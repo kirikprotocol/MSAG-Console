@@ -110,7 +110,7 @@ time_t DailySchedule::calulateNextTime()
 
     tm dt; localtime_r(&st, &dt);
     int intervalInSeconds = 86400*everyNDays;
-    dt.tm_mday += ((ct-st)/intervalInSeconds+1)*everyNDays;
+    dt.tm_mday += (int)((ct-st)/intervalInSeconds+1)*everyNDays;
     dt.tm_isdst = -1;
     st = mktime(&dt); 
 
@@ -142,7 +142,7 @@ time_t WeeklySchedule::calulateNextTime()
     int intervalInSeconds = intervalInDays*86400;
 
     if (ct >= st) { // сдвиг до текущего времени
-        dt.tm_mday += ((ct-st)/intervalInSeconds)*intervalInDays;
+        dt.tm_mday += (int)((ct-st)/intervalInSeconds)*intervalInDays;
         dt.tm_isdst = -1;
         st = mktime(&dt);
     }

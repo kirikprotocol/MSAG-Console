@@ -105,7 +105,7 @@ uint32_t CsvStore::Delete(bool onlynew)
       buf::File::RmDir(dir.dirPath.c_str());
     }
   }
-  if(!unknownDirs)
+  if(!unknownDirs && !onlynew)
   {
     buf::File::RmDir(location.c_str());
   }

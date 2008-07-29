@@ -197,17 +197,17 @@ bool TaskProcessor::addTask(Task* task)
 }
 bool TaskProcessor::remTask(uint32_t taskId)
 {
-    Task* task = 0;
-    {
-        MutexGuard guard(tasksLock);
-        if (!tasks.Exist(taskId)) return false;
-        task = tasks.Get(taskId);
-        tasks.Delete(taskId);
-        if (!task) return false;
-        awake.Signal();
-    }
-    if (task) task->shutdown();
-    return true;
+  Task* task = 0;
+  {
+    MutexGuard guard(tasksLock);
+    if (!tasks.Exist(taskId)) return false;
+    task = tasks.Get(taskId);
+    tasks.Delete(taskId);
+    if (!task) return false;
+    awake.Signal();
+  }
+  if (task) task->shutdown();
+  return true;
 }
 bool TaskProcessor::delTask(uint32_t taskId)
 {
@@ -890,7 +890,6 @@ void TaskProcessor::removeTask(uint32_t taskId)
 }
 void TaskProcessor::changeTask(uint32_t taskId)
 {
-    Task* task = 0; bool delivery = false;
     try
     {
         Manager::reinit();
@@ -898,25 +897,31 @@ void TaskProcessor::changeTask(uint32_t taskId)
         char taskSection[1024];
         sprintf(taskSection, "InfoSme.Tasks.%d", taskId);
         ConfigView taskConfig(config, taskSection);
-        
+        TaskGuard tg(getTask(taskId));
+        Task* task = tg.get();
+        task->update(&taskConfig);
+
+        /*
         try { delivery = taskConfig.getBool("delivery"); }
         catch (ConfigException& ce) { delivery = false; }
 
         DataSource* taskDs = 0;
         if (!delivery)
         {
-            const char* ds_id = taskConfig.getString("dsId");
-            if (!ds_id || ds_id[0] == '\0')
-                throw ConfigException("DataSource id for task '%d' empty or wasn't specified",
-                                      taskId);
-            taskDs = provider.getDataSource(ds_id);
-            if (!taskDs)
-                throw ConfigException("Failed to obtail DataSource driver '%s' for task '%d'", 
-                                      ds_id, taskId);
+          const char* ds_id = taskConfig.getString("dsId");
+          if (!ds_id || ds_id[0] == '\0')
+              throw ConfigException("DataSource id for task '%d' empty or wasn't specified",
+                                    taskId);
+          taskDs = provider.getDataSource(ds_id);
+          if (!taskDs)
+              throw ConfigException("Failed to obtail DataSource driver '%s' for task '%d'", 
+                                    ds_id, taskId);
         }
         
         if (!remTask(taskId))
-            smsc_log_warn(logger, "Failed to change task. Task with id '%d' wasn't registered.", taskId);
+        {
+          smsc_log_warn(logger, "Failed to change task. Task with id '%d' wasn't registered.", taskId);
+        }
         std::string location=storeLocation;
         char buf[32];
         sprintf(buf,"%u/",taskId);
@@ -928,20 +933,23 @@ void TaskProcessor::changeTask(uint32_t taskId)
         }
         task = new Task(&taskConfig, taskId, location, taskDs);
         if (!task) 
-            throw Exception("New task create failed");
-        if (!putTask(task)) {
-            smsc_log_warn(logger, "Failed to change task with id '%d'. Task was re-registered", taskId);
-            if (!delivery) task->destroy();
+        {
+          throw Exception("New task create failed");
         }
-    
+        if (!putTask(task))
+        {
+          smsc_log_warn(logger, "Failed to change task with id '%d'. Task was re-registered", taskId);
+          if (!delivery) task->destroy();
+        }
+        */
     } catch (std::exception& exc)
     {
-        if (task && !delivery) task->destroy();
+        //if (task && !delivery) task->destroy();
         smsc_log_error(logger, "Failed to change task '%d'. Details: %s", taskId, exc.what());
         throw;
     } catch (...) 
     {
-        if (task && !delivery) task->destroy();
+        //if (task && !delivery) task->destroy();
         smsc_log_error(logger, "Failed to change task '%d'. Cause is unknown", taskId);
         throw Exception("Cause is unknown");
     }

@@ -24,6 +24,7 @@
 
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
+#include <core/synchronization/EventMonitor.hpp>
 
 #include "DataProvider.h"
 #include "Statistics.h"
@@ -40,6 +41,7 @@ namespace infosme
     using namespace smsc::db;
 
     using smsc::core::synchronization::Event;
+    using smsc::core::synchronization::EventMonitor;
     using smsc::core::synchronization::Mutex;
 
     using smsc::logger::Logger;
@@ -74,8 +76,8 @@ namespace infosme
         CsvStore store;
 
         Mutex       createTableLock, enableLock;
-        Event       generationEndEvent;
-        Mutex       inGenerationLock, inProcessLock;
+        EventMonitor inGenerationMon;
+        Mutex       inProcessLock;
         bool        bInProcess, bInGeneration, bGenerationSuccess;
         bool        infoSme_T_storageWasDestroyed;
 
@@ -107,6 +109,8 @@ namespace infosme
         Task(ConfigView* config, uint32_t taskId, std::string location,
              DataSource* dsOwn);
 
+        void update(ConfigView* config);
+
         void finalize(); // Wait usages & delete task
         bool shutdown(); // Wait usages, cleanup waiting & delete task
         bool destroy();  // Wait usages, drop entire table & delete task
@@ -123,11 +127,11 @@ namespace infosme
             return bInProcess;
         }
         inline bool isInGeneration() {
-            MutexGuard guard(inGenerationLock);
+            MutexGuard guard(inGenerationMon);
             return bInGeneration;
         }
         inline bool isGenerationSucceeded() {
-            MutexGuard guard(inGenerationLock);
+            MutexGuard guard(inGenerationMon);
             return (!bInGeneration && bGenerationSuccess);
         }
 

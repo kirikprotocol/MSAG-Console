@@ -311,15 +311,16 @@ public:
         }
 
         const char* out = message.c_str();
-        int outLen = message.length();
+        size_t outLen = message.length();
         char* msgBuf = 0;
         if(hasHighBit(out,outLen)) {
-            int msgLen = outLen*2;
+            size_t msgLen = outLen*2;
             msgBuf = new char[msgLen];
             ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen,
                                    CONV_ENCODING_CP1251);
             sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
-            out = msgBuf; outLen = msgLen;
+            out = msgBuf;
+            outLen = msgLen;
         } else {
             sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
         }

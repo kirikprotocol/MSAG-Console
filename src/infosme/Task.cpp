@@ -4,63 +4,22 @@
 #include <time.h>
 #include <sstream>
 #include <list>
-#include <util/sleep.h>
-#include <sms/sms.h>
-#include <util/config/region/Region.hpp>
-#include <util/config/region/RegionFinder.hpp>
+#include "util/sleep.h"
+#include "sms/sms.h"
+#include "util/vformat.hpp"
+#include "util/config/region/Region.hpp"
+#include "util/config/region/RegionFinder.hpp"
 
 extern bool isMSISDNAddress(const char* string);
 
 namespace smsc { namespace infosme 
 {
 
-const char* USER_QUERY_STATEMENT_ID           = "%s_USER_QUERY_STATEMENT_ID";   // Own
-
-const char* DELETE_GENERATING_STATEMENT_ID    = "DELETE_GENERATING_STATEMENT_ID";
-const char* INSERT_GENERATING_STATEMENT_ID    = "INSERT_GENERATING_STATEMENT_ID"; 
-const char* DELETE_NEW_MESSAGES_STATEMENT_ID  = "%s_DELETE_NEW_MESSAGES_STATEMENT_ID";
-const char* SELECT_MESSAGES_STATEMENT_ID      = "%s_SELECT_MESSAGES_STATEMENT_ID";
-const char* NEW_MESSAGE_STATEMENT_ID          = "%s_NEW_MESSAGE_STATEMENT_ID";
-const char* CLEAR_MESSAGES_STATEMENT_ID       = "%s_CLEAR_MESSAGES_STATEMENT_ID";
-const char* RESET_MESSAGES_STATEMENT_ID       = "%s_RESET_MESSAGES_STATEMENT_ID";
-const char* DO_STATE_MESSAGE_STATEMENT_ID     = "%s_DO_STATE_MESSAGE_STATEMENT_ID";
-const char* DO_RETRY_MESSAGE_STATEMENT_ID     = "%s_DO_RETRY_MESSAGE_STATEMENT_ID";
-const char* DO_DELETE_MESSAGE_STATEMENT_ID    = "%s_DO_DELETE_MESSAGE_STATEMENT_ID";
-const char* DO_ENROUTE_MESSAGE_STATEMENT_ID   = "%s_DO_ENROUTE_MESSAGE_STATEMENT_ID";
-
-const char* DELETE_GENERATING_STATEMENT_SQL   = "DELETE FROM INFOSME_GENERATING_TASKS WHERE TASK_ID=:TASK_ID";
-const char* INSERT_GENERATING_STATEMENT_SQL   = "INSERT INTO INFOSME_GENERATING_TASKS TASK_ID VALUES(:TASK_ID)";
-const char* DELETE_NEW_MESSAGES_STATEMENT_SQL = "DELETE FROM %s WHERE STATE=:NEW";
-const char* CLEAR_MESSAGES_STATEMENT_SQL      = "DELETE FROM %s WHERE STATE=:NEW AND ABONENT=:ABONENT";
-const char* NEW_SD_INDEX_STATEMENT_SQL        = "CREATE INDEX %s_SD_IDX ON %s (STATE, SEND_DATE)";
-const char* NEW_AB_INDEX_STATEMENT_SQL        = "CREATE INDEX %s_AB_IDX ON %s (STATE, ABONENT)";
-const char* RESET_MESSAGES_STATEMENT_SQL      = "UPDATE %s SET STATE=:NEW WHERE STATE=:WAIT";
-const char* DO_STATE_MESSAGE_STATEMENT_SQL    = "UPDATE %s SET STATE=:STATE WHERE ID=:ID";
-const char* DO_RETRY_MESSAGE_STATEMENT_SQL    = "UPDATE %s SET STATE=:NEW, SEND_DATE=:SEND_DATE WHERE ID=:ID";
-const char* DO_DELETE_MESSAGE_STATEMENT_SQL   = "DELETE FROM %s WHERE ID=:ID";
-const char* DO_ENROUTE_MESSAGE_STATEMENT_SQL  = "UPDATE %s SET STATE=:ENROUTE WHERE ID=:ID AND STATE=:WAIT";
-const char* DROP_TABLE_STATEMENT_SQL          = "DROP TABLE %s";
-const char* NEW_TABLE_STATEMENT_SQL           = "CREATE TABLE %s (\n"
-                                                "ID             NUMBER          NOT NULL,\n"
-                                                "STATE          NUMBER(3)       NOT NULL,\n"
-                                                "ABONENT        VARCHAR2(30)    NOT NULL,\n"
-                                                "SEND_DATE      DATE            NOT NULL,\n"
-                                                "MESSAGE        VARCHAR2(2000)  NULL,    \n"
-                                                "PRIMARY KEY    (ID)                     \n"
-                                                ")";
-const char* NEW_MESSAGE_STATEMENT_SQL         = "INSERT INTO %s (ID, STATE, ABONENT, SEND_DATE, MESSAGE) "
-                                                "VALUES (INFOSME_MESSAGES_SEQ.NEXTVAL, :STATE, :ABONENT, "
-                                                ":SEND_DATE, :MESSAGE)";
-const char* SELECT_MESSAGES_STATEMENT_SQL     = "SELECT ID, ABONENT, MESSAGE FROM %s WHERE "
-                                                "STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY SEND_DATE ASC";
-
-const char* DROP_INFOSME_T_INDEX_STATEMENT_SQL = "DROP INDEX ON %s";
-
 Task::Task(ConfigView* config, uint32_t taskId, std::string location, 
            DataSource* _dsOwn)
     : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
       usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(_dsOwn),store(location),
-      bInProcess(false), bInGeneration(false), bGenerationSuccess(false),
+      bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
       infoSme_T_storageWasDestroyed(false), lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
    
 {
@@ -69,10 +28,13 @@ Task::Task(ConfigView* config, uint32_t taskId, std::string location,
   formatter = new OutputFormatter(info.msgTemplate.c_str());
   trackIntegrity(true, true); // delete flag & generated messages
 }
+
 Task::~Task()
 {
     if (formatter) delete formatter;
 
+
+/*  
     if (dsOwn)
     {
       char buf[128];
@@ -81,146 +43,275 @@ Task::~Task()
       sprintf(buf,USER_QUERY_STATEMENT_ID,idBuf);
       dsOwn->closeRegisteredQueries(buf);
     }
+    */
 }
 
 void Task::init(ConfigView* config, uint32_t taskId)
 {
-    __require__(config);
+  __require__(config);
 
-    const int MAX_PRIORITY_VALUE = 1000;
+  const int MAX_PRIORITY_VALUE = 1000;
 
-    info.uid = taskId;
-    try { info.name = config->getString("name"); } catch (...) {}
-    info.enabled = config->getBool("enabled");
-    info.priority = config->getInt("priority");
-    if (info.priority <= 0 || info.priority > MAX_PRIORITY_VALUE)
-        throw ConfigException("Task priority should be positive and less than %d.", 
-                              MAX_PRIORITY_VALUE);
-    try {
-      info.address = config->getString("address"); 
-    }
-    catch (...)
-    { 
-        smsc_log_warn(logger, "<address> parameter missed for task '%d'. "
-                              "Using global definitions", info.uid);
-        info.address = "";
-    }
-    info.retryOnFail = config->getBool("retryOnFail");
-    info.replaceIfPresent = config->getBool("replaceMessage");
-    info.transactionMode = config->getBool("transactionMode");
-    info.trackIntegrity = config->getBool("trackIntegrity");
-    info.keepHistory = config->getBool("keepHistory");
-    try
-    {
-      info.flash = config->getBool("flash");
-    } catch(std::exception& e)
-    {
-    }
-    info.endDate = parseDateTime(config->getString("endDate"));
+  info.uid = taskId;
+  try { info.name = config->getString("name"); } catch (...) {}
+  info.enabled = config->getBool("enabled");
+  info.priority = config->getInt("priority");
+  if (info.priority <= 0 || info.priority > MAX_PRIORITY_VALUE)
+      throw ConfigException("Task priority should be positive and less than %d.", 
+                            MAX_PRIORITY_VALUE);
+  try {
+    info.address = config->getString("address"); 
+  }
+  catch (...)
+  { 
+      smsc_log_warn(logger, "<address> parameter missed for task '%d'. "
+                            "Using global definitions", info.uid);
+      info.address = "";
+  }
+  info.retryOnFail = config->getBool("retryOnFail");
+  info.replaceIfPresent = config->getBool("replaceMessage");
+  info.transactionMode = config->getBool("transactionMode");
+  info.trackIntegrity = config->getBool("trackIntegrity");
+  info.keepHistory = config->getBool("keepHistory");
+  try
+  {
+    info.flash = config->getBool("flash");
+  } catch(std::exception& e)
+  {
+  }
+  info.endDate = parseDateTime(config->getString("endDate"));
 
-    /*
-    !!TODO!!??
-    if (info.endDate>0 && time(0)>=info.endDate)
-    {
-      // preload InfoSme_T_ storage without index building
-      Connection* connection = 0;
-      connection = dsInt->getConnection();
+  /*
+  !!TODO!!??
+  if (info.endDate>0 && time(0)>=info.endDate)
+  {
+    // preload InfoSme_T_ storage without index building
+    Connection* connection = 0;
+    connection = dsInt->getConnection();
 
-      std::string createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
-      std::auto_ptr<Statement> statementGuard(connection->createStatement(createTableSql.c_str()));
-      Statement* statement = statementGuard.get();
-      if (!statement) 
-        throw Exception("Failed to create table statement.");
-      statement->execute();  
+    std::string createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
+    std::auto_ptr<Statement> statementGuard(connection->createStatement(createTableSql.c_str()));
+    Statement* statement = statementGuard.get();
+    if (!statement) 
+      throw Exception("Failed to create table statement.");
+    statement->execute();  
 
-      // and set flag in order to don't try destroy storage needed only for queries execution
-      infoSme_T_storageWasDestroyed = true;
-    }
-    */
+    // and set flag in order to don't try destroy storage needed only for queries execution
+    infoSme_T_storageWasDestroyed = true;
+  }
+  */
 
-    info.retryTime = parseTime(config->getString("retryTime"));
-    if (info.retryOnFail && info.retryTime <= 0)
-        throw ConfigException("Task retry time specified incorrectly."); 
-    info.validityPeriod = parseTime(config->getString("validityPeriod"));
-    info.validityDate = parseDateTime(config->getString("validityDate"));
-    if (info.validityPeriod <= 0 && info.validityDate <= 0)
-        throw ConfigException("Message validity period/date specified incorrectly.");
-    info.activePeriodStart = parseTime(config->getString("activePeriodStart"));
-    info.activePeriodEnd = parseTime(config->getString("activePeriodEnd"));
-    if ((info.activePeriodStart < 0 && info.activePeriodEnd >= 0) ||
-        (info.activePeriodStart >= 0 && info.activePeriodEnd < 0) ||
-        (info.activePeriodStart >= 0 && info.activePeriodEnd >= 0 && 
-         info.activePeriodStart >= info.activePeriodEnd))
-        throw ConfigException("Task active period specified incorrectly."); 
-    
-    const char* awd = 0;
-    try { awd = config->getString("activeWeekDays"); } 
-    catch (...) { 
-        smsc_log_warn(logger, "<activeWeekDays> parameter missed for task '%d'. "
-                              "Using default: Mon,Tue,Wed,Thu,Fri", info.uid);
-        info.activeWeekDays.weekDays = 0x7c; awd = 0;
-    }
-    if (awd && awd[0]) {
-        if (!info.activeWeekDays.setWeekDays(awd))
-            throw ConfigException("Task active week days set listed incorrectly."); 
-    }
-    else info.activeWeekDays.weekDays = 0;
+  info.retryTime = parseTime(config->getString("retryTime"));
+  if (info.retryOnFail && info.retryTime <= 0)
+      throw ConfigException("Task retry time specified incorrectly."); 
+  info.validityPeriod = parseTime(config->getString("validityPeriod"));
+  info.validityDate = parseDateTime(config->getString("validityDate"));
+  if (info.validityPeriod <= 0 && info.validityDate <= 0)
+      throw ConfigException("Message validity period/date specified incorrectly.");
+  info.activePeriodStart = parseTime(config->getString("activePeriodStart"));
+  info.activePeriodEnd = parseTime(config->getString("activePeriodEnd"));
+  if ((info.activePeriodStart < 0 && info.activePeriodEnd >= 0) ||
+      (info.activePeriodStart >= 0 && info.activePeriodEnd < 0) ||
+      (info.activePeriodStart >= 0 && info.activePeriodEnd >= 0 && 
+       info.activePeriodStart >= info.activePeriodEnd))
+      throw ConfigException("Task active period specified incorrectly."); 
+  
+  const char* awd = 0;
+  try { awd = config->getString("activeWeekDays"); } 
+  catch (...) { 
+      smsc_log_warn(logger, "<activeWeekDays> parameter missed for task '%d'. "
+                            "Using default: Mon,Tue,Wed,Thu,Fri", info.uid);
+      info.activeWeekDays.weekDays = 0x7c; awd = 0;
+  }
+  if (awd && awd[0]) {
+      if (!info.activeWeekDays.setWeekDays(awd))
+          throw ConfigException("Task active week days set listed incorrectly."); 
+  }
+  else info.activeWeekDays.weekDays = 0;
 
-    if (dsOwn != 0)
-    {
-        const char* query_sql = config->getString("query");
-        if (!query_sql || query_sql[0] == '\0')
-            throw ConfigException("Sql query for task empty or wasn't specified.");
-        info.querySql = query_sql;
-        const char* msg_template = config->getString("template");
-        if (!msg_template || msg_template[0] == '\0')
-            throw ConfigException("Message template for task empty or wasn't specified.");
-        info.msgTemplate = msg_template;
-    }
-    info.svcType = "";
-    if (info.replaceIfPresent)
-    {
-        try         { info.svcType = config->getString("svcType"); } 
-        catch (...) { info.svcType = "";}
-    }
+  if (dsOwn != 0)
+  {
+      const char* query_sql = config->getString("query");
+      if (!query_sql || query_sql[0] == '\0')
+          throw ConfigException("Sql query for task empty or wasn't specified.");
+      info.querySql = query_sql;
+      const char* msg_template = config->getString("template");
+      if (!msg_template || msg_template[0] == '\0')
+          throw ConfigException("Message template for task empty or wasn't specified.");
+      info.msgTemplate = msg_template;
+  }
+  info.svcType = "";
+  if (info.replaceIfPresent)
+  {
+      try         { info.svcType = config->getString("svcType"); } 
+      catch (...) { info.svcType = "";}
+  }
 
-    info.dsTimeout = 0;
-    try { info.dsTimeout = config->getInt("dsTimeout"); } catch(...) {}
-    if (info.dsTimeout < 0) info.dsTimeout = 0;
-    
-    info.dsUncommitedInProcess = 1;
-    try { info.dsUncommitedInProcess = config->getInt("uncommitedInProcess"); } catch(...) {}
-    if (info.dsUncommitedInProcess < 0) info.dsUncommitedInProcess = 1;
-    info.dsUncommitedInGeneration = 1;
-    try { info.dsUncommitedInGeneration = config->getInt("uncommitedInGeneration"); } catch(...) {}
-    if (info.dsUncommitedInGeneration < 0) info.dsUncommitedInGeneration = 1;
-    info.messagesCacheSize = 100;
-    try { info.messagesCacheSize = config->getInt("messagesCacheSize"); } catch(...) {}
-    if (info.messagesCacheSize <= 0) info.messagesCacheSize = 100;
-    info.messagesCacheSleep = 1;
-    try { info.messagesCacheSleep = config->getInt("messagesCacheSleep"); } catch(...) {}
-    if (info.messagesCacheSleep <= 0) info.messagesCacheSleep = 1;
-    try
-    { 
-      bGenerationSuccess = config->getBool("messagesHaveLoaded");
-      bInGeneration = false;
-    } catch (...) {}
+  info.dsTimeout = 0;
+  try { info.dsTimeout = config->getInt("dsTimeout"); } catch(...) {}
+  if (info.dsTimeout < 0) info.dsTimeout = 0;
+  
+  info.dsUncommitedInProcess = 1;
+  try { info.dsUncommitedInProcess = config->getInt("uncommitedInProcess"); } catch(...) {}
+  if (info.dsUncommitedInProcess < 0) info.dsUncommitedInProcess = 1;
+  info.dsUncommitedInGeneration = 1;
+  try { info.dsUncommitedInGeneration = config->getInt("uncommitedInGeneration"); } catch(...) {}
+  if (info.dsUncommitedInGeneration < 0) info.dsUncommitedInGeneration = 1;
+  info.messagesCacheSize = 100;
+  try { info.messagesCacheSize = config->getInt("messagesCacheSize"); } catch(...) {}
+  if (info.messagesCacheSize <= 0) info.messagesCacheSize = 100;
+  info.messagesCacheSleep = 1;
+  try { info.messagesCacheSleep = config->getInt("messagesCacheSleep"); } catch(...) {}
+  if (info.messagesCacheSleep <= 0) info.messagesCacheSleep = 1;
+  try
+  { 
+    bGenerationSuccess = config->getBool("messagesHaveLoaded");
+    bInGeneration = false;
+  } catch (...) {}
 }
+
+void Task::update(ConfigView *config)
+{
+  const int MAX_PRIORITY_VALUE = 1000;
+
+  TaskInfo newinfo = info;
+  try { newinfo.name = config->getString("name"); } catch (...) {}
+  newinfo.enabled = config->getBool("enabled");
+  newinfo.priority = config->getInt("priority");
+  if (newinfo.priority <= 0 || newinfo.priority > MAX_PRIORITY_VALUE)
+      throw ConfigException("Task priority should be positive and less than %d.", 
+                            MAX_PRIORITY_VALUE);
+  try {
+    newinfo.address = config->getString("address"); 
+  }
+  catch (...)
+  { 
+      smsc_log_warn(logger, "<address> parameter missed for task '%d'. "
+                            "Using global definitions", newinfo.uid);
+      newinfo.address = "";
+  }
+  newinfo.retryOnFail = config->getBool("retryOnFail");
+  newinfo.replaceIfPresent = config->getBool("replaceMessage");
+  newinfo.transactionMode = config->getBool("transactionMode");
+  newinfo.trackIntegrity = config->getBool("trackIntegrity");
+  newinfo.keepHistory = config->getBool("keepHistory");
+  try
+  {
+    newinfo.flash = config->getBool("flash");
+  } catch(std::exception& e)
+  {
+  }
+  newinfo.endDate = parseDateTime(config->getString("endDate"));
+
+  /*
+  !!TODO!!??
+  if (newinfo.endDate>0 && time(0)>=newinfo.endDate)
+  {
+    // preload newinfoSme_T_ storage without index building
+    Connection* connection = 0;
+    connection = dsInt->getConnection();
+
+    std::string createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
+    std::auto_ptr<Statement> statementGuard(connection->createStatement(createTableSql.c_str()));
+    Statement* statement = statementGuard.get();
+    if (!statement) 
+      throw Exception("Failed to create table statement.");
+    statement->execute();  
+
+    // and set flag in order to don't try destroy storage needed only for queries execution
+    newinfoSme_T_storageWasDestroyed = true;
+  }
+  */
+
+  newinfo.retryTime = parseTime(config->getString("retryTime"));
+  if (newinfo.retryOnFail && newinfo.retryTime <= 0)
+      throw ConfigException("Task retry time specified incorrectly."); 
+  newinfo.validityPeriod = parseTime(config->getString("validityPeriod"));
+  newinfo.validityDate = parseDateTime(config->getString("validityDate"));
+  if (newinfo.validityPeriod <= 0 && newinfo.validityDate <= 0)
+      throw ConfigException("Message validity period/date specified incorrectly.");
+  newinfo.activePeriodStart = parseTime(config->getString("activePeriodStart"));
+  newinfo.activePeriodEnd = parseTime(config->getString("activePeriodEnd"));
+  if ((newinfo.activePeriodStart < 0 && newinfo.activePeriodEnd >= 0) ||
+      (newinfo.activePeriodStart >= 0 && newinfo.activePeriodEnd < 0) ||
+      (newinfo.activePeriodStart >= 0 && newinfo.activePeriodEnd >= 0 && 
+       newinfo.activePeriodStart >= newinfo.activePeriodEnd))
+      throw ConfigException("Task active period specified incorrectly."); 
+
+  const char* awd = 0;
+  try { awd = config->getString("activeWeekDays"); } 
+  catch (...) { 
+      smsc_log_warn(logger, "<activeWeekDays> parameter missed for task '%d'. "
+                            "Using default: Mon,Tue,Wed,Thu,Fri", newinfo.uid);
+      newinfo.activeWeekDays.weekDays = 0x7c; awd = 0;
+  }
+  if (awd && awd[0]) {
+      if (!newinfo.activeWeekDays.setWeekDays(awd))
+          throw ConfigException("Task active week days set listed incorrectly."); 
+  }
+  else newinfo.activeWeekDays.weekDays = 0;
+
+  if (dsOwn != 0)
+  {
+      const char* query_sql = config->getString("query");
+      if (!query_sql || query_sql[0] == '\0')
+          throw ConfigException("Sql query for task empty or wasn't specified.");
+      newinfo.querySql = query_sql;
+      const char* msg_template = config->getString("template");
+      if (!msg_template || msg_template[0] == '\0')
+          throw ConfigException("Message template for task empty or wasn't specified.");
+      newinfo.msgTemplate = msg_template;
+  }
+  newinfo.svcType = "";
+  if (newinfo.replaceIfPresent)
+  {
+      try         { newinfo.svcType = config->getString("svcType"); } 
+      catch (...) { newinfo.svcType = "";}
+  }
+
+  newinfo.dsTimeout = 0;
+  try { newinfo.dsTimeout = config->getInt("dsTimeout"); } catch(...) {}
+  if (newinfo.dsTimeout < 0) newinfo.dsTimeout = 0;
+
+  newinfo.dsUncommitedInProcess = 1;
+  try { newinfo.dsUncommitedInProcess = config->getInt("uncommitedInProcess"); } catch(...) {}
+  if (newinfo.dsUncommitedInProcess < 0) newinfo.dsUncommitedInProcess = 1;
+  newinfo.dsUncommitedInGeneration = 1;
+  try { newinfo.dsUncommitedInGeneration = config->getInt("uncommitedInGeneration"); } catch(...) {}
+  if (newinfo.dsUncommitedInGeneration < 0) newinfo.dsUncommitedInGeneration = 1;
+  newinfo.messagesCacheSize = 100;
+  try { newinfo.messagesCacheSize = config->getInt("messagesCacheSize"); } catch(...) {}
+  if (newinfo.messagesCacheSize <= 0) newinfo.messagesCacheSize = 100;
+  newinfo.messagesCacheSleep = 1;
+  try { newinfo.messagesCacheSleep = config->getInt("messagesCacheSleep"); } catch(...) {}
+  if (newinfo.messagesCacheSleep <= 0) newinfo.messagesCacheSleep = 1;
+  info=newinfo;
+  {
+    MutexGuard mg(inGenerationMon);
+    if(!bInGeneration)
+    {
+      OutputFormatter* newFormatter = new OutputFormatter(info.msgTemplate.c_str());
+      delete formatter;
+      formatter=newFormatter;
+    }
+  }
+}
+
 
 void Task::doFinalization()
 {
   smsc_log_error(logger, "Task::doFinalization::: taskId=%d",getId());
-    {
-        MutexGuard guard(finalizingLock);
-        bFinalizing = true;
-    }
-    endGeneration();
-
-    while (true) {
-        usersCountEvent.Wait(10);
-        MutexGuard guard(usersCountLock);
-        if (usersCount <= 0) break;
-    }
+  {
+    MutexGuard guard(finalizingLock);
+    bFinalizing = true;
+  }
+  endGeneration();
+  while (true)
+  {
+    usersCountEvent.Wait(10);
+    MutexGuard guard(usersCountLock);
+    if (usersCount <= 0) break;
+  }
 }
 void Task::finalize()
 {
@@ -230,37 +321,44 @@ void Task::finalize()
 bool Task::destroy()
 {
   smsc_log_error(logger, "Task::destroy::: taskId=%d",getId());
-    doFinalization();
-    bool result = false;
-    try
-    {
-      store.Delete(false);
-      result = true;
-    } catch (std::exception& exc)
-    {
-        smsc_log_error(logger, "Drop table failed for task '%d'. Reason: %s",
-                       info.uid, exc.what());
-    } catch (...) {
-        smsc_log_error(logger, "Drop table failed for task '%d'. Reason is unknown",
-                       info.uid);
-    }
-    delete this;
-    return result;
+  doFinalization();
+  bool result = false;
+  try
+  {
+    store.Delete(false);
+    result = true;
+  } catch (std::exception& exc)
+  {
+    smsc_log_error(logger, "Drop table failed for task '%d'. Reason: %s",
+                   info.uid, exc.what());
+  } catch (...) {
+    smsc_log_error(logger, "Drop table failed for task '%d'. Reason is unknown",
+                   info.uid);
+  }
+  delete this;
+  return result;
 }
+
 bool Task::shutdown()
 {
   smsc_log_error(logger, "Task::shutdown::: taskId=%d",getId());
-    doFinalization(); bool result = false;
-    try { resetWaiting(); result = true;
-    } catch (std::exception& exc) {
-        smsc_log_error(logger, "Reset waiting failed for task '%d/%s'. Reason: %s",
-                       info.uid, info.name.c_str(),exc.what());
-    } catch (...) {
-        smsc_log_error(logger, "Reset waiting failed for task '%d/%s'. Reason is unknown",
-                       info.uid,info.name.c_str());
-    }
-    delete this;
-    return result;
+  doFinalization();
+  bool result = false;
+  try 
+  { 
+    resetWaiting(); 
+    result = true;
+  } catch (std::exception& exc) 
+  {
+    smsc_log_error(logger, "Reset waiting failed for task '%d/%s'. Reason: %s",
+                   info.uid, info.name.c_str(),exc.what());
+  } catch (...) 
+  {
+    smsc_log_error(logger, "Reset waiting failed for task '%d/%s'. Reason is unknown",
+                   info.uid,info.name.c_str());
+  }
+  delete this;
+  return result;
 }
 
 void Task::trackIntegrity(bool clear, bool del)
@@ -284,7 +382,7 @@ void Task::trackIntegrity(bool clear, bool del)
         TaskLock::getInstance().Lock(info.uid);
       }
     } 
-    catch (Exception& exc)
+    catch (std::exception& exc)
     {
         smsc_log_error(logger, "Task '%d/%s'. Failed to track task integrity. "
                      "Details: %s", info.uid,info.name.c_str(), exc.what());
@@ -299,9 +397,13 @@ bool Task::beginGeneration(Statistics* statistics)
     uint64_t totalGenerated = 0;
 
     {
-        MutexGuard guard(inGenerationLock);
-        if (bInGeneration || (info.trackIntegrity && isInProcess())) return false;
-        bInGeneration = true; bGenerationSuccess = false;
+        MutexGuard guard(inGenerationMon);
+        if (bInGeneration || (info.trackIntegrity && isInProcess())) 
+        {
+          return false;
+        }
+        bInGeneration = true;
+        bGenerationSuccess = false;
     }
 
     Connection* ownConnection = 0;
@@ -350,47 +452,64 @@ bool Task::beginGeneration(Statistics* statistics)
         time_t sendTime=time(NULL)+60;
         while (isInGeneration() && rs->fetchNext())
         {
-            const char* abonentAddress = rs->getString(1);
-            if (!abonentAddress || abonentAddress[0] == '\0' || !isMSISDNAddress(abonentAddress))
+          const char* abonentAddress = rs->getString(1);
+          if (!abonentAddress || abonentAddress[0] == '\0' || !isMSISDNAddress(abonentAddress))
+          {
+              smsc_log_warn(logger, "Task '%d/%s'. Invalid abonent number '%s' selected.", 
+                            info.uid,info.name.c_str(), abonentAddress ? abonentAddress:"-");
+          }
+          else
+          {
+            std::string message = "";
+            smsc::sms::Address addr=abonentAddress;
+            formatter->format(message, getAdapter, context);
+            if (message.length() > 0)
             {
-                smsc_log_warn(logger, "Task '%d/%s'. Invalid abonent number '%s' selected.", 
-                              info.uid,info.name.c_str(), abonentAddress ? abonentAddress:"-");
-            }
-            else
-            {
-              std::string message = "";
-              formatter->format(message, getAdapter, context);
-              if (message.length() > 0)
+              if (info.replaceIfPresent)
               {
-                if (info.replaceIfPresent)
+                AbntMap::iterator it=abntMap.find(addr.toString());
+                if(it!=abntMap.end())
                 {
-                  AbntMap::iterator it=abntMap.find(abonentAddress);
-                  if(it!=abntMap.end())
-                  {
-                    store.setMsgState(it->second,DELETED);
-                  }
-                }
-                Message msg;
-                msg.abonent=abonentAddress;
-                msg.message=message;
-
-                store.createMessage(sendTime,msg);
-
-                if (statistics) statistics->incGenerated(info.uid, 1);
-
-                totalGenerated++;
-                if(totalGenerated%500==0)
-                {
-                  sendTime++;
+                  store.setMsgState(it->second,DELETED);
                 }
               }
+              Message msg;
+              msg.abonent=addr.toString();
+              msg.message=message;
+              const smsc::util::config::region::Region* foundRegion = smsc::util::config::region::RegionFinder::getInstance().findRegionByAddress(addr.toString());
+              if ( foundRegion )
+                smsc_log_debug(logger, "Task::beginGeneration::: abonent = %s matches to mask for region with id %s", addr.toString().c_str(), foundRegion->getId().c_str());
+              else
+                throw Exception("Task::insertDeliveryMessage::: Wrong configuraiton - can't find region definition");
+
+              msg.regionId=foundRegion->getId();
+
+              store.createMessage(sendTime,msg);
+
+              if (statistics)
+              {
+                statistics->incGenerated(info.uid, 1);
+              }
+
+              totalGenerated++;
+              if(totalGenerated%500==0)
+              {
+                sendTime++;
+              }
             }
+          }
         }
         
         {
-            MutexGuard guard(inGenerationLock);
-            if (info.trackIntegrity && !bInGeneration) bGenerationSuccess = false;
-            else bGenerationSuccess = true;
+          MutexGuard guard(inGenerationMon);
+          if (info.trackIntegrity && !bInGeneration)
+          {
+            bGenerationSuccess = false;
+          }
+          else
+          {
+            bGenerationSuccess = true;
+          }
         }
 
         trackIntegrity(true, false); // delete flag only
@@ -401,30 +520,35 @@ bool Task::beginGeneration(Statistics* statistics)
                      "Details: %s", info.uid,info.name.c_str(), exc.what());
         
         trackIntegrity(true, true); // delete flag & generated messages
-        MutexGuard guard(inGenerationLock);
+        MutexGuard guard(inGenerationMon);
         bGenerationSuccess = false;
     }
     
-    if (ownConnection) dsOwn->freeConnection(ownConnection);
+    if (ownConnection)
+    {
+      dsOwn->freeConnection(ownConnection);
+    }
     
     {
-        MutexGuard guard(inGenerationLock);
-        bInGeneration = false;
+      MutexGuard guard(inGenerationMon);
+      bInGeneration = false;
+      inGenerationMon.notify();
     }
-    generationEndEvent.Signal();
     store.closeAllFiles();
     return (bGenerationSuccess && totalGenerated > 0);
 }
+
 void Task::endGeneration()
 {
-    smsc_log_debug(logger, "endGeneration method being called on task '%d/%s'",
-                 info.uid,info.name.c_str());
+    smsc_log_debug(logger, "endGeneration method being called on task '%d/%s' (%s)",
+                 info.uid,info.name.c_str(),bInGeneration?"true":"false");
+    MutexGuard guard(inGenerationMon);
+    if (!bInGeneration)
     {
-        MutexGuard guard(inGenerationLock);
-        if (!bInGeneration) return;
-        bInGeneration = false;
+      return;
     }
-    generationEndEvent.Wait();
+    bInGeneration = false;
+    inGenerationMon.wait();
 }
 
 void Task::dropNewMessages(Statistics* statistics)
@@ -702,15 +826,15 @@ bool Task::isReady(time_t time, bool checkActivePeriod)
           if (info.activePeriodStart > info.activePeriodEnd) return false;
 
           dt.tm_isdst = -1;
-          dt.tm_hour = info.activePeriodStart/3600;
-          dt.tm_min  = (info.activePeriodStart%3600)/60;
-          dt.tm_sec  = (info.activePeriodStart%3600)%60;
+          dt.tm_hour = (int)info.activePeriodStart/3600;
+          dt.tm_min  = (int)(info.activePeriodStart%3600)/60;
+          dt.tm_sec  = (int)(info.activePeriodStart%3600)%60;
           time_t apst = mktime(&dt);
 
           dt.tm_isdst = -1;
-          dt.tm_hour = info.activePeriodEnd/3600;
-          dt.tm_min  = (info.activePeriodEnd%3600)/60;
-          dt.tm_sec  = (info.activePeriodEnd%3600)%60;
+          dt.tm_hour = (int)info.activePeriodEnd/3600;
+          dt.tm_min  = (int)(info.activePeriodEnd%3600)/60;
+          dt.tm_sec  = (int)(info.activePeriodEnd%3600)%60;
           time_t apet = mktime(&dt);
 
           if (time < apst || time > apet) return false;
@@ -904,14 +1028,17 @@ struct MessageDescription {
 
   std::string toString()
   {
-    std::ostringstream obuf;
-    obuf << "id=[" << id 
+    //std::ostringstream obuf;
+    /*obuf << "id=[" << id 
          << "],state=[" << uint_t(state)
          << "],abonentAddress=[" << abonentAddress
          << "],sendDate=[" << sendDate
          << "],message=[" << message 
          << "]";
     return obuf.str();
+    */
+    std::string rv=smsc::util::format("id=[%d],state=[%d],abonentAddress=[%s],sendDate=[%d],message=[%s]",id,state,abonentAddress.c_str(),sendDate,message.c_str());
+    return rv;
   }
   uint64_t id;
   uint8_t state;
@@ -1017,19 +1144,20 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
   }
   smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion:::  prepare taskMessages");
   Array<std::string> taskMessages;
-  for(MessagesList_t::iterator iter=messagesList.begin(); iter!=messagesList.end(); ++iter) {
-    std::ostringstream messageBuf;
-    messageBuf << iter->id << "|"
+  for(MessagesList_t::iterator iter=messagesList.begin(); iter!=messagesList.end(); ++iter)
+  {
+    std::string msgBuf=smsc::util::format("%lld|%d|%s|%s|%s",iter->id,iter->state,iter->abonentAddress.c_str(),unixTimeToStringFormat(iter->sendDate).c_str(),iter->message.c_str());
+    /*messageBuf << iter->id << "|"
                << uint_t(iter->state) << "|"
                << iter->abonentAddress << "|"
                << unixTimeToStringFormat(iter->sendDate) << "|"
-               << iter->message;
-    smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: add message=[%s] to taskMessages", messageBuf.str().c_str());
-    taskMessages.Push(messageBuf.str());
+               << iter->message;*/
+    smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: add message=[%s] to taskMessages", msgBuf.c_str());
+    taskMessages.Push(msgBuf);
   }
-  std::ostringstream fetchedCountAsStr;
-  fetchedCountAsStr << fetchedCount;
-  taskMessages.Push(fetchedCountAsStr.str());
+  //std::ostringstream fetchedCountAsStr;
+  //fetchedCountAsStr << fetchedCount;
+  taskMessages.Push(smsc::util::format("%d",fetchedCount));//fetchedCountAsStr.str());
   return taskMessages;
 }
 
@@ -1039,14 +1167,15 @@ Task::endDeliveryMessagesGeneration()
   smsc_log_debug(logger, "Task::endDeliveryMessagesGeneration method being called on task '%d/%s'",
                  info.uid,info.name.c_str());
 
-  MutexGuard guard(inGenerationLock);
-  bInGeneration = false; bGenerationSuccess = true;
+  MutexGuard guard(inGenerationMon);
+  bInGeneration = false;
+  bGenerationSuccess = true;
   store.closeAllFiles();
   /*  Manager& configManager = Manager::getInstance();
 
   configManager.setBool(("InfoSme.Tasks."+info.id+".taskLoaded").c_str(), true);
   configManager.save();*/
-  generationEndEvent.Signal();
+  inGenerationMon.notify();
 }
 
 void
