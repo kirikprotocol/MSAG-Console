@@ -36,6 +36,7 @@
 #include "ProfilesStorage.hpp"
 #include "Profiler.h"
 #include "ProfilesStorageServer.hpp"
+#include "MCAEventsStorage.hpp"
 
 #include "version.inc"
 
@@ -109,20 +110,6 @@ static int   unrespondedMessagesSleep = 10;
 static int   unrespondedMessagesMax   = 3;
 static int   outgoingSpeedMax = 50;
 
-//template <class T=int,T init_v=0,T inc_v=1>
-//class TimeSlotCounterEx: public TimeSlotCounter<T, init_v, inc_v>
-//{
-//public:
-//	TimeSlotCounterEx(unsigned int nsec,unsigned int msecres=100): TimeSlotCounter(nsec, msecres){}
-//	~TimeSlotCounterEx(){}
-//
-//  int getUsedSlots(void)
-//  {
-//    Inc(0);
-//    return (last-first+slotsCount)%slotsCount;
-//  }
-//};
-
 class TrafficControl
 {
   static EventMonitor   trafficMonitor; 
@@ -142,13 +129,12 @@ public:
     int out = outgoing.Get();
     int inc = incoming.Get();
     int difference = out-inc;
-        
+
     if (difference >= unrespondedMessagesMax) {
       smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)", 
                      difference, difference*unrespondedMessagesSleep, out, inc);
       trafficMonitor.wait(difference*unrespondedMessagesSleep);
     }
-    //		else {smsc_log_debug(logger, "nowait");}
 
     uint32_t pause;
     while(limitSpeed.Get() >= outgoingSpeedMax)
@@ -157,14 +143,15 @@ public:
       pause+=10;
     }
     limitSpeed.Inc();
-    //		smsc_log_debug(logger, "Speed limiter stoped sending by %d milliseconds", pause);
-  };
+  }
+
   static bool getTraffic(int& in, int& out)
   {
     MutexGuard guard(trafficMonitor);
     in = incoming.Get()/10; out = outgoing.Get()/10; 
     return (!TrafficControl::stopped);
-  };
+  }
+
   static void incIncoming()
   {
     MutexGuard guard(trafficMonitor);
@@ -173,18 +160,20 @@ public:
     if ((outgoing.Get()-incoming.Get()) < unrespondedMessagesMax) {
       trafficMonitor.notifyAll();
     }
-  };
+  }
+
   static void stopControl()
   {
     MutexGuard guard(trafficMonitor);
     TrafficControl::stopped = true;
     trafficMonitor.notifyAll();
-  };
+  }
+
   static void startControl()
   {
     MutexGuard guard(trafficMonitor);
     TrafficControl::stopped = false;
-  };
+  }
 };
 
 EventMonitor         TrafficControl::trafficMonitor;
@@ -196,11 +185,9 @@ bool                 TrafficControl::stopped = false;
 class MCISmeConfig : public SmeConfig
 {
 private:
-    
   char *strHost, *strSid, *strPassword, *strSysType, *strOrigAddr;
 
 public:
-    
   MCISmeConfig(ConfigView* config)
     throw(ConfigException)
     : SmeConfig(), strHost(0), strSid(0), strPassword(0), 
@@ -211,10 +198,10 @@ public:
     host = strHost;
     strSid = config->getString("sid", "MCISme id wasn't defined !");
     sid = strSid;
-        
+
     port = config->getInt("port", "SMSC port wasn't defined !");
     timeOut = config->getInt("timeout", "Connect timeout wasn't defined !");
-        
+
     // Optional fields
     try {
       strPassword = config->getString("password", "MCISme password wasn't defined !");
@@ -228,7 +215,7 @@ public:
       strOrigAddr = config->getString("origAddress", "MCISme originating address wasn't defined !");
       origAddr = strOrigAddr;
     } catch (ConfigException& exc) { origAddr = ""; strOrigAddr = 0; }
-  };
+  }
 
   virtual ~MCISmeConfig()
   {
@@ -237,13 +224,12 @@ public:
     if (strPassword) delete strPassword;
     if (strSysType) delete strSysType;
     if (strOrigAddr) delete strOrigAddr;
-  };
+  }
 };
 
 class MCISmeMessageSender: public MessageSender
 {
 private:
-    
   TaskProcessor&  processor;
   SmppSession*    session;
   Mutex           sendLock;
@@ -251,13 +237,13 @@ private:
   MCISmeMessageSender(const MCISmeMessageSender& rhs);
   MCISmeMessageSender& operator=(const MCISmeMessageSender& rhs);
 public:
-    
+
   MCISmeMessageSender(TaskProcessor& processor, SmppSession* session) 
     : MessageSender(), processor(processor), session(session) {};
   virtual ~MCISmeMessageSender() {
     MutexGuard guard(sendLock);
     session = 0;
-  };
+  }
 
   virtual int getSequenceNumber()
   {
@@ -267,7 +253,7 @@ public:
   virtual bool send(int seqNumber, const Message& message)
   {
     MutexGuard guard(sendLock);
-        
+
     if (!session) {
       smsc_log_error(logger, "Smpp session is undefined for MessageSender");
       return false;
@@ -277,20 +263,15 @@ public:
       smsc_log_error(logger, "Smpp transmitter is undefined for MessageSender");
       return false;
     }
-        
+
     if (message.notification) smsc_log_debug(logger, "Sender: sending notification message with seqNum=%d for %s from %s",
                                              seqNumber, message.abonent.c_str(), message.caller_abonent.c_str());
     else smsc_log_debug(logger, "Sender: %s%s message with seqNum=%d for %s from %s", 
                         (message.cancel) ? "canceling ":"sending", (message.cancel) ? message.smsc_id.c_str():"",
                         seqNumber, message.abonent.c_str(), message.caller_abonent.c_str());
 
-
     Address oa, da;
-    const char* oaStr;
-    if ( processor.isGroupSmsByCallingAbonent() )
-      oaStr = message.caller_abonent.c_str();
-    else
-      oaStr = processor.getAddress();
+    const char* oaStr = message.caller_abonent.c_str();
 
     if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
       smsc_log_error(logger, "Invalid originating address '%s'", oaStr ? oaStr:"-");
@@ -301,33 +282,31 @@ public:
       smsc_log_error(logger, "Invalid destination address '%s'", daStr ? daStr:"-");
       return false;
     }
-        
+
     if (message.cancel)
     {
-      //smsc_log_debug(logger, "CANCEL SMSC_ID=%s da=%s", message.smsc_id.c_str(), daStr);
       PduCancelSm sm;
 
       sm.set_messageId(message.smsc_id.c_str());
       sm.get_source().set_typeOfNumber(oa.type);
       sm.get_source().set_numberingPlan(oa.plan);
       sm.get_source().set_value(oa.value);
-      sm.get_dest()  .set_typeOfNumber(da.type);
-      sm.get_dest()  .set_numberingPlan(da.plan);
-      sm.get_dest()  .set_value(da.value);
-            
+      sm.get_dest().set_typeOfNumber(da.type);
+      sm.get_dest().set_numberingPlan(da.plan);
+      sm.get_dest().set_value(da.value);
+
       sm.get_header().set_commandLength(sm.size());
       sm.get_header().set_commandId(SmppCommandSet::CANCEL_SM);
       sm.get_header().set_commandStatus(0);
       sm.get_header().set_sequenceNumber(seqNumber);
-            
+
       asyncTransmitter->sendPdu(&(sm.get_header()));
     }
     else if(message.data_sm)
     {
-
       const char* out  = message.GetMsg();//.message.c_str();
       int outLen = message.GetMsgLen();//message.length();
-            
+
       char* msgBuf = 0;
       int msgDataCoding = DataCoding::LATIN1;
       if(hasHighBit(out,outLen))
@@ -341,8 +320,6 @@ public:
         out = msgBuf; outLen = msgLen;
       }
 
-      //            time_t smsValidityDate = time(NULL) + processor.getDaysValid()*3600*24;
-            
       EService svcType;
       strncpy(svcType, processor.getSvcType(), MAX_ESERVICE_TYPE_LENGTH);
       svcType[MAX_ESERVICE_TYPE_LENGTH]='\0';
@@ -369,12 +346,10 @@ public:
       sm.get_header().set_sequenceNumber(seqNumber);
 
       if (msgBuf) delete msgBuf;
-      //sm.dump(stdout, 1);
-			
+
       smsc_log_debug(logger, "Sending DATA_SM to %s with seqNum = %d", daStr, sm.get_header().get_sequenceNumber());
       asyncTransmitter->sendPdu(&(sm.get_header()));
       TrafficControl::incOutgoing();
-
     }
     else if(message.secured_data)
     {
@@ -412,18 +387,16 @@ public:
       sm.get_header().set_sequenceNumber(seqNumber);
 
       if (msgBuf) delete msgBuf;
-      //sm.dump(stdout, 1);
-			
+
       smsc_log_debug(logger, "Sending DATA_SM to %s with seqNum = %d", daStr, sm.get_header().get_sequenceNumber());
       asyncTransmitter->sendPdu(&(sm.get_header()));
       TrafficControl::incOutgoing();
-
     }
     else
     {
       const char* out  = message.GetMsg();
       int outLen = message.GetMsgLen();
-            
+
       char* msgBuf = 0;
       int msgDataCoding = DataCoding::LATIN1;
       if(hasHighBit(out,outLen))
@@ -438,13 +411,13 @@ public:
       }
 
       time_t smsValidityDate = time(NULL) + processor.getDaysValid()*3600*24;
-            
+
       EService svcType;
       strncpy(svcType, processor.getSvcType(), MAX_ESERVICE_TYPE_LENGTH);
       svcType[MAX_ESERVICE_TYPE_LENGTH]='\0';
 
       PduSubmitSm  sm;
-            
+
       sm.get_message().set_serviceType(svcType);
       sm.get_message().get_source().set_typeOfNumber(oa.type);
       sm.get_message().get_source().set_numberingPlan(oa.plan);
@@ -465,7 +438,7 @@ public:
 
       sm.get_message().set_smDefaultMsgId(0);
       sm.get_message().set_dataCoding(msgDataCoding);
-            
+
       if (outLen > MAX_ALLOWED_MESSAGE_LENGTH)
       {
         if (outLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
@@ -477,7 +450,7 @@ public:
         sm.get_optional().set_messagePayload(out, outLen);
       } 
       else sm.get_message().set_shortMessage(out, outLen);
-            
+
       sm.get_header().set_commandLength(sm.size(false));
       sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
       sm.get_header().set_commandStatus(0);
@@ -522,10 +495,9 @@ private:
     int cmdId	= pdu->get_commandId();
     int seqNum	= pdu->get_sequenceNumber();
     int status	= pdu->get_commandStatus();
-        
+
     TrafficControl::incIncoming();
     processor.invokeProcessDataSmResp(cmdId, status, seqNum);
-
   }
   void processAlertNotification(SmppHeader *pdu)
   {
@@ -536,65 +508,22 @@ private:
     int ton = alert->get_source().get_typeOfNumber();
     int npi = alert->get_source().get_numberingPlan();
     int ms_availability_status = 0xFF;
-		
+
     if(alert->get_optional().has_msAvailableStatus())
       ms_availability_status = alert->get_optional().get_msAvailableStatus();
 
     const char* source_addr = alert->get_source().get_value();
-    int source_addr_size = strlen(source_addr);
-		
+    uint8_t source_addr_size = static_cast<uint8_t>(strlen(source_addr));
+
     smsc_log_debug(logger, "MCISme: Recieved Alert Notification: ton=%d, npi=%d, source_addr=%s, addr_size=%d avalible = %X", 
                    ton, npi, source_addr, source_addr_size, ms_availability_status);
-    //		if(0 != ms_availability_status)	return;
     AbntAddr	abnt(source_addr_size, ton, npi, source_addr);
     processor.invokeProcessAlertNotification(cmdId, status, abnt);
   }
   void processDeliverySm(SmppHeader *pdu)
   {
     if (!pdu || !asyncTransmitter) return;
-    //bool bNeedResponce = true;
 
-    //SMS sms;
-    //fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
-    //bool isReceipt = (sms.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
-    //    ((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
-    //
-    //if (isReceipt && ((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
-    //{
-    //    const char* msgid = ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
-    //    if (msgid && msgid[0] != '\0')
-    //    {
-    //        bool delivered = false;
-    //        bool expired   = false;
-    //        bool deleted   = false;
-    //        
-    //        if (sms.hasIntProperty(Tag::SMPP_MSG_STATE))
-    //        {
-    //            int msgState = sms.getIntProperty(Tag::SMPP_MSG_STATE);
-    //            switch (msgState)
-    //            {
-    //            case SmppMessageState::DELIVERED:
-    //                delivered = true;
-    //                break;
-    //            case SmppMessageState::EXPIRED:
-    //                expired = true;
-    //                break;
-    //            case SmppMessageState::DELETED:
-    //                deleted = true;
-    //                break;
-    //            case SmppMessageState::ENROUTE:
-    //            case SmppMessageState::UNKNOWN:
-    //            case SmppMessageState::ACCEPTED:
-    //            case SmppMessageState::REJECTED:
-    //            case SmppMessageState::UNDELIVERABLE:
-    //                break;
-    //            default:
-    //                smsc_log_warn(logger, "Invalid state=%d received in reciept !", msgState);
-    //                break;
-    //            }
-    //        }
-    //    }
-    //}
     PduDeliverySmResp smResp;
     smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
     smResp.set_messageId("");
@@ -604,7 +533,6 @@ private:
 public:
   void handleEvent(SmppHeader *pdu)
   {
-
     if (bMCISmeIsConnecting) {
       mciSmeReady.Wait(mciSmeReadyTimeout);
       if (bMCISmeIsConnecting) {
@@ -621,26 +549,6 @@ public:
     case SmppCommandSet::ALERT_NOTIFICATION:
       processAlertNotification(pdu);
       break;
-
-      //if(resp->get_optional().has_deliveryFailureReason())
-      //	printf("faied = %X\n", resp->get_optional().deliveryFailureReason);
-      //else
-      //	printf("OK\n");
-      //if(resp->get_optional().has_networkErrorCode())
-      //	printf("networkErrorCode = %X\n", resp->get_optional().networkErrorCode);
-      //else
-      //	printf("No networkErrorCode \n");
-      //if(resp->get_optional().has_additionalStatusInfoText())
-      //	printf("additionalStatusInfoText = %s\n", resp->get_optional().additionalStatusInfoText);
-      //else
-      //	printf("No additionalStatusInfoText\n");
-      //if(resp->get_optional().has_dpfResult())
-      //	printf("dpfResult = %X\n", resp->get_optional().dpfResult);
-      //else
-      //	printf("No dpfResult\n");
-      //break;
-      //resp->dump(stdout, 1);
-
     case SmppCommandSet::DELIVERY_SM:
       smsc_log_debug(logger, "Received DELIVERY_SM seq_num = %d", pdu->get_sequenceNumber());	
       processDeliverySm(pdu);
@@ -658,10 +566,10 @@ public:
       smsc_log_debug(logger, "Received unsupported Pdu !");
       break;
     }
-        
+
     disposePdu(pdu);
   }
-    
+
   void handleError(int errorCode)
   {
     smsc_log_error(logger, "Transport error handled! Code is: %d", errorCode);
@@ -679,6 +587,7 @@ extern "C" void appSignalHandler(int sig)
     setNeedStop(true);
   }
 }
+
 extern "C" void atExitHandler(void)
 {
   smsc::util::xml::TerminateXerces();
@@ -695,6 +604,7 @@ extern "C" void setShutdownHandler(void)
   }
   sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
 }
+
 extern "C" void clearSignalMask(void)
 {
   sigset_t set;
@@ -718,29 +628,28 @@ struct ShutdownThread : public Thread
     setShutdownHandler();
     shutdownEvent.Wait();
     return 0;
-  };
+  }
   void Stop() {
     shutdownEvent.Signal();    
-  };
+  }
 } shutdownThread;
 
 class MCISmeAdministrator : public MCISmeAdmin
 {
 private:
-    
+
   AdminInterface& admin;
 
 public:
-    
   MCISmeAdministrator(AdminInterface& _admin) : MCISmeAdmin(), admin(_admin) {};
   virtual ~MCISmeAdministrator() {};
 
   virtual void flushStatistics() {
     admin.flushStatistics();
-  };
+  }
   virtual EventsStat  getStatistics() {
     return admin.getStatistics();
-  };
+  }
   virtual RuntimeStat getRuntimeStatistics()
   {
     int inSpeed = 0; int outSpeed = 0;
@@ -749,7 +658,7 @@ public:
     int outQueueSize = admin.getOutQueueSize();
     TrafficControl::getTraffic(inSpeed, outSpeed);
     return RuntimeStat(activeTasks, inQueueSize, outQueueSize, inSpeed, outSpeed);
-  };
+  }
   virtual std::string getSchedItem(const std::string& Abonent)
   {
     return admin.getSchedItem(Abonent);
@@ -765,7 +674,7 @@ int main(void)
 {
   Logger::Init();
   logger = Logger::getInstance("smsc.mcisme.MCISme");
-	
+
   atexit(atExitHandler);
   clearSignalMask();
   shutdownThread.Start();
@@ -813,6 +722,9 @@ int main(void)
                     "The preffered max value is 400 messages per second", outgoingSpeedMax);
     }
 
+    ConfigView mcaEventsStorageConfig(manager, "MCISme.MCAEventStorage");
+    MCAEventsStorageRegister::init(mcaEventsStorageConfig);
+
     std::auto_ptr<ConfigView> profStorCfgGuard(tpConfig.getSubConfig("ProfileStorage"));
     ConfigView* profStorCfg = profStorCfgGuard.get();
     string locationProfStor;
@@ -834,43 +746,41 @@ int main(void)
       }
       else
         smsc_log_warn(logger, "ProfilesStorageServer NOT started - illegal port %d.", portProfStor);
-    } 
+    }
     catch (...)
     {
       smsc_log_warn(logger, "Parameter <MCISme.ProfileStorage.port> missed. ProfilesStorageServer NOT started");
     }
-    //		sleep(60);
-    //		exit(0);
 
     ConfigView adminConfig(manager, "MCISme.Admin");
     smsc_log_debug(logger, "%s %d", adminConfig.getString("host"), adminConfig.getInt("port"));
     adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));               
     bAdminListenerInited = true;
-        
+
     TaskProcessor processor(&tpConfig);
 
     taskProcessor = &processor;
-        
+
     MCISmeAdministrator adminHandler(processor);
     MCISmeComponent admin(adminHandler);                   
     ComponentManager::registerComponent(&admin); 
     adminListener->Start();
-       
+
     ConfigView smscConfig(manager, "MCISme.SMSC");
     MCISmeConfig cfg(&smscConfig);
-		
+
     while (!isNeedStop())
     {
       MCISmePduListener       listener(processor);
       SmppSession             session(cfg, &listener);
       MCISmeMessageSender     sender(processor, &session);
-            
+
       smsc_log_info(logger, "Connecting to SMSC ... ");
       try
       {
         listener.setSyncTransmitter(session.getSyncTransmitter());
         listener.setAsyncTransmitter(session.getAsyncTransmitter());
-                
+
         bMCISmeIsConnecting = true;
         mciSmeReady.Wait(0);
         TrafficControl::startControl();
@@ -898,7 +808,7 @@ int main(void)
       processor.Run();
       clearSignalMask();
       smsc_log_info(logger, "Message send loop exited");
-            
+
       smsc_log_info(logger, "Disconnecting from SMSC ...");
       TrafficControl::stopControl();
       processor.assignMessageSender(0);
@@ -927,15 +837,13 @@ int main(void)
     smsc_log_error(logger, "Unknown exception: '...' caught. Exiting");
     resultCode = -5;
   }
-    
+
   if (bAdminListenerInited)
   {
     adminListener->shutdown();
     adminListener->WaitFor();
   }
 
-  //    DataSourceLoader::unload();
-  //ProfilesStorage::Close();
   smsc_log_debug(logger, "Exited !!!");
   shutdownThread.Stop();
   return resultCode;
