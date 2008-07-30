@@ -45,6 +45,7 @@ using core::synchronization::Mutex;
 
 const int MAX_EVENTS = 50;
 const int MAX_BDFILES_INCR = 10000;
+const int DEFAULT_BDFILES_INCR = 1000;
 
 //	ќписани€ сопутствующих структур данных.
 
@@ -53,26 +54,19 @@ struct event_cell
 {
   time_t          date;
   uint8_t         id;
-  AbntAddrValue	calling_num;
-  uint8_t         reserved[16 - sizeof(uint8_t) - sizeof(AbntAddrValue)];
+  AbntAddrValue	  callingNum;
+  uint16_t        callCount;
 };
 
 //	структура файла событий дл€ абонентов
 struct dat_file_cell
 {
-  time_t			schedTime;
-  uint8_t         event_count;
-  uint16_t	    last_error;
-  AbntAddrValue	inaccessible_num;
-  uint8_t         reserved[16 - sizeof(uint8_t) - sizeof(AbntAddrValue) - sizeof(uint16_t)];
-  event_cell      events[MAX_EVENTS];
-};
-
-//	структура файла индексов
-struct idx_file_cell
-{
-  AbntAddrValue		inaccessible_num;
-  //		uint32_t	cell_num;
+  time_t        schedTime;
+  uint8_t       eventCount;
+  uint16_t      lastError;
+  AbntAddrValue	calledNum;
+  uint8_t       recordIsActive;
+  event_cell    events[MAX_EVENTS];
 };
 
 //	очередь свободных €чеек(позици€ в файле) дл€ файла индексов и файла событий дл€ абонентов.
@@ -133,14 +127,11 @@ public:
 
 class FSStorage: public Storage
 {
-	
-  smsc::logger::Logger *logger;
-
 public:
 
   FSStorage();
   ~FSStorage();
-	
+
   int Init(smsc::util::config::ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue);
   int Init(const string& location, time_t eventLifeTime, uint8_t maxEvents, DeliveryQueue* pDeliveryQueue);
   virtual void addEvent(const AbntAddr& CalledNum, const MCEvent& event, time_t schedTime);
@@ -149,41 +140,28 @@ public:
   void deleteEvents(const AbntAddr& CalledNum, const vector<MCEvent>& events);
 
 private:
-
-  //	FreeCells	freeIdxCells;	//	список свободных €чеек(номер записи. позици€ в файле определ€етс€ индекс*размер_записи) дл€ файла индексов.
-  //	FreeCells	freeDatCells;	//	список свободных €чеек(номер €чейки) в файле файле событий дл€ абонентов.
+  smsc::logger::Logger *logger;
   FreeCells	freeCells;			//	список свободных €чеек(номер €чейки).
 
   //	хэш-таблица абонентов, дл€ которых существуют событи€.
   //	 люч - абонент, значение - индекс в файле событий дл€ абонентов
   //				(номер записи. позици€ в файле определ€етс€ индекс*размер_записи).
   //
-  HashAbnt	hashAbnt;
-	
-  string		pathDatFile;
-  string		pathIdxFile;
-  string		pathTransFile;
-  uint8_t		policy;
-  uint32_t	bdFilesIncr;
-  int			fd_dat;
-  int			fd_idx;
-  int			fd_trans;
-	
-  File		dat_file;
-  File		idx_file;
-  File		trans_file;
+  HashAbnt  hashAbnt;
 
-  uint8_t		maxEvents;
-  time_t		eventLifeTime;
-  //	const uint32_t	incrValue;
+  string    pathDatFile;
+  uint32_t  bdFilesIncr;
 
-  uint8_t		*zero_dat_cell;
-  uint8_t		*zero_idx_cell;
-  uint8_t		*zero_event_cell;
+  File      _dat_file;
 
-  Mutex		mut;
+  uint8_t   maxEvents;
+  time_t    eventLifeTime;
 
-  int	OpenFiles(void);
+  unsigned int _first_free_cell_num;
+
+  Mutex	    mut;
+
+  int  OpenFiles(void);
   void CloseFiles(void);
   int CompleteTransaction(void);
   int LoadEvents(DeliveryQueue* pDeliveryQueue);
@@ -192,15 +170,25 @@ private:
   int DestroyAbntEvents(const AbntAddr& CalledNum);
   int SaveAbntEvents(const AbntAddr& CalledNum, const dat_file_cell* pAbntEvents);
   int LoadAbntEvents(const AbntAddr& CalledNum, dat_file_cell* pAbntEvents);
-  int AddAbntEvent(dat_file_cell* pAbntEvents, const MCEvent& event);
-  int RemoveAbntEvents(dat_file_cell* pAbntEvents, const vector<MCEvent>& events);
-  int RemoveEvent(dat_file_cell* pAbntEvents, const MCEvent& event);
+  void AddAbntEvent(dat_file_cell* pAbntEvents, const MCEvent& event);
+  void RemoveAbntEvents(dat_file_cell* pAbntEvents, const vector<MCEvent>& events);
+  void RemoveEvent(dat_file_cell* pAbntEvents, const MCEvent& event);
   int KillExpiredEvents(dat_file_cell* pAbntEvents);		// убирает событи€ у которых истек срок доставки и возвращает кол-во уничтоженны событий.
 
-  int IncrIdxFile(const uint32_t& num_cells);
   int IncrDatFile(const uint32_t& num_cells);
   int IncrStorage(const uint32_t& num_cells);
 
+  void replaceOldestEvent(dat_file_cell* pAbntEvents,
+                          const MCEvent& event);
+  void EraseEvent(dat_file_cell* pAbntEvents, int eventNum);
+  bool findAndUpdateEventDateAndCallCount(dat_file_cell* pAbntEvents,
+                                          const AbntAddrValue& caller);
+  void insertEventIntoPosition(dat_file_cell* pAbntEvents,
+                               unsigned int idx,
+                               const MCEvent& event);
+
+  void store_E_Event_in_logstore(const AbntAddrValue& calledAbonent,
+                                 const AbntAddrValue& callingAbonent);
 };
 
 };	//  namespace mcisme
