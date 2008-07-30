@@ -65,7 +65,7 @@ public:
 #ifdef linux
     struct timeval now;
     struct timespec tv;
-    int retcode;
+    // int retcode;
 
     gettimeofday(&now,0);
     tv.tv_sec = now.tv_sec + timeout/1000;
