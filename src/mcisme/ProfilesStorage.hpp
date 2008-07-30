@@ -17,11 +17,12 @@
 #include <core/threads/ThreadedTask.hpp>
 
 #include <core/buffers/DiskHash.hpp>
-
-#include <mcisme/AbntAddr.hpp>
-#include <mcisme/Profiler.h>
-#include <mcisme/ProfilesStorageKeys.hpp>
 #include <core/buffers/File.hpp>
+
+#include "AbntAddr.hpp"
+#include "Profiler.h"
+#include "ProfilesStorageKeys.hpp"
+#include "MCAEventsStorage.hpp"
 
 namespace smsc {
 namespace mcisme {
@@ -30,12 +31,6 @@ using namespace core::synchronization;
 using namespace core::buffers;
 
 typedef DiskHash<StrKey<28>,AbntProfKey> AddrDiskHash;
-
-//const uint8_t DefaultEventMask = 0xFF;
-//const uint8_t DefaultInformTemplateId = -1;
-//const uint8_t DefaultNotifyTemplateId = -1;
-//const bool DefaultInform = true;
-//const bool DefaultNotify = false;
 
 class ProfilesStorage
 {
@@ -60,8 +55,7 @@ public:
     {
       profiles.Close();
       _isOpen = false;
-    }
-    catch(...)
+    } catch(...)
     {
       smsc_log_debug(logger, "Exception in ProfileStorage::Close");
     }
@@ -111,11 +105,17 @@ public:
   }
 
 private:
+  void store_P_Event_in_logstore(const std::string& abonent,
+                                 unsigned int notifyFlag)
+  {
+    MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_ChangeAbonentProfile(abonent, notifyFlag));
+  }
 
   void _Set(const AbntAddr& abnt, const AbonentProfile& prof)
   {
     StrKey<28>	key = abnt.toString().c_str();
     AbntProfKey	value(prof.eventMask, prof.informTemplateId, prof.notifyTemplateId, prof.inform, prof.notify, prof.wantNotifyMe);
+    store_P_Event_in_logstore(abnt.getText(), prof.notify);
     profiles.Delete(key);
     profiles.Insert(key, value);
   }
@@ -150,11 +150,6 @@ private:
   static smsc::logger::Logger *logger;
 };
 
-//ProfilesStorage* ProfilesStorage::pInstance=0;
-//AddrDiskHash	ProfilesStorage::profiles;
-//Mutex			ProfilesStorage::mutex;
-//bool			ProfilesStorage::_isOpen = false;
-
-};	//  namespace msisme
-};	//  namespace smsc
+}	//  namespace msisme
+}	//  namespace smsc
 #endif
