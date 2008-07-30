@@ -69,6 +69,11 @@ public:
     size_t size() const {
         return buf_.size();
     }
+
+    /// write buffer of size sz.
+    /// This method is provided to co-work with other serializer types.
+    /// NOTE: see also Deserializer::read().
+    void write( uint32_t sz, const char* buf );
     
     uint32_t checksum( size_t pos1, size_t pos2 ) const {
         return dochecksum( buf_, pos1, pos2 );
@@ -95,6 +100,10 @@ public:
     Deserializer& operator >> ( const char* ) throw ( DeserializerException );
     Deserializer& operator >> ( std::string& ) throw ( DeserializerException );
     Deserializer& operator >> ( Buf& ) throw ( DeserializerException );
+
+    /// read buffer previously written via Serializer::write().
+    /// you have to treat the return value as a buffer of length sz!
+    const char* read( uint32_t& sz ) throw (DeserializerException);
 
     inline size_t size() const {
         return buf_.size();

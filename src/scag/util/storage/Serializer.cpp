@@ -56,6 +56,15 @@ namespace storage {
     }
 
 
+    void Serializer::write( uint32_t sz, const char* buf )
+    {
+        cvt.longs[0] = htonl(sz);
+        std::copy( buf, buf+sz,
+                   std::copy( cvt.bytes, cvt.bytes+4, ensure(sz+4) ));
+        return *this;
+    }
+
+
     Deserializer& Deserializer::operator >> ( uint8_t& i ) throw (DeserializerException )
     {
         readbuf( & static_cast<unsigned char&>(i), 1 ); 
@@ -120,6 +129,18 @@ namespace storage {
         i.assign( &(buf_[rpos_]), &(buf_[rpos_]) + sz );
         rpos_ += sz;
         return *this;
+    }
+
+
+    const char* Deserializer::read( uint32_t& size ) throw (DeserializerException)
+    {
+        uint32_t sz;
+        *this >> sz;
+        rcheck( sz );
+        size = sz;
+        const char* ret = reinterpret_cast<const char*>(&buf_[rpos_]);
+        rpos_ += sz;
+        return ret;
     }
 
 
