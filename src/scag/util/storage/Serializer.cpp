@@ -61,7 +61,6 @@ namespace storage {
         cvt.longs[0] = htonl(sz);
         std::copy( buf, buf+sz,
                    std::copy( cvt.bytes, cvt.bytes+4, ensure(sz+4) ));
-        return *this;
     }
 
 
