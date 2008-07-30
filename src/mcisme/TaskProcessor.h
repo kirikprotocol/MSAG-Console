@@ -76,9 +76,9 @@ protected:
 
 struct sms_info
 {
-  time_t				sending_time;
-  AbntAddr			abnt;
-  vector<MCEvent>		events;
+  time_t          sending_time;
+  AbntAddr        abnt;
+  vector<MCEvent> events;
 };
 
 class TimeoutMonitor;
@@ -89,38 +89,35 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
 
   smsc::logger::Logger *logger;
 
-  int		protocolId, daysValid;
-  std::string	svcType, address;
+  int              protocolId, daysValid;
+  std::string      svcType, address;
 
-  int     	releaseCallsStrategy;
-  int		stkTemplateId;
+  int              releaseCallsStrategy;
+  int              stkTemplateId;
 
-  Storage*	pStorage;
-  DeliveryQueue*	pDeliveryQueue;
+  Storage*         pStorage;
+  DeliveryQueue*   pDeliveryQueue;
 
-  TemplateManager*	templateManager;
-  MCIModule*		mciModule;
+  TemplateManager* templateManager;
+  MCIModule*     mciModule;
 
-  Mutex		messageSenderLock;
-  MessageSender*	messageSender;
+  Mutex          messageSenderLock;
+  MessageSender* messageSender;
 
-  Advertising*	advertising;
-  bool		useAdvert;
+  Advertising*   advertising;
+  bool           useAdvert;
 
-  ProfilesStorage*	profileStorage;
-  StatisticsManager*	statistics;
-  TimeoutMonitor*		timeoutMonitor;
-  time_t			responseWaitTime;
+  ProfilesStorage*   profileStorage;
+  StatisticsManager* statistics;
+  TimeoutMonitor*    timeoutMonitor;
+  time_t             responseWaitTime;
 
-  //EventMonitor    smscIdMonitor;
   Hash<bool>      lockedSmscIds;
 
-  IntHash<sms_info*>	smsInfo;
-  Mutex			smsInfoMutex;
+  IntHash<sms_info*> smsInfo;
+  Mutex	             smsInfoMutex;
 
-  bool	forceInform, forceNotify;
-
-  //EventMonitor		tasksMonitor;
+  bool    forceInform, forceNotify;
 
   Mutex   startLock;
   Event   exitedEvent;
@@ -128,53 +125,59 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   int                             maxInQueueSize; //, maxOutQueueSize;
   EventMonitor                    inQueueMonitor; //, outQueueMonitor;
   CyclicQueue<MissedCallEvent>    inQueue;
-//  CyclicQueue<Message>            outQueue;
 
-  bool   _groupSmsByCallingAbonent, _isUseWantNotifyPolicy;
+  bool _isUseWantNotifyPolicy;
+  bool _originatingAddressIsMCIAddress;
 
   void openInQueue();
   void closeInQueue();
   bool putToInQueue(const MissedCallEvent& event, bool skip=true);
   bool getFromInQueue(MissedCallEvent& event);
   string getBanner(const AbntAddr& abnt);
-  void test_stk(void);    
-  void test_sched(void);
-  void test_advert(void);
-  //void openOutQueue();
-  //void closeOutQueue();
-  //bool putToOutQueue(const Message& event, bool force=false);
-  //bool getFromOutQueue(Message& event);
 
   void ProcessAbntEvents(const AbntAddr& abnt);
   bool GetAbntEvents(const AbntAddr& abnt, vector<MCEvent>& events);
-  void SendAbntOnlineNotifications(const sms_info* pInfo);
-  void StopProcessEvent4Abnt(const AbntAddr& abnt);
+  void SendAbntOnlineNotifications(const sms_info* pInfo,
+                                   const AbonentProfile& profile);
 
   bool needNotify(const AbonentProfile& profile, const sms_info* pInfo) const;
+
+  bool originatingAddressIsMCIAddress() const { return _originatingAddressIsMCIAddress; }
+  bool sendMessage(const AbntAddr& abnt, const Message& msg, const MCEventOut& outEvent);
+
+  void store_D_Event_in_logstore(const AbntAddr& abnt,
+                                 const vector<MCEvent>& events,
+                                 const AbonentProfile& abntProfile);
+
+  void store_F_Event_in_logstore(const AbntAddr& abnt,
+                                 const vector<MCEvent>& events);
+
+  void store_N_Event_in_logstore(const std::string& calledAbonent,
+                                 const std::string& callingAbonent);
+
+  void store_A_Event_in_logstore(const AbntAddr& callingAbonent,
+                                 const AbntAddr& calledAbonent,
+                                 const AbonentProfile& abntProfile);
+
 public:
 
   TaskProcessor(ConfigView* config);
   virtual ~TaskProcessor();
 
-  int getDaysValid()       { return daysValid;  };
-  int getProtocolId()      { return protocolId; };
+  int getDaysValid()       { return daysValid;  }
+  int getProtocolId()      { return protocolId; }
 
-  bool isGroupSmsByCallingAbonent() const { return _groupSmsByCallingAbonent; }
-
-  const char* getSvcType() { return (svcType.c_str()!="") ? svcType.c_str():"MCISme"; };
-  const char* getAddress() { return address.c_str(); };
+  const char* getSvcType() { return (svcType.c_str()!="") ? svcType.c_str():"MCISme"; }
+  const std::string& getAddress() const { return address; }
 
   void assignMessageSender(MessageSender* sender) {
     MutexGuard guard(messageSenderLock);
     messageSender = sender;
-  };
+  }
   bool isMessageSenderAssigned() {
     MutexGuard guard(messageSenderLock);
     return (messageSender != 0);
-  };
-
-  //    void lockSmscId(const char* smsc_id);
-  //    void freeSmscId(const char* smsc_id);
+  }
 
   void Run();             // outQueue processing
   virtual int Execute();  // inQueue processing
@@ -183,10 +186,9 @@ public:
 
   virtual void missed(MissedCallEvent event) {
     putToInQueue(event);
-  };
+  }
 
   virtual bool invokeProcessDataSmResp(int cmdId, int status, int seqNum);
-  //	virtual void invokeProcessDataSmTimeout(int seqNum);
   virtual void invokeProcessDataSmTimeout(void);
   virtual bool invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt);
 
@@ -217,110 +219,7 @@ public:
   virtual string getSchedItems(void);
 };
 
-//class TimeoutMonitor : public Thread
-//{
-//	smsc::logger::Logger*   logger;
-//	TaskProcessor*		processor;
-//	uint32_t			timeout;
-//	map<time_t, int>	seqNums;
-//	EventMonitor		awakeMonitor;
-//	Mutex				startLock;
-//	Event				exitedEvent;
-//	bool				bStarted, bNeedExit;
-//
-//public:
-//	
-//	TimeoutMonitor(TaskProcessor* _processor, uint32_t to):
-//	  processor(_processor), timeout(to),
-//	  logger(Logger::getInstance("mci.TimeoutM")) 
-//	  {}
-//    virtual int Execute()
-//	{
-//		clearSignalMask();
-//
-//		while (!bNeedExit)
-//		{
-//			MutexGuard lock(awakeMonitor);
-//			map<time_t, int>::iterator	It=seqNums.begin();
-//			
-//			time_t curTime = time(0);
-//			time_t awakeTime = (It != seqNums.end())?It->first:curTime+600;
-//			if(awakeTime > curTime)
-//			{
-//				uint32_t toSleep = (awakeTime - curTime)*1000;
-//				smsc_log_debug(logger, "TimeoutMonitor: Start wait %d ms", toSleep);
-//				awakeMonitor.wait(toSleep);
-//				smsc_log_debug(logger, "TimeoutMonitor: End wait");
-//			}
-//			else
-//			{
-//				int seqNum = It->second;
-//				smsc_log_debug(logger, "TimeoutMonitor: Timeout has passed for SMS seqNum %d", seqNum);
-//				processor->invokeProcessDataSmTimeout(seqNum);
-//				seqNums.erase(It);
-//			}
-//		}
-//		smsc_log_info(logger, "TimeoutMonitor Exiting ...");
-////		exitedEvent.Signal();
-//		return 0;	
-//	}
-//	void Start()
-//	{
-//		MutexGuard guard(startLock);
-//	    
-//		if (!bStarted)
-//		{
-//			smsc_log_info(logger, "TimeoutMonitor Starting ...");
-//			bNeedExit = false;
-//			Thread::Start();
-//			bStarted = true;
-//			smsc_log_info(logger, "TimeoutMonitor Started.");
-//		}	
-//	}
-//	void Stop()
-//	{
-//		MutexGuard  guard(startLock);
-//	    
-//		if (bStarted)
-//		{
-//			smsc_log_info(logger, "TimeoutMonitor Stopping ...");
-//			bNeedExit = true;
-//			awakeMonitor.notify();
-////			exitedEvent.Wait();
-//			WaitFor();
-//			bStarted = false;
-//			smsc_log_info(logger, "TimeoutMonitor Stopped.");
-//		}
-//	}
-//
-//	void addSeqNum(int seqNum)
-//	{
-//		MutexGuard lock(awakeMonitor);
-//		seqNums.insert(multimap<time_t, int>::value_type(time(0) + timeout, seqNum));
-//		awakeMonitor.notify();
-//		smsc_log_debug(logger, "Added SMS (seqNum = %d) to monitoring list (total = %d).", seqNum, seqNums.size());
-//	}
-//	void removeSeqNum(int seqNum)
-//	{
-//		MutexGuard lock(awakeMonitor);
-//		map<time_t, int>::iterator	It;
-//		for(It = seqNums.begin(); It != seqNums.end(); ++It)
-//		{
-//			if(It->second == seqNum)
-//			{
-//				seqNums.erase(It);
-//				awakeMonitor.notify();
-//				smsc_log_debug(logger, "Removed SMS (seqNum = %d) from monitoring list (total = %d).", seqNum, seqNums.size());
-//				return;
-//			}
-//		}
-//		smsc_log_debug(logger, "Removing SMS (seqNum = %d) from monitoring list - failed. No such seqNum. (total = %d)", seqNum, seqNums.size());
-//	}
-//	
-//};
-
-
-};
-};
+}
+}
 
 #endif
