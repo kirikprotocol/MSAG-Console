@@ -14,6 +14,7 @@
 #include <sms/sms_const.h>
 #include <util/crc32.h>
 #include <vector>
+#include <sstream>
 
 namespace smsc {
 namespace mcisme {
@@ -105,8 +106,8 @@ public:
       }
       value.addr_content.type = (uint8_t)itype;
       value.addr_content.plan = (uint8_t)iplan;
-      value.addr_content.length = strlen(addr_value);
-      setValue(strlen(addr_value), addr_value);
+      value.addr_content.length = static_cast<uint8_t>(strlen(addr_value));
+      setValue(static_cast<uint8_t>(strlen(addr_value)), addr_value);
     }
   }
 
@@ -294,17 +295,18 @@ public:
 
 struct MCEvent
 {
-  uint8_t	id;
-  time_t	dt;
-  AbntAddrValue	caller;	//uint8_t	caller[15];
+  uint8_t       id;
+  time_t        dt;
+  AbntAddrValue	caller;
+  uint16_t      callCount;
 
-  MCEvent(const uint8_t& _id):id(_id){}
-  MCEvent():id(0), dt(0)
+  MCEvent(const uint8_t& _id):id(_id),dt(0),callCount(0) {}
+  MCEvent():id(0), dt(0), callCount(0)
   {
     memset((void*)&(caller.full_addr), 0xFF, sizeof(caller.full_addr));
   }
 
-  MCEvent(const MCEvent& e): id(e.id), dt(e.dt)
+  MCEvent(const MCEvent& e): id(e.id), dt(e.dt), callCount(e.callCount)
   {
     memcpy((void*)&(caller.full_addr), (void*)&(e.caller.full_addr), sizeof(caller.full_addr));
   }
@@ -319,20 +321,46 @@ struct MCEvent
     if(&e == this)
       return *this;
 
-    id = e.id; dt = e.dt;
+    id = e.id; dt = e.dt; callCount = e.callCount;
     memcpy((void*)&(caller.full_addr), (void*)&(e.caller.full_addr), sizeof(caller.full_addr));
     return *this;
   }
 
+  std::string toString() const {
+    std::ostringstream result;
+
+    result << "id=" << uint_t(id)
+           << ",dt=" << dt
+           << ",caller=" << AbntAddr(&caller).getText()
+           << ",callCount=" << callCount;
+
+    return result.str();
+  }
 };
 
 struct MCEventOut {
   MCEventOut(const std::string& aCaller, const std::string& aMsg) : caller(aCaller), msg(aMsg) {}
 
-  //addSourceEvent(const MCEvent& srcEvent) { srcEvents.push_back(srcEvent); }
   std::string caller;
   std::string msg;
   std::vector<MCEvent> srcEvents;
+
+  std::string toString() const {
+    std::ostringstream result;
+    result << "caller=[" << caller
+           << "],msg=[" << msg
+           << "],srcEvents=[";
+
+    for(std::vector<MCEvent>::const_iterator iter = srcEvents.begin(), end_iter = srcEvents.end();
+        iter != end_iter;) {
+      result << iter->toString();
+      if ( ++iter != end_iter )
+        result << ",";
+    }
+    result << "]";
+
+    return result.str();
+  }
 };
 
 };	//  namespace mcisme
