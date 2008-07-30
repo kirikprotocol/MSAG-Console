@@ -17,9 +17,9 @@ const char* MSG_TEMPLATE_PARAM_ROWS    = "rows";
 
 static const char*  UNKNOWN_CALLER = "XXX";
 
-const int MAX_MSG_LATIN_LEN = 600; //160;
-const int MAX_MSG_RUS_LEN = 256;
-const int MAX_MSG_LENS[2] = {MAX_MSG_LATIN_LEN, MAX_MSG_RUS_LEN};
+const unsigned int MAX_MSG_LATIN_LEN = 600; //160;
+const unsigned int MAX_MSG_RUS_LEN = 256;
+const unsigned int MAX_MSG_LENS[2] = {MAX_MSG_LATIN_LEN, MAX_MSG_RUS_LEN};
 
 void keyIsNotSupported(const char* key) throw(AdapterException) {
   throw AdapterException(Exception("Argument '%s' is not supported by message formatter", key));
@@ -104,253 +104,110 @@ bool MessageFormatter::isLastFromCaller(int index)
   return true;
 }
 
-void MessageFormatter::formatMessage(const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEventOut>& for_send, const std::string& smscAddress, int timeOffset/*=0*/)
+bool
+MessageFormatter::formatMessage(const AbntAddr& abnt,
+                                const vector<MCEvent>& mc_events,
+                                MCEventOut* for_send,
+                                const std::string& mciSmeAddress,
+                                int timeOffset,
+                                bool originatingAddressIsMciSmeAddress)
 {
-  if (mc_events.size() <= 0) return;
+  if (mc_events.size() <= 0) return false;
 
-  std::string toAbnt = abnt.getText();
+  const std::string& toAbnt = abnt.getText();
   ContextEnvironment ctx;
   const std::string unknownCaller = formatter->getUnknownCaller();
-  OutputFormatter*  multiFormatter = formatter->getMultiFormatter();
-  OutputFormatter*  singleFormatter = formatter->getSingleFormatter();
-  size_t	mc_events_count = mc_events.size();
-  int hibit=0;
+  size_t            mc_events_count = mc_events.size();
 
-  if(formatter->isGroupping())
+  int total = 0;
+
+  for (int i = 0; i < mc_events_count; i++)
   {
-//    Hash<bool>	callers;
-    int total = 0;
-//    for (int i = start_from; i < mc_events_count; i++)
-    {
-      int	count = 0;
-      int i = start_from;
-      time_t convertedTime = 0;
-      AbntAddr from(&(mc_events[i].caller));
-      const char* fromStr = (from.getText().length() > 0) ? from.getText().c_str():UNKNOWN_CALLER;
-      if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
-        fromStr = unknownCaller.c_str();
-//      if(!callers.Exists(fromStr))
-      {
-//        callers.Insert(fromStr, true);
-        convertedTime = mc_events[i].dt + timeOffset; //timeOffset*3600;
-        count++;
+    smsc_log_debug(logger, "MessageFormatter::formatMessage::: process next event: event idx=%d", i);
+    AbntAddr from(&(mc_events[i].caller));
 
-        std::vector<MCEvent> srcEventLst;
-        srcEventLst.push_back(mc_events[i]);
+    const std::string& fromAbnt = (from.getText().empty() ? unknownCaller : from.getText());
 
-        for(int j = i + 1; j < mc_events_count; j++)
-        {
-          AbntAddr test(&(mc_events[j].caller));
-          const char* testStr = (test.getText().length() > 0) ? test.getText().c_str():UNKNOWN_CALLER;
-          if (testStr == UNKNOWN_CALLER || (strcmp(testStr, UNKNOWN_CALLER) == 0))
-            testStr = unknownCaller.c_str();
-          if(0 == strcmp(testStr, fromStr))
-          {
-            time_t t = mc_events[j].dt + timeOffset; //*3600;
-            if(t > convertedTime) 
-              convertedTime = t;
-            srcEventLst.push_back(mc_events[j]);
-            count++;
-          }
-        }
-        total += count;
+    const std::string& report_msg_for_client =
+      produceMessageForAbonent(toAbnt, fromAbnt, mc_events[i].callCount, mc_events[i].dt + timeOffset, &total, &ctx);
 
-        InformGetAdapter info_adapter(toAbnt, fromStr, count, convertedTime);
-        std::string rows = "";
-        if( count > 1 ) multiFormatter->format(rows, info_adapter, ctx);
-        else singleFormatter->format(rows, info_adapter, ctx);
+    unsigned int hibit = hasHighBit(report_msg_for_client.c_str(), report_msg_for_client.length()); 
 
-        OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
-        MessageGetAdapter msg_adapter(toAbnt, rows, total);
-        std::string report_msg_for_client;
-        messageFormatter->format(report_msg_for_client, msg_adapter, ctx);
-        hibit = hasHighBit(report_msg_for_client.c_str(), report_msg_for_client.length()); 
+    std::string messageOriginatingAddress;
+    if ( fromAbnt == unknownCaller || originatingAddressIsMciSmeAddress )
+      messageOriginatingAddress = mciSmeAddress;
+    else
+      messageOriginatingAddress = fromAbnt;
 
-        std::string messageOriginatingAddress;
-        if ( !strcmp(fromStr, unknownCaller.c_str()) )
-          messageOriginatingAddress = smscAddress;
-        else
-          messageOriginatingAddress = fromStr;
-        if(report_msg_for_client.length() < MAX_MSG_LENS[hibit]) {
-          MCEventOut outEvent(messageOriginatingAddress, report_msg_for_client);
-          outEvent.srcEvents = srcEventLst;
-          for_send.push_back(outEvent);
-        } else {
-          if(i == start_from)
-          {
-            // обрезать смску.
-            report_msg_for_client.resize(MAX_MSG_LENS[hibit]);
-            MCEventOut outEvent(messageOriginatingAddress, report_msg_for_client);
-            outEvent.srcEvents.assign(1, mc_events[i]);
-            for_send.push_back(outEvent);
-          }
-//          break;
-        }
-      }
-    }
-//    callers.Empty();
+    if ( createMCEventOut(for_send, mc_events[i], originatingAddressIsMciSmeAddress, messageOriginatingAddress, report_msg_for_client, MAX_MSG_LENS[hibit]) ) break;
   }
-  else
-  {
-    for (int i = start_from; i < mc_events_count; i++)
-    {
-      AbntAddr from(&(mc_events[i].caller));
-      const char* fromStr = (from.getText().length() > 0) ? from.getText().c_str():UNKNOWN_CALLER;
-      if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
-        fromStr = unknownCaller.c_str();
-      time_t convertedTime = mc_events[i].dt + timeOffset;//*3600;
 
-      InformGetAdapter info_adapter(toAbnt, fromStr, 1, convertedTime);
-      std::string rows = "";
-      singleFormatter->format(rows, info_adapter, ctx);
+  return true;
+}
 
-      OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
-      MessageGetAdapter msg_adapter(toAbnt, rows, i+1);
-      std::string report_msg_for_client;
-      messageFormatter->format(report_msg_for_client, msg_adapter, ctx);
-      hibit = hasHighBit(report_msg_for_client.c_str(), report_msg_for_client.length()); 
-      std::string messageOriginatingAddress;
-      if ( !strcmp(fromStr, unknownCaller.c_str()) )
-        messageOriginatingAddress = smscAddress;
-      else
-        messageOriginatingAddress = fromStr;
-      MCEventOut outEvent(messageOriginatingAddress, report_msg_for_client);
-      outEvent.srcEvents.push_back(mc_events[i]);
-      if(report_msg_for_client.length() < MAX_MSG_LENS[hibit])
-        for_send.push_back(outEvent);
-      else
-      {
-        if(i == start_from)
-        {
-          // обрезать смску.
-          report_msg_for_client.resize(MAX_MSG_LENS[hibit]);
-          MCEventOut outEvent(messageOriginatingAddress, report_msg_for_client);
-          outEvent.srcEvents.assign(1, mc_events[i]);
-          for_send.push_back(outEvent);
-        }
-        break;
+bool
+MessageFormatter::createMCEventOut(MCEventOut* forSend,
+                                   const MCEvent& eventFromStorage,
+                                   bool originatingAddressIsMciSmeAddress,
+                                   const std::string& messageOriginatingAddress,
+                                   const std::string& reportMsgForClient,
+                                   unsigned int maxMsgLen)
+{
+  if ( originatingAddressIsMciSmeAddress ) {
+    if ( forSend->msg.length() + reportMsgForClient.length() < maxMsgLen ) {
+      forSend->msg += reportMsgForClient;
+      forSend->srcEvents.push_back(eventFromStorage);
+      return false; // continue accumulate messages for abonent
+    } else {
+      if ( forSend->msg.empty() ) {
+        const std::string& messageToClient = ( reportMsgForClient.length() < maxMsgLen ) ? reportMsgForClient : reportMsgForClient.substr(0, maxMsgLen);
+        MCEventOut outEvent(messageOriginatingAddress, messageToClient);
+        outEvent.srcEvents.push_back(eventFromStorage);
+        *forSend = outEvent;
       }
+      return true;
     }
+  } else {
+    const std::string& messageToClient = ( reportMsgForClient.length() < maxMsgLen ) ? reportMsgForClient : reportMsgForClient.substr(0, maxMsgLen);
+    MCEventOut outEvent(messageOriginatingAddress, messageToClient);
+    outEvent.srcEvents.push_back(eventFromStorage);
+    *forSend = outEvent;
+
+    return true;
   }
 }
 
-void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEvent>& for_send, int timeOffset/*=0*/)
+std::string
+MessageFormatter::produceMessageForAbonent(const std::string& toAbnt,
+                                           const std::string& fromAbnt,
+                                           uint16_t callCount,
+                                           time_t convertedTime,
+                                           int* total,
+                                           ContextEnvironment* ctx
+                                           )
 {
-  message.message = "";
-  if (mc_events.size() <= 0) return;
-
-  std::string test_msg;
+  smsc_log_debug(logger, "MessageFormatter::produceMessageForAbonent::: create InformGetAdapter, toAbnt=[%s], fromAbnt=[%s], callCount=%d, convertedTime=%x", toAbnt.c_str(), fromAbnt.c_str(), callCount, convertedTime);
+  InformGetAdapter info_adapter(toAbnt, fromAbnt, callCount, convertedTime);
   std::string rows = "";
-  std::string toAbnt = abnt.getText();
-  ContextEnvironment ctx;
-  const std::string unknownCaller = formatter->getUnknownCaller();
-  OutputFormatter*  multiFormatter = formatter->getMultiFormatter();
-  OutputFormatter*  singleFormatter = formatter->getSingleFormatter();
-  size_t	mc_events_count = mc_events.size();
-  int hibit=0;
-
-  if(formatter->isGroupping())
-  {
-    Hash<bool>	callers;
-    int total = 0;
-    for (int i = start_from; i < mc_events_count; i++)
-    {
-      int	count = 0;
-      time_t convertedTime = 0;
-      AbntAddr from(&(mc_events[i].caller));
-      const char* fromStr = (from.getText().length() > 0) ? from.getText().c_str():UNKNOWN_CALLER;
-      if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
-        fromStr = unknownCaller.c_str();
-      if(!callers.Exists(fromStr))
-      {
-        callers.Insert(fromStr, true);
-        convertedTime = mc_events[i].dt + timeOffset; //timeOffset*3600;
-        for_send.push_back(mc_events[i]);
-        count++;
-
-        for(int j = i + 1; j < mc_events_count; j++)
-        {
-          AbntAddr test(&(mc_events[j].caller));
-          const char* testStr = (test.getText().length() > 0) ? test.getText().c_str():UNKNOWN_CALLER;
-          if (testStr == UNKNOWN_CALLER || (strcmp(testStr, UNKNOWN_CALLER) == 0))
-            testStr = unknownCaller.c_str();
-          if(0 == strcmp(testStr, fromStr))
-          {
-            time_t t = mc_events[j].dt + timeOffset; //*3600;
-            if(t > convertedTime) 
-              convertedTime = t;
-            for_send.push_back(mc_events[j]);
-            count++;
-          }
-        }
-        total += count;
-        InformGetAdapter info_adapter(toAbnt, fromStr, count, convertedTime);
-        if( count > 1 ) multiFormatter->format(rows, info_adapter, ctx);
-        else singleFormatter->format(rows, info_adapter, ctx);
-
-        OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
-        MessageGetAdapter msg_adapter(toAbnt, rows, total);
-        messageFormatter->format(test_msg, msg_adapter, ctx);
-        hibit = hasHighBit(test_msg.c_str(), test_msg.length()); 
-        if(test_msg.length() < MAX_MSG_LENS[hibit])
-        {
-          message.message = test_msg;
-          test_msg="";
-        }
-        else
-        {
-          if(i == start_from)
-          {	
-            // обрезать смску.
-            message.message = test_msg;
-            message.message.resize(MAX_MSG_LENS[hibit]);
-          }
-          else
-            for_send.erase(for_send.end()-count, for_send.end());
-          break;
-        }
-      }
-    }
-    callers.Empty();
-  }
+  if ( callCount > 1 )
+    formatter->getMultiFormatter()->format(rows, info_adapter, *ctx);
   else
-  {
-    for (int i = start_from; i < mc_events_count; i++)
-    {
-      AbntAddr from(&(mc_events[i].caller));
-      const char* fromStr = (from.getText().length() > 0) ? from.getText().c_str():UNKNOWN_CALLER;
-      if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
-        fromStr = unknownCaller.c_str();
-      time_t convertedTime = mc_events[i].dt + timeOffset;//*3600;
+    formatter->getSingleFormatter()->format(rows, info_adapter, *ctx);
 
-      InformGetAdapter info_adapter(toAbnt, fromStr, 1, convertedTime);
-      singleFormatter->format(rows, info_adapter, ctx);
+  smsc_log_debug(logger, "MessageFormatter::produceMessageForAbonent::: OutputFormatter::format returned rows=[%s]", rows.c_str());
+  *total += callCount;
 
-      OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
-      MessageGetAdapter msg_adapter(toAbnt, rows, i+1);
-      messageFormatter->format(test_msg, msg_adapter, ctx);
-      hibit = hasHighBit(test_msg.c_str(), test_msg.length()); 
-      if(test_msg.length() < MAX_MSG_LENS[hibit])
-      {
-        message.message = test_msg;
-        test_msg="";
-        for_send.push_back(mc_events[i]);
-      }
-      else
-      {
-        if(i == start_from)
-        {	
-          // обрезать смску.
-          message.message = test_msg;
-          message.message.resize(MAX_MSG_LENS[hibit]);
-          for_send.push_back(mc_events[i]);
-        }
-        break;
-      }
-    }
-  }
+  OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
+  smsc_log_debug(logger, "MessageFormatter::produceMessageForAbonent::: create MessageGetAdapter: toAbnt=[%s], rows=[%s], total=[%d]", toAbnt.c_str(), rows.c_str(), *total);
+
+  MessageGetAdapter msg_adapter(toAbnt, rows, *total);
+  std::string report_msg_for_client;
+  messageFormatter->format(report_msg_for_client, msg_adapter, *ctx);
+
+  smsc_log_debug(logger, "MessageFormatter::produceMessageForAbonent::: result message for abonent report_msg_for_client=[%s]", report_msg_for_client.c_str());
+
+  return report_msg_for_client;;
 }
-
 
 void MessageFormatter::addBanner(Message& message, const string& banner)
 {
@@ -362,4 +219,5 @@ void MessageFormatter::addBanner(Message& message, const string& banner)
     message.message.resize(MAX_MSG_LENS[hibit]);
 }
 
-}}
+}
+}
