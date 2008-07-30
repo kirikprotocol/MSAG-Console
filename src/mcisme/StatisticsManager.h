@@ -2,7 +2,7 @@
 #define SMSC_MCI_SME_STATISTICS_MANAGER
 
 #include "Statistics.h"
-#include "core/buffers/File.hpp"
+#include <core/buffers/File.hpp>
 
 #include <logger/Logger.h>
 
@@ -49,7 +49,7 @@ protected:
   File file;
 
   bool createStorageDir(const std::string loc);
-  void dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM);
+  void dumpCounters(const uint8_t* buff, uint32_t buffLen, const tm& flushTM);
   bool createDir(const std::string& dir);
   void calculateTime(tm& flushTM);
 
@@ -66,10 +66,10 @@ public:
   virtual void incDelivered(const char* abonent);
   virtual void incFailed   (const char* abonent);
   virtual void incNotified (const char* abonent);
-  virtual void incMissed   (uint8_t count = 1);
-  virtual void incDelivered(uint8_t count = 1);
-  virtual void incFailed   (uint8_t count = 1);
-  virtual void incNotified (uint8_t count = 1);
+  virtual void incMissed   (unsigned count = 1);
+  virtual void incDelivered(unsigned count = 1);
+  virtual void incFailed   (unsigned count = 1);
+  virtual void incNotified (unsigned count = 1);
         
   StatisticsManager(const std::string& loc);
   virtual ~StatisticsManager();

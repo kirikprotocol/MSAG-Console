@@ -242,9 +242,9 @@ protected:
   }
   bool recvnbytes(char* msg, size_t n)
   {
-    int len, ret;
+    size_t len, ret;
     //		smsc_log_info(logger, "ProfileServer: recvnbytes n = %d", n);
-    ret = sock->Read(msg, n);
+    ret = sock->Read(msg, static_cast<int>(n));
     if(-1 == ret || 0 == ret)
     {
       smsc_log_info(logger, "ProfileServer: recvnbytes error: Read return %d", ret);
@@ -258,7 +258,7 @@ protected:
         smsc_log_info(logger, "ProfileServer: recvnbytes error: canRead return %d", ret);
         return false;
       }
-      ret = sock->Read(msg+len, n-len);
+      ret = sock->Read(msg+len, static_cast<int>(n-len));
       if(-1 == ret || 0 == ret)
       {
         smsc_log_info(logger, "ProfileServer: recvnbytes error: Read return %d", ret);
@@ -279,7 +279,7 @@ protected:
         smsc_log_info(logger, "ProfileServer: sendnbytes error: canWrite return %d", ret);
         return false;
       }
-      ret = sock->Write(msg+len, n-len);
+      ret = sock->Write(msg+len, static_cast<int>(n-len));
       if(-1 == ret || 0 == ret)
       {
         smsc_log_info(logger, "ProfileServer: sendnbytes error: Write return %d", ret);

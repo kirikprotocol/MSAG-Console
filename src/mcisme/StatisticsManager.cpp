@@ -22,11 +22,11 @@ StatisticsManager::StatisticsManager(const std::string& loc)
             currentIndex(0), bExternalFlush(false), bStarted(false), 
             bNeedExit(false), location(loc)
 {
-    logger = Logger::getInstance("mci.statmgr");
-    processLog = Logger::getInstance("mci.process");
+  logger = Logger::getInstance("mci.statmgr");
+  processLog = Logger::getInstance("mci.process");
 
-    if(!createStorageDir(location))
-        smsc_log_warn(logger, "Can't create directory: '%s'", location.c_str());
+  if(!createStorageDir(location))
+    smsc_log_warn(logger, "Can't create directory: '%s'", location.c_str());
 
 }
 StatisticsManager::~StatisticsManager()
@@ -64,25 +64,25 @@ void StatisticsManager::incNotified(const char* abonent)
   //    smsc_log_info(processLog, "N %s", abonent ? abonent:"-");
 }
 
-void StatisticsManager::incMissed(uint8_t count)
+void StatisticsManager::incMissed(unsigned count)
 {
   MutexGuard  guard(switchLock);
   statistics[currentIndex].missed+=count;
   //    smsc_log_info(processLog, "Missed calls count is %d (increased by %d, currentIndex=%d)", statistics[currentIndex].missed, count, currentIndex);
 }
-void StatisticsManager::incDelivered(uint8_t count)
+void StatisticsManager::incDelivered(unsigned count)
 {
   MutexGuard  guard(switchLock);
   statistics[currentIndex].delivered+=count;
   //    smsc_log_info(processLog, "Delivered Events is %d (increased by %d, currentIndex=%d)", statistics[currentIndex].delivered, count, currentIndex);
 }
-void StatisticsManager::incFailed(uint8_t count)
+void StatisticsManager::incFailed(unsigned count)
 {
   MutexGuard  guard(switchLock);
   statistics[currentIndex].failed+=count;
   //    smsc_log_info(processLog, "Failed Events is %d (increased by %d, currentIndex=%d)", statistics[currentIndex].failed, count, currentIndex);
 }
-void StatisticsManager::incNotified(uint8_t count)
+void StatisticsManager::incNotified(unsigned count)
 {
   MutexGuard  guard(switchLock);
   statistics[currentIndex].notified+=count;
@@ -110,7 +110,7 @@ int StatisticsManager::Execute()
 void StatisticsManager::Start()
 {
   MutexGuard guard(startLock);
-    
+
   if (!bStarted)
   {
     smsc_log_info(logger, "Starting ...");
@@ -125,7 +125,7 @@ void StatisticsManager::Start()
 void StatisticsManager::Stop()
 {
   MutexGuard  guard(startLock);
-    
+
   if (bStarted)
   {
     smsc_log_info(logger, "Stopping ...");
@@ -157,67 +157,10 @@ short StatisticsManager::switchCounters()
   return flushIndex;
 }
 
-/*uint32_t StatisticsManager::calculatePeriod()
-  {
-  time_t currTime = time(0);
-  if (!bExternalFlush) currTime -= 3600;
-  tm tmCT; localtime_r(&currTime, &tmCT);
-  return  (tmCT.tm_year+1900)*1000000+(tmCT.tm_mon+1)*10000+(tmCT.tm_mday)*100+tmCT.tm_hour;
-  }*/
 int StatisticsManager::calculateToSleep() // returns msecs to next hour
 {
   return SMSC_MCISME_STAT_DUMP_INTERVAL*1000;
-
-  //time_t currTime = time(0);
-  //time_t nextTime = currTime + SMSC_MCISME_STAT_DUMP_INTERVAL;
-  //tm tmNT; localtime_r(&nextTime, &tmNT);
-  //tmNT.tm_sec = 0; tmNT.tm_min = 0;
-  //nextTime = mktime(&tmNT);
-  //return (((nextTime-currTime)*1000)+1);
 }
-
-/*const char* INSERT_EVENTS_STAT_STATE_ID = "INSERT_EVENTS_STAT_STATE_ID";
-  const char* INSERT_EVENTS_STAT_STATE_SQL = (const char*)
-  "INSERT INTO MCISME_STAT (period, missed, delivered, failed, notified) "
-  "VALUES (:period, :missed, :delivered, :failed, :notified)";*/
-
-/*void StatisticsManager::flushCounters(short index)
-  {
-  if (statistics[index].isEmpty()) return;
-
-  uint32_t period = calculatePeriod();
-  smsc_log_debug(logger, "Flushing statistics for period: %lu / %lu", period, time(NULL));
-
-  try
-  {
-  Statement* statement = connection->getStatement(INSERT_EVENTS_STAT_STATE_ID, 
-  INSERT_EVENTS_STAT_STATE_SQL);
-  if (!statement)
-  throw Exception("Failed to obtain statement for statistics update");
-        
-  statement->setUint32(1, period);
-  statement->setUint32(2, statistics[index].missed);
-  statement->setUint32(3, statistics[index].delivered);
-  statement->setUint32(4, statistics[index].failed);
-  statement->setUint32(5, statistics[index].notified);
-
-  statement->executeUpdate();
-  connection->commit();
-  }
-  catch (Exception& exc)
-  {
-  try { if (connection) connection->rollback(); }
-  catch (Exception& exc) {
-  smsc_log_error(logger, "Failed to roolback transaction (statistics). "
-  "Details: %s", exc.what());
-  } catch (...) {
-  smsc_log_error(logger, "Failed to roolback transaction (statistics).");
-  }
-  smsc_log_error(logger, "Error occurred during statistics flushing. Details: %s", exc.what());
-  }
-
-  statistics[index].Empty();
-  }*/
 
 void StatisticsManager::flushCounters(short index)
 {
@@ -244,7 +187,7 @@ void StatisticsManager::flushCounters(short index)
     value32 = htonl(statistics[index].failed);         buff.Append((uint8_t *)&value32, sizeof(value32));
     value32 = htonl(statistics[index].notified);       buff.Append((uint8_t *)&value32, sizeof(value32));
 
-    dumpCounters(buff, buff.GetPos(), flushTM);
+    dumpCounters(buff, static_cast<uint32_t>(buff.GetPos()), flushTM);
 
   } catch (std::exception& exc) {
     smsc_log_error(logger, "Statistics flush failed. Cause: %s", exc.what());
@@ -259,7 +202,7 @@ bool StatisticsManager::createStorageDir(const std::string loc)
 {
   const char * dir_ = loc.c_str();
 
-  int len = strlen(dir_);
+  size_t len = strlen(dir_);
   if(len == 0)
     return false;
 
@@ -284,16 +227,15 @@ bool StatisticsManager::createStorageDir(const std::string loc)
   std::vector<std::string> dirs(0);
 
   char* p1 = buff+1;
-  int dirlen = 0;
+  size_t dirlen = 0;
   char* p2 = strchr(p1, '/');
-  int pos = p2 - buff;
   while(p2){
-    int len = p2 - p1;
+    len = p2 - p1;
     dirlen += len + 1;
     if(len == 0)
       return false;
 
-    int direclen = dirlen + 1;
+    size_t direclen = dirlen + 1;
     TmpBuf<char, 512> tmpBuff(direclen);
     char * dir = tmpBuff.get();
     memcpy(dir, buff, dirlen);
@@ -318,11 +260,11 @@ bool StatisticsManager::createStorageDir(const std::string loc)
       }
     }
   }
-    
+
   return true;
 }
 
-void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM)
+void StatisticsManager::dumpCounters(const uint8_t* buff, uint32_t buffLen, const tm& flushTM)
 {
   smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", 
                  flushTM.tm_hour, flushTM.tm_min);

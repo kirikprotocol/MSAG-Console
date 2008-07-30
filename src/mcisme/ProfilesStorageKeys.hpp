@@ -41,7 +41,7 @@ struct AbntProfKey{
 
   uint32_t Get()const{return key.prof;}
 
-  static uint32_t Size(){return sizeof(AbntProf);}
+  static uint32_t Size(){return static_cast<uint32_t>(sizeof(AbntProf));}
 
   void Read(File& f)
   {
