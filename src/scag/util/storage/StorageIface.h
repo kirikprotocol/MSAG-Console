@@ -157,7 +157,7 @@ protected:
 ///     unsigned long size() const;
 ///     index_type getIndex( const key_type& ) const;
 ///     index_type removeIndex( const key_type& );
-///     void setIndex( const key_type&, index_type);
+///     bool setIndex( const key_type&, index_type);
 /// };
 /// DStorage {
 ///     index_type = POD integral type (?);
