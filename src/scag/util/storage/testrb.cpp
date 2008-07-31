@@ -14,6 +14,7 @@
 #include "Serializer.h"
 #include "StorageIface.h"
 #include "StorageNumbering.h"
+#include "GlossaryBase.h"
 
 // please comment out for BHS
 // #define USEPAGEFILE
@@ -375,8 +376,8 @@ struct Address
 
 #ifndef USEPAGEFILE
         // FIXME: for BlocksHSStorage
-        void Serialize( SerialBuffer& buf, bool = false ) const;
-        void Deserialize( SerialBuffer& buf, bool = false );
+        void Serialize( SerialBuffer& buf, bool = false, GlossaryBase* g = NULL ) const;
+        void Deserialize( SerialBuffer& buf, bool = false, GlossaryBase* g = NULL );
 #endif
     
     private:
@@ -407,7 +408,7 @@ struct Address
 
 
 #ifndef USEPAGEFILE
-void Session::Serialize( SerialBuffer& buf, bool ) const
+void Session::Serialize( SerialBuffer& buf, bool, GlossaryBase* g ) const
 {
     std::vector< unsigned char > v;
     Serializer s( v );
@@ -415,7 +416,7 @@ void Session::Serialize( SerialBuffer& buf, bool ) const
     buf.blkcpy( reinterpret_cast<const char*>(&(v[0])), v.size() );
 }
 
-void Session::Deserialize( SerialBuffer& buf, bool )
+void Session::Deserialize( SerialBuffer& buf, bool, GlossaryBase* g )
 {
     const unsigned char* bp = reinterpret_cast<const unsigned char*>(buf.c_ptr());
     std::vector< unsigned char > v( bp, bp + buf.length() );

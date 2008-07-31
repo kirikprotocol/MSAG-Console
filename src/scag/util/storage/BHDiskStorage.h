@@ -10,11 +10,11 @@ namespace storage {
 /**
  * BlocksHSStorage wrapper
  */
-template < class Key, class Val >
+template < class Key, class Val, class Storage = BlocksHSStorage< Key, Val > >
 class BHDiskStorage
 {
 public:
-    typedef BlocksHSStorage< Key, Val >       storage_type;
+    typedef Storage                           storage_type;
     typedef Key                               key_type;
     typedef typename storage_type::index_type index_type;
     typedef DataBlockBackup< Val >            value_type;

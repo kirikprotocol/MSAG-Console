@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 
 #include "DataBlock.h"
+#include "GlossaryBase.h"
 
 namespace scag { 
 namespace util {
@@ -50,8 +51,8 @@ protected:
 class Serializable
 {
 public:
-    virtual void Serialize(SerialBuffer &sb, bool toFSDB = false) const = 0;
-    virtual void Deserialize(SerialBuffer &sb, bool fromFSDB = false) = 0;
+    virtual void Serialize(SerialBuffer &sb, bool toFSDB = false, GlossaryBase* glossary = NULL) const = 0;
+    virtual void Deserialize(SerialBuffer &sb, bool fromFSDB = false, GlossaryBase* glossary = NULL) = 0;
 };
 
 } // namespace storage

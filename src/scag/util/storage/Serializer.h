@@ -6,6 +6,8 @@
 #include <vector>
 #include <netinet/in.h>
 
+#include "Glossary.h"
+
 namespace scag {
 namespace util {
 namespace storage {
@@ -36,9 +38,11 @@ class SerializerBase
 {
 public:
     typedef std::vector< unsigned char > Buf;
-
+    GlossaryBase* getGlossary() const { return glossary_; }
+    virtual ~SerializerBase() {};
+    
 protected:
-    SerializerBase() {}
+    SerializerBase( GlossaryBase* glossary ) : glossary_(glossary){}
 
     uint32_t dochecksum( const Buf& buf, size_t pos1, size_t pos2 ) const;
 
@@ -50,13 +54,16 @@ protected:
         uint64_t quads[1];
     } cvt;
 
+private:
+    GlossaryBase* glossary_;
+
 };
 
 
 class Serializer : public SerializerBase
 {
 public:
-    Serializer( Buf& b ) : buf_(b) {}
+    Serializer( Buf& b, GlossaryBase* glossary = NULL ) : SerializerBase(glossary) ,buf_(b) {}
 
     Serializer& operator << ( uint8_t );
     Serializer& operator << ( uint16_t );
@@ -79,6 +86,7 @@ public:
         return dochecksum( buf_, pos1, pos2 );
     }
 
+
 private:
     // returns an iterator to a chunk of given size
     Buf::iterator ensure( uint32_t chunk );
@@ -91,7 +99,7 @@ private:
 class Deserializer : public SerializerBase
 {
 public:
-    Deserializer( const Buf& buf ) : buf_(buf), rpos_(0) {}
+    Deserializer( const Buf& buf, GlossaryBase* glossary = NULL ) : SerializerBase(glossary), buf_(buf), rpos_(0) {}
 
     Deserializer& operator >> ( uint8_t& ) throw ( DeserializerException );
     Deserializer& operator >> ( uint16_t& ) throw ( DeserializerException );

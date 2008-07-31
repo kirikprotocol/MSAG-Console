@@ -19,6 +19,7 @@
 
 #include "core/buffers/File.hpp"
 #include "SerialBuffer.h"
+#include "GlossaryBase.h"
 #include "DataBlockBackup.h"
 #include "util/Exception.hpp"
 
@@ -146,8 +147,11 @@ public:
     static const int defaultFileSize = 3; // in blocks 
     static const long BLOCK_USED	= long(uint64_t(1) << 63);
 
-    BlocksHSStorage():running(false), iterBlockIndex(0)
+    BlocksHSStorage(GlossaryBase* g = NULL): glossary_(g), running(false), iterBlockIndex(0)
     {
+        if (!glossary_) {
+          throw std::runtime_error("BlocksHSStorage: glossary should be provided!");
+        }
         logger = smsc::logger::Logger::getInstance("BlkStore");
         hdrSize = sizeof(DataBlockHeader);
     }
@@ -226,7 +230,7 @@ public:
         BlocksHSBackupData& bkp = *prof.backup;
         //SerialBuffer data;
         profileData.Empty();
-        profile.Serialize(profileData, true);
+        profile.Serialize(profileData, true, glossary_);
         smsc_log_debug(logger, "Add data block key='%s' length=%d", key.toString().c_str(), profileData.length());
         int dataLength = profileData.length();
         if (dataLength <= 0) {
@@ -266,7 +270,7 @@ public:
             return Add(profile, key, blockIndex);
         }
         profileData.Empty();
-        profile.Serialize(profileData, true);
+        profile.Serialize(profileData, true, glossary_);
         smsc_log_debug(logger, "Change data block index=%d key='%s' length=%d",
                        blockIndex, key.toString().c_str(), profileData.length());
         DescriptionFile oldDescrFile = descrFile;
@@ -389,7 +393,7 @@ public:
             bkp.addDataToBackup(hdr.next_block);
         }
         while(-1 != curBlockIndex);
-        profile.Deserialize(profileData, true);
+        profile.Deserialize(profileData, true, glossary_);
         bkp.setBackupData(profileData.c_ptr(), profileData.length());
         return true;
     }
@@ -456,6 +460,7 @@ public:
 private:
 
   Logger* logger;
+  GlossaryBase* glossary_;
   bool running;
   string dbName;
   string dbPath;

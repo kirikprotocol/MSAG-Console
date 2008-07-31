@@ -39,10 +39,12 @@ public:
     typedef Key                                       key_type;
     typedef Val                                       value_type;
 
-    PageFileDiskStorage( PF* pf ) : pf_(pf), disklog_(NULL)
+    PageFileDiskStorage( PF* pf, GlossaryBase* g = NULL ) : pf_(pf), glossary_(g), disklog_(NULL)
     {
         if ( ! pf_ )
             throw std::runtime_error( "PageFileDiskStorage: pagefile should be provided!" );
+        if ( ! glossary_ )
+            throw std::runtime_error( "PageFileDiskStorage: glossary should be provided!" );
         disklog_ = smsc::logger::Logger::getInstance( "disk" );
     }
 
@@ -59,7 +61,7 @@ public:
     /// serialize the value into an internal buffer
     void serialize( const value_type& v ) {
         buf.resize(0);
-        Serializer s( buf );
+        Serializer s( buf, glossary_ );
         s << v;
         // assert( (buf.size() < 10000) && (buf.buffer().capacity() < 10000) );
         // key_ = v.getKey().toString();
@@ -105,7 +107,7 @@ public:
     /// @return true if successfully deserialized, otherwise v is broken
     bool deserialize( value_type& v ) const {
         try {
-            Deserializer s( buf );
+            Deserializer s( buf, glossary_ );
             s >> v;
             // key_ = "destroyed";
         } catch ( DeserializerException& e ) {
@@ -125,6 +127,7 @@ private:
     PF* pf_;                            // owned
     // mutable std::string key_;
     smsc::logger::Logger* disklog_;
+    GlossaryBase* glossary_;
 };
 
 } // namespace storage
