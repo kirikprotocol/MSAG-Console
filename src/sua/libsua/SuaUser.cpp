@@ -14,7 +14,7 @@ extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 namespace libsua {
 
 SuaUser::SuaUser()
-  : _wasInitialized(false), _logger(smsc::logger::Logger::getInstance("libsua")), _hopCountValue(0), _lastUsedConnIdx(0)
+  : _wasInitialized(false), _logger(smsc::logger::Logger::getInstance("libsua")), _lastUsedConnIdx(0)
 {}
 
 int
@@ -25,11 +25,6 @@ SuaUser::sua_init(smsc::util::config::ConfigView* config)
       _appId = config->getString("appId", "SuaUser::sua_init::: appId parameter wasn't set");
       std::string trafficMode = config->getString("traffic-mode", "SuaUser::sua_init::: traffic-mode parameter wasn't set");
       _trafficMode = convertStringToTrafficModeValue(utilx::toLowerCaseString(trafficMode), "SuaUser::sua_init");
-      try {
-        _hopCountValue = config->getInt("ss7hop-count");
-      } catch (smsc::util::config::ConfigException& ex) {
-        _hopCountValue = 15;
-      }
       smsc_log_info(_logger, "loading links configuration ...");
 
       std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
@@ -294,10 +289,10 @@ SuaUser::unitdata_req(const uint8_t* message,
 
   unitdataReqMessage.setUserData(message, messageSize);
 
-  try {
-    communication::TP tp;
-    unitdataReqMessage.serialize(&tp);
+  communication::TP tp;
+  unitdataReqMessage.serialize(&tp);
 
+  try {
     smsc::core::synchronization::MutexGuard synchronize(_lock);
 
     if ( suaConnectNum >= _knownLinks.size() )
