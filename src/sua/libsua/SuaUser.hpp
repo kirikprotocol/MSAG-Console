@@ -92,8 +92,6 @@ private:
   std::string _appId;
   traffic_mode_t _trafficMode;
 
-  unsigned int _hopCountValue;
-
   unsigned int _lastUsedConnIdx;
 
   mutable smsc::core::synchronization::Mutex _lock;
