@@ -448,9 +448,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   }
 
   std::auto_ptr<ConfigView> storageCfgGuard(config->getSubConfig("Storage"));
-  ConfigView* storageCfg = storageCfgGuard.get();
   pStorage = new FSStorage();
-  int ret = pStorage->Init(storageCfg, pDeliveryQueue);
+  int ret = pStorage->Init(storageCfgGuard.get(), pDeliveryQueue);
   smsc_log_warn(logger, "ret = %d", ret);
 
   string sResponseWaitTime;
@@ -555,7 +554,6 @@ int TaskProcessor::Execute()
   clearSignalMask();
 
   MissedCallEvent event;
-  MCEvent         outEvent;
 
   smsc_log_debug(logger, "Execute");
 
@@ -583,7 +581,9 @@ int TaskProcessor::Execute()
       }
 
       AbntAddr to(event.to.c_str()), from(event.from.c_str());
+      MCEvent  outEvent;
       outEvent = from;
+      outEvent.dt = time(0);
       AbonentProfile profile;
       profileStorage->Get(to, profile);
 
