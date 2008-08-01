@@ -182,7 +182,7 @@ private:
                           const MCEvent& event);
   void EraseEvent(dat_file_cell* pAbntEvents, int eventNum);
   bool findAndUpdateEventDateAndCallCount(dat_file_cell* pAbntEvents,
-                                          const AbntAddrValue& caller);
+                                          const MCEvent& event);
   void insertEventIntoPosition(dat_file_cell* pAbntEvents,
                                unsigned int idx,
                                const MCEvent& event);
