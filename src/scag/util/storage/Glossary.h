@@ -19,7 +19,7 @@ using smsc::logger::Logger;
 
 class Glossary: public GlossaryBase {
 public:
-  Glossary() : glossFile(0), opened(false), currentIndex(0), logger(Logger::getInstance("Pers.Gloss")) {};
+  Glossary() : logger(Logger::getInstance("gloss")), glossFile(0), currentIndex(0), opened(false) {};
   ~Glossary() { Close(); };
   int Open(const string& glossFileName);
   void Close();

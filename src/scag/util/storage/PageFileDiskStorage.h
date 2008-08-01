@@ -39,7 +39,7 @@ public:
     typedef Key                                       key_type;
     typedef Val                                       value_type;
 
-    PageFileDiskStorage( PF* pf, GlossaryBase* g = NULL ) : pf_(pf), glossary_(g), disklog_(NULL)
+    PageFileDiskStorage( PF* pf, GlossaryBase* g = NULL ) : pf_(pf), disklog_(NULL), glossary_(g)
     {
         if ( ! pf_ )
             throw std::runtime_error( "PageFileDiskStorage: pagefile should be provided!" );

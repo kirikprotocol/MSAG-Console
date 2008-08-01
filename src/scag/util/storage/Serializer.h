@@ -6,7 +6,7 @@
 #include <vector>
 #include <netinet/in.h>
 
-#include "Glossary.h"
+#include "GlossaryBase.h"
 
 namespace scag {
 namespace util {
