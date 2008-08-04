@@ -28,6 +28,7 @@ public class Options extends SmeBean
   private int smpp_partsSendSpeedPerHour = 60;
   private int smpp_maxUdhParts = 3;
 
+  private boolean stat_enabled = false;
   private String stat_storeLocation = "store/stat";
   private int stat_flushPeriodInSec = 300;
 
@@ -128,8 +129,13 @@ public class Options extends SmeBean
         smpp_partsSendSpeedPerHour = getIntParameter("smpp.partsSendSpeedPerHour");
         smpp_maxUdhParts = getIntParameter("smpp.maxUdhParts");
 
-        stat_storeLocation = getStringParameter("stat.storeLocation");
-        stat_flushPeriodInSec = getIntParameter("stat.flushPeriodInSec");
+        if (getConfig().containsSection("stat") && getConfig().containsParameter("stat.storeLocation")) {
+          stat_storeLocation = getStringParameter("stat.storeLocation");
+          stat_flushPeriodInSec = getIntParameter("stat.flushPeriodInSec");
+          stat_enabled = true;
+        } else {
+          stat_enabled = false;
+        }
 
         listener_host = getStringParameter("listener.host");
         listener_port = getIntParameter("listener.port");
@@ -215,8 +221,12 @@ public class Options extends SmeBean
     getConfig().setInt("smpp.partsSendSpeedPerHour", smpp_partsSendSpeedPerHour);
     getConfig().setInt("smpp.maxUdhParts", smpp_maxUdhParts);
 
-    getConfig().setString("stat.storeLocation", stat_storeLocation);
-    getConfig().setInt("stat.flushPeriodInSec", stat_flushPeriodInSec);
+    if (stat_enabled) {
+      getConfig().setString("stat.storeLocation", stat_storeLocation);
+      getConfig().setInt("stat.flushPeriodInSec", stat_flushPeriodInSec);
+    } else if (getConfig().containsSection("stat")) {
+      getConfig().removeSection("stat");
+    }
 
     getConfig().setString("listener.host", listener_host);
     getConfig().setInt("listener.port", listener_port);
@@ -872,5 +882,13 @@ public class Options extends SmeBean
 
   public void setAdmin_routesconfig(String admin_routesconfig) {
     this.admin_routesconfig = admin_routesconfig;
+  }
+
+  public boolean isStat_enabled() {
+    return stat_enabled;
+  }
+
+  public void setStat_enabled(boolean val) {
+    stat_enabled = val;
   }
 }

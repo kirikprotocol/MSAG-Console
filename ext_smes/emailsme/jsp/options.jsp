@@ -169,6 +169,10 @@
 <%rowN=0;%>
 <tr><td colspan=2><div class=page_subtitle>Statistic</div></td></tr>
 <tr class=row<%=rowN++&1%>>
+  <th>enabled</th>
+  <td align="LEFT"><input type=checkbox name=stat_enabled <%=bean.isStat_enabled() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>store location</th>
   <td><input class=txt name=stat_storeLocation value="<%=StringEncoderDecoder.encode(bean.getStat_storeLocation())%>"></td>
 </tr>
