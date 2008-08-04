@@ -122,14 +122,14 @@ private:
 
 public:
   Route()
-    : id(), sources(), destinations(), archiving(false), enabling(true), active(false), srcSmeSystemId(), serviceId(-1), 
-        slicing(SlicingType::NONE)
+    : id(), sources(), destinations(), archiving(false), enabling(true), active(false), srcSmeSystemId(),
+    slicing(SlicingType::NONE), serviceId(-1)
   {
   }
   Route(const Route &r)
     : id(r.id), sources(r.sources), destinations(r.destinations),
     archiving(r.archiving), enabling(r.enabling), active(r.active),
-    srcSmeSystemId(r.srcSmeSystemId), serviceId(r.serviceId), slicing(r.slicing), slicingRespPolicy(r.slicingRespPolicy)
+    srcSmeSystemId(r.srcSmeSystemId), slicing(r.slicing), slicingRespPolicy(r.slicingRespPolicy), serviceId(r.serviceId)
   {}
   Route(std::string routeId, bool archiving_, bool enabling_, bool active_, std::string srcSmeSystemId_, int32_t serviceId_,
     std::string slicing_, std::string slicingRespPolicy_)

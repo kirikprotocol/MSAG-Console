@@ -9,7 +9,7 @@
 #include "core/buffers/Hash.hpp"
 #include "util/cstrings.h"
 #include "util/config/ConfigException.h"
-#include "util/config/Config.h"
+#include "Config.h"
 
 namespace smsc   {
 namespace util   {

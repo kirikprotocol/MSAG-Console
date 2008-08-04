@@ -3,26 +3,23 @@
 
 #include "TransportType.h"
 
-namespace scag {
-namespace sessions2 {
+namespace scag2 {
+namespace sessions {
 
     class Session;
     class SessionStore;
     
 } // namespace sessions
 
-namespace transport2 {
+namespace transport {
 
 using namespace scag::transport;
-using namespace scag::sessions2;
+using namespace scag2::sessions;
 
 class SCAGCommand
 {
-    friend class scag::sessions2::SessionStore;
+    friend class scag2::sessions::SessionStore;
 
-private:
-    SCAGCommand( const SCAGCommand& c );
-    SCAGCommand& operator = ( const SCAGCommand& c );
 public:
     // static const uint8_t SESSIONDESTROY = 255;
 
@@ -50,7 +47,11 @@ protected:
     /// session is set from session store when the command is locking the session.
     virtual void setSession( Session* as ) = 0;
 
+protected:
     SCAGCommand() {}
+    SCAGCommand( const SCAGCommand& ) {}
+private:
+    SCAGCommand& operator = ( const SCAGCommand& c );
 };
 
 

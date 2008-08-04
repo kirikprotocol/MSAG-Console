@@ -11,26 +11,26 @@
 #include <time.h>
 
 namespace scag { namespace re {
-    enum AccessType 
+    typedef enum AccessType 
     {
         atNoAccess = 0,
         atRead  = 1,
         atWrite = 2,
         atReadWrite = 3
-    };
+    } AccessType;
 
 }};
 
 
 namespace scag { namespace util { namespace properties 
 {
-    enum PropertyType
+    typedef enum PropertyType
     {
         pt_int,
         pt_str,
         pt_bool,
         pt_date
-    };
+    } PropertyType;
 
     struct Changeable;
 

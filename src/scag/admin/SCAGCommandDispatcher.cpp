@@ -12,7 +12,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "scag/config/ConfigManager.h"
 
-#include "scag/scag.h"
+// #include "scag/scag.h"
 
 #include "logger/Logger.h"
 

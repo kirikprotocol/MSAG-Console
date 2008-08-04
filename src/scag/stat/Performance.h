@@ -70,7 +70,7 @@ struct CommonPerformanceCounter
 
     virtual ~CommonPerformanceCounter() {
 
-        for (int i = 0; i < count; i++) 
+        for (uint32_t i = 0; i < count; i++) 
             if (slots[i]) delete slots[i];
 
         delete counters;
@@ -127,7 +127,7 @@ struct GenStatistics
     {
         MutexGuard g(statLock);
 
-        if(counter >= count)
+        if(uint32_t(counter) >= count)
             return;
 
         counters[counter]++;

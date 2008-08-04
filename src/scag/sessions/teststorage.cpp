@@ -14,8 +14,8 @@
 #include "scag/util/storage/StorageNumbering.h"
 #include "scag/transport/SCAGCommand2.h"
 
-using namespace scag::sessions2;
-using namespace scag::transport2;
+using namespace scag2::sessions;
+using namespace scag2::transport;
 
 SessionKey genKey( unsigned node )
 {
@@ -76,8 +76,12 @@ private:
 class SKCommand : public SCAGCommand
 {
 public:
-    SKCommand( const SessionKey& sk ) : sk_(sk), s_(0) {}
-    virtual ~SKCommand() {}
+    SKCommand( const SessionKey& sk ) : sk_(sk), s_(0) {
+        smsc_log_debug(mlog,"command %p created, key=%s", this, sk.toString().c_str());
+    }
+    virtual ~SKCommand() {
+        smsc_log_debug(mlog,"command %p destroyed", this);
+    }
     
     virtual scag::transport::TransportType getType() const {
         return scag::transport::SMPP;
@@ -306,7 +310,7 @@ int main( int argc, char** argv )
     // smsc_log_error( slog, "cannot get config" );
     // }
 
-    scag::config2::ConfigManager::Init();
+    scag2::config::ConfigManager::Init();
     scag::config::ConfigManager::Init();
 
     // set the number of nodes
@@ -318,7 +322,7 @@ int main( int argc, char** argv )
     // ( mynode, * df.get(), * cq.get() ) );
     // SessionManager& sm = SessionManager::Instance();
     SessionManager::Init( 0,
-                          scag::config2::ConfigManager::Instance().getSessionManConfig(),
+                          scag2::config::ConfigManager::Instance().getSessionManConfig(),
                           *cq.get() );
 
     const unsigned machines = 50;
@@ -347,8 +351,9 @@ int main( int argc, char** argv )
 int SCAGCommandGenerator::Execute()
 {
     smsc_log_info( glog, "cmd generator started" );
-    while ( true ) 
+    for ( size_t i = 0;; ++i )
     {
+        // if ( i > 10000 ) break;
         SCAGCommand* cmd = new SKCommand(genKey(node_));
         unsigned sz = queue_->pushCommand( cmd );
         if ( sz == unsigned(-1) ) break;
@@ -371,9 +376,10 @@ int StateMach::Execute()
 
         /// cmd gets owned
         smsc_log_debug( mlog, "trying to get session for key=%s cmd=%p", key.toString().c_str(), cmd.get() );
-        ActiveSession as = SessionManager::Instance().getSession( key, cmd.get() );
+        ActiveSession as = SessionManager::Instance().getSession( key, cmd );
         if ( ! as.get() ) {
             // cmd is pushed to session
+            // cmd.release();
             smsc_log_debug( mlog, "session for key=%s is LOCKED", key.toString().c_str() );
             continue;
         }

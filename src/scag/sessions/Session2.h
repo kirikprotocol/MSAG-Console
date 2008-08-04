@@ -8,19 +8,38 @@
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "logger/Logger.h"
-#include "scag/util/properties/Properties.h"
+#include "scag/util/properties/Properties2.h"
 #include "scag/util/storage/Serializer.h"
 #include "scag/transport/SCAGCommand2.h"
+#include "scag/lcm/LongCallManager2.h"
 
 
-namespace scag {
-namespace sessions2 {
+namespace scag2 {
+namespace sessions {
 
-    using namespace smsc::logger;
-    using namespace scag::util::properties;
-    using namespace smsc::core::buffers;
-    using namespace scag::util::storage;
-    using namespace scag::transport2;
+using lcm::LongCallContext;
+using namespace smsc::logger;
+using namespace scag::util::properties;
+using namespace smsc::core::buffers;
+using namespace scag::util::storage;
+using namespace transport;
+
+
+enum ProtocolForEvent
+{
+    PROTOCOL_SMPP_SMS =  1,
+    PROTOCOL_SMPP_USSD = 2,
+    PROTOCOL_HTTP = 3,
+    PROTOCOL_MMS = 4
+};
+
+
+enum ICCOperationStatus
+{
+    OPERATION_INITED = 1,
+    OPERATION_CONTINUED,
+    OPERATION_COMPLETED
+};
 
 
 /// Scope of properties (e.g. global, service, context, operation)
@@ -77,8 +96,23 @@ public:
         return key_;
     }
 
+    inline const SessionPrimaryKey& sessionPrimaryKey() const {
+        return pkey_;
+    }
+
+    /// get current operation
+    Operation* getCurrentOperation();
+
     /// destroy current operation
     void closeCurrentOperation();
+
+    /// FIXME: should it be here?
+    LongCallContext& getLongCallContext() {
+        return lcmCtx_;
+    }
+
+    bool isNew() const;
+    void setNew( bool anew );
 
     /// --- property Scopes, for use from ActionContext
 
@@ -112,11 +146,12 @@ public:
     inline SCAGCommand* setCurrentCommand( SCAGCommand* cmd ) {
         SCAGCommand* prev = command_;
         if ( command_ ) {
-            if ( command_ != cmd ) {
-                if ( cmd )
-                    smsc_log_warn(log_,"session %p has changed command: session->cmd=%p cmd=%p", this, command_, cmd );
-            } else {
+            if ( command_ == cmd ) {
                 prev = 0;
+                /*
+            } else if ( cmd ) {
+                smsc_log_warn(log_,"session %p has changed command: session->cmd=%p cmd=%p", this, command_, cmd );
+                 */
             }
         }
         command_ = cmd;
@@ -163,8 +198,9 @@ private:
     enum { COMMON = 0, FIXED = 1, ACCESS = 2 }
     expirationPolicy_;
 
-    /// session create time
-    timeval bornTime_;
+    // session create time is incorporated into primarykey
+    // timeval bornTime_;
+    SessionPrimaryKey  pkey_;
 
     /// last access time (pers)
     time_t lastAccessTime_;
@@ -174,6 +210,12 @@ private:
 
     /// current command being processed, it locks the session (owned, not pers).
     SCAGCommand* command_;
+
+    /// FIXME: should it be here?
+    LongCallContext  lcmCtx_;
+
+    /// if the session is just created
+    bool isnew_;
 
     /// the list of pending commands (owned, not pers).
     std::list< SCAGCommand* > cmdQueue_;
@@ -273,11 +315,11 @@ private:
 } // namespace sessions
 } // namespace scag
 
-inline scag::util::storage::Serializer& operator << ( scag::util::storage::Serializer& o, const scag::sessions2::Session& s )
+inline scag::util::storage::Serializer& operator << ( scag::util::storage::Serializer& o, const scag2::sessions::Session& s )
 {
     return s.serialize(o);
 }
-inline scag::util::storage::Deserializer& operator >> ( scag::util::storage::Deserializer& o, scag::sessions2::Session& s )
+inline scag::util::storage::Deserializer& operator >> ( scag::util::storage::Deserializer& o, scag2::sessions::Session& s )
 {
     return s.deserialize(o);
 }

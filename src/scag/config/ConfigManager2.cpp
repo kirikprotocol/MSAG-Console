@@ -24,8 +24,8 @@
 #include "license/check/license.hpp"
 #include "util/crc32.h"
 
-namespace scag   {
-namespace config2 {
+namespace scag2   {
+namespace config {
 
 using namespace std;
 using namespace xercesc;

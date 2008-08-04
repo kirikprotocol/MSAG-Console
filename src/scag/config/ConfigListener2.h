@@ -3,8 +3,8 @@
 
 #include "ConfigType.h"
 
-namespace scag {
-namespace config2 {
+namespace scag2 {
+namespace config {
 
 using namespace scag::config;
 

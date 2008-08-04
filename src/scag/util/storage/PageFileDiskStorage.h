@@ -43,8 +43,8 @@ public:
     {
         if ( ! pf_ )
             throw std::runtime_error( "PageFileDiskStorage: pagefile should be provided!" );
-        if ( ! glossary_ )
-            throw std::runtime_error( "PageFileDiskStorage: glossary should be provided!" );
+        // if ( ! glossary_ )
+        // throw std::runtime_error( "PageFileDiskStorage: glossary should be provided!" );
         disklog_ = smsc::logger::Logger::getInstance( "disk" );
     }
 

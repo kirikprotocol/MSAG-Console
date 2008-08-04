@@ -1,8 +1,8 @@
 #ifndef _SCAG_SESSIONS_EXTERNALTRANSACTION_H
 #define _SCAG_SESSIONS_EXTERNALTRANSACTION_H
 
-namespace scag {
-namespace sessions2 {
+namespace scag2 {
+namespace sessions {
 
     class ExternalTransaction 
     {

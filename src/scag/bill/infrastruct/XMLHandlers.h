@@ -35,7 +35,7 @@ public:
     uint32_t billType;
 
     TariffRec() {};
-    TariffRec(const std::string& sn, double pr, const std::string& c, uint32_t ci, uint32_t mti, uint32_t bt):Price(pr), ServiceNumber(sn), Currency(c), CategoryId(ci), MediaTypeId(mti), billType(bt) {};
+    TariffRec(const std::string& sn, double pr, const std::string& c, uint32_t ci, uint32_t mti, uint32_t bt):Price(pr), ServiceNumber(sn), Currency(c), MediaTypeId(mti), CategoryId(ci), billType(bt) {};
     
     TariffRec(const TariffRec& sm) { operator=(sm); };
 

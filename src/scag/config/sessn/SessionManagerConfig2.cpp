@@ -1,8 +1,8 @@
 #include "SessionManagerConfig2.h"
 
 
-namespace scag {
-namespace config2 {
+namespace scag2 {
+namespace config {
 
 
     SessionManagerConfig::SessionManagerConfig() :

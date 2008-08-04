@@ -15,8 +15,8 @@ namespace {
 } // namespace
 
 
-namespace scag {
-namespace sessions2 {
+namespace scag2 {
+namespace sessions {
 
     SessionPropertyScope::~SessionPropertyScope()
     {
@@ -76,21 +76,23 @@ namespace sessions2 {
     smsc::logger::Logger* Session::log_ = 0;
 
 
-    Session::Session( const SessionKey& key ) :
-    key_(key),
-    command_(0),
-    transactions_(0),
-    globalScope_(0),
-    serviceScopes_(0),
-    contextScopes_(0),
-    operationScopes_(0)
-    {
-        if ( ! log_ ) {
-            MutexGuard mg(::sessionloggermutex);
-            if ( !log_ ) log_ = smsc::logger::Logger::getInstance("session");
-        }
-        clear();
+Session::Session( const SessionKey& key ) :
+key_(key),
+expirationPolicy_(COMMON),
+pkey_(key),
+command_(0),
+transactions_(0),
+globalScope_(0),
+serviceScopes_(0),
+contextScopes_(0),
+operationScopes_(0)
+{
+    if ( ! log_ ) {
+        MutexGuard mg(::sessionloggermutex);
+        if ( !log_ ) log_ = smsc::logger::Logger::getInstance("session");
     }
+    clear();
+}
 
 
     Session::~Session()
@@ -148,7 +150,8 @@ namespace sessions2 {
     void Session::clear()
     {
         expirationPolicy_ = COMMON;
-        gettimeofday( &bornTime_, 0 );
+        // gettimeofday( &bornTime_, 0 );
+        pkey_ = SessionPrimaryKey( key_ ); // to reset born time
         lastAccessTime_ = time(0);
         expirationTime_ = lastAccessTime_ + 5; // FIXME: customize
 
@@ -156,6 +159,8 @@ namespace sessions2 {
         
         lastOperationId_ = 0;
         ussdOperationId_ = 0;
+
+        isnew_ = true;
 
         { // clear operations
             assert( operations_.Count() == 0 );
@@ -192,6 +197,27 @@ namespace sessions2 {
         // FIXME
     }
 
+
+Operation* Session::getCurrentOperation()
+{
+    // FIXME
+    return 0;
+}
+
+
+void Session::closeCurrentOperation()
+{
+    // FIXME
+}
+
+
+bool Session::isNew() const {
+    return isnew_;
+}
+
+void Session::setNew( bool an ) {
+    isnew_ = an;
+}
 
     time_t Session::expirationTime() const 
     {

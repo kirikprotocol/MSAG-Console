@@ -20,6 +20,7 @@
 #include <util/BufferSerialization.hpp>
 #include <scag/util/singleton/Singleton.h>
 #include "StatisticsManager.h"
+#include "scag/config/ConfigManager.h"
 
 #include <scag/util/properties/Properties.h>
 using namespace scag::util::properties;

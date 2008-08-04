@@ -11,10 +11,10 @@
 // #include "SessionExpirationQueue.h"
 #include "scag/config/ConfigView.h"
 
-namespace scag {
-namespace sessions2 {
+namespace scag2 {
+namespace sessions {
 
-    using namespace scag::transport2;
+    using namespace scag2::transport;
     class Session;
     class SessionFinalizer;
     class SessionExpirationQueue;

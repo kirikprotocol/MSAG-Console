@@ -11,19 +11,19 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "logger/Logger.h"
-#include "scag/config/ConfigListener.h"
+#include "scag/config/ConfigListener2.h"
 #include "scag/config/ConfigManager2.h"
 #include "scag/exc/SCAGExceptions.h"
-#include "scag/lcm/LongCallManager.h"
-#include "scag/re/CommandBrige.h"
-#include "scag/re/RuleEngine.h"
+#include "scag/lcm/LongCallManager2.h"
+// #include "scag/re/CommandBrige.h"
+// #include "scag/re/RuleEngine2.h"
 #include "scag/util/UnlockMutexGuard.h"
 #include "scag/util/singleton/Singleton.h"
 #include "scag/util/sms/HashUtil.h"
 #include "util/int.h"
 
-namespace scag {
-namespace sessions2 {
+namespace scag2 {
+namespace sessions {
 
     const time_t SessionManager::DEFAULT_EXPIRE_INTERVAL = 60;
 
@@ -33,15 +33,14 @@ namespace sessions2 {
     using namespace scag::exceptions;
     using namespace smsc::core::buffers;
     using namespace scag::util::sms;
-    using namespace scag::lcm;
+    using namespace lcm;
     using namespace re;
-    using namespace scag::config;
-    using namespace scag::config2;
-    using scag::config::SessionManagerConfig;
+    using namespace scag2::config;
+
+    using scag2::config::SessionManagerConfig;
     using scag::util::UnlockMutexGuard;
 
     using smsc::logger::Logger;
-
 
     class SessionManagerImpl :
     public Thread,
@@ -65,11 +64,8 @@ namespace sessions2 {
 
         // void AddRestoredSession(Session * session);
 
-        void init( const scag::config2::SessionManagerConfig& config );
+        void init( const scag2::config::SessionManagerConfig& config );
 
-        // SessionManager interface
-        virtual ActiveSession getSession( const SessionKey& key,
-                                          SCAGCommand* cmd );
         // virtual void releaseSession(SessionPtr session);
 
         virtual void getSessionsCount( uint32_t& sessionsCount,
@@ -92,6 +88,12 @@ namespace sessions2 {
         /// --- interface of SessionFinalizer
         virtual void finalize( Session& s );
 
+    protected:
+
+        // SessionManager interface
+        virtual ActiveSession fetchSession( const SessionKey& key,
+                                            SCAGCommand*      cmd );
+
     private:
 
         /// --- interface of Thread
@@ -100,15 +102,15 @@ namespace sessions2 {
         void Stop();
         bool isStarted();
         int  processExpire();
-        void deleteSession(SessionPtr& session);
-        bool processDeleteSession(SessionPtr& session);
-      bool deleteQueuePop(SessionPtr& s);
-        void deleteQueuePush(SessionPtr& s, bool expired);
+        // void deleteSession(SessionPtr& session);
+        // bool processDeleteSession(SessionPtr& session);
+        // bool deleteQueuePop(SessionPtr& s);
+        // void deleteQueuePush(SessionPtr& s, bool expired);
 
-        uint16_t getNewUSR(Address& address);
-        uint16_t getLastUSR(Address& address);
+        // uint16_t getNewUSR(Address& address);
+        // uint16_t getLastUSR(Address& address);
 
-        void reorderExpireQueue(Session* session);
+        // void reorderExpireQueue(Session* session);
 
     public:
         unsigned          nodeNumber;
@@ -126,7 +128,7 @@ namespace sessions2 {
         bool            started_;
 
         std::auto_ptr<SessionStore>  store_;
-        scag::config2::SessionManagerConfig  config_;
+        scag2::config::SessionManagerConfig  config_;
         // CyclicQueue< ExpireData > deleteQueue_;
 
     };
@@ -216,7 +218,7 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
 
 
 void SessionManager::Init( unsigned theNodeNumber,
-                           const scag::config2::SessionManagerConfig& config,
+                           const scag2::config::SessionManagerConfig& config,
                            SCAGCommandQueue&           cmdqueue )
 {
     if (!bSessionManagerInited)
@@ -227,7 +229,7 @@ void SessionManager::Init( unsigned theNodeNumber,
             sm.nodeNumber = theNodeNumber;
             sm.cmdqueue = &cmdqueue;
             sm.init(config);
-            // sm.Start();
+            sm.Start();
             bSessionManagerInited = true;
         }
     }
@@ -287,7 +289,7 @@ SessionManagerImpl::~SessionManagerImpl()
 }
 
 
-void SessionManagerImpl::init( const scag::config2::SessionManagerConfig& cfg ) // possible throws exceptions
+void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg ) // possible throws exceptions
 {
     this->config_ = cfg;
     // expireSchedule = time(NULL) + DEFAULT_EXPIRE_INTERVAL;
@@ -310,10 +312,10 @@ void SessionManagerImpl::init( const scag::config2::SessionManagerConfig& cfg ) 
 }
 
 
-ActiveSession SessionManagerImpl::getSession( const SessionKey& key,
-                                              SCAGCommand* cmd )
+ActiveSession SessionManagerImpl::fetchSession( const SessionKey& key,
+                                                SCAGCommand*      cmd )
 {
-    if ( !isStarted() || ! store_.get() ) return ActiveSession();
+    if ( !isStarted() || !store_.get() || !cmd ) return ActiveSession();
     return store_->fetchSession( key, cmd );
 }
 
@@ -357,35 +359,40 @@ void SessionManagerImpl::Stop()
 
     if (started_)
     {
-        started_ = false;
+        MutexGuard mg(expireMonitor_);
+
         // waiting for all sessions to be unlocked
         if ( store_.get() ) {
             store_->stop();
-            MutexGuard mg(expireMonitor_);
 
-            for ( int passes = 0; ; ++passes ) {
+            unsigned sessionLockedCount = 0;
+            for ( int passes = 0; ; ) {
 
                 unsigned sessionCount;
-                unsigned sessionLockedCount;
-                store_->getSessionsCount( sessionCount, sessionLockedCount );
-                if ( sessionLockedCount == 0 ) break;
+                unsigned newSessionLockedCount;
+                store_->getSessionsCount( sessionCount, newSessionLockedCount );
+                if ( newSessionLockedCount == 0 ) break;
+                if ( sessionLockedCount == newSessionLockedCount )
+                    ++passes;
+                sessionLockedCount = newSessionLockedCount;
 
                 expireMonitor_.wait(100);
-                if ( passes >= 200 ) {
-                    smsc_log_error( log_, "logic error in stop: long lived session or dead lock?" );
+                if ( passes >= 10 ) {
+                    smsc_log_error( log_, "logic error in stop: long lived session(s) or dead lock? Final number of sessions=%u", sessionLockedCount );
                     ::abort();
                 }
             }
-        }
 
-        // all sessions have been returned to store
-        while ( expireSet_.size() > 0 ) {
+            // all sessions have been returned to store
+            // notify expire thread
+            smsc_log_info( log_, "all sessions are in expire pool" );
+            started_ = false;
             expireMonitor_.notify();
-            expireMonitor_.wait(100);
         }
-        smsc_log_info( log_, "expire pool is empty" );
+        started_ = false;
 
     } // if started
+    this->WaitFor();
     smsc_log_info(log_,"SessionManager::stop");
 }
 
@@ -438,14 +445,14 @@ int SessionManagerImpl::Execute()
             int next = (expireSet_.begin()->expiration - time(0))*1000; // in ms
             if ( curtmo > next ) curtmo = next;
         }
-        if ( ! isStarted() ) {
-            if ( curtmo > 100 ) curtmo = 100;
-        }
-        if ( curtmo > 0 ) expireMonitor_.wait( curtmo );
+        if ( curtmo > 0 && isStarted() ) expireMonitor_.wait( curtmo );
 
         const time_t now = time(0);
         std::vector< ExpireData > curset;
         if ( ! isStarted() ) {
+
+            if ( expireSet_.size() == 0 ) break;
+
             curset.reserve( expireSet_.size() );
             std::copy( expireSet_.begin(), expireSet_.end(),
                        std::back_inserter(curset));
@@ -518,7 +525,7 @@ int SessionManagerImpl::Execute()
             expireSet_.insert(*i);
         }
 
-    } // while expireSet_ is alive
+    } // while expireSet_ is not empty
 
     smsc_log_info( log_, "SessionManager::stop executing" );
     return 0;

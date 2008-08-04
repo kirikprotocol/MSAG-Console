@@ -63,8 +63,9 @@ class LongCallContext
     ActionContext  *actionContext;
     PostProcessAction *actions, *actionsTail;
 public:
-    LongCallContext(): initiator(NULL), stateMachineContext(NULL),
-  next(NULL), params(NULL), actionContext(NULL), continueExec(false), actions(NULL) {};
+    LongCallContext(): params(NULL), actionContext(NULL), actions(NULL),
+    stateMachineContext(NULL), initiator(NULL),
+    next(NULL), continueExec(false) {};
 
     uint32_t systemType, callCommandId;
     void *stateMachineContext;

@@ -15,8 +15,8 @@
 
 namespace {
 
-    using namespace scag::sessions2;
-    using namespace scag::transport2;
+    using namespace scag2::sessions;
+    using namespace scag2::transport;
     using namespace scag::util::storage;
 
     class UnlockGuard
@@ -333,6 +333,7 @@ namespace {
                     }
 
                     smsc_log_debug(log_, "fetched key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
+                    session->setCurrentCommand( command );
                     return makeLockedSession(*session, *cmd.release());
 
                 }
@@ -398,6 +399,7 @@ namespace {
                 abort();
                 // throw std::runtime_error("SessionStore: logic error in releaseSession" );
             }
+            --lockedSessions_;
             expiration = session.expirationTime();
 
             if ( flush ) {
@@ -511,6 +513,7 @@ namespace {
             if ( i == expired.end() ) break;
 
             const SessionKey& key = i->key;
+            ++i;
             MemStorage::stored_type* v = cache_->get( key );
             if ( !v ) {
                 // smsc_log_warn(log_,"key=%s to be expired is not found, sz=%u", key.toString().c_str(), curset.size() );
@@ -709,8 +712,8 @@ namespace {
 
 
 
-namespace scag {
-namespace sessions2 {
+namespace scag2 {
+namespace sessions {
 
     SessionStore* SessionStore::create( SessionFinalizer& fin,
                                         SessionExpirationQueue& exq )

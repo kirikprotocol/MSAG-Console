@@ -1,8 +1,8 @@
 #ifndef _SCAG_SESSIONS_SESSIONFINALIZER_H
 #define _SCAG_SESSIONS_SESSIONFINALIZER_H
 
-namespace scag {
-namespace sessions2 {
+namespace scag2 {
+namespace sessions {
 
     class Session;
 

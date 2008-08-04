@@ -12,7 +12,7 @@
 #include <logger/Logger.h>
 
 #include <util/timeslotcounter.hpp>
-#include <util/config/Config.h>
+#include "scag/config/Config.h"
 
 #include "Statistics.h"
 #include "TrafficRecord.h"
@@ -46,7 +46,7 @@ namespace stat {
     using smsc::core::buffers::Hash;
 
     using smsc::logger::Logger;
-    using smsc::util::config::Config;
+    // using smsc::util::config::Config;
     using scag::stat::SmppStatEvent;
 
     using smsc::util::TimeSlotCounter;

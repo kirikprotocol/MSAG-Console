@@ -13,6 +13,7 @@
 
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/config/ConfigListener.h"
+#include "scag/config/ConfigManager.h"
 #include "scag/stat/Statistics.h"
 #include "scag/util/lltostr.h"
 
@@ -160,8 +161,9 @@ public:
     void configChanged();
 
     BillingManagerImpl() :
+        ConfigListener(BILLMAN_CFG),
         m_bStarted(false),
-        m_lastBillId(0), ConfigListener(BILLMAN_CFG), logger(Logger::getInstance("bill.man"))
+        m_lastBillId(0), logger(Logger::getInstance("bill.man"))
         #ifdef MSAG_INMAN_BILL
         , socket(0), pipe(0)
         #endif
@@ -516,7 +518,7 @@ void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, Bill
     ev->pBillingCurrency = tariffRec.Currency;
 
     char buff[70];
-    sprintf(buff,"%s/%ld%d",billingInfo.AbonentNumber.c_str(), billingInfo.SessionBornMicrotime.tv_sec, billingInfo.SessionBornMicrotime.tv_usec / 1000);
+    sprintf(buff,"%s/%ld%d",billingInfo.AbonentNumber.c_str(), billingInfo.SessionBornMicrotime.tv_sec, int(billingInfo.SessionBornMicrotime.tv_usec / 1000));
     ev->Header.pSessionKey.append(buff);
 }
 

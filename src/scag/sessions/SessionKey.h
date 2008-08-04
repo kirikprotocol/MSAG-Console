@@ -4,8 +4,15 @@
 #include "util/int.h"
 #include "scag/util/storage/Serializer.h"
 
-namespace scag {
-namespace sessions2 {
+namespace smsc {
+    namespace sms {
+        struct Address;
+    }
+}
+
+
+namespace scag2 {
+namespace sessions {
 
 using namespace scag::util::storage;
 
@@ -49,8 +56,32 @@ public:
     Serializer& serialize( Serializer& s ) const;
     Deserializer& deserialize( Deserializer& s ) throw (DeserializerException);
 
+    // from sms::Address
+    const SessionKey& operator = ( const smsc::sms::Address& a );
+
 private:
     uint64_t msisdn_;
+};
+
+
+class SessionPrimaryKey
+{
+public:
+    SessionPrimaryKey( const SessionKey& a );
+    const std::string& toString() const {
+        return key_;
+    }
+    const timeval& bornTime() const {
+        return borntime_;
+    }
+
+private:
+    SessionPrimaryKey();
+    // SessionPrimaryKey( const SessionPrimaryKey& );
+    // SessionPrimaryKey& operator = ( const SessionPrimaryKey& );
+private:
+    std::string key_;
+    timeval     borntime_;
 };
 
 
