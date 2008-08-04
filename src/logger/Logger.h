@@ -227,10 +227,10 @@ private:
   
   static void timedConfigReload()
   {
-    if(reloadConfigInterval && lastReloadConfigCheck + reloadConfigInterval < time(NULL))
+    if(reloadConfigInterval && time_t(lastReloadConfigCheck + reloadConfigInterval) < time(NULL))
     {
         MutexGuard guard(static_mutex);
-        if(lastReloadConfigCheck + reloadConfigInterval >= time(NULL)) return;
+        if(time_t(lastReloadConfigCheck + reloadConfigInterval) >= time(NULL)) return;
         struct ::stat st;
         const char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
         if(!logFileName) logFileName = "logger.properties";
