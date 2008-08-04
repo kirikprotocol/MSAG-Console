@@ -22,6 +22,11 @@
   <th>directory</th>
   <td><input class=txt name=store_dir value="<%=StringEncoderDecoder.encode(bean.getStore_dir())%>"></td>
 </tr>
+<tr class=row<%=rowN++&1%>>
+  <th>queue directory</th>
+  <td><input class=txt name=store_queueDir value="<%=StringEncoderDecoder.encode(bean.getStore_queueDir())%>"></td>
+</tr>
+
 
 <%rowN=0;%>
 <tr><td colspan=2><div class=page_subtitle>SMPP</div></td></tr>
@@ -61,6 +66,18 @@
   <th>retryTime</th>
   <td><input class=txt name=smpp_retryTime value="<%=StringEncoderDecoder.encode(bean.getSmpp_retryTime())%>"></td>
 </tr>
+<tr class=row<%=rowN++&1%>>
+  <th>partitionSms</th>
+  <td align="LEFT"><input type=checkbox name=smpp_partitionSms <%=bean.isSmpp_partitionSms() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>partsSendSpeedPerHour</th>
+  <td><input class=txt name=smpp_partsSendSpeedPerHour value="<%=StringEncoderDecoder.encode(bean.getSmpp_partsSendSpeedPerHour())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>maxUdhParts</th>
+  <td><input class=txt name=smpp_maxUdhParts value="<%=StringEncoderDecoder.encode(bean.getSmpp_maxUdhParts())%>"></td>
+</tr>
 
 <%rowN=0;%>
 <tr><td colspan=2>&nbsp;</td></tr>
@@ -96,6 +113,18 @@
 <tr class=row<%=rowN++&1%>>
   <th>default limit</th>
   <td><input class=txt name=admin_default_limit value="<%=StringEncoderDecoder.encode(bean.getAdmin_default_limit())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>regions config</th>
+  <td><input class=txt name=admin_regionsconfig value="<%=StringEncoderDecoder.encode(bean.getAdmin_regionsconfig())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>routes config</th>
+  <td><input class=txt name=admin_routesconfig value="<%=StringEncoderDecoder.encode(bean.getAdmin_routesconfig())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>helpdesk address</th>
+  <td><input class=txt name=admin_helpdeskAddress value="<%=StringEncoderDecoder.encode(bean.getAdmin_helpdeskAddress())%>"></td>
 </tr>
 
 
@@ -135,6 +164,17 @@
 <tr class=row<%=rowN++&1%>>
   <th>user name transform result</th>
   <td><input class=txt name=mail_user_name_transform_result value="<%=StringEncoderDecoder.encode(bean.getMail_user_name_transform_result())%>"></td>
+</tr>
+
+<%rowN=0;%>
+<tr><td colspan=2><div class=page_subtitle>Statistic</div></td></tr>
+<tr class=row<%=rowN++&1%>>
+  <th>store location</th>
+  <td><input class=txt name=stat_storeLocation value="<%=StringEncoderDecoder.encode(bean.getStat_storeLocation())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>flush period (sec)</th>
+  <td><input class=txt name=stat_flushPeriodInSec value="<%=StringEncoderDecoder.encode(bean.getStat_flushPeriodInSec())%>"></td>
 </tr>
 
 <%rowN=0;%>

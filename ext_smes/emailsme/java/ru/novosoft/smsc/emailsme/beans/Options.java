@@ -13,6 +13,7 @@ import java.util.List;
 public class Options extends SmeBean
 {
   private String store_dir = "";
+  private String store_queueDir = "store/eueue";
 
   private String smpp_host = "";
   private int smpp_port = 0;
@@ -23,6 +24,12 @@ public class Options extends SmeBean
   private String smpp_serviceType = "";
   private int smpp_protocolId = 0;
   private int smpp_retryTime = 0;
+  private boolean smpp_partitionSms = false;
+  private int smpp_partsSendSpeedPerHour = 60;
+  private int smpp_maxUdhParts = 3;
+
+  private String stat_storeLocation = "store/stat";
+  private int stat_flushPeriodInSec = 300;
 
   private String listener_host = "";
   private int listener_port = 0;
@@ -33,6 +40,9 @@ public class Options extends SmeBean
   private boolean admin_allow_email_2_gsm_without_profile = false;
   private boolean sendSuccessAnswer = false;
   private String admin_default_limit = "";
+  private String admin_regionsconfig = "";
+  private String admin_routesconfig = "";
+  private String admin_helpdeskAddress = "";
 
   private String mail_domain = "";
   private String mail_stripper = "";
@@ -103,6 +113,7 @@ public class Options extends SmeBean
     if (!isInitialized()) {
       try {
         store_dir = getStringParameter("store.dir");
+        store_queueDir = getStringParameter("store.queueDir");
 
         smpp_host = getStringParameter("smpp.host");
         smpp_port = getIntParameter("smpp.port");
@@ -113,6 +124,12 @@ public class Options extends SmeBean
         smpp_serviceType = getStringParameter("smpp.serviceType");
         smpp_protocolId = getIntParameter("smpp.protocolId");
         smpp_retryTime = getIntParameter("smpp.retryTime");
+        smpp_partitionSms = getBoolParameter("smpp.partitionSms");
+        smpp_partsSendSpeedPerHour = getIntParameter("smpp.partsSendSpeedPerHour");
+        smpp_maxUdhParts = getIntParameter("smpp.maxUdhParts");
+
+        stat_storeLocation = getStringParameter("stat.storeLocation");
+        stat_flushPeriodInSec = getIntParameter("stat.flushPeriodInSec");
 
         listener_host = getStringParameter("listener.host");
         listener_port = getIntParameter("listener.port");
@@ -123,6 +140,9 @@ public class Options extends SmeBean
         admin_allow_email_2_gsm_without_profile = getBoolParameter("admin.allowEml2GsmWithoutProfile");
         sendSuccessAnswer = getBoolParameter("answers.sendSuccessAnswer");
         admin_default_limit = getStringParameter("admin.defaultLimit");
+        admin_regionsconfig = getStringParameter("admin.regionsconfig");
+        admin_routesconfig = getStringParameter("admin.routesconfig");
+        admin_helpdeskAddress = getStringParameter("admin.helpdeskAddress");
 
         mail_domain = getStringParameter("mail.domain");
         mail_stripper = getStringParameter("mail.stripper");
@@ -180,6 +200,7 @@ public class Options extends SmeBean
   private int done()
   {
     getConfig().setString("store.dir", store_dir);
+    getConfig().setString("store.queueDir", store_queueDir);
 
     getConfig().setString("smpp.host", smpp_host);
     getConfig().setInt("smpp.port", smpp_port);
@@ -190,6 +211,12 @@ public class Options extends SmeBean
     getConfig().setString("smpp.serviceType", smpp_serviceType);
     getConfig().setInt("smpp.protocolId", smpp_protocolId);
     getConfig().setInt("smpp.retryTime", smpp_retryTime);
+    getConfig().setBool("smpp.partitionSms", smpp_partitionSms);
+    getConfig().setInt("smpp.partsSendSpeedPerHour", smpp_partsSendSpeedPerHour);
+    getConfig().setInt("smpp.maxUdhParts", smpp_maxUdhParts);
+
+    getConfig().setString("stat.storeLocation", stat_storeLocation);
+    getConfig().setInt("stat.flushPeriodInSec", stat_flushPeriodInSec);
 
     getConfig().setString("listener.host", listener_host);
     getConfig().setInt("listener.port", listener_port);
@@ -200,6 +227,9 @@ public class Options extends SmeBean
     getConfig().setBool("admin.allowEml2GsmWithoutProfile", admin_allow_email_2_gsm_without_profile);
     getConfig().setBool("answers.sendSuccessAnswer", sendSuccessAnswer);
     getConfig().setString("admin.defaultLimit", admin_default_limit);
+    getConfig().setString("admin.regionsconfig", admin_regionsconfig);
+    getConfig().setString("admin.routesconfig", admin_routesconfig);
+    getConfig().setString("admin.helpdeskAddress", admin_helpdeskAddress);
 
     getConfig().setString("mail.domain", mail_domain);
     getConfig().setString("mail.stripper", mail_stripper);
@@ -758,5 +788,89 @@ public class Options extends SmeBean
 
   public void setAnswers_messagefailedsystem(String answers_messagefailedsystem) {
     this.answers_messagefailedsystem = answers_messagefailedsystem;
+  }
+
+  public String getSmpp_maxUdhParts() {
+    return String.valueOf(smpp_maxUdhParts);
+  }
+
+  public void setSmpp_maxUdhParts(String smpp_maxUdhParts) {
+    try {
+      this.smpp_maxUdhParts = Integer.parseInt(smpp_maxUdhParts);
+    } catch (NumberFormatException e) {
+      logger.error("Invalid smpp.maxUdhParts: " + smpp_maxUdhParts);
+    }
+  }
+
+  public boolean isSmpp_partitionSms() {
+    return smpp_partitionSms;
+  }
+
+  public void setSmpp_partitionSms(boolean smpp_partitionSms) {
+    this.smpp_partitionSms = smpp_partitionSms;
+  }
+
+  public String getSmpp_partsSendSpeedPerHour() {
+    return String.valueOf(smpp_partsSendSpeedPerHour);
+  }
+
+  public void setSmpp_partsSendSpeedPerHour(String smpp_partsSendSpeedPerHour) {
+    try {
+      this.smpp_partsSendSpeedPerHour = Integer.parseInt(smpp_partsSendSpeedPerHour);
+    } catch (NumberFormatException e) {
+      logger.error("Invalid smpp.partsSendSpeedPerHour: " + smpp_partsSendSpeedPerHour);
+    }
+  }
+
+  public String getStore_queueDir() {
+    return store_queueDir;
+  }
+
+  public void setStore_queueDir(String store_queueDir) {
+    this.store_queueDir = store_queueDir;
+  }
+
+  public String getStat_flushPeriodInSec() {
+    return String.valueOf(stat_flushPeriodInSec);
+  }
+
+  public void setStat_flushPeriodInSec(String stat_flushPeriodInSec) {
+    try {
+      this.stat_flushPeriodInSec = Integer.parseInt(stat_flushPeriodInSec);
+    } catch (NumberFormatException e) {
+      logger.error("Invalid stat.flushPerionInSec: " + stat_flushPeriodInSec);
+    }
+  }
+
+  public String getStat_storeLocation() {
+    return stat_storeLocation;
+  }
+
+  public void setStat_storeLocation(String stat_storeLocation) {
+    this.stat_storeLocation = stat_storeLocation;
+  }
+
+  public String getAdmin_helpdeskAddress() {
+    return admin_helpdeskAddress;
+  }
+
+  public void setAdmin_helpdeskAddress(String admin_helpdeskAddress) {
+    this.admin_helpdeskAddress = admin_helpdeskAddress;
+  }
+
+  public String getAdmin_regionsconfig() {
+    return admin_regionsconfig;
+  }
+
+  public void setAdmin_regionsconfig(String admin_regionsconfig) {
+    this.admin_regionsconfig = admin_regionsconfig;
+  }
+
+  public String getAdmin_routesconfig() {
+    return admin_routesconfig;
+  }
+
+  public void setAdmin_routesconfig(String admin_routesconfig) {
+    this.admin_routesconfig = admin_routesconfig;
   }
 }
