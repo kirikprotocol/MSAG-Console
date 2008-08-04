@@ -1,27 +1,27 @@
-#ifndef __SCAG_SYSTEM_CORE__
-#define __SCAG_SYSTEM_CORE__
+#ifndef __SCAG_SYSTEM_CORE2__
+#define __SCAG_SYSTEM_CORE2__
 
 #include <sys/types.h>
 
+#include "core/buffers/XHash.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "core/threads/ThreadedTask.hpp"
-#include "scag/transport/smpp/router/route_manager.h"
-//#include "util/config/smeman/SmeManConfig.h"
-//#include "sme/SmppBase.hpp"
-#include "smeman/smsccmd.h"
-#include "core/buffers/XHash.hpp"
 #include "logger/Logger.h"
-#include "scag/config/route/RouteConfig.h"
-#include "scag/stat/Statistics.h"
-#include "scag/stat/StatisticsManager.h"
+#include "config/route/RouteConfig.h"
+#include "stat/Statistics.h"
+#include "stat/StatisticsManager.h"
+// #include "transport/http/Managers.h"
+// #include "transport/http/HttpProcessor.h"
+#include "transport/smpp/router/route_manager.h"
+#include "transport/smpp/SmppManager2.h"
+#include "transport/smpp/SmppManagerAdmin2.h"
+#include "util/Reffer.h"
+#include "smeman/smsccmd.h"
 #include "sms/sms.h"
-#include "scag/transport/smpp/SmppManager.h"
-#include "scag/transport/smpp/SmppManagerAdmin.h"
-#include "scag/transport/http/Managers.h"
-#include "scag/transport/http/HttpProcessor.h"
-#include "scag/util/Reffer.h"
+//#include "sme/SmppBase.hpp"
+//#include "util/config/smeman/SmeManConfig.h"
 
-namespace scag
+namespace scag2
 {
 
 using smsc::sms::SMS;
@@ -35,8 +35,8 @@ using namespace smsc::logger;
 using scag::config::RouteConfig;
 using scag::stat::SmppStatEvent;
 using scag::stat::StatisticsManager;
-using scag::transport::smpp::router::RouteManager;
-using scag::transport::smpp::router::RouteInfo;
+using scag2::transport::smpp::router::RouteManager;
+using scag2::transport::smpp::router::RouteInfo;
 using std::string;
 using scag::util::Reffer;
 using scag::util::RefferGuard;
@@ -56,7 +56,8 @@ class GatewaySme;
 class Scag
 {
 public:
-  Scag():stopFlag(false), testRouter_(0)
+
+    Scag() : stopFlag(false), testRouter_(0)
   {
 /*    acceptedCounter=0;
     rejectedCounter=0;
@@ -67,8 +68,10 @@ public:
 
     startTime=0;
   };
-  ~Scag();
-  void init();
+
+    ~Scag();
+
+    void init( unsigned mynode );
 //  void run();
   void stop(){stopFlag=true;}
   //void mainLoop();
@@ -126,9 +129,9 @@ public:
 
   void reloadTestRoutes(const RouteConfig& rcfg);
 
-  scag::transport::smpp::SmppManagerAdmin* getSmppManagerAdmin()
+  scag2::transport::smpp::SmppManagerAdmin* getSmppManagerAdmin()
   {
-      return &scag::transport::smpp::SmppManager::Instance();
+      return &scag2::transport::smpp::SmppManager::Instance();
   }
 
 protected:
@@ -167,6 +170,6 @@ protected:
 
 };
 
-}//scag
+} // scag2
 
 #endif // __SCAG_SYSTEM_CORE__
