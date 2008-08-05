@@ -400,36 +400,39 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
     smsc_log_debug(logger,"Process RuleEngine with serviceId: %d", command.getServiceId());
 
     RulesReference rulesRef = getRules();
-    //int ruleId = command.getRuleId();
+
+    if ( session.isNew() ) {
+        processSession( session, rs );
+        if ( rs.status != STATUS_OK ) return;
+    }
 
     RuleKey key;
-    key.transport = command.getType();
     key.serviceId = command.getServiceId();
-
-    if (session.isNew()) {
-        // FIXME: should session has rule key ?
-        // session.setRuleKey(key);
-    }
+    key.transport = command.getType();
 
     Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
 
     if (rulePtr)
         (*rulePtr)->process(command, session, rs);
     else
-        throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", key.serviceId);
+        smsc_log_debug(logger,"rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
 }
+
 
 void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
 {
     RulesReference rulesRef = getRules();
-    // FIXME: add rule key functionality to session
-    Rule ** rulePtr = 0; // rulesRef.rules->rules.GetPtr(session.getRuleKey());
+    RuleKey key;
+    key.serviceId = -1;
+    key.transport = transport::NONE;
+    Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
 
     if (rulePtr)
-        (*rulePtr)->processSession(session, rs);
+        (*rulePtr)->processSession( session, rs );
     else
-        // FIXME: rule key
-        throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", 0 ); // session.getRuleKey().serviceId );
+        smsc_log_debug(logger,"session rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
+    session.setNew( false );
+    // throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", 0 ); // session.getRuleKey().serviceId );
 }
 
 
