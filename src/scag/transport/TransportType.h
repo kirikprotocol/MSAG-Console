@@ -6,7 +6,10 @@ namespace transport {
 
     enum TransportType
     {
-        SMPP = 1, HTTP = 2, MMS = 3
+        NONE = 0,
+        SMPP = 1,
+        HTTP = 2,
+        MMS = 3
     };
     
 } // namespace transport
