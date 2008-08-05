@@ -14,14 +14,14 @@ namespace emailsme{
 enum LimitType{ltDay,ltWeek,ltMonth};
 
 template <class T>
-void WriteString(T& f,const std::string& str)
+inline void WriteString(T& f,const std::string& str)
 {
   f.WriteNetInt16((uint16_t)str.length());
   f.Write(str.c_str(),str.length());
 }
 
 template <class T>
-void ReadString(T& f,std::string& str)
+inline void ReadString(T& f,std::string& str)
 {
   uint16_t len=f.ReadNetInt16();
   TmpBuf<char,64> buf(len);
