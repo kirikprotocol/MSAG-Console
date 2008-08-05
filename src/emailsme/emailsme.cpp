@@ -821,6 +821,7 @@ namespace cfg{
  string smtpHost;
  int smtpPort=25;
  int retryTime=5;
+ bool pauseAfterDisconnect=false;
  int defaultDailyLimit;
  int annotationSize;
  string maildomain;
@@ -1468,8 +1469,9 @@ public:
     needToStop=false;
     concatTimeout=120;
   }
-  void Init(const std::string& argLocation)
+  void Init(const std::string& argLocation,int argConcatTimeout)
   {
+    concatTimeout=argConcatTimeout;
     log=smsc::logger::Logger::getInstance("concat");
     storeLocation=argLocation;
     if(storeLocation.length() && *storeLocation.rbegin()!='/')
@@ -2724,6 +2726,15 @@ int main(int argc,char* argv[])
     __warning__("smpp.retryTime not found, using default");
   }
 
+  try
+  {
+    cfg::pauseAfterDisconnect=cfgman.getInt("smpp.pauseAfterDisconnect");
+
+  } catch(...)
+  {
+    __warning__("smpp.pauseAfterDisconnect not found, disabled");
+  }
+
   try{
     cfg::allowGsm2EmlWithoutProfile=cfgman.getBool("admin.allowGsm2EmlWithoutProfile");
   }catch(...)
@@ -2836,8 +2847,7 @@ int main(int argc,char* argv[])
     {
       File::MkDir(concatStore.c_str());
     }
-    concatManager.Init(concatStore);
-    
+    concatManager.Init(concatStore,cfgman.getInt("smpp.concatTimeout"));
   }
 
   cfg::serviceType=cfgman.getString("smpp.serviceType");
@@ -3028,6 +3038,10 @@ int main(int argc,char* argv[])
       concatManager.WaitFor();
     }
     ss.close();
+    if(!cfg::stopSme && cfg::pauseAfterDisconnect)
+    {
+      sleep(cfg::retryTime);
+    }
   }
   if(haveStats)
   {
