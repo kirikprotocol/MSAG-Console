@@ -90,13 +90,18 @@ namespace {
 
         virtual unsigned storedCommands() const;
 
-        virtual void expireSessions( const std::vector< ExpireData >& expired,
-                                     std::vector< ExpireData >& notyetexpired );
+        virtual bool expireSessions( const std::vector< SessionKey >& expired );
+
+        virtual void sessionFinalized( Session& s );
 
         virtual void getSessionsCount( unsigned& sessionsCount,
                                        unsigned& sessionsLockedCount ) const;
 
     protected:
+
+        // helper method, may be invoked from expireSessions or from sessionFinalized
+        // NOTE: lock should be pre-locked.
+        bool doSessionFinalization( Session& s );
 
         ActiveSession makeLockedSession( Session& s, SCAGCommand& c );
 
@@ -468,99 +473,122 @@ namespace {
     }
 
 
-    void SessionStoreImpl::expireSessions( const std::vector< ExpireData >& expired,
-                                           std::vector< ExpireData >& notyetexpired )
-    {
-        notyetexpired.clear();
-        if ( expired.size() == 0 ) return;
+bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired )
+{
+    if ( expired.size() == 0 ) return true;
 
-        notyetexpired.reserve( expired.size() );
-        smsc_log_debug( log_, "%u sessions to be expired", expired.size() );
+    smsc_log_debug( log_, "%u sessions to be expired", expired.size() );
 
-        time_t now = time(0);
-        Session* session = 0;
-        std::vector< ExpireData >::const_iterator i = expired.begin();
-        while ( true ) {
+    time_t now = time(0);
+    Session* session = 0;
+    std::vector< SessionKey >::const_iterator i = expired.begin();
+    unsigned longcall = 0;
+    unsigned notexpired = 0;
+    while ( true ) {
 
-            if ( session ) {
-                smsc_log_debug(log_, "finalizing key=%s session=%p", session->sessionKey().toString().c_str(), session );
-                // it may take quite long time
-                fin_->finalize( *session );
+        if ( session ) {
+            smsc_log_debug(log_, "finalizing key=%s session=%p", session->sessionKey().toString().c_str(), session );
+            // it may take quite long time
+            if ( ! fin_->finalize( *session ) ) {
+                // session is taken for long call finalization
+                ++longcall;
+                session = 0;
             }
+        }
 
-            MutexGuard mg(cacheLock_);
+        MutexGuard mg(cacheLock_);
             
-            if ( session ) {
+        if ( session ) {
+            if ( ! doSessionFinalization(*session) ) ++notexpired;
+        }
 
-                // check if there are some more commands
-                SCAGCommand* nextcmd = session->popCommand();
-                session->setCurrentCommand( nextcmd );
-                if ( nextcmd )
-                    setCommandSession(*nextcmd, session);
+        if ( i == expired.end() ) break;
 
-                if ( carryNextCommand(*session,nextcmd,false) ) {
-                    // cannot delete session, return it back to not expired
-                    // FIXME: what about initialization ?
-                    notyetexpired.push_back( ExpireData(session->expirationTime(),session->sessionKey()) );
-                } else {
-                    // no more commands
-                    delete cache_->release( session->sessionKey() );
-                }
+        const SessionKey& key = *i;
+        ++i;
+        MemStorage::stored_type* v = cache_->get( key );
+        if ( !v ) {
+            // smsc_log_warn(log_,"key=%s to be expired is not found, sz=%u", key.toString().c_str(), curset.size() );
+            ++notexpired;
+            continue;
+        }
 
-            }
-            
+        session = cache_->store2val(*v);
+        // smsc_log_debug(log_, "expired key=%s session=%p", key.toString().c_str(), session );
+        const time_t newexpiration = session->expirationTime();
 
-            if ( i == expired.end() ) break;
+        if ( session->currentCommand() ) {
+            smsc_log_debug(log_,"key=%s session=%p is locked, cmd=%p, skipped",
+                           key.toString().c_str(), session, session->currentCommand() );
+            ++notexpired;
+            session = 0;
+            continue;
+        }
 
-            const SessionKey& key = i->key;
-            ++i;
-            MemStorage::stored_type* v = cache_->get( key );
-            if ( !v ) {
-                // smsc_log_warn(log_,"key=%s to be expired is not found, sz=%u", key.toString().c_str(), curset.size() );
-                continue;
-            }
-
-            session = cache_->store2val(*v);
-            // smsc_log_debug(log_, "expired key=%s session=%p", key.toString().c_str(), session );
-            const time_t newexpiration = session->expirationTime();
-
-            if ( session->currentCommand() ) {
-                smsc_log_debug(log_,"key=%s session=%p is not free, cmd=%p, skipped",
-                               key.toString().c_str(), session, session->currentCommand() );
-                notyetexpired.push_back( ExpireData(newexpiration,key) );
+        // check expiration time again, as it may be prolonged while we were waiting
+        if ( ! stopping_ ) {
+            if ( now < newexpiration ) {
+                smsc_log_debug(log_,"key=%s session=%p is not expired yet",
+                               key.toString().c_str(), session );
+                ++notexpired;
                 session = 0;
                 continue;
             }
+        }
 
-            // check expiration time again, as it may be prolonged while we were waiting
-            if ( ! stopping_ ) {
-                if ( now < newexpiration ) {
-                    smsc_log_debug(log_,"key=%s session=%p is not expired yet",
-                                   key.toString().c_str(), session );
-                    notyetexpired.push_back( ExpireData(newexpiration,key) );
-                    session = 0;
-                    continue;
-                }
-            }
+        // lock session with some fictional command to prevent fetching
+        // while finalizing
+        session->setCurrentCommand( reinterpret_cast<SCAGCommand*>(-1) );
 
-            // lock session with some fictional command to prevent fetching
-            // while finalizing
-            session->setCurrentCommand( reinterpret_cast<SCAGCommand*>(-1) );
+    } // while
 
-        } // while
+    smsc_log_debug( log_, "sessions not expired: %u, longcalled: %u", notexpired, longcall );
+    return (notexpired == 0);
+}
 
-        if ( notyetexpired.size() > 0 )
-            smsc_log_debug( log_, "%u sessions are not yet expired", notyetexpired.size() );
+
+
+void SessionStoreImpl::sessionFinalized( Session& s )
+{
+    MutexGuard mg(cacheLock_);
+    doSessionFinalization( s );
+}
+
+
+void SessionStoreImpl::getSessionsCount( unsigned& sessionsCount,
+                                         unsigned& sessionsLockedCount ) const
+{
+    MutexGuard mg(cacheLock_);
+    sessionsCount = totalSessions_;
+    sessionsLockedCount = lockedSessions_;
+}
+
+
+bool SessionStoreImpl::doSessionFinalization( Session& session )
+{
+    if ( session.currentCommand() != reinterpret_cast<SCAGCommand*>(-1) ) {
+        smsc_log_error(log_, "logic error in session=%p finalization, cmd != -1", &session );
+        ::abort();
     }
 
-
-    void SessionStoreImpl::getSessionsCount( unsigned& sessionsCount,
-                                             unsigned& sessionsLockedCount ) const
-    {
-        MutexGuard mg(cacheLock_);
-        sessionsCount = totalSessions_;
-        sessionsLockedCount = lockedSessions_;
+    SCAGCommand* nextcmd = session.popCommand();
+    session.setCurrentCommand( nextcmd );
+    if ( nextcmd ) setCommandSession( *nextcmd, &session );
+    if ( carryNextCommand(session,nextcmd,false) ) {
+        // cannot delete session
+        // NOTE: the session was already finalized (possible via session_destroy rule),
+        // so make sure it will be initialized
+        smsc_log_debug(log_, "key=%s session=%p is revived via clear()", session.sessionKey().toString().c_str(), &session );
+        session.clear();
+        return false;
+    } else {
+        // no more commands
+        smsc_log_debug(log_, "key=%s session=%p is being destroyed", session.sessionKey().toString().c_str(), &session );
+        // FIXME: delete from disk also
+        std::auto_ptr<Session> sptr(cache_->release( session.sessionKey() ));
     }
+    return true;
+}
 
 
     // executed in a separate thread
@@ -702,7 +730,6 @@ namespace {
               ++i ) {
             queue_->pushCommand( *i, SCAGCommandQueue::MOVE );
         }
-
         return false;
 
     } // carryNextCommand

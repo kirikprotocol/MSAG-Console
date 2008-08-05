@@ -23,25 +23,6 @@ namespace sessions {
 class SessionStore
 {
 public:
-
-    struct ExpireData 
-    {
-        ExpireData( time_t expTime, const SessionKey& k ) : expiration(expTime), key(k) {}
-        bool operator < ( const ExpireData& e ) const {
-            return ( expiration < e.expiration || 
-                     ( expiration == e.expiration && key < e.key ) );
-        }
-                
-        bool operator == ( const ExpireData& e ) const {
-            return ( expiration == e.expiration ) && ( key == e.key );
-        }
-
-    public:
-        time_t      expiration;
-        SessionKey  key;
-    };
-
-public:
     virtual ~SessionStore() {}
 
     /// create an instance of session store for given processing node
@@ -81,9 +62,11 @@ public:
     /// Total number of commands that are attached to sessions
     virtual unsigned storedCommands() const = 0;
 
-    /// expire sessions and fill the list of sessions that are not yet expired
-    virtual void expireSessions( const std::vector< ExpireData >& expired,
-                                 std::vector< ExpireData >& notyetexpired ) = 0;
+    /// tries to expire sessions (that are not locked and have no commands).
+    virtual bool expireSessions( const std::vector< SessionKey >& expired ) = 0;
+
+    /// report that session is finalized.  The method is invoked from session finalizer.
+    virtual void sessionFinalized( Session& s ) = 0;
 
     /// get current sessions count
     virtual void getSessionsCount( unsigned& sessionsCount,

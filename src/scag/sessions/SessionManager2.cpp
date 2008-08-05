@@ -15,8 +15,8 @@
 #include "scag/config/ConfigManager2.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/lcm/LongCallManager2.h"
-// #include "scag/re/CommandBrige.h"
-// #include "scag/re/RuleEngine2.h"
+// #include "scag/re/CommandBridge.h"
+#include "scag/re/RuleEngine2.h"
 #include "scag/util/UnlockMutexGuard.h"
 #include "scag/util/singleton/Singleton.h"
 #include "scag/util/sms/HashUtil.h"
@@ -51,7 +51,25 @@ namespace sessions {
     public SessionExpirationQueue
     {
     private:
-        typedef SessionStore::ExpireData ExpireData;
+
+
+    struct ExpireData 
+    {
+        ExpireData( time_t expTime, const SessionKey& k ) : expiration(expTime), key(k) {}
+        bool operator < ( const ExpireData& e ) const {
+            return ( expiration < e.expiration || 
+                     ( expiration == e.expiration && key < e.key ) );
+        }
+                
+        bool operator == ( const ExpireData& e ) const {
+            return ( expiration == e.expiration ) && ( key == e.key );
+        }
+
+    public:
+        time_t      expiration;
+        SessionKey  key;
+    };
+
         typedef std::set< ExpireData >  ExpireSet;
         // typedef std::multiset<CSessionAccessData*,FWakeTimeCompare> CSessionSet;
         // typedef std::multiset<CSessionAccessData*>::iterator CSessionSetIterator;
@@ -86,7 +104,7 @@ namespace sessions {
                                      const SessionKey& key );
 
         /// --- interface of SessionFinalizer
-        virtual void finalize( Session& s );
+        virtual bool finalize( Session& s );
 
     protected:
 
@@ -427,6 +445,7 @@ int SessionManagerImpl::Execute()
 
     const int deftmo = 1000;
     MutexGuard mg(expireMonitor_);
+    bool alldone = true;
     while( true ) {
 
         /*
@@ -448,28 +467,27 @@ int SessionManagerImpl::Execute()
         if ( curtmo > 0 && isStarted() ) expireMonitor_.wait( curtmo );
 
         const time_t now = time(0);
-        std::vector< ExpireData > curset;
-        if ( ! isStarted() ) {
-
-            if ( expireSet_.size() == 0 ) break;
-
-            curset.reserve( expireSet_.size() );
-            std::copy( expireSet_.begin(), expireSet_.end(),
-                       std::back_inserter(curset));
-            expireSet_ = ExpireSet();
-            smsc_log_debug(log_, "taking the whole expire set, sz=%u", curset.size() );
-        } else {
-            ExpireData d( now, SessionKey() );
-            ExpireSet::iterator i = expireSet_.lower_bound(d);
-            std::copy( expireSet_.begin(), i,
-                       std::back_inserter(curset) );
+        std::vector< SessionKey > curset;
+        {
+            ExpireSet::iterator i;
+            if ( ! isStarted() ) {
+                if ( expireSet_.size() == 0 && alldone ) break;
+                curset.reserve( expireSet_.size() );
+                i = expireSet_.end();
+                smsc_log_debug(log_, "taking the whole expire set, sz=%u", expireSet_.size() );
+            } else {
+                ExpireData d( now, SessionKey() );
+                i = expireSet_.lower_bound(d);
+            }
+            for ( ExpireSet::iterator j = expireSet_.begin(); j != i ; ++j ) {
+                curset.push_back( j->key );
+            }
             expireSet_.erase( expireSet_.begin(), i );
         }
 
-        std::vector< ExpireData > newset;
         {
             UnlockMutexGuard ug( expireMonitor_ );
-            store_->expireSessions( curset, newset );
+            alldone = store_->expireSessions( curset );
 
             /*
             MutexGuard cmg(cacheLock_);
@@ -518,12 +536,14 @@ int SessionManagerImpl::Execute()
 
         } // lock expireMonitor_
 
+        /*
         if ( newset.size() > 0 ) smsc_log_debug( log_, "%u sessions has not expired yet", newset.size() );
         for ( std::vector< ExpireData >::const_iterator i = newset.begin();
               i != newset.end();
               ++i ) {
             expireSet_.insert(*i);
         }
+         */
 
     } // while expireSet_ is not empty
 
@@ -841,9 +861,36 @@ void SessionManagerImpl::scheduleExpire( time_t expirationTime,
 }
 
 
-void SessionManagerImpl::finalize( Session& )
+bool SessionManagerImpl::finalize( Session& session )
 {
+    smsc_log_debug( log_, "finalize: session=%p, key=%s", &session, session.sessionKey().toString().c_str() );
+
     // FIXME: connect to session_destroy rule in RE
+    try {
+
+        RuleStatus rs;
+        re::RuleEngine::Instance().processSession( session, rs );
+        LongCallContext& lcmCtx = session.getLongCallContext();
+        if ( rs.status == STATUS_LONG_CALL ) {
+
+            lcmCtx.stateMachineContext = &session;
+            lcmCtx.initiator = this;
+            if ( LongCallManager::Instance().call(&lcmCtx) )
+                // successfully called
+                return false;
+
+        } else if ( rs.status == STATUS_OK ) {
+
+            lcmCtx.runPostProcessActions();
+
+        }
+
+    } catch ( SCAGException& exc ) {
+        smsc_log_error( log_, "finalize: %s", exc.what() );
+    } catch (...) {
+        smsc_log_error( log_, "finalize: unknown error" );
+    }
+    return true;
 }
 
 }}
