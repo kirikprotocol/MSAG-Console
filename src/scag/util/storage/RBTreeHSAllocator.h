@@ -231,8 +231,8 @@ public:
         std::vector< RBTreeNode* > fnl;
         fnl.reserve( header->cells_free );
         for ( int cf = 0; cf < header->cells_free; ++cf ) {
-            if ( cf < 20 )
-                smsc_log_debug( logger, "free cell #%d has address %ld", cf, celladdr );
+            // if ( cf < 20 )
+            // smsc_log_debug( logger, "free cell #%d has address %ld", cf, celladdr );
             if ( celladdr >= rbtFileLen ) {
                 smsc_log_error( logger, "free cell #d address is too big=%ld filelen=%lld", cf, celladdr, (long long)rbtFileLen );
                 // fprintf( stderr, "free cell #d address is too big=%ld filelen=%lld\n", cf, celladdr, (long long)rbtFileLen );
