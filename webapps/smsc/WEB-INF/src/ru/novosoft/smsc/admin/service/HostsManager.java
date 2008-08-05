@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.service;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.daemon.Daemon;
+import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroup;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.util.config.Config;
@@ -21,6 +22,8 @@ public interface HostsManager {
     public Daemon addHost(final String host, final int port, final String hostServicesFolder) throws AdminException;
 
     public Daemon removeHost(final String host) throws AdminException;
+
+    public DaemonManager getDaemonManager();
 
     public void applyHosts() throws IOException, AdminException, Config.WrongParamTypeException;
 

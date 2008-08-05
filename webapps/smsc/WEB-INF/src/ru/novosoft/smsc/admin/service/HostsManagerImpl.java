@@ -52,6 +52,10 @@ public abstract class HostsManagerImpl implements HostsManager {
         return daemonManager.getHostNames();
     }
 
+    public DaemonManager getDaemonManager() {
+      return daemonManager;
+    }
+
     public synchronized List getServiceIds() throws AdminException {
         refreshServices();
         return serviceManager.getServiceIds();
