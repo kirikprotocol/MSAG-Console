@@ -35,6 +35,20 @@ sub readmodules{
   return \@rv;
 }
 
+my @preamble = (
+    '# --- architecture specific variables',
+#    'ifeq ($(filter-out linux Linux,$(shell uname)),)',
+    'override ECHO := echo -e',
+#    'else',
+#    'override ECHO := echo',
+#    'endif',
+    '');
+for my $l (@preamble) 
+{
+    print $mkf $l."\n";
+}
+
+
 print $mkf "build: ".join(' ',@$mods)."\n\n";
 generate('',$mods);
 print $mkf "clean: ".join(' ',map{"$_.rclean"}@$mods)."\n\n";
@@ -100,7 +114,7 @@ sub generate{
         my $ldflags=readstring($dirname.'/.ldflags');
         print $mkf '$(SMSC_BUILDDIR)/bin/'.$binname.': $(SMSC_BUILDDIR)/obj/'.$moddir.'/'.$srcname.'.o'.$libdeps."\n";
         print $mkf "\t\@mkdir -p `dirname \$@`\n";
-        print $mkf "\t\@echo '${lnkclr}Linking \$\@${clrend}'\n" unless $silent;
+        print $mkf "\t\@\$(ECHO) '${lnkclr}Linking \$\@${clrend}'\n" unless $silent;
         print $mkf "\t$cmdprefix\$(CXX) \$(CXXFLAGS) $ldflags -o \$@ \$< \$(LDFLAGS) $rawlibs\n\n";
         srcrule($dirname,$srcname.".cpp",\@files);
         push @files,'$(SMSC_BUILDDIR)/bin/'.$binname;
@@ -121,7 +135,7 @@ sub generate{
       push @files,'$(SMSC_BUILDDIR)/lib/'.$modlib;
       
       print $mkf '$(SMSC_BUILDDIR)/lib/'.$modlib.':'.join(' ',@objs)."\n";
-      print $mkf "\t\@echo '${libclr}Assembling $modlib${clrend}'\n" unless $silent;
+      print $mkf "\t\@\$(ECHO) '${libclr}Assembling $modlib${clrend}'\n" unless $silent;
       print $mkf "\t\@mkdir -p \$(SMSC_BUILDDIR)/lib/\n";
       print $mkf "\t\@rm -f \$(SMSC_BUILDDIR)/lib/$modlib\n";
       print $mkf "\t$cmdprefix\$(AR) -r \$(SMSC_BUILDDIR)/lib/$modlib ".join(' ',@objs)."\n\n";
@@ -132,7 +146,7 @@ sub generate{
     my $modname=$dirname;
     $modname=~s!/!.!g;
     print $mkf "$modname.clean:\n";
-    print $mkf "\t\@echo '${lnkclr}Cleaning $modname${clrend}'\n";
+    print $mkf "\t\@\$(ECHO) '${lnkclr}Cleaning $modname${clrend}'\n";
     print $mkf "\t\@rm -f $_\n" for @files;
     print $mkf "\n";
     
@@ -169,7 +183,7 @@ sub srcrule{
   push @$files,"\$(SMSC_BUILDDIR)/obj/$objdir/$basename.o";
   push @$files,"\$(SMSC_BUILDDIR)/deps/$dirname/$basename.dep";
   print $mkf "\$(SMSC_BUILDDIR)/obj/$objdir/$basename.o: \$(SMSC_SRCDIR)/$dirname/$srcname\n";
-  print $mkf "\t\@echo '${cmpclr}Compiling $dirname/$srcname${clrend}'\n" unless $silent;
+  print $mkf "\t\@\$(ECHO) '${cmpclr}Compiling $dirname/$srcname${clrend}'\n" unless $silent;
   print $mkf "\t\@mkdir -p \$(SMSC_BUILDDIR)/obj/$objdir\n";
   my $cppflags=readstring($dirname.'/.cxxflags');
   my $cflags=readstring($dirname.'/.cflags');
