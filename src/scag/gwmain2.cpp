@@ -99,7 +99,7 @@ int main( int argc, char* argv[] )
 
 
         // FIXME: make it configurable
-        scag::util::storage::StorageNumbering::setInstance( 5 );
+        scag::util::storage::StorageNumbering::setInstance( 1 );
         const unsigned mynode = 0;
 
         char * admin_host = 0;
