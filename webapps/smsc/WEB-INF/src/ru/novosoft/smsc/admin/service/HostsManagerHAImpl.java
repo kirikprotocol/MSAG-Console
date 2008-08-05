@@ -4,6 +4,7 @@ import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.daemon.Daemon;
+import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroup;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroupManager;
 import ru.novosoft.smsc.admin.route.SME;
@@ -53,7 +54,11 @@ public class HostsManagerHAImpl implements HostsManager {
         return null;
     }
 
-    public synchronized List getHostNames() {
+  public DaemonManager getDaemonManager() {
+    return null;
+  }
+
+  public synchronized List getHostNames() {
         return new SortedList();
     }
 
