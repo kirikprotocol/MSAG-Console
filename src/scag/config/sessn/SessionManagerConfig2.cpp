@@ -60,9 +60,9 @@ namespace config {
     {
         dir = "sessions";
         name = "sessions";
-        indexgrowth = 10000;
+        indexgrowth = 1000;
         pagesize = 512;
-        prealloc = 1000;
+        prealloc = 100;
     }
 
 }
