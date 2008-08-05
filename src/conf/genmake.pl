@@ -37,11 +37,11 @@ sub readmodules{
 
 my @preamble = (
     '# --- architecture specific variables',
-#    'ifeq ($(filter-out linux Linux,$(shell uname)),)',
+    'ifeq ($(filter-out linux Linux,$(shell uname)),)',
     'override ECHO := echo -e',
-#    'else',
-#    'override ECHO := echo',
-#    'endif',
+    'else',
+    'override ECHO := echo',
+    'endif',
     '');
 for my $l (@preamble) 
 {
