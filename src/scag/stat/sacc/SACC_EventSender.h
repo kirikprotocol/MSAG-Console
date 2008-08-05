@@ -88,6 +88,10 @@ private:
  
  void sendPing();
  smsc::logger::Logger * logger;
+
+private:
+    // to make compiler happy
+    void Start(int);
 };
 
 }}}

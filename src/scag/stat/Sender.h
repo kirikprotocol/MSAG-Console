@@ -37,6 +37,9 @@ protected:
     PerformanceListener* perfListener;
     bool isStopping;
     Logger * logger;
+private:
+    // to make compiler happy
+    void Start(int);
 };
 
 }

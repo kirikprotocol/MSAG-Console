@@ -268,6 +268,10 @@ namespace stat {
             
         StatisticsManager();
         virtual ~StatisticsManager();
+
+    private:
+        // to make compiler happy
+        void Start( int );
     };
 
 }//namespace stat

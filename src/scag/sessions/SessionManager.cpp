@@ -117,6 +117,11 @@ namespace scag { namespace sessions
         virtual SessionPtr newSession(CSessionKey& sessionKey);
 
         virtual void continueExecution(LongCallContext* context, bool dropped);
+
+    private:
+        // to make compiler happy
+        void Start( int );
+
     };
 
 // ################## Singleton related issues ##################
@@ -202,11 +207,9 @@ SessionManagerImpl::~SessionManagerImpl()
 {
     Stop();
 
-    CSessionSetIterator it;
-
-    for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
+    for ( CSessionSetIterator it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
     {
-    delete (*it);
+        delete (*it);
     }
 
     CSessionKey key;

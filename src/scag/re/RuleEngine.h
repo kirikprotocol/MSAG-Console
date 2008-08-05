@@ -6,10 +6,7 @@
 #include "scag/transport/SCAGCommand.h"
 #include "RuleStatus.h"
 #include "RuleKey.h"
-
-namespace scag { namespace sessions {
-    class Session;
-}}
+#include "scag/sessions/Session.h"
 
 namespace scag { namespace re
 {

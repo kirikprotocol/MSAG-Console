@@ -281,7 +281,7 @@ private:
     
     int ReallocRBTreeFile(void)
     {
-        uint32_t _growth = growth;
+        uint32_t _growth = uint32_t(growth);
         if(!rbtree_addr)
         {
             rbtFileLen = sizeof(rbtFileHeader);
@@ -291,8 +291,8 @@ private:
             completeChanges();
         }
         
-        uint32_t newRbtFileLen = rbtFileLen + growth * sizeof(RBTreeNode);
-        caddr_t newMem = new char[newRbtFileLen];
+        off_t newRbtFileLen = rbtFileLen + growth * sizeof(RBTreeNode);
+        caddr_t newMem = new char[size_t(newRbtFileLen)];
         if(!newMem)
         {
             smsc_log_error(logger, "Error reallocating memory for RBTree, reason: %s", strerror(errno));
@@ -307,10 +307,10 @@ private:
 
         if(rbtree_addr)
         {
-            memcpy(newMem, rbtree_addr, rbtFileLen);
+            memcpy(newMem, rbtree_addr, size_t(rbtFileLen));
             delete rbtree_addr;
         } else {
-            memset(newMem, 0, rbtFileLen);
+            memset(newMem, 0, size_t(rbtFileLen));
         }
             
         header = (rbtFileHeader*)newMem;
@@ -329,7 +329,7 @@ private:
         bool newfile = (!rbtree_addr);
         
         rbtree_addr = newMem;
-        memset(rbtree_addr + rbtFileLen, 0x00, growth * sizeof(RBTreeNode));
+        memset(rbtree_addr + rbtFileLen, 0x00, size_t(growth * sizeof(RBTreeNode)));
         
         free_cell_list* cell = (free_cell_list*)(rbtree_addr + sizeof(rbtFileHeader) + header->cells_count * sizeof(RBTreeNode));
         for( unsigned long i = header->cells_count + 1; i < header->cells_count + _growth; i++ )
@@ -344,7 +344,7 @@ private:
         header->cells_count += _growth;
         header->cells_free = _growth;
         rbtree_f.Seek(rbtFileLen, SEEK_SET);
-        rbtree_f.Write(rbtree_addr + rbtFileLen, newRbtFileLen - rbtFileLen);
+        rbtree_f.Write(rbtree_addr + rbtFileLen, size_t(newRbtFileLen - rbtFileLen));
 
         // should be in transactional manner
         rbtFileLen = newRbtFileLen;

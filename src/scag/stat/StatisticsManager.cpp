@@ -700,19 +700,19 @@ bool StatisticsManager::createStorageDir(const std::string loc)
     char* p2 = strchr(p1, '/');
     int pos = p2 - buff;
     while(p2){
-       int len = p2 - p1;
-       dirlen += len + 1;
-       if(len == 0)
+       int plen = p2 - p1;
+       dirlen += plen + 1;
+       if(plen == 0)
            return false;
 
        int direclen = dirlen + 1;
-       TmpBuf<char, 512> tmpBuff(direclen);
-       char * dir = tmpBuff.get();
+       TmpBuf<char, 512> ptmpBuff(direclen);
+       char * dir = ptmpBuff.get();
        memcpy(dir, buff, dirlen);
        dir[dirlen] = 0;
        dirs.push_back(std::string(dir));
 
-       p1 = p1 + len + 1;
+       p1 = p1 + plen + 1;
        p2 = strchr(p1, '/');
     }
     dirs.push_back(std::string(buff));
@@ -935,8 +935,8 @@ void StatisticsManager::incRouteTraffic(Hash<TrafficRecord>& h,  const char* rou
         tr->inc(tmnow);
     else
     {
-        TrafficRecord tr(1, 1, 1, 1, tmnow.tm_year, tmnow.tm_mon, tmnow.tm_mday, tmnow.tm_hour, tmnow.tm_min);
-        h.Insert(routeId, tr);
+        TrafficRecord ntr(1, 1, 1, 1, tmnow.tm_year, tmnow.tm_mon, tmnow.tm_mday, tmnow.tm_hour, tmnow.tm_min);
+        h.Insert(routeId, ntr);
     }
 }
 

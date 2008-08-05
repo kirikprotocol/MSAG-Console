@@ -226,7 +226,7 @@ Response * CommandLoadSmppTraceRoutes::CreateResponse(Scag * ScagApp)
     smsc_log_info(logger, "CommandLoadSmppTraceRoutes is processing");
 
     smsc::admin::service::Variant result(smsc::admin::service::StringListType);
-    result.appendValueToStringList("Routes configuration successfully loaded");
+    // result.appendValueToStringList("Routes configuration successfully loaded");
 
     if (!ScagApp) throw AdminException("ScagApp undefined");
     RouteConfig cfg;
@@ -243,7 +243,7 @@ Response * CommandLoadSmppTraceRoutes::CreateResponse(Scag * ScagApp)
       // 0:   Message (Routes successfully loaded)
       // 1..: Trace (if any)
 
-      smsc::admin::service::Variant result(smsc::admin::service::StringListType);
+      // smsc::admin::service::Variant result(smsc::admin::service::StringListType);
       result.appendValueToStringList("Routes configuration successfully loaded");
 
       smsc_log_info(logger, "traceBuff size: %d", traceBuff.size());

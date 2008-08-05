@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "SmppManager2.h"
 #include "SmppStateMachine2.h"
 #include "SmppUtil.h"

@@ -38,6 +38,10 @@ protected:
     PerformanceServer * performanceServer;
     bool isStopping;
     Multiplexer listener;
+
+private:
+    // to make compiler happy
+    void Start(int);
 };
 
 }

@@ -31,6 +31,8 @@ public:
 protected:
     StatisticsManager * sm;
     bool isStopping;
+private:
+    void Start( int );
 };
 
 int Registrator::Execute()

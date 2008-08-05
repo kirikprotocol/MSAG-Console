@@ -71,7 +71,7 @@ namespace sessions {
         virtual void getSessionsCount( uint32_t& sessionsCount,
                                        uint32_t& sessionsLockedCount );
 
-        virtual void Start();
+        void Start();
 
         // virtual SessionPtr newSession(CSessionKey& sessionKey);
 
@@ -99,6 +99,7 @@ namespace sessions {
         /// --- interface of Thread
         virtual int Execute();
 
+        void Start( int ); // to make compiler happy
         void Stop();
         bool isStarted();
         int  processExpire();
@@ -130,7 +131,6 @@ namespace sessions {
         std::auto_ptr<SessionStore>  store_;
         scag2::config::SessionManagerConfig  config_;
         // CyclicQueue< ExpireData > deleteQueue_;
-
     };
 
 // ################## Singleton related issues ##################
