@@ -34,6 +34,7 @@
 #include "core/buffers/File.hpp"
 #include "system/status.h"
 #include "util/sleep.h"
+#include "util/udh.hpp"
 
 
 static const char* cssc_version="@(#)" FILEVER;
@@ -803,12 +804,18 @@ protected:
   smsc::logger::Logger* log;
 };
 
+class IAnswerQueue{
+public:
+  virtual void enqueueAnswer(PduSubmitSm* pdu)=0;
+};
+
 namespace cfg{
  string sourceAddress;
  int protocolId;
  string serviceType;
  SmppTransmitter *tr;
  SmppTransmitter *atr;
+ IAnswerQueue* aq;
  int mainId;
  bool stopSme=false;
  string smtpHost;
@@ -1181,10 +1188,10 @@ void sendAnswer(const Address& orgAddr,const char* msgName,const char* paramName
       sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
       sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,text.c_str(),(unsigned)text.length());
     }
-    PduSubmitSm sm;
-    sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-    fillSmppPduFromSms(&sm,&sms);
-    cfg::atr->submit(sm);
+    PduSubmitSm* sm=new PduSubmitSm;
+    sm->get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+    fillSmppPduFromSms(sm,&sms);
+    cfg::aq->enqueueAnswer(sm);
   }catch(std::exception& e)
   {
     __warning2__("Failed to send answer sms:%s",e.what());
@@ -1453,36 +1460,363 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
   return ProcessSmsCodes::NETERROR;
 }
 
-class MyListener:public SmppPduEventListener{
+class ConcatManager:public smsc::core::threads::Thread{
 public:
+  ConcatManager()
+  {
+    lastIdx=0;
+    needToStop=false;
+    concatTimeout=120;
+  }
+  void Init(const std::string& argLocation)
+  {
+    log=smsc::logger::Logger::getInstance("concat");
+    storeLocation=argLocation;
+    if(storeLocation.length() && *storeLocation.rbegin()!='/')
+    {
+      storeLocation+='/';
+    }
+    std::vector<std::string> dir;
+    File::ReadDir(storeLocation.c_str(),dir,File::rdfFilesOnly);
+    for(std::vector<std::string>::iterator it=dir.begin();it!=dir.end();it++)
+    {
+      char ext[8];
+      int idx;
+      if(sscanf(it->c_str(),"sms%d.%3s",&idx,ext)==2)
+      {
+        if(strcmp(ext,"bin")!=0)
+        {
+          smsc_log_info(log,"Skipped unrecognized file:'%s'",it->c_str());
+          continue;
+        }
+        ConcatRecord rec;
+        rec.fileIdx=idx;
+        if(idx>lastIdx)
+        {
+          lastIdx=idx;
+        }
+        ReadRecord(rec);
+        RecordKey key(rec.mr,rec.oa);
+        rec.tit=timeMap.insert(TimeMap::value_type(rec.lastUpdate,key));
+        records.insert(RecordsMap::value_type(key,rec));
+      }
+    }
+
+  }
+  int Execute()
+  {
+    smsc_log_info(log,"Starting ConcatManager");
+    MutexGuard mg(mon);
+    while(!needToStop)
+    {
+      try
+      {
+        if(timeMap.empty())
+        {
+          mon.wait();
+        }else
+        {
+          int toSleep=(int)(timeMap.begin()->first-time(NULL))*1000;
+          if(toSleep<=0)
+          {
+            toSleep=1;
+          }
+          mon.wait(toSleep);
+        }
+        if(needToStop)
+        {
+          break;
+        }
+        if(timeMap.empty())
+        {
+          continue;
+        }
+        TimeMap::iterator it=timeMap.begin();
+        if(it->first>time(NULL))
+        {
+          continue;
+        }
+  
+        RecordKey key(it->second);
+        RecordsMap::iterator rit=records.find(key);
+        if(rit==records.end())
+        {
+          smsc_log_warn(log,"Inconsistency: timerecord without record for %d/%s",key.mr,key.oa.c_str());
+          timeMap.erase(it);
+          continue;
+        }
+        ConcatRecord& rec=rit->second;
+        processSms(rec.combineTxt().c_str(),rec.oa.c_str(),rec.da.c_str());
+        smsc_log_info(log,"Concat timed out:%d/%s",rec.mr,rec.oa.c_str());
+        timeMap.erase(it);
+        records.erase(key);
+        DelRecord(rec);
+      } catch(std::exception& e)
+      {
+        smsc_log_warn(log,"Exception in ConcatManager::Execute: '%s'",e.what());
+      }
+    }
+    smsc_log_info(log,"Stopped ConcatManager");
+    needToStop=false;
+    return 0;
+  }
+  void Stop()
+  {
+    MutexGuard mg(mon);
+    needToStop=true;
+    mon.notify();
+  }
+  bool Enqueue(PduXSm* pdu)
+  {
+    SMS sms;
+    fetchSmsFromSmppPdu(pdu,&sms);
+    uint16_t mr;
+    uint8_t idx,num;
+    if(sms.hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM))
+    {
+      mr=sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
+      idx=sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+      num=sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+    }else
+    {
+      if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)==0)
+      {
+        return false;
+      }
+      bool havemoreudh;
+      if(!smsc::util::findConcatInfo(sms,mr,idx,num,havemoreudh))
+      {
+        return false;
+      }
+    }
+    MutexGuard mg(mon);
+    RecordKey key(mr,sms.getOriginatingAddress().toString());
+    RecordsMap::iterator it=records.find(key);
+    if(it==records.end())
+    {
+      smsc_log_info(log,"Starting concat for %d/%s",mr,sms.getOriginatingAddress().toString().c_str());
+      ConcatRecord rec;
+      rec.fileIdx=lastIdx++;
+      rec.oa=sms.getOriginatingAddress().toString();
+      rec.da=sms.getDestinationAddress().toString();
+      rec.num=num;
+      rec.mr=mr;
+      ConcatRecord::Part part(idx,"");
+      getSmsText(&sms,part.txt);
+      rec.lastUpdate=time(NULL);
+      rec.parts.insert(ConcatRecord::PartsMap::value_type(idx,part));
+      rec.tit=timeMap.insert(TimeMap::value_type(rec.lastUpdate+concatTimeout,key));
+      records.insert(RecordsMap::value_type(key,rec)).second;
+      WriteRecord(rec);
+      mon.notify();
+      return true;
+    }
+    ConcatRecord& rec=it->second;
+    if(rec.parts.find(idx)!=rec.parts.end())
+    {
+      smsc_log_info(log,"Duplicate part %d for %d/%s",idx,rec.mr,rec.oa.c_str());
+      return true;
+    }
+
+    ConcatRecord::Part part(idx,"");
+    getSmsText(&sms,part.txt);
+    rec.parts.insert(ConcatRecord::PartsMap::value_type(idx,part));
+    if(rec.parts.size()==rec.num)
+    {
+      smsc_log_info(log,"Concat complete for %d/%s",rec.mr,rec.oa.c_str());
+      std::string txt=rec.combineTxt();
+      processSms(txt.c_str(),rec.oa.c_str(),rec.da.c_str());
+      timeMap.erase(rec.tit);
+      records.erase(it);
+      DelRecord(rec);
+      return true;
+    }
+    smsc_log_info(log,"Received %d/%d parts for %d/%s",rec.parts.size(),num,rec.mr,rec.oa.c_str());
+    rec.lastUpdate=time(NULL);
+    timeMap.erase(rec.tit);
+    rec.tit=timeMap.insert(TimeMap::value_type(rec.lastUpdate+concatTimeout,key));
+    WriteRecord(rec);
+    mon.notify();
+    return true;
+  }
+protected:
+
+  struct RecordKey{
+    int mr;
+    std::string oa;
+    RecordKey(int argMr,const std::string& argOa):mr(argMr),oa(argOa)
+    {
+    }
+    bool operator<(const RecordKey& key)const
+    {
+      return mr<key.mr || (mr==key.mr && oa<key.oa);
+    }
+  };
+
+  typedef std::multimap<time_t,RecordKey> TimeMap;
+
+  struct ConcatRecord{
+    struct Part{
+      Part()
+      {
+      }
+      Part(int argSeq,const std::string& argTxt):seq(argSeq),txt(argTxt)
+      {
+      }
+      int seq;
+      std::string txt;
+    };
+    typedef std::map<int,Part> PartsMap;
+    PartsMap parts;
+    int num;
+    int mr;
+    std::string oa;
+    std::string da;
+    time_t lastUpdate;
+    TimeMap::iterator tit;
+    int fileIdx;
+
+    void Write(File& f)const
+    {
+      f.WriteNetInt32(num);
+      f.WriteNetInt32(mr);
+      WriteString(f,oa);
+      WriteString(f,da);
+      f.WriteNetInt64(lastUpdate);
+      f.WriteNetInt16((uint16_t)parts.size());
+      for(PartsMap::const_iterator it=parts.begin();it!=parts.end();it++)
+      {
+        f.WriteNetInt32(it->second.seq);
+        WriteString(f,it->second.txt);
+      }
+    }
+
+    void Read(File& f)
+    {
+      num=f.ReadNetInt32();
+      mr=f.ReadNetInt32();
+      ReadString(f,oa);
+      ReadString(f,da);
+      lastUpdate=f.ReadNetInt64();
+      int count=f.ReadNetInt16();
+      for(int i=0;i<count;i++)
+      {
+        Part p;
+        p.seq=f.ReadNetInt32();
+        ReadString(f,p.txt);
+        parts.insert(PartsMap::value_type(p.seq,p));
+      }
+    }
+
+    std::string combineTxt()
+    {
+      std::string rv;
+      for(PartsMap::iterator it=parts.begin();it!=parts.end();it++)
+      {
+        rv+=it->second.txt;
+      }
+      return rv;
+    }
+  };
+
+  std::string mkFileName(const ConcatRecord& rec)
+  {
+    char buf[32];
+    sprintf(buf,"sms%08d.bin",rec.fileIdx);
+    return storeLocation+buf;
+  }
+
+  void ReadRecord(ConcatRecord& rec)
+  {
+    std::string fileName=mkFileName(rec);
+    File f;
+    f.ROpen(fileName.c_str());
+    rec.Read(f);
+    f.Flush();
+  }
+  void WriteRecord(const ConcatRecord& rec)
+  {
+    std::string fileName=mkFileName(rec);
+    File f;
+    f.RWCreate(fileName.c_str());
+    rec.Write(f);
+    f.Flush();
+  }
+  void DelRecord(const ConcatRecord& rec)
+  {
+    std::string fileName=mkFileName(rec);
+    File::Unlink(fileName.c_str());
+  }
+
+  typedef std::map<RecordKey,ConcatRecord> RecordsMap;
+  RecordsMap records;
+  TimeMap timeMap;
+  EventMonitor mon;
+
+  bool needToStop;
+  int lastIdx;
+  int concatTimeout;
+  std::string storeLocation;
+  smsc::logger::Logger* log;
+}concatManager;
+
+class MyListener:public SmppPduEventListener,public IAnswerQueue{
+public:
+  MyListener()
+  {
+    trans=0;
+    log=smsc::logger::Logger::getInstance("smpp.lst");
+  }
+
+  void enqueueAnswer(PduSubmitSm* pdu)
+  {
+    MutexGuard mg(mtx);
+    answers.push_back(pdu);
+  }
+
+
   void handleEvent(SmppHeader *pdu)
   {
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
       char buf[65536];
       PduXSm* xsm=(PduXSm*)pdu;
-      getPduText(xsm,buf,sizeof(buf));
-      /*Address addr(
-      ((PduXSm*)pdu)->get_message().get_source().value.size(),
-      ((PduXSm*)pdu)->get_message().get_source().get_typeOfNumber(),
-      ((PduXSm*)pdu)->get_message().get_source().get_numberingPlan(),
-      ((PduXSm*)pdu)->get_message().get_source().get_value());*/
+
       int code=ProcessSmsCodes::INVALIDSMS;
+      bool concatRv=false;
       try{
-        code=processSms(buf,xsm->get_message().get_source().get_value(),xsm->get_message().get_dest().get_value());
+        concatRv=concatManager.Enqueue(xsm);
       }catch(std::exception& e)
       {
-        __warning2__("Exception in processSms:%s",e.what());
+        smsc_log_warn(log,"Exception in concatManager.Enqueue:'%s'",e.what());
       }
-      __trace2__("processSms: code=%d",code);
-      switch(code)
+      if(!concatRv)
       {
-        case ProcessSmsCodes::OUTOFLIMIT:
-        case ProcessSmsCodes::NOPROFILE:
-        case ProcessSmsCodes::UNABLETOSEND:
-        case ProcessSmsCodes::INVALIDSMS:code=SmppStatusSet::ESME_RX_P_APPN;break;
-        case ProcessSmsCodes::NETERROR:code=SmppStatusSet::ESME_RX_T_APPN;break;
-        case ProcessSmsCodes::OK:code=SmppStatusSet::ESME_ROK;break;
+        getPduText(xsm,buf,sizeof(buf));
+        /*Address addr(
+        ((PduXSm*)pdu)->get_message().get_source().value.size(),
+        ((PduXSm*)pdu)->get_message().get_source().get_typeOfNumber(),
+        ((PduXSm*)pdu)->get_message().get_source().get_numberingPlan(),
+        ((PduXSm*)pdu)->get_message().get_source().get_value());*/
+        try{
+          code=processSms(buf,xsm->get_message().get_source().get_value(),xsm->get_message().get_dest().get_value());
+        }catch(std::exception& e)
+        {
+          __warning2__("Exception in processSms:%s",e.what());
+        }
+        __trace2__("processSms: code=%d",code);
+        switch(code)
+        {
+          case ProcessSmsCodes::OUTOFLIMIT:
+          case ProcessSmsCodes::NOPROFILE:
+          case ProcessSmsCodes::UNABLETOSEND:
+          case ProcessSmsCodes::INVALIDSMS:code=SmppStatusSet::ESME_RX_P_APPN;break;
+          case ProcessSmsCodes::NETERROR:code=SmppStatusSet::ESME_RX_T_APPN;break;
+          case ProcessSmsCodes::OK:code=SmppStatusSet::ESME_ROK;break;
+        }
+      }else
+      {
+        code=SmppStatusSet::ESME_ROK;
       }
       PduDeliverySmResp resp;
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
@@ -1490,6 +1824,7 @@ public:
       resp.set_messageId("");
       resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
       trans->sendDeliverySmResp(resp);
+      sendAnswers();
     }else if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
       if(pdu->get_commandStatus()==0)
@@ -1507,6 +1842,19 @@ public:
     __warning2__("SMPP::Error:%d",errorCode);
     pthread_kill(cfg::mainId,16);
   }
+
+  void sendAnswers()
+  {
+    MutexGuard mg(mtx);
+    while(!answers.empty())
+    {
+      cfg::atr->submit(*answers.back());
+      delete answers.back();
+      std::vector<PduSubmitSm*>::iterator it=answers.end();
+      it--;
+      answers.erase(it);
+    }
+  }
   
   bool handleIdle() 
   {
@@ -1519,6 +1867,9 @@ public:
   }
 protected:
   SmppTransmitter* trans;
+  Mutex mtx;
+  std::vector<PduSubmitSm*> answers;
+  smsc::logger::Logger* log;
 };
 
 bool GetNextLine(const char* text,size_t maxlen,size_t& pos,string& line)
@@ -1710,13 +2061,24 @@ public:
         }
         if(!resp || resp->get_header().get_commandStatus()!=SmppStatusSet::ESME_ROK)
         {
-          if(resp && smsc::system::Status::isErrorPermanent(resp->get_header().get_commandStatus()))
+          if(resp)
           {
-            smsc_log_warn(log,"SMS delivery failed with permanent error:%s->%s:%d",sms.getOriginatingAddress().toString().c_str(),
-                          sms.getDestinationAddress().toString().c_str(),resp->get_header().get_commandStatus());
-            smsQueue.erase(it);
-            disposePdu((SmppHeader*)resp);
-            break;
+            int code=resp->get_header().get_commandStatus();
+            if(smsc::system::Status::isErrorPermanent(code))
+            {
+              smsc_log_warn(log,"SMS delivery failed with permanent error:%s->%s:%d",sms.getOriginatingAddress().toString().c_str(),
+                            sms.getDestinationAddress().toString().c_str(),resp->get_header().get_commandStatus());
+              smsQueue.erase(it);
+              disposePdu((SmppHeader*)resp);
+              break;
+            }
+            if(code==SmppStatusSet::ESME_RMSGQFUL)
+            {
+              disposePdu((SmppHeader*)resp);
+              smsQueue.push_back(*it);
+              smsQueue.erase(it);
+              break;
+            }
           }
           if(resp)disposePdu((SmppHeader*)resp);
           continue;
@@ -1792,6 +2154,7 @@ protected:
   void DeleteSms(const SmsInfo& info)
   {
     smsc::core::buffers::File::Unlink(mkFileName(info).c_str());
+    delete info.sms;
   }
 }multiPartSendQueue;
 
@@ -2385,7 +2748,7 @@ int main(int argc,char* argv[])
 
   try
   {
-    cfg::helpDeskAddress=cfgman.getString("admin.helpdeskAddress");
+    cfg::helpDeskAddress=Address(cfgman.getString("admin.helpdeskAddress")).toString().c_str();
   } catch(std::exception& e)
   {
     __warning__("helpdesk support disabled");
@@ -2430,6 +2793,8 @@ int main(int argc,char* argv[])
 
   cfg::storeDir=cfgman.getString("store.dir");
 
+
+
   storage.Open(cfg::storeDir.c_str());
 
 
@@ -2460,6 +2825,19 @@ int main(int argc,char* argv[])
     int sendSpeed=cfgman.getInt("smpp.partsSendSpeedPerHour");
     int sendDelay=3600*1000/sendSpeed;
     multiPartSendQueue.Init(cfgman.getString("store.queueDir"),sendDelay);
+
+    std::string concatStore=cfg::storeDir;
+    if(concatStore.length() && *concatStore.rbegin()!='/')
+    {
+      concatStore+='/';
+    }
+    concatStore+="concat";
+    if(!File::Exists(concatStore.c_str()))
+    {
+      File::MkDir(concatStore.c_str());
+    }
+    concatManager.Init(concatStore);
+    
   }
 
   cfg::serviceType=cfgman.getString("smpp.serviceType");
@@ -2570,6 +2948,8 @@ int main(int argc,char* argv[])
   __trace2__("defaults.annotationSize:%d",cfg::annotationSize);
 
   MyListener lst;
+  cfg::aq=&lst;
+
   SmppSession ss(cfg,&lst);
   cfg::tr=ss.getSyncTransmitter();
   cfg::atr=ss.getAsyncTransmitter();
@@ -2595,6 +2975,7 @@ int main(int argc,char* argv[])
     if(cfg::partitionSms)
     {
       multiPartSendQueue.Start();
+      concatManager.Start();
     }
     
     reconnectFlag=false;
@@ -2643,6 +3024,8 @@ int main(int argc,char* argv[])
     {
       multiPartSendQueue.Stop();
       multiPartSendQueue.WaitFor();
+      concatManager.Stop();
+      concatManager.WaitFor();
     }
     ss.close();
   }
