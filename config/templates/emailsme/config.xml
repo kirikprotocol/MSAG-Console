@@ -23,6 +23,8 @@
       <param name="partitionSms" type="bool">true</param>
       <param name="partsSendSpeedPerHour" type="int">60</param>
       <param name="maxUdhParts" type="int">3</param>
+      <param name="concatTimeout" type="int">120</param>
+      <param name="pauseAfterDisconnect" type="bool">true</param>
       -->
   </section>
   
