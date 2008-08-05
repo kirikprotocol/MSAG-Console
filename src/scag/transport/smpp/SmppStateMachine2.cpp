@@ -451,7 +451,6 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         session = sm.getSession( key, aucmd );
         if ( ! session.get() ) return;
           
-          // FIXME: cannot obtain session
           /*
            {
             smsc_log_warn(log_, "USSD Submit: Cannot obtain session" );
@@ -558,8 +557,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
       }
 
         smsc_log_debug(log_, "Submit: RuleEngine processing...");
-        // FIXME: impl
-        // re::RuleEngine::Instance().process(*cmd,*session.get(), st);
+        re::RuleEngine::Instance().process(*cmd,*session.get(), st);
         smsc_log_debug(log_, "Submit: RuleEngine procesed.");
 
   } while ( st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
@@ -612,7 +610,6 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
   {
       std::auto_ptr<SmppCommand> resp(SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),failed));
       resp->setEntity(dst);
-      // FIXME: should we release aucmd ?
       resp->get_resp()->setOrgCmd( aucmd.release() );
       resp->setFlag(SmppCommandFlags::FAILED_COMMAND_RESP);
       processSubmitResp(resp,session);
@@ -745,8 +742,7 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
     }
 
     smsc_log_debug(log_, "SubmitResp: RuleEngine processing...");
-    // FIXME: impl
-    // re::RuleEngine::Instance().process( *cmd, *session.get(), st );
+    re::RuleEngine::Instance().process( *cmd, *session.get(), st );
     smsc_log_debug(log_, "SubmitResp: RuleEngine processed");
 
     if(st.status == re::STATUS_LONG_CALL)
@@ -821,8 +817,6 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
     {
         session->getLongCallContext().runPostProcessActions();
     }
-    // FIXME: command is taken ? sms owned ?
-    // cmd->get_resp()->set_sms(0);
     smsc_log_debug(log_, "SubmitResp: processed");
 }
 
@@ -930,10 +924,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
           if(!session.get())
           {
               session = sm.getSession(key,aucmd);
-              if ( ! session.get() ) {
-                  // FIXME: cannot get session, it is locked and command is taken
-                  return;
-              }
+              if ( ! session.get() ) return;
 
               /*
             if(cmd.hasSession())
@@ -973,10 +964,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         }
 
         session = sm.getSession( key, aucmd );
-        if ( ! session.get() ) {
-            // FIXME: cannot obtain session
-            return;
-        }
+        if ( ! session.get() ) return;
 
           /*
 
@@ -1055,8 +1043,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
       }
 
         smsc_log_debug(log_, "Delivery: RuleEngine processing...");
-        // FIXME: impl
-        // re::RuleEngine::Instance().process(*cmd,*session.get(), st);
+        re::RuleEngine::Instance().process(*cmd,*session.get(), st);
         smsc_log_debug(log_, "Delivery: RuleEngine procesed.");
 
   }while(st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
@@ -1237,8 +1224,7 @@ void StateMachine::processDeliveryResp(std::auto_ptr<SmppCommand> aucmd, ActiveS
 
 //    smsc_log_debug(log_, "sms:%x sm: %d mp: %d rsm: %d rmp: %d", sms->hasBinProperty(Tag::SMPP_SHORT_MESSAGE), sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD), sms->hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE), sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD));
     smsc_log_debug(log_, "DeliveryResp: RuleEngine processing...");
-    // FIXME: impl
-    // re::RuleEngine::Instance().process(*cmd,*session.get(), st);
+    re::RuleEngine::Instance().process(*cmd,*session.get(), st);
     smsc_log_debug(log_, "DeliveryResp: RuleEngine processed.");
 
     if(st.status == re::STATUS_LONG_CALL)
@@ -1465,8 +1451,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
           session->getLongCallContext().continueExec = true;
       }
         smsc_log_debug(log_, "DataSm: RuleEngine processing...");
-        // FIXME: impl
-        // re::RuleEngine::Instance().process(*cmd,*session.get(), st);
+        re::RuleEngine::Instance().process(*cmd,*session.get(), st);
         smsc_log_debug(log_, "DataSm: RuleEngine procesed.");
 
   } while( st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
@@ -1644,8 +1629,7 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
     }
 
     smsc_log_debug(log_, "DataSmResp: RuleEngine processing...");
-    // FIXME: impl
-    // re::RuleEngine::Instance().process(*cmd,*session.get(), st);
+    re::RuleEngine::Instance().process(*cmd,*session.get(), st);
     smsc_log_debug(log_, "DataSmResp: RuleEngine processed.");
 
     if(st.status == re::STATUS_LONG_CALL)
