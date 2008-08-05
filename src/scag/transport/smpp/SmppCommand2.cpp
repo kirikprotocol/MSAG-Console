@@ -236,11 +236,7 @@ void SmppCommand::makeSMSBody(SMS* sms,const SmppHeader* pdu,bool forceDC)
 
 
 SmppCommand::SmppCommand( SmppHeader* pdu, bool forceDC ) :
-serviceId_(0),
-opId_(-1),
-session_(0),
-shared_(&keep_),
-dta_(0)
+SCAGCommand(), _SmppCommand()
 {
     getlogger();
     __require__ ( pdu != NULL );
@@ -765,40 +761,36 @@ std::auto_ptr< SmppCommand > SmppCommand::clone()
 
 
 SmppCommand::SmppCommand() :
-cmdid_(UNKNOWN),
-serviceId_(-1),
-opId_(-1),
-session_(0),
-src_ent_(0),
-dst_ent_(0),
-shared_(&keep_),
-dta_(0)
+SCAGCommand(), _SmppCommand()
 {
     getlogger();
 }
 
 
 SmppCommand::SmppCommand( const SmppCommand& c ) :
-SCAGCommand(c), shared_(0), dta_(0)
+SCAGCommand(c), _SmppCommand(c)
 {
     if ( c.cmdid_ != SUBMIT && c.cmdid_ != DELIVERY && c.cmdid_ != DATASM ) {
         smsc_log_error(log_, "cloning is allowed for submit/deliver/datasm only" );
         ::abort();
     }
-    char* p0 = reinterpret_cast<char*>(this);
-    char* pb = reinterpret_cast<char*>(static_cast<SCAGCommand*>(this)) + sizeof(SCAGCommand);
-    char* pe = reinterpret_cast<char*>(this) + sizeof(SmppCommand);
-    memcpy( pb, &c + (pb-p0), (pe-pb) );
-    get_smsCommand().ref();
+    const unsigned clones = get_smsCommand().ref();
+    // no need to assign uid
+    smsc_log_debug( log_, "Command create (clone): cmd=%p, uid=%u, clones=%u", this, shared_->uid, clones );
     session_ = 0;
-    // we don't need to assign an uid here
 }
 
 
 void SmppCommand::dispose()
 {
     if ( cmdid_ == DELIVERY || cmdid_ == SUBMIT || cmdid_ == DATASM ) {
-        if ( !dta_ || get_smsCommand().unref() ) return;
+        if ( !dta_ ) return;
+        const uint32_t uid = shared_->uid;
+        const unsigned clones = get_smsCommand().unref();
+        if ( clones ) {
+            smsc_log_debug(log_, "Command destroy: cmd=%p, uid=%u, %u clones still exist", this, uid, clones );
+            return;
+        }
     }
 
     if ( shared_ ) {
@@ -808,14 +800,14 @@ void SmppCommand::dispose()
                 MutexGuard mg(cntMutex);
                 sc = commandCounter;
             }
-            smsc_log_warn(log_, "destroying command with uid=-1, exception?" );
+            smsc_log_warn(log_, "destroying command %p with uid=-1, exception?", this );
         } else if ( log_->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG ) ) {
             uint32_t sc = 0;
             {
                 MutexGuard mtxx(cntMutex);
                 sc = --commandCounter;
             }
-            smsc_log_debug(log_, "Command destroy: count=%d, uid=%d", sc, shared_->uid);
+            smsc_log_debug(log_, "Command destroy: cmd=%p, count=%u, uid=%u", this, sc, shared_->uid);
         }
     }
 
@@ -892,6 +884,7 @@ void SmppCommand::assignUid()
     ++commandCounter;
     if ( ++stuid == uint32_t(-1) ) ++stuid;
     shared_->uid = stuid;
+    smsc_log_debug( log_, "Command create: cmd=%p, count=%u, uid=%u", this, commandCounter, stuid );
 }
 
 

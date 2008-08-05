@@ -89,7 +89,6 @@ struct StateMachine::ResponseRegistry
                 outCnt.Insert(cmd->getDstEntity()->info.systemId.c_str(),1);
             }
         }
-        smsc_log_debug(log, "register %d/%d", uid, seq);
         RegValue val;
         ListValue lv;
         lv.key = key;
@@ -102,6 +101,7 @@ struct StateMachine::ResponseRegistry
         // we will use dialog id in resp
         // cmd->set_dialogId(seq);
         reg.Insert(key,val);
+        smsc_log_debug(log, "register %d/%d", uid, seq);
         return true;
     }
 
@@ -557,9 +557,10 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
 
       }
 
-      smsc_log_debug(log_, "Submit: RuleEngine processing...");
-      re::RuleEngine::Instance().process(*cmd,*session.get(), st);
-      smsc_log_debug(log_, "Submit: RuleEngine procesed.");
+        smsc_log_debug(log_, "Submit: RuleEngine processing...");
+        // FIXME: impl
+        // re::RuleEngine::Instance().process(*cmd,*session.get(), st);
+        smsc_log_debug(log_, "Submit: RuleEngine procesed.");
 
   } while ( st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
 
@@ -630,7 +631,6 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
     SessionKey key;
     int ussd_op;
     SMS *sms;
-    SmppCommand* orgCmd;
 
     src = cmd->getEntity();
 
@@ -644,6 +644,7 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
         if ( cmd->getOperationId() == -1 ) {
 
             smsc_log_debug(log_, "SubmitResp: got");
+            SmppCommand* orgCmd;
 
             if(!cmd->get_resp()->hasOrgCmd()) // hasOrgCmd is true in the case of inplace call from processSubmit due to failed putCommand
             {
@@ -666,14 +667,15 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
                     }
                 }
 
-                orgCmd = reg_.Get(srcUid, cmd->get_dialogId()).release();
+                std::auto_ptr<SmppCommand> auOrgCmd(reg_.Get(srcUid, cmd->get_dialogId()));
+                orgCmd = auOrgCmd.get();
                 if(! orgCmd )
                 {
                     smsc_log_warn(log_,"SubmitResp: Original submit for submit response not found. sid='%s',seq='%d'",
                                   src ? src->getSystemId() : "NULL",cmd->get_dialogId());
                     return;
                 }
-                cmd->get_resp()->setOrgCmd(orgCmd);
+                cmd->get_resp()->setOrgCmd(auOrgCmd.release());
             }
             else
             {
@@ -698,7 +700,8 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
 
             key = sms->getDestinationAddress();
             // int umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
-            ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+            ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
+                sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
             if (ussd_op == 35) { // Not Sibinco USSD dialog
                 sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP);
                 ussd_op = -1;
@@ -713,7 +716,8 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
              */
             session = SessionManager::Instance().getSession(key,aucmd);
             if ( session.get() )
-                smsc_log_debug(log_,"SubmitResp: got session=%p key='%s' %s",key.toString().c_str(), cmd->get_resp()->expiredResp ? "(expired)" : "");
+                smsc_log_debug(log_,"SubmitResp: got session=%p key='%s' %s",
+                               session.get(), key.toString().c_str(), cmd->get_resp()->expiredResp ? "(expired)" : "");
             break;
         }
 
@@ -741,7 +745,8 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
     }
 
     smsc_log_debug(log_, "SubmitResp: RuleEngine processing...");
-    re::RuleEngine::Instance().process( *cmd, *session.get(), st );
+    // FIXME: impl
+    // re::RuleEngine::Instance().process( *cmd, *session.get(), st );
     smsc_log_debug(log_, "SubmitResp: RuleEngine processed");
 
     if(st.status == re::STATUS_LONG_CALL)
@@ -1049,9 +1054,10 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
            */
       }
 
-      smsc_log_debug(log_, "Delivery: RuleEngine processing...");
-      re::RuleEngine::Instance().process(*cmd,*session.get(), st);
-      smsc_log_debug(log_, "Delivery: RuleEngine procesed.");
+        smsc_log_debug(log_, "Delivery: RuleEngine processing...");
+        // FIXME: impl
+        // re::RuleEngine::Instance().process(*cmd,*session.get(), st);
+        smsc_log_debug(log_, "Delivery: RuleEngine procesed.");
 
   }while(st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
 
@@ -1185,7 +1191,8 @@ void StateMachine::processDeliveryResp(std::auto_ptr<SmppCommand> aucmd, ActiveS
             ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
                 sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
             if (ussd_op == 35) { // Not Sibinco USSD dialog
-                sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP); ussd_op = -1;
+                sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP);
+                ussd_op = -1;
             }
 
             // cmd->get_resp()->set_sms(sms);
@@ -1202,7 +1209,8 @@ void StateMachine::processDeliveryResp(std::auto_ptr<SmppCommand> aucmd, ActiveS
 
             session = SessionManager::Instance().getSession(key, aucmd);
             if ( session.get() )
-                smsc_log_debug(log_,"DeliveryResp: got session. key='%s' %s",key.toString().c_str(), cmd->get_resp()->expiredResp ? "(expired)" : "");
+                smsc_log_debug(log_,"DeliveryResp: got session=%p key='%s' %s",
+                               session.get(), key.toString().c_str(), cmd->get_resp()->expiredResp ? "(expired)" : "");
             break;
         }
 
@@ -1229,7 +1237,8 @@ void StateMachine::processDeliveryResp(std::auto_ptr<SmppCommand> aucmd, ActiveS
 
 //    smsc_log_debug(log_, "sms:%x sm: %d mp: %d rsm: %d rmp: %d", sms->hasBinProperty(Tag::SMPP_SHORT_MESSAGE), sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD), sms->hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE), sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD));
     smsc_log_debug(log_, "DeliveryResp: RuleEngine processing...");
-    re::RuleEngine::Instance().process(*cmd,*session.get(), st);
+    // FIXME: impl
+    // re::RuleEngine::Instance().process(*cmd,*session.get(), st);
     smsc_log_debug(log_, "DeliveryResp: RuleEngine processed.");
 
     if(st.status == re::STATUS_LONG_CALL)
@@ -1455,9 +1464,10 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
       {
           session->getLongCallContext().continueExec = true;
       }
-      smsc_log_debug(log_, "DataSm: RuleEngine processing...");
-      re::RuleEngine::Instance().process(*cmd,*session.get(), st);
-      smsc_log_debug(log_, "DataSm: RuleEngine procesed.");
+        smsc_log_debug(log_, "DataSm: RuleEngine processing...");
+        // FIXME: impl
+        // re::RuleEngine::Instance().process(*cmd,*session.get(), st);
+        smsc_log_debug(log_, "DataSm: RuleEngine procesed.");
 
   } while( st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
 
@@ -1634,7 +1644,8 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
     }
 
     smsc_log_debug(log_, "DataSmResp: RuleEngine processing...");
-    re::RuleEngine::Instance().process(*cmd,*session.get(), st);
+    // FIXME: impl
+    // re::RuleEngine::Instance().process(*cmd,*session.get(), st);
     smsc_log_debug(log_, "DataSmResp: RuleEngine processed.");
 
     if(st.status == re::STATUS_LONG_CALL)

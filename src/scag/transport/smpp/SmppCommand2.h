@@ -120,7 +120,7 @@ static inline void fillSmppAddr(auto_ptr<char>& field,PduAddress& addr)
 }
 
 
-/// base of all commands (shared data)
+/// shared data for commands
 struct SmppCommandData
 {
     int        priority;
@@ -377,13 +377,13 @@ struct SmsCommand : public SmppCommandData
         return false;
     }
 
-    void ref() {
+    unsigned ref() {
         MutexGuard mg(mtx_);
         __require__(ref_ > 0);
-        ++ref_;
+        return ++ref_;
     }
 
-    int unref() {
+    unsigned unref() {
         MutexGuard mg(mtx_);
         __require__(ref_ > 0);
         return --ref_;
@@ -405,8 +405,8 @@ protected:
     bool     slicedRespSent_;
     Mutex    slicedMutex_;
 
-    Mutex mtx_;
-    int   ref_;
+    Mutex    mtx_;
+    unsigned ref_;
 
 private:
     SmsCommand( const SmsCommand& cmd );
@@ -504,10 +504,51 @@ struct _SmppCommand
  */
 
 
-class SmppCommand: public SCAGCommand
+class _SmppCommand
+{
+protected:
+    _SmppCommand() : cmdid_(UNKNOWN), serviceId_(-1), opId_(-1), session_(0),
+    src_ent_(0), dst_ent_(0), shared_(&keep_), dta_(0) {}
+
+private:
+    _SmppCommand& operator = ( const _SmppCommand& );
+
+protected:
+    // -- generic stuff
+    CommandId   cmdid_;
+    int         serviceId_;
+    uint64_t    opId_;
+    Session*    session_;
+
+    // -- smpp-specific
+    SmppEntity* src_ent_;
+    SmppEntity* dst_ent_;
+
+    // pointer to a shared data (flags, etc.) (not owned)
+    SmppCommandData* shared_;
+
+    // a keep for shared data (don't access it directly, use shared_ pointer instead).
+    // this keep is not used for SUBMIT, DELIVERY, DATASM
+    SmppCommandData keep_;
+
+    // uint32_t orgDialogId_; only in resps
+
+    // only in delivery, submit, datasm
+    /*
+    uint32_t sliceCount_;
+    uint8_t slicingRespPolicy_;
+    bool slicedRespSent_;
+    Mutex    slicedMutex_;
+     */
+
+    // pointer to a command-specific data (owned)
+    void* dta_;
+};
+
+
+class SmppCommand: public SCAGCommand, protected _SmppCommand
 {
 public:
-
     // specialized constructors (meta constructors)
     static std::auto_ptr<SmppCommand> makeCommandSm(CommandId command, const SMS& sms,uint32_t dialogId);
     static std::auto_ptr<SmppCommand> makeSubmitSm(const SMS& sms,uint32_t dialogId);
@@ -660,43 +701,8 @@ protected:
     virtual void setSession( Session* s) { session_ = s; };
 
 private:
-
-    // data previously kept in _SmppCommand
-
-    // -- generic stuff
-    // NOTE: cmdid_ should be the first member
-    CommandId   cmdid_;
-    int         serviceId_;
-    uint64_t    opId_;
-    Session*    session_;
-
-    // smpp-specific
-    SmppEntity* src_ent_;
-    SmppEntity* dst_ent_;
-
-    // pointer to a shared data (flags, etc.) (not owned)
-    SmppCommandData* shared_;
-    // a keep for shared data (don't access it directly).
-    // this keep is not used for SUBMIT, DELIVERY, DATASM
-    SmppCommandData keep_;
-
-    // uint32_t orgDialogId_; only in resps
-
-    // only in delivery, submit, datasm
-    /*
-    uint32_t sliceCount_;
-    uint8_t slicingRespPolicy_;
-    bool slicedRespSent_;
-    Mutex    slicedMutex_;
-     */
-
-    // pointer to a command-specific part (owned)
-    // NOTE: should be the last member!
-    void* dta_;
-
     static Logger* log_;
     static Mutex   loggerMutex_;
-
     static uint32_t commandCounter; // for debugging
     static Mutex    cntMutex;
     static uint32_t stuid;
