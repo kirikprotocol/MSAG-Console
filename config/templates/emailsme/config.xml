@@ -65,7 +65,6 @@
   </section>
 
   <section name="defaults">
-    <param name="dailyLimit" type="int">20</param>
     <param name="annotationSize" type="int">460</param>
   </section>
 

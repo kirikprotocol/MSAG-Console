@@ -822,7 +822,7 @@ namespace cfg{
  int smtpPort=25;
  int retryTime=5;
  bool pauseAfterDisconnect=false;
- int defaultDailyLimit;
+ //int defaultDailyLimit;
  int annotationSize;
  string maildomain;
  vector<string> validDomains;
@@ -2952,7 +2952,7 @@ int main(int argc,char* argv[])
     }
   }
 
-  cfg::defaultDailyLimit=cfgman.getInt("defaults.dailyLimit");
+  //cfg::defaultDailyLimit=cfgman.getInt("defaults.dailyLimit");
   cfg::annotationSize=cfgman.getInt("defaults.annotationSize");
 
   __trace2__("defaults.annotationSize:%d",cfg::annotationSize);
