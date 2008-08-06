@@ -171,7 +171,8 @@ protected:
 ///     index_type append();                   // internal buffer
 ///     remove( index_type );
 /// };
-template < class IStorage, class DStorage, class LockType = EmptyMutex >
+template < class IStorage, class DStorage,
+    class LockType = EmptyMutex, bool Updatable = false >
 class IndexedStorage
 {
 private:
@@ -303,16 +304,28 @@ private:
     bool do_set( const key_type& k ) {
         index_type i = index_->getIndex( k );
         if ( i ) {
-            index_type j = data_->append();
-            if ( j && index_->setIndex(k,j) ) {
-                data_->remove( i );
-                return true;
-            }
+            return do_update( i );
+            /*
+             */
         } else {
             i = data_->append(); // from internal buffer
             if ( i ) return index_->setIndex(k,i);
         }
         return false;
+    }
+
+
+    /// by default we have no update policy, so we use append/remove couple.
+    bool do_update( const key_type& k, index_type i )
+    {
+        index_type j = data_->append();
+        if ( j ) {
+            index_->setIndex(k,j);
+        } else {
+            index_->removeIndex(k);
+        }
+        data_->remove(i);
+        return bool( j );
     }
 
 private:
@@ -321,6 +334,20 @@ private:
     DStorage*  data_;
 };
 
+
+// partial specialization of do_update
+template < class IStorage, class DStorage, class MutexType >
+    bool IndexedStorage< IStorage, DStorage, MutexType, true >
+    ::do_update( const key_type& k, index_type i )
+    {
+        index_type j = disk_->update(i);
+        if ( j ) {
+            index_->setIndex(k,j);
+        } else {
+            index_->removeIndex(k);
+        }
+        return bool(j);
+    }
 
 /*
 /// class storing transient objects in memory.
