@@ -1,0 +1,7 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name                            source name     libraries         
+
+scag/mtpers                              mtpers          -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers-mtpers -lscag-pers -lutil-mirrorfile -lcore-network -lcore-threads -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl -llogger -llicense-check -lscag-util-storage
+scag/client_test/mtpers_client           mtpers_client   -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers-mtpers -lscag-pers -lutil-mirrorfile -lcore-network -lcore-threads -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl -llogger -llicense-check -lscag-util-storage
