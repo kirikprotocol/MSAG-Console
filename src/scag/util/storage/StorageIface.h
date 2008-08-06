@@ -142,6 +142,49 @@ protected:
     mutable T* lock_;
 };
 
+
+namespace details {
+
+// indexed storage updater
+template < class IS, bool UPD = false >
+    struct IndexedStorageUpdater
+{
+    typedef typename IS::key_type   key_type;
+    typedef typename IS::index_type index_type;
+    
+    inline static bool update( IS& is, const key_type& k, index_type i )
+    {
+        index_type j = is.data_->append();
+        if ( j )
+            is.index_->setIndex(k,j);
+        else
+            is.index_->removeIndex(k);
+        is.data_->remove(i);
+        return bool(j);
+    }
+
+};
+
+template < class IS >
+    struct IndexedStorageUpdater< IS, true >
+{
+    typedef typename IS::key_type   key_type;
+    typedef typename IS::index_type index_type;
+
+    inline static bool update( IS& is, const key_type& k, index_type i )
+    {
+        index_type j = is.data_->update();
+        if ( j )
+            is.index_->setIndex(k,j);
+        else
+            is.index_->removeIndex(k);
+        return bool(j);
+    }
+};
+
+} // namespace details
+
+
 /// Indexed storage template class.
 /// Template parameters are IStorage -- a storage for indices
 /// and DStorage -- a storage for data.
@@ -160,13 +203,16 @@ protected:
 ///     bool setIndex( const key_type&, index_type);
 /// };
 /// DStorage {
+///     static const bool updatable;           // updata policy
 ///     index_type = POD integral type (?);
 ///     value_type;
 ///     bool read( index_type ) const;         // into internal (mutable) buffer
 ///     bool deserialize( value_type& ) const; // from intern. buffer
 ///     ~DStorage();
+///     setKey( ... );
 ///     serialize( const value_type& );
-///     remove( index_type );
+///     append( index_type );
+///     update( index_type );                  // required only if updatable = true
 ///     copyBuffer( OtherDStorage& );          // copy internal buffer
 ///     index_type append();                   // internal buffer
 ///     remove( index_type );
@@ -174,6 +220,8 @@ protected:
 template < class IStorage, class DStorage, class LockType = EmptyMutex >
 class IndexedStorage
 {
+    typedef IndexedStorage< IStorage, DStorage, LockType >  Self;
+    friend class details::IndexedStorageUpdater< Self, DStorage::updatable >;
 private:
     typedef typename IStorage::index_type        index_type;
 public:
@@ -304,10 +352,7 @@ private:
         index_type i = index_->getIndex( k );
         if ( i ) {
             // FIXME: implement partial template fix when I'll be smart enough
-            if ( DStorage::updatable )
-                return do_update_true(k,i);
-            else
-                return do_update_false(k,i);
+            return details::IndexedStorageUpdater< Self, DStorage::updatable >::update( *this, k, i );
         } else {
             i = data_->append(); // from internal buffer
             if ( i ) return index_->setIndex(k,i);
@@ -316,6 +361,7 @@ private:
     }
 
 
+    /*
     inline bool do_update_false( const key_type& k, index_type i ) {
         index_type j = data_->append();
         if ( j ) {
@@ -336,6 +382,7 @@ private:
         }
         return bool(j);
     }
+     */
 
 private:
     mutable LockType   lock_;

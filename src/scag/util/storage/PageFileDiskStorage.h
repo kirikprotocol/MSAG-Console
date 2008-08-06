@@ -77,6 +77,7 @@ public:
         return i;
     }
 
+    /*
     // update data from internal buffer to the storage
     index_type update( index_type i ) {
         // NOTE: this method should not be invoked
@@ -89,6 +90,7 @@ public:
         // key_ = "destroyed";
         return i;
     }
+     */
 
     /// read data from storage into internal (mutable) buffer
     bool read( index_type i ) const {
