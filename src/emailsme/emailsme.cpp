@@ -1548,7 +1548,7 @@ public:
           continue;
         }
         ConcatRecord& rec=rit->second;
-        processSms(rec.combineTxt().c_str(),rec.oa.c_str(),rec.da.c_str());
+        processSms(rec.combineTxt().c_str(),Address(rec.oa.c_str()).value,Address(rec.da.c_str()).value);
         smsc_log_info(log,"Concat timed out:%d/%s",rec.mr,rec.oa.c_str());
         timeMap.erase(it);
         records.erase(key);
@@ -1596,7 +1596,7 @@ public:
     RecordsMap::iterator it=records.find(key);
     if(it==records.end())
     {
-      smsc_log_info(log,"Starting concat for %d/%s",mr,sms.getOriginatingAddress().toString().c_str());
+      smsc_log_info(log,"Starting concat for %d/%s[num=%d]",mr,sms.getOriginatingAddress().toString().c_str(),num);
       ConcatRecord rec;
       rec.fileIdx=lastIdx++;
       rec.oa=sms.getOriginatingAddress().toString();
@@ -1627,7 +1627,7 @@ public:
     {
       smsc_log_info(log,"Concat complete for %d/%s",rec.mr,rec.oa.c_str());
       std::string txt=rec.combineTxt();
-      processSms(txt.c_str(),rec.oa.c_str(),rec.da.c_str());
+      processSms(txt.c_str(),Address(rec.oa.c_str()).value,Address(rec.da.c_str()).value);
       timeMap.erase(rec.tit);
       records.erase(it);
       DelRecord(rec);
