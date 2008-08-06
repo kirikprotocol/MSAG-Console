@@ -228,7 +228,6 @@ public:
     bool Add( DataBlockBackup<Profile>& prof, const Key& key, index_type& blockIndex) {
         Profile& profile = *prof.value;
         BlocksHSBackupData& bkp = *prof.backup;
-        //SerialBuffer data;
         profileData.Empty();
         profile.Serialize(profileData, true, glossary_);
         smsc_log_debug(logger, "Add data block key='%s' length=%d", key.toString().c_str(), profileData.length());
@@ -255,8 +254,9 @@ public:
         } catch (const std::exception& e) {
             blockIndex = -1;
             restoreDataBlocks(oldDescrFile, bkp.getBackupData());
-            // FIXME: profile cleanup is its own responsibility
-            // profile.Empty();
+            SerialBuffer sb;
+            profile.Deserialize(sb);
+            bkp.clearBackup();
             descrFile = oldDescrFile;
             changeDescriptionFile();
             //exit(-1);
@@ -267,8 +267,10 @@ public:
     
     bool Change(DataBlockBackup<Profile>& prof, const Key& key, index_type& blockIndex) {
         if (blockIndex == -1) {
-            return Add(profile, key, blockIndex);
+            return Add(prof, key, blockIndex);
         }
+        Profile& profile = *prof.value;
+        BlocksHSBackupData& bkp = *prof.backup;
         profileData.Empty();
         profile.Serialize(profileData, true, glossary_);
         smsc_log_debug(logger, "Change data block index=%d key='%s' length=%d",
@@ -277,7 +279,7 @@ public:
         index_type ffb = descrFile.first_free_block;
         backupHeader.key = key;
         int dataLength = profileData.length();
-        if (!backUpProfile(key, blockIndex, profile, dataLength, true)) {
+        if (!backUpProfile(key, blockIndex, bkp, dataLength, true)) {
             smsc_log_error(logger, "Backup profile error");
             return false;
         }
@@ -286,12 +288,12 @@ public:
         int updateBlocksCount = blocksCount <= oldBlocksCount ? blocksCount : oldBlocksCount;
 
         try {
-            profile.clearBackup();
-            index_type curBlockIndex = addBlocks(blockIndex, 0, updateBlocksCount, profileData, key, profile); 
+            bkp.clearBackup();
+            index_type curBlockIndex = addBlocks(blockIndex, 0, updateBlocksCount, profileData, key, bkp); 
             if (blocksCount > oldBlocksCount) {
                 smsc_log_debug(logger, "Add new blocks");
                 descrFile.first_free_block = addBlocks(ffb, updateBlocksCount, blocksCount,
-                                                       profileData, key, profile);
+                                                       profileData, key, bkp);
             }
             if (blocksCount < oldBlocksCount) {
                 smsc_log_debug(logger, "Remove empty blocks");
@@ -302,11 +304,16 @@ public:
             if (blocksCount == 0) {
                 blockIndex = -1;
             }
-            profile.setBackupData(profileData);
+            bkp.setBackupData(profileData.c_ptr(), profileData.length());
             return true;
         } catch (const std::exception& e) {
-            profile.restoreBackup(dataBlockBackup, oldBlocksCount);
-            restoreDataBlocks(oldDescrFile, profile.getBackupData());
+            bkp.setBackup(vector<index_type>(dataBlockBackup.begin(), dataBlockBackup.begin() + oldBlocksCount));
+            size_t backupSize = bkp.getBackupDataSize();
+            SerialBuffer sb(backupSize);
+            sb.Append(bkp.getBackupData(), backupSize);
+            sb.SetPos(0);
+            profile.Deserialize(sb, true, glossary_);
+            restoreDataBlocks(oldDescrFile, bkp.getBackupData());
             descrFile = oldDescrFile;
             changeDescriptionFile();
             //exit(-1);
