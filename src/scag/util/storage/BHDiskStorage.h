@@ -72,7 +72,7 @@ public:
     index_type update( index_type i )
     {
       index_type block_index = i - 1;
-      if ( !v_ || !store_->Change( *v_, key_, blockIndex ) ) return index_type(0);
+      if ( !v_ || !store_->Change( *v_, key_, block_index ) ) return index_type(0);
       return ++block_index;
     }
 
