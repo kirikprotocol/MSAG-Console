@@ -111,8 +111,9 @@ public:
         return lcmCtx_;
     }
 
-    bool isNew() const;
-    void setNew( bool anew );
+    /// check if the session is new for given service/transport
+    bool isNew( int serviceId, int transport ) const;
+    void setNew( int serviceId, int transport, bool anew );
 
     /// --- property Scopes, for use from ActionContext
 
