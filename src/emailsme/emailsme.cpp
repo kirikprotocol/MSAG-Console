@@ -2759,7 +2759,7 @@ int main(int argc,char* argv[])
 
   try
   {
-    cfg::helpDeskAddress=Address(cfgman.getString("admin.helpdeskAddress")).toString().c_str();
+    cfg::helpDeskAddress=Address(cfgman.getString("admin.helpdeskAddress")).value;
   } catch(std::exception& e)
   {
     __warning__("helpdesk support disabled");
