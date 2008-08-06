@@ -76,6 +76,7 @@ public:
       return ++block_index;
     }
 
+
     void remove( index_type i )
     {
         typename value_type::value_type vv;

@@ -78,17 +78,17 @@ public:
     }
 
     // update data from internal buffer to the storage
-    /*
     index_type update( index_type i ) {
+        // NOTE: this method should not be invoked
+        ::abort();
         // smsc_log_debug( disklog_, "update: index=%llx val=%s",
         // static_cast<unsigned long long>(i), key_.c_str() );
         // pf_->Delete( i );
         // i = pf_->Append( buf.data(), buf.size() );
-        pf_->Update( i, buf.data(), buf.size() );
+        // pf_->Update( i, buf.data(), buf.size() );
         // key_ = "destroyed";
         return i;
     }
-     */
 
     /// read data from storage into internal (mutable) buffer
     bool read( index_type i ) const {
