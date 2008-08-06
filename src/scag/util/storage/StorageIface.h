@@ -171,8 +171,7 @@ protected:
 ///     index_type append();                   // internal buffer
 ///     remove( index_type );
 /// };
-template < class IStorage, class DStorage,
-    class LockType = EmptyMutex, bool Updatable = false >
+template < class IStorage, class DStorage, class LockType = EmptyMutex >
 class IndexedStorage
 {
 private:
@@ -304,9 +303,11 @@ private:
     bool do_set( const key_type& k ) {
         index_type i = index_->getIndex( k );
         if ( i ) {
-            return do_update( i );
-            /*
-             */
+            // FIXME: implement partial template fix when I'll be smart enough
+            if ( DStorage::updatable )
+                return do_update_true(k,i);
+            else
+                return do_update_false(k,i);
         } else {
             i = data_->append(); // from internal buffer
             if ( i ) return index_->setIndex(k,i);
@@ -315,9 +316,7 @@ private:
     }
 
 
-    /// by default we have no update policy, so we use append/remove couple.
-    bool do_update( const key_type& k, index_type i )
-    {
+    inline bool do_update_false( const key_type& k, index_type i ) {
         index_type j = data_->append();
         if ( j ) {
             index_->setIndex(k,j);
@@ -325,7 +324,17 @@ private:
             index_->removeIndex(k);
         }
         data_->remove(i);
-        return bool( j );
+        return bool(j);
+    }
+
+    inline bool do_update_true( const key_type& k, index_type i ) {
+        index_type j = data_->update(i);
+        if ( j ) {
+            index_->setIndex(k,j);
+        } else {
+            index_->removeIndex(k);
+        }
+        return bool(j);
     }
 
 private:
@@ -335,19 +344,6 @@ private:
 };
 
 
-// partial specialization of do_update
-template < class IStorage, class DStorage, class MutexType >
-    bool IndexedStorage< IStorage, DStorage, MutexType, true >
-    ::do_update( const key_type& k, index_type i )
-    {
-        index_type j = disk_->update(i);
-        if ( j ) {
-            index_->setIndex(k,j);
-        } else {
-            index_->removeIndex(k);
-        }
-        return bool(j);
-    }
 
 /*
 /// class storing transient objects in memory.

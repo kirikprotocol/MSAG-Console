@@ -14,6 +14,7 @@ template < class Key, class Val, class Storage = BlocksHSStorage< Key, Val > >
 class BHDiskStorage
 {
 public:
+    static const bool                         updatable = false;
     typedef Storage                           storage_type;
     typedef Key                               key_type;
     typedef typename storage_type::index_type index_type;
@@ -67,6 +68,12 @@ public:
         return true;
     }
 
+
+    index_type update( index_type )
+    {
+#warning please realize me
+        return index_type(0);
+    }
 
     void remove( index_type i )
     {

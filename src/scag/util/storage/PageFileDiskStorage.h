@@ -34,6 +34,7 @@ template < class Key, class Val, class PF = smsc::core::buffers::PageFile >
 class PageFileDiskStorage : public MutableBufferHolder
 {
 public:
+    static const bool                                 updatable = false;
     typedef PF                                        storage_type;
     typedef smsc::core::buffers::File::offset_type    index_type;
     typedef Key                                       key_type;
