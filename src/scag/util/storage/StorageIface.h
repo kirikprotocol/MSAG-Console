@@ -410,10 +410,17 @@ public:
     value_type* get( const key_type& k, bool create = false ) const {
         stored_type* const vv = cache_->get( k );
         if ( vv ) {
-            if ( cache_->store2val(*vv) ) ++this->hitcount_;
-            // NOTE: we won't invoke faultHandler if we already
-            // have something (even NULL) with this key in cache.
-            // This is to remember the negative hit.
+            if ( cache_->store2val(*vv) ) {
+                ++this->hitcount_;
+            } else if ( create ) {
+                // NOTE: we won't invoke faultHandler if we already
+                // have something (even NULL) with this key in cache.
+                // This is to remember the negative hit.
+                // However, if we want to create something it should be done here.
+                stored_type v = cache_->val2store(alloc(k));
+                cache_->set(k,v);
+                return cache_->store2val(v);
+            }
             return cache_->store2val(*vv);
         }
         stored_type v = faultHandler(k, create);
