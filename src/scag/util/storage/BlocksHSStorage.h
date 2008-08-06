@@ -265,7 +265,7 @@ public:
     }
 
     
-    bool Change(Profile& profile, const Key& key, index_type& blockIndex) {
+    bool Change(DataBlockBackup<Profile>& prof, const Key& key, index_type& blockIndex) {
         if (blockIndex == -1) {
             return Add(profile, key, blockIndex);
         }

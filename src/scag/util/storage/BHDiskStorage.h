@@ -69,10 +69,11 @@ public:
     }
 
 
-    index_type update( index_type )
+    index_type update( index_type i )
     {
-#warning please realize me
-        return index_type(0);
+      index_type block_index = i - 1;
+      if ( !v_ || !store_->Change( *v_, key_, blockIndex ) ) return index_type(0);
+      return ++block_index;
     }
 
     void remove( index_type i )
