@@ -2728,7 +2728,7 @@ int main(int argc,char* argv[])
 
   try
   {
-    cfg::pauseAfterDisconnect=cfgman.getInt("smpp.pauseAfterDisconnect");
+    cfg::pauseAfterDisconnect=cfgman.getBool("smpp.pauseAfterDisconnect");
 
   } catch(...)
   {
