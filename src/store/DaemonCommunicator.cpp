@@ -21,7 +21,7 @@ void Message::read(Socket* socket, void* buffer, size_t size)
     {
       throw CommunicationException("Message read failed. Socket NULL!");
     }
-    size_t toRead = size;
+    ssize_t toRead = size;
     char* readBuffer = (char *)buffer;
     while (toRead > 0)
     {
@@ -58,7 +58,7 @@ void Message::write(Socket* socket, const void* buffer, size_t size)
     const char* writeBuffer = (const char *)buffer;
     while (toWrite > 0)
     {
-      size_t write = socket->canWrite(10);
+      ssize_t write = socket->canWrite(10);
       if (write == 0)
       {
         throw CommunicationException("Message send failed. Timeout expired.");
