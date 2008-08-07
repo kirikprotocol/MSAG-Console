@@ -76,6 +76,12 @@ Modules:
     <property name="TEMPLATES_CSV_FILE" value="SMSExtraSubscriptionSME/docs/msisdn2smsc.csv"/>
     <ant dir="SMSExtraSubscriptionSME" target="update"/>
   </target>
+  <target name="mcahdb_distr">
+    <ant dir="MCAhdb" antfile="build.xml" target="distr"/>
+  </target>
+  <target name="mcahdb_update">
+    <ant dir="MCAhdb" antfile="build.xml" target="update"/>
+  </target>
   <target name="unibalance_distr">
     <ant dir="unibalance" antfile="build.xml" target="distr"/>
   </target>
