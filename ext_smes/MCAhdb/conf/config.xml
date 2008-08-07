@@ -1,0 +1,18 @@
+<config>
+
+  <param name="journalsCheckInterval">60000</param>
+
+  <section name="journalStore">
+    <param name="journalsDir">store/journals</param>
+    <param name="archivesDir">store/journals/archives</param>
+  </section>
+
+  <section name="eventsStore">
+    <param name="storeDir">store/events</param>
+  </section>
+
+  <section name="soap">
+    <param name="responseDateFormat">yyyyMMdd HH:mm:ss</param>
+    <param name="eventsFetchInterval">12</param>
+  </section>
+</config>

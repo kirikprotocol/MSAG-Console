@@ -1,0 +1,59 @@
+<project name="MCAHDB">
+
+  <property name="esme_name" value="MCAhdb"/>
+  <property name="SMSC_DIR" value=".."/>
+  <property file="${SMSC_DIR}/webapps/build.properties"/>
+  <property file="${SMSC_DIR}/src/build.properties"/>
+  <property environment="env"/>
+  <property name="TEMPLATE_PROPS" value="should be defined in calling script"/>
+  <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
+
+  <property name="esme_bin_path" value="should be defined in calling script"/>
+  <property name="esme_bin_name" value="should be defined in calling script"/>
+  <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
+  <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
+  <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
+  <property name="exploded" location="${BUILD_DIR}/exploded/${esme_name}"/>
+  <property name="java_out" location="${BUILD_DIR}/classes/${esme_name}"/>
+  
+
+  <property name="CFG_DIR" value="conf"/>
+  <property name="BIN_DIR" value="bin"/>
+  <property name="JAVA_SRC" value="java/src"/>
+  <property name="JAVA_LIB" value="java/lib"/>
+
+  <!--<property name="BUILD_DIR" value="BUILD"/>-->
+  <!--<property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>-->
+
+  <target name="prepare">
+    <mkdir dir="${java_out}"/>
+    <mkdir dir="${exploded}/lib"/>
+    <!--<mkdir dir="${DISTR_DIR}/services/${esme_name}/logs"/>-->
+    <!--<mkdir dir="${DISTR_DIR}/services/${esme_name}/store/journals/archives"/>-->
+    <!--<mkdir dir="${DISTR_DIR}/services/${esme_name}/store/events"/>-->
+  </target>
+
+  <target name="compile" depends="prepare">
+    <javac srcdir="${JAVA_SRC}" destdir="${java_out}">
+      <classpath>
+        <fileset dir="${JAVA_LIB}" includes="*.jar"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="build" depends="compile">
+    <jar basedir="${BUILD_DIR}/classes" jarfile="${exploded}/lib/mcahdb.jar"/>
+  </target>
+
+  <target name="distr" depends="build, update">
+    <copydir src="${TEMPL_DIR}/${esme_name}" dest="${DISTR_DIR}/services/${esme_name}/conf"/>
+  </target>
+
+  <target name="update" depends="build">
+    <copydir src="${BIN_DIR}" dest="${DISTR_DIR}/services/${esme_name}/bin"/>
+    <chmod dir="${DISTR_DIR}/services/${esme_name}/bin" perm="ugo+rx" includes="*"/>
+    <copydir src="${JAVA_LIB}" dest="${DISTR_DIR}/services/${esme_name}/lib"/>
+    <copyfile src="${exploded}/lib/mcahdb.jar" dest="${DISTR_DIR}/services/${esme_name}/lib/mcahdb.jar"/>
+  </target>
+
+</project>
