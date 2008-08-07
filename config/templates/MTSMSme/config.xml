@@ -6,19 +6,23 @@
   <section name="MTSMSme">
 
     <section name="Aliases">
+	<section name="250013903784021">
+	    <param name="reg_type" type="string">internal</param>
+            <param name="address" type="string">.0.1.250013903784021</param>
+            <param name="alias" type="string">.0.1.1971</param>
+            <param name="mgt" type="string">.1.1.791603903784021</param>
+            <param name="msisdn" type="string">.1.1.79134632021</param>
+            <param name="period" type="int">600</param>
+	</section>
 
-      <section name="250130124323100">
-        <param name="address" type="string">.0.1.250130124323100</param>
-        <param name="alias" type="string">.1.1.78612661701</param>
-        <param name="mgt" type="string">790243012432310</param>
-      </section>
-
-      <section name="250013903784021">
-        <param name="address" type="string">.0.1.250013903784021</param>
-        <param name="alias" type="string">.1.1.79134632021</param>
-        <param name="mgt" type="string">.1.1.791603903784021</param>
-      </section>
-
+	<section name="250013903784022">
+	    <param name="reg_type" type="string">internal</param>
+            <param name="address" type="string">.0.1.250013903784022</param>
+            <param name="alias" type="string">.0.1.1971</param>
+            <param name="mgt" type="string">.1.1.791603903784022</param>
+            <param name="msisdn" type="string">.1.1.79139872021</param>
+            <param name="period" type="int">600</param>
+	</section>
     </section>
 
     <section name="SMSC">
@@ -33,6 +37,7 @@
       <param name="user_ssn" type="int">191</param>
       <param name="msc_gt" type="string">.1.1.791398699812</param>
       <param name="vlr_gt" type="string">.1.1.791398699813</param>
+      <param name="hlr_gt" type="string">.1.1.791398699813</param>
     </section>
   </section>
 </config>
