@@ -20,8 +20,9 @@ public:
     typedef typename storage_type::index_type index_type;
     typedef DataBlockBackup< Val >            value_type;
 
-    BHDiskStorage( storage_type* hs ) : store_(hs), i_(0), v_(NULL)
+    BHDiskStorage( storage_type* hs ) : store_(hs), v_(NULL)
     {
+        i_ = invalidIndex();
         if ( !hs ) {
             throw std::runtime_error("BlocksHSStorage should be provided" );
         }
@@ -38,10 +39,15 @@ public:
     }
 
 
+    inline index_type invalidIndex() const {
+        return -1;
+    }
+
+
     void serialize( const value_type& v )
     {
         // no serialization is done here, we just store ptr to v
-        i_ = 0;
+        i_ = invalidIndex();
         v_ = const_cast<value_type*>(&v);
     }
 
@@ -50,7 +56,7 @@ public:
     {
         index_type blockIndex;
         if ( !v_ || !store_->Add( *v_, key_, blockIndex ) ) return 0;
-        return ++blockIndex;
+        return blockIndex;
     }
     
 
@@ -64,16 +70,15 @@ public:
 
     bool deserialize( value_type& v ) const
     {
-        if ( !i_ || !store_->Get(i_-1, v) ) return false;
+        if ( i_ == invalidIndex() || !store_->Get(i_, v) ) return false;
         return true;
     }
 
 
     index_type update( index_type i )
     {
-      index_type block_index = i - 1;
-      if ( !v_ || !store_->Change( *v_, key_, block_index ) ) return index_type(0);
-      return ++block_index;
+        if ( !v_ || !store_->Change( *v_, key_, i ) ) return invalidIndex();
+        return i;
     }
 
 
@@ -82,7 +87,6 @@ public:
         typename value_type::value_type vv;
         typename value_type::backup_type bb;
         value_type v(&vv,&bb);
-        --i;
         if ( store_->Get(i,v) ) store_->Remove(key_,i,v);
     }
 

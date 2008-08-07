@@ -12,7 +12,7 @@ namespace util {
 namespace storage {
 
 /// index disk storage
-template < class Key, class Idx >
+template < class Key, typename Idx >
 class RBTreeIndexStorage
 {
 private:
@@ -28,7 +28,8 @@ public:
                         const std::string& dbpath,
                         int indexGrowth = 1000000,
                         bool cleanup = false ) :
-    cache_(0)
+    cache_(0),
+    invalid_(0)
     {
         allocator_.reset( new IndexAllocator() );
         if ( allocator_->Init( dbpath + '/' + dbname + "-index",
@@ -51,10 +52,16 @@ public:
     }
 
 
+    /// set invalid index
+    void setInvalidIndex( index_type i ) {
+        invalid_ = i;
+    }
+
+
     /// @return the index of the key, or 0 if not found
     index_type getIndex( const key_type& k ) const {
         IndexNode* node = getNode( k );
-        return node ? node->value : 0;
+        return node ? node->value : invalid_;
     }
     
     /// set the index of the key with possible replacement.
@@ -76,10 +83,10 @@ public:
         IndexNode* node = getNode( k );
         if ( node ) {
             index_type i = node->value;
-            index_.setNodeValue( node, 0 );
+            index_.setNodeValue( node, invalid_ );
             return i;
         }
-        return 0;
+        return invalid_;
     }
 
 
@@ -148,6 +155,7 @@ private:
     std::auto_ptr< IndexAllocator > allocator_;
     mutable IndexNode*              cache_;       // for successive get/set
     mutable key_type                negativekey_; // for absent key
+    index_type                      invalid_;
 };
 
 } // namespace storage

@@ -54,8 +54,13 @@ public:
     }
 
 
-    bool setKey( const key_type& ) {
+    inline bool setKey( const key_type& ) {
         return true;
+    }
+
+
+    inline index_type invalidIndex() const {
+        return 0;
     }
 
 

@@ -155,7 +155,7 @@ template < class IS, bool UPD = false >
     inline static bool update( IS& is, const key_type& k, index_type i )
     {
         index_type j = is.data_->append();
-        if ( j )
+        if ( j != is.data_->invalidIndex() )
             is.index_->setIndex(k,j);
         else
             is.index_->removeIndex(k);
@@ -174,7 +174,7 @@ template < class IS >
     inline static bool update( IS& is, const key_type& k, index_type i )
     {
         index_type j = is.data_->update();
-        if ( j )
+        if ( j != is.data_->invalidIndex() )
             is.index_->setIndex(k,j);
         else
             is.index_->removeIndex(k);
@@ -201,6 +201,7 @@ template < class IS >
 ///     index_type getIndex( const key_type& ) const;
 ///     index_type removeIndex( const key_type& );
 ///     bool setIndex( const key_type&, index_type);
+///     void setInvalidIndex( index_type );    // to set invalid index
 /// };
 /// DStorage {
 ///     static const bool updatable;           // updata policy
@@ -215,6 +216,7 @@ template < class IS >
 ///     update( index_type );                  // required only if updatable = true
 ///     copyBuffer( OtherDStorage& );          // copy internal buffer
 ///     index_type append();                   // internal buffer
+///     index_type invalidIndex() const;       // return invalid index
 ///     remove( index_type );
 /// };
 template < class IStorage, class DStorage, class LockType = EmptyMutex >
@@ -238,7 +240,9 @@ public:
             if ( !s_ ) return false;
             index_type i;
             while ( iter_.next(k,i) ) {
-                if ( i && s_->data_->read(i) && s_->data_->deserialize(v) ) {
+                if ( i != s_->data_->invalidIndex() && 
+                     s_->data_->read(i) && 
+                     s_->data_->deserialize(v) ) {
                     return true;
                 }
             }
@@ -264,6 +268,7 @@ public:
             delete ds;
             throw std::runtime_error("IndexedStorage: both storages should be provided!");
         }
+        index_->setInvalidIndex( data_->invalidIndex() );
     }
 
 
@@ -291,7 +296,10 @@ public:
     bool get( const key_type& k, value_type& v ) const {
         mutexguard_type mg(lock_);
         index_type i = index_->getIndex( k );
-        if ( i && data_->setKey(k) && data_->read(i) && data_->deserialize(v) )
+        if ( i != data_->invalidIndex() &&
+             data_->setKey(k) && 
+             data_->read(i) && 
+             data_->deserialize(v) )
             return true;
         return false;
     }
@@ -299,14 +307,14 @@ public:
 
     bool has( const key_type& k ) const {
         mutexguard_type mg(lock_);
-        return ( index_->getIndex( k ) != 0 );
+        return ( index_->getIndex(k) != data_->invalidIndex() );
     }
 
 
     bool remove( const key_type& k ) {
         mutexguard_type mg(lock_);
         index_type i = index_->removeIndex( k );
-        if ( i != 0 ) {
+        if ( i != data_->invalidIndex() ) {
             data_->setKey( k );
             data_->remove( i );
             return true;
@@ -324,7 +332,9 @@ public:
     {
         if ( &s != this ) {
             index_type i = s.index_->getIndex(k);
-            if ( i != 0 && s.data_->setKey(k) && s.data_->read(i) ) {
+            if ( i != data_->invalidIndex() &&
+                 s.data_->setKey(k) &&
+                 s.data_->read(i) ) {
                 data_->setKey(k);
                 data_->copyBuffer( s.data_ );
                 return do_set(k);
@@ -350,12 +360,12 @@ private:
     /// set internal buffer to the data storage
     bool do_set( const key_type& k ) {
         index_type i = index_->getIndex( k );
-        if ( i ) {
+        if ( i != data_->invalidIndex() ) {
             // FIXME: implement partial template fix when I'll be smart enough
             return details::IndexedStorageUpdater< Self, DStorage::updatable >::update( *this, k, i );
         } else {
             i = data_->append(); // from internal buffer
-            if ( i ) return index_->setIndex(k,i);
+            if ( i != data_->invalidIndex() ) return index_->setIndex(k,i);
         }
         return false;
     }
