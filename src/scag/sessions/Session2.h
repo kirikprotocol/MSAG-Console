@@ -2,6 +2,7 @@
 #define _SCAG_SESSIONS_SESSION2_H
 
 #include <list>
+#include <stack>
 
 // #include "util/stringhash.hpp"
 #include "SessionKey.h"
@@ -64,8 +65,49 @@ private:
 };
 
 
-class Operation;
 class ExternalTransaction;
+class Session;
+
+
+class Operation
+{
+public:
+    Operation( Session* owner, uint8_t type );
+    ~Operation();
+
+    uint8_t type() const { return type_; }
+
+    void receiveNewPart( int currentIndex, int lastIndex );
+    void receiveNewResp( int currentIndex, int lastIndex );
+
+    ICCOperationStatus getStatus();
+    void setStatus( ICCOperationStatus st ) { status_ = st; }
+
+    void setFlag( uint32_t f ) { flags_ |= f; }
+    void clearFlag( uint32_t f ) { flags_ &= ~f; }
+    bool flagSet( uint32_t f ) const { return flags_ & f; }
+    uint32_t flags() const { return flags_; }
+
+private:
+    Operation& operator = ( const Operation& );
+    Operation( const Operation& );
+
+private:
+    static smsc::logger::Logger* log_;
+    static Mutex                 loggerMutex_;
+
+private:
+    Session*            owner_;
+    int                 receivedParts_;
+    bool                receivedAllParts_;
+    int                 receivedResps_;
+    bool                receivedAllResps_;
+    ICCOperationStatus  status_;
+    uint8_t             type_;
+    uint32_t            flags_;
+
+};
+
 
 ///
 /// a new realization of msag Session
@@ -100,11 +142,23 @@ public:
         return pkey_;
     }
 
-    /// get current operation
-    Operation* getCurrentOperation();
+    /// === operations methods
+    opid_type getCurrentOperationId() const;
+    Operation* getCurrentOperation() const;
+
+    /// set an existing operation by id and return it.
+    Operation* setCurrentOperation( opid_type opid );
+
+    /// return ussd operation id or -1
+    opid_type getUSSDOperationId() const;
+
+    /// create a new operation and set it as current
+    Operation* createOperation( SCAGCommand& cmd, int operationType );
 
     /// destroy current operation
     void closeCurrentOperation();
+
+
 
     /// FIXME: should it be here?
     LongCallContext& getLongCallContext() {
@@ -114,6 +168,12 @@ public:
     /// check if the session is new for given service/transport
     bool isNew( int serviceId, int transport ) const;
     void setNew( int serviceId, int transport, bool anew );
+
+    /// push a rule key onto the rulekey stack
+    void pushInitRuleKey( int serviceId, int transport );
+    bool getRuleKey( int& serviceId, int& transport ) const;
+    void popInitRuleKey();
+
 
     /// --- property Scopes, for use from ActionContext
 
@@ -181,6 +241,7 @@ private: // methods
     void serializeScopeHash( Serializer& o, const IntHash< SessionPropertyScope* >* s ) const;
     void deserializeScopeHash( Deserializer& o, IntHash< SessionPropertyScope* >*& s ) throw (DeserializerException);
     void clearScopeHash( IntHash< SessionPropertyScope* >* s );
+    opid_type getNewOperationId() const;
     void abort();
 
 private: // statics
@@ -215,18 +276,19 @@ private:
     /// FIXME: should it be here?
     LongCallContext  lcmCtx_;
 
-    /// if the session is just created
-    bool isnew_;
+    /// === fields for init/destroy handlers (not pers?)
+    struct TransportNewFlag;
+    IntHash< TransportNewFlag >      isnew_;
+    std::stack< std::pair<int,int> > initrulekeys_;
 
     /// the list of pending commands (owned, not pers).
     std::list< SCAGCommand* > cmdQueue_;
 
-    /// last operation serial number (int)
-    uint64_t lastOperationId_;
+    /// operations
+    opid_type   currentOperationId_;
+    opid_type   ussdOperationId_;
+    Operation*  currentOperation_;
 
-    /// ussd operation serial number (or 0 if n/a)
-    uint64_t ussdOperationId_;
-    
     /// the hash of operations (int -> Operation)
     IntHash< Operation* > operations_;
 
