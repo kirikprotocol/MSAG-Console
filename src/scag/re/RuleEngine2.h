@@ -37,7 +37,10 @@ public:
     static RuleEngine& Instance();
 
     virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs) = 0;
+
+    /// NOTE: this method is invoked for session destruction only!
     virtual void processSession(Session& session, RuleStatus& rs) = 0;
+
     virtual void updateRule(RuleKey& key) = 0;
     virtual void removeRule(RuleKey& key) = 0;
 //    virtual ActionFactory& getActionFactory() = 0;

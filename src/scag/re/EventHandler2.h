@@ -45,7 +45,7 @@ public:
     virtual ~EventHandler();
 
     virtual void init(const SectionParams& params,PropertyObject _propertyObject) {propertyObject = _propertyObject;}
-    virtual void process(SCAGCommand& command,Session& session, RuleStatus& rs) = 0;
+    virtual void process( SCAGCommand& command,Session& session, RuleStatus& rs ) = 0;
     virtual int StrToHandlerId(const std::string& str) = 0;
 
 };

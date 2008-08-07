@@ -1,8 +1,10 @@
+#include <cassert>
+
 #include "Rule2.h"
 #include "scag/transport/smpp/SmppCommand2.h"
 // #include "scag/transport/http/HttpCommand.h"
-// #include "scag/re/smpp/SmppEventHandler.h"
-// #include "scag/re/http/HttpEventHandler.h"
+#include "scag/re/smpp/SmppEventHandler2.h"
+// #include "scag/re/http/HttpEventHandler2.h"
 #include "scag/re/session/SessionEventHandler2.h"
 #include "RuleEngine2.h"
 
@@ -27,16 +29,19 @@ Rule::~Rule()
 }
 
 
-void Rule::process(SCAGCommand& command,Session& session, RuleStatus& rs)
+void Rule::process(SCAGCommand& command, Session& session, RuleStatus& rs)
 {
     smsc_log_debug(logger,"Process Rule... (%d Event Handlers registered)", Handlers.Count());
 
-    if(session.isNew())
+    // moved to ruleengine
+    /*
+    if ( session.isNew() )
     {
         processSession(session, rs);
         if(rs.status != STATUS_OK)
            return;
     }
+     */
 
     EventHandlerType handlerType = CommandBridge::getHandlerType(command);
 
@@ -52,7 +57,7 @@ void Rule::process(SCAGCommand& command,Session& session, RuleStatus& rs)
                 session.getLongCallContext().continueExec = false;
             return;
         }
-        smsc_log_warn(logger,"Rule: cannot find EventHandler for command");
+        smsc_log_debug( logger,"Rule: cannot find EventHandler for command" );
     }
     catch (Exception& e)
     {
@@ -66,24 +71,32 @@ void Rule::process(SCAGCommand& command,Session& session, RuleStatus& rs)
     {
         smsc_log_error(logger,"EH Rule top level exception: Unknown system error");
     }
-    rs.status = STATUS_FAILED;
+    // rs.status = STATUS_FAILED;
 }
 
-void Rule::processSession(Session& session, RuleStatus& rs)
+
+void Rule::processSession( Session& session, RuleStatus& rs )
 {
     smsc_log_debug(logger,"Process session rule... (%d Event Handlers registered)", Handlers.Count());
 
     try
     {
-        if( Handlers.Exist(session.isNew() ? EH_SESSION_INIT : EH_SESSION_DESTROY))
-        {
-            SessionEventHandler* eh = (SessionEventHandler*)Handlers.Get(session.isNew() ? EH_SESSION_INIT : EH_SESSION_DESTROY);
+        int servid;
+        int transport;
+        // try to obtain the last servid/transport
+        if ( ! session.getRuleKey(servid,transport) ) return;
+
+        const EventHandlerType eht = (session.isNew(servid,transport) ? EH_SESSION_INIT : EH_SESSION_DESTROY );
+
+        if ( Handlers.Exist(eht) ) {
+
+            SessionEventHandler* eh = (SessionEventHandler*)Handlers.Get(eht);
             eh->_process(session, rs);
-            if(rs.status == STATUS_OK)
+            if (rs.status == STATUS_OK)
                 session.getLongCallContext().continueExec = false;
         }
 
-        if(session.isNew()) session.setNew(false);
+        if (session.isNew(servid,transport)) session.setNew(servid,transport,false);
 
 //        smsc_log_warn(logger,"session rule: cannot find EventHandler for command");
         return;
@@ -100,22 +113,20 @@ void Rule::processSession(Session& session, RuleStatus& rs)
     {
         smsc_log_error(logger,"EH Rule top level exception: Unknown system error");
     }
-    rs.status = STATUS_FAILED;
+    // rs.status = STATUS_FAILED;
 }
 
 
 EventHandler * Rule::CreateEventHandler()
 {
-    // FIXME: impl
-    /*
     switch (transportType) 
     {
     case SMPP:
         return new SmppEventHandler();
-    case HTTP:
-        return new HttpEventHandler();
+        // FIXME: impl
+    // case HTTP:
+        // return new HttpEventHandler();
     }
-     */
     throw SCAGException("Rule: unknown RuleTransport to create EventHandler");
 }
 

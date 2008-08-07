@@ -517,7 +517,7 @@ protected:
     // -- generic stuff
     CommandId   cmdid_;
     int         serviceId_;
-    uint64_t    opId_;
+    opid_type   opId_;
     Session*    session_;
 
     // -- smpp-specific
@@ -587,11 +587,11 @@ public:
         serviceId_ = serviceId;
     }
 
-    virtual int64_t getOperationId() const
+    virtual opid_type getOperationId() const
     {
         return opId_;
     }
-    virtual void setOperationId(int64_t op)
+    virtual void setOperationId(opid_type op)
     {
         opId_ = op;
     }

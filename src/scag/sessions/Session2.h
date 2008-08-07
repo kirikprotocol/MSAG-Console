@@ -25,6 +25,7 @@ using namespace smsc::core::buffers;
 using namespace scag::util::storage;
 using namespace transport;
 
+typedef  transport::opid_type  opid_type;
 
 enum ProtocolForEvent
 {

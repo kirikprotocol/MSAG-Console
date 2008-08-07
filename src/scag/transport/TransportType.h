@@ -6,7 +6,6 @@ namespace transport {
 
     enum TransportType
     {
-        NONE = 0,
         SMPP = 1,
         HTTP = 2,
         MMS = 3

@@ -16,6 +16,8 @@ namespace transport {
 using namespace scag::transport;
 using namespace scag2::sessions;
 
+typedef uint32_t opid_type;
+
 class SCAGCommand
 {
     friend class scag2::sessions::SessionStore;
@@ -28,8 +30,8 @@ public:
     virtual int getServiceId() const = 0;
     virtual void setServiceId(int serviceId) = 0;
 
-    virtual int64_t getOperationId() const = 0;
-    virtual void setOperationId(int64_t op) = 0;
+    virtual opid_type getOperationId() const = 0;
+    virtual void setOperationId( opid_type op) = 0;
 
     virtual uint8_t getCommandId() const = 0;
       

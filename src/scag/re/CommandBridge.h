@@ -5,6 +5,7 @@
 #include "scag/transport/smpp/SmppCommand2.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/stat/Statistics.h"
+#include "CommandOperations.h"
 
 /*namespace scag { namespace sessions {
 
@@ -22,27 +23,6 @@ using namespace scag::exceptions;
 using namespace scag::stat;
 using namespace smsc::smpp::UssdServiceOpValue;
 using smsc::sms::Address;
-
-enum CommandOperations
-{
-    //SMS
-    CO_DELIVER = 0,
-    CO_SUBMIT = 1,
-    CO_RECEIPT = 2,
-    CO_DATA_SC_2_SME = 3,
-    CO_DATA_SC_2_SC = 4,
-    CO_DATA_SME_2_SME = 5,
-    CO_DATA_SME_2_SC = 6,
-
-    //USSD
-    CO_USSD_DIALOG = 7,
-    CO_PULL_USSD_DIALOG = 7,
-    CO_PUSH_USSD_DIALOG = 8,
-
-    //HTTP
-    CO_HTTP_DELIVERY = 9
-
-};
 
 enum EventHandlerType
 {
@@ -64,7 +44,7 @@ enum EventHandlerType
     EH_SESSION_DESTROY = 12
 };
 
-struct CSmppDiscriptor
+struct CSmppDescriptor
 {
     CommandOperations cmdType;
     int currentIndex;
@@ -76,7 +56,7 @@ struct CSmppDiscriptor
     bool m_waitReceipt;
     bool isResp;
 
-    CSmppDiscriptor() : 
+    CSmppDescriptor() : 
         currentIndex(0), 
         lastIndex(0), 
         isUSSDClosed(false), 
@@ -104,7 +84,7 @@ public:
     static std::string getMessageBody(SmppCommand& command);
     //static void makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev);
     static EventHandlerType getHandlerType(const SCAGCommand& command);
-    static CSmppDiscriptor getSmppDiscriptor(const SCAGCommand& command);
+    static CSmppDescriptor getSmppDescriptor(const SCAGCommand& command);
 
     static int getProtocolForEvent(SCAGCommand& command);
 

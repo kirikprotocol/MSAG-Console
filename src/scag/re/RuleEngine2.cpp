@@ -401,20 +401,22 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
 
     RulesReference rulesRef = getRules();
 
-    if ( session.isNew() ) {
-        processSession( session, rs );
-        if ( rs.status != STATUS_OK ) return;
-    }
-
     RuleKey key;
     key.serviceId = command.getServiceId();
     key.transport = command.getType();
 
     Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
 
-    if (rulePtr)
-        (*rulePtr)->process(command, session, rs);
-    else
+    if (rulePtr) {
+
+        if ( session.isNew( key.serviceId, key.transport ) ) {
+            session.pushInitRuleKey( key.serviceId, key.transport );
+            (*rulePtr)->processSession( session, rs );
+            if ( rs.status != STATUS_OK ) return;
+        }
+        (*rulePtr)->process( command, session, rs );
+
+    } else 
         smsc_log_debug(logger,"rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
 }
 
@@ -422,17 +424,32 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
 void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
 {
     RulesReference rulesRef = getRules();
-    RuleKey key;
-    key.serviceId = -1;
-    key.transport = transport::NONE;
-    Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
 
-    if (rulePtr)
-        (*rulePtr)->processSession( session, rs );
-    else
-        smsc_log_debug(logger,"session rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
-    session.setNew( false );
-    // throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", 0 ); // session.getRuleKey().serviceId );
+    while ( true ) {
+
+        RuleKey key;
+        if ( ! session.getRuleKey(key.serviceId, key.transport) ) break;
+
+        assert( ! session.isNew(key.serviceId, key.transport) );
+
+        Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
+
+        if (rulePtr) {
+
+            (*rulePtr)->processSession( session, rs );
+            if ( rs.status != STATUS_OK ) break;
+
+        } else
+            smsc_log_debug(logger,"session rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
+
+        // pop the key
+        session.popInitRuleKey();
+
+        // if (session.isNew()) session.setNew( false );
+        // throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", 0 ); // session.getRuleKey().serviceId );
+
+    }
+    return;
 }
 
 

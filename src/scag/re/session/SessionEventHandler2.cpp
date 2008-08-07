@@ -13,11 +13,9 @@ void SessionEventHandler::_process(Session& session, RuleStatus& rs)
 {
     smsc_log_debug(logger, "Process EventHandler...");
 
-    // FIXME: impl
-    /*
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
-    const Address& abonentAddr = session.getSessionKey().abonentAddr;
+    Address abonentAddr( session.sessionKey().toString().c_str() );
 
     int providerId = istr.GetProviderID(session.getRuleKey().serviceId);
     if (providerId == 0) {
@@ -62,7 +60,6 @@ void SessionEventHandler::_process(Session& session, RuleStatus& rs)
         smsc_log_error(logger, "EventHandler: error in actions processing. Details: %s", e.what());
         rs.status = STATUS_FAILED;
     }
-     */
     return;
 }
 

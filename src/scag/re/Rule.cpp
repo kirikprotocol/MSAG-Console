@@ -82,7 +82,7 @@ void Rule::processSession(Session& session, RuleStatus& rs)
             if(rs.status == STATUS_OK)
                 session.getLongCallContext().continueExec = false;
         }
-        if(session.isNew()) session.setNew(false);        
+        if (session.isNew()) session.setNew(false);        
 //        smsc_log_warn(logger,"session rule: cannot find EventHandler for command");
         return;
     }
