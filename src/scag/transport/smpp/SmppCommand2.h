@@ -507,7 +507,7 @@ struct _SmppCommand
 class _SmppCommand
 {
 protected:
-    _SmppCommand() : cmdid_(UNKNOWN), serviceId_(-1), opId_(-1), session_(0),
+    _SmppCommand() : cmdid_(UNKNOWN), serviceId_(-1), opId_(0), session_(0),
     src_ent_(0), dst_ent_(0), shared_(&keep_), dta_(0) {}
 
 private:

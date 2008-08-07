@@ -9,11 +9,11 @@ namespace re {
 
 class SmppEventHandler : public EventHandler
 {
-    void ProcessModifyRespCommandOperation(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor);
-    void ProcessModifyCommandOperation(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor);
+    void ProcessModifyRespCommandOperation(Session& session, SmppCommand& command, CSmppDescriptor& smppDescriptor);
+    void ProcessModifyCommandOperation(Session& session, SmppCommand& command, CSmppDescriptor& smppDescriptor);
 
-    void ModifyOperationBeforeExecuting(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor);
-    void ModifyOperationAfterExecuting(Session& session, SmppCommand& command, RuleStatus& ruleStatus, CSmppDiscriptor& smppDiscriptor);
+    void ModifyOperationBeforeExecuting(Session& session, SmppCommand& command, CSmppDescriptor& smppDescriptor);
+    void ModifyOperationAfterExecuting(Session& session, SmppCommand& command, RuleStatus& ruleStatus, CSmppDescriptor& smppDescriptor);
 public:
     virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs); 
     

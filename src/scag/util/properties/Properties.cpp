@@ -91,7 +91,6 @@ int64_t Property::convertToInt()
 
     sync = true;
 
-
     return i_val;
 }
 const std::string& Property::convertToStr() 

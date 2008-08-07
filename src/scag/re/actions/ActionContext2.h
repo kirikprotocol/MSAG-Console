@@ -6,11 +6,18 @@
 #include <core/buffers/Hash.hpp>
 #include "scag/re/RuleStatus2.h"
 #include "scag/sessions/Session2.h"
+// #include "scag/util/properties/Properties2.h"
 #include "scag/bill/BillingManager.h"
 #include "scag/re/CommandBridge.h"
 #include "scag/lcm/LongCallManager2.h"
 
 namespace scag2 {
+
+namespace sessions {
+class Operation;
+class Session;
+}
+
 namespace re {
 namespace actions {
 
@@ -24,10 +31,12 @@ namespace actions {
     enum FieldType
     {
         ftUnknown,
-        ftLocal =   '%',
-        ftConst =   '@',
-        ftSession = '$',
-        ftField =   '#'
+        ftGlobal    = '$',
+        ftService   = '~',
+        ftContext   = '^',
+        ftOperation = '%',
+        ftConst     = '@',
+        ftField     = '#'
     };
    /*
     struct ActionStackValue
@@ -72,8 +81,15 @@ namespace actions {
 
         Property routeId;
 
-        CommandProperty(SCAGCommand* command, int commandStatus, const Address& addr, int ProviderId, int OperatorId,
-                         int ServiceId, int msgRef, CommandOperations CmdType, const Property& routeId);
+        CommandProperty( SCAGCommand* command,
+                         int commandStatus,
+                         const Address& addr,
+                         int ProviderId,
+                         int OperatorId,
+                         int ServiceId,
+                         int msgRef,
+                         CommandOperations CmdType,
+                         const Property& routeId );
     };
 
 
@@ -85,77 +101,86 @@ namespace actions {
         InfrastructIDs() : operatorId(0), providerId(0) {}
     };
 
+
     class ActionContext
     {
-    private:
-
-        RuleStatus*             status;
-
-        Hash<Property>          variables;
-        Hash<Property>*         constants;
-        Hash<Property>          infrastructConstants;
-
-        Session*                session;
-        CommandAccessor*        command;
-
-        CommandProperty*        commandProperty;
-        auto_ptr<TariffRec>     m_TariffRec;
-        void setInfrastructureConstants();
     public:
+        static FieldType Separate( const std::string& var, const char *& name );
 
-        bool isTrueCondition;
-
-        ActionContext(Hash<Property>* _constants, Session* _session, 
-		      CommandAccessor* _command, CommandProperty* _commandProperty, RuleStatus* rs) :
-        status(rs), 
-        constants(_constants),
-        session(_session), command(_command), commandProperty(_commandProperty)
+    public:
+        ActionContext( Hash<Property>*  constants,
+                       Session*         session, 
+                       CommandAccessor* command,
+                       CommandProperty* commandProperty,
+                       RuleStatus*      rs) :
+        isTrueCondition(false),
+        status_(rs),
+        constants_(constants),
+        session_(session),
+        command_(command),
+        contextId_(0),
+        commandProperty_(commandProperty)
         {
-          setInfrastructureConstants();   
-        };
-        ~ActionContext() {};
+            setInfrastructureConstants();
+        }
 
-        void resetContext(Hash<Property>* _constants, Session* _session, 
-			  CommandAccessor* _command, CommandProperty* _commandProperty,
-			  RuleStatus* rs);
+
+        ~ActionContext() {}
+
+
+        void resetContext( Hash<Property>* _constants,
+                           Session* _session,
+                           CommandAccessor* _command,
+                           CommandProperty* _commandProperty,
+                           RuleStatus* rs );
 
         SCAGCommand& getSCAGCommand()
         {
-            if(!command) throw SCAGException("ActionContext: command is not set");
-            return command->getSCAGCommand();
+            if (!command_) throw SCAGException("ActionContext: command is not set");
+            return command_->getSCAGCommand();
         }
 
         inline RuleStatus& getRuleStatus() {
-            return *status;
+            return *status_;
         }
 
-        void clearLongCallContext()
+        void clearLongCallContext();
+        /*
         {
             while (!getSession().getLongCallContext().ActionStack.empty()) 
                 getSession().getLongCallContext().ActionStack.pop();
         }
+         */
 
-        //Comment: 'name' is valid until 'var' is valid
-        static FieldType Separate(const std::string& var, const char *& name);
-        static bool StrToPeriod(CheckTrafficPeriod& period, std::string& str);
+        // static bool StrToPeriod(CheckTrafficPeriod& period, std::string& str);
 
         CommandAccessor* getCommand() {
-            if(!command) throw SCAGException("ActionContext: command is not set");
-            return command;
+            if (!command_) throw SCAGException("ActionContext: command is not set");
+            return command_;
         };
 
-        Session& getSession() { return *session; };        
+        Session& getSession() { return *session_; };
 
-        bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
+        // bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
+
+        /// set the current context scope for property access.
+        void setContextScope( int id ) {
+            contextId_ = id;
+        }
+
+        /// get property, variable prefix defines the scope
         Property* getProperty(const std::string& var);
-        void abortSession();
-        void AddPendingOperation(uint8_t type, time_t pendingTime, unsigned int billID);
-        Operation * GetCurrentOperation() {return session->getCurrentOperation();}
 
-        CommandProperty& getCommandProperty() { return *commandProperty; }
+        void abortSession();
+
+        // void AddPendingOperation(uint8_t type, time_t pendingTime, unsigned int billID);
+        // Operation * getCurrentOperation() { return session_->getCurrentOperation(); }
+
+        CommandProperty& getCommandProperty() { return *commandProperty_; }
 
         /// FIXME: this should be changed (several billing transactions per session!)
-        void getBillingInfoStruct(BillingInfoStruct& billingInfoStruct)
+        void getBillingInfoStruct(BillingInfoStruct& billingInfoStruct);
+        /*
         {
             billingInfoStruct.AbonentNumber = commandProperty->abonentAddr.toString();
             billingInfoStruct.serviceId = commandProperty->serviceId;
@@ -168,10 +193,32 @@ namespace actions {
             billingInfoStruct.SessionBornMicrotime = tv; // session->getPrimaryKey().BornMicrotime;
             billingInfoStruct.msgRef = commandProperty->msgRef;
         }
+         */
 
         TariffRec * getTariffRec(uint32_t category, uint32_t mediaType);
-        bool checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType);
-        int getCurrentOperationBillID();
+
+        // bool checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType);
+        // int getCurrentOperationBillID();
+
+    private:
+        //Comment: 'name' is valid until 'var' is valid
+        void setInfrastructureConstants();
+
+    public:
+        bool                    isTrueCondition;
+
+    private:
+        RuleStatus*             status_;
+
+        // Hash<Property>          variables_;
+        Hash<Property>*         constants_;
+        Hash<Property>          infrastructConstants_;
+
+        Session*                session_;
+        CommandAccessor*        command_;
+        int                     contextId_;   // current context scope id (0 -- invalid)
+        CommandProperty*        commandProperty_;
+        auto_ptr<TariffRec>     tariffRec_;
    };
 
 }}}

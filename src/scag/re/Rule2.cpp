@@ -126,6 +126,8 @@ EventHandler * Rule::CreateEventHandler()
         // FIXME: impl
     // case HTTP:
         // return new HttpEventHandler();
+    default:
+        break;
     }
     throw SCAGException("Rule: unknown RuleTransport to create EventHandler");
 }

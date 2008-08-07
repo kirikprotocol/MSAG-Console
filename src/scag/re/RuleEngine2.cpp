@@ -24,6 +24,7 @@
 #include "RuleEngine2.h"
 #include "XMLHandlers2.h"
 #include "util/regexp/RegExp.hpp"
+#include "scag/sessions/Operation.h"
 
 
 namespace scag2 {
@@ -490,13 +491,13 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
     property.setInt(Const::HTTP);
     ConstantsHash["HTTP"] = property;
 
-    property.setInt(OPERATION_INITED);
+    property.setInt(sessions::OPERATION_INITED);
     ConstantsHash["ICC_INITED"] = property;
 
-    property.setInt(OPERATION_CONTINUED);
+    property.setInt(sessions::OPERATION_CONTINUED);
     ConstantsHash["ICC_CONTINUED"] = property;
 
-    property.setInt(OPERATION_COMPLETED);
+    property.setInt(sessions::OPERATION_COMPLETED);
     ConstantsHash["ICC_COMPLETED"] = property;
 
     property.setInt(dsdUnknown);

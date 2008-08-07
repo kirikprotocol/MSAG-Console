@@ -16,6 +16,8 @@ namespace transport {
 using namespace scag::transport;
 using namespace scag2::sessions;
 
+/// operation id type
+/// NOTE: opid_type(0) denotes invalid operation
 typedef uint32_t opid_type;
 
 class SCAGCommand

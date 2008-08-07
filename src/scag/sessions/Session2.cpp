@@ -13,7 +13,8 @@
 
 namespace {
 
-    smsc::core::synchronization::Mutex sessionloggermutex;
+smsc::core::synchronization::Mutex sessionloggermutex;
+smsc::core::synchronization::Mutex sessionopidmutex;
 
 } // namespace
 
@@ -23,9 +24,29 @@ namespace sessions {
 
 using namespace scag::exceptions;
 
+
+// statics
+smsc::logger::Logger*  Session::log_ = 0;
+opid_type              Session::newopid_ = 0;
+
+
 SessionPropertyScope::~SessionPropertyScope()
 {
     clear();
+}
+
+
+Property* SessionPropertyScope::getProperty( const std::string& name )
+{
+    AdapterProperty* res;
+    AdapterProperty** ptr = properties_.GetPtr( name.c_str() );
+    if ( ptr ) {
+        res = *ptr;
+    } else {
+        res = new AdapterProperty( name, patron_, "" );
+        properties_.Insert( name.c_str(), res );
+    }
+    return res;
 }
 
 
@@ -45,37 +66,36 @@ Serializer& SessionPropertyScope::serialize( Serializer& o ) const
 }
 
 
-    Deserializer& SessionPropertyScope::deserialize( Deserializer& o ) throw (DeserializerException)
-    {
-        uint32_t sz;
-        o >> sz;
-        clear();
-        std::string key;
-        std::string value;
-        for ( ; sz > 0; --sz ) {
-            o >> key >> value;
-            if ( key.size() > 0 ) {
-                AdapterProperty* p = new AdapterProperty( key, patron_, value );
-                properties_.Insert( smsc::util::cStringCopy(key.c_str()), p );
-            }
+Deserializer& SessionPropertyScope::deserialize( Deserializer& o ) throw (DeserializerException)
+{
+    uint32_t sz;
+    o >> sz;
+    clear();
+    std::string key;
+    std::string value;
+    for ( ; sz > 0; --sz ) {
+        o >> key >> value;
+        if ( key.size() > 0 ) {
+            AdapterProperty* p = new AdapterProperty( key, patron_, value );
+            properties_.Insert( smsc::util::cStringCopy(key.c_str()), p );
         }
-        return o;
     }
+    return o;
+}
 
 
-    void SessionPropertyScope::clear()
-    {
-        char* key;
-        AdapterProperty* value;
-        for ( Hash< AdapterProperty* >::Iterator i( &properties_ ); i.Next(key,value); ) {
-            delete key;
-            delete value;
-        }
-        properties_.Empty();
+void SessionPropertyScope::clear()
+{
+    char* key;
+    AdapterProperty* value;
+    for ( Hash< AdapterProperty* >::Iterator i( &properties_ ); i.Next(key,value); ) {
+        delete value;
     }
+    properties_.Empty();
+}
 
 
-    // ======================================
+// ======================================
 
 
 struct Session::TransportNewFlag
@@ -101,9 +121,6 @@ private:
     bool old[maxtrans];
 
 };
-
-
-smsc::logger::Logger* Session::log_ = 0;
 
 
 Session::Session( const SessionKey& key ) :
@@ -220,7 +237,6 @@ operationScopes_(0)
                   i.Next(key,value); ) {
                 if ( !value ) continue;
                 value->rollback();
-                delete key;
                 delete value;
             }
             transactions_->Empty();
@@ -236,12 +252,6 @@ operationScopes_(0)
 void Session::changed( AdapterProperty& )
 {
     // FIXME
-}
-
-
-Operation* Session::getCurrentOperation() const
-{
-    return currentOperation_;
 }
 
 
@@ -261,12 +271,6 @@ Operation* Session::setCurrentOperation( opid_type opid )
 
     } while ( false );
     return currentOperation_;
-}
-
-
-opid_type Session::getUSSDOperationId() const
-{
-    return ussdOperationId_;
 }
 
 
@@ -358,10 +362,84 @@ void Session::popInitRuleKey()
 }
 
 
-    time_t Session::expirationTime() const 
-    {
-        return expirationTime_;
+/// create context Scope.
+int Session::createContextScope()
+{
+    if ( ! contextScopes_ ) contextScopes_ = new IntHash< SessionPropertyScope* >;
+    contextScopes_->Insert( ++nextContextId_, new SessionPropertyScope(this) );
+    return nextContextId_;
+}
+
+
+/// delete context Scope.
+void Session::deleteContextScope( int ctxid )
+{
+    if ( ! contextScopes_ ) return;
+    SessionPropertyScope** sptr = contextScopes_->GetPtr( ctxid );
+    if ( sptr ) delete *sptr;
+    contextScopes_->Delete( ctxid );
+}
+
+
+/// @return session global Scope
+SessionPropertyScope* Session::getGlobalScope()
+{
+    if ( ! globalScope_ ) globalScope_ = new SessionPropertyScope(this);
+    return globalScope_;
+}
+
+
+/// @return service Scope by id (created on-demand)
+SessionPropertyScope* Session::getServiceScope( int servid )
+{
+    SessionPropertyScope* res;
+    if ( ! serviceScopes_ ) serviceScopes_ = new IntHash< SessionPropertyScope* >;
+    SessionPropertyScope** sptr = serviceScopes_->GetPtr( servid );
+    if ( ! sptr ) {
+        res = new SessionPropertyScope( this );
+        serviceScopes_->Insert( servid, res );
+    } else {
+        res = *sptr;
     }
+    return res;
+}
+
+
+/// @return context Scope by id (may return NULL)
+SessionPropertyScope* Session::getContextScope( int ctxid )
+{
+    SessionPropertyScope* res = 0;
+    if ( contextScopes_ ) {
+        SessionPropertyScope** sptr = contextScopes_->GetPtr( ctxid );
+        if ( sptr ) res = *sptr;
+    }
+    return res;
+}
+
+    
+/// @return current operation Scope (created on-demand)
+SessionPropertyScope* Session::getOperationScope()
+{
+    SessionPropertyScope* res;
+    if ( getCurrentOperation() == 0 )
+        throw SCAGException( "session=%p cannot get operation scope, op=0", this );
+
+    if ( ! operationScopes_ ) operationScopes_ = new IntHash< SessionPropertyScope* >;
+    SessionPropertyScope** sptr = operationScopes_->GetPtr( getCurrentOperationId() );
+    if ( ! sptr ) {
+        res = new SessionPropertyScope( this );
+        operationScopes_->Insert( getCurrentOperationId(), res );
+    } else {
+        res = *sptr;
+    }
+    return res;
+}
+
+
+time_t Session::expirationTime() const 
+{
+    return expirationTime_;
+}
 
 
     unsigned Session::appendCommand( SCAGCommand* cmd )
@@ -380,6 +458,13 @@ void Session::popInitRuleKey()
         }
         return cmd;
     }
+
+
+void Session::abort()
+{
+    // FIXME
+    ::abort();
+}
 
 
     void Session::serializeScope( Serializer& o, const SessionPropertyScope* s ) const
@@ -439,26 +524,25 @@ void Session::popInitRuleKey()
 
 
 
-    void Session::clearScopeHash( IntHash< SessionPropertyScope* >* s )
-    {
-        if ( !s ) return;
-        int key;
-        SessionPropertyScope* value;
-        for ( IntHash< SessionPropertyScope* >::Iterator i(*s);
-              i.Next(key,value); ) {
-
-            if (value) delete value;
-
-        }
-        s->Empty();
+void Session::clearScopeHash( IntHash< SessionPropertyScope* >* s )
+{
+    if ( !s ) return;
+    int key;
+    SessionPropertyScope* value;
+    for ( IntHash< SessionPropertyScope* >::Iterator i(*s);
+          i.Next(key,value); ) {
+        delete value;
     }
+    s->Empty();
+}
 
 
-    void Session::abort()
-    {
-        // FIXME
-        ::abort();
-    }
+opid_type Session::getNewOperationId() const
+{
+    MutexGuard mg(::sessionopidmutex);
+    if ( ++newopid_ == opid_type(0) ) ++newopid_;
+    return newopid_;
+}
 
 
     // ======================================

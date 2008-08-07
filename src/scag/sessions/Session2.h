@@ -36,14 +36,6 @@ enum ProtocolForEvent
 };
 
 
-enum ICCOperationStatus
-{
-    OPERATION_INITED = 1,
-    OPERATION_CONTINUED,
-    OPERATION_COMPLETED
-};
-
-
 /// Scope of properties (e.g. global, service, context, operation)
 class SessionPropertyScope
 {
@@ -67,47 +59,7 @@ private:
 
 
 class ExternalTransaction;
-class Session;
-
-
-class Operation
-{
-public:
-    Operation( Session* owner, uint8_t type );
-    ~Operation();
-
-    uint8_t type() const { return type_; }
-
-    void receiveNewPart( int currentIndex, int lastIndex );
-    void receiveNewResp( int currentIndex, int lastIndex );
-
-    ICCOperationStatus getStatus();
-    void setStatus( ICCOperationStatus st ) { status_ = st; }
-
-    void setFlag( uint32_t f ) { flags_ |= f; }
-    void clearFlag( uint32_t f ) { flags_ &= ~f; }
-    bool flagSet( uint32_t f ) const { return flags_ & f; }
-    uint32_t flags() const { return flags_; }
-
-private:
-    Operation& operator = ( const Operation& );
-    Operation( const Operation& );
-
-private:
-    static smsc::logger::Logger* log_;
-    static Mutex                 loggerMutex_;
-
-private:
-    Session*            owner_;
-    int                 receivedParts_;
-    bool                receivedAllParts_;
-    int                 receivedResps_;
-    bool                receivedAllResps_;
-    ICCOperationStatus  status_;
-    uint8_t             type_;
-    uint32_t            flags_;
-
-};
+class Operation;
 
 
 ///
@@ -144,21 +96,27 @@ public:
     }
 
     /// === operations methods
-    opid_type getCurrentOperationId() const;
-    Operation* getCurrentOperation() const;
+    /// NOTE: opid_type(0) denotes invalid operation
+    opid_type getCurrentOperationId() const {
+        return currentOperationId_;
+    }
+    Operation* getCurrentOperation() const { 
+        return currentOperation_;
+    }
 
     /// set an existing operation by id and return it.
     Operation* setCurrentOperation( opid_type opid );
 
     /// return ussd operation id or -1
-    opid_type getUSSDOperationId() const;
+    opid_type getUSSDOperationId() const {
+        return ussdOperationId_;
+    }
 
     /// create a new operation and set it as current
     Operation* createOperation( SCAGCommand& cmd, int operationType );
 
     /// destroy current operation
     void closeCurrentOperation();
-
 
 
     /// FIXME: should it be here?
@@ -178,14 +136,16 @@ public:
 
     /// --- property Scopes, for use from ActionContext
 
-    /// create context Scope.
-    /// @return false if the Scope with userid is already exist
-    bool createContextScope( int userid );
+    /// create a new context scope and return its id.
+    int createContextScope();
+
+    /// delete context scope by id.
+    void deleteContextScope( int ctxid );
 
     /// @return session global Scope
     SessionPropertyScope* getGlobalScope();
 
-    /// @return service Scope by id
+    /// @return service Scope by id (created on-demand)
     SessionPropertyScope* getServiceScope( int servid );
 
     /// @return context Scope by id (may return NULL)
@@ -235,6 +195,10 @@ public:
     /// NOTE: cmd disowned, may return NULL.
     SCAGCommand* popCommand();
 
+
+    /// abort the session
+    void abort();
+
 private: // methods
 
     void serializeScope( Serializer& o, const SessionPropertyScope* s ) const;
@@ -243,11 +207,11 @@ private: // methods
     void deserializeScopeHash( Deserializer& o, IntHash< SessionPropertyScope* >*& s ) throw (DeserializerException);
     void clearScopeHash( IntHash< SessionPropertyScope* >* s );
     opid_type getNewOperationId() const;
-    void abort();
 
 private: // statics
 
-    static Logger* log_;
+    static Logger*   log_;
+    static opid_type newopid_;
 
 private:
     /// session key (msisdn)
@@ -297,6 +261,8 @@ private:
     Hash< ExternalTransaction* >* transactions_;
 
     /// --- property Scopes
+
+    int nextContextId_;
 
     /// global var Scope
     SessionPropertyScope* globalScope_;

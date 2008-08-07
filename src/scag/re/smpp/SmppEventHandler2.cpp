@@ -3,6 +3,7 @@
 #include "scag/re/actions/ActionContext2.h"
 #include "scag/re/CommandBridge.h"
 #include "scag/re/RuleEngine2.h"
+#include "scag/sessions/Operation.h"
 
 namespace scag2 {
 namespace re {
@@ -37,6 +38,9 @@ void SmppEventHandler::ProcessModifyRespCommandOperation(Session& session, SmppC
         if (smppDescriptor.isUSSDClosed) operation->setStatus(OPERATION_COMPLETED);
         else operation->setStatus(OPERATION_CONTINUED);
 
+        break;
+    default:
+        // do nothing
         break;
     }
 }
@@ -110,16 +114,19 @@ void SmppEventHandler::ProcessModifyCommandOperation(Session& session, SmppComma
         {
             // operation = session.AddNewOperationToHash(command, CO_USSD_DIALOG);
             operation = session.createOperation(command, CO_USSD_DIALOG);
-            if ( command->flagSet(scag::transport::smpp::SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG))
-                operation->setFlag(scag::sessions::OperationFlags::SERVICE_INITIATED_USSD_DIALOG);
-            operation->setStatus(OPERATION_INITED);
+            if ( command.flagSet(transport::smpp::SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG))
+                operation->setFlag(sessions::OperationFlags::SERVICE_INITIATED_USSD_DIALOG);
+            operation->setStatus(sessions::OPERATION_INITED);
             break;
         }
 
         operation = session.setCurrentOperation(session.getUSSDOperationId());
         command.setOperationId(session.getCurrentOperationId());
-        operation->setStatus(OPERATION_CONTINUED);
+        operation->setStatus(sessions::OPERATION_CONTINUED);
 
+        break;
+
+    default:
         break;
     }
 }
@@ -137,10 +144,10 @@ void SmppEventHandler::ModifyOperationBeforeExecuting(Session& session, SmppComm
 
 void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppCommand& command, RuleStatus& ruleStatus, CSmppDescriptor& smppDescriptor)
 {
-    Operation * currentOperation = session.GetCurrentOperation();
+    Operation * currentOperation = session.getCurrentOperation();
     if (!currentOperation) throw SCAGException("Session: Fatal error - cannot end operation. Couse: current operation not found");
 
-    if(ruleStatus.status == STATUS_FAILED) 
+    if ( ruleStatus.status == STATUS_FAILED )
     {
         session.closeCurrentOperation(); 
         return;
@@ -191,6 +198,10 @@ void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppComma
         if ((smppDescriptor.isUSSDClosed) && (smppDescriptor.isResp))
             session.closeCurrentOperation();
         break;
+
+    default :
+        // do nothing
+        break;
     }
 }
 
@@ -218,7 +229,7 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
     if (operatorId == 0) 
     {
         RegisterAlarmEvent(1, abonentAddr.toString(), CommandBridge::getProtocolForEvent(smppcommand), command.getServiceId(),
-                           providerId, 0, 0, session.getPrimaryKey(),
+                           providerId, 0, 0, session.sessionPrimaryKey(),
                            (hi == EH_SUBMIT_SM)||(hi == EH_DELIVER_SM) ? 'I' : 'O');
         
         if (smppDescriptor.isResp) session.closeCurrentOperation();
@@ -232,12 +243,15 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
 			    ? smppcommand->get_resp()->status : smppcommand->status;*/
     Property routeId;
     routeId.setStr(sms.getRouteId());
-    CommandProperty commandProperty(&command, smppcommand->getCommandStatus(), abonentAddr, providerId, operatorId,
+    CommandProperty commandProperty( &command, smppcommand.get_status(), abonentAddr, providerId, operatorId,
                                      smppcommand.getServiceId(), msgRef, smppDescriptor.cmdType, routeId);
 
     if(!session.getLongCallContext().continueExec)
-        RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), 
-            (hi == EH_SUBMIT_SM)||(hi == EH_DELIVER_SM)||(hi == EH_DATA_SM) ? CommandBridge::getMessageBody(smppcommand) : "");
+        RegisterTrafficEvent( commandProperty, session.sessionPrimaryKey(),
+                              (hi == EH_SUBMIT_SM) || 
+                              (hi == EH_DELIVER_SM) ||
+                              (hi == EH_DATA_SM) ?
+                              CommandBridge::getMessageBody(smppcommand) : "" );
     
     try {
         ModifyOperationBeforeExecuting(session, smppcommand, smppDescriptor);
@@ -277,8 +291,8 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
         rs.status = STATUS_FAILED;
     }
 
-    if (smppcommand->status > 0) {
-        rs.result = smppcommand->status;
+    if ( smppcommand.get_status() > 0) {
+        rs.result = smppcommand.get_status();
         rs.status = STATUS_FAILED;
     }
 

@@ -17,9 +17,13 @@ void SessionEventHandler::_process(Session& session, RuleStatus& rs)
 
     Address abonentAddr( session.sessionKey().toString().c_str() );
 
-    int providerId = istr.GetProviderID(session.getRuleKey().serviceId);
+    RuleKey key;
+    if ( ! session.getRuleKey( key.serviceId, key.transport ) ) {
+        throw SCAGException("SessionEventHandler: no rule key is set, session=%p", &session);
+    }
+    int providerId = istr.GetProviderID(key.serviceId);
     if (providerId == 0) {
-        throw SCAGException("SessionEventHandler: Cannot find ProviderID for ServiceID=%d", session.getRuleKey().serviceId);
+        throw SCAGException("SessionEventHandler: Cannot find ProviderID for ServiceID=%d", key.serviceId);
     }
     int operatorId = istr.GetOperatorID(abonentAddr), hi = propertyObject.HandlerId;
     if (operatorId == 0) {
@@ -29,8 +33,8 @@ void SessionEventHandler::_process(Session& session, RuleStatus& rs)
     SessionAdapter _command(session);
     Property routeId;
     routeId.setInt(0);
-    CommandProperty commandProperty(NULL, 0, abonentAddr, providerId, operatorId, session.getRuleKey().serviceId,
-                                     0, (CommandOperations)0, routeId);
+    CommandProperty commandProperty(NULL, 0, abonentAddr, providerId, operatorId, key.serviceId,
+                                    0, (CommandOperations)0, routeId);
     ActionContext* actionContext = 0;
     if(session.getLongCallContext().continueExec) {
 	actionContext = session.getLongCallContext().getActionContext();

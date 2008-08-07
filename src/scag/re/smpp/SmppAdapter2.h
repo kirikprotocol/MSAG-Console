@@ -142,10 +142,6 @@ namespace smpp {
         void WriteDataSmField(SMS& data,int FieldId,AdapterProperty& property);
         void WriteDataSmRespField(int fieldId, AdapterProperty& property);
 
-        SmppCommand&    command;
-        IntHash<AdapterProperty *>  PropertyPul;
-        AdapterProperty *src_sme_id, *dst_sme_id;
-
         static IntHash<AccessType> SubmitFieldsAccess;
         static IntHash<AccessType> DeliverFieldsAccess;
         static IntHash<AccessType> DataSmFieldsAccess;
@@ -174,7 +170,8 @@ namespace smpp {
                                                             
     public:
 
-        SmppCommandAdapter(SmppCommand& _command) : command(_command), src_sme_id(0), dst_sme_id(0) 
+        SmppCommandAdapter( SmppCommand& _command ) :
+        command(_command), src_sme_id(0), dst_sme_id(0) 
         {
         }
 
@@ -214,6 +211,12 @@ namespace smpp {
         {
             CommandBridge::getSMS(command).setDestinationAddress(addr);
         }
+
+    private:
+        SmppCommand&    command;
+        IntHash<AdapterProperty *>  PropertyPul;
+        AdapterProperty *src_sme_id, *dst_sme_id;
+
     };
 
 }}}

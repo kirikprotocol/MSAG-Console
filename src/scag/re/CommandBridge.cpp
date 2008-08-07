@@ -211,20 +211,20 @@ DataSmDirection CommandBridge::getPacketDirection(const SCAGCommand& command)
     return dsdUnknown;
 }
 
-CSmppDiscriptor CommandBridge::getSmppDiscriptor(const SCAGCommand& command)
+CSmppDescriptor CommandBridge::getSmppDescriptor(const SCAGCommand& command)
 {
 
     SCAGCommand& _command = const_cast<SCAGCommand&>(command);
 
     SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
-    if (!smppCommand) throw SCAGException("Command Bridge Error: Cannot get SmppDiscriptor - SCAGCommand is not smpp-type");
+    if (!smppCommand) throw SCAGException("Command Bridge Error: Cannot get SmppDescriptor - SCAGCommand is not smpp-type");
 
 
     SMS& sms = getSMS(*smppCommand);
 
     CommandId cmdid = CommandId(smppCommand->getCommandId());
 
-    CSmppDiscriptor SmppDiscriptor;
+    CSmppDescriptor SmppDescriptor;
     int receiptMessageId = 0;
     SmsResp * smsResp = 0;
 
@@ -245,7 +245,7 @@ CSmppDiscriptor CommandBridge::getSmppDiscriptor(const SCAGCommand& command)
         req_receipt = ((reg_delivery&3) > 0);
     } 
 
-    SmppDiscriptor.m_waitReceipt = ((!transact)&&(req_receipt));
+    SmppDescriptor.m_waitReceipt = ((!transact)&&(req_receipt));
     
     switch (cmdid) 
     {
@@ -253,36 +253,36 @@ CSmppDiscriptor CommandBridge::getSmppDiscriptor(const SCAGCommand& command)
         receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
 
         //TODO: ensure
-        if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT;
+        if (receiptMessageId) SmppDescriptor.cmdType = CO_RECEIPT;
         else if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
-            SmppDiscriptor.cmdType = CO_USSD_DIALOG;
-            SmppDiscriptor.wantOpenUSSD = 
+            SmppDescriptor.cmdType = CO_USSD_DIALOG;
+            SmppDescriptor.wantOpenUSSD = 
                 (uint32_t(smsc::smpp::UssdServiceOpValue::PSSR_INDICATION) == sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
         }
-        else SmppDiscriptor.cmdType = CO_DELIVER;
+        else SmppDescriptor.cmdType = CO_DELIVER;
 
         if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-            SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+            SmppDescriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
 
         if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-            SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+            SmppDescriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
 
         break;
     case SUBMIT:
 
         if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
-            SmppDiscriptor.cmdType = CO_USSD_DIALOG;
-            SmppDiscriptor.wantOpenUSSD = smppCommand->flagSet(SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG);
+            SmppDescriptor.cmdType = CO_USSD_DIALOG;
+            SmppDescriptor.wantOpenUSSD = smppCommand->flagSet(SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG);
         }
-        else SmppDiscriptor.cmdType = CO_SUBMIT;
+        else SmppDescriptor.cmdType = CO_SUBMIT;
 
         if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-            SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+            SmppDescriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
 
         if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-            SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+            SmppDescriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
 
         break;
     case DELIVERY_RESP:
@@ -290,40 +290,40 @@ CSmppDiscriptor CommandBridge::getSmppDiscriptor(const SCAGCommand& command)
         receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
 
         if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-            SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+            SmppDescriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
 
         if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-            SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+            SmppDescriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
 
-        SmppDiscriptor.isResp = true;
+        SmppDescriptor.isResp = true;
 
-        if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT;
+        if (receiptMessageId) SmppDescriptor.cmdType = CO_RECEIPT;
         else if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
-            SmppDiscriptor.cmdType = CO_USSD_DIALOG;
-//            SmppDiscriptor.isUSSDClosed = ((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_RESPONSE)||((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSN_REQUEST)));
-            SmppDiscriptor.isUSSDClosed = 
+            SmppDescriptor.cmdType = CO_USSD_DIALOG;
+//            SmppDescriptor.isUSSDClosed = ((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_RESPONSE)||((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSN_REQUEST)));
+            SmppDescriptor.isUSSDClosed = 
                 (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == uint32_t(USSN_CONFIRM));
         }
-        else SmppDiscriptor.cmdType = CO_DELIVER;
+        else SmppDescriptor.cmdType = CO_DELIVER;
 
         break;
     case SUBMIT_RESP:
-        SmppDiscriptor.isResp = true;
+        SmppDescriptor.isResp = true;
 
         if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
-            SmppDiscriptor.cmdType = CO_USSD_DIALOG;
-            SmppDiscriptor.isUSSDClosed = 
+            SmppDescriptor.cmdType = CO_USSD_DIALOG;
+            SmppDescriptor.isUSSDClosed = 
                 (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == uint32_t(PSSR_RESPONSE));
         }
-        else SmppDiscriptor.cmdType = CO_SUBMIT;
+        else SmppDescriptor.cmdType = CO_SUBMIT;
 
         if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-            SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+            SmppDescriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
 
         if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-            SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+            SmppDescriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
         break;
 
     case DATASM:
@@ -331,16 +331,16 @@ CSmppDiscriptor CommandBridge::getSmppDiscriptor(const SCAGCommand& command)
         switch (smppCommand->get_smsCommand().dir)
         {
         case dsdSc2Sc:
-            SmppDiscriptor.cmdType = CO_DATA_SC_2_SC;
+            SmppDescriptor.cmdType = CO_DATA_SC_2_SC;
             break;
         case dsdSc2Srv:
-            SmppDiscriptor.cmdType = CO_DATA_SC_2_SME;
+            SmppDescriptor.cmdType = CO_DATA_SC_2_SME;
             break;
         case dsdSrv2Sc:
-            SmppDiscriptor.cmdType = CO_DATA_SME_2_SC;
+            SmppDescriptor.cmdType = CO_DATA_SME_2_SC;
             break;
         case dsdSrv2Srv:
-            SmppDiscriptor.cmdType = CO_DATA_SME_2_SME;
+            SmppDescriptor.cmdType = CO_DATA_SME_2_SME;
             break;
         case dsdUnknown:
         default:
@@ -350,31 +350,31 @@ CSmppDiscriptor CommandBridge::getSmppDiscriptor(const SCAGCommand& command)
         }
 
         if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-            SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+            SmppDescriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
 
         if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-            SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+            SmppDescriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
 
         break;
 
     case DATASM_RESP:
         smsResp = smppCommand->get_resp();
         if (!smsResp) throw SCAGException("Command Bridge: cannot get SmsCommand from DATA_SM");
-        SmppDiscriptor.isResp = true;
+        SmppDescriptor.isResp = true;
 
         switch (smsResp->get_dir()) 
         {
         case dsdSc2Sc:
-            SmppDiscriptor.cmdType = CO_DATA_SC_2_SC;
+            SmppDescriptor.cmdType = CO_DATA_SC_2_SC;
             break;
         case dsdSc2Srv:
-            SmppDiscriptor.cmdType = CO_DATA_SC_2_SME;
+            SmppDescriptor.cmdType = CO_DATA_SC_2_SME;
             break;
         case dsdSrv2Sc:
-            SmppDiscriptor.cmdType = CO_DATA_SME_2_SC;
+            SmppDescriptor.cmdType = CO_DATA_SME_2_SC;
             break;
         case dsdSrv2Srv:
-            SmppDiscriptor.cmdType = CO_DATA_SME_2_SME;
+            SmppDescriptor.cmdType = CO_DATA_SME_2_SME;
             break;
         case dsdUnknown:
         default:
@@ -383,26 +383,26 @@ CSmppDiscriptor CommandBridge::getSmppDiscriptor(const SCAGCommand& command)
 
         }
         if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-            SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+            SmppDescriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
 
         if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-            SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+            SmppDescriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
 
         break;
   /*  case PROCESSEXPIREDRESP:
-        SmppDiscriptor.isResp = true;
-        SmppDiscriptor.
+        SmppDescriptor.isResp = true;
+        SmppDescriptor.
 
         break;*/
     }
         /*
         if (sms == 0) throw SCAGException("Command Bridge Error: Unknown SCAGCommand data");
 
-        SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-        SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+        SmppDescriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+        SmppDescriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
           */
 
-    return SmppDiscriptor;
+    return SmppDescriptor;
 }
 
 
