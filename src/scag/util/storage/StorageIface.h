@@ -173,7 +173,7 @@ template < class IS >
 
     inline static bool update( IS& is, const key_type& k, index_type i )
     {
-        index_type j = is.data_->update();
+        index_type j = is.data_->update(i);
         if ( j != is.data_->invalidIndex() )
             is.index_->setIndex(k,j);
         else

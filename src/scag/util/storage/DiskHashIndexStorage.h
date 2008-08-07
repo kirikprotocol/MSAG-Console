@@ -45,14 +45,14 @@ public:
 
   index_type getIndex(const key_type& key) const {
     Offset off;
-    return index_.LookUp(key, off) ? off.value : 0;
+    return index_.LookUp(key, off) ? off.value : invalid_;
   }
 
   index_type removeIndex(const key_type& key) {
     Offset off;
     if (!index_.LookUp(key, off)) {
       smsc_log_info(logger_, "Attempt to delete record that doesn't exists:%s", key.toString().c_str());
-      return 0;
+      return invalid_;
     }
     index_.Delete(key);
     smsc_log_debug(logger_, "delRecord:%s:%08llx", key.toString().c_str(), off.value);
@@ -64,6 +64,10 @@ public:
     index_.Insert(key, off, true);
     return true;
   } 
+
+  void setInvalidIndex(index_type i) {
+    invalid_ = i;
+  }
 
 private:
 
@@ -96,6 +100,7 @@ private:
 private:
   mutable IndexStorage index_;
   Logger* logger_;
+  index_type invalid_;
 };
 
 }//storage

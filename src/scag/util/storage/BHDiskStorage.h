@@ -14,7 +14,7 @@ template < class Key, class Val, class Storage = BlocksHSStorage< Key, Val > >
 class BHDiskStorage
 {
 public:
-    static const bool                         updatable = false;
+    static const bool                         updatable = true;
     typedef Storage                           storage_type;
     typedef Key                               key_type;
     typedef typename storage_type::index_type index_type;

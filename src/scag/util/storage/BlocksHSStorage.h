@@ -58,6 +58,7 @@ static const uint8_t TRX_INCOMPLETE = 1;
 
 static const size_t WRITE_BUF_SIZE = 10240;
 static const size_t PROFILE_MAX_BLOCKS_COUNT = 10;
+static const size_t MIN_BLOCK_SIZE = 10;
                                           
 
 
@@ -143,8 +144,8 @@ public:
     static const int BACKUP_FILE_CREATE_FAILED	   = -11;
     static const int BACKUP_FILE_OPEN_FAILED	   = -12;
 
-    static const int defaultBlockSize = 56; // in bytes
-    static const int defaultFileSize = 3; // in blocks 
+    static const int defaultBlockSize = 2048; // in bytes
+    static const int defaultFileSize = 100; // in blocks 
     static const long BLOCK_USED	= long(uint64_t(1) << 63);
 
     BlocksHSStorage(GlossaryBase* g = NULL): glossary_(g), running(false), iterBlockIndex(0)
@@ -165,7 +166,7 @@ public:
 
     int Create(const string& _dbName, const string& _dbPath = "",
                long _fileSize = defaultFileSize,
-               long _blockSize = defaultBlockSize - sizeof(DataBlockHeader))
+               long _blockSize = defaultBlockSize)
     {
         dbName = _dbName;
         dbPath = _dbPath;
@@ -173,9 +174,13 @@ public:
             smsc_log_error(logger, "block size %d too large. max block size = %d", _blockSize, WRITE_BUF_SIZE);
             return CANNOT_CREATE_STORAGE;
         }
+        if (_blockSize < hdrSize + MIN_BLOCK_SIZE) {
+          smsc_log_error(logger, "block size %d too small. min block size = %d", _blockSize, hdrSize + MIN_BLOCK_SIZE);
+          return CANNOT_CREATE_STORAGE;
+        }
 		
         int ret;
-        if(0 != (ret = CreateDescriptionFile(_blockSize + hdrSize, _fileSize)))
+        if(0 != (ret = CreateDescriptionFile(_blockSize, _fileSize)))
             return ret;
         try {
             CreateDataFile();
