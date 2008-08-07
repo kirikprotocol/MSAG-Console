@@ -386,7 +386,6 @@ class RequestProcessorConfig {
     Address msc;
     Address vlr;
     Address hlr;
-    const char* sccpprv;
   private:
     char* msc_str;
     char* vlr_str;
@@ -394,10 +393,9 @@ class RequestProcessorConfig {
     Logger* logger;
   public:
     RequestProcessorConfig(Logger* _logger)
-    { 
+    {
       msc_str = NULL;
       vlr_str = NULL;
-      sccpprv = NULL;
       hlr_str = NULL;
       logger = _logger;
     }
@@ -407,15 +405,7 @@ class RequestProcessorConfig {
         throw ConfigException("\'SCCP\' section is missed");
 
       ConfigView sccpConfig(manager, "MTSMSme.SCCP");
-      
-      try {
-        sccpprv = sccpConfig.getString("sccp_provider");
-      }
-      catch (ConfigException& exc)
-      {
-          smsc_log_debug(logger, "\'sccp_provider\' is not defined, \"tietoenator\" will be used");
-          sccpprv = "tietoenator";
-      }
+
       try { user = sccpConfig.getInt("user_id");
       } catch (ConfigException& exc) {
         throw ConfigException("\'user_id\' is unknown or missing");
@@ -590,8 +580,8 @@ int main(void)
         RequestProcessorFactory* factory = 0;
         factory = RequestProcessorFactory::getInstance();
         if (!factory) throw Exception("RequestProcessorFactory is undefined");
-        
-        requestProcessor = factory->createRequestProcessor(rp_cfg.sccpprv);
+
+        requestProcessor = factory->createRequestProcessor();
         if (!requestProcessor) throw Exception("RequestProcessor is undefined");
 
         requestProcessor->configure(rp_cfg.user,rp_cfg.ssn,rp_cfg.msc,rp_cfg.vlr,rp_cfg.hlr);

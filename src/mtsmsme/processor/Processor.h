@@ -81,7 +81,7 @@ namespace smsc { namespace mtsmsme { namespace processor
     {
       public:
         static RequestProcessorFactory* getInstance();
-        virtual RequestProcessor* createRequestProcessor(const char* type) = 0;
+        virtual RequestProcessor* createRequestProcessor() = 0;
       protected:
         RequestProcessorFactory() {};
     };
