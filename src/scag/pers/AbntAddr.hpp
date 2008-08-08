@@ -33,8 +33,6 @@ union	AbntAddrValue
 
 class AbntAddr
 {
-  AbntAddrValue value;
-
 public:
 
   AbntAddr(){memset((void*)&value, 0x00, sizeof(value));}
@@ -70,38 +68,7 @@ public:
 
   AbntAddr(const char* text)
   {
-    if(!text || !*text)
-    {
-      throw runtime_error("AbntAddr::AbntAddr(const char* text): bad address NULL");
-    }
-    AddressValue addr_value;
-    int iplan,itype;
-    memset(addr_value,0,sizeof(addr_value));
-    int scaned = sscanf(text,".%d.%d.%15s", &itype, &iplan, addr_value);
-    if (scaned != 3)
-    {
-      scaned = sscanf(text, "+%15[0123456789?]s", addr_value);
-      if (scaned)
-      {
-        iplan = 1;//ISDN
-        itype = 1;//INTERNATIONAL
-      }
-      else
-      {
-        scaned = sscanf(text, "%15[0123456789?]s", addr_value);
-        if (!scaned)
-        {
-          throw runtime_error(string("AbntAddr::AbntAddr(const char* text): bad address ") + text);
-        }
-        iplan = 1;//ISDN
-        itype = 1;//INTERNATIONAL
-        //itype = 0;//UNKNOWN
-      }
-    }
-    value.addr_content.type = (uint8_t)itype;
-    value.addr_content.plan = (uint8_t)iplan;
-    value.addr_content.length = strlen(addr_value);
-    setValue(value.addr_content.length, addr_value);
+    setAddress(text);
   }
 
   AbntAddr(const Address& addr)
@@ -272,47 +239,53 @@ public:
   {
       return  crc32(0, key.value.full_addr, sizeof(key.value.full_addr));
   }
-};
 
-struct MCEvent
-{
-  uint8_t	id;
-  time_t	dt;
-  AbntAddrValue	caller;	//uint8_t	caller[15];
-
-  MCEvent(const uint8_t& _id):id(_id){}
-  MCEvent():id(0), dt(0)
-  {
-    memset((void*)&(caller.full_addr), 0xFF, sizeof(caller.full_addr));
+  uint64_t getNumber() const {
+    return number;
   }
 
-  MCEvent(const MCEvent& e): id(e.id), dt(e.dt)
-  {
-    memcpy((void*)&(caller.full_addr), (void*)&(e.caller.full_addr), sizeof(caller.full_addr));
+  void setAddress(const char* address) {
+    if(!address || !*address)
+    {
+      throw runtime_error("AbntAddr::setAddress: bad address NULL");
+    }
+    AddressValue addr_value;
+    int iplan,itype;
+    memset(addr_value,0,sizeof(addr_value));
+    int scaned = sscanf(address,".%d.%d.%15s", &itype, &iplan, addr_value);
+    if (scaned != 3)
+    {
+      scaned = sscanf(address, "+%15[0123456789?]s", addr_value);
+      if (scaned)
+      {
+        iplan = 1;//ISDN
+        itype = 1;//INTERNATIONAL
+      }
+      else
+      {
+        scaned = sscanf(address, "%15[0123456789?]s", addr_value);
+        if (!scaned)
+        {
+          throw runtime_error(string("AbntAddr::setAddress: bad address ") + address);
+        }
+        iplan = 1;//ISDN
+        itype = 1;//INTERNATIONAL
+        //itype = 0;//UNKNOWN
+      }
+    }
+    value.addr_content.type = (uint8_t)itype;
+    value.addr_content.plan = (uint8_t)iplan;
+    value.addr_content.length = strlen(addr_value);
+    setValue(value.addr_content.length, addr_value);
+    number = atoll(addr_value);
+    if (number == 0) {
+      throw runtime_error(string("AbntAddr::setAddress: bad address ") + address);
+    }
   }
-  MCEvent& operator=(const AbntAddr& addr)
-  {
-    memcpy((void*)&(caller.full_addr), (void*)addr.getAddrSig(), sizeof(caller.full_addr));
-    return *this;
-  }
 
-  MCEvent& operator=(const MCEvent& e)
-  {
-    if(&e == this)
-      return *this;
-
-    id = e.id; dt = e.dt;
-    memcpy((void*)&(caller.full_addr), (void*)&(e.caller.full_addr), sizeof(caller.full_addr));
-    return *this;
-  }
-
-};
-
-struct MCEventOut {
-  MCEventOut(const std::string& aCaller, const std::string& aMsg) : caller(aCaller), msg(aMsg) {}
-  std::string caller;
-  std::string msg;
-  std::vector<MCEvent> srcEvents;
+private:
+  AbntAddrValue value;
+  uint64_t number;
 };
 
 };	//  namespace pers
