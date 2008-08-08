@@ -18,7 +18,7 @@ using namespace scag::pers::client;
 using namespace scag::pers;
 using namespace scag::config;
 
-#define ITER_CNT 100
+#define ITER_CNT 1000
 
 extern "C" void atExitHandler(void)
 {
@@ -56,6 +56,7 @@ int main(int argc, char* argv[])
             sprintf(tvs, "test_val_string%05d", i);						
             sprintf(tvb, "test_val_bool%05d", i);						
             sprintf(tvd, "test_val_date%05d", i);						
+
             prop.setInt(tv, 234567, FIXED, -1, 20);
             pc.SetProperty(PT_ABONENT, s, prop);
 
@@ -122,9 +123,98 @@ int main(int argc, char* argv[])
             pc.GetProperty(PT_SERVICE, i + 1, tv, prop);
             smsc_log_debug(logger,  ">>SERVICE: get int(after inc mod) %s", prop.toString().c_str());
 
-//batch
-            pc.PrepareBatch(sb);
+//mtbatch
+            pc.PrepareMTBatch(sb, PT_ABONENT, s, 11, true);
 
+            prop.setInt(tv, 234567, FIXED, -1, 20);
+            pc.SetPropertyPrepare(prop, sb);
+            prop.setBool(tvb, false, R_ACCESS, -1, 25);
+            pc.SetPropertyPrepare(prop, sb);
+            prop.setString(tvs, "test_string", W_ACCESS, -1, 25);
+            pc.SetPropertyPrepare(prop, sb);
+            prop.setDate(tvd, 111111, INFINIT, -1, 25);
+            pc.SetPropertyPrepare(prop, sb);
+            pc.GetPropertyPrepare(tv, sb);
+            pc.GetPropertyPrepare(tvb, sb);
+            pc.GetPropertyPrepare(tvs, sb);
+            pc.GetPropertyPrepare(tvd, sb);
+            prop.setInt(tv, -123, FIXED, -1, 20);
+            pc.IncPropertyPrepare(prop, sb);
+            pc.GetPropertyPrepare(tv, sb);
+            pc.DelPropertyPrepare(tv, sb);
+
+            pc.RunBatch(sb);
+
+            pc.SetPropertyResult(sb);
+            pc.SetPropertyResult(sb);
+            pc.SetPropertyResult(sb);
+            pc.SetPropertyResult(sb);
+            pc.GetPropertyResult(prop, sb);
+            smsc_log_debug(logger,  "BATCH >>ABONENT %s: get int %s", s, prop.toString().c_str());
+            pc.GetPropertyResult(prop, sb);
+            smsc_log_debug(logger,  "BATCH >>ABONENT %s: get bool %s", s, prop.toString().c_str());
+            pc.GetPropertyResult(prop, sb);
+            smsc_log_debug(logger,  "BATCH >>ABONENT: get string %s", prop.toString().c_str());
+            pc.GetPropertyResult(prop, sb);
+            smsc_log_debug(logger,  "BATCH >>ABONENT: get string1 %s", prop.toString().c_str());
+            pc.IncPropertyResult(sb);
+            pc.GetPropertyResult(prop, sb);
+            smsc_log_debug(logger,  "BATCH >>ABONENT: get int(after inc) %s", prop.toString().c_str());
+            pc.DelPropertyResult(sb);
+            smsc_log_debug(logger,  "BATCH >>ABONENT: del int");
+
+            pc.PrepareMTBatch(sb, PT_PROVIDER, i + 1, 2, false);
+
+            prop.setBool(tvb, false, R_ACCESS, -1, 25);
+            pc.SetPropertyPrepare(prop, sb);
+            pc.GetPropertyPrepare(tvb, sb);
+
+            pc.RunBatch(sb);
+
+            pc.SetPropertyResult(sb);
+            pc.GetPropertyResult(prop, sb);
+            smsc_log_debug(logger,  "BATCH >>PROVIDER: get bool %s", prop.toString().c_str());
+
+            pc.PrepareMTBatch(sb, PT_SERVICE, i + 1, 5, true);
+
+            prop.setInt(tv, 234567, FIXED, -1, 20);
+            pc.SetPropertyPrepare(prop, sb);
+            pc.GetPropertyPrepare(tv, sb);
+            prop.setInt(tv, -123, FIXED, -1, 20);
+            pc.IncModPropertyPrepare(prop, 10, sb);
+            pc.GetPropertyPrepare(tv, sb);
+            pc.DelPropertyPrepare(tv, sb);
+
+            pc.RunBatch(sb);
+
+            pc.SetPropertyResult(sb);
+            pc.GetPropertyResult(prop, sb);
+            smsc_log_debug(logger,  "BATCH >>SERVICE: get int %s", prop.toString().c_str());
+            pc.IncModPropertyResult(sb);
+            pc.GetPropertyResult(prop, sb);
+            smsc_log_debug(logger,  "BATCH >>SERVICE: get after inc-mod %s", prop.toString().c_str());
+            pc.DelPropertyResult(sb);
+            smsc_log_debug(logger,  "BATCH >>SERVICE: del int");
+
+            pc.PrepareMTBatch(sb, PT_SERVICE, i + 1, 4, false);
+
+            prop.setString(tvs, "test_string", W_ACCESS, -1, 25);
+            pc.SetPropertyPrepare(prop, sb);
+            prop.setDate(tvd, 111111, INFINIT, -1, 25);
+            pc.SetPropertyPrepare(prop, sb);
+            pc.GetPropertyPrepare(tvs, sb);
+            pc.GetPropertyPrepare(tvd, sb);
+
+            pc.RunBatch(sb);
+
+            pc.SetPropertyResult(sb);
+            pc.SetPropertyResult(sb);
+            pc.GetPropertyResult(prop, sb);
+            smsc_log_debug(logger,  "BATCH >>OPERATOR: get string inc-mod %s", prop.toString().c_str());
+            pc.GetPropertyResult(prop, sb);
+            smsc_log_debug(logger,  "BATCH >>OPERATOR: get date inc-mod %s", prop.toString().c_str());
+            /*
+            //pc.PrepareBatch(sb);
             prop.setInt(tv, 234567, FIXED, -1, 20);
             pc.SetPropertyPrepare(PT_ABONENT, s, prop, sb);
 
@@ -224,7 +314,7 @@ int main(int argc, char* argv[])
 
             pc.DelPropertyResult(sb);
             smsc_log_debug(logger,  "BATCH >>ABONENT: del int(int)");
-            
+*/            
             }
             catch(PersClientException &e)
             {
