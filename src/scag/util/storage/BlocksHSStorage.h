@@ -238,6 +238,7 @@ public:
         smsc_log_debug(logger, "Add data block key='%s' length=%d", key.toString().c_str(), profileData.length());
         int dataLength = profileData.length();
         if (dataLength <= 0) {
+            blockIndex = -1;
             return false;
         }
         index_type ffb = descrFile.first_free_block;

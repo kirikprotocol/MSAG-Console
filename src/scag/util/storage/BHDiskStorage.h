@@ -54,8 +54,8 @@ public:
 
     index_type append() 
     {
-        index_type blockIndex;
-        if ( !v_ || !store_->Add( *v_, key_, blockIndex ) ) return 0;
+        index_type blockIndex = invalidIndex();
+        if ( !v_ || !store_->Add( *v_, key_, blockIndex ) ) return invalidIndex();
         return blockIndex;
     }
     
