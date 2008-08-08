@@ -25,40 +25,6 @@ using std::string;
 using std::stack;
 using std::vector;
 
-class IntProfileKey
-{
-    uint32_t key;
-
-  public:
-
-    IntProfileKey(){};
-    IntProfileKey(const IntProfileKey& k):key(k.key) {};
-    IntProfileKey(const uint32_t k):key(k) {};
-
-    bool operator==(const IntProfileKey& that)const { return key==that.key; }
-
-    std::string toString() const
-    {
-      char buf[16];
-      sprintf(buf,"%hu", key);
-      std::string str = buf;
-      return str;
-    }
-
-    static uint32_t Size() { return sizeof(uint32_t); }
-
-    void Read(File& f) { key = f.ReadNetInt32(); }
-
-    void Write(File& f)const { f.WriteNetInt32(key); }
-
-    uint32_t HashCode(uint32_t attempt)const
-    {
-        uint32_t res = crc32(0, &key, sizeof(key));
-        for(; attempt > 0; attempt--) res = crc32(res, &key, sizeof(key));
-        return res;
-    }
-};
-
 class StringProfileKey
 {
     smsc::logger::Logger* log;
@@ -257,7 +223,7 @@ public:
                 store.newRecord(key, pf);
                 smsc_log_debug(log, "Profile %s created.", key.toString().c_str());
             }
-        }
+        } 
         else
             store.deleteRecord(key);
     }
@@ -575,7 +541,7 @@ private:
     private:
     BackupProperty() {};
   };
-
+  
   void _setProperty(Profile* pf, const Key& key, Property& prop) {
     if (!pf) {
       //TODO require?
