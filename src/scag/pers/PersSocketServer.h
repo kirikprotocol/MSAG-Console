@@ -5,10 +5,12 @@
 #include "RWMultiplexer.hpp"
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
-#include "SerialBuffer.h"
+#include "scag/util/storage/SerialBuffer.h"
 
 namespace scag { namespace pers {
 
+using scag::util::storage::SerialBuffer;
+using scag::util::storage::SerialBufferOutOfBounds;
 using smsc::core::network::Socket;
 using smsc::logger::Logger;
 

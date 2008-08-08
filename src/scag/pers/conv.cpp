@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
         
         AbonentStore.Reset();
         AbntAddr key;
-        DataBlock data;
+        scag::util::storage::DataBlock data;
         int i = 0;
         while(AbonentStore.Next(key, data))
         {
