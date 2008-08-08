@@ -23,7 +23,8 @@ enum PersCmd{
     PC_PING,
 	PC_BATCH,
     PC_TRANSACT_BATCH,
-    PC_INC_RESULT
+    PC_INC_RESULT,
+    PC_MTBATCH
 };
 
 namespace CentralPersCmd{
@@ -48,7 +49,8 @@ enum PersServerResponseType{
     RESPONSE_BAD_REQUEST,
     RESPONSE_TYPE_INCONSISTENCE,
     COMMAND_IN_PROCESS,
-    RESPONSE_PROFILE_LOCKED
+    RESPONSE_PROFILE_LOCKED,
+    RESPONSE_NOTSUPPORT
 };
 
     static const char* RESPONSE_TEXT[] = {
@@ -59,7 +61,8 @@ enum PersServerResponseType{
       "bad request",
       "type inconsistence",
       "command in process",
-      "profile locked"
+      "profile locked",
+      "not support"
     };
 
 
