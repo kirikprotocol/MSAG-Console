@@ -9,7 +9,7 @@
 #ifndef ___FSDB_H
 #define ___FSDB_H
 
-#include "DataBlock.h"
+#include "scag/util/storage/DataBlock.h"
 #include "RBTree.h"
 #include "RBTreeHSAllocator.h"
 #include "BlocksHSStorage.h"
@@ -25,6 +25,7 @@
 
 using std::string;
 using scag::pers::Profile;
+using scag::util::storage::DataBlock;
 
 const int FSDB_CREATE       = 0x00000001;
 const int FSDB_OPEN         = 0x00000002;
