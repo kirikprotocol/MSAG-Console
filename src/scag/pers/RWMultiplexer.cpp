@@ -30,8 +30,9 @@ int RWMultiplexer::canReadWrite(SockArray& read, SockArray& write, SockArray& er
   error.Empty();
 
   int fdsCount = fds.Count();
-  if(poll(&fds[0], fdsCount, timeout) <= 0)
-	return 0;
+  if(!fdsCount || poll(&fds[0], fdsCount, timeout) <= 0) {
+    return 0;
+  }
 
   for(int i = 0; i < fdsCount; ++i)
   {
