@@ -9,6 +9,7 @@ namespace scag { namespace mtpers {
 using smsc::core::synchronization::MutexGuard;
 
 const char* DEF_STORAGE_NAME    = "abonent";
+const char* DEF_LOCAL_PATH      = "infrastruct";
 const char* DEF_STORAGE_PATH    = "./storage";
 const char* DEF_GLOSSARY_NAME   = "/glossary";
 const uint32_t DEF_INDEX_GROWTH = 1000;
@@ -106,10 +107,10 @@ AbonentStorageProcessor::AbonentStorageProcessor(uint16_t maxWaitingCount, uint1
                          StorageProcessor(maxWaitingCount), storageIndex_(storageIndex) {   
 }
 
-void AbonentStorageProcessor::init(const StorageConfig& cfg) {
+void AbonentStorageProcessor::init(const AbonentStorageConfig& cfg) {
   char pathSuffix[4];
-  sprintf(pathSuffix, "/%02d", storageIndex_ + 1);			
-  string path = cfg.dbPath + pathSuffix;
+  //sprintf(pathSuffix, "/%02d", storageIndex_ + 1);			
+  string path = cfg.dbPath + "/" + cfg.localPath[storageIndex_];
   initGlossary(path);
   std::auto_ptr< DiskIndexStorage > dis(new DiskIndexStorage(cfg.dbName, path, cfg.indexGrowth));
   smsc_log_debug(logger_, "data index %d storage is created", storageIndex_);
@@ -179,9 +180,9 @@ void InfrastructStorageProcessor::process(ConnectionContext* cx) {
   }
 }
 
-void InfrastructStorageProcessor::init(const StorageConfig& cfg) {
-  StorageConfig locCfg(cfg);
-  locCfg.dbPath += "/infrastruct";
+void InfrastructStorageProcessor::init(const InfrastructStorageConfig& cfg) {
+  InfrastructStorageConfig locCfg(cfg);
+  locCfg.dbPath += "/" + cfg.localPath;
   initGlossary(locCfg.dbPath);
   locCfg.dbName = "provider";
   initStorage(locCfg, provider_);
@@ -194,7 +195,7 @@ void InfrastructStorageProcessor::init(const StorageConfig& cfg) {
   olog_ = Logger::getInstance("pvss.oper");
 }
 
-void InfrastructStorageProcessor::initStorage(const StorageConfig& cfg,
+void InfrastructStorageProcessor::initStorage(const InfrastructStorageConfig& cfg,
                                               std::auto_ptr<InfrastructStorage>& storage) {
   const string fn(cfg.dbPath + "/" + cfg.dbName + ".bin");
   std::auto_ptr< DiskDataStorage::storage_type > pf(new PageFile);
@@ -220,17 +221,19 @@ void InfrastructStorageProcessor::initStorage(const StorageConfig& cfg,
   smsc_log_debug(logger_, "%s storage is created", cfg.dbName.c_str());
 }
 
-StorageConfig::StorageConfig() {
+AbonentStorageConfig::AbonentStorageConfig(uint32_t snumber) {
   dbName = DEF_STORAGE_NAME;
   dbPath = DEF_STORAGE_PATH;
   indexGrowth = DEF_INDEX_GROWTH;
   blockSize = DEF_BLOCK_SIZE;
   fileSize = DEF_FILE_SIZE;
   cacheSize = DEF_CACHE_SIZE;
-  recordCount = DEF_RECORD_COUNT;
+  storageNumber = snumber;
 }
 
-StorageConfig::StorageConfig(ConfigView& cfg, const char* storageType, Logger* logger) {
+AbonentStorageConfig::AbonentStorageConfig(uint32_t snumber, ConfigView& cfg, const char* storageType,
+                                            Logger* logger) {
+  storageNumber = snumber;
   try {
     dbName = cfg.getString("storageName"); 
   } catch (...) {
@@ -238,13 +241,14 @@ StorageConfig::StorageConfig(ConfigView& cfg, const char* storageType, Logger* l
     smsc_log_warn(logger, "Parameter <MTPers.%s.storageName> missed. Defaul value is '%s'",
                    storageType, DEF_STORAGE_NAME);
   }
+  /*
   try {
     dbPath = cfg.getString("storagePath"); 
   } catch (...) {
     dbPath = DEF_STORAGE_PATH;
     smsc_log_warn(logger, "Parameter <MTPers.%s.storagePath> missed. Defaul value is '%s'",
                    storageType, DEF_STORAGE_PATH);
-  }
+  }*/
   try {
     indexGrowth = cfg.getInt("indexGrowth"); 
   } catch (...) {
@@ -270,10 +274,54 @@ StorageConfig::StorageConfig(ConfigView& cfg, const char* storageType, Logger* l
     cacheSize = cfg.getInt("cacheSize"); 
   } catch (...) {
     cacheSize = DEF_CACHE_SIZE;
-    smsc_log_warn(logger, "Parameter <pers.%s.cacheSize> missed. Defaul value is %d",
+    smsc_log_warn(logger, "Parameter <MTPers.%s.cacheSize> missed. Defaul value is %d",
                    storageType, DEF_CACHE_SIZE);
   }
+  string storageDirPrefix = "storageDir_";
+  char dirName[30];
+  string name;
+  for (int i = 0; i < storageNumber; ++i) {
+    try {
+      sprintf(dirName, "%s%02d", storageDirPrefix.c_str(), i + 1);
+      name = cfg.getString(dirName);
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <MTPers.%s.%s> missed. Defaul value is '%02d'",
+                     storageType, dirName, i);
+      sprintf(dirName, "%02d", i + 1);
+      name = dirName;
+    }
+    localPath.push_back(name);
+  }
+}
 
+InfrastructStorageConfig::InfrastructStorageConfig() {
+  dbPath = DEF_STORAGE_PATH;
+  cacheSize = DEF_CACHE_SIZE;
+  recordCount = DEF_RECORD_COUNT;
+}
+
+InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* storageType, Logger* logger) {
+  try {
+    localPath = cfg.getString("storageDir"); 
+  } catch (...) {
+    localPath = DEF_STORAGE_NAME;
+    smsc_log_warn(logger, "Parameter <MTPers.%s.storageDir> missed. Defaul value is '/'",
+                   storageType);
+  }
+  try {
+    recordCount = cfg.getInt("initRecordCount"); 
+  } catch (...) {
+    recordCount = DEF_BLOCK_SIZE;
+    smsc_log_warn(logger, "Parameter <MTPers.%s.initRecordCount> missed. Defaul value is %d",
+                   storageType, DEF_RECORD_COUNT);
+  }
+  try {
+    cacheSize = cfg.getInt("cacheSize"); 
+  } catch (...) {
+    cacheSize = DEF_CACHE_SIZE;
+    smsc_log_warn(logger, "Parameter <MTPers.%s.cacheSize> missed. Defaul value is %d",
+                   storageType, DEF_CACHE_SIZE);
+  }
 }
 
 }//mtpers

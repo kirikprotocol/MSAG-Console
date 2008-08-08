@@ -2,18 +2,17 @@
 
 namespace scag { namespace mtpers {
 
-void StorageManager::init(uint16_t maxWaitingCount, uint16_t storageNumber, const StorageConfig& cfg) {
-  //TODO: init storages;
-  //need storage name and storage path
+void StorageManager::init(uint16_t maxWaitingCount, uint16_t storageNumber, const AbonentStorageConfig& abntcfg,
+                          const InfrastructStorageConfig& infcfg) {
   storageNumber_ = storageNumber;
   for (int i = 0; i < storageNumber_; ++i) {
-    StorageProcessor* proc = new AbonentStorageProcessor(maxWaitingCount, i);
-    proc->init(cfg);
+    AbonentStorageProcessor* proc = new AbonentStorageProcessor(maxWaitingCount, i);
+    proc->init(abntcfg);
     storages_.Push(proc);
     pool_.startTask(proc);
   }
   notAbonentsStorage_ = new InfrastructStorageProcessor(maxWaitingCount);
-  notAbonentsStorage_->init(cfg);
+  notAbonentsStorage_->init(infcfg);
   pool_.startTask(notAbonentsStorage_);
 }
 

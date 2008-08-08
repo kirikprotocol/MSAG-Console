@@ -23,7 +23,8 @@ public:
   StorageManager():storageNumber_(0), logger_(Logger::getInstance("storeman")) {};
   virtual ~StorageManager() {};
 
-  void init(uint16_t maxWaitingCount, uint16_t storageNumber, const StorageConfig& cfg);
+  void init(uint16_t maxWaitingCount, uint16_t storageNumber, const AbonentStorageConfig& abntcfg,
+            const InfrastructStorageConfig& infcfg);
   bool process(ConnectionContext* cx);
   void shutdown();
 
@@ -33,7 +34,7 @@ private:
   Logger *logger_;
   uint16_t storageNumber_;
   Array<StorageProcessor *> storages_;
-  StorageProcessor* notAbonentsStorage_;
+  InfrastructStorageProcessor* notAbonentsStorage_;
 
 };
 

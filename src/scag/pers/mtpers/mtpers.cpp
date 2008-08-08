@@ -71,6 +71,7 @@ int main(int argc, char* argv[]) {
     ConfigView persConfig(manager, "MTPers");
 
     string storageName;
+    string storagePath = "./storage";
     std::string host = "phoenix";
     int port = 47111;
     int maxClientCount = 10, timeout = 600;
@@ -79,21 +80,57 @@ int main(int argc, char* argv[]) {
     uint16_t ioTasksCount = 10;
     uint32_t initRecordCount = 1000;
 
-    try { host = persConfig.getString("host"); } catch (...) {};
-    try { port = persConfig.getInt("port"); } catch (...) {};
-    try { maxClientCount = persConfig.getInt("connections"); } catch (...) {};
-    try { timeout = persConfig.getInt("timeout"); } catch (...) {};
-    try { ioTasksCount = persConfig.getInt("ioPoolSize"); } catch (...) {};
-    try { storageNumber = persConfig.getInt("abonentStorageNumber"); } catch (...) {};
-    try { maxWaitingCount = persConfig.getInt("storageQueueSize"); } catch (...) {};
+    try { 
+      host = persConfig.getString("host");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <MTPers.host> missed. Defaul value is '%s'", host.c_str());
+    };
+    try { 
+      port = persConfig.getInt("port");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <MTPers.port> missed. Defaul value is %d", port);
+    };
+    try { 
+      maxClientCount = persConfig.getInt("maxClientCount");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <MTPers.maxClientsCount> missed. Defaul value is %d", maxClientCount);
+    };
+    try { 
+      timeout = persConfig.getInt("timeout");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <MTPers.timeout> missed. Defaul value is %d", timeout);
+    };
+    try { 
+      ioTasksCount = persConfig.getInt("ioPoolSize");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <MTPers.ioPoolSize> missed. Defaul value is %d", ioTasksCount);
+    };
+    try { 
+      storageNumber = persConfig.getInt("abonentStorageNumber");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <MTPers.abonentStorageNumber> missed. Defaul value is %d", storageNumber);
+    };
+    try { 
+      maxWaitingCount = persConfig.getInt("storageQueueSize");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <MTPers.storageQueueSize> missed. Defaul value is %d", maxWaitingCount);
+    };
+    try { 
+      storagePath = persConfig.getString("storagePath");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <MTPers.storagePath> missed. Defaul value is '%s'", storagePath.c_str());
+    };
 
     ConfigView abntStorageConfig(manager, "MTPers.AbonentStorage");
-    StorageConfig abntCfg(abntStorageConfig, "AbonentStorage", logger);
+    AbonentStorageConfig abntCfg(storageNumber, abntStorageConfig, "AbonentStorage", logger);
+    abntCfg.dbPath = storagePath;
+    ConfigView infStorageConfig(manager, "MTPers.InfrastructStorage");
+    InfrastructStorageConfig infCfg(infStorageConfig, "InfrastructStorage", logger);
+    infCfg.dbPath = storagePath;
 
-    abntCfg.recordCount = initRecordCount;
 
     StorageManager storageManager;
-    storageManager.init(maxWaitingCount, storageNumber, abntCfg);
+    storageManager.init(maxWaitingCount, storageNumber, abntCfg, infCfg);
 
     IOTaskManager ioMananger(storageManager);
     ioMananger.init(ioTasksCount, maxClientCount, "ioman");

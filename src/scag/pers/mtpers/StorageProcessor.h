@@ -39,10 +39,10 @@ using scag::pers::IntProfileKey;
 using smsc::core::buffers::PageFile;
 using namespace smsc::util::config;
 
-struct StorageConfig {
+struct AbonentStorageConfig {
 
-  StorageConfig();
-  StorageConfig(ConfigView& cfg, const char* storageType, Logger* logger);
+  AbonentStorageConfig(uint32_t snumber);
+  AbonentStorageConfig(uint32_t snumber, ConfigView& cfg, const char* storageType, Logger* logger);
 
   string dbName;
   string dbPath;
@@ -50,8 +50,18 @@ struct StorageConfig {
   uint32_t fileSize;
   uint32_t blockSize;
   uint32_t cacheSize;
-  uint32_t recordCount;
+  uint32_t storageNumber;
+  vector<string> localPath;
+};
 
+struct InfrastructStorageConfig {
+  InfrastructStorageConfig();
+  InfrastructStorageConfig(ConfigView& cfg, const char* storageType, Logger* logger);
+  string dbName;
+  string dbPath;
+  string localPath;
+  uint32_t cacheSize;
+  uint32_t recordCount;
 };
 
 class StorageManager;
@@ -65,7 +75,7 @@ public:
   virtual const char * taskName();
   bool addContext(ConnectionContext* cx);
   virtual void process(ConnectionContext* cx) = 0;
-  virtual void init(const StorageConfig& cfg) = 0;
+  //virtual void init(const StorageConfig& cfg) = 0;
 
 protected:
   void initGlossary(const string& dbPath);
@@ -82,7 +92,7 @@ class AbonentStorageProcessor: public StorageProcessor {
 public:
   AbonentStorageProcessor(uint16_t maxWaitingCount, uint16_t storageIndex);
   ~AbonentStorageProcessor() {};
-  void init(const StorageConfig& cfg);
+  void init(const AbonentStorageConfig& cfg);
   void process(ConnectionContext* cx) ;
 
 private:
@@ -102,7 +112,7 @@ class InfrastructStorageProcessor: public StorageProcessor {
 public:
   InfrastructStorageProcessor(uint16_t maxWaitingCount):StorageProcessor(maxWaitingCount) {};
   ~InfrastructStorageProcessor() {};
-  void init(const StorageConfig& cfg);
+  void init(const InfrastructStorageConfig& cfg);
   void process(ConnectionContext* cx) ;
 
 private:
@@ -113,7 +123,7 @@ private:
   typedef CachedDiskStorage< MemStorage, DiskStorage > InfrastructStorage;
 
 private:
-  void initStorage(const StorageConfig& cfg, std::auto_ptr<InfrastructStorage>& storage);
+  void initStorage(const InfrastructStorageConfig& cfg, std::auto_ptr<InfrastructStorage>& storage);
 
 private:
   std::auto_ptr<InfrastructStorage> provider_;
