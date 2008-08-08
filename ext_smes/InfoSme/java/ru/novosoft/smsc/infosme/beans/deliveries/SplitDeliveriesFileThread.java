@@ -82,7 +82,6 @@ public class SplitDeliveriesFileThread extends Thread {
   private TemplatesRadixTree initRadixTree() throws AdminException {
     final TemplatesRadixTree regionsTree = new TemplatesRadixTree();
     // Fill regions tree
-    appContext.getRegionsManager().reset();
     Collection regions = appContext.getRegionsManager().getRegions();
     Region r;
     for (Iterator regionsIter = regions.iterator(); regionsIter.hasNext();) {
