@@ -8,7 +8,7 @@ namespace scag{ namespace pers{
 const uint8_t PROPERTIES_COUNT_SIZE = 14; //14 bits for profile properties count
 const uint16_t MAX_PROPERTIES_COUNT = 16383; 
 
-void Profile::Serialize(SerialBuffer& buf, bool toFSDB) const
+void Profile::Serialize(SerialBuffer& buf, bool toFSDB, GlossaryBase* glossary) const
 {
     uint16_t cnt = properties.GetCount();
     if (cnt == 0 && toFSDB && state != LOCKED) {
@@ -22,11 +22,15 @@ void Profile::Serialize(SerialBuffer& buf, bool toFSDB) const
     Property* prop;
     char *key = 0;
     while(it.Next(key, prop))
-        prop->Serialize(buf, toFSDB);
+        prop->Serialize(buf, toFSDB, glossary);
 }
 
-void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB)
+void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB, GlossaryBase* glossary)
 {
+    if (!buf.GetSize() || buf.GetPos() >= buf.GetSize()) {
+      Empty();
+      return;
+    }
     uint16_t state_cnt = buf.ReadInt16();
     uint16_t cnt = state_cnt & MAX_PROPERTIES_COUNT;
     state_cnt >>= PROPERTIES_COUNT_SIZE;
@@ -38,7 +42,7 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB)
     while(cnt) {
         prop = new Property();
         do{
-            prop->Deserialize(buf, fromFSDB);
+            prop->Deserialize(buf, fromFSDB, glossary);
             cnt--;
             if(log && prop->isExpired(cur_time))
                 smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), prop->getName());
