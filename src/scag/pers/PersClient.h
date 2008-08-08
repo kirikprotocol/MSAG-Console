@@ -3,7 +3,7 @@
 #ifndef SCAG_PERS_CLIENT_H
 #define SCAG_PERS_CLIENT_H
 
-#include "SerialBuffer.h"
+#include "scag/util/storage/SerialBuffer.h"
 #include "Property.h"
 #include "core/network/Socket.hpp"
 #include "Types.h"
@@ -17,6 +17,9 @@ using smsc::core::network::Socket;
 using namespace scag::pers;
 using scag::lcm::LongCallParams;
 using scag::lcm::LongCallContext;
+
+using scag::util::storage::SerialBuffer;
+using scag::util::storage::SerialBufferOutOfBounds;
 
 enum PersClientExceptionType{
     CANT_CONNECT = 1,
@@ -34,7 +37,8 @@ enum PersClientExceptionType{
   BAD_REQUEST,
   TYPE_INCONSISTENCE,
   BATCH_ERROR,
-  PROFILE_LOCKED
+  PROFILE_LOCKED,
+  COMMAND_NOTSUPPORT
 };
 
     static const char* strs[] = {
@@ -55,6 +59,7 @@ enum PersClientExceptionType{
       "Types inconsistence",
       "Batch prepare error",
       "Profile locked"
+      "Command Not Supports"
     };
 
 class PersClientException{
@@ -110,6 +115,12 @@ public:
     virtual void DelPropertyPrepare(ProfileType pt, const PersKey& key, const char *property_name, SerialBuffer& bsb) = 0;
     virtual void IncPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, SerialBuffer& bsb) = 0;
     virtual void IncModPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod, SerialBuffer& bsb) = 0;
+
+    virtual void SetPropertyPrepare(Property& prop, SerialBuffer& bsb) = 0;
+    virtual void GetPropertyPrepare(const char *property_name, SerialBuffer& bsb) = 0;
+    virtual void DelPropertyPrepare(const char *property_name, SerialBuffer& bsb) = 0;
+    virtual void IncPropertyPrepare(Property& prop, SerialBuffer& bsb) = 0;
+    virtual void IncModPropertyPrepare(Property& prop, uint32_t mod, SerialBuffer& bsb) = 0;
     
     virtual void SetPropertyResult(SerialBuffer& bsb) = 0;
     virtual void GetPropertyResult(Property& prop, SerialBuffer& bsb) = 0;
@@ -118,6 +129,7 @@ public:
     virtual int IncModPropertyResult(SerialBuffer& bsb) = 0;
 
 	virtual void PrepareBatch(SerialBuffer& bsb, bool transactMode = false) = 0;
+    virtual void PrepareMTBatch(SerialBuffer& bsb, ProfileType pt, const PersKey& key, uint16_t cnt, bool transactMode = false) = 0;
 	virtual void RunBatch(SerialBuffer& sb) = 0;
 	virtual void FinishPrepareBatch(uint32_t cnt, SerialBuffer& bsb) = 0;
 	

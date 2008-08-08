@@ -40,6 +40,12 @@ public:
     void DelPropertyPrepare(ProfileType pt, const PersKey& key, const char *property_name, SerialBuffer& bsb);
     void IncPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, SerialBuffer& bsb);
     void IncModPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod, SerialBuffer& bsb);
+
+    void SetPropertyPrepare(Property& prop, SerialBuffer& bsb);
+    void GetPropertyPrepare(const char *property_name, SerialBuffer& bsb);
+    void DelPropertyPrepare(const char *property_name, SerialBuffer& bsb);
+    void IncPropertyPrepare(Property& prop, SerialBuffer& bsb);
+    void IncModPropertyPrepare(Property& prop, uint32_t mod, SerialBuffer& bsb);
     
     void SetPropertyResult(SerialBuffer& bsb);
     void GetPropertyResult(Property& prop, SerialBuffer& bsb);
@@ -48,6 +54,7 @@ public:
     int IncModPropertyResult(SerialBuffer& bsb);
 	
 	void PrepareBatch(SerialBuffer& bsb, bool transactMode = false);
+    void PrepareMTBatch(SerialBuffer& bsb, ProfileType pt, const PersKey& key, uint16_t cnt, bool transactMode = false);
 	void FinishPrepareBatch(uint32_t cnt, SerialBuffer& bsb);
 	void RunBatch(SerialBuffer& bsb);
 
@@ -318,6 +325,36 @@ void PersClientImpl::IncModPropertyPrepare(ProfileType pt, const PersKey& key, P
     prop.Serialize(bsb);
 }
 
+void PersClientImpl::SetPropertyPrepare(Property& prop, SerialBuffer& bsb) {
+  bsb.WriteInt8(PC_SET);
+  prop.Serialize(bsb);
+}
+
+void PersClientImpl::GetPropertyPrepare(const char *property_name, SerialBuffer& bsb) {
+  bsb.WriteInt8(PC_GET);
+  bsb.WriteString(property_name);
+}
+
+void PersClientImpl::DelPropertyPrepare(const char *property_name, SerialBuffer& bsb) {
+  bsb.WriteInt8(PC_GET);
+  bsb.WriteString(property_name);
+}
+
+void PersClientImpl::IncPropertyPrepare(Property& prop, SerialBuffer& bsb) {
+  if(prop.getType() != INT && prop.getType() != DATE)
+      throw PersClientException(INVALID_PROPERTY_TYPE);
+  bsb.WriteInt8(PC_INC_RESULT);
+  prop.Serialize(bsb);
+}
+
+void PersClientImpl::IncModPropertyPrepare(Property& prop, uint32_t mod, SerialBuffer& bsb) {
+  if(prop.getType() != INT && prop.getType() != DATE)
+      throw PersClientException(INVALID_PROPERTY_TYPE);
+  bsb.WriteInt8(PC_INC_MOD);
+  bsb.WriteInt32(mod);
+  prop.Serialize(bsb);
+}
+
 void PersClientImpl::CheckServerResponse(SerialBuffer& bsb)
 {
   switch (GetServerResponse(bsb)) {
@@ -365,6 +402,13 @@ void PersClientImpl::setBatchCount(uint32_t cnt, SerialBuffer& bsb)
 	bsb.SetPos(5);
 	bsb.WriteInt16(cnt);
 	bsb.SetPos(i);
+}
+
+void PersClientImpl::PrepareMTBatch(SerialBuffer& bsb, ProfileType pt, const PersKey& key, uint16_t cnt, bool transactMode) {
+  emptyPacket(bsb);
+  FillHead(PC_MTBATCH, pt, key, bsb);
+  bsb.WriteInt16(cnt);
+  bsb.WriteInt8((uint8_t)transactMode);
 }
 
 void PersClientImpl::PrepareBatch(SerialBuffer& bsb, bool transactMode)
