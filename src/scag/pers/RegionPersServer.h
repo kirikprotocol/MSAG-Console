@@ -9,6 +9,9 @@ namespace scag { namespace pers {
 
 using namespace scag::cpers;
 
+using scag::util::storage::SerialBuffer;
+using scag::util::storage::SerialBufferOutOfBounds;
+
 struct CmdContext {
   CmdContext();
   CmdContext(const CmdContext& ctx);

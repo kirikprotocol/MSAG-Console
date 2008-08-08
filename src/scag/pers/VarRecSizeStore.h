@@ -7,7 +7,7 @@
 #include "core/buffers/DiskHash.hpp"
 #include "core/buffers/PageFile.hpp"
 #include "core/buffers/TmpBuf.hpp"
-#include "SerialBuffer.h"
+#include "scag/util/storage/SerialBuffer.h"
 #include <vector>
 
 using std::vector;
@@ -16,6 +16,9 @@ namespace scag{ namespace pers{
 
 using namespace smsc::core::buffers;
 using namespace smsc::core::synchronization;
+
+using scag::util::storage::SerialBuffer;
+using scag::util::storage::SerialBufferOutOfBounds;
 
 class VarRecordNotFound{};
 

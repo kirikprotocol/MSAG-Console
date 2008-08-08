@@ -326,7 +326,7 @@ PersServerResponseType RegionPersServer::execCommand(ConnectionContext& ctx) {
   if(pt != PT_ABONENT) {
     return execCommand(cmd, pt, isb, osb);
   } 
-
+  //TODO: remove getProfileKey method
   isb.ReadString(str_key);
   string profKey = getProfileKey(str_key);
   AbntAddr addr(profKey.c_str());
