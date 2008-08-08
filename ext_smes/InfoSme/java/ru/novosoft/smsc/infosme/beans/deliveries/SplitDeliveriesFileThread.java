@@ -2,6 +2,7 @@ package ru.novosoft.smsc.infosme.beans.deliveries;
 
 import ru.novosoft.smsc.admin.route.Subject;
 import ru.novosoft.smsc.admin.region.Region;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.BlackListManager;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.radixtree.TemplatesRadixTree;
@@ -78,9 +79,10 @@ public class SplitDeliveriesFileThread extends Thread {
     return (sb.length() == 0) ? null : sb.toString().trim();
   }
 
-  private TemplatesRadixTree initRadixTree() {
+  private TemplatesRadixTree initRadixTree() throws AdminException {
     final TemplatesRadixTree regionsTree = new TemplatesRadixTree();
     // Fill regions tree
+    appContext.getRegionsManager().reset();
     Collection regions = appContext.getRegionsManager().getRegions();
     Region r;
     for (Iterator regionsIter = regions.iterator(); regionsIter.hasNext();) {
@@ -104,7 +106,14 @@ public class SplitDeliveriesFileThread extends Thread {
     // Init black list manager
     final BlackListManager blm = infoSmeContext.getBlackListManager();
     // Init subjects tree
-    final TemplatesRadixTree radixTree = initRadixTree();
+    TemplatesRadixTree radixTree;
+    try {
+      radixTree = initRadixTree();
+    } catch (AdminException e) {
+       e.printStackTrace();
+      this.status = STATUS_ERROR;
+      return;
+    }
 
     this.status = STATUS_PROCESSING;
 
