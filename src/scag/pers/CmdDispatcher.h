@@ -4,13 +4,16 @@
 #define SCAG_PERS_COMMAND_DISPATCHER
 
 #include "logger/Logger.h"
-#include "SerialBuffer.h"
+#include "scag/util/storage/SerialBuffer.h"
 #include "ProfileStore.h"
 #include "Types.h"
 
 namespace scag { namespace pers {
 
 using smsc::logger::Logger;
+
+using scag::util::storage::SerialBuffer;
+using scag::util::storage::SerialBufferOutOfBounds;
 
 class CommandDispatcher {
     StringProfileStore* AbonentStore;

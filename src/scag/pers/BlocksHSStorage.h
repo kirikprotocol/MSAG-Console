@@ -18,8 +18,9 @@
 #include "util/Exception.hpp"
 
 
-#include "DataBlock.h"
-#include "SerialBuffer.h"
+//#include "DataBlock.h"
+#include "scag/util/storage/SerialBuffer.h"
+#include "scag/util/storage/DataBlock.h"
 #include "Profile.h"
 
 #include <cerrno>
@@ -32,6 +33,9 @@ using std::string;
 using smsc::logger::Logger;
 using scag::pers::Profile;
 using smsc::util::Exception;
+using scag::util::storage::SerialBuffer;
+using scag::util::storage::SerialBufferOutOfBounds;
+using scag::util::storage::DataBlock;
 
 const string dfPreambule= "RBTREE_FILE_STORAGE!";
 const int dfVersion_32_1 = 0x01;

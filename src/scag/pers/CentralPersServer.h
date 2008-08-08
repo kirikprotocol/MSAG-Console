@@ -4,7 +4,7 @@
 #define SCAG_PERS_CENTRAL_PERSSERVER
 
 #include "logger/Logger.h"
-#include "SerialBuffer.h"
+//#include "SerialBuffer.h"
 #include "PersSocketServer.h"
 #include "FSDB.h"
 #include "AbntAddr.hpp"
@@ -24,6 +24,9 @@ XERCES_CPP_NAMESPACE_USE
 using namespace scag::pers;
 using scag::pers::AbntAddr;
 using smsc::logger::Logger;
+
+using scag::util::storage::SerialBuffer;
+using scag::util::storage::SerialBufferOutOfBounds;
 
 class ProfileInfo
 {

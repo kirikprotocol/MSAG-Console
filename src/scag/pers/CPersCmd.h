@@ -6,7 +6,7 @@
 #include <logger/Logger.h>
 
 #include "Types.h"
-#include "SerialBuffer.h"
+#include "scag/util/storage/SerialBuffer.h"
 #include "Profile.h"
 
 namespace scag { namespace cpers {
@@ -17,6 +17,8 @@ using std::string;
 using namespace scag::pers::CentralPersCmd;
 using scag::pers::Profile;
 using smsc::logger::Logger;
+using scag::util::storage::SerialBuffer;
+using scag::util::storage::SerialBufferOutOfBounds;
 
 namespace ownership {
   enum {
