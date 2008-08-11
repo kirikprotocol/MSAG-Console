@@ -309,7 +309,7 @@ public class Messages extends InfoSmeBean
     return messages;
   }
   public int getTotalSize() {
-    return (messages == null) ? 0 : messages.size();
+    return (messages == null) ? 0 : messages.getTotalSize();
   }
   public int getTotalSizeInt() {
     return getTotalSize();

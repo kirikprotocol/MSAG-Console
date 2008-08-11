@@ -288,4 +288,12 @@ public class DeliveriesNew extends InfoSmeBean {
   public int getSubjectsFound() {
     return pageData.subjectsFound;
   }
+
+  public boolean isSplitDeliveriesFile() {
+    return pageData.isSplitDeliveriesFile();
+  }
+
+  public void setSplitDeliveriesFile(boolean val) {
+    pageData.setSplitDeliveriesFile(val);
+  }
 }

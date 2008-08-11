@@ -3,6 +3,7 @@ package ru.novosoft.smsc.infosme.beans.deliveries;
 import ru.novosoft.smsc.infosme.backend.Task;
 import ru.novosoft.smsc.infosme.backend.MultiTask;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
@@ -17,11 +18,11 @@ import java.util.Map;
 
 public class ProcessFilePage extends DeliveriesPage {
 
-  private final SplitDeliveriesFileThread thread;
+  private final LoadDeliveriesFileThread thread;
 
   public ProcessFilePage(DeliveriesPageData pageData) {
     super(pageData);
-    thread = new SplitDeliveriesFileThread(pageData.getDeliveriesFile(), pageData.getInfoSmeContext(), pageData.getAppContext());
+    thread = new LoadDeliveriesFileThread(pageData.getDeliveriesFile(), pageData.getInfoSmeContext(), pageData.isSplitDeliveriesFile(), pageData.getAppContext());
     thread.start();
   }
 
@@ -36,6 +37,14 @@ public class ProcessFilePage extends DeliveriesPage {
 
         final HashMap inputFiles = new HashMap(outputFiles.size());
         final MultiTask task = new MultiTask();
+        try {
+          task.setAddress(pageData.getInfoSmeContext().getConfig().getString("InfoSme.Address"));
+        } catch (Config.ParamNotFoundException e) {
+          throw new AdminException(e.getMessage());
+        } catch (Config.WrongParamTypeException e) {
+          throw new AdminException(e.getMessage());
+        }
+
         Map.Entry e;
         for (Iterator iter = outputFiles.entrySet().iterator(); iter.hasNext();) {
           e = (Map.Entry)iter.next();
@@ -81,7 +90,7 @@ public class ProcessFilePage extends DeliveriesPage {
   }
 
   public DeliveriesPage mbUpdate(HttpServletRequest request) throws AdminException {
-    SplitDeliveriesFileThread.Progress progress = thread.getProgress();
+    LoadDeliveriesFileThread.Progress progress = thread.getProgress();
     pageData.recordsProcessed = progress.getRecordsProcessed();
     pageData.unrecognized = progress.getUnrecognized();
     pageData.inblackList = progress.getInblackList();

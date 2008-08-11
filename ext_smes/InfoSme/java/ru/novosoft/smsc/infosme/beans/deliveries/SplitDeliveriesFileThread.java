@@ -87,7 +87,11 @@ public class SplitDeliveriesFileThread extends Thread {
     for (Iterator regionsIter = regions.iterator(); regionsIter.hasNext();) {
       r = (Region)regionsIter.next();
 
-      RegionOutputFile outFile = new RegionOutputFile(r.getName(), Functions.createNewFilenameForSave(new File(WebAppFolders.getWorkFolder(), "INFO_SME_abonents." + r.getName() + ".list")));
+      File f = Functions.createNewFilenameForSave(new File(WebAppFolders.getWorkFolder(), "INFO_SME_abonents.region_" + r.getId() + ".list"));
+      if (log.isDebugEnabled())
+        log.debug("Subscribers from file " + inputFile + " for region " + r.getName() + " will be stored into " + f);
+
+      RegionOutputFile outFile = new RegionOutputFile(r.getName(), f);
 
       for (Iterator subjectsIter = r.getSubjects().iterator(); subjectsIter.hasNext();) {
         String subjectName = (String)subjectsIter.next();

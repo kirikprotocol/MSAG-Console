@@ -52,6 +52,8 @@ public class DeliveriesPageData {
   public String sourceAddress;
   public String errorStr;
 
+  public boolean splitDeliveriesFile = true;
+
   // process file progress attributes
   public int recordsProcessed;
   public int subjectsFound;
@@ -166,5 +168,13 @@ public class DeliveriesPageData {
 
   public void setTask(MultiTask task) {
     this.task = task;
+  }
+
+  public boolean isSplitDeliveriesFile() {
+    return splitDeliveriesFile;
+  }
+
+  public void setSplitDeliveriesFile(boolean splitDeliveriesFile) {
+    this.splitDeliveriesFile = splitDeliveriesFile;
   }
 }

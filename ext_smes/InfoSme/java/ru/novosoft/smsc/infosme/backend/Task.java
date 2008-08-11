@@ -62,7 +62,7 @@ public class Task
 
   public Task(String id) {
     this.id = id;
-    activeWeekDays = new ArrayList();
+    activeWeekDays = new ArrayList();    
     Functions.addValuesToCollection(this.activeWeekDays, DEFAULT_ACTIVE_WEEK_DAYS, ",", true);
     activeWeekDaysSet = new HashSet(activeWeekDays);
     if (delivery) provider = Task.INFOSME_EXT_PROVIDER;

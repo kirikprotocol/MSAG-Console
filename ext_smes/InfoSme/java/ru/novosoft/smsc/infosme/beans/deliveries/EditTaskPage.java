@@ -22,7 +22,7 @@ public class EditTaskPage extends DeliveriesPage {
     taskToPage(pageData.getTask().getTask(pageData.activeTaskSubject));
   }
 
-  private long calculateTotalTime(Task task) throws ParseException {
+  private long calculateTotalTime(Task task)  {
     long result = 0;
     String[] days = new String[] {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     final long endDate = task.getEndDateDate().getTime();
@@ -136,6 +136,8 @@ public class EditTaskPage extends DeliveriesPage {
 
     task.setFlash(pageData.flash);
 
+    task.setActiveWeekDays(Arrays.asList(pageData.activeWeekDays));
+
     if (!isUserAdmin(request))
       calculateRetryOnFail(task);
   }
@@ -172,10 +174,6 @@ public class EditTaskPage extends DeliveriesPage {
     pageData.validityDate = task.getValidityDate();
     pageData.activePeriodStart = task.getActivePeriodStart();
     pageData.activePeriodEnd = task.getActivePeriodEnd();
-    pageData.activeWeekDays = new String[task.getActiveWeekDays().size()];
-    int i=0;
-    for (Iterator iter = task.getActiveWeekDays().iterator(); iter.hasNext(); i++)
-      pageData.activeWeekDays[i] = (String)iter.next();
     pageData.recondsNumber = String.valueOf(task.getActualRecordsSize());
   }
 
@@ -188,7 +186,6 @@ public class EditTaskPage extends DeliveriesPage {
     task.setValidityDate(pageData.validityDate);
     task.setActivePeriodStart(pageData.activePeriodStart);
     task.setActivePeriodEnd(pageData.activePeriodEnd);
-    task.setActiveWeekDays(Arrays.asList(pageData.activeWeekDays));
   }
 
 }

@@ -106,14 +106,12 @@ else
 <div class=page_subtitle><%= getLocString("infosme.label.query_results_b")%>&nbsp;<%= bean.getTotalSize()%>&nbsp;<%= getLocString("infosme.label.query_results_e")%></div>
 <table class=list cellspacing=0>
 <col width="1%">
-<col width="10%">
 <col width="15%">
 <col width="13%">
 <col width="22%">
 <col width="40%">
 <thead><tr class=row<%=rowN++&1%>>
   <th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-  <th style="text-align:left">ID</th>
   <th style="text-align:left"><a href="#" <%=bean.getSort().endsWith(Message.SORT_BY_ABONENT) ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_abonent")%>" onclick='return setSort("<%= Message.SORT_BY_ABONENT%>")'><%= getLocString("infosme.label.abonent")%></a></th>
   <th style="text-align:left"><a href="#" <%=bean.getSort().endsWith(Message.SORT_BY_STATUS)  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_msg_status")%>" onclick='return setSort("<%= Message.SORT_BY_STATUS%>")'><%= getLocString("infosme.label.msg_status")%></a></th>
   <th style="text-align:left"><a href="#" <%=bean.getSort().endsWith(Message.SORT_BY_DATE)    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_date")%>" onclick='return setSort("<%= Message.SORT_BY_DATE%>")'><%= getLocString("infosme.label.date")%></a></th>
@@ -128,7 +126,6 @@ else
     if (pos >= start) {
     %><tr class=row<%=rowN++&1%>>
       <td><input class=check type=checkbox name=checked value="<%=message.getValue("id")%>" <%=bean.isMessageChecked(String.valueOf(message.getValue("id"))) ? "checked" : ""%>></td>
-      <td><%=StringEncoderDecoder.encode(String.valueOf(message.getValue("id")))%></td>
       <td><%=StringEncoderDecoder.encode((String)message.getValue("msisdn"))%></td>
       <td><%=StringEncoderDecoder.encode(bean.getStateName((Message.State)message.getValue("state")))%></td>
       <td nowrap><%=StringEncoderDecoder.encode(bean.convertDateToString((Date)message.getValue("date")))%></td>

@@ -11,6 +11,10 @@
       <th><%= getLocString("infosme.label.file_location")%></th>
       <td><input class=txt type=file name="<%=DeliveriesPageData.ABONENTS_FILE_PARAM%>" id="<%=DeliveriesPageData.ABONENTS_FILE_PARAM%>" onChange="checkCreateButton();"></td>
     </tr>
+    <tr class=row1>
+      <th><%= getLocString("infosme.label.split_file")%></th>
+      <td><input class=check type=checkbox name="splitDeliveriesFile" <%=deliveriesBean.isSplitDeliveriesFile() ? "checked" : ""%>/></td>
+    </tr>
   </table>
 </div>
 

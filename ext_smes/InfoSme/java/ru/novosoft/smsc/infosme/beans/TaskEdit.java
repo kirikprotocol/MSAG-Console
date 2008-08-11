@@ -198,7 +198,6 @@ public class TaskEdit extends InfoSmeBean
           return error("Task with name='"+getName()+"' already exists. Please specify another name");
     }
     if (transliterate) task.setTemplate(Transliterator.translit(task.getTemplate()));
-    System.out.println("Save flash = " + task.isFlash());
     task.storeToConfig(getConfig());
     getInfoSmeContext().setChangedTasks(true);
     return RESULT_DONE;
