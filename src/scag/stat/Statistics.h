@@ -6,7 +6,7 @@
 //#include <router/route_types.h>
 #include <sms/sms.h>
 #include "scag/transport/smpp/router/route_types.h"
-#include "scag/transport/smpp/SmppManagerAdmin.h"
+// #include "scag/transport/smpp/SmppManagerAdmin.h"
 #include "sacc/SACC_Defs.h"
 #include <util/BufferSerialization.hpp>
 #include "core/network/Socket.hpp"
