@@ -70,5 +70,20 @@ void Operation::receiveNewResp( int curidx, int lastidx )
     if ( receivedAllResps_ && receivedAllParts_ ) status_ = OPERATION_COMPLETED;
 }
 
+
+const char* Operation::getNamedStatus() const
+{
+    switch (status_) {
+    case OPERATION_INITED :
+        return "INITED";
+    case OPERATION_CONTINUED :
+        return "CONTINUED";
+    case OPERATION_COMPLETED :
+        return "COMPLETED";
+    default:
+        return "UNKNOWN";
+    };
+}
+
 } // namespace sessions
 } // namespace scag

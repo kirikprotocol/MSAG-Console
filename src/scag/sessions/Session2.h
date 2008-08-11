@@ -36,25 +36,29 @@ enum ProtocolForEvent
 };
 
 
+class Session;
+
+
 /// Scope of properties (e.g. global, service, context, operation)
 class SessionPropertyScope
 {
 public:
-    SessionPropertyScope( Changeable* patron ) : patron_(patron) {}
-    ~SessionPropertyScope();
-    Property* getProperty( const std::string& name );
-
+    SessionPropertyScope( Session* patron ) : session_(patron) {}
+    virtual ~SessionPropertyScope();
+    virtual Property* getProperty( const std::string& name );
     Serializer& serialize( Serializer& s ) const;
     Deserializer& deserialize( Deserializer& s ) throw (DeserializerException);
 
     // clear the scope
     void clear();
-
     unsigned size() const { return properties_.GetCount(); }
 
-private:
-    Changeable*              patron_;
-    Hash< AdapterProperty* > properties_; // owned
+protected:
+    virtual bool isReadonly( const char* ) const { return false; }
+
+protected:
+    Session*                         session_;
+    mutable Hash< AdapterProperty* > properties_; // owned
 };
 
 
@@ -68,9 +72,19 @@ class Operation;
 class Session : public Changeable
 {
 private:
-    Session();
-    Session( const Session& s );
-    Session& operator = ( const Session& s );
+    // why we need this?
+    /*
+    enum ReadOnlyProperties
+    {
+        // PROPERTY_USR = 1,
+        PROPERTY_ICC_STATUS = 2,
+        PROPERTY_ABONENT = 3
+    };
+     */
+
+public:
+    /// NOTE: the full field name (with prefix) is required
+    static bool isReadOnlyProperty( const char* fullname );
 
 public:
     Session( const SessionKey& key );
@@ -117,6 +131,11 @@ public:
 
     /// destroy current operation
     void closeCurrentOperation();
+    
+    /// number of operations
+    unsigned operationsCount() const {
+        return operations_.Count();
+    }
 
 
     /// FIXME: should it be here?
@@ -140,7 +159,7 @@ public:
     int createContextScope();
 
     /// delete context scope by id.
-    void deleteContextScope( int ctxid );
+    bool deleteContextScope( int ctxid );
 
     /// @return session global Scope
     SessionPropertyScope* getGlobalScope();
@@ -200,6 +219,9 @@ public:
     void abort();
 
 private: // methods
+    Session();
+    Session( const Session& s );
+    Session& operator = ( const Session& s );
 
     void serializeScope( Serializer& o, const SessionPropertyScope* s ) const;
     void deserializeScope( Deserializer& o, SessionPropertyScope*& s ) throw (DeserializerException);

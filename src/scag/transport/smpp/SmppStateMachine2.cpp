@@ -99,9 +99,9 @@ struct StateMachine::ResponseRegistry
         val.it = toList.end();
         val.it--;
         // we will use dialog id in resp
-        // cmd->set_dialogId(seq);
+        cmd->set_dialogId( seq );
         reg.Insert(key,val);
-        smsc_log_debug(log, "register %d/%d", uid, seq);
+        smsc_log_debug(log, "register uid=%d, seq=%d, name=%s", uid, seq, cmd->getDstEntity()->info.systemId.c_str());
         return true;
     }
 
@@ -112,7 +112,7 @@ struct StateMachine::ResponseRegistry
         if (!log) log = smsc::logger::Logger::getInstance("respreg");
         RegKey key(uid, seq);
         RegValue* ptr=reg.GetPtr(key);
-        smsc_log_debug(log, "get %d/%d - %s", uid, seq, (ptr) ? "ok":"not found");
+        smsc_log_debug(log, "get uid=%d seq=%d - %s", uid, seq, (ptr) ? "ok":"not found");
         std::auto_ptr<SmppCommand> cmd;
         if (ptr) {
             cmd.reset(ptr->cmd);
@@ -633,14 +633,9 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
 
     do { // fake loop
 
-        if ( session.get() ) {
-            session.moveLock(aucmd.get());
-            break;
-        }
+        if ( cmd->getOperationId() == SCAGCommand::invalidOpId() ) {
 
-        if ( cmd->getOperationId() == -1 ) {
-
-            smsc_log_debug(log_, "SubmitResp: got");
+            smsc_log_debug(log_, "SubmitResp: got cmd=%p", cmd );
             SmppCommand* orgCmd;
 
             if(!cmd->get_resp()->hasOrgCmd()) // hasOrgCmd is true in the case of inplace call from processSubmit due to failed putCommand
@@ -695,51 +690,39 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
             sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
             sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
 
-            key = sms->getDestinationAddress();
-            // int umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
-            ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
-                sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
-            if (ussd_op == 35) { // Not Sibinco USSD dialog
-                sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP);
-                ussd_op = -1;
-            }
-            // key.USR = (ussd_op < 0) ? umr : src->getUSR(key.abonentAddr, umr);
+        } else {
 
-            /*
-             if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
-             {
-             return;
-             }
-             */
-            session = SessionManager::Instance().getSession(key,aucmd);
-            if ( session.get() )
-                smsc_log_debug(log_,"SubmitResp: got session=%p key='%s' %s",
-                               session.get(), key.toString().c_str(), cmd->get_resp()->expiredResp ? "(expired)" : "");
+            smsc_log_debug(log_, "SubmitResp: continued... cmd=%p", cmd );
+            dst = cmd->getDstEntity();
+            sms = cmd->get_resp()->getOrgCmd()->get_sms();
+
+        }
+
+        ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
+            sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+        if (ussd_op == 35) { // Not Sibinco USSD dialog
+            sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP);
+            ussd_op = -1;
+        }
+
+        // if session is already locked
+        if ( session.get() ) {
+            session.moveLock(cmd);
+            smsc_log_debug(log_,"SubmitResp: got pre-locked session=%p", session.get() );
             break;
         }
 
-        smsc_log_debug(log_, "SubmitResp: continued...");
-        dst = cmd->getDstEntity();
-        sms = cmd->get_resp()->getOrgCmd()->get_sms();
         key = sms->getDestinationAddress();
+        // key.USR = (ussd_op < 0) ? umr : src->getUSR(key.abonentAddr, umr);
 
-        ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
-        if (ussd_op == 35) { // Not Sibinco USSD dialog
-            sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP); ussd_op = -1;
-        }
-
-        // we don't need session key as we already has session in command
-        session = SessionManager::Instance().getSession(key,aucmd);
-        if ( session.get() )
-            smsc_log_debug(log_, "SubmitResp: session got from command key=%s", session->sessionKey().toString().c_str());
+        session = SessionManager::Instance().getSession(key, aucmd);
+        if ( ! session.get() )
+            return;
+        
+        smsc_log_debug(log_,"SubmitResp: got session=%p key='%s' %s",
+                       session.get(), key.toString().c_str(), cmd->get_resp()->expiredResp ? "(expired)" : "");
 
     } while ( false ); // fake loop
-
-    if(!session.get())
-    {
-        // session is locked
-        return;
-    }
 
     smsc_log_debug(log_, "SubmitResp: RuleEngine processing...");
     re::RuleEngine::Instance().process( *cmd, *session.get(), st );
@@ -1121,14 +1104,9 @@ void StateMachine::processDeliveryResp(std::auto_ptr<SmppCommand> aucmd, ActiveS
 
     do { // fake loop
 
-        if ( session.get() ) {
-            session.moveLock(aucmd.get());
-            break;
-        }
-
-        if( cmd->getOperationId() == -1 )
+        if( cmd->getOperationId() == SCAGCommand::invalidOpId() )
         {
-            smsc_log_debug(log_, "DeliveryResp: got");
+            smsc_log_debug(log_, "DeliveryResp: got cmd=%p", cmd );
             SmppCommand* orgCmd;
 
             if(!cmd->get_resp()->hasOrgCmd())
@@ -1175,12 +1153,6 @@ void StateMachine::processDeliveryResp(std::auto_ptr<SmppCommand> aucmd, ActiveS
             dst = orgCmd->getEntity();
             cmd->setDstEntity(dst);
             sms = orgCmd->get_sms();
-            ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
-                sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
-            if (ussd_op == 35) { // Not Sibinco USSD dialog
-                sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP);
-                ussd_op = -1;
-            }
 
             // cmd->get_resp()->set_sms(sms);
             cmd->setServiceId(orgCmd->getServiceId());
@@ -1190,37 +1162,43 @@ void StateMachine::processDeliveryResp(std::auto_ptr<SmppCommand> aucmd, ActiveS
 
             sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
             sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
+            
+        } else {
 
-            key = sms->getOriginatingAddress();
-            // key.USR = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+            smsc_log_debug(log_, "DeliveryResp: continued... cmd=%p", cmd );
+            dst = cmd->getDstEntity();
+            sms = cmd->get_resp()->getOrgCmd()->get_sms();
 
-            session = SessionManager::Instance().getSession(key, aucmd);
-            if ( session.get() )
-                smsc_log_debug(log_,"DeliveryResp: got session=%p key='%s' %s",
-                               session.get(), key.toString().c_str(), cmd->get_resp()->expiredResp ? "(expired)" : "");
-            break;
         }
 
-        smsc_log_debug(log_, "DeliveryResp: continued...");
-        dst = cmd->getDstEntity();
-        sms = cmd->get_resp()->getOrgCmd()->get_sms();
         ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
             sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
         if (ussd_op == 35) { // Not Sibinco USSD dialog
-            sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP); ussd_op = -1;
+            sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP);
+            ussd_op = -1;
         }
 
-        // we don't need session key as we already has session in command
-        session = SessionManager::Instance().getSession(SessionKey(), aucmd);
-        if ( session.get() )
-            smsc_log_debug(log_, "SubmitResp: session got from command key=%s", session->sessionKey().toString().c_str());
+        // session may be already locked (when failure resp is sent)
+        if ( session.get() ) {
+            session.moveLock(cmd);
+            smsc_log_debug(log_,"DeliveryResp: got pre-locked session=%p", session.get() );
+            break;
+        }
+
+        key = sms->getOriginatingAddress();
+        // key.USR = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+
+        session = SessionManager::Instance().getSession(key, aucmd);
+
+        if ( ! session.get() ) {
+            // cannot get session
+            return;
+        }
+
+        smsc_log_debug(log_,"DeliveryResp: got session=%p key='%s' %s",
+                       session.get(), key.toString().c_str(), cmd->get_resp()->expiredResp ? "(expired)" : "");
 
     } while ( false ); // fake loop
-
-    if(!session.get())
-    {
-        return;
-    }
 
 //    smsc_log_debug(log_, "sms:%x sm: %d mp: %d rsm: %d rmp: %d", sms->hasBinProperty(Tag::SMPP_SHORT_MESSAGE), sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD), sms->hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE), sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD));
     smsc_log_debug(log_, "DeliveryResp: RuleEngine processing...");
@@ -1511,6 +1489,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
   }
 }
 
+
 void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSession session )
 {
     SmppCommand* cmd = aucmd.get();
@@ -1526,14 +1505,9 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
 
     do { // fake loop
 
-        if ( session.get() ) {
-            session.moveLock( aucmd.get() );
-            break;
-        }
-
-        if( cmd->getOperationId() == -1 )
+        if( cmd->getOperationId() == SCAGCommand::invalidOpId() )
         {
-            smsc_log_debug(log_, "DataSmResp: got");
+            smsc_log_debug(log_, "DataSmResp: got cmd=%p", cmd );
 
             SmppCommand* orgCmd;
             if(!cmd->get_resp()->hasOrgCmd())
@@ -1571,10 +1545,10 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
             if(!orgCmd->get_smsCommand().essentialSlicedResponse(cmd->get_status() || cmd->get_resp()->expiredResp))
                 return;
 
-            SmsCommand& smscmd = orgCmd->get_smsCommand();
             sms = orgCmd->get_sms();
             // cmd->get_resp()->set_sms(sms);
 
+            SmsCommand& smscmd = orgCmd->get_smsCommand();
             if (smscmd.dir == dsdSrv2Sc)
             {
                 cmd->get_resp()->set_dir(dsdSc2Srv);
@@ -1597,36 +1571,33 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
             cmd->setDstEntity(dst);
             cmd->set_dialogId( orgCmd->get_smsCommand().get_orgDialogId() );
 
-            key = (cmd->get_resp()->get_dir() == dsdSc2Srv || cmd->get_resp()->get_dir() == dsdSrv2Srv) ?
-                sms->getDestinationAddress() : sms->getOriginatingAddress();
-            // key.USR=sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+        } else {
 
-            session = SessionManager::Instance().getSession(key, aucmd);
-            if ( ! session.get() ) {
-                return;
-            }
+            smsc_log_debug(log_, "DataSmResp: continued... cmd=%p", cmd);
+            dst = cmd->getDstEntity();
+            sms = cmd->get_resp()->getOrgCmd()->get_sms();
 
-            smsc_log_debug( log_, "DataSmResp: got session. key='%s' %s",key.toString().c_str(), cmd->get_resp()->expiredResp ? "(expired)" : "");
+        }
+
+        if ( session.get() ) {
+            session.moveLock(cmd);
+            smsc_log_debug(log_,"DataSmResp: got pre-locked session=%p", session.get() );
             break;
         }
 
-        smsc_log_debug(log_, "DataSmResp: continued...");
-        dst = cmd->getDstEntity();
-        sms = cmd->get_resp()->getOrgCmd()->get_sms();
+        key = (cmd->get_resp()->get_dir() == dsdSc2Srv || cmd->get_resp()->get_dir() == dsdSrv2Srv) ?
+            sms->getDestinationAddress() : sms->getOriginatingAddress();
+        // key.USR=sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
 
-        session = SessionManager::Instance().getSession(SessionKey(), aucmd);
-        if ( session.get() )
-            smsc_log_debug(log_, "DataSmResp: session got from command=%p Address=%s", aucmd.get(), session->sessionKey().toString().c_str());
+        session = SessionManager::Instance().getSession(key, aucmd);
+        if ( ! session.get() ) {
+            return;
+        }
+
+        smsc_log_debug( log_, "DataSmResp: got session=%p. key='%s' %s",
+                        session.get(), key.toString().c_str(), cmd->get_resp()->expiredResp ? "(expired)" : "");
 
     } while ( false ); // fake loop
-
-    if(!session.get())
-    {
-        return;
-        // smsc_log_warn(log_,"Session not found. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
-        // cmd->get_resp()->set_status(smsc::system::Status::TRANSACTIONTIMEDOUT);
-        // rs = smsc::system::Status::TRANSACTIONTIMEDOUT;
-    }
 
     smsc_log_debug(log_, "DataSmResp: RuleEngine processing...");
     re::RuleEngine::Instance().process(*cmd,*session.get(), st);

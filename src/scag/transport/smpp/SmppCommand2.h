@@ -128,7 +128,13 @@ struct SmppCommandData
     uint32_t   dialogId;
     int        status;
     uint32_t   flags;
-    SmppCommandData() : uid(uint32_t(-1)) {}
+
+    SmppCommandData() :
+    priority( ScagCommandDefaultPriority ),
+    uid(uint32_t(-1)),
+    dialogId(uint32_t(-1)),
+    status(0),
+    flags(0) {}
 };
 
 
@@ -371,8 +377,10 @@ struct SmsCommand : public SmppCommandData
     bool essentialSlicedResponse( bool failed )
     {
         MutexGuard mg(slicedMutex_);
-        sliceCount_--;
-        if(!slicedRespSent_ && (failed || slicingRespPolicy_ == router::SlicingRespPolicy::ANY || !sliceCount_))
+        if ( slicedRespSent_ ) return true;
+        if ( failed ||
+             slicingRespPolicy_ == router::SlicingRespPolicy::ANY ||
+             (! --sliceCount_) )
             return slicedRespSent_ = true;
         return false;
     }
@@ -507,8 +515,11 @@ struct _SmppCommand
 class _SmppCommand
 {
 protected:
-    _SmppCommand() : cmdid_(UNKNOWN), serviceId_(-1), opId_(0), session_(0),
-    src_ent_(0), dst_ent_(0), shared_(&keep_), dta_(0) {}
+    _SmppCommand() : cmdid_(UNKNOWN), serviceId_(-1),
+    opId_( SCAGCommand::invalidOpId() ),
+    session_(0),
+    src_ent_(0), dst_ent_(0),
+    shared_(&keep_), dta_(0) {}
 
 private:
     _SmppCommand& operator = ( const _SmppCommand& );

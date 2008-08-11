@@ -22,9 +22,16 @@
 
 #include "Rule2.h"
 #include "RuleEngine2.h"
+#include "TransportRule.h"
 #include "XMLHandlers2.h"
 #include "util/regexp/RegExp.hpp"
 #include "scag/sessions/Operation.h"
+#include "scag/re/smpp/SmppTransportRule.h"
+
+
+namespace {
+smsc::core::synchronization::Mutex transportRuleLock;
+}
 
 
 namespace scag2 {
@@ -135,6 +142,33 @@ class RuleEngineImpl : public RuleEngine
     Mutex  rulesLock;
     Rules* rules;
 
+    static const unsigned maxrule = 3;
+    mutable std::auto_ptr< TransportRule > transportRules_[maxrule];
+
+    TransportRule* getTransportRule( TransportType tt ) const
+    {
+        const unsigned idx = unsigned(tt)-1;
+        if ( idx >= maxrule )
+            throw SCAGException("getTransportRule: transport=%u is wrong", unsigned(tt) );
+        std::auto_ptr< TransportRule >& autr = transportRules_[idx];
+        if ( ! autr.get() ) {
+            MutexGuard mg(transportRuleLock);
+            if ( ! autr.get() ) {
+                switch (tt) {
+                case SMPP :
+                    autr.reset( new smpp::SmppTransportRule );
+                    break;
+                default:
+                    // FIXME: impl
+                    throw SCAGException("getTransportRule: transport=%u is not impl yet", unsigned(tt) );
+                    break;
+                }
+            }
+        }
+        return autr.get();
+    }
+
+
     RulesReference getRules()
     {
     MutexGuard mg(rulesLock);
@@ -174,6 +208,7 @@ class RuleEngineImpl : public RuleEngine
 
     void ReadRulesFromDir(TransportType transport, const char * dir);
     Hash<Property> ConstantsHash;
+
 public:
     RuleEngineImpl();
     ~RuleEngineImpl();
@@ -398,26 +433,38 @@ std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const Rule
 
 void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus& rs)
 {
-    smsc_log_debug(logger,"Process RuleEngine with serviceId: %d", command.getServiceId());
-
     RulesReference rulesRef = getRules();
+    smsc_log_debug(logger,"Process RuleEngine (total=%u) with serviceId: %d",
+                   rulesRef.rules->rules.Count(), command.getServiceId());
 
     RuleKey key;
     key.serviceId = command.getServiceId();
     key.transport = command.getType();
 
     Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
-
     if (rulePtr) {
-
         if ( session.isNew( key.serviceId, key.transport ) ) {
             session.pushInitRuleKey( key.serviceId, key.transport );
             (*rulePtr)->processSession( session, rs );
             if ( rs.status != STATUS_OK ) return;
         }
-        (*rulePtr)->process( command, session, rs );
+    }
 
-    } else 
+    TransportRule* tr = getTransportRule( command.getType() );
+    assert( tr );
+
+    TransportRule::Guard g( *tr, command, session, rs );
+    try {
+        g.init();
+    } catch ( SCAGException& e ) {
+        smsc_log_error( logger, "TransportRule cannot start/locate operation. Details: %s", e.what() );
+        rs.result = smsc::system::Status::SMDELIFERYFAILURE;
+        rs.status = STATUS_FAILED;
+        return;
+    }
+    if ( rulePtr )
+        (*rulePtr)->process( command, session, rs );
+    else 
         smsc_log_debug(logger,"rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
 }
 

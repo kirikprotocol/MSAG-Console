@@ -10,13 +10,14 @@ namespace re {
 
 using namespace smpp;
 
+#if 0
 void SmppEventHandler::ProcessModifyRespCommandOperation(Session& session, SmppCommand& command, CSmppDescriptor& smppDescriptor)
 {
     Operation * operation = 0;
 
     if(session.getLongCallContext().continueExec)
     {
-        smsc_log_debug(logger,"resp: continue execution. operation id=%lld", command.getOperationId());
+        smsc_log_debug(logger,"resp: continue execution. operation id=%u", unsigned(command.getOperationId()));
 //        operation = session.setCurrentOperation(command.getOperationId());
         return;
     }
@@ -52,7 +53,7 @@ void SmppEventHandler::ProcessModifyCommandOperation(Session& session, SmppComma
 
     if(session.getLongCallContext().continueExec)
     {
-        smsc_log_debug(logger,"continue execution. operation_id=%lld", command.getOperationId());
+        smsc_log_debug(logger,"continue execution. operation_id=%u", unsigned(command.getOperationId()));
 //        operation = session.setCurrentOperation(command.getOperationId());
         return;
     }
@@ -156,7 +157,7 @@ void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppComma
     if (ruleStatus.status == STATUS_LONG_CALL)
         return;
 
-    smsc_log_debug(logger, "current operation status=%d", currentOperation->getStatus());
+    smsc_log_debug(logger, "current operation=%p status=%d(%s)", currentOperation, currentOperation->getStatus(), currentOperation->getNamedStatus());
 
     switch (smppDescriptor.cmdType)
     {
@@ -204,6 +205,7 @@ void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppComma
         break;
     }
 }
+#endif // if 0
 
 
 void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStatus& rs )
@@ -253,6 +255,7 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
                               (hi == EH_DATA_SM) ?
                               CommandBridge::getMessageBody(smppcommand) : "" );
     
+    /*
     try {
         ModifyOperationBeforeExecuting(session, smppcommand, smppDescriptor);
     } catch (SCAGException& e)
@@ -262,6 +265,7 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
         rs.status = STATUS_FAILED;
         return;
     }
+     */
 
     ActionContext* actionContext = 0;
     if(session.getLongCallContext().continueExec) {
@@ -294,9 +298,10 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
     if ( smppcommand.get_status() > 0) {
         rs.result = smppcommand.get_status();
         rs.status = STATUS_FAILED;
+        smsc_log_debug( logger, "Command status=%d(%x) overrides RE status", rs.result, rs.result );
     }
 
-    ModifyOperationAfterExecuting(session, smppcommand, rs, smppDescriptor);
+    // ModifyOperationAfterExecuting(session, smppcommand, rs, smppDescriptor);
     return;
 }
 

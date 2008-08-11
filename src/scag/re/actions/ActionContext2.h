@@ -167,6 +167,7 @@ namespace actions {
         void setContextScope( int id ) {
             contextId_ = id;
         }
+        int getContextScope() const { return contextId_; }
 
         /// get property, variable prefix defines the scope
         Property* getProperty(const std::string& var);

@@ -42,7 +42,10 @@ public:
         switch ( cmd->getType() ) {
         case SMPP: {
             /// FIXME: use smppmanager.lcmprocessingcount to make sure command is processed before shutdown
-            if ( action == RESERVE ) return 1;
+            if ( action == RESERVE ) {
+                c.release();
+                return 1;
+            }
 
             SmppManager::Instance().pushCommand( static_cast<SmppCommand*>(c.release()) );
             return 1;

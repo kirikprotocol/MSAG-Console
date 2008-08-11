@@ -90,7 +90,7 @@ public:
     virtual int getServiceId() const { return 0; }
     virtual void setServiceId( int ) {}
     
-    virtual int64_t getOperationId() const { return 0; }
+    virtual int64_t getOperationId() const { return invalidOpId(); }
     virtual void setOperationId(int64_t ) {}
 
     virtual uint8_t getCommandId() const { return 1; }

@@ -16,6 +16,78 @@ namespace {
 smsc::core::synchronization::Mutex sessionloggermutex;
 smsc::core::synchronization::Mutex sessionopidmutex;
 
+using namespace scag2::sessions;
+using namespace scag::exceptions;
+
+Hash<int> InitReadOnlyPropertiesHash()
+{
+    Hash<int> hs;
+    // hs["USR"]               = PROPERTY_USR;
+    hs["%ICC_STATUS"]        = 1; // PROPERTY_ICC_STATUS;
+    hs["$abonent"]           = 1; // PROPERTY_ABONENT;
+    return hs;
+}
+Hash<int> ReadOnlyPropertiesHash = InitReadOnlyPropertiesHash();
+
+
+class SessionPropertyScopeWrapper : public SessionPropertyScope
+{
+public:
+    SessionPropertyScopeWrapper( Session* patron ) : SessionPropertyScope(patron) {}
+
+    void addReadonly( const std::string& name ) {
+        readonly_.insert( name );
+    }
+
+    virtual Property* getProperty( const std::string& name )
+    {
+        Property* p = SessionPropertyScope::getProperty( name );
+        if ( isReadonly(name.c_str()) )
+            p = postProcessReadonly( name, p );
+        return p;
+    }
+
+protected:
+    virtual bool isReadonly( const char* name ) const {
+        return ( readonly_.find( name ) == readonly_.end() ? false : true );
+    }
+
+    // only a few readonly items are expected
+    Property* postProcessReadonly( const std::string& name, Property* p ) 
+    {
+        if ( name == "ICC_STATUS" ) {
+
+            Operation* op = session_->getCurrentOperation();
+            if ( ! op ) return 0;
+            if ( ! p ) {
+                AdapterProperty* np = new AdapterProperty( name, session_, op->getStatus());
+                properties_.Insert( name.c_str(), np );
+                p = np;
+            } else {
+                p->setInt( op->getStatus() );
+            }
+
+        } else if ( name == "abonent" ) {
+
+            if ( ! p ) {
+                AdapterProperty* np = new AdapterProperty( name, session_,
+                                                           session_->sessionKey().toString() );
+                properties_.Insert( name.c_str(), np );
+                p = np;
+            }
+        } else {
+
+            throw SCAGException( "logic error in SessionPropertyScope:processReadonly, unregistered name='%s' is requested", 
+                                 name.c_str() );
+        }
+        return p;
+    }
+
+private:
+    // we don't need hash here as only a few (<5) readonly values are expected.
+    std::set< std::string > readonly_;
+};
+
 } // namespace
 
 
@@ -27,7 +99,7 @@ using namespace scag::exceptions;
 
 // statics
 smsc::logger::Logger*  Session::log_ = 0;
-opid_type              Session::newopid_ = 0;
+opid_type              Session::newopid_ = SCAGCommand::invalidOpId();
 
 
 SessionPropertyScope::~SessionPropertyScope()
@@ -43,7 +115,7 @@ Property* SessionPropertyScope::getProperty( const std::string& name )
     if ( ptr ) {
         res = *ptr;
     } else {
-        res = new AdapterProperty( name, patron_, "" );
+        res = new AdapterProperty( name, session_, "" );
         properties_.Insert( name.c_str(), res );
     }
     return res;
@@ -58,6 +130,7 @@ Serializer& SessionPropertyScope::serialize( Serializer& o ) const
         char* key;
         AdapterProperty* value;
         for ( Hash< AdapterProperty* >::Iterator i(&properties_); i.Next(key,value); --sz ) {
+            if ( isReadonly(key) ) continue;
             o << key << value->getStr();
         }
         assert( sz == 0 );
@@ -76,7 +149,7 @@ Deserializer& SessionPropertyScope::deserialize( Deserializer& o ) throw (Deseri
     for ( ; sz > 0; --sz ) {
         o >> key >> value;
         if ( key.size() > 0 ) {
-            AdapterProperty* p = new AdapterProperty( key, patron_, value );
+            AdapterProperty* p = new AdapterProperty( key, session_, value );
             properties_.Insert( smsc::util::cStringCopy(key.c_str()), p );
         }
     }
@@ -123,12 +196,19 @@ private:
 };
 
 
+bool Session::isReadOnlyProperty( const char* name )
+{
+    return ::ReadOnlyPropertiesHash.GetPtr(name);
+}
+
+
 Session::Session( const SessionKey& key ) :
 key_(key),
 expirationPolicy_(COMMON),
 pkey_(key),
 command_(0),
 transactions_(0),
+nextContextId_(0),
 globalScope_(0),
 serviceScopes_(0),
 contextScopes_(0),
@@ -258,15 +338,24 @@ void Session::changed( AdapterProperty& )
 Operation* Session::setCurrentOperation( opid_type opid )
 {
     do {
-        if ( opid == 0 ) break;
 
-        Operation** optr = operations_.GetPtr(opid);
-        if ( ! optr ) throw SCAGException( "Cannot find operation id=%u, key=%s",
-                                           unsigned(opid), sessionKey().toString().c_str() );
+        uint8_t optype;
+        if ( opid == SCAGCommand::invalidOpId() ) {
+            
+            currentOperation_ = 0;
+            optype = -1;
+            
+        } else {
+
+            Operation** optr = operations_.GetPtr(opid);
+            if ( ! optr ) throw SCAGException( "Cannot find operation id=%u, key=%s",
+                                               unsigned(opid), sessionKey().toString().c_str() );
+            currentOperation_ = *optr;
+            optype = currentOperation_->type();
+        }
         currentOperationId_ = opid;
-        currentOperation_ = *optr;
-        smsc_log_debug( log_, "Session: set current operation=%p, id=%u, type=%d",
-                        currentOperation_, unsigned(opid), currentOperation_->type() );
+        smsc_log_debug( log_, "Session=%p set current operation=%p, opid=%u, type=%d",
+                        this, currentOperation_, unsigned(opid), int(optype) );
         // changed_ = true;
 
     } while ( false );
@@ -284,7 +373,7 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
     operations_.Insert( opid, auop.release() );
     if ( operationType == re::CO_USSD_DIALOG ) {
         // if the operation is already there, replace it
-        if ( ussdOperationId_ != 0 ) {
+        if ( ussdOperationId_ != SCAGCommand::invalidOpId() ) {
             Operation* oldop = operations_.Get( ussdOperationId_ );
             smsc_log_debug( log_, "** Session: old USSD operation exists, delete: session=%p, key=%s, op=%p, opid=%u",
                             this, sessionKey().toString().c_str(), oldop, unsigned(ussdOperationId_) );
@@ -296,8 +385,8 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
     currentOperationId_ = opid;
     currentOperation_ = op;
     // changed_ = true;
-    smsc_log_debug( log_, "** Session: create new operation: session=%p, key=%s, opid=%u, type=%d",
-                    this, sessionKey().toString().c_str(), unsigned(currentOperationId_), operationType );
+    smsc_log_debug( log_, "** Session: create new operation: session=%p, key=%s, opid=%u, type=%d, op=%p",
+                    this, sessionKey().toString().c_str(), unsigned(currentOperationId_), operationType, currentOperation_ );
     return currentOperation_;
 }
 
@@ -305,7 +394,7 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
 void Session::closeCurrentOperation()
 {
     if ( ! currentOperation_ ) return;
-    smsc_log_debug( log_, "Session: close current operation, session=%p key=%s op=%p opid=%u type=%d",
+    smsc_log_debug( log_, "** Session: close current operation, session=%p key=%s op=%p opid=%u type=%d",
                     this, sessionKey().toString().c_str(), currentOperation_,
                     unsigned(currentOperationId_), currentOperation_->type() );
 
@@ -313,9 +402,9 @@ void Session::closeCurrentOperation()
     delete currentOperation_;
     currentOperation_ = 0;
     if ( ussdOperationId_ == currentOperationId_ ) {
-        ussdOperationId_ = 0;
+        ussdOperationId_ = SCAGCommand::invalidOpId();
     }
-    currentOperationId_ = 0;
+    currentOperationId_ = SCAGCommand::invalidOpId();
     // changed_ = true;
 }
 
@@ -372,19 +461,27 @@ int Session::createContextScope()
 
 
 /// delete context Scope.
-void Session::deleteContextScope( int ctxid )
+bool Session::deleteContextScope( int ctxid )
 {
-    if ( ! contextScopes_ ) return;
+    if ( ! contextScopes_ ) return false;
     SessionPropertyScope** sptr = contextScopes_->GetPtr( ctxid );
-    if ( sptr ) delete *sptr;
-    contextScopes_->Delete( ctxid );
+    if ( sptr ) {
+        delete *sptr;
+        contextScopes_->Delete( ctxid );
+        return true;
+    }
+    return false;
 }
 
 
 /// @return session global Scope
 SessionPropertyScope* Session::getGlobalScope()
 {
-    if ( ! globalScope_ ) globalScope_ = new SessionPropertyScope(this);
+    if ( ! globalScope_ ) {
+        SessionPropertyScopeWrapper* w = new SessionPropertyScopeWrapper( this );
+        globalScope_ = w;
+        w->addReadonly( "abonent" );
+    }
     return globalScope_;
 }
 
@@ -424,11 +521,14 @@ SessionPropertyScope* Session::getOperationScope()
     if ( getCurrentOperation() == 0 )
         throw SCAGException( "session=%p cannot get operation scope, op=0", this );
 
-    if ( ! operationScopes_ ) operationScopes_ = new IntHash< SessionPropertyScope* >;
+    if ( ! operationScopes_ )
+        operationScopes_ = new IntHash< SessionPropertyScope* >;
     SessionPropertyScope** sptr = operationScopes_->GetPtr( getCurrentOperationId() );
     if ( ! sptr ) {
-        res = new SessionPropertyScope( this );
+        SessionPropertyScopeWrapper* w = new SessionPropertyScopeWrapper( this );
+        res = w;
         operationScopes_->Insert( getCurrentOperationId(), res );
+        w->addReadonly( "ICC_STATUS" );
     } else {
         res = *sptr;
     }
@@ -540,7 +640,7 @@ void Session::clearScopeHash( IntHash< SessionPropertyScope* >* s )
 opid_type Session::getNewOperationId() const
 {
     MutexGuard mg(::sessionopidmutex);
-    if ( ++newopid_ == opid_type(0) ) ++newopid_;
+    if ( ++newopid_ == SCAGCommand::invalidOpId() ) ++newopid_;
     return newopid_;
 }
 

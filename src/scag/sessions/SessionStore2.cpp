@@ -380,8 +380,8 @@ namespace {
         const SessionKey& key = session.sessionKey();
         {
             SCAGCommand* cmd = session.currentCommand();
-            smsc_log_debug(log_,"releaseSession(key=%s,session=%p,cmd=%p,flush=%d)",
-                           key.toString().c_str(), &session, cmd, flush?1:0 );
+            smsc_log_debug(log_,"releaseSession(key=%s, session=%p, session->ops=%d, cmd=%p, flush=%d)",
+                           key.toString().c_str(), &session, session.operationsCount(), cmd, flush?1:0 );
             if ( ! cmd ) {
                 smsc_log_error(log_, "logic error in releaseSession(sess=%p): session->cmd is not set", &session );
                 ::abort();

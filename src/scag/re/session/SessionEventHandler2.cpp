@@ -11,7 +11,7 @@ void SessionEventHandler::process(SCAGCommand& command, Session& session, RuleSt
 
 void SessionEventHandler::_process(Session& session, RuleStatus& rs)
 {
-    smsc_log_debug(logger, "Process EventHandler...");
+    smsc_log_debug(logger, "Process SessionEventHandler...");
 
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 

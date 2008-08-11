@@ -37,8 +37,9 @@ public:
     void receiveNewPart( int currentIndex, int lastIndex );
     void receiveNewResp( int currentIndex, int lastIndex );
 
-    ICCOperationStatus getStatus() { return status_; }
+    ICCOperationStatus getStatus() const { return status_; }
     void setStatus( ICCOperationStatus st ) { status_ = st; }
+    const char* getNamedStatus() const;
 
     void setFlag( uint32_t f ) { flags_ |= f; }
     void clearFlag( uint32_t f ) { flags_ &= ~f; }

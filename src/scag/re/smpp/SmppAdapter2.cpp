@@ -724,7 +724,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
         case Tag::SMPP_LANGUAGE_INDICATOR:
         case Tag::SMPP_SOURCE_PORT:
         case Tag::SMPP_DESTINATION_PORT:
-            data.setIntProperty(FieldId, property.getInt());
+            data.setIntProperty(FieldId, unsigned(property.getInt()));
             break;
         case SMS_SVC_TYPE:
             str = property.getStr();
@@ -762,9 +762,9 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
   
             if (IsShortSize(resStr.size()) && data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) 
             {
-                unsigned len;
-                data.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &len);
-                if (len) 
+                unsigned mlen;
+                data.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &mlen);
+                if (mlen) 
                 {
                    data.setBinProperty(Tag::SMPP_SHORT_MESSAGE, resStr.data(), resStr.size());
                    data.setIntProperty(Tag::SMPP_SM_LENGTH, resStr.size());
@@ -792,13 +792,13 @@ void SmppCommandAdapter::WriteDataSmRespField(int fieldId, AdapterProperty& prop
     resp->setAdditionalStatusInfoText(property.getStr().c_str());
     break;
   case SMPP_DELIVERY_FAILURE_REASON:
-    resp->setDeliveryFailureReason(property.getInt());
+    resp->setDeliveryFailureReason(uint8_t(property.getInt()));
     break;
   case SMPP_DPF_RESULT:
-    resp->setDpfResult(property.getInt());
+    resp->setDpfResult(uint8_t(property.getInt()));
     break;
   case SMPP_NETWORK_ERROR_CODE:
-    resp->setNetworkErrorCode(property.getInt());
+    resp->setNetworkErrorCode(unsigned(property.getInt()));
     break;
   }
 }
@@ -1378,7 +1378,7 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
     case SUBMIT_RESP:
         if (name!= "status") return;
         // if (!command.get_resp()) return;
-        command.set_status( property.getInt() );
+        command.set_status( int(property.getInt()) );
         break;
 
     default:

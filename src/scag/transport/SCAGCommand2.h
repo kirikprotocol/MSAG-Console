@@ -32,8 +32,12 @@ public:
     virtual int getServiceId() const = 0;
     virtual void setServiceId(int serviceId) = 0;
 
+    // initially 0
     virtual opid_type getOperationId() const = 0;
     virtual void setOperationId( opid_type op) = 0;
+    static inline opid_type invalidOpId() {
+        return 0;
+    }
 
     virtual uint8_t getCommandId() const = 0;
       
