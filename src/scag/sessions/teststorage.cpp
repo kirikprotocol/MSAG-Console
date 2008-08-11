@@ -24,7 +24,9 @@ SessionKey genKey( unsigned node )
     do {
         k = 89130000000ULL + random() % 1000000;
     } while ( n.nodeByNumber( k ) != node );
-    return SessionKey( k );
+    char buf[100];
+    snprintf( buf, sizeof(buf), ".1.1.%llu", k );
+    return SessionKey( buf );
 }
 
 
@@ -90,8 +92,8 @@ public:
     virtual int getServiceId() const { return 0; }
     virtual void setServiceId( int ) {}
     
-    virtual int64_t getOperationId() const { return invalidOpId(); }
-    virtual void setOperationId(int64_t ) {}
+    virtual opid_type getOperationId() const { return invalidOpId(); }
+    virtual void setOperationId(opid_type) {}
 
     virtual uint8_t getCommandId() const { return 1; }
 
@@ -135,8 +137,9 @@ class DummySessionFinalizer : public SessionFinalizer
 public:
     DummySessionFinalizer() {}
     virtual ~DummySessionFinalizer() {}
-    virtual void finalize( Session& s ) {
+    virtual bool finalize( Session& s ) {
         smsc_log_debug( slog, "session %p is finalized", &s );
+        return true;
     }
 };
 
