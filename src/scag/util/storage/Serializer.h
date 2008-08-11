@@ -25,6 +25,9 @@ public:
     inline static DeserializerException stringMismatch() {
         return DeserializerException("Deserializer: c-string mismatch");
     }
+    inline static DeserializerException dataTooBig() {
+        return DeserializerException("Deserializer: data length is too big");
+    }
 
     virtual ~DeserializerException() throw () {}
     virtual const char* what() const throw () { return what_; }
