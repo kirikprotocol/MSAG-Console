@@ -44,7 +44,7 @@ void SendRoutingInfoForSMReq::decode(const vector<unsigned char>& buf)
 SendRoutingInfoForSMResp::SendRoutingInfoForSMResp(const string& imsi, const string& msc)
 {
   ZERO_OCTET_STRING(_imsi);
-  _imsi.size = packNumString2BCD91(_imsi.buf, imsi.c_str(), imsi.length());
+  _imsi.size = packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
   res.imsi = _imsi;
 
   ZERO_OCTET_STRING(_msc);
