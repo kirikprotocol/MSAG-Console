@@ -285,10 +285,13 @@ AbonentStorageConfig::AbonentStorageConfig(uint32_t snumber, ConfigView& cfg, co
       sprintf(dirName, "%s%02d", storageDirPrefix.c_str(), i + 1);
       name = cfg.getString(dirName);
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.%s.%s> missed. Defaul value is '%02d'",
-                     storageType, dirName, i);
       sprintf(dirName, "%02d", i + 1);
       name = dirName;
+      if (storageNumber == 1) {
+        name = dbName;
+      }
+      smsc_log_warn(logger, "Parameter <MTPers.%s.%s> missed. Defaul value is '%s'",
+                     storageType, dirName, name.c_str());
     }
     localPath.push_back(name);
   }
@@ -304,7 +307,7 @@ InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* 
   try {
     localPath = cfg.getString("storageDir"); 
   } catch (...) {
-    localPath = DEF_STORAGE_NAME;
+    localPath = "";
     smsc_log_warn(logger, "Parameter <MTPers.%s.storageDir> missed. Defaul value is '/'",
                    storageType);
   }
