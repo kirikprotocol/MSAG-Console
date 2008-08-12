@@ -42,7 +42,7 @@ public:
   bool storageProcess(ConnectionContext* cx);
   void shutdown();
   void removeContext(IOTask* t, uint16_t contextsNumber = 1);
-  void init(uint16_t maxThreads, uint32_t maxSock, const char *logName);
+  void init(uint16_t maxThreads, uint32_t maxSock, uint16_t timeout, const char *logName);
   bool canStop();
   bool serverReady();
 

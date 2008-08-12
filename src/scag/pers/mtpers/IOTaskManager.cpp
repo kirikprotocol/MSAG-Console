@@ -56,13 +56,13 @@ void TasksSorter::assignTask(uint16_t index, SortedTask *task) {
 IOTaskManager::IOTaskManager(StorageManager& storageManager):storageManager_(storageManager) {
 }
 
-void IOTaskManager::init(uint16_t maxThreads, uint32_t maxSockets, const char *logName) {
-  //TODO: set conectionTimeout from config
-  connectionTimeout_ = 100;
+void IOTaskManager::init(uint16_t maxThreads, uint32_t maxSockets, uint16_t timeout, const char *logName) {
+  connectionTimeout_ = timeout;
   logger = Logger::getInstance(logName);
 
   maxThreads_ = maxThreads;
-  maxSockets_ = maxSockets;
+  int mod = maxSockets % maxThreads;
+  maxSockets_ = mod > 0 ? (maxSockets / maxThreads_) + 1 : maxSockets / maxThreads_;
   pool_.setMaxThreads(maxThreads_);
   taskSorter_.init(maxThreads_);
 
