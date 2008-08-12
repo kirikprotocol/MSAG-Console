@@ -1,8 +1,6 @@
 package ru.novosoft.smsc.util;
 
-import java.io.IOException;
-import java.io.EOFException;
-import java.io.RandomAccessFile;
+import java.io.*;
 
 /**
  * User: artem
@@ -46,8 +44,8 @@ public class RandomAccessFileReader {
     return bufferStartPos + bufferPos;
   }
 
-  public String readLine() throws IOException {
-    StringBuffer input = new StringBuffer();
+  public String readLine(String encoding) throws IOException {
+    ByteArrayOutputStream str = new ByteArrayOutputStream();
     int c = -1;
     boolean eol = false;
 
@@ -64,15 +62,15 @@ public class RandomAccessFileReader {
             seek(cur);
           break;
         default:
-          input.append((char)c);
+          str.write(c);
           break;
       }
     }
 
-    if ((c == -1) && (input.length() == 0))
+    if ((c == -1) && (str.size() == 0))
       return null;
 
-    return input.toString();
+    return str.toString(encoding);
   }
 
   public int read() throws IOException {

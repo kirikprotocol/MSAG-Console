@@ -129,7 +129,7 @@ else
       <td><%=StringEncoderDecoder.encode((String)message.getValue("msisdn"))%></td>
       <td><%=StringEncoderDecoder.encode(bean.getStateName((Message.State)message.getValue("state")))%></td>
       <td nowrap><%=StringEncoderDecoder.encode(bean.convertDateToString((Date)message.getValue("date")))%></td>
-      <td><%=StringEncoderDecoder.encode((String)message.getValue("message"))%></td>
+      <td nowrap><%=StringEncoderDecoder.encodeHTML((String)message.getValue("message"))%></td>
     </tr>
 <%  }
   }%>

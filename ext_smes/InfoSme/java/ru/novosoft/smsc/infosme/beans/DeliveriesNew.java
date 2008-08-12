@@ -290,10 +290,10 @@ public class DeliveriesNew extends InfoSmeBean {
   }
 
   public boolean isSplitDeliveriesFile() {
-    return pageData.isSplitDeliveriesFile();
+    return pageData.splitDeliveriesFile;
   }
 
   public void setSplitDeliveriesFile(boolean val) {
-    pageData.setSplitDeliveriesFile(val);
+    this.pageData.splitDeliveriesFile = val;
   }
 }

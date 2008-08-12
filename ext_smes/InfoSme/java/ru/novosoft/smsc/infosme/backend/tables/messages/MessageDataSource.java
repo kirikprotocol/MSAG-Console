@@ -13,12 +13,16 @@ import java.util.*;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
+import org.apache.log4j.Category;
+
 /**
  * User: artem
  * Date: 29.05.2008
  */
 
 public class MessageDataSource extends AbstractDataSourceImpl {
+
+  private static final Category log = Category.getInstance(MessageDataSource.class);
 
   private static final SimpleDateFormat dirNameFormat = new SimpleDateFormat("yyMMdd");
   private static final SimpleDateFormat msgDateFormat = new SimpleDateFormat("yyMMddhhmmss");
@@ -27,7 +31,7 @@ public class MessageDataSource extends AbstractDataSourceImpl {
 
   public MessageDataSource(String storeDir) {
     super(new String[]{"state", "date", "msisdn", "region", "message"});
-    this.storeDir = storeDir;
+    this.storeDir = "/data/users/skv/install/services/InfoSme/store"; //todo
   }
 
   public QueryResultSet query(Query query_to_run) {
@@ -45,7 +49,7 @@ public class MessageDataSource extends AbstractDataSourceImpl {
     cal.setTime(fromDate);
 
     int total = 0;
-    while (cal.getTime().before(tillDate)) {
+    while (cal.getTime().before(tillDate) || cal.getTime().equals(tillDate)) {
 
       String dirName = dirNameFormat.format(cal.getTime());
       final String fileNamePrefix = String.valueOf(cal.get(Calendar.HOUR_OF_DAY));
@@ -69,34 +73,30 @@ public class MessageDataSource extends AbstractDataSourceImpl {
 
         long idbase = y2 << 60 | y1 << 56 | m2 << 52 | m1 << 48 | d2 << 44 | d1 << 40 | h2 << 36 | h1 << 32;
         String encoding = System.getProperty("file.encoding");
-			    
+
         for (int i=0; i< files.length; i++) {
-          File file = files[i];          
+          File file = files[i];
 
           RandomAccessFile f = null;
+          int j=0;
+          if (log.isDebugEnabled())
+            log.debug("Start reading messages from file: " + file.getName());
           try {
             f = new RandomAccessFile(file, "r");
 
             RandomAccessFileReader is = new RandomAccessFileReader(f);
 
-            String line = is.readLine(); // Skip first string
+            String line = is.readLine(encoding); // Skip first string
 
             while(true) {
               long offset =is.getFilePointer();
-              line = is.readLine();
+              line = is.readLine(encoding);
               if (line == null)
                 break;
 
+              j++;
 
-              // recode read line accourding to file.encoding
-              line = new String(line.getBytes(), encoding);
-//              byte[] buff = new byte[line.length()];
-//              int lsz = line.length();
-//              for( int k = 0; k < lsz; k++)
-//                buff[k] = (byte)line.charAt(k);
-//              line = new String(buff, encoding);
-			  		
-              AdvancedStringTokenizer st = new AdvancedStringTokenizer(line, ",");
+              StringTokenizer st = new StringTokenizer(line, ",");
               int state = Integer.parseInt(st.nextToken().trim());
               if (state == Message.State.DELETED.getId())
                 continue;
@@ -129,6 +129,8 @@ public class MessageDataSource extends AbstractDataSourceImpl {
               } catch (IOException e) {
               }
           }
+          if (log.isDebugEnabled())
+            log.debug(j + " messages have readed from file: " + file.getName());
         }
       }
       cal.set(Calendar.HOUR, cal.get(Calendar.HOUR) + 1);
@@ -146,7 +148,7 @@ public class MessageDataSource extends AbstractDataSourceImpl {
     message = message.substring(1, message.length() - 1);
 
     message = message.replaceAll("\\\\n", "\n");
-    message = message.replaceAll("\\\"", "\"");
+    message = message.replaceAll("\\\\\"", "\"");
 
 //    message.replaceAll("\\\\", "\\");
 

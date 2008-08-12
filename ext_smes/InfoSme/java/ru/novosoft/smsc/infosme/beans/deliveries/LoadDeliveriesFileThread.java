@@ -22,7 +22,7 @@ import ru.novosoft.smsc.util.WebAppFolders;
 
 public class LoadDeliveriesFileThread extends Thread{
 
-  private static final Category log = Category.getInstance(SplitDeliveriesFileThread.class);
+  private static final Category log = Category.getInstance(LoadDeliveriesFileThread.class);
 
   public static final int STATUS_INITIALIZATION = 0;
   public static final int STATUS_PROCESSING = 1;
@@ -127,6 +127,7 @@ public class LoadDeliveriesFileThread extends Thread{
 
         String msisdn;
         outputFile = new OutputFile("All", Functions.createNewFilenameForSave(new File(WebAppFolders.getWorkFolder(), "INFO_SME_abonents.region_ALL.list")));
+        progress.subjectsFound = 1;
         while ((msisdn = readLine(is)) != null && started) {
           progress.recordsProcessed++;
 
@@ -137,6 +138,8 @@ public class LoadDeliveriesFileThread extends Thread{
             progress.inblackList++;
             continue;
           }
+
+          outputFile.addMsisdn(msisdn);
         }
 
         outputFiles.put("All Regions", outputFile);

@@ -2,6 +2,7 @@ package ru.novosoft.smsc.infosme.beans.deliveries;
 
 import ru.novosoft.smsc.infosme.backend.Task;
 import ru.novosoft.smsc.infosme.backend.MultiTask;
+import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.config.Config;
 
@@ -29,7 +30,7 @@ public class ProcessFilePage extends DeliveriesPage {
   public DeliveriesPage mbNext(HttpServletRequest request) throws AdminException {
 
     switch(thread.getStatus()) {
-      case SplitDeliveriesFileThread.STATUS_DONE:
+      case LoadDeliveriesFileThread.STATUS_DONE:
         HashMap outputFiles = thread.getOutputFiles();
 
         if (outputFiles.isEmpty())
@@ -37,22 +38,15 @@ public class ProcessFilePage extends DeliveriesPage {
 
         final HashMap inputFiles = new HashMap(outputFiles.size());
         final MultiTask task = new MultiTask();
-        try {
-          task.setAddress(pageData.getInfoSmeContext().getConfig().getString("InfoSme.Address"));
-        } catch (Config.ParamNotFoundException e) {
-          throw new AdminException(e.getMessage());
-        } catch (Config.WrongParamTypeException e) {
-          throw new AdminException(e.getMessage());
-        }
 
         Map.Entry e;
         for (Iterator iter = outputFiles.entrySet().iterator(); iter.hasNext();) {
           e = (Map.Entry)iter.next();
           String region = (String)e.getKey();
-          SplitDeliveriesFileThread.RegionOutputFile outputFile = (SplitDeliveriesFileThread.RegionOutputFile)e.getValue();
+          LoadDeliveriesFileThread.OutputFile outputFile = (LoadDeliveriesFileThread.OutputFile)e.getValue();
 
           final Task t = pageData.getInfoSmeContext().getTaskManager().createTask();
-          resetTask(t, request);
+          resetTask(t, pageData.getInfoSmeContext(), request);
           t.setSubject(region);
           t.setActualRecordsSize(outputFile.getTotalSize());
 
@@ -72,8 +66,8 @@ public class ProcessFilePage extends DeliveriesPage {
 
         return new EditTaskPage(pageData);
 
-      case SplitDeliveriesFileThread.STATUS_CANCELED:
-      case SplitDeliveriesFileThread.STATUS_ERROR:
+      case LoadDeliveriesFileThread.STATUS_CANCELED:
+      case LoadDeliveriesFileThread.STATUS_ERROR:
         return new StartPage(pageData);
       default:
         return this;
@@ -81,7 +75,7 @@ public class ProcessFilePage extends DeliveriesPage {
   }
 
   public DeliveriesPage mbCancel(HttpServletRequest request) throws AdminException {
-    if (thread.getStatus() == SplitDeliveriesFileThread.STATUS_PROCESSING || thread.getStatus() == SplitDeliveriesFileThread.STATUS_INITIALIZATION) {
+    if (thread.getStatus() == LoadDeliveriesFileThread.STATUS_PROCESSING || thread.getStatus() == LoadDeliveriesFileThread.STATUS_INITIALIZATION) {
       thread.shutdown();
       return this;
     }
@@ -103,7 +97,14 @@ public class ProcessFilePage extends DeliveriesPage {
     return request.isUserInRole("infosme-admin");
   }
 
-  private static void resetTask(Task task, HttpServletRequest request) {
+  private static void resetTask(Task task, InfoSmeContext context, HttpServletRequest request) throws AdminException {
+    try {
+      task.setAddress(context.getConfig().getString("InfoSme.Address"));
+    } catch (Config.ParamNotFoundException e) {
+      throw new AdminException(e.getMessage());
+    } catch (Config.WrongParamTypeException e) {
+      throw new AdminException(e.getMessage());
+    }
     task.setDelivery(true);
     task.setProvider(Task.INFOSME_EXT_PROVIDER);
     task.setPriority(10);

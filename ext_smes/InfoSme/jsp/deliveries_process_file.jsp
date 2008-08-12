@@ -15,7 +15,8 @@
   </div>
 </div>
 
-<script type="text/javascript">
+<script language="javascript" type="text/javascript">
+  statusDataSource.hasObservers();
   statusDataSource.addObserver(new ElementObserver({elementId: 'tdcStatus', field: 'status'}));
   statusDataSource.addObserver(new ElementObserver({elementId: 'tdcRecordsProcessed', field: 'recordsProcessed'}));
   statusDataSource.addObserver(new ElementObserver({elementId: 'tdcSubjectsFound', field: 'subjectsFound'}));
@@ -26,7 +27,8 @@
     statusDataSource.update();
     window.setTimeout(refreshProgressStatus, 5000);
   }
-  refreshProgressStatus();
+
+  window.setTimeout(refreshProgressStatus, 5000);
 </script>
 
 <%

@@ -19,7 +19,13 @@ public class EditTaskPage extends DeliveriesPage {
 
   protected EditTaskPage(DeliveriesPageData pageData) {
     super(pageData);
-    taskToPage(pageData.getTask().getTask(pageData.activeTaskSubject));
+    Task task = pageData.getTask().getTask(pageData.activeTaskSubject);
+    taskToPage(task);
+    pageData.activeWeekDays = new String[task.getActiveWeekDays().size()];
+    int i=0;
+    for (Iterator iter = task.getActiveWeekDays().iterator(); iter.hasNext(); i++)
+      pageData.activeWeekDays[i] = (String)iter.next();
+    pageData.sourceAddress = task.getAddress();
   }
 
   private long calculateTotalTime(Task task)  {

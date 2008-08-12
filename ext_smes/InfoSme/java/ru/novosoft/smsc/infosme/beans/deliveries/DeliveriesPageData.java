@@ -80,6 +80,7 @@ public class DeliveriesPageData {
     activeTaskSubject = null;
     oldActiveTaskSubject = null;
     name = null;
+    splitDeliveriesFile=true;
     transliterate = false;
     retryOnFail = false;
     retryTime = null;

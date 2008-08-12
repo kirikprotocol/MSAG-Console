@@ -13,7 +13,7 @@
     </tr>
     <tr class=row1>
       <th><%= getLocString("infosme.label.split_file")%></th>
-      <td><input class=check type=checkbox name="splitDeliveriesFile" <%=deliveriesBean.isSplitDeliveriesFile() ? "checked" : ""%>/></td>
+      <td><input class=check type=checkbox name=splitDeliveriesFile id=splitDeliveriesFile <%=deliveries_bean.isSplitDeliveriesFile() ? "checked" : ""%>></td>
     </tr>
   </table>
 </div>

@@ -17,7 +17,9 @@ var ElementObserver = new Class({
 ElementObserver.implement(new Options);
 
 
-var StringTableDataSource = XHR.extend({
+var StringTableDataSource = new Class({
+  Extends: Request,
+
   options: {
     url : '',
     onComplete : Class.empty

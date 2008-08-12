@@ -10,6 +10,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Enumeration;
 
 /**
  * User: artem
@@ -22,10 +25,16 @@ public class LoadFilePage extends DeliveriesPage {
   }
 
   private DeliveriesPage loadFile(HttpServletRequest request) throws AdminException {
+
     // Check request is multipart
     final MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");
     if (multi == null)
       return new StartPage(pageData);
+
+    if (multi.getParameter("splitDeliveriesFile") != null)
+      pageData.setSplitDeliveriesFile(true);
+    else
+      pageData.setSplitDeliveriesFile(false);
 
     // Receive and analize file
     MultipartDataSource dataFile = null;
@@ -42,7 +51,7 @@ public class LoadFilePage extends DeliveriesPage {
       deliveriesFile.deleteOnExit();
 
       pageData.setDeliveriesFile(deliveriesFile);
-      
+
       return new ProcessFilePage(pageData);
 
     } catch (Throwable t) {
