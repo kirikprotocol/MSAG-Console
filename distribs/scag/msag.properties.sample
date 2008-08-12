@@ -82,6 +82,20 @@ cpers.regions_config_name=/opt/home/msag_stbl/msag_distr/services/cpers/conf/reg
 cpers.service.args=Central Personalization
 cpers.service.autostart=false
 
+mtpers.port=23880
+mtpers.listen_host=0.0.0.0
+mtpers.connect_host=127.0.0.1
+mtpers.timeout=300
+mtpers.io_pool_size=10
+mtpers.connections=100
+mtpers.storage_dir=/home/odarchenko/new_msag_64/distr/storage/mtpers
+mtpers.storage_number=1
+mtpers.storage_queue_size=20
+mtpers.abonent_storage_name=abonent
+mtpers.infrastruct_storage_dir=/
+mtpers.service.args=MultiThred Personalization
+mtpers.service.autostart=true
+
 rule_editor.ping_port=23987
 rule_editor.ping_timeout=10000
 
