@@ -110,13 +110,13 @@ public:
 		if(!isFileExists() || clearFile)
 		{
 			int ret;
-			if(0 != (ret = CreateRBTreeFile()))
+			if(0 > (ret = CreateRBTreeFile()))
 				return ret;
 		}
 		else
 		{
 			int ret;
-			if(0 != (ret = OpenRBTreeFile()))
+			if(0 > (ret = OpenRBTreeFile()))
 				return ret;
 		}
 		running = true;
@@ -190,7 +190,9 @@ public:
 	virtual void startChanges(RBTreeNode* node, int operation)
 	{
 //	    smsc_log_debug(logger, "startChanges. node = (%d)%p, operation = %d", (long)node - (long)rbtree_body, node, operation);        
-	    currentOperation = operation;
+        //TODO: if changedNodes not empty call compliteChanges
+
+        currentOperation = operation;
 	    changedNodes.erase(changedNodes.begin(), changedNodes.end());
 	    changedNodes.push_back(node);
 	}
@@ -288,6 +290,7 @@ private:
 		header->cells_free = _growth;
 		rbtree_f.Seek(rbtFileLen, SEEK_SET);
 		rbtree_f.Write(rbtree_addr + rbtFileLen, newRbtFileLen - rbtFileLen);
+        //TODO: make transactional write with startChanges and compliteChanges
 		rbtree_f.Seek(0, SEEK_SET);
 		rbtree_f.Write(rbtree_addr, sizeof(rbtFileHeader));
         rbtFileLen = newRbtFileLen;        
@@ -393,6 +396,7 @@ private:
 		rbtree_f.Read(rbtree_addr, len);
 		header = (rbtFileHeader*)rbtree_addr;
 		rbtree_body = rbtree_addr + sizeof(rbtFileHeader);
+        //TODO: calc rbtFileLen 
         rbtFileLen = len;
 		smsc_log_debug(logger, "OpenRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d, rbtFileLen %d", header->cells_used, header->cells_free, header->cells_count, header->first_free_cell, header->root_cell, header->nil_cell, rbtFileLen);
 		return ret;
