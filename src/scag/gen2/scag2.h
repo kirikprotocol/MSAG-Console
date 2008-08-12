@@ -7,17 +7,18 @@
 #include "core/threads/ThreadPool.hpp"
 #include "core/threads/ThreadedTask.hpp"
 #include "logger/Logger.h"
-#include "config/route/RouteConfig.h"
-#include "stat/Statistics.h"
-#include "stat/StatisticsManager.h"
+#include "scag/config/route/RouteConfig.h"
+#include "scag/stat/Statistics.h"
+#include "scag/stat/StatisticsManager.h"
 // #include "transport/http/Managers.h"
 // #include "transport/http/HttpProcessor.h"
-#include "transport/smpp/router/route_manager.h"
-#include "transport/smpp/SmppManager2.h"
-#include "transport/smpp/SmppManagerAdmin2.h"
-#include "util/Reffer.h"
+#include "scag/transport/smpp/router/route_manager.h"
+#include "scag/transport/smpp/SmppManager2.h"
+#include "scag/transport/smpp/SmppManagerAdmin2.h"
+#include "scag/util/Reffer.h"
 #include "smeman/smsccmd.h"
 #include "sms/sms.h"
+#include "scag/sessions/base/SessionManager2.h"
 //#include "sme/SmppBase.hpp"
 //#include "util/config/smeman/SmeManConfig.h"
 
@@ -168,6 +169,7 @@ protected:
 
   friend class StatusSme;
 
+    std::auto_ptr< sessions::SessionManager >  sessman_;
 };
 
 } // scag2

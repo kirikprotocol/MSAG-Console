@@ -2,7 +2,7 @@
 #define __SCAG_RULE_H__
 
 #include "core/buffers/IntHash.hpp"
-#include "scag/sessions/Session2.h"
+#include "scag/sessions/base/Session2.h"
 #include "EventHandler2.h"
 #include "RuleStatus.h"
 

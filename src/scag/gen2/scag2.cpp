@@ -10,8 +10,8 @@
 #include "scag/pers/PersClient.h"
 #include "scag/re/RuleEngine2.h"
 #include "scag/re/XMLHandlers2.h"
-#include "scag/scag2.h"
-#include "scag/sessions/SessionManager2.h"
+#include "scag2.h"
+#include "scag/sessions/impl/SessionManager2.h"
 #include "scag/stat/StatisticsManager.h"
 // #include "scag/transport/http/HttpRouter.h"
 #include "scag/transport/smpp/router/load_routes.h"
@@ -90,7 +90,7 @@ using scag2::config::ConfigManager;
 using scag::bill::BillingManager;
 using scag::stat::StatisticsManager;
 using scag::config::BillingManagerConfig;
-using scag2::sessions::SessionManager;
+using scag2::sessions::SessionManagerImpl;
 using scag2::lcm::LongCallManager;
 using smsc::util::findConfigFile;
 
@@ -139,11 +139,14 @@ void Scag::init( unsigned mynode )
 
     //*********** SessionManager initialization **************
     try{
-      smsc_log_info(log, "Session Manager is starting..." );
+        smsc_log_info(log, "Session Manager is starting..." );
 
-      SessionManager::Init(mynode, cfg.getSessionManConfig(), fsq);
+        SessionManagerImpl* sm = new SessionManagerImpl;
+        sessman_.reset( sm );
+        sm->init( cfg.getSessionManConfig(), mynode, fsq );
+        sm->Start();
 
-      smsc_log_info(log, "Session Manager started" );
+        smsc_log_info(log, "Session Manager started" );
     }catch(exception& e){
       smsc_log_warn(log, "Scag.init exception: %s", e.what());
       __warning__("Sessioan Manager is not started.");

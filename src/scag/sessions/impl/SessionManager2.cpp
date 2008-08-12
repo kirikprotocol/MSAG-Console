@@ -1,163 +1,35 @@
-#include <set>
-#include <unistd.h>
-#include <time.h>
-
-#include "SessionExpirationQueue.h"
-#include "SessionFinalizer.h"
 #include "SessionManager2.h"
-#include "SessionStore2.h"
-#include "core/buffers/XHash.hpp"
-#include "core/synchronization/Mutex.hpp"
-#include "core/synchronization/Event.hpp"
-#include "core/synchronization/EventMonitor.hpp"
-#include "logger/Logger.h"
-#include "scag/config/ConfigListener2.h"
-#include "scag/config/ConfigManager2.h"
-#include "scag/exc/SCAGExceptions.h"
-#include "scag/lcm/LongCallManager2.h"
-// #include "scag/re/CommandBridge.h"
-#include "scag/re/RuleEngine2.h"
 #include "scag/util/UnlockMutexGuard.h"
-#include "scag/util/singleton/Singleton.h"
-#include "scag/util/sms/HashUtil.h"
-#include "util/int.h"
 
 namespace scag2 {
+
+using namespace config;
+
 namespace sessions {
 
-    const time_t SessionManager::DEFAULT_EXPIRE_INTERVAL = 60;
+// const time_t SessionManagerImpl::DEFAULT_EXPIRE_INTERVAL = 60;
 
-    using namespace smsc::core::threads;
-    using namespace smsc::core::synchronization;
-    using namespace scag::util::singleton;
-    using namespace scag::exceptions;
-    using namespace smsc::core::buffers;
-    using namespace scag::util::sms;
-    using namespace lcm;
-    using namespace re;
-    using namespace scag2::config;
+using namespace smsc::core::threads;
+using namespace smsc::core::synchronization;
+// using namespace scag::util::singleton;
+using namespace scag::exceptions;
+using namespace smsc::core::buffers;
+// using namespace scag::util::sms;
+using namespace lcm;
+using namespace re;
 
-    using scag2::config::SessionManagerConfig;
-    using scag::util::UnlockMutexGuard;
+using scag2::config::SessionManagerConfig;
+using scag::util::UnlockMutexGuard;
 
-    using smsc::logger::Logger;
-
-    class SessionManagerImpl :
-    public Thread,
-    public ConfigListener,
-    public SessionManager,
-    public LongCallInitiator,
-    public SessionFinalizer,
-    public SessionExpirationQueue
-    {
-    private:
-
-
-    struct ExpireData 
-    {
-        ExpireData( time_t expTime, const SessionKey& k ) : expiration(expTime), key(k) {}
-        bool operator < ( const ExpireData& e ) const {
-            return ( expiration < e.expiration || 
-                     ( expiration == e.expiration && key < e.key ) );
-        }
-                
-        bool operator == ( const ExpireData& e ) const {
-            return ( expiration == e.expiration ) && ( key == e.key );
-        }
-
-    public:
-        time_t      expiration;
-        SessionKey  key;
-    };
-
-        typedef std::set< ExpireData >  ExpireSet;
-        // typedef std::multiset<CSessionAccessData*,FWakeTimeCompare> CSessionSet;
-        // typedef std::multiset<CSessionAccessData*>::iterator CSessionSetIterator;
-        // typedef XHash<CSessionKey,CSessionSetIterator,CSessionKey> CSessionExpireHash;
-        // typedef XHash<CSessionKey,SessionPtr,CSessionKey> CSessionHash;
-
-    public:
-        SessionManagerImpl();
-        virtual ~SessionManagerImpl();
-
-        // void AddRestoredSession(Session * session);
-
-        void init( const scag2::config::SessionManagerConfig& config );
-
-        // virtual void releaseSession(SessionPtr session);
-
-        virtual void getSessionsCount( uint32_t& sessionsCount,
-                                       uint32_t& sessionsLockedCount );
-
-        void Start();
-
-        // virtual SessionPtr newSession(CSessionKey& sessionKey);
-
-        virtual void continueExecution(LongCallContext* context, bool dropped);
-
-
-        /// --- interface of ConfigListener
-        virtual void configChanged();
-
-        /// --- interface of SessionExpirationQueue
-        virtual void scheduleExpire( time_t expirationTime,
-                                     const SessionKey& key );
-
-        /// --- interface of SessionFinalizer
-        virtual bool finalize( Session& s );
-
-    protected:
-
-        // SessionManager interface
-        virtual ActiveSession fetchSession( const SessionKey& key,
-                                            SCAGCommand*      cmd );
-
-    private:
-
-        /// --- interface of Thread
-        virtual int Execute();
-
-        void Start( int ); // to make compiler happy
-        void Stop();
-        bool isStarted();
-        int  processExpire();
-        // void deleteSession(SessionPtr& session);
-        // bool processDeleteSession(SessionPtr& session);
-        // bool deleteQueuePop(SessionPtr& s);
-        // void deleteQueuePush(SessionPtr& s, bool expired);
-
-        // uint16_t getNewUSR(Address& address);
-        // uint16_t getLastUSR(Address& address);
-
-        // void reorderExpireQueue(Session* session);
-
-    public:
-        unsigned          nodeNumber;
-        SCAGCommandQueue* cmdqueue;
-
-    private:
-        EventMonitor    expireMonitor_;
-        ExpireSet       expireSet_;
-        // CSessionHash    SessionHash;
-        // CSessionExpireHash SessionExpireHash;
-        // CUMRHash        UMRHash;
-        Logger*         log_;
-
-        Mutex           stopLock_;
-        bool            started_;
-
-        std::auto_ptr<SessionStore>  store_;
-        scag2::config::SessionManagerConfig  config_;
-        // CyclicQueue< ExpireData > deleteQueue_;
-    };
+using smsc::logger::Logger;
 
 // ################## Singleton related issues ##################
 
 static bool  bSessionManagerInited = false;
 static Mutex initSessionManagerLock;
 
-inline unsigned GetLongevity(SessionManager*) { return 6; } // ? Move upper ?
-typedef SingletonHolder<SessionManagerImpl> SingleSM;
+// inline unsigned GetLongevity(SessionManager*) { return 6; } // ? Move upper ?
+// typedef SingletonHolder<SessionManagerImpl> SingleSM;
 
 /*
 void SessionManagerCallback(void * sm,Session * session)
@@ -235,6 +107,7 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
 #endif // if 0
 
 
+/*
 void SessionManager::Init( unsigned theNodeNumber,
                            const scag2::config::SessionManagerConfig& config,
                            SCAGCommandQueue&           cmdqueue )
@@ -252,7 +125,9 @@ void SessionManager::Init( unsigned theNodeNumber,
         }
     }
 }
+ */
 
+/*
 SessionManager& SessionManager::Instance()
 {
     if (!bSessionManagerInited)
@@ -263,12 +138,13 @@ SessionManager& SessionManager::Instance()
     }
     return SingleSM::Instance();
 }
+ */
 
 
 SessionManagerImpl::SessionManagerImpl() :
 ConfigListener(SESSIONMAN_CFG),
-nodeNumber(-1),
-cmdqueue(0),
+nodeNumber_(-1),
+cmdqueue_(0),
 log_(0),
 started_(false)
 {
@@ -307,19 +183,24 @@ SessionManagerImpl::~SessionManagerImpl()
 }
 
 
-void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg ) // possible throws exceptions
+void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg,
+                               unsigned nodeNumber,
+                               SCAGCommandQueue& cmdqueue ) // possible throws exceptions
 {
-    this->config_ = cfg;
+    nodeNumber_ = nodeNumber;
+    cmdqueue_ = &cmdqueue;
+    config_ = cfg;
     // expireSchedule = time(NULL) + DEFAULT_EXPIRE_INTERVAL;
 
     if (!log_) log_ = Logger::getInstance("sess.man");
 
     if ( ! store_.get() )
-        store_.reset( SessionStore::create( *this,
-                                            *this ) );
+        store_.reset( new SessionStoreImpl( *this,
+                                            *this,
+                                            new SessionAllocator() ) );
 
-    store_->init( nodeNumber,
-                  *cmdqueue,
+    store_->init( nodeNumber_,
+                  *cmdqueue_,
                   cfg.dir,
                   cfg.name,
                   cfg.indexgrowth,
@@ -348,7 +229,10 @@ void SessionManagerImpl::configChanged()
 {
     // MutexGuard mt(inUseMonitor);
     Stop();
-    init( ConfigManager::Instance().getSessionManConfig() );
+    assert( cmdqueue_ );
+    init( ConfigManager::Instance().getSessionManConfig(),
+          nodeNumber_,
+          *cmdqueue_ );
     Start();
 }
 

@@ -5,7 +5,7 @@
 #include <string>
 #include <core/buffers/Hash.hpp>
 #include "scag/re/RuleStatus2.h"
-#include "scag/sessions/Session2.h"
+#include "scag/sessions/base/Session2.h"
 // #include "scag/util/properties/Properties2.h"
 #include "scag/bill/BillingManager.h"
 #include "scag/re/CommandBridge.h"

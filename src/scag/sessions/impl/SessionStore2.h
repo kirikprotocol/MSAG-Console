@@ -1,88 +1,123 @@
-#ifndef _SCAG_SESSIONS_SESSIONSTORE2_H
-#define _SCAG_SESSIONS_SESSIONSTORE2_H
+#ifndef _SCAG_SESSIONS_IMPL_SESSIONSTORE2_H
+#define _SCAG_SESSIONS_IMPL_SESSIONSTORE2_H
 
 #include "time.h"
 #include <vector>
 
-// #include "Session2.h"
-#include "scag/transport/SCAGCommand2.h"
-#include "SessionKey.h"
-// #include "SessionFinalizer.h"
-// #include "SessionExpirationQueue.h"
-#include "scag/config/ConfigView.h"
+#include "logger/Logger.h"
+#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/EventMonitor.hpp"
+#include "scag/sessions/base/Session2.h"
+#include "scag/sessions/base/SessionStore2.h"
+#include "scag/util/storage/HashedMemoryCache.h"
+#include "scag/util/storage/PageFileDiskStorage.h"
+#include "scag/util/storage/RBTreeIndexStorage.h"
+#include "scag/util/storage/StorageIface.h"
+#include "scag/util/storage/CompositeDiskStorage.h"
 
 namespace scag2 {
 namespace sessions {
 
-    using namespace scag2::transport;
-    class Session;
-    class SessionFinalizer;
-    class SessionExpirationQueue;
+class SessionFinalizer;
+class SessionExpirationQueue;
 
 
-class SessionStore
+// create an instance of session store for given processing node
+// \param fin -- session finalizer, method finalize() is invoked when session is expired;
+// \param exq -- an instance of session expiration queue interface,
+// \param queue -- an instance of scag command queue interface, the instance
+//                 is used in method releaseSession to push the next command to the queue.
+// static SessionStore* createSessionStore( SessionFinalizer&       fin,
+//                                         SessionExpirationQueue& exq );
+
+struct SessionAllocator {
+    virtual ~SessionAllocator() {}
+    virtual Session* alloc( const SessionKey& k ) { return new Session(k); }
+};
+
+
+class SessionStoreImpl : public SessionStore
 {
 public:
-    virtual ~SessionStore() {}
+    typedef HashedMemoryCache< SessionKey, Session > MemStorage;
+    typedef PageFileDiskStorage< SessionKey, Session > DiskDataStorage;
+    typedef RBTreeIndexStorage< SessionKey, DiskDataStorage::index_type > DiskIndexStorage;
+    typedef IndexedStorage< DiskIndexStorage, DiskDataStorage, smsc::core::synchronization::Mutex > EltDiskStorage;
+    // typedef IndexedStorage< DiskIndexStorage, DiskDataStorage, SlowMutex > EltDiskStorage;
+    typedef CompositeDiskStorage< EltDiskStorage > DiskStorage;
 
-    /// create an instance of session store for given processing node
-    /// \param fin -- session finalizer, method finalize() is invoked when session is expired;
-    /// \param exq -- an instance of session expiration queue interface,
-    /// \param queue -- an instance of scag command queue interface, the instance
-    ///                 is used in method releaseSession to push the next command to the queue.
-    static SessionStore* create( SessionFinalizer&       fin,
-                                 SessionExpirationQueue& exq );
+    /// create a storage
+    SessionStoreImpl( SessionFinalizer& fin,
+                      SessionExpirationQueue& exq,
+                      SessionAllocator* a );
 
-    /// initialization, clear stopping flag
-    virtual void init( unsigned           nodeNumber,
-                       SCAGCommandQueue&  cmdqueue,
+    virtual ~SessionStoreImpl();
+
+    /// unlock storage, clear stop flag, etc.
+    virtual void init( unsigned nodeNumber,
+                       SCAGCommandQueue& queue,
                        const std::string& path = "sessions",
                        const std::string& name = "sessions",
                        unsigned indexgrowth = 10000,
                        unsigned pagesize = 512,
-                       unsigned prealloc = 0 ) = 0;
+                       unsigned prealloc = 0 );
 
-    /// tell storage to begin stopping
-    virtual void stop() = 0;
+    virtual void stop();
 
-    /// fetch/create session for given command.
-    /// NOTE: command ownership is taken.
-    /// @return NULL if session is locked and push command to the end of session command list.
-    /// otherwise, return valid session with current command set.
-    virtual ActiveSession fetchSession( const SessionKey& key, SCAGCommand* cmd ) = 0;
+    virtual ActiveSession fetchSession( const SessionKey& key, SCAGCommand* cmd );
 
-    /// release session (return it to store and unlock for further use).
-    /// \param flush (do flush on disk prior to releasing session lock).
-    /// NOTE: this method is invoked automatically from ActiveSession dtor.
-    virtual void releaseSession( Session& s, bool flush ) = 0;
+    virtual void releaseSession( Session& s, bool flush );
 
-    /// move lock on the session to the specified command.
-    virtual void moveLock( Session& s, SCAGCommand* cmd ) = 0;
+    virtual void moveLock( Session& s, SCAGCommand* cmd );
 
-    /// Total number of commands that are attached to sessions
-    virtual unsigned storedCommands() const = 0;
+    virtual unsigned storedCommands() const;
 
-    /// tries to expire sessions (that are not locked and have no commands).
-    virtual bool expireSessions( const std::vector< SessionKey >& expired ) = 0;
+    virtual bool expireSessions( const std::vector< SessionKey >& expired );
 
-    /// report that session is finalized.  The method is invoked from session finalizer.
-    virtual void sessionFinalized( Session& s ) = 0;
+    virtual void sessionFinalized( Session& s );
 
-    /// get current sessions count
     virtual void getSessionsCount( unsigned& sessionsCount,
-                                   unsigned& sessionsLockedCount ) const = 0;
+                                   unsigned& sessionsLockedCount ) const;
 
-    /*
 protected:
-    inline Session* getCommandSession( SCAGCommand& cmd ) const {
-        return cmd.getSession();
-    }
-     */
-    inline void setCommandSession( SCAGCommand& cmd, Session* s ) const
-    {
-        cmd.setSession( s );
-    }
 
+    // helper method, may be invoked from expireSessions or from sessionFinalized
+    // NOTE: lock should be pre-locked.
+    bool doSessionFinalization( Session& s );
+
+    ActiveSession makeLockedSession( Session& s, SCAGCommand& c );
+
+    bool carryNextCommand( Session& s, SCAGCommand* cmd, bool dolock );
+
+private:
+    unsigned                    nodeNumber_; // for composite storage
+
+    SessionFinalizer*           fin_;
+    SessionExpirationQueue*     expiration_;
+    SCAGCommandQueue*           queue_;
+
+    // lock access to cache_, cache_->get(key)->state, stopping_ flag
+    mutable EventMonitor        cacheLock_;
+    std::auto_ptr<MemStorage>   cache_;
+    bool                        stopping_;
+
+    std::auto_ptr<DiskStorage>      disk_;
+    std::auto_ptr<SessionAllocator> allocator_;
+
+    // EventMonitor                expireMonitor_;
+    // std::auto_ptr<ExpireSet>    expireSet_;
+
+    smsc::logger::Logger*       log_;
+    // std::auto_ptr<smsc::core::threads::Thread> expireThread_;
+
+    // statstics
+    unsigned                    totalSessions_;
+    unsigned                    lockedSessions_;
+    unsigned                    storedCommands_;
+
+    unsigned                    maxqueuesize_;
+    unsigned                    maxcachesize_;
+    unsigned                    maxcommands_;
 };
 
 } // namespace sessions2
