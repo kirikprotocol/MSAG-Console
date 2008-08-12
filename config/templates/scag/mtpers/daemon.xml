@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+  <section name="services">
+    <section name="scag">
+      <param name="args" type="string">@scag.service.args@</param>
+      <param name="autostart" type="bool">@scag.service.autostart@</param>
+    </section>
+    <section name="mtpers">
+      <param name="args" type="string">@mtpers.service.args@</param>
+      <param name="autostart" type="bool">@mtpers.service.autostart@</param>
+    </section>
+  </section>
+  <section name="admin">
+    <section name="daemon">
+      <param name="stderr" type="string">logs/daemon.err</param>
+      <param name="host" type="string">@listen.host@</param>
+      <param name="home" type="string">daemon</param>
+      <param name="services folder" type="string">../services</param>
+     <param name="shutdown timeout" type="int">10</param>
+      <param name="port" type="int">@daemon.admin.port@</param>
+    </section>
+  </section>
+</config>
