@@ -339,26 +339,34 @@ Operation* Session::setCurrentOperation( opid_type opid )
 {
     do {
 
-        uint8_t optype;
         if ( opid == SCAGCommand::invalidOpId() ) {
-            
             currentOperation_ = 0;
-            optype = -1;
-            
-        } else {
-
-            Operation** optr = operations_.GetPtr(opid);
-            if ( ! optr ) throw SCAGException( "Cannot find operation id=%u, key=%s",
-                                               unsigned(opid), sessionKey().toString().c_str() );
-            currentOperation_ = *optr;
-            optype = currentOperation_->type();
+            break;
         }
-        currentOperationId_ = opid;
-        smsc_log_debug( log_, "Session=%p set current operation=%p, opid=%u, type=%d",
-                        this, currentOperation_, unsigned(opid), int(optype) );
-        // changed_ = true;
+
+        Operation** optr = operations_.GetPtr(opid);
+        if ( ! optr ) {
+            currentOperation_ = 0;
+            break;
+        }
+
+        currentOperation_ = *optr;
 
     } while ( false );
+
+    if ( ! currentOperation_ ) {
+        currentOperationId_ = SCAGCommand::invalidOpId();
+        smsc_log_warn( log_, "Session=%p cannot find operation id=%u, key=%s",
+                       this, unsigned(opid), sessionKey().toString().c_str() );
+        throw SCAGException( "Session=%p cannot find operation id=%u, key=%s",
+                             this, unsigned(opid), sessionKey().toString().c_str() );
+    }
+
+    const uint8_t optype = currentOperation_->type();
+    currentOperationId_ = opid;
+    smsc_log_debug( log_, "Session=%p set current operation=%p, opid=%u, type=%d(%x)",
+                    this, currentOperation_, unsigned(opid), int(optype), int(optype) );
+    // changed_ = true;
     return currentOperation_;
 }
 
