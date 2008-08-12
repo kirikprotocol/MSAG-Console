@@ -488,6 +488,15 @@ Targets:
     <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/cpers/conf"/>
   </target>
 
+  <target name="create_distr_tree_mtpers" depends="create_distr_tree_pers_common" >
+    <mkdir dir="${DISTR_DIR}/services/mtpers"/>
+    <mkdir dir="${DISTR_DIR}/services/mtpers/bin"/>
+    <mkdir dir="${DISTR_DIR}/services/mtpers/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/mtpers"/>
+    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/mtpers"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/mtpers/conf"/>
+  </target>
+
   <target name="configure_pers_common" unless="FIRST_TARGET_INSTALLED">
     <!-- daemon configuration-->
     <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
@@ -537,6 +546,24 @@ Targets:
     </copy>
   </target>
 
+  <target name="copy_mtpers_pers_daemon" depends="" if="PERS_INSTALLED">
+    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/mtpers/daemon_pers.xml" overwrite="yes">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+  </target>
+
+  <target name="copy_msag_mtpers_pers_daemon" depends="" if="MSAG_INSTALLED">
+    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/mtpers/daemon.xml" overwrite="yes">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+  </target>
+
+  <target name="copy_mtpers_daemon" depends="copy_mtpers_pers_daemon, copy_msag_mtpers_pers_daemon" unless="FIRST_TARGET_INSTALLED">
+    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/mtpers/daemon_mtpers.xml">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+  </target>
+
   <target name="configure_pers" depends="copy_to_dist_dir_pers, configure_pers_common, copy_pers_daemon">
     <!--pers-->
     <copy tofile="${DISTR_DIR}/services/pers/logger.properties" file="${TEMPL_DIR}/logger/msag_pers.logger">
@@ -567,6 +594,23 @@ Targets:
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <mkdir dir="${cpers.storage_dir}" description="create cpers storage dir"/>
+  </target>
+
+  <!--target name="configure_mtpers" depends="copy_to_dist_dir_mtpers, configure_pers_common"-->
+  <target name="configure_mtpers" depends="copy_to_dist_dir_mtpers, configure_pers_common, copy_mtpers_daemon">
+    <!--mtpers-->
+    <copy tofile="${DISTR_DIR}/services/mtpers/logger.properties" file="${TEMPL_DIR}/logger/msag_mtpers.logger">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy tofile="${DISTR_DIR}/services/mtpers/bin/service" file="${TEMPL_DIR}/service/msag_mtpers">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <chmod file="${DISTR_DIR}/services/mtpers/bin/service" perm="755"/>
+    <copy todir="${DISTR_DIR}/services/mtpers/conf" flatten="yes">
+      <fileset dir="${TEMPL_DIR}/scag/mtpers" includes="config.xml"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <mkdir dir="${mtpers.storage_dir}" description="create mtpers storage dir"/>
   </target>
 
   <target name="create_distr_pers" unless="FIRST_TARGET_INSTALLED">
@@ -617,6 +661,11 @@ Targets:
     <chmod file="${DISTR_DIR}/services/cpers/bin/cpers" perm="755"/>
   </target>
 
+  <target name="copy_to_dist_dir_mtpers" depends="copy_to_dist_dir_pers_common">
+    <copy file="${BUILD_BIN}/scag/mtpers" todir="${DISTR_DIR}/services/mtpers/bin"/>
+    <chmod file="${DISTR_DIR}/services/mtpers/bin/mtpers" perm="755"/>
+  </target>
+
   <target name="clear_pers_build_bin_dir" unless="FIRST_TARGET_INSTALLED">
     <delete dir="${BUILD_BIN}"/>
   </target>
@@ -652,6 +701,17 @@ Targets:
   </target>
 
   <target name="update_pers" depends="clear_pers_build_bin_dir, makegw_pers, copy_to_dist_dir_pers">
+    <property name="FIRST_TARGET_INSTALLED" value="true"/>
+  </target>
+
+<!--mtpers-->
+
+  <target name="distr_mtpers" depends="create_distr_tree_mtpers, makegw_pers, configure_mtpers, create_distr_pers, extra_libs">
+    <property name="FIRST_TARGET_INSTALLED" value="true"/>
+    <property name="PERS_INSTALLED" value="true"/>
+  </target>
+
+  <target name="update_mtpers" depends="clear_pers_build_bin_dir, makegw_pers, copy_to_dist_dir_mtpers">
     <property name="FIRST_TARGET_INSTALLED" value="true"/>
   </target>
 
