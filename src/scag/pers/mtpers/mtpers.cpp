@@ -44,7 +44,7 @@ extern "C" void atExitHandler(void)
 
 int main(int argc, char* argv[]) {
 
-  Logger::Init();
+  Logger::Init(); 
 
   atexit(atExitHandler);
 
@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
     storageManager.init(maxWaitingCount, storageNumber, abntCfg, infCfg);
 
     IOTaskManager ioMananger(storageManager);
-    ioMananger.init(ioTasksCount, maxClientCount, "ioman");
+    ioMananger.init(ioTasksCount, maxClientCount, timeout, "ioman");
 
     ps = new PersServer(ioMananger);
     ps->init(host.c_str(), port);
