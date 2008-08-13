@@ -1446,7 +1446,7 @@ bool SmppManagerImpl::makeLongCall( std::auto_ptr<SmppCommand>& cx, ActiveSessio
 
     bool b = LongCallManager::Instance().call( &lcmCtx );
     if (b) {
-        session.release();
+        session.leaveLocked();
         MutexGuard mg(queueMon);
         lcmProcessingCount++;
     } else {

@@ -93,8 +93,8 @@ public:
     virtual unsigned pushCommand( SCAGCommand* cmd,
                                   int action = PUSH ) = 0;
 
-    /// return 0 if the queue is stopped
-    virtual SCAGCommand* popCommand() = 0;
+    // return 0 if the queue is stopped
+    // virtual SCAGCommand* popCommand() = 0;
 
 };
 
