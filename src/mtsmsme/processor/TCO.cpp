@@ -54,13 +54,23 @@ void TCO::fixCalledAddress(uint8_t cdlen, uint8_t* cd)
 {
   /* fix ssn for configured numbers */
   if (modifyssn(cd, cdlen, mscnumber, 8))
+  {
     smsc_log_debug(logger,
                   "Cd equals to %s, set SSN = 8, new Cd(%s)",
                   mscnumber,getAddressDescription(cdlen,cd).c_str());
-  if (modifyssn(cd, cdlen, vlrnumber, 7))
+  }
+  else if (modifyssn(cd, cdlen, vlrnumber, 7))
+  {
     smsc_log_debug(logger,
                   "Cd GT equals to %s, set SSN = 7, new Cd(%s)",
                   vlrnumber,getAddressDescription(cdlen,cd).c_str());
+  }
+  else if (modifyssn(cd, cdlen, hlrnumber, 6, true /* force SSN=6 */))
+  {
+    smsc_log_debug(logger,
+                  "Cd GT not equals to VLR or MSC, assuming SSN = 6, new Cd(%s)",
+                  getAddressDescription(cdlen,cd).c_str());
+  }
 }
 void TCO::NUNITDATA(uint8_t cdlen,
                     uint8_t *cd, /* called party address */

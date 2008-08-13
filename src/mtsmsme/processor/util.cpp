@@ -78,7 +78,7 @@ unsigned packSCCPAddress(unsigned char* dst, unsigned char npi, const char *sadd
     return len ? addrLen : 0;
 }
 
-bool modifyssn(UCHAR_T* src, UCHAR_T len, const char* pattern, UCHAR_T newssn)
+bool modifyssn(UCHAR_T* src, UCHAR_T len, const char* pattern, UCHAR_T newssn, bool uncoditional)
 {
   if( !len || !src) return false;
   int i=0; //position
@@ -101,7 +101,7 @@ bool modifyssn(UCHAR_T* src, UCHAR_T len, const char* pattern, UCHAR_T newssn)
 
     char ad[32];
     unpack_addr(ad,src+i, (len - i)*2 - odd);
-    if (strcmp(ad,pattern) == 0)
+    if (strcmp(ad,pattern) == 0 || uncoditional)
     {
       *ssn_ptr = newssn;
       return true;
