@@ -20,6 +20,8 @@
 #include "scag/re/actions/str/ActionReplace2.h"
 #include "scag/re/actions/str/ActionSubstr2.h"
 
+#include "scag/re/actions/pers/LongCallTestAction.h"
+
 
 /*
 #include "scag/re/actions/Action.h"
@@ -121,6 +123,9 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             if (name=="datetime:dec") return new DecDateTimeAction();
             break;
         }
+
+
+        if ( name == "longcalltest" ) return new LongCallTestAction();
 
     // FIXME: impl
     /* 

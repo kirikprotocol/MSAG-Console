@@ -25,7 +25,7 @@
 #include "TransportRule.h"
 #include "XMLHandlers2.h"
 #include "util/regexp/RegExp.hpp"
-#include "scag/sessions/Operation.h"
+#include "scag/sessions/base/Operation.h"
 #include "scag/re/smpp/SmppTransportRule.h"
 
 

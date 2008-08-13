@@ -1,6 +1,6 @@
 #include "CommandBridge.h"
 #include "scag/bill/BillingManager.h"
-#include "scag/sessions/Session2.h"
+#include "scag/sessions/base/Session2.h"
 // #include "scag/transport/http/HttpCommand.h"
 #include "scag/util/encodings/Encodings.h"
 #include "util/recoder/recode_dll.h"

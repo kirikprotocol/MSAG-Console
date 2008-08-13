@@ -1,10 +1,18 @@
 #include <cassert>
+#include "scag/util/singleton/Singleton2.h"
 #include "SessionManager2.h"
+
+
+using namespace scag2::sessions;
+using namespace scag2::util::singleton;
 
 namespace {
 
-scag2::sessions::SessionManager* inst_ = 0;
-smsc::core::synchronization::Mutex mtx;
+typedef SingletonHolder< SessionManager, OuterCreation > SingleSM;
+bool inited = false;
+Mutex mtx;
+
+inline unsigned GetLongevity( SessionManager* ) { return 6; }
 
 }
 
@@ -13,23 +21,25 @@ namespace sessions {
 
 SessionManager& SessionManager::Instance()
 {
-    MutexGuard mg(mtx);
-    assert(inst_);
-    return *inst_;
+    if ( ! inited ) {
+        MutexGuard mg(mtx);
+        if ( ! inited ) ::abort();
+    }
+    return SingleSM::Instance();
 }
 
 SessionManager::SessionManager()
 {
     MutexGuard mg(mtx);
-    assert( ! inst_ );
-    inst_ = this;
+    assert( ! inited );
+    inited = true;
+    SingleSM::setInstance( this );
 }
 
 SessionManager::~SessionManager()
 {
     MutexGuard mg(mtx);
-    assert( inst_ == this );
-    inst_ = 0;
+    inited = false;
 }
 
 } // namespace sessions

@@ -1,6 +1,6 @@
 #include "ActionCloseUssdDialog2.h"
 #include "scag/re/CommandAdapter2.h"
-#include "scag/sessions/Operation.h"
+#include "scag/sessions/base/Operation.h"
 
 namespace scag2 {
 namespace re {

@@ -3,7 +3,7 @@
 #include "scag/re/actions/ActionContext2.h"
 #include "scag/re/CommandBridge.h"
 #include "scag/re/RuleEngine2.h"
-#include "scag/sessions/Operation.h"
+#include "scag/sessions/base/Operation.h"
 
 namespace scag2 {
 namespace re {

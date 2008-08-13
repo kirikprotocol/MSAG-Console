@@ -59,10 +59,6 @@ public:
     }
 
     /// --- the following methods are not used
-    virtual SCAGCommand* popCommand() {
-        return 0;
-    }
-
     virtual void stop() {
     }
 
@@ -116,18 +112,6 @@ void Scag::init( unsigned mynode )
         throw Exception("Exception during initialization of LongCallManager");
     }
 
-    //********** Statistics manager initialization ***********
-    try{
-      StatisticsManager::init(cfg.getStatManConfig());
-
-      smsc_log_info(log, "Statistics manager inited" );
-    }catch(exception& e){
-      smsc_log_warn(log, "Smsc.init exception: %s", e.what());
-      __warning__("Statistics manager is not started.");
-    }catch(...){
-      __warning__("Statistics manager is not started.");
-    }
-
     //********** Billing manager initialization ***********
     try {
         BillingManager::Init(cfg.getBillManConfig());
@@ -141,8 +125,8 @@ void Scag::init( unsigned mynode )
     try{
         smsc_log_info(log, "Session Manager is starting..." );
 
+        // it will auto-register
         SessionManagerImpl* sm = new SessionManagerImpl;
-        sessman_.reset( sm );
         sm->init( cfg.getSessionManConfig(), mynode, fsq );
         sm->Start();
 
@@ -152,6 +136,18 @@ void Scag::init( unsigned mynode )
       __warning__("Sessioan Manager is not started.");
     }catch(...){
       __warning__("Session Manager is not started.");
+    }
+
+    //********** Statistics manager initialization ***********
+    try{
+      StatisticsManager::init(cfg.getStatManConfig());
+
+      smsc_log_info(log, "Statistics manager inited" );
+    }catch(exception& e){
+      smsc_log_warn(log, "Smsc.init exception: %s", e.what());
+      __warning__("Statistics manager is not started.");
+    }catch(...){
+      __warning__("Statistics manager is not started.");
     }
 
     //************** Personalization client initialization **************

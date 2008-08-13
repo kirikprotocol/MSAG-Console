@@ -18,7 +18,7 @@
 #include "scag/util/Reffer.h"
 #include "smeman/smsccmd.h"
 #include "sms/sms.h"
-#include "scag/sessions/base/SessionManager2.h"
+// #include "scag/sessions/base/SessionManager2.h"
 //#include "sme/SmppBase.hpp"
 //#include "util/config/smeman/SmeManConfig.h"
 
@@ -169,7 +169,7 @@ protected:
 
   friend class StatusSme;
 
-    std::auto_ptr< sessions::SessionManager >  sessman_;
+    // std::auto_ptr< sessions::SessionManager >  sessman_;
 };
 
 } // scag2

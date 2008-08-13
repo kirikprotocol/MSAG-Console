@@ -7,13 +7,17 @@
 namespace scag2 {
 namespace sessions {
 
+using namespace util;
+
 /// this is an interface for providing sessions for different clients.
 /// SessionManagerImpl will inherit from this one.
 class SessionManager
 {
 public:
-    /// this method is deprecated and will be removed eventually
     static SessionManager& Instance();
+
+    /// should be invoked once
+    static void setInstance( SessionManager* mgr );
 
     template < class T >
         inline ActiveSession getSession( const SessionKey& key,

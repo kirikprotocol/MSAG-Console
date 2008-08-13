@@ -5,7 +5,7 @@
 #include "SmppCommandQueue2.h"
 #include "SmppRouter2.h"
 #include "SmppCommand2.h"
-#include "scag/sessions/Session2.h"
+#include "scag/sessions/base/Session2.h"
 #include "core/threads/ThreadedTask.hpp"
 #include "logger/Logger.h"
 

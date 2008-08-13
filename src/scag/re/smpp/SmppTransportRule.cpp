@@ -1,7 +1,7 @@
 #include "SmppTransportRule.h"
 #include "scag/re/CommandBridge.h"
-#include "scag/sessions/Operation.h"
-#include "scag/sessions/Session2.h"
+#include "scag/sessions/base/Operation.h"
+#include "scag/sessions/base/Session2.h"
 
 namespace scag2 {
 namespace re {

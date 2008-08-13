@@ -23,7 +23,7 @@ protected:
         if (!longCallContext.ActionStack.empty()) 
         {
             startIndex = longCallContext.ActionStack.top().actionIndex;
-            smsc_log_debug(logger, "Skeep %d actions.", startIndex);
+            smsc_log_debug(logger, "Skip %d actions.", startIndex);
 
             if ( startIndex >= actions.size())
             {

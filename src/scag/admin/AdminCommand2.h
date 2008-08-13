@@ -9,7 +9,7 @@
 #include "CommandActions.h"
 
 #include "CommandIds.h"
-#include "scag/scag2.h"
+#include "scag/gen2/scag2.h"
 
 namespace scag2 {
 namespace admin {

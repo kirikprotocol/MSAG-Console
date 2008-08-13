@@ -6,7 +6,7 @@
 #include "SmsSplit.h"
 #include "core/buffers/XHash.hpp"
 #include "scag/re/RuleEngine2.h"
-#include "scag/sessions/SessionManager2.h"
+#include "scag/sessions/base/SessionManager2.h"
 #include "scag/stat/StatisticsManager.h"
 #include "system/status.h"
 

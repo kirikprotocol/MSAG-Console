@@ -10,7 +10,7 @@
 #include "config/ConfigManager.h"
 #include "config/ConfigManager2.h"
 #include "core/threads/Thread.hpp"
-#include "scag2.h"
+#include "gen2/scag2.h"
 #include "util/config/route/RouteConfig.h"
 #include "util/findConfigFile.h"
 #include "util/mirrorfile/mirrorfile.h"

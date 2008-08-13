@@ -1,5 +1,5 @@
 #include "SmppCommand2.h"
-#include "scag/sessions/Session2.h"
+// #include "scag/sessions/Session2.h"
 
 namespace scag2 {
 namespace transport {

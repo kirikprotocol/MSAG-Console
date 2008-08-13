@@ -1,7 +1,7 @@
 #include "Sender.h"
 #include "StatisticsManager.h"
 #include "scag/sessions/SessionManager.h"
-#include "scag/sessions/SessionManager2.h"
+#include "scag/sessions/base/SessionManager2.h"
 #include "scag/transport/smpp/SmppManager.h"
 #include "scag/transport/smpp/SmppManager2.h"
 #include "scag/transport/http/Managers.h"
