@@ -16,6 +16,7 @@ using smsc::mtsmsme::comp::SendRoutingInfoForSMResp;
 using smsc::mtsmsme::comp::EmptyComp;
 using smsc::mtsmsme::processor::util::getAddressDescription;
 using smsc::mtsmsme::comp::SendRoutingInfoForSMInd;
+using smsc::mtsmsme::comp::SendRoutingInfoForSMRespV1;
 using smsc::sms::Address;
 using std::string;
 
