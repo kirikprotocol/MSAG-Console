@@ -76,20 +76,20 @@ void SRI4SMTSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr,
       msisdn.setValue(strlen(sri4sm.getMSISDN()),sri4sm.getMSISDN());
       if ( hlr->lookup(msisdn,_imsi) )
       {
-        if ( appcntx == shortMsgGatewayContext_v1)
-        {
-          SendRoutingInfoForSMRespV1 resp(_imsi.value, tco->mscnumber);
-          TResultLReq( iid /* invokeId */, 45 /* sendRoutingInfoForSM operation */, resp);
-          smsc_log_debug(logger,
-                         "tsm otid=%s receive BEGIN with component MAP V1, "
-                         "send END with MWD=FALSE",
-                         ltrid.toString().c_str());
-        }
-        else
-        {
+        //if ( appcntx == shortMsgGatewayContext_v1)
+        //{
+        //  SendRoutingInfoForSMRespV1 resp(_imsi.value, tco->mscnumber);
+        //  TResultLReq( iid /* invokeId */, 45 /* sendRoutingInfoForSM operation */, resp);
+        //  smsc_log_debug(logger,
+        //                 "tsm otid=%s receive BEGIN with component MAP V1, "
+        //                 "send END with MWD=FALSE",
+        //                 ltrid.toString().c_str());
+        //}
+        //else
+        //{
           SendRoutingInfoForSMResp resp(_imsi.value, tco->mscnumber);
           TResultLReq( iid /* invokeId */, 45 /* sendRoutingInfoForSM operation */, resp);
-        }
+        //}
       }
       else
       {
