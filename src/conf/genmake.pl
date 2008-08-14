@@ -74,12 +74,18 @@ sub generate{
     if(-f $dirname.'/binaries-list')
     {
       open(my $f,$dirname.'/binaries-list');
+      my $line = "";
       while(<$f>)
       {
         s/[\x0d\x0a]//g;
         next if /^\s*(?:$|#)/;
-        my $ln=$_;
-        my ($binname,$srcname,$libs)=split(/\s+/,$ln,3);
+        my $ln = $_;
+        if ( '\\' eq substr($ln,-1) ) {
+            $line .= substr($ln,0,length($ln)-1);
+            next;
+        }
+        my ($binname,$srcname,$libs) = split(/\s+/,$line.$ln,3);
+        $line = "";
         $binsrc{$srcname.'.cpp'}=1;
         if($binname=~/^-/)
         {
@@ -118,7 +124,9 @@ sub generate{
         print $mkf "\t$cmdprefix\$(CXX) \$(CXXFLAGS) $ldflags -o \$@ \$< \$(LDFLAGS) $rawlibs\n\n";
         srcrule($dirname,$srcname.".cpp",\@files);
         push @files,'$(SMSC_BUILDDIR)/bin/'.$binname;
-      }
+      } # while
+      die "Abnormal end-of-file $dirname/binaries-list\nline=<$line>\n"
+          if ( length($line) != 0 );
     }
     
     opendir(my $dir,$dirname);
