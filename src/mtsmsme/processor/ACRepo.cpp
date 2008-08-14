@@ -111,7 +111,8 @@ bool isMapV1ContextSupported(AC& appcntx)
 {
   return (
 		  appcntx == sm_mt_relay_v1 ||
-		  appcntx == roamingNumberEnquiryContext_v1
+		  appcntx == roamingNumberEnquiryContext_v1 ||
+		  appcntx == shortMsgGatewayContext_v1
          );
 }
 bool isIncomingContextSupported(AC& appcntx)
@@ -125,7 +126,6 @@ bool isIncomingContextSupported(AC& appcntx)
           appcntx == roamingNumberEnquiryContext_v3 ||
           appcntx == subscriberDataMngtContext_v2 ||
           appcntx == subscriberDataMngtContext_v3 ||
-          appcntx == shortMsgGatewayContext_v1 ||
           appcntx == shortMsgGatewayContext_v2 ||
           appcntx == shortMsgGatewayContext_v3
          );
