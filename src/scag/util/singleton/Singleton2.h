@@ -277,17 +277,17 @@ template <
             {
                 if (destroyed_)
                 {
-                    OnDeadReference();
+                    LifetimePolicy< T >::OnDeadReference();
                     destroyed_ = false;
                 }
-                pInstance_ = Create();
-                ScheduleDestruction(pInstance_, &DestroySingleton);
+                pInstance_ = CreationPolicy< T >::Create();
+                LifetimePolicy< T >::ScheduleDestruction(pInstance_, &DestroySingleton);
             }
         }
         static void DestroySingleton()
         {
             assert(!destroyed_);
-            Destroy(pInstance_);
+            CreationPolicy< T >::Destroy(pInstance_);
             pInstance_ = 0;
             destroyed_ = true;
         }

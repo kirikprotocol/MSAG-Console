@@ -17,6 +17,7 @@ namespace scag{ namespace pers{
 using namespace smsc::core::buffers;
 using namespace smsc::core::synchronization;
 
+using scag::util::storage::Serializable;
 using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
 
