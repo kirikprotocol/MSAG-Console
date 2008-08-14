@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SUBSCRIPTION_URL="http://localhost:8080/smsx/services/SmsXSubscription"
+SUBSCRIPTION_URL="http://phoenix:7802/smsx/services/SmsXSubscription"
 
 SCRIPT_NAME=""
 

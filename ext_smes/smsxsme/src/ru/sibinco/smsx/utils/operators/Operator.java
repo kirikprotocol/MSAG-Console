@@ -10,7 +10,7 @@ import java.util.LinkedList;
 
 public class Operator {
   private final String name;
-  private Collection masks = new LinkedList();
+  private Collection<String> masks = new LinkedList<String>();
 
   public Operator(String name) {
     this.name = name;
@@ -24,7 +24,7 @@ public class Operator {
     return name;
   }
 
-  public Collection getMasks() {
+  public Collection<String> getMasks() {
     return masks;
   }
 }

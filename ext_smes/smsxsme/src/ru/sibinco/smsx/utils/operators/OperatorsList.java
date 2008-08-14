@@ -6,7 +6,7 @@ import ru.aurorisoft.smpp.SMPPAddressException;
 
 import java.util.Iterator;
 
-import com.eyeline.utils.tree.radix.TemplatesRadixTree;
+import com.eyeline.utils.tree.radix.TemplatesRTree;
 
 /**
  * User: artem
@@ -17,7 +17,7 @@ public class OperatorsList {
 
   private static final Category log = Category.getInstance("OPERATORS LIST");
 
-  private TemplatesRadixTree operatorsTree;
+  private TemplatesRTree<Operator> operatorsTree;
 
   private final OperatorsDataSource ds;
 
@@ -30,7 +30,7 @@ public class OperatorsList {
   public Operator getOperatorByAddress(String address) {
     try {
       final Address addr = new Address(address);
-      return (Operator) operatorsTree.getValue("." + addr.getTon() + '.' + addr.getNpi() + '.' + addr.getAddress());
+      return (Operator) operatorsTree.get("." + addr.getTon() + '.' + addr.getNpi() + '.' + addr.getAddress());
     } catch (SMPPAddressException e) {
       log.error(e,e);
       return null;
@@ -39,11 +39,12 @@ public class OperatorsList {
   }
 
   public void reloadOperators() {
-    final TemplatesRadixTree newOperatorsTree = new TemplatesRadixTree();
+    final TemplatesRTree<Operator> newOperatorsTree = new TemplatesRTree<Operator>();
     try {
       for (Iterator iter = ds.getOperators().iterator(); iter.hasNext();) {
         final Operator oper = (Operator)iter.next();
-        newOperatorsTree.add(oper.getMasks(), oper);
+        for (String mask : oper.getMasks())
+          newOperatorsTree.put(mask, oper);
       }
     } catch (Throwable e) {
       log.error(e,e);

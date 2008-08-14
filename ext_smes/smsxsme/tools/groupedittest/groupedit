@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GROUP_EDIT_URL="http://localhost:8080/smsx/services/GroupEdit"
+GROUP_EDIT_URL="http://212.192.169.196:7802/smsx/services/GroupEdit"
 
 SCRIPT_NAME=""
 

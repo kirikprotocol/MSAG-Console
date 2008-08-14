@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GROUP_SEND_URL="http://localhost:8080/smsx/services/GroupSend"
+GROUP_SEND_URL="http://phoenix:7802/smsx/services/GroupSend"
 
 SCRIPT_NAME=""
 

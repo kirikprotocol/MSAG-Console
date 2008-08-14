@@ -36,7 +36,9 @@ public class GroupServiceImpl implements Service, GroupService {
       this.groupSendDS = new JStoreGroupSendDataSource(group.getString("store.file"), group.getInt("store.data.life.time"));
       this.sendProcessor = new GroupSendProcessor(outQueue, groupSendDS, group.getString("group.address"));
 
-      this.dlManager = new DistributionListManager(group.getString("smsc.host"), group.getInt("smsc.port"), "windows-1251");
+      this.dlManager = new DistributionListManager(group.getString("smsc.host"), group.getInt("smsc.port"), "windows-1251",
+                                                   group.getInt("manager.pool.size"), group.getInt("manager.connection.timeout"));
+      
       this.groupEditDS = new DBGroupEditDataSource();
       this.editProcessor = new GroupEditProcessor(outQueue, dlManager, groupEditDS, group.getString("source.address"), group.getSection("notifications").toProperties(""));
     } catch (Exception e) {

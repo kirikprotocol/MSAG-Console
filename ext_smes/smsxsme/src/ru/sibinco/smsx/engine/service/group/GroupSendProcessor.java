@@ -42,7 +42,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
     this.outQueue = outQueue;
     this.ds = ds;
     this.groupServiceAddr = groupServiceAddr;
-    this.executor = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue(100), new ThreadFactoryWithCounter("Group-Executor-"));;
+    this.executor = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue(100), new ThreadFactoryWithCounter("Group-Executor-"));
   }
 
   private static long getMsgKey(String owner, int usrMsgRef) {
@@ -169,14 +169,12 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
       this.msgId = msgId;
     }
 
-    @Override
-    protected void handleResponse(final PDU pdu) {
+    private void setError() {
       try {
         executor.execute(new Runnable() {
           public void run() {
             try {
-              if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR)
-                ds.setStatus(msgId, GroupSendDataSource.MessageStatus.SYS_ERROR);
+              ds.setStatus(msgId, GroupSendDataSource.MessageStatus.SYS_ERROR);
             } catch (DataSourceException e) {
               log.error(e,e);
             }
@@ -186,6 +184,17 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
         log.error(e,e);
         rejectedTasks.increment();
       }
+    }
+
+    @Override
+    protected void handleSendError() {
+      setError();
+    }
+
+    @Override
+    protected void handleResponse(final PDU pdu) {
+      if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR)
+        setError();
     }
   }
 }

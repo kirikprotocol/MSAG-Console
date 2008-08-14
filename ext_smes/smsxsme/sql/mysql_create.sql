@@ -1,4 +1,4 @@
-# TABLES FOR CALENDAR
+-- TABLES FOR CALENDAR
 CREATE TABLE calendar_messages (
   id INT NOT NULL,
   source_address VARCHAR(30) NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE calendar_messages (
 ) CHARACTER SET koi8r, ENGINE InnoDB;
 
 
-# TABLES FOR SECRET
+-- TABLES FOR SECRET
 CREATE TABLE sec_users (
   address VARCHAR(30) NOT NULL,
   password TEXT NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE sec_messages (
   destination_address VARCHAR(30) NOT NULL,
   source_address VARCHAR(30) NOT NULL,
   message TEXT,
-  send_date TIMESTAMP NOT NULL DEFAULT NOW(),
+  send_date TIMESTAMP NOT NULL DEFAULT now(),
   dest_addr_subunit INT NOT NULL,
   status INT NOT NULL,
   save_delivery_status INT NOT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE sec_messages (
 ) CHARACTER SET koi8r, ENGINE InnoDB;
 
 
-# TABLES FOR SENDER
+-- TABLES FOR SENDER
 CREATE TABLE smpp_messages (
   id INT NOT NULL,
   smpp_status INT,
@@ -56,7 +56,7 @@ CREATE TABLE smpp_messages (
 ) CHARACTER SET koi8r, ENGINE InnoDB;
 
 
-#TABLES FOR SPONSORED
+--TABLES FOR SPONSORED
 CREATE TABLE sponsored_distribution_info (
   abonent CHAR(20) NOT NULL,
   cnt SMALLINT NOT NULL DEFAULT 0,
@@ -77,7 +77,7 @@ CREATE TABLE sponsored_delivery_stats (
 ) ENGINE InnoDB;
 
 
-#TABLES FOR NICKS
+--TABLES FOR NICKS
 CREATE TABLE nicks (
   address CHAR(20) NOT NULL,
   nick CHAR(20) NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE nicks (
 ) ENGINE InnoDB;
 
 
-#TABLES FOR GROUP
+--TABLES FOR GROUP
 CREATE TABLE group_edit_profiles (
   address CHAR(20) NOT NULL PRIMARY KEY,
   send_notifications SMALLINT NOT NULL,
