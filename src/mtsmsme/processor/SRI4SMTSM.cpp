@@ -99,21 +99,6 @@ void SRI4SMTSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr,
   }
   TEndReq();
   tco->TSMStopped(ltrid);
-  /////
-  ProvideRoamingNumberResp resp;
-  ProvideRoamingNumberRespV1 respv1;
-  resp.setRoamingNumber("79139860932");
-  respv1.setRoamingNumber("79139860932");
-  if(appcntx == roamingNumberEnquiryContext_v1)
-  {
-    TResultLReq( iid /* invokeId */, 4 /* ProvideRoamingNumber operation */, respv1);
-    smsc_log_debug(logger,"tsm otid=%s receive BEGIN with component MAP V1, send END with Missed Calls number as Roaming Number",ltrid.toString().c_str());
-  }
-  else
-  {
-    TResultLReq( iid /* invokeId */, 4 /* ProvideRoamingNumber operation */, resp);
-  }
-  //////
 }
 void SRI4SMTSM::CONTINUE_received(uint8_t cdlen,
                               uint8_t *cd, /* called party address */
