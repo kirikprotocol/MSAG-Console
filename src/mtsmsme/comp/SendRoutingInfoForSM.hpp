@@ -7,6 +7,7 @@
 #include "mtsmsme/processor/util.hpp"
 #include "RoutingInfoForSM-Arg.h"
 #include "RoutingInfoForSM-Res.h"
+#include "RoutingInfoForSM-Res-v1.h"
 #include "logger/Logger.h"
 #include <string>
 
@@ -24,6 +25,18 @@ class SendRoutingInfoForSMResp : public CompIF {
     virtual void decode(const vector<unsigned char>& buf);
   private:
     RoutingInfoForSM_Res_t res;
+    OCTET_STRING_DECL(_imsi,20);
+    OCTET_STRING_DECL(_msc, 20);
+};
+class SendRoutingInfoForSMRespV1 : public CompIF {
+  public:
+    SendRoutingInfoForSMRespV1(const string& imsi, const string& msc);
+    ~SendRoutingInfoForSMRespV1();
+    virtual void encode(vector<unsigned char>& buf);
+    virtual void decode(const vector<unsigned char>& buf);
+  private:
+    RoutingInfoForSM_Res_v1_t res;
+    BOOLEAN_t mwd;
     OCTET_STRING_DECL(_imsi,20);
     OCTET_STRING_DECL(_msc, 20);
 };

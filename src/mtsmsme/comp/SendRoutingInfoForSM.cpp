@@ -70,6 +70,36 @@ void SendRoutingInfoForSMResp::decode(const vector<unsigned char>& buf)
 {
 
 }
+SendRoutingInfoForSMRespV1::SendRoutingInfoForSMRespV1(const string& imsi, const string& msc)
+{
+  ZERO_OCTET_STRING(_imsi);
+  _imsi.size = packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
+  res.imsi = _imsi;
+
+  mwd = 0;
+  res.mwd_Set = &mwd;
+
+  ZERO_OCTET_STRING(_msc);
+  _msc.size = packNumString2BCD91(_msc.buf, msc.c_str(), msc.length());
+
+  res.choice.present = choice_PR_sequence;
+  res.choice.choice.sequence.lMsId = 0;
+  res.choice.choice.sequence.locationInfo.present = LocationInfo_PR_mscNumber;
+  res.choice.choice.sequence.locationInfo.choice.mscNumber = _msc;
+}
+SendRoutingInfoForSMRespV1::~SendRoutingInfoForSMRespV1()
+{
+
+}
+void SendRoutingInfoForSMRespV1::decode(const vector<unsigned char>& buf)
+{
+
+}
+void SendRoutingInfoForSMRespV1::encode(vector<unsigned char>& buf)
+{
+  asn_enc_rval_t er;
+  er = der_encode(&asn_DEF_RoutingInfoForSM_Res_v1, &res, print2vec, &buf);
+}
 SendRoutingInfoForSMInd::SendRoutingInfoForSMInd(Logger* _logger) :
   logger(_logger)
 {
