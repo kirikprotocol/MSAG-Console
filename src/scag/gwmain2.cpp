@@ -7,8 +7,8 @@
 #include "Inst.h"
 #include "admin/SCAGSocketListener2.h"
 #include "admin/service/ServiceSocketListener.h"
-#include "config/ConfigManager.h"
-#include "config/ConfigManager2.h"
+#include "scag/config/ConfigManager.h"
+#include "scag/config/impl/ConfigManager2.h"
 #include "core/threads/Thread.hpp"
 #include "gen2/scag2.h"
 #include "util/config/route/RouteConfig.h"
@@ -83,7 +83,13 @@ int main( int argc, char* argv[] )
         scag::config::ConfigManager::Init();
         scag::config::ConfigManager& cfgs0 = scag::config::ConfigManager::Instance();
 
-        config::ConfigManager::Init();
+        {
+            // initialization of config
+            scag2::config::ConfigManagerImpl* cfg = 
+                new scag2::config::ConfigManagerImpl();
+            cfg->Init();
+        }
+        // config::ConfigManager::Init();
         config::ConfigManager& cfgs = config::ConfigManager::Instance();
 //    smsc_log_info(logger,  "SCAG configuration is loaded" );
 

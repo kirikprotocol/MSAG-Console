@@ -1,7 +1,7 @@
 #ifndef BillingManagerConfig_dot_h
 #define BillingManagerConfig_dot_h
 
-#include "scag/config/ConfigView.h"
+#include "scag/config/base/ConfigView.h"
 
 
 namespace scag {

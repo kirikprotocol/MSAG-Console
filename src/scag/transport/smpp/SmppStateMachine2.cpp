@@ -9,6 +9,7 @@
 #include "scag/sessions/base/SessionManager2.h"
 #include "scag/stat/StatisticsManager.h"
 #include "system/status.h"
+#include "scag/transport/smpp/router/route_types.h"
 
 namespace scag2 {
 namespace transport {

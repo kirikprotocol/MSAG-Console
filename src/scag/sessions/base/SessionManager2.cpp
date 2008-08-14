@@ -1,4 +1,4 @@
-#include <cassert>
+#include <stdexcept>
 #include "scag/util/singleton/Singleton2.h"
 #include "SessionManager2.h"
 
@@ -23,7 +23,8 @@ SessionManager& SessionManager::Instance()
 {
     if ( ! inited ) {
         MutexGuard mg(mtx);
-        if ( ! inited ) ::abort();
+        if ( ! inited )
+            throw std::runtime_error("SessionManager not inited");
     }
     return SingleSM::Instance();
 }

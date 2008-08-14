@@ -1,7 +1,7 @@
 #ifndef ConfigListener_dot_h
 #define ConfigListener_dot_h
 
-#include "ConfigType.h"
+#include "scag/config/base/ConfigType.h"
 
 namespace scag {
 namespace config {

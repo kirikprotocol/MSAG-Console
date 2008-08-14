@@ -17,7 +17,7 @@
 #include "core/buffers/Array.hpp"
 #include <scag/util/singleton/Singleton.h>
 
-#include "scag/config/ConfigView.h"
+#include "scag/config/base/ConfigView.h"
 #include "ConfigListener.h"
 #include <typeinfo>
 #include "logger/Logger.h"

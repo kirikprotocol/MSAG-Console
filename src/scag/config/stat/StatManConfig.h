@@ -1,7 +1,7 @@
 #ifndef StatManConf_dot_h
 #define StatManConf_dot_h
 
-#include "scag/config/ConfigView.h"
+#include "scag/config/base/ConfigView.h"
 #include <core/buffers/IntHash.hpp>
 namespace scag {
 namespace config {

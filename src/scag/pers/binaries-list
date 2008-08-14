@@ -4,9 +4,24 @@
 # binary name                            source name     libraries         
 
 #pers_server/pers_test                   pers_test       -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl -llogger -llicense-check
-scag/pers                                pers            @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl -llogger -llicense-check -lscag-util-storage
-scag/client_test/pers_client_test        client_test     @liblogger.so -L$(SMSC_BUILDDIR)/bin -lscag-pers -lscag-config -lscag-config-smpp -lscag-config-stat -lscag-config-bill -lscag-config-sessn -lscag-config-route -lscag-config-http -lscag-config-pers -lscag-config-lcm -llogger -lcore-threads -lcore-network -lcore-buffers -lutil -llogger-additional -lnsl -lrt -lpthread -lsocket $(__LIBRARIES) -lutil-recoder-recode_dll $(SOCKETLIB) -lcore-network -lutil-regexp -lsms -lrouter -ladmin-protocol -lscag-util-properties -lscag-util-singleton -L$(SMSC_BUILDDIR)/bin -llogger -lutil-templates -lutil-regexp -lsystem-common -lsystem-smppio  -lcore-threads -lcore-buffers -lutil-config -lutil -lrt -ldl -lutil-xml $(XERCES_LIB) -lsms -lcore-network -lnsl -lscag-util-encodings -lscag-exc $(SSL_LIB) -llicense-check -lscag-util-storage
-#scag/pers/heirarchic_test/hpers         hpers_test      -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl -llogger -lscag-exc -llicense-check -lcore-threads
-scag/cpers                               cpers           @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl -llogger -lscag-exc -llicense-check -lscag-util-storage
-#scag/persconv                           conv            -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl -llogger -llicense-check
-#scag/pers_upload                        pers_upload     -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lscag-config -lscag-config-smpp -lscag-config-stat -lscag-config-bill -lscag-config-sessn -lscag-config-route -lscag-config-http -lscag-config-pers -lscag-config-lcm -llogger -lcore-threads -lcore-network -lcore-buffers -lutil -llogger-additional -lnsl -lrt -lpthread -lsocket $(__LIBRARIES) -lutil-recoder-recode_dll $(SOCKETLIB) -lcore-network -lutil-regexp -lsms -lrouter -ladmin-protocol -lscag-util-properties -lscag-util-singleton -L$(SMSC_BUILDDIR)/bin -llogger -lutil-templates -lutil-regexp -lsystem-common -lsystem-smppio  -lcore-threads -lcore-buffers -lutil-config -lutil -lrt -ldl -lutil-xml $(XERCES_LIB) -lsms $(SOCKETLIB) -lcore-network -lnsl -lscag-util-encodings -lscag-exc -llicense-check
+scag/pers                                pers            @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -llicense-check -lscag-util-storage
+
+scag/client_test/pers_client_test        client_test     @liblogger.so \
+   -L$(SMSC_BUILDDIR)/bin -lscag-pers -lscag-config -lscag-config-smpp \
+   -lscag-config-stat -lscag-config-bill -lscag-config-sessn -lscag-config-route \
+   -lscag-config-http -lscag-config-pers -lscag-config-lcm \
+   -lscag-config-base \
+   -llogger -lcore-threads \
+   -lcore-network -lcore-buffers -lutil -llogger-additional -lnsl -lrt -lpthread \
+   $(SOCKETLIB) $(__LIBRARIES) -lutil-recoder-recode_dll $(SOCKETLIB) \
+   -lcore-network -lutil-regexp -lsms -lrouter -ladmin-protocol \
+   -lscag-util-properties -lscag-util-singleton -L$(SMSC_BUILDDIR)/bin -llogger \
+   -lutil-templates -lutil-regexp -lsystem-common -lsystem-smppio  -lcore-threads \
+   -lcore-buffers -lutil-config -lutil -lrt -ldl -lutil-xml $(XERCES_LIB) -lsms \
+   -lcore-network -lnsl -lscag-util-encodings -lscag-exc $(SSL_LIB) -llicense-check \
+   -lscag-util-storage
+
+#scag/pers/heirarchic_test/hpers         hpers_test      -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -lscag-exc -llicense-check -lcore-threads
+scag/cpers                               cpers           @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -lscag-exc -llicense-check -lscag-util-storage
+#scag/persconv                           conv            -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -llicense-check
+#scag/pers_upload                        pers_upload     -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lscag-config -lscag-config-smpp -lscag-config-stat -lscag-config-bill -lscag-config-sessn -lscag-config-route -lscag-config-http -lscag-config-pers -lscag-config-lcm -llogger -lcore-threads -lcore-network -lcore-buffers -lutil -llogger-additional -lnsl -lrt -lpthread $(SOCKETLIB) $(__LIBRARIES) -lutil-recoder-recode_dll $(SOCKETLIB) -lcore-network -lutil-regexp -lsms -lrouter -ladmin-protocol -lscag-util-properties -lscag-util-singleton -L$(SMSC_BUILDDIR)/bin -llogger -lutil-templates -lutil-regexp -lsystem-common -lsystem-smppio  -lcore-threads -lcore-buffers -lutil-config -lutil -lrt -ldl -lutil-xml $(XERCES_LIB) -lsms $(SOCKETLIB) -lcore-network -lnsl -lscag-util-encodings -lscag-exc -llicense-check

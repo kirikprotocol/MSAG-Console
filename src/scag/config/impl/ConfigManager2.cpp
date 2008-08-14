@@ -1,6 +1,9 @@
 #include <xercesc/dom/DOM.hpp>
 #include <fstream>
 #include <sys/stat.h>
+#include <typeinfo>
+
+#include "ConfigManager2.h"
 
 #include "logger/Logger.h"
 #include "util/xml/init.h"
@@ -10,15 +13,9 @@
 #include "scag/config/route/RouteConfig.h"
 #include "scag/config/stat/StatManConfig.h"
 #include "util/findConfigFile.h"
-#include "ConfigManager2.h"
-#include "ConfigListener2.h"
-
+#include "scag/config/base/ConfigListener2.h"
 #include "core/buffers/IntHash.hpp"
-#include "core/buffers/Array.hpp"
-#include <scag/util/singleton/Singleton.h>
-
-#include "ConfigView.h"
-#include <typeinfo>
+#include "scag/config/base/ConfigView.h"
 #include "logger/Logger.h"
 #include "util/findConfigFile.h"
 #include "license/check/license.hpp"
@@ -32,101 +29,8 @@ using namespace xercesc;
 using namespace smsc::util::xml;
 using smsc::core::buffers::IntHash;
 using smsc::core::buffers::Array;
-using namespace scag::util::singleton;
 using smsc::util::findConfigFile;
 using namespace scag::config;
-
-class ConfigManagerImpl : public ConfigManager
-{
-public:
-    virtual ~ConfigManagerImpl() {smsc_log_info(logger, "ConfigManager released");}
-    ConfigManagerImpl() throw(ConfigException);
-
-    virtual void registerListener(ConfigType type, ConfigListener* listener);
-    virtual void removeListener(ConfigType type);
-
-    virtual void reloadConfig(ConfigType type);
-  virtual void reloadAllConfigs();
-  static void Init() throw(ConfigException);
-  virtual RouteConfig&  getRouteConfig(){ return getRouteConfig_(); }
-  virtual SmppManConfig& getSmppManConfig(){ return getSmppManConfig(); }
-  virtual StatManConfig& getStatManConfig(){ return getStatManConfig_(); }
-  virtual BillingManagerConfig& getBillManConfig(){ return getBillManConfig_(); }
-  virtual SessionManagerConfig& getSessionManConfig(){ return getSessionManConfig_(); }
-  virtual HttpManagerConfig& getHttpManConfig(){ return getHttpManConfig_(); }  
-  virtual PersClientConfig& getPersClientConfig(){ return getPersClientConfig_(); }
-  virtual LongCallManagerConfig& getLongCallManConfig(){ return getLongCallManConfig_(); }
-
-    static RouteConfig&  getRouteConfig_()
-    {
-        static RouteConfig routeCfg;
-        return routeCfg;
-    }
-    static SmppManConfig& getSmppManConfig_()
-    {
-        static SmppManConfig smppManCfg;
-        return smppManCfg;
-    }
-    static StatManConfig& getStatManConfig_()
-    {
-        static StatManConfig statManCfg;
-        return statManCfg;
-    }
-    static BillingManagerConfig& getBillManConfig_()
-    {
-        static BillingManagerConfig billManCfg;
-        return billManCfg;
-    }
-    static SessionManagerConfig& getSessionManConfig_()
-    {
-        static SessionManagerConfig sessionManCfg;
-        return sessionManCfg;
-    };
-    static HttpManagerConfig& getHttpManConfig_()
-    {
-        static HttpManagerConfig httpManCfg;
-        return httpManCfg;
-    };
-    static PersClientConfig& getPersClientConfig_()
-    {
-        static PersClientConfig persCfg;
-        return persCfg;
-    };
-    static LongCallManagerConfig& getLongCallManConfig_()
-    {
-        static LongCallManagerConfig cfg;
-        return cfg;
-    };
-    virtual LicenseInfo& getLicense(){return license;}
-    virtual void checkLicenseFile();
-    virtual Config* getConfig(){return &config;};
-
-    void save();
-protected:
-    IntHash<ConfigListener*> listeners;
-    Mutex listenerLock;
-    smsc::logger::Logger* logger;
-
-    static Hash<std::string> licconfig;
-    static LicenseInfo license;
-    static time_t licenseFileMTime;
-    static std::string licenseFile;
-    static std::string licenseSig;
-
-private:
-    static void findConfigFile();
-protected:
-    static Config config;
-
-private:
-    static std::auto_ptr<char> config_filename;
-    void writeHeader(std::ostream &out);
-    void writeFooter(std::ostream &out);
-    void reload(Array<int>& changedConfigs) throw(ConfigException);
-
-    DOMDocument * parse(const char * const filename) throw (ConfigException);
-
-};
 
 std::auto_ptr<char> ConfigManagerImpl::config_filename;
 Hash<std::string> ConfigManagerImpl::licconfig;
@@ -135,56 +39,18 @@ time_t ConfigManagerImpl::licenseFileMTime=0;
 std::string ConfigManagerImpl::licenseFile;
 std::string ConfigManagerImpl::licenseSig;
 
-
 Config ConfigManagerImpl::config;
-
-//==============================================================
-//============== Singleton related part ========================
-
-static bool  bConfigManagerInited = false;
-static Mutex initConfigManagerLock;
-
-inline unsigned GetLongevity(ConfigManagerImpl*) { return 1; }
-typedef SingletonHolder<ConfigManagerImpl> SingleConfig;
-
-void ConfigManager::Init()
-{
-    if (!bConfigManagerInited)
-    {
-        MutexGuard guard(initConfigManagerLock);
-
-        if (!bConfigManagerInited) {
-            ConfigManagerImpl& cfgman = SingleConfig::Instance();
-            cfgman.Init();
-            bConfigManagerInited = true;
-        }
-    }
-}
-
-ConfigManager& ConfigManager::Instance()
-{
-    if (!bConfigManagerInited)
-    {
-        MutexGuard guard(initConfigManagerLock);
-
-        if (!bConfigManagerInited)
-            throw std::runtime_error("ConfigManager not inited!");
-
-    }
-    return SingleConfig::Instance();
-}
 
 //==============================================================
 //============== ConfigManager implementation ==================
 
-ConfigManagerImpl::ConfigManagerImpl()
-  throw(ConfigException)
-    : logger(smsc::logger::Logger::getInstance("cfgman"))
+ConfigManagerImpl::ConfigManagerImpl() throw (ConfigException) :
+ConfigManager(),
+logger(smsc::logger::Logger::getInstance("cfgman"))
 {
 }
 
-void ConfigManagerImpl::Init()
-  throw(ConfigException)
+void ConfigManagerImpl::Init() throw(ConfigException)
 {
   initXerces();
   //findConfigFile();
@@ -635,14 +501,13 @@ void ConfigManagerImpl::checkLicenseFile()
     'L'^0x4c,'i'^0x4c,'c'^0x4c,'e'^0x4c,'n'^0x4c,'s'^0x4c,'e'^0x4c,' '^0x4c,'E'^0x4c,'x'^0x4c,'p'^0x4c,'i'^0x4c,'r'^0x4c,'e'^0x4c,'d'^0x4c,
     };
     std::string s;
-    for(int i=0;i<sizeof(x);i++)
+    for(unsigned i=0;i<sizeof(x);i++)
     {
       s+=x[i]^0x4c;
     }
     throw runtime_error(s);
   }
 }
-
 
 }
 }

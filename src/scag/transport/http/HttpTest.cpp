@@ -1,6 +1,6 @@
 #include <xercesc/dom/DOM.hpp>
-#include "scag/config/ConfigView.h"
-#include <scag/config/Config.h>
+#include "scag/config/base/ConfigView.h"
+#include "scag/config/base/Config.h"
 
 #include <pthread.h>
 #include <signal.h>

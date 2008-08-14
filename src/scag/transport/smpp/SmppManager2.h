@@ -15,7 +15,7 @@
 #include "core/threads/ThreadPool.hpp"
 #include "logger/Logger.h"
 #include "router/route_manager.h"
-#include "scag/config/ConfigListener2.h"
+#include "scag/config/base/ConfigListener2.h"
 #include "scag/config/route/RouteConfig.h"
 #include "scag/lcm/LongCallManager2.h"
 #include "scag/util/Reffer.h"

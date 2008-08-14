@@ -10,7 +10,7 @@
 #include "core/threads/Thread.hpp"
 
 #include "core/synchronization/Mutex.hpp"
-#include "scag/config/ConfigManager2.h"
+#include "scag/config/base/ConfigManager2.h"
 
 // #include "scag/scag.h"
 

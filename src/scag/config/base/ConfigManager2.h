@@ -10,6 +10,7 @@
 #include "scag/config/http/HttpManagerConfig.h"
 #include "scag/config/pers/PersClientConfig.h"
 #include "scag/config/lcm/LongCallManagerConfig.h"
+#include "ConfigListener2.h"
 
 #include <string>
 
@@ -35,14 +36,11 @@ struct LicenseInfo{
 
 class ConfigManager
 {
-    ConfigManager(const ConfigManager& bm);
-    ConfigManager& operator=(const ConfigManager& bm);
-protected:
-        ConfigManager() {};
-        virtual ~ConfigManager() {};
 public:
     static ConfigManager& Instance();
-    static void Init();
+    // static void Init();
+
+    virtual ~ConfigManager();
 
     virtual void reloadConfig(ConfigType type) = 0;
     virtual void reloadAllConfigs() = 0;
@@ -59,6 +57,17 @@ public:
     virtual void checkLicenseFile()=0;
     
     virtual Config* getConfig() = 0;
+
+protected:
+    ConfigManager();
+
+    friend class ConfigListener;
+    virtual void registerListener( ConfigType t, ConfigListener* l ) = 0;
+    virtual void removeListener( ConfigType t ) = 0;
+
+private:
+    ConfigManager(const ConfigManager& bm);
+    ConfigManager& operator=(const ConfigManager& bm);
 };
 
 }

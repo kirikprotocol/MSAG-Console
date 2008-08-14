@@ -3,7 +3,7 @@
 
 #include <time.h>
 #include <string>
-#include "scag/config/ConfigView.h"
+#include "scag/config/base/ConfigView.h"
 
 namespace scag {
 namespace config {

@@ -1,7 +1,7 @@
 #ifndef ConfigManager_dot_h
 #define ConfigManager_dot_h
 
-#include "ConfigType.h"
+#include "scag/config/base/ConfigType.h"
 #include "scag/config/smpp/SmppManConfig.h"
 #include "scag/config/route/RouteConfig.h"
 #include "scag/config/stat/StatManConfig.h"

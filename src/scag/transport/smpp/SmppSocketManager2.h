@@ -10,7 +10,7 @@
 #include "SmscConnector2.h"
 #include "core/threads/ThreadPool.hpp"
 #include "logger/Logger.h"
-#include "scag/config/ConfigManager2.h"
+#include "scag/config/base/ConfigManager2.h"
 
 namespace scag2 {
 namespace transport {

@@ -10,7 +10,7 @@
 #include <core/buffers/Hash.hpp>
 #include <logger/Logger.h>
 #include <util/cstrings.h>
-#include <scag/config/ConfigException.h>
+#include "ConfigException.h"
 
 namespace scag {
 namespace config {
@@ -21,13 +21,14 @@ using smsc::core::buffers::HashInvalidKeyException;
 using smsc::logger::Logger;
 using smsc::util::cStringCopy;
 
-class ConfigManagerImpl;
+// class ConfigManagerImpl;
 
 typedef std::set<std::string> CStrSet;
 
-class Config {
+class Config 
+{
 public:
-    friend class ConfigManagerImpl;
+    // friend class ConfigManagerImpl;
 
     Config()
     {}

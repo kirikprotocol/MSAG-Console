@@ -1,21 +1,22 @@
 #include <memory>
 #include <typeinfo>
 
+// #include "scag/transport/http/HttpRouter.h"
+
 #include "core/synchronization/Event.hpp"
 #include "logger/Logger.h"
 #include "scag/bill/BillingManager.h"
-#include "scag/config/ConfigManager2.h"
-#include "scag/config/ConfigView.h"
+#include "scag/config/base/ConfigView.h"
+#include "scag/config/base/ConfigManager2.h"
 #include "scag/lcm/LongCallManager2.h"
 #include "scag/pers/PersClient.h"
 #include "scag/re/RuleEngine2.h"
 #include "scag/re/XMLHandlers2.h"
-#include "scag2.h"
 #include "scag/sessions/impl/SessionManager2.h"
 #include "scag/stat/StatisticsManager.h"
-// #include "scag/transport/http/HttpRouter.h"
 #include "scag/transport/smpp/router/load_routes.h"
 #include "scag/util/encodings/Encodings.h"
+#include "scag2.h"
 #include "util/Exception.hpp"
 #include "util/debug.h"
 #include "util/findConfigFile.h"
@@ -101,8 +102,7 @@ void Scag::init( unsigned mynode )
 
     smsc_log_info(log, "SCAG start initialisation...");
 
-
-    ConfigManager & cfg = ConfigManager::Instance();
+    ConfigManager& cfg = ConfigManager::Instance();
 
     //********************************************************
     try {

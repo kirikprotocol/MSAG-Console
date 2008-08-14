@@ -12,7 +12,7 @@
 #include <logger/Logger.h>
 
 #include <util/timeslotcounter.hpp>
-#include "scag/config/Config.h"
+#include "scag/config/base/Config.h"
 
 #include "Statistics.h"
 #include "TrafficRecord.h"

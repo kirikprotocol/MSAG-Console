@@ -3,8 +3,8 @@
 #include <core/threads/ThreadPool.hpp>
 #include <core/synchronization/EventMonitor.hpp>
 #include <scag/util/singleton/Singleton.h>
-#include "scag/config/ConfigManager2.h"
-#include "scag/config/ConfigListener2.h"
+#include "scag/config/base/ConfigManager2.h"
+#include "scag/config/base/ConfigListener2.h"
 #include "scag/pers/PersClient.h"
 #include "scag/pers/Types.h"
 #include "scag/bill/BillingManager.h"

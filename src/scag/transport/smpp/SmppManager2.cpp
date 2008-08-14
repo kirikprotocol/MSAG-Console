@@ -9,7 +9,7 @@
 #include "core/buffers/Hash.hpp"
 #include "router/load_routes.h"
 #include "scag/config/route/RouteConfig.h"
-#include "scag/config/ConfigManager2.h"
+#include "scag/config/base/ConfigManager2.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/util/singleton/Singleton.h"
 #include "util/xml/DOMTreeReader.h"

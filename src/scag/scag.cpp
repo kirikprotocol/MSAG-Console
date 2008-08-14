@@ -6,7 +6,7 @@
 #include "util/Exception.hpp"
 #include "logger/Logger.h"
 #include "util/regexp/RegExp.hpp"
-#include "config/ConfigView.h"
+#include "scag/config/base/ConfigView.h"
 #include <typeinfo>
 #include "util/findConfigFile.h"
 
