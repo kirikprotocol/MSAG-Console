@@ -38,6 +38,7 @@ CREATE TABLE sec_messages (
   notify_originator INT NOT NULL,
   conn CHAR(10),
   smpp_id BIGINT,
+  smpp_status INT,
 
   PRIMARY KEY(id),
   INDEX(destination_address, status),

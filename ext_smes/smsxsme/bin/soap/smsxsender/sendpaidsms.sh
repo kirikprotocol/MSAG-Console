@@ -18,6 +18,6 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
       <SMSXSecret>false</SMSXSecret>
       <SMSXCalendar>false</SMSXCalendar>
       <SMSXCalendarTimeUTC>0</SMSXCalendarTimeUTC>
-    </sendSms>
+    </sendPaidSms>
   </soapenv:Body>
 </soapenv:Envelope>"
