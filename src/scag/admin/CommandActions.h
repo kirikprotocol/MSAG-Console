@@ -22,11 +22,15 @@ struct CommandActions
   CommandActions() : restart(false), reloadroutes(false) {};
 };  */
 
-
 }
 }
 }
 
+namespace scag2 {
+namespace admin {
+namespace Actions = scag::admin::Actions;
+}
+}
 
 #endif	/* _SCAG_ADMIN_CommandActions_H */
 

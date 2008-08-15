@@ -53,6 +53,11 @@ namespace CommandIds {
 }
 }
 
+namespace scag2 {
+namespace admin {
+namespace CommandIds = scag::admin::CommandIds;
+}
+}
 
 #endif  /* _SCAG_ADMIN_CommandIds_H */
 

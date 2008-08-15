@@ -3,18 +3,14 @@
 
 #include <xercesc/dom/DOM.hpp>
 #include "admin/protocol/Command.h"
-
 #include "admin/service/Variant.h"
 #include "admin/protocol/ResponseWriter.h"
-#include "CommandActions.h"
-
-#include "CommandIds.h"
+#include "scag/admin/CommandActions.h"
+#include "scag/admin/CommandIds.h"
 #include "scag/gen2/scag2.h"
 
 namespace scag2 {
 namespace admin {
-
-namespace CommandIds = scag::admin::CommandIds;
 
 #define GETSTRPARAM(param, name_)                           \
     if (::strcmp(name_, name) == 0){                        \

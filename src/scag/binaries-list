@@ -32,32 +32,24 @@ scag/scag            gwmain         $(XERCES_LIB) -lscag-util -lscag \
    -L$(SMSC_BUILDDIR)/bin -llogger -linman-interaction -linman-common \
    -lutil-URCdb -lutil $(SSL_LIB)
 
-scag/scag2           gwmain2        $(XERCES_LIB) -lscag-util -lscag-gen2 \
+scag/scag2           gwmain2        \
+  -lscag-admin-gen2 \
+  -lscag-gen2 \
   -lscag-sessions-impl \
-  $(__LIBRARIES) \
-  -lscag-pers -lutil-mirrorfile \
-  -lscag-admin -lscag-transport -ladmin-service $(SOCKETLIB) -lcore-network \
-  $(XERCES_LIB) \
+  \
+  -lscag-pers \
   \
   -lscag-bill-impl \
-  -linman-interaction-msgbill \
-  -linman-interaction \
-  -linman-common \
-  \
   -lscag-stat-impl \
   -lscag-re-impl \
   -lscag-re-actions-impl \
   -lscag-lcm-impl \
   -lscag-config-impl \
   \
-  $(XERCES_LIB) \
   -lscag-transport-smpp \
   -lscag-transport-smpp-router \
   -lscag-transport-smpp \
   -lscag-transport-http \
-  \
-  -lscag-util-properties \
-  -lscag-pers \
   \
   -lscag-sessions-base \
   -lscag-lcm-base \
@@ -71,10 +63,15 @@ scag/scag2           gwmain2        $(XERCES_LIB) -lscag-util -lscag-gen2 \
   -lscag-config-pers -lscag-config-lcm \
   -lscag-config-base \
   \
+  -lscag-util-properties \
   -lscag-util-storage \
   -lscag-util-singleton \
   -lscag-util-encodings \
   -lscag-exc \
+  \
+  -linman-interaction-msgbill \
+  -linman-interaction \
+  -linman-common \
   \
   -llicense-check \
   -lrouter -ladmin-protocol -ladmin-service \
@@ -83,6 +80,7 @@ scag/scag2           gwmain2        $(XERCES_LIB) -lscag-util -lscag-gen2 \
   -lsms -lcore-network $(SOCKETLIB) -lnsl \
   -lcore-threads -lrt -ldl \
   \
+  -lutil-mirrorfile \
   -lutil-templates \
   -lutil-config \
   -lutil-xml \
@@ -91,4 +89,5 @@ scag/scag2           gwmain2        $(XERCES_LIB) -lscag-util -lscag-gen2 \
   $(XERCES_LIB) \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil-URCdb -lutil \
+  $(__LIBRARIES) \
   $(SSL_LIB)

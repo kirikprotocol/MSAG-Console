@@ -5,9 +5,8 @@
 // Created on 27 Май 2004 г., 16:49
 //
 
+#include "scag/admin/CommandIds.h"
 #include "SCAGCommandReader2.h"
-#include "CommandIds.h"
-
 #include "SCAGAdminCommand2.h"
 #include "SMSCAdminCommands2.h"
 #include "SCAGRuleCommands2.h"

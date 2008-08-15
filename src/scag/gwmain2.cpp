@@ -5,7 +5,7 @@
 #include <string>
 
 #include "gen2/Inst.h"
-#include "admin/SCAGSocketListener2.h"
+#include "scag/admin/gen2/SCAGSocketListener2.h"
 #include "admin/service/ServiceSocketListener.h"
 #include "scag/config/ConfigManager.h"
 #include "scag/config/impl/ConfigManager2.h"

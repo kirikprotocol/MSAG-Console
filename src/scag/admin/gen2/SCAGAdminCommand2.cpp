@@ -6,8 +6,8 @@
 //
 
 #include <vector>
+#include "scag/admin/CommandIds.h"
 #include "SCAGAdminCommand2.h"
-#include "CommandIds.h"
 #include "util/xml/utilFunctions.h"
 
 #include <sms/sms.h>
@@ -15,8 +15,6 @@
 
 #include "scag/transport/smpp/SmppTypes.h"
 #include "util/xml/utilFunctions.h"
-#include "CommandIds.h"
-
 #include "admin/service/Variant.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/transport/smpp/SmppManagerAdmin2.h"
@@ -27,7 +25,6 @@
 #include "admin/service/Type.h"
 
 #include "scag/config/route/RouteStructures.h"
-
 #include "scag/bill/base/BillingManager.h"
 // #include "scag/transport/http/HttpProcessor.h"
 // #include "scag/transport/http/HttpRouter.h"

@@ -9,7 +9,7 @@
 #define	_SCAG_ADMIN_SCAGSocketListener2_H
 
 #include <admin/util/SocketListener.h>
-#include <scag/admin/SCAGCommandDispatcher2.h>
+#include "SCAGCommandDispatcher2.h"
 
 namespace scag2 {
 namespace admin {

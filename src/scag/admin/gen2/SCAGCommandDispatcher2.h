@@ -8,7 +8,7 @@
 #ifndef _SCAG_ADMIN_SCAGCommandDispatcher2_H
 #define _SCAG_ADMIN_SCAGCommandDispatcher2_H
 
-#include "CommandActions.h"
+#include "scag/admin/CommandActions.h"
 #include "admin/AdminException.h"
 #include "admin/util/CommandDispatcher.h"
 #include "admin/protocol/ResponseWriter.h"
@@ -19,8 +19,8 @@
 // Its during for a test only
 //#include "scag/scag.h"
 
-#include "scag/admin/SCAGCommandReader2.h"
-#include "scag/admin/AdminCommand2.h"
+#include "SCAGCommandReader2.h"
+#include "AdminCommand2.h"
 #include "logger/Logger.h"
 
 namespace scag2 {
@@ -31,8 +31,8 @@ using namespace smsc::admin::util;
 // using namespace scag;
 using smsc::admin::AdminException;
 using smsc::core::network::Socket;
-using namespace scag::admin::Actions;
 using smsc::logger::Logger;
+using namespace Actions;
 
 class SCAGCommandDispatcher : public CommandDispatcherTempl<SCAGCommandReader, ResponseWriter>
 {

@@ -5,10 +5,9 @@
 // Created on 26 Май 2004 г., 19:45
 //
 
+#include "scag/admin/CommandIds.h"
 #include "SCAGCommandDispatcher2.h"
-#include "CommandIds.h"
 #include "core/threads/Thread.hpp"
-
 #include "core/synchronization/Mutex.hpp"
 #include "scag/config/base/ConfigManager2.h"
 
