@@ -85,9 +85,6 @@ class SmsXSenderHandler implements SmsXSender {
       if (log.isInfoEnabled())
         log.info("Send SMS: dstaddr=" + msisdn + "; msg=" + message + "; express=" + express + "; secret=" + secret + "; calendar=" + calendar + "; time=" + new Date(calendarTimeUTC) + "; advertising=" + advertising);
 
-      int status = 0;
-      String id_message = null;
-
       // Check operator
       final Operator operator = Context.getInstance().getOperators().getOperatorByAddress(msisdn);
       if (operator == null || !operator.getName().equals("MTS")) {
@@ -114,81 +111,13 @@ class SmsXSenderHandler implements SmsXSender {
           message += advertisingDelimiter + banner;
       }
 
-      if (calendar) {
-        final CalendarSendMessageCmd c = new CalendarSendMessageCmd();
-        c.setSourceAddress(serviceAddress);
-        c.setDestinationAddress(msisdn);
-        c.setSendDate(new Date(calendarTimeUTC));
-        c.setMessage(message);
-        c.setDestAddressSubunit(express ? 1 : -1);
-        c.setStoreDeliveryStatus(true);
-        c.setSourceId(AsyncCommand.SOURCE_SOAP);
-
-        try {
-          long msgId = Services.getInstance().getCalendarService().execute(c);
-          status = STATUS_ACCEPTED;
-          id_message = CALENDAR_MSG_ID_PREFIX + msgId;
-        } catch (CommandExecutionException e) {
-          switch (e.getErrCode()) {
-            case CalendarSendMessageCmd.ERR_WRONG_SEND_DATE:
-            status = STATUS_CALENDAR_WRONG_SEND_DATE;
-            break;
-          case CalendarSendMessageCmd.ERR_WRONG_DESTINATION_ADDRESS:
-            status = STATUS_CALENDAR_WRONG_DESTINATION_ADDRESS;
-            break;
-          default:
-            status = STATUS_SYSTEM_ERROR;
-          }
-        }
-
-      } else if (secret) {
-
-        final SecretSendMessageCmd c = new SecretSendMessageCmd();
-        c.setSourceAddress(serviceAddress);
-        c.setDestinationAddress(msisdn);
-        c.setMessage(message);
-        c.setDestAddressSubunit(express ? 1 : -1);
-        c.setSaveDeliveryStatus(true);
-        c.setNotifyOriginator(false);
-        c.setSourceId(AsyncCommand.SOURCE_SOAP);
-
-        try {
-          long msgId = Services.getInstance().getSecretService().execute(c);
-          status = STATUS_ACCEPTED;
-          id_message = SECRET_MSG_ID_PREFIX + msgId;
-        } catch (CommandExecutionException e) {
-          switch(e.getErrCode()) {
-            case SecretSendMessageCmd.ERR_DESTINATION_ADDRESS_IS_NOT_ALLOWED:
-              status = STATUS_SECRET_WRONG_DESTINATION_ADDRESS;
-              break;
-            default:
-              status = STATUS_SYSTEM_ERROR;
-          }
-        }
-
-      } else {
-        SenderSendMessageCmd c = new SenderSendMessageCmd();
-        c.setSourceAddress(serviceAddress);
-        c.setDestinationAddress(msisdn);
-        c.setMessage(message);
-        c.setDestAddressSubunit(express ? 1 : -1);
-        c.setStorable(true);
-        c.setSourceId(AsyncCommand.SOURCE_SOAP);
-        final CmdStatusObserver observer = new CmdStatusObserver(null);
-        c.addExecutionObserver(observer);
-        Services.getInstance().getSenderService().execute(c);
-        observer.waitStatus();
-        switch (c.getStatus()) {
-          case SenderSendMessageCmd.STATUS_SUCCESS:
-            status = STATUS_ACCEPTED;
-            id_message = SENDER_MSG_ID_PREFIX + c.getMsgId();
-            break;
-          default:
-            status = STATUS_SYSTEM_ERROR;
-        }
-      }
-
-      return new SmsXSenderResponse(id_message, 0, status);
+      if (calendar)
+        return sendCalendarMessage(serviceAddress, msisdn, message, express, calendarTimeUTC);
+      else if (secret)
+        return sendSecretMessage(serviceAddress, msisdn, message, express);
+      else
+        return sendSenderMessage(serviceAddress, msisdn, message, express);
+      
     } catch (Throwable e) {
       return new SmsXSenderResponse(null, -1, STATUS_SYSTEM_ERROR);
 
@@ -196,6 +125,116 @@ class SmsXSenderHandler implements SmsXSender {
       if (log.isInfoEnabled())
         log.info("Time=" + (System.currentTimeMillis() - start));
     }
+  }
+
+  public SmsXSenderResponse sendPaidSms(String oa, String da, String message, boolean express, boolean secret, boolean calendar, long calendarTimeUTC) throws RemoteException {
+    final long start = System.currentTimeMillis();
+    try {
+      if (log.isInfoEnabled())
+        log.info("Send SMS: oa=" + oa + "; da=" + da + "; msg=" + message + "; express=" + express + "; secret=" + secret + "; calendar=" + calendar + "; time=" + new Date(calendarTimeUTC));
+
+      if (calendar)
+        return sendCalendarMessage(oa, da, message, express, calendarTimeUTC);
+      else if (secret)
+        return sendSecretMessage(oa, da, message, express);
+      else
+        return sendSenderMessage(oa, da, message, express);
+
+    } catch (Throwable e) {
+      return new SmsXSenderResponse(null, -1, STATUS_SYSTEM_ERROR);
+
+    } finally {
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
+    }
+  }
+
+  private SmsXSenderResponse sendSenderMessage(String sourceAddress, String destinationAddress, String message, boolean express) {
+    SenderSendMessageCmd c = new SenderSendMessageCmd();
+    c.setSourceAddress(sourceAddress);
+    c.setDestinationAddress(destinationAddress);
+    c.setMessage(message);
+    c.setDestAddressSubunit(express ? 1 : -1);
+    c.setStorable(true);
+    c.setSourceId(AsyncCommand.SOURCE_SOAP);
+
+    String id_message = null;
+    int status;
+    final CmdStatusObserver observer = new CmdStatusObserver(null);
+    c.addExecutionObserver(observer);
+    Services.getInstance().getSenderService().execute(c);
+    observer.waitStatus();
+    switch (c.getStatus()) {
+      case SenderSendMessageCmd.STATUS_SUCCESS:
+        status = STATUS_ACCEPTED;
+        id_message = SENDER_MSG_ID_PREFIX + c.getMsgId();
+        break;
+      default:
+        status = STATUS_SYSTEM_ERROR;
+    }
+
+    return new SmsXSenderResponse(id_message, 0, status);
+  }
+
+  private SmsXSenderResponse sendCalendarMessage(String sourceAddress, String destinationAddress, String message, boolean express, long calendarTimeUTC) {
+    final CalendarSendMessageCmd c = new CalendarSendMessageCmd();
+    c.setSourceAddress(sourceAddress);
+    c.setDestinationAddress(destinationAddress);
+    c.setSendDate(new Date(calendarTimeUTC));
+    c.setMessage(message);
+    c.setDestAddressSubunit(express ? 1 : -1);
+    c.setStoreDeliveryStatus(true);
+    c.setSourceId(AsyncCommand.SOURCE_SOAP);
+
+    String id_message = null;
+    int status;
+    try {
+      long msgId = Services.getInstance().getCalendarService().execute(c);
+      status = STATUS_ACCEPTED;
+      id_message = CALENDAR_MSG_ID_PREFIX + msgId;
+    } catch (CommandExecutionException e) {
+      switch (e.getErrCode()) {
+        case CalendarSendMessageCmd.ERR_WRONG_SEND_DATE:
+          status = STATUS_CALENDAR_WRONG_SEND_DATE;
+          break;
+        case CalendarSendMessageCmd.ERR_WRONG_DESTINATION_ADDRESS:
+          status = STATUS_CALENDAR_WRONG_DESTINATION_ADDRESS;
+          break;
+        default:
+          status = STATUS_SYSTEM_ERROR;
+      }
+    }
+
+    return new SmsXSenderResponse(id_message, 0, status);
+  }
+
+  private SmsXSenderResponse sendSecretMessage(String sourceAddress, String destinationAddress, String message, boolean express) throws CommandExecutionException {
+    final SecretSendMessageCmd c = new SecretSendMessageCmd();
+    c.setSourceAddress(sourceAddress);
+    c.setDestinationAddress(destinationAddress);
+    c.setMessage(message);
+    c.setDestAddressSubunit(express ? 1 : -1);
+    c.setSaveDeliveryStatus(true);
+    c.setNotifyOriginator(false);
+    c.setSourceId(AsyncCommand.SOURCE_SOAP);
+
+    String id_message = null;
+    int status;
+    try {
+      long msgId = Services.getInstance().getSecretService().execute(c);
+      status = STATUS_ACCEPTED;
+      id_message = SECRET_MSG_ID_PREFIX + msgId;
+    } catch (CommandExecutionException e) {
+      switch(e.getErrCode()) {
+        case SecretSendMessageCmd.ERR_DESTINATION_ADDRESS_IS_NOT_ALLOWED:
+          status = STATUS_SECRET_WRONG_DESTINATION_ADDRESS;
+          break;
+        default:
+          status = STATUS_SYSTEM_ERROR;
+      }
+    }
+
+    return new SmsXSenderResponse(id_message, 0, status);
   }
 
   public SmsXSenderResponse checkStatus(String messageId) throws RemoteException {

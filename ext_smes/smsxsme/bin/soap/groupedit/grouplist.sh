@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [[ $# < 1 ]]; then
+    echo "list <owner>"
+    exit 1
+fi
+
+echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"
+xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"
+xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">
+<soapenv:Body>
+<groupList xmlns=\"http://sibinco.ru/groupedit\">
+<owner>$1</owner>
+</groupList>
+</soapenv:Body>
+</soapenv:Envelope>"

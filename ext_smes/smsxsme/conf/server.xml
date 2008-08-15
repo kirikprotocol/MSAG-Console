@@ -13,10 +13,10 @@
       maxThreads="150" minSpareThreads="25" maxSpareThreads="75"
       enableLookups="false" disableUploadTimeout="true"
       acceptCount="100" scheme="https" secure="true"
-      clientAuth="true" sslProtocol="TLS"
-      keystoreType="JKS" keystoreFile="conf/keystore.jks" keystorePass="laefeeza"
-      truststoreType="JKS" truststoreFile="conf/truststore.jks" truststorePass="laefeeza"
-    />
+      clientAuth="false" sslProtocol="TLS"
+      keystoreType="JKS" keystoreFile="conf/keystore.jks" keystorePass="laefeeza"/>
+      <!--truststoreType="JKS" truststoreFile="conf/truststore.jks" truststorePass="laefeeza"-->
+    
 
     <Engine name="Standalone" defaultHost="localhost" debug="0">
 

@@ -50,6 +50,7 @@ CREATE TABLE smpp_messages (
   id INT NOT NULL,
   smpp_status INT,
   smpp_id BIGINT,
+  status INT NOT NULL,
 
   PRIMARY KEY(id),
   INDEX(smpp_id)
@@ -91,4 +92,9 @@ CREATE TABLE group_edit_profiles (
   address CHAR(20) NOT NULL PRIMARY KEY,
   send_notifications SMALLINT NOT NULL,
   lock_group_edit SMALLINT NOT NULL
+) ENGINE InnoDB;
+
+--TABLES FOR BLACK LIST
+CREATE TABLE black_list (
+  msisdn CHAR(20) NOT NULL PRIMARY KEY
 ) ENGINE InnoDB;

@@ -2,7 +2,7 @@
 <deployment xmlns="http://xml.apache.org/axis/wsdd/" xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
   <globalConfiguration>
     <parameter name="sendMultiRefs" value="true"/>
-    <parameter name="disablePrettyXML" value="true"/>
+    <parameter name="disablePrettyXML" value="false"/>
     <parameter name="adminPassword" value="admin"/>
 
     <parameter name="dotNetSoapEncFix" value="true"/>

@@ -17,8 +17,6 @@
   <property name="TOMCAT_HOME" value="tomcat"/>
   <property name="SME_DISTR_DIR" value="${DISTR_DIR}/services/${esme_name}"/>
   <property name="WEB_INF" value="WEB-INF"/>
-  <property name="tools" value="tools"/>
-  <property name="soap" value="soap"/>
 
   <target name="copy_config" depends="prepare" description="copy config files">
     <copydir src="${config}" dest="${SME_DISTR_DIR}/conf"/>
@@ -35,6 +33,7 @@
     <!-- Create webapp dir -->
     <mkdir dir="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF"/>
     <mkdir dir="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF/lib"/>
+    <mkdir dir="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF/store"/>
     <!-- Copy libs -->
     <copy todir="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF/lib">
       <fileset dir="${java_lib}" includes="*.jar"/>
@@ -42,15 +41,13 @@
     <copydir src="${java_lib}/platform" dest="${SME_DISTR_DIR}/common/lib/platform"/>
     <!-- Copy WEB_INF-->
     <copydir src="${WEB_INF}" dest="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF"/>
-    <!-- Copy tools -->
-    <copydir src="${tools}" dest="${SME_DISTR_DIR}/bin"/>
-    <chmod dir="${SME_DISTR_DIR}/bin" perm="ugo+rx" includes="*.sh"/>
-    <!-- Copy Axis files -->
-    <copydir src="${soap}" dest="${SME_DISTR_DIR}/soap"/>
     <!-- Copy scripts -->
-    <copy file="deploy.sh" todir="${SME_DISTR_DIR}"/>
-    <copy file="run.sh" todir="${SME_DISTR_DIR}"/>
-    <copy file="stop.sh" todir="${SME_DISTR_DIR}"/>
+    <copy file="bin/start.sh" todir="${SME_DISTR_DIR}"/>
+    <copy file="bin/stop.sh" todir="${SME_DISTR_DIR}"/>
+    <copydir src="bin/soap" dest="${SME_DISTR_DIR}/bin/soap"/>
+    <chmod dir="${SME_DISTR_DIR}/bin" perm="ugo+rx" includes="*.sh"/>
+    <chmod dir="${SME_DISTR_DIR}" perm="ugo+rx" includes="*.sh"/>
+    <chmod dir="${SME_DISTR_DIR}/bin" perm="ugo+rx" includes="**/*.sh"/>
   </target>
 
   <target name="compile" description="compile sources">
