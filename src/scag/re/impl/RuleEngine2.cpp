@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <dirent.h>
+#include <cassert>
 
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/TransService.hpp>
