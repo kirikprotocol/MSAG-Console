@@ -60,4 +60,11 @@ private:
 
 }
 }
+
+namespace scag2 {
+namespace config {
+using scag::config::RouteConfig;
+}
+}
+
 #endif // ifndef SMSC_UTIL_CONFIG_ROUTE_ROUTECONFIG

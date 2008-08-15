@@ -24,4 +24,10 @@ private:
 }
 }
 
+namespace scag2 {
+namespace config {
+using scag::config::SmppManConfig;
+}
+}
+
 #endif //ifndef SMSC_UTIL_CONFIG_SMEMAN_SMEMANCONFIG

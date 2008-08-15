@@ -12,7 +12,7 @@
 #include "scag/util/properties/Properties2.h"
 #include "scag/util/storage/Serializer.h"
 #include "scag/transport/SCAGCommand2.h"
-#include "scag/lcm/LongCallManager2.h"
+#include "scag/re/base/LongCallContext.h"
 
 
 namespace scag2 {

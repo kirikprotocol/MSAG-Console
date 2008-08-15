@@ -1,6 +1,7 @@
 #ifndef ConfigManager2impl_dot_h
 #define ConfigManager2impl_dot_h
 
+#include <xercesc/dom/DOM.hpp>
 #include "core/buffers/Array.hpp"
 #include "scag/config/base/ConfigListener2.h"
 #include "scag/config/base/ConfigManager2.h"
@@ -103,7 +104,7 @@ private:
     static std::string licenseFile;
     static std::string licenseSig;
 
-    DOMDocument * parse(const char * const filename) throw (ConfigException);
+    xercesc::DOMDocument * parse( const char * const filename ) throw (ConfigException);
 };
 
 }

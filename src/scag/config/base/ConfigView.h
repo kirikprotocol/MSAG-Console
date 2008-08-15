@@ -59,4 +59,11 @@ namespace config {
 
 }}
 
+
+namespace scag2 {
+namespace config {
+using scag::config::ConfigView;
+}
+}
+
 #endif

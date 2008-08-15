@@ -257,4 +257,11 @@ public:
 
 }
 }
+
+namespace scag2 {
+namespace config {
+using scag::config::Config;
+}
+}
+
 #endif // ifndef SMSC_UTIL_CONFIG_CONFIG

@@ -1,5 +1,7 @@
 #include "SessionManager2.h"
 #include "scag/util/UnlockMutexGuard.h"
+#include "scag/re/base/RuleEngine2.h"
+#include "scag/lcm/base/LongCallManager2.h"
 
 namespace scag2 {
 
@@ -717,7 +719,7 @@ uint16_t SessionManagerImpl::getNewUSR(Address& address)
 }
  */
 
-void SessionManagerImpl::continueExecution(LongCallContext* lcmCtx, bool dropped)
+void SessionManagerImpl::continueExecution( LongCallContext* lcmCtx, bool dropped )
 {
     // FIXME
     /*

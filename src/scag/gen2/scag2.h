@@ -8,8 +8,7 @@
 #include "core/threads/ThreadedTask.hpp"
 #include "logger/Logger.h"
 #include "scag/config/route/RouteConfig.h"
-#include "scag/stat/Statistics.h"
-#include "scag/stat/StatisticsManager.h"
+#include "scag/stat/base/Statistics2.h"
 // #include "transport/http/Managers.h"
 // #include "transport/http/HttpProcessor.h"
 #include "scag/transport/smpp/router/route_manager.h"
@@ -34,8 +33,7 @@ using smsc::core::threads::ThreadedTask;
 using namespace smsc::logger;
 
 using scag::config::RouteConfig;
-using scag::stat::SmppStatEvent;
-using scag::stat::StatisticsManager;
+using stat::SmppStatEvent;
 using scag2::transport::smpp::router::RouteManager;
 using scag2::transport::smpp::router::RouteInfo;
 using std::string;

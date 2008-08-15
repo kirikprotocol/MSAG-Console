@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 #include <string>
 
-#include "Inst.h"
+#include "gen2/Inst.h"
 #include "admin/SCAGSocketListener2.h"
 #include "admin/service/ServiceSocketListener.h"
 #include "scag/config/ConfigManager.h"

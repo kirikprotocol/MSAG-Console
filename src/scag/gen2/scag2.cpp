@@ -5,15 +5,15 @@
 
 #include "core/synchronization/Event.hpp"
 #include "logger/Logger.h"
-#include "scag/bill/BillingManager.h"
+#include "scag/bill/impl/BillingManager.h"
 #include "scag/config/base/ConfigView.h"
 #include "scag/config/base/ConfigManager2.h"
-#include "scag/lcm/LongCallManager2.h"
+#include "scag/lcm/impl/LongCallManagerImpl.h"
 #include "scag/pers/PersClient.h"
-#include "scag/re/RuleEngine2.h"
-#include "scag/re/XMLHandlers2.h"
+#include "scag/re/impl/RuleEngine2.h"
+#include "scag/re/base/XMLHandlers2.h" // for StrX
 #include "scag/sessions/impl/SessionManager2.h"
-#include "scag/stat/StatisticsManager.h"
+#include "scag/stat/impl/StatisticsManager.h"
 #include "scag/transport/smpp/router/load_routes.h"
 #include "scag/util/encodings/Encodings.h"
 #include "scag2.h"
@@ -83,13 +83,9 @@ using std::exception;
 using namespace smsc::sms;
 using namespace smsc::core::synchronization;
 using smsc::util::Exception;
-using scag2::config::ConfigManager;
-using scag::bill::BillingManager;
-using scag::stat::StatisticsManager;
-using scag::config::BillingManagerConfig;
-using scag2::sessions::SessionManagerImpl;
-using scag2::lcm::LongCallManager;
+using config::ConfigManager;
 using smsc::util::findConfigFile;
+using namespace xercesc;
 
 Scag::~Scag()
 {
@@ -106,7 +102,8 @@ void Scag::init( unsigned mynode )
 
     //********************************************************
     try {
-        LongCallManager::Init(cfg.getLongCallManConfig());
+        LongCallManagerImpl* lcm = new LongCallManagerImpl();
+        lcm->init( cfg.getLongCallManConfig().maxThreads );
     }catch(...)
     {
         throw Exception("Exception during initialization of LongCallManager");
@@ -114,7 +111,10 @@ void Scag::init( unsigned mynode )
 
     //********** Billing manager initialization ***********
     try {
-        BillingManager::Init(cfg.getBillManConfig());
+
+        bill::BillingManagerImpl* bm = new bill::BillingManagerImpl;
+        bm->init( cfg.getBillManConfig() );
+
     }catch(...)
     {
         throw Exception("Exception during initialization of BillingManager");
@@ -140,10 +140,12 @@ void Scag::init( unsigned mynode )
 
     //********** Statistics manager initialization ***********
     try{
-      StatisticsManager::init(cfg.getStatManConfig());
 
-      smsc_log_info(log, "Statistics manager inited" );
-    }catch(exception& e){
+        stat::StatisticsManager* sm = new stat::StatisticsManager;
+        sm->init( cfg.getStatManConfig() );
+        smsc_log_info(log, "Statistics manager inited" );
+
+    } catch(exception& e){
       smsc_log_warn(log, "Smsc.init exception: %s", e.what());
       __warning__("Statistics manager is not started.");
     }catch(...){
@@ -179,12 +181,12 @@ void Scag::init( unsigned mynode )
       auto_ptr <char> loc(cv->getString("location", 0, false));
       if (!loc.get()) throw Exception("RuleEngine.location not found");
 
-      std::string location = loc.get();
+        std::string location = loc.get();
 
-      scag2::re::RuleEngine & re = scag2::re::RuleEngine::Instance();
-      re.Init(location);
+        re::RuleEngineImpl* re = new re::RuleEngineImpl;
+        re->init( location );
 
-      smsc_log_info(log, "Rule Engine started" );
+        smsc_log_info(log, "Rule Engine started" );
     } catch (SCAGException& e) {
       smsc_log_warn(log, "%s", e.what());
       __warning__("Rule Engine is not started.");
@@ -204,8 +206,8 @@ void Scag::init( unsigned mynode )
     } catch(Exception& e) {
       throw Exception("Exception during initialization of SmppManager: %s", e.what());
     } catch (XMLException& e) {
-      scag2::re::StrX msg(e.getMessage());
-      throw Exception("Exception during initialization of SmppManager: %s", msg.localForm());
+        scag2::re::StrX msg(e.getMessage());
+        throw Exception("Exception during initialization of SmppManager: %s", msg.localForm());
     } catch (...) {
       throw Exception("Exception during initialization of SmppManager: unknown error");
     }
@@ -238,7 +240,7 @@ void Scag::init( unsigned mynode )
 #endif
 
     try{
-        StatisticsManager::Instance().Start();
+        stat::StatisticsManager::Instance().Start();
         smsc_log_info(log, "Statistics manager started" );        
     }catch(exception& e){
       smsc_log_warn(log, "Smsc.init exception: %s", e.what());
@@ -257,10 +259,10 @@ void Scag::shutdown()
   __trace__("shutting down");
 //   scag::transport::http::HttpManager::Instance().shutdown();
   scag2::transport::smpp::SmppManager::shutdown();
-  LongCallManager::shutdown();  
+    lcm::LongCallManager::Instance().shutdown();  
   scag::pers::client::PersClient::Instance().Stop();
-  scag::bill::BillingManager::Instance().Stop();  
-  scag::stat::StatisticsManager::Instance().Stop();   
+    bill::BillingManager::Instance().Stop();
+    stat::Statistics::Instance().Stop();
 }
 
 } //scag

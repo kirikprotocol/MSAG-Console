@@ -136,4 +136,11 @@ struct SmeRecord
 }
 }
 
+namespace scag2 {
+namespace config {
+using scag::config::SmppSmeRecord;
+using scag::config::SmeRecord;
+}
+}
+
 #endif // ifndef SMSC_UTIL_CONFIG_SMEMAN_SMEMAN_STRUCTURES

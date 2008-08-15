@@ -14,6 +14,7 @@
 #include "scag/util/singleton/Singleton.h"
 #include "util/xml/DOMTreeReader.h"
 #include "util/xml/utilFunctions.h"
+#include "scag/lcm/base/LongCallManager2.h"
 
 namespace scag2 {
 namespace transport {

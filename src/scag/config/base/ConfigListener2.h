@@ -6,8 +6,6 @@
 namespace scag2 {
 namespace config {
 
-using namespace scag::config;
-
 class ConfigListener {
 private:
     ConfigType type;

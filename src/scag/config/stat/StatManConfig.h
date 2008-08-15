@@ -54,4 +54,10 @@ protected:
 }
 }
 
+namespace scag2 {
+namespace config {
+using scag::config::StatManConfig;
+}
+}
+
 #endif

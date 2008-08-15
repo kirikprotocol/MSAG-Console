@@ -1,7 +1,9 @@
+#include <set>
 #include <cassert>
 #include <cstdlib>      // for abort
 #include <sys/time.h>
 
+#include "util/cstrings.h"
 #include "util/Exception.hpp"
 #include "scag/exc/SCAGExceptions.h"
 #include "core/synchronization/Mutex.hpp"
@@ -9,7 +11,7 @@
 #include "Operation.h"
 #include "Session2.h"
 #include "SessionStore2.h"
-#include "scag/re/CommandOperations.h"
+#include "scag/re/base/CommandOperations.h"
 
 namespace {
 

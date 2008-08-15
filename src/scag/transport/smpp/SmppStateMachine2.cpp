@@ -5,19 +5,20 @@
 #include "SmppUtil.h"
 #include "SmsSplit.h"
 #include "core/buffers/XHash.hpp"
-#include "scag/re/RuleEngine2.h"
+#include "scag/re/base/RuleEngine2.h"
 #include "scag/sessions/base/SessionManager2.h"
-#include "scag/stat/StatisticsManager.h"
+#include "scag/stat/base/Statistics2.h"
 #include "system/status.h"
 #include "scag/transport/smpp/router/route_types.h"
+#include "scag/config/route/RouteStructures.h"
 
 namespace scag2 {
 namespace transport {
 namespace smpp {
 
-using namespace scag2::lcm;
-using namespace scag2::sessions;
-using namespace scag::stat;
+using namespace lcm;
+using namespace sessions;
+using namespace stat;
 using namespace scag::transport::smpp;
 using namespace smsc::core::buffers;
 
@@ -292,17 +293,19 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
             }
         else
         {
-            stripUnknownSmppOptionals(sms,allowedUnknownOptionals);
+            stripUnknownSmppOptionals( sms,allowedUnknownOptionals );
 
             uint32_t cnt;
-            if(ri.slicing != SlicingType::NONE && !isSliced(sms) && (cnt = getPartsCount(sms)) > 1)
+            if( ri.slicing != router::SlicingType::NONE && 
+                !isSliced(sms) && (cnt = getPartsCount(sms)) > 1)
             {
                 smsc_log_debug(log_, "%s: slicing message, type=%d, parts=%d, resppolicy=%d", cmdName, ri.slicing, cnt, ri.slicingRespPolicy);
                 cmd->get_smsCommand().setSlicingParams(ri.slicingRespPolicy, cnt);
                 uint32_t seq = 0, refNum = dst->getNextSlicingSeq();
 
                 SMS partSms;
-                uint8_t udhType = ri.slicing > SlicingType::SAR ? ri.slicing - SlicingType::SAR : 0;
+                uint8_t udhType = ri.slicing > router::SlicingType::SAR ?
+                    ri.slicing - router::SlicingType::SAR : 0;
                 while( (seq = getNextSmsPart(sms, partSms, refNum, seq, udhType, cmdType == DATASM)) )
                 {
                     int newSeq=dst->getNextSeq();
@@ -319,7 +322,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
                     throw Exception("%s: Register cmd for uid=%d, seq=%d failed", cmdName, dst->getUid(), newSeq);
                 dst->putCommand(aucmd);
             }
-            registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
+            registerEvent( stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
         }
     } catch(std::exception& e) {
         failed = smsc::system::Status::SYSFAILURE;
@@ -382,7 +385,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
             {
                 session->closeCurrentOperation();
             }
-            registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+            registerEvent( stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
             return;
         }
         routeId = ri.routeId;
@@ -448,7 +451,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
                 smsc_log_warn(log_, "USSD Submit: Rerouting for USSD dialog not allowed");
                 SubmitResp(aucmd,smsc::system::Status::NOROUTE);
                 session->closeCurrentOperation();
-                registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+                registerEvent( stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
                 return;
             }
 
@@ -459,7 +462,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
            {
             smsc_log_warn(log_, "USSD Submit: Cannot obtain session" );
             SubmitResp(aucmd.release(),smsc::system::Status::NOROUTE);
-            registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+            registerEvent( stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
             aucmd.release();
             return;
            }
@@ -488,7 +491,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
                     // cannot continue
                     smsc_log_warn(log_, "USSD Submit: ussd operation is not found" );
                     SubmitResp(aucmd, smsc::system::Status::USSDDLGREFMISM);
-                    registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+                    registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
                     return;
                 }
 
@@ -521,7 +524,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
             {
                 smsc_log_warn(log_, "USSD Submit: UMR is not specified");
                 SubmitResp(cmd, smsc::system::Status::USSDDLGREFMISM);
-                registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+                registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
                 return;
             }
         }
@@ -545,7 +548,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
             {
                 smsc_log_warn(log_, "USSD Submit: USR=%d is invalid, no session", key.USR);
                 SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-                registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+                registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
                 return;
             }
         }
@@ -562,7 +565,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
             {
                 smsc_log_warn(log_, "USSD Submit: USR=%d is invalid, no session", key.USR);
                 SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-                registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+                registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
                 return;
             }
         }
@@ -576,7 +579,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
             {
                 smsc_log_warn(log_, "USSD Submit: USR=%d is invalid, no session", key.USR);
                 SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-                registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+                registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
                 return;
             }
 //            dst->delUMRMapping(key.abonentAddr, umr);
@@ -586,7 +589,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         {
             smsc_log_warn(log_, "USSD Submit: USSD_OP=%d is invalid", ussd_op);
             SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-            registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
             return;
         }
            */
@@ -603,7 +606,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
                       src->getSystemId(), sms.getDestinationAddress().toString().c_str());
         SubmitResp(aucmd,smsc::system::Status::NOROUTE);
         session->closeCurrentOperation();
-        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+        registerEvent( stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
         return;
     }
 
@@ -614,7 +617,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         {
             SubmitResp(aucmd, smsc::system::Status::SYSERR);
             session->closeCurrentOperation();
-            registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
+            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
         }
         return;
     }
@@ -629,7 +632,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         }
         SubmitResp(aucmd, st.result);
         session->closeCurrentOperation();
-        registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
+        registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
         return;
     }
 
@@ -689,7 +692,7 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
                     {
                         smsc_log_warn(log_, "SubmitResp: Src entity disconnected. sid='%s', seq='%d'",
                                       src->getSystemId(), cmd->get_dialogId());
-                        //          registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
+                        //          registerEvent( stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
                         return;
                     }
                 }
@@ -804,26 +807,26 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
     if(rs != -2)
     {
         cmd->set_status(rs);
-        rs = scag::stat::events::smpp::RESP_GW_REJECTED;
+        rs = stat::events::smpp::RESP_GW_REJECTED;
     }
     else if(cmd->flagSet(SmppCommandFlags::FAILED_COMMAND_RESP))
     {
-        rs = scag::stat::events::smpp::RESP_FAILED;
+        rs = stat::events::smpp::RESP_FAILED;
     }
     else if(cmd->get_resp()->expiredResp)
     {
-        rs = scag::stat::events::smpp::RESP_EXPIRED;
+        rs = stat::events::smpp::RESP_EXPIRED;
     }
     else if(cmd->get_status())
     {
-        rs = scag::stat::events::smpp::RESP_REJECTED;
+        rs = stat::events::smpp::RESP_REJECTED;
     }
     else
     {
-        rs = scag::stat::events::smpp::RESP_OK;
+        rs = stat::events::smpp::RESP_OK;
     }
 
-    registerEvent(rs, src, dst, (char*)sms->getRouteId(), rs != scag::stat::events::smpp::RESP_OK ? cmd->get_status() : -1);
+    registerEvent(rs, src, dst, (char*)sms->getRouteId(), rs != stat::events::smpp::RESP_OK ? cmd->get_status() : -1);
 
     try {
         dst->putCommand(aucmd);
@@ -921,7 +924,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
             session->closeCurrentOperation();
             // sm.releaseSession(session);
         }
-        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+        registerEvent( stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
         return;
       }
       routeId = ri.routeId;
@@ -977,7 +980,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
             DeliveryResp(aucmd, smsc::system::Status::NOROUTE);
             session->closeCurrentOperation();
             // sm.releaseSession(session);
-            registerEvent(scag::stat::events::smpp::REJECTED, src, dst, NULL, smsc::system::Status::NOROUTE);
+            registerEvent( stat::events::smpp::REJECTED, src, dst, NULL, smsc::system::Status::NOROUTE);
             return;
         }
 
@@ -995,7 +998,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         {
             smsc_log_warn(log_, "USSD Delivery: UMR is not specified");
             DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-            registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
             return;
         }
         else if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_INDICATION)
@@ -1024,7 +1027,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
             {
                 smsc_log_warn(log_, "USSD Delivery: USR=%d is invalid, no session", key.USR);
                 DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-                registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+                registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
                 return;
             }
         }
@@ -1046,7 +1049,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
             {
                 smsc_log_warn(log_, "USSD Delivery: USR=%d is invalid, no session", key.USR);
                 DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-                registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+                registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
                 return;
             }
         }
@@ -1054,7 +1057,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         {
             smsc_log_warn(log_, "USSD Delivery: USSD_OP=%d is invalid", ussd_op);
             DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-            registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
             return;
         }
            */
@@ -1074,7 +1077,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
     DeliveryResp(aucmd,smsc::system::Status::NOROUTE);
     session->closeCurrentOperation();
     // sm.releaseSession(session);
-    registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+    registerEvent( stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
     return;
   }
 
@@ -1085,7 +1088,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
       {
         DeliveryResp(aucmd,smsc::system::Status::SYSERR);
         session->closeCurrentOperation();
-        registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
+        registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
       }
       return;
   }
@@ -1100,7 +1103,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
     }
     DeliveryResp(aucmd,st.result);
     session->closeCurrentOperation();
-    registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
+    registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
     return;
   }
 
@@ -1159,7 +1162,7 @@ void StateMachine::processDeliveryResp(std::auto_ptr<SmppCommand> aucmd, ActiveS
                     {
                         smsc_log_warn(log_, "DeliveryResp: Src entity disconnected. sid='%s', seq='%d'",
                                       src->getSystemId(), cmd->get_dialogId());
-                        //          registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
+                        //          registerEvent( stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
                         return;
                     }
                 }
@@ -1274,26 +1277,26 @@ void StateMachine::processDeliveryResp(std::auto_ptr<SmppCommand> aucmd, ActiveS
     if(rs != -2)
     {
         cmd->set_status(rs);
-        rs = scag::stat::events::smpp::RESP_GW_REJECTED;
+        rs = stat::events::smpp::RESP_GW_REJECTED;
     }
     else if(cmd->flagSet(SmppCommandFlags::FAILED_COMMAND_RESP))
     {
-        rs = scag::stat::events::smpp::RESP_FAILED;
+        rs = stat::events::smpp::RESP_FAILED;
     }
     else if(cmd->get_resp()->expiredResp)
     {
-        rs = scag::stat::events::smpp::RESP_EXPIRED;
+        rs = stat::events::smpp::RESP_EXPIRED;
     }
     else if(cmd->get_status())
     {
-        rs = scag::stat::events::smpp::RESP_REJECTED;
+        rs = stat::events::smpp::RESP_REJECTED;
     }
     else
     {
-        rs = scag::stat::events::smpp::RESP_OK;
+        rs = stat::events::smpp::RESP_OK;
     }
 
-    registerEvent(rs, src, dst, (char*)sms->getRouteId(), rs != scag::stat::events::smpp::RESP_OK ? cmd->get_status() : -1);
+    registerEvent(rs, src, dst, (char*)sms->getRouteId(), rs != stat::events::smpp::RESP_OK ? cmd->get_status() : -1);
 
     try{
         dst->putCommand(aucmd);
@@ -1377,7 +1380,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
         smsc_log_info(log_,"DataSm: USSD dialog not allowed in DataSm %s(%s)->%s", sms.getOriginatingAddress().toString().c_str(),
                         src->getSystemId(), sms.getDestinationAddress().toString().c_str());
         DataResp(aucmd,smsc::system::Status::USSDDLGREFMISM);
-        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::USSDDLGREFMISM);
+        registerEvent(stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::USSDDLGREFMISM);
         return;
     }
 
@@ -1396,7 +1399,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
               session->closeCurrentOperation();
               // sm.releaseSession(session);
           }
-          registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+          registerEvent(stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
           return;
       }
       routeId = ri.routeId;
@@ -1476,7 +1479,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
     DataResp(aucmd,smsc::system::Status::NOROUTE);
     session->closeCurrentOperation();
     // sm.releaseSession(session);
-    registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+    registerEvent(stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
     return;
   }
 
@@ -1488,7 +1491,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
         DataResp(aucmd, smsc::system::Status::SYSERR);
         session->closeCurrentOperation();
         // sm.releaseSession(session);
-        registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
+        registerEvent(stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
       }
       return;
   }
@@ -1504,7 +1507,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
     DataResp(aucmd, st.result);
     session->closeCurrentOperation();
     // sm.releaseSession(session);
-    registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
+    registerEvent(stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
     return;
   }
 
@@ -1560,7 +1563,7 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
                     {
                         smsc_log_warn(log_, "DataSmResp: Src entity disconnected. sid='%s', seq='%d'",
                                       src ? src->getSystemId() : "NULL", cmd->get_dialogId());
-                        //          registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
+                        //          registerEvent(stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
                         return;
                     }
                 }
@@ -1672,26 +1675,26 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
     if(rs != -2)
     {
         cmd->set_status(rs);
-        rs = scag::stat::events::smpp::RESP_GW_REJECTED;
+        rs = stat::events::smpp::RESP_GW_REJECTED;
     }
     else if(cmd->flagSet(SmppCommandFlags::FAILED_COMMAND_RESP))
     {
-        rs = scag::stat::events::smpp::RESP_FAILED;
+        rs = stat::events::smpp::RESP_FAILED;
     }
     else if(cmd->get_resp()->expiredResp)
     {
-        rs = scag::stat::events::smpp::RESP_EXPIRED;
+        rs = stat::events::smpp::RESP_EXPIRED;
     }
     else if(cmd->get_status())
     {
-        rs = scag::stat::events::smpp::RESP_REJECTED;
+        rs = stat::events::smpp::RESP_REJECTED;
     }
     else
     {
-        rs = scag::stat::events::smpp::RESP_OK;
+        rs = stat::events::smpp::RESP_OK;
     }
 
-    registerEvent(rs, src, dst, (char*)sms->getRouteId(), rs != scag::stat::events::smpp::RESP_OK ? cmd->get_status() : -1);
+    registerEvent(rs, src, dst, (char*)sms->getRouteId(), rs != stat::events::smpp::RESP_OK ? cmd->get_status() : -1);
 
 
     try{
@@ -1700,10 +1703,10 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
         smsc_log_warn(log_,"DataSmResp: Failed to put command into %s:%s",dst->getSystemId(),e.what());
     }
     
-    if(session.get())
+    if (session.get())
     {
         session->getLongCallContext().runPostProcessActions();
-        // scag::sessions::SessionManager::Instance().releaseSession(session);
+        // sessions::SessionManager::Instance().releaseSession(session);
     }
 
     // cmd->get_resp()->set_sms(0);
@@ -1774,7 +1777,7 @@ void StateMachine::processAlertNotification( std::auto_ptr<SmppCommand> aucmd)
     if ( ! cmd ) return;
     smsc_log_debug(log_, "AlertNotification: processing cmd=%p...", cmd );
   
-    RouteInfo ri;
+    router::RouteInfo ri;
     SmppEntity *dst;
     dst = routeMan_->RouteSms( cmd->getEntity()->getSystemId(),
                                cmd->get_alertNotification().src,

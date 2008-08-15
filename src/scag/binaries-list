@@ -21,7 +21,11 @@ scag/scag            gwmain         $(XERCES_LIB) -lscag-util -lscag \
    -lscag-re-actions-datetime -lscag-re-smpp -lscag-re-session -lscag-re-http \
    -lscag-re-actions -lscag-re -lutil-xml -lscag-transport-http -lscag-stat \
    -lscag-stat -ladmin-service -lscag-stat-sacc -lscag-bill-infrastruct \
-   -lscag-pers -lscag-config-pers -lscag-pers -lscag-lcm -lscag-config-lcm \
+   -lscag-pers -lscag-config-pers -lscag-pers -lscag-lcm \
+   \
+   -lscag-lcm-base -lscag-re-base -lscag-stat-base \
+   \
+   -lscag-config-lcm \
    -lscag-config-base \
    -lscag-util-encodings -lutil-recoder-recode_dll -lutil-regexp -lscag-exc \
    -lsms $(SOCKETLIB) -lcore-network -lnsl  $(XERCES_LIB) -lscag @liblogger.so \
@@ -29,33 +33,62 @@ scag/scag            gwmain         $(XERCES_LIB) -lscag-util -lscag \
    -lutil-URCdb -lutil $(SSL_LIB)
 
 scag/scag2           gwmain2        $(XERCES_LIB) -lscag-util -lscag-gen2 \
-  -lscag-sessions-impl $(__LIBRARIES) -lscag-pers -lutil-mirrorfile \
+  -lscag-sessions-impl \
+  $(__LIBRARIES) \
+  -lscag-pers -lutil-mirrorfile \
   -lscag-admin -lscag-transport -ladmin-service $(SOCKETLIB) -lcore-network \
-  -lscag-bill-infrastruct -lscag-bill -lscag-bill-infrastruct $(XERCES_LIB) \
-  \
-  -lscag-config-impl \
   $(XERCES_LIB) \
-  -lscag-transport-smpp -lscag-stat -lscag-transport-smpp-router -lcore-buffers \
-  -lsms  -lrouter -ladmin-protocol -lscag-sessions -lscag-sessions-base \
-  -lscag-stat -lscag-util-properties -lscag-util-singleton -lscag-util-storage \
-  -L$(SMSC_BUILDDIR)/bin  -llicense-check -lutil-templates -linman-interaction-msgbill \
-  -linman-interaction -linman-common -lsystem-common -lsystem-smppio \
-  -lcore-threads -lutil-config -lutil -lrt -ldl  -lscag-re \
-  -lscag-re-actions -lscag-re-actions-str -lscag-re-actions-misc \
-  -lscag-re-actions-sess -lscag-re-actions-bill -lscag-re-actions-smpp \
-  -lscag-re-actions-http -lscag-re-actions-pers -lscag-re-actions-datetime \
-  -lscag-re-smpp -lscag-transport-smpp -lscag-re-session -lscag-re-http \
-  -lscag-re-actions -lscag-re -lutil-xml -lscag-transport-http -lscag-stat \
-  -lscag-stat -ladmin-service -lscag-stat-sacc -lscag-bill-infrastruct \
+  \
+  -lscag-bill-impl \
+  -linman-interaction-msgbill \
+  -linman-interaction \
+  -linman-common \
+  \
+  -lscag-stat-impl \
+  -lscag-re-impl \
+  -lscag-re-actions-impl \
+  -lscag-lcm-impl \
+  -lscag-config-impl \
+  \
+  $(XERCES_LIB) \
+  -lscag-transport-smpp \
+  -lscag-transport-smpp-router \
+  -lscag-transport-smpp \
+  -lscag-transport-http \
+  \
+  -lscag-util-properties \
   -lscag-pers \
-  -lscag-lcm \
+  \
+  -lscag-sessions-base \
+  -lscag-lcm-base \
+  -lscag-bill-base \
+  -lscag-re-base \
+  -lscag-stat-base \
   \
   -lscag-config \
   -lscag-config-smpp -lscag-config-stat -lscag-config-bill \
   -lscag-config-sessn -lscag-config-route -lscag-config-http \
-  -lscag-config-pers -lscag-config-lcm -lscag-config-base \
+  -lscag-config-pers -lscag-config-lcm \
+  -lscag-config-base \
   \
-  -lscag-util-encodings -lutil-recoder-recode_dll -lutil-regexp \
-  -lscag-exc -lsms $(SOCKETLIB) -lcore-network -lnsl  $(XERCES_LIB) -lscag \
-  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -linman-interaction -linman-common \
-  -lutil-URCdb -lutil $(SSL_LIB)
+  -lscag-util-storage \
+  -lscag-util-singleton \
+  -lscag-util-encodings \
+  -lscag-exc \
+  \
+  -llicense-check \
+  -lrouter -ladmin-protocol -ladmin-service \
+  -lsystem-common -lsystem-smppio \
+  -lcore-buffers \
+  -lsms -lcore-network $(SOCKETLIB) -lnsl \
+  -lcore-threads -lrt -ldl \
+  \
+  -lutil-templates \
+  -lutil-config \
+  -lutil-xml \
+  -lutil-recoder-recode_dll \
+  -lutil-regexp \
+  $(XERCES_LIB) \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil-URCdb -lutil \
+  $(SSL_LIB)

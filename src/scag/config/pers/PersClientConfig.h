@@ -32,4 +32,10 @@ public:
 }
 }
 
+namespace scag2 {
+namespace config {
+using scag::config::PersClientConfig;
+}
+}
+
 #endif

@@ -1,4 +1,3 @@
-#include <xercesc/dom/DOM.hpp>
 #include <fstream>
 #include <sys/stat.h>
 #include <typeinfo>

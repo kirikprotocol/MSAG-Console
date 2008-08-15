@@ -1,7 +1,7 @@
 #include "SCAGRuleCommands2.h"
 #include "util/xml/utilFunctions.h"
 #include "scag/exc/SCAGExceptions.h"
-#include "scag/re/RuleEngine2.h"
+#include "scag/re/base/RuleEngine2.h"
 
 namespace scag2 {
 namespace admin {

@@ -171,4 +171,13 @@ typedef std::vector<Route*> RoutePVector;
 }
 }
 
+namespace scag2 {
+namespace config {
+using scag::config::Subject;
+using scag::config::Source;
+using scag::config::Destination;
+using scag::config::Route;
+}
+}
+
 #endif //ifndef SMSC_UTIL_CONFIG_ROUTE_ROUTESTRUCTURES

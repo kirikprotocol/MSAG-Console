@@ -47,4 +47,10 @@ public:
 }
 }
 
+namespace scag2 {
+namespace config {
+using scag::config::HttpManagerConfig;
+}
+}
+
 #endif

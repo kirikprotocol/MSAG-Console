@@ -17,7 +17,7 @@
 #include "router/route_manager.h"
 #include "scag/config/base/ConfigListener2.h"
 #include "scag/config/route/RouteConfig.h"
-#include "scag/lcm/LongCallManager2.h"
+#include "scag/re/base/LongCallContext.h"
 #include "scag/util/Reffer.h"
 
 namespace scag2 {

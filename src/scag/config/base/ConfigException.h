@@ -22,4 +22,10 @@ public:
 }
 }
 
+namespace scag2 {
+namespace config {
+using scag::config::ConfigException;
+}
+}
+
 #endif // ifndef SMSC_UTIL_CONFIG_CONFIGEXCEPTION

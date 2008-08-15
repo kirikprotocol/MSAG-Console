@@ -2,7 +2,7 @@
 #define _SCAG_RULE_COMMANDS2_H_
 
 #include "AdminCommand2.h"
-#include "scag/re/RuleKey2.h"
+#include "scag/re/base/RuleKey2.h"
 
 
 namespace scag2 {

@@ -28,7 +28,7 @@
 
 #include "scag/config/route/RouteStructures.h"
 
-#include "scag/bill/BillingManager.h"
+#include "scag/bill/base/BillingManager.h"
 // #include "scag/transport/http/HttpProcessor.h"
 // #include "scag/transport/http/HttpRouter.h"
 

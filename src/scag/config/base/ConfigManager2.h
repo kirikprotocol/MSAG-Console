@@ -17,8 +17,6 @@
 namespace scag2 {
 namespace config {
 
-    using namespace scag::config;
-
 struct LicenseInfo{
   LicenseInfo()
   {
