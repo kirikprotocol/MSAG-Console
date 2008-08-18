@@ -14,7 +14,7 @@ using namespace scag::util::storage;
 using scag::util::UnlockMutexGuard;
 
     /*
-    // FIXME: temporary for tests SlowMutex
+    /// temporary: SlowMutex for tests
     class SlowMutex : public smsc::core::synchronization::Mutex
     {
     public:
@@ -86,12 +86,6 @@ void SessionStoreImpl::init( unsigned nodeNumber,
     maxqueuesize_ = 0;   // maximum length of one session command queue
     maxcommands_ = 0;    // maximum of storedCommands
 
-    // create a new memstorage, diskstorage
-    // const std::string path = getString(cfg, "path", "sessions" );
-    // const std::string name = getString(cfg, "name", "sessionStore" );
-    // const int32_t indexgrowth = getInt(cfg, "indexgrowth", 100 );
-    // const int32_t pagesize    = getInt(cfg, "pagesize", 512 );
-    // const int32_t prealloc    = getInt(cfg, "prealloc", 0 );
     smsc_log_info( log_, "init path=%s, name=%s, indexgrowth=%d, pagesize=%d, prealloc=%d",
                    path.c_str(), name.c_str(), indexgrowth, pagesize, prealloc );
 
@@ -123,12 +117,6 @@ void SessionStoreImpl::init( unsigned nodeNumber,
         }
     }
     stopping_ = false;
-/*
-        expireSet_.reset(new ExpireSet);
-        expireThread_.reset( new scag::util::ThreadWrap<SessionStoreImpl>
-                             ( *this, &SessionStoreImpl::expireThread ) );
-        expireThread_->Start();
- */
 }
 
 
@@ -139,52 +127,6 @@ void SessionStoreImpl::stop()
     MutexGuard mg(cacheLock_);
     stopping_ = true;
 }
-    /*
-            printf( "session store: maxqueuesize=%u maxcachesize=%u maxstoredcmds=%u\n", maxqueuesize_, maxcachesize_, maxcommands_ );
-            smsc_log_info( log_, "maxqueuesize=%u maxcachesize=%u maxstoredcmds=%u", maxqueuesize_, maxcachesize_, maxcommands_ );
-            if ( ! wait ) return;
-
-            // wait until there are locked sessions
-            int passes = 0;
-            do {
-
-                bool haslocked = false;
-                // check that all session have been freed
-                for ( MemStorage::iterator_type i(cache_->begin()); i.next(); ) {
-                    Session* s = cache_->store2val( i.value() );
-                    SCAGCommand* cmd = s->currentCommand();
-                    if ( cmd ) {
-                        smsc_log_debug( log_, "storage is still locked: key=%s session=%p cmd=%p",
-                                        i.key().toString().c_str(), s, cmd );
-                        haslocked = true;
-                        break;
-                    }
-                }
-                if ( ! haslocked ) break;
-                cacheLock_.wait(100);
-
-            } while ( ++passes < 200 );
-            if ( passes >= 200 ) {
-                smsc_log_error( log_, "logic error in stop: dead lock?");
-                ::abort();
-            }
-        }
-
-
-        {   // notify expire thread, and wait for when it stopped
-            MutexGuard mg(expireMonitor_);
-            while ( expireSet_.get() && expireSet_->size() > 0 ) {
-                expireMonitor_.notify();
-                expireMonitor_.wait(100);
-            }
-            smsc_log_info( log_, "expire pool is destroyed" );
-            expireSet_.reset(0);
-            expireMonitor_.notify();
-        }
-        expireThread_->WaitFor();
-    }
-     */
-
 
 
 ActiveSession SessionStoreImpl::fetchSession( const SessionKey& key,
@@ -300,10 +242,14 @@ void SessionStoreImpl::releaseSession( Session&                      session,
         expiration = session.expirationTime();
 
         if ( flush ) {
-
             UnlockMutexGuard ug(cacheLock_);
             disk_->set( key, cache_->store2ref(*v) );
             smsc_log_debug(log_, "flushed key=%s session=%p", key.toString().c_str(), &session );
+
+        } else {
+            UnlockMutexGuard ug(cacheLock_);
+            disk_->remove( key );
+            smsc_log_debug(log_, "removed key=%s session=%p", key.toString().c_str(), &session );
 
         }
             
@@ -380,7 +326,8 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired 
 
         if ( session ) {
             smsc_log_debug(log_, "finalizing key=%s session=%p", session->sessionKey().toString().c_str(), session );
-            // it may take quite long time
+            // it may take quite long time, so we don't lock mutex yet
+            // but the session must be already locked by a fictional command (-1)
             if ( ! fin_->finalize( *session ) ) {
                 // session is taken for long call finalization
                 ++longcall;
@@ -456,6 +403,7 @@ void SessionStoreImpl::getSessionsCount( unsigned& sessionsCount,
 }
 
 
+/// the cache must be locked here
 bool SessionStoreImpl::doSessionFinalization( Session& session )
 {
     if ( session.currentCommand() != reinterpret_cast<SCAGCommand*>(-1) ) {
@@ -476,118 +424,11 @@ bool SessionStoreImpl::doSessionFinalization( Session& session )
     } else {
         // no more commands
         smsc_log_debug(log_, "key=%s session=%p is being destroyed", session.sessionKey().toString().c_str(), &session );
-        // FIXME: delete from disk also
-        std::auto_ptr<Session> sptr(cache_->release( session.sessionKey() ));
+        // NOTE: session should be already deleted from disk
+        delete cache_->release( session.sessionKey() );
     }
     return true;
 }
-
-
-    // executed in a separate thread
-    /*
-    int SessionStoreImpl::expireThread()
-    {
-        const int tmo = 1000;
-        MutexGuard mg(expireMonitor_);
-        smsc_log_debug(log_,"node=%u expire thread started", nodeNumber_ );
-        bool dostopping = false;
-        while ( expireSet_.get() ) {
-
-            // FIXME: should we calculate the next wake time?
-            // the answer is yes, but we should take minimum
-            // of the calculated time and some rather small timeout.
-            int curtmo = tmo;
-            if ( expireSet_->size() > 0 ) {
-                int next = expireSet_->begin()->expiration - time(0);
-                if ( next < 0 ) next = 0;
-                if ( curtmo > next ) curtmo = next;
-            }
-
-            if ( dostopping ) curtmo = 100;
-            if ( curtmo > 0 ) expireMonitor_.wait( curtmo );
-            if ( ! expireSet_.get() ) break;
-
-            const time_t curtime = time(0);
-
-            ExpireSet curset;
-            if ( dostopping ) {
-                curset = *expireSet_;
-                *expireSet_ = ExpireSet();
-                smsc_log_debug(log_, "taking the whole expire set, sz=%u", curset.size() );
-            } else {
-                ExpireData d( curtime, SessionKey() );
-                ExpireSet::iterator i = expireSet_->lower_bound(d);
-                curset = ExpireSet( expireSet_->begin(), i );
-                expireSet_->erase( expireSet_->begin(), i );
-            }
-
-            std::vector< ExpireData > newset;
-            {
-                UnlockMutexGuard ug( expireMonitor_ );
-                newset.reserve( curset.size() );
-
-                MutexGuard cmg(cacheLock_);
-                dostopping = stopping_;
-
-                if ( curset.size() > 0 ) smsc_log_debug(log_, "%u sessions expired", curset.size() );
-
-                for ( ExpireSet::iterator i = curset.begin();
-                      i != curset.end();
-                      ++i ) {
-
-                    const SessionKey& key = i->key;
-                    MemStorage::stored_type* v = cache_->get( key );
-                    if ( !v ) {
-                        // smsc_log_warn(log_,"key=%s to be expired is not found, sz=%u", key.toString().c_str(), curset.size() );
-                        continue;
-                    }
-
-                    Session* session = cache_->store2val(*v);
-                    // smsc_log_debug(log_, "expired key=%s session=%p", key.toString().c_str(), session );
-                    const time_t newexpiration = session->expirationTime();
-
-                    if ( session->currentCommand() ) {
-                        smsc_log_debug(log_,"key=%s session=%p is not free, cmd=%p, skipped",
-                                       key.toString().c_str(), session, session->currentCommand() );
-                        newset.push_back( ExpireData(newexpiration,key) );
-                        continue;
-                    }
-
-                    // check expiration time again, as it may be prolonged while we were waiting
-                    if ( ! stopping_ ) {
-                        if ( curtime < newexpiration ) {
-                            smsc_log_debug(log_,"key=%s session=%p is not expired yet",
-                                           key.toString().c_str(), session );
-                            newset.push_back( ExpireData(newexpiration,key) );
-                            continue;
-                        }
-                    }
-
-                    smsc_log_debug(log_, "finalizing key=%s session=%p", key.toString().c_str(), session );
-                    fin_->finalize( *session );
-                    delete cache_->release( key );
-
-                }
-
-            } // lock expireMonitor_
-
-            if ( newset.size() > 0 ) smsc_log_debug( log_, "%u sessions has not expired yet", newset.size() );
-            if ( expireSet_.get() ) {
-                for ( std::vector< ExpireData >::const_iterator i = newset.begin();
-                      i != newset.end();
-                      ++i ) {
-                    expireSet_->insert(*i);
-                }
-            }
-
-        } // while expireSet_ is alive
-
-        smsc_log_info(log_,"expire thread is finishing" );
-        return 0;
-
-    } // expireThread
-     */
-
 
 
 bool SessionStoreImpl::carryNextCommand( Session&     session,

@@ -166,10 +166,7 @@ void ActionContext::getBillingInfoStruct( bill::BillingInfoStruct& bis )
     bis.protocol = commandProperty_->protocol;
     bis.providerId = commandProperty_->providerId;
     bis.operatorId = commandProperty_->operatorId;
-
-    // FIXME!
-    timeval tv;
-    bis.SessionBornMicrotime = tv; // session->getPrimaryKey().BornMicrotime;
+    bis.SessionBornMicrotime = session_->sessionPrimaryKey().bornTime();
     bis.msgRef = commandProperty_->msgRef;
 }
 

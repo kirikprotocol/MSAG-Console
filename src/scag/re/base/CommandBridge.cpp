@@ -42,7 +42,7 @@ EventHandlerType CommandBridge::getHTTPHandlerType(const SCAGCommand& command)
 {
     switch(command.getCommandId())
     {
-        // FIXME
+        // FIXME: http
         /*
         case HTTP_REQUEST:
             return EH_HTTP_REQUEST;

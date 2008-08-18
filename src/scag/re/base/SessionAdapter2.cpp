@@ -20,7 +20,8 @@ Property* SessionAdapter::getProperty(const std::string& name)
     {
         if(!statusProp)
             statusProp = new AdapterProperty(name, this, false );
-        // FIXME: statusProp = new AdapterProperty(name, this, session.isExpired());
+        // FIXME: could session be expired? statusProp was (see below)
+        // statusProp = new AdapterProperty(name, this, session.isExpired());
         return statusProp;
     }
     return NULL;

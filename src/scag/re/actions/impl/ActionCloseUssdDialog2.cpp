@@ -41,7 +41,7 @@ bool ActionCloseUssdDialog::run(ActionContext& context)
 
     if (serviceOp == USSR_REQUEST) 
     {
-        // FIXME: should we take any ussd dialog (or current op only?)
+        // FIXME: should we check that current op is ussd?
         Operation* op = context.getSession().getCurrentOperation();
         if(op && op->flagSet(sessions::OperationFlags::SERVICE_INITIATED_USSD_DIALOG))
             smppAdapter.setServiceOp(USSN_REQUEST);

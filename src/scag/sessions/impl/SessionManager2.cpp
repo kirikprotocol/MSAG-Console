@@ -721,19 +721,18 @@ uint16_t SessionManagerImpl::getNewUSR(Address& address)
 
 void SessionManagerImpl::continueExecution( LongCallContext* lcmCtx, bool dropped )
 {
-    // FIXME
-    /*
-    SessionPtr* s = (SessionPtr*)lcmCtx->stateMachineContext;
+    /// long call in session_destroy
+    Session* session = reinterpret_cast<Session*>( lcmCtx->stateMachineContext );
     lcmCtx->continueExec = true;
+    assert( session && 
+            session->currentCommand() == reinterpret_cast< SCAGCommand* >(-1) );
 
-    if(!dropped)
-    {
-        MutexGuard mg(inUseMonitor);
-        deleteQueue.Push(*s);
-        awakeEvent.Signal();
+    if ( dropped ) {
+        // finalize immediately
+        store_->sessionFinalized( *session );
+    } else {
+        scheduleExpire( session->expirationTime(), session->sessionKey() );
     }
-    delete s;
-     */
 }
 
 
@@ -751,7 +750,6 @@ bool SessionManagerImpl::finalize( Session& session )
 {
     smsc_log_debug( log_, "finalize: session=%p, key=%s", &session, session.sessionKey().toString().c_str() );
 
-    // FIXME: connect to session_destroy rule in RE
     try {
 
         RuleStatus rs;
@@ -762,7 +760,7 @@ bool SessionManagerImpl::finalize( Session& session )
             lcmCtx.stateMachineContext = &session;
             lcmCtx.initiator = this;
             if ( LongCallManager::Instance().call(&lcmCtx) )
-                // successfully called
+                // successfully called, session is not finalized
                 return false;
 
         } else if ( rs.status == STATUS_OK ) {

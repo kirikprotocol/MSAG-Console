@@ -631,7 +631,7 @@ void CommandTraceHttpRoute::init()
 
 Response * CommandTraceHttpRoute::CreateResponse(Scag * ScagApp)
 {
-    // FIXME
+    // FIXME: http
     return new Response( Response::Ok, "not impl" );
     
     /*

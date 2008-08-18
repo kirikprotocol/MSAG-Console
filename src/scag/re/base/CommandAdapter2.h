@@ -30,7 +30,7 @@ public:
         case SMPP:
             return SmppCommandAdapter::CheckAccess(handlerType,PropertyName);
         case HTTP:
-            // FIXME
+            // FIXME: http
             fprintf( stderr, "NOT IMPL YET\n");
             ::abort();
             // return HttpCommandAdapter::CheckAccess(handlerType,PropertyName);

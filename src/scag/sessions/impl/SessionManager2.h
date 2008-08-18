@@ -85,7 +85,7 @@ public:
 
     // virtual SessionPtr newSession(CSessionKey& sessionKey);
 
-    virtual void continueExecution(LongCallContext* context, bool dropped);
+    virtual void continueExecution( lcm::LongCallContext* context, bool dropped );
 
     /// --- interface of ConfigListener
     virtual void configChanged();
