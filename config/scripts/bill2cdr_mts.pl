@@ -538,6 +538,12 @@ sub process{
     {
       $makeoutrec=0;
     }
+    if($infields->{SRC_ADDR}=~/111122(?:2\d|30)$/)
+    {
+      #Feature Request F-43.1
+      $infields->{DST_ADDR}=$infields->{SRC_ADDR};
+      $infields->{SRC_ADDR}='.1.1.79134548051';
+    }
     my $outfields={};
     %$outfields=%$infields;
     $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?22:$infields->{SERVICE_ID};
