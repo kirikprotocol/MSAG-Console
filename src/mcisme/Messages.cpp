@@ -121,7 +121,8 @@ MessageFormatter::formatMessage(const AbntAddr& abnt,
 
   int total = 0;
 
-  for (int i = 0; i < mc_events_count; i++)
+  int i=0;
+  for (; i < mc_events_count; i++)
   {
     smsc_log_debug(logger, "MessageFormatter::formatMessage::: process next event: event idx=%d", i);
     AbntAddr from(&(mc_events[i].caller));
@@ -141,6 +142,8 @@ MessageFormatter::formatMessage(const AbntAddr& abnt,
 
     if ( createMCEventOut(for_send, mc_events[i], originatingAddressIsMciSmeAddress, messageOriginatingAddress, report_msg_for_client, MAX_MSG_LENS[hibit]) ) break;
   }
+
+  for_send->lastCallingTime = mc_events[i].dt;
 
   return true;
 }
