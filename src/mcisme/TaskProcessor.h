@@ -78,6 +78,7 @@ struct sms_info
 {
   time_t          sending_time;
   AbntAddr        abnt;
+  time_t          lastCallingTime;
   vector<MCEvent> events;
 };
 
@@ -128,6 +129,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
 
   bool _isUseWantNotifyPolicy;
   bool _originatingAddressIsMCIAddress;
+  time_t _sendAbntOnlineNotificationPeriod; // expressed in seconds
 
   void openInQueue();
   void closeInQueue();
