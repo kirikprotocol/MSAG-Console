@@ -32,6 +32,8 @@ extern "C" void clearSignalMask(void);
 namespace smsc {
 namespace mcisme {
 
+extern char* cTime(const time_t* clock, char* buff, size_t bufSz);
+
 using namespace scag::util::encodings;
 using namespace std;
 
@@ -241,6 +243,14 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   } catch (...) {
     _originatingAddressIsMCIAddress = false;
   }
+
+  int32_t sendAbntOnlineNotificationPeriodInHours;
+  try {
+    sendAbntOnlineNotificationPeriodInHours = config->getInt("SendAbntOnlineNotificationPeriod");
+  } catch(ConfigException& exc) {
+    sendAbntOnlineNotificationPeriodInHours = 12;
+  }
+  _sendAbntOnlineNotificationPeriod = sendAbntOnlineNotificationPeriodInHours * 60;
 
   smsc::misscall::MissedCallProcessor::instance_type_t instance_type;
 
@@ -676,6 +686,7 @@ TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg, const MCEve
 
   pInfo->sending_time = time(0);
   pInfo->abnt = abnt;
+  pInfo->lastCallingTime = outEvent.lastCallingTime;
   pInfo->events = outEvent.srcEvents;
 
   int res = smsInfo.Insert(seqNum, pInfo);
@@ -741,7 +752,7 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 {
   if(cmdId == smsc::smpp::SmppCommandSet::DATA_SM_RESP)
   {
-    sms_info* pInfo=0;
+    std::auto_ptr<sms_info> pInfo;
     {
       MutexGuard Lock(smsInfoMutex);
       if(!smsInfo.Exist(seqNum))
@@ -749,7 +760,7 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
         smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
         return false;
       }
-      pInfo = smsInfo.Get(seqNum);
+      pInfo.reset(smsInfo.Get(seqNum));
       smsInfo.Delete(seqNum);
     }
 
@@ -760,7 +771,7 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
       AbonentProfile abntProfile;
       profileStorage->Get(pInfo->abnt, abntProfile);
 
-      SendAbntOnlineNotifications(pInfo, abntProfile);
+      SendAbntOnlineNotifications(pInfo.get(), abntProfile);
       statistics->incDelivered(static_cast<unsigned>(pInfo->events.size()));
       pStorage->deleteEvents(pInfo->abnt, pInfo->events);
 
@@ -787,7 +798,6 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
       time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt, status);
       pStorage->setSchedParams(pInfo->abnt, schedTime, status);
     }
-    delete pInfo;
   }
   return true;
 }
@@ -861,6 +871,12 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
 
   if ( !needNotify(profile, pInfo) ) return;
 
+  if ( time(0) - pInfo->lastCallingTime > _sendAbntOnlineNotificationPeriod ) {
+    char lastCallingTimeStr[32];
+    smsc_log_info(logger, "last calling time=[%s], notificationPeriod was expired. Cancel sending online notification to calling abonent", cTime(&pInfo->lastCallingTime, lastCallingTimeStr, sizeof(lastCallingTimeStr)));
+    return;
+  }
+
   size_t events_count = pInfo->events.size();
 
   NotifyTemplateFormatter* formatter = templateManager->getNotifyFormatter(profile.notifyTemplateId);
@@ -878,8 +894,9 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
       AbonentProfile callerProfile;
       profileStorage->Get(caller, callerProfile);
       if ( !callerProfile.wantNotifyMe ) continue;
-    } else
-      msg.abonent = caller.getText();
+    }
+
+    msg.abonent = caller.getText();
 
     NotifyGetAdapter adapter(abnt, msg.abonent);
     messageFormatter->format(msg.message, adapter, ctx);
