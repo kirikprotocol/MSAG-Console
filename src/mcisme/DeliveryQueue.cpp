@@ -31,12 +31,11 @@ using namespace core::synchronization;
 using namespace core::buffers;
 
 
-char* cTime(const time_t* clock)      // функция возвращает на статический буфер. Не потокобезопасная.
+char* cTime(const time_t* clock, char* buff, size_t bufSz)
 {
-  static char buff[32];
-
-  struct tm* t = localtime(clock);
-  snprintf(buff, 32, "%.2d.%.2d.%4d %.2d:%.2d:%.2d", t->tm_mday, t->tm_mon+1, t->tm_year+1900, t->tm_hour, t->tm_min, t->tm_sec);								
+  struct tm t;
+  localtime_r(clock, &t);
+  snprintf(buff, bufSz, "%.2d.%.2d.%4d %.2d:%.2d:%.2d", t.tm_mday, t.tm_mon+1, t.tm_year+1900, t.tm_hour, t.tm_min, t.tm_sec);								
   return buff;
 }
 
@@ -88,18 +87,19 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
 {
   string strAbnt = abnt.toString();
   MutexGuard lock(deliveryQueueMonitor);
+  char curSchedTimeStr[32];
   if(AbntsStatus.Exists(strAbnt.c_str()))
   {
     SchedParam *schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
     time_t curSchedTime = schedParam->schedTime;
     time_t curTime = time(0);
-    smsc_log_info(logger, "Abonent %s already scheduled on %s. total = %d (%d)", strAbnt.c_str(), cTime(&curSchedTime), total, deliveryQueue.size());
+    smsc_log_info(logger, "Abonent %s already scheduled on %s. total = %d (%d)", strAbnt.c_str(), cTime(&curSchedTime, curSchedTimeStr, sizeof(curSchedTimeStr)), total, deliveryQueue.size());
     if( (curTime - curSchedTime) > 900)
     {
       Resched(abnt, curSchedTime, curTime);
       schedParam->schedTime = curTime;
       deliveryQueueMonitor.notify();
-      smsc_log_info(logger, "Abonent %s rescheduled on %s. total = %d (%d)", strAbnt.c_str(), cTime(&curTime), total, deliveryQueue.size());
+      smsc_log_info(logger, "Abonent %s rescheduled on %s. total = %d (%d)", strAbnt.c_str(), cTime(&curTime, curSchedTimeStr, sizeof(curSchedTimeStr)), total, deliveryQueue.size());
     }
     if( (schedParam->abntStatus == InProcess) && (schedParam->lastAttempt != 0) &&
         (curTime > (schedParam->lastAttempt + responseWaitTime)) )
@@ -112,7 +112,7 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
   }
   if(-1 != schedTime)
   {
-    smsc_log_info(logger, "Abonent %s scheduling on time %s", strAbnt.c_str(), cTime(&schedTime));
+    smsc_log_info(logger, "Abonent %s scheduling on time %s", strAbnt.c_str(), cTime(&schedTime, curSchedTimeStr, sizeof(curSchedTimeStr)));
   }
   else
   {
@@ -120,7 +120,7 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
     if(onBusy)
     {
       schedTime += schedTimeOnBusy;
-      smsc_log_info(logger, "Abonent %s was BUSY waiting up to %s", strAbnt.c_str(), cTime(&schedTime));
+      smsc_log_info(logger, "Abonent %s was BUSY waiting up to %s", strAbnt.c_str(), cTime(&schedTime, curSchedTimeStr, sizeof(curSchedTimeStr)));
     }
   }
 
@@ -130,7 +130,6 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
   AbntsStatus.Insert(strAbnt.c_str(), schedParam);
   deliveryQueueMonitor.notify();
   total++;
-  //	smsc_log_info(logger, "Add %s. total = %d (%d) (on time %s)", strAbnt.c_str(), total, deliveryQueue.size(), cTime(&schedTime));
 
   return schedTime;
 }
@@ -163,7 +162,7 @@ time_t DeliveryQueue::Reschedule(const AbntAddr& abnt, int resp_status) // bool 
   schedParam->abntStatus = Idle;
   time_t oldSchedTime = schedParam->schedTime;
   time_t newSchedTime;
-
+  char newSchedTimeStr[32];
   if(toHead)
   {
     newSchedTime = time(0);
@@ -172,7 +171,7 @@ time_t DeliveryQueue::Reschedule(const AbntAddr& abnt, int resp_status) // bool 
   else 
   {
     newSchedTime = CalcTimeDelivery(resp_status);
-    smsc_log_info(logger, "Rescheduling %s to %s by error %d", strAbnt.c_str(), cTime(&newSchedTime), resp_status);
+    smsc_log_info(logger, "Rescheduling %s to %s by error %d", strAbnt.c_str(), cTime(&newSchedTime, newSchedTimeStr, sizeof(newSchedTimeStr)), resp_status);
   }
 
   Resched(abnt, oldSchedTime, newSchedTime);
@@ -386,5 +385,5 @@ time_t DeliveryQueue::GetDeliveryTime(void)
   return t;
 }
 
-};
-};
+}
+}
