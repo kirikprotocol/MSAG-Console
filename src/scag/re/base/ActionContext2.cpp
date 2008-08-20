@@ -21,7 +21,7 @@ CommandProperty::CommandProperty( SCAGCommand* command,
                                   int OperatorId,
                                   int ServiceId,
                                   int MsgRef,
-                                  CommandOperations CmdType,
+                                  transport::CommandOperation opType,
                                   const Property& _routeId ) :
 abonentAddr(addr),
 protocol(-1),
@@ -30,7 +30,7 @@ commandId(-1),
 direction(dsdUnknown),
 routeId(_routeId)
 {
-    cmdType = CmdType;
+    cmdType = opType;
 
     if (command)
     {

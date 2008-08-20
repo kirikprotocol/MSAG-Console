@@ -8,7 +8,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "scag/re/actions/impl/MainActionFactory2.h"
 #include "scag/re/base/Rule2.h"
-#include "scag/re/base/TransportRule.h"
+// #include "scag/re/base/TransportRule.h"
 #include "scag/re/Constants.h"
 
 namespace scag2 {
@@ -121,7 +121,7 @@ private:
 
 private:
 
-    TransportRule* getTransportRule( TransportType tt ) const;
+    // TransportRule* getTransportRule( TransportType tt ) const;
 
 
     RulesReference getRules()
@@ -172,7 +172,7 @@ private:
     Hash<TransportType>         TransportTypeHash;
     Mutex  rulesLock;
     Rules* rules;
-    mutable std::auto_ptr< TransportRule > transportRules_[maxrule];
+    // mutable std::auto_ptr< TransportRule > transportRules_[maxrule];
     Mutex   changeLock;
     Hash<Property> ConstantsHash;
 };

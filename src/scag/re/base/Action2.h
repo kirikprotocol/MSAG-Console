@@ -20,7 +20,14 @@ public:
     virtual ~Action() {};
     virtual void init(const SectionParams& params,PropertyObject propertyObject) = 0;
     virtual bool run(ActionContext& context) = 0;
-    static FieldType CheckParameter(const SectionParams& params, PropertyObject& propertyObject, const char * actionName, const char * paramName, bool isRequired, bool readOnly, std::string& strParameter, bool& exist);
+    static FieldType CheckParameter( const SectionParams& params,
+                                     PropertyObject& propertyObject,
+                                     const char * actionName,
+                                     const char * paramName,
+                                     bool isRequired,
+                                     bool readOnly,
+                                     std::string& strParameter,
+                                     bool& exist);
 };
 
 

@@ -153,6 +153,7 @@ void Scag::init( unsigned mynode )
     }
 
     //************** Personalization client initialization **************
+#if 0
     try {
         smsc_log_info(log, "Personalization client initializing...");
 
@@ -170,6 +171,7 @@ void Scag::init( unsigned mynode )
     {
         throw Exception("Exception during initialization of PersClient: unknown error");
     }
+#endif
 
     //************** RuleEngine initialization ***************
     try {
@@ -260,7 +262,7 @@ void Scag::shutdown()
 //   scag::transport::http::HttpManager::Instance().shutdown();
   scag2::transport::smpp::SmppManager::shutdown();
     lcm::LongCallManager::Instance().shutdown();  
-  scag::pers::client::PersClient::Instance().Stop();
+//  scag::pers::client::PersClient::Instance().Stop();
     bill::BillingManager::Instance().Stop();
     stat::Statistics::Instance().Stop();
 }

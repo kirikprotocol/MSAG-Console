@@ -20,6 +20,62 @@ uint32_t _SmppCommand::getCommandStatus() const
 }
  */
 
+const char* commandIdName( int id )
+{
+#define CMDIDNAME(x) case x: return #x
+    switch (id) {
+        CMDIDNAME(DELIVERY);
+        CMDIDNAME(SUBMIT);
+        CMDIDNAME(DATASM);
+        CMDIDNAME(DELIVERY_RESP);
+        CMDIDNAME(SUBMIT_RESP);
+        CMDIDNAME(DATASM_RESP);
+        CMDIDNAME(UNKNOWN);
+        CMDIDNAME(FORWARD);
+        CMDIDNAME(GENERIC_NACK);
+        CMDIDNAME(QUERY);
+        CMDIDNAME(QUERY_RESP);
+        CMDIDNAME(UNBIND);
+        CMDIDNAME(UNBIND_RESP);
+        CMDIDNAME(REPLACE);
+        CMDIDNAME(REPLACE_RESP);
+        CMDIDNAME(CANCEL);
+        CMDIDNAME(CANCEL_RESP);
+        CMDIDNAME(ENQUIRELINK);
+        CMDIDNAME(ENQUIRELINK_RESP);
+        CMDIDNAME(SUBMIT_MULTI_SM);
+        CMDIDNAME(SUBMIT_MULTI_SM_RESP);
+        CMDIDNAME(BIND_TRANSCEIVER);
+        CMDIDNAME(BIND_RECIEVER_RESP);
+        CMDIDNAME(BIND_TRANSMITTER_RESP);
+        CMDIDNAME(BIND_TRANCIEVER_RESP);
+        CMDIDNAME(PROCESSEXPIREDRESP);
+        CMDIDNAME(ALERT_NOTIFICATION);
+    default: return "???";
+    }
+#undef CMDIDNAME
+}
+
+
+const char* ussdOpName( int id )
+{
+    using namespace smsc::smpp::UssdServiceOpValue;
+#define USSDOPNAME(x) case x: return #x
+    switch (id) {
+        USSDOPNAME(USSR_REQUEST);
+        USSDOPNAME(PSSR_RESPONSE);
+        USSDOPNAME(USSN_REQUEST);
+        USSDOPNAME(PSSD_INDICATION);
+        USSDOPNAME(PSSR_INDICATION);
+        USSDOPNAME(PSSD_RESPONSE);
+        USSDOPNAME(USSR_CONFIRM);
+        USSDOPNAME(USSN_CONFIRM);
+    default : return "???";
+    }
+#undef USSDOPNAME
+}
+
+
 // specialized constructors (meta constructors)
 std::auto_ptr<SmppCommand> SmppCommand::makeCommandSm( CommandId command, const SMS& sms, uint32_t dialogId )
 {
@@ -28,7 +84,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeCommandSm( CommandId command, const 
     cmd->dta_ = new SmsCommand(sms);
     cmd->shared_ = &cmd->get_smsCommand();
     cmd->set_dialogId(dialogId);
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -47,7 +103,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeDeliverySm(const SMS& sms,uint32_t d
 
 std::auto_ptr<SmppCommand> SmppCommand::makeDataSm(const SMS& sms,uint32_t dialogId)
 {
-    return makeCommandSm( DATASM, sms, dialogId );
+    return makeCommandSm(DATASM, sms, dialogId);
 }
 
 
@@ -57,7 +113,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeSubmitSmResp(const char* messageId, 
 }
 
 
-std::auto_ptr<SmppCommand> SmppCommand::makeCommandSmResp(CommandId cmdid, const char* messageId, uint32_t dialogId, uint32_t status,bool dataSm)
+std::auto_ptr<SmppCommand> SmppCommand::makeCommandSmResp(CommandId cmdid, const char* messageId, uint32_t dialogId, uint32_t status, bool dataSm)
 {
     std::auto_ptr<SmppCommand> cmd(new SmppCommand);
     cmd->cmdid_ = cmdid;
@@ -67,7 +123,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeCommandSmResp(CommandId cmdid, const
     cmd->set_dialogId( dialogId );
     resp->set_messageId(messageId);
     if (dataSm) resp->set_dataSm();
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -88,7 +144,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeSubmitMultiResp(const char* messageI
     cmd->set_status(status);
     cmd->set_dialogId(dialogId);
     resp->set_unsuccessCount(0);
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -105,7 +161,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeGenericNack(uint32_t dialogId,uint32
     cmd->cmdid_ = GENERIC_NACK;
     cmd->set_status( status );
     cmd->set_dialogId( dialogId );
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -117,7 +173,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeUnbind(int dialogId,int mode)
     cmd->dta_ = (void*)mode;
     cmd->set_status(0);
     cmd->set_dialogId(dialogId);
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -128,7 +184,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeUnbindResp(uint32_t dialogId,uint32_
     cmd->dta_ = data;
     cmd->set_status( status );
     cmd->set_dialogId( dialogId );
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -138,7 +194,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeReplaceSmResp(uint32_t dialogId,uint
     cmd->cmdid_ = REPLACE_RESP;
     cmd->set_status( status );
     cmd->set_dialogId( dialogId );
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -150,7 +206,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeQuerySmResp( uint32_t dialogId,uint3
     cmd->dta_ = new QuerySmResp(id,findate,state,netcode);
     cmd->set_dialogId(dialogId);
     cmd->set_status(status);
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -161,7 +217,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeCancelSmResp(uint32_t dialogId,uint3
     cmd->cmdid_ = CANCEL_RESP;
     cmd->set_status( status );
     cmd->set_dialogId(dialogId);
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -172,7 +228,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeCancel(SMSId id,const Address& oa,co
     cmd->cmdid_ = CANCEL;
     cmd->dta_ = new CancelSm(id,oa,da);
     cmd->set_dialogId(0);
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -183,7 +239,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeCancel(SMSId id)
     cmd->cmdid_ = CANCEL;
     cmd->dta_ = new CancelSm(id);
     cmd->set_dialogId(0);
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -194,7 +250,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeBindCommand(const char* sysId,const 
     cmd->cmdid_ = BIND_TRANSCEIVER;
     cmd->dta_ = new BindCommand(sysId,pwd,addrRange,sysType);
     cmd->set_dialogId(1);
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -206,7 +262,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeCommand(CommandId cmdId,uint32_t dia
     cmd->set_status(status);
     cmd->dta_ = data;
     cmd->set_dialogId(dialogId);
-    cmd->assignUid();
+    cmd->postfix();
     return cmd;
 }
 
@@ -446,7 +502,7 @@ SCAGCommand(), _SmppCommand()
         }
         end_construct:
         set_dialogId( pdu->get_sequenceNumber() );
-        assignUid();
+        postfix();
 
     } catch (...) {
 
@@ -770,13 +826,15 @@ SCAGCommand(), _SmppCommand()
 SmppCommand::SmppCommand( const SmppCommand& c ) :
 SCAGCommand(c), _SmppCommand(c)
 {
-    if ( c.cmdid_ != SUBMIT && c.cmdid_ != DELIVERY && c.cmdid_ != DATASM ) {
+    if ( cmdid_ != SUBMIT && cmdid_ != DELIVERY && cmdid_ != DATASM ) {
         smsc_log_error(log_, "cloning is allowed for submit/deliver/datasm only" );
         ::abort();
     }
     const unsigned clones = get_smsCommand().ref();
     // no need to assign uid
-    smsc_log_debug( log_, "Command create (clone): cmd=%p, uid=%u, clones=%u", this, shared_->uid, clones );
+    smsc_log_debug( log_, "Command create (clone): cmd=%p, type=%d(%s), uid=%u, clones=%u",
+                    this, cmdid_, commandIdName(cmdid_),
+                    shared_->uid, clones );
     session_ = 0;
 }
 
@@ -788,18 +846,14 @@ void SmppCommand::dispose()
         const uint32_t uid = shared_->uid;
         const unsigned clones = get_smsCommand().unref();
         if ( clones ) {
-            smsc_log_debug(log_, "Command destroy: cmd=%p, uid=%u, %u clones still exist", this, uid, clones );
+            smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), uid=%u, %u clones still exist",
+                           this, cmdid_, commandIdName(cmdid_), uid, clones );
             return;
         }
     }
 
     if ( shared_ ) {
         if ( shared_->uid == uint32_t(-1) ) {
-            uint32_t sc = 0;
-            {
-                MutexGuard mg(cntMutex);
-                sc = commandCounter;
-            }
             smsc_log_warn(log_, "destroying command %p with uid=-1, exception?", this );
         } else if ( log_->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG ) ) {
             uint32_t sc = 0;
@@ -807,7 +861,8 @@ void SmppCommand::dispose()
                 MutexGuard mtxx(cntMutex);
                 sc = --commandCounter;
             }
-            smsc_log_debug(log_, "Command destroy: cmd=%p, count=%u, uid=%u", this, sc, shared_->uid);
+            smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), count=%u, uid=%u",
+                           this, cmdid_, commandIdName(cmdid_), sc, shared_->uid);
         }
     }
 
@@ -877,14 +932,15 @@ void SmppCommand::dispose()
 }
 
 
-void SmppCommand::assignUid()
+void SmppCommand::postfix()
 {
     if ( ! shared_ ) return;
     MutexGuard mg(cntMutex);
     ++commandCounter;
     if ( ++stuid == uint32_t(-1) ) ++stuid;
     shared_->uid = stuid;
-    smsc_log_debug( log_, "Command create: cmd=%p, count=%u, uid=%u", this, commandCounter, stuid );
+    smsc_log_debug( log_, "Command create: cmd=%p, type=%d(%s), count=%u, uid=%u",
+                    this, cmdid_, commandIdName(cmdid_), commandCounter, stuid );
 }
 
 

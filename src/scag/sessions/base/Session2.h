@@ -13,6 +13,7 @@
 #include "scag/util/storage/Serializer.h"
 #include "scag/transport/SCAGCommand2.h"
 #include "scag/re/base/LongCallContext.h"
+#include "scag/exc/SCAGExceptions.h"
 
 
 namespace scag2 {
@@ -109,6 +110,23 @@ public:
         return pkey_;
     }
 
+    /// === transaction methods
+    /// NOTE: all non-released transactions will be rollbacked at destructor!
+    /// So, if you want to commit a transaction, the proper way to do it is:
+    /// releaseTransaction( id )->commit();
+    
+    /// get transaction by id
+    ExternalTransaction* getTransaction( const char* id );
+
+    /// add transaction with id (taking ownership).
+    /// return false, if there is already transaction with given id.
+    bool setTransaction( const char* id, std::auto_ptr<ExternalTransaction> tr );
+
+    /// remove transaction from session.
+    /// NOTE: it is your responsibility to rollback/commit + delete it.
+    std::auto_ptr<ExternalTransaction> releaseTransaction( const char* id );
+
+
     /// === operations methods
     /// NOTE: opid_type(0) denotes invalid operation
     opid_type getCurrentOperationId() const {
@@ -136,6 +154,14 @@ public:
     unsigned operationsCount() const {
         return operations_.Count();
     }
+
+    /// this field is not in ussd operation because operation is created later (in RE)
+    int32_t getUSSDref() const {
+        return umr_;
+    }
+
+    /// NOTE: this method works only if getUSSDref() == 0.
+    void setUSSDref( int32_t ref ) throw (exceptions::SCAGException);
 
 
     /// FIXME: should it be here?
@@ -271,16 +297,21 @@ private:
     /// the list of pending commands (owned, not pers).
     std::list< SCAGCommand* > cmdQueue_;
 
-    /// operations
+    /// === operations
     opid_type   currentOperationId_;
     opid_type   ussdOperationId_;
     Operation*  currentOperation_;
 
+    // TODO: think about movind operations creation/deletion into smppstatemachine,
+    // then move umr_ field into operation.
+    uint32_t    umr_;   // ussd reference number (-1 -- invalid, 0 -- pending)
+    
     /// the hash of operations (int -> Operation)
     IntHash< Operation* > operations_;
 
     /// the hash of external transactions (string -> transaction)
     Hash< ExternalTransaction* >* transactions_;
+
 
     /// --- property Scopes
 

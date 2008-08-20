@@ -65,6 +65,8 @@ protected:
 
     void sendReceipt(std::auto_ptr<SmppCommand> cmd);
 
+    int getUSSDOp( const char* where, SMS& sms, SmsCommand* smscmd ) const;
+
 protected: // static
     static sync::Mutex expMtx_;
     static bool expProc_;

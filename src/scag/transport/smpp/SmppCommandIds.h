@@ -36,6 +36,7 @@ typedef enum CommandId
     ALERT_NOTIFICATION      //26
 } CommandId;
 
+
 /*
 enum CommandStatus{
   CMD_OK=0,
@@ -46,7 +47,7 @@ enum CommandStatus{
 };
 */
 
-enum DataSmDirection{
+enum DataSmDirection {
     dsdUnknown,
     dsdSrv2Srv,
     dsdSrv2Sc,

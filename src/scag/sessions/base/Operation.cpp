@@ -14,9 +14,7 @@ Mutex Operation::loggerMutex_;
 Operation::Operation( Session* s, uint8_t tp ) :
 owner_(s),
 receivedParts_(0),
-receivedAllParts_(false),
 receivedResps_(0),
-receivedAllResps_(false),
 status_(OPERATION_INITED),
 type_(tp),
 flags_(0)
@@ -38,36 +36,34 @@ void Operation::receiveNewPart( int curidx, int lastidx )
     else
         status_ = OPERATION_CONTINUED;
 
-    if (lastidx == 0)
-    {
-        receivedAllParts_ = true;
+    if (lastidx == 0) {
+        setFlag( OperationFlags::RECEIVED_ALL_PARTS );
     } else {
         ++receivedParts_;
-        receivedAllParts_ = (lastidx <= receivedParts_);
+        if ( lastidx <= receivedParts_ ) setFlag( OperationFlags::RECEIVED_ALL_PARTS );
     }
 
-    if ( receivedAllResps_ && receivedAllParts_ ) status_ = OPERATION_COMPLETED;
+    if ( (flags() & OperationFlags::RECEIVED_ALL) == OperationFlags::RECEIVED_ALL ) 
+        status_ = OPERATION_COMPLETED;
 }
 
 
 void Operation::receiveNewResp( int curidx, int lastidx )
 {
-    //smsc_log_debug(logger,"Operation: Change status resp (CI=%d, LI=%d, allParts=%d)",currentIndex, lastIndex, m_receivedAllParts);
-
     if ( curidx < 0 || lastidx < 0 || curidx > lastidx )
         throw SCAGException( "Error: Invalid SMS index (curidx=%d, lastidx=%d)", curidx, lastidx);
 
     status_ = OPERATION_CONTINUED;
 
-    if ( lastidx == 0 )
-    {
-        receivedAllResps_ = true;
+    if (lastidx == 0) {
+        setFlag( OperationFlags::RECEIVED_ALL_RESPS );
     } else {
         ++receivedResps_;
-        receivedAllResps_ = ( lastidx <= receivedResps_ );
+        if ( lastidx <= receivedResps_ ) setFlag( OperationFlags::RECEIVED_ALL_RESPS );
     }
 
-    if ( receivedAllResps_ && receivedAllParts_ ) status_ = OPERATION_COMPLETED;
+    if ( (flags() & OperationFlags::RECEIVED_ALL) == OperationFlags::RECEIVED_ALL ) 
+        status_ = OPERATION_COMPLETED;
 }
 
 
@@ -81,7 +77,7 @@ const char* Operation::getNamedStatus() const
     case OPERATION_COMPLETED :
         return "COMPLETED";
     default:
-        return "UNKNOWN";
+        return "???";
     };
 }
 

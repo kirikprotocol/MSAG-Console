@@ -32,7 +32,7 @@ public:
     virtual int getServiceId() const = 0;
     virtual void setServiceId(int serviceId) = 0;
 
-    // initially 0
+    // initially set to invalidOpId()
     virtual opid_type getOperationId() const = 0;
     virtual void setOperationId( opid_type op) = 0;
     static inline opid_type invalidOpId() {
@@ -79,12 +79,12 @@ public:
 
     virtual ~SCAGCommandQueue() {}
 
-    /// tell the queue to stop.
-    /// The queue then stop accepting command.
-    virtual void stop() = 0;
+    // tell the queue to stop.
+    // The queue then stop accepting command.
+    // virtual void stop() = 0;
 
-    /// check if the queue is stopped
-    virtual bool isStopping() const = 0;
+    // check if the queue is stopped
+    // virtual bool isStopping() const = 0;
 
     /// push a command to a queue and return the resulting queue size.
     /// \param cmd -- command, \param action -- what to do (see above).

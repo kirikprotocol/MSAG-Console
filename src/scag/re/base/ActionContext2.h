@@ -9,7 +9,7 @@
 #include "scag/exc/SCAGExceptions.h"
 #include "RuleStatus2.h"
 #include "scag/util/properties/Properties2.h"
-#include "CommandOperations.h"
+#include "scag/transport/CommandOperation.h"
 #include "scag/transport/smpp/SmppCommandIds.h"
 #include "scag/bill/base/BillingInfoStruct.h"
 #include "scag/bill/base/Infrastructure.h"
@@ -82,7 +82,7 @@ enum FieldType
         int operatorId;
         int msgRef;
         uint8_t commandId;
-        CommandOperations cmdType;
+        transport::CommandOperation cmdType;
         transport::smpp::DataSmDirection direction;
 
         Property routeId;
@@ -94,7 +94,7 @@ enum FieldType
                          int OperatorId,
                          int ServiceId,
                          int msgRef,
-                         CommandOperations CmdType,
+                         transport::CommandOperation CmdType,
                          const Property& routeId );
     };
 

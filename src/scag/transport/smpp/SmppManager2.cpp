@@ -56,7 +56,7 @@ public:
 
   //manager
   void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id, uint32_t netErrCode);
-    virtual void pushCommand(SmppCommand* cmd);
+    virtual unsigned pushCommand( SmppCommand* cmd, int action = SCAGCommandQueue::PUSH );
 
   void configChanged();
 
@@ -1458,14 +1458,30 @@ bool SmppManagerImpl::makeLongCall( std::auto_ptr<SmppCommand>& cx, ActiveSessio
 }
 
 
-void SmppManagerImpl::pushCommand( SmppCommand* cmd )
+unsigned SmppManagerImpl::pushCommand( SmppCommand* cmd, int action )
 {
-    if ( ! cmd ) return;
-    // FIXME: implement scag command queue interface
+    if ( ! cmd ) return unsigned(-1);
+
     MutexGuard mg(queueMon);
-    lcmQueue.Push(cmd);
+    if ( action == SCAGCommandQueue::RESERVE ) {
+        ++lcmProcessingCount;
+        smsc_log_debug( log, "reserve place for a cmd=%p: lcmQsz=%u, lcmCount=%u", cmd, lcmQueue.Count(), lcmProcessingCount );
+        return lcmProcessingCount;
+    }
+
+    // FIXME: should we return -1 when stopped ?
+
+    lcmQueue.Push( cmd );
+    if ( action == SCAGCommandQueue::MOVE ) {
+        if ( lcmProcessingCount > 0 ) --lcmProcessingCount;
+        smsc_log_debug( log, "reserved cmd=%p moved onto queue: lcmQsz=%u, lcmCount=%u", cmd, lcmQueue.Count(), lcmProcessingCount );
+    } else {
+        smsc_log_debug( log, "cmd=%p pushed onto queue: lcmQsz=%u, lcmCount=%u", cmd, lcmQueue.Count(), lcmProcessingCount );
+    }
     queueMon.notify();
+    return lcmProcessingCount;
 }
+
 
 void SmppManagerImpl::reloadTestRoutes(const RouteConfig& rcfg)
 {

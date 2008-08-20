@@ -37,7 +37,7 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::util::Exception;
 using std::string;
 
-    namespace router = scag::transport::smpp::router;
+namespace router = scag::transport::smpp::router;
 
 const int ScagCommandDefaultPriority = 16;
 
@@ -70,6 +70,11 @@ static inline void fillSmppAddr(auto_ptr<char>& field,PduAddress& addr)
     fillField(field,buf,len);
   }
 }
+
+
+/// helpers for logging
+const char* commandIdName( int );
+const char* ussdOpName( int );
 
 
 /// shared data for commands
@@ -463,7 +468,6 @@ struct _SmppCommand
 };
  */
 
-
 class _SmppCommand
 {
 protected:
@@ -478,10 +482,10 @@ private:
 
 protected:
     // -- generic stuff
-    CommandId   cmdid_;
-    int         serviceId_;
-    opid_type   opId_;
-    Session*    session_;
+    CommandId        cmdid_;
+    int              serviceId_;
+    opid_type        opId_;
+    Session*         session_;
 
     // -- smpp-specific
     SmppEntity* src_ent_;
@@ -585,6 +589,12 @@ public:
     int get_priority() const { return shared_->priority; }
     void set_priority( int prio ) { shared_->priority = prio; }
 
+    inline bool isResp() const {
+        return ( cmdid_ == SUBMIT_RESP ||
+                 cmdid_ == DELIVERY_RESP ||
+                 cmdid_ == DATASM_RESP );
+    }
+
     // === access to different command types
 
     inline SMS* get_sms();
@@ -640,7 +650,7 @@ protected:
     {
         return status;
     }
-
+    
 private:
     SmppCommand();
     SmppCommand( const SmppCommand& c );
@@ -649,7 +659,9 @@ private:
     // destroying dta_ depending on command type
     void dispose();
 
-    void assignUid();
+    /// this method is invoked in virtual constructor to setup additional
+    /// fields: uid, etc. (may be extended in the future).
+    void postfix();
 
     inline void getlogger() {
         if ( ! log_ ) {

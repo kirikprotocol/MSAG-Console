@@ -19,21 +19,22 @@
 
 #include "scag/re/base/CommandBridge.h"
 #include "scag/re/base/Rule2.h"
-#include "scag/re/base/SmppTransportRule.h"
+// #include "scag/re/base/SmppTransportRule.h"
 #include "scag/re/base/XMLHandlers2.h"
 #include "scag/sessions/base/Operation.h"
 #include "util/regexp/RegExp.hpp"
 
 
-namespace {
-smsc::core::synchronization::Mutex transportRuleLock;
-}
+//namespace {
+//smsc::core::synchronization::Mutex transportRuleLock;
+//}
 
 
 namespace scag2 {
 namespace re {
 
 
+/*
 TransportRule* RuleEngineImpl::getTransportRule( TransportType tt ) const
 {
     const unsigned idx = unsigned(tt)-1;
@@ -57,6 +58,7 @@ TransportRule* RuleEngineImpl::getTransportRule( TransportType tt ) const
     }
     return autr.get();
 }
+ */
 
 
 void RuleEngineImpl::ReadRulesFromDir(TransportType transport, const char * dir)
@@ -247,9 +249,9 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
         }
     }
 
+    /*
     TransportRule* tr = getTransportRule( command.getType() );
     assert( tr );
-
     TransportRule::Guard g( *tr, command, session, rs );
     try {
         g.init();
@@ -259,6 +261,7 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
         rs.status = STATUS_FAILED;
         return;
     }
+     */
     if ( rulePtr )
         (*rulePtr)->process( command, session, rs );
     else 
@@ -313,7 +316,7 @@ void RuleEngineImpl::init( const std::string& dir )
     TransportTypeHash["MMS"] = MMS;
 
     // prefetch transport rules
-    getTransportRule( SMPP );
+    // getTransportRule( SMPP );
 
     Property property;
 

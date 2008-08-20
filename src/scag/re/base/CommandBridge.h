@@ -5,7 +5,7 @@
 #include "scag/transport/smpp/SmppCommand2.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/stat/base/Statistics2.h"
-#include "CommandOperations.h"
+// #include "CommandOperations.h"
 
 /*namespace scag { namespace sessions {
 
@@ -44,6 +44,7 @@ enum EventHandlerType
     EH_SESSION_DESTROY = 12
 };
 
+/*
 struct CSmppDescriptor
 {
     CommandOperations cmdType;
@@ -65,6 +66,7 @@ struct CSmppDescriptor
         isResp(false) {}
     
 };
+ */
 
 
 void AssignAddress(Address& address, const char * str);
@@ -84,7 +86,7 @@ public:
     static std::string getMessageBody(SmppCommand& command);
     //static void makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev);
     static EventHandlerType getHandlerType(const SCAGCommand& command);
-    static CSmppDescriptor getSmppDescriptor(const SCAGCommand& command);
+    // static CSmppDescriptor getSmppDescriptor(const SCAGCommand& command);
 
     static int getProtocolForEvent(SCAGCommand& command);
 

@@ -26,10 +26,9 @@ public:
     // if ( ! log_ ) getLogger();
     // dumpkey();
     // }
-    explicit SessionKey( const std::string& ab ) : addr_(ab.c_str()), str_() {
-        // if ( !log_ ) getLogger();
-        // dumpkey();
-    }
+    explicit SessionKey( const smsc::sms::Address& ab ) : addr_(ab) {}
+
+    explicit SessionKey( const std::string& ab ) : addr_(ab.c_str()) {}
 
     bool operator == ( const SessionKey& k ) const
     {

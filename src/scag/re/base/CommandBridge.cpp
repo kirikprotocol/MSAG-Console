@@ -210,6 +210,8 @@ DataSmDirection CommandBridge::getPacketDirection(const SCAGCommand& command)
     return dsdUnknown;
 }
 
+
+#if 0
 CSmppDescriptor CommandBridge::getSmppDescriptor(const SCAGCommand& command)
 {
 
@@ -405,6 +407,7 @@ CSmppDescriptor CommandBridge::getSmppDescriptor(const SCAGCommand& command)
 
     return SmppDescriptor;
 }
+#endif
 
 
 int CommandBridge::getProtocolForEvent(SCAGCommand& command)

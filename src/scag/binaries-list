@@ -10,6 +10,7 @@ scag/scag            gwmain         $(XERCES_LIB) -lscag-util -lscag \
    -lscag-config-route -lscag-config-http $(XERCES_LIB) -lscag-transport-smpp \
    -lscag-stat -lscag-transport-smpp -lscag-transport-smpp-router -lcore-buffers \
    -lsms  -lrouter -ladmin-protocol -lscag-sessions -lscag-sessions-base \
+   -lscag-transport \
    -lscag-stat -lscag-util-storage -lscag-config -lscag-config-smpp \
    -lscag-config-sessn -lscag-util-properties -lscag-util-singleton \
    -L$(SMSC_BUILDDIR)/bin  -llicense-check -lutil-templates \
@@ -56,6 +57,8 @@ scag/scag2           gwmain2        \
   -lscag-bill-base \
   -lscag-re-base \
   -lscag-stat-base \
+  \
+  -lscag-transport \
   \
   -lscag-config \
   -lscag-config-smpp -lscag-config-stat -lscag-config-bill \

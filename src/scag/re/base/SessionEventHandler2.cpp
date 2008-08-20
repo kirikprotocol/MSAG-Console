@@ -3,6 +3,7 @@
 #include "RuleEngine2.h"
 #include "CommandBridge.h"
 #include "scag/bill/base/BillingManager.h"
+#include "scag/transport/CommandOperation.h"
 
 namespace scag2 {
 namespace re {
@@ -37,7 +38,7 @@ void SessionEventHandler::_process(Session& session, RuleStatus& rs)
     Property routeId;
     routeId.setInt(0);
     CommandProperty commandProperty(NULL, 0, abonentAddr, providerId, operatorId, key.serviceId,
-                                    0, (CommandOperations)0, routeId);
+                                    0, transport::CO_NA, routeId);
     ActionContext* actionContext = 0;
     if(session.getLongCallContext().continueExec) {
 	actionContext = session.getLongCallContext().getActionContext();

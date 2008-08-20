@@ -1,3 +1,5 @@
+#if 0
+
 #include "SmppTransportRule.h"
 #include "CommandBridge.h"
 #include "scag/sessions/base/Operation.h"
@@ -119,6 +121,9 @@ void SmppTransportRule::ProcessModifyCommandOperation( Session& session,
             if ( command.flagSet(transport::smpp::SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG))
                 operation->setFlag(sessions::OperationFlags::SERVICE_INITIATED_USSD_DIALOG);
             operation->setStatus(sessions::OPERATION_INITED);
+            // set UMR
+            command.get_sms()->setIntProperty( Tag::SMPP_USER_MESSAGE_REFERENCE,
+                                               session.getUSSDOperationId() );
             break;
         }
 
@@ -228,4 +233,4 @@ void SmppTransportRule::resetSessionOperation( transport::SCAGCommand& command,
 } // namespace re
 } // namespace scag2
 
-
+#endif

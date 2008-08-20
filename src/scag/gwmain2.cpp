@@ -7,13 +7,13 @@
 #include "gen2/Inst.h"
 #include "scag/admin/gen2/SCAGSocketListener2.h"
 #include "admin/service/ServiceSocketListener.h"
-#include "scag/config/ConfigManager.h"
+// #include "scag/config/ConfigManager.h"
 #include "scag/config/impl/ConfigManager2.h"
 #include "core/threads/Thread.hpp"
 #include "gen2/scag2.h"
-#include "util/config/route/RouteConfig.h"
-#include "util/findConfigFile.h"
-#include "util/mirrorfile/mirrorfile.h"
+// #include "util/config/route/RouteConfig.h"
+// #include "util/findConfigFile.h"
+// #include "util/mirrorfile/mirrorfile.h"
 #include "util/signal.hpp"
 #include "util/xml/init.h"
 #include "version.inc"
@@ -80,8 +80,8 @@ int main( int argc, char* argv[] )
         smsc::logger::Logger *logger = Logger::getInstance("scagmain");
 
 //    smsc_log_info(logger,  "SCAG configuration loading..." );
-        scag::config::ConfigManager::Init();
-        scag::config::ConfigManager& cfgs0 = scag::config::ConfigManager::Instance();
+//        scag::config::ConfigManager::Init();
+//        scag::config::ConfigManager& cfgs0 = scag::config::ConfigManager::Instance();
 
         {
             // initialization of config

@@ -218,8 +218,9 @@ void SmppSocket::sendData()
     if(outQueue.Count()==0)return;
     SmppCommand* c;
     outQueue.Pop(c);
+    smsc_log_debug(log, "received cmd=%p", c );
     cmd.reset(c);
-    if(cmd->flagSet(SmppCommandFlags::EXPIRED_COMMAND))return;
+    if(cmd->flagSet(SmppCommandFlags::EXPIRED_COMMAND)) return;
   }
   pdu = cmd->makePdu();
   int sz = calcSmppPacketLength(pdu);

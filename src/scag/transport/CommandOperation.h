@@ -2,10 +2,13 @@
 #define _SCAG_UTIL_COMMANDOPERATIONS_H
 
 namespace scag2 {
-namespace re {
+namespace transport {
 
-enum CommandOperations
+enum CommandOperation
 {
+    // N/A
+    CO_NA = -1,
+
     //SMS
     CO_DELIVER = 0,
     CO_SUBMIT = 1,
@@ -24,6 +27,9 @@ enum CommandOperations
     CO_HTTP_DELIVERY = 9
 
 };
+
+// helper for logging
+const char* commandOpName( int );
 
 }
 }

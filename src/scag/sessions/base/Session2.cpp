@@ -11,7 +11,7 @@
 #include "Operation.h"
 #include "Session2.h"
 #include "SessionStore2.h"
-#include "scag/re/base/CommandOperations.h"
+#include "scag/transport/CommandOperation.h"
 
 namespace {
 
@@ -19,7 +19,7 @@ smsc::core::synchronization::Mutex sessionloggermutex;
 smsc::core::synchronization::Mutex sessionopidmutex;
 
 using namespace scag2::sessions;
-using namespace scag::exceptions;
+using namespace scag2::exceptions;
 
 Hash<int> InitReadOnlyPropertiesHash()
 {
@@ -301,6 +301,7 @@ operationScopes_(0)
             currentOperationId_ = 0;
             ussdOperationId_ = 0;
             currentOperation_ = 0;
+            umr_ = -1;
 
             assert( operations_.Count() == 0 );
             int opkey;
@@ -337,6 +338,45 @@ void Session::changed( AdapterProperty& )
 }
 
 
+/// transaction methods
+ExternalTransaction* Session::getTransaction( const char* id )
+{
+    if ( !id || !transactions_ ) return 0;
+    ExternalTransaction** ptr = transactions_->GetPtr( id );
+    return ( ptr ? *ptr : 0 );
+}
+
+
+bool Session::setTransaction( const char* id, std::auto_ptr<ExternalTransaction> tr )
+{
+    if ( !id || !tr.get() ) return false;
+    if ( ! transactions_ ) transactions_ = new Hash< ExternalTransaction* >;
+    ExternalTransaction** ptr = transactions_->GetPtr( id );
+    if ( ptr ) {
+        if ( *ptr ) return false; // already set
+        *ptr = tr.release();
+    } else {
+        transactions_->Insert( id, tr.release() );
+    }
+    return true;
+}
+
+
+std::auto_ptr< ExternalTransaction > Session::releaseTransaction( const char* id )
+{
+    std::auto_ptr< ExternalTransaction > ret;
+    if ( id && transactions_ ) {
+        ExternalTransaction** ptr = transactions_->GetPtr(id);
+        if ( ptr ) {
+            ret.reset( *ptr );
+            ptr = 0;
+        }
+    }
+    return ret;
+}
+
+
+/// operation methods
 Operation* Session::setCurrentOperation( opid_type opid )
 {
     do {
@@ -366,8 +406,9 @@ Operation* Session::setCurrentOperation( opid_type opid )
 
     const uint8_t optype = currentOperation_->type();
     currentOperationId_ = opid;
-    smsc_log_debug( log_, "Session=%p set current operation=%p, opid=%u, type=%d(%x)",
-                    this, currentOperation_, unsigned(opid), int(optype), int(optype) );
+    smsc_log_debug( log_, "Session=%p set current op=%p, opid=%u, type=%d(%s)",
+                    this, currentOperation_, unsigned(opid), int(optype),
+                    commandOpName(optype) );
     // changed_ = true;
     return currentOperation_;
 }
@@ -381,7 +422,7 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
     opid_type opid = getNewOperationId();
     cmd.setOperationId( opid );
     operations_.Insert( opid, auop.release() );
-    if ( operationType == re::CO_USSD_DIALOG ) {
+    if ( operationType == transport::CO_USSD_DIALOG ) {
         // if the operation is already there, replace it
         if ( ussdOperationId_ != SCAGCommand::invalidOpId() ) {
             Operation* oldop = operations_.Get( ussdOperationId_ );
@@ -389,14 +430,19 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
                             this, sessionKey().toString().c_str(), oldop, unsigned(ussdOperationId_) );
             operations_.Delete( ussdOperationId_ );
             delete oldop;
+            umr_ = 0; // waiting for new umr
         }
         ussdOperationId_ = opid;
     }
     currentOperationId_ = opid;
     currentOperation_ = op;
     // changed_ = true;
-    smsc_log_debug( log_, "** Session: create new operation: session=%p, key=%s, opid=%u, type=%d, op=%p",
-                    this, sessionKey().toString().c_str(), unsigned(currentOperationId_), operationType, currentOperation_ );
+    smsc_log_debug( log_, "Session=%p key=%s create op=%p opid=%u type=%d(%s)",
+                    this, sessionKey().toString().c_str(),
+                    currentOperation_,
+                    unsigned(currentOperationId_),
+                    operationType,
+                    commandOpName(operationType) );
     return currentOperation_;
 }
 
@@ -404,18 +450,30 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
 void Session::closeCurrentOperation()
 {
     if ( ! currentOperation_ ) return;
-    smsc_log_debug( log_, "** Session: close current operation, session=%p key=%s op=%p opid=%u type=%d",
-                    this, sessionKey().toString().c_str(), currentOperation_,
-                    unsigned(currentOperationId_), currentOperation_->type() );
+    smsc_log_debug( log_, "Session=%p key=%s close op=%p opid=%u type=%d(%s)",
+                    this, sessionKey().toString().c_str(),
+                    currentOperation_,
+                    unsigned(currentOperationId_), currentOperation_->type(),
+                    commandOpName(currentOperation_->type()) );
 
     operations_.Delete( currentOperationId_ );
     delete currentOperation_;
     currentOperation_ = 0;
     if ( ussdOperationId_ == currentOperationId_ ) {
         ussdOperationId_ = SCAGCommand::invalidOpId();
+        umr_ = -1;
     }
     currentOperationId_ = SCAGCommand::invalidOpId();
     // changed_ = true;
+}
+
+
+void Session::setUSSDref( int32_t ref ) throw (SCAGException)
+{
+    if ( ref <= 0 ) throw SCAGException( "setUSSDref(ref=%d), ref should be >0", ref );
+    if ( umr_ > 0 ) throw SCAGException( "setUSSDref(ref=%d), UMR=%d is already set", ref, umr_ );
+    if ( umr_ == -1 ) throw SCAGException( "setUSSDref(ref=%d), no USSD operation found", ref );
+    umr_ = ref;
 }
 
 

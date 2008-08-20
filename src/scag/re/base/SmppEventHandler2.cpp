@@ -11,204 +11,6 @@ namespace re {
 
 using namespace smpp;
 
-#if 0
-void SmppEventHandler::ProcessModifyRespCommandOperation(Session& session, SmppCommand& command, CSmppDescriptor& smppDescriptor)
-{
-    Operation * operation = 0;
-
-    if(session.getLongCallContext().continueExec)
-    {
-        smsc_log_debug(logger,"resp: continue execution. operation id=%u", unsigned(command.getOperationId()));
-//        operation = session.setCurrentOperation(command.getOperationId());
-        return;
-    }
-
-    switch (smppDescriptor.cmdType)
-    {
-    case CO_DELIVER:
-    case CO_SUBMIT:
-    case CO_DATA_SC_2_SME:
-    case CO_DATA_SME_2_SC:
-    case CO_RECEIPT:
-        operation = session.setCurrentOperation(command.getOperationId());
-        operation->receiveNewResp(smppDescriptor.currentIndex,smppDescriptor.lastIndex);
-        break;
-    case CO_USSD_DIALOG:
-        smsc_log_debug(logger,"Session: process USSD_DIALOG operation");
-        operation = session.setCurrentOperation(session.getUSSDOperationId());
-
-        if (smppDescriptor.isUSSDClosed) operation->setStatus(OPERATION_COMPLETED);
-        else operation->setStatus(OPERATION_CONTINUED);
-
-        break;
-    default:
-        // do nothing
-        break;
-    }
-}
-
-void SmppEventHandler::ProcessModifyCommandOperation(Session& session, SmppCommand& command, CSmppDescriptor& smppDescriptor)
-{
-    Operation * operation = 0;
-    // uint16_t UMR;
-
-    if(session.getLongCallContext().continueExec)
-    {
-        smsc_log_debug(logger,"continue execution. operation_id=%u", unsigned(command.getOperationId()));
-//        operation = session.setCurrentOperation(command.getOperationId());
-        return;
-    }
-
-    switch (smppDescriptor.cmdType)
-    {
-    case CO_DELIVER:
-    case CO_DATA_SC_2_SME:
-        // if (session.hasPending()) 
-        // operation = session.setOperationFromPending(command, smppDescriptor.cmdType);
-        // else 
-        if ( smppDescriptor.currentIndex <= 1 )
-            // operation = session.AddNewOperationToHash(command, smppDescriptor.cmdType);
-            operation = session.createOperation(command, smppDescriptor.cmdType);
-        else
-            operation = session.setCurrentOperation(command.getOperationId());
-
-        operation->receiveNewPart(smppDescriptor.currentIndex,smppDescriptor.lastIndex);
-        break;
-
-    case CO_SUBMIT:
-    case CO_DATA_SME_2_SC:
-        //TODO: разобаться с RECEIPT`ом и SUBMIT_RESP
-
-        // UMR = session.getUSR();
-
-        /*
-        if ((UMR <= 0)||(session.getCanOpenSubmitOperation()))
-        {
-            if (smppDescriptor.currentIndex == 0) 
-                operation = session.AddNewOperationToHash(command, smppDescriptor.cmdType);
-            else
-                operation = session.setCurrentOperation(command.getOperationId());
-        } 
-        else if (smppDescriptor.currentIndex == 0)
-            operation = session.setOperationFromPending(command, smppDescriptor.cmdType);
-        else
-            operation = session.setCurrentOperation(command.getOperationId());
-         */
-        if ( smppDescriptor.currentIndex == 0 )
-            operation = session.createOperation( command, smppDescriptor.cmdType );
-        else
-            operation = session.setCurrentOperation(command.getOperationId());
-
-        operation->receiveNewPart(smppDescriptor.currentIndex,smppDescriptor.lastIndex);
-        break;
-
-    case CO_RECEIPT:
-        //TODO:: Нужно учесть политику для multipart
-
-        operation = session.setCurrentOperation(command.getOperationId());
-        operation->receiveNewResp(smppDescriptor.currentIndex,smppDescriptor.lastIndex);
-        break;   
-
-    case CO_USSD_DIALOG:
-        smsc_log_debug(logger,"Session: process USSD_DIALOG operation");
-
-        if (smppDescriptor.wantOpenUSSD)
-        {
-            // operation = session.AddNewOperationToHash(command, CO_USSD_DIALOG);
-            operation = session.createOperation(command, CO_USSD_DIALOG);
-            if ( command.flagSet(transport::smpp::SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG))
-                operation->setFlag(sessions::OperationFlags::SERVICE_INITIATED_USSD_DIALOG);
-            operation->setStatus(sessions::OPERATION_INITED);
-            break;
-        }
-
-        operation = session.setCurrentOperation(session.getUSSDOperationId());
-        command.setOperationId(session.getCurrentOperationId());
-        operation->setStatus(sessions::OPERATION_CONTINUED);
-
-        break;
-
-    default:
-        break;
-    }
-}
-
-
-
-void SmppEventHandler::ModifyOperationBeforeExecuting(Session& session, SmppCommand& command, CSmppDescriptor& smppDescriptor)
-{
-    if (smppDescriptor.isResp)
-        ProcessModifyRespCommandOperation(session, command, smppDescriptor);
-    else
-        ProcessModifyCommandOperation(session, command, smppDescriptor);
-}
-
-
-void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppCommand& command, RuleStatus& ruleStatus, CSmppDescriptor& smppDescriptor)
-{
-    Operation * currentOperation = session.getCurrentOperation();
-    if (!currentOperation) throw SCAGException("Session: Fatal error - cannot end operation. Couse: current operation not found");
-
-    if ( ruleStatus.status == STATUS_FAILED )
-    {
-        session.closeCurrentOperation(); 
-        return;
-    }
-
-    if (ruleStatus.status == STATUS_LONG_CALL)
-        return;
-
-    smsc_log_debug(logger, "current operation=%p status=%d(%s)", currentOperation, currentOperation->getStatus(), currentOperation->getNamedStatus());
-
-    switch (smppDescriptor.cmdType)
-    {
-    case CO_DELIVER:
-    case CO_DATA_SC_2_SME:
-    case CO_RECEIPT:
-        if (currentOperation->getStatus() == OPERATION_COMPLETED) session.closeCurrentOperation();
-        break;
-
-    case CO_SUBMIT:
-    case CO_DATA_SME_2_SC:
-
-        if (currentOperation->getStatus() == OPERATION_COMPLETED) 
-        {
-            session.closeCurrentOperation();
-            break;
-        }
-
-        if (smppDescriptor.isResp) break; 
-
-        if (smppDescriptor.m_waitReceipt)
-        {
-            /*time_t now;
-            time(&now);
-
-            PendingOperation pendingOperation;
-            pendingOperation.type = CO_RECEIPT;
-            //TODO: Определяем время жизни операции
-            pendingOperation.validityTime = now + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
-
-
-            session.addPendingOperation(pendingOperation);*/
-            session.createOperation(command, CO_RECEIPT);
-        }                    
-        break;
-
-
-    case CO_USSD_DIALOG:
-        if ((smppDescriptor.isUSSDClosed) && (smppDescriptor.isResp))
-            session.closeCurrentOperation();
-        break;
-
-    default :
-        // do nothing
-        break;
-    }
-}
-#endif // if 0
-
-
 void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStatus& rs )
 {
     smsc_log_debug(logger, "Process EventHandler...");
@@ -219,12 +21,12 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
     bill::Infrastructure& istr = bill::BillingManager::Instance().getInfrastructure();
 
     const Address abonentAddr( session.sessionKey().toString().c_str() );
-    CSmppDescriptor smppDescriptor = CommandBridge::getSmppDescriptor(smppcommand);
+    // CSmppDescriptor smppDescriptor = CommandBridge::getSmppDescriptor(smppcommand);
 
     int providerId = istr.GetProviderID(command.getServiceId());
     if (providerId == 0) 
     {
-        if (smppDescriptor.isResp) session.closeCurrentOperation();
+        if ( smppcommand.isResp() ) session.closeCurrentOperation();
         throw SCAGException("SmppEventHandler: Cannot find ProviderID for ServiceID=%d", command.getServiceId());
     }
 
@@ -235,7 +37,7 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
                            providerId, 0, 0, session.sessionPrimaryKey(),
                            (hi == EH_SUBMIT_SM)||(hi == EH_DELIVER_SM) ? 'I' : 'O');
         
-        if (smppDescriptor.isResp) session.closeCurrentOperation();
+        if ( smppcommand.isResp() ) session.closeCurrentOperation();
         throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
     }
 
@@ -246,8 +48,11 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
 			    ? smppcommand->get_resp()->status : smppcommand->status;*/
     Property routeId;
     routeId.setStr(sms.getRouteId());
-    CommandProperty commandProperty( &command, smppcommand.get_status(), abonentAddr, providerId, operatorId,
-                                     smppcommand.getServiceId(), msgRef, smppDescriptor.cmdType, routeId);
+    CommandProperty commandProperty
+        ( &command, smppcommand.get_status(), abonentAddr, providerId, operatorId,
+          smppcommand.getServiceId(), msgRef,
+          transport::CommandOperation(session.getCurrentOperation()->type()),
+          routeId );
 
     if(!session.getLongCallContext().continueExec)
         RegisterTrafficEvent( commandProperty, session.sessionPrimaryKey(),
@@ -256,18 +61,6 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
                               (hi == EH_DATA_SM) ?
                               CommandBridge::getMessageBody(smppcommand) : "" );
     
-    /*
-    try {
-        ModifyOperationBeforeExecuting(session, smppcommand, smppDescriptor);
-    } catch (SCAGException& e)
-    {
-        smsc_log_error(logger, "EventHandler cannot start/locate operation. Details: %s", e.what());
-        rs.result = smsc::system::Status::SMDELIFERYFAILURE;
-        rs.status = STATUS_FAILED;
-        return;
-    }
-     */
-
     ActionContext* actionContext = 0;
     if(session.getLongCallContext().continueExec) {
     	actionContext = session.getLongCallContext().getActionContext();
@@ -301,10 +94,9 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
         rs.status = STATUS_FAILED;
         smsc_log_debug( logger, "Command status=%d(%x) overrides RE status", rs.result, rs.result );
     }
-
-    // ModifyOperationAfterExecuting(session, smppcommand, rs, smppDescriptor);
     return;
 }
+
 
 int SmppEventHandler::StrToHandlerId(const std::string& str)
 {

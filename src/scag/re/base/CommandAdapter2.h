@@ -1,7 +1,6 @@
 #ifndef _SCAG_COMMAND_ADAPTER2_
 #define _SCAG_COMMAND_ADAPTER2_
 
-
 #include "scag/transport/SCAGCommand2.h"
 #include "SmppAdapter2.h"
 #include "HttpAdapter2.h"
