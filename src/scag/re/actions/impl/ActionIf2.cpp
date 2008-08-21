@@ -38,8 +38,8 @@ void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
 
 ActionIf::~ActionIf()
 {
-    int key;
-    Action * value;
+    // int key;
+    // Action * value;
 
     std::vector<Action *>::const_iterator it;
 

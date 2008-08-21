@@ -22,13 +22,14 @@
 
 #include "LongCallTestAction.h"
 
+#include "BillActionOpen.h"
+#include "BillActionClose.h"
+#include "BillActionInfo.h"
 
 /*
 #include "scag/re/actions/Action.h"
 #include "scag/re/actions/misc/ActionTrafficCheck.h"
 #include "scag/re/actions/sess/ActionOperationWait.h"
-#include "scag/re/actions/bill/BillActionOpen.h"
-#include "scag/re/actions/bill/BillActionClose.h"
 #include "scag/re/actions/bill/BillActionInfo.h"
 
 #include "scag/re/actions/pers/PersAction.h"
@@ -126,6 +127,13 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
 
 
         if ( name == "longcalltest" ) return new LongCallTestAction();
+
+        if ( 0 == strncmp(name.c_str(), "bill:", 5 ) ) {
+            if ( name == "bill:open" ) return new BillActionOpen();
+            if ( name == "bill:close" ) return new BillActionClose();
+            if ( name == "bill:info" ) return new BillActionInfo();
+            break;
+        }
 
     // FIXME: impl
     /* 

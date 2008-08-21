@@ -347,18 +347,23 @@ ExternalTransaction* Session::getTransaction( const char* id )
 }
 
 
-bool Session::setTransaction( const char* id, std::auto_ptr<ExternalTransaction> tr )
+bool Session::addTransaction( const char* id, std::auto_ptr<ExternalTransaction> tr )
 {
-    if ( !id || !tr.get() ) return false;
-    if ( ! transactions_ ) transactions_ = new Hash< ExternalTransaction* >;
-    ExternalTransaction** ptr = transactions_->GetPtr( id );
-    if ( ptr ) {
-        if ( *ptr ) return false; // already set
-        *ptr = tr.release();
-    } else {
-        transactions_->Insert( id, tr.release() );
-    }
-    return true;
+    if ( ! tr.get() ) return false;
+    do {
+        if ( !id ) break;
+        if ( ! transactions_ ) transactions_ = new Hash< ExternalTransaction* >;
+        ExternalTransaction** ptr = transactions_->GetPtr( id );
+        if ( ptr ) {
+            if ( *ptr ) break;
+            *ptr = tr.release();
+        } else {
+            transactions_->Insert( id, tr.release() );
+        }
+        return true;
+    } while ( false );
+    tr->rollback();
+    return false;
 }
 
 
@@ -400,8 +405,10 @@ Operation* Session::setCurrentOperation( opid_type opid )
         currentOperationId_ = SCAGCommand::invalidOpId();
         smsc_log_warn( log_, "Session=%p cannot find operation id=%u, key=%s",
                        this, unsigned(opid), sessionKey().toString().c_str() );
-        throw SCAGException( "Session=%p cannot find operation id=%u, key=%s",
-                             this, unsigned(opid), sessionKey().toString().c_str() );
+        // FIXME: should we throw?
+        // throw SCAGException( "Session=%p cannot find operation id=%u, key=%s",
+        // this, unsigned(opid), sessionKey().toString().c_str() );
+        return 0;
     }
 
     const uint8_t optype = currentOperation_->type();
@@ -418,22 +425,18 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
 {
     std::auto_ptr< Operation > auop( new Operation(this, operationType) );
     Operation* op = auop.get();
-
     opid_type opid = getNewOperationId();
-    cmd.setOperationId( opid );
-    operations_.Insert( opid, auop.release() );
     if ( operationType == transport::CO_USSD_DIALOG ) {
         // if the operation is already there, replace it
         if ( ussdOperationId_ != SCAGCommand::invalidOpId() ) {
-            Operation* oldop = operations_.Get( ussdOperationId_ );
-            smsc_log_debug( log_, "** Session: old USSD operation exists, delete: session=%p, key=%s, op=%p, opid=%u",
-                            this, sessionKey().toString().c_str(), oldop, unsigned(ussdOperationId_) );
-            operations_.Delete( ussdOperationId_ );
-            delete oldop;
-            umr_ = 0; // waiting for new umr
+            smsc_log_debug( log_, "Session: old USSD operation exists, going to delete" );
+            setCurrentOperation( ussdOperationId_ );
+            closeCurrentOperation();
         }
         ussdOperationId_ = opid;
     }
+    cmd.setOperationId( opid );
+    operations_.Insert( opid, auop.release() );
     currentOperationId_ = opid;
     currentOperation_ = op;
     // changed_ = true;

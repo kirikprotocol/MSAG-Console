@@ -29,7 +29,8 @@ void SessionEventHandler::_process(Session& session, RuleStatus& rs)
     if (providerId == 0) {
         throw SCAGException("SessionEventHandler: Cannot find ProviderID for ServiceID=%d", key.serviceId);
     }
-    int operatorId = istr.GetOperatorID(abonentAddr), hi = propertyObject.HandlerId;
+    int operatorId = istr.GetOperatorID(abonentAddr);
+    // int hi = propertyObject.HandlerId;
     if (operatorId == 0) {
         throw SCAGException("SessionEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
     }

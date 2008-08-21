@@ -36,20 +36,31 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
 {
     // find out operation type
     SMS* sms = cmd.get_sms();
-    if ( ! sms ) throw SCAGException("SmppOperationMaker: should not be here, sms not found");
+    if ( ! sms ) {
+        what_ = "SMS not found in command";
+        st.status = re::STATUS_FAILED;
+        st.result = smsc::system::Status::SYSERR;
+        return;
+    }
 
     Operation* op = 0;
     if ( cmd.getOperationId() != SCAGCommand::invalidOpId() ) {
 
         // cmd has just returned from long call, or was rerouted
         op = session.setCurrentOperation( cmd.getOperationId() );
+        if ( ! op ) {
+            what_ = "cmd->opid is set, but operation not found";
+            st.status = re::STATUS_FAILED;
+            st.result = smsc::system::Status::SYSERR;
+            return;
+        }
         session.getLongCallContext().continueExec = true;
-        st.status = re::STATUS_OK;
         smsc_log_debug( log_, "cmd=%p continue op=%p opid=%d type=%d(%s) (no preprocess)",
                         &cmd, op, cmd.getOperationId(),
                         op->type(), commandOpName(op->type()) );
+        st.status = re::STATUS_OK;
+        st.result = 0;
         return;
-
     }
 
     const CommandId cmdid = CommandId(cmd.getCommandId());
@@ -88,8 +99,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
                 st.result = smsc::system::Status::USSDDLGREFMISM;
                 return;
             }
-            }
-        else 
+        } else
             optype_ = CO_DELIVER;
         break;
 
@@ -137,8 +147,10 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
             break;
         case dsdUnknown:
         default:
-            throw SCAGException("SmppDescriptor: cannot identify DATA_SM direction");
-            break;
+            what_ = "cannot identify DATA_SM direction";
+            st.status = re::STATUS_FAILED;
+            st.result = smsc::system::Status::SYSERR;
+            return;
         }
         break;
 
@@ -149,10 +161,20 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
         // NOTE: as we have SMS we already have the original command,
         // so skip any checking here!
         opid_type opid = cmd.get_resp()->getOrgCmd()->getOperationId();
-        if ( opid == SCAGCommand::invalidOpId() )
-            throw SCAGException("SmppDescriptor: original command operationId is not set");
-        cmd.setOperationId( opid );
+        if ( opid == SCAGCommand::invalidOpId() ) {
+            what_ = "resp->orgCmd opid is not set";
+            st.status = re::STATUS_FAILED;
+            st.result = smsc::system::Status::SYSERR;
+            return;
+        }
         op = session.setCurrentOperation( opid );
+        if ( ! op ) {
+            what_ = "resp->orgCmd opid is set, but operation not found";
+            st.status = re::STATUS_FAILED;
+            st.result = smsc::system::Status::SYSERR;
+            return;
+        }
+        cmd.setOperationId( opid );
         smsc_log_debug( log_, "resp cmd=%p takes orig op=%p opid=%d type=%d(%s)",
                         &cmd, op, opid, op->type(), commandOpName(op->type()) );
         break;
@@ -208,6 +230,13 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
             } else { // ussd op exists
 
                 op = session.setCurrentOperation( found_ussd );
+                if ( ! op ) {
+                    what_ = "ussd opid is set, but operation not found";
+                    st.status = re::STATUS_FAILED;
+                    st.result = smsc::system::Status::SYSERR;
+                    return;
+                }
+
                 if ( umr != session.getUSSDref() ) {
                     // umr mismatch
                     if ( session.getUSSDref() == 0 && 
@@ -330,6 +359,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
                     op->flags(), op->parts(), op->resps() );
 
     st.status = re::STATUS_OK;
+    st.result = 0;
     return;
 }
 

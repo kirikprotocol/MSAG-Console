@@ -60,15 +60,8 @@ protected:
 
     virtual bool RunBeforePostpone(ActionContext& context) = 0;
     virtual void ContinueRunning(ActionContext& context) = 0;
-};
 
-
-class LongCallAction : public Action, ActionLongCallInterface
-{
-    LongCallAction(const LongCallAction&);
-
-public:
-    virtual bool run(ActionContext& context)
+    bool dorun( ActionContext& context ) 
     {
         if (context.getSession().getLongCallContext().ActionStack.empty()) 
         {
@@ -86,6 +79,19 @@ public:
         }
 
         return true;
+    }
+
+};
+
+
+class LongCallAction : public Action, ActionLongCallInterface
+{
+    LongCallAction(const LongCallAction&);
+
+public:
+    virtual bool run(ActionContext& context)
+    {
+        return dorun( context );
     }
     LongCallAction() {};
 };

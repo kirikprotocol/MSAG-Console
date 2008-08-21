@@ -120,7 +120,7 @@ public:
 
     /// add transaction with id (taking ownership).
     /// return false, if there is already transaction with given id.
-    bool setTransaction( const char* id, std::auto_ptr<ExternalTransaction> tr );
+    bool addTransaction( const char* id, std::auto_ptr<ExternalTransaction> tr );
 
     /// remove transaction from session.
     /// NOTE: it is your responsibility to rollback/commit + delete it.
@@ -304,7 +304,7 @@ private:
 
     // TODO: think about movind operations creation/deletion into smppstatemachine,
     // then move umr_ field into operation.
-    uint32_t    umr_;   // ussd reference number (-1 -- invalid, 0 -- pending)
+    int32_t    umr_;   // ussd reference number (-1 -- invalid, 0 -- pending)
     
     /// the hash of operations (int -> Operation)
     IntHash< Operation* > operations_;
