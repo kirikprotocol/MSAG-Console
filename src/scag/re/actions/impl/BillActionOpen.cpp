@@ -268,6 +268,8 @@ void BillActionOpen::processResult( ActionContext& context,
                                     const infrastruct::TariffRec* tariffRec)
 {
     std::string transId = getTransId( context );
+    smsc_log_debug( logger, "Action '%s': process result trans-id='%s' billid=%d", 
+                    opname(), transId.c_str(), billId );
     std::auto_ptr<ExternalTransaction> trans( new sessions::ExternalBillingTransaction( billId ) );
     if ( ! context.getSession().addTransaction( transId.c_str(), trans ) ) {
         smsc_log_error( logger, "Action '%s': cannot put transaction '%s' in session",

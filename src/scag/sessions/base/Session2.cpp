@@ -15,8 +15,17 @@
 
 namespace {
 
+smsc::logger::Logger*              log_ = 0;
 smsc::core::synchronization::Mutex sessionloggermutex;
 smsc::core::synchronization::Mutex sessionopidmutex;
+
+inline void getlog() {
+    if ( !log_ ) {
+        MutexGuard mg(sessionloggermutex);
+        if ( !log_ ) log_ = smsc::logger::Logger::getInstance("session");
+    }
+}
+
 
 using namespace scag2::sessions;
 using namespace scag2::exceptions;
@@ -25,69 +34,107 @@ Hash<int> InitReadOnlyPropertiesHash()
 {
     Hash<int> hs;
     // hs["USR"]               = PROPERTY_USR;
+
+    // operation scope
     hs["%ICC_STATUS"]        = 1; // PROPERTY_ICC_STATUS;
+    hs["%operation_id"]      = 1;
+
+    // global scope
     hs["$abonent"]           = 1; // PROPERTY_ABONENT;
     return hs;
 }
 Hash<int> ReadOnlyPropertiesHash = InitReadOnlyPropertiesHash();
 
 
+std::set< std::string > initGlobalScopeSet()
+{
+    std::set< std::string > res;
+    res.insert( "abonent" );
+    return res;
+}
+
+std::set< std::string > initOperationScopeSet()
+{
+    std::set< std::string > res;
+    res.insert( "ICC_STATUS" );
+    res.insert( "operation_id" );
+    return res;
+}
+
+std::set< std::string > readonlyGlobalScopeSet = initGlobalScopeSet();
+std::set< std::string > readonlyOperationScopeSet = initOperationScopeSet();
+
+
 class SessionPropertyScopeWrapper : public SessionPropertyScope
 {
 public:
-    SessionPropertyScopeWrapper( Session* patron ) : SessionPropertyScope(patron) {}
-
-    void addReadonly( const std::string& name ) {
-        readonly_.insert( name );
-    }
+    SessionPropertyScopeWrapper( Session* patron, std::set< std::string >& rd ) :
+    SessionPropertyScope(patron), readonly_(&rd) {}
 
     virtual Property* getProperty( const std::string& name )
     {
-        Property* p = SessionPropertyScope::getProperty( name );
-        if ( isReadonly(name.c_str()) )
-            p = postProcessReadonly( name, p );
+        Property* p;
+        if ( isReadonly(name) ) {
+            p = processReadonly( name );
+        } else {
+            p = SessionPropertyScope::getProperty( name );
+        }
         return p;
     }
 
 protected:
-    virtual bool isReadonly( const char* name ) const {
-        return ( readonly_.find( name ) == readonly_.end() ? false : true );
+    virtual bool isReadonly( const std::string& name ) const {
+        return ( readonly_->find( name ) == readonly_->end() ? false : true );
     }
 
     // only a few readonly items are expected
-    Property* postProcessReadonly( const std::string& name, Property* p ) 
+    Property* processReadonly( const std::string& name )
     {
+        AdapterProperty** p = properties_.GetPtr( name.c_str() );
+        AdapterProperty* np = 0;
         if ( name == "ICC_STATUS" ) {
 
             Operation* op = session_->getCurrentOperation();
-            if ( ! op ) return 0;
-            if ( ! p ) {
-                AdapterProperty* np = new AdapterProperty( name, session_, op->getStatus());
-                properties_.Insert( name.c_str(), np );
-                p = np;
+            const int opstat = op ? op->getStatus() : 0;
+            if ( !p ) {
+                np = new AdapterProperty( name, session_, opstat );
             } else {
-                p->setInt( op->getStatus() );
+                (*p)->setInt( opstat );
             }
 
         } else if ( name == "abonent" ) {
 
-            if ( ! p ) {
-                AdapterProperty* np = new AdapterProperty( name, session_,
-                                                           session_->sessionKey().toString() );
-                properties_.Insert( name.c_str(), np );
-                p = np;
+            if ( !p )
+                np = new AdapterProperty( name, session_, 
+                                          session_->sessionKey().toString() );
+
+        } else if ( name == "operation_id" ) {
+            
+            if ( !p ) {
+                np = new AdapterProperty( name, session_, session_->getCurrentOperationId() );
+            } else {
+                (*p)->setInt( session_->getCurrentOperationId() );
             }
+
         } else {
 
             throw SCAGException( "logic error in SessionPropertyScope:processReadonly, unregistered name='%s' is requested", 
                                  name.c_str() );
         }
-        return p;
+        if ( np ) {
+            properties_.Insert( name.c_str(), np );
+        } else {
+            assert(p);
+            np = *p;
+        }
+        smsc_log_debug( log_, "readonly property '%s' has value '%s'",
+                        name.c_str(), np->getStr().c_str() );
+        return np;
     }
 
 private:
     // we don't need hash here as only a few (<5) readonly values are expected.
-    std::set< std::string > readonly_;
+    std::set< std::string >* readonly_;
 };
 
 } // namespace
@@ -100,9 +147,13 @@ using namespace scag::exceptions;
 
 
 // statics
-smsc::logger::Logger*  Session::log_ = 0;
 opid_type              Session::newopid_ = SCAGCommand::invalidOpId();
 
+
+SessionPropertyScope::SessionPropertyScope( Session* patron ) :
+session_(patron) {
+    ::getlog();
+}
 
 SessionPropertyScope::~SessionPropertyScope()
 {
@@ -216,10 +267,7 @@ serviceScopes_(0),
 contextScopes_(0),
 operationScopes_(0)
 {
-    if ( ! log_ ) {
-        MutexGuard mg(::sessionloggermutex);
-        if ( !log_ ) log_ = smsc::logger::Logger::getInstance("session");
-    }
+    getlog();
     clear();
 }
 
@@ -374,7 +422,7 @@ std::auto_ptr< ExternalTransaction > Session::releaseTransaction( const char* id
         ExternalTransaction** ptr = transactions_->GetPtr(id);
         if ( ptr ) {
             ret.reset( *ptr );
-            ptr = 0;
+            *ptr = 0;
         }
     }
     return ret;
@@ -549,9 +597,9 @@ bool Session::deleteContextScope( int ctxid )
 SessionPropertyScope* Session::getGlobalScope()
 {
     if ( ! globalScope_ ) {
-        SessionPropertyScopeWrapper* w = new SessionPropertyScopeWrapper( this );
+        SessionPropertyScopeWrapper* w = 
+            new SessionPropertyScopeWrapper( this, readonlyGlobalScopeSet );
         globalScope_ = w;
-        w->addReadonly( "abonent" );
     }
     return globalScope_;
 }
@@ -596,10 +644,10 @@ SessionPropertyScope* Session::getOperationScope()
         operationScopes_ = new IntHash< SessionPropertyScope* >;
     SessionPropertyScope** sptr = operationScopes_->GetPtr( getCurrentOperationId() );
     if ( ! sptr ) {
-        SessionPropertyScopeWrapper* w = new SessionPropertyScopeWrapper( this );
+        SessionPropertyScopeWrapper* w = 
+            new SessionPropertyScopeWrapper( this, readonlyOperationScopeSet );
         res = w;
         operationScopes_->Insert( getCurrentOperationId(), res );
-        w->addReadonly( "ICC_STATUS" );
     } else {
         res = *sptr;
     }

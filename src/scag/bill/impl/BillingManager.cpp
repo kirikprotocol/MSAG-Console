@@ -6,6 +6,10 @@
 #include "scag/stat/base/Statistics2.h"
 #include "scag/util/lltostr.h"
 
+#ifdef MSAG_INMAN_BILL
+#include "inman/services/smbill/SmBillDefs.hpp"
+#endif
+
 namespace scag2 {
 namespace bill {
 
@@ -87,18 +91,18 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
 
     SendTransactionHash.Delete(bt->billId);
 
-    LongCallContext* lcmCtx = st->lcmCtx;
+    lcm::LongCallContext* lcmCtx = st->lcmCtx;
 
     BillingCommandStatus i;
     const char *p;
 
     bt->status = st->status;
 
-    if(st->status == TRANSACTION_VALID)
+    if( st->status == TRANSACTION_VALID )
     {
         SPckDeliverySmsResult opRes;
         opRes.Hdr().dlgId = bt->billId;
-        if(lcmCtx->callCommandId == BILL_OPEN)
+        if( lcmCtx->callCommandId == lcm::BILL_OPEN )
         {
             BillOpenCallParams* bp = (BillOpenCallParams*)lcmCtx->getParams();
             bp->BillId = bt->billId;
@@ -106,7 +110,7 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
             opRes.Cmd().setResultValue(1);
             opRes.Cmd().setFinal(false); // To skip CDR creation
         }
-        else if(lcmCtx->callCommandId == BILL_ROLLBACK)
+        else if(lcmCtx->callCommandId == lcm::BILL_ROLLBACK)
             opRes.Cmd().setResultValue(2);
         sendCommand(opRes);
 
@@ -136,26 +140,28 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
     BillingTransactionEvent event;
     switch(lcmCtx->callCommandId)
     {
-        case BILL_OPEN: event = TRANSACTION_OPEN; eventName = "open"; break;
-        case BILL_COMMIT: event = TRANSACTION_COMMITED; eventName = "commit"; break;
-        case BILL_ROLLBACK: event = TRANSACTION_CALL_ROLLBACK; eventName = "rollback"; break;
+    case lcm::BILL_OPEN: event = TRANSACTION_OPEN; eventName = "open"; break;
+    case lcm::BILL_COMMIT: event = TRANSACTION_COMMITED; eventName = "commit"; break;
+    case lcm::BILL_ROLLBACK: event = TRANSACTION_CALL_ROLLBACK; eventName = "rollback"; break;
     }
 
-    SaccBillingInfoEvent* billEvent = new SaccBillingInfoEvent();
-    makeBillEvent(event, i, bt->tariffRec, bt->billingInfoStruct, billEvent);
-    Statistics::Instance().registerSaccEvent(billEvent);
+    stat::SaccBillingInfoEvent* billEvent = new stat::SaccBillingInfoEvent();
+    makeBillEvent( event, i, bt->tariffRec, bt->billingInfoStruct, billEvent );
+    stat::Statistics::Instance().registerSaccEvent(billEvent);
     logEvent(eventName, i == COMMAND_SUCCESSFULL, bt->billingInfoStruct, bt->billId);
     if(i != COMMAND_SUCCESSFULL)
     {
         char buf[20];
         buf[19]=0;
-        LongCallParams* lp = lcmCtx->getParams();
+        lcm::LongCallParams* lp = lcmCtx->getParams();
         lp->exception = "Transaction billId=";
         lp->exception += lltostr(bt->billId, buf + 19);
         lp->exception += p;
     }
-    else if(lcmCtx->callCommandId == BILL_OPEN)
-        putBillTransaction(bt->billId, bt.release());
+    else if ( lcmCtx->callCommandId == lcm::BILL_OPEN) {
+        const unsigned int billid = bt->billId;
+        putBillTransaction( billid, bt.release());
+    }
     
     lcmCtx->initiator->continueExecution(lcmCtx, false);
 }
@@ -211,6 +217,7 @@ unsigned int BillingManagerImpl::Open( BillingInfoStruct& billingInfoStruct,
 
         if(lcmCtx)
         {
+            smsc_log_debug( logger, "going to send command async" );
             sendCommandAsync(p.release(), lcmCtx);
             return 0;
         }

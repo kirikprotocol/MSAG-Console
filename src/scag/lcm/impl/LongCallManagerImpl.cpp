@@ -99,7 +99,11 @@ bool LongCallManagerImpl::call(LongCallContext* context)
 {
     if(stopped) return false;
     
-    if(context->callCommandId == BILL_OPEN || context->callCommandId == BILL_COMMIT || context->callCommandId == BILL_ROLLBACK)
+    smsc_log_debug( logger, "call context=%p session=%p cmdid=%d",
+                    context, & context->getActionContext()->getSession(),
+                    context->callCommandId );
+
+    if (context->callCommandId == BILL_OPEN || context->callCommandId == BILL_COMMIT || context->callCommandId == BILL_ROLLBACK)
     {
         try {
 
@@ -164,6 +168,10 @@ int LongCallTask::Execute()
         if(isStopping || !ctx) break;
         // presently do nothing
             
+        smsc_log_debug( logger, "pass context=%p session=%p cmdid=%d back to initiator",
+                        ctx, & ctx->getActionContext()->getSession(),
+                        ctx->callCommandId );
+
         ctx->initiator->continueExecution(ctx, false);
     }
 //    smsc_log_debug(logger, "Stopped lcm task");

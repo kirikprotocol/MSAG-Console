@@ -44,7 +44,7 @@ class Session;
 class SessionPropertyScope
 {
 public:
-    SessionPropertyScope( Session* patron ) : session_(patron) {}
+    SessionPropertyScope( Session* patron );
     virtual ~SessionPropertyScope();
     virtual Property* getProperty( const std::string& name );
     Serializer& serialize( Serializer& s ) const;
@@ -55,7 +55,8 @@ public:
     unsigned size() const { return properties_.GetCount(); }
 
 protected:
-    virtual bool isReadonly( const char* ) const { return false; }
+    /// method is necessary for serialization
+    virtual bool isReadonly( const std::string& ) const { return false; }
 
 protected:
     Session*                         session_;
@@ -258,7 +259,7 @@ private: // methods
 
 private: // statics
 
-    static Logger*   log_;
+    // static Logger*   log_;
     static opid_type newopid_;
 
 private:

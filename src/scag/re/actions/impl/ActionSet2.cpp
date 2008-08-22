@@ -26,7 +26,7 @@ bool ActionSet::run(ActionContext& context)
 
     if (!property) 
     {
-        smsc_log_warn(logger,"Action 'set':: invalid property '%s'",m_strVariable.c_str());
+        smsc_log_warn(logger,"Action 'set': invalid property '%s'",m_strVariable.c_str());
         return true;
     }
 
@@ -43,7 +43,8 @@ bool ActionSet::run(ActionContext& context)
         if (val) 
         {
             property->setStr(val->getStr());
-            smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",m_strVariable.c_str(),m_strValue.c_str());
+            smsc_log_debug(logger,"Action 'set': property '%s' set to val='%s' of '%s'",
+                           m_strVariable.c_str(), val->getStr().c_str(), m_strValue.c_str() );
         }
         else 
             smsc_log_warn(logger,"Action 'set': cannot initialize '%s' with '%s' value - no such property",m_strVariable.c_str(),m_strValue.c_str());

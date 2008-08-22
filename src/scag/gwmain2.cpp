@@ -195,7 +195,8 @@ int main( int argc, char* argv[] )
 } // namespace scag2
 
 
-int main(int argc,char* argv[])
+int main( int argc, char* argv[] )
 {
     scag2::main( argc, argv );
+    return 0;
 }

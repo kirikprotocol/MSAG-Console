@@ -20,18 +20,18 @@ void ActionSessionContextScope::init( const SectionParams& params,
                          idfieldname_, bExist );
 
     // m_valueFieldType = CheckParameter(params, propertyObject, "set", "value", true, true, m_strValue, bExist);
-    smsc_log_debug( logger, "Action '%s':: init", actionname() );
+    smsc_log_debug( logger, "Action '%s': init", actionname() );
 }
 
 
 bool ActionSessionContextScope::run( ActionContext& context )
 {
-    smsc_log_debug( logger,"Run Action '%s'", actionname() );
+    smsc_log_debug( logger,"Action '%s': run", actionname() );
     Property * property = context.getProperty(idfieldname_);
 
     if (!property) 
     {
-        smsc_log_warn(logger,"Action '%s':: invalid property '%s'", actionname(), idfieldname_.c_str() );
+        smsc_log_warn(logger,"Action '%s': invalid property '%s'", actionname(), idfieldname_.c_str() );
         return true;
     }
 
@@ -41,7 +41,7 @@ bool ActionSessionContextScope::run( ActionContext& context )
 
         const int ctx = context.getSession().createContextScope();
         property->setInt( ctx );
-        smsc_log_debug(logger,"Action '%s': property '%s' set to '%d'", actionname(), idfieldname_.c_str(), ctx );
+        smsc_log_debug(logger,"Action '%s': property '%s' new scope_id='%d'", actionname(), idfieldname_.c_str(), ctx );
         break;
 
     }
@@ -52,9 +52,9 @@ bool ActionSessionContextScope::run( ActionContext& context )
         SessionPropertyScope* scope = context.getSession().getContextScope( ctx );
         if ( scope ) {
             context.setContextScope( ctx );
-            smsc_log_debug(logger,"Action '%s': property '%s' set session context scope to '%d'", actionname(), idfieldname_.c_str(), ctx );
+            smsc_log_debug(logger,"Action '%s': property '%s' set scope_id='%d' scope=%p", actionname(), idfieldname_.c_str(), ctx, scope );
         } else {
-            smsc_log_warn(logger,"Action '%s': property '%s' cannot set session context scope to '%d' - not found", actionname(), idfieldname_.c_str(), ctx );
+            smsc_log_warn(logger,"Action '%s': property '%s' cannot set scope_id='%d' - not found", actionname(), idfieldname_.c_str(), ctx );
         }
         break;
     }

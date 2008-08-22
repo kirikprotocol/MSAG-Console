@@ -12,7 +12,6 @@ namespace lcm {
 
 using scag2::re::actions::ActionContext;
 
-/*
 enum LongCallCommandId 
 {
     PERS_GET = 1,
@@ -20,12 +19,11 @@ enum LongCallCommandId
     PERS_DEL,
     PERS_INC,
     PERS_INC_MOD,
-  PERS_BATCH,
+    PERS_BATCH,
     BILL_OPEN,
     BILL_COMMIT,
     BILL_ROLLBACK
 };
- */
 
 class LongCallParams
 {

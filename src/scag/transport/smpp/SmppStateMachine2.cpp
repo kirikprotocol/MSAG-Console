@@ -414,7 +414,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
 
         smsc_log_debug(log_, "Submit: RuleEngine processing...");
         re::RuleEngine::Instance().process( *cmd, *session.get(), st);
-        smsc_log_debug(log_, "Submit: RuleEngine procesed.");
+        smsc_log_debug(log_, "Submit: RuleEngine processed: st.status=%d st.result=%d", st.status, st.result );
 
         opmaker.postProcess( st );
 
@@ -586,7 +586,7 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
 
     smsc_log_debug(log_, "SubmitResp: RuleEngine processing...");
     re::RuleEngine::Instance().process( *cmd, *session.get(), st );
-    smsc_log_debug(log_, "SubmitResp: RuleEngine processed");
+    smsc_log_debug(log_, "SubmitResp: RuleEngine processed: st.status=%d st.result=%d", st.status, st.result );
 
     opmaker.postProcess( st );
 
@@ -740,7 +740,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
 
         smsc_log_debug(log_, "Delivery: RuleEngine processing...");
         re::RuleEngine::Instance().process(*cmd,*session.get(), st);
-        smsc_log_debug(log_, "Delivery: RuleEngine procesed.");
+        smsc_log_debug(log_, "Delivery: RuleEngine processed: st.status=%d st.result=%d", st.status, st.result );
 
         opmaker.postProcess( st );
 
@@ -911,7 +911,7 @@ void StateMachine::processDeliveryResp(std::auto_ptr<SmppCommand> aucmd, ActiveS
 //    smsc_log_debug(log_, "sms:%x sm: %d mp: %d rsm: %d rmp: %d", sms->hasBinProperty(Tag::SMPP_SHORT_MESSAGE), sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD), sms->hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE), sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD));
     smsc_log_debug(log_, "DeliveryResp: RuleEngine processing...");
     re::RuleEngine::Instance().process(*cmd,*session.get(), st);
-    smsc_log_debug(log_, "DeliveryResp: RuleEngine processed.");
+    smsc_log_debug(log_, "DeliveryResp: RuleEngine processed: st.status=%d st.result=%d", st.status, st.result );
 
     opmaker.postProcess( st );
 
@@ -1103,7 +1103,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
         
         smsc_log_debug(log_, "DataSm: RuleEngine processing...");
         re::RuleEngine::Instance().process(*cmd,*session.get(), st);
-        smsc_log_debug(log_, "DataSm: RuleEngine procesed.");
+        smsc_log_debug(log_, "DataSm: RuleEngine processed: st.status=%d st.result=%d", st.status, st.result );
 
         opmaker.postProcess( st );
 
@@ -1277,7 +1277,7 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
 
     smsc_log_debug(log_, "DataSmResp: RuleEngine processing...");
     re::RuleEngine::Instance().process(*cmd,*session.get(), st);
-    smsc_log_debug(log_, "DataSmResp: RuleEngine processed.");
+    smsc_log_debug(log_, "DataSmResp: RuleEngine processed: st.status=%d st.result=%d", st.status, st.result );
 
     opmaker.postProcess( st );
 

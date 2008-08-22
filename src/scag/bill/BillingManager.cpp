@@ -9,6 +9,7 @@
 #ifdef MSAG_INMAN_BILL
 #include "inman/interaction/connect.hpp"
 #include "inman/interaction/msgbill/MsgBilling.hpp"
+#include "inman/services/smbill/SmBillDefs.hpp"
 #endif
 
 #include "scag/exc/SCAGExceptions.h"

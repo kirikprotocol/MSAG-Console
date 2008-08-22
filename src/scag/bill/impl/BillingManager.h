@@ -27,12 +27,17 @@ using smsc::core::network::Socket;
 // using namespace scag::exceptions;
 using smsc::logger::Logger;
 
+#ifdef MSAG_INMAN_BILL
+using smsc::core::network::Socket;
+#endif
+
 class BillingManagerImpl :
 public BillingManager,
 public Thread,
 public config::ConfigListener
 #ifdef MSAG_INMAN_BILL
-    , public SMSCBillingHandlerITF, public ConnectListenerITF
+    , public smsc::inman::interaction::SMSCBillingHandlerITF
+    , public smsc::inman::interaction::ConnectListenerITF
 #endif
 {
     struct BillTransaction
@@ -40,19 +45,20 @@ public config::ConfigListener
         TransactionStatus status;
         TariffRec tariffRec;
         #ifdef MSAG_INMAN_BILL
-        SPckChargeSms ChargeOperation;
+        smsc::inman::interaction::SPckChargeSms ChargeOperation;
         #endif
         unsigned int billId;
         stat::SaccBillingInfoEvent billEvent;
         BillingInfoStruct billingInfoStruct;
         BillTransaction() : status(TRANSACTION_NOT_STARTED) {}
     };
+
     #ifdef MSAG_INMAN_BILL
     struct SendTransaction
     {
         TransactionStatus status;
         Event responseEvent;
-        LongCallContext* lcmCtx;
+        lcm::LongCallContext* lcmCtx;
         time_t startTime;
         BillTransaction* billTransaction;
         SendTransaction() : status(TRANSACTION_WAIT_ANSWER), lcmCtx(NULL), startTime(time(NULL)), billTransaction(NULL) {}
@@ -85,14 +91,20 @@ public config::ConfigListener
 
     #ifdef MSAG_INMAN_BILL
     Socket * socket;
-    Connect * pipe;
-    virtual void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd);
-    virtual void onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc);
-    void sendCommand(INPPacketAC& op) { pipe->sendPck(&op); }
-    TransactionStatus sendCommandAndWaitAnswer(SPckChargeSms& op);
+    smsc::inman::interaction::Connect * pipe;
+    virtual void onPacketReceived( smsc::inman::interaction::Connect* conn,
+                                   std::auto_ptr<SerializablePacketAC>& recv_cmd );
+    virtual void onConnectError( smsc::inman::interaction::Connect* conn,
+                                 std::auto_ptr<CustomException>& p_exc);
+    void sendCommand( smsc::inman::interaction::INPPacketAC& op ) {
+        pipe->sendPck(&op); 
+    }
+    TransactionStatus sendCommandAndWaitAnswer( smsc::inman::interaction::SPckChargeSms& op );
 
-    void fillChargeSms(smsc::inman::interaction::ChargeSms& op, BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec);
-    virtual void onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr_dlg * hdr);
+    void fillChargeSms( smsc::inman::interaction::ChargeSms& op,
+                        BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec );
+    virtual void onChargeSmsResult( smsc::inman::interaction::ChargeSmsResult* result,
+                                    smsc::inman::interaction::CsBillingHdr_dlg * hdr );
     bool Reconnect();
     void InitConnection(std::string& host, int port)
     {
@@ -102,7 +114,7 @@ public config::ConfigListener
     void insertSendTransaction(int dlgId, SendTransaction* st);
     void deleteSendTransaction(int dlgId);
 
-    void sendCommandAsync(BillTransaction *bt, LongCallContext* lcmCtx);
+    void sendCommandAsync( BillTransaction *bt, lcm::LongCallContext* lcmCtx );
     void processAsyncResult(BillingManagerImpl::SendTransaction* pst);
     #endif /* MSAG_INMAN_BILL */
 
@@ -164,18 +176,21 @@ public:
 
     BillingManagerImpl() :
     ConfigListener(config::BILLMAN_CFG),
-    logger(Logger::getInstance("bill.man")),
+    logger(0),
     m_bStarted(false),
     m_lastBillId(0)
 #ifdef MSAG_INMAN_BILL
         , socket(0), pipe(0)
 #endif
     {
-     max_t = 0, min_t = 1000000000, billcount = 0, start_t = time(NULL);
+        logger = Logger::getInstance("bill.man");
+        max_t = 0, min_t = 1000000000, billcount = 0, start_t = time(NULL);
         #ifdef MSAG_INMAN_BILL
         socket = new Socket();
-        INPSerializer::getInstance()->registerCmdSet(INPCSBilling::getInstance());
-        pipe = new Connect(socket, INPSerializer::getInstance(), logger);
+        smsc::inman::interaction::INPSerializer::getInstance()
+            ->registerCmdSet(smsc::inman::interaction::INPCSBilling::getInstance());
+        pipe = new smsc::inman::interaction::Connect
+            ( socket, smsc::inman::interaction::INPSerializer::getInstance(), logger);
         pipe->addListener(this);
         #endif
     }

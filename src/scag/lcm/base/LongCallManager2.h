@@ -8,6 +8,7 @@
 namespace scag2 {
 namespace lcm {
 
+/*
 enum LongCallCommandId{
     PERS_GET = 1,
     PERS_SET,
@@ -19,6 +20,7 @@ enum LongCallCommandId{
     BILL_COMMIT,
     BILL_ROLLBACK
 };
+ */
 
 
 class LongCallManager 
