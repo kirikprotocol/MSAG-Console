@@ -503,9 +503,11 @@ Billing::PGraphState Billing::onChargeSms(void)
         billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgSpecific);
     }
 
-    AbonentRecord cacheRec;
-    _cfg.abCache->getAbonentInfo(abNumber, &cacheRec);
-    abCsi.abRec.Merge(cacheRec);     //merge available abonent info
+    if (_cfg.abCache) {
+        AbonentRecord cacheRec;
+        _cfg.abCache->getAbonentInfo(abNumber, &cacheRec);
+        abCsi.abRec.Merge(cacheRec);     //merge available abonent info
+    }
     //check for IMSI being defined
     if (!abCsi.abRec.getImsi())
         abCsi.abRec.ab_type = AbonentContractInfo::abtUnknown;
@@ -792,7 +794,8 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
         abCsi.abRec.Merge(ab_info.abRec); //merge known abonent info
     } else {
         abCsi.abRec = ab_info.abRec; //renew abonent info, overwrite TDPScfMAP
-        _cfg.abCache->setAbonentInfo(abNumber, abCsi.abRec);
+        if (_cfg.abCache)
+            _cfg.abCache->setAbonentInfo(abNumber, abCsi.abRec);
     }
     if (!ab_info.vlrNum.empty())
         abCsi.vlrNum = ab_info.vlrNum;

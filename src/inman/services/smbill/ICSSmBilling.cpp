@@ -26,8 +26,13 @@ namespace smbill {
 //Initializes service verifying that all dependent services are inited
 ICServiceAC::RCode ICSSmBilling::_icsInit(void)
 {
-    if (wCfg.prm->useCache)
+    if (wCfg.prm->useCache) {
         wCfg.abCache = (AbonentCacheITF*)_icsHost->getInterface(ICSIdent::icsIdAbntCache);
+        if (!wCfg.abCache) {
+            smsc_log_warn(logger, "Abonents Cache service required but not loaded!");
+            wCfg.prm->useCache = false;
+        }
+    }
 
     //Initialize CAP3Sms components factory
     if (wCfg.prm->capSms.get()) {
