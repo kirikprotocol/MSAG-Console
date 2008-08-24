@@ -34,7 +34,7 @@ class SRI4SMTSM : public TSM
                            uint8_t  cllen,
                            uint8_t* cl        /* calling party address */);
 
-    virtual void TInvokeReq(uint8_t invokeId, uint8_t opcode, CompIF& arg);
+    virtual void TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg);
     virtual void TEndReq();
     virtual void TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg);
     virtual void TUErrorReq(int invokeId, uint8_t errcode, CompIF& arg);
@@ -46,7 +46,7 @@ class SRI4SMTSM : public TSM
     vector<unsigned char> temp_arg;
     uint8_t temp_opcode;
     uint8_t temp_errcode;
-    uint8_t temp_invokeId;
+    int8_t temp_invokeId;
 };
 
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

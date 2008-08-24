@@ -164,7 +164,7 @@ int main(int argc, char** argv)
       if (tsm)
       {
         SendRoutingInfoForSMReq* inv = new SendRoutingInfoForSMReq(ms, true, sca);
-        tsm->TInvokeReq(1, 45, *inv);
+        tsm->TInvokeReq(-15, 45, *inv);
         tsm->TBeginReq(cdlen, cd, cllen, cl);
       }
       sleep(10);

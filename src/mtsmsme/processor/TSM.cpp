@@ -33,6 +33,9 @@ void TSM::TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
   smsc_log_debug(logger,"TSM::TResultLReq() is NOT IMPLEMENTED");
   return;
 }
-void TSM::TInvokeReq(uint8_t invokeId, uint8_t opcode,  CompIF& arg) {return;}
-
+void TSM::TInvokeReq(int8_t invokeId, uint8_t opcode,  CompIF& arg)
+{
+  smsc_log_debug(logger,"TSM::TInvokeReq() is NOT IMPLEMENTED");
+  return;
+}
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

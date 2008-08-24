@@ -33,7 +33,7 @@ class PRNTSM : public TSM
                            uint8_t  cllen,
                            uint8_t* cl        /* calling party address */);
     virtual void TEndReq();
-    virtual void TInvokeReq(uint8_t invokeId, uint8_t opcode, CompIF& arg);
+    virtual void TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg);
     virtual void TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg);
   private:
     vector<unsigned char> temp_arg;

@@ -28,7 +28,7 @@ class ULTSM : public TSM
                                    Message& msg);
 
     virtual void END_received(Message& msg);
-    virtual void TInvokeReq(uint8_t invokeId, uint8_t opcode, CompIF& arg);
+    virtual void TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg);
     virtual void TBeginReq(uint8_t  cdlen,
                            uint8_t* cd,        /* called party address */
                            uint8_t  cllen,

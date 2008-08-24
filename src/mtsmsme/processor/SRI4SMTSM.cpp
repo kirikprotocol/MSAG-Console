@@ -136,10 +136,11 @@ void SRI4SMTSM::END_received(Message& msg)
   if(listener) listener->complete(1);
   tco->TSMStopped(ltrid);
 }
-void SRI4SMTSM::TInvokeReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
+void SRI4SMTSM::TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg)
 {
   arg.encode(temp_arg);
   temp_opcode = opcode;
+  temp_invokeId = invokeId;
 }
 void SRI4SMTSM::TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
 {
@@ -235,7 +236,7 @@ void SRI4SMTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* 
 
   // intialize invoke with invokeID and operation code
   comp.present = Component_PR_invoke;
-  comp.choice.invoke.invokeId = 1;
+  comp.choice.invoke.invokeId = temp_invokeId;
   comp.choice.invoke.linkedId = 0;
   comp.choice.invoke.opcode.present = Code_PR_local;
   comp.choice.invoke.opcode.choice.local = temp_opcode;
