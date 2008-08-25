@@ -12,9 +12,12 @@ import ru.sibinco.smsc.utils.admin.dl.DistributionListManager;
 import ru.sibinco.smsc.utils.admin.dl.exceptions.*;
 import ru.sibinco.smsc.utils.admin.AdminException;
 import ru.aurorisoft.smpp.Message;
+import ru.aurorisoft.smpp.Address;
+import ru.aurorisoft.smpp.SMPPAddressException;
 
 import java.util.List;
 import java.util.Properties;
+import java.util.ArrayList;
 
 import org.apache.log4j.Category;
 import com.eyeline.sme.smpp.OutgoingQueue;
@@ -182,12 +185,17 @@ class GroupEditProcessor implements GroupAddCmd.Receiver,
 
   public GroupInfo execute(GroupInfoCmd cmd) throws CommandExecutionException {
     checkGroup(cmd.getGroupName(), cmd.getOwner());
-
     try {
       List<String> members = dlmanager.members(cmd.getGroupName(), cmd.getOwner());
-      return new GroupInfo(members);
+      List<String> result = new ArrayList<String>(members.size());
+      for (String member : members)
+        result.add(new Address(member).getAddressString());      
+
+      return new GroupInfo(result);
     } catch (AdminException e) {
       catchGroupException(e, cmd);
+    } catch (SMPPAddressException e) {
+      throw new CommandExecutionException(e.getMessage(), GroupEditCommand.ERR_SYS_ERROR);
     }
     return null;
   }

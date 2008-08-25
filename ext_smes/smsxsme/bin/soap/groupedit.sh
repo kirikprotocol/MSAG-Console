@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GROUP_EDIT_URL="http://localhost:8080/smsx/services/GroupEdit"
+GROUP_EDIT_URL="http://phoenix:7802/smsx/services/GroupEdit"
 
 if [[ $1 == "add" ]]; then
     SCRIPT_NAME="groupadd.sh"

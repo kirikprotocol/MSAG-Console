@@ -10,6 +10,8 @@ elif [[ $1 == "sms" ]]; then
     SCRIPT_NAME="sendsms.sh"
 elif [[ $1 == "smspaid" ]]; then
     SCRIPT_NAME="sendpaidsms.sh"
+elif [[ $1 == "smssys" ]]; then
+    SCRIPT_NAME="sendsyssms.sh"
 elif [[ $1 == "calendarpaid" ]]; then
     SCRIPT_NAME="sendpaidcalendar.sh"
 elif [[ $1 == "secretpaid" ]]; then
@@ -17,7 +19,7 @@ elif [[ $1 == "secretpaid" ]]; then
 elif [[ $1 == "check" ]]; then
     SCRIPT_NAME="checkstatus.sh"
 else
-    echo -e "Usage: \n sms\n secret\n calendar\n smspaid\n secretpaid\n calendarpaid\n check\n"
+    echo -e "Usage: \n sms\n secret\n calendar\n smspaid\n secretpaid\n calendarpaid\n smssys\n check\n"
     exit 1
 fi
 
