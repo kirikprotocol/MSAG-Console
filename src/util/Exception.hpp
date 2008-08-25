@@ -1,4 +1,3 @@
-#pragma ident "$Id$"
 #ifndef __UTIL_EXCEPTION_HPP__
 #define __UTIL_EXCEPTION_HPP__
 
