@@ -37,6 +37,7 @@ private:
 
     // FieldType       statusFieldType_;
     std::string     statusFieldName_;
+    bool            hasStatus_;
 
     // FieldType       msgFieldType_;
     std::string     msgFieldName_;

@@ -19,9 +19,9 @@ void BillAction::init( const SectionParams& params,
 
     CheckParameter( params, propertyObject, 
                     opname(), "status",
-                    true, false,
+                    false, false,
                     statusFieldName_,
-                    bExist );
+                    hasStatus_ );
 
     CheckParameter( params, propertyObject,
                     opname(), "msg",
@@ -71,15 +71,16 @@ void BillAction::setBillingStatus( ActionContext& context,
                                    const char*    errmsg,
                                    bool           ok )
 {
-    Property* propertyStatus = context.getProperty(statusFieldName_);
-    if (!propertyStatus) 
-    {
-        smsc_log_debug( logger,"Action '%s' :: Invalid property %s for status",
-                        opname(), statusFieldName_.c_str());
-        return;
+    if ( hasStatus_ ) {
+        Property* propertyStatus = context.getProperty(statusFieldName_);
+        if (!propertyStatus) 
+        {
+            smsc_log_debug( logger,"Action '%s' :: Invalid property %s for status",
+                            opname(), statusFieldName_.c_str());
+            return;
+        }
+        propertyStatus->setInt(!ok);
     }
-
-    propertyStatus->setInt(!ok);
 
     if (hasMessage_)
     {
