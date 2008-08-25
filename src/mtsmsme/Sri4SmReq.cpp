@@ -149,6 +149,7 @@ int main(int argc, char** argv)
     SccpSender* sccpsender = new SuaSender(suaApi);
     mtsms->setSccpSender(sccpsender);
     int count = 0;
+    int8_t invoke_id = 0;
     while(true)
     {
       char* s;
@@ -164,7 +165,7 @@ int main(int argc, char** argv)
       if (tsm)
       {
         SendRoutingInfoForSMReq* inv = new SendRoutingInfoForSMReq(ms, true, sca);
-        tsm->TInvokeReq(-15, 45, *inv);
+        tsm->TInvokeReq(invoke_id++, 45, *inv);
         tsm->TBeginReq(cdlen, cd, cllen, cl);
       }
       sleep(10);
