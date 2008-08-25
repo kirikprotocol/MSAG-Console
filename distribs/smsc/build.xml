@@ -465,6 +465,13 @@ Targets:
     <ant dir="${SMSC_DIR}/ext_smes" target="smsx_distr"/>
   </target>
 
+  <target name="mcahdb_update" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="mcahdb_update"/>
+  </target>
+  <target name="mcahdb_distr" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="mcahdb_distr"/>
+  </target>
+
   <target name="subscription_update" >
     <ant dir="${SMSC_DIR}/ext_smes" target="subscription_update"/>
   </target>
