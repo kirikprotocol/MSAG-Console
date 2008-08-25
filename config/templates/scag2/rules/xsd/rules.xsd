@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG" 
+   xmlns="http://www.w3.org/2001/XMLSchema"
+   xmlns:scag="http://www.sibinco.com/SCAG"
+   xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
+   xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+   xmlns:smpp="http://www.sibinco.com/SCAG/SMPP"
+   xmlns:strings="http://www.sibinco.com/SCAG/STRINGS"
+   xmlns:bill="http://www.sibinco.com/SCAG/BILL"
+   xmlns:send="http://www.sibinco.com/SCAG/SEND"
+   xmlns:profile="http://www.sibinco.com/SCAG/PROFILE"
+   xmlns:log="http://www.sibinco.com/SCAG/LOG"
+   xmlns:http="http://www.sibinco.com/SCAG/HTTP"
+   xmlns:datetime="http://www.sibinco.com/SCAG/DATETIME">
+    
+    <annotation>
+        <documentation xml:lang="en">
+            Abstarct rule schema for Sibinco.com.
+            Copyright 2005 Sibinco.com. All rights reserved.
+        </documentation>
+    </annotation>
+   
+    <import schemaLocation="bill.xsd"       namespace="http://www.sibinco.com/SCAG/BILL"/>
+    <import schemaLocation="send.xsd"       namespace="http://www.sibinco.com/SCAG/SEND"/>
+    <import schemaLocation="sessions.xsd"   namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
+    <import schemaLocation="operations.xsd" namespace="http://www.sibinco.com/SCAG/OPERATIONS"/>
+    <import schemaLocation="strings.xsd"    namespace="http://www.sibinco.com/SCAG/STRINGS"/>
+    <import schemaLocation="profile.xsd"    namespace="http://www.sibinco.com/SCAG/PROFILE"/>
+    <import schemaLocation="log.xsd"        namespace="http://www.sibinco.com/SCAG/LOG"/>
+    <import schemaLocation="http.xsd"       namespace="http://www.sibinco.com/SCAG/HTTP"/>
+    <import schemaLocation="smpp.xsd" 	    namespace="http://www.sibinco.com/SCAG/SMPP"/>
+    <import schemaLocation="datetime.xsd"   namespace="http://www.sibinco.com/SCAG/DATETIME"/>
+
+    <!-- General values types definition  -->
+    <simpleType name="Value">
+        <restriction base="string"/>
+    </simpleType>
+    <simpleType name="Command">
+        <restriction base="string">
+            <pattern value="#\p{L}+[\w_\-\.]*"/>
+        </restriction>
+    </simpleType>
+    <simpleType name="Global">
+        <restriction base="string">
+            <pattern value="$\p{L}+[\w_\-\.]*"/>
+        </restriction>
+    </simpleType>
+    <simpleType name="Service">
+        <restriction base="string">
+            <pattern value="~\p{L}+[\w_\-\.]*"/>
+        </restriction>
+    </simpleType>
+    <simpleType name="Context">
+        <restriction base="string">
+            <pattern value="^\p{L}+[\w_\-\.]*"/>
+        </restriction>
+    </simpleType>
+    <simpleType name="Local">
+        <restriction base="string">
+            <pattern value="%\p{L}+[\w_\-\.]*"/>
+        </restriction>
+    </simpleType>
+    <simpleType name="Const">
+        <restriction base="string">
+            <pattern value="@\p{L}+[\w_\-\.]*"/>
+        </restriction>
+    </simpleType>
+
+    <!-- General fields types definition  -->
+    <simpleType name="Var">
+        <union memberTypes="scag:Command scag:Global scag:Service scag:Context scag:Local"></union>
+    </simpleType>
+    <simpleType name="Named">
+        <union memberTypes="scag:Command scag:Global scag:Service scag:Context scag:Local scag:Const"></union>
+    </simpleType>
+    
+    <!-- General comparision definition  -->
+    <simpleType name="Operation">
+        <restriction base="string">
+            <enumeration value="eq"/><enumeration value="ne"/>
+            <enumeration value="gt"/> <enumeration value="lt"/>
+            <enumeration value="ge"/><enumeration value="le"/>
+            <enumeration value="eqi"/><enumeration value="nei"/>
+            <enumeration value="gti"/> <enumeration value="lti"/>
+            <enumeration value="gei"/><enumeration value="lei"/>
+        </restriction>
+    </simpleType>
+    
+    
+    <simpleType name="TransportOperation">
+        <restriction base="string">
+	    <enumeration value="DELIVER" />
+	    <enumeration value="SUBMIT" />
+	    <enumeration value="RECEIPT" />
+	    <enumeration value="USSD_DIALOG" />
+	    <enumeration value="HTTP_DELIVERY" />
+	    <enumeration value="DATA_SC_2_SME" />
+	    <enumeration value="DATA_SC_2_SC" />
+	    <enumeration value="DATA_SME_2_SME" />
+	    <enumeration value="DATA_SME_2_SC" />
+        </restriction>
+    </simpleType>
+    
+    
+    <attributeGroup name="Test">
+        <attribute name="test" type="scag:Named" use="required"/>
+        <attribute name="op" type="scag:Operation" use="optional"/>
+        <attribute name="value" type="scag:Value" use="optional"/>
+    </attributeGroup>
+
+    <simpleType name="Status">
+        <restriction base="string">
+            <enumeration value="Ok"/>
+            <enumeration value="Failed"/>
+        </restriction>
+    </simpleType>
+
+
+    <!-- General actions elements group definition  -->
+    <group name="Actions">
+        <choice>
+            <group ref="session:Actions"/>
+            <group ref="bill:Actions" />
+            <group ref="send:Actions" />
+            <group ref="operation:Actions" />
+            <group ref="strings:Actions" />
+            <group ref="profile:Actions" />
+            <group ref="log:Actions" />
+            <group ref="http:Actions" />
+            <group ref="smpp:Actions" />
+            <group ref="datetime:Actions" />
+
+            <element name="set">
+                <complexType>
+                    <attribute name="var" type="scag:Var" use="required"/>
+                    <attribute name="value" type="scag:Value" use="required"/>
+                </complexType>    
+            </element>
+            
+            <element name="longcalltest"/>
+
+            <element name="return">
+                <complexType>
+                    <attribute name="result" type="scag:Value" use="optional"/>
+                    <attribute name="status" type="scag:Status" use="required"/>
+                </complexType>    
+            </element>
+            
+        <element name="match">
+        <complexType>
+            <attribute name="regexp" type="string" use="required" />
+            <attribute name="value" type="scag:Value" use="required"/>
+            <attribute name="result" type="scag:Var" use="required"/>
+        </complexType>
+        </element>
+        
+        <element name="if">
+            <complexType>
+                <choice>
+                    <sequence>
+                        <element name="then" type="scag:ActionsBranch" maxOccurs="1"/>
+                        <element name="else" type="scag:ActionsBranch" maxOccurs="1"/>
+                    </sequence>
+                    <group ref="scag:Actions" minOccurs="1" maxOccurs="unbounded"/>
+                </choice>
+                <attributeGroup ref="scag:Test"/>
+            </complexType>    
+        </element>
+            
+        <element name="inc">
+        <complexType>
+            <attribute name="var" type="scag:Var" use="required" />
+            <attribute name="value" type="scag:Value" use="optional" />
+        </complexType>
+        </element>
+        
+        <element name="dec">
+        <complexType>
+            <attribute name="var" type="scag:Var" use="required" />
+            <attribute name="value" type="scag:Value" use="optional" />
+        </complexType>
+        </element>
+
+        <element name="mod">
+        <complexType>
+            <attribute name="var" type="scag:Var" use="required" />
+            <attribute name="value" type="scag:Value" use="required" />
+        </complexType>
+        </element>
+        
+        <element name="mul">
+        <complexType>
+            <attribute name="var" type="scag:Var" use="required" />
+            <attribute name="value" type="scag:Value" use="required" />
+        </complexType>
+        </element>
+        
+        <element name="div">
+        <complexType>
+            <attribute name="var" type="scag:Var" use="required" />
+            <attribute name="value" type="scag:Value" use="required" />
+        </complexType>
+        </element>
+
+        </choice>
+    </group>
+    
+    <complexType name="ActionsBranch">
+        <group ref="scag:Actions" minOccurs="1" maxOccurs="unbounded"/>
+    </complexType>
+    <complexType name="Handler">
+        <group ref="scag:Actions" minOccurs="1" maxOccurs="unbounded"/>
+    </complexType>
+    
+    <simpleType name="Transport">
+        <restriction base="string">
+            <enumeration value="SMPP"/>
+            <enumeration value="HTTP"/>
+            <enumeration value="MMS"/>
+        </restriction>
+    </simpleType>
+    
+    <!-- Main element definition  -->
+    <complexType name="RuleType" abstract="true">
+        <attribute name="transport" type="scag:Transport" use="required"/>
+    </complexType>
+    <element name="rule" type="scag:RuleType"/>
+    
+</schema>

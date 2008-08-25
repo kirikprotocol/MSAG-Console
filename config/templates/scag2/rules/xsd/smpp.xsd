@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/SMPP" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:smpp="http://www.sibinco.com/SCAG/SMPP"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG" />
+
+    <simpleType name="MsgState">
+        <restriction base="string">
+            <enumeration value="ENROUTE"/> <!-- 1 -->
+            <enumeration value="DELIVERED"/>
+            <enumeration value="EXPIRED"/>
+            <enumeration value="DELETED"/>
+            <enumeration value="UNDELIVERABLE"/>
+            <enumeration value="ACCEPTED"/>
+            <enumeration value="UNKNOWN"/>
+            <enumeration value="REJECTED"/>
+        </restriction>
+    </simpleType>
+
+    <simpleType name="TLVType">
+        <restriction base="string">
+            <enumeration value="STR"/>
+            <enumeration value="STRN"/>
+            <enumeration value="INT8"/>
+            <enumeration value="INT16"/>
+            <enumeration value="INT32"/>
+            <enumeration value="INT64"/>
+            <enumeration value="UINT8"/>
+            <enumeration value="UINT16"/>
+            <enumeration value="UINT32"/>
+            <enumeration value="HEXDUMP"/>
+        </restriction>
+    </simpleType>
+    
+    <group name="Actions">
+        <choice>
+            <element name="redirect">
+                <complexType>
+                    <attribute name="OA" type="scag:Value" use="optional"/>
+                    <attribute name="DA" type="scag:Value" use="optional"/>
+                </complexType>
+            </element>
+
+            <element name="close_ussd_dialog">
+            </element>
+
+            <element name="set_tlv">
+                <complexType>
+                    <attribute name="tag" type="scag:Value" use="optional"/>
+                    <attribute name="name" type="scag:Value" use="optional"/>
+                    <attribute name="var" type="scag:Value" use="required"/>
+                    <attribute name="type" type="smpp:TLVType" use="optional"/>
+                </complexType>
+            </element>
+            
+            <element name="get_tlv">
+                <complexType>
+                    <attribute name="tag" type="scag:Value" use="optional"/>
+                    <attribute name="name" type="scag:Value" use="optional"/>
+                    <attribute name="var" type="scag:Value" use="required"/>
+                    <attribute name="type" type="smpp:TLVType" use="optional"/>
+                </complexType>
+            </element>
+            
+            <element name="del_tlv">
+                <complexType>
+                    <attribute name="tag" type="scag:Value" use="optional"/>
+                    <attribute name="name" type="scag:Value" use="optional"/>
+                </complexType>
+            </element>
+            
+            <element name="exist_tlv">
+                <complexType>
+                    <attribute name="tag" type="scag:Value" use="optional"/>
+                    <attribute name="name" type="scag:Value" use="optional"/>
+                    <attribute name="exist" type="scag:Value" use="required"/>
+                </complexType>
+            </element>
+
+            <element name="receipt">
+                <complexType>
+                    <attribute name="from" type="scag:Value" use="required"/>
+                    <attribute name="to" type="scag:Value" use="required"/>
+                    <attribute name="state" type="smpp:MsgState" use="required"/>
+                    <attribute name="msg_id" type="scag:Value" use="required"/>
+                    <attribute name="dst_sme_id" type="scag:Value" use="required"/>
+                    <attribute name="network_error_code" type="scag:Value" use="optional"/>
+                </complexType>
+            </element>
+        </choice>    
+    
+    </group>
+    
+</schema>

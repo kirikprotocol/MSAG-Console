@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/DATETIME" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    xmlns:datetime="http://www.sibinco.com/SCAG/DATETIME"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG"/>  
+
+
+    <simpleType name="IsDst">
+        <restriction base="scag:Value">
+            <enumeration value="TRUE"/>
+            <enumeration value="FALSE"/>
+        </restriction>
+    </simpleType>
+    
+
+    <complexType name="currentType">
+        <attribute name="datetime" type="scag:Var" use="optional"/>
+        <attribute name="date" type="scag:Var" use="optional"/>
+        <attribute name="year" type="scag:Var" use="optional"/>
+        <attribute name="month" type="scag:Var" use="optional"/>
+        <attribute name="day" type="scag:Var" use="optional"/>
+        <attribute name="wday" type="scag:Var" use="optional"/>
+        <attribute name="yday" type="scag:Var" use="optional"/>
+        <attribute name="time" type="scag:Var" use="optional"/>
+        <attribute name="hour" type="scag:Var" use="optional"/>
+        <attribute name="min" type="scag:Var" use="optional"/>
+        <attribute name="sec" type="scag:Var" use="optional"/>
+        <attribute name="timezone" type="scag:Value" use="optional"/>
+        <attribute name="isdst" type="datetime:IsDst" use="optional"/>
+    </complexType>
+    
+    <complexType name="dateType">
+        <attribute name="year" type="scag:Value" use="optional"/>
+        <attribute name="month" type="scag:Value" use="optional"/>
+        <attribute name="day" type="scag:Value" use="optional"/>
+        <attribute name="wday" type="scag:Value" use="optional"/>
+        <attribute name="yday" type="scag:Value" use="optional"/>
+    </complexType>
+    
+    <complexType name="timeType">
+        <attribute name="time" type="scag:Value" use="optional"/>
+        <attribute name="hour" type="scag:Value" use="optional"/>
+        <attribute name="min" type="scag:Value" use="optional"/>
+        <attribute name="sec" type="scag:Value" use="optional"/>
+        <attribute name="timezone" type="scag:Value" use="optional"/>
+        <attribute name="isdst" type="datetime:IsDst" use="optional"/>
+    </complexType>
+    
+    <attributeGroup name="commonAttributes">
+        <attribute name="date" type="scag:Var" use="optional"/>
+        <attribute name="time" type="scag:Var" use="optional"/>
+        <attribute name="datetime" type="scag:Var" use="optional"/>
+        <attribute name="year" type="scag:Value" use="optional"/>
+        <attribute name="month" type="scag:Value" use="optional"/>
+        <attribute name="day" type="scag:Value" use="optional"/>
+        <attribute name="hour" type="scag:Value" use="optional"/>
+        <attribute name="min" type="scag:Value" use="optional"/>
+        <attribute name="sec" type="scag:Value" use="optional"/>
+    </attributeGroup>
+
+    <complexType name="changeType">
+	<attributeGroup ref="datetime:commonAttributes"/>
+    </complexType>
+
+    <complexType name="addType">
+	<attributeGroup ref="datetime:commonAttributes"/>
+        <attribute name="isdst" type="datetime:IsDst" use="optional"/>
+    </complexType>
+
+    <complexType name="decType">
+	<attributeGroup ref="datetime:commonAttributes"/>
+        <attribute name="isdst" type="datetime:IsDst" use="optional"/>
+    </complexType>
+					
+    <group name="Actions">
+	<choice>
+    	    <element name="current" type="datetime:currentType"/>
+            <element name="change" type="datetime:changeType"/>
+            <element name="add" type="datetime:addType"/>
+            <element name="dec" type="datetime:decType"/>
+	</choice>
+    </group>
+    
+</schema>

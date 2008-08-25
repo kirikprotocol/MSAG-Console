@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/SESSIONS" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG" />
+
+    <group name="Actions">
+        <choice>
+            <element name="abort">
+            </element>
+            <element name="new_context">
+                <complexType>
+                    <attribute name="id" type="scag:Var" use="required" />
+                </complexType>
+            </element>
+            <!-- NOTE: in principle we could allow set/del context to take id from
+                 constant field (hardcoded string or Const), but this does not
+                 have any sense, that's why we put scag:Var below
+            -->
+            <element name="set_context">
+                <complexType>
+                    <attribute name="id" type="scag:Var" use="required" />
+                </complexType>
+            </element>
+            <element name="del_context">
+                <complexType>
+                    <attribute name="id" type="scag:Var" use="required" />
+                </complexType>
+            </element>
+        </choice>    
+    </group>
+    
+</schema>

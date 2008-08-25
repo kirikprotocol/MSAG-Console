@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE service_providers SYSTEM "services.dtd">
+
+<service_providers>
+    <param name="last used provider id" type="int">0</param>
+    <param name="last used service id" type="int">0</param>
+</service_providers>

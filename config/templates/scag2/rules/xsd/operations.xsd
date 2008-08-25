@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/OPERATIONS" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG" />
+
+    <group name="Actions">
+        <choice>
+            <element name="wait">
+                <complexType>
+                    <attribute name="type" type="scag:TransportOperation" use="required"/>
+                    <attribute name="time" type="scag:Value" use="required"/>
+                </complexType>
+            </element>
+        
+            <element name="bill_wait">
+                <complexType>
+                    <attribute name="type" type="scag:TransportOperation" use="required"/>
+                    <attribute name="time" type="scag:Value" use="required"/>
+                    <attribute name="category" type="scag:Value" use="optional"/>
+                    <attribute name="content-type" type="scag:Value" use="optional"/>
+                    <attribute name="category-str" type="scag:Value" use="optional"/>
+                    <attribute name="content-type-str" type="scag:Value" use="optional"/>
+                    <attribute name="status" type="scag:Var" use="required" />
+                    <attribute name="msg" type="scag:Var" use="optional" />
+                    <attribute name="bill_id" type="scag:Var" use="optional" />
+                    <attribute name="result_number" type="scag:Var" use="optional" />
+                </complexType>
+            </element>
+        
+            <element name="bill_move_wait">
+                <complexType>
+                    <attribute name="type" type="scag:TransportOperation" use="required"/>
+                    <attribute name="time" type="scag:Value" use="required"/>
+                    <attribute name="status" type="scag:Var" use="required" />
+                    <attribute name="msg" type="scag:Var" use="optional" />
+                </complexType>
+            </element>
+       
+        </choice>    
+    </group>
+
+</schema>

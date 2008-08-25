@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE operators SYSTEM "operators.dtd">
+
+<operators>
+    <param name="last used operator id" type="int">0</param>
+</operators>

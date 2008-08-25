@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/STRINGS" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:operation="http://www.sibinco.com/SCAG/STRINGS"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG" />
+
+    <group name="Actions">
+        <choice>
+            <element name="indexof">
+                <complexType>
+                    <attribute name="var" type="scag:Value" use="required"/>
+		    <attribute name="value" type="scag:Value" use="required"/>
+
+		    <attribute name="result" type="scag:Var" use="required" />
+                </complexType>
+            </element>
+
+            <element name="substr">
+                <complexType>
+                    <attribute name="var" type="scag:Value" use="required"/>
+		    <attribute name="begin" type="scag:Value" use="optional"/>
+		    <attribute name="end" type="scag:Value" use="optional"/>
+		    
+		    <attribute name="result" type="scag:Var" use="required" />
+                </complexType>
+            </element>
+
+            <element name="concat">
+                <complexType>
+                    <attribute name="var" type="scag:Var" use="required"/>
+		    <attribute name="value" type="scag:Value" use="required"/>
+                </complexType>
+            </element>
+
+	    <element name="length">
+                <complexType>
+	    	   <attribute name="var" type="scag:Value" use="required"/>
+	           <attribute name="result" type="scag:Var" use="required" />
+	        </complexType>
+	    </element>
+								      
+	    <element name="replace">
+	        <complexType>
+	            <attribute name="var" type="scag:Value" use="required"/>
+		    <attribute name="regexp" type="string" use="required"/>
+		    <attribute name="value" type="scag:Value" use="required"/>
+		    <attribute name="result" type="scag:Var" use="required" />
+		</complexType>
+	    </element>
+
+        </choice>    
+    </group>
+    
+</schema>

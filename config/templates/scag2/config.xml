@@ -12,7 +12,7 @@
     </section>
 
     <section name="SessionManager">
-    <param name="location" type="string">@scag.session.location@</param>
+    <param name="location" type="string">@scag2.session.location@</param>
     <param name="expireInterval" type="int">@session.expireInterval@</param>
     </section>
 

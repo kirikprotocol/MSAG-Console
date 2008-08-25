@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/BILL" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:bill="http://www.sibinco.com/SCAG/BILL"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG"/>
+    
+    <simpleType name="BillActions">
+        <restriction base="string">
+            <enumeration value="commit"/>
+            <enumeration value="rollback"/>
+        </restriction>
+    </simpleType>
+
+
+    <group name="Actions">
+        <choice>
+            <element name="open">
+                <complexType>
+                    <attribute name="category" type="scag:Value" use="optional"/>
+                    <attribute name="content-type" type="scag:Value" use="optional"/>
+                    <attribute name="category-str" type="scag:Value" use="optional"/>
+                    <attribute name="content-type-str" type="scag:Value" use="optional"/>
+                    <attribute name="status" type="scag:Var" use="optional" />
+                    <attribute name="msg" type="scag:Var" use="optional" />
+                    <attribute name="trans-id" type="scag:Value" use="required" />
+                    <attribute name="result_number" type="scag:Var" use="optional" />
+               </complexType>
+            </element>
+        
+            <element name="close">
+                <complexType>
+                    <attribute name="action" type="bill:BillActions" use="required" />
+                    <attribute name="status" type="scag:Var" use="optional"/>
+                    <attribute name="msg" type="scag:Var" use="optional"/>
+                    <attribute name="trans-id" type="scag:Value" use="required"/>
+                </complexType>
+            </element>
+
+            <element name="info">
+                <complexType>
+                    <attribute name="trans-id" type="scag:Value" use="required"/>
+                    <attribute name="category" type="scag:Var" use="optional"/>
+                    <attribute name="content-type" type="scag:Var" use="optional"/>
+                    <attribute name="result_number" type="scag:Var" use="optional" />
+                    <attribute name="operator_id" type="scag:Var" use="optional" />
+                    <attribute name="provider_id" type="scag:Var" use="optional" />
+                    <attribute name="service_id" type="scag:Var" use="optional" />
+                    <attribute name="price" type="scag:Var" use="optional" />
+                    <attribute name="currency" type="scag:Var" use="optional" />
+                    <attribute name="abonent" type="scag:Var" use="optional" />
+                    <attribute name="bill_type" type="scag:Var" use="optional" />
+                    <attribute name="category-str" type="scag:Var" use="optional"/>
+                    <attribute name="content-type-str" type="scag:Var" use="optional"/>
+                    <attribute name="status" type="scag:Var" use="optional"/>
+                    <attribute name="msg" type="scag:Var" use="optional"/>
+                </complexType>
+            </element>
+        </choice>    
+    </group>
+    
+</schema>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/PROFILE" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    xmlns:profile="http://www.sibinco.com/SCAG/PROFILE"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG"/>  
+
+    <simpleType name="ProfileType">
+        <restriction base="scag:Value">
+            <enumeration value="ABONENT" />
+            <enumeration value="OPERATOR" />
+            <enumeration value="PROVIDER" />
+            <enumeration value="SERVICE" />
+        </restriction>
+    </simpleType>
+
+    <simpleType name="TimePolicy">
+        <restriction base="scag:Value">
+            <enumeration value="INFINIT" />
+            <enumeration value="FIXED" />
+            <enumeration value="R_ACCESS" />
+            <enumeration value="W_ACCESS" />
+            <enumeration value="ACCESS" />
+        </restriction>
+    </simpleType>
+
+    <simpleType name="BatchMode">
+        <restriction base="scag:Value">
+            <enumeration value="TRANSACTIONAL" />
+            <enumeration value="NORMAL" />
+        </restriction>
+    </simpleType>
+
+    <attributeGroup name="commonAttributes">
+	    <attribute name="type" type="profile:ProfileType" use="required"/>
+	    <attribute name="key" type="scag:Value" use="optional"/>
+        <attribute name="var" type="scag:Value" use="required"/>
+        <attribute name="status" type="scag:Var" use="optional"/>
+        <attribute name="msg" type="scag:Var" use="optional"/>
+    </attributeGroup>
+    
+    <complexType name="setType">
+        <attribute name="value" type="scag:Value" use="required" />
+        <attribute name="policy" type="profile:TimePolicy" use="required" />
+        <attribute name="finaldate" type="scag:Value" use="optional" />
+        <attribute name="lifetime" type="scag:Value" use="optional" />
+	    <attributeGroup ref="profile:commonAttributes"/>
+    </complexType> 
+	
+    <complexType name="getType">
+        <attribute name="value" type="scag:Value" use="required" />
+	    <attributeGroup ref="profile:commonAttributes"/>
+    </complexType> 
+
+    <complexType name="delType">
+	    <attributeGroup ref="profile:commonAttributes"/>
+    </complexType>
+
+    <complexType name="incType">
+        <attribute name="inc" type="scag:Value" use="optional" />
+        <attribute name="result" type="scag:Var" use="optional" />
+        <attribute name="policy" type="profile:TimePolicy" use="required" />
+        <attribute name="finaldate" type="scag:Value" use="optional" />
+        <attribute name="lifetime" type="scag:Value" use="optional" />
+	    <attributeGroup ref="profile:commonAttributes"/>
+    </complexType>
+
+    <complexType name="inc-modType">
+        <attribute name="inc" type="scag:Value" use="optional" />
+        <attribute name="mod" type="scag:Value" use="optional" />
+        <attribute name="result" type="scag:Var" use="optional" />
+        <attribute name="policy" type="profile:TimePolicy" use="required" />
+        <attribute name="finaldate" type="scag:Value" use="optional" />
+        <attribute name="lifetime" type="scag:Value" use="optional" />
+	    <attributeGroup ref="profile:commonAttributes"/>
+    </complexType>
+	
+
+    <group name="batchElements">
+	    <choice>                                                                                                              
+	        <element name="get" type="profile:getType" />
+	        <element name="set" type="profile:setType" />                                                                      
+	        <element name="del"	type="profile:delType" />                                                                      
+	        <element name="inc" type="profile:incType" />                                                                      			
+	        <element name="inc-mod" type="profile:inc-modType" />
+        </choice>                                                                                                             
+    </group>
+												                  
+    <complexType name="batchType">
+	    <group ref="profile:batchElements" minOccurs="0" maxOccurs="unbounded"/>
+	    <attribute name="mode" type="profile:BatchMode" use="optional"/>
+            <attribute name="status" type="scag:Var" use="optional"/>
+            <attribute name="msg" type="scag:Var" use="optional"/>
+    </complexType>
+					
+    <group name="Actions">
+	    <choice>
+    	    <element name="set" type="profile:setType"/>
+            <element name="get" type="profile:getType"/>
+            <element name="del" type="profile:delType"/>
+            <element name="inc" type="profile:incType"/>
+            <element name="inc-mod" type="profile:inc-modType"/>
+	        <element name="batch" type="profile:batchType"/>
+        </choice>
+    </group>
+    
+</schema>

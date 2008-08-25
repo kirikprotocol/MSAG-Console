@@ -93,6 +93,8 @@ Targets:
     <mkdir dir="${DISTR_DIR}/services"/>
     <mkdir dir="${DISTR_DIR}/services/scag"/>
     <mkdir dir="${DISTR_DIR}/services/scag/bin"/>
+    <mkdir dir="${DISTR_DIR}/services/scag2"/>
+    <mkdir dir="${DISTR_DIR}/services/scag2/bin"/>
     <mkdir dir="${DISTR_DIR}/services/pers"/>
     <mkdir dir="${DISTR_DIR}/services/pers/bin"/>
     <mkdir dir="${DISTR_DIR}/webapps"/>
@@ -113,12 +115,19 @@ Targets:
     <mkdir dir="${DISTR_DIR}/services/scag/conf/rules/SMPP"/>
     <mkdir dir="${DISTR_DIR}/services/scag/conf/rules/HTTP"/>
     <mkdir dir="${DISTR_DIR}/services/scag/conf/rules/MMS"/>
+    <mkdir dir="${DISTR_DIR}/services/scag2/conf"/>
+    <mkdir dir="${DISTR_DIR}/services/scag2/conf/rules"/>
+    <mkdir dir="${DISTR_DIR}/services/scag2/conf/rules/SMPP"/>
+    <mkdir dir="${DISTR_DIR}/services/scag2/conf/rules/HTTP"/>
+    <mkdir dir="${DISTR_DIR}/services/scag2/conf/rules/MMS"/>
     <mkdir dir="${DISTR_DIR}/services/pers/conf"/>
     <mkdir dir="${DISTR_DIR}/daemon/conf"/>
     <mkdir dir="${DISTR_DIR}/applet"/>
            
     <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/scag"/>
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/scag"/>
+    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/scag2"/>
+    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/scag2"/>
     <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/pers"/>
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/pers"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd"          link="${DISTR_DIR}/services/scag/conf"/>
@@ -126,6 +135,11 @@ Targets:
     <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd"         link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd"       link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd"          link="${DISTR_DIR}/services/scag2/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/scag2/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd"         link="${DISTR_DIR}/services/scag2/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd"       link="${DISTR_DIR}/services/scag2/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/scag2/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/pers/conf"/>
 
     <symlink resource="${DAEMON2HOME_PATH}/logs" link="${DISTR_DIR}/daemon"/>
@@ -142,9 +156,11 @@ Targets:
   <target name="copy_to_dist_dir">
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
-    <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
+    <!-- copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/ -->
     <copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/>
     <chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/>
+    <copy file="${BUILD_BIN}/scag/scag2" todir="${DISTR_DIR}/services/scag2/bin"/>
+    <chmod file="${DISTR_DIR}/services/scag2/bin/scag2" perm="755"/>
     <copy file="${BUILD_BIN}/scag/pers" todir="${DISTR_DIR}/services/pers/bin"/>
     <chmod file="${DISTR_DIR}/services/pers/bin/pers" perm="755"/>
 
@@ -158,8 +174,12 @@ Targets:
     <copy todir="${DISTR_DIR}/services/scag/conf" preservelastmodified="yes" flatten="yes" >
       <fileset dir="${SMSC_DIR}/config"
                includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag/smpp_routes.dtd scag/http_routes.dtd"/>
-    </copy>      
-    
+    </copy>
+    <copy todir="${DISTR_DIR}/services/scag2/conf" preservelastmodified="yes" flatten="yes" >
+      <fileset dir="${SMSC_DIR}/config"
+               includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag/smpp_routes.dtd scag/http_routes.dtd"/>
+    </copy>
+
     <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
     <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
     <copy file="${BUILD_BIN}/admin/daemon/hs_smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
@@ -190,14 +210,29 @@ Targets:
                <include name="scag/rules/*"/>
       </fileset>
     </copy>
+    <copy todir="${DISTR_DIR}/services/scag2/conf/rules/" flatten="yes" >
+      <fileset dir="${TEMPL_DIR}">
+               <include name="scag2/rules/*"/>
+      </fileset>
+    </copy>
     <copy todir="${DISTR_DIR}/services/scag/conf/rules/xsd" flatten="yes" >
       <fileset dir="${TEMPL_DIR}">
                <include name="scag/rules/xsd/*"/>
       </fileset>
     </copy>
+    <copy todir="${DISTR_DIR}/services/scag2/conf/rules/xsd" flatten="yes" >
+      <fileset dir="${TEMPL_DIR}">
+               <include name="scag2/rules/xsd/*"/>
+      </fileset>
+    </copy>
     <copy todir="${DISTR_DIR}/services/scag/conf/rules/xsl" flatten="yes" >
       <fileset dir="${TEMPL_DIR}">
                <include name="scag/rules/xsl/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${DISTR_DIR}/services/scag2/conf/rules/xsl" flatten="yes" >
+      <fileset dir="${TEMPL_DIR}">
+               <include name="scag2/rules/xsl/*"/>
       </fileset>
     </copy>
   </target>
@@ -251,12 +286,23 @@ Targets:
     <copy tofile="${DISTR_DIR}/services/scag/logger.properties" file="${TEMPL_DIR}/logger/scag.logger">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
+    <copy tofile="${DISTR_DIR}/services/scag2/logger.properties" file="${TEMPL_DIR}/logger/scag2.logger">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
     <copy tofile="${DISTR_DIR}/services/scag/bin/service" file="${TEMPL_DIR}/service/scag">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
+    <copy tofile="${DISTR_DIR}/services/scag2/bin/service" file="${TEMPL_DIR}/service/scag2">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
     <chmod file="${DISTR_DIR}/services/scag/bin/service" perm="755"/>
+    <chmod file="${DISTR_DIR}/services/scag2/bin/service" perm="755"/>
     <copy todir="${DISTR_DIR}/services/scag/conf" flatten="yes">
       <fileset dir="${TEMPL_DIR}/scag" includes="config.xml smpp.xml smpp_routes.xml http_routes.xml operators.xml tariffs.xml services.xml"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy todir="${DISTR_DIR}/services/scag2/conf" flatten="yes">
+      <fileset dir="${TEMPL_DIR}/scag2" includes="config.xml smpp.xml smpp_routes.xml http_routes.xml operators.xml tariffs.xml services.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
 
@@ -276,7 +322,8 @@ Targets:
     <chmod perm="755">
       <fileset dir="${DISTR_DIR}" includes="**/*.sh"/>
     </chmod>
-    <mkdir dir="${session.location}" description="create sessions dir"/>
+    <mkdir dir="${scag.session.location}" description="create sessions dir #1"/>
+    <mkdir dir="${scag2.session.location}" description="create sessions dir #2"/>
     <mkdir dir="${pers.storage_dir}" description="create personalization storage dir"/>
     <mkdir dir="${stat.dir}" description="create statistics dir"/>
     <mkdir dir="${stat.traffic_dir}" description="create traffic dir"/>
@@ -735,6 +782,7 @@ Targets:
 	<include name="daemon/bin/smsc_ssdaemon"/>
 	<include name="daemon/bin/hs_smsc_ssdaemon"/>
         <include name="services/scag/bin/scag"/>
+        <include name="services/scag2/bin/scag2"/>
 	<include name="services/pers/bin/pers"/>
         <include name="tomcat/bin/*.sh"/>
       </tarfileset>
@@ -743,6 +791,7 @@ Targets:
         <exclude name="daemon/bin/*"/>
 	<exclude name="daemon/lib/*"/>
         <exclude name="services/scag/bin/scag"/>
+        <exclude name="services/scag2/bin/scag2"/>
 	<exclude name="services/pers/bin/pers"/>
         <exclude name="tomcat/bin/*.sh"/>
         <include name="**/*"/>

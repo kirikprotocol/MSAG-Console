@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/SEND" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:send="http://www.sibinco.com/SCAG/SEND"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG" />
+    
+    <simpleType name="YesNo">
+    <restriction base="string">
+            <enumeration value="yes"/>
+            <enumeration value="no"/>
+    </restriction>
+    </simpleType>
+    
+    <attributeGroup name="SendAttributes">
+        <attribute name="message"  type="scag:Value" use="required" />
+        <attribute name="date"     type="scag:Value" use="optional" />
+        <attribute name="terminal" type="send:YesNo" use="optional" />
+        <attribute name="usr"      type="send:YesNo" use="optional" />
+        <attribute name="esmClass"      type="scag:Value" use="optional" />
+        <attribute name="destPort"       type="scag:Value" use="optional" />
+        <attribute name="srcPort"       type="scag:Value" use="optional" />
+        <attribute name="packetType"       type="scag:Value" use="optional" />
+    </attributeGroup>
+
+    <complexType name="ToRecepient">
+    <attribute name="to" type="scag:Value" use="required" />
+    <attribute name="from" type="scag:Value" use="optional" />    
+    </complexType>
+    
+    <group name="SendElements">
+        <choice>
+        <element name="sms"   type="send:ToRecepient" />
+        <element name="mms"   type="send:ToRecepient" />
+        <element name="email" type="send:ToRecepient" />
+        </choice>
+    </group>
+    
+    <complexType name="SendMessage">
+    <group ref="send:SendElements" minOccurs="0" maxOccurs="unbounded"/>
+        <attributeGroup ref="send:SendAttributes" />
+    </complexType>
+        
+    <group name="Actions">
+        <choice>
+            <element name="alarm"  type="send:SendMessage" />
+        <element name="warn"   type="send:SendMessage" />
+        <element name="info"   type="send:SendMessage" />
+        <element name="notify" type="send:SendMessage" />
+        </choice>    
+    </group>
+    
+</schema>

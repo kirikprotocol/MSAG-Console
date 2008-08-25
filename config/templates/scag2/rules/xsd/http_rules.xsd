@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG"
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:scag="http://www.sibinco.com/SCAG">
+    
+    <annotation>
+        <documentation>
+            SMPP rules schema detalization for Sibinco.com.
+            Copyright 2005 Sibinco.com. All rights reserved.
+        </documentation>
+    </annotation>
+    
+    <redefine schemaLocation="rules.xsd">
+        
+        <simpleType name="Transport">
+            <restriction base="scag:Transport">
+                <enumeration value="HTTP"/>
+            </restriction>
+        </simpleType>
+        
+    <!--simpleType name="httpHeader">
+            <restriction base="string">
+                <pattern value="#header\-\p{L}+[\w_\-]*"/>
+            </restriction>
+        </simpleType-->
+
+        <!--simpleType name="Command">
+            <restriction base="scag:Command">
+                <enumeration value="#abonent"/>
+                <enumeration value="#path"/>
+                <enumeration value="#site"/>
+                <enumeration value="#port"/>
+                <enumeration value="#filename"/>
+                <enumeration value="#message"/>
+                <enumeration value="#status"/>
+                <enumeration value="#header-*"/>
+                <enumeration value="#param-*"/>
+            </restriction>
+        </simpleType-->
+        
+        <complexType name="RuleType">
+            <complexContent>
+                <extension base="scag:RuleType">
+                    <all>
+                        <element name="request"  type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="response" type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="delivery" type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="session_init"        type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="session_destroy"        type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                    </all>
+                </extension>
+            </complexContent>
+        </complexType>
+        
+    </redefine>
+    
+</schema>

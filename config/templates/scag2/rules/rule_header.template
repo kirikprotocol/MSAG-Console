@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.sibinco.com/SCAG ../xsd/{0}"
+            xmlns:scag     ="http://www.sibinco.com/SCAG"
+            xmlns:session  ="http://www.sibinco.com/SCAG/SESSIONS"
+            xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+            xmlns:strings  ="http://www.sibinco.com/SCAG/STRINGS"
+            xmlns:bill     ="http://www.sibinco.com/SCAG/BILL"
+            xmlns:send     ="http://www.sibinco.com/SCAG/SEND"
+            xmlns:profile  ="http://www.sibinco.com/SCAG/PROFILE"
+            xmlns:log      ="http://www.sibinco.com/SCAG/LOG"
+            xmlns:http     ="http://www.sibinco.com/SCAG/HTTP"
+            xmlns:smpp     ="http://www.sibinco.com/SCAG/SMPP"
+	    xmlns:datetime ="http://www.sibinco.com/SCAG/DATETIME" 
+            transport="{1}">
+
