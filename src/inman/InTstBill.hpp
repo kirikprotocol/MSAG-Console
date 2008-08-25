@@ -88,7 +88,7 @@ protected:
 public:
     BillFacade(ConnectSrv * conn_srv, Logger * use_log = NULL)
         : TSTFacadeAC(conn_srv, use_log), _maxDlgId(0)
-        , _msg_ref(0x0100), _msg_id(0x010203040000)
+        , _msg_ref(0x0100), _msg_id(0x010203040000ULL)
         , _abDB(AbonentsDB::getInstance())
     { 
         strcpy(_logId, "TFBill");

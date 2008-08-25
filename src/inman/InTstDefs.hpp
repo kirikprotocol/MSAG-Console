@@ -67,7 +67,7 @@ public:
         do_disconnect();
     }
 
-    inline void Prompt(Logger::LogLevel dlvl, std::string & str)
+    inline void Prompt(Logger::LogLevel dlvl, const std::string & str)
     {
         fprintf(stdout, "%s\n", str.c_str());  logger->log(dlvl, "%s: %s", _logId, str.c_str());
     }

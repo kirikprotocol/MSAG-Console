@@ -3,4 +3,6 @@
 #
 
 #binary name			source name			libraries
-inman/inmanemu	inmanemu -linman-inmanemu -L$(SMSC_BUILDDIR)/bin -lutil -llogger -lutil-leaktracing $(XERCES_LIB) -linman-storage -lcore-network -lsocket -linman-interaction-msgbill -linman-interaction -linman-common -lnsl
+inman/inmanemu	inmanemu -linman-inmanemu -L$(SMSC_BUILDDIR)/bin -lutil -llogger \
+   -lutil-leaktracing $(XERCES_LIB) -linman-storage -lcore-network \
+   $(SOCKETLIB) -linman-interaction-msgbill -linman-interaction -linman-common -lnsl

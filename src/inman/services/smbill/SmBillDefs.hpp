@@ -8,6 +8,8 @@
 #include <map>
 
 #include "inman/inap/TCDspDefs.hpp"
+#include "inman/services/ICSrvIDs.hpp"
+
 using smsc::inman::inap::TCAPUsr_CFG;
 
 namespace smsc    {

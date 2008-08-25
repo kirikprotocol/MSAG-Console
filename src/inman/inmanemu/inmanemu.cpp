@@ -13,7 +13,7 @@ using inmanemu::util::InmanemuConfig;
 BillingServer * billingServer = 0;
 Logger * logger = 0;
 
-extern "C" static void appSignalHandler(int sig)
+extern "C" void appSignalHandler(int sig)
 {
     if (sig==SIGTERM || sig==SIGINT)
     {
@@ -25,7 +25,7 @@ extern "C" static void appSignalHandler(int sig)
     }
 }
 
-extern "C" static void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
 }
 

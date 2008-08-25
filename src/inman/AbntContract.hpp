@@ -6,6 +6,7 @@
 #define SMSC_INMAN_SUBSCR_CONTRACT_HPP
 
 #include "inman/InScf.hpp"  //using TDPScfMap
+#include "util/strlcpy.h"   // for strlcpy on linux
 
 namespace smsc {
 namespace inman {

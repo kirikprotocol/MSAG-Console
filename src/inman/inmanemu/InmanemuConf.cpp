@@ -7,7 +7,7 @@
 #include <xercesc/sax/SAXException.hpp>
 #include <xercesc/sax/Locator.hpp>
 #include <xercesc/util/TransService.hpp>
-
+#include <xercesc/parsers/SAXParser.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/TransService.hpp>
 #include <xercesc/sax2/SAX2XMLReader.hpp>

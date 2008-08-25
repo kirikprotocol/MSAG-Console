@@ -59,7 +59,7 @@ public:
     static void truncateFile(const std::string& location, const std::string& fileName, off_t length);
     static File::offset_type getFilePos(File & currFile);
     //NOTE: NULL as argument adjusts position to start of file
-    static void FSEntry::setFilePos(File & currFile, const File::offset_type* pos);
+    static void setFilePos(File & currFile, const File::offset_type* pos);
 
     //upon return fullName keeps file name with new extension
     static void rollFileExt(const std::string& location, std::string& fullName, const char* newExt);
