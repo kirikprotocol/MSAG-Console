@@ -6,6 +6,10 @@
       <param name="args" type="string">@scag.service.args@</param>
       <param name="autostart" type="bool">@scag.service.autostart@</param>
     </section>
+    <section name="scag2">
+      <param name="args" type="string">@scag2.service.args@</param>
+      <param name="autostart" type="bool">@scag2.service.autostart@</param>
+    </section>
     <section name="pers">
       <param name="args" type="string">@pers.service.args@</param>
       <param name="autostart" type="bool">@pers.service.autostart@</param>
