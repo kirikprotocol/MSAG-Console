@@ -170,8 +170,8 @@
                         <element name="receipt"             type="scag:Handler" minOccurs="0" maxOccurs="1"/>
                         <element name="data_sm"         type="scag:Handler" minOccurs="0" maxOccurs="1"/>
                         <element name="data_sm_resp"        type="scag:Handler" minOccurs="0" maxOccurs="1"/>
-                        <element name="session_init"        type="scag:Handler" minOccurs="0" maxOccurs="1"/>
-                        <element name="session_destroy"        type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="service_init"        type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="service_destroy"        type="scag:Handler" minOccurs="0" maxOccurs="1"/>
                     </all>
                 </extension>
             </complexContent>

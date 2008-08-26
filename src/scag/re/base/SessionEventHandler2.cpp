@@ -74,8 +74,8 @@ void SessionEventHandler::_process(Session& session, RuleStatus& rs)
 
 int SessionEventHandler::StrToHandlerId(const std::string& str)
 {
-    if (str == "session_init")      return EH_SESSION_INIT;
-    if (str == "session_destroy")   return EH_SESSION_DESTROY;
+    if (str == "service_init")      return EH_SESSION_INIT;
+    if (str == "service_destroy")   return EH_SESSION_DESTROY;
     return UNKNOWN; 
 }
 

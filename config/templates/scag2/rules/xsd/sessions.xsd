@@ -9,8 +9,8 @@
 
     <group name="Actions">
         <choice>
-            <element name="abort">
-            </element>
+            <!-- element name="abort">
+            </element -->
             <element name="new_context">
                 <complexType>
                     <attribute name="id" type="scag:Var" use="required" />
@@ -28,6 +28,11 @@
             <element name="del_context">
                 <complexType>
                     <attribute name="id" type="scag:Var" use="required" />
+                </complexType>
+            </element>
+            <element name="wait">
+                <complexType>
+                    <attribute name="time" type="scag:Value" use="required" />
                 </complexType>
             </element>
         </choice>    

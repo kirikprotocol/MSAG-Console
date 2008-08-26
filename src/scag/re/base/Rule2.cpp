@@ -147,7 +147,7 @@ IParserHandler * Rule::StartXMLSubSection(const std::string& name,const SectionP
 
     try
     {
-        if( (i = name == "session_init") || name == "session_destroy")
+        if( (i = name == "service_init") || name == "service_destroy")
         {
             eh = new SessionEventHandler();
             nHId = i ? EH_SESSION_INIT : EH_SESSION_DESTROY;
