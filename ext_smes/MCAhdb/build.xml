@@ -42,7 +42,7 @@
   </target>
 
   <target name="build" depends="compile">
-    <jar basedir="${BUILD_DIR}/classes" jarfile="${exploded}/lib/mcahdb.jar"/>
+    <jar basedir="${java_out}" jarfile="${exploded}/lib/mcahdb.jar"/>
   </target>
 
   <target name="distr" depends="build, update">
