@@ -12,7 +12,7 @@ using namespace smsc::admin::service;
 using smsc::util::encode;
 
 static const char * const RESPONSE_HEADER =
-"<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n\
+"<?xml version=\"1.0\" encoding=\"windows-1251\"?>\n\
 <!DOCTYPE response SYSTEM \"file://response.dtd\">\n\
 <response status=\"";
 static const size_t RESPONSE_HEADER_LENGTH = strlen(RESPONSE_HEADER);
