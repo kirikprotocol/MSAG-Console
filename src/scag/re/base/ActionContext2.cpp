@@ -153,10 +153,12 @@ Property* ActionContext::getProperty( const std::string& var )
 }
 
 
+/*
 void ActionContext::abortSession()
 {
     session_->abort();
 }
+ */
 
 
 void ActionContext::getBillingInfoStruct( bill::BillingInfoStruct& bis )

@@ -1,7 +1,6 @@
 #include "ActionAbort2.h"
 #include "scag/re/base/CommandAdapter2.h"
 
-
 namespace scag2 {
 namespace re {
 namespace actions {

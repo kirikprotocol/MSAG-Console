@@ -81,5 +81,18 @@ const char* Operation::getNamedStatus() const
     };
 }
 
+void Operation::print( util::Print& p, opid_type opid ) const
+{
+    if ( ! p.enabled() ) return;
+    p.print( "op=%p session=%p opid=%u type=%d(%s) part/resp=%d%s/%d%s stat=%s%s",
+             this, owner_, opid, type_, commandOpName(type_),
+             receivedParts_, flagSet( OperationFlags::RECEIVED_ALL_PARTS) ? "(ALL)" : "",
+             receivedResps_, flagSet( OperationFlags::RECEIVED_ALL_RESPS) ? "(ALL)" : "",
+             getNamedStatus(),
+             flagSet(OperationFlags::SERVICE_INITIATED_USSD_DIALOG) ? " svcinit" : "",
+             flagSet(OperationFlags::WAIT_RECEIPT) ? " waitrcpt" : ""
+             );
+}
+
 } // namespace sessions
 } // namespace scag

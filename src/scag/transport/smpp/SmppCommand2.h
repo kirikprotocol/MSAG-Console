@@ -569,6 +569,8 @@ public:
 
     virtual Session* getSession() { return session_; };
 
+    virtual void print( util::Print& p ) const;
+
     /// === SMPP specific
 
     SmppEntity* getEntity() const { return src_ent_; }

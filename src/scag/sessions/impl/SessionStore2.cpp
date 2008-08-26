@@ -5,6 +5,7 @@
 #include "scag/sessions/base/SessionFinalizer.h"
 #include "scag/sessions/base/SessionExpirationQueue.h"
 #include "scag/util/UnlockMutexGuard.h"
+#include "scag/util/Print.h"
 
 namespace scag2 {
 namespace sessions {
@@ -220,6 +221,12 @@ void SessionStoreImpl::releaseSession( Session&                      session,
             smsc_log_error(log_, "logic error in releaseSession(sess=%p): session->cmd is not set", &session );
             ::abort();
         }
+    }
+
+    // debugging printout of the session
+    {
+        scag_plog_debug(pl,log_);
+        session.print(pl);
     }
 
     bool dostopping = false;

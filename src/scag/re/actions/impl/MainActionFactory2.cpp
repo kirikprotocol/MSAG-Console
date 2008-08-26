@@ -7,8 +7,9 @@
 #include "ActionBinOperations2.h"
 #include "ActionLog2.h"
 #include "ActionSend2.h"
-#include "ActionAbort2.h"
+// #include "ActionAbort2.h"
 #include "ActionSessionContextScope.h"
+#include "ActionSessionWait.h"
 #include "ActionCloseUssdDialog2.h"
 #include "ActionReceipt2.h"
 #include "ActionRedirect2.h"
@@ -79,8 +80,10 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
         }
 
         if ( 0 == strncmp(name.c_str(), "session:", 8) ) {
-            if (name=="session:abort") 
-                return new ActionAbort();
+            // if (name=="session:abort") 
+            // return new ActionAbort();
+            if (name=="session:wait")
+                return new ActionSessionWait();
             if (name == "session:new_context") 
                 return new ActionSessionContextScope(ActionSessionContextScope::NEW);
             if (name == "session:set_context") 

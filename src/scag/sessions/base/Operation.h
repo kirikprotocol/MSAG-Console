@@ -3,14 +3,13 @@
 
 #include "core/synchronization/Mutex.hpp"
 #include "logger/Logger.h"
+#include "Session2.h"
 
 namespace scag2 {
 namespace sessions {
 
 using namespace smsc::core::synchronization;
-
 class Session;
-
 
 typedef enum ICCOperationStatus
 {
@@ -52,6 +51,8 @@ public:
     inline void clearFlag( uint32_t f ) { flags_ &= ~f; }
     inline bool flagSet( uint32_t f ) const { return (flags_ & f); }
     inline uint32_t flags() const { return flags_; }
+
+    void print( util::Print& p, opid_type opid = SCAGCommand::invalidOpId() ) const;
 
 private:
     Operation& operator = ( const Operation& );

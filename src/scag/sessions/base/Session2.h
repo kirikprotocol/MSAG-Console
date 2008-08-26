@@ -11,6 +11,7 @@
 #include "logger/Logger.h"
 #include "scag/util/properties/Properties2.h"
 #include "scag/util/storage/Serializer.h"
+#include "scag/util/Print.h"
 #include "scag/transport/SCAGCommand2.h"
 #include "scag/re/base/LongCallContext.h"
 #include "scag/exc/SCAGExceptions.h"
@@ -111,6 +112,9 @@ public:
         return pkey_;
     }
 
+    /// debugging printout.
+    void print( util::Print& p ) const;
+
     /// === transaction methods
     /// NOTE: all non-released transactions will be rollbacked at destructor!
     /// So, if you want to commit a transaction, the proper way to do it is:
@@ -203,6 +207,10 @@ public:
     /// @return session expiration time in GMT (as returned by time(2) )
     time_t expirationTime() const;
 
+    /// make sure the session is alive at least s seconds, i.e. set expirationTime
+    /// to now()+s.
+    /// NOTE: if expirationTime is already set to a later time, then do nothing.
+    void waitAtLeast( unsigned s );
 
 
     // === the following methods should be invoked from session store only
@@ -241,9 +249,9 @@ public:
     /// NOTE: cmd disowned, may return NULL.
     SCAGCommand* popCommand();
 
-
-    /// abort the session
-    void abort();
+    // NOTE: aborting session is forbidden
+    // abort the session
+    // void abort();
 
 private: // methods
     Session();
@@ -265,14 +273,6 @@ private: // statics
 private:
     /// session key (msisdn)
     SessionKey     key_;
-
-    /// expiration policy (COMMON,FIXED,ACCESS) (pers)
-    ///   COMMON: if has operations, die after last operations die, otherwise
-    ///         die after createTime+TMO;
-    ///   FIXED: die after createTime+TMO;
-    ///   ACCESS: die after lastAccessTime+TMO;
-    enum { COMMON = 0, FIXED = 1, ACCESS = 2 }
-    expirationPolicy_;
 
     // session create time is incorporated into primarykey
     // timeval bornTime_;

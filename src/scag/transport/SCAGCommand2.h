@@ -1,6 +1,7 @@
 #ifndef _SCAG_TRANSPORT_SCAGCOMMAND2_H
 #define _SCAG_TRANSPORT_SCAGCOMMAND2_H
 
+#include "scag/util/Print.h"
 #include "TransportType.h"
 
 namespace scag2 {
@@ -50,6 +51,9 @@ public:
     virtual ~SCAGCommand() {};
 
     virtual Session* getSession() = 0;
+
+    /// print-out the command (for debugging)
+    virtual void print( util::Print& p ) const = 0;
 
 protected:
     /// session is set from session store when the command is locking the session.

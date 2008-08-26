@@ -1,4 +1,6 @@
+#include <cassert>
 #include "SmppCommand2.h"
+#include "SmppEntity2.h"
 // #include "scag/sessions/Session2.h"
 
 namespace scag2 {
@@ -288,6 +290,62 @@ void SmppCommand::makeSMSBody(SMS* sms,const SmppHeader* pdu,bool forceDC)
             throw Exception("SmppCommand: Invalid pdu (udhi length > message length)");
         }
     }
+}
+
+
+// --- non-static
+
+
+void SmppCommand::print( util::Print& p ) const
+{
+    if ( ! p.enabled() ) return;
+    SmppCommand* that = const_cast< SmppCommand* >( this );
+    switch ( cmdid_ ) {
+    case SUBMIT:
+    case DELIVERY:
+    case DATASM: {
+        SmsCommand& sc = that->get_smsCommand();
+        p.print( "smppcmd=%p session=%p type=%d(%s) uid=%d svc=%d opid=%d dlg/org=%d/%d %s(%s)->%s",
+                 this, session_, cmdid_, commandIdName(cmdid_), shared_->uid,
+                 serviceId_, opId_, shared_->dialogId,
+                 sc.get_orgDialogId(),
+                 sc.orgSrc.toString().c_str(),
+                 src_ent_->getSystemId(),
+                 sc.orgDst.toString().c_str() );
+        break;
+    }
+    case SUBMIT_RESP:
+    case DELIVERY_RESP:
+    case DATASM_RESP: {
+        SmsResp* r = that->get_resp();
+        assert( r );
+        SmppCommand* orgcmd = r->getOrgCmd();
+        if ( orgcmd ) {
+            SmsCommand& sc = orgcmd->get_smsCommand();
+            p.print( "smppcmd=%p session=%p type=%d(%s) uid=%d svc=%d opid=%d orgcmd=%p dlg/org=%d/%d %s(%s)->%s",
+                     this, session_, cmdid_, commandIdName(cmdid_),
+                     shared_->uid,
+                     serviceId_, opId_, orgcmd,
+                     shared_->dialogId, sc.get_orgDialogId(),
+                     sc.orgSrc.toString().c_str(),
+                     src_ent_->getSystemId(),
+                     sc.orgDst.toString().c_str() );
+        } else {
+            p.print( "smppcmd=%p session=%p type=%d(%s) uid=%d svc=%d opid=%d orgcmd=%p dlg=%d ?(%s)->?",
+                     this, session_, cmdid_, commandIdName(cmdid_),
+                     shared_->uid,
+                     serviceId_, opId_, orgcmd,
+                     shared_->dialogId,
+                     src_ent_->getSystemId() );
+        }
+        break;
+    }
+    default:
+        p.print( "smppcmd=%p session=%p type=%d(%s) uid=%d svc=%d opid=%d dlg=%d ?(%s)->?",
+                 this, session_, cmdid_, commandIdName(cmdid_), shared_->uid,
+                 serviceId_, opId_, shared_->dialogId,
+                 src_ent_->getSystemId() );
+    } // switch
 }
 
 

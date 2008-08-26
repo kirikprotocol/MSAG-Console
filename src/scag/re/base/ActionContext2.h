@@ -178,7 +178,7 @@ enum FieldType
         /// get property, variable prefix defines the scope
         Property* getProperty(const std::string& var);
 
-        void abortSession();
+        // void abortSession();
 
         // void AddPendingOperation(uint8_t type, time_t pendingTime, unsigned int billID);
         // Operation * getCurrentOperation() { return session_->getCurrentOperation(); }

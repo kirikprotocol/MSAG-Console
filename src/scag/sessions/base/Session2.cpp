@@ -1,6 +1,6 @@
 #include <set>
 #include <cassert>
-#include <cstdlib>      // for abort
+// #include <cstdlib>      // for abort
 #include <sys/time.h>
 
 #include "util/cstrings.h"
@@ -257,7 +257,6 @@ bool Session::isReadOnlyProperty( const char* name )
 
 Session::Session( const SessionKey& key ) :
 key_(key),
-expirationPolicy_(COMMON),
 pkey_(key),
 command_(0),
 transactions_(0),
@@ -278,7 +277,7 @@ operationScopes_(0)
         // FIXME: delete things
         if ( cmdQueue_.size() > 0 ) {
             smsc_log_error( log_, "!!!Session command queue is not empty: %d", cmdQueue_.size() );
-            this->abort();
+            // this->abort();
         }
         /*
         for ( std::list< scag::transport::SCAGCommand* >::iterator i = cmdQueue_.begin();
@@ -330,7 +329,6 @@ operationScopes_(0)
 
     void Session::clear()
     {
-        expirationPolicy_ = COMMON;
         // gettimeofday( &bornTime_, 0 );
         pkey_ = SessionPrimaryKey( key_ ); // to reset born time
         lastAccessTime_ = time(0);
@@ -383,6 +381,35 @@ operationScopes_(0)
 void Session::changed( AdapterProperty& )
 {
     // FIXME
+}
+
+
+void Session::print( util::Print& p ) const
+{
+    if ( ! p.enabled() ) return;
+    if ( ! command_ ) return;  // session is not locked !
+
+    const time_t now = time(0);
+    const int expire = int(expirationTime() - now);
+    const int lastac = int(now - lastAccessTime_);
+    p.print( "session=%p key=%s expire=%d lastac=%d ops=%d trans=%d lockCmd=%p umr=%d%s",
+             this, sessionKey().toString().c_str(),
+             expire, lastac,
+             operationsCount(),
+             transactions_ ? transactions_->GetCount() : 0,
+             command_,
+             umr_,
+             ussdOperationId_ == SCAGCommand::invalidOpId() ? "" : " hasUssd" );
+    command_->print( p );
+    Operation* curop = getCurrentOperation();
+    if ( curop ) curop->print( p, getCurrentOperationId() );
+    int opid;
+    Operation* op;
+    for ( IntHash< Operation* >::Iterator i( operations_ ); i.Next(opid,op); ) {
+        if ( ! op ) continue;
+        if ( op == curop ) continue;
+        op->print( p, opid_type(opid) );
+    }
 }
 
 
@@ -522,7 +549,8 @@ void Session::closeCurrentOperation()
 void Session::setUSSDref( int32_t ref ) throw (SCAGException)
 {
     if ( ref <= 0 ) throw SCAGException( "setUSSDref(ref=%d), ref should be >0", ref );
-    if ( umr_ > 0 ) throw SCAGException( "setUSSDref(ref=%d), UMR=%d is already set", ref, umr_ );
+    // changing umr is allowed
+    // if ( umr_ > 0 ) throw SCAGException( "setUSSDref(ref=%d), UMR=%d is already set", ref, umr_ );
     if ( umr_ == -1 ) throw SCAGException( "setUSSDref(ref=%d), no USSD operation found", ref );
     umr_ = ref;
 }
@@ -661,11 +689,18 @@ time_t Session::expirationTime() const
 }
 
 
-    unsigned Session::appendCommand( SCAGCommand* cmd )
-    {
-        if (cmd) cmdQueue_.push_back( cmd );
-        return cmdQueue_.size();
-    }
+void Session::waitAtLeast( unsigned sec )
+{
+    time_t t = time(0) + sec;
+    if ( t > expirationTime_ ) expirationTime_ = t;
+}
+
+
+unsigned Session::appendCommand( SCAGCommand* cmd )
+{
+    if (cmd) cmdQueue_.push_back( cmd );
+    return cmdQueue_.size();
+}
 
 
     SCAGCommand* Session::popCommand()
@@ -679,11 +714,13 @@ time_t Session::expirationTime() const
     }
 
 
+/*
 void Session::abort()
 {
     // FIXME
     ::abort();
 }
+ */
 
 
     void Session::serializeScope( Serializer& o, const SessionPropertyScope* s ) const

@@ -4,6 +4,7 @@
 #include "CommandBridge.h"
 #include "scag/transport/smpp/SmppEntity2.h"
 #include "scag/util/encodings/Encodings.h"
+#include "scag/sessions/base/Session2.h"
 #include "system/status.h"
 
 
@@ -174,6 +175,7 @@ IntHash<AccessType> SmppCommandAdapter::InitSubmitAccess()
     hs.Insert(DC_GSM_MSG_CC, atReadWrite);
 
     hs.Insert(Tag::SMPP_SM_LENGTH, atReadWrite);
+    hs.Insert(Tag::SMPP_USER_MESSAGE_REFERENCE, atReadWrite);
 /*
     hs.Insert(Tag::SMPP_SHORT_MESSAGE, atReadWrite);
     hs.Insert(Tag::SMPP_MESSAGE_PAYLOAD, atReadWrite);*/
@@ -214,6 +216,7 @@ IntHash<AccessType> SmppCommandAdapter::InitDeliverAccess()
     hs.Insert(DC_GSM_MSG_CC, atReadWrite);
 
     hs.Insert(Tag::SMPP_SM_LENGTH, atReadWrite);
+    hs.Insert(Tag::SMPP_USER_MESSAGE_REFERENCE, atReadWrite );
 
 /*    hs.Insert(Tag::SMPP_SHORT_MESSAGE, atReadWrite);
     hs.Insert(Tag::SMPP_MESSAGE_PAYLOAD, atReadWrite);*/
@@ -368,6 +371,7 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
 
     hs["protocol_id"]                   = Tag::SMPP_PROTOCOL_ID; 
     hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
+    hs["umr"]                           = Tag::SMPP_USER_MESSAGE_REFERENCE;
     hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
 
     //hs["registred_delivery"]            = Tag::SMPP_REGISTRED_DELIVERY; //mask +
@@ -567,6 +571,7 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
 
     hs["protocol_id"]                   = Tag::SMPP_PROTOCOL_ID; 
     hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
+    hs["umr"]                           = Tag::SMPP_USER_MESSAGE_REFERENCE;
     hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
 
 
@@ -719,6 +724,11 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
     else 
         switch (FieldId)
         {
+        case Tag::SMPP_USER_MESSAGE_REFERENCE:
+            // we also need to switch session ussd ref
+            if ( ! command.getSession() )
+                throw SCAGException( "command has no session to change umr in" );
+            command.getSession()->setUSSDref( unsigned(property.getInt()) );
         case Tag::SMPP_SM_LENGTH:
         case Tag::SMPP_USER_RESPONSE_CODE:
         case Tag::SMPP_LANGUAGE_INDICATOR:
