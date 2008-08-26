@@ -25,7 +25,7 @@
                     <attribute name="content-type-str" type="scag:Value" use="optional"/>
                     <attribute name="status" type="scag:Var" use="optional" />
                     <attribute name="msg" type="scag:Var" use="optional" />
-                    <attribute name="trans-id" type="scag:Value" use="required" />
+                    <attribute name="id" type="scag:Value" use="required" />
                     <attribute name="result_number" type="scag:Var" use="optional" />
                </complexType>
             </element>
@@ -35,13 +35,13 @@
                     <attribute name="action" type="bill:BillActions" use="required" />
                     <attribute name="status" type="scag:Var" use="optional"/>
                     <attribute name="msg" type="scag:Var" use="optional"/>
-                    <attribute name="trans-id" type="scag:Value" use="required"/>
+                    <attribute name="id" type="scag:Value" use="required"/>
                 </complexType>
             </element>
 
             <element name="info">
                 <complexType>
-                    <attribute name="trans-id" type="scag:Value" use="required"/>
+                    <attribute name="id" type="scag:Value" use="required"/>
                     <attribute name="category" type="scag:Var" use="optional"/>
                     <attribute name="content-type" type="scag:Var" use="optional"/>
                     <attribute name="result_number" type="scag:Var" use="optional" />

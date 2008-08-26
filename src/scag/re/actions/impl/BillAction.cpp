@@ -10,7 +10,7 @@ void BillAction::init( const SectionParams& params,
     bool bExist;
     transIdFieldType_ = CheckParameter( params,
                                        propertyObject, 
-                                       opname(), "trans-id",
+                                       opname(), "id",
                                        true, true,
                                        transIdFieldName_,
                                        bExist );
