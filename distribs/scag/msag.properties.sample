@@ -12,6 +12,10 @@ scag.service.name=scag
 scag.service.args=MSA Gateway
 scag.service.autostart=false
 
+scag2.service.name=scag2
+scag2.service.args=MSA Gateway N2
+scag2.service.autostart=false
+
 listen.host=0.0.0.0
 connect.host=127.0.0.1
 
@@ -35,12 +39,14 @@ bill.reconnect_time_out=60
 
 status.show_interval=86400000
 language.default=ru
-session.location=/opt/home/msag_test/msag_distr/storage/sessions
+scag.session.location=/opt/home/msag_test/msag_distr/storage/sessions
+scag2.session.location=/opt/home/msag_test/msag_distr/storage/sessions
 session.expireInterval=60000
 
 logger.properties_file=/opt/home/msag_test/msag_distr/services/scag/logger.properties
 
-rules.path=/opt/home/msag_test/msag_distr/services/scag/conf/rules
+scag.rules.path=/opt/home/msag_test/msag_distr/services/scag/conf/rules
+scag2.rules.path=/opt/home/msag_test/msag_distr/services/scag2/conf/rules
 stat.dir=/opt/home/msag_test/msag_distr/storage/statistics
 stat.traffic_dir=/opt/home/msag_test/msag_distr/storage/statistics/traffic
 
