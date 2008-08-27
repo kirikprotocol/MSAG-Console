@@ -1,4 +1,4 @@
-#ident "$Id$"
+#ident "@(#)$Id$"
 /* ************************************************************************** *
  * TonNpiAddress and GsmSCFinfo helper classes.
  * ************************************************************************** */
@@ -65,7 +65,11 @@ struct TonNpiAddress {              // '.' + 3 + '.' + 3 + '.' + 20
             iplan = itype = 1;
         } break;
         default:    //isdn unknown or alpha-numeric adr
-            length = strlen(text);
+            size_t txt_len = strlen(text);
+            if (txt_len > 0xFF)
+                return false;
+            length = (unsigned char)txt_len;
+
             scanned = sscanf(text, "%20[0123456789]s", addr_value);
             if (scanned == 1 && (length == strlen(addr_value))) {
                 iplan = 1; /*itype = 0;*/   // isdn unknown
@@ -82,7 +86,7 @@ struct TonNpiAddress {              // '.' + 3 + '.' + 3 + '.' + 20
 
         numPlanInd = (unsigned char)iplan;
         typeOfNumber = (unsigned char)itype;
-        memcpy(signals, addr_value, length = strlen((const char*)addr_value));
+        memcpy(signals, addr_value, length = (unsigned char)strlen((const char*)addr_value));
         signals[length] = 0;
         return true;
     }
@@ -104,7 +108,7 @@ struct TonNpiAddress {              // '.' + 3 + '.' + 3 + '.' + 20
     }
                 
     //use at least TonNpiAddress::_strSZ chars buffer
-    int toString(char* buf, bool ton_npi = true, int buflen = TonNpiAddress::_strSZ) const
+    int toString(char* buf, bool ton_npi = true, unsigned buflen = TonNpiAddress::_strSZ) const
     {
         int n = 0;
         if (length) {
@@ -152,7 +156,7 @@ struct GsmSCFinfo { //gsmSCF paramaters
 
     void Reset(void) { serviceKey = 0; scfAddress.clear(); }
 
-    int toString(char* buf, bool omit_ton_npi = true, int buflen = GsmSCFinfo::_strSZ) const
+    int toString(char* buf, bool omit_ton_npi = true, unsigned buflen = GsmSCFinfo::_strSZ) const
     {
         int     n = scfAddress.toString(buf, !omit_ton_npi);
         if (n)
