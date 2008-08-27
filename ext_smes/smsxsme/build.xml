@@ -72,9 +72,10 @@
   </target>
 
   <target name="build" depends="compile, prepare" description="build jar">
-    <jar jarfile="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF/lib/${esme_name}.jar">
+    <jar jarfile="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF/lib/${esme_name}.jar" manifest="MANIFEST.MF">
 	    <fileset dir="${java_out}"/>
       <fileset dir="${java_src}" includes="**/*.properties"/>
+      <fileset file="history.txt"/>
     </jar>
   </target>
   
