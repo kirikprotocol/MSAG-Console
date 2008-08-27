@@ -337,11 +337,12 @@ void Session::clear()
 
     persistent_ = false;
     
-    delete command_; command_ = 0;
+    // FIXME: command is owned elsewhere ?
+    // delete command_; command_ = 0;
         
     isnew_.Empty();
     if ( ! initrulekeys_.empty() ) {
-        smsc_log_warn( log_, "rule keys stack is not empty, finalization failed?" );
+        smsc_log_error( log_, "rule keys stack is not empty, finalization failed?" );
     }
     initrulekeys_ = std::stack< std::pair<int,int> >();
 
@@ -352,10 +353,14 @@ void Session::clear()
         currentOperation_ = 0;
         umr_ = -1;
 
-        assert( operations_.Count() == 0 );
+        // assert( operations_.Count() == 0 );
+        if ( operations_.Count() > 0 ) {
+            smsc_log_warn( log_, "operation count=%d > 0, FIXME: what to do?", operations_.Count() );
+        }
         int opkey;
         Operation* op;
         for ( IntHash< Operation* >::Iterator i(operations_); i.Next(opkey,op); ) {
+            // FIXME: finalize operations ?
             delete op;
         }
         operations_.Empty();
