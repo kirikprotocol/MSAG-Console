@@ -129,7 +129,7 @@ void InitialDPSMSArg::setIMSI(const std::string& imsi) throw(CustomException)
         throw CustomException("IDPMSArg: IMSI length is too long: %u", imsi.length());
 
     ZERO_OCTET_STRING(comp->_iMSI);
-    comp->_iMSI.size = packNumString2BCD(comp->_iMSI.buf, imsi.c_str(), imsi.length());
+    comp->_iMSI.size = packNumString2BCD(comp->_iMSI.buf, imsi.c_str(), (unsigned)imsi.length());
     comp->idp.iMSI = &(comp->_iMSI);
 }
 

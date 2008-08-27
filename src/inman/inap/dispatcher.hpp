@@ -28,6 +28,9 @@ static const uint8_t TCAP_INSTANCE_ID = 0;
 //TCAPDispatcher: manages SS7 stack connecton, listens for TCAP/SCCP messages
 //NOTE: this is a singleton, so initialization is not thread safe
 class TCAPDispatcher : Thread, public TCAPDispatcherITF {
+private:
+    using Thread::Start; //hide it to avoid annoying CC warnings
+
 protected:
     typedef std::map<uint8_t, SSNSession*> SSNmap_T;
 

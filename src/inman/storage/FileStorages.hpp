@@ -55,6 +55,9 @@ protected:
 
 //Just an external roller for several InRollingFileStorages
 class InFileStorageRoller : Thread {
+private:
+    using Thread::Start; //hide it to avoid annoying CC warnings
+
 public:
     //NOTE: 'rollInterval' is measured in seconds
     InFileStorageRoller(InRollingFileStorage * rfs = NULL, unsigned long rollInterval = 0);

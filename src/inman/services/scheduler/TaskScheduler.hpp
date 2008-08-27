@@ -27,6 +27,9 @@ namespace smsc {
 namespace util {
 
 class TaskSchedulerAC : public TaskSchedulerITF, Thread {
+private:
+    using Thread::Start; //hide it to avoid annoying CC warnings
+
 protected:
     static const unsigned _MAX_IDALLOC_ATTEMPT = 5;
     static const unsigned _MAX_LOG_ID_LEN = 32;

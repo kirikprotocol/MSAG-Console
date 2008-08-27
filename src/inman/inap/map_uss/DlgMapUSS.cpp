@@ -102,15 +102,15 @@ static void makeUI(std::vector<unsigned char> & ui, const TonNpiAddress & own_ad
     }
 
     //NOTE: total encoding size is less then 127, so encode it as small number
-    addrLen = ui.size();
+    addrLen = (unsigned)ui.size();
     ui.insert(ui.begin(), (unsigned char)addrLen);
     ui.insert(ui.begin(), 0xA0); //[0] MAP-OpenInfo
 
-    addrLen = ui.size();
+    addrLen = (unsigned)ui.size();
     ui.insert(ui.begin(), (unsigned char)addrLen);
     ui.insert(ui.begin(), ui_oid, ui_oid + sizeof(ui_oid)); //map-DialogueAS OID
 
-    addrLen = ui.size();
+    addrLen = (unsigned)ui.size();
     ui.insert(ui.begin(), (unsigned char)addrLen);
     ui.insert(ui.begin(), 0x28); //UserInfo ::= IMPLICIT [UNIVERSAL 8]
 }
@@ -170,7 +170,7 @@ void MapUSSDlg::requestSS(const std::vector<unsigned char> & rq_data, unsigned c
 {
     //create Component for TCAP invoke
     ProcessUSSRequestArg    arg(logger);
-    arg.setRAWUSSData(dcs, &rq_data[0], rq_data.size());
+    arg.setRAWUSSData(dcs, &rq_data[0], (unsigned)rq_data.size());
     smsc_log_debug(logger, "MapUSS[%u]: USS request: 0x%s", dlgId,
                     DumpHex(rq_data.size(), &rq_data[0]).c_str());
 
@@ -358,7 +358,7 @@ void MapUSSDlg::initSSDialog(ProcessUSSRequestArg & arg,
         }
         std::vector<unsigned char>   ui4;
         makeUI(ui4, session->getOwnAdr(), subsc_adr, msImsi.empty() ? NULL : &msImsi);
-        dialog->beginDialog(&ui4[0], ui4.size()); //throws
+        dialog->beginDialog(&ui4[0], (USHORT_T)ui4.size()); //throws
     } else
         dialog->beginDialog(); //throws
     dlgState.s.ctrInited = MapUSSDlg::operInited;

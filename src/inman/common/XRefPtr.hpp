@@ -304,6 +304,11 @@ public:
 // ********************************************************************
 template <class TArg>
 class URefPtr_T : public XRefPtr_T<TArg> {
+private:
+    //hide these operators because of there are own versions
+    using XRefPtr_T<TArg>::operator=;
+    using XRefPtr_T<TArg>::operator==;
+
 public:
     URefPtr_T(TArg * use_obj, ObjectUtilizatorITF_T<TArg> * use_utz = NULL)
         : XRefPtr_T<TArg>(new UTZObjectReferee_T<TArg>(use_obj, use_utz))
@@ -341,6 +346,11 @@ public:
 // ********************************************************************
 template <class TArg>
 class MTRefPtr_T : public XRefPtr_T<TArg> {
+private:
+    //hide these operators because of there are own versions
+    using XRefPtr_T<TArg>::operator=;
+    using XRefPtr_T<TArg>::operator==;
+
 public:
     MTRefPtr_T(TArg * use_obj)
         : XRefPtr_T<TArg>(new MTObjectReferee_T<TArg>(use_obj))

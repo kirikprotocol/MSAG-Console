@@ -654,6 +654,9 @@ public:
 
     //NOTE: HFRehasher doesn't close either original HashFile or produced one
     class HFRehasher : Thread {
+    private:
+        using Thread::Start; //hide it to avoid annoying CC warnings
+
     protected:
         typedef ExtendingBuffer<char, 256> FNameBuffer;
 
@@ -745,7 +748,7 @@ public:
 
             //Create temporary file
             new_fname.reset(0);
-            new_fname.Append(srcHF->FileName().c_str(), srcHF->FileName().length());
+            new_fname.Append(srcHF->FileName().c_str(), (unsigned)srcHF->FileName().length());
             new_fname.Append(".XXXXXX\0", 8);
             int fd = mkstemp(new_fname.get());
             if (fd < 0)

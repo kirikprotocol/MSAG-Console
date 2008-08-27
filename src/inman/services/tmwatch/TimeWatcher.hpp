@@ -225,6 +225,8 @@ public:
 //TimeWatcher core functionality.
 class TimeWatcherAC : TimeWatcherITF, Thread {
 private:
+    using Thread::Start; //hide it to avoid annoying CC warnings
+
     class StopWatch : public Mutex {
     public:
         typedef enum { //reverse order of FSM states
@@ -382,6 +384,9 @@ private:
     };
     //
     class SWNotifier : public Thread {
+    private:
+        using Thread::Start; //hide it to avoid annoying CC warnings
+
     protected:
         EventMonitor    _sync;
         volatile bool   _running;

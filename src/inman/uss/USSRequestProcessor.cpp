@@ -113,7 +113,7 @@ void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
       // process std::vector result
       smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: _dcs=%02X _resultAsLatin1=%d", _dcs, _resultAsLatin1);
       if ( _resultAsLatin1 )
-        resultPacket.Cmd().setUSSData(_resultUssAsString.c_str(), _resultUssAsString.size());
+        resultPacket.Cmd().setUSSData(_resultUssAsString.c_str(), (unsigned)_resultUssAsString.size());
       else {
         smsc::cbs::CBS_DCS cbs;
         if (smsc::cbs::parseCBS_DCS(_dcs, cbs) == smsc::cbs::CBS_DCS::dcUCS2 && 

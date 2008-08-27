@@ -35,6 +35,9 @@ public:
 };
 
 class ConnectSrv : Thread {
+private:
+    using Thread::Start; //hide it to avoid annoying CC warnings
+
 public:
     static const unsigned POLL_TIMEOUT_ms  = 100; //default timeout for select(), millisecs
     typedef enum { lstStopped = 0, lstStopping, lstRunning } SrvState;

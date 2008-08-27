@@ -34,6 +34,9 @@ public:
     std::auto_ptr<ObjectBuffer>     objBuf;
     std::auto_ptr<CustomException>  exc;
 
+private:
+    using SocketAcquirerAC::Reset; //hide it to avoid annoying CC warnings
+
 protected:
     union { //force correct alignment of len.buf on 64-bit platforms
         uint32_t    ui;

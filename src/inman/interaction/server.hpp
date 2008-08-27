@@ -38,6 +38,9 @@ struct ServSocketCFG {
 
 class ServerListenerITF;
 class Server : Thread, public GRDObservatoryOfT<ServerListenerITF> {
+private:
+    using Thread::Start; //hide it to avoid annoying CC warnings
+
 public:
     static const unsigned int _SHUTDOWN_TMO_MS = 400; //millisecs
 

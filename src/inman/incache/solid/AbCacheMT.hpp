@@ -60,6 +60,9 @@ protected:
     public:
         static const uint32_t _maxSize = MAP_MAX_ISDN_AddressLength;
 
+    private:
+        using AbonentId::operator==; //hide it to avoid annoying CC warnings
+
     protected:
         unsigned char bcd[_maxSize + 2];
         uint32_t      bcdSz;
@@ -91,7 +94,7 @@ protected:
             if (!max_octs || (max_octs > _maxSize))
                 max_octs = _maxSize;
             //File::Read() throws if reads less bytes than requested
-            bcdSz = fh.Read(bcd, max_octs);
+            bcdSz = (uint32_t)fh.Read(bcd, max_octs);
             length = unpackBCD2NumString(bcd, signals, bcdSz);
             signals[length] = 0;
             if (!length)
@@ -344,6 +347,9 @@ protected:
                     AbonentHashKey::_maxSize, AbonentHashData::_maxSize> FileCache;
     //FileSystem Cache updater/rehasher
     class FSCacheMonitor : Thread, public FileCache::HFRehashAcquirerITF {
+    private:
+        using Thread::Start; //hide it to avoid annoying CC warnings
+
     protected:
         EventMonitor            _sync;
         volatile bool           _rehashOn;
