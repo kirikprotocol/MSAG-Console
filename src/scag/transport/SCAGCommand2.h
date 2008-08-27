@@ -42,6 +42,8 @@ public:
 
     virtual uint8_t getCommandId() const = 0;
       
+    virtual uint32_t getSerial() const = 0;
+
     /*
     virtual SessionPtr getSession() = 0;
     virtual void setSession(const SessionPtr&) = 0;
@@ -62,6 +64,12 @@ protected:
 protected:
     SCAGCommand() {}
     SCAGCommand( const SCAGCommand& ) {}
+
+    /// make serial, please use this method in subclasses to obtain the serial.
+    /// 0   -- no serial
+    /// <10 -- reserved
+    static uint32_t makeSerial();
+
 private:
     SCAGCommand& operator = ( const SCAGCommand& c );
 };

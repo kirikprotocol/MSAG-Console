@@ -305,7 +305,7 @@ void SmppCommand::print( util::Print& p ) const
     case DELIVERY:
     case DATASM: {
         SmsCommand& sc = that->get_smsCommand();
-        p.print( "smppcmd=%p session=%p type=%d(%s) uid=%d svc=%d opid=%d dlg/org=%d/%d %s(%s)->%s",
+        p.print( "smppcmd=%p session=%p type=%d(%s) serial=%d svc=%d opid=%d dlg/org=%d/%d %s(%s)->%s",
                  this, session_, cmdid_, commandIdName(cmdid_), shared_->uid,
                  serviceId_, opId_, shared_->dialogId,
                  sc.get_orgDialogId(),
@@ -322,7 +322,7 @@ void SmppCommand::print( util::Print& p ) const
         SmppCommand* orgcmd = r->getOrgCmd();
         if ( orgcmd ) {
             SmsCommand& sc = orgcmd->get_smsCommand();
-            p.print( "smppcmd=%p session=%p type=%d(%s) uid=%d svc=%d opid=%d orgcmd=%p dlg/org=%d/%d %s(%s)->%s",
+            p.print( "smppcmd=%p session=%p type=%d(%s) serial=%d svc=%d opid=%d orgcmd=%p dlg/org=%d/%d %s(%s)->%s",
                      this, session_, cmdid_, commandIdName(cmdid_),
                      shared_->uid,
                      serviceId_, opId_, orgcmd,
@@ -331,7 +331,7 @@ void SmppCommand::print( util::Print& p ) const
                      src_ent_->getSystemId(),
                      sc.orgDst.toString().c_str() );
         } else {
-            p.print( "smppcmd=%p session=%p type=%d(%s) uid=%d svc=%d opid=%d orgcmd=%p dlg=%d ?(%s)->?",
+            p.print( "smppcmd=%p session=%p type=%d(%s) serial=%d svc=%d opid=%d orgcmd=%p dlg=%d ?(%s)->?",
                      this, session_, cmdid_, commandIdName(cmdid_),
                      shared_->uid,
                      serviceId_, opId_, orgcmd,
@@ -341,7 +341,7 @@ void SmppCommand::print( util::Print& p ) const
         break;
     }
     default:
-        p.print( "smppcmd=%p session=%p type=%d(%s) uid=%d svc=%d opid=%d dlg=%d ?(%s)->?",
+        p.print( "smppcmd=%p session=%p type=%d(%s) serial=%d svc=%d opid=%d dlg=%d ?(%s)->?",
                  this, session_, cmdid_, commandIdName(cmdid_), shared_->uid,
                  serviceId_, opId_, shared_->dialogId,
                  src_ent_->getSystemId() );
@@ -890,7 +890,7 @@ SCAGCommand(c), _SmppCommand(c)
     }
     const unsigned clones = get_smsCommand().ref();
     // no need to assign uid
-    smsc_log_debug( log_, "Command create (clone): cmd=%p, type=%d(%s), uid=%u, clones=%u",
+    smsc_log_debug( log_, "Command create (clone): cmd=%p, type=%d(%s), serial=%u, clones=%u",
                     this, cmdid_, commandIdName(cmdid_),
                     shared_->uid, clones );
     session_ = 0;
@@ -904,22 +904,22 @@ void SmppCommand::dispose()
         const uint32_t uid = shared_->uid;
         const unsigned clones = get_smsCommand().unref();
         if ( clones ) {
-            smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), uid=%u, %u clones still exist",
+            smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), serial=%u, %u clones still exist",
                            this, cmdid_, commandIdName(cmdid_), uid, clones );
             return;
         }
     }
 
     if ( shared_ ) {
-        if ( shared_->uid == uint32_t(-1) ) {
-            smsc_log_warn(log_, "destroying command %p with uid=-1, exception?", this );
+        if ( shared_->uid == 0 ) {
+            smsc_log_warn(log_, "destroying command %p with serial=0, exception?", this );
         } else if ( log_->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG ) ) {
             uint32_t sc = 0;
             {
                 MutexGuard mtxx(cntMutex);
                 sc = --commandCounter;
             }
-            smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), count=%u, uid=%u",
+            smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), count=%u, serial=%u",
                            this, cmdid_, commandIdName(cmdid_), sc, shared_->uid);
         }
     }
@@ -993,12 +993,14 @@ void SmppCommand::dispose()
 void SmppCommand::postfix()
 {
     if ( ! shared_ ) return;
-    MutexGuard mg(cntMutex);
-    ++commandCounter;
-    if ( ++stuid == uint32_t(-1) ) ++stuid;
-    shared_->uid = stuid;
-    smsc_log_debug( log_, "Command create: cmd=%p, type=%d(%s), count=%u, uid=%u",
-                    this, cmdid_, commandIdName(cmdid_), commandCounter, stuid );
+    {
+        MutexGuard mg(cntMutex);
+        ++commandCounter;
+    }
+    // if ( ++stuid == uint32_t(-1) ) ++stuid;
+    shared_->uid = makeSerial();
+    smsc_log_debug( log_, "Command create: cmd=%p, type=%d(%s), count=%u, serial=%u",
+                    this, cmdid_, commandIdName(cmdid_), commandCounter, shared_->uid );
 }
 
 

@@ -101,7 +101,8 @@ bool ActionReplace::run(ActionContext& context)
     var.append(endbuff,2);
 
     SMatch m[100];
-    int n = 100, pos = 0;
+    int n = 100;
+    size_t pos = 0;
     std::string result;
 
     while(re.Search((uint16_t*)(var.data() + pos), m, n))
@@ -116,7 +117,7 @@ bool ActionReplace::run(ActionContext& context)
     Property *p = context.getProperty(m_sResult);
     if(result.size() > 0)
     {
-        if(pos < var.size() - 2)
+        if ( pos < var.size() - 2)
             result.append(var.data() + pos, var.size() - 2 - pos);
         std::string temp2;
         Convertor::UCS2ToUTF8((uint16_t*)result.data(), result.size() / 2, temp2);

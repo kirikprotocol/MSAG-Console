@@ -395,11 +395,12 @@ void Session::print( util::Print& p ) const
     const time_t now = time(0);
     const int expire = int(expirationTime() - now);
     const int lastac = int(now - lastAccessTime_);
-    p.print( "session=%p key=%s expire=%d lastac=%d ops=%d trans=%d lockCmd=%p umr=%d%s",
+    p.print( "session=%p key=%s expire=%d lastac=%d ops=%d trans=%d pers=%d lockCmd=%p umr=%d%s",
              this, sessionKey().toString().c_str(),
              expire, lastac,
              operationsCount(),
              transactions_ ? transactions_->GetCount() : 0,
+             isPersistent() ? 1 : 0,
              command_,
              umr_,
              ussdOperationId_ == SCAGCommand::invalidOpId() ? "" : " hasUssd" );

@@ -56,7 +56,10 @@ public:
 
   //manager
   void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id, uint32_t netErrCode);
-    virtual unsigned pushCommand( SmppCommand* cmd, int action = SCAGCommandQueue::PUSH );
+
+    virtual void pushCommand( SmppCommand* cmd );
+    virtual unsigned pushSessionCommand( SmppCommand* cmd,
+                                         int action = SCAGCommandQueue::PUSH );
 
   void configChanged();
 
@@ -1458,25 +1461,53 @@ bool SmppManagerImpl::makeLongCall( std::auto_ptr<SmppCommand>& cx, ActiveSessio
 }
 
 
-unsigned SmppManagerImpl::pushCommand( SmppCommand* cmd, int action )
+void SmppManagerImpl::pushCommand( SmppCommand* cmd )
 {
-    if ( ! cmd ) return unsigned(-1);
+    if ( ! cmd ) {
+        smsc_log_error(log,"cmd = (null) is passed to smppmanager::pushCommand");
+        ::abort();
+        return;
+    }
+
+    MutexGuard mg(queueMon);
+    lcmQueue.Push( cmd );
+    queueMon.notify();
+}
+
+unsigned SmppManagerImpl::pushSessionCommand( SmppCommand* cmd, int action )
+{
+    if ( ! cmd ) {
+        smsc_log_error(log,"cmd = (null) is passed to smppmanager::pushSessionCommand");
+        ::abort();
+        return unsigned(-1);
+    }
 
     MutexGuard mg(queueMon);
     if ( action == SCAGCommandQueue::RESERVE ) {
         ++lcmProcessingCount;
-        smsc_log_debug( log, "reserve place for a cmd=%p: lcmQsz=%u, lcmCount=%u", cmd, lcmQueue.Count(), lcmProcessingCount );
+        smsc_log_debug( log, "reserve place for a cmd=%p: respQsz=%u, Qsz=%u, lcmCount=%u", cmd, respQueue.Count(), queue.Count(), lcmProcessingCount );
         return lcmProcessingCount;
     }
 
     // FIXME: should we return -1 when stopped ?
 
-    lcmQueue.Push( cmd );
-    if ( action == SCAGCommandQueue::MOVE ) {
-        if ( lcmProcessingCount > 0 ) --lcmProcessingCount;
-        smsc_log_debug( log, "reserved cmd=%p moved onto queue: lcmQsz=%u, lcmCount=%u", cmd, lcmQueue.Count(), lcmProcessingCount );
+    if ( action == SCAGCommandQueue::PUSH ) {
+        smsc_log_error( log, "SmppManager::pushSessionCommand is intended for session queue commands, so RESERVE/MOVE should be used");
+        throw SCAGException( "SmppManager::pushSessionCommand is intended for session queue commands, so RESERVE/MOVE should be used" );
+    }
+
+    assert( action == SCAGCommandQueue::MOVE );
+
+    // action MOVE
+    if ( lcmProcessingCount > 0 ) --lcmProcessingCount;
+    smsc_log_debug( log, "reserved cmd=%p moved onto queue: respQsz=%u, Qsz=%u, lcmCount=%u",
+                    cmd, respQueue.Count(), queue.Count(), lcmProcessingCount );
+    if ( cmd->isResp() ) {
+        respQueue.Push( cmd );
     } else {
-        smsc_log_debug( log, "cmd=%p pushed onto queue: lcmQsz=%u, lcmCount=%u", cmd, lcmQueue.Count(), lcmProcessingCount );
+        queue.Push( cmd );
+        // for being decremented in getCommand
+        if ( cmd->getEntity() ) cmd->getEntity()->incQueueCount();
     }
     queueMon.notify();
     return lcmProcessingCount;

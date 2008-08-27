@@ -56,14 +56,15 @@ public:
 
     virtual void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id, uint32_t netErrCode) = 0;
 
-    /// This method accepts partially processed commands (for example,
-    /// from lcm, from sessman when session is relocked for next command, etc.)
-    /// taking their ownership.  See SCAGCommandQueue for description of
-    /// the second parameter.
+    /// accept partially processed commands from LCM
+    virtual void pushCommand( SmppCommand* cmd ) = 0;
+
+    /// This method accepts next command from session queue, taking their ownership.
+    /// See SCAGCommandQueue for description of the second parameter.
     /// \return queue size if success, -1 for failure (when queue is stopped),
     /// but the command is taken anyway!
-    virtual unsigned pushCommand( SmppCommand* cmd,
-                                  int action = SCAGCommandQueue::PUSH ) = 0;
+    virtual unsigned pushSessionCommand( SmppCommand* cmd,
+                                         int action = SCAGCommandQueue::PUSH ) = 0;
 
     /// if success cx is cleared and session is left locked.
     virtual bool makeLongCall( std::auto_ptr<SmppCommand>& cx,

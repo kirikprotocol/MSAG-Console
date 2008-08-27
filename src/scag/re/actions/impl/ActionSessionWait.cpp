@@ -46,7 +46,7 @@ void ActionSessionWait::init( const SectionParams& params,
 
             int nelts = sscanf( waitFieldName_.c_str(), fmt,
                                 &(elts[0]), &(elts[1]), &(elts[2]) );
-            if ( nelts != 3 - i ) continue;
+            if ( nelts != int(3-i) ) continue;
 
             wait_ = 0;
             for ( unsigned j = 0; j < i; ++j ) {

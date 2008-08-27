@@ -81,7 +81,7 @@ const char* ussdOpName( int );
 struct SmppCommandData
 {
     int        priority;
-    uint32_t   uid;
+    uint32_t   uid;       // serial number
     uint32_t   dialogId;
     int        status;
     uint32_t   flags;
@@ -566,7 +566,10 @@ public:
     {
         return cmdid_;
     }
-
+    virtual uint32_t getSerial() const {
+        return shared_->uid;
+    }
+    
     virtual Session* getSession() { return session_; };
 
     virtual void print( util::Print& p ) const;

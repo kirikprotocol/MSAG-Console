@@ -39,17 +39,19 @@ public:
     virtual unsigned pushCommand( SCAGCommand* cmd, int action = PUSH )
     {
         if ( ! cmd ) return unsigned(-1);
-        std::auto_ptr< SCAGCommand > c(cmd);
         switch ( cmd->getType() ) {
         case SMPP: {
-            /// FIXME: use smppmanager.lcmprocessingcount to make sure command is processed before shutdown
+            /*
+            // FIXME: use smppmanager.lcmprocessingcount to make sure command is processed before shutdown
             if ( action == RESERVE ) {
                 c.release();
                 return 1;
             }
 
             SmppManager::Instance().pushCommand( static_cast<SmppCommand*>(c.release()) );
-            return 1;
+             */
+            return SmppManager::Instance().pushSessionCommand
+                ( static_cast<SmppCommand*>(cmd), action );
         }
 
         default : {
