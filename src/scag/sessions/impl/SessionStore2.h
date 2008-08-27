@@ -66,7 +66,7 @@ public:
 
     virtual ActiveSession fetchSession( const SessionKey& key, SCAGCommand* cmd );
 
-    virtual void releaseSession( Session& s, bool flush );
+    virtual void releaseSession( Session& s );
 
     virtual void moveLock( Session& s, SCAGCommand* cmd );
 

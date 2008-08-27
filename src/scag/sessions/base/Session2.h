@@ -113,7 +113,13 @@ public:
     }
 
     /// debugging printout.
+    /// NOTE: command should not be printed, as it may be already deleted!
     void print( util::Print& p ) const;
+
+    /// --- get/set persistent flag
+    bool isPersistent() const { return persistent_; }
+    void setPersistent( bool p = true ) { persistent_ = p; }
+
 
     /// === transaction methods
     /// NOTE: all non-released transactions will be rollbacked at destructor!
@@ -151,6 +157,29 @@ public:
 
     /// create a new operation and set it as current
     Operation* createOperation( SCAGCommand& cmd, int operationType );
+
+    /*
+    class operation_iterator
+    {
+    public:
+        operation_iterator( Session& s ) :
+        id_(int(SCAGCommand::invalidOpId())),
+        op_(0),
+        i_(s.operations_) {}
+
+        bool next() {
+            return i_.Next(id_,op_);
+        }
+
+        inline opid_type opid() const { return id_; }
+        inline Operation* operation() const { return op_; }
+
+    private:
+        int        id_;
+        Operation* op_;
+        IntHash< Operation* >::Iterator i_;
+    };
+     */
 
     /// destroy current operation
     void closeCurrentOperation();
@@ -284,6 +313,9 @@ private:
     /// expiration Time
     time_t expirationTime_;
 
+    /// the flag tells if the session should be flushed (not pers)
+    bool persistent_;
+
     /// current command being processed, it locks the session (owned, not pers).
     SCAGCommand* command_;
 
@@ -364,10 +396,9 @@ public:
         return s_;
     }
 
-    /// get/set flush state of session
-    void setFlush( bool f ) { flush_ = f; }
-    bool getFlush() const { return flush_; }
-
+    // get/set flush state of session
+    // void setFlush( bool f ) { flush_ = f; }
+    // bool getFlush() const { return flush_; }
 
     /// explcitly release current session.
     void release();
@@ -387,13 +418,13 @@ private:
         if (s_) release();
         store_ = as.store_;
         s_ = as.s_;
-        flush_ = as.flush_;
+        // flush_ = as.flush_;
         as.s_ = 0;
     }
 private:
     SessionStore*    store_;
     mutable Session* s_;
-    bool             flush_;
+    // bool             flush_;
 };
 
 } // namespace sessions

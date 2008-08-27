@@ -258,6 +258,7 @@ bool Session::isReadOnlyProperty( const char* name )
 Session::Session( const SessionKey& key ) :
 key_(key),
 pkey_(key),
+persistent_(false),
 command_(0),
 transactions_(0),
 nextContextId_(0),
@@ -271,14 +272,14 @@ operationScopes_(0)
 }
 
 
-    Session::~Session()
-    {
-        clear();
-        // FIXME: delete things
-        if ( cmdQueue_.size() > 0 ) {
-            smsc_log_error( log_, "!!!Session command queue is not empty: %d", cmdQueue_.size() );
-            // this->abort();
-        }
+Session::~Session()
+{
+    clear();
+    // FIXME: delete things
+    if ( cmdQueue_.size() > 0 ) {
+        smsc_log_error( log_, "!!!Session command queue is not empty: %d", cmdQueue_.size() );
+        // this->abort();
+    }
         /*
         for ( std::list< scag::transport::SCAGCommand* >::iterator i = cmdQueue_.begin();
               i != cmdQueue_.end();
@@ -327,55 +328,57 @@ operationScopes_(0)
     }
 
 
-    void Session::clear()
-    {
-        // gettimeofday( &bornTime_, 0 );
-        pkey_ = SessionPrimaryKey( key_ ); // to reset born time
-        lastAccessTime_ = time(0);
-        expirationTime_ = lastAccessTime_ + 5; // FIXME: customize
+void Session::clear()
+{
+    // gettimeofday( &bornTime_, 0 );
+    pkey_ = SessionPrimaryKey( key_ ); // to reset born time
+    lastAccessTime_ = time(0);
+    expirationTime_ = lastAccessTime_ + 5; // FIXME: customize
 
-        delete command_; command_ = 0;
+    persistent_ = false;
+    
+    delete command_; command_ = 0;
         
-        isnew_.Empty();
-        if ( ! initrulekeys_.empty() ) {
-            smsc_log_warn( log_, "rule keys stack is not empty, finalization failed?" );
-        }
-        initrulekeys_ = std::stack< std::pair<int,int> >();
-
-        { // clear operations
-
-            currentOperationId_ = 0;
-            ussdOperationId_ = 0;
-            currentOperation_ = 0;
-            umr_ = -1;
-
-            assert( operations_.Count() == 0 );
-            int opkey;
-            Operation* op;
-            for ( IntHash< Operation* >::Iterator i(operations_); i.Next(opkey,op); ) {
-                delete op;
-            }
-            operations_.Empty();
-
-        }
-
-        if ( transactions_ ) {
-            char*          key;
-            ExternalTransaction* value;
-            for ( Hash< ExternalTransaction* >::Iterator i(transactions_);
-                  i.Next(key,value); ) {
-                if ( !value ) continue;
-                value->rollback();
-                delete value;
-            }
-            transactions_->Empty();
-        }
-
-        if ( globalScope_ ) globalScope_->clear();
-        clearScopeHash( operationScopes_ );
-        clearScopeHash( serviceScopes_ );
-        clearScopeHash( contextScopes_ );
+    isnew_.Empty();
+    if ( ! initrulekeys_.empty() ) {
+        smsc_log_warn( log_, "rule keys stack is not empty, finalization failed?" );
     }
+    initrulekeys_ = std::stack< std::pair<int,int> >();
+
+    { // clear operations
+
+        currentOperationId_ = 0;
+        ussdOperationId_ = 0;
+        currentOperation_ = 0;
+        umr_ = -1;
+
+        assert( operations_.Count() == 0 );
+        int opkey;
+        Operation* op;
+        for ( IntHash< Operation* >::Iterator i(operations_); i.Next(opkey,op); ) {
+            delete op;
+        }
+        operations_.Empty();
+
+    }
+
+    if ( transactions_ ) {
+        char*          key;
+        ExternalTransaction* value;
+        for ( Hash< ExternalTransaction* >::Iterator i(transactions_);
+              i.Next(key,value); ) {
+            if ( !value ) continue;
+            value->rollback();
+            delete value;
+        }
+        transactions_->Empty();
+    }
+
+    if ( globalScope_ ) globalScope_->clear();
+    clearScopeHash( operationScopes_ );
+    clearScopeHash( serviceScopes_ );
+    clearScopeHash( contextScopes_ );
+}
 
 
 void Session::changed( AdapterProperty& )
@@ -400,7 +403,7 @@ void Session::print( util::Print& p ) const
              command_,
              umr_,
              ussdOperationId_ == SCAGCommand::invalidOpId() ? "" : " hasUssd" );
-    command_->print( p );
+    // command_->print( p );
     Operation* curop = getCurrentOperation();
     if ( curop ) curop->print( p, getCurrentOperationId() );
     int opid;
@@ -805,12 +808,12 @@ opid_type Session::getNewOperationId() const
 
 
     ActiveSession::ActiveSession( SessionStore& st, Session& s ) :
-    store_(&st), s_(&s), flush_(false) {}
+    store_(&st), s_(&s) {}
 
 
     void ActiveSession::release() 
     {
-        if ( s_ ) store_->releaseSession( *s_, flush_ );
+        if ( s_ ) store_->releaseSession( *s_ );
         s_ = 0;
     }
 

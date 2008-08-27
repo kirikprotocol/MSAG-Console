@@ -209,14 +209,13 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey& key,
 }
 
 
-void SessionStoreImpl::releaseSession( Session&                      session,
-                                       bool                          flush )
+void SessionStoreImpl::releaseSession( Session&                      session )
 {
     const SessionKey& key = session.sessionKey();
     {
         SCAGCommand* cmd = session.currentCommand();
-        smsc_log_debug(log_,"releaseSession(key=%s, session=%p, session->ops=%d, cmd=%p, flush=%d)",
-                       key.toString().c_str(), &session, session.operationsCount(), cmd, flush?1:0 );
+        smsc_log_debug(log_,"releaseSession(session=%p): key=%s, sess->ops=%d, sess->pers=%d, cmd=%p)",
+                       &session, key.toString().c_str(), session.operationsCount(), session.isPersistent() ? 1 : 0, cmd );
         if ( ! cmd ) {
             smsc_log_error(log_, "logic error in releaseSession(sess=%p): session->cmd is not set", &session );
             ::abort();
@@ -248,7 +247,8 @@ void SessionStoreImpl::releaseSession( Session&                      session,
         --lockedSessions_;
         expiration = session.expirationTime();
 
-        if ( flush ) {
+        // FIXME: think for optimization of not-flushing each time a session is released?
+        if ( session.isPersistent() ) {
             UnlockMutexGuard ug(cacheLock_);
             disk_->set( key, cache_->store2ref(*v) );
             smsc_log_debug(log_, "flushed key=%s session=%p", key.toString().c_str(), &session );

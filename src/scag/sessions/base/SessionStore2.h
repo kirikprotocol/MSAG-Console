@@ -31,9 +31,8 @@ public:
     // SessionExpirationQueue& exq );
 
     /// release session (return it to store and unlock for further use).
-    /// \param flush (do flush on disk prior to releasing session lock).
     /// NOTE: this method is invoked automatically from ActiveSession dtor.
-    virtual void releaseSession( Session& s, bool flush ) = 0;
+    virtual void releaseSession( Session& s ) = 0;
 
     /// move lock on the session to the specified command.
     virtual void moveLock( Session& s, SCAGCommand* cmd ) = 0;
