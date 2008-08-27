@@ -84,7 +84,7 @@ protected:
             return it;
         }
 
-        void cleanUp(GRDIterator up_to)
+        void cleanUp(const GRDIterator& up_to)
         {
             GRDIterator it = this->begin();
             while (it != up_to) {
