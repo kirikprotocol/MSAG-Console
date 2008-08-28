@@ -170,8 +170,11 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             smsc_log_debug( log_, "hit key=%s session=%p session->cmd=%u",
                             key.toString().c_str(), session, session->currentCommand() );
 
-            if ( ! session->currentCommand() || session->currentCommand() == cmd->getSerial() )
-            {
+            do {
+                if ( ! session->currentCommand() )
+                    ++lockedSessions_;
+                else if ( session->currentCommand() != cmd->getSerial() )
+                    break;
                 // unlocked
                 /*
                 if ( session->expirationTime() < time(0) ) {
@@ -185,7 +188,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                 session->setCurrentCommand( cmd->getSerial() );
                 return makeLockedSession(*session, *cmd.get());
 
-            }
+            } while ( false );
 
             // session is locked
             // reserve a place in queue for a command
@@ -205,6 +208,8 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             return ActiveSession();
         }
 
+        ++totalSessions_;
+
         // create a stub to be filled by disk io
         cache_->set( key, cache_->val2store( allocator_->alloc(key) ));
         v = cache_->get( key );
@@ -221,6 +226,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     disk_->get( key, cache_->store2ref(*v) );
 
     smsc_log_debug( log_, "fetched key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
+    ++lockedSessions_;
     return makeLockedSession(*session,*cmd.get());
 }
 
@@ -260,7 +266,6 @@ void SessionStoreImpl::releaseSession( Session& session )
             abort();
             // throw std::runtime_error("SessionStore: logic error in releaseSession" );
         }
-        --lockedSessions_;
 
         // FIXME: think for optimization of not-flushing each time a session is released?
         if ( session.isPersistent() ) {
@@ -275,6 +280,7 @@ void SessionStoreImpl::releaseSession( Session& session )
 
         }
             
+        --lockedSessions_;
         expiration = session.expirationTime();
         nextcmd = session.popCommand();
         uint32_t nextuid = 0;
@@ -329,7 +335,7 @@ inline ActiveSession SessionStoreImpl::makeLockedSession( Session&     s,
         smsc_log_error(log_, "logic error in makeAS: sess->cmd=%u cmd->serial=%u", oldc, c.getSerial() );
         ::abort();
     }
-    ++lockedSessions_;
+    // ++lockedSessions_;
     return ActiveSession(*this,s);
 }
 
@@ -410,6 +416,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired 
         // lock session with some fictional command serial to prevent fetching
         // while finalizing
         session->setCurrentCommand( 1 );
+        ++lockedSessions_;
 
     } // while
 
@@ -443,6 +450,7 @@ bool SessionStoreImpl::doSessionFinalization( Session& session )
                        &session, session.currentCommand() );
         ::abort();
     }
+    --lockedSessions_;
 
     SCAGCommand* nextcmd = session.popCommand();
     if ( nextcmd ) {
@@ -462,6 +470,7 @@ bool SessionStoreImpl::doSessionFinalization( Session& session )
         // no more commands
         smsc_log_debug(log_, "key=%s session=%p is being destroyed", session.sessionKey().toString().c_str(), &session );
         // NOTE: session should be already deleted from disk
+        --totalSessions_;
         delete cache_->release( session.sessionKey() );
     }
     return true;
@@ -476,7 +485,10 @@ bool SessionStoreImpl::carryNextCommand( Session&     session,
 
     // next command to process, move it to a queue
     const unsigned sz = queue_->pushCommand( nextcmd, SCAGCommandQueue::MOVE );
-    if ( sz != unsigned(-1) ) return true;
+    if ( sz != unsigned(-1) ) {
+        ++lockedSessions_;
+        return true;
+    }
 
     // queue is stopped, delete all remaining commands
     std::vector< SCAGCommand* > comlist;
