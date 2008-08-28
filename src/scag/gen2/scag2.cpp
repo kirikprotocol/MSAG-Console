@@ -146,6 +146,7 @@ void Scag::init( unsigned mynode )
 
         stat::StatisticsManager* sm = new stat::StatisticsManager;
         sm->init( cfg.getStatManConfig() );
+        sm->Start();
         smsc_log_info(log, "Statistics manager inited" );
 
     } catch(exception& e){
