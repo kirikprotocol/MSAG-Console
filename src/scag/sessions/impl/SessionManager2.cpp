@@ -328,7 +328,7 @@ void SessionManagerImpl::deleteQueuePush(SessionPtr& s, bool expired)
 
 int SessionManagerImpl::Execute()
 {
-    smsc_log_info( log_, "SessionManager::start executing" );
+    smsc_log_info( log_, "SessionManager:start executing" );
 
     const int deftmo = 1000;
     MutexGuard mg(expireMonitor_);

@@ -154,7 +154,8 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
 
     // session is not attached to the command
 
-    smsc_log_debug(log_,"fetchSession(key=%s,cmd=%p)", key.toString().c_str(), cmd.get() );
+    smsc_log_debug(log_,"fetchSession(key=%s,cmd=%p,create=%d)",
+                   key.toString().c_str(), cmd.get(), create ? 1:0 );
     MemStorage::stored_type* v;
     {
         MutexGuard mg(cacheLock_);
@@ -282,8 +283,9 @@ void SessionStoreImpl::releaseSession( Session& session )
             nextuid = nextcmd->getSerial();
         } 
         uint32_t prevuid = session.setCurrentCommand( nextuid );
-        smsc_log_debug( log_, "released key=%s session=%p, prevcmd=%u nextcmd=%u",
-                        key.toString().c_str(), &session, prevuid, nextuid );
+        smsc_log_debug( log_, "released key=%s session=%p, prevcmd=%u nextcmd=%u, tot/lck=%u/%u",
+                        key.toString().c_str(), &session, prevuid, nextuid,
+                        totalSessions_, lockedSessions_ );
         // release lock
     }
     // commands are owned elsewhere
@@ -375,8 +377,10 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired 
         ++i;
         MemStorage::stored_type* v = cache_->get( key );
         if ( !v ) {
-            // smsc_log_warn(log_,"key=%s to be expired is not found, sz=%u", key.toString().c_str(), curset.size() );
+            smsc_log_debug(log_,"key=%s to be expired is not found",
+                           key.toString().c_str() );
             ++notexpired;
+            session = 0;
             continue;
         }
 
