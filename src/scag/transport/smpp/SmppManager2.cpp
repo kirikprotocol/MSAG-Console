@@ -1500,8 +1500,6 @@ unsigned SmppManagerImpl::pushSessionCommand( SmppCommand* cmd, int action )
 
     // action MOVE
     if ( lcmProcessingCount > 0 ) --lcmProcessingCount;
-    smsc_log_debug( log, "reserved cmd=%p moved onto queue: respQsz=%u, Qsz=%u, lcmCount=%u",
-                    cmd, respQueue.Count(), queue.Count(), lcmProcessingCount );
     if ( cmd->isResp() ) {
         respQueue.Push( cmd );
     } else {
@@ -1509,6 +1507,8 @@ unsigned SmppManagerImpl::pushSessionCommand( SmppCommand* cmd, int action )
         // for being decremented in getCommand
         if ( cmd->getEntity() ) cmd->getEntity()->incQueueCount();
     }
+    smsc_log_debug( log, "reserved cmd=%p moved onto queue: respQsz=%u, Qsz=%u, lcmCount=%u",
+                    cmd, respQueue.Count(), queue.Count(), lcmProcessingCount );
     queueMon.notify();
     return lcmProcessingCount;
 }
