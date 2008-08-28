@@ -259,7 +259,7 @@ Session::Session( const SessionKey& key ) :
 key_(key),
 pkey_(key),
 persistent_(false),
-command_(0),
+command_(0),        // unlocked
 transactions_(0),
 nextContextId_(0),
 globalScope_(0),
@@ -277,7 +277,7 @@ Session::~Session()
     clear();
     // FIXME: delete things
     if ( cmdQueue_.size() > 0 ) {
-        smsc_log_error( log_, "!!!Session command queue is not empty: %d", cmdQueue_.size() );
+        smsc_log_error( log_, "LOGIC ERROR!!! Session command queue is not empty: %d", cmdQueue_.size() );
         // this->abort();
     }
         /*
@@ -337,8 +337,8 @@ void Session::clear()
 
     persistent_ = false;
     
-    // FIXME: command is owned elsewhere ?
-    // delete command_; command_ = 0;
+    // session unlocking should be done externally
+    // command_ = 0;
         
     isnew_.Empty();
     if ( ! initrulekeys_.empty() ) {
@@ -400,7 +400,7 @@ void Session::print( util::Print& p ) const
     const time_t now = time(0);
     const int expire = int(expirationTime() - now);
     const int lastac = int(now - lastAccessTime_);
-    p.print( "session=%p key=%s expire=%d lastac=%d ops=%d trans=%d pers=%d lockCmd=%p umr=%d%s",
+    p.print( "session=%p key=%s expire=%d lastac=%d ops=%d trans=%d pers=%d lockCmd=%u umr=%d%s",
              this, sessionKey().toString().c_str(),
              expire, lastac,
              operationsCount(),
@@ -409,7 +409,6 @@ void Session::print( util::Print& p ) const
              command_,
              umr_,
              ussdOperationId_ == SCAGCommand::invalidOpId() ? "" : " hasUssd" );
-    // command_->print( p );
     Operation* curop = getCurrentOperation();
     if ( curop ) curop->print( p, getCurrentOperationId() );
     int opid;
@@ -712,15 +711,15 @@ unsigned Session::appendCommand( SCAGCommand* cmd )
 }
 
 
-    SCAGCommand* Session::popCommand()
-    {
-        SCAGCommand* cmd = 0; 
-        if ( ! cmdQueue_.empty() ) {
-            cmd = cmdQueue_.front();
-            cmdQueue_.pop_front();
-        }
-        return cmd;
+SCAGCommand* Session::popCommand()
+{
+    SCAGCommand* cmd = 0; 
+    if ( ! cmdQueue_.empty() ) {
+        cmd = cmdQueue_.front();
+        cmdQueue_.pop_front();
     }
+    return cmd;
+}
 
 
 /*
@@ -813,20 +812,19 @@ opid_type Session::getNewOperationId() const
     // ======================================
 
 
-    ActiveSession::ActiveSession( SessionStore& st, Session& s ) :
-    store_(&st), s_(&s) {}
+ActiveSession::ActiveSession( SessionStore& st, Session& s ) :
+store_(&st), s_(&s) {}
 
+void ActiveSession::release() 
+{
+    if ( s_ ) store_->releaseSession( *s_ );
+    s_ = 0;
+}
 
-    void ActiveSession::release() 
-    {
-        if ( s_ ) store_->releaseSession( *s_ );
-        s_ = 0;
-    }
-
-    void ActiveSession::moveLock( SCAGCommand* cmd )
-    {
-        if ( s_ ) store_->moveLock( *s_, cmd );
-    }
+void ActiveSession::moveLock( SCAGCommand* cmd )
+{
+    if ( s_ ) store_->moveLock( *s_, cmd );
+}
 
 } // namespace sessions
 } // namespace scag

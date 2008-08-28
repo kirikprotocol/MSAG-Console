@@ -213,11 +213,12 @@ void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg,
 }
 
 
-ActiveSession SessionManagerImpl::fetchSession( const SessionKey& key,
-                                                SCAGCommand*      cmd )
+ActiveSession SessionManagerImpl::fetchSession( const SessionKey&           key,
+                                                std::auto_ptr<SCAGCommand>& cmd,
+                                                bool                        create )
 {
-    if ( !isStarted() || !store_.get() || !cmd ) return ActiveSession();
-    return store_->fetchSession( key, cmd );
+    if ( !isStarted() || !store_.get() || !cmd.get() ) return ActiveSession();
+    return store_->fetchSession( key, cmd, create );
 }
 
 
@@ -724,8 +725,9 @@ void SessionManagerImpl::continueExecution( LongCallContext* lcmCtx, bool droppe
     /// long call in session_destroy
     Session* session = reinterpret_cast<Session*>( lcmCtx->stateMachineContext );
     lcmCtx->continueExec = true;
-    assert( session && 
-            session->currentCommand() == reinterpret_cast< SCAGCommand* >(-1) );
+
+    // special finalization command
+    assert( session && session->currentCommand() == 1 );
 
     if ( dropped ) {
         // finalize immediately

@@ -9,6 +9,7 @@ namespace scag2 {
 
 namespace sessions {
 class Session;
+class ActiveSession;
 }
 
 namespace transport {
@@ -20,21 +21,23 @@ class SmppCommand;
 struct SmppOperationMaker
 {
 public:
-    SmppOperationMaker( SmppCommand& thecmd,
-                        sessions::Session& thesession );
+    SmppOperationMaker( const char*                 where,
+                        std::auto_ptr<SmppCommand>& thecmd,
+                        sessions::ActiveSession&    thesession,
+                        smsc::logger::Logger*       logger );
 
     ~SmppOperationMaker() {
         assert( postproc_ );
     }
 
-    /// method determine the type of operation and
-    /// then create/obtain operation of this type from session.
-    /// NOTE: side-effect: it also modifies command and session.
-    /// at return st.status is set to STATUS_OK or STATUS_FAILED.
-    void setupOperation( re::RuleStatus& st );
-
-    /// post-process operation based on status.
-    void postProcess( re::RuleStatus& st );
+    /// process command/session:
+    /// 1. analyse the command, determine the type of operation;
+    /// 1a. TODO: create/fetch the session;
+    /// 2. create/fetch the operation;
+    /// 3. preprocess command/operation before RE execution;
+    /// 4. invoke RE;
+    /// 5. postprocess command/operation.
+    void process( re::RuleStatus& st );
 
     /// the reason of failure in case of STATUS_FAILED.
     inline const char* what() const {
@@ -46,14 +49,34 @@ public:
     }
 
 private:
+    /// method determine the type of operation and
+    /// then create/obtain operation of this type from session.
+    /// NOTE: side-effect: it also modifies command and session.
+    /// at return st.status is set to STATUS_OK or STATUS_FAILED.
+    void setupOperation( re::RuleStatus& st );
+
+    /// post-process operation based on status.
+    void postProcess( re::RuleStatus& st );
+
     SmppOperationMaker();
 
+    inline void fail( const char* msg,
+                      re::RuleStatus& st,
+                      int reason ) {
+        what_ = msg;
+        st.status = re::STATUS_FAILED;
+        st.result = reason;
+        smsc_log_warn( log_, "%s: failure: %s, res=%d", where_, what_, reason );
+    }
+
 private:
-    SmppCommand&       cmd;
-    sessions::Session& session;
-    CommandOperation   optype_;
-    const char*        what_;
-    bool               postproc_;
+    const char*                  where_;
+    std::auto_ptr<SmppCommand>&  cmd_;
+    sessions::ActiveSession&     session_;
+    CommandOperation             optype_;
+    const char*                  what_;
+    bool                         postproc_;
+    smsc::logger::Logger*        log_;
 };
 
 } // namespace smpp

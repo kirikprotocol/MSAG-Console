@@ -248,8 +248,8 @@ public:
     /// the presence of a command tells that session is locked.
     /// \return the previous owned command.
     /// It gives the possibility to destroy it after unlocking.
-    inline SCAGCommand* setCurrentCommand( SCAGCommand* cmd ) {
-        SCAGCommand* prev = command_;
+    inline uint32_t setCurrentCommand( uint32_t cmd ) {
+        uint32_t prev = command_;
         if ( command_ ) {
             if ( command_ == cmd ) {
                 prev = 0;
@@ -263,7 +263,7 @@ public:
         return prev;
     }
 
-    inline SCAGCommand* currentCommand() {
+    inline uint32_t currentCommand() {
         return command_;
     }
 
@@ -316,8 +316,9 @@ private:
     /// the flag tells if the session should be flushed (not pers)
     bool persistent_;
 
-    /// current command being processed, it locks the session (owned, not pers).
-    SCAGCommand* command_;
+    /// the serial number of the current command being processed,
+    /// the session is locked if not 0.
+    uint32_t command_;
 
     /// FIXME: should it be here?
     LongCallContext  lcmCtx_;

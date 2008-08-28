@@ -100,8 +100,9 @@ public:
 protected:
 
     // SessionManager interface
-    virtual ActiveSession fetchSession( const SessionKey& key,
-                                        SCAGCommand*      cmd );
+    virtual ActiveSession fetchSession( const SessionKey&           key,
+                                        std::auto_ptr<SCAGCommand>& cmd,
+                                        bool                        create = true );
 
 private:
 
