@@ -1,7 +1,7 @@
 #ifndef _SCAG_SESSIONS_IMPL_MANAGER2_H
 #define _SCAG_SESSIONS_IMPL_MANAGER2_H
 
-#include <set>
+#include <map>
 #include <time.h>
 #include <unistd.h>
 #include <string>
@@ -41,6 +41,7 @@ private:
 
     static const time_t DEFAULT_EXPIRE_INTERVAL = 60;
 
+    /*
     struct ExpireData 
     {
         ExpireData( time_t expTime, const SessionKey& k ) :
@@ -57,9 +58,10 @@ private:
         time_t      expiration;
         SessionKey  key;
     };
+     */
 
-    typedef std::multiset< ExpireData >  ExpireSet;
-    typedef XHash< SessionKey, ExpireSet::iterator, SessionKey > ExpireHash;
+    typedef std::multimap< time_t, SessionKey >     ExpireMap;
+    typedef XHash< SessionKey, time_t, SessionKey > ExpireHash;
 
 public:
 
@@ -124,7 +126,7 @@ private:
     unsigned          nodeNumber_;
     SCAGCommandQueue* cmdqueue_;
     EventMonitor      expireMonitor_;
-    ExpireSet         expireSet_;
+    ExpireMap         expireMap_;
     ExpireHash        expireHash_;
     Logger*           log_;
 
