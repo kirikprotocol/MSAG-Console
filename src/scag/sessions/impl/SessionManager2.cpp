@@ -364,10 +364,11 @@ int SessionManagerImpl::Execute()
                 smsc_log_debug(log_, "taking the whole expire set, sz=%u", expireSet_.size() );
             } else {
                 ExpireData d( now, SessionKey() );
-                i = expireSet_.lower_bound(d);
+                i = expireSet_.upper_bound(d);
             }
             for ( ExpireSet::iterator j = expireSet_.begin(); j != i ; ++j ) {
                 curset.push_back( j->key );
+                expireHash_.Delete( j->key );
             }
             expireSet_.erase( expireSet_.begin(), i );
         }
@@ -742,8 +743,18 @@ void SessionManagerImpl::scheduleExpire( time_t expirationTime,
                                          const SessionKey& key )
 {
     MutexGuard mg(expireMonitor_);
-    smsc_log_debug( log_, "place key=%s to expire queue", key.toString().c_str() );
-    expireSet_.insert( ExpireData(expirationTime,key) );
+    ExpireSet::iterator* ptr = expireHash_.GetPtr( key );
+    if ( ptr ) {
+        smsc_log_debug( log_, "change key=%s expiration time:%d->%d",
+                        key.toString().c_str(),
+                        int((*ptr)->expiration),
+                        int(expirationTime) );
+        expireSet_.erase( *ptr );
+        *ptr = expireSet_.insert( ExpireData(expirationTime,key) );
+    } else {
+        smsc_log_debug( log_, "place key=%s to expire queue", key.toString().c_str() );
+        expireHash_.Insert( key, expireSet_.insert(ExpireData(expirationTime,key)) );
+    }
     if ( expirationTime < time(0) || !isStarted() ) expireMonitor_.notify();
 }
 

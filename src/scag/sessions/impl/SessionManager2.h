@@ -43,14 +43,14 @@ private:
 
     struct ExpireData 
     {
-        ExpireData( time_t expTime, const SessionKey& k ) : expiration(expTime), key(k) {}
+        ExpireData( time_t expTime, const SessionKey& k ) :
+        expiration(expTime), key(k) {}
         bool operator < ( const ExpireData& e ) const {
-            return ( expiration < e.expiration || 
-                     ( expiration == e.expiration && key < e.key ) );
+            return expiration < e.expiration;
         }
                 
         bool operator == ( const ExpireData& e ) const {
-            return ( expiration == e.expiration ) && ( key == e.key );
+            return expiration == e.expiration;
         }
 
     public:
@@ -58,11 +58,8 @@ private:
         SessionKey  key;
     };
 
-        typedef std::set< ExpireData >  ExpireSet;
-        // typedef std::multiset<CSessionAccessData*,FWakeTimeCompare> CSessionSet;
-        // typedef std::multiset<CSessionAccessData*>::iterator CSessionSetIterator;
-        // typedef XHash<CSessionKey,CSessionSetIterator,CSessionKey> CSessionExpireHash;
-        // typedef XHash<CSessionKey,SessionPtr,CSessionKey> CSessionHash;
+    typedef std::multiset< ExpireData >  ExpireSet;
+    typedef XHash< SessionKey, ExpireSet::iterator, SessionKey > ExpireHash;
 
 public:
 
@@ -128,9 +125,7 @@ private:
     SCAGCommandQueue* cmdqueue_;
     EventMonitor      expireMonitor_;
     ExpireSet         expireSet_;
-    // CSessionHash    SessionHash;
-    // CSessionExpireHash SessionExpireHash;
-    // CUMRHash        UMRHash;
+    ExpireHash        expireHash_;
     Logger*           log_;
 
     Mutex             stopLock_;
@@ -138,7 +133,6 @@ private:
 
     std::auto_ptr<SessionStoreImpl>  store_;
     scag2::config::SessionManagerConfig  config_;
-    // CyclicQueue< ExpireData > deleteQueue_;
 };
 
 }}
