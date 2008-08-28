@@ -61,7 +61,7 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
         if (!isContentType_)
             bp->billingInfoStruct.mediaType = property->getStr();
 
-        mt = isContentType_ ? property->getInt() :
+        mt = isContentType_ ? int(property->getInt()) :
         bm.getInfrastructure().GetMediaTypeID( bp->billingInfoStruct.mediaType );
 
     } else if ( !isContentType_ ) {
@@ -82,7 +82,7 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
         if( !isCategory_ )
             bp->billingInfoStruct.category = property->getStr();
 
-        cat = isCategory_ ? property->getInt() :
+        cat = isCategory_ ? int(property->getInt()) :
         bm.getInfrastructure().GetCategoryID( bp->billingInfoStruct.category );
     } else if( !isCategory_ ) {
         bp->billingInfoStruct.category = categoryFieldName_;

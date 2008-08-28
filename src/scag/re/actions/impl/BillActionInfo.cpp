@@ -85,7 +85,7 @@ bool BillActionInfo::run( ActionContext& context )
     if ( logger->isDebugEnabled() ) {
         char buf[20];
         snprintf( buf, sizeof(buf), "%u", trans->billId() );
-        std::string s( "Action 'bill:info' bill_id=" + std::string(buf) );
+        s = std::string("Action 'bill:info' bill_id=") + std::string(buf);
     }
     for ( int i = 0; i < fields_count; i++ )
     {

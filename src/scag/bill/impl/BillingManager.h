@@ -202,6 +202,9 @@ public:
         #endif
     }
 
+private:
+    void Start( int ); // to make compiler happy
+
 };
 
 } // namespace bill
