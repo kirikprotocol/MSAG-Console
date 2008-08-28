@@ -26,6 +26,8 @@ inline void getlog() {
     }
 }
 
+/// session default live time (in seconds)
+unsigned sessionLiveTime = 60;
 
 using namespace scag2::sessions;
 using namespace scag2::exceptions;
@@ -249,11 +251,25 @@ private:
 };
 
 
+// --- statics
+
+unsigned Session::defaultLiveTime()
+{
+    return sessionLiveTime;
+}
+
+void Session::setDefaultLiveTime( unsigned tmo )
+{
+    sessionLiveTime = tmo;
+}
+
 bool Session::isReadOnlyProperty( const char* name )
 {
     return ::ReadOnlyPropertiesHash.GetPtr(name);
 }
 
+
+// --- non-statics
 
 Session::Session( const SessionKey& key ) :
 key_(key),
@@ -277,7 +293,7 @@ Session::~Session()
     clear();
     // FIXME: delete things
     if ( cmdQueue_.size() > 0 ) {
-        smsc_log_error( log_, "LOGIC ERROR!!! Session command queue is not empty: %d", cmdQueue_.size() );
+        smsc_log_error( log_, "LOGIC ERROR!!! Session command queue is not empty: %d, FIXME: MEMLEAK!", cmdQueue_.size() );
         // this->abort();
     }
         /*
@@ -332,8 +348,9 @@ void Session::clear()
 {
     // gettimeofday( &bornTime_, 0 );
     pkey_ = SessionPrimaryKey( key_ ); // to reset born time
-    lastAccessTime_ = time(0);
-    expirationTime_ = lastAccessTime_ + 5; // FIXME: customize
+    // lastAccessTime_ = time(0);
+    expirationTimeAtLeast_ = time(0);
+    expirationTime_ = expirationTimeAtLeast_ + defaultLiveTime(); // FIXME: customize
 
     persistent_ = false;
     
@@ -398,11 +415,11 @@ void Session::print( util::Print& p ) const
     if ( ! command_ ) return;  // session is not locked !
 
     const time_t now = time(0);
-    const int expire = int(expirationTime() - now);
-    const int lastac = int(now - lastAccessTime_);
-    p.print( "session=%p key=%s expire=%d lastac=%d ops=%d trans=%d pers=%d lockCmd=%u umr=%d%s",
+    // const int lastac = int(now - lastAccessTime_);
+    p.print( "session=%p key=%s expire=%d/%d ops=%d trans=%d pers=%d lockCmd=%u umr=%d%s",
              this, sessionKey().toString().c_str(),
-             expire, lastac,
+             int(expirationTime_ - now),
+             int(expirationTimeAtLeast_ - now),
              operationsCount(),
              transactions_ ? transactions_->GetCount() : 0,
              isPersistent() ? 1 : 0,
@@ -529,6 +546,14 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
                     unsigned(currentOperationId_),
                     operationType,
                     commandOpName(operationType) );
+    {
+        // increase session live time
+        time_t expire = time(0) + defaultLiveTime();
+        if ( expire > expirationTime_ ) expirationTime_ = expire;
+        smsc_log_debug( log_, "session=%p key=%s soft expiration time increased: %u",
+                        this, sessionKey().toString().c_str(), defaultLiveTime() );
+    }
+    // FIXME: what to do with expiration time if it was set explicitly?
     return currentOperation_;
 }
 
@@ -551,6 +576,18 @@ void Session::closeCurrentOperation()
     }
     currentOperationId_ = SCAGCommand::invalidOpId();
     // changed_ = true;
+    if ( operationsCount() == 0 ) {
+        time_t now = time(0);
+        if ( expirationTime_ > expirationTimeAtLeast_ ) {
+            expirationTime_ = expirationTimeAtLeast_;
+        }
+        smsc_log_debug(log_, "session=%p key=%s has no ops, expiration=%d",
+                       this, sessionKey().toString().c_str(),
+                       int(expirationTime_ - now));
+        if ( expirationTime_ <= now ) {
+            ; // FIXME: push session manager expiration thread
+        }
+    }
 }
 
 
@@ -700,7 +737,10 @@ time_t Session::expirationTime() const
 void Session::waitAtLeast( unsigned sec )
 {
     time_t t = time(0) + sec;
-    if ( t > expirationTime_ ) expirationTime_ = t;
+    if ( t > expirationTimeAtLeast_ ) {
+        expirationTimeAtLeast_ = t;
+        if ( t > expirationTime_ ) expirationTime_ = t;
+    }
 }
 
 

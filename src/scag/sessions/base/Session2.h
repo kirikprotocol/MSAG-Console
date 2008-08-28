@@ -86,6 +86,10 @@ private:
      */
 
 public:
+    /// return the default live time of the session
+    static unsigned defaultLiveTime();
+    static void setDefaultLiveTime( unsigned tmo );
+
     /// NOTE: the full field name (with prefix) is required
     static bool isReadOnlyProperty( const char* fullname );
 
@@ -97,8 +101,8 @@ public:
     Serializer& serialize( Serializer& s ) const;
     Deserializer& deserialize( Deserializer& s ) throw (DeserializerException);
 
-    /// clear internal state except session key, and the command queue.
-    /// reset expiration policy and creation time.
+    /// clear internal state except session key, but not the command queue.
+    /// reset expiration time.
     void clear();
 
     /// notification when property is changed
@@ -185,7 +189,7 @@ public:
     void closeCurrentOperation();
     
     /// number of operations
-    unsigned operationsCount() const {
+    inline unsigned operationsCount() const {
         return operations_.Count();
     }
 
@@ -234,10 +238,11 @@ public:
     SessionPropertyScope* getOperationScope();
 
     /// @return session expiration time in GMT (as returned by time(2) )
+    /// NOTE: this time gives the soft expiration limit.
     time_t expirationTime() const;
 
     /// make sure the session is alive at least s seconds, i.e. set expirationTime
-    /// to now()+s.
+    /// to now()+s.  I.e. this method sets the hard expiration limit.
     /// NOTE: if expirationTime is already set to a later time, then do nothing.
     void waitAtLeast( unsigned s );
 
@@ -307,11 +312,12 @@ private:
     // timeval bornTime_;
     SessionPrimaryKey  pkey_;
 
-    /// last access time (pers)
-    time_t lastAccessTime_;
+    // last access time (pers)
+    // time_t lastAccessTime_;
 
-    /// expiration Time
+    /// expiration Time ( soft/hard limits)
     time_t expirationTime_;
+    time_t expirationTimeAtLeast_;
 
     /// the flag tells if the session should be flushed (not pers)
     bool persistent_;

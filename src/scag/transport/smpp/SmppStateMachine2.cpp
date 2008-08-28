@@ -339,7 +339,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
     const char* where = "Submit";
     SmppCommand* cmd = aucmd.get();
     if ( ! cmd ) return;
-    smsc_log_debug(log_, "%s: got cmd=%p% cmd->serial=%u cmd->sess=%p%s",
+    smsc_log_debug(log_, "%s: got cmd=%p cmd->serial=%u cmd->sess=%p%s",
                    where,
                    cmd,
                    cmd->getSerial(),
@@ -721,7 +721,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
     const char* where = "Delivery";
     SmppCommand* cmd = aucmd.get();
     if ( ! cmd ) return;
-    smsc_log_debug(log_, "%s: got cmd=%p% cmd->serial=%u cmd->sess=%p%s",
+    smsc_log_debug(log_, "%s: got cmd=%p cmd->serial=%u cmd->sess=%p%s",
                    where,
                    cmd,
                    cmd->getSerial(),
@@ -1152,7 +1152,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
     const char* where = "DataSm";
     SmppCommand* cmd = aucmd.get();
     if ( ! cmd ) return;
-    smsc_log_debug(log_, "%s: got cmd=%p% cmd->serial=%u cmd->sess=%p%s",
+    smsc_log_debug(log_, "%s: got cmd=%p cmd->serial=%u cmd->sess=%p%s",
                    where,
                    cmd,
                    cmd->getSerial(),
