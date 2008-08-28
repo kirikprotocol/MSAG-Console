@@ -105,6 +105,8 @@ Sender::~Sender()
 
 int Sender::Execute()
 {
+    smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("stat.send");
+
     uint64_t cnt,last=0;
     timespec now={0,0},lasttime={0,0};
     double ut,tm,rate,avg;
@@ -244,8 +246,12 @@ int Sender::Execute()
       d.now=now.tv_sec;
       d.uptime=now.tv_sec-start.tv_sec;
 
+        smsc_log_debug( logger, "going to get statistics");
         SessionManager::Instance().getSessionsCount( d.sessionCount, d.sessionLockedCount );
         SmppManager::Instance().getQueueLen(d.smppReqQueueLen, d.smppRespQueueLen, d.smppLCMQueueLen);
+        smsc_log_debug( logger, "stat is sessions: tot/lck=%u/%u, queues: req/resp/lcm=%u/%u/%u",
+                        d.sessionCount, d.sessionLockedCount,
+                        d.smppReqQueueLen, d.smppRespQueueLen, d.smppLCMQueueLen );
 
       // FIXME: http
       // HttpManager::Instance().getQueueLen(d.httpReqQueueLen, d.httpRespQueueLen, d.httpLCMQueueLen);
