@@ -366,7 +366,10 @@ int SessionManagerImpl::Execute()
                 ExpireData d( now, SessionKey() );
                 i = expireSet_.upper_bound(d);
             }
+            smsc_log_debug( log_, "waked for expiration, cnt=%u/%u", 
+                            expireSet_.size(), expireHash_.Count() );
             for ( ExpireSet::iterator j = expireSet_.begin(); j != i ; ++j ) {
+                smsc_log_debug( log_, "prepare key=%s for expiration", j->key.toString().c_str() );
                 curset.push_back( j->key );
                 expireHash_.Delete( j->key );
             }
@@ -745,15 +748,19 @@ void SessionManagerImpl::scheduleExpire( time_t expirationTime,
     MutexGuard mg(expireMonitor_);
     ExpireSet::iterator* ptr = expireHash_.GetPtr( key );
     if ( ptr ) {
-        smsc_log_debug( log_, "change key=%s expiration time:%d->%d",
+        assert( (*ptr)->key == key );
+        smsc_log_debug( log_, "scheduleExpire(time=%d,key=%s): time changed from:%d, cnt=%u/%u",
+                        int(expirationTime),
                         key.toString().c_str(),
                         int((*ptr)->expiration),
-                        int(expirationTime) );
+                        expireSet_.size(), expireHash_.Count() );
         expireSet_.erase( *ptr );
         *ptr = expireSet_.insert( ExpireData(expirationTime,key) );
     } else {
-        smsc_log_debug( log_, "place key=%s to expire queue", key.toString().c_str() );
         expireHash_.Insert( key, expireSet_.insert(ExpireData(expirationTime,key)) );
+        smsc_log_debug( log_, "scheduleExpire(time=%d,key=%s): new key, cnt=%u/%u",
+                        int(expirationTime), key.toString().c_str(),
+                        expireSet_.size(), expireHash_.Count() );
     }
     if ( expirationTime < time(0) || !isStarted() ) expireMonitor_.notify();
 }
