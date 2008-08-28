@@ -131,7 +131,6 @@ void Scag::init( unsigned mynode )
         // it will auto-register
         SessionManagerImpl* sm = new SessionManagerImpl;
         sm->init( cfg.getSessionManConfig(), mynode, fsq );
-        sm->Start();
 
         smsc_log_info(log, "Session Manager started" );
     }catch(exception& e){
