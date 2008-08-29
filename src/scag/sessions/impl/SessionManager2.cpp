@@ -46,103 +46,6 @@ void SessionManagerCallback(void * sm,Session * session)
  */
 
 
-#if 0
-void SessionManagerImpl::AddRestoredSession(Session * session)
-{
-    MutexGuard mt(inUseMonitor);
-
-    CSessionKey sessionKey = session->getSessionKey();
-
-    //smsc_log_debug(logger,"SessionManager: Restoring session from store");
-
-    session->expirePendingOperation();
-
-    if(session->hasPending())
-    {
-        uint16_t lastUSR = getLastUSR(sessionKey.abonentAddr);
-        lastUSR++;
-
-        sessionKey.USR = sessionKey.USR > lastUSR ? sessionKey.USR : lastUSR;
-        UMRHash.Insert(sessionKey.abonentAddr, sessionKey.USR);
-
-        session->setSessionKey(sessionKey);
-
-        int key;
-        Operation* value = 0;
-
-        COperationsHash::Iterator iter = session->OperationsHash.First();
-
-        smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' has %d operations",
-                       sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->OperationsHash.Count());
-
-        for (;iter.Next(key, value);)
-        {
-            smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' operation has finished (TYPE=%d)",
-                           sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), value->type);
-
-            delete value;
-            session->OperationsHash.Delete(key);
-        }
-
-        session->m_pCurrentOperation = 0;
-        session->currentOperationId = 0;
-
-        reorderExpireQueue(session);
-        store_.storeSessionIndex(session);
-        if(store_.updateSession(session))
-        {
-            smsc_log_debug(logger,"SessionManager: session updated.  USR='%d', Address='%s' Pending: %d InUse: %d",
-                       sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->getPendingAmount(), SessionHash.Count());
-            sessionCount++;
-        }
-    }
-    else
-    {
-         store_.deleteSessionByIndex(session);
-        //store_.deleteSession(sessionKey);
-    }
-    /*smsc_log_debug(logger,"SessionManager: Session restored from store with USR='%d', Address='%s', pending: %d-%d",
-       accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),
-       session->PendingOperationList.size(),session->PrePendingOperationList.size());
-       */
-}
-#endif // if 0
-
-
-/*
-void SessionManager::Init( unsigned theNodeNumber,
-                           const scag2::config::SessionManagerConfig& config,
-                           SCAGCommandQueue&           cmdqueue )
-{
-    if (!bSessionManagerInited)
-    {
-        MutexGuard guard(initSessionManagerLock);
-        if (!bSessionManagerInited) {
-            SessionManagerImpl& sm = SingleSM::Instance();
-            sm.nodeNumber = theNodeNumber;
-            sm.cmdqueue = &cmdqueue;
-            sm.init(config);
-            sm.Start();
-            bSessionManagerInited = true;
-        }
-    }
-}
- */
-
-/*
-SessionManager& SessionManager::Instance()
-{
-    if (!bSessionManagerInited)
-    {
-        MutexGuard guard(initSessionManagerLock);
-        if (!bSessionManagerInited)
-            throw std::runtime_error("SessionManager not inited!");
-    }
-    return SingleSM::Instance();
-}
- */
-
-
 SessionManagerImpl::SessionManagerImpl() :
 ConfigListener(SESSIONMAN_CFG),
 nodeNumber_(-1),
@@ -157,30 +60,6 @@ started_(false)
 SessionManagerImpl::~SessionManagerImpl()
 {
     Stop();
-
-    /*
-    CSessionSetIterator it;
-
-    for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
-    {
-    delete (*it);
-    }
-
-    CSessionKey key;
-    SessionPtr* value;
-
-    SessionHash.First();
-    for (CSessionHash::Iterator it = SessionHash.getIterator(); it.Next(key, value);)
-    {
-        SessionPtr session = store_.getSession(key);
-        if(session.Get())
-            session->abort();
-        else
-            smsc_log_debug(logger,"SessionManager: cannot find session in store - USR='%d', Address='%s'",
-                  key.USR,key.abonentAddr.toString().c_str());
-    }
-     */
-
     smsc_log_debug(log_,"SessionManager released");
 }
 
@@ -196,10 +75,14 @@ void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg,
 
     if (!log_) log_ = Logger::getInstance("sess.man");
 
+    if ( ! allocator_.get() )
+        allocator_.reset( new SessionAllocator() );
+
     if ( ! store_.get() )
-        store_.reset( new SessionStoreImpl( *this,
-                                            *this,
-                                            new SessionAllocator() ) );
+        store_.reset( new CompositeSessionStore( log_,
+                                                 *this,
+                                                 *this,
+                                                 allocator_.get() ) );
 
     store_->init( nodeNumber_,
                   *cmdqueue_,

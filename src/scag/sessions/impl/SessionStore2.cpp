@@ -35,15 +35,14 @@ using scag::util::UnlockMutexGuard;
 SessionStoreImpl::SessionStoreImpl( SessionFinalizer& fin,
                                     SessionExpirationQueue& exq,
                                     SessionAllocator* a ) :
-nodeNumber_(-1),
+// nodeNumber_(-1),
 fin_(&fin),
 expiration_(&exq),
 queue_(0),
-cache_(0),
 stopping_(true),
-disk_(0),
 allocator_(a),
-// expireSet_(0),
+cache_(0),
+disk_(0),
 log_(0)
 {
     log_ = smsc::logger::Logger::getInstance("sess.store");
@@ -66,7 +65,7 @@ SessionStoreImpl::~SessionStoreImpl()
 }
 
 
-void SessionStoreImpl::init( unsigned nodeNumber,
+void SessionStoreImpl::init( unsigned eltNumber,
                              SCAGCommandQueue& queue,
                              const std::string& path,
                              const std::string& name,
@@ -77,7 +76,7 @@ void SessionStoreImpl::init( unsigned nodeNumber,
     MutexGuard mg(cacheLock_);
     if ( ! stopping_ ) return; // already inited
     queue_ = &queue;
-    nodeNumber_ = nodeNumber;
+    // eltNumber_ = eltNumber;
 
     totalSessions_ = 0;
     lockedSessions_ = 0;
@@ -91,31 +90,33 @@ void SessionStoreImpl::init( unsigned nodeNumber,
                    path.c_str(), name.c_str(), indexgrowth, pagesize, prealloc );
 
     cache_.reset( new MemStorage );
-    disk_.reset( new DiskStorage );
-    const StorageNumbering& n = StorageNumbering::instance();
+    // disk_.reset( new DiskStorage );
+    // const StorageNumbering& n = StorageNumbering::instance();
 
-    for ( unsigned i = 0; i < n.storages(); ++i ) {
-        if ( n.node( i ) == nodeNumber_ ) {
+    // for ( unsigned i = 0; i < n.storages(); ++i ) {
+    // if ( n.node( i ) == nodeNumber_ ) {
                 
-            const std::string suffix("-pgf");
-            std::auto_ptr<PageFile> pgf( new PageFile );
-            char buf[10];
-            snprintf( buf, sizeof(buf), "%03u", i );
-            const std::string idxstr(buf);
-            const std::string fn( path + "/" + name + suffix + idxstr + "-data" );
-            try {
-                pgf->Open( fn );
-            } catch (...) {
-                pgf->Create( fn, pagesize, prealloc );
-            }
-            
-            std::auto_ptr<EltDiskStorage> eds
-                ( new EltDiskStorage
-                  ( new DiskIndexStorage( name + suffix + idxstr, path, indexgrowth ),
-                    new DiskDataStorage( pgf.release() ) ) );
-            disk_->addStorage( i, eds.release() );
-            smsc_log_debug(log_, "added storage %d", i );
+    {
+        unsigned i = eltNumber;
+        const std::string suffix("-pgf");
+        std::auto_ptr<PageFile> pgf( new PageFile );
+        char buf[10];
+        snprintf( buf, sizeof(buf), "%03u", i );
+        const std::string idxstr(buf);
+        const std::string fn( path + "/" + name + suffix + idxstr + "-data" );
+        try {
+            pgf->Open( fn );
+        } catch (...) {
+            pgf->Create( fn, pagesize, prealloc );
         }
+            
+        std::auto_ptr<EltDiskStorage> eds
+            ( new EltDiskStorage
+              ( new DiskIndexStorage( name + suffix + idxstr, path, indexgrowth ),
+                new DiskDataStorage( pgf.release() ) ) );
+        // disk_->addStorage( i, eds.release() );
+        // smsc_log_debug(log_, "added storage %d", i );
+        disk_ = eds;
     }
     stopping_ = false;
 }
@@ -149,6 +150,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                            session, session->currentCommand() );
             ::abort();
         }
+        // session is already locked
         return makeLockedSession(*session,*cmd.get());
     }
 
@@ -175,7 +177,9 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                     ++lockedSessions_;
                 else if ( session->currentCommand() != cmd->getSerial() )
                     break;
-                // unlocked
+
+                // unlocked or locked to the same command
+
                 /*
                 if ( session->expirationTime() < time(0) ) {
                     smsc_log_debug(log_,"expired key=%s session=%p, going to be clear?", key.toString().c_str(), session );
@@ -208,8 +212,6 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             return ActiveSession();
         }
 
-        ++totalSessions_;
-
         // create a stub to be filled by disk io
         cache_->set( key, cache_->val2store( allocator_->alloc(key) ));
         v = cache_->get( key );
@@ -218,6 +220,10 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
 
         session = cache_->store2val(*v);
         session->setCurrentCommand( cmd->getSerial() );
+
+        ++totalSessions_;
+        ++lockedSessions_;
+
         // release lock
     }
     // commands are owned elsewhere
@@ -226,7 +232,6 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     disk_->get( key, cache_->store2ref(*v) );
 
     smsc_log_debug( log_, "fetched key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
-    ++lockedSessions_;
     return makeLockedSession(*session,*cmd.get());
 }
 
@@ -280,14 +285,15 @@ void SessionStoreImpl::releaseSession( Session& session )
 
         }
             
-        --lockedSessions_;
         expiration = session.expirationTime();
         nextcmd = session.popCommand();
         uint32_t nextuid = 0;
         if ( nextcmd ) {
             setCommandSession( *nextcmd, &session );
             nextuid = nextcmd->getSerial();
-        } 
+        } else {
+            --lockedSessions_;
+        }
         uint32_t prevuid = session.setCurrentCommand( nextuid );
         smsc_log_debug( log_, "released key=%s session=%p, prevcmd=%u nextcmd=%u, tot/lck=%u/%u",
                         key.toString().c_str(), &session, prevuid, nextuid,
@@ -454,6 +460,7 @@ bool SessionStoreImpl::doSessionFinalization( Session& session )
 
     SCAGCommand* nextcmd = session.popCommand();
     if ( nextcmd ) {
+        ++lockedSessions_;
         setCommandSession( *nextcmd, &session );
         session.setCurrentCommand( nextcmd->getSerial() );
     } else
@@ -485,10 +492,7 @@ bool SessionStoreImpl::carryNextCommand( Session&     session,
 
     // next command to process, move it to a queue
     const unsigned sz = queue_->pushCommand( nextcmd, SCAGCommandQueue::MOVE );
-    if ( sz != unsigned(-1) ) {
-        ++lockedSessions_;
-        return true;
-    }
+    if ( sz != unsigned(-1) ) return true;
 
     // queue is stopped, delete all remaining commands
     std::vector< SCAGCommand* > comlist;
@@ -500,6 +504,7 @@ bool SessionStoreImpl::carryNextCommand( Session&     session,
                 comlist.push_back( com );
             }
             // reset the state
+            --lockedSessions_;
             session.setCurrentCommand( 0 );
         } catch (...) {
         }

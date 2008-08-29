@@ -37,9 +37,9 @@ public:
     /// move lock on the session to the specified command.
     virtual void moveLock( Session& s, SCAGCommand* cmd ) = 0;
 
-    /// get current sessions count
-    virtual void getSessionsCount( unsigned& sessionsCount,
-                                   unsigned& sessionsLockedCount ) const = 0;
+    // get current sessions count
+    // virtual void getSessionsCount( unsigned& sessionsCount,
+    // unsigned& sessionsLockedCount ) const = 0;
 
 protected:
     /*

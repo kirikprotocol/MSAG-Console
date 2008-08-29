@@ -44,7 +44,8 @@ public:
     typedef RBTreeIndexStorage< SessionKey, DiskDataStorage::index_type > DiskIndexStorage;
     typedef IndexedStorage< DiskIndexStorage, DiskDataStorage, smsc::core::synchronization::Mutex > EltDiskStorage;
     // typedef IndexedStorage< DiskIndexStorage, DiskDataStorage, SlowMutex > EltDiskStorage;
-    typedef CompositeDiskStorage< EltDiskStorage > DiskStorage;
+    // typedef CompositeDiskStorage< EltDiskStorage > DiskStorage;
+    typedef EltDiskStorage DiskStorage;
 
     /// create a storage
     SessionStoreImpl( SessionFinalizer& fin,
@@ -54,32 +55,34 @@ public:
     virtual ~SessionStoreImpl();
 
     /// unlock storage, clear stop flag, etc.
-    virtual void init( unsigned nodeNumber,
-                       SCAGCommandQueue& queue,
-                       const std::string& path = "sessions",
-                       const std::string& name = "sessions",
-                       unsigned indexgrowth = 10000,
-                       unsigned pagesize = 512,
-                       unsigned prealloc = 0 );
+    void init( unsigned eltNumber,
+               SCAGCommandQueue& queue,
+               const std::string& path = "sessions",
+               const std::string& name = "sessions",
+               unsigned indexgrowth = 10000,
+               unsigned pagesize = 512,
+               unsigned prealloc = 0 );
 
-    virtual void stop();
+    void stop();
 
-    virtual ActiveSession fetchSession( const SessionKey&           key,
-                                        std::auto_ptr<SCAGCommand>& cmd,
-                                        bool                        create );
+    ActiveSession fetchSession( const SessionKey&           key,
+                                std::auto_ptr<SCAGCommand>& cmd,
+                                bool                        create );
+
+    unsigned storedCommands() const;
+
+    bool expireSessions( const std::vector< SessionKey >& expired );
+
+    void sessionFinalized( Session& s );
+
+    void getSessionsCount( unsigned& sessionsCount,
+                           unsigned& sessionsLockedCount ) const;
+
+    /// --- session store iface
 
     virtual void releaseSession( Session& s );
 
     virtual void moveLock( Session& s, SCAGCommand* cmd );
-
-    virtual unsigned storedCommands() const;
-
-    virtual bool expireSessions( const std::vector< SessionKey >& expired );
-
-    virtual void sessionFinalized( Session& s );
-
-    virtual void getSessionsCount( unsigned& sessionsCount,
-                                   unsigned& sessionsLockedCount ) const;
 
 protected:
 
@@ -92,25 +95,20 @@ protected:
     bool carryNextCommand( Session& s, SCAGCommand* cmd, bool dolock );
 
 private:
-    unsigned                    nodeNumber_; // for composite storage
+    // unsigned                    eltNumber_;  // the number of elementary storage
 
     SessionFinalizer*           fin_;
     SessionExpirationQueue*     expiration_;
     SCAGCommandQueue*           queue_;
 
-    // lock access to cache_, cache_->get(key)->state, stopping_ flag
     mutable EventMonitor        cacheLock_;
-    std::auto_ptr<MemStorage>   cache_;
     bool                        stopping_;
 
-    std::auto_ptr<DiskStorage>      disk_;
-    std::auto_ptr<SessionAllocator> allocator_;
-
-    // EventMonitor                expireMonitor_;
-    // std::auto_ptr<ExpireSet>    expireSet_;
+    SessionAllocator*           allocator_;    // not owned
+    std::auto_ptr<MemStorage>   cache_;
+    std::auto_ptr<DiskStorage>  disk_;
 
     smsc::logger::Logger*       log_;
-    // std::auto_ptr<smsc::core::threads::Thread> expireThread_;
 
     // statstics
     unsigned                    totalSessions_;

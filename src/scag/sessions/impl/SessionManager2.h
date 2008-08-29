@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <string>
 #include "SessionManager2.h"
-#include "SessionStore2.h"
+#include "CompositeSessionStore.h"
 #include "core/buffers/XHash.hpp"
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
@@ -133,8 +133,9 @@ private:
     Mutex             stopLock_;
     bool              started_;
 
-    std::auto_ptr<SessionStoreImpl>  store_;
-    scag2::config::SessionManagerConfig  config_;
+    std::auto_ptr<SessionAllocator>       allocator_;
+    std::auto_ptr<CompositeSessionStore>  store_;
+    scag2::config::SessionManagerConfig   config_;
 };
 
 }}
