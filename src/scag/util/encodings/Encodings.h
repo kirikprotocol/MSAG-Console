@@ -34,24 +34,37 @@ struct Convertor
 {
     /**
      *
-     * @param usc2buff Буффер, содержащий строку в формате UCS2
-     * @param ucs2len Длинна строки (каждый символ строки занимает 2 байта)
-     * @param utf8str Строка, в которую возвращяется результат
+     * @param usc2buff UCS2 string buffer (BIG ENDIAN!)
+     * @param ucs2len the length of the string (in two-byte symbols)
+     * @param utf8str resulting string
      *
-     * @see UTF8ToUCS2
+     * NOTE: This method is provided for all network-related activities,
+     * where endianness is strictly defined.
+     * 
+     * @see UTF8ToUCS2BE
     */
-    static void UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str);
+    static void UCS2BEToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str);
 
     /**
      *
-     * @param utf8buff Буффер, содержащий строку в формате utf8
-     * @param utf8len Размер буффера в байтах
-     * @param ucs2str Строка, в которую возвращяется результат
+     * @param utf8buff UTF8 buffer.
+     * @param utf8len  buffer size in bytes.
+     * @param ucs2str  resulting string in UCS2 (BIG ENDIAN!)
      *
-     * @see UCS2ToUTF8
+     * NOTE: BOM is not placed into the resulting string.
+     * 
+     * @see UCS2BEToUTF8
     */
-    static void UTF8ToUCS2(const char * utf8buff, unsigned int utf8len, std::string& ucs2str);
+    static void UTF8ToUCS2BE(const char * utf8buff, unsigned int utf8len, std::string& ucs2str);
 
+
+    /// NOTE: the following two methods are for "native" UCS2 conversion
+    /// e.g. for parsing XML-document, etc.  The resulting UCS2 string
+    /// should never leave the machine.
+    /// The arguments are the same as for UCS2-BE methods.
+    /// NOTE: BOM is not placed into the resulting string.
+    static void UCS2ToUTF8( const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str);
+    static void UTF8ToUCS2( const char* utf8buff, unsigned int utf8len, std::string& ucs2str );
 
     /**
      *

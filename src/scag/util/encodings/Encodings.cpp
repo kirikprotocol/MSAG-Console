@@ -13,6 +13,35 @@
 #include "Encodings.h"
 #include "scag/util/strlcpy.h"
 
+namespace {
+#if BYTE_ORDER == LITTLE_ENDIAN
+// e.g. linux
+const char* nativeucs2 = "UCS2-LE";
+#else
+const char* nativeucs2 = "UCS2-BE";
+#endif
+}
+
+namespace {
+
+void dump( const char* what, const char* s, size_t sz )
+{
+    fprintf( stderr, "%s has %u bytes:", what, sz );
+    unsigned cnt = 0;
+    const char* p = s;
+    for ( ; sz-- > 0 ; ++p ) {
+        fprintf( stderr, " %#2.2x", unsigned(*p) );
+        if ( ++cnt >= 8 ) {
+            fprintf( stderr, "\n" );
+            cnt = 0;
+        }
+    }
+    if ( cnt ) fprintf( stderr, "\n" );
+}
+
+}
+
+
 namespace scag { namespace util { namespace encodings {
 
 using namespace smsc::core::synchronization;
@@ -39,10 +68,19 @@ using namespace scag::util::singleton;
 inline unsigned GetLongevity(Convertor*) { return 5; }
 typedef SingletonHolder<ConvertorImpl> SingleC;
 
+
 void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str)
 {
-//    convert("UCS-2", "UTF-8", (const char*)ucs2buff, ucs2len, utf8str);
+    convert( nativeucs2, "UTF-8", (const char*)ucs2buff, ucs2len*2, utf8str );
+}
 
+void Convertor::UCS2BEToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str)
+{
+    convert( "UCS2-BE", "UTF-8", (const char*)ucs2buff, ucs2len*2, utf8str );
+}
+
+
+    /*
     int pos = 0;
 
     std::auto_ptr<char> buff(new char[ucs2len*3]);
@@ -87,17 +125,22 @@ void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len
     }
 
     utf8str.assign(ptr,pos);
+     */
   /*
     0x00000000 — 0x0000007F: 0xxxxxxx
     0x00000080 — 0x000007FF: 110xxxxx 10xxxxxx
     0x00000800 — 0x0000FFFF: 1110xxxx 10xxxxxx 10xxxxxx
     0x00010000 — 0x001FFFFF: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
     */
+
+void Convertor::UTF8ToUCS2BE(const char * utf8buff, unsigned int utf8len, std::string& ucs2str)
+{
+    convert("UTF-8", "UCS-2BE", utf8buff, utf8len, ucs2str);
 }
 
 void Convertor::UTF8ToUCS2(const char * utf8buff, unsigned int utf8len, std::string& ucs2str)
 {
-    convert("UTF-8", "UCS-2BE", utf8buff, utf8len, ucs2str);
+    convert("UTF-8", nativeucs2, utf8buff, utf8len, ucs2str);
 }
 
 
@@ -178,6 +221,7 @@ void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
                             const char * in, size_t inLen, TmpBuf<uint8_t, 2048>& buf)
 {
 
+    size_t inlenleft = inLen;
     bool error=false;
     {
       MutexGuard mt(mtx);
@@ -194,20 +238,25 @@ void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
       outbufptr = (char*)buf.GetCurPtr();
       //unsigned long inLenLong=inLen;
 //    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
+      char* inptr = const_cast<char*>(in);
+
       if(iconv(cd,
-#ifdef __GNUC__
-               const_cast<char**>(&in), // the problem in iconv definition
-#else
-               &in,
-#endif
-               &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
+// #ifdef __GNUC__
+//                const_cast<char**>(&in), // the problem in iconv definition
+// #else
+//                &in,
+// #endif
+               &inptr,
+               &inlenleft, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
           error=true;
 
       buf.SetPos(i - outbytesleft);
   }
   if(error)
   {
-    throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
+      MutexGuard mg(mtx);
+      dump( "input", in, inLen );
+      throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inlenleft);
   }
 
 //    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);

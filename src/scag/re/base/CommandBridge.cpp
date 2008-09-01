@@ -172,7 +172,7 @@ std::string CommandBridge::getMessageBody(SmppCommand& command)
         Convertor::KOI8RToUTF8(buff, len, str);
         break;
     case smsc::smpp::DataCoding::UCS2:
-        Convertor::UCS2ToUTF8((unsigned short *)buff, len / 2, str);
+        Convertor::UCS2BEToUTF8((unsigned short *)buff, len / 2, str);
         break;
     default:
         Convertor::GSM7BitToUTF8(buff,len,str);
