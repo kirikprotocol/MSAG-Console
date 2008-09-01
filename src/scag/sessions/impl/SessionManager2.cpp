@@ -627,39 +627,48 @@ void SessionManagerImpl::continueExecution( LongCallContext* lcmCtx, bool droppe
 void SessionManagerImpl::scheduleExpire( time_t expirationTime,
                                          const SessionKey& key )
 {
-    MutexGuard mg(expireMonitor_);
-    time_t* ptr = expireHash_.GetPtr( key );
-    if ( ptr ) {
-        smsc_log_debug( log_, "scheduleExpire(time=%d,key=%s): time changed from:%d, cnt=%u/%u",
-                        int(expirationTime),
-                        key.toString().c_str(),
-                        int(*ptr),
-                        expireMap_.size(), expireHash_.Count() );
+    unsigned mapsz;
+    unsigned hashsz;
+    time_t now = time(0);
+    int prevtime;
+    do {
+        MutexGuard mg(expireMonitor_);
+        time_t* ptr = expireHash_.GetPtr( key );
+        if ( ptr ) {
+            mapsz = expireMap_.size();
+            hashsz = expireHash_.Count();
+            prevtime = int(*ptr - now);
 
-        if ( *ptr == expirationTime ) return;
+            if ( *ptr == expirationTime ) break;
 
-        // find the element in the map and remove it
-        ExpireMap::iterator i = expireMap_.lower_bound(*ptr);
-        while ( true ) {
-            if ( i == expireMap_.end() || i->first != *ptr ) {
-                smsc_log_error( log_, "Logic error in scheduleExpire: %s",
-                                i == expireMap_.end() ? "at end" : "time mismatch" );
-                ::abort();
+            // find the element in the map and remove it
+            ExpireMap::iterator i = expireMap_.lower_bound(*ptr);
+            while ( true ) {
+                if ( i == expireMap_.end() || i->first != *ptr ) {
+                    smsc_log_error( log_, "Logic error in scheduleExpire: %s",
+                                    i == expireMap_.end() ? "at end" : "time mismatch" );
+                    ::abort();
+                }
+                if ( i->second == key ) break;
+                ++i;
             }
-            if ( i->second == key ) break;
-            ++i;
+            expireMap_.erase( i );
+            expireMap_.insert( std::pair< time_t, SessionKey >(expirationTime,key) );
+            *ptr = expirationTime;
+        } else {
+            expireMap_.insert( std::pair< time_t, SessionKey >(expirationTime,key) );
+            expireHash_.Insert(key, expirationTime);
+            mapsz = expireMap_.size();
+            hashsz = expireHash_.Count();
+            prevtime = -1;
         }
-        expireMap_.erase( i );
-        expireMap_.insert( std::pair< time_t, SessionKey >(expirationTime,key) );
-        *ptr = expirationTime;
-    } else {
-        expireMap_.insert( std::pair< time_t, SessionKey >(expirationTime,key) );
-        expireHash_.Insert(key, expirationTime);
-        smsc_log_debug( log_, "scheduleExpire(time=%d,key=%s): new key, cnt=%u/%u",
-                        int(expirationTime), key.toString().c_str(),
-                        expireMap_.size(), expireHash_.Count() );
-    }
-    if ( expirationTime < time(0) || !isStarted() ) expireMonitor_.notify();
+        if ( expirationTime < now || !isStarted() ) expireMonitor_.notify();
+    } while ( false );
+
+    smsc_log_debug( log_, "scheduleExpire(key=%s): time=%d => %d, cnt=%u/%u",
+                    key.toString().c_str(),
+                    prevtime, int( expirationTime - now ),
+                    mapsz, hashsz );
 }
 
 

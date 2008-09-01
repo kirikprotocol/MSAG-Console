@@ -383,7 +383,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired 
     while ( true ) {
 
         if ( session ) {
-            smsc_log_debug(log_, "finalizing key=%s session=%p", session->sessionKey().toString().c_str(), session );
+            // smsc_log_debug(log_, "finalizing key=%s session=%p", session->sessionKey().toString().c_str(), session );
             // it may take quite long time, so we don't lock mutex yet
             // but the session must be already locked by a fictional command (-1)
             if ( ! fin_->finalize( *session ) ) {
@@ -486,12 +486,12 @@ bool SessionStoreImpl::doSessionFinalization( Session& session )
         // cannot delete session
         // NOTE: the session was already finalized (possible via session_destroy rule),
         // so make sure it will be initialized
-        smsc_log_debug(log_, "key=%s session=%p is revived via clear()", session.sessionKey().toString().c_str(), &session );
+        // smsc_log_debug(log_, "key=%s session=%p is revived via clear()", session.sessionKey().toString().c_str(), &session );
         session.clear();
         return false;
     } else {
         // no more commands
-        smsc_log_debug(log_, "key=%s session=%p is being destroyed", session.sessionKey().toString().c_str(), &session );
+        // smsc_log_debug(log_, "key=%s session=%p is being destroyed", session.sessionKey().toString().c_str(), &session );
         // NOTE: session should be already deleted from disk
         --totalSessions_;
         delete cache_->release( session.sessionKey() );

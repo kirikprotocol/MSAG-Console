@@ -474,7 +474,7 @@ std::auto_ptr< ExternalTransaction > Session::releaseTransaction( const char* id
         ExternalTransaction** ptr = transactions_->GetPtr(id);
         if ( ptr ) {
             ret.reset( *ptr );
-            *ptr = 0;
+            transactions_->Delete(id);
         }
     }
     return ret;
