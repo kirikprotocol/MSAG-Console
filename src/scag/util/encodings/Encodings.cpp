@@ -238,7 +238,12 @@ void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
       outbufptr = (char*)buf.GetCurPtr();
       //unsigned long inLenLong=inLen;
 //    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
+
+#ifdef __GNUC__
       char* inptr = const_cast<char*>(in);
+#else
+        const char* inptr = in;
+#endif
 
       if(iconv(cd,
 // #ifdef __GNUC__
