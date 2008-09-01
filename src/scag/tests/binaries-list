@@ -7,3 +7,4 @@ tests/test02     test02         -lpthread -lrt -ldl
 tests/test03     test03         -lpthread -lrt -ldl
 tests/test04     test04         -lpthread -lrt -ldl
 tests/test05     test05         -lpthread -lrt -ldl
+tests/test06     test06         -lrt -ldl
