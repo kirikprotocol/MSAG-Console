@@ -513,9 +513,11 @@ Operation* Session::setCurrentOperation( opid_type opid )
 
     const uint8_t optype = currentOperation_->type();
     currentOperationId_ = opid;
-    smsc_log_debug( log_, "Session=%p set current op=%p, opid=%u, type=%d(%s)",
-                    this, currentOperation_, unsigned(opid), int(optype),
-                    commandOpName(optype) );
+    smsc_log_debug( log_, "setOp(sess=%p,opid=%u) => op=%p type=%d(%s) expire=%d",
+                    this, unsigned(opid), currentOperation_,
+                    int(optype),
+                    commandOpName(optype),
+                    int(expirationTime_ - time(0)) );
     // changed_ = true;
     return currentOperation_;
 }
@@ -540,19 +542,20 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
     currentOperationId_ = opid;
     currentOperation_ = op;
     // changed_ = true;
-    smsc_log_debug( log_, "Session=%p key=%s create op=%p opid=%u type=%d(%s)",
-                    this, sessionKey().toString().c_str(),
+
+    // increase session live time
+    time_t now = time(0);
+    time_t expire = now + defaultLiveTime();
+    if ( expire > expirationTime_ ) expirationTime_ = expire;
+    smsc_log_debug( log_, "createOp(sess=%p,cmd=%p) => op=%p opid=%u type=%d(%s), expire=%d",
+                    this, &cmd,
                     currentOperation_,
                     unsigned(currentOperationId_),
                     operationType,
-                    commandOpName(operationType) );
-    {
-        // increase session live time
-        time_t expire = time(0) + defaultLiveTime();
-        if ( expire > expirationTime_ ) expirationTime_ = expire;
-        smsc_log_debug( log_, "session=%p key=%s soft expiration time increased: %u",
-                        this, sessionKey().toString().c_str(), defaultLiveTime() );
-    }
+                    commandOpName(operationType),
+                    int(expirationTime_-now)
+                    );
+
     // FIXME: what to do with expiration time if it was set explicitly?
     return currentOperation_;
 }
@@ -561,12 +564,11 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
 void Session::closeCurrentOperation()
 {
     if ( ! currentOperation_ ) return;
-    smsc_log_debug( log_, "Session=%p key=%s close op=%p opid=%u type=%d(%s)",
-                    this, sessionKey().toString().c_str(),
-                    currentOperation_,
-                    unsigned(currentOperationId_), currentOperation_->type(),
-                    commandOpName(currentOperation_->type()) );
-
+    
+    const Operation* prevop = currentOperation_;
+    const opid_type  prevopid = currentOperationId_;
+    const uint8_t    prevoptype = currentOperation_->type();
+    
     operations_.Delete( currentOperationId_ );
     delete currentOperation_;
     currentOperation_ = 0;
@@ -576,18 +578,27 @@ void Session::closeCurrentOperation()
     }
     currentOperationId_ = SCAGCommand::invalidOpId();
     // changed_ = true;
-    if ( operationsCount() == 0 ) {
+    const unsigned opcount = operationsCount();
+    if ( opcount == 0 ) {
         time_t now = time(0);
         if ( expirationTime_ > expirationTimeAtLeast_ ) {
             expirationTime_ = expirationTimeAtLeast_;
         }
-        smsc_log_debug(log_, "session=%p key=%s has no ops, expiration=%d",
-                       this, sessionKey().toString().c_str(),
-                       int(expirationTime_ - now));
+        // smsc_log_debug(log_, "session=%p key=%s has no ops, expiration=%d",
+        // this, sessionKey().toString().c_str(),
+        // int(expirationTime_ - now));
         if ( expirationTime_ <= now ) {
             ; // FIXME: push session manager expiration thread
         }
     }
+    smsc_log_debug( log_, "closeOp(sess=%p,op=%p opid=%u type=%d(%s)) => opcnt=%u expire=%d",
+                    this,
+                    prevop,
+                    unsigned(prevopid),
+                    prevoptype,
+                    commandOpName(prevoptype),
+                    opcount,
+                    int(expirationTime_ - time(0)) );
 }
 
 
@@ -747,7 +758,7 @@ void Session::waitAtLeast( unsigned sec )
 unsigned Session::appendCommand( SCAGCommand* cmd )
 {
     if (cmd) cmdQueue_.push_back( cmd );
-    return cmdQueue_.size();
+    return unsigned(cmdQueue_.size());
 }
 
 

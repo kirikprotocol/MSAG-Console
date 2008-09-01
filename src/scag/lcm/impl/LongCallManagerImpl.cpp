@@ -99,9 +99,9 @@ bool LongCallManagerImpl::call(LongCallContext* context)
 {
     if(stopped) return false;
     
-    smsc_log_debug( logger, "call context=%p session=%p cmdid=%d",
-                    context, & context->getActionContext()->getSession(),
-                    context->callCommandId );
+    // smsc_log_debug( logger, "call context=%p session=%p cmdid=%d",
+    // context, & context->getActionContext()->getSession(),
+    // context->callCommandId );
 
     if (context->callCommandId == BILL_OPEN || context->callCommandId == BILL_COMMIT || context->callCommandId == BILL_ROLLBACK)
     {
@@ -168,9 +168,9 @@ int LongCallTask::Execute()
         if(isStopping || !ctx) break;
         // presently do nothing
             
-        smsc_log_debug( logger, "pass context=%p session=%p cmdid=%d back to initiator",
-                        ctx, & ctx->getActionContext()->getSession(),
-                        ctx->callCommandId );
+        // smsc_log_debug( logger, "pass context=%p session=%p cmdid=%d back to initiator",
+        // ctx, & ctx->getActionContext()->getSession(),
+        // ctx->callCommandId );
 
         ctx->initiator->continueExecution(ctx, false);
     }

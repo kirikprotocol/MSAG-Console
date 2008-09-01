@@ -32,7 +32,7 @@ Rule::~Rule()
 
 void Rule::process(SCAGCommand& command, Session& session, RuleStatus& rs)
 {
-    smsc_log_debug(logger,"Process Rule... (%d Event Handlers registered)", Handlers.Count());
+    // smsc_log_debug(logger,"Process Rule... (%d Event Handlers registered)", Handlers.Count());
 
     // moved to ruleengine
     /*
@@ -46,7 +46,7 @@ void Rule::process(SCAGCommand& command, Session& session, RuleStatus& rs)
 
     EventHandlerType handlerType = CommandBridge::getHandlerType(command);
 
-    smsc_log_debug(logger,"Event Handlers found. (id=%d)", handlerType);
+    // smsc_log_debug(logger,"Event Handlers found. (id=%d)", handlerType);
 
     try
     {
@@ -58,7 +58,7 @@ void Rule::process(SCAGCommand& command, Session& session, RuleStatus& rs)
                 session.getLongCallContext().continueExec = false;
             return;
         }
-        smsc_log_debug( logger,"Rule: cannot find EventHandler for command" );
+        // smsc_log_debug( logger,"Rule: cannot find EventHandler for command" );
     }
     catch (Exception& e)
     {
@@ -78,7 +78,7 @@ void Rule::process(SCAGCommand& command, Session& session, RuleStatus& rs)
 
 void Rule::processSession( Session& session, RuleStatus& rs )
 {
-    smsc_log_debug(logger,"Process session rule... (%d Event Handlers registered)", Handlers.Count());
+    // smsc_log_debug(logger,"Process session rule... (%d Event Handlers registered)", Handlers.Count());
 
     try
     {

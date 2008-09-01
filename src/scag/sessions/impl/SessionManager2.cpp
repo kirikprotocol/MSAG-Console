@@ -27,8 +27,8 @@ using smsc::logger::Logger;
 
 // ################## Singleton related issues ##################
 
-static bool  bSessionManagerInited = false;
-static Mutex initSessionManagerLock;
+// static bool  bSessionManagerInited = false;
+// static Mutex initSessionManagerLock;
 
 // inline unsigned GetLongevity(SessionManager*) { return 6; } // ? Move upper ?
 // typedef SingletonHolder<SessionManagerImpl> SingleSM;
@@ -248,10 +248,10 @@ int SessionManagerImpl::Execute()
             } else {
                 i = expireMap_.upper_bound( now );
             }
-            smsc_log_debug( log_, "waked for expiration, cnt=%u/%u", 
-                            expireMap_.size(), expireHash_.Count() );
+            // smsc_log_debug( log_, "waked for expiration, cnt=%u/%u", 
+            // expireMap_.size(), expireHash_.Count() );
             for ( ExpireMap::iterator j = expireMap_.begin(); j != i ; ++j ) {
-                smsc_log_debug( log_, "prepare key=%s for expiration", j->second.toString().c_str() );
+                // smsc_log_debug( log_, "prepare key=%s for expiration", j->second.toString().c_str() );
                 curset.push_back( j->second );
                 expireHash_.Delete( j->second );
             }

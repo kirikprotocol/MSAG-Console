@@ -39,9 +39,12 @@ class RBTree
 {
 public:
     typedef templRBTreeNode<Key, Value> RBTreeNode;
-	RBTree(RBTreeAllocator<Key, Value>* _allocator=0, RBTreeChangesObserver<Key, Value>* _changesObserver=0):defaultAllocator(false), defaultChangesObserver(false)
-	{
-        logger = smsc::logger::Logger::getInstance("RBTree");
+    RBTree( RBTreeAllocator<Key, Value>* _allocator=0,
+            RBTreeChangesObserver<Key, Value>* _changesObserver=0,
+            smsc::logger::Logger* thelog = 0 ) : 
+    defaultAllocator(false), defaultChangesObserver(false)
+    {
+        logger = thelog;
 		if(!_allocator)
 		{
 			allocator = new DefaultAllocator;
@@ -84,11 +87,11 @@ public:
 		// size = allocator->getSize();
                 if ( ! rootNode || ! nilNode ) {
                     fprintf( stderr, "SetAllocator: rootNode=%ld, nilNode=%ld\n", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
-                    smsc_log_error( logger, "SetAllocator: rootNode=%ld, nilNode=%ld", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
+                    if (logger) smsc_log_error( logger, "SetAllocator: rootNode=%ld, nilNode=%ld", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
                 }
                 const std::vector< RBTreeNode* > freenodes = allocator->freenodes();
                 int cnt = dumpcheck( freenodes, rootNode, nilNode, 0, "" );
-                smsc_log_info( logger, "SetAllocator: rbtree nodes=%d", cnt );
+            if (logger) smsc_log_info( logger, "SetAllocator: rbtree nodes=%d", cnt );
 	}
 	void SetChangesObserver(RBTreeChangesObserver<Key, Value>* _changesObserver)
 	{
@@ -108,21 +111,21 @@ public:
 
 	int Insert(const Key& k, const Value& v)
 	{
-        smsc_log_debug(logger, "Start Insert: k=%s val=%lld", k.toString().c_str(), (long long)v);
+            if (logger) smsc_log_debug(logger, "Start Insert: k=%s val=%lld", k.toString().c_str(), (long long)v);
 		RBTreeNode* newNode = allocator->allocateNode();
 		rootNode = allocator->getRootNode();
 		nilNode = allocator->getNilNode();
                 // offset = allocator->getOffset();
 		newNode->key = k;
 		newNode->value = v;
-        smsc_log_debug(logger, "Insert: %ld k=%s val=%lld", (long)relativeAddr(newNode), k.toString().c_str(), (long long)v);
+            if (logger) smsc_log_debug(logger, "Insert: %ld k=%s val=%lld", (long)relativeAddr(newNode), k.toString().c_str(), (long long)v);
 		changesObserver->startChanges(newNode, RBTreeChangesObserver<Key, Value>::OPER_INSERT);
 		bstInsert(newNode);
 		newNode->color = RED;
 		changesObserver->nodeChanged(newNode);
 		rbtRecovery(newNode);
 		changesObserver->completeChanges();
-        smsc_log_debug(logger, "End Insert: %ld k=%s val=%lld", (long)relativeAddr(newNode), k.toString().c_str(), (long long)v);
+            if (logger) smsc_log_debug(logger, "End Insert: %ld k=%s val=%lld", (long)relativeAddr(newNode), k.toString().c_str(), (long long)v);
 		return 1;
     }
 
@@ -150,7 +153,7 @@ public:
       if (!node || node->value == val) {
         return;
       }
-      smsc_log_debug(logger, "Node %ld k=%s value has changed. old=%lld new=%lld",
+        if (logger) smsc_log_debug(logger, "Node %ld k=%s value has changed. old=%lld new=%lld",
                      (long)relativeAddr(node),
                      node->key.toString().c_str(),
                      (long long)node->value, (long long)val);
@@ -158,7 +161,7 @@ public:
       changesObserver->startChanges(node, RBTreeChangesObserver<Key, Value>::OPER_CHANGE);
       // changesObserver->nodeChanged(node);
       changesObserver->completeChanges();
-      smsc_log_debug( logger, "Node key=%s setNodeValue finished",
+        if (logger) smsc_log_debug( logger, "Node key=%s setNodeValue finished",
                       node->key.toString().c_str() );
     }
 
@@ -174,11 +177,11 @@ public:
 		}
 		
 		if(node == nilNode) {
-          smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
+                    if (logger) smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
           return false;
         } 
 		val = node->value;
-        smsc_log_debug(logger, "Get: %ld k=%s val=%lld", (long)relativeAddr(node), k.toString().c_str(), (long long)val);
+            if (logger) smsc_log_debug(logger, "Get: %ld k=%s val=%lld", (long)relativeAddr(node), k.toString().c_str(), (long long)val);
 		return true;
 	}
 
@@ -188,10 +191,10 @@ public:
         node = node->key < k ? realAddr(node->right) : realAddr(node->left);
       }
       if(node == nilNode) {
-        smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
+          if (logger) smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
         return 0;
       } 
-      smsc_log_debug(logger, "Get: %ld k=%s val=%lld", (long)relativeAddr(node), k.toString().c_str(), (long long)node->value);
+        if (logger) smsc_log_debug(logger, "Get: %ld k=%s val=%lld", (long)relativeAddr(node), k.toString().c_str(), (long long)node->value);
       return node;
     }
 
@@ -258,6 +261,7 @@ protected:
                    int depth = 0,
                    const std::string& path = "" ) const
     {
+        if ( !logger ) return 0;
         if ( node == nilNode ) return 0;
 
         int res = 0;
@@ -325,6 +329,7 @@ protected:
 
     void shownode( const char* text, RBTreeNode* node ) const
     {
+        if ( !logger ) return;
         if ( node == nilNode ) {
             smsc_log_debug( logger, "%s: nilnode" );
         } else {

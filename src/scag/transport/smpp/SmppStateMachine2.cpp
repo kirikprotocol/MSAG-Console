@@ -396,9 +396,9 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         sms.setDestinationSmeId(dst->getSystemId());
         cmd->setServiceId(ri.serviceId);
 
-        smsc_log_info( log_, "%s %s: %s, USSD_OP=%d. %s(%s)->%s, routeId=%s",
+        smsc_log_info( log_, "%s%s: %s, USSD_OP=%d. %s(%s)->%s, routeId=%s",
                        where,
-                       cmd->getOperationId() != SCAGCommand::invalidOpId() ? "continued..." : "",
+                       cmd->getOperationId() != SCAGCommand::invalidOpId() ? " continued..." : "",
                        rcnt ? "(redirected)" : "", ussd_op,
                        sms.getOriginatingAddress().toString().c_str(),
                        src->getSystemId(),
@@ -783,9 +783,9 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         sms.setDestinationSmeId(dst->getSystemId());
         cmd->setServiceId(ri.serviceId);
 
-        smsc_log_info( log_, "%s %s: %s USSD_OP=%d. %s(%s)->%s, routeId=%s",
+        smsc_log_info( log_, "%s%s: %s USSD_OP=%d. %s(%s)->%s, routeId=%s",
                        where,
-                       cmd->getOperationId() != SCAGCommand::invalidOpId() ? "continued..." : "",
+                       cmd->getOperationId() != SCAGCommand::invalidOpId() ? " continued..." : "",
                        rcnt ? "(redirected)" : "", ussd_op,
                        sms.getOriginatingAddress().toString().c_str(),
                        src->getSystemId(),
@@ -1219,9 +1219,9 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
             smscmd.dir = (dst->info.type==etService) ? dsdSc2Srv : dsdSc2Sc;
         cmd->setServiceId(ri.serviceId);
 
-        smsc_log_info( log_, "%s %s: %s. %s(%s)->%s, routeid=%s",
+        smsc_log_info( log_, "%s%s: %s. %s(%s)->%s, routeid=%s",
                        where,
-                       cmd->getOperationId() != SCAGCommand::invalidOpId() ? "continued..." : "",
+                       cmd->getOperationId() != SCAGCommand::invalidOpId() ? " continued..." : "",
                        rcnt ? "(redirected)" : "",
                        sms.getOriginatingAddress().toString().c_str(),
                        src->getSystemId(),

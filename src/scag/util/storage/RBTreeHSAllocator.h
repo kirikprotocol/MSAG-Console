@@ -90,11 +90,11 @@ public:
 	static const int RBTREE_FILE_ERROR		= -10;
 	static const int ATTEMPT_INIT_RUNNING_PROC	= -20;
 
-	RBTreeHSAllocator():
-        rbtree_addr(0), growth(100000000), rbtFileLen(0), running(false)
-	{
-            logger = smsc::logger::Logger::getInstance("RBTAlloc");
-	}
+    RBTreeHSAllocator( smsc::logger::Logger* thelog ):
+    rbtree_addr(0), growth(100000000), rbtFileLen(0), running(false)
+    {
+        logger = thelog;
+    }
 
 	void Create(void){}
 	void Open(void){}
@@ -143,8 +143,8 @@ public:
         if(!header->cells_free && ReallocRBTreeFile() != SUCCESS)
             abort();
 		newNode = (RBTreeNode*)((long)rbtree_body + header->first_free_cell);
-        smsc_log_debug(logger, "allocateNode rbtree_body = %p, header->first_free_cell = %d", rbtree_body, header->first_free_cell);
-		header->first_free_cell = ((free_cell_list*)newNode)->next_free_cell;
+            if (logger) smsc_log_debug(logger, "allocateNode rbtree_body = %p, header->first_free_cell = %d", rbtree_body, header->first_free_cell);
+            header->first_free_cell = ((free_cell_list*)newNode)->next_free_cell;
 		newNode->parent = newNode->left = newNode->right = 0;
 		header->cells_used++;
 		header->cells_free--;
@@ -169,7 +169,7 @@ public:
 		if(!running) return;
 		header->root_cell = (long)node - (long)rbtree_body;
 		
-	    smsc_log_debug(logger, "SetRoot (long)node = (%d)%p, header->root_cell=%d", (long)node - (long)rbtree_body, node, header->root_cell);
+	    if (logger) smsc_log_debug(logger, "SetRoot (long)node = (%d)%p, header->root_cell=%d", (long)node - (long)rbtree_body, node, header->root_cell);
 		//printf("SetRoot (long)node = %X", (long)node);
 		//printf("(long)rbtree_body = %X", (long)rbtree_body);
 		//printf("((long)node - (long)rbtree_body) = %d", ((long)node - (long)rbtree_body));
@@ -193,7 +193,7 @@ public:
 	virtual void startChanges(RBTreeNode* node, int operation)
 	{
             if ( changedNodes.size() > 0 ) completeChanges();
-	    smsc_log_debug(logger, "startChanges. node = (%d)%p, operation = %d", (long)node - (long)rbtree_body, node, operation);
+	    if (logger) smsc_log_debug(logger, "startChanges. node = (%d)%p, operation = %d", (long)node - (long)rbtree_body, node, operation);
 	    currentOperation = operation;
 	    changedNodes.push_back(node);
 	}
@@ -234,7 +234,7 @@ public:
             // if ( cf < 20 )
             // smsc_log_debug( logger, "free cell #%d has address %ld", cf, celladdr );
             if ( celladdr >= rbtFileLen ) {
-                smsc_log_error( logger, "free cell #d address is too big=%ld filelen=%lld", cf, celladdr, (long long)rbtFileLen );
+                if (logger) smsc_log_error( logger, "free cell #d address is too big=%ld filelen=%lld", cf, celladdr, (long long)rbtFileLen );
                 // fprintf( stderr, "free cell #d address is too big=%ld filelen=%lld\n", cf, celladdr, (long long)rbtFileLen );
                 throw smsc::util::Exception( "RBTreeAlloc: free cell %d address is too big %ld filelen=%lld", cf, celladdr, (long long)rbtFileLen );
                 break;
@@ -248,7 +248,7 @@ public:
         fnl.erase( std::unique( fnl.begin(), fnl.end() ),
                          fnl.end() );
         if ( fnc != fnl.size() ) {
-            smsc_log_error( logger, "non-unique nodes have been found!" );
+            if (logger) smsc_log_error( logger, "non-unique nodes have been found!" );
             // fprintf( stderr, "non-unique nodes have been found!\n" );
             throw smsc::util::Exception( "RBTreeAlloc: %d non-unique nodes have been found!", fnc - fnl.size() );
         }
@@ -295,13 +295,13 @@ private:
         caddr_t newMem = new char[size_t(newRbtFileLen)];
         if(!newMem)
         {
-            smsc_log_error(logger, "Error reallocating memory for RBTree, reason: %s", strerror(errno));
+            if (logger) smsc_log_error(logger, "Error reallocating memory for RBTree, reason: %s", strerror(errno));
             return BTREE_FILE_MAP_FAILED;
         }
         else {
-            smsc_log_info(logger, "RBTree index realloc from %lld to %lld bytes",
-                          static_cast<long long>(rbtFileLen),
-                          static_cast<long long>(newRbtFileLen) );
+            if (logger) smsc_log_info(logger, "RBTree index realloc from %lld to %lld bytes",
+                                      static_cast<long long>(rbtFileLen),
+                                      static_cast<long long>(newRbtFileLen) );
             // smsc_log_debug(logger, "RBTree address range is [%p..%p)", newMem, newMem + newRbtFileLen );
         }
 
@@ -357,11 +357,11 @@ private:
             startChanges( getRootNode(), RBTreeChangesObserver<Key,Value>::OPER_CHANGE );
             completeChanges();
         }
-        smsc_log_debug(logger, "ReallocRBTree: cells_used %ld, cells_free %ld, cells_count %ld, first_free_cell %ld, root_cell %ld, nil_cell %ld, rbtFileLen %lld",
-                       long(header->cells_used), long(header->cells_free),
-                       long(header->cells_count), long(header->first_free_cell),
-                       long(header->root_cell), long(header->nil_cell),
-                       static_cast<long long>(rbtFileLen) );
+        if (logger) smsc_log_debug(logger, "ReallocRBTree: cells_used %ld, cells_free %ld, cells_count %ld, first_free_cell %ld, root_cell %ld, nil_cell %ld, rbtFileLen %lld",
+                                   long(header->cells_used), long(header->cells_free),
+                                   long(header->cells_count), long(header->first_free_cell),
+                                   long(header->root_cell), long(header->nil_cell),
+                                   static_cast<long long>(rbtFileLen) );
         // check nodes
         // freenodes();
         return SUCCESS;
@@ -376,7 +376,7 @@ private:
 		}
 		catch(FileException ex)
 		{
-		    smsc_log_error(logger, "FSStorage: error idx_file: %s, reason: %s\n", rbtree_file.c_str(), ex.what());
+		    if (logger) smsc_log_error(logger, "FSStorage: error idx_file: %s, reason: %s\n", rbtree_file.c_str(), ex.what());
 		    return CANNOT_CREATE_RBTREE_FILE;
 		}
 
@@ -389,7 +389,7 @@ private:
 		}
 		catch(FileException ex)
 		{
-		    smsc_log_error(logger, "FSStorage: error idx_file - %s\n", ex.what());
+		    if (logger) smsc_log_error(logger, "FSStorage: error idx_file - %s\n", ex.what());
 		    rbtree_f.Close();
 		    return CANNOT_CREATE_TRANS_FILE;
 		}
@@ -445,7 +445,7 @@ private:
 		if(status == STAT_WRITE_TRX)
 		{
 			//printf("status == STAT_WRITE_TRX\n");
-                        smsc_log_debug(logger, "OpenRBTree: transf status is trx" );
+                    if (logger) smsc_log_debug(logger, "OpenRBTree: transf status is trx" );
 			trans_f.Seek(0, SEEK_SET);
 			status = STAT_OK;
 			trans_f.Write((char*)&status, sizeof(int));
@@ -454,7 +454,7 @@ private:
 		}
 		else if(status == STAT_WRITE_RBT)
 		{
-                        smsc_log_debug(logger, "OpenRBTree: transf status is rbt" );
+                    if (logger) smsc_log_debug(logger, "OpenRBTree: transf status is rbt" );
 			//printf("status == STAT_WRITE_RBT\n");
 			repairRBTreeFile();
 		}
@@ -472,9 +472,9 @@ private:
             // NOTE: file len should be calculated from cells_count
             rbtFileLen = off_t(sizeof(rbtFileHeader)) + header->cells_count * sizeof(RBTreeNode);
             if ( len != rbtFileLen ) {
-                smsc_log_warn(logger, "OpenRBTree: file size has been fixed from %lld to %lld", len, rbtFileLen );
+                if (logger) smsc_log_warn(logger, "OpenRBTree: file size has been fixed from %lld to %lld", len, rbtFileLen );
             }
-		smsc_log_debug(logger, "OpenRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d, rbtFileLen %d", header->cells_used, header->cells_free, header->cells_count, header->first_free_cell, header->root_cell, header->nil_cell, rbtFileLen);
+            if (logger) smsc_log_debug(logger, "OpenRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d, rbtFileLen %d", header->cells_used, header->cells_free, header->cells_count, header->first_free_cell, header->root_cell, header->nil_cell, rbtFileLen);
             return ret;
 	}
     
@@ -490,7 +490,7 @@ private:
 		hdr.version = TRX_VER_1;
 		hdr.operation = currentOperation;
 		hdr.nodes_count = changedNodes.size();
-	    smsc_log_debug( logger, "Start transaction: nodes changed=%d", changedNodes.size() );
+	    if (logger) smsc_log_debug( logger, "Start transaction: nodes changed=%d", changedNodes.size() );
 		//printf("header->root_cell = %d (%d)\n", header->root_cell, sizeof(header->root_cell));
 		trans_f.Seek(0, SEEK_SET);
 		trans_f.Write((char*)&hdr, sizeof(transFileHeader));
@@ -509,7 +509,7 @@ private:
 	}
 	int writeChanges(void)
 	{
-	    smsc_log_debug( logger, "Write Changes: nodes changed=%d", changedNodes.size());
+	    if (logger) smsc_log_debug( logger, "Write Changes: nodes changed=%d", changedNodes.size());
 	    int stat = STAT_WRITE_RBT;
 	    trans_f.Seek(0, SEEK_SET);
 	    trans_f.Write((char*)&stat, sizeof(int));
@@ -530,7 +530,7 @@ private:
 	}
 	int endTransaction()
 	{
-            smsc_log_debug(logger, "endTransaction");
+            if (logger) smsc_log_debug(logger, "endTransaction");
 		int stat = STAT_OK;
 		trans_f.Seek(0, SEEK_SET);
 		trans_f.Write((char*)&stat, sizeof(int));
@@ -550,8 +550,8 @@ private:
 		rbtree_f.Seek(0, SEEK_SET);
 		rbtree_f.Write((char*)&rbtHdr, sizeof(rbtFileHeader));
 
-                smsc_log_debug(logger, "RepairRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d, rbtFileLen %d", rbtHdr.cells_used, rbtHdr.cells_free, rbtHdr.cells_count, rbtHdr.first_free_cell, rbtHdr.root_cell, rbtHdr.nil_cell, rbtFileLen);
-		smsc_log_info(logger, "repairRBTreeFile transHdr.nodes_count = %d, transHdr.status=%d", transHdr.nodes_count, transHdr.status);
+            if (logger) smsc_log_debug(logger, "RepairRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d, rbtFileLen %d", rbtHdr.cells_used, rbtHdr.cells_free, rbtHdr.cells_count, rbtHdr.first_free_cell, rbtHdr.root_cell, rbtHdr.nil_cell, rbtFileLen);
+            if (logger) smsc_log_info(logger, "repairRBTreeFile transHdr.nodes_count = %d, transHdr.status=%d", transHdr.nodes_count, transHdr.status);
 		
 		for(int i = 0; i < transHdr.nodes_count; i++)
 		{

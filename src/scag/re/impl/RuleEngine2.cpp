@@ -233,8 +233,8 @@ std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const Rule
 void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus& rs)
 {
     RulesReference rulesRef = getRules();
-    smsc_log_debug(logger,"Process RuleEngine (total=%u) with serviceId: %d",
-                   rulesRef.rules->rules.Count(), command.getServiceId());
+    // smsc_log_debug(logger,"Process RuleEngine (total=%u) with serviceId: %d",
+    // rulesRef.rules->rules.Count(), command.getServiceId());
 
     RuleKey key;
     key.serviceId = command.getServiceId();
@@ -264,8 +264,8 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
      */
     if ( rulePtr )
         (*rulePtr)->process( command, session, rs );
-    else 
-        smsc_log_debug(logger,"rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
+    // else 
+    // smsc_log_debug(logger,"rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
 }
 
 
@@ -287,8 +287,9 @@ void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
             (*rulePtr)->processSession( session, rs );
             if ( rs.status != STATUS_OK ) break;
 
-        } else
-            smsc_log_debug(logger,"session rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
+        }
+        // else
+        // smsc_log_debug(logger,"session rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
 
         // pop the key
         session.popInitRuleKey();

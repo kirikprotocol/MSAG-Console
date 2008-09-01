@@ -714,7 +714,7 @@ int main( int argc, char** argv )
         std::auto_ptr< MemStorage > ms;
 
 #ifdef USECOMPOSITE
-        ds.reset( new DiskStorage() );
+        ds.reset( new DiskStorage(smsc::logger::Logger::getInstance("diskcompos")) );
         smsc_log_debug( slog, "disk storage is created" );
 
         for ( unsigned idx = 0; idx < StorageNumbering::instance().storages(); ++idx ) {
@@ -737,7 +737,9 @@ int main( int argc, char** argv )
             // --- setup is here
             dis.reset( new DiskIndexStorage( cfg.storagename + storagesuffix + idxstr,
                                              cfg.storagepath,
-                                             cfg.indexgrowth ));
+                                             cfg.indexgrowth,
+                                             false,
+                                             smsc::logger::Logger::getInstance("diskindex") ));
             smsc_log_debug( slog, "data index %u storage is created", idx );
             // return testDiskIndexStorage( cfg, dis.get() );
 
@@ -762,12 +764,14 @@ int main( int argc, char** argv )
 
             if ( ret < 0 ) pf->Create( fn,
                                        cfg.storagepath,
-                                       cfg.preallocate, cfg.pagesize );
+                                       cfg.preallocate,
+                                       cfg.pagesize );
 #endif
             smsc_log_debug( slog, "pagefile storage %u is created", idx );
 
 
-            dds.reset( new DiskDataStorage( pf.release() ) );
+            dds.reset( new DiskDataStorage( pf.release(),
+                                            smsc::logger::Logger::getInstance("diskdata") ) );
             smsc_log_debug( slog, "data disk storage %u is created" );
 
             
@@ -783,7 +787,8 @@ int main( int argc, char** argv )
 #endif
         smsc_log_debug( slog, "disk storage is assembled" );
 
-        ms.reset( new MemStorage( cfg.cachesize ) );
+        ms.reset( new MemStorage( smsc::logger::Logger::getInstance("cache"),
+                                  cfg.cachesize ) );
         smsc_log_debug( slog, "memory storage is created" );
 
         store.reset( new SessionStorage( ms.release(), ds.release() ) );

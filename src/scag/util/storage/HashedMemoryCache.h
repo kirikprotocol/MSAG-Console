@@ -57,10 +57,10 @@ private:
     typedef smsc::core::buffers::XHash<key_type,stored_type,HF>  hash_type;
 
 public:
-    HashedMemoryCache( unsigned int cachesize = 10000 ) :
+    HashedMemoryCache( smsc::logger::Logger* thelog = 0,
+                       unsigned int cachesize = 10000 ) :
     hash_(cachesize),
-    cachelog_(NULL) {
-        cachelog_ = smsc::logger::Logger::getInstance( "cache" );
+    cachelog_(thelog) {
     }
 
     ~HashedMemoryCache() {
@@ -68,7 +68,7 @@ public:
     }
 
     bool set( const key_type& k, stored_type v ) {
-        smsc_log_debug( cachelog_, "set: %s", k.toString().c_str() );
+        if (cachelog_) smsc_log_debug( cachelog_, "set: %s", k.toString().c_str() );
         stored_type* vv = hash_.GetPtr(k);
         if (vv) {
             if (store2val(*vv) && store2val(v)) {
@@ -95,13 +95,13 @@ public:
     stored_type* get( const key_type& k ) const {
         stored_type* vv = const_cast<hash_type&>(hash_).GetPtr( k );
         // stored_type v( vv ? *vv : this->val2store(NULL) );
-        smsc_log_debug( cachelog_, "get: %s %s", k.toString().c_str(), ( vv && store2val(*vv) ) ? "hit" : "miss" );
+        if (cachelog_) smsc_log_debug( cachelog_, "get: %s %s", k.toString().c_str(), ( vv && store2val(*vv) ) ? "hit" : "miss" );
         return vv;
     }
 
 
     value_type* release( const key_type& k ) {
-        smsc_log_debug( cachelog_, "clr: %s", k.toString().c_str() );
+        if (cachelog_) smsc_log_debug( cachelog_, "clr: %s", k.toString().c_str() );
         stored_type* vv = hash_.GetPtr(k);
         stored_type v = vv ? *vv : this->val2store(NULL);
         if ( vv ) hash_.Delete( k );

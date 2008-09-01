@@ -27,14 +27,16 @@ public:
     RBTreeIndexStorage( const std::string& dbname,
                         const std::string& dbpath,
                         int indexGrowth = 1000000,
-                        bool cleanup = false ) :
+                        bool cleanup = false,
+                        smsc::logger::Logger* thelog = 0 ) :
+    index_(0,0,thelog),
     cache_(0),
     invalid_(0)
     {
-        allocator_.reset( new IndexAllocator() );
+        allocator_.reset( new IndexAllocator(thelog) );
         if ( allocator_->Init( dbpath + '/' + dbname + "-index",
                                indexGrowth,
-                               cleanup ) < 0 ) {
+                               cleanup) < 0 ) {
             throw smsc::util::Exception( "cannot initialize RBTreeAllocator" );
         }
 

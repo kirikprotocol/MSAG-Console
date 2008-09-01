@@ -54,9 +54,8 @@ public:
     typedef Iterator iterator_type;
 
 
-    CompositeDiskStorage() : log_(0)
+    CompositeDiskStorage( smsc::logger::Logger* thelog ) : log_(thelog)
     {
-        log_ = smsc::logger::Logger::getInstance("compstore");
         const StorageNumbering& n = StorageNumbering::instance();
         storages_.resize( n.storages(), NULL );
     }
@@ -72,7 +71,7 @@ public:
         } else if ( storages_[idx] ) {
             throw smsc::util::Exception( "CompositeDiskStorage: storage replacement is not allowed (idx=%u)", idx );
         }
-        smsc_log_info(log_, "storage #%u added: %p", idx, store );
+        if (log_) smsc_log_info(log_, "storage #%u added: %p", idx, store );
         storages_[idx] = x.release();
     }
 
@@ -83,7 +82,7 @@ public:
               i != storages_.end();
               ++i ) {
             if ( *i ) {
-                smsc_log_info(log_, "storage #%u deleted: %p", i-storages_.begin(), *i );
+                if (log_) smsc_log_info(log_, "storage #%u deleted: %p", i-storages_.begin(), *i );
                 delete *i;
                 *i = NULL;
             }
@@ -134,7 +133,7 @@ private:
             throw smsc::util::Exception
                 ( "CompositeDiskStorage: storage not found key=%s number=%llu idx=%u", k.toString().c_str(), k.toIndex(), n );
         }
-        smsc_log_debug(log_,"storage for key=%s is %u at %p", k.toString().c_str(), n, ret);
+        if (log_) smsc_log_debug(log_,"storage for key=%s is %u at %p", k.toString().c_str(), n, ret);
         return ret;
     }
 

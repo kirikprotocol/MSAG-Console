@@ -13,7 +13,7 @@ using namespace smpp;
 
 void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStatus& rs )
 {
-    smsc_log_debug(logger, "Process EventHandler...");
+    // smsc_log_debug(logger, "Process EventHandler...");
 
     SmppCommand& smppcommand = static_cast<SmppCommand&>(command);
     SmppCommandAdapter _command(smppcommand);

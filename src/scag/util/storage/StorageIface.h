@@ -453,8 +453,9 @@ public:
     typedef typename MemStorage::stored_type    stored_type;
 
     CachedDiskStorage( MemStorage* ms,
-                       DiskStorage* ds ) :
-    cache_( ms ), disk_( ds ), hitcount_(0), cachelog_(NULL)
+                       DiskStorage* ds,
+                       smsc::logger::Logger* thelog = 0 ) :
+    cache_( ms ), disk_( ds ), hitcount_(0), cachelog_(thelog)
     {
         if ( !ms || !ds ) {
             delete ms;
@@ -462,7 +463,7 @@ public:
             throw std::runtime_error("CachedDiskStorage: both storages should be provided!");
         }
         spare_ = cache_->val2store(NULL);
-        cachelog_ = smsc::logger::Logger::getInstance("memcache");
+        // cachelog_ = smsc::logger::Logger::getInstance("memcache");
     }
 
 
@@ -533,7 +534,7 @@ public:
         // key_type k;
         // stored_type v;
         unsigned int count = 0;
-        smsc_log_debug( cachelog_, "FLUSH STARTED" );
+        if (cachelog_) smsc_log_debug( cachelog_, "FLUSH STARTED" );
         // cache_->preflush();
         for ( typename MemStorage::iterator_type i = cache_->begin();
               i.next(); ) {
@@ -549,7 +550,7 @@ public:
                 disk_->set( i.key(), cache_->store2ref(i.value()) );
             }
         }
-        smsc_log_debug( cachelog_, "FLUSH FINISHED, count=%d", count );
+        if (cachelog_) smsc_log_debug( cachelog_, "FLUSH FINISHED, count=%d", count );
         return count;
     }
 

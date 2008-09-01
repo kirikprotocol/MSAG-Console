@@ -919,8 +919,9 @@ void SmppCommand::dispose()
                 MutexGuard mtxx(cntMutex);
                 sc = --commandCounter;
             }
-            smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), count=%u, serial=%u",
-                           this, cmdid_, commandIdName(cmdid_), sc, shared_->uid);
+            if ( cmdid_ != PROCESSEXPIREDRESP )
+                smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), count=%u, serial=%u",
+                               this, cmdid_, commandIdName(cmdid_), sc, shared_->uid);
         }
     }
 
@@ -999,8 +1000,9 @@ void SmppCommand::postfix()
     }
     // if ( ++stuid == uint32_t(-1) ) ++stuid;
     shared_->uid = makeSerial();
-    smsc_log_debug( log_, "Command create: cmd=%p, type=%d(%s), count=%u, serial=%u",
-                    this, cmdid_, commandIdName(cmdid_), commandCounter, shared_->uid );
+    if ( cmdid_ != PROCESSEXPIREDRESP )
+        smsc_log_debug( log_, "Command create: cmd=%p, type=%d(%s), count=%u, serial=%u",
+                        this, cmdid_, commandIdName(cmdid_), commandCounter, shared_->uid );
 }
 
 

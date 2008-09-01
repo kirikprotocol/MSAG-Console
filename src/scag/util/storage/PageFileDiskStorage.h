@@ -40,13 +40,16 @@ public:
     typedef Key                                       key_type;
     typedef Val                                       value_type;
 
-    PageFileDiskStorage( PF* pf, GlossaryBase* g = NULL ) : pf_(pf), disklog_(NULL), glossary_(g)
+    PageFileDiskStorage( PF* pf,
+                         smsc::logger::Logger* thelog = 0,
+                         GlossaryBase* g = NULL ) :
+    pf_(pf), disklog_(thelog), glossary_(g)
     {
         if ( ! pf_ )
             throw std::runtime_error( "PageFileDiskStorage: pagefile should be provided!" );
         // if ( ! glossary_ )
         // throw std::runtime_error( "PageFileDiskStorage: glossary should be provided!" );
-        disklog_ = smsc::logger::Logger::getInstance( "disk" );
+        // disklog_ = smsc::logger::Logger::getInstance( "disk" );
     }
 
     ~PageFileDiskStorage() {
@@ -103,9 +106,10 @@ public:
         index_type j;
         pf_->Read( i, buf, &j );
         if ( i != j ) {
-            smsc_log_warn( disklog_, "read: different index read: was=%llx is=%llx",
-                           static_cast< unsigned long long >( i ),
-                           static_cast< unsigned long long >( j ) );
+            if (disklog_) 
+                smsc_log_warn( disklog_, "read: different index read: was=%llx is=%llx",
+                               static_cast< unsigned long long >( i ),
+                               static_cast< unsigned long long >( j ) );
         }
         // assert( buf.size() < 10000 && buf.buffer().capacity() < 10000 );
         return true;
@@ -119,7 +123,8 @@ public:
             s >> v;
             // key_ = "destroyed";
         } catch ( DeserializerException& e ) {
-            smsc_log_error( disklog_, "exception occurred: %s", e.what() );
+            if (disklog_) 
+                smsc_log_error( disklog_, "exception occurred: %s", e.what() );
             return false;
         }
         return true;

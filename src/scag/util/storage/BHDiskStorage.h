@@ -20,7 +20,8 @@ public:
     typedef typename storage_type::index_type index_type;
     typedef DataBlockBackup< Val >            value_type;
 
-    BHDiskStorage( storage_type* hs ) : store_(hs), v_(NULL)
+    BHDiskStorage( storage_type* hs,
+                   smsc::logger::Logger* = 0 ) : store_(hs), v_(NULL)
     {
         i_ = invalidIndex();
         if ( !hs ) {

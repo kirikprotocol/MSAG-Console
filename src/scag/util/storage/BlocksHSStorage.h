@@ -148,12 +148,13 @@ public:
     static const int defaultFileSize = 100; // in blocks 
     static const long BLOCK_USED	= long(uint64_t(1) << 63);
 
-    BlocksHSStorage(GlossaryBase* g = NULL): glossary_(g), running(false), iterBlockIndex(0)
+    BlocksHSStorage(GlossaryBase* g = NULL,
+                    smsc::logger::Logger* thelog = 0): glossary_(g), running(false), iterBlockIndex(0)
     {
         if (!glossary_) {
           throw std::runtime_error("BlocksHSStorage: glossary should be provided!");
         }
-        logger = smsc::logger::Logger::getInstance("BlkStore");
+        logger = thelog;
         hdrSize = sizeof(DataBlockHeader);
     }
 
@@ -171,11 +172,11 @@ public:
         dbName = _dbName;
         dbPath = _dbPath;
         if (_blockSize > WRITE_BUF_SIZE) {
-            smsc_log_error(logger, "block size %d too large. max block size = %d", _blockSize, WRITE_BUF_SIZE);
+            if (logger) smsc_log_error(logger, "block size %d too large. max block size = %d", _blockSize, WRITE_BUF_SIZE);
             return CANNOT_CREATE_STORAGE;
         }
         if (_blockSize < hdrSize + MIN_BLOCK_SIZE) {
-          smsc_log_error(logger, "block size %d too small. min block size = %d", _blockSize, hdrSize + MIN_BLOCK_SIZE);
+            if (logger) smsc_log_error(logger, "block size %d too small. min block size = %d", _blockSize, hdrSize + MIN_BLOCK_SIZE);
           return CANNOT_CREATE_STORAGE;
         }
 		
@@ -235,7 +236,7 @@ public:
         BlocksHSBackupData& bkp = *prof.backup;
         profileData.Empty();
         profile.Serialize(profileData, true, glossary_);
-        smsc_log_debug(logger, "Add data block key='%s' length=%d", key.toString().c_str(), profileData.length());
+        if (logger) smsc_log_debug(logger, "Add data block key='%s' length=%d", key.toString().c_str(), profileData.length());
         int dataLength = profileData.length();
         if (dataLength <= 0) {
             blockIndex = -1;
@@ -246,7 +247,7 @@ public:
         backupHeader.key = key;
         if (!backUpProfile(key, -1, bkp, dataLength, true)) {
             blockIndex = -1;
-            smsc_log_error(logger, "Backup profile error");
+            if (logger) smsc_log_error(logger, "Backup profile error");
             return false;
         }
         try {
@@ -279,14 +280,15 @@ public:
         BlocksHSBackupData& bkp = *prof.backup;
         profileData.Empty();
         profile.Serialize(profileData, true, glossary_);
-        smsc_log_debug(logger, "Change data block index=%d key='%s' length=%d",
-                       blockIndex, key.toString().c_str(), profileData.length());
+        if (logger) 
+            smsc_log_debug(logger, "Change data block index=%d key='%s' length=%d",
+                           blockIndex, key.toString().c_str(), profileData.length());
         DescriptionFile oldDescrFile = descrFile;
         index_type ffb = descrFile.first_free_block;
         backupHeader.key = key;
         int dataLength = profileData.length();
         if (!backUpProfile(key, blockIndex, bkp, dataLength, true)) {
-            smsc_log_error(logger, "Backup profile error");
+            if (logger) smsc_log_error(logger, "Backup profile error");
             return false;
         }
         int blocksCount = (dataLength + effectiveBlockSize - 1) / effectiveBlockSize;
@@ -297,12 +299,12 @@ public:
             bkp.clearBackup();
             index_type curBlockIndex = addBlocks(blockIndex, 0, updateBlocksCount, profileData, key, bkp); 
             if (blocksCount > oldBlocksCount) {
-                smsc_log_debug(logger, "Add new blocks");
+                if (logger) smsc_log_debug(logger, "Add new blocks");
                 descrFile.first_free_block = addBlocks(ffb, updateBlocksCount, blocksCount,
                                                        profileData, key, bkp);
             }
             if (blocksCount < oldBlocksCount) {
-                smsc_log_debug(logger, "Remove empty blocks");
+                if (logger) smsc_log_debug(logger, "Remove empty blocks");
                 descrFile.first_free_block = removeBlocks(ffb, curBlockIndex, updateBlocksCount);
             }
             changeDescriptionFile();
@@ -331,7 +333,7 @@ public:
 
     bool Get(index_type blockIndex, DataBlock& data)
     {
-        smsc_log_debug(logger, "Get data block index=%d ", blockIndex);
+        if (logger) smsc_log_debug(logger, "Get data block index=%d ", blockIndex);
         if(blockIndex == -1) return false;
         char* buff;
         index_type curBlockIndex = blockIndex;
@@ -371,7 +373,7 @@ public:
     {
         Profile& profile = *prof.value;
         BlocksHSBackupData& bkp = *prof.backup;
-        smsc_log_debug(logger, "Get data block index=%d ", blockIndex);
+        if (logger) smsc_log_debug(logger, "Get data block index=%d ", blockIndex);
         if(blockIndex == -1) return false;
         char* buff;
         index_type curBlockIndex = blockIndex;
@@ -389,7 +391,7 @@ public:
             f->Seek(offset, SEEK_SET);
             f->Read((void*)&hdr, hdrSize);
             if(hdr.block_used != BLOCK_USED) {
-                smsc_log_error(logger, "block index=%d unused", curBlockIndex);
+                if (logger) smsc_log_error(logger, "block index=%d unused", curBlockIndex);
                 return false;
             }
             if(curBlockIndex == blockIndex)
@@ -415,9 +417,9 @@ public:
     void Remove(const Key& key, index_type blockIndex, const DataBlockBackup<Profile>& prof) {
         Profile& profile = *prof.value;
         BlocksHSBackupData& bkp = *prof.backup;
-        smsc_log_debug(logger, "Remove data block index=%d ", blockIndex);
+        if (logger) smsc_log_debug(logger, "Remove data block index=%d ", blockIndex);
         if (blockIndex < 0) {
-            smsc_log_warn(logger, "Can't remove data block index=%d ", blockIndex);
+            if (logger) smsc_log_warn(logger, "Can't remove data block index=%d ", blockIndex);
             return;
         }
         DescriptionFile oldDescrFile = descrFile;
@@ -461,7 +463,7 @@ public:
             {
                 key = hdr.key;
                 if(!Get(blockIndex, data))
-                    smsc_log_error(logger, "Error reading block: %d", blockIndex);
+                    if (logger) smsc_log_error(logger, "Error reading block: %d", blockIndex);
                 else
                     return true;
             }
@@ -494,6 +496,7 @@ private:
 private:
 
     void printHdr(const DataBlockHeader& hdr) {
+        if (!logger) return;
         smsc_log_debug(logger, "block header used=%d next_free=%d head=%d total=%d next=%d size=%d key='%s'",
                        hdr.block_used, hdr.next_free_block, hdr.head, hdr.total_blocks, 
                        hdr.next_block, hdr.data_size, hdr.key.toString().c_str());
@@ -502,8 +505,9 @@ private:
 
     void writeDataBlock(int fileNumber, off_t offset, const DataBlockHeader& hdr, const void* data, size_t curBlockSize)
     {
-        smsc_log_debug(logger, "write data block fn=%d, offset=%d, blockSize=%d", fileNumber,
-                       offset, curBlockSize);
+        if (logger)
+            smsc_log_debug(logger, "write data block fn=%d, offset=%d, blockSize=%d", fileNumber,
+                           offset, curBlockSize);
         //printHdr(hdr);
         if ( !checkfn(fileNumber) ) {
             throw smsc::util::Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count-1);
@@ -517,8 +521,9 @@ private:
             f->Seek(offset, SEEK_SET);
             f->Write((void *)writeBuf, bufSize);
         } catch (const std::exception& e) {
-            smsc_log_warn(logger, "Error writing block to data file %d. std::exception: '%s'",
-                          fileNumber,e.what());
+            if (logger)
+                smsc_log_warn(logger, "Error writing block to data file %d. std::exception: '%s'",
+                              fileNumber,e.what());
             throw;
         }
     }
@@ -550,7 +555,7 @@ private:
             bkp.addDataToBackup(hdr.next_block);
             hdr.head = false;
         }
-        smsc_log_debug(logger, "addBlocks curBlockIndex=%d", curBlockIndex);
+        if (logger) smsc_log_debug(logger, "addBlocks curBlockIndex=%d", curBlockIndex);
         return curBlockIndex;
     }
 
@@ -568,19 +573,19 @@ private:
             ffb = descrFile.files_count * descrFile.file_size;
             CreateDataFile();
         }
-        smsc_log_debug(logger, "First free block %d", ffb);
+        if (logger) smsc_log_debug(logger, "First free block %d", ffb);
         return ffb;
     }
 
     index_type removeBlocks(index_type ffb, index_type blockIndex, size_t backupIndex) {
-        smsc_log_debug(logger, "Remove %d blocks start block index=%d", 
-                       backupHeader.blocksCount - backupIndex, blockIndex);
+        if (logger) smsc_log_debug(logger, "Remove %d blocks start block index=%d", 
+                                   backupHeader.blocksCount - backupIndex, blockIndex);
         if (backupIndex >= backupHeader.blocksCount) {
-            smsc_log_warn(logger, "Can't remove unbackuped data blocks");
+            if (logger) smsc_log_warn(logger, "Can't remove unbackuped data blocks");
             return ffb;
         }
         while (blockIndex != -1) {
-            smsc_log_debug(logger, "Remove %d block, ffb=%d", blockIndex, ffb); 
+            if (logger) smsc_log_debug(logger, "Remove %d block, ffb=%d", blockIndex, ffb); 
             int file_number = blockIndex / descrFile.file_size;
             if (!checkfn(file_number)) {
                 throw smsc::util::Exception("Invalid file number %d, max file number %d", file_number, descrFile.files_count-1);
@@ -598,13 +603,13 @@ private:
 
     int CreateBackupFile() {
         try {
-            smsc_log_debug(logger, "Create backup file");
+            if (logger) smsc_log_debug(logger, "Create backup file");
             backupFile_f.RWCreate((dbPath + '/' + dbName + ".trx").c_str());
             backupFile_f.SetUnbuffered();
             backupFile_f.Write((void*)&TRX_COMPLETE, sizeof(TRX_COMPLETE));
             return 0;
         } catch (const std::exception& e) {
-            smsc_log_error(logger, "FSStorage: error create backup file: '%s'", e.what());
+            if (logger) smsc_log_error(logger, "FSStorage: error create backup file: '%s'", e.what());
             return BACKUP_FILE_CREATE_FAILED;
         }
     }
@@ -615,7 +620,7 @@ private:
         {
             string name = dbPath + '/' + dbName;
             if (File::Exists(name.c_str())) {
-                smsc_log_error(logger, "FSStorage: error create description file: file '%s' already exists",
+                if (logger) smsc_log_error(logger, "FSStorage: error create description file: file '%s' already exists",
                                name.c_str());
                 return DESCR_FILE_CREATE_FAILED;
             }
@@ -624,7 +629,7 @@ private:
         }
         catch(const std::exception& e)
         {
-            smsc_log_error(logger, "FSStorage: error create description file: '%s'", e.what());
+            if (logger) smsc_log_error(logger, "FSStorage: error create description file: '%s'", e.what());
             return DESCR_FILE_CREATE_FAILED;
         }
 
@@ -658,7 +663,7 @@ private:
     int CreateDataFile(void)
     {
         const std::string name = makeDataFileName(descrFile.files_count);
-        smsc_log_debug(logger, "Create data file: '%s'", name.c_str());
+        if (logger) smsc_log_debug(logger, "Create data file: '%s'", name.c_str());
         if (File::Exists(name.c_str())) {
             // we move the old file and create a new one
             for ( int backnum = 0;; ++backnum ) {
@@ -666,21 +671,21 @@ private:
                     makeDataFileName( descrFile.files_count, backnum );
                 if ( File::Exists(backname.c_str()) ) {
                     if ( backnum < 10 ) continue;
-                    smsc_log_error(logger, "FSStorage: error create data file: file '%s' already exists",
+                    if (logger) smsc_log_error(logger, "FSStorage: error create data file: file '%s' already exists",
                                    name.c_str());
                     throw FileException(FileException::errOpenFailed, name.c_str());
                 }
 
-                smsc_log_debug( logger, "Renaming unregistered data file %s into %s", name.c_str(), backname.c_str() );
+                if (logger) smsc_log_debug( logger, "Renaming unregistered data file %s into %s", name.c_str(), backname.c_str() );
                 File::Rename( name.c_str(), backname.c_str() );
-                smsc_log_info( logger, "unregisterd data file %s is renamed into %s",
+                if (logger) smsc_log_info( logger, "unregisterd data file %s is renamed into %s",
                                name.c_str(), backname.c_str() );
                 break;
             }
         }
 	
         dataFile_f.push_back(new File());
-        smsc_log_debug(logger, "Alloc: %p, %d", dataFile_f[descrFile.files_count], descrFile.files_count);
+        if (logger) smsc_log_debug(logger, "Alloc: %p, %d", dataFile_f[descrFile.files_count], descrFile.files_count);
         char* emptyBlock = 0;
         index_type startBlock = descrFile.files_count * descrFile.file_size;
         try
@@ -706,7 +711,7 @@ private:
         }
         catch (const std::exception& ex)
         {
-            smsc_log_debug(logger, "Error create data file. std::exception: '%s'", ex.what());
+            if (logger) smsc_log_debug(logger, "Error create data file. std::exception: '%s'", ex.what());
             if (emptyBlock) {
                 delete[] emptyBlock;
             }
@@ -723,13 +728,13 @@ private:
 
     void changeDescriptionFile() {
         try {
-            smsc_log_debug(logger, "Change description file");
+            if (logger) smsc_log_debug(logger, "Change description file");
             descrFile_f.Seek(0, SEEK_SET);        
             descrFile_f.Write((char*)&descrFile, sizeof(DescriptionFile));
             printDescrFile();
             return;
         } catch (const std::exception& ex) {
-            smsc_log_error(logger, "Can't write to description file. std::exception: '%s'", ex.what());
+            if (logger) smsc_log_error(logger, "Can't write to description file. std::exception: '%s'", ex.what());
             printDescrFile();
         } 
         try {
@@ -739,9 +744,9 @@ private:
             tmpFile.SetUnbuffered();
             tmpFile.Seek(0, SEEK_SET);
             tmpFile.Write((char*)&descrFile, sizeof(DescriptionFile));
-            smsc_log_error(logger, "Last description data saved in file '%s'", name.c_str());
+            if (logger) smsc_log_error(logger, "Last description data saved in file '%s'", name.c_str());
         } catch (const std::exception& ex) {
-            smsc_log_error(logger, "Can't save temp description file. std::exception: '%s'", ex.what());
+            if (logger) smsc_log_error(logger, "Can't save temp description file. std::exception: '%s'", ex.what());
         }
         exit(-1);
     }
@@ -749,6 +754,7 @@ private:
 
     void printDescrFile()
     {
+        if (!logger) return;
         smsc_log_debug(logger, "DescrFile: files_count=%d, block_size=%d, file_size=%d",
                        descrFile.files_count, descrFile.block_size, descrFile.file_size);
         smsc_log_debug(logger, "DescrFile: blocks_used=%d, blocks_free=%d, first_free_block=%d",
@@ -762,10 +768,10 @@ private:
             backupFile_f.Seek(0);
             uint8_t trx = backupFile_f.ReadByte();
             if (trx == TRX_COMPLETE) {
-                smsc_log_debug(logger, "Last transaction is complited");
+                if (logger) smsc_log_debug(logger, "Last transaction is complited");
                 return;
             }
-            smsc_log_warn(logger, "Last transaction is incomplited. Load transaction data");
+            if (logger) smsc_log_warn(logger, "Last transaction is incomplited. Load transaction data");
             backupFile_f.Read((void*)&descrFile, sizeof(DescriptionFile));
             backupFile_f.Read((void*)&backupHeader, sizeof(BackupHeader));
             for (int i = 0; i < backupHeader.blocksCount; ++i) {
@@ -783,7 +789,7 @@ private:
             restoreDataBlocks(descrFile, profileData.c_ptr());
             return;
         } catch (const std::exception& e) {
-            smsc_log_error(logger, "Error loading transaction data: '%s'", e.what());
+            if (logger) smsc_log_error(logger, "Error loading transaction data: '%s'", e.what());
             dataBlockBackup.clear();
             throw;
         }
@@ -797,9 +803,9 @@ private:
             loadBackupData();
             return 0;
         } catch (const std::exception& e) {
-            smsc_log_warn(logger, "FSStorage: error open backup file: '%s'\n", e.what());
+            if (logger) smsc_log_warn(logger, "FSStorage: error open backup file: '%s'\n", e.what());
             if (File::Exists(name.c_str())) {
-                smsc_log_error(logger, "FSStorage: backup file - exists, but can't be opened correct: '%s'\n", e.what());
+                if (logger) smsc_log_error(logger, "FSStorage: backup file - exists, but can't be opened correct: '%s'\n", e.what());
                 return CANNOT_OPEN_EXISTS_DESCR_FILE;
             } else {
                 return CreateBackupFile();
@@ -815,7 +821,7 @@ private:
             descrFile_f.RWOpen(name.c_str());
             descrFile_f.SetUnbuffered();
             descrFile_f.Read((char*)&descrFile, sizeof(DescriptionFile));
-            smsc_log_debug(logger, "OpenDescrFile: files_count=%d, block_size=%d, file_size=%d, blocks_used=%d, blocks_free=%d, first_free_block=%d",
+            if (logger) smsc_log_debug(logger, "OpenDescrFile: files_count=%d, block_size=%d, file_size=%d, blocks_used=%d, blocks_free=%d, first_free_block=%d",
                            descrFile.files_count, descrFile.block_size, descrFile.file_size, descrFile.blocks_used, descrFile.blocks_free, descrFile.first_free_block);
             effectiveBlockSize = descrFile.block_size - sizeof(DataBlockHeader);
             return 0;
@@ -823,10 +829,10 @@ private:
         catch(const FileException& ex)
         {
             if (File::Exists(name.c_str())) {
-                smsc_log_error(logger, "FSStorage: idx_file - exists, but can't be opened : %s\n", ex.what());
+                if (logger) smsc_log_error(logger, "FSStorage: idx_file - exists, but can't be opened : %s\n", ex.what());
                 return CANNOT_OPEN_EXISTS_DESCR_FILE;
             }
-            smsc_log_debug(logger, "FSStorage: error idx_file - %s\n", ex.what());
+            if (logger) smsc_log_debug(logger, "FSStorage: error idx_file - %s\n", ex.what());
             return DESCR_FILE_OPEN_FAILED;
         }
     }
@@ -835,7 +841,7 @@ private:
     int OpenDataFiles(void)
     {
         if (descrFile.files_count <= 0) {
-            smsc_log_error(logger, "Open data files error: files count=%d", descrFile.files_count);
+            if (logger) smsc_log_error(logger, "Open data files error: files count=%d", descrFile.files_count);
             return CANNOT_OPEN_DATA_FILE;
         }
         char	buff[10];
@@ -847,13 +853,13 @@ private:
             dataFile_f.push_back(new File());
             try
             {
-                smsc_log_debug(logger, "Open data file: %s", name.c_str());
+                if (logger) smsc_log_debug(logger, "Open data file: %s", name.c_str());
                 dataFile_f[i]->RWOpen(name.c_str());
                 dataFile_f[i]->SetUnbuffered();
             }
             catch(const std::exception& ex)
             {
-                smsc_log_error(logger, "Cannot open data file: %s", ex.what());
+                if (logger) smsc_log_error(logger, "Cannot open data file: %s", ex.what());
                 return CANNOT_OPEN_DATA_FILE;
             }
         }
@@ -863,11 +869,11 @@ private:
     
     void restoreDataBlocks(const DescriptionFile& _descrFile, const char* data) {
         if (dataBlockBackup.size() <= 1) {
-            smsc_log_warn(logger, "data blocks backup is empty");
+            if (logger) smsc_log_warn(logger, "data blocks backup is empty");
             return;
         }
         try {
-            smsc_log_warn(logger, "Restoring data storage...");
+            if (logger) smsc_log_warn(logger, "Restoring data storage...");
             size_t profileBlocksCount = (backupHeader.dataSize + effectiveBlockSize - 1) / effectiveBlockSize;
             index_type curBlockIndex = backupHeader.curBlockIndex;
             DataBlockHeader hdr;
@@ -901,12 +907,12 @@ private:
                 File* f = dataFile_f[file_number];
                 f->Seek(offset);
                 f->Write((void*)(&curBlockIndex), sizeof(descrFile.first_free_block));
-                smsc_log_debug(logger, "restore next_free_block=%d offset=%d", curBlockIndex, offset);
+                if (logger) smsc_log_debug(logger, "restore next_free_block=%d offset=%d", curBlockIndex, offset);
             }
             clearBackup();
-            smsc_log_warn(logger, "Restoring complite");
+            if (logger) smsc_log_warn(logger, "Restoring complite");
         } catch (const std::exception& e) {
-            smsc_log_warn(logger, "Error restore data storage: '%s'", e.what());
+            if (logger) smsc_log_warn(logger, "Error restore data storage: '%s'", e.what());
             exit(-1);
         }
     }
@@ -942,22 +948,22 @@ private:
 
     void saveBackupToFile(const DescriptionFile& _descrFile, const char* backupData) {
         try {
-            //smsc_log_debug(logger, "Save transaction data to file");
+            //if (logger) smsc_log_debug(logger, "Save transaction data to file");
             //printDescrFile();
             writeBackup(backupFile_f, _descrFile, backupData);
             return;
         } catch (const std::exception& e) {
-            smsc_log_error(logger, "Error saving transaction data: '%s'", e.what());
+            if (logger) smsc_log_error(logger, "Error saving transaction data: '%s'", e.what());
         }
         try {
             string tmpName = backupFile_f.getFileName() + ".tmp";
-            smsc_log_error(logger, "Trying to save transaction data to file '%s'...", tmpName.c_str());
+            if (logger) smsc_log_error(logger, "Trying to save transaction data to file '%s'...", tmpName.c_str());
             File tmpFile;
             tmpFile.RWCreate(tmpName.c_str());
             tmpFile.SetUnbuffered();
             writeBackup(tmpFile, _descrFile, backupData);
         } catch (const std::exception& e) {
-            smsc_log_error(logger, "%s", e.what());
+            if (logger) smsc_log_error(logger, "%s", e.what());
         }
         exit (-1);
     }
@@ -965,18 +971,18 @@ private:
 
     void clearBackup() {
         try {
-            smsc_log_debug(logger, "clear backup");
+            if (logger) smsc_log_debug(logger, "clear backup");
             backupFile_f.Seek(0);
             backupFile_f.WriteByte(TRX_COMPLETE);
             dataBlockBackup.clear();
         } catch (const std::exception& e) {
-            smsc_log_error(logger, "Error clear transaction data: '%s'", e.what());
+            if (logger) smsc_log_error(logger, "Error clear transaction data: '%s'", e.what());
         }
     }
 
 
     index_type readFreeBlocks(int blocksCount) {
-        smsc_log_debug(logger, "Read %d free blocks", blocksCount);
+        if (logger) smsc_log_debug(logger, "Read %d free blocks", blocksCount);
         index_type curBlockIndex = descrFile.first_free_block;
         for (int i = 0; i < blocksCount; ++i) {
             int file_number = curBlockIndex / descrFile.file_size;
@@ -990,7 +996,7 @@ private:
 
     bool backUpProfile(const Key& key, index_type blockIndex, const BlocksHSBackupData& profile, int dataLength, bool saveToFile = false) 
     {
-        smsc_log_debug(logger, "backup profile key=%s block index=%d, data length=%d",
+        if (logger) smsc_log_debug(logger, "backup profile key=%s block index=%d, data length=%d",
                        key.toString().c_str(), blockIndex, dataLength);
         dataBlockBackup.clear();
         int blocksCount = (dataLength + effectiveBlockSize - 1) / effectiveBlockSize;
@@ -1008,7 +1014,7 @@ private:
                 if (saveToFile) {
                     saveBackupToFile(oldDescrFile, NULL ); // profile.getBackupData());
                 }
-                smsc_log_debug(logger, "backup profile size=%d", dataBlockBackup.size());
+                if (logger) smsc_log_debug(logger, "backup profile size=%d", dataBlockBackup.size());
                 return true;
             }
             backupHeader.curBlockIndex = blockIndex;
@@ -1017,20 +1023,20 @@ private:
             size_t backupSize = dataBlockBackup.size();
             backupHeader.blocksCount = blocksCount >= backupSize ? blocksCount : backupSize;
             if (backupSize == 0) {
-                smsc_log_warn(logger, "Error backup profile: key=%s backup is empty", key.toString().c_str() );
+                if (logger) smsc_log_warn(logger, "Error backup profile: key=%s backup is empty", key.toString().c_str() );
                 return false;
             }
             if (backupSize < blocksCount) {
                 dataBlockBackup[backupSize - 1] = oldDescrFile.first_free_block;
                 readFreeBlocks(blocksCount - backupSize);
             }
-            smsc_log_debug(logger, "backup profile key=%s size=%d", key.toString().c_str(), dataBlockBackup.size());
+            if (logger) smsc_log_debug(logger, "backup profile key=%s size=%d", key.toString().c_str(), dataBlockBackup.size());
             if (saveToFile) {
                 saveBackupToFile(oldDescrFile, profile.getBackupData());
             }
             return true;
         } catch (const std::exception& e) {
-            smsc_log_warn(logger, "Error backup profile key=%s. std::exception: '%s'",
+            if (logger) smsc_log_warn(logger, "Error backup profile key=%s. std::exception: '%s'",
                           key.toString().c_str(), e.what());
             dataBlockBackup.clear();
             descrFile = oldDescrFile;
@@ -1043,7 +1049,7 @@ private:
     /// check file number
     inline bool checkfn( int fn ) const {
         if ( fn < descrFile.files_count ) return true;
-        smsc_log_error(logger, "Invalid file number %d, max file number %d", fn, descrFile.files_count-1 );
+        if (logger) smsc_log_error(logger, "Invalid file number %d, max file number %d", fn, descrFile.files_count-1 );
         return false;
     }
 };
