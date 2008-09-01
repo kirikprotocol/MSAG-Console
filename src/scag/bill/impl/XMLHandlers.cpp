@@ -198,7 +198,7 @@ static double str_to_double(char* str)
     uint8_t j = '+', ch, adp = 0;
     if(*str && (*str == '+' || *str == '-'))
         j = *str++;
-    while(ch = *str++)
+    while( (ch = *str++) )
     {
         if(ch == '.' && !adp)
             adp = true;
@@ -250,7 +250,7 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
-    for(int i = 0; i < CATEGORY_TAGS_SZ; i++)
+    for( size_t i = 0; i < CATEGORY_TAGS_SZ; i++)
         if(!strcmp(category_tags[i].name, qname) && category_tag == category_tags[i].top_tag)
         {
             category_tag = i;
@@ -264,7 +264,7 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
             return;
         }
 
-    for(int i = 0; i < MEDIA_TYPE_TAGS_SZ; i++)
+    for( size_t i = 0; i < MEDIA_TYPE_TAGS_SZ; i++)
         if(!strcmp(media_type_tags[i].name, qname) && media_type_tag == media_type_tags[i].top_tag)
         {
             media_type_tag = i;
@@ -277,7 +277,7 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
             return;
         }
 
-    for(int i = 0; i < BILL_TAGS_SZ; i++)
+    for( size_t i = 0; i < BILL_TAGS_SZ; i++)
         if(!strcmp(bill_tags[i].name, qname) && bill_tag == bill_tags[i].top_tag)
         {
             bill_tag = i;
@@ -311,7 +311,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
-    for(int i = 0; i < CATEGORY_TAGS_SZ; i++)
+    for( size_t i = 0; i < CATEGORY_TAGS_SZ; i++)
         if(!strcmp(category_tags[i].name, qname) && category_tag == i)
         {
             category_tag = category_tags[i].top_tag;
@@ -328,7 +328,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
             }
             return;
         }
-    for(int i = 0; i < MEDIA_TYPE_TAGS_SZ; i++)
+    for( size_t i = 0; i < MEDIA_TYPE_TAGS_SZ; i++)
         if(!strcmp(media_type_tags[i].name, qname) && media_type_tag == i)
         {
             media_type_tag = media_type_tags[i].top_tag;
@@ -346,7 +346,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
             return;
         }
 
-    for(int i = 0; i < BILL_TAGS_SZ; i++)
+    for( size_t i = 0; i < BILL_TAGS_SZ; i++)
         if(!strcmp(bill_tags[i].name, qname) && bill_tag == i)
         {
             bill_tag = bill_tags[i].top_tag;

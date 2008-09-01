@@ -78,7 +78,7 @@ static inline
 string AddrToString(const Address& addr)
 {
   char buff[128] = {0};
-  snprintf(buff,127,".%d.%d.%s\x00",addr.type,addr.plan,addr.value);
+  snprintf(buff,127,".%d.%d.%s",addr.type,addr.plan,addr.value);
   return string(buff);
 }
 

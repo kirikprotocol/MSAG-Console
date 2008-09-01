@@ -33,7 +33,7 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
 
     if (!params.Exists("category")) throw SCAGException("Action 'log': missing 'category' parameter");
 
-    const char * name = 0;
+    // const char * name = 0;
     strCategory = params["category"];
     std::string s = "rule." + ttToStr(propertyObject.transport);
 
@@ -47,7 +47,7 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
 bool ActionLog::run(ActionContext& context)
 {
     char buf[20];
-    Property * p1 = 0;
+    // Property * p1 = 0;
     Property * p2 = 0;
 
     buf[19] = 0;

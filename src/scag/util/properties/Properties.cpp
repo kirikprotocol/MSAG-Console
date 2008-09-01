@@ -79,14 +79,18 @@ int64_t Property::convertToInt()
 
     switch (type) 
     {
-    case pt_bool: 
+    case pt_bool:
+    case pt_int:
+    case pt_date:
         break;
     case pt_str:
         i_val = atoi(s_val.c_str());
         break;
-/*    case PTYPE_DATE:
+        /*
+    case pt_date:
         throw ConvertException("date","int");
-        break;*/
+        break;
+         */
     }
 
     sync = true;
@@ -101,6 +105,8 @@ const std::string& Property::convertToStr()
 
     switch (type) 
     {
+    case pt_str:
+        break;
     case pt_bool: 
     case pt_int:
         sprintf(buff, "%lld", i_val);
@@ -126,6 +132,9 @@ bool Property::convertToBool()
 
     switch (type) 
     {
+    case pt_bool:
+    case pt_int:
+        break;
     case pt_str:
         i_val = s_val.length();
         break;

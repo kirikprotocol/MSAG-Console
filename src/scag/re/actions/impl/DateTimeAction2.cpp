@@ -91,7 +91,7 @@ void DateTimeAction::intiDateModifierAction(const SectionParams &params,
                                  false, strParameter, exist);
   if (exist) {
     dateTimeProperty = new DateProperty(ft, strParameter);
-    for (int i = 0; i < DATE_PROPERTIES_NUMBER - 1; ++i) {
+    for (unsigned i = 0; i < DATE_PROPERTIES_NUMBER - 1; ++i) {
       addProperty(params, propertyObject, dateProperties[i], true, false, true);
     }
   }
@@ -104,7 +104,7 @@ void DateTimeAction::intiDateModifierAction(const SectionParams &params,
                            DATETIME_ACTION, getActionName());
     }
     dateTimeProperty = new TimeProperty(ft, strParameter);
-    for (int i = 0; i < TIME_PROPERTIES_NUMBER - 2; ++i) {
+    for (unsigned i = 0; i < TIME_PROPERTIES_NUMBER - 2; ++i) {
       addProperty(params, propertyObject, timeProperties[i], true, false, true);
     }
     //getDst(params, propertyObject);
@@ -118,10 +118,10 @@ void DateTimeAction::intiDateModifierAction(const SectionParams &params,
                            DATETIME_ACTION, getActionName());
     }
     dateTimeProperty = new DateTimeProperty(ft, strParameter);
-    for (int i = 0; i < DATE_PROPERTIES_NUMBER - 1; ++i) {
+    for (unsigned i = 0; i < DATE_PROPERTIES_NUMBER - 1; ++i) {
       addProperty(params, propertyObject, dateProperties[i], true, false, true);
     }
-    for (int i = 0; i < TIME_PROPERTIES_NUMBER - 2; ++i) {
+    for (unsigned i = 0; i < TIME_PROPERTIES_NUMBER - 2; ++i) {
       addProperty(params, propertyObject, timeProperties[i], true, false, true);
     }
     //getDst(params, propertyObject);
@@ -137,8 +137,9 @@ bool DateTimeAction::getDst(const SectionParams &params, PropertyObject &propert
   string value;
   bool exist = false;
   ActionProperty actionProperty;
-  FieldType ft = CheckParameter(params, propertyObject, DATETIME_ACTION, timeProperties[TIME_ISDST],
-                                false, true, value, exist);
+    // FieldType ft = 
+    CheckParameter(params, propertyObject, DATETIME_ACTION, timeProperties[TIME_ISDST],
+                   false, true, value, exist);
   if (!exist) {
     return false;
   }
@@ -165,10 +166,10 @@ void CurrentDateTimeAction::init(const SectionParams &params, PropertyObject pro
   addProperty(params, propertyObject, DATE_PROPERTY, false, false, false);
   addProperty(params, propertyObject,TIME_PROPERTY, false, false, false);
   addProperty(params, propertyObject,DATETIME_PROPERTY, false, false, false);
-  for (int i = 0; i < DATE_PROPERTIES_NUMBER; ++i) {
+  for (unsigned i = 0; i < DATE_PROPERTIES_NUMBER; ++i) {
     addProperty(params, propertyObject, dateProperties[i], true, false, false);
   }
-  for (int i = 0; i < TIME_PROPERTIES_NUMBER - 2; ++i) {
+  for (unsigned i = 0; i < TIME_PROPERTIES_NUMBER - 2; ++i) {
     addProperty(params, propertyObject, timeProperties[i], true, false, false);
   }
   addProperty(params, propertyObject, timeProperties[TIME_TIMEZONE], true, false, true);
@@ -305,7 +306,7 @@ bool DecDateTimeAction::run(ActionContext &context) {
 }
 
 bool DateTimeModifier::checkYear(int year, const char* actionName) {
-  if (year > MIN_YEAR && year < MAX_YEAR) {
+  if (year > int(MIN_YEAR) && year < int(MAX_YEAR)) {
     return true;
   } else {
     smsc_log_warn(logger, "%s '%s' action : error year value %d. Should be: %d < year < %d",

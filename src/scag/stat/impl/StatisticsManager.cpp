@@ -156,10 +156,11 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
 }
 
 
-StatisticsManager::StatisticsManager()
-    : Statistics(), Thread(), genStatHttp(PERF_HTTP_COUNT), genStatSmpp(PERF_CNT_COUNT),
-      logger(Logger::getInstance("statman")),
-      currentIndex(0), bExternalFlush(false), isStarted(false), ConfigListener(STATMAN_CFG)
+StatisticsManager::StatisticsManager() :
+Statistics(), Thread(), ConfigListener(STATMAN_CFG),
+logger(Logger::getInstance("statman")),
+currentIndex(0), bExternalFlush(false), isStarted(false),
+genStatSmpp(PERF_CNT_COUNT), genStatHttp(PERF_HTTP_COUNT)
 {
     memset(&smppFileTM, 0, sizeof(smppFileTM));
     memset(&httpFileTM, 0, sizeof(httpFileTM));
@@ -696,7 +697,7 @@ bool StatisticsManager::createStorageDir(const std::string loc)
     char* p1 = buff+1;
     int dirlen = 0;
     char* p2 = strchr(p1, '/');
-    int pos = p2 - buff;
+    // int pos = p2 - buff;
     while(p2){
        int plen = p2 - p1;
        dirlen += plen + 1;
@@ -1045,7 +1046,7 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
 
       int wr=genSockets[i]->WriteAll((char*)buf.getBuffer(), buf.getPos());
 
-      if(wr != size)
+      if(uint32_t(wr) != size)
       {
         smsc_log_warn(logger, "Error writing gen performance to socket");
         genSockets[i]->Abort();
@@ -1082,7 +1083,7 @@ void StatisticsManager::dumpPerfCounters(SerializationBuffer& buf, Hash<CommonPe
             buf.Write(sysId, l);
         }
 
-        for (int i = 0; i < counter->count; i++)
+        for (uint32_t i = 0; i < counter->count; i++)
         {
                  //uint16_t(2)  xxx counter + avg (hour)
             buf.WriteNetInt16((counter) ? counter->counters[i]:0);
@@ -1137,7 +1138,7 @@ void StatisticsManager::reportPerformance(bool t, Mutex& mt, Array<Socket*>& soc
         int wr = socks[i]->WriteAll((char*)&nsize, 4);
         wr += socks[i]->WriteAll((char*)buf.getBuffer(), size - 4);
 
-      if(wr != size)
+      if(uint32_t(wr) != size)
       {
         socks[i]->Abort();
         delete socks[i];

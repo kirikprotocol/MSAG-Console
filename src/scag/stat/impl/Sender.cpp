@@ -38,7 +38,7 @@ int Registrator::Execute()
     int counter = 0;
     int httpCounter = 0;
 
-    smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("reg");
+    // smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("reg");
     while(!isStopping)
     {
         SmppStatEvent si;
@@ -107,9 +107,9 @@ int Sender::Execute()
 {
     // smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("stat.send");
 
-    uint64_t cnt,last=0;
+    // uint64_t cnt,last=0;
     timespec now={0,0},lasttime={0,0};
-    double ut,tm,rate,avg;
+    double ut,tm; // ,rate,avg;
     if(start.tv_sec==0)
       clock_gettime(CLOCK_REALTIME,&start);
     Event ev;
@@ -126,9 +126,8 @@ int Sender::Execute()
  
 
     // Makes statistics
-    StatisticsManager * sm = dynamic_cast<StatisticsManager*>(perfListener);
-
 #ifdef MSAG_FAKE_STAT
+    StatisticsManager * sm = dynamic_cast<StatisticsManager*>(perfListener);
     Registrator registrator;
     printf("Registrator is initing...\n");
     registrator.init(sm);
@@ -146,7 +145,7 @@ int Sender::Execute()
       // replace queue
       //cnt=queue.getCounter();
 
-      int eqhash,equnl;
+      // int eqhash,equnl;
 
       //=======================
       // replace queue

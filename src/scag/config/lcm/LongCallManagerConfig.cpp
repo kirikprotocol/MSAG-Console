@@ -21,7 +21,7 @@ void LongCallManagerConfig::init(const ConfigView& cv)   throw(ConfigException)
 bool LongCallManagerConfig::check(const ConfigView& cv)   throw(ConfigException)
 {   
     try {
-        return maxThreads != cv.getInt("maxTasks", NULL);
+        return maxThreads != uint32_t(cv.getInt("maxTasks", NULL));
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){

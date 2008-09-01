@@ -196,39 +196,47 @@ bool StateMachine::expProc_ = false;
 
 int StateMachine::Execute()
 {
-  SmppCommand* pcmd;
+  SmppCommand* cmd;
   while(!isStopping)
   {
     try{
-      while(queue_->getCommand(pcmd))
+      while(queue_->getCommand(cmd))
       {
-          if ( !pcmd ) continue;
-          std::auto_ptr<SmppCommand> aucmd(pcmd);
-          SmppCommand* cmd = pcmd;
+          if ( !cmd ) continue;
+          std::auto_ptr<SmppCommand> aucmd(cmd);
 
           if ( cmd->getCommandId() != PROCESSEXPIREDRESP ) {
-              smsc_log_debug(log_,"Exec: processing command %p %d(%x) from %s", pcmd,
-                             cmd->getCommandId(), cmd->getCommandId(), cmd->getEntity()?cmd->getEntity()->getSystemId():"" );
+              smsc_log_debug(log_,"Exec: processing command %p %d(%s) from %s",
+                             cmd,
+                             cmd->getCommandId(),
+                             commandIdName(cmd->getCommandId()),
+                             cmd->getEntity() ? cmd->getEntity()->getSystemId():"" );
           }
 
           switch(cmd->getCommandId())
           {
           case SUBMIT:              processSubmit(aucmd);             break;
           case SUBMIT_RESP:         processSubmitResp(aucmd);         break;
-          case DELIVERY:            processDelivery(aucmd);           break;
+          case DELIVERY: {
+              if ( cmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT) )
+                  sendReceipt(aucmd);
+              else
+                  processDelivery(aucmd);
+              break;
+          }
           case DELIVERY_RESP:       processDeliveryResp(aucmd);       break;
           case DATASM:              processDataSm(aucmd);             break;
           case DATASM_RESP:         processDataSmResp(aucmd);         break;
           case PROCESSEXPIREDRESP:  processExpiredResps();            break;
           case ALERT_NOTIFICATION:  processAlertNotification(aucmd);  break;
           default:
-              smsc_log_warn(log_,"Unprocessed command %p id %d", pcmd, cmd->getCommandId());
+              smsc_log_warn(log_,"Unprocessed command %p id %d", cmd, cmd->getCommandId());
               break;
           }
       }
     }catch(std::exception& e)
     {
-      smsc_log_error(log_,"Exception in state machine:%s",e.what());
+        smsc_log_error(log_,"Exception in state machine:%s",e.what());
     }
   } // while
   return 0;
@@ -348,7 +356,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
     uint32_t rcnt = 0, failed = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
-    ActiveSession session; // to unlock session automatically
+    ActiveSession session;
     router::RouteInfo ri;
     FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
     re::RuleStatus st;
@@ -741,14 +749,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
     SessionManager& sm = SessionManager::Instance();
     smscmd.set_orgDialogId(cmd->get_dialogId());
 
-    if (cmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT))
-    {
-        sendReceipt(aucmd);
-        return;
-    }
-
     const int ussd_op = getUSSDOp(where, sms, &smscmd );
-
     smscmd.dir = dsdSc2Srv;
     smscmd.orgSrc=sms.getOriginatingAddress();
     smscmd.orgDst=sms.getDestinationAddress();

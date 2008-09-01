@@ -50,7 +50,7 @@ void SerialBuffer::ReadString(std::string &str)
 
 void SerialBuffer::ReadString(std::wstring &str)
 {
-    uint16_t len, i, c;
+    uint16_t len, i; //, c;
     wchar_t scb[255];
 
     len = ReadInt16();
@@ -101,7 +101,7 @@ void SerialBuffer::Empty()
 
 uint32_t SerialBuffer::ReadInt32()
 {
-    if(getPos() + sizeof(uint32_t) > length())
+    if(int(getPos() + sizeof(uint32_t)) > length())
         throw SerialBufferOutOfBounds();
 
 	uint32_t i;
@@ -111,7 +111,7 @@ uint32_t SerialBuffer::ReadInt32()
 
 uint16_t SerialBuffer::ReadInt16()
 {
-    if(getPos() + sizeof(uint16_t) > length())
+    if(int(getPos() + sizeof(uint16_t)) > length())
         throw SerialBufferOutOfBounds();
 
 	uint16_t i;
@@ -121,7 +121,7 @@ uint16_t SerialBuffer::ReadInt16()
 
 uint8_t SerialBuffer::ReadInt8()
 {
-    if(getPos() + sizeof(uint8_t) > length())
+    if(int(getPos() + sizeof(uint8_t)) > length())
         throw SerialBufferOutOfBounds();
 
     uint8_t i;

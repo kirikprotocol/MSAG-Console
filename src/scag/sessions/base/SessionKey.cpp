@@ -104,7 +104,7 @@ Deserializer& SessionKey::deserialize( Deserializer& s ) throw (DeserializerExce
     const char* valdat = "0";
     if ( ival.c_str() ) valdat = ival.c_str();
     const unsigned vallen = strlen( valdat );
-    if ( vallen > smsc::sms::MAX_ADDRESS_VALUE_LENGTH ) 
+    if ( vallen > unsigned(smsc::sms::MAX_ADDRESS_VALUE_LENGTH) )
         throw DeserializerException::dataTooBig();
     addr_ = smsc::sms::Address( vallen, itype, iplan, valdat );
     str_ = "";

@@ -71,12 +71,12 @@ bool ActionSubstr::run(ActionContext& context)
     }
     if (begin < 0) begin = 0;
 
-    if (begin >= strArgument.size()) {
+    if (size_t(begin) >= strArgument.size()) {
         smsc_log_warn(logger,"Action 'substr':: 'begin' parameter is out of bound '%s' string", strArgument.c_str());
         return true;
     } 
 
-    if (end < 0 || end >= strArgument.size()) {
+    if (end < 0 || size_t(end) >= strArgument.size()) {
         if (m_bExistEnd) // Warn if end was specified
             smsc_log_warn(logger,"Action 'substr':: 'end' is out of bound '%d>%d' string", end, strArgument.size());
         end = strArgument.size() - 1;

@@ -12,7 +12,7 @@ ActionReturn::~ActionReturn()
 
 void ActionReturn::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    FieldType ft;
+    // FieldType ft;
     std::string temp;
     bool bExist;
     std::string StatusStr;
