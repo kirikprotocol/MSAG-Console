@@ -51,7 +51,7 @@ static void trim(char* buf)
   size_t st=0,fn=strlen(buf)-1;
   while(isspace(buf[st]))st++;
   while(fn>=0 && isspace(buf[fn]))fn--;
-  if(fn==-1)
+  if(fn==size_t(-1))
   {
     buf[0]=0;
     return;

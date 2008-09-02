@@ -79,7 +79,7 @@ inline char * encode(const char * const src)
 
 inline std::string decodeDot(std::string str)
 {
-  for (int i=0;i<str.length();i++)
+  for (size_t i=0;i<str.length();i++)
   {
     if (str.at(i) == ENCODE_DECODE_ESCAPE_CHAR)
     {

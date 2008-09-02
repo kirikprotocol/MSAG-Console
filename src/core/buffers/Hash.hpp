@@ -357,11 +357,11 @@ public:
     _buckets=new List[_bucketsnum];
     for(i=0;i<_bucketsnum;i++)
     {
-      if(lnk=src._buckets[i].First())
+      if( (lnk=src._buckets[i].First()) )
       {
         do{
           _buckets[i].Add(*lnk);
-        }while(lnk=_buckets[i].Next(lnk));
+        }while( (lnk=_buckets[i].Next(lnk)) );
       }
     }
     _count=src._count;

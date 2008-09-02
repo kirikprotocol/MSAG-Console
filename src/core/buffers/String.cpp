@@ -858,7 +858,7 @@ int String::LoadFromFile(const char* filename)
   int size=(int)ftell(f);
   fseek(f,0,SEEK_SET);
   SetSize(size);
-  if(fread(_str,1,size,f)!=size)
+  if(fread(_str,1,size,f)!=size_t(size))
   {
     fclose(f);
     return 0;

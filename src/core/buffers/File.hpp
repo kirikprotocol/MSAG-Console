@@ -382,7 +382,7 @@ public:
   {
     if(!isInMemory() || fd==-1)throw FileException(FileException::errFileNotOpened,filename.c_str());
     flags&=~FLG_INMEMORY;
-    int sz=(int)Size();
+    size_t sz=(int)Size();
     if(bufferSize<sz)
     {
       if(buffer!=initBuffer)delete [] buffer;
@@ -391,7 +391,7 @@ public:
     }
     flags|=FLG_INMEMORY;
     lseek(fd,0,SEEK_SET);
-    if(read(fd,buffer,sz)!=sz)throw FileException(FileException::errReadFailed,filename.c_str());
+    if(read(fd,buffer,sz)!=ssize_t(sz))throw FileException(FileException::errReadFailed,filename.c_str());
     fileSize=sz;
     bufferPosition=0;
   }
@@ -462,7 +462,7 @@ public:
 
   void SetBuffer(int sz)
   {
-    if(sz<bufferSize)return;
+    if(sz<int(bufferSize))return;
     if(fd!=-1)Flush();
     ResetBuffer();
     buffer=new char[sz];
@@ -615,14 +615,14 @@ public:
         buf=tmp;
         sz-=towr;
         bufferPosition=0;
-        if(write(fd,buffer,bufferSize)!=bufferSize)
+        if(write(fd,buffer,bufferSize)!=ssize_t(bufferSize))
         {
           throw FileException(FileException::errWriteFailed,filename.c_str());
         }
         if(eventHandler)eventHandler->onWrite(buffer,bufferSize);
         if(sz>bufferSize)
         {
-          if(write(fd,buf,sz)!=sz)
+          if(write(fd,buf,sz)!=ssize_t(sz))
           {
             throw FileException(FileException::errWriteFailed,filename.c_str());
           }
@@ -639,7 +639,7 @@ public:
       }
     }else
     {
-      if(write(fd,buf,sz)!=sz)throw FileException(FileException::errWriteFailed,filename.c_str());
+      if(write(fd,buf,sz)!=ssize_t(sz))throw FileException(FileException::errWriteFailed,filename.c_str());
       if(eventHandler)eventHandler->onWrite(buf,sz);
     }
 
@@ -849,7 +849,7 @@ public:
       {
         if(maxFlushSpeed==0)
         {
-          if(write(fd,buffer,bufferPosition)!=bufferPosition)
+          if(write(fd,buffer,bufferPosition)!=ssize_t(bufferPosition))
             throw FileException(FileException::errWriteFailed,filename.c_str());
           if(eventHandler)eventHandler->onWrite(buffer,bufferPosition);
           bufferPosition=0;
@@ -859,9 +859,9 @@ public:
           uint64_t written=0;
           while(written<bufferPosition)
           {
-            uint64_t pieceSize=bufferPosition-written<maxFlushSpeed?bufferPosition-written:maxFlushSpeed;
+            uint64_t pieceSize=int(bufferPosition-written)<maxFlushSpeed?bufferPosition-written:maxFlushSpeed;
             writeTime=smsc::util::getmillis();
-            if(write(fd,buffer+written,pieceSize)!=pieceSize)
+            if(write(fd,buffer+written,pieceSize)!=ssize_t(pieceSize))
               throw FileException(FileException::errWriteFailed,filename.c_str());
             if(eventHandler)eventHandler->onWrite(buffer+written,pieceSize);
             writeTime=smsc::util::getmillis()-writeTime;

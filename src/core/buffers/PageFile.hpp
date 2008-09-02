@@ -116,6 +116,8 @@ public:
           smsc_log_warn( log_, "file was corrupted in NewPage: last=%llx",
                          static_cast<long long>(lastFreePage) );
 #endif
+          fprintf( stderr, "pagefile was corrupted in NewPage: last=%llx\n",
+                   static_cast<long long>(lastFreePage) );
           lastFreePage = 0;
           file.Seek(headerSize-8);
           file.WriteNetInt64( lastFreePage );
@@ -131,6 +133,9 @@ public:
                              static_cast<long long>(lastFreePage),
                              statusstring(status) );
 #endif
+              fprintf( stderr, "pagefile was corrupted in FreePage: last=%llx, status=%s\n",
+                       static_cast<long long>(lastFreePage),
+                       statusstring(status) );
               File::offset_type startPage = lastFreePage;
               File::offset_type nextPage = 0;
               for (;;) {
@@ -138,9 +143,11 @@ public:
                   nextPage = file.ReadNetInt64();
                   if ( nextPage == startPage ) {
 #ifdef PAGEFILEDEBUG
-                      smsc_log_debug( log_, "looping at page=%llx, last free page forced",
+                      smsc_log_warng( log_, "looping at page=%llx, last free page forced",
                                       static_cast<long long>(lastFreePage) );
 #endif
+                      fprintf( stderr, "looping at page=%llx, last free page forced\n",
+                               static_cast<long long>(lastFreePage) );
                       nextPage = 0; // looping
                   }
                   status = ( nextPage ? pageFree : pageFreeLast );
@@ -188,9 +195,9 @@ public:
       if(state==pageUsedSingle)
       {
         //printf("Read::Single pageIdx=%08llx\n",pageIdx);
-#ifdef PAGEFILEDEBUG
-          if ( log_->isDebugEnabled() ) showpage( "rd single", pageIdx, state, dataSize, 0 );
-#endif
+// #ifdef PAGEFILEDEBUG
+//          if ( log_->isDebugEnabled() ) showpage( "rd single", pageIdx, state, dataSize, 0 );
+// #endif
         data.resize(dataSize);
         file.SeekCur(8);
         file.Read(&data[0],dataSize);
@@ -202,9 +209,9 @@ public:
         {
           File::offset_type next=file.ReadNetInt64();
           //printf("Read::Multi state=%d, pageIdx=%08llx,next=%08llx\n",state,pageIdx,next);
-#ifdef PAGEFILEDEBUG
-            if ( log_->isDebugEnabled() ) showpage( "rd multi", innerPageIdx, state, dataSize, next );
-#endif
+// #ifdef PAGEFILEDEBUG
+//             if ( log_->isDebugEnabled() ) showpage( "rd multi", innerPageIdx, state, dataSize, next );
+// #endif
           size_t sz=data.size();
           data.resize(sz+dataSize);
           file.Read(&data[sz],dataSize);
@@ -243,7 +250,7 @@ public:
     while(size>0)
     {
       File::offset_type pageIdx=nextIdx?nextIdx:NewPage();
-      nextIdx=size>pageSize-pageHeaderSize?NewPage():0;
+      nextIdx=size>unsigned(pageSize-pageHeaderSize)?NewPage():0;
       file.Seek(pageIdx);
       int state=pageUsedContinued;
       if(firstPage==0)
@@ -263,7 +270,7 @@ public:
         }
       }
       file.WriteByte(state);
-      unsigned pieceSize=size>pageSize-pageHeaderSize?pageSize-pageHeaderSize:size;
+      unsigned pieceSize=size>unsigned(pageSize-pageHeaderSize)?pageSize-pageHeaderSize:size;
 #ifdef PAGEFILEDEBUG
         if ( log_->isDebugEnabled() ) showpage( "append", pageIdx, state, pieceSize, nextIdx );
 #endif
@@ -339,14 +346,14 @@ public:
       }
       file.Seek(pageIdx);
       int status=file.ReadByte();
-      unsigned dataSize=file.ReadNetInt32();
       nextIdx=file.ReadNetInt64();
 #ifdef PAGEFILEDEBUG
+      unsigned dataSize=file.ReadNetInt32();
       if ( log_->isDebugEnabled() ) showpage("upd read", pageIdx, status, dataSize, nextIdx );
 #endif
       if(wasNewPage || status==pageUsedFinal)nextIdx=0;
 
-      if((status==pageUsedSingle || firstPage) && size<=pageSize-pageHeaderSize)
+      if((status==pageUsedSingle || firstPage) && size<=unsigned(pageSize-pageHeaderSize))
       {
         //printf("Update:: single, idx=%08llx\n",pageIdx);
         file.Seek(pageIdx);
@@ -361,13 +368,13 @@ public:
         break;
       }
 
-      if(size>pageSize-pageHeaderSize)
+      if(size>unsigned(pageSize-pageHeaderSize))
       {
         status=firstPage?pageUsedFirst:pageUsedContinued;
-      }else if(firstPage && size<=pageSize-pageHeaderSize)
+      }else if(firstPage && size<=unsigned(pageSize-pageHeaderSize))
       {
         status=pageUsedSingle;
-      }else if(!firstPage && size<=pageSize-pageHeaderSize)
+      }else if(!firstPage && size<=unsigned(pageSize-pageHeaderSize))
       {
         status=pageUsedFinal;
       }
@@ -381,7 +388,7 @@ public:
 
       file.Seek(pageIdx);
       file.WriteByte(status);
-      unsigned pieceSize=size>pageSize-pageHeaderSize?pageSize-pageHeaderSize:size;
+      unsigned pieceSize=size>unsigned(pageSize-pageHeaderSize)?pageSize-pageHeaderSize:size;
       file.WriteNetInt32(pieceSize);
       {
           File::offset_type nextPage = (status==pageUsedFinal || status==pageUsedSingle?0:nextIdx);
