@@ -355,14 +355,8 @@ public class MissedCallServiceStub extends org.apache.axis2.client.Stub
      * @param param PhoneNumber
      */
     public void setPhoneNumber(java.lang.String param){
-                            
-      if (param != null){
-        //update the setting tracker
-        localPhoneNumberTracker = true;
-      } else {
-        localPhoneNumberTracker = false;
-                                              
-      }
+
+      localPhoneNumberTracker = param != null;
                                    
       this.localPhoneNumber=param;
                                     
@@ -1443,13 +1437,7 @@ public class MissedCallServiceStub extends org.apache.axis2.client.Stub
      */
     public void setGetMissedCallsResult(ArrayOfMissedCall param){
 
-      if (param != null){
-        //update the setting tracker
-        localGetMissedCallsResultTracker = true;
-      } else {
-        localGetMissedCallsResultTracker = false;
-
-      }
+      localGetMissedCallsResultTracker = param != null;
 
       this.localGetMissedCallsResult=param;
 
@@ -1893,13 +1881,7 @@ public class MissedCallServiceStub extends org.apache.axis2.client.Stub
      */
     public void setPhoneNumber(java.lang.String param){
 
-      if (param != null){
-        //update the setting tracker
-        localPhoneNumberTracker = true;
-      } else {
-        localPhoneNumberTracker = false;
-
-      }
+      localPhoneNumberTracker = param != null;
 
       this.localPhoneNumber=param;
 
@@ -1937,13 +1919,7 @@ public class MissedCallServiceStub extends org.apache.axis2.client.Stub
      */
     public void setCallDate(java.lang.String param){
 
-      if (param != null){
-        //update the setting tracker
-        localCallDateTracker = true;
-      } else {
-        localCallDateTracker = false;
-
-      }
+      localCallDateTracker = param != null;
 
       this.localCallDate=param;
 
@@ -1981,13 +1957,7 @@ public class MissedCallServiceStub extends org.apache.axis2.client.Stub
      */
     public void setProcessDate(java.lang.String param){
 
-      if (param != null){
-        //update the setting tracker
-        localProcessDateTracker = true;
-      } else {
-        localProcessDateTracker = false;
-
-      }
+      localProcessDateTracker = param != null;
 
       this.localProcessDate=param;
 

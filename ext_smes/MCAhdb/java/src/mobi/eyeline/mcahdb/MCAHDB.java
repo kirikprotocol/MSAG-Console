@@ -1,46 +1,57 @@
 package mobi.eyeline.mcahdb;
 
-import java.io.File;
 import java.util.Date;
 import java.util.Collection;
+import java.io.File;
 
-import mobi.eyeline.mcahdb.engine.ds.JournalDataSource;
-import mobi.eyeline.mcahdb.engine.ds.EventsDataSource;
-import mobi.eyeline.mcahdb.engine.ds.Event;
-import mobi.eyeline.mcahdb.engine.ds.impl.file.JournalDataSourceImpl;
-import mobi.eyeline.mcahdb.engine.ds.impl.file.EventsDataSourceImpl;
-import mobi.eyeline.mcahdb.engine.JournalsProcessor;
-import mobi.eyeline.mcahdb.engine.EventsFetcher;
+import mobi.eyeline.mcahdb.engine.event.EventStore;
+import mobi.eyeline.mcahdb.engine.event.ds.Event;
+import mobi.eyeline.mcahdb.engine.journal.JournalsProcessor;
 import mobi.eyeline.mcahdb.engine.InitException;
+import mobi.eyeline.mcahdb.engine.scheduler.Scheduler;
 import mobi.eyeline.mcahdb.soap.SoapServer;
+import mobi.eyeline.mcahdb.smpp.TestTransportMultiplexor;
 import org.apache.axis2.AxisFault;
+import com.eyeline.sme.smpp.SMPPTransceiver;
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.Arguments;
+import ru.aurorisoft.smpp.SMPPException;
 
 /**
  * User: artem
  * Date: 01.08.2008
  */
-
+                                                                                  
 public class MCAHDB {
 
-  private final EventsDataSource eventsDS;
   private final JournalsProcessor journalsProcessor;
-  private final EventsFetcher eventsFetcher;
+  private final EventStore eventStore;
   private final SoapServer soapServer;
+  private final Scheduler scheduler;
+  private final SMPPTransceiver transceiver;
 
-  public MCAHDB() throws InitException {
+  public MCAHDB(boolean test) throws InitException {
     try {
 
       GlobalConfig cfg = new GlobalConfig();
 
-      JournalDataSource journalDS = new JournalDataSourceImpl(cfg);
+      final PropertiesConfig smppConfig = new PropertiesConfig();
+      smppConfig.load(new File("conf/smpp.properties"));
+      if (test) {
+        System.out.println("MCAHDB started in test mode.");
+        transceiver = new SMPPTransceiver(new TestTransportMultiplexor(), smppConfig, "");
+      } else
+        transceiver = new SMPPTransceiver(smppConfig, "");
 
-      eventsDS = new EventsDataSourceImpl(cfg);
+      scheduler = new Scheduler(cfg, transceiver);
 
-      journalsProcessor = new JournalsProcessor(journalDS, eventsDS, cfg);
-      eventsFetcher = new EventsFetcher(eventsDS);
+      eventStore = new EventStore(cfg);
+      journalsProcessor = new JournalsProcessor(eventStore, scheduler, cfg);
 
-      soapServer = new SoapServer(cfg, eventsFetcher);
-      soapServer.start();      
+      transceiver.connect();
+      
+      soapServer = new SoapServer(cfg, eventStore);
+      soapServer.start();
     } catch (Exception e) {
       throw new InitException(e);
     }
@@ -57,17 +68,27 @@ public class MCAHDB {
   }
 
   public Collection<Event> getEvents(String address, Date from, Date till) {
-    return eventsFetcher.getEvents(address, from, till);
+    return eventStore.getEvents(address, from, till);
   }
 
   public void shutdown() {
+    System.out.println("Shutdown journal processor.");
     journalsProcessor.shutdown();
-    System.out.println("Shutdown journal processor");
-    eventsDS.close();
-    System.out.println("Shutdown events ds.");
+    System.out.println("Shutdown events.");
+    eventStore.shutdown();
+    System.out.println("Shutown scheduler.");
+    scheduler.shutdown();
+    System.out.println("Shutdown smpp.");
     try {
-      soapServer.stop();
+      transceiver.shutdown();
+    } catch (SMPPException e) {
+      e.printStackTrace();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    try {
       System.out.println("Stop soap server");
+      soapServer.stop();
     } catch (AxisFault axisFault) {
       axisFault.printStackTrace();
     }
@@ -75,7 +96,9 @@ public class MCAHDB {
 
   public static void main(String[] args) {
     try {
-      new MCAHDB();
+      Arguments a = new Arguments(args);
+
+      new MCAHDB(a.containsAttr("-t"));
     } catch (InitException e) {
       e.printStackTrace();
     }

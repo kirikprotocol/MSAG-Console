@@ -1,6 +1,6 @@
 package mobi.eyeline.mcahdb.soap;
 
-import mobi.eyeline.mcahdb.engine.EventsFetcher;
+import mobi.eyeline.mcahdb.engine.event.EventStore;
 import mobi.eyeline.mcahdb.soap.missedcallservice.MissedCallServiceMessageReceiverInOut;
 import mobi.eyeline.mcahdb.soap.missedcallservice.MissedCallServiceSkeleton;
 import org.apache.axis2.AxisFault;
@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.ConfigException;
 
 /**
@@ -26,7 +25,7 @@ import com.eyeline.utils.config.ConfigException;
 
 public class SoapServer extends AxisServer {
 
-  public SoapServer(SoapConfig config, EventsFetcher fetcher) throws IOException, ConfigException {
+  public SoapServer(SoapConfig config, EventStore fetcher) throws IOException, ConfigException {
     super(false); // run on deploy
 
     ServiceContext.init(fetcher, config);

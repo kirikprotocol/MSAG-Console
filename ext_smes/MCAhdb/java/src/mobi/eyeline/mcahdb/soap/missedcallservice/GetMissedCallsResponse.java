@@ -53,18 +53,10 @@ public  class GetMissedCallsResponse
    * @param param GetMissedCallsResult
    */
   public void setGetMissedCallsResult(ArrayOfMissedCall param){
-                            
-    if (param != null){
-      //update the setting tracker
-      localGetMissedCallsResultTracker = true;
-    } else {
-      localGetMissedCallsResultTracker = false;
-                                              
-    }
+
+    localGetMissedCallsResultTracker = param != null;
                                    
     this.localGetMissedCallsResult=param;
-                                    
-
   }
                             
 

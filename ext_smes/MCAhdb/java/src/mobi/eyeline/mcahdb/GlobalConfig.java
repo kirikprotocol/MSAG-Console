@@ -6,9 +6,9 @@ import com.eyeline.utils.config.ConfigException;
 
 import java.io.File;
 
-import mobi.eyeline.mcahdb.engine.ds.impl.file.JournalDataSourceImpl;
-import mobi.eyeline.mcahdb.engine.ds.impl.file.EventsDataSourceImpl;
-import mobi.eyeline.mcahdb.engine.JournalsProcessor;
+import mobi.eyeline.mcahdb.engine.journal.JournalsProcessor;
+import mobi.eyeline.mcahdb.engine.event.EventStore;
+import mobi.eyeline.mcahdb.engine.scheduler.Scheduler;
 import mobi.eyeline.mcahdb.soap.SoapConfig;
 
 /**
@@ -16,9 +16,9 @@ import mobi.eyeline.mcahdb.soap.SoapConfig;
  * Date: 06.08.2008
  */
 
-public class GlobalConfig implements JournalDataSourceImpl.Config,
-                                     EventsDataSourceImpl.Config,
-                                     JournalsProcessor.Config, SoapConfig {
+public class GlobalConfig implements EventStore.Config,
+                                     JournalsProcessor.Config,
+                                     Scheduler.Config, SoapConfig {
 
   private final int journalsCheckInterval;
   private final String journalsDir;
@@ -26,6 +26,12 @@ public class GlobalConfig implements JournalDataSourceImpl.Config,
   private final String eventsStoreDir;
   private final String soapResponseDateFormat;
   private final int soapEventsFetchInterval;
+
+  private final String schedulerExpiredNotifText;
+  private final String schedulerStoreDir;
+  private final String schedulerErrorText;
+  private final String schedulerProfileChangedText;
+  private final int schedulerExpirationPeriod;
 
   public GlobalConfig() throws ConfigException {
     XmlConfig config = new XmlConfig();
@@ -42,7 +48,7 @@ public class GlobalConfig implements JournalDataSourceImpl.Config,
 
     XmlConfigSection eventsStoreSection = config.getSection("eventsStore");
     if (eventsStoreSection == null)
-      throw new ConfigException("'eventssStore' section not found in config.xml");
+      throw new ConfigException("'eventsStore' section not found in config.xml");
     eventsStoreDir = eventsStoreSection.getString("storeDir");
 
     XmlConfigSection soapSection = config.getSection("soap");
@@ -50,6 +56,15 @@ public class GlobalConfig implements JournalDataSourceImpl.Config,
       throw new ConfigException("'soap' section not found in config.xml");
     soapResponseDateFormat = soapSection.getString("responseDateFormat");
     soapEventsFetchInterval = soapSection.getInt("eventsFetchInterval");
+
+    XmlConfigSection schedulerSection = config.getSection("scheduler");
+    if (schedulerSection == null)
+      throw new ConfigException(("'scheduler' section not found in config.xml"));
+    schedulerExpiredNotifText = schedulerSection.getString("expiredText");
+    schedulerStoreDir = schedulerSection.getString("storeDir");
+    schedulerErrorText = schedulerSection.getString("errorText");
+    schedulerProfileChangedText = schedulerSection.getString("profileChangedText");
+    schedulerExpirationPeriod = schedulerSection.getInt("expirationPeriod");
   }
 
   public int getJournalsCheckInterval() {
@@ -74,5 +89,25 @@ public class GlobalConfig implements JournalDataSourceImpl.Config,
 
   public int getSoapEventsFetchInterval() {
     return soapEventsFetchInterval;
+  }
+
+  public String getSchedulerExpiredNotifText() {
+    return schedulerExpiredNotifText;
+  }
+
+  public String getSchedulerStoreDir() {
+    return schedulerStoreDir;
+  }
+
+  public String getSchedulerErrorText() {
+    return schedulerErrorText;
+  }
+
+  public String getSchedulerProfileChangedText() {
+    return schedulerProfileChangedText;
+  }
+
+  public int getSchedulerExpirationPeriod() {
+    return schedulerExpirationPeriod;
   }
 }

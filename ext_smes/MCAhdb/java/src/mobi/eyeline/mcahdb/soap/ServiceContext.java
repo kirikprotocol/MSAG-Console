@@ -1,7 +1,6 @@
 package mobi.eyeline.mcahdb.soap;
 
-import mobi.eyeline.mcahdb.engine.EventsFetcher;
-import mobi.eyeline.mcahdb.GlobalConfig;
+import mobi.eyeline.mcahdb.engine.event.EventStore;
 
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Lock;
@@ -33,7 +32,7 @@ public class ServiceContext {
     }
   }
 
-  static void init(EventsFetcher fetcher, SoapConfig config) {
+  static void init(EventStore fetcher, SoapConfig config) {
     try {
       lock.lock();
 
@@ -47,17 +46,17 @@ public class ServiceContext {
     }
   }
 
-  private final EventsFetcher eventsFetcher;
+  private final EventStore eventsFetcher;
   private final SimpleDateFormat df;
   private final int eventsFetchInterval;
 
-  public ServiceContext(EventsFetcher eventsFetcher, SoapConfig config) {
+  public ServiceContext(EventStore eventsFetcher, SoapConfig config) {
     this.eventsFetcher = eventsFetcher;
     this.df = new SimpleDateFormat(config.getSoapResponseDateFormat());
     this.eventsFetchInterval = config.getSoapEventsFetchInterval();
   }
 
-  public EventsFetcher getEventsFetcher() {
+  public EventStore getEventsFetcher() {
     return eventsFetcher;
   }
 

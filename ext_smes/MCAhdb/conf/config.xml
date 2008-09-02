@@ -1,6 +1,6 @@
 <config>
 
-  <param name="journalsCheckInterval">60000</param>
+  <param name="journalsCheckInterval">10000</param>
 
   <section name="journalStore">
     <param name="journalsDir">store/journals</param>
@@ -9,6 +9,14 @@
 
   <section name="eventsStore">
     <param name="storeDir">store/events</param>
+  </section>
+
+  <section name="scheduler">
+    <param name="storeDir">store/schedule</param>
+    <param name="expirationPeriod">12</param>
+    <param name="expiredText">expired</param>
+    <param name="profileChangedText">profile changed</param>
+    <param name="errorText">error</param>
   </section>
 
   <section name="soap">

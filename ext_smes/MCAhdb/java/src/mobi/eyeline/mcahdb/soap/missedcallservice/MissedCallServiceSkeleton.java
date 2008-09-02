@@ -1,7 +1,7 @@
 package mobi.eyeline.mcahdb.soap.missedcallservice;
 
 import mobi.eyeline.mcahdb.soap.ServiceContext;
-import mobi.eyeline.mcahdb.engine.ds.Event;
+import mobi.eyeline.mcahdb.engine.event.ds.Event;
 
 import java.util.Date;
 import java.util.Collection;

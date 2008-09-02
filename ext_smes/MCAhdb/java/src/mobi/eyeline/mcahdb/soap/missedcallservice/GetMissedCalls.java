@@ -53,18 +53,10 @@ public  class GetMissedCalls
    * @param param PhoneNumber
    */
   public void setPhoneNumber(java.lang.String param){
-                            
-    if (param != null){
-      //update the setting tracker
-      localPhoneNumberTracker = true;
-    } else {
-      localPhoneNumberTracker = false;
-                                              
-    }
+
+    localPhoneNumberTracker = param != null;
                                    
     this.localPhoneNumber=param;
-                                    
-
   }
                             
 
