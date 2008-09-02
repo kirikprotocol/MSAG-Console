@@ -24,6 +24,8 @@ public:
     unsigned    indexgrowth;
     unsigned    pagesize;
     unsigned    prealloc;
+    bool        diskio;
+
 private:
     std::string getString( const scag::config::ConfigView& cfg,
                            const char* param ) const throw (ConfigException);

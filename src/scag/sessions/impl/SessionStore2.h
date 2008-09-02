@@ -61,7 +61,8 @@ public:
                const std::string& name = "sessions",
                unsigned indexgrowth = 10000,
                unsigned pagesize = 512,
-               unsigned prealloc = 0 );
+               unsigned prealloc = 0,
+               bool     dodiskio = true );
 
     void stop();
 
@@ -109,6 +110,8 @@ private:
     std::auto_ptr<DiskStorage>  disk_;
 
     smsc::logger::Logger*       log_;
+    
+    bool                        diskio_;
 
     // statstics
     unsigned                    totalSessions_;

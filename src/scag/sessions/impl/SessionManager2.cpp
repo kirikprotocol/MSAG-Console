@@ -90,7 +90,8 @@ void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg,
                   cfg.name,
                   cfg.indexgrowth,
                   cfg.pagesize,
-                  cfg.prealloc );
+                  cfg.prealloc,
+                  cfg.diskio );
 
     smsc_log_debug(log_,"SessionManager::initialized");
 }

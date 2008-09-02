@@ -28,6 +28,7 @@ namespace config {
             indexgrowth = cv.getInt("indexgrowth");
             pagesize = cv.getInt("pagesize");
             prealloc = cv.getInt("prealloc");
+            diskio = (cv.getInt("diskio") != 0);
         } catch (...) {
             if ( ! usedefault_ ) throw;
         }
@@ -43,7 +44,8 @@ namespace config {
                  name == smc.name &&
                  indexgrowth == smc.indexgrowth &&
                  pagesize == smc.pagesize &&
-                 prealloc == smc.prealloc );
+                 prealloc == smc.prealloc &&
+                 diskio == smc.diskio );
 }
 
 
@@ -63,6 +65,7 @@ namespace config {
         indexgrowth = 1000;
         pagesize = 512;
         prealloc = 100;
+        diskio = true;
     }
 
 }

@@ -71,10 +71,13 @@ void SessionStoreImpl::init( unsigned eltNumber,
                              const std::string& name,
                              unsigned indexgrowth,
                              unsigned pagesize,
-                             unsigned prealloc )
+                             unsigned prealloc,
+                             bool     dodiskio )
 {
     MutexGuard mg(cacheLock_);
     if ( ! stopping_ ) return; // already inited
+
+    diskio_ = dodiskio;
     queue_ = &queue;
     // eltNumber_ = eltNumber;
 
@@ -232,7 +235,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     // commands are owned elsewhere
     // delete prev;
 
-    if (v) disk_->get( key, cache_->store2ref(*v) );
+    if (v && diskio_) disk_->get( key, cache_->store2ref(*v) );
 
     // smsc_log_debug( log_, "fetched key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
     smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p%s",
@@ -287,16 +290,17 @@ void SessionStoreImpl::releaseSession( Session& session )
         }
 
         // FIXME: think for optimization of not-flushing each time a session is released?
-        if ( session.isPersistent() ) {
-            UnlockMutexGuard ug(cacheLock_);
-            disk_->set( key, cache_->store2ref(*v) );
-            smsc_log_debug(log_, "flushed key=%s session=%p", key.toString().c_str(), &session );
+        if ( diskio_ ) {
 
-        } else {
-            UnlockMutexGuard ug(cacheLock_);
-            disk_->remove( key );
-            smsc_log_debug(log_, "removed key=%s session=%p", key.toString().c_str(), &session );
-
+            if ( session.isPersistent() ) {
+                UnlockMutexGuard ug(cacheLock_);
+                disk_->set( key, cache_->store2ref(*v) );
+                smsc_log_debug(log_, "flushed key=%s session=%p", key.toString().c_str(), &session );
+            } else {
+                UnlockMutexGuard ug(cacheLock_);
+                disk_->remove( key );
+                smsc_log_debug(log_, "removed key=%s session=%p", key.toString().c_str(), &session );
+            }
         }
             
         expiration = session.expirationTime();
