@@ -26,6 +26,7 @@ scag/scag            gwmain         $(XERCES_LIB) -lscag-util -lscag \
    -lscag-pers -lscag-config-pers -lscag-pers -lscag-lcm \
    \
    -lscag-config-lcm \
+   -lscag-config-base \
    -lscag-util-encodings -lutil-recoder-recode_dll -lutil-regexp -lscag-exc \
    -lsms $(SOCKETLIB) -lcore-network -lnsl  $(XERCES_LIB) -lscag @liblogger.so \
    -L$(SMSC_BUILDDIR)/bin -llogger -linman-interaction -linman-common \
