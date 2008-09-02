@@ -28,7 +28,7 @@ public class StoresCache {
 
   private static final SimpleDateFormat fileNameFormat = new SimpleDateFormat("yyMM/dd/HH");
 
-  private static final int CACHE_CLEAN_INTERVAL = 3600000;
+  private static final int CACHE_CLEAN_INTERVAL = 600000;
   private static final int CACHE_MODIFIED_CLOSE_INTERVAL = 600000;
 
   private final File storeDir;

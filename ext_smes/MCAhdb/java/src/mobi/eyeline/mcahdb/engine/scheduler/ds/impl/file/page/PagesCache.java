@@ -31,7 +31,7 @@ public class PagesCache {
   private static final Category log = Category.getInstance(PagesCache.class);
   private static final SimpleDateFormat df = new SimpleDateFormat("yyyyMM/dd/HH");
 
-  private static final int CACHE_CLEAN_INTERVAL = 3600000;
+  private static final int CACHE_CLEAN_INTERVAL = 600000;
   private static final int CACHE_MODIFIED_CLOSE_INTERVAL = 600000;
 
   private final File storeDir;
