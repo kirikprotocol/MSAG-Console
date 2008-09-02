@@ -16,4 +16,14 @@ uint32_t getNextSmsPart(SMS& orgSms, SMS& partSms, uint32_t refNum, uint32_t seq
 
 }}}
 
+namespace scag2 {
+namespace transport {
+namespace smpp {
+using scag::transport::smpp::isSliced;
+using scag::transport::smpp::getPartsCount;
+using scag::transport::smpp::getNextSmsPart;
+}
+}
+}
+
 #endif

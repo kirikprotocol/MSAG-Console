@@ -2,7 +2,7 @@
 #define __SCAG_TRANSPORT_SMPP_SMPPMANAGERADMIN2_H__
 
 #include "sms/sms_const.h"
-#include "SmppTypes.h"
+#include "scag/transport/smpp/SmppTypes.h"
 #include "core/buffers/FixedLengthString.hpp"
 #include <strings.h>
 #include <list>

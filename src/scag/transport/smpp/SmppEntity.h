@@ -1,8 +1,8 @@
 #ifndef __SCAG_TRANSPORT_SMPP_SMPPENTITY_H__
 #define __SCAG_TRANSPORT_SMPP_SMPPENTITY_H__
 
-#include "scag/transport/smpp/SmppChannel.h"
 #include "scag/transport/smpp/SmppTypes.h"
+#include "scag/transport/smpp/SmppChannel.h"
 #include "core/synchronization/Mutex.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "core/buffers/Hash.hpp"

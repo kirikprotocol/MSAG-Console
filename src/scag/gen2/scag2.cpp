@@ -15,6 +15,7 @@
 #include "scag/sessions/impl/SessionManager2.h"
 #include "scag/stat/impl/StatisticsManager.h"
 #include "scag/transport/smpp/router/load_routes.h"
+#include "scag/transport/smpp/impl/SmppManager2.h"
 #include "scag/util/encodings/Encodings.h"
 #include "scag2.h"
 #include "util/Exception.hpp"
@@ -205,9 +206,10 @@ void Scag::init( unsigned mynode )
     scagPort=cfg.getConfig()->getInt("smpp.port");
 
     try {
-      smsc_log_info(log, "Smpp Manager is starting");
-      transport::smpp::SmppManager::Init(findConfigFile("../conf/smpp.xml"));
-      smsc_log_info(log, "Smpp Manager started");
+        smsc_log_info(log, "Smpp Manager is starting");
+        SmppManagerImpl* sm = new SmppManagerImpl();
+        sm->Init( findConfigFile("../conf/smpp.xml") );
+        smsc_log_info(log, "Smpp Manager started");
     } catch(Exception& e) {
       throw Exception("Exception during initialization of SmppManager: %s", e.what());
     } catch (XMLException& e) {
@@ -263,7 +265,7 @@ void Scag::shutdown()
 {
   __trace__("shutting down");
 //   scag::transport::http::HttpManager::Instance().shutdown();
-  scag2::transport::smpp::SmppManager::shutdown();
+    transport::smpp::SmppManager::Instance().shutdown();
     lcm::LongCallManager::Instance().shutdown();  
 //  scag::pers::client::PersClient::Instance().Stop();
     bill::BillingManager::Instance().Stop();

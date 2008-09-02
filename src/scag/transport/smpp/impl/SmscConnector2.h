@@ -5,7 +5,7 @@
 #include <string>
 #include <time.h>
 #include "core/threads/ThreadPool.hpp"
-#include "SmppSMInterface2.h"
+#include "scag/transport/smpp/base/SmppSMInterface2.h"
 #include "SmscSocket2.h"
 #include "SmscConnectorAdmin2.h"
 

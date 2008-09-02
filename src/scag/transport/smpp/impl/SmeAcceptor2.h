@@ -4,7 +4,7 @@
 #include <string>
 
 #include "SmeSocket2.h"
-#include "SmppSMInterface2.h"
+#include "scag/transport/smpp/base/SmppSMInterface2.h"
 #include "core/threads/ThreadedTask.hpp"
 #include "logger/Logger.h"
 #include "util/Exception.hpp"

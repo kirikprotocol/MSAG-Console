@@ -2,9 +2,9 @@
 #define __SCAG_TRANSPORT_SMPP_SMPPSTATEMACHINE2_H__
 
 #include <vector>
-#include "SmppCommandQueue2.h"
-#include "SmppRouter2.h"
-#include "SmppCommand2.h"
+#include "scag/transport/smpp/base/SmppCommandQueue2.h"
+#include "scag/transport/smpp/base/SmppRouter2.h"
+#include "scag/transport/smpp/base/SmppCommand2.h"
 #include "scag/sessions/base/Session2.h"
 #include "core/threads/ThreadedTask.hpp"
 #include "logger/Logger.h"
@@ -13,12 +13,7 @@ namespace scag2 {
 namespace transport {
 namespace smpp {
 
-namespace router = scag::transport::smpp::router;
-
-namespace thr = smsc::core::threads;
-using namespace sessions;
-
-class StateMachine: public thr::ThreadedTask
+class StateMachine: public smsc::core::threads::ThreadedTask
 {
 public:
     StateMachine( SmppCommandQueue* argQueue, SmppRouter* argRouteMan ) :
@@ -43,11 +38,11 @@ protected:
     void processExpiredResps();
     void processAlertNotification( std::auto_ptr<SmppCommand> aucmd);
     void processSubmitResp( std::auto_ptr<SmppCommand> cmd,
-                            ActiveSession session = ActiveSession() );
+                            sessions::ActiveSession session = sessions::ActiveSession() );
     void processDeliveryResp( std::auto_ptr<SmppCommand> cmd,
-                              ActiveSession session = ActiveSession() );
+                              sessions::ActiveSession session = sessions::ActiveSession() );
     void processDataSmResp( std::auto_ptr<SmppCommand> cmd,
-                            ActiveSession session = ActiveSession() );
+                            sessions::ActiveSession session = sessions::ActiveSession() );
 
     void SubmitResp( std::auto_ptr<SmppCommand> cmd,int status);
     void DeliveryResp( std::auto_ptr<SmppCommand> cmd,int status);

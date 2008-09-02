@@ -2,7 +2,7 @@
 #define _SCAG_TRANSPORT_SMPP_SMPPENTITY2_H
 
 #include "SmppChannel2.h"
-#include "SmppTypes2.h"
+#include "scag/transport/smpp/SmppTypes.h"
 #include "core/synchronization/Mutex.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "core/buffers/Hash.hpp"

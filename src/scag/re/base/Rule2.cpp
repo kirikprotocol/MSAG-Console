@@ -1,7 +1,7 @@
 #include <cassert>
 
 #include "Rule2.h"
-#include "scag/transport/smpp/SmppCommand2.h"
+#include "scag/transport/smpp/base/SmppCommand2.h"
 // #include "scag/transport/http/HttpCommand.h"
 #include "SmppEventHandler2.h"
 // #include "scag/re/http/HttpEventHandler2.h"

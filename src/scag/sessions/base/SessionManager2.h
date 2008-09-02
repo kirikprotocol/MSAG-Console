@@ -16,8 +16,8 @@ class SessionManager
 public:
     static SessionManager& Instance();
 
-    /// should be invoked once
-    static void setInstance( SessionManager* mgr );
+    // should be invoked once
+    // static void setInstance( SessionManager* mgr );
 
     template < class T >
         inline ActiveSession getSession( const SessionKey& key,

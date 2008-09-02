@@ -17,7 +17,7 @@
 #include "util/xml/utilFunctions.h"
 #include "admin/service/Variant.h"
 #include "scag/exc/SCAGExceptions.h"
-#include "scag/transport/smpp/SmppManagerAdmin2.h"
+#include "scag/transport/smpp/base/SmppManagerAdmin2.h"
 
 #include <sms/sms.h>
 #include <sms/sms_const.h>
@@ -28,8 +28,8 @@
 #include "scag/bill/base/BillingManager.h"
 // #include "scag/transport/http/HttpProcessor.h"
 // #include "scag/transport/http/HttpRouter.h"
-
-#include "scag/transport/smpp/SmppManager2.h"
+#include "scag/config/base/ConfigManager2.h"
+#include "scag/transport/smpp/base/SmppManager2.h"
 
 #define CATCH_ADMINEXC(msg_)                                    \
       }catch(AdminException& e){                                \

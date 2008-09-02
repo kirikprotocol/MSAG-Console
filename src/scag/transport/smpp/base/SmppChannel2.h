@@ -2,7 +2,7 @@
 #define _SCAG_TRANSPORT_SMPP_SMPPCHANNEL_H
 
 #include "SmppCommand2.h"
-#include "SmppTypes2.h"
+#include "scag/transport/smpp/SmppTypes.h"
 
 namespace scag2 {
 namespace transport {

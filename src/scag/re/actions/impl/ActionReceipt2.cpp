@@ -2,7 +2,7 @@
 #include "scag/re/base/CommandAdapter2.h"
 #include "scag/re/base/CommandBridge.h"
 #include "smpp/smpp_structures.h"
-#include "scag/transport/smpp/SmppManager2.h"
+#include "scag/transport/smpp/base/SmppManager2.h"
 #include "scag/sessions/base/Session2.h"
 
 namespace scag2 {

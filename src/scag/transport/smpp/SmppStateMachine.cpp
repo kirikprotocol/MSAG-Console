@@ -4,9 +4,9 @@
 #include "scag/sessions/SessionManager.h"
 #include "scag/stat/StatisticsManager.h"
 #include "system/status.h"
-#include "SmppUtil.h"
+#include "scag/transport/smpp/common/SmppUtil.h"
 #include "SmppManager.h"
-#include "SmsSplit.h"
+#include "scag/transport/smpp/common/SmsSplit.h"
 
 namespace scag{
 namespace transport{

@@ -12,8 +12,8 @@
 // #include "transport/http/Managers.h"
 // #include "transport/http/HttpProcessor.h"
 #include "scag/transport/smpp/router/route_manager.h"
-#include "scag/transport/smpp/SmppManager2.h"
-#include "scag/transport/smpp/SmppManagerAdmin2.h"
+#include "scag/transport/smpp/base/SmppManager2.h"
+// #include "scag/transport/smpp/SmppManagerAdmin2.h"
 #include "scag/util/Reffer.h"
 #include "smeman/smsccmd.h"
 #include "sms/sms.h"
@@ -128,10 +128,10 @@ public:
 
   void reloadTestRoutes(const RouteConfig& rcfg);
 
-  scag2::transport::smpp::SmppManagerAdmin* getSmppManagerAdmin()
-  {
-      return &scag2::transport::smpp::SmppManager::Instance();
-  }
+    transport::smpp::SmppManagerAdmin* getSmppManagerAdmin()
+    {
+        return & transport::smpp::SmppManager::Instance();
+    }
 
 protected:
 

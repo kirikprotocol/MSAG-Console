@@ -1,9 +1,9 @@
 #include "Sender.h"
 #include "StatisticsManager.h"
 #include "scag/sessions/SessionManager.h"
-#include "scag/sessions/base/SessionManager2.h"
+// #include "scag/sessions/base/SessionManager2.h"
 #include "scag/transport/smpp/SmppManager.h"
-#include "scag/transport/smpp/SmppManager2.h"
+// #include "scag/transport/smpp/SmppManager2.h"
 #include "scag/transport/http/Managers.h"
 #include <stdlib.h>
 #include <unistd.h>
@@ -137,17 +137,6 @@ int Sender::Execute()
     printf("Registrator is started\n");
 #endif
 
-
-    bool is2 = false;
-    try {
-        SessionManager::Instance();
-    } catch (...) {
-        printf( "switching to use of session generation 2\n" );
-        is2 = true;
-        scag2::sessions::SessionManager::Instance();
-    }
-
-
     //for(;;)
     while(!isStopping)
     {
@@ -257,13 +246,8 @@ int Sender::Execute()
       d.now=now.tv_sec;
       d.uptime=now.tv_sec-start.tv_sec;
 
-        if ( ! is2 ) {
-            SessionManager::Instance().getSessionsCount(d.sessionCount, d.sessionLockedCount);
-            SmppManager::Instance().getQueueLen(d.smppReqQueueLen, d.smppRespQueueLen, d.smppLCMQueueLen);
-        } else {
-            scag2::sessions::SessionManager::Instance().getSessionsCount( d.sessionCount, d.sessionLockedCount );
-            scag2::transport::smpp::SmppManager::Instance().getQueueLen(d.smppReqQueueLen, d.smppRespQueueLen, d.smppLCMQueueLen);
-        }
+        SessionManager::Instance().getSessionsCount(d.sessionCount, d.sessionLockedCount);
+        SmppManager::Instance().getQueueLen(d.smppReqQueueLen, d.smppRespQueueLen, d.smppLCMQueueLen);
       // FIXME: http
       // HttpManager::Instance().getQueueLen(d.httpReqQueueLen, d.httpRespQueueLen, d.httpLCMQueueLen);
         d.httpReqQueueLen = 0;

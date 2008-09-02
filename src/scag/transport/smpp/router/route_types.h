@@ -62,4 +62,12 @@ struct RouteInfo
 }//namespace smpp
 }//namespace router
 
+namespace scag2 {
+namespace transport {
+namespace smpp {
+namespace router = scag::transport::smpp::router;
+}
+}
+}
+
 #endif

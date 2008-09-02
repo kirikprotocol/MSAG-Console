@@ -1,5 +1,5 @@
 #include "SmppOperationMaker.h"
-#include "SmppCommand2.h"
+#include "scag/transport/smpp/base/SmppCommand2.h"
 #include "scag/re/base/RuleEngine2.h"
 #include "scag/sessions/base/Session2.h"
 #include "scag/sessions/base/Operation.h"

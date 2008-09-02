@@ -10,7 +10,7 @@
 #include "RuleStatus2.h"
 #include "scag/util/properties/Properties2.h"
 #include "scag/transport/CommandOperation.h"
-#include "scag/transport/smpp/SmppCommandIds.h"
+#include "scag/transport/smpp/base/SmppCommandIds.h"
 #include "scag/bill/base/BillingInfoStruct.h"
 #include "scag/bill/base/Infrastructure.h"
 

@@ -2,7 +2,7 @@
 #define __SCAG_RULE_ENGINE_COMMAND_BRIDGE__
 
 //#include "scag/transport/SCAGCommand.h"
-#include "scag/transport/smpp/SmppCommand2.h"
+#include "scag/transport/smpp/base/SmppCommand2.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/stat/base/Statistics2.h"
 // #include "CommandOperations.h"

@@ -1,7 +1,7 @@
 #ifndef SCAG_RULE_ENGINE_SMPP_ADAPTER2
 #define SCAG_RULE_ENGINE_SMPP_ADAPTER2
 
-#include "scag/transport/smpp/SmppCommand2.h"
+#include "scag/transport/smpp/base/SmppCommand2.h"
 //#include <scag/util/properties/Properties.h>
 #include "ActionContext2.h"
 #include "CommandBridge.h"

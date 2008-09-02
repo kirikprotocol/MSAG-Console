@@ -59,4 +59,11 @@ private:
 }
 }
 
+namespace scag2 {
+namespace util {
+using scag::util::Reffer;
+using scag::util::RefferGuard;
+}
+}
+
 #endif

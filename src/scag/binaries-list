@@ -8,8 +8,9 @@ scag/scag            gwmain         $(XERCES_LIB) -lscag-util -lscag \
    -lscag-bill -lscag-bill-infrastruct $(XERCES_LIB) -lscag-config \
    -lscag-config-smpp -lscag-config-stat -lscag-config-bill -lscag-config-sessn \
    -lscag-config-route -lscag-config-http $(XERCES_LIB) -lscag-transport-smpp \
-   -lscag-stat -lscag-transport-smpp -lscag-transport-smpp-router -lcore-buffers \
-   -lsms  -lrouter -ladmin-protocol -lscag-sessions -lscag-sessions-base \
+   -lscag-stat -lscag-transport-smpp -lscag-transport-smpp-common \
+   -lscag-transport-smpp-router -lcore-buffers \
+   -lsms  -lrouter -ladmin-protocol -lscag-sessions \
    -lscag-transport \
    -lscag-stat -lscag-util-storage -lscag-config -lscag-config-smpp \
    -lscag-config-sessn -lscag-util-properties -lscag-util-singleton \
@@ -24,10 +25,7 @@ scag/scag            gwmain         $(XERCES_LIB) -lscag-util -lscag \
    -lscag-stat -ladmin-service -lscag-stat-sacc -lscag-bill-infrastruct \
    -lscag-pers -lscag-config-pers -lscag-pers -lscag-lcm \
    \
-   -lscag-lcm-base -lscag-re-base -lscag-stat-base \
-   \
    -lscag-config-lcm \
-   -lscag-config-base \
    -lscag-util-encodings -lutil-recoder-recode_dll -lutil-regexp -lscag-exc \
    -lsms $(SOCKETLIB) -lcore-network -lnsl  $(XERCES_LIB) -lscag @liblogger.so \
    -L$(SMSC_BUILDDIR)/bin -llogger -linman-interaction -linman-common \
@@ -38,24 +36,21 @@ scag/scag2           gwmain2        \
   -lscag-gen2 \
   -lscag-sessions-impl \
   \
-  -lscag-pers \
-  \
   -lscag-bill-impl \
   -lscag-stat-impl \
   -lscag-re-impl \
   -lscag-re-actions-impl \
   -lscag-lcm-impl \
   -lscag-config-impl \
-  \
-  -lscag-transport-smpp \
-  -lscag-transport-smpp-router \
-  -lscag-transport-smpp \
-  -lscag-transport-http \
+  -lscag-transport-smpp-impl \
   \
   -lscag-sessions-base \
   -lscag-lcm-base \
   -lscag-bill-base \
   -lscag-re-base \
+  -lscag-transport-smpp-base \
+  -lscag-transport-smpp-common \
+  -lscag-transport-smpp-router \
   -lscag-stat-base \
   \
   -lscag-transport \

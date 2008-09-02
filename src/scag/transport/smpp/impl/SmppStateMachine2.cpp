@@ -2,8 +2,8 @@
 
 #include "SmppManager2.h"
 #include "SmppStateMachine2.h"
-#include "SmppUtil.h"
-#include "SmsSplit.h"
+#include "scag/transport/smpp/common/SmppUtil.h"
+#include "scag/transport/smpp/common/SmsSplit.h"
 #include "core/buffers/XHash.hpp"
 #include "scag/re/base/RuleEngine2.h"
 #include "scag/sessions/base/SessionManager2.h"

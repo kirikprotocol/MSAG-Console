@@ -9,7 +9,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "logger/Logger.h"
-#include "router/route_types.h"
+#include "scag/transport/smpp/router/route_types.h"
 #include "scag/transport/SCAGCommand2.h"
 #include "smpp/smpp_sms.h"
 #include "smpp/smpp_structures.h"
@@ -36,8 +36,6 @@ using smsc::logger::Logger;
 using smsc::core::synchronization::MutexGuard;
 using smsc::util::Exception;
 using std::string;
-
-namespace router = scag::transport::smpp::router;
 
 const int ScagCommandDefaultPriority = 16;
 

@@ -2,10 +2,10 @@
 #define __SCAG_TRANSPORT_SMPP_SMPPSOCKETMANAGER2_H__
 
 #include "SmeAcceptor2.h"
-#include "SmppChannelRegistrator2.h"
-#include "SmppCommandQueue2.h"
+#include "scag/transport/smpp/base/SmppChannelRegistrator2.h"
+#include "scag/transport/smpp/base/SmppCommandQueue2.h"
 #include "SmppReader2.h"
-#include "SmppSMInterface.h"
+#include "scag/transport/smpp/base/SmppSMInterface2.h"
 #include "SmppWriter2.h"
 #include "SmscConnector2.h"
 #include "core/threads/ThreadPool.hpp"

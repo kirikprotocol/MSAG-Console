@@ -1,7 +1,7 @@
 #ifndef _SCAG_TRANSPORT_SMPP_SMPPCHANNELREGISTRATOR2_H
 #define _SCAG_TRANSPORT_SMPP_SMPPCHANNELREGISTRATOR2_H
 
-#include "SmppTypes2.h"
+#include "scag/transport/smpp/SmppTypes.h"
 #include "SmppChannel2.h"
 
 namespace scag2 {

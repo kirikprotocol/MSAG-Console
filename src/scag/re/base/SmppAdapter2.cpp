@@ -2,7 +2,7 @@
 #include "logger/Logger.h"
 #include "CommandAdapter2.h"
 #include "CommandBridge.h"
-#include "scag/transport/smpp/SmppEntity2.h"
+#include "scag/transport/smpp/base/SmppEntity2.h"
 #include "scag/util/encodings/Encodings.h"
 #include "scag/sessions/base/Session2.h"
 #include "system/status.h"

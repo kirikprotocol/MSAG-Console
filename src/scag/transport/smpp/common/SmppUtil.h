@@ -15,4 +15,12 @@ void stripUnknownSmppOptionals(smsc::sms::SMS& sms,const std::vector<int>& allow
 }//transport
 }//scag
 
+namespace scag{
+namespace transport{
+namespace smpp{
+using scag::transport::smpp::stripUnknownSmppOptionals;
+}//smpp
+}//transport
+}//scag
+
 #endif

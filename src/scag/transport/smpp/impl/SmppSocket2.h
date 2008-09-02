@@ -8,12 +8,11 @@
 #include "core/network/Socket.hpp"
 #include "core/buffers/CyclicQueue.hpp"
 
-#include "SmppCommandQueue2.h"
-#include "SmppChannelRegistrator2.h"
-#include "SmppChannel2.h"
-#include "SmppTypes2.h"
-
-#include "SmppSMInterface2.h"
+#include "scag/transport/smpp/base/SmppCommandQueue2.h"
+#include "scag/transport/smpp/base/SmppChannelRegistrator2.h"
+#include "scag/transport/smpp/base/SmppChannel2.h"
+#include "scag/transport/smpp/SmppTypes.h"
+#include "scag/transport/smpp/base/SmppSMInterface2.h"
 
 #include "logger/Logger.h"
 
