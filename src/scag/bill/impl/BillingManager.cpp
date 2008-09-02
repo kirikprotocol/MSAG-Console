@@ -427,7 +427,7 @@ TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op
         MutexGuard mg(inUseLock);
         if(t > max_t) max_t = t;
         if(t < min_t) min_t = t;
-        int total_t = time(NULL) - start_t;
+        int total_t = int(time(NULL) - start_t);
         billcount++;
         smsc_log_debug(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t);
     }

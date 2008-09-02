@@ -199,7 +199,7 @@ iconv_t ConvertorImpl::getIconv(const char* inCharset, const char* outCharset)
     uint32_t i;
     char s[128];
 
-    i = strlcpy(s, inCharset, 128);
+    i = uint32_t(strlcpy(s, inCharset, 128));
     s[i] = '#';
     strlcpy(s + i + 1, outCharset, 128 - i - 1);
 

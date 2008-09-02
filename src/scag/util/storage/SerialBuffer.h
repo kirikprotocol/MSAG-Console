@@ -41,7 +41,7 @@ public:
     uint32_t GetSize() const {return length();}
     size_t GetPos() const {return getPos();};
     const char* GetCurPtr() const {return c_curPtr();};
-    void SetPos(size_t _pos) {setPos(_pos);};
+    void SetPos(size_t _pos) {setPos(int(_pos));};
 
 protected:
 

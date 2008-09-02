@@ -86,7 +86,8 @@ public config::ConfigListener
 
     bool isStarted() { return m_bStarted; };
 
-    int max_t, min_t, billcount, start_t;
+    int max_t, min_t, billcount;
+    time_t start_t;
     InfrastructureImpl infrastruct;
 
     #ifdef MSAG_INMAN_BILL
