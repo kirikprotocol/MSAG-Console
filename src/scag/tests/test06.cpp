@@ -7,6 +7,7 @@
 #include <string>
 #include <iconv.h>
 #include <cerrno>
+#include <stdlib.h>
 
 void dump( const char* s, size_t sz )
 {
@@ -39,7 +40,11 @@ std::string cvt( const std::string& from, const std::string& to,
 
     size_t inpos = inbuf.size();
     size_t outpos = sizeof(result);
+#ifdef __GNUC__
     char* in = const_cast<char*>(inbuf.data());
+#else
+    const char* in = inbuf.data();
+#endif
     char* out = result;
     size_t left = iconv( cd, &in, &inpos, &out, &outpos );
 
