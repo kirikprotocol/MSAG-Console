@@ -52,6 +52,7 @@
   <target name="update" depends="build">
     <copydir src="${BIN_DIR}" dest="${DISTR_DIR}/services/${esme_name}/bin"/>
     <chmod dir="${DISTR_DIR}/services/${esme_name}/bin" perm="ugo+rx" includes="*"/>
+    <chmod dir="${DISTR_DIR}/services/${esme_name}/bin" perm="ugo+rx" includes="**/*.sh"/>
     <copydir src="${JAVA_LIB}" dest="${DISTR_DIR}/services/${esme_name}/lib"/>
     <copyfile src="${exploded}/lib/mcahdb.jar" dest="${DISTR_DIR}/services/${esme_name}/lib/mcahdb.jar"/>
   </target>

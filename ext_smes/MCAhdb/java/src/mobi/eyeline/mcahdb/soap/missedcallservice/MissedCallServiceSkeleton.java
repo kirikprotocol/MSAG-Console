@@ -32,7 +32,7 @@ public class MissedCallServiceSkeleton {
       SimpleDateFormat df = ServiceContext.getInstance().getDf();
       int fetchInterval = ServiceContext.getInstance().getEventsFetchInterval();
 
-      LinkedList<Event> events = new LinkedList<Event>();
+      List<Event> events = new ArrayList<Event>(100);
       ServiceContext.getInstance().getEventsFetcher().getEvents(req.getPhoneNumber(), new Date(System.currentTimeMillis() - 3600000 * fetchInterval), new Date(), events);
       ArrayOfMissedCall missedCalls = new ArrayOfMissedCall();
 
