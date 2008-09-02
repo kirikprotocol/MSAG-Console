@@ -15,4 +15,12 @@
     <param name="responseDateFormat">yyyyMMdd HH:mm:ss</param>
     <param name="eventsFetchInterval">12</param>
   </section>
+  
+  <section name="scheduler">
+    <param name="storeDir">@store_scheduler</param>
+    <param name="expirationPeriod">12</param>
+    <param name="expiredText">@expired_text</param>
+    <param name="profileChangedText">@profile_changed_text</param>
+    <param name="errorText">@error_text</param>
+  </section>
 </config>
