@@ -5,6 +5,7 @@ import mobi.eyeline.mcahdb.engine.DataSourceException;
 
 import java.io.*;
 import java.util.*;
+import java.nio.channels.FileChannel;
 
 import com.eyeline.utils.IOUtils;
 import com.eyeline.utils.FileUtils;
@@ -32,42 +33,41 @@ class DataFile {
   }
 
   public boolean checkAndRepair() throws IOException {
-    return !FileUtils.truncateFile(f, EOR, EVENT_LEN);
-//    long pos = f.length();
-//    if (pos == 0)
-//      return true;
-//
-//    f.seek(pos - 1);
-//    byte eor = (byte) f.read();
-//
-//    if (eor != EOR) {
-//      FileChannel fc = null;
-//      try {
-//        fc = f.getChannel();
-//        fc.truncate(findLastEOR());
-//      } finally {
-//        if (fc != null)
-//          fc.close();
-//      }
-//      return false;
-//    }
-//    return true;
+    long pos = f.length();
+    if (pos == 0)
+      return true;
+
+    f.seek(pos - 1);
+    byte eor = (byte) f.read();
+
+    if (eor != EOR) {
+      FileChannel fc = null;
+      try {
+        fc = f.getChannel();
+        fc.truncate(findLastEOR());
+      } finally {
+        if (fc != null)
+          fc.close();
+      }
+      return false;
+    }
+    return true;
   }
 
-//  private long findLastEOR() throws IOException {
-//    long pos = f.length();
-//    byte[] bytes = new byte[EVENT_LEN];
-//    while (pos - EVENT_LEN > 0) {
-//      pos -= EVENT_LEN;
-//      f.seek(pos);
-//      f.readFully(bytes);
-//      for (int i = 0; i< EVENT_LEN; i++) {
-//        if (bytes[i] == EOR)
-//          return pos + i;
-//      }
-//    }
-//    return 0;
-//  }
+  private long findLastEOR() throws IOException {
+    long pos = f.length();
+    byte[] bytes = new byte[EVENT_LEN];
+    while (pos - EVENT_LEN > 0) {
+      pos -= EVENT_LEN;
+      f.seek(pos);
+      f.readFully(bytes);
+      for (int i = 0; i< EVENT_LEN; i++) {
+        if (bytes[i] == EOR)
+          return pos + i;
+      }
+    }
+    return 0;
+  }
 
   public void close() throws IOException {
     f.close();
@@ -116,7 +116,7 @@ class DataFile {
     return startPos;
   }
 
-  public Collection<Event> readEvents(String address, long startPos, Date from, Date till) throws IOException, DataSourceException {
+  public void readEvents(String address, long startPos, Date from, Date till, Collection<Event> result) throws IOException, DataSourceException {
     reader.seek(startPos);
     byte[] bytes = new byte[MSISDN_LEN + 2/*number of events*/];
     reader.readFully(bytes);
@@ -127,12 +127,11 @@ class DataFile {
 
     int eventsSize = IOUtils.readShort(bytes, MSISDN_LEN);
     if (eventsSize == 0)
-      return Collections.emptyList();
+      return;
 
     bytes = new byte[eventsSize * EVENT_LEN];
     reader.readFully(bytes);
 
-    Collection<Event> result = new ArrayList<Event>(eventsSize);
     int pos = 0;
     for (int i=0; i < eventsSize; i++) {
       Event e = readEvent(bytes, pos);
@@ -143,7 +142,6 @@ class DataFile {
         break;
       pos += EVENT_LEN;
     }
-    return result;
   }
 
   public Map<String, Long> getEventsListsPositions() throws IOException {

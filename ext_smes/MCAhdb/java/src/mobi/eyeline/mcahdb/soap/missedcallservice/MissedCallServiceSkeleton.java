@@ -3,10 +3,7 @@ package mobi.eyeline.mcahdb.soap.missedcallservice;
 import mobi.eyeline.mcahdb.soap.ServiceContext;
 import mobi.eyeline.mcahdb.engine.event.ds.Event;
 
-import java.util.Date;
-import java.util.Collection;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 import java.text.SimpleDateFormat;
 
 import org.apache.log4j.Category;
@@ -35,8 +32,8 @@ public class MissedCallServiceSkeleton {
       SimpleDateFormat df = ServiceContext.getInstance().getDf();
       int fetchInterval = ServiceContext.getInstance().getEventsFetchInterval();
 
-      Collection<Event> events = ServiceContext.getInstance().getEventsFetcher().getEvents(req.getPhoneNumber(), new Date(System.currentTimeMillis() - 3600000 * fetchInterval), new Date());
-
+      LinkedList<Event> events = new LinkedList<Event>();
+      ServiceContext.getInstance().getEventsFetcher().getEvents(req.getPhoneNumber(), new Date(System.currentTimeMillis() - 3600000 * fetchInterval), new Date(), events);
       ArrayOfMissedCall missedCalls = new ArrayOfMissedCall();
 
       final Map<String, MissedCall> calls = new HashMap<String, MissedCall>(events.size()/2);

@@ -67,10 +67,6 @@ public class MCAHDB {
     System.out.println("MCAHDB started.");
   }
 
-  public Collection<Event> getEvents(String address, Date from, Date till) {
-    return eventStore.getEvents(address, from, till);
-  }
-
   public void shutdown() {
     System.out.println("Shutdown journal processor.");
     journalsProcessor.shutdown();

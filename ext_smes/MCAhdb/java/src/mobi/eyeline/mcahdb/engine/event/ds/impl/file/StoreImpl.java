@@ -118,17 +118,13 @@ public class StoreImpl implements Store {
     eventsBuffer.clear();
   }
 
-  public Collection<Event> getEvents(String address, Date from, Date till) throws DataSourceException, IOException {
+  public void getEvents(String address, Date from, Date till, Collection<Event> result) throws DataSourceException, IOException {
     Collection<Long> indexes = roIndex.get(address);
     if (indexes == null)
-      return Collections.emptyList();
-    
-    Collection<Event> result = new LinkedList<Event>();
+      return;
 
     for (long index : indexes)
-      result.addAll(dataFile.readEvents(address, index, from, till));
-    
-    return result;
+      dataFile.readEvents(address, index, from, till, result);
   }
 
   public void addEvent(Event event) throws DataSourceException, IOException {

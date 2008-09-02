@@ -12,7 +12,7 @@ import java.util.Date;
 
 public interface EventsDataSource {
 
-  public Collection<Event> getEvents(String address, Date from, Date till) throws DataSourceException;
+  public void getEvents(String address, Date from, Date till, Collection<Event> result) throws DataSourceException;
 
   public void addEvents(Collection<Event> events) throws DataSourceException;
 

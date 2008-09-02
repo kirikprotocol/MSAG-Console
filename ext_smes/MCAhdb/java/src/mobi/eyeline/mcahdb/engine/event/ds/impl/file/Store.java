@@ -22,7 +22,7 @@ public interface Store {
 
   public void rollback() throws DataSourceException, IOException;
 
-  public Collection<Event> getEvents(String address, Date from, Date till) throws DataSourceException, IOException;
+  public void getEvents(String address, Date from, Date till, Collection<Event> result) throws DataSourceException, IOException;
 
   public void addEvent(Event event) throws DataSourceException, IOException;
 }

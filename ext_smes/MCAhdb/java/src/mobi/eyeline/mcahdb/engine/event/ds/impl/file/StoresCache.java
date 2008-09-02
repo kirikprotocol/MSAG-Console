@@ -200,8 +200,8 @@ public class StoresCache {
       impl.rollback();
     }
 
-    public Collection<Event> getEvents(String address, Date from, Date till) throws DataSourceException, IOException {
-      return impl.getEvents(address, from, till);
+    public void getEvents(String address, Date from, Date till, Collection<Event> result) throws DataSourceException, IOException {
+      impl.getEvents(address, from, till, result);
     }
 
     public void addEvent(Event event) throws DataSourceException, IOException {

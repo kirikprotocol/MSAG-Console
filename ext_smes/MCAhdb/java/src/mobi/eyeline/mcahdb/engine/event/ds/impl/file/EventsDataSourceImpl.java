@@ -25,14 +25,13 @@ public class EventsDataSourceImpl implements EventsDataSource {
   }
 
 
-  public Collection<Event> getEvents(String address, Date from, Date till) throws DataSourceException {
+  public void getEvents(String address, Date from, Date till, Collection<Event> result) throws DataSourceException {
     Collection<Store> files = cache.getFilesForRead(from, till);
-    Collection<Event> result= new LinkedList<Event>();
 
     for (Store f : files) {
       try {
         f.open();
-        result.addAll(f.getEvents(address, from, till));
+        f.getEvents(address, from, till, result);
       } catch (IOException e) {
         throw new DataSourceException(e);
       } finally {
@@ -42,8 +41,6 @@ public class EventsDataSourceImpl implements EventsDataSource {
         }
       }
     }
-
-    return result;
   }
 
   public void addEvents(Collection<Event> events) throws DataSourceException {

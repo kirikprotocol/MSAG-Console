@@ -39,12 +39,11 @@ public class EventStore {
     }
   }
 
-  public Collection<Event> getEvents(String address, Date from, Date till) {
+  public void getEvents(String address, Date from, Date till, Collection<Event> result) {
     try {
-      return ds.getEvents(address, from, till);
+      ds.getEvents(address, from, till, result);
     } catch (DataSourceException e) {
       log.error("Can't fetch events", e);
-      return Collections.emptyList();
     }
   }
 
