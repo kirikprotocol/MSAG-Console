@@ -28,7 +28,7 @@ bool isbigendian() {
 
 const char* nativeucs2()
 {
-    static const char* native = isbigendian() ? "UCS2-BE" : "UCS2-LE";
+    static const char* native = isbigendian() ? "UCS-2BE" : "UCS-2LE";
     return native;
 }
 
