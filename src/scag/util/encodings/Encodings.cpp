@@ -14,12 +14,24 @@
 #include "scag/util/strlcpy.h"
 
 namespace {
-#if BYTE_ORDER == LITTLE_ENDIAN
-// e.g. linux
-const char* nativeucs2 = "UCS2-LE";
-#else
-const char* nativeucs2 = "UCS2-BE";
-#endif
+
+typedef union {
+    uint8_t  bytes[2];
+    uint16_t words[1];
+} cvt;
+
+bool isbigendian() {
+    cvt x;
+    x.words[0] = 0xff00;
+    return ( x.bytes[0] == 0xff );
+}
+
+const char* nativeucs2()
+{
+    static const char* native = isbigendian() ? "UCS2-BE" : "UCS2-LE";
+    return native;
+}
+
 }
 
 namespace {
@@ -71,7 +83,7 @@ typedef SingletonHolder<ConvertorImpl> SingleC;
 
 void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str)
 {
-    convert( nativeucs2, "UTF-8", (const char*)ucs2buff, ucs2len*2, utf8str );
+    convert( nativeucs2(), "UTF-8", (const char*)ucs2buff, ucs2len*2, utf8str );
 }
 
 void Convertor::UCS2BEToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str)
@@ -140,7 +152,7 @@ void Convertor::UTF8ToUCS2BE(const char * utf8buff, unsigned int utf8len, std::s
 
 void Convertor::UTF8ToUCS2(const char * utf8buff, unsigned int utf8len, std::string& ucs2str)
 {
-    convert("UTF-8", nativeucs2, utf8buff, utf8len, ucs2str);
+    convert("UTF-8", nativeucs2(), utf8buff, utf8len, ucs2str);
 }
 
 
