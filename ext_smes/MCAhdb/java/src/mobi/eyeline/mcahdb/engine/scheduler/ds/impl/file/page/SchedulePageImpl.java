@@ -49,17 +49,10 @@ class SchedulePageImpl implements SchedulePage {
   }
 
   public TaskPointer add(Task task) throws DataSourceException {
-    StringBuilder sb = new StringBuilder(100);
-    sb.append("0,")
-      .append(df.format(task.getTime())).append(',')
-      .append(task.getCaller()).append(',')
-      .append(task.getCalled()).append(',')
-      .append(task.getType()).append('\n');
-
     try {
       long id = f.length();
       f.seek(id);
-      f.write(sb.toString().getBytes());
+      writeLine(f, "0,", df.format(task.getTime()), ",", task.getCaller(), ",", task.getCalled(), ",", String.valueOf(task.getType()));
       return new TaskPointer(getId(), id);
     } catch (IOException e) {
       throw new DataSourceException(e);
@@ -110,27 +103,21 @@ class SchedulePageImpl implements SchedulePage {
   }
 
   public void list(Date from, Date till, Collection<Task> result) throws DataSourceException {
-
-    RandomAccessFile r = null;
+    BufferedReader r = null;
     try {
-
-      r = new RandomAccessFile(file, "r");
+      r = new BufferedReader(new FileReader(file));
 
       String line;
       long pointer = 0;
       while((line = r.readLine()) != null) {
-        if (line.charAt(0) == '1')
-          continue;
-
-        Task t = readTask(line, pointer);
-        if (!t.getTime().before(from) && !t.getTime().after(till))
-          result.add(t);
-
-        pointer = r.getFilePointer();
+        if (line.charAt(0) == '0') {
+          Task t = readTask(line, pointer);
+          if (!t.getTime().before(from) && !t.getTime().after(till))
+            result.add(t);
+        }
+        pointer += line.length() + 1;
       }
-    } catch (IOException e) {
-      throw new DataSourceException(e);
-    } catch (ParseException e) {
+    } catch (Exception e) {
       throw new DataSourceException(e);
     } finally {
       if (r != null)
@@ -139,6 +126,18 @@ class SchedulePageImpl implements SchedulePage {
         } catch (IOException e) {
         }
     }
+  }
+
+  private static void writeLine(RandomAccessFile f, String... strs) throws IOException {
+    int len = 0;
+    for (String str : strs) len += str.length();
+    byte[] bytes = new byte[len + 1];
+    int k=0;
+    for (String str : strs)
+      for (int j=0; j<str.length(); j++)
+        bytes[k++] = (byte) str.charAt(j);
+    bytes[len] = '\n';
+    f.write(bytes);
   }
 
   private static String readLine(RandomAccessFile f) throws IOException {
@@ -151,7 +150,6 @@ class SchedulePageImpl implements SchedulePage {
         break;
       sb.append((char)b);
     }
-//    System.out.println(sb.toString());
     return sb.toString();
   }
 

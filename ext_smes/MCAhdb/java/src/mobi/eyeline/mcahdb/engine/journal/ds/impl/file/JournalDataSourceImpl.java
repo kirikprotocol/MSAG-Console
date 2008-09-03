@@ -24,9 +24,9 @@ public class JournalDataSourceImpl implements JournalDataSource {
   private final FileFilter journalsFilter;
   private final File archivesDir;
 
-  public JournalDataSourceImpl(JournalsProcessor.Config config) throws DataSourceException {
-    this.journalsDir = new File(config.getJournalsStoreDir());
-    this.archivesDir = new File(config.getJournalsArchivesDir());
+  public JournalDataSourceImpl(File journalsDir, File archivesDir) throws DataSourceException {
+    this.journalsDir = journalsDir;
+    this.archivesDir = archivesDir;
 
     if (!journalsDir.exists() && !journalsDir.mkdirs())
         throw new DataSourceException("Can't create journals dir: " + journalsDir.getAbsolutePath());
@@ -39,6 +39,10 @@ public class JournalDataSourceImpl implements JournalDataSource {
         return !pathname.isDirectory() && pathname.getName().matches(".*\\.csv");
       }
     };
+  }
+
+  public JournalDataSourceImpl(JournalsProcessor.Config config) throws DataSourceException {
+    this(new File(config.getJournalsStoreDir()), new File(config.getJournalsArchivesDir()));
   }
 
   public void getJournals(Collection<Journal> result) throws DataSourceException {
@@ -215,25 +219,20 @@ public class JournalDataSourceImpl implements JournalDataSource {
     public JournalEvent nextEvent() throws DataSourceException {
       try {
         String str;
-        while ((str = is.readLine()) != null) {
+        if ((str = is.readLine()) != null) {
           lineNumber++;
-          StringTokenizer st = new StringTokenizer(str, ",");
+          char type = str.charAt(0);
+          switch (type) {
+            case 'A': return readMissedCall(new StringTokenizer(str.substring(2), ","));
+            case 'D': return readMissedCallAlert(new StringTokenizer(str.substring(2), ","));
+            case 'F': return readMissedCallAlertFail(new StringTokenizer(str.substring(2), ","));
+            case 'E': return readMissedCallRemove(new StringTokenizer(str.substring(2), ","));
+            case 'P': return readProfileChanged(new StringTokenizer(str.substring(2), ","));
+            default:return null;
+          }
+        } else
+          return null;        
 
-          final String type = st.nextToken();
-          if (type.equals("A"))
-            return readMissedCall(st);
-          else if (type.equals("D"))
-            return readMissedCallAlert(st);
-          else if (type.equals("F"))
-            return readMissedCallAlertFail(st);
-          else if (type.equals("E"))
-            return readMissedCallRemove(st);
-          else if (type.equals("P"))
-            return readProfileChanged(st);
-        }
-
-        return null;
-        
       } catch (IOException e) {
         throw new DataSourceException("Read journal error: ", e);
       } catch (DataSourceException ex) {

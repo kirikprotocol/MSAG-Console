@@ -88,24 +88,29 @@ class SchedulerEngine {
 
     public void run() {
 
+      final List<Task> list = new LinkedList<Task>();
       while (started) {
         try {
+          if (log.isDebugEnabled())
+            log.debug("Set time = " + from);
           tds.setTime(from);
         } catch (DataSourceException e) {
           log.error(e, e);
         }
         
         till = new Date(from.getTime() + TASK_FETCH_PERIOD);
-
+        
         try {
-          final List<Task> list = new LinkedList<Task>();
+          list.clear();
           ds.list(from, till, list);
+          for (Task t : list) {
+            if (log.isDebugEnabled())
+              log.debug("Schedule call: oa=" + t.getCaller() + "; da=" + t.getCalled() + "; time=" + t.getTime());
+            queue.offer(t, new TaskKey(t.getCaller(), t.getCalled()), t.getTime().getTime());
+          }
 
-          for (Task t : list)
-            queue.offer(t, new TaskKey(t.getCaller(), t.getCalled()), t.getTime().getTime());          
-
-          while (started || !queue.isEmpty()) {            
-            Task t = queue.poll(10000);
+          while (started && (!queue.isEmpty() || till.getTime() >= System.currentTimeMillis())) {            
+            Task t = queue.poll(Math.min(10000, till.getTime() - System.currentTimeMillis()));
             if (t == null)
               continue;
 

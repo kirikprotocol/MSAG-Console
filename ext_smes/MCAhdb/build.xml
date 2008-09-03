@@ -20,6 +20,7 @@
   <property name="CFG_DIR" value="conf"/>
   <property name="BIN_DIR" value="bin"/>
   <property name="JAVA_SRC" value="java/src"/>
+  <property name="TEST_SRC" value="java/test"/>
   <property name="JAVA_LIB" value="java/lib"/>
 
   <!--<property name="BUILD_DIR" value="BUILD"/>-->
@@ -41,6 +42,16 @@
     </javac>
   </target>
 
+  <target name="compile_with_tests" depends="compile">
+    <javac srcdir="${TEST_SRC}" destdir="${java_out}">
+      <classpath>
+        <fileset dir="${JAVA_LIB}" includes="*.jar"/>
+        <fileset dir="${java_out}"/>
+      </classpath>
+    </javac>
+  </target>
+
+
   <target name="build" depends="compile">
     <jar basedir="${java_out}" jarfile="${exploded}/lib/mcahdb.jar"/>
   </target>
@@ -49,12 +60,28 @@
     <copydir src="${TEMPL_DIR}/${esme_name}" dest="${DISTR_DIR}/services/${esme_name}/conf"/>
   </target>
 
+  <target name="build_with_tests" depends="compile_with_tests">
+    <jar basedir="${java_out}" jarfile="${exploded}/lib/mcahdb.jar"/>
+  </target>
+
+  <target name="distr_with_tests" depends="build_with_tests, update_with_tests">
+    <copydir src="${TEMPL_DIR}/${esme_name}" dest="${DISTR_DIR}/services/${esme_name}/conf"/>
+  </target>    
+
   <target name="update" depends="build">
-    <copydir src="${BIN_DIR}" dest="${DISTR_DIR}/services/${esme_name}/bin"/>
+    <copydir src="${BIN_DIR}" dest="${DISTR_DIR}/services/${esme_name}/bin">
+      <exclude name="starttest.sh"/>
+      <exclude name="stoptest.sh"/>
+    </copydir>
     <chmod dir="${DISTR_DIR}/services/${esme_name}/bin" perm="ugo+rx" includes="*"/>
     <chmod dir="${DISTR_DIR}/services/${esme_name}/bin" perm="ugo+rx" includes="**/*.sh"/>
     <copydir src="${JAVA_LIB}" dest="${DISTR_DIR}/services/${esme_name}/lib"/>
     <copyfile src="${exploded}/lib/mcahdb.jar" dest="${DISTR_DIR}/services/${esme_name}/lib/mcahdb.jar"/>
+  </target>
+
+  <target name="update_with_tests" depends="update">
+    <copydir src="${BIN_DIR}" dest="${DISTR_DIR}/services/${esme_name}/bin"/>
+    <chmod dir="${DISTR_DIR}/services/${esme_name}/bin" perm="ugo+rx" includes="*"/>
   </target>
 
 </project>
