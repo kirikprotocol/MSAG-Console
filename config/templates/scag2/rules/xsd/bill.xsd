@@ -19,6 +19,7 @@
         <choice>
             <element name="open">
                 <complexType>
+                    <attribute name="id" type="scag:Value" use="required" />
                     <attribute name="category" type="scag:Value" use="optional"/>
                     <attribute name="content-type" type="scag:Value" use="optional"/>
                     <attribute name="category-str" type="scag:Value" use="optional"/>
@@ -32,10 +33,10 @@
         
             <element name="close">
                 <complexType>
+                    <attribute name="id" type="scag:Value" use="required"/>
                     <attribute name="action" type="bill:BillActions" use="required" />
                     <attribute name="status" type="scag:Var" use="optional"/>
                     <attribute name="msg" type="scag:Var" use="optional"/>
-                    <attribute name="id" type="scag:Value" use="required"/>
                 </complexType>
             </element>
 

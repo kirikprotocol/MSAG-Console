@@ -14,6 +14,7 @@
             <element name="new_context">
                 <complexType>
                     <attribute name="id" type="scag:Var" use="required" />
+                    <attribute name="status" type="scag:Var" use="optional" />
                 </complexType>
             </element>
             <!-- NOTE: in principle we could allow set/del context to take id from
@@ -23,11 +24,13 @@
             <element name="set_context">
                 <complexType>
                     <attribute name="id" type="scag:Var" use="required" />
+                    <attribute name="status" type="scag:Var" use="optional" />
                 </complexType>
             </element>
             <element name="del_context">
                 <complexType>
                     <attribute name="id" type="scag:Var" use="required" />
+                    <attribute name="status" type="scag:Var" use="optional" />
                 </complexType>
             </element>
             <element name="wait">

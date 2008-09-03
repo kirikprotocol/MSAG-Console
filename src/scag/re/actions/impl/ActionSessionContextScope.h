@@ -29,10 +29,13 @@ protected:
 
 private:
     const char* actionname() const;
+    void setstatus( bool st );
 
 private:
     ActionType   type_;
     std::string  idfieldname_;  // name of variable to get/set scope id into
+    std::string  statusfieldname_;
+    bool         hasstatus_;
 };
 
 } // namespace actions

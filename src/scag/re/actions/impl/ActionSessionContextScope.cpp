@@ -19,6 +19,9 @@ void ActionSessionContextScope::init( const SectionParams& params,
                          true, (type_ == NEW ? false : true),
                          idfieldname_, bExist );
 
+    CheckParameter( params, propertyObject, actionname(), "status",
+                    false, true, statusfieldname_, hasstatus_ );
+
     // m_valueFieldType = CheckParameter(params, propertyObject, "set", "value", true, true, m_strValue, bExist);
     smsc_log_debug( logger, "Action '%s': init", actionname() );
 }
@@ -32,6 +35,7 @@ bool ActionSessionContextScope::run( ActionContext& context )
     if (!property) 
     {
         smsc_log_warn(logger,"Action '%s': invalid property '%s'", actionname(), idfieldname_.c_str() );
+        setstatus(false);
         return true;
     }
 
@@ -42,6 +46,7 @@ bool ActionSessionContextScope::run( ActionContext& context )
         const int ctx = context.getSession().createContextScope();
         property->setInt( ctx );
         smsc_log_debug(logger,"Action '%s': property '%s' new scope_id='%d'", actionname(), idfieldname_.c_str(), ctx );
+        setstatus(true);
         break;
 
     }
@@ -56,6 +61,7 @@ bool ActionSessionContextScope::run( ActionContext& context )
         } else {
             smsc_log_warn(logger,"Action '%s': property '%s' cannot set scope_id='%d' - not found", actionname(), idfieldname_.c_str(), ctx );
         }
+        setstatus( scope );
         break;
     }
 
@@ -68,9 +74,12 @@ bool ActionSessionContextScope::run( ActionContext& context )
             smsc_log_debug(logger,"Action '%s': property '%s', context scope %d deleted%s",
                            actionname(), idfieldname_.c_str(), ctx,
                            reset ? " (reset also)" : "");
-        } else
+            setstatus(true);
+        } else {
             smsc_log_warn(logger,"Action '%s': property '%s' cannot delete session scope %d - not found",
                           actionname(), idfieldname_.c_str(), ctx );
+            setstatus(false);
+        }
         break;
 
     }
@@ -104,6 +113,19 @@ const char* ActionSessionContextScope::actionname() const
     case DEL : return "session:del_context";
     default  : return "session:???_context";
     }
+}
+
+
+void ActionSessionContextScope::setstatus( bool st )
+{
+    if ( ! hasstatus_ ) return;
+    Property * property = context.getProperty(statusfieldname_);
+    if ( ! property ) {
+        smsc_log_warn( logger,"Action '%s': property '%s' not found",
+                       actionname(), statusfieldname_.c_str() );
+        return;
+    }
+    property->setBool( st );
 }
 
 } // namespace actions
