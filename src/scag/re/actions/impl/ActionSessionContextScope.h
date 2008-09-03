@@ -29,7 +29,7 @@ protected:
 
 private:
     const char* actionname() const;
-    void setstatus( bool st );
+    void setstatus( ActionContext& ctx, bool st );
 
 private:
     ActionType   type_;

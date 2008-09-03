@@ -35,7 +35,7 @@ bool ActionSessionContextScope::run( ActionContext& context )
     if (!property) 
     {
         smsc_log_warn(logger,"Action '%s': invalid property '%s'", actionname(), idfieldname_.c_str() );
-        setstatus(false);
+        setstatus(context,false);
         return true;
     }
 
@@ -45,8 +45,9 @@ bool ActionSessionContextScope::run( ActionContext& context )
 
         const int ctx = context.getSession().createContextScope();
         property->setInt( ctx );
+        context.setContextScope( ctx );
         smsc_log_debug(logger,"Action '%s': property '%s' new scope_id='%d'", actionname(), idfieldname_.c_str(), ctx );
-        setstatus(true);
+        setstatus(context,true);
         break;
 
     }
@@ -61,7 +62,7 @@ bool ActionSessionContextScope::run( ActionContext& context )
         } else {
             smsc_log_warn(logger,"Action '%s': property '%s' cannot set scope_id='%d' - not found", actionname(), idfieldname_.c_str(), ctx );
         }
-        setstatus( scope );
+        setstatus( context,scope );
         break;
     }
 
@@ -74,11 +75,11 @@ bool ActionSessionContextScope::run( ActionContext& context )
             smsc_log_debug(logger,"Action '%s': property '%s', context scope %d deleted%s",
                            actionname(), idfieldname_.c_str(), ctx,
                            reset ? " (reset also)" : "");
-            setstatus(true);
+            setstatus(context,true);
         } else {
             smsc_log_warn(logger,"Action '%s': property '%s' cannot delete session scope %d - not found",
                           actionname(), idfieldname_.c_str(), ctx );
-            setstatus(false);
+            setstatus(context,false);
         }
         break;
 
@@ -116,7 +117,7 @@ const char* ActionSessionContextScope::actionname() const
 }
 
 
-void ActionSessionContextScope::setstatus( bool st )
+void ActionSessionContextScope::setstatus( ActionContext& context, bool st )
 {
     if ( ! hasstatus_ ) return;
     Property * property = context.getProperty(statusfieldname_);

@@ -725,10 +725,12 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
         switch (FieldId)
         {
         case Tag::SMPP_USER_MESSAGE_REFERENCE:
-            // we also need to switch session ussd ref
-            if ( ! command.getSession() )
-                throw SCAGException( "command has no session to change umr in" );
-            command.getSession()->setUSSDref( unsigned(property.getInt()) );
+            // FIXME: should we also set session UMR?
+            // if ( ! command.getSession() )
+            // throw SCAGException( "command has no session to change umr in" );
+            // if ( command.getSession()->getUSSDref() != -1 ) {
+            // command.getSession()->setUSSDref( unsigned(property.getInt()) );
+            // }
         case Tag::SMPP_SM_LENGTH:
         case Tag::SMPP_USER_RESPONSE_CODE:
         case Tag::SMPP_LANGUAGE_INDICATOR:

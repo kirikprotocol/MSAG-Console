@@ -89,12 +89,12 @@ IParserHandler * ActionIf::StartXMLSubSection(const std::string& name,const Sect
         if (FillThenSection) 
         {
             ThenActions.push_back(action);
-            smsc_log_debug(logger,"Action 'if': child object set to 'then'");
+            smsc_log_debug(logger,"Action 'if': child object '%s' set to 'then'", name.c_str());
         }
         else if (FillElseSection) 
         {
             ElseActions.push_back(action);
-            smsc_log_debug(logger,"Action 'if': child object set to 'else'");
+            smsc_log_debug(logger,"Action 'if': child object '%s' set to 'else'", name.c_str());
         }
 
         return action;
@@ -104,19 +104,19 @@ IParserHandler * ActionIf::StartXMLSubSection(const std::string& name,const Sect
 bool ActionIf::FinishXMLSubSection(const std::string& name)
 {
 
-    int thenPos = name.find("then", -1);
-    int endPos = name.find("else", -1);
+    const size_t thenPos = name.find("then");
+    const size_t endPos = name.find("else");
 
     //smsc_log_debug(logger, "Action <if>: --- section %s, %d, %d", name.c_str(), thenPos, endPos);
 
-    if (thenPos >= 0) 
+    if (thenPos != std::string::npos)
     {
         //smsc_log_debug(logger, "Action <if>: <then> closed");
 
         FillThenSection = false;
         return false;
     }
-    else if (endPos >= 0) 
+    else if (endPos != std::string::npos)
     {
         //smsc_log_debug(logger, "Action <if>: <else> closed");
 
@@ -127,7 +127,7 @@ bool ActionIf::FinishXMLSubSection(const std::string& name)
     else if (name != "if") throw SCAGException("Action 'if': unrecognized final tag '%s'", name.c_str());
 #endif
   */
-    smsc_log_debug(logger, "Action <if>: action closed");
+    smsc_log_debug(logger, "Action <if>: action closed" );
     return true;
 }
 

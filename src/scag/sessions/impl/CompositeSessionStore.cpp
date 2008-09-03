@@ -30,7 +30,8 @@ void CompositeSessionStore::init( unsigned nodeNumber,
                                   const std::string& name,
                                   unsigned indexgrowth,
                                   unsigned pagesize,
-                                  unsigned prealloc )
+                                  unsigned prealloc,
+                                  bool     dodiskio )
 {
     clear();
     const StorageNumbering& n = StorageNumbering::instance();
@@ -41,7 +42,7 @@ void CompositeSessionStore::init( unsigned nodeNumber,
 
             Storage* st = new Storage( *fin_, *expiration_, allocator_ );
             storages_[i] = st;
-            st->init( i, queue, path, name, indexgrowth, pagesize, prealloc );
+            st->init( i, queue, path, name, indexgrowth, pagesize, prealloc, dodiskio );
 
         }
     }
