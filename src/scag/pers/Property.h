@@ -37,7 +37,7 @@ protected:
     PropertyType type;
     std::string name;
     std::string s_val;
-    int32_t i_val;
+    int64_t i_val;
     time_t d_val;
     bool b_val;
 
@@ -69,13 +69,13 @@ public:
 
     const char* getName() const { return name.c_str(); };
     void setName(const std::string& nm) { name = nm; };
-    uint32_t getIntValue() { return i_val; };
+    int64_t getIntValue() { return i_val; };
     bool getBoolValue() { return b_val; };
     time_t getDateValue() { return d_val; };
     const std::string& getStringValue() { return s_val; };
     void setValue(const Property& cp);
     void setValue(const char* str);
-    void setIntValue(int32_t i) { i_val = i; type = INT; };
+    void setIntValue(int64_t i) { i_val = i; type = INT; };
     void setBoolValue(bool b) { b_val = b; type = BOOL; };
     void setDateValue(time_t d) { d_val = d; type = DATE; };
     void setStringValue(const char* s) { s_val = s; type = STRING; };
