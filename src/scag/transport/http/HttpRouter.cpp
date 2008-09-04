@@ -144,7 +144,8 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
 
     pt.Append(path.c_str(), path.length() + 1);
     pathPtr = pt.get();
-    uint32_t ptLen = pt.GetPos();
+    //uint32_t ptLen = static_cast<uint32_t>(pt.GetPos());
+    size_t ptLen = pt.GetPos();
 
     while(ptLen)
     {
@@ -153,7 +154,8 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
         {
             trace.push_back(std::string("Path found: ") + pathPtr);
             pid = *p;
-            uint32_t addrLen = addr.length();
+            size_t addrLen = addr.length();
+            //uint32_t addrLen = addr.length();
             strcpy(buf, addr.c_str());
             while(addrLen > 0)
             {
@@ -301,16 +303,18 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
 
     hid = *p;
 
-    pt.Append(path.c_str(), path.length() + 1);
+    pt.Append(path.c_str(), static_cast<size_t>(path.length() + 1));
     pathPtr = pt.get();
-    uint32_t ptLen = pt.GetPos();
+    //uint32_t ptLen = pt.GetPos();
+    size_t ptLen = pt.GetPos();
 
     while(ptLen)
     {
         if((p = pathsMap->GetPtr(pathPtr)))
         {
             pid = *p;
-            uint32_t addrLen = addr.length();
+            //uint32_t addrLen = addr.length();
+            size_t addrLen = addr.length();
             HttpRouteInt **rt;            
             
             if(!addrLen)
@@ -458,10 +462,10 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, ServiceIdHash *sid
         if(rt->provider_id == 0)
             throw Exception("provider id not found for service id=%d", rt->service_id);
 
-        int i = rt->sites.Count() - 1;
-        while(i > 0 && !rt->sites[i].def)
-            i--;
-        rt->defSite = rt->sites[i];
+        int siteNumber = rt->sites.Count() - 1;
+        while(siteNumber > 0 && !rt->sites[siteNumber].def)
+            siteNumber--;
+        rt->defSite = rt->sites[siteNumber];
 
         if(rt->def)
             sid->Insert(rt->service_id, rt);

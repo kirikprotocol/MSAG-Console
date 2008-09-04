@@ -254,7 +254,7 @@ public:
     void setMessageBinary(uint8_t* body, int length, const std::string& cp);
 
     char *getMessageContent(unsigned int& length) {
-        length = content.GetPos();
+        length = static_cast<unsigned int>(content.GetPos());
         return content.get();
     }
     void appendMessageContent(char *data, unsigned int length) {

@@ -200,7 +200,8 @@ HttpManagerConfig HttpManCfg(
     5001       //int port;
 );
 
-void load_config(const ConfigView & cv)
+//void load_config(const ConfigView & cv)
+void load_config(ConfigView & cv)
 {
  
         try {

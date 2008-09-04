@@ -43,7 +43,7 @@ public:
     ~HttpContext();
 
     unsigned int loadUnparsed(char* buf) {
-        unsigned int len = unparsed.GetPos();
+        unsigned int len = static_cast<unsigned int>(unparsed.GetPos());
 
         if (len) {
             unparsed.SetPos(0);  

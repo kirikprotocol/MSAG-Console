@@ -118,7 +118,7 @@ bool XMLBasicHandler::getBool(AttributeList& attrs, const char *v, bool def)
 
 void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
 {
-    uint32_t i;
+    //uint32_t i;
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
@@ -144,7 +144,7 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         else
             throw Exception("Invalid XML address_prefix: No route id");
     }
-    else if((i = getKind(qname)) != PlacementKind::UNKNOWN)
+    else if(int i = getKind(qname) != PlacementKind::UNKNOWN)
         handlePlacement(i, attrs);
     else if(!strcmp(qname, "route"))
     {

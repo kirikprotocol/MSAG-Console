@@ -71,7 +71,7 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
         return rc;
 
       saved_buf = local_buf;
-      local_len = len - (local_buf - buf);
+      local_len = len - static_cast<int>(local_buf - buf);
 
       cx.flags = 1;
     }
@@ -84,7 +84,7 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
       if ((rc == OK) && (local_len == 0)) {
         // empty line at the end of HTTP header
         cx.flags = 2;
-        local_len = len - (local_buf - buf);
+        local_len = len - static_cast<int>(local_buf - buf);
 
         if (command->contentLength == 0)
           return OK;
@@ -108,7 +108,7 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
         return rc;
 
       saved_buf = local_buf;
-      local_len = len - (local_buf - buf);
+      local_len = len - static_cast<int>(local_buf - buf);
     }
 
     if (rc != OK)
@@ -129,7 +129,7 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
 
         if ((cx.getRequest().getMethod() == POST) && !strcmp(tmp, CONTENT_TYPE_URL_ENCODED)) {
           char *pp = command->content.get();
-          int ll = command->content.GetPos();
+          size_t ll = command->content.GetPos();
           
           while (ll && (pp[ll-1] == '\r' || pp[ll-1] == '\n'))
             ll--;            
@@ -147,7 +147,7 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
   } while (false);
 
   if (rc == CONTINUE) {
-    len = len - (saved_buf - buf);
+    len = len - static_cast<int>(saved_buf - buf);
   }
 
   return rc;
@@ -237,7 +237,7 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
         }
 
         pos++;
-        const char *end = findCharsN(pos, " \t", len - (pos - buf));
+        const char *end = findCharsN(pos, " \t", len - static_cast<int>(pos - buf));
         std::string path;
 
         if (end) {
@@ -333,7 +333,7 @@ StatusCode HttpParser::parseHeaderFieldLine(char *buf, unsigned int len,
     }
 
     pos = value.data();
-    const char *end = findCharsN(pos, " \t", value.size());
+    const char *end = findCharsN(pos, " \t", static_cast<int>(value.size()));
 
     if (!end)
       cmd.contentType = value;
@@ -408,13 +408,13 @@ StatusCode HttpParser::parseCookie(const char *buf, HttpCommand& cmd, bool set)
     val = mid + 1;
 
     if(*start == '$')
-        cur->setParam(start + 1, mid - start - 1, val, end ? end - val : strlen(val));
+        cur->setParam(start + 1, static_cast<uint32_t>(mid - start - 1), val, end ? static_cast<uint32_t>(end - val) : static_cast<uint32_t>(strlen(val)));
     else
     {
         int i = 0;
         while(i < cookieParamsCnt && strncasecmp(cookieParams[i], start, mid - start)) i++;
         if(i < cookieParamsCnt)
-            cur->setParam(start, mid - start, val, end ? end - val : strlen(val));
+            cur->setParam(start, static_cast<uint32_t>(mid - start), val, end ? static_cast<uint32_t>(end - val) : static_cast<uint32_t>(strlen(val)));
         else
         {
             cur = new Cookie;
@@ -451,7 +451,7 @@ int HttpParser::compareNocaseN(const char *src, const char *dst, int count)
   }
   return 0;
 }
-
+ 
 const char *HttpParser::findCharsN(const char *src, const char *dst, int count)
 {
   size_t size = strlen(dst);

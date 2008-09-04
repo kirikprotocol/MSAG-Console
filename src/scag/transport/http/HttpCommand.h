@@ -232,8 +232,8 @@ public:
     int getContentLength() {
         return contentLength < 0 ? 0 : contentLength;
     }
-    void setContentLength(int length) { 
-        contentLength = length;
+    void setContentLength(size_t length) { 
+        contentLength = static_cast<int>(length);
         content.setSize(length);
     }
     
@@ -244,7 +244,7 @@ public:
     void setMessageBinary(uint8_t* body, int length, const std::string& cp);
 
     char *getMessageContent(unsigned int& length) {
-        length = content.GetPos();
+        length = static_cast<unsigned int>(content.GetPos());
         return content.get();
     }
     void appendMessageContent(char *data, unsigned int length) {
@@ -274,7 +274,7 @@ public:
     // unsigned int totalHeadersSize;
     int contentLength;
     
-    void setLengthField(unsigned int length);
+    void setLengthField(uint64_t length);
 };
 
 /**

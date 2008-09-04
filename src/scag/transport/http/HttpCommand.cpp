@@ -281,7 +281,6 @@ const std::string& HttpCommand::getMessageText()
         else
         {
             TmpBuf<uint8_t, 2048> buf(2048);
-            
             Convertor::convert(charset.c_str(), "UTF-8", inbufptr, inbytesleft, buf);
             textContent.assign((char*)buf.get(), buf.GetPos());
         }
@@ -301,9 +300,9 @@ bool HttpCommand::setMessageText(const std::string& text)
     {
         charset = "UTF-8";
         setHeaderField(content_type_field, "text/html; charset=" + charset);
-    }        
-    
-    content.SetPos(0);        
+    }     
+
+    content.SetPos(0);      
     if(!strcasecmp("UTF-8", charset.c_str()))
         content.Append(text.c_str(), text.length());
     else
@@ -326,7 +325,7 @@ const uint8_t* HttpCommand::getMessageBinary(int& length)
     return (uint8_t*)getMessageContent((unsigned int &)length);
 }
 
-void HttpCommand::setLengthField(unsigned int length)
+void HttpCommand::setLengthField(uint64_t length)
 {    
     char buf[11];    
     buf[10] = 0;
@@ -482,7 +481,7 @@ const std::string& HttpResponse::serialize()
 void HttpResponse::fillFakeResponse(int s)
 {
     const char *sl;
-    int len;
+    size_t len;
 
     fake = true;
     
