@@ -21,6 +21,9 @@
 #include "ActionReplace2.h"
 #include "ActionSubstr2.h"
 
+#include "BatchAction2.h"
+#include "PersAction2.h"
+
 #include "LongCallTestAction.h"
 
 #include "BillActionOpen.h"
@@ -137,6 +140,22 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             if ( name == "bill:info" ) return new BillActionInfo();
             break;
         }
+        if ( 0 == strncmp(name.c_str(), "profile:", 8 ) ) {
+          if (name=="profile:set") return new PersAction(PC_SET);
+          if (name=="profile:get") return new PersAction(PC_GET);
+          if (name=="profile:del") return new PersAction(PC_DEL);
+          if (name=="profile:inc") return new PersAction(PC_INC);
+          if (name=="profile:inc-mod") return new PersAction(PC_INC_MOD);
+          if (name=="profile:batch") return new BatchAction();
+        }
+        if ( 0 == strncmp(name.c_str(), "batch:", 6 ) ) {
+          if (name=="batch:set") return new PersActionCommand(PC_SET);
+          if (name=="batch:get") return new PersActionCommand(PC_GET);
+          if (name=="batch:del") return new PersActionCommand(PC_DEL);
+          if (name=="batch:inc") return new PersActionCommand(PC_INC);
+          if (name=="batch:inc-mod") return new PersActionCommand(PC_INC_MOD);
+        }
+
 
     // FIXME: impl
     /* 
@@ -149,12 +168,6 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
     if (name=="bill:close") return new BillActionClose();
     if (name=="bill:info") return new BillActionInfo();
 
-    if (name=="profile:set") return new PersAction(PC_SET);
-    if (name=="profile:get") return new PersAction(PC_GET);
-    if (name=="profile:del") return new PersAction(PC_DEL);
-    if (name=="profile:inc") return new PersAction(PC_INC);
-    if (name=="profile:inc-mod") return new PersAction(PC_INC_MOD);
-    if (name=="profile:batch") return new BatchAction();
 
     if (name=="http:get-cookie") return new CookieAction(false);
     if (name=="http:set-cookie") return new CookieAction(true);
