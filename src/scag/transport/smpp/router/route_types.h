@@ -43,6 +43,7 @@ struct RouteInfo
 
   bool enabled;
   bool archived;
+    bool transit;
   uint8_t slicing, slicingRespPolicy;
 
   FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> smeSystemId;

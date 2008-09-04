@@ -19,12 +19,12 @@ public:
 
     void useDefault( bool ud ) { usedefault_ = ud; }
 
-    std::string dir;
-    std::string name;
-    unsigned    indexgrowth;
-    unsigned    pagesize;
-    unsigned    prealloc;
-    bool        diskio;
+    std::vector<std::string> dirs;
+    std::string              name;
+    unsigned                 indexgrowth;
+    unsigned                 pagesize;
+    unsigned                 prealloc;
+    bool                     diskio;
 
 private:
     std::string getString( const scag::config::ConfigView& cfg,

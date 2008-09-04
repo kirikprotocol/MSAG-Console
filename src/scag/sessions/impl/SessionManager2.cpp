@@ -86,7 +86,7 @@ void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg,
 
     store_->init( nodeNumber_,
                   *cmdqueue_,
-                  cfg.dir,
+                  cfg.dirs,
                   cfg.name,
                   cfg.indexgrowth,
                   cfg.pagesize,

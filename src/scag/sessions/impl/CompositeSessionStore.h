@@ -1,6 +1,7 @@
 #ifndef _SCAG_SESSIONS_IMPL_COMPOSITESESSIONSTORE_H
 #define _SCAG_SESSIONS_IMPL_COMPOSITESESSIONSTORE_H
 
+#include <vector>
 #include "SessionStore2.h"
 #include "scag/exc/SCAGExceptions.h"
 
@@ -24,7 +25,7 @@ public:
 
     void init( unsigned nodeNumber,
                SCAGCommandQueue& queue,
-               const std::string& path = "sessions",
+               const std::vector<std::string>& paths,
                const std::string& name = "sessions",
                unsigned indexgrowth = 10000,
                unsigned pagesize = 512,

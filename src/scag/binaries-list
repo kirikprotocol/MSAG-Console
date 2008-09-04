@@ -45,6 +45,8 @@ scag/scag2           gwmain2        \
   -lscag-config-impl \
   -lscag-transport-smpp-impl \
   \
+  -lscag-pers \
+  \
   -lscag-sessions-base \
   -lscag-lcm-base \
   -lscag-bill-base \

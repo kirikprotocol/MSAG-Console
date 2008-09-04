@@ -413,6 +413,8 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
                        sms.getDestinationAddress().toString().c_str(),
                        routeId.c_str() );
 
+        if ( ri.transit ) break;
+
         if ( ! session.get() ) {
 
             SessionKey key( sms.getDestinationAddress() );
@@ -501,10 +503,10 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smscmd.original_ussd_op);
     failed = putCommand(SUBMIT, src, dst, ri, aucmd);
 
-    session->getLongCallContext().runPostProcessActions();
+    if (session.get()) session->getLongCallContext().runPostProcessActions();
     smsc_log_debug(log_, "%s: processed", where );
 
-    if(failed)
+    if (failed)
     {
         std::auto_ptr<SmppCommand> resp(SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),failed));
         resp->setEntity(dst);
@@ -793,6 +795,8 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
                        sms.getDestinationAddress().toString().c_str(),
                        routeId.c_str());
 
+        if ( ri.transit ) break;
+
         if ( ! session.get() ) {
 
             SessionKey key( sms.getOriginatingAddress() );
@@ -883,7 +887,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smscmd.original_ussd_op);
     failed = putCommand(DELIVERY, src, dst, ri, aucmd);
 
-    session->getLongCallContext().runPostProcessActions();
+    if (session.get()) session->getLongCallContext().runPostProcessActions();
     smsc_log_debug(log_, "%s: processed", where );
 
     if(failed)
@@ -1229,6 +1233,8 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
                        sms.getDestinationAddress().toString().c_str(),
                        routeId.c_str() );
 
+        if ( ri.transit ) break;
+
         if (!session.get())
         {
             SessionKey key( (src->info.type == etService) ?
@@ -1306,7 +1312,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
 
     failed = putCommand(DATASM, src, dst, ri, aucmd);
 
-    session->getLongCallContext().runPostProcessActions();
+    if (session.get()) session->getLongCallContext().runPostProcessActions();
     smsc_log_debug(log_, "%s: processed", where );
 
     if (failed)

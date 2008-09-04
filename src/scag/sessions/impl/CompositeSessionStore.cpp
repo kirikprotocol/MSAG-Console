@@ -26,7 +26,7 @@ CompositeSessionStore::~CompositeSessionStore()
 
 void CompositeSessionStore::init( unsigned nodeNumber,
                                   SCAGCommandQueue& queue,
-                                  const std::string& path,
+                                  const std::vector<std::string>& paths,
                                   const std::string& name,
                                   unsigned indexgrowth,
                                   unsigned pagesize,
@@ -36,13 +36,16 @@ void CompositeSessionStore::init( unsigned nodeNumber,
     clear();
     const StorageNumbering& n = StorageNumbering::instance();
     storages_.resize( n.storages(), 0 );
+    assert( paths.size() > 0 );
 
+    unsigned pathidx = 0;
     for ( unsigned i = 0; i < storages_.size(); ++i ) {
         if ( n.node(i) == nodeNumber ) {
 
             Storage* st = new Storage( *fin_, *expiration_, allocator_ );
             storages_[i] = st;
-            st->init( i, queue, path, name, indexgrowth, pagesize, prealloc, dodiskio );
+            st->init( i, queue, paths[pathidx], name, indexgrowth, pagesize, prealloc, dodiskio );
+            if ( ++pathidx >= paths.size() ) pathidx = 0;
 
         }
     }

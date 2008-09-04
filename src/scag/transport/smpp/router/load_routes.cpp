@@ -65,6 +65,7 @@ void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,bool tracei
               rinfo.smeSystemId = dest.getSmeIdString();//dest.smeId;
               rinfo.srcSmeSystemId = route->getSrcSmeSystemId();
               rinfo.archived=route->isArchiving();
+              rinfo.transit = route->isTransit();
               rinfo.routeId=route->getId();
               rinfo.serviceId=route->getServiceId();
               rinfo.enabled=route->isEnabling();

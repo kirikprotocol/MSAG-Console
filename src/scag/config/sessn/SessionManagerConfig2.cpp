@@ -23,14 +23,33 @@ namespace config {
     void SessionManagerConfig::init(const ConfigView& cv) throw(ConfigException)
     {
         try {
-            dir = getString(cv,"location");
+
+            // dir = getString(cv,"location");
             name = getString(cv,"name");
             indexgrowth = cv.getInt("indexgrowth");
             pagesize = cv.getInt("pagesize");
             prealloc = cv.getInt("prealloc");
             diskio = (cv.getInt("diskio") != 0);
+
+            // locations
+            dirs.clear();
+            std::auto_ptr<ConfigView> locs( cv.getSubConfig( "locations" ) );
+            std::auto_ptr<config::CStrSet> names(locs->getStrParamNames());
+            for ( config::CStrSet::const_iterator i = names->begin();
+                  i != names->end();
+                  ++i ) {
+
+                dirs.push_back( getString( *locs.get(), i->c_str() ) );
+
+            }
+
         } catch (...) {
             if ( ! usedefault_ ) throw;
+        }
+
+        if ( dirs.size() == 0 ) {
+            if ( ! usedefault_ ) throw ConfigException("SessionManager.locations has no elements");
+            dirs.push_back( "sessions" );
         }
     }
 
@@ -40,7 +59,7 @@ namespace config {
         SessionManagerConfig smc;
         smc.usedefault_ = usedefault_;
         smc.init( cv );
-        return ( dir == smc.dir &&
+        return ( dirs == smc.dirs &&
                  name == smc.name &&
                  indexgrowth == smc.indexgrowth &&
                  pagesize == smc.pagesize &&
@@ -60,7 +79,8 @@ namespace config {
 
     void SessionManagerConfig::clear()
     {
-        dir = "sessions";
+        dirs.clear();
+        dirs.push_back( "sessions" );
         name = "sessions";
         indexgrowth = 1000;
         pagesize = 512;

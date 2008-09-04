@@ -260,6 +260,7 @@ public:
 
 namespace scag2 {
 namespace config {
+using scag::config::CStrSet;
 using scag::config::Config;
 }
 }

@@ -207,6 +207,7 @@ throw (SubjectNotFoundException)
                                     getAttribBool(elem, "archived"),
                                     getAttribBool(elem, "enabled"),
                                     getAttribBool(elem, "active"),
+                                    getAttribBool(elem, "transit"),
                                     getAttribStr(elem, "srcSmeId"),
                                     getAttribInt(elem, "serviceId"),
                                     getAttribStr(elem, "slicing"),
