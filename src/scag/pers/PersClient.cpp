@@ -336,7 +336,7 @@ void PersClientImpl::GetPropertyPrepare(const char *property_name, SerialBuffer&
 }
 
 void PersClientImpl::DelPropertyPrepare(const char *property_name, SerialBuffer& bsb) {
-  bsb.WriteInt8(PC_GET);
+  bsb.WriteInt8(PC_DEL);
   bsb.WriteString(property_name);
 }
 
