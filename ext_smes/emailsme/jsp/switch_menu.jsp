@@ -18,6 +18,9 @@
     case SmeBean.RESULT_PROFILES:
       response.sendRedirect("profiles.jsp");
       return;
+    case SmeBean.RESULT_STATS:
+      response.sendRedirect("stats.jsp");
+      return;
     default:
       break;
   }

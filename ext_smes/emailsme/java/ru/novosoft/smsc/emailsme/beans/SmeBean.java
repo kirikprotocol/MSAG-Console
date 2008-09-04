@@ -19,7 +19,8 @@ public class SmeBean extends PageBean
   public static final int RESULT_INDEX = PageBean.PRIVATE_RESULT + 0;
   public static final int RESULT_OPTIONS = PageBean.PRIVATE_RESULT + 1;
   public static final int RESULT_PROFILES = PageBean.PRIVATE_RESULT + 3;
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 4;
+  public static final int RESULT_STATS = PageBean.PRIVATE_RESULT + 4;
+  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 5;
 
   private SmeContext smeContext = null;
   private Config config = null;
@@ -46,6 +47,8 @@ public class SmeBean extends PageBean
       return RESULT_OPTIONS;
     else if ("profiles".equals(mbMenu))
       return RESULT_PROFILES;
+    else if ("stats".equals(mbMenu))
+      return RESULT_STATS;
     else
       return result;
   }
