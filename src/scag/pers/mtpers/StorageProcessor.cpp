@@ -133,7 +133,7 @@ void AbonentStorageProcessor::init(const AbonentStorageConfig& cfg) {
   std::auto_ptr< DiskStorage > ds(new DiskStorage(dis.release(), dds.release()));
   smsc_log_debug(logger_, "disk storage is assembled");
 
-  std::auto_ptr< MemStorage > ms(new MemStorage(cfg.cacheSize));
+  std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance("cache"), cfg.cacheSize));
   smsc_log_debug(logger_, "memory storage is created");
 
   storage_.reset( new AbonentStorage(ms.release(), ds.release()));
@@ -205,7 +205,7 @@ void InfrastructStorageProcessor::initStorage(const InfrastructStorageConfig& cf
     pf->Create(fn, 256, cfg.recordCount);
   }
 
-  std::auto_ptr< DiskDataStorage > data(new DiskDataStorage(pf.release(), &glossary_));
+  std::auto_ptr< DiskDataStorage > data(new DiskDataStorage(pf.release(),  Logger::getInstance("disk"), &glossary_));
   smsc_log_debug(logger_, "%s data storage is created", cfg.dbName.c_str());
 
   std::auto_ptr< DiskIndexStorage > index(new DiskIndexStorage(cfg.dbName, cfg.dbPath, cfg.recordCount));
@@ -214,7 +214,7 @@ void InfrastructStorageProcessor::initStorage(const InfrastructStorageConfig& cf
   std::auto_ptr< DiskStorage > ds (new DiskStorage(index.release(), data.release()));
   smsc_log_debug(logger_, "%s indexed storage is created", cfg.dbName.c_str());
 
-  std::auto_ptr< MemStorage > ms(new MemStorage(cfg.cacheSize));
+  std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance("cache"), cfg.cacheSize));
   smsc_log_debug(logger_, "%s memory storage is created", cfg.dbName.c_str());
 
   storage.reset(new InfrastructStorage(ms.release(), ds.release()));
