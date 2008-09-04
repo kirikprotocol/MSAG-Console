@@ -26,7 +26,6 @@
                     <attribute name="content-type-str" type="scag:Value" use="optional"/>
                     <attribute name="status" type="scag:Var" use="optional" />
                     <attribute name="msg" type="scag:Var" use="optional" />
-                    <attribute name="id" type="scag:Value" use="required" />
                     <attribute name="result_number" type="scag:Var" use="optional" />
                </complexType>
             </element>

@@ -177,7 +177,7 @@ Targets:
     </copy>
     <copy todir="${DISTR_DIR}/services/scag2/conf" preservelastmodified="yes" flatten="yes" >
       <fileset dir="${SMSC_DIR}/config"
-               includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag/smpp_routes.dtd scag/http_routes.dtd"/>
+               includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag2/smpp_routes.dtd scag/http_routes.dtd"/>
     </copy>
 
     <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>

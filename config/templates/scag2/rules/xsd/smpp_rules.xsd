@@ -18,48 +18,47 @@
             </restriction>
         </simpleType>
         
-    <simpleType name="Const">
-        <restriction base="scag:Const">
-            <enumeration value="@TRUE" />
-        <enumeration value="@FALSE" />
-        <enumeration value="@USSD" />
-        <enumeration value="@SMS" />
-        <enumeration value="@MMS" />
-        <enumeration value="@WAP" />
-        <enumeration value="@HTTP" />
+        <simpleType name="Const">
+            <restriction base="scag:Const">
+                <enumeration value="@TRUE" />
+                <enumeration value="@FALSE" />
+                <enumeration value="@USSD" />
+                <enumeration value="@SMS" />
+                <enumeration value="@MMS" />
+                <enumeration value="@WAP" />
+                <enumeration value="@HTTP" />
         
-            <enumeration value="@ICC_INITED"/>
-            <enumeration value="@ICC_CONTINUED"/>
-            <enumeration value="@ICC_COMPLETED"/>
+                <enumeration value="@ICC_INITED"/>
+                <enumeration value="@ICC_CONTINUED"/>
+                <enumeration value="@ICC_COMPLETED"/>
         
-            <enumeration value="@UNKNOWN"/>
-            <enumeration value="@DIRECTION_SC_2_SME"/>
-            <enumeration value="@DIRECTION_SME_2_SME"/>
-            <enumeration value="@DIRECTION_SC_2_SC"/>
-            <enumeration value="@DIRECTION_SME_2_SC"/>
+                <enumeration value="@UNKNOWN"/>
+                <enumeration value="@DIRECTION_SC_2_SME"/>
+                <enumeration value="@DIRECTION_SME_2_SME"/>
+                <enumeration value="@DIRECTION_SC_2_SC"/>
+                <enumeration value="@DIRECTION_SME_2_SC"/>
         
-        
-        </restriction>
-    </simpleType>
+
+            </restriction>
+        </simpleType>
     
     
         <simpleType name="Command">
             <restriction base="scag:Command">
-            <enumeration value="#status_ok"/>
-            <enumeration value="#status_perm_error"/>
-            <enumeration value="#status_temp_error"/>
+                <enumeration value="#status_ok"/>
+                <enumeration value="#status_perm_error"/>
+                <enumeration value="#status_temp_error"/>
 
-            <enumeration value="#packet_direction"/>
-            <enumeration value="#svc_type"/>
-        <enumeration value="#ussd_dialog" />
-        <enumeration value="#whoisd_charging" />
-            <enumeration value="#whoisd_message_transport_type" />
-            <enumeration value="#whoisd_expected_message_transport_type"/>
+                <enumeration value="#packet_direction"/>
+                <enumeration value="#svc_type"/>
+                <enumeration value="#ussd_dialog" />
+                <enumeration value="#whoisd_charging" />
+                <enumeration value="#whoisd_message_transport_type" />
+                <enumeration value="#whoisd_expected_message_transport_type"/>
         
-            <enumeration value="#whoisd_message_content_type" />
-        <enumeration value="#whoisd_expected_message_content_type" />
+                <enumeration value="#whoisd_message_content_type" />
+                <enumeration value="#whoisd_expected_message_content_type" />
                     
-        
                 <enumeration value="#OA"/>
                 <enumeration value="#DA"/>
 
@@ -77,6 +76,7 @@
 
                 <enumeration value="#protocol_id"/>
                 <enumeration value="#priority_flag"/>
+                <enumeration value="#umr"/>
                 <enumeration value="#Schedule_delivery_time"/>
                 <enumeration value="#validity_period"/>
 
