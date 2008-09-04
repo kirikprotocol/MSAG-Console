@@ -8,6 +8,7 @@
             xmlns:bill     ="http://www.sibinco.com/SCAG/BILL"
             xmlns:send     ="http://www.sibinco.com/SCAG/SEND"
             xmlns:profile  ="http://www.sibinco.com/SCAG/PROFILE"
+            xmlns:batch    ="http://www.sibinco.com/SCAG/BATCH"
             xmlns:log      ="http://www.sibinco.com/SCAG/LOG"
             xmlns:http     ="http://www.sibinco.com/SCAG/HTTP"
             xmlns:smpp     ="http://www.sibinco.com/SCAG/SMPP"
