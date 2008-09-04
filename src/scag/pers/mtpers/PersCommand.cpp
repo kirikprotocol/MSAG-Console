@@ -226,9 +226,6 @@ void BatchPacket::execCommand(Profile *pf, SerialBuffer& sb, Logger* dblog, cons
       if (resp != scag::pers::RESPONSE_OK) {
         smsc_log_warn(dblog, "break transact batch execution response = %d", resp);
         pf->setChanged(false);
-        sb.Empty();
-        sb.SetPos(4);
-        sb.WriteInt8(resp);
         break;
       }
     }
