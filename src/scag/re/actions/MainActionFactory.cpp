@@ -79,6 +79,11 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="profile:inc") return new PersAction(PC_INC);
     if (name=="profile:inc-mod") return new PersAction(PC_INC_MOD);
     if (name=="profile:batch") return new BatchAction();
+    if (name=="batch:set") return new PersActionCommand(PC_SET);
+    if (name=="batch:get") return new PersActionCommand(PC_GET);
+    if (name=="batch:del") return new PersActionCommand(PC_DEL);
+    if (name=="batch:inc") return new PersActionCommand(PC_INC);
+    if (name=="batch:inc-mod") return new PersActionCommand(PC_INC_MOD);
 
     if (name=="log:debug") return new ActionLog(ActionLog::lgDebug);
     if (name=="log:info") return new ActionLog(ActionLog::lgInfo);
