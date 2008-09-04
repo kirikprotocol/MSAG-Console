@@ -41,7 +41,7 @@ struct ActionProperty {
     if (!p) {
       return 0;
     }
-    return p->getInt();
+    return static_cast<int>(p->getInt());
   }
   void setIntValue(int _value, ActionContext &context) const {
     if (type == ftUnknown) {
