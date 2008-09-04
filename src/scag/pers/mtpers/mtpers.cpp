@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
       smsc_log_warn(logger, "Parameter <MTPers.port> missed. Defaul value is %d", port);
     };
     try { 
-      maxClientCount = persConfig.getInt("maxClientCount");
+      maxClientCount = persConfig.getInt("maxClientsCount");
     } catch (...) {
       smsc_log_warn(logger, "Parameter <MTPers.maxClientsCount> missed. Defaul value is %d", maxClientCount);
     };
