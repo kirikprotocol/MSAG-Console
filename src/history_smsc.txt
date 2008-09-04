@@ -124,6 +124,56 @@ B3008:
     MCISme	Remove reversed notify policy
     MCISme	Add wantNotify support
 B3009:
-    Emailsme	Fix for limit counters reset.
     SMSC	License runtime reloading
     SMSC	set_dpf now supported from many SMEs to one abonent
+    SMSC	Extra check for address in MO sms, fix for alphanumeric starting from 0x00 crash
+    SMSC	SM_RP_PRI set to 1 when querying IMSI on MO
+    SMSC	Fined log output for smpp io tasks
+    SMSC	Fix for unintialized SME mode when reciving updates by standby node from active node
+    SMSC	Now ALERT_NOTIFICATION will not be dropped by limits
+    SMSC	MSGQFUL changed to THROTTLED when smpp proxy limits reached or shape limit occured on SME
+    Logger	Fix for possible unhandled exception
+    SMPP	processing timeouts for unresponded submits had bad performance, cause high CPU usage by SME's if 
+		a lot of submits were waiting responces
+    Emailsme	Add helpdesk support, helpdesk email can be selected from regions.xml
+    Emailsme	Fix for limit counters reset.
+    Inman	Fix for possible crash because of wait on non-locked mutex
+    Inman	Fix for OID counting
+    Inman	synchronization fixes in MAP/CAP dialogs finalization 
+    Inman	SEGV in TCDlg unbind loop is fixed
+    MCISme	Date formatter localized according to LC_TIME env variable
+    InfoSme	Storage architecture rebuilded
+    InfoSme	Mixing abonents, decomposition by regions, black list
+    Ussman	DuplicateRequestChecker::getInstance() in main() body in order to initialize Singleton instance properly
+    MTSms	SRI4SM support
+    Archiver	fix for some masks indexing
+    Webadm	add_ussd_ssn mistake fixed in SMSC config management form
+    Utils	profile updater tool now accept file with list of addresses to process
+B3010:
+    Common	New build scheme, generate make file with deps, allow parralel building
+    InfoSme	CSV storage fixes, periodical tasks fixes
+    InfoSme	admin fixes default address get from config, message view of unicode text, stats fix. 
+    InfoSme	Reload regions on region settings change
+    InfoSme	decomposition by regions fix 
+    Emailsme	Message partitioning support, sms sending limits, statistics implemented for MTS helpdesk reqs
+    MTSms	negative invoke id handling fix
+    MTSms	SRI4SM MAP V1 support
+    MTSms	force SSN=6 in called address if not VLR or MCS
+    MTSms	SRI4SM remove ton,npi octet from IMSI encoding
+    MTSms	Support for Eyeline SUA stack
+    INMan	calls to not inited abonents cache are fixed
+    INMan	URC registry initialization for MAP services
+    MCISme	storage structure redesigned, grouping missed calls in storage
+    MCISme	cTime thread-safe fix
+    MCISme	send abonent online notification if event is not older then time specified by config parameter SendAbntOnlineNotificationPeriod
+    MCISme	added parameter OriginatingAddressIsMCIAddress instead of GroupSmsByCallingAbonent
+    SMSC	bulk ussd feature implemented (bill2cdr for MTS Sibir), feature request F-43.1
+    SMSC	correct place of dpf storage in cluster mode
+    SMSC	distrlist copy&rename sms&admin commands for SMSExtra
+    SMSC	distrlist for sme fix unknown resource now key instead of empty string 
+    SMSC	support for multiple crash/restart/crash during restart, merge all SMS stores on scheduler initialization
+    MCAhdb	Missed calls history database module first version developed
+    Archiver	Query socket error handling fix
+    Webadm	Add support for runtime add SME to single mode installation smsc_daemon
+    Webadm	SOAP framework integrated, add GroupEdit web service
+    HSDaemon    connect timeout fix for situation when one of daemons or nodes has not started
