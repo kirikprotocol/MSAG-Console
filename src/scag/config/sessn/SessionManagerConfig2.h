@@ -2,6 +2,7 @@
 #define SessionManagerConfig2_dot_h
 
 #include <time.h>
+#include <vector>
 #include <string>
 #include "scag/config/base/ConfigView.h"
 
@@ -27,9 +28,15 @@ public:
     bool                     diskio;
 
 private:
-    std::string getString( const scag::config::ConfigView& cfg,
-                           const char* param ) const throw (ConfigException);
-
+    void getString( const scag::config::ConfigView& cfg,
+                    const char* param,
+                    std::string& result ) const throw (ConfigException);
+    void getInt( const scag::config::ConfigView& cfg,
+                 const char* param,
+                 unsigned& result ) const throw (ConfigException);
+    void getBool( const scag::config::ConfigView& cfg,
+                  const char* param,
+                  bool& result ) const throw (ConfigException);
     void clear();
 
 private:

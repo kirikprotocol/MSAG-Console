@@ -15,41 +15,38 @@ namespace config {
     SessionManagerConfig::SessionManagerConfig(const ConfigView& cv) throw(ConfigException) :
     usedefault_(true)
     {
-        clear();
         init(cv);
     }
 
 
     void SessionManagerConfig::init(const ConfigView& cv) throw(ConfigException)
     {
-        try {
+        // dir = getString(cv,"location");
+        clear();
+        getString(cv, "name", name);
+        getInt(cv, "indexgrowth", indexgrowth );
+        getInt(cv, "pagesize", pagesize );
+        getInt(cv, "prealloc", prealloc );
+        getBool(cv, "diskio", diskio);
 
-            // dir = getString(cv,"location");
-            name = getString(cv,"name");
-            indexgrowth = cv.getInt("indexgrowth");
-            pagesize = cv.getInt("pagesize");
-            prealloc = cv.getInt("prealloc");
-            diskio = (cv.getInt("diskio") != 0);
+        // locations
+        std::auto_ptr<ConfigView> locs( cv.getSubConfig( "locations" ) );
+        std::auto_ptr<config::CStrSet> names(locs->getStrParamNames());
+        std::vector< std::string > newlocs;
+        for ( config::CStrSet::const_iterator i = names->begin();
+              i != names->end();
+              ++i ) {
 
-            // locations
-            dirs.clear();
-            std::auto_ptr<ConfigView> locs( cv.getSubConfig( "locations" ) );
-            std::auto_ptr<config::CStrSet> names(locs->getStrParamNames());
-            for ( config::CStrSet::const_iterator i = names->begin();
-                  i != names->end();
-                  ++i ) {
+            std::string loc;
+            getString( *locs.get(), i->c_str(), loc );
+            if ( ! loc.empty() ) newlocs.push_back( loc );
 
-                dirs.push_back( getString( *locs.get(), i->c_str() ) );
-
-            }
-
-        } catch (...) {
-            if ( ! usedefault_ ) throw;
         }
 
-        if ( dirs.size() == 0 ) {
-            if ( ! usedefault_ ) throw ConfigException("SessionManager.locations has no elements");
-            dirs.push_back( "sessions" );
+        if ( newlocs.size() > 0 ) {
+            dirs = newlocs;
+        } else if ( ! usedefault_ ) {
+            throw ConfigException("SessionManager.locations has no elements");
         }
     }
 
@@ -68,17 +65,50 @@ namespace config {
 }
 
 
-    std::string SessionManagerConfig::getString
-        ( const scag::config::ConfigView& cfg,
-          const char* param ) const throw (ConfigException)
-    {
+void SessionManagerConfig::getString
+    ( const scag::config::ConfigView& cfg,
+      const char* param,
+      std::string& result ) const throw (ConfigException)
+{
+    try {
         std::auto_ptr< char > p( cfg.getString(param) );
-        return std::string( p.get() );
+        result = std::string( p.get() );
+    } catch (ConfigException&) {
+        if ( ! usedefault_ ) throw;
     }
+}
 
 
-    void SessionManagerConfig::clear()
-    {
+void SessionManagerConfig::getInt
+    ( const scag::config::ConfigView& cfg,
+      const char* param,
+      unsigned& result ) const throw (ConfigException)
+{
+    try {
+        unsigned p = unsigned(cfg.getInt(param));
+        result = p;
+    } catch (ConfigException&) {
+        if ( ! usedefault_ ) throw;
+    }
+}
+
+
+void SessionManagerConfig::getBool
+    ( const scag::config::ConfigView& cfg,
+      const char* param,
+      bool& result ) const throw (ConfigException)
+{
+    try {
+        bool p = unsigned(cfg.getBool(param));
+        result = p;
+    } catch (ConfigException&) {
+        if ( ! usedefault_ ) throw;
+    }
+}
+
+
+void SessionManagerConfig::clear()
+{
         dirs.clear();
         dirs.push_back( "sessions" );
         name = "sessions";
@@ -86,7 +116,7 @@ namespace config {
         pagesize = 512;
         prealloc = 100;
         diskio = true;
-    }
+}
 
 }
 }

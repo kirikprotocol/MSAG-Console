@@ -404,14 +404,15 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         sms.setDestinationSmeId(dst->getSystemId());
         cmd->setServiceId(ri.serviceId);
 
-        smsc_log_info( log_, "%s%s: %s, USSD_OP=%d. %s(%s)->%s, routeId=%s",
+        smsc_log_info( log_, "%s%s: %s, USSD_OP=%d. %s(%s)->%s, routeId=%s%s",
                        where,
                        cmd->getOperationId() != SCAGCommand::invalidOpId() ? " continued..." : "",
                        rcnt ? "(redirected)" : "", ussd_op,
                        sms.getOriginatingAddress().toString().c_str(),
                        src->getSystemId(),
                        sms.getDestinationAddress().toString().c_str(),
-                       routeId.c_str() );
+                       routeId.c_str(),
+                       ri.transit ? "(transit)" : "");
 
         if ( ri.transit ) break;
 
@@ -786,14 +787,15 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         sms.setDestinationSmeId(dst->getSystemId());
         cmd->setServiceId(ri.serviceId);
 
-        smsc_log_info( log_, "%s%s: %s USSD_OP=%d. %s(%s)->%s, routeId=%s",
+        smsc_log_info( log_, "%s%s: %s USSD_OP=%d. %s(%s)->%s, routeId=%s%s",
                        where,
                        cmd->getOperationId() != SCAGCommand::invalidOpId() ? " continued..." : "",
                        rcnt ? "(redirected)" : "", ussd_op,
                        sms.getOriginatingAddress().toString().c_str(),
                        src->getSystemId(),
                        sms.getDestinationAddress().toString().c_str(),
-                       routeId.c_str());
+                       routeId.c_str(),
+                       ri.transit ? "(transit)" : "");
 
         if ( ri.transit ) break;
 
@@ -1224,14 +1226,15 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
             smscmd.dir = (dst->info.type==etService) ? dsdSc2Srv : dsdSc2Sc;
         cmd->setServiceId(ri.serviceId);
 
-        smsc_log_info( log_, "%s%s: %s. %s(%s)->%s, routeid=%s",
+        smsc_log_info( log_, "%s%s: %s. %s(%s)->%s, routeid=%s%s",
                        where,
                        cmd->getOperationId() != SCAGCommand::invalidOpId() ? " continued..." : "",
                        rcnt ? "(redirected)" : "",
                        sms.getOriginatingAddress().toString().c_str(),
                        src->getSystemId(),
                        sms.getDestinationAddress().toString().c_str(),
-                       routeId.c_str() );
+                       routeId.c_str(),
+                       ri.transit ? "(transit)" : "");
 
         if ( ri.transit ) break;
 

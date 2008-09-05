@@ -108,7 +108,8 @@ void SessionStoreImpl::init( unsigned eltNumber,
         char buf[10];
         snprintf( buf, sizeof(buf), "%03u", i );
         const std::string idxstr(buf);
-        const std::string fn( path + "/" + name + suffix + idxstr + "-data" );
+        const std::string realpath = path + "/" + idxstr;
+        const std::string fn( realpath + "/" + name + suffix + idxstr + "-data" );
         try {
             pgf->Open( fn );
         } catch (...) {
@@ -118,7 +119,7 @@ void SessionStoreImpl::init( unsigned eltNumber,
         std::auto_ptr<EltDiskStorage> eds
             ( new EltDiskStorage
               ( new DiskIndexStorage( name + suffix + idxstr,
-                                      path, indexgrowth, false,
+                                      realpath, indexgrowth, false,
                                       smsc::logger::Logger::getInstance("sess.sto.i")),
                 new DiskDataStorage( pgf.release(),
                                      smsc::logger::Logger::getInstance("sess.sto.d"))));
