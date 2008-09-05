@@ -597,6 +597,12 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
             sms->setOriginatingAddress(smscmd.orgSrc);
             sms->setDestinationAddress(smscmd.orgDst);
 
+            // orgcmd->operation is not set in case of transit route
+            if ( orgCmd->getOperationId() == SCAGCommand::invalidOpId() ) {
+                smsc_log_debug(log_, "%s: orgcmd has no operation, transit route?", where );
+                break;
+            }
+
         } else {
 
             dst = cmd->getDstEntity();
@@ -984,6 +990,12 @@ void StateMachine::processDeliveryResp( std::auto_ptr<SmppCommand> aucmd,
             sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
             sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
             
+            // orgcmd->operation is not set in case of transit route
+            if ( orgCmd->getOperationId() == SCAGCommand::invalidOpId() ) {
+                smsc_log_debug(log_, "%s: orgcmd has no operation, transit route?", where );
+                break;
+            }
+
         } else {
 
             dst = cmd->getDstEntity();
@@ -1419,6 +1431,12 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
             dst = orgCmd->getEntity();
             cmd->setDstEntity(dst);
             cmd->set_dialogId( smscmd.get_orgDialogId() );
+
+            // orgcmd->operation is not set in case of transit route
+            if ( orgCmd->getOperationId() == SCAGCommand::invalidOpId() ) {
+                smsc_log_debug(log_, "%s: orgcmd has no operation, transit route?", where );
+                break;
+            }
 
         } else {
 
