@@ -13,4 +13,4 @@ shift
 
 SCRIPT_NAME="./mca/$SCRIPT_NAME"
 
-./sendsoap.sh $BLACK_LIST_URL $SCRIPT_NAME $@
+./sendsoap.sh $MCA_URL $SCRIPT_NAME $@

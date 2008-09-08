@@ -65,15 +65,12 @@ public class MissedCallServiceMessageReceiverInOut extends org.apache.axis2.rece
   private static org.apache.axiom.om.OMElement  toOM(GetMissedCallsResponse param, boolean optimizeContent)
     throws org.apache.axis2.AxisFault {
 
-            
     try{
       return param.getOMElement(GetMissedCallsResponse.MY_QNAME,
         org.apache.axiom.om.OMAbstractFactory.getOMFactory());
     } catch(org.apache.axis2.databinding.ADBException e){
       throw org.apache.axis2.AxisFault.makeFault(e);
     }
-                    
-
   }
         
   private static org.apache.axiom.soap.SOAPEnvelope toEnvelope(org.apache.axiom.soap.SOAPFactory factory, GetMissedCallsResponse param, boolean optimizeContent)
@@ -82,7 +79,6 @@ public class MissedCallServiceMessageReceiverInOut extends org.apache.axis2.rece
       org.apache.axiom.soap.SOAPEnvelope emptyEnvelope = factory.getDefaultEnvelope();
                            
       emptyEnvelope.getBody().addChild(param.getOMElement(GetMissedCallsResponse.MY_QNAME,factory));
-                                
 
       return emptyEnvelope;
     } catch(org.apache.axis2.databinding.ADBException e){

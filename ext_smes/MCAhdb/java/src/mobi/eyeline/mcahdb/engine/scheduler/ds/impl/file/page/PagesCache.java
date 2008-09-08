@@ -176,8 +176,15 @@ public class PagesCache {
 
     public void open() throws DataSourceException {
       lock.lock();
-      impl.open();
-      opened = true;      
+      if (!opened) {
+        try {
+        impl.open();
+        } catch (Throwable e) {
+          lock.unlock();
+          throw new DataSourceException(e);
+        }
+        opened = true;
+      }
     }
 
     public String getId() {

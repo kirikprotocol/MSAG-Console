@@ -1,5 +1,9 @@
 package mobi.eyeline.mcahdb.soap.missedcallservice;
-            
+
+import org.apache.axis2.databinding.ADBException;
+
+import java.util.ArrayList;
+
 
 /**
  *  ArrayOfMissedCall bean class
@@ -272,7 +276,7 @@ public  class ArrayOfMissedCall
   /**
    * Util method to write an attribute with the ns prefix
    */
-  private void writeAttribute(java.lang.String prefix,java.lang.String namespace,java.lang.String attName,
+  private static void writeAttribute(java.lang.String prefix,java.lang.String namespace,java.lang.String attName,
                               java.lang.String attValue,javax.xml.stream.XMLStreamWriter xmlWriter) throws javax.xml.stream.XMLStreamException{
     if (xmlWriter.getPrefix(namespace) == null) {
       xmlWriter.writeNamespace(prefix, namespace);
@@ -330,7 +334,7 @@ public  class ArrayOfMissedCall
    *  method to handle Qnames
    */
 
-  private void writeQName(javax.xml.namespace.QName qname,
+  private static void writeQName(javax.xml.namespace.QName qname,
                           javax.xml.stream.XMLStreamWriter xmlWriter) throws javax.xml.stream.XMLStreamException {
     java.lang.String namespaceURI = qname.getNamespaceURI();
     if (namespaceURI != null) {
@@ -353,7 +357,7 @@ public  class ArrayOfMissedCall
     }
   }
 
-  private void writeQNames(javax.xml.namespace.QName[] qnames,
+  private static void writeQNames(javax.xml.namespace.QName[] qnames,
                            javax.xml.stream.XMLStreamWriter xmlWriter) throws javax.xml.stream.XMLStreamException {
 
     if (qnames != null) {
@@ -394,7 +398,7 @@ public  class ArrayOfMissedCall
   /**
    * Register a namespace prefix
    */
-  private java.lang.String registerPrefix(javax.xml.stream.XMLStreamWriter xmlWriter, java.lang.String namespace) throws javax.xml.stream.XMLStreamException {
+  private static String registerPrefix(javax.xml.stream.XMLStreamWriter xmlWriter, String namespace) throws javax.xml.stream.XMLStreamException {
     java.lang.String prefix = xmlWriter.getPrefix(namespace);
 
     if (prefix == null) {
@@ -417,26 +421,21 @@ public  class ArrayOfMissedCall
    * databinding method to get an XML representation of this object
    *
    */
-  public javax.xml.stream.XMLStreamReader getPullParser(javax.xml.namespace.QName qName)
-    throws org.apache.axis2.databinding.ADBException{
+  public javax.xml.stream.XMLStreamReader getPullParser(javax.xml.namespace.QName qName) throws ADBException {
 
-
-        
-    java.util.ArrayList elementList = new java.util.ArrayList();
-    java.util.ArrayList attribList = new java.util.ArrayList();
+    ArrayList elementList = new ArrayList();
+    ArrayList attribList = new ArrayList();
 
     if (localMissedCallTracker){
       if (localMissedCall!=null) {
         for (int i = 0;i < localMissedCall.length;i++){
 
           if (localMissedCall[i] != null){
-            elementList.add(new javax.xml.namespace.QName("http://tempuri.org/",
-              "MissedCall"));
+            elementList.add(new javax.xml.namespace.QName("http://tempuri.org/", "MissedCall"));
             elementList.add(localMissedCall[i]);
           } else {
                                         
-            elementList.add(new javax.xml.namespace.QName("http://tempuri.org/",
-              "MissedCall"));
+            elementList.add(new javax.xml.namespace.QName("http://tempuri.org/", "MissedCall"));
             elementList.add(null);
                                             
           }

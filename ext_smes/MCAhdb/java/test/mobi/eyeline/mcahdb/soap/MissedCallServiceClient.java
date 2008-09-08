@@ -1,6 +1,8 @@
 package mobi.eyeline.mcahdb.soap;
 
 import org.apache.axis2.AxisFault;
+import org.apache.axis2.engine.AxisConfiguration;
+import org.apache.axis2.context.ConfigurationContext;
 
 /**
  * User: artem
@@ -11,7 +13,8 @@ public class MissedCallServiceClient {
 
   public static void main(String[] args) {
     try {
-      final MissedCallServiceStub s = new MissedCallServiceStub("http://localhost:8088/mca/services/MissedCalls");      
+      final MissedCallServiceStub s = new MissedCallServiceStub("http://localhost:8088/mca/services/MissedCalls");
+
 
       long start = System.currentTimeMillis();
       for (int i=1000; i<1000 + 1000; i++) {

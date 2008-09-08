@@ -1,12 +1,8 @@
 package mobi.eyeline.mcahdb.soap;
 
-        
+import org.apache.axis2.client.Options;
+import org.apache.axis2.transport.http.HTTPConstants;
 
-/*
-        *  MissedCallServiceStub java implementation
-        */
-
-        
 public class MissedCallServiceStub extends org.apache.axis2.client.Stub
 {
   protected org.apache.axis2.description.AxisOperation[] _operations;
@@ -45,12 +41,7 @@ public class MissedCallServiceStub extends org.apache.axis2.client.Stub
     __operation.setName(new javax.xml.namespace.QName("http://tempuri.org/", "GetMissedCalls"));
     _service.addOperation(__operation);
 	    
-
-	    
-	    
     _operations[0]=__operation;
-            
-        
   }
 
   //populates the faults
@@ -82,18 +73,19 @@ public class MissedCallServiceStub extends org.apache.axis2.client.Stub
     populateFaults();
 
     _serviceClient = new org.apache.axis2.client.ServiceClient(configurationContext,_service);
-        
+
+
 	
     configurationContext = _serviceClient.getServiceContext().getConfigurationContext();
 
-    _serviceClient.getOptions().setTo(new org.apache.axis2.addressing.EndpointReference(
-      targetEndpoint));
-    _serviceClient.getOptions().setUseSeparateListener(useSeparateListener);
-        
+    _serviceClient.getOptions().setTo(new org.apache.axis2.addressing.EndpointReference(targetEndpoint));
+    _serviceClient.getOptions().setUseSeparateListener(useSeparateListener);    
+    _serviceClient.getOptions().setProperty(HTTPConstants.CACHED_HTTP_CLIENT, Boolean.TRUE);
+    _serviceClient.getOptions().setProperty(HTTPConstants.CONNECTION_TIMEOUT, new Integer(100000));
+    
+
     //Set the soap version
     _serviceClient.getOptions().setSoapVersionURI(org.apache.axiom.soap.SOAP12Constants.SOAP_ENVELOPE_NAMESPACE_URI);
-        
-    
   }
 
   /**

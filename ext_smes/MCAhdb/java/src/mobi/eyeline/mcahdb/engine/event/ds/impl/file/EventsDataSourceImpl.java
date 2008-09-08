@@ -11,12 +11,16 @@ import java.util.*;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.log4j.Category;
+
 /**
  * User: artem
  * Date: 31.07.2008
  */
 
 public class EventsDataSourceImpl implements EventsDataSource {
+
+  private static final Category log = Category.getInstance(EventsDataSourceImpl.class);
 
   private StoresCache cache;
 
@@ -50,8 +54,8 @@ public class EventsDataSourceImpl implements EventsDataSource {
       for (Event e : events) {
         Store s = cache.getFileForWrite(e.getDate());
         if (!openedFiles.contains(s)) {
-          s.open();
           openedFiles.add(s);
+          s.open();
         }
         s.addEvent(e);
       }
@@ -64,7 +68,7 @@ public class EventsDataSourceImpl implements EventsDataSource {
         }
       }
 
-    } catch (Exception e) {
+    } catch (Exception e) {      
       for (Store s : openedFiles) {
         try {
           s.rollback();

@@ -151,7 +151,7 @@ public class StoresCache {
     private boolean opened = false;
 
     private long closeTime;
-    private boolean modified = false;
+    private long lastWriteTime;
 
     private CachedStore(StoreImpl impl) {
       this.impl = impl;
@@ -160,7 +160,12 @@ public class StoresCache {
     public void open() throws DataSourceException {
       lock.lock();  // lock store until close()
       if (!opened) {
-        impl.open();
+        try {
+          impl.open();
+        } catch (Throwable e) {
+          lock.unlock();
+          throw new DataSourceException(e);
+        }
         opened = true;
       }
     }
@@ -176,7 +181,7 @@ public class StoresCache {
 
         long now = System.currentTimeMillis();
 
-        if (f || (modified && now - closeTime > CACHE_MODIFIED_CLOSE_INTERVAL) || (now - closeTime > CACHE_CLEAN_INTERVAL)) {
+        if (f || (!impl.isReadOnly() && now - lastWriteTime > CACHE_MODIFIED_CLOSE_INTERVAL) || (now - closeTime > CACHE_CLEAN_INTERVAL)) {
           impl.close();
           opened = false;
           return true;
@@ -206,7 +211,7 @@ public class StoresCache {
 
     public void addEvent(Event event) throws DataSourceException, IOException {
       impl.addEvent(event);
-      modified = true;
+      lastWriteTime = System.currentTimeMillis();
     }
 
     public int hashCode() {

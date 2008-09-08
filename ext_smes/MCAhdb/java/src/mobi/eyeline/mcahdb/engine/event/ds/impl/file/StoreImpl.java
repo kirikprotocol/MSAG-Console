@@ -49,7 +49,11 @@ public class StoreImpl implements Store {
   private void openFileForRead() throws IOException, DataSourceException {
     rwIndex = null;
 
-    if (indexFile.exists() && dataFile.checkAndRepair()) {// If index exists and date file ok, load it
+    if (!dataFile.checkAndRepair()) {
+      log.warn("Data file " + dataFile.getFile().getAbsolutePath() + " was crushed and now repaired.");
+    } else if (!indexFile.exists()) {
+      log.warn("Index file " + indexFile.getAbsolutePath() + " does not exists.");
+    } else if (indexFile.exists() && dataFile.checkAndRepair()) {// If index exists and date file ok, load it
       try {
         roIndex = new FileBasedStringsRTree(indexFile.getAbsolutePath(), LongsCollectionSerializer.getInstance(), INDEX_READ_BUFFER_SIZE);
         return;
@@ -60,8 +64,7 @@ public class StoreImpl implements Store {
       }
     }
 
-    // Index does not exists, data file cruched or index file cruched
-    log.warn("Index file " + indexFile.getAbsolutePath() + " does not exists or data file " + dataFile.getFile().getAbsolutePath() + " is cruched. Remove index.");
+    // Index does not exists, data file cruched or index file cruched    
     roIndex = FileBasedStringsRTree.createRTree(createIndex(this.dataFile), indexFile.getAbsolutePath(), LongsCollectionSerializer.getInstance(), INDEX_READ_BUFFER_SIZE);
   }
 
