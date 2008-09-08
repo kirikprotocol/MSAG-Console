@@ -8,7 +8,7 @@
 
 namespace scag { namespace util { namespace encodings {
 
-using namespace scag::exceptions;
+using namespace exceptions;
 
 namespace EncodeTypes
 {
@@ -110,5 +110,11 @@ protected:
 
 
 }}}
+
+namespace scag2 {
+namespace util {
+namespace encodings = scag::util::encodings;
+}
+}
 
 #endif
