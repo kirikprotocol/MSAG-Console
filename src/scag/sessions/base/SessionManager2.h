@@ -16,9 +16,10 @@ class SessionManager
 public:
     static SessionManager& Instance();
 
-    // should be invoked once
-    // static void setInstance( SessionManager* mgr );
-
+    /// NOTE: there are two types of getSession method in the class.
+    /// For return values see method fetchSession below.
+    /// The first one is for cases where command ownership is passed along with it.
+    /// Then in the case of exception, the command should be destroyed.
     template < class T >
         inline ActiveSession getSession( const SessionKey& key,
                                          std::auto_ptr< T >& cmd,
@@ -29,6 +30,26 @@ public:
             cmd.reset( static_cast< T* >(kmd.release()) );
             return a;
         }
+
+
+    /// The second is for cases where command is externally owned.
+    /// The command should not be destroyed.
+    inline ActiveSession getSession( const SessionKey& key,
+                                     SCAGCommand*& cmd,
+                                     bool create = true )
+    {
+        std::auto_ptr< SCAGCommand > kmd(cmd);
+        ActiveSession a;
+        try {
+            a = fetchSession(key,kmd,create);
+            cmd = kmd.release();
+        } catch (...) {
+            cmd = kmd.release();
+            throw;
+        }
+        return a;
+    }
+
 
     /// get some statistics
     virtual void getSessionsCount( uint32_t& sessionsCount,

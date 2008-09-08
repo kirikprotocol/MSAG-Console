@@ -24,7 +24,7 @@
 #include "BatchAction2.h"
 #include "PersAction2.h"
 
-#include "LongCallTestAction.h"
+// #include "LongCallTestAction.h"
 
 #include "BillActionOpen.h"
 #include "BillActionClose.h"
@@ -132,7 +132,7 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
         }
 
 
-        if ( name == "longcalltest" ) return new LongCallTestAction();
+        // if ( name == "longcalltest" ) return new LongCallTestAction();
 
         if ( 0 == strncmp(name.c_str(), "bill:", 5 ) ) {
             if ( name == "bill:open" ) return new BillActionOpen();

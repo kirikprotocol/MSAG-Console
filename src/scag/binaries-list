@@ -44,6 +44,7 @@ scag/scag2           gwmain2        \
   -lscag-lcm-impl \
   -lscag-config-impl \
   -lscag-transport-smpp-impl \
+  -lscag-transport-http-impl \
   \
   -lscag-pers \
   \
@@ -54,6 +55,7 @@ scag/scag2           gwmain2        \
   -lscag-transport-smpp-base \
   -lscag-transport-smpp-common \
   -lscag-transport-smpp-router \
+  -lscag-transport-http-base \
   -lscag-stat-base \
   \
   -lscag-transport \

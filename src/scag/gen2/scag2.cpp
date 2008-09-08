@@ -1,21 +1,22 @@
 #include <memory>
 #include <typeinfo>
 
-// #include "scag/transport/http/HttpRouter.h"
-
 #include "core/synchronization/Event.hpp"
 #include "logger/Logger.h"
 #include "scag/bill/impl/BillingManager.h"
-#include "scag/config/base/ConfigView.h"
 #include "scag/config/base/ConfigManager2.h"
+#include "scag/config/base/ConfigView.h"
 #include "scag/lcm/impl/LongCallManagerImpl.h"
 #include "scag/pers/PersClient.h"
-#include "scag/re/impl/RuleEngine2.h"
 #include "scag/re/base/XMLHandlers2.h" // for StrX
+#include "scag/re/impl/RuleEngine2.h"
 #include "scag/sessions/impl/SessionManager2.h"
 #include "scag/stat/impl/StatisticsManager.h"
-#include "scag/transport/smpp/router/load_routes.h"
+#include "scag/transport/http/impl/HttpRouter.h"
+#include "scag/transport/http/impl/HttpProcessor.h"
+#include "scag/transport/http/impl/Managers.h"
 #include "scag/transport/smpp/impl/SmppManager2.h"
+#include "scag/transport/smpp/router/load_routes.h"
 #include "scag/util/encodings/Encodings.h"
 #include "scag2.h"
 #include "util/Exception.hpp"
@@ -219,32 +220,38 @@ void Scag::init( unsigned mynode )
       throw Exception("Exception during initialization of SmppManager: unknown error");
     }
 
-#if 0
+
     //************** HttpManager initialization **************
     try {
         smsc_log_info(log, "Http Manager is starting");
 
-        scag::transport::http::HttpProcessor::Init("./conf");
-        scag::transport::http::HttpProcessor& hp = scag::transport::http::HttpProcessor::Instance();
+        transport::http::HttpProcessorImpl* hp = new transport::http::HttpProcessorImpl;
+        hp->init( "./conf" );
 
-        scag::transport::http::HttpTraceRouter::Init("./conf/http_routes__.xml");
+        // transport::http::HttpProcessor::Init("./conf");
+        // transport::http::HttpProcessor& hp = transport::http::HttpProcessor::Instance();
+        transport::http::HttpRouterImpl* rp = new transport::http::HttpRouterImpl;
+        rp->init( "./conf/http_routes__.xml" );
 
-        scag::transport::http::HttpManager::Init(hp, cfg.getHttpManConfig());
+        transport::http::HttpManagerImpl* mp = 
+            new transport::http::HttpManagerImpl;
+        mp->init( *hp, cfg.getHttpManConfig());
 
         smsc_log_info(log, "Http Manager started");
+
     }catch(Exception& e)
     {
         throw Exception("Exception during initialization of HttpManager: %s", e.what());
     }catch (XMLException& e)
     {
-        scag::re::StrX msg(e.getMessage());
+        re::StrX msg(e.getMessage());
 
         throw Exception("Exception during initialization of HttpManager: %s", msg.localForm());
     }catch (...)
     {
         throw Exception("Exception during initialization of HttpManager: unknown error");
     }
-#endif
+
 
     try{
         stat::StatisticsManager::Instance().Start();
@@ -264,7 +271,7 @@ void Scag::init( unsigned mynode )
 void Scag::shutdown()
 {
   __trace__("shutting down");
-//   scag::transport::http::HttpManager::Instance().shutdown();
+    transport::http::HttpManager::Instance().shutdown();
     transport::smpp::SmppManager::Instance().shutdown();
     lcm::LongCallManager::Instance().shutdown();  
 //  scag::pers::client::PersClient::Instance().Stop();

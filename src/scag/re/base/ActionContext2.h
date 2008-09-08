@@ -44,31 +44,12 @@ enum FieldType
         ftField     = '#'
 };
 
-   /*
-    struct ActionStackValue
-    {
-        int actionIndex;
-        bool thenSection;
 
-        ActionStackValue() : thenSection(false)
-        {
-        }
-
-        ActionStackValue(int index, bool flag) : actionIndex(index), thenSection(flag)
-        {
-        }
-    };
-   */
-    class CommandAccessor : public PropertyManager
-    {
-    public:
-        /*
-        virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec) = 0;
-        virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec) = 0;
-        */
-        //virtual SMS& getSMS() = 0;
-        virtual SCAGCommand& getSCAGCommand() = 0;
-    };
+class CommandAccessor : public PropertyManager
+{
+public:
+    virtual SCAGCommand& getSCAGCommand() = 0;
+};
 
    
     struct CommandProperty

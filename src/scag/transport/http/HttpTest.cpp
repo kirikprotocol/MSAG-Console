@@ -201,7 +201,7 @@ HttpManagerConfig HttpManCfg(
 );
 
 //void load_config(const ConfigView & cv)
-void load_config(ConfigView & cv)
+void load_config(const ConfigView & cv)
 {
  
         try {
@@ -271,7 +271,7 @@ int configure()
       return 0;
     }
 
-     load_config(ConfigView(config, "HttpTransport"));
+      load_config(ConfigView(config, "HttpTransport"));
 
   } catch (ParseException &e) {
       smsc_log_debug(logger,"%s",e.what());

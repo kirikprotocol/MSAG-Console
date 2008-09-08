@@ -15,9 +15,11 @@ public:
 
     virtual void commit() {
         bill::BillingManager::Instance().Commit( billid_ );
+        active_ = false;
     }
     virtual void rollback() {
         bill::BillingManager::Instance().Rollback( billid_ );
+        active_ = false;
     }
 
     virtual ExternalBillingTransaction* castToBilling() {
