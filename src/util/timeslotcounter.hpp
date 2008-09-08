@@ -152,7 +152,7 @@ public:
 protected:
   T *slot;
   T count;
-  int first,last,slotsCount;
+  unsigned int first,last,slotsCount;
   int slotRes; // slot resolution
   hrtime_t lastTime;
 
