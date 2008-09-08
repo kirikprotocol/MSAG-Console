@@ -360,8 +360,6 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
     router::RouteInfo ri;
     FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
     re::RuleStatus st;
-    st.status = re::STATUS_OK;
-    st.result = 0;
     SMS& sms = *cmd->get_sms();
     SmsCommand& smscmd = cmd->get_smsCommand();
     SessionManager& sm = SessionManager::Instance();
@@ -375,6 +373,9 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
     src = cmd->getEntity();
 
     do { // rerouting loop
+
+        st.status = re::STATUS_OK;
+        st.result = 0;
 
         dst=routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
         smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
@@ -751,8 +752,6 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
     router::RouteInfo ri;
     FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
     re::RuleStatus st;
-    st.status = re::STATUS_OK;
-    st.result = 0;
     SMS& sms = *(cmd->get_sms());
     SmsCommand& smscmd = cmd->get_smsCommand();
     SessionManager& sm = SessionManager::Instance();
@@ -765,6 +764,9 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
     src = cmd->getEntity();
 
     do { // rerouting loop
+
+        st.status = re::STATUS_OK;
+        st.result = 0;
 
         dst=routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
         smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
@@ -1184,8 +1186,6 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
     router::RouteInfo ri;
     FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
     re::RuleStatus st;
-    st.status = re::STATUS_OK;
-    st.result = 0;
     SMS& sms=*(cmd->get_sms());
     SmsCommand& smscmd=cmd->get_smsCommand();
     SessionManager& sm = SessionManager::Instance();
@@ -1207,6 +1207,9 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
     smscmd.orgDst=sms.getDestinationAddress();
 
     do {
+
+        st.status = re::STATUS_OK;
+        st.result = 0;
 
         dst=routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
         smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",

@@ -49,8 +49,11 @@ void SmppOperationMaker::process( re::RuleStatus& st )
                 if ( SmppManager::Instance().makeLongCall(cmd_, session_) ) return;
                 fail( "could not make long call", st, smsc::system::Status::SYSERR );
                 return;
+            } else if ( st.status == re::STATUS_OK || st.status == re::STATUS_REDIRECT ) {
 
-            } else if ( st.status != re::STATUS_OK ) {
+                // ok
+
+            } else {
 
                 if ( ! st.result ) {
                     smsc_log_warn( log_, "%s: Rule failed and no error(zero result) returned",
