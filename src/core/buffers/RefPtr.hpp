@@ -31,7 +31,7 @@ protected:
     }
   };
 public:
-  explicit RefPtr(T* ptr=NULL)
+  explicit RefPtr(T* ptr=0)
   {
     data=new RefPtrData;
     data->ptr=ptr;
@@ -48,6 +48,7 @@ public:
   }
   RefPtr& operator=(const RefPtr& src)
   {
+      if ( this == &src ) return *this;
     Unref();
     src.Ref();
     data=src.data;
@@ -55,6 +56,7 @@ public:
   }
   RefPtr& operator=(T* ptr)
   {
+      if ( data->ptr == ptr ) return *this;
     Unref();
     data=new RefPtrData;
     data->ptr=ptr;
