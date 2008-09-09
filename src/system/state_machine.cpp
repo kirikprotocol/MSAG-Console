@@ -5386,7 +5386,7 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
 bool StateMachine::ExtraProcessing(SbmContext& c)
 {
   bool toSmsx=c.dest_proxy && !strcmp(c.dest_proxy->getSystemId(),"smsx");
-  bool isMultipart=c.sms->hasBinProperty(Tag::SMSC_CONCATINFO);
+  bool isMultipart=c.sms->hasBinProperty(Tag::SMSC_CONCATINFO) || c.sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT);
 
   if((((c.fromMap || c.fromDistrList) && c.toMap) || (c.fromMap && toSmsx))&& !isMultipart)
   {
