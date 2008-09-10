@@ -61,6 +61,7 @@ public class WHOISDServlet extends HttpServlet
 
   public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
   {
+      logger.debug( "WHOISDServlet.doGet() start" );
     logRequest(req);
     SCAGAppContext appContext = (SCAGAppContext)req.getAttribute(Constants.APP_CONTEXT);
     int id = getRequestId(req);
@@ -70,7 +71,7 @@ public class WHOISDServlet extends HttpServlet
     switch (id) {
       case WHOISDRequest.OPERATORS:
         result = loadXml(composePath(GW_LOCATION_OPERATORS_FILE, appContext));
-          contentType = CONTENT_TYPE_XML;
+        contentType = CONTENT_TYPE_XML;
         break;
       case WHOISDRequest.OPERATORS_SCHEMA:
         result = getSchema(id, composePath(GW_LOCATION_OPERATORS_FILE, appContext));
@@ -124,6 +125,8 @@ public class WHOISDServlet extends HttpServlet
 
   public synchronized void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
   {
+      logger.debug( "WHOISDServlet.doPost() start" );
+      req.setCharacterEncoding( "UTF-8" );
       logRequest(req);
       SCAGAppContext appContext = (SCAGAppContext)req.getAttribute(Constants.APP_CONTEXT);
       int id = getRequestId(req);
@@ -178,6 +181,7 @@ public class WHOISDServlet extends HttpServlet
 
    private void applyTerm(HttpServletRequest req, boolean isMultipartFormat, SCAGAppContext appContext) throws Exception
    {
+       logger.debug( "WHOISDServlet.applyTerm() start\n encoding='" + req.getCharacterEncoding() +"'" );
      ByteArrayOutputStream bos = new ByteArrayOutputStream();
      int b;
      InputStream in = req.getInputStream();
@@ -351,14 +355,16 @@ public class WHOISDServlet extends HttpServlet
 
   private void SendResult(WHOISDResult result, HttpServletResponse resp, String contentType) throws IOException
   {
+      logger.debug( "WHOISDServlet.SendResult() start" );
     int length = 0;
     if (!resp.containsHeader("status"))
     {
-      logger.debug("Request is served successfully");
+      logger.debug( "WHOISDServlet.SendResult() Request is served successfully" );
       resp.setHeader("status","ok");
       if (result != null && result.result != null && result.result.length > 0) {
           length = result.result.length;
         if( contentType.equals("") ) contentType = CONTENT_TYPE_TXT;
+          logger.debug( "WHOISDServlet.SendResult() \ncontentType='" + contentType + "'\nsetCharacterEncoding='" + Functions.getLocaleEncoding() + "'" );
         resp.setContentType(contentType);
         resp.setCharacterEncoding(Functions.getLocaleEncoding());
       }
@@ -368,6 +374,7 @@ public class WHOISDServlet extends HttpServlet
       logger.error("Request is not served, reason: " + error);
     }
     if( result.error==null ){
+        logger.debug( "WHOISDServlet.SendResult() error==null" );
         resp.setContentLength( length );
         OutputStream out = null;
         try {
@@ -379,6 +386,7 @@ public class WHOISDServlet extends HttpServlet
             if (out!=null) out.close();
         }
     } else {
+        logger.debug( "WHOISDServlet.SendResult() error" );
         ServletOutputStream serOut = null;
         try{
             serOut = resp.getOutputStream();
@@ -395,6 +403,8 @@ public class WHOISDServlet extends HttpServlet
   {
     String[] parsedURI = req.getRequestURI().split("/");
     String requestedFile = parsedURI[parsedURI.length-1];
+      logger.debug( "WHOISDServlet.getRequestId() requestedFile='" + requestedFile + "'" );
+      logger.debug( "WHOISDServlet.getRequestId() WHOISDRequest.getId(requestedFile)='" + WHOISDRequest.getId(requestedFile) + "'" );
     return WHOISDRequest.getId(requestedFile);
   }
 
