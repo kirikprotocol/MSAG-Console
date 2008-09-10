@@ -228,7 +228,7 @@ void Scag::init( unsigned mynode )
         // transport::http::HttpProcessor::Init("./conf");
         // transport::http::HttpProcessor& hp = transport::http::HttpProcessor::Instance();
         transport::http::HttpRouterImpl* rp = new transport::http::HttpRouterImpl;
-        HttpTraceRouter::setInstance( rp );
+        transport::http::HttpTraceRouter::setInstance( rp );
         rp->init( "./conf/http_routes__.xml" );
 
         transport::http::HttpProcessorImpl* hp = new transport::http::HttpProcessorImpl;
