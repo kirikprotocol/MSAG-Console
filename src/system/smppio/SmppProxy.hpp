@@ -146,7 +146,7 @@ public:
           if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
              !(
                sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
-               sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
+               !sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
               )
             )
           {
