@@ -13,6 +13,7 @@ class RouteNotFoundException{};
 class HttpTraceRouter
 {
 public:
+    static void setInstance( HttpTraceRouter* inst );
     static HttpTraceRouter& Instance();
 
     virtual ~HttpTraceRouter();

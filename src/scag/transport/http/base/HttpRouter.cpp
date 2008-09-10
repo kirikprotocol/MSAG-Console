@@ -19,6 +19,16 @@ namespace scag2 {
 namespace transport {
 namespace http {
 
+void HttpTraceRouter::setInstance( HttpTraceRouter* inst )
+{
+    assert( inst );
+    MutexGuard mg(mtx);
+    assert( ! inited );
+    Single::setInstance( inst );
+    inited = true;
+}
+
+
 HttpTraceRouter& HttpTraceRouter::Instance()
 {
     if ( ! inited ) {
@@ -31,16 +41,20 @@ HttpTraceRouter& HttpTraceRouter::Instance()
 
 HttpTraceRouter::HttpTraceRouter()
 {
+    /*
     MutexGuard mg(mtx);
     assert( ! inited );
     inited = true;
     Single::setInstance( this );
+     */
 }
 
 HttpTraceRouter::~HttpTraceRouter()
 {
+    /*
     MutexGuard mg(mtx);
     inited = false;
+     */
 }
 
 } // namespace http

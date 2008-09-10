@@ -225,13 +225,14 @@ void Scag::init( unsigned mynode )
     try {
         smsc_log_info(log, "Http Manager is starting");
 
-        transport::http::HttpProcessorImpl* hp = new transport::http::HttpProcessorImpl;
-        hp->init( "./conf" );
-
         // transport::http::HttpProcessor::Init("./conf");
         // transport::http::HttpProcessor& hp = transport::http::HttpProcessor::Instance();
         transport::http::HttpRouterImpl* rp = new transport::http::HttpRouterImpl;
+        HttpTraceRouter::setInstance( rp );
         rp->init( "./conf/http_routes__.xml" );
+
+        transport::http::HttpProcessorImpl* hp = new transport::http::HttpProcessorImpl;
+        hp->init( "./conf" );
 
         transport::http::HttpManagerImpl* mp = 
             new transport::http::HttpManagerImpl;
