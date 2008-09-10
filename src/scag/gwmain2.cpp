@@ -104,9 +104,21 @@ int main( int argc, char* argv[] )
         }
 
 
-        // FIXME: make it configurable
-        scag::util::storage::StorageNumbering::setInstance( 1 );
-        const unsigned mynode = 0;
+        try {
+            unsigned nodes = cfgs.getConfig()->getInt("General.nodes");
+            scag::util::storage::StorageNumbering::setInstance( nodes );
+        } catch ( std::exception& e) {
+            smsc_log_error( logger, "FATAL ERROR: cannot set the number of nodes");
+            exit(-1);
+        }
+
+        unsigned mynode;
+        try {
+            mynode = cfgs.getConfig()->getInt("General.node");
+        } catch ( std::exception& e ) {
+            smsc_log_error( logger, "FATAL ERROR: cannot set the node number");
+            exit(-1);
+        }
 
         char * admin_host = 0;
         try

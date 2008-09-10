@@ -3,17 +3,33 @@
 
 <config>
 
+    <section name="General">
+        <!-- this section is for general configuration of scag nodes. -->
+        <!-- please, run setupnodes.py to check the consistency. -->
+        <param name="nodes">1</param>
+        <param name="node">0</param>
+    </section>
+
     <section name="BillingManager">
-    <param name="configDir" type="string">@bill.config_dir@</param>
-    <param name="BillingServerHost" type="string">@bill.server_host@</param>
-    <param name="BillingServerPort" type="int">@bill.server_port@</param>
-    <param name="BillingTimeOut" type="int">@bill.time_out@</param> <!-- sec. -->
-    <param name="BillingReconnectTimeOut" type="int">@bill.reconnect_time_out@</param> <!-- sec. -->
+        <param name="configDir" type="string">@bill.config_dir@</param>
+        <param name="BillingServerHost" type="string">@bill.server_host@</param>
+        <param name="BillingServerPort" type="int">@bill.server_port@</param>
+        <param name="BillingTimeOut" type="int">@bill.time_out@</param> <!-- sec. -->
+        <param name="BillingReconnectTimeOut" type="int">@bill.reconnect_time_out@</param> <!-- sec. -->
     </section>
 
     <section name="SessionManager">
-    <param name="location" type="string">@scag2.session.location@</param>
-    <param name="expireInterval" type="int">@session.expireInterval@</param>
+        <section name="locations">
+            <!-- specify a number of locations for sessions -->
+            <param name="1" type="string">@scag2.session.location@</param>
+        </section>
+        <section name="oldlocations">
+            <!-- this section is for reconfuguration when -->
+            <!-- adding/removing a new msag node. -->
+            <!-- simply rename section "locations" into "oldlocations" -->
+            <!-- and run setupnodes.py -->
+        </section>
+        <param name="expireInterval" type="int">@session.expireInterval@</param>
     </section>
 
     <section name="StatisticsManager">
@@ -25,36 +41,36 @@
         <param name="saccPort" type="int">@stat.sacc_port@</param>
         <param name="saccHost" type="string">@stat.sacc_host@</param>
         <param name="connect_timeout" type="int">@stat.sacc_connect_timeout@</param>
-    <param name="queue_length" type="int">@stat.sacc_queue_length@</param>
+        <param name="queue_length" type="int">@stat.sacc_queue_length@</param>
     </section>
 
     <section name="RuleEngine">
-    <param name="location" type="string">@rules.path@</param>
+        <param name="location" type="string">@rules.path@</param>
     </section>
 
     <section name="admin">
-    <param name="host" type="string">@listen.host@</param>
-    <param name="port" type="int">@gateway.admin.port@</param>
+        <param name="host" type="string">@listen.host@</param>
+        <param name="port" type="int">@gateway.admin.port@</param>
     </section>
 
     <section name="smpp">
-    <param name="host" type="string">@listen.host@</param>
-    <param name="port" type="int">@gateway.smpp.port@</param>
-    <param name="inactivityTime" type="int">30</param>
-    <param name="inactivityTimeOut" type="int">30</param>
-    <param name="readTimeout" type="int">60</param>
-    <param name="maxSmsPerSecond" type="int">1000</param>
-    <param name="transitOptionalTags" type="string"></param>
-    <section name="core">
-        <param name="eventQueueLimit" type="int">1000</param>
-        <param name="protocol_id" type="int">34</param> <!-- ???? -->
-        <param name="state_machines_count" type="int">10</param>
+        <param name="host" type="string">@listen.host@</param>
+        <param name="port" type="int">@gateway.smpp.port@</param>
+        <param name="inactivityTime" type="int">30</param>
+        <param name="inactivityTimeOut" type="int">30</param>
+        <param name="readTimeout" type="int">60</param>
+        <param name="maxSmsPerSecond" type="int">1000</param>
+        <param name="transitOptionalTags" type="string"></param>
+        <section name="core">
+            <param name="eventQueueLimit" type="int">1000</param>
+            <param name="protocol_id" type="int">34</param> <!-- ???? -->
+            <param name="state_machines_count" type="int">10</param>
             <param name="ussdTransactionTimeout" type="int">600</param> <!-- ???? -->
-    </section>
+        </section>
     </section>
 
     <section name="HttpTransport">
-    <param name="host" type="string">@listen.host@</param>
+        <param name="host" type="string">@listen.host@</param>
         <param name="port" type="int">@gateway.http.port@</param>
         <param name="readerSockets" type="int">10</param>
         <param name="writerSockets" type="int">10</param>

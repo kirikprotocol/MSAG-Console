@@ -198,7 +198,8 @@ def setupnodes( opts ) :
         pass
 
     # reading the configuration of controller
-    cfg = readconfig(inputnames.pop(0))
+    ctrlfn = inputnames.pop(0)
+    cfg = readconfig(ctrlfn)
     ctrlnodes = cfg[ 'Controller.msagnodes' ]
 
     names = []
@@ -266,12 +267,24 @@ def setupnodes( opts ) :
             pass
 
         if len(locs) > 0 :
+            # check the node number
+            mynodes = cfg['General.nodes']
+            if mynodes != ctrlnodes :
+                print >> sys.stderr, "Config mismatch: nodes in %s and %s differ" % (ctrlfn,fn)
+                sys.exit(1)
+                pass
+
+            mynode = cfg['General.node']
+            if mynode != len(cfgs) :
+                print >> sys.stderr, "Config order mismatch: wrong node number (%d) in %s" % (mynode,fn)
+                sys.exit(1)
+                pass
             names.append(fn)
             cfgs.append(cfg)
             nodelocs.append(locs)
             pass
         else :
-            print >> sys.stderr, "config %s has no locations (old config assumed, skipped)"
+            print >> sys.stderr, "config %s has no locations (old config assumed, skipped)" % fn
             if oldlocs == 0 :
                 print >> sys.stderr, "ERROR: it also has no old locations, no sense?"
                 sys.exit(1)
