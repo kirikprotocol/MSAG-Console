@@ -6,11 +6,6 @@ open(my $mkf,'>makefile.inc') || die "Failed to open makefile.inc for writing:'$
 
 my $mods=readmodules('modules-list');
 
-my $cmpclr;
-my $libclr;
-my $lnkclr;
-my $clrend;
-
 my $cmdprefix='@';
 
 my $silent=$ENV{SILENT} eq 'YES';
@@ -20,14 +15,6 @@ if($ENV{VERBOSE} eq 'YES')
   $cmdprefix='';
 }
 
-if($ENV{USECOLORS} eq 'YES')
-{
-  $cmpclr='\033[01;32m';
-  $libclr='\033[01;33m';
-  $lnkclr='\033[01;31m';
-  $clrend='\033[00m';
-}
-
 sub readmodules{
   my $fn=shift;
   open(my $f,$fn) || die "Failed to open $fn:'$!'";
@@ -35,19 +22,36 @@ sub readmodules{
   return \@rv;
 }
 
-my @preamble = (
-    '# --- architecture specific variables',
-    'ifeq ($(filter-out linux Linux,$(shell uname)),)',
-    'override ECHO := echo -e',
-    'else',
-    'override ECHO := echo',
-    'endif',
-    '');
-for my $l (@preamble) 
-{
-    print $mkf $l."\n";
-}
+print $mkf
+    '# --- architecture specific variables
+    ifeq ($(filter-out linux Linux,$(shell uname)),)
+    override ECHO := echo -e
+    else
+    override ECHO := echo
+    endif
+    ';
+    
+print $mkf
+'
+PFX=@
 
+ifeq ($(VERBOSE),YES)
+override PFX=
+endif
+
+CCXX:=$(CXX)
+CCC:=$(CC)
+
+ifeq ($(USECOLORS),YES)
+CXXCLR=\033[01;36m
+LIBCLR=\033[01;34m
+LNKCLR=\033[01;35m
+CLREND=\033[00m
+override CCXX:=conf/colorederr $(CXX)
+override CCC:=conf/clorederr $(CC)
+endif
+
+';
 
 print $mkf "build: ".join(' ',@$mods)."\n\n";
 generate('',$mods);
@@ -120,8 +124,8 @@ sub generate{
         my $ldflags=readstring($dirname.'/.ldflags');
         print $mkf '$(SMSC_BUILDDIR)/bin/'.$binname.': $(SMSC_BUILDDIR)/obj/'.$moddir.'/'.$srcname.'.o'.$libdeps."\n";
         print $mkf "\t\@mkdir -p `dirname \$@`\n";
-        print $mkf "\t\@\$(ECHO) '${lnkclr}Linking \$\@${clrend}'\n" unless $silent;
-        print $mkf "\t$cmdprefix\$(CXX) \$(CXXFLAGS) $ldflags -o \$@ \$< \$(LDFLAGS) $rawlibs\n\n";
+        print $mkf "\t\@\$(ECHO) '\$(LNKCLR)Linking \$\@\$(CLREND)'\n" unless $silent;
+        print $mkf "\t\$(PFX)\$(CXX) \$(CXXFLAGS) $ldflags -o \$@ \$< \$(LDFLAGS) $rawlibs\n\n";
         srcrule($dirname,$srcname.".cpp",\@files);
         push @files,'$(SMSC_BUILDDIR)/bin/'.$binname;
       } # while
@@ -143,10 +147,10 @@ sub generate{
       push @files,'$(SMSC_BUILDDIR)/lib/'.$modlib;
       
       print $mkf '$(SMSC_BUILDDIR)/lib/'.$modlib.':'.join(' ',@objs)."\n";
-      print $mkf "\t\@\$(ECHO) '${libclr}Assembling $modlib${clrend}'\n" unless $silent;
+      print $mkf "\t\@\$(ECHO) '\$(LIBCLR)Assembling $modlib\$(CLREND)'\n" unless $silent;
       print $mkf "\t\@mkdir -p \$(SMSC_BUILDDIR)/lib/\n";
       print $mkf "\t\@rm -f \$(SMSC_BUILDDIR)/lib/$modlib\n";
-      print $mkf "\t$cmdprefix\$(AR) -r \$(SMSC_BUILDDIR)/lib/$modlib ".join(' ',@objs)."\n\n";
+      print $mkf "\t\$(PFX)\$(AR) -r \$(SMSC_BUILDDIR)/lib/$modlib ".join(' ',@objs)." 2>/dev/null\n\n";
       srcrule($dirname,$_,\@files)for@dirlist;
       $moddeps.=' $(SMSC_BUILDDIR)/lib/'.$modlib;
     }
@@ -154,7 +158,7 @@ sub generate{
     my $modname=$dirname;
     $modname=~s!/!.!g;
     print $mkf "$modname.clean:\n";
-    print $mkf "\t\@\$(ECHO) '${lnkclr}Cleaning $modname${clrend}'\n";
+    print $mkf "\t\@\$(ECHO) '\$(LNKCLR)Cleaning $modname\$(CLREND)'\n";
     print $mkf "\t\@rm -f $_\n" for @files;
     print $mkf "\n";
     
@@ -191,20 +195,20 @@ sub srcrule{
   push @$files,"\$(SMSC_BUILDDIR)/obj/$objdir/$basename.o";
   push @$files,"\$(SMSC_BUILDDIR)/deps/$dirname/$basename.dep";
   print $mkf "\$(SMSC_BUILDDIR)/obj/$objdir/$basename.o: \$(SMSC_SRCDIR)/$dirname/$srcname\n";
-  print $mkf "\t\@\$(ECHO) '${cmpclr}Compiling $dirname/$srcname${clrend}'\n" unless $silent;
+  print $mkf "\t\@\$(ECHO) '\$(CXXCLR)Compiling $dirname/$srcname\$(CLREND)'\n" unless $silent;
   print $mkf "\t\@mkdir -p \$(SMSC_BUILDDIR)/obj/$objdir\n";
   my $cppflags=readstring($dirname.'/.cxxflags');
   my $cflags=readstring($dirname.'/.cflags');
   if($srcname=~/\.cpp/)
   {
-    print $mkf "\t$cmdprefix\$(CXX) \$(CXXFLAGS) $cppflags \$(COMPFLAGS) -c -o \$\@ \$<\n";
+    print $mkf "\t\$(PFX)\$(CCXX) \$(CXXFLAGS) $cppflags \$(COMPFLAGS) -c -o \$\@ \$<\n";
     print $mkf "\t\@mkdir -p \$(SMSC_BUILDDIR)/deps/$dirname\n";
     print $mkf "\t\@".($cppflags?"CXXFLAGS=\"\$(CXXFLAGS) $cppflags\" ":'')."conf/mkdeps.sh $objdir $dirname/$basename .cpp\n\n";
     print $mkf "-include \$(SMSC_BUILDDIR)/deps/$dirname/$basename.dep\n\n";
     
   }else
   {
-    print $mkf "\t$cmdprefix\$(CC) \$(CFLAGS) $cflags \$(C_COMPFLAGS) -c -o \$\@ \$<\n";
+    print $mkf "\t\$(PFX)\$(CCC) \$(CFLAGS) $cflags \$(C_COMPFLAGS) -c -o \$\@ \$<\n";
     print $mkf "\t\@mkdir -p \$(SMSC_BUILDDIR)/deps/$dirname\n";
     print $mkf "\t\@".($cflags?"CFLAGS=\"\$(CFLAGS) $cflags\" ":'')."conf/mkdeps.sh $objdir $dirname/$basename .c\n\n";
     print $mkf "-include \$(SMSC_BUILDDIR)/deps/$dirname/$basename.dep\n\n";

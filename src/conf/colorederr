@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+use strict;
+$|=1;
+my $cmd=join(' ',map{"'$_'"}@ARGV);
+open(F,$cmd.' 2>&1 |') || die 'Failed to open command pipe for '.$cmd.":$!";
+while(<F>)
+{
+  my $color=0;
+  if(/[Ww]arning(?:\s*\(\w+\))?:/)
+  {
+    print "\033[01;33m";
+    $color=1;
+  }
+  if(/[Ee]rror:/)
+  {
+    print "\033[01;31m";
+    $color=1;
+  }
+  print;
+  if($color)
+  {
+    print "\033[00m";
+  }
+}
+close F;
