@@ -1633,6 +1633,22 @@ StateType StateMachine::submit(Tuple& t)
     sms->setStrProperty(Tag::SMSC_MSC_ADDRESS,sms->getOriginatingDescriptor().msc);
   }
 
+#ifdef SMSEXTRA
+  {
+    SmeInfo srcSmeInfo=smsc->getSmeInfo(c.src_proxy->getSystemId());
+    if(c.toMap && (srcSmeInfo.interfaceVersion&0x0f)==0x09 && sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS))
+    {
+      smsc_log_debug(smsLog,"Filling descriptor from smpp fields:%s/%s",sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str(),sms->getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str());
+      Descriptor d;
+      const SmsPropertyBuf& imsi(sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS));
+      d.setImsi((uint8_t)imsi.length(),imsi.c_str());
+      const SmsPropertyBuf& msc(sms->getStrProperty(Tag::SMSC_MSC_ADDRESS));
+      d.setMsc((uint8_t)msc.length(),msc.c_str());
+      sms->setOriginatingDescriptor(d);
+    }
+  }
+#endif
+
   //__trace2__("SUBMIT_SM: route found, routeId=%s, smeSystemId=%s",ri.routeId.c_str(),ri.smeSystemId.c_str());
 
   sms->setDestinationSmeId(c.ri.smeSystemId.c_str());
