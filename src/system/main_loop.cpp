@@ -1,6 +1,4 @@
-/*
-  $Id$
-*/
+#ident "@(#)$Id$"
 
 #include "smsc.hpp"
 #include <memory>

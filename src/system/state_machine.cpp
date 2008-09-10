@@ -23,6 +23,8 @@
 #endif
 
 
+#ident "@(#)$Id$"
+
 // строчка по русски, что б сработал autodetect :)
 
 namespace smsc{
