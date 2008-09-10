@@ -44,7 +44,13 @@ bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProx
 
 bool isUSSDSessionSms(SMS* sms)
 {
-  return sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+  return sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) &&
+         sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
+         !(
+            sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
+            !sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
+          )
+  ;
 }
 
 void Smsc::RejectSms(const SmscCommand& cmd)
