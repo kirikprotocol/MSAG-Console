@@ -13,6 +13,7 @@ public class SenderSendMessageCmd extends AsyncCommand {
   private String destinationAddress;
   private String message;
   private int destAddressSubunit;
+  private String mscAddress;
   private boolean storable;
 
   private int msgId;
@@ -63,6 +64,14 @@ public class SenderSendMessageCmd extends AsyncCommand {
 
   public void setMsgId(int msgId) {
     this.msgId = msgId;
+  }
+
+  public String getMscAddress() {
+    return mscAddress;
+  }
+
+  public void setMscAddress(String mscAddress) {
+    this.mscAddress = mscAddress;
   }
 
   public interface Receiver {

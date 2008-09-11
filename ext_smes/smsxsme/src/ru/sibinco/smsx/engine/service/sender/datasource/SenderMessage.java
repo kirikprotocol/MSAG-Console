@@ -22,6 +22,7 @@ public class SenderMessage {
   private boolean storable = true;
   private String connectionName;
   private long smppId=-1;
+  private String mscAddress;
 
   public SenderMessage() {
   }
@@ -108,6 +109,14 @@ public class SenderMessage {
 
   public void setSmppId(long smppId) {
     this.smppId = smppId;
+  }
+
+  public String getMscAddress() {
+    return mscAddress;
+  }
+
+  public void setMscAddress(String mscAddress) {
+    this.mscAddress = mscAddress;
   }
 
   public boolean isExists() {

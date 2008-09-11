@@ -5,8 +5,8 @@ if [[ $# < 5 ]]; then
     exit 1
 fi
 
-x=`date +%s`
-x=($x+$5)*1000
+let x=`date +%s`
+let x=($x+$5)*1000
 
 echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <soapenv:Envelope xmlns:soapenv=\"http://www.w3.org/2003/05/soap-envelope\"

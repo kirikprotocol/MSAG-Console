@@ -6,6 +6,11 @@ import ru.sibinco.smsx.engine.service.group.commands.GroupSendStatusCmd;
 import ru.sibinco.smsx.engine.service.*;
 import ru.sibinco.smsx.engine.soaphandler.SOAPHandlerInitializationException;
 
+import java.io.File;
+
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.ConfigException;
+
 class GroupSendSoapHandler implements GroupSend {
 
   private static final Category log = Category.getInstance(GroupSendSoapHandler.class);
@@ -17,8 +22,18 @@ class GroupSendSoapHandler implements GroupSend {
   private static final int STATUS_UNKNOWN_GROUP = -3;
   private static final int STATUS_INVALID_MSGID = -4;
 
-  GroupSendSoapHandler(String configDir) throws SOAPHandlerInitializationException {
+  private final String mscAddress;
 
+  GroupSendSoapHandler(String configDir) throws SOAPHandlerInitializationException {
+    final File configFile = new File(configDir, "soaphandlers/groupsendhandler.properties");
+
+    try {
+      final PropertiesConfig config = new PropertiesConfig();
+      config.load(configFile);
+      mscAddress = config.getString("msc.address");
+    } catch (ConfigException e) {
+      throw new SOAPHandlerInitializationException(e);
+    }
   }
 
   public GroupSendResp sendSms(String groupName, String owner, String message, boolean express) throws java.rmi.RemoteException {
@@ -31,8 +46,7 @@ class GroupSendSoapHandler implements GroupSend {
       .setOwner(owner)
       .setMessage(message)
       .setStorable(true)
-      .setImsi("")
-      .setMscAddress("")
+      .setMscAddress(mscAddress)
       .setSourceId(AsyncCommand.SOURCE_SOAP);
 
     final GroupSendResp r = new GroupSendResp();

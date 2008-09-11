@@ -18,6 +18,7 @@ public class SecretSendMessageCmd extends Command {
   private int destAddressSubunit;
   private boolean saveDeliveryStatus;
   private boolean notifyOriginator;
+  private String mscAddress;
 
 
   public String getSourceAddress() {
@@ -58,6 +59,14 @@ public class SecretSendMessageCmd extends Command {
 
   public void setSaveDeliveryStatus(boolean saveDeliveryStatus) {
     this.saveDeliveryStatus = saveDeliveryStatus;
+  }
+
+  public String getMscAddress() {
+    return mscAddress;
+  }
+
+  public void setMscAddress(String mscAddress) {
+    this.mscAddress = mscAddress;
   }
 
   public boolean isNotifyOriginator() {

@@ -68,6 +68,7 @@ class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarChec
       calendarMessage.setMessage(cmd.getMessage());
       calendarMessage.setSaveDeliveryStatus(cmd.isStoreDeliveryStatus());
       calendarMessage.setConnectionName(cmd.getSourceId() == Command.SOURCE_SMPP ? "smsx" : "websms");
+      calendarMessage.setMscAddress(cmd.getMscAddress());
 
       // Save message
       ds.saveCalendarMessage(calendarMessage);

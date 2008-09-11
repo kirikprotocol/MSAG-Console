@@ -26,6 +26,7 @@ public class SecretMessage {
   private boolean notifyOriginator;
   private String connectionName;
   private long smppId;
+  private String mscAddress;
 
   public SecretMessage() {
     this(-1);
@@ -129,6 +130,14 @@ public class SecretMessage {
 
   public void setSmppId(long smppId) {
     this.smppId = smppId;
+  }
+
+  public String getMscAddress() {
+    return mscAddress;
+  }
+
+  public void setMscAddress(String mscAddress) {
+    this.mscAddress = mscAddress;
   }
 
   public boolean isExists() {

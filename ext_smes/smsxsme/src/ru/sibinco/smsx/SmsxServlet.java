@@ -18,21 +18,7 @@ public class SmsxServlet extends AxisServlet {
     try {
       boolean testMode = System.getProperty("test.mode") != null;
 
-      int jmxPort;
-
-      if (System.getProperty("portJMX") == null) {
-        System.out.println("portJMX = null");
-        jmxPort = -1;
-      } else {
-        try {
-          jmxPort = Integer.parseInt(System.getProperty("portJMX"));
-        } catch (Throwable e) {
-          e.printStackTrace();
-          jmxPort = -1;
-        }
-      }
-
-      sme = new Sme(getServletConfig().getInitParameter("configDir"), testMode, jmxPort);
+      sme = new Sme(getServletConfig().getInitParameter("configDir"), testMode);
 
     } catch (Throwable e) {
       e.printStackTrace();;

@@ -22,6 +22,7 @@ public class CalendarSendMessageCmd extends Command {
   private Date sendDate;
   private int destAddressSubunit;
   private boolean storeDeliveryStatus;
+  private String mscAddress;
 
   public String getSourceAddress() {
     return sourceAddress;
@@ -69,6 +70,14 @@ public class CalendarSendMessageCmd extends Command {
 
   public void setStoreDeliveryStatus(boolean storeDeliveryStatus) {
     this.storeDeliveryStatus = storeDeliveryStatus;
+  }
+
+  public String getMscAddress() {
+    return mscAddress;
+  }
+
+  public void setMscAddress(String mscAddress) {
+    this.mscAddress = mscAddress;
   }
 
   public interface Receiver {

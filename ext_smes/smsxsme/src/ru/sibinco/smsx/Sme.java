@@ -44,7 +44,7 @@ public class Sme {
   private MessageHandler handler;
   private AdvertisingClient senderAdvertisingClient;
 
-  public Sme(String configDir, boolean testMode, int jmxPort) throws SmeException {
+  public Sme(String configDir, boolean testMode) throws SmeException {
 
     try {
       // Init DB connection pool
@@ -89,8 +89,11 @@ public class Sme {
       handler.start();
 
 
-      if (jmxPort != -1) {
+      if (config.getSection("jmx") != null) {
         System.out.println("SMSX started in JMX mode");
+        int jmxPort = config.getSection("jmx").getInt("port");
+        String user = config.getSection("jmx").getString("user");
+        String password = config.getSection("jmx").getString("password");
         final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         // SMPPTransceiver MBeans
         mbs.registerMBean(transceiver.getInQueueMonitor(), new ObjectName("SMSX.smpp:mbean=inQueue"));
@@ -106,7 +109,7 @@ public class Sme {
         mbs.registerMBean(servicesMBean, new ObjectName("SMSX:mbean=services"));
 
         // Load JMX configuration        
-        HtmlAdaptorServer adapter = new HtmlAdaptorServer(jmxPort, new AuthInfo[] {new AuthInfo("admin", "laefeeza")});        
+        HtmlAdaptorServer adapter = new HtmlAdaptorServer(jmxPort, new AuthInfo[] {new AuthInfo(user, password)});
         mbs.registerMBean(adapter, new ObjectName("SMSX:mbean=htmlAdaptor"));
         adapter.start();
       }

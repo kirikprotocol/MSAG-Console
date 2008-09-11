@@ -38,6 +38,7 @@ class SenderProcessor implements SenderGetMessageStatusCmd.Receiver, SenderSendM
       msg.setDestAddrSubunit(cmd.getDestAddressSubunit());
       msg.setStorable(cmd.isStorable());
       msg.setConnectionName(cmd.getSourceId() == AsyncCommand.SOURCE_SMPP ? "smsx" : "websms");
+      msg.setMscAddress(cmd.getMscAddress());
 
       if (cmd.isStorable())
         ds.saveSenderMessage(msg);

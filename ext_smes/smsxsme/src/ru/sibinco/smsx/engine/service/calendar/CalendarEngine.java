@@ -113,6 +113,7 @@ class CalendarEngine extends IterativeWorker {
       msg.setMessageString(message.getMessage());
       msg.setDestAddrSubunit(message.getDestAddressSubunit());
       msg.setConnectionName(message.getConnectionName());
+      msg.setMscAddress(message.getMscAddress());
       if (message.isSaveDeliveryStatus())
         msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
 

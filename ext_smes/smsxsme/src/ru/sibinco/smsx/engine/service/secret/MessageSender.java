@@ -101,6 +101,7 @@ class MessageSender {
     outMsg.setDestAddrSubunit(message.getDestAddressSubunit());
     outMsg.setMessageString(message.getMessage());
     outMsg.setConnectionName(message.getConnectionName());
+    outMsg.setMscAddress(message.getMscAddress());
     if (message.isSaveDeliveryStatus())
       outMsg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
 

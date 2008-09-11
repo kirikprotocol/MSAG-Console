@@ -39,6 +39,12 @@
     </section>
   </section>
 
+  <section name="jmx">
+    <param name="port">8124</param>
+    <param name="user">admin</param>
+    <param name="password">laefeeza</param>
+  </section>
+
   <section name="advertising">
     <param name="host">phoenix</param>
     <param name="port">25000</param>

@@ -160,6 +160,7 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
       secretMessage.setSaveDeliveryStatus(cmd.isSaveDeliveryStatus());
       secretMessage.setNotifyOriginator(cmd.isNotifyOriginator());
       secretMessage.setConnectionName(cmd.getSourceId() == AsyncCommand.SOURCE_SMPP ? "smsx" : "websms");
+      secretMessage.setMscAddress(cmd.getMscAddress());
       ds.saveSecretMessage(secretMessage);
 
       if (users.get(cmd.getDestinationAddress()) == null) // destinationAddress has not been registered

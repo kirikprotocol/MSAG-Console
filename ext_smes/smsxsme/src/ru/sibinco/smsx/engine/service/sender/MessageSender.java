@@ -45,6 +45,7 @@ class MessageSender {
     msg.setMessageString(message.getMessage());
     msg.setDestAddrSubunit(message.getDestAddrSubunit());
     msg.setConnectionName(message.getConnectionName());
+    msg.setMscAddress(message.getMscAddress());
     if (message.isStorable())
       msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
 

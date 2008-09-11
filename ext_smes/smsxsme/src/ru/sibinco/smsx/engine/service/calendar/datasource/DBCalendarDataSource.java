@@ -80,6 +80,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
         msg.setSaveDeliveryStatus(rs.getInt(8) == 1);
         msg.setSmppStatus(rs.getInt(9));
         msg.setConnectionName(rs.getString(10));
+        msg.setMscAddress(rs.getString(11));
 
         messagesList.add(msg);
       }
@@ -116,6 +117,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
         msg.setSaveDeliveryStatus(rs.getInt(8) == 1);
         msg.setSmppStatus(rs.getInt(9));
         msg.setConnectionName(rs.getString(10));
+        msg.setMscAddress(rs.getString(11));
         return msg;
       }
 
@@ -163,6 +165,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
       ps.setInt(7, calendarMessage.isSaveDeliveryStatus() ? 1 : 0);
       ps.setInt(8, calendarMessage.getSmppStatus());
       ps.setString(9, calendarMessage.getConnectionName());
+      ps.setString(10, calendarMessage.getMscAddress());
 
       if (!calendarMessage.isExists()) {
         synchronized (idLock) {
@@ -171,7 +174,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
         }
       }
 
-      ps.setInt(10, calendarMessage.getId());
+      ps.setInt(11, calendarMessage.getId());
 
 
       ps.executeUpdate();

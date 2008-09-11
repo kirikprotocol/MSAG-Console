@@ -11,6 +11,7 @@ CREATE TABLE calendar_messages (
   smpp_status INT,
   conn CHAR(10),
   smpp_id BIGINT,
+  msc_address VARCHAR(20),
 
   PRIMARY KEY(id),
   INDEX(send_time),
@@ -39,6 +40,7 @@ CREATE TABLE sec_messages (
   conn CHAR(10),
   smpp_id BIGINT,
   smpp_status INT,
+  msc_address VARCHAR(20),
 
   PRIMARY KEY(id),
   INDEX(destination_address, status),

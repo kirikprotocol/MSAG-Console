@@ -54,6 +54,7 @@ class SmsXSenderHandler implements SmsXSender {
   private final int advertisingRestriction;
   private final String advertisingDelimiter;
   private final String advertisingClientName;
+  private final String mscAddress;
   private boolean appendAdvertising;
 
   private final AdvertisingClient advertisingClient;
@@ -72,6 +73,7 @@ class SmsXSenderHandler implements SmsXSender {
       advertisingClientName = config.getString("advertising.service.name");
       advertisingRestriction = config.getInt("advertising.restriction");
       advertisingDelimiter = config.getString("advertising.delimiter");
+      mscAddress = config.getString("msc.address");
     } catch (ConfigException e) {
       throw new SOAPHandlerInitializationException(e);
     }
@@ -112,11 +114,11 @@ class SmsXSenderHandler implements SmsXSender {
       }
 
       if (calendar)
-        return sendCalendarMessage(serviceAddress, msisdn, message, express, calendarTimeUTC);
+        return sendCalendarMessage(serviceAddress, msisdn, message, express, calendarTimeUTC, null);
       else if (secret)
-        return sendSecretMessage(serviceAddress, msisdn, message, express);
+        return sendSecretMessage(serviceAddress, msisdn, message, express, null);
       else
-        return sendSenderMessage(serviceAddress, msisdn, message, express);
+        return sendSenderMessage(serviceAddress, msisdn, message, express, null);
       
     } catch (Throwable e) {
       return new SmsXSenderResponse(null, -1, STATUS_SYSTEM_ERROR);
@@ -134,11 +136,11 @@ class SmsXSenderHandler implements SmsXSender {
         log.info("Send SMS: oa=" + oa + "; da=" + da + "; msg=" + message + "; express=" + express + "; secret=" + secret + "; calendar=" + calendar + "; time=" + new Date(calendarTimeUTC));
 
       if (calendar)
-        return sendCalendarMessage(oa, da, message, express, calendarTimeUTC);
+        return sendCalendarMessage(oa, da, message, express, calendarTimeUTC, mscAddress);
       else if (secret)
-        return sendSecretMessage(oa, da, message, express);
+        return sendSecretMessage(oa, da, message, express, mscAddress);
       else
-        return sendSenderMessage(oa, da, message, express);
+        return sendSenderMessage(oa, da, message, express, mscAddress);
 
     } catch (Throwable e) {
       return new SmsXSenderResponse(null, -1, STATUS_SYSTEM_ERROR);
@@ -171,13 +173,14 @@ class SmsXSenderHandler implements SmsXSender {
     return status;
   }
 
-  private SmsXSenderResponse sendSenderMessage(String sourceAddress, String destinationAddress, String message, boolean express) {
+  private SmsXSenderResponse sendSenderMessage(String sourceAddress, String destinationAddress, String message, boolean express, String mscAddress) {
     SenderSendMessageCmd c = new SenderSendMessageCmd();
     c.setSourceAddress(sourceAddress);
     c.setDestinationAddress(destinationAddress);
     c.setMessage(message);
     c.setDestAddressSubunit(express ? 1 : -1);
     c.setStorable(true);
+    c.setMscAddress(mscAddress);
     c.setSourceId(AsyncCommand.SOURCE_SOAP);
 
     String id_message = null;
@@ -198,7 +201,7 @@ class SmsXSenderHandler implements SmsXSender {
     return new SmsXSenderResponse(id_message, 0, status);
   }
 
-  private SmsXSenderResponse sendCalendarMessage(String sourceAddress, String destinationAddress, String message, boolean express, long calendarTimeUTC) {
+  private SmsXSenderResponse sendCalendarMessage(String sourceAddress, String destinationAddress, String message, boolean express, long calendarTimeUTC, String mscAddress) {
     final CalendarSendMessageCmd c = new CalendarSendMessageCmd();
     c.setSourceAddress(sourceAddress);
     c.setDestinationAddress(destinationAddress);
@@ -207,6 +210,7 @@ class SmsXSenderHandler implements SmsXSender {
     c.setDestAddressSubunit(express ? 1 : -1);
     c.setStoreDeliveryStatus(true);
     c.setSourceId(AsyncCommand.SOURCE_SOAP);
+    c.setMscAddress(mscAddress);
 
     String id_message = null;
     int status;
@@ -230,7 +234,7 @@ class SmsXSenderHandler implements SmsXSender {
     return new SmsXSenderResponse(id_message, 0, status);
   }
 
-  private SmsXSenderResponse sendSecretMessage(String sourceAddress, String destinationAddress, String message, boolean express) throws CommandExecutionException {
+  private SmsXSenderResponse sendSecretMessage(String sourceAddress, String destinationAddress, String message, boolean express, String mscAddress) throws CommandExecutionException {
     final SecretSendMessageCmd c = new SecretSendMessageCmd();
     c.setSourceAddress(sourceAddress);
     c.setDestinationAddress(destinationAddress);
@@ -239,6 +243,7 @@ class SmsXSenderHandler implements SmsXSender {
     c.setSaveDeliveryStatus(true);
     c.setNotifyOriginator(false);
     c.setSourceId(AsyncCommand.SOURCE_SOAP);
+    c.setMscAddress(mscAddress);
 
     String id_message = null;
     int status;
