@@ -1,5 +1,6 @@
 #include "StorageProcessor.h"
 #include "core/synchronization/MutexGuard.hpp"
+#include "core/buffers/File.hpp"
 #include <exception>
 
 
@@ -7,6 +8,8 @@
 namespace scag { namespace mtpers {
 
 using smsc::core::synchronization::MutexGuard;
+using smsc::core::buffers::File;
+using smsc::core::buffers::FileException;
 
 const char* DEF_STORAGE_NAME    = "abonent";
 const char* DEF_LOCAL_PATH      = "infrastruct";
@@ -18,21 +21,24 @@ const uint32_t DEF_FILE_SIZE    = 50000;
 const uint32_t DEF_CACHE_SIZE   = 1000;
 const uint32_t DEF_RECORD_COUNT = 1000;
 
-StorageProcessor::StorageProcessor(uint16_t maxWaitingCount):
-                                   maxWaitingCount_(maxWaitingCount)
+StorageProcessor::StorageProcessor(unsigned maxWaitingCount): maxWaitingCount_(maxWaitingCount)
 {
   logger_ = Logger::getInstance("storeproc");
 }
 
-void StorageProcessor::initGlossary(const string& dbPath) {
-  string fn = dbPath + DEF_GLOSSARY_NAME;
-  if ( GlossaryBase::SUCCESS != glossary_.Open(fn) ) {
+
+void StorageProcessor::initGlossary(const string& path, Glossary* glossary) {
+  if (!File::Exists(path.c_str())) {
+    smsc_log_debug(logger_, "create storage dir '%s'", path.c_str());
+    File::MkDir(path.c_str());
+  }
+  string fn = path + DEF_GLOSSARY_NAME;
+  if ( GlossaryBase::SUCCESS != glossary->Open(fn) ) {
     throw std::runtime_error("StorageProcessor: glossary open error");
   }
 }
 
 StorageProcessor::~StorageProcessor() {
-  glossary_.Close();
 }
 
 
@@ -103,19 +109,21 @@ bool StorageProcessor::addContext(ConnectionContext* cx) {
   return true;
 }
 
-AbonentStorageProcessor::AbonentStorageProcessor(uint16_t maxWaitingCount, uint16_t storageIndex):
-                         StorageProcessor(maxWaitingCount), storageIndex_(storageIndex) {   
+AbonentStorageProcessor::AbonentStorageProcessor(unsigned maxWaitingCount, unsigned locationNumber, unsigned storagesCount):
+                         StorageProcessor(maxWaitingCount), locationNumber_(locationNumber), storagesCount_(storagesCount) {  
+  abntlog_ = Logger::getInstance("pvss.abnt");
 }
 
-void AbonentStorageProcessor::init(const AbonentStorageConfig& cfg) {
+void AbonentStorageProcessor::initElementStorage(const AbonentStorageConfig& cfg, unsigned index) {
   char pathSuffix[4];
-  //sprintf(pathSuffix, "/%02d", storageIndex_ + 1);			
-  string path = cfg.dbPath + "/" + cfg.localPath[storageIndex_];
-  initGlossary(path);
-  std::auto_ptr< DiskIndexStorage > dis(new DiskIndexStorage(cfg.dbName, path, cfg.indexGrowth));
-  smsc_log_debug(logger_, "data index %d storage is created", storageIndex_);
+  sprintf(pathSuffix, "%03d", index);			
+  string path = string(cfg.locationPath[locationNumber_] + "/") + pathSuffix;
+  ElementStorage elStorage(index);
+  initGlossary(path, elStorage.glossary);
 
-  std::auto_ptr< DiskDataStorage::storage_type > bs(new DiskDataStorage::storage_type(&glossary_));
+  std::auto_ptr< DiskIndexStorage > dis(new DiskIndexStorage(cfg.dbName, path, cfg.indexGrowth));
+  smsc_log_debug(logger_, "data index storage %d is created", index);
+  std::auto_ptr< DiskDataStorage::storage_type > bs(new DiskDataStorage::storage_type(elStorage.glossary));
   int ret = -1;
   const string fn(cfg.dbName + "-data");
   try {
@@ -127,8 +135,7 @@ void AbonentStorageProcessor::init(const AbonentStorageConfig& cfg) {
     bs->Create(fn, path, cfg.fileSize, cfg.blockSize);
   }
   std::auto_ptr< DiskDataStorage > dds(new DiskDataStorage(bs.release()));
-  smsc_log_debug(logger_, "data disk storage %d is created", storageIndex_);
-
+  smsc_log_debug(logger_, "data disk storage %d is created", index);
 
   std::auto_ptr< DiskStorage > ds(new DiskStorage(dis.release(), dds.release()));
   smsc_log_debug(logger_, "disk storage is assembled");
@@ -136,14 +143,25 @@ void AbonentStorageProcessor::init(const AbonentStorageConfig& cfg) {
   std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance("cache"), cfg.cacheSize));
   smsc_log_debug(logger_, "memory storage is created");
 
-  storage_.reset( new AbonentStorage(ms.release(), ds.release()));
+  //storage_.reset( new AbonentStorage(ms.release(), ds.release()));
+  elStorage.storage = new AbonentStorage(ms.release(), ds.release());
+
+  elementStorages_.Insert(elStorage.index, elStorage);
   smsc_log_debug(logger_, "abonent storage is assembled");
-  abntlog_ = Logger::getInstance("pvss.abnt");
 }
 
 void AbonentStorageProcessor::process(ConnectionContext* cx) {
   smsc_log_debug(logger_, "%p: %p createProfile=%d", this, cx, cx->packet->createProfile);
-  Profile *pf = storage_->get(cx->packet->address, cx->packet->createProfile);
+  unsigned elstorageIndex = static_cast<unsigned>(cx->packet->address.getNumber() % storagesCount_);
+  smsc_log_debug(logger_, "%p: %p process profile key='%s' in location: %d, storage: %d",
+                  this, cx, cx->packet->address.toString().c_str(), locationNumber_, elstorageIndex);
+  ElementStorage *elstorage = elementStorages_.GetPtr(elstorageIndex);
+  if (!elstorage) {
+    smsc_log_warn(logger_, "%p: %p element storage %d not found in location %d", this, cx, elstorageIndex, locationNumber_);
+    cx->createFakeResponse(scag::pers::RESPONSE_ERROR);
+    return;
+  }
+  Profile *pf = elstorage->storage->get(cx->packet->address, cx->packet->createProfile);
   if (!pf) {
     cx->createFakeResponse(scag::pers::RESPONSE_PROPERTY_NOT_FOUND);
     return;
@@ -151,7 +169,22 @@ void AbonentStorageProcessor::process(ConnectionContext* cx) {
   cx->packet->execCommand(pf, cx->outbuf, abntlog_, cx->packet->address.toString());
   if (pf->isChanged()) {
     smsc_log_debug(logger_, "%p: %p flush profile", this, cx);
-    storage_->flush(cx->packet->address);
+    elstorage->storage->flush(cx->packet->address);
+  }
+}
+
+AbonentStorageProcessor::~AbonentStorageProcessor() {
+  IntHash<ElementStorage>::Iterator it(elementStorages_);
+  ElementStorage elstorage;
+  int key = 0;
+  while (it.Next(key, elstorage)) {
+    smsc_log_debug(logger_, "delete %d element storage index=%d", key, elstorage.index);
+    if (elstorage.storage) {
+      delete elstorage.storage;
+    }
+    if (elstorage.glossary) {
+      delete elstorage.glossary;
+    }
   }
 }
 
@@ -159,9 +192,9 @@ void InfrastructStorageProcessor::process(ConnectionContext* cx) {
   Logger *dblog = 0;
   InfrastructStorage* storage = 0;
   switch (cx->packet->profileType) {
-  case scag::pers::PT_OPERATOR: dblog = olog_; storage = operator_.get(); break;
-  case scag::pers::PT_PROVIDER: dblog = plog_; storage = provider_.get(); break;
-  case scag::pers::PT_SERVICE:  dblog = slog_; storage = service_.get(); break;
+  case scag::pers::PT_OPERATOR: dblog = olog_; storage = operator_; break;
+  case scag::pers::PT_PROVIDER: dblog = plog_; storage = provider_; break;
+  case scag::pers::PT_SERVICE:  dblog = slog_; storage = service_; break;
   default: 
     smsc_log_error(logger_, "cx %p unknown profile type %d", cx, cx->packet->profileType);
     cx->createFakeResponse(scag::pers::RESPONSE_BAD_REQUEST);
@@ -182,21 +215,22 @@ void InfrastructStorageProcessor::process(ConnectionContext* cx) {
 
 void InfrastructStorageProcessor::init(const InfrastructStorageConfig& cfg) {
   InfrastructStorageConfig locCfg(cfg);
-  locCfg.dbPath += "/" + cfg.localPath;
-  initGlossary(locCfg.dbPath);
+  initGlossary(locCfg.dbPath, &glossary_);
   locCfg.dbName = "provider";
-  initStorage(locCfg, provider_);
+  provider_ = initStorage(locCfg);
+  smsc_log_debug(logger_, "provider storage is created");
   locCfg.dbName = "service";
-  initStorage(locCfg, service_);
+  service_ = initStorage(locCfg);
+  smsc_log_debug(logger_, "service storage is created");
   locCfg.dbName = "operator";
-  initStorage(locCfg, operator_);
+  operator_ = initStorage(locCfg);
+  smsc_log_debug(logger_, "operator storage is created");
   plog_ = Logger::getInstance("pvss.prov");
   slog_ = Logger::getInstance("pvss.serv");
   olog_ = Logger::getInstance("pvss.oper");
 }
 
-void InfrastructStorageProcessor::initStorage(const InfrastructStorageConfig& cfg,
-                                              std::auto_ptr<InfrastructStorage>& storage) {
+InfrastructStorageProcessor::InfrastructStorage* InfrastructStorageProcessor::initStorage(const InfrastructStorageConfig& cfg) {
   const string fn(cfg.dbPath + "/" + cfg.dbName + ".bin");
   std::auto_ptr< DiskDataStorage::storage_type > pf(new PageFile);
   try {
@@ -217,23 +251,32 @@ void InfrastructStorageProcessor::initStorage(const InfrastructStorageConfig& cf
   std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance("cache"), cfg.cacheSize));
   smsc_log_debug(logger_, "%s memory storage is created", cfg.dbName.c_str());
 
-  storage.reset(new InfrastructStorage(ms.release(), ds.release()));
-  smsc_log_debug(logger_, "%s storage is created", cfg.dbName.c_str());
+  return new InfrastructStorage(ms.release(), ds.release());
 }
 
-AbonentStorageConfig::AbonentStorageConfig(uint32_t snumber) {
+InfrastructStorageProcessor::~InfrastructStorageProcessor() {
+  if (provider_) {
+    delete provider_;
+  }
+  if (operator_) {
+    delete operator_;
+  }
+  if (service_) {
+    delete service_;
+  }
+}
+
+AbonentStorageConfig::AbonentStorageConfig() {
   dbName = DEF_STORAGE_NAME;
   dbPath = DEF_STORAGE_PATH;
   indexGrowth = DEF_INDEX_GROWTH;
   blockSize = DEF_BLOCK_SIZE;
   fileSize = DEF_FILE_SIZE;
   cacheSize = DEF_CACHE_SIZE;
-  storageNumber = snumber;
 }
 
-AbonentStorageConfig::AbonentStorageConfig(uint32_t snumber, ConfigView& cfg, const char* storageType,
+AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg, const char* storageType,
                                             Logger* logger) {
-  storageNumber = snumber;
   try {
     dbName = cfg.getString("storageName"); 
   } catch (...) {
@@ -241,14 +284,6 @@ AbonentStorageConfig::AbonentStorageConfig(uint32_t snumber, ConfigView& cfg, co
     smsc_log_warn(logger, "Parameter <MTPers.%s.storageName> missed. Defaul value is '%s'",
                    storageType, DEF_STORAGE_NAME);
   }
-  /*
-  try {
-    dbPath = cfg.getString("storagePath"); 
-  } catch (...) {
-    dbPath = DEF_STORAGE_PATH;
-    smsc_log_warn(logger, "Parameter <MTPers.%s.storagePath> missed. Defaul value is '%s'",
-                   storageType, DEF_STORAGE_PATH);
-  }*/
   try {
     indexGrowth = cfg.getInt("indexGrowth"); 
   } catch (...) {
@@ -277,6 +312,7 @@ AbonentStorageConfig::AbonentStorageConfig(uint32_t snumber, ConfigView& cfg, co
     smsc_log_warn(logger, "Parameter <MTPers.%s.cacheSize> missed. Defaul value is %d",
                    storageType, DEF_CACHE_SIZE);
   }
+  /*
   string storageDirPrefix = "storageDir_";
   char dirName[30];
   string name;
@@ -295,6 +331,7 @@ AbonentStorageConfig::AbonentStorageConfig(uint32_t snumber, ConfigView& cfg, co
     }
     localPath.push_back(name);
   }
+  */
 }
 
 InfrastructStorageConfig::InfrastructStorageConfig() {
@@ -305,9 +342,9 @@ InfrastructStorageConfig::InfrastructStorageConfig() {
 
 InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* storageType, Logger* logger) {
   try {
-    localPath = cfg.getString("storageDir"); 
+    dbPath = cfg.getString("storagePath"); 
   } catch (...) {
-    localPath = "";
+    dbPath = "./storage";
     smsc_log_warn(logger, "Parameter <MTPers.%s.storageDir> missed. Defaul value is '/'",
                    storageType);
   }

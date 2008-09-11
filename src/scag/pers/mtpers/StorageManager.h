@@ -17,24 +17,37 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::core::synchronization::Mutex;
 using smsc::logger::Logger;
 using smsc::core::buffers::Array;
+using std::vector;
+
+struct NodeConfig {
+  NodeConfig():storagesCount(100), nodesCount(1), nodeNumber(0), locationsCount(1) {};
+  unsigned storagesCount;
+  unsigned nodesCount;
+  unsigned nodeNumber;
+  unsigned locationsCount;
+};
 
 class StorageManager {
 public:
-  StorageManager():storageNumber_(0), logger_(Logger::getInstance("storeman")) {};
+  StorageManager(const NodeConfig& nodeCfg);
   virtual ~StorageManager() {};
 
-  void init(uint16_t maxWaitingCount, uint16_t storageNumber, const AbonentStorageConfig& abntcfg,
-            const InfrastructStorageConfig& infcfg);
+  void init(uint16_t maxWaitingCount, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig& infcfg);
   bool process(ConnectionContext* cx);
   void shutdown();
+
+private:
+  AbonentStorageProcessor* getLocation(unsigned elementStorageNumber);
 
 private:
   ThreadPool pool_;
   Mutex procMutex_;
   Logger *logger_;
-  uint16_t storageNumber_;
-  Array<StorageProcessor *> storages_;
-  InfrastructStorageProcessor* notAbonentsStorage_;
+  Array<AbonentStorageProcessor*> storages_;
+  unsigned locationsCount_;
+  unsigned storagesCount_;
+  unsigned nodeNumber_;
+  InfrastructStorageProcessor *infrastructStorage_;
 
 };
 

@@ -14,6 +14,7 @@
 #include "scag/pers/AbntAddr.hpp"
 #include "scag/pers/Profile.h"
 #include "core/buffers/PageFile.hpp"
+#include "core/buffers/IntHash.hpp"
 
 #include "scag/util/storage/BlocksHSStorage.h"
 #include "scag/util/storage/RBTreeIndexStorage.h"
@@ -37,21 +38,21 @@ using namespace scag::util::storage;
 using scag::pers::AbntAddr;
 using scag::pers::IntProfileKey;
 using smsc::core::buffers::PageFile;
+using smsc::core::buffers::IntHash;
 using namespace smsc::util::config;
 
 struct AbonentStorageConfig {
 
-  AbonentStorageConfig(uint32_t snumber);
-  AbonentStorageConfig(uint32_t snumber, ConfigView& cfg, const char* storageType, Logger* logger);
+  AbonentStorageConfig();
+  AbonentStorageConfig(ConfigView& cfg, const char* storageType, Logger* logger);
 
   string dbName;
   string dbPath;
-  uint32_t indexGrowth;
-  uint32_t fileSize;
-  uint32_t blockSize;
-  uint32_t cacheSize;
-  uint32_t storageNumber;
-  vector<string> localPath;
+  unsigned indexGrowth;
+  unsigned fileSize;
+  unsigned blockSize;
+  unsigned cacheSize;
+  vector<string> locationPath;
 };
 
 struct InfrastructStorageConfig {
@@ -64,36 +65,32 @@ struct InfrastructStorageConfig {
   uint32_t recordCount;
 };
 
-class StorageManager;
-
 class StorageProcessor: public ThreadedTask {
 public:
-  StorageProcessor(uint16_t maxWaitingCount);
+  StorageProcessor(unsigned maxWaitingCount);
   virtual ~StorageProcessor();
   virtual int Execute();
   virtual void stop();
   virtual const char * taskName();
   bool addContext(ConnectionContext* cx);
   virtual void process(ConnectionContext* cx) = 0;
-  //virtual void init(const StorageConfig& cfg) = 0;
 
 protected:
-  void initGlossary(const string& dbPath);
+  void initGlossary(const string& path, Glossary* glossary);
 
 protected:
   vector<ConnectionContext* > waitingProcess_;
-  uint16_t maxWaitingCount_;
+  unsigned maxWaitingCount_;
   EventMonitor processMonitor_;
   Logger* logger_;
-  Glossary glossary_;
 };
 
 class AbonentStorageProcessor: public StorageProcessor {
 public:
-  AbonentStorageProcessor(uint16_t maxWaitingCount, uint16_t storageIndex);
-  ~AbonentStorageProcessor() {};
-  void init(const AbonentStorageConfig& cfg);
-  void process(ConnectionContext* cx) ;
+  AbonentStorageProcessor(unsigned maxWaitingCount, unsigned locationNumber, unsigned storagesCount);
+  ~AbonentStorageProcessor();
+  void process(ConnectionContext* cx);
+  void initElementStorage(const AbonentStorageConfig& cfg, unsigned index);
 
 private:
   typedef HashedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
@@ -102,16 +99,25 @@ private:
   typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
   typedef CachedDiskStorage< MemStorage, DiskStorage > AbonentStorage;
 
+  struct ElementStorage {
+    ElementStorage(unsigned idx):index(idx), glossary(new Glossary()) {};
+    ElementStorage():index(0), glossary(new Glossary()) {};
+    AbonentStorage* storage;
+    Glossary* glossary;
+    unsigned index;
+  };
+
 private:
-  std::auto_ptr<AbonentStorage> storage_;
-  uint16_t storageIndex_;
+  IntHash<ElementStorage> elementStorages_;
+  unsigned locationNumber_;
+  unsigned storagesCount_;
   Logger* abntlog_;
 };
 
 class InfrastructStorageProcessor: public StorageProcessor {
 public:
-  InfrastructStorageProcessor(uint16_t maxWaitingCount):StorageProcessor(maxWaitingCount) {};
-  ~InfrastructStorageProcessor() {};
+  InfrastructStorageProcessor(unsigned maxWaitingCount):StorageProcessor(maxWaitingCount), provider_(NULL), operator_(NULL), service_(NULL) {};
+  ~InfrastructStorageProcessor();
   void init(const InfrastructStorageConfig& cfg);
   void process(ConnectionContext* cx) ;
 
@@ -123,12 +129,13 @@ private:
   typedef CachedDiskStorage< MemStorage, DiskStorage > InfrastructStorage;
 
 private:
-  void initStorage(const InfrastructStorageConfig& cfg, std::auto_ptr<InfrastructStorage>& storage);
+  InfrastructStorage* initStorage(const InfrastructStorageConfig& cfg);
 
 private:
-  std::auto_ptr<InfrastructStorage> provider_;
-  std::auto_ptr<InfrastructStorage> service_;
-  std::auto_ptr<InfrastructStorage> operator_;
+  InfrastructStorage* provider_;
+  InfrastructStorage* service_;
+  InfrastructStorage* operator_;
+  Glossary glossary_;
   Logger* plog_;
   Logger* slog_;
   Logger* olog_;
