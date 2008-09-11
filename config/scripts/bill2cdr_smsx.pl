@@ -208,7 +208,7 @@ sub conv_addr{
 #      $addr=$3;
 #    }
   }
-  if($addr=~/\+(\d+)/)
+  if($addr=~/^\+(.+)$/)
   {
     return $1;
   }
@@ -253,7 +253,13 @@ sub process{
     next if $infields->{STATUS}!=0;
     my $outfields={};
     %$outfields=%$infields;
-    
+
+    #changed by request (paid websms/webgroups support) 11.09.2008
+    if(($infields->{SRC_SME_ID} eq 'webgroup' || $infields->{SRC_SME_ID} eq 'websms') && $infields->{SRC_MSC} ne '')
+    {
+      $infields->{DST_ADDR}=$infields->{DST_ADDR}.'IH';
+    }
+
     #changed by request 19.10.2007
     if($infields->{SRC_SME_ID} ne 'MAP_PROXY' && $infields->{SRC_MSC} eq '')
     {
@@ -289,8 +295,8 @@ sub process{
         #$$addrref=~s/^(?!ussd:)/ussd:/i;
       }
     }
-    
-    
+
+
     #by request of Igor G at 7.4.2008
     #$outfields->{SRC_ADDR}=~s/^\.5\.0\.//;
     #$outfields->{DST_ADDR}=~s/^\.5\.0\.//;
@@ -325,7 +331,7 @@ sub process{
     {
       $makeInRec=0;
     }
-    
+
     if($infields->{DST_SME_ID} eq 'smsx')
     {
       $makeInRec=0;
