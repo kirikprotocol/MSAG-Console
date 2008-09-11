@@ -5,8 +5,8 @@
 #include "scag/bill/base/BillingManager.h"
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/exc/SCAGExceptions.h"
-#include "scag/pers/PersClient.h"
-#include "scag/pers/Types.h"
+#include "scag/pers/util/PersClient.h"
+#include "scag/pers/util/Types.h"
 #include "scag/re/base/ActionContext2.h"
 
 namespace scag2 {
@@ -18,7 +18,7 @@ using namespace smsc::core::threads;
 using namespace scag::exceptions;
 using namespace scag2::config;
 
-using namespace scag::pers::client;
+using namespace scag::pers::util;
 using bill::BillOpenCallParams;
 using bill::BillCloseCallParams;
 
@@ -134,11 +134,9 @@ bool LongCallManagerImpl::call(LongCallContext* context)
     else if(context->callCommandId >= PERS_GET && context->callCommandId <= PERS_BATCH)
     {
 
-        // FIXME: implement
-        /*
         if(!PersClient::Instance().call(context))
             return false;
-         */
+        
     }
     else
     {
