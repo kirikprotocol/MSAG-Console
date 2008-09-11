@@ -48,7 +48,7 @@ LIBCLR=\033[01;34m
 LNKCLR=\033[01;35m
 CLREND=\033[00m
 override CCXX:=conf/colorederr $(CXX)
-override CCC:=conf/clorederr $(CC)
+override CCC:=conf/colorederr $(CC)
 endif
 
 ';
