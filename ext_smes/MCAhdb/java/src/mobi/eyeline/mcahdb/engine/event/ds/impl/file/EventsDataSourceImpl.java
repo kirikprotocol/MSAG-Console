@@ -11,8 +11,6 @@ import java.util.*;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.log4j.Category;
-
 /**
  * User: artem
  * Date: 31.07.2008
@@ -20,21 +18,18 @@ import org.apache.log4j.Category;
 
 public class EventsDataSourceImpl implements EventsDataSource {
 
-  private static final Category log = Category.getInstance(EventsDataSourceImpl.class);
-
   private StoresCache cache;
 
   public EventsDataSourceImpl(EventStore.Config config) throws DataSourceException {
-    cache = new StoresCache(new File(config.getEventsStoreDir()));
+    cache = new StoresCache(new File(config.getEventsStoreDir()), config.getEventsStoreRWTimeout(), config.getEventsStoreROTimeout());
   }
 
-
   public void getEvents(String address, Date from, Date till, Collection<Event> result) throws DataSourceException {
-    Collection<Store> files = cache.getFilesForRead(from, till);
+    Collection<Store> files = cache.listFiles(from, till);
 
     for (Store f : files) {
       try {
-        f.open();
+        f.open(true);
         f.getEvents(address, from, till, result);
       } catch (IOException e) {
         throw new DataSourceException(e);
@@ -52,10 +47,10 @@ public class EventsDataSourceImpl implements EventsDataSource {
 
     try {
       for (Event e : events) {
-        Store s = cache.getFileForWrite(e.getDate());
+        Store s = cache.getFile(e.getDate());
         if (!openedFiles.contains(s)) {
           openedFiles.add(s);
-          s.open();
+          s.open(false);
         }
         s.addEvent(e);
       }

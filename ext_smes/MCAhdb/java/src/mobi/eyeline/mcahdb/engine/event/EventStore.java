@@ -53,5 +53,7 @@ public class EventStore {
 
   public interface Config {
     public String getEventsStoreDir();
+    public int getEventsStoreRWTimeout();
+    public int getEventsStoreROTimeout();
   }
 }

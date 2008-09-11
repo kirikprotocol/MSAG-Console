@@ -7,7 +7,6 @@ if [ "$pid" == "" ]; then
   echo MCAHDB not started.
 else
   echo Service PID=$pid
-  `kill $pid`
-  echo Service $pid stopped.
-  rm MCAHDB.PID
+  `kill -3 $pid`
+  echo Threads dumped.
 fi

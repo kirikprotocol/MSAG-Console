@@ -23,7 +23,11 @@ public class GlobalConfig implements EventStore.Config,
   private final int journalsCheckInterval;
   private final String journalsDir;
   private final String journalsArchivesDir;
+
   private final String eventsStoreDir;
+  private final int eventsStoreRWTimeout;
+  private final int eventsStoreROTimeout;
+
   private final String soapResponseDateFormat;
   private final int soapEventsFetchInterval;
 
@@ -50,6 +54,8 @@ public class GlobalConfig implements EventStore.Config,
     if (eventsStoreSection == null)
       throw new ConfigException("'eventsStore' section not found in config.xml");
     eventsStoreDir = eventsStoreSection.getString("storeDir");
+    eventsStoreRWTimeout = eventsStoreSection.getInt("rwTimeout");
+    eventsStoreROTimeout = eventsStoreSection.getInt("roTimeout");
 
     XmlConfigSection soapSection = config.getSection("soap");
     if (soapSection == null)
@@ -81,6 +87,14 @@ public class GlobalConfig implements EventStore.Config,
 
   public String getEventsStoreDir() {
     return eventsStoreDir;
+  }
+
+  public int getEventsStoreRWTimeout() {
+    return eventsStoreRWTimeout;
+  }
+
+  public int getEventsStoreROTimeout() {
+    return eventsStoreROTimeout;
   }
 
   public String getSoapResponseDateFormat() {

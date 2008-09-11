@@ -5,10 +5,7 @@ import mobi.eyeline.mcahdb.engine.event.ds.Event;
 import mobi.eyeline.mcahdb.engine.DataSourceException;
 
 import java.util.*;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.text.SimpleDateFormat;
@@ -28,15 +25,16 @@ public class StoresCache {
 
   private static final SimpleDateFormat fileNameFormat = new SimpleDateFormat("yyMM/dd/HH");
 
-  private static final int CACHE_CLEAN_INTERVAL = 600000;
-  private static final int CACHE_MODIFIED_CLOSE_INTERVAL = 600000;
+  private final int rwTimeout;
+  private final int roTimeout;
 
   private final File storeDir;
   private final ScheduledExecutorService cleaner;
-  private final HashMap<String, CachedStore> cache = new HashMap<String, CachedStore>(10);
-  private final Lock cacheLock = new ReentrantLock();
+  private final ConcurrentHashMap<String, CachedStore> cache = new ConcurrentHashMap<String, CachedStore>(10);
 
-  public StoresCache(File storeDir) throws DataSourceException {
+  public StoresCache(File storeDir, int rwTimeout, int roTimeout) throws DataSourceException {
+    this.rwTimeout = rwTimeout;
+    this.roTimeout = roTimeout;
     this.storeDir = storeDir;
     if (!storeDir.exists() && !storeDir.mkdirs())
       throw new DataSourceException("Cant create store dir: " + storeDir.getAbsolutePath());
@@ -51,13 +49,11 @@ public class StoresCache {
       public void run() {
         clearCache(false);
       }
-    }, CACHE_MODIFIED_CLOSE_INTERVAL, CACHE_MODIFIED_CLOSE_INTERVAL, TimeUnit.MILLISECONDS);
+    }, Math.min(rwTimeout, roTimeout), Math.min(rwTimeout, roTimeout), TimeUnit.MILLISECONDS);
   }
 
    private void clearCache(boolean all) {
     try {
-      cacheLock.lock();
-
       if (log.isDebugEnabled())
         log.debug("Clear cache called: " + all);
 
@@ -73,49 +69,37 @@ public class StoresCache {
         }
       }
 
-    } finally {
-      cacheLock.unlock();
+    } catch (Throwable e) {
+      log.error("Clear cache err." , e);
     }
   }
 
   private Store getFile(String name, boolean readOnly) throws DataSourceException {
-    try {
-      cacheLock.lock();
+    CachedStore page = cache.get(name);
 
-      CachedStore page = cache.get(name);
-
-      if (page != null && page.isReadOnly() && !readOnly) {
-        page.closeInt(true);
-        cache.remove(name);        
-        page = null;
+    if (page == null) {
+      File f = new File(storeDir, name);
+      if (!f.exists()) {
+        if (readOnly)
+          return null;
+        File parent = f.getParentFile();
+        if (!parent.exists() && !parent.mkdirs())
+          throw new DataSourceException("Can't create dir: " + parent.getAbsolutePath());
       }
-
-      if (page == null) {
-        File f = new File(storeDir, name);
-        if (!f.exists()) {
-          if (readOnly)
-            return null;
-          File parent = f.getParentFile();
-          if (!parent.exists() && !parent.mkdirs())
-            throw new DataSourceException("Can't create dir: " + parent.getAbsolutePath());
-        }
-        page = new CachedStore(new StoreImpl(f, readOnly));
-        cache.put(name, page);
-      }
-
-      return page;
-    } catch (IOException e) {
-      throw new DataSourceException(e);
-    } finally {
-      cacheLock.unlock();
+      page = new CachedStore(f);
+      CachedStore prev = cache.putIfAbsent(name, page);
+      if (prev != null)
+        page = prev;
     }
+
+    return page;
   }
 
   private static String getFileName(Date date) {
     return fileNameFormat.format(date) + ".dat";
   }
 
-  public Collection<Store> getFilesForRead(Date from, Date till) throws DataSourceException {
+  public Collection<Store> listFiles(Date from, Date till) throws DataSourceException {
     Collection<Store> result = new LinkedList<Store>();
 
     long time = from.getTime();
@@ -131,7 +115,7 @@ public class StoresCache {
     return result;
   }
 
-  public Store getFileForWrite(Date date) throws DataSourceException {
+  public Store getFile(Date date) throws DataSourceException {
     return getFile(getFileName(date), false);
   }
 
@@ -143,30 +127,29 @@ public class StoresCache {
 
 
 
-  private static class CachedStore implements Store {
+  private class CachedStore implements Store {
 
     private final StoreImpl impl;
     private final Lock lock = new ReentrantLock();
 
-    private boolean opened = false;
-
     private long closeTime;
     private long lastWriteTime;
 
-    private CachedStore(StoreImpl impl) {
-      this.impl = impl;
+    private CachedStore(File file) {
+      this.impl = new StoreImpl(file);
     }
 
-    public void open() throws DataSourceException {
+    public boolean exists() {
+      return impl.exists();
+    }
+
+    public void open(boolean readOnly) throws DataSourceException {
       lock.lock();  // lock store until close()
-      if (!opened) {
-        try {
-          impl.open();
-        } catch (Throwable e) {
-          lock.unlock();
-          throw new DataSourceException(e);
-        }
-        opened = true;
+      try {
+        impl.open(readOnly);
+      } catch (Throwable e) {
+        lock.unlock();
+        throw new DataSourceException(e);
       }
     }
 
@@ -181,9 +164,8 @@ public class StoresCache {
 
         long now = System.currentTimeMillis();
 
-        if (f || (!impl.isReadOnly() && now - lastWriteTime > CACHE_MODIFIED_CLOSE_INTERVAL) || (now - closeTime > CACHE_CLEAN_INTERVAL)) {
+        if (f || (!impl.isReadOnly() && now - lastWriteTime > rwTimeout) || (now - closeTime > roTimeout)) {
           impl.close();
-          opened = false;
           return true;
         }
 

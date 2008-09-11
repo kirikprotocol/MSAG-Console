@@ -9,6 +9,8 @@
 
   <section name="eventsStore">
     <param name="storeDir">store/events</param>
+    <param name="rwTimeout">120000</param>
+    <param name="roTimeout">600000</param>
   </section>
 
   <section name="scheduler">

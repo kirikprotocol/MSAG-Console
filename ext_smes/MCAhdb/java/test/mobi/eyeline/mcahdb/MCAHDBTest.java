@@ -26,6 +26,7 @@ public class MCAHDBTest {
   private static class GetMissedCalls implements Runnable {
 
     private final String url;
+    private int start = 0;
 
     private GetMissedCalls(String url) {
       this.url = url;
@@ -36,15 +37,18 @@ public class MCAHDBTest {
       try {
         s = new MissedCallServiceStub(url);
 
-        for (int i=1000; i<1000 + 1000; i++) {
+        for (int i=start; i<start + 10000; i++) {
           MissedCallServiceStub.GetMissedCalls req = new MissedCallServiceStub.GetMissedCalls();
           req.setPhoneNumber("+7913903" + i);
 
           System.out.println("Get missed calls for " + req.getPhoneNumber());
           s.GetMissedCalls(req);
 
-          Thread.sleep(500);
+          Thread.sleep(100);
         }
+
+        start +=10000;
+
       } catch (AxisFault axisFault) {
         axisFault.printStackTrace();
       } catch (java.rmi.RemoteException e) {
@@ -63,11 +67,14 @@ public class MCAHDBTest {
 
   private static class JournalsGenerator implements Runnable {
 
+    private int start = 0;
+
     public void run() {
       try {
         GlobalConfig config = new GlobalConfig();
         System.out.println("Generate journal.");
-        TestUtils.generateJournal(config.getJournalsStoreDir(), 10000, 10);
+        TestUtils.generateJournal(config.getJournalsStoreDir(), "+7913902", "+7913903", start, 9000, 10);
+        start += 10000;
       } catch (IOException e) {
         e.printStackTrace();
       } catch (ConfigException e) {

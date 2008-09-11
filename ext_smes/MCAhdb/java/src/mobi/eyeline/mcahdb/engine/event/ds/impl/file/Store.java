@@ -14,13 +14,15 @@ import java.util.Date;
 
 public interface Store {
 
-  public void open() throws IOException, DataSourceException;
+  public void open(boolean readonly) throws IOException, DataSourceException;
 
   public void close() throws IOException;
 
   public void commit() throws DataSourceException, IOException;
 
   public void rollback() throws DataSourceException, IOException;
+
+  public boolean exists();
 
   public void getEvents(String address, Date from, Date till, Collection<Event> result) throws DataSourceException, IOException;
 

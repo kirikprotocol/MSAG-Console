@@ -9,10 +9,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.FilenameFilter;
@@ -36,8 +33,7 @@ public class PagesCache {
 
   private final File storeDir;
   private final ScheduledExecutorService cleaner;
-  private final HashMap<String, CachedPageImpl> cache = new HashMap<String, CachedPageImpl>(10);
-  private final Lock cacheLock = new ReentrantLock();
+  private final ConcurrentHashMap<String, CachedPageImpl> cache = new ConcurrentHashMap<String, CachedPageImpl>(10);
 
   public PagesCache(File storeDir) {
     this.storeDir = storeDir;
@@ -56,7 +52,6 @@ public class PagesCache {
 
   private void clearCache(boolean all) {
     try {
-      cacheLock.lock();
 
       if (log.isDebugEnabled())
         log.debug("Clear cache called: " + all);
@@ -69,8 +64,8 @@ public class PagesCache {
           entries.remove();
       }
 
-    } finally {
-      cacheLock.unlock();
+    } catch (Throwable e) {
+      log.error("Clear cache err.", e);
     }
   }
 
@@ -133,8 +128,6 @@ public class PagesCache {
 
   private SchedulePage getPage(String id, boolean create) throws DataSourceException {
     try {
-      cacheLock.lock();
-
       CachedPageImpl page = cache.get(id);
       if (page == null) {
         File f = new File(storeDir, id);
@@ -146,14 +139,14 @@ public class PagesCache {
             throw new DataSourceException("Can't create dir: " + parent.getAbsolutePath());
         }
         page = new CachedPageImpl(new SchedulePageImpl(f, id));
-        cache.put(id, page);
+        CachedPageImpl prev = cache.putIfAbsent(id, page);
+        if (prev != null)
+          page = prev;
       }      
       return page;
     } catch (IOException e) {
       throw new DataSourceException(e);
-    } finally {
-      cacheLock.unlock();
-    }    
+    }
   }
 
   public void shutdown() {

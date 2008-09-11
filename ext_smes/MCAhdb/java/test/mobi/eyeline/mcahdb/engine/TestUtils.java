@@ -62,15 +62,19 @@ public class TestUtils {
   }
 
   public static Collection<JournalEvent> generateJournalEvents(int count, int step) {
+    return generateJournalEvents("+7913902", "+7913903", 0, count, step);
+  }
+
+  public static Collection<JournalEvent> generateJournalEvents(String prefix1, String prefix2, int start, int count, int step) {
     // Prepare events
     Calendar cal = Calendar.getInstance();
     cal.setTime(new Date());
 
     Collection<JournalEvent> events = new ArrayList<JournalEvent>(count);
-    for (int i=1000; i<1000 + count; i++) {
+    for (int i=start; i<start + count; i++) {
       JournalEvent e = new JournalEvent();
-      e.setCaller("+7913902" + i);
-      e.setCalled("+7913903" + i);
+      e.setCaller(prefix1 + i);
+      e.setCalled(prefix2 + i);
       e.setDate(cal.getTime());
       e.setCalledProfileNotify(true);
       e.setCallerProfileWantNotifyMe(true);
@@ -115,11 +119,11 @@ public class TestUtils {
     return events;
   }
 
-  public static String generateJournal(String storeDir, int count, int step) throws IOException {
+  public static String generateJournal(String storeDir, String prefix1, String prefix2, int start, int count, int step) throws IOException {
     final String journal = "journal." + startdf.format(new Date()) + ".csv";
 
     // Create journal
-    writeJournal(generateJournalEvents(count, step), new File(storeDir, journal));
+    writeJournal(generateJournalEvents(prefix1, prefix2, start, count, step), new File(storeDir, journal));
 
     return journal;
   }

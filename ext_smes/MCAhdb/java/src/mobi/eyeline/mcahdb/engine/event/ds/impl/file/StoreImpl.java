@@ -24,15 +24,16 @@ public class StoreImpl implements Store {
 
   private UnmodifiableRTree<Collection<Long>> roIndex;
   private RTree<Collection<Long>> rwIndex;
-  private final DataFile dataFile;
+  private File file;
+  private DataFile dataFile;
   private File indexFile;
 
   private Map<String, Collection<Event>> eventsBuffer = new HashMap<String, Collection<Event>>(100);
-  private final boolean readOnly;
+  private boolean readOnly = false;
+  private boolean opened = false;
 
-  public StoreImpl(File dataFile, boolean readOnly) throws IOException, DataSourceException {
-    this.dataFile = new DataFile(dataFile, readOnly);
-    this.readOnly = readOnly;
+  public StoreImpl(File dataFile) {
+    this.file = dataFile;
   }
 
   private static StringsRTree createIndex(DataFile dataFile) throws IOException {
@@ -46,8 +47,14 @@ public class StoreImpl implements Store {
     return readOnly;
   }
 
+  public boolean exists() {
+    return file.exists();
+  }
+
   private void openFileForRead() throws IOException, DataSourceException {
     rwIndex = null;
+
+    this.dataFile = new DataFile(file, true);
 
     if (!dataFile.checkAndRepair()) {
       log.warn("Data file " + dataFile.getFile().getAbsolutePath() + " was crushed and now repaired.");
@@ -69,6 +76,8 @@ public class StoreImpl implements Store {
   }
 
   private void openFileForWrite() throws DataSourceException, IOException {
+    this.dataFile = new DataFile(file, false);
+
     if (indexFile.exists()) {// If index exists, remove it
       log.debug("Index file " + indexFile.getAbsolutePath() + " exists but data file opens it edit mode. Index file will be removed.");
       if (!indexFile.delete())
@@ -79,14 +88,21 @@ public class StoreImpl implements Store {
     roIndex = rwIndex;
   }
 
-  public void open() throws DataSourceException {
+  public void open(boolean readOnly) throws DataSourceException {
     try {
-      indexFile = new File(dataFile.getFile().getAbsolutePath() + ".ind");
+      if (this.readOnly && !readOnly)
+        close();
 
-      if (readOnly)
-        openFileForRead();
-      else
-        openFileForWrite();
+      if (!opened) {
+        indexFile = new File(dataFile.getFile().getAbsolutePath() + ".ind");
+        if (readOnly)
+          openFileForRead();
+        else
+          openFileForWrite();
+        opened = true;
+      }
+
+      this.readOnly = readOnly;
 
     } catch (IOException e) {
       throw new DataSourceException(e);
@@ -94,13 +110,17 @@ public class StoreImpl implements Store {
   }
 
   public void close() throws IOException {
-    if (readOnly)
-      ((FileBasedStringsRTree)roIndex).close();
-    else { // store index
-      FileBasedStringsRTree index = FileBasedStringsRTree.createRTree(rwIndex, indexFile.getAbsolutePath(), LongsCollectionSerializer.getInstance());
-      index.close();
+    if (opened) {
+      if (readOnly)
+        ((FileBasedStringsRTree)roIndex).close();
+      else { // store index
+        FileBasedStringsRTree index = FileBasedStringsRTree.createRTree(rwIndex, indexFile.getAbsolutePath(), LongsCollectionSerializer.getInstance());
+        index.close();
+      }
+      dataFile.close();
+      dataFile = null;
+      opened = false;
     }
-    dataFile.close();
   }
 
   public void commit() throws DataSourceException, IOException {
