@@ -26,7 +26,7 @@ public:
     tp(newtp),smeManager(manager)
   {
     log=smsc::logger::Logger::getInstance("smpp.sock");
-
+    useAbortiveClose=true;
   }
   void registerSocket(Socket* sock);
   int removeSocket(Socket* sock);
@@ -52,12 +52,17 @@ public:
     connectLim.Insert(ip,lim);
     info2(log,"Set limit for %s to %d",ip,lim);
   }
+  void setUseAbortiveClose(bool val)
+  {
+    useAbortiveClose=val;
+  }
 protected:
   Array<SmppIOTask*> intasks,outtasks;
   ThreadPool *tp;
   int socketTimeOut;
   int inactivityTime;
   int inactivityTimeOut;
+  bool useAbortiveClose;
   smsc::smeman::SmeManager* smeManager;
   Mutex mtxAdd,mtxRemove;
   smsc::logger::Logger* log;

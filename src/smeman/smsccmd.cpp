@@ -4,14 +4,15 @@
 namespace smsc{
 namespace smeman{
 
+bool SmscCommand::standardErrorCodes=false;
+
 uint32_t SmscCommand::makeSmppStatus(uint32_t status)
 {
-  static bool standardSmppErrors=smsc::util::config::Manager::getInstance().getBool("smpp.standardErrorCodes");
-  if(!standardSmppErrors)
+  if(!standardErrorCodes)
   {
     return status;
   }
-  if(status<255)
+  if(status<=260)
   {
     return status;
   }

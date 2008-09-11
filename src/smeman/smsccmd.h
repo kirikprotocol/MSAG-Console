@@ -1349,32 +1349,8 @@ public:
     return;
   }
 
-  uint32_t makeSmppStatus(uint32_t status)
-  {
-    return status;
-    /*
-    switch(status)
-    {
-    case Status::OK :                return SmppStatusSet::ESME_ROK;
-    case Status::SYSERROR :          return SmppStatusSet::ESME_RSYSERR;
-    case Status::INVSRC:             return SmppStatusSet::ESME_RINVSRCADR;
-    case Status::INVDST:             return SmppStatusSet::ESME_RINVDSTADR;
-    case Status::NOROUTE :           return SmppStatusSet::ESME_RINVDSTADR;
-    case Status::DBERROR :           return SmppStatusSet::ESME_RSYSERR;
-    case Status::INVALIDSCHEDULE :   return SmppStatusSet::ESME_RINVSCHED;
-    case Status::INVALIDVALIDTIME :  return SmppStatusSet::ESME_RINVEXPIRY;
-    case Status::INVALIDDATACODING : return SmppStatusSet::ESME_RINVDCS;
-    case Status::REPLACEFAIL :       return SmppStatusSet::ESME_RREPLACEFAIL;
-    case Status::QUERYFAIL :         return SmppStatusSet::ESME_RQUERYFAIL;
-    case Status::CANCELFAIL:         return SmppStatusSet::ESME_RCANCELFAIL;
-    case Status::INVALIDBINDSTATE:   return SmppStatusSet::ESME_RINVBNDSTS;
-    case Status::INVALIDCMDID:       return SmppStatusSet::ESME_RINVCMDID;
-    case Status::INVALIDMSGID:       return SmppStatusSet::ESME_RINVMSGID;
-
-    default : return SmppStatusSet::ESME_RUNKNOWNERR;
-    }
-    */
-  }
+  static uint32_t makeSmppStatus(uint32_t status);
+  static bool standardErrorCodes;
 
   SmppHeader* makePdu(bool forceDC=false)
   {

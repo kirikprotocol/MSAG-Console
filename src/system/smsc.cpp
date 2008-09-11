@@ -904,6 +904,20 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   ssockman.setInactivityTime(cfg.cfgman->getInt("smpp.inactivityTime"));
   ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
   ssockman.setDefaultConnectionsLimit(cfg.cfgman->getInt("smpp.defaultConnectionsLimit"));
+
+  try
+  {
+    ssockman.setUseAbortiveClose(cfg.cfgman->getBool("smpp.useAbortiveClose"));
+  } catch(...)
+  {
+  }
+
+  try
+  {
+    SmscCommand::standardErrorCodes=cfg.cfgman->getBool("smpp.standardErrorCodes");
+  } catch(...)
+  {
+  }
   {
     using smsc::util::config::CStrSet;
     CStrSet *params=cfg.cfgman->getChildIntParamNames("smpp.connectionsLimitsForIps");

@@ -89,6 +89,8 @@
     <param name="inactivityTimeOut" type="int">600</param>
     <param name="bindTimeout" type="int">10</param>
     <param name="defaultConnectionsLimit" type="int">1000</param>
+    <param name="standardErrorCodes" type="bool">false</param>
+    <param name="useAbortiveClose" type="bool">true</param>
   </section>
   
 

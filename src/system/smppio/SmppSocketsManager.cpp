@@ -102,7 +102,13 @@ int SmppSocketsManager::removeSocket(Socket* sock)
   ptr2addr.erase(it);
 
   info2(log,"deleting socket:%p",sock);
-  sock->Abort();
+  if(useAbortiveClose)
+  {
+    sock->Abort();
+  }else
+  {
+    sock->Close();
+  }
   delete sd;
   delete sock;
   return 0;
