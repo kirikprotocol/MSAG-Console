@@ -46,7 +46,7 @@ scag/scag2           gwmain2        \
   -lscag-transport-smpp-impl \
   -lscag-transport-http-impl \
   \
-  -lscag-pers \
+  -lscag-pers-util \
   \
   -lscag-sessions-base \
   -lscag-lcm-base \
