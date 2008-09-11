@@ -7,24 +7,16 @@
 #include "scag/re/base/LongCallAction2.h"
 #include "scag/re/base/LongCallContext.h"
 
-#include "scag/pers/Property.h"
-#include "scag/pers/PersClient.h"
-#include "scag/pers/Types.h"
+#include "scag/pers/util/Property.h"
+#include "scag/pers/util/PersClient.h"
+#include "scag/pers/util/Types.h"
 
 namespace scag2 { namespace re { namespace actions {
 
-using namespace scag::pers;
-using scag::pers::client::PersClient;
-using scag::pers::client::PersKey;
-using scag::pers::client::PersClientException;
-
-//using namespace scag::re::actions;
-//using namespace scag::re;
-//using namespace scag::pers::client;
+using namespace scag::pers::util;
 
 extern const char* OPTIONAL_KEY;
 extern uint32_t getKey(const CommandProperty& cp, ProfileType pt);
-
 
 class PersCallParams : public LongCallParams{
 public:
@@ -34,7 +26,7 @@ public:
 	uint32_t ikey;
     std::string skey;
     std::string propName;
-	scag::pers::Property prop;
+	scag::pers::util::Property prop;
     uint32_t mod;
     int32_t error;
     uint32_t result;

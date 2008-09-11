@@ -2,15 +2,9 @@
 #define _BATCH_PERS_ACTION_COMMIT_
 
 #include <string>
-
 #include "PersAction2.h"
-//#include "scag/pers/PersClient.h"
 
 namespace scag2 { namespace re { namespace actions {  
-
-//using namespace scag::re::actions;
-//using namespace scag::re;
-//using client::PersCallParams;
 
 class BatchAction : public PersActionBase {
 public:

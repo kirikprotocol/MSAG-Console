@@ -52,17 +52,17 @@ ProfileType PersActionBase::getProfileTypeFromStr(const std::string& str)
 TimePolicy PersActionCommand::getPolicyFromStr(const std::string& str)
 {
     if(!strcmp(str.c_str(), "INFINIT"))
-        return scag::pers::INFINIT;
+        return scag::pers::util::INFINIT;
     else if(!strcmp(str.c_str(), "FIXED"))
-        return scag::pers::FIXED;
+        return scag::pers::util::FIXED;
     else if(!strcmp(str.c_str(), "ACCESS"))
-        return scag::pers::ACCESS;
+        return scag::pers::util::ACCESS;
     else if(!strcmp(str.c_str(), "R_ACCESS"))
-        return scag::pers::R_ACCESS;
+        return scag::pers::util::R_ACCESS;
     else if(!strcmp(str.c_str(), "W_ACCESS"))
-        return scag::pers::W_ACCESS;
+        return scag::pers::util::W_ACCESS;
     else
-        return scag::pers::UNKNOWN;
+        return scag::pers::util::UNKNOWN;
 }
 
 time_t PersActionCommand::parseFinalDate(const std::string& s)
@@ -164,7 +164,7 @@ void PersActionCommand::init(const SectionParams& params, PropertyObject propert
           throw SCAGException("PersAction '%s' : 'mod' parameter not a number. mod=%s", getStrCmd(cmd), sMod.c_str());
   }
 
-  if(!params.Exists("policy") || (policy = getPolicyFromStr(params["policy"])) == scag::pers::UNKNOWN)
+  if(!params.Exists("policy") || (policy = getPolicyFromStr(params["policy"])) == scag::pers::util::UNKNOWN)
       throw SCAGException("PersAction '%s' : missing or unknown 'policy' parameter", getStrCmd(cmd));
 
   if(policy == INFINIT)
@@ -236,7 +236,7 @@ uint32_t getKey(const CommandProperty& cp, ProfileType pt)
     return 0;
 }
 
-static void setPersPropFromREProp(scag::pers::Property& prop, REProperty& rep)
+static void setPersPropFromREProp(scag::pers::util::Property& prop, REProperty& rep)
 {
     namespace reprop = scag::util::properties;
 
@@ -257,7 +257,7 @@ static void setPersPropFromREProp(scag::pers::Property& prop, REProperty& rep)
     }
 }
 
-static void setREPropFromPersProp(REProperty& rep, scag::pers::Property& prop)
+static void setREPropFromPersProp(REProperty& rep, scag::pers::util::Property& prop)
 {
     switch(prop.getType())
     {
@@ -316,7 +316,7 @@ int PersActionCommand::batchResult(ActionContext& context, SerialBuffer& sb, boo
 		{
 			case PC_GET:
 			{
-				scag::pers::Property prop;
+				scag::pers::util::Property prop;
 				pc.GetPropertyResult(prop, sb);
 		        REProperty *rep = context.getProperty(sValue);
 		        setREPropFromPersProp(*rep, prop);
@@ -492,7 +492,7 @@ void PersActionCommand::ContinueRunning(ActionContext& context) {
     msgProp->setStr(params->error == 0 ? "Ok" : params->exception);
   }
   if (params->error != 0) {
-    if(params->error == scag::pers::client::PROPERTY_NOT_FOUND && cmd == PC_GET) {
+    if(params->error == scag::pers::util::PROPERTY_NOT_FOUND && cmd == PC_GET) {
       REProperty *rep = context.getProperty(sValue);
       rep->setStr("");
     }

@@ -2,8 +2,6 @@
 #include "scag/stat/Statistics.h"
 #include "scag/util/properties/Properties.h"
 #include "scag/re/base/CommandAdapter2.h"
-//#include "scag/pers/PersClient.h"
-//#include "scag/pers/Property.h"
 #include "scag/re/base/ActionFactory2.h"
 
 namespace scag2 { namespace re { namespace actions {
@@ -11,7 +9,7 @@ namespace scag2 { namespace re { namespace actions {
 typedef scag::util::properties::Property REProperty;
 
 using namespace scag::stat;
-using scag::pers::client::PersClient;
+using scag::pers::util::PersClient;
 
 const std::string TRANSACTIONAL_MODE = "TRANSACTIONAL";
 const std::string NORMAL_MODE = "NORMAL";
@@ -97,8 +95,8 @@ bool BatchAction::RunBeforePostpone(ActionContext& context)
     PersClient::Instance().PrepareMTBatch(p->sb, profile, pk, static_cast<uint16_t>(actions.size()), transactMode);
     for(int i = 0; i < actions.size(); i++) {
       if (!actions[i]->batchPrepare(profile, context, p->sb)) {
-        p->error = scag::pers::client::BATCH_ERROR;
-        p->exception = scag::pers::client::strs[scag::pers::client::BATCH_ERROR];
+        p->error = scag::pers::util::BATCH_ERROR;
+        p->exception = scag::pers::util::strs[scag::pers::util::BATCH_ERROR];
         setStatus(context, p.get(), p->error, p->exception, i + 1);
       }
     }
@@ -127,7 +125,7 @@ void BatchAction::ContinueRunning(ActionContext& context)
           error_result_idx = i + 1;
         }
       }
-      setStatus(context, p, result, result == 0 ? "Ok" : scag::pers::client::strs[result], error_result_idx);
+      setStatus(context, p, result, result == 0 ? "Ok" : scag::pers::util::strs[result], error_result_idx);
     } catch (const PersClientException& e) {
       setStatus(context, p, e.getType(), e.what(), action_idx);
       smsc_log_debug(logger, "'BatchAction' abort. Error code=%d : %s in action %d", e.getType(), e.what(), action_idx);
