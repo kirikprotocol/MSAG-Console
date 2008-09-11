@@ -1,5 +1,4 @@
-/*  $Id$
-*/
+#ident "@(#)$Id$"
 
 #if !defined __Cpp_Header__smsccmd_h__
 #define __Cpp_Header__smsccmd_h__
