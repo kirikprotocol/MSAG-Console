@@ -508,6 +508,19 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   schedulerSoftLimit=cfg.cfgman->getInt("core.schedulerSoftLimit");
   schedulerHardLimit=cfg.cfgman->getInt("core.schedulerHardLimit");
 
+  try
+  {
+    speedLogFlushPeriod=cfg.cfgman->getInt("core.speedLogFlushPeriodMin");
+    if((60%speedLogFlushPeriod)!=0)
+    {
+      smsc_log_warn(log,"60 isn't multiple of core.speedLogFlushPeriodMin. using default value");
+    }
+    time_t now=time(NULL)/60;
+    nextSpeedLogFlush=now+(speedLogFlushPeriod-(now%speedLogFlushPeriod));
+  } catch(...)
+  {
+  }
+
 
   //smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),0);
   //store=smsc::store::StoreManager::getMessageStore();

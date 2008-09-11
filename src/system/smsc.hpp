@@ -161,6 +161,8 @@ public:
     mainLoopsCount=1;
     mapIOTasksCount=1;
     mapioptr=0;
+    speedLogFlushPeriod=60;
+    nextSpeedLogFlush=0;
     if(instance!=0)
     {
       throw smsc::util::Exception("Attempt to init second smsc instance:%p (previous:%p)",this,instance);
@@ -697,6 +699,8 @@ protected:
   INManComm* inManCom;
 
   bool smartMultipartForward;
+  int speedLogFlushPeriod;
+  time_t nextSpeedLogFlush;
 
   int mainLoopsCount;
   int mapIOTasksCount;

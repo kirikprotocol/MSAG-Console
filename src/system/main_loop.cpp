@@ -138,19 +138,15 @@ void Smsc::mainLoop(int idx)
       if(frame.size()>0)debug2(log,"getFrame time:%lld",gfEnd-gfStart);
       now = time(NULL);
 
-      if(idx==0 && now-lastTimeStatCheck>60)
+      if(idx==0)
       {
-        tm nowtm;
-        localtime_r(&now,&nowtm);
-        if(nowtm.tm_hour!=lastUpdateHour)
+        if(now/60>=nextSpeedLogFlush)
         {
-          lastUpdateHour=nowtm.tm_hour;
           info2(tslog,"maxTotalCounter=%d, maxStatCounter=%d",maxTotalCounter,maxStatCounter);
           maxTotalCounter=0;
           maxStatCounter=0;
+          nextSpeedLogFlush+=speedLogFlushPeriod;
         }
-        lastTimeStatCheck=now;
-        //warn2(log,"sbmcnt=%d",sbmcnt);
       }
 
 
