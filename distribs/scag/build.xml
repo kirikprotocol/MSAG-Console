@@ -65,6 +65,8 @@ Targets:
     <echo message="${MAKE_ARGS}"/>
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="scag"/>
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
+    <copy file="${SMSC_DIR}/src/scag/util/setupnodes.py" todir="${BUILD_DIR}/bin/scag"/>
+    <chmod file="${BUILD_DIR}/bin/scag/setupnodes.py" perm="755"/>
   </target>
 
   <target name="makeweb">
@@ -88,6 +90,7 @@ Targets:
     <mkdir dir="${DISTR_DIR}"/>
     <mkdir dir="${DISTR_DIR}/conf"/>
     <mkdir dir="${DISTR_DIR}/lib"/>
+    <mkdir dir="${DISTR_DIR}/bin"/>
     <mkdir dir="${DISTR_DIR}/daemon"/>
     <mkdir dir="${DISTR_DIR}/daemon/bin"/>
     <mkdir dir="${DISTR_DIR}/services"/>
@@ -161,6 +164,7 @@ Targets:
     <chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/>
     <copy file="${BUILD_BIN}/scag/scag2" todir="${DISTR_DIR}/services/scag2/bin"/>
     <chmod file="${DISTR_DIR}/services/scag2/bin/scag2" perm="755"/>
+    <copy file="${BUILD_BIN}/scag/setupnodes.py" todir="${DISTR_DIR}/bin"/>
     <copy file="${BUILD_BIN}/scag/pers" todir="${DISTR_DIR}/services/pers/bin"/>
     <chmod file="${DISTR_DIR}/services/pers/bin/pers" perm="755"/>
 
