@@ -48,10 +48,11 @@ static bool ReadFile(const char* fn,string& str)
 
 static void trim(char* buf)
 {
+
   size_t st=0,fn=strlen(buf)-1;
-  while(isspace(buf[st]))st++;
-  while(fn>=0 && isspace(buf[fn]))fn--;
-  if(fn==size_t(-1))
+  while(st<fn && isspace(buf[st]))st++;
+  while(fn>0 && isspace(buf[fn]))fn--;
+  if(fn==0 && isspace(buf[fn]))
   {
     buf[0]=0;
     return;
