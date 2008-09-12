@@ -9,6 +9,7 @@
 
     <group name="Actions">
         <choice>
+            <element name="make_persistent" />
             <element name="wait">
                 <complexType>
                     <attribute name="type" type="scag:TransportOperation" use="required"/>

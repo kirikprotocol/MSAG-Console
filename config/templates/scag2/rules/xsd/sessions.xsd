@@ -38,6 +38,7 @@
                     <attribute name="time" type="scag:Value" use="required" />
                 </complexType>
             </element>
+            <element name="destroy_service" />
         </choice>    
     </group>
     
