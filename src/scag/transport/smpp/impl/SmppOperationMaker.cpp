@@ -121,7 +121,8 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
     int8_t ussd_op = 
         sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
         int8_t(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)) : int8_t(-1);
-    // FIXME: fix for ussd_op == 35
+
+    // fix for ussd_op == 35 is already applied in state machine
 
     switch ( cmdid )
     {

@@ -21,7 +21,6 @@ public:
     virtual void readerProcess(HttpContext *cx) = 0;
     virtual void writerProcess(HttpContext* cx) = 0;
     virtual config::HttpManagerConfig& getConfig() = 0;
-    // virtual ScagTaskManager* getScagTaskManager() = 0;
     virtual void getQueueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lcmLen) = 0;
     virtual bool isLicenseExpired() = 0;
 

@@ -123,19 +123,6 @@ public:
     }
 
 
-    /*
-    // FIXME: ugly
-    void preflush() 
-    {
-        key_type k;
-        stored_type* v;
-        hash_.First();
-        while ( hash_.Next(k,v) ) {
-            this->store2ref(*v);
-        }
-    }
-     */
-
 private:
 
 public:

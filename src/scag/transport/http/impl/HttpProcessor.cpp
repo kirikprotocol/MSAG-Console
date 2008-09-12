@@ -319,11 +319,7 @@ bool HttpProcessorImpl::makeLongCall( HttpCommand& cmd, ActiveSession& se )
 {
     LongCallContext& lcmCtx = se->getLongCallContext();
     lcmCtx.stateMachineContext = cmd.getContext();
-    // FIXME: provide initiator
-    lcmCtx.initiator = 0;
-    // lcmCtx.initiator = HttpManager::Instance().getScagTaskManager();
-    // cmd.setSession( se );
-    
+    lcmCtx.initiator = scagmgr_;
     const bool b = LongCallManager::Instance().call(&lcmCtx);
     if (b) se.leaveLocked();
     return b;
@@ -621,6 +617,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         
 void HttpProcessorImpl::init(const std::string& cfg)
 {
+    scagmgr_ = 0;
     logger = Logger::getInstance("httpProc");
     router.init(cfg + "/http_routes.xml");
     ReloadRoutes();

@@ -149,6 +149,8 @@ public:
         Session& getSession() { return *session_; };
 
         // bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
+        bool getDestroyService() const { return destroyService_; }
+        void setDestroyService() { destroyService_ = true; }
 
         /// set the current context scope for property access.
         void setContextScope( int id ) {
@@ -209,6 +211,7 @@ public:
         int                     contextId_;   // current context scope id (0 -- invalid)
         CommandProperty*        commandProperty_;
         std::auto_ptr< bill::infrastruct::TariffRec >  tariffRec_;
+        bool                    destroyService_;
    };
 
 }}}

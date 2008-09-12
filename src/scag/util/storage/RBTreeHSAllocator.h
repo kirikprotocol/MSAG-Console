@@ -215,7 +215,7 @@ public:
 	}
 
 
-    // FIXME: temporary
+    /// a temporary method to check free cells integrity
     virtual std::vector< RBTreeNode* > freenodes()
     {
         // check header integrity

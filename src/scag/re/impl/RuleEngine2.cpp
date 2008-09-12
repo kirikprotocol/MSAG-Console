@@ -241,12 +241,13 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
     key.transport = command.getType();
 
     Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
-    if (rulePtr) {
-        if ( session.isNew( key.serviceId, key.transport ) ) {
-            session.pushInitRuleKey( key.serviceId, key.transport );
+    if ( session.isNew( key.serviceId, key.transport ) ) {
+        session.pushInitRuleKey( key.serviceId, key.transport );
+        if (rulePtr) {
             (*rulePtr)->processSession( session, rs );
             if ( rs.status != STATUS_OK ) return;
         }
+        session.setNew( key.serviceId, key.transport, false );
     }
 
     /*
@@ -262,8 +263,15 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
         return;
     }
      */
-    if ( rulePtr )
-        (*rulePtr)->process( command, session, rs );
+    if ( rulePtr ) (*rulePtr)->process( command, session, rs );
+
+    // check if we need to destroy the service
+    if ( rs.status == STATUS_OK && 
+         session.getLongCallContext().getActionContext()->getDestroyService() ) {
+        if ( rulePtr ) (*rulePtr)->processSession( session, rs );
+        if ( rs.status == STATUS_OK ) 
+            session.dropInitRuleKey(key.serviceId, key.transport);
+    }
     // else 
     // smsc_log_debug(logger,"rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
 }
@@ -292,7 +300,7 @@ void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
         // smsc_log_debug(logger,"session rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
 
         // pop the key
-        session.popInitRuleKey();
+        session.dropInitRuleKey(key.serviceId, key.transport);
 
         // if (session.isNew()) session.setNew( false );
         // throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", 0 ); // session.getRuleKey().serviceId );

@@ -15,6 +15,8 @@ class ActiveSession;
 namespace transport {
 namespace http {
 
+class ScagTaskManager;
+
 class HttpProcessorImpl : public HttpProcessor
 {
 public:
@@ -26,7 +28,10 @@ public:
     virtual int statusResponse(HttpResponse& response, bool delivered=true);
     virtual void ReloadRoutes();
 
-    void init(const std::string& cfg);
+    void init( const std::string& cfg );
+    void setScagTaskManager( ScagTaskManager& mgr ) {
+        scagmgr_ = &mgr;
+    }
 
 protected:
     PlacementKindArray defInPlaces;
@@ -35,6 +40,7 @@ protected:
     smsc::logger::Logger* logger;
     HttpRouterImpl router;
     std::string inURLFields;
+    ScagTaskManager* scagmgr_;
 
     //        bool findPlace(std::string& rs, const PlacementArray& places, HttpRequest& request);
     bool findPlace(const char* wh, std::string& rs, const PlacementArray& places, HttpRequest& request, std::string& url);

@@ -2,7 +2,6 @@
 #define _SCAG_SESSIONS_SESSION2_H
 
 #include <list>
-#include <stack>
 
 // #include "util/stringhash.hpp"
 #include "SessionKey.h"
@@ -120,10 +119,11 @@ public:
     /// NOTE: command should not be printed, as it may be already deleted!
     void print( util::Print& p ) const;
 
-    /// --- get/set persistent flag
-    bool isPersistent() const { return persistent_; }
-    void setPersistent( bool p = true ) { persistent_ = p; }
-
+    // --- check if session needs flushing to disk.
+    // NOTE: this flag may be set from closeCurrentOperation()
+    // when the operation is persistent.
+    bool needsFlush() const { return needsflush_; }
+    // void setPersistent( bool p = true ) { persistent_ = p; }
 
     /// === transaction methods
     /// NOTE: all non-released transactions will be rollbacked at destructor!
@@ -144,10 +144,10 @@ public:
 
     /// === operations methods
     /// NOTE: opid_type(0) denotes invalid operation
-    opid_type getCurrentOperationId() const {
+    inline opid_type getCurrentOperationId() const {
         return currentOperationId_;
     }
-    Operation* getCurrentOperation() const { 
+    inline Operation* getCurrentOperation() const { 
         return currentOperation_;
     }
 
@@ -188,6 +188,9 @@ public:
     /// destroy current operation
     void closeCurrentOperation();
     
+    /// check if the session has at least one persistent operation
+    bool hasPersistentOperation() const;
+
     /// number of operations
     inline unsigned operationsCount() const {
         return operations_.Count();
@@ -214,7 +217,7 @@ public:
     /// push a rule key onto the rulekey stack
     void pushInitRuleKey( int serviceId, int transport );
     bool getRuleKey( int& serviceId, int& transport ) const;
-    void popInitRuleKey();
+    void dropInitRuleKey( int serviceId, int transport );
 
 
     /// --- property Scopes, for use from ActionContext
@@ -320,7 +323,8 @@ private:
     time_t expirationTimeAtLeast_;
 
     /// the flag tells if the session should be flushed (not pers)
-    bool persistent_;
+    /// NOTE: this flag is reset after flush.
+    bool needsflush_;
 
     /// the serial number of the current command being processed,
     /// the session is locked if not 0.
@@ -332,7 +336,7 @@ private:
     /// === fields for init/destroy handlers (not pers?)
     struct TransportNewFlag;
     IntHash< TransportNewFlag >      isnew_;
-    std::stack< std::pair<int,int> > initrulekeys_;
+    std::list< std::pair<int,int> >  initrulekeys_;
 
     /// the list of pending commands (owned, not pers).
     std::list< SCAGCommand* > cmdQueue_;

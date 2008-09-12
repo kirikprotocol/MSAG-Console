@@ -274,7 +274,7 @@ bool Session::isReadOnlyProperty( const char* name )
 Session::Session( const SessionKey& key ) :
 key_(key),
 pkey_(key),
-persistent_(false),
+needsflush_(false),
 command_(0),        // unlocked
 transactions_(0),
 nextContextId_(0),
@@ -352,7 +352,7 @@ void Session::clear()
     expirationTimeAtLeast_ = time(0);
     expirationTime_ = expirationTimeAtLeast_ + defaultLiveTime(); // FIXME: customize
 
-    persistent_ = false;
+    needsflush_ = false;
     
     // session unlocking should be done externally
     // command_ = 0;
@@ -361,7 +361,7 @@ void Session::clear()
     if ( ! initrulekeys_.empty() ) {
         smsc_log_error( log_, "rule keys stack is not empty, finalization failed?" );
     }
-    initrulekeys_ = std::stack< std::pair<int,int> >();
+    initrulekeys_.clear();
 
     { // clear operations
 
@@ -416,13 +416,12 @@ void Session::print( util::Print& p ) const
 
     const time_t now = time(0);
     // const int lastac = int(now - lastAccessTime_);
-    p.print( "session=%p key=%s expire=%d/%d ops=%d trans=%d pers=%d lockCmd=%u umr=%d%s",
+    p.print( "session=%p key=%s expire=%d/%d ops=%d trans=%d lockCmd=%u umr=%d%s",
              this, sessionKey().toString().c_str(),
              int(expirationTime_ - now),
              int(expirationTimeAtLeast_ - now),
              operationsCount(),
              transactions_ ? transactions_->GetCount() : 0,
-             isPersistent() ? 1 : 0,
              command_,
              umr_,
              ussdOperationId_ == SCAGCommand::invalidOpId() ? "" : " hasUssd" );
@@ -569,6 +568,17 @@ void Session::closeCurrentOperation()
     const opid_type  prevopid = currentOperationId_;
     const uint8_t    prevoptype = currentOperation_->type();
     
+    if ( prevop->flagSet( OperationFlags::PERSISTENT ) )
+        needsflush_ = true;
+
+    if ( operationScopes_ ) {
+        SessionPropertyScope** sptr = operationScopes_->GetPtr(prevopid);
+        if ( sptr ) {
+            delete sptr;
+            *sptr = 0;
+        }
+    }
+
     operations_.Delete( currentOperationId_ );
     delete currentOperation_;
     currentOperation_ = 0;
@@ -602,6 +612,22 @@ void Session::closeCurrentOperation()
 }
 
 
+
+bool Session::hasPersistentOperation() const
+{
+    int opid;
+    Operation* op;
+    for ( IntHash< Operation* >::Iterator i(operations_);
+          i.Next(opid,op);
+          ) {
+        if ( op->flagSet( OperationFlags::PERSISTENT ) )
+            return true;
+    }
+    return false;
+}
+
+
+
 void Session::setUSSDref( int32_t ref ) throw (SCAGException)
 {
     if ( ref <= 0 ) throw SCAGException( "setUSSDref(ref=%d), ref should be >0", ref );
@@ -621,36 +647,50 @@ bool Session::isNew( int serv, int trans ) const {
 
 void Session::setNew( int serv, int trans, bool an ) {
     TransportNewFlag* f = isnew_.GetPtr( serv );
-    if ( !f ) {
+    if ( f ) {
+        f->setNew( trans, an );
+    } else if ( !an ) {
         TransportNewFlag ff;
         ff.setNew( trans, an );
         isnew_.Insert(serv,ff);
-    } else {
-        f->setNew( trans, an );
-    }
+    } // else already is new
 }
 
 
 void Session::pushInitRuleKey( int serv, int trans )
 {
     std::pair<int,int> st(serv,trans);
-    if ( ! initrulekeys_.empty() && st == initrulekeys_.top() ) return;
-    initrulekeys_.push( st );
+    if ( ! initrulekeys_.empty() && st == initrulekeys_.front() ) return;
+    initrulekeys_.push_front( st );
 }
 
 bool Session::getRuleKey( int& serv, int& trans ) const
 {
     if ( initrulekeys_.empty() ) return false;
-    const std::pair<int,int>& st = initrulekeys_.top();
+    const std::pair<int,int>& st = initrulekeys_.front();
     serv = st.first;
     trans = st.second;
     return true;
 }
 
 
-void Session::popInitRuleKey()
+void Session::dropInitRuleKey( int serviceId, int transport )
 {
-    if ( ! initrulekeys_.empty() ) initrulekeys_.pop();
+    if ( ! initrulekeys_.empty() ) {
+        const std::pair<int,int> st(serviceId,transport);
+        for ( std::list< std::pair<int,int> >::iterator i = initrulekeys_.begin();
+              i != initrulekeys_.end();
+              ++i ) {
+            if ( *i == st ) {
+                initrulekeys_.erase( i );
+                setNew( serviceId, transport, true );
+                break;
+            }
+        }
+        // FIXME: check the number of items
+        // and lower expiration time
+
+    }
 }
 
 
@@ -734,6 +774,9 @@ SessionPropertyScope* Session::getOperationScope()
         operationScopes_->Insert( getCurrentOperationId(), res );
     } else {
         res = *sptr;
+        if ( ! res ) {
+            res = *sptr = new SessionPropertyScopeWrapper( this, readonlyOperationScopeSet );
+        }
     }
     return res;
 }
@@ -782,61 +825,60 @@ void Session::abort()
  */
 
 
-    void Session::serializeScope( Serializer& o, const SessionPropertyScope* s ) const
-    {
-        const uint32_t sz = s ? s->size() : 0;
-        if (!sz) {
-            o << sz;
-            return;
-        }
-        s->serialize( o );
-    }
-
-
-    void Session::deserializeScope( Deserializer& o, SessionPropertyScope*& s ) throw (DeserializerException)
-    {
-        const size_t rpos = o.rpos();
-        uint32_t sz;
-        o >> sz;
-        if ( s ) s->clear();
-        if ( !sz ) return;
-        o.setrpos( rpos );
-        if ( !s ) s = new SessionPropertyScope( this );
-        s->deserialize( o );
-    }
-
-
-    void Session::serializeScopeHash( Serializer& o, const IntHash< SessionPropertyScope* >* s ) const
-    {
-        uint32_t sz = s ? s->Count() : 0;
+void Session::serializeScope( Serializer& o, const SessionPropertyScope* s ) const
+{
+    const uint32_t sz = s ? s->size() : 0;
+    if (!sz) {
         o << sz;
-        if ( !sz ) return;
-        int key;
+        return;
+    }
+    s->serialize( o );
+}
+
+
+void Session::deserializeScope( Deserializer& o, SessionPropertyScope*& s ) throw (DeserializerException)
+{
+    const size_t rpos = o.rpos();
+    uint32_t sz;
+    o >> sz;
+    if ( s ) s->clear();
+    if ( !sz ) return;
+    o.setrpos( rpos );
+    if ( !s ) s = new SessionPropertyScope( this );
+    s->deserialize( o );
+}
+
+
+void Session::serializeScopeHash( Serializer& o, const IntHash< SessionPropertyScope* >* s ) const
+{
+    uint32_t sz = s ? s->Count() : 0;
+    o << sz;
+    if ( !sz ) return;
+    int key;
+    SessionPropertyScope* value;
+    for ( IntHash< SessionPropertyScope* >::Iterator i(*s); i.Next(key,value); --sz ) {
+        o << uint32_t(key);
+        serializeScope(o,value);
+    }
+    assert( sz == 0 );
+}
+
+
+void Session::deserializeScopeHash( Deserializer& o, IntHash< SessionPropertyScope* >*& s ) throw (DeserializerException)
+{
+    uint32_t sz;
+    o >> sz;
+    clearScopeHash( s );
+    if ( !sz ) return;
+    if ( !s ) s = new IntHash< SessionPropertyScope* >;
+    for ( ; sz > 0; --sz ) {
+        uint32_t key;
         SessionPropertyScope* value;
-        for ( IntHash< SessionPropertyScope* >::Iterator i(*s); i.Next(key,value); --sz ) {
-            o << uint32_t(key);
-            serializeScope(o,value);
-        }
-        assert( sz == 0 );
+        o >> key;
+        deserializeScope(o,value);
+        if ( value ) s->Insert( int(key), value );
     }
-
-
-    void Session::deserializeScopeHash( Deserializer& o, IntHash< SessionPropertyScope* >*& s ) throw (DeserializerException)
-    {
-        uint32_t sz;
-        o >> sz;
-        clearScopeHash( s );
-        if ( !sz ) return;
-        if ( !s ) s = new IntHash< SessionPropertyScope* >;
-        for ( ; sz > 0; --sz ) {
-            uint32_t key;
-            SessionPropertyScope* value;
-            o >> key;
-            deserializeScope(o,value);
-            if ( value ) s->Insert( int(key), value );
-        }
-    }
-
+}
 
 
 void Session::clearScopeHash( IntHash< SessionPropertyScope* >* s )
@@ -860,7 +902,7 @@ opid_type Session::getNewOperationId() const
 }
 
 
-    // ======================================
+// ======================================
 
 
 ActiveSession::ActiveSession( SessionStore& st, Session& s ) :

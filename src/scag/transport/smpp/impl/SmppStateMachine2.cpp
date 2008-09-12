@@ -285,12 +285,6 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
     uint32_t failed = 0;
     SMS& sms = *cmd->get_sms();
 
-  /*
-   FIXME: release session externally
-  if(cmd.hasSession())
-    cmd.setSession(SessionPtr(NULL)); // cmd can lay in out queue quite long time, so let's free session right now.
-   */
-
     try{
         if ( cmdName == 0 ) {
             smsc_log_info(log_,"wrong command type in putCommand: %d", int(cmdType) );

@@ -26,6 +26,7 @@ const uint32_t RECEIVED_ALL_PARTS            = 2;
 const uint32_t RECEIVED_ALL_RESPS            = 4;
 const uint32_t RECEIVED_ALL                  = RECEIVED_ALL_PARTS | RECEIVED_ALL_RESPS;
 const uint32_t WAIT_RECEIPT                  = 0x10;
+const uint32_t PERSISTENT                    = 0x20;
 }
 
 

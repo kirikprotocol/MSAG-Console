@@ -98,7 +98,8 @@ void Rule::processSession( Session& session, RuleStatus& rs )
         if (rs.status == STATUS_OK) {
 
             session.getLongCallContext().continueExec = false;
-            if (session.isNew(servid,transport)) session.setNew(servid,transport,false);
+            // setNew is done in RuleEngine
+            // if (session.isNew(servid,transport)) session.setNew(servid,transport,false);
 
         }
 

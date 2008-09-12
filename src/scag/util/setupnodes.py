@@ -258,7 +258,7 @@ def setupnodes( opts ) :
                 pass
 
             locs.append(v)
-            # FIXME: a check for cross-msag locs
+            # a check for cross-msag locs
             crossmsag = alllocs.get(v,len(cfgs))
             if crossmsag not in (-1, len(cfgs)) :
                 print >> sys.stderr, "WARNING: location %s belongs to MSAG #%s and #%s" % (v,alllocs[v],len(cfgs))

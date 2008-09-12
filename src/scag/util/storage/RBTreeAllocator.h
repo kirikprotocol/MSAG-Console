@@ -36,7 +36,10 @@ public:
 	virtual long getSize(void) const = 0;
 	virtual long getOffset(void) const = 0;
 
-    // FIXME: temporary
+    // a temporary method (for debugging)
+    // return the list of the free nodes and check their integrity:
+    // address correctness, uniqueness, freecell count, etc.
+    // NOTE: it may be quite resources consuming.
     virtual std::vector< RBTreeNode* > freenodes() = 0;
 
 	//virtual void resetChanges(void) = 0;

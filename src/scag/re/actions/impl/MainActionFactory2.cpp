@@ -9,7 +9,9 @@
 #include "ActionSend2.h"
 // #include "ActionAbort2.h"
 #include "ActionSessionContextScope.h"
+#include "ActionSessionDestroyService.h"
 #include "ActionSessionWait.h"
+#include "ActionOperationMakePersistent.h"
 #include "ActionCloseUssdDialog2.h"
 #include "ActionReceipt2.h"
 #include "ActionRedirect2.h"
@@ -87,6 +89,8 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             // return new ActionAbort();
             if (name=="session:wait")
                 return new ActionSessionWait();
+            if (name=="session:destroy_service")
+                return new ActionSessionDestroyService();
             if (name == "session:new_context") 
                 return new ActionSessionContextScope(ActionSessionContextScope::NEW);
             if (name == "session:set_context") 
@@ -132,6 +136,10 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
         }
 
 
+        if ( name == "operation:make_persistent" ) {
+            return new ActionOperationMakePersistent();
+        }
+
         // if ( name == "longcalltest" ) return new LongCallTestAction();
 
         if ( 0 == strncmp(name.c_str(), "bill:", 5 ) ) {
@@ -147,6 +155,7 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
           if (name=="profile:inc") return new PersAction(PC_INC);
           if (name=="profile:inc-mod") return new PersAction(PC_INC_MOD);
           if (name=="profile:batch") return new BatchAction();
+            break;
         }
         if ( 0 == strncmp(name.c_str(), "batch:", 6 ) ) {
           if (name=="batch:set") return new PersActionCommand(PC_SET);
@@ -154,7 +163,9 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
           if (name=="batch:del") return new PersActionCommand(PC_DEL);
           if (name=="batch:inc") return new PersActionCommand(PC_INC);
           if (name=="batch:inc-mod") return new PersActionCommand(PC_INC_MOD);
+            break;
         }
+
 
 
     // FIXME: impl

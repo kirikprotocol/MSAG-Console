@@ -56,6 +56,7 @@ bool EventHandler::FinishXMLSubSection(const std::string& name)
     return true;
 }
 
+
 void EventHandler::RunActions(ActionContext& context)
 {
     context.getRuleStatus().status = STATUS_OK;
@@ -67,6 +68,7 @@ void EventHandler::RunActions(ActionContext& context)
 
     RunActionVector(context, longCallContext, actions, logger);
 }
+
 
 void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, const SessionPrimaryKey& sessionPrimaryKey, const std::string& messageBody)
 {

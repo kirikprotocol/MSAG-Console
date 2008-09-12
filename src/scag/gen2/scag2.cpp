@@ -43,15 +43,6 @@ public:
         if ( ! cmd ) return unsigned(-1);
         switch ( cmd->getType() ) {
         case SMPP: {
-            /*
-            // FIXME: use smppmanager.lcmprocessingcount to make sure command is processed before shutdown
-            if ( action == RESERVE ) {
-                c.release();
-                return 1;
-            }
-
-            SmppManager::Instance().pushCommand( static_cast<SmppCommand*>(c.release()) );
-             */
             return SmppManager::Instance().pushSessionCommand
                 ( static_cast<SmppCommand*>(cmd), action );
         }

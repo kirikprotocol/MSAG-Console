@@ -3,6 +3,7 @@
 #include "scag/transport/http/base/HttpContext.h"
 #include "IOTasks.h"
 #include "ScagTask.h"
+#include "HttpProcessor.h"
 
 namespace scag2 {
 namespace transport {
@@ -13,6 +14,7 @@ config::ConfigListener(config::HTTPMAN_CFG),
 scags(*this),
 readers(*this),
 writers(*this),
+processor_(0),
 licenseCounter(10, 20),
 licenseFileCheckHour(0),
 licenseExpired(false),
@@ -25,12 +27,14 @@ acceptor(*this)
 void HttpManagerImpl::configChanged()
 {
     shutdown();
-    init(HttpProcessor::Instance(), config::ConfigManager::Instance().getHttpManConfig());
+    init( *processor_, config::ConfigManager::Instance().getHttpManConfig() );
 }
 
-void HttpManagerImpl::init(HttpProcessor& p, const config::HttpManagerConfig& conf)
+void HttpManagerImpl::init(HttpProcessorImpl& p, const config::HttpManagerConfig& conf)
 {
     this->cfg = conf;
+    processor_ = &p;
+    p.setScagTaskManager( scags );
 
     readers.init(cfg.readerPoolSize, cfg.readerSockets, "scag.http.reader");
     writers.init(cfg.writerPoolSize, cfg.writerSockets, "scag.http.writer");

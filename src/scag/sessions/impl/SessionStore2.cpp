@@ -1,6 +1,7 @@
 #include <memory>
 
 #include "scag/sessions/base/Session2.h"
+#include "scag/sessions/base/Operation.h"
 #include "SessionStore2.h"
 #include "scag/sessions/base/SessionFinalizer.h"
 #include "scag/sessions/base/SessionExpirationQueue.h"
@@ -212,11 +213,13 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             }
         }
 
+        // NOTE: session may be flushed out to disk, that's why
+        // we check if it is not found after upload from disk.
         // object not found in cache
-        if ( !create ) {
-            what = " is not found";
-            break;
-        }
+        // if ( !create ) {
+        // what = " is not found";
+        // break;
+        // }
 
         // create a stub to be filled by disk io
         cache_->set( key, cache_->val2store( allocator_->alloc(key) ));
@@ -236,7 +239,21 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     // commands are owned elsewhere
     // delete prev;
 
-    if (v && diskio_) disk_->get( key, cache_->store2ref(*v) );
+    if (v && diskio_) {
+
+        if ( ! disk_->get( key, cache_->store2ref(*v) ) && ! create ) {
+            // failure to upload from disk and creation flag is not set
+            {
+                MutexGuard mg(cacheLock_);
+                session = cache_->release( key );
+                --totalSessions_;
+                --lockedSessions_;
+            }
+            delete session;
+            session = 0;
+            what = " is not found";
+        }
+    }
 
     // smsc_log_debug( log_, "fetched key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
     smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p%s",
@@ -278,6 +295,18 @@ void SessionStoreImpl::releaseSession( Session& session )
     uint32_t prevuid;
     unsigned tot;
     unsigned lck;
+    
+    bool needflush = false;
+    bool ispersist = false;
+    if ( diskio_ ) {
+        ispersist = session.getCurrentOperation() &&
+            session.getCurrentOperation()->flagSet( OperationFlags::PERSISTENT );
+        if ( session.needsFlush() || ispersist ) {
+            needflush = true;
+            if ( !ispersist) ispersist = session.hasPersistentOperation();
+        }
+    }
+
     {
         MemStorage::stored_type* v;
         MutexGuard mg(cacheLock_);
@@ -290,15 +319,12 @@ void SessionStoreImpl::releaseSession( Session& session )
             // throw std::runtime_error("SessionStore: logic error in releaseSession" );
         }
 
-        // FIXME: think for optimization of not-flushing each time a session is released?
-        if ( diskio_ ) {
-
-            if ( session.isPersistent() ) {
-                UnlockMutexGuard ug(cacheLock_);
+        if ( needflush ) {
+            UnlockMutexGuard ug(cacheLock_);
+            if ( ispersist ) {
                 disk_->set( key, cache_->store2ref(*v) );
                 smsc_log_debug(log_, "flushed key=%s session=%p", key.toString().c_str(), &session );
             } else {
-                UnlockMutexGuard ug(cacheLock_);
                 disk_->remove( key );
                 smsc_log_debug(log_, "removed key=%s session=%p", key.toString().c_str(), &session );
             }

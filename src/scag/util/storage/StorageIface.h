@@ -361,7 +361,6 @@ private:
     bool do_set( const key_type& k ) {
         index_type i = index_->getIndex( k );
         if ( i != data_->invalidIndex() ) {
-            // FIXME: implement partial template fix when I'll be smart enough
             return details::IndexedStorageUpdater< Self, DStorage::updatable >::update( *this, k, i );
         } else {
             i = data_->append(); // from internal buffer
@@ -370,29 +369,6 @@ private:
         return false;
     }
 
-
-    /*
-    inline bool do_update_false( const key_type& k, index_type i ) {
-        index_type j = data_->append();
-        if ( j ) {
-            index_->setIndex(k,j);
-        } else {
-            index_->removeIndex(k);
-        }
-        data_->remove(i);
-        return bool(j);
-    }
-
-    inline bool do_update_true( const key_type& k, index_type i ) {
-        index_type j = data_->update(i);
-        if ( j ) {
-            index_->setIndex(k,j);
-        } else {
-            index_->removeIndex(k);
-        }
-        return bool(j);
-    }
-     */
 
 private:
     mutable LockType   lock_;

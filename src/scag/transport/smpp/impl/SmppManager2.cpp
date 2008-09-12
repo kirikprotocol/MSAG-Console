@@ -1087,10 +1087,9 @@ unsigned SmppManagerImpl::pushSessionCommand( SmppCommand* cmd, int action )
     if ( action == SCAGCommandQueue::RESERVE ) {
         ++lcmProcessingCount;
         smsc_log_debug( log, "reserve place for a cmd=%p: respQsz=%u, Qsz=%u, lcmCount=%u", cmd, respQueue.Count(), queue.Count(), lcmProcessingCount );
+        // FIXME: should we return -1 when stopped ?
         return lcmProcessingCount;
     }
-
-    // FIXME: should we return -1 when stopped ?
 
     if ( action == SCAGCommandQueue::PUSH ) {
         smsc_log_error( log, "SmppManager::pushSessionCommand is intended for session queue commands, so RESERVE/MOVE should be used");

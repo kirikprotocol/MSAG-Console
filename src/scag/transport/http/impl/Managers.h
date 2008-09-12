@@ -31,6 +31,7 @@ class IOTask;
 class ScagTask;
 class HttpContext;
 class HttpProcessor;
+class HttpProcessorImpl;
 class HttpManager;
 class HttpManagerImpl;
 
@@ -212,7 +213,7 @@ public:
     HttpManagerImpl();
     ~HttpManagerImpl() {};
 
-    void init(HttpProcessor& p, const config::HttpManagerConfig& cfg);
+    void init( HttpProcessorImpl& p, const config::HttpManagerConfig& cfg );
     void configChanged();
 
     void shutdown();
@@ -220,7 +221,7 @@ public:
     void readerProcess(HttpContext* cx) { readers.process(cx); };
     void writerProcess(HttpContext* cx) { writers.process(cx); };
     config::HttpManagerConfig& getConfig() { return cfg; };
-    ScagTaskManager* getScagTaskManager() { return &scags; };
+    // ScagTaskManager* getScagTaskManager() { return &scags; };
 
     void getQueueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lcmLen) { scags.queueLen(reqLen, respLen, lcmLen); };
 
@@ -233,6 +234,7 @@ public:
     ScagTaskManager scags;
     ReaderTaskManager readers;    
     WriterTaskManager writers;
+    HttpProcessorImpl* processor_; // not owned
 
     smsc::util::TimeSlotCounter<> licenseCounter;
     time_t lastLicenseExpTest;
