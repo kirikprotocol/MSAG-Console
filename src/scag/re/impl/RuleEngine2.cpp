@@ -267,6 +267,7 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
 
     // check if we need to destroy the service
     if ( rs.status == STATUS_OK && 
+         session.getLongCallContext().getActionContext() &&
          session.getLongCallContext().getActionContext()->getDestroyService() ) {
         if ( rulePtr ) (*rulePtr)->processSession( session, rs );
         if ( rs.status == STATUS_OK ) 
