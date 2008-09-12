@@ -15,7 +15,7 @@ scag/scag            gwmain         $(XERCES_LIB) -lscag-util -lscag \
    -lscag-stat -lscag-util-storage -lscag-config -lscag-config-smpp \
    -lscag-config-sessn -lscag-util-properties -lscag-util-singleton \
    -L$(SMSC_BUILDDIR)/bin  -llicense-check -lutil-templates \
-   -linman-interaction-msgbill -linman-interaction -linman-common \
+   $(MSAG_INMAN_LIBS) \
    -lsystem-common -lsystem-smppio -lcore-threads -lutil-config -lutil \
    -lrt -ldl  -lscag-re -lscag-re-actions -lscag-re-actions-str \
    -lscag-re-actions-misc -lscag-re-actions-sess -lscag-re-actions-bill \
@@ -29,7 +29,7 @@ scag/scag            gwmain         $(XERCES_LIB) -lscag-util -lscag \
    -lscag-config-base \
    -lscag-util-encodings -lutil-recoder-recode_dll -lutil-regexp -lscag-exc \
    -lsms $(SOCKETLIB) -lcore-network -lnsl  $(XERCES_LIB) -lscag @liblogger.so \
-   -L$(SMSC_BUILDDIR)/bin -llogger -linman-interaction -linman-common \
+   -L$(SMSC_BUILDDIR)/bin -llogger \
    -lutil-URCdb -lutil $(SSL_LIB)
 
 scag/scag2           gwmain2        \
@@ -72,9 +72,7 @@ scag/scag2           gwmain2        \
   -lscag-util-encodings \
   -lscag-exc \
   \
-  -linman-interaction-msgbill \
-  -linman-interaction \
-  -linman-common \
+  $(MSAG_INMAN_LIBS) \
   \
   -llicense-check \
   -lrouter -ladmin-protocol -ladmin-service \

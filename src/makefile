@@ -118,6 +118,10 @@ endif
 export SS7_LIBRARY_NAME
 
 CAMMON_INCLUDES := -I$(SMSC_SRCDIR)
+ifeq ($(USEHOME),YES)
+CAMMON_INCLUDES := $(CAMMON_INCLUDES) -I$(HOME)/include
+endif
+
 ifeq ($(SFW),YES)
 CAMMON_INCLUDES := $(CAMMON_INCLUDES) -I/usr/sfw/include -I/usr/local/include
 else
@@ -137,6 +141,10 @@ LDFLAGS := $(XTARGET) -L$(SMSC_BUILDDIR)/lib -L$(USRLOCLIB) -L$(SSL_LIB_DIR) -L$
 else
 LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L$(USRLOCLIB) -L$(SSL_LIB_DIR)
 CXXFLAGS := $(CXXFLAGS) -fPIC
+endif
+
+ifeq ($(USEHOME),YES)
+LDFLAGS := $(LDFLAGS) -L$(HOME)/lib
 endif
 
 ifneq ($(TRACE),YES)
@@ -227,6 +235,7 @@ ifeq ($(MSAG_INMAN_BILL),YES)
 CFLAGS := $(CFLAGS) -DMSAG_INMAN_BILL
 CXXFLAGS := $(CXXFLAGS) -DMSAG_INMAN_BILL
 export MSAG_INMAN_BILL
+MSAG_INMAN_LIBS := -linman-interaction-msgbill -linman-interaction -linman-common
 endif
 
 ifdef ASSERT
@@ -248,6 +257,10 @@ CFLAGS := $(CFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I
 ifneq ("$(NOMAP)","YES")
 MAP_LIBRARIES := -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lsystem-mapio
 CXXFLAGS := $(CXXFLAGS) -DUSE_MAP
+endif
+
+ifneq ($(CXX),CC)
+CXXFLAGS := $(CXXFLAGS) -DTEMPINST
 endif
 
 export CXXFLAGS
