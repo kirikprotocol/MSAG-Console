@@ -172,6 +172,13 @@ B3010:
     SMSC	distrlist copy&rename sms&admin commands for SMSExtra
     SMSC	distrlist for sme fix unknown resource now key instead of empty string 
     SMSC	support for multiple crash/restart/crash during restart, merge all SMS stores on scheduler initialization
+    SMSC	smpp.standardErrorCodes - enables mapping between internal errors to SMPP standard scheme 
+                now only 1025 and 1044 mapped to inv dest addr and msg queue full
+    SMSC	smpp.useAbortiveClose forces abortive close on smpp sockets
+    SMSC	configurable flush period for speed.log
+    SMSC	SMSX - multipart sms fix for checking extra prefixes only in first part
+    SMSC	support for accepting orig and dest descriptors from SME's
+    SMSC	fix for licensing limit for USSD 
     MCAhdb	Missed calls history database module first version developed
     Archiver	Query socket error handling fix
     Webadm	Add support for runtime add SME to single mode installation smsc_daemon
