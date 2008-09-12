@@ -49,7 +49,7 @@ void ActionSessionWait::init( const SectionParams& params,
             if ( nelts != int(3-i) ) continue;
 
             wait_ = 0;
-            for ( unsigned j = 0; j <= i; ++j ) {
+            for ( unsigned j = 0; j < 3-i; ++j ) {
                 wait_ = wait_*60 + elts[j];
             }
             break;
@@ -87,8 +87,9 @@ bool ActionSessionWait::run( ActionContext& context )
     }
 
     context.getSession().waitAtLeast( tmo );
+    smsc_log_debug( logger, "Action 'session:wait': tmo=%u", tmo );
+    // FIXME: remove this heavy debugging
     scag_plog_debug(pl,logger);
-    smsc_log_debug( logger, "Action 'session:wait': tmo=..." );
     context.getSession().print( pl );
     return true;
 }
