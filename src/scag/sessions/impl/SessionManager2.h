@@ -60,14 +60,17 @@ private:
     };
      */
 
-    typedef std::multimap< time_t, Session* >   ExpireMap;
-    typedef XHash< Session*, time_t >           ExpireHash;
+    typedef std::multimap< time_t, SessionKey >      ExpireMap;
+    typedef XHash< SessionKey, time_t, SessionKey >  ExpireHash;
 
 public:
 
     // only one instance may be created!
     SessionManagerImpl();
     virtual ~SessionManagerImpl();
+
+    /// a number of sessions to initiate flushing to disk
+    size_t flushSizeLimit() const;
 
     // void AddRestoredSession(Session * session);
 
@@ -91,7 +94,7 @@ public:
 
     /// --- interface of SessionExpirationQueue
     virtual void scheduleExpire( time_t            expirationTime,
-                                 const SessionKey& key );
+                                 Session&          session );
 
     /// --- interface of SessionFinalizer
     virtual bool finalize( Session& s );
@@ -121,6 +124,7 @@ private:
     // uint16_t getLastUSR(Address& address);
 
     // void reorderExpireQueue(Session* session);
+    void eraseExpire( time_t expire, const SessionKey& key );
 
 private:
     unsigned          nodeNumber_;

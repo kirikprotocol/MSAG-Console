@@ -351,7 +351,7 @@ void SessionStoreImpl::releaseSession( Session& session )
                     &session, key.toString().c_str(), prevuid, nextuid, tot, lck );
 
     if ( ! carryNextCommand(session,nextcmd,true) )
-        expiration_->scheduleExpire(expiration,key);
+        expiration_->scheduleExpire(expiration,session);
 
 }
 
@@ -402,15 +402,16 @@ unsigned SessionStoreImpl::storedCommands() const
 
 
 bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
-                                       size_t expiredCount )
+                                       const std::vector< SessionKey >& flush )
 {
-    if ( expired.size() == 0 ) return true;
+    assert( expired.size() > 0 || flush.size() > 0 );
 
-    smsc_log_debug( log_, "%u sessions to be expired", expired.size() );
+    smsc_log_debug( log_, "%u/%u sessions to be expired/flushed", expired.size(), flush.size() );
 
     time_t now = time(0);
     Session* session = 0;
     std::vector< SessionKey >::const_iterator i = expired.begin();
+    std::vector< SessionKey >::const_iterator j = flush.begin();
     unsigned longcall = 0;
     unsigned notexpired = 0;
 
@@ -450,11 +451,19 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
 
         // take the next session in the list
 
-        if ( i == expired.end() ) break;
-
-        const SessionKey& key = *i;
-        ++i;
-        keep = ( std::distance(expired.begin(),i) > expiredCount );
+        std::vector< SessionKey >::const_iterator ij;
+        if ( i != expired.end() ) {
+            ij = i;
+            ++i;
+        } else if ( j != flush.end() ) {
+            ij = j;
+            ++j;
+            keep = true;
+        } else {
+            break;
+        }
+        const SessionKey& key = *ij;
+        // keep = ( std::distance(expired.begin(),i) > expiredCount );
 
         MemStorage::stored_type* v = cache_->get( key );
         if ( v ) {
@@ -509,7 +518,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
                 ++lockedSessions_;
                 setCommandSession( *nextcmd, session );
                 session->setCurrentCommand( nextcmd->getSerial() );
-                if ( carryNextCommand(session,nextcmd,false) ) {
+                if ( carryNextCommand(*session,nextcmd,false) ) {
                     // activity
                     ++notexpired;
                     session = 0;

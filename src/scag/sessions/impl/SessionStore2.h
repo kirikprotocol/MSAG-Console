@@ -73,7 +73,7 @@ public:
     unsigned storedCommands() const;
 
     bool expireSessions( const std::vector< SessionKey >& expired,
-                         unsigned expiredCount );
+                         const std::vector< SessionKey >& flush );
 
     void sessionFinalized( Session& s );
 

@@ -1,4 +1,5 @@
 #include <map>
+#include <set>
 #include "CompositeSessionStore.h"
 
 namespace scag2 {
@@ -90,27 +91,44 @@ unsigned CompositeSessionStore::storedCommands() const
 }
 
 
-bool CompositeSessionStore::expireSessions( const std::vector< SessionKey >& expired )
+bool CompositeSessionStore::expireSessions( const std::vector< SessionKey >& expired,
+                                            const std::vector< SessionKey >& flush )
 {
-    std::map< unsigned, std::vector< SessionKey > > dispatch;
+    typedef std::set< unsigned > keys_type;
+    typedef std::map< unsigned, std::vector< SessionKey > > dispatch_type;
+    keys_type keys;
+    dispatch_type edispatch;
+    dispatch_type fdispatch;
     const StorageNumbering& n = StorageNumbering::instance();
     for ( std::vector< SessionKey >::const_iterator i = expired.begin();
           i != expired.end();
           ++i ) {
         const unsigned k = n.storage( i->toIndex() );
-        dispatch[k].push_back( *i );
+        keys.insert(k);
+        edispatch[k].push_back( *i );
     }
-
+    for ( std::vector< SessionKey >::const_iterator i = flush.begin();
+          i != flush.end();
+          ++i ) {
+        const unsigned k = n.storage( i->toIndex() );
+        keys.insert(k);
+        fdispatch[k].push_back( *i );
+    }
     bool res = true;
-    for ( std::map< unsigned, std::vector< SessionKey > >::const_iterator i = dispatch.begin();
-          i != dispatch.end();
+    const std::vector< SessionKey > null;
+    for ( keys_type::const_iterator i = keys.begin();
+          i != keys.end();
           ++i ) {
 
-        if ( ! storages_[i->first] ) {
-            smsc_log_error( log_, "cannot find storage #%u", i->first );
-            throw SCAGException( "sess.man: cannot find storage #%u", i->first );
+        if ( ! storages_[*i] ) {
+            smsc_log_error( log_, "cannot find storage #%u", *i );
+            throw SCAGException( "sess.man: cannot find storage #%u", *i );
         }
-        if ( !storages_[i->first]->expireSessions( i->second ) ) res = false;
+        dispatch_type::const_iterator ei = edispatch.find(*i);
+        dispatch_type::const_iterator fi = fdispatch.find(*i);
+        if ( !storages_[*i]->expireSessions
+             ( ei == edispatch.end() ? null : ei->second,
+               fi == fdispatch.end() ? null : fi->second ) ) res = false;
     }
     return res;
 }

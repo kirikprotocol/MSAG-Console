@@ -4,14 +4,14 @@
 namespace scag2 {
 namespace sessions {
 
-    class SessionKey;
+    class Session;
 
     class SessionExpirationQueue 
     {
     public:
         virtual ~SessionExpirationQueue() {}
         virtual void scheduleExpire( time_t expirationTime,
-                                     const SessionKey& key ) = 0;
+                                     Session& session ) = 0;
     };
 
 
