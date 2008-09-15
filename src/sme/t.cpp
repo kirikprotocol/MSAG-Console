@@ -2721,7 +2721,6 @@ int main(int argc,char* argv[])
       pdu.get_header().set_commandId(SmppCommandSet::UNBIND);
       pdu.get_header().set_sequenceNumber(ss.getNextSeq());
       SmppHeader *resp=tr->sendPdu((SmppHeader*)&pdu);
-      ss.getAsyncTransmitter()->sendPdu((SmppHeader*)&pdu);
       if(resp)
       {
         CmdOut("Unbind response:status=%#x\n",resp->get_commandStatus());
