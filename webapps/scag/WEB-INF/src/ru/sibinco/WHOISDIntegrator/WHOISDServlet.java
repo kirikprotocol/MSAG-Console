@@ -153,6 +153,7 @@ public class WHOISDServlet extends HttpServlet
          }
       }
       catch (Exception e) {
+         logger.debug( "WHOISDServlet.doPost() Exception" );
          resp.setHeader("status","false");
          String errorMessage;
          if (e instanceof WHOISDException)
@@ -179,76 +180,118 @@ public class WHOISDServlet extends HttpServlet
             File.separatorChar + appContext.getConfig().getString(paramName);
    }
 
-   private void applyTerm(HttpServletRequest req, boolean isMultipartFormat, SCAGAppContext appContext) throws Exception
-   {
-       logger.debug( "WHOISDServlet.applyTerm() start\n encoding='" + req.getCharacterEncoding() +"'" );
-     ByteArrayOutputStream bos = new ByteArrayOutputStream();
-     int b;
-     InputStream in = req.getInputStream();
-     BufferedReader br = new BufferedReader(new InputStreamReader(in));
-     while((b=br.read()) != -1) {
-         bos.write(b);
-     }
-     String service = req.getParameter("service");
-     if (service == null) throw new WHOISDException("service parameter is missed!");
-     try {
-       new Long(service);
-     } catch (NumberFormatException e) {
-       throw new WHOISDException("service parameter must be an integer or long value");
-     }
-     if (appContext.getServiceProviderManager().getServiceById(new Long(service))==null)
-       throw new WHOISDException("MSAG doesn't contain service with id = " + service);
-     RuleManagerWrapper rulemanager = appContext.getRuleManager().getWrapper();
-     Map rulesWHOISD = null;
-     Rule ruleWHOISD = null;
-     LinkedList termAsList = new LinkedList();
-     if (isMultipartFormat) {
-       int[] dataSlice = extractData(req,new ByteArrayInputStream(bos.toByteArray()));
-       String content = new String();
-       for (int i=0 ;i<dataSlice.length;i++)
-         content = content +(char)dataSlice[i];
-         rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service, new BufferedReader(new StringReader(content)), rulemanager.getXslFolder());
-     } else {
-       rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service, new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bos.toByteArray()))), rulemanager.getXslFolder());
-     }
-     String[] transports = Transport.transportTitles;
-     if (rulesWHOISD.size()>0)
-     try {
-     for (byte i =0 ;i<transports.length;i++) {
-       ruleWHOISD = (Rule)rulesWHOISD.get(transports[i]);
-       RuleState curRuleState = rulemanager.getRuleStateAndLock(service,transports[i]);
-       if (ruleWHOISD == null) {
-         if (curRuleState.getExists()) {
-           rulemanager.removeRule(service,transports[i]);
-         }
-         continue;
-       }
-       String ruleSystemId = composePath(GW_LOCATION_RULES_FOLDER, appContext)+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
-       try {
-        SAXParserImpl.parseRule(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
-       } catch(WHOISDException e) {
-         throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, e.getMessage(), e.getLineNumber()));
-       }
-       if (ruleWHOISD != null && curRuleState.getExists()) {
-          LinkedList error = rulemanager.updateRule(ruleWHOISD,service,transports[i]);
-          if (error != null && error.size()>0)
-            throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
-       } else if (ruleWHOISD != null && !curRuleState.getExists()) {
-          LinkedList error = rulemanager.AddRule(ruleWHOISD,service, transports[i]);
-          if (error != null && error.size()>0)
-            throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
-       }
-     }
-     rulemanager.applyTerm(RuleManagerWrapper.TERM_COMMIT);
-     } catch (Exception e) {
-       rulemanager.applyTerm(RuleManagerWrapper.TERM_ROLLBACK);
-       throw e;
-     } finally {
-       rulemanager.unlockRules();
-     }
-   }
+    public static String ENCO_UTF_8="UTF-8";
 
-   private String composeErrorMessage(Rule ruleWHOISD, LinkedList termAsList, String errormessage, int linenumber) {
+    private void applyTerm(HttpServletRequest req, boolean isMultipartFormat, SCAGAppContext appContext) throws Exception
+    {
+      logger.debug( "WHOISDServlet.applyTerm() start\n\t encoding='" + req.getCharacterEncoding() +"'\ntestrus=אבגדהוזחט" );
+      String encoding = req.getCharacterEncoding(); //!=null? req.getCharacterEncoding(): ENCO_UTF_8;
+
+      InputStream reqIS = req.getInputStream();
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+//      BufferedReader br = new BufferedReader(new InputStreamReader(in));
+      BufferedReader br = null;
+      BufferedWriter bw = null;
+      try {
+          br = new BufferedReader( new InputStreamReader(reqIS, encoding) );
+          bw = new BufferedWriter( new OutputStreamWriter(baos, encoding) );
+      } catch (UnsupportedEncodingException e) {
+          logger.debug( "WHOISDServlet.applyTerm() UnsupportedEncodingException" );
+          encoding = ENCO_UTF_8;
+          e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+      }
+
+      int b;
+      try {
+          while((b=br.read()) != -1) {
+//          bos.write(b);
+              bw.write(b);
+          }
+      } finally {
+          bw.close();
+          br.close();
+      }
+
+      String service = req.getParameter("service");
+      if (service == null) throw new WHOISDException("service parameter is missed!");
+      try {
+        new Long(service);
+      } catch (NumberFormatException e) {
+        throw new WHOISDException("service parameter must be an integer or long value");
+      }
+      if (appContext.getServiceProviderManager().getServiceById(new Long(service))==null)
+        throw new WHOISDException("MSAG doesn't contain service with id = " + service);
+      RuleManagerWrapper rulemanager = appContext.getRuleManager().getWrapper();
+      Map rulesWHOISD = null;
+      Rule ruleWHOISD = null;
+      LinkedList termAsList = new LinkedList();
+      if (isMultipartFormat) {
+        logger.debug( "WHOISDServlet.applyTerm() (isMultipartFormat)" );
+        int[] dataSlice = extractData(req,new ByteArrayInputStream(baos.toByteArray()));
+        String content = new String();
+        for (int i=0 ;i<dataSlice.length;i++)
+          content = content +(char)dataSlice[i];
+        rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service, new BufferedReader(new StringReader(content)), rulemanager.getXslFolder());
+      } else {
+        logger.debug( "WHOISDServlet.applyTerm() (!isMultipartFormat)" );
+        rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service,
+                new BufferedReader( new InputStreamReader( new ByteArrayInputStream(baos.toByteArray() ), encoding) ),
+                rulemanager.getXslFolder());
+      }
+      String[] transports = Transport.transportTitles;
+      logger.debug( "WHOISDServlet.applyTerm() line359" );
+      if (rulesWHOISD.size()>0)
+      {
+          logger.debug( "WHOISDServlet.applyTerm() (rulesWHOISD.size()>0) line362" );
+          try {
+              for (byte i =0 ;i<transports.length;i++) {
+                ruleWHOISD = (Rule)rulesWHOISD.get(transports[i]);
+                RuleState curRuleState = rulemanager.getRuleStateAndLock(service,transports[i]);
+                if (ruleWHOISD == null) {
+                  if (curRuleState.getExists()) {
+                    rulemanager.removeRule(service,transports[i]);
+                  }
+                  continue;
+                }
+                String ruleSystemId = composePath(GW_LOCATION_RULES_FOLDER, appContext)+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
+                try {
+                 SAXParserImpl.parseRule(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
+                } catch(WHOISDException e) {
+                  throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, e.getMessage(), e.getLineNumber()));
+                }
+                if (ruleWHOISD != null && curRuleState.getExists()) {
+                   LinkedList error = rulemanager.updateRule(ruleWHOISD,service,transports[i]);
+                   if (error != null && error.size()>0)
+                     throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
+                } else if (ruleWHOISD != null && !curRuleState.getExists()) {
+                   LinkedList error = rulemanager.AddRule(ruleWHOISD,service, transports[i]);
+                   if (error != null && error.size()>0)
+                     throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
+                }
+              }
+              rulemanager.applyTerm(RuleManagerWrapper.TERM_COMMIT);
+          } catch (Exception e) {
+            rulemanager.applyTerm(RuleManagerWrapper.TERM_ROLLBACK);
+            throw e;
+          } finally {
+            rulemanager.unlockRules();
+          }
+      }
+    }
+
+
+    private void debugFlushBos(ByteArrayOutputStream bos) {
+        try {
+            FileOutputStream fos = new FileOutputStream(System.currentTimeMillis() + ".bos1.log");
+            fos.write(bos.toByteArray());
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+    }
+
+    private String composeErrorMessage(Rule ruleWHOISD, LinkedList termAsList, String errormessage, int linenumber) {
      int ruleHeaderLength = Rule.mainHeaderLength;
      LinkedList ruleBodyWithoutHeader = ruleWHOISD.getBody();
      for (int ii=0;ii<(ruleHeaderLength+ruleWHOISD.getWhoisdPartOffset());ii++)
@@ -323,7 +366,7 @@ public class WHOISDServlet extends HttpServlet
       int[] data = new int[request.getContentLength()];
       int bytes;
       int counter = 0;
-      while((bytes=is.read())!=-1) {
+      while( (bytes=is.read())!=-1 ) {
         data[counter]=bytes;
         counter++;
       }
