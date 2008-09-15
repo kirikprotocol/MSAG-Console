@@ -232,7 +232,7 @@ int SessionManagerImpl::Execute()
          */
         int curtmo = deftmo;
         if ( expireMap_.size() > 0 ) {
-            int next = (expireMap_.begin()->first - time(0))*1000; // in ms
+            int next = int((expireMap_.begin()->first - time(0))*1000); // in ms
             if ( curtmo > next ) curtmo = next;
         }
         if ( curtmo > 0 && isStarted() ) expireMonitor_.wait( curtmo );
@@ -636,7 +636,7 @@ void SessionManagerImpl::scheduleExpire( time_t expirationTime,
         MutexGuard mg(expireMonitor_);
         time_t* ptr = expireHash_.GetPtr( key );
         if ( ptr ) {
-            mapsz = expireMap_.size();
+            mapsz = unsigned(expireMap_.size());
             hashsz = expireHash_.Count();
             prevtime = int(*ptr - now);
 
@@ -659,7 +659,7 @@ void SessionManagerImpl::scheduleExpire( time_t expirationTime,
         } else {
             expireMap_.insert( std::pair< time_t, SessionKey >(expirationTime,key) );
             expireHash_.Insert(key, expirationTime);
-            mapsz = expireMap_.size();
+            mapsz = unsigned(expireMap_.size());
             hashsz = expireHash_.Count();
             prevtime = -1;
         }

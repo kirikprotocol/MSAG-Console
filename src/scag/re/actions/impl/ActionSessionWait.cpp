@@ -88,9 +88,8 @@ bool ActionSessionWait::run( ActionContext& context )
 
     context.getSession().waitAtLeast( tmo );
     smsc_log_debug( logger, "Action 'session:wait': tmo=%u", tmo );
-    // FIXME: remove this heavy debugging
-    scag_plog_debug(pl,logger);
-    context.getSession().print( pl );
+    // scag_plog_debug(pl,logger);
+    // context.getSession().print( pl );
     return true;
 }
 

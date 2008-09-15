@@ -303,7 +303,7 @@ void SessionStoreImpl::releaseSession( Session& session )
             session.getCurrentOperation()->flagSet( OperationFlags::PERSISTENT );
         if ( session.needsFlush() || ispersist ) {
             needflush = true;
-            if ( !ispersist) ispersist = session.hasPersistentOperation();
+            // if ( !ispersist) ispersist = session.hasPersistentOperation();
         }
     }
 
@@ -321,13 +321,13 @@ void SessionStoreImpl::releaseSession( Session& session )
 
         if ( needflush ) {
             UnlockMutexGuard ug(cacheLock_);
-            if ( ispersist ) {
-                disk_->set( key, cache_->store2ref(*v) );
-                smsc_log_debug(log_, "flushed key=%s session=%p", key.toString().c_str(), &session );
-            } else {
-                disk_->remove( key );
-                smsc_log_debug(log_, "removed key=%s session=%p", key.toString().c_str(), &session );
-            }
+            // if ( ispersist ) {
+            disk_->set( key, cache_->store2ref(*v) );
+            smsc_log_debug(log_, "flushed key=%s session=%p", key.toString().c_str(), &session );
+            // } else {
+            // disk_->remove( key );
+            // smsc_log_debug(log_, "removed key=%s session=%p", key.toString().c_str(), &session );
+            // }
         }
             
         expiration = session.expirationTime();
@@ -422,6 +422,10 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired 
                 ++longcall;
                 session = 0;
             }
+
+            if ( session )
+                disk_->remove( session->sessionKey() );
+
         }
 
         MutexGuard mg(cacheLock_);

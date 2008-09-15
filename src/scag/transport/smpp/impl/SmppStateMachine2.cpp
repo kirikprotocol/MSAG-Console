@@ -224,7 +224,10 @@ int StateMachine::Execute()
                   processDelivery(aucmd);
               break;
           }
-          case DELIVERY_RESP:       processDeliveryResp(aucmd);       break;
+          case DELIVERY_RESP:
+              // FIXME: temporary commented out
+              // processDeliveryResp(aucmd);
+              break;
           case DATASM:              processDataSm(aucmd);             break;
           case DATASM_RESP:         processDataSmResp(aucmd);         break;
           case PROCESSEXPIREDRESP:  processExpiredResps();            break;
@@ -374,23 +377,30 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         dst=routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
         smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
                        where, routeId.c_str(), ri.routeId.c_str());
-        if (!dst || routeId == ri.routeId)
         {
-            smsc_log_info(log_,"%s: %s %s(%s)->%s",
-                          where,
-                          !dst ? "no route" : "redirection to the same route",
-                          sms.getOriginatingAddress().toString().c_str(),
-                          src->getSystemId(),
-                          sms.getDestinationAddress().toString().c_str());
-            st.status = re::STATUS_FAILED;
-            st.result = smsc::system::Status::NOROUTE;
-            break;
-            /*
-            SubmitResp( aucmd, smsc::system::Status::NOROUTE );
-            registerEvent( stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
-            if (session.get()) session->closeCurrentOperation();
-            return;
-             */
+            const char* fail = 0;
+            if (!dst) {
+                fail = "no route";
+                st.result = smsc::system::Status::NOROUTE;
+            } else if ( routeId == ri.routeId ) {
+                fail = "redirect to the same route";
+                st.result = smsc::system::Status::NOROUTE;
+            } else if ( dst->getBindType() == btNone ) {
+                fail = "sme not connected";
+                st.result = smsc::system::Status::SMENOTCONNECTED;
+            }
+
+            if ( fail ) {
+                smsc_log_info(log_,"%s: %s %s(%s)->%s",
+                              where,
+                              fail,
+                              sms.getOriginatingAddress().toString().c_str(),
+                              src->getSystemId(),
+                              sms.getDestinationAddress().toString().c_str());
+                st.status = re::STATUS_FAILED;
+                // st.result = smsc::system::Status::NOROUTE;
+                break;
+            }
         }
         routeId = ri.routeId;
         cmd->setDstEntity(dst);
@@ -765,22 +775,29 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         dst=routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
         smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
                        where, routeId.c_str(), ri.routeId.c_str());
-        if (!dst || routeId == ri.routeId)
         {
-            smsc_log_info(log_,"%s: %s %s(%s)->%s",
-                          where,
-                          !dst ? "no route" : "redirection to the same route",
-                          sms.getOriginatingAddress().toString().c_str(),
-                          src->getSystemId(),
-                          sms.getDestinationAddress().toString().c_str());
-            st.status = re::STATUS_FAILED;
-            st.result = smsc::system::Status::NOROUTE;
-            break;
-            /*
-            registerEvent( stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
-            if (session.get()) session->closeCurrentOperation();
-            return;
-             */
+            const char* fail = 0;
+            if (!dst) {
+                fail = "no route";
+                st.result = smsc::system::Status::NOROUTE;
+            } else if ( routeId == ri.routeId ) {
+                fail = "redirect to the same route";
+                st.result = smsc::system::Status::NOROUTE;
+            } else if ( dst->getBindType() == btNone ) {
+                fail = "sme not connected";
+                st.result = smsc::system::Status::SMENOTCONNECTED;
+            }
+
+            if ( fail ) {
+                smsc_log_info(log_,"%s: %s %s(%s)->%s",
+                              where,
+                              fail,
+                              sms.getOriginatingAddress().toString().c_str(),
+                              src->getSystemId(),
+                              sms.getDestinationAddress().toString().c_str());
+                st.status = re::STATUS_FAILED;
+                break;
+            }
         }
         routeId = ri.routeId;
         cmd->setDstEntity(dst);
@@ -1208,20 +1225,31 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
         dst=routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
         smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
                        where, routeId.c_str(), ri.routeId.c_str());
-        if(!dst || routeId == ri.routeId)
+
         {
-            smsc_log_info(log_,"%s: %s %s(%s)->%s",
-                          where, 
-                          !dst ? "no route" : "redirection to the same route",
-                          sms.getOriginatingAddress().toString().c_str(),
-                          src->getSystemId(),
-                          sms.getDestinationAddress().toString().c_str());
-            st.status = re::STATUS_FAILED;
-            st.result = smsc::system::Status::NOROUTE;
-            break;
-            // registerEvent(stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
-            // if (session.get()) session->closeCurrentOperation();
-            // return;
+            const char* fail = 0;
+            if (!dst) {
+                fail = "no route";
+                st.result = smsc::system::Status::NOROUTE;
+            } else if ( routeId == ri.routeId ) {
+                fail = "redirect to the same route";
+                st.result = smsc::system::Status::NOROUTE;
+            } else if ( dst->getBindType() == btNone ) {
+                fail = "sme not connected";
+                st.result = smsc::system::Status::SMENOTCONNECTED;
+            }
+
+
+            if ( fail ) {
+                smsc_log_info(log_,"%s: %s %s(%s)->%s",
+                              where, 
+                              fail,
+                              sms.getOriginatingAddress().toString().c_str(),
+                              src->getSystemId(),
+                              sms.getDestinationAddress().toString().c_str());
+                st.status = re::STATUS_FAILED;
+                break;
+            }
         }
         routeId = ri.routeId;
         cmd->setDstEntity(dst);
@@ -1598,6 +1626,7 @@ void StateMachine::processExpiredResps()
                 resp->get_resp()->expiredResp = true;
                 resp->get_resp()->expiredUid = uid;
                 resp->setEntity(routeMan_->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
+                resp->get_resp()->setOrgCmd( cmd.release() );
                 processDeliveryResp(resp);
                 break;
             }
@@ -1606,6 +1635,7 @@ void StateMachine::processExpiredResps()
                 resp->get_resp()->expiredResp=true;
                 resp->get_resp()->expiredUid=uid;
                 resp->setEntity(routeMan_->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
+                resp->get_resp()->setOrgCmd( cmd.release() );
                 processSubmitResp(resp);
                 break;
             }
@@ -1614,6 +1644,7 @@ void StateMachine::processExpiredResps()
                 resp->get_resp()->expiredResp=true;
                 resp->get_resp()->expiredUid=uid;
                 resp->setEntity(routeMan_->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
+                resp->get_resp()->setOrgCmd( cmd.release() );
                 processDataSmResp(resp);
                 break;
             }

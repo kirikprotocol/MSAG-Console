@@ -11,25 +11,65 @@ namespace sessions {
 
 using namespace scag::util::storage;
 
-class SessionKey
+class StoredSessionKey
+{
+public:
+    StoredSessionKey() : addr_() {
+    }
+
+    explicit StoredSessionKey( const smsc::sms::Address& ab ) : addr_(ab) {}
+    explicit StoredSessionKey( const std::string& ab ) : addr_(ab.c_str()) {}
+
+    bool operator == ( const StoredSessionKey& k ) const
+    {
+        return (addr_ == k.addr_);
+    }
+
+    bool operator < ( const StoredSessionKey& k ) const
+    {
+        return addr_ < k.addr_;
+    }
+
+    static uint32_t CalcHash( const StoredSessionKey& key )
+    {
+        const uint64_t abonent = key.toIndex();
+        const uint32_t high = uint32_t(abonent >> 32);
+        const uint32_t low = uint32_t(abonent);
+        return low ^ (high * 33) ^ (((high >> 24) & 0xffff)*37);
+    }
+
+    uint64_t toIndex() const;
+
+    // from sms::Address
+    const StoredSessionKey& operator = ( const smsc::sms::Address& a );
+
+    /// abonent address
+    const smsc::sms::Address& address() const {
+        return addr_;
+    }
+
+    std::string toString() const {
+        return addr_.toString();
+    }
+
+protected:
+    smsc::sms::Address addr_;
+};
+
+
+
+class SessionKey : public StoredSessionKey
 {
     // static std::string isdnToString( uint64_t isdn );
     // static uint64_t stringToIsdn( const std::string& ab );
     // static void getLogger();
 
 public:
-    SessionKey() : addr_(), str_() {
-        // if ( ! log_ ) getLogger();
-        // dumpkey();
-    }
-    // explicit SessionKey( uint64_t ab ) : msisdn_(ab), str_(isdnToString(ab)) {
-    // if ( ! log_ ) getLogger();
-    // dumpkey();
-    // }
-    explicit SessionKey( const smsc::sms::Address& ab ) : addr_(ab) {}
+    SessionKey() {}
+    explicit SessionKey( const smsc::sms::Address& ab ) : StoredSessionKey(ab) {}
+    explicit SessionKey( const std::string& ab ) : StoredSessionKey(ab) {}
 
-    explicit SessionKey( const std::string& ab ) : addr_(ab.c_str()) {}
-
+    /*
     bool operator == ( const SessionKey& k ) const
     {
         return (addr_ == k.addr_);
@@ -48,10 +88,6 @@ public:
         return low ^ (high * 33) ^ (((high >> 24) & 0xffff)*37);
     }
 
-    /*
-    uint64_t abonent() const {
-        return msisdn_;
-    }
      */
 
     inline const std::string& toString() const {
@@ -62,36 +98,20 @@ public:
         // return std::string(buf);
     }
 
-    uint64_t toIndex() const;
-
     Serializer& serialize( Serializer& s ) const;
     Deserializer& deserialize( Deserializer& s ) throw (DeserializerException);
 
     // from sms::Address
     const SessionKey& operator = ( const smsc::sms::Address& a );
 
-    // const SessionKey& operator = ( const SessionKey& sk );
-
-    /// abonent address
-    const smsc::sms::Address& address() const {
-        return addr_;
-    }
-
 private:
-    // void dumpkey() const {
-    // smsc_log_debug( log_, "key set '%s'/%llu", str_.c_str(), msisdn_ );
-    // }
     void fillString() const {
         str_ = addr_.toString();
     }
 
 private:
-    // static smsc::logger::Logger* log_;
-
-private:
-    smsc::sms::Address  addr_;
+    // cache
     mutable std::string str_;
-    // uint64_t    msisdn_;
 };
 
 

@@ -554,8 +554,6 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
                     commandOpName(operationType),
                     int(expirationTime_-now)
                     );
-
-    // FIXME: what to do with expiration time if it was set explicitly?
     return currentOperation_;
 }
 
@@ -570,6 +568,12 @@ void Session::closeCurrentOperation()
     
     if ( prevop->flagSet( OperationFlags::PERSISTENT ) )
         needsflush_ = true;
+
+    // if ( log_->isDebugEnabled() ) {
+    // scag_plog_debug(pl,log_);
+    // this->print(pl);
+    // }
+
 
     if ( operationScopes_ ) {
         SessionPropertyScope** sptr = operationScopes_->GetPtr(prevopid);
@@ -591,9 +595,7 @@ void Session::closeCurrentOperation()
     const unsigned opcount = operationsCount();
     if ( opcount == 0 ) {
         time_t now = time(0);
-        if ( expirationTime_ > expirationTimeAtLeast_ ) {
-            expirationTime_ = expirationTimeAtLeast_;
-        }
+        expirationTime_ = expirationTimeAtLeast_;
         // smsc_log_debug(log_, "session=%p key=%s has no ops, expiration=%d",
         // this, sessionKey().toString().c_str(),
         // int(expirationTime_ - now));
@@ -601,6 +603,7 @@ void Session::closeCurrentOperation()
             ; // FIXME: push session manager expiration thread
         }
     }
+
     smsc_log_debug( log_, "closeOp(sess=%p,op=%p opid=%u type=%d(%s)) => opcnt=%u expire=%d",
                     this,
                     prevop,
@@ -677,6 +680,7 @@ bool Session::getRuleKey( int& serv, int& trans ) const
 void Session::dropInitRuleKey( int serviceId, int transport )
 {
     if ( ! initrulekeys_.empty() ) {
+
         const std::pair<int,int> st(serviceId,transport);
         for ( std::list< std::pair<int,int> >::iterator i = initrulekeys_.begin();
               i != initrulekeys_.end();
@@ -687,9 +691,12 @@ void Session::dropInitRuleKey( int serviceId, int transport )
                 break;
             }
         }
-        // FIXME: check the number of items
-        // and lower expiration time
 
+        if ( initrulekeys_.empty() ) {
+            // if no services left, then reset session expiration time
+            time_t now = time(0);
+            if ( expirationTimeAtLeast_ > now ) expirationTimeAtLeast_ = now;
+        }
     }
 }
 

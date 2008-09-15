@@ -12,12 +12,12 @@ namespace util {
 namespace storage {
 
 /// index disk storage
-template < class Key, typename Idx >
+template < class Key, typename Idx, typename StoredKey = Key >
 class RBTreeIndexStorage
 {
 private:
-    typedef RBTree<Key,Idx>                       IndexStorage;    // transient
-    typedef RBTreeHSAllocator<Key,Idx>            IndexAllocator;
+    typedef RBTree<StoredKey,Idx>                 IndexStorage;    // transient
+    typedef RBTreeHSAllocator<StoredKey,Idx>      IndexAllocator;
     typedef typename IndexStorage::RBTreeNode     IndexNode;
 
 public:

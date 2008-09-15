@@ -41,7 +41,7 @@ class SessionStoreImpl : public SessionStore
 public:
     typedef HashedMemoryCache< SessionKey, Session > MemStorage;
     typedef PageFileDiskStorage< SessionKey, Session > DiskDataStorage;
-    typedef RBTreeIndexStorage< SessionKey, DiskDataStorage::index_type > DiskIndexStorage;
+    typedef RBTreeIndexStorage< SessionKey, DiskDataStorage::index_type, StoredSessionKey > DiskIndexStorage;
     typedef IndexedStorage< DiskIndexStorage, DiskDataStorage, smsc::core::synchronization::Mutex > EltDiskStorage;
     // typedef IndexedStorage< DiskIndexStorage, DiskDataStorage, SlowMutex > EltDiskStorage;
     // typedef CompositeDiskStorage< EltDiskStorage > DiskStorage;

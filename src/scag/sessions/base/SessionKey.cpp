@@ -62,7 +62,7 @@ void SessionKey::getLogger()
  */
 
 
-uint64_t SessionKey::toIndex() const
+uint64_t StoredSessionKey::toIndex() const
 {
     uint64_t res = 0;
     const char* err = 0;
@@ -103,7 +103,7 @@ Deserializer& SessionKey::deserialize( Deserializer& s ) throw (DeserializerExce
     s >> itype >> iplan >> ival;
     const char* valdat = "0";
     if ( ival.c_str() ) valdat = ival.c_str();
-    const unsigned vallen = strlen( valdat );
+    const unsigned vallen = unsigned(strlen( valdat ));
     if ( vallen > unsigned(smsc::sms::MAX_ADDRESS_VALUE_LENGTH) )
         throw DeserializerException::dataTooBig();
     addr_ = smsc::sms::Address( vallen, itype, iplan, valdat );
@@ -112,12 +112,20 @@ Deserializer& SessionKey::deserialize( Deserializer& s ) throw (DeserializerExce
 }
 
 
-const SessionKey& SessionKey::operator = ( const smsc::sms::Address& a )
+const StoredSessionKey& StoredSessionKey::operator = ( const smsc::sms::Address& a )
 {
     addr_ = a;
-    str_ = "";
+    // str_ = "";
     // msisdn_ = stringToIsdn( str_ );
     // dumpkey();
+    return *this;
+}
+
+
+const SessionKey& SessionKey::operator = ( const smsc::sms::Address& a )
+{
+    this->StoredSessionKey::operator=( a );
+    str_ = "";
     return *this;
 }
 
