@@ -193,7 +193,6 @@ public:
         // int getCurrentOperationBillID();
 
     private:
-        //Comment: 'name' is valid until 'var' is valid
         void setInfrastructureConstants();
 
     public:

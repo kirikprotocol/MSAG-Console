@@ -254,6 +254,12 @@ void ActionContext::setInfrastructureConstants() {
     property.setInt(commandProperty_->operatorId);
     infrastructConstants_["operator_id"] = property;
 
+    property.setInt(session_->getCurrentOperationId());
+    infrastructConstants_["operation_id"] = property;
+
+    // property.setInt(session_->sessionKey().toIndex());
+    // infrastructConstants_["abonent"] = property;
+
     infrastructConstants_["route_id"] = commandProperty_->routeId;
 }
 
