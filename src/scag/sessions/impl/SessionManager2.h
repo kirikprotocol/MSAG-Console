@@ -90,8 +90,8 @@ public:
     virtual void configChanged();
 
     /// --- interface of SessionExpirationQueue
-    virtual void scheduleExpire( time_t   expirationTime,
-                                 Session* session );
+    virtual void scheduleExpire( time_t            expirationTime,
+                                 const SessionKey& key );
 
     /// --- interface of SessionFinalizer
     virtual bool finalize( Session& s );

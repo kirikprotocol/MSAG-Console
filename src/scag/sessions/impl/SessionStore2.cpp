@@ -351,7 +351,7 @@ void SessionStoreImpl::releaseSession( Session& session )
                     &session, key.toString().c_str(), prevuid, nextuid, tot, lck );
 
     if ( ! carryNextCommand(session,nextcmd,true) )
-        expiration_->scheduleExpire(expiration, key);
+        expiration_->scheduleExpire(expiration,key);
 
 }
 
@@ -401,7 +401,8 @@ unsigned SessionStoreImpl::storedCommands() const
 }
 
 
-bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired )
+bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
+                                       size_t expiredCount )
 {
     if ( expired.size() == 0 ) return true;
 
@@ -414,7 +415,6 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired 
     unsigned notexpired = 0;
 
     bool keep = false; // keep session on disk and destroy
-
     while ( true ) {
 
         if ( session ) {
@@ -454,16 +454,42 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired 
 
         const SessionKey& key = *i;
         ++i;
+        keep = ( std::distance(expired.begin(),i) > expiredCount );
+
         MemStorage::stored_type* v = cache_->get( key );
-        if ( !v ) {
-            // smsc_log_debug(log_,"key=%s to be expired is not found",
-            // key.toString().c_str() );
+        if ( v ) {
+            session = cache_->store2val(*v);
+
+        } else if ( keep ) {
+
+            // session is already flushed?
             ++notexpired;
             session = 0;
             continue;
+
+        } else {
+            // smsc_log_debug(log_,"key=%s to be expired is not found",
+            // key.toString().c_str() );
+            cache_->set( key, cache_->val2store( allocator_->alloc(key)) );
+            v = cache_->get( key );
+            session = cache_->store2val(*v);
+            session->setCurrentCommand(2);
+            ++totalSessions_;
+            {
+                UnlockMutexGuard umg(cacheLock_);
+                if ( ! disk_->get( key, cache_->store2ref(*v) ) ) v = 0;
+            }
+            if ( !v ) {
+                --totalSessions_;
+                delete cache_->release(key);
+                ++notexpired;
+                session = 0;
+                continue;
+            } else {
+                session->setCurrentCommand(0);
+            }
         }
 
-        session = cache_->store2val(*v);
 
         if ( session->currentCommand() ) {
             // smsc_log_debug(log_,"key=%s session=%p is locked, cmd=%u, skipped",
@@ -475,18 +501,38 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired 
 
         // session is not locked
 
-        // smsc_log_debug(log_, "expired key=%s session=%p", key.toString().c_str(), session );
-        const time_t newexpiration = session->expirationTime();
-        const time_t lastaccesstime = session->lastAccessTime();
+        if ( keep ) {
 
-        // check expiration time again, as it may be prolonged while we were waiting
-        if ( ! stopping_ ) {
-            if ( now < newexpiration ) {
-                // smsc_log_debug(log_,"key=%s session=%p is not expired yet",
-                // key.toString().c_str(), session );
-                ++notexpired;
-                session = 0;
-                continue;
+            // the session was not accessed for too long time?
+            SCAGCommand* nextcmd = session->popCommand();
+            if ( nextcmd ) {
+                ++lockedSessions_;
+                setCommandSession( *nextcmd, session );
+                session->setCurrentCommand( nextcmd->getSerial() );
+                if ( carryNextCommand(session,nextcmd,false) ) {
+                    // activity
+                    ++notexpired;
+                    session = 0;
+                    continue;
+                }
+            }
+
+        } else {
+
+            // expired session?
+
+            // smsc_log_debug(log_, "expired key=%s session=%p", key.toString().c_str(), session );
+            const time_t newexpiration = session->expirationTime();
+
+            // check expiration time again, as it may be prolonged while we were waiting
+            if ( ! stopping_ ) {
+                if ( now < newexpiration ) {
+                    // smsc_log_debug(log_,"key=%s session=%p is not expired yet",
+                    // key.toString().c_str(), session );
+                    ++notexpired;
+                    session = 0;
+                    continue;
+                }
             }
         }
 

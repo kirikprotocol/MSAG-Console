@@ -72,7 +72,8 @@ public:
 
     unsigned storedCommands() const;
 
-    bool expireSessions( const std::vector< SessionKey >& expired );
+    bool expireSessions( const std::vector< SessionKey >& expired,
+                         unsigned expiredCount );
 
     void sessionFinalized( Session& s );
 
@@ -87,9 +88,10 @@ public:
 
 protected:
 
-    // helper method, may be invoked from expireSessions or from sessionFinalized
-    // NOTE: lock should be pre-locked.
-    bool doSessionFinalization( Session& s );
+    // helper method, may be invoked from expireSessions or from sessionFinalized.
+    // keep = true, if the session should not be cleaned.
+    // NOTE: cachelock should be pre-acquired.
+    bool doSessionFinalization( Session& s, bool keep );
 
     ActiveSession makeLockedSession( Session& s, SCAGCommand& c );
 
