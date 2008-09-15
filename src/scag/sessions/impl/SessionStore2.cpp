@@ -389,6 +389,7 @@ inline ActiveSession SessionStoreImpl::makeLockedSession( Session&     s,
         ::abort();
     }
     // ++lockedSessions_;
+    s.setLastAccessTime( time(0) );
     return ActiveSession(*this,s);
 }
 
@@ -411,28 +412,43 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired 
     std::vector< SessionKey >::const_iterator i = expired.begin();
     unsigned longcall = 0;
     unsigned notexpired = 0;
+
+    bool keep = false; // keep session on disk and destroy
+
     while ( true ) {
 
         if ( session ) {
-            // smsc_log_debug(log_, "finalizing key=%s session=%p", session->sessionKey().toString().c_str(), session );
-            // it may take quite long time, so we don't lock mutex yet
-            // but the session must be already locked by a fictional command (-1)
-            if ( ! fin_->finalize( *session ) ) {
+
+            if ( keep ) {
+
+                // session should be kept on disk.
+                // NOTE: we'll save session only if cache is overwhelmed,
+                // otherwise the session should be returned to expirationQueue.
+                disk_->set( session->sessionKey(), *session );
+
+            } else if ( ! fin_->finalize( *session ) ) {
+
                 // session is taken for long call finalization
                 ++longcall;
                 session = 0;
-            }
 
-            if ( session )
+            } else {
+
+                // finalization is done, remove the session from disk
                 disk_->remove( session->sessionKey() );
+
+            }
 
         }
 
         MutexGuard mg(cacheLock_);
             
         if ( session ) {
-            if ( ! doSessionFinalization(*session) ) ++notexpired;
+            if ( ! doSessionFinalization(*session,keep) )
+                ++notexpired;
         }
+
+        // take the next session in the list
 
         if ( i == expired.end() ) break;
 
@@ -448,8 +464,6 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired 
         }
 
         session = cache_->store2val(*v);
-        // smsc_log_debug(log_, "expired key=%s session=%p", key.toString().c_str(), session );
-        const time_t newexpiration = session->expirationTime();
 
         if ( session->currentCommand() ) {
             // smsc_log_debug(log_,"key=%s session=%p is locked, cmd=%u, skipped",
@@ -458,6 +472,12 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired 
             session = 0;
             continue;
         }
+
+        // session is not locked
+
+        // smsc_log_debug(log_, "expired key=%s session=%p", key.toString().c_str(), session );
+        const time_t newexpiration = session->expirationTime();
+        const time_t lastaccesstime = session->lastAccessTime();
 
         // check expiration time again, as it may be prolonged while we were waiting
         if ( ! stopping_ ) {
@@ -483,10 +503,11 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired 
 
 
 
+// return from longcall from SessionManager
 void SessionStoreImpl::sessionFinalized( Session& s )
 {
     MutexGuard mg(cacheLock_);
-    doSessionFinalization( s );
+    doSessionFinalization(s,false);
 }
 
 
@@ -500,7 +521,7 @@ void SessionStoreImpl::getSessionsCount( unsigned& sessionsCount,
 
 
 /// the cache must be locked here
-bool SessionStoreImpl::doSessionFinalization( Session& session )
+bool SessionStoreImpl::doSessionFinalization( Session& session, bool keep )
 {
     if ( session.currentCommand() != 1 ) {
         smsc_log_error(log_, "logic error in session=%p finalization, session->cmd=%u != 1",
@@ -522,12 +543,12 @@ bool SessionStoreImpl::doSessionFinalization( Session& session )
         // NOTE: the session was already finalized (possible via session_destroy rule),
         // so make sure it will be initialized
         // smsc_log_debug(log_, "key=%s session=%p is revived via clear()", session.sessionKey().toString().c_str(), &session );
-        session.clear();
+        if ( !keep ) session.clear();
         return false;
     } else {
         // no more commands
         // smsc_log_debug(log_, "key=%s session=%p is being destroyed", session.sessionKey().toString().c_str(), &session );
-        // NOTE: session should be already deleted from disk
+        // NOTE: session should be already saved/deleted from disk
         --totalSessions_;
         delete cache_->release( session.sessionKey() );
     }

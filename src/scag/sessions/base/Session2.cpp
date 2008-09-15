@@ -348,8 +348,9 @@ void Session::clear()
 {
     // gettimeofday( &bornTime_, 0 );
     pkey_ = SessionPrimaryKey( key_ ); // to reset born time
-    // lastAccessTime_ = time(0);
-    expirationTimeAtLeast_ = time(0);
+    const time_t now = time(0);
+    lastAccessTime_ = now;
+    expirationTimeAtLeast_ = now;
     expirationTime_ = expirationTimeAtLeast_ + defaultLiveTime(); // FIXME: customize
 
     needsflush_ = false;
@@ -416,8 +417,9 @@ void Session::print( util::Print& p ) const
 
     const time_t now = time(0);
     // const int lastac = int(now - lastAccessTime_);
-    p.print( "session=%p key=%s expire=%d/%d ops=%d trans=%d lockCmd=%u umr=%d%s",
+    p.print( "session=%p key=%s times=%d/%d/%d ops=%d trans=%d lockCmd=%u umr=%d%s",
              this, sessionKey().toString().c_str(),
+             int(lastAccessTime_ - now),
              int(expirationTime_ - now),
              int(expirationTimeAtLeast_ - now),
              operationsCount(),
@@ -786,12 +788,6 @@ SessionPropertyScope* Session::getOperationScope()
         }
     }
     return res;
-}
-
-
-time_t Session::expirationTime() const 
-{
-    return expirationTime_;
 }
 
 

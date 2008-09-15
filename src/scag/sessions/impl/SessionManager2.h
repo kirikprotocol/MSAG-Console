@@ -60,8 +60,8 @@ private:
     };
      */
 
-    typedef std::multimap< time_t, SessionKey >     ExpireMap;
-    typedef XHash< SessionKey, time_t, SessionKey > ExpireHash;
+    typedef std::multimap< time_t, Session* >   ExpireMap;
+    typedef XHash< Session*, time_t >           ExpireHash;
 
 public:
 
@@ -90,8 +90,8 @@ public:
     virtual void configChanged();
 
     /// --- interface of SessionExpirationQueue
-    virtual void scheduleExpire( time_t expirationTime,
-                                 const SessionKey& key );
+    virtual void scheduleExpire( time_t   expirationTime,
+                                 Session* session );
 
     /// --- interface of SessionFinalizer
     virtual bool finalize( Session& s );

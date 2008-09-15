@@ -242,7 +242,9 @@ public:
 
     /// @return session expiration time in GMT (as returned by time(2) )
     /// NOTE: this time gives the soft expiration limit.
-    time_t expirationTime() const;
+    inline time_t expirationTime() const {
+        return expirationTime_;
+    }
 
     /// make sure the session is alive at least s seconds, i.e. set expirationTime
     /// to now()+s.  I.e. this method sets the hard expiration limit.
@@ -250,7 +252,16 @@ public:
     void waitAtLeast( unsigned s );
 
 
-    // === the following methods should be invoked from session store only
+    // === ATTENTION! the following methods should be invoked from session store only
+
+    /// get/set the last access time
+    inline time_t lastAccessTime() const {
+        return lastAccessTime_;
+    }
+
+    inline void setLastAccessTime( time_t t ) {
+        lastAccessTime_ = t;
+    }
 
     /// current processing command (owned).
     /// the presence of a command tells that session is locked.
@@ -278,12 +289,10 @@ public:
     /// append command to the list of session commands.
     /// @return the size of command queue.
     /// NOTE: this method should be invoked from SessionStore only (as it requires locking).
-    /// NOTE: cmd gets owned.
     unsigned appendCommand( SCAGCommand* cmd );
 
     /// pop one command from the list of session commands.
     /// NOTE: this method should be invoked from SessionStore only (as it requires locking).
-    /// NOTE: cmd disowned, may return NULL.
     SCAGCommand* popCommand();
 
     // NOTE: aborting session is forbidden
@@ -315,10 +324,10 @@ private:
     // timeval bornTime_;
     SessionPrimaryKey  pkey_;
 
-    // last access time (pers)
-    // time_t lastAccessTime_;
+    /// last access time (pers), should be changed in successful fetchSession only
+    time_t lastAccessTime_;
 
-    /// expiration Time ( soft/hard limits)
+    /// expiration Time ( soft/hard limits) (pers)
     time_t expirationTime_;
     time_t expirationTimeAtLeast_;
 
