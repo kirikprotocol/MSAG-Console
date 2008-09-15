@@ -225,7 +225,7 @@ int SmppInputThread::Execute()
             ss->isConnectionTimedOut() ||
             (prx && now-ss->getLastUpdate()-inactivityTime>inactivityTimeOut) ||
             (prx && prx->isDisconnecting() && now-prx->getDisconnectTime()>10)||
-            (!prx && now-ss->getConnectTime()>bindTimeout)
+            (!prx && now-ss->getConnectTime()>bindTimeout && ss->getChannelType()!=ctUnbound)
           )
         {
           bool evt[5]=
@@ -234,7 +234,7 @@ int SmppInputThread::Execute()
             ss->isConnectionTimedOut(),
             (prx && now-ss->getLastUpdate()-inactivityTime>inactivityTimeOut),
             (prx && now-prx->isDisconnecting() && now-prx->getDisconnectTime()>10),
-            (!prx && now-ss->getConnectTime()>bindTimeout)
+            (!prx && now-ss->getConnectTime()>bindTimeout && ss->getChannelType()!=ctUnbound)
           };
           char smb[6]={evt[0]?'Y':'N',evt[1]?'Y':'N',evt[2]?'Y':'N',evt[3]?'Y':'N',evt[4]?'Y':'N',0};
           info2(log,"SmppInputThread:: killing socket %p by request, timeout or invactivity timeout:%s",ss,smb);

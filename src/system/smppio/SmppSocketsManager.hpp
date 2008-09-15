@@ -56,6 +56,10 @@ public:
   {
     useAbortiveClose=val;
   }
+  bool getUseAbortiveClose()
+  {
+    return useAbortiveClose;
+  }
 protected:
   Array<SmppIOTask*> intasks,outtasks;
   ThreadPool *tp;

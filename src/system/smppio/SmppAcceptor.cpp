@@ -14,7 +14,7 @@ int SmppAcceptor::Execute()
   smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smpp.acc");
   Socket srv;
   try{
-    if(srv.InitServer(server,port,0)==-1)
+    if(srv.InitServer(server,port,0,1,true)==-1)
       throw Exception("Failed to init smpp server socket");
     if(srv.StartServer()==-1)
       throw Exception("Failed to start smpp server socket");
@@ -28,11 +28,6 @@ int SmppAcceptor::Execute()
   debug2(log,"signal smpp acceptor start:%p",startNotify);
   startNotify->SignalAll();
 
-
-  linger l;
-  l.l_onoff=1;
-  l.l_linger=0;
-  setsockopt(srv.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,(int)sizeof(l));
 
   for(;;)
   {
@@ -50,6 +45,8 @@ int SmppAcceptor::Execute()
     info2(log,"Connection accepted:%p/%s",clnt,buf);
     sm->registerSocket(clnt);
   }
+  srv.Close();
+
   __trace__("SmppAcceptor: quiting");
   return 0;
 }

@@ -923,6 +923,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     ssockman.setUseAbortiveClose(cfg.cfgman->getBool("smpp.useAbortiveClose"));
   } catch(...)
   {
+    __warning__("smpp.useAbortiveClose not found in config");
   }
 
   try
@@ -930,6 +931,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     SmscCommand::standardErrorCodes=cfg.cfgman->getBool("smpp.standardErrorCodes");
   } catch(...)
   {
+    __warning__("smpp.standardErrorCodes not found in config");
   }
   {
     using smsc::util::config::CStrSet;
