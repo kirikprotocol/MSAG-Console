@@ -225,8 +225,7 @@ int StateMachine::Execute()
               break;
           }
           case DELIVERY_RESP:
-              // FIXME: temporary commented out
-              // processDeliveryResp(aucmd);
+              processDeliveryResp(aucmd);
               break;
           case DATASM:              processDataSm(aucmd);             break;
           case DATASM_RESP:         processDataSmResp(aucmd);         break;
