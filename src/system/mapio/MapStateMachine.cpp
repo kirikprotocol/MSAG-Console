@@ -2863,8 +2863,8 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
       checkMapReq( Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
     }
     ET96MAP_ERROR_FORW_SM_MO_T moResp;
+    memset( &moResp, 0, sizeof(ET96MAP_ERROR_FORW_SM_MO_T) );
     moResp.errorCode = ET96MAP_UE_SYS_FAILURE;
-    moResp.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
     if( version == 3 ) {
         ET96MAP_SM_RP_UI_T ui;
         ui.signalInfoLen=0;
