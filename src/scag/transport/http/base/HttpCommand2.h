@@ -6,6 +6,7 @@
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/TmpBuf.hpp"
 #include "scag/transport/SCAGCommand2.h"
+#include "HttpCommandId.h"
 
 namespace scag2 {
 namespace transport {
@@ -93,13 +94,13 @@ protected:
     std::string key;
     StringHash &masterHash;
 };
-
+/*
 enum HttpCommandId {
     HTTP_REQUEST = 100,
     HTTP_RESPONSE,
     HTTP_DELIVERY
 };
-
+*/
 // helper for debugging
 const char* commandIdName( int );
 
