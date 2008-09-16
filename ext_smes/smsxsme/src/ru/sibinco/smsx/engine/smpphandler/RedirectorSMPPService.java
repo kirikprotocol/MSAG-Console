@@ -24,6 +24,9 @@ public class RedirectorSMPPService extends AbstractSMPPService {
     try {
       m.setDestinationAddress(smppRequest.getParameter("destination_address"));
       m.setMessageString(smppRequest.getParameter("message"));
+
+      System.out.println("SEND " + m.getMscAddress() + ' ' + m.getImsi());
+
       send(new RedirectorOutgoingObject(m, inObj));
 
       return true;

@@ -81,19 +81,19 @@
     <service-class>ru.sibinco.smsx.engine.smpphandler.GroupEditSMPPService</service-class>    
     <init-param>
       <param-name>edit.lock</param-name>
-      <param-value>#template=smsx.groupeditlock#</param-value>
+      <param-value>Редактирование групп через веб запрещено.</param-value>
     </init-param>
     <init-param>
       <param-name>edit.unlock</param-name>
-      <param-value>#template=smsx.groupeditunlock#</param-value>
+      <param-value>Редактирование групп через веб разрешено.</param-value>
     </init-param>
     <init-param>
       <param-name>edit.alert.on</param-name>
-      <param-value>#template=smsx.groupeditalerton#</param-value>
+      <param-value>СМС нотификации об изменении в группах включены.</param-value>
     </init-param>
     <init-param>
       <param-name>edit.alert.off</param-name>
-      <param-value>#template=smsx.groupeditalertoff#</param-value>
+      <param-value>СМС нотификации об изменении в группах включены.</param-value>
     </init-param>
   </service>
 

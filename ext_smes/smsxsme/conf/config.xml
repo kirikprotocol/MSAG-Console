@@ -30,12 +30,12 @@
     <param name="source.address">147</param>
 
     <section name="notifications">
-      <param name="add.group">#template=smsx.groupadd# {group}={1}</param>
-      <param name="remove.group">#template=smsx.groupremove# {group}={1}</param>
-      <param name="rename.group">#template=smsx.grouprename# {group}={1} {newgroup}={2}</param>
-      <param name="copy.group">#template=smsx.groupcopy# {group}={1} {newgroup}={2}</param>
-      <param name="add.member">#template=smsx.groupaddmember# {group}={1} {member}={2}</param>
-      <param name="remove.member">#template=smsx.groupremovemember# {group}={1} {member}={2}</param>      
+      <param name="add.group">Группа {1} добавлена.</param>
+      <param name="remove.group">Группа {1} удалена.</param>
+      <param name="rename.group">Группа {1} переименована в {2}.</param>
+      <param name="copy.group">Группа {1} скопирована в {2}.</param>
+      <param name="add.member">В группу {1} добавлен реципиент {2}.</param>
+      <param name="remove.member">Из группы {1} удален реципиент {2}.</param>
     </section>
   </section>
 

@@ -75,7 +75,7 @@ public class ServiceManagerMBean extends AbstractDynamicMBean {
       }
 
       { // Register group MBean
-        Object groupMBean = Services.getInstance().getGroupService().getMBean(domain + ",service=group");
+        Object groupMBean = Services.getInstance().getGroupService().getMBean(domain + ".services:name=group");
         if (groupMBean != null) {
           attributes.add(new MBeanAttributeInfo("groupService", ObjectName.class.getName(), "Group service monitor", true, false, false));
 

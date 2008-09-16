@@ -55,7 +55,7 @@ public class GroupServiceImpl implements Service, GroupService {
   }
 
   public Object getMBean(String domain) {
-    return new GroupMBean(sendProcessor);
+    return new GroupMBean(domain, sendProcessor, dlManager);
   }
 
   public long execute(GroupSendCmd cmd) throws CommandExecutionException {

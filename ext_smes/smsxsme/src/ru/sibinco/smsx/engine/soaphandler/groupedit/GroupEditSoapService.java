@@ -107,7 +107,7 @@ public class GroupEditSoapService implements GroupEdit, org.apache.axis.wsdl.Ske
     _params = new org.apache.axis.description.ParameterDesc [] {
         new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/groupedit", "groupName"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
         new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/groupedit", "owner"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
-        new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/groupedit", "member"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
+        new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/groupedit", "newGroupName"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
     };
     _oper = new org.apache.axis.description.OperationDesc("renameGroup", _params, new javax.xml.namespace.QName("http://sibinco.ru/groupedit", "renameGroupReturn"));
     _oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
