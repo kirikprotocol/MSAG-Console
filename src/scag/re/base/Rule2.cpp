@@ -4,6 +4,7 @@
 #include "scag/transport/smpp/base/SmppCommand2.h"
 // #include "scag/transport/http/HttpCommand.h"
 #include "SmppEventHandler2.h"
+#include "HttpEventHandler2.h"
 // #include "scag/re/http/HttpEventHandler2.h"
 #include "SessionEventHandler2.h"
 #include "CommandBridge.h"
@@ -128,9 +129,8 @@ EventHandler * Rule::CreateEventHandler()
     {
     case SMPP:
         return new SmppEventHandler();
-        // FIXME: impl
-    // case HTTP:
-        // return new HttpEventHandler();
+     case HTTP:
+         return new scag2::re::http::HttpEventHandler();
     default:
         break;
     }

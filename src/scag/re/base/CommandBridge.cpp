@@ -1,7 +1,7 @@
 #include "CommandBridge.h"
 // #include "scag/bill/base/BillingManager.h"
 #include "scag/sessions/base/Session2.h"
-// #include "scag/transport/http/HttpCommand.h"
+#include "scag/transport/http/HttpCommandId.h"
 #include "scag/util/encodings/Encodings.h"
 #include "util/recoder/recode_dll.h"
 
@@ -42,15 +42,12 @@ EventHandlerType CommandBridge::getHTTPHandlerType(const SCAGCommand& command)
 {
     switch(command.getCommandId())
     {
-        // FIXME: http
-        /*
-        case HTTP_REQUEST:
+        case scag2::transport::http::HTTP_REQUEST:
             return EH_HTTP_REQUEST;
-        case HTTP_RESPONSE:
+        case scag2::transport::http::HTTP_RESPONSE:
             return EH_HTTP_RESPONSE;
-        case HTTP_DELIVERY:
+        case scag2::transport::http::HTTP_DELIVERY:
             return EH_HTTP_DELIVERY;
-         */
         default:
             return EH_UNKNOWN;
     }
