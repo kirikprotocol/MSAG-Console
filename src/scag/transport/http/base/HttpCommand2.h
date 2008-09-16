@@ -94,13 +94,7 @@ protected:
     std::string key;
     StringHash &masterHash;
 };
-/*
-enum HttpCommandId {
-    HTTP_REQUEST = 100,
-    HTTP_RESPONSE,
-    HTTP_DELIVERY
-};
-*/
+
 // helper for debugging
 const char* commandIdName( int );
 
