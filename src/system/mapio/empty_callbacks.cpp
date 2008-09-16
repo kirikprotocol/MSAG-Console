@@ -55,5 +55,8 @@ _CB(Et96MapV3AnyTimeInterrogationInd)
 _CB(Et96MapV3ProvideSubscriberInfoConf)
 
 _CB(Et96MapGetACVersionConf)
+_CB(Et96MapV2CheckImeiConf)
+_CB(Et96MapV3ForwardSmMOConf)
+_CB(Et96MapV2CheckImeiInd)
 
 }
