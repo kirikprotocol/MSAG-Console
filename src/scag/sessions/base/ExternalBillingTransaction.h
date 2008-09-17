@@ -10,6 +10,9 @@ namespace sessions {
 class ExternalBillingTransaction : public ExternalTransaction
 {
 public:
+    static const uint32_t id = 1;
+
+public:
     explicit ExternalBillingTransaction( int billid ) :
     billid_(billid) {}
 
@@ -25,6 +28,11 @@ public:
     virtual ExternalBillingTransaction* castToBilling() {
         return this;
     }
+
+    virtual util::storage::Serializer& serialize( util::storage::Serializer& s ) const;
+    virtual util::storage::Deserializer& deserialize( util::storage::Deserializer& s )
+        throw ( util::storage::DeserializerException );
+
 
     virtual void info( bill::BillingInfoStruct& bis,
                        bill::TariffRec& tr ) const 

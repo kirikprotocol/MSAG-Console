@@ -9,12 +9,27 @@ using namespace scag2::sessions;
 
 struct lessAccessTime
 {
-    bool operator() ( const std::pair<time_t, SessionKey>& a,
-                      const std::pair<time_t, SessionKey>& b ) const
+    bool operator() ( const std::pair<SessionKey,time_t>* a,
+                      const std::pair<SessionKey,time_t>* b ) const
     {
-        return ( a.first < b.first ) || ( a.first == b.first && a.second < b.second );
+        return ( a->second < b->second ) || ( a->second == b->second && a->first < b->first );
     }
 };
+
+time_t maxtime_() {
+    time_t zero = time_t(0);
+
+    unsigned long long x(-1);
+    for ( size_t i = 0; i < 100; ++i ) {
+        time_t res = time_t(x);
+        if ( res > zero ) return res;
+        x = x >> 1;
+    }
+    ::abort();
+    return zero;
+}
+
+const time_t maxtime = maxtime_();
 
 }
 
@@ -65,6 +80,8 @@ void SessionManagerCallback(void * sm,Session * session)
 SessionManagerImpl::SessionManagerImpl() :
 ConfigListener(SESSIONMAN_CFG),
 nodeNumber_(-1),
+flushLimit_(100000000),
+activeSessions_(0),
 cmdqueue_(0),
 log_(0),
 started_(false)
@@ -82,7 +99,7 @@ SessionManagerImpl::~SessionManagerImpl()
 
 size_t SessionManagerImpl::flushSizeLimit() const
 {
-    return 1000;
+    return flushLimit_;
 }
 
 
@@ -91,6 +108,7 @@ void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg,
                                SCAGCommandQueue& cmdqueue ) // possible throws exceptions
 {
     nodeNumber_ = nodeNumber;
+    flushLimit_ = cfg.flushlimit;
     cmdqueue_ = &cmdqueue;
     config_ = cfg;
     // expireSchedule = time(NULL) + DEFAULT_EXPIRE_INTERVAL;
@@ -223,7 +241,7 @@ int SessionManagerImpl::Execute()
             if ( curtmo > next ) curtmo = next;
         }
         if ( isStarted() && curtmo > 0 &&
-             expireMap_.size() < flushSizeLimit() ) expireMonitor_.wait( curtmo );
+             activeSessions_ <= flushSizeLimit() ) expireMonitor_.wait( curtmo );
 
         const time_t now = time(0);
         std::vector< SessionKey > curset;
@@ -241,34 +259,43 @@ int SessionManagerImpl::Execute()
             // expireMap_.size(), expireHash_.Count() );
             for ( ExpireMap::iterator j = expireMap_.begin(); j != i ; ++j ) {
                 // smsc_log_debug( log_, "prepare key=%s for expiration", j->second.toString().c_str() );
-                curset.push_back( j->second );
-                expireHash_.Delete( j->second );
+                if ( j->second.second != ::maxtime ) --activeSessions_;
+                curset.push_back( j->second.first );
+                expireHash_.Delete( j->second.first );
             }
             expireMap_.erase( expireMap_.begin(), i );
         }
 
         // const size_t expiredCount = curset.size();
 
-        std::vector< SessionKey > flushset;
-        if ( expireMap_.size() > flushSizeLimit() ) {
+        std::vector< std::pair<SessionKey,time_t> > flushset;
+        if ( activeSessions_ > flushSizeLimit() ) {
             // too many living sessions
-            typedef std::vector< std::pair<time_t, SessionKey > > OldAccess_type;
+            typedef std::vector< std::pair<SessionKey,time_t>* > OldAccess_type;
             OldAccess_type oldaccess;
             oldaccess.reserve( expireMap_.size() );
-            std::copy( expireMap_.begin(), expireMap_.end(),
-                       std::back_inserter(oldaccess) );
-            std::sort( oldaccess.begin(), oldaccess.end(),
+            for ( ExpireMap::iterator i = expireMap_.begin();
+                  i != expireMap_.end();
+                  ++i ) {
+                oldaccess.push_back( &(i->second) );
+            }
+            std::sort( oldaccess.begin(),
+                       oldaccess.end(),
                        ::lessAccessTime() );
             size_t extracount = oldaccess.size() - size_t(flushSizeLimit()*0.9);
             flushset.reserve( extracount );
-            for ( OldAccess_type::const_iterator i = oldaccess.begin();
+            for ( OldAccess_type::iterator i = oldaccess.begin();
                   extracount > 0;
                   --extracount ) {
 
+                // smsc_log_debug( log_, "oldaccess: %s %i",
+                // (*i)->first.toString().c_str(), int((*i)->second - now) );
+                if ( (*i)->second != maxtime ) {
+                    --activeSessions_;
+                    flushset.push_back(**i);
+                    (*i)->second = maxtime;
+                }
                 ++i;
-                flushset.push_back( i->second );
-                eraseExpire( i->first, i->second );
-                expireHash_.Delete( i->second );
 
             }
             
@@ -277,7 +304,22 @@ int SessionManagerImpl::Execute()
         if ( !curset.empty() || !flushset.empty() ) {
 
             UnlockMutexGuard ug( expireMonitor_ );
+            /*
+            smsc_log_debug( log_, "going to expire/flush=%u/%u", 
+                            unsigned(curset.size()),
+                            unsigned(flushset.size()) );
+             */
             alldone = store_->expireSessions( curset, flushset );
+
+            /*
+             if ( log_->isDebugEnabled() ) {
+             uint32_t sc;
+             uint32_t slc;
+             getSessionsCount( sc, slc );
+             smsc_log_debug( log_, "after expire/flush sessions tot/lck=%u/%u",
+             sc, slc );
+             }
+             */
 
         } // lock expireMonitor_
 
@@ -301,53 +343,58 @@ void SessionManagerImpl::continueExecution( LongCallContext* lcmCtx, bool droppe
         // finalize immediately
         store_->sessionFinalized( *session );
     } else {
-        scheduleExpire( session->expirationTime(), *session );
+        scheduleExpire( session->expirationTime(), session->lastAccessTime(), session->sessionKey() );
     }
 }
 
 
 void SessionManagerImpl::scheduleExpire( time_t expirationTime,
-                                         Session& session )
+                                         time_t lastaccessTime,
+                                         const SessionKey& key )
 {
     unsigned mapsz;
-    unsigned hashsz;
+    unsigned actsz;
     time_t now = time(0);
     int prevtime;
-    const SessionKey& key( session.sessionKey() );
     do {
 
         MutexGuard mg(expireMonitor_);
         time_t* ptr = expireHash_.GetPtr(key);
         mapsz = unsigned(expireMap_.size());
-        hashsz = expireHash_.Count();
-
-        session.setLastAccessTime( now );
+        actsz = activeSessions_;
 
         if ( ptr ) {
 
             prevtime = int(*ptr - now);
-            if ( *ptr == expirationTime ) break; // time has not changed
 
             // find the element in the map and remove it
-            eraseExpire(*ptr,key);
+            ExpireMap::iterator ei = findExpire(*ptr,key);
+            assert( ei != expireMap_.end() );
+            if ( ei->second.second != maxtime ) {
+                if ( ei->first == expirationTime ) break; // already the same time
+                --activeSessions_;
+            }
+            expireMap_.erase( ei );
             *ptr = expirationTime;
         } else {
             expireHash_.Insert(key, expirationTime);
             prevtime = -1;
             ++mapsz;
-            ++hashsz;
         }
-        expireMap_.insert( std::pair< time_t, SessionKey >(expirationTime,key) );
+        actsz = ++activeSessions_;
+        expireMap_.insert
+            ( std::make_pair( expirationTime, std::make_pair
+                              ( key, lastaccessTime ) ) );
 
         if ( expirationTime < now || !isStarted() ||
-             expireMap_.size() > flushSizeLimit() ) expireMonitor_.notify();
+             activeSessions_ > flushSizeLimit() ) expireMonitor_.notify();
 
     } while ( false );
 
     smsc_log_debug( log_, "scheduleExpire(key=%s): time=%d => %d, cnt=%u/%u",
                     key.toString().c_str(),
                     prevtime, int( expirationTime - now ),
-                    mapsz, hashsz );
+                    actsz, mapsz );
 }
 
 
@@ -383,21 +430,20 @@ bool SessionManagerImpl::finalize( Session& session )
 }
 
 
-void SessionManagerImpl::eraseExpire( time_t expire, const SessionKey& key )
+SessionManagerImpl::ExpireMap::iterator
+    SessionManagerImpl::findExpire( time_t expire, const SessionKey& key )
 {
-    for ( ExpireMap::iterator i = expireMap_.lower_bound(expire);
-          ;
-          ++i ) {
+    ExpireMap::iterator i = expireMap_.lower_bound(expire);
+    for ( ; ; ++i ) {
         if ( i == expireMap_.end() || i->first != expire ) {
             smsc_log_error( log_, "Logic error in scheduleExpire: %s",
                             i == expireMap_.end() ? "at end" : "time mismatch" );
-            ::abort();
-        }
-        if ( i->second == key ) {
-            expireMap_.erase( i );
+            i = expireMap_.end();
             break;
         }
+        if ( i->second.first == key ) break;
     }
+    return i;
 }
 
 }}

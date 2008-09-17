@@ -1,3 +1,4 @@
+#include <cassert>
 #include <sys/time.h>
 // #include "sms/sms.h"
 #include "SessionKey.h"
@@ -134,11 +135,26 @@ SessionPrimaryKey::SessionPrimaryKey( const SessionKey& k )
 {
     ::gettimeofday(&borntime_,0);
     key_ = k.toString();
+    addtokey();
+}
+
+
+void SessionPrimaryKey::setBornTime( const timeval& tv )
+{
+    borntime_ = tv;
+    const char* p = strrchr( key_.c_str(), '/' );
+    assert( p );
+    key_.erase( p - key_.c_str() );
+    addtokey();
+}
+
+
+void SessionPrimaryKey::addtokey()
+{
     char buf[128];
     sprintf( buf,"/%ld%d", borntime_.tv_sec, int(borntime_.tv_usec/1000) );
     key_.append( buf );
 }
-
 
 } // namespace sessions
 } // namespace scag

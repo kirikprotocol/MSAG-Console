@@ -6,6 +6,7 @@ namespace scag2 {
 namespace sessions {
 
 using namespace scag::exceptions;
+using namespace util::storage;
 
 smsc::logger::Logger* Operation::log_ = 0;
 Mutex Operation::loggerMutex_;
@@ -94,6 +95,29 @@ void Operation::print( util::Print& p, opid_type opid ) const
              flagSet(OperationFlags::PERSISTENT) ? " pers" : ""
              );
 }
+
+
+Serializer& Operation::serialize( Serializer& s ) const
+{
+    return s << 
+        uint32_t(receivedParts_) <<
+        uint32_t(receivedResps_) <<
+        uint8_t(status_) <<
+        type_ << flags_;
+}
+
+
+Deserializer& Operation::deserialize( Deserializer& s ) throw ( DeserializerException )
+{
+    uint32_t x;
+    s >> x; receivedParts_ = int(x);
+    s >> x; receivedResps_ = int(x);
+    uint8_t y;
+    s >> y; status_ = ICCOperationStatus(y);
+    s >> type_ >> flags_;
+    return s;
+}
+
 
 } // namespace sessions
 } // namespace scag

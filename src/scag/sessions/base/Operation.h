@@ -4,12 +4,12 @@
 #include "core/synchronization/Mutex.hpp"
 #include "logger/Logger.h"
 #include "Session2.h"
+#include "scag/util/storage/Serializer.h"
 
 namespace scag2 {
 namespace sessions {
 
 using namespace smsc::core::synchronization;
-class Session;
 
 typedef enum ICCOperationStatus
 {
@@ -54,6 +54,9 @@ public:
     inline uint32_t flags() const { return flags_; }
 
     void print( util::Print& p, opid_type opid = SCAGCommand::invalidOpId() ) const;
+
+    util::storage::Serializer& serialize( util::storage::Serializer& s ) const;
+    util::storage::Deserializer& deserialize( util::storage::Deserializer& s ) throw (DeserializerException);
 
 private:
     Operation& operator = ( const Operation& );

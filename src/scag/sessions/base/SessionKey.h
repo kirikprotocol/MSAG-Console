@@ -125,8 +125,11 @@ public:
     const timeval& bornTime() const {
         return borntime_;
     }
+    void setBornTime( const timeval& tv );
 
 private:
+    void addtokey();
+
     SessionPrimaryKey();
     // SessionPrimaryKey( const SessionPrimaryKey& );
     // SessionPrimaryKey& operator = ( const SessionPrimaryKey& );

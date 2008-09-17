@@ -13,16 +13,22 @@
 #include "SessionStore2.h"
 #include "scag/transport/CommandOperation.h"
 
+using namespace scag2::util::storage;
+
 namespace {
 
 smsc::logger::Logger*              log_ = 0;
+smsc::logger::Logger*              logc_ = 0; // for ctor/dtor
 smsc::core::synchronization::Mutex sessionloggermutex;
 smsc::core::synchronization::Mutex sessionopidmutex;
 
 inline void getlog() {
     if ( !log_ ) {
         MutexGuard mg(sessionloggermutex);
-        if ( !log_ ) log_ = smsc::logger::Logger::getInstance("session");
+        if ( !log_ ) {
+            log_ = smsc::logger::Logger::getInstance("session");
+            logc_ = smsc::logger::Logger::getInstance("sess.alloc");
+        }
     }
 }
 
@@ -185,8 +191,11 @@ Serializer& SessionPropertyScope::serialize( Serializer& o ) const
         char* key;
         AdapterProperty* value;
         for ( Hash< AdapterProperty* >::Iterator i(&properties_); i.Next(key,value); --sz ) {
-            if ( isReadonly(key) ) continue;
-            o << key << value->getStr();
+            if ( isReadonly(key) || !strlen(key) ) {
+                o << "";
+            } else {
+                o << key << value->getStr();
+            }
         }
         assert( sz == 0 );
     }
@@ -202,8 +211,9 @@ Deserializer& SessionPropertyScope::deserialize( Deserializer& o ) throw (Deseri
     std::string key;
     std::string value;
     for ( ; sz > 0; --sz ) {
-        o >> key >> value;
+        o >> key;
         if ( key.size() > 0 ) {
+            o >> value;
             AdapterProperty* p = new AdapterProperty( key, session_, value );
             properties_.Insert( smsc::util::cStringCopy(key.c_str()), p );
         }
@@ -274,8 +284,15 @@ bool Session::isReadOnlyProperty( const char* name )
 Session::Session( const SessionKey& key ) :
 key_(key),
 pkey_(key),
+lastAccessTime_(time(0)),
+expirationTimeAtLeast_(lastAccessTime_),
+expirationTime_(lastAccessTime_+defaultLiveTime()),
 needsflush_(false),
 command_(0),        // unlocked
+currentOperationId_(SCAGCommand::invalidOpId()),
+ussdOperationId_(SCAGCommand::invalidOpId()),
+currentOperation_(0),
+umr_(-1),
 transactions_(0),
 nextContextId_(0),
 globalScope_(0),
@@ -283,8 +300,9 @@ serviceScopes_(0),
 contextScopes_(0),
 operationScopes_(0)
 {
-    getlog();
-    clear();
+    ::getlog();
+    smsc_log_debug( logc_, "session=%p key=%s +1", this, key.toString().c_str() );
+    // clear();
 }
 
 
@@ -304,85 +322,194 @@ Session::~Session()
         }
         cmdQueue_.erase( cmdQueue_.begin(), cmdQueue_.end() );
          */
-        delete transactions_;
-        delete globalScope_;
-        delete serviceScopes_;
-        delete contextScopes_;
-        delete operationScopes_;
+    delete transactions_;
+    delete globalScope_;
+    delete serviceScopes_;
+    delete contextScopes_;
+    delete operationScopes_;
+    smsc_log_debug( logc_, "session=%p key=%s -1", this, sessionKey().toString().c_str() );
+}
+
+
+Serializer& Session::serialize( Serializer& s ) const
+{
+    key_.serialize( s );
+    const timeval& tv( pkey_.bornTime() );
+    s << uint64_t(tv.tv_sec) << 
+        uint32_t(tv.tv_usec) <<
+        uint64_t(lastAccessTime_) <<
+        uint64_t(expirationTime_) <<
+        uint64_t(expirationTimeAtLeast_);
+
+    assert( ! lcmCtx_.continueExec );
+
+    // services init/destroy fields
+    uint32_t count = uint32_t(initrulekeys_.size());
+    s << count;
+    for ( std::list<std::pair<int,int> >::const_iterator i = initrulekeys_.begin();
+          i != initrulekeys_.end();
+          ++i ) {
+        --count;
+        const uint32_t service( i->first );
+        const uint32_t transport( i->second );
+        s << service << transport << uint8_t(isNew(service,transport));
+    }
+    assert( count == 0 );
+
+    s << currentOperationId_ << ussdOperationId_ << uint32_t(umr_);
+    
+    count = operations_.Count();
+    s << count;
+    if ( count ) {
+        int key;
+        Operation* value;
+        for ( IntHash< Operation* >::Iterator i(operations_); i.Next(key,value); --count ) {
+            if ( ! value ) key = int(SCAGCommand::invalidOpId());
+            s << opid_type(key);
+            if ( opid_type(key) != SCAGCommand::invalidOpId() )
+                value->serialize( s );
+        }
+        assert( count == 0 );
     }
 
-
-    Serializer& Session::serialize( Serializer& s ) const
-    {
-        key_.serialize( s );
-        // s << bornTime_.tv_sec << bornTime_.tv_usec;
-        // FIXME: cmdQueue?
-        s << currentOperationId_;
-        serializeScope( s, globalScope_ );
-        serializeScopeHash( s, serviceScopes_ );
-        serializeScopeHash( s, contextScopes_ );
-        serializeScopeHash( s, operationScopes_ );
-        return s;
+    count = transactions_ ? transactions_->GetCount() : 0;
+    s << count;
+    if ( count ) {
+        char* key;
+        ExternalTransaction* value;
+        for ( Hash< ExternalTransaction* >::Iterator i(transactions_);
+              i.Next(key,value);
+              ) {
+            if ( !value || !strlen(key) ) {
+                s << "";
+            } else {
+                s << key;
+                value->serialize( s );
+            }
+        }
     }
 
+    s << uint32_t(nextContextId_);
+    serializeScope( s, globalScope_ );
+    serializeScopeHash( s, serviceScopes_ );
+    serializeScopeHash( s, contextScopes_ );
+    serializeScopeHash( s, operationScopes_ );
+    return s;
+}
 
-    Deserializer& Session::deserialize( Deserializer& s ) throw (DeserializerException)
-    {
+
+Deserializer& Session::deserialize( Deserializer& s ) throw (DeserializerException)
+{
+    clear();
+    try {
         key_.deserialize( s );
-        // s >> bornTime_.tv_sec >> bornTime_.tv_usec;
-        // FIXME: cmdQueue?
-        opid_type opid;
-        s >> opid;
-        // FIXME: operations hash
+        {
+            uint64_t tvsec,atime,etimes,etimeh;
+            uint32_t tvusec;
+            s >> tvsec >> tvusec >> atime >> etimes >> etimeh;
+            timeval tv = { tvsec, tvusec };
+            pkey_ = SessionPrimaryKey(key_);
+            pkey_.setBornTime(tv);
+            expirationTime_ = time_t(etimes);
+            expirationTimeAtLeast_ = time_t(etimeh);
+        }
+
+        uint32_t count;
+        s >> count;
+        isnew_.Empty();
+        initrulekeys_.clear();
+        for ( ; count > 0; --count ) {
+            uint32_t service, transport;
+            uint8_t isnew;
+            s >> service >> transport >> isnew;
+            initrulekeys_.push_back( std::make_pair(int(service),int(transport)) );
+            setNew( int(service), int(transport), isnew );
+        }
+
+        s >> currentOperationId_ >> ussdOperationId_ >> count;
+        umr_ = int32_t(count);
+
+        s >> count;
+        for ( ; count > 0; --count ) {
+            opid_type key;
+            s >> key;
+            if ( key != SCAGCommand::invalidOpId() ) {
+                Operation* op = new Operation( this, CO_NA );
+                op->deserialize( s );
+                operations_.Insert( key, op );
+            }
+        }
+
+        s >> count;
+        if ( count > 0 ) {
+            transactions_ = new Hash< ExternalTransaction* >;
+            for ( ; count > 0; --count ) {
+                std::string key;
+                s >> key;
+                if ( ! key.empty() ) {
+                    ExternalTransaction* et = 
+                        ExternalTransaction::createAndDeserialize( s );
+                    assert( et );
+                    transactions_->Insert( smsc::util::cStringCopy(key.c_str()), et );
+                }
+            }
+        }
+
+        s >> count;
+        nextContextId_ = int32_t(count);
+
         deserializeScope( s, globalScope_ );
         deserializeScopeHash( s, serviceScopes_ );
         deserializeScopeHash( s, contextScopes_ );
         deserializeScopeHash( s, operationScopes_ );
+
         // post-processing
-        setCurrentOperation( opid );
-        return s;
+        setCurrentOperation( currentOperationId_ );
+    } catch (...) {
+        clear();
+        throw;
     }
+    return s;
+}
 
 
 void Session::clear()
 {
-    // gettimeofday( &bornTime_, 0 );
-    pkey_ = SessionPrimaryKey( key_ ); // to reset born time
+    // FIXME: temporary output
+    smsc_log_debug( logc_, "session=%p key=%s clear", this, sessionKey().toString().c_str() );
+
+    pkey_ = SessionPrimaryKey(key_); // to reset born time
+
     const time_t now = time(0);
     lastAccessTime_ = now;
     expirationTimeAtLeast_ = now;
-    expirationTime_ = expirationTimeAtLeast_ + defaultLiveTime(); // FIXME: customize
+    expirationTime_ = expirationTimeAtLeast_ + defaultLiveTime();
 
     needsflush_ = false;
-    
-    // session unlocking should be done externally
-    // command_ = 0;
-        
+
+    lcmCtx_.clear();
+    lcmCtx_.setActionContext( 0 );
+
     isnew_.Empty();
-    if ( ! initrulekeys_.empty() ) {
-        smsc_log_error( log_, "rule keys stack is not empty, finalization failed?" );
-    }
     initrulekeys_.clear();
 
     { // clear operations
 
-        currentOperationId_ = 0;
-        ussdOperationId_ = 0;
+        currentOperationId_ = SCAGCommand::invalidOpId();
+        ussdOperationId_ = SCAGCommand::invalidOpId();
         currentOperation_ = 0;
         umr_ = -1;
 
         // assert( operations_.Count() == 0 );
-        if ( operations_.Count() > 0 ) {
-            smsc_log_warn( log_, "operation count=%d > 0, FIXME: what to do?", operations_.Count() );
-        }
+        // if ( operations_.Count() > 0 ) {
+        // smsc_log_warn( log_, "operation count=%d > 0, FIXME: what to do?", operations_.Count() );
+        // }
         int opkey;
         Operation* op;
         for ( IntHash< Operation* >::Iterator i(operations_); i.Next(opkey,op); ) {
-            // FIXME: finalize operations ?
             delete op;
         }
         operations_.Empty();
-
     }
 
     if ( transactions_ ) {
@@ -396,6 +523,8 @@ void Session::clear()
         }
         transactions_->Empty();
     }
+
+    // nextcontextid is not reset to prevent accidents
 
     if ( globalScope_ ) globalScope_->clear();
     clearScopeHash( operationScopes_ );
@@ -417,7 +546,7 @@ void Session::print( util::Print& p ) const
 
     const time_t now = time(0);
     // const int lastac = int(now - lastAccessTime_);
-    p.print( "session=%p key=%s times=%d/%d/%d ops=%d trans=%d lockCmd=%u umr=%d%s",
+    p.print( "session=%p key=%s tmASH=%d/%d/%d ops=%d trans=%d lockCmd=%u umr=%d%s",
              this, sessionKey().toString().c_str(),
              int(lastAccessTime_ - now),
              int(expirationTime_ - now),
@@ -488,8 +617,8 @@ Operation* Session::setCurrentOperation( opid_type opid )
     do {
 
         if ( opid == SCAGCommand::invalidOpId() ) {
-            currentOperation_ = 0;
-            break;
+            currentOperationId_ = opid;
+            return currentOperation_ = 0;
         }
 
         Operation** optr = operations_.GetPtr(opid);
@@ -514,7 +643,7 @@ Operation* Session::setCurrentOperation( opid_type opid )
 
     const uint8_t optype = currentOperation_->type();
     currentOperationId_ = opid;
-    smsc_log_debug( log_, "setOp(sess=%p,opid=%u) => op=%p type=%d(%s) expire=%d",
+    smsc_log_debug( log_, "setOp(sess=%p,opid=%u) => op=%p type=%d(%s) etime=%d",
                     this, unsigned(opid), currentOperation_,
                     int(optype),
                     commandOpName(optype),
@@ -548,7 +677,7 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
     time_t now = time(0);
     time_t expire = now + defaultLiveTime();
     if ( expire > expirationTime_ ) expirationTime_ = expire;
-    smsc_log_debug( log_, "createOp(sess=%p,cmd=%p) => op=%p opid=%u type=%d(%s), expire=%d",
+    smsc_log_debug( log_, "createOp(sess=%p,cmd=%p) => op=%p opid=%u type=%d(%s), etime=%d",
                     this, &cmd,
                     currentOperation_,
                     unsigned(currentOperationId_),
@@ -606,7 +735,7 @@ void Session::closeCurrentOperation()
         }
     }
 
-    smsc_log_debug( log_, "closeOp(sess=%p,op=%p opid=%u type=%d(%s)) => opcnt=%u expire=%d",
+    smsc_log_debug( log_, "closeOp(sess=%p,op=%p opid=%u type=%d(%s)) => opcnt=%u etime=%d",
                     this,
                     prevop,
                     unsigned(prevopid),
@@ -697,6 +826,8 @@ void Session::dropInitRuleKey( int serviceId, int transport )
         if ( initrulekeys_.empty() ) {
             // if no services left, then reset session expiration time
             time_t now = time(0);
+            smsc_log_debug( log_, "session=%p key=%s dropinitrulekey",
+                            this, sessionKey().toString().c_str() );
             if ( expirationTimeAtLeast_ > now ) expirationTimeAtLeast_ = now;
         }
     }
@@ -793,10 +924,16 @@ SessionPropertyScope* Session::getOperationScope()
 
 void Session::waitAtLeast( unsigned sec )
 {
-    time_t t = time(0) + sec;
+    const time_t now = time(0);
+    const time_t t = now + sec;
     if ( t > expirationTimeAtLeast_ ) {
         expirationTimeAtLeast_ = t;
         if ( t > expirationTime_ ) expirationTime_ = t;
+        smsc_log_debug( log_, "session=%p key=%s tmASH=%d/%d/%d",
+                        this, sessionKey().toString().c_str(),
+                        int(lastAccessTime_ - now),
+                        int(expirationTime_ - now),
+                        int(expirationTimeAtLeast_ - now) );
     }
 }
 

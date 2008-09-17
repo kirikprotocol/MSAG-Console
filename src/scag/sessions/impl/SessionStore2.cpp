@@ -280,14 +280,14 @@ void SessionStoreImpl::releaseSession( Session& session )
         }
     }
 
-    // debugging printout of the session
+    // debugging printout of the session while it is locked
     {
         scag_plog_debug(pl,log_);
         session.print(pl);
     }
 
     bool dostopping = false;
-    time_t expiration;
+    time_t expiration, lastaccess = time(0);
 
     // SCAGCommand* prevcmd = 0;
     SCAGCommand* nextcmd = 0;
@@ -318,6 +318,8 @@ void SessionStoreImpl::releaseSession( Session& session )
             abort();
             // throw std::runtime_error("SessionStore: logic error in releaseSession" );
         }
+
+        session.setLastAccessTime(lastaccess);
 
         if ( needflush ) {
             UnlockMutexGuard ug(cacheLock_);
@@ -351,7 +353,7 @@ void SessionStoreImpl::releaseSession( Session& session )
                     &session, key.toString().c_str(), prevuid, nextuid, tot, lck );
 
     if ( ! carryNextCommand(session,nextcmd,true) )
-        expiration_->scheduleExpire(expiration,session);
+        expiration_->scheduleExpire(expiration,lastaccess,key);
 
 }
 
@@ -402,7 +404,7 @@ unsigned SessionStoreImpl::storedCommands() const
 
 
 bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
-                                       const std::vector< SessionKey >& flush )
+                                       const std::vector<std::pair<SessionKey,time_t> >& flush )
 {
     assert( expired.size() > 0 || flush.size() > 0 );
 
@@ -411,7 +413,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
     time_t now = time(0);
     Session* session = 0;
     std::vector< SessionKey >::const_iterator i = expired.begin();
-    std::vector< SessionKey >::const_iterator j = flush.begin();
+    std::vector< std::pair<SessionKey,time_t> >::const_iterator j = flush.begin();
     unsigned longcall = 0;
     unsigned notexpired = 0;
 
@@ -425,6 +427,10 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
                 // session should be kept on disk.
                 // NOTE: we'll save session only if cache is overwhelmed,
                 // otherwise the session should be returned to expirationQueue.
+                smsc_log_debug( log_, "session=%p key=%s is being flushed:",
+                                session, session->sessionKey().toString().c_str() );
+                scag_plog_debug(pl,log_);
+                session->print(pl);
                 disk_->set( session->sessionKey(), *session );
 
             } else if ( ! fin_->finalize( *session ) ) {
@@ -451,18 +457,20 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
 
         // take the next session in the list
 
-        std::vector< SessionKey >::const_iterator ij;
+        const SessionKey* pkey;
+        time_t lastaccess;
         if ( i != expired.end() ) {
-            ij = i;
+            pkey = &(*i);
             ++i;
         } else if ( j != flush.end() ) {
-            ij = j;
+            pkey = &(j->first);
+            lastaccess = j->second;
             ++j;
             keep = true;
         } else {
             break;
         }
-        const SessionKey& key = *ij;
+        const SessionKey& key = *pkey;
         // keep = ( std::distance(expired.begin(),i) > expiredCount );
 
         MemStorage::stored_type* v = cache_->get( key );
@@ -473,12 +481,14 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
 
             // session is already flushed?
             ++notexpired;
+            smsc_log_warn( log_, "session key=%s is already flushed?",
+                           key.toString().c_str() );
             session = 0;
             continue;
 
         } else {
-            // smsc_log_debug(log_,"key=%s to be expired is not found",
-            // key.toString().c_str() );
+            // session is asked to be expired, but is not found in cache:
+            // was it flushed to disk?
             cache_->set( key, cache_->val2store( allocator_->alloc(key)) );
             v = cache_->get( key );
             session = cache_->store2val(*v);
@@ -486,7 +496,18 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             ++totalSessions_;
             {
                 UnlockMutexGuard umg(cacheLock_);
-                if ( ! disk_->get( key, cache_->store2ref(*v) ) ) v = 0;
+                smsc_log_debug(log_,"key=%s to be expired is not found",
+                               key.toString().c_str() );
+                if ( ! disk_->get( key, cache_->store2ref(*v) ) ) {
+                    smsc_log_warn( log_, "session key=%s cannot be uploaded",
+                                   key.toString().c_str() );
+                    v = 0;
+                } else {
+                    smsc_log_debug( log_,"session=%p key=%s has been just uploaded:",
+                                    session, key.toString().c_str() );
+                    scag_plog_debug(pl,log_);
+                    session->print(pl);
+                }
             }
             if ( !v ) {
                 --totalSessions_;
@@ -512,14 +533,23 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
 
         if ( keep ) {
 
-            // the session was not accessed for too long time?
+            // was the session not accessed for too long time?
+
+            const time_t newlastaccess = session->lastAccessTime();
+            if ( lastaccess != newlastaccess ) {
+                ++notexpired;
+                session = 0;
+                continue;
+            }
+
             SCAGCommand* nextcmd = session->popCommand();
             if ( nextcmd ) {
+                // a command has appeared on the queue
                 ++lockedSessions_;
                 setCommandSession( *nextcmd, session );
                 session->setCurrentCommand( nextcmd->getSerial() );
                 if ( carryNextCommand(*session,nextcmd,false) ) {
-                    // activity
+                    // some activity on this session
                     ++notexpired;
                     session = 0;
                     continue;

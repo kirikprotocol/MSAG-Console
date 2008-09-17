@@ -106,7 +106,8 @@ public:
         session_(session),
         command_(command),
         contextId_(0),
-        commandProperty_(commandProperty)
+        commandProperty_(commandProperty),
+        destroyService_(false)
         {
             setInfrastructureConstants();
         }

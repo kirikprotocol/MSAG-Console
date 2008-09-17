@@ -23,7 +23,6 @@ using lcm::LongCallContext;
 using namespace smsc::logger;
 using namespace scag::util::properties;
 using namespace smsc::core::buffers;
-using namespace scag::util::storage;
 using namespace transport;
 
 typedef  transport::opid_type  opid_type;
@@ -47,8 +46,9 @@ public:
     SessionPropertyScope( Session* patron );
     virtual ~SessionPropertyScope();
     virtual Property* getProperty( const std::string& name );
-    Serializer& serialize( Serializer& s ) const;
-    Deserializer& deserialize( Deserializer& s ) throw (DeserializerException);
+    util::storage::Serializer& serialize( util::storage::Serializer& s ) const;
+    util::storage::Deserializer& deserialize( util::storage::Deserializer& s ) 
+        throw (util::storage::DeserializerException);
 
     // clear the scope
     void clear();
@@ -97,12 +97,9 @@ public:
 
     virtual ~Session();
 
-    Serializer& serialize( Serializer& s ) const;
-    Deserializer& deserialize( Deserializer& s ) throw (DeserializerException);
-
-    /// clear internal state except session key, but not the command queue.
-    /// reset expiration time.
-    void clear();
+    util::storage::Serializer& serialize( util::storage::Serializer& s ) const;
+    util::storage::Deserializer& deserialize( util::storage::Deserializer& s )
+        throw (util::storage::DeserializerException);
 
     /// notification when property is changed
     virtual void changed( AdapterProperty& prop );
@@ -254,7 +251,11 @@ public:
 
     // === ATTENTION! the following methods should be invoked from session store only
 
-    /// get/set the last access time
+    /// clear internal state except session key, but not the command queue.
+    /// reset expiration time.
+    void clear();
+
+    // get/set the last access time
     inline time_t lastAccessTime() const {
         return lastAccessTime_;
     }
@@ -304,10 +305,12 @@ private: // methods
     Session( const Session& s );
     Session& operator = ( const Session& s );
 
-    void serializeScope( Serializer& o, const SessionPropertyScope* s ) const;
-    void deserializeScope( Deserializer& o, SessionPropertyScope*& s ) throw (DeserializerException);
-    void serializeScopeHash( Serializer& o, const IntHash< SessionPropertyScope* >* s ) const;
-    void deserializeScopeHash( Deserializer& o, IntHash< SessionPropertyScope* >*& s ) throw (DeserializerException);
+    void serializeScope( util::storage::Serializer& o, const SessionPropertyScope* s ) const;
+    void deserializeScope( util::storage::Deserializer& o, SessionPropertyScope*& s )
+        throw (util::storage::DeserializerException);
+    void serializeScopeHash( util::storage::Serializer& o, const IntHash< SessionPropertyScope* >* s ) const;
+    void deserializeScopeHash( util::storage::Deserializer& o, IntHash< SessionPropertyScope* >*& s ) 
+        throw (util::storage::DeserializerException);
     void clearScopeHash( IntHash< SessionPropertyScope* >* s );
     opid_type getNewOperationId() const;
 
@@ -318,60 +321,60 @@ private: // statics
 
 private:
     /// session key (msisdn)
-    SessionKey     key_;
+    SessionKey     key_;                          // (pers)
 
     // session create time is incorporated into primarykey
     // timeval bornTime_;
-    SessionPrimaryKey  pkey_;
+    SessionPrimaryKey  pkey_;                     // (pers: borntime only)
 
-    /// last access time (pers), should be changed in successful fetchSession only
-    time_t lastAccessTime_;
+    // last access time (should not be changed by users)
+    time_t lastAccessTime_;                       // (pers)
 
-    /// expiration Time ( soft/hard limits) (pers)
-    time_t expirationTime_;
-    time_t expirationTimeAtLeast_;
+    /// expiration Time ( soft/hard limits)
+    time_t expirationTime_;                       // (pers)
+    time_t expirationTimeAtLeast_;                // (pers)
 
-    /// the flag tells if the session should be flushed (not pers)
+    /// the flag tells if the session should be flushed
     /// NOTE: this flag is reset after flush.
-    bool needsflush_;
+    bool needsflush_;                             // (not pers: false)
 
     /// the serial number of the current command being processed,
     /// the session is locked if not 0.
-    uint32_t command_;
+    uint32_t command_;                            // (not pers: don't touch)
 
     /// FIXME: should it be here?
-    LongCallContext  lcmCtx_;
+    LongCallContext  lcmCtx_;                     // (not pers: continueExec=0)
 
-    /// === fields for init/destroy handlers (not pers?)
+    /// === fields for init/destroy services
     struct TransportNewFlag;
-    IntHash< TransportNewFlag >      isnew_;
-    std::list< std::pair<int,int> >  initrulekeys_;
+    IntHash< TransportNewFlag >      isnew_;         // pers
+    std::list< std::pair<int,int> >  initrulekeys_;  // pers
 
     /// the list of pending commands (owned, not pers).
-    std::list< SCAGCommand* > cmdQueue_;
+    std::list< SCAGCommand* > cmdQueue_;             // not pers: don't touch
 
     /// === operations
-    opid_type   currentOperationId_;
-    opid_type   ussdOperationId_;
-    Operation*  currentOperation_;
+    opid_type   currentOperationId_;                 // pers
+    opid_type   ussdOperationId_;                    // pers
+    Operation*  currentOperation_;                   // not pers: reset on load via setCurOp
 
     // TODO: think about movind operations creation/deletion into smppstatemachine,
     // then move umr_ field into operation.
-    int32_t    umr_;   // ussd reference number (-1 -- invalid, 0 -- pending)
+    // ussd reference number (-1 -- invalid, 0 -- pending)
+    int32_t    umr_;                                 // pers
     
     /// the hash of operations (int -> Operation)
-    IntHash< Operation* > operations_;
+    IntHash< Operation* > operations_;               // pers
 
     /// the hash of external transactions (string -> transaction)
-    Hash< ExternalTransaction* >* transactions_;
-
+    Hash< ExternalTransaction* >* transactions_;     // pers
 
     /// --- property Scopes
 
-    int nextContextId_;
+    int32_t nextContextId_;                          // pers
 
     /// global var Scope
-    SessionPropertyScope* globalScope_;
+    SessionPropertyScope* globalScope_;              // pers
 
     /// the hash of service var Scopes (int(service_id) -> SessionServiceScope)
     IntHash< SessionPropertyScope* >* serviceScopes_;
@@ -450,11 +453,11 @@ private:
 } // namespace sessions
 } // namespace scag
 
-inline scag::util::storage::Serializer& operator << ( scag::util::storage::Serializer& o, const scag2::sessions::Session& s )
+inline scag2::util::storage::Serializer& operator << ( scag2::util::storage::Serializer& o, const scag2::sessions::Session& s )
 {
     return s.serialize(o);
 }
-inline scag::util::storage::Deserializer& operator >> ( scag::util::storage::Deserializer& o, scag2::sessions::Session& s )
+inline scag2::util::storage::Deserializer& operator >> ( scag2::util::storage::Deserializer& o, scag2::sessions::Session& s )
 {
     return s.deserialize(o);
 }

@@ -60,8 +60,8 @@ private:
     };
      */
 
-    typedef std::multimap< time_t, SessionKey >      ExpireMap;
-    typedef XHash< SessionKey, time_t, SessionKey >  ExpireHash;
+    typedef std::multimap< time_t, std::pair<SessionKey,time_t> > ExpireMap;
+    typedef XHash< SessionKey, time_t, SessionKey >               ExpireHash;
 
 public:
 
@@ -94,7 +94,8 @@ public:
 
     /// --- interface of SessionExpirationQueue
     virtual void scheduleExpire( time_t            expirationTime,
-                                 Session&          session );
+                                 time_t            lastaccessTime,
+                                 const SessionKey& key );
 
     /// --- interface of SessionFinalizer
     virtual bool finalize( Session& s );
@@ -124,10 +125,12 @@ private:
     // uint16_t getLastUSR(Address& address);
 
     // void reorderExpireQueue(Session* session);
-    void eraseExpire( time_t expire, const SessionKey& key );
+    ExpireMap::iterator findExpire( time_t expire, const SessionKey& key );
 
 private:
     unsigned          nodeNumber_;
+    unsigned          flushLimit_;
+    unsigned          activeSessions_;
     SCAGCommandQueue* cmdqueue_;
     EventMonitor      expireMonitor_;
     ExpireMap         expireMap_;
