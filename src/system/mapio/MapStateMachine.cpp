@@ -1,4 +1,4 @@
-//$Id$
+#ident "@(#)$Id$"
 
 #if defined USE_MAP
 #define MAP_DIALOGS_LIMIT 360
@@ -1432,16 +1432,19 @@ static void SendSegmentedSms(MapDialog* dialog)
   checkMapReq( Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 ), __func__);
 }
 
-static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const unsigned char* text, unsigned text_len, ET96MAP_USSD_STRING_T* ussdString) {
+static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const unsigned char* text, unsigned text_len, ET96MAP_USSD_STRING_T* ussdString)
+{
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
   unsigned bytes = 0;
-  if( encoding == MAP_UCS2_ENCODING ) {
+  if( encoding == MAP_UCS2_ENCODING )
+  {
     if( text_len > ET96MAP_MAX_USSD_STR_LEN )
       throw VeryLongText();
     bytes = text_len;
     memcpy( ussdString->ussdStr, text, text_len );
     ussdEncoding = 0x48;
-  } else if( encoding == MAP_OCTET7BIT_ENCODING || encoding == MAP_LATIN1_ENCODING || encoding == MAP_SMSC7BIT_ENCODING ) {
+  } else if( encoding == MAP_OCTET7BIT_ENCODING || encoding == MAP_LATIN1_ENCODING || encoding == MAP_SMSC7BIT_ENCODING )
+  {
     if (encoding == MAP_SMSC7BIT_ENCODING ) {
       bytes = ConvertSMSC7bit27bit(text,text_len,ussdString->ussdStr,0,ET96MAP_MAX_USSD_STR_LEN);
       // if buffer have trailing 7 unfilled bits place <cr> there
@@ -1453,7 +1456,8 @@ static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const
       if( bytes*8-elen*7 == 7 ) ussdString->ussdStr[bytes-1] |= (0x0D<<1);
     }
     ussdEncoding = 0x01;
-  } else { //8 bit
+  } else
+  { //8 bit
     if( text_len > ET96MAP_MAX_USSD_STR_LEN )
       throw VeryLongText();
     bytes = text_len;
@@ -1565,59 +1569,74 @@ static void DoUSSRUserResponce( MapDialog* dialog)
     text=(const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
   }
 
-    if ( dialog->version == 2 )
-    {
-      /*
-      if ( text_len > ET96MAP_MAX_USSD_STR_LEN )
-        throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
-      */
+  if(text_len==0)
+  {
+    __map_warn2__("%s: attempt to send empty ussd string seq=%d, oa=%s,srcSme=%s,da=%s",
+                  __func__,dialog->dialogid_smsc,dialog->sms->getOriginatingAddress().toString().c_str(),
+                  dialog->sms->getSourceSmeId(),dialog->sms->getDestinationAddress().toString().c_str());
+    text=(const unsigned char*)"\x0d";
+    text_len=1;
+    encoding=MAP_LATIN1_ENCODING;
+  }
 
-      ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
-      try {
-        ET96MAP_USSD_STRING_T ussdString = {0,};
-        ussdEncoding = fillUSSDString( encoding, text, text_len, &ussdString );
-        checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
-                                                               dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
-                                                               &ussdEncoding,
-                                                               &ussdString,
-                                                               0), __func__);
-        SendOkToSmsc(dialog);
-      } catch (VeryLongText &t) {
-        char errtext[1024] = {0,};
-        ET96MAP_USSD_STRING_T ussdString = {0,};
-        makeUssdErrorText(errtext, Status::USSDMSGTOOLONG );
-        int err_text_len = (int)strlen(errtext);
-        __map_warn2__("%s: dlg 0x%x very long ussd string %d %s",__func__,dialog->dialogid_map, text_len, errtext);
-        ussdEncoding = fillUSSDString( MAP_LATIN1_ENCODING, (unsigned char *)errtext, err_text_len, &ussdString );
-        checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
-                                                               dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
-                                                               &ussdEncoding,
-                                                               &ussdString,
-                                                               0), __func__);
-        SendErrToSmsc(dialog->dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_PERM,Status::USSDMSGTOOLONG));
-      }
-    } else if( dialog->version == 1 ) {
-      if ( text_len > ET96MAP_MAX_SS_USER_DATA_LEN )
-        throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
+  if ( dialog->version == 2 )
+  {
+    /*
+    if ( text_len > ET96MAP_MAX_USSD_STR_LEN )
+      throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
+    */
 
-      char data[ET96MAP_MAX_SS_USER_DATA_LEN*3];
-      int data_len = 0;
-      if( encoding == MAP_UCS2_ENCODING ) {
-        char buf[ET96MAP_MAX_SS_USER_DATA_LEN];
-        int len = ConvertUCS2ToMultibyte((const short*)text,text_len,buf,ET96MAP_MAX_SS_USER_DATA_LEN,CONV_ENCODING_CP1251);
-        data_len=Transliterate(buf,len,CONV_ENCODING_CP1251,data,ET96MAP_MAX_SS_USER_DATA_LEN*3);
-        if ( data_len > ET96MAP_MAX_SS_USER_DATA_LEN || data_len == -1)
-          throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
-        text = (const unsigned char*)data;
-        text_len = data_len;
-      }
-
-      ET96MAP_SS_USER_DATA_T ussdData;
-      memcpy(ussdData.ssUserDataStr,text,text_len);
-      ussdData.ssUserDataStrLen = text_len;
-      checkMapReq( Et96MapV1ProcessUnstructuredSSDataResp( dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,&ussdData, 0 ), __func__);
+    ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
+    try {
+      ET96MAP_USSD_STRING_T ussdString = {0,};
+      ussdEncoding = fillUSSDString( encoding, text, text_len, &ussdString );
+      checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
+                                                             dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
+                                                             &ussdEncoding,
+                                                             &ussdString,
+                                                             0), __func__);
       SendOkToSmsc(dialog);
-    } else throw runtime_error( FormatText("%s: incorrect dialog version %d",__func__,dialog->version));
+    } catch (VeryLongText &t) {
+      char errtext[1024] = {0,};
+      ET96MAP_USSD_STRING_T ussdString = {0,};
+      makeUssdErrorText(errtext, Status::USSDMSGTOOLONG );
+      int err_text_len = (int)strlen(errtext);
+      __map_warn2__("%s: dlg 0x%x very long ussd string %d %s",__func__,dialog->dialogid_map, text_len, errtext);
+      ussdEncoding = fillUSSDString( MAP_LATIN1_ENCODING, (unsigned char *)errtext, err_text_len, &ussdString );
+      checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
+                                                             dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
+                                                             &ussdEncoding,
+                                                             &ussdString,
+                                                             0), __func__);
+      SendErrToSmsc(dialog->dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_PERM,Status::USSDMSGTOOLONG));
+    }
+  } else if( dialog->version == 1 )
+  {
+    if ( text_len > ET96MAP_MAX_SS_USER_DATA_LEN )
+      throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
+
+    char data[ET96MAP_MAX_SS_USER_DATA_LEN*3];
+    int data_len = 0;
+    if( encoding == MAP_UCS2_ENCODING ) {
+      char buf[ET96MAP_MAX_SS_USER_DATA_LEN];
+      int len = ConvertUCS2ToMultibyte((const short*)text,text_len,buf,ET96MAP_MAX_SS_USER_DATA_LEN,CONV_ENCODING_CP1251);
+      data_len=Transliterate(buf,len,CONV_ENCODING_CP1251,data,ET96MAP_MAX_SS_USER_DATA_LEN*3);
+      if ( data_len > ET96MAP_MAX_SS_USER_DATA_LEN || data_len == -1)
+        throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
+      text = (const unsigned char*)data;
+      text_len = data_len;
+    }
+
+    ET96MAP_SS_USER_DATA_T ussdData;
+    memcpy(ussdData.ssUserDataStr,text,text_len);
+    ussdData.ssUserDataStrLen = text_len;
+    checkMapReq( Et96MapV1ProcessUnstructuredSSDataResp( dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,&ussdData, 0 ), __func__);
+    SendOkToSmsc(dialog);
+  }
+  else
+  {
+    throw runtime_error( FormatText("%s: incorrect dialog version %d",__func__,dialog->version));
+  }
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
   eraseUssdLock(dialog, __func__);
   dialog->state = MAPST_END;
