@@ -69,7 +69,6 @@ private:
   void ReadAllTO(char* buf, uint32_t sz);
   uint32_t getPacketSize(SerialBuffer& bsb);
   PersServerResponseType GetServerResponse(SerialBuffer& bsb);
-  //void ParseProperty(Property& prop, SerialBuffer& bsb);
   void ping();
   void CheckServerResponse(SerialBuffer& bsb);
 
@@ -81,7 +80,6 @@ private:
   time_t actTS;
   Socket sock;
   bool connected;
-  //bool isStopping;
   Logger * log;
   SerialBuffer sb;
 };

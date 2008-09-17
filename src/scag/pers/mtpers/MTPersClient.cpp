@@ -541,7 +541,7 @@ int ClientTask::Execute() {
   smsc_log_debug(logger, "client task %p started", this);
   char address[20];
   time_t t = time(NULL);
-  int iterCnt = 25;
+  int iterCnt = 50;
   int reqCount = 19 * 4 * iterCnt;
   for (int i = 1; i < iterCnt + 1; i += 2) {
     if (isStopping) {

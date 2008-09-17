@@ -75,7 +75,6 @@ int main(int argc, char* argv[])
     sigset(SIGHUP, appSignalHandler); 
 
     try {
-        //ConfigManager::Init();
         string host = "phoenix";
         int port = 47111;
         if (argc > 1) {
