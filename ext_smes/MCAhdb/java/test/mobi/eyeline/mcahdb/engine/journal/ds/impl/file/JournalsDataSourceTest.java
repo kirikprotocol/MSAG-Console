@@ -23,7 +23,7 @@ public class JournalsDataSourceTest {
   @Test
   public void journalTest() throws IOException, DataSourceException {
 
-    final String journal = TestUtils.generateJournal("store/journals", 9000, 100);
+    final String journal = TestUtils.generateJournal("store/journals", "+7913902", "+7913903", 1000, 9000, 100);
 
     final JournalDataSource ds = new JournalDataSourceImpl(new File("store/journals"), new File("store/journals/archives"));
 

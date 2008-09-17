@@ -22,7 +22,8 @@ public class StoreImplTest {
 
   @Test
   public void testAdd() throws DataSourceException, IOException {
-    StoreImpl store = new StoreImpl(new File("store/events/2008010101.dat"), false);
+    StoreImpl store = new StoreImpl(new File("store/events/2008010101.dat"));
+    store.open(false);
     Collection<Event> events = TestUtils.generateEvents(2, 1);
     for (Event e : events)
       store.addEvent(e);
@@ -32,7 +33,8 @@ public class StoreImplTest {
 
   @Test
   public void testRead() throws DataSourceException, IOException {
-    StoreImpl store = new StoreImpl(new File("store/events/2008010101.dat"), true);
+    StoreImpl store = new StoreImpl(new File("store/events/2008010101.dat"));
+    store.open(true);
     Collection<Event> events = new LinkedList<Event>();
     store.getEvents("+79139031000", new Date(System.currentTimeMillis() - 3600000), new Date(), events);
     for (Event e : events) {

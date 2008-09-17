@@ -94,7 +94,7 @@ public class StoreImpl implements Store {
         close();
 
       if (!opened) {
-        indexFile = new File(dataFile.getFile().getAbsolutePath() + ".ind");
+        indexFile = new File(file.getAbsolutePath() + ".ind");
         if (readOnly)
           openFileForRead();
         else
@@ -172,12 +172,12 @@ public class StoreImpl implements Store {
   }
 
   public int hashCode() {
-    return dataFile.getFile().getName().hashCode();
+    return file.getName().hashCode();
   }
 
   public boolean equals(Object o) {
     if (o instanceof StoreImpl)
-      return ((StoreImpl)o).dataFile.getFile().equals(dataFile.getFile());
+      return ((StoreImpl)o).file.equals(file);
     return false;
   }
 

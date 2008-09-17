@@ -23,11 +23,12 @@ public class StoresCache {
 
   private static final Category log = Category.getInstance(StoresCache.class);
 
-  private static final SimpleDateFormat fileNameFormat = new SimpleDateFormat("yyMM/dd/HH");
+  private final SimpleDateFormat fileNameFormat = new SimpleDateFormat("yyMM/dd/HH");
 
   private final int rwTimeout;
   private final int roTimeout;
 
+  private final Lock flock = new ReentrantLock();
   private final File storeDir;
   private final ScheduledExecutorService cleaner;
   private final ConcurrentHashMap<String, CachedStore> cache = new ConcurrentHashMap<String, CachedStore>(10);
@@ -74,7 +75,16 @@ public class StoresCache {
     }
   }
 
-  private Store getFile(String name, boolean readOnly) throws DataSourceException {
+  private Store getFile(Date date, boolean readOnly) throws DataSourceException {
+
+    String name;
+    try {
+      flock.lock();
+      name = fileNameFormat.format(date) + ".dat";
+    } finally {
+      flock.unlock();
+    }
+
     CachedStore page = cache.get(name);
 
     if (page == null) {
@@ -95,10 +105,6 @@ public class StoresCache {
     return page;
   }
 
-  private static String getFileName(Date date) {
-    return fileNameFormat.format(date) + ".dat";
-  }
-
   public Collection<Store> listFiles(Date from, Date till) throws DataSourceException {
     Collection<Store> result = new LinkedList<Store>();
 
@@ -106,7 +112,7 @@ public class StoresCache {
     long tillTime = till.getTime();
     while(time <= tillTime) {
       Date date = new Date(time);
-      Store s = getFile(getFileName(date), true);
+      Store s = getFile(date, true);
       if (s != null)
         result.add(s);      
       time += 3600000;
@@ -116,7 +122,7 @@ public class StoresCache {
   }
 
   public Store getFile(Date date) throws DataSourceException {
-    return getFile(getFileName(date), false);
+    return getFile(date, false);
   }
 
   public void shutdown() {
@@ -134,9 +140,11 @@ public class StoresCache {
 
     private long closeTime;
     private long lastWriteTime;
+    private final File file;
 
     private CachedStore(File file) {
       this.impl = new StoreImpl(file);
+      this.file = file;
     }
 
     public boolean exists() {
@@ -148,20 +156,19 @@ public class StoresCache {
       try {
         impl.open(readOnly);
       } catch (Throwable e) {
-        lock.unlock();
         throw new DataSourceException(e);
       }
     }
 
     public void close() throws IOException {
-      closeTime = System.currentTimeMillis();
+      closeTime = System.currentTimeMillis();      
       lock.unlock(); // unlock store
     }
 
     public boolean closeInt(boolean f) throws IOException {
       try {
         lock.lock();
-
+        System.out.println("2");
         long now = System.currentTimeMillis();
 
         if (f || (!impl.isReadOnly() && now - lastWriteTime > rwTimeout) || (now - closeTime > roTimeout)) {
