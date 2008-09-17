@@ -201,7 +201,7 @@ void Property::Serialize(SerialBuffer& buf, bool toFSDB, GlossaryBase* glossary)
 	buf.WriteString(name.c_str());
 
     switch(type) {
-        case INT:   buf.WriteInt32(i_val);          break;
+        case INT:   buf.WriteInt32(static_cast<uint32_t>(i_val));          break;
         case STRING:buf.WriteString(s_val.c_str()); break;
         case BOOL:  buf.WriteInt8((uint8_t)b_val);  break;
         case DATE:  buf.WriteInt32((uint32_t)d_val);break;
