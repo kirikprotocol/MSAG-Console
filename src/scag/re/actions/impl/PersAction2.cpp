@@ -350,11 +350,11 @@ int PersActionCommand::batchResult(ActionContext& context, SerialBuffer& sb, boo
 	}
 }
 
-bool PersActionCommand::batchPrepare(ProfileType pt, ActionContext& context, SerialBuffer& sb)
+bool PersActionCommand::batchPrepare(ActionContext& context, SerialBuffer& sb)
 {
     smsc_log_debug(logger,"Run BatchPrepare 'PersAction cmd=%s. var=%s'...", getStrCmd(cmd), var.c_str());
     PersCallParams params;
-    if (!RunBeforePostpone(pt, context, &params)) {
+    if (!RunBeforePostpone(context, &params)) {
       return false;
     }
 
@@ -379,7 +379,7 @@ bool PersActionCommand::batchPrepare(ProfileType pt, ActionContext& context, Ser
     }
 }
 
-bool PersActionCommand::RunBeforePostpone(ProfileType pt, ActionContext& context, PersCallParams* params) {
+bool PersActionCommand::RunBeforePostpone(ActionContext& context, PersCallParams* params) {
   REProperty *p;
   if (ftVar != ftUnknown && !(p = context.getProperty(var))) {
     smsc_log_error(logger, "Invalid var property  %s", var.c_str());
@@ -388,7 +388,6 @@ bool PersActionCommand::RunBeforePostpone(ProfileType pt, ActionContext& context
   const std::string& svar = ftVar == ftUnknown ? var : p->getStr();
   time_t fd = finalDate;
   uint32_t lt = lifeTime;
-  params->pt = pt;
   params->propName = svar;
   if (ftLifeTime != ftUnknown) {
     REProperty *rp = context.getProperty(sLifeTime);
@@ -442,41 +441,51 @@ const char* PersActionCommand::getVar() {
   return var.c_str();
 }
 
+bool PersActionBase::setKey(ActionContext& context, PersCallParams* params) {
+  if (!hasOptionalKey) {
+    CommandProperty& cp = context.getCommandProperty();
+    if(params->pt == PT_ABONENT)
+        params->skey = cp.abonentAddr.toString();
+    else
+        params->ikey = getKey(cp, profile);
+    return true;
+  }
+  if (ftOptionalKey != ftUnknown) {
+    REProperty *rp = context.getProperty(optionalKeyStr);
+    if(!rp) {
+      smsc_log_error(logger, "'%s' parameter '%s' not found in action context",
+                      OPTIONAL_KEY, optionalKeyStr.c_str());
+      return false;
+    }
+    if (params->pt == PT_ABONENT) {
+      try {
+        optionalSkey = getAbntAddress(rp->getStr());
+      } catch(const std::runtime_error& e) {
+        smsc_log_error(logger, "'%s' parameter has error abonent profile key: %s", OPTIONAL_KEY, e.what());
+        return false;
+      }
+    } else {
+      optionalIkey = static_cast<uint32_t>(rp->getInt());
+    }
+  }
+  params->skey = optionalSkey;
+  params->ikey = optionalIkey;
+  return true;
+}
+
 bool PersAction::RunBeforePostpone(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'PersAction cmd=%s, profile=%d var=%s'...", getStrCmd(cmd), profile, persCommand.getVar());
 
-    CommandProperty& cp = context.getCommandProperty();
     auto_ptr<PersCallParams> params(new PersCallParams());
-    if (hasOptionalKey) {
-      if (ftOptionalKey != ftUnknown) {
-        REProperty *rp = context.getProperty(optionalKeyStr);
-        if(!rp) {
-          smsc_log_error(logger, "'%s' parameter '%s' not found in action context",
-                          OPTIONAL_KEY, optionalKeyStr.c_str());
-          return false;
-        }
-        if (profile == PT_ABONENT) {
-          try {
-            optionalSkey = getAbntAddress(rp->getStr());
-          } catch(const std::runtime_error& e) {
-            smsc_log_error(logger, "'%s' parameter has error abonent profile key: %s", OPTIONAL_KEY, e.what());
-            return false;
-          }
-        } else {
-          optionalIkey = static_cast<uint32_t>(rp->getInt());
-        }
-      }
-      params->skey = optionalSkey;
-      params->ikey = optionalIkey;
-    } else {
-      if(params->pt == PT_ABONENT)
-          params->skey = cp.abonentAddr.toString();
-      else
-          params->ikey = getKey(cp, profile);
+    params->pt = profile;
+
+    if (!setKey(context, params.get())) {
+      return false;
     }
+
     context.getSession().getLongCallContext().callCommandId = cmdToLongCallCmd(cmd);
-    persCommand.RunBeforePostpone(profile, context, params.get());
+    persCommand.RunBeforePostpone(context, params.get());
     context.getSession().getLongCallContext().setParams(params.release());
     return true;
 }

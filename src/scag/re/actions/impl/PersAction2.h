@@ -43,10 +43,10 @@ public:
   bool run(ActionContext& context) { return true; };
   IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
   bool FinishXMLSubSection(const std::string& name);
-  bool RunBeforePostpone(ProfileType pt, ActionContext& context, PersCallParams* params);
+  bool RunBeforePostpone(ActionContext& context, PersCallParams* params);
   void ContinueRunning(ActionContext& context);
   const char* getVar();
-  bool batchPrepare(ProfileType pt, ActionContext& context, SerialBuffer& sb);
+  bool batchPrepare(ActionContext& context, SerialBuffer& sb);
   int batchResult(ActionContext& context, SerialBuffer& sb, bool transactMode = false);
 
 private:
@@ -86,6 +86,7 @@ protected:
   ProfileType getProfileTypeFromStr(const std::string& str);
   void getOptionalKey(const std::string& key_str);
   std::string getAbntAddress(const std::string& _address);
+  bool setKey(ActionContext& context, PersCallParams* params);
 
 protected:
   PersCmd cmd;

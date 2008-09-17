@@ -49,58 +49,30 @@ bool BatchAction::RunBeforePostpone(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'BatchAction' in %s mode..."
                    , transactMode ? TRANSACTIONAL_MODE.c_str() : NORMAL_MODE.c_str());
-	auto_ptr<PersCallParams> p(new PersCallParams());
     context.getSession().getLongCallContext().callCommandId = PERS_BATCH;
-    CommandProperty& cp = context.getCommandProperty();
+	auto_ptr<PersCallParams> params(new PersCallParams());
+    params->pt = profile;
+
+    if (!setKey(context, params.get())) {
+      return false;
+    }
+
     PersKey pk;
-    std::string skey;
-
-    if (hasOptionalKey) {
-      if (ftOptionalKey == ftUnknown) {
-        if (profile == PT_ABONENT) {
-          pk.skey = optionalSkey.c_str();
-          skey = optionalSkey;
-        } else {
-          pk.ikey = optionalIkey;
-        }
-      } else {
-        REProperty *rp = context.getProperty(optionalKeyStr);
-        if(!rp) {
-          smsc_log_error(logger, "'%s' parameter '%s' not found in action context",
-                          OPTIONAL_KEY, optionalKeyStr.c_str());
-          return false;
-        }
-        if (profile == PT_ABONENT) {
-          try {
-            skey = getAbntAddress(rp->getStr());
-            pk.skey = skey.c_str();
-          } catch(const std::runtime_error& e) {
-            smsc_log_error(logger, "'%s' parameter has error abonent profile key: %s", OPTIONAL_KEY, e.what());
-            return false;
-          }
-        } else {
-          pk.ikey = static_cast<uint32_t>(rp->getInt());
-        }
-      }
+    if (params->pt == PT_ABONENT) {
+      pk.skey = params->skey.c_str();
     } else {
-      if(profile == PT_ABONENT)
-      {
-          skey = cp.abonentAddr.toString();
-          pk.skey = skey.c_str();
-      }
-      else
-          pk.ikey = getKey(cp, profile);
+      pk.ikey = params->ikey;
     }
 
-    PersClient::Instance().PrepareMTBatch(p->sb, profile, pk, static_cast<uint16_t>(actions.size()), transactMode);
+    PersClient::Instance().PrepareMTBatch(params->sb, profile, pk, static_cast<uint16_t>(actions.size()), transactMode);
     for(int i = 0; i < actions.size(); i++) {
-      if (!actions[i]->batchPrepare(profile, context, p->sb)) {
-        p->error = scag::pers::util::BATCH_ERROR;
-        p->exception = scag::pers::util::strs[scag::pers::util::BATCH_ERROR];
-        setStatus(context, p.get(), p->error, p->exception, i + 1);
+      if (!actions[i]->batchPrepare(context, params->sb)) {
+        params->error = scag::pers::util::BATCH_ERROR;
+        params->exception = scag::pers::util::strs[scag::pers::util::BATCH_ERROR];
+        setStatus(context, params.get(), params->error, params->exception, i + 1);
       }
     }
-    context.getSession().getLongCallContext().setParams(p.release());
+    context.getSession().getLongCallContext().setParams(params.release());
     return true;
 }
 
