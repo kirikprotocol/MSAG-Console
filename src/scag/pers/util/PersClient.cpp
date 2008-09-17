@@ -5,8 +5,8 @@
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "scag/util/singleton/Singleton.h"
-#include "scag/config/ConfigManager.h"
-#include "scag/config/ConfigListener.h"
+#include "scag/config/base/ConfigManager2.h"
+#include "scag/config/base/ConfigListener2.h"
 
 #include "PersClient.h"
 
@@ -21,7 +21,7 @@ using namespace scag2::lcm;
 bool  PersClient::inited = false;
 Mutex PersClient::initLock;
 
-class PersClientImpl: public PersClient, public scag::config::ConfigListener, public Thread {
+class PersClientImpl: public PersClient, public scag2::config::ConfigListener, public Thread {
 //    friend class PersClient;
 public:
     PersClientImpl(): connected(false), headContext(NULL), ConfigListener(scag::config::PERSCLIENT_CFG) {};
@@ -165,7 +165,7 @@ void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, i
 
 void PersClientImpl::configChanged()
 {
-    scag::config::PersClientConfig& cfg = scag::config::ConfigManager::Instance().getPersClientConfig();
+    scag2::config::PersClientConfig& cfg = scag2::config::ConfigManager::Instance().getPersClientConfig();
     
     reinit(cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout);
 }
@@ -668,31 +668,24 @@ void PersClientImpl::ExecutePersCall(LongCallContext* ctx)
           if (persParams->error == 0) {
             RunBatch(persParams->sb);
           }
-        }
-		else if(persParams->pt == PT_ABONENT)   {     
+        } else {
+          PersKey key;
+          if (persParams->pt == PT_ABONENT) {
+            key.skey = persParams->skey.c_str();
+          } else {
+            key.ikey = persParams->ikey;
+          }
           persParams->error = 0;
-          persParams->exception.assign("");
+          persParams->exception.clear();
           switch(ctx->callCommandId)
           {
-              case PERS_GET: GetProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str(), persParams->prop); break;
-              case PERS_SET: SetProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
-              case PERS_DEL: DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str());  break;
-              case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, persParams->skey.c_str(), persParams->prop, persParams->mod); break;
-              case PERS_INC: persParams->result = IncProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
+              case PERS_GET:     GetProperty(persParams->pt, key, persParams->propName.c_str(), persParams->prop); break;
+              case PERS_SET:     SetProperty(persParams->pt, key, persParams->prop); break;
+              case PERS_DEL:     DelProperty(persParams->pt, key, persParams->propName.c_str());  break;
+              case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, key, persParams->prop, persParams->mod); break;
+              case PERS_INC:     persParams->result = IncProperty(persParams->pt, key, persParams->prop); break;
           }
-        }
-        else {
-          persParams->error = 0;
-          persParams->exception.assign("");
-          switch(ctx->callCommandId)
-          {
-              case PERS_GET: GetProperty(persParams->pt, persParams->ikey, persParams->propName.c_str(), persParams->prop); break;
-              case PERS_SET: SetProperty(persParams->pt, persParams->ikey, persParams->prop); break;
-              case PERS_DEL: DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str());  break;
-              case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, persParams->ikey, persParams->prop, persParams->mod); break;
-              case PERS_INC: persParams->result = IncProperty(persParams->pt, persParams->ikey, persParams->prop); break;
-          }
-        }
+        } 
     }
     catch(PersClientException& exc)
     {

@@ -79,7 +79,7 @@ union PersKey{
 
 class PersCallParams : public LongCallParams{
 public:
-    PersCallParams() : error(0), result(0) {};
+    PersCallParams() : LongCallParams(), error(0), result(0) {};
     ProfileType pt;
 	SerialBuffer sb;
 	uint32_t ikey;
@@ -90,7 +90,6 @@ public:
     
     int32_t error;
     uint32_t result;
-    std::string exception;
 };
 
 class PersClient {
