@@ -19,7 +19,7 @@
 
 using namespace std;
 using namespace smsc::logger;
-using namespace scag::pers::client;
+using namespace scag::pers::util;
 using namespace scag::pers;
 using namespace scag::config;
 using smsc::core::network::Socket;
@@ -90,10 +90,10 @@ int main(int argc, char* argv[])
 
         ThreadPool pool;
         for (int i = 0; i < threadCount; ++i) {
-          ClientTask *t = new ClientTask();
+          ClientTask *t = new ClientTask(host, port);
           pool.startTask(t);
         }
-        mainTask = new ClientTask();
+        mainTask = new ClientTask(host, port);
         mainTask->Execute();
         pool.shutdown();
         smsc_log_error(logger, "Test Stopped");

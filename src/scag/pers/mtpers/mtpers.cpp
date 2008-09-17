@@ -106,31 +106,57 @@ int main(int argc, char* argv[]) {
       smsc_log_warn(logger, "Parameter <MTPers.ioPoolSize> missed. Defaul value is %d", ioTasksCount);
     };
     try { 
-      storageNumber = persConfig.getInt("abonentStorageNumber");
-    } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.abonentStorageNumber> missed. Defaul value is %d", storageNumber);
-    };
-    try { 
       maxWaitingCount = persConfig.getInt("storageQueueSize");
     } catch (...) {
       smsc_log_warn(logger, "Parameter <MTPers.storageQueueSize> missed. Defaul value is %d", maxWaitingCount);
     };
+    NodeConfig nodeCfg;
     try { 
-      storagePath = persConfig.getString("storagePath");
+      nodeCfg.nodesCount = persConfig.getInt("nodesCount");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.storagePath> missed. Defaul value is '%s'", storagePath.c_str());
+      smsc_log_warn(logger, "Parameter <MTPers.nodesCount> missed. Defaul value is %d", nodeCfg.nodesCount);
+    };
+    try { 
+      nodeCfg.nodeNumber = persConfig.getInt("nodeNumber");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <MTPers.nodeNumber> missed. Defaul value is %d", nodeCfg.nodeNumber);
+    };
+    try { 
+      nodeCfg.storagesCount = persConfig.getInt("storagesCount");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <MTPers.storagesCount> missed. Defaul value is %d", nodeCfg.storagesCount);
     };
 
     ConfigView abntStorageConfig(manager, "MTPers.AbonentStorage");
-    AbonentStorageConfig abntCfg(storageNumber, abntStorageConfig, "AbonentStorage", logger);
+    AbonentStorageConfig abntCfg(abntStorageConfig, "AbonentStorage", logger);
     abntCfg.dbPath = storagePath;
-    ConfigView infStorageConfig(manager, "MTPers.InfrastructStorage");
-    InfrastructStorageConfig infCfg(infStorageConfig, "InfrastructStorage", logger);
-    infCfg.dbPath = storagePath;
+
+    try {
+      ConfigView locationsConfig(manager, "MTPers.AbonentStorage.Locations");
+      std::auto_ptr<CStrSet> locations(locationsConfig.getStrParamNames());
+      for (CStrSet::iterator i = locations.get()->begin(); i != locations.get()->end(); ++i) {
+        string loc = locationsConfig.getString((*i).c_str());
+        abntCfg.locationPath.push_back(loc);
+        ++nodeCfg.locationsCount;
+      }
+    } catch (...) {
+      smsc_log_warn(logger, "Section <MTPers.AbonentStorage.Locations> missed.");
+    }
+    if (abntCfg.locationPath.empty()) {
+      throw Exception("Locations paths is not specified");
+    }
 
 
-    StorageManager storageManager;
-    storageManager.init(maxWaitingCount, storageNumber, abntCfg, infCfg);
+    StorageManager storageManager(nodeCfg);
+
+    if (nodeCfg.nodeNumber == storageManager.getInfrastructNodeNumber()) {
+      ConfigView infStorageConfig(manager, "MTPers.InfrastructStorage");
+      std::auto_ptr<InfrastructStorageConfig> infCfg(new InfrastructStorageConfig(infStorageConfig, "InfrastructStorage", logger));
+      storageManager.init(maxWaitingCount, abntCfg, infCfg.get());
+    } else {
+      storageManager.init(maxWaitingCount, abntCfg, NULL);
+    }
+
 
     IOTaskManager ioMananger(storageManager);
     ioMananger.init(ioTasksCount, maxClientCount, timeout, "ioman");
@@ -140,13 +166,13 @@ int main(int argc, char* argv[]) {
     ps->Execute();
 
     smsc_log_error(logger, "PersServer stopped");
-  } catch (ConfigException& exc) {
+  } catch (const ConfigException& exc) {
     smsc_log_error(logger, "Configuration invalid. Details: %s Exiting.", exc.what());
     resultCode = -2;
-  } catch (Exception& exc) {
+  } catch (const Exception& exc) {
     smsc_log_error(logger, "Top level Exception: %s Exiting.", exc.what());
     resultCode = -3;
-  } catch (std::exception& exc) {
+  } catch (const std::exception& exc) {
     smsc_log_error(logger, "Top level exception: %s Exiting.", exc.what());
     resultCode = -4;
   } catch (...) {

@@ -2,18 +2,18 @@
 #define __SCAG_MTPERS_MTPERSCLIENT_H__
 
 
+#include <string>
 #include "core/threads/ThreadPool.hpp"
 #include "core/threads/ThreadedTask.hpp"
 
-#include "scag/pers/PersClient.h"
+#include "scag/pers/util/PersClient.h"
 #include "scag/util/storage/SerialBuffer.h"
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
-#include <string>
 
 namespace scag { namespace mtpers {
 
-using namespace scag::pers::client;
+using namespace scag::pers::util;
 using smsc::logger::Logger;
 using std::string;
 using smsc::core::network::Socket;
@@ -88,7 +88,7 @@ private:
 
 class ClientTask: public ThreadedTask {
 public:
-  ClientTask():client("phoenix", 47111, 60, 5) { logger = Logger::getInstance("task");};
+  ClientTask(const string& host, int port):client(host, port, 60, 5) { logger = Logger::getInstance("task");};
   ~ClientTask() {};
   virtual int Execute();
   virtual const char * taskName() {

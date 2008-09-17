@@ -1,5 +1,5 @@
 #include "MTPersClient.h"
-#include "scag/pers/Types.h"
+#include "scag/pers/util/Types.h"
 
 namespace scag { namespace mtpers {
 
@@ -120,10 +120,10 @@ void MTPersClient::ReadPacket(SerialBuffer& bsb)
     }
 
     bsb.Empty();
-    ReadAllTO(tmp_buf, sizeof(uint32_t));
-    bsb.Append(tmp_buf, sizeof(uint32_t));
+    ReadAllTO(tmp_buf, static_cast<uint32_t>(sizeof(uint32_t)));
+    bsb.Append(tmp_buf, static_cast<uint32_t>(sizeof(uint32_t)));
     bsb.SetPos(0);
-    sz = bsb.ReadInt32() - sizeof(uint32_t);
+    sz = bsb.ReadInt32() - static_cast<uint32_t>(sizeof(uint32_t));
     smsc_log_debug(log, "%d bytes will be read from socket", sz);
 
     while (sz > 1024) {
@@ -176,7 +176,7 @@ void MTPersClient::FillHead(PersCmd pc, ProfileType pt, const PersKey& key, Seri
 
 void MTPersClient::setBatchCount(uint32_t cnt, SerialBuffer& bsb)
 {
-	uint32_t i = bsb.GetPos();
+	uint32_t i = bsb.getPos();
 	bsb.SetPos(5);
 	bsb.WriteInt16(cnt);
 	bsb.SetPos(i);
@@ -467,10 +467,10 @@ void MTPersClient::testCase_CommandProcessing(ProfileType pt, const char* addres
   }
   string storeName;
   switch (pt) {
-  case scag::pers::PT_ABONENT: storeName = "ABONENT"; break;
-  case scag::pers::PT_SERVICE: storeName = "SERVICE"; break;
-  case scag::pers::PT_PROVIDER: storeName = "PROVIDER"; break;
-  case scag::pers::PT_OPERATOR: storeName = "OPERATOR"; break;
+  case scag::pers::util::PT_ABONENT: storeName = "ABONENT"; break;
+  case scag::pers::util::PT_SERVICE: storeName = "SERVICE"; break;
+  case scag::pers::util::PT_PROVIDER: storeName = "PROVIDER"; break;
+  case scag::pers::util::PT_OPERATOR: storeName = "OPERATOR"; break;
   }
   Property prop;
 
@@ -541,20 +541,20 @@ int ClientTask::Execute() {
   smsc_log_debug(logger, "client task %p started", this);
   char address[20];
   time_t t = time(NULL);
-  int iterCnt = 1;
+  int iterCnt = 25;
   int reqCount = 19 * 4 * iterCnt;
-  for (int i = 1; i < iterCnt + 1; ++i) {
+  for (int i = 1; i < iterCnt + 1; i += 2) {
     if (isStopping) {
       break;
     }
     try {
       client.init();
       sprintf(address, "8913880%04d", i);			
-      client.testCase_DelProfile(PT_ABONENT, address, i);
-      //client.testCase_CommandProcessing(PT_ABONENT, address, i);
-      //client.testCase_CommandProcessing(PT_PROVIDER, address, i);
-      //client.testCase_CommandProcessing(PT_SERVICE, address, i);
-      //client.testCase_CommandProcessing(PT_OPERATOR, address, i);
+      //client.testCase_DelProfile(PT_ABONENT, address, i);
+      client.testCase_CommandProcessing(PT_ABONENT, address, i);
+      client.testCase_CommandProcessing(PT_PROVIDER, address, i);
+      client.testCase_CommandProcessing(PT_SERVICE, address, i);
+      client.testCase_CommandProcessing(PT_OPERATOR, address, i);
       client.disconnect();
     } catch (const PersClientException& exc) {
       smsc_log_error(logger, "%p: address '%s' PersClientException: %s", this, exc.what());
@@ -562,7 +562,7 @@ int ClientTask::Execute() {
   }
   t = time(NULL) - t;
   if (t) {
-    int reqPerSec = reqCount / t;
+    int reqPerSec = static_cast<int>(reqCount / t);
     smsc_log_error(logger, "%p timings %d", this,  reqPerSec);
   }
   isStopping = true;
