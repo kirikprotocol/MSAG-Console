@@ -140,7 +140,7 @@ public:
 };
 
 }}
-
+/*
 inline scag::util::storage::Serializer& operator << (scag::util::storage::Serializer& ser, 
                                                      const scag::pers::Profile& pf) { 
   scag::util::storage::SerialBuffer buf;
@@ -159,6 +159,6 @@ inline scag::util::storage::Deserializer& operator >> (scag::util::storage::Dese
   pf.Deserialize(sb, true, deser.getGlossary());
   return deser;
 };
-
+*/
 #endif
 
