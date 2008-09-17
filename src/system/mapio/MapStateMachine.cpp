@@ -1685,6 +1685,17 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   {
     text=(const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
   }
+
+  if(text_len==0)
+  {
+    __map_warn2__("%s: attempt to send empty ussd string seq=%d, oa=%s,srcSme=%s,da=%s",
+                  __func__,dialog->dialogid_smsc,dialog->sms->getOriginatingAddress().toString().c_str(),
+                  dialog->sms->getSourceSmeId(),dialog->sms->getDestinationAddress().toString().c_str());
+    text=(const unsigned char*)"\x0d";
+    text_len=1;
+    encoding=MAP_LATIN1_ENCODING;
+  }
+
   /*
   if ( text_len > ET96MAP_MAX_USSD_STR_LEN )
     throw runtime_error(FormatText("%s: dlg=0x%x very long msg text %d",__func__,dialog->dialogid_map,text_len));
