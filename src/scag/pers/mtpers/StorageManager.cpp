@@ -11,17 +11,11 @@ StorageManager::StorageManager(const NodeConfig& nodeCfg): nodeNumber_(nodeCfg.n
   //storagesCount_ = StorageNumbering::instance().storages();
 }
 
-void StorageManager::init(uint16_t maxWaitingCount, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig& infcfg) {
-  vector<string> locationPath(abntcfg.locationPath);
-  if (locationPath.empty()) {
-    smsc_log_warn(logger_, "locations paths not set, set locations count=1 location path='./storage/abonent'");
-    locationPath.push_back("./storage/abonent");
-  }
-  locationsCount_ = locationPath.size();
+void StorageManager::init(uint16_t maxWaitingCount, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg) {
   for (unsigned locationNumber = 0; locationNumber < locationsCount_; ++locationNumber) {
-    if (!File::Exists(locationPath[locationNumber].c_str())) {
-      smsc_log_debug(logger_, "create storage dir '%s'", locationPath[locationNumber].c_str());
-      File::MkDir(locationPath[locationNumber].c_str());
+    if (!File::Exists(abntcfg.locationPath[locationNumber].c_str())) {
+      smsc_log_debug(logger_, "create storage dir '%s'", abntcfg.locationPath[locationNumber].c_str());
+      File::MkDir(abntcfg.locationPath[locationNumber].c_str());
     }
     AbonentStorageProcessor* proc = new AbonentStorageProcessor(maxWaitingCount, locationNumber, storagesCount_);
     storages_.Push(proc);
@@ -34,10 +28,15 @@ void StorageManager::init(uint16_t maxWaitingCount, const AbonentStorageConfig& 
   for (unsigned locationNumber = 0; locationNumber < locationsCount_; ++locationNumber) {
     pool_.startTask(storages_[locationNumber]);
   }
+  if (nodeNumber_ == getInfrastructNodeNumber()) {
+    if (!infcfg) {
+      throw Exception("Erorr init infrastruct storage, config in NULL");
+    }
+    infrastructStorage_ = new InfrastructStorageProcessor(maxWaitingCount);
+    infrastructStorage_->init(*infcfg);
+    pool_.startTask(infrastructStorage_);
+  }
 
-  infrastructStorage_ = new InfrastructStorageProcessor(maxWaitingCount);
-  infrastructStorage_->init(infcfg);
-  pool_.startTask(infrastructStorage_);
 }
 
 AbonentStorageProcessor* StorageManager::getLocation(unsigned elementStorageNumber) {
@@ -46,12 +45,16 @@ AbonentStorageProcessor* StorageManager::getLocation(unsigned elementStorageNumb
 
 bool StorageManager::process(ConnectionContext* cx) {
   if (cx->packet->notAbonentsProfile()) {
+    if (nodeNumber_ != getInfrastructNodeNumber()) {
+      smsc_log_warn(logger_, "can't process infrastruct request on node number=%d", cx, nodeNumber_);
+      return false;
+    }
     smsc_log_debug(logger_, "give %p context to not abonent's processor", cx);
     return infrastructStorage_->addContext(cx);
   } else {
     unsigned storageNumber = 0;
     try {
-      storageNumber = cx->packet->address.getNumber() % storagesCount_;
+      storageNumber = static_cast<unsigned>(cx->packet->address.getNumber() % storagesCount_);
       smsc_log_debug(logger_, "give %p context to storage %d in node %d", cx, storageNumber, nodeNumber_);
       return getLocation(storageNumber)->addContext(cx);      
     } catch (const std::runtime_error& e) {

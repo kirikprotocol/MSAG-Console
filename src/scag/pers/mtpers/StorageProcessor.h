@@ -11,8 +11,8 @@
 
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
-#include "scag/pers/AbntAddr.hpp"
-#include "scag/pers/Profile.h"
+#include "scag/pers/util/AbntAddr.hpp"
+#include "scag/pers/util/Profile.h"
 #include "core/buffers/PageFile.hpp"
 #include "core/buffers/IntHash.hpp"
 
@@ -25,8 +25,6 @@
 #include "scag/util/storage/BHDiskStorage.h"
 #include "scag/util/storage/Glossary.h"
 
-#include "scag/pers/ProfileStore.h"
-
 namespace scag { namespace mtpers {
 
 using std::vector;
@@ -35,8 +33,8 @@ using smsc::core::threads::ThreadedTask;
 using smsc::core::synchronization::EventMonitor;
 
 using namespace scag::util::storage;
-using scag::pers::AbntAddr;
-using scag::pers::IntProfileKey;
+using scag::pers::util::AbntAddr;
+using scag::pers::util::IntProfileKey;
 using smsc::core::buffers::PageFile;
 using smsc::core::buffers::IntHash;
 using namespace smsc::util::config;

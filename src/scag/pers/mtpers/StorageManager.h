@@ -20,7 +20,7 @@ using smsc::core::buffers::Array;
 using std::vector;
 
 struct NodeConfig {
-  NodeConfig():storagesCount(100), nodesCount(1), nodeNumber(0), locationsCount(1) {};
+  NodeConfig():storagesCount(100), nodesCount(1), nodeNumber(0), locationsCount(0) {};
   unsigned storagesCount;
   unsigned nodesCount;
   unsigned nodeNumber;
@@ -32,9 +32,10 @@ public:
   StorageManager(const NodeConfig& nodeCfg);
   virtual ~StorageManager() {};
 
-  void init(uint16_t maxWaitingCount, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig& infcfg);
+  void init(uint16_t maxWaitingCount, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg);
   bool process(ConnectionContext* cx);
   void shutdown();
+  unsigned getInfrastructNodeNumber() { return 0; }
 
 private:
   AbonentStorageProcessor* getLocation(unsigned elementStorageNumber);

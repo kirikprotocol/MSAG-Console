@@ -112,19 +112,19 @@ int main(int argc, char* argv[]) {
     };
     NodeConfig nodeCfg;
     try { 
-      nodeCfg.nodesCount = persConfig.getInt("nodesCount");
+      nodeCfg.nodesCount = persConfig.getInt("nodes");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.nodesCount> missed. Defaul value is %d", nodeCfg.nodesCount);
+      smsc_log_warn(logger, "Parameter <MTPers.nodes> missed. Defaul value is %d", nodeCfg.nodesCount);
     };
     try { 
-      nodeCfg.nodeNumber = persConfig.getInt("nodeNumber");
+      nodeCfg.nodeNumber = persConfig.getInt("node");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.nodeNumber> missed. Defaul value is %d", nodeCfg.nodeNumber);
+      smsc_log_warn(logger, "Parameter <MTPers.node> missed. Defaul value is %d", nodeCfg.nodeNumber);
     };
     try { 
-      nodeCfg.storagesCount = persConfig.getInt("storagesCount");
+      nodeCfg.storagesCount = persConfig.getInt("storages");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.storagesCount> missed. Defaul value is %d", nodeCfg.storagesCount);
+      smsc_log_warn(logger, "Parameter <MTPers.storages> missed. Defaul value is %d", nodeCfg.storagesCount);
     };
 
     ConfigView abntStorageConfig(manager, "MTPers.AbonentStorage");

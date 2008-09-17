@@ -66,19 +66,19 @@ int StorageProcessor::Execute() {
         smsc_log_debug(logger_, "%p: %p processing complite", this, *i);      
       } catch (const SerialBufferOutOfBounds &e) {
         smsc_log_warn(logger_, "%p: %p processing error: SerialBufferOutOfBounds", this, *i);
-        (*i)->createFakeResponse(scag::pers::RESPONSE_ERROR);
+        (*i)->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
       } catch (const std::runtime_error &e) {
         smsc_log_warn(logger_, "%p: %p processing error: std::runtime_error: %s", this, *i, e.what());
-        (*i)->createFakeResponse(scag::pers::RESPONSE_ERROR);
+        (*i)->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
       } catch (const FileException &e) {
         smsc_log_warn(logger_, "%p: %p processing error: FileException: %s", this, *i, e.what());
-        (*i)->createFakeResponse(scag::pers::RESPONSE_ERROR);
+        (*i)->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
       } catch (const std::exception &e) {
         smsc_log_warn(logger_, "%p: %p processing error: std::exception: %s", this, *i, e.what());
-        (*i)->createFakeResponse(scag::pers::RESPONSE_ERROR);
+        (*i)->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
       } catch (...) {
         smsc_log_warn(logger_, "%p: %p processing error: unknown exception", this, *i);      
-        (*i)->createFakeResponse(scag::pers::RESPONSE_ERROR);
+        (*i)->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
       }
       (*i)->sendResponse();
     }
@@ -158,12 +158,12 @@ void AbonentStorageProcessor::process(ConnectionContext* cx) {
   ElementStorage *elstorage = elementStorages_.GetPtr(elstorageIndex);
   if (!elstorage) {
     smsc_log_warn(logger_, "%p: %p element storage %d not found in location %d", this, cx, elstorageIndex, locationNumber_);
-    cx->createFakeResponse(scag::pers::RESPONSE_ERROR);
+    cx->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
     return;
   }
   Profile *pf = elstorage->storage->get(cx->packet->address, cx->packet->createProfile);
   if (!pf) {
-    cx->createFakeResponse(scag::pers::RESPONSE_PROPERTY_NOT_FOUND);
+    cx->createFakeResponse(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
     return;
   }
   cx->packet->execCommand(pf, cx->outbuf, abntlog_, cx->packet->address.toString());
@@ -186,24 +186,25 @@ AbonentStorageProcessor::~AbonentStorageProcessor() {
       delete elstorage.glossary;
     }
   }
+  smsc_log_debug(logger_, "storage processor %d deleted", locationNumber_);
 }
 
 void InfrastructStorageProcessor::process(ConnectionContext* cx) {
   Logger *dblog = 0;
   InfrastructStorage* storage = 0;
   switch (cx->packet->profileType) {
-  case scag::pers::PT_OPERATOR: dblog = olog_; storage = operator_; break;
-  case scag::pers::PT_PROVIDER: dblog = plog_; storage = provider_; break;
-  case scag::pers::PT_SERVICE:  dblog = slog_; storage = service_; break;
+  case scag::pers::util::PT_OPERATOR: dblog = olog_; storage = operator_; break;
+  case scag::pers::util::PT_PROVIDER: dblog = plog_; storage = provider_; break;
+  case scag::pers::util::PT_SERVICE:  dblog = slog_; storage = service_; break;
   default: 
     smsc_log_error(logger_, "cx %p unknown profile type %d", cx, cx->packet->profileType);
-    cx->createFakeResponse(scag::pers::RESPONSE_BAD_REQUEST);
+    cx->createFakeResponse(scag::pers::util::RESPONSE_BAD_REQUEST);
     return;
   }
   IntProfileKey key(cx->packet->intKey);
   Profile *pf = storage->get(key, cx->packet->createProfile);
   if (!pf) {
-    cx->createFakeResponse(scag::pers::RESPONSE_PROPERTY_NOT_FOUND);
+    cx->createFakeResponse(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
     return;
   }
   cx->packet->execCommand(pf, cx->outbuf, dblog, key.toString());
@@ -264,6 +265,7 @@ InfrastructStorageProcessor::~InfrastructStorageProcessor() {
   if (service_) {
     delete service_;
   }
+  smsc_log_debug(logger_, "infrastruct storage processor deleted");
 }
 
 AbonentStorageConfig::AbonentStorageConfig() {
@@ -312,26 +314,6 @@ AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg, const char* storageT
     smsc_log_warn(logger, "Parameter <MTPers.%s.cacheSize> missed. Defaul value is %d",
                    storageType, DEF_CACHE_SIZE);
   }
-  /*
-  string storageDirPrefix = "storageDir_";
-  char dirName[30];
-  string name;
-  for (int i = 0; i < storageNumber; ++i) {
-    try {
-      sprintf(dirName, "%s%02d", storageDirPrefix.c_str(), i + 1);
-      name = cfg.getString(dirName);
-    } catch (...) {
-      sprintf(dirName, "%02d", i + 1);
-      name = dirName;
-      if (storageNumber == 1) {
-        name = dbName;
-      }
-      smsc_log_warn(logger, "Parameter <MTPers.%s.%s> missed. Defaul value is '%s'",
-                     storageType, dirName, name.c_str());
-    }
-    localPath.push_back(name);
-  }
-  */
 }
 
 InfrastructStorageConfig::InfrastructStorageConfig() {
