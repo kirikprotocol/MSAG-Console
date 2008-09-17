@@ -95,10 +95,13 @@ mtpers.timeout=300
 mtpers.io_pool_size=10
 mtpers.connections=100
 mtpers.storage_dir=/home/odarchenko/new_msag_64/distr/storage/mtpers
-mtpers.storage_number=1
+mtpers.location1_path=/home/odarchenko/new_msag_64/distr/storage/mtpers/1
+mtpers.storages=100
+mtpers.nodes=1
+mtpers.node=0
 mtpers.storage_queue_size=20
 mtpers.abonent_storage_name=abonent
-mtpers.infrastruct_storage_dir=/
+mtpers.infrastruct_storage_dir=/home/odarchenko/new_msag_64/distr/storage/mtpers/infrastruct
 mtpers.service.args=MultiThred Personalization
 mtpers.service.autostart=true
 
