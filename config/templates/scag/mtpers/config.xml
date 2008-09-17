@@ -9,14 +9,19 @@
     <param name="maxClientsCount" type="int">@mtpers.connections@</param>
     <param name="timeout" type="int">@mtpers.timeout@</param>
     <param name="ioPoolSize" type="int">@mtpers.io_pool_size@</param>
-    <param name="abonentStorageNumber" type="int">@mtpers.storage_number@</param>
     <param name="storageQueueSize" type="int">@mtpers.storage_queue_size@</param>
-    <param name="storagePath" type="string">@mtpers.storage_dir@</param>
+
+    <param name="storages" type="int">@mtpers.storages@</param>
+    <param name="nodes" type="int">@mtpers.nodes@</param>
+    <param name="node" type="int">@mtpers.node@</param>
 
     <section name="AbonentStorage">
+        <section name="Locations">
+	    <param name="1" type="string">@mtpers.location1_path@</param>
+	    <!--param name="2" type="string">@mtpers.location2_path@</param-->
+	</section>
+	
         <param name="storageName" type="string">@mtpers.abonent_storage_name@</param>
-	<!--param name="storageDir_01" type="string">01</param>
-	<param name="storageDir_02" type="string">02</param-->
         <param name="indexGrowth" type="int">10000</param>
         <param name="dataBlockSize" type="int">2048</param>
         <param name="blocksInFile" type="int">5000</param>
@@ -24,7 +29,7 @@
     </section>
 
     <section name="InfrastructStorage">
-        <param name="storageDir" type="string">@mtpers.infrastruct_storage_dir@</param>
+        <param name="storagePath" type="string">@mtpers.infrastruct_storage_path@</param>
         <param name="initRecordCount" type="int">10000</param>
         <param name="cacheSize" type="int">10000</param>
     </section>
