@@ -7,7 +7,7 @@
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/config/base/ConfigView.h"
 #include "scag/lcm/impl/LongCallManagerImpl.h"
-#include "scag/pers/PersClient.h"
+#include "scag/pers/util/PersClient.h"
 #include "scag/re/base/XMLHandlers2.h" // for StrX
 #include "scag/re/impl/RuleEngine2.h"
 #include "scag/sessions/impl/SessionManager2.h"
@@ -149,25 +149,26 @@ void Scag::init( unsigned mynode )
     }
 
     //************** Personalization client initialization **************
-#if 0
+
     try {
         smsc_log_info(log, "Personalization client initializing...");
+        smsc_log_warn(log, "Personalization client initializing host=%s port=%d", cfg.getPersClientConfig().host.c_str(), cfg.getPersClientConfig().port);
 
-        scag::pers::client::PersClient::Init(cfg.getPersClientConfig());
+        scag::pers::util::PersClient::Init(cfg.getPersClientConfig());
 
         smsc_log_info(log, "Personalization client initialized");
     }catch(Exception& e)
     {
         throw Exception("Exception during initialization of PersClient: %s", e.what());
-    }catch (scag::pers::client::PersClientException& e)
+    }catch (scag::pers::util::PersClientException& e)
     {
-        smsc_log_error(log, "Exception during initialization of PersClient: %s", e.what());
-//        throw Exception("Exception during initialization of PersClient: %s", e.what());
+        //smsc_log_error(log, "Exception during initialization of PersClient: %s", e.what());
+        throw Exception("Exception during initialization of PersClient: %s", e.what());
     }catch (...)
     {
         throw Exception("Exception during initialization of PersClient: unknown error");
     }
-#endif
+
 
     //************** RuleEngine initialization ***************
     try {
@@ -266,7 +267,7 @@ void Scag::shutdown()
     transport::http::HttpManager::Instance().shutdown();
     transport::smpp::SmppManager::Instance().shutdown();
     lcm::LongCallManager::Instance().shutdown();  
-//  scag::pers::client::PersClient::Instance().Stop();
+    scag::pers::util::PersClient::Instance().Stop();
     bill::BillingManager::Instance().Stop();
     stat::Statistics::Instance().Stop();
 }
