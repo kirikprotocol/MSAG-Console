@@ -1,9 +1,9 @@
-#ident "$Id$"
 /* ************************************************************************** *
  * INMan testing console: commonly used defs and helpers
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_TEST_DEFS__
 #define __SMSC_INMAN_TEST_DEFS__
+#ident "$Id$"
 
 #include "core/synchronization/Event.hpp"
 using smsc::core::synchronization::Event;

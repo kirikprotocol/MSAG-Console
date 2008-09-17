@@ -1,6 +1,6 @@
-#ident "$Id$"
 #ifndef __CORE_THREADS_THREADPOOL_HPP__
 #define __CORE_THREADS_THREADPOOL_HPP__
+#ident "$Id$"
 
 #include "Thread.hpp"
 #include "ThreadedTask.hpp"

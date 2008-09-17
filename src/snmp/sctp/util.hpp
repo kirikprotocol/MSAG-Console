@@ -1,6 +1,6 @@
-#ident "$Id$"
 #ifndef __SMSC_SNMP_SCTP_UTIL_HPP__
 #define __SMSC_SNMP_SCTP_UTIL_HPP__
+#ident "$Id$"
 #include <string>
 #include "ss7cp.h"
 #include "mgmtapi.h"

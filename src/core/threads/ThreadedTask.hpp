@@ -1,6 +1,6 @@
-#ident "$Id$"
 #ifndef __CORE_THREADS_THREADEDTASK_HPP__
 #define __CORE_THREADS_THREADEDTASK_HPP__
+#ident "$Id$"
 
 #include "core/buffers/MemoryManager.hpp"
 

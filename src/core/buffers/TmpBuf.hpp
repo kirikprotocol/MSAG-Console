@@ -1,6 +1,6 @@
-#ident "$Id$"
 #ifndef __SMSC_CORE_BUFFERS_HPP__
 #define __SMSC_CORE_BUFFERS_HPP__
+#ident "$Id$"
 
 #include <algorithm>
 

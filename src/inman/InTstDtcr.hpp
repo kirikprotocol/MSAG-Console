@@ -1,9 +1,9 @@
-#ident "$Id$"
 /* ************************************************************************** *
  * INMan testing console: Contract determination protocol client
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_TEST_DETECTOR__
 #define __SMSC_INMAN_TEST_DETECTOR__
+#ident "$Id$"
 
 #include "inman/InTstDefs.hpp"
 using smsc::inman::test::TSTFacadeAC;
