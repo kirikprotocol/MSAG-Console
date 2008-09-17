@@ -109,6 +109,7 @@ void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg,
 {
     nodeNumber_ = nodeNumber;
     flushLimit_ = cfg.flushlimit;
+    if ( ! cfg.diskio ) flushLimit_ = 1000000000;
     cmdqueue_ = &cmdqueue;
     config_ = cfg;
     // expireSchedule = time(NULL) + DEFAULT_EXPIRE_INTERVAL;

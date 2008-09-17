@@ -442,7 +442,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             } else {
 
                 // finalization is done, remove the session from disk
-                disk_->remove( session->sessionKey() );
+                if ( diskio_ ) disk_->remove( session->sessionKey() );
 
             }
 
@@ -463,6 +463,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             pkey = &(*i);
             ++i;
         } else if ( j != flush.end() ) {
+            if ( ! diskio_ ) break;
             pkey = &(j->first);
             lastaccess = j->second;
             ++j;
@@ -486,7 +487,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             session = 0;
             continue;
 
-        } else {
+        } else if ( diskio_ ) {
             // session is asked to be expired, but is not found in cache:
             // was it flushed to disk?
             cache_->set( key, cache_->val2store( allocator_->alloc(key)) );
@@ -518,6 +519,10 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             } else {
                 session->setCurrentCommand(0);
             }
+        } else {
+            session = 0;
+            ++notexpired;
+            continue;
         }
 
 
