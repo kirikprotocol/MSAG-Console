@@ -30,7 +30,7 @@ public:
     
     /// previous state backup
     unsigned getBackupDataSize() const {
-        return previous_.length();
+        return static_cast<unsigned>(previous_.length());
     }
     const char* getBackupData() const {
         return previous_.c_str();
