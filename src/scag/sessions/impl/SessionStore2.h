@@ -58,7 +58,6 @@ public:
     void init( unsigned eltNumber,
                SCAGCommandQueue& queue,
                const std::string& path = "sessions",
-               const std::string& name = "sessions",
                unsigned indexgrowth = 10000,
                unsigned pagesize = 512,
                unsigned prealloc = 0,

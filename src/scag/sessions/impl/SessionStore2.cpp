@@ -69,7 +69,6 @@ SessionStoreImpl::~SessionStoreImpl()
 void SessionStoreImpl::init( unsigned eltNumber,
                              SCAGCommandQueue& queue,
                              const std::string& path,
-                             const std::string& name,
                              unsigned indexgrowth,
                              unsigned pagesize,
                              unsigned prealloc,
@@ -90,8 +89,8 @@ void SessionStoreImpl::init( unsigned eltNumber,
     maxqueuesize_ = 0;   // maximum length of one session command queue
     maxcommands_ = 0;    // maximum of storedCommands
 
-    smsc_log_info( log_, "init path=%s, name=%s, indexgrowth=%d, pagesize=%d, prealloc=%d",
-                   path.c_str(), name.c_str(), indexgrowth, pagesize, prealloc );
+    smsc_log_info( log_, "init path=%s, indexgrowth=%d, pagesize=%d, prealloc=%d",
+                   path.c_str(), indexgrowth, pagesize, prealloc );
 
     cache_.reset( new MemStorage( 0 ) );
     // cache_.reset( new MemStorage(smsc::logger::Logger::getInstance("sess.sto.c")) );
@@ -104,13 +103,13 @@ void SessionStoreImpl::init( unsigned eltNumber,
                 
     {
         unsigned i = eltNumber;
-        const std::string suffix("-pgf");
+        const std::string suffix("pgf");
         std::auto_ptr<PageFile> pgf( new PageFile );
         char buf[10];
         snprintf( buf, sizeof(buf), "%03u", i );
         const std::string idxstr(buf);
         const std::string realpath = path + "/" + idxstr;
-        const std::string fn( realpath + "/" + name + suffix + idxstr + "-data" );
+        const std::string fn( realpath + "/" + suffix + idxstr + "-data" );
         try {
             pgf->Open( fn );
         } catch (...) {
@@ -119,7 +118,7 @@ void SessionStoreImpl::init( unsigned eltNumber,
             
         std::auto_ptr<EltDiskStorage> eds
             ( new EltDiskStorage
-              ( new DiskIndexStorage( name + suffix + idxstr,
+              ( new DiskIndexStorage( suffix + idxstr,
                                       realpath, indexgrowth, false,
                                       smsc::logger::Logger::getInstance("sess.sto.i")),
                 new DiskDataStorage( pgf.release(),

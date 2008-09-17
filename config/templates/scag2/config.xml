@@ -30,12 +30,11 @@
             <!-- and run setupnodes.py -->
         </section>
         <param name="expireInterval" type="int">@session.expireInterval@</param>
-        <param name="name" type="string">sessions</param> <!-- a stem of storage file name -->
         <param name="indexgrowth" type="int">1000</param> <!-- an increment of index file -->
         <param name="pagesize" type="int">512</param> <!-- the page/block size -->
         <param name="prealloc" type="int">100</param> <!-- number of pages to preallocate -->
         <param name="flushLimit" type="int">1000</param> <!-- a limit on number of transient sessions -->
-        <param name="diskio" type="bool">1</param> <!-- is disk i/o for sessions enabled -->
+        <param name="diskio" type="bool">true</param> <!-- is disk i/o for sessions enabled -->
     </section>
 
     <section name="StatisticsManager">

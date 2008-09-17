@@ -26,7 +26,6 @@ public:
     void init( unsigned nodeNumber,
                SCAGCommandQueue& queue,
                const std::vector<std::string>& paths,
-               const std::string& name = "sessions",
                unsigned indexgrowth = 10000,
                unsigned pagesize = 512,
                unsigned prealloc = 0,

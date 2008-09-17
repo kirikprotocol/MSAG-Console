@@ -23,7 +23,6 @@ namespace config {
     {
         // dir = getString(cv,"location");
         clear();
-        getString(cv, "name", name);
         getInt(cv, "indexgrowth", indexgrowth );
         getInt(cv, "pagesize", pagesize );
         getInt(cv, "prealloc", prealloc );
@@ -58,7 +57,6 @@ namespace config {
         smc.usedefault_ = usedefault_;
         smc.init( cv );
         return ( dirs == smc.dirs &&
-                 name == smc.name &&
                  indexgrowth == smc.indexgrowth &&
                  pagesize == smc.pagesize &&
                  prealloc == smc.prealloc &&
@@ -113,7 +111,6 @@ void SessionManagerConfig::clear()
 {
     dirs.clear();
     dirs.push_back( "sessions" );
-    name = "sessions";
     indexgrowth = 1000;
     pagesize = 512;
     prealloc = 100;

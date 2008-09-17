@@ -21,7 +21,6 @@ public:
     void useDefault( bool ud ) { usedefault_ = ud; }
 
     std::vector<std::string> dirs;
-    std::string              name;
     unsigned                 indexgrowth;
     unsigned                 pagesize;
     unsigned                 prealloc;
