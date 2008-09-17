@@ -33,7 +33,7 @@ void ConnectionContext::createFakeResponse(PersServerResponseType response) {
   smsc_log_debug(logger, "%p: Create Fake response %d", this, response);
   outbuf.Empty();
   outbuf.SetPos(0);
-  outbuf.WriteInt32(sizeof(uint8_t) + PACKET_LENGTH_SIZE);
+  outbuf.WriteInt32(static_cast<uint32_t>(sizeof(uint8_t)) + PACKET_LENGTH_SIZE);
   outbuf.WriteInt8(response);
   outbuf.setPos(0);
   action = SEND_RESPONSE;
@@ -41,27 +41,27 @@ void ConnectionContext::createFakeResponse(PersServerResponseType response) {
 }
 
 bool ConnectionContext::notSupport(PersCmd cmd) {
-  return (cmd > scag::pers::PC_MTBATCH || cmd == scag::pers::PC_BATCH
-          || cmd == scag::pers::PC_TRANSACT_BATCH) ? true : false;
+  return (cmd > scag::pers::util::PC_MTBATCH || cmd == scag::pers::util::PC_BATCH
+          || cmd == scag::pers::util::PC_TRANSACT_BATCH) ? true : false;
 }
 
 bool ConnectionContext::parsePacket() {
-  PersServerResponseType response = scag::pers::RESPONSE_BAD_REQUEST;
+  PersServerResponseType response = scag::pers::util::RESPONSE_BAD_REQUEST;
   try {
     PersCmd cmd = (PersCmd)inbuf.ReadInt8();
-    if (cmd == scag::pers::PC_PING) {
+    if (cmd == scag::pers::util::PC_PING) {
       smsc_log_debug(logger, "Ping received");
-      createFakeResponse(scag::pers::RESPONSE_OK);
+      createFakeResponse(scag::pers::util::RESPONSE_OK);
       return false;
     }
     if (notSupport(cmd)) {
-      createFakeResponse(scag::pers::RESPONSE_NOTSUPPORT);
+      createFakeResponse(scag::pers::util::RESPONSE_NOTSUPPORT);
       return false;
     }
     if (packet) {
       delete packet;
     }
-    if (cmd == scag::pers::PC_MTBATCH) {
+    if (cmd == scag::pers::util::PC_MTBATCH) {
       smsc_log_debug(logger, "Batch received");
       packet = new BatchPacket();
     } else {
@@ -80,7 +80,7 @@ bool ConnectionContext::parsePacket() {
   } catch(const PersCommandNotSupport& e) {
     smsc_log_warn(logger, "std::runtime_error: Not support command. received buffer len=%d, data=%s",
                    inbuf.length(), inbuf.toString().c_str());
-    response = scag::pers::RESPONSE_NOTSUPPORT;
+    response = scag::pers::util::RESPONSE_NOTSUPPORT;
   }
   createFakeResponse(response);
   return false;

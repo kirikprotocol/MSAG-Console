@@ -203,7 +203,7 @@ bool IOTask::processReadSocket(Socket* s) {
     if (sb.GetSize() < PACKET_LENGTH_SIZE) {
       return true;
     }
-    n = sb.GetPos();
+    n = sb.getPos();
     sb.SetPos(0);
     cx->packetLen = sb.ReadInt32();
     smsc_log_debug(logger, "%d bytes will be read from %x", cx->packetLen, s);
@@ -237,7 +237,7 @@ bool IOTask::processReadSocket(Socket* s) {
     removeSocketFromMultiplexer(s);
     //SocketData::setSocketState(s, READWRITE_SOCKET);
   } else {
-    cx->createFakeResponse(scag::pers::RESPONSE_ERROR);
+    cx->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
     changeSocketState(s);
   }
   return true;
@@ -256,7 +256,7 @@ bool IOTask::processWriteSocket(Socket* s) {
   smsc_log_debug(logger, "write %u bytes to %p, GetCurPtr: %x, GetPos: %d data=%s",
                   len, s, sb.GetCurPtr(), sb.GetPos(), sb.toString().c_str());
 
-  int n = s->Write(sb.GetCurPtr(), len - sb.GetPos());
+  int n = s->Write(sb.GetCurPtr(), len - sb.getPos());
   if (n > 0) {
     sb.SetPos(sb.GetPos() + n);
     SocketData::updateTimestamp(s, time(NULL));

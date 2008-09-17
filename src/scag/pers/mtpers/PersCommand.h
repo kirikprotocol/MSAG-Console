@@ -3,26 +3,27 @@
 
 #include <string>
 #include <vector>
-#include "scag/util/storage/SerialBuffer.h"
-#include "scag/pers/Types.h"
-#include "scag/pers/Property.h"
-#include "scag/pers/Profile.h"
 #include "core/buffers/Array.hpp"
-#include "scag/pers/AbntAddr.hpp"
 #include "util/Exception.hpp"
+#include "scag/util/storage/SerialBuffer.h"
+#include "scag/pers/util/Types.h"
+#include "scag/pers/util/Property.h"
+#include "scag/pers/util/Profile.h"
+#include "scag/pers/util/AbntAddr.hpp"
 
 namespace scag { namespace mtpers {
 
-const size_t PACKET_LENGTH_SIZE = sizeof(uint32_t);
+const uint32_t PACKET_LENGTH_SIZE = static_cast<uint32_t>(sizeof(uint32_t));
 
 using std::string;
-using scag::pers::Profile;
-using scag::pers::ProfileType;
-using scag::pers::PersCmd;
-using scag::pers::Property;
+using namespace scag::pers::util;
+//using scag::pers::Profile;
+//using scag::pers::ProfileType;
+//using scag::pers::PersCmd;
+//using scag::pers::Property;
 using smsc::core::buffers::Array;
 using smsc::util::Exception;
-using scag::pers::AbntAddr;
+//using scag::pers::AbntAddr;
 
 using smsc::logger::Logger;
 using std::vector;
@@ -30,13 +31,13 @@ using std::vector;
 using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
 
-typedef scag::pers::PersServerResponseType Response;
+typedef scag::pers::util::PersServerResponseType Response;
 
 class PersCommandNotSupport: public Exception {};
 
 class PersCommand {
 public:
-  PersCommand():cmdId(scag::pers::PC_UNKNOWN), mod(0) {};
+  PersCommand():cmdId(scag::pers::util::PC_UNKNOWN), mod(0) {};
   PersCommand(PersCmd cmd):cmdId(cmd), mod(0) {};
   ~PersCommand() {};
   bool deserialize(SerialBuffer& sb);
@@ -49,7 +50,7 @@ private:
   Response inc(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key);
   Response incMod(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key);
   Response incResult(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key);
-  int incModProperty(Profile *pf, Logger* dblog, const string& key);
+  uint32_t incModProperty(Profile *pf, Logger* dblog, const string& key);
 
 private:
   PersCmd cmdId;
@@ -62,7 +63,7 @@ struct PersPacket {
   PersPacket():createProfile(false) {};
   virtual ~PersPacket() {};
   virtual void deserialize(SerialBuffer& sb);
-  bool notAbonentsProfile() const { return profileType != scag::pers::PT_ABONENT; };
+  bool notAbonentsProfile() const { return profileType != scag::pers::util::PT_ABONENT; };
   void setPacketSize(SerialBuffer& sb) const;
   virtual void execCommand(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key) = 0;
 

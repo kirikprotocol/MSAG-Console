@@ -2,12 +2,11 @@
 #define __SCAG_PERS_PVGW_PVGWCONTEXT_H__
 
 #include <string>
-
+#include "logger/Logger.h"
 #include "core/network/Socket.hpp"
 #include "scag/util/storage/SerialBuffer.h"
-#include "scag/pers/Types.h"
+#include "scag/pers/util/Types.h"
 #include "PersCommand.h"
-#include "logger/Logger.h"
 
 
 namespace scag { namespace mtpers {
@@ -15,7 +14,7 @@ namespace scag { namespace mtpers {
 using smsc::core::network::Socket;
 using std::string;
 using smsc::logger::Logger;
-using scag::pers::PersServerResponseType;
+using scag::pers::util::PersServerResponseType;
 using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
 

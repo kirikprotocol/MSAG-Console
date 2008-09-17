@@ -5,17 +5,17 @@
 #include "core/threads/ThreadedTask.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/buffers/Array.hpp"
-#include "scag/pers/RWMultiplexer.hpp"
+#include "scag/pers/util/RWMultiplexer.hpp"
 
 //#include "PvgwManager.h"
 #include "ConnectionContext.h"
 
 namespace scag { namespace mtpers { 
 
-const size_t READ_BUF_SIZE = 1024;
+const uint32_t READ_BUF_SIZE = 1024;
 
 using smsc::core::threads::ThreadedTask;
-using scag::pers::RWMultiplexer;
+using scag::pers::util::RWMultiplexer;
 using smsc::core::synchronization::EventMonitor;
 using smsc::logger::Logger;
 using smsc::core::buffers::Array;
