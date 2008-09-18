@@ -284,6 +284,16 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
     BufOps::SmsBuffer buf(item.smsBuf,item.smsBufSize);
     Deserialize(buf,sms,fileVer);
 
+    if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x02)//forward mode sms!
+    {
+      if(item.smsBuf)
+      {
+        delete [] item.smsBuf;
+        item.smsBuf=0;
+      }
+      continue;
+    }
+
     __trace2__("srcsmeid=%s",sms.getSourceSmeId());
     try{
       int smeIndex=smsc->getSmeIndex(sms.getSourceSmeId());
@@ -518,7 +528,11 @@ int Scheduler::Execute()
       }else if(cmd->cmdid==HLRALERT)
       {
         info2(log,"HLRALERT: %s",cmd->get_address().toString().c_str());
-        dpfTracker.hlrAlert(cmd->get_address());
+        {
+          mon.Unlock();
+          dpfTracker.hlrAlert(cmd->get_address());
+          mon.Lock();
+        }
         try{
           Chain* c=GetChain(cmd->get_address());
           if(!c)continue;

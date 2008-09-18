@@ -66,6 +66,8 @@ void DpfTracker::Init(const char *argStoreLocation, int to1179, int to1044,int m
   }
   timeOut1179=to1179;
   timeOut1044=to1044;
+  maxChangesCount=mxch;
+  compactTime=ctm;
   log=smsc::logger::Logger::getInstance("dpf.track");
 
   std::string binFile=storeLocation+"dpfstore.bin";

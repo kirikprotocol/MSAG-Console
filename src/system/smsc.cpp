@@ -1420,15 +1420,18 @@ void Smsc::run()
 #endif
   }
 
+  if(ishs)
+  {
+    smsc::util::config::Config& cfg=smsc::util::config::Manager::getInstance().getConfig();
+    scheduler->InitDpfTracker(cfg.getString("dpf.storeDir"),
+                              cfg.getInt("dpf.timeOut1179"),
+                              cfg.getInt("dpf.timeOut1044"),
+                              cfg.getInt("dpf.maxChanges"),
+                              cfg.getInt("dpf.maxTime"));
+  }
 
   // start rescheduler created in init
   // start on thread pool 2 to shutdown it after state machines
-  smsc::util::config::Config& cfg=smsc::util::config::Manager::getInstance().getConfig();
-  scheduler->InitDpfTracker(cfg.getString("dpf.storeDir"),
-                            cfg.getInt("dpf.timeOut1179"),
-                            cfg.getInt("dpf.timeOut1044"),
-                            cfg.getInt("dpf.maxChanges"),
-                            cfg.getInt("dpf.maxTime"));
  
   scheduler->InitMsgId(&smsc::util::config::Manager::getInstance());
   tp2.startTask(scheduler);
