@@ -765,6 +765,11 @@ public:
           dpfTracker.registerSetDpf(abonent,smeAddr,errCode,smeId);
         }
 
+        int getDpfCount()
+        {
+          return dpfTracker.getCount();
+        }
+
 public:
   struct StartupItem{
     SMSId id;

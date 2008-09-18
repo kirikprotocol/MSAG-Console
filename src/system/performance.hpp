@@ -40,6 +40,7 @@ struct PerformanceData{
   uint32_t eventQueueSize;
   uint32_t inProcessingCount;
   uint32_t inScheduler;
+  uint32_t dpfCount;
 };
 
 #define SME_PERF_CNT_ACCEPTED       0
@@ -290,6 +291,7 @@ public:
     ld.eventQueueSize=htonl(ld.eventQueueSize);
     ld.inProcessingCount=htonl(ld.inProcessingCount);
     ld.inScheduler=htonl(ld.inScheduler);
+    ld.dpfCount=htonl(ld.dpfCount);
 
     for(int i=0;i<sockets.Count();i++)
     {

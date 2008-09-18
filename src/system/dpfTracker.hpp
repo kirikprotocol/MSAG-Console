@@ -44,6 +44,12 @@ public:
     mon.notify();
   }
 
+  int getCount()
+  {
+    sync::MutexGuard mg(mon);
+    return (int)expirations.size();
+  }
+
 protected:
   int timeOut1179;
   int timeOut1044;

@@ -207,7 +207,7 @@ public:
         Scheduler::SchedulerCounts cnts;
         smsc->getScheduler()->getCounts(cnts);
         d.inScheduler=cnts.timeLineCount+cnts.firstTimeCount;
-
+        d.dpfCount=smsc->getScheduler()->getDpfCount();
         perfListener->reportGenPerformance(&d);
 
         for(i=0;i<performance::performanceCounters;i++)
