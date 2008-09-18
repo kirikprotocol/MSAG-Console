@@ -295,12 +295,16 @@ void DpfTracker::hlrAlert(const smsc::sms::Address &abonent)
 
 int DpfTracker::Execute()
 {
-  sync::MutexGuard mg(mon);
+  uint64_t abonent;
+  SystemIdStr smeId;
+  smsc::sms::Address smeAddr;
+  bool needToSendAlert=false;
   while(!isStopping)
   {
     try
     {
-      while(expirations.empty() && !isStopping)
+      sync::MutexGuard mg(mon);
+      if(expirations.empty())
       {
         time_t now=time(NULL);
         int toSleep=(int)(compactTime-(now-lastCompact))*1000;
@@ -315,10 +319,7 @@ int DpfTracker::Execute()
           }
           lastCompact=now;
         }
-      }
-      if(isStopping)
-      {
-        break;
+        continue;
       }
       Record* rec=(*expirations.begin());
       time_t nextExp=rec->expiration;
@@ -345,15 +346,16 @@ int DpfTracker::Execute()
         continue;
       }
       rec=(*expirations.begin());
-      now=time(NULL);
-      if(rec->expiration<now)
+      if(rec->expiration<=now)
       {
         expirations.erase(rec->expIter);
         Record::ReqSet::iterator it=rec->requests.begin();
-        SystemIdStr smeId=it->smeId;
+        smeId=it->smeId;
         SaveChange(Change(rec->abonent,smeId));
         smsc_log_info(log,"request for abonent=%lld smeIdx=%s expired",rec->abonent,smeId.c_str());
-        sendAlertNotify(rec->abonent,it->addr,smeId,2);
+        abonent=rec->abonent;
+        smeAddr=it->addr;
+        needToSendAlert=true;
         rec->requests.erase(it);
         if(rec->requests.empty())
         {
@@ -369,6 +371,11 @@ int DpfTracker::Execute()
     } catch(std::exception& e)
     {
       smsc_log_warn(log,"Exception in dpfTracker::Execute:'%s'",e.what());
+    }
+    if(needToSendAlert)
+    {
+      sendAlertNotify(abonent,smeAddr,smeId,2);
+      needToSendAlert=false;
     }
   }
   return 0;

@@ -1503,6 +1503,8 @@ void Smsc::shutdown()
 
   delete smscsme;
 
+  scheduler->stopDpfTracker();
+
   tp.shutdown();
 
 #if defined(USE_MAP)

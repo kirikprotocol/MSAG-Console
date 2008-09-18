@@ -116,7 +116,6 @@ public:
   }
   ~Scheduler()
   {
-    dpfTracker.stop();
     localFileStore.Stop();
     localFileStore.WaitFor();
     for(std::vector<StoreData*>::iterator it=storeDataPool.begin();it!=storeDataPool.end();it++)
@@ -768,6 +767,11 @@ public:
         int getDpfCount()
         {
           return dpfTracker.getCount();
+        }
+
+        void stopDpfTracker()
+        {
+          dpfTracker.stop();
         }
 
 public:
