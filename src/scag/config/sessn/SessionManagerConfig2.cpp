@@ -26,7 +26,8 @@ namespace config {
         getInt(cv, "indexgrowth", indexgrowth );
         getInt(cv, "pagesize", pagesize );
         getInt(cv, "prealloc", prealloc );
-        getInt(cv, "flushLimit", flushlimit );
+        getInt(cv, "flushCountLimit", flushlimitsize );
+        getInt(cv, "flushTimeLimit", flushlimittime );
         getBool(cv, "diskio", diskio);
 
         // locations
@@ -60,7 +61,8 @@ namespace config {
                  indexgrowth == smc.indexgrowth &&
                  pagesize == smc.pagesize &&
                  prealloc == smc.prealloc &&
-                 flushlimit == smc.flushlimit &&
+                 flushlimitsize == smc.flushlimitsize &&
+                 flushlimittime == smc.flushlimittime &&
                  diskio == smc.diskio );
 }
 
@@ -114,7 +116,8 @@ void SessionManagerConfig::clear()
     indexgrowth = 1000;
     pagesize = 512;
     prealloc = 100;
-    flushlimit = 1000;
+    flushlimitsize = 10000;
+    flushlimittime = 120;
     diskio = true;
 }
 

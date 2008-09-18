@@ -80,11 +80,13 @@ void SessionManagerCallback(void * sm,Session * session)
 SessionManagerImpl::SessionManagerImpl() :
 ConfigListener(SESSIONMAN_CFG),
 nodeNumber_(-1),
-flushLimit_(100000000),
+flushLimitSize_(100000000),
+flushLimitTime_(100000000),
 activeSessions_(0),
 cmdqueue_(0),
 log_(0),
-started_(false)
+started_(false),
+oldestsession_(time(0))
 {
     log_ = smsc::logger::Logger::getInstance("sess.man");
 }
@@ -97,19 +99,17 @@ SessionManagerImpl::~SessionManagerImpl()
 }
 
 
-size_t SessionManagerImpl::flushSizeLimit() const
-{
-    return flushLimit_;
-}
-
-
 void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg,
                                unsigned nodeNumber,
                                SCAGCommandQueue& cmdqueue ) // possible throws exceptions
 {
     nodeNumber_ = nodeNumber;
-    flushLimit_ = cfg.flushlimit;
-    if ( ! cfg.diskio ) flushLimit_ = 1000000000;
+    flushLimitSize_ = cfg.flushlimitsize;
+    flushLimitTime_ = cfg.flushlimittime;
+    if ( ! cfg.diskio ) {
+        flushLimitSize_ = 100000000;
+        flushLimitTime_ = 100000000;
+    }
     cmdqueue_ = &cmdqueue;
     config_ = cfg;
     // expireSchedule = time(NULL) + DEFAULT_EXPIRE_INTERVAL;
@@ -240,10 +240,18 @@ int SessionManagerImpl::Execute()
             int next = int((expireMap_.begin()->first - time(0))*1000); // in ms
             if ( curtmo > next ) curtmo = next;
         }
-        if ( isStarted() && curtmo > 0 &&
-             activeSessions_ <= flushSizeLimit() ) expireMonitor_.wait( curtmo );
+        time_t now = time(0);
+        // oldwait is a number of ms to wait for oldest session flush time
+        // NOTE: we also add 5 seconds to bunch old session processing.
+        int oldwait = int(oldestsession_+flushLimitTime_+5 - now) * 1000; // in ms
+        if ( curtmo > oldwait ) curtmo = oldwait;
 
-        const time_t now = time(0);
+        if ( isStarted() && curtmo > 0 && activeSessions_ <= flushLimitSize_ ) {
+            expireMonitor_.wait( curtmo );
+            now = time(0);
+            oldwait = int(oldestsession_+flushLimitTime_+5 - now) * 1000;
+        }
+
         std::vector< SessionKey > curset;
         {
             ExpireMap::iterator i;
@@ -269,7 +277,8 @@ int SessionManagerImpl::Execute()
         // const size_t expiredCount = curset.size();
 
         std::vector< std::pair<SessionKey,time_t> > flushset;
-        if ( activeSessions_ > flushSizeLimit() ) {
+        if ( activeSessions_ > flushLimitSize_ || oldwait < 0 ) {
+
             // too many living sessions
             typedef std::vector< std::pair<SessionKey,time_t>* > OldAccess_type;
             OldAccess_type oldaccess;
@@ -282,22 +291,35 @@ int SessionManagerImpl::Execute()
             std::sort( oldaccess.begin(),
                        oldaccess.end(),
                        ::lessAccessTime() );
-            size_t extracount = oldaccess.size() - size_t(flushSizeLimit()*0.9);
-            flushset.reserve( extracount );
-            for ( OldAccess_type::iterator i = oldaccess.begin();
-                  extracount > 0;
-                  --extracount ) {
+            const size_t finalsize = size_t(flushLimitSize_ * 0.9);
+            size_t extracount = oldaccess.size() > finalsize ? oldaccess.size() - finalsize : 0;
+            if ( extracount > 0 ) 
+                flushset.reserve( extracount );
+            else
+                flushset.reserve( size_t(oldaccess.size() * 0.1) );
+            const time_t flushtime = time_t(now - flushLimitTime_);
+            oldestsession_ = maxtime;
+            for ( OldAccess_type::iterator i = oldaccess.begin(); i != oldaccess.end(); ++i ) {
 
                 // smsc_log_debug( log_, "oldaccess: %s %i",
                 // (*i)->first.toString().c_str(), int((*i)->second - now) );
-                if ( (*i)->second != maxtime ) {
-                    --activeSessions_;
-                    flushset.push_back(**i);
-                    (*i)->second = maxtime;
+                if ( (*i)->second == maxtime ) continue;
+                    
+                if ( extracount > 0 ) {
+                    --extracount;
+                } else if ( (*i)->second <= flushtime ) {
+                } else {
+                    // a new oldest session
+                    oldestsession_ = (*i)->second;
+                    break;
                 }
-                ++i;
+                    
+                --activeSessions_;
+                flushset.push_back(**i);
+                (*i)->second = maxtime;
 
             }
+            if ( oldestsession_ == maxtime ) oldestsession_ = now;
             
         }
 
@@ -363,6 +385,8 @@ void SessionManagerImpl::scheduleExpire( time_t expirationTime,
         mapsz = unsigned(expireMap_.size());
         actsz = activeSessions_;
 
+        if ( actsz == 0 ) oldestsession_ = lastaccessTime;
+
         if ( ptr ) {
 
             prevtime = int(*ptr - now);
@@ -387,7 +411,8 @@ void SessionManagerImpl::scheduleExpire( time_t expirationTime,
                               ( key, lastaccessTime ) ) );
 
         if ( expirationTime < now || !isStarted() ||
-             activeSessions_ > flushSizeLimit() ) expireMonitor_.notify();
+             activeSessions_ > flushLimitSize_ ||
+             unsigned(now - oldestsession_) > flushLimitTime_ ) expireMonitor_.notify();
 
     } while ( false );
 

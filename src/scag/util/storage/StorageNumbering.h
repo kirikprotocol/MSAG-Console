@@ -11,13 +11,13 @@ public:
     /// @return the total number of elementary storages
     /// NOTE: this number should not be changed!
     inline unsigned storages() const {
-        return 100;
+        return storages_;
     }
 
     static const StorageNumbering& instance();
 
     /// only once (?) or please use mutex (see .cpp)
-    static void setInstance( unsigned nodes );
+    static void setInstance( unsigned nodes, unsigned storages = 100 );
 
     inline unsigned nodes() const { return nodes_; }
 
@@ -39,10 +39,11 @@ public:
     }
 
 private:
-    StorageNumbering( unsigned nodes ) : nodes_(nodes) {}
+    StorageNumbering( unsigned nodes, unsigned stores ) : nodes_(nodes), storages_(stores) {}
 
 private:
     unsigned nodes_;
+    unsigned storages_;
 };
 
 } // namespace storage

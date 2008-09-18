@@ -201,6 +201,7 @@ def setupnodes( opts ) :
     ctrlfn = inputnames.pop(0)
     cfg = readconfig(ctrlfn)
     ctrlnodes = cfg[ 'Controller.msagnodes' ]
+    totstores = cfg['Controller.storages']
 
     names = []
     cfgs = []
@@ -274,6 +275,12 @@ def setupnodes( opts ) :
                 sys.exit(1)
                 pass
 
+            storages2 = cfg['General.storages']
+            if storages2 != totstores :
+                print >> sys.stderr, "Config mismatch: number of storages in %s and %s differ" % (ctrlfn,fn)
+                sys.exit(1)
+                pass
+
             mynode = cfg['General.node']
             if mynode != len(cfgs) :
                 print >> sys.stderr, "Config order mismatch: wrong node number (%d) in %s" % (mynode,fn)
@@ -315,8 +322,6 @@ def setupnodes( opts ) :
     for k,v in tmp :
         print '%2d. %s' % (k,v)
         pass
-
-    totstores = 100
 
     # collect existing storages
     storages = {}

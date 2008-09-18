@@ -69,9 +69,6 @@ public:
     SessionManagerImpl();
     virtual ~SessionManagerImpl();
 
-    /// a number of sessions to initiate flushing to disk
-    size_t flushSizeLimit() const;
-
     // void AddRestoredSession(Session * session);
 
     void init( const scag2::config::SessionManagerConfig& config,
@@ -129,7 +126,8 @@ private:
 
 private:
     unsigned          nodeNumber_;
-    unsigned          flushLimit_;
+    unsigned          flushLimitSize_;
+    unsigned          flushLimitTime_;
     unsigned          activeSessions_;
     SCAGCommandQueue* cmdqueue_;
     EventMonitor      expireMonitor_;
@@ -139,6 +137,7 @@ private:
 
     Mutex             stopLock_;
     bool              started_;
+    time_t            oldestsession_;
 
     std::auto_ptr<SessionAllocator>       allocator_;
     std::auto_ptr<CompositeSessionStore>  store_;

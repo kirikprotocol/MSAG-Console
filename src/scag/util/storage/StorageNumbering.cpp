@@ -20,10 +20,11 @@ const StorageNumbering& StorageNumbering::instance()
     return *inst_;
 }
 
-void StorageNumbering::setInstance( unsigned nodes )
+void StorageNumbering::setInstance( unsigned nodes,
+                                    unsigned stores )
 {
     assert( !inst_ );
-    inst_ = new StorageNumbering( nodes );
+    inst_ = new StorageNumbering( nodes, stores );
 }
 
 void StorageNumbering::setNodes( unsigned nodes )

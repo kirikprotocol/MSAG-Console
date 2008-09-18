@@ -105,10 +105,11 @@ int main( int argc, char* argv[] )
 
 
         try {
-            unsigned nodes = cfgs.getConfig()->getInt("General.nodes");
-            scag::util::storage::StorageNumbering::setInstance( nodes );
+            const unsigned nodes = cfgs.getConfig()->getInt("General.nodes");
+            const unsigned storages = cfgs.getConfig()->getInt("General.storages");
+            scag::util::storage::StorageNumbering::setInstance( nodes, storages );
         } catch ( std::exception& e) {
-            smsc_log_error( logger, "FATAL ERROR: cannot set the number of nodes");
+            smsc_log_error( logger, "FATAL ERROR: cannot set the number of nodes/storages: %s", e.what() );
             exit(-1);
         }
 

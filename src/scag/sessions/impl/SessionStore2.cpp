@@ -560,12 +560,20 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
                 }
             }
 
+            const time_t newexpiration = session->expirationTime();
+            if ( now+5 > newexpiration ) {
+                // too short interval until expiration, so don't flush on disk
+                ++notexpired;
+                session = 0;
+                continue;
+            }
+
         } else {
 
             // expired session?
+            const time_t newexpiration = session->expirationTime();
 
             // smsc_log_debug(log_, "expired key=%s session=%p", key.toString().c_str(), session );
-            const time_t newexpiration = session->expirationTime();
 
             // check expiration time again, as it may be prolonged while we were waiting
             if ( ! stopping_ ) {

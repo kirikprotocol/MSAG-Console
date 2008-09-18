@@ -24,7 +24,8 @@ public:
     unsigned                 indexgrowth;
     unsigned                 pagesize;
     unsigned                 prealloc;
-    unsigned                 flushlimit;
+    unsigned                 flushlimitsize;
+    unsigned                 flushlimittime;
     bool                     diskio;
 
 private:
