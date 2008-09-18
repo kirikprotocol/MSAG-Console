@@ -179,6 +179,8 @@ B3010:
     SMSC	SMSX - multipart sms fix for checking extra prefixes only in first part
     SMSC	support for accepting orig and dest descriptors from SME's
     SMSC	fix for licensing limit for USSD 
+    SMSC	check for USSD request string from SME, if empty insert at least 0x0d to meet signaling requirements
+    SMSC	fix for starting to threads for dpf tracker in single mode installations
     MCAhdb	Missed calls history database module first version developed
     Archiver	Query socket error handling fix
     Webadm	Add support for runtime add SME to single mode installation smsc_daemon
