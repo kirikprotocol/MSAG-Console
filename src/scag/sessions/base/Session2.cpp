@@ -709,8 +709,8 @@ void Session::closeCurrentOperation()
     if ( operationScopes_ ) {
         SessionPropertyScope** sptr = operationScopes_->GetPtr(prevopid);
         if ( sptr ) {
-            delete sptr;
-            *sptr = 0;
+            delete *sptr;
+            operationScopes_->Delete(prevopid);
         }
     }
 
@@ -1013,7 +1013,7 @@ void Session::deserializeScopeHash( Deserializer& o, IntHash< SessionPropertySco
     if ( !s ) s = new IntHash< SessionPropertyScope* >;
     for ( ; sz > 0; --sz ) {
         uint32_t key;
-        SessionPropertyScope* value;
+        SessionPropertyScope* value = 0;
         o >> key;
         deserializeScope(o,value);
         if ( value ) s->Insert( int(key), value );
