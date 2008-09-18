@@ -18,6 +18,7 @@ public class PerfSnap
   public int queueSize;
   public int processingSize;
   public int schedulerSize;
+  public int dpfSize;
 
   public String strUptime;
   public String strSctime;
@@ -49,6 +50,7 @@ public class PerfSnap
     queueSize = snap.queueSize;
     processingSize = snap.processingSize;
     schedulerSize = snap.schedulerSize;
+    dpfSize = snap.dpfSize;
     strSctime = new String(snap.strSctime);
     strUptime = new String(snap.strUptime);
   }
@@ -124,6 +126,7 @@ public class PerfSnap
     out.writeInt(queueSize);
     out.writeInt(processingSize);
     out.writeInt(schedulerSize);
+    out.writeInt(dpfSize);
     for(int i = 0; i < last.length; i++ )
       out.writeLong(last[i]);
     for(int i = 0; i < avg.length; i++ )
@@ -145,6 +148,7 @@ public class PerfSnap
     queueSize = in.readInt();
     processingSize = in.readInt();
     schedulerSize = in.readInt();
+    dpfSize = in.readInt();
     for(int i = 0; i < last.length; i++ )
       last[i] = in.readLong();
     for(int i = 0; i < avg.length; i++ )
@@ -215,5 +219,11 @@ public class PerfSnap
     queueSize = in.readNetworkInt();
     processingSize = in.readNetworkInt();
     schedulerSize = in.readNetworkInt();
+    try {
+      dpfSize = in.readNetworkInt();
+    } catch (Throwable e) {
+      dpfSize = 0;
+    }
+
   }
 }

@@ -13,7 +13,7 @@ public class PerfQueueTable extends Canvas
 {
   static final int vpad = 1;
   static final int hpad = 5;
-  static final int numCols = 3;
+  static final int numCols = 4;
 
   static final Color bgColor = SystemColor.control;
   static final Color textColor = SystemColor.textText;
@@ -96,6 +96,11 @@ public class PerfQueueTable extends Canvas
 
     sbs.setLength(0);
     sbs.append(heads[2]).append(' ').append(snap.schedulerSize);
+    g.drawString(sbs.toString(), x, y);
+    x += columnWidth;
+
+    sbs.setLength(0);
+    sbs.append(heads[3]).append(' ').append(snap.dpfSize);
     g.drawString(sbs.toString(), x, y);
     x += columnWidth;
 
