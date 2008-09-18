@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 
 #include "GlossaryBase.h"
+#include "EndianConverter.h"
 
 namespace scag {
 namespace util {
@@ -49,13 +50,7 @@ protected:
 
     uint32_t dochecksum( const Buf& buf, size_t pos1, size_t pos2 ) const;
 
-    // converter
-    union {
-        uint8_t  bytes[8];
-        uint16_t words[4];
-        uint32_t longs[2];
-        uint64_t quads[1];
-    } cvt;
+    EndianConverter cvt;
 
 private:
     GlossaryBase* glossary_;

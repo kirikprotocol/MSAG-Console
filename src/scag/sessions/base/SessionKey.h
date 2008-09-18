@@ -14,46 +14,74 @@ using namespace scag::util::storage;
 class StoredSessionKey
 {
 public:
-    StoredSessionKey() : addr_() {
-    }
-
-    explicit StoredSessionKey( const smsc::sms::Address& ab ) : addr_(ab) {}
-    explicit StoredSessionKey( const std::string& ab ) : addr_(ab.c_str()) {}
-
-    bool operator == ( const StoredSessionKey& k ) const
-    {
-        return (addr_ == k.addr_);
-    }
-
-    bool operator < ( const StoredSessionKey& k ) const
-    {
-        return addr_ < k.addr_;
-    }
-
     static uint32_t CalcHash( const StoredSessionKey& key )
     {
-        const uint64_t abonent = key.toIndex();
+        register const uint64_t abonent = key.toIndex();
         const uint32_t high = uint32_t(abonent >> 32);
         const uint32_t low = uint32_t(abonent);
         return low ^ (high * 33) ^ (((high >> 24) & 0xffff)*37);
     }
 
-    uint64_t toIndex() const;
-
-    // from sms::Address
-    const StoredSessionKey& operator = ( const smsc::sms::Address& a );
-
-    /// abonent address
-    const smsc::sms::Address& address() const {
-        return addr_;
+protected:
+    static inline uint64_t setaddr( uint8_t ton, uint8_t npi, uint64_t addr ) {
+        // NOTE: it is made so that for ton=1,npi=1 the msisdn_ == addr.
+        return addr + ((ton^1)&0xf)*toncoef + ((npi^1)&0xf)*npicoef;
     }
 
-    std::string toString() const {
-        return addr_.toString();
+private:
+    static const uint64_t toncoef = 0x1000000000000000ULL;
+    static const uint64_t npicoef = 0x0100000000000000ULL;
+    static const uint64_t adrmask = 0x00ffffffffffffffULL;
+    static uint64_t zeroadr();
+
+public:
+    StoredSessionKey();
+
+    // explicit StoredSessionKey( const smsc::sms::Address& ab );
+    // explicit StoredSessionKey( const std::string& ab );
+
+    bool operator == ( const StoredSessionKey& k ) const
+    {
+        return (msisdn_ == k.msisdn_);
+    }
+
+    bool operator < ( const StoredSessionKey& k ) const
+    {
+        return msisdn_ < k.msisdn_;
+    }
+
+    inline uint64_t toIndex() const {
+        return msisdn_;
+    }
+
+    // from sms::Address
+    // const StoredSessionKey& operator = ( const smsc::sms::Address& a );
+
+    // abonent address
+    // const smsc::sms::Address& address() const {
+    // return addr_;
+    // }
+
+    std::string toString() const;
+    // return addr_.toString();
+    // }
+
+protected:
+    explicit StoredSessionKey( uint64_t a ) : msisdn_(a) {}
+
+    inline uint8_t ton() const {
+        return uint8_t(((msisdn_/toncoef)^1)&0xf);
+    }
+    inline uint8_t npi() const {
+        return uint8_t(((msisdn_/npicoef)^1)&0xf);
+    }
+    inline uint8_t adr() const {
+        return msisdn_ & adrmask;
     }
 
 protected:
-    smsc::sms::Address addr_;
+    uint64_t              msisdn_;   // abonent number, including ton+npi prefix
+    // smsc::sms::Address addr_;
 };
 
 
@@ -66,8 +94,8 @@ class SessionKey : public StoredSessionKey
 
 public:
     SessionKey() {}
-    explicit SessionKey( const smsc::sms::Address& ab ) : StoredSessionKey(ab) {}
-    explicit SessionKey( const std::string& ab ) : StoredSessionKey(ab) {}
+    explicit SessionKey( const smsc::sms::Address& ab ); // : StoredSessionKey(ab) {}
+    explicit SessionKey( const std::string& ab ); // : StoredSessionKey(ab) {}
 
     /*
     bool operator == ( const SessionKey& k ) const
@@ -91,12 +119,14 @@ public:
      */
 
     inline const std::string& toString() const {
-        if ( str_.empty() ) fillString();
+        if ( str_.empty() ) str_ = StoredSessionKey::toString();
         return str_;
         // char buf[100];
         // snprintf( buf, sizeof(buf), "%llu", msisdn_ );
         // return std::string(buf);
     }
+
+    smsc::sms::Address address() const;
 
     Serializer& serialize( Serializer& s ) const;
     Deserializer& deserialize( Deserializer& s ) throw (DeserializerException);
@@ -105,9 +135,9 @@ public:
     const SessionKey& operator = ( const smsc::sms::Address& a );
 
 private:
-    void fillString() const {
-        str_ = addr_.toString();
-    }
+    // void fillString() const {
+    // str_ = addr_.toString();
+    // }
 
 private:
     // cache

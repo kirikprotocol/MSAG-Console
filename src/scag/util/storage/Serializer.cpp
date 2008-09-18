@@ -13,54 +13,53 @@ namespace storage {
     }
 
     Serializer& Serializer::operator << ( uint16_t i ) {
-        cvt.words[0] = htons( i );
-        buf_.push_back( cvt.bytes[0] );
-        buf_.push_back( cvt.bytes[1] );
+        uint8_t* p = cvt.uset(i);
+        buf_.push_back( *p++ );
+        buf_.push_back( *p );
         return *this;
     }
 
     Serializer& Serializer::operator << ( uint32_t i ) {
-        cvt.longs[0] = htonl( i );
-        std::copy( cvt.bytes, cvt.bytes+4, ensure(4) );
+        uint8_t* p = cvt.uset(i);
+        std::copy( p, p+4, ensure(4) );
         return *this;
     }
 
     Serializer& Serializer::operator << ( uint64_t i ) {
-        cvt.longs[0] = htonl( uint32_t(i >> 32) );
-        cvt.longs[1] = htonl( uint32_t(i) );
-        std::copy( cvt.bytes, cvt.bytes+8, ensure(8) );
+        uint8_t* p = cvt.uset(i);
+        std::copy( p, p+8, ensure(8) );
         return *this;
     }
 
     Serializer& Serializer::operator << ( const char* str ) {
         const uint32_t sz(str ? strlen(str) : 0);
-        cvt.longs[0] = htonl(sz);
-        std::copy( str, str+sz, std::copy( cvt.bytes, cvt.bytes+4, ensure(sz+4)) );
+        uint8_t* p = cvt.uset(sz);
+        std::copy( str, str+sz, std::copy( p, p+4, ensure(sz+4)) );
         return *this;
     }
 
     Serializer& Serializer::operator << ( const std::string& i ) {
         const uint32_t sz( i.size() );
-        cvt.longs[0] = htonl(sz);
+        uint8_t* p = cvt.uset(sz);
         std::copy( i.c_str(), i.c_str() + sz,
-                   std::copy( cvt.bytes, cvt.bytes+4, ensure(sz+4) ));
+                   std::copy( p, p+4, ensure(sz+4) ));
         return *this;
     }
 
     Serializer& Serializer::operator << ( const Buf& i ) {
         const uint32_t sz( i.size() );
-        cvt.longs[0] = htonl(sz);
+        uint8_t* p = cvt.uset(sz);
         std::copy( &(i[0]), &(i[0]) + sz,
-                   std::copy( cvt.bytes, cvt.bytes+4, ensure(sz+4) ));
+                   std::copy( p, p+4, ensure(sz+4) ));
         return *this;
     }
 
 
     void Serializer::write( uint32_t sz, const char* buf )
     {
-        cvt.longs[0] = htonl(sz);
+        uint8_t* p = cvt.uset(sz);
         std::copy( buf, buf+sz,
-                   std::copy( cvt.bytes, cvt.bytes+4, ensure(sz+4) ));
+                   std::copy( p, p+4, ensure(sz+4) ));
     }
 
 
@@ -73,24 +72,24 @@ namespace storage {
 
     Deserializer& Deserializer::operator >> ( uint16_t& i ) throw ( DeserializerException )
     {
-        readbuf( cvt.bytes, 2 );
-        i = ntohs( cvt.words[0] );
+        readbuf( cvt.ubuf(), 2 );
+        i = cvt.get16();
         return *this;
     }
 
     
     Deserializer& Deserializer::operator >> ( uint32_t& i ) throw ( DeserializerException )
     {
-        readbuf( cvt.bytes, 4 );
-        i = ntohl( cvt.longs[0] );
+        readbuf( cvt.ubuf(), 4 );
+        i = cvt.get32();
         return *this;
     }
 
     
     Deserializer& Deserializer::operator >> ( uint64_t& i ) throw ( DeserializerException )
     {
-        readbuf( cvt.bytes, 8 );
-        i = (uint64_t(ntohl(cvt.longs[0])) << 32) + ntohl(cvt.longs[1]);
+        readbuf( cvt.ubuf(), 8 );
+        i = cvt.get64();
         return *this;
     }
 

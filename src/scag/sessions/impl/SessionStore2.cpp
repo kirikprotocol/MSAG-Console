@@ -110,11 +110,33 @@ void SessionStoreImpl::init( unsigned eltNumber,
         const std::string idxstr(buf);
         const std::string realpath = path + "/" + idxstr;
         const std::string fn( realpath + "/" + suffix + idxstr + "-data" );
+        bool opened = false;
         try {
             pgf->Open( fn );
+            opened = true;
         } catch (...) {
-            pgf->Create( fn, pagesize, prealloc );
+            // check that directory exist
+            struct stat st;
+            if ( stat(realpath.c_str(), &st) ) {
+                // not found?
+                if ( mkdir( realpath.c_str(), 0777 ) ) {
+                    smsc_log_error( log_, "cannot create a directory %s", realpath.c_str() );
+                }
+            } else if ( ! S_ISDIR(st.st_mode) ) {
+                smsc_log_error( log_, "path %s exists but is not a directory", realpath.c_str() );
+                ::abort();
+            }
         }
+
+        try {
+            if ( ! opened ) pgf->Create( fn, pagesize, prealloc );
+            opened = true;
+        } catch ( std::exception& e ) {
+            smsc_log_error( log_, "cannot open/create file %s: %s", fn.c_str(), e.what() );
+        } catch (...) {
+            smsc_log_error( log_, "cannot open/create file %s: unknown error" );
+        }
+        if ( ! opened ) ::abort();
             
         std::auto_ptr<EltDiskStorage> eds
             ( new EltDiskStorage

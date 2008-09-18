@@ -3,13 +3,14 @@
 // #include "sms/sms.h"
 #include "SessionKey.h"
 #include "scag/exc/SCAGExceptions.h"
-// #include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/Mutex.hpp"
 
-/*
+
 namespace {
-smsc::core::synchronization::Mutex logmtx;
+bool zeroadrdone = false;
+uint64_t zeroadr_;
+smsc::core::synchronization::Mutex zeromutex;
 }
- */
 
 
 namespace scag2 {
@@ -63,6 +64,7 @@ void SessionKey::getLogger()
  */
 
 
+/*
 uint64_t StoredSessionKey::toIndex() const
 {
     uint64_t res = 0;
@@ -88,44 +90,68 @@ uint64_t StoredSessionKey::toIndex() const
     }
     return res;
 }
+ */
+
+
+uint64_t StoredSessionKey::zeroadr()
+{
+    if ( ! ::zeroadrdone ) {
+        MutexGuard mg(::zeromutex);
+        ::zeroadrdone = true;
+        ::zeroadr_ = setaddr(0,0,0);
+    }
+    return ::zeroadr_;
+}
+
+
+StoredSessionKey::StoredSessionKey() : msisdn_(zeroadr()) {}
+
+
+std::string StoredSessionKey::toString() const
+{
+    char buf[128];
+    snprintf( buf, sizeof(buf), ".%1u.%1u.%llu", unsigned(ton()), unsigned(npi()), adr() );
+    return std::string(buf);
+}
+
+
+SessionKey::SessionKey( const smsc::sms::Address& a )
+{
+    *this = a;
+}
+
+SessionKey::SessionKey( const std::string& a ) 
+{
+    smsc::sms::Address ad(a.c_str());
+    *this = ad;
+}
+
+
+smsc::sms::Address SessionKey::address() const
+{
+    char buf[30];
+    snprintf( buf, sizeof(buf), "%llu", adr() );
+    return smsc::sms::Address( ton(), npi(), strlen(buf), buf );
+}
 
 
 Serializer& SessionKey::serialize( Serializer& s ) const
 {
-    return s << uint8_t(addr_.type) << uint8_t(addr_.plan) << std::string(addr_.value);
+    return s << msisdn_;
 }
 
 
 Deserializer& SessionKey::deserialize( Deserializer& s ) throw (DeserializerException)
 {
-    uint8_t itype;
-    uint8_t iplan;
-    std::string ival;
-    s >> itype >> iplan >> ival;
-    const char* valdat = "0";
-    if ( ival.c_str() ) valdat = ival.c_str();
-    const unsigned vallen = unsigned(strlen( valdat ));
-    if ( vallen > unsigned(smsc::sms::MAX_ADDRESS_VALUE_LENGTH) )
-        throw DeserializerException::dataTooBig();
-    addr_ = smsc::sms::Address( vallen, itype, iplan, valdat );
+    s >> msisdn_;
     str_ = "";
-    return s;
-}
-
-
-const StoredSessionKey& StoredSessionKey::operator = ( const smsc::sms::Address& a )
-{
-    addr_ = a;
-    // str_ = "";
-    // msisdn_ = stringToIsdn( str_ );
-    // dumpkey();
-    return *this;
 }
 
 
 const SessionKey& SessionKey::operator = ( const smsc::sms::Address& a )
 {
-    this->StoredSessionKey::operator=( a );
+    uint64_t addr = strtoull( a.value, NULL, 10 );
+    msisdn_ = setaddr( a.type, a.plan, addr );
     str_ = "";
     return *this;
 }

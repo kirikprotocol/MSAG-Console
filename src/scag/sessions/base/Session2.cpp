@@ -17,6 +17,8 @@ using namespace scag2::util::storage;
 
 namespace {
 
+uint32_t serializationVersion = 1;
+
 smsc::logger::Logger*              log_ = 0;
 smsc::logger::Logger*              logc_ = 0; // for ctor/dtor
 smsc::core::synchronization::Mutex sessionloggermutex;
@@ -333,6 +335,7 @@ Session::~Session()
 
 Serializer& Session::serialize( Serializer& s ) const
 {
+    s << ::serializationVersion;
     key_.serialize( s );
     const timeval& tv( pkey_.bornTime() );
     s << uint64_t(tv.tv_sec) << 
@@ -402,6 +405,21 @@ Deserializer& Session::deserialize( Deserializer& s ) throw (DeserializerExcepti
 {
     clear();
     try {
+        uint32_t count;
+        {
+            s >> count;
+            const char* fail = 0;
+            if ( count > ::serializationVersion ) {
+                fail = "Unknown serialization version: %u";
+            } else if ( count != ::serializationVersion ) {
+                fail = "Older serialization version is not supported: %u";
+            }
+            if ( fail ) {
+                smsc_log_error( log_, fail, count );
+                throw SCAGException( fail, count );
+            }
+        }
+
         key_.deserialize( s );
         {
             uint64_t tvsec,atime,etimes,etimeh;
@@ -414,7 +432,6 @@ Deserializer& Session::deserialize( Deserializer& s ) throw (DeserializerExcepti
             expirationTimeAtLeast_ = time_t(etimeh);
         }
 
-        uint32_t count;
         s >> count;
         isnew_.Empty();
         initrulekeys_.clear();

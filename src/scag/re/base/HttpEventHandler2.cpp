@@ -119,7 +119,7 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 
     HttpCommand& hc = (HttpCommand&)command;
     bill::Infrastructure& istr = bill::BillingManager::Instance().getInfrastructure();
-    const smsc::sms::Address& abonentAddr = session.sessionKey().address();
+    const smsc::sms::Address abonentAddr = session.sessionKey().address();
 
     uint32_t operatorId = istr.GetOperatorID(abonentAddr);
     if (operatorId == 0) {
