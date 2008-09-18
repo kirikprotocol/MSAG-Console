@@ -225,8 +225,21 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
         return;
     } // switch on cmdid
     
-
     int32_t umr = -1;
+
+    // multipart sms
+    // set slicing
+    int lastIndex = 0;
+    int currentIndex = 0;
+    if ( sms->hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM) &&
+         sms->hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS) &&
+         sms->hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM) ) {
+
+        // FIXME: restore the operation for multipart SMS
+        lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+        currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+    }
+
     if ( ! op ) {
 
         if ( optype_ == CO_USSD_DIALOG ) {
@@ -308,6 +321,8 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
 
     }
 
+    // operation is created
+
     { // setting waitReceipt
         bool transact = false;
         bool req_receipt = false;
@@ -329,15 +344,6 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
             op->setFlag( OperationFlags::WAIT_RECEIPT );
         }
     }
-
-    // set slicing
-    int lastIndex = 0;
-    if (sms->hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-        lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-
-    int currentIndex = 0;
-    if (sms->hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-        currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
 
     // preprocess operation
     if ( cmd_->isResp() ) {
