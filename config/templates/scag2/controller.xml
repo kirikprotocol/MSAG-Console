@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+
+    <section name="Controller">
+        <!-- this section is for general configuration of scag nodes. -->
+        <!-- it should match the General section of individual MSAG's config.xml -->
+        <!-- please, run setupnodes.py to check the consistency. -->
+        <param name="msagnodes" type="int">1</param>      <!-- a number of MSAG nodes -->
+        <param name="storages" type="int">100</param> <!-- a number of elementary storages -->
+    </section>
+
+</config>

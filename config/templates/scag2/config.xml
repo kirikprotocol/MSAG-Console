@@ -6,8 +6,9 @@
     <section name="General">
         <!-- this section is for general configuration of scag nodes. -->
         <!-- please, run setupnodes.py to check the consistency. -->
-        <param name="nodes">1</param>
-        <param name="node">0</param>
+        <param name="nodes" type="int">1</param>      <!-- a number of MSAG nodes -->
+        <param name="node" type="int">0</param>       <!-- a number of this MSAG node -->
+        <param name="storages" type="int">100</param> <!-- a number of elementary storages -->
     </section>
 
     <section name="BillingManager">
@@ -33,7 +34,8 @@
         <param name="indexgrowth" type="int">1000</param> <!-- an increment of index file -->
         <param name="pagesize" type="int">512</param> <!-- the page/block size -->
         <param name="prealloc" type="int">100</param> <!-- number of pages to preallocate -->
-        <param name="flushLimit" type="int">1000</param> <!-- a limit on number of transient sessions -->
+        <param name="flushCountLimit" type="int">10000</param> <!-- a limit on number of transient sessions -->
+        <param name="flushTimeLimit" type="int">120</param> <!-- a time limit on session inactivity (sec) -->
         <param name="diskio" type="bool">true</param> <!-- is disk i/o for sessions enabled -->
     </section>
 

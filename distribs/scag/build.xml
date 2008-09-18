@@ -196,7 +196,8 @@ Targets:
     <delete dir="${BUILD_BIN}"/>
   </target>
 
-  <target name="updategw" depends="clear_build_bin_dir, makegw, copy_to_dist_dir, copy_rules_files">
+  <!-- target name="updategw" depends="clear_build_bin_dir, makegw, copy_to_dist_dir, copy_rules_files" -->
+  <target name="updategw" depends="makegw, copy_to_dist_dir, copy_rules_files">
     <property name="FIRST_TARGET_INSTALLED" value="true"/>
   </target>
   
@@ -306,7 +307,7 @@ Targets:
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy todir="${DISTR_DIR}/services/scag2/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/scag2" includes="config.xml smpp.xml smpp_routes.xml http_routes.xml operators.xml tariffs.xml services.xml"/>
+      <fileset dir="${TEMPL_DIR}/scag2" includes="controller.xml config.xml smpp.xml smpp_routes.xml http_routes.xml operators.xml tariffs.xml services.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
 
