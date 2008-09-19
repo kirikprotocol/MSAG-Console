@@ -234,17 +234,24 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             }
         }
 
+        // object not found in cache
+
+        if ( !create && !diskio_ ) {
+            // creation and diskio are not allowed
+            what = " is not found";
+            v = 0;
+            session = 0;
+            break;
+        }
+
         // NOTE: session may be flushed out to disk, that's why
         // we check if it is not found after upload from disk.
-        // object not found in cache
-        // if ( !create ) {
-        // what = " is not found";
-        // break;
-        // }
 
-        // create a stub to be filled by disk io
-        cache_->set( key, cache_->val2store( allocator_->alloc(key) ));
-        v = cache_->get( key );
+        if ( !v ) {
+            // create a stub to be filled by disk io
+            cache_->set( key, cache_->val2store( allocator_->alloc(key) ));
+            v = cache_->get( key );
+        }
         const unsigned sz = cache_->size();
         if ( sz > maxcachesize_ ) maxcachesize_ = sz;
 
@@ -260,8 +267,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     // commands are owned elsewhere
     // delete prev;
 
-    if (v && diskio_) {
-
+    if ( v && diskio_ ) {
         if ( ! disk_->get( key, cache_->store2ref(*v) ) && ! create ) {
             // failure to upload from disk and creation flag is not set
             {
@@ -290,7 +296,9 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
 
 void SessionStoreImpl::releaseSession( Session& session )
 {
-    const SessionKey& key = session.sessionKey();
+    // NOTE: key should not be a reference, as session may be destroyed at the end of the method
+    const SessionKey key = session.sessionKey();
+
     {
         uint32_t cmd = session.currentCommand();
         // smsc_log_debug(log_,"releaseSession(session=%p): key=%s, sess->ops=%d, sess->pers=%d, sess->cmd=%u)",
@@ -309,6 +317,7 @@ void SessionStoreImpl::releaseSession( Session& session )
 
     bool dostopping = false;
     time_t expiration, lastaccess = time(0);
+    session.setLastAccessTime(lastaccess);
 
     // SCAGCommand* prevcmd = 0;
     SCAGCommand* nextcmd = 0;
@@ -318,9 +327,8 @@ void SessionStoreImpl::releaseSession( Session& session )
     unsigned lck;
     
     bool needflush = false;
-    bool ispersist = false;
     if ( diskio_ ) {
-        ispersist = session.getCurrentOperation() &&
+        bool ispersist = session.getCurrentOperation() &&
             session.getCurrentOperation()->flagSet( OperationFlags::PERSISTENT );
         if ( session.needsFlush() || ispersist ) {
             needflush = true;
@@ -336,11 +344,9 @@ void SessionStoreImpl::releaseSession( Session& session )
         v = cache_->get( key );
         if ( !v || cache_->store2val(*v) != &session ) {
             smsc_log_error( log_, "logic error in releaseSession" );
-            abort();
+            ::abort();
             // throw std::runtime_error("SessionStore: logic error in releaseSession" );
         }
-
-        session.setLastAccessTime(lastaccess);
 
         if ( needflush ) {
             UnlockMutexGuard ug(cacheLock_);
@@ -373,9 +379,8 @@ void SessionStoreImpl::releaseSession( Session& session )
     smsc_log_debug( log_, "releaseSession(session=%p,key=%s) => prevcmd=%u nextcmd=%u, tot/lck=%u/%u",
                     &session, key.toString().c_str(), prevuid, nextuid, tot, lck );
 
-    if ( ! carryNextCommand(session,nextcmd,true) )
+    if ( ! (nextcmd && carryNextCommand( session, nextcmd, true)) )
         expiration_->scheduleExpire(expiration,lastaccess,key);
-
 }
 
 
