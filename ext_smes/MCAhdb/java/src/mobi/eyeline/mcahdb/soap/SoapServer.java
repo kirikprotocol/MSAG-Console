@@ -39,7 +39,6 @@ public class SoapServer extends AxisServer {
     missedCallsService.setName("MissedCalls");
 
     configContext.getAxisConfiguration().addService(missedCallsService);
-
   }
 
   public void start() throws AxisFault {

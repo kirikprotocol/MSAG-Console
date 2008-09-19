@@ -24,7 +24,7 @@ public class StoreImpl implements Store {
 
   private UnmodifiableRTree<Collection<Long>> roIndex;
   private RTree<Collection<Long>> rwIndex;
-  private File file;
+  private final File file;
   private DataFile dataFile;
   private File indexFile;
 
@@ -100,9 +100,8 @@ public class StoreImpl implements Store {
         else
           openFileForWrite();
         opened = true;
+        this.readOnly = readOnly;
       }
-
-      this.readOnly = readOnly;
 
     } catch (IOException e) {
       throw new DataSourceException(e);

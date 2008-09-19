@@ -24,11 +24,11 @@ public class StoresCache {
   private static final Category log = Category.getInstance(StoresCache.class);
 
   private final SimpleDateFormat fileNameFormat = new SimpleDateFormat("yyMM/dd/HH");
+  private final Lock flock = new ReentrantLock();
 
   private final int rwTimeout;
   private final int roTimeout;
 
-  private final Lock flock = new ReentrantLock();
   private final File storeDir;
   private final ScheduledExecutorService cleaner;
   private final ConcurrentHashMap<String, CachedStore> cache = new ConcurrentHashMap<String, CachedStore>(10);
@@ -140,11 +140,9 @@ public class StoresCache {
 
     private long closeTime;
     private long lastWriteTime;
-    private final File file;
 
     private CachedStore(File file) {
       this.impl = new StoreImpl(file);
-      this.file = file;
     }
 
     public boolean exists() {
@@ -167,8 +165,7 @@ public class StoresCache {
 
     public boolean closeInt(boolean f) throws IOException {
       try {
-        lock.lock();
-        System.out.println("2");
+        lock.lock();        
         long now = System.currentTimeMillis();
 
         if (f || (!impl.isReadOnly() && now - lastWriteTime > rwTimeout) || (now - closeTime > roTimeout)) {

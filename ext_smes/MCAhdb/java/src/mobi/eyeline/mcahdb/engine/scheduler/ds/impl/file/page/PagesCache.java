@@ -26,7 +26,9 @@ import org.apache.log4j.Category;
 public class PagesCache {
 
   private static final Category log = Category.getInstance(PagesCache.class);
-  private static final SimpleDateFormat df = new SimpleDateFormat("yyyyMM/dd/HH");
+
+  private final SimpleDateFormat df = new SimpleDateFormat("yyyyMM/dd/HH");
+  private final Lock flock = new ReentrantLock();
 
   private static final int CACHE_CLEAN_INTERVAL = 600000;
   private static final int CACHE_MODIFIED_CLOSE_INTERVAL = 600000;
@@ -69,11 +71,16 @@ public class PagesCache {
     }
   }
 
-  private static String getPageId(Date date) {
-    return df.format(date) + ".csv";
+  private String getPageId(Date date) {
+    try {
+      flock.lock();
+      return df.format(date) + ".csv";
+    } finally {
+      flock.unlock();
+    }
   }
 
-  private static Collection<String> getPageIds(Date from, Date till) {
+  private Collection<String> getPageIds(Date from, Date till) {
     Collection<String> result = new ArrayList<String>((int)(till.getTime() - from.getTime()) / 3600000 + 2);
     long cur = from.getTime();
     while (cur <= till.getTime()) {
@@ -108,6 +115,7 @@ public class PagesCache {
     });
 
     try {
+      flock.lock();
       String fromStr = df.format(from);
       Date fromDate = df.parse(fromStr);
       for (File f : files) {
@@ -123,6 +131,8 @@ public class PagesCache {
       }
     } catch (ParseException e) {
       throw new DataSourceException(e);
+    } finally {
+      flock.unlock();
     }
   }
 
@@ -161,7 +171,6 @@ public class PagesCache {
     private final SchedulePageImpl impl;
 
     private long closeTime;
-    private boolean opened = false;
 
     private CachedPageImpl(SchedulePageImpl impl) {
       this.impl = impl;
@@ -169,14 +178,11 @@ public class PagesCache {
 
     public void open() throws DataSourceException {
       lock.lock();
-      if (!opened) {
-        try {
+
+      try {
         impl.open();
-        } catch (Throwable e) {
-          lock.unlock();
-          throw new DataSourceException(e);
-        }
-        opened = true;
+      } catch (Throwable e) {
+        throw new DataSourceException(e);
       }
     }
 
@@ -185,35 +191,25 @@ public class PagesCache {
     }
 
     public TaskPointer add(Task task) throws DataSourceException {
-      if (opened)
-        return impl.add(task);
-      throw new DataSourceException("File is not opened");
+      return impl.add(task);
     }
 
     public Task remove(long taskId) throws DataSourceException {
-      if (opened)
-        return impl.remove(taskId);
-      else
-        throw new DataSourceException("File is not opened");
+      return impl.remove(taskId);
     }
 
     public Task get(long taskId) throws DataSourceException {
-      if (opened)
-        return impl.get(taskId);
-      throw new DataSourceException("File is not opened");
+      return impl.get(taskId);
     }
 
     public void list(Date from, Date till, Collection<Task> result) throws DataSourceException {
-      if (opened)
-        impl.list(from, till, result);
-      else
-        throw new DataSourceException("File is not opened");
+      impl.list(from, till, result);
     }
 
     public boolean closeInt(boolean all) {
       try {
         lock.lock();
-        if (opened || ((System.currentTimeMillis() - closeTime) < CACHE_CLEAN_INTERVAL & !all))
+        if (((System.currentTimeMillis() - closeTime) < CACHE_CLEAN_INTERVAL & !all))
           return false;
 
         impl.close();
@@ -223,8 +219,7 @@ public class PagesCache {
       }
     }
 
-    public void close() {
-      opened = false;
+    public void close() {      
       closeTime = System.currentTimeMillis();
       lock.unlock();
     }
