@@ -3,13 +3,11 @@ package com.eyeline.sponsored.distribution.advert.config;
 import com.eyeline.utils.config.ConfigException;
 import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.xml.XmlConfigSection;
+import com.eyeline.utils.config.xml.XmlConfigParam;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * User: artem
@@ -62,13 +60,12 @@ public class Config extends com.eyeline.sponsored.config.Config {
       throw new ConfigException("distributions section not found in advert_distribution");
 
 
-    XmlConfigSection s;
-    for (Iterator iter = distrSection.sections().iterator(); iter.hasNext();) {
-      s = (XmlConfigSection)iter.next();
+    for (XmlConfigSection s : distrSection.sections()) {
       final DistributionInfo info = new DistributionInfo();
       info.setDistributionName(s.getName());
       info.setAdvServiceName(s.getString("advServiceName"));
       info.setSrcAddress(s.getString("srcAddress"));
+      info.setPostfix(s.getString("postfix", null));
       try {
         info.setStartTime(parseTime(s.getString("startTime")));
       } catch (ParseException e) {
@@ -78,6 +75,12 @@ public class Config extends com.eyeline.sponsored.config.Config {
         info.setEndTime(parseTime(s.getString("endTime")));
       } catch (ParseException e) {
         throw new ConfigException("Invalid end time in distr " + s.getName() + ". Should be HH:mm:ss");
+      }
+
+      XmlConfigSection advMap = s.getSection("advertiserNames");
+      if (advMap != null) {
+        for (XmlConfigParam p : advMap.params())
+          info.setAdvertiserName(Integer.parseInt(p.getName()), p.getString());        
       }
       distrInfos.add(info);
     }

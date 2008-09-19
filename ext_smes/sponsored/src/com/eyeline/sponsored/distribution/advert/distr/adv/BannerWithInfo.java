@@ -18,6 +18,10 @@ public class BannerWithInfo {
     return bannerText;
   }
 
+  public void setBannerText(String bannerText) {
+    this.bannerText = bannerText;
+  }
+
   public int getAdvertiserId() {
     return advertiserId;
   }

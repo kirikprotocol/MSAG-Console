@@ -44,17 +44,18 @@ public class AdvertisingClient {
   public BannerWithInfo getBannerWithInfo(String serviceName, String abonentAddress, int transportType, int maxBannerLength, int charSet, int clientId, int transactionId) throws AdvertisingException {
     try {
 //      return new BannerWithInfo("test", (int)(Math.random() * 100));
-      final Address address = new Address(abonentAddress);
-      final String abonent = "." + address.getTon() + '.' + address.getNpi() + '.' + address.getAddress();
-
-      RequestResult banner = impl.getLikelyBannerWithId(abonent.getBytes("ISO8859-1"), abonent.length(),
-                                                 serviceName.getBytes("ISO8859-1"),
-                                                 transportType, maxBannerLength, charSet, clientId, transactionId);
-
-      if (banner == null || banner.getBannerText() == null || banner.getBannerText().length == 0)
-        return null;
-
-      return new BannerWithInfo(Encode.decodeUTF16(banner.getBannerText()), banner.getAdvertiserId());
+      return new BannerWithInfo("test", (int)(Math.random() * 10));
+//      final Address address = new Address(abonentAddress);
+//      final String abonent = "." + address.getTon() + '.' + address.getNpi() + '.' + address.getAddress();
+//
+//      RequestResult banner = impl.getLikelyBannerWithId(abonent.getBytes("ISO8859-1"), abonent.length(),
+//                                                 serviceName.getBytes("ISO8859-1"),
+//                                                 transportType, maxBannerLength, charSet, clientId, transactionId);
+//
+//      if (banner == null || banner.getBannerText() == null || banner.getBannerText().length == 0)
+//        return null;
+//
+//      return new BannerWithInfo(Encode.decodeUTF16(banner.getBannerText()), banner.getAdvertiserId());
     } catch (Throwable e) {
       throw new AdvertisingException(e);
     }

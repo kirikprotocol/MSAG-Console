@@ -101,8 +101,21 @@ public class ConservativeDistributionEngine implements DistributionEngine {
 
             if (banner != null) {
 
+              String advertiserName = distr.getAdvertiserName(banner.getAdvertiserId());
+              String srcAddress = advertiserName == null ? distr.getSrcAddress() : advertiserName;
+
+              String postfix = distr.getPostfix();
+              if (postfix != null) {
+                StringBuilder bannerText = new StringBuilder(banner.getBannerText());
+                char lastChar = bannerText.charAt(bannerText.length() - 1);
+                if (lastChar != '.' && lastChar != '!' && lastChar != '?')
+                  bannerText.append('.');
+                bannerText.append(postfix);
+                banner.setBannerText(bannerText.toString());
+              }
+
               // Send message
-              final OutgoingObject o = new OutgoingObjectWithBanner(distr.getSrcAddress(), d.getSubscriberAddress(), bannerMap, banner);
+              final OutgoingObject o = new OutgoingObjectWithBanner(srcAddress, d.getSubscriberAddress(), bannerMap, banner);
 
               try {
                 if (log.isDebugEnabled()) {

@@ -101,7 +101,7 @@ public class SmeLoadTest extends SubscriptionSme {
         int seqNum = 0;
         for (int i = s; i < e; i++, seqNum++) {
           final Message m = new Message();
-          m.setSourceAddress("+79169" + i);
+          m.setSourceAddress("+79139" + i);
           m.setDestinationAddress("741");
           m.setMessageString("10");
           m.setConnectionName("smsx");

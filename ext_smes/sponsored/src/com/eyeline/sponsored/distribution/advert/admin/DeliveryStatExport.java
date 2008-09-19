@@ -253,7 +253,7 @@ public class DeliveryStatExport {
 
     public void setInterval(String interval) {
       try {
-        this.interval = interval == null ? null : Integer.parseInt(interval);
+        this.interval = (interval == null) ? -1 : Integer.parseInt(interval);
       } catch (NumberFormatException e) {
         throw new IllegalArgumentException("Invalid interval");
       }
@@ -292,6 +292,9 @@ public class DeliveryStatExport {
 
       if (interval == 0)
         throw new IllegalArgumentException("Interval is zero");
+
+      if (toDate.after(CalendarUtils.getDayStart(new Date())))
+        throw new IllegalArgumentException("Can't get stats from this day");
 
       if (cost == -1)
         throw new IllegalArgumentException("Cost is empty");

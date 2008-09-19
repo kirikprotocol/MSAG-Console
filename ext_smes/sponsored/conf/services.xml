@@ -98,12 +98,26 @@
       <param-name>respSrcAddr</param-name>
       <param-value>741</param-value>
     </init-param>
-  </service>  
+  </service>
+
+  <service>
+    <service-name>forwarder</service-name>
+    <service-class>com.eyeline.sme.handler.services.ForwarderService</service-class>
+  </service>
   
   <!-- REQUESTS -->
   <request>
     <request-name>receipt</request-name>
     <receipt>true</receipt>
+  </request>
+
+  <request>
+    <request-name>anketa</request-name>
+    <message-pattern>(0|1|2|3|4|5|6|7|8|9)</message-pattern>
+    <request-param>
+      <param-name>forwardTo</param-name>
+      <param-value>684</param-value>
+    </request-param>
   </request>
 
   <request>
@@ -152,6 +166,11 @@
   <request-mapping>
     <request-name>help</request-name>
     <service-name>help</service-name>
+  </request-mapping>
+
+  <request-mapping>
+    <request-name>anketa</request-name>
+    <service-name>forwarder</service-name>
   </request-mapping>
   
   <default-service>

@@ -37,7 +37,7 @@ public class SubscriptionsExport {
 
   public static void main(String[] args) {
     final Arguments parser = new Arguments(args);
-    if (parser.containsAttr("help")) {
+    if (parser.containsAttr("-help")) {
       printHelp();
       return;
     }

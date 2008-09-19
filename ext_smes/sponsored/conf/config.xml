@@ -28,7 +28,7 @@
     <param name="driver">com.mysql.jdbc.Driver</param>
     <param name="url">jdbc:mysql://localhost/sponsored?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</param>
     <param name="login">root</param>
-    <param name="password">laefeeza</param>
+    <param name="password">laefeeza1</param>
     <param name="connectionTimeout">60000</param>    
   </section>
 
@@ -65,9 +65,15 @@
 
       <section name="sponsored1">
         <param name="srcAddress">741</param>
-        <param name="startTime">17:37:00</param>
+        <param name="startTime">14:37:00</param>
         <param name="endTime">23:45:02</param>
         <param name="advServiceName">SPONSORED</param>
+        <param name="postfix">подробности *741#</param>
+        <section name="advertiserNames">
+          <param name="0">.5.0.MTC</param>
+          <param name="1">.5.0.Vodafone</param>
+        </section>
+
       </section>
 
       <section name="sponsored3">

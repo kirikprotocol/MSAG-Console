@@ -1,8 +1,10 @@
 package com.eyeline.sponsored.ds.banner.impl;
 
-import com.eyeline.jstore.JStore4Java;
+import com.eyeline.jstore.JStore;
 import com.eyeline.sponsored.ds.banner.BannerMap;
 import com.eyeline.sponsored.utils.CalendarUtils;
+import static com.eyeline.utils.IOUtils.readLong;
+import static com.eyeline.utils.IOUtils.writeLong;
 import org.apache.log4j.Category;
 
 import java.io.*;
@@ -16,8 +18,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static com.eyeline.utils.IOUtils.*;
-
 /**
  * User: artem
  * Date: 11.04.2008
@@ -28,7 +28,7 @@ public final class JNIBannerMapImpl implements BannerMap {
   private static final Category log = Category.getInstance(JNIBannerMapImpl.class);
 
   private final String keyStoreFile;
-  private final JStore4Java store;
+  private final JStore store;
   private final ScheduledExecutorService mapCleaner;
   private final Lock lock = new ReentrantLock();
 
@@ -36,9 +36,9 @@ public final class JNIBannerMapImpl implements BannerMap {
 
 
   public JNIBannerMapImpl(String storeFile, int rollingTime, int maxCollizions, String keyStoreFile) {
-    this.store = new JStore4Java();
+    this.store = new JStore(Integer.MIN_VALUE);
     this.keyStoreFile = keyStoreFile;
-    this.store.Init(storeFile, rollingTime, maxCollizions);
+    this.store.init(storeFile, rollingTime, maxCollizions);
 
     this.mapCleaner = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
       public Thread newThread(Runnable r) {
@@ -55,7 +55,7 @@ public final class JNIBannerMapImpl implements BannerMap {
   public void put(long messageId, int advertiserId) {
     try {
       lock.lock();
-      store.Insert(messageId, advertiserId);
+      store.put(messageId, advertiserId);
       lastKey = messageId;
     } finally {
       lock.unlock();
@@ -63,20 +63,14 @@ public final class JNIBannerMapImpl implements BannerMap {
   }
 
   public int get(long messageId) {
-    int val[] = new int[1];
     try {
       lock.lock();
 
-      if (store.Lookup(messageId, val)) {
-        store.Delete(messageId);
-        return val[0];
-      }
+      return store.get(messageId);
 
-      return Integer.MIN_VALUE;
     } finally {
       lock.unlock();
     }
-
   }
 
   public void close() {
@@ -84,18 +78,15 @@ public final class JNIBannerMapImpl implements BannerMap {
   }
 
   public int size() {
-    long key[] = new long[1];
-
     int size = 0;
 
     try {
       lock.lock();
 
-      store.First();
+      store.first();
 
-      while(store.Next(key)) {
+      while(store.next() != Integer.MIN_VALUE)
         size++;
-      }
 
     } finally {
       lock.unlock();
@@ -105,21 +96,21 @@ public final class JNIBannerMapImpl implements BannerMap {
   }
 
   public void clear(long minMessageId) {
-    long key[] = new long[1];
     final List<Long> buffer = new ArrayList<Long>(1000);
 
     try {
       lock.lock();
 
-      store.First();
+      store.first();
 
-      while(store.Next(key)) {
-        if (key[0] < minMessageId)
-          buffer.add(key[0]);
+      long key;
+      while((key = store.next()) != Integer.MIN_VALUE) {
+        if (key < minMessageId)
+          buffer.add(key);
       }
 
       for (long k : buffer)
-        store.Delete(k);
+        store.remove(k);
 
       if (log.isInfoEnabled())
         log.info(buffer.size() + " records was removed from map.");

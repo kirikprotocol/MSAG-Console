@@ -1,6 +1,8 @@
 package com.eyeline.sponsored.distribution.advert.config;
 
 import java.util.Calendar;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * User: artem
@@ -13,6 +15,8 @@ public class DistributionInfo {
   private Calendar endTime;
   private String srcAddress;
   private String advServiceName;
+  private String postfix;
+  private Map<Integer, String> advertiserNames = null;
 
   public String getDistributionName() {
     return distributionName;
@@ -52,5 +56,25 @@ public class DistributionInfo {
 
   public void setAdvServiceName(String advServiceName) {
     this.advServiceName = advServiceName;
+  }
+
+  public String getPostfix() {
+    return postfix;
+  }
+
+  public void setPostfix(String postfix) {
+    this.postfix = postfix;
+  }
+
+  public String getAdvertiserName(int advertiserId) {
+    if (advertiserNames != null)
+      return advertiserNames.get(advertiserId);
+    return null;
+  }
+
+  public void setAdvertiserName(int advertiserId, String name) {
+    if (advertiserNames == null)
+      advertiserNames = new HashMap<Integer, String>(10);
+    advertiserNames.put(advertiserId, name);
   }
 }
