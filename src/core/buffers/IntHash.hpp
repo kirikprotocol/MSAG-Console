@@ -49,15 +49,13 @@ public:
     count=src.count;
     keys=new int[size];
     values=new T[size];
-    refcounts=new int[size];
+    refcounts=new unsigned int[size];
     memcpy(keys,src.keys,sizeof(int)*size);
-    memcpy(refcounts,src.refcounts,sizeof(int)*size);
+    memcpy(refcounts,src.refcounts,sizeof(unsigned int)*size);
     for(int i=0;i<size;i++)
     {
-      if(refcounts[i]!=0)values[i]=src.values[i];
+      if(refcounts[i]&0x80000000)values[i]=src.values[i];
     }
-    reflist=0;
-    reflistsize=0;
     return *this;
   }
 
@@ -88,21 +86,22 @@ public:
     if(n>size)Rehash(n);
   }
 
-  int Insert(int key,const T& value)
+  T& Insert(int key,const T& value)
   {
     //printf("ins:%d\n",key);fflush(stdout);
-    if(!size || count>=size/4)Rehash(size*4);
+    if(!size || count>=size/2)Rehash(size*2);
     unsigned int idx=Index(key,0);
     int res=0;
     int attempt=0;
     for(;;)
     {
-      if(keys[idx]<0)
+      if((refcounts[idx]&0x80000000)==0)
       {
         //printf("ins:new\n");fflush(stdout);
         keys[idx]=key;
         values[idx]=value;
         refcounts[idx]++;
+        refcounts[idx]|=0x80000000;
         res=1;
         break;
       }
@@ -110,8 +109,6 @@ public:
       {
         //printf("ins:exists\n");fflush(stdout);
         values[idx]=value;
-        refcounts[idx]++;
-        res=0;
         break;
       }
       //AddRef(idx,attempt);
@@ -127,7 +124,7 @@ public:
       idx=Index(key,attempt);
     }
     if(res)count++;
-    return res;
+    return values[idx];
   }
 
   const T& Get(int key)const
@@ -137,9 +134,12 @@ public:
     int attempt=0;
     do{
       idx=Index(key,attempt);
-      if(refcounts[idx]==0)throw std::runtime_error("get on empty inthash");
+      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)
+      {
+        throw std::runtime_error("IntHash::Get - item not found");
+      }
       attempt++;
-    }while(keys[idx]!=key);
+    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
     return values[idx];
   }
 
@@ -150,79 +150,94 @@ public:
     int attempt=0;
     do{
       idx=Index(key,attempt);
-      if(refcounts[idx]==0)throw std::runtime_error("get on empty inthash");
+      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)
+      {
+        throw std::runtime_error("IntHash::Get - item not found");
+      }
       attempt++;
-    }while(keys[idx]!=key);
+    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
     return values[idx];
   }
 
   T* GetPtr(int key)const
   {
-    if(!size || !count)return 0;
+    if(!size || !count)
+    {
+      return 0;
+    }
     unsigned int idx;
     int attempt=0;
     do{
       idx=Index(key,attempt);
-      if(refcounts[idx]==0)return 0;
+      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)return 0;
       attempt++;
-    }while(keys[idx]!=key);
+    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
     return &values[idx];
   }
 
 
-  int Get(int key,T& value)const
+  bool Get(int key,T& value)const
   {
 //    printf("get:%d\n",key);fflush(stdout);
-    if(!size || !count)return 0;
+    if(!size || !count)
+    {
+      return false;
+    }
     unsigned int idx;
     int attempt=0;
     do{
       idx=Index(key,attempt);
-      if(refcounts[idx]==0)return 0;
+      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)return false;
       attempt++;
-    }while(keys[idx]!=key);
+    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
     value=values[idx];
 //    printf("get:ok\n");fflush(stdout);
-    return 1;
+    return true;
   }
 
-  int Exist(int key)
+  bool Exist(int key)const
   {
-    if(!count)return 0;
+    if(!count)
+    {
+      return false;
+    }
     unsigned int idx;
     int attempt=0;
     do{
       idx=Index(key,attempt);
-      if(refcounts[idx]==0)return 0;
+      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)return 0;
       attempt++;
-    }while(keys[idx]!=key);
-    return 1;
+    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
+    return true;
   }
 
-  int Delete(int key)
+  bool Delete(int key)
   {
     //printf("del:%d\n",key);fflush(stdout);
-    if(size==0)return 0;
+    if(size==0)
+    {
+      return false;
+    }
     unsigned int idx;
     int attempt=0;
     do{
       idx=Index(key,attempt);
-      if(refcounts[idx]==0)
+      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)
       {
         //printf("del:not found\n");fflush(stdout);
-        return 0;
+        return false;
       }
       AddRef(idx,attempt);
-    }while(keys[idx]!=key);
+    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
     //printf("del:ok\n");fflush(stdout);
-    keys[idx]=-1;
+    refcounts[idx]&=0x7fffffff;
     for(int i=0;i<attempt;i++)
     {
       //printf("dele:%d\n",reflist[i]);fflush(stdout);
       refcounts[reflist[i]]--;
     }
     count--;
-    return 1;
+    return true;
   }
 
   class Iterator{
@@ -234,29 +249,34 @@ public:
     {
       idx=src.idx;
       h=src.h;
+      return *this;
     }
 
-    int Next(int& k,T& v)
+    bool Next(int& k,T& v)
     {
-      if(idx>=h->size || h->count==0)return 0;
-      while(idx<h->size && h->refcounts[idx]==0)idx++;
-      if(idx>=h->size)return 0;
+      if(idx>=h->size || h->count==0)return false;
+      while(idx<h->size && (h->refcounts[idx]&0x80000000)==0)idx++;
+      if(idx>=h->size)return false;
       k=h->keys[idx];
       v=h->values[idx];
       idx++;
-      return 1;
+      return true;
     }
-    int Next(int& k,T*& v)
+    bool Next(int& k,T*& v)
     {
-      if(idx>=h->size || h->count==0)return 0;
-      while(idx<h->size && h->refcounts[idx]==0)idx++;
-      if(idx>=h->size)return 0;
+      if(idx>=h->size || h->count==0)return false;
+      while(idx<h->size && (h->refcounts[idx]&0x80000000)==0)idx++;
+      if(idx>=h->size)return false;
       k=h->keys[idx];
       v=&h->values[idx];
       idx++;
-      return 1;
+      return true;
     }
-    protected:
+    void First()
+    {
+      idx=0;
+    }
+  protected:
     int idx;
     const IntHash* h;
   };
@@ -290,7 +310,7 @@ public:
 
 protected:
   int *keys;
-  int *refcounts;
+  unsigned int *refcounts;
   T *values;
   int count;
   int size;
@@ -328,15 +348,15 @@ protected:
   {
     if(newsize==0)newsize=16;
     int *okeys=keys;
-    int *orefs=refcounts;
+    unsigned int *orefs=refcounts;
     T *oval=values;
     keys=new int[newsize];
-    refcounts=new int[newsize];
+    refcounts=new unsigned int[newsize];
     values=new T[newsize];
 
     int i;
-    memset(keys,-1,sizeof(int)*newsize);
-    memset(refcounts,0,sizeof(int)*newsize);
+    //memset(keys,-1,sizeof(int)*newsize);
+    memset(refcounts,0,sizeof(unsigned int)*newsize);
 
     int oldsize=size;
     size=newsize;
@@ -344,13 +364,14 @@ protected:
     int idx,att;
     for(i=0;i<oldsize;i++)
     {
-      if(orefs[i]>0 && okeys[i]>=0)
+      if(orefs[i]&0x80000000)
       {
         //Insert(okeys[i],oval[i]);
         att=0;
         do{
           idx=Index(okeys[i],att++);
-        }while(refcounts[idx]++!=0);
+        }while((refcounts[idx]++)&0x80000000);
+        refcounts[idx]|=0x80000000;
         keys[idx]=okeys[i];
         values[idx]=oval[i];
       }

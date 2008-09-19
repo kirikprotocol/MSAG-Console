@@ -36,8 +36,8 @@ namespace smsc { namespace cluster
             int Exist(int type) {
                 return getInstance().Exist(type);
             }
-            int Insert(int type, CommandFactory* factory) {
-                return getInstance().Insert(type, factory);
+            void Insert(int type, CommandFactory* factory) {
+                getInstance().Insert(type, factory);
             }
             CommandFactory* Get(int type) {
                 return getInstance().Get(type);
