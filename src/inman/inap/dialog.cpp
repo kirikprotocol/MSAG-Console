@@ -567,7 +567,7 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
             updateState(true);
             return MSG_OK;
         }
-        updateState(); //postponing invokes cleanUp on T_END
+        updateState(); //postponing invokes cleanUp on T_END until return from TC User callback
         pUser.Lock();
     }
 
@@ -581,7 +581,7 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
     }
     {
         MutexGuard dtmp(dlgGrd);
-        clenUpInvokes();
+        cleanUpInvokes();
     }
     smsc_log_debug(logger, "%s: releasing %s", _logId, pInv->strStatus().c_str());
     unlockUser();
@@ -711,7 +711,7 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
     }
     {
         MutexGuard dtmp(dlgGrd);
-        clenUpInvokes();
+        cleanUpInvokes();
     }
     smsc_log_debug(logger, "%s: releasing %s", _logId, pInv->strStatus().c_str());
     unlockUser();

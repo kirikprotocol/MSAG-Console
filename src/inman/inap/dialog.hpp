@@ -47,7 +47,7 @@ typedef union {
         unsigned int reserved : 4;
 //NOTE: These masks are for BIG_ENDIAN platforms
 #define TC_DLG_CONTINUED_MASK   0x1C00
-#define TC_DLG_ENDED_MASK       0x0280
+#define TC_DLG_ENDED_MASK       0x0380
 #define TC_DLG_ABORTED_MASK     0x0070
 #define TC_DLG_CLOSED_MASK      (TC_DLG_ENDED_MASK|TC_DLG_ABORTED_MASK) //0x03F0
     } s;
@@ -137,7 +137,7 @@ private:
 
     //if Dialog is remotedly ended, no LCancel or Result/Error
     //indications will arise for invokes
-    inline void clenUpInvokes(void)
+    inline void cleanUpInvokes(void)
     {
         if (_state.s.dlgREnded == TCAP_DLG_COMP_LAST)
             clearInvokes();
