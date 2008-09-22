@@ -689,7 +689,7 @@ TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg, const MCEve
   pInfo->lastCallingTime = outEvent.lastCallingTime;
   pInfo->events = outEvent.srcEvents;
 
-  int res = smsInfo.Insert(seqNum, pInfo);
+  smsInfo.Insert(seqNum, pInfo);
   if(!messageSender->send(seqNum, msg))
   {
     smsc_log_error(logger, "Send DATA_SM for Abonent %s failed", pInfo->abnt.toString().c_str());
