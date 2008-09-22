@@ -5,31 +5,23 @@
 #include <unistd.h>
 
 #include <signal.h>
+#include <string>
 
 #include <logger/Logger.h>
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 
-#include "version.inc"
-#include "util/mirrorfile/mirrorfile.h"
-
-#include "ProfileStore.h"
-#include "PersServer.h"
-#include "RegionPersServer.h"
-
-#include "string"
 #include "Glossary.h"
-
-#include "BlocksHSReader.h"
-
-#include "PersClient.h"
-#include "scag/config/ConfigManager.h"
+#include "scag/pers/util/BlocksHSReader.h"
+#include "scag/pers/util/PersClient.h"
 
 using std::string;
-using namespace scag::pers;
+using scag::pers::AbntAddr;
+using scag::pers::Glossary;
+using scag::pers::util::PersClient;
+using scag::pers::util::PersClientException;
 using namespace smsc::util::config;
-using namespace scag::pers::client;
-using scag::config::ConfigManager;
+using scag::pers::util::BlocksHSReader;
 
 extern "C" void appSignalHandler(int sig)
 {
@@ -55,17 +47,10 @@ extern "C" void atExitHandler(void)
 
 int main(int argc, char* argv[])
 {
-    std::string storageDir;
-    int resultCode = 0;
-    std::string host;
-    int port = 9988;
-    int maxClientCount = 100, recCnt = 1000, timeout = 300;
-
     Logger::Init();
     Logger* logger = Logger::getInstance("pers");
 
     atexit(atExitHandler);
-
     sigset_t set;    
     sigfillset(&set);
     sigdelset(&set, SIGTERM);
@@ -73,82 +58,72 @@ int main(int argc, char* argv[])
     sigdelset(&set, SIGSEGV);
     sigdelset(&set, SIGBUS);
     sigdelset(&set, SIGHUP);
-    
     sigprocmask(SIG_SETMASK, &set, NULL);
     sigset(SIGTERM, appSignalHandler);
     sigset(SIGINT, appSignalHandler);
     sigset(SIGHUP, appSignalHandler);    
 
+    int open_result = Glossary::OPEN_ERROR;
+    int resultCode = 0;
     try{
-        smsc_log_info(logger,  "Starting up %s", getStrVersion());
-
-        ConfigManager::Init();
-
+        smsc_log_info(logger,  "Starting up Pers Upload");
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
 
-        ConfigView persConfig(manager, "pers");
+        ConfigView persConfig(manager, "PersUpload");
 
-        try { storageDir = persConfig.getString("storage_dir"); } catch (...) {};
-        int len = storageDir.length();
-        if( len > 0 && storageDir[len - 1] != '\\' && storageDir[len - 1] != '/')
-            storageDir += '/';
-	
-        try { recCnt = persConfig.getInt("init_record_count"); } catch (...) { recCnt = 1000; };
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//	Init Abonent's profiles storage 
-		ConfigView abntProfStorConfig(manager, "pers.AbntProfStorage");
+        ConfigView abntProfStorConfig(manager, "PersUpload.AbntProfStorage");
 		
-		string storageName;
-		try { storageName = abntProfStorConfig.getString("storageName"); } catch (...) { storageName = "abonent";
-			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.storageName> missed. Defaul value is 'abonent'");
+		string storageName = "abonent";
+		try { 
+          storageName = abntProfStorConfig.getString("storageName"); 
+        } catch (...) {
+          smsc_log_warn(logger, "Parameter <PersUpload.AbntProfStorage.storageName> missed. Defaul value is %s", storageName.c_str());
 		}
-		string storagePath;
-		try { storagePath = abntProfStorConfig.getString("storagePath"); } catch (...) { storagePath = "./";
-			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.storagePath> missed. Defaul value is './'");
+		string storagePath = "./storage";
+		try { 
+          storagePath = abntProfStorConfig.getString("storagePath");
+        } catch (...) {
+          smsc_log_warn(logger, "Parameter <PersUpload.AbntProfStorage.storagePath> missed. Defaul value is %d", storagePath.c_str());
 		}
-		int indexGrowth;
-		try { indexGrowth = abntProfStorConfig.getInt("indexGrowth"); } catch (...) { indexGrowth = 0;
-			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.indexGrowth> missed. Defaul value is 0 (automatic size selection)");
+		int dataBlockSize = 2048;
+		try {
+           dataBlockSize = abntProfStorConfig.getInt("dataBlockSize");
+        } catch (...) {
+          smsc_log_warn(logger, "Parameter <PersUpload.AbntProfStorage.dataBlockSize> missed. Defaul value is %d", dataBlockSize);
 		}
-		int dataBlockSize;
-		try { dataBlockSize = abntProfStorConfig.getInt("dataBlockSize"); } catch (...) { dataBlockSize = 0;
-			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.dataBlockSize> missed. Defaul value is 0 (automatic size selection)");
-		}
-		int blocksInFile;
-		try { blocksInFile = abntProfStorConfig.getInt("blocksInFile"); } catch (...) { blocksInFile = 0;
-			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.blocksInFile> missed. Defaul value is 0 (automatic size selection)");
-		}
-		int cacheSize;
-		try { cacheSize = abntProfStorConfig.getInt("cacheSize"); } catch (...) { cacheSize = 10000;
-			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.blocksInFile> missed. Defaul value is 10000");
+		int blocksInFile = 50000;
+		try {
+          blocksInFile = abntProfStorConfig.getInt("blocksInFile");
+        } catch (...) {;
+		  smsc_log_warn(logger, "Parameter <PersUpload.AbntProfStorage.blocksInFile> missed. Defaul value is %d", blocksInFile);
 		}
 
         bool sendToPers = false;
         try { sendToPers = persConfig.getBool("sendToPers"); } 
         catch (...) { 
-            smsc_log_warn(logger, "Parameter <pers_upload.sendToPers> missed. Defaul value is false");
+            smsc_log_warn(logger, "Parameter <PersUpload.sendToPers> missed. Defaul value is false");
         }
 
-        if(argc > 1 && !strcmp(argv[1], "--rebuild-index"))
-        {
-      		smsc_log_info(logger, "Index rebuilding started");                        
-            FSDBProfiles<AbntAddr> store;
-            store.RebuildIndex(storageName, storagePath, indexGrowth);
-            smsc_log_info(logger, "Index rebuilding finished.");
-            return 0;
+        smsc_log_warn(logger, "Parameter <PersUpload.AbntProfStorage.storagePath> = '%s'", storagePath.c_str());
+
+		if ((open_result = Glossary::Open(storagePath + "/glossary")) != Glossary::SUCCESS) {
+           throw Exception("Glossary open error");  
+        }
+        std::string host = "phoenix";
+        int port = 47880;
+
+        try { 
+          host = persConfig.getString("host");
+        } catch (...) {
+          smsc_log_warn(logger, "Parameter <PersUpload.host> missed. Defaul value is %s", host.c_str());
         }
 
-	    //StringProfileStore AbonentStore;
-	    //IntProfileStore ServiceStore, OperatorStore, ProviderStore;
-        
-        //AbonentStore.init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize, cacheSize,
-          //  Logger::getInstance("pvss.abnt"));
-		Glossary::Open(storagePath + "/glossary");
-
-        try { host = persConfig.getString("host"); } catch (...) {};
-        try { port = persConfig.getInt("port"); } catch (...) {};
+        try { 
+          port = persConfig.getInt("port");
+        } catch (...) {
+          smsc_log_warn(logger, "Parameter <PersUpload.port> missed. Defaul value is %d", port);
+        }
 
 
         smsc_log_debug(logger, "Client connect to %s:%d", host.c_str(), port);  
@@ -173,22 +148,22 @@ int main(int argc, char* argv[])
         }
     }
 
-    catch (PersClientException& exc) 
+    catch (const PersClientException& exc) 
     {
         smsc_log_error(logger, "PersClientException: %s Exiting.", exc.what());
-        resultCode = -21;
+        resultCode = -1;
     }
-    catch (ConfigException& exc) 
+    catch (const ConfigException& exc) 
     {
         smsc_log_error(logger, "Configuration invalid. Details: %s Exiting.", exc.what());
         resultCode = -2;
     }   
-    catch (Exception& exc) 
+    catch (const Exception& exc) 
     {
         smsc_log_error(logger, "Top level Exception: %s Exiting.", exc.what());
         resultCode = -3;
     }
-    catch (exception& exc) 
+    catch (const std::exception& exc) 
     {
         smsc_log_error(logger, "Top level exception: %s Exiting.", exc.what());
         resultCode = -4;
@@ -198,7 +173,8 @@ int main(int argc, char* argv[])
         smsc_log_error(logger, "Unknown exception: '...' caught. Exiting.");
         resultCode = -5;
     }   
-	
-    Glossary::Close();
+	if (open_result == Glossary::SUCCESS) {
+      Glossary::Close();
+    }
     return resultCode;
 }
