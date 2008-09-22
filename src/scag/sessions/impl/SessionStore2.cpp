@@ -209,7 +209,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             
             if ( session ) {
 
-                sqsz = int(session->appendCommand( com ));
+                sqsz = int(session->commandCount());
                 v = 0;
                 // smsc_log_debug( log_, "hit key=%s session=%p session->cmd=%u",
                 // key.toString().c_str(), session, session->currentCommand() );
@@ -228,6 +228,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                 queue_->pushCommand( cmd.get(), SCAGCommandQueue::RESERVE );
                 ++sqsz;
                 SCAGCommand* com = cmd.release();
+                session->appendCommand( com );
                 // smsc_log_debug(log_, "session is locked, put cmd=%p cmd->serial=%u to session queue, sz=%u",
                 // com, com->getSerial(), sz );
                 if ( unsigned(sqsz) > maxqueuesize_ ) maxqueuesize_ = unsigned(sqsz);

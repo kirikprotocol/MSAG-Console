@@ -2,6 +2,7 @@
 #define _SCAG_SESSIONS_IMPL_MANAGER2_H
 
 #include <map>
+#include <list>
 #include <time.h>
 #include <unistd.h>
 #include <string>
@@ -73,13 +74,18 @@ private:
         bool operator == ( const KeyPtr& o ) const {
             return *o.key == *key;
         }
+        static inline unsigned int CalcHash( const KeyPtr& k ) {
+            return SessionKey::CalcHash( *k.key );
+        }
     public:
         SessionKey* key;
     };
 
     typedef std::list< Expire >                               ExpireList;
     typedef std::multimap< time_t, ExpireList::iterator >     ExpireMap;
-    typedef XHash< KeyPtr, ExpireList::iterator, SessionKey > ExpireHash;
+    typedef XHash< KeyPtr, ExpireList::iterator, KeyPtr > ExpireHash;
+
+    struct lessAccessTime;
 
 public:
 
