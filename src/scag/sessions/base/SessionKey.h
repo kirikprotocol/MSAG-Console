@@ -5,6 +5,7 @@
 #include "scag/util/storage/Serializer.h"
 #include "logger/Logger.h"
 #include "sms/sms.h"  // for Address
+#include "core/synchronization/Mutex.hpp"
 
 namespace scag2 {
 namespace sessions {
@@ -75,7 +76,7 @@ protected:
     inline uint8_t npi() const {
         return uint8_t(((msisdn_/npicoef)^1)&0xf);
     }
-    inline uint8_t adr() const {
+    inline uint64_t adr() const {
         return msisdn_ & adrmask;
     }
 
@@ -119,13 +120,8 @@ public:
      */
 
     inline const std::string& toString() const {
-        if ( str_.empty() ) str_ = StoredSessionKey::toString();
         return str_;
-        // char buf[100];
-        // snprintf( buf, sizeof(buf), "%llu", msisdn_ );
-        // return std::string(buf);
     }
-
     smsc::sms::Address address() const;
 
     Serializer& serialize( Serializer& s ) const;
@@ -140,8 +136,17 @@ private:
     // }
 
 private:
+    /*
+    struct sharedstr {
+        smsc::core::synchronization::Mutex mtx;
+        int   count;
+        char* str;
+    };
+
     // cache
-    mutable std::string str_;
+    mutable RefPtr<std::string,smsc::core::synchronization::Mutex> str_;
+     */
+    std::string str_;
 };
 
 

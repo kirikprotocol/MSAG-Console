@@ -256,7 +256,11 @@ int SessionManagerImpl::Execute()
         {
             ExpireMap::iterator i;
             if ( ! isStarted() ) {
-                if ( expireMap_.size() == 0 && alldone ) break;
+                if ( expireMap_.empty() ) {
+                    if ( alldone ) break;
+                    expireMonitor_.wait( 500 );
+                    continue;
+                }
                 curset.reserve( expireMap_.size() );
                 i = expireMap_.end();
                 smsc_log_debug(log_, "taking the whole expire set, sz=%u", expireMap_.size() );
@@ -325,12 +329,14 @@ int SessionManagerImpl::Execute()
 
         if ( !curset.empty() || !flushset.empty() ) {
 
+            const unsigned tot = expireMap_.size();
+            const unsigned act = activeSessions_;
+
             UnlockMutexGuard ug( expireMonitor_ );
-            /*
-            smsc_log_debug( log_, "going to expire/flush=%u/%u", 
+            smsc_log_debug( log_, "%u/%u to be expired/flushed, %u/%u left active/total",
                             unsigned(curset.size()),
-                            unsigned(flushset.size()) );
-             */
+                            unsigned(flushset.size()),
+                            act, tot );
             alldone = store_->expireSessions( curset, flushset );
 
             /*
@@ -425,7 +431,7 @@ void SessionManagerImpl::scheduleExpire( time_t expirationTime,
 
 bool SessionManagerImpl::finalize( Session& session )
 {
-    smsc_log_debug( log_, "finalize: session=%p, key=%s", &session, session.sessionKey().toString().c_str() );
+    smsc_log_debug( log_, "session=%p/%s: finalize", &session, session.sessionKey().toString().c_str() );
 
     try {
 
@@ -446,10 +452,12 @@ bool SessionManagerImpl::finalize( Session& session )
 
         }
 
-    } catch ( SCAGException& exc ) {
-        smsc_log_error( log_, "finalize: %s", exc.what() );
+    } catch ( std::exception& exc ) {
+        smsc_log_error( log_, "session=%p/%s: finalize: %s",
+                        &session, session.sessionKey().toString().c_str(), exc.what() );
     } catch (...) {
-        smsc_log_error( log_, "finalize: unknown error" );
+        smsc_log_error( log_, "session=%p/%s: finalize: unknown error",
+                        &session, session.sessionKey().toString().c_str() );
     }
     return true;
 }
@@ -461,7 +469,8 @@ SessionManagerImpl::ExpireMap::iterator
     ExpireMap::iterator i = expireMap_.lower_bound(expire);
     for ( ; ; ++i ) {
         if ( i == expireMap_.end() || i->first != expire ) {
-            smsc_log_error( log_, "Logic error in scheduleExpire: %s",
+            smsc_log_error( log_, "Logic error in scheduleExpire(key=%s): %s",
+                            key.toString().c_str(),
                             i == expireMap_.end() ? "at end" : "time mismatch" );
             i = expireMap_.end();
             break;

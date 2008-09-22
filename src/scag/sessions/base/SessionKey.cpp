@@ -115,10 +115,15 @@ std::string StoredSessionKey::toString() const
 }
 
 
+
+
+
+
 SessionKey::SessionKey( const smsc::sms::Address& a )
 {
     *this = a;
 }
+
 
 SessionKey::SessionKey( const std::string& a ) 
 {
@@ -131,7 +136,7 @@ smsc::sms::Address SessionKey::address() const
 {
     char buf[30];
     snprintf( buf, sizeof(buf), "%llu", adr() );
-    return smsc::sms::Address( ton(), npi(), strlen(buf), buf );
+    return smsc::sms::Address( ton(), npi(), uint8_t(strlen(buf)), buf );
 }
 
 
@@ -144,15 +149,16 @@ Serializer& SessionKey::serialize( Serializer& s ) const
 Deserializer& SessionKey::deserialize( Deserializer& s ) throw (DeserializerException)
 {
     s >> msisdn_;
-    str_ = "";
+    str_ = StoredSessionKey::toString();
+    return s;
 }
 
 
 const SessionKey& SessionKey::operator = ( const smsc::sms::Address& a )
 {
-    uint64_t addr = strtoull( a.value, NULL, 10 );
+    const uint64_t addr = strtoull( a.value, NULL, 10 );
     msisdn_ = setaddr( a.type, a.plan, addr );
-    str_ = "";
+    str_ = StoredSessionKey::toString();
     return *this;
 }
 

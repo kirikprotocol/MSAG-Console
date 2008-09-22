@@ -283,6 +283,12 @@ public:
         return prev;
     }
 
+    /// the id of the command with currently locks the session
+    /// NOTE: ids are (see also SCAGCommand):
+    /// 0 -- unlocked
+    /// 1 -- locked for finalization
+    /// 2 -- locked for disk i/o
+    /// 3-9 -- reserved
     inline uint32_t currentCommand() {
         return command_;
     }
@@ -296,6 +302,11 @@ public:
     /// NOTE: this method should be invoked from SessionStore only (as it requires locking).
     SCAGCommand* popCommand();
 
+    /// get the count of the command queue
+    inline unsigned commandCount() {
+        return unsigned(cmdQueue_.size());
+    }
+
     // NOTE: aborting session is forbidden
     // abort the session
     // void abort();
@@ -305,11 +316,15 @@ private: // methods
     Session( const Session& s );
     Session& operator = ( const Session& s );
 
+    typedef SessionPropertyScope* (*Opmaker)( Session* );
+
     void serializeScope( util::storage::Serializer& o, const SessionPropertyScope* s ) const;
-    void deserializeScope( util::storage::Deserializer& o, SessionPropertyScope*& s )
+    void deserializeScope( util::storage::Deserializer& o, SessionPropertyScope*& s, Opmaker opmaker )
         throw (util::storage::DeserializerException);
     void serializeScopeHash( util::storage::Serializer& o, const IntHash< SessionPropertyScope* >* s ) const;
-    void deserializeScopeHash( util::storage::Deserializer& o, IntHash< SessionPropertyScope* >*& s ) 
+    void deserializeScopeHash( util::storage::Deserializer& o,
+                               IntHash< SessionPropertyScope* >*& s,
+                               Opmaker opmaker )
         throw (util::storage::DeserializerException);
     void clearScopeHash( IntHash< SessionPropertyScope* >* s );
     opid_type getNewOperationId() const;

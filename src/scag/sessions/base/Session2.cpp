@@ -128,7 +128,7 @@ protected:
 
         } else {
 
-            throw SCAGException( "logic error in SessionPropertyScope:processReadonly, unregistered name='%s' is requested", 
+            throw SCAGException( "logic error in SessionPropertyScope:processReadonly, unregistered name='%s' is requested",
                                  name.c_str() );
         }
         if ( np ) {
@@ -146,6 +146,32 @@ private:
     // we don't need hash here as only a few (<5) readonly values are expected.
     std::set< std::string >* readonly_;
 };
+
+
+
+
+SessionPropertyScope* makeGlobalScope( Session* s )
+{
+    return new SessionPropertyScopeWrapper( s, readonlyGlobalScopeSet );
+}
+
+
+SessionPropertyScope* makeServiceScope( Session* s )
+{
+    return new SessionPropertyScope( s );
+}
+
+
+SessionPropertyScope* makeContextScope( Session* s )
+{
+    return new SessionPropertyScope( s );
+}
+
+
+SessionPropertyScope* makeOperationScope( Session* s )
+{
+    return new SessionPropertyScopeWrapper( s, readonlyOperationScopeSet );
+}
 
 } // namespace
 
@@ -303,7 +329,7 @@ contextScopes_(0),
 operationScopes_(0)
 {
     ::getlog();
-    smsc_log_debug( logc_, "session=%p key=%s +1", this, key.toString().c_str() );
+    smsc_log_debug( logc_, "session=%p/%s +1", this, key.toString().c_str() );
     // clear();
 }
 
@@ -313,7 +339,8 @@ Session::~Session()
     clear();
     // FIXME: delete things
     if ( cmdQueue_.size() > 0 ) {
-        smsc_log_error( log_, "LOGIC ERROR!!! Session command queue is not empty: %d, FIXME: MEMLEAK!", cmdQueue_.size() );
+        smsc_log_error( log_, "LOGIC ERROR!!! session=%p/%s command queue is not empty: %d, FIXME: MEMLEAK!",
+                        this, sessionKey().toString().c_str(), cmdQueue_.size() );
         // this->abort();
     }
         /*
@@ -329,7 +356,7 @@ Session::~Session()
     delete serviceScopes_;
     delete contextScopes_;
     delete operationScopes_;
-    smsc_log_debug( logc_, "session=%p key=%s -1", this, sessionKey().toString().c_str() );
+    smsc_log_debug( logc_, "session=%p/%s -1", this, sessionKey().toString().c_str() );
 }
 
 
@@ -475,10 +502,10 @@ Deserializer& Session::deserialize( Deserializer& s ) throw (DeserializerExcepti
         s >> count;
         nextContextId_ = int32_t(count);
 
-        deserializeScope( s, globalScope_ );
-        deserializeScopeHash( s, serviceScopes_ );
-        deserializeScopeHash( s, contextScopes_ );
-        deserializeScopeHash( s, operationScopes_ );
+        deserializeScope( s, globalScope_, ::makeGlobalScope );
+        deserializeScopeHash( s, serviceScopes_, ::makeServiceScope );
+        deserializeScopeHash( s, contextScopes_, ::makeContextScope );
+        deserializeScopeHash( s, operationScopes_, ::makeOperationScope );
 
         // post-processing
         setCurrentOperation( currentOperationId_ );
@@ -493,7 +520,7 @@ Deserializer& Session::deserialize( Deserializer& s ) throw (DeserializerExcepti
 void Session::clear()
 {
     // FIXME: temporary output
-    smsc_log_debug( logc_, "session=%p key=%s clear", this, sessionKey().toString().c_str() );
+    smsc_log_debug( logc_, "session=%p/%s clear", this, sessionKey().toString().c_str() );
 
     pkey_ = SessionPrimaryKey(key_); // to reset born time
 
@@ -563,7 +590,7 @@ void Session::print( util::Print& p ) const
 
     const time_t now = time(0);
     // const int lastac = int(now - lastAccessTime_);
-    p.print( "session=%p key=%s tmASH=%d/%d/%d ops=%d trans=%d lockCmd=%u umr=%d%s",
+    p.print( "session=%p/%s tmASH=%d/%d/%d ops=%d trans=%d lockCmd=%u umr=%d%s",
              this, sessionKey().toString().c_str(),
              int(lastAccessTime_ - now),
              int(expirationTime_ - now),
@@ -650,8 +677,10 @@ Operation* Session::setCurrentOperation( opid_type opid )
 
     if ( ! currentOperation_ ) {
         currentOperationId_ = SCAGCommand::invalidOpId();
-        smsc_log_warn( log_, "Session=%p cannot find operation id=%u, key=%s",
-                       this, unsigned(opid), sessionKey().toString().c_str() );
+        smsc_log_warn( log_, "session=%p/%s cannot find operation id=%u",
+                       this,
+                       sessionKey().toString().c_str(),
+                       unsigned(opid) );
         // FIXME: should we throw?
         // throw SCAGException( "Session=%p cannot find operation id=%u, key=%s",
         // this, unsigned(opid), sessionKey().toString().c_str() );
@@ -660,8 +689,9 @@ Operation* Session::setCurrentOperation( opid_type opid )
 
     const uint8_t optype = currentOperation_->type();
     currentOperationId_ = opid;
-    smsc_log_debug( log_, "setOp(sess=%p,opid=%u) => op=%p type=%d(%s) etime=%d",
-                    this, unsigned(opid), currentOperation_,
+    smsc_log_debug( log_, "session=%p/%s setOp(opid=%u) => op=%p type=%d(%s) etime=%d",
+                    this, sessionKey().toString().c_str(),
+                    unsigned(opid), currentOperation_,
                     int(optype),
                     commandOpName(optype),
                     int(expirationTime_ - time(0)) );
@@ -678,7 +708,8 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
     if ( operationType == transport::CO_USSD_DIALOG ) {
         // if the operation is already there, replace it
         if ( ussdOperationId_ != SCAGCommand::invalidOpId() ) {
-            smsc_log_debug( log_, "Session: old USSD operation exists, going to delete" );
+            smsc_log_info( log_, "session=%p/%s old USSD operation will be replaced",
+                           this, sessionKey().toString().c_str() );
             setCurrentOperation( ussdOperationId_ );
             closeCurrentOperation();
         }
@@ -694,8 +725,9 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
     time_t now = time(0);
     time_t expire = now + defaultLiveTime();
     if ( expire > expirationTime_ ) expirationTime_ = expire;
-    smsc_log_debug( log_, "createOp(sess=%p,cmd=%p) => op=%p opid=%u type=%d(%s), etime=%d",
-                    this, &cmd,
+    smsc_log_debug( log_, "session=%p/%s createOp(cmd=%p) => op=%p opid=%u type=%d(%s), etime=%d",
+                    this, sessionKey().toString().c_str(),
+                    &cmd,
                     currentOperation_,
                     unsigned(currentOperationId_),
                     operationType,
@@ -752,8 +784,9 @@ void Session::closeCurrentOperation()
         }
     }
 
-    smsc_log_debug( log_, "closeOp(sess=%p,op=%p opid=%u type=%d(%s)) => opcnt=%u etime=%d",
+    smsc_log_debug( log_, "session=%p/%s closeOp(op=%p opid=%u type=%d(%s)) => opcnt=%u etime=%d",
                     this,
+                    sessionKey().toString().c_str(),
                     prevop,
                     unsigned(prevopid),
                     prevoptype,
@@ -781,10 +814,12 @@ bool Session::hasPersistentOperation() const
 
 void Session::setUSSDref( int32_t ref ) throw (SCAGException)
 {
-    if ( ref <= 0 ) throw SCAGException( "setUSSDref(ref=%d), ref should be >0", ref );
+    if ( ref <= 0 ) throw SCAGException( "session=%p/%s setUSSDref(ref=%d), ref should be >0",
+                                         this, sessionKey().toString().c_str(), ref );
     // changing umr is allowed
     // if ( umr_ > 0 ) throw SCAGException( "setUSSDref(ref=%d), UMR=%d is already set", ref, umr_ );
-    if ( umr_ == -1 ) throw SCAGException( "setUSSDref(ref=%d), no USSD operation found", ref );
+    if ( umr_ == -1 ) throw SCAGException( "session=%p/%s setUSSDref(ref=%d), no USSD operation found",
+                                           this, sessionKey().toString().c_str(), ref );
     umr_ = ref;
 }
 
@@ -843,8 +878,8 @@ void Session::dropInitRuleKey( int serviceId, int transport )
         if ( initrulekeys_.empty() ) {
             // if no services left, then reset session expiration time
             time_t now = time(0);
-            smsc_log_debug( log_, "session=%p key=%s dropinitrulekey",
-                            this, sessionKey().toString().c_str() );
+            // smsc_log_debug( log_, "session=%p/%s no more initrulekeys",
+            // this, sessionKey().toString().c_str() );
             if ( expirationTimeAtLeast_ > now ) expirationTimeAtLeast_ = now;
         }
     }
@@ -855,7 +890,7 @@ void Session::dropInitRuleKey( int serviceId, int transport )
 int Session::createContextScope()
 {
     if ( ! contextScopes_ ) contextScopes_ = new IntHash< SessionPropertyScope* >;
-    contextScopes_->Insert( ++nextContextId_, new SessionPropertyScope(this) );
+    contextScopes_->Insert( ++nextContextId_, ::makeContextScope(this) );
     return nextContextId_;
 }
 
@@ -878,9 +913,7 @@ bool Session::deleteContextScope( int ctxid )
 SessionPropertyScope* Session::getGlobalScope()
 {
     if ( ! globalScope_ ) {
-        SessionPropertyScopeWrapper* w = 
-            new SessionPropertyScopeWrapper( this, readonlyGlobalScopeSet );
-        globalScope_ = w;
+        globalScope_ = ::makeGlobalScope(this);
     }
     return globalScope_;
 }
@@ -893,7 +926,7 @@ SessionPropertyScope* Session::getServiceScope( int servid )
     if ( ! serviceScopes_ ) serviceScopes_ = new IntHash< SessionPropertyScope* >;
     SessionPropertyScope** sptr = serviceScopes_->GetPtr( servid );
     if ( ! sptr ) {
-        res = new SessionPropertyScope( this );
+        res = ::makeServiceScope( this );
         serviceScopes_->Insert( servid, res );
     } else {
         res = *sptr;
@@ -919,21 +952,18 @@ SessionPropertyScope* Session::getOperationScope()
 {
     SessionPropertyScope* res;
     if ( getCurrentOperation() == 0 )
-        throw SCAGException( "session=%p cannot get operation scope, op=0", this );
+        throw SCAGException( "session=%p/%s cannot get operation scope, op=0",
+                             this, sessionKey().toString().c_str() );
 
     if ( ! operationScopes_ )
         operationScopes_ = new IntHash< SessionPropertyScope* >;
     SessionPropertyScope** sptr = operationScopes_->GetPtr( getCurrentOperationId() );
     if ( ! sptr ) {
-        SessionPropertyScopeWrapper* w = 
-            new SessionPropertyScopeWrapper( this, readonlyOperationScopeSet );
-        res = w;
+        res = ::makeOperationScope( this );
         operationScopes_->Insert( getCurrentOperationId(), res );
     } else {
         res = *sptr;
-        if ( ! res ) {
-            res = *sptr = new SessionPropertyScopeWrapper( this, readonlyOperationScopeSet );
-        }
+        if ( ! res ) res = *sptr = ::makeOperationScope( this );
     }
     return res;
 }
@@ -946,7 +976,7 @@ void Session::waitAtLeast( unsigned sec )
     if ( t > expirationTimeAtLeast_ ) {
         expirationTimeAtLeast_ = t;
         if ( t > expirationTime_ ) expirationTime_ = t;
-        smsc_log_debug( log_, "session=%p key=%s tmASH=%d/%d/%d",
+        smsc_log_debug( log_, "session=%p/%s wait at least tmASH=%d/%d/%d",
                         this, sessionKey().toString().c_str(),
                         int(lastAccessTime_ - now),
                         int(expirationTime_ - now),
@@ -993,7 +1023,9 @@ void Session::serializeScope( Serializer& o, const SessionPropertyScope* s ) con
 }
 
 
-void Session::deserializeScope( Deserializer& o, SessionPropertyScope*& s ) throw (DeserializerException)
+void Session::deserializeScope( Deserializer& o,
+                                SessionPropertyScope*& s,
+                                Opmaker opmaker ) throw (DeserializerException)
 {
     const size_t rpos = o.rpos();
     uint32_t sz;
@@ -1001,7 +1033,7 @@ void Session::deserializeScope( Deserializer& o, SessionPropertyScope*& s ) thro
     if ( s ) s->clear();
     if ( !sz ) return;
     o.setrpos( rpos );
-    if ( !s ) s = new SessionPropertyScope( this );
+    if ( !s ) s = (*opmaker)( this );
     s->deserialize( o );
 }
 
@@ -1021,7 +1053,9 @@ void Session::serializeScopeHash( Serializer& o, const IntHash< SessionPropertyS
 }
 
 
-void Session::deserializeScopeHash( Deserializer& o, IntHash< SessionPropertyScope* >*& s ) throw (DeserializerException)
+void Session::deserializeScopeHash( Deserializer& o,
+                                    IntHash< SessionPropertyScope* >*& s,
+                                    Opmaker opmaker ) throw (DeserializerException)
 {
     uint32_t sz;
     o >> sz;
@@ -1032,7 +1066,7 @@ void Session::deserializeScopeHash( Deserializer& o, IntHash< SessionPropertySco
         uint32_t key;
         SessionPropertyScope* value = 0;
         o >> key;
-        deserializeScope(o,value);
+        deserializeScope(o,value,opmaker);
         if ( value ) s->Insert( int(key), value );
     }
 }

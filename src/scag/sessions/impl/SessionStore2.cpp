@@ -156,7 +156,7 @@ void SessionStoreImpl::init( unsigned eltNumber,
 /// stop processing
 void SessionStoreImpl::stop()
 {
-    smsc_log_info(log_, "stop()");
+    // smsc_log_info(log_, "stop()");
     MutexGuard mg(cacheLock_);
     stopping_ = true;
 }
@@ -170,6 +170,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     if ( ! cmdaddr ) return ActiveSession();
 
     const char* what = "";
+    int sqsz=-1;
     Session* session = cmd->getSession();
     if ( session ) {
         // fast access to session, w/o locking mutex
@@ -179,9 +180,10 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
         // cmdaddr, cmd->getSerial(),
         // session );
         if ( session->currentCommand() != cmd->getSerial() ) {
-            smsc_log_error(log_, "logic error in fetchSession, cmd=%p, cmd->serial=%u, cmd->session=%p, session->cmd=%u",
+            smsc_log_error(log_, "logic error in fetchSession, cmd=%p, cmd->serial=%u, cmd->session=%p/%s, session->cmd=%u",
                            cmdaddr, cmd->getSerial(),
-                           session, session->currentCommand() );
+                           session, key.toString().c_str(),
+                           session->currentCommand() );
             ::abort();
         }
         what = " fast lookup";
@@ -207,6 +209,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             
             if ( session ) {
 
+                sqsz = int(session->appendCommand( com ));
                 v = 0;
                 // smsc_log_debug( log_, "hit key=%s session=%p session->cmd=%u",
                 // key.toString().c_str(), session, session->currentCommand() );
@@ -223,11 +226,11 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                 what = " is locked";
                 // reserve a place in queue for a command
                 queue_->pushCommand( cmd.get(), SCAGCommandQueue::RESERVE );
+                ++sqsz;
                 SCAGCommand* com = cmd.release();
-                const unsigned sqsz = session->appendCommand( com );
                 // smsc_log_debug(log_, "session is locked, put cmd=%p cmd->serial=%u to session queue, sz=%u",
                 // com, com->getSerial(), sz );
-                if ( sqsz > maxqueuesize_ ) maxqueuesize_ = sqsz;
+                if ( unsigned(sqsz) > maxqueuesize_ ) maxqueuesize_ = unsigned(sqsz);
                 if ( ++storedCommands_ > maxcommands_ ) maxcommands_ = storedCommands_;
                 session = 0;
                 break;
@@ -235,6 +238,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
         }
 
         // object not found in cache
+        sqsz = 0;
 
         if ( !create && !diskio_ ) {
             // creation and diskio are not allowed
@@ -283,9 +287,9 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     }
 
     // smsc_log_debug( log_, "fetched key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
-    smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p%s",
+    smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p qsz=%d%s",
                     key.toString().c_str(), cmdaddr, create ? 1:0,
-                    session, what );
+                    session, sqsz, what );
 
     if ( session )
         return makeLockedSession(*session,*cmd.get());
@@ -304,7 +308,8 @@ void SessionStoreImpl::releaseSession( Session& session )
         // smsc_log_debug(log_,"releaseSession(session=%p): key=%s, sess->ops=%d, sess->pers=%d, sess->cmd=%u)",
         // &session, key.toString().c_str(), session.operationsCount(), session.isPersistent() ? 1 : 0, cmd );
         if ( ! cmd ) {
-            smsc_log_error(log_, "logic error in releaseSession(sess=%p): session->cmd is not set", &session );
+            smsc_log_error(log_, "logic error in releaseSession(session=%p/%s): session->cmd is not set",
+                           &session, key.toString().c_str() );
             ::abort();
         }
     }
@@ -343,7 +348,8 @@ void SessionStoreImpl::releaseSession( Session& session )
 
         v = cache_->get( key );
         if ( !v || cache_->store2val(*v) != &session ) {
-            smsc_log_error( log_, "logic error in releaseSession" );
+            smsc_log_error( log_, "logic error in releaseSession(session=%p/%s): not found in cache",
+                            &session, key.toString().c_str() );
             ::abort();
             // throw std::runtime_error("SessionStore: logic error in releaseSession" );
         }
@@ -352,7 +358,7 @@ void SessionStoreImpl::releaseSession( Session& session )
             UnlockMutexGuard ug(cacheLock_);
             // if ( ispersist ) {
             disk_->set( key, cache_->store2ref(*v) );
-            smsc_log_debug(log_, "flushed key=%s session=%p", key.toString().c_str(), &session );
+            smsc_log_debug(log_, "session=%p/%s is flushed", &session, key.toString().c_str() );
             // } else {
             // disk_->remove( key );
             // smsc_log_debug(log_, "removed key=%s session=%p", key.toString().c_str(), &session );
@@ -376,7 +382,7 @@ void SessionStoreImpl::releaseSession( Session& session )
     // commands are owned elsewhere
     // delete prevcmd;
 
-    smsc_log_debug( log_, "releaseSession(session=%p,key=%s) => prevcmd=%u nextcmd=%u, tot/lck=%u/%u",
+    smsc_log_debug( log_, "releaseSession(session=%p/%s) => prevcmd=%u nextcmd=%u, tot/lck=%u/%u",
                     &session, key.toString().c_str(), prevuid, nextuid, tot, lck );
 
     if ( ! (nextcmd && carryNextCommand( session, nextcmd, true)) )
@@ -391,8 +397,8 @@ void SessionStoreImpl::moveLock( Session& s, SCAGCommand* cmd )
     Session* olds = cmd->getSession();
     if ( olds && olds != &s ) {
         // another session is set
-        smsc_log_warn(log_, "cannot moveLock: session=%p session->cmd=%u cmd=%p cmd->serial=%u cmd->session=%p",
-                      &s, s.currentCommand(), cmd, cmd->getSerial(), olds );
+        smsc_log_warn(log_, "cannot moveLock: session=%p/%s session->cmd=%u cmd=%p cmd->serial=%u cmd->session=%p",
+                      &s, s.sessionKey().toString().c_str(), s.currentCommand(), cmd, cmd->getSerial(), olds );
         return;
     }
     MutexGuard mg(cacheLock_);
@@ -409,11 +415,13 @@ inline ActiveSession SessionStoreImpl::makeLockedSession( Session&     s,
     // should be already set
     // s.setCurrentCommand(&c);
     if ( olds && olds != &s ) {
-        smsc_log_error(log_, "logic error in makeLocked: cmd->session=%p session=%p", olds, &s );
+        smsc_log_error(log_, "logic error in makeLocked(session=%p/%s): cmd->session=%p",
+                       &s, s.sessionKey().toString().c_str(), olds );
         ::abort();
     }
     if ( oldc && oldc != c.getSerial() ) {
-        smsc_log_error(log_, "logic error in makeLocked: sess->cmd=%u cmd->serial=%u", oldc, c.getSerial() );
+        smsc_log_error(log_, "logic error in makeLocked(session=%p/%s): sess->cmd=%u cmd->serial=%u",
+                       &s, s.sessionKey().toString().c_str(), oldc, c.getSerial() );
         ::abort();
     }
     // ++lockedSessions_;
@@ -453,7 +461,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
                 // session should be kept on disk.
                 // NOTE: we'll save session only if cache is overwhelmed,
                 // otherwise the session should be returned to expirationQueue.
-                smsc_log_debug( log_, "session=%p key=%s is being flushed:",
+                smsc_log_debug( log_, "session=%p/%s is being flushed",
                                 session, session->sessionKey().toString().c_str() );
                 scag_plog_debug(pl,log_);
                 session->print(pl);
@@ -530,7 +538,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
                                    key.toString().c_str() );
                     v = 0;
                 } else {
-                    smsc_log_debug( log_,"session=%p key=%s has been just uploaded:",
+                    smsc_log_debug( log_,"session=%p/%s has been just uploaded",
                                     session, key.toString().c_str() );
                     scag_plog_debug(pl,log_);
                     session->print(pl);
@@ -648,8 +656,8 @@ void SessionStoreImpl::getSessionsCount( unsigned& sessionsCount,
 bool SessionStoreImpl::doSessionFinalization( Session& session, bool keep )
 {
     if ( session.currentCommand() != 1 ) {
-        smsc_log_error(log_, "logic error in session=%p finalization, session->cmd=%u != 1",
-                       &session, session.currentCommand() );
+        smsc_log_error(log_, "logic error in session=%p/%s finalization, session->cmd=%u != 1",
+                       &session, session.sessionKey().toString().c_str(), session.currentCommand() );
         ::abort();
     }
     --lockedSessions_;
@@ -659,24 +667,16 @@ bool SessionStoreImpl::doSessionFinalization( Session& session, bool keep )
         ++lockedSessions_;
         setCommandSession( *nextcmd, &session );
         session.setCurrentCommand( nextcmd->getSerial() );
-    } else
-        session.setCurrentCommand( 0 );
-
-    if ( carryNextCommand(session,nextcmd,false) ) {
-        // cannot delete session
-        // NOTE: the session was already finalized (possible via session_destroy rule),
-        // so make sure it will be initialized
-        // smsc_log_debug(log_, "key=%s session=%p is revived via clear()", session.sessionKey().toString().c_str(), &session );
-        if ( !keep ) session.clear();
+        // session has been already finalized, so clear it up
+        if (!keep) session.clear();
+        carryNextCommand( session, nextcmd, false );
         return false;
     } else {
-        // no more commands
-        // smsc_log_debug(log_, "key=%s session=%p is being destroyed", session.sessionKey().toString().c_str(), &session );
-        // NOTE: session should be already saved/deleted from disk
+        // no more commands, delete the session
         --totalSessions_;
         delete cache_->release( session.sessionKey() );
+        return true;
     }
-    return true;
 }
 
 
@@ -707,7 +707,8 @@ bool SessionStoreImpl::carryNextCommand( Session&     session,
         if ( dolock ) cacheLock_.Unlock();
     }
     
-    smsc_log_info( log_, "queue is stopped: session=%p deletes %u commands", &session, comlist.size() );
+    smsc_log_info( log_, "queue is stopped: session=%p/%s deletes %u commands",
+                   &session, session.sessionKey().toString().c_str(), comlist.size() );
     for ( std::vector< SCAGCommand* >::iterator i = comlist.begin();
           i != comlist.end();
           ++i ) {
