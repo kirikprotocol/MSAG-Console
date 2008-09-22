@@ -669,7 +669,7 @@ private:
     inline void getlogger() {
         if ( ! log_ ) {
             MutexGuard mg(loggerMutex_);
-            if ( !log_ ) log_ = smsc::logger::Logger::getInstance("smpp");
+            if ( !log_ ) log_ = smsc::logger::Logger::getInstance("smpp.cmd");
         }
     }
 

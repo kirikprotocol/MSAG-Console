@@ -60,8 +60,26 @@ private:
     };
      */
 
-    typedef std::multimap< time_t, std::pair<SessionKey,time_t> > ExpireMap;
-    typedef XHash< SessionKey, time_t, SessionKey >               ExpireHash;
+    struct Expire {
+        Expire( time_t e, time_t a, const SessionKey& sk ) : expire(e), access(a), key(sk) {}
+        time_t      expire;
+        time_t      access;
+        SessionKey  key;
+    };
+
+    struct KeyPtr {
+        explicit KeyPtr( SessionKey* k ) : key(k) {}
+        explicit KeyPtr( Expire& ek ) : key(&ek.key) {}
+        bool operator == ( const KeyPtr& o ) const {
+            return *o.key == *key;
+        }
+    public:
+        SessionKey* key;
+    };
+
+    typedef std::list< Expire >                               ExpireList;
+    typedef std::multimap< time_t, ExpireList::iterator >     ExpireMap;
+    typedef XHash< KeyPtr, ExpireList::iterator, SessionKey > ExpireHash;
 
 public:
 
@@ -130,9 +148,15 @@ private:
     unsigned          flushLimitTime_;
     unsigned          activeSessions_;
     SCAGCommandQueue* cmdqueue_;
+
     EventMonitor      expireMonitor_;
-    ExpireMap         expireMap_;
-    ExpireHash        expireHash_;
+
+    // unsigned          inputCount_;    // count of items in the inputList_
+    ExpireList*       inputList_;     // this one is used to pick input from scheduleExpire()
+    ExpireList        expireList_;    // this list actually keeps expiration data
+    ExpireMap         expireMap_;     // ordered by expiration time
+    ExpireHash        expireHash_;    // fast access via sessionKey
+
     Logger*           log_;
 
     Mutex             stopLock_;

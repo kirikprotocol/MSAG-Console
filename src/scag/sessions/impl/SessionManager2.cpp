@@ -84,6 +84,7 @@ flushLimitSize_(100000000),
 flushLimitTime_(100000000),
 activeSessions_(0),
 cmdqueue_(0),
+inputList_(0),
 log_(0),
 started_(false),
 oldestsession_(time(0))
@@ -219,6 +220,8 @@ void SessionManagerImpl::Stop()
             expireMonitor_.notify();
         }
         started_ = false;
+        delete inputList_;
+        inputList_ = 0;
 
     } // if started
     this->WaitFor();
@@ -231,9 +234,55 @@ int SessionManagerImpl::Execute()
     smsc_log_info( log_, "SessionManager:start executing" );
 
     const int deftmo = 1000;
-    MutexGuard mg(expireMonitor_);
+    // MutexGuard mg(expireMonitor_);
     bool alldone = true;
+    bool started = true;
+    time_t oldtime;
     while( true ) {
+
+        ExpireList* list = 0;
+        {
+            MutexGuard mg(expireMonitor_);
+            if ( inputList_ && ! inputList_->empty() ) {
+                list = inputList_;
+                inputList_ = 0;
+            }
+            started = isStarted();
+            oldtime = oldestsession_;
+        }
+
+        // process input
+        if ( list ) {
+
+            // expireList_ is a std::list< Expire >
+            // expireMap_  is a std::multimap< time_t, ExpireList::iterator >
+            // expireHash_ is XHash< KeyPtr, ExpireList::iterator, KeyPtr >
+
+            for ( ; ! list->empty(); list->pop_front() ) {
+
+                Expire& e = list->front();
+                ExpireList::iterator i;
+                ExpireList::iterator* ptr = expireHash_.GetPtr(KeyPtr(e));
+                if ( ptr ) {
+                    // found
+                    i = ei->second;
+                    ExpireMap::iterator ei = findExpire(*ptr,e.key);
+                    if ( i->access == maxtime && e.access != maxtime ) ++activeSessions_;
+                    i->access = e.access;
+                    if ( i->expire == e.expire ) continue;
+                    expireMap_.erase( ei );
+                } else {
+                    // not found
+                    ++activeSessions_;
+                    expireList_.push_front( e );
+                    i = expireList_.begin();
+                    expireHash_.Insert( KeyPtr(*i), i );
+                }
+                expireMap_.insert( i->expire, i );
+
+            }
+            delete list;
+        }
 
         int curtmo = deftmo;
         if ( ! expireMap_.empty() ) {
@@ -243,21 +292,28 @@ int SessionManagerImpl::Execute()
         time_t now = time(0);
         // oldwait is a number of ms to wait for oldest session flush time
         // NOTE: we also add 5 seconds to bunch old session processing.
-        int oldwait = int(oldestsession_+flushLimitTime_+5 - now) * 1000; // in ms
+        int oldwait = int(oldttime+flushLimitTime_+5 - now) * 1000; // in ms
         if ( curtmo > oldwait ) curtmo = oldwait;
 
-        if ( isStarted() && curtmo > 0 && activeSessions_ <= flushLimitSize_ ) {
-            expireMonitor_.wait( curtmo );
-            now = time(0);
-            oldwait = int(oldestsession_+flushLimitTime_+5 - now) * 1000;
+        if ( started ) {
+            if ( curtmo > 0 && activeSessions_ <= flushLimitSize_ ) {
+                expireMonitor_.wait(curtmo);
+                continue;
+            }
+            // now = time(0);
+            // oldwait = int(oldestsession_+flushLimitTime_+5 - now) * 1000;
+        } else if ( expireMap_.empty() ) {
+            continue;
+            // expireMonitor_.wait(500);
+            // continue;
         }
 
         std::vector< SessionKey > curset;
         {
             ExpireMap::iterator i;
-            if ( ! isStarted() ) {
-                if ( expireMap_.empty() ) {
-                    if ( alldone ) break;
+            if ( alldone ) break;
+            // FIXME
+
                     expireMonitor_.wait( 500 );
                     continue;
                 }
@@ -380,13 +436,20 @@ void SessionManagerImpl::scheduleExpire( time_t expirationTime,
                                          time_t lastaccessTime,
                                          const SessionKey& key )
 {
-    unsigned mapsz;
-    unsigned actsz;
-    time_t now = time(0);
-    int prevtime;
-    do {
+    // unsigned mapsz;
+    // unsigned actsz;
+    // time_t now = time(0);
+    // int prevtime;
 
+    time_t now = time(0);
+    {
         MutexGuard mg(expireMonitor_);
+        if ( ! inputList_ ) inputList_ = new ExpireList;
+        inputList_->push_back( Expire(expirationTime, lastaccessTime, key ) );
+    
+        if ( lastaccessTime < oldestsession_ ) oldestsession_ = lastaccessTime;
+
+    /*
         time_t* ptr = expireHash_.GetPtr(key);
         mapsz = unsigned(expireMap_.size());
         actsz = activeSessions_;
@@ -416,16 +479,19 @@ void SessionManagerImpl::scheduleExpire( time_t expirationTime,
             ( std::make_pair( expirationTime, std::make_pair
                               ( key, lastaccessTime ) ) );
 
+
+     */
+
         if ( expirationTime < now || !isStarted() ||
-             activeSessions_ > flushLimitSize_ ||
-             unsigned(now - oldestsession_) > flushLimitTime_ ) expireMonitor_.notify();
+             // activeSessions_ > flushLimitSize_ ||
+             unsigned(now - oldestsession_) > flushLimitTime_ ||
+             inputList_->size() > 50 ) expireMonitor_.notify();
 
-    } while ( false );
-
-    smsc_log_debug( log_, "scheduleExpire(key=%s): time=%d => %d, cnt=%u/%u",
-                    key.toString().c_str(),
-                    prevtime, int( expirationTime - now ),
-                    actsz, mapsz );
+    }
+    // smsc_log_debug( log_, "scheduleExpire(etime=%d,key=%s): time=%d => %d, cnt=%u/%u",
+    // key.toString().c_str(),
+    // prevtime, int( expirationTime - now ),
+    // actsz, mapsz );
 }
 
 

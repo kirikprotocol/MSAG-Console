@@ -70,7 +70,7 @@ struct StateMachine::ResponseRegistry
 
         RegKey key(uid, seq);
         sync::MutexGuard mg(mtx);
-        if (!log) log=smsc::logger::Logger::getInstance("respreg");
+        if (!log) log=smsc::logger::Logger::getInstance("smpp.reg");
         if (reg.Exists(key))
         { // key already registered
             smsc_log_warn(log, "register %d/%d failed", uid, seq);

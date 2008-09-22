@@ -19,7 +19,7 @@ public:
     StateMachine( SmppCommandQueue* argQueue, SmppRouter* argRouteMan ) :
     queue_(argQueue), routeMan_(argRouteMan), log_(0)
     {
-        log_ = smsc::logger::Logger::getInstance("statmach");
+        log_ = smsc::logger::Logger::getInstance("smpp.sm");
     }
 
     const char* taskName(){return "StateMachine";}
