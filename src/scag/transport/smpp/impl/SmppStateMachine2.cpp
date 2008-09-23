@@ -113,7 +113,7 @@ struct StateMachine::ResponseRegistry
     std::auto_ptr<SmppCommand> Get( int uid, int seq )
     {
         sync::MutexGuard mg(mtx);
-        if (!log) log = smsc::logger::Logger::getInstance("respreg");
+        if (!log) log = smsc::logger::Logger::getInstance("smpp.reg");
         RegKey key(uid, seq);
         RegValue* ptr=reg.GetPtr(key);
         smsc_log_debug(log, "get uid=%d seq=%d - %s", uid, seq, (ptr) ? "ok":"not found");

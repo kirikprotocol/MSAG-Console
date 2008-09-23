@@ -19,7 +19,7 @@ public:
     StateMachine( SmppCommandQueue* argQueue, SmppRouter* argRouteMan ) :
     queue_(argQueue), routeMan_(argRouteMan), log_(0)
     {
-        log_ = smsc::logger::Logger::getInstance("smpp.sm");
+        log_ = smsc::logger::Logger::getInstance("smpp.stm");
     }
 
     const char* taskName(){return "StateMachine";}
@@ -28,7 +28,7 @@ public:
     static void addTransitOptional(int tag)
     {
         allowedUnknownOptionals.push_back(tag);
-        smsc_log_debug(smsc::logger::Logger::getInstance("statmach"), "Transitional tag added: %x", tag);
+        smsc_log_debug(smsc::logger::Logger::getInstance("smpp.stm"), "Transitional tag added: %x", tag);
     }
 
 protected:

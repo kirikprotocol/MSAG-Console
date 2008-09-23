@@ -282,6 +282,7 @@ int SessionManagerImpl::Execute()
                     if ( i->access != maxtime ) --activeSessions_;
                     i->access = e.access;
                     if ( i->expire == e.expire ) continue;
+                    i->expire = e.expire;
                     expireMap_.erase( ei );
                 } else {
                     // not found

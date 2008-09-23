@@ -34,7 +34,7 @@ public:
                ConfigManager::Instance().getConfig()->getString("smpp.host")
     );
     tp.startTask(acc);
-    log=smsc::logger::Logger::getInstance("smpp.sm");
+    log=smsc::logger::Logger::getInstance("smpp.sock");
   }
   SmscConnectorAdmin* getSmscConnectorAdmin()
   {

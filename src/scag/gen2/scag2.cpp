@@ -66,6 +66,8 @@ public:
 
 FromSessionQueue fsq;
 
+smsc::logger::Logger* log;
+
 } // namespace
 
 
@@ -88,8 +90,7 @@ Scag::~Scag()
 
 void Scag::init( unsigned mynode )
 {
-    smsc::logger::Logger *log=smsc::logger::Logger::getInstance("scag.init");
-
+    log = smsc::logger::Logger::getInstance("scag.init");
 
     smsc_log_info(log, "SCAG start initialisation...");
 
@@ -256,14 +257,14 @@ void Scag::init( unsigned mynode )
       __warning__("Statistics manager is not started.");
     }
     
-  smsc_log_info(log, "SCAG init complete" );
-
-  __trace__("Smsc::init completed");
+    smsc_log_info(log, "SCAG init complete\n\n" );
+    // __trace__("Smsc::init completed");
 }
 
 void Scag::shutdown()
 {
-  __trace__("shutting down");
+    // __trace__("shutting down");
+    smsc_log_info( log, "SCAG is shutting down\n\n");
     transport::http::HttpManager::Instance().shutdown();
     transport::smpp::SmppManager::Instance().shutdown();
     lcm::LongCallManager::Instance().shutdown();  
