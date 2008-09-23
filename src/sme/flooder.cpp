@@ -138,6 +138,8 @@ int probDatagram=0;
 int probForward=0;
 int probStoreAndForward=0;
 
+int setDpf=-1;
+
 Option options[]=
 {
   {"host",'s',&host},
@@ -165,7 +167,8 @@ Option options[]=
   {"probDefault",'i',&probDefault},
   {"probDatagram",'i',&probDatagram},
   {"probForward",'i',&probForward},
-  {"probStoreAndForward",'i',&probStoreAndForward}
+  {"probStoreAndForward",'i',&probStoreAndForward},
+  {"setdpf",'i',&setDpf}
 };
 
 int optionsCount=sizeof(options)/sizeof(options[0]);
@@ -402,6 +405,11 @@ int main(int argc,char* argv[])
           {
             s.setIntProperty(Tag::SMPP_ESM_CLASS,(s.getIntProperty(Tag::SMPP_ESM_CLASS)&(~3))|3);
           }
+        }
+
+        if(setDpf>=0)
+        {
+          s.setIntProperty(Tag::SMPP_SET_DPF,setDpf);
         }
 
         fillSmppPduFromSms(&sm,&s);
