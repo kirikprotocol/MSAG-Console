@@ -4,6 +4,7 @@
 #include <string>
 #include "util/int.h"
 #include "DateTime.h"
+#include "system/status.h"
 
 namespace smsc{
 namespace infosme{
@@ -53,11 +54,13 @@ namespace infosme{
       bool    flash;
 
       time_t  endDate;            // full date/time
-      time_t  retryTime;          // only HH:mm:ss in seconds
+      //time_t  retryTime;          // only HH:mm:ss in seconds
       time_t  validityPeriod;     // only HH:mm:ss in seconds
       time_t  validityDate;       // full date/time
       time_t  activePeriodStart;  // only HH:mm:ss in seconds
       time_t  activePeriodEnd;    // only HH:mm:ss in seconds
+
+      std::string retryPolicy;
 
       WeekDaysSet activeWeekDays; // Mon, Tue ...
 
@@ -74,13 +77,40 @@ namespace infosme{
           : uid(0), enabled(true), priority(0),
             retryOnFail(false), replaceIfPresent(false),
             trackIntegrity(false), transactionMode(false), keepHistory(false),flash(false),
-            endDate(-1), retryTime(-1), validityPeriod(-1), validityDate(-1),
+            endDate(-1), validityPeriod(-1), validityDate(-1),
             activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
             dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1),
             messagesCacheSize(100), messagesCacheSleep(0) {};
   };
 
 
+  struct ResponseData{
+    std::string msgId;
+    int status;
+    int seqNum;
+    bool accepted, retry, immediate, trafficst;
+    ResponseData(int argStatus,int argSeqNum,const std::string& argMsgId):msgId(argMsgId),status(argStatus),seqNum(argSeqNum)
+    {
+      using namespace smsc::system;
+      accepted = status==Status::OK;
+      retry     = (!Status::isErrorPermanent(status));
+
+      immediate = (status == Status::MSGQFUL   ||
+                        status == Status::THROTTLED ||
+                        status == Status::LICENSELIMITREJECT
+                        //commented for Lugovoj's request
+                        //|| status == Status::SUBSCRBUSYMT
+                        );
+
+      trafficst = (status == Status::MSGQFUL                   ||
+                        status == Status::THROTTLED                 ||
+                        status == Status::LICENSELIMITREJECT        ||
+                        status == Status::MAP_RESOURCE_LIMITATION   ||
+                        status == Status::MAP_NO_RESPONSE_FROM_PEER ||
+                        status == Status::SMENOTCONNECTED           ||
+                        status == Status::SYSFAILURE);
+    }
+  };
 }
 }
 

@@ -10,6 +10,8 @@ extern bool isMSISDNAddress(const char* string);
 namespace smsc { namespace infosme 
 {
 
+RetryPolicies TaskProcessor::retryPlcs;
+
 /* ---------------------------- TaskProcessor ---------------------------- */
 
 TaskProcessor::TaskProcessor(ConfigView* config)
@@ -63,6 +65,9 @@ TaskProcessor::TaskProcessor(ConfigView* config)
       smsc_log_warn(logger, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
                     "The preffered max value is 500ms", unrespondedMessagesSleep);
     }
+
+    std::auto_ptr<ConfigView> retryPlcCfg(config->getSubConfig("RetryPolicies"));
+    retryPlcs.Load(retryPlcCfg.get());
 
     std::auto_ptr<ConfigView> tasksThreadPoolCfgGuard(config->getSubConfig("TasksThreadPool"));
     taskManager.init(tasksThreadPoolCfgGuard.get());   // loads up thread pool for tasks
@@ -384,7 +389,7 @@ struct MessageGuard{
   {
     if(!messageProcessed)
     {
-      time_t retryTime=task->getInfo().retryTime;
+      time_t retryTime=TaskProcessor::getRetryPolicies().getRetryTime(task->getInfo().retryPolicy.c_str(),0);
       if(retryTime==0)
       {
         retryTime=60*60;
@@ -508,7 +513,9 @@ void TaskProcessor::processWaitingEvents(time_t time)
         }
         if (needProcess)
         {
-          processResponce(timer.seqNum, false, true, true, "", true);
+          ResponseData rd(smsc::system::Status::MSGQFUL,timer.seqNum,"");
+
+          processResponce(rd, true);
         }
         
         {
@@ -543,7 +550,9 @@ void TaskProcessor::processWaitingEvents(time_t time)
             }
         }
         if (needProcess)
-            processReceipt(timer.smscId, false, true, true);
+        {
+          processReceipt(ResponseData(smsc::system::Status::MSGQFUL,0,timer.smscId), true);
+        }
 
         {
             MutexGuard recptGuard(receiptWaitQueueLock);
@@ -553,12 +562,13 @@ void TaskProcessor::processWaitingEvents(time_t time)
     while (!bNeedExit && count > 0);
 }
 
-void TaskProcessor::processMessage(Task* task, uint64_t msgId,
-                                   bool delivered, bool retry, bool immediate)
+void TaskProcessor::processMessage(Task* task, const ResponseData& rd)
 {
     __require__(task);
 
-    if (delivered)
+    uint64_t msgId=atoll(rd.msgId.c_str());
+
+    if (rd.accepted)
     {
         task->finalizeMessage(msgId, DELIVERED);
         statistics->incDelivered(task->getInfo().uid);
@@ -566,9 +576,9 @@ void TaskProcessor::processMessage(Task* task, uint64_t msgId,
     else
     {
         TaskInfo info = task->getInfo();
-        if (retry && (immediate || (info.retryOnFail && info.retryTime > 0)))
+        if (rd.retry && (rd.immediate || (info.retryOnFail && info.retryPolicy.length())))
         {
-            time_t nextTime = time(NULL)+((immediate) ? 0:info.retryTime);
+            time_t nextTime = time(NULL)+(rd.immediate ? 0:retryPlcs.getRetryTime(info.retryPolicy.c_str(),rd.status));
 
             if ((info.endDate>0 && nextTime >=info.endDate) ||
                 (info.validityDate>0 && nextTime>=info.validityDate))
@@ -582,7 +592,7 @@ void TaskProcessor::processMessage(Task* task, uint64_t msgId,
                     smsc_log_warn(logger, "Message #%lld not found for retry.", msgId);
                     statistics->incFailed(info.uid);
                 } 
-                else if (!immediate) statistics->incRetried(info.uid);
+                else if (!rd.immediate) statistics->incRetried(info.uid);
             }
         }
         else
@@ -605,23 +615,32 @@ const char* DEL_ID_MAPPING_STATEMENT_ID = "DEL_ID_MAPPING_STATEMENT_ID";
 const char* DEL_ID_MAPPING_STATEMENT_SQL = (const char*)
 "DELETE FROM INFOSME_ID_MAPPING WHERE ID=:ID";
 
-void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool immediate,
-                                    std::string smscId, bool internal)
+void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
 {
-    if (!internal) smsc_log_info(logger, "Responce: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
-                                 seqNum, accepted, retry, immediate);
-    else smsc_log_info(logger, "Responce for seqNum=%d is timed out.", seqNum);
+    if (!internal)
+    {
+      smsc_log_info(logger, "Responce: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
+                                 rd.seqNum, rd.accepted, rd.retry, rd.immediate);
+    }
+    else
+    {
+       smsc_log_info(logger, "Responce for seqNum=%d is timed out.", rd.seqNum);
+    }
 
     TaskMsgId tmIds;
-    {   
+    {
         TaskMsgId* tmIdsPtr = 0;
         MutexGuard snGuard(taskIdsBySeqNumMonitor);
-        if (!(tmIdsPtr = taskIdsBySeqNum.GetPtr(seqNum))) {
-            if (!internal) smsc_log_warn(logger, "processResponce(): Sequence number=%d is unknown !", seqNum);
+        if (!(tmIdsPtr = taskIdsBySeqNum.GetPtr(rd.seqNum)))
+        {
+            if (!internal)
+            {
+              smsc_log_warn(logger, "processResponce(): Sequence number=%d is unknown !", rd.seqNum);
+            }
             return;
         }
         tmIds = *tmIdsPtr;
-        taskIdsBySeqNum.Delete(seqNum);
+        taskIdsBySeqNum.Delete(rd.seqNum);
         taskIdsBySeqNumMonitor.notifyAll();
     }
     
@@ -629,16 +648,16 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
     Task* task = taskGuard.get();
     if (!task) {
         if (!internal) smsc_log_warn(logger, "Unable to locate task '%d' for sequence number=%d", 
-                                     tmIds.taskId, seqNum);
+                                     tmIds.taskId, rd.seqNum);
         return;
     }
     TaskInfo info = task->getInfo();
 
-    if (!accepted || internal)
+    if (!rd.accepted || internal)
     {
-        if (retry && (immediate || (info.retryOnFail && info.retryTime > 0)))
+        if (rd.retry && (rd.immediate || (info.retryOnFail && info.retryPolicy.length())))
         {
-            time_t nextTime = time(NULL)+((immediate) ? 0:info.retryTime);
+            time_t nextTime = time(NULL)+(rd.immediate ? 0:retryPlcs.getRetryTime(info.retryPolicy.c_str(),rd.status));
 
             if ((info.endDate>0 && nextTime >=info.endDate) ||
                 (info.validityDate>0 && nextTime>=info.validityDate))
@@ -652,7 +671,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                     smsc_log_warn(logger, "Message #%lld not found for retry.", tmIds.msgId);
                     statistics->incFailed(info.uid);
                 } 
-                else if (!immediate) statistics->incRetried(info.uid);
+                else if (!rd.immediate) statistics->incRetried(info.uid);
             }
         }
         else
@@ -669,7 +688,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
             return;
         }
         
-        const char* smsc_id = smscId.c_str();
+        const char* smsc_id = rd.msgId.c_str();
         
         try
         {
@@ -681,7 +700,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                 else {
                     receipts.Insert(smsc_id, receipt);
                     MutexGuard recptGuard(receiptWaitQueueLock);
-                    receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, smscId));
+                    receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, rd.msgId));
                 }
             }
 
@@ -715,8 +734,11 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                 {
                   jstore.Delete(atol(smsc_id));
                 }
-                
-                processMessage(task, tmIds.msgId, receipt.delivered, receipt.retry);
+                ResponseData rd2(rd);
+                rd2.accepted=receipt.delivered;
+                rd2.retry=receipt.retry;
+
+                processMessage(task, rd2);
             }
         }
         catch (std::exception& exc) {
@@ -728,13 +750,19 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
     }
 }
 
-void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool retry, bool internal)
+void TaskProcessor::processReceipt (const ResponseData& rd, bool internal)
 {
-    const char* smsc_id = smscId.c_str();
+    const char* smsc_id = rd.msgId.c_str();
 
-    if (!internal) smsc_log_info(logger, "Receipt : smscId=%s, delivered=%d, retry=%d",
-                                 smsc_id, delivered, retry);
-    else smsc_log_info(logger, "Responce/Receipt for smscId=%s is timed out. Cleanup.",smsc_id);
+    if (!internal)
+    {
+      smsc_log_info(logger, "Receipt : smscId=%s, delivered=%d, retry=%d",
+                            smsc_id, rd.accepted, rd.retry);
+    }
+    else
+    {
+      smsc_log_info(logger, "Responce/Receipt for smscId=%s is timed out. Cleanup.",smsc_id);
+    }
     
     if (!internal)
     {
@@ -743,15 +771,15 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
         if (receiptPtr) // attach & return;
         {   
             receiptPtr->receipted = true;
-            receiptPtr->delivered = delivered;
-            receiptPtr->retry     = retry;
+            receiptPtr->delivered = rd.accepted;
+            receiptPtr->retry     = rd.retry;
             return;
         }
         else
         {
-            receipts.Insert(smsc_id, ReceiptData(true, delivered, retry));
+            receipts.Insert(smsc_id, ReceiptData(true, rd.accepted, rd.retry));
             MutexGuard recptGuard(receiptWaitQueueLock);
-            receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, smscId));
+            receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, rd.msgId));
         }
     }
     
@@ -798,7 +826,7 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
           throw Exception("processReceipt(): Unable to locate task '%d' for smscId=%s",
                           taskId, smsc_id);
 
-        processMessage(task, msgId, delivered, retry, internal);
+        processMessage(task, rd);
       }
       
     }

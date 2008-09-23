@@ -417,8 +417,10 @@ public:
                         break;
                     }
                 }
+                ResponseData rd(delivered?0:Status::UNKNOWNERR,0,msgid);
+                rd.retry=retry;
 
-                bNeedResponce = processor.invokeProcessReceipt(msgid, delivered, retry);
+                bNeedResponce = processor.invokeProcessReceipt(rd);
             }
         }
 
@@ -440,21 +442,6 @@ public:
         int status = pdu->get_commandStatus();
 
         bool accepted  = (status == Status::OK);
-        bool retry     = (!Status::isErrorPermanent(status));
-
-        bool immediate = (status == Status::MSGQFUL   ||
-                          status == Status::THROTTLED ||
-        status == Status::LICENSELIMITREJECT
-        /*|| commented for Lugovoj's request
-                                                        status == Status::SUBSCRBUSYMT*/);
-
-        bool trafficst = (status == Status::MSGQFUL                   ||
-                          status == Status::THROTTLED                 ||
-        status == Status::LICENSELIMITREJECT        ||
-                          status == Status::MAP_RESOURCE_LIMITATION   ||
-                          status == Status::MAP_NO_RESPONSE_FROM_PEER ||
-                          status == Status::SMENOTCONNECTED           ||
-                          status == Status::SYSFAILURE);
 
         const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
         std::string msgId = "";
@@ -465,7 +452,7 @@ public:
             smsc_log_info(logger, "SMS #%s seqNum=%d wasn't accepted, errcode=%d",
                           msgId.c_str(), seqNum, status);
 
-        processor.invokeProcessResponce(seqNum, accepted, retry, immediate, msgId, trafficst);
+        processor.invokeProcessResponce(ResponseData(status,seqNum,msgId));
     }
 
     void handleEvent(SmppHeader *pdu)

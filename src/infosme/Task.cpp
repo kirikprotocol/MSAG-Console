@@ -101,8 +101,8 @@ void Task::init(ConfigView* config, uint32_t taskId)
   }
   */
 
-  info.retryTime = parseTime(config->getString("retryTime"));
-  if (info.retryOnFail && info.retryTime <= 0)
+  info.retryPolicy = parseTime(config->getString("retryPolicy"));
+  if (info.retryOnFail && info.retryPolicy.length()==0)
       throw ConfigException("Task retry time specified incorrectly."); 
   info.validityPeriod = parseTime(config->getString("validityPeriod"));
   info.validityDate = parseDateTime(config->getString("validityDate"));
@@ -223,8 +223,8 @@ void Task::update(ConfigView *config)
   }
   */
 
-  newinfo.retryTime = parseTime(config->getString("retryTime"));
-  if (newinfo.retryOnFail && newinfo.retryTime <= 0)
+  newinfo.retryPolicy = parseTime(config->getString("retryPolicy"));
+  if (newinfo.retryOnFail && newinfo.retryPolicy.length()== 0)
       throw ConfigException("Task retry time specified incorrectly."); 
   newinfo.validityPeriod = parseTime(config->getString("validityPeriod"));
   newinfo.validityDate = parseDateTime(config->getString("validityDate"));

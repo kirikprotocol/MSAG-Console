@@ -23,6 +23,7 @@
 #include "db/DataSource.h"
 
 #include "TaskScheduler.h"
+#include "RetryPolicies.hpp"
 #include "StatisticsManager.h"
 #include "InfoSmeAdmin.h"
 
@@ -129,21 +130,15 @@ namespace smsc { namespace infosme
 
         EventMethod            method;
         TaskProcessorAdapter&  processor;
-
-        int             seqNum;
-        bool            delivered, retry, immediate;
-        std::string     smscId;
-        bool            trafficst;
+        ResponseData           rd;
     public:
 
-        EventRunner(EventMethod method, TaskProcessorAdapter& processor, int seqNum,
-                    bool accepted, bool retry, bool immediate, std::string smscId, bool aTrafficst)
-            : method(method), processor(processor), seqNum(seqNum),
-              delivered(accepted), retry(retry), immediate(immediate), smscId(smscId), trafficst(aTrafficst) {};
-        EventRunner(EventMethod method, TaskProcessorAdapter& processor,
+        EventRunner(EventMethod method, TaskProcessorAdapter& processor,const ResponseData& argRd)
+            : method(method), processor(processor),rd(argRd) {};
+        /*EventRunner(EventMethod method, TaskProcessorAdapter& processor,
                     std::string smscId, bool delivered, bool retry)
             : method(method), processor(processor), seqNum(0),
-              delivered(delivered), retry(retry), immediate(false), smscId(smscId), trafficst(false) {};
+              delivered(delivered), retry(retry), immediate(false), smscId(smscId), trafficst(false) {};*/
 
         virtual ~EventRunner() {};
 
@@ -152,11 +147,11 @@ namespace smsc { namespace infosme
             switch (method)
             {
             case processResponceMethod:
-                processor.processResponce(seqNum, delivered, retry, immediate, smscId);
-                if (!trafficst) TrafficControl::incIncoming();
+                processor.processResponce(rd);
+                if (!rd.trafficst) TrafficControl::incIncoming();
                 break;
             case processReceiptMethod:
-                processor.processReceipt (smscId, delivered, retry);
+                processor.processReceipt (rd);
                 break;
             default:
                 __trace2__("Invalid method '%d' invoked by event.", method);
@@ -200,7 +195,7 @@ namespace smsc { namespace infosme
     protected:
 
         smsc::logger::Logger *logger;
-        ThreadPool           pool;
+        //ThreadPool           pool;
 
         Mutex               stopLock;
         bool                bStopping;
@@ -305,6 +300,7 @@ namespace smsc { namespace infosme
         ThreadManager eventManager;
 
         TaskScheduler scheduler;    // for scheduled messages generation
+        static RetryPolicies retryPlcs;
         DataProvider  provider;     // to obtain registered data source by key
 
         IntHash<Task *>  tasks;
@@ -351,13 +347,10 @@ namespace smsc { namespace infosme
         bool processTask(Task* task);
         void resetWaitingTasks();
 
-        virtual void processMessage (Task* task, uint64_t msgId,
-                                     bool delivered, bool retry, bool immediate=false);
+        virtual void processMessage (Task* task, const ResponseData& rd);
         friend class EventRunner;
-        virtual void processResponce(int seqNum, bool accepted, bool retry, bool immediate,
-                                     std::string smscId="", bool internal=false);
-        virtual void processReceipt (std::string smscId,
-                                     bool delivered, bool retry, bool internal=false);
+        virtual void processResponce(const ResponseData& rd, bool internal=false);
+        virtual void processReceipt (const ResponseData& rd, bool internal=false);
 
         bool doesMessageConformToCriterion(ResultSet* rs,
                                            const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
@@ -413,17 +406,13 @@ namespace smsc { namespace infosme
             return taskManager.startThread(new TaskRunner(task, dropAllMessagesMethod, this, statistics));
         };
 
-        virtual bool invokeProcessResponce(int seqNum, bool accepted,
-                                           bool retry, bool immediate, std::string smscId, bool trafficst)
+        virtual bool invokeProcessResponce(const ResponseData& rd)
         {
-            return eventManager.startThread(new EventRunner(processResponceMethod, *this,
-                                                            seqNum, accepted, retry, immediate, smscId,
-                                                            trafficst));
+            return eventManager.startThread(new EventRunner(processResponceMethod, *this,rd));
         };
-        virtual bool invokeProcessReceipt (std::string smscId, bool delivered, bool retry)
+        virtual bool invokeProcessReceipt (const ResponseData& rd)
         {
-            return eventManager.startThread(new EventRunner(processReceiptMethod, *this,
-                                                            smscId, delivered, retry));
+            return eventManager.startThread(new EventRunner(processReceiptMethod, *this,rd));
         };
         virtual void awakeSignal() {
             awake.Signal();
@@ -432,6 +421,11 @@ namespace smsc { namespace infosme
         bool getStatistics(uint32_t taskId, TaskStat& stat) {
             return (statistics) ? statistics->getStatistics(taskId, stat):false;
         };
+
+        static RetryPolicies& getRetryPolicies()
+        {
+          return retryPlcs;
+        }
 
         /* ------------------------ Admin interface ------------------------ */
 
