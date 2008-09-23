@@ -368,6 +368,16 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
     smscmd.orgDst=sms.getDestinationAddress();
     src = cmd->getEntity();
 
+    if ( cmd->getSession() ) {
+        // NOTE: it may happen that session was locked by that command
+        // and then this command goes to longcall, and then some failure happens.
+        // We should detect this, and unless we have a good longcall implementation
+        // we should get session from sm.
+        SessionKey key( sms.getDestinationAddress() );
+        session = sm.getSession( key, aucmd, false );
+        assert( session.get() );
+    }
+
     do { // rerouting loop
 
         st.status = re::STATUS_OK;
@@ -766,6 +776,16 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
     smscmd.orgDst=sms.getDestinationAddress();
     src = cmd->getEntity();
 
+    if ( cmd->getSession() ) {
+        // NOTE: it may happen that session was locked by that command
+        // and then this command goes to longcall, and then some failure happens.
+        // We should detect this, and unless we have a good longcall implementation
+        // we should get session from sm.
+        SessionKey key( sms.getOriginatingAddress() );
+        session = sm.getSession( key, aucmd, false );
+        assert( session.get() );
+    }
+
     do { // rerouting loop
 
         st.status = re::STATUS_OK;
@@ -788,6 +808,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
             }
 
             if ( fail ) {
+
                 smsc_log_info(log_,"%s: %s %s(%s)->%s",
                               where,
                               fail,
@@ -1215,6 +1236,17 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
 
     smscmd.orgSrc=sms.getOriginatingAddress();
     smscmd.orgDst=sms.getDestinationAddress();
+
+    if ( cmd->getSession() && ! session.get() ) {
+        // NOTE: it may happen that session was locked by that command
+        // and then this command goes to longcall, and then some failure happens.
+        // We should detect this, and unless we have a good longcall implementation
+        // we should get session from sm.
+        SessionKey key( (src->info.type == etService) ?
+                        sms.getDestinationAddress() : sms.getOriginatingAddress() );
+        session = sm.getSession( key, aucmd, false );
+        assert( session.get() );
+    }
 
     do {
 

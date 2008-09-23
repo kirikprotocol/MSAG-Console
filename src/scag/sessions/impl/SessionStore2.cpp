@@ -321,6 +321,13 @@ void SessionStoreImpl::releaseSession( Session& session )
         session.print(pl);
     }
 
+    // NOTE: this is ugly to clear lcm in store
+    if ( session.getLongCallContext().continueExec ) {
+        smsc_log_warn( log_, "session=%p/%s has lcm continue set",
+                       &session, key.toString().c_str() );
+        session.getLongCallContext().continueExec = false;
+    }
+
     bool dostopping = false;
     time_t expiration, lastaccess = time(0);
     session.setLastAccessTime(lastaccess);

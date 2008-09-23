@@ -590,14 +590,15 @@ void Session::print( util::Print& p ) const
 
     const time_t now = time(0);
     // const int lastac = int(now - lastAccessTime_);
-    p.print( "session=%p/%s tmASH=%d/%d/%d ops=%d trans=%d lockCmd=%u umr=%d%s",
+    p.print( "session=%p/%s tmASH=%d/%d/%d lock=%u svc/ops/trs=%u/%u/%u umr=%d%s",
              this, sessionKey().toString().c_str(),
              int(lastAccessTime_ - now),
              int(expirationTime_ - now),
              int(expirationTimeAtLeast_ - now),
-             operationsCount(),
-             transactions_ ? transactions_->GetCount() : 0,
              command_,
+             unsigned(initrulekeys_.size()),
+             unsigned(operationsCount()),
+             unsigned(transactions_ ? transactions_->GetCount() : 0),
              umr_,
              ussdOperationId_ == SCAGCommand::invalidOpId() ? "" : " hasUssd" );
     Operation* curop = getCurrentOperation();
