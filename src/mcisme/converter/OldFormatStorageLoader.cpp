@@ -28,7 +28,7 @@ static int parseTime(const char* str)
 {
   int hour, minute, second;
   if (!str || str[0] == '\0' ||
-      sscanf(str, "%02d:%02d:%02d", 
+      sscanf(str, "%d:%02d:%02d", 
              &hour, &minute, &second) != 3) return -1;
     
   return hour*3600+minute*60+second;
@@ -65,6 +65,10 @@ OldFormatStorageLoader::~OldFormatStorageLoader()
 int OldFormatStorageLoader::Init(const std::string& location, const std::string& sEventLifeTime)
 {
   eventLifeTime = parseTime(sEventLifeTime.c_str());
+
+  std::string dirName(location);
+  if ( dirName[dirName.size() - 1] != '/' )
+    dirName += '/';
 
   pathDatFile = location + "dat_file";
   pathIdxFile = location + "idx_file";
