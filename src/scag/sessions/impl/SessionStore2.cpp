@@ -568,6 +568,11 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
         }
 
 
+        if ( session->currentCommand() == 1 ) {
+            // already in finalization stage, just returned from longcall
+            continue;
+        }
+
         if ( session->currentCommand() ) {
             // smsc_log_debug(log_,"key=%s session=%p is locked, cmd=%u, skipped",
             // key.toString().c_str(), session, session->currentCommand() );

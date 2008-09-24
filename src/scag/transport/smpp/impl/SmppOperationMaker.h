@@ -27,7 +27,8 @@ public:
                         smsc::logger::Logger*       logger );
 
     ~SmppOperationMaker() {
-        assert( postproc_ );
+        // NOTE: postproc_ may be not set, in case of failure in setupOperation()
+        // assert( postproc_ );
     }
 
     /// process command/session:

@@ -314,16 +314,7 @@ int SessionManagerImpl::Execute()
             curtmo = 1;
         }
 
-        smsc_log_debug( log_, "act/tot=%u/%u inc=%u access=%d expire=%d tmo=%d",
-                        activeSessions_,
-                        unsigned(expireMap_.size()),
-                        increment,
-                        oldwait,
-                        next,
-                        curtmo );
-        if ( curtmo > 0 ) {
-            continue;
-        }
+        if ( curtmo > 0 ) continue;
 
         // smsc_log_debug( log_, "act/tot=%u/%u", activeSessions_, expireMap_.size() );
 
@@ -348,6 +339,9 @@ int SessionManagerImpl::Execute()
             }
             expireMap_.erase( expireMap_.begin(), i );
         }
+
+        if ( ! expireMap_.empty() )
+            next = int(expireMap_.begin()->first - now);
 
         // const size_t expiredCount = curset.size();
 
@@ -406,10 +400,16 @@ int SessionManagerImpl::Execute()
 
             // const unsigned tot = unsigned(expireMap_.size());
             // const unsigned act = activeSessions_;
-            smsc_log_debug( log_, "%u/%u to be expired/flushed, %u/%u left active/total",
+            smsc_log_debug( log_, "expire/flush=%u/%u act/tot=%u/%u inc=%u tmAE=%d/%d limTS=%u/%u",
                             unsigned(curset.size()),
                             unsigned(flushset.size()),
-                            activeSessions_, unsigned(expireMap_.size()) );
+                            activeSessions_,
+                            unsigned(expireMap_.size()),
+                            increment,
+                            oldwait,
+                            next,
+                            flushLimitTime_,
+                            flushLimitSize_ );
             alldone = store_->expireSessions( curset, flushset );
 
             /*
@@ -439,6 +439,10 @@ void SessionManagerImpl::continueExecution( LongCallContext* lcmCtx, bool droppe
 
     // special finalization command
     assert( session && session->currentCommand() == 1 );
+
+    // smsc_log_debug( log_, "return from lcm:" );
+    // scag_plog_debug(pl, log_);
+    // session->print(pl);
 
     if ( dropped ) {
         // finalize immediately

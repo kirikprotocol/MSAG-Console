@@ -376,6 +376,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         SessionKey key( sms.getDestinationAddress() );
         session = sm.getSession( key, aucmd, false );
         assert( session.get() );
+        session->setCurrentOperation( cmd->getOperationId() );
     }
 
     do { // rerouting loop
@@ -784,6 +785,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         SessionKey key( sms.getOriginatingAddress() );
         session = sm.getSession( key, aucmd, false );
         assert( session.get() );
+        session->setCurrentOperation( cmd->getOperationId() );
     }
 
     do { // rerouting loop
@@ -1246,6 +1248,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
                         sms.getDestinationAddress() : sms.getOriginatingAddress() );
         session = sm.getSession( key, aucmd, false );
         assert( session.get() );
+        session->setCurrentOperation( cmd->getOperationId() );
     }
 
     do {
