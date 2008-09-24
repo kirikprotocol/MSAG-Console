@@ -27,16 +27,18 @@ int main()
 
     std::auto_ptr<smsc::util::config::ConfigView> storageCfgGuard(config.getSubConfig("Storage"));
 
-    smsc::mcisme::FSStorage pStorage;
-
-    std::string location="converted_storage/";
-
-    if ( mkdir(location.c_str(), S_IRWXU|S_IRWXG) && errno != EEXIST ) {
-      smsc_log_error(logger, "Convertation failed. Can't create directpry '%s'. [%s]", location.c_str(), strerror(errno));
-      return 1;
+    std::string location;
+    try {
+      location = storageCfgGuard->getString("location");
+    } catch (...) {
+      location = "./";
+      smsc_log_warn(logger, "Parameter <MCISme.Storage.location> missed. Default value is './'.");
     }
 
-    if ( pStorage.Init(storageCfgGuard.get(), NULL) ) {
+    smsc::mcisme::FSStorage pStorage;
+
+    const char* v2_suffix = ".v2";
+    if ( pStorage.Init(storageCfgGuard.get(), NULL, v2_suffix) ) {
       smsc_log_error(logger, "FSStorage can't be initialized");
       return 1;
     }
