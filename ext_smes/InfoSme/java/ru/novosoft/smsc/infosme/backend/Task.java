@@ -47,6 +47,7 @@ public class Task
   private String template = "";
   private String text = "";
   private int dsTimeout = 0;
+  private String retryPolicy = "default";
   private int messagesCacheSize = 0;
   private int messagesCacheSleep = 0;
   private boolean transactionMode = false;
@@ -90,6 +91,7 @@ public class Task
       startDate = "";
     }
     retryTime = config.getString(prefix + ".retryTime");
+    retryPolicy = config.getString(prefix + ".retryPolicy");
     validityPeriod = config.getString(prefix + ".validityPeriod");
     validityDate = config.getString(prefix + ".validityDate");
     activePeriodStart = config.getString(prefix + ".activePeriodStart");
@@ -132,6 +134,7 @@ public class Task
     config.setString(prefix + ".startDate", startDate);
     config.setString(prefix + ".endDate", endDate);
     config.setString(prefix + ".retryTime", retryTime);
+    config.setString(prefix + ".retryPolicy", retryPolicy);
     config.setString(prefix + ".validityPeriod", validityPeriod);
     config.setString(prefix + ".validityDate", validityDate);
     config.setString(prefix + ".activePeriodStart", activePeriodStart);
@@ -208,7 +211,8 @@ public class Task
               && this.uncommitedInProcess == task.uncommitedInProcess
               && this.trackIntegrity == task.trackIntegrity
               && this.keepHistory == task.keepHistory
-              && this.activeWeekDays.equals(task.activeWeekDays);
+              && this.activeWeekDays.equals(task.activeWeekDays)
+              && this.retryPolicy.equals(task.retryPolicy);
     } else
       return false;
   }
