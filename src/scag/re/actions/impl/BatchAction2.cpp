@@ -14,7 +14,6 @@ using scag::pers::util::PersClient;
 const std::string TRANSACTIONAL_MODE = "TRANSACTIONAL";
 const std::string NORMAL_MODE = "NORMAL";
 const char* BATCH_MODE = "mode";
-const size_t ACTION_IDX_BUFFER_SIZE = 10;
 
 void BatchAction::init(const SectionParams& params, PropertyObject propertyObject)
 {
@@ -25,10 +24,10 @@ void BatchAction::init(const SectionParams& params, PropertyObject propertyObjec
 
     bool statusExist = false;
     CheckParameter(params, propertyObject, "PersAction", "status", false, false,
-                    status_str, statusExist);
+                    batchStatus, statusExist);
     bool msgExist = false;
     CheckParameter(params, propertyObject, "PersAction", "msg", false, false,
-                    msg_str, msgExist);
+                    batchMsg, msgExist);
 
     if (params.Exists(BATCH_MODE)) {
       if (TRANSACTIONAL_MODE == params[BATCH_MODE]) {
@@ -47,8 +46,10 @@ void BatchAction::init(const SectionParams& params, PropertyObject propertyObjec
 
 bool BatchAction::RunBeforePostpone(ActionContext& context)
 {
-    smsc_log_debug(logger,"Run Action 'BatchAction' in %s mode..."
-                   , transactMode ? TRANSACTIONAL_MODE.c_str() : NORMAL_MODE.c_str());
+    smsc_log_debug(logger,"Run Action 'BatchAction' in %s mode...", transactMode ? TRANSACTIONAL_MODE.c_str() : NORMAL_MODE.c_str());
+    if (!checkConnection(context, batchStatus, batchMsg)) {
+      return false;
+    }
     context.getSession().getLongCallContext().callCommandId = PERS_BATCH;
 	auto_ptr<PersCallParams> params(new PersCallParams());
     params->pt = profile;
@@ -69,7 +70,7 @@ bool BatchAction::RunBeforePostpone(ActionContext& context)
       if (!actions[i]->batchPrepare(context, params->sb)) {
         params->error = scag::pers::util::BATCH_ERROR;
         params->exception = scag::pers::util::strs[scag::pers::util::BATCH_ERROR];
-        setStatus(context, params.get(), params->error, params->exception, i + 1);
+        setStatus(context, params->error, batchStatus, batchMsg, i + 1);
       }
     }
     context.getSession().getLongCallContext().setParams(params.release());
@@ -92,36 +93,18 @@ void BatchAction::ContinueRunning(ActionContext& context)
       for(int i = 0; i < actions.size(); i++) {
         action_idx = i + 1;
         int action_result = actions[i]->batchResult(context, p->sb, transactMode);
+        setStatus(context, action_result, actions[i]->getStatus(), actions[i]->getMsg());
         if (!result) {
           result = action_result;
           error_result_idx = i + 1;
         }
       }
-      setStatus(context, p, result, result == 0 ? "Ok" : scag::pers::util::strs[result], error_result_idx);
+      setStatus(context, result, batchStatus, batchMsg, error_result_idx);
     } catch (const PersClientException& e) {
-      setStatus(context, p, e.getType(), e.what(), action_idx);
+      setStatus(context, e.getType(), batchStatus, batchMsg, action_idx);
       smsc_log_debug(logger, "'BatchAction' abort. Error code=%d : %s in action %d", e.getType(), e.what(), action_idx);
     }
 }
-
-void BatchAction::setStatus(ActionContext& context, PersCallParams *params, int status, const std::string& msg, int action_idx) {
-  std::string _msg = msg;
-  if (status != 0) {
-    char idx_buffer[ACTION_IDX_BUFFER_SIZE];
-    int n = snprintf(idx_buffer, ACTION_IDX_BUFFER_SIZE, "%d", action_idx);
-    _msg += " in action ";
-    _msg.append(idx_buffer, n);
-  }
-  REProperty *statusProp = context.getProperty(status_str);
-  if (statusProp) {
-    statusProp->setInt(status);
-  }
-  REProperty *msgProp = context.getProperty(msg_str);
-  if (msgProp) {
-    msgProp->setStr(_msg);
-  }
-}
-
 
 IParserHandler * BatchAction::StartXMLSubSection(const std::string& name, const SectionParams& params, const ActionFactory& factory)
 {

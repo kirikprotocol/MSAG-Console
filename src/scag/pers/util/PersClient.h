@@ -133,6 +133,8 @@ public:
     virtual bool call(LongCallContext* context) = 0;
     
     virtual void Stop() = 0;
+
+    virtual bool isConnected() = 0;
 protected:
     static bool  inited;
     static Mutex initLock;

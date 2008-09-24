@@ -63,6 +63,7 @@ public:
     virtual int Execute();
     void Stop();
     void StartClient() {isStopping = false; Thread::Start();};
+    bool isConnected();
 	
 protected:
     void setBatchCount(uint32_t cnt, SerialBuffer& bsb);    
@@ -98,7 +99,8 @@ protected:
     bool connected, isStopping;
     Logger * log;
     Mutex mtx;
-    EventMonitor callMonitor;
+    EventMonitor clientMonitor;
+    EventMonitor connectMonitor;
     SerialBuffer sb;
     LongCallContext* headContext, *tailContext;
 };
@@ -410,8 +412,8 @@ void PersClientImpl::Stop()
     smsc_log_info(log, "PersClient stopping...");
     isStopping = true;
     {
-        MutexGuard mt(callMonitor), mt1(mtx);
-        callMonitor.notify();
+        MutexGuard mt(clientMonitor), mt1(mtx);
+        clientMonitor.notify();
     }
     WaitFor();
     smsc_log_info(log, "PersClient stopped");
@@ -602,9 +604,9 @@ void PersClientImpl::ParseProperty(Property& prop, SerialBuffer& bsb)
 LongCallContext* PersClientImpl::getContext()
 {
     LongCallContext *ctx;
-    MutexGuard mt(callMonitor);
-    if(isStopping) return NULL;
-    if(!headContext) callMonitor.wait(pingTimeout * 1000);
+    MutexGuard mt(clientMonitor);
+    if(isStopping || !connected) return NULL;
+    if(!headContext) clientMonitor.wait(pingTimeout * 1000);
     ctx = headContext;    
     if(headContext) headContext = headContext->next;
     return ctx;        
@@ -612,7 +614,7 @@ LongCallContext* PersClientImpl::getContext()
 
 bool PersClientImpl::call(LongCallContext* context)
 {
-    MutexGuard mt(callMonitor);
+    MutexGuard mt(clientMonitor);
     if(isStopping) return false;
     context->next = NULL;
 
@@ -622,7 +624,7 @@ bool PersClientImpl::call(LongCallContext* context)
         headContext = context;
     tailContext = context;
     
-    callMonitor.notify();
+    clientMonitor.notify();
     return true;
 }
 
@@ -704,15 +706,39 @@ void PersClientImpl::ExecutePersCall(LongCallContext* ctx)
     }
 }
 
+bool PersClientImpl::isConnected() {
+  MutexGuard mt(clientMonitor);
+  if (!connected) {
+    clientMonitor.notify();
+  }
+  return connected;
+}
+
 int PersClientImpl::Execute()
 {
     smsc_log_debug(log, "Pers thread started");
     
     while(!isStopping)
     {
-        LongCallContext* ctx = getContext();
         
         if(isStopping) break;
+
+        {
+          MutexGuard mg(clientMonitor);
+  
+          if (!connected) {
+            smsc_log_debug(log, "Pers Client Not Connected. Wait");
+            clientMonitor.wait(pingTimeout * 1000);
+            smsc_log_debug(log, "Pers Client Notified");
+            try {
+              init();
+            } catch (const PersClientException& ex) {
+              smsc_log_warn(log, "Error during connecting to Pers Server: %s", ex.what());
+            }
+          }
+        }
+
+        LongCallContext* ctx = getContext();
 
         if(ctx)
         {
@@ -732,7 +758,7 @@ int PersClientImpl::Execute()
         }
     }
 
-    MutexGuard mg(callMonitor);
+    MutexGuard mg(clientMonitor);
     while(headContext)
     {
         LongCallContext* ctx = headContext;

@@ -17,13 +17,13 @@ public:
 protected:
   virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
   virtual bool FinishXMLSubSection(const std::string& name);
-  void setStatus(ActionContext& context, PersCallParams *params, int status, const std::string& msg, int action_idx = 0);
 
 protected:
   std::vector<PersActionCommand *> actions;
   PropertyObject pobj;
   bool transactMode;
-  std::string status_str, msg_str;
+  std::string batchStatus;
+  std::string batchMsg;
 };
 
 }

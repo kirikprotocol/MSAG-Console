@@ -10,6 +10,7 @@ typedef scag::util::properties::Property REProperty;
 
 using namespace scag::stat;
 const char* OPTIONAL_KEY = "key";
+const size_t ACTION_IDX_BUFFER_SIZE = 10;
 
 char buf; // crashs without this :)
 
@@ -302,15 +303,6 @@ int PersActionCommand::batchResult(ActionContext& context, SerialBuffer& sb, boo
 {
     smsc_log_debug(logger,"ContinueRunning BatchAction 'PersAction cmd=%s. var=%s'...", getStrCmd(cmd), var.c_str());
 	PersClient& pc = PersClient::Instance();
-
-    REProperty *statusProp = context.getProperty(status);
-    if (statusProp) {
-      statusProp->setInt(0);
-    }
-    REProperty *msgProp = context.getProperty(msg);
-    if (msgProp) {
-      msgProp->setStr("Ok");
-    }
 	try{
 		switch(cmd)
 		{
@@ -335,12 +327,6 @@ int PersActionCommand::batchResult(ActionContext& context, SerialBuffer& sb, boo
 	}
 	catch(const PersClientException& e)		
 	{
-      if (statusProp) {
-        statusProp->setInt(e.getType());
-      }
-      if (msgProp) {
-        msgProp->setStr(e.what());
-      }
       smsc_log_debug(logger, "batchResult: cmd=%s var=%s, error code=%d : %s",
                      getStrCmd(cmd), var.c_str(), e.getType(), e.what());
       if (transactMode) {
@@ -473,9 +459,22 @@ bool PersActionBase::setKey(ActionContext& context, PersCallParams* params) {
   return true;
 }
 
+bool PersActionBase::checkConnection(ActionContext& context, const string& statusName, const string& msgName) {
+  if (!PersClient::Instance().isConnected()) {
+    smsc_log_warn(logger,"Run Action 'PersAction: Pers Client Not Connected");
+    setStatus(context, scag::pers::util::NOT_CONNECTED, statusName, msgName);
+    return false;
+  }
+  return true;
+}
+
 bool PersAction::RunBeforePostpone(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'PersAction cmd=%s, profile=%d var=%s'...", getStrCmd(cmd), profile, persCommand.getVar());
+
+    if (!checkConnection(context, persCommand.getStatus(), persCommand.getMsg())) {
+      return false;
+    }
 
     auto_ptr<PersCallParams> params(new PersCallParams());
     params->pt = profile;
@@ -490,16 +489,30 @@ bool PersAction::RunBeforePostpone(ActionContext& context)
     return true;
 }
 
+void PersActionBase::setStatus(ActionContext& context, int status, const string& statusName, const string& msgName, int actionIdx) {
+  string msg = "Ok";
+  if (status != 0) {
+    msg = scag::pers::util::strs[status];
+    if (actionIdx > 0) {
+      char idx_buffer[ACTION_IDX_BUFFER_SIZE];
+      int n = snprintf(idx_buffer, ACTION_IDX_BUFFER_SIZE, "%d", actionIdx);
+      msg += " in action ";
+      msg.append(idx_buffer, n);
+    }
+  }
+  REProperty *statusProp = context.getProperty(statusName);
+  if (statusProp) {
+    statusProp->setInt(status);
+  }
+  REProperty *msgProp = context.getProperty(msgName);
+  if (msgProp) {
+    msgProp->setStr(msg);
+  }
+
+}
+
 void PersActionCommand::ContinueRunning(ActionContext& context) {
   PersCallParams *params = (PersCallParams*)context.getSession().getLongCallContext().getParams();
-  REProperty *statusProp = context.getProperty(status);
-  if (statusProp) {
-    statusProp->setInt(params->error);
-  }
-  REProperty *msgProp = context.getProperty(msg);
-  if (msgProp) {
-    msgProp->setStr(params->error == 0 ? "Ok" : params->exception);
-  }
   if (params->error != 0) {
     if(params->error == scag::pers::util::PROPERTY_NOT_FOUND && cmd == PC_GET) {
       REProperty *rep = context.getProperty(sValue);
@@ -525,6 +538,8 @@ void PersAction::ContinueRunning(ActionContext& context)
 {
     smsc_log_debug(logger, "ContinueRunning: cmd=%s (skey=%s ikey=%d) var=%s",
                    getStrCmd(cmd), context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), persCommand.getVar());
+    PersCallParams *params = (PersCallParams*)context.getSession().getLongCallContext().getParams();
+    setStatus(context, params->error, persCommand.getStatus(), persCommand.getMsg());
     persCommand.ContinueRunning(context);
 }
 
