@@ -459,7 +459,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 
   std::auto_ptr<ConfigView> storageCfgGuard(config->getSubConfig("Storage"));
   pStorage = new FSStorage();
-  int ret = pStorage->Init(storageCfgGuard.get(), pDeliveryQueue);
+  const char* v2_suffix = ".v2";
+  int ret = pStorage->Init(storageCfgGuard.get(), pDeliveryQueue, v2_suffix);
   smsc_log_warn(logger, "ret = %d", ret);
 
   string sResponseWaitTime;
