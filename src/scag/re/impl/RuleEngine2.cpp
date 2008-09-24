@@ -287,7 +287,16 @@ void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
         RuleKey key;
         if ( ! session.getRuleKey(key.serviceId, key.transport) ) break;
 
-        assert( ! session.isNew(key.serviceId, key.transport) );
+        // isNew may be not set in case of failure from long call
+        // assert( ! session.isNew(key.serviceId, key.transport) );
+        // make sure 
+        if ( session.isNew( key.serviceId, key.transport ) ) {
+            smsc_log_warn( logger, "session=%p/%s didn't finish init svc/trans=%d/%d",
+                           &session, session.sessionKey().toString().c_str(),
+                           int(key.serviceId), int(key.transport) );
+            session.dropInitRuleKey(key.serviceId, key.transport);
+            continue;
+        }
 
         Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
 
