@@ -283,7 +283,7 @@ void Uint32Formatter::format(std::string& output,
         }
     }
     char    buff[64] = "";
-    sprintf(buff, "%lu", value);
+    sprintf(buff, "%u", value);
     output += buff;
 
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
@@ -597,7 +597,7 @@ void DateTimeFormatter::format(std::string& output,
 
     if (pattern && strcmp(pattern, ioInternalPatternString) == 0)
     {
-        sprintf(buff, "%d", date); // in seconds
+        sprintf(buff, "%ld", date); // in seconds
         output += buff;
     }
     else

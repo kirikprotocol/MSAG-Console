@@ -1162,7 +1162,7 @@ protected:
     if(newsz>MAX_BUFFER_SIZE || newsz<=0)
     {
       char buf[128];
-      sprintf(buf,"File buffer size exceeded limit:%d/%d",newsz,MAX_BUFFER_SIZE);
+      sprintf(buf,"File buffer size exceeded limit:%ld/%d",newsz,MAX_BUFFER_SIZE);
       throw std::runtime_error(buf);
     }
     char* newbuf=new char[newsz];

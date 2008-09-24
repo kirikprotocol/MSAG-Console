@@ -253,7 +253,7 @@ namespace smsc { namespace infosme
         virtual const char* getString(const char* key)
             throw(AdapterException)
         {
-            sprintf(buff, "%lu", rows);
+            sprintf(buff, "%u", rows);
             return ((const char *)buff);
         };
         virtual int8_t getInt8(const char* key)

@@ -199,7 +199,7 @@ int StatisticsManager::calculateToSleep() // returns msecs to next hour
     tm tmNT; localtime_r(&nextTime, &tmNT);
     tmNT.tm_sec = 0; tmNT.tm_min = 0;
     nextTime = mktime(&tmNT);
-    return (((nextTime-currTime)*1000)+1);
+    return (int)(((nextTime-currTime)*1000)+1);
 }
 
 const char* INSERT_TASK_STAT_STATE_ID = "INSERT_TASK_STAT_STATE_ID";
