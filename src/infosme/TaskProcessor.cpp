@@ -562,11 +562,9 @@ void TaskProcessor::processWaitingEvents(time_t time)
     while (!bNeedExit && count > 0);
 }
 
-void TaskProcessor::processMessage(Task* task, const ResponseData& rd)
+void TaskProcessor::processMessage(Task* task, uint64_t msgId,const ResponseData& rd)
 {
     __require__(task);
-
-    uint64_t msgId=atoll(rd.msgId.c_str());
 
     if (rd.accepted)
     {
@@ -738,7 +736,7 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
                 rd2.accepted=receipt.delivered;
                 rd2.retry=receipt.retry;
 
-                processMessage(task, rd2);
+                processMessage(task, tmIds.msgId,rd2);
             }
         }
         catch (std::exception& exc) {
@@ -826,7 +824,7 @@ void TaskProcessor::processReceipt (const ResponseData& rd, bool internal)
           throw Exception("processReceipt(): Unable to locate task '%d' for smscId=%s",
                           taskId, smsc_id);
 
-        processMessage(task, rd);
+        processMessage(task, msgId,rd);
       }
       
     }

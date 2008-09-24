@@ -347,7 +347,7 @@ namespace smsc { namespace infosme
         bool processTask(Task* task);
         void resetWaitingTasks();
 
-        virtual void processMessage (Task* task, const ResponseData& rd);
+        virtual void processMessage (Task* task, uint64_t msgId,const ResponseData& rd);
         friend class EventRunner;
         virtual void processResponce(const ResponseData& rd, bool internal=false);
         virtual void processReceipt (const ResponseData& rd, bool internal=false);
