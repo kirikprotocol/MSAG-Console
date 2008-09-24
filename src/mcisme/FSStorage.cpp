@@ -57,27 +57,37 @@ FSStorage::~FSStorage()
   smsc_log_debug(logger, "FSStorage: Destroed.\n");
 }
 
-int FSStorage::Init(ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue)
+int FSStorage::Init(ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue, const std::string& fileVersionExt)
 {
   MutexGuard lock(mut);
 
   smsc_log_debug(logger, "Reading Storage parameters.");
   string location;
-  try { location = storageConfig->getString("location"); } catch (...){ location = "./";
-    smsc_log_warn(logger, "Parameter <MCISme.Storage.DBFilesPath> missed. Default value is './'.");}
+  try {
+    location = storageConfig->getString("location");
+    if ( location[location.size() - 1] != '/' )
+      location += '/';
+  } catch (...) {
+    location = "./";
+    smsc_log_warn(logger, "Parameter <MCISme.Storage.location> missed. Default value is './'.");
+  }
 
   try { maxEvents = storageConfig->getInt("maxEvents"); } catch (...){maxEvents = 20;
-    smsc_log_warn(logger, "Parameter <MCISme.Storage.MaxEvents> missed. Default value is 20.");}
+    smsc_log_warn(logger, "Parameter <MCISme.Storage.maxEvents> missed. Default value is 20.");}
 
   string sEventLifeTime;
   try { sEventLifeTime = storageConfig->getString("eventLifeTime"); } catch (...){sEventLifeTime = "24:00:00";
-    smsc_log_warn(logger, "Parameter <MCISme.Storage.EventLifeTime> missed. Default value is '24:00:00'.");}
+    smsc_log_warn(logger, "Parameter <MCISme.Storage.eventLifeTime> missed. Default value is '24:00:00'.");}
   eventLifeTime = parseTime(sEventLifeTime.c_str());
 
   try { bdFilesIncr = storageConfig->getInt("bdFilesIncr"); } catch (...){bdFilesIncr = DEFAULT_BDFILES_INCR;
     smsc_log_warn(logger, "Parameter <MCISme.Storage.bdFilesIncr> missed. Default value is %s.", DEFAULT_BDFILES_INCR);}
 
-  pathDatFile = location + "dat_file";
+  std::string fileVersionSuffix(fileVersionExt);
+  if ( !fileVersionSuffix.empty() && fileVersionSuffix[0] != '.' )
+    fileVersionSuffix.insert(fileVersionSuffix.begin(), '.');
+
+  pathDatFile = location + "dat_file" + fileVersionSuffix;
 
   if(maxEvents > MAX_EVENTS) maxEvents = MAX_EVENTS;
   if(bdFilesIncr > MAX_BDFILES_INCR) bdFilesIncr = MAX_BDFILES_INCR;
@@ -99,7 +109,12 @@ int FSStorage::Init(const string& location, time_t _eventLifeTime, uint8_t _maxE
 {
   MutexGuard lock(mut);
 
-  pathDatFile = location + "dat_file";
+  std::string directory = location;
+
+  if ( directory[directory.size() - 1] != '/' )
+    directory += '/';
+
+  pathDatFile = directory + "dat_file";
   eventLifeTime = _eventLifeTime;
   maxEvents <= MAX_EVENTS? maxEvents = _maxEvents: maxEvents = MAX_EVENTS;
 

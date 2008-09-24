@@ -38,8 +38,8 @@ class Storage
 public:
   Storage(){}
   ~Storage(){}
-  virtual int Init(smsc::util::config::ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue) = 0;
-  virtual int Init(const string& location, time_t _eventLifeTime, uint8_t _maxEvents, DeliveryQueue* pDeliveryQueue) = 0;
+  virtual int Init(smsc::util::config::ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue, const std::string& fileVersionSuffixy) = 0;
+  virtual int Init(const string& location, time_t eventLifeTime, uint8_t maxEvents, DeliveryQueue* pDeliveryQueue) = 0;
   virtual void addEvent(const AbntAddr& CalledNum, const MCEvent& event, time_t schedTime) = 0;
   virtual void setSchedParams(const AbntAddr& CalledNum, time_t schedTime, uint16_t lastError = -1) = 0;
   virtual bool getEvents(const AbntAddr& CalledNum, vector<MCEvent>& events) = 0;
