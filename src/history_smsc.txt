@@ -186,3 +186,7 @@ B3010:
     Webadm	Add support for runtime add SME to single mode installation smsc_daemon
     Webadm	SOAP framework integrated, add GroupEdit web service
     HSDaemon    connect timeout fix for situation when one of daemons or nodes has not started
+
+B3011:
+    MCISme	fix for task processor thread loop caused by IntHash
+    Archiver	fix for incorrect indexing some cases caused by DiskXTree
