@@ -36,7 +36,8 @@ enum PersClientExceptionType{
   TYPE_INCONSISTENCE,
   BATCH_ERROR,
   PROFILE_LOCKED,
-  COMMAND_NOTSUPPORT
+  COMMAND_NOTSUPPORT,
+  CLIENT_BUSY
 };
 
 static const char* strs[] = {
@@ -56,8 +57,9 @@ static const char* strs[] = {
   "Bad request",
   "Types inconsistence",
   "Batch prepare error",
-  "Profile locked"
-  "Command Not Supports"
+  "Profile locked",
+  "Command Not Supports",
+  "Client busy"
 };
 
 class PersClientException{
@@ -98,7 +100,7 @@ protected:
 
 public:
     static PersClient& Instance();
-    static void Init(const char *_host, int _port, int timeout, int pingTimeout);// throw(PersClientException);
+    static void Init(const char *_host, int _port, int timeout, int pingTimeout, int _reconnectTimeout, int _maxCallsCount);// throw(PersClientException);
     static void Init(const scag::config::PersClientConfig& cfg);// throw(PersClientException);    
 
     virtual void SetProperty(ProfileType pt, const PersKey& key, Property& prop) = 0;
@@ -134,7 +136,7 @@ public:
     
     virtual void Stop() = 0;
 
-    virtual bool isConnected() = 0;
+    virtual int getClientStatus() = 0;
 protected:
     static bool  inited;
     static Mutex initLock;

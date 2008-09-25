@@ -58,18 +58,18 @@ public:
 
     bool call(LongCallContext* context);
 
-    void init_internal(const char *_host, int _port, int timeout, int _pingTimeout);
+    void init_internal(const char *_host, int _port, int timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount);
     
     virtual int Execute();
     void Stop();
     void StartClient() {isStopping = false; Thread::Start();};
-    bool isConnected();
+    int getClientStatus();
 	
 protected:
     void setBatchCount(uint32_t cnt, SerialBuffer& bsb);    
     void configChanged();
     void init();
-    void reinit(const char *_host, int _port, int _timeout, int _pingTimeout);
+    void reinit(const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount);
     void setPacketSize(SerialBuffer& bsb);
 	
 	void emptyPacket(SerialBuffer& bsb) { bsb.Empty(); bsb.SetPos(4); }
@@ -94,6 +94,9 @@ protected:
     std::string host;
     int port;
     int timeout, pingTimeout;
+    int reconnectTimeout;
+    int maxCallsCount;
+    int callsCount;
     time_t actTS;
     Socket sock;
     bool connected, isStopping;
@@ -119,14 +122,14 @@ PersClient& PersClient::Instance()
     return SinglePC::Instance();
 }
 
-void PersClient::Init(const char *_host, int _port, int _timeout, int _pingTimeout) //throw(PersClientException)
+void PersClient::Init(const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount) //throw(PersClientException)
 {
     if (!PersClient::inited)
     {
         MutexGuard guard(PersClient::initLock);
         if(!inited) {
             PersClientImpl& pc = SinglePC::Instance();
-            pc.init_internal(_host, _port, _timeout, _pingTimeout);
+            pc.init_internal(_host, _port, _timeout, _pingTimeout, _reconnectTimeout, _maxCallsCount);
             PersClient::inited = true;
         }
     }
@@ -139,21 +142,25 @@ void PersClient::Init(const scag::config::PersClientConfig& cfg)// throw(PersCli
         MutexGuard guard(PersClient::initLock);
         if(!inited) {
             PersClientImpl& pc = SinglePC::Instance();
-            pc.init_internal(cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout);
+            pc.init_internal(cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout, cfg.reconnectTimeout, cfg.maxCallsCount);
             PersClient::inited = true;
         }
     }
 } 
 
-void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, int _pingTimeout) //throw(PersClientException)
+void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount) //throw(PersClientException)
 {
     log = Logger::getInstance("persclient");
-    smsc_log_info(log, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d", _host, _port, _timeout, _pingTimeout);
+    smsc_log_info(log, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d reconnectTimeout=%d maxWaitingRequestsCount=%d",
+                  _host, _port, _timeout, _pingTimeout, _reconnectTimeout, _maxCallsCount);
     connected = false;
+    callsCount = 0;
     host = _host;
     port = _port;
     timeout = _timeout;
     pingTimeout = _pingTimeout;
+    reconnectTimeout = _reconnectTimeout;
+    maxCallsCount = _maxCallsCount;
     actTS = time(NULL);
     try{
         init();
@@ -169,10 +176,10 @@ void PersClientImpl::configChanged()
 {
     scag2::config::PersClientConfig& cfg = scag2::config::ConfigManager::Instance().getPersClientConfig();
     
-    reinit(cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout);
+    reinit(cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout, cfg.reconnectTimeout, cfg.maxCallsCount);
 }
 
-void PersClientImpl::reinit(const char *_host, int _port, int _timeout, int _pingTimeout) //throw(PersClientException)
+void PersClientImpl::reinit(const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount) //throw(PersClientException)
 {
     MutexGuard mt(mtx);
 
@@ -185,6 +192,9 @@ void PersClientImpl::reinit(const char *_host, int _port, int _timeout, int _pin
     port = _port;
     timeout = _timeout;
     pingTimeout = _pingTimeout;
+    reconnectTimeout = _reconnectTimeout;
+    maxCallsCount = _maxCallsCount;
+    callsCount = 0;
     actTS = time(NULL);
     try{
         init();
@@ -445,6 +455,7 @@ void PersClientImpl::init()
         sock.Close();
         throw PersClientException(UNKNOWN_RESPONSE);
     }
+    smsc_log_debug(log, "PersClient connected");
     connected = true;
 }
 
@@ -458,7 +469,7 @@ void PersClientImpl::ReadAllTO(char* buf, uint32_t sz)
     {
 		pfd.fd = sock.getSocket();
 		pfd.events = POLLIN;
-        if(poll(&pfd, 1, timeout * 1000) <= 0 || !(pfd.revents & POLLIN))
+        if(poll(&pfd, 1, timeout) <= 0 || !(pfd.revents & POLLIN))
             throw PersClientException(TIMEOUT);
 
         cnt = sock.Read(buf + rd, sz);
@@ -480,7 +491,7 @@ void PersClientImpl::WriteAllTO(const char* buf, uint32_t sz)
     {
 		pfd.fd = sock.getSocket();
 		pfd.events = POLLOUT | POLLIN;
-        if(poll(&pfd, 1, timeout * 1000) <= 0)
+        if(poll(&pfd, 1, timeout) <= 0)
             throw PersClientException(TIMEOUT);
 		else if(!(pfd.revents & POLLOUT) || (pfd.revents & POLLIN))
             throw PersClientException(SEND_FAILED);		
@@ -605,8 +616,11 @@ LongCallContext* PersClientImpl::getContext()
 {
     LongCallContext *ctx;
     MutexGuard mt(clientMonitor);
-    if(isStopping || !connected) return NULL;
-    if(!headContext) clientMonitor.wait(pingTimeout * 1000);
+    if (isStopping || !connected) return NULL;
+    if (!headContext)  {
+      callsCount = 0;
+      clientMonitor.wait(pingTimeout * 1000);
+    }
     ctx = headContext;    
     if(headContext) headContext = headContext->next;
     return ctx;        
@@ -623,7 +637,7 @@ bool PersClientImpl::call(LongCallContext* context)
     else
         headContext = context;
     tailContext = context;
-    
+    ++callsCount;
     clientMonitor.notify();
     return true;
 }
@@ -706,12 +720,15 @@ void PersClientImpl::ExecutePersCall(LongCallContext* ctx)
     }
 }
 
-bool PersClientImpl::isConnected() {
+int PersClientImpl::getClientStatus() {
   MutexGuard mt(clientMonitor);
   if (!connected) {
-    clientMonitor.notify();
+    return NOT_CONNECTED;
   }
-  return connected;
+  if (callsCount >= maxCallsCount) {
+    return CLIENT_BUSY;
+  }
+  return 0;
 }
 
 int PersClientImpl::Execute()
@@ -728,8 +745,7 @@ int PersClientImpl::Execute()
   
           if (!connected) {
             smsc_log_debug(log, "Pers Client Not Connected. Wait");
-            clientMonitor.wait(pingTimeout * 1000);
-            smsc_log_debug(log, "Pers Client Notified");
+            clientMonitor.wait(reconnectTimeout * 1000);
             try {
               init();
             } catch (const PersClientException& ex) {
@@ -743,7 +759,7 @@ int PersClientImpl::Execute()
         if(ctx)
         {
             ExecutePersCall(ctx);
-                
+            --callsCount;
             ctx->initiator->continueExecution(ctx, false);
 
             actTS = time(NULL);
@@ -763,6 +779,7 @@ int PersClientImpl::Execute()
     {
         LongCallContext* ctx = headContext;
         headContext = headContext->next;
+        --callsCount;
         ctx->initiator->continueExecution(ctx, true);
     }
     
