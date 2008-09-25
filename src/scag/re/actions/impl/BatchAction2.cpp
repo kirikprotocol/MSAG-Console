@@ -47,7 +47,7 @@ void BatchAction::init(const SectionParams& params, PropertyObject propertyObjec
 bool BatchAction::RunBeforePostpone(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'BatchAction' in %s mode...", transactMode ? TRANSACTIONAL_MODE.c_str() : NORMAL_MODE.c_str());
-    if (!checkConnection(context, batchStatus, batchMsg)) {
+    if (!canProcessRequest(context, batchStatus, batchMsg)) {
       return false;
     }
     context.getSession().getLongCallContext().callCommandId = PERS_BATCH;
@@ -83,6 +83,7 @@ void BatchAction::ContinueRunning(ActionContext& context)
 	PersCallParams* p = (PersCallParams*)context.getSession().getLongCallContext().getParams();
     if (p->error) {
       smsc_log_debug(logger, "'BatchAction' abort. Error code=%d : %s", p->error, p->exception.c_str());
+      setStatus(context, p->error, batchStatus, batchMsg);
       return;
     }
     smsc_log_debug(logger,"ContinueRunning Action 'BatchAction' (skey=%s ikey=%d)", p->skey.c_str(), p->ikey);

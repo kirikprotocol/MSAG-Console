@@ -91,7 +91,7 @@ protected:
   string getAbntAddress(const string& _address);
   bool setKey(ActionContext& context, PersCallParams* params);
   void setStatus(ActionContext& context, int status, const string& statusName, const string& msgName, int actionIdx = 0);
-  bool checkConnection(ActionContext& context, const string& statusName, const string& msgName);
+  bool canProcessRequest(ActionContext& context, const string& statusName, const string& msgName);
 
 protected:
   PersCmd cmd;

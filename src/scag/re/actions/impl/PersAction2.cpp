@@ -459,10 +459,11 @@ bool PersActionBase::setKey(ActionContext& context, PersCallParams* params) {
   return true;
 }
 
-bool PersActionBase::checkConnection(ActionContext& context, const string& statusName, const string& msgName) {
-  if (!PersClient::Instance().isConnected()) {
-    smsc_log_warn(logger,"Run Action 'PersAction: Pers Client Not Connected");
-    setStatus(context, scag::pers::util::NOT_CONNECTED, statusName, msgName);
+bool PersActionBase::canProcessRequest(ActionContext& context, const string& statusName, const string& msgName) {
+  int status = PersClient::Instance().getClientStatus();
+  if (status > 0) {
+    smsc_log_warn(logger,"Run Action 'PersAction: Pers Client %s'", scag::pers::util::strs[status]);
+    setStatus(context, status, statusName, msgName);
     return false;
   }
   return true;
@@ -472,7 +473,7 @@ bool PersAction::RunBeforePostpone(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'PersAction cmd=%s, profile=%d var=%s'...", getStrCmd(cmd), profile, persCommand.getVar());
 
-    if (!checkConnection(context, persCommand.getStatus(), persCommand.getMsg())) {
+    if (!canProcessRequest(context, persCommand.getStatus(), persCommand.getMsg())) {
       return false;
     }
 
