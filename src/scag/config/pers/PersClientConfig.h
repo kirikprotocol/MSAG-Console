@@ -13,13 +13,9 @@ class PersClientConfig
 public:
 
     PersClientConfig(const std::string h, int p, int to, int pto):
-        host(h), port(p), timeout(to), pingTimeout(pto)
-    {
-    }
+        host(h), port(p), timeout(to), pingTimeout(pto), reconnectTimeout(300), maxCallsCount(100) { }
 
-    PersClientConfig(): port(1200), timeout(60), pingTimeout(180)
-    {
-    }
+    PersClientConfig(): port(1200), timeout(60), pingTimeout(180), reconnectTimeout(300), maxCallsCount(100) {}
 
     PersClientConfig(const ConfigView& cv)  throw(ConfigException);
     void init(const ConfigView& cv)  throw(ConfigException);   
@@ -27,6 +23,7 @@ public:
 
     std::string host;
     int port, timeout, pingTimeout;    
+    int reconnectTimeout, maxCallsCount;
 };
 
 }
