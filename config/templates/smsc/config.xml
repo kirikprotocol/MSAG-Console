@@ -159,6 +159,7 @@
   <section name="distrList">
     <param name="storeDir" type="string">@localstore.dir@/dl</param>
     <param name="originatingAddress" type="string"></param>
+    <!--param name="originatingAddressForSme" type="string"></param-->
   </section>
 
   <section name="acl">
