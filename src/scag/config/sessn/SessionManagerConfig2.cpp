@@ -28,6 +28,8 @@ namespace config {
         getInt(cv, "prealloc", prealloc );
         getInt(cv, "flushCountLimit", flushlimitsize );
         getInt(cv, "flushTimeLimit", flushlimittime );
+        getInt(cv, "initUploadCount", initUploadCount );
+        getInt(cv, "initUploadInterval", initUploadInterval );
         getBool(cv, "diskio", diskio);
 
         // locations
@@ -63,6 +65,8 @@ namespace config {
                  prealloc == smc.prealloc &&
                  flushlimitsize == smc.flushlimitsize &&
                  flushlimittime == smc.flushlimittime &&
+                 initUploadCount == smc.initUploadCount &&
+                 initUploadInterval == smc.initUploadInterval &&
                  diskio == smc.diskio );
 }
 
@@ -118,6 +122,8 @@ void SessionManagerConfig::clear()
     prealloc = 100;
     flushlimitsize = 10000;
     flushlimittime = 120;
+    initUploadCount = 10;
+    initUploadInterval = 100;
     diskio = true;
 }
 

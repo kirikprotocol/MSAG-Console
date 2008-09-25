@@ -119,6 +119,13 @@ std::string StoredSessionKey::toString() const
 
 
 
+SessionKey::SessionKey( const StoredSessionKey& sk ) :
+StoredSessionKey(sk)
+{
+    str_ = StoredSessionKey::toString();
+}
+
+
 SessionKey::SessionKey( const smsc::sms::Address& a )
 {
     *this = a;

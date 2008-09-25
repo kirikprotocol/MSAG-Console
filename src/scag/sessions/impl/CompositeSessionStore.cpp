@@ -1,6 +1,12 @@
 #include <map>
 #include <set>
 #include "CompositeSessionStore.h"
+#include "core/synchronization/EventMonitor.hpp"
+
+namespace {
+smsc::core::synchronization::EventMonitor mtx;
+}
+
 
 namespace scag2 {
 namespace sessions {
@@ -15,6 +21,7 @@ fin_(&fin),
 expiration_(&exq),
 allocator_(a)
 {
+    clear();
     smsc_log_debug( log_, "composite session store created");
 }
 
@@ -31,32 +38,50 @@ void CompositeSessionStore::init( unsigned nodeNumber,
                                   unsigned indexgrowth,
                                   unsigned pagesize,
                                   unsigned prealloc,
+                                  unsigned initialCount,
+                                  unsigned initialTime,
                                   bool     dodiskio )
 {
-    clear();
+    MutexGuard mg(mtx);
+    if ( ! stopped_ ) return;
     const StorageNumbering& n = StorageNumbering::instance();
     storages_.resize( n.storages(), 0 );
     assert( paths.size() > 0 );
+    
+    initialChunk_ = initialCount;
+    initialTime_ = initialTime;
 
     unsigned pathidx = 0;
     for ( unsigned i = 0; i < storages_.size(); ++i ) {
         if ( n.node(i) == nodeNumber ) {
 
-            Storage* st = new Storage( *fin_, *expiration_, allocator_ );
-            storages_[i] = st;
-            st->init( i, queue, paths[pathidx], indexgrowth, pagesize, prealloc, dodiskio );
+            if ( ! storages_[i] ) {
+                Storage* st = new Storage( *fin_, *expiration_, allocator_ );
+                storages_[i] = st;
+            }
+            storages_[i]->init( i, queue, paths[pathidx], indexgrowth, pagesize, prealloc, dodiskio );
             if ( ++pathidx >= paths.size() ) pathidx = 0;
 
         }
     }
+    if ( ! initialThread_ ) {
+        initialThread_ = new InitialThread(*this);
+    }
     stopped_ = false;
+    initialThread_->Start();
 }
 
 
 void CompositeSessionStore::stop()
 {
-    stopped_ = true;
-    smsc_log_debug( log_, "stop issued" );
+    {
+        MutexGuard mg(mtx);
+        if ( stopped_ ) return;
+        smsc_log_debug( log_, "stop issued" );
+        stopped_ = true;
+        mtx.notify();
+    }
+    if ( initialThread_ ) initialThread_->WaitFor();
     for ( std::vector< Storage* >::const_iterator i = storages_.begin();
           i != storages_.end();
           ++i ) {
@@ -161,7 +186,8 @@ void CompositeSessionStore::getSessionsCount( unsigned& sessionsCount,
 
 void CompositeSessionStore::clear()
 {
-    stop();
+    if ( initialThread_ ) initialThread_->WaitFor();
+    delete initialThread_;
     for ( std::vector< Storage* >::iterator i = storages_.begin();
           i != storages_.end();
           ++i ) {
@@ -185,6 +211,44 @@ CompositeSessionStore::Storage*
     }
     return storages_[n];
 }
+
+
+int CompositeSessionStore::InitialThread::Execute()
+{
+    std::list< Storage* > hasinit_;
+    // FIXME: uncomment to start an initial upload thread
+    /*
+    {
+        MutexGuard mg(mtx);
+        if ( ! store_.stopped_ ) {
+            for ( std::vector< Storage* >::iterator i = store_.storages_.begin();
+                  i != store_.storages_.end();
+                  ++i ) {
+                if ( ! *i ) continue;
+                hasinit_.push_back( *i );
+            }
+        }
+    }
+     */
+    while ( ! hasinit_.empty() ) {
+
+        for ( std::list< Storage* >::iterator i = hasinit_.begin();
+              i != hasinit_.end();
+              ++i ) {
+            if ( ! (*i)->uploadInitial( store_.initialChunk_ ) ) {
+                hasinit_.erase( i );
+                break;
+            }
+        }
+
+        MutexGuard mg(mtx);
+        if ( store_.stopped_ ) break;
+        mtx.wait( store_.initialTime_ );
+        if ( store_.stopped_ ) break;
+    }
+    return 0;
+}
+
 
 } // namespace sessions
 } // namespace scag2

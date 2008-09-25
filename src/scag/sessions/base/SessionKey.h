@@ -95,6 +95,7 @@ class SessionKey : public StoredSessionKey
 
 public:
     SessionKey() {}
+    SessionKey( const StoredSessionKey& sk );
     explicit SessionKey( const smsc::sms::Address& ab ); // : StoredSessionKey(ab) {}
     explicit SessionKey( const std::string& ab ); // : StoredSessionKey(ab) {}
 

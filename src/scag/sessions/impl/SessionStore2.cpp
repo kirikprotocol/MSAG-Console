@@ -89,8 +89,8 @@ void SessionStoreImpl::init( unsigned eltNumber,
     maxqueuesize_ = 0;   // maximum length of one session command queue
     maxcommands_ = 0;    // maximum of storedCommands
 
-    smsc_log_info( log_, "init path=%s, indexgrowth=%d, pagesize=%d, prealloc=%d",
-                   path.c_str(), indexgrowth, pagesize, prealloc );
+    smsc_log_info( log_, "#%u init path=%s, indexgrowth=%d, pagesize=%d, prealloc=%d",
+                   eltNumber, path.c_str(), indexgrowth, pagesize, prealloc );
 
     cache_.reset( new MemStorage( 0 ) );
     // cache_.reset( new MemStorage(smsc::logger::Logger::getInstance("sess.sto.c")) );
@@ -110,41 +110,58 @@ void SessionStoreImpl::init( unsigned eltNumber,
         const std::string idxstr(buf);
         const std::string realpath = path + "/" + idxstr;
         const std::string fn( realpath + "/" + suffix + idxstr + "-data" );
+        bool ok = false;
         bool opened = false;
         try {
             pgf->Open( fn );
-            opened = true;
+            ok = opened = true;
         } catch (...) {
             // check that directory exist
             struct stat st;
             if ( stat(realpath.c_str(), &st) ) {
                 // not found?
                 if ( mkdir( realpath.c_str(), 0777 ) ) {
-                    smsc_log_error( log_, "cannot create a directory %s", realpath.c_str() );
+                    smsc_log_error( log_, "#%u cannot create a directory %s", eltNumber, realpath.c_str() );
                 }
             } else if ( ! S_ISDIR(st.st_mode) ) {
-                smsc_log_error( log_, "path %s exists but is not a directory", realpath.c_str() );
+                smsc_log_error( log_, "#%u path %s exists but is not a directory", eltNumber, realpath.c_str() );
                 ::abort();
             }
         }
 
         try {
-            if ( ! opened ) pgf->Create( fn, pagesize, prealloc );
-            opened = true;
+            if ( ! ok ) pgf->Create( fn, pagesize, prealloc );
+            ok = true;
         } catch ( std::exception& e ) {
-            smsc_log_error( log_, "cannot open/create file %s: %s", fn.c_str(), e.what() );
+            smsc_log_error( log_, "#%u cannot open/create file %s: %s", eltNumber, fn.c_str(), e.what() );
         } catch (...) {
-            smsc_log_error( log_, "cannot open/create file %s: unknown error" );
+            smsc_log_error( log_, "#%u cannot open/create file %s: unknown error", eltNumber );
         }
-        if ( ! opened ) ::abort();
+        if ( ! ok ) ::abort();
             
+        DiskIndexStorage* di = new DiskIndexStorage( suffix + idxstr, 
+                                                     realpath, 
+                                                     indexgrowth,
+                                                     ! opened,  // cleanup (should be true if failed to open datafile)
+                                                     smsc::logger::Logger::getInstance("sess.sto.i") );
+
         std::auto_ptr<EltDiskStorage> eds
             ( new EltDiskStorage
-              ( new DiskIndexStorage( suffix + idxstr,
-                                      realpath, indexgrowth, false,
-                                      smsc::logger::Logger::getInstance("sess.sto.i")),
+              ( di,
                 new DiskDataStorage( pgf.release(),
                                      smsc::logger::Logger::getInstance("sess.sto.d"))));
+
+        if ( opened ) {
+            // collect all keys from disk storage
+            for ( DiskIndexStorage::iterator_type i(di->begin());
+                  i.next();
+                  ) {
+                if ( i.idx() != di->invalidIndex() )
+                    initialkeys_.push_back( i.key() );
+            }
+            smsc_log_info( log_, "#%u has %u initial sessions", unsigned(initialkeys_.size()) );
+        }
+
         // disk_->addStorage( i, eds.release() );
         // smsc_log_debug(log_, "added storage %d", i );
         disk_ = eds;
@@ -284,6 +301,17 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             delete session;
             session = 0;
             what = " is not found";
+        } else if ( session->expirationTime() < time(0) ) {
+            what = " expired on disk";
+            queue_->pushCommand( cmd.get(), SCAGCommandQueue::RESERVE );
+            SCAGCommand* com = cmd.release();
+            { 
+                MutexGuard mg(cacheLock_);
+                sqsz = session->appendCommand( com );
+                session->setCurrentCommand( 1 ); // expiration command
+            }
+            expiration_->scheduleExpire( session->expirationTime(), session->lastAccessTime(), key );
+            session = 0;
         }
     }
 
@@ -662,6 +690,67 @@ void SessionStoreImpl::getSessionsCount( unsigned& sessionsCount,
     MutexGuard mg(cacheLock_);
     sessionsCount = totalSessions_;
     sessionsLockedCount = lockedSessions_;
+}
+
+
+bool SessionStoreImpl::uploadInitial( unsigned count )
+{
+    if ( ! initialkeys_.empty() ) {
+
+        std::vector< SessionKey > keys_;
+        {
+            unsigned count(std::min(count,unsigned(initialkeys_.size())));
+            std::vector< DiskIndexStorage::storedkey_type >::iterator i = initialkeys_.begin() + count;
+            keys_.reserve( count );
+            for ( std::vector< DiskIndexStorage::storedkey_type >::const_iterator j = initialkeys_.begin();
+                  j != i;
+                  ++j ) {
+                keys_.push_back( *i );
+            }
+            initialkeys_.erase( initialkeys_.begin(), i );
+        }
+
+        std::vector< SessionKey >::const_iterator i = keys_.begin();
+        SessionKey key;
+        MemStorage::stored_type v = cache_->val2store(0);
+        while ( true ) {
+
+            Session* session = cache_->store2val(v);
+            if ( session ) {
+
+                if ( disk_->get( key, cache_->store2ref(v) ) )
+                {
+                    // loaded
+                    expiration_->scheduleExpire( session->expirationTime(),
+                                                 session->lastAccessTime(),
+                                                 key );
+                }
+                cache_->dealloc(v);
+            }
+
+            if ( i == keys_.end() ) break;
+
+            key = *i;
+            ++i;
+
+            MutexGuard mg(cacheLock_);
+            if ( session ) {
+                --totalSessions_;
+                --lockedSessions_;
+            }
+            if ( stopping_ ) return false;
+
+            MemStorage::stored_type* vv = cache_->get( key );
+            if ( vv ) {
+                v = cache_->val2store(0);
+                continue; // already loaded
+            }
+            v = cache_->val2store( allocator_->alloc(key) );
+            ++totalSessions_;
+            ++lockedSessions_;
+        }
+    }
+    return ! initialkeys_.empty();
 }
 
 

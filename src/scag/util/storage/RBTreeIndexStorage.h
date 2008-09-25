@@ -21,8 +21,9 @@ private:
     typedef typename IndexStorage::RBTreeNode     IndexNode;
 
 public:
-    typedef Key key_type;
-    typedef Idx index_type;
+    typedef StoredKey storedkey_type;
+    typedef Key       key_type;
+    typedef Idx       index_type;
 
     RBTreeIndexStorage( const std::string& dbname,
                         const std::string& dbpath,
@@ -57,6 +58,11 @@ public:
     /// set invalid index
     void setInvalidIndex( index_type i ) {
         invalid_ = i;
+    }
+
+
+    index_type invalidIndex() const {
+        return invalid_;
     }
 
 
@@ -95,10 +101,15 @@ public:
     class Iterator {
     public:
         void reset() {
-            if (s_) s_->index_.Reset();
+            if (s_) {
+                s_->index_.Reset();
+                key_ = StoredKey();
+                idx_ = s_->invalid_;
+            }
         }
-        bool next( key_type& k, index_type& i ) {
-            return (s_ ? s_->index_.Next( k, i ) : false);
+        bool next() {
+            // key_type& k, index_type& i ) {
+            return (s_ ? s_->index_.Next( key_, idx_ ) : false);
         }
         Iterator() : s_(NULL) {}
         Iterator( const Iterator& s ) : s_(s.s_) {
@@ -113,20 +124,30 @@ public:
             return *this;
         }
 
-    private:
-        friend class RBTreeIndexStorage<Key,Idx>;
+        const StoredKey& key() const {
+            return key_;
+        }
 
-        Iterator( RBTreeIndexStorage<Key,Idx>* s ) :
+        const index_type idx() const {
+            return idx_;
+        }
+
+    private:
+        friend class RBTreeIndexStorage<Key,Idx,StoredKey>;
+
+        Iterator( RBTreeIndexStorage<Key,Idx,StoredKey>* s ) :
         s_(s) { reset(); }
 
     private:
-        RBTreeIndexStorage<Key,Idx>* s_;
+        StoredKey                    key_;
+        index_type                   idx_;
+        RBTreeIndexStorage<Key,Idx,StoredKey>* s_;
     };
     typedef Iterator iterator_type;
     friend struct Iterator;
 
     Iterator begin() {
-        return Iterator( const_cast< RBTreeIndexStorage<Key,Idx>* >( this ) );
+        return Iterator( const_cast< RBTreeIndexStorage<Key,Idx,StoredKey>* >( this ) );
     }
 
 private:

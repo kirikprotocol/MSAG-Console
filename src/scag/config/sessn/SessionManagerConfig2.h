@@ -23,9 +23,11 @@ public:
     std::vector<std::string> dirs;
     unsigned                 indexgrowth;
     unsigned                 pagesize;
-    unsigned                 prealloc;
+    unsigned                 prealloc;           // in pages/blocks
     unsigned                 flushlimitsize;
-    unsigned                 flushlimittime;
+    unsigned                 flushlimittime;     // in seconds
+    unsigned                 initUploadCount;
+    unsigned                 initUploadInterval; // in ms
     bool                     diskio;
 
 private:

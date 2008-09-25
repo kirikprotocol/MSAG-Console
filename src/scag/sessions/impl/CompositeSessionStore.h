@@ -2,6 +2,7 @@
 #define _SCAG_SESSIONS_IMPL_COMPOSITESESSIONSTORE_H
 
 #include <vector>
+#include "core/threads/Thread.hpp"
 #include "SessionStore2.h"
 #include "scag/exc/SCAGExceptions.h"
 
@@ -29,6 +30,8 @@ public:
                unsigned indexgrowth = 10000,
                unsigned pagesize = 512,
                unsigned prealloc = 0,
+               unsigned initialCount = 10,
+               unsigned initialTime = 100,
                bool     dodiskio = true );
 
     void stop();
@@ -52,6 +55,16 @@ private:
 
     Storage* store( const SessionKey& key ) const throw (SCAGException);
     
+    struct InitialThread : public smsc::core::threads::Thread
+    {
+        InitialThread( CompositeSessionStore& s ) : store_(s) {}
+
+        virtual int Execute();
+        
+    private:
+        CompositeSessionStore& store_;
+    };
+
 private:
     bool                    stopped_;
     smsc::logger::Logger*   log_;
@@ -62,6 +75,11 @@ private:
     // SCAGCommandQueue*       queue_;
     // unsigned                nodeNumber_;
     std::vector< Storage* > storages_;   // owned
+
+    InitialThread*          initialThread_;
+    unsigned                initialChunk_;
+    unsigned                initialTime_;
+
 };
 
 } // namespace sessions

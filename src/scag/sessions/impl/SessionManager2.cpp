@@ -134,6 +134,8 @@ void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg,
                   cfg.indexgrowth,
                   cfg.pagesize,
                   cfg.prealloc,
+                  cfg.initUploadCount,
+                  cfg.initUploadInterval,
                   cfg.diskio );
 
     smsc_log_debug(log_,"SessionManager::initialized");

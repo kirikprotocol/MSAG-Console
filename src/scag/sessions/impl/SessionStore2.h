@@ -79,6 +79,9 @@ public:
     void getSessionsCount( unsigned& sessionsCount,
                            unsigned& sessionsLockedCount ) const;
 
+    /// upload count initial sessions, return true if there are more sessions to upload
+    bool uploadInitial( unsigned count );
+    
     /// --- session store iface
 
     virtual void releaseSession( Session& s );
@@ -109,6 +112,7 @@ private:
     SessionAllocator*           allocator_;    // not owned
     std::auto_ptr<MemStorage>   cache_;
     std::auto_ptr<DiskStorage>  disk_;
+    std::vector< DiskIndexStorage::storedkey_type > initialkeys_;   // the list of initial keys
 
     smsc::logger::Logger*       log_;
     
