@@ -29,6 +29,7 @@
             <!-- adding/removing a new msag node. -->
             <!-- simply rename section "locations" into "oldlocations" -->
             <!-- and run setupnodes.py -->
+            <!-- NOTE: don't put this section into web frontend -->
         </section>
         <param name="expireInterval" type="int">@session.expireInterval@</param>
         <param name="indexgrowth" type="int">1000</param> <!-- an increment of index file -->
@@ -36,6 +37,8 @@
         <param name="prealloc" type="int">100</param> <!-- number of pages to preallocate -->
         <param name="flushCountLimit" type="int">10000</param> <!-- a limit on number of transient sessions -->
         <param name="flushTimeLimit" type="int">120</param> <!-- a time limit on session inactivity (sec) -->
+        <param name="initUploadCount" type="int">10</param> <!-- a number of sessions in one initial upload -->
+        <param name="initUploadInterval" type="int">1000</param> <!-- an interval between initial uploads (ms) -->
         <param name="diskio" type="bool">true</param> <!-- is disk i/o for sessions enabled -->
     </section>
 
