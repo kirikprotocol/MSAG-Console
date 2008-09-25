@@ -63,6 +63,11 @@ stat.sacc_host=127.0.0.1
 stat.sacc_connect_timeout=60
 stat.sacc_queue_length=1000
 
+pers_client.io_timeout=100
+pers_client.reconnect_timeout=100
+pers_client.ping_timeout=100
+pres_client.max_waiting_requests_count=100
+
 pers.port=23880
 pers.listen_host=0.0.0.0
 pers.connect_host=127.0.0.1
