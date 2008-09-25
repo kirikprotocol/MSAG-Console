@@ -645,6 +645,7 @@ protected:
               {
                 memcpy(nn[pidx]->shortStr,Str()+1,l+1);
               }
+              nn[pidx]->child=child;
               nn[pidx]->data=data;
               nn[pidx]->dataType=dataType;
               data=0;
