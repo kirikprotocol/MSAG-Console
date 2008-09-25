@@ -8,6 +8,7 @@
 #include "sms/sms.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "RuleStatus2.h"
+#include "Rule2.h"
 #include "scag/util/properties/Properties2.h"
 #include "scag/transport/CommandOperation.h"
 #include "scag/transport/smpp/base/SmppCommandIds.h"
@@ -89,50 +90,65 @@ public:
     };
 
 
-    class ActionContext
+class ActionContext
+{
+public:
+    static FieldType Separate( const std::string& var, const char *& name );
+
+public:
+    ActionContext( Hash<Property>*  constants,
+                   Session*         session, 
+                   CommandAccessor* command,
+                   CommandProperty* commandProperty,
+                   RuleStatus*      rs) :
+    isTrueCondition(false),
+    status_(rs),
+    constants_(constants),
+    session_(session),
+    command_(command),
+    contextId_(0),
+    commandProperty_(commandProperty),
+    destroyService_(false),
+    rule_(0)
     {
-    public:
-        static FieldType Separate( const std::string& var, const char *& name );
-
-    public:
-        ActionContext( Hash<Property>*  constants,
-                       Session*         session, 
-                       CommandAccessor* command,
-                       CommandProperty* commandProperty,
-                       RuleStatus*      rs) :
-        isTrueCondition(false),
-        status_(rs),
-        constants_(constants),
-        session_(session),
-        command_(command),
-        contextId_(0),
-        commandProperty_(commandProperty),
-        destroyService_(false)
-        {
-            setInfrastructureConstants();
-        }
+        setInfrastructureConstants();
+    }
 
 
-        ~ActionContext() {}
+    ~ActionContext() {
+        if ( rule_ ) rule_->unref();
+    }
 
 
-        void resetContext( Hash<Property>* _constants,
-                           Session* _session,
-                           CommandAccessor* _command,
-                           CommandProperty* _commandProperty,
-                           RuleStatus* rs );
+    void setRule( Rule& r ) {
+        r.ref();
+        if ( rule_ ) rule_->unref();
+        rule_ = &r;
+    }
 
-        SCAGCommand& getSCAGCommand()
-        {
-            if (!command_) throw scag::exceptions::SCAGException("ActionContext: command is not set");
-            return command_->getSCAGCommand();
-        }
 
-        inline RuleStatus& getRuleStatus() {
-            return *status_;
-        }
+    Rule* getRule() const {
+        return rule_;
+    }
 
-        void clearLongCallContext();
+
+    void resetContext( Hash<Property>* _constants,
+                       Session* _session,
+                       CommandAccessor* _command,
+                       CommandProperty* _commandProperty,
+                       RuleStatus* rs );
+
+    SCAGCommand& getSCAGCommand()
+    {
+        if (!command_) throw scag::exceptions::SCAGException("ActionContext: command is not set");
+        return command_->getSCAGCommand();
+    }
+
+    inline RuleStatus& getRuleStatus() {
+        return *status_;
+    }
+
+    void clearLongCallContext();
         /*
         {
             while (!getSession().getLongCallContext().ActionStack.empty()) 
@@ -142,35 +158,35 @@ public:
 
         // static bool StrToPeriod(CheckTrafficPeriod& period, std::string& str);
 
-        CommandAccessor* getCommand() {
-            if (!command_) throw scag::exceptions::SCAGException("ActionContext: command is not set");
-            return command_;
-        };
+    CommandAccessor* getCommand() {
+        if (!command_) throw scag::exceptions::SCAGException("ActionContext: command is not set");
+        return command_;
+    };
 
-        Session& getSession() { return *session_; };
+    Session& getSession() { return *session_; };
 
-        // bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
-        bool getDestroyService() const { return destroyService_; }
-        void setDestroyService() { destroyService_ = true; }
+    // bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
+    bool getDestroyService() const { return destroyService_; }
+    void setDestroyService() { destroyService_ = true; }
 
-        /// set the current context scope for property access.
-        void setContextScope( int id ) {
-            contextId_ = id;
-        }
-        int getContextScope() const { return contextId_; }
+    /// set the current context scope for property access.
+    void setContextScope( int id ) {
+        contextId_ = id;
+    }
+    int getContextScope() const { return contextId_; }
 
-        /// get property, variable prefix defines the scope
-        Property* getProperty(const std::string& var);
+    /// get property, variable prefix defines the scope
+    Property* getProperty(const std::string& var);
 
         // void abortSession();
 
         // void AddPendingOperation(uint8_t type, time_t pendingTime, unsigned int billID);
         // Operation * getCurrentOperation() { return session_->getCurrentOperation(); }
 
-        CommandProperty& getCommandProperty() { return *commandProperty_; }
+    CommandProperty& getCommandProperty() { return *commandProperty_; }
 
-        /// fill billing infostructure with data
-        void getBillingInfoStruct( bill::BillingInfoStruct& billingInfoStruct );
+    /// fill billing infostructure with data
+    void getBillingInfoStruct( bill::BillingInfoStruct& billingInfoStruct );
 
         /*
         {
@@ -187,34 +203,38 @@ public:
         }
          */
 
-        bill::infrastruct::TariffRec * getTariffRec( uint32_t category,
-                                                     uint32_t mediaType );
+    bill::infrastruct::TariffRec * getTariffRec( uint32_t category,
+                                                 uint32_t mediaType );
 
         // bool checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType);
         // int getCurrentOperationBillID();
 
-    private:
-        void setInfrastructureConstants();
+private:
+    void setInfrastructureConstants();
 
-    public:
-        bool                    isTrueCondition;
+public:
+    bool                    isTrueCondition;
 
-    private:
-        RuleStatus*             status_;
+private:
+    RuleStatus*             status_;
 
-        // Hash<Property>          variables_;
-        Hash<Property>*         constants_;
-        Hash<Property>          infrastructConstants_;
+    // Hash<Property>          variables_;
+    Hash<Property>*         constants_;
+    Hash<Property>          infrastructConstants_;
 
-        Session*                session_;
-        CommandAccessor*        command_;
-        int                     contextId_;   // current context scope id (0 -- invalid)
-        CommandProperty*        commandProperty_;
-        std::auto_ptr< bill::infrastruct::TariffRec >  tariffRec_;
-        bool                    destroyService_;
-   };
+    Session*                session_;
+    CommandAccessor*        command_;
+    int                     contextId_;   // current context scope id (0 -- invalid)
+    CommandProperty*        commandProperty_;
+    std::auto_ptr< bill::infrastruct::TariffRec >  tariffRec_;
+    bool                    destroyService_;
 
-}}}
+    Rule*                   rule_;        // a rule from long call context
+};
+
+}
+}
+}
 
 #endif // SCAG_RULE_ENGINE_ACTION_CONTEXT
 

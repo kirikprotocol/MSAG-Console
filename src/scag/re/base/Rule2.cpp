@@ -6,6 +6,7 @@
 #include "SmppEventHandler2.h"
 #include "HttpEventHandler2.h"
 // #include "scag/re/http/HttpEventHandler2.h"
+#include "scag/sessions/base/Session2.h"
 #include "SessionEventHandler2.h"
 #include "CommandBridge.h"
 #include "RuleEngine2.h"

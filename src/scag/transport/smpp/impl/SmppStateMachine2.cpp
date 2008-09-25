@@ -368,56 +368,69 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
     smscmd.orgDst=sms.getDestinationAddress();
     src = cmd->getEntity();
 
-    if ( cmd->getSession() ) {
-        // NOTE: it may happen that session was locked by that command
-        // and then this command goes to longcall, and then some failure happens.
-        // We should detect this, and unless we have a good longcall implementation
-        // we should get session from sm.
-        SessionKey key( sms.getDestinationAddress() );
-        session = sm.getSession( key, aucmd, false );
-        assert( session.get() );
-        session->setCurrentOperation( cmd->getOperationId() );
-    }
+    bool longcall = bool(cmd->getSession());
 
     do { // rerouting loop
 
         st.status = re::STATUS_OK;
         st.result = 0;
 
-        dst=routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
-        smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
-                       where, routeId.c_str(), ri.routeId.c_str());
-        {
-            const char* fail = 0;
-            if (!dst) {
-                fail = "no route";
+        if ( ! longcall ) {
+
+            if ( ussd_op >= 0 && rcnt > 0 ) {
+                smsc_log_warn(log_, "%s(USSD): Rerouting for USSD dialog not allowed",
+                              where );
+                ri = router::RouteInfo();
+                st.status = re::STATUS_FAILED;
                 st.result = smsc::system::Status::NOROUTE;
-            } else if ( routeId == ri.routeId ) {
-                fail = "redirect to the same route";
-                st.result = smsc::system::Status::NOROUTE;
-            } else if ( dst->getBindType() == btNone ) {
-                fail = "sme not connected";
-                st.result = smsc::system::Status::SMENOTCONNECTED;
+                break;
+                // SubmitResp(aucmd, smsc::system::Status::NOROUTE);
+                // registerEvent( stat::events::smpp::REJECTED, src, dst, NULL, smsc::system::Status::NOROUTE);
+                // session->closeCurrentOperation();
+                // return;
             }
 
-            if ( fail ) {
-                smsc_log_info(log_,"%s: %s %s(%s)->%s",
-                              where,
-                              fail,
-                              sms.getOriginatingAddress().toString().c_str(),
-                              src->getSystemId(),
-                              sms.getDestinationAddress().toString().c_str());
-                st.status = re::STATUS_FAILED;
-                // st.result = smsc::system::Status::NOROUTE;
-                break;
+            dst = routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+
+            smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
+                           where, routeId.c_str(), ri.routeId.c_str());
+            {
+                const char* fail = 0;
+                if (!dst) {
+                    fail = "no route";
+                    st.result = smsc::system::Status::NOROUTE;
+                } else if ( routeId == ri.routeId ) {
+                    fail = "redirect to the same route";
+                    st.result = smsc::system::Status::NOROUTE;
+                } else if ( dst->getBindType() == btNone ) {
+                    fail = "sme not connected";
+                    st.result = smsc::system::Status::SMENOTCONNECTED;
+                }
+
+                if ( fail ) {
+                    smsc_log_info(log_,"%s: %s %s(%s)->%s",
+                                  where,
+                                  fail,
+                                  sms.getOriginatingAddress().toString().c_str(),
+                                  src->getSystemId(),
+                                  sms.getDestinationAddress().toString().c_str());
+                    st.status = re::STATUS_FAILED;
+                    // st.result = smsc::system::Status::NOROUTE;
+                    break;
+                }
             }
+            routeId = ri.routeId;
+            cmd->setDstEntity(dst);
+            sms.setRouteId(ri.routeId);
+            sms.setSourceSmeId(src->getSystemId());
+            sms.setDestinationSmeId(dst->getSystemId());
+            cmd->setServiceId(ri.serviceId);
+
+        } else {
+            smscmd.getRouteInfo( ri );
+            dst = cmd->getDstEntity();
+            routeId = sms.getRouteId();
         }
-        routeId = ri.routeId;
-        cmd->setDstEntity(dst);
-        sms.setRouteId(ri.routeId);
-        sms.setSourceSmeId(src->getSystemId());
-        sms.setDestinationSmeId(dst->getSystemId());
-        cmd->setServiceId(ri.serviceId);
 
         smsc_log_info( log_, "%s%s: %s, USSD_OP=%d. %s(%s)->%s, routeId=%s%s",
                        where,
@@ -432,34 +445,27 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         if ( ri.transit ) break;
 
         if ( ! session.get() ) {
-
             SessionKey key( sms.getDestinationAddress() );
-            session = sm.getSession( key, aucmd, true );
-            if ( ! session.get() ) return; // locked
-
-        }
-
-        if ( ussd_op >= 0 && rcnt > 0 ) {
-            smsc_log_warn(log_, "%s(USSD): Rerouting for USSD dialog not allowed",
-                          where );
-            st.status = re::STATUS_FAILED;
-            st.result = smsc::system::Status::NOROUTE;
-            break;
-            // SubmitResp(aucmd, smsc::system::Status::NOROUTE);
-            // registerEvent( stat::events::smpp::REJECTED, src, dst, NULL, smsc::system::Status::NOROUTE);
-            // session->closeCurrentOperation();
-            // return;
+            session = sm.getSession( key, aucmd, ! longcall ); // NOTE: create session only if not from longcall
+            if ( ! session.get() ) {
+                __require__( ! longcall );
+                return; // locked
+            }
+            longcall = false;
         }
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
         opmaker.process( st );
-        if ( st.status == re::STATUS_LONG_CALL ) return;
+        if ( st.status == re::STATUS_LONG_CALL ) {
+            smscmd.setRouteInfo( ri );
+            return;
+        }
 
         /*
         opmaker.setupOperation( st );
         if ( st.status != re::STATUS_OK ) {
             SubmitResp( aucmd, st.result );
-            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result );
+            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)routeId, st.result );
             return;
         }
         smsc_log_debug(log_, "Submit: RuleEngine processing...");
@@ -493,7 +499,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         {
             SubmitResp(aucmd, smsc::system::Status::SYSERR);
             session->closeCurrentOperation();
-            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
+            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)routeId, smsc::system::Status::SYSERR);
         }
         return;
     }
@@ -510,7 +516,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         }
          */
         SubmitResp(aucmd, st.result);
-        registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
+        registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)routeId, st.result);
         if ( session.get() ) session->closeCurrentOperation();
         return;
     }
@@ -777,56 +783,68 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
     smscmd.orgDst=sms.getDestinationAddress();
     src = cmd->getEntity();
 
-    if ( cmd->getSession() ) {
-        // NOTE: it may happen that session was locked by that command
-        // and then this command goes to longcall, and then some failure happens.
-        // We should detect this, and unless we have a good longcall implementation
-        // we should get session from sm.
-        SessionKey key( sms.getOriginatingAddress() );
-        session = sm.getSession( key, aucmd, false );
-        assert( session.get() );
-        session->setCurrentOperation( cmd->getOperationId() );
-    }
+    bool longcall = bool(cmd->getSession());
 
     do { // rerouting loop
 
         st.status = re::STATUS_OK;
         st.result = 0;
 
-        dst=routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
-        smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
-                       where, routeId.c_str(), ri.routeId.c_str());
-        {
-            const char* fail = 0;
-            if (!dst) {
-                fail = "no route";
-                st.result = smsc::system::Status::NOROUTE;
-            } else if ( routeId == ri.routeId ) {
-                fail = "redirect to the same route";
-                st.result = smsc::system::Status::NOROUTE;
-            } else if ( dst->getBindType() == btNone ) {
-                fail = "sme not connected";
-                st.result = smsc::system::Status::SMENOTCONNECTED;
-            }
+        if ( ! longcall ) {
 
-            if ( fail ) {
-
-                smsc_log_info(log_,"%s: %s %s(%s)->%s",
-                              where,
-                              fail,
-                              sms.getOriginatingAddress().toString().c_str(),
-                              src->getSystemId(),
-                              sms.getDestinationAddress().toString().c_str());
+            if ( ussd_op >= 0 && rcnt > 0 ) {
+                smsc_log_warn(log_, "%s (USSD): Rerouting for USSD dialog not allowed",
+                              where );
+                ri = router::RouteInfo();
                 st.status = re::STATUS_FAILED;
+                st.result = smsc::system::Status::NOROUTE;
                 break;
+                // DeliveryResp(aucmd, smsc::system::Status::NOROUTE);
+                // registerEvent( stat::events::smpp::REJECTED, src, dst, NULL, smsc::system::Status::NOROUTE);
+                // session->closeCurrentOperation();
+                // return;
             }
+            
+            dst=routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+            smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
+                           where, routeId.c_str(), ri.routeId.c_str());
+            {
+                const char* fail = 0;
+                if (!dst) {
+                    fail = "no route";
+                    st.result = smsc::system::Status::NOROUTE;
+                } else if ( routeId == ri.routeId ) {
+                    fail = "redirect to the same route";
+                    st.result = smsc::system::Status::NOROUTE;
+                } else if ( dst->getBindType() == btNone ) {
+                    fail = "sme not connected";
+                    st.result = smsc::system::Status::SMENOTCONNECTED;
+                }
+                
+                if ( fail ) {
+
+                    smsc_log_info(log_,"%s: %s %s(%s)->%s",
+                                  where,
+                                  fail,
+                                  sms.getOriginatingAddress().toString().c_str(),
+                                  src->getSystemId(),
+                                  sms.getDestinationAddress().toString().c_str());
+                    st.status = re::STATUS_FAILED;
+                    break;
+                }
+            }
+            routeId = ri.routeId;
+            cmd->setDstEntity(dst);
+            sms.setRouteId(ri.routeId);
+            sms.setSourceSmeId(src->getSystemId());
+            sms.setDestinationSmeId(dst->getSystemId());
+            cmd->setServiceId(ri.serviceId);
+
+        } else {
+            smscmd.getRouteInfo( ri );
+            dst = cmd->getDstEntity();
+            routeId = sms.getRouteId();
         }
-        routeId = ri.routeId;
-        cmd->setDstEntity(dst);
-        sms.setRouteId(ri.routeId);
-        sms.setSourceSmeId(src->getSystemId());
-        sms.setDestinationSmeId(dst->getSystemId());
-        cmd->setServiceId(ri.serviceId);
 
         smsc_log_info( log_, "%s%s: %s USSD_OP=%d. %s(%s)->%s, routeId=%s%s",
                        where,
@@ -843,27 +861,21 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         if ( ! session.get() ) {
 
             SessionKey key( sms.getOriginatingAddress() );
-            session = sm.getSession( key, aucmd, true );
-            if ( ! session.get() ) return; // locked
+            session = sm.getSession( key, aucmd, ! longcall );
+            if ( ! session.get() ) {
+                __require__( ! longcall );
+                return; // locked
+            }
+            longcall = false;
 
-        }
-
-
-        if ( ussd_op >= 0 && rcnt > 0 ) {
-            smsc_log_warn(log_, "%s (USSD): Rerouting for USSD dialog not allowed",
-                          where );
-            st.status = re::STATUS_FAILED;
-            st.result = smsc::system::Status::NOROUTE;
-            break;
-            // DeliveryResp(aucmd, smsc::system::Status::NOROUTE);
-            // registerEvent( stat::events::smpp::REJECTED, src, dst, NULL, smsc::system::Status::NOROUTE);
-            // session->closeCurrentOperation();
-            // return;
         }
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
         opmaker.process( st );
-        if ( st.status == re::STATUS_LONG_CALL ) return;
+        if ( st.status == re::STATUS_LONG_CALL ) {
+            smscmd.setRouteInfo( ri );
+            return;
+        }
 
         /*
         opmaker.setupOperation( st );
@@ -921,7 +933,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         }
          */
         DeliveryResp(aucmd,st.result);
-        registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
+        registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)routeId, st.result);
         if ( session.get() ) session->closeCurrentOperation();
         return;
     }
@@ -1239,63 +1251,62 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
     smscmd.orgSrc=sms.getOriginatingAddress();
     smscmd.orgDst=sms.getDestinationAddress();
 
-    if ( cmd->getSession() && ! session.get() ) {
-        // NOTE: it may happen that session was locked by that command
-        // and then this command goes to longcall, and then some failure happens.
-        // We should detect this, and unless we have a good longcall implementation
-        // we should get session from sm.
-        SessionKey key( (src->info.type == etService) ?
-                        sms.getDestinationAddress() : sms.getOriginatingAddress() );
-        session = sm.getSession( key, aucmd, false );
-        assert( session.get() );
-        session->setCurrentOperation( cmd->getOperationId() );
-    }
+    bool longcall = bool(cmd->getSession());
 
     do {
 
         st.status = re::STATUS_OK;
         st.result = 0;
 
-        dst=routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
-        smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
-                       where, routeId.c_str(), ri.routeId.c_str());
+        if ( ! longcall ) {
 
-        {
-            const char* fail = 0;
-            if (!dst) {
-                fail = "no route";
-                st.result = smsc::system::Status::NOROUTE;
-            } else if ( routeId == ri.routeId ) {
-                fail = "redirect to the same route";
-                st.result = smsc::system::Status::NOROUTE;
-            } else if ( dst->getBindType() == btNone ) {
-                fail = "sme not connected";
-                st.result = smsc::system::Status::SMENOTCONNECTED;
+            dst=routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+            smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
+                           where, routeId.c_str(), ri.routeId.c_str());
+
+            {
+                const char* fail = 0;
+                if (!dst) {
+                    fail = "no route";
+                    st.result = smsc::system::Status::NOROUTE;
+                } else if ( routeId == ri.routeId ) {
+                    fail = "redirect to the same route";
+                    st.result = smsc::system::Status::NOROUTE;
+                } else if ( dst->getBindType() == btNone ) {
+                    fail = "sme not connected";
+                    st.result = smsc::system::Status::SMENOTCONNECTED;
+                }
+
+
+                if ( fail ) {
+                    smsc_log_info(log_,"%s: %s %s(%s)->%s",
+                                  where, 
+                                  fail,
+                                  sms.getOriginatingAddress().toString().c_str(),
+                                  src->getSystemId(),
+                                  sms.getDestinationAddress().toString().c_str());
+                    st.status = re::STATUS_FAILED;
+                    break;
+                }
             }
+            routeId = ri.routeId;
+            cmd->setDstEntity(dst);
+            sms.setRouteId(ri.routeId);
+            sms.setSourceSmeId(src->getSystemId());
+            sms.setDestinationSmeId(dst->getSystemId());
 
+            if(src->info.type==etService)
+                smscmd.dir = (dst->info.type==etService) ? dsdSrv2Srv : dsdSrv2Sc;
+            else
+                smscmd.dir = (dst->info.type==etService) ? dsdSc2Srv : dsdSc2Sc;
+            cmd->setServiceId(ri.serviceId);
 
-            if ( fail ) {
-                smsc_log_info(log_,"%s: %s %s(%s)->%s",
-                              where, 
-                              fail,
-                              sms.getOriginatingAddress().toString().c_str(),
-                              src->getSystemId(),
-                              sms.getDestinationAddress().toString().c_str());
-                st.status = re::STATUS_FAILED;
-                break;
-            }
+        } else {
+
+            smscmd.getRouteInfo( ri );
+            dst = cmd->getDstEntity();
+            routeId = sms.getRouteId();
         }
-        routeId = ri.routeId;
-        cmd->setDstEntity(dst);
-        sms.setRouteId(ri.routeId);
-        sms.setSourceSmeId(src->getSystemId());
-        sms.setDestinationSmeId(dst->getSystemId());
-
-        if(src->info.type==etService)
-            smscmd.dir = (dst->info.type==etService) ? dsdSrv2Srv : dsdSrv2Sc;
-        else
-            smscmd.dir = (dst->info.type==etService) ? dsdSc2Srv : dsdSc2Sc;
-        cmd->setServiceId(ri.serviceId);
 
         smsc_log_info( log_, "%s%s: %s. %s(%s)->%s, routeid=%s%s",
                        where,
@@ -1313,14 +1324,20 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
         {
             SessionKey key( (src->info.type == etService) ?
                             sms.getDestinationAddress() : sms.getOriginatingAddress() );
-            session = sm.getSession( key, aucmd, true );
-            if ( ! session.get() ) return; // locked
-          
+            session = sm.getSession( key, aucmd, ! longcall );
+            if ( ! session.get() ) {
+                __require__( ! longcall );
+                return; // locked
+            }
+            longcall = false;
         }
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
         opmaker.process( st );
-        if ( st.status == re::STATUS_LONG_CALL ) return;
+        if ( st.status == re::STATUS_LONG_CALL ) {
+            smscmd.setRouteInfo( ri );
+            return;
+        }
 
         /*
         if ( st.status != re::STATUS_OK ) {

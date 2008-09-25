@@ -12,14 +12,12 @@
 #include "scag/util/storage/Serializer.h"
 #include "scag/util/Print.h"
 #include "scag/transport/SCAGCommand2.h"
-#include "scag/re/base/LongCallContext.h"
 #include "scag/exc/SCAGExceptions.h"
-
+#include "scag/re/base/LongCallContext.h"
 
 namespace scag2 {
 namespace sessions {
 
-using lcm::LongCallContext;
 using namespace smsc::logger;
 using namespace scag::util::properties;
 using namespace smsc::core::buffers;
@@ -203,7 +201,7 @@ public:
 
 
     /// FIXME: should it be here?
-    LongCallContext& getLongCallContext() {
+    lcm::LongCallContext& getLongCallContext() {
         return lcmCtx_;
     }
 
@@ -358,7 +356,7 @@ private:
     uint32_t command_;                            // (not pers: don't touch)
 
     /// FIXME: should it be here?
-    LongCallContext  lcmCtx_;                     // (not pers: continueExec=0)
+    lcm::LongCallContext  lcmCtx_;                 // (not pers: continueExec=0)
 
     /// === fields for init/destroy services
     struct TransportNewFlag;

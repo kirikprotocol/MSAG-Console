@@ -2,15 +2,25 @@
 #define __SCAG_RULE_H__
 
 #include "core/buffers/IntHash.hpp"
-#include "scag/sessions/base/Session2.h"
-#include "EventHandler2.h"
+// #include "scag/sessions/base/Session2.h"
+// #include "EventHandler2.h"
+#include "IParserHandler2.h"
 #include "RuleStatus2.h"
 
 namespace scag2 {
+
+namespace sessions {
+class Session;
+}
+
+namespace transport {
+class SCAGCommand;
+}
+
+
 namespace re {
 
 using smsc::core::buffers::IntHash;
-using sessions::Session;
 using namespace transport;
 using smsc::logger::Logger;
 
@@ -57,13 +67,14 @@ public:
      * @param   command     command to process
      * @return  status      rule's handler execution status
      */
-    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs);
-    virtual void processSession(Session& session, RuleStatus& rs);
+    virtual void process(SCAGCommand& command, sessions::Session& session, RuleStatus& rs);
+    virtual void processSession(sessions::Session& session, RuleStatus& rs);
 
     Rule(): useCounter(1), transportType(SMPP),logger(0) {logger = Logger::getInstance("scag.re");};
     virtual ~Rule();
 };
 
-}}
+}
+}
 
 #endif

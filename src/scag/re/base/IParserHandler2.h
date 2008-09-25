@@ -3,7 +3,7 @@
 
 #include <core/buffers/Hash.hpp>
 #include "scag/exc/SCAGExceptions.h"
-#include "scag/transport/SCAGCommand2.h"
+#include "scag/transport/TransportType.h"
 
 
 namespace scag2 {

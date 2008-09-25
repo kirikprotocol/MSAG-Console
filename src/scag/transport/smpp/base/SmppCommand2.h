@@ -355,6 +355,13 @@ struct SmsCommand : public SmppCommandData
     uint32_t get_orgDialogId() const { return orgDialogId_; }
     void set_orgDialogId( uint32_t dlgId ) { orgDialogId_ = dlgId; }
 
+    void getRouteInfo( router::RouteInfo& ri ) const {
+        ri = routeInfo_;
+    }
+    void setRouteInfo( router::RouteInfo& ri ) {
+        routeInfo_ = ri;
+    }
+
 public:
     SMS sms;
     Address orgSrc,orgDst;
@@ -370,6 +377,13 @@ protected:
 
     Mutex    mtx_;
     unsigned ref_;
+
+    // bukind: routeInfo is used only for long calls.
+    // it is not brilliant idea to put it here.
+    // I have in mind an smppcommand wrapper, which is put in smpp queue,
+    // and in case of long call we could put longcallsmppwrapper, which
+    // also would hold routerInfo data.
+    router::RouteInfo  routeInfo_;
 
 private:
     SmsCommand( const SmsCommand& cmd );

@@ -230,7 +230,7 @@ std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const Rule
     return result;
 }
 
-void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus& rs)
+void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus& rs )
 {
     RulesReference rulesRef = getRules();
     // smsc_log_debug(logger,"Process RuleEngine (total=%u) with serviceId: %d",
@@ -240,38 +240,63 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
     key.serviceId = command.getServiceId();
     key.transport = command.getType();
 
-    Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
-    if ( session.isNew( key.serviceId, key.transport ) ) {
-        session.pushInitRuleKey( key.serviceId, key.transport );
-        if (rulePtr) {
-            (*rulePtr)->processSession( session, rs );
-            if ( rs.status != STATUS_OK ) return;
+    Rule* rulePtr;
+    do { // fake loop
+
+        if ( session.getLongCallContext().continueExec ) {
+            // take rule from action context
+            __require__( session.getLongCallContext().getActionContext() );
+            rulePtr = session.getLongCallContext().getActionContext()->getRule();
+        } else {
+            Rule** rp = rulesRef.rules->rules.GetPtr(key);
+            rulePtr = rp ? *rp : 0;
         }
-        session.setNew( key.serviceId, key.transport, false );
-    }
 
-    /*
-    TransportRule* tr = getTransportRule( command.getType() );
-    assert( tr );
-    TransportRule::Guard g( *tr, command, session, rs );
-    try {
-        g.init();
-    } catch ( SCAGException& e ) {
-        smsc_log_error( logger, "TransportRule cannot start/locate operation. Details: %s", e.what() );
-        rs.result = smsc::system::Status::SMDELIFERYFAILURE;
-        rs.status = STATUS_FAILED;
-        return;
-    }
-     */
-    if ( rulePtr ) (*rulePtr)->process( command, session, rs );
+        if ( session.isNew( key.serviceId, key.transport ) ) { // fake while
 
-    // check if we need to destroy the service
-    if ( rs.status == STATUS_OK && 
-         session.getLongCallContext().getActionContext() &&
-         session.getLongCallContext().getActionContext()->getDestroyService() ) {
-        if ( rulePtr ) (*rulePtr)->processSession( session, rs );
-        if ( rs.status == STATUS_OK ) 
-            session.dropInitRuleKey(key.serviceId, key.transport);
+            session.pushInitRuleKey( key.serviceId, key.transport );
+            if ( rulePtr ) {
+
+                rulePtr->processSession( session, rs );
+                if ( rs.status == STATUS_FAILED ) {
+                    session.dropInitRuleKey( key.serviceId, key.transport );
+                    // session.setNew( key.serviceId, key.transport, false );
+                }
+                if ( rs.status != STATUS_OK ) break;
+            }
+            session.setNew( key.serviceId, key.transport, false );
+
+        }
+
+        /*
+         TransportRule* tr = getTransportRule( command.getType() );
+         assert( tr );
+         TransportRule::Guard g( *tr, command, session, rs );
+         try {
+         g.init();
+         } catch ( SCAGException& e ) {
+         smsc_log_error( logger, "TransportRule cannot start/locate operation. Details: %s", e.what() );
+         rs.result = smsc::system::Status::SMDELIFERYFAILURE;
+         rs.status = STATUS_FAILED;
+         return;
+         }
+         */
+        if ( rulePtr ) rulePtr->process( command, session, rs );
+
+        // check if we need to destroy the service
+        if ( rs.status == STATUS_OK && 
+             session.getLongCallContext().getActionContext() &&
+             session.getLongCallContext().getActionContext()->getDestroyService() ) {
+            if ( rulePtr ) rulePtr->processSession( session, rs );
+            if ( rs.status == STATUS_OK ) 
+                session.dropInitRuleKey(key.serviceId, key.transport);
+        }
+    
+    } while ( false );
+
+    if ( rs.status == STATUS_LONG_CALL && rulePtr ) {
+        // session.getLongCallContext().continueExec = true;
+        session.getLongCallContext().getActionContext()->setRule( *rulePtr );
     }
     // else 
     // smsc_log_debug(logger,"rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );
@@ -282,6 +307,7 @@ void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
 {
     RulesReference rulesRef = getRules();
 
+    Rule* rulePtr = 0;
     while ( true ) {
 
         RuleKey key;
@@ -298,11 +324,18 @@ void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
             continue;
         }
 
-        Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
+        {
+            Rule** rp = rulesRef.rules->rules.GetPtr(key);
+            rulePtr = rp ? *rp : 0;
+        }
 
         if (rulePtr) {
 
-            (*rulePtr)->processSession( session, rs );
+            rulePtr->processSession( session, rs );
+            if ( rs.status == STATUS_LONG_CALL ) {
+                // session.getLongCallContext().continueExec = true;
+                session.getLongCallContext().getActionContext()->setRule( *rulePtr );
+            }
             if ( rs.status != STATUS_OK ) break;
 
         }
@@ -316,6 +349,10 @@ void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
         // throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", 0 ); // session.getRuleKey().serviceId );
 
     }
+    if ( rs.status == STATUS_LONG_CALL ) {
+        session.getLongCallContext().getActionContext()->setRule( *rulePtr );
+    }
+
     return;
 }
 
