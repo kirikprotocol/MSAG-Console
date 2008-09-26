@@ -159,7 +159,9 @@ void SessionStoreImpl::init( unsigned eltNumber,
                 if ( i.idx() != di->invalidIndex() )
                     initialkeys_.push_back( i.key() );
             }
-            smsc_log_info( log_, "#%u has %u initial sessions", unsigned(initialkeys_.size()) );
+            smsc_log_info( log_, "#%u has %u initial sessions",
+                           eltNumber,
+                           unsigned(initialkeys_.size()) );
         }
 
         // disk_->addStorage( i, eds.release() );
@@ -213,7 +215,10 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     MemStorage::stored_type* v = 0;
     while ( ! session ) { // fake loop
         MutexGuard mg(cacheLock_);
-        if ( stopping_ ) break;
+        if ( stopping_ ) {
+            what = " store is stopped";
+            break;
+        }
         // return ActiveSession();
 
         v = cache_->get( key );
@@ -234,8 +239,10 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                 if ( ! session->currentCommand() ) {
                     ++lockedSessions_;
                     session->setCurrentCommand( cmd->getSerial() );
+                    what = " was free";
                     break;
                 } else if ( session->currentCommand() == cmd->getSerial() ) {
+                    what = " already mine";
                     break;
                 }
 
@@ -269,11 +276,10 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
         // NOTE: session may be flushed out to disk, that's why
         // we check if it is not found after upload from disk.
 
-        if ( !v ) {
-            // create a stub to be filled by disk io
-            cache_->set( key, cache_->val2store( allocator_->alloc(key) ));
-            v = cache_->get( key );
-        }
+        // if ( !v ) {
+        // create a stub to be filled by disk io
+        cache_->set( key, cache_->val2store( allocator_->alloc(key) ));
+        v = cache_->get( key );
         const unsigned sz = cache_->size();
         if ( sz > maxcachesize_ ) maxcachesize_ = sz;
 
@@ -312,6 +318,8 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             }
             expiration_->scheduleExpire( session->expirationTime(), session->lastAccessTime(), key );
             session = 0;
+        } else {
+            what = " uploaded";
         }
     }
 

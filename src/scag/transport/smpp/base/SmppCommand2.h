@@ -321,8 +321,24 @@ struct AlertNotification
 
 struct SmsCommand : public SmppCommandData 
 {
-    SmsCommand() : dir(dsdUnknown), original_ussd_op(-1), orgDialogId_(-1), sliceCount_(1), slicedRespSent_(false), ref_(1) {}
-    SmsCommand( const SMS& sms ): sms(sms), dir(dsdUnknown), original_ussd_op(-1), orgDialogId_(-1), sliceCount_(1), slicedRespSent_(false), ref_(1) {}
+    SmsCommand() :
+    dir(dsdUnknown),
+    original_ussd_op(-1),
+    orgDialogId_(-1),
+    sliceCount_(1), 
+    slicedRespSent_(false),
+    ref_(1),
+    hasroute_(false) {}
+
+    SmsCommand( const SMS& sms ):
+    sms(sms),
+    dir(dsdUnknown),
+    original_ussd_op(-1),
+    orgDialogId_(-1),
+    sliceCount_(1),
+    slicedRespSent_(false),
+    ref_(1),
+    hasroute_(false) {}
 
     void setSlicingParams( uint8_t srp, uint32_t cnt) {
         slicingRespPolicy_ = srp;
@@ -355,10 +371,15 @@ struct SmsCommand : public SmppCommandData
     uint32_t get_orgDialogId() const { return orgDialogId_; }
     void set_orgDialogId( uint32_t dlgId ) { orgDialogId_ = dlgId; }
 
+    bool hasRouteSet() const {
+        return hasroute_;
+    }
+
     void getRouteInfo( router::RouteInfo& ri ) const {
         ri = routeInfo_;
     }
     void setRouteInfo( router::RouteInfo& ri ) {
+        hasroute_ = true;
         routeInfo_ = ri;
     }
 
@@ -384,6 +405,7 @@ protected:
     // and in case of long call we could put longcallsmppwrapper, which
     // also would hold routerInfo data.
     router::RouteInfo  routeInfo_;
+    bool               hasroute_;
 
 private:
     SmsCommand( const SmsCommand& cmd );

@@ -368,14 +368,14 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
     smscmd.orgDst=sms.getDestinationAddress();
     src = cmd->getEntity();
 
-    bool longcall = bool(cmd->getSession());
+    bool routeset = smscmd.hasRouteSet();
 
     do { // rerouting loop
 
         st.status = re::STATUS_OK;
         st.result = 0;
 
-        if ( ! longcall ) {
+        if ( ! routeset ) {
 
             if ( ussd_op >= 0 && rcnt > 0 ) {
                 smsc_log_warn(log_, "%s(USSD): Rerouting for USSD dialog not allowed",
@@ -391,7 +391,6 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
             }
 
             dst = routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
-
             smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
                            where, routeId.c_str(), ri.routeId.c_str());
             {
@@ -425,7 +424,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
             sms.setSourceSmeId(src->getSystemId());
             sms.setDestinationSmeId(dst->getSystemId());
             cmd->setServiceId(ri.serviceId);
-
+            
         } else {
             smscmd.getRouteInfo( ri );
             dst = cmd->getDstEntity();
@@ -445,13 +444,13 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         if ( ri.transit ) break;
 
         if ( ! session.get() ) {
+            if ( ! routeset ) smscmd.setRouteInfo( ri ); // in case session is locked
             SessionKey key( sms.getDestinationAddress() );
-            session = sm.getSession( key, aucmd, ! longcall ); // NOTE: create session only if not from longcall
+            session = sm.getSession( key, aucmd, ! routeset ); // NOTE: create session only if not from longcall
             if ( ! session.get() ) {
-                __require__( ! longcall );
+                __require__( ! routeset );
                 return; // locked
             }
-            longcall = false;
         }
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
@@ -474,6 +473,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         opmaker.postProcess( st );
          */
 
+        routeset = false; // in case rerouting happens
     } while ( st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
 
     if (rcnt >= MAX_REDIRECT_CNT)
@@ -783,14 +783,14 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
     smscmd.orgDst=sms.getDestinationAddress();
     src = cmd->getEntity();
 
-    bool longcall = bool(cmd->getSession());
+    bool routeset = smscmd.hasRouteSet();
 
     do { // rerouting loop
 
         st.status = re::STATUS_OK;
         st.result = 0;
 
-        if ( ! longcall ) {
+        if ( ! routeset ) {
 
             if ( ussd_op >= 0 && rcnt > 0 ) {
                 smsc_log_warn(log_, "%s (USSD): Rerouting for USSD dialog not allowed",
@@ -859,15 +859,13 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         if ( ri.transit ) break;
 
         if ( ! session.get() ) {
-
+            if ( ! routeset ) smscmd.setRouteInfo( ri );
             SessionKey key( sms.getOriginatingAddress() );
-            session = sm.getSession( key, aucmd, ! longcall );
+            session = sm.getSession( key, aucmd, ! routeset );
             if ( ! session.get() ) {
-                __require__( ! longcall );
+                __require__( ! routeset );
                 return; // locked
             }
-            longcall = false;
-
         }
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
@@ -891,6 +889,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         opmaker.postProcess( st );
          */
 
+        routeset = false;
     } while ( st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
 
     if (rcnt >= MAX_REDIRECT_CNT)
@@ -1251,14 +1250,14 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
     smscmd.orgSrc=sms.getOriginatingAddress();
     smscmd.orgDst=sms.getDestinationAddress();
 
-    bool longcall = bool(cmd->getSession());
+    bool routeset = smscmd.hasRouteSet();
 
     do {
 
         st.status = re::STATUS_OK;
         st.result = 0;
 
-        if ( ! longcall ) {
+        if ( ! routeset ) {
 
             dst=routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
             smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
@@ -1301,8 +1300,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
                 smscmd.dir = (dst->info.type==etService) ? dsdSc2Srv : dsdSc2Sc;
             cmd->setServiceId(ri.serviceId);
 
-        } else {
-
+        } else { // route is not set in command
             smscmd.getRouteInfo( ri );
             dst = cmd->getDstEntity();
             routeId = sms.getRouteId();
@@ -1322,14 +1320,14 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
 
         if (!session.get())
         {
+            if ( ! routeset ) smscmd.setRouteInfo( ri );
             SessionKey key( (src->info.type == etService) ?
                             sms.getDestinationAddress() : sms.getOriginatingAddress() );
-            session = sm.getSession( key, aucmd, ! longcall );
+            session = sm.getSession( key, aucmd, ! routeset );
             if ( ! session.get() ) {
-                __require__( ! longcall );
+                __require__( ! routeset );
                 return; // locked
             }
-            longcall = false;
         }
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
@@ -1354,6 +1352,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
         opmaker.postProcess( st );
          */
 
+        routeset = false;
     } while ( st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT );
 
     if (rcnt >= MAX_REDIRECT_CNT)

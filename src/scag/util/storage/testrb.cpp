@@ -829,11 +829,11 @@ int testDiskIndexStorage( const Config& cfg, DiskIndexStorage* dis )
 
     unsigned count = 0;
     DiskIndexStorage::key_type prevk;
-    DiskIndexStorage::key_type k;
-    DiskIndexStorage::index_type idx;
     
     unsigned filledcount = 0;
-    for ( DiskIndexStorage::iterator_type i( dis->begin() ); i.next(k,idx); ) {
+    for ( DiskIndexStorage::iterator_type i( dis->begin() ); i.next(); ) {
+        DiskIndexStorage::key_type k = i.key();
+        DiskIndexStorage::index_type idx = i.idx();
 
         ++count;
         if ( count % 100 == 0 ) {

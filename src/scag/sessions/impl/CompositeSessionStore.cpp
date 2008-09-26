@@ -21,7 +21,6 @@ fin_(&fin),
 expiration_(&exq),
 allocator_(a)
 {
-    clear();
     smsc_log_debug( log_, "composite session store created");
 }
 
@@ -54,14 +53,12 @@ void CompositeSessionStore::init( unsigned nodeNumber,
     unsigned pathidx = 0;
     for ( unsigned i = 0; i < storages_.size(); ++i ) {
         if ( n.node(i) == nodeNumber ) {
-
             if ( ! storages_[i] ) {
                 Storage* st = new Storage( *fin_, *expiration_, allocator_ );
                 storages_[i] = st;
             }
             storages_[i]->init( i, queue, paths[pathidx], indexgrowth, pagesize, prealloc, dodiskio );
             if ( ++pathidx >= paths.size() ) pathidx = 0;
-
         }
     }
     if ( ! initialThread_ ) {

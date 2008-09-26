@@ -238,10 +238,12 @@ public:
         void reset() { if (s_) iter_ = s_->index_->begin(); }
         bool next( key_type& k, value_type& v ) {
             if ( !s_ ) return false;
-            index_type i;
-            while ( iter_.next(k,i) ) {
+            // index_type i;
+            while ( iter_.next() ) {
+                k = iter_.key();
+                index_type i = iter_.idx();
                 if ( i != s_->data_->invalidIndex() && 
-                     s_->data_->read(i) && 
+                     s_->data_->read(i) &&
                      s_->data_->deserialize(v) ) {
                     return true;
                 }
