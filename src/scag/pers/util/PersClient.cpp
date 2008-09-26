@@ -743,7 +743,7 @@ void PersClientImpl::finishCalls() {
       persParams->exception = strs[NOT_CONNECTED];
     }
     --callsCount;
-    ctx->initiator->continueExecution(ctx, true);
+    ctx->initiator->continueExecution(ctx, false);
   }
 }
 
