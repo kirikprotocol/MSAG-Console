@@ -86,6 +86,7 @@ protected:
 
     LongCallContext* getContext();
     void ping();
+    void finishCalls();
     void ExecutePersCall(LongCallContext* ctx);
 
     void CheckServerResponse(SerialBuffer& bsb);
@@ -731,6 +732,21 @@ int PersClientImpl::getClientStatus() {
   return 0;
 }
 
+void PersClientImpl::finishCalls() {
+  smsc_log_warn(log, "PersClient Not Connected: finishing %d LongCalls", callsCount);
+  while(headContext) {
+    LongCallContext* ctx = headContext;
+    headContext = headContext->next;
+    PersCallParams* persParams = (PersCallParams*)ctx->getParams();
+    if (persParams) {
+      persParams->error = NOT_CONNECTED;
+      persParams->exception = strs[NOT_CONNECTED];
+    }
+    --callsCount;
+    ctx->initiator->continueExecution(ctx, true);
+  }
+}
+
 int PersClientImpl::Execute()
 {
     smsc_log_debug(log, "Pers thread started");
@@ -744,12 +760,14 @@ int PersClientImpl::Execute()
           MutexGuard mg(clientMonitor);
   
           if (!connected) {
+            finishCalls();
             smsc_log_debug(log, "Pers Client Not Connected. Wait");
             clientMonitor.wait(reconnectTimeout * 1000);
             try {
               init();
             } catch (const PersClientException& ex) {
               smsc_log_warn(log, "Error during connecting to Pers Server: %s", ex.what());
+              continue;
             }
           }
         }
