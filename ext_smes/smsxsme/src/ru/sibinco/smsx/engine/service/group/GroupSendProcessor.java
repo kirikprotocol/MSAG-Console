@@ -69,6 +69,8 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
       m.setImsi(cmd.getImsi());
       m.setMscAddress(cmd.getMscAddress());
       m.setMessageString("SEND " + cmd.getGroupName() + ' ' + cmd.getMessage());
+      if (cmd.isExpress())
+        m.setDestAddrSubunit(1);
       m.setConnectionName("webgroup");
 
       OutgoingObject o;
