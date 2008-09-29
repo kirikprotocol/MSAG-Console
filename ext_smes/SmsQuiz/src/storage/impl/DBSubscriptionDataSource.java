@@ -1,0 +1,190 @@
+package storage.impl;
+
+import storage.*;
+import storage.ResultSet;
+
+import java.util.Date;
+import java.sql.*;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.File;
+
+import snaq.db.ConnectionPool;
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.ConfigException;
+import org.apache.log4j.Logger;
+
+
+public class DBSubscriptionDataSource implements SubscriptionDataSource {
+    
+    private static Logger logger = Logger.getLogger(DBSubscriptionDataSource.class);
+    private ConnectionPool pool;
+
+    public static void init(final String configDir) {
+        try {
+            ConnectionPoolFactory.init(configDir);
+        } catch (StorageException e) {
+            e.printStackTrace();
+        }
+    }
+    private PropertiesConfig sql;
+    private String prefix;
+
+    public DBSubscriptionDataSource(String configFile, String prefix) throws StorageException {
+
+        pool = ConnectionPoolFactory.createConnectionPool("smsquiz", Integer.MAX_VALUE, 60000);
+
+        sql = new PropertiesConfig();
+        try {
+            sql.load(new File(configFile));
+        } catch (ConfigException e) {
+            throw new StorageException("Error load config properties", e);
+        }
+        this.prefix = prefix;
+    }
+
+    private String getSql(java.lang.String string) throws StorageException {
+        try {
+            return sql.getString(prefix + string);
+        } catch (ConfigException e) {
+            throw new StorageException("Can't find sql: " + prefix + string, StorageException.ErrorCode.ERROR_CONFIG);
+        }
+    }
+
+    public void save(Subscription subscription) throws StorageException {
+         if ((subscription.getAddress()==null)||
+                 (subscription.getStartDate()==null)){
+             throw new StorageException("Wrong arguments due creating subscription", StorageException.ErrorCode.ERROR_WRONG_REQUEST);
+         }
+         Connection connection = null;
+         PreparedStatement prepStatement = null;
+
+         try{
+             connection = pool.getConnection();
+
+
+             prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.save"));
+
+             prepStatement.setString(1, subscription.getAddress());
+             prepStatement.setTimestamp(2, new Timestamp(subscription.getStartDate().getTime()));
+             if(subscription.getEndDate()!=null) {
+                prepStatement.setTimestamp(3, new Timestamp(subscription.getEndDate().getTime()) );
+             }
+             else {
+                prepStatement.setNull(3, java.sql.Types.TIMESTAMP);
+             }
+             prepStatement.executeUpdate();
+
+             if (logger.isInfoEnabled()){
+                 logger.info("Succesful DB insertion of subscription" + subscription);
+             }
+         }catch(SQLException exc){
+
+             logger.error("Unable to insert subscription to the dataBase: " + subscription, exc);
+             throw new StorageException("Unable to insert subscription to the dataBase: " + subscription, StorageException.ErrorCode.ERROR_DB);
+
+         }finally{
+             closeConn(connection,prepStatement,null);
+         }
+    }
+
+    public Subscription get(String address) throws StorageException {
+        Subscription subscription = null;
+        Connection connection = null;
+        PreparedStatement prepStatement = null;
+        java.sql.ResultSet sqlResult = null;
+
+         try{
+            connection = pool.getConnection();
+            connection.setAutoCommit(false);
+
+            prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.address"));
+            prepStatement.setString(1, address);
+
+            sqlResult = prepStatement.executeQuery();
+
+            if(sqlResult.next()) {
+                subscription = new Subscription();
+                subscription.setAddress(address);
+                subscription.setEndDate(sqlResult.getTimestamp("end_date"));
+                subscription.setStartDate(sqlResult.getTimestamp("start_date"));
+            }
+
+            if (logger.isInfoEnabled()){
+                logger.info("Succesful get subscription" + subscription);
+            }
+         }catch(SQLException exc){
+             logger.error("Unable to get subscription from the dataBase with address: " + address, exc);
+             throw new StorageException("Unable to get subscription from the dataBase with address: " + address, StorageException.ErrorCode.ERROR_DB);
+
+         }finally{
+             closeConn(connection,prepStatement,sqlResult);
+         }
+         return subscription;
+    }
+
+    public ResultSet list(Date date) throws StorageException{
+        if(date==null) {
+            throw new StorageException("Argument is null", StorageException.ErrorCode.ERROR_WRONG_REQUEST);
+        }
+        Connection connection = null;
+        PreparedStatement prepStatement = null;
+        java.sql.ResultSet sqlResult = null;
+
+        try{
+            connection = pool.getConnection();
+            connection.setAutoCommit(false);
+
+            prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.date"));
+            Timestamp timestamp = new Timestamp(date.getTime());
+            prepStatement.setTimestamp(1, timestamp );
+            prepStatement.setTimestamp(2, timestamp );
+
+            sqlResult = prepStatement.executeQuery();
+
+            if (logger.isInfoEnabled()){
+                logger.info("Succesful get list of subscription");
+            }
+         }catch(SQLException exc){
+             logger.error("Unable to get list of subscriptions from the dataBase", exc);
+             throw new StorageException("Unable to get list of subscriptions from the dataBase", StorageException.ErrorCode.ERROR_DB);
+
+         }finally{
+             closeConn(connection,prepStatement,sqlResult);
+         }
+        return new ResultSet(sqlResult);
+    }
+
+    public boolean subscribed(String address) {
+        return false;
+    }
+
+    public void close() {
+        pool.close();
+    }
+
+    private void closeConn(Connection connection, PreparedStatement preparedStatement, java.sql.ResultSet resultSet) {
+        try{
+            if(connection!=null) {
+                connection.close();
+            }
+        } catch (SQLException exc) {
+            logger.error("", exc);
+        }
+        try{
+            if(preparedStatement!=null) {
+                preparedStatement.close();
+            }
+        } catch (SQLException exc) {
+            logger.error("", exc);
+
+        }
+        try{
+            if(resultSet!=null) {
+                resultSet.close();
+            }
+        } catch (SQLException exc) {
+            logger.error("", exc);
+        }
+    }
+}
