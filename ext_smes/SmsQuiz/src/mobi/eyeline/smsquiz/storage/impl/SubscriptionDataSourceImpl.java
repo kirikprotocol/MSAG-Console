@@ -1,7 +1,7 @@
-package storage.impl;
+package mobi.eyeline.smsquiz.storage.impl;
 
-import storage.SubscriptionDataSource;
-import storage.StorageException;
+import mobi.eyeline.smsquiz.storage.SubscriptionDataSource;
+import mobi.eyeline.smsquiz.storage.StorageException;
 
 
 public class SubscriptionDataSourceImpl {

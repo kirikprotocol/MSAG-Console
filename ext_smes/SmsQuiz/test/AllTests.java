@@ -8,9 +8,9 @@ import org.junit.runners.Suite;
  * Time: 9:30:24
  * To change this template use File | Settings | File Templates.
  */
+
 @RunWith(value= Suite.class)
 @Suite.SuiteClasses(value={DBDataSourceTester.class})
-
 public class AllTests {
     public static void main(String[] args) {
         System.out.println("Tests begin");

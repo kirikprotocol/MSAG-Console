@@ -2,8 +2,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.AfterClass;
 import org.junit.Ignore;
-import storage.impl.SubscriptionDataSourceImpl;
-import storage.*;
+import mobi.eyeline.smsquiz.storage.impl.SubscriptionDataSourceImpl;
+import mobi.eyeline.smsquiz.storage.impl.DBSubscriptionDataSource;
+import mobi.eyeline.smsquiz.storage.*;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -14,7 +15,7 @@ import java.util.Date;
 
 public class DBDataSourceTester {
 
-    private static SubscriptionDataSource dataSource;
+    private static DBSubscriptionDataSource dataSource;
     private String addressOff ="+791394899off";
     private String addressOn ="+7913948999on";
 
@@ -23,8 +24,8 @@ public class DBDataSourceTester {
     @BeforeClass
     public static void initPool () {
         try {
-            ConnectionPoolFactory.init("/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/conf/config.xml");  // todo
-            dataSource = SubscriptionDataSourceImpl.getInstance("/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/conf/smsquiz.properties",""); // todo
+            ConnectionPoolFactory.init("conf/config.xml");
+            dataSource = new DBSubscriptionDataSource("conf/smsquiz.properties","");
         } catch (StorageException e) {
             e.printStackTrace();
             assertTrue(false);
@@ -33,7 +34,14 @@ public class DBDataSourceTester {
    // @Ignore
     @Test
     public  void addSubscription() {
-        try {
+       try {
+           dataSource.remove(addressOff);
+       } catch (StorageException e) {}
+       try {
+           dataSource.remove(addressOn);
+       } catch (StorageException e) {}
+
+       try {
             Subscription subscription = new Subscription();
             subscription.setAddress(addressOn);
             subscription.setStartDate(new Date());
@@ -64,17 +72,7 @@ public class DBDataSourceTester {
            assertTrue(false);
        }
    }
-  //  @Ignore
-    @Test
-    public void subscribed() {
-        try {
-            assertFalse(dataSource.subscribed(addressOff));
-            assertTrue(dataSource.subscribed(addressOn));
-        } catch (StorageException e) {
-            e.printStackTrace();
-            assertTrue(false);
-        }
-    }
+
 
     @Test
     public void list() {

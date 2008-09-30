@@ -21,8 +21,8 @@
 
   <section name="group">
     <param name="group.address">011</param>
-    <param name="manager.pool.size">10</param>
-    <param name="manager.connection.timeout">60000</param>
+    <param name="mobi.eyeline.smsquiz.manager.pool.size">10</param>
+    <param name="mobi.eyeline.smsquiz.manager.connection.timeout">60000</param>
     <param name="store.file">webapps/smsx/WEB-INF/store/group.bin</param>
     <param name="store.data.life.time">1800000</param>
     <param name="smsc.host">phoenix</param>

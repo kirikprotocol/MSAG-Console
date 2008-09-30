@@ -1,8 +1,4 @@
-package storage;
-
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Date;
+package mobi.eyeline.smsquiz.storage;
 
 
 public interface ResultSet {

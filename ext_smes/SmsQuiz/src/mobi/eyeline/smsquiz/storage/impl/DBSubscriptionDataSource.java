@@ -1,12 +1,10 @@
-package storage.impl;
+package mobi.eyeline.smsquiz.storage.impl;
 
-import storage.*;
-import storage.ResultSet;
+import mobi.eyeline.smsquiz.storage.*;
+import mobi.eyeline.smsquiz.storage.ResultSet;
 
 import java.util.Date;
 import java.sql.*;
-import java.io.InputStream;
-import java.io.IOException;
 import java.io.File;
 
 import snaq.db.ConnectionPool;
@@ -89,7 +87,6 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
 
          try{
             connection = pool.getConnection();
-            connection.setAutoCommit(false);  // todo
 
             prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.address"));
             prepStatement.setString(1, address);
@@ -118,6 +115,10 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
          }
          return subscription;
     }
+    private Subscription _get(String address, Connection connection) throws StorageException {
+
+        return null;
+    }
 
     public ResultSet list(Date date) throws StorageException{
         if(date==null) {
@@ -129,10 +130,9 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
 
         try{
             connection = pool.getConnection();
-            connection.setAutoCommit(false); // todo
 
-            prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.date"), java.sql.ResultSet.CONCUR_READ_ONLY); //todo
-            prepStatement.setFetchSize(Integer.MIN_VALUE); // todo
+            prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.date"), java.sql.ResultSet.CONCUR_READ_ONLY);
+            prepStatement.setFetchSize(Integer.MIN_VALUE);
             Timestamp timestamp = new Timestamp(date.getTime());
             prepStatement.setTimestamp(1, timestamp );
             prepStatement.setTimestamp(2, timestamp );
@@ -146,14 +146,12 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
              logger.error("Unable to get list of subscriptions from the dataBase", exc);
              throw new StorageException("Unable to get list of subscriptions from the dataBase", exc);
 
-         }finally{
-             closeConn(null,null,null);  // todo
          }
-        return ResultSetImpl.getInstance(sqlResult,connection, prepStatement);
+        return new SubscriptionResultSet(sqlResult,connection, prepStatement);
     }
 
-    public boolean subscribed(String address) throws StorageException {
-        boolean res=false;
+
+    public void remove(String address) throws StorageException{
         if(address==null) {
             throw new StorageException("Argument is null", StorageException.ErrorCode.ERROR_WRONG_REQUEST);
         }
@@ -163,17 +161,10 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
 
         try{
             connection = pool.getConnection();
-            connection.setAutoCommit(false); // todo
 
-            prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.address"));
-            prepStatement.setString(1, address );
-
-            sqlResult = prepStatement.executeQuery();
-            if(sqlResult.next()) {
-                if(sqlResult.getTimestamp("end_date")==null) {
-                    res = true;
-                }
-            }
+            prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.remove.by.address"));
+            prepStatement.setString(1,address);
+            prepStatement.execute();
             if (logger.isInfoEnabled()){
                 logger.info("Succesful get subscribed info by address");
             }
@@ -185,8 +176,6 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
          }finally{
              closeConn(connection,prepStatement,sqlResult);
          }
-
-         return res;
     }
 
     public void close() {

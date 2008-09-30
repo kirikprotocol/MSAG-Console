@@ -1,8 +1,8 @@
-package storage.impl;
+package mobi.eyeline.smsquiz.storage.impl;
 
-import storage.StorageException;
-import storage.Subscription;
-import storage.ResultSet;
+import mobi.eyeline.smsquiz.storage.StorageException;
+import mobi.eyeline.smsquiz.storage.Subscription;
+import mobi.eyeline.smsquiz.storage.ResultSet;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -30,13 +30,7 @@ public class SubscriptionResultSet implements ResultSet {
     }
     public boolean next() throws StorageException {
         try {
-            if(sqlResult.next()){
-                return true;
-            }
-            else {
-                close();        // todo
-                return false;
-            }
+            return sqlResult.next();
         } catch (SQLException e) {
             throw new StorageException("Unable to move resultset cursor", e);
         }

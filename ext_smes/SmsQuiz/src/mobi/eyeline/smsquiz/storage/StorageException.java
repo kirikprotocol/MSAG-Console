@@ -1,4 +1,4 @@
-package storage;
+package mobi.eyeline.smsquiz.storage;
 
 import com.eyeline.utils.config.ConfigException;
 
