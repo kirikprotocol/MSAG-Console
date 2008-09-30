@@ -12,6 +12,7 @@
             xmlns:log      ="http://www.sibinco.com/SCAG/LOG"
             xmlns:http     ="http://www.sibinco.com/SCAG/HTTP"
             xmlns:smpp     ="http://www.sibinco.com/SCAG/SMPP"
-	    xmlns:datetime ="http://www.sibinco.com/SCAG/DATETIME" 
+            xmlns:datetime ="http://www.sibinco.com/SCAG/DATETIME"
+            xmlns:stat     ="http://www.sibinco.com/SCAG/STAT"
             transport="{1}">
 
