@@ -8,6 +8,9 @@ public class Subscription {
     private Date startDate;
     private Date endDate;
 
+    public Subscription() {
+        startDate = new Date();
+    }
     public String getAddress() {
         return address;
     }
