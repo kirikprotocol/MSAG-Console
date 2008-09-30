@@ -20,13 +20,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
     private static Logger logger = Logger.getLogger(DBSubscriptionDataSource.class);
     private ConnectionPool pool;
 
-    public static void init(final String configDir) {
-        try {
-            ConnectionPoolFactory.init(configDir);
-        } catch (StorageException e) {
-            e.printStackTrace();
-        }
-    }
+
     private PropertiesConfig sql;
     private String prefix;
 
@@ -61,8 +55,6 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
 
          try{
              connection = pool.getConnection();
-
-
              prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.save"));
 
              prepStatement.setString(1, subscription.getAddress());
@@ -81,7 +73,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
          }catch(SQLException exc){
 
              logger.error("Unable to insert subscription to the dataBase: " + subscription, exc);
-             throw new StorageException("Unable to insert subscription to the dataBase: " + subscription, StorageException.ErrorCode.ERROR_DB);
+             throw new StorageException("Unable to insert subscription to the dataBase: ", exc);
 
          }finally{
              closeConn(connection,prepStatement,null);
@@ -115,7 +107,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
             }
          }catch(SQLException exc){
              logger.error("Unable to get subscription from the dataBase with address: " + address, exc);
-             throw new StorageException("Unable to get subscription from the dataBase with address: " + address, StorageException.ErrorCode.ERROR_DB);
+             throw new StorageException("Unable to get subscription from the dataBase with address: " + address, exc);
 
          }finally{
              closeConn(connection,prepStatement,sqlResult);
@@ -147,16 +139,49 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
             }
          }catch(SQLException exc){
              logger.error("Unable to get list of subscriptions from the dataBase", exc);
-             throw new StorageException("Unable to get list of subscriptions from the dataBase", StorageException.ErrorCode.ERROR_DB);
+             throw new StorageException("Unable to get list of subscriptions from the dataBase", exc);
 
          }finally{
-             closeConn(connection,prepStatement,sqlResult);
+             closeConn(connection,prepStatement,null);
          }
         return new ResultSet(sqlResult);
     }
 
-    public boolean subscribed(String address) {
-        return false;
+    public boolean subscribed(String address) throws StorageException {
+        boolean res=false;
+        if(address==null) {
+            throw new StorageException("Argument is null", StorageException.ErrorCode.ERROR_WRONG_REQUEST);
+        }
+        Connection connection = null;
+        PreparedStatement prepStatement = null;
+        java.sql.ResultSet sqlResult = null;
+
+        try{
+            connection = pool.getConnection();
+            connection.setAutoCommit(false);
+
+            prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.address"));
+            prepStatement.setString(1, address );
+
+            sqlResult = prepStatement.executeQuery();
+            if(sqlResult.next()) {
+                if(sqlResult.getTimestamp("end_date")==null) {
+                    res = true;
+                }
+            }
+            if (logger.isInfoEnabled()){
+                logger.info("Succesful get subscribed info by address");
+            }
+
+         }catch(SQLException exc){
+             logger.error("Unable to get subscribed info by address: "+address, exc);
+             throw new StorageException("Unable get subscribed info by address: ", exc);
+
+         }finally{
+             closeConn(connection,prepStatement,null);
+         }
+
+         return res;
     }
 
     public void close() {
@@ -169,14 +194,14 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
                 connection.close();
             }
         } catch (SQLException exc) {
-            logger.error("", exc);
+            logger.error("Unable to close connection", exc);
         }
         try{
             if(preparedStatement!=null) {
                 preparedStatement.close();
             }
         } catch (SQLException exc) {
-            logger.error("", exc);
+            logger.error("Unable to close connection", exc);
 
         }
         try{
@@ -184,7 +209,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
                 resultSet.close();
             }
         } catch (SQLException exc) {
-            logger.error("", exc);
+            logger.error("Unable to close connection", exc);
         }
     }
 }
