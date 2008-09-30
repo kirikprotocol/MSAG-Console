@@ -56,8 +56,28 @@
                     <attribute name="content-type-str" type="scag:Var" use="optional"/>
                     <attribute name="status" type="scag:Var" use="optional"/>
                     <attribute name="msg" type="scag:Var" use="optional"/>
+                    <attribute name="keywords" type="scag:Var" use="optional"/>
+                </complexType>
+	    </element>
+
+            <element name="add_keywords">
+                <complexType>
+                    <attribute name="id" type="scag:Value" use="required"/>
+                    <attribute name="keywords" type="scag:Value" use="required"/>
+                    <attribute name="status" type="scag:Var" use="optional"/>
+                    <attribute name="msg" type="scag:Var" use="optional"/>
                 </complexType>
             </element>
+
+            <element name="set_keywords">
+                <complexType>
+                    <attribute name="id" type="scag:Value" use="required"/>
+                    <attribute name="keywords" type="scag:Value" use="required"/>
+                    <attribute name="status" type="scag:Var" use="optional"/>
+                    <attribute name="msg" type="scag:Var" use="optional"/>
+                </complexType>
+            </element>
+	    
         </choice>    
     </group>
     

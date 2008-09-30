@@ -25,12 +25,14 @@
 
 #include "BatchAction2.h"
 #include "PersAction2.h"
+#include "StatAction.h"
 
 // #include "LongCallTestAction.h"
 
 #include "BillActionOpen.h"
 #include "BillActionClose.h"
 #include "BillActionInfo.h"
+#include "BillActionKeywords.h"
 
 /*
 #include "scag/re/actions/Action.h"
@@ -146,6 +148,8 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             if ( name == "bill:open" ) return new BillActionOpen();
             if ( name == "bill:close" ) return new BillActionClose();
             if ( name == "bill:info" ) return new BillActionInfo();
+            if ( name == "bill:set_keywords" ) return new BillActionSetKeywords();
+            if ( name == "bill:add_keywords" ) return new BillActionAddKeywords();
             break;
         }
         if ( 0 == strncmp(name.c_str(), "profile:", 8 ) ) {
@@ -164,6 +168,12 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
           if (name=="batch:inc") return new PersActionCommand(PC_INC);
           if (name=="batch:inc-mod") return new PersActionCommand(PC_INC_MOD);
             break;
+        }
+        if ( 0 == strncmp(name.c_str(), "stat:", 5 ) ) {
+          if (name == "stat:add_keywords") return new AddKeywordsAction();
+          if (name == "stat:set_keywords") return new SetKeywordsAction();
+          if (name == "stat:get_keywords") return new GetKeywordsAction();
+          break;
         }
 
 
