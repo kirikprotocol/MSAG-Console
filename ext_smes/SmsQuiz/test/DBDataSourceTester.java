@@ -1,33 +1,74 @@
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.AfterClass;
-import storage.impl.DBSubscriptionDataSource;
-import storage.ConnectionPoolFactory;
-import storage.StorageException;
-import storage.Subscription;
+import org.junit.Ignore;
+import storage.impl.SubscriptionDataSourceImpl;
+import storage.*;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.Date;
 
 
-/**
- * Created by IntelliJ IDEA.
- * User: alkhal
- * Date: 30.09.2008
- * Time: 9:13:08
- * To change this template use File | Settings | File Templates.
- */
 public class DBDataSourceTester {
 
-    private static  DBSubscriptionDataSource dataSource;
-    private String address ="+7913948990";
+    private static SubscriptionDataSource dataSource;
+    private String addressOff ="+791394899off";
+    private String addressOn ="+7913948999on";
+
+
 
     @BeforeClass
     public static void initPool () {
         try {
             ConnectionPoolFactory.init("/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/conf/config.xml");
-            dataSource = new DBSubscriptionDataSource("/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/conf/smsquiz.properties","");
+            dataSource = SubscriptionDataSourceImpl.getInstance("/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/conf/smsquiz.properties","");
+        } catch (StorageException e) {
+            e.printStackTrace();
+            assertTrue(false);
+        }
+    }
+    @Ignore
+    @Test
+    public  void addSubscription() {
+        try {
+            Subscription subscription = new Subscription();
+            subscription.setAddress(addressOn);
+            subscription.setStartDate(new Date());
+            subscription.setEndDate(null);
+            dataSource.save(subscription);
+            subscription.setAddress(addressOff);
+            subscription.setStartDate(new Date());
+            subscription.setEndDate(new Date());
+            dataSource.save(subscription);
+        } catch (StorageException e) {
+            e.printStackTrace();
+            assertTrue(false);
+        }
+    }
+    @AfterClass
+    public static  void close() {
+           dataSource.close();
+    }
+
+  //  @Ignore
+    @Test
+    public void getByAddress() {
+       try {
+           assertNotNull(dataSource.get(addressOff));
+           assertNotNull(dataSource.get(addressOn));
+       } catch (StorageException e) {
+           e.printStackTrace();
+           assertTrue(false);
+       }
+   }
+  //  @Ignore
+    @Test
+    public void subscribed() {
+        try {
+            assertFalse(dataSource.subscribed(addressOff));
+            assertTrue(dataSource.subscribed(addressOn));
         } catch (StorageException e) {
             e.printStackTrace();
             assertTrue(false);
@@ -35,34 +76,18 @@ public class DBDataSourceTester {
     }
 
     @Test
-    public  void addSubscription() {
-            Subscription subscription = new Subscription();
-            subscription.setAddress(address);
-            subscription.setStartDate(new Date());
-            subscription.setEndDate(null);
+    public void list() {
         try {
-            dataSource.save(subscription);
+            ResultSet result = dataSource.list(new Date());
+            while(result.next()) {
+                System.out.println(result.get());
+            }
+            result.close();
         } catch (StorageException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
             assertTrue(false);
         }
     }
-    @AfterClass
-    public static  void close(){
-           dataSource.close();
-    }
-
-
-    @Test
-    public void getByAddress() {
-       try {
-           assertNotNull(dataSource.get(address));
-       } catch (StorageException e) {
-           e.printStackTrace();
-           assertTrue(false);
-       }
-   }
-
   
 
 }

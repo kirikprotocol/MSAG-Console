@@ -8,5 +8,5 @@ public interface SubscriptionDataSource {
     public Subscription get(String address) throws StorageException;
     public ResultSet list(Date date) throws StorageException;
     boolean subscribed (String address) throws StorageException;
-    void close() throws StorageException;
+    void close();
 }

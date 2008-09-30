@@ -31,4 +31,15 @@ public class Subscription {
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
     }
+
+    public String toString() {
+        String res="";
+        if(address!=null)
+            res+=address;
+        if(startDate!=null)
+            res+=" "+startDate;
+        if(endDate!=null)
+            res+=" "+endDate;
+        return res;
+    }
 }

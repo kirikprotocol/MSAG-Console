@@ -3,8 +3,8 @@
 create table smsquiz_subscriptions
 (
     address varchar(32) not null primary key ,
-    start_date timestamp not null,
-    end_date timestamp
+    start_date DATETIME not null default 'now()',
+    end_date DATETIME
 ) engine=InnoDB character set utf8;
 
 

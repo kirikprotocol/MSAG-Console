@@ -55,15 +55,16 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
 
          try{
              connection = pool.getConnection();
-             prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.save"));
-
-             prepStatement.setString(1, subscription.getAddress());
-             prepStatement.setTimestamp(2, new Timestamp(subscription.getStartDate().getTime()));
              if(subscription.getEndDate()!=null) {
+                prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.save.withend"));
+                prepStatement.setString(1, subscription.getAddress());
+                prepStatement.setTimestamp(2, new Timestamp(subscription.getStartDate().getTime()));
                 prepStatement.setTimestamp(3, new Timestamp(subscription.getEndDate().getTime()) );
              }
              else {
-                prepStatement.setNull(3, java.sql.Types.TIMESTAMP);
+                prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.save"));
+                prepStatement.setString(1, subscription.getAddress());
+                prepStatement.setTimestamp(2, new Timestamp(subscription.getStartDate().getTime()));
              }
              prepStatement.executeUpdate();
 
@@ -98,8 +99,11 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
             if(sqlResult.next()) {
                 subscription = new Subscription();
                 subscription.setAddress(address);
-                subscription.setEndDate(sqlResult.getTimestamp("end_date"));
-                subscription.setStartDate(sqlResult.getTimestamp("start_date"));
+                subscription.setStartDate(new Date(sqlResult.getTimestamp("start_date").getTime()));
+                Timestamp timestamp;
+                if((timestamp = sqlResult.getTimestamp("end_date"))!=null) {
+                    subscription.setEndDate(new Date(timestamp.getTime()));
+                }
             }
 
             if (logger.isInfoEnabled()){
@@ -142,9 +146,9 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
              throw new StorageException("Unable to get list of subscriptions from the dataBase", exc);
 
          }finally{
-             closeConn(connection,prepStatement,null);
+             closeConn(null,null,null);
          }
-        return new ResultSet(sqlResult);
+        return ResultSetImpl.getInstance(sqlResult,connection, prepStatement);
     }
 
     public boolean subscribed(String address) throws StorageException {
@@ -178,7 +182,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
              throw new StorageException("Unable get subscribed info by address: ", exc);
 
          }finally{
-             closeConn(connection,prepStatement,null);
+             closeConn(connection,prepStatement,sqlResult);
          }
 
          return res;
