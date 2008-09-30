@@ -44,25 +44,26 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
     }
 
     public void save(Subscription subscription) throws StorageException {
-         if ((subscription.getAddress()==null)||
-                 (subscription.getStartDate()==null)){
+         if (subscription.getAddress()==null){
              throw new StorageException("Wrong arguments due creating subscription", StorageException.ErrorCode.ERROR_WRONG_REQUEST);
          }
+         if(subscription.getStartDate()==null) {
+             subscription.setStartDate(new Date());
+         }
+
          Connection connection = null;
          PreparedStatement prepStatement = null;
 
          try{
              connection = pool.getConnection();
+             prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.save"));
+             prepStatement.setString(1, subscription.getAddress());
+             prepStatement.setTimestamp(2, new Timestamp(subscription.getStartDate().getTime()));
              if(subscription.getEndDate()!=null) {
-                prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.save.withend"));
-                prepStatement.setString(1, subscription.getAddress());
-                prepStatement.setTimestamp(2, new Timestamp(subscription.getStartDate().getTime()));
-                prepStatement.setTimestamp(3, new Timestamp(subscription.getEndDate().getTime()) );
+                prepStatement.setTimestamp(3, new Timestamp(subscription.getEndDate().getTime()));
              }
              else {
-                prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.save"));
-                prepStatement.setString(1, subscription.getAddress());
-                prepStatement.setTimestamp(2, new Timestamp(subscription.getStartDate().getTime()));
+                prepStatement.setNull(3, java.sql.Types.TIMESTAMP);
              }
              prepStatement.executeUpdate();
 
@@ -114,10 +115,6 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
              closeConn(connection,prepStatement,sqlResult);
          }
          return subscription;
-    }
-    private Subscription _get(String address, Connection connection) throws StorageException {
-
-        return null;
     }
 
     public ResultSet list(Date date) throws StorageException{
