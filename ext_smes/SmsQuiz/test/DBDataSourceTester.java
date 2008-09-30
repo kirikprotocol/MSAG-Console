@@ -23,8 +23,8 @@ public class DBDataSourceTester {
     @BeforeClass
     public static void initPool () {
         try {
-            ConnectionPoolFactory.init("/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/conf/config.xml");
-            dataSource = SubscriptionDataSourceImpl.getInstance("/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/conf/smsquiz.properties","");
+            ConnectionPoolFactory.init("/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/conf/config.xml");  // todo
+            dataSource = SubscriptionDataSourceImpl.getInstance("/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/conf/smsquiz.properties",""); // todo
         } catch (StorageException e) {
             e.printStackTrace();
             assertTrue(false);

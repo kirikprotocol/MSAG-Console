@@ -89,7 +89,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
 
          try{
             connection = pool.getConnection();
-            connection.setAutoCommit(false);
+            connection.setAutoCommit(false);  // todo
 
             prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.address"));
             prepStatement.setString(1, address);
@@ -129,9 +129,10 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
 
         try{
             connection = pool.getConnection();
-            connection.setAutoCommit(false);
+            connection.setAutoCommit(false); // todo
 
-            prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.date"));
+            prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.date"), java.sql.ResultSet.CONCUR_READ_ONLY); //todo
+            prepStatement.setFetchSize(Integer.MIN_VALUE); // todo
             Timestamp timestamp = new Timestamp(date.getTime());
             prepStatement.setTimestamp(1, timestamp );
             prepStatement.setTimestamp(2, timestamp );
@@ -146,7 +147,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
              throw new StorageException("Unable to get list of subscriptions from the dataBase", exc);
 
          }finally{
-             closeConn(null,null,null);
+             closeConn(null,null,null);  // todo
          }
         return ResultSetImpl.getInstance(sqlResult,connection, prepStatement);
     }
@@ -162,7 +163,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
 
         try{
             connection = pool.getConnection();
-            connection.setAutoCommit(false);
+            connection.setAutoCommit(false); // todo
 
             prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.address"));
             prepStatement.setString(1, address );

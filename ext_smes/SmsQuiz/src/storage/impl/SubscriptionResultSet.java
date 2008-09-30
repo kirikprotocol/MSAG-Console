@@ -34,7 +34,7 @@ public class SubscriptionResultSet implements ResultSet {
                 return true;
             }
             else {
-                close();
+                close();        // todo
                 return false;
             }
         } catch (SQLException e) {

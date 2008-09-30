@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
  * Time: 14:49:07
  * To change this template use File | Settings | File Templates.
  */
+// todo
 public class ResultSetImpl {
     public static ResultSet getInstance(java.sql.ResultSet resultSet, Connection connection, PreparedStatement prepStatement) throws StorageException {
         return new SubscriptionResultSet(resultSet,connection, prepStatement);
