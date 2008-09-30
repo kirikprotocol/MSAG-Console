@@ -12,10 +12,15 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
 
     private SubscriptionDataSource dataSource;
     private static Logger logger = Logger.getLogger(SubscriptionManagerImpl.class);
+    private static SubscriptionManager manager;
 
-    public SubscriptionManagerImpl(String configFile) throws StorageException {
-        dataSource = SubscriptionDataSourceImpl.getInstance(configFile,"");
+    public static void init(String configFile) throws StorageException {
+        manager = new SubscriptionManagerImpl(configFile);
     }
+    public static SubscriptionManager getInstance() {
+        return manager;
+    }
+
     public boolean subscribe(String address) {
         Subscription subscription = new Subscription();
         subscription.setAddress(address);
@@ -45,5 +50,9 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     }
     public void shutdown() {
 
+    }
+
+    private SubscriptionManagerImpl(String configFile) throws StorageException {
+        dataSource = SubscriptionDataSourceImpl.getInstance(configFile,"");
     }
 }
