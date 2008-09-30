@@ -1,0 +1,2 @@
+09:56:22,530  INFO main DBSubscriptionDataSource:save:71 - Succesful DB insertion of subscriptionstorage.Subscription@15cda3f
+09:56:22,574  INFO main DBSubscriptionDataSource:get:106 - Succesful get subscriptionstorage.Subscription@120a47e
