@@ -7,6 +7,7 @@ import storage.*;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.Date;
 
@@ -29,7 +30,7 @@ public class DBDataSourceTester {
             assertTrue(false);
         }
     }
-    @Ignore
+   // @Ignore
     @Test
     public  void addSubscription() {
         try {
@@ -87,7 +88,6 @@ public class DBDataSourceTester {
             e.printStackTrace();
             assertTrue(false);
         }
-    }
-  
+    }   
 
 }
