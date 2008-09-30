@@ -26,7 +26,7 @@ protected:
     }
 
 private:
-    static const int fields_count = 12;
+    static const int fields_count = 13;
     static const char* m_name[fields_count];
 
 private:

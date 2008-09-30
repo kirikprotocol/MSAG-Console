@@ -21,7 +21,8 @@ const char* BillActionInfo::m_name[BillActionInfo::fields_count] =
         "currency",
         "bill_type",
         "category-str",
-        "content-type-str"
+        "content-type-str",
+        "keywords"
 };
 
 void BillActionInfo::init( const SectionParams& params,
@@ -119,6 +120,8 @@ bool BillActionInfo::run( ActionContext& context )
         case 9: p->setInt(tr.billType); break;
         case 10: p->setStr(bis.category); break;
         case 11: p->setStr(bis.mediaType); break;
+        //TODO: set real keywords from action context
+        case 12: p->setStr("keywords"); break;
         }
         if ( logger->isDebugEnabled() ) {
             s += ", ";
