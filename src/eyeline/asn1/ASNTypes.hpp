@@ -15,16 +15,19 @@ struct OCTBuffer {
     uint8_t *       ptr;
     uint32_t        size;
 
-    OCTBuffer() : ptr(0), size(0)
+    OCTBuffer(uint8_t * use_ptr = 0, uint32_t use_sz = 0)
+        : ptr(use_ptr), size(use_sz)
     { }
 };
 
 //unaligned BIT buffer
 struct BITBuffer : public OCTBuffer {
-//    uint8_t         bitsGap;    //unused bits in first byte of encoding
+    uint8_t         bitsGap;    //unused bits in first byte of encoding
     uint8_t         bitsUnused; //unused bits in last byte of encoding
 
-    BITBuffer() : OCTBuffer(), bitsUnused(0) //, bitsGap(0)
+    BITBuffer(uint8_t * use_ptr = 0, uint32_t use_sz = 0)
+        : OCTBuffer(use_ptr, use_sz)
+        , bitsUnused(0), bitsGap(0)
     { }
 };
 
@@ -161,12 +164,15 @@ public:
     struct ENCResult {
         ENCStatus   rval;   //encoding status
         uint16_t    nbytes; //number of bytes encoded
+
+        EnCResult() : rval(encOk), nbytes(0)
     };
     struct DECResult {
         DECStatus   rval;   //decoding status
         uint16_t    nbytes; //number of bytes succsefully decoded
-    };
 
+        DECResult() : rval(decOk), nbytes(0)
+    };
 
 protected:
     Presentation        valType;
@@ -209,6 +215,12 @@ public:
         return tags.Tag(tag_idx, option_idx);
     }
     inline const ASTypeTagging & Tagging(void) const { return tags; }
+
+    inline Presentation getPresentation(void) const { return valType; }
+
+    inline const BITBuffer * getEncoding(void) const { return valBuf; }
+
+    inline EncodingRule getRule(void) const { return valRule; }
 
     // ---------------------------------
     // ASTypeAC interface methods
@@ -258,7 +270,7 @@ public
     const EncodedOID &  _asId; //associated ABSTRACT-SYNTAX.&id
 
     AbstractSyntax(const EncodedOID & use_Id)
-        : _asId(use_asId)
+        : _asId(use_asId), ASTypeAC()
     { }
     AbstractSyntax(const EncodedOID & use_Id, ASTag::TagClass tag_class,  uint16_t tag_val)
         : _asId(use_asId), ASTypeAC(tag_class, tag_val)
