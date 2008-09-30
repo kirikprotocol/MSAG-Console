@@ -70,8 +70,8 @@ public:
     }
 };
 
-}; //tcap
-}; //eyelinecom
+} //tcap
+} //eyelinecom
 
 #endif /* __TCAP_TRANSACTION_ID_HPP */
 

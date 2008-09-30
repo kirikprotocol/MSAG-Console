@@ -150,8 +150,8 @@ public:
 };
 
 
-}; //tcap
-}; //eyelinecom
+} //tcap
+} //eyelinecom
 
 #endif /* __TCAP_SUA_INDICATIONS_HPP */
 

@@ -213,8 +213,8 @@ public:
 
 };
 
-}; //tcap
-}; //eyelinecom
+} //tcap
+} //eyelinecom
 
 #endif /* __TCAP_TRANSACTION_DEFS_HPP */
 

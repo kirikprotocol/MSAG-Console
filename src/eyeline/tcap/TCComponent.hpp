@@ -57,15 +57,10 @@ public:
     //in case of decMoreInput, stores decoding context 
     DECResult Demux(uint16_t num_tags = 0,
                     const ASTypeTagging (* defer_tag)[] = NULL) /*throw ASN1CodecError*/;
-
-    //Returns number of bytes encoded
-    virtual uint16_t encode(uint8_t * buf, uint16_t max_len) const /*throw(std::exception)*/ ;
-    //Returns number of bytes decoded
-    virtual uint16_t decode(const uint8_t * buf, uint16_t max_len) /*throw(std::exception)*/;
 };
 
-}; //tcap
-}; //eyelinecom
+} //tcap
+} //eyelinecom
 
 #endif /* __TC_COMPONENT_DEFS_HPP */
 
