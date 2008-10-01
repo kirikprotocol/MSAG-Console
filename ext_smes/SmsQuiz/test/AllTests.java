@@ -10,7 +10,7 @@ import org.junit.runners.Suite;
  */
 
 @RunWith(value= Suite.class)
-@Suite.SuiteClasses(value={DBDataSourceTester.class})
+@Suite.SuiteClasses(value={DBDataSourceTester.class, SubscriptionManagerTest.class})
 public class AllTests {
     public static void main(String[] args) {
         System.out.println("Tests begin");
