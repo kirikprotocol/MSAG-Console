@@ -89,7 +89,8 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
          try{
             connection = pool.getConnection();
 
-            prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.address"));
+            prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.get.by.address"),java.sql.ResultSet.CONCUR_READ_ONLY);
+            prepStatement.setFetchSize(Integer.MIN_VALUE);
             prepStatement.setString(1, address);
 
             sqlResult = prepStatement.executeQuery();

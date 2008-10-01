@@ -8,9 +8,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="dbpool" level="project" />
-    <orderEntry type="library" name="general_utils" level="project" />
-    <orderEntry type="library" name="log4j" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -48,6 +45,16 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="junit" level="project" />
+    <orderEntry type="module" module-name="sme_utils" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../utils/branches/impl/sme_utils/lib/jsmppapi.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntryProperties />
   </component>
 </module>

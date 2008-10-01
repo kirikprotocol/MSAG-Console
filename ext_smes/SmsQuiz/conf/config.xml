@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="windows-1251"?>
 
 <config>
+    <param name="servicesConfig">conf/services.xml</param>
+    <param name="smppConfig">conf/smpp.properties</param>
+
+      <!-- allowed values for requestHandleStrategy: threadPool, greedyConsumer -->
+    <param name="requestHandleStrategy">threadPool</param>
+    <param name="threadsNumber">10</param>
   <section name="calendar">
     <param name="service.address">147</param>
     <param name="send.date.max.year">2009</param>

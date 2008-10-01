@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config>
+
+  <service>
+    <service-name>smsquiz_on</service-name>
+    <service-class>mobi.eyeline.smsquiz.service.SubscriptionOnSMPPService</service-class>
+    <init-param>
+      <param-name>send.subscribe</param-name>
+      <param-value>Услуга успешно добавлена</param-value>
+    </init-param>
+  </service>
+
+  <service>
+    <service-name>smsquiz_off</service-name>
+    <service-class>mobi.eyeline.smsquiz.service.SubscriptionOffSMPPService</service-class>
+    <init-param>
+      <param-name>send.unsubscribe</param-name>
+      <param-value>Услуга успешно удалена</param-value>
+    </init-param>
+  </service>
+
+  <service>
+    <service-name>smsquiz_help</service-name>
+    <service-class>mobi.eyeline.smsquiz.service.SubscriptionHelpSMPPService</service-class>
+    <init-param>
+      <param-name>send.request.wrong</param-name>
+      <param-value>Подсказка: 'on' - вкл., 'off' - выкл.</param-value>
+    </init-param>
+  </service>
+  <!--  ========================================= SmsQuiz requests ================================================ -->
+
+  <request>
+    <request-name>smsquiz_on</request-name>
+    <message-pattern>(on|ON|On)</message-pattern>
+  </request>
+
+  <request>
+    <request-name>smsquiz_off</request-name>
+    <message-pattern>(off|Off|OFF)</message-pattern>
+  </request>
+
+  <request>
+    <request-name>smsquiz_help</request-name>
+    <message-pattern>(.*)</message-pattern>
+  </request>
+
+  <!-- ============================================ Request mapping ================================================ -->
+
+
+  <request-mapping>
+    <request-name>smsquiz_on</request-name>
+    <service-name>smsquiz_on</service-name>
+  </request-mapping>
+
+    <request-mapping>
+      <request-name>smsquiz_off</request-name>
+      <service-name>smsquiz_off</service-name>
+    </request-mapping>
+
+    <request-mapping>
+      <request-name>smsquiz_help</request-name>
+      <service-name>smsquiz_help</service-name>
+    </request-mapping>
+  <!-- ========================================== Default ================================================== -->
+
+  <default-service>
+    <service-name>error</service-name>
+  </default-service>    
+
+</config>
