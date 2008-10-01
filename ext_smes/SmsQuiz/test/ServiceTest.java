@@ -8,6 +8,7 @@ import java.io.File;
 
 import ru.aurorisoft.smpp.SMPPException;
 import mobi.eyeline.smsquiz.manager.SubscriptionManager;
+import mobi.eyeline.smsquiz.manager.SubManagerException;
 import mobi.eyeline.smsquiz.storage.StorageException;
 import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
 import static org.junit.Assert.assertTrue;
@@ -15,7 +16,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * author: alkhal
  */
-// todo ?????
+
 public class ServiceTest {
     public static void init() {
 
@@ -26,8 +27,8 @@ public class ServiceTest {
             assertTrue(false);
         }
         try {
-            SubscriptionManager.init("conf/smsquiz.properties");
-        } catch (StorageException e) {
+            SubscriptionManager.init();
+        } catch (SubManagerException e) {
             e.printStackTrace();
         }
 

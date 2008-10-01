@@ -14,6 +14,7 @@ import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.SMPPException;
 import org.apache.log4j.Logger;
 import mobi.eyeline.smsquiz.manager.SubscriptionManager;
+import mobi.eyeline.smsquiz.manager.SubManagerException;
 
 /**
  * author: alkhal
@@ -50,7 +51,7 @@ public class SubscriptionOffSMPPService extends BasicService {
 
         try {
             manager.unsubscribe(clientAddress);
-        } catch (Exception e) {
+        } catch (SubManagerException e) {
             log.error(e,e);
             return false;            
         }

@@ -22,9 +22,13 @@
 
   <service>
     <service-name>smsquiz_help</service-name>
-    <service-class>mobi.eyeline.smsquiz.service.SubscriptionHelpSMPPService</service-class>
+    <service-class>com.eyeline.sme.handler.services.SimpleResponder</service-class>
     <init-param>
-      <param-name>send.request.wrong</param-name>
+      <param-name>responseCode</param-name>
+      <param-value>0</param-value>
+    </init-param>
+    <init-param>
+      <param-name>responseText</param-name>
       <param-value>Подсказка: 'on' - добавление услуги, 'off' - удаление услуги</param-value>
     </init-param>
   </service>

@@ -1,6 +1,7 @@
 import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
 import mobi.eyeline.smsquiz.storage.StorageException;
 import mobi.eyeline.smsquiz.manager.SubscriptionManager;
+import mobi.eyeline.smsquiz.manager.SubManagerException;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import org.junit.BeforeClass;
@@ -23,9 +24,9 @@ public class SubscriptionManagerTest {
             assertTrue(false);
         }
         try {
-            SubscriptionManager.init("conf/smsquiz.properties");
+            SubscriptionManager.init();
             manager = SubscriptionManager.getInstance();
-        } catch (StorageException e) {
+        } catch (SubManagerException e) {
             e.printStackTrace();
         }
     }
