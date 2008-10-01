@@ -120,7 +120,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
   public void execute(GroupDeliveryReportCmd cmd) throws CommandExecutionException {
     try {
       if (log.isDebugEnabled())
-        log.debug("DeliveryReportReq: owner=" + cmd.getOwner() + "; umr=" + cmd.getUmr());
+        log.debug("DeliveryReportReq: owner=" + cmd.getOwner() + "; umr=" + cmd.getUmr() + "; status=" + cmd.getDeliveryStatus());
 
       GroupSendDataSource.MessageStatus status;
       switch (cmd.getDeliveryStatus()) {
@@ -135,7 +135,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
         ds.setStatus(getMsgKey(cmd.getOwner(), cmd.getUmr()), status);
 
     } catch (Throwable e) {
-      log.error("CheckStatusErr: ", e);
+      log.error("DeliveryReportErr: ", e);
       throw new CommandExecutionException("Error: " + e.getMessage(), GroupDeliveryReportCmd.ERR_SYS_ERROR);
     }
   }

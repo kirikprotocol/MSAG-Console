@@ -28,10 +28,10 @@ public class GroupSendSMPPService extends AbstractSMPPService {
     cmd.setOwner(smppRequest.getInObj().getMessage().getDestinationAddress());
     cmd.setUmr(smppRequest.getInObj().getMessage().getUserMessageReference());
 
-    if (smppRequest.getName().equalsIgnoreCase("group_delivery_ok")) {
+    if (smppRequest.getName().equalsIgnoreCase("group_send_delivery_ok")) {
       cmd.setDeliveryStatus(GroupDeliveryReportCmd.DeliveryStatus.DELIVERED);
 
-    } else if (smppRequest.getName().equalsIgnoreCase("group_delivery_failed")) {
+    } else if (smppRequest.getName().equalsIgnoreCase("group_send_delivery_failed")) {
       String reason = smppRequest.getParameter("reason");
       if (reason != null) {
         if (reason.equalsIgnoreCase("dl.reason.list_not_found"))
