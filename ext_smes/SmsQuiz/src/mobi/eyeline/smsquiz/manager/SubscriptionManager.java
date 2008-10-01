@@ -23,18 +23,18 @@ public class SubscriptionManager {
         return manager;
     }
 
-    public boolean subscribe(String address) throws Exception{
+    public boolean subscribe(String address) throws Exception { // todo
         Subscription subscription = new Subscription();
         subscription.setAddress(address);
         dataSource.save(subscription);
         return true;
     }
 
-    public boolean unsubscribe(String address) throws Exception{
+    public boolean unsubscribe(String address) throws Exception {
        Subscription subscription = dataSource.get(address);
        if(subscription!=null) {
            if(subscription.getEndDate()!=null) {
-                throw new Exception("Abonent wasn't subscribed");
+                throw new Exception("Abonent wasn't subscribed"); // todo
            }
            subscription.setEndDate(new Date());
            dataSource.save(subscription);
@@ -45,7 +45,7 @@ public class SubscriptionManager {
        }
     }
 
-    public boolean subscribed(String address) throws Exception{
+    public boolean subscribed(String address) throws Exception { // todo
         Subscription subscription = dataSource.get(address);
         return subscription != null && subscription.getEndDate() == null;
     }
