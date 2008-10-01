@@ -25,7 +25,7 @@
     <service-class>mobi.eyeline.smsquiz.service.SubscriptionHelpSMPPService</service-class>
     <init-param>
       <param-name>send.request.wrong</param-name>
-      <param-value>Подсказка: 'on' - вкл., 'off' - выкл.</param-value>
+      <param-value>Подсказка: 'on' - добавление услуги, 'off' - удаление услуги</param-value>
     </init-param>
   </service>
   <!--  ========================================= SmsQuiz requests ================================================ -->
@@ -40,10 +40,7 @@
     <message-pattern>(off|Off|OFF)</message-pattern>
   </request>
 
-  <request>
-    <request-name>smsquiz_help</request-name>
-    <message-pattern>(.*)</message-pattern>
-  </request>
+
 
   <!-- ============================================ Request mapping ================================================ -->
 
@@ -58,14 +55,10 @@
       <service-name>smsquiz_off</service-name>
     </request-mapping>
 
-    <request-mapping>
-      <request-name>smsquiz_help</request-name>
-      <service-name>smsquiz_help</service-name>
-    </request-mapping>
   <!-- ========================================== Default ================================================== -->
 
   <default-service>
-    <service-name>error</service-name>
-  </default-service>    
+    <service-name>smsquiz_help</service-name>
+  </default-service>
 
 </config>
