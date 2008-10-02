@@ -10,7 +10,7 @@ import mobi.eyeline.mcahdb.engine.journal.JournalsProcessor;
 import mobi.eyeline.mcahdb.engine.InitException;
 import mobi.eyeline.mcahdb.engine.scheduler.Scheduler;
 import mobi.eyeline.mcahdb.soap.SoapServer;
-import mobi.eyeline.mcahdb.smpp.TestTransportMultiplexor;
+//import mobi.eyeline.mcahdb.smpp.TestTransportMultiplexor;
 import org.apache.axis2.AxisFault;
 import com.eyeline.sme.smpp.SMPPTransceiver;
 import com.eyeline.utils.config.properties.PropertiesConfig;
@@ -39,7 +39,7 @@ public class MCAHDB {
       smppConfig.load(new File("conf/smpp.properties"));
       if (test) {
         System.out.println("MCAHDB started in test mode.");
-        transceiver = new SMPPTransceiver(new TestTransportMultiplexor(), smppConfig, "");
+//        transceiver = new SMPPTransceiver(new TestTransportMultiplexor(), smppConfig, "");
       } else
         transceiver = new SMPPTransceiver(smppConfig, "");
 
