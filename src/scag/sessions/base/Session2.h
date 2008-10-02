@@ -91,7 +91,7 @@ public:
     static bool isReadOnlyProperty( const char* fullname );
 
 public:
-    Session( const SessionKey& key );
+    Session( const SessionKey& key, bool quiet = false );
 
     virtual ~Session();
 
@@ -399,6 +399,7 @@ private:
     /// the hash of operation var Scopes (int(op_id) -> SessionOperationScope)
     IntHash< SessionPropertyScope* >* operationScopes_;
 
+    bool quiet_;                                      // not pers
 };
 
 

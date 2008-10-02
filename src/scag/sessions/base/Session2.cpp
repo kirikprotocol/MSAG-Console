@@ -309,7 +309,7 @@ bool Session::isReadOnlyProperty( const char* name )
 
 // --- non-statics
 
-Session::Session( const SessionKey& key ) :
+Session::Session( const SessionKey& key, bool quiet ) :
 key_(key),
 pkey_(key),
 lastAccessTime_(time(0)),
@@ -326,23 +326,25 @@ nextContextId_(0),
 globalScope_(0),
 serviceScopes_(0),
 contextScopes_(0),
-operationScopes_(0)
+operationScopes_(0),
+quiet_(quiet)
 {
     ::getlog();
-    smsc_log_debug( logc_, "session=%p/%s +1", this, key.toString().c_str() );
+    if (!quiet_) smsc_log_debug( logc_, "session=%p/%s +1", this, key.toString().c_str() );
     // clear();
 }
 
 
 Session::~Session()
 {
-    clear();
-    // FIXME: delete things
-    if ( cmdQueue_.size() > 0 ) {
-        smsc_log_error( log_, "LOGIC ERROR!!! session=%p/%s command queue is not empty: %d, FIXME: MEMLEAK!",
-                        this, sessionKey().toString().c_str(), cmdQueue_.size() );
-        // this->abort();
-    }
+    try {
+        clear();
+        // FIXME: delete things
+        if ( cmdQueue_.size() > 0 ) {
+            smsc_log_error( log_, "LOGIC ERROR!!! session=%p/%s command queue is not empty: %d, FIXME: MEMLEAK!",
+                            this, sessionKey().toString().c_str(), cmdQueue_.size() );
+            // this->abort();
+        }
         /*
         for ( std::list< scag::transport::SCAGCommand* >::iterator i = cmdQueue_.begin();
               i != cmdQueue_.end();
@@ -351,12 +353,15 @@ Session::~Session()
         }
         cmdQueue_.erase( cmdQueue_.begin(), cmdQueue_.end() );
          */
-    delete transactions_;
-    delete globalScope_;
-    delete serviceScopes_;
-    delete contextScopes_;
-    delete operationScopes_;
-    smsc_log_debug( logc_, "session=%p/%s -1", this, sessionKey().toString().c_str() );
+        delete transactions_;
+        delete globalScope_;
+        delete serviceScopes_;
+        delete contextScopes_;
+        delete operationScopes_;
+        if (!quiet_) smsc_log_debug( logc_, "session=%p/%s -1", this, sessionKey().toString().c_str() );
+    } catch (...) {
+        smsc_log_error( log_, "Exception in session=%p%/s dtor", this, sessionKey().toString().c_str() );
+    }
 }
 
 
@@ -520,7 +525,7 @@ Deserializer& Session::deserialize( Deserializer& s ) throw (DeserializerExcepti
 void Session::clear()
 {
     // FIXME: temporary output
-    smsc_log_debug( logc_, "session=%p/%s clear", this, sessionKey().toString().c_str() );
+    if (!quiet_) smsc_log_debug( logc_, "session=%p/%s clear", this, sessionKey().toString().c_str() );
 
     pkey_ = SessionPrimaryKey(key_); // to reset born time
 

@@ -701,24 +701,24 @@ void SessionStoreImpl::getSessionsCount( unsigned& sessionsCount,
 }
 
 
-bool SessionStoreImpl::uploadInitial( unsigned count )
+bool SessionStoreImpl::uploadInitial( unsigned cnt )
 {
     if ( ! initialkeys_.empty() ) {
 
-        std::vector< SessionKey > keys_;
+        std::vector< SessionKey > keys;
         {
-            unsigned count(std::min(count,unsigned(initialkeys_.size())));
+            unsigned count(std::min(cnt,unsigned(initialkeys_.size())));
             std::vector< DiskIndexStorage::storedkey_type >::iterator i = initialkeys_.begin() + count;
-            keys_.reserve( count );
+            keys.reserve( count );
             for ( std::vector< DiskIndexStorage::storedkey_type >::const_iterator j = initialkeys_.begin();
                   j != i;
                   ++j ) {
-                keys_.push_back( *i );
+                keys.push_back( *j );
             }
             initialkeys_.erase( initialkeys_.begin(), i );
         }
 
-        std::vector< SessionKey >::const_iterator i = keys_.begin();
+        std::vector< SessionKey >::const_iterator i = keys.begin();
         SessionKey key;
         MemStorage::stored_type v = cache_->val2store(0);
         while ( true ) {
@@ -731,8 +731,8 @@ bool SessionStoreImpl::uploadInitial( unsigned count )
                 if ( disk_->get( key, cache_->store2ref(v) ) )
                 {
                     // loaded
-                    smsc_log_debug( log_, "upload sess=%p/%s has expire=%d",
-                                    session, key, int(session->expirationTime() - now) );
+                    smsc_log_debug( log_, "upload session=%p/%s has expire=%d",
+                                    session, key.toString().c_str(), int(session->expirationTime() - now) );
                     expiration_->scheduleExpire( session->expirationTime(),
                                                  session->lastAccessTime(),
                                                  key );
@@ -740,16 +740,16 @@ bool SessionStoreImpl::uploadInitial( unsigned count )
                 cache_->dealloc(v);
             }
 
-            if ( i == keys_.end() ) break;
+            if ( i == keys.end() ) break;
 
             key = *i;
             ++i;
 
             MutexGuard mg(cacheLock_);
-            if ( session ) {
-                --totalSessions_;
-                --lockedSessions_;
-            }
+            // if ( session ) {
+            // --totalSessions_;
+            // --lockedSessions_;
+            // }
             if ( stopping_ ) return false;
 
             MemStorage::stored_type* vv = cache_->get( key );
@@ -759,8 +759,8 @@ bool SessionStoreImpl::uploadInitial( unsigned count )
                 continue;
             }
             v = cache_->val2store( allocator_->alloc(key) );
-            ++totalSessions_;
-            ++lockedSessions_;
+            // ++totalSessions_;
+            // ++lockedSessions_;
         } // while loop over session keys
     } // if the list of keys is not empty
     return ! initialkeys_.empty();

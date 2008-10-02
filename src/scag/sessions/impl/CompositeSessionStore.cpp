@@ -214,8 +214,6 @@ CompositeSessionStore::Storage*
 int CompositeSessionStore::InitialThread::Execute()
 {
     std::list< Storage* > hasinit_;
-    // FIXME: uncomment for initial upload
-    /*
     {
         MutexGuard mg(mtx);
         if ( ! store_.stopped_ ) {
@@ -227,7 +225,6 @@ int CompositeSessionStore::InitialThread::Execute()
             }
         }
     }
-     */
     while ( ! hasinit_.empty() ) {
 
         for ( std::list< Storage* >::iterator i = hasinit_.begin();
