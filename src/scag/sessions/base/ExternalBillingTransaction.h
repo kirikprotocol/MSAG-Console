@@ -48,9 +48,8 @@ public:
         return billid_;
     }
 
-    const std::string& getKeywords() const {
-        static const std::string empty;
-        return keywords_ ? *keywords_ : empty;
+    inline const std::string* getKeywords() const {
+        return keywords_;
     }
 
     void setKeywords( const std::string& kw ) {

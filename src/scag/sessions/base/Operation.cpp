@@ -108,8 +108,7 @@ Serializer& Operation::serialize( Serializer& s ) const
         uint32_t(receivedResps_) <<
         uint32_t(ctxid_) <<
         uint8_t(status_) <<
-        type_ << flags_ <<
-        getKeywords();
+        type_ << flags_ << ( keywords_ ? *keywords_ : std::string() );
 }
 
 

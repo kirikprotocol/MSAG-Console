@@ -33,7 +33,7 @@ class SessionExpirationQueue;
 struct SessionAllocator {
     virtual ~SessionAllocator() {}
     virtual Session* alloc( const SessionKey& k ) { return new Session(k); }
-    Session* quietalloc( const SessionKey& k ) { return new Session(k); }
+    Session* quietalloc( const SessionKey& k ) { return new Session(k,true); }
 };
 
 

@@ -758,7 +758,7 @@ bool SessionStoreImpl::uploadInitial( unsigned cnt )
                 v = cache_->val2store(0);
                 continue;
             }
-            v = cache_->val2store( allocator_->alloc(key) );
+            v = cache_->val2store( allocator_->quietalloc(key) );
             // ++totalSessions_;
             // ++lockedSessions_;
         } // while loop over session keys

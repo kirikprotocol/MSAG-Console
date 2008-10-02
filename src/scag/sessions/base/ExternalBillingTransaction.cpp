@@ -10,7 +10,7 @@ Serializer& ExternalBillingTransaction::serialize( Serializer& s ) const
 {    
     s << id;
     s << uint32_t(billid_);
-    s << getKeywords();
+    s << (keywords_ ? *keywords_ : std::string());
     return s;
 }
 

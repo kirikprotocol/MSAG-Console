@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "core/threads/Thread.hpp"
+#include "core/synchronization/EventMonitor.hpp"
 #include "SessionStore2.h"
 #include "scag/exc/SCAGExceptions.h"
 
@@ -81,6 +82,8 @@ private:
     InitialThread*          initialThread_;
     unsigned                initialChunk_;
     unsigned                initialTime_;
+
+    smsc::core::synchronization::EventMonitor stopLock_;
 
 };
 

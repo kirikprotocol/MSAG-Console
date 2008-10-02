@@ -3,11 +3,6 @@
 #include "CompositeSessionStore.h"
 #include "core/synchronization/EventMonitor.hpp"
 
-namespace {
-smsc::core::synchronization::EventMonitor mtx;
-}
-
-
 namespace scag2 {
 namespace sessions {
 
@@ -42,7 +37,7 @@ void CompositeSessionStore::init( unsigned nodeNumber,
                                   unsigned initialTime,
                                   bool     dodiskio )
 {
-    MutexGuard mg(mtx);
+    MutexGuard mg(stopLock_);
     if ( ! stopped_ ) return;
     const StorageNumbering& n = StorageNumbering::instance();
     storages_.resize( n.storages(), 0 );
@@ -80,11 +75,11 @@ void CompositeSessionStore::start()
 void CompositeSessionStore::stop()
 {
     {
-        MutexGuard mg(mtx);
+        MutexGuard mg(stopLock_);
         if ( stopped_ ) return;
         smsc_log_debug( log_, "stop issued" );
         stopped_ = true;
-        mtx.notify();
+        stopLock_.notify();
     }
     if ( initialThread_ ) initialThread_->WaitFor();
     for ( std::vector< Storage* >::const_iterator i = storages_.begin();
@@ -220,10 +215,10 @@ CompositeSessionStore::Storage*
 
 int CompositeSessionStore::InitialThread::Execute()
 {
-    smsc_log_debug("initial upload thread is started");
+    smsc_log_debug(store_.log_, "initial upload thread is started");
     std::list< Storage* > hasinit_;
     {
-        MutexGuard mg(mtx);
+        MutexGuard mg(store_.stopLock_);
         if ( ! store_.stopped_ ) {
             for ( std::vector< Storage* >::iterator i = store_.storages_.begin();
                   i != store_.storages_.end();
@@ -244,12 +239,12 @@ int CompositeSessionStore::InitialThread::Execute()
             }
         }
 
-        MutexGuard mg(mtx);
+        MutexGuard mg(store_.stopLock_);
         if ( store_.stopped_ ) break;
-        mtx.wait( store_.initialTime_ );
+        store_.stopLock_.wait( store_.initialTime_ );
         if ( store_.stopped_ ) break;
     }
-    smsc_log_debug("initial upload thread is stopped");
+    smsc_log_debug(store_.log_, "initial upload thread is stopped");
     return 0;
 }
 

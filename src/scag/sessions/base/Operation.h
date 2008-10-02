@@ -59,9 +59,8 @@ public:
     void setContextScope( int ctx ) { ctxid_ = ctx; }
     int getContextScope() const { return ctxid_; }
 
-    const std::string& getKeywords() const {
-        static const std::string empty;
-        return keywords_ ? *keywords_ : empty;
+    const std::string* getKeywords() const {
+        return keywords_;
     }
     void setKeywords( const std::string& kw ) {
         if ( keywords_ ) delete keywords_;
