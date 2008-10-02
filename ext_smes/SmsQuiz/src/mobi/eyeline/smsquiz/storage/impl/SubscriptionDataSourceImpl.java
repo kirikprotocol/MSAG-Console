@@ -5,7 +5,7 @@ import mobi.eyeline.smsquiz.storage.StorageException;
 
 
 public class SubscriptionDataSourceImpl {
-    public static SubscriptionDataSource getInstance(String configFile, String prefix) throws StorageException {
-        return new DBSubscriptionDataSource(configFile,prefix); 
+    public static SubscriptionDataSource getInstance() throws StorageException {
+        return new DBSubscriptionDataSource(); 
     }
 }

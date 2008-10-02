@@ -17,7 +17,7 @@ public class SubscriptionManager {
     private static SubscriptionManager manager;
 
     public static void init() throws SubManagerException {
-        manager = new SubscriptionManager("src/smsquiz.properties");
+        manager = new SubscriptionManager();
     }
     public static SubscriptionManager getInstance() {
         return manager;
@@ -69,9 +69,9 @@ public class SubscriptionManager {
         dataSource.close();
     }
 
-    private SubscriptionManager(String configFile) throws SubManagerException {
+    private SubscriptionManager() throws SubManagerException {
         try {
-            dataSource = SubscriptionDataSourceImpl.getInstance(configFile,"");
+            dataSource = SubscriptionDataSourceImpl.getInstance();
         } catch (StorageException e) {
             logger.error("Error init manager",e);
             throw new SubManagerException("Error init manager",e);

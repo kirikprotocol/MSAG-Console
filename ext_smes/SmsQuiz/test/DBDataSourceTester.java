@@ -25,7 +25,7 @@ public class DBDataSourceTester {
     public static void initPool () {
         try {
             ConnectionPoolFactory.init("conf/config.xml");
-            dataSource = new DBSubscriptionDataSource("conf/smsquiz.properties","");
+            dataSource = new DBSubscriptionDataSource();
         } catch (StorageException e) {
             e.printStackTrace();
             assertTrue(false);

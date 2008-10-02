@@ -3,7 +3,7 @@ package mobi.eyeline.smsquiz.storage;
 import com.eyeline.utils.config.ConfigException;
 
 import java.sql.SQLException;
-
+import java.io.IOException;
 
 
 public class StorageException extends Exception{
@@ -33,7 +33,7 @@ public class StorageException extends Exception{
         super(message, preException);
         this.errorCode = ErrorCode.ERROR_DB;
     }
-    public StorageException(String message, ConfigException preException){
+    public StorageException(String message, IOException preException){
         super(message, preException);
         this.errorCode = ErrorCode.ERROR_CONFIG;
     }

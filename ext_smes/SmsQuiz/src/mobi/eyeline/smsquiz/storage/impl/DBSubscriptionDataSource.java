@@ -6,6 +6,8 @@ import mobi.eyeline.smsquiz.storage.ResultSet;
 import java.util.Date;
 import java.sql.*;
 import java.io.File;
+import java.io.InputStream;
+import java.io.IOException;
 
 import snaq.db.ConnectionPool;
 import com.eyeline.utils.config.properties.PropertiesConfig;
@@ -18,28 +20,35 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
     private static Logger logger = Logger.getLogger(DBSubscriptionDataSource.class);
     private ConnectionPool pool;
 
-
+    private String properties = "smsquiz.properties";
     private PropertiesConfig sql;
-    private String prefix;
 
-    public DBSubscriptionDataSource(String configFile, String prefix) throws StorageException {
+    public DBSubscriptionDataSource() throws StorageException {
 
         pool = ConnectionPoolFactory.createConnectionPool("smsquiz", Integer.MAX_VALUE, 60000);
-
+        InputStream is = DBSubscriptionDataSource.class.getResourceAsStream(properties);
         sql = new PropertiesConfig();
         try {
-            sql.load(new File(configFile));
-        } catch (ConfigException e) {
+            sql.load(is);        
+        } catch (IOException e) {
+            logger.error("Error load config properties",e);
             throw new StorageException("Error load config properties", e);
+        } finally {
+            try{
+                if(is!=null)
+                    is.close();
+            } catch (IOException e1) {
+                logger.error("Can't close stream",e1);
+                throw new StorageException("Error load config properties", e1);
+            }
         }
-        this.prefix = prefix;
     }
 
     private String getSql(java.lang.String string) throws StorageException {
         try {
-            return sql.getString(prefix + string);
+            return sql.getString(string);
         } catch (ConfigException e) {
-            throw new StorageException("Can't find sql: " + prefix + string, StorageException.ErrorCode.ERROR_CONFIG);
+            throw new StorageException("Can't find sql: "  + string, StorageException.ErrorCode.ERROR_CONFIG);
         }
     }
 
