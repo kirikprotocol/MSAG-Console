@@ -14,7 +14,11 @@ public:
 
 public:
     explicit ExternalBillingTransaction( int billid ) :
-    billid_(billid) {}
+    billid_(billid), keywords_(0) {}
+
+    virtual ~ExternalBillingTransaction() {
+        delete keywords_;
+    }
 
     virtual void commit() {
         bill::BillingManager::Instance().Commit( billid_ );
@@ -44,8 +48,20 @@ public:
         return billid_;
     }
 
+    const std::string& getKeywords() const {
+        static const std::string empty;
+        return keywords_ ? *keywords_ : empty;
+    }
+
+    void setKeywords( const std::string& kw ) {
+        if ( keywords_ ) delete keywords_;
+        if ( kw.empty() ) keywords_ = 0;
+        else keywords_ = new std::string(kw);
+    }
+
 private:
-    int billid_;
+    int          billid_;
+    std::string* keywords_;
 };
 
 }
