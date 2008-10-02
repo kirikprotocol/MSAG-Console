@@ -34,7 +34,9 @@ class Operation
 {
 public:
     Operation( Session* owner, uint8_t type );
-    ~Operation() {}
+    ~Operation() {
+        if (keywords_) delete keywords_;
+    }
 
     uint8_t type() const { return type_; }
 
@@ -57,6 +59,16 @@ public:
     void setContextScope( int ctx ) { ctxid_ = ctx; }
     int getContextScope() const { return ctxid_; }
 
+    const std::string& getKeywords() const {
+        static const std::string empty;
+        return keywords_ ? *keywords_ : empty;
+    }
+    void setKeywords( const std::string& kw ) {
+        if ( keywords_ ) delete keywords_;
+        if ( kw.empty() ) keywords_ = 0; 
+        else keywords_ = new std::string( kw );
+    }
+
     void print( util::Print& p, opid_type opid = SCAGCommand::invalidOpId() ) const;
 
     util::storage::Serializer& serialize( util::storage::Serializer& s ) const;
@@ -78,6 +90,7 @@ private:
     uint8_t             type_;
     uint32_t            flags_;
     int32_t             ctxid_;
+    std::string*        keywords_;
 };
 
 } // namespace sessions
