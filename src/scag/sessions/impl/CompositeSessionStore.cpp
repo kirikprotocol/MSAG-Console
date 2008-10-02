@@ -62,9 +62,16 @@ void CompositeSessionStore::init( unsigned nodeNumber,
             if ( ++pathidx >= paths.size() ) pathidx = 0;
         }
     }
+}
+
+
+void CompositeSessionStore::start()
+{
+    if ( ! stopped_ ) return;
     if ( ! initialThread_ ) {
         initialThread_ = new InitialThread(*this);
     }
+    smsc_log_debug( log_, "initial upload thread is starting" );
     stopped_ = false;
     initialThread_->Start();
 }

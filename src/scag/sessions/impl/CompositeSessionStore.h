@@ -34,6 +34,8 @@ public:
                unsigned initialTime = 100,
                bool     dodiskio = true );
 
+    /// start stop the initial upload thread
+    void start();
     void stop();
     
     ActiveSession fetchSession( const SessionKey&           key,

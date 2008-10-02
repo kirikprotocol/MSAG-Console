@@ -183,6 +183,7 @@ void SessionManagerImpl::Start()
     {
         started_ = true;
         Thread::Start();
+        if ( store_.get() ) store_->start();
     }
 }
 

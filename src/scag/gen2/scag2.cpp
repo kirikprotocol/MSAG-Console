@@ -119,20 +119,23 @@ void Scag::init( unsigned mynode )
 
 
     //*********** SessionManager initialization **************
+    SessionManagerImpl* sessman = 0;
     try{
-        smsc_log_info(log, "Session Manager is starting..." );
+        smsc_log_info(log, "Session Manager is being created..." );
 
         // it will auto-register
-        SessionManagerImpl* sm = new SessionManagerImpl;
-        sm->init( cfg.getSessionManConfig(), mynode, fsq );
-        sm->Start();
+        sessman = new SessionManagerImpl;
+        sessman->init( cfg.getSessionManConfig(), mynode, fsq );
+        // sessman->Start();
 
-        smsc_log_info(log, "Session Manager started" );
+        smsc_log_info(log, "Session Manager is created" );
     }catch(exception& e){
-      smsc_log_warn(log, "Scag.init exception: %s", e.what());
-      __warning__("Sessioan Manager is not started.");
+      smsc_log_error(log, "Scag.init exception: %s", e.what());
+      __warning__("Sessioan Manager is not created.");
+        ::abort();
     }catch(...){
-      __warning__("Session Manager is not started.");
+      __warning__("Session Manager is not created.");
+        ::abort();
     }
 
     //********** Statistics manager initialization ***********
@@ -192,6 +195,10 @@ void Scag::init( unsigned mynode )
       __warning__("Rule Engine is not started.");
     } catch(...){
       __warning__("Unknown error: rule Engine is not started.");
+    }
+
+    if ( sessman ) {
+        sessman->Start();
     }
 
     //************** SmppManager initialization **************
