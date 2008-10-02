@@ -138,6 +138,7 @@ IntHash<AccessType> SmppCommandAdapter::InitDataSmAccess()
     hs.Insert(DC_GSM_MSG_CC, atReadWrite);
 
     hs.Insert(Tag::SMPP_SM_LENGTH, atReadWrite);
+    hs.Insert(Tag::SMPP_USER_MESSAGE_REFERENCE, atReadWrite);
     hs.Insert(SMS_MESSAGE_BODY, atReadWrite);
 
     hs.Insert(Tag::SMPP_USER_RESPONSE_CODE, atReadWrite);
@@ -250,7 +251,7 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
     hs["whoisd_message_content_type"]              = OPTIONAL_MESSAGE_CONTENT_TYPE;
     hs["whoisd_expected_message_content_type"]     = OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE;
 
-    //Submit fields
+    //Data fields
     hs["esm_mm_smsc_default"]           = ESM_MM_SMSC_DEFAULT;
     hs["esm_mm_datagram"]               = ESM_MM_DATAGRAM;
     hs["esm_mm_forward"]                = ESM_MM_FORWARD;
@@ -263,9 +264,9 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
     hs["esm_nsf_srp"]                   = ESM_NSF_SRP;
     hs["esm_nsf_both"]                  = ESM_NSF_BOTH;
 
-
     hs["protocol_id"]                   = Tag::SMPP_PROTOCOL_ID; 
     hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
+    hs["umr"]                           = Tag::SMPP_USER_MESSAGE_REFERENCE;
     hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
 
     //hs["registred_delivery"]            = Tag::SMPP_REGISTRED_DELIVERY; //mask +
@@ -278,9 +279,7 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
     hs["rd_ack_both_on"]                = RD_RD_ACK_BOTH_ON;
     hs["rd_i_notification"]             = RD_I_NOTIFICATION;
 
-
     hs["replace_if_present_flag"]       = Tag::SMPP_REPLACE_IF_PRESENT_FLAG;
-
 
     //hs[""] = Tag::SMPP_DATA_CODING //mask *
     hs["dc_binary"]                     = DC_BINARY;
@@ -304,7 +303,6 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
     dc_text   !
     */
 
-
     hs["sm_length"]                     = Tag::SMPP_SM_LENGTH; // *
     hs["message_text"]                  = SMS_MESSAGE_BODY;
 
@@ -320,7 +318,6 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
     hs["ms_validity"]                   = Tag::SMPP_MS_VALIDITY; 
     hs["number_of_messages"]            = Tag::SMPP_NUMBER_OF_MESSAGES; 
     hs["language_indicator"]            = Tag::SMPP_LANGUAGE_INDICATOR; // *
-
 
     //hs[""] = Tag::SMPP_USSD_SERVICE_OP //mask +
 
@@ -353,7 +350,6 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     hs["OA"]                            = OA;
     hs["DA"]                            = DA;
 
-
     //hs[""] = Tag::SMPP_ESM_CLASS //mask 
 
     hs["esm_mm_smsc_default"]           = ESM_MM_SMSC_DEFAULT;
@@ -367,7 +363,6 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     hs["esm_nsf_udhi"]                  = ESM_NSF_UDHI;
     hs["esm_nsf_srp"]                   = ESM_NSF_SRP;
     hs["esm_nsf_both"]                  = ESM_NSF_BOTH;
-
 
     hs["protocol_id"]                   = Tag::SMPP_PROTOCOL_ID; 
     hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
@@ -384,9 +379,7 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     hs["rd_ack_both_on"]                = RD_RD_ACK_BOTH_ON;
     hs["rd_i_notification"]             = RD_I_NOTIFICATION;
 
-
     hs["replace_if_present_flag"]       = Tag::SMPP_REPLACE_IF_PRESENT_FLAG;
-
 
     //hs[""] = Tag::SMPP_DATA_CODING //mask *
     hs["dc_binary"]                     = DC_BINARY;
@@ -409,7 +402,6 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     dc_binary !
     dc_text   !
     */
-    
 
     hs["sm_length"]                     = Tag::SMPP_SM_LENGTH;
 
@@ -430,7 +422,6 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     hs["number_of_messages"]            = Tag::SMPP_NUMBER_OF_MESSAGES; 
     hs["language_indicator"]            = Tag::SMPP_LANGUAGE_INDICATOR; // *
 
-
     //hs[""] = Tag::SMPP_USSD_SERVICE_OP //mask +
 
     hs["ussd_pssd_ind"]                 = USSD_PSSD_IND;
@@ -441,7 +432,6 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     hs["ussd_pssr_resp"]                = USSD_PSSR_RESP;
     hs["ussd_ussr_conf"]                = USSD_USSR_CONF;
     hs["ussd_ussn_conf"]                = USSD_USSN_CONF;
-
 
     hs["validity_period"]               = SMS_VALIDITY_PERIOD;
     hs["svc_type"]                      = SMS_SVC_TYPE;
@@ -553,7 +543,6 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
     hs["OA"]                            = OA;
     hs["DA"]                            = DA;
 
-
     //hs[""] = Tag::SMPP_ESM_CLASS //mask +
 
     hs["esm_mm_smsc_default"]           = ESM_MM_SMSC_DEFAULT;
@@ -568,12 +557,10 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
     hs["esm_nsf_srp"]                   = ESM_NSF_SRP;
     hs["esm_nsf_both"]                  = ESM_NSF_BOTH;
 
-
     hs["protocol_id"]                   = Tag::SMPP_PROTOCOL_ID; 
     hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
     hs["umr"]                           = Tag::SMPP_USER_MESSAGE_REFERENCE;
     hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
-
 
     //hs["registred_delivery"]            = Tag::SMPP_REGISTRED_DELIVERY; //mask +
     hs["rd_receipt_off"]                = RD_RECEIPT_OFF;
@@ -584,7 +571,6 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
     hs["rd_ack_man_on"]                 = RD_ACK_MAN_ON;
     hs["rd_ack_both_on"]                = RD_RD_ACK_BOTH_ON;
     hs["rd_i_notification"]             = RD_I_NOTIFICATION;
-
 
     //hs[""] = Tag::SMPP_DATA_CODING //mask *
     hs["dc_binary"]                     = DC_BINARY;
@@ -607,7 +593,6 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
     dc_binary !
     dc_text   !
     */
-
 
     hs["sm_length"]                     = Tag::SMPP_SM_LENGTH; // *
 

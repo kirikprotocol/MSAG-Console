@@ -384,6 +384,7 @@ private:
 
     /// --- property Scopes
 
+    /// 0 -- not set
     int32_t nextContextId_;                          // pers
 
     /// global var Scope

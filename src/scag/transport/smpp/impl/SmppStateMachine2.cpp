@@ -369,6 +369,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
     src = cmd->getEntity();
 
     bool routeset = smscmd.hasRouteSet();
+    int statevent = stat::events::smpp::GW_REJECTED;
 
     do { // rerouting loop
 
@@ -403,7 +404,9 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
                     st.result = smsc::system::Status::NOROUTE;
                 } else if ( dst->getBindType() == btNone ) {
                     fail = "sme not connected";
+                    routeId = ri.routeId;
                     st.result = smsc::system::Status::SMENOTCONNECTED;
+                    statevent = stat::events::smpp::REJECTED;
                 }
 
                 if ( fail ) {
@@ -516,7 +519,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         }
          */
         SubmitResp(aucmd, st.result);
-        registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)routeId, st.result);
+        registerEvent( statevent, src, dst, (char*)routeId, st.result);
         if ( session.get() ) session->closeCurrentOperation();
         return;
     }
@@ -714,30 +717,34 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
     }
 
     int staterr;
-    if ( st.result )
-    {
-        cmd->set_status(st.result);
-        staterr = stat::events::smpp::RESP_GW_REJECTED;
-    }
-    else if (cmd->flagSet(SmppCommandFlags::FAILED_COMMAND_RESP))
-    {
-        staterr = stat::events::smpp::RESP_FAILED;
-    }
-    else if (cmd->get_resp()->expiredResp)
-    {
-        staterr = stat::events::smpp::RESP_EXPIRED;
-    }
-    else if(cmd->get_status())
-    {
+    int err = int(cmd->get_resp()->getOrigStatus());
+    if ( err ) {
         staterr = stat::events::smpp::RESP_REJECTED;
-    }
-    else
-    {
-        staterr = stat::events::smpp::RESP_OK;
+    } else if ( st.result ) {
+        cmd->set_status( err = st.result );
+        staterr = stat::events::smpp::RESP_GW_REJECTED;
+    } else {
+        err = cmd->get_status();
+        if (cmd->flagSet(SmppCommandFlags::FAILED_COMMAND_RESP))
+        {
+            staterr = stat::events::smpp::RESP_FAILED;
+        }
+        else if (cmd->get_resp()->expiredResp)
+        {
+            staterr = stat::events::smpp::RESP_EXPIRED;
+        }
+        // else if(cmd->get_status())
+        // {
+        // staterr = stat::events::smpp::RESP_REJECTED;
+        // }
+        else
+        {
+            err = -1;
+            staterr = stat::events::smpp::RESP_OK;
+        }
     }
 
-    registerEvent( staterr, src, dst, (char*)sms->getRouteId(),
-                   staterr != stat::events::smpp::RESP_OK ? cmd->get_status() : -1 );
+    registerEvent( staterr, src, dst, (char*)sms->getRouteId(), err );
 
     try {
         dst->putCommand(aucmd);
@@ -784,6 +791,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
     src = cmd->getEntity();
 
     bool routeset = smscmd.hasRouteSet();
+    int statevent = stat::events::smpp::GW_REJECTED;
 
     do { // rerouting loop
 
@@ -818,7 +826,9 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
                     st.result = smsc::system::Status::NOROUTE;
                 } else if ( dst->getBindType() == btNone ) {
                     fail = "sme not connected";
+                    routeId = ri.routeId;
                     st.result = smsc::system::Status::SMENOTCONNECTED;
+                    statevent = stat::events::smpp::REJECTED;
                 }
                 
                 if ( fail ) {
@@ -923,16 +933,8 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
 
     if (st.status != re::STATUS_OK)
     {
-        /*
-        smsc_log_info(log_,"Delivery: RuleEngine returned result=%d",st.result);
-        if(!st.result)
-        {
-            smsc_log_warn(log_, "Delivery: Rule failed and no error(zero rezult) returned");
-            st.result = smsc::system::Status::SYSERR;
-        }
-         */
         DeliveryResp(aucmd,st.result);
-        registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)routeId, st.result);
+        registerEvent( statevent, src, dst, (char*)routeId, st.result);
         if ( session.get() ) session->closeCurrentOperation();
         return;
     }
@@ -1135,30 +1137,31 @@ void StateMachine::processDeliveryResp( std::auto_ptr<SmppCommand> aucmd,
     cmd->get_resp()->set_messageId("");
 
     int staterr;
-    if ( st.result )
-    {
-        cmd->set_status( st.result );
-        staterr = stat::events::smpp::RESP_GW_REJECTED;
-    }
-    else if ( cmd->flagSet(SmppCommandFlags::FAILED_COMMAND_RESP))
-    {
-        staterr = stat::events::smpp::RESP_FAILED;
-    }
-    else if (cmd->get_resp()->expiredResp)
-    {
-        staterr = stat::events::smpp::RESP_EXPIRED;
-    }
-    else if (cmd->get_status())
-    {
+    int err = int(cmd->get_resp()->getOrigStatus());
+    if ( err ) {
         staterr = stat::events::smpp::RESP_REJECTED;
-    }
-    else
-    {
-        staterr = stat::events::smpp::RESP_OK;
+    } else if ( st.result ) {
+        cmd->set_status( err = st.result );
+        staterr = stat::events::smpp::RESP_GW_REJECTED;
+    } else {
+        err = cmd->get_status();
+        if ( cmd->flagSet(SmppCommandFlags::FAILED_COMMAND_RESP)) {
+            staterr = stat::events::smpp::RESP_FAILED;
+        } else if (cmd->get_resp()->expiredResp) {
+            staterr = stat::events::smpp::RESP_EXPIRED;
+        }
+        // else if (cmd->get_status())
+        // {
+        // staterr = stat::events::smpp::RESP_REJECTED;
+        // }
+        else
+        {
+            err = -1;
+            staterr = stat::events::smpp::RESP_OK;
+        }
     }
 
-    registerEvent( staterr, src, dst, (char*)sms->getRouteId(),
-                   staterr != stat::events::smpp::RESP_OK ? cmd->get_status() : -1);
+    registerEvent( staterr, src, dst, (char*)sms->getRouteId(), err );
 
     try{
         dst->putCommand(aucmd);
@@ -1243,7 +1246,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
                        src->getSystemId(), 
                        sms.getDestinationAddress().toString().c_str());
         DataResp(aucmd,smsc::system::Status::USSDDLGREFMISM);
-        registerEvent(stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::USSDDLGREFMISM);
+        registerEvent(stat::events::smpp::GW_REJECTED, src, NULL, NULL, smsc::system::Status::USSDDLGREFMISM);
         return;
     }
 
@@ -1251,6 +1254,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
     smscmd.orgDst=sms.getDestinationAddress();
 
     bool routeset = smscmd.hasRouteSet();
+    int statevent = stat::events::smpp::GW_REJECTED;
 
     do {
 
@@ -1273,7 +1277,9 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
                     st.result = smsc::system::Status::NOROUTE;
                 } else if ( dst->getBindType() == btNone ) {
                     fail = "sme not connected";
+                    routeId = ri.routeId;
                     st.result = smsc::system::Status::SMENOTCONNECTED;
+                    statevent = stat::events::smpp::REJECTED;
                 }
 
 
@@ -1386,16 +1392,8 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
 
     if (st.status != re::STATUS_OK)
     {
-        /*
-        smsc_log_info(log_,"DataSm: RuleEngine returned result=%d",st.result);
-        if(!st.result)
-        {
-            smsc_log_warn(log_, "DataSm: Rule failed and no error(zero rezult) returned");
-            st.result = smsc::system::Status::SYSERR;
-        }
-         */
         DataResp(aucmd, st.result);
-        registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
+        registerEvent( statevent, src, dst, (char*)ri.routeId, st.result);
         if ( session.get() ) session->closeCurrentOperation();
         return;
     }
@@ -1611,30 +1609,34 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
     }
 
     int staterr;
-    if ( st.result )
-    {
-        cmd->set_status( st.result );
-        staterr = stat::events::smpp::RESP_GW_REJECTED;
-    }
-    else if(cmd->flagSet(SmppCommandFlags::FAILED_COMMAND_RESP))
-    {
-        staterr = stat::events::smpp::RESP_FAILED;
-    }
-    else if(cmd->get_resp()->expiredResp)
-    {
-        staterr = stat::events::smpp::RESP_EXPIRED;
-    }
-    else if(cmd->get_status())
-    {
+    int err = int(cmd->get_resp()->getOrigStatus());
+    if ( err ) {
         staterr = stat::events::smpp::RESP_REJECTED;
-    }
-    else
-    {
-        staterr = stat::events::smpp::RESP_OK;
+    } else if ( st.result ) {
+        cmd->set_status( err = st.result );
+        staterr = stat::events::smpp::RESP_GW_REJECTED;
+    } else {
+        err = cmd->get_status();
+        if (cmd->flagSet(SmppCommandFlags::FAILED_COMMAND_RESP))
+        {
+            staterr = stat::events::smpp::RESP_FAILED;
+        }
+        else if(cmd->get_resp()->expiredResp)
+        {
+            staterr = stat::events::smpp::RESP_EXPIRED;
+        }
+        // else if(cmd->get_status())
+        // {
+        // staterr = stat::events::smpp::RESP_REJECTED;
+        // }
+        else
+        {
+            err = -1;
+            staterr = stat::events::smpp::RESP_OK;
+        }
     }
 
-    registerEvent( staterr, src, dst, (char*)sms->getRouteId(),
-                   staterr != stat::events::smpp::RESP_OK ? cmd->get_status() : -1);
+    registerEvent( staterr, src, dst, (char*)sms->getRouteId(), err );
 
     try{
         dst->putCommand(aucmd);

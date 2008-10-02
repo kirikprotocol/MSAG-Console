@@ -53,6 +53,10 @@ public:
     inline bool flagSet( uint32_t f ) const { return (flags_ & f); }
     inline uint32_t flags() const { return flags_; }
 
+    /// set/get current context scope (0--invalid)
+    void setContextScope( int ctx ) { ctxid_ = ctx; }
+    int getContextScope() const { return ctxid_; }
+
     void print( util::Print& p, opid_type opid = SCAGCommand::invalidOpId() ) const;
 
     util::storage::Serializer& serialize( util::storage::Serializer& s ) const;
@@ -73,7 +77,7 @@ private:
     ICCOperationStatus  status_;
     uint8_t             type_;
     uint32_t            flags_;
-
+    int32_t             ctxid_;
 };
 
 } // namespace sessions

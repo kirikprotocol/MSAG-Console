@@ -18,7 +18,8 @@ receivedParts_(0),
 receivedResps_(0),
 status_(OPERATION_INITED),
 type_(tp),
-flags_(0)
+flags_(0),
+ctxid_(0)
 {
     if ( !log_ ) {
         MutexGuard mg(loggerMutex_);
@@ -85,10 +86,11 @@ const char* Operation::getNamedStatus() const
 void Operation::print( util::Print& p, opid_type opid ) const
 {
     if ( ! p.enabled() ) return;
-    p.print( "op=%p session=%p opid=%u type=%d(%s) part/resp=%d%s/%d%s stat=%s%s%s%s",
+    p.print( "op=%p session=%p opid=%u type=%d(%s) part/resp=%d%s/%d%s ctx=%d stat=%s%s%s%s",
              this, owner_, opid, type_, commandOpName(type_),
              receivedParts_, flagSet( OperationFlags::RECEIVED_ALL_PARTS) ? "(ALL)" : "",
              receivedResps_, flagSet( OperationFlags::RECEIVED_ALL_RESPS) ? "(ALL)" : "",
+             int(ctxid_),
              getNamedStatus(),
              flagSet(OperationFlags::SERVICE_INITIATED_USSD_DIALOG) ? " svcinit" : "",
              flagSet(OperationFlags::WAIT_RECEIPT) ? " waitrcpt" : "",
@@ -102,6 +104,7 @@ Serializer& Operation::serialize( Serializer& s ) const
     return s << 
         uint32_t(receivedParts_) <<
         uint32_t(receivedResps_) <<
+        uint32_t(ctxid_) <<
         uint8_t(status_) <<
         type_ << flags_;
 }
@@ -112,6 +115,7 @@ Deserializer& Operation::deserialize( Deserializer& s ) throw ( DeserializerExce
     uint32_t x;
     s >> x; receivedParts_ = int(x);
     s >> x; receivedResps_ = int(x);
+    s >> x; ctxid_ = int32_t(x);
     uint8_t y;
     s >> y; status_ = ICCOperationStatus(y);
     s >> type_ >> flags_;

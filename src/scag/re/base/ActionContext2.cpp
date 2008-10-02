@@ -2,6 +2,7 @@
 #include "scag/exc/SCAGExceptions.h"
 #include "CommandBridge.h"
 #include "scag/sessions/base/Session2.h"
+#include "scag/sessions/base/Operation.h"
 #include "scag/bill/base/BillingManager.h"
 
 namespace scag2 {
@@ -91,6 +92,20 @@ void ActionContext::clearLongCallContext()
 }
 
 
+void ActionContext::setContextScope( int id )
+{
+    __require__( session_->getCurrentOperation() );
+    session_->getCurrentOperation()->setContextScope( id );
+}
+
+
+int ActionContext::getContextScope() const
+{
+    __require__( session_->getCurrentOperation() );
+    return session_->getCurrentOperation()->getContextScope();
+}
+
+
 Property* ActionContext::getProperty( const std::string& var )
 {
     FieldType prefix;
@@ -102,24 +117,28 @@ Property* ActionContext::getProperty( const std::string& var )
 
     switch (prefix) 
     {
-    case ftGlobal:
+    case ftGlobal: {
         scope = session_->getGlobalScope();
         break;
+    }
 
-    case ftService:
+    case ftService: {
         if ( ! commandProperty_ )
             throw SCAGException( "ActionContext::getProperty(%s): command is not set", var.c_str() );
         scope = session_->getServiceScope( commandProperty_->serviceId );
         break;
+    }
 
-    case ftContext:
-        scope = session_->getContextScope( contextId_ );
+    case ftContext: {
+        __require__( session_->getCurrentOperation() );
+        scope = session_->getContextScope( session_->getCurrentOperation()->getContextScope() );
         break;
+    }
 
-    case ftOperation:
+    case ftOperation: {
         scope = session_->getOperationScope();
         break;
-
+    }
         /*
     case ftLocal:
         propertyPtr = variables.GetPtr(name);
@@ -133,15 +152,17 @@ Property* ActionContext::getProperty( const std::string& var )
         return propertyPtr;
          */
 
-    case ftConst:
+    case ftConst: {
         propertyPtr = infrastructConstants_.GetPtr(name);
         if ( ! propertyPtr ) propertyPtr = constants_->GetPtr(name);
         break;
+    }
 
-    case ftField:
+    case ftField: {
         if ( !command_ ) throw SCAGException("ActionContext.getProperty(%s): command is not set", var.c_str() );
         propertyPtr = command_->getProperty(name);
         break;
+    }
 
     default:
         return 0;

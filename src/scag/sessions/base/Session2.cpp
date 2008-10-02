@@ -891,8 +891,10 @@ void Session::dropInitRuleKey( int serviceId, int transport )
 int Session::createContextScope()
 {
     if ( ! contextScopes_ ) contextScopes_ = new IntHash< SessionPropertyScope* >;
-    contextScopes_->Insert( ++nextContextId_, ::makeContextScope(this) );
-    return nextContextId_;
+    int32_t cid = ++nextContextId_;
+    if ( ! cid ) cid = ++nextContextId_;
+    contextScopes_->Insert( cid, ::makeContextScope(this) );
+    return cid;
 }
 
 

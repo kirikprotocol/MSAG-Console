@@ -81,7 +81,7 @@ struct SmppCommandData
     int        priority;
     uint32_t   uid;       // serial number
     uint32_t   dialogId;
-    int        status;
+    uint32_t   status;
     uint32_t   flags;
 
     SmppCommandData() :
@@ -622,8 +622,8 @@ public:
     uint32_t get_dialogId() const { return shared_->dialogId; }
     void set_dialogId(uint32_t dlgId) { shared_->dialogId = dlgId; }
 
-    int get_status() const { return shared_->status; } // for enquirelink and unbind
-    void set_status(int st) { shared_->status = st; }
+    int get_status() const { return int(shared_->status); } // for enquirelink and unbind
+    void set_status( int st ) { shared_->status = uint32_t(st); }
 
     int get_priority() const { return shared_->priority; }
     void set_priority( int prio ) { shared_->priority = prio; }
@@ -726,27 +726,9 @@ private:
 
 struct SmsResp
 {
-private:
-    char* messageId;
-    bool dataSm;
-    // uint32_t status; taken from command data
-    // SMS* sms; // points to orgCmd
-    DataSmDirection dir;
-    SmppCommand* orgCmd;
-
-    bool bHasDeliveryFailureReason;
-    uint8_t deliveryFailureReason;
-    bool bHasAdditionalStatusInfoText;
-    string additionalStatusInfoText;
-    bool bHasDpfResult;
-    uint8_t dpfResult;
-    bool bHasNetworkErrorCode;
-    uint32_t networkErrorCode;
-    Logger* logger;
-
 public:
 
-    SmsResp();
+    SmsResp( uint32_t origstatus = 0 );
     ~SmsResp();
 
     void set_dir(DataSmDirection direction)
@@ -866,9 +848,32 @@ public:
     inline SmppCommand* getOrgCmd() { return orgCmd; }
     inline bool hasOrgCmd() { return orgCmd; };
 
-  int expiredUid;
-  bool expiredResp;
+    uint32_t getOrigStatus() const {
+        return origStatus_;
+    }
 
+
+public:
+    int expiredUid;
+    bool expiredResp;
+
+private:
+    char* messageId;
+    bool dataSm;
+    uint32_t origStatus_;     // original status of the resp
+    // SMS* sms; // points to orgCmd
+    DataSmDirection dir;
+    SmppCommand* orgCmd;
+
+    bool bHasDeliveryFailureReason;
+    uint8_t deliveryFailureReason;
+    bool bHasAdditionalStatusInfoText;
+    string additionalStatusInfoText;
+    bool bHasDpfResult;
+    uint8_t dpfResult;
+    bool bHasNetworkErrorCode;
+    uint32_t networkErrorCode;
+    Logger* logger;
 };
 
 

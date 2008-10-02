@@ -11,6 +11,7 @@
 #include "util/xml/DOMTreeReader.h"
 #include "util/xml/utilFunctions.h"
 #include "scag/lcm/base/LongCallManager2.h"
+#include "scag/sessions/base/SessionManager2.h"
 
 namespace scag2 {
 namespace transport {
@@ -1031,9 +1032,22 @@ void SmppManagerImpl::continueExecution( LongCallContext* lcmCtx, bool dropped )
     lcmCtx->stateMachineContext = 0;
     lcmCtx->continueExec = true;
 
+    Session* session = cx->getSession();
+    __require__( session );
+    smsc_log_debug( log, "continueExec(cmd=%p,sess=%p/%s,drop=%d)", cx.get(),
+                    session, session->sessionKey().toString().c_str(),
+                    dropped ? 1 : 0 );
+    if ( dropped ) {
+        // we need to get session here to force unlocking
+        ActiveSession as = sessions::SessionManager::Instance()
+            .getSession( session->sessionKey(), cx, false );
+        __require__( as.get() );
+    }
+
     MutexGuard mg(queueMon);
     lcmProcessingCount--;
-    if(!dropped)
+
+    if (!dropped)
     {
         lcmQueue.Push( cx.release() );
         queueMon.notify();

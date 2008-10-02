@@ -723,12 +723,16 @@ bool SessionStoreImpl::uploadInitial( unsigned count )
         MemStorage::stored_type v = cache_->val2store(0);
         while ( true ) {
 
+            time_t now = time(0);
+
             Session* session = cache_->store2val(v);
             if ( session ) {
 
                 if ( disk_->get( key, cache_->store2ref(v) ) )
                 {
                     // loaded
+                    smsc_log_debug( log_, "upload sess=%p/%s has expire=%d",
+                                    session, key, int(session->expirationTime() - now) );
                     expiration_->scheduleExpire( session->expirationTime(),
                                                  session->lastAccessTime(),
                                                  key );
@@ -750,14 +754,15 @@ bool SessionStoreImpl::uploadInitial( unsigned count )
 
             MemStorage::stored_type* vv = cache_->get( key );
             if ( vv ) {
+                // already in cache
                 v = cache_->val2store(0);
-                continue; // already loaded
+                continue;
             }
             v = cache_->val2store( allocator_->alloc(key) );
             ++totalSessions_;
             ++lockedSessions_;
-        }
-    }
+        } // while loop over session keys
+    } // if the list of keys is not empty
     return ! initialkeys_.empty();
 }
 

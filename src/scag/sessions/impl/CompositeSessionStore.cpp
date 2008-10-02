@@ -19,7 +19,8 @@ stopped_(true),
 log_(thelog),
 fin_(&fin),
 expiration_(&exq),
-allocator_(a)
+allocator_(a),
+initialThread_(0)
 {
     smsc_log_debug( log_, "composite session store created");
 }
@@ -213,7 +214,7 @@ CompositeSessionStore::Storage*
 int CompositeSessionStore::InitialThread::Execute()
 {
     std::list< Storage* > hasinit_;
-    // FIXME: uncomment to start an initial upload thread
+    // FIXME: uncomment for initial upload
     /*
     {
         MutexGuard mg(mtx);

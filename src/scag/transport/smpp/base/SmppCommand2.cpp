@@ -120,7 +120,7 @@ std::auto_ptr<SmppCommand> SmppCommand::makeCommandSmResp(CommandId cmdid, const
     std::auto_ptr<SmppCommand> cmd(new SmppCommand);
     cmd->cmdid_ = cmdid;
     SmsResp* resp;
-    cmd->dta_ = resp = new SmsResp;
+    cmd->dta_ = resp = new SmsResp( status );
     cmd->set_status(status);
     cmd->set_dialogId( dialogId );
     resp->set_messageId(messageId);
@@ -406,7 +406,7 @@ SCAGCommand(), _SmppCommand()
             {
                 cmdid_ = DATASM_RESP;
                 PduDataSmResp* xsm = reinterpret_cast<PduDataSmResp*>(pdu);
-                SmsResp* resp = new SmsResp;
+                SmsResp* resp = new SmsResp( xsm->header.get_commandStatus() );
                 dta_ = resp;
                 resp->set_messageId(xsm->get_messageId());
                 resp->set_dataSm();
@@ -522,7 +522,7 @@ SCAGCommand(), _SmppCommand()
         sms_resp:
         {
             PduXSmResp* xsm = reinterpret_cast<PduXSmResp*>(pdu);
-            SmsResp* resp = new SmsResp;
+            SmsResp* resp = new SmsResp( xsm->header.get_commandStatus() );
             dta_ = resp;
             resp->set_messageId(xsm->get_messageId());
             set_status(xsm->header.get_commandStatus());
@@ -1006,14 +1006,15 @@ void SmppCommand::postfix()
 }
 
 
-SmsResp::SmsResp() :
-    messageId(0), dataSm(false),
-    // sms(0),
-    dir(dsdUnknown),
-    orgCmd(0),
-    deliveryFailureReason(0),
-    dpfResult(0),
-    networkErrorCode(0)
+SmsResp::SmsResp( uint32_t origstatus ) :
+messageId(0),
+dataSm(false),
+origStatus_(origstatus),
+dir(dsdUnknown),
+orgCmd(0),
+deliveryFailureReason(0),
+dpfResult(0),
+networkErrorCode(0)
 {
     expiredUid = 0;
     expiredResp = false;

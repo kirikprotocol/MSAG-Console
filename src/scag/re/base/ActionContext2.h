@@ -106,7 +106,6 @@ public:
     constants_(constants),
     session_(session),
     command_(command),
-    contextId_(0),
     commandProperty_(commandProperty),
     destroyService_(false),
     rule_(0)
@@ -170,10 +169,8 @@ public:
     void setDestroyService() { destroyService_ = true; }
 
     /// set the current context scope for property access.
-    void setContextScope( int id ) {
-        contextId_ = id;
-    }
-    int getContextScope() const { return contextId_; }
+    void setContextScope( int id );
+    int getContextScope() const;
 
     /// get property, variable prefix defines the scope
     Property* getProperty(const std::string& var);
@@ -224,7 +221,6 @@ private:
 
     Session*                session_;
     CommandAccessor*        command_;
-    int                     contextId_;   // current context scope id (0 -- invalid)
     CommandProperty*        commandProperty_;
     std::auto_ptr< bill::infrastruct::TariffRec >  tariffRec_;
     bool                    destroyService_;
