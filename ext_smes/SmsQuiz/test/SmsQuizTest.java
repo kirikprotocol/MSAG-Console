@@ -33,9 +33,7 @@ import ru.aurorisoft.smpp.Message;
 public class SmsQuizTest {    
 
 
-    //private static SubscriptionOnSMPPService onSMPPService;
-    //private static SubscriptionOffSMPPService offSMPPService;
-   // private static SimpleResponder helpService;
+
     private static ServicesConfig config;
     private static RequestToServiceMap requestToServiceMap;
 
