@@ -220,6 +220,7 @@ CompositeSessionStore::Storage*
 
 int CompositeSessionStore::InitialThread::Execute()
 {
+    smsc_log_debug("initial upload thread is started");
     std::list< Storage* > hasinit_;
     {
         MutexGuard mg(mtx);
@@ -248,6 +249,7 @@ int CompositeSessionStore::InitialThread::Execute()
         mtx.wait( store_.initialTime_ );
         if ( store_.stopped_ ) break;
     }
+    smsc_log_debug("initial upload thread is stopped");
     return 0;
 }
 
