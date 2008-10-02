@@ -1,0 +1,61 @@
+<project name="Sms_quiz" basedir="." default="distr">
+
+   <property file="build.properties"/>
+
+  <property name="SMS_QUIZ_HOME" value="."/>
+
+
+  <target name="prepare">
+    <mkdir dir="${BUILD_DIR}"/>
+    <mkdir dir="${DISTR_DIR}"/>
+  </target>
+
+
+  <property name="module_name" value="sms_quiz"/>
+
+  <property name="java_src" location="${SMS_QUIZ_HOME}/src"/>
+  <property name="java_lib" location="${SMS_QUIZ_HOME}/lib"/>
+  <property name="java_out" location="${BUILD_DIR}/classes/${module_name}"/>
+
+  <property name="SMS_QUIZ_DISTR_DIR" value="${DISTR_DIR}/${module_name}"/>
+
+
+  <target name="compile" depends="prepare">
+    <mkdir dir="${java_out}"/>
+    <javac srcdir="${java_src}" destdir="${java_out}" debug="yes">
+      <classpath >
+        <fileset dir="${java_lib}" includes="*.jar"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="build" depends="compile">
+    <jar jarfile="${java_out}/${module_name}.jar" manifest="${SMS_QUIZ_HOME}/MANIFEST.MF">
+      <fileset dir="${java_out}" excludes="*.jar" />
+    </jar>
+  </target>
+
+  <target name="install" depends="build">
+    <mkdir dir="${SMS_QUIZ_DISTR_DIR}/bin"/>
+    <mkdir dir="${SMS_QUIZ_DISTR_DIR}/conf"/>
+    <mkdir dir="${SMS_QUIZ_DISTR_DIR}/lib"/>
+    <mkdir dir="${SMS_QUIZ_DISTR_DIR}/logs"/>
+
+    <copydir src="${java_lib}" dest="${SMS_QUIZ_DISTR_DIR}/lib"/>
+
+    <copy todir="${SMS_QUIZ_DISTR_DIR}/lib">
+      <fileset dir="${java_out}" includes="*.jar"/>
+    </copy>
+
+ </target>
+
+  <target name="conf" depends="install">
+    <copydir src="${SMS_QUIZ_HOME}/conf" dest="${SMS_QUIZ_DISTR_DIR}/conf"/>
+  </target>
+
+  <target name="distr" depends="install,conf"/>
+
+
+</project>
+
+
