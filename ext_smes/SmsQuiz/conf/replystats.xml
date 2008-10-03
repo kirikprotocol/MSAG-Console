@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="windows-1251"?>
+
+<config>
+  <section name="statsFile">
+    <param name="dir.name">/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/replyStats</param>
+    <param name="date.pattern">yyyyMMdd</param>
+    <param name="time.pattern">HH:mm</param>      
+  </section>     
+</config>
