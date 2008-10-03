@@ -43,6 +43,7 @@ public class SubscribedAbDownloader {
             if  (args.length>=2) {
                 try {
                     wantedDate = dateParser.parse(args[1]);
+                    System.out.println("Second argument defined");
                 } catch (ParseException e) {
                     help();
                     return;
@@ -83,9 +84,6 @@ public class SubscribedAbDownloader {
         }
     }
 
-    private static boolean subscribed(Subscription subscription) {
-        return subscription != null && subscription.getEndDate() == null;
-    }
 
     private static void help() {
         System.out.println("Usage with arguments:");
