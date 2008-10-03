@@ -230,6 +230,7 @@ namespace scag { namespace sessions {
         ICCOperationStatus m_Status;
 
         Session * m_Owner;
+        std::string* keywords_;
     public:
         uint8_t type;
         uint32_t flags;
@@ -249,7 +250,20 @@ namespace scag { namespace sessions {
         void clearFlag(uint32_t f) { flags &= ~f; };
         bool flagSet(uint32_t f) { return flags & f; };
 
-        ~Operation() {}
+        const std::string* getKeywords() const {
+            return keywords_;
+        }
+        void setKeywords( const std::string& kw ) {
+            if ( keywords_ ) delete keywords_;
+            if ( kw.empty() ) keywords_ = 0; 
+            else keywords_ = new std::string( kw );
+        }
+
+        ~Operation() {
+          if (keywords_) {
+            delete keywords_;
+          }
+        }
         Operation(Session * Owner) :
             m_Owner(Owner),
             m_hasBill(false),
@@ -258,7 +272,8 @@ namespace scag { namespace sessions {
             m_receivedAllParts(false),
             m_receivedAllResp(false),
             m_Status(OPERATION_INITED),
-            billId(0)
+            billId(0),
+            keywords_(0)
         {
             if(!logger)
             {
