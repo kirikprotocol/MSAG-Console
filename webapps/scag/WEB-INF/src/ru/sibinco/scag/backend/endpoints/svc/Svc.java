@@ -191,7 +191,7 @@ public class Svc {
         out.println("    <param name=\"timeout\"\tvalue=\"" + timeout + "\"/>");
         out.println("    <param name=\"mode\"\t\tvalue=\"" + getModeStr() + "\"/>");
         out.println("    <param name=\"enabled\"\tvalue=\"" + enabled + "\"/>");
-        out.println("    <param name=\"providerId\"\tvalue=\"" + -1/*provider.getId()*/ + "\"/>");
+//        out.println("    <param name=\"providerId\"\tvalue=\"" + -1/*provider.getId()*/ + "\"/>");
         out.println("    <param name=\"" + IN_QUEUE_LIMIT +  "\"\tvalue=\"" + intToString(getInQueueLimit()) + "\"/>");
         out.println("    <param name=\"" + OUT_QUEUE_LIMIT + "\"\tvalue=\"" + intToString(getOutQueueLimit()) + "\"/>");
         out.println("    <param name=\"" + MAX_SMS_PER_SEC + "\"\tvalue=\"" + intToString(getMaxSmsPerSec()) + "\"/>");
@@ -204,7 +204,7 @@ public class Svc {
     }
 
     public PrintWriter store(final PrintWriter out) {
-        return storeFooter(storeBody(storeHeader(out)));
+        return storeFooter( storeBody( storeHeader(out) ) );
     }
 
     public String getModeStr() {
