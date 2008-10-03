@@ -520,7 +520,11 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             } else {
 
                 // finalization is done, remove the session from disk
-                if ( diskio_ ) disk_->remove( session->sessionKey() );
+                if ( diskio_ ) {
+                    smsc_log_debug( log_, "session=%p/%s is being erased from disk",
+                                    session, session->sessionKey().toString().c_str() );
+                    disk_->remove( session->sessionKey() );
+                }
 
             }
 
