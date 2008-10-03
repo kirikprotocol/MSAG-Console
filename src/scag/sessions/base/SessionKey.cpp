@@ -68,7 +68,7 @@ smsc::sms::Address SessionKey::address() const
 {
     char buf[30];
     snprintf( buf, sizeof(buf), "%llu", adr() );
-    return smsc::sms::Address( ton(), npi(), uint8_t(strlen(buf)), buf );
+    return smsc::sms::Address( uint8_t(strlen(buf)), ton(), npi(), buf );
 }
 
 
