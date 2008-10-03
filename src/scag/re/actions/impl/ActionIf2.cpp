@@ -13,7 +13,7 @@ ActionIf::ActionIf() : FillThenSection(true), FillElseSection(false)
 {
 }
 
-const char* ActionIf::getStrFromOperation( IfOperations op )
+const char* ActionIf::getStrFromOperation( IfOperations op ) const
 {
     switch (op) {
     case (opEQ) : return "eq";

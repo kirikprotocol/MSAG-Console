@@ -13,7 +13,7 @@ using smsc::core::threads::Thread;
 using smsc::logger::Logger;
 using namespace sessions;
 using namespace transport::smpp;
-// using namespace transport::http;
+using namespace transport::http;
 
 class Registrator : public Thread {
 public:
