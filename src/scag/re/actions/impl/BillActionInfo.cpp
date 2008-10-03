@@ -121,7 +121,15 @@ bool BillActionInfo::run( ActionContext& context )
         case 10: p->setStr(bis.category); break;
         case 11: p->setStr(bis.mediaType); break;
         //TODO: set real keywords from action context
-        case 12: p->setStr("keywords"); break;
+        case 12:  {
+          const std::string* keywords = trans->getKeywords();
+          if (keywords) {
+            p->setStr(*keywords); 
+          } else {
+            p->setStr("");
+          }
+          break;
+        }
         }
         if ( logger->isDebugEnabled() ) {
             s += ", ";
