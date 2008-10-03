@@ -40,8 +40,8 @@ void SmppOperationMaker::process( re::RuleStatus& st )
         
             smsc_log_debug(log_, "%s: RuleEngine processing...", where_ );            
             re::RuleEngine::Instance().process( *cmd_.get(), *session_.get(), st );
-            smsc_log_debug(log_, "%s: RuleEngine processed: st.status=%d st.result=%d",
-                           where_, st.status, st.result );
+            smsc_log_debug(log_, "%s: RuleEngine processed: st.status=%d st.result=%d cmd.stat=%d",
+                           where_, st.status, st.result, cmd_->get_status() );
             postProcess( st );
             if ( st.status == re::STATUS_LONG_CALL ) {
                 smsc_log_debug( log_, "%s: long call initiate", where_ );
