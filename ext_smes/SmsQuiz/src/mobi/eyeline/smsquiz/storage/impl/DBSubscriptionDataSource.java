@@ -5,7 +5,6 @@ import mobi.eyeline.smsquiz.storage.ResultSet;
 
 import java.util.Date;
 import java.sql.*;
-import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 
