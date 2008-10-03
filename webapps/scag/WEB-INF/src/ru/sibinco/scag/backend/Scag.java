@@ -399,16 +399,18 @@ public class Scag extends Proxy {
     public void invokeCommand(final String commandName, final Object paramsObject, final SCAGAppContext appContext,
                               final Manager manager, final String configFilename)
                               throws SibincoException {
-     try{
+        logger.debug( "Scag.invokeCommand().start commandName='" +commandName + "'" );
+        try{
         //2.save current config to temporary file(smpp.xml->smpp.xml.old)
+
         File configFile = new File(configFilename);
         File temporary = Functions.createTempFilename(configFile.getName(),".old",configFile.getParentFile());
         Functions.RenameFile(configFile,temporary);
        //3.save config
-        logger.debug("Scag:invokeCommand1:store file");
+        logger.debug( "Scag:invokeCommand:store file , manager '" + manager + "'" );
         manager.store();
 //moved from end
-        logger.debug("Scag:invokeCommand1:store file:daemon");
+        logger.debug("Scag:invokeCommand:store file:daemon");
         appContext.getHSDaemon().store(configFile);
 
        //3.1 parse method used to localy validate saved config
@@ -424,7 +426,7 @@ public class Scag extends Proxy {
           try
           {
               Method commandMethod;
-              logger.debug("Scag:invokeCommand1:commandMethod");
+              logger.debug( "Scag.invokeCommand() commandName='" +commandName + "' paramsObject==null is '" + (paramsObject==null) + "'" );
               if (paramsObject==null) {
                   commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{});
                   commandMethod.invoke(appContext.getScag(),null);
@@ -433,7 +435,7 @@ public class Scag extends Proxy {
                   commandMethod.invoke(appContext.getScag(),new Object[]{paramsObject});
               }
           } catch (NoSuchMethodException e) {
-              logger.error("Scag:invokeCommand1:scag doesn't support command "+commandName,e);
+              logger.error("Scag:invokeCommand:scag doesn't support command "+commandName,e);
               e.printStackTrace();
           } catch (IllegalAccessException e) {
               e.printStackTrace();
@@ -461,7 +463,7 @@ public class Scag extends Proxy {
                 //Paint error on the screen by throwing exception(next string)
                 throw se;
             }
-      }
+        }
       //we don't have any exception, so
       //9. save smpp.xml to backup!
       //10. delete smpp.xml.new
@@ -478,82 +480,82 @@ public class Scag extends Proxy {
    }
   }
 //2
-    public void invokeCommand(final String commandName, final Object paramsObject, final SCAGAppContext appContext,
-                              final Manager manager, final String configFilename, boolean store) throws SibincoException {
-     try{
-       //2.save current config to temporary file(smpp.xml->smpp.xml.old)
-       File configFile = new File(configFilename);
-       File temporary = Functions.createTempFilename(configFile.getName(),".old",configFile.getParentFile());
-       Functions.RenameFile(configFile,temporary);
-       //3.save config
-       logger.error("Scag:invokeCommand2:store");
-       if( store ){
-           logger.error("Scag:invokeCommand2:store:in");
-            manager.store();
-       }
-       logger.error("Scag:invokeCommand2:store:daemon");
-       appContext.getHSDaemon().store(configFile);
-       //3.1 parse method used to localy validate saved config
-       try {
-         manager.parse();
-       } catch (Throwable e) {
-         Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
-         throw new SibincoException(e);
-       }
-       //4.send command
-     try {
-       try {
-            Method commandMethod;
-            if (paramsObject==null) {
-                commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{});
-                commandMethod.invoke(appContext.getScag(),null);
-            } else {
-                commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{paramsObject.getClass()});
-                commandMethod.invoke(appContext.getScag(),new Object[]{paramsObject});
-            }
-        } catch (NoSuchMethodException e) {
-            logger.error("scag doesn't support command "+commandName,e);
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            throw (SibincoException)e.getTargetException();
-        }
-      } catch (SibincoException se) {
-        //5. does service started?
-        if (getStatus() == STATUS_DISCONNECTED) {
-          //5. N0(service isn't started)
-          //9. save smpp.xml to backup!
-          //10. delete smpp.xml.old
-            logger.error("Scag:invokeCommand2:SibincoException:(getStatus() == STATUS_DISCONNECTED)");
-            Functions.SavedFileToBackup(temporary,".old");
-            Functions.ReturnSavedFileToBackup(temporary,".old");
-            appContext.getHSDaemon().store( Functions.ReturnSavedFileToBackup(temporary,".old") );
-            throw new StatusDisconnectedException(host,port);
-        } else {
-          //5. YES(service is started)
-          //6. service return error
-          //7. Restore config from temporary file(smpp.xml.new -> smpp.xml)
-            logger.error("Scag:invokeCommand2:SibincoException:(getStatus() != STATUS_DISCONNECTED)");
-            Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
-            appContext.getHSDaemon().store(configFile);
-          //Paint error on the screen by throwing exception(next string)
-            throw se;
-        }
-      }
-      //we don't have any exception, so
-      //9. save smpp.xml to backup!
-      //10. delete smpp.xml.new
-//      Functions.SavedFileToBackup(temporary,".old");
-      logger.error("Scag:invokeCommand2:done!:end");
-      appContext.getHSDaemon().store( Functions.ReturnSavedFileToBackup(temporary,".old") );
-//moved above
-//      appContext.getHSDaemon().store(configFile);
-      logger.error("Scag:invokeCommand2:SibincoException:done!");
-   } catch (IOException e) {
-     //e.printStackTrace();
-     logger.error("Scag:invokeCommand2:IO operation failed - couldn't save config",e);
-     throw new SibincoException("IO operation failed - couldn't save config");
-   }
-  }
+//    public void invokeCommand(final String commandName, final Object paramsObject, final SCAGAppContext appContext,
+//                              final Manager manager, final String configFilename, boolean store) throws SibincoException {
+//     try{
+//       //2.save current config to temporary file(smpp.xml->smpp.xml.old)
+//       File configFile = new File(configFilename);
+//       File temporary = Functions.createTempFilename(configFile.getName(),".old",configFile.getParentFile());
+//       Functions.RenameFile(configFile,temporary);
+//       //3.save config
+//       logger.error("Scag:invokeCommand2:store");
+//       if( store ){
+//           logger.error("Scag:invokeCommand2:store:in");
+//            manager.store();
+//       }
+//       logger.error("Scag:invokeCommand2:store:daemon");
+//       appContext.getHSDaemon().store(configFile);
+//       //3.1 parse method used to localy validate saved config
+//       try {
+//         manager.parse();
+//       } catch (Throwable e) {
+//         Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
+//         throw new SibincoException(e);
+//       }
+//       //4.send command
+//     try {
+//       try {
+//            Method commandMethod;
+//            if (paramsObject==null) {
+//                commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{});
+//                commandMethod.invoke(appContext.getScag(),null);
+//            } else {
+//                commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{paramsObject.getClass()});
+//                commandMethod.invoke(appContext.getScag(),new Object[]{paramsObject});
+//            }
+//        } catch (NoSuchMethodException e) {
+//            logger.error("scag doesn't support command "+commandName,e);
+//            e.printStackTrace();
+//        } catch (IllegalAccessException e) {
+//            e.printStackTrace();
+//        } catch (InvocationTargetException e) {
+//            throw (SibincoException)e.getTargetException();
+//        }
+//      } catch (SibincoException se) {
+//        //5. does service started?
+//        if (getStatus() == STATUS_DISCONNECTED) {
+//          //5. N0(service isn't started)
+//          //9. save smpp.xml to backup!
+//          //10. delete smpp.xml.old
+//            logger.error("Scag:invokeCommand2:SibincoException:(getStatus() == STATUS_DISCONNECTED)");
+//            Functions.SavedFileToBackup(temporary,".old");
+//            Functions.ReturnSavedFileToBackup(temporary,".old");
+//            appContext.getHSDaemon().store( Functions.ReturnSavedFileToBackup(temporary,".old") );
+//            throw new StatusDisconnectedException(host,port);
+//        } else {
+//          //5. YES(service is started)
+//          //6. service return error
+//          //7. Restore config from temporary file(smpp.xml.new -> smpp.xml)
+//            logger.error("Scag:invokeCommand2:SibincoException:(getStatus() != STATUS_DISCONNECTED)");
+//            Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
+//            appContext.getHSDaemon().store(configFile);
+//          //Paint error on the screen by throwing exception(next string)
+//            throw se;
+//        }
+//      }
+//      //we don't have any exception, so
+//      //9. save smpp.xml to backup!
+//      //10. delete smpp.xml.new
+////      Functions.SavedFileToBackup(temporary,".old");
+//      logger.error("Scag:invokeCommand2:done!:end");
+//      appContext.getHSDaemon().store( Functions.ReturnSavedFileToBackup(temporary,".old") );
+////moved above
+////      appContext.getHSDaemon().store(configFile);
+//      logger.error("Scag:invokeCommand2:SibincoException:done!");
+//   } catch (IOException e) {
+//     //e.printStackTrace();
+//     logger.error("Scag:invokeCommand2:IO operation failed - couldn't save config",e);
+//     throw new SibincoException("IO operation failed - couldn't save config");
+//   }
+//  }
 }
