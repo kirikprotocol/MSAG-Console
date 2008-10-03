@@ -12,6 +12,7 @@ bool TimeField::init( const SectionParams& params,
                       bool readonly )
 {
     bool bExist;
+    wait_ = 0;
     type_ = Action::CheckParameter( params,
                                    propertyObject,
                                    actionName,
@@ -20,6 +21,7 @@ bool TimeField::init( const SectionParams& params,
                                    readonly,
                                    name_,
                                    bExist );
+    if ( ! bExist ) return bExist;
 
     if ( type_ == ftUnknown ) {
 
