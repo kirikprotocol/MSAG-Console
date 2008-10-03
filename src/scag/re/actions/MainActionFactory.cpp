@@ -13,6 +13,7 @@
 #include "scag/re/actions/bill/BillActionOpen.h"
 #include "scag/re/actions/bill/BillActionClose.h"
 #include "scag/re/actions/bill/BillActionInfo.h"
+#include "scag/re/actions/bill/BillActionKeywords.h"
 
 #include "scag/re/actions/pers/PersAction.h"
 #include "scag/re/actions/pers/BatchAction.h"
@@ -32,6 +33,8 @@
 #include "scag/re/actions/smpp/ActionReceipt.h"
 #include "scag/re/actions/str/ActionLength.h"
 #include "scag/re/actions/str/ActionReplace.h"
+
+#include "scag/re/actions/misc/StatAction.h"
 
 //#include "scag/SAX2Print.hpp"
 
@@ -59,6 +62,8 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
 
     if (name=="bill:close") return new BillActionClose();
     if (name=="bill:info") return new BillActionInfo();
+    if (name=="bill:add_keywords") return new BillActionAddKeywords();
+    if (name=="bill:set_keywords") return new BillActionSetKeywords();
 
     if (name=="inc") return new ActionInc();
     if (name=="dec") return new ActionDec();
@@ -113,6 +118,10 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="datetime:change") return new ChangeDateTimeAction();
     if (name=="datetime:add") return new AddDateTimeAction();
     if (name=="datetime:dec") return new DecDateTimeAction();
+
+    if (name=="stat:add_keywords") return new AddKeywordsAction();
+    if (name=="stat:set_keywords") return new SetKeywordsAction();
+    if (name=="stat:get_keywords") return new GetKeywordsAction();
 
     Action * action = 0;
 
