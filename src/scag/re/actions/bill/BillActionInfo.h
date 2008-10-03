@@ -10,7 +10,7 @@ class BillActionInfo : public Action
     std::string m_sBillId;
     uint32_t m_BillId;
 
-    static const int fields_count = 12;
+    static const int fields_count = 13;
     static const char* m_name[fields_count];
     std::string m_sField[fields_count];
     bool m_exist[fields_count], bExist;

@@ -4,7 +4,7 @@
 
 namespace scag { namespace re { namespace actions {
 
-const char* BillActionInfo::m_name[BillActionInfo::fields_count] = {"operator_id", "provider_id", "service_id", "abonent", "category", "content-type", "result_number", "price", "currency", "bill_type", "category-str", "content-type-str"};
+const char* BillActionInfo::m_name[BillActionInfo::fields_count] = {"operator_id", "provider_id", "service_id", "abonent", "category", "content-type", "result_number", "price", "currency", "bill_type", "category-str", "content-type-str", "keywords"};
 
 void BillActionInfo::init(const SectionParams& params,PropertyObject propertyObject)
 {
@@ -139,6 +139,17 @@ bool BillActionInfo::run(ActionContext& context)
             case 9: p->setInt(tr.billType); break;
             case 10: p->setStr(bis.category); break;
             case 11: p->setStr(bis.mediaType); break;
+            case 12:
+            {
+              const std::string* keywords = op->getKeywords();
+              if (keywords) {
+                p->setStr(*keywords); 
+              } else {
+                p->setStr("");
+              }
+              break;
+            }
+                  
         }
         s += ", ";
         s += m_name[i];
