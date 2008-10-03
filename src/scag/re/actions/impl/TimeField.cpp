@@ -52,6 +52,7 @@ bool TimeField::init( const SectionParams& params,
             break;
         }
     }
+    return bExist;
 }
 
 unsigned TimeField::getTime( const char* actionName, ActionContext& context ) const
