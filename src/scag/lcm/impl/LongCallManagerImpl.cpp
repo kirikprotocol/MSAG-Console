@@ -59,7 +59,7 @@ void LongCallManagerImpl::init(uint32_t maxThr)
 
 void LongCallManagerImpl::configChanged()
 {
-    // FIXME: ?
+    // FIXME: do we need a reaction on config change?
     // LongCallManagerConfig& cfg = ConfigManager::Instance().getLongCallManConfig();
 }
 

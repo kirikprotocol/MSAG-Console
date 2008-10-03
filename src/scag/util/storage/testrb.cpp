@@ -375,7 +375,7 @@ struct Address
         const CSessionKey& getKey() const { return sessionKey; }
 
 #ifndef USEPAGEFILE
-        // FIXME: for BlocksHSStorage
+        // these two methods are necessary for BlocksHSStorage
         void Serialize( SerialBuffer& buf, bool = false, GlossaryBase* g = NULL ) const;
         void Deserialize( SerialBuffer& buf, bool = false, GlossaryBase* g = NULL );
 #endif

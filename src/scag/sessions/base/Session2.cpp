@@ -339,20 +339,11 @@ Session::~Session()
 {
     try {
         clear();
-        // FIXME: delete things
         if ( cmdQueue_.size() > 0 ) {
-            smsc_log_error( log_, "LOGIC ERROR!!! session=%p/%s command queue is not empty: %d, FIXME: MEMLEAK!",
+            smsc_log_error( log_, "LOGIC ERROR!!! session=%p/%s command queue is not empty: %d, MEMLEAK!",
                             this, sessionKey().toString().c_str(), cmdQueue_.size() );
             // this->abort();
         }
-        /*
-        for ( std::list< scag::transport::SCAGCommand* >::iterator i = cmdQueue_.begin();
-              i != cmdQueue_.end();
-              ++i ) {
-            delete *i;
-        }
-        cmdQueue_.erase( cmdQueue_.begin(), cmdQueue_.end() );
-         */
         delete transactions_;
         delete globalScope_;
         delete serviceScopes_;
@@ -524,8 +515,7 @@ Deserializer& Session::deserialize( Deserializer& s ) throw (DeserializerExcepti
 
 void Session::clear()
 {
-    // FIXME: temporary output
-    if (!quiet_) smsc_log_debug( logc_, "session=%p/%s clear", this, sessionKey().toString().c_str() );
+    // if (!quiet_) smsc_log_debug( logc_, "session=%p/%s clear", this, sessionKey().toString().c_str() );
 
     pkey_ = SessionPrimaryKey(key_); // to reset born time
 
@@ -549,10 +539,6 @@ void Session::clear()
         currentOperation_ = 0;
         umr_ = -1;
 
-        // assert( operations_.Count() == 0 );
-        // if ( operations_.Count() > 0 ) {
-        // smsc_log_warn( log_, "operation count=%d > 0, FIXME: what to do?", operations_.Count() );
-        // }
         int opkey;
         Operation* op;
         for ( IntHash< Operation* >::Iterator i(operations_); i.Next(opkey,op); ) {
@@ -584,7 +570,7 @@ void Session::clear()
 
 void Session::changed( AdapterProperty& )
 {
-    // FIXME
+    // FIXME: do we need reaction on property change?
 }
 
 
@@ -687,9 +673,6 @@ Operation* Session::setCurrentOperation( opid_type opid )
                        this,
                        sessionKey().toString().c_str(),
                        unsigned(opid) );
-        // FIXME: should we throw?
-        // throw SCAGException( "Session=%p cannot find operation id=%u, key=%s",
-        // this, unsigned(opid), sessionKey().toString().c_str() );
         return 0;
     }
 
@@ -786,7 +769,7 @@ void Session::closeCurrentOperation()
         // this, sessionKey().toString().c_str(),
         // int(expirationTime_ - now));
         if ( expirationTime_ <= now ) {
-            ; // FIXME: push session manager expiration thread
+            ; // FIXME: push into session manager expiration thread
         }
     }
 
@@ -1009,15 +992,6 @@ SCAGCommand* Session::popCommand()
     }
     return cmd;
 }
-
-
-/*
-void Session::abort()
-{
-    // FIXME
-    ::abort();
-}
- */
 
 
 void Session::serializeScope( Serializer& o, const SessionPropertyScope* s ) const

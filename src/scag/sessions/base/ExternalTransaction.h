@@ -22,7 +22,6 @@ public:
     // virtual std::string transactionId() const = 0;
     virtual void rollback() = 0;
 
-    /// FIXME: or should it return bool?
     virtual void commit() = 0;
 
     virtual ExternalBillingTransaction* castToBilling() {

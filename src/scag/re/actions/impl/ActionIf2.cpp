@@ -13,6 +13,26 @@ ActionIf::ActionIf() : FillThenSection(true), FillElseSection(false)
 {
 }
 
+const char* ActionIf::getStrFromOperation( IfOperations op )
+{
+    switch (op) {
+    case (opEQ) : return "eq";
+    case (opNE) : return "ne";
+    case (opGT) : return "gt";
+    case (opGE) : return "ge";
+    case (opLT) : return "lt";
+    case (opLE) : return "le";
+    case (opEQ_I) : return "eqi";
+    case (opGE_I) : return "gei";
+    case (opLE_I) : return "lei";
+    case (opNE_I) : return "nei";
+    case (opGT_I) : return "gti";
+    case (opLT_I) : return "lti";
+    default: return "???";
+    };
+}
+
+
 void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
 {
     propertyObject = _propertyObject;
@@ -169,7 +189,11 @@ bool ActionIf::run(ActionContext& context)
             //std::string str = property->getStr();
             //smsc_log_debug(logger,"Testing %s='%s' vs %s",singleparam.strOperand1.c_str(),FormatWStr(str).c_str(),ConvertWStrToStr(singleparam.wstrOperand2).c_str());
 
-            smsc_log_debug(logger,"Testing %s = '%s' vs '%s'", singleparam.strOperand1.c_str(), property->getStr().c_str(),singleparam.strOperand2.c_str());
+            smsc_log_debug(logger,"Testing %s = '%s' %s '%s'",
+                           singleparam.strOperand1.c_str(),
+                           property->getStr().c_str(),
+                           getStrFromOperation(singleparam.Operation),
+                           singleparam.strOperand2.c_str());
 
             int result = 0;
 

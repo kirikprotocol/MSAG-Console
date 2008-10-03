@@ -568,7 +568,6 @@ public:
 
 
     /// iterator on the disk data.
-    /// FIXME: should we allow this one?
     typename DiskStorage::iterator_type dataBegin() const {
         return disk_->begin();
     }

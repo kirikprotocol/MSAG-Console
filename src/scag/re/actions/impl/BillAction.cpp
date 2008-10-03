@@ -63,6 +63,10 @@ std::string BillAction::getTransId( ActionContext& context )
 
         transId = transIdFieldName_;
     }
+    if ( transId.empty() ) {
+        smsc_log_error( logger, "Action '%s': empty trans-id", opname() );
+        setBillingStatus( context, "Empty transaction id", false );
+    }
     return transId;
 }
 

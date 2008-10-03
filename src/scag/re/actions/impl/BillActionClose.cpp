@@ -13,8 +13,8 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
 
     const std::string transId = getTransId( context );
     if ( transId.empty() ) {
-        smsc_log_error( logger, "Action '%s': invalid (empty) trans-id", opname() );
-        setBillingStatus( context, "Empty trans-id", false );
+        // smsc_log_error( logger, "Action '%s': invalid (empty) trans-id", opname() );
+        // setBillingStatus( context, "Empty trans-id", false );
         return false;
     }
     
@@ -35,6 +35,9 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
     } else {
         bill::BillingInfoStruct bis;
         bill::infrastruct::TariffRec tr;
+
+        smsc_log_debug( logger, "Action '%s': transid=%s billid=%d",
+                        opname(), transId.c_str(), trans->billId() );
 
         try {
             trans->info(bis, tr);

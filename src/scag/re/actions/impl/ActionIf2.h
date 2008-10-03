@@ -51,7 +51,7 @@ class ActionIf : public Action, ComplexActionLongCallHelper
 
     bool CompareResultToBool(IfOperations op,int result);
 
-    IfOperations GetOperationFromSTR(const std::string& str)
+    IfOperations GetOperationFromSTR(const std::string& str) const
     {
         if (str == "eq") return opEQ;
         if (str == "ne") return opNE;
@@ -70,6 +70,7 @@ class ActionIf : public Action, ComplexActionLongCallHelper
         return opUnknown;
     };
 
+    const char* getStrFromOperation( IfOperations op ) const;
 
     bool FillThenSection;
     bool FillElseSection;

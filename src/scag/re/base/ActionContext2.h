@@ -175,36 +175,13 @@ public:
     /// get property, variable prefix defines the scope
     Property* getProperty(const std::string& var);
 
-        // void abortSession();
-
-        // void AddPendingOperation(uint8_t type, time_t pendingTime, unsigned int billID);
-        // Operation * getCurrentOperation() { return session_->getCurrentOperation(); }
-
     CommandProperty& getCommandProperty() { return *commandProperty_; }
 
     /// fill billing infostructure with data
     void getBillingInfoStruct( bill::BillingInfoStruct& billingInfoStruct );
 
-        /*
-        {
-            billingInfoStruct.AbonentNumber = commandProperty->abonentAddr.toString();
-            billingInfoStruct.serviceId = commandProperty->serviceId;
-            billingInfoStruct.protocol = commandProperty->protocol;
-            billingInfoStruct.providerId = commandProperty->providerId;
-            billingInfoStruct.operatorId = commandProperty->operatorId;
-
-            // FIXME!
-            timeval tv;
-            billingInfoStruct.SessionBornMicrotime = tv; // session->getPrimaryKey().BornMicrotime;
-            billingInfoStruct.msgRef = commandProperty->msgRef;
-        }
-         */
-
     bill::infrastruct::TariffRec * getTariffRec( uint32_t category,
                                                  uint32_t mediaType );
-
-        // bool checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType);
-        // int getCurrentOperationBillID();
 
 private:
     void setInfrastructureConstants();

@@ -2,7 +2,7 @@
 #include "StatisticsManager.h"
 #include "scag/sessions/base/SessionManager2.h"
 #include "scag/transport/smpp/base/SmppManager2.h"
-// #include "scag/transport/http/Managers.h"
+#include "scag/transport/http/base/HttpManager.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -252,8 +252,7 @@ int Sender::Execute()
         // d.sessionCount, d.sessionLockedCount,
         // d.smppReqQueueLen, d.smppRespQueueLen, d.smppLCMQueueLen );
 
-      // FIXME: http
-      // HttpManager::Instance().getQueueLen(d.httpReqQueueLen, d.httpRespQueueLen, d.httpLCMQueueLen);
+        HttpManager::Instance().getQueueLen(d.httpReqQueueLen, d.httpRespQueueLen, d.httpLCMQueueLen);
         d.httpReqQueueLen = 0;
         d.httpRespQueueLen = 0;
         d.httpLCMQueueLen = 0;

@@ -20,8 +20,8 @@ bool BillActionSetKeywords::run(ActionContext &context) {
   smsc_log_debug(logger, "Run Action '%s'...", opname());
   std::string transId = getTransId( context );
   if ( transId.empty() ) {
-      smsc_log_error( logger, "Action '%s' cannot get transaction name", opname() );
-      setBillingStatus( context, "cannot get transaction name", false );
+      // smsc_log_error( logger, "Action '%s' cannot get transaction name", opname() );
+      // setBillingStatus( context, "cannot get transaction name", false );
       return true;
   }
 
