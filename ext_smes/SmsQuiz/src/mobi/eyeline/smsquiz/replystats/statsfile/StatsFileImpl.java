@@ -20,11 +20,10 @@ public class StatsFileImpl implements StatsFile {
     private static String timePattern;
 
     private final String da;    // номер сервиса
-    private BufferedReader reader;
     private PrintWriter writer;
     private SimpleDateFormat dateFormat;
     private SimpleDateFormat timeFormat;
-    private SimpleDateFormat cvsDateFormat;
+    private SimpleDateFormat csvDateFormat;
     private String filePath;
 
     public static void init(final String configFile) throws ReplyStatsException {
@@ -55,7 +54,7 @@ public class StatsFileImpl implements StatsFile {
 
         dateFormat = new SimpleDateFormat(datePattern);
         timeFormat = new SimpleDateFormat(timePattern);
-        cvsDateFormat = new SimpleDateFormat(datePattern+" "+timePattern);
+        csvDateFormat = new SimpleDateFormat(datePattern+" "+timePattern);
 
         File currentFile = new File(filePath);
         if(!currentFile.exists()) {
@@ -98,10 +97,10 @@ public class StatsFileImpl implements StatsFile {
         Date date = null;
         Reply reply=  null;
         try {
-            reader = new BufferedReader(new FileReader(filePath));
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
             while((line = reader.readLine())!=null) {
                 tokenizer = new StringTokenizer(line,",");
-                date = cvsDateFormat.parse(tokenizer.nextToken()+" "+tokenizer.nextToken());
+                date = csvDateFormat.parse(tokenizer.nextToken()+" "+tokenizer.nextToken());
                 if((date.before(till))&&(date.after(from))) {
                     reply = new Reply();
                     reply.setDa(da);
