@@ -34,11 +34,15 @@ protected:
     virtual bool FinishXMLSubSection(const std::string& name);
 //////////////IParserHandler Interfase///////////////////////
     void RunActions(ActionContext& context);
-    void RegisterTrafficEvent(const CommandProperty& commandProperty, const SessionPrimaryKey& sessionPrimaryKey, const std::string& messageBody );
+    void RegisterTrafficEvent( const CommandProperty& commandProperty,
+                               const SessionPrimaryKey& sessionPrimaryKey,
+                               const std::string& messageBody,
+                               const std::string* keywords );
     
     void RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol,
                             uint32_t serviceId, uint32_t providerId, uint32_t operatorId,
-                            uint16_t commandStatus, const SessionPrimaryKey& sessionPrimaryKey, char dir);
+                            uint16_t commandStatus, const SessionPrimaryKey& sessionPrimaryKey,
+                            char dir);
 public:
     EventHandler() :logger(0)  { logger = Logger::getInstance("scag.re"); };
     virtual ~EventHandler();

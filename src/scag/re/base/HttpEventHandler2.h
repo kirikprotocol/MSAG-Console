@@ -10,9 +10,11 @@ namespace http {
 
 class HttpEventHandler : public EventHandler
 {
-    void processRequest(transport::http::HttpRequest& command, ActionContext& context);
-    void processResponse(transport::http::HttpResponse& command, ActionContext& context);
-    void processDelivery(transport::http::HttpResponse& command, ActionContext& context);
+    void processRequest(transport::http::HttpRequest& command, ActionContext& context, bool isnewevent );
+    void processResponse(transport::http::HttpResponse& command, ActionContext& context, bool isnewevent );
+    void processDelivery(transport::http::HttpResponse& command, ActionContext& context, bool isnewevent );
+    /// extends EventHandler::RunActions, adds traffic event registration if isnewevent is true
+    void newEvent( ActionContext& ctx );
 public:
     virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs);
     //Method return HandlerId from hander type string

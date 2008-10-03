@@ -70,7 +70,10 @@ void EventHandler::RunActions(ActionContext& context)
 }
 
 
-void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, const SessionPrimaryKey& sessionPrimaryKey, const std::string& messageBody)
+void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty,
+                                        const SessionPrimaryKey& sessionPrimaryKey,
+                                        const std::string& messageBody,
+                                        const std::string* keywords )
 {
     SaccTrafficInfoEvent* ev = new SaccTrafficInfoEvent();
 
@@ -98,6 +101,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
     else
         ev->cDirection = 'O';
 
+    if ( keywords ) ev->keywords.append(keywords->data(),keywords->size());
     Statistics::Instance().registerSaccEvent( ev );
 }
 

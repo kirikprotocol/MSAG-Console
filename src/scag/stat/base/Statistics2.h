@@ -86,6 +86,7 @@ using smsc::core::network::Socket;
         SaccEventHeader Header;
         uint8_t  cDirection;
         std::string pMessageText;
+        std::string keywords;
 
         SaccTrafficInfoEvent() : SaccEvent(sec_transport), cDirection(0) {};
 
@@ -93,6 +94,7 @@ using smsc::core::network::Socket;
         {
             pMessageText=src.pMessageText;
             cDirection=src.cDirection;
+            keywords = src.keywords;
         }
         void write(SaccSerialBuffer& buf);
         const char* getName() { return "SaccTrafficInfoEvent"; };
@@ -230,7 +232,8 @@ using smsc::core::network::Socket;
         event = -1;
         errCode = -1;
       }
-      SmppStatEvent(const char* src, bool _srcType, const char* dst, bool _dstType, int cnt, int errcode)
+        SmppStatEvent(const char* src, bool _srcType, const char* dst,
+                      bool _dstType, int cnt, int errcode)
       {
         srcId[0] = 0;
         if(src != NULL)
@@ -246,7 +249,8 @@ using smsc::core::network::Socket;
         event = cnt;
         errCode = errcode;
       }
-      SmppStatEvent(const char* src, bool _srcType, const char* dst, bool _dstType, const char* rid, int cnt, int errcode)
+      SmppStatEvent(const char* src, bool _srcType, const char* dst, bool _dstType,
+                    const char* rid, int cnt, int errcode)
       {
         srcId[0] = 0;
         if(src != NULL)

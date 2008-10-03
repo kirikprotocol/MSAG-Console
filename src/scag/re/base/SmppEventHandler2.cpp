@@ -54,12 +54,7 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
           transport::CommandOperation(session.getCurrentOperation()->type()),
           routeId );
 
-    if(!session.getLongCallContext().continueExec)
-        RegisterTrafficEvent( commandProperty, session.sessionPrimaryKey(),
-                              (hi == EH_SUBMIT_SM) || 
-                              (hi == EH_DELIVER_SM) ||
-                              (hi == EH_DATA_SM) ?
-                              CommandBridge::getMessageBody(smppcommand) : "" );
+    const bool newevent = ( !session.getLongCallContext().continueExec );
     
     ActionContext* actionContext = 0;
     if(session.getLongCallContext().continueExec) {
@@ -87,6 +82,19 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
     } catch (std::exception& e) {
         smsc_log_error(logger, "EventHandler: error in actions processing. Details: %s", e.what());
         rs.status = STATUS_FAILED;
+    }
+
+    if ( newevent ) {
+        const std::string* kw = 
+            ( session.getCurrentOperation() ?
+              session.getCurrentOperation()->getKeywords() : 0 );
+        RegisterTrafficEvent( commandProperty,
+                              session.sessionPrimaryKey(),
+                              (hi == EH_SUBMIT_SM) || 
+                              (hi == EH_DELIVER_SM) ||
+                              (hi == EH_DATA_SM) ?
+                              CommandBridge::getMessageBody(smppcommand) : "",
+                              kw );
     }
 
     if ( smppcommand.get_status() > 0) {

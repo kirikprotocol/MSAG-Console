@@ -66,6 +66,7 @@ void SaccTrafficInfoEvent::write(SaccSerialBuffer& buf)
 
     buf.writeStr(pMessageText, MAX_TEXT_MESSAGE_LENGTH * 2);
     buf.writeByte(cDirection);
+    buf.writeStr(keywords, MAX_KEYWORDS_TEXT_LENGTH * 2);
 }
 
 void SaccBillingInfoEvent::write(SaccSerialBuffer& buf)

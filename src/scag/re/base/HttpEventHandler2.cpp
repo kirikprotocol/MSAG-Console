@@ -2,6 +2,7 @@
 #include "HttpAdapter2.h"
 #include "ActionContext2.h"
 #include "scag/sessions/base/SessionManager2.h"
+#include "scag/sessions/base/Operation.h"
 #include "RuleEngine2.h"
 #include "EventHandlerType.h"
 #include "scag/bill/base/BillingManager.h"
@@ -13,7 +14,7 @@ namespace http {
 using namespace transport::http;
 using namespace sessions;
 
-void HttpEventHandler::processRequest(HttpRequest& command, ActionContext& context)
+void HttpEventHandler::processRequest(HttpRequest& command, ActionContext& context, bool isnewevent )
 {
     smsc_log_debug(logger, "Process HttpEventHandler Request...");
 
@@ -33,6 +34,10 @@ void HttpEventHandler::processRequest(HttpRequest& command, ActionContext& conte
         }
 
         RunActions(context);
+        if ( isnewevent ) {
+            isnewevent = false;
+            newEvent( context );
+        }
         if(rs.status == STATUS_FAILED) session.closeCurrentOperation();
 
         /*
@@ -51,13 +56,18 @@ void HttpEventHandler::processRequest(HttpRequest& command, ActionContext& conte
         //TODO: отлуп в стейт-машину
     }
    
+    if ( isnewevent ) {
+        isnewevent = false;
+        newEvent( context );
+    }
+
     session.closeCurrentOperation();
     rs.status = STATUS_FAILED;
     rs.result = -1;
     return;
 }
 
-void HttpEventHandler::processResponse(HttpResponse& command, ActionContext& context)
+void HttpEventHandler::processResponse(HttpResponse& command, ActionContext& context, bool isnewevent)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Response...");
 
@@ -68,6 +78,10 @@ void HttpEventHandler::processResponse(HttpResponse& command, ActionContext& con
         session.setCurrentOperation(command.getOperationId());
 
         RunActions(context);
+        if ( isnewevent ) {
+            isnewevent = false;
+            newEvent( context );
+        }
         if(rs.status == STATUS_FAILED) session.closeCurrentOperation();
 
         return;
@@ -76,14 +90,19 @@ void HttpEventHandler::processResponse(HttpResponse& command, ActionContext& con
         smsc_log_warn(logger, "HttpEventHandler: cannot process response command - %s", e.what());
         //TODO: отлуп в стейт-машину
     }
-    session.closeCurrentOperation();
 
+    if ( isnewevent ) {
+        isnewevent = false;
+        newEvent( context );
+    }
+
+    session.closeCurrentOperation();
     rs.status = STATUS_FAILED;
     rs.result = -1;
     return;
 }
 
-void HttpEventHandler::processDelivery(HttpResponse& command, ActionContext& context)
+void HttpEventHandler::processDelivery(HttpResponse& command, ActionContext& context, bool isnewevent)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Delivery...");
 
@@ -94,6 +113,10 @@ void HttpEventHandler::processDelivery(HttpResponse& command, ActionContext& con
         session.setCurrentOperation(command.getOperationId());
 
         RunActions(context);
+        if ( isnewevent ) {
+            isnewevent = false;
+            newEvent( context );
+        }
 
         if (rs.status != STATUS_LONG_CALL) {
           session.closeCurrentOperation();
@@ -106,12 +129,26 @@ void HttpEventHandler::processDelivery(HttpResponse& command, ActionContext& con
         //TODO: отлуп в стейт-машину
     }
 
+    if ( isnewevent ) {
+        isnewevent = false;
+        newEvent( context );
+    }
     session.closeCurrentOperation();
 
     rs.status = STATUS_FAILED;
     rs.result = -1;
     return;
 }
+
+
+void HttpEventHandler::newEvent( ActionContext& ctx )
+{
+    Operation* op = ctx.getSession().getCurrentOperation();
+    const std::string* kw = op ? op->getKeywords() : 0;
+    RegisterTrafficEvent( ctx.getCommandProperty(),
+                          ctx.getSession().sessionPrimaryKey(), "", kw );
+}
+
 
 void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs)
 {
@@ -145,6 +182,7 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
     HttpCommandAdapter _command(hc);
 
     ActionContext* actionContext = 0;
+    bool isnewevent = false;
     if(session.getLongCallContext().continueExec) {
 	actionContext = session.getLongCallContext().getActionContext();
 	if (actionContext) {
@@ -160,23 +198,23 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 	actionContext = new ActionContext(&(RuleEngine::Instance().getConstants()), 
 					  &session, &_command, &cp, &rs);
 	session.getLongCallContext().setActionContext(actionContext);
-	RegisterTrafficEvent(cp, session.sessionPrimaryKey(), "");
+        isnewevent = true;
+	// RegisterTrafficEvent(cp, session.sessionPrimaryKey(), "");
     }
 
     switch(hc.getCommandId())
     {
-        case HTTP_REQUEST:
-            return processRequest((HttpRequest&)hc, *actionContext);
-        case HTTP_RESPONSE:
-            return processResponse((HttpResponse&)hc, *actionContext);
-        case HTTP_DELIVERY:
-            return processDelivery((HttpResponse&)hc, *actionContext);
-        default:
-            smsc_log_debug(logger, "HttpEventHandler: unknown command");
+    case HTTP_REQUEST:
+        processRequest((HttpRequest&)hc, *actionContext, isnewevent );
+    case HTTP_RESPONSE:
+        processResponse((HttpResponse&)hc, *actionContext, isnewevent );
+    case HTTP_DELIVERY:
+        processDelivery((HttpResponse&)hc, *actionContext, isnewevent );
+    default:
+        smsc_log_debug(logger, "HttpEventHandler: unknown command");
+        rs.status = STATUS_FAILED;
+        rs.result = -1;
     }
-
-    rs.status = STATUS_FAILED;
-    rs.result = -1;
     return;
 }
 

@@ -245,7 +245,8 @@ int StateMachine::Execute()
 }
 
 
-void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode)
+void StateMachine::registerEvent( int event, SmppEntity* src, SmppEntity* dst,
+                                  const char* rid, int errCode )
 {
     char* src_id;
     char* dst_id = NULL;
@@ -262,11 +263,13 @@ void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, co
         dstType = dst->info.type == etSmsc;
     }
 
-    Statistics::Instance().registerEvent(SmppStatEvent(src_id, srcType, dst_id, dstType, rid, event, errCode));
+    Statistics::Instance().registerEvent
+        ( SmppStatEvent(src_id, srcType, dst_id, dstType, rid, event, errCode) );
 }
 
     
-uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity* dst, router::RouteInfo& ri, std::auto_ptr<SmppCommand>& aucmd)
+uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity* dst, router::RouteInfo& ri,
+                                  std::auto_ptr<SmppCommand>& aucmd )
 {
     if ( ! aucmd.get() ) return smsc::system::Status::SYSFAILURE;
     SmppCommand* cmd = aucmd.get();
@@ -328,7 +331,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
                     throw Exception("%s: Register cmd for uid=%d, seq=%d failed", cmdName, dst->getUid(), newSeq);
                 dst->putCommand(aucmd);
             }
-            registerEvent( stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
+            registerEvent( stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1 );
         }
     } catch (std::exception& e) {
         failed = smsc::system::Status::SYSFAILURE;
@@ -463,19 +466,6 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
             return;
         }
 
-        /*
-        opmaker.setupOperation( st );
-        if ( st.status != re::STATUS_OK ) {
-            SubmitResp( aucmd, st.result );
-            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)routeId, st.result );
-            return;
-        }
-        smsc_log_debug(log_, "Submit: RuleEngine processing...");
-        re::RuleEngine::Instance().process( *cmd, *session.get(), st);
-        smsc_log_debug(log_, "Submit: RuleEngine processed: st.status=%d st.result=%d", st.status, st.result );
-        opmaker.postProcess( st );
-         */
-
         routeset = false; // in case rerouting happens
     } while ( st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
 
@@ -488,38 +478,12 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
                       sms.getDestinationAddress().toString().c_str());
         st.status = re::STATUS_FAILED;
         st.result = smsc::system::Status::NOROUTE;
-        // SubmitResp(aucmd,smsc::system::Status::NOROUTE);
-        // registerEvent( stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
-        // session->closeCurrentOperation();
-        // return;
     }
-
-    /*
-    if (st.status == re::STATUS_LONG_CALL)
-    {
-        smsc_log_info(log_,"Submit: long call initiate");
-        if(!SmppManager::Instance().makeLongCall(aucmd, session))
-        {
-            SubmitResp(aucmd, smsc::system::Status::SYSERR);
-            session->closeCurrentOperation();
-            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)routeId, smsc::system::Status::SYSERR);
-        }
-        return;
-    }
-     */
 
     if (st.status != re::STATUS_OK )
     {
-        /*
-        smsc_log_info(log_,"Submit: RuleEngine returned result=%d",st.result);
-        if (!st.result)
-        {
-            smsc_log_warn(log_, "Submit: Rule failed and no error(zero rezult) returned");
-            st.result = smsc::system::Status::SYSERR;
-        }
-         */
         SubmitResp(aucmd, st.result);
-        registerEvent( statevent, src, dst, (char*)routeId, st.result);
+        registerEvent( statevent, src, dst, (char*)routeId, st.result );
         if ( session.get() ) session->closeCurrentOperation();
         return;
     }
@@ -744,7 +708,7 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
         }
     }
 
-    registerEvent( staterr, src, dst, (char*)sms->getRouteId(), err );
+    registerEvent(staterr, src, dst, (char*)sms->getRouteId(), err);
 
     try {
         dst->putCommand(aucmd);
@@ -885,20 +849,6 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
             return;
         }
 
-        /*
-        opmaker.setupOperation( st );
-        if ( st.status != re::STATUS_OK ) {
-            smsc_log_warn( log_, "Delivery op fail: %s, res=%d", opmaker.what(), st.result );
-            DeliveryResp( aucmd, st.result );
-            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result );
-            return;
-        }
-        smsc_log_debug(log_, "Delivery: RuleEngine processing...");
-        re::RuleEngine::Instance().process(*cmd,*session.get(), st);
-        smsc_log_debug(log_, "Delivery: RuleEngine processed: st.status=%d st.result=%d", st.status, st.result );
-        opmaker.postProcess( st );
-         */
-
         routeset = false;
     } while ( st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
 
@@ -911,30 +861,12 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
                       sms.getDestinationAddress().toString().c_str());
         st.status = re::STATUS_FAILED;
         st.result = smsc::system::Status::NOROUTE;
-        // DeliveryResp(aucmd,smsc::system::Status::NOROUTE);
-        // registerEvent( stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
-        // session->closeCurrentOperation();
-        // return;
     }
-
-    /*
-    if (st.status == re::STATUS_LONG_CALL)
-    {
-        smsc_log_debug(log_,"Delivery: long call initiate");
-        if(!SmppManager::Instance().makeLongCall(aucmd, session))
-        {
-            DeliveryResp(aucmd,smsc::system::Status::SYSERR);
-            session->closeCurrentOperation();
-            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
-        }
-        return;
-    }
-     */
 
     if (st.status != re::STATUS_OK)
     {
         DeliveryResp(aucmd,st.result);
-        registerEvent( statevent, src, dst, (char*)routeId, st.result);
+        registerEvent(statevent, src, dst, (char*)routeId, st.result);
         if ( session.get() ) session->closeCurrentOperation();
         return;
     }
@@ -1092,44 +1024,6 @@ void StateMachine::processDeliveryResp( std::auto_ptr<SmppCommand> aucmd,
         opmaker.process( st );
         if ( st.status == re::STATUS_LONG_CALL ) return;
 
-        /*
-        opmaker.setupOperation( st );
-        if ( st.status != re::STATUS_OK ) {
-            smsc_log_warn( log_, "%s: op fail: %s, res=%d",
-                           where, opmaker.what(), st.result );
-            st.result = smsc::system::Status::TRANSACTIONTIMEDOUT;
-            break;
-        }
-
-        smsc_log_debug(log_, "DeliveryResp: RuleEngine processing...");
-        re::RuleEngine::Instance().process(*cmd, *session.get(), st);
-        smsc_log_debug(log_, "DeliveryResp: RuleEngine processed: st.status=%d st.result=%d", st.status, st.result );
-
-         opmaker.postProcess( st );
-
-    if (st.status == re::STATUS_LONG_CALL)
-    {
-  //          if (!reg_.Register(srcUid, cmd->get_dialogId(), orgCmd))
-  //            throw Exception("DeliveryResp: Register cmd for uid=%d, seq=%d failed", dst->getUid(), cmd->get_dialogId());
-
-        smsc_log_debug(log_,"DeliveryResp: long call initiate");
-        if(SmppManager::Instance().makeLongCall(aucmd, session))
-        {
-            return;
-        }
-        rs = smsc::system::Status::SYSERR;
-    }
-    else if(st.status != re::STATUS_OK)
-    {
-        if(!st.result)
-        {
-            smsc_log_warn(log_, "DeliveryResp: Rule failed and no error(zero rezult) returned");
-            st.result = smsc::system::Status::SYSERR;
-        }
-        rs = st.result;
-    }
-         */
-
     } while ( false ); // fake loop
 
 
@@ -1150,10 +1044,6 @@ void StateMachine::processDeliveryResp( std::auto_ptr<SmppCommand> aucmd,
         } else if (cmd->get_resp()->expiredResp) {
             staterr = stat::events::smpp::RESP_EXPIRED;
         }
-        // else if (cmd->get_status())
-        // {
-        // staterr = stat::events::smpp::RESP_REJECTED;
-        // }
         else
         {
             err = -1;
@@ -1161,7 +1051,7 @@ void StateMachine::processDeliveryResp( std::auto_ptr<SmppCommand> aucmd,
         }
     }
 
-    registerEvent( staterr, src, dst, (char*)sms->getRouteId(), err );
+    registerEvent( staterr, src, dst, (char*)sms->getRouteId(), err);
 
     try{
         dst->putCommand(aucmd);
@@ -1337,26 +1227,11 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
         }
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
-        opmaker.process( st );
+        opmaker.process(st);
         if ( st.status == re::STATUS_LONG_CALL ) {
             smscmd.setRouteInfo( ri );
             return;
         }
-
-        /*
-        if ( st.status != re::STATUS_OK ) {
-            smsc_log_warn( log_, "DataSm op fail: %s, res=%d", opmaker.what(), st.result );
-            DataResp( aucmd, st.result );
-            registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result );
-            return;
-        }
-        
-        smsc_log_debug(log_, "DataSm: RuleEngine processing...");
-        re::RuleEngine::Instance().process(*cmd,*session.get(), st);
-        smsc_log_debug(log_, "DataSm: RuleEngine processed: st.status=%d st.result=%d", st.status, st.result );
-
-        opmaker.postProcess( st );
-         */
 
         routeset = false;
     } while ( st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT );
@@ -1370,25 +1245,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
                       sms.getDestinationAddress().toString().c_str());
         st.status = re::STATUS_FAILED;
         st.result = smsc::system::Status::NOROUTE;
-        // DataResp(aucmd,smsc::system::Status::NOROUTE);
-        // session->closeCurrentOperation();
-        // registerEvent(stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
-        // return;
     }
-
-    /*
-    if (st.status == re::STATUS_LONG_CALL)
-    {
-        smsc_log_debug(log_,"DataSm: long call initiate");
-        if(!SmppManager::Instance().makeLongCall(aucmd, session))
-        {
-            DataResp(aucmd, smsc::system::Status::SYSERR);
-            session->closeCurrentOperation();
-            registerEvent(stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
-        }
-        return;
-    }
-     */
 
     if (st.status != re::STATUS_OK)
     {
@@ -1561,48 +1418,6 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
 
     } while ( false ); // fake loop
 
-    /*
-    SmppOperationMaker opmaker( *cmd, *session.get() );
-    opmaker.setupOperation( st );
-    if ( st.status != re::STATUS_OK ) {
-        smsc_log_warn( log_, "DataSmResp op fail: %s, res=%d", opmaker.what(), st.result );
-        registerEvent( stat::events::smpp::REJECTED, src, dst, (char*)sms->getRouteId(), st.result );
-        return;
-    }
-
-    smsc_log_debug(log_, "DataSmResp: RuleEngine processing...");
-    re::RuleEngine::Instance().process(*cmd,*session.get(), st);
-    smsc_log_debug(log_, "DataSmResp: RuleEngine processed: st.status=%d st.result=%d", st.status, st.result );
-
-    opmaker.postProcess( st );
-
-    if (st.status == re::STATUS_LONG_CALL)
-    {
-        smsc_log_debug(log_,"DataSmResp: long call initiate");
-        if(SmppManager::Instance().makeLongCall(aucmd, session))
-        {
-            return;
-        }
-        rs = smsc::system::Status::SYSERR;
-    }
-    else if(st.status != re::STATUS_OK)
-    {
-        if(!st.result)
-        {
-            smsc_log_warn(log_, "DataSmResp: Rule failed and no error(zero rezult) returned");
-            st.result = smsc::system::Status::SYSERR;
-        }
-        rs = st.result;
-    }
-     */
-
-    /*
-  if(cmd.hasSession())
-  {
-    cmd.setSession(SessionPtr(NULL));
-  }
-     */
-
     if (!(cmd->get_resp()->get_messageId()))
     {
         cmd->get_resp()->set_messageId("");
@@ -1625,10 +1440,6 @@ void StateMachine::processDataSmResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
         {
             staterr = stat::events::smpp::RESP_EXPIRED;
         }
-        // else if(cmd->get_status())
-        // {
-        // staterr = stat::events::smpp::RESP_REJECTED;
-        // }
         else
         {
             err = -1;

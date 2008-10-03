@@ -36,6 +36,7 @@ namespace sacc{
 #define MAX_EMAIL_ADDRESS_LENGTH    1024
 #define DELEVIRY_TIME_LENGTH        16
 #define PACKET_TYPE_LENGTH          50
+#define MAX_KEYWORDS_TEXT_LENGTH    1024
 
 #define SACC_SEND_TRANSPORT_EVENT       0x0001
 #define SACC_SEND_BILL_EVENT            0x0002  
