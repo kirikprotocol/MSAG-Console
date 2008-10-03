@@ -217,6 +217,7 @@ public class ScagRoutingManager extends Manager {
             }
             for (Iterator it = routes.values().iterator(); it.hasNext();) {
                 final Route route = (Route) it.next();
+                System.out.println("ScagRoutingManager.asveToFile().route ID=" + route.getId());
                 route.store(out);
             }
             Functions.storeConfigFooter(out, "routes");
@@ -291,6 +292,7 @@ public class ScagRoutingManager extends Manager {
 
     public synchronized void apply(final SCAGAppContext appContext) throws SCAGJspException {
       try {
+          System.out.println("ScagRoutingManager.apply()");
           appContext.getScag().invokeCommand("applySmppRoutes",null,appContext,this,new File(scagConfFolder, SMPP_ROUTES_PRIMARY_CONFIG).getAbsolutePath());
       } catch (SibincoException e) {
           if (!(e instanceof StatusDisconnectedException)) {

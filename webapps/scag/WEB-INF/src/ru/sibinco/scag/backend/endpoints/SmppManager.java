@@ -391,12 +391,15 @@ public class SmppManager extends Manager {
     public synchronized void createUpdateServicePoint(String user, Svc svc, boolean isAdd,
                                                       boolean isEnabled, SCAGAppContext appContext,
                                                       Svc oldSvc) throws SCAGJspException {
+        logger.error("SmppManager.createUpdateServicePoint() start");
         String messageText = "";
         try {
             if (isAdd) {
+                logger.error("SmppManager.createUpdateServicePoint() isAdd");
                 messageText = "Added new service point: ";
                 appContext.getScag().invokeCommand("addSvc", svc, appContext, this, configFilename);
             } else {
+                logger.error("SmppManager.createUpdateServicePoint() !isAdd");
                 messageText = "Changed service point: ";
                 appContext.getScag().invokeCommand("updateSvc", svc, appContext, this, configFilename);
             }
