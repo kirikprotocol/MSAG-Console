@@ -49,6 +49,9 @@ public class MCAHDBTest {
 
         start +=10000;
 
+        if (start >= 100000)
+          start = 0;
+
       } catch (AxisFault axisFault) {
         axisFault.printStackTrace();
       } catch (java.rmi.RemoteException e) {
@@ -75,6 +78,8 @@ public class MCAHDBTest {
         System.out.println("Generate journal.");
         TestUtils.generateJournal(config.getJournalsStoreDir(), "+7913902", "+7913903", start, 9000, 10);
         start += 10000;
+        if (start >= 100000)
+          start = 0;
       } catch (IOException e) {
         e.printStackTrace();
       } catch (ConfigException e) {

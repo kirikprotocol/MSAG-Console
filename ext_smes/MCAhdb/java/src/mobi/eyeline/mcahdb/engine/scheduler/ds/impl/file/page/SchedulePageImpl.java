@@ -22,7 +22,8 @@ import com.eyeline.utils.FileUtils;
 class SchedulePageImpl implements SchedulePage {
 
   private static final Category log = Category.getInstance(SchedulePageImpl.class);
-  private static final SimpleDateFormat df = new SimpleDateFormat("yyMMddHHmmss");
+
+  private final SimpleDateFormat df = new SimpleDateFormat("yyMMddHHmmss");
 
   private RandomAccessFile f;
   private final File file;

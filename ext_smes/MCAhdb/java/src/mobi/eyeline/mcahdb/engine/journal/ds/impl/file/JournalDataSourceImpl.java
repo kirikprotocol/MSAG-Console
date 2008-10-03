@@ -7,6 +7,8 @@ import mobi.eyeline.mcahdb.engine.journal.ds.JournalEvent;
 import mobi.eyeline.mcahdb.engine.journal.JournalsProcessor;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
@@ -18,7 +20,7 @@ import java.text.ParseException;
 
 public class JournalDataSourceImpl implements JournalDataSource {
 
-  private final static SimpleDateFormat archiveDateDirFormat = new SimpleDateFormat("yyMM/dd");
+  private final SimpleDateFormat archiveDateDirFormat = new SimpleDateFormat("yyMM/dd");
 
   private final File journalsDir;
   private final FileFilter journalsFilter;
@@ -81,8 +83,8 @@ public class JournalDataSourceImpl implements JournalDataSource {
 
   private static class JournalImpl implements Journal {
 
-    private static final SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd HH:mm:ss.SSS");
-    private static final SimpleDateFormat startdf = new SimpleDateFormat("yyyyMMddHHmmss");
+    private final SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd HH:mm:ss.SSS");
+    private final SimpleDateFormat startdf = new SimpleDateFormat("yyyyMMddHHmmss");
 
     private BufferedReader is;
     private final String journalName;
@@ -109,7 +111,7 @@ public class JournalDataSourceImpl implements JournalDataSource {
       }
     }
 
-    private static JournalEvent readMissedCall(StringTokenizer st) throws DataSourceException {
+    private JournalEvent readMissedCall(StringTokenizer st) throws DataSourceException {
       JournalEvent e = new JournalEvent();
       e.setType(JournalEvent.Type.MissedCall);
 
@@ -130,7 +132,7 @@ public class JournalDataSourceImpl implements JournalDataSource {
       return e;
     }
 
-    private static JournalEvent readMissedCallAlert(StringTokenizer st) throws DataSourceException {
+    private JournalEvent readMissedCallAlert(StringTokenizer st) throws DataSourceException {
       JournalEvent e = new JournalEvent();
       e.setType(JournalEvent.Type.MissedCallAlert);
 
@@ -151,7 +153,7 @@ public class JournalDataSourceImpl implements JournalDataSource {
       return e;
     }
 
-    private static JournalEvent readMissedCallAlertFail(StringTokenizer st) throws DataSourceException {
+    private JournalEvent readMissedCallAlertFail(StringTokenizer st) throws DataSourceException {
       JournalEvent e = new JournalEvent();
       e.setType(JournalEvent.Type.MissedCallAlertFail);
 
@@ -170,7 +172,7 @@ public class JournalDataSourceImpl implements JournalDataSource {
       return e;
     }
 
-    private static JournalEvent readMissedCallRemove(StringTokenizer st) throws DataSourceException {
+    private JournalEvent readMissedCallRemove(StringTokenizer st) throws DataSourceException {
       JournalEvent e = new JournalEvent();
       e.setType(JournalEvent.Type.MissedCallRemove);
 
@@ -189,7 +191,7 @@ public class JournalDataSourceImpl implements JournalDataSource {
       return e;
     }
 
-    private static JournalEvent readProfileChanged(StringTokenizer st) throws DataSourceException {
+    private JournalEvent readProfileChanged(StringTokenizer st) throws DataSourceException {
       JournalEvent e = new JournalEvent();
       e.setType(JournalEvent.Type.ProfileChaged);
 

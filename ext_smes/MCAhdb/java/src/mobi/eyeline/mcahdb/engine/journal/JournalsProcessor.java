@@ -53,7 +53,7 @@ public class JournalsProcessor {
         return new Thread(r, "Journals-Processor-Task");
       }
     });
-    executor.scheduleWithFixedDelay(new Runnable() {
+    executor.scheduleAtFixedRate(new Runnable() {
       public void run() {
         loadJournals();
       }
