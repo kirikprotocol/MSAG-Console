@@ -2,7 +2,7 @@
 #define _SCAG_RE_ACTIONS_SESS_ACTIONSESSIONDESTROYSERVICE_H
 
 #include "scag/re/base/Action2.h"
-
+#include "TimeField.h"
 
 namespace scag2 {
 namespace re {
@@ -22,6 +22,9 @@ protected:
                                                  const ActionFactory& factory );
     virtual bool FinishXMLSubSection( const std::string& name );
 
+protected:
+    bool      haswait_;
+    TimeField wait_;
 };
 
 }

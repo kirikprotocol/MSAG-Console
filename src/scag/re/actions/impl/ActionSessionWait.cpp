@@ -7,8 +7,7 @@ namespace scag2 {
 namespace re {
 namespace actions {
 
-ActionSessionWait::ActionSessionWait() :
-wait_(0)
+ActionSessionWait::ActionSessionWait()
 {
 }
 
@@ -17,44 +16,7 @@ void ActionSessionWait::init( const SectionParams& params,
                               PropertyObject propertyObject )
 {
     // --- input fields
-    bool bExist;
-    waitFieldType_ = CheckParameter( params,
-                                     propertyObject, 
-                                     "session:wait", "time",
-                                     true, true,
-                                     waitFieldName_,
-                                     bExist );
-
-    if ( waitFieldType_ == ftUnknown ) {
-
-        if ( waitFieldName_.empty() )
-            throw SCAGException("Action: 'session:wait' should have non-empty time field" );
-
-        static const char* formats[] = {
-            "%u:%u:%u", "%u:%u", "%u", 0
-        };
-
-        for ( unsigned i = 0; ; ++i ) {
-
-            const char* fmt = formats[i];
-            if ( ! *fmt )
-                throw SCAGException( "Action: 'session:wait' wrong time field: %s",
-                                     waitFieldName_.c_str() );
-
-            unsigned elts[3];
-            elts[0] = elts[1] = elts[2] = 0;
-
-            int nelts = sscanf( waitFieldName_.c_str(), fmt,
-                                &(elts[0]), &(elts[1]), &(elts[2]) );
-            if ( nelts != int(3-i) ) continue;
-
-            wait_ = 0;
-            for ( unsigned j = 0; j < 3-i; ++j ) {
-                wait_ = wait_*60 + elts[j];
-            }
-            break;
-        }
-    }
+    wait_.init( params, propertyObject, "session:wait", "time", true, true );
 }
 
 
@@ -74,22 +36,9 @@ bool ActionSessionWait::FinishXMLSubSection( const std::string& )
 
 bool ActionSessionWait::run( ActionContext& context )
 {
-    unsigned tmo = wait_;
-    if ( waitFieldType_ != ftUnknown ) {
-        Property* property = context.getProperty( waitFieldName_ );
-        if ( ! property ) {
-            smsc_log_error( logger, "Action 'session:wait': invalid property %s for time",
-                            waitFieldName_.c_str() );
-            return true;
-        }
-        tmo = unsigned(property->getInt());
-
-    }
-
+    const unsigned tmo = wait_.getTime( "session:wait", context );
     context.getSession().waitAtLeast( tmo );
     smsc_log_debug( logger, "Action 'session:wait': tmo=%u", tmo );
-    // scag_plog_debug(pl,logger);
-    // context.getSession().print( pl );
     return true;
 }
 

@@ -284,12 +284,12 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
         if ( rulePtr ) rulePtr->process( command, session, rs );
 
         // check if we need to destroy the service
-        if ( rs.status == STATUS_OK && 
-             session.getLongCallContext().getActionContext() &&
-             session.getLongCallContext().getActionContext()->getDestroyService() ) {
+        actions::ActionContext* ac = session.getLongCallContext().getActionContext();
+        if ( rs.status == STATUS_OK && ac && ac->getDestroyService() >= 0 ) {
             if ( rulePtr ) rulePtr->processSession( session, rs );
             if ( rs.status == STATUS_OK ) 
-                session.dropInitRuleKey(key.serviceId, key.transport);
+                session.dropInitRuleKey( key.serviceId, key.transport,
+                                         ac->getDestroyService() );
         }
     
     } while ( false );

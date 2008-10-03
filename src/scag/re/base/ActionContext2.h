@@ -164,9 +164,11 @@ public:
 
     Session& getSession() { return *session_; };
 
-    // bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
-    bool getDestroyService() const { return destroyService_; }
-    void setDestroyService() { destroyService_ = true; }
+    /// return the flag of destroying service:
+    /// <0 -- do not destroy the service;
+    /// >=0 -- destroy the service and set the expiration time to the given amount of seconds
+    int getDestroyService() const { return destroyService_; }
+    void setDestroyService( int wait = 0 ) { destroyService_ = wait; }
 
     /// set the current context scope for property access.
     void setContextScope( int id );

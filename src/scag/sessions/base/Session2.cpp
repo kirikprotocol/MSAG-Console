@@ -763,11 +763,11 @@ void Session::closeCurrentOperation()
     // changed_ = true;
     const unsigned opcount = operationsCount();
     if ( opcount == 0 ) {
-        time_t now = time(0);
         expirationTime_ = expirationTimeAtLeast_;
         // smsc_log_debug(log_, "session=%p key=%s has no ops, expiration=%d",
         // this, sessionKey().toString().c_str(),
         // int(expirationTime_ - now));
+        time_t now = time(0);
         if ( expirationTime_ <= now ) {
             ; // FIXME: push into session manager expiration thread
         }
@@ -849,7 +849,7 @@ bool Session::getRuleKey( int& serv, int& trans ) const
 }
 
 
-void Session::dropInitRuleKey( int serviceId, int transport )
+void Session::dropInitRuleKey( int serviceId, int transport, int wait )
 {
     if ( ! initrulekeys_.empty() ) {
 
@@ -864,12 +864,21 @@ void Session::dropInitRuleKey( int serviceId, int transport )
             }
         }
 
-        if ( initrulekeys_.empty() ) {
-            // if no services left, then reset session expiration time
-            time_t now = time(0);
-            // smsc_log_debug( log_, "session=%p/%s no more initrulekeys",
-            // this, sessionKey().toString().c_str() );
-            if ( expirationTimeAtLeast_ > now ) expirationTimeAtLeast_ = now;
+        if ( wait >= 0 ) {
+            if ( initrulekeys_.empty() ) {
+                // if no services left, then reset session expiration time
+                const time_t waitfor = time_t(time(0) + wait);
+                // smsc_log_debug( log_, "session=%p/%s no more initrulekeys",
+                // this, sessionKey().toString().c_str() );
+                if ( expirationTimeAtLeast_ > waitfor ) {
+                    expirationTimeAtLeast_ = waitfor;
+                    if ( operationsCount() == 0 )
+                        expirationTime_ = expirationTimeAtLeast_;
+                }
+            } else {
+                // there is at least one service
+                waitAtLeast( unsigned(wait) );
+            }
         }
     }
 }
@@ -967,11 +976,13 @@ void Session::waitAtLeast( unsigned sec )
     if ( t > expirationTimeAtLeast_ ) {
         expirationTimeAtLeast_ = t;
         if ( t > expirationTime_ ) expirationTime_ = t;
+        /*
         smsc_log_debug( log_, "session=%p/%s wait at least tmASH=%d/%d/%d",
                         this, sessionKey().toString().c_str(),
                         int(lastAccessTime_ - now),
                         int(expirationTime_ - now),
                         int(expirationTimeAtLeast_ - now) );
+         */
     }
 }
 

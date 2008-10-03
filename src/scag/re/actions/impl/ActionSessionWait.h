@@ -3,6 +3,7 @@
 
 #include "scag/re/base/ActionContext2.h"
 #include "scag/re/base/Action2.h"
+#include "TimeField.h"
 
 namespace scag2 {
 namespace re {
@@ -22,9 +23,9 @@ protected:
                                                  const ActionFactory& factory );
     virtual bool FinishXMLSubSection( const std::string& name );
 
-    FieldType   waitFieldType_;
-    std::string waitFieldName_;
-    unsigned    wait_;
+protected:
+    bool        haswait_;
+    TimeField   wait_;
 };
 
 }

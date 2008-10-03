@@ -212,8 +212,10 @@ public:
     /// push a rule key onto the rulekey stack
     void pushInitRuleKey( int serviceId, int transport );
     bool getRuleKey( int& serviceId, int& transport ) const;
-    void dropInitRuleKey( int serviceId, int transport );
 
+    /// drop the given rule and reset expiration time to wait if possible.
+    /// expiration time cannot be lowered if there are living services.
+    void dropInitRuleKey( int serviceId, int transport, int wait = 0 );
 
     /// --- property Scopes, for use from ActionContext
 
