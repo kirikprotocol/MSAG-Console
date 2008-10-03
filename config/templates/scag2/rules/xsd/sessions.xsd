@@ -38,7 +38,11 @@
                     <attribute name="time" type="scag:Value" use="required" />
                 </complexType>
             </element>
-            <element name="destroy_service" />
+            <element name="destroy_service">
+                <complexType>
+                    <attribute name="wait" type="scag:Value" use="optional" />
+                </complexType>
+            </element>
         </choice>    
     </group>
     
