@@ -31,15 +31,27 @@ public class Index extends EditBean {
     private boolean stopped = false;
     private boolean started = false;
     private static final String COLLAPSING_TREE_PARAM_PREFIX = "collapsing_tree_param.";
+//    private boolean isSaved = false;
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
+        logger.debug( "config/Index.process() start" );
         requestParams = request.getParameterMap();
+//        listParameters(requestParams); //debug code
         super.process(request, response);
 
         if (null != mbStart)
             start();
         else if (null != mbStop)
             stop();
+    }
+
+    private void listParameters( Map params ) {
+        logger.debug( "\n---------------------------------------" );
+        logger.debug( "config/Index.listParameters() params.size()=" + params.size() );
+        for( Iterator i = params.entrySet().iterator(); i.hasNext();  ){
+            logger.debug( "\tIndex.listParameter().entry='" + i.next() + "'" );
+        }
+        logger.debug( "\n---------------------------------------" );
     }
 
     public String getId() {
@@ -51,7 +63,7 @@ public class Index extends EditBean {
             Map.Entry entry = (Map.Entry) i.next();
             if (entry.getKey() instanceof String) {
                 String key = (String) entry.getKey();
-                if (key.startsWith(COLLAPSING_TREE_PARAM_PREFIX)) {
+                if (key.startsWith(COLLAPSING_TREE_PARAM_PREFIX)) {         // after save() such params exists
                     String name = key.substring(COLLAPSING_TREE_PARAM_PREFIX.length());
                     StringBuffer value = new StringBuffer();
                     for (int j = 0; j < ((String[]) entry.getValue()).length; j++) {
@@ -83,7 +95,98 @@ public class Index extends EditBean {
         }
     }
 
+//    protected void load_new(String loadId) throws SCAGJspException {
+//        // load params from URL
+////        for (Iterator i = requestParams.entrySet().iterator(); i.hasNext();) {
+////            Map.Entry entry = (Map.Entry) i.next();
+////            if (entry.getKey() instanceof String) {
+////                String key = (String) entry.getKey();
+////                if (key.startsWith(COLLAPSING_TREE_PARAM_PREFIX)) {
+////                    String name = key.substring(COLLAPSING_TREE_PARAM_PREFIX.length());
+////                    StringBuffer value = new StringBuffer();
+////                    for (int j = 0; j < ((String[]) entry.getValue()).length; j++) {
+////                        String valueElem = ((String[]) entry.getValue())[j];
+////                        value.append(valueElem.trim());
+////                    }
+////                    params.put(name, value.toString());
+////                }
+////            }
+////        }
+//
+//        logger.debug( "config/Index.load() start, params.size()=" + params.size() );
+//        //if no params in request
+////        if (params.size() == 0) {
+//            final Config gwConfig = appContext.getGwConfig();
+//            for (Iterator i = gwConfig.getParameterNames().iterator(); i.hasNext();) {
+//                String name = (String) i.next();
+//                Object value = gwConfig.getParameter(name);
+//                logger.debug( "config.Index.load() name='" + name + "' value='" + value + "'" );
+//                if (value instanceof String)
+//                    params.put(name, value);
+//                else if (value instanceof Boolean) {
+//                    Boolean valueBoolean = (Boolean) value;
+//                    params.put(name, String.valueOf(valueBoolean.booleanValue()));
+//                } else if (value instanceof Long) {
+//                    Long aLong = (Long) value;
+//                    params.put(name, String.valueOf(aLong.longValue()));
+//                } else if (value instanceof Integer) {
+//                    Integer integer = (Integer) value;
+//                    params.put(name, String.valueOf(integer.longValue()));
+//                }
+//            }
+////        }
+//        logger.debug( "config/Index.load() L100, params.size()=" + params.size() );
+//        for (Iterator i = requestParams.entrySet().iterator(); i.hasNext();) {
+//            Map.Entry entry = (Map.Entry) i.next();
+//            if (entry.getKey() instanceof String) {
+//                String key = (String) entry.getKey();
+//                if (key.startsWith(COLLAPSING_TREE_PARAM_PREFIX)) {
+//                    String name = key.substring(COLLAPSING_TREE_PARAM_PREFIX.length());
+//                    StringBuffer value = new StringBuffer();
+//                    String[] values = (String[]) entry.getValue();
+//                    for (int j = 0; j < 1; j++) {
+//                        String valueElem = values[j];
+//                        logger.debug( "config/Index.load() requestParams value" + j + "='" + value + "'" );
+//                        logger.debug( "config/Index.load() requestParams valueElem=" + valueElem + " param=" + params.get( name ) );
+//                        if( !isSaved && !valueElem.equals(params.get(name)) ){
+//                            logger.debug( "config/Index.load() DIFF valueElem=" + valueElem + " param=" + params.get(name) );
+//                            value.append(valueElem.trim());
+//                            break;
+//                        }
+//                    }
+//                    logger.debug( "config/Index.load() put name" + "='" + name + "value='" + value + "'" );
+//                    params.put(name, value.toString());
+//                }
+//            }
+//        }
+//        logger.debug( "config/Index.load() END params.size()=" + params.size() + "\n");
+//        listParameters( params );
+//        isSaved = false;
+//    }
+
+//    private String getValue(String name) {
+//        Object value =params.get( name );
+//
+//        if (value instanceof String)
+//            params.put(name, value);
+//        else if (value instanceof Boolean) {
+//            Boolean valueBoolean = (Boolean) value;
+//            params.put(name, String.valueOf(valueBoolean.booleanValue()));
+//        } else if (value instanceof Long) {
+//            Long aLong = (Long) value;
+//            params.put(name, String.valueOf(aLong.longValue()));
+//        } else if (value instanceof Integer) {
+//            Integer integer = (Integer) value;
+//            params.put(name, String.valueOf(integer.longValue()));
+//        }
+//
+//        String result = null;
+//        return result;
+//    }
+
     protected void save() throws SCAGJspException {
+        logger.debug( "config/Index.save() start" );
+        listParameters( params );
         final Config gwConfig = appContext.getGwConfig();
         Config oldConfig = null;
         try {
@@ -92,22 +195,45 @@ public class Index extends EditBean {
         final Statuses statuses = appContext.getStatuses();
         for (Iterator i = params.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
-            final Object parameter = gwConfig.getParameter((String) entry.getKey());
+            String key = (String) entry.getKey();
+            Object value = entry.getValue();
+            final Object parameter = gwConfig.getParameter(key);
+            logger.debug( "config/Index.save() key='" + entry.getKey() + "'");
+//            logger.debug( "config/Index.save() S key='" + key + "'");
             if (parameter != null) {
-                if (parameter instanceof String)
-                    gwConfig.setString((String) entry.getKey(), (String) entry.getValue());
-                else if (parameter instanceof Integer || parameter instanceof Long)
+                if (parameter instanceof String){
+                    gwConfig.setString(key, (String)value);
+                    logger.debug( "config/Index.save() param S value='" + (String) value + "'");
+                }
+                else if (parameter instanceof Integer || parameter instanceof Long){
                     try {
-                        gwConfig.setInt((String) entry.getKey(), Integer.parseInt(((String) entry.getValue()).trim()));
+                        gwConfig.setInt( key, Integer.parseInt( ((String)value).trim() ) );
+                        logger.debug( "config/Index.save() param I value='" + Integer.parseInt( ( (String)value).trim() ) + "'");
                     } catch (NumberFormatException e) {
+                        logger.debug( "config/Index.save() INVALID_INTEGER");
                         throw new SCAGJspException(Constants.errors.config.INVALID_INTEGER, (String) entry.getValue());
                     }
-                else if (parameter instanceof Boolean)
-                    gwConfig.setBool((String) entry.getKey(), Boolean.valueOf((String) entry.getValue()).booleanValue());
-                else
-                    gwConfig.setString((String) entry.getKey(), ((String) entry.getValue()).trim());
-            } else
-                gwConfig.setString((String) entry.getKey(), ((String) entry.getValue()).trim());
+                } else if (parameter instanceof Boolean){
+                    gwConfig.setBool( key, Boolean.valueOf((String)value).booleanValue() );
+                    logger.debug( "config/Index.save() param  B value='" + Integer.parseInt(((String)value).trim()) + "'");
+                } else {
+                    gwConfig.setString(key, ((String)value).trim());
+                    logger.debug( "config/Index.save() param O value='" + (String)value + "'");
+                }
+            } else {
+                try {
+                    logger.debug( "config/Index.save() NEW param I value='" + (String)value + "'");
+                    gwConfig.setInt( key, Integer.parseInt( ((String)value).trim() ) );
+                } catch (NumberFormatException e) {
+                    if( ((String)value).equalsIgnoreCase("true") || ((String)value).equalsIgnoreCase("false") ){
+                        logger.debug( "config/Index.save() NEW param B value='" + (String)value + "'");
+                        gwConfig.setBool( key, Boolean.valueOf((String)value).booleanValue() );
+                    } else {
+                        logger.debug( "config/Index.save() NEW param S value='" + (String)value + "'");
+                        gwConfig.setString(key, ((String) value).trim());
+                    }
+                }
+            }
             statuses.setConfigChanged(true);
             this.configChanged = true;
         }
@@ -203,4 +329,12 @@ public class Index extends EditBean {
     public void setStarted(boolean started) {
         this.started = started;
     }
+
+    public String getColTreeParamPrefix() {
+        return COLLAPSING_TREE_PARAM_PREFIX;
+    }
+
+//    public void setColTreeParamPrefix(String str){
+//        logger.debug( "config/Index attempt to save COLLAPSING_TREE_PARAM_PREFIX" );;
+//    }
 }
