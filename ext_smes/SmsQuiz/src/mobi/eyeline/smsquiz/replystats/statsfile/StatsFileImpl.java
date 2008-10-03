@@ -14,8 +14,9 @@ import mobi.eyeline.smsquiz.replystats.ReplyStatsException;
 import mobi.eyeline.smsquiz.replystats.Reply;
 
 public class StatsFileImpl implements StatsFile {
-    private static String replyStatsDir;   //директория статистики
     private static Logger logger = Logger.getLogger(StatsFileImpl.class);
+
+    private static String replyStatsDir;   //директория статистики
     private static String datePattern;
     private static String timePattern;
 
@@ -25,6 +26,7 @@ public class StatsFileImpl implements StatsFile {
     private SimpleDateFormat timeFormat;
     private SimpleDateFormat csvDateFormat;
     private String filePath;
+    private boolean closed = true;
 
     public static void init(final String configFile) throws ReplyStatsException {
         try {
@@ -35,20 +37,14 @@ public class StatsFileImpl implements StatsFile {
             if(replyStatsDir==null) {
                 throw new ReplyStatsException("dir.name parameter missed in config file", ReplyStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
             }
-            timePattern = config.getString("time.pattern","yyyyMMdd");
-            datePattern = config.getString("date.pattern","НН:mm");
-
-            File replyStatsDirFile = new File(replyStatsDir);
-            if(!replyStatsDirFile.exists()) {
-                logger.warn(replyStatsDir+" doesn't exist. Creating...");
-                replyStatsDirFile.mkdirs();
-            }
+            timePattern = config.getString("time.pattern.in.file","yyyyMMdd");
+            datePattern = config.getString("date.pattern.in.file","НН:mm");
         } catch (ConfigException e) {
             logger.error("Unable to init StatsFile",e);
             throw new ReplyStatsException("Unable to init StatsFile",e);
         }
     }
-    public StatsFileImpl(String da, String fileName) throws ReplyStatsException{
+    public StatsFileImpl(final String da, final String fileName) throws ReplyStatsException{
         this.da = da;
         filePath = replyStatsDir + "/" + da +"/"+fileName;
 
@@ -64,8 +60,12 @@ public class StatsFileImpl implements StatsFile {
     }
 
     public void open() throws ReplyStatsException{
+        if(logger.isInfoEnabled()) {
+            logger.info("File: "+filePath+" opened");
+        }
         try{
             writer = new PrintWriter(new BufferedWriter(new FileWriter(filePath,true)));
+            closed = false;
         } catch (IOException e) {
             logger.error("Can't create io stream",e);
             throw new ReplyStatsException("Can't create io stream",e);
@@ -130,9 +130,22 @@ public class StatsFileImpl implements StatsFile {
     }
 
 	public void close() {
+        if(logger.isInfoEnabled()) {
+            logger.info("File: "+filePath+" closed");
+        }
         if(writer!=null) {
             writer.close();
+            closed = true;
         }
+    }
+
+    public boolean exist() {
+        File file = new File(filePath);
+        return file.exists();
+    }
+
+    public static String getReplyStatsDir() {
+        return replyStatsDir;   
     }
 
     public static void main(String[] args) throws ReplyStatsException {
@@ -151,7 +164,10 @@ public class StatsFileImpl implements StatsFile {
             System.out.println(obj);
         }
         statsFile.close();
+    }
 
+    public boolean isClosed() {
+        return closed;
     }
 	 
 }
