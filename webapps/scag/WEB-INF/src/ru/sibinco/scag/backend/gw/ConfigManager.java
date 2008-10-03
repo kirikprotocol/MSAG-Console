@@ -31,16 +31,17 @@ public class ConfigManager extends Manager {
      try {
          appContext.getScag().invokeCommand("applyConfig", null, appContext, this, configFilename);
      } catch (SibincoException e) {
-     if (!(e instanceof StatusDisconnectedException)) {
+        if (!(e instanceof StatusDisconnectedException)) {
           //restore - copy parameters from oldConfig to current
           gwConfig.copyParams(oldConfig);
           logger.debug("Couldn't apply config", e);
           throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
-       }
+        }
      }
   }
 
   public void store() throws SibincoException{
+      logger.debug( "ConfigManager.store()");
     try {
      gwConfig.saveWithoutBackup(System.getProperty("file.encoding").equals("Cp1251") ? "ISO-8859-1" : System.getProperty("file.encoding"));
     } catch (Config.WrongParamTypeException e) {
