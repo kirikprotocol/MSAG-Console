@@ -205,11 +205,11 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
     switch(hc.getCommandId())
     {
     case HTTP_REQUEST:
-        processRequest((HttpRequest&)hc, *actionContext, isnewevent );
+        processRequest((HttpRequest&)hc, *actionContext, isnewevent ); break;
     case HTTP_RESPONSE:
-        processResponse((HttpResponse&)hc, *actionContext, isnewevent );
+        processResponse((HttpResponse&)hc, *actionContext, isnewevent ); break;
     case HTTP_DELIVERY:
-        processDelivery((HttpResponse&)hc, *actionContext, isnewevent );
+        processDelivery((HttpResponse&)hc, *actionContext, isnewevent ); break;
     default:
         smsc_log_debug(logger, "HttpEventHandler: unknown command");
         rs.status = STATUS_FAILED;
