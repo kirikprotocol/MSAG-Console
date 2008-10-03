@@ -18,8 +18,9 @@
     <script language="javaScript">
         function enableDisableByIdFunction(itemId, isDisabled) {
 //            var items = opForm.all[itemId];
-//            alert( itemId);
+            //alert( itemId);
             var items = document.getElementsByName(itemId);
+//            alert( "LENGTH=" + items.length );
             for (var i = 0; i < items.length; i++) {
                 items[i].disabled = isDisabled;
             }
@@ -29,7 +30,7 @@
             enableDisableByIdFunction('mbSave', false);
         }
 
-        function closeProp(id){
+        function openCloseProp(id){
 //            alert("id=" + id);
             var tbl = getElementByIdUni(id);
             var divCat = getElementByIdUni(id+"_div");
@@ -71,14 +72,45 @@
 <%--        </sm-ep:properties>--%>
     </sm-et:section>
 
+<%--    <sm-et:section title="Session Manager" name="SessionManager" type="table" >--%>
+<%--        <sm-ep:properties id="SessionManager" display="none">--%>
+<%--<%--        <table id="SessionManager" style="display:none">--%>
+<%--            <sm-et:txt title="Location" name="location" type="string" onchanged="configChanged();"/>--%>
+<%--            <sm-et:txt title="Expire Interval" name="expireInterval" type="int" onchanged="configChanged();"/>--%>
+<%--<%--        </table>--%>
+<%--        </sm-ep:properties>--%>
+<%--    </sm-et:section>--%>
+
     <sm-et:section title="Session Manager" name="SessionManager" type="table" >
         <sm-ep:properties id="SessionManager" display="none">
 <%--        <table id="SessionManager" style="display:none">--%>
-            <sm-et:txt title="Location" name="location" type="string" onchanged="configChanged();"/>
+<%--            <tr><td colspan=2>--%>
+<%--                <sm-et:section title="Locations" name="Locations" type="table">--%>
+<%--                    <sm-ep:properties id="Locations" display="none">--%>
+<%--                        <sm-et:txt title="Name" name="name" type="string" onchanged="configChanged();"/>--%>
+<%--                    </sm-ep:properties>--%>
+<%--                </sm-et:section>--%>
+<%--            </td></tr>--%>
+<%--            <sm-et:txt title="Location" name="location" type="string" onchanged="configChanged();"/>--%>
+<%--            <sm-et:txt title="Name" name="name" type="string" onchanged="configChanged();"/>--%>
             <sm-et:txt title="Expire Interval" name="expireInterval" type="int" onchanged="configChanged();"/>
-<%--        </table>--%>
+            <sm-et:txt title="IndexGrowth" name="indexGrowth" type="int" onchanged="configChanged();"/>
+            <sm-et:txt title="Pagesize" name="pagesize" type="int" onchanged="configChanged();"/>
+            <sm-et:txt title="Prealloc" name="prealloc" type="int" onchanged="configChanged();"/>
+            <sm-et:txt title="FlushCountLimit" name="flushCountLimit" type="int" onchanged="configChanged();"/>
+            <sm-et:txt title="FlushTimeLimit" name="flushTimeLimit" type="int" onchanged="configChanged();"/>
+            <sm-et:txt title="initUploadCount" name="initUploadCount" type="int" onchanged="configChanged();"/>
+            <sm-et:txt title="initUploadInterval" name="initUploadInterval" type="int" onchanged="configChanged();"/>
+            <sm-et:txt title="Diskio" name="diskio" type="bool" onchanged="configChanged();"/>
+<%--                <sm-et:section title="OldLocations" name="Locations" type="table">--%>
+<%--                    <sm-ep:properties id="Locations" display="none">--%>
+<%--                        <sm-et:txt title="Name" name="name" type="string" onchanged="configChanged();"/>--%>
+<%--                    </sm-ep:properties>--%>
+<%--                </sm-et:section>--%>
+
         </sm-ep:properties>
     </sm-et:section>
+
 
     <sm-et:section title="Statistics Manager" name="StatisticsManager" type="table">
         <sm-ep:properties id="StatisticsManager" display="none">
@@ -156,8 +188,10 @@
         <sm-ep:properties id="Personalization" display="none">
             <sm-et:txt name="host" type="string" onchanged="configChanged();"/>
             <sm-et:txt name="port" type="int" validation="port" onchanged="configChanged();"/>
-            <sm-et:txt title="Timeout" name="timeout" type="int" onchanged="configChanged();"/>
-            <sm-et:txt title="Ping Timeout" name="pingTimeout" type="int" onchanged="configChanged();"/>
+            <sm-et:txt name="pingTimeout"             type="int" onchanged="configChanged();"/>
+            <sm-et:txt name="ioTimeout"               type="int" onchanged="configChanged();"/>
+            <sm-et:txt name="reconnectTimeout"        type="int" onchanged="configChanged();"/>
+            <sm-et:txt name="maxWaitingRequestsCount" type="int" onchanged="configChanged();"/>
         </sm-ep:properties>
     </sm-et:section>
 
