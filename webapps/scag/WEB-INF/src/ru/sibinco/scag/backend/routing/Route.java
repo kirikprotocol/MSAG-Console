@@ -47,6 +47,8 @@ public class Route {
     private Service service;
     private String notes;
 
+    private boolean transit;
+
     public Route(final String routeName, final Map sources, final Map destinations, final boolean archived,
                  final boolean enabled, final boolean active, final String slicing, final String slicedRespPolicy,
                  final String srcSmeId, final Service service, final String notes) {
@@ -70,6 +72,33 @@ public class Route {
         this.srcSmeId = srcSmeId;
         this.service = service;
         this.notes = notes;
+    }
+
+    public Route(final String routeName, final Map sources, final Map destinations, final boolean archived,
+                 final boolean enabled, final boolean active, final String slicing, final String slicedRespPolicy,
+                 final String srcSmeId, final Service service, final String notes, final boolean transit) {
+        if (routeName == null)
+            throw new NullPointerException("Route name is null");
+        if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
+            throw new IllegalArgumentException("Route name is too long");
+        if (sources == null)
+            throw new NullPointerException("Sources list is null");
+        if (destinations == null)
+            throw new NullPointerException("Destinations list is null");
+
+        this.name = routeName;
+        this.sources = sources;
+        this.destinations = destinations;
+        this.archived = archived;
+        this.enabled = enabled;
+        this.active = active;
+        this.slicing = slicing;
+        this.slicedRespPolicy = slicedRespPolicy;
+        this.srcSmeId = srcSmeId;
+        this.service = service;
+        this.notes = notes;
+
+        this.transit = transit;
     }
 
     public Route(String routeName) {
@@ -187,13 +216,14 @@ public class Route {
         destinations.putAll(list);
     }
 
-    public PrintWriter store(PrintWriter out) {
+    public PrintWriter  store(PrintWriter out) {
         String name = StringEncoderDecoder.encode(getName());
         try {
             out.println("  <route id=\"" + name
-                    + "\" archived=\"" + isArchived()
+//                    + "\" archived=\"" + isArchived()
                     + "\" enabled=\"" + isEnabled()
                     + "\" active=\"" + isActive()
+                    + "\" transit=\"" + isTransit()
                     + "\" slicing=\"" + StringEncoderDecoder.encode(getSlicing())
                     + "\" slicedRespPolicy=\"" + StringEncoderDecoder.encode(getSlicedRespPolicy())
                     + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
@@ -336,4 +366,13 @@ public class Route {
     public void setNotes(final String notes) {
         this.notes = notes;
     }
+
+    public boolean isTransit() {
+        return transit;
+    }
+
+    public void setTransit(final boolean transit) {
+        this.transit = transit;
+    }
+
 }

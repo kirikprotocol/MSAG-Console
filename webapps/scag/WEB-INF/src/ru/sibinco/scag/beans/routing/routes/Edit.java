@@ -69,6 +69,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private HttpSession session;
     private boolean emptyDestinations = false;
 
+    private boolean transit;
 
     public String getId() {
         return id;
@@ -300,6 +301,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             srcSmeId = route.getSrcSmeId();
             notes = route.getNotes();
 
+            transit = route.isTransit();
+
             if (null != route.getService()) {
                 serviceName = route.getService().getName();
             }
@@ -340,16 +343,20 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 if( routes.containsKey(id) ){
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 }
+//                routes.put( id, new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(),
+//                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
                 routes.put( id, new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(),
-                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
+                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit) );
                 messagetxt = "Added new route: " + id + " ";
             } else {
                 if (!getEditId().equals(id) && routes.containsKey(id)){
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 }
                 routes.remove(getEditId());
+//                routes.put( id, new Route(id, sources, destinations, archived, enabled, active,
+//                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
                 routes.put( id, new Route(id, sources, destinations, archived, enabled, active,
-                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
+                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit) );
                 messagetxt = "Changed route: " + id + " ";
             }
         } catch (SibincoException e) {
@@ -670,5 +677,13 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             }
         }
         return result;
+    }
+
+    public boolean isTransit() {
+        return transit;
+    }
+
+    public void setTransit(final boolean transit) {
+        this.transit = transit;
     }
 }
