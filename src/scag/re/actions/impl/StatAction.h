@@ -5,23 +5,27 @@
 #include <vector>
 
 #include "scag/re/base/Action2.h"
+#include "scag/sessions/base/Operation.h"
 
 namespace scag2 { namespace re { namespace actions {
 
 using std::string;
 using std::vector;
+using scag2::sessions::Session;
+using scag2::sessions::Operation;
 
 class StatAction : public Action {
 public:
   StatAction():keywordsType_(ftUnknown) {};
   ~StatAction() {};
-  virtual void init(const SectionParams &params, PropertyObject propertyObject);
-  virtual bool run(ActionContext &context);
   virtual bool FinishXMLSubSection(const std::string &name);
   virtual IParserHandler * StartXMLSubSection(const std::string &name, const SectionParams &params, const ActionFactory &factory);
 
 protected:
+  void initKeywordsParameter(const SectionParams &params, PropertyObject propertyObject, bool readOnly);
+  bool getKeywords(ActionContext &context, string& keywords);
   void separateKeywords(const string& keywords, vector<string>& separatedKeywords);
+  void setKeywords(const vector<string>& separated, Operation* op);
   virtual const char* actionName() const = 0;
 
 protected:
@@ -33,6 +37,7 @@ protected:
 class AddKeywordsAction : public StatAction {
 public:
   AddKeywordsAction() {};
+  virtual void init(const SectionParams &params, PropertyObject propertyObject);
   virtual bool run(ActionContext &context);
 
 protected:
@@ -42,6 +47,7 @@ protected:
 class SetKeywordsAction : public StatAction {
 public:
   SetKeywordsAction() {};
+  virtual void init(const SectionParams &params, PropertyObject propertyObject);
   virtual bool run(ActionContext &context);
 
 protected:
