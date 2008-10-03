@@ -82,6 +82,7 @@ public class SubscribedAbDownloader {
                 result.close();
             }
         }
+        System.exit(1);
     }
 
 
