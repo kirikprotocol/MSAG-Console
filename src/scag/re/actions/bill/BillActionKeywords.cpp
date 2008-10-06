@@ -17,15 +17,16 @@ void BillActionKeywords::init(const SectionParams &params, PropertyObject proper
   smsc_log_debug(logger,"Action '%s' init...", opname());
 }
 
-bool BillActionKeywords::run(ActionContext& context)
+bool BillActionKeywords::changeKeywords(ActionContext &context, Keywords< ActionContext, BillingInfoStruct >* keywords)
 {
     Operation *op = NULL;
+    uint32_t bid = m_BillId;
     if(bExist)
     {
-        if(!m_BillId)
+        if(!bid)
         {
             Property * p = context.getProperty(m_sBillId);
-            if(!p || !(m_BillId = p->getInt()))
+            if(!p || !(bid = p->getInt()))
             {
                 std::string s = "Action '" + string(opname()) + " ' :: Invalid property " + m_sBillId + " for BillID";
                 smsc_log_error(logger, s.c_str());
@@ -44,7 +45,21 @@ bool BillActionKeywords::run(ActionContext& context)
             SetBillingStatus(context, p, false);
             return false;
         }
-        m_BillId = op->getBillId();
+        bid = op->getBillId();
+    }
+    BillingInfoStruct bis;
+    TariffRec tr;
+    try {
+        BillingManager::Instance().Info(bid, bis, tr);
+    } catch(SCAGException& e) {
+        smsc_log_error(logger,"Action 'bill:info' :: No transaction with bill_id=%d. Error: %s", bid, e.what());
+        SetBillingStatus(context, e.what(), false);
+        return true;
+    }
+    if (keywords->change(&bis)) {
+      SetBillingStatus(context, "", true);
+    } else {
+      SetBillingStatus( context, "can't set keywords", false );
     }
     return true;
 }
@@ -83,20 +98,13 @@ IParserHandler * BillActionKeywords::StartXMLSubSection(const std::string &name,
 }
 
 bool BillActionSetKeywords::run(ActionContext &context) {
-  smsc_log_debug(logger, "Run Action '%s'...", opname());
-  if (!BillActionKeywords::run(context)) {
-    return true;
-  }
-  SetBillingStatus(context, "", true);
-  return true;
+  std::auto_ptr< SetKeywordsType > keywords(new SetKeywordsType(keywords_, keywordsType_ == ftUnknown, logger, context));
+  return changeKeywords(context, keywords.get());
 }
 
 bool BillActionAddKeywords::run(ActionContext &context) {
-  if (!BillActionKeywords::run(context)) {
-    return true;
-  }
-  SetBillingStatus(context, "", true);
-  return true;
+  std::auto_ptr< AddKeywordsType > keywords(new AddKeywordsType(keywords_, keywordsType_ == ftUnknown, logger, context));
+  return changeKeywords(context, keywords.get());
 }
 
 }

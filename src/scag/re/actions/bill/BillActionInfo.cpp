@@ -141,7 +141,7 @@ bool BillActionInfo::run(ActionContext& context)
             case 11: p->setStr(bis.mediaType); break;
             case 12:
             {
-              const std::string* keywords = op->getKeywords();
+              const std::string* keywords = bis.getKeywords();
               if (keywords) {
                 p->setStr(*keywords); 
               } else {
