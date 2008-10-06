@@ -146,26 +146,6 @@ public class StatsFileImpl implements StatsFile {
     public static String getReplyStatsDir() {
         return replyStatsDir;   
     }
-
-    public static void main(String[] args) throws FileStatsException {
-        /*init("conf/replystats.xml");
-        StatsFileImpl statsFile = new StatsFileImpl("148","test.txt");
-        statsFile.open();
-        Reply reply = new Reply();
-        reply.setDa("148");
-        reply.setOa("+7913924924249");
-        reply.setText("Test");
-        reply.setDate(new Date());
-        statsFile.add(reply);
-        ArrayList list = new ArrayList();
-        statsFile.list(new Date(0),new Date(),list );
-        for(Object obj:list) {
-            System.out.println(obj);
-        }
-        statsFile.close(); */
-        System.out.println();
-    }
-
 	 
 }
  
