@@ -1,10 +1,10 @@
+package subscription;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.AfterClass;
-import org.junit.Ignore;
-import mobi.eyeline.smsquiz.storage.impl.SubscriptionDataSourceImpl;
-import mobi.eyeline.smsquiz.storage.impl.DBSubscriptionDataSource;
-import mobi.eyeline.smsquiz.storage.*;
+import mobi.eyeline.smsquiz.subscription.storage.impl.DBSubscriptionDataSource;
+import mobi.eyeline.smsquiz.subscription.storage.*;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;

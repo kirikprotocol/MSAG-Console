@@ -1,7 +1,6 @@
 package mobi.eyeline.smsquiz.replystats.statsfile;
 
-import mobi.eyeline.smsquiz.replystats.statsfile.StatsFile;
-import mobi.eyeline.smsquiz.replystats.ReplyStatsException;
+import mobi.eyeline.smsquiz.replystats.statsfile.FileStatsException;
 import mobi.eyeline.smsquiz.replystats.Reply;
 
 import java.util.*;
@@ -25,19 +24,27 @@ public class StatsFilesCache {
     private static String fileNamePattern;
     private static Logger logger = Logger.getLogger(StatsFilesCache.class);
     private ScheduledExecutorService s;
+    private static long delayFirst;
+    private static long iterationPeriod;
+    private static long timeLimit;
 
-    public static void init(final String configFile) throws ReplyStatsException {
+    public static void init(final String configFile) throws FileStatsException {
         try {
             final XmlConfig c = new XmlConfig();
             c.load(new File(configFile));
-            final PropertiesConfig config = new PropertiesConfig(c.getSection("statsFile").toProperties("."));
+            PropertiesConfig config = new PropertiesConfig(c.getSection("statsFile").toProperties("."));
             fileNamePattern = config.getString("filename.pattern");
+            config = new PropertiesConfig(c.getSection("fileCollector").toProperties("."));
+            delayFirst = config.getLong("time.first.delay");
+            iterationPeriod = config.getLong("time.period");
+            timeLimit = config.getLong("time.limit");
+
             if(fileNamePattern==null) {
-                throw new ReplyStatsException("filename.pattern not found in config file", ReplyStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
+                throw new FileStatsException("filename.pattern not found in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
             }
         } catch (ConfigException e) {
             logger.error("Unable to init StatsFilesCache",e);
-            throw new ReplyStatsException("Unable to init StatsFilesCache",e);
+            throw new FileStatsException("Unable to init StatsFilesCache",e);
         }
     }
 
@@ -47,13 +54,13 @@ public class StatsFilesCache {
         dateToStringFormat = new SimpleDateFormat("yyyyMMdd");
 
         s = Executors.newSingleThreadScheduledExecutor();
-        s.scheduleAtFixedRate(new FileCollector(false),500000,50000, java.util.concurrent.TimeUnit.SECONDS); //todo
+        s.scheduleAtFixedRate(new FileCollector(false),delayFirst,iterationPeriod, java.util.concurrent.TimeUnit.MINUTES);
 
     }
 	 
-    public Collection<StatsFile> getFiles(String da, Date from, Date till) throws ReplyStatsException{
+    public Collection<StatsFile> getFiles(String da, Date from, Date till) throws FileStatsException {
         if((da==null)||(from==null)||(till==null)) {
-            throw new ReplyStatsException("Some arguments are null", ReplyStatsException.ErrorCode.ERROR_WRONG_REQUEST);
+            throw new FileStatsException("Some arguments are null", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
         }
         StatsFile statsFile = null;
         Collection<StatsFile> files = new HashSet<StatsFile>();
@@ -64,6 +71,7 @@ public class StatsFilesCache {
         calendar.set(Calendar.MINUTE,0);
         calendar.set(Calendar.SECOND,0);
         calendar.set(Calendar.MILLISECOND,0);
+
         while(calendar.getTime().before(till)) {
             if ((statsFile = lockupFile(da, calendar.getTime()))!=null) {
                 files.add(statsFile);
@@ -73,9 +81,9 @@ public class StatsFilesCache {
         return files;
     }
 	 
-	public StatsFile getFile(String da, Date date) throws ReplyStatsException{
+	public StatsFile getFile(String da, Date date) throws FileStatsException {
         if((da==null)||(date==null)) {
-            throw new ReplyStatsException("Some arguments are null", ReplyStatsException.ErrorCode.ERROR_WRONG_REQUEST);
+            throw new FileStatsException("Some arguments are null", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
         }
         return lockupFile(da,date);
 	}
@@ -119,7 +127,7 @@ public class StatsFilesCache {
             lastUsageDate = new Date();
         }
 
-        public void open() throws ReplyStatsException {
+        public void open() throws FileStatsException {
             lock.lock();
             if(statsFileImpl==null) {
                 statsFileImpl = new StatsFileImpl(da, fileName);
@@ -131,10 +139,10 @@ public class StatsFilesCache {
             lastUsageDate = new Date();
         }
 
-        public void add(Reply reply) throws ReplyStatsException {
+        public void add(Reply reply) throws FileStatsException {
             statsFileImpl.add(reply);
         }
-        public void list(Date from, Date till, Collection result) throws ReplyStatsException {
+        public void list(Date from, Date till, Collection result) throws FileStatsException {
             statsFileImpl.list(from, till, result);
         }
 
@@ -149,31 +157,38 @@ public class StatsFilesCache {
     }
 
     private class FileCollector implements Runnable {
-        final long timeLimit = 50000000; //todo
-        boolean closeAll = false;
 
+        boolean closeAll = false;
         FileCollector(boolean closeAll) {
             this.closeAll = closeAll;
         }
 
         public void run() {
+            if(logger.isInfoEnabled()) {
+                logger.info("FileCollector starts...");
+            }
             for(CachedStatsFile file:filesMap.values()) {
-                boolean close;
-                if(closeAll) {
-                    close = closeAll;
-                }
-                else {
-                    close = (new Date().getTime() - file.lastUsageDate.getTime())>timeLimit;
-                }
-                if((!file.isClosed)&&(close)) {
-                    try {
-                        file.open();
-                        file.closeExt();
-                        file.close();
-                    } catch (ReplyStatsException e) {
-                        logger.error("Error lock the cached file", e);
+                if(!file.isClosed) {
+                    boolean close;
+                    if(closeAll) {
+                        close = closeAll;
+                    }
+                    else {
+                        close = (new Date().getTime() - file.lastUsageDate.getTime())>timeLimit;
+                    }
+                    if(close) {
+                        try {
+                            file.open();
+                            file.closeExt();
+                            file.close();
+                        } catch (FileStatsException e) {
+                            logger.error("Error lock the cached file", e);
+                        }
                     }
                 }
+            }
+            if(logger.isInfoEnabled()) {
+                logger.info("FileCollector finishes.");
             }
         }
     }

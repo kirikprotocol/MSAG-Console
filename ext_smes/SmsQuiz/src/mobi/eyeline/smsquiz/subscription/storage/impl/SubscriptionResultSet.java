@@ -1,8 +1,8 @@
-package mobi.eyeline.smsquiz.storage.impl;
+package mobi.eyeline.smsquiz.subscription.storage.impl;
 
-import mobi.eyeline.smsquiz.storage.StorageException;
-import mobi.eyeline.smsquiz.storage.Subscription;
-import mobi.eyeline.smsquiz.storage.ResultSet;
+import mobi.eyeline.smsquiz.subscription.storage.StorageException;
+import mobi.eyeline.smsquiz.subscription.storage.Subscription;
+import mobi.eyeline.smsquiz.subscription.storage.ResultSet;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;

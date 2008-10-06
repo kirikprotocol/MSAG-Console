@@ -4,7 +4,7 @@
 
   <service>
     <service-name>smsquiz_on</service-name>
-    <service-class>mobi.eyeline.smsquiz.service.SubscriptionOnSMPPService</service-class>
+    <service-class>mobi.eyeline.smsquiz.subscription.service.SubscriptionOnSMPPService</service-class>
     <init-param>
       <param-name>send.subscribe</param-name>
       <param-value>Услуга успешно добавлена</param-value>
@@ -13,7 +13,7 @@
 
   <service>
     <service-name>smsquiz_off</service-name>
-    <service-class>mobi.eyeline.smsquiz.service.SubscriptionOffSMPPService</service-class>
+    <service-class>mobi.eyeline.smsquiz.subscription.service.SubscriptionOffSMPPService</service-class>
     <init-param>
       <param-name>send.unsubscribe</param-name>
       <param-value>Услуга успешно удалена</param-value>

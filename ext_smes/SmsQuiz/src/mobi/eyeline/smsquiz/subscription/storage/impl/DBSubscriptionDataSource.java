@@ -1,7 +1,7 @@
-package mobi.eyeline.smsquiz.storage.impl;
+package mobi.eyeline.smsquiz.subscription.storage.impl;
 
-import mobi.eyeline.smsquiz.storage.*;
-import mobi.eyeline.smsquiz.storage.ResultSet;
+import mobi.eyeline.smsquiz.subscription.storage.*;
+import mobi.eyeline.smsquiz.subscription.storage.ResultSet;
 
 import java.util.Date;
 import java.sql.*;

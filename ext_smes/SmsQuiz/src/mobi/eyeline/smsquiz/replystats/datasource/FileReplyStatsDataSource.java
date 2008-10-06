@@ -1,28 +1,84 @@
 package mobi.eyeline.smsquiz.replystats.datasource;
 
 import mobi.eyeline.smsquiz.replystats.statsfile.StatsFilesCache;
+import mobi.eyeline.smsquiz.replystats.statsfile.StatsFile;
+import mobi.eyeline.smsquiz.replystats.statsfile.FileStatsException;
 import mobi.eyeline.smsquiz.replystats.Reply;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedList;
+
+import org.apache.log4j.Logger;
 
 public class FileReplyStatsDataSource implements ReplyStatsDataSource {
- 
-	private StatsFilesCache statsFilesCache;
+
+	private static Logger logger = Logger.getLogger(FileReplyStatsDataSource.class);
+	private StatsFilesCache filesCache;
+
+    public FileReplyStatsDataSource() {
+        filesCache = new StatsFilesCache();
+    }
+
+    public void add(Reply reply) throws ReplyDataSourceException{
+        String da = reply.getDa();
+        Date date = reply.getDate();
+        if((da==null)||(date==null)) {
+            logger.error("Some arguments are null");
+            throw new ReplyDataSourceException("Some arguments are null", ReplyDataSourceException.ErrorCode.ERROR_WRONG_REQUEST);
+        }
+        StatsFile file = null;
+        try {
+            file = filesCache.getFile(reply.getDa(), reply.getDate());
+            file.open();
+            file.add(reply);
+        } catch (FileStatsException e) {
+            logger.error("Error during write the reply");
+            throw new ReplyDataSourceException("Error during write the reply", e);
+        } finally {
+            if(file!=null) {
+                file.close();
+            }
+        }
+
+    }
 	 
 
-	public void add(Reply reply) {
-	 
-	}
-	 
+	public Collection list(String da, Date from, Date till) throws ReplyDataSourceException{
+        if((da == null)||(from == null)||(till == null)) {
+            logger.error("Some arguments are null");
+            throw new ReplyDataSourceException("Some arguments are null", ReplyDataSourceException.ErrorCode.ERROR_WRONG_REQUEST);
+        }
 
-	public Collection list(String da, Date from, Date till) {
-		return null;
-	}
+        Collection<Reply> replies = new LinkedList<Reply>();
+        Collection<StatsFile> files = null;
+
+        try {
+            files = filesCache.getFiles(da,from,till);
+        } catch (FileStatsException e) {
+            logger.error("Error during getting files",e);
+            throw new ReplyDataSourceException("Error during getting file list",e);
+        }
+
+        for(StatsFile file : files) {
+            try {
+                file.open();
+                file.list(from, till,replies);
+            } catch (FileStatsException e) {
+                logger.error("Error during getting replies",e);
+                throw new ReplyDataSourceException("Error during getting replies",e);
+            } finally {
+                if(file!=null) {
+                    file.close();
+                }
+            }
+        }
+        return replies;
+    }
 	 
 
 	public void shutdown() {
-	 
+	    filesCache.shutdown();
 	}
 	 
 }

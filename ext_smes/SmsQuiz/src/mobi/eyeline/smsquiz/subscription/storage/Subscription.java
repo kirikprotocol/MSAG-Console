@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz.storage;
+package mobi.eyeline.smsquiz.subscription.storage;
 
 import java.util.Date;
 

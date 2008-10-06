@@ -1,5 +1,8 @@
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+import subscription.DBDataSourceTester;
+import subscription.SmsQuizTest;
+import subscription.SubscriptionManagerTest;
 
 /**
  * Created by IntelliJ IDEA.

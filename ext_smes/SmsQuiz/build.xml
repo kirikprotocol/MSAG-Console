@@ -30,8 +30,8 @@
   </target>
 
   <target name="build" depends="compile">
-    <copy todir="${java_out}/mobi/eyeline/smsquiz/storage/impl">
-        <fileset file="${SMS_QUIZ_HOME}/src/mobi/eyeline/smsquiz/storage/impl/smsquiz.properties"/>
+    <copy todir="${java_out}/mobi/eyeline/smsquiz/subscription/storage/impl">
+        <fileset file="${SMS_QUIZ_HOME}/src/mobi/eyeline/smsquiz/subscription/storage/impl/smsquiz.properties"/>
     </copy>
     <jar jarfile="${java_out}/${module_name}.jar" manifest="${SMS_QUIZ_HOME}/MANIFEST.MF">
       <fileset dir="${java_out}" excludes="*.jar" />

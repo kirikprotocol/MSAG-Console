@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 import org.apache.log4j.Logger;
-import mobi.eyeline.smsquiz.replystats.ReplyStatsException;
+import mobi.eyeline.smsquiz.replystats.statsfile.FileStatsException;
 import mobi.eyeline.smsquiz.replystats.Reply;
 
 public class StatsFileImpl implements StatsFile {
@@ -28,23 +28,23 @@ public class StatsFileImpl implements StatsFile {
     private SimpleDateFormat csvDateFormat;
     private String filePath;
 
-    public static void init(final String configFile) throws ReplyStatsException {
+    public static void init(final String configFile) throws FileStatsException {
         try {
             final XmlConfig c = new XmlConfig();
             c.load(new File(configFile));
             final PropertiesConfig config = new PropertiesConfig(c.getSection("statsFile").toProperties("."));
             replyStatsDir = config.getString("dir.name",null);
             if(replyStatsDir==null) {
-                throw new ReplyStatsException("dir.name parameter missed in config file", ReplyStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
+                throw new FileStatsException("dir.name parameter missed in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
             }
             timePattern = config.getString("time.pattern.in.file","yyyyMMdd");
             datePattern = config.getString("date.pattern.in.file","НН:mm");
         } catch (ConfigException e) {
             logger.error("Unable to init StatsFile",e);
-            throw new ReplyStatsException("Unable to init StatsFile",e);
+            throw new FileStatsException("Unable to init StatsFile",e);
         }
     }
-    public StatsFileImpl(final String da, final String fileName) throws ReplyStatsException{
+    public StatsFileImpl(final String da, final String fileName) throws FileStatsException {
         this.da = da;
         filePath = replyStatsDir + "/" + da +"/"+fileName;
 
@@ -56,11 +56,11 @@ public class StatsFileImpl implements StatsFile {
             FileUtils.truncateFile(currentFile,"\n".getBytes()[0],10);
         } catch (IOException e) {
             logger.error("Unable to truncate file",e);
-            throw new ReplyStatsException("Unable to truncate file",e);
+            throw new FileStatsException("Unable to truncate file",e);
         }
     }
 
-    public void open() throws ReplyStatsException{
+    public void open() throws FileStatsException {
         if(logger.isInfoEnabled()) {
             logger.info("File: "+filePath+" opened");
         }
@@ -68,15 +68,15 @@ public class StatsFileImpl implements StatsFile {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(filePath,true)));
         } catch (IOException e) {
             logger.error("Can't create io stream",e);
-            throw new ReplyStatsException("Can't create io stream",e);
+            throw new FileStatsException("Can't create io stream",e);
         }
     }
 	 
 
-	public void add(Reply reply)  throws ReplyStatsException {
+	public void add(Reply reply)  throws FileStatsException {
         if((reply.getDate()==null)||(reply.getOa()==null)||(reply.getText()==null)) {
             logger.error("Some arguments are missed");
-            throw new ReplyStatsException("Some arguments are missed", ReplyStatsException.ErrorCode.ERROR_WRONG_REQUEST);
+            throw new FileStatsException("Some arguments are missed", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
         }
         writer.print(dateFormat.format(reply.getDate())+",");
         writer.print(timeFormat.format(reply.getDate())+",");
@@ -87,10 +87,10 @@ public class StatsFileImpl implements StatsFile {
 	 
 
 	@SuppressWarnings({"unchecked"})
-    public  void list(Date from, Date till, Collection result)  throws ReplyStatsException {
+    public  void list(Date from, Date till, Collection result)  throws FileStatsException {
         if((result==null)||(from==null)||(till==null)) {
             logger.error("Some arguments are null!");
-            throw new ReplyStatsException("Some arguments are null!", ReplyStatsException.ErrorCode.ERROR_WRONG_REQUEST);
+            throw new FileStatsException("Some arguments are null!", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
         }
         String line=null;
         StringTokenizer tokenizer=null;
@@ -118,13 +118,13 @@ public class StatsFileImpl implements StatsFile {
         }
         catch (NoSuchElementException e) {
             logger.error("Unsupported file format",e);
-            throw new ReplyStatsException("Unsupported file format",e);
+            throw new FileStatsException("Unsupported file format",e);
         } catch (ParseException e) {
             logger.error("Unsupported file format",e);
-            throw new ReplyStatsException("Unsupported file format",e);
+            throw new FileStatsException("Unsupported file format",e);
         } catch (IOException e) {
             logger.error("IOException during reading file",e);
-            throw new ReplyStatsException("IOException during reading file",e);
+            throw new FileStatsException("IOException during reading file",e);
         }
 
     }
@@ -147,7 +147,7 @@ public class StatsFileImpl implements StatsFile {
         return replyStatsDir;   
     }
 
-    public static void main(String[] args) throws ReplyStatsException {
+    public static void main(String[] args) throws FileStatsException {
         /*init("conf/replystats.xml");
         StatsFileImpl statsFile = new StatsFileImpl("148","test.txt");
         statsFile.open();

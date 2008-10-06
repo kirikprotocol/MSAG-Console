@@ -1,3 +1,5 @@
+package subscription;
+
 import org.junit.BeforeClass;
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -5,12 +7,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
-import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
-import mobi.eyeline.smsquiz.storage.StorageException;
-import mobi.eyeline.smsquiz.manager.SubscriptionManager;
-import mobi.eyeline.smsquiz.manager.SubManagerException;
-import mobi.eyeline.smsquiz.service.SubscriptionOnSMPPService;
-import mobi.eyeline.smsquiz.service.SubscriptionOffSMPPService;
+import mobi.eyeline.smsquiz.subscription.storage.ConnectionPoolFactory;
+import mobi.eyeline.smsquiz.subscription.storage.StorageException;
+import mobi.eyeline.smsquiz.subscription.manager.SubscriptionManager;
+import mobi.eyeline.smsquiz.subscription.manager.SubManagerException;
+import mobi.eyeline.smsquiz.subscription.service.SubscriptionOnSMPPService;
+import mobi.eyeline.smsquiz.subscription.service.SubscriptionOffSMPPService;
 import com.eyeline.sme.handler.config.ServicesConfig;
 import com.eyeline.sme.handler.config.ServicesConfigReader;
 import com.eyeline.sme.handler.config.ConfigException;

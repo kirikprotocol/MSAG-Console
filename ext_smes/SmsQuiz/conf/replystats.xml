@@ -6,5 +6,10 @@
     <param name="date.pattern.in.file">yyyyMMdd</param>
     <param name="time.pattern.in.file">HH:mm</param>
     <param name="filename.pattern">yyyyMMdd.csv</param>
-  </section>     
+  </section>
+  <section name="fileCollector">
+    <param name="time.limit">5000</param>
+    <param name="time.first.delay">5000</param>
+    <param name="time.period">5000</param>
+  </section>
 </config>

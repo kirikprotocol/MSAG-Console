@@ -1,7 +1,7 @@
-package mobi.eyeline.smsquiz.manager;
+package mobi.eyeline.smsquiz.subscription.manager;
 
 import com.eyeline.utils.config.ConfigException;
-import mobi.eyeline.smsquiz.storage.StorageException;
+import mobi.eyeline.smsquiz.subscription.storage.StorageException;
 
 /**
  * author: alkhal

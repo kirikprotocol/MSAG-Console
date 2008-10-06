@@ -9,7 +9,7 @@ cd ..
 cls="conf/"
 for i in lib/*.jar ; do cls=$cls:$i ; done
 
-PARAM="-Dtest_$1_$2 -Xmx128m -cp $cls -Dfile.encoding=windows-1251 mobi.eyeline.smsquiz.script.SubscribedAbDownloader"
+PARAM="-Dtest_$1_$2 -Xmx128m -cp $cls -Dfile.encoding=windows-1251 mobi.eyeline.smsquiz.subscription.script.SubscribedAbDownloader"
 
 echo "Downloading..."
 $JAVA_HOME/bin/java $PARAM $@

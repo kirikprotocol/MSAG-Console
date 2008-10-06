@@ -1,6 +1,4 @@
-package mobi.eyeline.smsquiz.storage;
-
-import com.eyeline.utils.config.ConfigException;
+package mobi.eyeline.smsquiz.subscription.storage;
 
 import java.sql.SQLException;
 import java.io.IOException;

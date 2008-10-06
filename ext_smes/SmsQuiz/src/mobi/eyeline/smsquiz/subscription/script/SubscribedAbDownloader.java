@@ -1,7 +1,7 @@
-package mobi.eyeline.smsquiz.script;
+package mobi.eyeline.smsquiz.subscription.script;
 
-import mobi.eyeline.smsquiz.storage.*;
-import mobi.eyeline.smsquiz.storage.impl.SubscriptionDataSourceImpl;
+import mobi.eyeline.smsquiz.subscription.storage.*;
+import mobi.eyeline.smsquiz.subscription.storage.impl.SubscriptionDataSourceImpl;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

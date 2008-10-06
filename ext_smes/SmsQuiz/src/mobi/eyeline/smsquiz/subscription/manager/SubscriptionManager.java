@@ -1,10 +1,10 @@
-package mobi.eyeline.smsquiz.manager;
+package mobi.eyeline.smsquiz.subscription.manager;
 
 
-import mobi.eyeline.smsquiz.storage.SubscriptionDataSource;
-import mobi.eyeline.smsquiz.storage.StorageException;
-import mobi.eyeline.smsquiz.storage.Subscription;
-import mobi.eyeline.smsquiz.storage.impl.SubscriptionDataSourceImpl;
+import mobi.eyeline.smsquiz.subscription.storage.SubscriptionDataSource;
+import mobi.eyeline.smsquiz.subscription.storage.StorageException;
+import mobi.eyeline.smsquiz.subscription.storage.Subscription;
+import mobi.eyeline.smsquiz.subscription.storage.impl.SubscriptionDataSourceImpl;
 import org.apache.log4j.Logger;
 
 import java.util.Date;
