@@ -3,6 +3,7 @@ package mobi.eyeline.smsquiz.replystats.statsfile;
 import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.FileUtils;
 
 import java.util.*;
 import java.io.*;
@@ -26,7 +27,6 @@ public class StatsFileImpl implements StatsFile {
     private SimpleDateFormat timeFormat;
     private SimpleDateFormat csvDateFormat;
     private String filePath;
-    private boolean closed = true;
 
     public static void init(final String configFile) throws ReplyStatsException {
         try {
@@ -51,11 +51,12 @@ public class StatsFileImpl implements StatsFile {
         dateFormat = new SimpleDateFormat(datePattern);
         timeFormat = new SimpleDateFormat(timePattern);
         csvDateFormat = new SimpleDateFormat(datePattern+" "+timePattern);
-
         File currentFile = new File(filePath);
-        if(!currentFile.exists()) {
-            logger.error(filePath+ " doesn't exist!");
-            throw new ReplyStatsException(filePath+ " doesn't exist!", ReplyStatsException.ErrorCode.ERROR_WRONG_REQUEST);
+        try {
+            FileUtils.truncateFile(currentFile,"\n".getBytes()[0],10);
+        } catch (IOException e) {
+            logger.error("Unable to truncate file",e);
+            throw new ReplyStatsException("Unable to truncate file",e);
         }
     }
 
@@ -65,7 +66,6 @@ public class StatsFileImpl implements StatsFile {
         }
         try{
             writer = new PrintWriter(new BufferedWriter(new FileWriter(filePath,true)));
-            closed = false;
         } catch (IOException e) {
             logger.error("Can't create io stream",e);
             throw new ReplyStatsException("Can't create io stream",e);
@@ -112,6 +112,9 @@ public class StatsFileImpl implements StatsFile {
                 }
             }
             reader.close();
+
+        } catch (FileNotFoundException e) {
+            logger.info("Unable to create file reader, maybe file doesn't exist",e);
         }
         catch (NoSuchElementException e) {
             logger.error("Unsupported file format",e);
@@ -119,9 +122,6 @@ public class StatsFileImpl implements StatsFile {
         } catch (ParseException e) {
             logger.error("Unsupported file format",e);
             throw new ReplyStatsException("Unsupported file format",e);
-        } catch (FileNotFoundException e) {
-            logger.error("Unable to create file reader",e);
-            throw new ReplyStatsException("Unable to create file reader",e);
         } catch (IOException e) {
             logger.error("IOException during reading file",e);
             throw new ReplyStatsException("IOException during reading file",e);
@@ -135,7 +135,6 @@ public class StatsFileImpl implements StatsFile {
         }
         if(writer!=null) {
             writer.close();
-            closed = true;
         }
     }
 
@@ -149,7 +148,7 @@ public class StatsFileImpl implements StatsFile {
     }
 
     public static void main(String[] args) throws ReplyStatsException {
-        init("conf/replystats.xml");
+        /*init("conf/replystats.xml");
         StatsFileImpl statsFile = new StatsFileImpl("148","test.txt");
         statsFile.open();
         Reply reply = new Reply();
@@ -163,12 +162,10 @@ public class StatsFileImpl implements StatsFile {
         for(Object obj:list) {
             System.out.println(obj);
         }
-        statsFile.close();
+        statsFile.close(); */
+        System.out.println();
     }
 
-    public boolean isClosed() {
-        return closed;
-    }
 	 
 }
  

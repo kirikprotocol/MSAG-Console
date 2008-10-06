@@ -7,6 +7,8 @@ import mobi.eyeline.smsquiz.replystats.Reply;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
 import java.text.SimpleDateFormat;
 import java.io.File;
 
@@ -17,11 +19,12 @@ import org.apache.log4j.Logger;
 
 public class StatsFilesCache {
 
-    private Map<String,StatsFile> filesMap;
+    private Map<String,CachedStatsFile> filesMap;
     private SimpleDateFormat fileNameFormat;
     private SimpleDateFormat dateToStringFormat;
     private static String fileNamePattern;
     private static Logger logger = Logger.getLogger(StatsFilesCache.class);
+    private ScheduledExecutorService s;
 
     public static void init(final String configFile) throws ReplyStatsException {
         try {
@@ -39,9 +42,13 @@ public class StatsFilesCache {
     }
 
     public StatsFilesCache() {
-        filesMap = new HashMap<String, StatsFile>();
+        filesMap = new HashMap<String, CachedStatsFile>();
         fileNameFormat = new SimpleDateFormat(fileNamePattern);
         dateToStringFormat = new SimpleDateFormat("yyyyMMdd");
+
+        s = Executors.newSingleThreadScheduledExecutor();
+        s.scheduleAtFixedRate(new FileCollector(false),500000,50000, java.util.concurrent.TimeUnit.SECONDS); //todo
+
     }
 	 
     public Collection<StatsFile> getFiles(String da, Date from, Date till) throws ReplyStatsException{
@@ -62,8 +69,7 @@ public class StatsFilesCache {
                 files.add(statsFile);
             }
             calendar.add(Calendar.DAY_OF_MONTH,1);
-        }
-
+        } 
         return files;
     }
 	 
@@ -75,8 +81,8 @@ public class StatsFilesCache {
 	}
 	 
 	public void shutdown() {
-	//todo
-	}
+        s.shutdown();
+    }
 
     private String buildKey(String da, Date date) {
         String result ="";
@@ -88,57 +94,89 @@ public class StatsFilesCache {
     }
 
     private StatsFile lockupFile(final String dest, final Date date){
-        StatsFile file = null;
+        CachedStatsFile file = null;
         String key = buildKey(dest, date);
-
-        final Thread shutdowner = new Thread() {
-                        public boolean shutdown = false;
-                        public void run() {
-                            shutdown = true;
-                        }
-                        public boolean getShutdown() {
-                            return shutdown;
-                        }
-                    };
+        
         if( (file = filesMap.get(key)) == null) {
-            file = new StatsFile(){
-                    private StatsFileImpl statsFileImpl;
-                    private String filename = fileNameFormat.format(date);
-                    private String da = dest;
-                    private Lock lock = new ReentrantLock();
-                    public void open() throws ReplyStatsException {
-                        lock.lock();
-                        if(statsFileImpl==null) {
-                            statsFileImpl = new StatsFileImpl(da,filename);
-                        }
-                        if(statsFileImpl.isClosed()) {
-                            statsFileImpl.open();
-                        }
-                    }
-                    public void add(Reply reply) throws ReplyStatsException {
-                        statsFileImpl.add(reply);
-                    }
-                    public void list(Date from, Date till, Collection result) throws ReplyStatsException {
-                        statsFileImpl.list(from, till, result);
-                    }
-                    public void close() {
-                        lock.unlock();              
-                    }
-                    public boolean exist() {
-                        File replyStatsDirFile = new File(StatsFileImpl.getReplyStatsDir()+"/"+da+"/"+filename);
-                        return replyStatsDirFile.exists();
-                    }
-            };
-
-            if(!file.exist()) {
-                return null;
-            }
-            filesMap.put(key,file);
+            file = new CachedStatsFile(dest, fileNameFormat.format(date));
+            filesMap.put(key, file);
         }
         return file;
     }
 
+    private class CachedStatsFile implements StatsFile{
+        private StatsFileImpl statsFileImpl;
+        private String fileName;
+        private String da;
+        private Lock lock = new ReentrantLock();
+        private boolean isClosed = true;
+        private Date lastUsageDate;
 
-	 
+        public CachedStatsFile(String da, String fileName) {
+            this.da = da;
+            this.fileName = fileName;
+            lastUsageDate = new Date();
+        }
+
+        public void open() throws ReplyStatsException {
+            lock.lock();
+            if(statsFileImpl==null) {
+                statsFileImpl = new StatsFileImpl(da, fileName);
+            }
+            if(isClosed) {
+                statsFileImpl.open();
+                isClosed = false;
+            }
+            lastUsageDate = new Date();
+        }
+
+        public void add(Reply reply) throws ReplyStatsException {
+            statsFileImpl.add(reply);
+        }
+        public void list(Date from, Date till, Collection result) throws ReplyStatsException {
+            statsFileImpl.list(from, till, result);
+        }
+
+        public void close() {
+            lock.unlock();
+        }
+
+        private void closeExt() {
+            statsFileImpl.close();
+            isClosed = false;
+        }
+    }
+
+    private class FileCollector implements Runnable {
+        final long timeLimit = 50000000; //todo
+        boolean closeAll = false;
+
+        FileCollector(boolean closeAll) {
+            this.closeAll = closeAll;
+        }
+
+        public void run() {
+            for(CachedStatsFile file:filesMap.values()) {
+                boolean close;
+                if(closeAll) {
+                    close = closeAll;
+                }
+                else {
+                    close = (new Date().getTime() - file.lastUsageDate.getTime())>timeLimit;
+                }
+                if((!file.isClosed)&&(close)) {
+                    try {
+                        file.open();
+                        file.closeExt();
+                        file.close();
+                    } catch (ReplyStatsException e) {
+                        logger.error("Error lock the cached file", e);
+                    }
+                }
+            }
+        }
+    }
 }
+
+
  
