@@ -17,18 +17,18 @@ import mobi.eyeline.smsquiz.replystats.Reply;
 public class StatsFileImpl implements StatsFile {
     private static Logger logger = Logger.getLogger(StatsFileImpl.class);
 
-    private static String replyStatsDir;   //директория статистики
+    private static String replyStatsDir;   //директория статистики    // todo
     private static String datePattern;
     private static String timePattern;
 
-    private final String da;    // номер сервиса
+    private final String da;    // номер сервиса      todo
     private PrintWriter writer;
     private SimpleDateFormat dateFormat;
     private SimpleDateFormat timeFormat;
     private SimpleDateFormat csvDateFormat;
     private String filePath;
 
-    public static void init(final String configFile) throws FileStatsException {
+    public static void init(final String configFile) throws FileStatsException { // todo
         try {
             final XmlConfig c = new XmlConfig();
             c.load(new File(configFile));
@@ -78,7 +78,7 @@ public class StatsFileImpl implements StatsFile {
             logger.error("Some arguments are missed");
             throw new FileStatsException("Some arguments are missed", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
         }
-        writer.print(dateFormat.format(reply.getDate())+",");
+        writer.print(dateFormat.format(reply.getDate())+",");    // todo
         writer.print(timeFormat.format(reply.getDate())+",");
         writer.print(reply.getOa()+",");
         writer.println(reply.getText());
@@ -111,7 +111,7 @@ public class StatsFileImpl implements StatsFile {
                     result.add(reply);
                 }
             }
-            reader.close();
+            reader.close();         // todo !!!!!!!!!!!!!!!
 
         } catch (FileNotFoundException e) {
             logger.info("Unable to create file reader, maybe file doesn't exist",e);

@@ -49,7 +49,7 @@ public class StatsFilesCache {
     }
 
     public StatsFilesCache() {
-        filesMap = new HashMap<String, CachedStatsFile>();
+        filesMap = new HashMap<String, CachedStatsFile>();      // todo
         fileNameFormat = new SimpleDateFormat(fileNamePattern);
         dateToStringFormat = new SimpleDateFormat("yyyyMMdd");
 
@@ -128,7 +128,7 @@ public class StatsFilesCache {
         }
 
         public void open() throws FileStatsException {
-            lock.lock();
+            lock.lock();               // todo
             if(statsFileImpl==null) {
                 statsFileImpl = new StatsFileImpl(da, fileName);
             }
@@ -174,7 +174,7 @@ public class StatsFilesCache {
                         close = closeAll;
                     }
                     else {
-                        close = (new Date().getTime() - file.lastUsageDate.getTime())>timeLimit;
+                        close = (new Date().getTime() - file.lastUsageDate.getTime())>timeLimit;  // todo
                     }
                     if(close) {
                         try {

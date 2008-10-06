@@ -22,7 +22,7 @@
 
   <target name="compile" depends="prepare">
     <mkdir dir="${java_out}"/>
-      <javac srcdir="${java_src}" destdir="${java_out}" debug="yes">
+    <javac srcdir="${java_src}" destdir="${java_out}" debug="yes">
       <classpath >
         <fileset dir="${java_lib}" includes="*.jar"/>
       </classpath>
@@ -30,9 +30,6 @@
   </target>
 
   <target name="build" depends="compile">
-    <copy todir="${java_out}/mobi/eyeline/smsquiz/subscription/storage/impl">
-        <fileset file="${SMS_QUIZ_HOME}/src/mobi/eyeline/smsquiz/subscription/storage/impl/smsquiz.properties"/>
-    </copy>
     <jar jarfile="${java_out}/${module_name}.jar" manifest="${SMS_QUIZ_HOME}/MANIFEST.MF">
       <fileset dir="${java_out}" excludes="*.jar" />
     </jar>
@@ -48,9 +45,6 @@
 
     <copy todir="${SMS_QUIZ_DISTR_DIR}/lib">
       <fileset dir="${java_out}" includes="*.jar"/>
-    </copy>
-    <copy todir="${SMS_QUIZ_DISTR_DIR}/bin">
-        <fileset dir="${SMS_QUIZ_HOME}/bin"/>
     </copy>
 
  </target>
