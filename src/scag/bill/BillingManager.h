@@ -61,8 +61,13 @@ struct BillingInfoStruct
 
     timeval SessionBornMicrotime;
 
+    BillingInfoStruct():keywords_(0) {};
+
     const BillingInfoStruct& operator=(const BillingInfoStruct& cp)
     {
+        if (this == &cp) {
+          return *this;
+        }
         mediaType = cp.mediaType;
         category = cp.category;
         AbonentNumber = cp.AbonentNumber;
@@ -72,8 +77,25 @@ struct BillingInfoStruct
         operatorId = cp.operatorId;
         msgRef = cp.msgRef;
         SessionBornMicrotime = cp.SessionBornMicrotime;
+        const std::string* keywords = cp.getKeywords();
+        if (keywords) {
+          setKeywords(*keywords);
+        }
         return *this;
     }
+
+    const std::string* getKeywords() const {
+        return keywords_;
+    }
+
+    void setKeywords( const std::string& kw ) {
+        if ( keywords_ ) delete keywords_;
+        if ( kw.empty() ) keywords_ = 0; 
+        else keywords_ = new std::string( kw );
+    }
+
+private:
+    std::string* keywords_;
 };
 
 class BillOpenCallParams : public LongCallParams
