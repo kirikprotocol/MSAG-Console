@@ -33,7 +33,7 @@ const uint32_t PERSISTENT                    = 0x20;
 class Operation
 {
 public:
-    Operation( Session* owner, uint8_t type );
+    Operation( Session* owner = 0, uint8_t type = transport::CO_NA );
     ~Operation() {
         if (keywords_) delete keywords_;
     }

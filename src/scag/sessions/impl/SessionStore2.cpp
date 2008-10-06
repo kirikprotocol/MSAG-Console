@@ -562,10 +562,10 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
 
         } else if ( keep ) {
 
-            // session is already flushed?
-            ++notexpired;
-            smsc_log_warn( log_, "session key=%s is already flushed?",
-                           key.toString().c_str() );
+            // session is already flushed -- ok
+            // ++notexpired;
+            // smsc_log_warn( log_, "session key=%s is already flushed?",
+            // key.toString().c_str() );
             session = 0;
             continue;
 

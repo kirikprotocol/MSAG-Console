@@ -384,7 +384,7 @@ Serializer& Session::serialize( Serializer& s ) const
 
     s << currentOperationId_ << ussdOperationId_ << uint32_t(umr_);
     
-    count = operations_.Count();
+    count = operationsCount();
     s << count;
     if ( count ) {
         int key;
