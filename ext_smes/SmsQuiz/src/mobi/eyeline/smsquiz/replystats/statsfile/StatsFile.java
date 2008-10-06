@@ -12,6 +12,5 @@ public interface StatsFile {
 	public void add(Reply reply) throws ReplyStatsException;
 	public void list(Date from, Date till, Collection result) throws ReplyStatsException;
 	public void close();
-    public boolean exist();
 }
  

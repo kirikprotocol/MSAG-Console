@@ -82,6 +82,7 @@ public class StatsFilesCache {
 	 
 	public void shutdown() {
         s.shutdown();
+        new Thread(new FileCollector(true)).run();
     }
 
     private String buildKey(String da, Date date) {
