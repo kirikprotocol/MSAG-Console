@@ -14,15 +14,13 @@ using std::vector;
 using scag::util::properties::Property;
 using smsc::logger::Logger;
 
-//const char* KEYWORDS_PARAM_NAME = "keywords";
- 
 template<class T, class K>
 class Keywords {
 public:  
   Keywords(const string& keywords, bool fieldTypeUnknown, Logger* log, T& actionContext)
            :value_(keywords), fieldTypeUnknown_(fieldTypeUnknown), logger(log), actionContext_(actionContext) { };
   virtual ~Keywords() {};
-  virtual bool run(K* keywordsContext) {
+  virtual bool change(K* keywordsContext) {
     if (!keywordsContext) {
       smsc_log_error(logger, "Action '%s': keywords context not defined", actionName());
       return false;
@@ -33,7 +31,7 @@ public:
     }
     Property *p = actionContext_.getProperty(value_);
     if(!p) {
-      smsc_log_error(logger, "Action '%s': Invalid %s property: '%s'", actionName(), "keywords", value_.c_str());
+      smsc_log_error(logger, "Action '%s': Invalid keywords property: '%s'", actionName(), value_.c_str());
       return false;
     }
     value_ = p->getStr();
@@ -94,8 +92,8 @@ class AddKeywords : public Keywords<T, K>{
 public:
   AddKeywords(const string& keywords, bool fieldTypeUnknown, Logger* log, T& actionContext)
              :Keywords<T, K>(keywords, fieldTypeUnknown, log, actionContext) {};
-  virtual bool run(K* keywordsContext) {
-    if (!Keywords<T, K>::run(keywordsContext)) {
+  virtual bool change(K* keywordsContext) {
+    if (!Keywords<T, K>::change(keywordsContext)) {
       return false;
     }
     vector<string> addSeparated;
@@ -137,8 +135,8 @@ class SetKeywords : public Keywords<T, K> {
 public:
   SetKeywords(const string& keywords, bool fieldTypeUnknown, Logger* log, T& actionContext)
               :Keywords<T, K>(keywords, fieldTypeUnknown, log, actionContext) {};
-  virtual bool run(K* keywordsContext) {
-    if (!Keywords<T, K>::run(keywordsContext)) {
+  virtual bool change(K* keywordsContext) {
+    if (!Keywords<T, K>::change(keywordsContext)) {
       return false;
     }
     if (value_.empty()) {
