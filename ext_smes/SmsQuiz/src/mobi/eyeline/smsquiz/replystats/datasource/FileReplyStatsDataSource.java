@@ -44,7 +44,7 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
     }
 	 
 
-	public Collection list(String da, Date from, Date till) throws ReplyDataSourceException{
+	public Collection<Reply> list(String da, Date from, Date till) throws ReplyDataSourceException{
         if((da == null)||(from == null)||(till == null)) {
             logger.error("Some arguments are null");
             throw new ReplyDataSourceException("Some arguments are null", ReplyDataSourceException.ErrorCode.ERROR_WRONG_REQUEST);
@@ -56,7 +56,7 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
         try {
             files = filesCache.getFiles(da,from,till);
         } catch (FileStatsException e) {
-            logger.error("Error during getting files",e);
+            logger.error("Error during getting file list",e);
             throw new ReplyDataSourceException("Error during getting file list",e);
         }
 

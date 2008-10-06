@@ -8,6 +8,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ConcurrentHashMap;
 import java.text.SimpleDateFormat;
 import java.io.File;
 
@@ -18,27 +19,38 @@ import org.apache.log4j.Logger;
 
 public class StatsFilesCache {
 
-    private Map<String,CachedStatsFile> filesMap;
-    private SimpleDateFormat fileNameFormat;
-    private SimpleDateFormat dateToStringFormat;
-    private static String fileNamePattern;
-    private static Logger logger = Logger.getLogger(StatsFilesCache.class);
-    private ScheduledExecutorService s;
     private static long delayFirst;
     private static long iterationPeriod;
     private static long timeLimit;
+    private static String datePattern;
+    private static String timePattern;
+    private static String replyStatsDir;
+    private static String fileNamePattern;
+    private static Logger logger = Logger.getLogger(StatsFilesCache.class);
+
+    private ConcurrentHashMap<String,CachedStatsFile> filesMap;
+    private SimpleDateFormat fileNameFormat;
+    private SimpleDateFormat dateToStringFormat;
+    private ScheduledExecutorService s;
 
     public static void init(final String configFile) throws FileStatsException {
         try {
             final XmlConfig c = new XmlConfig();
             c.load(new File(configFile));
+
             PropertiesConfig config = new PropertiesConfig(c.getSection("statsFile").toProperties("."));
             fileNamePattern = config.getString("filename.pattern");
+            timePattern = config.getString("time.pattern.in.file","yyyyMMdd");
+            datePattern = config.getString("date.pattern.in.file","НН:mm");
+            replyStatsDir = config.getString("dir.name",null);
+            if(replyStatsDir==null) {
+                throw new FileStatsException("dir.name parameter missed in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
+            }
+
             config = new PropertiesConfig(c.getSection("fileCollector").toProperties("."));
             delayFirst = config.getLong("time.first.delay");
             iterationPeriod = config.getLong("time.period");
             timeLimit = config.getLong("time.limit");
-
             if(fileNamePattern==null) {
                 throw new FileStatsException("filename.pattern not found in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
             }
@@ -49,12 +61,12 @@ public class StatsFilesCache {
     }
 
     public StatsFilesCache() {
-        filesMap = new HashMap<String, CachedStatsFile>();      // todo
+        filesMap =  new ConcurrentHashMap<String, CachedStatsFile>();
         fileNameFormat = new SimpleDateFormat(fileNamePattern);
         dateToStringFormat = new SimpleDateFormat("yyyyMMdd");
 
         s = Executors.newSingleThreadScheduledExecutor();
-        s.scheduleAtFixedRate(new FileCollector(false),delayFirst,iterationPeriod, java.util.concurrent.TimeUnit.MINUTES);
+        s.scheduleAtFixedRate(new FileCollector(false),delayFirst,iterationPeriod, java.util.concurrent.TimeUnit.SECONDS);
 
     }
 	 
@@ -107,7 +119,7 @@ public class StatsFilesCache {
         String key = buildKey(dest, date);
         
         if( (file = filesMap.get(key)) == null) {
-            file = new CachedStatsFile(dest, fileNameFormat.format(date));
+            file = new CachedStatsFile(dest, replyStatsDir +"/"+dest+"/"+fileNameFormat.format(date));
             filesMap.put(key, file);
         }
         return file;
@@ -115,34 +127,40 @@ public class StatsFilesCache {
 
     private class CachedStatsFile implements StatsFile{
         private StatsFileImpl statsFileImpl;
-        private String fileName;
+        private String filePath;
         private String da;
         private Lock lock = new ReentrantLock();
         private boolean isClosed = true;
         private Date lastUsageDate;
 
-        public CachedStatsFile(String da, String fileName) {
+        public CachedStatsFile(String da, String filePath) {
             this.da = da;
-            this.fileName = fileName;
+            this.filePath = filePath;
             lastUsageDate = new Date();
         }
 
-        public void open() throws FileStatsException {
-            lock.lock();               // todo
-            if(statsFileImpl==null) {
-                statsFileImpl = new StatsFileImpl(da, fileName);
-            }
-            if(isClosed) {
-                statsFileImpl.open();
-                isClosed = false;
+        public void open() throws FileStatsException{
+            try{
+                lock.lock();
+                if(statsFileImpl==null) {
+                    statsFileImpl = new StatsFileImpl(da, filePath, timePattern,datePattern);
+                }
+                if(isClosed) {
+                    statsFileImpl.open();
+                    isClosed = false;
+                }
+            } catch (FileStatsException e) {
+                lock.unlock();
+                throw new FileStatsException(e);
             }
             lastUsageDate = new Date();
+
         }
 
         public void add(Reply reply) throws FileStatsException {
             statsFileImpl.add(reply);
         }
-        public void list(Date from, Date till, Collection result) throws FileStatsException {
+        public void list(Date from, Date till, Collection<Reply> result) throws FileStatsException {
             statsFileImpl.list(from, till, result);
         }
 
@@ -174,7 +192,7 @@ public class StatsFilesCache {
                         close = closeAll;
                     }
                     else {
-                        close = (new Date().getTime() - file.lastUsageDate.getTime())>timeLimit;  // todo
+                        close = (System.currentTimeMillis() - file.lastUsageDate.getTime())>timeLimit;
                     }
                     if(close) {
                         try {

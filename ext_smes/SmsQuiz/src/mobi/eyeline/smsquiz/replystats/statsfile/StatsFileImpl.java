@@ -17,36 +17,20 @@ import mobi.eyeline.smsquiz.replystats.Reply;
 public class StatsFileImpl implements StatsFile {
     private static Logger logger = Logger.getLogger(StatsFileImpl.class);
 
-    private static String replyStatsDir;   //директория статистики    // todo
-    private static String datePattern;
-    private static String timePattern;
-
-    private final String da;    // номер сервиса      todo
+    private final String da;
     private PrintWriter writer;
     private SimpleDateFormat dateFormat;
     private SimpleDateFormat timeFormat;
     private SimpleDateFormat csvDateFormat;
     private String filePath;
 
-    public static void init(final String configFile) throws FileStatsException { // todo
-        try {
-            final XmlConfig c = new XmlConfig();
-            c.load(new File(configFile));
-            final PropertiesConfig config = new PropertiesConfig(c.getSection("statsFile").toProperties("."));
-            replyStatsDir = config.getString("dir.name",null);
-            if(replyStatsDir==null) {
-                throw new FileStatsException("dir.name parameter missed in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
-            }
-            timePattern = config.getString("time.pattern.in.file","yyyyMMdd");
-            datePattern = config.getString("date.pattern.in.file","НН:mm");
-        } catch (ConfigException e) {
-            logger.error("Unable to init StatsFile",e);
-            throw new FileStatsException("Unable to init StatsFile",e);
-        }
+
+    public StatsFileImpl(final String da, final String filePath) throws FileStatsException{
+        this(da,filePath, "НН:mm", "yyyyMMdd");
     }
-    public StatsFileImpl(final String da, final String fileName) throws FileStatsException {
+    public StatsFileImpl(final String da, final String filePath, String timePattern, String datePattern) throws FileStatsException {
         this.da = da;
-        filePath = replyStatsDir + "/" + da +"/"+fileName;
+        this.filePath = filePath;
 
         dateFormat = new SimpleDateFormat(datePattern);
         timeFormat = new SimpleDateFormat(timePattern);
@@ -78,16 +62,19 @@ public class StatsFileImpl implements StatsFile {
             logger.error("Some arguments are missed");
             throw new FileStatsException("Some arguments are missed", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
         }
-        writer.print(dateFormat.format(reply.getDate())+",");    // todo
-        writer.print(timeFormat.format(reply.getDate())+",");
-        writer.print(reply.getOa()+",");
+        writer.print(dateFormat.format(reply.getDate()));
+        writer.print(",");
+        writer.print(timeFormat.format(reply.getDate()));
+        writer.print(",");
+        writer.print(reply.getOa());
+        writer.print(",");
         writer.println(reply.getText());
         writer.flush();
     }
 	 
 
 	@SuppressWarnings({"unchecked"})
-    public  void list(Date from, Date till, Collection result)  throws FileStatsException {
+    public  void list(Date from, Date till, Collection<Reply> result)  throws FileStatsException {
         if((result==null)||(from==null)||(till==null)) {
             logger.error("Some arguments are null!");
             throw new FileStatsException("Some arguments are null!", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
@@ -96,8 +83,9 @@ public class StatsFileImpl implements StatsFile {
         StringTokenizer tokenizer=null;
         Date date = null;
         Reply reply=  null;
+        BufferedReader reader = null;
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            reader = new BufferedReader(new FileReader(filePath));
             while((line = reader.readLine())!=null) {
                 tokenizer = new StringTokenizer(line,",");
                 date = csvDateFormat.parse(tokenizer.nextToken()+" "+tokenizer.nextToken());
@@ -111,7 +99,6 @@ public class StatsFileImpl implements StatsFile {
                     result.add(reply);
                 }
             }
-            reader.close();         // todo !!!!!!!!!!!!!!!
 
         } catch (FileNotFoundException e) {
             logger.info("Unable to create file reader, maybe file doesn't exist",e);
@@ -125,6 +112,15 @@ public class StatsFileImpl implements StatsFile {
         } catch (IOException e) {
             logger.error("IOException during reading file",e);
             throw new FileStatsException("IOException during reading file",e);
+        } finally {
+            if(reader!=null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    logger.error("Can't close reader",e);
+                    throw new FileStatsException("Can't close reader", e);
+                }
+            }
         }
 
     }
@@ -143,9 +139,6 @@ public class StatsFileImpl implements StatsFile {
         return file.exists();
     }
 
-    public static String getReplyStatsDir() {
-        return replyStatsDir;   
-    }
 	 
 }
  
