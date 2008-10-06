@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/STAT" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    xmlns:stat="http://www.sibinco.com/SCAG/STAT"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG"/>  
+
+
+    <complexType name="addKeywordsType">
+        <attribute name="keywords" type="scag:Value" use="required" />
+    </complexType> 
+
+    <complexType name="setKeywordsType">
+        <attribute name="keywords" type="scag:Value" use="required" />
+    </complexType> 
+
+    <complexType name="getKeywordsType">
+        <attribute name="keywords" type="scag:Var" use="required" />
+    </complexType> 
+	
+    <group name="Actions">
+	<choice>                                                                                                              
+	    <element name="add_keywords" type="stat:addKeywordsType" />
+	    <element name="set_keywords" type="stat:setKeywordsType" />                                                                      
+	    <element name="get_keywords" type="stat:getKeywordsType" />                                                                      
+        </choice>                                                                                                             
+    </group>
+
+</schema>
