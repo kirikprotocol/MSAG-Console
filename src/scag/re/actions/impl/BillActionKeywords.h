@@ -11,6 +11,7 @@ namespace re {
 namespace actions {
 
 using std::string;
+using scag::util::Keywords;
 using scag::util::AddKeywords;
 using scag::util::SetKeywords;
 using scag2::sessions::ExternalBillingTransaction;
@@ -22,7 +23,7 @@ public:
   virtual bool run(ActionContext &context);
 
 protected:
-  ExternalBillingTransaction* getBillTransaction(ActionContext &context);
+  bool changeKeywords(ActionContext &context, Keywords< ActionContext, ExternalBillingTransaction >* keywords);
   virtual void init(const SectionParams &params, PropertyObject propertyObject);
   virtual const char * opname() const { return "bill:set_keywords"; }
 
@@ -31,7 +32,7 @@ protected:
   FieldType keywordsType_;
 
 private:
-  typedef SetKeywords< ActionContext, ExternalBillingTransaction > KeywordsAction;
+  typedef SetKeywords< ActionContext, ExternalBillingTransaction > SetKeywordsType;
 };
 
 class BillActionAddKeywords : public BillActionSetKeywords {
@@ -43,7 +44,7 @@ protected:
   virtual const char * opname() const { return "bill:add_keywords"; }
 
 private:
-  typedef AddKeywords< ActionContext, ExternalBillingTransaction > KeywordsAction;
+  typedef AddKeywords< ActionContext, ExternalBillingTransaction > AddKeywordsType;
 };
 
 }

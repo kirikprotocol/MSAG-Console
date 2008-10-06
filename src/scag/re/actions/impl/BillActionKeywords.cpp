@@ -14,19 +14,13 @@ void BillActionSetKeywords::init( const SectionParams& params, PropertyObject pr
   smsc_log_debug(logger, "Action '%s' init...", opname() );
 }
 
-ExternalBillingTransaction* BillActionSetKeywords::getBillTransaction(ActionContext &context) {
+bool BillActionSetKeywords::changeKeywords(ActionContext &context, Keywords< ActionContext, ExternalBillingTransaction >* keywords) {
   smsc_log_debug(logger, "Run Action '%s'...", opname());
   std::string transId = getTransId( context );
   if ( transId.empty() ) {
-//<<<<<<< BillActionKeywords.cpp
       smsc_log_error( logger, "Action '%s' cannot get transaction name", opname() );
       setBillingStatus( context, "cannot get transaction name", false );
-      return NULL;
-//=======
-      // smsc_log_error( logger, "Action '%s' cannot get transaction name", opname() );
-      // setBillingStatus( context, "cannot get transaction name", false );
-//      return true;
-//>>>>>>> 1.2
+      return true;
   }
 
   ExternalTransaction* etrans = context.getSession().getTransaction( transId.c_str() );
@@ -34,7 +28,7 @@ ExternalBillingTransaction* BillActionSetKeywords::getBillTransaction(ActionCont
       smsc_log_error( logger, "Action '%s' transaction '%s' not found",
                       opname(), transId.c_str() );
       setBillingStatus( context, "transaction not found", false );
-      return NULL;
+      return true;
   }
 
   ExternalBillingTransaction* trans = etrans->castToBilling();
@@ -42,18 +36,9 @@ ExternalBillingTransaction* BillActionSetKeywords::getBillTransaction(ActionCont
       smsc_log_error( logger, "Action '%s' transaction '%s' is not a billing one",
                       opname(), transId.c_str() );
       setBillingStatus( context, "not a billing transaction", false );
-      return NULL;
+      return true;
   }
-  return trans;
-}
-
-bool BillActionSetKeywords::run(ActionContext &context) {
-  ExternalBillingTransaction* trans = getBillTransaction(context);
-  if (!trans) {
-    return true;
-  }
-  std::auto_ptr< KeywordsAction > keywordsRuner(new KeywordsAction(keywords_, keywordsType_ == ftUnknown, logger, context));
-  if (keywordsRuner->run(trans)) {
+  if (keywords->change(trans)) {
     setBillingStatus(context, "", true);
   } else {
     setBillingStatus( context, "can't set keywords", false );
@@ -61,18 +46,14 @@ bool BillActionSetKeywords::run(ActionContext &context) {
   return true;
 }
 
+bool BillActionSetKeywords::run(ActionContext &context) {
+  std::auto_ptr< SetKeywordsType > keywords(new SetKeywordsType(keywords_, keywordsType_ == ftUnknown, logger, context));
+  return changeKeywords(context, keywords.get());
+}
+
 bool BillActionAddKeywords::run(ActionContext &context) {
-  ExternalBillingTransaction* trans = getBillTransaction(context);
-  if (!trans) {
-    return true;
-  }
-  std::auto_ptr< KeywordsAction > keywordsRuner(new KeywordsAction(keywords_, keywordsType_ == ftUnknown, logger, context));
-  if (keywordsRuner->run(trans)) {
-    setBillingStatus(context, "", true);
-  } else {
-    setBillingStatus( context, "can't add keywords", false );
-  }
-  return true;
+  std::auto_ptr< AddKeywordsType > keywords(new AddKeywordsType(keywords_, keywordsType_ == ftUnknown, logger, context));
+  return changeKeywords(context, keywords.get());
 }
 
 }

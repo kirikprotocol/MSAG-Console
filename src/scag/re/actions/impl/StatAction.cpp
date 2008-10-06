@@ -21,20 +21,23 @@ IParserHandler * StatAction::StartXMLSubSection(const std::string &name, const S
   throw SCAGException("Action '%s': cannot have a child object", actionName());
 }
 
-void AddKeywordsAction::init(const SectionParams &params, PropertyObject propertyObject) {
-  initKeywordsParameter(params, propertyObject, true);  
-}
-
-bool AddKeywordsAction::run(ActionContext &context) {
+bool StatAction::changeKeywords(ActionContext &context, Keywords< ActionContext, Operation >* keywords) {
   smsc_log_debug(logger, "Run Action '%s'", actionName());
   Operation *op = context.getSession().getCurrentOperation();
   if (!op) {
     smsc_log_warn(logger, "Action '%s': there is no operation", actionName());
     return false;
   }
+  return keywords->change(op);
+}
 
-  std::auto_ptr< KeywordsAction > keywordsRuner(new KeywordsAction(keywords_, keywordsType_ == ftUnknown, logger, context));
-  return keywordsRuner->run(op);
+void AddKeywordsAction::init(const SectionParams &params, PropertyObject propertyObject) {
+  initKeywordsParameter(params, propertyObject, true);  
+}
+
+bool AddKeywordsAction::run(ActionContext &context) {
+  std::auto_ptr< AddKeywordsType > keywords(new AddKeywordsType(keywords_, keywordsType_ == ftUnknown, logger, context));
+  return changeKeywords(context, keywords.get());
 }
 
 void SetKeywordsAction::init(const SectionParams &params, PropertyObject propertyObject) {
@@ -42,15 +45,8 @@ void SetKeywordsAction::init(const SectionParams &params, PropertyObject propert
 }
 
 bool SetKeywordsAction::run(ActionContext &context) {
-  smsc_log_debug(logger, "Run Action '%s'", actionName());
-  Operation *op = context.getSession().getCurrentOperation();
-  if (!op) {
-    smsc_log_warn(logger, "Action '%s': there is no operation", actionName());
-    return false;
-  }
-
-  std::auto_ptr< KeywordsAction > keywordsRuner(new KeywordsAction(keywords_, keywordsType_ == ftUnknown, logger, context));
-  return keywordsRuner->run(op);
+  std::auto_ptr< SetKeywordsType > keywords(new SetKeywordsType(keywords_, keywordsType_ == ftUnknown, logger, context));
+  return changeKeywords(context, keywords.get());
 }
 
 void GetKeywordsAction::init(const SectionParams &params, PropertyObject propertyObject) {

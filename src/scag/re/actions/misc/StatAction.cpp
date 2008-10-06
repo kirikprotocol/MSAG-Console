@@ -7,10 +7,7 @@ using scag::util::properties::Property;
 
 void StatAction::initKeywordsParameter(const SectionParams &params, PropertyObject propertyObject, bool readOnly) {
   bool keywordsExists = false;
-  FieldType keywordsType = CheckParameter(params, propertyObject, actionName(), "keywords", true, readOnly, keywords_, keywordsExists);
-  if (keywordsType != ftUnknown) {
-    keywordsTypeUnknown_ = false;
-  }
+  keywordsType_ = CheckParameter(params, propertyObject, actionName(), "keywords", true, readOnly, keywords_, keywordsExists);
 }  
 
 bool StatAction::FinishXMLSubSection(const std::string &name) {
@@ -21,20 +18,23 @@ IParserHandler * StatAction::StartXMLSubSection(const std::string &name, const S
   throw SCAGException("Action '%s': cannot have a child object", actionName());
 }
 
+bool StatAction::changeKeywords(ActionContext &context, Keywords< ActionContext, Operation >* keywords) {
+  smsc_log_debug(logger, "Run Action '%s'", actionName());
+  Operation *op = context.getSession().GetCurrentOperation();
+  if (!op) {
+    smsc_log_warn(logger, "Action '%s': there is no operation", actionName());
+    return false;
+  }
+  return keywords->change(op);
+}
+
 void AddKeywordsAction::init(const SectionParams &params, PropertyObject propertyObject) {
   initKeywordsParameter(params, propertyObject, true);  
 }
 
 bool AddKeywordsAction::run(ActionContext &context) {
-  smsc_log_debug(logger, "Run Action '%s'", actionName());
-  Operation *op = context.GetCurrentOperation();
-  if (!op) {
-    smsc_log_warn(logger, "Action '%s':  operation not found", actionName());
-    return false;
-  }
-
-  std::auto_ptr< KeywordsAction > keywordsRuner(new KeywordsAction(keywords_, keywordsTypeUnknown_, logger, context));
-  return keywordsRuner->run(op);
+  std::auto_ptr< AddKeywordsType > keywords(new AddKeywordsType(keywords_, keywordsType_ == ftUnknown, logger, context));
+  return changeKeywords(context, keywords.get());
 }
 
 void SetKeywordsAction::init(const SectionParams &params, PropertyObject propertyObject) {
@@ -42,15 +42,8 @@ void SetKeywordsAction::init(const SectionParams &params, PropertyObject propert
 }
 
 bool SetKeywordsAction::run(ActionContext &context) {
-  smsc_log_debug(logger, "Run Action '%s'", actionName());
-  Operation *op = context.GetCurrentOperation();
-  if (!op) {
-    smsc_log_warn(logger, "Action '%s': operation not found", actionName());
-    return false;
-  }
-
-  std::auto_ptr< KeywordsAction > keywordsRuner(new KeywordsAction(keywords_, keywordsTypeUnknown_, logger, context));
-  return keywordsRuner->run(op);
+  std::auto_ptr< SetKeywordsType > keywords(new SetKeywordsType(keywords_, keywordsType_ == ftUnknown, logger, context));
+  return changeKeywords(context, keywords.get());
 }
 
 void GetKeywordsAction::init(const SectionParams &params, PropertyObject propertyObject) {

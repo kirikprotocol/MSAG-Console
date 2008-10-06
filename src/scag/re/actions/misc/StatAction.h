@@ -15,23 +15,25 @@ using std::vector;
 using scag::sessions::Session;
 using scag::sessions::Operation;
 
+using scag::util::Keywords;
 using scag::util::AddKeywords;
 using scag::util::SetKeywords;
 
 class StatAction : public Action {  
 public:
-  StatAction():keywordsTypeUnknown_(true) {};
+  StatAction():keywordsType_(ftUnknown) {};
   ~StatAction() {};
   virtual bool FinishXMLSubSection(const std::string &name);
   virtual IParserHandler * StartXMLSubSection(const std::string &name, const SectionParams &params, const ActionFactory &factory);
 
 protected:
+  bool changeKeywords(ActionContext &context, Keywords< ActionContext, Operation >* keywords);
   void initKeywordsParameter(const SectionParams &params, PropertyObject propertyObject, bool readOnly);
   virtual const char* actionName() const = 0;
 
 protected:
   string keywords_;
-  bool keywordsTypeUnknown_;
+  FieldType keywordsType_;
 
 };
 
@@ -42,7 +44,7 @@ public:
   virtual bool run(ActionContext &context);
 
 protected:
-  typedef AddKeywords< ActionContext, Operation > KeywordsAction;
+  typedef AddKeywords< ActionContext, Operation > AddKeywordsType;
   const char* actionName() const { return "stat:add_keywords"; }
 
 };
@@ -54,7 +56,7 @@ public:
   virtual bool run(ActionContext &context);
 
 protected:
-  typedef SetKeywords< ActionContext, Operation > KeywordsAction;
+  typedef SetKeywords< ActionContext, Operation > SetKeywordsType;
   const char* actionName() const { return "stat:set_keywords"; }
 };
 
