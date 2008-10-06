@@ -30,7 +30,6 @@ public class StatsFilesCache {
 
     private ConcurrentHashMap<String,CachedStatsFile> filesMap;
     private SimpleDateFormat fileNameFormat;
-    private SimpleDateFormat dateToStringFormat;
     private ScheduledExecutorService s;
 
     public static void init(final String configFile) throws FileStatsException {
@@ -45,6 +44,10 @@ public class StatsFilesCache {
             replyStatsDir = config.getString("dir.name",null);
             if(replyStatsDir==null) {
                 throw new FileStatsException("dir.name parameter missed in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
+            }
+            File file = new File(replyStatsDir);
+            if(!file.exists()){
+                file.mkdirs();
             }
 
             config = new PropertiesConfig(c.getSection("fileCollector").toProperties("."));
@@ -63,7 +66,6 @@ public class StatsFilesCache {
     public StatsFilesCache() {
         filesMap =  new ConcurrentHashMap<String, CachedStatsFile>();
         fileNameFormat = new SimpleDateFormat(fileNamePattern);
-        dateToStringFormat = new SimpleDateFormat("yyyyMMdd");
 
         s = Executors.newSingleThreadScheduledExecutor();
         s.scheduleAtFixedRate(new FileCollector(false),delayFirst,iterationPeriod, java.util.concurrent.TimeUnit.SECONDS);
@@ -102,16 +104,13 @@ public class StatsFilesCache {
 	 
 	public void shutdown() {
         s.shutdown();
-        new Thread(new FileCollector(true)).run();
+        new FileCollector(true).run();
     }
 
     private String buildKey(String da, Date date) {
         String result ="";
-        result+=da+"_" + dateToString(date);
+        result+=da+"_" + date.getTime();
         return result;
-    }
-    private String dateToString(Date date) {
-        return dateToStringFormat.format(date);
     }
 
     private StatsFile lockupFile(final String dest, final Date date){
@@ -119,8 +118,11 @@ public class StatsFilesCache {
         String key = buildKey(dest, date);
         
         if( (file = filesMap.get(key)) == null) {
-            file = new CachedStatsFile(dest, replyStatsDir +"/"+dest+"/"+fileNameFormat.format(date));
-            filesMap.put(key, file);
+            file = new CachedStatsFile(dest, replyStatsDir +"/"+dest+"/"+fileNameFormat.format(date)+".csv");
+            file.setMapKey(key);
+            CachedStatsFile f1 = filesMap.putIfAbsent(key, file);
+            if (f1 != null)
+                file = f1;
         }
         return file;
     }
@@ -132,6 +134,7 @@ public class StatsFilesCache {
         private Lock lock = new ReentrantLock();
         private boolean isClosed = true;
         private Date lastUsageDate;
+        private String mapKey;
 
         public CachedStatsFile(String da, String filePath) {
             this.da = da;
@@ -172,6 +175,14 @@ public class StatsFilesCache {
             statsFileImpl.close();
             isClosed = false;
         }
+
+        public String getMapKey() {
+            return mapKey;
+        }
+
+        public void setMapKey(String mapKey) {
+            this.mapKey = mapKey;
+        }
     }
 
     private class FileCollector implements Runnable {
@@ -199,6 +210,7 @@ public class StatsFilesCache {
                             file.open();
                             file.closeExt();
                             file.close();
+                            filesMap.remove(file.getMapKey());
                         } catch (FileStatsException e) {
                             logger.error("Error lock the cached file", e);
                         }

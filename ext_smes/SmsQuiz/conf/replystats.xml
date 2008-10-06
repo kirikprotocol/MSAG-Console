@@ -5,7 +5,7 @@
     <param name="dir.name">/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/replyStats</param>
     <param name="date.pattern.in.file">yyyyMMdd</param>
     <param name="time.pattern.in.file">HH:mm</param>
-    <param name="filename.pattern">yyyyMMdd.csv</param>
+    <param name="filename.pattern">yyyyMMdd</param>
   </section>
   <section name="fileCollector">
     <param name="time.limit">5000</param>
