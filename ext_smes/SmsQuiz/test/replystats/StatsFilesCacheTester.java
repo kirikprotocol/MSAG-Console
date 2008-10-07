@@ -28,14 +28,6 @@ public class StatsFilesCacheTester {
     public void init() {
         try {
             StatsFilesCache.init("conf/config.xml");
-            File dir = new File(StatsFilesCache.getReplyStatsDir()+"/"+"148");
-            if((dir.exists())&&(dir.isDirectory())) {
-                for(File file:dir.listFiles()) {
-                    if(file.isFile()) {
-                        file.delete();
-                    }
-                }
-            }
             filesCache = new StatsFilesCache();
         } catch (FileStatsException e) {
             e.printStackTrace();
@@ -57,7 +49,7 @@ public class StatsFilesCacheTester {
             file.add(reply);
 
             Collection<Reply> replies = new LinkedList<Reply>();
-            file.list(new Date(0), new Date(new Date().getTime()+1000), replies);
+            file.list(new Date(0), new Date(new Date().getTime()+100000), replies);
             int flag=0;
 
             Iterator<Reply> iter = replies.iterator();
