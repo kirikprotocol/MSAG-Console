@@ -4,7 +4,7 @@ package mobi.eyeline.smsquiz.subscription.manager;
 import mobi.eyeline.smsquiz.subscription.storage.SubscriptionDataSource;
 import mobi.eyeline.smsquiz.subscription.storage.StorageException;
 import mobi.eyeline.smsquiz.subscription.storage.Subscription;
-import mobi.eyeline.smsquiz.subscription.storage.impl.SubscriptionDataSourceImpl;
+import mobi.eyeline.smsquiz.subscription.storage.impl.DBSubscriptionDataSource;
 import org.apache.log4j.Logger;
 
 import java.util.Date;
@@ -71,7 +71,7 @@ public class SubscriptionManager {
 
     private SubscriptionManager() throws SubManagerException {
         try {
-            dataSource = SubscriptionDataSourceImpl.getInstance();
+            dataSource = new DBSubscriptionDataSource();
         } catch (StorageException e) {
             logger.error("Error init manager",e);
             throw new SubManagerException("Error init manager",e);

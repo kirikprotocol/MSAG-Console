@@ -1,7 +1,7 @@
 package mobi.eyeline.smsquiz.subscription.script;
 
 import mobi.eyeline.smsquiz.subscription.storage.*;
-import mobi.eyeline.smsquiz.subscription.storage.impl.SubscriptionDataSourceImpl;
+import mobi.eyeline.smsquiz.subscription.storage.impl.DBSubscriptionDataSource;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -56,7 +56,7 @@ public class SubscribedAbDownloader {
         }
         try {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(dest))) ;
-            dataSource = SubscriptionDataSourceImpl.getInstance();
+            dataSource = new DBSubscriptionDataSource();
             result = dataSource.list(wantedDate);
             while (result.next()) {
                 if((sub=(Subscription)result.get())!=null){
