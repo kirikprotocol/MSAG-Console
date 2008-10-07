@@ -197,12 +197,15 @@ public class Scag extends Proxy {
    }
 
     public List updateRule(final String ruleId, final String transport) throws SibincoException {
+//        if( true ){
+//            throw new SibincoException( "Test exception!!!" );
+//        }
         String err = "Couldn't update rule , nested: ";
         HashMap args = new HashMap();
         args.put("serviceId",ruleId);
         args.put("transport",transport);
         final Object res = call(UPDATE_RULE_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], args);
-        return res instanceof List ? (List) res : null;
+        return res instanceof List ? (List)res : null;
     }
 
     //load routes
@@ -271,7 +274,11 @@ public class Scag extends Proxy {
     public Object call(final String commandId, final String err, final Type returnType, final Map arguments) throws SibincoException {
         try {
             final Response r = runCommand(new CommandCall(commandId, returnType, arguments));
+
+            if(true) throw new SibincoException("Error occured: " + err + r.getDataAsString());
+
             if (Response.STATUS_OK != r.getStatus()){
+                logger.error( "Scag.call() !STATUS_OK" );
                 throw new SibincoException("Error occured: " + err + r.getDataAsString());
             }
             final Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
