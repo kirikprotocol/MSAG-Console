@@ -15,8 +15,6 @@ import java.util.Date;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Iterator;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
 
 /**
  * author: alkhal
@@ -28,7 +26,7 @@ public class StatsFilesCacheTester {
     @Before
     public void init() {
         try {
-            StatsFilesCache.init("conf/replystats.xml");
+            StatsFilesCache.init("conf/config.xml");
             filesCache = new StatsFilesCache();
         } catch (FileStatsException e) {
             e.printStackTrace();
@@ -77,11 +75,8 @@ public class StatsFilesCacheTester {
     public void getFiles() {
         Collection<StatsFile> files = null;
         try {
-            files = filesCache.getFiles("148",new SimpleDateFormat("ddMMyyy").parse("06102008"), new SimpleDateFormat("ddMMyyy").parse("07102008"));
+            files = filesCache.getFiles("148",new Date(System.currentTimeMillis()-1000000000), new Date(System.currentTimeMillis()+10000000));
         } catch (FileStatsException e) {
-            e.printStackTrace();
-            assertFalse(true);
-        } catch (ParseException e) {
             e.printStackTrace();
             assertFalse(true);
         }
@@ -91,13 +86,39 @@ public class StatsFilesCacheTester {
                 file.open();
             } catch (FileStatsException e) {
                 e.printStackTrace();
-                file.close();
                 assertFalse(true);
+            } finally {
+                file.close();
             }
         }
     }
-    @Test
+    @Test(timeout = 21000)
     public void openNotClose() {
+        try {
+            StatsFile file = filesCache.getFile("148",new Date());
+            file.open();
+            file.close();
+            int count = filesCache.countOpenedFiles();
+            System.out.println(count);
+            Thread thread = new Thread() {
+                public void run() {
+                    try {
+                        sleep(StatsFilesCache.getIterationPeriod()*2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();}
+                }
+            };
+            thread.start();
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            assertTrue(filesCache.countOpenedFiles() <= count - 1);
+        } catch (FileStatsException e) {
+            e.printStackTrace();
+            assertFalse(true);
+        }
 
     }
     @After

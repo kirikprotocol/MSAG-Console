@@ -37,11 +37,11 @@ public class StatsFilesCache {
             final XmlConfig c = new XmlConfig();
             c.load(new File(configFile));
 
-            PropertiesConfig config = new PropertiesConfig(c.getSection("statsFile").toProperties("."));
-            fileNamePattern = config.getString("filename.pattern");
-            timePattern = config.getString("time.pattern.in.file","yyyyMMdd");
-            datePattern = config.getString("date.pattern.in.file","НН:mm");
-            replyStatsDir = config.getString("dir.name",null);
+            PropertiesConfig config = new PropertiesConfig(c.getSection("replystats").toProperties("."));
+            fileNamePattern = config.getString("statsFile.filename.pattern");
+            timePattern = config.getString("statsFile.time.pattern.in.file","yyyyMMdd");
+            datePattern = config.getString("statsFile.date.pattern.in.file","НН:mm");
+            replyStatsDir = config.getString("statsFile.dir.name",null);
             if(replyStatsDir==null) {
                 throw new FileStatsException("dir.name parameter missed in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
             }
@@ -50,12 +50,12 @@ public class StatsFilesCache {
                 file.mkdirs();
             }
 
-            config = new PropertiesConfig(c.getSection("fileCollector").toProperties("."));
-            delayFirst = config.getLong("time.first.delay");
-            iterationPeriod = config.getLong("time.period");
-            timeLimit = config.getLong("time.limit");
+           // config = new PropertiesConfig(c.getSection("fileCollector").toProperties("."));
+            delayFirst = config.getLong("fileCollector.time.first.delay");
+            iterationPeriod = config.getLong("fileCollector.time.period");
+            timeLimit = config.getLong("fileCollector.time.limit");
             if(fileNamePattern==null) {
-                throw new FileStatsException("filename.pattern not found in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
+                throw new FileStatsException("statsFile.filename.pattern not found in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
             }
         } catch (ConfigException e) {
             logger.error("Unable to init StatsFilesCache",e);
@@ -221,6 +221,18 @@ public class StatsFilesCache {
                 logger.info("FileCollector finishes.");
             }
         }
+    }
+    public int countOpenedFiles() {
+        if(filesMap!=null) {
+            return filesMap.values().size();
+        }
+        else {
+            return 0;
+        }
+    }
+
+    public static long getIterationPeriod() {
+        return iterationPeriod;
     }
 }
 
