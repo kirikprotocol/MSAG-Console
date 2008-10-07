@@ -53,7 +53,7 @@ public class DataSourceTester {
         try {
             int flag=0;
             for (Reply reply:dataSource.list("148",new Date(System.currentTimeMillis()-2000), new Date())){
-                if(reply.getText().equals("getFileAddReply"))
+                if(reply.getText().equals("add"))
                     if(reply.getOa().equals("+7913testAdd"))
                         if(reply.getDa().equals("148"))
                             flag=1;
