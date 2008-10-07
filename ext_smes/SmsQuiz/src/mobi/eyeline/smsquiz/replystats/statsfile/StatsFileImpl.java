@@ -9,6 +9,7 @@ import java.util.*;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
+import java.sql.Time;
 
 import org.apache.log4j.Logger;
 import mobi.eyeline.smsquiz.replystats.statsfile.FileStatsException;
@@ -36,11 +37,16 @@ public class StatsFileImpl implements StatsFile {
         timeFormat = new SimpleDateFormat(timePattern);
         csvDateFormat = new SimpleDateFormat(datePattern+" "+timePattern);
         File currentFile = new File(filePath);
-        try {
-            FileUtils.truncateFile(currentFile,"\n".getBytes()[0],10);
-        } catch (IOException e) {
-            logger.error("Unable to truncate file",e);
-            throw new FileStatsException("Unable to truncate file",e);
+        File parent = currentFile.getParentFile();
+        if (!parent.exists())
+            parent.mkdirs();
+        else {
+            try {
+                FileUtils.truncateFile(currentFile,"\n".getBytes()[0],10);
+            } catch (IOException e) {
+                logger.error("Unable to truncate file",e);
+                throw new FileStatsException("Unable to truncate file",e);
+            }
         }
     }
 
