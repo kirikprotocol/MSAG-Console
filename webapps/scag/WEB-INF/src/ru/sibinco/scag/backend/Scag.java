@@ -279,7 +279,7 @@ public class Scag extends Proxy {
 
             if (Response.STATUS_OK != r.getStatus()){
                 logger.error( "Scag.call() !STATUS_OK" );
-                throw new SibincoException("Error occured: " + err + r.getDataAsString());
+                throw new SibincoException( "Error occured: '" + err + r.getDataAsString() + "'" );
             }
             final Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
             final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
