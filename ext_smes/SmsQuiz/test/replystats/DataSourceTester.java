@@ -14,6 +14,8 @@ import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
 import mobi.eyeline.smsquiz.replystats.Reply;
 
 import java.util.Date;
+import java.util.Calendar;
+import java.io.File;
 
 /**
  * author: alkhal
@@ -39,7 +41,7 @@ public class DataSourceTester {
         reply.setDate(new Date());
         reply.setOa("+7913testAdd");
         reply.setDa("148");
-        reply.setText("add");
+        reply.setText("addDatasource");
         try {
             dataSource.add(reply);
         } catch (ReplyDataSourceException e) {
@@ -52,11 +54,18 @@ public class DataSourceTester {
     public void list() {
         try {
             int flag=0;
-            for (Reply reply:dataSource.list("148",new Date(System.currentTimeMillis()-2000), new Date())){
-                if(reply.getText().equals("add"))
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(new Date(System.currentTimeMillis()-2000));
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            Date from = cal.getTime();
+            cal.add(Calendar.MINUTE,1);
+            Date till = cal.getTime();
+            for (Reply reply:dataSource.list("148",from, till)){
+                if(reply.getText().equals("addDatasource"))
                     if(reply.getOa().equals("+7913testAdd"))
                         if(reply.getDa().equals("148"))
-                            flag=1;
+                            flag = 1;
             }
             assertTrue(flag==1);
         } catch (ReplyDataSourceException e) {

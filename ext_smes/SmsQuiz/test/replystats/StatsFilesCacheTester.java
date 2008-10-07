@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Iterator;
+import java.io.File;
 
 /**
  * author: alkhal
@@ -27,6 +28,14 @@ public class StatsFilesCacheTester {
     public void init() {
         try {
             StatsFilesCache.init("conf/config.xml");
+            File dir = new File(StatsFilesCache.getReplyStatsDir()+"/"+"148");
+            if((dir.exists())&&(dir.isDirectory())) {
+                for(File file:dir.listFiles()) {
+                    if(file.isFile()) {
+                        file.delete();
+                    }
+                }
+            }
             filesCache = new StatsFilesCache();
         } catch (FileStatsException e) {
             e.printStackTrace();
@@ -92,6 +101,7 @@ public class StatsFilesCacheTester {
             }
         }
     }
+    @Ignore
     @Test(timeout = 21000)
     public void openNotClose() {
         try {

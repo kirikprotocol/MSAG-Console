@@ -24,7 +24,7 @@ public class StatsFileTest {
     @Before
     public void init() {
         try {
-            file = new StatsFileImpl("148","06102008");
+            file = new StatsFileImpl("148","/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/replyStats/148/20081007.csv");
             file.open();
         } catch (FileStatsException e) {
             e.printStackTrace();
@@ -59,7 +59,6 @@ public class StatsFileTest {
             e.printStackTrace();
             assertTrue(false);
         }
-        System.out.println("12");
     }
 
     @After

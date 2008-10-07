@@ -50,7 +50,6 @@ public class StatsFilesCache {
                 file.mkdirs();
             }
 
-           // config = new PropertiesConfig(c.getSection("fileCollector").toProperties("."));
             delayFirst = config.getLong("fileCollector.time.first.delay");
             iterationPeriod = config.getLong("fileCollector.time.period");
             timeLimit = config.getLong("fileCollector.time.limit");
@@ -87,7 +86,7 @@ public class StatsFilesCache {
         calendar.set(Calendar.MILLISECOND,0);
 
         while(calendar.getTime().before(till)) {
-            if ((statsFile = lockupFile(da, calendar.getTime()))!=null) {
+            if ((statsFile = lockupFile(da, calendar.getTime(),true))!=null) {
                 files.add(statsFile);
             }
             calendar.add(Calendar.DAY_OF_MONTH,1);
@@ -99,7 +98,7 @@ public class StatsFilesCache {
         if((da==null)||(date==null)) {
             throw new FileStatsException("Some arguments are null", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
         }
-        return lockupFile(da,date);
+        return lockupFile(da,date,false);
 	}
 	 
 	public void shutdown() {
@@ -113,16 +112,22 @@ public class StatsFilesCache {
         return result;
     }
 
-    private StatsFile lockupFile(final String dest, final Date date){
+    private StatsFile lockupFile(final String dest, final Date date, boolean checkExist){
         CachedStatsFile file = null;
         String key = buildKey(dest, date);
         
         if( (file = filesMap.get(key)) == null) {
             file = new CachedStatsFile(dest, replyStatsDir +"/"+dest+"/"+fileNameFormat.format(date)+".csv");
+            if((checkExist)&&(!file.exist())) {
+                return null;
+            }
             file.setMapKey(key);
             CachedStatsFile f1 = filesMap.putIfAbsent(key, file);
             if (f1 != null)
                 file = f1;
+        }
+        if((checkExist)&&(!file.exist())) {
+            return null;
         }
         return file;
     }
@@ -183,6 +188,11 @@ public class StatsFilesCache {
         public void setMapKey(String mapKey) {
             this.mapKey = mapKey;
         }
+
+        public boolean exist() {
+            File file = new File(filePath);
+            return file.exists();
+        }
     }
 
     private class FileCollector implements Runnable {
@@ -233,6 +243,9 @@ public class StatsFilesCache {
 
     public static long getIterationPeriod() {
         return iterationPeriod;
+    }
+    public static String getReplyStatsDir() {
+        return replyStatsDir;
     }
 }
 

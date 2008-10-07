@@ -26,7 +26,7 @@ public class StatsFileImpl implements StatsFile {
 
 
     public StatsFileImpl(final String da, final String filePath) throws FileStatsException{
-        this(da,filePath, "НН:mm", "yyyyMMdd");
+        this(da,filePath, "HH:mm", "yyyyMMdd");
     }
     public StatsFileImpl(final String da, final String filePath, String timePattern, String datePattern) throws FileStatsException {
         this.da = da;
@@ -89,13 +89,13 @@ public class StatsFileImpl implements StatsFile {
             while((line = reader.readLine())!=null) {
                 tokenizer = new StringTokenizer(line,",");
                 date = csvDateFormat.parse(tokenizer.nextToken()+" "+tokenizer.nextToken());
-                if((date.before(till))&&(date.after(from))) {
+                if((date.compareTo(till)<=0)&&(date.compareTo(from)>=0)) {
                     reply = new Reply();
                     reply.setDa(da);
                     reply.setDate(date);
                     reply.setOa(tokenizer.nextToken());
                     reply.setText(tokenizer.nextToken());
-                    
+
                     result.add(reply);
                 }
             }
