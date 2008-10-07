@@ -32,4 +32,10 @@
       </section>
   </section>
 
+  <section name="distribution">
+      <param name="info.sme.stats.dir">/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/infoSme</param>
+      <param name="info.sme.stats.date.dir.pattern">yyMMdd</param>
+      <param name="info.sme.stats.time.file.pattern">HH</param>
+  </section>
+
 </config>
