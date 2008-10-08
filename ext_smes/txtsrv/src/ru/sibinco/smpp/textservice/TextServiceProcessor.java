@@ -9,6 +9,7 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import java.util.Properties;
 import java.util.Date;
+import java.util.regex.Pattern;
 import java.io.*;
 import java.text.SimpleDateFormat;
 
@@ -26,6 +27,10 @@ public class TextServiceProcessor implements RequestProcessor {
   private String name = "TextServiceProcessor";
   private String configFileName = null;
   private Properties config = null;
+  private final static String checkRequiredSuffix = ".check.enabled";
+  private final static String checkSuffix = ".check.regexp";
+  private final static String checkedTextSuffix = ".checked.response.text";
+  private final static String uncheckedTextSuffix = ".unchecked.response.text";
   private final static String responseTextSuffix = ".response.text";
   private final static String defaultResponse = "default.response.text";
   private final static String emailSuffix=".email";
@@ -112,8 +117,21 @@ public class TextServiceProcessor implements RequestProcessor {
 
   public Response process(MessageData messageData) throws RequestProcessingException {
     String response = config.getProperty(defaultResponse);
-    if (!config.getProperty((messageData.getDestinationAddress() + responseTextSuffix), "").equals(""))
+    if ((config.getProperty(messageData.getDestinationAddress() + checkRequiredSuffix, "").equalsIgnoreCase("1") ||
+        config.getProperty(messageData.getDestinationAddress() + checkRequiredSuffix, "").equalsIgnoreCase("yes") ||
+        config.getProperty(messageData.getDestinationAddress() + checkRequiredSuffix, "").equalsIgnoreCase("true")) &&
+        !config.getProperty(messageData.getDestinationAddress() + checkSuffix, "").equals("") &&
+        !config.getProperty(messageData.getDestinationAddress() + checkedTextSuffix, "").equals("") &&
+        !config.getProperty(messageData.getDestinationAddress() + uncheckedTextSuffix, "").equals("")) {
+      // check request
+      if (Pattern.matches(config.getProperty(messageData.getDestinationAddress() + checkSuffix), messageData.getMessageString())) {
+        response = config.getProperty(messageData.getDestinationAddress() + checkedTextSuffix);
+      } else {
+        response = config.getProperty(messageData.getDestinationAddress() + uncheckedTextSuffix);
+      }
+    } else if (!config.getProperty((messageData.getDestinationAddress() + responseTextSuffix), "").equals("")) {
       response = config.getProperty((messageData.getDestinationAddress() + responseTextSuffix));
+    }
     sendEmail(messageData);
     return getSimpleResponse(response, messageData);
   }
