@@ -67,7 +67,7 @@ public class Distribution {
     }
 
     public Collection<WeekDays> getDays() {
-        return days;
+        return EnumSet.copyOf(days);
     }
 }
  
