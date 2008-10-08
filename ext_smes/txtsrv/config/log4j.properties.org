@@ -1,0 +1,82 @@
+#######################
+# sme logs
+#######################
+log4j.category.ru.sibinco.smpp=DEBUG,logAppender
+log4j.additivity.ru.sibinco.smpp=true
+
+log4j.appender.logAppender=org.apache.log4j.RollingFileAppender
+log4j.appender.logAppender.File=logs/sme.log
+log4j.appender.logAppender.Append=false
+log4j.appender.logAppender.layout=org.apache.log4j.PatternLayout
+log4j.appender.logAppender.layout.ConversionPattern=%1.1p %d{MM/dd HH:mm:ss.SSS} (%15.15t) %-15.15c{1} %m%n
+log4j.appender.logAppender.MaxFileSize=100MB
+log4j.appender.logAppender.MaxBackupIndex=50
+log4j.additivity.category.logAppender=true
+
+
+#######################
+# reporter logs
+#######################
+log4j.category.ru.sibinco.smpp.reporter.ConnectionsStatusReporter=DEBUG,reporterLog
+log4j.additivity.ru.sibinco.smpp.reporter.ConnectionsStatusReporter=false
+
+log4j.category.ru.sibinco.smpp.reporter.tests.ConnectionsStatusReporterTest=DEBUG,alertLog
+log4j.additivity.ru.sibinco.smpp.reporter.tests.ConnectionsStatusReporterTest=false
+log4j.category.ru.sibinco.smpp.reporter.AlertSender=DEBUG,alertLog
+log4j.additivity.ru.sibinco.smpp.reporter.AlertSender=false
+log4j.category.ru.sibinco.smpp.reporter.ConfigLoader=DEBUG,alertLog
+log4j.additivity.ru.sibinco.smpp.reporter.ConfigLoader=false
+
+log4j.appender.reporterLog=org.apache.log4j.RollingFileAppender
+log4j.appender.reporterLog.File=logs/reporter.log
+log4j.appender.reporterLog.Append=false
+log4j.appender.reporterLog.layout=org.apache.log4j.PatternLayout
+log4j.appender.reporterLog.layout.ConversionPattern=%1.1p %d{MM/dd HH:mm:ss.SSS} %-15.15t %-15.15c{1} %m%n
+log4j.appender.reporterLog.MaxFileSize=100MB
+log4j.appender.reporterLog.MaxBackupIndex=50
+log4j.additivity.category.reporterLog=false
+
+log4j.appender.alertLog=org.apache.log4j.RollingFileAppender
+log4j.appender.alertLog.File=logs/alert.log
+log4j.appender.alertLog.Append=false
+log4j.appender.alertLog.layout=org.apache.log4j.PatternLayout
+log4j.appender.alertLog.layout.ConversionPattern=%1.1p %d{MM/dd HH:mm:ss.SSS} %-15.15t %-15.15c{1} %m%n
+log4j.appender.alertLog.MaxFileSize=100MB
+log4j.appender.alertLog.MaxBackupIndex=50
+log4j.additivity.category.alertLog=false
+
+
+#######################
+# jsmppapi loggs
+#######################
+log4j.category.ru.aurorisoft.smpp=DEBUG,smppLog
+log4j.additivity.ru.aurorisoft.smpp=false
+log4j.category.ru.aurorisoft.smpp.AbstractConnector=DEBUG,smppLog
+log4j.additivity.ru.aurorisoft.smpp.AbstractConnector=false
+log4j.category.ru.aurorisoft.smpp.ConnectorImpl=DEBUG,smppLog
+log4j.additivity.ru.aurorisoft.smpp.ConnectorImpl=false
+log4j.category.ru.aurorisoft.smpp.Message=DEBUG,smppLog
+log4j.additivity.ru.aurorisoft.smpp.Message=false
+log4j.category.ru.aurorisoft.smpp.Multiplexor=DEBUG,smppLog
+log4j.additivity.ru.aurorisoft.smpp.Multiplexor=false
+log4j.category.ru.aurorisoft.smpp.RouteMasks=INFO,smppLog
+log4j.additivity.ru.aurorisoft.smpp.RouteMasks=false
+log4j.category.com.logica.smpp=INFO,smppLog
+log4j.additivity.com.logica.smpp=false
+
+log4j.appender.smppLog=org.apache.log4j.RollingFileAppender
+log4j.appender.smppLog.File=logs/smpp.log
+log4j.appender.smppLog.Append=false
+log4j.appender.smppLog.layout=org.apache.log4j.PatternLayout
+log4j.appender.smppLog.layout.ConversionPattern=%1.1p %d{MM/dd HH:mm:ss.SSS} %-15.15t %-15.15c{1} %m%n
+log4j.appender.smppLog.MaxFileSize=100MB
+log4j.appender.smppLog.MaxBackupIndex=50
+log4j.additivity.category.smppLog=false
+
+
+#######################
+# other
+#######################
+log4j.category.logica.smpp=ERROR
+log4j.category.ru.novosoft.jdbc.pool=ERROR
+log4j.category.util.threads=ERROR
