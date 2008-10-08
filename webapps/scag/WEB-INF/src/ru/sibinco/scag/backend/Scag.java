@@ -274,12 +274,10 @@ public class Scag extends Proxy {
     public Object call(final String commandId, final String err, final Type returnType, final Map arguments) throws SibincoException {
         try {
             final Response r = runCommand(new CommandCall(commandId, returnType, arguments));
-
-            if(true) throw new SibincoException("Error occured: " + err + r.getDataAsString());
-
-            if (Response.STATUS_OK != r.getStatus()){
-                logger.error( "Scag.call() !STATUS_OK" );
-                throw new SibincoException( "Error occured: '" + err + r.getDataAsString() + "'" );
+//            if (Response.STATUS_OK != r.getStatus()){
+            if (Response.STATUS_FATAL == r.getStatus() && true){
+                logger.error( "Scag.call() STATUS_FATAL!!!" );
+                throw new SibincoException( "Error occured: '" + err + "|" + r.getDataAsString() + "'" );
             }
             final Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
             final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
