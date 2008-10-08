@@ -12,6 +12,11 @@ class Session;
 class ActiveSession;
 }
 
+namespace util {
+class HRTimer;
+}
+
+
 namespace transport {
 namespace smpp {
 
@@ -38,7 +43,7 @@ public:
     /// 3. preprocess command/operation before RE execution;
     /// 4. invoke RE;
     /// 5. postprocess command/operation.
-    void process( re::RuleStatus& st );
+    void process( re::RuleStatus& st, util::HRTimer* hrt = 0 );
 
     /// the reason of failure in case of STATUS_FAILED.
     inline const char* what() const {

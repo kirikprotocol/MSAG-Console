@@ -188,7 +188,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                                               bool                        create )
 {
     static unsigned passcount = 0;
-    bool dotiming = ++passcount % 100;
+    bool dotiming = ((++passcount % 10) == 0);
     SCAGCommand* cmdaddr = cmd.get();
     if ( ! cmdaddr ) return ActiveSession();
 
@@ -344,7 +344,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
 void SessionStoreImpl::releaseSession( Session& session )
 {
     static unsigned passcount = 0;
-    bool dotiming = ++passcount % 100;
+    bool dotiming = ((++passcount % 10) == 0);
     HRTimer hrt;
     if ( dotiming ) hrt.mark();
 

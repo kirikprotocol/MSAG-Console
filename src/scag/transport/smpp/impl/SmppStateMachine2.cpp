@@ -345,7 +345,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
 void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
 {
     static unsigned passcount = 0;
-    bool dotiming = ++passcount % 100;
+    bool dotiming = (( ++passcount % 10 ) == 0 );
     HRTimer hrt;
     if (dotiming) hrt.mark();
     hrtime_t timeprep, timeroute, timesess, timerule, timesend;
@@ -477,7 +477,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         if ( dotiming ) timesess = hrt.get();
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
-        opmaker.process( st );
+        opmaker.process( st, dotiming ? &hrt : 0 );
         if ( st.status == re::STATUS_LONG_CALL ) {
             smscmd.setRouteInfo( ri );
             return;
@@ -760,7 +760,7 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
 void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
 {
     static unsigned passcount = 0;
-    bool dotiming = ++passcount % 100;
+    bool dotiming = ((++passcount % 10) == 0);
     HRTimer hrt;
     if (dotiming) hrt.mark();
     hrtime_t timeprep, timeroute, timesess, timerule, timesend;
@@ -891,7 +891,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         if ( dotiming ) timesess = hrt.get();
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
-        opmaker.process( st );
+        opmaker.process( st, dotiming ? &hrt : 0 );
         if ( st.status == re::STATUS_LONG_CALL ) {
             smscmd.setRouteInfo( ri );
             return;
@@ -1171,7 +1171,7 @@ void StateMachine::DataResp( std::auto_ptr<SmppCommand> aucmd,int status)
 void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
 {
     static unsigned passcount = 0;
-    bool dotiming = ++passcount % 100;
+    bool dotiming = ((++passcount % 10) == 0);
     HRTimer hrt;
     if (dotiming) hrt.mark();
     hrtime_t timeprep, timeroute, timesess, timerule, timesend;
@@ -1275,7 +1275,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
 
         if ( dotiming ) timeroute = hrt.get();
 
-        smsc_log_info( log_, "%s%s: %s. %s(%s)->%s, routeid=%s%s",
+        smsc_log_debug( log_, "%s%s: %s. %s(%s)->%s, routeid=%s%s",
                        where,
                        cmd->getOperationId() != SCAGCommand::invalidOpId() ? " continued..." : "",
                        rcnt ? "(redirected)" : "",
@@ -1305,7 +1305,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
         if ( dotiming ) timesess = hrt.get();
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
-        opmaker.process(st);
+        opmaker.process(st, dotiming ? &hrt : 0 );
         if ( st.status == re::STATUS_LONG_CALL ) {
             smscmd.setRouteInfo( ri );
             return;

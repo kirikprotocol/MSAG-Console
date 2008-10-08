@@ -11,10 +11,10 @@ int SmppWriter::Execute()
 {
   smsc_log_debug(log,"Starting SmppWriter");
   net::Multiplexer::SockArray ready,error;
-    unsigned pass = 0;
+    unsigned passcount = 0;
   while(!isStopping)
   {
-      bool dotiming = ++pass % 300;
+      bool dotiming = (( ++passcount % 10 ) == 0 );
       HRTimer hrt;
       if (dotiming) hrt.mark();
       hrtime_t timeprep, timepoll, timewrite;

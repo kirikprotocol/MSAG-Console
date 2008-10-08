@@ -243,6 +243,7 @@ int SessionManagerImpl::Execute()
     // MutexGuard mg(expireMonitor_);
     bool alldone = true;
     bool started = true;
+    EventMonitor dummy;
     while( true ) {
 
         ExpireList* list = 0;
@@ -295,7 +296,6 @@ int SessionManagerImpl::Execute()
                     expireHash_.Insert( KeyPtr(*i), i );
                 }
                 expireMap_.insert( std::make_pair(i->expire,i) );
-
             }
             delete list;
         }

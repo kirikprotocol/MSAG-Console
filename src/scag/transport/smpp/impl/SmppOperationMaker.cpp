@@ -6,6 +6,7 @@
 #include "scag/exc/SCAGExceptions.h"
 #include "core/synchronization/Mutex.hpp"
 #include "SmppManager2.h"
+#include "scag/util/HRTimer.h"
 
 namespace scag2 {
 namespace transport {
@@ -30,19 +31,25 @@ log_(logger)
 
 
 
-void SmppOperationMaker::process( re::RuleStatus& st )
+void SmppOperationMaker::process( re::RuleStatus& st, util::HRTimer* inhrt )
 {
+    hrtime_t timepre, timeproc, timepost;
+    util::HRTimer hrt;
+    if ( inhrt ) hrt = *inhrt;
     try {
         do {
-
             setupOperation( st );
+            if ( inhrt ) timepre = hrt.get();
             if ( st.status != re::STATUS_OK ) break;
         
             smsc_log_debug(log_, "%s: RuleEngine processing...", where_ );            
             re::RuleEngine::Instance().process( *cmd_.get(), *session_.get(), st );
+            if ( inhrt ) timeproc = hrt.get();
             smsc_log_debug(log_, "%s: RuleEngine processed: st.status=%d st.result=%d cmd.stat=%d",
                            where_, st.status, st.result, cmd_->get_status() );
             postProcess( st );
+            if ( inhrt ) timepost = hrt.get();
+
             if ( st.status == re::STATUS_LONG_CALL ) {
                 smsc_log_debug( log_, "%s: long call initiate", where_ );
                 if ( SmppManager::Instance().makeLongCall(cmd_, session_) ) return;
@@ -63,6 +70,11 @@ void SmppOperationMaker::process( re::RuleStatus& st )
             }
 
         } while ( false );
+
+        if ( inhrt ) smsc_log_info( log_, "%s: RE timing(us): pre=%u proc=%u post=%u", where_,
+                                    unsigned(timepre/1000),
+                                    unsigned(timeproc/1000),
+                                    unsigned(timepost/1000) );
 
     } catch ( std::exception& e ) {
         // smsc_log_warn( log_, "%s: exception in opmaker: %s", where, e.what() );

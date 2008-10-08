@@ -9,11 +9,15 @@
 #include "scag/util/properties/Properties.h"
 
 namespace scag2 {
+
 namespace sessions {
     class Session;
-}}
+}
 
-namespace scag2 {
+namespace util {
+    class HRTimer;
+}
+
 namespace re {
 
 using namespace scag::util::properties;
@@ -28,7 +32,7 @@ public:
     // static void Init(const std::string& dir);
     static RuleEngine& Instance();
 
-    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs) = 0;
+    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTimer* hrt = 0 ) = 0;
 
     /// NOTE: this method is invoked (directly) for session destruction only!
     virtual void processSession(Session& session, RuleStatus& rs) = 0;
