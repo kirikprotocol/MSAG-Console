@@ -92,24 +92,28 @@ public class LoggingManager {
         try {
             br = new BufferedReader(new FileReader(loggerFile));
         } catch (FileNotFoundException e) {
-            logger.error( "" );
+            logger.error( "LoggingManager.read() FileNotFoundException '" + loggerFile + "'" );
         }
-        StringBuffer buf = new StringBuffer();
-            String str;
         try {
-            br.readLine();
+            String str;
             String key;
             String value;
-            while ((str = br.readLine())!=null) {
-                if (str.startsWith(CAT_PREFIX)) {
+            while( (str = br.readLine()) != null ) {
+                if( str.startsWith(CAT_PREFIX) ) {
                     key = str.substring( CAT_PREFIX.length(), str.indexOf(PROP_SEPARATOR) );
-                    value = str.substring( str.indexOf(PROP_SEPARATOR)+1);
+                    value = str.substring( str.indexOf(PROP_SEPARATOR)+1 );
                     map.put( key, value );
                 }
-          }
+            }
         } catch (IOException io) {
-            logger.error("Cannot read from "+loggerFile.getAbsolutePath(),io);
+            logger.error("LoggingManager.read() IOException. Cannot read from "+loggerFile.getAbsolutePath(),io);
         } finally {
+            try {
+                br.close();
+            } catch (IOException e) {
+                logger.error( "LoggingManager.read() IOException while close BR" );
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
             return map;
         }
     }

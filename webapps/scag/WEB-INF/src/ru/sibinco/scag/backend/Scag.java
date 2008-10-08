@@ -379,6 +379,7 @@ public class Scag extends Proxy {
     }
 
     public synchronized void setLogCategories(final Map cats) throws SibincoException {
+        logger.debug( "Scag.setLogCategories()" );
         final Map params = new HashMap();
         final List catsList = new LinkedList();
         params.put("categories", catsList);
@@ -388,14 +389,15 @@ public class Scag extends Proxy {
             final String catName = (String) entry.getKey();
             final String catPriority = (String) entry.getValue();
             catsList.add(catName + LOGGER_DELIMITER + catPriority);
+            params.put( catName, catPriority ); //added code
         }
         call("setLogCategories", err, Type.Types[Type.BOOLEAN_TYPE], params);
     }
 
     public synchronized void storeLogCategories(final Map cats) throws SibincoException {
-        final Map params = new HashMap();
+        logger.debug( "Scag.storeLogCategories()" );
+        final Map params = new HashMap(cats);
         String err = "Couldn't set LogCategories , nested: ";
-        logger.error( "Scag:storeLogCategories()" );
         call("storeLogCategories", err, Type.Types[Type.BOOLEAN_TYPE], params);
     }
 
