@@ -22,6 +22,7 @@ public class Response {
     public static final byte STATUS_UNKNOWN = 0;
     public static final byte STATUS_ERROR = 1;
     public static final byte STATUS_OK = 2;
+    public static final byte STATUS_FATAL = 3;
 
     protected final Document document;
     private final byte status;
@@ -31,7 +32,8 @@ public class Response {
     private static final Status[] statuses = {
             new Status("Undefined", STATUS_UNKNOWN),
             new Status("Error", STATUS_ERROR),
-            new Status("Ok", STATUS_OK)
+            new Status("Ok", STATUS_OK),
+            new Status("Fatal", STATUS_FATAL)
     };
 
     public Response(Document document) {
