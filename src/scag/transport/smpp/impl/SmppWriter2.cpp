@@ -14,7 +14,7 @@ int SmppWriter::Execute()
     unsigned pass = 0;
   while(!isStopping)
   {
-      bool dotiming = ++pass % 100;
+      bool dotiming = ++pass % 300;
       HRTimer hrt;
       if (dotiming) hrt.mark();
       hrtime_t timeprep, timepoll, timewrite;
