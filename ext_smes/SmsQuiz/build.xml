@@ -16,6 +16,8 @@
   <property name="java_src" location="${SMS_QUIZ_HOME}/src"/>
   <property name="java_lib" location="${SMS_QUIZ_HOME}/lib"/>
   <property name="java_out" location="${BUILD_DIR}/classes/${module_name}"/>
+  <property name="env.JAVA_HOME" location="/opt/sun-jdk-1.5.0.15"/>
+
 
   <property name="SMS_QUIZ_DISTR_DIR" value="${DISTR_DIR}/${module_name}"/>
 
@@ -30,8 +32,8 @@
   </target>
 
   <target name="build" depends="compile">
-    <copy todir="${java_out}/mobi/eyeline/smsquiz/subscription/storage/impl">
-        <fileset file="${SMS_QUIZ_HOME}/src/mobi/eyeline/smsquiz/subscription/storage/impl/smsquiz.properties"/>
+    <copy todir="${java_out}/mobi/eyeline/smsquiz/subscription/datasource/impl">
+        <fileset file="${SMS_QUIZ_HOME}/src/mobi/eyeline/smsquiz/subscription/datasource/impl/smsquiz.properties"/>
     </copy>
     <jar jarfile="${java_out}/${module_name}.jar" manifest="${SMS_QUIZ_HOME}/MANIFEST.MF">
       <fileset dir="${java_out}" excludes="*.jar" />
