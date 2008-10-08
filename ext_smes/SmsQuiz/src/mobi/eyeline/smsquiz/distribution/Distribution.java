@@ -66,7 +66,7 @@ public class Distribution {
         days.add(weekDays);
     }
 
-    public Collection<WeekDays> getDays() {
+    public EnumSet<WeekDays> getDays() {
         return EnumSet.copyOf(days);
     }
 }
