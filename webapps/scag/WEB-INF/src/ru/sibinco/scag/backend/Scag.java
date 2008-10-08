@@ -275,8 +275,8 @@ public class Scag extends Proxy {
         try {
             final Response r = runCommand(new CommandCall(commandId, returnType, arguments));
 //            if (Response.STATUS_OK != r.getStatus()){
-            if (Response.STATUS_FATAL == r.getStatus() && true){
-                logger.error( "Scag.call() STATUS_FATAL!!!" );
+            if( Response.STATUS_ERROR == r.getStatus() ){
+                logger.error( "Scag.call() STATUS_ERROR!!!" );
                 throw new SibincoException( "Error occured: '" + err + "|" + r.getDataAsString() + "'" );
             }
             final Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
