@@ -19,7 +19,7 @@ import java.util.HashSet;
 public class DistributionManagerTester {
 
     private static DistributionManager distributionManager;
-    private static String distrList = "/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/infoSme/distribution.csv";
+    private static String distrList = "/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/infoSme/distribution.csv";   // todo
     private static String id = null;
     private static HashSet<String> abonents;
 

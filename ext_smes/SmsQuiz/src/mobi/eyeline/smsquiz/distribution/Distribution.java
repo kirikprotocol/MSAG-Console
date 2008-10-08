@@ -19,7 +19,7 @@ public class Distribution {
 	private Set<WeekDays> days;
 
     public Distribution() {
-        days = new HashSet<WeekDays>();
+        days = new HashSet<WeekDays>(); // todo
     }
 
     public String getFilePath() {
@@ -66,7 +66,7 @@ public class Distribution {
         days.add(weekDays);
     }
 
-    public Collection<WeekDays> getDays() {
+    public Collection<WeekDays> getDays() { // todo
         return days;
     }
 }
