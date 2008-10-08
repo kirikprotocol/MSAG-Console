@@ -18,14 +18,16 @@ public class DistributionResultSet implements ResultSet {
     private final Date startDate;
     private final Date endDate;
     private String successStatus;
-    private final String dateInFilePattern;
     private SimpleDateFormat dateFormat;
 
-    public DistributionResultSet(final Collection<File> files, Date startDate, Date endDate, String successStatus, String dateInFilePattern) {
+    public DistributionResultSet(final Collection<File> files, Date startDate, Date endDate, String successStatus, String dateInFilePattern) throws DistributionException {
+        if((files==null)||(startDate==null)||(endDate==null)||(successStatus==null)||(dateInFilePattern==null)) {
+            logger.error("Some arguments in constructor are null");
+            throw new DistributionException("Some arguments in constructor are null", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
+        }
         this.successStatus = successStatus;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.dateInFilePattern = dateInFilePattern;
         this.files = new HashSet<File>();
         for(File f:files) {
             this.files.add(f);
@@ -45,7 +47,7 @@ public class DistributionResultSet implements ResultSet {
                 reader = new BufferedReader(new FileReader(currentFile));
             }
             if((line=reader.readLine())!=null) {
-                return parseSuccessDelivery(line, successStatus, startDate, endDate) || next();
+                return parseLine(line, successStatus, startDate, endDate) || next();
             } else {
                 reader.close();
                 files.remove(currentFile);
@@ -87,19 +89,18 @@ public class DistributionResultSet implements ResultSet {
         files.clear();
     }
 
-    private boolean parseSuccessDelivery(String line, String successStatus, Date from, Date until) throws DistributionException{
+    private boolean parseLine(String line, String successStatus, Date from, Date until){
         StringTokenizer tokenizer= new StringTokenizer(line,",");
         String status = tokenizer.nextToken();
         if(status.equals(successStatus)) {
             try {
-                Date date =dateFormat.parse(tokenizer.nextToken());
+                Date date = dateFormat.parse(tokenizer.nextToken());
                 if((date.compareTo(until)<=0)&&(date.compareTo(from)>=0)) {
                     currentString = tokenizer.nextToken();
                     return true;    
                 }
             } catch (ParseException e) {
                 logger.error("Unable to parse date", e);
-                throw new DistributionException("Unable to parse date", e);
             }
          }
         return false;
