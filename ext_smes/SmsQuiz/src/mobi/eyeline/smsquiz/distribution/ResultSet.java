@@ -5,7 +5,7 @@ import java.io.IOException;
 
 public interface ResultSet {
  
-	public boolean next() throws IOException;
+	public boolean next();
 	public Object get();
 	public void close();
 }

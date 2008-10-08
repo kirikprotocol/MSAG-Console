@@ -6,6 +6,7 @@ import subscription.SubscriptionManagerTest;
 import replystats.StatsFileTest;
 import replystats.StatsFilesCacheTester;
 import replystats.DataSourceTester;
+import distribution.DistributionManagerTester;
 
 /**
  * Created by IntelliJ IDEA.
@@ -16,7 +17,7 @@ import replystats.DataSourceTester;
  */
 
 @RunWith(value= Suite.class)
-@Suite.SuiteClasses(value={DBDataSourceTester.class, SubscriptionManagerTest.class, SmsQuizTest.class, StatsFileTest.class, StatsFilesCacheTester.class ,DataSourceTester.class})
+@Suite.SuiteClasses(value={DBDataSourceTester.class, SubscriptionManagerTest.class, SmsQuizTest.class, StatsFileTest.class, StatsFilesCacheTester.class ,DataSourceTester.class, DistributionManagerTester.class})
 public class AllTests {
     public static void main(String[] args) {
         System.out.println("Tests begin");

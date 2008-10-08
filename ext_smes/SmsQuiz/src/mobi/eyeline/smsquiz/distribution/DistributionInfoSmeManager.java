@@ -33,12 +33,15 @@ public class DistributionInfoSmeManager implements DistributionManager {
             PropertiesConfig config = new PropertiesConfig(c.getSection("distribution").toProperties("."));
 
             statsDir = config.getString("info.sme.stats.dir",null);
-            dirPattern = config.getString("info.sme.stats.date.dir.pattern",null);
-            filePattern = config.getString("info.sme.stats.time.file.pattern",null);
-            succDeliveryStatus = config.getString("info.sme.succ.delivery.status");
-            dateInFilePattern = config.getString("info.sme.date.format.in.file");
+            dirPattern = config.getString("info.sme.stats.date.dir.pattern", "yyMMdd");
+            filePattern = config.getString("info.sme.stats.time.file.pattern", "HH");
+            succDeliveryStatus = config.getString("info.sme.succ.delivery.status", null);
+            dateInFilePattern = config.getString("info.sme.date.format.in.file", "yyMMddHHmmss");
             if(statsDir==null) {
-               throw new DistributionException("dir.name parameter missed in config file", DistributionException.ErrorCode.ERROR_NOT_INITIALIZED);
+               throw new DistributionException("info.sme.stats.dir parameter missed in config file", DistributionException.ErrorCode.ERROR_NOT_INITIALIZED);
+            }
+            if(succDeliveryStatus==null) {
+               throw new DistributionException("info.sme.succ.delivery.status parameter missed in config file", DistributionException.ErrorCode.ERROR_NOT_INITIALIZED);
             }
             File file = new File(statsDir);
             if(!file.exists()){
