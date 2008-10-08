@@ -36,6 +36,8 @@
       <param name="info.sme.stats.dir">/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/infoSme</param>
       <param name="info.sme.stats.date.dir.pattern">yyMMdd</param>
       <param name="info.sme.stats.time.file.pattern">HH</param>
+      <param name="info.sme.succ.delivery.status">0</param>
+      <param name="info.sme.date.format.in.file">yyMMddHHmmss</param> 
   </section>
 
 </config>
