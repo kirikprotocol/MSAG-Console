@@ -45,17 +45,18 @@ public class Proxy {
     }
 
     public synchronized Response runCommand(Command command) throws SibincoException {
-        logger.debug("runCommand(@" + command.getClass().getName() + ")");
-        logger.debug(" status = " + getStatus() + " (" + (getStatus() != STATUS_CONNECTED ? "disconnect" : "connected") + ")");
+        logger.debug("Proxy.runCommand() runCommand(@" + command.getClass().getName() + ")");
+        logger.debug("Proxy.runCommand() status = " + getStatus() + " (" + (getStatus() != STATUS_CONNECTED ? "disconnect" : "connected") + ")");
         if (getStatus() != STATUS_CONNECTED)
             connect(host, port);
 
         try {
-            logger.debug("write command " + command);
+            logger.debug("Proxy.runCommand() write command: " + command);
             writer.write(command);
-            logger.debug("reading response");
+            logger.debug("Proxy.runCommand() reading response...");
             return reader.read();
         } catch (IOException e) {
+            logger.error( "Proxy.runCommand() need reconnect");
             e.printStackTrace();
             try {
                 reconnect();
@@ -63,6 +64,7 @@ public class Proxy {
                 return reader.read();
             } catch (IOException e1) {
                 disconnect();
+                logger.error( "Proxy.runCommand() Couldn't write command or read response");
                 throw new SibincoException("Couldn't write command or read response", e1);
             }
         } catch (NullPointerException npe) {throw new SibincoException("CommandWriter or ResponseReader is null");}
