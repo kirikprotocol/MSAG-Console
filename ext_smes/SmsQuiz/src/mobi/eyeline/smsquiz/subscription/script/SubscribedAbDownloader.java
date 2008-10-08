@@ -1,7 +1,10 @@
 package mobi.eyeline.smsquiz.subscription.script;
 
-import mobi.eyeline.smsquiz.subscription.storage.*;
-import mobi.eyeline.smsquiz.subscription.storage.impl.DBSubscriptionDataSource;
+import mobi.eyeline.smsquiz.subscription.datasource.*;
+import mobi.eyeline.smsquiz.subscription.datasource.impl.DBSubscriptionDataSource;
+import mobi.eyeline.smsquiz.subscription.Subscription;
+import mobi.eyeline.smsquiz.storage.ResultSet;
+import mobi.eyeline.smsquiz.storage.StorageException;
 
 import java.io.*;
 import java.util.Date;

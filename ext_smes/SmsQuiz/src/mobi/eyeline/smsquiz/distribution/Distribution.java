@@ -16,10 +16,10 @@ public class Distribution {
 	 
 	private Calendar timeEnd;
 	 
-	private Set<WeekDays> days;
+	private EnumSet<WeekDays> days;
 
     public Distribution() {
-        days = new HashSet<WeekDays>(); // todo
+        days = EnumSet.allOf(WeekDays.class);
     }
 
     public String getFilePath() {
@@ -66,7 +66,7 @@ public class Distribution {
         days.add(weekDays);
     }
 
-    public Collection<WeekDays> getDays() { // todo
+    public Collection<WeekDays> getDays() {
         return days;
     }
 }

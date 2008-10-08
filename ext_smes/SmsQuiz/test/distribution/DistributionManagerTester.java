@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import mobi.eyeline.smsquiz.distribution.*;
 import mobi.eyeline.smsquiz.distribution.Impl.DistributionInfoSmeManager;
+import mobi.eyeline.smsquiz.storage.ResultSet;
+import mobi.eyeline.smsquiz.storage.StorageException;
 
 import java.io.*;
 import java.util.Random;
@@ -19,7 +21,7 @@ import java.util.HashSet;
 public class DistributionManagerTester {
 
     private static DistributionManager distributionManager;
-    private static String distrList = "/home/alkhal/cvs/smsc/ext_smes/SmsQuiz/infoSme/distribution.csv";   // todo
+    private static String distrList = "infoSme/distribution.csv";
     private static String id = null;
     private static HashSet<String> abonents;
 
@@ -118,10 +120,13 @@ public class DistributionManagerTester {
                 assertTrue(abonents.contains(resultSet.get().toString()));
                 System.out.println(resultSet.get().toString());
             }
+        } catch (StorageException e) {
+            e.printStackTrace();
+            assertFalse(true);
         } catch (DistributionException e) {
             e.printStackTrace();
             assertFalse(true);
-        }  finally {
+        } finally {
             if(resultSet!=null) {
                 resultSet.close();
             }

@@ -16,7 +16,6 @@
   <property name="java_src" location="${SMS_QUIZ_HOME}/src"/>
   <property name="java_lib" location="${SMS_QUIZ_HOME}/lib"/>
   <property name="java_out" location="${BUILD_DIR}/classes/${module_name}"/>
-  <property name="env.JAVA_HOME" location="/opt/sun-jdk-1.5.0.15"/>
 
 
   <property name="SMS_QUIZ_DISTR_DIR" value="${DISTR_DIR}/${module_name}"/>
