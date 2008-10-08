@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import mobi.eyeline.smsquiz.distribution.*;
+import mobi.eyeline.smsquiz.distribution.Impl.DistributionInfoSmeManager;
 
 import java.io.*;
 import java.util.Random;
@@ -120,10 +121,7 @@ public class DistributionManagerTester {
         } catch (DistributionException e) {
             e.printStackTrace();
             assertFalse(true);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assertFalse(true);
-        } finally {
+        }  finally {
             if(resultSet!=null) {
                 resultSet.close();
             }
