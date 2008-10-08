@@ -78,32 +78,26 @@ void CommandRuleBase::init()
 Response * CommandRuleBase::CreateResponse(Scag * SmscApp)
 {
     try {
-
         processRuleCommand();
-
     } catch (RuleEngineException& e){                             
         char desc[512];                                         
         sprintf(desc, "Failed to %s rule (%s transport). RuleEngineException exception: %s. Error in rule_%d.xml in line %d.", m_ProcessName.c_str(), strTransport.c_str(), e.what(), key.serviceId, e.getLineNumber());
         Variant res(smsc::admin::service::StringListType); 
-
         res.appendValueToStringList(desc);
         smsc_log_info(logger, desc);                            
         char buff[32];
         sprintf(buff,"%d",e.getLineNumber());			
         res.appendValueToStringList(buff);			
-        return new Response(Response::Ok, res);
-
-    } catch(Exception& e) {                                     
+        return new Response(Response::Error, res);
+    } catch(std::exception& e) {                                     
         char msg[1024];                                         
         sprintf(msg, "Failed to %s rule. Details: %s", m_ProcessName.c_str(), e.what());
         smsc_log_error(logger, msg);                            
         return new Response(Response::Error, msg);
-
     } catch (...) {
         smsc_log_warn(logger, "Failed to %s rule. Unknown exception", m_ProcessName.c_str());
         throw AdminException("Failed to %s rule. Unknown exception", m_ProcessName.c_str());
     }
-
     Variant okRes("");
     return new Response(Response::Ok, okRes);
 }

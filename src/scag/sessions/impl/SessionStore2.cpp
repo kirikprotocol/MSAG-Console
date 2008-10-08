@@ -7,10 +7,12 @@
 #include "scag/sessions/base/SessionExpirationQueue.h"
 #include "scag/util/UnlockMutexGuard.h"
 #include "scag/util/Print.h"
+#include "scag/util/HRTimer.h"
 
 namespace scag2 {
 namespace sessions {
 
+using util::HRTimer;
 using namespace transport;
 using namespace scag::util::storage;
 using scag::util::UnlockMutexGuard;
@@ -190,6 +192,8 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
 
     const char* what = "";
     int sqsz=-1;
+    HRTimer hrt;
+    hrt.mark();
     Session* session = cmd->getSession();
     if ( session ) {
         // fast access to session, w/o locking mutex
@@ -324,9 +328,11 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     }
 
     // smsc_log_debug( log_, "fetched key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
-    smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p qsz=%d%s",
+    smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p tm=%u qsz=%d%s",
                     key.toString().c_str(), cmdaddr, create ? 1:0,
-                    session, sqsz, what );
+                    session,
+                    unsigned(hrt.get()/1000),
+                    sqsz, what );
 
     if ( session )
         return makeLockedSession(*session,*cmd.get());
@@ -337,6 +343,9 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
 
 void SessionStoreImpl::releaseSession( Session& session )
 {
+    HRTimer hrt;
+    hrt.mark();
+
     // NOTE: key should not be a reference, as session may be destroyed at the end of the method
     const SessionKey key = session.sessionKey();
 
@@ -426,8 +435,10 @@ void SessionStoreImpl::releaseSession( Session& session )
     // commands are owned elsewhere
     // delete prevcmd;
 
-    smsc_log_debug( log_, "releaseSession(session=%p/%s) => prevcmd=%u nextcmd=%u, tot/lck=%u/%u",
-                    &session, key.toString().c_str(), prevuid, nextuid, tot, lck );
+    smsc_log_debug( log_, "releaseSession(session=%p/%s) => tm=%u prevcmd=%u nextcmd=%u, tot/lck=%u/%u",
+                    &session, key.toString().c_str(),
+                    unsigned(hrt.get()/1000),
+                    prevuid, nextuid, tot, lck );
 
     if ( ! (nextcmd && carryNextCommand( session, nextcmd, true)) )
         expiration_->scheduleExpire(expiration,lastaccess,key);

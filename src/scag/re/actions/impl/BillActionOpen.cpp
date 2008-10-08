@@ -113,7 +113,7 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
         smsc_log_warn(logger, "Billing desabled for this tariff entry. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d",
                       tariffRec->ServiceNumber.c_str(), tariffRec->CategoryId,
                       tariffRec->MediaTypeId );
-        // FIXME: how to report disabled billing ?
+        // FIXME: how to (should we?) report disabled billing ?
         return false;
     }
 

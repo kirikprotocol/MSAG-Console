@@ -78,7 +78,6 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
 #endif
     setBillingStatus(context,"", true);
     // if (op && op->getBillId() == bid) op->detachBill();
-    // FIXME: should we extract transaction just before trans->commit/rollback ?
     context.getSession().releaseTransaction( transId.c_str() );
     return false;
 }
@@ -99,21 +98,8 @@ void BillActionClose::ContinueRunning( ActionContext& context )
         return;
     }   
 
-    // FIXME: should we check things?
     const std::string transId = getTransId( context );
     context.getSession().releaseTransaction( transId.c_str() );
-    /*
-    Operation *op = context.GetCurrentOperation();
-    if(!op || !op->hasBill())
-    {
-        const char *p = !op ? "Bill: Operation from ActionContext is invalid" : "Bill is not attached to operation";
-        smsc_log_error(logger, p);
-        SetBillingStatus(context, p, false);
-        return;
-    }
-    SetBillingStatus(context,"", true);
-    if(op && bp->BillId == op->getBillId()) op->detachBill();
-     */
 }
 
 

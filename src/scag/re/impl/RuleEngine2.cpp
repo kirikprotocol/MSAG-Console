@@ -10,55 +10,19 @@
 #include <xercesc/util/OutOfMemoryException.hpp>
 #include <xercesc/framework/MemBufInputSource.hpp>
 
-// #include <core/buffers/IntHash.hpp>
-
 #include <util/debug.h>
 #include <locale.h>
 
 #include "RuleEngine2.h"
-
 #include "scag/re/base/CommandBridge.h"
 #include "scag/re/base/Rule2.h"
-// #include "scag/re/base/SmppTransportRule.h"
 #include "scag/re/base/XMLHandlers2.h"
 #include "scag/sessions/base/Operation.h"
 #include "util/regexp/RegExp.hpp"
 
 
-//namespace {
-//smsc::core::synchronization::Mutex transportRuleLock;
-//}
-
-
 namespace scag2 {
 namespace re {
-
-
-/*
-TransportRule* RuleEngineImpl::getTransportRule( TransportType tt ) const
-{
-    const unsigned idx = unsigned(tt)-1;
-    if ( idx >= maxrule )
-        throw SCAGException("getTransportRule: transport=%u is wrong", unsigned(tt) );
-    std::auto_ptr< TransportRule >& autr = transportRules_[idx];
-    if ( ! autr.get() ) {
-
-        MutexGuard mg(transportRuleLock);
-        if ( ! autr.get() ) {
-            switch (tt) {
-            case SMPP :
-                autr.reset( new smpp::SmppTransportRule );
-                break;
-            default:
-                // FIXME: impl
-                throw SCAGException("getTransportRule: transport=%u is not impl yet", unsigned(tt) );
-                break;
-            }
-        }
-    }
-    return autr.get();
-}
- */
 
 
 void RuleEngineImpl::ReadRulesFromDir(TransportType transport, const char * dir)
@@ -174,17 +138,7 @@ Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
 
 
 }
-/*
-bool RuleEngineImpl::findTransport(const char * name, TransportType& transportType)
-{
-    TransportType * transportPTR = TransportTypeHash.GetPtr(name);
-    if (!transportPTR) return false;
 
-    transportType = *transportPTR;
-    return true;
-
-}
-*/
 
 bool RuleEngineImpl::isValidFileName(std::string fname, int& serviceId)
 {
@@ -204,6 +158,7 @@ bool RuleEngineImpl::isValidFileName(std::string fname, int& serviceId)
 
     return (serviceId >= 0);
 }
+
 
 std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const RuleKey& key)
 {
@@ -268,19 +223,6 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
 
         }
 
-        /*
-         TransportRule* tr = getTransportRule( command.getType() );
-         assert( tr );
-         TransportRule::Guard g( *tr, command, session, rs );
-         try {
-         g.init();
-         } catch ( SCAGException& e ) {
-         smsc_log_error( logger, "TransportRule cannot start/locate operation. Details: %s", e.what() );
-         rs.result = smsc::system::Status::SMDELIFERYFAILURE;
-         rs.status = STATUS_FAILED;
-         return;
-         }
-         */
         if ( rulePtr ) rulePtr->process( command, session, rs );
 
         // check if we need to destroy the service

@@ -97,20 +97,20 @@ public:
       return false;
     }
     vector<string> addSeparated;
-    separateKeywords(value_, addSeparated);
+    separateKeywords(this->value_, addSeparated);
     if (addSeparated.empty()) {
-      smsc_log_debug(logger, "Action '%s': no keywords for adding", actionName());
+      smsc_log_debug(this->logger, "Action '%s': no keywords for adding", actionName());
       return true;
     }
-    const string* keywords = keywordsContext_->getKeywords();
+    const string* keywords = this->keywordsContext_->getKeywords();
     if (!keywords) {
-      setFormatedValue(addSeparated);
+      this->setFormatedValue(addSeparated);
       return true;
     }
     vector<string> separated;
-    separateKeywords(*keywords, separated);
+    this->separateKeywords(*keywords, separated);
     if (separated.empty()) {
-      setFormatedValue(addSeparated);
+      this->setFormatedValue(addSeparated);
       return true;
     }
     vector<string> newKeywords;
@@ -123,7 +123,7 @@ public:
       return true;
     }
     separated.insert(separated.end(), newKeywords.begin(), newKeywords.end());
-    setFormatedValue(separated);
+    this->setFormatedValue(separated);
     return true;
   }
 protected:
@@ -139,17 +139,17 @@ public:
     if (!Keywords<T, K>::change(keywordsContext)) {
       return false;
     }
-    if (value_.empty()) {
-      keywordsContext_->setKeywords("");
+    if (this->value_.empty()) {
+      this->keywordsContext_->setKeywords("");
       return true;
     }
     vector<string> separated;
-    separateKeywords(value_, separated);
+    this->separateKeywords(this->value_, separated);
     if (separated.empty()) {
-      smsc_log_debug(logger, "Action '%s': error keywords '%s'", actionName(), value_.c_str());
+        smsc_log_debug(this->logger, "Action '%s': error keywords '%s'", actionName(), this->value_.c_str());
       return true;
     }
-    setFormatedValue(separated);
+    this->setFormatedValue(separated);
     return true;
   }
 protected:

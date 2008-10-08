@@ -7,7 +7,6 @@
 #include "ActionBinOperations2.h"
 #include "ActionLog2.h"
 #include "ActionSend2.h"
-// #include "ActionAbort2.h"
 #include "ActionSessionContextScope.h"
 #include "ActionSessionDestroyService.h"
 #include "ActionSessionWait.h"
@@ -34,31 +33,9 @@
 #include "BillActionInfo.h"
 #include "BillActionKeywords.h"
 
-/*
-#include "scag/re/actions/Action.h"
-#include "scag/re/actions/misc/ActionTrafficCheck.h"
-#include "scag/re/actions/sess/ActionOperationWait.h"
-#include "scag/re/actions/bill/BillActionInfo.h"
-
-#include "scag/re/actions/pers/PersAction.h"
-#include "scag/re/actions/pers/BatchAction.h"
-
-#include "scag/re/actions/http/HttpCookieAction.h"
-
-#include "scag/re/actions/bill/ActionBillMoveWait.h"
-*/
-
-//#include "scag/SAX2Print.hpp"
-
 namespace scag2 {
 namespace re {
 namespace actions {
-
-// using namespace scag::re::actions;
-// using namespace scag::bill;
-// using namespace scag::pers;
-// using namespace scag::transport::http;
-
 
 Action * MainActionFactory::CreateAction( const std::string& name ) const
 {
@@ -78,7 +55,6 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
         }
 
         if ( 0 == strncmp(name.c_str(), "log:", 4) ) {
-            // if (name=="log") return new ActionLog();
             if (name=="log:debug") return new ActionLog(ActionLog::lgDebug);
             if (name=="log:info") return new ActionLog(ActionLog::lgInfo);
             if (name=="log:warn") return new ActionLog(ActionLog::lgWarning);
@@ -87,8 +63,6 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
         }
 
         if ( 0 == strncmp(name.c_str(), "session:", 8) ) {
-            // if (name=="session:abort") 
-            // return new ActionAbort();
             if (name=="session:wait")
                 return new ActionSessionWait();
             if (name=="session:destroy_service")
@@ -153,47 +127,35 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             break;
         }
         if ( 0 == strncmp(name.c_str(), "profile:", 8 ) ) {
-          if (name=="profile:set") return new PersAction(PC_SET);
-          if (name=="profile:get") return new PersAction(PC_GET);
-          if (name=="profile:del") return new PersAction(PC_DEL);
-          if (name=="profile:inc") return new PersAction(PC_INC);
-          if (name=="profile:inc-mod") return new PersAction(PC_INC_MOD);
-          if (name=="profile:batch") return new BatchAction();
+            if (name=="profile:set") return new PersAction(PC_SET);
+            if (name=="profile:get") return new PersAction(PC_GET);
+            if (name=="profile:del") return new PersAction(PC_DEL);
+            if (name=="profile:inc") return new PersAction(PC_INC);
+            if (name=="profile:inc-mod") return new PersAction(PC_INC_MOD);
+            if (name=="profile:batch") return new BatchAction();
             break;
         }
         if ( 0 == strncmp(name.c_str(), "batch:", 6 ) ) {
-          if (name=="batch:set") return new PersActionCommand(PC_SET);
-          if (name=="batch:get") return new PersActionCommand(PC_GET);
-          if (name=="batch:del") return new PersActionCommand(PC_DEL);
-          if (name=="batch:inc") return new PersActionCommand(PC_INC);
-          if (name=="batch:inc-mod") return new PersActionCommand(PC_INC_MOD);
+            if (name=="batch:set") return new PersActionCommand(PC_SET);
+            if (name=="batch:get") return new PersActionCommand(PC_GET);
+            if (name=="batch:del") return new PersActionCommand(PC_DEL);
+            if (name=="batch:inc") return new PersActionCommand(PC_INC);
+            if (name=="batch:inc-mod") return new PersActionCommand(PC_INC_MOD);
             break;
         }
         if ( 0 == strncmp(name.c_str(), "stat:", 5 ) ) {
-          if (name == "stat:add_keywords") return new AddKeywordsAction();
-          if (name == "stat:set_keywords") return new SetKeywordsAction();
-          if (name == "stat:get_keywords") return new GetKeywordsAction();
-          break;
+            if (name == "stat:add_keywords") return new AddKeywordsAction();
+            if (name == "stat:set_keywords") return new SetKeywordsAction();
+            if (name == "stat:get_keywords") return new GetKeywordsAction();
+            break;
         }
 
-
-
-    // FIXME: impl
+    // FIXME: implement other actions
     /* 
     if (name=="traffic:check") return new ActionTrafficCheck();
-    if (name=="operation:wait") return new ActionOperationWait();
-
-    if (name=="bill:open") return new BillActionOpen(false);
-    if (name=="operation:bill_wait") return new BillActionOpen(true);
-
-    if (name=="bill:close") return new BillActionClose();
-    if (name=="bill:info") return new BillActionInfo();
-
-
     if (name=="http:get-cookie") return new CookieAction(false);
     if (name=="http:set-cookie") return new CookieAction(true);
 
-    if (name=="operation:bill_move_wait") return new ActionBillMoveWait();
      */
 
     } while ( false ); // fake loop

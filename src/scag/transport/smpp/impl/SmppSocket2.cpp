@@ -218,10 +218,10 @@ void SmppSocket::sendData()
     if(outQueue.Count()==0)return;
     SmppCommand* c;
     outQueue.Pop(c);
-    smsc_log_debug(log, "received cmd=%p", c );
     cmd.reset(c);
-    if(cmd->flagSet(SmppCommandFlags::EXPIRED_COMMAND)) return;
   }
+    // smsc_log_debug(log, "received cmd=%p", cmd.get() );
+    if (cmd->flagSet(SmppCommandFlags::EXPIRED_COMMAND)) return;
   pdu = cmd->makePdu();
   int sz = calcSmppPacketLength(pdu);
   if(sz>wrBufSize)
@@ -260,15 +260,18 @@ void SmppSocket::sendData()
 
 void SmppSocket::genEnquireLink(int to)
 {
-  MutexGuard mg(outMtx);
-  time_t now=time(NULL);
-  if(now-lastEnquireLink<to)
-  {
-    return;
-  }
-  lastEnquireLink=now;
-  SmppEntity* se = SmppManager::Instance().getSmppEntity(systemId.c_str());
-  outQueue.Push(SmppCommand::makeCommand(ENQUIRELINK,se?se->getNextSeq():1,0,0).release());
+    SmppEntity* se;
+    {
+        MutexGuard mg(outMtx);
+        time_t now=time(NULL);
+        if(now-lastEnquireLink<to)
+        {
+            return;
+        }
+        lastEnquireLink=now;
+        SmppEntity* se = SmppManager::Instance().getSmppEntity(systemId.c_str());
+    }
+    outQueue.Push(SmppCommand::makeCommand(ENQUIRELINK,se?se->getNextSeq():1,0,0).release());
 }
 
 }//smpp

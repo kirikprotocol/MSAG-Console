@@ -41,46 +41,13 @@ bool ActionCloseUssdDialog::run(ActionContext& context)
 
     if (serviceOp == USSR_REQUEST) 
     {
-        // FIXME: should we check that current op is ussd?
         Operation* op = context.getSession().getCurrentOperation();
         if(op && op->flagSet(sessions::OperationFlags::SERVICE_INITIATED_USSD_DIALOG))
             smppAdapter.setServiceOp(USSN_REQUEST);
         else
             smppAdapter.setServiceOp(PSSR_RESPONSE);
-//        smppAdapter.setServiceOp(USSN_REQUEST);
         smsc_log_debug(logger,"Action 'smpp:close_ussd_dialog' closed ussd dialog.");
     }
-    
-    /*
-    Property * propertyUSSD = context.getProperty("#ussd_dialog");
-
-    if (!propertyUSSD) 
-    {
-        smsc_log_warn(logger, "Action 'operation:close_ussd_dialog' stopped. Details: Cannot read '#ussd_dialog' property.");
-        return true;
-    }
-
-    Property * propertyUSSR_REQ = context.getProperty("#ussd_ussr_req");
-    if (!propertyUSSR_REQ) 
-    {
-        smsc_log_warn(logger, "Action 'operation:close_ussd_dialog' stopped. Details: Cannot read '#ussd_ussr_req' property.");
-        return true;
-    }
-
-    //if (propertyUSSD->getBool()&&propertyUSSR_REQ->getBool()) 
-    {
-        Property * propertySetter = context.getProperty("#ussd_pssr_resp");
-
-        if (!propertySetter) 
-        {
-            smsc_log_warn(logger, "Action 'operation:close_ussd_dialog' stopped. Details: Cannot read '#ussd_pssr_resp' property.");
-            return true;
-        }
-
-        propertySetter->setBool(true);
-        smsc_log_debug(logger,"Action 'operation:close_ussd_dialog' closed ussd dialog.");
-    }
-    */
     return true;
 }
 
