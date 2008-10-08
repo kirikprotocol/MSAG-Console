@@ -56,6 +56,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
         dateInFileFormat = new SimpleDateFormat(dateInFilePattern);
     }
 
+    @SuppressWarnings({"ThrowFromFinallyBlock"})
     public String createDistribution(Distribution distr) throws DistributionException {
         if((distr==null)||(distr.getFilePath()==null)||(distr.getDateBegin()==null)||(distr.getDateEnd()==null)
                 ||(distr.getDays()==null)||(distr.getTimeBegin()==null)|| (distr.getTimeEnd()==null)) {
@@ -68,10 +69,9 @@ public class DistributionInfoSmeManager implements DistributionManager {
         }
 
         //todo Implementation
-            String id = null;
             BufferedReader reader = null;
-            String str = null;
-            String msisdn=null;
+            String str;
+            String msisdn;
             List<String> msisdns = new LinkedList<String>();
 
             try {
@@ -108,7 +108,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
         calendar.set(Calendar.SECOND,0);
         calendar.set(Calendar.MILLISECOND,0);
         String path = statsDir+"/"+id;
-        Date date = null;
+        Date date;
         Set<File> files = new HashSet<File>();
 
         while(calendar.getTime().compareTo(endDate)<=0) {
@@ -142,7 +142,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
             String fileDir = dir+"/"+dirFormat.format(calendar.getTime());
             File file = new File(fileDir);
             if(!file.exists()) {
-                file.mkdir();
+                file.mkdirs();
             }
             writer = new PrintWriter(new BufferedWriter(new FileWriter(fileDir+"/"+fileFormat.format(calendar.getTime())+".csv")));
             Random random = new Random();
@@ -156,7 +156,6 @@ public class DistributionInfoSmeManager implements DistributionManager {
             writer.flush();
             writer.close();
 
-            calendar.add(Calendar.DAY_OF_MONTH,2);
             calendar.add(Calendar.HOUR_OF_DAY,2);
             fileDir = dir+"/"+dirFormat.format(calendar.getTime());
             file = new File(fileDir);
@@ -174,7 +173,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
             writer.flush();
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Unable to create delivery file", e);
+            throw new DistributionException("Unable to create delivery file",e);
         } finally {
             if(writer!=null) {
                 writer.close();
