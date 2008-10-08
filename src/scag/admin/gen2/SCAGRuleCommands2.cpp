@@ -88,7 +88,7 @@ Response * CommandRuleBase::CreateResponse(Scag * SmscApp)
         char buff[32];
         sprintf(buff,"%d",e.getLineNumber());			
         res.appendValueToStringList(buff);			
-        return new Response(Response::Error, res);
+        return new Response(Response::Ok, res);
     } catch(std::exception& e) {                                     
         char msg[1024];                                         
         sprintf(msg, "Failed to %s rule. Details: %s", m_ProcessName.c_str(), e.what());
