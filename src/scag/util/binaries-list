@@ -1,1 +1,1 @@
-scag/tests/testtimer testtimer -lscag-util -lrt -ldl
+#scag/tests/testtimer testtimer -lscag-util -lrt -ldl

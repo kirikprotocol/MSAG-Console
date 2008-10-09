@@ -1,4 +1,6 @@
 #include <vector>
+#include <stdio.h>
+#include <stdlib.h>
 #include "HRTimer.h"
 
 using scag2::util::HRTimer;
