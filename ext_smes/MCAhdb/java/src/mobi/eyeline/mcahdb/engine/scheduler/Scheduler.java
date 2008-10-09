@@ -107,6 +107,7 @@ public class Scheduler {
     m.setSourceAddress(oa);
     m.setDestinationAddress(da);
     m.setMessageString(message);
+    m.setServiceType(config.getSchedulerServiceType());
     OutgoingObject o = new OutgoingObject();
     o.setMessage(m);
     try {
@@ -129,6 +130,7 @@ public class Scheduler {
     public String getSchedulerErrorText();
     public String getSchedulerProfileChangedText();
     public String getSchedulerStoreDir();
+    public String getSchedulerServiceType();
     public int getSchedulerExpirationPeriod();
   }
 }

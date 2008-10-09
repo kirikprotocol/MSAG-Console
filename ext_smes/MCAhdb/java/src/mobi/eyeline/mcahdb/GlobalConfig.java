@@ -35,6 +35,7 @@ public class GlobalConfig implements EventStore.Config,
   private final String schedulerStoreDir;
   private final String schedulerErrorText;
   private final String schedulerProfileChangedText;
+  private final String schedulerServiceType;
   private final int schedulerExpirationPeriod;
 
   public GlobalConfig() throws ConfigException {
@@ -71,6 +72,7 @@ public class GlobalConfig implements EventStore.Config,
     schedulerErrorText = schedulerSection.getString("errorText");
     schedulerProfileChangedText = schedulerSection.getString("profileChangedText");
     schedulerExpirationPeriod = schedulerSection.getInt("expirationPeriod");
+    schedulerServiceType = schedulerSection.getString("serviceType");
   }
 
   public int getJournalsCheckInterval() {
@@ -123,5 +125,9 @@ public class GlobalConfig implements EventStore.Config,
 
   public int getSchedulerExpirationPeriod() {
     return schedulerExpirationPeriod;
+  }
+
+  public String getSchedulerServiceType() {
+    return schedulerServiceType;
   }
 }

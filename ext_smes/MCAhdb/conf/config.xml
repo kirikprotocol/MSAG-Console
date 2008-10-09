@@ -18,6 +18,7 @@
     <param name="expirationPeriod">12</param>
     <param name="expiredText">expired</param>
     <param name="profileChangedText">profile changed</param>
+    <param name="serviceType">MCA</param>
     <param name="errorText">error</param>
   </section>
 

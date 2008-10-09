@@ -118,6 +118,7 @@ class SchedulerEngine {
             m.setSourceAddress(t.getCalled());
             m.setDestinationAddress(t.getCaller());
             m.setMessageString(config.getSchedulerExpiredNotifText());
+            m.setServiceType(config.getSchedulerServiceType());
             OutgoingObject o = new OutgoingObject();
             o.setMessage(m);
             try {
