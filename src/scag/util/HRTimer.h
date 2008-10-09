@@ -1,6 +1,7 @@
 #ifndef _SCAG_UTIL_HRTIMER_H
 #define _SCAG_UTIL_HRTIMER_H
 
+#include <string>
 #include "util/timeslotcounter.hpp"
 
 namespace scag2 {
@@ -94,15 +95,15 @@ public:
         return result_;
     }
     
-    inline void mark( const char* where ) {
-        if ( ! result_ ) return;
-        const size_t l = strlen( where ) + 30;
-        char buf[ l ];
+    inline unsigned mark( const char* where ) {
+        if ( ! result_ ) return 0;
+        char buf[100];
         unsigned tm = unsigned(timer_.get() / resol_);
-        int written = snprintf( buf, l, " %s=%u", where, tm );
+        int written = snprintf( buf, sizeof(buf), " %s=%u", where, tm );
         if ( written > 0 ) {
-            result_->append( buf, std::min(l-1,unsigned(written)) );
+            result_->append( buf, std::min(unsigned(sizeof(buf)-1),unsigned(written)) );
         }
+        return tm;
     }
 
     inline void comment( const char* what ) {
