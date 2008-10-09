@@ -189,7 +189,6 @@ public:
 
     while (!isNeedExit())
     {
-      sleep(1);
       setRunning(true);
       try
       {   
