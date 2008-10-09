@@ -2,9 +2,12 @@
 #include <set>
 #include "CompositeSessionStore.h"
 #include "core/synchronization/EventMonitor.hpp"
+#include "core/threads/Thread.hpp"
 
 namespace scag2 {
 namespace sessions {
+
+using smsc::core::threads::Thread;
 
 CompositeSessionStore::CompositeSessionStore( smsc::logger::Logger* thelog,
                                               SessionFinalizer&       fin,
@@ -142,6 +145,7 @@ bool CompositeSessionStore::expireSessions( const std::vector< SessionKey >& exp
     bool res = true;
     const std::vector< SessionKey > enull;
     const std::vector< std::pair<SessionKey,time_t> > fnull;
+    Thread::Yield();
     for ( keys_type::const_iterator i = keys.begin();
           i != keys.end();
           ++i ) {
@@ -155,6 +159,7 @@ bool CompositeSessionStore::expireSessions( const std::vector< SessionKey >& exp
         if ( !storages_[*i]->expireSessions
              ( ei == edispatch.end() ? enull : ei->second,
                fi == fdispatch.end() ? fnull : fi->second ) ) res = false;
+        Thread::Yield();
     }
     return res;
 }

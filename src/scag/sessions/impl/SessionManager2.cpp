@@ -267,7 +267,7 @@ int SessionManagerImpl::Execute()
             // expireList_ is a std::list< Expire >
             // expireMap_  is a std::multimap< time_t, ExpireList::iterator >
             // expireHash_ is XHash< KeyPtr, ExpireList::iterator, KeyPtr >
-
+            unsigned count = 0;
             for ( ; ! list->empty(); list->pop_front() ) {
 
                 ++increment;
@@ -295,6 +295,8 @@ int SessionManagerImpl::Execute()
                     expireHash_.Insert( KeyPtr(*i), i );
                 }
                 expireMap_.insert( std::make_pair(i->expire,i) );
+
+                if ( ++count % 10 == 0 ) Thread::Yield();
             }
             delete list;
         }
@@ -419,6 +421,8 @@ int SessionManagerImpl::Execute()
         }
 
         if ( !curset.empty() || !flushset.empty() ) {
+
+            Thread::Yield();
 
             // const unsigned tot = unsigned(expireMap_.size());
             // const unsigned act = activeSessions_;

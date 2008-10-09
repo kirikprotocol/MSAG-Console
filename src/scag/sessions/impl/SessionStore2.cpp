@@ -7,6 +7,7 @@
 #include "scag/sessions/base/SessionExpirationQueue.h"
 #include "scag/util/UnlockMutexGuard.h"
 #include "scag/util/Print.h"
+#include "core/threads/Thread.hpp"
 
 namespace scag2 {
 namespace sessions {
@@ -14,6 +15,7 @@ namespace sessions {
 using namespace transport;
 using namespace scag::util::storage;
 using scag::util::UnlockMutexGuard;
+using smsc::core::threads::Thread;
 
     /*
     /// temporary: SlowMutex for tests
@@ -495,6 +497,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
     unsigned notexpired = 0;
 
     bool keep = false; // keep session on disk and destroy
+    unsigned count = 0;
     while ( true ) {
 
         if ( session ) {
@@ -528,6 +531,8 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             }
 
         }
+        
+        if ( session && ( ++count % 30 == 0 ) ) Thread::Yield();
 
         MutexGuard mg(cacheLock_);
             
