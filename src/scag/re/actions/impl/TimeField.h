@@ -10,7 +10,7 @@ namespace actions {
 struct TimeField
 {
 public:
-    TimeField() : wait_(0) {}
+    TimeField() : wait_(0), type_(ftUnknown) {}
 
     /// initialize and return exist flag
     bool init( const SectionParams& params,

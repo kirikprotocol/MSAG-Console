@@ -11,7 +11,7 @@ namespace actions {
 class ActionSessionDestroyService : public Action
 {
 public:
-    ActionSessionDestroyService() {}
+    ActionSessionDestroyService() : haswait_(false) {}
 
     virtual void init( const SectionParams& params, PropertyObject propertyObject );
     virtual bool run( ActionContext& context );

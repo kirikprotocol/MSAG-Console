@@ -21,7 +21,7 @@ bool TimeField::init( const SectionParams& params,
                                    readonly,
                                    name_,
                                    bExist );
-    if ( ! bExist ) return bExist;
+    if ( ! bExist ) return false;
 
     if ( type_ == ftUnknown ) {
 
@@ -54,7 +54,7 @@ bool TimeField::init( const SectionParams& params,
             break;
         }
     }
-    return bExist;
+    return true;
 }
 
 unsigned TimeField::getTime( const char* actionName, ActionContext& context ) const
