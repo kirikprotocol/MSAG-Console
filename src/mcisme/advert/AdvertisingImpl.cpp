@@ -1,409 +1,267 @@
-#include"AdvertisingImpl.h"
+#include "AdvertisingImpl.h"
+#include <string.h>
+#include <util/Exception.hpp>
+#include <util/BufferSerialization.hpp>
 
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <inttypes.h>
 
-namespace scag {
-namespace advert {
+#include <mcisme/Exceptions.hpp>
 
+namespace smsc {
+namespace mcisme {
 
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-//поток следящий за асинхронными вызовами
-//
-int AdvertisAsync::Execute()
+SimpleAdvertisingClient::SimpleAdvertisingClient(const std::string& host, int port, int timeout)
+  : _logger(Logger::getInstance("scag.advert.Advertising")),
+    _host(host), _port(port), _timeout(timeout)
+{}
+
+void
+SimpleAdvertisingClient::init()
 {
+  if ( _socket.Init(_host.c_str(), _port, _timeout) )
+    throw util::Exception("AdvertisingImpl::init::: can't init socket for host=[%s],port=[%d] - '%s'", _host.c_str(), _port, strerror(errno));
 
-    advertAsync_item* curAdvItem;
-    int key;
-
-    while(stop == false)
-    {
-        AsyncAdverts->WaitTime(timeout);   // ждем изменения (пополнения) очереди
-        // обработка полученных от сервера ответов
-        while (stop == false && AsyncAdverts->Pop(curAdvItem))
-        {
-            {
-                MutexGuard mg(curAdvItem->eventMon);
-
-                int rc = curAdvItem->pakLen < 0 ? -curAdvItem->pakLen:0;
-                AdvertImpl->ServAsyncAdvert(curAdvItem, rc);
-            }
-//            MutexGuard mg(AdvertTh->AsyncItemDeleteMtx);
-            delete curAdvItem;
-        }
-        AdvertImpl->CheckAsyncTimes();  // проверка тайм-аутов
-    }
-    return 0;
+  if ( _socket.Connect() )
+    throw util::Exception("AdvertisingImpl::init::: can't establish connection to host=[%s],port=[%d] - '%s'", _host.c_str(), _port, strerror(errno));
 }
 
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-// поиск устаревших асинхронных запросов и удаление их из общего списка
-/*/
-int AdvertisTimed::Execute()
+void
+SimpleAdvertisingClient::reinit()
 {
-    int key;
-    advertAsync_item* asyncItem;
-    while(stop == false)
-    {
-        pause.Wait(timeout);                            // пауза
-        AdvertImpl->CheckAsyncTimes();
-    }
-    return 0;
-}
-*/
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-//
-AdvertisingImpl::AdvertisingImpl()
-{
-//        Logger::Init();
-      logger=Logger::getInstance("scag.advert.Advertising");
-        smsc_log_debug(logger, "adv->AdvertisingImpl()");
-
-        adv_thread.logger = logger;
+  if ( _socket.Connect() )
+    smsc_log_error(_logger, "AdvertisingImpl::reinit::: can't establish connection to host=[%s],port=[%d] - %s", _host.c_str(), _port, strerror(errno));
 }
 
-//------------------------------------------------------------------------------
-//
-AdvertisingImpl::~AdvertisingImpl()
+void SimpleAdvertisingClient::CheckBannerRequest(BannerRequest& banReq, int async)
 {
-  smsc_log_debug(logger, "AdvertisingImpl::~AdvertisingImpl()");
-}
-//------------------------------------------------------------------------------
-//
-void AdvertisingImpl::init(const std::string& host, int port, int _timeout, int _maxcount)
-{
-        timeout  = _timeout;
-        maxcount = _maxcount;
-
-        AsyncAdverts = &adv_thread.AsyncAdverts;
-        AsyncKeys    = &adv_thread.AsyncKeys;
-
-        adv_asyncs.Init(this, AsyncAdverts, timeout);
-        adv_asyncs.Start();
-
-        adv_thread.Init(host, port, timeout);
-        adv_thread.Start();
-
-};
-
-//------------------------------------------------------------------------------
-//
-//
-void AdvertisingImpl::CheckBannerRequest(BannerRequest& banReq, int async)
-{
-
-    smsc_log_debug(logger,"Advert::askBanner() abonent = %s, serviceName = %s, transportType = %d, charSet = %d, maxLen = %d, async = %d",
-            banReq.abonent.c_str(), banReq.serviceName.c_str(), banReq.transportType, banReq.charSet, banReq.maxLen, async);
+  smsc_log_debug(_logger,"SimpleAdvertisingClient::CheckBannerRequest() abonent = %s, serviceName = %s, transportType = %d, charSet = %d, async = %d",
+                 banReq.abonent.c_str(), banReq.serviceName.c_str(), banReq.transportType, banReq.charSet, async);
 
   __require__(banReq.abonent.length() > 5 && banReq.abonent.length() < 21);
-
-/*  if (banReq.dispatcher)
-    {
-        BannerDispatcher* bd =  banReq.dispatcher;
-        void (scag::advert::BannerDispatcher:: *procBanner)(const BannerRequest&) = bd->processBanner;
-        void (scag::advert::BannerDispatcher:: *procError)(const BannerRequest& , uint32_t) = bd->processError;
-
-      __require__(procBanner != NULL  && procError != NULL);
-    }   */
 }
 
-//------------------------------------------------------------------------------
-// обертка
-//
-uint32_t AdvertisingImpl::getBanner(const std::string& abonent,
-                                    const std::string& serviceName,
-                                    uint32_t transportType, uint32_t charSet,
-                                    std::string &banner, uint32_t maxLen)
+uint32_t
+SimpleAdvertisingClient::getBanner(const std::string& abonent,
+                                   const std::string& serviceName,
+                                   uint32_t transportType, uint32_t charSet,
+                                   std::string &banner)
 {
-    BannerRequest req(abonent, serviceName, transportType, charSet, maxLen);
-    uint32_t rc = getBanner(req);
-    banner = req.banner;
+  BannerRequest req(abonent, serviceName, transportType, charSet);
+  uint32_t rc = getBanner(req);
+  banner = req.banner;
   return  rc;
 }
-//------------------------------------------------------------------------------
-//
-//
-uint32_t AdvertisingImpl::getBanner(BannerRequest& banReq)
+
+uint32_t
+SimpleAdvertisingClient::getBanner(BannerRequest& banReq)
 {
-    CheckBannerRequest(banReq);
+  CheckBannerRequest(banReq);
 
-    TmpBuf<char, BANNER_LEN> rsp(0);         // буфер для ответов от сервера
-    advertising_item curAdvItem(&banReq, &rsp);
+  advertising_item curAdvItem(&banReq);
 
-    SerializationBuffer req;
-    // заполнение буфера протокольной команды
-    uint32_t len = PrepareCmnd(&req, &banReq, CMD_BANNER_REQ);
+  util::SerializationBuffer req;
+  // ЪБРПМОЕОЙЕ ВХЖЕТБ РТПФПЛПМШОПК ЛПНБОДЩ
+  uint32_t len = PrepareCmnd(&req, &banReq, CMD_BANNER_REQ);
 
-
-    int rc = adv_thread.ServBanner(&curAdvItem, &req, len);
-    if (rc != 0)
+  int rc = sendRequestAndGetResponse(&curAdvItem, &req, len);
+  if (rc != 0)
+  {
+    WriteErrorToLog((char*)"SimpleAdvertisingClient::ServBanner", rc);
+    if (rc == ERR_ADV_TIMEOUT)
     {
-        WriteErrorToLog((char*)"AdvertisingImpl::ServBanner", rc);
-        if (rc == ERR_ADV_TIMEOUT)
-        {
-            //если таймаут сервера - сообщить серверу об этой ошибке
-            len = PrepareCmnd(&req, &banReq, CMD_ERR_INFO, ERR_ADV_TIMEOUT);
-            len = adv_thread.Write(&req, len);
-            if (len)    //используем len, чтобы не забивать rc
-                WriteErrorToLog((char*)"AdvertisingImpl::Write", len);
-        }
-        return rc;
-    }//if (rc != 0)
-
-    rc = AnaliseResponse(&curAdvItem);
-    if (rc)
-       WriteErrorToLog((char*)"AdvertisingImpl::AnaliseResponse", rc);
-
-    return rc;
-};
-//------------------------------------------------------------------------------
-//
-//
-void AdvertisingImpl::requestBanner(const BannerRequest& constbanReq)
-{
-    BannerRequest* banReq = (BannerRequest*)&constbanReq;
-    CheckBannerRequest(*banReq, 1);
-
-    int rc;
-    if (AsyncKeys->Count() >= maxcount)
-    {
-        AsyncAdverts->Notify();     //вдруг большой тайм-аут - разбудить
-        rc = ERR_ADV_QUEUE_FULL;
+      //ЕУМЙ ФБКНБХФ УЕТЧЕТБ - УППВЭЙФШ УЕТЧЕТХ ПВ ЬФПК ПЫЙВЛЕ
+      len = PrepareCmnd(&req, &banReq, CMD_ERR_INFO, ERR_ADV_TIMEOUT);
+      writeToSocket(req.getBuffer(), len, "SimpleAdvertisingClient::getBanner:::");
     }
-    else
-    {
-        advertising_item *curAdvItem = new advertAsync_item(banReq, timeout);
-
-        SerializationBuffer req;
-        // заполнение буфера протокольной команды
-        uint32_t len = PrepareCmnd(&req, banReq, CMD_BANNER_REQ);
-        rc = adv_thread.ServBanner(curAdvItem, &req, len);
-        if (rc)
-            delete curAdvItem;
-    }
-    if (rc)
-    {
-      WriteErrorToLog((char*)"AdvertisingImpl::requestBanner", rc);
-        banReq->dispatcher->processError(constbanReq, rc);
-    }
-}
-
-//------------------------------------------------------------------------------
-// поиск устаревших асинхронных запросов и удаление их из общего списка
-//
-void AdvertisingImpl::CheckAsyncTimes()
-{
-    int key;
-    advertAsync_item* asyncItem;
-    timestruc_t now={-1, 0};
-    clock_gettime(CLOCK_REALTIME,&now); // используем одно время на всех
-
-    while(AsyncKeys->Front(key))        // пока очередь не пуста
-    {
-        asyncItem = (advertAsync_item*) adv_thread.GetAdvertItem(key);
-        if (asyncItem)                  // еще в списке
-        {
-            MutexGuard mg(asyncItem->eventMon);
-            if (asyncItem->pakLen == 0) // еще не обработан
-            {
-                if ( now.tv_sec  <  asyncItem->tv.tv_sec  ||
-                   ( now.tv_sec  == asyncItem->tv.tv_sec &&
-                     now.tv_nsec <  asyncItem->tv.tv_nsec  ) )  break;// еще можно ждать
-
-                asyncItem->pakLen = -ERR_ADV_TIMEOUT;   // признак просроченности
-                AsyncAdverts->Push(asyncItem);          // вставка в очередь обработанных указателей
-            }
-        }//if (asyncItem)
-        AsyncKeys->Pop(key);                            // удаление ключа из очереди
-    }
-}
-//------------------------------------------------------------------------------
-// обслуживание асинхронного запроса
-//
-int AdvertisingImpl::ServAsyncAdvert(advertising_item *curAdvItem, int er)
-{
-    adv_thread.RemoveAdvert(curAdvItem->TransactID);    // удаление из общего списка
-
-    int rc = er;
-    if (rc == 0)
-        rc = AnaliseResponse(curAdvItem);
-    else
-    {
-         if (rc == ERR_ADV_TIMEOUT)
-        {
-            //если таймаут сервера - сообщить серверу об этой ошибке
-            SerializationBuffer req;
-            int len  = PrepareCmnd(&req, curAdvItem->banReq, CMD_ERR_INFO, rc);
-            len  = adv_thread.Write(&req, len);
-            if (len)    //используем len, чтобы не забивать rc
-                WriteErrorToLog((char*)"AdvertisingImpl::ServAsyncAdvert:SayError", len);
-         }
-    }
-
-    const BannerRequest* banReq = curAdvItem->banReq;
-    if (rc)
-    {
-          WriteErrorToLog((char*)"AdvertisingImpl::ServAsyncAdvert", rc);
-          banReq->dispatcher->processError (*banReq, rc);
-    }
-    else  banReq->dispatcher->processBanner(*banReq);
+  }
 
   return rc;
 }
 
-//------------------------------------------------------------------------------
-// запись в журнал сообщения об ошибке
-//
-void AdvertisingImpl::WriteErrorToLog(char* where, int errCode)
+int
+SimpleAdvertisingClient::sendRequestAndGetResponse(advertising_item* advItem, SerializationBuffer* req, uint32_t req_len)
 {
-    switch(errCode)
-    {
-        case ERR_ADV_SOCKET     : smsc_log_error(logger, "%s, server hangs", where); break;
-        case ERR_ADV_SOCK_WRITE   : smsc_log_error(logger, "%s, socket closed", where); break;
-        case ERR_ADV_PACKET_TYPE  : smsc_log_error(logger, "%s, bad packet type", where); break;
-        case ERR_ADV_PACKET_LEN   : smsc_log_error(logger, "%s, bad packet length", where); break;
-        case ERR_ADV_PACKET_MEMBER  : smsc_log_error(logger, "%s, bad packet member", where); break;
-        case ERR_ADV_QUEUE_FULL     : smsc_log_error(logger, "%s, queue is overloaded", where); break;
+  writeToSocket(req->getBuffer(), req_len, "SimpleAdvertisingClient::sendRequestAndGetResponse");
 
-        default           : smsc_log_error(logger, "%s, error %d", where, errCode);
-    }
+  return readAdvert(advItem);
+}
+
+void
+SimpleAdvertisingClient::writeToSocket(const void* dataBuf, int dataSz, const std::string& where)
+{
+  smsc_log_debug(_logger, "SimpleAdvertisingClient::writeToSocket::: dataBuf=%x, dataSz=%d", dataBuf, dataSz);
+  if ( _socket.WriteAll((char *)dataBuf, dataSz) < 0 ) {
+    std::string errMsg = where + " socket write error [" + strerror(errno) + "]";
+    smsc_log_warn(_logger, errMsg);
+    throw NetworkException(errMsg.c_str());
+  }
+}
+
+void
+SimpleAdvertisingClient::readFromSocket(char *dataBuf, int bytesToRead, const std::string& where)
+{
+  if ( _socket.ReadAll(dataBuf, bytesToRead) < 0 ) {
+    smsc_log_warn(_logger, "SimpleAdvertisingClient::readFromSocket::: socket error [%s]", strerror(errno));
+    throw NetworkException("SimpleAdvertisingClient::readFromSocket::: read socket error");
+  }
+}
+
+uint32_t
+SimpleAdvertisingClient::readPacket(core::buffers::TmpBuf<char, MAX_PACKET_LEN>* buf)
+{
+  buf->SetPos(0);
+  uint32_t *s = (uint32_t*)buf->GetCurPtr();
+
+  int len = CMD_HEADER + TRANSACTION_ID_LV_SIZE + BANNER_LEN_SIZE;
+
+  // ЮЙФБЕН Ч ВХЖЕТ ЪБЗПМПЧПЛ
+  readFromSocket(buf->GetCurPtr(), len, "SimpleAdvertisingClient::readPacket");
+
+  buf->SetPos(len);
+
+  uint32_t word = ntohl(s[0]);
+  if (word != CMD_BANNER_RSP)                     // ФЙР ДПМЦЕО ВЩФШ ПФЧЕФПН ОБ ЪБРТПУ ВБООЕТБ
+  {
+    smsc_log_error(_logger, "SimpleAdvertisingClient::readPacket::: incorrect packet type %d", word);
+    throw std::exception();
+  }
+
+  uint32_t pak_len = ntohl(s[1]) + static_cast<uint32_t>(CMD_HEADER);    // ДМЙОБ ЧУЕЗП РБЛЕФБ
+  if (pak_len > MAX_PACKET_LEN)
+  {
+    smsc_log_warn(_logger, "SimpleAdvertisingClient::readPacket::: bad packet length");
+    throw std::exception();
+  }
+
+  readFromSocket(buf->GetCurPtr(), pak_len-len, "SimpleAdvertisingClient::readPacket");
+
+  buf->SetPos(pak_len);
+
+  return ntohl(s[3]);                     //  ЪОБЮЕОЙЕ TransactID
+}
+
+uint32_t
+SimpleAdvertisingClient::readAdvert(advertising_item* advItem)
+{
+  smsc_log_debug(_logger, "SimpleAdvertisingClient::readAdvert");
+
+  int rc = 0;
+
+  try {
+    uint32_t gotTransactId;
+    TmpBuf<char, MAX_PACKET_LEN> incomingPacketBuf(0);
+    while( (gotTransactId = readPacket(&incomingPacketBuf)) != advItem->TransactID )
+      smsc_log_error(_logger, "SimpleAdvertisingClient::readAdvert::: wrong transactionId value=[%d], expected value=[%d]", gotTransactId, advItem->TransactID);
+
+    rc = extractBanner(incomingPacketBuf, &advItem->banReq->banner);
+  } catch(util::Exception& ex) {
+    smsc_log_error(_logger, "SimpleAdvertisingClient::readAdvert::: catched exception [%s]", ex.what());
+  }
+
+  return rc;
+}
+
+int
+SimpleAdvertisingClient::extractBanner(TmpBuf<char, MAX_PACKET_LEN>& incomingPacketBuf,
+                                       std::string* banner)
+{
+  util::SerializationBuffer buf4parsing;
+  buf4parsing.setExternalBuffer(incomingPacketBuf.get() + BANNER_OFFSET_IN_PACKET, static_cast<uint32_t>(incomingPacketBuf.GetPos() - BANNER_OFFSET_IN_PACKET));
+
+  buf4parsing.ReadString<uint32_t>(*banner);
+
+  return 0;
 }
 
 //------------------------------------------------------------------------------
-// заполнение буфера протокольной команды
+// ЪБРЙУШ Ч ЦХТОБМ УППВЭЕОЙС ПВ ПЫЙВЛЕ
 //
-uint32_t AdvertisingImpl::PrepareCmnd(SerializationBuffer* req, BannerRequest* par,
+void SimpleAdvertisingClient::WriteErrorToLog(char* where, int errCode)
+{
+  switch(errCode)
+  {
+  case ERR_ADV_SOCKET     : smsc_log_error(_logger, "%s, server hangs", where); break;
+  case ERR_ADV_SOCK_WRITE   : smsc_log_error(_logger, "%s, socket closed", where); break;
+  case ERR_ADV_PACKET_TYPE  : smsc_log_error(_logger, "%s, bad packet type", where); break;
+  case ERR_ADV_PACKET_LEN   : smsc_log_error(_logger, "%s, bad packet length", where); break;
+  case ERR_ADV_PACKET_MEMBER  : smsc_log_error(_logger, "%s, bad packet member", where); break;
+  case ERR_ADV_QUEUE_FULL     : smsc_log_error(_logger, "%s, queue is overloaded", where); break;
+
+  default           : smsc_log_error(_logger, "%s, error %d", where, errCode);
+  }
+}
+
+//------------------------------------------------------------------------------
+// ЪБРПМОЕОЙЕ ВХЖЕТБ РТПФПЛПМШОПК ЛПНБОДЩ
+//
+uint32_t SimpleAdvertisingClient::PrepareCmnd(SerializationBuffer* req, BannerRequest* par,
                                       uint32_t cmndType, uint32_t cmdInfo)
 {
+  uint32_t req_len;
 
-    uint32_t req_len;
+  switch(cmndType)   // ДМЙОБ  РБЛЕФБ  ДМС ЛБЦДПК ЙЪ ЛПНБОД ЛМЙЕОФБ
+  {
+  case CMD_BANNER_REQ:
+    req_len = static_cast<uint32_t>(GET_BANNER_REQ_LEN + par->abonent.length() + par->serviceName.length());
+    break;
 
-    switch(cmndType)   // длина  пакета  для каждой из команд клиента
+  case CMD_ERR_INFO:
+    req_len = ERR_INFO_LEN;
+    break;
+  }
+
+  req->resize(static_cast<uint32_t>(req_len + CMD_HEADER));
+  req->setPos(0);
+
+  //command
+  req->WriteNetInt32(cmndType);       //Command Type
+  req->WriteNetInt32(req_len);      //Command length
+
+  //TransactId45
+  req->WriteNetInt32(static_cast<uint32_t>(sizeof(uint32_t))); //Param length
+  req->WriteNetInt32(par->getId());   //Param body
+
+  if(cmndType == CMD_ERR_INFO)
+  {
+    req->WriteNetInt32(static_cast<uint32_t>(sizeof(uint32_t)));
+    req->WriteNetInt32(cmdInfo);
+  }
+  else
+  {
+    // abonent
+    req->WriteNetInt32(static_cast<uint32_t>(par->abonent.length()));
+    req->Write(par->abonent.c_str(), par->abonent.length());
+
+    // service_Name
+    req->WriteNetInt32(static_cast<uint32_t>(par->serviceName.length()));
+    req->Write(par->serviceName.c_str(), par->serviceName.length());
+
+    // transportType
+    req->WriteNetInt32(static_cast<uint32_t>(sizeof(par->transportType)));
+    req->WriteNetInt32(par->transportType);
+
+    uint32_t bannerLen;
+    switch (par->transportType)
     {
-        case CMD_BANNER_REQ : req_len = GET_BANNER_REQ_LEN
-                                      + par->abonent.length()
-                                      + par->serviceName.length();
-                            break;
-
-        case CMD_ERR_INFO   : req_len = ERR_INFO_LEN;
-                            break;
+    case TRANSPORT_TYPE_SMS : bannerLen = TRANSPORT_LEN_SMS;  break;
+    case TRANSPORT_TYPE_USSD: bannerLen = TRANSPORT_LEN_USSD; break;
+    case TRANSPORT_TYPE_HTTP: bannerLen = TRANSPORT_LEN_HTTP; break;
+    case TRANSPORT_TYPE_MMS : bannerLen = TRANSPORT_LEN_MMS;  break;
     }
 
-    req->resize(req_len + CMD_HEADER);
-    req->setPos(0);
+    req->WriteNetInt32(static_cast<uint32_t>(sizeof(bannerLen)));
+    req->WriteNetInt32(bannerLen);
 
-    //command
-    req->WriteNetInt32(cmndType);       //Command Type
-    req->WriteNetInt32(req_len);      //Command length
+    //charSet
+    req->WriteNetInt32(static_cast<uint32_t>(sizeof(par->charSet)));
+    req->WriteNetInt32(par->charSet);
 
-    //TransactId45
-    req->WriteNetInt32(sizeof(uint32_t)); //Param length
-    req->WriteNetInt32(par->getId());   //Param body
+  } //cmndType != CMD_ERR_INFO
 
-    if(cmndType == CMD_ERR_INFO)
-    {
-        req->WriteNetInt32(sizeof(uint32_t));
-        req->WriteNetInt32(cmdInfo);
-    }
-    else
-    {
-        // abonent
-        req->WriteNetInt32(par->abonent.length());
-        req->Write(par->abonent.c_str(), par->abonent.length());
-
-        // service_Name
-        req->WriteNetInt32(par->serviceName.length());
-        req->Write(par->serviceName.c_str(), par->serviceName.length());
-
-        // transportType
-        req->WriteNetInt32(sizeof(par->transportType));
-        req->WriteNetInt32(par->transportType);
-
-        //maxLen45
-        uint32_t bannerLen = par->maxLen;
-        if (bannerLen == (uint32_t)-1)
-            switch (par->transportType)
-            {
-                case TRANSPORT_TYPE_SMS : bannerLen = TRANSPORT_LEN_SMS;  break;
-                case TRANSPORT_TYPE_USSD: bannerLen = TRANSPORT_LEN_USSD; break;
-                case TRANSPORT_TYPE_HTTP: bannerLen = TRANSPORT_LEN_HTTP; break;
-                case TRANSPORT_TYPE_MMS : bannerLen = TRANSPORT_LEN_MMS;  break;
-            }
-
-        req->WriteNetInt32(sizeof(bannerLen));
-        req->WriteNetInt32(bannerLen);
-
-        //charSet
-        req->WriteNetInt32(sizeof(par->charSet));
-        req->WriteNetInt32(par->charSet);
-
-    } //cmndType != CMD_ERR_INFO
-
-    return req_len + CMD_HEADER;//возвращается ОБЩАЯ длина пакета
+  return static_cast<uint32_t>(req_len + CMD_HEADER);//ЧПЪЧТБЭБЕФУС пвэбс ДМЙОБ РБЛЕФБ
 }
-//------------------------------------------------------------------------------
-// анализ полученного от сервера пакета, считывание банераError
-// возвращает  0 - если банер считан,  иначе - код ошибки
-//
-uint32_t AdvertisingImpl::AnaliseResponse(advertising_item *curAdvItem)
-{
-
-    uint32_t pak_len = curAdvItem->pakLen;
-    smsc_log_debug(logger, "AdvertisingImpl::AnaliseResponse(), len = %d", pak_len);
-
-    if (pak_len < 0)        // перебдеть - вообще-то это отлавливается снаружи
-        return -pak_len;    // код ошибки (выставленный ранее)
-    if (pak_len == 0)
-        return  ERR_ADV_PACKET_LEN;     // неверная длина пакета
-
-    //char* buf = curAdvItem->buf;
-    char* buf = curAdvItem->isAsync ? curAdvItem->asyncBuf : curAdvItem->buf->GetCurPtr();
-    BannerRequest* banReq =  curAdvItem->banReq;
-
-    SerializationBuffer res;
-    res.setExternalBuffer(buf, pak_len);
-    res.setPos(0);
-
-    uint32_t len;
-
-    //command
-    len = res.ReadNetInt32();             // command type
-    if(len != CMD_BANNER_RSP)             // тип должен быть ответом на запрос баннера
-        return ERR_ADV_PACKET_TYPE;       // некорректный тип пакета
-
-    len = res.ReadNetInt32() + CMD_HEADER;      // Command length
-    if (pak_len != len)
-  return  ERR_ADV_PACKET_LEN;       // неверная длина пакета
-
-    //TransactionId
-    len = res.ReadNetInt32();             // Param length
-    if (len != sizeof(int32_t))
-        return ERR_ADV_PACKET_MEMBER;       // неверный элемент пакета
-
-    uint32_t transID = res.ReadNetInt32();  // значение TransactID(оно же = hash key)
-
-     // banner string
-    len = res.ReadNetInt32();
-    if (len == 0) banReq->banner.clear();   // баннер 0 длины
-    else
-    {
-        if (banReq->maxLen != ((uint32_t)-1) &&
-            banReq->maxLen <= len )
-        {
-            smsc_log_warn(logger, "AdvertisingImpl::getBanner(), banner length (%d)> maxLen (%d), transact_id = %d",
-                           len, banReq->maxLen, transID);
-            return ERR_ADV_BANNER_LEN;    // длина баннера большe maxLen
-        }
-        // вычитываем банер
-
-        banReq->banner.reserve(len);
-        banReq->banner.assign(buf + res.getPos(), len);
-    }
-    return 0;
-}
-//------------------------------------------------------------------------------
 
 } // advert
 } // scag

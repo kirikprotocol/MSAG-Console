@@ -1,158 +1,137 @@
-#ifndef SCAG_ADVERT_ADVERTISINGIMPL_CLIENT
-#define SCAG_ADVERT_ADVERTISINGIMPL_CLIENT
+#ifndef MCISME_ADVERT_ADVERTISINGIMPL_CLIENT
+#define MCISME_ADVERT_ADVERTISINGIMPL_CLIENT
 
 #include "AdvertErrors.h"
 #include "Advertising.h"
-#include "AdvertisingTh.h"
 
-#include "core/buffers/Array.hpp"
-#include "core/buffers/IntHash.hpp"
-//#include "core/buffers/FastMTQueue.hpp"
-#include "core/network/Socket.hpp"
-#include "core/threads/Thread.hpp"
-#include "core/synchronization/Event.hpp"
-#include "scag/util/singleton/Singleton.h"
-#include "util/BufferSerialization.hpp"
-#include "scag/exc/SCAGExceptions.h"
+#include <logger/Logger.h>
 
+#include <core/buffers/Array.hpp>
+#include <core/buffers/IntHash.hpp>
+#include <core/buffers/TmpBuf.hpp>
 
-#include "util/debug.h"
+#include <core/network/Socket.hpp>
+
+#include <core/threads/Thread.hpp>
+#include <core/synchronization/Event.hpp>
+
+#include <util/BufferSerialization.hpp>
+#include <core/network/Socket.hpp>
+
+#include <util/debug.h>
 
 using namespace smsc::core::buffers;
 using namespace smsc::core::network;
 using namespace smsc::core::threads;
 using namespace smsc::util;
 
-using namespace scag::util::singleton;
-using namespace scag::exceptions;
 using namespace smsc::logger;
 
-// типы транспортов
+namespace smsc {
+namespace mcisme {
+
+// ФЙРЩ ФТБОУРПТФПЧ
 enum 
 {
-    TRANSPORT_TYPE_SMS = 1,
-    TRANSPORT_TYPE_USSD,
-    TRANSPORT_TYPE_HTTP,
-    TRANSPORT_TYPE_MMS
+  TRANSPORT_TYPE_SMS = 1,
+  TRANSPORT_TYPE_USSD,
+  TRANSPORT_TYPE_HTTP,
+  TRANSPORT_TYPE_MMS
 };
-// максимальные длины пакетов транспортов
+// НБЛУЙНБМШОЩЕ ДМЙОЩ РБЛЕФПЧ ФТБОУРПТФПЧ
 enum 
 {
-    TRANSPORT_LEN_SMS  =  140,
-    TRANSPORT_LEN_USSD =  160,
-    TRANSPORT_LEN_HTTP = 1024,
-    TRANSPORT_LEN_MMS  = 1024
+  TRANSPORT_LEN_SMS  =  140,
+  TRANSPORT_LEN_USSD =  160,
+  TRANSPORT_LEN_HTTP = 1024,
+  TRANSPORT_LEN_MMS  = 1024
 };
 
-#define GET_BANNER_REQ_LEN 40       // общая длина фиксированных параметров в getBannerReq
-#define ERR_INFO_LEN 16             // общая длинаstd::vector <char > buf; фиксированных параметров в errInfo
+#define GET_BANNER_REQ_LEN 40       // ПВЭБС ДМЙОБ ЖЙЛУЙТПЧБООЩИ РБТБНЕФТПЧ Ч getBannerReq
+#define ERR_INFO_LEN 16             // ПВЭБС ДМЙОБstd::vector <char > buf; ЖЙЛУЙТПЧБООЩИ РБТБНЕФТПЧ Ч errInfo
 
-static int CommonTransactID = 0;    // общий счетчик транзакций
-static Mutex CommTransId_mtx;       // мьютекс для доступа к счетчику
+static int CommonTransactID = 0;    // ПВЭЙК УЮЕФЮЙЛ ФТБОЪБЛГЙК
+static Mutex CommTransId_mtx;       // НШАФЕЛУ ДМС ДПУФХРБ Л УЮЕФЮЙЛХ
 
+// ЛПДЩ ЛПНБОД 
+enum 
+  {
+    CMD_BANNER_REQ = 1,    // ЪБРТПУ ПФ ЛМЙЕОФБ Л УЕТЧЕТХ
+    CMD_BANNER_RSP,        // ПФЧЕФ  ПФ УЕТЧЕТБ
+    CMD_ERR_INFO = 0x100   // РБЛЕФ ПФ ЛМЙЕОФБ Л УЕТЧЕТХ У ЙОЖПТНБГЙЕК ПВ ПЫЙВЛЕ
+  };
 
-namespace scag {
-namespace advert {
+static const unsigned CMD_HEADER = sizeof(uint32_t) + sizeof(uint32_t);
+static const unsigned TRANSACTION_ID_LV_SIZE = sizeof(uint32_t) + sizeof(uint32_t);
+static const unsigned BANNER_LEN_SIZE = sizeof(uint32_t);
+static const unsigned BANNER_OFFSET_IN_PACKET = CMD_HEADER + TRANSACTION_ID_LV_SIZE;
 
-//------------------------------------------------------------------------------
-// поток обрабатывающий асинхронные вызовы
-//
-//class AdvertisingImpl;   
-class AdvertisAsync : public Thread
+#define BANNER_LEN 1024                     // max len ВБООЕТБ
+#define MAX_PACKET_LEN 1048                 // НБЛУЙНБМШОБС ДМЙОБ ЧУЕЗП РБЛЕФБ
+
+#define MAX_WAIT_TIME 120000// (~2 НЙО) НБЛУЙНБМШОЩКЕ РТПНЕЦХФПЛ НЕЦДХ ЧПУУФБОПЧМЕОЙЕН УПЕДЙОЕОЙС
+#define MIN_WAIT_TIME 500
+
+struct advertising_item
 {
-    AdvertisingImpl* AdvertImpl;            // экземпляр реализации Advrtise
-    FrontMTQueue <advertAsync_item*> *AsyncAdverts; // указатель на очередь
-    int timeout;
-    
-    int Execute();
-    
+  uint32_t TransactID;     // ОПНЕТ ФТБОЪБЛГЙЙ
+  BannerRequest* banReq;
+
+  explicit advertising_item(BannerRequest* aBanReq)
+  {
+    banReq = aBanReq;
+    TransactID = banReq->getId();
+  }
+};
+
+class SimpleAdvertisingClient : public Advertising
+{
 public:
-    bool stop;
+  SimpleAdvertisingClient(const std::string& host, int port, int timeout);
 
-    inline void Stop() { stop = true;
-                         //WaitFor();
-                         pthread_cancel(thread);
-                        }    
-     
-    void Init( AdvertisingImpl* adv,        // экземпляр реализации Advrtise
-               FrontMTQueue <advertAsync_item*> *asyncs,     
-               int time               )     // время ожидания 
-    {
-        AdvertImpl   = adv;
-        AsyncAdverts = asyncs;
-               
-        timeout = time/2 + 11;              // msec
-    }
-    
-//    void Notify() { AsyncAdverts->Notify();}
-    
-    AdvertisAsync() { stop=false; }
+  virtual void init();
 
-};
+  virtual void reinit();
 
-//-----------------------------------------------------------------------------------------
-//   
-class AdvertisingImpl : public Advertising
-{
-    
-public:	
-    
-	 // запрос банера
-    uint32_t getBanner( const std::string& abonent, 
-                        const std::string& serviceName,
-                        uint32_t transportType, uint32_t charSet, 
-			std::string &banner, uint32_t maxLen = (uint32_t)-1);
-    
-    uint32_t getBanner(BannerRequest& req);
-    void requestBanner(const BannerRequest& req);
-      
-    // инициализация
-    void init(const std::string& host, int port, int timeout, int maxcount);
-    
-    // проверка асинхроноой очереди на просроченность 
-    void CheckAsyncTimes();     
-    
-    // обслуживание "готовых" асинхронных запросов
-    int  ServAsyncAdvert(advertising_item *curAdvItem, int er=0);                              
-    
-    void Stop()// Implement shutdown !
-    {
-        adv_thread.Stop();
-        adv_asyncs.Stop();
-    } 
+  // ЪБРТПУ ВБОЕТБ
+  virtual uint32_t getBanner( const std::string& abonent,
+                              const std::string& serviceName,
+                              uint32_t transportType, uint32_t charSet,
+                              std::string &banner);
 
-             AdvertisingImpl();
-    virtual ~AdvertisingImpl();
-    
 protected:
-        
-    AdvertisingTh adv_thread; // потоковый объект для работы с сокетом и разбора ответов сервера
-    AdvertisAsync adv_asyncs; // потоковый объект для разбора ответов сервера от асинхронных запросов
-    FrontMTQueue <advertAsync_item*> *AsyncAdverts;     // очередь указателей на полученные от сервера ответы   
-    FrontMTQueue <int> *AsyncKeys;                      // очередь ключей асинхронных запросов   
-        
-    Logger    *logger;                                  // указатель на общие журналы
-    uint32_t  timeout;
-    int maxcount;             // максимальное количество асинхронных запросов в очереди
-    
-	// проверка корректности асинхронного запроса
-    void CheckBannerRequest(BannerRequest& banReq, int async = 0);  
+  Logger*     _logger; // ХЛБЪБФЕМШ ОБ ПВЭЙЕ ЦХТОБМЩ
+  uint32_t    _timeout;
+  std::string _host;
+  in_port_t   _port;
+  Socket _socket;
+  bool _wasInited;
 
-    //  заполнение буфера протокольной команды
-    uint32_t PrepareCmnd(SerializationBuffer* rec,      // буфер
-                         BannerRequest* par,            // параметры запроса банера
-                         uint32_t cmndType,             // тип команды
-                         uint32_t cmdInfo = 0);         // доп информация
-	
-	// анализ полученного от сервера пакета
-    uint32_t AdvertisingImpl::AnaliseResponse(advertising_item *curAdvItem);            
-    // запись в журнал сообщения об ошибке
-    void WriteErrorToLog(char* where, int errCode);                  
+  uint32_t getBanner(BannerRequest& req);
+
+  // РТПЧЕТЛБ ЛПТТЕЛФОПУФЙ БУЙОИТПООПЗП ЪБРТПУБ
+  void CheckBannerRequest(BannerRequest& banReq, int async = 0);
+
+  //  ЪБРПМОЕОЙЕ ВХЖЕТБ РТПФПЛПМШОПК ЛПНБОДЩ
+  uint32_t PrepareCmnd(SerializationBuffer* rec,      // ВХЖЕТ
+                       BannerRequest* par,            // РБТБНЕФТЩ ЪБРТПУБ ВБОЕТБ
+                       uint32_t cmndType,             // ФЙР ЛПНБОДЩ
+                       uint32_t cmdInfo = 0);         // ДПР ЙОЖПТНБГЙС
+
+  int sendRequestAndGetResponse(advertising_item* advItem, SerializationBuffer* req, uint32_t req_len);
+
+  uint32_t readPacket(TmpBuf<char, MAX_PACKET_LEN>* buf);
+  uint32_t readAdvert(advertising_item* advItem);
+  int extractBanner(TmpBuf<char, MAX_PACKET_LEN>& incomingPacketBuf, std::string* banner);
+
+  // ЪБРЙУШ Ч ЦХТОБМ УППВЭЕОЙС ПВ ПЫЙВЛЕ
+  void WriteErrorToLog(char* where, int errCode);
+
+  void readFromSocket(char *dataBuf, int bytesToRead, const std::string& where);
+  void writeToSocket(const void* buf, int bufSize, const std::string& where);
 };
 
+}}
 
-} // advert
-} // scag
-
-#endif //SCAG_ADVERT_ADVERTISINGIMPL_CLIENT
+#endif
 
