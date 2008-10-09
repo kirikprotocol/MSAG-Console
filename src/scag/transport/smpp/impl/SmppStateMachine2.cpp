@@ -28,6 +28,7 @@ using namespace smsc::core::buffers;
 std::vector<int> StateMachine::allowedUnknownOptionals;
 
 const uint32_t MAX_REDIRECT_CNT = 10;
+const unsigned TIMERFREQ = 4;
 
 struct StateMachine::ResponseRegistry
 {
@@ -345,7 +346,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
 void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
 {
     static unsigned passcount = 0;
-    bool dotiming = (( ++passcount % 10 ) == 0 );
+    bool dotiming = (( ++passcount % TIMERFREQ ) == 0 );
     HRTimer hrt;
     if (dotiming) hrt.mark();
     hrtime_t timeprep, timeroute, timesess, timerule, timesend;
@@ -760,7 +761,7 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
 void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
 {
     static unsigned passcount = 0;
-    bool dotiming = ((++passcount % 10) == 0);
+    bool dotiming = ((++passcount % TIMERFREQ) == 0);
     HRTimer hrt;
     if (dotiming) hrt.mark();
     hrtime_t timeprep, timeroute, timesess, timerule, timesend;
@@ -1171,7 +1172,7 @@ void StateMachine::DataResp( std::auto_ptr<SmppCommand> aucmd,int status)
 void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
 {
     static unsigned passcount = 0;
-    bool dotiming = ((++passcount % 10) == 0);
+    bool dotiming = ((++passcount % TIMERFREQ) == 0);
     HRTimer hrt;
     if (dotiming) hrt.mark();
     hrtime_t timeprep, timeroute, timesess, timerule, timesend;

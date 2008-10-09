@@ -43,7 +43,7 @@ void SmppOperationMaker::process( re::RuleStatus& st, util::HRTimer* inhrt )
             if ( st.status != re::STATUS_OK ) break;
         
             smsc_log_debug(log_, "%s: RuleEngine processing...", where_ );            
-            re::RuleEngine::Instance().process( *cmd_.get(), *session_.get(), st );
+            re::RuleEngine::Instance().process( *cmd_.get(), *session_.get(), st, inhrt );
             if ( inhrt ) timeproc = hrt.get();
             smsc_log_debug(log_, "%s: RuleEngine processed: st.status=%d st.result=%d cmd.stat=%d",
                            where_, st.status, st.result, cmd_->get_status() );

@@ -260,17 +260,14 @@ void SmppSocket::sendData()
 
 void SmppSocket::genEnquireLink(int to)
 {
-    SmppEntity* se;
+    MutexGuard mg(outMtx);
+    time_t now=time(NULL);
+    if(now-lastEnquireLink<to)
     {
-        MutexGuard mg(outMtx);
-        time_t now=time(NULL);
-        if(now-lastEnquireLink<to)
-        {
-            return;
-        }
-        lastEnquireLink=now;
-        SmppEntity* se = SmppManager::Instance().getSmppEntity(systemId.c_str());
+        return;
     }
+    lastEnquireLink=now;
+    SmppEntity* se = SmppManager::Instance().getSmppEntity(systemId.c_str());
     outQueue.Push(SmppCommand::makeCommand(ENQUIRELINK,se?se->getNextSeq():1,0,0).release());
 }
 
