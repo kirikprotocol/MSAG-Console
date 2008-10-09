@@ -263,9 +263,4 @@ public class JournalDataSourceImpl implements JournalDataSource {
     }
   }
 
-  public static void main(String ... args) throws DataSourceException {
-    String [] r = JournalImpl.parseLine("A,20080918 12:34:05.646,255,+79139030,1", 6);
-    for (String s : r)
-      System.out.println(s);
-  }
 }
