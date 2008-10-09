@@ -9,20 +9,22 @@
  attribute name="type" required="false"%><%@
  attribute name="tname" required="false"%><%@
  attribute name="classs" required="false"%><%@
- attribute name="width" required="false"%>
+ attribute name="width" required="false"%><%@
+ attribute name="func" required="false"%>
+
 
 <c:set var="COLLAPSING_TREE_PREFIX" value="${smf:concat(!empty COLLAPSING_TREE_PREFIX ? COLLAPSING_TREE_PREFIX : '', smf:concat(name, '.'))}" scope="request"/>
 <c:choose>
     <c:when test="${type == 'new'}">
         <tr><td colspan=2>
                 <div class=collapsing_tree_closed_logging id="${name}_div"
-                         onclick="closeProp('${name}')">
+                         onclick="openCloseProp('${name}')">
                          ${title}
                     </div>
                     <table id="${name}" style="display:none">
-                      <sm-et:txt title="pixPerSecond" name="pixPerSecond" validation="positive"/>
-                      <sm-et:txt title="scale" name="scale" validation="positive"/>
-                      <sm-et:txt title="block" name="block" validation="positive"/>
+                        <sm-et:txt title="pixPerSecond" name="pixPerSecond" validation="positive"/>
+                        <sm-et:txt title="scale" name="scale" validation="positive"/>
+                        <sm-et:txt title="block" name="block" validation="positive"/>
                     </table>
 <%--                                    <c:set var="COLLAPSING_TREE_PREFIX" value="perfmon." />--%>
         </td></tr>
@@ -34,11 +36,11 @@
               <td colaspan=2
                     <c:choose>
                         <c:when test="${!empty tname}">
-                            onclick="closeProp('${tname}');">
+                            onclick="openCloseProp('${tname}');">
                                 <div class="collapsing_tree_closed" id="${tname}_div">${title}</div>
                         </c:when>
                         <c:otherwise>
-                            onclick="closeProp('${name}');">
+                            onclick="openCloseProp('${name}');">
                                 <div class="collapsing_tree_closed" id="${name}_div">${title}</div>
                         </c:otherwise>
                     </c:choose>
