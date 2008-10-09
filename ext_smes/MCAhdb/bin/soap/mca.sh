@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MCA_URL="http://localhost:8088/mca/services/MissedCalls"
+MCA_URL="http://phoenix:8008/mca/services/MissedCalls"
 
 if [[ $1 == "get" ]]; then
     SCRIPT_NAME="getevents.sh"

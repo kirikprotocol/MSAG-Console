@@ -111,101 +111,106 @@ public class JournalDataSourceImpl implements JournalDataSource {
       }
     }
 
-    private JournalEvent readMissedCall(StringTokenizer st) throws DataSourceException {
+    private static String[] parseLine(String str, int count) throws DataSourceException {
+
+      String[] result = new String[count];
+
+      int i=0, j=0, k=0;
+
+      while ((i = str.indexOf(',', j)) >=0 && k < count - 1) {
+        String st = str.substring(j,i);
+        result[k++] = st;
+        j = i + 1;
+      }
+
+      if (k != count -1)
+        throw new DataSourceException("Invalid line, expected count=" + count + ": " + str);
+
+      result[count-1] = str.substring(j);
+
+      return result;
+    }
+
+    private JournalEvent readMissedCall(String[] st) throws DataSourceException {
       JournalEvent e = new JournalEvent();
       e.setType(JournalEvent.Type.MissedCall);
 
-      if (st.countTokens() != 5)
-        throw new DataSourceException("Invalid missed call record");
-
       try {
-        e.setDate(df.parse(st.nextToken()));
+        e.setDate(df.parse(st[0]));
       } catch (ParseException e1) {
         throw new DataSourceException("Invalid date format");
       }
 
-      e.setCaller(st.nextToken());
-      e.setCalled(st.nextToken());
-      e.setCalledProfileNotify(st.nextToken().equals("1"));
-      e.setCallerProfileWantNotifyMe(st.nextToken().equals("1"));
+      e.setCaller(st[1]);
+      e.setCalled(st[2]);
+      e.setCalledProfileNotify(st[3].charAt(0) == '1');
+      e.setCallerProfileWantNotifyMe(st[4].charAt(0) == '1');
 
       return e;
     }
 
-    private JournalEvent readMissedCallAlert(StringTokenizer st) throws DataSourceException {
+    private JournalEvent readMissedCallAlert(String[] st) throws DataSourceException {
       JournalEvent e = new JournalEvent();
       e.setType(JournalEvent.Type.MissedCallAlert);
 
-      if (st.countTokens() != 5)
-        throw new DataSourceException("Invalid missed call record");
-
       try {
-        e.setDate(df.parse(st.nextToken()));
+        e.setDate(df.parse(st[0]));
       } catch (ParseException e1) {
         throw new DataSourceException("Invalid date format");
       }
 
-      e.setCaller(st.nextToken());
-      e.setCalled(st.nextToken());
-      e.setCalledProfileNotify(st.nextToken().equals("1"));
-      e.setCallerProfileWantNotifyMe(st.nextToken().equals("1"));
+      e.setCaller(st[1]);
+      e.setCalled(st[2]);
+      e.setCalledProfileNotify(st[3].charAt(0) == '1');
+      e.setCallerProfileWantNotifyMe(st[4].charAt(0) == '1');
 
       return e;
     }
 
-    private JournalEvent readMissedCallAlertFail(StringTokenizer st) throws DataSourceException {
+    private JournalEvent readMissedCallAlertFail(String[] st) throws DataSourceException {
       JournalEvent e = new JournalEvent();
       e.setType(JournalEvent.Type.MissedCallAlertFail);
 
-      if (st.countTokens() != 3)
-        throw new DataSourceException("Invalid missed call record");
-
       try {
-        e.setDate(df.parse(st.nextToken()));
+        e.setDate(df.parse(st[0]));
       } catch (ParseException e1) {
         throw new DataSourceException("Invalid date format");
       }
 
-      e.setCaller(st.nextToken());
-      e.setCalled(st.nextToken());
+      e.setCaller(st[1]);
+      e.setCalled(st[2]);
 
       return e;
     }
 
-    private JournalEvent readMissedCallRemove(StringTokenizer st) throws DataSourceException {
+    private JournalEvent readMissedCallRemove(String[] st) throws DataSourceException {
       JournalEvent e = new JournalEvent();
       e.setType(JournalEvent.Type.MissedCallRemove);
 
-      if (st.countTokens() != 3)
-        throw new DataSourceException("Invalid missed call record");
-
       try {
-        e.setDate(df.parse(st.nextToken()));
+        e.setDate(df.parse(st[0]));
       } catch (ParseException e1) {
         throw new DataSourceException("Invalid date format");
       }
 
-      e.setCaller(st.nextToken());
-      e.setCalled(st.nextToken());
+      e.setCaller(st[1]);
+      e.setCalled(st[2]);
 
       return e;
     }
 
-    private JournalEvent readProfileChanged(StringTokenizer st) throws DataSourceException {
+    private JournalEvent readProfileChanged(String[] st) throws DataSourceException {
       JournalEvent e = new JournalEvent();
       e.setType(JournalEvent.Type.ProfileChaged);
 
-      if (st.countTokens() != 3)
-        throw new DataSourceException("Invalid missed call record");
-
       try {
-        e.setDate(df.parse(st.nextToken()));
+        e.setDate(df.parse(st[0]));
       } catch (ParseException e1) {
         throw new DataSourceException("Invalid date format");
       }
 
-      e.setCalled(st.nextToken());
-      e.setCallerProfileWantNotifyMe(st.nextToken().equals("1"));
+      e.setCalled(st[1]);
+      e.setCallerProfileWantNotifyMe(st[2].charAt(0) == '1');
 
       return e;
     }
@@ -225,11 +230,11 @@ public class JournalDataSourceImpl implements JournalDataSource {
           lineNumber++;
           char type = str.charAt(0);
           switch (type) {
-            case 'A': return readMissedCall(new StringTokenizer(str.substring(2), ","));
-            case 'D': return readMissedCallAlert(new StringTokenizer(str.substring(2), ","));
-            case 'F': return readMissedCallAlertFail(new StringTokenizer(str.substring(2), ","));
-            case 'E': return readMissedCallRemove(new StringTokenizer(str.substring(2), ","));
-            case 'P': return readProfileChanged(new StringTokenizer(str.substring(2), ","));
+            case 'A': return readMissedCall(parseLine(str.substring(2), 5));
+            case 'D': return readMissedCallAlert(parseLine(str.substring(2), 5));
+            case 'F': return readMissedCallAlertFail(parseLine(str.substring(2), 3));
+            case 'E': return readMissedCallRemove(parseLine(str.substring(2), 3));
+            case 'P': return readProfileChanged(parseLine(str.substring(2), 3));
             default:return null;
           }
         } else
@@ -238,7 +243,7 @@ public class JournalDataSourceImpl implements JournalDataSource {
       } catch (IOException e) {
         throw new DataSourceException("Read journal error: ", e);
       } catch (DataSourceException ex) {
-        throw new DataSourceException(ex.getMessage() + " in journal " + journalName + ", line=" + lineNumber);
+        throw new DataSourceException(ex.getMessage() + " in journal " + journalName + ", line=" + lineNumber, ex);
       }
     }
 
@@ -256,5 +261,11 @@ public class JournalDataSourceImpl implements JournalDataSource {
       } catch (IOException e) {        
       }
     }
+  }
+
+  public static void main(String ... args) throws DataSourceException {
+    String [] r = JournalImpl.parseLine("A,20080918 12:34:05.646,255,+79139030,1", 6);
+    for (String s : r)
+      System.out.println(s);
   }
 }
