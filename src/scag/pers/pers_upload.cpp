@@ -129,13 +129,15 @@ int main(int argc, char* argv[])
         smsc_log_debug(logger, "Client connect to %s:%d", host.c_str(), port);  
         int timeOut = 1000;
         int pingTimeOut = 1000;
+        int reconnectTimeout = 100;
+        int maxWaitRequestsCount = 100;
         int filesCount = 0;
         if (argc > 1) {
           filesCount = atoi(argv[1]);
         } 
 
         if (sendToPers) {
-          PersClient::Init(host.c_str(), port, timeOut, pingTimeOut);
+          PersClient::Init(host.c_str(), port, timeOut, pingTimeOut, reconnectTimeout, maxWaitRequestsCount);
           PersClient& pc = PersClient::Instance();
           BlocksHSReader<AbntAddr> reader(pc, storageName, storagePath, dataBlockSize, blocksInFile);
           smsc_log_debug(logger, "will be read %d files", filesCount);
