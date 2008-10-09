@@ -7,7 +7,8 @@
         <param name="Address" type="string">@mcisme.orig.address@</param>
 	<param name="CalledMask"  type="string">/^\d{10}$/</param>
 	<param name="CallingMask" type="string">/^(?:\.3\.\d\.\d{10}|\.4\.\d\.\d{1,20})$/</param>
-	<param name="SvcType" type="string">MCISme</param>
+	<param name="SvcType" type="string">MCA</param>
+	<param name="SvcTypeOnline" type="string">MCAONL</param>
         <param name="ProtocolId" type="int">0</param>
 
 	<param name="DaysValid"  type="int">1</param>
@@ -123,6 +124,7 @@
 	    <param name="server" type="string">@mcisme.Advertising.server@</param>
 	    <param name="port" type="int">@mcisme.Advertising.port@</param>
 	    <param name="timeout" type="int">@mcisme.Advertising.timeout@</param>
+	    <param name="proxyCount" type="int">10</param>
 	</section>
 
 	<section name="Statistics">
