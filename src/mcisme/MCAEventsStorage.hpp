@@ -125,21 +125,38 @@ private:
 
 class MCAEventsStorage {
 public:
-  MCAEventsStorage(const std::string& dirName,
-                   const std::string& fileNamePrefix,
-                   time_t rollingInterval);
-  ~MCAEventsStorage();
+  virtual ~MCAEventsStorage() {}
 
+  virtual void addEvent(const Event_GotMissedCall& event) = 0;
+  virtual void addEvent(const Event_MissedCallInfoDelivered& event) = 0;
+  virtual void addEvent(const Event_MissedCallInfoDeliveringFailed& event) = 0;
+  virtual void addEvent(const Event_SendCallerNotification& event) = 0;
+  virtual void addEvent(const Event_DeleteMissedCallInfo& event) = 0;
+  virtual void addEvent(const Event_ChangeAbonentProfile& event) = 0;
+};
+
+class MCAEventsFileStorage : public MCAEventsStorage {
+public:
+  MCAEventsFileStorage(const std::string& dirName,
+                       const std::string& fileNamePrefix,
+                       time_t rollingInterval);
+  ~MCAEventsFileStorage();
+
+  virtual void addEvent(const Event_GotMissedCall& event);
+  virtual void addEvent(const Event_MissedCallInfoDelivered& event);
+  virtual void addEvent(const Event_MissedCallInfoDeliveringFailed& event);
+  virtual void addEvent(const Event_SendCallerNotification& event);
+  virtual void addEvent(const Event_DeleteMissedCallInfo& event);
+  virtual void addEvent(const Event_ChangeAbonentProfile& event);
+private:
   template <class EVENT>
-  void addEvent(const EVENT& event) {
-    smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("mcastrg");
-    smsc_log_info(logger, "MCAEventsStorage::addEvent::: write event [%s]", event.toString().c_str());
+  void _addEvent(const EVENT& event) {
+    smsc_log_info(_logger, "MCAEventsStorage::_addEvent::: write event [%s]", event.toString().c_str());
     smsc::core::synchronization::MutexGuard synchronize(_lock);
     rollLoggingFileIfNeeded();
     fprintf(_eventFileFD, "%s\n", event.toString().c_str());
   }
 
-private:
   std::string calculateTimeStamp(time_t curTime) const;
   void rollLoggingFileIfNeeded();
   void formLogFileNameAndOpenIt(time_t curTime);
@@ -148,6 +165,17 @@ private:
   std::string _fileNamePrefix, _logFileName, _cvsFileName;
   time_t _rollingInterval, _lastRollingTime;
   smsc::core::synchronization::Mutex _lock;
+  smsc::logger::Logger* _logger;
+};
+
+class FakeMCAEventsStorage : public  MCAEventsStorage {
+public:
+  virtual void addEvent(const Event_GotMissedCall& event) {}
+  virtual void addEvent(const Event_MissedCallInfoDelivered& event) {}
+  virtual void addEvent(const Event_MissedCallInfoDeliveringFailed& event) {}
+  virtual void addEvent(const Event_SendCallerNotification& event) {}
+  virtual void addEvent(const Event_DeleteMissedCallInfo& event) {}
+  virtual void addEvent(const Event_ChangeAbonentProfile& event) {}
 };
 
 class MCAEventsStorageRegister {
