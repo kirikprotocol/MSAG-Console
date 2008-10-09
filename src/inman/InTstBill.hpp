@@ -196,6 +196,7 @@ public:
         op.setCallingSMEid("MAP_PROXY");
         op.setRouteId("sibinco.sms > plmn.kem");
         op.setServiceId(1234);
+        op.setServiceType("InTst");
         op.setUserMsgRef(++_msg_ref);
         op.setMsgId(++_msg_id);
         op.setServiceOp(dlg_cfg->ussdOp ? 0 : -1);

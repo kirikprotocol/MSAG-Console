@@ -1,5 +1,9 @@
-#ident "$Id$"
+/* ************************************************************************* *
+ * INMan CSV file record definition. Contains all required info for CDR
+ * generation (external postprocessing, out of INMan scope).
+ * ************************************************************************* */
 #ifndef _SMSC_INMAN_CDR_UTIL_H
+#ident "@(#)$Id$"
 #define _SMSC_INMAN_CDR_UTIL_H
 
 #include <string>
@@ -59,7 +63,8 @@ struct CDRRecord {
     uint32_t        _smsXMask;      //mask of pack of SMS Extra services
     ContractType    _contract;      //sender contract type
     ChargingPolicy  _chargePolicy;  //
-    bool            _inBilled;      //message was billed by IN platform                                    
+    bool            _inBilled;      //message was billed by IN platform
+    std::string     _dsmSrvType;    //SMPP DATA_SM service type
 //private: not written to CSV
     ChargingType    _chargeType;    //MO or MT charging
     enum {              //indicates which fields are fullfilled;

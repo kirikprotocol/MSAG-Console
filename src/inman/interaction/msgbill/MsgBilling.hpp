@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * INMan SMS/USSD messages charging protocol PDUs definition.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_BILLING_MESSAGES__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_BILLING_MESSAGES__
 
 #include "inman/interaction/messages.hpp"
@@ -111,6 +111,9 @@ public:
     inline void setRouteId(const std::string & route_id)
         { routeId = route_id; }
     inline void setServiceId(int32_t service_id)   { serviceId = service_id; }
+    //sets SMPP DATA_SM service type
+    inline void setServiceType(const std::string & service_type)
+                                                   { dsmSrvType = service_type; }
     inline void setUserMsgRef(uint32_t msg_ref)    { userMsgRef = msg_ref; }
     inline void setMsgId(uint64_t msg_id)          { msgId = msg_id; }
     inline void setServiceOp(int32_t service_op)   { ussdServiceOp = service_op; }
@@ -157,6 +160,7 @@ private:
     //
     uint32_t      smsXSrvsId;
     bool          mtBill;       //charge the dstSubscriber instead of calling one
+    std::string   dsmSrvType;   //SMPP DATA_SM service type
 };
 
 //NOTE: in case of CAP3 error, this command ends the TCP dialog.

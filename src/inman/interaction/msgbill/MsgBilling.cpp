@@ -77,6 +77,7 @@ void ChargeSms::load(ObjectBuffer& in) throw(SerializerException)
     unsigned char cm;
     in >> cm;
     chrgPolicy = static_cast<CDRRecord::ChargingPolicy>(cm);
+    in >> dsmSrvType;
 }
 
 void ChargeSms::save(ObjectBuffer& out) const
@@ -105,6 +106,7 @@ void ChargeSms::save(ObjectBuffer& out) const
     out << partsNum;
     out << msgLen;
     out << ((unsigned char)chrgPolicy);
+    out << dsmSrvType;
 }
 
 void ChargeSms::export2CDR(CDRRecord & cdr) const
@@ -123,6 +125,7 @@ void ChargeSms::export2CDR(CDRRecord & cdr) const
 
     cdr._routeId = routeId;
     cdr._serviceId = serviceId;
+    cdr._dsmSrvType = dsmSrvType;
     cdr._userMsgRef = userMsgRef;
 
     cdr._dstAdr = dstSubscriberNumber;
