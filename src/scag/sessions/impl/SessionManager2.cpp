@@ -243,7 +243,6 @@ int SessionManagerImpl::Execute()
     // MutexGuard mg(expireMonitor_);
     bool alldone = true;
     bool started = true;
-    EventMonitor dummy;
     while( true ) {
 
         ExpireList* list = 0;

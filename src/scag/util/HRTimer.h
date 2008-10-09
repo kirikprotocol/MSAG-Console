@@ -53,26 +53,49 @@ private:
 class HRTiming
 {
 public:
-    HRTiming( HRTiming* inhrt = 0 ) : result_(0) {
+    /// ctor for grandparent
+    HRTiming( std::string& res, unsigned resolution = 1000 /* ns */ ) :
+    parent_(0), result_(&res), resol_(resolution) {}
+
+    /// ctor for child
+    HRTiming( HRTiming* inhrt = 0 ) : parent_(inhrt), result_(0) {
         if ( inhrt ) {
             result_ = inhrt->result_;
             resol_ = inhrt->resol_;
+            timer_ = inhrt->timer_;
+        } else {
+            resol_ = 1000;
         }
     }
 
-    HRTiming( std::string& res, unsigned resolution = 1000 /* ns */ ) : result_(&res), resol_(resolution) {}
-
+    /*
     void reset( HRTiming* inhrt = 0 ) {
+        parent_ = inhrt;
         if ( inhrt ) {
             timer_ = inhrt->timer_;
             result_ = inhrt->result_;
             resol_ = inhrt->resol_;
-        } else {
+        } else if (result_) {
+            result_->erase();
             timer_.mark();
         }
     }
+     */
 
-    void mark( const char* where ) {
+    /// reset for grandparent
+    void reset( std::string& res, unsigned resol = 1000 ) {
+        result_ = &res;
+        resol_ = resol;
+        result_->erase();
+        timer_.mark();
+    }
+
+    inline bool isValid() const {
+        return result_;
+    }
+    
+    inline void mark( const char* where ) {
+        if ( ! result_ ) return;
         const size_t l = strlen( where ) + 30;
         char buf[ l ];
         unsigned tm = unsigned(timer_.get() / resol_);
@@ -82,7 +105,24 @@ public:
         }
     }
 
+    inline void comment( const char* what ) {
+        if ( ! result_ ) return;
+        result_->append( what );
+    }
+
+    /// NOTE: use if isValid() only
+    inline const std::string& result() const {
+        return *result_;
+    }
+
+    /// stop the chain timing
+    inline void stop() {
+        if ( parent_ ) parent_->stop();
+        result_ = 0;
+    }
+
 private:
+    HRTiming*    parent_;
     HRTimer      timer_;
     std::string* result_;  // where we keep results (not owned)
     unsigned     resol_;   // resolution (ns)

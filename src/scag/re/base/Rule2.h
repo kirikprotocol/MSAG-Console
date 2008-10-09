@@ -17,6 +17,10 @@ namespace transport {
 class SCAGCommand;
 }
 
+namespace util {
+class HRTiming;
+}
+
 
 namespace re {
 
@@ -67,7 +71,8 @@ public:
      * @param   command     command to process
      * @return  status      rule's handler execution status
      */
-    virtual void process(SCAGCommand& command, sessions::Session& session, RuleStatus& rs);
+    virtual void process( SCAGCommand& command, sessions::Session& session,
+                          RuleStatus& rs, util::HRTiming* hrt = 0 );
     virtual void processSession(sessions::Session& session, RuleStatus& rs);
 
     Rule(): useCounter(1), transportType(SMPP),logger(0) {logger = Logger::getInstance("scag.re");};

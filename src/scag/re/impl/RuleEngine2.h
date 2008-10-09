@@ -40,7 +40,7 @@ public:
     virtual ActionFactory& getActionFactory() {return factory;}
     virtual void updateRule(RuleKey& key);
     virtual void removeRule(RuleKey& key);
-    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTimer* hrt = 0);
+    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* hrt = 0);
     virtual void processSession(Session& session, RuleStatus& rs);
 
     virtual Hash<TransportType> getTransportTypeHash() {return TransportTypeHash;}

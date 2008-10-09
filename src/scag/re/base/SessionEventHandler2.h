@@ -10,7 +10,7 @@ namespace re {
 class SessionEventHandler : public EventHandler
 {
 public:
-    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs);
+    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* hrt = 0 );
     void _process(Session& session, RuleStatus& rs);
     
     virtual int StrToHandlerId(const std::string& str); //Method return HandlerId from string

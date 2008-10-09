@@ -8,12 +8,15 @@
 #include "LongCallAction2.h"
 
 namespace scag2 {
+
 namespace sessions {
 class SessionPrimaryKey;
 }
+
+namespace util {
+class HRTiming;
 }
 
-namespace scag2 {
 namespace re {
 
 using transport::SCAGCommand;
@@ -48,7 +51,7 @@ public:
     virtual ~EventHandler();
 
     virtual void init(const SectionParams& params,PropertyObject _propertyObject) {propertyObject = _propertyObject;}
-    virtual void process( SCAGCommand& command,Session& session, RuleStatus& rs ) = 0;
+    virtual void process( SCAGCommand& command,Session& session, RuleStatus& rs, util::HRTiming* hrt = 0 ) = 0;
     virtual int StrToHandlerId(const std::string& str) = 0;
 
 };

@@ -10,7 +10,7 @@ namespace re {
 
 using namespace session;
 
-void SessionEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs) { _process(session, rs); };
+void SessionEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* ) { _process(session, rs); };
 
 void SessionEventHandler::_process(Session& session, RuleStatus& rs)
 {

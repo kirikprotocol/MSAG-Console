@@ -5,15 +5,17 @@
 #include "RuleEngine2.h"
 #include "scag/sessions/base/Operation.h"
 #include "scag/bill/base/BillingManager.h"
+#include "scag/util/HRTimer.h"
 
 namespace scag2 {
 namespace re {
 
 using namespace smpp;
 
-void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStatus& rs )
+void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* inhrt )
 {
     // smsc_log_debug(logger, "Process EventHandler...");
+    util::HRTiming hrt(inhrt);
 
     SmppCommand& smppcommand = static_cast<SmppCommand&>(command);
     SmppCommandAdapter _command(smppcommand);
@@ -73,6 +75,7 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
                     					  &session, &_command, &commandProperty, &rs);
     	session.getLongCallContext().setActionContext(actionContext);
     }
+    hrt.mark("ev.prep");
     
     try {
         RunActions(*actionContext);
@@ -83,6 +86,7 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
         smsc_log_error(logger, "EventHandler: error in actions processing. Details: %s", e.what());
         rs.status = STATUS_FAILED;
     }
+    hrt.mark("ev.run");
 
     if ( newevent ) {
         const std::string* kw = 
@@ -102,6 +106,7 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
         rs.status = STATUS_FAILED;
         smsc_log_debug( logger, "Command status=%d(%x) overrides RE status", rs.result, rs.result );
     }
+    hrt.mark("ev.post");
     return;
 }
 

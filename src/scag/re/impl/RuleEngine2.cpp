@@ -185,17 +185,13 @@ std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const Rule
 }
 
 void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus& rs,
-                              util::HRTimer* inhrt )
+                              util::HRTiming* inhrt )
 {
-    util::HRTimer hrt;
-    hrtime_t timerref, timerule, timeinit, timeexec, timeexit;
-    if ( inhrt ) hrt = *inhrt;
+    util::HRTiming hrt(inhrt);
 
     RulesReference rulesRef = getRules();
     // smsc_log_debug(logger,"Process RuleEngine (total=%u) with serviceId: %d",
     // rulesRef.rules->rules.Count(), command.getServiceId());
-
-    if ( inhrt ) timerref = hrt.get();
 
     RuleKey key;
     key.serviceId = command.getServiceId();
@@ -213,7 +209,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
             rulePtr = rp ? *rp : 0;
         }
 
-        if ( inhrt ) timerule = hrt.get();
+        hrt.mark( "re.getrul" );
 
         if ( session.isNew( key.serviceId, key.transport ) ) { // fake while
 
@@ -225,17 +221,19 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
                     session.dropInitRuleKey( key.serviceId, key.transport );
                     // session.setNew( key.serviceId, key.transport, false );
                 }
-                if ( rs.status != STATUS_OK ) break;
+                if ( rs.status != STATUS_OK ) {
+                    hrt.stop();
+                    break;
+                }
             }
             session.setNew( key.serviceId, key.transport, false );
 
+            hrt.mark("re.sess");
         }
         
-        if ( inhrt ) timeinit = hrt.get();
+        if ( rulePtr ) rulePtr->process( command, session, rs, &hrt );
 
-        if ( rulePtr ) rulePtr->process( command, session, rs );
-
-        if ( inhrt ) timeexec = hrt.get();
+        hrt.mark("re.proc");
 
         // check if we need to destroy the service
         actions::ActionContext* ac = session.getLongCallContext().getActionContext();
@@ -251,15 +249,8 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
     if ( rs.status == STATUS_LONG_CALL && rulePtr ) {
         // session.getLongCallContext().continueExec = true;
         session.getLongCallContext().getActionContext()->setRule( *rulePtr );
-    }
-    else if ( inhrt ) {
-        timeexit = hrt.get();
-        smsc_log_info( logger, "timing(us): rref=%u rule=%u init=%u exec=%u exit=%u",
-                       unsigned(timerref/1000),
-                       unsigned(timerule/1000),
-                       unsigned(timeinit/1000),
-                       unsigned(timeexec/1000),
-                       unsigned(timeexit/1000) );
+    } else {
+        hrt.mark("re.post");
     }
     // else 
     // smsc_log_debug(logger,"rule for serv=%d, trans=%d not found, ok", key.serviceId, key.transport );

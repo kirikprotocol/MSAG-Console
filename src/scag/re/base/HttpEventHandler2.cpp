@@ -150,7 +150,7 @@ void HttpEventHandler::newEvent( ActionContext& ctx )
 }
 
 
-void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs)
+void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* )
 {
     smsc_log_debug(logger, "Process HttpEventHandler...");
 

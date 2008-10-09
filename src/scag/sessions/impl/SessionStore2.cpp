@@ -7,12 +7,10 @@
 #include "scag/sessions/base/SessionExpirationQueue.h"
 #include "scag/util/UnlockMutexGuard.h"
 #include "scag/util/Print.h"
-#include "scag/util/HRTimer.h"
 
 namespace scag2 {
 namespace sessions {
 
-using util::HRTimer;
 using namespace transport;
 using namespace scag::util::storage;
 using scag::util::UnlockMutexGuard;
@@ -187,15 +185,11 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                                               std::auto_ptr<SCAGCommand>& cmd,
                                               bool                        create )
 {
-    static unsigned passcount = 0;
-    bool dotiming = ((++passcount % 10) == 0);
     SCAGCommand* cmdaddr = cmd.get();
     if ( ! cmdaddr ) return ActiveSession();
 
     const char* what = "";
     int sqsz=-1;
-    HRTimer hrt;
-    if ( dotiming ) hrt.mark();
     Session* session = cmd->getSession();
     if ( session ) {
         // fast access to session, w/o locking mutex
@@ -330,9 +324,8 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     }
 
     // smsc_log_debug( log_, "fetched key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
-    const unsigned tmus = dotiming ? unsigned(hrt.get()/1000) : 0;
-    smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p tm=%u qsz=%d%s",
-                    key.toString().c_str(), cmdaddr, create ? 1:0, session, tmus, sqsz, what );
+    smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p qsz=%d%s",
+                    key.toString().c_str(), cmdaddr, create ? 1:0, session, sqsz, what );
 
     if ( session )
         return makeLockedSession(*session,*cmd.get());
@@ -343,11 +336,6 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
 
 void SessionStoreImpl::releaseSession( Session& session )
 {
-    static unsigned passcount = 0;
-    bool dotiming = ((++passcount % 10) == 0);
-    HRTimer hrt;
-    if ( dotiming ) hrt.mark();
-
     // NOTE: key should not be a reference, as session may be destroyed at the end of the method
     const SessionKey key = session.sessionKey();
 
@@ -437,9 +425,8 @@ void SessionStoreImpl::releaseSession( Session& session )
     // commands are owned elsewhere
     // delete prevcmd;
 
-    const unsigned tmus = dotiming ? unsigned(hrt.get()/1000) : 0;
-    smsc_log_debug( log_, "releaseSession(session=%p/%s) => tm=%u prevcmd=%u nextcmd=%u, tot/lck=%u/%u",
-                    &session, key.toString().c_str(), tmus, prevuid, nextuid, tot, lck );
+    smsc_log_debug( log_, "releaseSession(session=%p/%s) => prevcmd=%u nextcmd=%u, tot/lck=%u/%u",
+                    &session, key.toString().c_str(), prevuid, nextuid, tot, lck );
 
     if ( ! (nextcmd && carryNextCommand( session, nextcmd, true)) )
         expiration_->scheduleExpire(expiration,lastaccess,key);

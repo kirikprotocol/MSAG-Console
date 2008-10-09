@@ -15,7 +15,7 @@ namespace sessions {
 }
 
 namespace util {
-    class HRTimer;
+    class HRTiming;
 }
 
 namespace re {
@@ -32,7 +32,7 @@ public:
     // static void Init(const std::string& dir);
     static RuleEngine& Instance();
 
-    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTimer* hrt = 0 ) = 0;
+    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* hrt = 0 ) = 0;
 
     /// NOTE: this method is invoked (directly) for session destruction only!
     virtual void processSession(Session& session, RuleStatus& rs) = 0;

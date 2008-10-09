@@ -28,7 +28,7 @@ using namespace smsc::core::buffers;
 std::vector<int> StateMachine::allowedUnknownOptionals;
 
 const uint32_t MAX_REDIRECT_CNT = 10;
-const unsigned TIMERFREQ = 4;
+const unsigned TIMINGFREQ = 4;
 
 struct StateMachine::ResponseRegistry
 {
@@ -199,9 +199,14 @@ bool StateMachine::expProc_ = false;
 int StateMachine::Execute()
 {
     SmppCommand* cmd;
+    std::string hrresult;
+    hrresult.reserve(256);
+    util::HRTiming hrt;
+    unsigned passcount = 0;
     while(!isStopping)
     {
         try{
+
             while(queue_->getCommand(cmd))
             {
                 if ( !cmd ) continue;
@@ -215,21 +220,37 @@ int StateMachine::Execute()
                                    cmd->getEntity() ? cmd->getEntity()->getSystemId():"" );
                 }
 
+                const bool dotiming = ( ++passcount % TIMINGFREQ ) == 0;
+                if ( dotiming ) hrt.reset( hrresult, 1000 );
+                bool realdotiming = false;
                 switch(cmd->getCommandId())
                 {
-                case SUBMIT:              processSubmit(aucmd);             break;
-                case SUBMIT_RESP:         processSubmitResp(aucmd);         break;
+                case SUBMIT: {
+                    processSubmit(aucmd, dotiming ? &hrt : 0);
+                    realdotiming = dotiming && hrt.isValid();
+                    break;
+                }
+                case SUBMIT_RESP: {
+                    processSubmitResp(aucmd);
+                    break;
+                }
                 case DELIVERY: {
                     if ( cmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT) )
                         sendReceipt(aucmd);
-                    else
-                        processDelivery(aucmd);
+                    else {
+                        processDelivery(aucmd, dotiming ? &hrt : 0 );
+                        realdotiming = dotiming && hrt.isValid();
+                    }
                     break;
                 }
                 case DELIVERY_RESP:
                     processDeliveryResp(aucmd);
                     break;
-                case DATASM:              processDataSm(aucmd);             break;
+                case DATASM: {
+                    processDataSm(aucmd, dotiming ? &hrt : 0);
+                    realdotiming = dotiming && hrt.isValid();
+                    break;
+                }
                 case DATASM_RESP:         processDataSmResp(aucmd);         break;
                 case PROCESSEXPIREDRESP:  processExpiredResps();            break;
                 case ALERT_NOTIFICATION:  processAlertNotification(aucmd);  break;
@@ -237,8 +258,13 @@ int StateMachine::Execute()
                     smsc_log_warn(log_,"Unprocessed command %p id %d", cmd, cmd->getCommandId());
                     break;
                 }
+
+                if ( realdotiming ) {
+                    hrt.mark( "stm.endloop" );
+                    smsc_log_info(log_, "timing:%s", hrt.result().c_str() );
+                }
             }
-        }catch(std::exception& e)
+        } catch(std::exception& e)
             {
                 smsc_log_error(log_,"Exception in state machine:%s",e.what());
             }
@@ -343,16 +369,15 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
 }
 
 
-void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
+void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* inhrt )
 {
-    static unsigned passcount = 0;
-    bool dotiming = (( ++passcount % TIMERFREQ ) == 0 );
-    HRTimer hrt;
-    if (dotiming) hrt.mark();
-    hrtime_t timeprep, timeroute, timesess, timerule, timesend;
     const char* where = "Submit";
     SmppCommand* cmd = aucmd.get();
     if ( ! cmd ) return;
+
+    util::HRTiming hrt( inhrt );
+    hrt.comment( where );
+
     smsc_log_debug(log_, "%s: got cmd=%p cmd->serial=%u cmd->sess=%p%s",
                    where,
                    cmd,
@@ -381,8 +406,6 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
     bool routeset = smscmd.hasRouteSet();
     int statevent = stat::events::smpp::GW_REJECTED;
 
-    if ( dotiming ) timeprep = hrt.get();
-
     do { // rerouting loop
 
         st.status = re::STATUS_OK;
@@ -396,7 +419,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
                 ri = router::RouteInfo();
                 st.status = re::STATUS_FAILED;
                 st.result = smsc::system::Status::NOROUTE;
-                dotiming = false;
+                hrt.stop();
                 break;
                 // SubmitResp(aucmd, smsc::system::Status::NOROUTE);
                 // registerEvent( stat::events::smpp::REJECTED, src, dst, NULL, smsc::system::Status::NOROUTE);
@@ -431,7 +454,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
                                   sms.getDestinationAddress().toString().c_str());
                     st.status = re::STATUS_FAILED;
                     // st.result = smsc::system::Status::NOROUTE;
-                    dotiming = false;
+                    hrt.stop();
                     break;
                 }
             }
@@ -448,7 +471,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
             routeId = sms.getRouteId();
         }
 
-        if ( dotiming ) timeroute = hrt.get();
+        hrt.mark( "stm.route" );
 
         smsc_log_debug( log_, "%s%s: %s, USSD_OP=%d. %s(%s)->%s, routeId=%s%s",
                        where,
@@ -461,7 +484,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
                        ri.transit ? "(transit)" : "");
 
         if ( ri.transit ) {
-            dotiming = false;
+            hrt.stop();
             break;
         }
 
@@ -471,20 +494,22 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
             session = sm.getSession( key, aucmd, ! routeset ); // NOTE: create session only if not from longcall
             if ( ! session.get() ) {
                 __require__( ! routeset );
+                hrt.stop();
                 return; // locked
             }
         }
 
-        if ( dotiming ) timesess = hrt.get();
+        hrt.mark( "stm.getsess" );
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
-        opmaker.process( st, dotiming ? &hrt : 0 );
+        opmaker.process( st, &hrt );
         if ( st.status == re::STATUS_LONG_CALL ) {
             smscmd.setRouteInfo( ri );
+            hrt.stop();
             return;
         }
 
-        if ( dotiming ) timerule = hrt.get();
+        hrt.mark("stm.rerule");
 
         routeset = false; // in case rerouting happens
 
@@ -506,6 +531,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         SubmitResp(aucmd, st.result);
         registerEvent( statevent, src, dst, (char*)routeId, st.result );
         if ( session.get() ) session->closeCurrentOperation();
+        hrt.stop();
         return;
     }
 
@@ -513,23 +539,15 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd)
         sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smscmd.original_ussd_op);
     failed = putCommand(SUBMIT, src, dst, ri, aucmd);
 
-    if ( dotiming ) timesend = hrt.get();
+    hrt.mark("stm.putcmd");
 
     if (session.get()) session->getLongCallContext().runPostProcessActions();
 
-    if ( dotiming ) {
-        smsc_log_info( log_, "%s: timing(us): prep=%u route=%u sess=%u rule=%u send=%u", where,
-                       unsigned(timeprep/1000),
-                       unsigned(timeroute/1000),
-                       unsigned(timesess/1000),
-                       unsigned(timerule/1000),
-                       unsigned(timesend/1000) );
-    } else {
-        smsc_log_debug(log_, "%s: processed", where );
-    }
+    smsc_log_debug(log_, "%s: processed", where );
 
     if (failed)
     {
+        hrt.comment("/failed");
         std::auto_ptr<SmppCommand> resp(SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),failed));
         resp->setEntity(dst);
         resp->get_resp()->setOrgCmd( aucmd.release() );
@@ -758,16 +776,15 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
 }
 
 
-void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
+void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd, util::HRTiming* inhrt )
 {
-    static unsigned passcount = 0;
-    bool dotiming = ((++passcount % TIMERFREQ) == 0);
-    HRTimer hrt;
-    if (dotiming) hrt.mark();
-    hrtime_t timeprep, timeroute, timesess, timerule, timesend;
-    const char* where = "Delivery";
+    const char* where = "Dlvery";
     SmppCommand* cmd = aucmd.get();
     if ( ! cmd ) return;
+
+    util::HRTiming hrt( inhrt );
+    hrt.comment( where );
+
     smsc_log_debug(log_, "%s: got cmd=%p cmd->serial=%u cmd->sess=%p%s",
                    where,
                    cmd,
@@ -795,8 +812,6 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
     bool routeset = smscmd.hasRouteSet();
     int statevent = stat::events::smpp::GW_REJECTED;
 
-    if ( dotiming ) timeprep = hrt.get();
-
     do { // rerouting loop
 
         st.status = re::STATUS_OK;
@@ -810,7 +825,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
                 ri = router::RouteInfo();
                 st.status = re::STATUS_FAILED;
                 st.result = smsc::system::Status::NOROUTE;
-                dotiming = false;
+                hrt.stop();
                 break;
                 // DeliveryResp(aucmd, smsc::system::Status::NOROUTE);
                 // registerEvent( stat::events::smpp::REJECTED, src, dst, NULL, smsc::system::Status::NOROUTE);
@@ -845,7 +860,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
                                   src->getSystemId(),
                                   sms.getDestinationAddress().toString().c_str());
                     st.status = re::STATUS_FAILED;
-                    dotiming = false;
+                    hrt.stop();
                     break;
                 }
             }
@@ -862,7 +877,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
             routeId = sms.getRouteId();
         }
 
-        if ( dotiming ) timeroute = hrt.get();
+        hrt.mark("stm.route");
 
         smsc_log_debug( log_, "%s%s: %s USSD_OP=%d. %s(%s)->%s, routeId=%s%s",
                        where,
@@ -875,7 +890,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
                        ri.transit ? "(transit)" : "");
 
         if ( ri.transit ) {
-            dotiming = false;
+            hrt.stop();
             break;
         }
 
@@ -889,16 +904,17 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
             }
         }
 
-        if ( dotiming ) timesess = hrt.get();
+        hrt.mark("stm.getsess");
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
-        opmaker.process( st, dotiming ? &hrt : 0 );
+        opmaker.process( st, &hrt );
         if ( st.status == re::STATUS_LONG_CALL ) {
             smscmd.setRouteInfo( ri );
+            hrt.stop();
             return;
         }
 
-        if ( dotiming ) timerule = hrt.get();
+        hrt.mark("stm.rerule");
 
         routeset = false;
 
@@ -920,6 +936,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         DeliveryResp(aucmd,st.result);
         registerEvent(statevent, src, dst, (char*)routeId, st.result);
         if ( session.get() ) session->closeCurrentOperation();
+        hrt.stop();
         return;
     }
 
@@ -927,23 +944,15 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd)
         sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smscmd.original_ussd_op);
     failed = putCommand(DELIVERY, src, dst, ri, aucmd);
 
-    if ( dotiming ) timesend = hrt.get();
+    hrt.mark("stm.putcmd");
 
     if (session.get()) session->getLongCallContext().runPostProcessActions();
 
-    if ( dotiming ) {
-        smsc_log_info( log_, "%s: timing(us): prep=%u route=%u sess=%u rule=%u send=%u", where,
-                       unsigned(timeprep/1000),
-                       unsigned(timeroute/1000),
-                       unsigned(timesess/1000),
-                       unsigned(timerule/1000),
-                       unsigned(timesend/1000) );
-    } else {
-        smsc_log_debug(log_, "%s: processed", where );
-    }
+    smsc_log_debug(log_, "%s: processed", where );
 
     if (failed)
     {
+        hrt.comment("/failed");
         std::auto_ptr<SmppCommand> resp(SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),failed));
         resp->setEntity(dst);
         resp->get_resp()->setOrgCmd(aucmd.release());
@@ -1169,16 +1178,15 @@ void StateMachine::DataResp( std::auto_ptr<SmppCommand> aucmd,int status)
 }
 
 
-void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
+void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd, util::HRTiming* inhrt )
 {
-    static unsigned passcount = 0;
-    bool dotiming = ((++passcount % TIMERFREQ) == 0);
-    HRTimer hrt;
-    if (dotiming) hrt.mark();
-    hrtime_t timeprep, timeroute, timesess, timerule, timesend;
     const char* where = "DataSm";
     SmppCommand* cmd = aucmd.get();
     if ( ! cmd ) return;
+
+    util::HRTiming hrt( inhrt );
+    hrt.comment(where);
+
     smsc_log_debug(log_, "%s: got cmd=%p cmd->serial=%u cmd->sess=%p%s",
                    where,
                    cmd,
@@ -1206,6 +1214,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
                        sms.getDestinationAddress().toString().c_str());
         DataResp(aucmd,smsc::system::Status::USSDDLGREFMISM);
         registerEvent(stat::events::smpp::GW_REJECTED, src, NULL, NULL, smsc::system::Status::USSDDLGREFMISM);
+        hrt.stop();
         return;
     }
 
@@ -1214,8 +1223,6 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
 
     bool routeset = smscmd.hasRouteSet();
     int statevent = stat::events::smpp::GW_REJECTED;
-
-    if ( dotiming ) timeprep = hrt.get();
 
     do {
 
@@ -1252,7 +1259,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
                                   src->getSystemId(),
                                   sms.getDestinationAddress().toString().c_str());
                     st.status = re::STATUS_FAILED;
-                    dotiming = false;
+                    hrt.stop();
                     break;
                 }
             }
@@ -1274,7 +1281,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
             routeId = sms.getRouteId();
         }
 
-        if ( dotiming ) timeroute = hrt.get();
+        hrt.mark( "stm.route" );
 
         smsc_log_debug( log_, "%s%s: %s. %s(%s)->%s, routeid=%s%s",
                        where,
@@ -1287,7 +1294,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
                        ri.transit ? "(transit)" : "");
 
         if ( ri.transit ) {
-            dotiming = false;
+            hrt.stop();
             break;
         }
 
@@ -1299,20 +1306,22 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
             session = sm.getSession( key, aucmd, ! routeset );
             if ( ! session.get() ) {
                 __require__( ! routeset );
+                hrt.stop();
                 return; // locked
             }
         }
 
-        if ( dotiming ) timesess = hrt.get();
+        hrt.mark( "stm.getsess" );
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
-        opmaker.process(st, dotiming ? &hrt : 0 );
+        opmaker.process(st, &hrt);
         if ( st.status == re::STATUS_LONG_CALL ) {
             smscmd.setRouteInfo( ri );
+            hrt.stop();
             return;
         }
 
-        if ( dotiming ) timerule = hrt.get();
+        hrt.mark( "stm.rerule" );
 
         routeset = false;
 
@@ -1334,28 +1343,21 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd)
         DataResp(aucmd, st.result);
         registerEvent( statevent, src, dst, (char*)ri.routeId, st.result);
         if ( session.get() ) session->closeCurrentOperation();
+        hrt.stop();
         return;
     }
 
     failed = putCommand(DATASM, src, dst, ri, aucmd);
 
-    if ( dotiming ) timesend = hrt.get();
+    hrt.mark("stm.putcmd");
 
     if (session.get()) session->getLongCallContext().runPostProcessActions();
 
-    if ( dotiming ) {
-        smsc_log_info( log_, "%s: timing(us): prep=%u route=%u sess=%u rule=%u send=%u", where,
-                       unsigned(timeprep/1000),
-                       unsigned(timeroute/1000),
-                       unsigned(timesess/1000),
-                       unsigned(timerule/1000),
-                       unsigned(timesend/1000) );
-    } else {
-        smsc_log_debug(log_, "%s: processed", where );
-    }
+    smsc_log_debug(log_, "%s: processed", where );
 
     if (failed)
     {
+        hrt.comment("/failed");
         std::auto_ptr<SmppCommand> resp(SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),failed));
         resp->setEntity(dst);
         resp->get_resp()->setOrgCmd(aucmd.release());

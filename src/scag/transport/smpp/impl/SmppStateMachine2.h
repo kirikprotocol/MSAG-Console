@@ -10,6 +10,11 @@
 #include "logger/Logger.h"
 
 namespace scag2 {
+
+namespace util {
+class HRTiming;
+}
+
 namespace transport {
 namespace smpp {
 
@@ -32,9 +37,9 @@ public:
     }
 
 protected:
-    void processSubmit( std::auto_ptr<SmppCommand> aucmd);
-    void processDelivery( std::auto_ptr<SmppCommand> aucmd);
-    void processDataSm( std::auto_ptr<SmppCommand> aucmd);
+    void processSubmit( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* hrt );
+    void processDelivery( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* hrt );
+    void processDataSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* hrt );
     void processExpiredResps();
     void processAlertNotification( std::auto_ptr<SmppCommand> aucmd);
     void processSubmitResp( std::auto_ptr<SmppCommand> cmd,

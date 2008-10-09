@@ -32,7 +32,7 @@ Rule::~Rule()
 }
 
 
-void Rule::process(SCAGCommand& command, Session& session, RuleStatus& rs)
+void Rule::process( SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* inhrt )
 {
     // smsc_log_debug(logger,"Process Rule... (%d Event Handlers registered)", Handlers.Count());
 
@@ -55,7 +55,7 @@ void Rule::process(SCAGCommand& command, Session& session, RuleStatus& rs)
         if(Handlers.Exist(handlerType)) 
         {
             EventHandler * eh = Handlers.Get(handlerType);
-            eh->process(command, session, rs);
+            eh->process(command, session, rs, inhrt );
             if(rs.status == STATUS_OK)
                 session.getLongCallContext().continueExec = false;
             return;

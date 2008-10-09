@@ -31,24 +31,22 @@ log_(logger)
 
 
 
-void SmppOperationMaker::process( re::RuleStatus& st, util::HRTimer* inhrt )
+void SmppOperationMaker::process( re::RuleStatus& st, util::HRTiming* inhrt )
 {
-    hrtime_t timepre, timeproc, timepost;
-    util::HRTimer hrt;
-    if ( inhrt ) hrt = *inhrt;
+    util::HRTiming hrt(inhrt);
     try {
         do {
             setupOperation( st );
-            if ( inhrt ) timepre = hrt.get();
+            hrt.mark("opmk.mkop");
             if ( st.status != re::STATUS_OK ) break;
         
             smsc_log_debug(log_, "%s: RuleEngine processing...", where_ );            
-            re::RuleEngine::Instance().process( *cmd_.get(), *session_.get(), st, inhrt );
-            if ( inhrt ) timeproc = hrt.get();
+            re::RuleEngine::Instance().process( *cmd_.get(), *session_.get(), st, &hrt );
+            hrt.mark("opmk.exec");
             smsc_log_debug(log_, "%s: RuleEngine processed: st.status=%d st.result=%d cmd.stat=%d",
                            where_, st.status, st.result, cmd_->get_status() );
             postProcess( st );
-            if ( inhrt ) timepost = hrt.get();
+            hrt.mark("opmk.post");
 
             if ( st.status == re::STATUS_LONG_CALL ) {
                 smsc_log_debug( log_, "%s: long call initiate", where_ );
@@ -70,11 +68,6 @@ void SmppOperationMaker::process( re::RuleStatus& st, util::HRTimer* inhrt )
             }
 
         } while ( false );
-
-        if ( inhrt ) smsc_log_info( log_, "%s: RE timing(us): pre=%u proc=%u post=%u", where_,
-                                    unsigned(timepre/1000),
-                                    unsigned(timeproc/1000),
-                                    unsigned(timepost/1000) );
 
     } catch ( std::exception& e ) {
         // smsc_log_warn( log_, "%s: exception in opmaker: %s", where, e.what() );
