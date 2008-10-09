@@ -68,10 +68,8 @@
     <section name="Personalization">
         <param name="host" type="string">@pers.connect_host@</param>
         <param name="port" type="int">@pers.port@</param>
-        <param name="ioTimeout" type="int">@pers_client.io_timeout@</param> <!--in miliseconds-->
-        <param name="pingTimeout" type="int">@pers_client.ping_timeout@</param> <!--in seconds-->
-        <param name="reconnectTimeout" type="int">@pers_client.reconnect_timeout@</param> <!--in seconds-->
-        <param name="maxWaitingRequestsCount" type="int">@pers_client.max_waiting_requests_count@</param>
+        <param name="timeout" type="int">@pers.io_timeout@</param>
+        <param name="pingTimeout" type="int">@pers.ping_timeout@</param>
     </section>
 
     <section name="LongCallManager">
