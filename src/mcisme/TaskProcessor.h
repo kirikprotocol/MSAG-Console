@@ -33,7 +33,8 @@
 
 #include <system/smscsignalhandlers.h>
 
-//#include "Tasks.h"
+#include <mcisme/OutputMessageProcessorsDispatcher.hpp>
+
 #include "MCIModule.h"
 #include "MCISmeAdmin.h"
 #include "TemplateManager.h"
@@ -54,13 +55,12 @@ using namespace smsc::misscall;
 using namespace smsc::core::synchronization;
 using namespace smsc::core::buffers;
 using namespace smsc::core::threads;
-//using namespace smsc::db;
 
 using smsc::logger::Logger;
 using smsc::util::config::Manager;
 using smsc::util::config::ConfigView;
 using smsc::util::config::ConfigException;
-using scag::advert::Advertising;
+
 using namespace std;
 
 struct MessageSender
@@ -82,6 +82,7 @@ struct sms_info
   vector<MCEvent> events;
 };
 
+class OutputMessageProcessor;
 class TimeoutMonitor;
 
 class TaskProcessor : public Thread, public MissedCallListener, public AdminInterface
@@ -91,7 +92,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   smsc::logger::Logger *logger;
 
   int              protocolId, daysValid;
-  std::string      svcType, address;
+  std::string      svcType, svcTypeOnLine, address;
 
   int              releaseCallsStrategy;
   int              stkTemplateId;
@@ -106,7 +107,6 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   MessageSender* messageSender;
 
   Advertising*   advertising;
-  bool           useAdvert;
 
   ProfilesStorage*   profileStorage;
   StatisticsManager* statistics;
@@ -131,20 +131,19 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   bool _originatingAddressIsMCIAddress;
   time_t _sendAbntOnlineNotificationPeriod; // expressed in seconds
 
+  OutputMessageProcessorsDispatcher* _outputMessageProcessorsDispatcher;
+
   void openInQueue();
   void closeInQueue();
   bool putToInQueue(const MissedCallEvent& event, bool skip=true);
   bool getFromInQueue(MissedCallEvent& event);
-  string getBanner(const AbntAddr& abnt);
 
-  void ProcessAbntEvents(const AbntAddr& abnt);
   bool GetAbntEvents(const AbntAddr& abnt, vector<MCEvent>& events);
   void SendAbntOnlineNotifications(const sms_info* pInfo,
                                    const AbonentProfile& profile);
 
   bool needNotify(const AbonentProfile& profile, const sms_info* pInfo) const;
 
-  bool originatingAddressIsMCIAddress() const { return _originatingAddressIsMCIAddress; }
   bool sendMessage(const AbntAddr& abnt, const Message& msg, const MCEventOut& outEvent);
 
   void store_D_Event_in_logstore(const AbntAddr& abnt,
@@ -166,10 +165,13 @@ public:
   TaskProcessor(ConfigView* config);
   virtual ~TaskProcessor();
 
+  void ProcessAbntEvents(const AbntAddr& abnt, OutputMessageProcessor* bannerEngineProxy=NULL);
+
   int getDaysValid()       { return daysValid;  }
   int getProtocolId()      { return protocolId; }
 
-  const char* getSvcType() { return (svcType.c_str()!="") ? svcType.c_str():"MCISme"; }
+  const char* getSvcType() const { return (svcType.c_str()!="") ? svcType.c_str():"MCISme"; }
+  const char* getSvcTypeOnLine() const { return (svcTypeOnLine.c_str()!="") ? svcTypeOnLine.c_str():"MCISme"; }
   const std::string& getAddress() const { return address; }
 
   void assignMessageSender(MessageSender* sender) {
