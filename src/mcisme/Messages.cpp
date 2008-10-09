@@ -214,9 +214,7 @@ MessageFormatter::produceMessageForAbonent(const std::string& toAbnt,
 
 void MessageFormatter::addBanner(Message& message, const string& banner)
 {
-  if( (message.abonent == "+79139139704") || (message.abonent == "+79137141001") || (message.abonent == "+79139419998") || (message.abonent == "+79139064438")) message.message += "Privet ot MikeR!"; else
-	
-    message.message += " " + banner;
+  message.message += " " + banner;
   int hibit = hasHighBit(message.message.c_str(), message.message.length()); 
   if(message.message.length() > MAX_MSG_LENS[hibit])
     message.message.resize(MAX_MSG_LENS[hibit]);
