@@ -85,23 +85,24 @@ Event_ChangeAbonentProfile::toString() const
   return obuf.str();
 }
 
-MCAEventsStorage::MCAEventsStorage(const std::string& dirName,
-                                   const std::string& fileNamePrefix,
-                                   time_t rollingInterval)
-  : _rollingInterval(rollingInterval), _lastRollingTime(time(0))
+MCAEventsFileStorage::MCAEventsFileStorage(const std::string& dirName,
+                                           const std::string& fileNamePrefix,
+                                           time_t rollingInterval)
+  : _rollingInterval(rollingInterval), _lastRollingTime(time(0)),
+    _logger(logger::Logger::getInstance("mcastrg"))
 {
   _fileNamePrefix = dirName + fileNamePrefix;
 
   formLogFileNameAndOpenIt(_lastRollingTime);
 }
 
-MCAEventsStorage::~MCAEventsStorage()
+MCAEventsFileStorage::~MCAEventsFileStorage()
 {
   fclose(_eventFileFD);
 }
 
 std::string
-MCAEventsStorage::calculateTimeStamp(time_t curTime) const
+MCAEventsFileStorage::calculateTimeStamp(time_t curTime) const
 {
   tm lcltm;
   char fileNameSuffix[64];
@@ -112,7 +113,7 @@ MCAEventsStorage::calculateTimeStamp(time_t curTime) const
 }
 
 void
-MCAEventsStorage::rollLoggingFileIfNeeded()
+MCAEventsFileStorage::rollLoggingFileIfNeeded()
 {
   time_t curTime = time(0);
   if ( curTime - _lastRollingTime < _rollingInterval )
@@ -121,7 +122,7 @@ MCAEventsStorage::rollLoggingFileIfNeeded()
   fclose(_eventFileFD);
 
   if ( rename(_logFileName.c_str(), _cvsFileName.c_str()) < 0 )
-    throw smsc::util::SystemError("MCAEventsStorage::rollLoggingFileIfNeeded::: call to rename() failed");
+    throw smsc::util::SystemError("MCAEventsFileStorage::rollLoggingFileIfNeeded::: call to rename() failed");
 
   _lastRollingTime = curTime;
 
@@ -129,7 +130,7 @@ MCAEventsStorage::rollLoggingFileIfNeeded()
 }
 
 void
-MCAEventsStorage::formLogFileNameAndOpenIt(time_t curTime)
+MCAEventsFileStorage::formLogFileNameAndOpenIt(time_t curTime)
 {
   std::string timeStampString = calculateTimeStamp(curTime);
 
@@ -138,12 +139,48 @@ MCAEventsStorage::formLogFileNameAndOpenIt(time_t curTime)
 
   if ( !(_eventFileFD = fopen(_logFileName.c_str(), "a+")) ) {
     char errMsg[128];
-    snprintf(errMsg, sizeof(errMsg), "MCAEventsStorage::formLogFileNameAndOpenIt::: fopen failed for file='%s'", _logFileName.c_str());
+    snprintf(errMsg, sizeof(errMsg), "MCAEventsFileStorage::formLogFileNameAndOpenIt::: fopen failed for file='%s'", _logFileName.c_str());
     throw smsc::util::SystemError(errMsg);
   }
 
   if ( setvbuf(_eventFileFD, NULL, _IOLBF, 0) )
-    throw smsc::util::SystemError("MCAEventsStorage::formLogFileNameAndOpenIt::: call to setvbuf() failed");
+    throw smsc::util::SystemError("MCAEventsFileStorage::formLogFileNameAndOpenIt::: call to setvbuf() failed");
+}
+
+void
+MCAEventsFileStorage::addEvent(const Event_GotMissedCall& event)
+{
+  _addEvent(event);
+}
+
+void
+MCAEventsFileStorage::addEvent(const Event_MissedCallInfoDelivered& event)
+{
+  _addEvent(event);
+}
+
+void
+MCAEventsFileStorage::addEvent(const Event_MissedCallInfoDeliveringFailed& event)
+{
+  _addEvent(event);
+}
+
+void
+MCAEventsFileStorage::addEvent(const Event_SendCallerNotification& event)
+{
+  _addEvent(event);
+}
+
+void
+MCAEventsFileStorage::addEvent(const Event_DeleteMissedCallInfo& event)
+{
+  _addEvent(event);
+}
+
+void
+MCAEventsFileStorage::addEvent(const Event_ChangeAbonentProfile& event)
+{
+  _addEvent(event);
 }
 
 void
@@ -152,21 +189,26 @@ MCAEventsStorageRegister::init(const smsc::util::config::ConfigView& config)
   std::string storageDir;
   try {
     storageDir = config.getString("location");
+
+    if ( storageDir.empty() || storageDir.find_first_not_of(" ") == std::string::npos )
+      _storage = new FakeMCAEventsStorage();
+    else {
+      time_t rollingInterval;
+      try {
+        rollingInterval = config.getInt("rollingInterval");
+      } catch(smsc::util::config::ConfigException& ex) {
+        rollingInterval = 60;
+      }
+
+      if (storageDir[storageDir.size() - 1] != '/')
+        storageDir.push_back('/');
+
+      _storage = new MCAEventsFileStorage(storageDir, "mcajournal", rollingInterval);
+    }
   } catch(smsc::util::config::ConfigException& ex) {
-    storageDir = "./";
+    _storage = new FakeMCAEventsStorage();
   }
 
-  time_t rollingInterval;
-  try {
-    rollingInterval = config.getInt("rollingInterval");
-  } catch(smsc::util::config::ConfigException& ex) {
-    rollingInterval = 60;
-  }
-
-  if (storageDir[storageDir.size() - 1] != '/')
-    storageDir.push_back('/');
-
-  _storage = new MCAEventsStorage(storageDir, "mcajournal", rollingInterval);
 }
 
 MCAEventsStorage&
