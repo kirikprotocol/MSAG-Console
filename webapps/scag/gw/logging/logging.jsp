@@ -19,7 +19,6 @@
             headerElem.className = "collapsing_tree_opened_logging";
             valueElem.style.display = "";
         }
-
         return false;
     }
 </script>
@@ -65,20 +64,32 @@
 <c:choose>
     <c:when test="${bean.running}">
         <sm-pm:menu>
-            <sm-pm:item name="mbSave" value="item.mbapply.value" enabled="true" title="item.mbapply.title"/>
-            <sm-pm:item name="mbSavePermanent" value="logging.item.save.permanent.value" enabled="true"
-                        title="logging.item.save.permanent.title"
-                        onclick=""/>
+            <sm-pm:item name="mbSave" value="logging.item.mbApply.value" enabled="true" title="logging.item.mbApply.title" onclick=""/>
+            <td>&nbsp</td>
+            <td>
+            <c:set var="page_menu_delimiter_needed" value="false" scope="request"/>
+            <sm-pm:item name="mbSavePermanent" value="logging.item.mbWrite.value" enabled="true" title="logging.item.mbWrite.title" onclick=""/>
+            <sm-pm:item name="mbRead" value="logging.item.mbRead.value" enabled="true" title="logging.item.mbRead.title" onclick=""/>
             <sm-pm:space/>
+            </td>
+<%--            <sm-pm:item name="mbSave" value="logging.item.mbApply.value" enabled="true" title="item.mbapply.title"/>--%>
+<%--            <sm-pm:item name="mbSavePermanent" value="logging.item.mbWrite.value" enabled="true"--%>
+<%--                        title="logging.item.save.permanent.title"--%>
+<%--                        onclick=""/>--%>
+<%--            <sm-pm:item name="mbSave" value="logging.item.mbRead.value" enabled="true" title="item.mbapply.title"/>--%>
+<%--            <sm-pm:space/>--%>
         </sm-pm:menu>
     </c:when>
     <c:otherwise>
         <sm-pm:menu>
-            <sm-pm:item name="mbSave" value="item.mbapply.value" enabled="false" title="item.mbapply.title"/>
-            <sm-pm:item name="mbSavePermanent" value="logging.item.save.permanent.value" enabled="true"
-                        title="logging.item.save.permanent.title"
-                        onclick=""/>
+            <sm-pm:item name="mbSave" value="logging.item.mbApply.value" enabled="false" title="logging.item.mbApply.title" onclick=""/>
+            <td>&nbsp</td>
+            <td>
+            <c:set var="page_menu_delimiter_needed" value="false" scope="request"/>
+            <sm-pm:item name="mbSavePermanent" value="logging.item.mbWrite.value" enabled="true" title="logging.item.mbWrite.title" onclick=""/>
+            <sm-pm:item name="mbRead" value="logging.item.mbRead.value" enabled="true" title="logging.item.mbRead.title" onclick=""/>
             <sm-pm:space/>
+            </td>
         </sm-pm:menu>
     </c:otherwise>
 </c:choose>
