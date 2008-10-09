@@ -509,7 +509,7 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd, util::HRTimi
             return;
         }
 
-        hrt.mark("stm.rerule");
+        if ( hrt.mark("stm.rerule") > 100000 ) hrt.comment("/HRTWARN");
 
         routeset = false; // in case rerouting happens
 
@@ -914,7 +914,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd, util::HRTim
             return;
         }
 
-        hrt.mark("stm.rerule");
+        if ( hrt.mark("stm.rerule") > 100000 ) hrt.comment("/HRTWARN");
 
         routeset = false;
 
@@ -1321,7 +1321,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd, util::HRTimin
             return;
         }
 
-        hrt.mark( "stm.rerule" );
+        if ( hrt.mark("stm.rerule") > 100000 ) hrt.comment("/HRTWARN");
 
         routeset = false;
 
