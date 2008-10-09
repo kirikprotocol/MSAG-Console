@@ -268,6 +268,7 @@ int SessionManagerImpl::Execute()
             // expireMap_  is a std::multimap< time_t, ExpireList::iterator >
             // expireHash_ is XHash< KeyPtr, ExpireList::iterator, KeyPtr >
             unsigned count = 0;
+            time_t now = time(0);
             for ( ; ! list->empty(); list->pop_front() ) {
 
                 ++increment;
@@ -293,6 +294,10 @@ int SessionManagerImpl::Execute()
                     expireList_.push_front( e );
                     i = expireList_.begin();
                     expireHash_.Insert( KeyPtr(*i), i );
+                }
+                if ( e.expire - now > 1000000 ) {
+                    smsc_log_warn( log_, "key=%s has too great expiration time: %u",
+                                   e.key.toString().c_str(), unsigned(e.expire-now) );
                 }
                 expireMap_.insert( std::make_pair(i->expire,i) );
 

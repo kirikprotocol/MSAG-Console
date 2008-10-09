@@ -155,11 +155,11 @@ void SessionStoreImpl::init( unsigned eltNumber,
 
         if ( opened ) {
             // collect all keys from disk storage
-            for ( DiskIndexStorage::iterator_type i(di->begin());
-                  i.next();
+            for ( DiskIndexStorage::iterator_type ii(di->begin());
+                  ii.next();
                   ) {
-                if ( i.idx() != di->invalidIndex() )
-                    initialkeys_.push_back( i.key() );
+                if ( ii.idx() != di->invalidIndex() )
+                    initialkeys_.push_back( ii.key() );
             }
             smsc_log_info( log_, "#%u has %u initial sessions",
                            eltNumber,
@@ -739,8 +739,10 @@ bool SessionStoreImpl::uploadInitial( unsigned cnt )
                 if ( disk_->get( key, cache_->store2ref(v) ) )
                 {
                     // loaded
-                    smsc_log_debug( log_, "upload session=%p/%s has expire=%d",
-                                    session, key.toString().c_str(), int(session->expirationTime() - now) );
+                    smsc_log_debug(log_, "uploaded session=%p/%s has expire=%d",
+                                   session, key.toString().c_str(), int(session->expirationTime()-now));
+                    // scag_plog_debug(pl,log_);
+                    // session->print(pl);
                     expiration_->scheduleExpire( session->expirationTime(),
                                                  session->lastAccessTime(),
                                                  key );

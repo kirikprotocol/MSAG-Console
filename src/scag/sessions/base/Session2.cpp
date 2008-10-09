@@ -313,8 +313,8 @@ Session::Session( const SessionKey& key, bool quiet ) :
 key_(key),
 pkey_(key),
 lastAccessTime_(time(0)),
-expirationTimeAtLeast_(lastAccessTime_),
 expirationTime_(lastAccessTime_+defaultLiveTime()),
+expirationTimeAtLeast_(lastAccessTime_),
 needsflush_(false),
 command_(0),        // unlocked
 currentOperationId_(SCAGCommand::invalidOpId()),
@@ -577,7 +577,7 @@ void Session::changed( AdapterProperty& )
 void Session::print( util::Print& p ) const
 {
     if ( ! p.enabled() ) return;
-    if ( ! command_ ) return;  // session is not locked !
+    // if ( ! command_ ) return;  // session is not locked !
 
     const time_t now = time(0);
     // const int lastac = int(now - lastAccessTime_);
@@ -849,7 +849,7 @@ bool Session::getRuleKey( int& serv, int& trans ) const
 }
 
 
-void Session::dropInitRuleKey( int serviceId, int transport, int wait )
+void Session::dropInitRuleKey( int serviceId, int transport, int wtime )
 {
     if ( ! initrulekeys_.empty() ) {
 
@@ -864,10 +864,14 @@ void Session::dropInitRuleKey( int serviceId, int transport, int wait )
             }
         }
 
-        if ( wait >= 0 ) {
+        if ( wtime >= 0 ) {
+            if ( wtime > 100000 ) {
+                smsc_log_warn( log_, "too great wait=%u", unsigned(wtime) );
+                // ::abort();
+            }
             if ( initrulekeys_.empty() ) {
                 // if no services left, then reset session expiration time
-                const time_t waitfor = time_t(time(0) + wait);
+                const time_t waitfor = time_t(time(0) + wtime);
                 // smsc_log_debug( log_, "session=%p/%s no more initrulekeys",
                 // this, sessionKey().toString().c_str() );
                 if ( expirationTimeAtLeast_ > waitfor ) {
@@ -877,7 +881,7 @@ void Session::dropInitRuleKey( int serviceId, int transport, int wait )
                 }
             } else {
                 // there is at least one service
-                waitAtLeast( unsigned(wait) );
+                waitAtLeast( unsigned(wtime) );
             }
         }
     }
