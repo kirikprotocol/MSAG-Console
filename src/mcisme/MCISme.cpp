@@ -413,7 +413,7 @@ public:
       time_t smsValidityDate = time(NULL) + processor.getDaysValid()*3600*24;
 
       EService svcType;
-      strncpy(svcType, processor.getSvcType(), MAX_ESERVICE_TYPE_LENGTH);
+      strncpy(svcType, processor.getSvcTypeOnLine(), MAX_ESERVICE_TYPE_LENGTH);
       svcType[MAX_ESERVICE_TYPE_LENGTH]='\0';
 
       PduSubmitSm  sm;
