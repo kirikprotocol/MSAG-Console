@@ -40,7 +40,8 @@ protected:
     void RegisterTrafficEvent( const CommandProperty& commandProperty,
                                const SessionPrimaryKey& sessionPrimaryKey,
                                const std::string& messageBody,
-                               const std::string* keywords );
+                               const std::string* keywords,
+                               util::HRTiming* hrt = 0 );
     
     void RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol,
                             uint32_t serviceId, uint32_t providerId, uint32_t operatorId,

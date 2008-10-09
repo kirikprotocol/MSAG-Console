@@ -1,6 +1,7 @@
 #include "EventHandler2.h"
 #include "scag/stat/base/Statistics2.h"
 #include "CommandBridge.h"
+#include "scag/util/HRTimer.h"
 
 namespace scag2 {
 namespace re {
@@ -73,9 +74,11 @@ void EventHandler::RunActions(ActionContext& context)
 void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty,
                                         const SessionPrimaryKey& sessionPrimaryKey,
                                         const std::string& messageBody,
-                                        const std::string* keywords )
+                                        const std::string* keywords,
+                                        util::HRTiming* hrt )
 {
     SaccTrafficInfoEvent* ev = new SaccTrafficInfoEvent();
+    if (hrt) hrt->mark("ev.newsacc");
 
     ev->Header.cCommandId = propertyObject.HandlerId;
     ev->Header.cProtocolId = commandProperty.protocol;
@@ -102,7 +105,10 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty,
         ev->cDirection = 'O';
 
     if ( keywords ) ev->keywords.append(keywords->data(),keywords->size());
+
+    if (hrt) hrt->mark("ev.fillsac");
     Statistics::Instance().registerSaccEvent( ev );
+    if (hrt) hrt->mark("ev.regsac");
 }
 
 void EventHandler::RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol, uint32_t serviceId, uint32_t providerId, uint32_t operatorId, uint16_t commandStatus, const SessionPrimaryKey& sessionPrimaryKey, char dir)

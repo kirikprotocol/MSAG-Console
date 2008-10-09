@@ -98,7 +98,8 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
                               (hi == EH_DELIVER_SM) ||
                               (hi == EH_DATA_SM) ?
                               CommandBridge::getMessageBody(smppcommand) : "",
-                              kw );
+                              kw,
+                              &hrt );
     }
 
     if ( smppcommand.get_status() > 0) {
