@@ -119,6 +119,7 @@ sub generate{
           }
           $libdeps.=' $(SMSC_BUILDDIR)/lib/lib'.$l.'.a';
         }
+        $libdeps=' '.join(' ',reverse(split(/ /,$libdeps)));
         $rawlibs=~s/\@\S+//g;
         $moddeps.=' $(SMSC_BUILDDIR)/bin/'.$binname;
         my $ldflags=readstring($dirname.'/.ldflags');
@@ -150,7 +151,7 @@ sub generate{
       print $mkf "\t\@\$(ECHO) '\$(LIBCLR)Assembling $modlib\$(CLREND)'\n" unless $silent;
       print $mkf "\t\@mkdir -p \$(SMSC_BUILDDIR)/lib/\n";
       print $mkf "\t\@rm -f \$(SMSC_BUILDDIR)/lib/$modlib\n";
-      print $mkf "\t\$(PFX)\$(AR) -r \$(SMSC_BUILDDIR)/lib/$modlib ".join(' ',@objs)." 2>/dev/null\n\n";
+      print $mkf "\t\$(PFX)\$(AR) -r \$(SMSC_BUILDDIR)/lib/$modlib ".join(' ',@objs)." 2\>/dev/null\n\n";
       srcrule($dirname,$_,\@files)for@dirlist;
       $moddeps.=' $(SMSC_BUILDDIR)/lib/'.$modlib;
     }
