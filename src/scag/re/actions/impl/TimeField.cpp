@@ -36,7 +36,7 @@ bool TimeField::init( const SectionParams& params,
         for ( unsigned i = 0; ; ++i ) {
 
             const char* fmt = formats[i];
-            if ( ! *fmt )
+            if ( ! fmt )
                 throw SCAGException( "Action: '%s' wrong %s field: %s",
                                      actionName, paramName, name_.c_str() );
 
