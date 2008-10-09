@@ -9,6 +9,8 @@
 
   <section name="eventsStore">
     <param name="storeDir">@store_events</param>
+    <param name="rwTimeout">@rw_timeout</param>
+    <param name="roTimeout">@ro_timeout</param>
   </section>
 
   <section name="soap">
@@ -22,5 +24,6 @@
     <param name="expiredText">@expired_text</param>
     <param name="profileChangedText">@profile_changed_text</param>
     <param name="errorText">@error_text</param>
+    <param name="serviceType">@service_type@</param>
   </section>
 </config>
