@@ -55,43 +55,49 @@ namespace scag2 {
 namespace stat {
 namespace sacc {
 
+
 class EventSender: public Thread 
 {
+private:
+    typedef CyclicQueue< SaccEvent* > QueueType;
+
+
 public:
- bool isActive() { return bConnected; };
+    bool isActive() { return bConnected; };
 
- EventSender();
- virtual ~EventSender();
- int Execute();
- void PushEvent(SaccEvent* item);
+    EventSender();
+    virtual ~EventSender();
+    int Execute();
+    void PushEvent(SaccEvent* item);
 
- void Start();
- void Stop();
- void init(std::string& host,int port,int timeout,int queuelen/*,bool * bf,*/,smsc::logger::Logger * lg);
-
-private:
- time_t lastOverflowNotify, lastConnectTry;
- EventMonitor mtx;
- CyclicQueue<SaccEvent*> eventsQueue;
- bool bStarted;
- bool bConnected;
- int  Timeout;
- Socket SaccSocket;
- std::string Host;
- int QueueLength;
- int Port;
- SaccSerialBuffer pdubuffer;
-
- bool checkQueue();
- bool connect(std::string host,int port,int timeout);
- bool processEvent(SaccEvent* ev);
- 
- void sendPing();
- smsc::logger::Logger * logger;
+    void Start();
+    void Stop();
+    void init(std::string& host,int port,int timeout,int queuelen/*,bool * bf,*/,smsc::logger::Logger * lg);
 
 private:
+    bool checkQueue();
+    bool connect(std::string host,int port,int timeout);
+    bool processEvent(SaccEvent* ev);
+    void sendPing();
+    smsc::logger::Logger * logger;
+
     // to make compiler happy
     void Start(int);
+    QueueType* switchQueue(); // and return freed queue
+
+private:
+    time_t lastOverflowNotify, lastConnectTry;
+    EventMonitor mtx;
+    QueueType eventsQueue[2];
+    unsigned queueIdx; // 0,1
+    bool bStarted;
+    bool bConnected;
+    int  Timeout;
+    Socket SaccSocket;
+    std::string Host;
+    int QueueLength;
+    int Port;
+    SaccSerialBuffer pdubuffer;
 };
 
 }}}

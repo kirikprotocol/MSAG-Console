@@ -128,25 +128,29 @@ namespace sacc{
 
 EventSender::EventSender()
 {
-
- bStarted  = false;
- logger = 0;
- bConnected=false;
- Host="";
- Port=0;
- Timeout=100;
- QueueLength=10000;
- pdubuffer.resize(0xFFFF);
+    bStarted  = false;
+    logger = 0;
+    bConnected = false;
+    Host="";
+    Port=0;
+    Timeout=100;
+    QueueLength=10000;
+    pdubuffer.resize(0xFFFF);
+    queueIdx = 0;
 }
 
 EventSender::~EventSender()
 {
-    while(eventsQueue.Count() > 0)
-    {
-        SaccEvent* ev;                    
-        if(eventsQueue.Pop(ev) && ev)
-            processEvent(ev);
-    }
+    QueueType* queue = switchQueue();
+    do {
+        while ( queue->Count() > 0 )
+        {
+            SaccEvent* ev;                    
+            if ( queue->Pop(ev) && ev)
+                processEvent(ev);
+        }
+        queue = switchQueue();
+    } while ( queue->Count() > 0 );
 }
 
 void EventSender::init(std::string& host,int port,int timeout,int queuelen,/*,bool * bf,*/smsc::logger::Logger * lg)
@@ -163,8 +167,9 @@ void EventSender::init(std::string& host,int port,int timeout,int queuelen,/*,bo
  Timeout=timeout*1000;
  lastOverflowNotify = 0;
  lastConnectTry = 0;
- smsc_log_debug(logger,"EventSender::init confuration succsess.");
+    smsc_log_debug(logger,"EventSender::init confuration succsess.");
 }
+
 
 bool EventSender::processEvent(SaccEvent *ev)
 {
@@ -182,55 +187,65 @@ bool EventSender::processEvent(SaccEvent *ev)
 
 int EventSender::Execute()
 {
-    while( bStarted)
+    while( bStarted )
     {
-        if(!bConnected && lastConnectTry < time(NULL) - 30)
+        if ( !bConnected )
         {
             //          SaccSocket.Abort();
-            SaccSocket.Close();
-            if(connect(Host,Port,Timeout))
-                bConnected=true;
-            lastConnectTry = time(NULL);
-        }
-
-        if(!bStarted) break;
-
-        MutexGuard g(mtx);
-
-        if(bStarted && (!eventsQueue.Count() || !bConnected))
-        {
-            mtx.wait(Timeout);
-            if(bConnected && !eventsQueue.Count())
-                sendPing();
-        }
-
-        if(!bStarted) break;      
-          
-        if(bConnected)
-        {
-            while(eventsQueue.Count() > 0)
-            {
-                SaccEvent* ev;                    
-                if(eventsQueue.Pop(ev) && ev)
-                   processEvent(ev);
+            time_t now = time(0);
+            if ( lastConnectTry+30 < now ) {
+                SaccSocket.Close();
+                lastConnectTry = now;
+                if(connect(Host,Port,Timeout))
+                    bConnected = true;
+            }
+            if ( !bConnected ) {
+                MutexGuard mg(mtx);
+                mtx.wait(Timeout);
+                continue;
             }
         }
-    }
 
-    while(eventsQueue.Count() > 0)
-    {
-        SaccEvent* ev;                    
-        if(eventsQueue.Pop(ev) && ev)
+        // we are connected here
+        if (!bStarted) break;
+
+        QueueType* queue = switchQueue();
+        if ( ! queue->Count() ) {
+            sendPing();
+            MutexGuard mg(mtx);
+            if ( !bStarted ) break;
+            mtx.wait(Timeout);
+            continue;
+        }
+
+        // we have a filled queue here
+        if(!bStarted) break;      
+          
+        while ( queue->Count() > 0 )
         {
-            if(bConnected)
+            if ( !bConnected ) continue;
+            SaccEvent* ev;
+            if ( queue->Pop(ev) && ev )
                 processEvent(ev);
-            else
-                delete ev;
         }
     }
 
+    do {
+        QueueType* queue = switchQueue();
+        if ( queue->Count() == 0 ) break;
+        while ( queue->Count() > 0 )
+        {
+            SaccEvent* ev;                    
+            if ( queue->Pop(ev) && ev)
+            {
+                if(bConnected)
+                    processEvent(ev);
+                else
+                    delete ev;
+            }
+        }
+    } while ( true );
     SaccSocket.Close();
-    
     smsc_log_debug(logger,"EventSender stopped.");
     return 1;
 }
@@ -281,14 +296,13 @@ void EventSender::sendPing()
 void EventSender::PushEvent(SaccEvent* item)
 {
     MutexGuard g(mtx);
-
     smsc_log_debug(logger,"EventSender::put %s addr=0x%X", item->getName(), item);
 
-    if(eventsQueue.Count() < QueueLength)
+    if (eventsQueue[queueIdx].Count() < QueueLength )
     {
-      eventsQueue.Push(item);
-      mtx.notifyAll();
-      return;
+        eventsQueue[queueIdx].Push(item);
+        mtx.notifyAll();
+        return;
     }
     mtx.notifyAll();  
     if(lastOverflowNotify < time(NULL) - 30)
@@ -300,6 +314,15 @@ void EventSender::PushEvent(SaccEvent* item)
 }
 
 
-
+EventSender::QueueType* EventSender::switchQueue()
+{
+    MutexGuard mg(mtx);
+    unsigned freeidx = 1 - queueIdx;
+    if ( eventsQueue[freeidx].Count() == 0 ) {
+        queueIdx = freeidx;
+        freeidx = 1 - queueIdx;
+    }
+    return &(eventsQueue[freeidx]);
+}
 
 }}}
