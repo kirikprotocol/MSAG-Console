@@ -28,7 +28,7 @@ using namespace smsc::core::buffers;
 std::vector<int> StateMachine::allowedUnknownOptionals;
 
 const uint32_t MAX_REDIRECT_CNT = 10;
-const unsigned TIMINGFREQ = 4;
+const unsigned TIMINGFREQ = 10000;
 
 struct StateMachine::ResponseRegistry
 {
