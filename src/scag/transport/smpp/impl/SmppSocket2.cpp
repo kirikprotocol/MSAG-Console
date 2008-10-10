@@ -67,17 +67,18 @@ void SmppSocket::processInput()
   if(rdBufUsed<rdToRead)return;
   if(dump->isDebugEnabled())
   {
-    std::string out;
-    char buf[32];
-    for(int i=0;i<rdToRead;i++)
-    {
-      sprintf(buf,"%02x",(unsigned char)rdBuffer[i]);
-      out+=buf;
-      out+=" ";
-    }
-    sock->GetPeer(buf);
-    dump->log(smsc::logger::Logger::LEVEL_DEBUG, "in from %s(%s): %s",
-        buf, systemId.c_str(), out.c_str());
+      std::string out;
+      out.reserve( 1024 );
+      char buf[32];
+      for(int i=0;i<rdToRead;i++)
+      {
+          sprintf(buf,"%02x",(unsigned char)rdBuffer[i]);
+          out.append(buf,2);
+          out.push_back(' ');
+      }
+      sock->GetPeer(buf);
+      dump->log(smsc::logger::Logger::LEVEL_DEBUG, "in from %s(%s): %s",
+                buf, systemId.c_str(), out.c_str());
   }
   SmppStream s;
   assignStreamWith(&s,rdBuffer,rdBufUsed,true);
@@ -242,15 +243,17 @@ void SmppSocket::sendData()
   }
   if(dump->isDebugEnabled())
   {
-    std::string out;
-    for(int i=0;i<sz;i++)
-    {
-      sprintf(buf,"%02x",(unsigned char)wrBuffer[i]);
-      out+=buf; out+=" ";
-    }
-    sock->GetPeer(buf);
-    dump->log(smsc::logger::Logger::LEVEL_DEBUG, "out to %s(%s),%d: %s",
-        buf, systemId.c_str(), outQueue.Count(), out.c_str());
+      std::string out;
+      out.reserve(1024);
+      for(int i=0;i<sz;i++)
+      {
+          sprintf(buf,"%02x",(unsigned char)wrBuffer[i]);
+          out.append(buf, 2);
+          out.push_back(' ');
+      }
+      sock->GetPeer(buf);
+      dump->log(smsc::logger::Logger::LEVEL_DEBUG, "out to %s(%s),%d: %s",
+                buf, systemId.c_str(), outQueue.Count(), out.c_str());
   }
   wrBufSent=0;
   wrBufUsed=sz;
