@@ -204,7 +204,7 @@ throw (SubjectNotFoundException)
   }
 
   std::auto_ptr<Route> r(new Route( getAttribStr(elem, "id"),
-                                    getAttribBool(elem, "archived"),
+                                    false, // getAttribBool(elem, "archived"),
                                     getAttribBool(elem, "enabled"),
                                     getAttribBool(elem, "active"),
                                     getAttribBool(elem, "transit"),
