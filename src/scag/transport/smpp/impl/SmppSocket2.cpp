@@ -6,20 +6,26 @@
 
 namespace {
 
-inline char digit( unsigned char c )
+const std::string& digitstring()
 {
-    return (c<10 ? c+'0' : c+'W'); // to make 0123456789abcdef
+    static std::string ds;
+    if ( ds.empty() ) {
+        ds.reserve(256*3+1);
+        char buf[10];
+        for ( unsigned i = 0; i < 256; ++i ) {
+            sprintf( buf, "%2x ", i );
+            ds.append(buf);
+        }
+    }
+    return ds;
 }
 
 void bufdump( std::string& out, const unsigned char* inbuf, unsigned insize )
 {
     out.reserve( out.size() + insize*3 + 10 );
-    char buf[3];
-    buf[2] = ' ';
+    const char* digits = digitstring().c_str();
     for ( ; insize-- > 0; ++inbuf ) {
-        buf[0] = digit((*inbuf) >> 4);
-        buf[1] = digit((*inbuf) & 0xf);
-        out.append( buf, 3 );
+        out.append( digits + ((*inbuf)*3), 3 );
     }
 }
 }
