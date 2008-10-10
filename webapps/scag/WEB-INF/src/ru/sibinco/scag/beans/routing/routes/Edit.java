@@ -41,6 +41,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private boolean enabled;
     private boolean archived;
     private boolean active;
+    private boolean transit;
     private String[] slicingTypes = new String[]{"NONE","SAR","UDH8", "UDH16"};
     private String[] slicingTypesTitles = new String[]{"NO/OFF","Via SAR Fields", "Via UDH8 encoding", "Via UDH16 encoding"};
     private String slicing;
@@ -69,9 +70,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private HttpSession session;
     private boolean emptyDestinations = false;
 
-    private boolean transit;
-
-    public String getId() {
+        public String getId() {
         return id;
     }
 
@@ -296,12 +295,11 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             enabled = route.isEnabled();
             archived = route.isArchived();
             active = route.isActive();
+            transit = route.isTransit();
             slicing = route.getSlicing();
             slicedRespPolicy= route.getSlicedRespPolicy();
             srcSmeId = route.getSrcSmeId();
             notes = route.getNotes();
-
-            transit = route.isTransit();
 
             if (null != route.getService()) {
                 serviceName = route.getService().getName();
