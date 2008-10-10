@@ -670,8 +670,7 @@ TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt,
 
   smsc_log_info(logger, "ProcessAbntEvents: prepared message = '%s' for sending to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
 
-  if ( !sendMessage(abnt, msg, mcEventOut) )
-    return;
+  sendMessage(abnt, msg, mcEventOut);
 }
 
 bool
