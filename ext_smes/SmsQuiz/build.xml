@@ -4,7 +4,6 @@
 
   <property name="SMS_QUIZ_HOME" value="."/>
 
-
   <target name="prepare">
     <mkdir dir="${BUILD_DIR}"/>
     <mkdir dir="${DISTR_DIR}"/>
@@ -13,9 +12,9 @@
 
   <property name="module_name" value="sms_quiz"/>
 
-  <property name="java_src" location="${SMS_QUIZ_HOME}/src"/>
-  <property name="java_lib" location="${SMS_QUIZ_HOME}/lib"/>
-  <property name="java_out" location="${BUILD_DIR}/classes/${module_name}"/>
+  <property name="java_src" value="${SMS_QUIZ_HOME}/src"/>
+  <property name="java_lib" value="${SMS_QUIZ_HOME}/lib"/>
+  <property name="java_out" value="${BUILD_DIR}/classes/${module_name}"/>
 
 
   <property name="SMS_QUIZ_DISTR_DIR" value="${DISTR_DIR}/${module_name}"/>
