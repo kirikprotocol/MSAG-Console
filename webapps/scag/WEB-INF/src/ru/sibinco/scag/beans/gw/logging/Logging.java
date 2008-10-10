@@ -43,31 +43,21 @@ public class Logging extends EditBean {
         super.process(request, response);
         if (getMbSave() != null) {
             logger.debug( "Logging.process() getMbSave()" );
-//            save(request.getParameterMap());
-            try{
-                apply(request.getParameterMap());
-            }finally{
-//                init(1);
-            }
+            apply(request.getParameterMap());
             return;
         } else if (getMbSavePermanent() != null) {
             logger.debug( "Logging.process() getMbSavePermanent()" );
-            try{
-                savePermanent(request.getParameterMap());
-            }finally{
-//                init(1);
-            }
+            savePermanent(request.getParameterMap());
             return;
         } else if (getMbRead() != null) {
             logger.debug( "Logging.process() getMbRead()" );
-//            readLogs(request);
             readFLF();
-//            init(0);
             return;
         } else {
-
+            logger.debug( "Logging.process() init()" );
+            init();
         }
-        init();
+
     }
 
     public class LoggerCategoryInfo implements Comparable {
@@ -210,48 +200,6 @@ public class Logging extends EditBean {
 
     }
 
-//    protected void init( int i ) {
-//        logger.debug( "logging.init1() start");
-//        Map logCategories = null;
-//        String rootPriority = null;
-//        try {
-//            logCategories = appContext.getScag().getLogCategories();
-////            if ( i == 0 ){
-////                logger.debug( "logging.init1() restore logCategories size='" + logCategories.keySet().size() + "'");
-////                Map logCategoriesFF = new HashMap();
-////                logCategoriesFF = appContext.getLoggingManager().readFromLogFile();
-////                for( Iterator iter = logCategories.keySet().iterator(); iter.hasNext(); ){
-////                    Object key = iter.next();
-////                    Object objectFF = logCategoriesFF.get(key);
-////                    logger.debug( "logging.init1() restore key from FILE: key='" + key + "' value='" + logCategories.get(key) + "'" +
-////                            " FILE value='" + objectFF + "'");
-////                    if( objectFF != null ){
-////                        logCategories.put( key, objectFF );
-////                    }
-////                    else{
-////                        logCategories.put( key, "NOTSET" );
-////                    }
-////                    logger.debug( "logging.init1() restored cats: key='" + key + "' value='" + logCategories.get(key) + "'");
-////                }
-////                logger.debug( "logging.init1() restore read from file cates size='" + logCategories.keySet().size() + "'");
-////            }
-//            logger.debug( "logging.init1() save logCategories size='" + logCategories.keySet().size() + "'");
-//            parseMap( logCategories );
-//        } catch (SibincoException e) {
-//            logger.warn( "Loigging:init1():Exception while init():Disconnected" );
-//            setRunning(false);
-//            try{
-//                logCategories = appContext.getLoggingManager().readFromLogFile();
-////                parseMap( logCategories );
-//            }catch (SibincoException e1) {
-//                logger.error( "Loigging:init()1:Exception while init():can not read loggers from file!!!" );
-//                rootCategory = new LoggerCategoryInfo("", "", "NOTSET");
-//
-//            }
-//        }
-//        getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
-//    }
-
     public void parseMap( Map logCategories ){
             String rootPriority = (String) logCategories.remove("");
             if (rootPriority == null) rootPriority = "NOTSET";
@@ -278,34 +226,6 @@ public class Logging extends EditBean {
     protected void save() throws SCAGJspException {
     }
 
-//    protected void save(Map parameters) throws SCAGJspException {
-//        Map cats = new HashMap();
-//        for (Iterator iterator = parameters.entrySet().iterator(); iterator.hasNext();) {
-//            Map.Entry entry = (Map.Entry) iterator.next();
-//            String paramName = (String) entry.getKey();
-//            if (paramName.startsWith(catParamNamePrefix)) {
-//                cats.put(paramName.substring(catParamNamePrefix.length()), getParamValue(entry.getValue()));
-//                logger.info("Logging.save() cat param: " + paramName + ":=" + getParamValue(entry.getValue()));
-//            } else {
-//                logger.info("Logging.save() WRONG param: " + paramName + ":=" + getParamValue(entry.getValue()));
-//            }
-//
-//        }
-//        try {
-//            appContext.getScag().setLogCategories(cats);
-//        } catch (SibincoException e) {
-//              logger.error( "Logging:save():Disconnected" );
-//            try {
-//                appContext.getLoggingManager().writeToLog(cats);
-//            } catch (SibincoException e1) {
-//                logger.error( "Logging:save():Disconnected:can not write loggers file!!!" );
-//                e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//                throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
-//            }
-//            throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
-//        }
-//    }
-
     Map getLogsFromMap( Map parameters ){
         Map cats = new HashMap();
         for (Iterator iterator = parameters.entrySet().iterator(); iterator.hasNext();) {
@@ -326,17 +246,6 @@ public class Logging extends EditBean {
         logger.info( "Logging.apply() start" );
         Map cats = new HashMap();
         cats = getLogsFromMap( parameters );
-//        for (Iterator iterator = parameters.entrySet().iterator(); iterator.hasNext();) {
-//            Map.Entry entry = (Map.Entry) iterator.next();
-//            String paramName = (String) entry.getKey();
-//            if (paramName.startsWith(catParamNamePrefix)) {
-//                cats.put( paramName.substring(catParamNamePrefix.length()), getParamValue(entry.getValue()) );
-//                logger.info("Logging.apply() cat param: " + paramName + "=" + getParamValue(entry.getValue()) );
-//            } else {
-//                logger.info("Logging.apply() WRONG param: " + paramName + ":=" + getParamValue(entry.getValue()));
-//            }
-//
-//        }
         try {
             logger.info( "Logging.apply() setLogCategories" );
             appContext.getScag().setLogCategories(cats);
@@ -345,38 +254,16 @@ public class Logging extends EditBean {
             if( e instanceof StatusDisconnectedException ){
                 logger.error( "Logging:apply():Disconnected" );
             }
-//            parseMap( cats );
-//            try {
-//                appContext.getLoggingManager().writeToLog(cats);
-//            } catch (SibincoException e1) {
-//                logger.error( "Logging:apply():Disconnected:can not write loggers file!!!" );
-//                e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//                throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
-//            }
             throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
         }finally{
             parseMap( cats );
         }
-
     }
 
     protected void savePermanent(Map parameters) throws SCAGJspException {
         Map cats = new HashMap();
         cats = getLogsFromMap( parameters );
-//        for (Iterator iterator = parameters.entrySet().iterator(); iterator.hasNext();) {
-//            Map.Entry entry = (Map.Entry) iterator.next();
-//            String paramName = (String) entry.getKey();
-//            if (paramName.startsWith(catParamNamePrefix)) {
-//                cats.put(paramName.substring(catParamNamePrefix.length()), getParamValue(entry.getValue()));
-//                logger.info("cat param: " + paramName + ":=" + getParamValue(entry.getValue()));
-//            } else {
-//                logger.info("WRONG param: " + paramName + ":=" + getParamValue(entry.getValue()));
-//            }
-//
-//        }
-
         try {
-//            appContext.getScag().setLogCategories(cats);
             logger.error( "Logging.savePermanent() storeLogConfig()" );
             appContext.getScag().storeLogCategories(cats);
             logger.error( "Logging.savePermanent() getLogCategories()" );
