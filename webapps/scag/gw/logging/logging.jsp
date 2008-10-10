@@ -65,13 +65,9 @@
     <c:when test="${bean.running}">
         <sm-pm:menu>
             <sm-pm:item name="mbSave" value="logging.item.mbApply.value" enabled="true" title="logging.item.mbApply.title" onclick=""/>
-            <td>&nbsp</td>
-            <td>
-            <c:set var="page_menu_delimiter_needed" value="false" scope="request"/>
+            <sm-pm:space/>
             <sm-pm:item name="mbSavePermanent" value="logging.item.mbWrite.value" enabled="true" title="logging.item.mbWrite.title" onclick=""/>
             <sm-pm:item name="mbRead" value="logging.item.mbRead.value" enabled="true" title="logging.item.mbRead.title" onclick=""/>
-            <sm-pm:space/>
-            </td>
 <%--            <sm-pm:item name="mbSave" value="logging.item.mbApply.value" enabled="true" title="item.mbapply.title"/>--%>
 <%--            <sm-pm:item name="mbSavePermanent" value="logging.item.mbWrite.value" enabled="true"--%>
 <%--                        title="logging.item.save.permanent.title"--%>
@@ -83,13 +79,9 @@
     <c:otherwise>
         <sm-pm:menu>
             <sm-pm:item name="mbSave" value="logging.item.mbApply.value" enabled="false" title="logging.item.mbApply.title" onclick=""/>
-            <td>&nbsp</td>
-            <td>
-            <c:set var="page_menu_delimiter_needed" value="false" scope="request"/>
+            <sm-pm:space/>
             <sm-pm:item name="mbSavePermanent" value="logging.item.mbWrite.value" enabled="true" title="logging.item.mbWrite.title" onclick=""/>
             <sm-pm:item name="mbRead" value="logging.item.mbRead.value" enabled="true" title="logging.item.mbRead.title" onclick=""/>
-            <sm-pm:space/>
-            </td>
         </sm-pm:menu>
     </c:otherwise>
 </c:choose>
