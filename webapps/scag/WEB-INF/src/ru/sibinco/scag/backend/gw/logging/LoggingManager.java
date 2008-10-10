@@ -80,13 +80,14 @@ public class LoggingManager {
     }
 
     public synchronized Map readFromLogFile() throws SibincoException{
-        logger.debug( "LoggingManager:readFromLogFile()");
+      logger.debug( "LoggingManager:readFromLogFile()");
       return read( loggerFile );
     }
 
     public static int PROP_SEPARATOR = '=';
 
     private Map read( File loggerFile ){
+        logger.error( "LoggingManager.read() start" );
         Map map = new TreeMap();
         BufferedReader br = null;
         try {
@@ -109,7 +110,9 @@ public class LoggingManager {
             logger.error("LoggingManager.read() IOException. Cannot read from "+loggerFile.getAbsolutePath(),io);
         } finally {
             try {
-                br.close();
+                if(br != null){
+                    br.close();
+                }
             } catch (IOException e) {
                 logger.error( "LoggingManager.read() IOException while close BR" );
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.

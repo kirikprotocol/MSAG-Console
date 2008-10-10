@@ -273,6 +273,7 @@ public class Scag extends Proxy {
 
     public Object call(final String commandId, final String err, final Type returnType, final Map arguments) throws SibincoException {
         try {
+            logger.debug( "Scag.call() start command='" + commandId + "'" );
             final Response r = runCommand(new CommandCall(commandId, returnType, arguments));
 //            if (Response.STATUS_OK != r.getStatus()){
             if( Response.STATUS_ERROR == r.getStatus() ){
