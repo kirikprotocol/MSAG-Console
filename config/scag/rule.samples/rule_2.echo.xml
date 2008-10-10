@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.sibinco.com/SCAG ../xsd/smpp_rules.xsd"
+            xmlns:scag     ="http://www.sibinco.com/SCAG"
+            xmlns:session  ="http://www.sibinco.com/SCAG/SESSIONS"
+            xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+            xmlns:strings  ="http://www.sibinco.com/SCAG/STRINGS"
+            xmlns:bill     ="http://www.sibinco.com/SCAG/BILL"
+            xmlns:send     ="http://www.sibinco.com/SCAG/SEND"
+            xmlns:profile  ="http://www.sibinco.com/SCAG/PROFILE"
+            xmlns:batch    ="http://www.sibinco.com/SCAG/BATCH"
+            xmlns:log      ="http://www.sibinco.com/SCAG/LOG"
+            xmlns:http     ="http://www.sibinco.com/SCAG/HTTP"
+            xmlns:smpp     ="http://www.sibinco.com/SCAG/SMPP"
+            xmlns:datetime ="http://www.sibinco.com/SCAG/DATETIME" 
+            transport="SMPP">
+
+        <service_init>
+            <log:debug category="ECHO" message="SERVICE_INIT"/>
+            <return status="Ok"/>
+        </service_init>
+        
+        <service_destroy>
+            <log:debug category="ECHO" message="SERVICE_DESTROY"/>
+            <return status="Ok"/>
+        </service_destroy>
+            
+        <deliver_sm>
+            <log:warn category="ECHO" message="Deliver called (invalid for ECHO)"/>
+            <return status="Failed" result="254"/> <!-- DELIVERYFAILURE -->
+        </deliver_sm>
+        <deliver_sm_resp>
+            <return status="Failed"/>
+        </deliver_sm_resp>
+
+        <submit_sm>
+            <log:warn category="ECHO" message="Submit called (invalid for ECHO)"/>
+            <return status="Failed" result="69"/> <!-- SUBMITFAIL -->
+        </submit_sm>
+        <submit_sm_resp>
+            <return status="Failed"/>
+        </submit_sm_resp>
+            
+        <data_sm>
+        
+            <!-- Restore %session_context_id from packet's UMR field -->
+            <set var="%session_context_id" value="#umr"/>
+            <!-- Open user session context to operate session data -->
+            <session:set_context id="%session_context_id" status="%session_context_status"/>
+            <if test="%session_context_status" op="ne" value="@TRUE">
+                <log:warn category="ECHO" message="Failed to open user session context:"/>
+                <log:warn category="ECHO" message="%session_context_id"/>
+                <session:destroy_service/>
+                <return status="Failed"/>
+            </if>
+            <!-- Check if SDP processing flag was set (skip old data_sm) -->
+            <if test="^sdp_sequence_started" op="ne" value="@TRUE">
+                <log:warn category="ECHO" message="DATA_SM is out of SDP sequence"/>
+                <session:destroy_service/>
+                <return status="Failed" result="69"/> <!-- SUBMITFAIL -->
+            </if>
+            
+            <if test="#packet_direction" op="eqi" value="@DIRECTION_SC_2_SME">
+            <then>
+                <!-- First DATA_SM to ECHO, waiting ECHO_SME >> SC -->
+                <log:info category="ECHO" message="Waiting DATA_SM ECHO_SME >> SC"/>
+                <session:wait time="00:00:10"/>
+            </then>
+            <else>
+                <!-- DATA_SM ECHO_SME >> SC -->
+                <log:info category="ECHO" message="DATA_SM ECHO_SME >> SC"/>
+                <!-- TEST: set var="#message_text" value="This is very very very large message. It should be dropped into many many slices by MSAG. Peredau privet ronnym i blizkim i ischo mnogo chego hochu im skazat'"/-->
+            </else>
+            </if>
+            <return status="Ok"/>
+        </data_sm>
+
+        <data_sm_resp>
+            <if test="#status" op="eqi" value="0">
+            <then> <!-- DATA_SM accepted -->
+                <!-- Last response from SC for DATA_SM ECHO_SME >> SC -->
+                <if test="#packet_direction" op="eqi" value="@DIRECTION_SC_2_SME">
+                    <log:info category="ECHO" message="Bill commit"/>
+                    <bill:close action="commit" id="^bill_id"/>
+                    <if test="^need_notify_receipt">
+                        <log:debug category="ECHO" message="^data_msg_id"/>
+                        <if test="^data_msg_id">
+                        <then>
+                            <smpp:receipt from="^data_original_DA" to="^data_original_OA" msg_id="^data_msg_id"
+                                          state="DELIVERED" dst_sme_id="^data_src_sme_id" network_error_code="0"/>
+                            <session:destroy_service/> <!-- End of SDP-charging processing -->
+                        </then>
+                        <else>
+                            <set var="^data_msg_id_missed" value="1"/>
+                            <set var="^receipt_failed_status" value="0"/>
+                        </else>
+                        </if>
+                    </if>
+                </if>
+            </then>
+            <else> <!-- DATA_SM rejected -->
+                <!-- On either delivery failed (ECHO_SME <> SC) -->
+                <log:warn category="ECHO" message="Failed to deliver charge DATA_SM"/>
+                <log:warn category="ECHO" message="#status"/>
+                <log:info category="ECHO" message="Bill rollback"/>
+                <bill:close action="rollback" id="^bill_id"/>
+                <if test="^need_notify_receipt">
+                    <log:debug category="ECHO" message="^data_msg_id"/>
+                    <if test="^data_msg_id">
+                    <then>
+                         <smpp:receipt from="^data_original_DA" to="^data_original_OA" msg_id="^data_msg_id"
+                                       state="REJECTED" dst_sme_id="^data_src_sme_id" network_error_code="#status"/>
+                         <session:destroy_service/> <!-- End of SDP-charging processing -->
+                    </then>
+                    <else>
+                        <set var="^data_msg_id_missed" value="2"/>
+                        <set var="^receipt_failed_status" value="#status"/>
+                    </else>
+                    </if>
+                </if>
+            </else>
+            </if>
+            <return status="Ok"/>
+        </data_sm_resp>
+            
+</scag:rule>

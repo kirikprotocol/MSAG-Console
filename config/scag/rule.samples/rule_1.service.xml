@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.sibinco.com/SCAG ../xsd/smpp_rules.xsd"
+            xmlns:scag     ="http://www.sibinco.com/SCAG"
+            xmlns:session  ="http://www.sibinco.com/SCAG/SESSIONS"
+            xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+            xmlns:strings  ="http://www.sibinco.com/SCAG/STRINGS"
+            xmlns:bill     ="http://www.sibinco.com/SCAG/BILL"
+            xmlns:send     ="http://www.sibinco.com/SCAG/SEND"
+            xmlns:profile  ="http://www.sibinco.com/SCAG/PROFILE"
+            xmlns:batch    ="http://www.sibinco.com/SCAG/BATCH"
+            xmlns:log      ="http://www.sibinco.com/SCAG/LOG"
+            xmlns:http     ="http://www.sibinco.com/SCAG/HTTP"
+            xmlns:smpp     ="http://www.sibinco.com/SCAG/SMPP"
+            xmlns:datetime ="http://www.sibinco.com/SCAG/DATETIME"
+            xmlns:stat     ="http://www.sibinco.com/SCAG/STAT"
+            transport="SMPP">
+
+
+
+
+
+    <service_init>
+        <log:debug category="TEST" message="SERVICE_INIT"/>
+        <set var="~submit_requested" value="0"/>
+        <return status="Ok"/>
+    </service_init>
+        
+    <service_destroy>
+        <log:debug category="TEST" message="SERVICE_DESTROY"/>
+        <log:debug category="SESSION_STATUS" message="#status"/>
+        <set var="~submit_requested" value="0"/>
+        <return status="Ok"/>
+    </service_destroy>
+
+    <deliver_sm>
+        <!-- operation:make_persistent / -->
+        <set var="~submit_requested" value="1"/>
+        <return status="Ok"/>
+    </deliver_sm>
+         
+    <deliver_sm_resp>
+        <if test="#status" op="nei" value="0">
+            <log:warn category="TEST" message="Failed to deliver DELIVER_SM"/>
+            <log:warn category="TEST" message="#status"/>
+            <set var="~submit_requested" value="0"/>
+            <session:destroy_service/>
+            <return status="Ok"/>
+        </if>
+        <session:wait time="00:00:10"/> <!-- wait 10 seconds for submit_sm -->
+        <return status="Ok"/>
+    </deliver_sm_resp>
+            
+    <submit_sm>
+        <!-- Check if SUBMIT_SM was requested by DELIVER_SM -->
+        <if test="~submit_requested" op="eqi" value="0">
+            <log:warn category="TEST" message="Attempt to send SUBMIT_SM without previous DELIVER_SM"/>
+            <return status="Failed" result="69"/> <!-- SUBMITFAIL -->
+        </if>
+        <return status="Ok"/>
+    </submit_sm>
+        
+    <submit_sm_resp>
+        <if test="#status" op="nei" value="0">
+            <log:warn category="TEST" message="Failed to deliver SUBMIT_SM"/>
+            <log:warn category="TEST" message="#status"/>
+            <set var="~submit_requested" value="0"/>
+        </if>
+        <return status="Ok"/>
+    </submit_sm_resp>
+
+    <data_sm>
+        <if test="#packet_direction" op="eqi" value="@DIRECTION_SME_2_SC">
+            <!-- Check if DATA_SM was requested by DELIVER_SM -->
+            <if test="~submit_requested" op="eqi" value="0">
+                <log:warn category="TEST" message="Attempt to send DATA_SM without previous DELIVER_SM"/>
+                <session:destroy_service/>
+                <return status="Failed" result="69"/> <!-- SUBMITFAIL -->
+            </if>
+            <!-- set var="~submit_requested" value="0"/--> <!-- Deny other SUBMIT_SM or DATA_SM -->
+            <log:info category="TEST" message="Got charge-DATA_SM"/>
+            
+            <!-- Create & open user session context to operate service data (e.g. store bill_id) -->
+            <session:new_context id="%session_context_id" status="%session_context_status"/>
+            <if test="%session_context_status" op="ne" value="@TRUE">
+                <log:warn category="TEST" message="Failed to create new user session context:"/>
+                <log:warn category="TEST" message="%session_context_status"/>
+                <session:destroy_service/>
+                <return status="Failed"/>
+            </if>
+            <!-- Set UMR field to %session_context_id to pass it throgh context related packets -->
+            <set var="#umr" value="%session_context_id"/>
+            <log:info category="TEST" message="User session context created:"/>
+            <log:info category="TEST" message="%session_context_id"/>
+            
+            <!-- Open bill transaction & get %BN. Store transaction id in user context ^bill_id -->
+            <set var="^bill_id" value="DATASM_BASE_BILL"/>
+            <bill:open category="1" content-type="1" status="%bill_status"
+                       result_number="^BN" id="^bill_id"/>
+            <if test="%bill_status" op="nei" value="0">
+                <log:warn category="TEST" message="Failed to open bill transaction"/>
+                <log:warn category="TEST" message="%bill_status"/>
+                <session:destroy_service/>
+                <return status="Failed"/>
+            </if>
+
+            <!-- Code for SMPP-receipt packets --> 
+            <!-- HINT: Set this var to 0 to skip notification receipts from MSAG -->
+            <set var="^need_notify_receipt" value="1"/>
+            <if test="^need_notify_receipt">
+                <!-- Store enpoint ids & OA into session -->
+                <set var="^data_src_sme_id" value="#src_sme_id"/>
+                <set var="^data_dst_sme_id" value="#dst_sme_id"/>
+                <set var="^data_original_OA" value="#OA"/>
+                <set var="^data_original_DA" value="#DA"/>
+                <set var="^data_msg_id_missed" value="0"/>
+            </if>
+            
+            <!-- Changing OA address to BN -->
+            <set var="#OA" value="^BN"/>
+            <!-- Set SDP processing flag (to skip old data_sm) -->
+            <set var="^sdp_sequence_started" value="@TRUE"/>
+            <!-- Now waiting delivery from SC to ECHO service -->
+            <session:wait time="00:00:10"/> <!-- wait 10 seconds for data_sm -->
+        </if>
+        <return status="Ok" result="0"/>
+    </data_sm>
+
+    <data_sm_resp>
+        <!-- Code for SMPP-receipt packets --> 
+        <if test="^need_notify_receipt">
+            <if test="#packet_direction" op="eqi" value="@DIRECTION_SC_2_SME">
+                <log:debug category="TEST" message="Message id check and store"/>
+                <log:debug category="TEST" message="#message_id"/>
+                <if test="^data_msg_id_missed" op="eqi" value="0">
+                    <set var="^data_msg_id" value="#message_id"/>
+                </if>
+                <if test="^data_msg_id_missed" op="eqi" value="1">
+                    <log:warn category="TEST" message="Receipt Ok"/>
+                    <smpp:receipt from="^data_original_DA" to="^data_original_OA" msg_id="#message_id"
+                                  state="DELIVERED" dst_sme_id="^data_src_sme_id" network_error_code="0"/>
+                </if>
+                <if test="^data_msg_id_missed" op="eqi" value="2">
+                    <log:warn category="TEST" message="Receipt Failed"/>
+                    <smpp:receipt from="^data_original_DA" to="^data_original_OA" msg_id="#message_id"
+                                  state="REJECTED" dst_sme_id="^data_src_sme_id" network_error_code="^receipt_failed_status"/>
+                </if>
+            </if>
+            <set var="^data_msg_id_missed" value="0"/>
+        </if>
+            
+        <if test="#status" op="nei" value="0">
+        <then>
+            <log:warn category="TEST" message="Failed to deliver DATA_SM"/>
+            <log:warn category="TEST" message="#status"/>
+            <set var="^data_sm_sequence_started" value="@FALSE"/>
+            <session:destroy_service/>
+        </then>
+        <else>
+            <session:destroy_service wait="00:01:00"/> <!-- wait 10 seconds for ECHO service activity --> 
+        </else>
+        </if>
+        <return status="Ok"/>
+    </data_sm_resp>
+            
+</scag:rule>
