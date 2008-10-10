@@ -47,8 +47,8 @@ void SmppSocket::processInput()
     }
     if(res<=0)
     {
-      connected=false;
-      return;
+        disconnect();
+        return;
     }
     lastActivity=time(NULL);
     rdBufUsed+=res;
@@ -61,13 +61,10 @@ void SmppSocket::processInput()
     rdToRead=ntohl(rdToRead);
     if(rdToRead>70000)
     {
-      char peer[32];
-      sock->GetPeer(peer);
-      smsc_log_warn(log,"command received from %s too large:%d",peer,rdToRead);
-      MutexGuard mg(mtx);
-      sock->Close();
-      connected=false;
-      return;
+        smsc_log_warn(log,"command received from %s too large:%d",getCachedPeer(),rdToRead);
+        MutexGuard mg(mtx);
+        disconnect();
+        return;
     }
     if(rdToRead>rdBufSize)
     {
@@ -84,9 +81,9 @@ void SmppSocket::processInput()
   }
   if(res<=0)
   {
-    smsc_log_warn(log, "SmppSocket error from recv");
-    connected=false;
-    return;
+      smsc_log_warn(log, "SmppSocket error from recv");
+      disconnect();
+      return;
   }
   lastActivity=time(NULL);
   rdBufUsed+=res;
@@ -95,18 +92,8 @@ void SmppSocket::processInput()
   {
       std::string out;
       ::bufdump( out, reinterpret_cast<const unsigned char*>(rdBuffer), rdToRead );
-      char buf[32];
-      /*
-      for(int i=0;i<rdToRead;i++)
-      {
-          sprintf(buf,"%02x",(unsigned char)rdBuffer[i]);
-          out.append(buf,2);
-          out.push_back(' ');
-      }
-       */
-      sock->GetPeer(buf);
       dump->log(smsc::logger::Logger::LEVEL_DEBUG, "in from %s(%s): %s",
-                buf, systemId.c_str(), out.c_str());
+                getCachedPeer(), systemId.c_str(), out.c_str());
   }
   SmppStream s;
   assignStreamWith(&s,rdBuffer,rdBufUsed,true);
@@ -115,11 +102,9 @@ void SmppSocket::processInput()
   PduGuard pdu(smsc::smpp::fetchSmppPdu(&s));
   if(pdu.isNull())
   {
-    char peer[32];
-    sock->GetPeer(peer);
-    smsc_log_warn(log, "Failed to parse pdu from %s, closing connection",peer);
-    connected=false;
-    return;
+      smsc_log_warn(log, "Failed to parse pdu from %s, closing connection",getCachedPeer());
+      disconnect();
+      return;
   }
   if(processPdu(pdu))return;
 
@@ -211,11 +196,10 @@ void SmppSocket::processInput()
   }
 }
 
+
 void SmppSocket::sendData()
 {
-  char buf[32];
-  sock->GetPeer(buf);
-  smsc_log_debug(log, "sendData: %d/%d(%s)",wrBufSent,wrBufUsed,buf);
+    smsc_log_debug(log, "sendData: %d/%d(%s)",wrBufSent,wrBufUsed,getCachedPeer());
   if(wrBufUsed && wrBufSent<wrBufUsed)
   {
     int res;
@@ -225,9 +209,9 @@ void SmppSocket::sendData()
     }
     if(res<=0)
     {
-      smsc_log_warn(log, "sendData: write failed:%d", res);
-      connected=false;
-      return;
+        smsc_log_warn(log, "sendData: write failed:%d", res);
+        disconnect();
+        return;
     }
     //lastActivity=time(NULL);
     wrBufSent+=res;
@@ -273,9 +257,8 @@ void SmppSocket::sendData()
   {
       std::string out;
       ::bufdump( out, reinterpret_cast<const unsigned char*>(wrBuffer), sz );
-      sock->GetPeer(buf);
       dump->log(smsc::logger::Logger::LEVEL_DEBUG, "out to %s(%s),%d: %s",
-                buf, systemId.c_str(), outQueue.Count(), out.c_str());
+                getCachedPeer(), systemId.c_str(), outQueue.Count(), out.c_str());
   }
   wrBufSent=0;
   wrBufUsed=sz;

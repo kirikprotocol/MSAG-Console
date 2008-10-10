@@ -73,6 +73,7 @@ struct SmppSocket:SmppChannel{
     delete [] wrBuffer;
     delete [] rdBuffer;
     if(sock)delete sock;
+      dropPeer();
     if ( outQueue.Count() > 0 ) {
         smsc_log_warn(log, "destructor: there are %u commands to send", outQueue.Count() );
         SmppCommand* cmd;
@@ -133,8 +134,9 @@ struct SmppSocket:SmppChannel{
 
   void disconnect()
   {
-    connected=false;
-    sock->Close();
+      connected=false;
+      sock->Close();
+      dropPeer();
   }
 
   void processInput();
@@ -184,17 +186,25 @@ struct SmppSocket:SmppChannel{
 
   virtual std::string getPeer()
   {
-      if (!sock) return "";
-
-      char buff[32];
-      sock->GetPeer(buff);
-
-      std::string str = buff;
+      std::string str = getCachedPeer();
       return str;
   }
 
 protected:
 
+    char* getCachedPeer() const {
+        if ( ! sock ) return "";
+        if ( ! peer_ ) {
+            peer_ = new char[32];
+            sock->GetPeer(peer_);
+        }
+        return peer_;
+    }
+    inline void dropPeer() {
+        if (peer_) { delete[] peer_; peer_ = 0; }
+    }
+
+protected:
   EventMonitor* outMon;
   SmppCommandQueue* cmdQueue;
   SmppChannelRegistrator* chReg;
@@ -202,6 +212,7 @@ protected:
   SmppSMInterface* sm;
 
   Socket* sock;
+    mutable char* peer_;
   Mutex mtx;
   int refCount;
   bool connected;
@@ -237,6 +248,7 @@ protected:
     lastActivity=time(NULL);
     outMon=0;
     sock=0;
+      peer_ = 0;
     refCount=1;
     connected=false;
     sockType=etUnknown;
