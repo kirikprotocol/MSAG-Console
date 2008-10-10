@@ -4,6 +4,26 @@
 #include "system/status.h"
 #include "SmppManager2.h"
 
+namespace {
+
+inline char digit( unsigned char c )
+{
+    return (c<10 ? c+'0' : c+'W'); // to make 0123456789abcdef
+}
+
+void bufdump( std::string& out, const unsigned char* inbuf, unsigned insize )
+{
+    out.reserve( out.size() + insize*3 + 10 );
+    char buf[3];
+    buf[2] = ' ';
+    for ( ; insize-- > 0; ++inbuf ) {
+        buf[0] = digit((*inbuf) >> 4);
+        buf[1] = digit((*inbuf) & 0xf);
+        out.append( buf, 3 );
+    }
+}
+}
+
 namespace scag2 {
 namespace transport{
 namespace smpp{
@@ -68,14 +88,16 @@ void SmppSocket::processInput()
   if(dump->isDebugEnabled())
   {
       std::string out;
-      out.reserve( 1024 );
+      ::bufdump( out, reinterpret_cast<const unsigned char*>(rdBuffer), rdToRead );
       char buf[32];
+      /*
       for(int i=0;i<rdToRead;i++)
       {
           sprintf(buf,"%02x",(unsigned char)rdBuffer[i]);
           out.append(buf,2);
           out.push_back(' ');
       }
+       */
       sock->GetPeer(buf);
       dump->log(smsc::logger::Logger::LEVEL_DEBUG, "in from %s(%s): %s",
                 buf, systemId.c_str(), out.c_str());
@@ -244,13 +266,7 @@ void SmppSocket::sendData()
   if(dump->isDebugEnabled())
   {
       std::string out;
-      out.reserve(1024);
-      for(int i=0;i<sz;i++)
-      {
-          sprintf(buf,"%02x",(unsigned char)wrBuffer[i]);
-          out.append(buf, 2);
-          out.push_back(' ');
-      }
+      ::bufdump( out, reinterpret_cast<const unsigned char*>(wrBuffer), sz );
       sock->GetPeer(buf);
       dump->log(smsc::logger::Logger::LEVEL_DEBUG, "out to %s(%s),%d: %s",
                 buf, systemId.c_str(), outQueue.Count(), out.c_str());
