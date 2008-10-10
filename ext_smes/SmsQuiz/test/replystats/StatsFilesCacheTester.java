@@ -5,17 +5,15 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
-import mobi.eyeline.smsquiz.replystats.statsfile.StatsFilesCache;
-import mobi.eyeline.smsquiz.replystats.statsfile.FileStatsException;
-import mobi.eyeline.smsquiz.replystats.statsfile.StatsFileImpl;
-import mobi.eyeline.smsquiz.replystats.statsfile.StatsFile;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.StatsFilesCache;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.FileStatsException;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.StatsFile;
 import mobi.eyeline.smsquiz.replystats.Reply;
 
 import java.util.Date;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Iterator;
-import java.io.File;
 
 /**
  * author: alkhal

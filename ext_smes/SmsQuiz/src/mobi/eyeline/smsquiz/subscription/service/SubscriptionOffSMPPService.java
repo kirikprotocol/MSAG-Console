@@ -13,8 +13,8 @@ import java.util.Properties;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.SMPPException;
 import org.apache.log4j.Logger;
-import mobi.eyeline.smsquiz.subscription.manager.SubscriptionManager;
-import mobi.eyeline.smsquiz.subscription.manager.SubManagerException;
+import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
+import mobi.eyeline.smsquiz.subscription.SubManagerException;
 
 /**
  * author: alkhal

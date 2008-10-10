@@ -1,6 +1,7 @@
-package mobi.eyeline.smsquiz.replystats.statsfile;
+package mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile;
 
-import mobi.eyeline.smsquiz.replystats.statsfile.FileStatsException;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.FileStatsException;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.StatsFile;
 import mobi.eyeline.smsquiz.replystats.Reply;
 
 import java.util.*;
@@ -9,7 +10,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.text.SimpleDateFormat;
 import java.io.File;
 
@@ -33,7 +33,7 @@ public class StatsFilesCache {
     private SimpleDateFormat fileNameFormat;
     private ScheduledExecutorService s;
 
-    public static void init(final String configFile) throws FileStatsException {
+    public static void init(final String configFile) throws FileStatsException { // todo  to constructor
         try {
             final XmlConfig c = new XmlConfig();
             c.load(new File(configFile));
@@ -76,9 +76,10 @@ public class StatsFilesCache {
         if((da==null)||(from==null)||(till==null)) {
             throw new FileStatsException("Some arguments are null", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
         }
-        StatsFile statsFile = null;
-        Collection<StatsFile> files = new HashSet<StatsFile>();
+        StatsFile statsFile;
+        Collection<StatsFile> files = new HashSet<StatsFile>();// todo
 
+      // todo not efficient
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(from);
         calendar.set(Calendar.HOUR_OF_DAY,0);
@@ -107,33 +108,33 @@ public class StatsFilesCache {
         new FileCollector(true).run();
     }
 
-    private String buildKey(String da, Date date) {
+    private static String buildKey(String da, Date date) {
         String result ="";
-        result+=da+"_" + date.getTime();
+        result+=da+ '_' + date.getTime();
         return result;
     }
 
     private StatsFile lockupFile(final String dest, final Date date, boolean checkExist){
-        CachedStatsFile file = null;
+        CachedStatsFile file;
         String key = buildKey(dest, date);
         
         if( (file = filesMap.get(key)) == null) {
-            file = new CachedStatsFile(dest, replyStatsDir +"/"+dest+"/"+fileNameFormat.format(date)+".csv");
+            file = new CachedStatsFile(dest, replyStatsDir + '/' +dest+ '/' +fileNameFormat.format(date)+".csv");
             if((checkExist)&&(!file.exist())) {
                 return null;
             }
-            file.setMapKey(key);
+            file.setMapKey(key); // todo
             CachedStatsFile f1 = filesMap.putIfAbsent(key, file);
             if (f1 != null)
                 file = f1;
         }
-        if((checkExist)&&(!file.exist())) {
+        if((checkExist)&&(!file.exist())) { // todo
             return null;
         }
         return file;
     }
 
-    private class CachedStatsFile implements StatsFile{
+    private static class CachedStatsFile implements StatsFile{
         private StatsFileImpl statsFileImpl;
         private String filePath;
         private String da;
@@ -221,7 +222,7 @@ public class StatsFilesCache {
                             file.open();
                             file.closeExt();
                             file.close();
-                            filesMap.remove(file.getMapKey());
+                            filesMap.remove(file.getMapKey());// todo
                         } catch (FileStatsException e) {
                             logger.error("Error lock the cached file", e);
                         }

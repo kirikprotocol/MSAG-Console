@@ -3,6 +3,7 @@ package mobi.eyeline.smsquiz.subscription.datasource.impl;
 import mobi.eyeline.smsquiz.subscription.datasource.*;
 import mobi.eyeline.smsquiz.subscription.Subscription;
 import mobi.eyeline.smsquiz.storage.StorageException;
+import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
 
 import java.util.Date;
 import java.sql.*;
@@ -17,7 +18,7 @@ import org.apache.log4j.Logger;
 
 public class DBSubscriptionDataSource implements SubscriptionDataSource {
     
-    private static Logger logger = Logger.getLogger(DBSubscriptionDataSource.class);
+    private static final Logger logger = Logger.getLogger(DBSubscriptionDataSource.class);
     private ConnectionPool pool;
 
     private String properties = "smsquiz.properties";
@@ -39,7 +40,6 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
                     is.close();
             } catch (IOException e1) {
                 logger.error("Can't close stream",e1);
-                throw new StorageException("Error load config properties", e1);
             }
         }
     }
@@ -151,8 +151,8 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
             }
          }catch(SQLException exc){
              logger.error("Unable to get list of subscriptions from the dataBase", exc);
+             // todo close connection if error
              throw new StorageException("Unable to get list of subscriptions from the dataBase", exc);
-
          }
         return new SubscriptionResultSet(sqlResult,connection, prepStatement);
     }
@@ -189,7 +189,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
         pool.close();
     }
 
-    private void closeConn(Connection connection, PreparedStatement preparedStatement, java.sql.ResultSet resultSet) {
+    private static void closeConn(Connection connection, PreparedStatement preparedStatement, java.sql.ResultSet resultSet) {
         try{
             if(connection!=null) {
                 connection.close();

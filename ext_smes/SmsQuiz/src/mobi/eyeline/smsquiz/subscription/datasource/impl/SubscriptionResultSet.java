@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz.subscription.datasource;
+package mobi.eyeline.smsquiz.subscription.datasource.impl;
 
 import mobi.eyeline.smsquiz.storage.StorageException;
 import mobi.eyeline.smsquiz.subscription.Subscription;
@@ -13,7 +13,7 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 
 
-public class SubscriptionResultSet implements ResultSet {
+class SubscriptionResultSet implements ResultSet {
 
     private static Logger logger = Logger.getLogger(SubscriptionResultSet.class);
     private java.sql.ResultSet sqlResult;

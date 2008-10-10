@@ -6,16 +6,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertFalse;
-import mobi.eyeline.smsquiz.replystats.statsfile.StatsFilesCache;
-import mobi.eyeline.smsquiz.replystats.statsfile.FileStatsException;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.StatsFilesCache;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.FileStatsException;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
-import mobi.eyeline.smsquiz.replystats.datasource.FileReplyStatsDataSource;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.FileReplyStatsDataSource;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
 import mobi.eyeline.smsquiz.replystats.Reply;
 
 import java.util.Date;
 import java.util.Calendar;
-import java.io.File;
 
 /**
  * author: alkhal

@@ -5,6 +5,7 @@ import mobi.eyeline.smsquiz.subscription.datasource.impl.DBSubscriptionDataSourc
 import mobi.eyeline.smsquiz.subscription.Subscription;
 import mobi.eyeline.smsquiz.storage.ResultSet;
 import mobi.eyeline.smsquiz.storage.StorageException;
+import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
 
 import java.io.*;
 import java.util.Date;

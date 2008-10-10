@@ -1,21 +1,18 @@
-package mobi.eyeline.smsquiz.replystats.statsfile;
+package mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile;
 
-import com.eyeline.utils.config.xml.XmlConfig;
-import com.eyeline.utils.config.properties.PropertiesConfig;
-import com.eyeline.utils.config.ConfigException;
 import com.eyeline.utils.FileUtils;
 
 import java.util.*;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
-import java.sql.Time;
 
 import org.apache.log4j.Logger;
-import mobi.eyeline.smsquiz.replystats.statsfile.FileStatsException;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.FileStatsException;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.StatsFile;
 import mobi.eyeline.smsquiz.replystats.Reply;
 
-public class StatsFileImpl implements StatsFile {
+class StatsFileImpl implements StatsFile {
     private static Logger logger = Logger.getLogger(StatsFileImpl.class);
 
     private final String da;
@@ -35,7 +32,7 @@ public class StatsFileImpl implements StatsFile {
 
         dateFormat = new SimpleDateFormat(datePattern);
         timeFormat = new SimpleDateFormat(timePattern);
-        csvDateFormat = new SimpleDateFormat(datePattern+" "+timePattern);
+        csvDateFormat = new SimpleDateFormat(datePattern+ ' ' +timePattern);
         File currentFile = new File(filePath);
         File parent = currentFile.getParentFile();
         if (!parent.exists())
@@ -85,10 +82,10 @@ public class StatsFileImpl implements StatsFile {
             logger.error("Some arguments are null!");
             throw new FileStatsException("Some arguments are null!", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
         }
-        String line=null;
-        StringTokenizer tokenizer=null;
-        Date date = null;
-        Reply reply=  null;
+        String line;
+        StringTokenizer tokenizer;
+        Date date;
+        Reply reply;
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(filePath));

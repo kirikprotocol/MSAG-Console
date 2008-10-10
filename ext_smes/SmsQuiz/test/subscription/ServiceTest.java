@@ -9,10 +9,10 @@ import com.eyeline.utils.config.ConfigException;
 import java.io.File;
 
 import ru.aurorisoft.smpp.SMPPException;
-import mobi.eyeline.smsquiz.subscription.manager.SubscriptionManager;
-import mobi.eyeline.smsquiz.subscription.manager.SubManagerException;
+import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
+import mobi.eyeline.smsquiz.subscription.SubManagerException;
 import mobi.eyeline.smsquiz.storage.StorageException;
-import mobi.eyeline.smsquiz.subscription.datasource.ConnectionPoolFactory;
+import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
 import static org.junit.Assert.assertTrue;
 
 /**

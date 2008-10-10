@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz.subscription.manager;
+package mobi.eyeline.smsquiz.subscription;
 
 
 import mobi.eyeline.smsquiz.subscription.datasource.SubscriptionDataSource;
@@ -13,10 +13,10 @@ import java.util.Date;
 public class SubscriptionManager {
 
     private SubscriptionDataSource dataSource;
-    private static Logger logger = Logger.getLogger(SubscriptionManager.class);
+    private static final Logger logger = Logger.getLogger(SubscriptionManager.class);
     private static SubscriptionManager manager;
 
-    public static void init() throws SubManagerException {
+    public static void init() throws SubManagerException { // todo
         manager = new SubscriptionManager();
     }
     public static SubscriptionManager getInstance() {
@@ -55,7 +55,7 @@ public class SubscriptionManager {
     }
 
     public boolean subscribed(String address) throws SubManagerException {
-        Subscription subscription = null;
+        Subscription subscription;
         try {
             subscription = dataSource.get(address);
             return subscription != null && subscription.getEndDate() == null;

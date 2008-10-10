@@ -4,7 +4,7 @@ import com.eyeline.utils.config.ConfigException;
 
 import java.io.IOException;
 
-import mobi.eyeline.smsquiz.replystats.statsfile.FileStatsException;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.FileStatsException;
 
 /**
  * author: alkhal

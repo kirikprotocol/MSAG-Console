@@ -1,7 +1,6 @@
 package mobi.eyeline.smsquiz.replystats.datasource;
 
 import mobi.eyeline.smsquiz.replystats.Reply;
-import mobi.eyeline.smsquiz.replystats.statsfile.StatsFile;
 
 import java.util.Collection;
 import java.util.Date;

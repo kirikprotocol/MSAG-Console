@@ -1,6 +1,6 @@
-package mobi.eyeline.smsquiz.replystats.statsfile;
+package mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile;
 
-import mobi.eyeline.smsquiz.replystats.statsfile.FileStatsException;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.FileStatsException;
 import mobi.eyeline.smsquiz.replystats.Reply;
 
 import java.util.Collection;

@@ -1,9 +1,11 @@
-package mobi.eyeline.smsquiz.replystats.datasource;
+package mobi.eyeline.smsquiz.replystats.datasource.impl;
 
-import mobi.eyeline.smsquiz.replystats.statsfile.StatsFilesCache;
-import mobi.eyeline.smsquiz.replystats.statsfile.StatsFile;
-import mobi.eyeline.smsquiz.replystats.statsfile.FileStatsException;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.StatsFilesCache;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.StatsFile;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.FileStatsException;
 import mobi.eyeline.smsquiz.replystats.Reply;
+import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
+import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
 
 import java.util.Collection;
 import java.util.Date;
@@ -13,14 +15,14 @@ import org.apache.log4j.Logger;
 
 public class FileReplyStatsDataSource implements ReplyStatsDataSource {
 
-	private static Logger logger = Logger.getLogger(FileReplyStatsDataSource.class);
+	private static final Logger logger = Logger.getLogger(FileReplyStatsDataSource.class);
 	private StatsFilesCache filesCache;
 
     public FileReplyStatsDataSource() {
         filesCache = new StatsFilesCache();
     }
 
-    public void add(Reply reply) throws ReplyDataSourceException{
+    public void add(Reply reply) throws ReplyDataSourceException {
         String da = reply.getDa();
         Date date = reply.getDate();
         if((da==null)||(date==null)) {
@@ -51,7 +53,7 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
         }
 
         Collection<Reply> replies = new LinkedList<Reply>();
-        Collection<StatsFile> files = null;
+        Collection<StatsFile> files;
 
         try {
             files = filesCache.getFiles(da,from,till);

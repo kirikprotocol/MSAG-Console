@@ -1,9 +1,9 @@
 package subscription;
 
-import mobi.eyeline.smsquiz.subscription.datasource.ConnectionPoolFactory;
+import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
 import mobi.eyeline.smsquiz.storage.StorageException;
-import mobi.eyeline.smsquiz.subscription.manager.SubscriptionManager;
-import mobi.eyeline.smsquiz.subscription.manager.SubManagerException;
+import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
+import mobi.eyeline.smsquiz.subscription.SubManagerException;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import org.junit.BeforeClass;

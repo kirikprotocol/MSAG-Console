@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz.subscription.datasource;
+package mobi.eyeline.smsquiz.storage;
 
 import snaq.db.ConnectionPool;
 
