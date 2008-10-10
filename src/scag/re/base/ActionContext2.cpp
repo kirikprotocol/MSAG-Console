@@ -80,7 +80,8 @@ void ActionContext::resetContext( Hash<Property>*  constants,
     session_ = session;
     command_ = command;
     commandProperty_ = commandProperty;
-    setInfrastructureConstants();
+    if ( infrastructConstants_ ) infrastructConstants_->Empty();
+    // setInfrastructureConstants();
 };
 
 
@@ -153,7 +154,7 @@ Property* ActionContext::getProperty( const std::string& var )
          */
 
     case ftConst: {
-        propertyPtr = infrastructConstants_.GetPtr(name);
+        propertyPtr = getInfrastructConstant(name);
         if ( ! propertyPtr ) propertyPtr = constants_->GetPtr(name);
         break;
     }
@@ -172,14 +173,6 @@ Property* ActionContext::getProperty( const std::string& var )
         propertyPtr = scope->getProperty(name);
     return propertyPtr;
 }
-
-
-/*
-void ActionContext::abortSession()
-{
-    session_->abort();
-}
- */
 
 
 void ActionContext::getBillingInfoStruct( bill::BillingInfoStruct& bis )
@@ -213,53 +206,72 @@ bill::infrastruct::TariffRec* ActionContext::getTariffRec( uint32_t category,
 }
 
 
+Property* ActionContext::getInfrastructConstant( const char* pname )
+{
+    // determine the validity of the name
+    Property* ret = 0;
+    if ( pname ) {
 
+        if (!commandProperty_) {
+            throw SCAGException("ActionContext: commandProperty is not set");
+            return 0;
+        }
+
+        int64_t propval;
+        switch (pname[0]) {
+        case 'p' :
+            if ( strcmp(pname,"provider_id")==0 ) {
+                propval = int64_t(commandProperty_->serviceId);
+            } else {
+                pname = 0;
+            }
+            break;
+        case 'o' :
+            if ( strcmp(pname,"operator_id")==0 ) {
+                propval = int64_t(commandProperty_->operatorId);
+            } else if ( strcmp(pname,"operation_id") ) {
+                propval = int64_t(session_->getCurrentOperationId());
+            } else {
+                pname = 0;
+            }
+            break;
+        case 'r' :
+            if ( strcmp(pname,"route_id")==0 ) {
+                if (!infrastructConstants_) {
+                    infrastructConstants_ = new Hash<Property>();
+                } else if ((ret = infrastructConstants_->GetPtr(pname))) {
+                    break;
+                }
+                (*infrastructConstants_)[pname] = commandProperty_->routeId;
+                ret = infrastructConstants_->GetPtr(pname);
+            }
+            pname = 0;
+            break;
+        case 's' :
+            if ( strcmp(pname,"service_id")==0 ) {
+                propval = int64_t(commandProperty_->serviceId);
+            } else {
+                pname = 0;
+            }
+            break;
+        default :
+            pname = 0;
+        }
+
+        if ( pname ) {
+            if ( ! infrastructConstants_ ) infrastructConstants_ = new Hash<Property>();
+            ret = infrastructConstants_->GetPtr(pname);
+            if ( ! ret ) {
+                Property p;
+                p.setInt( propval );
+                (*infrastructConstants_)[pname] = p;
+            }
+        }
+    } // if pname
+    return ret;
+}
 
 /*
-void ActionContext::AddPendingOperation(uint8_t type, time_t pendingTime, unsigned int billID)
-{
-    PendingOperation pendingOperation;
-    pendingOperation.validityTime = pendingTime;
-    pendingOperation.type = type;
-    
-    if (billID > 0) 
-        pendingOperation.billID = billID;
-    
-    session->addPendingOperation(pendingOperation);
-}
- */
-
-
-#if 0
-bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType)
-{
-    return (operationType != CO_DELIVER) && (operationType != CO_USSD_DIALOG);
-    
-    /* TODO: Reserved for future constrants 
-    switch (transportType) 
-    {
-        case SMPP: 
-        case MMS:
-        case HTTP:
-            return true;
-    }
-    return false;
-    */
-}
-
-int ActionContext::getCurrentOperationBillID()
-{
-    Operation * operation = session->GetCurrentOperation();
-    if (!operation) throw SCAGException("Operation: cannot find billing current operation");
-
-    if (!operation->hasBill()) throw SCAGException("Operation: cannot find billing transaction");
-
-    return operation->getBillId();
-}
-
-#endif
-
-
 void ActionContext::setInfrastructureConstants() {
     if (!commandProperty_) {
         throw SCAGException("ActionContext: commandProperty is not set");
@@ -283,7 +295,7 @@ void ActionContext::setInfrastructureConstants() {
 
     infrastructConstants_["route_id"] = commandProperty_->routeId;
 }
-
+ */
 
 }}}
 

@@ -104,18 +104,20 @@ public:
     isTrueCondition(false),
     status_(rs),
     constants_(constants),
+    infrastructConstants_(0),
     session_(session),
     command_(command),
     commandProperty_(commandProperty),
     destroyService_(-1),
     rule_(0)
     {
-        setInfrastructureConstants();
+        // setInfrastructureConstants();
     }
 
 
     ~ActionContext() {
         if ( rule_ ) rule_->unref();
+        if ( infrastructConstants_ ) delete infrastructConstants_;
     }
 
 
@@ -186,7 +188,7 @@ public:
                                                  uint32_t mediaType );
 
 private:
-    void setInfrastructureConstants();
+    Property* getInfrastructConstant( const char* pname );
 
 public:
     bool                    isTrueCondition;
@@ -196,7 +198,7 @@ private:
 
     // Hash<Property>          variables_;
     Hash<Property>*         constants_;
-    Hash<Property>          infrastructConstants_;
+    mutable Hash<Property>* infrastructConstants_;
 
     Session*                session_;
     CommandAccessor*        command_;
