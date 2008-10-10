@@ -67,6 +67,7 @@ public class Constants {
             public static final Constants COULDNT_SET_LOGCATS = new Constants("error.logging.couldnt.setLog.cats");
             public static final Constants COULDNT_SET_LOGCATS_FILE_WRITE = new Constants("error.logging.couldnt.setLog.cats.file_write");
             public static final Constants COULDNT_STORE_LOGCATS = new Constants("error.logging.couldnt.storeLog.cats");
+            public static final Constants COULDNT_GET_LOGCATS = new Constants("error.logging.couldnt.getLog.cats");
         }
 
 
