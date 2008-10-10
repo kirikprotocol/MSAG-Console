@@ -201,28 +201,34 @@ uint32_t InfrastructureImpl::GetProviderID(uint32_t service_id)
 
 uint32_t InfrastructureImpl::GetOperatorID(Address addr)
 {
-    MutexGuard mt(OperatorMapMutex);
-    
-    if(mask_hash == NULL)
-        return 0;
+    uint32_t ret =0;
+    do {
+        if (mask_hash == NULL) break;
 
-    std::string a = addr.toString();
-    uint8_t mask_ptr = a.length();
+        std::string a = addr.toString();
+        uint8_t mask_ptr = a.length();
 
-    bool found;
-    while(!(found = mask_hash->Exists(a.c_str())) && mask_ptr > 5)
-    {
-//        smsc_log_debug(logger, "Trying mask: %s", a.c_str());
-        a[--mask_ptr] = '?';
-    }
+        bool found;
+        {
+            MutexGuard mt(OperatorMapMutex);
+            if (mask_hash == NULL) break;
+            while(!(found = mask_hash->Exists(a.c_str())) && mask_ptr > 5)
+            {
+                //        smsc_log_debug(logger, "Trying mask: %s", a.c_str());
+                a[--mask_ptr] = '?';
+            }
+            if (found) ret = mask_hash->Get(a.c_str());
+        }
 
-    if(found)
-    {
-        smsc_log_debug(logger, "Match mask: %s", a.c_str());
-        return mask_hash->Get(a.c_str());
-    }
-    smsc_log_debug(logger, "No match mask found for: %s", addr.toString().c_str());
-    return 0;
+        if ( logger->isDebugEnabled() ) {
+            if (found) {
+                smsc_log_debug(logger, "Match mask: %s, operator=%u", a.c_str(), ret);
+            } else {
+                smsc_log_debug(logger, "No match mask found for: %s", addr.toString().c_str());
+            }
+        }
+    } while ( false );
+    return ret;
 }
 
 TariffRec* InfrastructureImpl::GetTariff(uint32_t operator_id, uint32_t category, uint32_t mt)
