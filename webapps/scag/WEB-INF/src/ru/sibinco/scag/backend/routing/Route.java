@@ -40,6 +40,7 @@ public class Route {
     private Map destinations;
     private boolean archived;
     private boolean enabled = true;
+    private boolean transit = true;
     private boolean active = true;
     private String slicing;
     private String slicedRespPolicy;
@@ -47,7 +48,6 @@ public class Route {
     private Service service;
     private String notes;
 
-    private boolean transit;
 
     public Route(final String routeName, final Map sources, final Map destinations, final boolean archived,
                  final boolean enabled, final boolean active, final String slicing, final String slicedRespPolicy,
@@ -91,6 +91,7 @@ public class Route {
         this.destinations = destinations;
         this.archived = archived;
         this.enabled = enabled;
+        this.transit = transit;
         this.active = active;
         this.slicing = slicing;
         this.slicedRespPolicy = slicedRespPolicy;
@@ -98,7 +99,6 @@ public class Route {
         this.service = service;
         this.notes = notes;
 
-        this.transit = transit;
     }
 
     public Route(String routeName) {
@@ -112,6 +112,7 @@ public class Route {
         this.destinations = new HashMap();
         this.archived = false;
         this.enabled = false;
+        this.transit = false;
         this.active = false;
         this.slicing = "NONE";
         this.slicedRespPolicy = "ALL";
@@ -134,6 +135,7 @@ public class Route {
         destinations = loadDestinations(routeElem, subjects, smppManager);
         archived = routeElem.getAttribute("archived").equalsIgnoreCase("true");
         enabled = routeElem.getAttribute("enabled").equalsIgnoreCase("true");
+        transit = routeElem.getAttribute("transit").equalsIgnoreCase("true");
         active = routeElem.getAttribute("active").equalsIgnoreCase("true");
         slicing = routeElem.getAttribute("slicing");
         slicedRespPolicy = routeElem.getAttribute("slicedRespPolicy");
@@ -311,6 +313,14 @@ public class Route {
         this.enabled = enabled;
     }
 
+    public boolean isTransit() {
+        return transit;
+    }
+
+    public void setTransit(final boolean transit) {
+        this.transit = transit;
+    }
+
     public boolean isActive() {
         return active;
     }
@@ -365,14 +375,6 @@ public class Route {
 
     public void setNotes(final String notes) {
         this.notes = notes;
-    }
-
-    public boolean isTransit() {
-        return transit;
-    }
-
-    public void setTransit(final boolean transit) {
-        this.transit = transit;
     }
 
 }
