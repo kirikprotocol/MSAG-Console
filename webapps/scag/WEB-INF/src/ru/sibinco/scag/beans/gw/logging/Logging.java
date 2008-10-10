@@ -70,8 +70,6 @@ public class Logging extends EditBean {
         init();
     }
 
-//    private void readLogs( HttpServletRequest req) {
-
     public class LoggerCategoryInfo implements Comparable {
         private String name;
         private String fullName;
@@ -277,8 +275,8 @@ public class Logging extends EditBean {
     protected void load(final String loadId) throws SCAGJspException {
     }
 
-//    protected void save() throws SCAGJspException {
-//    }
+    protected void save() throws SCAGJspException {
+    }
 
 //    protected void save(Map parameters) throws SCAGJspException {
 //        Map cats = new HashMap();
