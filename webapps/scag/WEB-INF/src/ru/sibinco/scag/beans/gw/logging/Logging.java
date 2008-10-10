@@ -4,11 +4,13 @@
 
 package ru.sibinco.scag.beans.gw.logging;
 
+import static ru.sibinco.scag.backend.daemon.Proxy.STATUS_CONNECTED;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.util.Comparator_CaseInsensitive;
@@ -182,9 +184,12 @@ public class Logging extends EditBean {
                 rootCategory = new LoggerCategoryInfo("", "", "NOTSET");
             }
             throw new SCAGJspException(Constants.errors.logging.COULDNT_GET_LOGCATS, e);
+        } finally{
+            parseMap( logCategories );
         }
         getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
     }
+
 
     void readFLF(){
         logger.warn( "Loigging:readFLF() start" );
@@ -246,6 +251,25 @@ public class Logging extends EditBean {
         logger.info( "Logging.apply() start" );
         Map cats = new HashMap();
         cats = getLogsFromMap( parameters );
+        try {
+            logger.info( "Logging.apply() setLogCategories" );
+            appContext.getScag().setLogCategories(cats);
+        } catch (SibincoException e) {
+            logger.error( "Logging:apply():SibincoException" );
+            if( e instanceof StatusDisconnectedException ){
+                logger.error( "Logging:apply():Disconnected" );
+            }
+            throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
+        }finally{
+            parseMap( cats );
+        }
+    }
+
+    protected void apply_(Map parameters) throws SCAGJspException {
+        logger.info( "Logging.apply() start" );
+        Map cats = new HashMap();
+        cats = getLogsFromMap( parameters );
+        if(appContext.getScag().getStatus() == appContext.getScag().STATUS_CONNECTED )
         try {
             logger.info( "Logging.apply() setLogCategories" );
             appContext.getScag().setLogCategories(cats);
