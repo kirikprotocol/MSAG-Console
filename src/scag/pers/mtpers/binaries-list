@@ -3,5 +3,9 @@
 
 # binary name                            source name     libraries         
 
-scag/mtpers                              mtpers          @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers-mtpers -lscag-pers-util -lutil-mirrorfile -lcore-network -lcore-threads -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl -llogger -llicense-check -lscag-util-storage
-#scag/client_test/mtpers_client           mtpers_client   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers-mtpers -lscag-pers-util -lutil-mirrorfile -lcore-network -lcore-threads -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl -llogger -llicense-check -lscag-util-storage
+scag/mtpers                              mtpers          @liblogger.so \
+	-L$(SMSC_BUILDDIR)/bin -llogger \
+        -lscag-pers-mtpers -lscag-pers-util -lutil-mirrorfile \
+        -lcore-network -lcore-threads -lrt -lutil -lutil-config \
+        -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -llicense-check -lscag-util-storage
+#scag/client_test/mtpers_client           mtpers_client   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers-mtpers -lscag-pers-util -lutil-mirrorfile -lcore-network -lcore-threads -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -llicense-check -lscag-util-storage

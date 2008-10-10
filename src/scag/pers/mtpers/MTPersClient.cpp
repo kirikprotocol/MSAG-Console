@@ -1,3 +1,4 @@
+#include <poll.h>
 #include "MTPersClient.h"
 #include "scag/pers/util/Types.h"
 
