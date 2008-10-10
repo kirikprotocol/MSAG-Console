@@ -4,7 +4,7 @@
 
 package ru.sibinco.scag.beans.gw.logging;
 
-import static ru.sibinco.scag.backend.daemon.Proxy.STATUS_CONNECTED;
+//import static ru.sibinco.scag.backend.daemon.Proxy.STATUS_CONNECTED;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.SortedList;
@@ -57,7 +57,7 @@ public class Logging extends EditBean {
             return;
         } else {
             logger.debug( "Logging.process() init()" );
-            init();
+            init_();
         }
 
     }
@@ -185,11 +185,10 @@ public class Logging extends EditBean {
             }
             throw new SCAGJspException(Constants.errors.logging.COULDNT_GET_LOGCATS, e);
         } finally{
-            parseMap( logCategories );
+            ;
         }
         getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
     }
-
 
     void readFLF(){
         logger.warn( "Loigging:readFLF() start" );
