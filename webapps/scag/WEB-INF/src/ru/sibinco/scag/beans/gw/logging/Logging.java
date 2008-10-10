@@ -57,7 +57,7 @@ public class Logging extends EditBean {
             return;
         } else {
             logger.debug( "Logging.process() init()" );
-            init_();
+            init();
         }
 
     }
