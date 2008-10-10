@@ -2,10 +2,10 @@
 # this file contains binaries definitions
 
 # binary name    source name    libraries         
-tests/test01     test01         -lpthread -lrt -ldl
-tests/test02     test02         -lpthread -lrt -ldl
-tests/test03     test03         -lpthread -lrt -ldl
-tests/test04     test04         -lpthread -lrt -ldl
-tests/test05     test05         -lpthread -lrt -ldl
-tests/test06     test06         -lrt -ldl
-tests/test07     test07         -lrt -ldl
+scag/tests/test01     test01         -lpthread -lrt -ldl
+-scag/tests/test02     test02         -lpthread -lrt -ldl
+-scag/tests/test03     test03         -lpthread -lrt -ldl
+-scag/tests/test04     test04         -lpthread -lrt -ldl
+-scag/tests/test05     test05         -lpthread -lrt -ldl
+-scag/tests/test06     test06         -lrt -ldl
+-scag/tests/test07     test07         -lrt -ldl
