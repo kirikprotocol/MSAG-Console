@@ -44,12 +44,12 @@ public:
   }
 
   index_type getIndex(const key_type& key) const {
-    Offset off;
-    return index_.LookUp(key, off) ? off.value : invalid_;
+      OffsetValue off;
+      return index_.LookUp(key, off) ? off.value : invalid_;
   }
 
   index_type removeIndex(const key_type& key) {
-    Offset off;
+      OffsetValue off;
     if (!index_.LookUp(key, off)) {
       smsc_log_info(logger_, "Attempt to delete record that doesn't exists:%s", key.toString().c_str());
       return invalid_;
@@ -60,7 +60,7 @@ public:
   }
 
   bool setIndex(const key_type& key, index_type index) {
-    Offset off(index);
+    OffsetValue off(index);
     index_.Insert(key, off, true);
     return true;
   } 
@@ -71,31 +71,31 @@ public:
 
 private:
 
-  template <class Idx>
-  struct OffsetValue {
+    // NOTE: we dont need another template Idx here
+    struct OffsetValue {
 
-    OffsetValue():value(0){}
-    OffsetValue(Idx argValue):value(argValue){}
-    OffsetValue(const OffsetValue& src):value(src.value){}
+        // OffsetValue() : value(0){}
+        OffsetValue( index_type argValue = 0 ) : value(argValue) {}
+        // default ctor is fine
+        // OffsetValue(const OffsetValue& src) : value(src.value) {}
 
-    static uint32_t Size() {
-      return sizeof(Idx);
-    }
+        static uint32_t Size() {
+            return sizeof(index_type);
+        }
 
-    void Read(File& f) {
-      value = f.ReadNetInt64();
-    }
+        void Read(File& f) {
+            value = index_type(f.ReadNetInt64());
+        }
 
-    void Write(File& f) const {
-      f.WriteNetInt64(value);
-    }
+        void Write(File& f) const {
+            f.WriteNetInt64(int64_t(value));
+        }
 
-    Idx value;
-  };
+        index_type value;
+    };
 
 private:
-  typedef OffsetValue < Idx > Offset;
-  typedef DiskHash < Key, Offset > IndexStorage;
+    typedef DiskHash < Key, OffsetValue > IndexStorage;
 
 private:
   mutable IndexStorage index_;
