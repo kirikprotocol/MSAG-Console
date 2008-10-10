@@ -44,6 +44,7 @@ BannerOutputMessageProcessorsDispatcher::dispatch(const AbntAddr& abnt)
   OutputMessageProcessor* msgProc = *iter;
   _freeMsgProcessors.erase(iter);
   _usedMsgProcessors.insert(msgProc);
+  smsc_log_debug(_logger, "BannerOutputMessageProcessorsDispatcher::dispatch::: got free message processor [%p]", msgProc);
   msgProc->assignMessageOutputWork(abnt);
 }
 
@@ -51,24 +52,28 @@ void
 BannerOutputMessageProcessorsDispatcher::markMessageProcessorAsFree(OutputMessageProcessor* freeMessageProcessor)
 {
   core::synchronization::MutexGuard synchonize(_dispatchMonitor);
+  smsc_log_debug(_logger, "BannerOutputMessageProcessorsDispatcher::markMessageProcessorAsFree::: try mark message processor [%p] as free", freeMessageProcessor);
   msg_processors_t::iterator iter = _usedMsgProcessors.find(freeMessageProcessor);
   if ( iter != _usedMsgProcessors.end() ) {
     _usedMsgProcessors.erase(iter);
     _freeMsgProcessors.insert(freeMessageProcessor);
+    smsc_log_debug(_logger, "BannerOutputMessageProcessorsDispatcher::markMessageProcessorAsFree::: message processor [%p] has been marked as free", freeMessageProcessor);
     _dispatchMonitor.notify();
-  }
+  } else
+    smsc_log_error(_logger, "BannerOutputMessageProcessorsDispatcher::markMessageProcessorAsFree::: message processor [%p] not found in set of used processors", freeMessageProcessor);
 }
 
 void
 BannerOutputMessageProcessorsDispatcher::deleteMessageProcessor(OutputMessageProcessor* terminatedMessageProcessor)
 {
   core::synchronization::MutexGuard synchonize(_dispatchMonitor);
+  smsc_log_debug(_logger, "BannerOutputMessageProcessorsDispatcher::deleteMessageProcessor::: delete message processor [%p]", terminatedMessageProcessor);
   msg_processors_t::iterator iter = _usedMsgProcessors.find(terminatedMessageProcessor);
   if ( iter != _usedMsgProcessors.end() )
     _usedMsgProcessors.erase(iter);
   else {
     iter = _freeMsgProcessors.find(terminatedMessageProcessor);
-    if ( iter != _usedMsgProcessors.end() )
+    if ( iter != _freeMsgProcessors.end() )
       _freeMsgProcessors.erase(iter);
   }
 
@@ -86,7 +91,6 @@ BannerOutputMessageProcessorsDispatcher::shutdown()
       OutputMessageProcessor* outputMsgProc = *iter;
       outputMsgProc->stop();
       _freeMsgProcessors.erase(iter);
-      //      delete outputMsgProc;
     }
 
     if ( !_usedMsgProcessors.empty() )
