@@ -11,7 +11,7 @@ namespace mcisme {
 OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
                                                util::config::ConfigView* advertCfg,
                                                OutputMessageProcessorsDispatcher& dispatcher)
-  : _taskProcessor(taskProcessor), _isStopped(false),
+  : _taskProcessor(taskProcessor), _isStopped(false), _eventWasSignalled(false),
     _logger(logger::Logger::getInstance("omsgprc")), _messagesProcessorsDispatcher(dispatcher)
 {
   if(!advertCfg->getBool("useAdvert"))
@@ -60,8 +60,13 @@ OutputMessageProcessor::Execute()
   while (!_isStopped) {
     try {
       AbntAddr calledAbnt;
-      if ( waitForCalledAbonentInfo(&calledAbnt) ){
-        formOutputMessageAndSendIt(calledAbnt);
+      if ( waitForCalledAbonentInfo(&calledAbnt) ) {
+        try {
+          formOutputMessageAndSendIt(calledAbnt);
+        } catch(...) {
+          _messagesProcessorsDispatcher.markMessageProcessorAsFree(this);
+          throw;
+        }
         _messagesProcessorsDispatcher.markMessageProcessorAsFree(this);
       }
     } catch (NetworkException& ex) {
@@ -86,14 +91,30 @@ OutputMessageProcessor::Execute()
 void
 OutputMessageProcessor::assignMessageOutputWork(const AbntAddr& calledAbnt)
 {
-  _abonentInfoEventMonitor.Lock();
-  try {
-    _calledAbnt = calledAbnt;
-    _abonentInfoEventMonitor.notify();
-    _abonentInfoEventMonitor.Unlock();
-  } catch (...) {
-    _abonentInfoEventMonitor.Unlock();
-    throw;
+  core::synchronization::MutexGuard synchronize(_abonentInfoEventMonitor);
+  _calledAbnt = calledAbnt;
+  _eventWasSignalled = true;
+  _abonentInfoEventMonitor.notify();
+}
+
+bool
+OutputMessageProcessor::waitForCalledAbonentInfo(AbntAddr* calledAbnt)
+{
+  core::synchronization::MutexGuard synchronize(_abonentInfoEventMonitor);
+
+  while ( !_eventWasSignalled ) {
+    if ( _abonentInfoEventMonitor.wait() )
+      throw smsc::util::SystemError("OutputMessageProcessor::waitForCalledAbonentInfo::: call to EventMonitor::wait failed");
+    
+  }
+
+  _eventWasSignalled = false;
+
+  if ( _isStopped )
+    return false;
+  else {
+    *calledAbnt = _calledAbnt;
+    return true;
   }
 }
 
@@ -132,22 +153,6 @@ OutputMessageProcessor::getBanner(const AbntAddr& abnt)
     smsc_log_debug(_logger, "getBanner Error. Error code = %d", rc);
 
   return banner;
-}
-
-bool
-OutputMessageProcessor::waitForCalledAbonentInfo(AbntAddr* calledAbnt)
-{
-  core::synchronization::MutexGuard synchronize(_abonentInfoEventMonitor);
-
-  if ( _abonentInfoEventMonitor.wait() )
-    throw smsc::util::SystemError("OutputMessageProcessor::waitForCalledAbonentInfo::: call to EventMonitor::wait failed");
-
-  if ( _isStopped )
-    return false;
-  else {
-    *calledAbnt = _calledAbnt;
-    return true;
-  }
 }
 
 }}
