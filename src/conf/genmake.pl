@@ -82,13 +82,18 @@ sub generate{
       while(<$f>)
       {
         s/[\x0d\x0a]//g;
-        next if /^\s*(?:$|#)/;
+        next if /^\s*$/;
         my $ln = $_;
         if ( '\\' eq substr($ln,-1) ) {
             $line .= substr($ln,0,length($ln)-1);
             next;
         }
-        my ($binname,$srcname,$libs) = split(/\s+/,$line.$ln,3);
+        $line .= $ln;
+        if ( $line =~ /^\s*#/ ) {
+            $line = "";
+            next;
+        }
+        my ($binname,$srcname,$libs) = split(/\s+/,$line,3);
         $line = "";
         $binsrc{$srcname.'.cpp'}=1;
         if($binname=~/^-/)
