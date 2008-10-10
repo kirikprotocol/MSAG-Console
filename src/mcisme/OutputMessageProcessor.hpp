@@ -29,7 +29,7 @@ private:
 
   TaskProcessor& _taskProcessor;
   AbntAddr _calledAbnt;
-  bool _isStopped;
+  bool _isStopped, _eventWasSignalled;
   smsc::core::synchronization::EventMonitor _abonentInfoEventMonitor;
   Advertising* _advertising;
   logger::Logger* _logger;
