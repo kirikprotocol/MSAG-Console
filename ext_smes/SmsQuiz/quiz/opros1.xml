@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opros>
+
+    <general>
+        <status>active</status>
+        <date-begin>20081010</date-begin>
+        <date-end>20081015</date-end>
+        <question>Question</question>
+        <abonents-file>opros1/abonents.csv</abonents-file>
+    </general>
+
+    <distribution>
+        <source-address>148</source-address>
+        <time-begin>12.00</time-begin>
+        <time-end>20.00</time-end>
+    </distribution>
+
+    <replies>
+        <destination-address>148</destination-address>
+        <answer>Thanks</answer> 
+        <max-repeat>3</max-repeat>
+
+        <reply>
+            <name>Да</name>
+            <pattern>(yes|y|1|да|д)</pattern>
+        </reply>
+
+        <reply>
+            <name>Нет</name>
+            <pattern>(no|n|0|нет|н)</pattern>
+        </reply>
+
+        <reply>
+            <name>help</name>
+            <pattern>(.*)</pattern>
+        </reply>          
+
+    </replies>
+</opros>
