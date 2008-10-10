@@ -3,37 +3,39 @@
 
     <general>
         <status>active</status>
-        <date-begin>20081010</date-begin>
-        <date-end>20081015</date-end>
+        <date-begin>10.10.2008 09:00</date-begin>
+        <date-end>15.20.2008 22:00</date-end>
         <question>Question</question>
         <abonents-file>opros1/abonents.csv</abonents-file>
     </general>
 
     <distribution>
         <source-address>148</source-address>
-        <time-begin>12.00</time-begin>
-        <time-end>20.00</time-end>
+        <time-begin>12:00</time-begin>
+        <time-end>20:00</time-end>
+        days
+        txmode
     </distribution>
 
     <replies>
         <destination-address>148</destination-address>
-        <answer>Thanks</answer> 
-        <max-repeat>3</max-repeat>
+        <!--<max-repeat>3</max-repeat>-->
 
         <reply>
             <name>Да</name>
             <pattern>(yes|y|1|да|д)</pattern>
+            <answer>Thanks</answer>
         </reply>
 
         <reply>
-            <name>Нет</name>
+            <category>Нет</name>
             <pattern>(no|n|0|нет|н)</pattern>
+            <answer>Thanks</answer>
         </reply>
 
-        <reply>
-            <name>help</name>
-            <pattern>(.*)</pattern>
-        </reply>          
+
+
+        <!--<default>Да</default>-->
 
     </replies>
 </opros>

@@ -25,8 +25,7 @@ public class StatsFilesCacheTester {
     @Before
     public void init() {
         try {
-            StatsFilesCache.init("conf/config.xml");
-            filesCache = new StatsFilesCache();
+            filesCache = new StatsFilesCache("conf/config.xml");
         } catch (FileStatsException e) {
             e.printStackTrace();
             assertFalse(true);
@@ -42,7 +41,7 @@ public class StatsFilesCacheTester {
             Reply reply = new Reply();
             reply.setDate(new Date());
             reply.setOa("+7913testAdd");
-            reply.setText("getFileAddReply");
+            reply.setText("getFileAddReplyCacheTest");
             file.open();
             file.add(reply);
 
@@ -53,7 +52,7 @@ public class StatsFilesCacheTester {
             Iterator<Reply> iter = replies.iterator();
             while(iter.hasNext()) {
                 Reply r = iter.next();
-                if((!iter.hasNext())&&(r.getText().equals("getFileAddReply"))){
+                if((!iter.hasNext())&&(r.getText().equals("getFileAddReplyCacheTest"))){
                     flag = 1;
                     break;
                 }
@@ -103,7 +102,7 @@ public class StatsFilesCacheTester {
             Thread thread = new Thread() {
                 public void run() {
                     try {
-                        sleep(StatsFilesCache.getIterationPeriod()*2000);
+                        sleep(filesCache.getIterationPeriod()*2000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();}
                 }

@@ -151,7 +151,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
             }
          }catch(SQLException exc){
              logger.error("Unable to get list of subscriptions from the dataBase", exc);
-             // todo close connection if error
+             closeConn(connection,prepStatement,sqlResult);
              throw new StorageException("Unable to get list of subscriptions from the dataBase", exc);
          }
         return new SubscriptionResultSet(sqlResult,connection, prepStatement);

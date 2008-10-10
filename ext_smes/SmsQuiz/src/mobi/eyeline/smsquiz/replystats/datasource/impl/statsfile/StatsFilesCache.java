@@ -11,6 +11,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ConcurrentHashMap;
 import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.io.File;
 
 import com.eyeline.utils.config.xml.XmlConfig;
@@ -20,20 +21,22 @@ import org.apache.log4j.Logger;
 
 public class StatsFilesCache {
 
-    private static long delayFirst;
-    private static long iterationPeriod;
-    private static long timeLimit;
-    private static String datePattern;
-    private static String timePattern;
-    private static String replyStatsDir;
-    private static String fileNamePattern;
+    private long iterationPeriod;
+    private long timeLimit;
+    private String datePattern;
+    private String timePattern;
+    private String replyStatsDir;
     private static Logger logger = Logger.getLogger(StatsFilesCache.class);
 
     private ConcurrentHashMap<String,CachedStatsFile> filesMap;
     private SimpleDateFormat fileNameFormat;
     private ScheduledExecutorService s;
 
-    public static void init(final String configFile) throws FileStatsException { // todo  to constructor
+
+
+    public StatsFilesCache(final String configFile) throws FileStatsException{
+        long delayFirst;
+        String fileNamePattern = null;
         try {
             final XmlConfig c = new XmlConfig();
             c.load(new File(configFile));
@@ -54,21 +57,18 @@ public class StatsFilesCache {
             delayFirst = config.getLong("fileCollector.time.first.delay");
             iterationPeriod = config.getLong("fileCollector.time.period");
             timeLimit = config.getLong("fileCollector.time.limit");
-            if(fileNamePattern==null) {
+            if(fileNamePattern ==null) {
                 throw new FileStatsException("statsFile.filename.pattern not found in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
             }
         } catch (ConfigException e) {
             logger.error("Unable to init StatsFilesCache",e);
             throw new FileStatsException("Unable to init StatsFilesCache",e);
         }
-    }
-
-    public StatsFilesCache() {
         filesMap =  new ConcurrentHashMap<String, CachedStatsFile>();
         fileNameFormat = new SimpleDateFormat(fileNamePattern);
 
         s = Executors.newSingleThreadScheduledExecutor();
-        s.scheduleAtFixedRate(new FileCollector(false),delayFirst,iterationPeriod, java.util.concurrent.TimeUnit.SECONDS);
+        s.scheduleAtFixedRate(new FileCollector(false), delayFirst,iterationPeriod, java.util.concurrent.TimeUnit.SECONDS);
 
     }
 	 
@@ -77,26 +77,49 @@ public class StatsFilesCache {
             throw new FileStatsException("Some arguments are null", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
         }
         StatsFile statsFile;
-        Collection<StatsFile> files = new HashSet<StatsFile>();// todo
+        Collection<StatsFile> files = new LinkedList<StatsFile>();
 
-      // todo not efficient
+        File dir = new File(replyStatsDir+"/"+da);
+        if(!dir.exists()) {
+            return files;
+        }
+
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(from);
-        calendar.set(Calendar.HOUR_OF_DAY,0);
-        calendar.set(Calendar.MINUTE,0);
-        calendar.set(Calendar.SECOND,0);
-        calendar.set(Calendar.MILLISECOND,0);
+        resetTillDay(calendar);
+        Date modifedFrom = calendar.getTime();
+        calendar.setTime(till);
+        resetTillDay(calendar);
+        Date modifedTill = calendar.getTime();
 
-        while(calendar.getTime().before(till)) {
-            if ((statsFile = lockupFile(da, calendar.getTime(),true))!=null) {
-                files.add(statsFile);
+        for(File f: dir.listFiles()) {
+            if(f.isFile()) {
+                String name = f.getName();
+                try {
+                    Date date = fileNameFormat.parse(name.substring(0,name.lastIndexOf(".")));
+                    if((date.compareTo(modifedTill)<=0)&&(date.compareTo(modifedFrom)>=0)) {
+                        if ((statsFile = lockupFile(da, calendar.getTime(),true))!=null) {
+                            files.add(statsFile);
+                        }
+                    }
+                } catch (ParseException e) {
+                    logger.error("Can't parse filename",e);
+                    throw new FileStatsException("Can't parse filename",e);
+                }
             }
-            calendar.add(Calendar.DAY_OF_MONTH,1);
-        } 
+        }
         return files;
     }
+    private void resetTillDay(Calendar calendar) {
+        if(calendar!=null) {
+            calendar.set(Calendar.HOUR_OF_DAY,0);
+            calendar.set(Calendar.MINUTE,0);
+            calendar.set(Calendar.SECOND,0);
+            calendar.set(Calendar.MILLISECOND,0);
+        }
+    }
 	 
-	public StatsFile getFile(String da, Date date) throws FileStatsException {
+    public StatsFile getFile(String da, Date date) throws FileStatsException {
         if((da==null)||(date==null)) {
             throw new FileStatsException("Some arguments are null", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
         }
@@ -119,29 +142,27 @@ public class StatsFilesCache {
         String key = buildKey(dest, date);
         
         if( (file = filesMap.get(key)) == null) {
-            file = new CachedStatsFile(dest, replyStatsDir + '/' +dest+ '/' +fileNameFormat.format(date)+".csv");
-            if((checkExist)&&(!file.exist())) {
-                return null;
+            String filePath = replyStatsDir + '/' +dest+ '/' +fileNameFormat.format(date)+".csv";
+            if(checkExist) {
+                File f = new File(filePath);
+                if(!f.exists())
+                    return null;
             }
-            file.setMapKey(key); // todo
+            file = new CachedStatsFile(dest, filePath);
             CachedStatsFile f1 = filesMap.putIfAbsent(key, file);
             if (f1 != null)
                 file = f1;
         }
-        if((checkExist)&&(!file.exist())) { // todo
-            return null;
-        }
         return file;
     }
 
-    private static class CachedStatsFile implements StatsFile{
+    private class CachedStatsFile implements StatsFile{
         private StatsFileImpl statsFileImpl;
         private String filePath;
         private String da;
         private Lock lock = new ReentrantLock();
         private boolean isClosed = true;
         private Date lastUsageDate;
-        private String mapKey;
 
         public CachedStatsFile(String da, String filePath) {
             this.da = da;
@@ -183,13 +204,6 @@ public class StatsFilesCache {
             isClosed = false;
         }
 
-        public String getMapKey() {
-            return mapKey;
-        }
-
-        public void setMapKey(String mapKey) {
-            this.mapKey = mapKey;
-        }
 
         public boolean exist() {
             File file = new File(filePath);
@@ -208,7 +222,14 @@ public class StatsFilesCache {
             if(logger.isInfoEnabled()) {
                 logger.info("FileCollector starts...");
             }
-            for(CachedStatsFile file:filesMap.values()) {
+
+            for (Map.Entry<String, CachedStatsFile> e : filesMap.entrySet()) {
+
+            }
+
+            for(Map.Entry<String, CachedStatsFile> entry : filesMap.entrySet()) {
+                CachedStatsFile file = entry.getValue();
+                String key = entry.getKey();
                 if(!file.isClosed) {
                     boolean close;
                     if(closeAll) {
@@ -222,9 +243,9 @@ public class StatsFilesCache {
                             file.open();
                             file.closeExt();
                             file.close();
-                            filesMap.remove(file.getMapKey());// todo
-                        } catch (FileStatsException e) {
-                            logger.error("Error lock the cached file", e);
+                            filesMap.remove(key);
+                        } catch (FileStatsException exc) {
+                            logger.error("Error lock the cached file", exc);
                         }
                     }
                 }
@@ -243,11 +264,11 @@ public class StatsFilesCache {
         }
     }
 
-    public static long getIterationPeriod() {
+    public long getIterationPeriod() {
         return iterationPeriod;
     }
-    public static String getReplyStatsDir() {
-        return replyStatsDir;
+    public String getReplyStatsDir() {
+        return replyStatsDir.substring(0);
     }
 }
 

@@ -137,11 +137,6 @@ class StatsFileImpl implements StatsFile {
         }
     }
 
-    public boolean exist() {
-        File file = new File(filePath);
-        return file.exists();
-    }
-
 	 
 }
  

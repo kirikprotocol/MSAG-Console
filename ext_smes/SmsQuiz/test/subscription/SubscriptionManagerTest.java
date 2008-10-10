@@ -26,7 +26,6 @@ public class SubscriptionManagerTest {
             assertTrue(false);
         }
         try {
-            SubscriptionManager.init();
             manager = SubscriptionManager.getInstance();
         } catch (SubManagerException e) {
             e.printStackTrace();

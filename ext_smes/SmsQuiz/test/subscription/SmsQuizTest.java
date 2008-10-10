@@ -48,12 +48,6 @@ public class SmsQuizTest {
             assertTrue(false);
         }
         try {
-            SubscriptionManager.init();
-        } catch (SubManagerException e) {
-            e.printStackTrace();
-            assertTrue(false);
-        }
-        try {
             config = ServicesConfigReader.readConfig("conf/services.xml");
         } catch (ConfigException e) {
             e.printStackTrace();

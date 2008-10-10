@@ -37,7 +37,12 @@ public class SubscriptionOffSMPPService extends BasicService {
     }
     responseText = conf.getString("send.unsubscribe", "Success");
 
-    manager = SubscriptionManager.getInstance();
+      try {
+          manager = SubscriptionManager.getInstance();
+      } catch (SubManagerException e) {
+          log.error("Error init SubscriptionManager",e);
+          throw new SMPPServiceException("Error init SubscriptionManager",e);
+      }
   }
 
   public boolean serve(SMPPRequest request) {

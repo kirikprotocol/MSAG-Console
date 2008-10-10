@@ -26,10 +26,9 @@ public class DataSourceTester {
     @Before
     public void init() {
         try {
-            StatsFilesCache.init("conf/config.xml");
-            dataSource = new FileReplyStatsDataSource();
-        } catch (FileStatsException e) {
-            e.printStackTrace();
+            dataSource = new FileReplyStatsDataSource("conf/config.xml");
+        } catch (ReplyDataSourceException e) {
+            e.printStackTrace();  
             assertFalse(true);
         }
     }

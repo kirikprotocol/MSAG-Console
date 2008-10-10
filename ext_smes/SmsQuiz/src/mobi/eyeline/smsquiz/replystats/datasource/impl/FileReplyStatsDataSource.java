@@ -18,8 +18,12 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
 	private static final Logger logger = Logger.getLogger(FileReplyStatsDataSource.class);
 	private StatsFilesCache filesCache;
 
-    public FileReplyStatsDataSource() {
-        filesCache = new StatsFilesCache();
+    public FileReplyStatsDataSource(final String config) throws ReplyDataSourceException{
+        try {
+            filesCache = new StatsFilesCache(config);
+        } catch (FileStatsException e) {
+            throw new ReplyDataSourceException("Error init files cache",e);
+        }
     }
 
     public void add(Reply reply) throws ReplyDataSourceException {

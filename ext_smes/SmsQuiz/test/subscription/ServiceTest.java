@@ -28,11 +28,6 @@ public class ServiceTest {
             e.printStackTrace();
             assertTrue(false);
         }
-        try {
-            SubscriptionManager.init();
-        } catch (SubManagerException e) {
-            e.printStackTrace();
-        }
 
     }
     public static void main(String[] args) {

@@ -29,8 +29,7 @@ public class DistributionManagerTester {
     public static void init() {
         abonents = new HashSet<String>();
         try {
-            DistributionInfoSmeManager.init("conf/config.xml");
-            distributionManager = new DistributionInfoSmeManager();
+            distributionManager = new DistributionInfoSmeManager("conf/config.xml");
         } catch (DistributionException e) {
             e.printStackTrace();
             assertFalse(true);

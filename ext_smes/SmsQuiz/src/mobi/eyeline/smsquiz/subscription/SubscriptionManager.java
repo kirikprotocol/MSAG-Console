@@ -16,10 +16,10 @@ public class SubscriptionManager {
     private static final Logger logger = Logger.getLogger(SubscriptionManager.class);
     private static SubscriptionManager manager;
 
-    public static void init() throws SubManagerException { // todo
-        manager = new SubscriptionManager();
-    }
-    public static SubscriptionManager getInstance() {
+    public static synchronized SubscriptionManager getInstance() throws SubManagerException{
+        if(manager==null) {
+            manager = new SubscriptionManager();            
+        }
         return manager;
     }
 
