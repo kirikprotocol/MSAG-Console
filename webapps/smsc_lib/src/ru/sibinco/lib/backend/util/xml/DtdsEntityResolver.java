@@ -31,19 +31,19 @@ public class DtdsEntityResolver implements EntityResolver
                                    String systemId)
       throws SAXException, IOException
   {
-    logger.debug("enter " + this.getClass().getName() + "resolveEntity(\"" + publicId + "\", \"" + systemId + "\")");
+    logger.debug("enter '" + this.getClass().getName() + "' resolveEntity(\"" + publicId + "\", \"" + systemId + "\")");
     if (systemId.endsWith(".dtd") || systemId.endsWith(".xsd")) {
      String filename = "dtds/" + getDtdName(systemId);
       logger.debug("try filename " + filename);
       InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
       if (in != null) {
         final InputSource inputSource = new InputSource(in);
-        logger.debug("exit " + this.getClass().getName() + "resolveEntity(\"" + publicId + "\", \"" + systemId + "\"): result " + inputSource);
+        logger.debug("exit '" + this.getClass().getName() + "' resolveEntity(\"" + publicId + "\", \"" + systemId + "\"): result " + inputSource);
         return inputSource;
       } else
         logger.warn("DTD systemId entity resolving failed");
     }
-    logger.debug("exit " + this.getClass().getName() + "resolveEntity(\"" + publicId + "\", \"" + systemId + "\"): result null");
+    logger.debug("exit '" + this.getClass().getName() + "' resolveEntity(\"" + publicId + "\", \"" + systemId + "\"): result null");
     return null;
   }
 }
