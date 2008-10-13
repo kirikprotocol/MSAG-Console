@@ -124,6 +124,7 @@
 	    <param name="server" type="string">@mcisme.Advertising.server@</param>
 	    <param name="port" type="int">@mcisme.Advertising.port@</param>
 	    <param name="timeout" type="int">@mcisme.Advertising.timeout@</param>
+	    <param name="connectTimeout" type="int">@mcisme.Advertising.timeout@</param>
 	    <param name="proxyCount" type="int">10</param>
 	</section>
 
