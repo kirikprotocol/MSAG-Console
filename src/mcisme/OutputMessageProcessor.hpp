@@ -33,6 +33,7 @@ private:
   smsc::core::synchronization::EventMonitor _abonentInfoEventMonitor;
   Advertising* _advertising;
   logger::Logger* _logger;
+  int _connectTimeout;
   OutputMessageProcessorsDispatcher& _messagesProcessorsDispatcher;
 };
 
