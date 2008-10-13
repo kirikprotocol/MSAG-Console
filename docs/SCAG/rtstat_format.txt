@@ -1,6 +1,57 @@
 SvcStat, ScStat:
-<stat> = <length: uint32> <queueSize: uint32>                <smppCount: uint16><smppRecs: 1...n>                <httpCount: uint16><httpRecs: 1...n>                <mmsCount: uint16><mmsRecs: 1...n><smppRecs: 1...n> = <smppRec> ... <smppRec><httpRecs: 1...n>  = <httpRec>  ... <httpRec><mmsRecs: 1...n>  = <mmsRec>  ... <mmsRec>
-<smppRec> = systemIdLength: uint16><systemId: systemIdLength bytes>                 <accepted: uint16>  <accepted    (avarage, 1hour): uint16>                 <rejected: uint16>     <rejected    (avarage, 1hour): uint16>                 <delivered: uint16>    <delivered   (avarage, 1hour): uint16>                 <gw_rejected: uint16>  <gw_rejected (avarage, 1hour): uint16>                 <failed: uint16>   <failed      (avarage, 1hour): uint16><httpRec> = urlIdLength: uint16><urlId: urlIdLength bytes>                 <request:      uint16> <request            (avarage, 1hour): uint16>                 <requestRejected:  uint16> <requestRejected        (avarage, 1hour): uint16>                 <response:         uint16> <response           (avarage, 1hour): uint16>                 <responseRejected:     uint16> <responseRejected   (avarage, 1hour): uint16>                 <delivered:        uint16> <delivered          (avarage, 1hour): uint16>                 <failed:       uint16> <failed         (avarage, 1hour): uint16>
-<mmsRec> = systemIdLength: uint16><systemId: systemIdLength bytes> <accepted: uint16>                 <accepted: uint16>     (avarage, 1hour): uint16>                 <rejected: uint16>     <rejected    (avarage, 1hour): uint16>                 <delivered: uint16>    <delivered   (avarage, 1hour): uint16>                 <gw_rejected: uint16>  <gw_rejected (avarage, 1hour): uint16>                 <failed: uint16>   <failed      (avarage, 1hour): uint16>GenStat:
-<stat> = <length: uint32><sessionCount: uint32><uptime: 4 bytes><now: 4 bytes>    <smppCountersNumber: uint32> <smppCounters: 1...smppCountersNumber>    <httpCountersNumber: uint32> <httpCounters: 1...httpCountersNumber><smppCounters: 1...smppCountersNumber> = <accpted><rejected><delivered><gw_rejected><failed>
-<accpted> =     <lastSecond: uint32><avarage: uint32><total: uint64><rejected> =    <lastSecond: uint32><avarage: uint32><total: uint64><delivered> =   <lastsecond: uint32><avarage: uint32><total: uint64><gw_rejected> = <lastSecond: uint32><avarage: uint32><total: uint64><failed> =      <lastSecond: uint32><avarage: uint32><total: uint64><httpCounters: 1...httpCountersNumber> = <request><requestRejected><response><responseRejected><delivered><failed><request> =     <lastSecond: uint32><avarage: uint32><total: uint64><requestRejected> =    <lastSecond: uint32><avarage: uint32><total: uint64><response>=    <lastsecond: uint32><avarage: uint32><total: uint64><responseRejected> = <lastSecond: uint32><avarage: uint32><total: uint64><delivered> =      <lastSecond: uint32><avarage: uint32><total: uint64><failed> =      <lastSecond: uint32><avarage: uint32><total: uint64>
+
+<stat> = <length: uint32> <queueSize: uint32>
+         <smppCount: uint16><smppRecs: 1...n>
+	 <httpCount: uint16><httpRecs: 1...n>
+	 <mmsCount:  uint16><mmsRecs: 1...n >
+	 <smppRecs: 1...n> = <smppRec> ... <smppRec>
+	 <httpRecs: 1...n> = <httpRec> ... <httpRec>
+	 <mmsRecs:  1...n> = <mmsRec > ... <mmsRec >
+
+<smppRec> = <systemIdLength: uint16><systemId: systemIdLength bytes>
+         <accepted:    uint16><accepted    (avarage, 1hour): uint16>
+	 <rejected:    uint16><rejected    (avarage, 1hour): uint16>
+	 <delivered:   uint16><delivered   (avarage, 1hour): uint16>
+	 <gw_rejected: uint16><gw_rejected (avarage, 1hour): uint16>
+	 <failed:      uint16><failed      (avarage, 1hour): uint16>
+	 
+<httpRec> = urlIdLength: uint16><urlId: urlIdLength bytes>
+	 <request:          uint16><request            (avarage, 1hour): uint16>
+	 <requestRejected:  uint16><requestRejected    (avarage, 1hour): uint16>
+	 <response:         uint16><response           (avarage, 1hour): uint16>
+	 <responseRejected: uint16><responseRejected   (avarage, 1hour): uint16>
+	 <delivered:        uint16><delivered          (avarage, 1hour): uint16>
+	 <failed:           uint16><failed             (avarage, 1hour): uint16>
+	 
+<mmsRec> = <systemIdLength: uint16><systemId: systemIdLength bytes>
+	 <accepted:    uint16><accepted: uint16>     (avarage, 1hour): uint16>
+	 <rejected:    uint16><rejected              (avarage, 1hour): uint16>
+	 <delivered:   uint16><delivered             (avarage, 1hour): uint16>
+	 <gw_rejected: uint16><gw_rejected           (avarage, 1hour): uint16>
+	 <failed:      uint16><failed                (avarage, 1hour): uint16>
+	 
+GenStat:
+
+<stat> = <length: uint32><sessionCount: uint32><uptime: 4 bytes><now: 4 bytes>
+         <smppCountersNumber: uint32><smppCounters: 1...smppCountersNumber>
+	 <httpCountersNumber: uint32><httpCounters: 1...httpCountersNumber>
+
+<smppCounters: 1...smppCountersNumber> = 
+	 <accepted><rejected><delivered><gw_rejected><failed>
+	 
+<accepted>    = <lastSecond: uint32><avarage: uint32><total: uint64>
+<rejected>    = <lastSecond: uint32><avarage: uint32><total: uint64>
+<delivered>   = <lastsecond: uint32><avarage: uint32><total: uint64>
+<gw_rejected> = <lastSecond: uint32><avarage: uint32><total: uint64>
+<failed>      = <lastSecond: uint32><avarage: uint32><total: uint64>
+
+<httpCounters: 1...httpCountersNumber> = 
+	 <request><requestRejected><response><responseRejected><delivered><failed>
+	 
+<request>          = <lastSecond: uint32><avarage: uint32><total: uint64>
+<requestRejected>  = <lastSecond: uint32><avarage: uint32><total: uint64>
+<response>         = <lastsecond: uint32><avarage: uint32><total: uint64>
+<responseRejected> = <lastSecond: uint32><avarage: uint32><total: uint64>
+<delivered>        = <lastSecond: uint32><avarage: uint32><total: uint64>
+<failed>           = <lastSecond: uint32><avarage: uint32><total: uint64>
+
