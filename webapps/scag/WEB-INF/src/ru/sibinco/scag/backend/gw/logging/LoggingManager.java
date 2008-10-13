@@ -95,6 +95,7 @@ public class LoggingManager {
         } catch (FileNotFoundException e) {
             logger.error( "LoggingManager.read() FileNotFoundException '" + loggerFile + "'" );
         }
+        logger.error( "LoggingManager.read() 98" );
         try {
             String str;
             String key;
@@ -103,6 +104,7 @@ public class LoggingManager {
                 if( str.startsWith(CAT_PREFIX) ) {
                     key = str.substring( CAT_PREFIX.length(), str.indexOf(PROP_SEPARATOR) );
                     value = str.substring( str.indexOf(PROP_SEPARATOR)+1 );
+                    logger.error( "LoggingManager.read() put key='" + key + "' value='" + value + "'" );
                     map.put( key, value );
                 }
             }
