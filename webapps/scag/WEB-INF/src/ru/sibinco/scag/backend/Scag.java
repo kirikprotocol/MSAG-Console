@@ -296,8 +296,10 @@ public class Scag extends Proxy {
                     throw new SibincoException("Unknown result type");
              }
         } catch (SibincoException se) {
+           logger.debug( "Scag.call() SibincoException" );
            if (getStatus() == STATUS_DISCONNECTED) {
-             throw new StatusDisconnectedException(host,port);
+               logger.debug( "Scag.call() StatusDisconnectedException" );
+               throw new StatusDisconnectedException(host,port);
            }
            else {
                throw se;
@@ -359,7 +361,7 @@ public class Scag extends Proxy {
     public synchronized Map getLogCategories() throws SibincoException {
         final Map return_result = new HashMap();
         String err = "Couldn't get LogCategories , nested: ";
-        logger.debug( "Scag:getLogCatagories:call()" );
+        logger.debug( "Scag.getLogCatagories call()" );
         final Object result0 = call("getLogCategories", err, Type.Types[Type.STRING_LIST_TYPE], new HashMap());
         logger.debug( "Scag:getLogCatagories:result0 = " + result0.toString() );
         if (result0 instanceof List) {
