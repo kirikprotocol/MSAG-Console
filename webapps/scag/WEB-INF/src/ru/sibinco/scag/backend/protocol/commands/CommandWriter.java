@@ -45,9 +45,8 @@ public class CommandWriter {
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
     }
 
-    public void write(Command command)
-            throws SibincoException, IOException {
-        logger.debug("writing command " + command.getClass().getName() + " [" + command.getSystemId() + "]");
+    public void write(Command command) throws SibincoException, IOException {
+        logger.debug("write() command " + command.getClass().getName() + " [" + command.getSystemId() + "]");
         final Document document = command.getDocument();
         try {
             outBuffer.reset();
@@ -55,7 +54,7 @@ public class CommandWriter {
             transformer.transform(new DOMSource(document), new StreamResult(outBuffer));
             writeLength(outBuffer.size());
             outBuffer.writeTo(out);
-            logger.debug("Command:\n" + outBuffer.toString());
+            logger.debug("write() Command:\n" + outBuffer.toString());
         } catch (TransformerException e) {
             logger.debug("Couldn't process command", e);
             throw new SibincoException("Couldn't process command", e);

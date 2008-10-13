@@ -41,17 +41,20 @@ public class Response {
     }
 
     private byte parseStatus(String status) {
-        for (int i = 0; i < statuses.length; i++)
-            if (statuses[i].name.equalsIgnoreCase(status))
-        return statuses[i].status;
+        for (int i = 0; i < statuses.length; i++){
+            if (statuses[i].name.equalsIgnoreCase(status)){
+                return statuses[i].status;
+            }
+        }
         logger.warn("Unknown status \"" + status + "\" in response");
         return 0;
     }
 
     public static String getStatusString(byte status) {
         for (int i = 0; i < statuses.length; i++) {
-            if (statuses[i].status == status)
+            if (statuses[i].status == status){
                 return statuses[i].name;
+            }
         }
         return "unknown";
     }
