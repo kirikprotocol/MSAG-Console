@@ -259,6 +259,9 @@ public:
     inline void setRouteId(const std::string & route_id)
         { routeId = route_id; }
     inline void setServiceId(int32_t service_id)   { serviceId = service_id; }
+    //sets SMPP DATA_SM service type
+    inline void setServiceType(const std::string & service_type)
+                                                   { dsmSrvType = service_type; }
     inline void setUserMsgRef(uint32_t msg_ref)    { userMsgRef = msg_ref; }
     inline void setMsgId(uint64_t msg_id)          { msgId = msg_id; }
     inline void setServiceOp(int32_t service_op)   { ussdServiceOp = service_op; }
@@ -316,6 +319,7 @@ private:
     unsigned char extCode;      //extension fields are present
     uint32_t      smsXSrvsId;
     bool          mtBill;       //charge the dstSubscriber instead of calling one
+    std::string   dsmSrvType;   //SMPP DATA_SM service type
 
     //Delivery report data ..
     uint32_t      dlvrRes;    //0, or errorcode

@@ -209,6 +209,7 @@ void DeliveredSmsData::load(ObjectBuffer& in) throw(SerializerException)
     in >> ussdServiceOp;
     in >> partsNum;
     in >> msgLen;
+    in >> dsmSrvType;
 
     //Delivery report data ..
     in >> dlvrRes;
@@ -244,6 +245,7 @@ void DeliveredSmsData::save(ObjectBuffer& out) const
     out << ussdServiceOp;
     out << partsNum;
     out << msgLen;
+    out << dsmSrvType;
 
     //Delivery report data ..
     out << dlvrRes;
@@ -270,6 +272,7 @@ void DeliveredSmsData::export2CDR(CDRRecord & cdr) const
 
     cdr._routeId = routeId;
     cdr._serviceId = serviceId;
+    cdr._dsmSrvType = dsmSrvType;
     cdr._userMsgRef = userMsgRef;
 
     cdr._dstAdr = dstSubscriberNumber;
