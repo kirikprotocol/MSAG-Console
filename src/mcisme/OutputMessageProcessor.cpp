@@ -34,12 +34,14 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
   int advertTimeout;
   try {
     advertTimeout = advertCfg->getInt("timeout");
+    if ( advertTimeout < 0 )
+      throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: invalid Advertising.timeout value < 0");
   } catch (...) {
     advertTimeout = 15;
     smsc_log_warn(_logger, "Parameter <MCISme.Advertising.server> missed. Default value is '15'.");
   }
 
-  _advertising = new SimpleAdvertisingClient(advertServer, advertPort, advertTimeout*1000);
+  _advertising = new SimpleAdvertisingClient(advertServer, advertPort, advertTimeout);
   try {
     _advertising->init();
   } catch (std::exception& ex) {
