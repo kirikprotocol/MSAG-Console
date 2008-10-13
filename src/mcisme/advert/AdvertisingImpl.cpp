@@ -18,18 +18,22 @@ SimpleAdvertisingClient::SimpleAdvertisingClient(const std::string& host, int po
 {}
 
 void
-SimpleAdvertisingClient::init()
+SimpleAdvertisingClient::init(int connectTimeout)
 {
   if ( _socket.Init(_host.c_str(), _port, _timeout) )
     throw util::Exception("AdvertisingImpl::init::: can't init socket for host=[%s],port=[%d] - '%s'", _host.c_str(), _port, strerror(errno));
+
+  _socket.setConnectTimeout(connectTimeout);
 
   if ( _socket.Connect() )
     throw util::Exception("AdvertisingImpl::init::: can't establish connection to host=[%s],port=[%d] - '%s'", _host.c_str(), _port, strerror(errno));
 }
 
 void
-SimpleAdvertisingClient::reinit()
+SimpleAdvertisingClient::reinit(int connectTimeout)
 {
+  _socket.setConnectTimeout(connectTimeout);
+
   if ( _socket.Connect() )
     smsc_log_error(_logger, "AdvertisingImpl::reinit::: can't establish connection to host=[%s],port=[%d] - %s", _host.c_str(), _port, strerror(errno));
 }
@@ -91,7 +95,6 @@ SimpleAdvertisingClient::sendRequestAndGetResponse(advertising_item* advItem, Se
 void
 SimpleAdvertisingClient::writeToSocket(const void* dataBuf, int dataSz, const std::string& where)
 {
-  smsc_log_debug(_logger, "SimpleAdvertisingClient::writeToSocket::: dataBuf=%x, dataSz=%d", dataBuf, dataSz);
   if ( _socket.WriteAll((char *)dataBuf, dataSz) < 0 ) {
     std::string errMsg = where + " socket write error [" + strerror(errno) + "]";
     smsc_log_warn(_logger, errMsg);
@@ -102,9 +105,24 @@ SimpleAdvertisingClient::writeToSocket(const void* dataBuf, int dataSz, const st
 void
 SimpleAdvertisingClient::readFromSocket(char *dataBuf, int bytesToRead, const std::string& where)
 {
-  if ( _socket.ReadAll(dataBuf, bytesToRead) < 0 ) {
-    smsc_log_warn(_logger, "SimpleAdvertisingClient::readFromSocket::: socket error [%s]", strerror(errno));
-    throw NetworkException("SimpleAdvertisingClient::readFromSocket::: read socket error");
+  int rd=0,res;
+  smsc_log_debug(_logger, "SimpleAdvertisingClient::readFromSocket: _timeout=%d, bytesToRead=%d", _timeout, bytesToRead);
+  while(rd<bytesToRead)
+  {
+    if ( _timeout > 0 ) {
+      res = _socket.canRead(_timeout);
+      if ( res < 0 )
+        throw NetworkException("SimpleAdvertisingClient::readFromSocket::: read socket error = %d", errno);
+      else if ( !res )
+        throw NetworkException("SimpleAdvertisingClient::readFromSocket::: read timeout was expired (timeout value=%d)", _timeout);
+    }
+    res=_socket.Read(dataBuf+rd,bytesToRead-rd);
+    if(res<0)
+      throw NetworkException("SimpleAdvertisingClient::readFromSocket::: read socket error = %d", errno);
+    else if (!res)
+      throw NetworkException("SimpleAdvertisingClient::readFromSocket::: connection closed by remote side");
+    smsc_log_debug(_logger, "SimpleAdvertisingClient::readFromSocket: _socket.read returned %d",res);
+    rd+=res;
   }
 }
 
