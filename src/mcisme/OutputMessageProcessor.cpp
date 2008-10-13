@@ -38,12 +38,21 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
       throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: invalid Advertising.timeout value < 0");
   } catch (...) {
     advertTimeout = 15;
-    smsc_log_warn(_logger, "Parameter <MCISme.Advertising.server> missed. Default value is '15'.");
+    smsc_log_warn(_logger, "Parameter <MCISme.Advertising.timeout> missed. Default value is '15'.");
+  }
+
+  try {
+    _connectTimeout = advertCfg->getInt("connectTimeout");
+    if ( _connectTimeout < 0 )
+      throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: invalid Advertising.connectTimeout value < 0");
+  } catch (...) {
+    _connectTimeout = 15;
+    smsc_log_warn(_logger, "Parameter <MCISme.Advertising.connectTimeout> missed. Default value is '15'.");
   }
 
   _advertising = new SimpleAdvertisingClient(advertServer, advertPort, advertTimeout);
   try {
-    _advertising->init();
+    _advertising->init(_connectTimeout);
   } catch (std::exception& ex) {
     smsc_log_error(_logger, "OutputMessageProcessor::OutputMessageProcessor::: advertising client can't be initialized - catched exception '%s'", ex.what());
   }
@@ -73,7 +82,7 @@ OutputMessageProcessor::Execute()
       }
     } catch (NetworkException& ex) {
       smsc_log_error(_logger, "OutputMessageProcessor::Execute::: catched NetworkException '%s'", ex.what());
-      _advertising->reinit();
+      _advertising->reinit(_connectTimeout);
     } catch (std::exception& ex) {
       smsc_log_error(_logger, "OutputMessageProcessor::Execute::: catched unexpected exception '%s'", ex.what());
     } catch (...) {
