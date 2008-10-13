@@ -20,8 +20,9 @@
 
 #include <util/debug.h>
 
+#include <mcisme/Socket.hpp>
+
 using namespace smsc::core::buffers;
-using namespace smsc::core::network;
 using namespace smsc::core::threads;
 using namespace smsc::util;
 
@@ -89,9 +90,9 @@ class SimpleAdvertisingClient : public Advertising
 public:
   SimpleAdvertisingClient(const std::string& host, int port, int timeout);
 
-  virtual void init();
+  virtual void init(int connectTimeout=0);
 
-  virtual void reinit();
+  virtual void reinit(int connectTimeout=0);
 
   // запрос банера
   virtual uint32_t getBanner( const std::string& abonent,

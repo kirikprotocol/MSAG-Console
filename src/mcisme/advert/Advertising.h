@@ -92,8 +92,8 @@ protected:
 
 class Advertising {
 public:
-  virtual void init() = 0;
-  virtual void reinit() = 0;
+  virtual void init(int connectTimeout=0) = 0;
+  virtual void reinit(int connectTimeout=0) = 0;
   /**
    * Returns 0 - if OK  or  error code (see AdvertErrors.h)
    *
