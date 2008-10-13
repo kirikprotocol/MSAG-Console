@@ -9,3 +9,4 @@ scag/tests/test01     test01         -lpthread -lrt -ldl
 -scag/tests/test05     test05         -lpthread -lrt -ldl
 -scag/tests/test06     test06         -lrt -ldl
 -scag/tests/test07     test07         -lrt -ldl
+scag/tests/test08     test08         -lscag-util -lpthread -lrt -ldl
