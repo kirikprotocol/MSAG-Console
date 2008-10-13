@@ -40,4 +40,13 @@
       <param name="info.sme.date.format.in.file">yyMMddHHmmss</param> 
   </section>
 
+  <section name="quizmanager">
+      <param name="dir.quiz">quiz</param>
+      <param name="dir.status">quiz</param>
+      <param name="listener.delay.first">10</param>     <!-- seconds -->
+      <param name="listener.period.repeat">10</param>    <!-- seconds -->
+      <param name="quiz.date.pattern">dd.MM.yyyy HH:mm</param>
+      <param name="quiz.time.pattern">HH:mm</param>
+  </section>
+
 </config>

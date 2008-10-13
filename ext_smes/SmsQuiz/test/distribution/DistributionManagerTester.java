@@ -89,8 +89,8 @@ public class DistributionManagerTester {
         distribution.setDateEnd(calDate.getTime());
         distribution.setFilePath(distrList);
 
-        distribution.addDay(Distribution.WeekDays.FRIDAY);
-        distribution.addDay(Distribution.WeekDays.SUNDAY);
+        distribution.addDay(Distribution.WeekDays.FRI);
+        distribution.addDay(Distribution.WeekDays.SUN);
 
         distribution.setTimeBegin(calTime1);
         distribution.setTimeEnd(calTime2);

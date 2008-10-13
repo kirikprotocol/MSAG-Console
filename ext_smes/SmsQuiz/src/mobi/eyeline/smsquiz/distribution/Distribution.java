@@ -3,8 +3,17 @@ package mobi.eyeline.smsquiz.distribution;
 import java.util.*;
 
 public class Distribution {
+    public String getSourceAddress() {
+        return sourceAddress;
+    }
 
-    public static enum WeekDays {MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY,SUNDAY}
+    public void setSourceAddress(String sourceAddress) {
+        this.sourceAddress = sourceAddress;
+    }
+
+    public static enum WeekDays {MON,TUE,WED,THU,FRI,SAT,SUN}
+
+    private String sourceAddress;
 
     private String filePath;
 	 
@@ -17,6 +26,8 @@ public class Distribution {
 	private Calendar timeEnd;
 	 
 	private EnumSet<WeekDays> days;
+
+    private String txmode;
 
     public Distribution() {
         days = EnumSet.allOf(WeekDays.class);
@@ -68,6 +79,12 @@ public class Distribution {
 
     public EnumSet<WeekDays> getDays() {
         return EnumSet.copyOf(days);
+    }
+    public String getTxmode() {
+        return txmode;
+    }
+    public void setTxmode(String txmode) {
+        this.txmode = txmode;
     }
 }
  

@@ -12,6 +12,16 @@ public class Reply {
 	 
 	private String text;
 
+    public Reply() {}
+
+    public Reply(Date date, String oa, String da, String text) {
+        super();
+        this.date = date;
+        this.oa = oa;
+        this.da = da;
+        this.text = text;        
+    }
+
     public Date getDate() {
         return date;
     }
