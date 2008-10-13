@@ -139,7 +139,7 @@ public class QuizManagerImpl implements QuizManager, Observer {
         String statsFileName = statusDir+"/"+quizName+".status";
         File statsFile = new File(statsFileName);
 
-        Quiz quiz = quizesMap.get(notification.getFileName());
+        Quiz quiz = quizesMap.get(notification.getFileName()); //todo change research file
         if(quiz==null) {
            logger.error("Can't find quiz into map with key: "+notification.getFileName());
            throw new QuizException("Can't find quiz into map with key: "+notification.getFileName());
@@ -174,7 +174,7 @@ public class QuizManagerImpl implements QuizManager, Observer {
             }
             quiz.setId(id);
         }
-        quizesMap.put(fileName, quiz);
+        quizesMap.put(fileName, quiz);    //todo change Key
 
     }
 
