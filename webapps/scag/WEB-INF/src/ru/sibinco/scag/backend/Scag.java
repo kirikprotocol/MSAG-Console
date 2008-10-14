@@ -39,8 +39,10 @@ import java.util.*;
 public class Scag extends Proxy {                           
 
     private final String id;
+    private final String id2;
 
     private static final String SCAG_COMPONENT_ID = "scag";
+    private static final String SCAG_COMPONENT_ID2 = "scag2";
     //************************ SMPP ROUTES **************************************//
     private static final String LOAD_SMPP_ROUTES_METHOD_ID = "loadSmppTraceRoutes";
     private static final String TRACE_SMPP_ROUTE_METHOD_ID = "traceSmppRoute";
@@ -56,21 +58,34 @@ public class Scag extends Proxy {
 
     public Scag(final ServiceInfo gwServiceInfo, final int port) {
         super(gwServiceInfo.getHost(), port);
-        id = gwServiceInfo.getId();
+        logger.debug( "Scag.Scag(final ServiceInfo gwServiceInfo, final int port)=Scag(" + gwServiceInfo + "," + port + ")" );
+        logger.debug( "Scag.Scag() gwServiceInfo.getId()=" + gwServiceInfo.getId() );
+        id  = gwServiceInfo.getId();
+        id2 = gwServiceInfo.getId();
     }
 
     public Scag(final String host, final int port) {
         super(host, port);
-        id = SCAG_COMPONENT_ID;
+        logger.debug( "Scag.Scag(final String host, final int port)=Scag(" + host + "," + port + ")" );
+        logger.debug( "Scag.Scag() id, id2" );
+        id  = SCAG_COMPONENT_ID;
+        id2 = SCAG_COMPONENT_ID2;
     }
 
     public Scag(final String host, final int port, String serviceId) {
         super(host, port);
-        id = serviceId;
+        logger.debug( "Scag.Scag(final String host, final int port, String serviceId)=Scag(" + host + "," + port + "," + serviceId +")" );
+        logger.debug( "Scag.Scag() serviceId=" + serviceId );
+        id  = serviceId;
+        id2 = serviceId;
     }
                                     
     public String getId() {
         return id;
+    }
+
+    public String getId2() {
+        return id2;
     }
 
     protected void apply(final String subject) throws SibincoException {
