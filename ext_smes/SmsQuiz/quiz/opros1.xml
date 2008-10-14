@@ -2,11 +2,10 @@
 <opros>
 
     <general>
-        <status>active</status>
         <date-begin>10.10.2008 09:00</date-begin>
         <date-end>15.20.2008 22:00</date-end>
         <question>Question</question>
-        <abonents-file>opros1/abonents.csv</abonents-file>
+        <abonents-file>quiz/abonents.csv</abonents-file>
     </general>
 
     <distribution>
@@ -21,7 +20,7 @@
     </distribution>
 
     <replies>
-        <destination-address>148</destination-address>
+        <destination-address>150</destination-address>
         <max-repeat>3</max-repeat>
 
         <reply>

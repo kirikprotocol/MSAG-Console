@@ -86,7 +86,7 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
             throw new ReplyDataSourceException("Some arguments are null", ReplyDataSourceException.ErrorCode.ERROR_WRONG_REQUEST);
         }
 
-        Map<String,Reply> replies = new HashMap<String,Reply>();
+        HashMap<String,Reply> replies = new HashMap<String,Reply>();
         Collection<StatsFile> files;
         Collection<Reply> repliesInFile = new LinkedList<Reply>();
 
@@ -99,7 +99,7 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
 
         for(StatsFile file : files) {
             try {
-                replies.clear();
+                repliesInFile.clear();
                 file.open();
                 file.list(from, till,repliesInFile);
                 for(Reply reply:repliesInFile) {

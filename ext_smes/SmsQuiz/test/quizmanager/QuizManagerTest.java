@@ -22,7 +22,7 @@ import mobi.eyeline.smsquiz.quizmanager.Result;
  */
 public class QuizManagerTest {
 
-    private QuizManagerImpl quizManager;
+    private static QuizManagerImpl quizManager;
 
     @Before
     public void init() {
@@ -42,13 +42,13 @@ public class QuizManagerTest {
 
         }
     }
-
+    @Ignore
     @Test
     public void initTest() {
         assertTrue(quizManager.countQuizes()==0);
     }
 
-
+    @Ignore
     @Test
     public void update() {
         try {
@@ -57,6 +57,7 @@ public class QuizManagerTest {
             assertTrue(quizManager.countQuizes()==1);
             File file = new File(quizManager.getStatusDir()+"/opros_test.status");
             assertTrue(file.exists());
+            file.delete();
         } catch (QuizException e) {
             e.printStackTrace();
             assertFalse(true);
@@ -64,6 +65,7 @@ public class QuizManagerTest {
 
     }
 
+    @Ignore
     @Test
     public void handleSms() {
        try{
@@ -76,6 +78,27 @@ public class QuizManagerTest {
                 quizManager.handleSms("150","+7909","asfaf");    
            }
            assertNull(quizManager.handleSms("150","+7909","asfaf"));
+           File file = new File(quizManager.getStatusDir()+"/opros_test.status");
+           assertTrue(file.exists());
+           file.delete();
+       } catch (QuizException e) {
+           e.printStackTrace();
+           assertTrue(false);
+       }
+    }
+
+    @Test
+    public void test() {
+       try{
+           quizManager.start();
+           waiting(120000);
+           Result result = quizManager.handleSms("150","+7909","y");
+           assertNotNull(result);
+           assertTrue(result.getReplyRull().equals(Result.ReplyRull.OK));
+           for(int i=0;i<10;i++) {
+                quizManager.handleSms("150","+7909","asfaf"+i);
+          }
+           waiting(1200000);
        } catch (QuizException e) {
            e.printStackTrace();
            assertTrue(false);
@@ -84,8 +107,6 @@ public class QuizManagerTest {
     @After
     public void stop() {
         quizManager.stop();
-        File file = new File(quizManager.getStatusDir()+"/opros_test.status");
-        file.delete();
     }
 
     private void removeAll(File dir) {
@@ -106,10 +127,10 @@ public class QuizManagerTest {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(System.currentTimeMillis());
         Date dateBegin = cal.getTime();
-        cal.add(Calendar.DAY_OF_MONTH,5);
+        cal.add(Calendar.MINUTE,2);
         Date dateEnd = cal.getTime();
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
         PrintWriter writer = null;
         try {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
@@ -175,16 +196,26 @@ public class QuizManagerTest {
             file.mkdirs();
         }
 
-        Random random = new Random();
         try {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(distrList)));
-            for(int i=0; i<40;i++) {
-                String abonent = "+7"+Math.abs(random.nextInt());
+                String abonent = "+7909";
                 writer.print(abonent);
                 writer.print("|");
 
                 StringBuilder strBuilder = new StringBuilder(20);
                 int aCode = (int)'a';
+                for (int j=0;j<20;j++){
+                    strBuilder.append( (char)( aCode + 26*Math.random() ) );
+                }
+                writer.println(strBuilder.substring(0));
+            Random random = new Random();
+            for(int i=0; i<100;i++) {
+                abonent = "+"+ Math.abs(random.nextInt());
+                writer.print(abonent);
+                writer.print("|");
+
+                strBuilder = new StringBuilder(20);
+                aCode = (int)'a';
                 for (int j=0;j<20;j++){
                     strBuilder.append( (char)( aCode + 26*Math.random() ) );
                 }
@@ -199,6 +230,25 @@ public class QuizManagerTest {
                 writer.close();
             }
         }
+    }
+
+    private void waiting(final int millis) {
+       Thread thread = new Thread() {
+           public void run() {
+               try {
+                   sleep(millis);
+               } catch (InterruptedException e) {
+                   e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+               }
+           }
+       };
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
     }
 
 

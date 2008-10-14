@@ -221,6 +221,7 @@ public class QuizBuilder {
         }
         List<Element> list = null;
         if((list = repliesElem.getChildren("reply"))!=null) {
+            quiz.clearPatterns();
             for(Element el:list) {
                 Element subEl=null;
                 String category = null;
@@ -242,7 +243,6 @@ public class QuizBuilder {
                     errorNotFound("answer");
                 }
                 quiz.addReplyPattern(new ReplyPattern(pattern, category, answer));
-
             }
         } else {
             errorNotFound("reply");

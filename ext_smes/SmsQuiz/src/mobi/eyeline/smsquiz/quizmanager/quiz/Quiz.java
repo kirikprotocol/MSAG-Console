@@ -107,7 +107,7 @@ public class Quiz {
 
 	public void exportStats() throws QuizException{
         SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
-        String fileName = dirResult+"/"+this.getId()+"."+dateFormat.format(dateBegin)+"-"+dateFormat.format(dateBegin)+".res";
+        String fileName = dirResult+"/"+this.getId()+"."+dateFormat.format(dateBegin)+"-"+dateFormat.format(dateEnd)+".res";
         dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
 
         File file = new File(fileName);
@@ -231,6 +231,10 @@ public class Quiz {
             replyPatterns.add(replyPattern);
         }
     }
+    public void clearPatterns() {
+        replyPatterns.clear();
+    }
+
     public void setDefaultCategory(String category) {
         if(category!=null) {
             defaultCategory = category;
@@ -256,11 +260,11 @@ public class Quiz {
     public String toString() {
         StringBuilder strBuilder= new StringBuilder();
         strBuilder.append("fileName: ").append(fileName).append("\n");
+        strBuilder.append("address: ").append(destAddress).append("\n");
         strBuilder.append("question: ").append(question).append("\n");
         strBuilder.append("dateBegin: ").append(dateBegin).append("\n");
-        strBuilder.append("dateEnd: ").append(dateBegin).append("\n");
+        strBuilder.append("dateEnd: ").append(dateEnd).append("\n");
         strBuilder.append("id: ").append(this.getId()).append("\n");
         return  strBuilder.substring(0);
-
     }
 }

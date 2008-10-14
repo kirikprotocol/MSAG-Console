@@ -16,6 +16,7 @@ import com.eyeline.utils.config.ConfigException;
 import java.io.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.*;
 
 import org.apache.log4j.Logger;
@@ -30,7 +31,7 @@ public class QuizManagerImpl implements QuizManager, Observer {
     private static DistributionManager distributionManager;
 
 
-    private Map<String,Quiz> quizesMap;
+    private ConcurrentHashMap<String,Quiz> quizesMap;
     private DirListener dirListener;
     private QuizCollector quizCollector;
     private ReplyStatsDataSource replyStatsDataSource;
@@ -42,6 +43,8 @@ public class QuizManagerImpl implements QuizManager, Observer {
     private String statusDir;
     private long listenerDelayFirst;
     private long listenerPeriod;
+    private long collectorDelayFirst;
+    private long collectorPeriod;
     private String dirResult;
 
     public static void init (final String configFile) throws QuizException{
@@ -61,6 +64,8 @@ public class QuizManagerImpl implements QuizManager, Observer {
             PropertiesConfig config = new PropertiesConfig(c.getSection("quizmanager").toProperties("."));
             listenerDelayFirst = config.getLong("listener.delay.first");
             listenerPeriod = config.getLong("listener.period.repeat");
+            collectorDelayFirst = config.getLong("collector.delay.first");
+            collectorPeriod = config.getLong("collector.period.repeat");
             quizDir = config.getString("dir.quiz");
             statusDir = config.getString("dir.status");
             datePattern = config.getString("quiz.date.pattern");
@@ -89,12 +94,12 @@ public class QuizManagerImpl implements QuizManager, Observer {
             logger.error("Unable to construct replyStatsDataSource",e);
             throw new QuizException("Unable to construct replyStatsDataSource",e);
         }
-        quizCollector = new QuizCollector();
         dirListener.addObserver(this);
         scheduledDirListener = Executors.newSingleThreadScheduledExecutor();
         scheduledQuizCollector = Executors.newSingleThreadScheduledExecutor();
         quizBuilder = new QuizBuilder(datePattern, timePattern);
-        quizesMap = new HashMap<String, Quiz>();
+        quizesMap = new ConcurrentHashMap<String, Quiz>();
+        quizCollector = new QuizCollector(quizesMap, dirListener);
 
         File file = new File(statusDir);
         if(!file.exists()) {
@@ -104,12 +109,17 @@ public class QuizManagerImpl implements QuizManager, Observer {
 
     public void start() {
         scheduledDirListener.scheduleAtFixedRate(dirListener, listenerDelayFirst, listenerPeriod, java.util.concurrent.TimeUnit.SECONDS);
-        scheduledQuizCollector.scheduleAtFixedRate(quizCollector,10000,10000,java.util.concurrent.TimeUnit.SECONDS);   //todo
+        scheduledQuizCollector.scheduleAtFixedRate(quizCollector,collectorDelayFirst,collectorPeriod,java.util.concurrent.TimeUnit.SECONDS);
     }
 
     public void stop() {
         scheduledDirListener.shutdown();
         scheduledQuizCollector.shutdown();
+        try {
+            replyStatsDataSource.shutdown();
+        } catch (ReplyDataSourceException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
     }
 
     public Result handleSms(String address, String oa, String text) throws QuizException{

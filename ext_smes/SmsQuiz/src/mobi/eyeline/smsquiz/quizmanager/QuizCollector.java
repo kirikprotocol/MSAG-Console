@@ -1,18 +1,49 @@
 package mobi.eyeline.smsquiz.quizmanager;
 
 import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
+import mobi.eyeline.smsquiz.quizmanager.dirlistener.DirListener;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+import java.util.Date;
+
+import org.apache.log4j.Logger;
 
 public class QuizCollector implements Runnable{
 
-	public void run() {
-	 
-	}
-	private void removeQuiz(Quiz quiz) {
-	 
-	}
-	private void createStatistics() {
-	 
-	}
+    private static Logger logger = Logger.getLogger(QuizCollector.class);
+
+    private ConcurrentHashMap<String,Quiz> quizesMap;
+    private DirListener dirListener;
+
+    public QuizCollector(ConcurrentHashMap<String, Quiz> quizesMap, DirListener dirListener) {
+        this.quizesMap = quizesMap;
+        this.dirListener = dirListener;
+    }
+
+    public void run() {
+        logger.info("QuizCollectors starts...");
+        for(Map.Entry<String,Quiz> entry : quizesMap.entrySet()) {
+            Quiz quiz = entry.getValue();
+            if(quiz.getDateEnd().before(new Date())) {
+                try {
+                    dirListener.remove(quiz.getFileName(),true);
+                } catch (QuizException e) {
+                    logger.error("Error removing file from DirListener");
+                }
+                try {
+                    quiz.exportStats();
+                    quizesMap.remove(entry.getKey());
+                } catch (QuizException e) {
+                    logger.error("Error creating resultStatistics");
+                }
+
+            }
+        }
+        logger.info("QuizCollectors finished");
+
+    }
+
 	 
 }
  
