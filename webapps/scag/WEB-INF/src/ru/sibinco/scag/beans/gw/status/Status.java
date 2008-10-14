@@ -8,6 +8,7 @@ import ru.sibinco.scag.backend.daemon.Daemon;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
 
 
 /**
@@ -16,15 +17,26 @@ import javax.servlet.http.HttpServletResponse;
 public class Status extends SCAGBean {
 
     private byte scagStatus = ServiceInfo.STATUS_UNKNOWN;
+
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
+        logger.debug("Status.process() start");
         super.process(request, response);
         final Daemon scagDaemon = appContext.getScagDaemon();
         try {
+            logger.debug("Status.process() refreshServices()");
             scagDaemon.refreshServices(appContext.getSmppManager());
-            final Object gwService = scagDaemon.getServiceInfo(appContext.getScag().getId());
+            logger.debug("Status.process() appContext.getScag().getId()='" + appContext.getScag().getId() + "'" );
+            Object gwService = scagDaemon.getServiceInfo( appContext.getScag().getId() );
+            if( gwService == null ){
+                logger.debug("Status.process() appContext.getScag().getId2()='" + appContext.getScag().getId2() + "'" );
+                gwService = scagDaemon.getServiceInfo( appContext.getScag().getId2() );
+            }
+            logger.debug("Status.process() scagDaemon.getServiceInfo()='" + gwService +"'" );
             if (gwService instanceof ServiceInfo) {
+                logger.debug("Status.process() (gwService instanceof ServiceInfo)" );
                 final ServiceInfo info = (ServiceInfo) gwService;
                 scagStatus = info.getStatus();
+                logger.debug("Status.process() SCAGstatus='" + scagStatus +"'");
             }
         } catch (SibincoException e) {
             logger.error("Could not refresh services", e);
