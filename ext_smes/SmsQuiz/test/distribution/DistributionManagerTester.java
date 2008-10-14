@@ -116,7 +116,7 @@ public class DistributionManagerTester {
         try {
             resultSet = distributionManager.getStatistics(id, begin, end);
             while(resultSet.next()) {
-                assertTrue(abonents.contains(resultSet.get().toString()));
+                assertTrue(abonents.contains(((StatsDelivery)resultSet.get()).getMsisdn()));
                 System.out.println(resultSet.get().toString());
             }
         } catch (StorageException e) {

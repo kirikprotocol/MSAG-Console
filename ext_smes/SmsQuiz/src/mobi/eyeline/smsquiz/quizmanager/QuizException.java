@@ -6,13 +6,14 @@ import java.io.IOException;
 
 import mobi.eyeline.smsquiz.distribution.DistributionException;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
+import mobi.eyeline.smsquiz.storage.StorageException;
 
 /**
  * author: alkhal
  */
 public class QuizException extends Exception{
 
-   public enum ErrorCode {ERROR_DEFAULT, ERROR_INIT,ERROR_NOT_INITIALIZED, ERROR_WRONG_REQUEST, ERROR_IO, ERROR_CONFIG, ERROR_DISTRIBUTION, ERROR_REPLY_STATS}
+   public enum ErrorCode {ERROR_DEFAULT, ERROR_INIT,ERROR_NOT_INITIALIZED, ERROR_WRONG_REQUEST, ERROR_IO, ERROR_CONFIG, ERROR_DISTRIBUTION, ERROR_REPLY_STATS, ERROR_STORAGE}
     private ErrorCode errorCode = ErrorCode.ERROR_DEFAULT;
 
     public QuizException() {
@@ -50,6 +51,11 @@ public class QuizException extends Exception{
         super(message, preException);
         this.errorCode = ErrorCode.ERROR_REPLY_STATS;         
     }
+    public QuizException(String message, StorageException preException) {
+        super(message, preException);
+        this.errorCode = ErrorCode.ERROR_STORAGE;
+    }
+
     public ErrorCode getErrorCode() {
         return errorCode;
     }

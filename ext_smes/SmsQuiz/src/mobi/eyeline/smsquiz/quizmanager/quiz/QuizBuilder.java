@@ -107,9 +107,8 @@ public class QuizBuilder {
         quiz.setDateBegin(dateBegin);
         quiz.setDateEnd(dateEnd);
         quiz.setQuestion(question);
-        quiz.setFileName(abFileName);
 
-        /*        <status>active</status> ? //todo
+        /*
         <date-begin>10.10.2008 09:00</date-begin>
         <date-end>15.20.2008 22:00</date-end>
         <question>Question</question>
@@ -182,9 +181,10 @@ public class QuizBuilder {
             distribution.setTimeBegin(timeBegin);
             distribution.setTimeEnd(timeEnd);
             distribution.setTxmode(txmode);
+            distribution.setSourceAddress(sourceaddress);
         }
 
-        quiz.setAddress(sourceaddress);
+
 
        /*         <source-address>148</source-address>
         <time-begin>12:00</time-begin>
@@ -199,6 +199,12 @@ public class QuizBuilder {
     private void parseReplies(Element repliesElem, Quiz quiz) throws QuizException{
         ReplyPattern replyPattern=null;
         Element elem = null;
+
+        if((elem = repliesElem.getChild("destination-address"))!=null) {
+            quiz.setDestAddress(elem.getTextTrim());
+        } else {
+            errorNotFound("destination-address");
+        }
         if((elem = repliesElem.getChild("max-repeat"))!=null) {
             try{
                 quiz.setMaxRepeat(Integer.parseInt(elem.getTextTrim()));
@@ -243,7 +249,7 @@ public class QuizBuilder {
         }
 
    /* <replies>
-        <destination-address>148</destination-address>    //todo?
+        <destination-address>148</destination-address>
         <max-repeat>3</max-repeat>
 
         <reply>

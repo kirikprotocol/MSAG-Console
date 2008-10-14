@@ -6,6 +6,6 @@ public interface QuizManager {
     
     public void start();
 	public void stop();
-	public Result handleSms(String address, String oa, String text);
+	public Result handleSms(String address, String oa, String text) throws QuizException;
 }
  

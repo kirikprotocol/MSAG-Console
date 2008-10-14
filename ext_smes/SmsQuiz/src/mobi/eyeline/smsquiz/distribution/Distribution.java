@@ -3,13 +3,6 @@ package mobi.eyeline.smsquiz.distribution;
 import java.util.*;
 
 public class Distribution {
-    public String getSourceAddress() {
-        return sourceAddress;
-    }
-
-    public void setSourceAddress(String sourceAddress) {
-        this.sourceAddress = sourceAddress;
-    }
 
     public static enum WeekDays {MON,TUE,WED,THU,FRI,SAT,SUN}
 
@@ -86,5 +79,13 @@ public class Distribution {
     public void setTxmode(String txmode) {
         this.txmode = txmode;
     }
+
+    public String getSourceAddress() {
+        return sourceAddress;
+    }
+
+    public void setSourceAddress(String sourceAddress) {
+        this.sourceAddress = sourceAddress;
+    }    
 }
  

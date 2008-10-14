@@ -7,9 +7,7 @@ import mobi.eyeline.smsquiz.replystats.Reply;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedList;
+import java.util.*;
 
 import org.apache.log4j.Logger;
 
@@ -50,7 +48,7 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
     }
 	 
 
-	public Collection<Reply> list(String da, Date from, Date till) throws ReplyDataSourceException{
+	public Collection<Reply> list(String da, Date from, Date till) throws ReplyDataSourceException{        //todo
         if((da == null)||(from == null)||(till == null)) {
             logger.error("Some arguments are null");
             throw new ReplyDataSourceException("Some arguments are null", ReplyDataSourceException.ErrorCode.ERROR_WRONG_REQUEST);
@@ -81,7 +79,43 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
         }
         return replies;
     }
-	 
+
+    public Map<String,Reply> listMap(String da, Date from, Date till) throws ReplyDataSourceException{        //todo
+        if((da == null)||(from == null)||(till == null)) {
+            logger.error("Some arguments are null");
+            throw new ReplyDataSourceException("Some arguments are null", ReplyDataSourceException.ErrorCode.ERROR_WRONG_REQUEST);
+        }
+
+        Map<String,Reply> replies = new HashMap<String,Reply>();
+        Collection<StatsFile> files;
+        Collection<Reply> repliesInFile = new LinkedList<Reply>();
+
+        try {
+            files = filesCache.getFiles(da,from,till);
+        } catch (FileStatsException e) {
+            logger.error("Error during getting file list",e);
+            throw new ReplyDataSourceException("Error during getting file list",e);
+        }
+
+        for(StatsFile file : files) {
+            try {
+                replies.clear();
+                file.open();
+                file.list(from, till,repliesInFile);
+                for(Reply reply:repliesInFile) {
+                    replies.put(reply.getOa(),reply);
+                }
+            } catch (FileStatsException e) {
+                logger.error("Error during getting replies",e);
+                throw new ReplyDataSourceException("Error during getting replies",e);
+            } finally {
+                if(file!=null) {
+                    file.close();
+                }
+            }
+        }
+        return replies;
+    }
 
 	public void shutdown() {
 	    filesCache.shutdown();

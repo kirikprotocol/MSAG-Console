@@ -8,10 +8,14 @@ import static org.junit.Assert.assertFalse;
 
 import java.io.*;
 import java.util.Random;
+import java.util.Calendar;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 import mobi.eyeline.smsquiz.quizmanager.QuizManagerImpl;
 import mobi.eyeline.smsquiz.quizmanager.dirlistener.Notification;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
+import mobi.eyeline.smsquiz.quizmanager.Result;
 
 /**
  * author: alkhal
@@ -53,17 +57,6 @@ public class QuizManagerTest {
             assertTrue(quizManager.countQuizes()==1);
             File file = new File(quizManager.getStatusDir()+"/opros_test.status");
             assertTrue(file.exists());
-
-            quizManager.update(null, notification);
-            assertTrue(quizManager.countQuizes()==1);
-            file.delete();
-
-            notification = new Notification("test_QuizManager/opros_test.xml", Notification.FileStatus.MODIFIED);
-            quizManager.update(null,notification);
-            assertTrue(quizManager.countQuizes()==1);
-            file = new File(quizManager.getStatusDir()+"/opros_test.status");
-            assertTrue(file.exists());
-            file.delete();
         } catch (QuizException e) {
             e.printStackTrace();
             assertFalse(true);
@@ -71,10 +64,28 @@ public class QuizManagerTest {
 
     }
 
-
+    @Test
+    public void handleSms() {
+       try{
+           Notification notification = new Notification("test_QuizManager/opros_test.xml", Notification.FileStatus.CREATED);
+           quizManager.update(null,notification);
+           Result result = quizManager.handleSms("150","+7909","y");
+           assertNotNull(result);
+           assertTrue(result.getReplyRull().equals(Result.ReplyRull.OK));
+           for(int i=0;i<10;i++) {
+                quizManager.handleSms("150","+7909","asfaf");    
+           }
+           assertNull(quizManager.handleSms("150","+7909","asfaf"));
+       } catch (QuizException e) {
+           e.printStackTrace();
+           assertTrue(false);
+       }
+    }
     @After
     public void stop() {
-        quizManager.stop();;
+        quizManager.stop();
+        File file = new File(quizManager.getStatusDir()+"/opros_test.status");
+        file.delete();
     }
 
     private void removeAll(File dir) {
@@ -92,6 +103,13 @@ public class QuizManagerTest {
     }
 
     private void createQuizFile(String fileName) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(System.currentTimeMillis());
+        Date dateBegin = cal.getTime();
+        cal.add(Calendar.DAY_OF_MONTH,5);
+        Date dateEnd = cal.getTime();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm");
         PrintWriter writer = null;
         try {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
@@ -99,9 +117,12 @@ public class QuizManagerTest {
             writer.println("<opros> ");
 
             writer.println("    <general>");
-            writer.println("        <status>active</status>");
-            writer.println("        <date-begin>10.10.2008 09:00</date-begin>");
-            writer.println("        <date-end>15.20.2008 22:00</date-end>");
+            writer.print("        <date-begin>");
+            writer.print(dateFormat.format(dateBegin));
+            writer.println("</date-begin>");
+            writer.print("        <date-end>");
+            writer.print(dateFormat.format(dateEnd));
+            writer.println("</date-end>");
             writer.println("        <question>Question</question>");
             writer.println("        <abonents-file>test_QuizManager/opros_test_ab.csv</abonents-file>");
             writer.println("    </general>");
@@ -118,7 +139,7 @@ public class QuizManagerTest {
             writer.println("    </distribution>");
 
             writer.println("    <replies>");
-            writer.println("        <destination-address>148</destination-address>");
+            writer.println("        <destination-address>150</destination-address>");
             writer.println("        <max-repeat>3</max-repeat>");
 
             writer.println("        <reply>");

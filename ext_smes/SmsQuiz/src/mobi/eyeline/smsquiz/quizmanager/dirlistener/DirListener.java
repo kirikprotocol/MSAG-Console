@@ -7,9 +7,14 @@ import mobi.eyeline.smsquiz.quizmanager.QuizException;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Observable;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Condition;
 
 import org.apache.log4j.Logger;
 
@@ -17,7 +22,7 @@ public class DirListener extends Observable implements Runnable{
 
 
     private static Logger logger = Logger.getLogger(DirListener.class);
-	private ConcurrentHashMap<String, QuizFile> filesMap;
+	private Map<String, QuizFile> filesMap;
     private String quizDir;
     private FilenameFilter fileFilter;
 
@@ -31,11 +36,11 @@ public class DirListener extends Observable implements Runnable{
             logger.info("Create quizDir");
             file.mkdirs();
         }
-        filesMap = new ConcurrentHashMap<String,QuizFile>();
+        filesMap = new HashMap<String,QuizFile>();
         fileFilter = new XmlFileFilter();
     }
 
-    public void run() {
+    public synchronized void run() {
         logger.info("Running DirListener...");
         File dirQuiz = new File(quizDir);
 
@@ -72,10 +77,23 @@ public class DirListener extends Observable implements Runnable{
             }
 
         }
-
         logger.info("DirListener finished...");
     }
 
+    public synchronized void remove(String fileName, boolean rename) throws QuizException{
+        if(fileName == null) {
+            throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
+        }
+        if(rename) {
+            File file = new File(fileName);
+            file.renameTo(new File(fileName+".old"));
+        }
+        filesMap.remove(fileName);
+    }
+
+    public int countFiles() {
+        return filesMap.size();
+    }
 
     private class XmlFileFilter implements FilenameFilter {
 
@@ -84,10 +102,6 @@ public class DirListener extends Observable implements Runnable{
             Matcher matcher = p.matcher(name);
             return matcher.matches();
         }
-    }
-
-    public int countFiles() {
-        return filesMap.size();
     }
 	 
 }

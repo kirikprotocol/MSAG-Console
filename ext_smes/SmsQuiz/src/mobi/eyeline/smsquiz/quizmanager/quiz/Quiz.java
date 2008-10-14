@@ -1,15 +1,19 @@
 package mobi.eyeline.smsquiz.quizmanager.quiz;
 
-import java.util.Date;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.io.*;
+import java.text.SimpleDateFormat;
 
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
 import mobi.eyeline.smsquiz.replystats.Reply;
 import mobi.eyeline.smsquiz.quizmanager.Result;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
+import mobi.eyeline.smsquiz.distribution.DistributionManager;
+import mobi.eyeline.smsquiz.distribution.DistributionException;
+import mobi.eyeline.smsquiz.distribution.StatsDelivery;
+import mobi.eyeline.smsquiz.storage.ResultSet;
+import mobi.eyeline.smsquiz.storage.StorageException;
 import com.eyeline.jstore.JStore;
 import org.apache.log4j.Logger;
 
@@ -20,25 +24,31 @@ import org.apache.log4j.Logger;
 public class Quiz {
     private static Logger logger = Logger.getLogger(Quiz.class);
 
-    private String address;  
+    private String destAddress; //At this number come reply 
 	private JStore jstore;
     private String question;
 	private String fileName;
 	private Date dateBegin;
 	private Date dateEnd;
+
     private int maxRepeat;
     private String defaultCategory;
+    private String dirResult;
 
     private List<ReplyPattern> replyPatterns;
 
 	private ReplyStatsDataSource replyStatsDataSource;
+    private DistributionManager distributionManager;
 
-	private Status status;
+    private Status status;
 
-    public Quiz(final String statusDir, final File file, final ReplyStatsDataSource replyStatsDataSource) throws QuizException {
+    public Quiz(final String statusDir, final File file,
+                    final ReplyStatsDataSource replyStatsDataSource,
+                    final DistributionManager distributionManager, final String dirResult) throws QuizException {
+        this.dirResult = dirResult;
         this.replyStatsDataSource = replyStatsDataSource;
+        this.distributionManager = distributionManager;
         jstore = new JStore(-1);
-        jstore.init("store.bin",10000,10);
 
         if(file==null) {
             logger.error("Some arguments are null");
@@ -46,74 +56,125 @@ public class Quiz {
         }
         fileName = file.getName();
         String quizName = fileName.substring(0,fileName.lastIndexOf("."));
+        jstore.init(quizName+".bin",60000,10);
         status = new Status(statusDir+"/"+quizName+".status");
         replyPatterns = new ArrayList<ReplyPattern>();
     }
 
-    public Result handleSms(String oa, String text) throws ReplyDataSourceException{
-        ReplyPattern replyPattern = null;
-        int oaNumber = Integer.parseInt( oa.substring ( oa.lastIndexOf("+"), oa.length() ) );
-        for(ReplyPattern rP: replyPatterns) {
-            if(rP.matches(text)) {
-                replyPattern = rP;
-                break;
-            }
-        }
+    public Result handleSms(String oa, String text) throws QuizException{
+        Result result = null;
+        int oaNumber = Integer.parseInt( oa.substring( oa.lastIndexOf("+")+1, oa.length() ) );
+        ReplyPattern replyPattern = getReplyPattern(text);
         if(replyPattern!=null) {
             if(jstore.get(oaNumber)!=-1) {
                 jstore.remove(oaNumber);
             }
-            try {
-                replyStatsDataSource.add(new Reply(new Date(),oa, address,replyPattern.getCategory()));
-            } catch (ReplyDataSourceException e) {
-                logger.error("Can't add reply", e);
-                throw new ReplyDataSourceException("Can't add reply", e);
-            }
-            return new Result(replyPattern.getAnswer(), Result.ReplyRull.OK);
+            result =  new Result(replyPattern.getAnswer(), Result.ReplyRull.OK);
+
         } else {
             if(maxRepeat>0) {
                 int count;
                 if((count = jstore.get(oaNumber))!=-1) {
                     if(count>=maxRepeat) {
-                        jstore.remove(oaNumber);
-                        if(defaultCategory!=null) {
-                            try {
-                                replyStatsDataSource.add(new Reply( new Date(),oa, address, defaultCategory ));
-                            } catch (ReplyDataSourceException e) {
-                                logger.error("Can't add reply", e);
-                                throw new ReplyDataSourceException("Can't add reply", e);}
-                        }
-                        return null;
+                        result = null;
                     }
                     else {
                         count++;
                         jstore.put(oaNumber,count);
-                        return new Result(question, Result.ReplyRull.REPEAT);
+                        result = new Result(question, Result.ReplyRull.REPEAT);
                     }
                 }
                 else {
                     jstore.put(oaNumber,1);
-                    return new Result(question, Result.ReplyRull.REPEAT);
+                    result = new Result(question, Result.ReplyRull.REPEAT);
                 }
             }
             else {
-                try {
-                    replyStatsDataSource.add(new Reply( new Date(),oa, address, defaultCategory ));
-                } catch (ReplyDataSourceException e) {
-                    logger.error("Can't add reply", e);
-                    throw new ReplyDataSourceException("Can't add reply", e);
-                }
-                return null;
+                result =  null;
             }
         }
 
-	}
+        try {
+            replyStatsDataSource.add(new Reply(new Date(),oa, destAddress,text));
+        } catch (ReplyDataSourceException e) {
+            logger.error("Can't add reply", e);
+            throw new QuizException("Can't add reply", e);
+        }
 
-	public void exportStats(String fileName) {
-        //todo
-	}
+        return result;
 
-	public Status getStatus() {
+    }
+
+	public void exportStats() throws QuizException{
+        SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
+        String fileName = dirResult+"/"+this.getId()+"."+dateFormat.format(dateBegin)+"-"+dateFormat.format(dateBegin)+".res";
+        dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
+
+        File file = new File(fileName);
+        File parentFile = file.getParentFile();
+        if((parentFile!=null)&&(!parentFile.exists())) {
+            parentFile.mkdirs();
+        }
+        PrintWriter printWriter = null;
+        try {
+            printWriter = new PrintWriter(new BufferedWriter(new FileWriter(file)));
+            ResultSet resultSet = distributionManager.getStatistics(this.getId(),dateBegin,dateEnd);
+            Map<String,Reply> replies = replyStatsDataSource.listMap(destAddress,dateBegin,dateEnd);
+            while(resultSet.next()) {
+                Reply reply = null;
+                StatsDelivery delivery = (StatsDelivery)resultSet.get();
+                String oa = delivery.getMsisdn();
+                Date dateDelivery = delivery.getDate();
+                if((reply = replies.get(oa))!=null) {
+                    if((reply.getOa().equals(oa))&&(reply.getDa().equals(destAddress))) {
+                        String text = reply.getText();
+                        ReplyPattern replyPattern = getReplyPattern(text);
+                        String category = null;
+                        if(replyPattern!=null) {
+                            category = replyPattern.getCategory();
+                        } else {
+                            if (defaultCategory!=null) {
+                                category = defaultCategory;
+                            }
+                            else {
+                                continue;
+                            }
+                        }                        
+                        printWriter.print(oa);
+                        printWriter.print(",");
+                        printWriter.print(dateFormat.format(dateDelivery));
+                        printWriter.print(",");
+                        printWriter.print(dateFormat.format(reply.getDate()));
+                        printWriter.print(",");
+                        printWriter.print(dateFormat.format(reply.getDate()));
+                        printWriter.print(",");
+                        printWriter.print(category);
+                        printWriter.print(",");
+                        printWriter.println(reply.getText());
+                    }
+                }
+            }
+            printWriter.flush();
+        } catch (DistributionException e) {
+            logger.error("Can't get statisctics", e);
+            throw new QuizException("Can't get statisctics", e);
+        } catch (ReplyDataSourceException e) {
+            logger.error("Can't get replies", e);
+            throw new QuizException("Can't get replies", e);
+        } catch (StorageException e) {
+            logger.error("Can't read ResultSet", e);
+            throw new QuizException("Can't read ResultSet", e);
+        } catch (IOException e) {
+            logger.error("Error during writing file", e);
+            throw new QuizException("Error during writing file", e);
+        } finally {
+            if(printWriter!=null) {
+                printWriter.close();
+            }
+        }
+    }
+
+    public Status getStatus() {
 		return null;
 	}
 
@@ -149,12 +210,12 @@ public class Quiz {
         this.fileName = fileName;
     }
 
-    public String getAddress() {
-        return address;
+    public String getDestAddress() {
+        return destAddress;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setDestAddress(String destAddress) {
+        this.destAddress = destAddress;
     }
 
     public String getId() {
@@ -176,8 +237,30 @@ public class Quiz {
         }
     }
 
-
     public void setMaxRepeat(int maxRepeat) {
         this.maxRepeat = maxRepeat;
+    }
+
+    private ReplyPattern getReplyPattern(String text) {
+        if(text!=null) {
+            for(ReplyPattern rP: replyPatterns) {
+                if(rP.matches(text)) {
+                    return rP;
+                }
+            }
+        }
+        return null;
+
+    }
+
+    public String toString() {
+        StringBuilder strBuilder= new StringBuilder();
+        strBuilder.append("fileName: ").append(fileName).append("\n");
+        strBuilder.append("question: ").append(question).append("\n");
+        strBuilder.append("dateBegin: ").append(dateBegin).append("\n");
+        strBuilder.append("dateEnd: ").append(dateBegin).append("\n");
+        strBuilder.append("id: ").append(this.getId()).append("\n");
+        return  strBuilder.substring(0);
+
     }
 }

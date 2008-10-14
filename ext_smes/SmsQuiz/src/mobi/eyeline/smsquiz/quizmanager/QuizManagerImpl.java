@@ -32,14 +32,17 @@ public class QuizManagerImpl implements QuizManager, Observer {
 
     private Map<String,Quiz> quizesMap;
     private DirListener dirListener;
+    private QuizCollector quizCollector;
     private ReplyStatsDataSource replyStatsDataSource;
-    private ScheduledExecutorService scheduledExecutor;
+    private ScheduledExecutorService scheduledDirListener;
+    private ScheduledExecutorService scheduledQuizCollector;
     private QuizBuilder quizBuilder;
 
     private String quizDir;
     private String statusDir;
     private long listenerDelayFirst;
     private long listenerPeriod;
+    private String dirResult;
 
     public static void init (final String configFile) throws QuizException{
         quizManager = new QuizManagerImpl(configFile);
@@ -62,6 +65,7 @@ public class QuizManagerImpl implements QuizManager, Observer {
             statusDir = config.getString("dir.status");
             datePattern = config.getString("quiz.date.pattern");
             timePattern = config.getString("quiz.time.pattern");
+            dirResult = config.getString("dir.result");
 
         } catch (ConfigException e) {
             logger.error("Unable to construct QuizManagerImpl",e);
@@ -85,9 +89,10 @@ public class QuizManagerImpl implements QuizManager, Observer {
             logger.error("Unable to construct replyStatsDataSource",e);
             throw new QuizException("Unable to construct replyStatsDataSource",e);
         }
-
+        quizCollector = new QuizCollector();
         dirListener.addObserver(this);
-        scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        scheduledDirListener = Executors.newSingleThreadScheduledExecutor();
+        scheduledQuizCollector = Executors.newSingleThreadScheduledExecutor();
         quizBuilder = new QuizBuilder(datePattern, timePattern);
         quizesMap = new HashMap<String, Quiz>();
 
@@ -98,15 +103,21 @@ public class QuizManagerImpl implements QuizManager, Observer {
  }
 
     public void start() {
-        scheduledExecutor.scheduleAtFixedRate(dirListener, listenerDelayFirst, listenerPeriod, java.util.concurrent.TimeUnit.SECONDS);
+        scheduledDirListener.scheduleAtFixedRate(dirListener, listenerDelayFirst, listenerPeriod, java.util.concurrent.TimeUnit.SECONDS);
+        scheduledQuizCollector.scheduleAtFixedRate(quizCollector,10000,10000,java.util.concurrent.TimeUnit.SECONDS);   //todo
     }
 
     public void stop() {
-        scheduledExecutor.shutdown();
+        scheduledDirListener.shutdown();
+        scheduledQuizCollector.shutdown();
     }
 
-    public Result handleSms(String address, String oa, String text) {
-        return null;       //todo
+    public Result handleSms(String address, String oa, String text) throws QuizException{
+        Quiz quiz = null;
+        if((quiz = quizesMap.get(address))!=null) {
+            return quiz.handleSms(oa, text);
+        }
+        return null;
     }
 
     public void update(Observable o, Object arg) {
@@ -131,52 +142,151 @@ public class QuizManagerImpl implements QuizManager, Observer {
     }
 
     private void modifyQuiz (Notification notification) throws QuizException{
-        Distribution distribution = new Distribution();
-        String fileName = notification.getFileName();
-        File file = new File(fileName);
+        try{
+            Distribution distribution = new Distribution();
+            String fileName = notification.getFileName();
+            File file = new File(fileName);
 
-        String quizName = file.getName().substring(0,file.getName().lastIndexOf("."));
-        String statsFileName = statusDir+"/"+quizName+".status";
-        File statsFile = new File(statsFileName);
+            String quizName = file.getName().substring(0,file.getName().lastIndexOf("."));
+            String statsFileName = statusDir+"/"+quizName+".status";
+            File statsFile = new File(statsFileName);
 
-        Quiz quiz = quizesMap.get(notification.getFileName()); //todo change research file
-        if(quiz==null) {
-           logger.error("Can't find quiz into map with key: "+notification.getFileName());
-           throw new QuizException("Can't find quiz into map with key: "+notification.getFileName());
+            Quiz quiz = null;
+            for(Quiz q:quizesMap.values()) {
+                if(q.getFileName().equals(fileName)) {
+                    quiz = q;
+                }
+            }
+            if(quiz==null) {
+               logger.error("Can't find quiz into map with key: "+notification.getFileName());
+               throw new QuizException("Can't find quiz into map with key: "+notification.getFileName());
+            }
+
+            quizBuilder.buildQuiz(fileName, distribution, quiz);                  //todo?
+        } catch (QuizException e) {
+            writeError(notification.getFileName(),e);
+            throw e;
         }
-        quizBuilder.buildQuiz(fileName, distribution, quiz);
-        try {
-            String id = distributionManager.createDistribution(distribution);         //todo?
-            quiz.setId(id);
-        } catch (DistributionException e) {
-           logger.error("Unable to create distribution", e);
-           throw new QuizException("Unable to create distribution", e);
-        }
-
     }
-    private void createQuiz (Notification notification) throws QuizException {
+    private void createQuiz (Notification notification) throws QuizException{
         String fileName = notification.getFileName();
         Distribution distribution = null;
         File file = new File(fileName);
-        Quiz quiz = new Quiz(statusDir, file, replyStatsDataSource);
-        if(quiz.getId()!=null) {
-            quizBuilder.buildQuiz(notification.getFileName(),null,quiz);
-        }
-        else {
-            distribution = new Distribution();
-            quizBuilder.buildQuiz(fileName,distribution,quiz);
-            String id = null;
-            try {
-                id = distributionManager.createDistribution(distribution);
-            } catch (DistributionException e) {
-                logger.error("Unable to create distribution",e);
-                throw new QuizException("Unable to create distribution",e);
+        Quiz quiz = null;
+        try {
+            quiz = new Quiz(statusDir, file, replyStatsDataSource, distributionManager, dirResult);
+            if(quiz.getId()!=null) {
+                quizBuilder.buildQuiz(notification.getFileName(),null,quiz);
             }
-            quiz.setId(id);
+            else {
+                distribution = new Distribution();
+                quizBuilder.buildQuiz(fileName,distribution,quiz);
+            }
+            Quiz previousQuiz = null;
+            if((previousQuiz = quizesMap.get(quiz.getDestAddress()))!=null) {
+                writeQuizesConflict(previousQuiz, quiz);
+                return;
+            }
+            if(distribution!=null) {
+                String id = null;
+                try {
+                    id = distributionManager.createDistribution(distribution);
+                } catch (DistributionException e) {
+                    logger.error("Unable to create distribution",e);
+                    throw new QuizException("Unable to create distribution",e);
+                }
+                quiz.setId(id);
+            }
+            resolveConflict(quiz);
+            quizesMap.put(quiz.getDestAddress(), quiz);
         }
-        quizesMap.put(fileName, quiz);    //todo change Key
-
+        catch (QuizException e) {
+            writeError(notification.getFileName(),e);
+            throw e;
+        }
     }
+
+    private void writeError(String quizFileName, Exception exc) {
+        if(quizFileName==null) {
+            return;
+        }
+        File file = new File(quizFileName);
+        String quizName = file.getName().substring(0,file.getName().lastIndexOf("."));
+        String errorFile = quizDir+"/"+quizName+".error";
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(new BufferedWriter(new FileWriter(errorFile,true)));
+            writer.println("Error during creating quiz:");
+            exc.printStackTrace(writer);
+            writer.flush();
+        } catch (IOException e) {
+            logger.error("Unable to create error file: "+errorFile, e);
+        } finally {
+            if(writer!=null) {
+                writer.close();
+            }
+        }
+    }
+
+    private void resolveConflict(Quiz quiz) throws QuizException{
+        if(quiz==null) {
+            logger.error("Some arguments are null");
+            throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
+        }
+
+        File file = new File(quiz.getFileName());
+        String quizName = file.getName().substring(0,file.getName().lastIndexOf("."));
+        String errorFile = quizDir+"/"+quizName+".error";
+        file = new File(errorFile);
+        if(!file.exists()) {
+            return;
+        }
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(new BufferedWriter(new FileWriter(errorFile,true)));
+            writer.println("\n\n\nConflicts resolved...");
+            writer.flush();
+        } catch (IOException e) {
+            logger.error("Unable to create error file: "+errorFile, e);
+            throw new QuizException("Unable to create error file: "+errorFile, e);
+        } finally {
+            if(writer!=null) {
+                writer.close();
+            }
+        }
+    }
+
+    private void writeQuizesConflict(Quiz prevQuiz, Quiz newQuiz) throws QuizException{
+        if((prevQuiz==null)||(newQuiz==null)) {
+            logger.error("Some arguments are null");
+            throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
+        }
+        logger.warn("Conflict quizes");
+        File newQuizfile = new File(newQuiz.getFileName());
+        String newQuizName = newQuizfile.getName().substring(0,newQuizfile.getName().lastIndexOf("."));
+        PrintWriter writer = null;
+        String errorFile = quizDir+"/"+newQuizName+".error";
+        try {
+            writer = new PrintWriter(new BufferedWriter(new FileWriter(errorFile,true)));
+            writer.println(" Quizes conflict:");
+            writer.println();
+            writer.println("Previous quiz");
+            writer.println(prevQuiz);
+            writer.println();
+            writer.println("New quiz");
+            writer.println(newQuiz);
+            writer.flush();
+        } catch (IOException e) {
+            logger.error("Unable to create error file: "+errorFile, e);
+            throw new QuizException("Unable to create error file: "+errorFile, e);
+        } finally {
+            if(writer!=null) {
+                writer.close();
+            }
+        }
+        dirListener.remove(newQuiz.getFileName(),false);
+    }
+
 
     public int countQuizes() {
         return quizesMap.size();
