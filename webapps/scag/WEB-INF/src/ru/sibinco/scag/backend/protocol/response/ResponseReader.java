@@ -11,9 +11,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.ByteArrayInputStream;
+import java.io.*;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.xml.DtdsEntityResolver;
@@ -46,7 +44,10 @@ public class ResponseReader {
         if (buffer == null)
             return null;
 
+//        logger.debug( "ResponseReader.read() source BAIS" );
         InputSource source = new InputSource(new ByteArrayInputStream(buffer));
+        logger.debug( "ResponseReader.read() source with new InputStreamReader( BAIS, \"Cp1251\" )" );
+        source = new InputSource( new InputStreamReader( new ByteArrayInputStream(buffer), "Cp1251") ); //added
         try {
             return new Response(builder.parse(source));
         } catch (SAXException e) {
