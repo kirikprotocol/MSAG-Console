@@ -46,7 +46,7 @@ public class Proxy {
 
     public synchronized Response runCommand(Command command) throws SibincoException {
         logger.debug("Proxy.runCommand() runCommand(@" + command.getClass().getName() + ")");
-        logger.debug("Proxy.runCommand() status = " + getStatus() + " (" + (getStatus() != STATUS_CONNECTED ? "disconnect" : "connected") + ")");
+        logger.debug("Proxy.runCommand() status = " + getStatus() + " (" + (getStatus() != STATUS_CONNECTED ? "disconnected" : "connected") + ")");
         if (getStatus() != STATUS_CONNECTED){
             logger.debug( "Proxy.runCommand() connect()" );
             connect(host, port);
@@ -73,7 +73,7 @@ public class Proxy {
 
 
     protected void reconnect() throws SibincoException {
-        logger.debug("reconnect()");
+        logger.debug("Proxy.reconnect()");
         disconnect();
         connect(host, port);
     }
