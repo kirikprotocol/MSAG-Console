@@ -89,6 +89,10 @@ bool ConnectionContext::parsePacket() {
 void ConnectionContext::sendResponse() {
   action = SEND_RESPONSE;
   SocketData::setSocketState(socket, WRITE_SOCKET);
+  if (!iotask) {
+    smsc_log_warn(logger, "%p context, iotsak %p was deleted", this, iotask);
+    //return;
+  }
   iotask->addSocket(socket);
 }
 

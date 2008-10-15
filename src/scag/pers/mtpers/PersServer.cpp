@@ -12,7 +12,7 @@ int PersServer::Execute()
 {
   Socket *clientSocket;
 
-  smsc_log_debug(logger, "pers server started");
+  smsc_log_info(logger, "pers server started");
 
   for (;;) {
 

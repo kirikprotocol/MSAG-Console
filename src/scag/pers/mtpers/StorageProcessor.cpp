@@ -44,6 +44,7 @@ StorageProcessor::~StorageProcessor() {
 
 int StorageProcessor::Execute() {
   vector<ConnectionContext*> process;
+  smsc_log_debug(logger_, "%p started", this);
   for (;;) {
     {
       MutexGuard g(processMonitor_);
@@ -62,8 +63,11 @@ int StorageProcessor::Execute() {
     for (vector<ConnectionContext*>::iterator i = process.begin(); i < process.end(); ++i) {
       smsc_log_debug(logger_, "%p: process context %p", this, *i);
       try {
+
         this->process(*i);
+
         smsc_log_debug(logger_, "%p: %p processing complite", this, *i);      
+
       } catch (const SerialBufferOutOfBounds &e) {
         smsc_log_warn(logger_, "%p: %p processing error: SerialBufferOutOfBounds", this, *i);
         (*i)->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
@@ -102,6 +106,7 @@ const char * StorageProcessor::taskName() {
 bool StorageProcessor::addContext(ConnectionContext* cx) {
   MutexGuard g(processMonitor_);
   if (waitingProcess_.size() >= maxWaitingCount_) {
+    smsc_log_debug(logger_, "%p: %p waiting process queue limit %d", this, cx, maxWaitingCount_);
     return false;
   }
   waitingProcess_.push_back(cx);
