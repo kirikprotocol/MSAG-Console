@@ -640,7 +640,7 @@ public synchronized void updateMetaEndpoint(
             }
 
         } catch (NullPointerException e) {
-            logger.error("Could not get SCAG daemon");
+            logger.error("Could not get SCAG daemon, getSvcsStatuses()");
         }
         return result;
     }
@@ -664,7 +664,7 @@ public synchronized void updateMetaEndpoint(
             }
 
         }catch (NullPointerException e) {
-            logger.error("Could not get SCAG daemon");
+            logger.error("Could not get SCAG daemon, getCenterStatuses()");
         }
         return result;
     }
