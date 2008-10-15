@@ -11,10 +11,19 @@
 
 static bool myalloc = false;
 static bool dbg = false;
+static unsigned doyield = 0;
+static unsigned maxproc = 0;
+static unsigned bunchsize = 10;
 
 using namespace smsc::core::synchronization;
 using namespace smsc::core::buffers;
 using namespace smsc::core::threads;
+
+unsigned thrid()
+{
+    unsigned t = unsigned(::pthread_self()) % 1000;
+    return t;
+}
 
 class MemoryManager
 {
@@ -25,7 +34,7 @@ public:
         while ( queue_.Pop(p) ) {
             --count_;
             ::operator delete(p);
-            if (dbg) printf( "%p- sz=%u cnt=%u/%u\n", p, objsize(), queue_.Count(), count_ );
+            if (dbg) printf( "%3.3u %p- sz=%u cnt=%u/%u\n", thrid(), p, objsize(), queue_.Count(), count_ );
         }
     }
 
@@ -35,17 +44,17 @@ public:
 
     void* allocate() {
         void* res;
-        {
+        if ( queue_.Count() ) { // first w/o locking
             MutexGuard mg(mtx_);
             if ( queue_.Pop(res) ) {
-                if (dbg) printf( "%p* sz=%u cnt=%u/%u\n", res, objsize(), queue_.Count(), count_ );
+                if (dbg) printf( "%3.3u %p* sz=%u cnt=%u/%u\n", thrid(), res, objsize(), queue_.Count(), count_ );
                 return res;
             }
         }
         // allocate an object and return it
         res = ::operator new( objsize() );
         ++count_;
-        if (dbg) printf( "%p+ sz=%u cnt=%u/%u\n", res, objsize(), queue_.Count(), count_ );
+        if (dbg) printf( "%3.3u %p+ sz=%u cnt=%u/%u\n", thrid(), res, objsize(), queue_.Count(), count_ );
         return res;
     }
 
@@ -54,7 +63,7 @@ public:
             MutexGuard mg(mtx_);
             queue_.Push( p );
         }
-        if (dbg) printf( "%p~ sz=%u cnt=%u/%u\n", p, objsize(), queue_.Count(), count_ );
+        if (dbg) printf( "%3.3u %p~ sz=%u cnt=%u/%u\n", thrid(), p, objsize(), queue_.Count(), count_ );
     }
 
     inline size_t objsize() const {
@@ -169,7 +178,7 @@ private:
                     this->print(pf);
                 }
                 newbuf = new MemoryManager* [newbufsize];
-                if (dbg) printf("taking a new buffer @%p\n", newbuf );
+                // if (dbg) printf("taking a new buffer @%p\n", newbuf );
                 for ( unsigned i = 0; i < bufsize_; ++i ) {
                     newbuf[i] = managers_[i];
                 }
@@ -183,7 +192,7 @@ private:
             ++seq_;
             if ( newbuf != managers_ ) {
                 std::swap( const_cast< MemoryManager**& >(managers_),newbuf);
-                if (dbg) printf( "deleting the old buffer @%p", newbuf );
+                // if (dbg) printf( "deleting the old buffer @%p", newbuf );
                 delete [] newbuf;
             }
             indices_[sz-1] = count_++;
@@ -324,10 +333,10 @@ class A
 {
 public:
     A( const char* n ) : name_(n) {
-        if (dbg) printf("%p created elt=%s@%p\n", this, name_.c_str(), name_.c_str() );
+        if (dbg) printf("%3.3u %p created elt=%s@%p\n", thrid(), this, name_.c_str(), name_.c_str() );
     }
     ~A() {
-        if (dbg) printf("%p destroy elt=%s@%p\n", this, name_.c_str(), name_.c_str() );
+        if (dbg) printf("%3.3u %p destroy elt=%s@%p\n", thrid(), this, name_.c_str(), name_.c_str() );
     }
     static void* operator new( std::size_t sz ) throw ( std::bad_alloc )
     {
@@ -430,6 +439,9 @@ int Worker::Execute()
     processed_ = 0;
     unsigned seed = ::pthread_self();
     while ( ! stop_ ) {
+
+        if ( ::maxproc && processed_ > ::maxproc ) stopping_ = true;
+
         if ( ! stopping_ ) {
             unsigned r = unsigned(100*(rand_r(&seed)/(RAND_MAX+1.0)));
             for ( unsigned i = 0; i < r; ++i ) {
@@ -438,13 +450,13 @@ int Worker::Execute()
         } else {
             stop_ = true;
         }
-        // Thread::Yield();
+        if ( ::doyield && queue_.Count() > ::doyield ) Thread::Yield();
         // reading all elements produced by the parent
         do {
             A* elt;
             bool notdone = ( stop_ && !producer_->hasStopped() );
             while ( producer_->queue().Pop(elt) ) {
-                ++processed_;
+                if (!stop_) ++processed_;
                 delete elt;
             }
             if ( notdone ) continue;
@@ -455,30 +467,50 @@ int Worker::Execute()
 }
 
 
+unsigned getu( const char* fail )
+{
+    char* endptr;
+    unsigned u = ::strtoul( optarg, &endptr, 10 );
+    if ( *endptr != '\0' ) {
+        fprintf( stderr, "%s\n", fail );
+        ::exit(-1);
+    }
+    return u;
+}
+
+
 int main( int argc, char** argv )
 {
-    unsigned testtime = 10;
+    unsigned testtime = 10000;
     unsigned nwork = 10;
 
     struct option longopts[] = {
         { "help", 0, NULL, 'h' },
+        { "verbose", 0, NULL, 'v' },
         { "myalloc", 0, NULL, 'm' },
-        { "workers", 1, NULL, 'w' },
         { "time", 1, NULL, 't' },
+        { "workers", 1, NULL, 'w' },
+        { "maxproc", 1, NULL, 'x' },
+        { "bunch", 1, NULL, 'b' },
+        { "yield", 1, NULL, 'y' },
         { NULL, 0, NULL, 0 }
     };
     do {
         int longindex;
-        int r = getopt_long( argc, argv, "hmt:w:", longopts, &longindex );
+        int r = getopt_long( argc, argv, "hvmt:w:x:b:y:", longopts, &longindex );
         if ( r == -1 ) break;
         switch (r) {
         case 'h' : {
             printf("%s [options]\n", argv[0]);
             printf(" -h | --help        This help\n" );
+            printf(" -v | --verbose     Be verbose\n" );
             printf(" -m | --myalloc     Use custom allocator (default is std alloc)\n" );
             printf(" -t | --time TIME   Set execution time to TIME (sec)\n" );
             printf(" -w WORKERS\n" );
             printf(" --workers WORKERS  Set number of worker threads to WORKERS\n" );
+            printf(" -x | --maxproc MAX Set maximum processed items per worker to MAX (default is unlimited)\n" );
+            printf(" -b | --bunch SIZE  Set bunchsize to SIZE (default is 100)\n" );
+            printf(" -y | --yield       Do yield (default is no)\n" );
             ::exit(0);
             break;
         }
@@ -486,22 +518,28 @@ int main( int argc, char** argv )
             ::myalloc = true;
             break;
         }
+        case 'b' : {
+            ::bunchsize = ::getu("wrong bunch size specification");
+            break;
+        }
         case 't' : {
-            char* endptr;
-            testtime = ::strtoul( optarg, &endptr, 10 );
-            if ( *endptr != '\0' ) {
-                fprintf( stderr, "wrong time specification\n" );
-                ::exit(-1);
-            }
+            testtime = ::getu("wrong time specification");
+            break;
+        }
+        case 'v' : {
+            ::dbg = true;
             break;
         }
         case 'w' : {
-            char* endptr;
-            nwork = ::strtoul( optarg, &endptr, 10 );
-            if ( *endptr != '\0' ) {
-                fprintf( stderr, "wrong worker threads specification\n");
-                ::exit(-1);
-            }
+            nwork = ::getu("wrong worker threads specification");
+            break;
+        }
+        case 'x' : {
+            maxproc = ::getu("wrong maxproc specification");
+            break;
+        }
+        case 'y' : {
+            ::doyield = ::getu("wrong yield limit specification");
             break;
         }
         default : {
@@ -510,10 +548,6 @@ int main( int argc, char** argv )
         }
         }
     } while ( true );
-
-    printf("%s alloc, %u workers, %u seconds\n",
-           ::myalloc ? "my " : "std",
-           nwork, testtime );
 
     std::vector< Worker* > workers;
     workers.reserve(nwork);
@@ -530,21 +564,27 @@ int main( int argc, char** argv )
     {
         EventMonitor x;
         MutexGuard mg(x);
-        x.wait(testtime * 1000);
+        x.wait(testtime);
     }
-    
-    workers[0]->Stop();
+
+    for ( size_t i = 0; i < nwork; ++i ) {
+        workers[i]->Stop();
+    }
     for ( size_t i = 0; i < nwork; ++i ) {
         workers[i]->WaitFor();
+    }
+    {
+        scag::util::PrintFile pf( stderr );
+        mdispatch().print( pf );
     }
     unsigned processed = 0;
     for ( size_t i = 0; i < nwork; ++i ) {
         processed += workers[i]->processed();
         delete workers[i];
     }
-    printf("%s alloc, %u workers, %u seconds: processed %u items\n",
+    printf("%s alloc, %u work, %u msec, %u bunch: processed %u\n",
            ::myalloc ? "my " : "std",
-           nwork, testtime,
+           nwork, testtime, ::bunchsize,
            processed );
     return 0;
 }
