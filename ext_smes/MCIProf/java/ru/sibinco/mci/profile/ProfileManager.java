@@ -38,6 +38,7 @@ public class ProfileManager
 
   private final static String DEFAULT_INFORM = "defaultInform";
   private final static String DEFAULT_NOTIFY = "defaultNotify";
+  private final static String DEFAULT_WANTNOTIFYME = "defaultWantNotifyMe";
   private final static String DEFAULT_REASONS_MASK = "defaultReasonsMask";
   private final static String DEFAULT_INFORM_ID = "defaultInformId";
   private final static String DEFAULT_NOTIFY_ID = "defaultNotifyId";
@@ -81,6 +82,13 @@ public class ProfileManager
       logger.warn("Parameter '"+DEFAULT_NOTIFY+"' missed. Default flag is off");
     }
     else DEFAULT_PROFILE_INFO.notify = strBool.trim().equalsIgnoreCase("true");
+
+    strBool = properties.getProperty(DEFAULT_WANTNOTIFYME);
+    if (strBool == null || strBool.trim().length() <= 0) {
+      DEFAULT_PROFILE_INFO.wantNotifyMe = false;
+      logger.warn("Parameter '"+DEFAULT_WANTNOTIFYME+"' missed. Default flag is off");
+    }
+    else DEFAULT_PROFILE_INFO.wantNotifyMe = strBool.trim().equalsIgnoreCase("true");
 
     int defaultInformId = -1; int defaultNotifyId = -1;
     try {
@@ -154,7 +162,7 @@ public class ProfileManager
 
 	private byte[] prepareStatement(String abnt, ProfileInfo info, boolean set)
 	{
-		byte[] stmt = new byte[40];
+		byte[] stmt = new byte[41];
 		int i;
 
 		stmt[0] = 1;
@@ -167,8 +175,9 @@ public class ProfileManager
 			stmt[35] = (byte)info.getEventMask();
 			stmt[36] = (info.isInform() ? (byte)1:(byte)0);
 			stmt[37] = (info.isNotify() ? (byte)1:(byte)0);
-			stmt[38] = (byte)info.getInformFormat().getId();
-			stmt[39] = (byte)info.getNotifyFormat().getId();
+			stmt[38] = (info.isNotify() ? (byte)1:(byte)0);
+			stmt[39] = (byte)info.getInformFormat().getId();
+			stmt[40] = (byte)info.getNotifyFormat().getId();
 		}
 		return stmt;
 	}
@@ -178,7 +187,7 @@ public class ProfileManager
 		Socket socket = null;
 		InputStream input = null;
 		OutputStream output = null;
-		byte[] anw = new byte[40];
+		byte[] anw = new byte[41];
 		int ret=0, len=0;
 		try 
 		{
@@ -186,10 +195,10 @@ public class ProfileManager
 			socket.setSoTimeout(15000);
 			input = socket.getInputStream();
 			output = socket.getOutputStream();
-			output.write(stmt, 0, 40);
-			while(len < 40)
+			output.write(stmt, 0, 41);
+			while(len < 41)
 			{
-				ret = input.read(anw, len, 40-len);
+				ret = input.read(anw, len, 41-len);
 				len += ret;
 			}
 			if( anw[2] == 1)
@@ -232,7 +241,7 @@ public class ProfileManager
       byte[] stmt = prepareStatement(abonent, i, false);
       byte[] anw = executeQuery(stmt);
 
-      ProfileInfo info = new ProfileInfo(getFormatType(anw[38], true), getFormatType(anw[39], false), anw[36]!=0, anw[37]!=0, anw[35]);
+      ProfileInfo info = new ProfileInfo(getFormatType(anw[39], true), getFormatType(anw[40], false), anw[36]!=0, anw[37]!=0, anw[38]!=0, anw[35]);
       return info;
     } catch (Exception exc) {
       logger.error("get profile info failed", exc);

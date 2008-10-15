@@ -19,6 +19,7 @@ public class ProfileInfo
 
   protected boolean inform = true;
   protected boolean notify = false;
+  protected boolean wantNotifyMe = false;
   protected int  eventMask = MASK_ALL;
   protected FormatType informFormat = new FormatType();
   protected FormatType notifyFormat = new FormatType();
@@ -29,13 +30,15 @@ public class ProfileInfo
     this.eventMask = info.eventMask;
     this.inform = info.inform;  this.notify = info.notify;
     this.informFormat = info.informFormat; this.notifyFormat = info.notifyFormat;
+    this.wantNotifyMe = info.wantNotifyMe;
   }
   public ProfileInfo(FormatType informFormat, FormatType notifyFormat,
-                     boolean inform, boolean notify, int eventMask)
+                     boolean inform, boolean notify, boolean wantNotifyMe, int eventMask)
   {
     this.eventMask = eventMask;
     this.inform = inform;  this.notify = notify;
     this.informFormat = informFormat; this.notifyFormat = notifyFormat;
+    this.wantNotifyMe = wantNotifyMe;
   }
 
   public int getEventMask() {
@@ -47,6 +50,10 @@ public class ProfileInfo
   public boolean isNotify() {
     return notify;
   }
+  public boolean isWantNotifyMe() {
+    return wantNotifyMe;
+  }
+  
   public FormatType getInformFormat() {
     return informFormat;
   }
