@@ -6,15 +6,22 @@
 
 namespace {
 
+smsc::core::synchronization::Mutex digitmtx;
+
 const std::string& digitstring()
 {
+    static bool done = false;
     static std::string ds;
-    if ( ds.empty() ) {
-        ds.reserve(256*3+1);
-        char buf[10];
-        for ( unsigned i = 0; i < 256; ++i ) {
-            sprintf( buf, "%2x ", i );
-            ds.append(buf);
+    if ( ! done ) {
+        MutexGuard mg(digitmtx);
+        if ( ! done ) {
+            ds.reserve(256*3+1);
+            char buf[10];
+            for ( unsigned i = 0; i < 256; ++i ) {
+                sprintf( buf, "%02x ", i );
+                ds.append(buf);
+            }
+            done = true;
         }
     }
     return ds;
