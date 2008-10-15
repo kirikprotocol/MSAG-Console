@@ -77,7 +77,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
              prepStatement.executeUpdate();
 
              if (logger.isInfoEnabled()){
-                 logger.info("Succesful DB insertion of subscription" + subscription);
+                 logger.info("Succesful DB insertion of subscription " + subscription);
              }
          }catch(SQLException exc){
 
@@ -115,7 +115,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
             }
 
             if (logger.isInfoEnabled()){
-                logger.info("Succesful get subscription" + subscription);
+                logger.info("Succesful get subscription " + subscription);
             }
          }catch(SQLException exc){
              logger.error("Unable to get subscription from the dataBase with address: " + address, exc);
@@ -173,7 +173,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
             prepStatement.setString(1,address);
             prepStatement.execute();
             if (logger.isInfoEnabled()){
-                logger.info("Succesful get subscribed info by address");
+                logger.info("Succesful remove address: "+address);
             }
 
          }catch(SQLException exc){

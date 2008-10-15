@@ -9,6 +9,10 @@ import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import mobi.eyeline.smsquiz.quizmanager.quiz.QuizBuilder;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
+import mobi.eyeline.smsquiz.subscription.datasource.SubscriptionDataSource;
+import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
+import mobi.eyeline.smsquiz.subscription.SubManagerException;
+import mobi.eyeline.smsquiz.storage.StorageException;
 import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.ConfigException;
@@ -28,17 +32,20 @@ public class QuizManagerImpl implements QuizManager, Observer {
 
     private static Logger logger = Logger.getLogger(QuizManagerImpl.class);
     private static QuizManager quizManager;
-    private static DistributionManager distributionManager;
 
 
-    private ConcurrentHashMap<String,Quiz> quizesMap;
+
     private DirListener dirListener;
     private QuizCollector quizCollector;
     private ReplyStatsDataSource replyStatsDataSource;
+    private DistributionManager distributionManager;        //init ConnectionPoll for DB needed
+    private SubscriptionManager subscriptionManager;
+
     private ScheduledExecutorService scheduledDirListener;
     private ScheduledExecutorService scheduledQuizCollector;
     private QuizBuilder quizBuilder;
 
+    private ConcurrentHashMap<String,Quiz> quizesMap;
     private String quizDir;
     private String statusDir;
     private long listenerDelayFirst;
@@ -46,6 +53,7 @@ public class QuizManagerImpl implements QuizManager, Observer {
     private long collectorDelayFirst;
     private long collectorPeriod;
     private String dirResult;
+    private String dirModifiedAb;
 
     public static void init (final String configFile) throws QuizException{
         quizManager = new QuizManagerImpl(configFile);
@@ -71,29 +79,46 @@ public class QuizManagerImpl implements QuizManager, Observer {
             datePattern = config.getString("quiz.date.pattern");
             timePattern = config.getString("quiz.time.pattern");
             dirResult = config.getString("dir.result");
+            dirModifiedAb = config.getString("dir.modified.abonents");
+
+            File file = new File(dirModifiedAb);
+            if(!file.exists()){
+                file.mkdirs();
+            }
 
         } catch (ConfigException e) {
             logger.error("Unable to construct QuizManagerImpl",e);
             throw new QuizException("Unable to construct QuizManagerImpl",e);
         }
+
         try {
             dirListener = new DirListener(quizDir);
         } catch (Exception e) {
             logger.error("Unable to construct DirListener",e);
             throw new QuizException("Unable to construct DirListener",e);
         }
+
         try {
             distributionManager = QuizManagerFieldFactory.getDistributionManager(configFile);
         } catch (DistributionException e) {
             logger.error("Unable to construct distributionManager",e);
             throw new QuizException("Unable to construct distributionManager",e);
         }
+
         try {
             replyStatsDataSource = QuizManagerFieldFactory.getReplyStatsDataSource(configFile);
         } catch (ReplyDataSourceException e) {
             logger.error("Unable to construct replyStatsDataSource",e);
             throw new QuizException("Unable to construct replyStatsDataSource",e);
         }
+
+        try {
+            subscriptionManager = SubscriptionManager.getInstance();
+        } catch (SubManagerException e) {
+            logger.error("Unable to construct subscriptionDataSource",e);
+            throw new QuizException("Unable to subscriptionDataSource",e);
+        }
+
         dirListener.addObserver(this);
         scheduledDirListener = Executors.newSingleThreadScheduledExecutor();
         scheduledQuizCollector = Executors.newSingleThreadScheduledExecutor();
@@ -118,8 +143,9 @@ public class QuizManagerImpl implements QuizManager, Observer {
         try {
             replyStatsDataSource.shutdown();
         } catch (ReplyDataSourceException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error shutdown reply datasource", e);
         }
+        subscriptionManager.shutdown();
     }
 
     public Result handleSms(String address, String oa, String text) throws QuizException{
@@ -153,7 +179,6 @@ public class QuizManagerImpl implements QuizManager, Observer {
 
     private void modifyQuiz (Notification notification) throws QuizException{
         try{
-            Distribution distribution = new Distribution();
             String fileName = notification.getFileName();
             File file = new File(fileName);
 
@@ -172,7 +197,7 @@ public class QuizManagerImpl implements QuizManager, Observer {
                throw new QuizException("Can't find quiz into map with key: "+notification.getFileName());
             }
 
-            quizBuilder.buildQuiz(fileName, distribution, quiz);                  //todo?
+            quizBuilder.buildQuiz(fileName, null, quiz);
         } catch (QuizException e) {
             writeError(notification.getFileName(),e);
             throw e;
@@ -191,6 +216,7 @@ public class QuizManagerImpl implements QuizManager, Observer {
             else {
                 distribution = new Distribution();
                 quizBuilder.buildQuiz(fileName,distribution,quiz);
+                makeSubscribedOnly(distribution);
             }
             Quiz previousQuiz = null;
             if((previousQuiz = quizesMap.get(quiz.getDestAddress()))!=null) {
@@ -214,6 +240,60 @@ public class QuizManagerImpl implements QuizManager, Observer {
             writeError(notification.getFileName(),e);
             throw e;
         }
+    }
+
+    private void makeSubscribedOnly(Distribution distribution) throws QuizException{
+        if((distribution==null)||(distribution.getFilePath()==null)) {
+            return;
+        }
+        File file = new File(distribution.getFilePath());
+        if(!file.exists()) {
+            logger.error("Distributions abonents file doesn't exist");
+            throw new QuizException("Distributions abonents file doesn't exist", QuizException.ErrorCode.ERROR_INIT);
+        }
+        String line = null;
+        StringTokenizer tokenizer = null;
+        PrintWriter writer = null;
+        BufferedReader reader = null;
+        String modifiedFileName = dirModifiedAb+"/"+file.getName()+".mod";
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            writer = new PrintWriter(new BufferedWriter(new FileWriter(modifiedFileName)));
+            while((line = reader.readLine())!=null) {
+                tokenizer = new StringTokenizer(line,"|");
+                String msisdn = tokenizer.nextToken();
+                if(subscriptionManager.subscribed(msisdn))  {
+                    writer.print(msisdn);
+                    writer.print("|");
+                    writer.println(tokenizer.nextToken());
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Abonent subscribed: "+msisdn);
+                    }
+                }
+            }
+            writer.flush();
+            distribution.setFilePath(modifiedFileName);
+        } catch (IOException e) {
+            logger.error("Unable to modified abonents list: ", e);
+            throw new QuizException("Unable to modified abonents list: ", e);
+        } catch (SubManagerException e) {
+            logger.error("Unable to modified abonents list: ", e);
+            throw new QuizException("Unable to modified abonents list: ", e);
+        } finally {
+            if(writer!=null) {
+                writer.close();
+            }
+            if(reader!=null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    logger.error("Unabe to close file: ",e);
+                }
+            }
+        }
+
+
+
     }
 
     private void writeError(String quizFileName, Exception exc) {

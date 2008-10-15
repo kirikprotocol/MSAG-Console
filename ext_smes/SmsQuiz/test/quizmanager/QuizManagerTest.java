@@ -16,6 +16,10 @@ import mobi.eyeline.smsquiz.quizmanager.QuizManagerImpl;
 import mobi.eyeline.smsquiz.quizmanager.dirlistener.Notification;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
 import mobi.eyeline.smsquiz.quizmanager.Result;
+import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
+import mobi.eyeline.smsquiz.subscription.datasource.impl.DBSubscriptionDataSource;
+import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
+import mobi.eyeline.smsquiz.subscription.SubManagerException;
 
 /**
  * author: alkhal
@@ -23,10 +27,13 @@ import mobi.eyeline.smsquiz.quizmanager.Result;
 public class QuizManagerTest {
 
     private static QuizManagerImpl quizManager;
+    private static SubscriptionManager subscriptionManager;
 
     @Before
     public void init() {
         try {
+            ConnectionPoolFactory.init("conf/config.xml");
+            subscriptionManager = SubscriptionManager.getInstance();
             QuizManagerImpl.init("conf/config.xml");
             quizManager = (QuizManagerImpl)QuizManagerImpl.getInstanse();
             File file = new File("test_QuizManager");
@@ -100,7 +107,7 @@ public class QuizManagerTest {
                 quizManager.handleSms("150","+7909","asfaf"+i);
                 quizManager.handleSms("150","+7910","xcvx"+i);
           }
-           for(int i=7911;i<100000;i++) {
+           for(int i=7911;i<10000;i++) {
                 quizManager.handleSms("150", "+"+Integer.toString(i),"asfaf"+i);
                 quizManager.handleSms("150","+"+Integer.toString(i),"xcvx"+i);
           }
@@ -205,6 +212,12 @@ public class QuizManagerTest {
 
         try {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(distrList)));
+            try {
+                subscriptionManager.subscribe("+7909");
+                subscriptionManager.subscribe("+7910");
+            } catch (SubManagerException e) {
+                e.printStackTrace();
+            }
                 String abonent = "+7909";
                 writer.print(abonent);
                 writer.print("|");
@@ -225,11 +238,17 @@ public class QuizManagerTest {
                 }
                 writer.println(strBuilder.substring(0));
             Random random = new Random();
-            for(int i=7911; i<100000;i++) {
+            for(int i=7911; i<10000;i++) {
                 abonent = "+"+ i;
                 writer.print(abonent);
                 writer.print("|");
-
+                if((i%1000)==0) {
+                    try {
+                        subscriptionManager.subscribe(abonent);
+                    } catch (SubManagerException e) {
+                        e.printStackTrace();
+                    }
+                }
                 strBuilder = new StringBuilder(20);
                 aCode = (int)'a';
                 for (int j=0;j<20;j++){

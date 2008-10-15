@@ -50,6 +50,7 @@
       <param name="quiz.date.pattern">dd.MM.yyyy HH:mm</param>
       <param name="quiz.time.pattern">HH:mm</param>
       <param name="dir.result">quizResults</param>
+      <param name="dir.modified.abonents">test_QuizManager</param>
   </section>
 
 </config>
