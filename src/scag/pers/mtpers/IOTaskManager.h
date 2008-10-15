@@ -44,11 +44,9 @@ public:
   void removeContext(IOTask* t, uint16_t contextsNumber = 1);
   void init(uint16_t maxThreads, uint32_t maxSock, uint16_t timeout, const char *logName);
   bool canStop();
-  bool serverReady();
 
 private:
   IOTask* newTask();
-  inline void giveContext(IOTask *t, ConnectionContext* cx);
 
 private:
   ThreadPool pool_;

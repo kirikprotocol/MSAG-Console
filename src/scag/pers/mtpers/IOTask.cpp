@@ -12,6 +12,7 @@ IOTask::IOTask(IOTaskManager& iomanager, uint16_t connectionTimeout):iomanager_(
                connectionTimeout_(connectionTimeout)
 {
   logger = Logger::getInstance("iotask");
+  smsc_log_debug(logger, "%p iotask created", this);
 }
 
 bool IOTask::idle() {
@@ -101,8 +102,9 @@ void IOTask::addSocket(Socket* s) {
 }
 
 void IOTask::registerContext(ConnectionContext* cx) {
-  addSocket(cx->socket);
+  ++itemsCount_;
   cx->iotask = this;
+  addSocket(cx->socket);
 }
 
 void IOTask::addSocketToMultiplexer(Socket* s) {
@@ -155,7 +157,7 @@ void IOTask::removeSocket(Multiplexer::SockArray &error) {
     MutexGuard g(socketMonitor_);
     while (error.Count()) {
       error.Pop(s);
-      smsc_log_warn(logger, "%p: socket %p failed", this, s);
+      smsc_log_debug(logger, "%p: socket %p failed", this, s);
       disconnectSocket(s);
     }
   }

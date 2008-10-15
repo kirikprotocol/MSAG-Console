@@ -46,6 +46,7 @@ class IOTask: public SortedTask {
 
 public:
   IOTask(IOTaskManager& iomanager, uint16_t connectionTimeout);
+  ~IOTask() { smsc_log_debug(logger, "IOTask %p deleted", this);}
   virtual void stop();
   virtual int Execute();
   virtual const char * taskName();

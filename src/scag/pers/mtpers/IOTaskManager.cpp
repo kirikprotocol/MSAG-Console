@@ -79,26 +79,15 @@ void IOTaskManager::removeContext(IOTask* t, uint16_t contextsNumber) {
   taskSorter_.reorderTask(t);
 }
 
-inline void IOTaskManager::giveContext(IOTask *t, ConnectionContext* cx) {
-  smsc_log_debug(logger, "%p:%d choosen for context %p", t, t->getSocketsCount(), cx);
-
-  t->itemsCount_++;
-  t->registerContext(cx);
-  taskSorter_.reorderTask(t);
-}
-
-bool IOTaskManager::serverReady() {
-  MutexGuard g(tasksMutex_);
-  IOTask *t = (IOTask*)taskSorter_.getFirst();
-  return t->getSocketsCount() < maxSockets_;
-}
-
 bool IOTaskManager::process(ConnectionContext* cx) {
   MutexGuard g(tasksMutex_);
   IOTask *t = (IOTask*)taskSorter_.getFirst();
   if (t->getSocketsCount() < maxSockets_) {
     cx->socket->Write("OK", 2);
-    giveContext(t, cx);
+
+    smsc_log_debug(logger, "%p:%d choosen for context %p", t, t->getSocketsCount(), cx);
+    t->registerContext(cx);
+    taskSorter_.reorderTask(t);
     return true;
   } else {
     smsc_log_warn(logger, "Can't process %p context. Server busy.", cx);
