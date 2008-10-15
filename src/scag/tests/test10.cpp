@@ -28,7 +28,7 @@ unsigned thrid()
 class MemoryManager
 {
 public:
-    MemoryManager( unsigned sz ) : objsize_(sz), count_(0) {}
+    MemoryManager( unsigned sz ) : objsize_(sz), queue_(1000), count_(0) {}
     ~MemoryManager() {
         void* p;
         while ( queue_.Pop(p) ) {
@@ -45,8 +45,12 @@ public:
     void* allocate() {
         void* res;
         if ( queue_.Count() ) { // first w/o locking
-            MutexGuard mg(mtx_);
-            if ( queue_.Pop(res) ) {
+            register bool b;
+            {
+                MutexGuard mg(mtx_);
+                b = queue_.Pop(res);
+            }
+            if ( b ) {
                 if (dbg) printf( "%3.3u %p* sz=%u cnt=%u/%u\n", thrid(), res, objsize(), queue_.Count(), count_ );
                 return res;
             }
