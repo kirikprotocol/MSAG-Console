@@ -58,8 +58,9 @@ int main( int argc, char** argv )
     }
 
 // -- PREPARATION CODE
-    Mutex mtx;
-    DummyThread dt(mtx);
+    EventMonitor mtx;
+    // DummyThread dt(mtx);
+    MutexGuard mg(mtx);
 // -- END OF PREPARATION CODE
 
     hrtime_t res[nexp*2];
@@ -73,10 +74,14 @@ int main( int argc, char** argv )
             if ( measure >= nexp ) {
 // -- MEASURED CODE
                 // 1. trylocking locked mutex
-                mtx.TryLock();
+                // mtx.TryLock();
 
                 // 2. locking/unlocking free mutex
                 // MutexGuard mg(mtx);
+
+                // 3. notifying locked monitor
+                mtx.notify();
+
 // -- END OF MEASURED CODE
             }
             // some dummy instruction to prevent optimization
