@@ -54,9 +54,9 @@ public class Quiz {
             logger.error("Some arguments are null");
             throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
         }
-        fileName = file.getName();
-        String quizName = fileName.substring(0,fileName.lastIndexOf("."));
-        jstore.init(quizName+".bin",60000,10);
+        fileName = file.getAbsolutePath();
+        String quizName = file.getName().substring(0,file.getName().lastIndexOf("."));
+        jstore.init(fileName+".bin",60000,10);
         status = new Status(statusDir+"/"+quizName+".status");
         replyPatterns = new ArrayList<ReplyPattern>();
     }
