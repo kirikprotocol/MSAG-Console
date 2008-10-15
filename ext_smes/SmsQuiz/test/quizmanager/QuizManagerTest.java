@@ -91,14 +91,21 @@ public class QuizManagerTest {
     public void test() {
        try{
            quizManager.start();
-           waiting(120000);
+           waiting(30000);
            Result result = quizManager.handleSms("150","+7909","y");
            assertNotNull(result);
            assertTrue(result.getReplyRull().equals(Result.ReplyRull.OK));
+           long begin = System.currentTimeMillis();
            for(int i=0;i<10;i++) {
                 quizManager.handleSms("150","+7909","asfaf"+i);
+                quizManager.handleSms("150","+7910","xcvx"+i);
           }
-           waiting(1200000);
+           for(int i=7911;i<100000;i++) {
+                quizManager.handleSms("150", "+"+Integer.toString(i),"asfaf"+i);
+                quizManager.handleSms("150","+"+Integer.toString(i),"xcvx"+i);
+          }
+           System.out.println(System.currentTimeMillis()-begin);
+           waiting(120000);
        } catch (QuizException e) {
            e.printStackTrace();
            assertTrue(false);
@@ -208,9 +215,18 @@ public class QuizManagerTest {
                     strBuilder.append( (char)( aCode + 26*Math.random() ) );
                 }
                 writer.println(strBuilder.substring(0));
+                abonent = "+7910";
+                writer.print(abonent);
+                writer.print("|");
+
+                strBuilder = new StringBuilder(20);
+                for (int j=0;j<20;j++){
+                    strBuilder.append( (char)( aCode + 26*Math.random() ) );
+                }
+                writer.println(strBuilder.substring(0));
             Random random = new Random();
-            for(int i=0; i<100;i++) {
-                abonent = "+"+ Math.abs(random.nextInt());
+            for(int i=7911; i<100000;i++) {
+                abonent = "+"+ i;
                 writer.print(abonent);
                 writer.print("|");
 
@@ -238,7 +254,7 @@ public class QuizManagerTest {
                try {
                    sleep(millis);
                } catch (InterruptedException e) {
-                   e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                   e.printStackTrace();
                }
            }
        };
@@ -246,7 +262,7 @@ public class QuizManagerTest {
         try {
             thread.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
 
     }

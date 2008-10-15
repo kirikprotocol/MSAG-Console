@@ -106,6 +106,9 @@ public class Quiz {
     }
 
 	public void exportStats() throws QuizException{
+        if(logger.isInfoEnabled()) {
+            logger.info("Export statistics begining for: "+fileName);
+        }
         SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
         String fileName = dirResult+"/"+this.getId()+"."+dateFormat.format(dateBegin)+"-"+dateFormat.format(dateEnd)+".res";
         dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
@@ -172,6 +175,7 @@ public class Quiz {
                 printWriter.close();
             }
         }
+        logger.info("Export statistics finished");
     }
 
     public Status getStatus() {

@@ -131,9 +131,9 @@ public class StatsFilesCache {
         new FileCollector(true).run();
     }
 
-    private static String buildKey(String da, Date date) {
+    private String buildKey(String da, Date date) {
         String result ="";
-        result+=da+ '_' + date.getTime();
+        result+=da+ '_' + fileNameFormat.format(date);
         return result;
     }
 
@@ -201,7 +201,7 @@ public class StatsFilesCache {
 
         private void closeExt() {
             statsFileImpl.close();
-            isClosed = false;
+            isClosed = true;
         }
 
 
