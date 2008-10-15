@@ -24,8 +24,9 @@ import org.apache.log4j.Logger;
 public class Quiz {
     private static Logger logger = Logger.getLogger(Quiz.class);
 
-    private String destAddress; //At this number come reply 
-	private JStore jstore;
+    private String destAddress; //At this number come reply
+    private String sourceAddress;
+    private JStore jstore;
     private String question;
 	private String fileName;
 	private Date dateBegin;
@@ -49,7 +50,6 @@ public class Quiz {
         this.replyStatsDataSource = replyStatsDataSource;
         this.distributionManager = distributionManager;
         jstore = new JStore(-1);
-
         if(file==null) {
             logger.error("Some arguments are null");
             throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
@@ -69,7 +69,7 @@ public class Quiz {
             if(jstore.get(oaNumber)!=-1) {
                 jstore.remove(oaNumber);
             }
-            result =  new Result(replyPattern.getAnswer(), Result.ReplyRull.OK);
+            result =  new Result(replyPattern.getAnswer(), Result.ReplyRull.OK, sourceAddress);
 
         } else {
             if(maxRepeat>0) {
@@ -81,12 +81,12 @@ public class Quiz {
                     else {
                         count++;
                         jstore.put(oaNumber,count);
-                        result = new Result(question, Result.ReplyRull.REPEAT);
+                        result = new Result(question, Result.ReplyRull.REPEAT, sourceAddress);
                     }
                 }
                 else {
                     jstore.put(oaNumber,1);
-                    result = new Result(question, Result.ReplyRull.REPEAT);
+                    result = new Result(question, Result.ReplyRull.REPEAT, sourceAddress);
                 }
             }
             else {
@@ -146,8 +146,6 @@ public class Quiz {
                         printWriter.print(oa);
                         printWriter.print(",");
                         printWriter.print(dateFormat.format(dateDelivery));
-                        printWriter.print(",");
-                        printWriter.print(dateFormat.format(reply.getDate()));
                         printWriter.print(",");
                         printWriter.print(dateFormat.format(reply.getDate()));
                         printWriter.print(",");
@@ -270,5 +268,13 @@ public class Quiz {
         strBuilder.append("dateEnd: ").append(dateEnd).append("\n");
         strBuilder.append("id: ").append(this.getId()).append("\n");
         return  strBuilder.substring(0);
+    }
+
+    public String getSourceAddress() {
+        return sourceAddress;
+    }
+
+    public void setSourceAddress(String sourceAddress) {
+        this.sourceAddress = sourceAddress;
     }
 }

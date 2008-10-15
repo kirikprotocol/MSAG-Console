@@ -183,7 +183,7 @@ public class QuizBuilder {
             distribution.setTxmode(txmode);
             distribution.setSourceAddress(sourceaddress);
         }
-
+        quiz.setSourceAddress(sourceaddress);
 
 
        /*         <source-address>148</source-address>

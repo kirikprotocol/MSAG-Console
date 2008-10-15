@@ -386,4 +386,8 @@ public class QuizManagerImpl implements QuizManager, Observer {
         return statusDir;
     }
 
+    public String getDirResult() {
+        return dirResult;
+    }
+
 }
