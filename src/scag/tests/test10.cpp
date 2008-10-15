@@ -1,3 +1,4 @@
+#include <getopt.h>
 #include <cassert>
 #include <cstdio>
 #include <string>
@@ -8,22 +9,12 @@
 #include "core/buffers/FastMTQueue.hpp"
 #include "core/threads/Thread.hpp"
 
-// -- setup
-#define MYALLOC
-// #define DPRINT
-// --
-
+static bool myalloc = false;
+static bool dbg = false;
 
 using namespace smsc::core::synchronization;
 using namespace smsc::core::buffers;
 using namespace smsc::core::threads;
-
-
-#ifdef DPRINT
-const bool dbg = true;
-#else
-const bool dbg = false;
-#endif
 
 class MemoryManager
 {
@@ -283,11 +274,12 @@ public:
         // << " of size " << sizeof(T) << std::endl;
         // pointer ret = (pointer)(::operator new(num*sizeof(T)));
         // std::cerr << " allocated at: " << (void*)ret << std::endl;
-#ifdef MYALLOC
-        pointer ret = (pointer) mdispatch().allocate( num*sizeof(T) );
-#else
-        pointer ret = (pointer) ::operator new( num*sizeof(T) );
-#endif
+        pointer ret;
+        if ( ::myalloc ) {
+            ret = (pointer) mdispatch().allocate( num*sizeof(T) );
+        } else {
+            ret = (pointer) ::operator new( num*sizeof(T) );
+        }
         return ret;
     }
 
@@ -309,11 +301,11 @@ public:
         // std::cerr << "deallocate " << num << " element(s)"
         // << " of size " << sizeof(T)
         // << " at: " << (void*)p << std::endl;
-#ifdef MYALLOC
-        mdispatch().deallocate( (void*)p, num*sizeof(T) );
-#else
-        ::operator delete( (void*)p );
-#endif
+        if ( ::myalloc ) {
+            mdispatch().deallocate( (void*)p, num*sizeof(T) );
+        } else {
+            ::operator delete( (void*)p );
+        }
     }
 
 };
@@ -339,11 +331,11 @@ public:
     }
     static void* operator new( std::size_t sz ) throw ( std::bad_alloc )
     {
-#ifdef MYALLOC
-        return mdispatch().allocate(sz);
-#else
-        return ::operator new(sz);
-#endif
+        if ( myalloc ) {
+            return mdispatch().allocate(sz);
+        } else {
+            return ::operator new(sz);
+        }
     }
     static void* operator new( std::size_t sz, const std::nothrow_t& ) throw ()
     {
@@ -353,11 +345,11 @@ public:
     }
     static void operator delete( void* p, std::size_t sz ) throw()
     {
-#ifdef MYALLOC
-        mdispatch().deallocate(p,sz);
-#else
-        ::operator delete(p);
-#endif
+        if ( myalloc ) {
+            mdispatch().deallocate(p,sz);
+        } else {
+            ::operator delete(p);
+        }
     }
     static void operator delete( void* p, const std::nothrow_t& ) throw ()
     {
@@ -465,13 +457,64 @@ int Worker::Execute()
 
 int main( int argc, char** argv )
 {
-    unsigned nelts = 2;
-    if ( argc > 1 ) {
-        nelts = unsigned(::atoi( argv[1] ));
-    }
-    if ( nelts <= 0 || nelts > 1000000 ) nelts = 10;
-
+    unsigned testtime = 10;
     unsigned nwork = 10;
+
+    struct option longopts[] = {
+        { "help", 0, NULL, 'h' },
+        { "myalloc", 0, NULL, 'm' },
+        { "workers", 1, NULL, 'w' },
+        { "time", 1, NULL, 't' },
+        { NULL, 0, NULL, 0 }
+    };
+    do {
+        int longindex;
+        int r = getopt_long( argc, argv, "hmt:w:", longopts, &longindex );
+        if ( r == -1 ) break;
+        switch (r) {
+        case 'h' : {
+            printf("%s [options]\n", argv[0]);
+            printf(" -h | --help        This help\n" );
+            printf(" -m | --myalloc     Use custom allocator (default is std alloc)\n" );
+            printf(" -t | --time TIME   Set execution time to TIME (sec)\n" );
+            printf(" -w WORKERS\n" );
+            printf(" --workers WORKERS  Set number of worker threads to WORKERS\n" );
+            ::exit(0);
+            break;
+        }
+        case 'm' : {
+            ::myalloc = true;
+            break;
+        }
+        case 't' : {
+            char* endptr;
+            testtime = ::strtoul( optarg, &endptr, 10 );
+            if ( *endptr != '\0' ) {
+                fprintf( stderr, "wrong time specification\n" );
+                ::exit(-1);
+            }
+            break;
+        }
+        case 'w' : {
+            char* endptr;
+            nwork = ::strtoul( optarg, &endptr, 10 );
+            if ( *endptr != '\0' ) {
+                fprintf( stderr, "wrong worker threads specification\n");
+                ::exit(-1);
+            }
+            break;
+        }
+        default : {
+            fprintf( stderr, "unknown option\n");
+            ::exit(-1);
+        }
+        }
+    } while ( true );
+
+    printf("%s alloc, %u workers, %u seconds\n",
+           ::myalloc ? "my " : "std",
+           nwork, testtime );
+
     std::vector< Worker* > workers;
     workers.reserve(nwork);
     for ( size_t i = 0; i < nwork; ++i ) {
@@ -487,7 +530,7 @@ int main( int argc, char** argv )
     {
         EventMonitor x;
         MutexGuard mg(x);
-        x.wait(nelts);
+        x.wait(testtime * 1000);
     }
     
     workers[0]->Stop();
@@ -499,6 +542,9 @@ int main( int argc, char** argv )
         processed += workers[i]->processed();
         delete workers[i];
     }
-    printf("processed %u items\n", processed);
+    printf("%s alloc, %u workers, %u seconds: processed %u items\n",
+           ::myalloc ? "my " : "std",
+           nwork, testtime,
+           processed );
     return 0;
 }
