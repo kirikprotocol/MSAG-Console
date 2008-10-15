@@ -1,6 +1,8 @@
 #ifndef SCAG_UTIL_SINGLETON
 #define SCAG_UTIL_SINGLETON
 
+// the code is gratefully taken from Loki library by A.Alexandrescu (and modified)
+
 #include <algorithm>
 #include <stdexcept>
 #include <cassert>
