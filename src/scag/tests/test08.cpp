@@ -59,7 +59,7 @@ int main( int argc, char** argv )
 
 // -- PREPARATION CODE
     Mutex mtx;
-    // DummyThread dt(mtx);
+    DummyThread dt(mtx);
 // -- END OF PREPARATION CODE
 
     hrtime_t res[nexp*2];
@@ -72,10 +72,11 @@ int main( int argc, char** argv )
             // hrt.get();
             if ( measure >= nexp ) {
 // -- MEASURED CODE
-                // trylocking locked mutex
-                // mtx.TryLock();
-                // locking/unlocking free mutex
-                MutexGuard mg(mtx);
+                // 1. trylocking locked mutex
+                mtx.TryLock();
+
+                // 2. locking/unlocking free mutex
+                // MutexGuard mg(mtx);
 // -- END OF MEASURED CODE
             }
             // some dummy instruction to prevent optimization
@@ -87,8 +88,6 @@ int main( int argc, char** argv )
             res[measure] = d;
         }
     }
-    // unsigned total = unsigned(hrt0.get()/1000);
-    // double perpass = double(total)/passes;
 
     // calculations
     printf( "total number of experiments: %u\n", nexp );
