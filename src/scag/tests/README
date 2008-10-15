@@ -1,0 +1,12 @@
+This package contains:
+(NOTE: those prefixed with - are not very brilliant tests)
+
+test01   Test of object lifetime (automatic, dynamic) and their order of destruction;
+-test02  (Failed) test of placement new operator;
+-test03  Silly test of auto_ptr;
+-test04  Namespace juggling;
+test05   Prototype of asprintf/vasprintf GNU library functions.  See scag/util/Print.h
+test06   Test/prototype of iconv conversion to/from UCS-2. See scag/util/encoding/Encoding.h
+-test07  Test of placement new operator;
+test08   Useful test/measurement tool to measure code timing;
+test10   Prototype of custom allocator;
