@@ -438,7 +438,7 @@ int Worker::Execute()
         } else {
             stop_ = true;
         }
-        Thread::Yield();
+        // Thread::Yield();
         // reading all elements produced by the parent
         do {
             A* elt;
