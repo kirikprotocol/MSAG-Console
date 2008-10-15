@@ -18,7 +18,9 @@ public class RemoteResourceBundle {
   public RemoteResourceBundle(URL codebase, String resource_uri) {
     properties = new HashMap();
     try {
-      resource_url = new URL(codebase,resource_uri);
+        resource_url = new URL(codebase,resource_uri);
+        System.out.println( "RRB:codebase='" + codebase.getPath() + "' resource_uri=" + resource_uri );
+        System.out.println( "RRB:resource_url=" + resource_url.getPath() + " full:'" + resource_url );
     } catch(Exception e) {
       e.printStackTrace();
     }
@@ -30,12 +32,14 @@ public class RemoteResourceBundle {
     if (message!=null) return message;
     BufferedReader br = null;
     try {
+        System.out.println("RRB.getString() STRING for url:'" + resource_url.toString() + "key=" + key + "'");
         URL url = new URL(resource_url.toString() + "key="+key);
+        System.out.println("RRB.getString() URL: host=" + url.getHost() + " protocol=" + url.getProtocol() + " path=" + url.getHost() + " port=" + url.getPort());
         InputStream s =url.openStream();
         byte[] mess = new byte[s.available()];
         s.read( mess );
         message = new String(mess, codePage);
-        System.out.println("RRB:getString:message='" + message + "'");
+        System.out.println("RRB.getString message='" + message + "'\n--------------");
         properties.put(key,message);
     } catch(Exception e) {
       e.printStackTrace();
