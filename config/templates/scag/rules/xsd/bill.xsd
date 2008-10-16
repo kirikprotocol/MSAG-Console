@@ -63,7 +63,7 @@
             <element name="add_keywords">
                 <complexType>
                     <attribute name="bill_id" type="scag:Var" use="optional"/>
-                    <attribute name="keywords" type="scag:Var" use="required"/>
+                    <attribute name="keywords" type="scag:Value" use="required"/>
                     <attribute name="status" type="scag:Var" use="optional"/>
                     <attribute name="msg" type="scag:Var" use="optional"/>
                 </complexType>
@@ -72,7 +72,7 @@
             <element name="set_keywords">
                 <complexType>
                     <attribute name="bill_id" type="scag:Var" use="optional"/>
-                    <attribute name="keywords" type="scag:Var" use="required"/>
+                    <attribute name="keywords" type="scag:Value" use="required"/>
                     <attribute name="status" type="scag:Var" use="optional"/>
                     <attribute name="msg" type="scag:Var" use="optional"/>
                 </complexType>
