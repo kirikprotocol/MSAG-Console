@@ -475,12 +475,12 @@ int main( int argc, char** argv )
 {
     unsigned testtime = 10000;
     unsigned nwork = 10;
-    bool myalloc = false;
+    MemoryManagerConfig::AllocType at(MemoryManagerConfig::OPNEW);
 
     struct option longopts[] = {
         { "help", 0, NULL, 'h' },
         { "verbose", 0, NULL, 'v' },
-        { "myalloc", 0, NULL, 'm' },
+        { "alloctype", 1, NULL, 'a' },
         { "time", 1, NULL, 't' },
         { "workers", 1, NULL, 'w' },
         { "maxproc", 1, NULL, 'x' },
@@ -491,25 +491,35 @@ int main( int argc, char** argv )
 
     do {
         int longindex;
-        int r = getopt_long( argc, argv, "hvmt:w:x:b:y:", longopts, &longindex );
+        int r = getopt_long( argc, argv, "hva:t:w:x:b:y:", longopts, &longindex );
         if ( r == -1 ) break;
         switch (r) {
         case 'h' : {
             printf("%s [options]\n", argv[0]);
-            printf(" -h | --help        This help\n" );
-            printf(" -v | --verbose     Be verbose\n" );
-            printf(" -m | --myalloc     Use custom allocator (default is std alloc)\n" );
-            printf(" -t | --time TIME   Set execution time to TIME (sec)\n" );
+            printf(" -h | --help         This help\n" );
+            printf(" -v | --verbose      Be verbose\n" );
+            printf(" -a | --alloctype A  Use allocator A (choose from 'my','new','malloc')\n" );
+            printf(" -t | --time TIME    Set execution time to TIME (sec)\n" );
             printf(" -w WORKERS\n" );
-            printf(" --workers WORKERS  Set number of worker threads to WORKERS\n" );
-            printf(" -x | --maxproc MAX Set maximum processed items per worker to MAX (default is unlimited)\n" );
-            printf(" -b | --bunch SIZE  Set bunchsize to SIZE (default is 100)\n" );
-            printf(" -y | --yield       Do yield (default is no)\n" );
+            printf(" --workers WORKERS   Set number of worker threads to WORKERS\n" );
+            printf(" -x | --maxproc MAX  Set maximum processed items per worker to MAX (default is unlimited)\n" );
+            printf(" -b | --bunch SIZE   Set bunchsize to SIZE (default is 100)\n" );
+            printf(" -y | --yield        Do yield (default is no)\n" );
             ::exit(0);
             break;
         }
-        case 'm' : {
-            myalloc = true;
+        case 'a' : {
+            
+            if ( strcmp(optarg,"my") == 0 ) {
+                at = MemoryManagerConfig::SCAGDB;
+            } else if ( strcmp(optarg,"new") == 0 ) {
+                at = MemoryManagerConfig::OPNEW;
+            } else if ( strcmp(optarg,"malloc") == 0 ) {
+                at = MemoryManagerConfig::MALLOC;
+            } else {
+                fprintf(stderr, "wrong specification %s for allocation type\n", optarg );
+                ::exit(-1);
+            }
             break;
         }
         case 'b' : {
@@ -545,7 +555,7 @@ int main( int argc, char** argv )
 
     {
         MemoryManagerConfig cfg;
-        cfg.myalloc = myalloc;
+        cfg.alloctype = at;
         MemoryManager::Instance().setConfig( cfg );
     }
 
@@ -583,7 +593,8 @@ int main( int argc, char** argv )
         delete workers[i];
     }
     printf("%s alloc, %u work, %u msec, %u bunch: processed %u\n",
-           myalloc ? "my " : "std",
+           at == MemoryManagerConfig::SCAGDB ? "my " :
+           ( at == MemoryManagerConfig::OPNEW ? "new" : "mlc" ),
            nwork, testtime, ::bunchsize,
            processed );
     return 0;

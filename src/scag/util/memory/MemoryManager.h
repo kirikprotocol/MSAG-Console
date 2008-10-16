@@ -9,16 +9,22 @@ namespace util {
 namespace memory {
 
 struct MemoryManagerConfig {
-    MemoryManagerConfig() : myalloc(true), prealloc(1000), maxsize_(255) /*, debug(0) */ {}
+    typedef enum {
+            MALLOC = 1,
+            OPNEW,
+            SCAGDB
+    } AllocType;
+
+    MemoryManagerConfig() : alloctype(SCAGDB), prealloc(1000), maxsize_(255) /*, debug(0) */ {}
 
     inline unsigned char maxsize() const {
         return maxsize_;
     }
 
 public:
-    bool                myalloc;   // really use myalloc
-    unsigned            prealloc;  // preallocation of the pointer queue
-    // scag::util::Print*  debug;     // debugging (owned?)
+    AllocType           alloctype;  // which method?
+    unsigned            prealloc;   // preallocation of the pointer queue
+    // scag::util::Print*  debug;   // debugging (owned?)
 private:
     unsigned char       maxsize_;   // maximum size treated by memory manager
 };
@@ -121,20 +127,41 @@ public:
 
     /// these two methods are for use from operator new and operator delete
     void* allocate( size_t sz ) {
-        if ( cfg_.myalloc && sz <= cfg_.maxsize() ) {
-            FixedMemoryManager* m = find( sz );
-            return m->allocate();
-        } else {
+        switch (cfg_.alloctype) {
+        case (MemoryManagerConfig::SCAGDB) :
+            if ( sz <= cfg_.maxsize() ) {
+                FixedMemoryManager* m = find( sz );
+                return m->allocate();
+            }
+            // NOTE: no break here, as we default to opnew
+        case (MemoryManagerConfig::OPNEW) :
             return ::operator new(sz);
+        case (MemoryManagerConfig::MALLOC) :
+            return ::malloc(sz);
+        default:
+            fprintf( stderr, "wrong allocator\n" );
+            ::abort();
+            return 0;
         }
     }
 
     void  deallocate( void* p, size_t sz ) {
-        if ( cfg_.myalloc && sz <= cfg_.maxsize() ) {
-            FixedMemoryManager* m = find( sz );
-            m->deallocate(p);
-        } else {
+        switch (cfg_.alloctype) {
+        case (MemoryManagerConfig::SCAGDB) :
+            if ( sz <= cfg_.maxsize() ) {
+                FixedMemoryManager* m = find( sz );
+                m->deallocate(p);
+                break;
+            }
+        case (MemoryManagerConfig::OPNEW) :
             ::operator delete(p);
+            break;
+        case (MemoryManagerConfig::MALLOC) :
+            free(p);
+            break;
+        default :
+            fprintf( stderr, "wrong alloc type\n" );
+            ::abort();
         }
     }
 
