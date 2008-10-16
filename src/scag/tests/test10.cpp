@@ -3,13 +3,14 @@
 #include <cstdio>
 #include <string>
 #include <vector>
-#include "scag/util/Print.h"
-#include "scag/util/singleton/Singleton2.h"
-#include "core/buffers/CyclicQueue.hpp"
+// #include "scag/util/Print.h"
+// #include "scag/util/singleton/Singleton2.h"
+// #include "core/buffers/CyclicQueue.hpp"
 #include "core/buffers/FastMTQueue.hpp"
 #include "core/threads/Thread.hpp"
+#include "scag/util/memory/MemoryManager.h"
 
-static bool myalloc = false;
+// static bool myalloc = false;
 static bool dbg = false;
 static unsigned doyield = 0;
 static unsigned maxproc = 0;
@@ -18,6 +19,7 @@ static unsigned bunchsize = 10;
 using namespace smsc::core::synchronization;
 using namespace smsc::core::buffers;
 using namespace smsc::core::threads;
+using namespace scag::util::memory;
 
 unsigned thrid()
 {
@@ -25,6 +27,7 @@ unsigned thrid()
     return t;
 }
 
+/*
 class MemoryManager
 {
 public:
@@ -222,19 +225,13 @@ private:
 inline unsigned GetLongevity( MemoryDispatcher* ) { return 0xffffffff; }
 // bool mdispatchinit = false;
 MemoryDispatcher& mdispatch() {
-    /*
-    if ( ! mdispatchinit ) {
-        MutexGuard mg(mdispatchmtx);
-        if ( ! mdispatchinit ) {
-            
-        }
-    }
-     */
     return scag2::util::singleton::SingletonHolder< MemoryDispatcher >::Instance();
 }
 // ---
 
+ */
 
+/*
 template < class T >
 class MyAlloc
 {
@@ -263,9 +260,7 @@ public:
         return &value;
     }
 
-    //* constructors and destructor/
-    /* - nothing to do because the allocator has no state/
-     */
+    /// constructors and destructor
     MyAlloc() throw() {
     }
     MyAlloc(const MyAlloc&) throw() {
@@ -331,6 +326,7 @@ template < class T, class U >
     bool operator != ( const MyAlloc< T >& a, const MyAlloc< U >& b ) {
     return false;
 }
+ */
 
 
 class A
@@ -344,11 +340,7 @@ public:
     }
     static void* operator new( std::size_t sz ) throw ( std::bad_alloc )
     {
-        if ( myalloc ) {
-            return mdispatch().allocate(sz);
-        } else {
-            return ::operator new(sz);
-        }
+        return MemoryManager::Instance().allocate( sz );
     }
     static void* operator new( std::size_t sz, const std::nothrow_t& ) throw ()
     {
@@ -358,11 +350,7 @@ public:
     }
     static void operator delete( void* p, std::size_t sz ) throw()
     {
-        if ( myalloc ) {
-            mdispatch().deallocate(p,sz);
-        } else {
-            ::operator delete(p);
-        }
+        MemoryManager::Instance().deallocate(p,sz);
     }
     static void operator delete( void* p, const std::nothrow_t& ) throw ()
     {
@@ -371,7 +359,7 @@ public:
     }
 
 private:
-    typedef std::basic_string< char, std::char_traits< char >, MyAlloc<char> > string_type;
+    typedef std::basic_string< char, std::char_traits< char >, StdAlloc<char> > string_type;
 
 private:
     string_type name_;
@@ -454,7 +442,7 @@ int Worker::Execute()
         } else {
             stop_ = true;
         }
-        if ( ::doyield && queue_.Count() > ::doyield ) Thread::Yield();
+        if ( ::doyield && unsigned(queue_.Count()) > ::doyield ) Thread::Yield();
         // reading all elements produced by the parent
         do {
             A* elt;
@@ -487,6 +475,7 @@ int main( int argc, char** argv )
 {
     unsigned testtime = 10000;
     unsigned nwork = 10;
+    bool myalloc = false;
 
     struct option longopts[] = {
         { "help", 0, NULL, 'h' },
@@ -499,6 +488,7 @@ int main( int argc, char** argv )
         { "yield", 1, NULL, 'y' },
         { NULL, 0, NULL, 0 }
     };
+
     do {
         int longindex;
         int r = getopt_long( argc, argv, "hvmt:w:x:b:y:", longopts, &longindex );
@@ -519,7 +509,7 @@ int main( int argc, char** argv )
             break;
         }
         case 'm' : {
-            ::myalloc = true;
+            myalloc = true;
             break;
         }
         case 'b' : {
@@ -553,6 +543,12 @@ int main( int argc, char** argv )
         }
     } while ( true );
 
+    {
+        MemoryManagerConfig cfg;
+        cfg.myalloc = myalloc;
+        MemoryManager::Instance().setConfig( cfg );
+    }
+
     std::vector< Worker* > workers;
     workers.reserve(nwork);
     for ( size_t i = 0; i < nwork; ++i ) {
@@ -579,7 +575,7 @@ int main( int argc, char** argv )
     }
     {
         scag::util::PrintFile pf( stderr );
-        mdispatch().print( pf );
+        MemoryManager::Instance().print( pf );
     }
     unsigned processed = 0;
     for ( size_t i = 0; i < nwork; ++i ) {
@@ -587,7 +583,7 @@ int main( int argc, char** argv )
         delete workers[i];
     }
     printf("%s alloc, %u work, %u msec, %u bunch: processed %u\n",
-           ::myalloc ? "my " : "std",
+           myalloc ? "my " : "std",
            nwork, testtime, ::bunchsize,
            processed );
     return 0;
