@@ -1,5 +1,5 @@
-#ifndef _SCAG_UTIL_MEMORY_MEMORYMANAGER_H
-#define _SCAG_UTIL_MEMORY_MEMORYMANAGER_H
+#ifndef _SCAG_UTIL_MEMORY_MEMORYPOOL_H
+#define _SCAG_UTIL_MEMORY_MEMORYPOOL_H
 
 #include "scag/util/Print.h"
 #include "core/buffers/CyclicQueue.hpp"
@@ -8,14 +8,14 @@ namespace scag {
 namespace util {
 namespace memory {
 
-struct MemoryManagerConfig {
+struct MemoryPoolConfig {
     typedef enum {
             MALLOC = 1,
             OPNEW,
             SCAGDB
     } AllocType;
 
-    MemoryManagerConfig() : alloctype(SCAGDB), prealloc(1000), maxsize_(255) /*, debug(0) */ {}
+    MemoryPoolConfig() : alloctype(SCAGDB), prealloc(1000), maxsize_(255) /*, debug(0) */ {}
 
     inline unsigned char maxsize() const {
         return maxsize_;
@@ -30,17 +30,17 @@ private:
 };
 
 
-class FixedMemoryManager
+class FixedMemoryPool
 {
 private:
     typedef smsc::core::synchronization::Mutex Mutex;
     typedef smsc::core::synchronization::MutexGuard MutexGuard;
 
 public:
-    FixedMemoryManager( const MemoryManagerConfig& cfg, unsigned sz ) :
+    FixedMemoryPool( const MemoryPoolConfig& cfg, unsigned sz ) :
     cfg_(cfg), objsize_(sz), queue_(cfg.prealloc), count_(0) {}
 
-    ~FixedMemoryManager() {
+    ~FixedMemoryPool() {
         void* p;
         while ( queue_.Pop(p) ) {
             deallocobj(p);
@@ -102,12 +102,12 @@ private:
     }
 
 
-    FixedMemoryManager();
-    FixedMemoryManager( const FixedMemoryManager& );
-    FixedMemoryManager& operator = ( const FixedMemoryManager& );
+    FixedMemoryPool();
+    FixedMemoryPool( const FixedMemoryPool& );
+    FixedMemoryPool& operator = ( const FixedMemoryPool& );
 
 private:
-    const MemoryManagerConfig&                cfg_;
+    const MemoryPoolConfig&                cfg_;
     size_t                                    objsize_;
     smsc::core::buffers::CyclicQueue< void* > queue_;
     Mutex                                     mtx_;
@@ -115,7 +115,7 @@ private:
 };
 
 
-class MemoryManager
+class MemoryPool
 {
 private:
     typedef smsc::core::synchronization::Mutex       Mutex;
@@ -123,20 +123,20 @@ private:
 
 public:
     /// return a global memory manager instance
-    static MemoryManager& Instance();
+    static MemoryPool& Instance();
 
     /// these two methods are for use from operator new and operator delete
     void* allocate( size_t sz ) {
         switch (cfg_.alloctype) {
-        case (MemoryManagerConfig::SCAGDB) :
+        case (MemoryPoolConfig::SCAGDB) :
             if ( sz <= cfg_.maxsize() ) {
-                FixedMemoryManager* m = find( sz );
+                FixedMemoryPool* m = find( sz );
                 return m->allocate();
             }
             // NOTE: no break here, as we default to opnew
-        case (MemoryManagerConfig::OPNEW) :
+        case (MemoryPoolConfig::OPNEW) :
             return ::operator new(sz);
-        case (MemoryManagerConfig::MALLOC) :
+        case (MemoryPoolConfig::MALLOC) :
             return ::malloc(sz);
         default:
             fprintf( stderr, "wrong allocator\n" );
@@ -147,16 +147,16 @@ public:
 
     void  deallocate( void* p, size_t sz ) {
         switch (cfg_.alloctype) {
-        case (MemoryManagerConfig::SCAGDB) :
+        case (MemoryPoolConfig::SCAGDB) :
             if ( sz <= cfg_.maxsize() ) {
-                FixedMemoryManager* m = find( sz );
+                FixedMemoryPool* m = find( sz );
                 m->deallocate(p);
                 break;
             }
-        case (MemoryManagerConfig::OPNEW) :
+        case (MemoryPoolConfig::OPNEW) :
             ::operator delete(p);
             break;
-        case (MemoryManagerConfig::MALLOC) :
+        case (MemoryPoolConfig::MALLOC) :
             free(p);
             break;
         default :
@@ -179,27 +179,27 @@ public:
         }
     }
 
-    inline const MemoryManagerConfig& cfg() const {
+    inline const MemoryPoolConfig& cfg() const {
         return cfg_;
     }
 
     // NOTE: this may be dangerous when set on running allocator
-    void setConfig( const MemoryManagerConfig& cfg ) {
+    void setConfig( const MemoryPoolConfig& cfg ) {
         cfg_ = cfg;
     }
 
 protected:
-    MemoryManager() :
+    MemoryPool() :
     seq_(0),
     bufsize_(4),
-    managers_( new FixedMemoryManager*[bufsize_] ),
+    managers_( new FixedMemoryPool*[bufsize_] ),
     count_(0)
     {
         for ( unsigned i = 0; i < cfg_.maxsize(); ++i ) indices_[i] = cfg_.maxsize();
         for ( unsigned i = 0; i < bufsize_; ++i ) managers_[i] = 0;
     }
 
-    ~MemoryManager()
+    ~MemoryPool()
     {
         MutexGuard mg(mtx_);
         ++seq_;
@@ -214,15 +214,15 @@ protected:
     }
 
 private:
-    FixedMemoryManager* find( size_t sz ) 
+    FixedMemoryPool* find( size_t sz ) 
     {
-        FixedMemoryManager* res = 0;
+        FixedMemoryPool* res = 0;
         do {
             unsigned s = seq_;
             if ( (s % 2) ) break;
             unsigned idx = unsigned(indices_[sz-1]);
             if ( idx == cfg_.maxsize() ) break;
-            FixedMemoryManager* m = managers_[idx];
+            FixedMemoryPool* m = managers_[idx];
             if ( s != seq_ ) break;
             res = m;
         } while ( false );
@@ -239,9 +239,9 @@ private:
             unsigned newbufsize = ( count_ == bufsize_ ? 
                                     ( bufsize_ < 16 ? 16 : bufsize_*2 ) :
                                     bufsize_ );
-            FixedMemoryManager** newbuf = const_cast< FixedMemoryManager** >(managers_);
+            FixedMemoryPool** newbuf = const_cast< FixedMemoryPool** >(managers_);
             if ( newbufsize != bufsize_ ) {
-                newbuf = new FixedMemoryManager* [newbufsize];
+                newbuf = new FixedMemoryPool* [newbufsize];
                 for ( unsigned i = 0; i < bufsize_; ++i ) {
                     newbuf[i] = managers_[i];
                 }
@@ -250,11 +250,11 @@ private:
                 }
                 bufsize_ = newbufsize;
             }
-            res = new FixedMemoryManager( cfg_, sz );
+            res = new FixedMemoryPool( cfg_, sz );
             newbuf[count_] = res;
             ++seq_;
             if ( newbuf != managers_ ) {
-                std::swap( const_cast< FixedMemoryManager**& >(managers_),newbuf);
+                std::swap( const_cast< FixedMemoryPool**& >(managers_),newbuf);
                 delete [] newbuf;
             }
             indices_[sz-1] = count_++;
@@ -266,15 +266,15 @@ private:
     }
 
 private:
-    MemoryManager( const MemoryManager& );
-    MemoryManager& operator = ( const MemoryManager& );
+    MemoryPool( const MemoryPool& );
+    MemoryPool& operator = ( const MemoryPool& );
 
 private:
-    MemoryManagerConfig  cfg_;
+    MemoryPoolConfig  cfg_;
     volatile unsigned    seq_;                // seqlock
     volatile unsigned char indices_[256];
     unsigned        bufsize_;       // the length of the mman buffer
-    FixedMemoryManager* volatile *managers_;    // the buffer of pointers to mmans
+    FixedMemoryPool* volatile *managers_;    // the buffer of pointers to mmans
 
     unsigned        count_;         // current number of mmans
     mutable Mutex   mtx_;           // write mutex
@@ -289,7 +289,7 @@ private:
 ///  typedef std::string< char, std::char_traits< char >, StdAlloc<char> > string_type;
 ///  string_type s;
 /// </pre>
-template < class T, class BaseMemAlloc = MemoryManager >
+template < class T, class BaseMemAlloc = MemoryPool >
     class StdAlloc
 {
 public:
@@ -385,4 +385,4 @@ namespace memory = scag::util::memory;
 }
 }
 
-#endif /* !_SCAG_UTIL_MEMORY_MEMORYMANAGER_H */
+#endif /* !_SCAG_UTIL_MEMORY_MEMORYPOOL_H */

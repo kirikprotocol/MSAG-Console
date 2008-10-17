@@ -3,14 +3,10 @@
 #include <cstdio>
 #include <string>
 #include <vector>
-// #include "scag/util/Print.h"
-// #include "scag/util/singleton/Singleton2.h"
-// #include "core/buffers/CyclicQueue.hpp"
 #include "core/buffers/FastMTQueue.hpp"
 #include "core/threads/Thread.hpp"
-#include "scag/util/memory/MemoryManager.h"
+#include "scag/util/memory/MemoryPool.h"
 
-// static bool myalloc = false;
 static bool dbg = false;
 static unsigned doyield = 0;
 static unsigned maxproc = 0;
@@ -27,308 +23,6 @@ unsigned thrid()
     return t;
 }
 
-/*
-class MemoryManager
-{
-public:
-    MemoryManager( unsigned sz ) : objsize_(sz), queue_(1000), count_(0) {}
-    ~MemoryManager() {
-        void* p;
-        while ( queue_.Pop(p) ) {
-            --count_;
-            ::operator delete(p);
-            if (dbg) printf( "%3.3u %p- sz=%u cnt=%u/%u\n", thrid(), p, objsize(), queue_.Count(), count_ );
-        }
-    }
-
-    void print( scag::util::Print& pf ) const {
-        pf.print( "manager@%p sz=%u has %u/%u elts", this, unsigned(objsize()), queue_.Count(), count_ );
-    }
-
-    void* allocate() {
-        void* res;
-        if ( queue_.Count() ) { // first w/o locking
-            register bool b;
-            {
-                MutexGuard mg(mtx_);
-                b = queue_.Pop(res);
-            }
-            if ( b ) {
-                if (dbg) printf( "%3.3u %p* sz=%u cnt=%u/%u\n", thrid(), res, objsize(), queue_.Count(), count_ );
-                return res;
-            }
-        }
-        // allocate an object and return it
-        res = ::operator new( objsize() );
-        ++count_;
-        if (dbg) printf( "%3.3u %p+ sz=%u cnt=%u/%u\n", thrid(), res, objsize(), queue_.Count(), count_ );
-        return res;
-    }
-
-    void  deallocate( void* p ) {
-        {
-            MutexGuard mg(mtx_);
-            queue_.Push( p );
-        }
-        if (dbg) printf( "%3.3u %p~ sz=%u cnt=%u/%u\n", thrid(), p, objsize(), queue_.Count(), count_ );
-    }
-
-    inline size_t objsize() const {
-        return objsize_;
-    }
-
-private:
-    MemoryManager();
-
-private:
-    // FastMTQueue queue_;
-    size_t               objsize_;
-    CyclicQueue< void* > queue_;
-    Mutex                mtx_;
-    unsigned             count_;
-};
-
-
-class MemoryDispatcher
-{
-private:
-    static const unsigned char invalid = 255;
-
-public:
-    void* allocate( size_t sz ) {
-        if ( sz <= invalid ) {
-            MemoryManager* m = find( sz );
-            return m->allocate();
-        } else {
-            return ::operator new(sz);
-        }
-    }
-    void  deallocate( void* p, size_t sz ) {
-        if ( sz <= invalid ) {
-            MemoryManager* m = find( sz );
-            m->deallocate( p );
-        } else {
-            ::operator delete(p);
-        }
-    }
-
-    MemoryDispatcher() : 
-    seq_(0),
-    bufsize_(4),
-    managers_( new MemoryManager*[bufsize_] ),
-    count_(0)
-    {
-        for ( unsigned i = 0; i < invalid; ++i ) indices_[i] = invalid;
-        for ( unsigned i = 0; i < bufsize_; ++i ) managers_[i] = 0;
-    }
-
-    ~MemoryDispatcher() {
-        MutexGuard mg(mtx_);
-        ++seq_;
-        // dump statistics
-        if (dbg) {
-            scag::util::PrintFile pf( stdout );
-            this->print( pf );
-        }
-        for ( unsigned i = 0; i < invalid; ++i ) indices_[i] = invalid;
-        for ( ; count_ > 0; ) {
-            delete managers_[--count_];
-            managers_[count_] = 0;
-        }
-        delete [] managers_;
-        managers_ = 0;
-        ++seq_;
-    }
-
-    void print( scag::util::Print& pf ) const
-    {
-        pf.print( "dispatcher@%p has %u managers@%p", this, count_, managers_ );
-        for ( unsigned i = 0; i < invalid; ++i ) {
-            unsigned idx = indices_[i];
-            if ( idx != invalid ) {
-                managers_[idx]->print( pf );
-            }
-        }
-    }
-
-private:
-    MemoryManager* find( size_t sz ) 
-    {
-        MemoryManager* res = 0;
-        do {
-            unsigned s = seq_;
-            if ( (s % 2) ) break;
-            assert( sz <= invalid );
-            unsigned idx = unsigned(indices_[sz-1]);
-            if ( idx == invalid ) break;
-            MemoryManager* m = managers_[idx];
-            if ( s != seq_ ) break;
-            res = m;
-        } while ( false );
-
-        while ( res == 0 ) {
-            // needs locking
-            MutexGuard mg(mtx_);
-            unsigned idx = unsigned(indices_[sz-1]);
-            if ( idx != invalid ) {
-                res = managers_[idx];
-                break;
-            }
-            // not found
-            unsigned newbufsize = ( count_ == bufsize_ ? 
-                                    ( bufsize_ < 16 ? 16 : bufsize_*2 ) :
-                                    bufsize_ );
-            MemoryManager** newbuf = const_cast< MemoryManager** >(managers_);
-            if ( newbufsize != bufsize_ ) {
-                if (dbg) {
-                    scag::util::PrintFile pf(stdout);
-                    this->print(pf);
-                }
-                newbuf = new MemoryManager* [newbufsize];
-                // if (dbg) printf("taking a new buffer @%p\n", newbuf );
-                for ( unsigned i = 0; i < bufsize_; ++i ) {
-                    newbuf[i] = managers_[i];
-                }
-                for ( unsigned i = bufsize_ ; i < newbufsize; ++i ) {
-                    newbuf[i] = 0;
-                }
-                bufsize_ = newbufsize;
-            }
-            res = new MemoryManager( sz );
-            newbuf[count_] = res;
-            ++seq_;
-            if ( newbuf != managers_ ) {
-                std::swap( const_cast< MemoryManager**& >(managers_),newbuf);
-                // if (dbg) printf( "deleting the old buffer @%p", newbuf );
-                delete [] newbuf;
-            }
-            indices_[sz-1] = count_++;
-            ++seq_;
-            break;
-        }
-        assert( res->objsize() == sz );
-        return res;
-    }
-
-private:
-    volatile unsigned seq_;                // seqlock
-    volatile unsigned char indices_[invalid];
-    unsigned        bufsize_;       // the length of the mman buffer
-    MemoryManager* volatile *managers_;    // the buffer of pointers to mmans
-
-    unsigned        count_;         // current number of mmans
-    Mutex           mtx_;           // write mutex
-};
-
-
-// --- singleton for MemoryDispatcher
-inline unsigned GetLongevity( MemoryDispatcher* ) { return 0xffffffff; }
-// bool mdispatchinit = false;
-MemoryDispatcher& mdispatch() {
-    return scag2::util::singleton::SingletonHolder< MemoryDispatcher >::Instance();
-}
-// ---
-
- */
-
-/*
-template < class T >
-class MyAlloc
-{
-public:
-    // taken from josuttis book
-
-    /// type definitions/
-    typedef T        value_type;
-    typedef T*       pointer;
-    typedef const T* const_pointer;
-    typedef T&       reference;
-    typedef const T& const_reference;
-    typedef std::size_t    size_type;
-    typedef std::ptrdiff_t difference_type;
-    
-    /// rebind allocator to type U/
-    template <class U> struct rebind {
-        typedef MyAlloc<U> other;
-    };
-
-    /// return address of values/
-    pointer address (reference value) const {
-        return &value;
-    }
-    const_pointer address (const_reference value) const {
-        return &value;
-    }
-
-    /// constructors and destructor
-    MyAlloc() throw() {
-    }
-    MyAlloc(const MyAlloc&) throw() {
-    }
-    template <class U> MyAlloc (const MyAlloc<U>&) throw() {
-    }
-    ~MyAlloc() throw() {
-    }
-
-    /// return maximum number of elements that can be allocated/
-    size_type max_size () const throw() {
-        return std::numeric_limits<std::size_t>::max() / sizeof(T);
-    }
-
-    /// allocate but don't initialize num elements of type T/
-    pointer allocate (size_type num, const void* = 0) {
-        /// print message and allocate memory with global new/
-        // std::cerr << "allocate " << num << " element(s)"
-        // << " of size " << sizeof(T) << std::endl;
-        // pointer ret = (pointer)(::operator new(num*sizeof(T)));
-        // std::cerr << " allocated at: " << (void*)ret << std::endl;
-        pointer ret;
-        if ( ::myalloc ) {
-            ret = (pointer) mdispatch().allocate( num*sizeof(T) );
-        } else {
-            ret = (pointer) ::operator new( num*sizeof(T) );
-        }
-        return ret;
-    }
-
-    /// initialize elements of allocated storage p with value value/
-    void construct (pointer p, const T& value) {
-        /// initialize memory with placement new/
-        new ((void*)p) T(value);
-    }
-
-    /// destroy elements of initialized storage p/
-    void destroy (pointer p) {
-        /// destroy objects by calling their destructor/
-        p->~T();
-    }
-
-    /// deallocate storage p of deleted elements/
-    void deallocate (pointer p, size_type num) {
-        /// print message and deallocate memory with global delete/
-        // std::cerr << "deallocate " << num << " element(s)"
-        // << " of size " << sizeof(T)
-        // << " at: " << (void*)p << std::endl;
-        if ( ::myalloc ) {
-            mdispatch().deallocate( (void*)p, num*sizeof(T) );
-        } else {
-            ::operator delete( (void*)p );
-        }
-    }
-
-};
-
-template < class T, class U >
-    bool operator == ( const MyAlloc< T >& a, const MyAlloc< U >& b ) {
-    return true;
-}
-template < class T, class U >
-    bool operator != ( const MyAlloc< T >& a, const MyAlloc< U >& b ) {
-    return false;
-}
- */
-
-
 class A
 {
 public:
@@ -340,7 +34,7 @@ public:
     }
     static void* operator new( std::size_t sz ) throw ( std::bad_alloc )
     {
-        return MemoryManager::Instance().allocate( sz );
+        return MemoryPool::Instance().allocate( sz );
     }
     static void* operator new( std::size_t sz, const std::nothrow_t& ) throw ()
     {
@@ -350,7 +44,7 @@ public:
     }
     static void operator delete( void* p, std::size_t sz ) throw()
     {
-        MemoryManager::Instance().deallocate(p,sz);
+        MemoryPool::Instance().deallocate(p,sz);
     }
     static void operator delete( void* p, const std::nothrow_t& ) throw ()
     {
@@ -475,7 +169,7 @@ int main( int argc, char** argv )
 {
     unsigned testtime = 10000;
     unsigned nwork = 10;
-    MemoryManagerConfig::AllocType at(MemoryManagerConfig::OPNEW);
+    MemoryPoolConfig::AllocType at(MemoryPoolConfig::OPNEW);
 
     struct option longopts[] = {
         { "help", 0, NULL, 'h' },
@@ -511,11 +205,11 @@ int main( int argc, char** argv )
         case 'a' : {
             
             if ( strcmp(optarg,"my") == 0 ) {
-                at = MemoryManagerConfig::SCAGDB;
+                at = MemoryPoolConfig::SCAGDB;
             } else if ( strcmp(optarg,"new") == 0 ) {
-                at = MemoryManagerConfig::OPNEW;
+                at = MemoryPoolConfig::OPNEW;
             } else if ( strcmp(optarg,"malloc") == 0 ) {
-                at = MemoryManagerConfig::MALLOC;
+                at = MemoryPoolConfig::MALLOC;
             } else {
                 fprintf(stderr, "wrong specification %s for allocation type\n", optarg );
                 ::exit(-1);
@@ -554,9 +248,9 @@ int main( int argc, char** argv )
     } while ( true );
 
     {
-        MemoryManagerConfig cfg;
+        MemoryPoolConfig cfg;
         cfg.alloctype = at;
-        MemoryManager::Instance().setConfig( cfg );
+        MemoryPool::Instance().setConfig( cfg );
     }
 
     std::vector< Worker* > workers;
@@ -585,7 +279,7 @@ int main( int argc, char** argv )
     }
     {
         scag::util::PrintFile pf( stderr );
-        MemoryManager::Instance().print( pf );
+        MemoryPool::Instance().print( pf );
     }
     unsigned processed = 0;
     for ( size_t i = 0; i < nwork; ++i ) {
@@ -593,8 +287,8 @@ int main( int argc, char** argv )
         delete workers[i];
     }
     printf("%s alloc, %u work, %u msec, %u bunch: processed %u\n",
-           at == MemoryManagerConfig::SCAGDB ? "my " :
-           ( at == MemoryManagerConfig::OPNEW ? "new" : "mlc" ),
+           at == MemoryPoolConfig::SCAGDB ? "my " :
+           ( at == MemoryPoolConfig::OPNEW ? "new" : "mlc" ),
            nwork, testtime, ::bunchsize,
            processed );
     return 0;
