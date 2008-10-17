@@ -8,7 +8,7 @@ namespace scag{ namespace pers{
 const uint8_t PROPERTIES_COUNT_SIZE = 14; //14 bits for profile properties count
 const uint16_t MAX_PROPERTIES_COUNT = 16383; 
 
-void Profile::Serialize(SerialBuffer& buf, bool toFSDB, GlossaryBase* glossary) const
+void Profile::Serialize(SerialBuffer& buf, bool toFSDB) const
 {
     uint16_t cnt = properties.GetCount();
     if (cnt == 0 && toFSDB && state != LOCKED) {
@@ -22,15 +22,11 @@ void Profile::Serialize(SerialBuffer& buf, bool toFSDB, GlossaryBase* glossary) 
     Property* prop;
     char *key = 0;
     while(it.Next(key, prop))
-        prop->Serialize(buf, toFSDB, glossary);
+        prop->Serialize(buf, toFSDB);
 }
 
-void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB, GlossaryBase* glossary)
+void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB)
 {
-    if (!buf.GetSize() || buf.GetPos() >= buf.GetSize()) {
-      Empty();
-      return;
-    }
     uint16_t state_cnt = buf.ReadInt16();
     uint16_t cnt = state_cnt & MAX_PROPERTIES_COUNT;
     state_cnt >>= PROPERTIES_COUNT_SIZE;
@@ -42,7 +38,7 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB, GlossaryBase* glossa
     while(cnt) {
         prop = new Property();
         do{
-            prop->Deserialize(buf, fromFSDB, glossary);
+            prop->Deserialize(buf, fromFSDB);
             cnt--;
             if(log && prop->isExpired(cur_time))
                 smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), prop->getName());
@@ -132,15 +128,16 @@ void Profile::Empty()
     properties.Empty();
 }
 
-void Profile::AddProperty(Property& prop)
+bool Profile::AddProperty(Property& prop)
 {
   uint16_t cnt = properties.GetCount();
   if (cnt == MAX_PROPERTIES_COUNT) {
     smsc_log_warn(log, "can't add property \'%s\', profile key=%s already has maximum properties count=%d",
                   prop.getName(), pkey.c_str(), cnt);
-    return;
+    return false;
   }
   properties.Insert(prop.getName(), new Property(prop));
+  return true;
 }
 
 Profile& Profile::operator=(const Profile& pf) {

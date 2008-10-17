@@ -326,7 +326,7 @@ PersServerResponseType RegionPersServer::execCommand(ConnectionContext& ctx) {
   if(pt != PT_ABONENT) {
     return execCommand(cmd, pt, isb, osb);
   } 
-  //TODO: remove getProfileKey method
+
   isb.ReadString(str_key);
   string profKey = getProfileKey(str_key);
   AbntAddr addr(profKey.c_str());
@@ -706,65 +706,58 @@ PersServerResponseType RegionPersServer::GetCmdHandler(ProfileType pt, uint32_t 
 
 PersServerResponseType RegionPersServer::SetCmdHandler(ProfileType pt, uint32_t int_key, Property& prop, SerialBuffer& osb) {
   IntProfileStore *is;
+  PersServerResponseType response = RESPONSE_OK;
   if(is = findStore(pt)) {
     smsc_log_debug(plog, "SetCmdHandler store=%d, key=%d, prop=%s", pt, int_key, prop.toString().c_str());
-    is->setProperty(int_key, prop);
+    if (!is->setProperty(int_key, prop)) {
+      response = RESPONSE_ERROR;
+    }
   }
-  SendResponse(osb, RESPONSE_OK);
-  return RESPONSE_OK;
+  SendResponse(osb, response);
+  return response;
 }
 
 PersServerResponseType RegionPersServer::IncCmdHandler(ProfileType pt, uint32_t int_key, Property& prop, SerialBuffer& osb) {
   IntProfileStore *is;
-  bool exists = false;
+  PersServerResponseType response = RESPONSE_OK;
   int result = 0;
   if(is = findStore(pt)) {
     smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName());
-    exists = is->incProperty(int_key, prop, result);
+    response = is->incProperty(int_key, prop, result);
   }
-  if (exists) {
-    SendResponse(osb, RESPONSE_OK);
-    return RESPONSE_OK;
-  } else {
-    SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
-    return RESPONSE_PROPERTY_NOT_FOUND;
-  }
+  SendResponse(osb, response);
+  return response;
 }
 
 PersServerResponseType RegionPersServer::IncResultCmdHandler(ProfileType pt, uint32_t int_key, Property& prop, SerialBuffer& osb) {
   IntProfileStore *is;
-  bool exists = false;
+  PersServerResponseType response = RESPONSE_OK;
   int result = 0;
   if(is = findStore(pt)) {
     smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName());
-    exists = is->incProperty(int_key, prop, result);
+    response = is->incProperty(int_key, prop, result);
   }
-  if(exists) {
-    SendResponse(osb, RESPONSE_OK);
+  SendResponse(osb, response);
+  if(response == RESPONSE_OK) {
     osb.WriteInt32(result);
-    return RESPONSE_OK;
-  } else {
-    SendResponse(osb, RESPONSE_TYPE_INCONSISTENCE);
-    return RESPONSE_TYPE_INCONSISTENCE;
   }
+  return response;
 }
 
 PersServerResponseType RegionPersServer::IncModCmdHandler(ProfileType pt, uint32_t int_key, Property& prop, int mod, SerialBuffer& osb) {
   smsc_log_debug(rplog, "IncModCmdHandler");
   IntProfileStore *is;
-  bool exists = false;
+  PersServerResponseType response = RESPONSE_OK;
   int res = 0;
   if(is = findStore(pt)) {
     smsc_log_debug(plog, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName(), mod);
-    exists = is->incModProperty(int_key, prop, mod, res);
+    response = is->incModProperty(int_key, prop, mod, res);
   }
-  if(exists) {
-    SendResponse(osb, RESPONSE_OK);
+  SendResponse(osb, response);
+  if(response == RESPONSE_OK) {
     osb.WriteInt32(res);
-    return RESPONSE_OK;
-  } else {
-    SendResponse(osb, RESPONSE_TYPE_INCONSISTENCE);
   }
+  return response;
 }
 
 PersServerResponseType RegionPersServer::DelCmdHandler(Profile *pf, const string& str_key,
@@ -823,7 +816,7 @@ PersServerResponseType RegionPersServer::IncCmdHandler(Profile *pf, const string
                                 Property& prop, SerialBuffer& osb, bool alwaysStore) {
   smsc_log_debug(rplog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName());
   int result = 0;
-  if (getAbonentStore()->incProperty(pf, str_key.c_str(), prop, result)) {
+  if (getAbonentStore()->incProperty(pf, str_key.c_str(), prop, result) == RESPONSE_OK) {
     SendResponse(osb, RESPONSE_OK);
     return RESPONSE_OK;
   } else {
@@ -840,7 +833,7 @@ PersServerResponseType RegionPersServer::IncResultCmdHandler(Profile *pf, const 
                                 Property& prop, SerialBuffer& osb, bool alwaysStore) {
   smsc_log_debug(rplog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName());
   int result = 0;
-  if (getAbonentStore()->incProperty(pf, str_key.c_str(), prop, result)) {
+  if (getAbonentStore()->incProperty(pf, str_key.c_str(), prop, result) == RESPONSE_OK) {
     SendResponse(osb, RESPONSE_OK);
     osb.WriteInt32(result);
     return RESPONSE_OK;
@@ -858,7 +851,7 @@ PersServerResponseType RegionPersServer::IncModCmdHandler(Profile *pf, const str
                                          Property& prop, int mod, SerialBuffer& osb, bool alwaysStore) {
   int res = 0;
   smsc_log_debug(rplog, "IncModCmdHandler AbonentStore: key=%s, name=%s, mod=%d", str_key.c_str(), prop.getName(), mod);
-  if(getAbonentStore()->incModProperty(pf, str_key.c_str(), prop, mod, res)) {
+  if(getAbonentStore()->incModProperty(pf, str_key.c_str(), prop, mod, res) == RESPONSE_OK) {
     SendResponse(osb, RESPONSE_OK);
     osb.WriteInt32(res);
     return RESPONSE_OK;
