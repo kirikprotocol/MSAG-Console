@@ -57,11 +57,13 @@ public class Proxy {
             logger.debug("Proxy.runCommand() reading response...");
             return reader.read();
         } catch (IOException e) {
-            logger.error( "Proxy.runCommand() need reconnect");
+            logger.error( "Proxy.runCommand() IOException need reconnect");
             e.printStackTrace();
             try {
                 reconnect();
+                logger.debug("Proxy.runCommand() IOException write command: " + command);
                 writer.write(command);
+                logger.debug("Proxy.runCommand() IOException reading response...");
                 return reader.read();
             } catch (IOException e1) {
                 disconnect();
@@ -107,7 +109,7 @@ public class Proxy {
                 status = STATUS_CONNECTED;
             } catch (IOException e) {
                 logger.warn("Could't connected to \"" + host + ':' + port + "\", nested: " + e.getMessage());
-                //throw new SibincoException("Could't connected to \"" + host + ':' + port + "\", nested: " + e.getMessage());
+//                throw new SibincoException("Could't connected to \"" + host + ':' + port + "\", nested: " + e.getMessage());
             }
         } else {
             throw new SibincoException("Already connected");
