@@ -90,8 +90,7 @@ public class StatsFilesCacheTester {
             }
         }
     }
-    @Ignore
-    @Test(timeout = 21000)
+
     public void openNotClose() {
         try {
             StatsFile file = filesCache.getFile("148",new Date());

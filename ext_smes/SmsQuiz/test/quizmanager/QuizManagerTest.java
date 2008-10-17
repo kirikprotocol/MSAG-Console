@@ -4,33 +4,54 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertFalse;
 
 import java.io.*;
-import java.util.Random;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.StringTokenizer;
+import java.util.Random;
 import java.text.SimpleDateFormat;
 
 import mobi.eyeline.smsquiz.quizmanager.QuizManagerImpl;
-import mobi.eyeline.smsquiz.quizmanager.dirlistener.Notification;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
 import mobi.eyeline.smsquiz.quizmanager.Result;
+import mobi.eyeline.smsquiz.quizmanager.service.ReplySMPPService;
 import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
-import mobi.eyeline.smsquiz.subscription.datasource.impl.DBSubscriptionDataSource;
 import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import mobi.eyeline.smsquiz.subscription.SubManagerException;
+import com.eyeline.sme.handler.config.ServicesConfig;
+import com.eyeline.sme.handler.config.ServicesConfigReader;
+import com.eyeline.sme.handler.RequestToServiceMap;
+import com.eyeline.sme.handler.SMPPService;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.IncomingObject;
+import ru.aurorisoft.smpp.Message;
+import ru.aurorisoft.smpp.SMPPException;
 
 /**
  * author: alkhal
  */
 public class QuizManagerTest {
 
-    private static QuizManagerImpl quizManager;
+    public static QuizManagerImpl quizManager;
     private static SubscriptionManager subscriptionManager;
+    private static Date dateBegin;
+    private static Date dateEnd;
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 
-    @Before
-    public void init() {
+    private static String number1="+7909";
+    private static String number2="+7910";
+    private static String number3="+8000";
+    private static int divider = 1000;
+    private static String oa = "148";
+    private static String da="148";
+    private static long initWait = 240000;
+    private static long abonents = 100000;
+    private static int minutes = 6;
+    private static String[] answers = {"yes","no","dsasddssdds"};
+
+    @BeforeClass
+    public static void init() {
         try {
             ConnectionPoolFactory.init("conf/config.xml");
             subscriptionManager = SubscriptionManager.getInstance();
@@ -43,48 +64,26 @@ public class QuizManagerTest {
             file.mkdirs();
             createQuizFile("test_QuizManager/opros_test.xml");
             createAbFile("test_QuizManager/opros_test_ab.csv");
+            quizManager.start();
+            waiting(initWait);
         } catch (Exception e) {
             e.printStackTrace();
             assertFalse(true);
 
         }
     }
-    @Ignore
-    @Test
-    public void initTest() {
-        assertTrue(quizManager.countQuizes()==0);
-    }
 
-    @Ignore
-    @Test
-    public void update() {
-        try {
-            Notification notification = new Notification("test_QuizManager/opros_test.xml", Notification.FileStatus.CREATED);
-            quizManager.update(null,notification);
-            assertTrue(quizManager.countQuizes()==1);
-            File file = new File(quizManager.getStatusDir()+"/opros_test.status");
-            assertTrue(file.exists());
-            file.delete();
-        } catch (QuizException e) {
-            e.printStackTrace();
-            assertFalse(true);
-        }
 
-    }
-
-    @Ignore
     @Test
     public void handleSms() {
        try{
-           Notification notification = new Notification("test_QuizManager/opros_test.xml", Notification.FileStatus.CREATED);
-           quizManager.update(null,notification);
-           Result result = quizManager.handleSms("150","+7909","y");
+           Result result = quizManager.handleSms(da,number1,"y");
            assertNotNull(result);
            assertTrue(result.getReplyRull().equals(Result.ReplyRull.OK));
            for(int i=0;i<10;i++) {
-                quizManager.handleSms("150","+7909","asfaf");    
+                quizManager.handleSms(da,number1,"asfaf");
            }
-           assertNull(quizManager.handleSms("150","+7909","asfaf"));
+           assertNull(quizManager.handleSms(da,number1,"asfaf"));
            File file = new File(quizManager.getStatusDir()+"/opros_test.status");
            assertTrue(file.exists());
            file.delete();
@@ -95,35 +94,124 @@ public class QuizManagerTest {
     }
 
     @Test
-    public void test() {
+    public void testRequestMapping() {
+        try{
+            ServicesConfig config = ServicesConfigReader.readConfig("conf/services_reply.xml");
+            RequestToServiceMap requestToServiceMap = new RequestToServiceMap(config,new OutgoingQueue(20));
+            IncomingObject incObj = createIncObj("+7",da,"dsads");
+            RequestToServiceMap.Entry e = requestToServiceMap.getEntry(incObj);
+            assertTrue(e.getService().getClass().getName().equals(ReplySMPPService.class.getName()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            assertTrue(false);
+        }
+    }
+
+    @Test
+    public void testService() {
+        try{
+            ServicesConfig config = ServicesConfigReader.readConfig("conf/services_reply.xml");
+            RequestToServiceMap requestToServiceMap = new RequestToServiceMap(config,new OutgoingQueue(20));
+            IncomingObject incObj = createIncObj(number2,da,"no");
+            RequestToServiceMap.Entry e = requestToServiceMap.getEntry(incObj);
+            SMPPService service = e.getService();
+            assertNotNull(service);
+            assertTrue(service.serve(e.getPattern().createRequest(incObj)));
+
+            incObj = createIncObj(number3,da,"dsd");
+            e = requestToServiceMap.getEntry(incObj);
+            service = e.getService();
+            assertNotNull(service);
+            for(int i=0;i<10;i++) {
+                service.serve(e.getPattern().createRequest(incObj));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            assertTrue(false);
+        }
+    }
+
+
+
+    @Test
+    public void perfTest() {
        try{
-           quizManager.start();
-           waiting(30000);
-           Result result = quizManager.handleSms("150","+7909","y");
-           assertNotNull(result);
-           assertTrue(result.getReplyRull().equals(Result.ReplyRull.OK));
+           Random random = new Random();
+           int i = Integer.parseInt(number2.substring(1,number2.length()))+1;
            long begin = System.currentTimeMillis();
-           for(int i=0;i<10;i++) {
-                quizManager.handleSms("150","+7909","asfaf"+i);
-                quizManager.handleSms("150","+7910","xcvx"+i);
-          }
-           for(int i=7911;i<10000;i++) {
-                quizManager.handleSms("150", "+"+Integer.toString(i),"asfaf"+i);
-                quizManager.handleSms("150","+"+Integer.toString(i),"xcvx"+i);
-          }
+           for(;i<abonents;i++) {
+                quizManager.handleSms(da, "+"+Integer.toString(i),answers[random.nextInt(3)]);
+                quizManager.handleSms(da, "+"+Integer.toString(i),answers[random.nextInt(3)]);
+           }
            System.out.println(System.currentTimeMillis()-begin);
-           waiting(120000);
        } catch (QuizException e) {
            e.printStackTrace();
            assertTrue(false);
        }
     }
-    @After
-    public void stop() {
+
+    @Test
+    public void stats() {
+        waiting(120000);// dateEnd.getTime() - dateBegin.getTime());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
+        String fileName = quizManager.getDirResult()+"/"+da+"."+dateFormat.format(dateBegin)+"-"+dateFormat.format(dateEnd)+".res";
+        File file = new File(fileName);
+        assertTrue(file.exists());
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            String line = null;
+            StringTokenizer tokenizer= null;
+            int flag=0;
+            while((line = reader.readLine())!=null) {
+                flag=1;
+                tokenizer = new StringTokenizer(line,",");
+                String msisdn = tokenizer.nextToken();
+                if(msisdn.equals(number1)) {
+                    tokenizer.nextToken();tokenizer.nextToken();
+                    assertTrue(tokenizer.nextToken().equals("Да"));
+                    assertTrue(tokenizer.nextToken().equals("asfaf"));
+                    continue;
+                }
+                if(msisdn.equals(number2)) {
+                    tokenizer.nextToken();tokenizer.nextToken();
+                    assertTrue(tokenizer.nextToken().equals("Нет"));
+                    assertTrue(tokenizer.nextToken().equals("no"));
+                    continue;
+                }
+                if((Integer.parseInt(msisdn.substring(1,msisdn.length()))%divider)==0){
+                  //  tokenizer.nextToken();tokenizer.nextToken();
+                  // assertTrue(tokenizer.nextToken().equals("Да"));
+                    continue;
+                }
+                assertTrue(false);
+            }
+            assertTrue(flag==1);
+        } catch (Exception e) {
+            e.printStackTrace();
+            assertFalse(true);
+        } finally {
+            if(reader!=null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
+    @AfterClass
+    public static void stop() {
         quizManager.stop();
     }
 
-    private void removeAll(File dir) {
+
+
+    /* --------------------------------- Utils --------------------------------------------- */
+
+    private static void removeAll(File dir) {
         if((dir==null)||(!dir.exists())) {
             return;
         }
@@ -137,33 +225,29 @@ public class QuizManagerTest {
         }
     }
 
-    private void createQuizFile(String fileName) {
+    private static void createQuizFile(String fileName) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(System.currentTimeMillis());
-        Date dateBegin = cal.getTime();
-        cal.add(Calendar.MINUTE,2);
-        Date dateEnd = cal.getTime();
+        cal.set(Calendar.SECOND,0);
+        dateBegin = cal.getTime();
+        cal.add(Calendar.MINUTE,minutes);
+        dateEnd = cal.getTime();
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
         PrintWriter writer = null;
         try {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
             writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-            writer.println("<opros> ");
+            writer.println("<opros>");
 
             writer.println("    <general>");
-            writer.print("        <date-begin>");
-            writer.print(dateFormat.format(dateBegin));
-            writer.println("</date-begin>");
-            writer.print("        <date-end>");
-            writer.print(dateFormat.format(dateEnd));
-            writer.println("</date-end>");
+            writer.print("        <date-begin>");writer.print(dateFormat.format(dateBegin)); writer.println("</date-begin>");
+            writer.print("        <date-end>"); writer.print(dateFormat.format(dateEnd));writer.println("</date-end>");
             writer.println("        <question>Question</question>");
             writer.println("        <abonents-file>test_QuizManager/opros_test_ab.csv</abonents-file>");
             writer.println("    </general>");
 
             writer.println("    <distribution>");
-            writer.println("        <source-address>148</source-address>");
+            writer.print("        <source-address>");writer.print(oa);writer.println("</source-address>");
             writer.println("        <time-begin>12:00</time-begin>");
             writer.println("        <time-end>20:00</time-end>");
             writer.println("        <days>");
@@ -174,7 +258,7 @@ public class QuizManagerTest {
             writer.println("    </distribution>");
 
             writer.println("    <replies>");
-            writer.println("        <destination-address>150</destination-address>");
+            writer.print("        <destination-address>");writer.print(da);writer.println("</destination-address>");
             writer.println("        <max-repeat>3</max-repeat>");
 
             writer.println("        <reply>");
@@ -192,7 +276,7 @@ public class QuizManagerTest {
             writer.println("        <default>Да</default>");
 
             writer.println("    </replies>");
-            writer.println("</opros> ");
+            writer.println("</opros>");
             writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -203,7 +287,7 @@ public class QuizManagerTest {
             }
         }
     }
-    private void createAbFile(String distrList) {
+    private static void createAbFile(String distrList) {
         PrintWriter writer = null;
         File file = (new File(distrList)).getParentFile();
         if(!file.exists()) {
@@ -213,22 +297,22 @@ public class QuizManagerTest {
         try {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(distrList)));
             try {
-                subscriptionManager.subscribe("+7909");
-                subscriptionManager.subscribe("+7910");
+                subscriptionManager.subscribe(number1);
+                subscriptionManager.subscribe(number2);
             } catch (SubManagerException e) {
                 e.printStackTrace();
             }
-                String abonent = "+7909";
+                String abonent = number1;
                 writer.print(abonent);
                 writer.print("|");
 
-                StringBuilder strBuilder = new StringBuilder(20);
+                StringBuilder strBuilder = new StringBuilder(30);
                 int aCode = (int)'a';
                 for (int j=0;j<20;j++){
                     strBuilder.append( (char)( aCode + 26*Math.random() ) );
                 }
                 writer.println(strBuilder.substring(0));
-                abonent = "+7910";
+                abonent = number2;
                 writer.print(abonent);
                 writer.print("|");
 
@@ -237,12 +321,11 @@ public class QuizManagerTest {
                     strBuilder.append( (char)( aCode + 26*Math.random() ) );
                 }
                 writer.println(strBuilder.substring(0));
-            Random random = new Random();
-            for(int i=7911; i<10000;i++) {
+            for(int i=7911; i<abonents;i++) {
                 abonent = "+"+ i;
                 writer.print(abonent);
                 writer.print("|");
-                if((i%1000)==0) {
+                if((i%divider)==0) {
                     try {
                         subscriptionManager.subscribe(abonent);
                     } catch (SubManagerException e) {
@@ -267,25 +350,38 @@ public class QuizManagerTest {
         }
     }
 
-    private void waiting(final int millis) {
-       Thread thread = new Thread() {
-           public void run() {
-               try {
-                   sleep(millis);
-               } catch (InterruptedException e) {
-                   e.printStackTrace();
-               }
-           }
-       };
-        thread.start();
+    private static void waiting(final long millis) {
         try {
-            thread.join();
+            Thread.sleep(millis);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
     }
 
+    private class TestIncomingObject implements IncomingObject {
+        private Message message;
+        public TestIncomingObject(Message message) {
+            this.message = message;
+        }
+        public Message getMessage() {
+            return message;
+        }
+
+        public boolean isResponded() {
+            return false;
+        }
+
+        public void respond(int status) throws SMPPException {
+        }
+
+    }
+    private IncomingObject createIncObj(String oa, String da, String text) {
+        Message message = new Message();
+        message.setDestinationAddress(da);
+        message.setSourceAddress(oa);
+        message.setMessageString(text);
+        return new TestIncomingObject(message);
+    }
 
 
 }

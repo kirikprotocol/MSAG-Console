@@ -32,7 +32,7 @@ import ru.aurorisoft.smpp.Message;
 /**
  * author: alkhal
  */
-public class SmsQuizTest {    
+public class SubscriptionServiceTest {    
 
 
 

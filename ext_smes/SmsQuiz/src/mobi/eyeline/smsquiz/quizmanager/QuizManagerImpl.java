@@ -216,7 +216,6 @@ public class QuizManagerImpl implements QuizManager, Observer {
             else {
                 distribution = new Distribution();
                 quizBuilder.buildQuiz(fileName,distribution,quiz);
-                makeSubscribedOnly(distribution);
             }
             Quiz previousQuiz = null;
             if((previousQuiz = quizesMap.get(quiz.getDestAddress()))!=null) {
@@ -224,6 +223,7 @@ public class QuizManagerImpl implements QuizManager, Observer {
                 return;
             }
             if(distribution!=null) {
+                makeSubscribedOnly(distribution);
                 String id = null;
                 try {
                     id = distributionManager.createDistribution(distribution);
@@ -262,7 +262,7 @@ public class QuizManagerImpl implements QuizManager, Observer {
             while((line = reader.readLine())!=null) {
                 tokenizer = new StringTokenizer(line,"|");
                 String msisdn = tokenizer.nextToken();
-                if(subscriptionManager.subscribed(msisdn))  {
+                if(subscriptionManager.subscribed(msisdn))  {   //todo performance?
                     writer.print(msisdn);
                     writer.print("|");
                     writer.println(tokenizer.nextToken());
