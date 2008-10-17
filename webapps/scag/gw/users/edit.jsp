@@ -32,7 +32,7 @@ function collapsing_tree_click_tree_section(id)
   return false;
 }
 
-function closeProp(id)
+function openCloseProp(id)
 {
 //  alert("id=" + id);
     var tbl = getElementByIdUni(id);

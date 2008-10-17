@@ -5,7 +5,7 @@
 <%@attribute name="width" required="false"%>
 <%@attribute name="type" required="true"%>
 <script>
-function closeProp(id)
+function openCloseProp(id)
 {
     var tbl = getElementByIdUni(id);
     var divCat = getElementByIdUni(id+"_div");
