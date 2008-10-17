@@ -376,9 +376,9 @@ public class Scag extends Proxy {
     public synchronized Map getLogCategories() throws SibincoException {
         final Map return_result = new HashMap();
         String err = "Couldn't get LogCategories , nested: ";
-        logger.debug( "Scag.getLogCatagories call()" );
-        final Object result0 = call("getLogCategories", err, Type.Types[Type.STRING_LIST_TYPE], new HashMap());
-        logger.debug( "Scag:getLogCatagories:result0 = " + result0.toString() );
+        logger.debug( "Scag.getLogCatagories() call()" );
+        final Object result0 = call( "getLogCategories", err, Type.Types[Type.STRING_LIST_TYPE], new HashMap() );
+        logger.debug( "Scag.getLogCatagories() result0 = " + result0.toString() );
         if (result0 instanceof List) {
             final List result = (List) result0;
             for (Iterator iterator = result.iterator(); iterator.hasNext();) {
