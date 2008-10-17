@@ -12,8 +12,9 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
 
     ft = CheckParameter(params, propertyObject, "set", "var", true, false, m_strVariable, bExist);
 
-
-    m_valueFieldType = CheckParameter(params, propertyObject, "set", "value", true, true, m_strValue, bExist);
+    std::string val;
+    m_valueFieldType = CheckParameter(params, propertyObject, "set", "value", true, true, val, bExist);
+    m_strValue.assign(val.c_str(),val.size());
 
     smsc_log_debug(logger,"Action 'set':: init");
 }
@@ -38,7 +39,7 @@ bool ActionSet::run(ActionContext& context)
     }
     else
     {
-        Property * val = context.getProperty(m_strValue);
+        Property * val = context.getProperty(m_strValue.c_str());
 
         if (val) 
         {

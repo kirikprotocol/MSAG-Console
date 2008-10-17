@@ -38,12 +38,12 @@ void ActionReplace::init(const SectionParams& params,PropertyObject propertyObje
 bool ActionReplace::getStrProperty(ActionContext& context, std::string& str, const char *field_name, std::string& val)
 {
     Property * p = NULL;
-    if (!(p = context.getProperty(str))) 
+    if (!(p = context.getProperty(str)))
     {
         smsc_log_error(logger,"Action 'smpp:receipt': invalid '%s' property '%s'", field_name, str.c_str());
         return false;
     }
-    val = p->getStr();
+    val.assign(p->getStr().c_str(),p->getStr().size());
     return true;
 }
 
@@ -121,7 +121,7 @@ bool ActionReplace::run(ActionContext& context)
             result.append(var.data() + pos, var.size() - 2 - pos);
         std::string temp2;
         Convertor::UCS2ToUTF8((uint16_t*)result.data(), result.size() / 2, temp2);
-        p->setStr(temp2);
+        p->setStr(Property::string_type(temp2.c_str(),temp2.size()));
     }
     else
         p->setStr(pvar);

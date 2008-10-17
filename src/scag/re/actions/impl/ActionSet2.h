@@ -12,7 +12,7 @@ class ActionSet : public Action
     ActionSet(const ActionSet &);
     std::string m_strVariable;
 
-    std::string m_strValue;
+    Property::string_type m_strValue;
     FieldType m_valueFieldType;
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);

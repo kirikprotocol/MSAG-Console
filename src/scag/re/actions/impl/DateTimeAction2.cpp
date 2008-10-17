@@ -63,6 +63,8 @@ const size_t TIME_PROPERTIES_NUMBER = 5;
 
 const size_t DATETIME_BUF_SIZE = 32;
 
+const Property::string_type ActionProperty::empty("");
+
 bool DateTimeAction::addProperty(const SectionParams &params, PropertyObject &propertyObject, 
                                  const char* propertyName, bool isInt, bool isRequired, bool readOnly){
   string strParameter;
@@ -90,7 +92,7 @@ void DateTimeAction::intiDateModifierAction(const SectionParams &params,
   FieldType ft = CheckParameter(params, propertyObject, DATETIME_ACTION, DATE_PROPERTY, false,
                                  false, strParameter, exist);
   if (exist) {
-    dateTimeProperty = new DateProperty(ft, strParameter);
+      dateTimeProperty = new DateProperty(ft, Property::string_type(strParameter.c_str()));
     for (unsigned i = 0; i < DATE_PROPERTIES_NUMBER - 1; ++i) {
       addProperty(params, propertyObject, dateProperties[i], true, false, true);
     }
@@ -103,7 +105,7 @@ void DateTimeAction::intiDateModifierAction(const SectionParams &params,
       throw SCAGException("%s '%s' action should has only one of 'date' 'time' 'datetime' properties",
                            DATETIME_ACTION, getActionName());
     }
-    dateTimeProperty = new TimeProperty(ft, strParameter);
+      dateTimeProperty = new TimeProperty(ft, Property::string_type(strParameter.c_str()));
     for (unsigned i = 0; i < TIME_PROPERTIES_NUMBER - 2; ++i) {
       addProperty(params, propertyObject, timeProperties[i], true, false, true);
     }
@@ -117,7 +119,7 @@ void DateTimeAction::intiDateModifierAction(const SectionParams &params,
       throw SCAGException("%s '%s' action should has only one of 'date' 'time' 'datetime' properties",
                            DATETIME_ACTION, getActionName());
     }
-    dateTimeProperty = new DateTimeProperty(ft, strParameter);
+      dateTimeProperty = new DateTimeProperty(ft, Property::string_type(strParameter.c_str()));
     for (unsigned i = 0; i < DATE_PROPERTIES_NUMBER - 1; ++i) {
       addProperty(params, propertyObject, dateProperties[i], true, false, true);
     }
@@ -316,7 +318,7 @@ bool DateTimeModifier::checkYear(int year, const char* actionName) {
 }
 
 bool DateProperty::getOldDateTime(ActionContext &context, const char* actionName, struct tm& dateTime) {
-  string dateTimeStr = property.getStrValue(context);
+  const Property::string_type& dateTimeStr = property.getStrValue(context);
   if (dateTimeStr.empty()) {
     smsc_log_warn(logger, "%s '%s' action : date property is empty",
                   DATETIME_ACTION, actionName);
@@ -400,7 +402,7 @@ bool DateProperty::change(ActionContext &context, Hash<ActionProperty>& properti
 }
 
 bool TimeProperty::getOldDateTime(ActionContext &context, const char* actionName, struct tm& dateTime) {
-  string dateTimeStr = property.getStrValue(context);
+  const Property::string_type& dateTimeStr = property.getStrValue(context);
   if (dateTimeStr.empty()) {
     smsc_log_warn(logger, "%s '%s' action : time property is empty",
                   DATETIME_ACTION, actionName);
@@ -489,7 +491,7 @@ bool TimeProperty::add(ActionContext &context, Hash<ActionProperty>& properties,
 }
 
 bool DateTimeProperty::getOldDateTime(ActionContext &context, const char* actionName, struct tm& dateTime) {
-  string dateTimeStr = property.getStrValue(context);
+  const Property::string_type& dateTimeStr = property.getStrValue(context);
   if (dateTimeStr.empty()) {
     smsc_log_warn(logger, "%s '%s' action : datetime property is empty",
                   DATETIME_ACTION, actionName);

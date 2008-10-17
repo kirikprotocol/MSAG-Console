@@ -57,7 +57,7 @@ std::string BillAction::getTransId( ActionContext& context )
                             opname(), transIdFieldName_.c_str() );
             return transId;
         }
-        transId = property->getStr();
+        transId = property->getStr().c_str();
 
     } else {
 

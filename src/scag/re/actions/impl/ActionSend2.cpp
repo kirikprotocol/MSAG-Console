@@ -68,7 +68,7 @@ bool ActionSend::getStrProperty(ActionContext& context, std::string& str, const 
             return false;
         }
 
-        val = p2->getStr();
+        val.assign(p2->getStr().c_str(), p2->getStr().size());
     } else
         val = str;
     return true;
@@ -257,7 +257,7 @@ bool ActionSend::run(ActionContext& context)
             smsc_log_warn(logger,"Action 'send': invalid 'packetType' property '%s'", strPacketType.c_str());
             return false;
         }
-        ev->pPacketType = p2->getStr();
+        ev->pPacketType.assign(p2->getStr().c_str(), p2->getStr().size());
     }
     else
         ev->pPacketType = strPacketType;

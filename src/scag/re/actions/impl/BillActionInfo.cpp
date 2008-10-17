@@ -87,6 +87,7 @@ bool BillActionInfo::run( ActionContext& context )
         char buf[20];
         snprintf( buf, sizeof(buf), "%u", trans->billId() );
         s = std::string("Action 'bill:info' bill_id=") + std::string(buf);
+        s.reserve( s.size() + 200 );
     }
     for ( int i = 0; i < fields_count; i++ )
     {
@@ -106,35 +107,32 @@ bool BillActionInfo::run( ActionContext& context )
         case 0: p->setInt(bis.operatorId); break;
         case 1: p->setInt(bis.providerId); break;
         case 2: p->setInt(bis.serviceId); break;
-        case 3: p->setStr(bis.AbonentNumber); break;
+        case 3: p->setStr(bis.AbonentNumber.c_str()); break;
         case 4: p->setInt(tr.CategoryId); break;
         case 5: p->setInt(tr.MediaTypeId); break;
-        case 6: p->setStr(tr.ServiceNumber); break;
+        case 6: p->setStr(tr.ServiceNumber.c_str()); break;
         case 7: {
             char bufp[20];
             snprintf(bufp, sizeof(bufp), "%.3lf", tr.Price);
             p->setStr(bufp);
             break;
         }
-        case 8: p->setStr(tr.Currency); break;
+        case 8: p->setStr(tr.Currency.c_str()); break;
         case 9: p->setInt(tr.billType); break;
-        case 10: p->setStr(bis.category); break;
-        case 11: p->setStr(bis.mediaType); break;
+        case 10: p->setStr(bis.category.c_str()); break;
+        case 11: p->setStr(bis.mediaType.c_str()); break;
         //TODO: set real keywords from action context
         case 12:  {
-          const std::string* keywords = trans->getKeywords();
-          if (keywords) {
-            p->setStr(*keywords); 
-          } else {
-            p->setStr("");
-          }
+            const std::string* keywords = trans->getKeywords();
+            p->setStr(keywords ? keywords->c_str() : "" );
           break;
         }
         }
         if ( logger->isDebugEnabled() ) {
             s += ", ";
             s += m_name[i];
-            s += "=" + p->getStr();
+            s.push_back('=');
+            s.append(p->getStr().c_str());
         }
     }
     smsc_log_debug( logger, s );

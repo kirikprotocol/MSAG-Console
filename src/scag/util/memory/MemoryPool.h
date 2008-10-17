@@ -365,12 +365,12 @@ public:
     }
 
     template < class U >
-        bool operator == ( const StdAlloc< U >& other ) const {
+        bool operator == ( const StdAlloc< U, BaseMemAlloc >& other ) const {
             return true;
         }
 
     template < class U >
-        bool operator != ( const StdAlloc< U >& other ) const {
+        bool operator != ( const StdAlloc< U, BaseMemAlloc >& other ) const {
             return false;
         }
 };

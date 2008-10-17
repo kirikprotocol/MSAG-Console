@@ -66,22 +66,22 @@ TimePolicy PersActionCommand::getPolicyFromStr(const std::string& str)
         return scag::pers::util::UNKNOWN;
 }
 
-time_t PersActionCommand::parseFinalDate(const std::string& s)
+time_t PersActionCommand::parseFinalDate(const char* s)
 {
 	struct tm time;
     char *ptr;
 
-    ptr = strptime(s.c_str(), "%d.%m.%Y %T", &time);
+    ptr = strptime(s, "%d.%m.%Y %T", &time);
     if(!ptr || *ptr)
 		return 0;
 
     return mktime(&time);
 }
 
-uint32_t PersActionCommand::parseLifeTime(const std::string& s)
+uint32_t PersActionCommand::parseLifeTime(const char* s)
 {
 	uint32_t hour = 0, min = 0, sec = 0;
-    if(sscanf(s.c_str(), "%u:%u:%u", &hour, &min, &sec) < 3)
+    if (sscanf(s, "%u:%u:%u", &hour, &min, &sec) < 3)
 		return 0;
 
     return hour * 3600 + min * 60 + sec;
@@ -90,7 +90,7 @@ uint32_t PersActionCommand::parseLifeTime(const std::string& s)
 void PersActionBase::getOptionalKey(const std::string& key_str) {
   if (profile == PT_ABONENT) {
     try {
-      optionalSkey = getAbntAddress(key_str);
+      optionalSkey = getAbntAddress(key_str.c_str());
     } catch(const std::runtime_error& e) {
         throw SCAGException("PersAction '%s' : '%s' parameter has error abonent profile key: %s",
                             getStrCmd(cmd), OPTIONAL_KEY, e.what());
@@ -104,7 +104,9 @@ void PersActionBase::getOptionalKey(const std::string& key_str) {
 void PersActionCommand::init(const SectionParams& params, PropertyObject propertyObject) {
   bool bExist = false;
   const char* name = 0;
-  ftVar = CheckParameter(params, propertyObject, "PersAction", "var", true, true, var, bExist);
+    std::string temp;
+  ftVar = CheckParameter(params, propertyObject, "PersAction", "var", true, true, temp, bExist);
+    var.assign( temp.data(), temp.size() );
 /////////////////////////////////////////////
     bool statusExist = false;
     CheckParameter(params, propertyObject, "PersAction", "status", false, false,
@@ -180,7 +182,7 @@ void PersActionCommand::init(const SectionParams& params, PropertyObject propert
       ftFinalDate = CheckParameter(params, propertyObject, "PersAction", "finaldate", true, true, sFinalDate, bExist);
       if(ftFinalDate == ftUnknown)
       {
-          finalDate = parseFinalDate(sFinalDate);
+          finalDate = parseFinalDate(sFinalDate.c_str());
           if(!finalDate)
               throw SCAGException("PersAction '%s' : invalid 'finaldate' parameter", getStrCmd(cmd));
       }
@@ -192,7 +194,7 @@ void PersActionCommand::init(const SectionParams& params, PropertyObject propert
   ftLifeTime = CheckParameter(params, propertyObject, "PersAction", "lifetime", true, true, sLifeTime, bExist);
   if(ftLifeTime == ftUnknown)
   {
-      lifeTime = parseLifeTime(sLifeTime);
+      lifeTime = parseLifeTime(sLifeTime.c_str());
       if(!lifeTime)
           throw SCAGException("PersAction '%s' : invalid 'lifetime' parameter", getStrCmd(cmd));
   }
@@ -272,7 +274,7 @@ static void setREPropFromPersProp(REProperty& rep, scag::pers::util::Property& p
             rep.setDate(prop.getDateValue());
             break;
         case STRING:
-            rep.setStr(prop.getStringValue());
+            rep.setStr(prop.getStringValue().c_str());
             break;
     }
 }
@@ -290,8 +292,8 @@ static uint32_t cmdToLongCallCmd(uint32_t c)
     return 0;
 }
 
-std::string PersActionBase::getAbntAddress(const std::string& _address) {
-  Address address(_address.c_str());
+std::string PersActionBase::getAbntAddress(const char* _address) {
+  Address address(_address);
   if (_address[0] != '.') {
     address.setNumberingPlan(1);
     address.setTypeOfNumber(1);
@@ -367,24 +369,24 @@ bool PersActionCommand::batchPrepare(ActionContext& context, SerialBuffer& sb)
 
 bool PersActionCommand::RunBeforePostpone(ActionContext& context, PersCallParams* params) {
   REProperty *p;
-  if (ftVar != ftUnknown && !(p = context.getProperty(var))) {
+  if (ftVar != ftUnknown && !(p = context.getProperty(var.c_str()))) {
     smsc_log_error(logger, "Invalid var property  %s", var.c_str());
     return false;
   }
-  const std::string& svar = ftVar == ftUnknown ? var : p->getStr();
+  const REProperty::string_type& svar = ftVar == ftUnknown ? var : p->getStr();
   time_t fd = finalDate;
   uint32_t lt = lifeTime;
-  params->propName = svar;
+  params->propName.assign(svar.data(),svar.size());
   if (ftLifeTime != ftUnknown) {
     REProperty *rp = context.getProperty(sLifeTime);
-    if (!rp || !(lt = parseLifeTime(rp->getStr()))) {
+    if (!rp || !(lt = parseLifeTime(rp->getStr().c_str()))) {
       smsc_log_error(logger, "Invalid lifeTime parameter %s(%s)", sLifeTime.c_str(), rp ? rp->getStr().c_str() : "");
       return false;
     }
   }
   if (ftFinalDate != ftUnknown)  {
     REProperty *rp = context.getProperty(sFinalDate);
-    if (!rp || !(fd = parseFinalDate(rp->getStr()))) {
+    if (!rp || !(fd = parseFinalDate(rp->getStr().c_str()))) {
       smsc_log_error(logger, "Invalid finaldate parameter %s(%s)", sFinalDate.c_str(), rp ? rp->getStr().c_str() : "");
       return false;
     }
@@ -400,7 +402,7 @@ bool PersActionCommand::RunBeforePostpone(ActionContext& context, PersCallParams
       return false;
     }
     setPersPropFromREProp(params->prop, *rp);
-    params->prop.setName(svar);
+    params->prop.setName(svar.c_str());
     params->prop.setTimePolicy(policy, fd, lt);
   } else {
     params->prop.assign(svar.c_str(), sValue.c_str(), policy, fd, lt);
@@ -445,7 +447,7 @@ bool PersActionBase::setKey(ActionContext& context, PersCallParams* params) {
     }
     if (params->pt == PT_ABONENT) {
       try {
-        optionalSkey = getAbntAddress(rp->getStr());
+        optionalSkey = getAbntAddress(rp->getStr().c_str());
       } catch(const std::runtime_error& e) {
         smsc_log_error(logger, "'%s' parameter has error abonent profile key: %s", OPTIONAL_KEY, e.what());
         return false;
@@ -507,7 +509,7 @@ void PersActionBase::setStatus(ActionContext& context, int status, const string&
   }
   REProperty *msgProp = context.getProperty(msgName);
   if (msgProp) {
-    msgProp->setStr(msg);
+    msgProp->setStr(msg.c_str());
   }
 
 }

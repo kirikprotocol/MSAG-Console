@@ -98,23 +98,23 @@ Property* HttpCommandAdapter::getRequestProperty(const std::string& name)
     HttpRequest& cmd = (HttpRequest&)command;
 
     if(!strncmp(name.c_str(), "header-", 7))
-        prop = new AdapterProperty(name, this, cmd.getHeaderField(name.c_str() + 7));
+        prop = new AdapterProperty(name.c_str(), this, cmd.getHeaderField(name.c_str() + 7));
     else if(!strncmp(name.c_str(), "param-", 6))
-        prop = new AdapterProperty(name, this, cmd.getQueryParameter(name.c_str() + 6));
+        prop = new AdapterProperty(name.c_str(), this, cmd.getQueryParameter(name.c_str() + 6));
     else if(!strcmp(name.c_str(), "abonent"))
-        prop = new AdapterProperty(name, this, cmd.getAddress());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getAddress());
     else if(!strcmp(name.c_str(), "site"))
-        prop = new AdapterProperty(name, this, cmd.getSite());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getSite());
     else if(!strcmp(name.c_str(), "path"))
-        prop = new AdapterProperty(name, this, cmd.getSitePath());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getSitePath());
     else if(!strcmp(name.c_str(), "filename"))
-        prop = new AdapterProperty(name, this, cmd.getSiteFileName());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getSiteFileName());
     else if(!strcmp(name.c_str(), "port"))
-        prop = new AdapterProperty(name, this, cmd.getSitePort());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getSitePort());
     else if(!strcmp(name.c_str(), "message"))
-        prop = new AdapterProperty(name, this, cmd.getMessageText());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getMessageText());
     else if(!strcmp(name.c_str(), "usr"))
-        prop = new AdapterProperty(name, this, cmd.getUSR());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getUSR());
 
     if(prop)
         PropertyPool.Insert(name.c_str(), prop);
@@ -132,15 +132,15 @@ Property* HttpCommandAdapter::getResponseProperty(const std::string& name)
     HttpResponse& cmd = (HttpResponse&)command;
 
     if(!strncmp(name.c_str(), "header-", 7))
-        prop = new AdapterProperty(name, this, cmd.getHeaderField(name.c_str() + 7));
+        prop = new AdapterProperty(name.c_str(), this, cmd.getHeaderField(name.c_str() + 7));
     else if(!strcmp(name.c_str(), "status"))
-        prop = new AdapterProperty(name, this, cmd.getStatus());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getStatus());
     else if(!strcmp(name.c_str(), "abonent"))
-        prop = new AdapterProperty(name, this, cmd.getAddress());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getAddress());
     else if(!strcmp(name.c_str(), "usr"))
-        prop = new AdapterProperty(name, this, cmd.getUSR());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getUSR());
     else if(!strcmp(name.c_str(), "message"))
-        prop = new AdapterProperty(name, this, cmd.getMessageText());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getMessageText());
 
     if(prop)
         PropertyPool.Insert(name.c_str(), prop);
@@ -158,15 +158,15 @@ Property* HttpCommandAdapter::getDeliveryProperty(const std::string& name)
     HttpResponse& cmd = (HttpResponse&)command;
 
     if(!strncmp(name.c_str(), "header-", 7))
-        prop = new AdapterProperty(name, this, cmd.getHeaderField(name.c_str() + 7));
+        prop = new AdapterProperty(name.c_str(), this, cmd.getHeaderField(name.c_str() + 7));
     else if(!strcmp(name.c_str(), "status"))
-        prop = new AdapterProperty(name, this, cmd.getStatus());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getStatus());
     else if(!strcmp(name.c_str(), "abonent"))
-        prop = new AdapterProperty(name, this, cmd.getAddress());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getAddress());
     else if(!strcmp(name.c_str(), "usr"))
-        prop = new AdapterProperty(name, this, cmd.getUSR());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getUSR());
     else if(!strcmp(name.c_str(), "delivered"))
-        prop = new AdapterProperty(name, this, cmd.getDelivered());
+        prop = new AdapterProperty(name.c_str(), this, cmd.getDelivered());
 
     if(prop)
         PropertyPool.Insert(name.c_str(), prop);
@@ -193,7 +193,7 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
         HttpResponse& cmd = (HttpResponse&)command;
 
         if(!strncmp(property.getName().c_str(), "header-", 7))
-            cmd.setHeaderField(property.getName().c_str() + 7, property.getStr());
+            cmd.setHeaderField(property.getName().c_str() + 7, property.getStr().c_str());
         else if(!strcmp(property.getName().c_str(), "status"))
             cmd.setStatus(property.getInt());
 /*        else if(!strcmp(property.getName().c_str(), "abonent"))
@@ -201,24 +201,24 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
         else if(!strcmp(property.getName().c_str(), "usr"))
             cmd.setUSR(property.getInt());*/
         else if(!strcmp(property.getName().c_str(), "message"))
-            cmd.setMessageText(property.getStr());
+            cmd.setMessageText(property.getStr().c_str());
     }
     else if(command.getCommandId() == HTTP_REQUEST)
     {
         HttpRequest& cmd = (HttpRequest&)command;
 
         if(!strncmp(property.getName().c_str(), "header-", 7))
-            cmd.setHeaderField(property.getName().c_str() + 7, property.getStr());
+            cmd.setHeaderField(property.getName().c_str() + 7, property.getStr().c_str());
         else if(!strncmp(property.getName().c_str(), "param-", 6))
-            cmd.setQueryParameter(property.getName().c_str() + 6, property.getStr());
+            cmd.setQueryParameter(property.getName().c_str() + 6, property.getStr().c_str());
 /*        else if(!strcmp(property.getName().c_str(), "abonent"))
             cmd.setAbonent(property.getStr());*/
         else if(!strcmp(property.getName().c_str(), "site"))
-            cmd.setSite(property.getStr());
+            cmd.setSite(property.getStr().c_str());
         else if(!strcmp(property.getName().c_str(), "path"))
-            cmd.setSitePath(property.getStr());
+            cmd.setSitePath(property.getStr().c_str());
         else if(!strcmp(property.getName().c_str(), "filename"))
-            cmd.setSiteFileName(property.getStr());
+            cmd.setSiteFileName(property.getStr().c_str());
         else if(!strcmp(property.getName().c_str(), "port"))
             cmd.setSitePort(property.getInt());
 /*        else if(!strcmp(property.getName().c_str(), "message"))

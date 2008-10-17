@@ -12,7 +12,7 @@ class ActionConcat : public Action
     ActionConcat(const ActionConcat &);
     std::string strVariable;
 
-    std::string strString;
+    Property::string_type strString;
     
     FieldType m_fStrFieldType;
 protected:

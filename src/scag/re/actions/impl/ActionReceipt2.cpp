@@ -83,7 +83,7 @@ bool ActionReceipt::getStrProperty(ActionContext& context, const std::string& st
 {
     Property * p = context.getProperty(str);
     if(p) 
-        val = p->getStr();
+        val.assign(p->getStr().c_str(),p->getStr().size());
     else
         smsc_log_error(logger,"Action 'smpp:receipt': invalid '%s' property '%s'", field_name, str.c_str());
     return p != NULL;

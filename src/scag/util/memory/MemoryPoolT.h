@@ -2,7 +2,7 @@
 #define _SCAG_UTIL_MEMORY_MEMORYPOOLT_H
 
 #include "MemoryPool.h"
-#include "scag/util/singleton/SingletonHolder.h"
+#include "scag/util/singleton/Singleton2.h"
 
 namespace scag {
 namespace util {
@@ -14,11 +14,11 @@ template < typename T >
     class MemoryPoolT : public MemoryPool
 {
 public:
-    MemoryPool& Instance() {
+    static MemoryPool& Instance() {
         return util::singleton::SingletonHolder< MemoryPoolT< T > >::Instance();
     }
 protected:
-    friend class util::singleton::SingletonHolder< MemoryPoolT< T > >;
+    friend class util::singleton::CreateUsingNew< MemoryPoolT< T > >;
     MemoryPoolT() {}
     ~MemoryPoolT() {}
 };
@@ -26,5 +26,10 @@ protected:
 }
 }
 }
+
+template < class T >
+    unsigned GetLongevity( scag::util::memory::MemoryPoolT< T >* ) {
+        return 0xffffffff;
+    }
 
 #endif /* !_SCAG_UTIL_MEMORY_MEMORYPOOLT_H */

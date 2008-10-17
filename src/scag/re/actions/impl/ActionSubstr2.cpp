@@ -9,7 +9,9 @@ void ActionSubstr::init(const SectionParams& params,PropertyObject propertyObjec
 {
     FieldType ft;  bool bExist;
 
-    m_fVariableFieldType = CheckParameter(params, propertyObject, "substr", "var", true, true, m_strVariable, bExist);
+    std::string temp;
+    m_fVariableFieldType = CheckParameter(params, propertyObject, "substr", "var", true, true, temp, bExist);
+    m_strVariable.assign(temp.data(),temp.size());
     ft = CheckParameter(params, propertyObject, "substr", "result", true, false, m_strResult, bExist);
     m_ftBegin = CheckParameter(params, propertyObject, "substr", "begin", false, true, m_strBegin, m_bExistBegin);
 
@@ -33,15 +35,15 @@ bool ActionSubstr::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'substr'");
 
-    std::string strArgument;
     int begin = beginIndex;
     int end = endIndex;
 
+    Property::string_type strArgument;
     if (m_fVariableFieldType == ftUnknown) 
         strArgument = m_strVariable;
     else
     {
-        Property * property = context.getProperty(m_strVariable);
+        Property * property = context.getProperty(m_strVariable.c_str());
         if (!property) {
             smsc_log_warn(logger,"Action 'substr':: invalid property '%s'",m_strVariable.c_str());
             return true;
@@ -93,13 +95,8 @@ bool ActionSubstr::run(ActionContext& context)
         return true;
     }
 
-    std::string temp;
-    auto_ptr<char> buff(new char[end - begin + 1]);
-    memcpy(buff.get(),strArgument.data() + begin, end - begin + 1);
-
-    temp.assign(buff.get(), end - begin + 1);
-
-    resultProperty->setStr(temp);
+    const Property::string_type temp(strArgument.data()+begin,end-begin+1);
+    resultProperty->setStr( temp );
     smsc_log_debug(logger,"Action 'substr':: substr result is '%s' (begin=%d, end=%d)", temp.c_str(), begin, end);
 
     return true;

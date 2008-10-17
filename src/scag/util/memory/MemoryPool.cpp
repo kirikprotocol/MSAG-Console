@@ -1,5 +1,5 @@
 #include "MemoryPool.h"
-#include "scag/util/singleton/Singleton.h"
+#include "scag/util/singleton/Singleton2.h"
 
 unsigned GetLongevity( scag::util::memory::MemoryPool* ) { return 0xffffffff; }
 

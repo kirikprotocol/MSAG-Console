@@ -12,11 +12,9 @@ namespace actions {
 class ActionIndexof : public Action
 {
     ActionIndexof(const ActionIndexof &);
-    std::string strVariable;
-
+    Property::string_type strVariable;
     std::string strResult;
-    
-    std::string strString;
+    Property::string_type strString;
 
     FieldType m_fVariableFieldType;
     FieldType m_fStringFieldType;

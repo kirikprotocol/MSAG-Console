@@ -7,12 +7,14 @@ namespace actions {
 
 void ActionIndexof::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    std::string temp;
     bool bExist;
     FieldType ft;
+    std::string temp;
 
-    m_fVariableFieldType = CheckParameter(params, propertyObject, "indexof", "var", true, true, strVariable, bExist);
-    m_fStringFieldType = CheckParameter(params, propertyObject, "indexof", "value", true, true, strString, bExist);
+    m_fVariableFieldType = CheckParameter(params, propertyObject, "indexof", "var", true, true, temp, bExist);
+    strVariable.assign(temp.c_str(), temp.size());
+    m_fStringFieldType = CheckParameter(params, propertyObject, "indexof", "value", true, true, temp, bExist);
+    strString.assign(temp.c_str(), temp.size());
     ft = CheckParameter(params, propertyObject, "indexof", "result", true, false, strResult, bExist);
 
     smsc_log_debug(logger,"Action 'indexof':: init");
@@ -23,15 +25,15 @@ bool ActionIndexof::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'indexof'");
 
-    std::string strArgument1;
-    std::string strArgument2;
+    Property::string_type strArgument1;
+    Property::string_type strArgument2;
 
     if (m_fVariableFieldType == ftUnknown) 
     {
         strArgument1 = strVariable;
     } else
     {
-        Property * property = context.getProperty(strVariable);
+        Property * property = context.getProperty(strVariable.c_str());
 
         if (!property) 
         {
@@ -47,7 +49,7 @@ bool ActionIndexof::run(ActionContext& context)
         strArgument2 = strString;
     } else
     {
-        Property * property = context.getProperty(strString);
+        Property * property = context.getProperty(strString.c_str());
 
         if (!property) 
         {

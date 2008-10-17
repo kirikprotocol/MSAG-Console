@@ -10,7 +10,7 @@ namespace actions {
 class ActionSubstr : public Action
 {
     ActionSubstr(const ActionSubstr &);
-    std::string m_strVariable;
+    Property::string_type m_strVariable;
     std::string m_strResult;
     std::string m_strBegin;
     std::string m_strEnd;

@@ -7,13 +7,13 @@ namespace actions {
 
 void ActionConcat::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    std::string temp;
+    // std::string temp;
     bool bExist;
     FieldType ft;
-
     ft = CheckParameter(params, propertyObject, "concat", "var", true, false, strVariable, bExist);
-    m_fStrFieldType = CheckParameter(params, propertyObject, "concat", "value", true, true, strString, bExist);
-
+    std::string val;
+    m_fStrFieldType = CheckParameter(params, propertyObject, "concat", "value", true, true, val, bExist);
+    strString.assign( val.c_str(), val.size() );
     smsc_log_debug(logger,"Action 'concat':: init");
 }
 
@@ -22,14 +22,14 @@ bool ActionConcat::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'concat'");
 
-    std::string strArgument;
+    Property::string_type strArgument;
 
     if (m_fStrFieldType == ftUnknown) 
     {
         strArgument = strString;
     } else
     {
-        Property * property = context.getProperty(strString);
+        Property * property = context.getProperty(strString.c_str());
 
         if (!property) 
         {
@@ -46,11 +46,11 @@ bool ActionConcat::run(ActionContext& context)
         return true;
     }
 
-    std::string temp = resultProperty->getStr();
-    std::string result;
+    Property::string_type temp = resultProperty->getStr();
+    Property::string_type result = temp;
 
-    result.append(temp.data(), temp.size());
-    result.append(strArgument.data(),strArgument.size());
+    // result.append(temp.data(), temp.size());
+    result.append( strArgument.data(), strArgument.size() );
 
     resultProperty->setStr(result);
 

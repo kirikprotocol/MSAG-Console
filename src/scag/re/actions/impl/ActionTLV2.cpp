@@ -151,7 +151,7 @@ bool ActionTLV::hexDumpToBytes(const std::string& hex_dump, std::string& bytes) 
 
 void ActionTLV::getPropertyValue(Property* prop, uint16_t tag, const std::string& var, int64_t& int_val, std::string& str_val) {
   if (tlv_type == TT_UNKNOWN || tlv_type == TT_STRN || tlv_type == TT_STR || tlv_type == TT_HEXDUMP) {
-      str_val = prop? prop->getStr() : var;
+      str_val = prop ? prop->getStr().c_str() : var.c_str();
       smsc_log_debug(logger, "Action 'tlv': TAG: %d. SetValue=%s", tag, str_val.c_str());
   } else  {
     if (prop) {
@@ -301,12 +301,12 @@ std::string ActionTLV::uint32ToStr(uint32_t uint_val) {
 
 void ActionTLV::getIntTag(uint32_t val, Property* prop, int tag) {
   if (tlv_type == TT_STRN || tlv_type == TT_STR) {
-    prop->setStr(uint32ToStr(val));
+    prop->setStr(uint32ToStr(val).c_str());
     smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
   } else if (tlv_type == TT_HEXDUMP) {
     std::string hexDump;
     smsc::util::DumpHex(hexDump, sizeof(uint32_t), (unsigned char*)&val, HEX_DUMP_CFG);
-    prop->setStr(hexDump);
+    prop->setStr(hexDump.c_str());
     smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
   } else {
     prop->setInt(val);
@@ -316,12 +316,12 @@ void ActionTLV::getIntTag(uint32_t val, Property* prop, int tag) {
 
 void ActionTLV::getStrTag(const std::string& val, Property* prop, int tag) {
   if (tlv_type == TT_STRN || tlv_type == TT_STR || tlv_type == TT_UNKNOWN) {
-    prop->setStr(val);
+    prop->setStr(val.c_str());
     smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
   } else if (tlv_type == TT_HEXDUMP) {
     std::string hexDump;
     smsc::util::DumpHex(hexDump, val.size(), (unsigned char*)val.c_str(), HEX_DUMP_CFG);
-    prop->setStr(hexDump);
+    prop->setStr(Property::string_type(hexDump.c_str(), hexDump.size()));
     smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
   } else {
     prop->setInt(atoll(val.c_str()));
@@ -395,13 +395,13 @@ void ActionTLV::getBinTag(const char* val, uint16_t val_len, Property* prop, int
   case TT_HEXDUMP: {
     std::string hexDump;
     smsc::util::DumpHex(hexDump, val_len, (unsigned char*)val, HEX_DUMP_CFG);
-    prop->setStr(hexDump);
+    prop->setStr(Property::string_type(hexDump.c_str(),hexDump.size()));
     int_val = false;
     break;
   }
   case TT_STR:
   case TT_STRN: {
-    std::string str(val, val_len);
+    Property::string_type str(val, val_len);
     prop->setStr(str);
     int_val = false;
     break;

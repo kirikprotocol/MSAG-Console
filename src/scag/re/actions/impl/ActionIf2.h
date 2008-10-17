@@ -33,8 +33,8 @@ class ActionIf : public Action, ComplexActionLongCallHelper
 
     struct SingleParam
     {
-        std::string strOperand1;
-        std::string strOperand2;
+        Property::string_type strOperand1;
+        Property::string_type strOperand2;
 
         IfOperations Operation;
         SingleParam() : Operation(opUnknown) {}

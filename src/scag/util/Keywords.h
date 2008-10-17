@@ -35,7 +35,7 @@ public:
       smsc_log_error(logger, "Action '%s': Invalid keywords property: '%s'", actionName(), value_.c_str());
       return false;
     }
-    value_ = p->getStr();
+    value_ = p->getStr().c_str();
     return true;
   }
 
@@ -67,12 +67,18 @@ protected:
     if (separatedKeywords.empty()) {
       return;
     }
-    vector<string>::const_iterator i = separatedKeywords.begin();
-    string keywords = *i;
-    ++i;
-    for (i; i != separatedKeywords.end(); ++i) {
-      keywords += ',' + *i;
-    }
+      size_t sz = separatedKeywords.size(); // for commas and trailing nullchar
+      for ( vector<string>::const_iterator i = separatedKeywords.begin();
+            i != separatedKeywords.end(); ++i ) {
+          sz += i->size();
+      }
+      string keywords;
+      keywords.reserve( sz );
+      for ( vector<string>::const_iterator i = separatedKeywords.begin();
+            i != separatedKeywords.end(); ++i ) {
+          if ( i != separatedKeywords.begin() ) keywords.push_back(',');
+          keywords.append(*i);
+      }
     smsc_log_debug(logger, "Action '%s': result keywords='%s'", actionName(), keywords.c_str());
     keywordsContext_->setKeywords(keywords);
 

@@ -59,7 +59,7 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
             return false;
         }
         if (!isContentType_)
-            bp->billingInfoStruct.mediaType = property->getStr();
+            bp->billingInfoStruct.mediaType = property->getStr().c_str();
 
         mt = isContentType_ ? int(property->getInt()) :
         bm.getInfrastructure().GetMediaTypeID( bp->billingInfoStruct.mediaType );
@@ -80,7 +80,7 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
             return false;
         }
         if( !isCategory_ )
-            bp->billingInfoStruct.category = property->getStr();
+            bp->billingInfoStruct.category = property->getStr().c_str();
 
         cat = isCategory_ ? int(property->getInt()) :
         bm.getInfrastructure().GetCategoryID( bp->billingInfoStruct.category );
@@ -258,7 +258,7 @@ void BillActionOpen::setTariffStatus( ActionContext&   context,
             smsc_log_debug(logger,"Action '%s' :: Invalid property %s for result_number",
                            opname(), resultFieldName_.c_str());
         else
-            propertyResNum->setStr( tariffRec ? tariffRec->ServiceNumber : "");
+            propertyResNum->setStr( tariffRec ? tariffRec->ServiceNumber.c_str() : "");
     }
 }
 

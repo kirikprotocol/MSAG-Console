@@ -38,7 +38,7 @@ int64_t Property::convertToInt() const
     return i_val;
 }
 
-const std::string& Property::convertToStr() const
+const Property::string_type& Property::convertToStr() const
 {
     if (sync) return s_val;
 
@@ -97,30 +97,6 @@ time_t Property::convertToDate() const
     return val;
 }
 
-//////////////////////////////////////////////////////GET////////////////////////////////
-
-
-int64_t Property::getInt() const
-{
-    if (type == pt_int) return i_val;
-    else return convertToInt();
-}
-const std::string& Property::getStr() const
-{
-    if (type == pt_str) return s_val;
-    else return convertToStr();
-}
-bool Property::getBool() const
-{
-    if (type == pt_bool) return (bool)i_val;
-    else return convertToBool();
-}
-time_t Property::getDate() const
-{
-    if (type == pt_date) return (time_t)i_val;
-    else return convertToDate();
-}
-
 //////////////////////////////////////////////////////SET////////////////////////////////
 
 void Property::setInt(int64_t val) 
@@ -138,16 +114,6 @@ void Property::setStr(const string_type& val)
     s_val = val;
     type = pt_str;
 }
-
-/*
-std::string& Property::_setStr()
-{
-    if (constant) throw ConstantSetException();
-    sync = false;
-    type = pt_str;
-    return s_val;
-}
- */
 
 void Property::setBool( bool val )
 {

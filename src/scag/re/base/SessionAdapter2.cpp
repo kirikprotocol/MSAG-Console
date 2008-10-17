@@ -19,7 +19,7 @@ Property* SessionAdapter::getProperty(const std::string& name)
     if(!strcmp(name.c_str(), "status"))
     {
         if(!statusProp)
-            statusProp = new AdapterProperty(name, this, false );
+            statusProp = new AdapterProperty(name.c_str(), this, int(false));
         return statusProp;
     }
     return NULL;

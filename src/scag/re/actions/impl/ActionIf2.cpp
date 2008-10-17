@@ -41,15 +41,15 @@ void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
     bool bExist;
     FieldType ft;
 
-    ft = CheckParameter(params, propertyObject, "if", "test", true, true, singleparam.strOperand1, bExist);
-
+    ft = CheckParameter(params, propertyObject, "if", "test", true, true, temp, bExist);
     if (ft == ftUnknown) throw SCAGException("Action 'if': unrecognized variable prefix '%s' for 'test' parameter", singleparam.strOperand1.c_str());
+    singleparam.strOperand1 = temp.c_str();
 
     m_hasOP = params.Exists("op");
-    ftSecondOperandFieldType = CheckParameter(params, propertyObject, "if", "value", false, true, singleparam.strOperand2, bExist);
-
+    ftSecondOperandFieldType = CheckParameter(params, propertyObject, "if", "value", false, true, temp, bExist);
     if (m_hasOP&&(!bExist)) throw SCAGException("Action 'if': missing 'value' parameter"); 
     if ((!m_hasOP)&&bExist) throw SCAGException("Action 'if': missing 'op' parameter"); 
+    singleparam.strOperand2 = temp.c_str();
 
     if (m_hasOP) singleparam.Operation = GetOperationFromSTR(params["op"]);
 
@@ -172,7 +172,7 @@ bool ActionIf::run(ActionContext& context)
 
     if (longCallContext.ActionStack.empty()) 
     {
-        Property * property = context.getProperty(singleparam.strOperand1);
+        Property * property = context.getProperty(singleparam.strOperand1.c_str());
         if (!property) 
         {
             smsc_log_debug(logger,"Action 'If' stopped. Details: Cannot find property '%s'", singleparam.strOperand1.c_str());
@@ -224,7 +224,7 @@ bool ActionIf::run(ActionContext& context)
             }
             else
             {
-                Property * valproperty = context.getProperty(singleparam.strOperand2);
+                Property * valproperty = context.getProperty(singleparam.strOperand2.c_str());
                 if (valproperty) result = property->Compare(*valproperty,pt);
                 else smsc_log_warn(logger,"Action 'if': Invalid property '%s'", singleparam.strOperand2.c_str());
             }

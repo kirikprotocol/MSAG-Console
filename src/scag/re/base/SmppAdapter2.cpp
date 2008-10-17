@@ -697,9 +697,6 @@ void SmppCommandAdapter::WriteSubmitField(SMS& data,int FieldId,AdapterProperty&
 
 void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterProperty& property)
 {
-    unsigned len = 0;
-    std::string str;
-
     if (FieldId == OA) 
         AssignAddress(data.originatingAddress, property.getStr().c_str());
     else if (FieldId == DA) 
@@ -723,22 +720,22 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
         case Tag::SMPP_DESTINATION_PORT:
             data.setIntProperty(FieldId, unsigned(property.getInt()));
             break;
-        case SMS_SVC_TYPE:
-            str = property.getStr();
+        case SMS_SVC_TYPE: {
+            const Property::string_type& str = property.getStr();
+            size_t len = 0;
 
             if (str.size() >= unsigned(MAX_ESERVICE_TYPE_LENGTH))
                 len = MAX_ESERVICE_TYPE_LENGTH;
             else
                 len = str.size();
 
-             memcpy(data.eServiceType, str.c_str(),str.size()); 
-             data.eServiceType[str.size()] = 0;
-
+            memcpy( data.eServiceType, str.c_str(), len );
+            data.eServiceType[len] = 0;
             break;
+        }
 
-        case SMS_MESSAGE_BODY:
-            str = property.getStr();
-
+        case SMS_MESSAGE_BODY: {
+            const Property::string_type& str = property.getStr();
             std::string resStr;
 
             int code = smsc::smpp::DataCoding::UCS2;
@@ -777,6 +774,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
 
             break;
         }
+        } // switch
 }
 
 void SmppCommandAdapter::WriteDataSmRespField(int fieldId, AdapterProperty& property) {
@@ -808,19 +806,19 @@ AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(const std::string& n
   AdapterProperty * property = 0;
   switch (fieldId) {
   case SMPP_ADDITIONAL_STATUS_INFO_TEXT:
-    property = new AdapterProperty(name, this, resp->getAdditionalStatusInfoText());
+    property = new AdapterProperty(name.c_str(), this, resp->getAdditionalStatusInfoText());
     break;
   case SMPP_DELIVERY_FAILURE_REASON: 
     {
       int val = resp->hasDeliveryFailureReason() ? resp->getDeliveryFailureReason() : -1;
-      property = new AdapterProperty(name, this, val);
+      property = new AdapterProperty(name.c_str(), this, val);
       break;
     }
   case SMPP_DPF_RESULT:
-    property = new AdapterProperty(name, this, resp->getDpfResult());
+    property = new AdapterProperty(name.c_str(), this, resp->getDpfResult());
     break;
   case SMPP_NETWORK_ERROR_CODE:
-    property = new AdapterProperty(name, this, resp->getNetworkErrorCode());
+    property = new AdapterProperty(name.c_str(), this, resp->getNetworkErrorCode());
     break;
   }
   return property;
@@ -834,38 +832,38 @@ AdapterProperty * SmppCommandAdapter::getRespProperty(SMS& data,const std::strin
     switch (FieldId) 
     {
     case STATUS:
-        property = new AdapterProperty(name,this,command.get_status());
+        property = new AdapterProperty(name.c_str(),this,command.get_status());
         break;
     case PACKET_DIRECTION:
-        property = new AdapterProperty(name,this,command.get_resp()->get_dir());
+        property = new AdapterProperty(name.c_str(),this,command.get_resp()->get_dir());
         break;
     case MESSAGE_ID:
-        property = new AdapterProperty(name,this,command.get_resp()->get_messageId());
+        property = new AdapterProperty(name.c_str(),this,command.get_resp()->get_messageId());
         break;
     case USSD_DIALOG:
-        property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+        property = new AdapterProperty(name.c_str(),this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
         break;
     case OA:
-        property = new AdapterProperty(name,this,CommandBridge::getAbonentAddr(command).toString());
+        property = new AdapterProperty(name.c_str(),this,CommandBridge::getAbonentAddr(command).toString());
         break;
     case DA:
-        property = new AdapterProperty(name,this,CommandBridge::getDestAddr(command).toString());
+        property = new AdapterProperty(name.c_str(),this,CommandBridge::getDestAddr(command).toString());
         break;
     case STATUS_OK:
-        property = new AdapterProperty(name,this,(command.get_status() == 0));
+        property = new AdapterProperty(name.c_str(),this,(command.get_status() == 0));
         break;
     case STATUS_PERM_ERROR:
         if (command.get_status() > 0)
-            property = new AdapterProperty(name,this,isErrorPermanent(command.get_status()));
+            property = new AdapterProperty(name.c_str(),this,isErrorPermanent(command.get_status()));
         else
-            property = new AdapterProperty(name,this,0);
+            property = new AdapterProperty(name.c_str(),this,0);
 
         break;
     case STATUS_TEMP_ERROR:
         if (command.get_status() > 0) 
-            property = new AdapterProperty(name,this,!isErrorPermanent(command.get_status()));
+            property = new AdapterProperty(name.c_str(),this,!isErrorPermanent(command.get_status()));
         else
-            property = new AdapterProperty(name,this,0);
+            property = new AdapterProperty(name.c_str(),this,0);
         break;
     }
 
@@ -875,7 +873,7 @@ AdapterProperty * SmppCommandAdapter::getRespProperty(SMS& data,const std::strin
 
 AdapterProperty * SmppCommandAdapter::GetStrBitFromMask(SMS& data,const std::string& name,int tag,int mask)
 {
-    return new AdapterProperty(name, this, int(data.getIntProperty(tag) & mask) == mask);
+    return new AdapterProperty(name.c_str(), this, int(data.getIntProperty(tag) & mask) == mask);
 }
 
 void SmppCommandAdapter::SetBitMask(SMS& data, int tag, int mask)
@@ -989,7 +987,7 @@ AdapterProperty * SmppCommandAdapter::Get_USSD_BOOL_Property(SMS& data, const st
         case USSD_USSN_CONF: b = sop ==  USSN_CONFIRM; break;
     }
 
-    return new AdapterProperty(name, this, b);
+    return new AdapterProperty(name.c_str(), this, b);
 }
 
 
@@ -1018,13 +1016,13 @@ AdapterProperty * SmppCommandAdapter::Get_Unknown_Property(SMS& data, const std:
             if (valueLen == 1)
             {
                 char temp = buff[i + 4];
-                return new AdapterProperty(name, this, temp);
-//                return new AdapterProperty(name, this, (temp > 0));
+                return new AdapterProperty(name.c_str(), this, temp);
+//                return new AdapterProperty(name.c_str(), this, (temp > 0));
             }
 
             std::string str;
             str.append((buff + i + 4),valueLen);
-            return new AdapterProperty(name, this, str.c_str());
+            return new AdapterProperty(name.c_str(), this, str.c_str());
         }
 
         //if ((i + valueLen + 4 + 2) > (len-1)) return 0;
@@ -1038,7 +1036,7 @@ AdapterProperty * SmppCommandAdapter::Get_Unknown_Property(SMS& data, const std:
 
 AdapterProperty * SmppCommandAdapter::getMessageBodyProperty(SMS& data, std::string name)
 {
-    return new AdapterProperty(name,this,CommandBridge::getMessageBody(command));
+    return new AdapterProperty(name.c_str(),this,CommandBridge::getMessageBody(command));
 }
 
 
@@ -1055,7 +1053,7 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     else if ((FieldId >= USSD_PSSD_IND)&&(FieldId <= USSD_USSN_CONF)) 
         property = Get_USSD_BOOL_Property(data,name,FieldId);
     else if (FieldId == Tag::SMPP_MESSAGE_PAYLOAD) 
-        property = new AdapterProperty(name,this,data.getState());
+        property = new AdapterProperty(name.c_str(),this,data.getState());
         //property->setPureInt(data.getState());
     else if ((FieldId >= OPTIONAL_CHARGING)&&(FieldId <= OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE))
         property = Get_Unknown_Property(data, name, FieldId);
@@ -1063,25 +1061,25 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     switch (FieldId) 
     {
     case PACKET_DIRECTION:
-        property = new AdapterProperty(name,this,command.get_smsCommand().dir);
+        property = new AdapterProperty(name.c_str(),this,command.get_smsCommand().dir);
         break;
     case OA:
-        property = new AdapterProperty(name,this,data.getOriginatingAddress().toString().c_str());
+        property = new AdapterProperty(name.c_str(),this,data.getOriginatingAddress().toString().c_str());
         break;
     case DA:
-        property = new AdapterProperty(name,this,data.getDestinationAddress().toString().c_str());
+        property = new AdapterProperty(name.c_str(),this,data.getDestinationAddress().toString().c_str());
         break;
     case SMS_VALIDITY_PERIOD:
-        property = new AdapterProperty(name,this,data.validTime);
+        property = new AdapterProperty(name.c_str(),this,data.validTime);
         break;
     case SMS_MESSAGE_BODY:
         property = getMessageBodyProperty(data,name);
         break;
     case SMS_SVC_TYPE:
-        property = new AdapterProperty(name, this, data.eServiceType);
+        property = new AdapterProperty(name.c_str(), this, data.eServiceType);
         break;
     case USSD_DIALOG:
-        property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+        property = new AdapterProperty(name.c_str(),this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
         break;
     }
 
@@ -1090,9 +1088,9 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     if (!property) 
     {
         if (tagType == SMS_STR_TAG)
-            property = new AdapterProperty(name, this, data.hasStrProperty(FieldId) ? data.getStrProperty(FieldId).c_str() : "");
+            property = new AdapterProperty(name.c_str(), this, data.hasStrProperty(FieldId) ? data.getStrProperty(FieldId).c_str() : "");
         else if (tagType == SMS_INT_TAG)
-            property = new AdapterProperty(name, this, data.hasIntProperty(FieldId) ? data.getIntProperty(FieldId) : 0);
+            property = new AdapterProperty(name.c_str(), this, data.hasIntProperty(FieldId) ? data.getIntProperty(FieldId) : 0);
     }
           
     return property;
@@ -1110,7 +1108,7 @@ AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const s
 */
 
     if (FieldId == PACKET_DIRECTION) 
-        property = new AdapterProperty(name,this,(int)data.dir);
+        property = new AdapterProperty(name.c_str(),this,(int)data.dir);
     else if (data.dir == dsdSc2Srv) 
         property = getDeliverProperty(data.sms, name, FieldId);
     else if (data.dir == dsdSrv2Sc) 
@@ -1125,13 +1123,13 @@ AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const s
     switch (FieldId)
     {
     case OA:
-        property = new AdapterProperty(name,this,data.orgSrc.toString().c_str());
+        property = new AdapterProperty(name.c_str(),this,data.orgSrc.toString().c_str());
         break;
     case DA:
-        property = new AdapterProperty(name,this,data.orgDst.toString().c_str());
+        property = new AdapterProperty(name.c_str(),this,data.orgDst.toString().c_str());
         break;
     case PACKET_DIRECTION:
-        property = new AdapterProperty(name,this,(int)data.dir);
+        property = new AdapterProperty(name.c_str(),this,(int)data.dir);
         break;
     }
     */
@@ -1159,28 +1157,28 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
         property = Get_USSD_BOOL_Property(data,name,FieldId);
     } else if (((FieldId >= ST_ENROUTE)&&(FieldId <= ST_REJECTED))||(FieldId == Tag::SMPP_MESSAGE_PAYLOAD)) 
     {
-        property = new AdapterProperty(name,this,data.getState());
+        property = new AdapterProperty(name.c_str(),this,data.getState());
         //property->setPureInt(data.getState());
     } else
     switch (FieldId) 
     {
     case PACKET_DIRECTION:
-        property = new AdapterProperty(name,this,command.get_smsCommand().dir);
+        property = new AdapterProperty(name.c_str(),this,command.get_smsCommand().dir);
         break;
     case OA:
-        property = new AdapterProperty(name,this,data.getOriginatingAddress().toString().c_str());
+        property = new AdapterProperty(name.c_str(),this,data.getOriginatingAddress().toString().c_str());
         break;
     case DA:
-        property = new AdapterProperty(name,this,data.getDestinationAddress().toString().c_str());
+        property = new AdapterProperty(name.c_str(),this,data.getDestinationAddress().toString().c_str());
         break;
     case SMS_MESSAGE_BODY:
         property = getMessageBodyProperty(data, name);
         break;
     case SMS_SVC_TYPE:
-        property = new AdapterProperty(name, this, data.eServiceType);
+        property = new AdapterProperty(name.c_str(), this, data.eServiceType);
         break;
     case USSD_DIALOG:
-        property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+        property = new AdapterProperty(name.c_str(),this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
         break;
     }
     
@@ -1194,9 +1192,9 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
     if (!property) 
     {
         if (tagType == SMS_STR_TAG) 
-            property = new AdapterProperty(name,this, data.hasStrProperty(FieldId) ? data.getStrProperty(FieldId).c_str() : "");
+            property = new AdapterProperty(name.c_str(),this, data.hasStrProperty(FieldId) ? data.getStrProperty(FieldId).c_str() : "");
         else if (tagType == SMS_INT_TAG) 
-            property = new AdapterProperty(name, this, data.hasIntProperty(FieldId) ? data.getIntProperty(FieldId) : 0);
+            property = new AdapterProperty(name.c_str(), this, data.hasIntProperty(FieldId) ? data.getIntProperty(FieldId) : 0);
     } 
           
     return property;
@@ -1238,13 +1236,13 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
     if(!strcmp(name.c_str(), "src_sme_id"))
     {
         if(!src_sme_id)
-            src_sme_id = new AdapterProperty(name, this, command.getEntity()->getSystemId());
+            src_sme_id = new AdapterProperty(name.c_str(), this, command.getEntity()->getSystemId());
         return src_sme_id;
     }
     else if(!strcmp(name.c_str(), "dst_sme_id"))
     {
         if(!dst_sme_id)
-            dst_sme_id = new AdapterProperty(name, this, command.getDstEntity()->getSystemId());
+            dst_sme_id = new AdapterProperty(name.c_str(), this, command.getDstEntity()->getSystemId());
         return dst_sme_id;
     }
 
@@ -1328,7 +1326,7 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
     int * pFieldId = 0;
     int receiptMessageId;
 
-    const std::string name = property.getName();  
+    const Property::string_type& name = property.getName();
 
     switch (cmdid) 
     {

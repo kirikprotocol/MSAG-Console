@@ -107,7 +107,7 @@ protected:
             Operation* op = session_->getCurrentOperation();
             const int opstat = op ? op->getStatus() : 0;
             if ( !p ) {
-                np = new AdapterProperty( name, session_, opstat );
+                np = new AdapterProperty( name.c_str(), session_, opstat );
             } else {
                 (*p)->setInt( opstat );
             }
@@ -115,13 +115,13 @@ protected:
         } else if ( name == "abonent" ) {
 
             if ( !p )
-                np = new AdapterProperty( name, session_, 
+                np = new AdapterProperty( name.c_str(), session_, 
                                           session_->sessionKey().toString() );
 
         } else if ( name == "operation_id" ) {
             
             if ( !p ) {
-                np = new AdapterProperty( name, session_, session_->getCurrentOperationId() );
+                np = new AdapterProperty( name.c_str(), session_, session_->getCurrentOperationId() );
             } else {
                 (*p)->setInt( session_->getCurrentOperationId() );
             }
@@ -204,7 +204,7 @@ Property* SessionPropertyScope::getProperty( const std::string& name )
     if ( ptr ) {
         res = *ptr;
     } else {
-        res = new AdapterProperty( name, session_, "" );
+        res = new AdapterProperty( name.c_str(), session_, "" );
         properties_.Insert( name.c_str(), res );
     }
     return res;
@@ -222,7 +222,7 @@ Serializer& SessionPropertyScope::serialize( Serializer& o ) const
             if ( isReadonly(key) || !strlen(key) ) {
                 o << "";
             } else {
-                o << key << value->getStr();
+                o << key << value->getStr().c_str();
             }
         }
         assert( sz == 0 );
@@ -242,7 +242,7 @@ Deserializer& SessionPropertyScope::deserialize( Deserializer& o ) throw (Deseri
         o >> key;
         if ( key.size() > 0 ) {
             o >> value;
-            AdapterProperty* p = new AdapterProperty( key, session_, value );
+            AdapterProperty* p = new AdapterProperty( key.c_str(), session_, value );
             properties_.Insert( smsc::util::cStringCopy(key.c_str()), p );
         }
     }

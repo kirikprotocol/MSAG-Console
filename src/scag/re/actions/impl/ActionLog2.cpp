@@ -61,7 +61,7 @@ bool ActionLog::run(ActionContext& context)
             return true;
         }
 
-        s2 += p2->getStr();
+        s2 += p2->getStr().c_str();
     } 
     else
         s2 += strMsg;

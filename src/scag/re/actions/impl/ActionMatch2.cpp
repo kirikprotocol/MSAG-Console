@@ -59,7 +59,7 @@ bool ActionMatch::run(ActionContext& context)
             return true;
         }
 
-        std::string temp = pRegexp->getStr();
+        const Property::string_type& temp = pRegexp->getStr();
         Convertor::UTF8ToUCS2(temp.c_str(), temp.size(), regexp);
     }
     else
@@ -77,7 +77,6 @@ bool ActionMatch::run(ActionContext& context)
     }
 
     std::string value;
-
     if (m_ftValue != ftUnknown) 
     {
         pValue = context.getProperty(strValue);
@@ -86,7 +85,7 @@ bool ActionMatch::run(ActionContext& context)
             smsc_log_warn(logger, "Action 'match': invalid property '%s'", strValue.c_str());
             return true;
         }
-        std::string temp = pValue->getStr();
+        const Property::string_type& temp = pValue->getStr();
         Convertor::UTF8ToUCS2(temp.c_str(), temp.size(), value);
     }
     else

@@ -54,8 +54,8 @@ public:
 
 private:
   TimePolicy getPolicyFromStr(const string& str);
-  time_t parseFinalDate(const string& s);
-  uint32_t parseLifeTime(const string& s);
+  time_t parseFinalDate(const char* s);
+  uint32_t parseLifeTime(const char* s);
 
 private:
   PersCmd cmd;
@@ -73,7 +73,7 @@ private:
   string sValue;
   string sMod;
   string sResult;
-  string var;
+  util::properties::Property::string_type var;
   string status;
   string msg;
 };
@@ -88,7 +88,7 @@ protected:
   virtual void init(const SectionParams& params,PropertyObject propertyObject);
   ProfileType getProfileTypeFromStr(const string& str);
   void getOptionalKey(const string& key_str);
-  string getAbntAddress(const string& _address);
+  string getAbntAddress(const char* _address);
   bool setKey(ActionContext& context, PersCallParams* params);
   void setStatus(ActionContext& context, int status, const string& statusName, const string& msgName, int actionIdx = 0);
   bool canProcessRequest(ActionContext& context, const string& statusName, const string& msgName);

@@ -17,22 +17,26 @@ using util::properties::Property;
 // using scag::util::properties::Property;
 
 struct ActionProperty {
-  void setStrValue(const string& _value, ActionContext &context) const {
+private:
+    static const Property::string_type empty;
+
+public:
+    void setStrValue(const Property::string_type& _value, ActionContext &context) const {
     if (type == ftUnknown) {
       return;
     }
-    Property *p = context.getProperty(value);
+    Property *p = context.getProperty(value.c_str());
     if (p) {
       p->setStr(_value);
     }
   }
-  string getStrValue(ActionContext &context) const {
+    const Property::string_type& getStrValue(ActionContext &context) const {
     if (type == ftUnknown) {
       return value;
     } 
-    Property *p = context.getProperty(value);
+    Property *p = context.getProperty(value.c_str());
     if (!p) {
-      return "";
+        return empty;
     }
     return p->getStr();
   }
@@ -40,7 +44,7 @@ struct ActionProperty {
     if (type == ftUnknown) {
       return intValue;
     }
-    Property *p = context.getProperty(value);
+    Property *p = context.getProperty(value.c_str());
     if (!p) {
       return 0;
     }
@@ -50,7 +54,7 @@ struct ActionProperty {
     if (type == ftUnknown) {
       return;
     } 
-    Property *p = context.getProperty(value);
+    Property *p = context.getProperty(value.c_str());
     if (p) {
       p->setInt(_value);
     }
@@ -58,13 +62,14 @@ struct ActionProperty {
   ActionProperty():type(ftUnknown), intValue(0) { 
     logger = Logger::getInstance("re.actions"); 
   };
-  ActionProperty(FieldType _type, const string _value):type(_type), value(_value) {
+    ActionProperty(FieldType _type, const Property::string_type& _value):type(_type), value(_value) {
     logger = Logger::getInstance("re.actions");
   };
-  bool setValue(const string& _value, bool isInt = true) {
+
+    bool setValue(const std::string& _value, bool isInt = true) {
     smsc_log_debug(logger, "set value = '%s' is int %d ft %d", _value.c_str(), (int)isInt, type);
     if (type != ftUnknown || !isInt) {
-      value = _value;
+        value = _value.c_str();
       return true;
     }
     intValue = atoi(_value.c_str());
@@ -85,14 +90,14 @@ protected:
   bool checkYear(int year);
 protected:
   FieldType type;
-  string value;
+    Property::string_type value;
   int intValue;
   Logger *logger;
 };
 
 class DateTimeModifier {
 public:
-  DateTimeModifier(FieldType _type, const string _value):property(_type, _value) {
+    DateTimeModifier(FieldType _type, const Property::string_type& _value):property(_type, _value) {
     logger = Logger::getInstance("re.actions");
   };
   virtual bool change(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName) = 0;
@@ -109,7 +114,7 @@ protected:
 
 class DateProperty: public DateTimeModifier {
 public:
-  DateProperty(FieldType _type, const string _value):DateTimeModifier(_type, _value) {};
+    DateProperty(FieldType _type, const Property::string_type& _value):DateTimeModifier(_type, _value) {};
   bool change(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName);
   bool add(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName, int sign);
 protected:
@@ -118,7 +123,7 @@ protected:
 
 class TimeProperty: public DateTimeModifier {
 public:
-  TimeProperty(FieldType _type, const string _value):DateTimeModifier(_type, _value) {};
+    TimeProperty(FieldType _type, const Property::string_type& _value):DateTimeModifier(_type, _value) {};
   bool change(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName);
   bool add(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName, int sign);
 protected:
@@ -127,7 +132,7 @@ protected:
 
 class DateTimeProperty: public DateTimeModifier {
 public:
-  DateTimeProperty(FieldType _type, const string _value):DateTimeModifier(_type, _value) {};
+    DateTimeProperty(FieldType _type, const Property::string_type& _value):DateTimeModifier(_type, _value) {};
   bool change(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName);
   bool add(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName, int sign);
 protected:

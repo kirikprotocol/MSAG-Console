@@ -67,7 +67,7 @@ bool GetKeywordsAction::run(ActionContext &context) {
   }
   const string* keywords = op->getKeywords();
   if (keywords) {
-    p->setStr(*keywords);
+    p->setStr(keywords->c_str());
   } else {
     p->setStr("");
   }

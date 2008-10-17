@@ -7,7 +7,9 @@
 #include <inttypes.h>
 #endif    
 
+#include <time.h>
 #include <string>
+#include "scag/util/memory/MemoryPoolT.h"
 #include "AccessType.h"
 
 namespace scag2 {
@@ -27,23 +29,41 @@ struct Changeable;
 class Property
 {
 public:
-    typedef std::string string_type;
+    typedef std::basic_string< char, std::char_traits<char>,
+        memory::StdAlloc< char, memory::MemoryPoolT< Property > > >
+        string_type;
+    // typedef std::string string_type;
+
 public:
     Property(): sync(false), type(pt_str), i_val(0) {}
+    Property( int64_t v ) : sync(false), type(pt_int), i_val(v) {}
+    Property( const string_type& v ) : sync(false), type(pt_str), s_val(v) {}
+    // back compatible version
+    Property( const char* v ) : sync(false), type(pt_str), s_val(v) {}
     virtual ~Property() {}
 
-    const string_type& getStr() const;
-    int64_t getInt () const;
-    bool    getBool() const;
-    time_t  getDate() const;
-    inline PropertyType getType() const {return type;}
+    inline const string_type& getStr() const {
+        if (type==pt_str) return s_val;
+        else return convertToStr();
+    }
+    inline int64_t getInt () const {
+        if (type==pt_int) return i_val;
+        else return convertToInt();
+    }
+    inline bool getBool() const {
+        if (type==pt_bool) return bool(i_val);
+        else return convertToBool();
+    }
+    inline time_t getDate() const {
+        if (type==pt_date) return time_t(i_val);
+        else return convertToDate();
+    }
+    inline PropertyType getType() const { return type; }
 
     virtual void setStr( const string_type& val );
     virtual void setInt( int64_t val );
     virtual void setBool( bool val );
     virtual void setDate( time_t val );
-
-    /// virtual string& _setStr();
 
     int Compare( const string_type& val ) const;
     int Compare( bool val ) const;
@@ -54,7 +74,7 @@ public:
     int Compare( const Property& val, bool reqcast ) const;
 
 protected:
-    const std::string& convertToStr() const;
+    const string_type& convertToStr() const;
     int64_t convertToInt () const;
     bool    convertToBool() const;
     time_t  convertToDate() const;
@@ -64,27 +84,37 @@ protected:
     mutable PropertyType type;
     // db: I removed the 'constant' field
     mutable int64_t      i_val;
-    mutable std::string  s_val;
+    mutable string_type  s_val;
 };
 
 
 class AdapterProperty : public Property
 {
 public:
-    AdapterProperty( const std::string& _name,
+    AdapterProperty( const string_type& _name,
                      Changeable* _patron,
                      int InitValue ) :
-    patron(_patron), name(_name) {i_val = InitValue; type = pt_int;};
+    Property(int64_t(InitValue)), patron(_patron), name(_name) {}
 
-    AdapterProperty( const std::string& _name,Changeable* _patron,const std::string& InitValue) :
-    patron(_patron), name(_name) {s_val = InitValue; type = pt_str;};
+    AdapterProperty( const string_type& _name, 
+                     Changeable* _patron, 
+                     const string_type& InitValue ) :
+    Property(InitValue), patron(_patron), name(_name) {}
 
     AdapterProperty(Changeable* _patron) 
         : patron(_patron) { type = pt_int;};
 
-    const std::string& getName() const { return name; }
-    // std::string& setName() { return name; };
+    // back-compatible versions
+    AdapterProperty( const char* theName,
+                     Changeable* thePatron,
+                     int init ) :
+    Property(init), patron(thePatron), name(theName) {}
+    AdapterProperty( const char* theName,
+                     Changeable* thePatron,
+                     const std::string& init ) :
+    Property(init.c_str()), patron(thePatron), name(theName) {}
 
+    const string_type& getName() const { return name; }
     virtual void setStr( const string_type& val );
     virtual void setInt( int64_t val );
     virtual void setBool( bool val );
