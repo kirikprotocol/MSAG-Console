@@ -12,7 +12,7 @@
 #include <util/config/ConfigView.h>
 
 #include "Glossary.h"
-#include "scag/pers/util/BlocksHSReader.h"
+#include "scag/pers/BlocksHSReader.h"
 #include "scag/pers/util/PersClient.h"
 
 using std::string;
