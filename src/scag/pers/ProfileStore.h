@@ -589,6 +589,9 @@ private:
         backup.push_back(BackupProperty(key, prop, PROP_ADD));
       }
       if (!pf->AddProperty(prop)) {
+        if (needBackup) {
+          backup.pop_back();
+        }
         return false;
       }
     }
