@@ -195,6 +195,10 @@ public class StatsFilesCache {
             statsFileImpl.list(from, till, result);
         }
 
+        public List<Reply> getReplies(String oa, Date from, Date till) throws FileStatsException {
+            return statsFileImpl.getReplies(oa, from, till);
+        }
+
         public void close() {
             lock.unlock();
         }

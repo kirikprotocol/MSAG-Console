@@ -149,6 +149,9 @@ public class QuizManagerImpl implements QuizManager, Observer {
     }
 
     public Result handleSms(String address, String oa, String text) throws QuizException{
+        if(logger.isInfoEnabled()) {
+            logger.info("Manager handle sms:" +address+" "+oa+" "+text);
+        }
         Quiz quiz = null;
         if((quiz = quizesMap.get(address))!=null) {
             return quiz.handleSms(oa, text);
@@ -262,7 +265,7 @@ public class QuizManagerImpl implements QuizManager, Observer {
             while((line = reader.readLine())!=null) {
                 tokenizer = new StringTokenizer(line,"|");
                 String msisdn = tokenizer.nextToken();
-                if(subscriptionManager.subscribed(msisdn))  {   //todo performance?
+                if(subscriptionManager.subscribed(msisdn))  {   
                     writer.print(msisdn);
                     writer.print("|");
                     writer.println(tokenizer.nextToken());

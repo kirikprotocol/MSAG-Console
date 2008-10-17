@@ -5,12 +5,14 @@ import mobi.eyeline.smsquiz.replystats.Reply;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 public interface StatsFile {
 
     public void open() throws FileStatsException;
 	public void add(Reply reply) throws FileStatsException;
-	public void list(Date from, Date till, Collection<Reply> result) throws FileStatsException;   
-	public void close();
+	public void list(Date from, Date till, Collection<Reply> result) throws FileStatsException;   //todo remove?
+    public List<Reply> getReplies(String oa, Date from, Date till) throws FileStatsException;
+    public void close();
 }
  

@@ -37,6 +37,9 @@ public class QuizCollector implements Runnable{
                 } catch (QuizException e) {
                     logger.error("Error creating resultStatistics");
                 }
+                if(logger.isInfoEnabled()) {
+                    logger.info("QuizCollector removed quiz: "+quiz);
+                }
 
             }
         }

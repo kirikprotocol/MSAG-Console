@@ -122,14 +122,12 @@ public class Quiz {
         try {
             printWriter = new PrintWriter(new BufferedWriter(new FileWriter(file)));
             ResultSet resultSet = distributionManager.getStatistics(this.getId(),dateBegin,dateEnd);
-            Map<String,Reply> replies = replyStatsDataSource.listMap(destAddress,dateBegin,dateEnd);
             while(resultSet.next()) {
                 Reply reply = null;
                 StatsDelivery delivery = (StatsDelivery)resultSet.get();
                 String oa = delivery.getMsisdn();
                 Date dateDelivery = delivery.getDate();
-                if((reply = replies.get(oa))!=null) {
-                    if((reply.getOa().equals(oa))&&(reply.getDa().equals(destAddress))) {
+                if((reply = replyStatsDataSource.getLastReply(oa, destAddress, dateBegin, dateEnd))!=null) {
                         String text = reply.getText();
                         ReplyPattern replyPattern = getReplyPattern(text);
                         String category = null;
@@ -152,7 +150,6 @@ public class Quiz {
                         printWriter.print(category);
                         printWriter.print(",");
                         printWriter.println(reply.getText());
-                    }
                 }
             }
             printWriter.flush();

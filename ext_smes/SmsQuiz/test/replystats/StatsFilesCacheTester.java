@@ -20,10 +20,10 @@ import java.util.Iterator;
  */
 public class StatsFilesCacheTester {
 
-    private StatsFilesCache filesCache;
+    private static StatsFilesCache filesCache;
 
-    @Before
-    public void init() {
+    @BeforeClass
+    public static void init() {
         try {
             filesCache = new StatsFilesCache("conf/config.xml");
         } catch (FileStatsException e) {
@@ -58,6 +58,7 @@ public class StatsFilesCacheTester {
                 }
             }
             assertTrue(flag==1);
+            file.add(reply);
         } catch (FileStatsException e) {
             e.printStackTrace();
             assertFalse(true);
@@ -119,8 +120,8 @@ public class StatsFilesCacheTester {
         }
 
     }
-    @After
-    public void shutdown() {
+    @AfterClass
+    public static void shutdown() {
         if(filesCache!=null)
             filesCache.shutdown();
     }

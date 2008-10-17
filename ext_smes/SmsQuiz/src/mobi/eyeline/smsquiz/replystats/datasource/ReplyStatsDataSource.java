@@ -9,8 +9,9 @@ import java.util.Map;
 public interface ReplyStatsDataSource {
 	 
 	public void add(Reply reply) throws ReplyDataSourceException;
-	public Collection<Reply> list(String da, Date from, Date till) throws ReplyDataSourceException;
-    public Map<String,Reply> listMap(String da, Date from, Date till) throws ReplyDataSourceException;
+	public Collection<Reply> list(String da, Date from, Date till) throws ReplyDataSourceException;   //todo remove?
+    public Map<String,Reply> listMap(String da, Date from, Date till) throws ReplyDataSourceException;  //todo remove?
+    public Reply getLastReply(String oa, String da, Date from, Date till) throws ReplyDataSourceException;
     public void shutdown() throws ReplyDataSourceException;
 }
  

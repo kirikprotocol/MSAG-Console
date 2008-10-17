@@ -26,7 +26,7 @@
         <param name="filename.pattern">yyyyMMdd</param>
       </section>
       <section name="fileCollector">
-        <param name="time.limit">400000</param>  <!--millis-->
+        <param name="time.limit">10000</param>  <!--millis-->
         <param name="time.first.delay">10</param>  <!-- seconds -->
         <param name="time.period">10</param>       <!-- seconds -->
       </section>

@@ -114,7 +114,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
                 }
             }
 
-            if (logger.isInfoEnabled()){
+            if (logger.isInfoEnabled()&&(subscription!=null)){
                 logger.info("Succesful get subscription " + subscription);
             }
          }catch(SQLException exc){

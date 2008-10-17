@@ -25,6 +25,7 @@ import com.eyeline.sme.handler.RequestToServiceMap;
 import com.eyeline.sme.handler.SMPPService;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.IncomingObject;
+import com.eyeline.utils.tree.radix.StringsRTree;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.SMPPException;
 
@@ -45,9 +46,9 @@ public class QuizManagerTest {
     private static int divider = 1000;
     private static String oa = "148";
     private static String da="148";
-    private static long initWait = 240000;
-    private static long abonents = 100000;
-    private static int minutes = 6;
+    private static long initWait = 10000;
+    private static long abonents = 15000;
+    private static int minutes = 3;
     private static String[] answers = {"yes","no","dsasddssdds"};
 
     @BeforeClass
@@ -87,6 +88,7 @@ public class QuizManagerTest {
            File file = new File(quizManager.getStatusDir()+"/opros_test.status");
            assertTrue(file.exists());
            file.delete();
+           waiting(25000);
        } catch (QuizException e) {
            e.printStackTrace();
            assertTrue(false);
@@ -138,12 +140,10 @@ public class QuizManagerTest {
        try{
            Random random = new Random();
            int i = Integer.parseInt(number2.substring(1,number2.length()))+1;
-           long begin = System.currentTimeMillis();
            for(;i<abonents;i++) {
                 quizManager.handleSms(da, "+"+Integer.toString(i),answers[random.nextInt(3)]);
                 quizManager.handleSms(da, "+"+Integer.toString(i),answers[random.nextInt(3)]);
            }
-           System.out.println(System.currentTimeMillis()-begin);
        } catch (QuizException e) {
            e.printStackTrace();
            assertTrue(false);
@@ -152,7 +152,7 @@ public class QuizManagerTest {
 
     @Test
     public void stats() {
-        waiting(120000);// dateEnd.getTime() - dateBegin.getTime());
+        waiting(dateEnd.getTime() - dateBegin.getTime());
         SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
         String fileName = quizManager.getDirResult()+"/"+da+"."+dateFormat.format(dateBegin)+"-"+dateFormat.format(dateEnd)+".res";
         File file = new File(fileName);
