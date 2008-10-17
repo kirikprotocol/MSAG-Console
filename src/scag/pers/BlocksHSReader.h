@@ -1,13 +1,19 @@
 #ifndef ___BLOCKS_HS_READER_H
 #define ___BLOCKS_HS_READER_H
 
-#include "BlocksHSStorage.h"
-#include "Profile.h"
-#include "PersClient.h"
+#include "scag/pers/BlocksHSStorage.h"
+#include "scag/util/storage/SerialBuffer.h"
+#include "scag/pers/Profile.h"
+#include "scag/pers/util/PersClient.h"
 
-namespace scag { namespace pers {
+namespace scag { namespace pers { namespace util {
 
-  using namespace scag::pers::client;
+  using scag::util::storage::SerialBuffer;
+  using scag::util::storage::SerialBufferOutOfBounds;
+  using namespace scag::pers;
+  using scag::pers::util::PersClient;
+  using scag::pers::util::PersClientException;
+
 
   static const char* restore_properties[] = {
     "maze.abonent.age",
@@ -58,7 +64,6 @@ public:
       logger = smsc::logger::Logger::getInstance("pers_up");
       smsc_log_debug(logger, "dbName='%s' dbPath='%s' blockSize=%d blocksInFile=%d",
                      dbName.c_str(), dbPath.c_str(), blockSize, blocksInFile);
-
     }
 
     ~BlocksHSReader() {
@@ -113,6 +118,7 @@ public:
             dataFile.ROpen(name.c_str());
             dataFile.SetUnbuffered();
             for (int j = 0; j < blocksInFile; ++j) {
+              smsc_log_debug(logger, "seek pos = %d", j * blockSize);
               dataFile.Seek(j * blockSize, SEEK_SET);
               DataBlockHeader hdr;
               dataFile.Read((void*)&hdr, sizeof(DataBlockHeader));
@@ -136,12 +142,13 @@ public:
               data.setLength(hdr.data_size);
               //dataFile.Read((void*)data_buff, effectiveBlockSize);
               dataFile.Read((void*)data_buff, hdr.data_size);
-              status_profiles += restoreProfile(hdr.key, data, sendToPers);
+              //status_profiles += restoreProfile(hdr.key, data, sendToPers);
+              status_profiles += restoreProfileCompletely(hdr.key, data, sendToPers);
             }
             total_count += profiles_count;
             total_status_profiles += status_profiles;
             smsc_log_info(logger, "profiles count = %d/%d in file %d", profiles_count, total_count, i + 1);
-            smsc_log_info(logger, "profiles with %s property count = %d/%d in file %d", STATUS_PROPERTY, status_profiles, total_status_profiles, i + 1);
+            smsc_log_info(logger, "uploaded profiles count = %d/%d in file %d", status_profiles, total_status_profiles, i + 1);
             dataFile.Close();
           } catch (const FileException& ex) {
             smsc_log_error(logger, "Cannot open data file: %s", ex.what());
@@ -149,10 +156,44 @@ public:
           }
       }
       smsc_log_info(logger, "total profiles count = %d in %d files", total_count, files_count);
-      smsc_log_info(logger, "profiles with %s property total count = %d", STATUS_PROPERTY, total_status_profiles);
+      smsc_log_info(logger, "total uploaded profiles = %d", STATUS_PROPERTY, total_status_profiles);
       return 0;
     }
 private:
+  int restoreProfileCompletely(const Key& key, SerialBuffer& data, bool sendToPers) {
+    try {
+      Profile pf(key.toString());   
+      pf.Deserialize(data, true);
+      SerialBuffer batch;
+      
+      if (sendToPers) {
+        pc.PrepareMTBatch(batch, PT_ABONENT, key.toString().c_str(), pf.GetCount(), true);
+      }
+
+      PropertyHash::Iterator it = pf.getProperties().getIterator();
+      Property* prop;
+      char *key = 0;
+      int prop_count = 0;
+      while(it.Next(key, prop)) {
+        pc.SetPropertyPrepare(*prop, batch);
+        ++prop_count;
+      }
+      if (sendToPers) {
+        pc.RunBatch(batch);
+        smsc_log_debug(logger, "send %d properties to pers for profile %s", prop_count, pf.getKey().c_str());
+      }
+      for (int i = 0; i < prop_count; ++i) {
+        pc.SetPropertyResult(batch);
+      }
+      return 1;
+    } catch (const SerialBufferOutOfBounds &e) {
+      smsc_log_warn(logger, "SerialBufferOutOfBounds Bad data in buffer read");
+      return 0;
+    } catch (const PersClientException& ex) {
+      smsc_log_warn(logger, "Error uploading profile. PersClientException: %s", ex.what());
+      return 0;
+    }
+  }
 
   int restoreProfile(const Key& key, SerialBuffer& data, bool sendToPers) {
     try {
@@ -211,6 +252,7 @@ private:
 
 };
 
+}//util
 }//pers
 }//scag
 
