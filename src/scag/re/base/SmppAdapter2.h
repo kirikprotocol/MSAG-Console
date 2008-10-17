@@ -2,18 +2,16 @@
 #define SCAG_RULE_ENGINE_SMPP_ADAPTER2
 
 #include "scag/transport/smpp/base/SmppCommand2.h"
-//#include <scag/util/properties/Properties.h>
 #include "ActionContext2.h"
 #include "CommandBridge.h"
 
 #include <core/buffers/IntHash.hpp>
 
-  
 namespace scag2 {
 namespace re {
 namespace smpp {
 
-using namespace scag::util::properties;
+using namespace util::properties;
 using namespace transport::smpp;
 using smsc::core::buffers::IntHash;
 using bill::infrastruct::TariffRec;

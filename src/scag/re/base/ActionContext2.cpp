@@ -9,10 +9,10 @@ namespace scag2 {
 namespace re {
 namespace actions {
 
-    using smsc::core::buffers::Hash;
-    using scag::re::RuleStatus;
-    using namespace scag::util::properties;
-    using namespace scag::exceptions;
+using smsc::core::buffers::Hash;
+using re::RuleStatus;
+using namespace util::properties;
+using namespace scag::exceptions;
 
 
 CommandProperty::CommandProperty( SCAGCommand* command,

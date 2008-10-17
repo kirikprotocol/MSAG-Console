@@ -6,7 +6,7 @@
 #include "scag/transport/SCAGCommand2.h"
 #include "RuleStatus2.h"
 #include "RuleKey2.h"
-#include "scag/util/properties/Properties.h"
+#include "scag/util/properties/Properties2.h"
 
 namespace scag2 {
 
@@ -20,7 +20,7 @@ namespace util {
 
 namespace re {
 
-using namespace scag::util::properties;
+using namespace util::properties;
 
 using namespace transport;
 using namespace sessions;

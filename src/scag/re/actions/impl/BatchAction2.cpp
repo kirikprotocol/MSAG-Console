@@ -1,13 +1,12 @@
 #include "BatchAction2.h"
 #include "scag/stat/Statistics.h"
-#include "scag/util/properties/Properties.h"
+// #include "scag/util/properties/Properties2.h"
 #include "scag/re/base/CommandAdapter2.h"
 #include "scag/re/base/ActionFactory2.h"
 
 namespace scag2 { namespace re { namespace actions {
 
-typedef scag::util::properties::Property REProperty;
-
+// using util::properties::Property;
 using namespace scag::stat;
 using scag::pers::util::PersClient;
 

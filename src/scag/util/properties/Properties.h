@@ -9,18 +9,7 @@
 
 #include <string>
 #include <time.h>
-
-namespace scag { namespace re {
-    typedef enum AccessType 
-    {
-        atNoAccess = 0,
-        atRead  = 1,
-        atWrite = 2,
-        atReadWrite = 3
-    } AccessType;
-
-}};
-
+#include "AccessType.h"
 
 namespace scag { namespace util { namespace properties 
 {

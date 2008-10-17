@@ -7,9 +7,8 @@ namespace scag2 {
 namespace re {
 
 using namespace stat;
-using namespace scag::util::properties;
+using namespace util::properties;
 using namespace lcm;
-
 
 EventHandler::~EventHandler()
 {

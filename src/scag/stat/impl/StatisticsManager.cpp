@@ -21,8 +21,8 @@
 #include "StatisticsManager.h"
 #include "scag/config/base/ConfigManager2.h"
 
-#include <scag/util/properties/Properties.h>
-using namespace scag::util::properties;
+// #include "scag/util/properties/Properties2.h"
+// using namespace util::properties;
 
 using namespace scag::stat::sacc;
 

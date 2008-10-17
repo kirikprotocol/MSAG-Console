@@ -85,8 +85,10 @@ namespace scag { namespace re { namespace actions
 
     class ActionContext
     {
-    private:
+    public:
+        typedef Property  PropertyType;
 
+    private:
         RuleStatus*             status;
 
         Hash<Property>          variables;

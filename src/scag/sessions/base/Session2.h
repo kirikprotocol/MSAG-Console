@@ -19,7 +19,7 @@ namespace scag2 {
 namespace sessions {
 
 using namespace smsc::logger;
-using namespace scag::util::properties;
+using namespace util::properties;
 using namespace smsc::core::buffers;
 using namespace transport;
 

@@ -29,7 +29,7 @@ class SCAGCommand;
 namespace re {
 namespace actions {
 
-using namespace scag::util::properties;
+using namespace util::properties;
 using smsc::core::buffers::Hash;
 using namespace sessions;
 using transport::SCAGCommand;
@@ -92,6 +92,9 @@ public:
 
 class ActionContext
 {
+public:
+    typedef Property PropertyType;
+
 public:
     static FieldType Separate( const std::string& var, const char *& name );
 

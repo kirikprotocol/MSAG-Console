@@ -11,10 +11,10 @@ namespace re {
 namespace actions {
 
 using std::string;
-using scag::util::Keywords;
-using scag::util::AddKeywords;
-using scag::util::SetKeywords;
-using scag2::sessions::ExternalBillingTransaction;
+using util::Keywords;
+using util::AddKeywords;
+using util::SetKeywords;
+using sessions::ExternalBillingTransaction;
 
 class BillActionSetKeywords : public BillAction {
 public:

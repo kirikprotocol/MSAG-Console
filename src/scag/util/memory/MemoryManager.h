@@ -304,7 +304,7 @@ public:
     
     /// rebind allocator to type U
     template <class U> struct rebind {
-        typedef StdAlloc<U> other;
+        typedef StdAlloc<U, BaseMemAlloc > other;
     };
 
     /// return address of values

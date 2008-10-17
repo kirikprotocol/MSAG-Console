@@ -6,13 +6,13 @@
 namespace scag2 {
 namespace re {
 
-    using scag::re::RuleStatus;
-    using scag::re::StatusEnum;
-    using scag::re::STATUS_OK;
-    using scag::re::STATUS_FAILED;
-    using scag::re::STATUS_REDIRECT;
-    using scag::re::STATUS_LONG_CALL;
-    using scag::re::STATUS_PROCESS_LATER;
+using scag::re::RuleStatus;
+using scag::re::StatusEnum;
+using scag::re::STATUS_OK;
+using scag::re::STATUS_FAILED;
+using scag::re::STATUS_REDIRECT;
+using scag::re::STATUS_LONG_CALL;
+using scag::re::STATUS_PROCESS_LATER;
 
 }
 }

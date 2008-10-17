@@ -1,10 +1,10 @@
 #include "StatAction.h"
-#include "scag/util/properties/Properties.h"
+#include "scag/util/properties/Properties2.h"
 #include "scag/util/Keywords.h"
   
 namespace scag2 { namespace re { namespace actions {
 
-using scag::util::properties::Property;
+using util::properties::Property;
 
 //const char* KEYWORDS_PARAM_NAME = "keywords";
 

@@ -1,12 +1,12 @@
 #include "PersAction2.h"
 #include "scag/stat/Statistics.h"
-#include "scag/util/properties/Properties.h"
+#include "scag/util/properties/Properties2.h"
 #include "scag/re/base/CommandAdapter2.h"
 #include "sms/sms.h"
   
 namespace scag2 { namespace re { namespace actions {
 
-typedef scag::util::properties::Property REProperty;
+typedef util::properties::Property REProperty;
 
 using namespace scag::stat;
 const char* OPTIONAL_KEY = "key";
@@ -239,7 +239,7 @@ uint32_t getKey(const CommandProperty& cp, ProfileType pt)
 
 static void setPersPropFromREProp(scag::pers::util::Property& prop, REProperty& rep)
 {
-    namespace reprop = scag::util::properties;
+    namespace reprop = util::properties;
 
     switch(rep.getType())
     {

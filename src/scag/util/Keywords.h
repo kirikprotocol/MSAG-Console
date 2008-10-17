@@ -7,7 +7,8 @@
 #include "scag/util/properties/Properties.h"
 #include "logger/Logger.h"
 
-namespace scag { namespace util { 
+namespace scag {
+namespace util { 
 
 using std::string;
 using std::vector;
@@ -29,7 +30,7 @@ public:
     if (fieldTypeUnknown_) {
       return true;
     }
-    Property *p = actionContext_.getProperty(value_);
+      typename T::PropertyType *p = actionContext_.getProperty(value_);
     if(!p) {
       smsc_log_error(logger, "Action '%s': Invalid keywords property: '%s'", actionName(), value_.c_str());
       return false;
@@ -158,5 +159,13 @@ protected:
 
 }//util
 }//scag
+
+namespace scag2 {
+namespace util {
+using scag::util::Keywords;
+using scag::util::AddKeywords;
+using scag::util::SetKeywords;
+}
+}
 
 #endif

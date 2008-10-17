@@ -192,38 +192,38 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
     {
         HttpResponse& cmd = (HttpResponse&)command;
 
-        if(!strncmp(property.GetName().c_str(), "header-", 7))
-            cmd.setHeaderField(property.GetName().c_str() + 7, property.getStr());
-        else if(!strcmp(property.GetName().c_str(), "status"))
+        if(!strncmp(property.getName().c_str(), "header-", 7))
+            cmd.setHeaderField(property.getName().c_str() + 7, property.getStr());
+        else if(!strcmp(property.getName().c_str(), "status"))
             cmd.setStatus(property.getInt());
-/*        else if(!strcmp(property.GetName().c_str(), "abonent"))
+/*        else if(!strcmp(property.getName().c_str(), "abonent"))
             cmd.setAbonent(property.getStr());
-        else if(!strcmp(property.GetName().c_str(), "usr"))
+        else if(!strcmp(property.getName().c_str(), "usr"))
             cmd.setUSR(property.getInt());*/
-        else if(!strcmp(property.GetName().c_str(), "message"))
+        else if(!strcmp(property.getName().c_str(), "message"))
             cmd.setMessageText(property.getStr());
     }
     else if(command.getCommandId() == HTTP_REQUEST)
     {
         HttpRequest& cmd = (HttpRequest&)command;
 
-        if(!strncmp(property.GetName().c_str(), "header-", 7))
-            cmd.setHeaderField(property.GetName().c_str() + 7, property.getStr());
-        else if(!strncmp(property.GetName().c_str(), "param-", 6))
-            cmd.setQueryParameter(property.GetName().c_str() + 6, property.getStr());
-/*        else if(!strcmp(property.GetName().c_str(), "abonent"))
+        if(!strncmp(property.getName().c_str(), "header-", 7))
+            cmd.setHeaderField(property.getName().c_str() + 7, property.getStr());
+        else if(!strncmp(property.getName().c_str(), "param-", 6))
+            cmd.setQueryParameter(property.getName().c_str() + 6, property.getStr());
+/*        else if(!strcmp(property.getName().c_str(), "abonent"))
             cmd.setAbonent(property.getStr());*/
-        else if(!strcmp(property.GetName().c_str(), "site"))
+        else if(!strcmp(property.getName().c_str(), "site"))
             cmd.setSite(property.getStr());
-        else if(!strcmp(property.GetName().c_str(), "path"))
+        else if(!strcmp(property.getName().c_str(), "path"))
             cmd.setSitePath(property.getStr());
-        else if(!strcmp(property.GetName().c_str(), "filename"))
+        else if(!strcmp(property.getName().c_str(), "filename"))
             cmd.setSiteFileName(property.getStr());
-        else if(!strcmp(property.GetName().c_str(), "port"))
+        else if(!strcmp(property.getName().c_str(), "port"))
             cmd.setSitePort(property.getInt());
-/*        else if(!strcmp(property.GetName().c_str(), "message"))
+/*        else if(!strcmp(property.getName().c_str(), "message"))
             cmd.setMessageText(property.getStr());
-        else if(!strcmp(property.GetName().c_str(), "usr"))
+        else if(!strcmp(property.getName().c_str(), "usr"))
             cmd.setUSR(property.getInt());*/
     }
 }

@@ -9,7 +9,7 @@ namespace session {
 
     using actions::CommandAccessor;
     using sessions::Session;
-    using namespace scag::util::properties;
+    using namespace util::properties;
 
     class SessionAdapter : public CommandAccessor
     {

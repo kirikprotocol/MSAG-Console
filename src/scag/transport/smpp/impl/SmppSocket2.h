@@ -192,7 +192,7 @@ struct SmppSocket:SmppChannel{
 
 protected:
 
-    char* getCachedPeer() const {
+    const char* getCachedPeer() const {
         if ( ! sock ) return "";
         if ( ! peer_ ) {
             peer_ = new char[32];

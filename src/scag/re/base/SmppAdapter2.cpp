@@ -12,8 +12,8 @@ namespace scag2 {
 namespace re {
 namespace smpp {
 
-using namespace scag::util::properties;
-using namespace scag::util::encodings;
+using namespace util::properties;
+using namespace util::encodings;
 using namespace smsc::system::Status;
 
 Hash<int> SmppCommandAdapter::SubmitFieldNames = SmppCommandAdapter::InitSubmitFieldNames();
@@ -1328,7 +1328,7 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
     int * pFieldId = 0;
     int receiptMessageId;
 
-    const std::string name = property.GetName();  
+    const std::string name = property.getName();  
 
     switch (cmdid) 
     {
