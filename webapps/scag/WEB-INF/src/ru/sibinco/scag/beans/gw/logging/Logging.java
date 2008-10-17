@@ -161,13 +161,13 @@ public class Logging extends EditBean {
         }
     }
 
-    protected void init_my() throws SCAGJspException{
+    protected void init() throws SCAGJspException{
         logger.warn( "Loigging:init() start" );
-        Map logCategories = null;
-        String rootPriority = null;
+        Map logCategories = new HashMap();
+//        String rootPriority = null;
         try {
             logCategories = appContext.getScag().getLogCategories();
-            parseMap( logCategories );
+
         } catch (SibincoException e) {
             logger.warn( "Loigging.init() SibincoException" );
 //            setRunning(false);
@@ -176,50 +176,58 @@ public class Logging extends EditBean {
                 logger.warn( "Loigging.init() StatusDisconnectedException Disconnected" );
             }
             try{
-                logger.warn( "Loigging.init() SibincoException. readFromLogFile" );
+                logger.warn( "Loigging.init() SibincoException readFromLogFile()" );
                 logCategories = appContext.getLoggingManager().readFromLogFile();
-                parseMap( logCategories );
+//                parseMap( logCategories );
             }catch (SibincoException e1) {
                 logger.error( "Loigging.init() SibincoException. readFromLogFile() SibincoException: can not read loggers from file!!!" );
                 rootCategory = new LoggerCategoryInfo("", "", "NOTSET");
             }
             throw new SCAGJspException(Constants.errors.logging.COULDNT_GET_LOGCATS, e);
         } finally{
-            ;
+            logger.warn( "Loigging.init() SibincoException finally" );
+            parseMap( logCategories );
+            getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
         }
-        getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
+//        getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
     }
 
-    protected void init() throws SCAGJspException{
-        logger.warn( "Loigging:init() start" );
+    protected void init_() throws SCAGJspException{
+        logger.warn( "Logging.init() start" );
         Map logCategories = null;
         String rootPriority = null;
         boolean exc = false;
         try {
-            logger.debug( "Loigging:init() readFromLogFile" );
+            logger.debug( "Logging.init() readFromLogFile" );
             logCategories = appContext.getLoggingManager().readFromLogFile();
         } catch (SibincoException e) {
-            logger.warn( "Loigging.init() SibincoException while readFromLogFile()" );
+            logger.warn( "Logging.init() SibincoException while readFromLogFile()" );
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-        logger.debug( "Loigging:init() appContext.getScag().getStatus()=" + appContext.getScag().getStatus() );
-        if( appContext.getScag().getStatus() == appContext.getScag().STATUS_CONNECTED ){
-            logger.debug( "Loigging:init() CONNECTED" );
+        logger.debug( "Logging.init() appContext.getScag().getStatus()=" + appContext.getScag().getStatus() );
+//        try{
+//        appContext.getScag().reconnect();
+//        }catch( SibincoException e ){
+//            e.printStackTrace();
+//        }
+//        logger.debug( "Logging.init() recon appContext.getScag().getStatus()=" + appContext.getScag().getStatus() );
+        if( appContext.getScag().getStatus() == Proxy.STATUS_CONNECTED ){
+            logger.debug( "Logging.init() CONNECTED" );
             try {
                 logCategories = appContext.getScag().getLogCategories();
 //                parseMap( logCategories );
             } catch (SibincoException e) {
-                logger.error( "Loigging.init() SibincoException while getLogCategories()" );
+                logger.error( "Logging.init() SibincoException while getLogCategories()" );
                 throw new SCAGJspException(Constants.errors.logging.COULDNT_GET_LOGCATS, e);
             }
         }else{
-            logger.warn( "Logging:init() Disconnected" );
+            logger.warn( "Logging:init() MSAG Disconnected" );
             setRunning(false);
             exc = true;
         }
-
         parseMap( logCategories );
+        logger.debug( "Loigging.init() getLoggerCategoryInfos()" );
         getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
         if( exc ){
             throw new SCAGJspException( Constants.errors.logging.COULDNT_GET_LOGCATS,
@@ -228,17 +236,19 @@ public class Logging extends EditBean {
     }
 
     boolean isConnected(){
-        return (appContext.getScag().getStatus() == appContext.getScag().STATUS_CONNECTED);
+        return (appContext.getScag().getStatus() == Proxy.STATUS_CONNECTED);
     }
 
-    void readFLF( boolean full ){
+    void readFLF( boolean full ) throws SCAGJspException {
         logger.warn( "Loigging:readFLF() start" );
         Map logCategoriesFF = null;
         Map logCategories = null;
+        boolean exc = false;
         try {
             logger.warn( "Loigging:readFLF() readFromLogFile()" );
             logCategoriesFF = appContext.getLoggingManager().readFromLogFile();
-            if( full && isConnected() ){
+            if( !isConnected() ) setRunning( false );
+            if( full && isRunning() ){
                 logger.warn( "Loigging:readFLF() getLogCategories()" );
                 logCategories = appContext.getScag().getLogCategories();
                 for( Iterator iter = logCategories.keySet().iterator(); iter.hasNext(); ){
@@ -253,12 +263,16 @@ public class Logging extends EditBean {
             } else {
                 logCategories = logCategoriesFF;
             }
+
             parseMap( logCategories );
         } catch (SibincoException e) {
             logger.warn( "Loigging:readFLF() SibincoException" );
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-
+        if( !isRunning() ){
+            throw new SCAGJspException( Constants.errors.logging.COULDNT_GET_LOGCATS,
+                    new StatusDisconnectedException( appContext.getScag().getHost(), appContext.getScag().getPort()) );
+        }
     }
 
     public void parseMap( Map logCategories ){
@@ -303,26 +317,31 @@ public class Logging extends EditBean {
         return cats;
     }
 
-    protected void apply_my(Map parameters) throws SCAGJspException {
+    protected void apply(Map parameters) throws SCAGJspException {
         logger.info( "Logging.apply() start" );
         Map cats = new HashMap();
         cats = getLogsFromMap( parameters );
         try {
             logger.info( "Logging.apply() setLogCategories" );
+
             appContext.getScag().setLogCategories(cats);
+            cats = appContext.getScag().getLogCategories();
+            parseMap( cats );
+
         } catch (SibincoException e) {
             logger.error( "Logging:apply():SibincoException" );
             if( e instanceof StatusDisconnectedException ){
                 setRunning(false);
                 logger.error( "Logging:apply():Disconnected" );
+                readFLF( true );
             }
             throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
         }finally{
-            parseMap( cats );
+//            parseMap( cats );
         }
     }
 
-    protected void apply(Map parameters) throws SCAGJspException {
+    protected void apply_(Map parameters) throws SCAGJspException {
         boolean exc = false;
 
         logger.info( "Logging.apply() start" );
@@ -360,7 +379,7 @@ public class Logging extends EditBean {
 
     }
 
-    protected void savePermanent_my(Map parameters) throws SCAGJspException {
+    protected void savePermanent(Map parameters) throws SCAGJspException {
         Map cats = new HashMap();
         cats = getLogsFromMap( parameters );
         try {
@@ -380,13 +399,13 @@ public class Logging extends EditBean {
                     e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 }
             }
-            throw new SCAGJspException(Constants.errors.logging.COULDNT_STORE_LOGCATS, e);
+            throw new SCAGJspException(Constants.errors.logging.COULDNT_STORE_LOGCATS_FILE_WRITE, e);
         }finally{
             parseMap( cats );
         }
     }
 
-    protected void savePermanent(Map parameters) throws SCAGJspException {
+    protected void savePermanent_(Map parameters) throws SCAGJspException {
         boolean exc = false;
         Map cats = new HashMap();
         cats = getLogsFromMap( parameters );

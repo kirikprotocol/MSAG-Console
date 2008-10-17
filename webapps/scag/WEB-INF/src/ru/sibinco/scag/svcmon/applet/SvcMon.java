@@ -56,7 +56,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
     private SnapSmppHistory snapSmppHistory;
     private SnapHttpHistory snapHttpHistory;
 //    private SmppTopGraph smppTopGraph;
-    public SmppTopGraph smppTopGraph;
+    SmppTopGraph smppTopGraph;
     HttpTopGraph httpTopGraph;
     private ScreenSplitter screenSplitter;
 
@@ -91,6 +91,9 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
 
     Pause pause = new Pause();
 
+    int smppShiftV = 0;
+    int httpShiftV = 0;
+
     Calendar smppPauseTime;
     Calendar httpPauseTime;
 
@@ -101,6 +104,10 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
     public static final String BUTTON_SCALE_Y_DEC = "Y ><";
     public static final String BUTTON_SCALE_X_INC = "X <>";
     public static final String BUTTON_SCALE_X_DEC = "X ><";
+
+    public static final String BUTTON_SHIFTV_UP   = "A";
+    public static final String BUTTON_SHIFTV_DOWN = "V";
+
     static String BUTTON_SMPP_PROPERTIES;
     static String BUTTON_HTTP_PROPERTIES;
     static String BUTTON_MMS_PROPERTIES;
@@ -125,13 +132,14 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         localText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
         System.out.println("SvcMon:getCodeBase()=" + getCodeBase() + ".");
         locale=localText.getLocale();
+
         maxSpeed = Integer.valueOf(getParameter("max.speed")).intValue();
 //        graphScale = Integer.valueOf(getParameter("graph.scale")).intValue();
         graphGrid = Integer.valueOf(getParameter("graph.grid")).intValue();
         graphHiGrid = Integer.valueOf(getParameter("graph.higrid")).intValue();
         graphHead = Integer.valueOf(getParameter("graph.head")).intValue();
+        System.out.println("INIT:\nmaxSpeed=" + maxSpeed + "\ngraph.grid=" + graphGrid + "\ngraph.hiGrid=" + graphHiGrid + "\ngraph.head=" + graphHead +"\n" );
 
-        System.out.println("INIT:\nmaxSpeed=" + maxSpeed + "\ngraph.grid=" + graphGrid + "\ngraph.hiGrid=" + graphHiGrid + "\ngraph.head=" + graphHead );
         setFont(new Font("Dialog", Font.BOLD, 14));
         setLayout(new GridBagLayout());
         setBackground(SystemColor.control);
@@ -211,8 +219,8 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         jTabbedPane.addTab("MMS", new MmsPanel());
         //jTabbedPane.insertTab("SMPP", null, new SmppPanel() , null, 0);
 
-        pause.addObserver( smppPanel.pan );
-        pause.addObserver( httpPanel.pan );
+        pause.addObserver( smppPanel.viewButtonPanel );
+        pause.addObserver( httpPanel.viewButtonPanel );
 
         gbc.gridy = 1;
         gbc.gridx = 1;
@@ -228,37 +236,42 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         Socket sock = null;
         DataInputStream is = null;
         isStopping = false;
-        System.out.println("SvcMon:run():host='" + getParameter("host") + "' port='" +  Integer.valueOf(getParameter("port")).intValue() + "'");
+        System.out.println("SvcMon.run() host='" + getParameter("host") + "' port='" +  Integer.valueOf(getParameter("port")).intValue() + "'");
         try {
+            SvcSnap snap = new SvcSnap(); // moved
+            int counter = TIMEOUT_MILLISEC/1000;
             while (!isStopping) {
                 try {
-                    System.out.println("SvcMon:run():sock");
+                    System.out.println("SvcMon.run() new Socket()");
                     sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());
-                    System.out.println("SvcMon:run():getInputStream");
+                    System.out.println("SvcMon.run() getInputStream");
                     InputStream is1 = sock.getInputStream();
-                    System.out.println("SvcMon:run():is1.available() from sock='" + is1.available() + "'");
+                    System.out.println("SvcMon.run() is1.available() from sock='" + is1.available() + "'");
                     is = new DataInputStream(is1);
-                    SvcSnap snap = new SvcSnap();
+//                    SvcSnap snap = new SvcSnap(); moved above
                     snap.read(is);
                     svcSnap = snap;
                     gotFirstSnap(snap);
-
+                    String text = this.smppPanel.viewButtonPanel.pauseGraphButton.getText();
                     while (!isStopping) {
 //                        System.out.println("SvcMon:run():while:while");
                         if( pause.getState() ){
                             System.out.println("SvcMon:run():while:while:if1:pause");
-                            Thread.sleep( 500 );
+
+                            this.smppPanel.viewButtonPanel.pauseGraphButton.setText( (counter--) + " " + BUTTON_CONTINUE_GRAPH );
+                            Thread.sleep( 1000 );
                             if( (Calendar.getInstance().getTimeInMillis() - smppPauseTime.getTimeInMillis()) > TIMEOUT_MILLISEC ){
                                 System.out.println("SvcMon:run():while:while:if2:pause end");
                                 pause.setState( false );
                             }
-                        }
-                        else {
+                        } else {
+                            counter = TIMEOUT_MILLISEC/1000;;
 //                            System.out.println("SvcMon:run():while:while:if2");
                             snap.read(is);
-                            smppTopGraph.setSnap(snap, smppViewList, graphScale, maxSpeed, smppXScale, smppYScale, smppViewGraph);
-                            httpTopGraph.setSnap(snap, httpViewList, graphScale, maxSpeed, httpXScale, httpYScale, httpViewGraph);
+                            smppTopGraph.setSnap(snap, smppViewList, graphScale, maxSpeed, smppXScale, smppYScale, smppViewGraph, smppShiftV);
+                            httpTopGraph.setSnap(snap, httpViewList, graphScale, maxSpeed, httpXScale, httpYScale, httpViewGraph, httpShiftV);
                         }
+//                        Thread.sleep( 1000 );
                     }
                 } catch (IOException ex) {
                     removeAll();
@@ -394,7 +407,7 @@ class MmsPanel extends JPanel {
 
 class SmppPanel extends JPanel {
 
-    ViewButtonPanel pan;
+    ViewButtonPanel viewButtonPanel;
 
     public SmppPanel( SvcMon mon ) {
 //        GridBagConstraints gbc = new GridBagConstraints();
@@ -405,8 +418,8 @@ class SmppPanel extends JPanel {
 
         setFont( new Font("Dialog", Font.BOLD, 12) );
 
-        pan = new ViewButtonPanel(SvcMon.TYPE_SMPP, mon);
-        add( pan, BorderLayout.SOUTH );
+        viewButtonPanel = new ViewButtonPanel(SvcMon.TYPE_SMPP, mon);
+        add( viewButtonPanel, BorderLayout.SOUTH );
 
         mon.smppTopGraph.requestFocus();
     }
@@ -414,7 +427,7 @@ class SmppPanel extends JPanel {
 
 class HttpPanel extends JPanel {
 
-    ViewButtonPanel pan;
+    ViewButtonPanel viewButtonPanel;
 
     public HttpPanel( SvcMon mon ) {
         setLayout( new BorderLayout() );
@@ -425,17 +438,17 @@ class HttpPanel extends JPanel {
 
         setFont(new Font("Dialog", Font.BOLD, 12));
 
-        pan = new ViewButtonPanel( SvcMon.TYPE_HTTP, mon );
-        add( pan, BorderLayout.SOUTH );
+        viewButtonPanel = new ViewButtonPanel( SvcMon.TYPE_HTTP, mon );
+        add( viewButtonPanel, BorderLayout.SOUTH );
 //        mon.httpTopGraph.requestFocus();
     }
 }
-
 
 class ViewButtonPanel extends JPanel implements Observer{
 
     static final int SCALE_STEP_Y = 1;
     static final int SCALE_STEP_X = 1;
+
     final JButton pauseGraphButton = new JButton( SvcMon.BUTTON_PAUSE_GRAPH );;
     final JButton incYButton = new JButton(SvcMon.BUTTON_SCALE_Y_INC);
     final JButton decYButton = new JButton(SvcMon.BUTTON_SCALE_Y_DEC);
@@ -443,6 +456,9 @@ class ViewButtonPanel extends JPanel implements Observer{
     final JButton decXButton = new JButton(SvcMon.BUTTON_SCALE_X_DEC);
     final JButton showGraphButton =  new JButton(SvcMon.BUTTON_SHOW_GRAPH);
 
+    static final int SHIFT_STEP = 100;
+    final JButton shiftUpButton   = new JButton(SvcMon.BUTTON_SHIFTV_UP);
+    final JButton shiftDownButton = new JButton(SvcMon.BUTTON_SHIFTV_DOWN);
 
     public ViewButtonPanel(final String type, final SvcMon mon){
         final JButton viewPropertiesButton;
@@ -462,40 +478,93 @@ class ViewButtonPanel extends JPanel implements Observer{
         gbc.weightx = 1;
         gbc.fill = GridBagConstraints.BOTH;
 
+//        gbc.gridy = 1;
+//        gbc.gridx = 2;
+        gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridheight = 1;
+        add(incYButton, gbc);
+
+//        gbc.gridy = 1;
+//        gbc.gridx = 3;
+        gbc.gridy = 2;
+        gbc.gridx = 0;
+        gbc.gridheight = 1;
+        add(decYButton, gbc);
+
+        gbc.gridy = 2;
+        gbc.gridx = 1;
+        gbc.gridheight = 1;
+        gbc.gridwidth = 2;
+        add(viewPropertiesButton, gbc);
+
         gbc.gridy = 1;
         gbc.gridx = 1;
-        gbc.gridheight = 2;
-        add(viewPropertiesButton, gbc);
+        gbc.gridheight = 1;
+        gbc.gridwidth = 1;
+        add(incXButton, gbc);
 
         gbc.gridy = 1;
         gbc.gridx = 2;
         gbc.gridheight = 1;
-        add(incYButton, gbc);
+        gbc.gridwidth = 1;
+        add(decXButton, gbc);
 
         gbc.gridy = 1;
         gbc.gridx = 3;
-        gbc.gridheight = 1;
-        add(decYButton, gbc);
+        gbc.gridheight = 2;
+        gbc.gridwidth = 1;
+        add(showGraphButton, gbc);
 
         gbc.gridy = 1;
         gbc.gridx = 4;
         gbc.gridheight = 2;
-        add(showGraphButton, gbc);
+        add(pauseGraphButton, gbc);
 
         gbc.gridy = 1;
         gbc.gridx = 5;
-        gbc.gridheight = 2;
-        add(pauseGraphButton, gbc);
+        gbc.gridheight = 1;
+        add(shiftUpButton, gbc);
 
         gbc.gridy = 2;
-        gbc.gridx = 2;
+        gbc.gridx = 5;
         gbc.gridheight = 1;
-        add(incXButton, gbc);
+        add(shiftDownButton, gbc);
 
-        gbc.gridy = 2;
-        gbc.gridx = 3;
-        gbc.gridheight = 1;
-        add(decXButton, gbc);
+
+        ActionListener shiftUpListener = new
+            ActionListener(){
+                public void actionPerformed(ActionEvent event){
+                    if( type.equals(SvcMon.TYPE_SMPP) ){
+                        mon.smppShiftV = mon.smppShiftV<2000? mon.smppShiftV + SHIFT_STEP: 2000;
+                        System.out.println("SvcMon SMPP shiftUpListener shiftV='" + mon.smppShiftV + "' prev='" + (mon.smppShiftV - SHIFT_STEP) + "'" );
+                    }else if( type.equals(SvcMon.TYPE_HTTP) ){
+                        mon.httpShiftV = mon.httpShiftV<2000? mon.httpShiftV + SHIFT_STEP: 2000;
+                        System.out.println("SvcMon HTTP zoomYInListener shiftV=' " + mon.httpShiftV + " prev " + (mon.httpShiftV - SHIFT_STEP) );
+                    }
+//                        smppTopGraph.maxSpeed = 200;
+                    mon.smppTopGraph.invalidate();
+                }
+            };
+        shiftUpButton.addActionListener(shiftUpListener);
+
+        ActionListener shiftDownListener = new
+            ActionListener(){
+                public void actionPerformed(ActionEvent event){
+                    if( type.equals(SvcMon.TYPE_SMPP) ){
+                        mon.smppShiftV = mon.smppShiftV>=SHIFT_STEP? mon.smppShiftV - SHIFT_STEP: 0;
+                        System.out.println("SMPP shiftDownListener. smppShiftV='" + mon.smppShiftV + "' prev='" + (mon.smppShiftV + SHIFT_STEP) + "'" );
+                    }else if( type.equals(SvcMon.TYPE_HTTP) ){
+                        mon.httpShiftV = mon.httpShiftV>=SHIFT_STEP? mon.httpShiftV - SHIFT_STEP: 0;
+                        System.out.println("HTTP shiftDownListener. httpShiftV='" + mon.httpShiftV + "' prev='" + (mon.httpShiftV + SHIFT_STEP) + "'" );
+                    }
+//                        smppTopGraph.maxSpeed = 200;
+                    mon.smppTopGraph.invalidate();
+                }
+            };
+        shiftDownButton.addActionListener(shiftDownListener);
+
+
 
         ActionListener pauseGraphListener = new
             ActionListener(){
@@ -643,6 +712,8 @@ class ViewButtonPanel extends JPanel implements Observer{
         decYButton.setEnabled( value );
         incXButton.setEnabled( value );
         decXButton.setEnabled( value );
+        shiftUpButton.setEnabled( value );
+        shiftDownButton.setEnabled( value );
 
     }
 
