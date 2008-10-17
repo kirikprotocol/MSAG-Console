@@ -26,6 +26,7 @@ using std::string;
 using std::stack;
 using std::vector;
 
+/*
 class IntProfileKey
 {
     uint32_t key;
@@ -59,7 +60,7 @@ class IntProfileKey
         return res;
     }
 };
-
+*/
 class StringProfileKey
 {
     smsc::logger::Logger* log;
