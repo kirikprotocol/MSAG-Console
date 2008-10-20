@@ -39,9 +39,9 @@ public:
 protected:
     void processSmResp( std::auto_ptr<SmppCommand> aucmd,
                         sessions::ActiveSession session = sessions::ActiveSession() );
-    void processSubmit( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* hrt );
-    void processDelivery( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* hrt );
-    void processDataSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* hrt );
+    void processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* hrt );
+    // void processDelivery( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* hrt );
+    // void processDataSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* hrt );
     void processExpiredResps();
     void processAlertNotification( std::auto_ptr<SmppCommand> aucmd);
     // void processSubmitResp( std::auto_ptr<SmppCommand> cmd,

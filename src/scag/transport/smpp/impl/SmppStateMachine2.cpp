@@ -226,7 +226,7 @@ int StateMachine::Execute()
                 switch(cmd->getCommandId())
                 {
                 case SUBMIT: {
-                    processSubmit(aucmd, dotiming ? &hrt : 0);
+                    processSm(aucmd, dotiming ? &hrt : 0);
                     realdotiming = dotiming && hrt.isValid();
                     break;
                 }
@@ -238,7 +238,7 @@ int StateMachine::Execute()
                     if ( cmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT) )
                         sendReceipt(aucmd);
                     else {
-                        processDelivery(aucmd, dotiming ? &hrt : 0 );
+                        processSm(aucmd, dotiming ? &hrt : 0 );
                         realdotiming = dotiming && hrt.isValid();
                     }
                     break;
@@ -247,7 +247,7 @@ int StateMachine::Execute()
                     processSmResp(aucmd);
                     break;
                 case DATASM: {
-                    processDataSm(aucmd, dotiming ? &hrt : 0);
+                    processSm(aucmd, dotiming ? &hrt : 0);
                     realdotiming = dotiming && hrt.isValid();
                     break;
                 }
@@ -583,11 +583,25 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
 }
 
 
-void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* inhrt )
+void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* inhrt )
 {
-    const char* where = "Submit";
     SmppCommand* cmd = aucmd.get();
     if ( ! cmd ) return;
+
+    const char* where;
+    switch (cmd->getCommandId()) {
+    case SUBMIT :
+        where = "Submit";
+        break;
+    case DELIVERY :
+        where = "Dlvery";
+        break;
+    case DATASM :
+        where = "DataSm";
+        break;
+    default :
+        ::abort();
+    }
 
     util::HRTiming hrt( inhrt );
     hrt.comment( where );
@@ -605,29 +619,45 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd, util::HRTimi
     router::RouteInfo ri;
     FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
     re::RuleStatus st;
+    st.status = re::STATUS_REDIRECT; // to start the loop
+
     SMS& sms = *cmd->get_sms();
     SmsCommand& smscmd = cmd->get_smsCommand();
     SessionManager& sm = SessionManager::Instance();
     smscmd.set_orgDialogId(cmd->get_dialogId());
 
-    const int ussd_op = getUSSDOp( where, sms, &smscmd );
+    int ussd_op = -1;
+    do {
+        if ( cmd->getCommandId() == DATASM ) {
+            if ( sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ) {
+                smsc_log_info( log_, "%s: USSD dialog not allowed in DataSm %s(%s)->%s",
+                               where, sms.getOriginatingAddress().toString().c_str(),
+                               src->getSystemId(), 
+                               sms.getDestinationAddress().toString().c_str());
+                st.status = re::STATUS_FAILED;
+                st.result = smsc::system::Status::USSDDLGREFMISM;
+                break;
+            }
+        } else {
+            ussd_op = getUSSDOp( where, sms, &smscmd );
+            smscmd.dir = cmd->getCommandId() == SUBMIT ? dsdSrv2Sc : dsdSc2Srv;
+        }
+        smscmd.orgSrc=sms.getOriginatingAddress();
+        smscmd.orgDst=sms.getDestinationAddress();
+    } while ( false );
 
-    smscmd.dir = dsdSrv2Sc;
-    smscmd.orgSrc=sms.getOriginatingAddress();
-    smscmd.orgDst=sms.getDestinationAddress();
     src = cmd->getEntity();
-
     bool routeset = smscmd.hasRouteSet();
     int statevent = stat::events::smpp::GW_REJECTED;
 
-    do { // rerouting loop
+    while ( st.status == re::STATUS_REDIRECT ) {
 
         st.status = re::STATUS_OK;
         st.result = 0;
 
         if ( ! routeset ) {
 
-            if ( ussd_op >= 0 && rcnt > 0 ) {
+            if ( rcnt > 0 && ussd_op >= 0 ) {
                 smsc_log_warn(log_, "%s(USSD): Rerouting for USSD dialog not allowed",
                               where );
                 ri = router::RouteInfo();
@@ -663,7 +693,6 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd, util::HRTimi
                                   src->getSystemId(),
                                   sms.getDestinationAddress().toString().c_str());
                     st.status = re::STATUS_FAILED;
-                    // st.result = smsc::system::Status::NOROUTE;
                     hrt.stop();
                     break;
                 }
@@ -675,6 +704,13 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd, util::HRTimi
             sms.setDestinationSmeId(dst->getSystemId());
             cmd->setServiceId(ri.serviceId);
             
+            if ( cmd->getCommandId() == DATASM ) {
+                if(src->info.type==etService)
+                    smscmd.dir = (dst->info.type==etService) ? dsdSrv2Srv : dsdSrv2Sc;
+                else
+                    smscmd.dir = (dst->info.type==etService) ? dsdSc2Srv : dsdSc2Sc;
+            }
+
         } else {
             smscmd.getRouteInfo( ri );
             dst = cmd->getDstEntity();
@@ -700,7 +736,10 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd, util::HRTimi
 
         if ( ! session.get() ) {
             if ( ! routeset ) smscmd.setRouteInfo( ri ); // in case session is locked
-            SessionKey key( sms.getDestinationAddress() );
+            bool keyisdest = ( cmd->getCommandId() == SUBMIT ? true :
+                               ( cmd->getCommandId() == DELIVERY ? false :
+                                 ( src->info.type == etService ? true : false )));
+            const SessionKey key( keyisdest ? sms.getDestinationAddress() : sms.getOriginatingAddress() );
             session = sm.getSession( key, aucmd, ! routeset ); // NOTE: create session only if not from longcall
             if ( ! session.get() ) {
                 __require__( ! routeset );
@@ -723,38 +762,49 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd, util::HRTimi
 
         routeset = false; // in case rerouting happens
 
-    } while ( st.status == re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
+        if ( rcnt++ >= MAX_REDIRECT_CNT ) {
+            smsc_log_info(log_,"%s: noroute(MAX_REDIRECT_CNT reached) %s(%s)->%s",
+                          where,
+                          sms.getOriginatingAddress().toString().c_str(),
+                          src->getSystemId(),
+                          sms.getDestinationAddress().toString().c_str());
+            st.status = re::STATUS_FAILED;
+            st.result = smsc::system::Status::NOROUTE;
+            break;
+        }
 
-    if (rcnt >= MAX_REDIRECT_CNT)
-    {
-        smsc_log_info(log_,"%s: noroute(MAX_REDIRECT_CNT reached) %s(%s)->%s",
-                      where,
-                      sms.getOriginatingAddress().toString().c_str(),
-                      src->getSystemId(),
-                      sms.getDestinationAddress().toString().c_str());
-        st.status = re::STATUS_FAILED;
-        st.result = smsc::system::Status::NOROUTE;
-    }
+    } // while
 
     if (st.status != re::STATUS_OK )
     {
-        src->putCommand
-            ( SmppCommand::makeSubmitSmResp
-              ( "0",
-                smscmd.get_orgDialogId(),
-                st.result,
-                sms.getIntProperty(Tag::SMPP_DATA_SM)
-                )
-              );
+        switch (cmd->getCommandId()) {
+        case SUBMIT :
+            src->putCommand
+                ( SmppCommand::makeSubmitSmResp
+                  ("0",smscmd.get_orgDialogId(),st.result,sms.getIntProperty(Tag::SMPP_DATA_SM)));
+            break;
+        case DELIVERY :
+            src->putCommand
+                ( SmppCommand::makeDeliverySmResp( "0", smscmd.get_orgDialogId(), st.result ));
+            break;
+        case DATASM :
+            src->putCommand
+                (SmppCommand::makeDataSmResp("0", smscmd.get_orgDialogId(), st.result));
+            break;
+        default:
+            break;
+        }
         registerEvent( statevent, src, dst, (char*)routeId, st.result );
         if ( session.get() ) session->closeCurrentOperation();
         hrt.stop();
         return;
     }
 
-    if (smscmd.original_ussd_op != -1) // Not Sibinco USSD
-        sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smscmd.original_ussd_op);
-    failed = putCommand(SUBMIT, src, dst, ri, aucmd);
+    if ( cmd->getCommandId() != DATASM ) {
+        if (smscmd.original_ussd_op != -1) // Not Sibinco USSD
+            sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smscmd.original_ussd_op);
+    }
+    failed = putCommand(CommandId(cmd->getCommandId()), src, dst, ri, aucmd);
 
     hrt.mark("stm.putcmd");
 
@@ -765,7 +815,19 @@ void StateMachine::processSubmit( std::auto_ptr<SmppCommand> aucmd, util::HRTimi
     if (failed)
     {
         hrt.comment("/failed");
-        std::auto_ptr<SmppCommand> resp(SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),failed));
+        std::auto_ptr<SmppCommand> resp;
+        switch (cmd->getCommandId()) {
+        case SUBMIT:
+            resp = SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),failed);
+            break;
+        case DELIVERY:
+            resp = SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),failed);
+        case DATASM:
+            resp = SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),failed);
+            break;
+        default :
+            break;
+        }
         resp->setEntity(dst);
         resp->get_resp()->setOrgCmd( aucmd.release() );
         resp->setFlag(SmppCommandFlags::FAILED_COMMAND_RESP);
@@ -962,6 +1024,7 @@ void StateMachine::processSubmitResp(std::auto_ptr<SmppCommand> aucmd, ActiveSes
  */
 
 
+/*
 void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd, util::HRTiming* inhrt )
 {
     const char* where = "Dlvery";
@@ -1143,6 +1206,7 @@ void StateMachine::processDelivery(std::auto_ptr<SmppCommand> aucmd, util::HRTim
         processSmResp(resp,session);
     }
 }
+ */
 
 
 /*
@@ -1326,6 +1390,7 @@ void StateMachine::processDeliveryResp( std::auto_ptr<SmppCommand> aucmd,
  */
 
 
+/*
 void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd, util::HRTiming* inhrt )
 {
     const char* where = "DataSm";
@@ -1513,6 +1578,7 @@ void StateMachine::processDataSm(std::auto_ptr<SmppCommand> aucmd, util::HRTimin
         processSmResp(resp,session);
     }
 }
+ */
 
 
 /*
