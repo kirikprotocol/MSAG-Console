@@ -18,7 +18,6 @@ import mobi.eyeline.smsquiz.replystats.Reply;
 class StatsFileImpl implements StatsFile {
     private static Logger logger = Logger.getLogger(StatsFileImpl.class);
 
-    private ReplyTreeHandler treeHandler;
     private StringsRTree<List<Long>> stringsRTree;
 
     private final String da;
@@ -27,6 +26,7 @@ class StatsFileImpl implements StatsFile {
     private SimpleDateFormat timeFormat;
     private SimpleDateFormat csvDateFormat;
     private String filePath;
+    private String treeFileName;
 
 
     public StatsFileImpl(final String da, final String filePath) throws FileStatsException{
@@ -61,21 +61,20 @@ class StatsFileImpl implements StatsFile {
             logger.error("Can't create io stream",e);
             throw new FileStatsException("Can't create io stream",e);
         }
-        _initTreeHandler();
+        _initTree();
         if(logger.isInfoEnabled()) {
             logger.info("File: "+filePath+" opened");
         }
 
     }
 
-    private void _initTreeHandler() throws FileStatsException{
+    private void _initTree() throws FileStatsException{
         String truncateName = filePath.substring(0,filePath.lastIndexOf("."));
-        String treeFileName = truncateName + ".tree";
+        treeFileName = truncateName + ".tree";
         stringsRTree = new StringsRTree<List<Long>>();
-        treeHandler = new ReplyTreeHandler(stringsRTree, treeFileName);
 
         if(new File(treeFileName).exists()) {
-            FileBasedStringsRTree<List<Long>> fileBasedStringsRTree = treeHandler.creatFileBasedStringsRTree(treeFileName);
+            FileBasedStringsRTree<List<Long>> fileBasedStringsRTree = new FileBasedStringsRTree<List<Long>>(treeFileName, new LongListSerializer());
             for(UnmodifiableRTree.Entry<List<Long>> entry:fileBasedStringsRTree.entries()) {
                 stringsRTree.put(entry.getKey(),entry.getValue());
             }
@@ -86,26 +85,23 @@ class StatsFileImpl implements StatsFile {
         } else {
             String msisdn = null;
             try {
-                if(randomAccessFile.length()>0) {      // ReplyFile isn't empty, tree file doesn't exist => system crushed previously
+                if(randomAccessFile.length()>1) {      // ReplyFile isn't empty, tree file doesn't exist => system crushed previously
                     long prevPosition = randomAccessFile.getFilePointer();
                     randomAccessFile.seek(0);
 
                     long beginPos = 0;
-                    long endPos = 0;
+                    long endPos;
+                    int nByte =(int)("\n".getBytes()[0]);
 
                     int b;
-                    while(true) {
-                        if((b = randomAccessFile.read()) != -1) {
-                            if(b==(int)("\n".getBytes()[0])) {
+                    while((b = randomAccessFile.read()) != -1) {
+                            if(b==nByte) {
                                 endPos =  randomAccessFile.getFilePointer();
                                 if((msisdn = getMsisdn( beginPos, false ))!=null)  {
-                                    treeHandler.put(msisdn, beginPos);
+                                    put(msisdn, beginPos);
                                 }
                                 beginPos = endPos+1;
                             }
-                        } else {
-                            break;
-                        }
                     }
                     randomAccessFile.seek(prevPosition);
                 }
@@ -140,7 +136,7 @@ class StatsFileImpl implements StatsFile {
             randomAccessFile.writeBytes(",");
             randomAccessFile.writeBytes(reply.getText());
             randomAccessFile.writeBytes("\n");
-            treeHandler.put(reply.getOa(), filePointer);
+            put(reply.getOa(), filePointer);
         } catch (IOException e) {
             logger.error("Unable to write reply", e);
             try {
@@ -150,14 +146,6 @@ class StatsFileImpl implements StatsFile {
             }
             throw new FileStatsException("Unable to write reply",e);
         }
-        /*  writer.print(dateFormat.format(reply.getDate()));
-     writer.print(",");
-     writer.print(timeFormat.format(reply.getDate()));
-     writer.print(",");
-     writer.print(reply.getOa());
-     writer.print(",");
-     writer.println(reply.getText());
-     writer.flush();   */
     }
 	 
 
@@ -220,7 +208,7 @@ class StatsFileImpl implements StatsFile {
             logger.error("Some arguments are null!");
             throw new FileStatsException("Some arguments are null!", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
         }
-        List<Long> positions = treeHandler.getValue(oa);
+        List<Long> positions = stringsRTree.get(oa);
         if(positions==null) {
             return null;
         }
@@ -244,7 +232,7 @@ class StatsFileImpl implements StatsFile {
     }
 
     public void close() {
-        treeHandler.saveTree();
+        saveTree();
         if(logger.isInfoEnabled()) {
             logger.info("File: "+filePath+" closed");
         }
@@ -255,11 +243,6 @@ class StatsFileImpl implements StatsFile {
                 logger.error("Can't close io stream",e);
             }
         }
-
-
-     /*   if(writer!=null) {
-            writer.close();
-        } */
     }
 
     private Reply getReply(long position, final boolean seekBack) throws FileStatsException{
@@ -310,7 +293,8 @@ class StatsFileImpl implements StatsFile {
             randomAccessFile.seek(position);
             String line = randomAccessFile.readLine();
             if(line==null) {
-                System.out.println("Error");
+                logger.warn("Unsupported file format");
+                return null;
             }
             StringTokenizer tokenizer = new StringTokenizer(line,",");
 
@@ -333,8 +317,30 @@ class StatsFileImpl implements StatsFile {
         }
     }
 
-
-
+    private void put(String key, long value) throws FileStatsException{
+        if(logger.isInfoEnabled()) {
+            logger.info("Put into tree entry: "+key+" "+value);
+        }
+        if(key==null) {
+            logger.error("Some arguments are null");
+            throw new FileStatsException("Some arguments are null", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
+        }
+        List<Long> previousValue = null;
+        List<Long> nextValue = null;
+        if((previousValue = stringsRTree.get(key))!=null) {
+            nextValue = new LinkedList<Long>(previousValue);
+        } else {
+            nextValue = new LinkedList<Long>();
+        }
+        nextValue.add(value);
+        stringsRTree.put(key, nextValue);
+    }
+    private void saveTree() {
+        File file = new File(treeFileName);
+        file.delete();
+        FileBasedStringsRTree.createRTree(stringsRTree,treeFileName, new LongListSerializer());
+        logger.info("Tree saved");
+    }
 	 
 }
  

@@ -138,6 +138,9 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
             try {
                 file.open();
                 replies = file.getReplies(oa,from, till);
+                if(replies==null) {
+                    continue;
+                }
                 for(Reply aR: replies) {
                     if((reply==null)||(reply.getDate().compareTo(aR.getDate())<=0)) {
                         reply = aR;
