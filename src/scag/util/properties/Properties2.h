@@ -35,6 +35,13 @@ public:
     // typedef std::string string_type;
 
 public:
+    static void* operator new ( size_t sz ) {
+        return memory::MemoryPoolT< Property >::Instance().allocate( sz );
+    }
+    static void operator delete( void* p, size_t sz ) {
+        return memory::MemoryPoolT< Property >::Instance().deallocate( p, sz );
+    }
+
     Property(): sync(false), type(pt_str), i_val(0) {}
     Property( int64_t v ) : sync(false), type(pt_int), i_val(v) {}
     Property( const string_type& v ) : sync(false), type(pt_str), s_val(v) {}
