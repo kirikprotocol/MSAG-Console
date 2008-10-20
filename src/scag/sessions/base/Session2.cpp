@@ -320,7 +320,6 @@ command_(0),        // unlocked
 currentOperationId_(SCAGCommand::invalidOpId()),
 ussdOperationId_(SCAGCommand::invalidOpId()),
 currentOperation_(0),
-umr_(-1),
 transactions_(0),
 nextContextId_(0),
 globalScope_(0),
@@ -382,7 +381,7 @@ Serializer& Session::serialize( Serializer& s ) const
     }
     assert( count == 0 );
 
-    s << currentOperationId_ << ussdOperationId_ << uint32_t(umr_);
+    s << currentOperationId_ << ussdOperationId_;
     
     count = operationsCount();
     s << count;
@@ -466,8 +465,7 @@ Deserializer& Session::deserialize( Deserializer& s ) throw (DeserializerExcepti
             setNew( int(service), int(transport), isnew );
         }
 
-        s >> currentOperationId_ >> ussdOperationId_ >> count;
-        umr_ = int32_t(count);
+        s >> currentOperationId_ >> ussdOperationId_;
 
         s >> count;
         for ( ; count > 0; --count ) {
@@ -537,7 +535,6 @@ void Session::clear()
         currentOperationId_ = SCAGCommand::invalidOpId();
         ussdOperationId_ = SCAGCommand::invalidOpId();
         currentOperation_ = 0;
-        umr_ = -1;
 
         int opkey;
         Operation* op;
@@ -581,7 +578,7 @@ void Session::print( util::Print& p ) const
 
     const time_t now = time(0);
     // const int lastac = int(now - lastAccessTime_);
-    p.print( "session=%p/%s tmASH=%d/%d/%d lock=%u svc/ops/trs=%u/%u/%u umr=%d%s",
+    p.print( "session=%p/%s tmASH=%d/%d/%d lock=%u svc/ops/trs=%u/%u/%u%s",
              this, sessionKey().toString().c_str(),
              int(lastAccessTime_ - now),
              int(expirationTime_ - now),
@@ -590,7 +587,6 @@ void Session::print( util::Print& p ) const
              unsigned(initrulekeys_.size()),
              unsigned(operationsCount()),
              unsigned(transactions_ ? transactions_->GetCount() : 0),
-             umr_,
              ussdOperationId_ == SCAGCommand::invalidOpId() ? "" : " hasUssd" );
     Operation* curop = getCurrentOperation();
     if ( curop ) curop->print( p, getCurrentOperationId() );
@@ -757,7 +753,6 @@ void Session::closeCurrentOperation()
     currentOperation_ = 0;
     if ( ussdOperationId_ == currentOperationId_ ) {
         ussdOperationId_ = SCAGCommand::invalidOpId();
-        umr_ = -1;
     }
     currentOperationId_ = SCAGCommand::invalidOpId();
     // changed_ = true;
@@ -800,7 +795,7 @@ bool Session::hasPersistentOperation() const
 }
 
 
-
+/*
 void Session::setUSSDref( int32_t ref ) throw (SCAGException)
 {
     if ( ref <= 0 ) throw SCAGException( "session=%p/%s setUSSDref(ref=%d), ref should be >0",
@@ -811,6 +806,7 @@ void Session::setUSSDref( int32_t ref ) throw (SCAGException)
                                            this, sessionKey().toString().c_str(), ref );
     umr_ = ref;
 }
+ */
 
 
 bool Session::isNew( int serv, int trans ) const {

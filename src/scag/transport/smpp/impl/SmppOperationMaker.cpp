@@ -272,7 +272,8 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
                     op->setFlag( OperationFlags::SERVICE_INITIATED_USSD_DIALOG );
                     umr = 0; // ask to set umr in delivery
                 }
-                session_->setUSSDref( umr );
+                op->setUSSDref( umr );
+                if ( cmdid == DELIVERY ) op->setFlag(OperationFlags::NEXTUSSDISSUBMIT);
 
             } else if ( found_ussd == SCAGCommand::invalidOpId() ) {
                 // ussd operation not found
@@ -289,15 +290,15 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
                     return;
                 }
 
-                if ( umr != session_->getUSSDref() ) {
+                if ( umr != op->getUSSDref() ) {
                     // umr mismatch
-                    if ( session_->getUSSDref() == 0 && 
+                    if ( op->getUSSDref() == 0 && 
                          cmdid == DELIVERY &&
                          op->flagSet( OperationFlags::SERVICE_INITIATED_USSD_DIALOG ) ) {
                         // it was initiated by service
                         smsc_log_debug( log_, "service initiated dialog op=%p opid=%u got umr=%d",
                                         op, found_ussd, umr );
-                        session_->setUSSDref( umr );
+                        op->setUSSDref( umr );
                     } else {
                         fail( "USSD: umr mismatch", st,
                               smsc::system::Status::USSDDLGREFMISM );
@@ -305,6 +306,16 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
                     }
                 } // if umr mismatch
                 
+                if ( op->flagSet(OperationFlags::NEXTUSSDISSUBMIT) == (cmdid == DELIVERY) ) {
+                    // we wanted submit but received deliver, or vice versa
+                    fail( "USSD: awaiting/received direction mismatch", st,
+                          smsc::system::Status::USSDDLGREFMISM );
+                    return;
+                } // if direction mismatch
+
+                if ( cmdid == DELIVERY ) op->setFlag(OperationFlags::NEXTUSSDISSUBMIT);
+                else op->clearFlag(OperationFlags::NEXTUSSDISSUBMIT);
+
                 if ( isUSSDClosed )
                     op->setStatus( OPERATION_COMPLETED );
                 else

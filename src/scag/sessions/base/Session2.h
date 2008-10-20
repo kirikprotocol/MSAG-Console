@@ -191,13 +191,12 @@ public:
         return operations_.Count();
     }
 
-    /// this field is not in ussd operation because operation is created later (in RE)
-    int32_t getUSSDref() const {
-        return umr_;
-    }
-
-    /// NOTE: this method works only if getUSSDref() == 0.
-    void setUSSDref( int32_t ref ) throw (exceptions::SCAGException);
+    // this field is not in ussd operation because operation is created later (in RE)
+    // int32_t getUSSDref() const {
+    // return umr_;
+    // }
+    // NOTE: this method works only if getUSSDref() == 0.
+    // void setUSSDref( int32_t ref ) throw (exceptions::SCAGException);
 
 
     /// FIXME: should it be here?
@@ -376,7 +375,7 @@ private:
     // TODO: think about movind operations creation/deletion into smppstatemachine,
     // then move umr_ field into operation.
     // ussd reference number (-1 -- invalid, 0 -- pending)
-    int32_t    umr_;                                 // pers
+    // int32_t    umr_;                                 // pers
     
     /// the hash of operations (int -> Operation)
     IntHash< Operation* > operations_;               // pers

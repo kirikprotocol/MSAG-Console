@@ -27,6 +27,7 @@ const uint32_t RECEIVED_ALL_RESPS            = 4;
 const uint32_t RECEIVED_ALL                  = RECEIVED_ALL_PARTS | RECEIVED_ALL_RESPS;
 const uint32_t WAIT_RECEIPT                  = 0x10;
 const uint32_t PERSISTENT                    = 0x20;
+const uint32_t NEXTUSSDISSUBMIT              = 0x40; // if set next ussd should be submit
 }
 
 
@@ -59,6 +60,11 @@ public:
     void setContextScope( int ctx ) { ctxid_ = ctx; }
     int getContextScope() const { return ctxid_; }
 
+    /// ussd reference number (-1 -- invalid, 0 -- pending).
+    /// this field is only valid if optype is CO_USSD_DIALOG
+    void setUSSDref( int32_t umr ) throw (exceptions::SCAGException);
+    inline int32_t getUSSDref() const { return umr_; }
+
     const std::string* getKeywords() const {
         return keywords_;
     }
@@ -89,6 +95,7 @@ private:
     uint8_t             type_;
     uint32_t            flags_;
     int32_t             ctxid_;
+    int32_t             umr_;     // used for USSD
     std::string*        keywords_;
 };
 

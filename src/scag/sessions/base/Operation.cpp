@@ -20,6 +20,7 @@ status_(OPERATION_INITED),
 type_(tp),
 flags_(0),
 ctxid_(0),
+umr_(-1),
 keywords_(0)
 {
     if ( !log_ ) {
@@ -70,6 +71,19 @@ void Operation::receiveNewResp( int curidx, int lastidx )
 }
 
 
+void Operation::setUSSDref( int32_t ref ) throw (SCAGException)
+{
+    if ( ref <= 0 ) throw SCAGException( "session=%p/%s setUSSDref(ref=%d), ref should be >0",
+                                         owner_, owner_ ? owner_->sessionKey().toString().c_str() : "",
+                                         ref );
+    // changing umr is allowed
+    // if ( umr_ > 0 ) throw SCAGException( "setUSSDref(ref=%d), UMR=%d is already set", ref, umr_ );
+    // if ( umr_ == -1 ) throw SCAGException( "session=%p/%s setUSSDref(ref=%d), no USSD operation found",
+    // this, sessionKey().toString().c_str(), ref );
+    umr_ = ref;
+}
+
+
 const char* Operation::getNamedStatus() const
 {
     switch (status_) {
@@ -87,10 +101,11 @@ const char* Operation::getNamedStatus() const
 void Operation::print( util::Print& p, opid_type opid ) const
 {
     if ( ! p.enabled() ) return;
-    p.print( "op=%p session=%p opid=%u type=%d(%s) part/resp=%d%s/%d%s ctx=%d stat=%s%s%s%s%s",
+    p.print( "op=%p session=%p opid=%u type=%d(%s) part/resp=%d%s/%d%s umr=%d ctx=%d stat=%s%s%s%s%s",
              this, owner_, opid, type_, commandOpName(type_),
              receivedParts_, flagSet( OperationFlags::RECEIVED_ALL_PARTS) ? "(ALL)" : "",
              receivedResps_, flagSet( OperationFlags::RECEIVED_ALL_RESPS) ? "(ALL)" : "",
+             int(umr_),
              int(ctxid_),
              getNamedStatus(),
              flagSet(OperationFlags::SERVICE_INITIATED_USSD_DIALOG) ? " svcinit" : "",
@@ -103,24 +118,28 @@ void Operation::print( util::Print& p, opid_type opid ) const
 
 Serializer& Operation::serialize( Serializer& s ) const
 {
-    return s << 
+    s << type_ <<
         uint32_t(receivedParts_) <<
         uint32_t(receivedResps_) <<
-        uint32_t(ctxid_) <<
+        uint32_t(ctxid_);
+    if ( type_ == CO_USSD_DIALOG ) s << uint32_t(umr_);
+    return s << 
         uint8_t(status_) <<
-        type_ << flags_ << ( keywords_ ? *keywords_ : std::string() );
+        flags_ << ( keywords_ ? *keywords_ : std::string() );
 }
 
 
 Deserializer& Operation::deserialize( Deserializer& s ) throw ( DeserializerException )
 {
     uint32_t x;
+    uint8_t y;
+    s >> type_;
     s >> x; receivedParts_ = int(x);
     s >> x; receivedResps_ = int(x);
     s >> x; ctxid_ = int32_t(x);
-    uint8_t y;
+    if ( type_ == CO_USSD_DIALOG ) s >> x; umr_ = int32_t(x);
     s >> y; status_ = ICCOperationStatus(y);
-    s >> type_ >> flags_;
+    s >> flags_;
     std::string kw;
     s >> kw;
     setKeywords( kw );
