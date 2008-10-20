@@ -37,21 +37,23 @@ public:
     }
 
 protected:
+    void processSmResp( std::auto_ptr<SmppCommand> aucmd,
+                        sessions::ActiveSession session = sessions::ActiveSession() );
     void processSubmit( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* hrt );
     void processDelivery( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* hrt );
     void processDataSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* hrt );
     void processExpiredResps();
     void processAlertNotification( std::auto_ptr<SmppCommand> aucmd);
-    void processSubmitResp( std::auto_ptr<SmppCommand> cmd,
-                            sessions::ActiveSession session = sessions::ActiveSession() );
-    void processDeliveryResp( std::auto_ptr<SmppCommand> cmd,
-                              sessions::ActiveSession session = sessions::ActiveSession() );
-    void processDataSmResp( std::auto_ptr<SmppCommand> cmd,
-                            sessions::ActiveSession session = sessions::ActiveSession() );
+    // void processSubmitResp( std::auto_ptr<SmppCommand> cmd,
+    // sessions::ActiveSession session = sessions::ActiveSession() );
+    // void processDeliveryResp( std::auto_ptr<SmppCommand> cmd,
+    // sessions::ActiveSession session = sessions::ActiveSession() );
+    // void processDataSmResp( std::auto_ptr<SmppCommand> cmd,
+    // sessions::ActiveSession session = sessions::ActiveSession() );
 
-    void SubmitResp( std::auto_ptr<SmppCommand> cmd,int status);
-    void DeliveryResp( std::auto_ptr<SmppCommand> cmd,int status);
-    void DataResp( std::auto_ptr<SmppCommand> cmd,int status);
+    // void SubmitResp( std::auto_ptr<SmppCommand> cmd,int status);
+    // void DeliveryResp( std::auto_ptr<SmppCommand> cmd,int status);
+    // void DataResp( std::auto_ptr<SmppCommand> cmd,int status);
 
     void registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode);
 
