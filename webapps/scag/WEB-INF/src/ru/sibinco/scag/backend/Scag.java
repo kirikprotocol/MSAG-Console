@@ -249,9 +249,13 @@ public class Scag extends Proxy {
 
     //apply routes
     protected void applySmppRoutes() throws SibincoException {
+        logger.debug( "Scag.applySmppRoutes() start" );
         final Response response = super.runCommand(new ApplySmppRoutes());
-        if (Response.STATUS_OK != response.getStatus())
+        logger.debug( "Scag.applySmppRoutes() after response STATUS='" + response.getStatus() + "'" );
+        if (Response.STATUS_OK != response.getStatus()){
+            logger.debug( "Scag.applySmppRoutes() Response.STATUS_ERROR" );
             throw new SibincoException("Couldn't apply smpp routes, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+        }
     }
 
     protected void applyHttpRoutes() throws SibincoException {
@@ -451,11 +455,12 @@ public class Scag extends Proxy {
           try
           {
               Method commandMethod;
-              logger.debug( "Scag.invokeCommand() commandName='" +commandName + "' paramsObject==null is '" + (paramsObject==null) + "'" );
               if (paramsObject==null) {
+                  logger.debug( "Scag.invokeCommand() params commandName='" + commandName + "'" );
                   commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{});
                   commandMethod.invoke(appContext.getScag(),null);
               } else {
+                  logger.debug( "Scag.invokeCommand() with commandName='" + commandName + "'" );
                   commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{paramsObject.getClass()});
                   commandMethod.invoke(appContext.getScag(),new Object[]{paramsObject});
               }
@@ -469,20 +474,22 @@ public class Scag extends Proxy {
           }
         } catch (SibincoException se) {
             //5. does service started?
+            logger.error( "Scag.invokeCommand() SibincoException" );
             if (getStatus() == STATUS_DISCONNECTED) {
               //5. N0(service isn't started)
               //9. save smpp.xml to backup!
               //10. delete smpp.xml.old
             //          Functions.SavedFileToBackup(temporary,".old");
             //          appContext.getHSDaemon().store(configFile);
-                logger.error("Scag:invokeCommand1:SibincoException:(getStatus() == STATUS_DISCONNECTED)");
+                logger.error("Scag.invokeCommand() SibincoException STATUS_DISCONNECTED");
                 appContext.getHSDaemon().store(Functions.ReturnSavedFileToBackup(temporary,".old"));
+                logger.error("Scag.invokeCommand() SibincoException STATUS_DISCONNECTED throw new StatusDisconnectedException(host,port)");
                 throw new StatusDisconnectedException(host,port);
             } else {
                 //5. YES(service is started)
                 //6. service return error
                 //7. Restore config from temporary file(smpp.xml.new -> smpp.xml)
-                logger.error("Scag:invokeCommand1:SibincoException:(getStatus() != STATUS_DISCONNECTED)");
+                logger.error("Scag.invokeCommand() SibincoException:(getStatus() != STATUS_DISCONNECTED)");
                 Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
                 appContext.getHSDaemon().store(configFile);
                 //Paint error on the screen by throwing exception(next string)
