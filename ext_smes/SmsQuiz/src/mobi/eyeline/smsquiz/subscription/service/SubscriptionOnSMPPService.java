@@ -31,48 +31,48 @@ public class SubscriptionOnSMPPService extends BasicService {
     super.init(properties);
     PropertiesConfig conf;
     try {
-      conf = new PropertiesConfig(properties); 
+      conf = new PropertiesConfig(properties);
     } catch (ConfigException e) {
       throw new SMPPServiceException(e);
     }
     responseText = conf.getString("send.subscribe", "Success");
 
-      try {
-          manager = SubscriptionManager.getInstance();
-      } catch (SubManagerException e) {
-          log.error("Error init SubscriptionManager",e);
-          throw new SMPPServiceException("Error init SubscriptionManager",e);
-      }
+    try {
+      manager = SubscriptionManager.getInstance();
+    } catch (SubManagerException e) {
+      log.error("Error init SubscriptionManager", e);
+      throw new SMPPServiceException("Error init SubscriptionManager", e);
+    }
   }
 
   public boolean serve(SMPPRequest request) {
     try {
 
-      final Message reqMsg = request.getInObj().getMessage(),  respMsg = new Message();
+      final Message reqMsg = request.getInObj().getMessage(), respMsg = new Message();
       String clientAddress = reqMsg.getSourceAddress();
 
-        respMsg.setSourceAddress(reqMsg.getDestinationAddress());
-        respMsg.setDestinationAddress(clientAddress);
+      respMsg.setSourceAddress(reqMsg.getDestinationAddress());
+      respMsg.setDestinationAddress(clientAddress);
 
-        try {
-            manager.subscribe(clientAddress);
-        } catch (SubManagerException e) {
-            log.error(e,e);
-            return false;
-        }
-        respMsg.setMessageString(responseText);
+      try {
+        manager.subscribe(clientAddress);
+      } catch (SubManagerException e) {
+        log.error(e, e);
+        return false;
+      }
+      respMsg.setMessageString(responseText);
 
-        request.getInObj().respond(Data.ESME_ROK);
+      request.getInObj().respond(Data.ESME_ROK);
 
-        try {
-            send(respMsg);
-        } catch (ShutdownedException e) {
-            log.error("Shutdowned.", e);
-        }
+      try {
+        send(respMsg);
+      } catch (ShutdownedException e) {
+        log.error("Shutdowned.", e);
+      }
     } catch (SMPPException e) {
-      log.error(e,e);
+      log.error(e, e);
     }
     return true;
   }
-    
+
 }

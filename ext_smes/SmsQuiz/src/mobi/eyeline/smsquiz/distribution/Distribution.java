@@ -4,88 +4,92 @@ import java.util.*;
 
 public class Distribution {
 
-    public static enum WeekDays {MON,TUE,WED,THU,FRI,SAT,SUN}
+  public static enum WeekDays {
+    MON, TUE, WED, THU, FRI, SAT, SUN
+  }
 
-    private String sourceAddress;
+  private String sourceAddress;
 
-    private String filePath;
-	 
-	private Date dateBegin;
-	 
-	private Date dateEnd;
-	 
-	private Calendar timeBegin;
-	 
-	private Calendar timeEnd;
-	 
-	private EnumSet<WeekDays> days;
+  private String filePath;
 
-    private String txmode;
+  private Date dateBegin;
 
-    public Distribution() {
-        days = EnumSet.allOf(WeekDays.class);
-    }
+  private Date dateEnd;
 
-    public String getFilePath() {
-        return filePath;
-    }
+  private Calendar timeBegin;
 
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
-    }
+  private Calendar timeEnd;
 
-    public Date getDateBegin() {
-        return dateBegin;
-    }
+  private final EnumSet<WeekDays> days;
 
-    public void setDateBegin(Date dateBegin) {
-        this.dateBegin = dateBegin;
-    }
+  private String txmode;
 
-    public Date getDateEnd() {
-        return dateEnd;
-    }
+  public Distribution() {
+    days = EnumSet.allOf(WeekDays.class);
+  }
 
-    public void setDateEnd(Date dateEnd) {
-        this.dateEnd = dateEnd;
-    }
+  public String getFilePath() {
+    return filePath;
+  }
 
-    public Calendar getTimeBegin() {
-        return timeBegin;
-    }
+  public void setFilePath(String filePath) {
+    this.filePath = filePath;
+  }
 
-    public void setTimeBegin(Calendar timeBegin) {
-        this.timeBegin = timeBegin;
-    }
+  public Date getDateBegin() {
+    return dateBegin;
+  }
 
-    public Calendar getTimeEnd() {
-        return timeEnd;
-    }
+  public void setDateBegin(Date dateBegin) {
+    this.dateBegin = dateBegin;
+  }
 
-    public void setTimeEnd(Calendar timeEnd) {
-        this.timeEnd = timeEnd;
-    }
+  public Date getDateEnd() {
+    return dateEnd;
+  }
 
-    public void addDay(WeekDays weekDays) {
-        days.add(weekDays);
-    }
+  public void setDateEnd(Date dateEnd) {
+    this.dateEnd = dateEnd;
+  }
 
-    public EnumSet<WeekDays> getDays() {
-        return EnumSet.copyOf(days);
-    }
-    public String getTxmode() {
-        return txmode;
-    }
-    public void setTxmode(String txmode) {
-        this.txmode = txmode;
-    }
+  public Calendar getTimeBegin() {
+    return timeBegin;
+  }
 
-    public String getSourceAddress() {
-        return sourceAddress;
-    }
+  public void setTimeBegin(Calendar timeBegin) {
+    this.timeBegin = timeBegin;
+  }
 
-    public void setSourceAddress(String sourceAddress) {
-        this.sourceAddress = sourceAddress;
-    }    
+  public Calendar getTimeEnd() {
+    return timeEnd;
+  }
+
+  public void setTimeEnd(Calendar timeEnd) {
+    this.timeEnd = timeEnd;
+  }
+
+  public void addDay(WeekDays weekDays) {
+    days.add(weekDays);
+  }
+
+  public EnumSet<WeekDays> getDays() {
+    return EnumSet.copyOf(days);
+  }
+
+  public String getTxmode() {
+    return txmode;
+  }
+
+  public void setTxmode(String txmode) {
+    this.txmode = txmode;
+  }
+
+  public String getSourceAddress() {
+    return sourceAddress;
+  }
+
+  public void setSourceAddress(String sourceAddress) {
+    this.sourceAddress = sourceAddress;
+  }
 }
  

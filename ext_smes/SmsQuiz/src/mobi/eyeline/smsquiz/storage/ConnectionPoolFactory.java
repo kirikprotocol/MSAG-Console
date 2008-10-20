@@ -29,13 +29,13 @@ public class ConnectionPoolFactory {
 
       // Register JDBC driver
       try {
-        DriverManager.registerDriver((Driver)Class.forName(config.getString("jdbc.driver")).newInstance());
+        DriverManager.registerDriver((Driver) Class.forName(config.getString("jdbc.driver")).newInstance());
       } catch (Exception e) {
         throw new StorageException("Can't register JDBC driver", StorageException.ErrorCode.ERROR_INIT);
       }
 
     } catch (ConfigException e) {
-        e.printStackTrace();
+      e.printStackTrace();
     }
   }
 

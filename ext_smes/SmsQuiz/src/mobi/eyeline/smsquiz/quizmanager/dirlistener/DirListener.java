@@ -11,98 +11,124 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Condition;
 
 import org.apache.log4j.Logger;
 
-public class DirListener extends Observable implements Runnable{
+public class DirListener extends Observable implements Runnable {
 
 
-    private static Logger logger = Logger.getLogger(DirListener.class);
-	private Map<String, QuizFile> filesMap;
-    private String quizDir;
-    private FilenameFilter fileFilter;
+  private static final Logger logger = Logger.getLogger(DirListener.class);
+  private Map<String, QuizFile> filesMap;
+  private String quizDir;
+  private FilenameFilter fileFilter;
+  private Lock lock;
+  private Condition notRemove;
+  private Condition notRun;
+  private static final Pattern PATTERN = Pattern.compile("(.*\\.xml)");
+  private int run = -1;
 
-    public DirListener(final String quizDir) throws QuizException {
-        if(quizDir==null) {
-            throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
-        }
-        this.quizDir = quizDir;
-        File file = new File(quizDir);
-        if(!file.exists()) {
-            logger.info("Create quizDir");
-            file.mkdirs();
-        }
-        filesMap = new HashMap<String,QuizFile>();
-        fileFilter = new XmlFileFilter();
+  public DirListener(final String quizDir) throws QuizException {
+    if (quizDir == null) {
+      throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
+    this.quizDir = quizDir;
+    File file = new File(quizDir);
+    if (!file.exists()) {
+      logger.info("Create quizDir");
+      file.mkdirs();
+    }
+    filesMap = new HashMap<String, QuizFile>();
+    fileFilter = new XmlFileFilter();
 
-    public synchronized void run() { // todo make notifyObservers synchronized
-        logger.info("Running DirListener..."); 
-        File dirQuiz = new File(quizDir);
+    lock = new ReentrantLock();
+    notRemove = lock.newCondition();
+    notRun = lock.newCondition();
+  }
 
-        File[] files = dirQuiz.listFiles(fileFilter);
+  public void run() {
+    logger.info("Running DirListener...");
+    File dirQuiz = new File(quizDir);
 
-        for(File f:files) {
+    File[] files = dirQuiz.listFiles(fileFilter);
 
-            String fileName = f.getAbsolutePath();
-            long lastModified = f.lastModified();
+    try {
+      lock.lock();
+      while(run==0) {
+        notRemove.await();
+      }
+      run=1;
+      for (File f : files) {
 
-            try {
-                QuizFile existFile;
+        String fileName = f.getAbsolutePath();
+        long lastModified = f.lastModified();
+        QuizFile existFile;
 
-                if((existFile = filesMap.get(fileName))!=null) {
-                    if(existFile.getLastModified()<lastModified) {
-                        notifyObservers( new Notification ( fileName, Notification.FileStatus.MODIFIED ) );
-                        existFile.modifyDate(lastModified);
-                        if(logger.isInfoEnabled()) {
-                            logger.info("Quiz file modified: "+fileName);
-                        }
-                    }
-                }
-                else {
-                    filesMap.put(fileName, new QuizFile(fileName,lastModified) );
-                    setChanged();
-                    notifyObservers( new Notification( fileName, Notification.FileStatus.CREATED ) );
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Quiz file created: "+fileName);
-                    }
-                }
-
-            } catch (QuizException e) {
-                logger.error("Error construct quiz file or notification", e);
+        if ((existFile = filesMap.get(fileName)) != null) {
+          if (existFile.getLastModified() < lastModified) {
+            notifyObservers(new Notification(fileName, Notification.FileStatus.MODIFIED));
+            existFile.modifyDate(lastModified);
+            if (logger.isInfoEnabled()) {
+              logger.info("Quiz file modified: " + fileName);
             }
-
+          }
+        } else {
+          filesMap.put(fileName, new QuizFile(fileName, lastModified));
+          setChanged();
+          notifyObservers(new Notification(fileName, Notification.FileStatus.CREATED));
+          if (logger.isInfoEnabled()) {
+            logger.info("Quiz file created: " + fileName);
+          }
         }
-        logger.info("DirListener finished...");
+        run=0;
+        notRun.signal();
+      }
+    } catch (Exception e) {
+      logger.error("Error construct quiz file or notification", e);
+    } finally {
+      lock.unlock();
     }
 
-    public synchronized void remove(String fileName, boolean rename) throws QuizException{ // todo move synchronized inside
-        if(fileName == null) {
-            throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
-        }
-        if(rename) {
-            File file = new File(fileName);
-            file.renameTo(new File(fileName+".old"));
-        }
-        filesMap.remove(fileName);
-    }
+    logger.info("DirListener finished...");
+  }
 
-    public int countFiles() {
-        return filesMap.size();
+  public void remove(String fileName, boolean rename) throws QuizException {
+    if (fileName == null) {
+      throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
-
-    private class XmlFileFilter implements FilenameFilter {
-
-        public boolean accept(File dir, String name) {
-            Pattern p = Pattern.compile("(.*\\.xml)");  // todo move up
-            Matcher matcher = p.matcher(name);
-            return matcher.matches();
-        }
+    try{
+      lock.lock();
+      while(run==1) {
+        notRun.await();
+      }
+      run=0;
+      if (rename) {
+        File file = new File(fileName);
+        file.renameTo(new File(fileName + ".old"));
+      }
+      filesMap.remove(fileName);
+      run=1;
+      notRemove.signal();
+    } catch (InterruptedException e) {
+        logger.error("Error during remove file from storage: "+fileName, e);
+    } finally {
+      lock.unlock();
     }
-	 
+  }
+
+  public int countFiles() {
+    return filesMap.size();
+  }
+
+  private class XmlFileFilter implements FilenameFilter {
+
+    public boolean accept(File dir, String name) {
+      Matcher matcher = PATTERN.matcher(name);
+      return matcher.matches();
+    }
+  }
+
 }
  

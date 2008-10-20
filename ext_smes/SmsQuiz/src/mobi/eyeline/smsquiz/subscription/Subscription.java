@@ -4,45 +4,46 @@ import java.util.Date;
 
 
 public class Subscription {
-    private String address;
-    private Date startDate;
-    private Date endDate;
+  private String address;
+  private Date startDate;
+  private Date endDate;
 
-    public Subscription() {
-        startDate = new Date();
-    }
-    public String getAddress() {
-        return address;
-    }
+  public Subscription() {
+    startDate = new Date();
+  }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
+  public String getAddress() {
+    return address;
+  }
 
-    public Date getStartDate() {
-        return startDate;
-    }
+  public void setAddress(String address) {
+    this.address = address;
+  }
 
-    public void setStartDate(Date startDate) {
-        this.startDate = startDate;
-    }
+  public Date getStartDate() {
+    return startDate;
+  }
 
-    public Date getEndDate() {
-        return endDate;
-    }
+  public void setStartDate(Date startDate) {
+    this.startDate = startDate;
+  }
 
-    public void setEndDate(Date endDate) {
-        this.endDate = endDate;
-    }
+  public Date getEndDate() {
+    return endDate;
+  }
 
-    public String toString() {
-        String res="";
-        if(address!=null)
-            res+=address;
-        if(startDate!=null)
-            res+=" "+startDate;
-        if(endDate!=null)
-            res+=" "+endDate;
-        return res;
-    }
+  public void setEndDate(Date endDate) {
+    this.endDate = endDate;
+  }
+
+  public String toString() {
+    String res = "";
+    if (address != null)
+      res += address;
+    if (startDate != null)
+      res += " " + startDate;
+    if (endDate != null)
+      res += " " + endDate;
+    return res;
+  }
 }

@@ -5,32 +5,32 @@ import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-public class ReplyPattern {
+class ReplyPattern {
 
 
-    private Pattern pattern;
-	 
-	private String category;
+  private Pattern pattern;
 
-    private String answer;
+  private String category;
 
-    public ReplyPattern (String p, String category, String answer) {
-        this.category = category;
-        this.answer = answer;
-        pattern = Pattern.compile(p);
-    }
+  private String answer;
 
-    public boolean matches(String str) {
-        Matcher matcher = pattern.matcher(str);
-        return matcher.matches();
-    }
+  public ReplyPattern(String p, String category, String answer) {
+    this.category = category;
+    this.answer = answer;
+    pattern = Pattern.compile(p);
+  }
 
-    public String getCategory() {
-        return category;
-    }
+  public boolean matches(String str) {
+    Matcher matcher = pattern.matcher(str);
+    return matcher.matches();
+  }
 
-    public String getAnswer() {
-        return answer;
-    }
+  public String getCategory() {
+    return category;
+  }
+
+  public String getAnswer() {
+    return answer;
+  }
 }
  

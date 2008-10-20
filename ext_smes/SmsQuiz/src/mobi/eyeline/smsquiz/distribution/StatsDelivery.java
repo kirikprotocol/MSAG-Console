@@ -11,29 +11,30 @@ import org.apache.log4j.Logger;
  */
 public class StatsDelivery {
 
-    private static Logger logger = Logger.getLogger(StatsDelivery.class);
+  private static final Logger logger = Logger.getLogger(StatsDelivery.class);
 
-    private String msisdn;
-    private Date date;
+  private String msisdn;
+  private Date date;
 
-    public StatsDelivery(String msisdn, Date date) throws StorageException {
-        if((msisdn==null)||(date==null)) {
-            logger.error("Some arguments are null");
-            throw new StorageException("Some arguments are null", StorageException.ErrorCode.ERROR_WRONG_REQUEST);
-        }
-        this.msisdn = msisdn;
-        this.date = date;
+  public StatsDelivery(String msisdn, Date date) throws StorageException {
+    if ((msisdn == null) || (date == null)) {
+      logger.error("Some arguments are null");
+      throw new StorageException("Some arguments are null", StorageException.ErrorCode.ERROR_WRONG_REQUEST);
     }
-    public String getMsisdn() {
-        return msisdn;
-    }
+    this.msisdn = msisdn;
+    this.date = date;
+  }
 
-    public Date getDate() {
-        return date;
-    }
+  public String getMsisdn() {
+    return msisdn;
+  }
 
-    public String toString() {
-        return msisdn+" "+date;
-    }
+  public Date getDate() {
+    return date;
+  }
+
+  public String toString() {
+    return msisdn + " " + date;
+  }
 
 }

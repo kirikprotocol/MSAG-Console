@@ -12,20 +12,21 @@ import java.util.StringTokenizer;
 import java.util.Random;
 import java.text.SimpleDateFormat;
 
-import mobi.eyeline.smsquiz.quizmanager.QuizManagerImpl;
+import mobi.eyeline.smsquiz.quizmanager.QuizManager;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
 import mobi.eyeline.smsquiz.quizmanager.Result;
 import mobi.eyeline.smsquiz.quizmanager.service.ReplySMPPService;
 import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
 import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import mobi.eyeline.smsquiz.subscription.SubManagerException;
+import mobi.eyeline.smsquiz.distribution.Impl.DistributionInfoSmeManager;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.FileReplyStatsDataSource;
 import com.eyeline.sme.handler.config.ServicesConfig;
 import com.eyeline.sme.handler.config.ServicesConfigReader;
 import com.eyeline.sme.handler.RequestToServiceMap;
 import com.eyeline.sme.handler.SMPPService;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.IncomingObject;
-import com.eyeline.utils.tree.radix.StringsRTree;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.SMPPException;
 
@@ -34,7 +35,7 @@ import ru.aurorisoft.smpp.SMPPException;
  */
 public class QuizManagerTest {
 
-    public static QuizManagerImpl quizManager;
+    public static QuizManager quizManager;
     private static SubscriptionManager subscriptionManager;
     private static Date dateBegin;
     private static Date dateEnd;
@@ -46,7 +47,7 @@ public class QuizManagerTest {
     private static int divider = 1000;
     private static String oa = "148";
     private static String da="148";
-    private static long initWait = 10000;
+    private static long initWait = 15000;
     private static long abonents = 15000;
     private static int minutes = 3;
     private static String[] answers = {"yes","no","dsasddssdds"};
@@ -56,8 +57,9 @@ public class QuizManagerTest {
         try {
             ConnectionPoolFactory.init("conf/config.xml");
             subscriptionManager = SubscriptionManager.getInstance();
-            QuizManagerImpl.init("conf/config.xml");
-            quizManager = (QuizManagerImpl)QuizManagerImpl.getInstanse();
+            QuizManager.init("conf/config.xml", new DistributionInfoSmeManager("conf/config.xml"),
+                new FileReplyStatsDataSource("conf/config.xml"), subscriptionManager);
+            quizManager = QuizManager.getInstance();
             File file = new File("test_QuizManager");
             if(file.exists()) {
                 removeAll(file);
@@ -87,7 +89,6 @@ public class QuizManagerTest {
            assertNull(quizManager.handleSms(da,number1,"asfaf"));
            File file = new File(quizManager.getStatusDir()+"/opros_test.status");
            assertTrue(file.exists());
-           file.delete();
            waiting(25000);
        } catch (QuizException e) {
            e.printStackTrace();
@@ -98,7 +99,7 @@ public class QuizManagerTest {
     @Test
     public void testRequestMapping() {
         try{
-            ServicesConfig config = ServicesConfigReader.readConfig("conf/services_reply.xml");
+            ServicesConfig config = ServicesConfigReader.readConfig("conf/services.xml");
             RequestToServiceMap requestToServiceMap = new RequestToServiceMap(config,new OutgoingQueue(20));
             IncomingObject incObj = createIncObj("+7",da,"dsads");
             RequestToServiceMap.Entry e = requestToServiceMap.getEntry(incObj);
@@ -112,7 +113,7 @@ public class QuizManagerTest {
     @Test
     public void testService() {
         try{
-            ServicesConfig config = ServicesConfigReader.readConfig("conf/services_reply.xml");
+            ServicesConfig config = ServicesConfigReader.readConfig("conf/services.xml");
             RequestToServiceMap requestToServiceMap = new RequestToServiceMap(config,new OutgoingQueue(20));
             IncomingObject incObj = createIncObj(number2,da,"no");
             RequestToServiceMap.Entry e = requestToServiceMap.getEntry(incObj);
@@ -160,8 +161,8 @@ public class QuizManagerTest {
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(file));
-            String line = null;
-            StringTokenizer tokenizer= null;
+            String line;
+            StringTokenizer tokenizer;
             int flag=0;
             while((line = reader.readLine())!=null) {
                 flag=1;
@@ -170,7 +171,7 @@ public class QuizManagerTest {
                 if(msisdn.equals(number1)) {
                     tokenizer.nextToken();tokenizer.nextToken();
                     assertTrue(tokenizer.nextToken().equals("Да"));
-                    assertTrue(tokenizer.nextToken().equals("asfaf"));
+                    assertTrue(tokenizer.nextToken().equals("y"));
                     continue;
                 }
                 if(msisdn.equals(number2)) {

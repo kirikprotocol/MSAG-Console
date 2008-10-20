@@ -3,71 +3,73 @@ package mobi.eyeline.smsquiz.replystats;
 import java.util.Date;
 
 public class Reply {
- 
-	private Date date;
-	 
-	private String oa;
-	 
-	private String da;
-	 
-	private String text;
 
-    public Reply() {}
+  private Date date;
 
-    public Reply(Date date, String oa, String da, String text) {
-        super();
-        this.date = date;
-        this.oa = oa;
-        this.da = da;
-        this.text = text;        
-    }
+  private String oa;
 
-    public Date getDate() {
-        return date;
-    }
+  private String da;
 
-    public String getOa() {
-        return oa;
-    }
+  private String text;
 
-    public String getDa() {
-        return da;
-    }
+  public Reply() {
+  }
 
-    public String getText() {
-        return text;
-    }
+  public Reply(Date date, String oa, String da, String text) {
+    super();
+    this.date = date;
+    this.oa = oa;
+    this.da = da;
+    this.text = text;
+  }
 
-    public void setDate(Date date) {
-        this.date = date;
-    }
+  public Date getDate() {
+    return date;
+  }
 
-    public void setOa(String oa) {
-        this.oa = oa;
-    }
+  public String getOa() {
+    return oa;
+  }
 
-    public void setDa(String da) {
-        this.da = da;
-    }
+  public String getDa() {
+    return da;
+  }
 
-    public void setText(String text) {
-        this.text = text;
+  public String getText() {
+    return text;
+  }
+
+  public void setDate(Date date) {
+    this.date = date;
+  }
+
+  public void setOa(String oa) {
+    this.oa = oa;
+  }
+
+  public void setDa(String da) {
+    this.da = da;
+  }
+
+  public void setText(String text) {
+    this.text = text;
+  }
+
+  public String toString() {
+    String result = "";
+    if (date != null) {
+      result += date + " ";
     }
-    public String toString() {
-        String result = "";
-        if(date!=null) {
-            result+=date+" ";
-        }
-        if(oa!=null) {
-            result+=oa+" ";
-        }
-        if(da!=null) {
-            result+=da+" ";
-        }
-        if(text!=null) {
-            result+=text;
-        }
-        return result;
+    if (oa != null) {
+      result += oa + " ";
     }
+    if (da != null) {
+      result += da + " ";
+    }
+    if (text != null) {
+      result += text;
+    }
+    return result;
+  }
 }
  

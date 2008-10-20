@@ -37,39 +37,39 @@ public class SubscriptionOffSMPPService extends BasicService {
     }
     responseText = conf.getString("send.unsubscribe", "Success");
 
-      try {
-          manager = SubscriptionManager.getInstance();
-      } catch (SubManagerException e) {
-          log.error("Error init SubscriptionManager",e);
-          throw new SMPPServiceException("Error init SubscriptionManager",e);
-      }
+    try {
+      manager = SubscriptionManager.getInstance();
+    } catch (SubManagerException e) {
+      log.error("Error init SubscriptionManager", e);
+      throw new SMPPServiceException("Error init SubscriptionManager", e);
+    }
   }
 
   public boolean serve(SMPPRequest request) {
     try {
 
-      final Message reqMsg = request.getInObj().getMessage(),  respMsg = new Message();
+      final Message reqMsg = request.getInObj().getMessage(), respMsg = new Message();
       String clientAddress = reqMsg.getSourceAddress();
 
       respMsg.setSourceAddress(reqMsg.getDestinationAddress());
       respMsg.setDestinationAddress(clientAddress);
 
-        try {
-            manager.unsubscribe(clientAddress);
-        } catch (SubManagerException e) {
-            log.error(e,e);
-            return false;            
-        }
-        respMsg.setMessageString(responseText);
+      try {
+        manager.unsubscribe(clientAddress);
+      } catch (SubManagerException e) {
+        log.error(e, e);
+        return false;
+      }
+      respMsg.setMessageString(responseText);
 
-        request.getInObj().respond(Data.ESME_ROK);
-        try {
-            send(respMsg);
-        } catch (ShutdownedException e) {
-            log.error("Shutdowned.", e);
-        }
+      request.getInObj().respond(Data.ESME_ROK);
+      try {
+        send(respMsg);
+      } catch (ShutdownedException e) {
+        log.error("Shutdowned.", e);
+      }
     } catch (SMPPException e) {
-      log.error(e,e);
+      log.error(e, e);
     }
     return true;
   }
