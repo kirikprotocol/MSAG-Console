@@ -37,7 +37,7 @@ private:
     typedef smsc::core::synchronization::MutexGuard MutexGuard;
 
 public:
-    FixedMemoryPool( const MemoryPoolConfig& cfg, unsigned sz ) :
+    FixedMemoryPool( const MemoryPoolConfig& cfg, size_t sz ) :
     cfg_(cfg), objsize_(sz), queue_(cfg.prealloc), count_(0) {}
 
     ~FixedMemoryPool() {
