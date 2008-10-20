@@ -61,10 +61,10 @@ public class Index extends TabledBeanImpl {
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
-        logger.debug("DEBUG:process():start");
+        logger.debug("routes.Index.process():start");
         sort = "time";
         super.process(request, response);
-        logger.debug("DEBUG:process():"
+        logger.debug("routes.Index.process()\n"
                 + "mbRestoreHttp:'" + mbRestoreHttp +"'\n"
                 + "mbRestore:'" + mbRestore+"'\n"
                 + "mbApplyHttp:'" + mbApplyHttp +"'\n"
@@ -86,6 +86,7 @@ public class Index extends TabledBeanImpl {
             applyHttpRoutes();
         }
         else if (mbApply != null){
+            logger.debug( "routes/Index.process() mbApply" );
             applySmppRoutes();
         }
         else if (mbLoadSaved != null){
@@ -108,7 +109,7 @@ public class Index extends TabledBeanImpl {
         }
         this.init();
         //refresh changes bean values (it's bug from class TabledBeanImpl)
-        logger.debug("DEBUG:process():end");
+        logger.debug("routes/Index.process() end");
         super.process(request, response);
         if( tabledItems.isEmpty() ){
             logger.debug("DEBUG:process():tabledItems.isEmpty(): set routesRestored to 'true' " +
@@ -220,10 +221,11 @@ public class Index extends TabledBeanImpl {
      * @throws SCAGJspException - an throws exception if it will be occurred
      */
     private void applySmppRoutes() throws SCAGJspException {
-          appContext.getScagRoutingManager().apply(appContext);
-          appContext.getScagRoutingManager().setChangedByUser("");
-          appContext.getScagRoutingManager().setRoutesChanged(false);
-          init();
+        logger.debug( "routes/Index.applySmppRoutes() start" );
+        appContext.getScagRoutingManager().apply(appContext);
+        appContext.getScagRoutingManager().setChangedByUser("");
+        appContext.getScagRoutingManager().setRoutesChanged(false);
+        init();
     }
 
     /**
