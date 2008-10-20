@@ -44,8 +44,6 @@ public class JournalsProcessor {
     this.eventsStore = eventsStore;
     this.scheduler = scheduler;
 
-    loadJournals();
-
     scheduler.start();
 
     this.executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
@@ -57,7 +55,7 @@ public class JournalsProcessor {
       public void run() {
         loadJournals();
       }
-    }, config.getJournalsCheckInterval(), config.getJournalsCheckInterval(), TimeUnit.MILLISECONDS);
+    }, 0, config.getJournalsCheckInterval(), TimeUnit.MILLISECONDS);
   }
 
   public void shutdown() {
