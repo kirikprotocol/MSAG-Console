@@ -29,6 +29,7 @@ public class DirListener extends Observable implements Runnable {
   private Condition notRun;
   private static final Pattern PATTERN = Pattern.compile("(.*\\.xml)");
   private int run = -1;
+  private int remove =-1;
 
   public DirListener(final String quizDir) throws QuizException {
     if (quizDir == null) {
@@ -52,14 +53,14 @@ public class DirListener extends Observable implements Runnable {
     logger.info("Running DirListener...");
     File dirQuiz = new File(quizDir);
 
-    File[] files = dirQuiz.listFiles(fileFilter);
-
     try {
       lock.lock();
-      while(run==0) {
+      if(remove==1) {
         notRemove.await();
       }
       run=1;
+
+      File[] files = dirQuiz.listFiles(fileFilter);
       for (File f : files) {
 
         String fileName = f.getAbsolutePath();
@@ -100,16 +101,16 @@ public class DirListener extends Observable implements Runnable {
     }
     try{
       lock.lock();
-      while(run==1) {
+      if(run==1) {
         notRun.await();
       }
-      run=0;
+      remove=1;
       if (rename) {
         File file = new File(fileName);
         file.renameTo(new File(fileName + ".old"));
       }
       filesMap.remove(fileName);
-      run=1;
+      remove=0;
       notRemove.signal();
     } catch (InterruptedException e) {
         logger.error("Error during remove file from storage: "+fileName, e);

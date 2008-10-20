@@ -64,7 +64,7 @@ public class Quiz {
   public Result handleSms(String oa, String text) throws QuizException {
     Result result;
     int count;
-    int oaNumber = Integer.parseInt(oa.substring(oa.lastIndexOf("+") + 1, oa.length()));
+    long oaNumber = Long.parseLong(oa.substring(oa.lastIndexOf("+") + 1, oa.length()));
     ReplyPattern replyPattern = getReplyPattern(text);
     if (replyPattern != null) {
       if(jstore.get(oaNumber)==maxRepeat) {
@@ -252,13 +252,15 @@ public class Quiz {
   }
 
   public String toString() {
+    String sep = System.getProperty("line.separator");
     StringBuilder strBuilder = new StringBuilder();
-    strBuilder.append("fileName: ").append(fileName).append("\n");
-    strBuilder.append("address: ").append(destAddress).append("\n");
-    strBuilder.append("question: ").append(question).append("\n");
-    strBuilder.append("dateBegin: ").append(dateBegin).append("\n");
-    strBuilder.append("dateEnd: ").append(dateEnd).append("\n");
-    strBuilder.append("id: ").append(this.getId()).append("\n");
+    strBuilder.append(sep);
+    strBuilder.append("fileName: ").append(fileName).append(sep);
+    strBuilder.append("address: ").append(destAddress).append(sep);
+    strBuilder.append("question: ").append(question).append(sep);
+    strBuilder.append("dateBegin: ").append(dateBegin).append(sep);
+    strBuilder.append("dateEnd: ").append(dateEnd).append(sep);
+    strBuilder.append("id: ").append(this.getId()).append(sep);
     return strBuilder.substring(0);
   }
 

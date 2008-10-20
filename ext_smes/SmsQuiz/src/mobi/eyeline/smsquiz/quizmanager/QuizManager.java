@@ -137,7 +137,6 @@ public class QuizManager implements Observer {
     scheduledDirListener.shutdown();
     scheduledQuizCollector.shutdown();
     replyStatsDataSource.shutdown();
-
     subscriptionManager.shutdown();
   }
 
@@ -167,15 +166,16 @@ public class QuizManager implements Observer {
       try {
         createQuiz(notification);
       } catch (QuizException e) {
-        logger.error("Unable to modify quiz: " + notification.getFileName());
+        logger.error("Unable to update quizes with: " + notification.getFileName());
       }
     }
     logger.info("Updating finished");
   }
 
   private void modifyQuiz(Notification notification) throws QuizException {
+
+    String fileName = notification.getFileName();
     try {
-      String fileName = notification.getFileName();
       Quiz quiz = null;
       for (Quiz q : quizesMap.values()) {
         if (q.getFileName().equals(fileName)) {
@@ -191,6 +191,9 @@ public class QuizManager implements Observer {
     } catch (QuizException e) {
       writeError(notification.getFileName(), e);
       throw e;
+    }
+    if(logger.isInfoEnabled()){
+      logger.info("Quiz modified: "+fileName);
     }
   }
 
@@ -230,6 +233,9 @@ public class QuizManager implements Observer {
       writeError(notification.getFileName(), e);
       throw e;
     }
+    if(logger.isInfoEnabled()){
+      logger.info("Quiz created: "+ quiz);
+    }
   }
 
   private void makeSubscribedOnly(Distribution distribution) throws QuizException {
@@ -255,7 +261,13 @@ public class QuizManager implements Observer {
         if (subscriptionManager.subscribed(msisdn)) {
           writer.print(msisdn);
           writer.print("|");
-          writer.println(tokenizer.nextToken());
+          writer.print(tokenizer.nextToken());           
+
+          while(tokenizer.hasMoreTokens()) {
+            writer.write(",");
+            writer.print(tokenizer.nextToken());
+          }
+          writer.println();
           if (logger.isInfoEnabled()) {
             logger.info("Abonent subscribed: " + msisdn);
           }
@@ -323,7 +335,10 @@ public class QuizManager implements Observer {
     PrintWriter writer = null;
     try {
       writer = new PrintWriter(new BufferedWriter(new FileWriter(errorFile, true)));
-      writer.println("\n\n\nConflicts resolved...");
+      String sep = System.getProperty("line.separator");
+      writer.write(sep);
+      writer.write(sep);
+      writer.println("Conflicts resolved...");
       writer.flush();
     } catch (IOException e) {
       logger.error("Unable to create error file: " + errorFile, e);

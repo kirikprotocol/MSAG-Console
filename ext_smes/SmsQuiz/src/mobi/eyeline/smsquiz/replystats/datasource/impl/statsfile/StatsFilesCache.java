@@ -198,10 +198,6 @@ public class StatsFilesCache {
       statsFileImpl.add(reply);
     }
 
-    public void list(Date from, Date till, Collection<Reply> result) throws FileStatsException {
-      statsFileImpl.list(from, till, result);
-    }
-
     public List<Reply> getReplies(String oa, Date from, Date till) throws FileStatsException {
       return statsFileImpl.getReplies(oa, from, till);
     }

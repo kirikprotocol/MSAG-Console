@@ -44,7 +44,7 @@ class StatsFileImpl implements StatsFile {
       parent.mkdirs();
     else {
       try {
-        FileUtils.truncateFile(currentFile, "\n".getBytes()[0], 10);
+        FileUtils.truncateFile(currentFile, System.getProperty("line.separator").getBytes()[0], 10);
       } catch (IOException e) {
         logger.error("Unable to truncate file", e);
         throw new FileStatsException("Unable to truncate file", e);
@@ -108,7 +108,7 @@ class StatsFileImpl implements StatsFile {
           long beginPos = 0;
           long endPos;
           String msisdn;
-          int nByte = (int) ("\n".getBytes()[0]);
+          int nByte = (int) (System.getProperty("line.separator").getBytes()[0]);
 
           int b;
           while ((b = randomAccessFile.read()) != -1) {
@@ -132,7 +132,7 @@ class StatsFileImpl implements StatsFile {
       randomAccessFile.writeBytes(reply.getOa());
       randomAccessFile.writeBytes(",");
       randomAccessFile.writeBytes(reply.getText());
-      randomAccessFile.writeBytes("\n");
+      randomAccessFile.writeBytes(System.getProperty("line.separator"));
       put(reply.getOa(), filePointer);
     } catch (IOException e) {
       logger.error("Unable to write reply", e);
@@ -145,59 +145,6 @@ class StatsFileImpl implements StatsFile {
     }
   }
 
-
-  @SuppressWarnings({"unchecked"})
-  public void list(Date from, Date till, Collection<Reply> result) throws FileStatsException {
-    if (logger.isInfoEnabled()) {
-      logger.info("Listing of replies from: " + from + " till: " + till);
-    }
-    if ((result == null) || (from == null) || (till == null)) {
-      logger.error("Some arguments are null!");
-      throw new FileStatsException("Some arguments are null!", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
-    }
-    String line;
-    StringTokenizer tokenizer;
-    Date date;
-    Reply reply;
-    BufferedReader reader = null;
-    try {
-      reader = new BufferedReader(new FileReader(filePath));
-      while ((line = reader.readLine()) != null) {
-        tokenizer = new StringTokenizer(line, ",");
-        date = csvDateFormat.parse(tokenizer.nextToken() + " " + tokenizer.nextToken());
-        if ((date.compareTo(till) <= 0) && (date.compareTo(from) >= 0)) {
-          reply = new Reply();
-          reply.setDa(da);
-          reply.setDate(date);
-          reply.setOa(tokenizer.nextToken());
-          reply.setText(tokenizer.nextToken());
-          result.add(reply);
-        }
-      }
-
-    } catch (FileNotFoundException e) {
-      logger.info("Unable to create file reader, maybe file doesn't exist", e);
-    }
-    catch (NoSuchElementException e) {
-      logger.error("Unsupported file format", e);
-      throw new FileStatsException("Unsupported file format", e);
-    } catch (ParseException e) {
-      logger.error("Unsupported file format", e);
-      throw new FileStatsException("Unsupported file format", e);
-    } catch (IOException e) {
-      logger.error("IOException during reading file", e);
-      throw new FileStatsException("IOException during reading file", e);
-    } finally {
-      if (reader != null) {
-        try {
-          reader.close();
-        } catch (IOException e) {
-          logger.error("Can't close reader", e);
-        }
-      }
-    }
-
-  }
 
   public List<Reply> getReplies(String oa, Date from, Date till) throws FileStatsException {
     if ((oa == null) || (from == null) || (till == null)) {
@@ -257,7 +204,11 @@ class StatsFileImpl implements StatsFile {
       reply.setDa(da);
       reply.setDate(date);
       reply.setOa(tokenizer.nextToken());
-      reply.setText(tokenizer.nextToken());
+      String text=tokenizer.nextToken();
+      while(tokenizer.hasMoreTokens()) {
+        text+=","+tokenizer.nextToken();
+      }
+      reply.setText(text);
 
       if (seekBack) {
         randomAccessFile.seek(prevPosition);

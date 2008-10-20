@@ -1,15 +1,21 @@
 #!/bin/sh
-if [[ $# < 1 ]]; then
-  echo "Destination file name expected"
-  exit 1
-fi
+
 
 cd ..
 
+platform="linux32"
 cls="conf/"
 for i in lib/*.jar ; do cls=$cls:$i ; done
 
-PARAM="-Dtest_$1_$2 -Xmx128m -cp $cls -Dfile.encoding=windows-1251 mobi.eyeline.smsquiz.subscription.script.SubscribedAbDownloader"
+PARAM="-Xmx128m -cp $cls -Dfile.encoding=windows-1251 -Djava.library.path=lib/platform/$platform  mobi.eyeline.smsquiz.Main"
 
-echo "Downloading..."
-$JAVA_HOME/bin/java $PARAM $@
+pid=`cat SMSQUIZ.PID`
+
+if [ "$pid" == "" ]; then
+
+    $JAVA_HOME/bin/java $PARAM  &
+    echo $!>SMSQUIZ.PID
+    echo Service started
+  else
+    echo Service already started. PID=$pid
+fi
