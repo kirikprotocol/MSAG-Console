@@ -143,6 +143,7 @@ public class QuizManagerTest {
            int i = Integer.parseInt(number2.substring(1,number2.length()))+1;
            for(;i<abonents;i++) {
                 quizManager.handleSms(da, "+"+Integer.toString(i),answers[random.nextInt(3)]);
+                quizManager.handleSms(da, "+"+Integer.toString(i),answers[random.nextInt(3)]); 
                 quizManager.handleSms(da, "+"+Integer.toString(i),answers[random.nextInt(3)]);
            }
        } catch (QuizException e) {

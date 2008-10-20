@@ -63,7 +63,7 @@ public class Quiz {
 
   public Result handleSms(String oa, String text) throws QuizException {
     Result result;
-    int count=0;
+    int count;
     int oaNumber = Integer.parseInt(oa.substring(oa.lastIndexOf("+") + 1, oa.length()));
     ReplyPattern replyPattern = getReplyPattern(text);
     if (replyPattern != null) {

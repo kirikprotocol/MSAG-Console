@@ -9,8 +9,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
 import mobi.eyeline.smsquiz.storage.StorageException;
-import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
-import mobi.eyeline.smsquiz.subscription.SubManagerException;
 import mobi.eyeline.smsquiz.subscription.service.SubscriptionOnSMPPService;
 import mobi.eyeline.smsquiz.subscription.service.SubscriptionOffSMPPService;
 import com.eyeline.sme.handler.config.ServicesConfig;
@@ -19,12 +17,9 @@ import com.eyeline.sme.handler.config.ConfigException;
 import com.eyeline.sme.handler.HandlerException;
 import com.eyeline.sme.handler.RequestToServiceMap;
 import com.eyeline.sme.handler.SMPPService;
-import com.eyeline.sme.handler.SMPPRequest;
-import com.eyeline.sme.handler.services.SimpleResponder;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.IncomingObject;
 
-import java.util.Properties;
 
 import ru.aurorisoft.smpp.SMPPException;
 import ru.aurorisoft.smpp.Message;
@@ -61,16 +56,13 @@ public class SubscriptionServiceTest {
         }
     }
 
-    @Test
-    public void testDefaultService() {
-        assertTrue(requestToServiceMap.getDefaultService().getClass().getName().equals(SimpleResponder.class.getName()));
-    }
+
 
     @Test
     public void testRequestMappingHelp() {
         IncomingObject incObj = createIncObj("sdadsadasasd");
         RequestToServiceMap.Entry e=requestToServiceMap.getEntry(incObj);
-        assertNull(e);
+        assertNotNull(e);
     }
     @Test
     public void testRequestMappingOn() {
@@ -86,12 +78,6 @@ public class SubscriptionServiceTest {
         assertTrue(e.getService().getClass().getName().equals(SubscriptionOffSMPPService.class.getName()));
     }
 
-    @Test
-    public void testServiceHelp() {
-        IncomingObject incObj = createIncObj("asdas");
-        SMPPService service = requestToServiceMap.getDefaultService();
-        assertTrue(service.serve(new SMPPRequest("Default request", incObj, new Properties())));
-    }
 
     @Test
     public void testServiceOn() {
@@ -143,7 +129,7 @@ public class SubscriptionServiceTest {
     }
     private IncomingObject createIncObj(String text) {
         Message message = new Message();
-        message.setDestinationAddress("148");
+        message.setDestinationAddress("177");
         message.setSourceAddress("+7913948test");
         message.setMessageString(text);
         return new TestIncomingObject(message);
