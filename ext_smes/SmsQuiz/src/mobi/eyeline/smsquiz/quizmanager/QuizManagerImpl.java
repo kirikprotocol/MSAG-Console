@@ -28,7 +28,7 @@ import org.apache.log4j.Logger;
 /**
  * author: alkhal
  */
-public class QuizManagerImpl implements QuizManager, Observer {
+public class QuizManagerImpl implements QuizManager, Observer { // todo remove interface
 
     private static Logger logger = Logger.getLogger(QuizManagerImpl.class);
     private static QuizManager quizManager;
@@ -120,16 +120,18 @@ public class QuizManagerImpl implements QuizManager, Observer {
         }
 
         dirListener.addObserver(this);
-        scheduledDirListener = Executors.newSingleThreadScheduledExecutor();
-        scheduledQuizCollector = Executors.newSingleThreadScheduledExecutor();
+        scheduledDirListener = Executors.newSingleThreadScheduledExecutor();       // todo thread factory
+        scheduledQuizCollector = Executors.newSingleThreadScheduledExecutor();     // todo thread factory
         quizBuilder = new QuizBuilder(datePattern, timePattern);
-        quizesMap = new ConcurrentHashMap<String, Quiz>();
+        quizesMap = new ConcurrentHashMap<String, Quiz>();    // todo
         quizCollector = new QuizCollector(quizesMap, dirListener);
 
         File file = new File(statusDir);
         if(!file.exists()) {
             file.mkdirs();
         }
+
+      // todo load quizes
  }
 
     public void start() {

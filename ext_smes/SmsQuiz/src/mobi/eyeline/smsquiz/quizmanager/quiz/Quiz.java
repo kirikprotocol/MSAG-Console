@@ -61,9 +61,10 @@ public class Quiz {
         replyPatterns = new ArrayList<ReplyPattern>();
     }
 
+    // todo otveti prinimat do pervogo korrektnogo
     public Result handleSms(String oa, String text) throws QuizException{
         Result result = null;
-        int oaNumber = Integer.parseInt( oa.substring( oa.lastIndexOf("+")+1, oa.length() ) );
+        int oaNumber = Integer.parseInt( oa.substring( oa.lastIndexOf("+")+1, oa.length() ) ); // todo
         ReplyPattern replyPattern = getReplyPattern(text);
         if(replyPattern!=null) {
             if(jstore.get(oaNumber)!=-1) {

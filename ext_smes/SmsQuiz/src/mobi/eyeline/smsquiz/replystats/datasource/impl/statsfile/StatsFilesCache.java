@@ -227,7 +227,7 @@ public class StatsFilesCache {
                 logger.info("FileCollector starts...");
             }
 
-            for (Map.Entry<String, CachedStatsFile> e : filesMap.entrySet()) {
+            for (Map.Entry<String, CachedStatsFile> e : filesMap.entrySet()) {    // todo ???
 
             }
 

@@ -68,7 +68,7 @@ class StatsFileImpl implements StatsFile {
 
     }
 
-    private void _initTree() throws FileStatsException{
+    private void _initTree() throws FileStatsException{    // todo
         String truncateName = filePath.substring(0,filePath.lastIndexOf("."));
         treeFileName = truncateName + ".tree";
         stringsRTree = new StringsRTree<List<Long>>();

@@ -14,7 +14,7 @@ import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
 /**
  * author: alkhal
  */
-public class QuizManagerFieldFactory {
+public class QuizManagerFieldFactory { //todo ???
 
     private static DistributionManager distributionManager;
     private static ReplyStatsDataSource replyStatsDataSource;

@@ -40,8 +40,8 @@ public class DirListener extends Observable implements Runnable{
         fileFilter = new XmlFileFilter();
     }
 
-    public synchronized void run() {
-        logger.info("Running DirListener...");
+    public synchronized void run() { // todo make notifyObservers synchronized
+        logger.info("Running DirListener..."); 
         File dirQuiz = new File(quizDir);
 
         File[] files = dirQuiz.listFiles(fileFilter);
@@ -80,7 +80,7 @@ public class DirListener extends Observable implements Runnable{
         logger.info("DirListener finished...");
     }
 
-    public synchronized void remove(String fileName, boolean rename) throws QuizException{
+    public synchronized void remove(String fileName, boolean rename) throws QuizException{ // todo move synchronized inside
         if(fileName == null) {
             throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
         }
@@ -98,7 +98,7 @@ public class DirListener extends Observable implements Runnable{
     private class XmlFileFilter implements FilenameFilter {
 
         public boolean accept(File dir, String name) {
-            Pattern p = Pattern.compile("(.*\\.xml)");
+            Pattern p = Pattern.compile("(.*\\.xml)");  // todo move up
             Matcher matcher = p.matcher(name);
             return matcher.matches();
         }
