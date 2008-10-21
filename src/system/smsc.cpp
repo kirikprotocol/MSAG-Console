@@ -431,7 +431,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }
 
   try{
-    RouteManager::EnableSmeRuters(cfg.cfgman->getBool("core.srcSmeSeparateRouting"));
+    RouteManager::EnableSmeRouters(cfg.cfgman->getBool("core.srcSmeSeparateRouting"));
   }catch(...)
   {
     __warning__("src sme routing disabled by default");

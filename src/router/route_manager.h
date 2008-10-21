@@ -145,7 +145,7 @@ public :
     smeRouters.clear();
   }
 
-  static void EnableSmeRuters(bool value)
+  static void EnableSmeRouters(bool value)
   {
     smeRoutersEnabled=value;
   }
