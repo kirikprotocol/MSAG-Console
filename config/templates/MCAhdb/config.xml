@@ -26,4 +26,10 @@
     <param name="errorText">@error_text</param>
     <param name="serviceType">@service_type@</param>
   </section>
+  
+  <section name="jmx">
+    <param name="port">@jmx_port</param>
+    <param name="user">@jmx_user</param>
+    <param name="password">@jmx_password</param>
+  </section>
 </config>
