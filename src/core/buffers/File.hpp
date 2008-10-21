@@ -856,10 +856,10 @@ public:
         }else
         {
           uint64_t writeTime;
-          uint64_t written=0;
+          size_t written=0;
           while(written<bufferPosition)
           {
-            uint64_t pieceSize=int(bufferPosition-written)<maxFlushSpeed?bufferPosition-written:maxFlushSpeed;
+            size_t pieceSize=int(bufferPosition-written)<maxFlushSpeed?bufferPosition-written:maxFlushSpeed;
             writeTime=smsc::util::getmillis();
             if(write(fd,buffer+written,pieceSize)!=ssize_t(pieceSize))
               throw FileException(FileException::errWriteFailed,filename.c_str());
