@@ -18,6 +18,7 @@ using smsc::logger::Logger;
 using smsc::core::threads::Thread;
 using namespace scag2::lcm;
 
+
 bool  PersClient::inited = false;
 Mutex PersClient::initLock;
 
@@ -51,12 +52,12 @@ public:
     int IncPropertyResult(SerialBuffer& bsb);
     int IncModPropertyResult(SerialBuffer& bsb);
 	
-	void PrepareBatch(SerialBuffer& bsb, bool transactMode = false);
+    void PrepareBatch(SerialBuffer& bsb, bool transactMode = false);
     void PrepareMTBatch(SerialBuffer& bsb, ProfileType pt, const PersKey& key, uint16_t cnt, bool transactMode = false);
-	void FinishPrepareBatch(uint32_t cnt, SerialBuffer& bsb);
-	void RunBatch(SerialBuffer& bsb);
+    void FinishPrepareBatch(uint32_t cnt, SerialBuffer& bsb);
+    void RunBatch(SerialBuffer& bsb);
 
-    bool call(LongCallContext* context);
+    bool call(LongCallContextBase* context);
 
     void init_internal(const char *_host, int _port, int timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount);
     
@@ -72,7 +73,7 @@ protected:
     void reinit(const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount);
     void setPacketSize(SerialBuffer& bsb);
 	
-	void emptyPacket(SerialBuffer& bsb) { bsb.Empty(); bsb.SetPos(4); }
+    void emptyPacket(SerialBuffer& bsb) { bsb.Empty(); bsb.SetPos(4); }
 	
     void FillHead(PersCmd pc, ProfileType pt, const PersKey& key, SerialBuffer& bsb);
     void AppendString(const char *str);
@@ -84,10 +85,10 @@ protected:
     PersServerResponseType GetServerResponse(SerialBuffer& bsb);
     void ParseProperty(Property& prop, SerialBuffer& bsb);
 
-    LongCallContext* getContext();
+    LongCallContextBase* getContext();
     void ping();
     void finishCalls();
-    void ExecutePersCall(LongCallContext* ctx);
+    void ExecutePersCall(LongCallContextBase* ctx);
 
     void CheckServerResponse(SerialBuffer& bsb);
 
@@ -106,7 +107,7 @@ protected:
     EventMonitor clientMonitor;
     EventMonitor connectMonitor;
     SerialBuffer sb;
-    LongCallContext* headContext, *tailContext;
+    LongCallContextBase* headContext, *tailContext;
 };
 
 inline unsigned GetLongevity(PersClient*) { return 5; }
@@ -613,9 +614,9 @@ void PersClientImpl::ParseProperty(Property& prop, SerialBuffer& bsb)
     }
 }
 
-LongCallContext* PersClientImpl::getContext()
+LongCallContextBase* PersClientImpl::getContext()
 {
-    LongCallContext *ctx;
+    LongCallContextBase *ctx;
     MutexGuard mt(clientMonitor);
     if (isStopping || !connected) return NULL;
     if (!headContext)  {
@@ -627,7 +628,7 @@ LongCallContext* PersClientImpl::getContext()
     return ctx;        
 }
 
-bool PersClientImpl::call(LongCallContext* context)
+bool PersClientImpl::call(LongCallContextBase* context)
 {
     MutexGuard mt(clientMonitor);
     if(isStopping) return false;
@@ -676,7 +677,7 @@ void PersClientImpl::ping()
     }
 }
 
-void PersClientImpl::ExecutePersCall(LongCallContext* ctx)
+void PersClientImpl::ExecutePersCall(LongCallContextBase* ctx)
 {
     PersCallParams* persParams = (PersCallParams*)ctx->getParams();
     smsc_log_debug(log, "ExecutePersCall: command=%d %s", ctx->callCommandId, persParams->skey.c_str());
@@ -735,7 +736,7 @@ int PersClientImpl::getClientStatus() {
 void PersClientImpl::finishCalls() {
   smsc_log_warn(log, "PersClient Not Connected: finishing %d LongCalls", callsCount);
   while(headContext) {
-    LongCallContext* ctx = headContext;
+    LongCallContextBase* ctx = headContext;
     headContext = headContext->next;
     PersCallParams* persParams = (PersCallParams*)ctx->getParams();
     if (persParams) {
@@ -772,7 +773,7 @@ int PersClientImpl::Execute()
           }
         }
 
-        LongCallContext* ctx = getContext();
+        LongCallContextBase* ctx = getContext();
 
         if(ctx)
         {
@@ -795,7 +796,7 @@ int PersClientImpl::Execute()
     MutexGuard mg(clientMonitor);
     while(headContext)
     {
-        LongCallContext* ctx = headContext;
+        LongCallContextBase* ctx = headContext;
         headContext = headContext->next;
         --callsCount;
         ctx->initiator->continueExecution(ctx, true);

@@ -2,11 +2,11 @@
 
 #ifndef SCAG_PERS_CLIENT_H
 #define SCAG_PERS_CLIENT_H
-
+ 
 #include "core/network/Socket.hpp"
 #include "scag/util/storage/SerialBuffer.h"
 #include "scag/config/pers/PersClientConfig.h"
-#include "scag/lcm/base/LongCallManager2.h"
+#include "scag/re/base/LongCallContextBase.h"
 #include "Property.h"
 #include "Types.h"
 
@@ -14,8 +14,7 @@ namespace scag { namespace pers { namespace util {
 
 using smsc::core::network::Socket;
 using scag2::lcm::LongCallParams;
-using scag2::lcm::LongCallContext;
-
+using scag2::lcm::LongCallContextBase;
 using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
 
@@ -79,15 +78,16 @@ union PersKey{
 	PersKey(uint32_t i) {ikey = i;};
 };
 
-class PersCallParams : public LongCallParams{
+
+class PersCallParams : public LongCallParams {
 public:
     PersCallParams() : LongCallParams(), error(0), result(0) {};
     ProfileType pt;
-	SerialBuffer sb;
-	uint32_t ikey;
+    SerialBuffer sb;
+    uint32_t ikey;
     std::string skey;
     std::string propName;
-	Property prop;
+    Property prop;
     uint32_t mod;
     
     int32_t error;
@@ -127,12 +127,12 @@ public:
     virtual int IncPropertyResult(SerialBuffer& bsb) = 0;
     virtual int IncModPropertyResult(SerialBuffer& bsb) = 0;
 
-	virtual void PrepareBatch(SerialBuffer& bsb, bool transactMode = false) = 0;
+    virtual void PrepareBatch(SerialBuffer& bsb, bool transactMode = false) = 0;
     virtual void PrepareMTBatch(SerialBuffer& bsb, ProfileType pt, const PersKey& key, uint16_t cnt, bool transactMode = false) = 0;
-	virtual void RunBatch(SerialBuffer& sb) = 0;
-	virtual void FinishPrepareBatch(uint32_t cnt, SerialBuffer& bsb) = 0;
+    virtual void RunBatch(SerialBuffer& sb) = 0;
+    virtual void FinishPrepareBatch(uint32_t cnt, SerialBuffer& bsb) = 0;
 	
-    virtual bool call(LongCallContext* context) = 0;
+    virtual bool call(LongCallContextBase* context) = 0;
     
     virtual void Stop() = 0;
 
