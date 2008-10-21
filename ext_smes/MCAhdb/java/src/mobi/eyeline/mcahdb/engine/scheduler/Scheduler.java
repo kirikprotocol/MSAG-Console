@@ -68,19 +68,22 @@ public class Scheduler {
     }
   }
 
-  public void missedCallAlert(String caller, String called) {
+  public boolean missedCallAlert(String caller, String called) {
     try {
       Task t = ds.remove(caller, called);
-      if (t != null)
-        engine.removeTask(t);      
+      if (t != null) {
+        engine.removeTask(t);
+        return true;
+      }
     } catch (DataSourceException e) {
       log.error("Can't unregister missed call", e);
     }
+    return false;
   }
 
   public void missedCallError(String caller, String called) {
-    missedCallAlert(caller, called);
-    sendMessage(called, caller, config.getSchedulerErrorText());
+    if (missedCallAlert(caller, called))
+      sendMessage(called, caller, config.getSchedulerErrorText());
   }
 
   public void profileChanged(String called) {
