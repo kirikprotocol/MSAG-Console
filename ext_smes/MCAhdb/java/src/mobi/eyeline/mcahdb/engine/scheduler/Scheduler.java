@@ -52,9 +52,6 @@ public class Scheduler {
 
   public void missedCall(String caller, String called, Date time) {
     try {
-      if (time.before(tds.getTime()))
-        return;
-
       Task oldTask = ds.remove(caller, called);
       if (oldTask != null)
         engine.removeTask(oldTask);      
