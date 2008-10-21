@@ -33,7 +33,7 @@ class LongCallInitiator;
 class LongCallContextBase
 {
 public:
-    LongCallContextBase(): initiator(NULL), next(NULL), params(NULL), stateMachineContext(NULL), continueExec(false) {}
+    LongCallContextBase(): initiator(NULL), next(NULL), stateMachineContext(NULL), continueExec(false), params(NULL) {}
 
     LongCallParams* getParams() { return params; }
 
