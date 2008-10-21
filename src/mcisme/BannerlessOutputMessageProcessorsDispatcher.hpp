@@ -14,7 +14,8 @@ class BannerlessOutputMessageProcessorsDispatcher : public OutputMessageProcesso
 public:
   explicit BannerlessOutputMessageProcessorsDispatcher(TaskProcessor& taskProcessor);
 
-  virtual void dispatch(const AbntAddr& abnt);
+  virtual void dispatchSendMissedCallNotification(const AbntAddr& abnt);
+  virtual void dispatchSendAbntOnlineNotifications(const sms_info* pInfo, const AbonentProfile& abntProfile);
   virtual void markMessageProcessorAsFree(OutputMessageProcessor* freeMessageProcessor) {}
   virtual void deleteMessageProcessor(OutputMessageProcessor* terminatedMessageProcessor) {}
 private:
