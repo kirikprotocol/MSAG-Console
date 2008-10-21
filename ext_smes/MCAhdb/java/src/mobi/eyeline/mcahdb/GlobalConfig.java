@@ -38,6 +38,11 @@ public class GlobalConfig implements EventStore.Config,
   private final String schedulerServiceType;
   private final int schedulerExpirationPeriod;
 
+  private final boolean jmx;
+  private final int jmxPort;
+  private final String jmxUser;
+  private final String jmxPassword;
+
   public GlobalConfig() throws ConfigException {
     XmlConfig config = new XmlConfig();
 
@@ -73,6 +78,18 @@ public class GlobalConfig implements EventStore.Config,
     schedulerProfileChangedText = schedulerSection.getString("profileChangedText");
     schedulerExpirationPeriod = schedulerSection.getInt("expirationPeriod");
     schedulerServiceType = schedulerSection.getString("serviceType");
+
+    XmlConfigSection jmx = config.getSection("jmx");
+    this.jmx = jmx != null;
+    if (this.jmx) {
+      this.jmxPort = jmx.getInt("port");
+      this.jmxUser = jmx.getString("user");
+      this.jmxPassword = jmx.getString("password");
+    } else {
+      this.jmxPort = 0;
+      this.jmxUser = null;
+      this.jmxPassword = null;
+    }
   }
 
   public int getJournalsCheckInterval() {
@@ -129,5 +146,21 @@ public class GlobalConfig implements EventStore.Config,
 
   public String getSchedulerServiceType() {
     return schedulerServiceType;
+  }
+
+  public boolean isJmx() {
+    return jmx;
+  }
+
+  public int getJmxPort() {
+    return jmxPort;
+  }
+
+  public String getJmxUser() {
+    return jmxUser;
+  }
+
+  public String getJmxPassword() {
+    return jmxPassword;
   }
 }

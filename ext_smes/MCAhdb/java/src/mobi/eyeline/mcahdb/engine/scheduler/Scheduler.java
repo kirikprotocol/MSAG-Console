@@ -13,6 +13,7 @@ import mobi.eyeline.mcahdb.engine.scheduler.ds.impl.file.TimeDataSourceImpl;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 
+import javax.management.DynamicMBean;
 import java.io.File;
 import java.util.Collection;
 import java.util.Date;
@@ -33,6 +34,7 @@ public class Scheduler {
   private final SchedulerEngine engine;
   private final Config config;
   private final SMPPTransceiver transceiver;
+  private DynamicMBean mbean;
 
   public Scheduler(Config config, SMPPTransceiver transceiver) throws InitException {
     try {
@@ -115,6 +117,12 @@ public class Scheduler {
     } catch (ShutdownedException e) {
       log.error(e,e);
     }
+  }
+
+  public DynamicMBean getMBean() {
+    if (mbean == null)
+      mbean = new SchedulerMBean(engine, ds, tds);
+    return mbean;
   }
 
   public void start() {

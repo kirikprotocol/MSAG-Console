@@ -23,4 +23,6 @@ public interface TaskDataSource {
   public Task get(String caller, String called) throws DataSourceException;
 
   public void get(String called, Collection<Task> result) throws DataSourceException;
+
+  public int size();
 }

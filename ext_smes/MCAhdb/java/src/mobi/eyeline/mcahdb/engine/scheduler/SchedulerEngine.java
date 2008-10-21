@@ -66,6 +66,10 @@ class SchedulerEngine {
       queue.remove(new TaskKey(t.getCaller(), t.getCalled()));
   }
 
+  public int getQueueSize() {
+    return queue.size();
+  }
+
   public void start() {
     worker.start();
   }

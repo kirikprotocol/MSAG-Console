@@ -26,4 +26,10 @@
     <param name="responseDateFormat">yyyyMMdd HH:mm:ss</param>
     <param name="eventsFetchInterval">12</param>
   </section>
+
+  <section name="jmx">
+    <param name="port">8124</param>
+    <param name="user">admin</param>
+    <param name="password">admin</param>
+  </section>
 </config>
