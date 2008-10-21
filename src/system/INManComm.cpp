@@ -64,6 +64,7 @@ static void FillChargeOp(SMSId id,OpClass& op,const SMS& sms)
   op.setMsgId(id);
   op.setServiceOp(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)?sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP):-1);
   op.setPartsNum(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM));
+  op.setServiceType(sms.getEServiceType());
   if(sms.getBillingRecord()==2)
   {
     op.setMTcharge();
