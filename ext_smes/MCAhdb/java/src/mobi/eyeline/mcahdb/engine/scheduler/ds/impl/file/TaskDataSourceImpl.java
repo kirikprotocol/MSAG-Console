@@ -144,6 +144,10 @@ public class TaskDataSourceImpl implements TaskDataSource {
     }
   }
 
+  public int size() {
+    return index.size();
+  }
+
   public void list(Date fromDate, Date tillDate, Collection<Task> result) throws DataSourceException {
     LinkedList<SchedulePage> pages = new LinkedList<SchedulePage>();
     cache.getPagesByDates(fromDate, tillDate, pages);
@@ -228,7 +232,7 @@ public class TaskDataSourceImpl implements TaskDataSource {
     }
 
     public int size() {
-      return 0;
+      return index.size();
     }
 
     public boolean isEmpty() {

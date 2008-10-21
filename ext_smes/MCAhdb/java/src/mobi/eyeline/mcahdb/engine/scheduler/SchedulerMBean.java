@@ -38,6 +38,7 @@ public class SchedulerMBean extends AbstractDynamicMBean {
       try {
         return tds.getTime();
       } catch (DataSourceException e) {
+        return null;
       }
     else if (attribute.equals("TasksSize"))
       return ds.size();

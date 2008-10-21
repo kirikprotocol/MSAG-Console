@@ -44,8 +44,6 @@ public class JournalsProcessor {
     this.eventsStore = eventsStore;
     this.scheduler = scheduler;
 
-    scheduler.start();
-
     this.executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
       public Thread newThread(Runnable r) {
         return new Thread(r, "Journals-Processor-Task");
