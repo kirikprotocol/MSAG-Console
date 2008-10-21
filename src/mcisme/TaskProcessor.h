@@ -82,7 +82,7 @@ struct sms_info
   vector<MCEvent> events;
 };
 
-class OutputMessageProcessor;
+class SendMessageEventHandler;
 class TimeoutMonitor;
 
 class TaskProcessor : public Thread, public MissedCallListener, public AdminInterface
@@ -139,8 +139,6 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   bool getFromInQueue(MissedCallEvent& event);
 
   bool GetAbntEvents(const AbntAddr& abnt, vector<MCEvent>& events);
-  void SendAbntOnlineNotifications(const sms_info* pInfo,
-                                   const AbonentProfile& profile);
 
   bool needNotify(const AbonentProfile& profile, const sms_info* pInfo) const;
 
@@ -159,13 +157,15 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   void store_A_Event_in_logstore(const AbntAddr& callingAbonent,
                                  const AbntAddr& calledAbonent,
                                  const AbonentProfile& abntProfile);
-
 public:
 
   TaskProcessor(ConfigView* config);
   virtual ~TaskProcessor();
 
-  void ProcessAbntEvents(const AbntAddr& abnt, OutputMessageProcessor* bannerEngineProxy=NULL);
+  void ProcessAbntEvents(const AbntAddr& abnt, SendMessageEventHandler* bannerEngineProxy=NULL);
+  void SendAbntOnlineNotifications(const sms_info* pInfo,
+                                   const AbonentProfile& profile,
+                                   SendMessageEventHandler* bannerEngineProxy=NULL);
 
   int getDaysValid()       { return daysValid;  }
   int getProtocolId()      { return protocolId; }
@@ -196,6 +196,7 @@ public:
   virtual void invokeProcessDataSmTimeout(void);
   virtual bool invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt);
 
+  void commitMissedCallEvents(const sms_info* pInfo, const AbonentProfile& abntProfile);
   /* ------------------------ Admin interface ------------------------ */
 
   virtual void flushStatistics() {

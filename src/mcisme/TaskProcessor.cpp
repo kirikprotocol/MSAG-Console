@@ -9,6 +9,7 @@
 #include <system/common/TimeZoneMan.hpp>
 #include <scag/util/encodings/Encodings.h>
 #include <time.h>
+#include <util/smstext.h>
 
 #include "TaskProcessor.h"
 #include "misscall/callproc.hpp"
@@ -543,7 +544,7 @@ void TaskProcessor::Run()
       AbntAddr abnt;
       if(pDeliveryQueue->Get(abnt)) {
         // dispatch message to one of active processing threads
-        _outputMessageProcessorsDispatcher->dispatch(abnt);
+        _outputMessageProcessorsDispatcher->dispatchSendMissedCallNotification(abnt);
       }
     } catch (std::exception& exc) {
       smsc_log_error(logger, ERROR_MESSAGE, exc.what());
@@ -617,7 +618,7 @@ int TaskProcessor::Execute()
 
 void
 TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt,
-                                 OutputMessageProcessor* bannerEngineProxy)
+                                 SendMessageEventHandler* bannerEngineProxy)
 {
   static time_t start = time(0);
   time_t end;
@@ -643,7 +644,7 @@ TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt,
     return;
   }
 
-  MessageFormatter  formatter(templateManager->getInformFormatter(profile.informTemplateId));
+  MessageFormatter formatter(templateManager->getInformFormatter(profile.informTemplateId));
 
   int timeOffset = static_cast<int>(smsc::system::common::TimeZoneManager::getInstance().getTimeZone(abnt.getAddress())+timezone);
 
@@ -666,7 +667,7 @@ TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt,
   msg.caller_abonent = mcEventOut.caller;
 
   if(bannerEngineProxy)
-    formatter.addBanner(msg, bannerEngineProxy->getBanner(abnt));
+    addBanner(msg, bannerEngineProxy->getBanner(abnt));
 
   smsc_log_info(logger, "ProcessAbntEvents: prepared message = '%s' for sending to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
 
@@ -768,14 +769,7 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
       AbonentProfile abntProfile;
       profileStorage->Get(pInfo->abnt, abntProfile);
 
-      SendAbntOnlineNotifications(pInfo.get(), abntProfile);
-      statistics->incDelivered(static_cast<unsigned>(pInfo->events.size()));
-      pStorage->deleteEvents(pInfo->abnt, pInfo->events);
-
-      store_D_Event_in_logstore(pInfo->abnt, pInfo->events, abntProfile);
-
-      time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt, smsc::system::Status::OK);
-      pStorage->setSchedParams(pInfo->abnt, schedTime, status);
+      _outputMessageProcessorsDispatcher->dispatchSendAbntOnlineNotifications(pInfo.release(), abntProfile);
     }
     else if(smsc::system::Status::isErrorPermanent(status))
     {
@@ -797,6 +791,18 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
     }
   }
   return true;
+}
+
+void
+TaskProcessor::commitMissedCallEvents(const sms_info* pInfo, const AbonentProfile& abntProfile)
+{
+  statistics->incDelivered(static_cast<unsigned>(pInfo->events.size()));
+  pStorage->deleteEvents(pInfo->abnt, pInfo->events);
+
+  store_D_Event_in_logstore(pInfo->abnt, pInfo->events, abntProfile);
+
+  time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt, smsc::system::Status::OK);
+  pStorage->setSchedParams(pInfo->abnt, schedTime, smsc::system::Status::OK);
 }
 
 void TaskProcessor::invokeProcessDataSmTimeout(void)
@@ -861,7 +867,8 @@ TaskProcessor::needNotify(const AbonentProfile& profile, const sms_info* pInfo) 
 
 void
 TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
-                                           const AbonentProfile& profile)
+                                           const AbonentProfile& profile,
+                                           SendMessageEventHandler* bannerEngineProxy)
 {
   smsc_log_debug(logger, "Process Notify message");
   statistics->incNotified();
@@ -907,6 +914,9 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
 
     msg.caller_abonent = abnt;
     msg.notification = true;
+
+    if(bannerEngineProxy)
+      addBanner(msg, bannerEngineProxy->getBanner(pInfo->abnt));
 
     smsc_log_debug(logger, "Notify message = %s to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
 
