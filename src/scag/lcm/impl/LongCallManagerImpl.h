@@ -21,8 +21,8 @@ public:
     void init(uint32_t _maxThreads);
 
     /// interface for tasks
-    LongCallContext* getContext();
-    bool call(LongCallContext* context);
+    LongCallContextBase* getContext();
+    bool call(LongCallContextBase* context);
 
 protected:
     virtual void configChanged();
@@ -33,7 +33,7 @@ protected:
     EventMonitor mtx;
     uint32_t maxThreads;
     smsc::core::threads::ThreadPool pool;
-    LongCallContext *headContext, *tailContext;
+    LongCallContextBase *headContext, *tailContext;
     
 };
 

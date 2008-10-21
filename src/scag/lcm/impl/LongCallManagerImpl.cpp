@@ -69,7 +69,7 @@ void LongCallManagerImpl::shutdown()
     {
         MutexGuard mg(mtx);
         stopped = true;
-        LongCallContext *ctx;
+        LongCallContextBase *ctx;
         while(headContext)
         {
             ctx = headContext;
@@ -84,18 +84,18 @@ void LongCallManagerImpl::shutdown()
 }
 
 
-LongCallContext* LongCallManagerImpl::getContext()
+LongCallContextBase* LongCallManagerImpl::getContext()
 {
     MutexGuard mt(mtx);
     if(stopped) return NULL;
     if(!headContext) mtx.wait();
-    LongCallContext *ctx = headContext;    
+    LongCallContextBase *ctx = headContext;    
     if(headContext) headContext = headContext->next;
     return ctx;        
 }
 
 
-bool LongCallManagerImpl::call(LongCallContext* context)
+bool LongCallManagerImpl::call(LongCallContextBase* context)
 {
     if(stopped) return false;
     
@@ -110,17 +110,17 @@ bool LongCallManagerImpl::call(LongCallContext* context)
             if(context->callCommandId == BILL_OPEN)
             {
                 BillOpenCallParams * bp = (BillOpenCallParams*)context->getParams();
-                bill::BillingManager::Instance().Open(bp->billingInfoStruct, bp->tariffRec, context);
+                bill::BillingManager::Instance().Open(bp->billingInfoStruct, bp->tariffRec, (LongCallContext*)context);
             }
             else if(context->callCommandId == BILL_COMMIT)
             {
                 BillCloseCallParams * bp = (BillCloseCallParams*)context->getParams();
-                bill::BillingManager::Instance().Commit(bp->BillId, context);
+                bill::BillingManager::Instance().Commit(bp->BillId, (LongCallContext*)context);
             }
             else if(context->callCommandId == BILL_ROLLBACK)
             {
                 BillCloseCallParams * bp = (BillCloseCallParams*)context->getParams();
-                bill::BillingManager::Instance().Rollback(bp->BillId, context);
+                bill::BillingManager::Instance().Rollback(bp->BillId, (LongCallContext*)context);
             }
         }
         catch(SCAGException& e)
@@ -158,7 +158,7 @@ bool LongCallManagerImpl::call(LongCallContext* context)
 
 int LongCallTask::Execute()
 {
-    LongCallContext* ctx;
+    LongCallContextBase* ctx;
     
     while(!isStopping)
     {
