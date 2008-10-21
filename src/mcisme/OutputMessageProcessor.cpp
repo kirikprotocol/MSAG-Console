@@ -12,7 +12,7 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
                                                util::config::ConfigView* advertCfg,
                                                OutputMessageProcessorsDispatcher& dispatcher)
   : _taskProcessor(taskProcessor), _isStopped(false), _eventWasSignalled(false),
-    _logger(logger::Logger::getInstance("omsgprc")), _messagesProcessorsDispatcher(dispatcher)
+    _logger(logger::Logger::getInstance("omsgprc")), _handler(NULL), _messagesProcessorsDispatcher(dispatcher)
 {
   if(!advertCfg->getBool("useAdvert"))
     throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: Fatal! Advertising.useAdvert = false");
@@ -62,7 +62,7 @@ void
 OutputMessageProcessor::stop()
 {
   _isStopped = true;
-  _abonentInfoEventMonitor.notify();
+  _outputEventMonitor.notify();
 }
 
 int
@@ -71,18 +71,16 @@ OutputMessageProcessor::Execute()
   while (!_isStopped) {
     try {
       AbntAddr calledAbnt;
-      if ( waitForCalledAbonentInfo(&calledAbnt) ) {
+      std::auto_ptr<SendMessageEventHandler> handler(waitingForHandler());
+      if ( handler.get() ) {
         try {
-          formOutputMessageAndSendIt(calledAbnt);
+          handler->handle();
         } catch(...) {
           _messagesProcessorsDispatcher.markMessageProcessorAsFree(this);
           throw;
         }
         _messagesProcessorsDispatcher.markMessageProcessorAsFree(this);
       }
-    } catch (NetworkException& ex) {
-      smsc_log_error(_logger, "OutputMessageProcessor::Execute::: catched NetworkException '%s'", ex.what());
-      _advertising->reinit(_connectTimeout);
     } catch (std::exception& ex) {
       smsc_log_error(_logger, "OutputMessageProcessor::Execute::: catched unexpected exception '%s'", ex.what());
     } catch (...) {
@@ -102,68 +100,93 @@ OutputMessageProcessor::Execute()
 void
 OutputMessageProcessor::assignMessageOutputWork(const AbntAddr& calledAbnt)
 {
-  core::synchronization::MutexGuard synchronize(_abonentInfoEventMonitor);
-  _calledAbnt = calledAbnt;
+  core::synchronization::MutexGuard synchronize(_outputEventMonitor);
+  _handler = new SendMissedCallMessageEventHandler(_taskProcessor, _connectTimeout, _advertising, calledAbnt);
+
   _eventWasSignalled = true;
-  _abonentInfoEventMonitor.notify();
+  _outputEventMonitor.notify();
 }
 
-bool
-OutputMessageProcessor::waitForCalledAbonentInfo(AbntAddr* calledAbnt)
+void
+OutputMessageProcessor::assignMessageOutputWork(const sms_info* pInfo, const AbonentProfile& abntProfile)
 {
-  core::synchronization::MutexGuard synchronize(_abonentInfoEventMonitor);
+  core::synchronization::MutexGuard synchronize(_outputEventMonitor);
+  _handler = new SendAbonentOnlineNotificationEventHandler(_taskProcessor, _connectTimeout, _advertising, pInfo, abntProfile);
+
+  _eventWasSignalled = true;
+  _outputEventMonitor.notify();
+}
+
+SendMessageEventHandler*
+OutputMessageProcessor::waitingForHandler()
+{
+  core::synchronization::MutexGuard synchronize(_outputEventMonitor);
 
   while ( !_eventWasSignalled ) {
-    if ( _abonentInfoEventMonitor.wait() )
-      throw smsc::util::SystemError("OutputMessageProcessor::waitForCalledAbonentInfo::: call to EventMonitor::wait failed");
-    
+    if ( _outputEventMonitor.wait() )
+      throw smsc::util::SystemError("OutputMessageProcessor::waitingForHandler::: call to EventMonitor::wait failed");
   }
 
   _eventWasSignalled = false;
 
   if ( _isStopped )
-    return false;
-  else {
-    *calledAbnt = _calledAbnt;
-    return true;
-  }
+    return NULL;
+  else
+    return _handler;
 }
 
 void
-OutputMessageProcessor::formOutputMessageAndSendIt(const AbntAddr& abnt)
+SendMissedCallMessageEventHandler::handle() {
+  formOutputMessageAndSendIt(_calledAbnt);
+}
+
+void
+SendMissedCallMessageEventHandler::formOutputMessageAndSendIt(const AbntAddr& abnt)
 {
-  smsc_log_debug(_logger, "OutputMessageProcessor::formOutputMessageAndSendIt::: format message for abonent '%s'", abnt.getText().c_str());
+  smsc_log_debug(_logger, "SendMissedCallMessageEventHandler::formOutputMessageAndSendIt::: format message for abonent '%s'", abnt.getText().c_str());
   _taskProcessor.ProcessAbntEvents(abnt, this);
 }
 
 string
-OutputMessageProcessor::getBanner(const AbntAddr& abnt)
+SendMessageEventHandler::getBanner(const AbntAddr& abnt)
 {
   string banner, ret, ret1;
   int rc;
 
-  smsc_log_debug(_logger, "OutputMessageProcessor::getBanner::: call to BE for abonent '%s'", abnt.getText().c_str());
-  rc = _advertising->getBanner(abnt.toString(), _taskProcessor.getSvcType(), SMPP_SMS, UTF16BE, ret);
-  if(rc == 0)
-  {
-    try {
-      scag::util::encodings::Convertor::convert("UTF-16BE", "UTF-8", ret.c_str(), ret.length(), ret1);
-    } catch(scag::exceptions::SCAGException e) {
-      smsc_log_error(_logger, "Exc: %s", e.what());
-      return banner="";
+  smsc_log_debug(_logger, "SendMessageEventHandler::getBanner::: call to BE for abonent '%s'", abnt.getText().c_str());
+  try {
+    rc = _advertising->getBanner(abnt.toString(), _taskProcessor.getSvcType(), SMPP_SMS, UTF16BE, ret);
+    if(rc == 0)
+    {
+      try {
+        scag::util::encodings::Convertor::convert("UTF-16BE", "UTF-8", ret.c_str(), ret.length(), ret1);
+      } catch(scag::exceptions::SCAGException e) {
+        smsc_log_error(_logger, "Exc: %s", e.what());
+        return banner="";
+      }
+      try {
+        scag::util::encodings::Convertor::convert("UTF-8", "CP1251", ret1.c_str(), ret1.length(), banner);
+      } catch(scag::exceptions::SCAGException e) {
+        smsc_log_error(_logger, "Exc: %s", e.what());
+        return banner="";
+      }
+      smsc_log_debug(_logger, "rc = %d; Banner: %s (%s)", rc, banner.c_str(), ret.c_str());
     }
-    try {
-      scag::util::encodings::Convertor::convert("UTF-8", "CP1251", ret1.c_str(), ret1.length(), banner);
-    } catch(scag::exceptions::SCAGException e) {
-      smsc_log_error(_logger, "Exc: %s", e.what());
-      return banner="";
-    }
-    smsc_log_debug(_logger, "rc = %d; Banner: %s (%s)", rc, banner.c_str(), ret.c_str());
+    else
+      smsc_log_debug(_logger, "getBanner Error. Error code = %d", rc);
+  } catch (NetworkException& ex) {
+    smsc_log_error(_logger, "SendMessageEventHandler::getBanner::: catched NetworkException '%s'", ex.what());
+    _advertising->reinit(_connectTimeout);
   }
-  else
-    smsc_log_debug(_logger, "getBanner Error. Error code = %d", rc);
 
   return banner;
+}
+
+void
+SendAbonentOnlineNotificationEventHandler::handle()
+{
+  _taskProcessor.SendAbntOnlineNotifications(_pInfo, _abntProfile, this);
+  _taskProcessor.commitMissedCallEvents(_pInfo, _abntProfile);
 }
 
 }}
