@@ -78,6 +78,7 @@ public:
     void sessionFinalized( Session& s );
 
     void getSessionsCount( unsigned& sessionsCount,
+                           unsigned& sessionsLoadedCount,
                            unsigned& sessionsLockedCount ) const;
 
     /// upload count initial sessions, return true if there are more sessions to upload
@@ -119,8 +120,9 @@ private:
     
     bool                        diskio_;
 
-    // statstics
+    // statistics
     unsigned                    totalSessions_;
+    unsigned                    loadedSessions_;
     unsigned                    lockedSessions_;
     unsigned                    storedCommands_;
 

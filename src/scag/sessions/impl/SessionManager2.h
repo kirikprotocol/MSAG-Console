@@ -102,6 +102,7 @@ public:
     // virtual void releaseSession(SessionPtr session);
 
     virtual void getSessionsCount( uint32_t& sessionsCount,
+                                   uint32_t& sessionsLoadedCount,
                                    uint32_t& sessionsLockedCount );
 
     void Start();

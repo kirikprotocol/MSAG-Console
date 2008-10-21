@@ -246,7 +246,9 @@ int Sender::Execute()
       d.uptime=now.tv_sec-start.tv_sec;
 
         // smsc_log_debug( logger, "going to get statistics");
-        SessionManager::Instance().getSessionsCount( d.sessionCount, d.sessionLockedCount );
+        SessionManager::Instance().getSessionsCount( d.sessionCount,
+                                                     d.sessionLoadedCount,
+                                                     d.sessionLockedCount );
         SmppManager::Instance().getQueueLen(d.smppReqQueueLen, d.smppRespQueueLen, d.smppLCMQueueLen);
         // smsc_log_debug( logger, "stat is sessions: tot/lck=%u/%u, queues: req/resp/lcm=%u/%u/%u",
         // d.sessionCount, d.sessionLockedCount,

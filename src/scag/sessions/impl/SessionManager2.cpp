@@ -151,9 +151,13 @@ ActiveSession SessionManagerImpl::fetchSession( const SessionKey&           key,
 }
 
 
-void SessionManagerImpl::getSessionsCount(uint32_t& sessionsCount, uint32_t& sessionsLockedCount)
+void SessionManagerImpl::getSessionsCount(uint32_t& sessionsCount,
+                                          uint32_t& sessionsLoadedCount,
+                                          uint32_t& sessionsLockedCount)
 {
-    if ( store_.get() ) store_->getSessionsCount( sessionsCount, sessionsLockedCount );
+    if ( store_.get() ) store_->getSessionsCount( sessionsCount, 
+                                                  sessionsLoadedCount,
+                                                  sessionsLockedCount );
 }
 
 
@@ -203,9 +207,9 @@ void SessionManagerImpl::Stop()
             unsigned sessionLockedCount = 0;
             for ( int passes = 0; ; ) {
 
-                unsigned sessionCount;
-                unsigned newSessionLockedCount;
-                store_->getSessionsCount( sessionCount, newSessionLockedCount );
+                unsigned sessionCount, sessionLoadedCount, newSessionLockedCount;
+                store_->getSessionsCount( sessionCount, sessionLoadedCount,
+                                          newSessionLockedCount );
                 if ( newSessionLockedCount == 0 ) break;
                 if ( sessionLockedCount == newSessionLockedCount )
                     ++passes;

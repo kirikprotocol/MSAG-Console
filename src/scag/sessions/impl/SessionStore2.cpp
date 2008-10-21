@@ -84,10 +84,11 @@ void SessionStoreImpl::init( unsigned eltNumber,
     // eltNumber_ = eltNumber;
 
     totalSessions_ = 0;
+    loadedSessions_ = 0;
     lockedSessions_ = 0;
     storedCommands_ = 0;
 
-    maxcachesize_ = 0;   // maximum of totalSessions
+    maxcachesize_ = 0;   // maximum of loadedSessions
     maxqueuesize_ = 0;   // maximum length of one session command queue
     maxcommands_ = 0;    // maximum of storedCommands
 
@@ -164,6 +165,7 @@ void SessionStoreImpl::init( unsigned eltNumber,
             smsc_log_info( log_, "#%u has %u initial sessions",
                            eltNumber,
                            unsigned(initialkeys_.size()) );
+            totalSessions_ = unsigned(initialkeys_.size());
         }
 
         // disk_->addStorage( i, eds.release() );
@@ -288,7 +290,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
         session = cache_->store2val(*v);
         session->setCurrentCommand( cmd->getSerial() );
 
-        ++totalSessions_;
+        ++loadedSessions_;
         ++lockedSessions_;
 
         // release lock
@@ -298,17 +300,28 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     // delete prev;
 
     if ( v && diskio_ ) {
-        if ( ! disk_->get( key, cache_->store2ref(*v) ) && ! create ) {
-            // failure to upload from disk and creation flag is not set
+
+        if ( ! disk_->get( key, cache_->store2ref(*v) ) ) {
+            // session is not found on disk
             {
                 MutexGuard mg(cacheLock_);
-                session = cache_->release( key );
-                --totalSessions_;
-                --lockedSessions_;
+                if ( ! create ) {
+                    // creation is forbidden
+                    session = cache_->release( key );
+                    --loadedSessions_;
+                    --lockedSessions_;
+                } else {
+                    ++totalSessions_;
+                }
             }
-            delete session;
-            session = 0;
-            what = " is not found";
+            if ( !create ) {
+                // failure to upload from disk and creation flag is not set
+                delete session;
+                session = 0;
+                what = " is not found";
+            } else {
+                what = " created";
+            }
         } else if ( session->expirationTime() < time(0) ) {
             what = " expired on disk";
             queue_->pushCommand( cmd.get(), SCAGCommandQueue::RESERVE );
@@ -373,8 +386,7 @@ void SessionStoreImpl::releaseSession( Session& session )
     SCAGCommand* nextcmd = 0;
     uint32_t nextuid = 0;
     uint32_t prevuid;
-    unsigned tot;
-    unsigned lck;
+    unsigned tot, ldd, lck;
     
     bool needflush = false;
     if ( diskio_ ) {
@@ -421,14 +433,15 @@ void SessionStoreImpl::releaseSession( Session& session )
         prevuid = session.setCurrentCommand( nextuid );
 
         tot = totalSessions_;
+        ldd = loadedSessions_;
         lck = lockedSessions_;
         // release lock
     }
     // commands are owned elsewhere
     // delete prevcmd;
 
-    smsc_log_debug( log_, "releaseSession(session=%p/%s) => prevcmd=%u nextcmd=%u, tot/lck=%u/%u",
-                    &session, key.toString().c_str(), prevuid, nextuid, tot, lck );
+    smsc_log_debug( log_, "releaseSession(session=%p/%s) => prevcmd=%u nextcmd=%u, tot/ldd/lck=%u/%u/%u",
+                    &session, key.toString().c_str(), prevuid, nextuid, tot, ldd, lck );
 
     if ( ! (nextcmd && carryNextCommand( session, nextcmd, true)) )
         expiration_->scheduleExpire(expiration,lastaccess,key);
@@ -469,7 +482,6 @@ inline ActiveSession SessionStoreImpl::makeLockedSession( Session&     s,
                        &s, s.sessionKey().toString().c_str(), oldc, c.getSerial() );
         ::abort();
     }
-    // ++lockedSessions_;
     s.setLastAccessTime( time(0) );
     return ActiveSession(*this,s);
 }
@@ -580,7 +592,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             v = cache_->get( key );
             session = cache_->store2val(*v);
             session->setCurrentCommand(2);
-            ++totalSessions_;
+            ++loadedSessions_;
             {
                 UnlockMutexGuard umg(cacheLock_);
                 smsc_log_debug(log_,"key=%s to be expired is not found",
@@ -598,6 +610,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             }
             if ( !v ) {
                 --totalSessions_;
+                --loadedSessions_;
                 delete cache_->release(key);
                 ++notexpired;
                 session = 0;
@@ -701,10 +714,12 @@ void SessionStoreImpl::sessionFinalized( Session& s )
 
 
 void SessionStoreImpl::getSessionsCount( unsigned& sessionsCount,
+                                         unsigned& sessionsLoadedCount,
                                          unsigned& sessionsLockedCount ) const
 {
     MutexGuard mg(cacheLock_);
     sessionsCount = totalSessions_;
+    sessionsLoadedCount = loadedSessions_;
     sessionsLockedCount = lockedSessions_;
 }
 
@@ -799,6 +814,7 @@ bool SessionStoreImpl::doSessionFinalization( Session& session, bool keep )
     } else {
         // no more commands, delete the session
         --totalSessions_;
+        --loadedSessions_;
         delete cache_->release( session.sessionKey() );
         return true;
     }

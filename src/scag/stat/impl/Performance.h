@@ -39,7 +39,7 @@ typedef struct {
 typedef struct {
   
 //    uint32_t size;
-    uint32_t sessionCount, sessionLockedCount;
+    uint32_t sessionCount, sessionLoadedCount, sessionLockedCount;
     uint32_t smppReqQueueLen, smppRespQueueLen, smppLCMQueueLen;
     uint32_t httpReqQueueLen, httpRespQueueLen, httpLCMQueueLen;
     time_t uptime;

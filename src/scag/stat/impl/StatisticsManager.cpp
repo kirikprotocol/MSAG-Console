@@ -1013,6 +1013,7 @@ void StatisticsManager::incScMmsCounter(const char* systemId, int index)
 
 void StatisticsManager::reportGenPerformance(PerformanceData * data)
 {
+    // TODO: move guard after serialization?
     MutexGuard g(genSocketsMutex);
     SerializationBuffer buf(256);
 

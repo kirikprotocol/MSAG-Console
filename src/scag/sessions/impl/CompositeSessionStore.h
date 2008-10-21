@@ -51,6 +51,7 @@ public:
     void sessionFinalized( Session& s );
 
     void getSessionsCount( unsigned& sessionsCount,
+                           unsigned& sessionsLoadedCount,
                            unsigned& sessionsLockedCount ) const;
 
 private:

@@ -172,19 +172,22 @@ void CompositeSessionStore::sessionFinalized( Session& s )
 
 
 void CompositeSessionStore::getSessionsCount( unsigned& sessionsCount,
+                                              unsigned& sessionsLoadedCount,
                                               unsigned& sessionsLockedCount ) const
 {
     sessionsCount = 0;
+    sessionsLoadedCount = 0;
     sessionsLockedCount = 0;
     if ( stopped_ ) return;
     for ( std::vector< Storage* >::const_iterator i = storages_.begin();
           i != storages_.end();
           ++i ) {
         if ( ! *i ) continue;
-        unsigned sc, slc;
-        (*i)->getSessionsCount( sc, slc );
+        unsigned sc, slc, skc;
+        (*i)->getSessionsCount( sc, slc, skc );
         sessionsCount += sc;
-        sessionsLockedCount += slc;
+        sessionsLoadedCount += slc;
+        sessionsLockedCount += skc;
     }
 }
 

@@ -53,6 +53,7 @@ public:
 
     /// get some statistics
     virtual void getSessionsCount( uint32_t& sessionsCount,
+                                   uint32_t& sessionsLoadedCount,
                                    uint32_t& sessionsLockedCount ) = 0;
 
     virtual ~SessionManager();
