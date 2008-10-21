@@ -91,4 +91,4 @@ scag/scag2           gwmain2        \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil-URCdb -lutil \
   $(__LIBRARIES) \
-  $(SSL_LIB)
+  $(SSL_LIB) $(LIBMALLOC)
