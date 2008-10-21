@@ -597,7 +597,9 @@ int DistrListProcess::Execute()
       }
 
       SMS ans;
-      ans.setOriginatingAddress(originatingAddress.length()?originatingAddress.c_str():sms.getDestinationAddress());
+      ans.setOriginatingAddress(
+        smeMode?originatingAddressForSme.c_str():
+        originatingAddress.length()?originatingAddress.c_str():sms.getDestinationAddress());
       ans.setDestinationAddress(sms.getOriginatingAddress());
       char msc[]="";
       char imsi[]="";
