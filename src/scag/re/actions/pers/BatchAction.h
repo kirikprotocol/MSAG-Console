@@ -6,7 +6,6 @@
 #include "scag/re/actions/Action.h"
 #include "scag/re/actions/LongCallAction.h"
 #include "scag/re/actions/pers/PersAction.h"
-#include "scag/pers/PersClient.h"
 
 namespace scag { namespace pers {  
 

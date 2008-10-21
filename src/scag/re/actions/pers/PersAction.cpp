@@ -2,7 +2,6 @@
 #include "scag/stat/Statistics.h"
 #include "scag/util/properties/Properties.h"
 #include "scag/re/CommandAdapter.h"
-#include "scag/pers/Property.h"
 
 #include "sms/sms.h"
   
