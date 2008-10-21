@@ -100,6 +100,7 @@ public class Constants {
                 public static final Constants COULD_NOT_CREATE_MASK = new Constants("error.routing.routes.could_not_create_mask");
                 public static final Constants COULD_NOT_CREATE_DESTINATION_MASK = new Constants("error.routing.routes.could_not_create_destination_mask");
                 public static final Constants COULDNT_APPLY_ROUTES = new Constants("error.routing.couldnt_apply_routes");
+                public static final Constants COULDNT_APPLY_ROUTES_SAVE_WV = new Constants("error.routing.couldnt_apply_routes_save_wv");
 //                public static final Constants COULD_NOT_SAVE_ROTE = new Constants("error.routing.routes.could_not_save_route");
                 public static final Constants COULDNT_APPLY_HTTP_ROUTES = new Constants("error.routing.couldnt_apply_http_routes");
                 public static final Constants COULDNT_LOAD_ROUTES = new Constants("error.routing.couldnt_load_routes");
