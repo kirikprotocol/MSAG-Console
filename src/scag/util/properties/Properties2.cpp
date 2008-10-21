@@ -1,6 +1,6 @@
+#include <stdlib.h>
 #include "Properties2.h"
 #include "scag/exc/SCAGExceptions.h"
-// #include <cstdlib.h>
 // #include <memory.h>
 // #include "util/recoder/recode_dll.h"
 // #include <core/buffers/TmpBuf.hpp>
@@ -60,9 +60,7 @@ const Property::string_type& Property::convertToStr() const
 
 bool Property::convertToBool() const
 {
-    if (sync) return (bool)i_val;
-    bool val;
-    // char buff[1024];
+    if (sync) return bool(i_val);
     switch (type) 
     {
     case pt_bool:
@@ -72,9 +70,8 @@ bool Property::convertToBool() const
         i_val = s_val.length();
         break;
     }
-    val = i_val;
     sync = true;
-    return val;
+    return bool(i_val);
 }
 
 time_t Property::convertToDate() const
