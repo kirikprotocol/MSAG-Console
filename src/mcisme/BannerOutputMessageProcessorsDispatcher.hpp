@@ -16,11 +16,14 @@ class BannerOutputMessageProcessorsDispatcher : public OutputMessageProcessorsDi
 public:
   explicit BannerOutputMessageProcessorsDispatcher(TaskProcessor& taskProcessor,
                                                    util::config::ConfigView* advertCfg);
-  virtual void dispatch(const AbntAddr& abnt);
+  virtual void dispatchSendMissedCallNotification(const AbntAddr& abnt);
+  virtual void dispatchSendAbntOnlineNotifications(const sms_info* pInfo, const AbonentProfile& abntProfile);
   virtual void markMessageProcessorAsFree(OutputMessageProcessor* freeMessageProcessor);
   virtual void deleteMessageProcessor(OutputMessageProcessor* terminatedMessageProcessor);
   virtual void shutdown();
 private:
+  OutputMessageProcessor* getFreeProcessor();
+
   unsigned _proxyCount;
   typedef std::set<OutputMessageProcessor*> msg_processors_t;
   msg_processors_t _freeMsgProcessors;

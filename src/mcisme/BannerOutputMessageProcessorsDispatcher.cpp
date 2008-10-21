@@ -32,20 +32,36 @@ BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher
   }
 }
 
-void
-BannerOutputMessageProcessorsDispatcher::dispatch(const AbntAddr& abnt)
+OutputMessageProcessor*
+BannerOutputMessageProcessorsDispatcher::getFreeProcessor()
 {
   core::synchronization::MutexGuard synchonize(_dispatchMonitor);
   if ( _freeMsgProcessors.empty() ) {
     if (_dispatchMonitor.wait())
-      throw util::SystemError("BannerOutputMessageProcessorsDispatcher::dispatch::: EventMonitor.wait() failed");
+      throw util::SystemError("BannerOutputMessageProcessorsDispatcher::getFreeProcessor::: EventMonitor.wait() failed");
   }
   msg_processors_t::iterator iter = _freeMsgProcessors.begin();
   OutputMessageProcessor* msgProc = *iter;
   _freeMsgProcessors.erase(iter);
   _usedMsgProcessors.insert(msgProc);
-  smsc_log_debug(_logger, "BannerOutputMessageProcessorsDispatcher::dispatch::: got free message processor [%p]", msgProc);
+  smsc_log_debug(_logger, "BannerOutputMessageProcessorsDispatcher::getFreeProcessor::: got free message processor [%p]", msgProc);
+
+  return msgProc;
+}
+
+void
+BannerOutputMessageProcessorsDispatcher::dispatchSendMissedCallNotification(const AbntAddr& abnt)
+{
+  OutputMessageProcessor* msgProc = getFreeProcessor();
   msgProc->assignMessageOutputWork(abnt);
+}
+
+void
+BannerOutputMessageProcessorsDispatcher::dispatchSendAbntOnlineNotifications(const sms_info* pInfo,
+                                                                             const AbonentProfile& abntProfile)
+{
+  OutputMessageProcessor* msgProc = getFreeProcessor();
+  msgProc->assignMessageOutputWork(pInfo, abntProfile);
 }
 
 void
