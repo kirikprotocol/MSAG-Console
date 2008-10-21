@@ -47,7 +47,7 @@ public:
     virtual bool getCommand(SmppCommand*& cmd);
 
     // lcm
-    virtual void continueExecution(LongCallContext* lcmCtx, bool dropped);
+    virtual void continueExecution(LongCallContextBase* lcmCtx, bool dropped);
     virtual bool makeLongCall( std::auto_ptr<SmppCommand>& cx, ActiveSession& session );
 
   //manager

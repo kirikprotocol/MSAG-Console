@@ -1025,7 +1025,7 @@ bool SmppManagerImpl::getCommand(SmppCommand*& cmd)
     return true;
 }
 
-void SmppManagerImpl::continueExecution( LongCallContext* lcmCtx, bool dropped )
+void SmppManagerImpl::continueExecution( LongCallContextBase* lcmCtx, bool dropped )
 {
     std::auto_ptr<SmppCommand> cx
         (reinterpret_cast<SmppCommand*>(lcmCtx->stateMachineContext));

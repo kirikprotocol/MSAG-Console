@@ -11,7 +11,7 @@
 #include "scag/config/base/ConfigListener2.h"
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/config/http/HttpManagerConfig.h"
-#include "scag/lcm/base/LongCallManager2.h"
+#include "scag/re/base/LongCallContextBase.h"
 #include "util/timeslotcounter.hpp"
 #include "scag/transport/http/base/HttpManager.h"
 
@@ -61,7 +61,7 @@ public:
         taskMon.wait();
     }
 
-    void continueExecution(lcm::LongCallContext* context, bool dropped);
+    void continueExecution(lcm::LongCallContextBase* context, bool dropped);
 
     void queueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lcmLen);
     

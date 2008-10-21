@@ -161,7 +161,7 @@ void ScagTaskManager::process(HttpContext* cx, bool continued)
     }
 }
 
-void ScagTaskManager::continueExecution(LongCallContext* context, bool dropped)
+void ScagTaskManager::continueExecution(LongCallContextBase* context, bool dropped)
 {
     HttpContext *cx = (HttpContext*)context->stateMachineContext;
     context->continueExec = true;
