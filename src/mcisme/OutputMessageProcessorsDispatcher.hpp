@@ -2,15 +2,21 @@
 # define __SMSC_MCISME_OUTPUTMESSAGEPROCESSORSDISPATCHER_HPP__
 
 # include <mcisme/AbntAddr.hpp>
+# include <mcisme/TaskProcessor.h>
+# include <mcisme/Profiler.h>
 
 namespace smsc {
 namespace mcisme {
 
 class OutputMessageProcessor;
+struct sms_info;
 
 class OutputMessageProcessorsDispatcher {
 public:
-  virtual void dispatch(const AbntAddr& abnt) = 0;
+  virtual ~OutputMessageProcessorsDispatcher() {}
+  virtual void dispatchSendMissedCallNotification(const AbntAddr& abnt) = 0;
+  virtual void dispatchSendAbntOnlineNotifications(const sms_info* pInfo, const AbonentProfile& abntProfile) = 0;
+
   virtual void markMessageProcessorAsFree(OutputMessageProcessor* freeMessageProcessor) = 0;
   virtual void deleteMessageProcessor(OutputMessageProcessor* terminatedMessageProcessor) = 0;
   virtual void shutdown() {}
