@@ -52,6 +52,14 @@ const char* findMessageTemplateKey(const char* key) throw(AdapterException)
   return 0;
 }
 
+void addBanner(Message& message, const string& banner)
+{
+  message.message += " " + banner;
+  int hibit = hasHighBit(message.message.c_str(), message.message.length()); 
+  if(message.message.length() > MAX_MSG_LENS[hibit])
+    message.message.resize(MAX_MSG_LENS[hibit]);
+}
+
 bool MessageFormatter::canAdd(const MissedCallEvent& event)
 {
   if (!formatter->isGroupping()) return (events.Count() < Message::maxRowsPerMessage);
@@ -210,14 +218,6 @@ MessageFormatter::produceMessageForAbonent(const std::string& toAbnt,
   smsc_log_debug(logger, "MessageFormatter::produceMessageForAbonent::: result message for abonent report_msg_for_client=[%s]", report_msg_for_client.c_str());
 
   return report_msg_for_client;;
-}
-
-void MessageFormatter::addBanner(Message& message, const string& banner)
-{
-  message.message += " " + banner;
-  int hibit = hasHighBit(message.message.c_str(), message.message.length()); 
-  if(message.message.length() > MAX_MSG_LENS[hibit])
-    message.message.resize(MAX_MSG_LENS[hibit]);
 }
 
 }

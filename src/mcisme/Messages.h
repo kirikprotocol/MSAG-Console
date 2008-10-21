@@ -178,9 +178,9 @@ public:
                      const std::string& smscAddress,
                      int timeOffset,
                      bool originatingAddressIsSmscAddress);
-
-  void addBanner(Message& message, const string& banner);
 };
+
+void addBanner(Message& message, const string& banner);
 
 void keyIsNotSupported(const char* type) throw(AdapterException);
 void typeIsNotSupported(const char* type) throw(AdapterException);
