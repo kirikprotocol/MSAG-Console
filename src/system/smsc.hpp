@@ -375,16 +375,23 @@ public:
 
   void ResetRouteManager(RouteManager* manager)
   {
-    MutexGuard g(routerSwitchMutex);
-    if ( router_ ) router_->Release();
-    router_ = new Reffer<RouteManager>(manager);
+    Reffer<RouteManager>* refToKill=router_;
+    {
+      MutexGuard g(routerSwitchMutex);
+      router_ = new Reffer<RouteManager>(manager);
+    }
+    if ( refToKill ) refToKill->Release();
   }
 
   void ResetTestRouteManager(RouteManager* manager)
   {
-    MutexGuard g(routerSwitchMutex);
-    if ( testRouter_ ) testRouter_->Release();
-    testRouter_ = new Reffer<RouteManager>(manager);
+    Reffer<RouteManager>* refToKill=testRouter_;
+    {
+      MutexGuard g(routerSwitchMutex);
+      testRouter_ = new Reffer<RouteManager>(manager);
+    }
+    if ( refToKill ) refToKill->Release();
+    
   }
 
   /*
