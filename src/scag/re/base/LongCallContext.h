@@ -3,34 +3,15 @@
 #ifndef _SCAG_RE_BASE_LONGCALLCONTEXT_H
 #define _SCAG_RE_BASE_LONGCALLCONTEXT_H
 
-#include "ActionContext2.h"
-
 #include <stack>
+
+#include "LongCallContextBase.h"
+#include "ActionContext2.h"
 
 namespace scag2 {
 namespace lcm {
 
 using scag2::re::actions::ActionContext;
-
-enum LongCallCommandId 
-{
-    PERS_GET = 1,
-    PERS_SET,
-    PERS_DEL,
-    PERS_INC,
-    PERS_INC_MOD,
-    PERS_BATCH,
-    BILL_OPEN,
-    BILL_COMMIT,
-    BILL_ROLLBACK
-};
-
-class LongCallParams
-{
-public:
-    std::string exception;
-    virtual ~LongCallParams() {};
-};
 
 struct ActionStackValue
 {
@@ -38,7 +19,6 @@ struct ActionStackValue
     bool thenSection;
     ActionStackValue(int index, bool flag) : actionIndex(index), thenSection(flag) {}
 };
-
 
 class PostProcessAction
 {
@@ -49,34 +29,13 @@ public:
     virtual ~PostProcessAction() {};
 };
 
-class LongCallInitiator;
-
-class LongCallContext
+class LongCallContext : public LongCallContextBase
 {
 public:
-    LongCallContext():
-    stateMachineContext(NULL),
-    initiator(NULL),
-    next(NULL),
-    continueExec(false),
-    params(NULL),
-    actionContext(NULL),
-    actions(NULL)
-    {}
-
-    LongCallParams* getParams() { return params; }
-    void setParams(LongCallParams* p)
-    {
-        if (params != p) delete params;
-        params = p;
-    }
-    void freeParams()
-    {
-        if(params) delete params;
-        params = NULL;
-    }
+    LongCallContext():actionContext(NULL), actions(NULL) {}
 
     void setActionContext(ActionContext* context);
+
     ActionContext* getActionContext();
 
     void addAction(PostProcessAction* p)
@@ -107,25 +66,13 @@ public:
 
 
 public:
-    uint32_t systemType, callCommandId;
-    void *stateMachineContext;
-    LongCallInitiator *initiator;
-    LongCallContext *next;
-    bool continueExec;
+    uint32_t systemType;
     std::stack<ActionStackValue> ActionStack;
 
 private:
-    LongCallParams *params;
     ActionContext  *actionContext;
     PostProcessAction *actions, *actionsTail;
 
-};
-
-
-class LongCallInitiator
-{
-public:
-    virtual void continueExecution(LongCallContext* context, bool dropped) = 0;
 };
 
 }

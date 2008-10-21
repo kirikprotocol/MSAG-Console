@@ -17,7 +17,7 @@
 #include "scag/config/base/ConfigListener2.h"
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/exc/SCAGExceptions.h"
-#include "scag/re/base/LongCallContext.h"
+#include "scag/re/base/LongCallContextBase.h"
 #include "scag/sessions/base/SessionFinalizer.h"
 #include "scag/sessions/base/Session2.h"
 #include "scag/sessions/base/SessionManager2.h"
@@ -108,7 +108,7 @@ public:
 
     // virtual SessionPtr newSession(CSessionKey& sessionKey);
 
-    virtual void continueExecution( lcm::LongCallContext* context, bool dropped );
+    virtual void continueExecution( lcm::LongCallContextBase* context, bool dropped );
 
     /// --- interface of ConfigListener
     virtual void configChanged();

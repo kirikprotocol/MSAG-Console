@@ -30,7 +30,6 @@ void LongCallContext::clear()
 
 LongCallContext::~LongCallContext()
 {
-    if(params) delete params;
     if(actionContext) delete actionContext;
     clear();
 }

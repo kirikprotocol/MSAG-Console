@@ -462,7 +462,7 @@ int SessionManagerImpl::Execute()
 }
 
 
-void SessionManagerImpl::continueExecution( LongCallContext* lcmCtx, bool dropped )
+void SessionManagerImpl::continueExecution( LongCallContextBase* lcmCtx, bool dropped )
 {
     /// long call in session_destroy
     Session* session = reinterpret_cast<Session*>( lcmCtx->stateMachineContext );
