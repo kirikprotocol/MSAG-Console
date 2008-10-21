@@ -292,13 +292,18 @@ public class ScagRoutingManager extends Manager {
 
     public synchronized void apply(final SCAGAppContext appContext) throws SCAGJspException {
       try {
-          System.out.println("ScagRoutingManager.apply()");
-          appContext.getScag().invokeCommand("applySmppRoutes",null,appContext,this,new File(scagConfFolder, SMPP_ROUTES_PRIMARY_CONFIG).getAbsolutePath());
+          logger.debug("ScagRoutingManager.apply()");
+          appContext.getScag().invokeCommand( "applySmppRoutes",null,appContext,this,new File(scagConfFolder, SMPP_ROUTES_PRIMARY_CONFIG).getAbsolutePath() );
       } catch (SibincoException e) {
-          if (!(e instanceof StatusDisconnectedException)) {
-              logger.debug("Couldn't apply routes", e);
+          logger.error("ScagRoutingManager.apply() SibincoException");
+          if( !(e instanceof StatusDisconnectedException) ) {
+              logger.error("ScagRoutingManager.apply() SibincoException Couldn't apply routes", e);
               throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_ROUTES, e);
+          } else{
+              logger.error("ScagRoutingManager.apply() StatusDisconnectedException Couldn't apply routes", e);
+              throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_ROUTES_SAVE_WV, e);
           }
+
       }
       clearStatMessages();
     }
