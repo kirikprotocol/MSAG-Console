@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.IOException;
 
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.scag.backend.protocol.commands.CommandWriter;
 import ru.sibinco.scag.backend.protocol.response.ResponseReader;
 import ru.sibinco.scag.backend.protocol.response.Response;
@@ -52,7 +53,7 @@ public class Proxy {
             connect(host, port);
         }
         try {
-            logger.debug("Proxy.runCommand() write command: " + command);
+            logger.debug("Proxy.runCommand() L55 write command: " + command);
             writer.write(command);
             logger.debug("Proxy.runCommand() reading response...");
             return reader.read();
@@ -94,7 +95,7 @@ public class Proxy {
     }
 
     protected void connect(String host, int port) throws SibincoException {
-        logger.debug("connect to \"" + host + ':' + port + '"');
+        logger.debug("Proxy.connect() to \"" + host + ':' + port + '"');
         if (status == STATUS_DISCONNECTED) {
             this.host = host;
             this.port = port;
@@ -108,8 +109,10 @@ public class Proxy {
                 reader = new ResponseReader(in);
                 status = STATUS_CONNECTED;
             } catch (IOException e) {
-                logger.warn("Could't connected to \"" + host + ':' + port + "\", nested: " + e.getMessage());
-//                throw new SibincoException("Could't connected to \"" + host + ':' + port + "\", nested: " + e.getMessage());
+                logger.warn( "Proxy.connect() IOException Could't connected to \"" + host + ':' + port + "\", nested: " + e.getMessage() +
+                        "\nthrow new StatusDisconnectedException()" );
+//                throw new SibincoException("Proxy.connect()Could't connected to \"" + host + ':' + port + "\", nested: " + e.getMessage());
+                throw new StatusDisconnectedException( "Proxy.connect() Could't connected to \"" + host + ':' + port + "\", nested: " + e.getMessage(), port );
             }
         } else {
             throw new SibincoException("Already connected");
