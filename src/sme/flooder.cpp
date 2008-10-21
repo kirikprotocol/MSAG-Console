@@ -119,6 +119,7 @@ string source;
 string sourcesFile;
 string destination;
 string destinationsFile;
+string destinationsRange;
 string message;
 string messagesFile;
 string wordsFile;
@@ -152,6 +153,7 @@ Option options[]=
   {"source",'s',&source},
   {"sourcesFile",'s',&sourcesFile},
   {"destination",'s',&destination},
+  {"destinationsRange",'s',&destinationsRange},
   {"destinations",'s',&destinationsFile},
   {"message",'s',&message},
   {"messagesFile",'s',&messagesFile},
@@ -275,14 +277,35 @@ int main(int argc,char* argv[])
     StrList words;
     StrList sources;
     StrList dests;
+    
+    Address startAddr,endAddr,curAddr;
 
     if(sourcesFile.length())LoadFile(sourcesFile,sources);
     else if(source.length()>0)sources.push_back(source);
     else throw Exception("Source address undefined");
 
-    if(destinationsFile.length())LoadFile(destinationsFile,dests);
-    else if (destination.length())dests.push_back(destination);
-    else throw Exception("Destination address undefined");
+    if(destinationsFile.length())
+    {
+      LoadFile(destinationsFile,dests);
+    }
+    else if (destination.length())
+    {
+      dests.push_back(destination); 
+    }
+    else if(destinationsRange.length())
+    {
+      string::size_type pos=destinationsRange.find('-');
+      if(pos==string::npos)
+      {
+        throw Exception("Invalid destinations range");
+      }
+      startAddr=destinationsRange.substr(0,pos).c_str();
+      endAddr=destinationsRange.substr(pos+1).c_str();
+      curAddr=startAddr;
+    }else
+    {
+      throw Exception("Destination address undefined");
+    }
 
     if(messagesFile.length() && wordsFile.length())
     {
@@ -355,7 +378,21 @@ int main(int argc,char* argv[])
       {
         hrtime_t msgstart=gethrtime();
 
-        s.setDestinationAddress(dests[dstidx].c_str());
+        if(!dests.empty())
+        {
+          s.setDestinationAddress(dests[dstidx].c_str());
+        }else
+        {
+          if(curAddr==endAddr)
+          {
+            curAddr=startAddr;
+          }
+          s.setDestinationAddress(curAddr);
+          uint64_t addrVal;
+          sscanf(curAddr.value,"%llu",&addrVal);
+          addrVal++;
+          sprintf(curAddr.value,"%0*llu",strlen(curAddr.value),addrVal);
+        }
         s.setOriginatingAddress(sources[srcidx].c_str());
 
         string* msgptr;
