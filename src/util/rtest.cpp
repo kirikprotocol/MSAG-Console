@@ -53,6 +53,7 @@ int main(int argc,char* argv[])
   smsc::smeman::SmeManager smeman;
   AliasManImpl am("aliases.bin");
 
+  RouteManager::EnableSmeRouters(true);
 
   smsc::util::config::smeman::SmeManConfig smemanconfig;
   smemanconfig.load("sme.xml");
