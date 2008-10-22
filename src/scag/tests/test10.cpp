@@ -1,4 +1,5 @@
-#include <getopt.h>
+// #include <getopt.h>
+#include <cstdio>
 #include <cassert>
 #include <cstdio>
 #include <string>
@@ -171,6 +172,7 @@ int main( int argc, char** argv )
     unsigned nwork = 10;
     MemoryPoolConfig::AllocType at(MemoryPoolConfig::OPNEW);
 
+    /*
     struct option longopts[] = {
         { "help", 0, NULL, 'h' },
         { "verbose", 0, NULL, 'v' },
@@ -182,23 +184,23 @@ int main( int argc, char** argv )
         { "yield", 1, NULL, 'y' },
         { NULL, 0, NULL, 0 }
     };
+     */
 
     do {
-        int longindex;
-        int r = getopt_long( argc, argv, "hva:t:w:x:b:y:", longopts, &longindex );
+        // int longindex;
+        int r = getopt( argc, argv, "hva:t:w:x:b:y:" );
         if ( r == -1 ) break;
         switch (r) {
         case 'h' : {
             printf("%s [options]\n", argv[0]);
-            printf(" -h | --help         This help\n" );
-            printf(" -v | --verbose      Be verbose\n" );
-            printf(" -a | --alloctype A  Use allocator A (choose from 'my','new','malloc')\n" );
-            printf(" -t | --time TIME    Set execution time to TIME (sec)\n" );
-            printf(" -w WORKERS\n" );
-            printf(" --workers WORKERS   Set number of worker threads to WORKERS\n" );
-            printf(" -x | --maxproc MAX  Set maximum processed items per worker to MAX (default is unlimited)\n" );
-            printf(" -b | --bunch SIZE   Set bunchsize to SIZE (default is 100)\n" );
-            printf(" -y | --yield        Do yield (default is no)\n" );
+            printf(" -h          This help\n" );
+            printf(" -v          Be verbose\n" );
+            printf(" -a A        Use allocator A (choose from 'my','new','malloc')\n" );
+            printf(" -t TIME     Set execution time to TIME (sec)\n" );
+            printf(" -w WORKERS  Set number of worker threads to WORKERS\n" );
+            printf(" -x MAX      Set maximum processed items per worker to MAX (default is unlimited)\n" );
+            printf(" -b SIZE     Set bunchsize to SIZE (default is 100)\n" );
+            printf(" -y LIMIT    Set queue limit when yield is done (default is none)\n" );
             ::exit(0);
             break;
         }
