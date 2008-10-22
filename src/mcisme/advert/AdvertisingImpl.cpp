@@ -167,17 +167,13 @@ SimpleAdvertisingClient::readAdvert(advertising_item* advItem)
 
   int rc = 0;
 
-  try {
-    uint32_t gotTransactId;
-    TmpBuf<char, MAX_PACKET_LEN> incomingPacketBuf(0);
-    while( (gotTransactId = readPacket(&incomingPacketBuf)) != advItem->TransactID )
-      smsc_log_error(_logger, "SimpleAdvertisingClient::readAdvert::: wrong transactionId value=[%d], expected value=[%d]", gotTransactId, advItem->TransactID);
+  uint32_t gotTransactId;
+  TmpBuf<char, MAX_PACKET_LEN> incomingPacketBuf(0);
+  while( (gotTransactId = readPacket(&incomingPacketBuf)) != advItem->TransactID )
+    smsc_log_error(_logger, "SimpleAdvertisingClient::readAdvert::: wrong transactionId value=[%d], expected value=[%d]", gotTransactId, advItem->TransactID);
 
-    rc = extractBanner(incomingPacketBuf, &advItem->banReq->banner);
-  } catch(util::Exception& ex) {
-    smsc_log_error(_logger, "SimpleAdvertisingClient::readAdvert::: catched exception [%s]", ex.what());
-  }
-
+  rc = extractBanner(incomingPacketBuf, &advItem->banReq->banner);
+ 
   return rc;
 }
 
