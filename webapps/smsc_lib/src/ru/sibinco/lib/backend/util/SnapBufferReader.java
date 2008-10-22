@@ -36,6 +36,7 @@ public class SnapBufferReader {
     int cnt = 0;
     while( size < len ) {
       cnt = is.read(buf, size, len-size);
+        System.out.println("SnapBR cnt = " + cnt );
       if( cnt == -1 ) throw new EOFException();
       size += cnt;
     }

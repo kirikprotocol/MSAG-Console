@@ -34,6 +34,9 @@ public class PerfServerRunner extends Thread {
             PerfSnap snap = new PerfSnap();
             while (!isStopping) {
                 readSnap(is, snap);
+                System.out.println("PerfServerRunner.run()\n" +
+                        "is.length=" + is.available() );
+
                 snap.write(os);
                 os.flush();
             }
@@ -78,6 +81,9 @@ public class PerfServerRunner extends Thread {
     protected void readSnap(InputStream istream, PerfSnap snap)
             throws IOException {
         int len = inbuf.readNetworkInt(istream);
+        System.out.println("PerfServerRunner.readSnap()\n" +
+                " len=" + len );
+
         inbuf.fill(istream, len - 4);
         snap.init(inbuf);
     }

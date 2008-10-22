@@ -208,6 +208,8 @@ public class PerfSnap {
     }
 
     public void read(java.io.DataInputStream in) throws IOException {
+        int le = in.read();
+        System.out.println("PerfSnap.read()\nle=" + le );
         sessionCount = in.readInt();
         sessionLoadedCount = in.readInt();
 	    sessionLockedCount = in.readInt();
@@ -240,10 +242,11 @@ public class PerfSnap {
 
 
     public void init(SnapBufferReader in) throws IOException {
+
         sessionCount = in.readNetworkInt();
         sessionLoadedCount = in.readNetworkInt();
 	    sessionLockedCount = in.readNetworkInt();
-        System.out.println("PerfSnap.read()\nsessionCount=" + sessionCount + "\nsessionLoadedCount=" + sessionLoadedCount + "\nsessionLockedCount=" + sessionLockedCount + "\n---------------------");
+        System.out.println("PerfSnap.init()\nsessionCount=" + sessionCount + "\nsessionLoadedCount=" + sessionLoadedCount + "\nsessionLockedCount=" + sessionLockedCount + "\n---------------------");
 
         smppReqQueueLen = in.readNetworkInt();
 	    smppResQueueLen = in.readNetworkInt();
