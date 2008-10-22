@@ -208,8 +208,6 @@ public class PerfSnap {
     }
 
     public void read(java.io.DataInputStream in) throws IOException {
-        int le = in.read();
-        System.out.println("PerfSnap.read()\nle=" + le );
         sessionCount = in.readInt();
         sessionLoadedCount = in.readInt();
 	    sessionLockedCount = in.readInt();

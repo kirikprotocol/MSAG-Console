@@ -11,7 +11,7 @@ import java.io.InputStream;
  */
 public class SnapBufferReader {
   private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
-  byte buf[] = new byte[1100];
+  byte buf[] = new byte[1024];
   int offset;
   int size;
   public SnapBufferReader() {
@@ -22,7 +22,7 @@ public class SnapBufferReader {
   }
   public int read() throws EOFException {
     if( offset >= size ) {
-      logger.error("Buffer: Requested byte at "+offset+" of "+size);
+      logger.error("Buffer: Requested byte at " + offset + " of " + size);
       throw new EOFException();
     }
     return ((int)buf[offset++])&0xFF;
