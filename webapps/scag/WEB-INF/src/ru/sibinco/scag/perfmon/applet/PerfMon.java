@@ -30,8 +30,11 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     AdvancedLabel sctimeLabel;
 
     AdvancedLabel sessionCountLabel;
+    AdvancedLabel sessionLoadedCountLabel;
     AdvancedLabel sessionLockedCountLabel;
+
     AdvancedLabel sessionCountLabelTitle;
+    AdvancedLabel sessionLoadedCountLabelTitle;
     AdvancedLabel sessionLockedCountLabelTitle;
 
     AdvancedLabel queueReqLabel;
@@ -107,7 +110,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     public static boolean viewFailedHTTPEnabled = true;
 
     public void init() {
-        System.out.println("Initing...");
+        System.out.println("PerfMon:init():Initing...");
         localeText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
         locale=localeText.getLocale();
         dateFormat = new SimpleDateFormat(localeText.getString("sctime"),locale);
@@ -167,6 +170,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     }
 
     protected void gotFirstSnap(PerfSnap snap) {
+        System.out.println("gotFirstSnap() start");
         remove(connectingLabel);
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -273,8 +277,11 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         sctimeLabel = new AdvancedLabel(snap.strSctime);
 
         sessionCountLabel = new AdvancedLabel(snap.strSessionCount);
+        sessionLoadedCountLabel = new AdvancedLabel(snap.strSessionLoadedCount);
 	    sessionLockedCountLabel = new AdvancedLabel(snap.strSessionLockedCount);
+
         sessionCountLabelTitle = new AdvancedLabel( localeText.getString("lab.sesscount.total") );
+        sessionLoadedCountLabelTitle = new AdvancedLabel( localeText.getString("lab.sesscount.loaded") );
         sessionLockedCountLabelTitle = new AdvancedLabel( localeText.getString("lab.sesscount.locked") );
 //        sessionCountLabelTitle = new AdvancedLabel( "Total" );
 //	    sessionLockedCountLabelTitle = new AdvancedLabel( "Locked" );
@@ -306,18 +313,24 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 // sesscount
         lg = new LabelGroup(localeText.getString("lab.sesscount"), LabelGroup.NORTHWEST);
     	lg.setLayout(new BorderLayout());
-    	Panel pSession = new Panel(new GridLayout(1, 2));
+    	Panel pSession = new Panel(new GridLayout(1, 3));
 
         Panel pSessionTotal = new Panel(new BorderLayout());
         pSessionTotal.add(sessionCountLabelTitle, BorderLayout.WEST);
         pSessionTotal.add(sessionCountLabel, BorderLayout.CENTER);
+
+        Panel pSessionLoaded = new Panel(new BorderLayout());
+        pSessionLoaded.add(sessionLoadedCountLabelTitle, BorderLayout.WEST);
+        pSessionLoaded.add(sessionLoadedCountLabel, BorderLayout.CENTER);
 
         Panel pSessionLocked = new Panel(new BorderLayout());
         pSessionLocked.add(sessionLockedCountLabelTitle, BorderLayout.WEST);
         pSessionLocked.add(sessionLockedCountLabel, BorderLayout.CENTER);
 
         pSession.add(pSessionTotal);
+        pSession.add(pSessionLoaded);
         pSession.add(pSessionLocked);
+
         lg.add(pSession, BorderLayout.CENTER);
         p.add(lg);
 // queues sizes
@@ -469,6 +482,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
             while (!isStopping) {
                 try {
                     sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());
+                    System.out.println("PerfMon:run():host=" + getParameter("host") + " port=" + Integer.valueOf(getParameter("port")).intValue());
                     is = new DataInputStream(sock.getInputStream());
                     PerfSnap snap = new PerfSnap();
                     snap.read(is);
@@ -479,8 +493,9 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
                         snap.calc();
                         uptimeLabel.setText(snap.strUptime);
                         sctimeLabel.setText(snap.strSctime);
-                        sessionCountLabel.setText(snap.strSessionCount);
-			            sessionLockedCountLabel.setText(snap.strSessionLockedCount);
+                        sessionCountLabel.setText( snap.strSessionCount );
+                        sessionLoadedCountLabel.setText( snap.strSessionLoadedCount );
+			            sessionLockedCountLabel.setText( snap.strSessionLockedCount );
                         if( statMode.equals(httpStatMode) ){
                             queueReqLabel.setText(snap.strHttpReqQueueLen);
 			                queueResLabel.setText(snap.strHttpResQueueLen);
@@ -625,26 +640,35 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
                 popupMenu.add(menuTransaction);
             }
         } else if (e.getSource() == menuIncrScale) {
+            System.out.println("menuIncrScale");
             scale += 10;
             perfbar.invalidate();
             perfGraph.invalidate();
         } else if (e.getSource() == menuIncrBlock) {
+            System.out.println("menuIncrBlock");
             block++;
             perfbar.invalidate();
             perfGraph.invalidate();
         } else if (e.getSource() == menuIncrPix) {
+            System.out.println("menuIncrPix");
             pixPerSecond++;
             perfbar.invalidate();
             perfGraph.invalidate();
         } else if (e.getSource() == menuDecrScale) {
+            System.out.println("menuDecrScale");
             if (scale >= 20) scale -= 10;
             perfbar.invalidate();
             perfGraph.invalidate();
         } else if (e.getSource() == menuDecrBlock) {
-            if (block > 4) block--;
+            System.out.println("menuDecrBlock");
+            if (block > 4) {
+                System.out.println("menuDecrBlock: block>4");
+                block--;
+            }
             perfbar.invalidate();
             perfGraph.invalidate();
         } else if (e.getSource() == menuDecrPix) {
+            System.out.println("menuDecrPix");
             if (pixPerSecond > 2) pixPerSecond--;
             perfbar.invalidate();
             perfGraph.invalidate();
