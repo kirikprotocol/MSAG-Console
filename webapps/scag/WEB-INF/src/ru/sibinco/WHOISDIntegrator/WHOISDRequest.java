@@ -27,14 +27,13 @@ public class WHOISDRequest {
   private int id;
   private String name;
 
-  public static String[] xslFILES = {
-            SMPP_XSL, HTTP_XSL, MMS_XSL};
+  public static String[] xslFILES = { SMPP_XSL, HTTP_XSL, MMS_XSL };
+
   static {
      for(int i = 0; i<Transport.transportTitles.length;i++) {
        transportToXSl.put(Transport.transportTitles[i], xslFILES[i]);
      }
   }
-
 
   public static final WHOISDRequest[] WHOISDRequests = {
      new WHOISDRequest(OPERATORS,"operators.xml"),
