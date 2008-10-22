@@ -764,8 +764,24 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = null;
 		
 		
-		match(TGT_IMPORT);
-		cmd=infosmeimport();
+		switch ( LA(1)) {
+		case TGT_IMPORT:
+		{
+			match(TGT_IMPORT);
+			cmd=infosmeimport();
+			break;
+		}
+		case TGT_CREATE:
+		{
+			match(TGT_CREATE);
+			cmd=infosmecreatedistr();
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		return cmd;
 	}
 	
@@ -3325,6 +3341,28 @@ public CommandParser(ParserSharedInputState state) {
 		{
 		match(OPT_TASK);
 		cmd.setFile(getnameid("task file"));
+		}
+		return cmd;
+	}
+	
+	public final InfoSmeCreateDistrCommand  infosmecreatedistr() throws RecognitionException, TokenStreamException {
+		InfoSmeCreateDistrCommand cmd;
+		
+		
+		cmd = new InfoSmeCreateDistrCommand();
+		
+		
+		{
+		match(OPT_DISTR);
+		
+		cmd.setFile(getnameid("distr file"));
+		cmd.setDateBeginStr(getnameid("date begin"));
+		cmd.setDateEndStr(getnameid("date end"));
+		cmd.setTimeBeginStr(getnameid("time begin"));
+		cmd.setTimeEndStr(getnameid("time end"));
+		cmd.setDayStr(getnameid("week days"));
+		cmd.setTxmode(getnameid("trans mode"));
+		
 		}
 		return cmd;
 	}
@@ -6102,6 +6140,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"group\"",
 		"\"emailsme\"",
 		"\"import\"",
+		"\"create\"",
 		"\"id\"",
 		"\"name\"",
 		"\"hide\"",
@@ -6190,6 +6229,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"sponsored\"",
 		"\"nick\"",
 		"\"task\"",
+		"\"distr\"",
 		"\"force\"",
 		"\"suppress\"",
 		"\"pass\"",

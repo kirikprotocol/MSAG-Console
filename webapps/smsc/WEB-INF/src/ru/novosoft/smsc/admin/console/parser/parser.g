@@ -212,7 +212,9 @@ export returns [Command cmd] {
 infosme returns [Command cmd] {
     cmd = null;
 }
-  : TGT_IMPORT cmd = infosmeimport;
+  : TGT_IMPORT cmd = infosmeimport
+  | TGT_CREATE cmd = infosmecreatedistr
+  ;
 
 /* ----------------------- Common names parser ------------------------- */
 getnameid[String msg] returns [String out] {
@@ -1087,6 +1089,18 @@ infosmeimport returns [InfosmeImportCommand cmd] {
     cmd = new InfosmeImportCommand();
 } : ( OPT_TASK { cmd.setFile(getnameid("task file")); });
 
+infosmecreatedistr returns [InfoSmeCreateDistrCommand cmd] {
+    cmd = new InfoSmeCreateDistrCommand();
+} :( OPT_DISTR {
+      cmd.setFile(getnameid("distr file"));
+      cmd.setDateBeginStr(getnameid("date begin"));
+      cmd.setDateEndStr(getnameid("date end"));
+      cmd.setTimeBeginStr(getnameid("time begin"));
+      cmd.setTimeEndStr(getnameid("time end"));
+      cmd.setDayStr(getnameid("week days"));
+      cmd.setTxmode(getnameid("trans mode"));
+      }
+   );
 /* ------------------ Misc commands parsers ---------------- */
 
 addprovider returns [ProviderAddCommand cmd] {
