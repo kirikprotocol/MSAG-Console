@@ -11,7 +11,7 @@ import java.io.InputStream;
  */
 public class SnapBufferReader {
   private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
-  byte buf[] = new byte[1024];
+  byte buf[] = new byte[1100];
   int offset;
   int size;
   public SnapBufferReader() {

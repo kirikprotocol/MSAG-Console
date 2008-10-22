@@ -482,8 +482,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
             while (!isStopping) {
                 try {
                     sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());
-                    System.out.println("PerfMon:run():host=" + getParameter("host") + " port=" + Integer.valueOf(getParameter("port")).intValue());
-                    is = new DataInputStream(sock.getInputStream());
+                    System.out.println( "PerfMon:run():host=" + getParameter("host") + " port=" + Integer.valueOf(getParameter("port")).intValue() );
+                    is = new DataInputStream( sock.getInputStream() );
                     PerfSnap snap = new PerfSnap();
                     snap.read(is);
                     snap.calc();
