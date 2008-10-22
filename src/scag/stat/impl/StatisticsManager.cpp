@@ -176,6 +176,7 @@ StatisticsManager::~StatisticsManager()
   WaitFor();
   smppFile.Close();
   httpFile.Close();
+    smsc_log_info( logger, "Statistics manager is released" );
 }
 
 void StatisticsManager::incError(IntHash<int>& hash, int errcode)

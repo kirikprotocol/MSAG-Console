@@ -349,8 +349,10 @@ Session::~Session()
         delete contextScopes_;
         delete operationScopes_;
         if (!quiet_) smsc_log_debug( logc_, "session=%p/%s -1", this, sessionKey().toString().c_str() );
+    } catch ( std::exception& e ) {
+        smsc_log_error( log_, "Exception in session=%p/%s dtor: %s", this, sessionKey().toString().c_str(), e.what() );
     } catch (...) {
-        smsc_log_error( log_, "Exception in session=%p%/s dtor", this, sessionKey().toString().c_str() );
+        smsc_log_error( log_, "Exception in session=%p/%s dtor: unknown", this, sessionKey().toString().c_str() );
     }
 }
 

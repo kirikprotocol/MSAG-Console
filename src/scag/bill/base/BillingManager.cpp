@@ -11,7 +11,8 @@ typedef SingletonHolder< BillingManager, OuterCreation > Single;
 bool inited = false;
 Mutex mtx;
 
-inline unsigned GetLongevity( BillingManager* ) { return 5; }
+/// BillingManager is required for sessionmanager.
+inline unsigned GetLongevity( BillingManager* ) { return 9; }
 
 }
 

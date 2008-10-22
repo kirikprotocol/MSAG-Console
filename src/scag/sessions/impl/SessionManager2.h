@@ -135,7 +135,7 @@ private:
     virtual int Execute();
 
     void Start( int ); // to make compiler happy
-    void Stop();
+    virtual void Stop();
     bool isStarted();
     int  processExpire();
     // void deleteSession(SessionPtr& session);

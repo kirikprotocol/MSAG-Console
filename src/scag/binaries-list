@@ -79,7 +79,7 @@ scag/scag2           gwmain2        \
   -lsystem-common -lsystem-smppio \
   -lcore-buffers \
   -lsms -lcore-network $(SOCKETLIB) -lnsl \
-  -lcore-threads -lrt -ldl \
+  -lcore-threads \
   \
   -lutil-mirrorfile \
   -lutil-templates \
@@ -91,4 +91,6 @@ scag/scag2           gwmain2        \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil-URCdb -lutil \
   $(__LIBRARIES) \
-  $(SSL_LIB) $(LIBMALLOC)
+  $(SSL_LIB) \
+  -lrt -ldl \
+  $(LIBMALLOC)  

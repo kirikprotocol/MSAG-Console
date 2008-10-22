@@ -98,7 +98,7 @@ oldestsession_(time(0))
 SessionManagerImpl::~SessionManagerImpl()
 {
     Stop();
-    smsc_log_debug(log_,"SessionManager released");
+    smsc_log_info(log_,"SessionManager is released");
 }
 
 

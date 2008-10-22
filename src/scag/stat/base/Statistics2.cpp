@@ -11,7 +11,8 @@ typedef SingletonHolder< Statistics, OuterCreation > Single;
 bool inited = false;
 Mutex mtx;
 
-inline unsigned GetLongevity( Statistics* ) { return 7; }
+/// NOTE: statistics is required for everything.
+inline unsigned GetLongevity( Statistics* ) { return 10; }
 
 }
 

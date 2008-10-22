@@ -11,7 +11,8 @@ typedef SingletonHolder< RuleEngine, OuterCreation > Single;
 bool inited = false;
 Mutex mtx;
 
-inline unsigned GetLongevity( RuleEngine* ) { return 7; }
+/// RE is required for sessionmanager.
+inline unsigned GetLongevity( RuleEngine* ) { return 8; }
 
 }
 
@@ -32,8 +33,8 @@ RuleEngine::RuleEngine()
 {
     MutexGuard mg(mtx);
     assert( ! inited );
-    inited = true;
     Single::setInstance( this );
+    inited = true;
 }
 
 RuleEngine::~RuleEngine()

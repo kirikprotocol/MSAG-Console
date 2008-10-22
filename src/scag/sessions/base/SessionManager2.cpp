@@ -33,8 +33,8 @@ SessionManager::SessionManager()
 {
     MutexGuard mg(mtx);
     assert( ! inited );
-    inited = true;
     SingleSM::setInstance( this );
+    inited = true;
 }
 
 SessionManager::~SessionManager()

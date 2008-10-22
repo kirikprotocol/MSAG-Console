@@ -276,8 +276,9 @@ void Scag::shutdown()
     transport::smpp::SmppManager::Instance().shutdown();
     lcm::LongCallManager::Instance().shutdown();  
     scag::pers::util::PersClient::Instance().Stop();
-    bill::BillingManager::Instance().Stop();
-    stat::Statistics::Instance().Stop();
+    sessions::SessionManager::Instance().Stop();
+    // bill::BillingManager::Instance().Stop();
+    // stat::Statistics::Instance().Stop();
 }
 
 } //scag

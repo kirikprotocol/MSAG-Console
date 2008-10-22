@@ -56,6 +56,9 @@ public:
                                    uint32_t& sessionsLoadedCount,
                                    uint32_t& sessionsLockedCount ) = 0;
 
+    /// stopping notification
+    virtual void Stop() = 0;
+
     virtual ~SessionManager();
 
 protected:
