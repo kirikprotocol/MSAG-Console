@@ -47,27 +47,6 @@ using scag::util::UnlockMutexGuard;
 
 using smsc::logger::Logger;
 
-// ################## Singleton related issues ##################
-
-// static bool  bSessionManagerInited = false;
-// static Mutex initSessionManagerLock;
-
-// inline unsigned GetLongevity(SessionManager*) { return 6; } // ? Move upper ?
-// typedef SingletonHolder<SessionManagerImpl> SingleSM;
-
-/*
-void SessionManagerCallback(void * sm,Session * session)
-{
-    if (sm == 0) return;
-    if (session == 0) return;
-
-    SessionManagerImpl * smImpl = (SessionManagerImpl *)sm;
-
-    smImpl->AddRestoredSession(session);
-}
- */
-
-
 struct SessionManagerImpl::lessAccessTime 
 {
     bool operator() ( ExpireList::const_iterator a,
@@ -117,7 +96,7 @@ void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg,
     config_ = cfg;
     // expireSchedule = time(NULL) + DEFAULT_EXPIRE_INTERVAL;
 
-    if (!log_) log_ = Logger::getInstance("sess.man");
+    // if (!log_) log_ = Logger::getInstance("sess.mgr");
 
     if ( ! allocator_.get() )
         allocator_.reset( new SessionAllocator() );
@@ -333,7 +312,7 @@ int SessionManagerImpl::Execute()
         // smsc_log_debug( log_, "act/tot=%u/%u", activeSessions_, expireMap_.size() );
 
         std::vector< SessionKey > curset;
-        {
+        if ( started ) {
             ExpireMap::iterator i = expireMap_.upper_bound(now);
             /*
             ExpireMap::iterator i;

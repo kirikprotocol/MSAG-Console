@@ -378,7 +378,6 @@ void SessionStoreImpl::releaseSession( Session& session )
         session.getLongCallContext().continueExec = false;
     }
 
-    bool dostopping = false;
     time_t expiration, lastaccess = time(0);
     session.setLastAccessTime(lastaccess);
 
@@ -401,7 +400,6 @@ void SessionStoreImpl::releaseSession( Session& session )
     {
         MemStorage::stored_type* v;
         MutexGuard mg(cacheLock_);
-        dostopping = stopping_;
 
         v = cache_->get( key );
         if ( !v || cache_->store2val(*v) != &session ) {
@@ -515,15 +513,26 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
         if ( session ) {
 
             if ( keep ) {
+                
+                // FIXME: when stopped, session should be either saved or destroyed on disk!
+                // \Otherwise, they will be loaded from disk.
+                // \Or, another possibility: discard sessions when they are loaded initially.
+                // In that case we need a flag "is session flushed in this run?"
+                if ( !stopping_ || session->needsFlush() || session->hasPersistentOperation() ) {
 
-                // session should be kept on disk.
-                // NOTE: we'll save session only if cache is overwhelmed,
-                // otherwise the session should be returned to expirationQueue.
-                smsc_log_debug( log_, "session=%p/%s is being flushed",
-                                session, session->sessionKey().toString().c_str() );
-                scag_plog_debug(pl,log_);
-                session->print(pl);
-                disk_->set( session->sessionKey(), *session );
+                    // session should be kept on disk.
+                    // NOTE: we'll save session only if cache is overwhelmed,
+                    // otherwise the session should be returned to expirationQueue.
+                    smsc_log_debug( log_, "session=%p/%s is being flushed",
+                                    session, session->sessionKey().toString().c_str() );
+                    scag_plog_debug(pl,log_);
+                    session->print(pl);
+                    disk_->set( session->sessionKey(), *session );
+
+                } else {
+                    smsc_log_debug( log_, "session=%p/%s is not flushed",
+                                    session, session->sessionKey().toString().c_str() );
+                }
 
             } else if ( ! fin_->finalize( *session ) ) {
 
@@ -544,7 +553,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
 
         }
         
-        if ( session && ( ++count % 30 == 0 ) ) Thread::Yield();
+        if ( session && ( ++count % 50 == 0 ) ) Thread::Yield();
 
         MutexGuard mg(cacheLock_);
             
@@ -575,6 +584,10 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
         MemStorage::stored_type* v = cache_->get( key );
         if ( v ) {
             session = cache_->store2val(*v);
+        } else if ( stopping_ ) {
+            // storage is stopping and session is not found, ok
+            session = 0;
+            continue;
 
         } else if ( keep ) {
 
@@ -612,7 +625,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
                 --totalSessions_;
                 --loadedSessions_;
                 delete cache_->release(key);
-                ++notexpired;
+                // ++notexpired;
                 session = 0;
                 continue;
             } else {
@@ -620,7 +633,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             }
         } else {
             session = 0;
-            ++notexpired;
+            // ++notexpired;
             continue;
         }
 
@@ -640,7 +653,11 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
 
         // session is not locked
 
-        if ( keep ) {
+        if ( stopping_ ) {
+            // we are stopping the session should be dropped to disk
+            keep = true;
+
+        } else if ( keep ) {
 
             // was the session not accessed for too long time?
 
