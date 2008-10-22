@@ -387,7 +387,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
         break;
     case DELIVERY_RESP:
         dir = dsdSc2Srv;
-        where = "DlveryResp";
+        where = "DeliveryResp";
         break;
     case DATASM_RESP :
         dir = dsdUnknown;
@@ -594,7 +594,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
         where = "Submit";
         break;
     case DELIVERY :
-        where = "Dlvery";
+        where = "Delivery";
         break;
     case DATASM :
         where = "DataSm";
