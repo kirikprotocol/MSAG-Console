@@ -61,7 +61,7 @@ public class WHOISDServlet extends HttpServlet
 
   public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
   {
-      logger.debug( "WHOISDServlet.doGet() start" );
+    logger.debug( "WHOISDServlet.doGet() start" );
     logRequest(req);
     SCAGAppContext appContext = (SCAGAppContext)req.getAttribute(Constants.APP_CONTEXT);
     int id = getRequestId(req);
@@ -184,8 +184,8 @@ public class WHOISDServlet extends HttpServlet
 
     private void applyTerm(HttpServletRequest req, boolean isMultipartFormat, SCAGAppContext appContext) throws Exception
     {
-      logger.debug( "WHOISDServlet.applyTerm() start\n\t encoding='" + req.getCharacterEncoding() +"'\ntestrus=אבגדהוזחט" );
-      String encoding = req.getCharacterEncoding(); //!=null? req.getCharacterEncoding(): ENCO_UTF_8;
+      logger.debug( "WHOISDServlet.applyTerm() start\n\t encoding='" + req.getCharacterEncoding() );
+      String encoding = ( req.getCharacterEncoding()!=null? req.getCharacterEncoding(): ENCO_UTF_8 );
 
       InputStream reqIS = req.getInputStream();
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -209,8 +209,8 @@ public class WHOISDServlet extends HttpServlet
               bw.write(b);
           }
       } finally {
-          bw.close();
-          br.close();
+          if( bw!= null ) bw.close();
+          if( br!= null ) br.close();
       }
 
       String service = req.getParameter("service");
@@ -226,18 +226,20 @@ public class WHOISDServlet extends HttpServlet
       Map rulesWHOISD = null;
       Rule ruleWHOISD = null;
       LinkedList termAsList = new LinkedList();
-      if (isMultipartFormat) {
+      if( isMultipartFormat ) {
         logger.debug( "WHOISDServlet.applyTerm() (isMultipartFormat)" );
         int[] dataSlice = extractData(req,new ByteArrayInputStream(baos.toByteArray()));
         String content = new String();
         for (int i=0 ;i<dataSlice.length;i++)
           content = content +(char)dataSlice[i];
         rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service, new BufferedReader(new StringReader(content)), rulemanager.getXslFolder());
+        logger.debug( "WHOISDServlet.applyTerm() rylesWHOISD='" + rulesWHOISD + "'" );
       } else {
         logger.debug( "WHOISDServlet.applyTerm() (!isMultipartFormat)" );
         rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service,
                 new BufferedReader( new InputStreamReader( new ByteArrayInputStream(baos.toByteArray() ), encoding) ),
                 rulemanager.getXslFolder());
+        logger.debug( "WHOISDServlet.applyTerm() isMultipartFormat rylesWHOISD='" + rulesWHOISD + "'" );
       }
       String[] transports = Transport.transportTitles;
       logger.debug( "WHOISDServlet.applyTerm() line359" );
@@ -414,7 +416,7 @@ public class WHOISDServlet extends HttpServlet
     }
     else {
       String error = (result != null && result.error != null) ? result.error : null;
-      logger.error("Request is not served, reason: " + error);
+      logger.error("WHOISDServlet.SendResult() Request is not served, reason: " + error);
     }
     if( result.error==null ){
         logger.debug( "WHOISDServlet.SendResult() error==null" );
@@ -452,6 +454,7 @@ public class WHOISDServlet extends HttpServlet
   }
 
   private WHOISDResult getRule(HttpServletRequest req, SCAGAppContext appContext) throws WHOISDException , Exception {
+      logger.debug( "WHOISDServlet.getRule() start" );
     Long serviceId = null;
     if (req.getParameter("service") == null) throw new WHOISDException("service parameter is missed!");
     try {
@@ -534,6 +537,7 @@ public class WHOISDServlet extends HttpServlet
   }
 
   private void validateTransportParameter(String transport) throws WHOISDException{
+      logger.debug( "WHOISDServlet.validateTransportParameter() start" );
     String[] transports = Transport.transportTitles;
     for (byte i =0 ;i<transports.length;i++) {
      if (transport.equals(transports[i])) return;
