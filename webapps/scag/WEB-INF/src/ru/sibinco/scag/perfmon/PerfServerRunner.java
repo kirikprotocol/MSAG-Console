@@ -28,15 +28,13 @@ public class PerfServerRunner extends Thread {
         DataOutputStream os = null;
         InputStream is = null;
         try {
-            os = new DataOutputStream(sock.getOutputStream());
+            os = new DataOutputStream( sock.getOutputStream() );
             is = smscSock.getInputStream();
 //            snapGenerator(os);
             PerfSnap snap = new PerfSnap();
             while (!isStopping) {
                 readSnap(is, snap);
-                System.out.println("PerfServerRunner.run()\n" +
-                        "is.length=" + is.available() );
-
+//                System.out.println("PerfServerRunner.run() is.available=" + is.available() );
                 snap.write(os);
                 os.flush();
             }
@@ -81,9 +79,7 @@ public class PerfServerRunner extends Thread {
     protected void readSnap(InputStream istream, PerfSnap snap)
             throws IOException {
         int len = inbuf.readNetworkInt(istream);
-        System.out.println("PerfServerRunner.readSnap()\n" +
-                " len=" + len );
-
+//        System.out.println("PerfServerRunner.readSnap() len=" + len );
         inbuf.fill(istream, len - 4);
         snap.init(inbuf);
     }
