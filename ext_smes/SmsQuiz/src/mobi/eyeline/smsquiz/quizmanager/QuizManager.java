@@ -148,6 +148,10 @@ public class QuizManager implements Observer {
     if ((quiz = quizesMap.get(address)) != null) {
       return quiz.handleSms(oa, text);
     }
+    logger.warn("Quiz not found for address: "+address);
+    if(logger.isInfoEnabled()) {
+      logger.info("Available addresses: "+quizesMap.keySet().toString());
+    }
     return null;
   }
 

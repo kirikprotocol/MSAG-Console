@@ -2,11 +2,18 @@ package mobi.eyeline.smsquiz;
 
 import com.eyeline.sme.handler.MessageHandler;
 import com.eyeline.sme.smpp.SMPPTransceiver;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.OutgoingObject;
+import com.eyeline.sme.smpp.ShutdownedException;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 
 import java.io.*;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.text.SimpleDateFormat;
 
 import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
@@ -16,6 +23,7 @@ import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import mobi.eyeline.smsquiz.subscription.SubManagerException;
 import mobi.eyeline.smsquiz.quizmanager.QuizManager;
 import org.apache.log4j.Logger;
+import ru.aurorisoft.smpp.Message;
 
 /**
  * author: alkhal
@@ -23,19 +31,19 @@ import org.apache.log4j.Logger;
 public class Main {
 
   private static final Logger logger = Logger.getLogger(Main.class);
+  private static OutgoingQueue outgoingQueue;
+
+  private static int quizIndex = 1;
+  private static ScheduledExecutorService scheduledQuizCreator;
 
   public static void main(String[] args){
+    //todo remove
+      init();
     final String conf="conf/config.xml";
     MessageHandler mh = null;
     QuizManager quizManager = null;
     try{
       ConnectionPoolFactory.init("conf/config.xml");
-
-       //todo remove
-      init(SubscriptionManager.getInstance());
-      createQuizFile("test_QuizManager/short.xml", 2, "170", "170","Short question");
-      createAbFile("test_QuizManager/short.xml.csv", 79136666, 79136667, SubscriptionManager.getInstance());
-       //todo remove
 
       QuizManager.init(conf, new DistributionInfoSmeManager(conf),
           new FileReplyStatsDataSource("conf/config.xml"), SubscriptionManager.getInstance());
@@ -44,18 +52,20 @@ public class Main {
       PropertiesConfig cfg = new PropertiesConfig();
       cfg.load(new File("conf/smpp.properties"));
       final SMPPTransceiver transceiver = new SMPPTransceiver(cfg, "");
+      outgoingQueue = transceiver.getOutQueue();
       transceiver.connect();
       mh = new MessageHandler(conf,transceiver.getInQueue(),transceiver.getOutQueue());
       mh.start();
       quizManager.start();
 
-
        //todo remove
-      createQuizFile("test_QuizManager/medium.xml", 3, "180", "180", "Medium question");
-      createAbFile("test_QuizManager/medium.xml.csv", 79136666, 79136668, SubscriptionManager.getInstance());
-      createQuizFile("test_QuizManager/long.xml", 4, "190", "190", "Long question");
-      createAbFile("test_QuizManager/long.xml.csv", 79136666, 79136669, SubscriptionManager.getInstance());
-       //todo remove
+      scheduledQuizCreator = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+          return new Thread(r, "QuizCreator");
+        }
+      });
+      scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(),10 ,1800 ,TimeUnit.SECONDS);
+      //todo remove
 
     } catch (Exception e) {
       logger.error("",e);
@@ -74,8 +84,55 @@ public class Main {
     }
   }
 
-  //todo remove
-  private static void init(SubscriptionManager subscriptionManager) {
+
+  //todo remove all
+
+  private static class QuizCreator extends Thread {
+    public void run() {
+      try{
+        createAbFile("test_QuizManager/opros"+quizIndex+".xml.csv", 791366, 791367, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros"+quizIndex+".xml", 10, "170", "170","Short question");
+        quizIndex++;
+        createAbFile("test_QuizManager/opros"+quizIndex+".xml.csv", 791367, 791368, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros"+quizIndex+".xml", 15, "180", "180", "Medium question");
+        quizIndex++;
+        createAbFile("test_QuizManager/opros"+quizIndex+".xml.csv", 791368, 791369, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros"+quizIndex+".xml", 20, "190", "190", "Long question");
+        quizIndex++;
+      } catch (SubManagerException e) {
+        logger.error("Error creatin quiz files",e);
+        e.printStackTrace();
+      }
+    }
+  }
+
+  public static int send(String da, String oa, String text) {
+    if(outgoingQueue==null) {
+      logger.error("Error during sending message, outgoingQueue==null");
+      return 1;
+    }
+    OutgoingObject outObj = new OutgoingObject();
+    Message m = new Message();
+    m.setDestinationAddress(da);
+    m.setSourceAddress(oa);
+    m.setMessageString(text);
+    outObj.setMessage(m);
+    try {
+      outgoingQueue.offer(outObj,3000);
+      if(logger.isInfoEnabled()) {
+        logger.info("Message send to abonent: "+da+" "+oa+" "+text);
+      }
+      return 0;
+    } catch (ShutdownedException e) {
+      logger.error("Error during sending message",e);
+      e.printStackTrace();
+      return 1;
+    }
+  }
+
+
+
+  private static void init() {
     File file = new File("test_QuizManager");
     if (file.exists()) {
       removeAll(file);
@@ -92,7 +149,6 @@ public class Main {
 
   }
 
-  //todo remove
   private static void createQuizFile(String fileName, int minutes, String oa, String da, String question) {
 
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
@@ -165,10 +221,9 @@ public class Main {
     }
   }
 
-  //todo remove
   private static void createAbFile(String fileName, long from, long till, SubscriptionManager subscriptionManager) {
-    from*=1000;
-    till*=1000;
+    from*=100000;
+    till*=100000;
 
     PrintWriter writer = null;
 
@@ -180,7 +235,7 @@ public class Main {
       } catch (SubManagerException e) {
         e.printStackTrace();
       }
-      String abonent = "7909";
+      String abonent = "+7909";
       writer.print(abonent);
       writer.print("|");
 
@@ -190,7 +245,7 @@ public class Main {
         strBuilder.append((char) (aCode + 26 * Math.random()));
       }
       writer.println(strBuilder.substring(0));
-      abonent = "7910";
+      abonent = "+7910";
       writer.print(abonent);
       writer.print("|");
 
@@ -203,7 +258,7 @@ public class Main {
         abonent = "+" + i;
         writer.print(abonent);
         writer.print("|");
-        if ((i % 100) == 0) {
+        if ((i % 500) == 0) {
           try {
             subscriptionManager.subscribe(abonent);
           } catch (SubManagerException e) {
@@ -226,7 +281,7 @@ public class Main {
       }
     }
   }
-  //todo remove
+
   private static void removeAll(File dir) {
     if ((dir == null) || (!dir.exists())) {
       return;
@@ -236,9 +291,7 @@ public class Main {
         removeAll(f);
       }
     }
-    if (dir.isFile()) {
-      dir.delete();
-    }
+    dir.delete();
   }
 
 }
