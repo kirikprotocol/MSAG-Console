@@ -222,24 +222,25 @@ public class WHOISDServlet extends HttpServlet
       }
       if (appContext.getServiceProviderManager().getServiceById(new Long(service))==null)
         throw new WHOISDException("MSAG doesn't contain service with id = " + service);
-      RuleManagerWrapper rulemanager = appContext.getRuleManager().getWrapper();
+      RuleManagerWrapper ruleManagerWrap = appContext.getRuleManager().getWrapper();
       Map rulesWHOISD = null;
       Rule ruleWHOISD = null;
       LinkedList termAsList = new LinkedList();
       if( isMultipartFormat ) {
-        logger.debug( "WHOISDServlet.applyTerm() (isMultipartFormat)" );
+        logger.debug( "WHOISDServlet.applyTerm() isMultipartFormat" );
         int[] dataSlice = extractData(req,new ByteArrayInputStream(baos.toByteArray()));
         String content = new String();
         for (int i=0 ;i<dataSlice.length;i++)
           content = content +(char)dataSlice[i];
-        rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service, new BufferedReader(new StringReader(content)), rulemanager.getXslFolder());
-        logger.debug( "WHOISDServlet.applyTerm() rylesWHOISD='" + rulesWHOISD + "'" );
+        rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service,
+                new BufferedReader(new StringReader(content)), ruleManagerWrap.getXslFolder());
+        logger.debug( "WHOISDServlet.applyTerm() isMultipartFormat rylesWHOISD='" + rulesWHOISD + "'" );
       } else {
         logger.debug( "WHOISDServlet.applyTerm() (!isMultipartFormat)" );
         rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service,
                 new BufferedReader( new InputStreamReader( new ByteArrayInputStream(baos.toByteArray() ), encoding) ),
-                rulemanager.getXslFolder());
-        logger.debug( "WHOISDServlet.applyTerm() isMultipartFormat rylesWHOISD='" + rulesWHOISD + "'" );
+                ruleManagerWrap.getXslFolder());
+        logger.debug( "WHOISDServlet.applyTerm() rylesWHOISD='" + rulesWHOISD + "'" );
       }
       String[] transports = Transport.transportTitles;
       logger.debug( "WHOISDServlet.applyTerm() line359" );
@@ -248,40 +249,47 @@ public class WHOISDServlet extends HttpServlet
           logger.debug( "WHOISDServlet.applyTerm() (rulesWHOISD.size()>0) line362" );
           try {
               for (byte i =0 ;i<transports.length;i++) {
+                logger.debug( "WHOISDServlet.applyTerm() for rule '" + transports[i] + "'" );
                 ruleWHOISD = (Rule)rulesWHOISD.get(transports[i]);
-                RuleState curRuleState = rulemanager.getRuleStateAndLock(service,transports[i]);
+                RuleState curRuleState = ruleManagerWrap.getRuleStateAndLock(service,transports[i]);
+                logger.debug( "WHOISDServlet.applyTerm() curRuleState='" + curRuleState + "'" );
                 if (ruleWHOISD == null) {
                   if (curRuleState.getExists()) {
-                    rulemanager.removeRule(service,transports[i]);
+                    ruleManagerWrap.removeRule(service,transports[i]);
                   }
                   continue;
                 }
+
                 String ruleSystemId = composePath(GW_LOCATION_RULES_FOLDER, appContext)+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
                 try {
-                 SAXParserImpl.parseRule(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
+                  SAXParserImpl.parseRule( ruleManagerWrap.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i] );
                 } catch(WHOISDException e) {
-                  throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, e.getMessage(), e.getLineNumber()));
+                  throw new WHOISDException(composeErrorMessage( ruleWHOISD,termAsList, e.getMessage(), e.getLineNumber()) );
                 }
-                if (ruleWHOISD != null && curRuleState.getExists()) {
-                   LinkedList error = rulemanager.updateRule(ruleWHOISD,service,transports[i]);
+                logger.debug( "WHOISDServlet.applyTerm() ruleWHOISD != null)" + (ruleWHOISD != null) + "curRuleState.getExists()='" + curRuleState.getExists() + "'" );
+                if( ruleWHOISD != null && curRuleState.getExists() ) {
+                   logger.debug( "WHOISDServlet.applyTerm() curRuleState.getExists()" );
+                   LinkedList error = ruleManagerWrap.updateRule( ruleWHOISD,service,transports[i] );
+                   logger.debug( "WHOISDServlet.applyTerm() curRuleState.getExists() error='" + error + "'" );
                    if (error != null && error.size()>0)
                      throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
                 } else if (ruleWHOISD != null && !curRuleState.getExists()) {
-                   LinkedList error = rulemanager.AddRule(ruleWHOISD,service, transports[i]);
+                   logger.debug( "WHOISDServlet.applyTerm() (!curRuleState.getExists())" );
+                   LinkedList error = ruleManagerWrap.AddRule(ruleWHOISD,service, transports[i]);
+                   logger.debug( "WHOISDServlet.applyTerm() (!curRuleState.getExists()) error='" + error + "'");
                    if (error != null && error.size()>0)
                      throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
                 }
               }
-              rulemanager.applyTerm(RuleManagerWrapper.TERM_COMMIT);
+              ruleManagerWrap.applyTerm(RuleManagerWrapper.TERM_COMMIT);
           } catch (Exception e) {
-            rulemanager.applyTerm(RuleManagerWrapper.TERM_ROLLBACK);
+            ruleManagerWrap.applyTerm(RuleManagerWrapper.TERM_ROLLBACK);
             throw e;
           } finally {
-            rulemanager.unlockRules();
+            ruleManagerWrap.unlockRules();
           }
       }
     }
-
 
     private void debugFlushBos(ByteArrayOutputStream bos) {
         try {
