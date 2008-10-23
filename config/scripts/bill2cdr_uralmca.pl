@@ -277,6 +277,13 @@ sub process{
       {
         $outfields->{INV_SERVICE_ID}='21';
       }
+      if($infields->{SERVICE_TYPE} eq 'MCA')
+      {
+        $outfields->{INV_SERVICE_ID}=0;
+      }elsif($infields->{SERVICE_TYPE} eq 'MCAON')
+      {
+        $outfields->{INV_SERVICE_ID}=1;
+      }
       $outfields->{PAYER_ADDR}=conv_addr($infields->{DST_ADDR});
       $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
