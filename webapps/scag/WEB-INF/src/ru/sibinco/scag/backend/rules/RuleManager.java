@@ -95,6 +95,7 @@ public class RuleManager
 
 
   public File composeRuleFile(String transport, String serviceId) {
+      logger.debug( "Rulemanager.composeRuleFile() start" );
       String filename="rule_"+ serviceId.toString()+".xml";
       final File folder = new File(rulesFolder, transport);
       File newFile= new File(folder,filename);
@@ -488,7 +489,7 @@ public class RuleManager
  {
    //String ruleId=fileName.substring(5,fileName.length()-4);
    Rule rule = getRule(ruleId,transport);
-   logger.debug("updateRule ruleId= "+ruleId+" ,transport = "+transport);
+   logger.debug( "RuleManager.updateRule() ruleId=" + ruleId + " ,transport = " + transport );
    LinkedList errorInfo = new LinkedList();
 
    //instead of scag.updateRule(ruleId, transport);
@@ -504,19 +505,19 @@ public class RuleManager
    File currentRuleFile = saveCurrentRule(curbody,ruleId, transport);
    saveRule(r,ruleId, transport);
 
-    if (!DEBUG)  {
+    if (!DEBUG) {
        try {
          errorInfo=(LinkedList) scag.updateRule(ruleId, transport);
        } catch (SibincoException e) {
          if (e instanceof StatusDisconnectedException) {
-           logger.error("RuleManager:updateRule():StatusDisconnectedException!!!");
+           logger.error("RuleManager.updateRule() StatusDisconnectedException!!!");
            if (mode != TERM_MODE) {
              Functions.SavedFileToBackup(currentRuleFile,".new");
              finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
              saveMessage("Updated rule: ", user, ruleId, transport);
            }
          } else {
-           logger.error("RuleManager:updateRule():SibincoException!!!");
+           logger.error("RuleManager:updateRule() SibincoException!!!");
            if (mode != TERM_MODE) {
              saveRule(curbody,ruleId,rule.getTransport());
              currentRuleFile.delete();
@@ -528,6 +529,7 @@ public class RuleManager
          throw e;
        }
     }
+    logger.error("RuleManager:updateRule() finishing" );
     if (errorInfo == null || errorInfo.size()==0) {
         if (mode!=TERM_MODE) {
           Functions.SavedFileToBackup(currentRuleFile, ".new");
@@ -541,6 +543,7 @@ public class RuleManager
           currentRuleFile.delete();
         }
     }
+    logger.error("RuleManager:updateRule() return" );
     return errorInfo;
  }
 
@@ -604,7 +607,7 @@ public class RuleManager
             }
 
         } else {
-            logger.error( "RuleManger:saveCurrentRule() Attempt to save unlocked rule. permission=false for " + transport );
+            logger.error( "RuleManger.saveCurrentRule() Attempt to save unlocked rule ruleId='" + ruleId + "' . permission=false for " + transport );
         }
         return newFile;
     }
@@ -633,7 +636,7 @@ public class RuleManager
         }
 
     }else{
-        logger.error( "RuleManager:saveRule(LL...) Attempt to save unlocked rule.RuleManger:saveRule( LL, S, S):" +
+        logger.error( "RuleManager.saveRule(LL...) Attempt to save unlocked rule.RuleManger.saveRule( LL, S, S):" +
                       "permission=false for " + transport );
     }
   }
@@ -677,7 +680,7 @@ public class RuleManager
                 throw new SibincoException("Couldn't save new rule template, rename failed" );
             }
         } else {
-            logger.error( "RuleManager.saveRule() Attempt to save unlocked rule. RuleManger:saveRule( BR, S, S):" +
+            logger.error( "RuleManager.saveRule() Attempt to save unlocked rule. RuleManager.saveRule( BR, S, S):" +
                         "permission=false for " + transport );
         }
       }
@@ -836,6 +839,12 @@ public class RuleManager
       this.lastmodified = lastmodified;
       this.schemaContent = schemaContent;
     }
+  }
+
+  public void setSavePermissions( boolean value ) {
+      setSavePermissionSMPP( value );
+      setSavePermissionHTTP( value );
+      setSavePermissionMMS ( value );
   }
 }
 
