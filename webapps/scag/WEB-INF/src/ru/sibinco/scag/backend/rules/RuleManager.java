@@ -608,6 +608,7 @@ public class RuleManager
 
         } else {
             logger.error( "RuleManger.saveCurrentRule() Attempt to save unlocked rule ruleId='" + ruleId + "' . permission=false for " + transport );
+//            throw new SibincoException( "No permossion for save currentRule, id='" + ruleId + "' transport='" + transport + "'" );
         }
         return newFile;
     }
@@ -638,6 +639,7 @@ public class RuleManager
     }else{
         logger.error( "RuleManager.saveRule(LL...) Attempt to save unlocked rule.RuleManger.saveRule( LL, S, S):" +
                       "permission=false for " + transport );
+        throw new SibincoException( "No permossion for save ruLe, id='" + ruleId + "' transport='" + transport + "'" );
     }
   }
 
@@ -655,7 +657,7 @@ public class RuleManager
 //      File backFile = null;
       try
       {
-        if( checkPermission(transport) ){
+        if( checkPermission(transport) ) {
             logger.debug("RuleManager.saveRule() Saving rule to disc! file : " + ruleFile);
             ruleFile = composeRuleFile(transport,ruleId);
 
@@ -682,6 +684,7 @@ public class RuleManager
         } else {
             logger.error( "RuleManager.saveRule() Attempt to save unlocked rule. RuleManager.saveRule( BR, S, S):" +
                         "permission=false for " + transport );
+            throw new SibincoException( "No permossion for save Rule, id='" + ruleId + "' transport='" + transport + "'" );
         }
       }
       catch (FileNotFoundException e) {
@@ -694,8 +697,10 @@ public class RuleManager
           throw new SibincoException("Couldn't save new rule template", e);
       }
       finally {
-          out.flush();
-          out.close();
+          if( out != null ){
+            out.flush();
+            out.close();
+          }
       }
     }
 
