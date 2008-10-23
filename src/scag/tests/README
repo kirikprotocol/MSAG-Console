@@ -10,3 +10,4 @@ test06   Test/prototype of iconv conversion to/from UCS-2. See scag/util/encodin
 -test07  Test of placement new operator;
 test08   Useful test/measurement tool to measure code timing;
 test10   Prototype of custom allocator;
+test11   POC for SEGV when pthread_join is multiply invoked;
