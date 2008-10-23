@@ -488,6 +488,14 @@ public:
         return cache_->store2val(v);
     }
 
+    /// NOTE: use only if type of stored_type is DataBlockBackup
+    void backup2Profile ( const key_type& k, GlossaryBase* glossary ) {
+        stored_type* const vv = cache_->get( k );
+        if ( !vv || !vv->value || !vv->backup ) {
+            return;
+        }
+        vv->value->deserialize( vv->backup->getBackupData(), vv->backup->getBackupDataSize(), glossary );
+    }
 
     /// flush item to disk
     bool flush( const key_type& k ) {

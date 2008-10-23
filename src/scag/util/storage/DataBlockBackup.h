@@ -6,6 +6,7 @@
 #include <vector>
 #include "logger/Logger.h"
 #include "BlocksHSBackupData.h"
+#include "scag/util/storage/Serializer.h"
 
 
 namespace scag {
@@ -72,6 +73,28 @@ protected:
 } // namespace storage
 } // namespace util
 } // namespace scag
+
+
+template < class T >
+inline scag::util::storage::Serializer& operator << (scag::util::storage::Serializer& ser, 
+                                                     const scag::util::storage::DataBlockBackup < T > &dataBlock) { 
+    size_t start = ser.size();
+    ser << *(dataBlock.value);
+    const char* data = reinterpret_cast<const char*>(ser.data());
+    size_t end = ser.size();
+    dataBlock.backup->setBackupData(data + start, end - start);
+    return ser; 
+};
+
+template < class T >
+inline scag::util::storage::Deserializer& operator >> (scag::util::storage::Deserializer& deser,
+                                                 scag::util::storage::DataBlockBackup < T > &dataBlock) { 
+    uint32_t size = 0;
+    const char* buf = deser.read(size);
+    dataBlock.value->deserialize(buf, size, deser.getGlossary());
+    dataBlock.backup->setBackupData(buf, size);
+    return deser;
+};
 
 #endif /* ! _SCAG_UTIL_STORAGE_DATABLOCKBACKUP_H */
 

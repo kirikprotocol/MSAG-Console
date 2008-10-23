@@ -75,6 +75,10 @@ public:
         return buf_.size();
     }
 
+    const unsigned char* data() const {
+        return buf_.size() ? &(buf_[0]) : 0;
+    }
+
     /// write buffer of size sz.
     /// This method is provided to co-work with other serializer types.
     /// NOTE: see also Deserializer::read().
