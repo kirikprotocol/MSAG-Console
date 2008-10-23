@@ -31,10 +31,20 @@ public class TaskBuilder extends Thread {
   private Config oldConfig;
   private String processedFile;
   private final InfoSmeContext smeContext;
+  private TaskProps taskProps;
 
   public TaskBuilder(String file, InfoSmeContext smeContext) {
     this.smeContext = smeContext;
     this.file = file;
+  }
+
+  public TaskBuilder(String file, InfoSmeContext smeContext, TaskProps taskProps) {
+    this.smeContext = smeContext;
+    this.file = file;
+    if(!taskProps.validateNull()) {
+      throw new NullPointerException("Some arguments of TaskProps are null");
+    }      
+    this.taskProps = taskProps;
   }
 
   private synchronized void removeTask(Task task) {
@@ -93,6 +103,20 @@ public class TaskBuilder extends Thread {
       resetTask(task, false);
       checkAndPrepareTask(task, smeContext, getFileCount(), false, false);
 
+      if(taskProps!=null) {
+        String activeDayStr = taskProps.getDays();
+        List activeDays = new LinkedList();
+        Functions.addValuesToCollection(activeDays,activeDayStr,",",true);
+        task.setActiveWeekDays(activeDays);
+        task.setActiveWeekDaysSet(activeDays);
+
+        task.setStartDate(taskProps.getDateBegin());
+        task.setEndDate(taskProps.getDateEnd());
+        task.setActivePeriodStart(taskProps.getTimeBegin());
+        task.setActivePeriodEnd(taskProps.getDateEnd());
+        task.setAddress(taskProps.getAddress());
+        task.setTransactionMode(taskProps.isTxmode());
+      }
       is = new InputStreamReader(new FileInputStream(processedFile), Functions.getLocaleEncoding());
 
       int count = 0;
