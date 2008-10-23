@@ -40,7 +40,6 @@ public class Route {
     private Map destinations;
     private boolean archived;
     private boolean enabled = true;
-    private boolean transit = true;
     private boolean active = true;
     private String slicing;
     private String slicedRespPolicy;
@@ -74,33 +73,6 @@ public class Route {
         this.notes = notes;
     }
 
-    public Route(final String routeName, final Map sources, final Map destinations, final boolean archived,
-                 final boolean enabled, final boolean active, final String slicing, final String slicedRespPolicy,
-                 final String srcSmeId, final Service service, final String notes, final boolean transit) {
-        if (routeName == null)
-            throw new NullPointerException("Route name is null");
-        if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
-            throw new IllegalArgumentException("Route name is too long");
-        if (sources == null)
-            throw new NullPointerException("Sources list is null");
-        if (destinations == null)
-            throw new NullPointerException("Destinations list is null");
-
-        this.name = routeName;
-        this.sources = sources;
-        this.destinations = destinations;
-        this.archived = archived;
-        this.enabled = enabled;
-        this.transit = transit;
-        this.active = active;
-        this.slicing = slicing;
-        this.slicedRespPolicy = slicedRespPolicy;
-        this.srcSmeId = srcSmeId;
-        this.service = service;
-        this.notes = notes;
-
-    }
-
     public Route(String routeName) {
         if (routeName == null)
             throw new NullPointerException("Route name is null");
@@ -112,7 +84,6 @@ public class Route {
         this.destinations = new HashMap();
         this.archived = false;
         this.enabled = false;
-        this.transit = false;
         this.active = false;
         this.slicing = "NONE";
         this.slicedRespPolicy = "ALL";
@@ -135,7 +106,6 @@ public class Route {
         destinations = loadDestinations(routeElem, subjects, smppManager);
         archived = routeElem.getAttribute("archived").equalsIgnoreCase("true");
         enabled = routeElem.getAttribute("enabled").equalsIgnoreCase("true");
-        transit = routeElem.getAttribute("transit").equalsIgnoreCase("true");
         active = routeElem.getAttribute("active").equalsIgnoreCase("true");
         slicing = routeElem.getAttribute("slicing");
         slicedRespPolicy = routeElem.getAttribute("slicedRespPolicy");
@@ -222,10 +192,9 @@ public class Route {
         String name = StringEncoderDecoder.encode(getName());
         try {
             out.println("  <route id=\"" + name
-//                    + "\" archived=\"" + isArchived()
+                    + "\" archived=\"" + isArchived()
                     + "\" enabled=\"" + isEnabled()
                     + "\" active=\"" + isActive()
-                    + "\" transit=\"" + isTransit()
                     + "\" slicing=\"" + StringEncoderDecoder.encode(getSlicing())
                     + "\" slicedRespPolicy=\"" + StringEncoderDecoder.encode(getSlicedRespPolicy())
                     + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
@@ -311,14 +280,6 @@ public class Route {
 
     public void setEnabled(final boolean enabled) {
         this.enabled = enabled;
-    }
-
-    public boolean isTransit() {
-        return transit;
-    }
-
-    public void setTransit(final boolean transit) {
-        this.transit = transit;
     }
 
     public boolean isActive() {

@@ -41,7 +41,6 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private boolean enabled;
     private boolean archived;
     private boolean active;
-    private boolean transit;
     private String[] slicingTypes = new String[]{"NONE","SAR","UDH8", "UDH16"};
     private String[] slicingTypesTitles = new String[]{"NO/OFF","Via SAR Fields", "Via UDH8 encoding", "Via UDH16 encoding"};
     private String slicing;
@@ -85,7 +84,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
         if (getMbCancel() != null) {
-            logger.debug("routing/routes/Edit:process():getMbCancel()");
+            logger.debug("routing/routes/Edit.process() getMbCancel()");
             storeToSessionParentGetFlag(request, Constants.GSP_TRUE);
             throw new CancelChildException(new StringBuffer().append(path).
                     append("/services/service/edit.jsp?parentId=").append(getParentId()).
@@ -98,7 +97,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         destinations = new HashMap();
         destSubjs = new HashMap();
         destMasks = new HashMap();
-        logger.debug("routing/routes/Edit.java:process():request.getParameterMap().entrySet()=" + request.getParameterMap().entrySet());
+        logger.debug("routing/routes/Edit.process() request.getParameterMap().entrySet()=" + request.getParameterMap().entrySet());
         for (Iterator i = request.getParameterMap().entrySet().iterator(); i.hasNext();) {
             final Map.Entry entry = (Map.Entry) i.next();
             final String s = (String) entry.getKey();
@@ -295,7 +294,6 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             enabled = route.isEnabled();
             archived = route.isArchived();
             active = route.isActive();
-            transit = route.isTransit();
             slicing = route.getSlicing();
             slicedRespPolicy= route.getSlicedRespPolicy();
             srcSmeId = route.getSrcSmeId();
@@ -344,7 +342,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 //                routes.put( id, new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(),
 //                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
                 routes.put( id, new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(),
-                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit) );
+                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes ) );
                 messagetxt = "Added new route: " + id + " ";
             } else {
                 if (!getEditId().equals(id) && routes.containsKey(id)){
@@ -354,7 +352,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 //                routes.put( id, new Route(id, sources, destinations, archived, enabled, active,
 //                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
                 routes.put( id, new Route(id, sources, destinations, archived, enabled, active,
-                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit) );
+                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes ) );
                 messagetxt = "Changed route: " + id + " ";
             }
         } catch (SibincoException e) {
@@ -677,11 +675,4 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         return result;
     }
 
-    public boolean isTransit() {
-        return transit;
-    }
-
-    public void setTransit(final boolean transit) {
-        this.transit = transit;
-    }
 }
