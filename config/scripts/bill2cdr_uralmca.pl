@@ -215,6 +215,14 @@ sub process{
     %$outfields=%$infields;
     $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?22:$infields->{SERVICE_ID};
 
+    if($infields->{SERVICE_TYPE} eq 'MCA')
+    {
+      $outfields->{INV_SERVICE_ID}=0;
+    }elsif($infields->{SERVICE_TYPE} eq 'MCAON')
+    {
+      $outfields->{INV_SERVICE_ID}=1;
+    }
+
     if( $infields->{BEARER_TYPE} == 1 )
     {
       $outfields->{INV_SERVICE_ID}='98';
