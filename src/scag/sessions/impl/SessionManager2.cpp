@@ -302,7 +302,7 @@ int SessionManagerImpl::Execute()
         if ( curtmo > oldwait ) curtmo = oldwait;
         if ( curtmo > int(flushLimitTime_) ) curtmo = int(flushLimitTime_);
         if ( activeSessions_ > flushLimitSize_ ) curtmo = 0;
-        if ( !started && activeSessions_ == 0 ) {
+        if ( ! started && activeSessions_ == 0 ) {
             if ( alldone ) break;
             curtmo = 1;
         }
@@ -414,7 +414,7 @@ int SessionManagerImpl::Execute()
 
             // const unsigned tot = unsigned(expireMap_.size());
             // const unsigned act = activeSessions_;
-            smsc_log_debug( log_, "expire/flush=%u/%u act/tot=%u/%u inc=%u tmAE=%d/%d limTS=%u/%u",
+            smsc_log_debug( log_, "expire/flush=%u/%u act/tot=%u/%u inc=%u tmAE=%d/%d limTS=%u/%u run=%u",
                             unsigned(curset.size()),
                             unsigned(flushset.size()),
                             activeSessions_,
@@ -423,7 +423,8 @@ int SessionManagerImpl::Execute()
                             oldwait,
                             next,
                             flushLimitTime_,
-                            flushLimitSize_ );
+                            flushLimitSize_,
+                            started ? 1 : 0 );
             alldone = store_->expireSessions( curset, flushset );
 
             /*
