@@ -42,7 +42,10 @@ public class RuleManagerWrapper {
 
   public LinkedList AddRule(final Rule rule, final String service, final String transport) throws SibincoException, IOException {
   try {
+      logger.debug( "RuleManagerWrapper.AddRule() start" );
     addRuleCommand("AddRule", service ,transport);
+      rulemanager.setSavePermissions( true );
+      logger.debug( "RuleManagerWrapper.updateRule() return( AddRule(...) )" );
     return rulemanager.AddRule(getRuleContent(getRuleContentAsString(rule)), service, transport, RuleManager.TERM_MODE, WHOISD_USER);
   } catch(SibincoException se) {
     if (se instanceof StatusDisconnectedException) {
@@ -55,7 +58,10 @@ public class RuleManagerWrapper {
 
   public LinkedList updateRule(final Rule rule, final String service, final String transport) throws SibincoException, IOException {
   try {
+    logger.debug( "RuleManagerWrapper.updateRule() start" );
     addRuleCommand("updateRule", service , transport);
+    rulemanager.setSavePermissions( true );
+    logger.debug( "RuleManagerWrapper.updateRule() return( updateRule(...) )" );
     return rulemanager.updateRule(getRuleContent(getRuleContentAsString(rule)),service,transport, RuleManager.TERM_MODE, WHOISD_USER);
   } catch(SibincoException se) {
      if (se instanceof StatusDisconnectedException) {
