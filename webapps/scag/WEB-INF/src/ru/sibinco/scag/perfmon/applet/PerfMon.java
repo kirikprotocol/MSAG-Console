@@ -30,11 +30,9 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     AdvancedLabel sctimeLabel;
 
     AdvancedLabel sessionCountLabel;
-    AdvancedLabel sessionLoadedCountLabel;
     AdvancedLabel sessionLockedCountLabel;
 
     AdvancedLabel sessionCountLabelTitle;
-    AdvancedLabel sessionLoadedCountLabelTitle;
     AdvancedLabel sessionLockedCountLabelTitle;
 
     AdvancedLabel queueReqLabel;
@@ -277,11 +275,9 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         sctimeLabel = new AdvancedLabel(snap.strSctime);
 
         sessionCountLabel = new AdvancedLabel(snap.strSessionCount);
-        sessionLoadedCountLabel = new AdvancedLabel(snap.strSessionLoadedCount);
 	    sessionLockedCountLabel = new AdvancedLabel(snap.strSessionLockedCount);
 
         sessionCountLabelTitle = new AdvancedLabel( localeText.getString("lab.sesscount.total") );
-        sessionLoadedCountLabelTitle = new AdvancedLabel( localeText.getString("lab.sesscount.loaded") );
         sessionLockedCountLabelTitle = new AdvancedLabel( localeText.getString("lab.sesscount.locked") );
 //        sessionCountLabelTitle = new AdvancedLabel( "Total" );
 //	    sessionLockedCountLabelTitle = new AdvancedLabel( "Locked" );
@@ -319,16 +315,11 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         pSessionTotal.add(sessionCountLabelTitle, BorderLayout.WEST);
         pSessionTotal.add(sessionCountLabel, BorderLayout.CENTER);
 
-        Panel pSessionLoaded = new Panel(new BorderLayout());
-        pSessionLoaded.add(sessionLoadedCountLabelTitle, BorderLayout.WEST);
-        pSessionLoaded.add(sessionLoadedCountLabel, BorderLayout.CENTER);
-
         Panel pSessionLocked = new Panel(new BorderLayout());
         pSessionLocked.add(sessionLockedCountLabelTitle, BorderLayout.WEST);
         pSessionLocked.add(sessionLockedCountLabel, BorderLayout.CENTER);
 
         pSession.add(pSessionTotal);
-        pSession.add(pSessionLoaded);
         pSession.add(pSessionLocked);
 
         lg.add(pSession, BorderLayout.CENTER);
@@ -494,7 +485,6 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
                         uptimeLabel.setText(snap.strUptime);
                         sctimeLabel.setText(snap.strSctime);
                         sessionCountLabel.setText( snap.strSessionCount );
-                        sessionLoadedCountLabel.setText( snap.strSessionLoadedCount );
 			            sessionLockedCountLabel.setText( snap.strSessionLockedCount );
                         if( statMode.equals(httpStatMode) ){
                             queueReqLabel.setText(snap.strHttpReqQueueLen);
