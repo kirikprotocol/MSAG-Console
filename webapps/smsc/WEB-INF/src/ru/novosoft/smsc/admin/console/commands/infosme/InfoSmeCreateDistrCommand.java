@@ -8,8 +8,12 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 /**
- * author: alkhal
+ *
+ * User: alkhal
+ * Date: 22.10.2008
+ *
  */
+
 public class InfoSmeCreateDistrCommand extends CommandClass {
 
 
@@ -31,10 +35,10 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
 
   private String dayStr;
 
-  private final String[] weekDays = {"mon", "tue", "wed", "thu", "fri", "sat", "sun"};
+  private final String[] weekDays = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
 
   private String txmode;
-    // infosme create distr "file" "10.08.2010 10:56" "10.08.2010 12:56" "10:45" "10:57" "montue" "rx"
+    // infosme create distr "/home/alkhal/file.txt" "10.08.2010 10:56" "10.08.2010 12:56" "10:45" "10:57" "Mon,Tue" "rx" "144"
 
   public InfoSmeCreateDistrCommand() {
     super();
@@ -43,20 +47,27 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
   }
 
   public void process(CommandContext ctx) {
-    Date dateBegin;
-    Date dateEnd;
-    Calendar timeEnd = Calendar.getInstance();
-    Calendar timeBegin = Calendar.getInstance();
-    Set days = new HashSet();
-
     try {
-      dateBegin = dateFormat.parse(dateBeginStr);
-      dateEnd = dateFormat.parse(dateEndStr);
-      buildTime(timeBegin, timeBeginStr);
-      buildTime(timeEnd, timeEndStr);
-      buildDays(days);
+      dateFormat.parse(dateBeginStr);
+      dateFormat.parse(dateEndStr);
+      validateTime(timeBeginStr);
+      validateTime(timeEndStr);
+      validateDays();
+      Boolean bolMod = Boolean.valueOf(txmode);
+
       final InfoSmeCreateDistr cmd = (InfoSmeCreateDistr)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeCreateDistrImpl").newInstance();
-      cmd.createDistribution(file, dateBegin, dateEnd, timeBegin, timeEnd, days, txmode);
+
+      HashMap params = new HashMap(7);
+      params.put("dateBegin", dateBeginStr);
+      params.put("dateEnd", dateEndStr);
+      params.put("timeBegin", timeBeginStr);
+      params.put("timeEnd", timeEndStr);
+      params.put("days",dayStr);
+      params.put("txmode",bolMod);
+      params.put("address", sourceAddress);
+
+      cmd.createDistribution(ctx, file, dateBeginStr, dateEndStr,
+          timeBeginStr, timeEndStr, dayStr, Boolean.valueOf(txmode), sourceAddress);
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
       ctx.setMessage("Can't find module InfoSme");
@@ -81,7 +92,7 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
     return "INFOSME_CREATE_DISTR";
   }
 
-  private void buildDays(Set days) throws ParseException, NoSuchElementException{
+  private void validateDays() throws ParseException, NoSuchElementException{
     StringTokenizer tokenizer = new StringTokenizer(dayStr,",");
     while(tokenizer.hasMoreTokens()){
       String token = tokenizer.nextToken();
@@ -91,7 +102,6 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
       int fl=0;
       for(int i=0;i<weekDays.length;i++) {
         if(weekDays[i].equals(token)) {
-          days.add(weekDays[i]);
           fl=1;
           break;
         }
@@ -102,17 +112,17 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
     }
   }
 
-  private void buildTime(Calendar cal, String str) throws ParseException, NoSuchElementException {
+  private void validateTime(String str) throws ParseException, NoSuchElementException {
     StringTokenizer tokenizer = new StringTokenizer(str,timeFormatDelim);
     String token = tokenizer.nextToken();
     if((token==null)||(token.equals(""))) {
       throw new NoSuchElementException("Hour is null");
     }
-    cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(token));
+    Integer.parseInt(token);
     if((token=tokenizer.nextToken())==null) {
       throw new NoSuchElementException("Minutes is null");
     }
-    cal.set(Calendar.MINUTE, Integer.parseInt(token));
+    Integer.parseInt(token);
   }
 
 

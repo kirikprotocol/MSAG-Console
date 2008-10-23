@@ -1099,6 +1099,7 @@ infosmecreatedistr returns [InfoSmeCreateDistrCommand cmd] {
       cmd.setTimeEndStr(getnameid("time end"));
       cmd.setDayStr(getnameid("week days"));
       cmd.setTxmode(getnameid("trans mode"));
+      cmd.setSourceAddress(getnameid("address"));
       }
    );
 /* ------------------ Misc commands parsers ---------------- */

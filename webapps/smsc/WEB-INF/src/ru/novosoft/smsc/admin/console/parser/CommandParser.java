@@ -3362,6 +3362,7 @@ public CommandParser(ParserSharedInputState state) {
 		cmd.setTimeEndStr(getnameid("time end"));
 		cmd.setDayStr(getnameid("week days"));
 		cmd.setTxmode(getnameid("trans mode"));
+		cmd.setSourceAddress(getnameid("address"));
 		
 		}
 		return cmd;

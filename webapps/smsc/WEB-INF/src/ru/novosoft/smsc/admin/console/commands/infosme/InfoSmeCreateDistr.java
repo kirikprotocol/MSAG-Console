@@ -1,18 +1,21 @@
 package ru.novosoft.smsc.admin.console.commands.infosme;
 
+import ru.novosoft.smsc.admin.console.CommandContext;
+
 import java.util.Date;
 import java.util.Calendar;
 import java.util.Set;
+import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
+ *
  * User: alkhal
  * Date: 22.10.2008
- * Time: 18:00:37
- * To change this template use File | Settings | File Templates.
+ *
  */
 public interface InfoSmeCreateDistr {
 
-  public boolean createDistribution(String fileName, Date dateBegin, Date dateEnd, Calendar timeBegin, Calendar timeEnd, Set days, String txmode);
+  public void createDistribution(CommandContext ctx, String fileName, String dateBegin, String dateEnd,
+                                 String timeBegin, String timeEnd, String days, Boolean txmode, String address);
 
 }
