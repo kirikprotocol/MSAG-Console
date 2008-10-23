@@ -66,7 +66,7 @@ public class WHOISDTermsTransformer {
       finally {
         if (br!=null) br.close();
       }
-      return buildRules(service,content,xslFolder);
+      return buildRules(service, content, xslFolder);
     }
 
   public static Map buildRules(String service, String content, File xslFolder) throws Exception  {
@@ -77,30 +77,31 @@ public class WHOISDTermsTransformer {
     long id = Long.parseLong(service);
     HashMap transportToXSl = WHOISDRequest.transportToXSl;
     LinkedList termsresult = new LinkedList();
-//      logger.debug( "WHOISDTermsTransformer.buildRules(3) addBody() L65");
-    addBody(termsresult,content, stylesheet, xslFolder,false);
+    logger.debug( "WHOISDTermsTransformer.buildRules(3) addBody() L80");
+    addBody(termsresult, content, stylesheet, xslFolder, false);
     termsresult.remove(1);
     termsresult.add(1,HeaderToWHOISDTerms);
     termsresult.add(EndingToWHOISDTerms);
-    Vector transports = new Vector(transportToXSl.keySet()) ;
+    Vector transports = new Vector( transportToXSl.keySet() ) ;
 //      logger.debug( "WHOISDTermsTransformer.buildRules() for");
-    for (Iterator i = transports.iterator() ;i.hasNext();) {
+    for( Iterator i = transports.iterator() ;i.hasNext(); ) {
         logger.debug( "WHOISDTermsTransformer.buildRules() for into");
-        LinkedList ruleresult = new LinkedList();
+        LinkedList ruleResult = new LinkedList();
         LinkedList header = new LinkedList();
         LinkedList body = new LinkedList();
         String transport = (String)i.next();
         stylesheet = (String)transportToXSl.get(transport);
         header = Rule.getRuleHeader(transport);
         header.removeFirst();
-        ruleresult.addAll(header);
-        if (addBody(body,content, stylesheet, xslFolder,true)) {
-          logger.debug("WHOISDTermsTransformer: adding Rule "+stylesheet + " : " + transport);
+        ruleResult.addAll(header);
+        if( addBody(body, content, stylesheet, xslFolder,true) ) {
+          logger.debug("WHOISDTermsTransformer: adding Rule " + stylesheet + ", " + transport);
           //body.removeFirst();
           body.removeFirst();
-          ruleresult.addAll(body);
-          newRule = new Rule(new Long(id),"",transport,termsresult);
-          newRule.appendBody(ruleresult);
+          ruleResult.addAll(body);
+          newRule = new Rule( new Long(id), "", transport, termsresult );
+          logger.debug( "WHOISDTermsTransformer.buildRules() newRule.appendBody() " + stylesheet + ", " + transport );
+          newRule.appendBody(ruleResult);
           if (DEBUG) debugRuleBody(newRule);
           rules.put(transport,newRule);
         }
@@ -110,7 +111,7 @@ public class WHOISDTermsTransformer {
 
 
   private static boolean addBody(LinkedList result,String content, String stylesheet, File xslFolder, boolean omit_declaration) throws Exception {
-      logger.debug( "WHOISDTermsTransformer.addBody() start" + "\ncontent=" + content );
+      logger.debug( "WHOISDTermsTransformer.addBody() start" + "\ncontent=" + content + "\nstylesheet=" + stylesheet + "\n" );
     StringWriter sw = new StringWriter();
     StringReader sr = new StringReader(content);
     BufferedReader br = null;
@@ -119,7 +120,7 @@ public class WHOISDTermsTransformer {
         Transformer transformer = tFactory.newTransformer(new StreamSource(new File(xslFolder,stylesheet)) ) ;
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, (omit_declaration)?"yes":"no");
 //        logContent(content, "cntbr");
-        transformer.transform(new StreamSource(sr), new StreamResult(sw));
+        transformer.transform( new StreamSource(sr), new StreamResult(sw) );
         br = new BufferedReader(new StringReader(sw.toString()));
         String line;
         while((line=br.readLine()) != null) {
@@ -137,7 +138,7 @@ public class WHOISDTermsTransformer {
 
          if (result.size()>2) return true;
     } catch(TransformerException te) {
-        throw new WHOISDException("Can't build rules from term, reason: "+te.getMessage() + " " + te.getLocationAsString());
+        throw new WHOISDException("Can't build rules from term, reason: " + te.getMessage() + " " + te.getLocationAsString());
     }
     finally {
       if (sw!=null) sw.close();
