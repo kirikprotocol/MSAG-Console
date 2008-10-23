@@ -21,6 +21,7 @@ public:
   virtual ~Thread();
 
   virtual int Execute()=0;
+  virtual void onStart(){}
   void Start();
   void Start(int stacksize);
   int WaitFor();

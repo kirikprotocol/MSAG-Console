@@ -40,7 +40,10 @@ void Thread::Start()
   if(pthread_create(&thread,NULL,(ThreadFunc)&Thread::ThreadRunner,this)!=0)
   {
     thread=0;
-  };
+  }else
+  {
+    onStart();
+  }
 #endif
 }
 
@@ -52,7 +55,10 @@ void Thread::Start(int stacksize)
   if(pthread_create(&thread,NULL,(ThreadFunc)&Thread::ThreadRunner,this)!=0)
   {
     thread=0;
-  };
+  }else
+  {
+    onStart();
+  }
 #endif
 }
 
@@ -73,7 +79,9 @@ int Thread::WaitFor()
 #ifdef _WIN32
   return WaitForSingleObject(thread,INFINITE);
 #else
-  return pthread_join(thread,NULL);
+  int rv=pthread_join(thread,NULL);
+  thread=0;
+  return rv;
 #endif
 }
 
