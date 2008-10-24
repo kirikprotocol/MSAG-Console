@@ -201,6 +201,11 @@ protected:
 
     ~MemoryPool()
     {
+        {
+            util::PrintFile pf( stderr );
+            this->print(pf);
+        }
+
         MutexGuard mg(mtx_);
         ++seq_;
         for ( unsigned i = 0; i < cfg_.maxsize(); ++i ) indices_[i] = cfg_.maxsize();
@@ -211,6 +216,8 @@ protected:
         delete [] managers_;
         managers_ = 0;
         ++seq_;
+        smsc::logger::Logger* l = smsc::logger::Logger::getInstance("mem.pool");
+        smsc_log_debug( l, "memory pool @ %p is destroyed", this );
     }
 
 private:
