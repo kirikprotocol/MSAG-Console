@@ -18,6 +18,7 @@ BannerlessOutputMessageProcessorsDispatcher::dispatchSendAbntOnlineNotifications
 {
   std::auto_ptr<const sms_info> autoPtrSmsInfo(pInfo);
   _taskProcessor.SendAbntOnlineNotifications(autoPtrSmsInfo.get(), abntProfile);
+  _taskProcessor.commitMissedCallEvents(autoPtrSmsInfo.get(), _abntProfile);
 }
 
 }}
