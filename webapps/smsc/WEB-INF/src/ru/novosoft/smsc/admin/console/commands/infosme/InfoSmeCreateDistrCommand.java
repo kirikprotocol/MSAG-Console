@@ -38,7 +38,7 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
   private final String[] weekDays = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
 
   private String txmode;
-    // infosme create distr "/home/alkhal/file.txt" "10.08.2010 10:56" "10.08.2010 12:56" "10:45" "10:57" "Mon,Tue" "rx" "144"
+    // infosme distr create "/home/alkhal/file.txt" "10.08.2010 10:56" "10.08.2010 12:56" "10:45" "10:57" "Mon,Tue" "rx" "144"
 
   public InfoSmeCreateDistrCommand() {
     super();
@@ -55,16 +55,7 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
       validateDays();
       Boolean bolMod = Boolean.valueOf(txmode);
 
-      final InfoSmeCreateDistr cmd = (InfoSmeCreateDistr)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeCreateDistrImpl").newInstance();
-
-      HashMap params = new HashMap(7);
-      params.put("dateBegin", dateBeginStr);
-      params.put("dateEnd", dateEndStr);
-      params.put("timeBegin", timeBeginStr);
-      params.put("timeEnd", timeEndStr);
-      params.put("days",dayStr);
-      params.put("txmode",bolMod);
-      params.put("address", sourceAddress);
+      final InfoSmeDistr cmd = (InfoSmeDistr)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeDistrImpl").newInstance();
 
       cmd.createDistribution(ctx, file, dateBeginStr, dateEndStr,
           timeBeginStr, timeEndStr, dayStr, Boolean.valueOf(txmode), sourceAddress);

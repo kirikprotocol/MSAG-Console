@@ -213,7 +213,7 @@ infosme returns [Command cmd] {
     cmd = null;
 }
   : TGT_IMPORT cmd = infosmeimport
-  | TGT_CREATE cmd = infosmecreatedistr
+  | TGT_DISTR cmd = infosmedistr
   ;
 
 /* ----------------------- Common names parser ------------------------- */
@@ -1089,9 +1089,16 @@ infosmeimport returns [InfosmeImportCommand cmd] {
     cmd = new InfosmeImportCommand();
 } : ( OPT_TASK { cmd.setFile(getnameid("task file")); });
 
+infosmedistr returns [Command cmd] {
+      cmd = null;
+}  : OPT_CREATE cmd = infosmecreatedistr
+   | OPT_STATUS cmd = infosmestatusdistr
+   ;
+
 infosmecreatedistr returns [InfoSmeCreateDistrCommand cmd] {
-    cmd = new InfoSmeCreateDistrCommand();
-} :( OPT_DISTR {
+      cmd = new InfoSmeCreateDistrCommand();
+} : {
+      cmd = new InfoSmeCreateDistrCommand();
       cmd.setFile(getnameid("distr file"));
       cmd.setDateBeginStr(getnameid("date begin"));
       cmd.setDateEndStr(getnameid("date end"));
@@ -1101,7 +1108,14 @@ infosmecreatedistr returns [InfoSmeCreateDistrCommand cmd] {
       cmd.setTxmode(getnameid("trans mode"));
       cmd.setSourceAddress(getnameid("address"));
       }
-   );
+  ;
+
+infosmestatusdistr returns [InfoSmeGetStatusCommand cmd] {
+      cmd = new InfoSmeGetStatusCommand();
+} : {
+      cmd.setTaskId(getnameid("task id"));
+      }
+  ;
 /* ------------------ Misc commands parsers ---------------- */
 
 addprovider returns [ProviderAddCommand cmd] {

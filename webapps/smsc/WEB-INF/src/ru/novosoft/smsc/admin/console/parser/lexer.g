@@ -59,7 +59,7 @@ tokens {
   TGT_GROUP     = "group";
   TGT_EMAILSME  = "emailsme";
   TGT_IMPORT    = "import";
-  TGT_CREATE    = "create";
+  TGT_DISTR     = "distr";
 
   OPT_ID        = "id";
   OPT_NAME      = "name";
@@ -149,7 +149,8 @@ tokens {
   OPT_SPONSORED = "sponsored";
   OPT_NICK = "nick";
   OPT_TASK = "task";
-  OPT_DISTR = "distr";
+  OPT_CREATE    = "create";
+  OPT_STATUS    = "status";
 
   VAL_FORCE     = "force";
   VAL_SUPPRESS  = "suppress";

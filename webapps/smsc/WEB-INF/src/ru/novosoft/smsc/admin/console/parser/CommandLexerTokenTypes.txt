@@ -42,7 +42,7 @@ TGT_ARCHIVE="archive"=42
 TGT_GROUP="group"=43
 TGT_EMAILSME="emailsme"=44
 TGT_IMPORT="import"=45
-TGT_CREATE="create"=46
+TGT_DISTR="distr"=46
 OPT_ID="id"=47
 OPT_NAME="name"=48
 OPT_HIDE="hide"=49
@@ -131,31 +131,32 @@ OPT_SERVICESBIT="servicesbit"=131
 OPT_SPONSORED="sponsored"=132
 OPT_NICK="nick"=133
 OPT_TASK="task"=134
-OPT_DISTR="distr"=135
-VAL_FORCE="force"=136
-VAL_SUPPRESS="suppress"=137
-VAL_PASS="pass"=138
-VAL_FULL="full"=139
-VAL_FINAL="final"=140
-VAL_NONE="none"=141
-VAL_DEF="default"=142
-VAL_UCS2="ucs2"=143
-VAL_LATIN1="latin1"=144
-VAL_UCS2LATIN1="ucs2-latin1"=145
-VAL_STORE="store"=146
-VAL_FORWARD="forward"=147
-VAL_DATAGRAM="datagram"=148
-VAL_TX="TX"=149
-VAL_RX="RX"=150
-VAL_TRX="TRX"=151
-VAL_SMPP="SMPP"=152
-VAL_SS7="SS7"=153
-WS=154
-STR("more input")=155
-QSTR("quoted string")=156
-ESTR("empty string")=157
-STR_WS=158
-STR_CHR=159
-COMMA("comma character ','")=160
-ESC=161
-DIGIT=162
+OPT_CREATE="create"=135
+OPT_STATUS="status"=136
+VAL_FORCE="force"=137
+VAL_SUPPRESS="suppress"=138
+VAL_PASS="pass"=139
+VAL_FULL="full"=140
+VAL_FINAL="final"=141
+VAL_NONE="none"=142
+VAL_DEF="default"=143
+VAL_UCS2="ucs2"=144
+VAL_LATIN1="latin1"=145
+VAL_UCS2LATIN1="ucs2-latin1"=146
+VAL_STORE="store"=147
+VAL_FORWARD="forward"=148
+VAL_DATAGRAM="datagram"=149
+VAL_TX="TX"=150
+VAL_RX="RX"=151
+VAL_TRX="TRX"=152
+VAL_SMPP="SMPP"=153
+VAL_SS7="SS7"=154
+WS=155
+STR("more input")=156
+QSTR("quoted string")=157
+ESTR("empty string")=158
+STR_WS=159
+STR_CHR=160
+COMMA("comma character ','")=161
+ESC=162
+DIGIT=163

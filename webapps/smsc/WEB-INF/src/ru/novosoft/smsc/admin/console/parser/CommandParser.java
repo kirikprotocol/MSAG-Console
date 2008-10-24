@@ -771,10 +771,10 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=infosmeimport();
 			break;
 		}
-		case TGT_CREATE:
+		case TGT_DISTR:
 		{
-			match(TGT_CREATE);
-			cmd=infosmecreatedistr();
+			match(TGT_DISTR);
+			cmd=infosmedistr();
 			break;
 		}
 		default:
@@ -3345,41 +3345,46 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
-	public final InfoSmeCreateDistrCommand  infosmecreatedistr() throws RecognitionException, TokenStreamException {
-		InfoSmeCreateDistrCommand cmd;
+	public final Command  infosmedistr() throws RecognitionException, TokenStreamException {
+		Command cmd;
+
+
+		cmd = null;
 		
 		
-		cmd = new InfoSmeCreateDistrCommand();
-		
-		
+		switch ( LA(1)) {
+		case OPT_CREATE:
 		{
-		match(OPT_DISTR);
-		
-		cmd.setFile(getnameid("distr file"));
-		cmd.setDateBeginStr(getnameid("date begin"));
-		cmd.setDateEndStr(getnameid("date end"));
-		cmd.setTimeBeginStr(getnameid("time begin"));
-		cmd.setTimeEndStr(getnameid("time end"));
-		cmd.setDayStr(getnameid("week days"));
-		cmd.setTxmode(getnameid("trans mode"));
-		cmd.setSourceAddress(getnameid("address"));
-		
+			match(OPT_CREATE);
+			cmd=infosmecreatedistr();
+			break;
+		}
+		case OPT_STATUS:
+		{
+			match(OPT_STATUS);
+			cmd=infosmestatusdistr();
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
 		}
 		return cmd;
 	}
-	
+
 	public final String  getnameid(
 		String msg
 	) throws RecognitionException, TokenStreamException {
 		String out;
-		
+
 		Token  qname = null;
 		Token  name = null;
 		Token  ename = null;
-		
+
 		out = LT(1).getText();
-		
-		
+
+
 		try {      // for error handling
 			switch ( LA(1)) {
 			case QSTR:
@@ -3387,10 +3392,10 @@ public CommandParser(ParserSharedInputState state) {
 				{
 				qname = LT(1);
 				match(QSTR);
-				
+
 					    out = qname.getText().trim();
 					    out = out.substring(1,out.length()-1);
-					
+
 				}
 				break;
 			}
@@ -3399,9 +3404,9 @@ public CommandParser(ParserSharedInputState state) {
 				{
 				name = LT(1);
 				match(TSTR);
-				
+
 					    out = name.getText();
-					
+
 				}
 				break;
 			}
@@ -3410,9 +3415,9 @@ public CommandParser(ParserSharedInputState state) {
 				{
 				ename = LT(1);
 				match(ESTR);
-				
+
 					    out = "";
-					
+
 				}
 				break;
 			}
@@ -3423,28 +3428,28 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (NoViableAltException ex) {
-			
+
 				  match(LA(1));
-				
+
 		}
 		catch (RecognitionException ex) {
-			
+
 				    throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
-				
+
 		}
 		return out;
 	}
-	
+
 	public final long  getlongid(
 		String msg
 	) throws RecognitionException, TokenStreamException {
 		long id;
-		
+
 		Token  num = null;
-		
+
 		id = 0;
-		
-		
+
+
 		try {      // for error handling
 			{
 			num = LT(1);
@@ -3453,28 +3458,28 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
-			
+
 		}
 		catch (NumberFormatException ex) {
-			
+
 			throw new RecognitionException(ex.getMessage()+". Long value for <"+msg+"> expected. ");
-			
+
 		}
 		return id;
 	}
-	
+
 	public final int  getint(
 		String msg
 	) throws RecognitionException, TokenStreamException {
 		int i;
-		
+
 		Token  num = null;
-		
+
 		i = 0;
-		
-		
+
+
 		try {      // for error handling
 			{
 			num = LT(1);
@@ -3483,37 +3488,37 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
-			
+
 		}
 		catch (NumberFormatException ex) {
-			
+
 			throw new RecognitionException(ex.getMessage()+". Integer value for <"+msg+"> expected. ");
-			
+
 		}
 		return i;
 	}
-	
+
 	public final void srcdef(
 		RouteGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
+
 		Token  addr = null;
 		// Special command required !!!
 		RouteSrcDef def = new RouteSrcDef();
-		
-		
+
+
 		{
 		switch ( LA(1)) {
 		case OPT_SUBJ:
 		{
 			{
 			match(OPT_SUBJ);
-			
+
 				    def.setType(RouteSrcDef.TYPE_SUBJECT);
 				    def.setSrc(getnameid("Subject name"));
-				
+
 			}
 			break;
 		}
@@ -3523,10 +3528,10 @@ public CommandParser(ParserSharedInputState state) {
 			match(OPT_MASK);
 			addr = LT(1);
 			match(STR);
-			
-				    def.setType(RouteSrcDef.TYPE_MASK); 
+
+				    def.setType(RouteSrcDef.TYPE_MASK);
 				    def.setSrc(addr.getText());
-				
+
 			}
 			break;
 		}
@@ -3540,26 +3545,26 @@ public CommandParser(ParserSharedInputState state) {
 		cmd.addSrcDef(def);
 		}
 	}
-	
+
 	public final void dstdef(
 		RouteGenCommand cmd, boolean needSmeId
 	) throws RecognitionException, TokenStreamException {
-		
+
 		Token  addr = null;
 		// Special command required !!!
 		RouteDstDef def = new RouteDstDef();
-		
-		
+
+
 		{
 		switch ( LA(1)) {
 		case OPT_SUBJ:
 		{
 			{
 			match(OPT_SUBJ);
-			
+
 				    def.setType(RouteDstDef.TYPE_SUBJECT);
 				    def.setDst(getnameid("Subject name"));
-				
+
 			}
 			break;
 		}
@@ -3569,10 +3574,10 @@ public CommandParser(ParserSharedInputState state) {
 			match(OPT_MASK);
 			addr = LT(1);
 			match(STR);
-			
-				    def.setType(RouteDstDef.TYPE_MASK); 
+
+				    def.setType(RouteDstDef.TYPE_MASK);
 				    def.setDst(addr.getText());
-				
+
 			}
 			break;
 		}
@@ -3583,18 +3588,18 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		{
-		
+
 			    if (needSmeId) def.setSmeId(getnameid("SME System id"));
 			    cmd.addDstDef(def);
-			
+
 		}
 	}
-	
+
 	public final void route_src(
 		RouteGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			match(OPT_SRC);
@@ -3608,25 +3613,25 @@ public CommandParser(ParserSharedInputState state) {
 				else {
 					if ( _cnt37>=1 ) { break _loop37; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
-				
+
 				_cnt37++;
 			} while (true);
 			}
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException(
 			"Route srcdef missed or invalid. Syntax: src (subj <subject_name>|mask <mask>)+");
-			
+
 		}
 	}
-	
+
 	public final void route_dst(
 		RouteGenCommand cmd, boolean needSmeId
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			match(OPT_DST);
@@ -3640,26 +3645,26 @@ public CommandParser(ParserSharedInputState state) {
 				else {
 					if ( _cnt41>=1 ) { break _loop41; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
-				
+
 				_cnt41++;
 			} while (true);
 			}
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException(
 				"Route dstdef missed or invalid. Syntax: dst (subj <subject_name>|mask <mask>"+
 				((needSmeId) ? " <systemid>)+":")+"));
-			
+
 		}
 	}
-	
+
 	public final void route_dm(
 		RouteGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
@@ -3695,17 +3700,17 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("Route delivery mode expected. Syntax: (default|store|forward|datagram)");
-			
+
 		}
 	}
-	
+
 	public final void addroute_flags(
 		RouteAddCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
@@ -3942,13 +3947,13 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_ARCH:
 			{
 				match(OPT_ARCH);
-				cmd.setArc(true);    	
+				cmd.setArc(true);
 				break;
 			}
 			case OPT_NOARCH:
 			{
 				match(OPT_NOARCH);
-				cmd.setArc(false);   	
+				cmd.setArc(false);
 				break;
 			}
 			default:
@@ -3962,13 +3967,13 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_ALLOW:
 			{
 				match(OPT_ALLOW);
-				cmd.setAllow(true);  	
+				cmd.setAllow(true);
 				break;
 			}
 			case OPT_DENY:
 			{
 				match(OPT_DENY);
-				cmd.setAllow(false); 	
+				cmd.setAllow(false);
 				break;
 			}
 			default:
@@ -3999,19 +4004,19 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("Route flags expected. "+
 				"Syntax: [active|inactive] [hide|nohide] [forceReplayPath] [forceDelivery]"+
 				"[transit] (bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
-			
+
 		}
 	}
-	
+
 	public final void altroute_flags(
 		RouteAlterCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
@@ -4513,30 +4518,30 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("Route flags expected");
-			
+
 		}
 	}
-	
+
 	public final void addsubj_mask(
 		SubjectGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
+
 		Token  mask = null;
-		
+
 		{
 		mask = LT(1);
 		match(STR);
 		cmd.addMask(mask.getText());
 		}
 	}
-	
+
 	public final void addsubj_masks(
 		SubjectGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			addsubj_mask(cmd);
@@ -4550,23 +4555,23 @@ public CommandParser(ParserSharedInputState state) {
 				else {
 					break _loop120;
 				}
-				
+
 			} while (true);
 			}
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("Subject mask list missed or invalid. Syntax: <subject_mask>(,<subject_mask>)*");
-			
+
 		}
 	}
-	
+
 	public final void profile_divert_opt(
 		ProfileGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
@@ -4758,17 +4763,17 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("Profile devert options expected. Syntax: [absent][barred][blocked][capacity][unconditional] [modifiable|notmodifiable]");
-			
+
 		}
 	}
-	
+
 	public final void profile_udh_concat_opt(
 		ProfileGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
@@ -4817,17 +4822,17 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("Profile udh concat option expected. Syntax: udhconcat on|off");
-			
+
 		}
 	}
-	
+
 	public final void profile_translit_opt(
 		ProfileGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
@@ -4875,20 +4880,20 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("Profile translit option expected. Syntax: translit on|off");
-			
+
 		}
 	}
-	
+
 	public final void profile_alias_opt(
 		ProfileGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		cmd.setAliasOptions(true);
-		
-		
+
+
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
@@ -4972,20 +4977,20 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("Profile alias options expected. Syntax: [hide|nohide|substitute] [modifiable|notmodifiable]");
-			
+
 		}
 	}
-	
+
 	public final void profile_encode_opt(
 		ProfileGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		cmd.setUssd7Bit(false);
-		
-		
+
+
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
@@ -5052,17 +5057,17 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("Profile encoding options expected. Syntax: (default|ucs2|latin1|ucs2-latin1) [ussd7bit]");
-			
+
 		}
 	}
-	
+
 	public final void profile_group_opt(
 		ProfileGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
@@ -5182,18 +5187,18 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("Profile closed group options expected. Syntax: [group <groupName>|<groupId>] [inputAccessMask <intNum>|inputAccessBit <bitNum:0-31> <on|off>] [outputAccessMask <intNum>|outputAccessBit <bitNum:0-31> <on|off>]");
-			
+
 		}
 	}
-	
+
 	public final void sme_base_opt(
 		SmeGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
+
 		Token  addr = null;
-		
+
 		{
 		switch ( LA(1)) {
 		case OPT_MODE:
@@ -5356,9 +5361,9 @@ public CommandParser(ParserSharedInputState state) {
 				match(STR);
 			}
 			catch (RecognitionException ex) {
-				
+
 				throw new RecognitionException("Invalid addressRange value. Cause: "+ex.getMessage());
-				
+
 			}
 			cmd.setAddressRange(addr.getText());
 			break;
@@ -5722,12 +5727,12 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 	}
-	
+
 	public final void sme_add_opt(
 		SmeGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			sme_base_opt(cmd);
@@ -5791,17 +5796,17 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("Sme add option(s) invalid. Details: "+ex.getMessage());
-			
+
 		}
 	}
-	
+
 	public final void sme_alt_opt(
 		SmeGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			sme_base_opt(cmd);
@@ -5943,17 +5948,17 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("Sme alt option(s) invalid. Details: "+ex.getMessage());
-			
+
 		}
 	}
-	
+
 	public final void group_add_opt(
 		ClosedGroupGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
@@ -5975,17 +5980,17 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("closed group add option(s) invalid. Details: "+ex.getMessage());
-			
+
 		}
 	}
-	
+
 	public final void group_alt_opt(
 		ClosedGroupAlterCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
@@ -6038,7 +6043,7 @@ public CommandParser(ParserSharedInputState state) {
 				else {
 					break _loop306;
 				}
-				
+
 			} while (true);
 			}
 			{
@@ -6051,27 +6056,27 @@ public CommandParser(ParserSharedInputState state) {
 				else {
 					break _loop308;
 				}
-				
+
 			} while (true);
 			}
 		}
 		catch (AdminException ex) {
-			
+
 			throw new RecognitionException("mask is not valid");
-			
+
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("closed group alt option(s) invalid. Details: "+ex.getMessage());
-			
+
 		}
 	}
-	
+
 	public final void emailsme_gen_opt(
 		EmailSmeGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
-		
-		
+
+
 		try {      // for error handling
 			{
 			match(OPT_TON);
@@ -6087,10 +6092,44 @@ public CommandParser(ParserSharedInputState state) {
 			}
 		}
 		catch (RecognitionException ex) {
-			
+
 			throw new RecognitionException("emailsme option(s) invalid. Details: "+ex.getMessage());
-			
+
 		}
+	}
+
+	public final InfoSmeCreateDistrCommand  infosmecreatedistr() throws RecognitionException, TokenStreamException {
+		InfoSmeCreateDistrCommand cmd;
+
+
+		cmd = new InfoSmeCreateDistrCommand();
+
+
+
+		cmd = new InfoSmeCreateDistrCommand();
+		cmd.setFile(getnameid("distr file"));
+		cmd.setDateBeginStr(getnameid("date begin"));
+		cmd.setDateEndStr(getnameid("date end"));
+		cmd.setTimeBeginStr(getnameid("time begin"));
+		cmd.setTimeEndStr(getnameid("time end"));
+		cmd.setDayStr(getnameid("week days"));
+		cmd.setTxmode(getnameid("trans mode"));
+		cmd.setSourceAddress(getnameid("address"));
+
+		return cmd;
+	}
+
+	public final InfoSmeGetStatusCommand  infosmestatusdistr() throws RecognitionException, TokenStreamException {
+		InfoSmeGetStatusCommand cmd;
+
+
+		cmd = new InfoSmeGetStatusCommand();
+
+
+
+		cmd.setTaskId(getnameid("task id"));
+
+		return cmd;
 	}
 	
 	
@@ -6141,7 +6180,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"group\"",
 		"\"emailsme\"",
 		"\"import\"",
-		"\"create\"",
+		"\"distr\"",
 		"\"id\"",
 		"\"name\"",
 		"\"hide\"",
@@ -6230,7 +6269,8 @@ public CommandParser(ParserSharedInputState state) {
 		"\"sponsored\"",
 		"\"nick\"",
 		"\"task\"",
-		"\"distr\"",
+		"\"create\"",
+		"\"status\"",
 		"\"force\"",
 		"\"suppress\"",
 		"\"pass\"",

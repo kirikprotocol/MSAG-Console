@@ -31,20 +31,34 @@ public class TaskBuilder extends Thread {
   private Config oldConfig;
   private String processedFile;
   private final InfoSmeContext smeContext;
+
+  private String taskId;
   private TaskProps taskProps;
+  private Task task;
 
   public TaskBuilder(String file, InfoSmeContext smeContext) {
     this.smeContext = smeContext;
     this.file = file;
+    initTask();
   }
 
   public TaskBuilder(String file, InfoSmeContext smeContext, TaskProps taskProps) {
-    this.smeContext = smeContext;
-    this.file = file;
     if(!taskProps.validateNull()) {
       throw new NullPointerException("Some arguments of TaskProps are null");
-    }      
+    }
+    this.smeContext = smeContext;
+    this.file = file;
     this.taskProps = taskProps;
+    initTask();
+  }
+
+  private void initTask() {
+    try {
+      task = smeContext.getTaskManager().createTask();
+      taskId = task.getId();
+    } catch (AdminException e) {
+      e.printStackTrace();
+    }
   }
 
   private synchronized void removeTask(Task task) {
@@ -67,16 +81,13 @@ public class TaskBuilder extends Thread {
   }
 
   public void run() {
+    if(taskId==null) {
+      System.out.println("ERROR: Init task error, task is null");
+      return;
+    }
     System.out.println("Task builder started");
     final String fileName = new File(file).getName();
 
-    final Task task;
-    try {
-      task = smeContext.getTaskManager().createTask();
-    } catch (AdminException e) {
-      e.printStackTrace();
-      return;
-    }
 
     int i = fileName.lastIndexOf('.');
     String taskName = (i >= 0) ? fileName.substring(0, i) : fileName;
@@ -103,6 +114,7 @@ public class TaskBuilder extends Thread {
       resetTask(task, false);
       checkAndPrepareTask(task, smeContext, getFileCount(), false, false);
 
+      task.setStatus("INPROGRESS");
       if(taskProps!=null) {
         String activeDayStr = taskProps.getDays();
         List activeDays = new LinkedList();
@@ -121,9 +133,7 @@ public class TaskBuilder extends Thread {
 
       int count = 0;
 
-      System.out.println("Store task to config...");
-      task.storeToConfig(smeContext.getConfig());
-      smeContext.getConfig().save();
+      storeTaskToConfig();
       System.out.println("Task generation....");
       smeContext.getInfoSme().addTask(task.getId());
 
@@ -139,6 +149,9 @@ public class TaskBuilder extends Thread {
 //      smeContext.getInfoSme().addStatisticRecord(task.getId(), new Date(), count, 0, 0, 0);
       smeContext.getInfoSme().endDeliveryMessageGeneration(task.getId());
       System.out.println("Task generation ok");
+
+      task.setStatus("GENERATED");
+      storeTaskToConfig();
     } catch (Exception e) {
       e.printStackTrace();
       removeTask(task);
@@ -151,6 +164,12 @@ public class TaskBuilder extends Thread {
       } catch (IOException e) {
       }
     }
+  }
+
+  private void storeTaskToConfig() throws Exception{
+    System.out.println("Store task to config...");
+    task.storeToConfig(smeContext.getConfig());
+    smeContext.getConfig().save();
   }
 
   private void saveTaskFail(Exception e) {
@@ -370,5 +389,9 @@ public class TaskBuilder extends Thread {
     }
 
     return result;
+  }
+
+  public String getTaskId() {
+    return taskId; 
   }
 }
