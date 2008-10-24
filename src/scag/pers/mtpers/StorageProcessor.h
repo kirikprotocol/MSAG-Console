@@ -120,8 +120,10 @@ public:
   void process(ConnectionContext* cx) ;
 
 private:
-  typedef HashedMemoryCache< IntProfileKey, Profile > MemStorage;
-  typedef PageFileDiskStorage< IntProfileKey, Profile, PageFile > DiskDataStorage;
+  //typedef HashedMemoryCache< IntProfileKey, Profile > MemStorage;
+  //typedef PageFileDiskStorage< IntProfileKey, Profile, PageFile > DiskDataStorage;
+  typedef HashedMemoryCache< IntProfileKey, Profile, DataBlockBackupTypeJuggling > MemStorage;
+  typedef PageFileDiskStorage< IntProfileKey, DataBlockBackup<Profile>, PageFile > DiskDataStorage;
   typedef DiskHashIndexStorage< IntProfileKey, DiskDataStorage::index_type > DiskIndexStorage;
   typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
   typedef CachedDiskStorage< MemStorage, DiskStorage > InfrastructStorage;

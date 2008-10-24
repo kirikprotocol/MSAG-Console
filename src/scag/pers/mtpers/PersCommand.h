@@ -17,13 +17,8 @@ const uint32_t PACKET_LENGTH_SIZE = static_cast<uint32_t>(sizeof(uint32_t));
 
 using std::string;
 using namespace scag::pers::util;
-//using scag::pers::Profile;
-//using scag::pers::ProfileType;
-//using scag::pers::PersCmd;
-//using scag::pers::Property;
 using smsc::core::buffers::Array;
 using smsc::util::Exception;
-//using scag::pers::AbntAddr;
 
 using smsc::logger::Logger;
 using std::vector;
@@ -37,48 +32,59 @@ class PersCommandNotSupport: public Exception {};
 
 class PersCommand {
 public:
-  PersCommand():cmdId(scag::pers::util::PC_UNKNOWN), mod(0) {};
-  PersCommand(PersCmd cmd):cmdId(cmd), mod(0) {};
-  ~PersCommand() {};
+  PersCommand(vector<string>& logs):cmdId(scag::pers::util::PC_UNKNOWN), mod(0), dblogs(logs), logger(Logger::getInstance("pers.cmd")) {};
+  PersCommand(PersCmd cmd, vector<string>& logs):cmdId(cmd), mod(0), dblogs(logs), logger(Logger::getInstance("pers.cmd")) {};
+  virtual ~PersCommand() {};
   bool deserialize(SerialBuffer& sb);
-  Response execute(Profile *pf, SerialBuffer&sb, Logger* dblog, const string& key);
+  Response execute(Profile *pf, SerialBuffer&sb);
 
 private:
-  Response set(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key);
-  Response get(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key);
-  Response del(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key);
-  Response inc(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key);
-  Response incMod(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key);
-  Response incResult(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key);
-  uint32_t incModProperty(Profile *pf, Logger* dblog, const string& key);
+  Response set(Profile *pf, SerialBuffer& sb);
+  Response get(Profile *pf, SerialBuffer& sb);
+  Response del(Profile *pf, SerialBuffer& sb);
+  Response inc(Profile *pf, SerialBuffer& sb);
+  Response incMod(Profile *pf, SerialBuffer& sb);
+  Response incResult(Profile *pf, SerialBuffer& sb);
+  Response incModProperty(Profile *pf, uint32_t& result);
+  void createAddLogMsg(string const& key, string const& msg);
+  void createUpdateLogMsg(string const& key, string const& msg);
+  void createDelLogMsg(string const& key, string const& msg);
+  void createExpireLogMsg(string const& key, string const& msg);
 
 private:
   PersCmd cmdId;
   Property property;
   string propertyName;
+  string logMsg;
   uint32_t mod;
+  vector<string>& dblogs;
+  Logger* logger;
 };
 
 struct PersPacket {
-  PersPacket():createProfile(false) {};
+  PersPacket():createProfile(false), rollback(false) {};
   virtual ~PersPacket() {};
   virtual void deserialize(SerialBuffer& sb);
   bool notAbonentsProfile() const { return profileType != scag::pers::util::PT_ABONENT; };
   void setPacketSize(SerialBuffer& sb) const;
-  virtual void execCommand(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key) = 0;
+  virtual void execCommand(Profile *pf, SerialBuffer& sb) = 0;
+  void flushLogs(Logger* log) const;
 
   ProfileType profileType;
   uint32_t intKey;
   string strKey;
   AbntAddr address;
   bool createProfile;
+  bool rollback;
+protected:
+  vector<string> dblogs;
 };
 
 struct CommandPacket: public PersPacket {
-  CommandPacket(PersCmd cmdId):command(cmdId) {};
+  CommandPacket(PersCmd cmdId):command(cmdId, dblogs)  {};
   ~CommandPacket(){};
   void deserialize(SerialBuffer &sb);
-  void execCommand(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key);
+  void execCommand(Profile *pf, SerialBuffer& sb);
 
   PersCommand command;
 };
@@ -87,7 +93,7 @@ struct BatchPacket: public PersPacket {
   BatchPacket():count(0), transact(false) {};
   ~BatchPacket(){};
   void deserialize(SerialBuffer &sb);
-  void execCommand(Profile *pf, SerialBuffer& sb, Logger* dblog, const string& key);
+  void execCommand(Profile *pf, SerialBuffer& sb);
 
   uint16_t count;
   bool transact;

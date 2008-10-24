@@ -148,7 +148,6 @@ void AbonentStorageProcessor::initElementStorage(const AbonentStorageConfig& cfg
   std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance("cache"), cfg.cacheSize));
   smsc_log_debug(logger_, "memory storage is created");
 
-  //storage_.reset( new AbonentStorage(ms.release(), ds.release()));
   elStorage.storage = new AbonentStorage(ms.release(), ds.release());
 
   elementStorages_.Insert(elStorage.index, elStorage);
@@ -171,10 +170,14 @@ void AbonentStorageProcessor::process(ConnectionContext* cx) {
     cx->createFakeResponse(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
     return;
   }
-  cx->packet->execCommand(pf, cx->outbuf, abntlog_, cx->packet->address.toString());
+  cx->packet->execCommand(pf, cx->outbuf);
   if (pf->isChanged()) {
-    smsc_log_debug(logger_, "%p: %p flush profile", this, cx);
+    smsc_log_debug(logger_, "%p: %p flush profile %s", this, cx, pf->getKey().c_str());
     elstorage->storage->flush(cx->packet->address);
+    cx->packet->flushLogs(abntlog_);
+  } else if (cx->packet->rollback) {
+    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, cx, pf->getKey().c_str());
+    elstorage->storage->backup2Profile(cx->packet->address, elstorage->glossary);
   }
 }
 
@@ -212,10 +215,14 @@ void InfrastructStorageProcessor::process(ConnectionContext* cx) {
     cx->createFakeResponse(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
     return;
   }
-  cx->packet->execCommand(pf, cx->outbuf, dblog, key.toString());
+  cx->packet->execCommand(pf, cx->outbuf);
   if (pf->isChanged()) {
-    smsc_log_debug(logger_, "%p: %p flush profile", this, cx);
+    smsc_log_debug(logger_, "%p: %p flush profile %s", this, cx, pf->getKey().c_str());
     storage->flush(key);
+    cx->packet->flushLogs(dblog);
+  } else if (cx->packet->rollback){
+    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, cx, pf->getKey().c_str());
+    storage->backup2Profile(key, &glossary_);
   }
 }
 
