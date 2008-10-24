@@ -156,7 +156,8 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
 
   void store_A_Event_in_logstore(const AbntAddr& callingAbonent,
                                  const AbntAddr& calledAbonent,
-                                 const AbonentProfile& abntProfile);
+                                 const AbonentProfile& abntProfile,
+				 const AbonentProfile& callerProfile);
 public:
 
   TaskProcessor(ConfigView* config);
