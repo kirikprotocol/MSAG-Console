@@ -622,7 +622,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
                 }
             }
             if ( !v ) {
-                --totalSessions_;
+                // --totalSessions_; is has been already deleted in previous attempt
                 --loadedSessions_;
                 delete cache_->release(key);
                 // ++notexpired;
