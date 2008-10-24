@@ -33,6 +33,19 @@
   </section>
 
   <section name="distribution">
+      <param name="smsc.console.host">phoenix</param>
+      <param name="smsc.console.port">39826</param>
+      <param name="smsc.console.access.login">admin</param>
+      <param name="smsc.console.access.password">password</param>
+      <param name="smsc.console.code.ok">+ 100</param>
+      <param name="smsc.console.command.create">infosme distr create</param>
+      <param name="smsc.console.command.status">infosme distr status</param>
+      <param name="infosme.max.wait.creation">100000</param> <!-- seconds -->
+      <param name="infosme.success.status">GENERATED</param>
+      <param name="infosme.inprogress.status">INPROGRESS</param>
+
+      <param name="status.checker.delay.first">10</param> <!-- seconds -->
+      <param name="status.checker.period">10</param>    <!-- seconds -->
       <param name="info.sme.stats.dir">infoSme</param>
       <param name="info.sme.stats.date.dir.pattern">yyMMdd</param>
       <param name="info.sme.stats.time.file.pattern">HH</param>

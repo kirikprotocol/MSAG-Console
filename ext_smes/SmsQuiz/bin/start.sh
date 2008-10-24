@@ -13,7 +13,7 @@ pid=`cat SMSQUIZ.PID`
 
 if [ "$pid" == "" ]; then
 
-    $JAVA_HOME/bin/java $PARAM  &
+    $JAVA_HOME/bin/java $PARAM $@ 1>logs/out 2>logs/err &
     echo $!>SMSQUIZ.PID
     echo Service started
   else

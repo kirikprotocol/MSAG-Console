@@ -1,7 +1,6 @@
 package mobi.eyeline.smsquiz.quizmanager.quiz;
 
 import mobi.eyeline.smsquiz.distribution.Distribution;
-import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
 import org.jdom.input.SAXBuilder;
 import org.jdom.Document;
@@ -157,7 +156,7 @@ public class QuizBuilder {
         if ((list = elem.getChildren("day")) != null) {
           for (Element el : list) {
             Distribution.WeekDays day;
-            if ((day = Distribution.WeekDays.valueOf(el.getTextTrim().toUpperCase())) != null) {
+            if ((day = Distribution.WeekDays.valueOf(el.getTextTrim())) != null) {
               distribution.addDay(day);
             } else {
               logger.error("Error during parsing week days, unsupported format of day: " + el.getTextTrim());
@@ -187,7 +186,7 @@ public class QuizBuilder {
     if (distribution != null) {
       distribution.setTimeBegin(timeBegin);
       distribution.setTimeEnd(timeEnd);
-      distribution.setTxmode(txmode);
+      distribution.setTxmode(Boolean.valueOf(txmode));
       distribution.setSourceAddress(sourceaddress);
     }
     quiz.setSourceAddress(sourceaddress);

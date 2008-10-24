@@ -8,10 +8,8 @@ import mobi.eyeline.smsquiz.quizmanager.dirlistener.Notification;
 import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import mobi.eyeline.smsquiz.quizmanager.quiz.QuizBuilder;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
-import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
 import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import mobi.eyeline.smsquiz.subscription.SubManagerException;
-import mobi.eyeline.smsquiz.subscription.datasource.SubscriptionDataSource;
 import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.ConfigException;
@@ -134,10 +132,21 @@ public class QuizManager implements Observer {
   }
 
   public void stop() {
-    scheduledDirListener.shutdown();
-    scheduledQuizCollector.shutdown();
-    replyStatsDataSource.shutdown();
-    subscriptionManager.shutdown();
+    if(scheduledDirListener!=null) {
+      scheduledDirListener.shutdown();
+    }
+    if(scheduledQuizCollector!=null) {
+      scheduledQuizCollector.shutdown();
+    }
+    if(replyStatsDataSource!=null) {
+      replyStatsDataSource.shutdown();
+    }
+    if(subscriptionManager!=null) {
+      subscriptionManager.shutdown();
+    }
+    if(distributionManager!=null) {
+      distributionManager.shutdown();
+    }
   }
 
   public Result handleSms(String address, String oa, String text) throws QuizException {
@@ -202,43 +211,54 @@ public class QuizManager implements Observer {
   }
 
   private void createQuiz(Notification notification) throws QuizException {
+    if(logger.isInfoEnabled()) {
+      logger.info("Create quiz...");
+    }
     String fileName = notification.getFileName();
-    Distribution distribution = null;
+    Distribution distribution;
     File file = new File(fileName);
     Quiz quiz;
     try {
       quiz = new Quiz(statusDir, file, replyStatsDataSource, distributionManager, dirResult);
-      if (quiz.getId() != null) {
-        quizBuilder.buildQuiz(notification.getFileName(), null, quiz);
-      } else {
-        distribution = new Distribution();
-        quizBuilder.buildQuiz(fileName, distribution, quiz);
-      }
+      distribution = new Distribution();
+      quizBuilder.buildQuiz(fileName, distribution, quiz);
       Quiz previousQuiz;
       if ((previousQuiz = quizesMap.get(quiz.getDestAddress())) != null) {
         writeQuizesConflict(previousQuiz, quiz);
         return;
       }
-      if (distribution != null) {
-        makeSubscribedOnly(distribution);
-        String id;
+      makeSubscribedOnly(distribution);
+      String id;
+      if ((id=quiz.getId())!= null) {
+        if(logger.isInfoEnabled()) {
+          logger.info("Quizes status will be repaired, current id: "+id);
+        }
+
+        id =  distributionManager.repairStatus(id, fileName+".distr.error",
+            new QuizManagerTask(quizesMap,quiz), distribution);
+
+        if(logger.isInfoEnabled()) {
+          logger.info("Quizes status repaired, new id: "+id);
+        }
+      }
+      else {
         try {
-          id = distributionManager.createDistribution(distribution);
+          id = distributionManager.createDistribution(distribution,
+              new QuizManagerTask(quizesMap,quiz), fileName+".distr.error");
         } catch (DistributionException e) {
           logger.error("Unable to create distribution", e);
           throw new QuizException("Unable to create distribution", e);
         }
-        quiz.setId(id);
       }
+      quiz.setId(id);
       resolveConflict(quiz);
-      quizesMap.put(quiz.getDestAddress(), quiz);
+      if(logger.isInfoEnabled()) {
+        logger.info("Quiz created: "+quiz);
+      }
     }
-    catch (QuizException e) {
+    catch (Exception e) {
       writeError(notification.getFileName(), e);
-      throw e;
-    }
-    if(logger.isInfoEnabled()){
-      logger.info("Quiz created: "+ quiz);
+      throw new QuizException(e);
     }
   }
 

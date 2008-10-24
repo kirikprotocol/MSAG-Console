@@ -5,7 +5,7 @@ import java.util.*;
 public class Distribution {
 
   public static enum WeekDays {
-    MON, TUE, WED, THU, FRI, SAT, SUN
+    Mon, Tue, Wed, Thu, Fri, Sat, Sun
   }
 
   private String sourceAddress;
@@ -22,7 +22,7 @@ public class Distribution {
 
   private final EnumSet<WeekDays> days;
 
-  private String txmode;
+  private boolean txmode;
 
   public Distribution() {
     days = EnumSet.allOf(WeekDays.class);
@@ -76,11 +76,11 @@ public class Distribution {
     return EnumSet.copyOf(days);
   }
 
-  public String getTxmode() {
+  public boolean isTxmode() {
     return txmode;
   }
 
-  public void setTxmode(String txmode) {
+  public void setTxmode(boolean txmode) {
     this.txmode = txmode;
   }
 
@@ -90,6 +90,20 @@ public class Distribution {
 
   public void setSourceAddress(String sourceAddress) {
     this.sourceAddress = sourceAddress;
+  }
+
+  public String getDays(String delim) {
+    StringBuilder builder = new StringBuilder();
+    if(days!=null) {
+      Iterator<WeekDays> iter = days.iterator();
+      if(iter.hasNext()) {
+        builder.append(iter.next().toString());
+      }
+      while(iter.hasNext()) {
+        builder.append(delim).append(iter.next().toString());
+      }
+    }
+    return builder.toString();
   }
 }
  
