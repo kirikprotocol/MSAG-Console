@@ -10,6 +10,7 @@
 // #include "scag/config/ConfigManager.h"
 #include "scag/config/impl/ConfigManager2.h"
 #include "core/threads/Thread.hpp"
+#include "core/buffers/File.hpp"
 #include "gen2/scag2.h"
 // #include "util/config/route/RouteConfig.h"
 // #include "util/findConfigFile.h"
@@ -33,7 +34,7 @@ scag2::Scag* getApp()
 
 extern "C" void sigHandler(int signo)
 {
-    fprintf(stderr,"Signal received %d\n", signo);
+    fprintf(stderr,"MSAG Signal received %d\n", signo);
     shutdownFlag = signo;
 }
 
@@ -129,6 +130,13 @@ int main( int argc, char* argv[] )
         catch (scag::config::ConfigException &c)
         {}
 
+        int usesignals = 1;
+        try {
+            usesignals = cfgs.getConfig()->getInt("General.usesignals");
+        } catch (std::exception& ) {
+            usesignals = 1;
+        }
+
         // For instance control
         char filename[20];
         sprintf(filename, "/tmp/scag.%d", servicePort);
@@ -154,9 +162,25 @@ int main( int argc, char* argv[] )
         else
             smsc_log_warn(logger, "WARNING: admin port not specified, admin module disabled - smsc is not administrable");
 
-        while(!shutdownFlag) { 
-            sigsuspend(&st); 
-            smsc_log_debug(logger, "MAIN: sigsuspend exited. flag=%d", shutdownFlag); 
+        if ( ! usesignals ) {
+            sigset_t oldmask;
+            sigprocmask( SIG_SETMASK, &st, &oldmask );
+            EventMonitor mon;
+            MutexGuard mg(mon);
+            while(!shutdownFlag) {
+                mon.wait(1000);
+                if ( smsc::core::buffers::File::Exists("stop")) {
+                    shutdownFlag = SHUTDOWN_SIGNAL;
+                    // sigsuspend(&st); 
+                    smsc_log_debug(logger, "MAIN: stop is found. flag=%d", shutdownFlag); 
+                }
+            }
+            sigprocmask( SIG_SETMASK, &oldmask, NULL );
+        } else {
+            while(!shutdownFlag) {
+                sigsuspend(&st); 
+                smsc_log_debug(logger, "MAIN: sigsuspend exited. flag=%d", shutdownFlag); 
+            }
         }
 
         if(listener)
