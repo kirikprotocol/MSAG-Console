@@ -11,5 +11,7 @@ scag/tests/test01     test01         -lpthread -lrt -ldl
 -scag/tests/test07     test07         -lrt -ldl
 scag/tests/test08     test08         -lcore-threads -lscag-util -lpthread -lrt -ldl
 # scag/tests/test09     test09         -lscag-util-properties -lscag-exc -lscag-util -lutil -lloki -lpthread -lrt -ldl
-scag/tests/test10     test10         -lscag-util-memory -lscag-util-singleton -lscag-util -lcore-threads -lpthread -lrt -ldl $(LIBMALLOC)
+scag/tests/test10     test10         \
+  -lscag-util-memory -lscag-util-singleton -lscag-util -lcore-threads \
+  -lpthread -lrt -ldl $(LIBMALLOC)
 -scag/tests/test11     test11         -lcore-threads -lpthread -lrt -ldl $(LIBMALLOC)

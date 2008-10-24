@@ -19,6 +19,7 @@ namespace scag { namespace util { namespace singleton
 
     namespace Private
     {
+
         ////////////////////////////////////////////////////////////////////////////////
         // class LifetimeTracker
         // Helper class for SetLongevity
@@ -36,8 +37,7 @@ namespace scag { namespace util { namespace singleton
                 return (lhs->longevity_ < rhs->longevity_); 
             }
             
-        private:
-
+        protected:
             unsigned int longevity_;
         };
         
@@ -61,9 +61,17 @@ namespace scag { namespace util { namespace singleton
         {
         public:
 
-            ConcreteLifetimeTracker(T* p,unsigned int longevity, Destroyer d)
-                : LifetimeTracker(longevity), pTracked_(p), destroyer_(d) {}
-            ~ConcreteLifetimeTracker() { destroyer_(pTracked_); }
+            ConcreteLifetimeTracker(T* p,unsigned int longevity, Destroyer d) :
+            LifetimeTracker(longevity), pTracked_(p), destroyer_(d) 
+            {
+                fprintf( stderr, "singleton instance=%p, longevity=%u: lifetracker created\n",
+                         p, longevity );
+            }
+            ~ConcreteLifetimeTracker() {
+                fprintf( stderr, "singleton instance=%p, longevity=%u: is to be destroyed\n",
+                         pTracked_, longevity_ );
+                destroyer_(pTracked_);
+            }
             
         private:
 
@@ -182,6 +190,44 @@ namespace scag { namespace util { namespace singleton
         }
     };
     
+
+////////////////////////////////////////////////////////////////////////////////
+// class template OuterCreation
+// Implementation of CreationPolicy for SingletonHolder
+////////////////////////////////////////////////////////////////////////////////
+template < class T >
+    class OuterCreation
+{
+public:
+    /// you have to make sure of synchronized access to this method
+    static void setInstance( T* inst ) {
+        if ( inst_ ) {
+            throw std::logic_error("Multiple invocation of OuterCreation::setInstance()");
+        }
+        inst_ = inst;
+    }
+protected:
+    static T* Create() {
+        if ( ! inst_ ) {
+            throw std::logic_error("Have you forgot to call OuterCreation::setInstance()");
+        }
+        return inst_;
+    }
+    static void Destroy(T* p) {
+        if ( p != inst_ ) {
+            throw std::logic_error("different pointer used in OuterCreation::Destroy()");
+        }
+        inst_ = 0;
+        delete p;
+    }
+
+private:
+    static T* inst_;
+};
+
+template < class T > T* OuterCreation< T >::inst_ = 0;
+
+
     ////////////////////////////////////////////////////////////////////////////////
     // class template DefaultLifetime
     // Implementation of the LifetimePolicy used by SingletonHolder
@@ -288,8 +334,10 @@ namespace scag { namespace util { namespace singleton
     // To protect that type from spurious instantiations, you have to protect it
     // yourself.
     ////////////////////////////////////////////////////////////////////////////////
-    template <typename T>
-    class SingletonHolder
+    template <typename T,
+        template <class> class CreationPolicy = CreateUsingNew,
+        template <class> class LifetimePolicy = SingletonWithLongevity >
+        class SingletonHolder : public CreationPolicy< T >, public LifetimePolicy< T >
     {
     public:
         
@@ -308,17 +356,18 @@ namespace scag { namespace util { namespace singleton
             {
                 if (destroyed_)
                 {
-                    SingletonWithLongevity<T>::OnDeadReference();
+                    LifetimePolicy< T >::OnDeadReference();
                     destroyed_ = false;
                 }
-                pInstance_ = CreateUsingNew<T>::Create();
-                SingletonWithLongevity<T>::ScheduleDestruction(pInstance_, &DestroySingleton);
+                pInstance_ = CreationPolicy< T >::Create();
+                // fprintf( stderr, "singleton instance @ %p is created\n", pInstance_ );
+                LifetimePolicy< T >::ScheduleDestruction(pInstance_, &DestroySingleton);
             }
         }
         static void DestroySingleton()
         {
             assert(!destroyed_);
-            CreateUsingNew<T>::Destroy(pInstance_);
+            CreationPolicy< T >::Destroy(pInstance_);
             pInstance_ = 0;
             destroyed_ = true;
         }
@@ -336,18 +385,22 @@ namespace scag { namespace util { namespace singleton
     ////////////////////////////////////////////////////////////////////////////////
     // SingletonHolder's data
     ////////////////////////////////////////////////////////////////////////////////
-    template <class T>
-    Mutex SingletonHolder<T>::singletonHolderLock_;
+template < class T,
+    template <class> class CreationPolicy,
+    template <class> class LifetimePolicy >
+    Mutex SingletonHolder<T, CreationPolicy, LifetimePolicy >::singletonHolderLock_;
 
-    template <class T>
-    typename SingletonHolder<T>::PtrInstanceType 
-             SingletonHolder<T>::pInstance_;
+template < class T,
+    template <class> class CreationPolicy,
+    template <class> class LifetimePolicy >
+    typename SingletonHolder<T, CreationPolicy, LifetimePolicy >::PtrInstanceType 
+    SingletonHolder<T, CreationPolicy, LifetimePolicy >::pInstance_ = 0;
 
-    template <class T>
-    bool SingletonHolder<T>::destroyed_;
+template < class T,
+    template <class> class CreationPolicy,
+    template <class> class LifetimePolicy >
+    bool SingletonHolder<T, CreationPolicy, LifetimePolicy >::destroyed_ = false;
     
 }}}
 
 #endif // SCAG_UTIL_SINGLETON
-
-

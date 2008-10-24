@@ -2,12 +2,29 @@
 #include <stdio.h>
 
 #include "Singleton.h"
+// #include "core/synchronization/Mutex.hpp"
 
 using namespace scag::util::singleton;
 using namespace scag::util::singleton::Private;
+// using namespace smsc::core::synchronization;
 
 scag::util::singleton::Private::TrackerArray scag::util::singleton::Private::pTrackerArray = 0;
 unsigned int scag::util::singleton::Private::elements = 0;
+
+/*
+smsc::logger::Logger* scag::util::singleton::Private::getLog()
+{
+    static Mutex mtx;
+    static smsc::logger::Logger* log_ = 0;
+    if ( ! log_ ) {
+        MutexGuard mg(mtx);
+        if ( ! log_ ) {
+            log_ = smsc::logger::Logger::getInstance( "singleton" );
+        }
+    }
+    return log_;
+}
+ */
 
 ////////////////////////////////////////////////////////////////////////////////
 // function AtExitFn
@@ -23,6 +40,9 @@ extern "C" void scag::util::singleton::Private::AtExitFn()
     // Don't check errors - realloc with less memory can't fail
     pTrackerArray = static_cast<TrackerArray>(std::realloc(pTrackerArray, 
                                                            sizeof(*pTrackerArray) * --elements));
+
+    // smsc_log_debug( Private::getLog(), "singleton instance @ %p is going to be destroyed", pTop );
+
     // Destroy the element
     delete pTop;
 }
