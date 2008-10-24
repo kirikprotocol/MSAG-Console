@@ -10,6 +10,7 @@ const uint16_t MAX_PROPERTIES_COUNT = 16383;
 
 void Profile::Serialize(SerialBuffer& buf, bool toFSDB, GlossaryBase* glossary) const
 {
+  //TODO: add glossary check
     uint16_t cnt = properties.GetCount();
     if (cnt == 0 && toFSDB && state != LOCKED) {
       return;
@@ -27,6 +28,7 @@ void Profile::Serialize(SerialBuffer& buf, bool toFSDB, GlossaryBase* glossary) 
 
 void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB, GlossaryBase* glossary)
 {
+    //TODO: add glossary check
     if (!buf.GetSize() || buf.GetPos() >= buf.GetSize()) {
       Empty();
       return;
@@ -53,6 +55,20 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB, GlossaryBase* glossa
         else
             delete prop;
     }
+}
+
+void Profile::deserialize(const char* data, uint32_t dataSize, GlossaryBase* glossary) {
+  if (!glossary) {
+    return;
+  }
+  if (!data || !dataSize) {
+    Empty();
+    return;
+  }
+  SerialBuffer sb(dataSize);
+  sb.Append(data, dataSize);
+  sb.SetPos(0);
+  Deserialize(sb, true, glossary);
 }
 
 Profile::~Profile()
@@ -132,15 +148,16 @@ void Profile::Empty()
     properties.Empty();
 }
 
-void Profile::AddProperty(Property& prop)
+bool Profile::AddProperty(Property& prop)
 {
   uint16_t cnt = properties.GetCount();
   if (cnt == MAX_PROPERTIES_COUNT) {
     smsc_log_warn(log, "can't add property \'%s\', profile key=%s already has maximum properties count=%d",
                   prop.getName(), pkey.c_str(), cnt);
-    return;
+    return false;
   }
   properties.Insert(prop.getName(), new Property(prop));
+  return true;
 }
 
 Profile& Profile::operator=(const Profile& pf) {
@@ -181,38 +198,6 @@ void Profile::copyPropertiesTo(Profile* pf) const {
     smsc_log_debug(logger, "copy property key=\'%s\' prop=\'%s\'", key, prop->toString().c_str());
     pf->addNewProperty(*prop);
   }
-}
-
-void Profile::addDataToBackup(long nextBlock) {
-  backup.push_back(nextBlock);
-}
-void Profile::clearBackup() {
-  backup.clear();
-}
-const vector<long>& Profile::getBackup() const {
-  return backup;
-}
-void Profile::setBackup(const vector<long>& _backup) {
-  backup = _backup;
-}
-
-int Profile::getBackupDataSize() const {
-  return dataCopy.length();
-}
-
-const char* Profile::getBackupData() const {
-  return dataCopy.c_ptr();
-}
-
-void Profile::setBackupData(const SerialBuffer& data) {
-  dataCopy.blkcpy(data.c_ptr(), data.length());
-}
-
-void Profile::restoreBackup(const vector<long>& _backup, int backupSize) {
-  clearBackup();
-  backup.assign(_backup.begin(), _backup.begin() + backupSize);
-  dataCopy.setPos(0);
-  Deserialize(dataCopy, true);
 }
 
 }//util

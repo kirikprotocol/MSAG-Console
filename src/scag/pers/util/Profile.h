@@ -84,15 +84,6 @@ enum ProfileState {
 
 class Profile : public Serializable
 {
-
-    PropertyHash properties;
-    smsc::logger::Logger* log;
-    ProfileState state;
-    std::string pkey;
-    bool changed;
-
-    vector<long> backup;
-    SerialBuffer dataCopy;
 public:
     Profile():log(NULL), state(OK), changed(false) {};
     Profile(const std::string& _pkey, smsc::logger::Logger* _log = NULL) : state(OK), pkey(_pkey), log(_log) {};
@@ -103,7 +94,7 @@ public:
 
     Property* GetProperty(const char* name);
     bool PropertyExists(const char* str);
-    void AddProperty(Property& prop);
+    bool AddProperty(Property& prop);
     bool DeleteProperty(const char* str);
     void DeleteExpired();
     void Empty();
@@ -123,18 +114,16 @@ public:
     void addNewProperty(Property& prop);
     void copyPropertiesTo(Profile* pf) const;
 
-    void addDataToBackup(long nextBlock);
-    void clearBackup();
-    const vector<long>& getBackup() const;
-    void setBackup(const vector<long>& _backup);
-    int getBackupDataSize() const; 
-    const char* getBackupData() const;
-    void setBackupData(const SerialBuffer& data);
-    void restoreBackup(const vector<long>& _backup, int backupSize);
-
     bool isChanged() const { return changed; };
     void setChanged(bool change) { changed = change; };
+    void deserialize(const char* data, uint32_t dataSize, GlossaryBase* glossary = NULL);
 
+private:
+  PropertyHash properties;
+  smsc::logger::Logger* log;
+  ProfileState state;
+  std::string pkey;
+  bool changed;
 };
 
 }//util 
