@@ -33,9 +33,10 @@ public class TaskDataSourceImpl implements TaskDataSource {
   private void restoreIndex(Date startDate) throws DataSourceException {
     Date tillDate = new Date(Long.MAX_VALUE);
     LinkedList<SchedulePage> pages = new LinkedList<SchedulePage>();
+
     cache.getPagesFromDate(startDate, pages);
     for (SchedulePage page : pages) {
-      try {
+      try {        
         page.open();
 
         page.list(startDate, tillDate, index);

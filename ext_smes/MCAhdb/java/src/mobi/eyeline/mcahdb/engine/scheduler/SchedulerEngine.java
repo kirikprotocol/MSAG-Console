@@ -118,6 +118,8 @@ class SchedulerEngine {
             if (t == null)
               continue;
 
+            if (log.isDebugEnabled())
+              log.debug("Send notification msg: oa=" + t.getCalled() + "; da=" + t.getCaller());
             Message m = new Message();
             m.setSourceAddress(t.getCalled());
             m.setDestinationAddress(t.getCaller());

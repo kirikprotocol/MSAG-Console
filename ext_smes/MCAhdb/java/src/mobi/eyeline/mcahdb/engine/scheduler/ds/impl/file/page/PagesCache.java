@@ -106,33 +106,36 @@ public class PagesCache {
     }
   }
 
-  public void getPagesFromDate(Date from, Collection<SchedulePage> result) throws DataSourceException {
-    final Pattern p = Pattern.compile(".*csv");
-    File[] files = storeDir.listFiles(new FilenameFilter() {
+  public void getPagesFromDate(final Date from, Collection<SchedulePage> result) throws DataSourceException {
+
+    final String yyyyMMFromStr = new SimpleDateFormat("yyyyMM").format(from);
+    File[] yyyyMMDirs = storeDir.listFiles(new FilenameFilter() {
       public boolean accept(File dir, String name) {
-        return p.matcher(name).matches();
+        return name.compareTo(yyyyMMFromStr) >= 0;
       }
     });
 
-    try {
-      flock.lock();
-      String fromStr = df.format(from);
-      Date fromDate = df.parse(fromStr);
-      for (File f : files) {
-        String name = f.getName();
-        String dateStr = name.substring(0, name.lastIndexOf('.'));
+    String fromName = getPageId(from);    
 
-        Date date = df.parse(dateStr);
-        if (date.getTime() >= fromDate.getTime()) {
-          SchedulePage page = getPage(dateStr, false);
-          if (page != null)
-            result.add(page);
+    for (File yyyyMMDir : yyyyMMDirs) {
+      if (!yyyyMMDir.isDirectory())
+        continue;
+
+      File[] ddDirs = yyyyMMDir.listFiles();
+        
+      for (File ddDir : ddDirs) {
+        File[] files = ddDir.listFiles();
+
+        for (File f : files) {
+          String name = yyyyMMDir.getName() + '/' + ddDir.getName() + '/' + f.getName();
+          if (name.compareTo(fromName) >= 0) {
+            SchedulePage page = getPageById(name);
+            if (page != null) {
+              result.add(page);
+            }
+          }
         }
       }
-    } catch (ParseException e) {
-      throw new DataSourceException(e);
-    } finally {
-      flock.unlock();
     }
   }
 
