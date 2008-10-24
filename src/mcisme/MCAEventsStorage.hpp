@@ -16,10 +16,10 @@ public:
   MissedCall_GenericInfo(std::string callingAbonent,
                          std::string calledAbonent,
                          unsigned int calledProfileNotifyFlag,
-                         unsigned int calledProfileWantNotifyMeFlag)
+                         unsigned int callerProfileWantNotifyMeFlag)
     : _callingAbonent(callingAbonent), _calledAbonent(calledAbonent),
       _calledProfileNotifyFlag(calledProfileNotifyFlag),
-      _calledProfileWantNotifyMeFlag(calledProfileWantNotifyMeFlag)
+      _callerProfileWantNotifyMeFlag(callerProfileWantNotifyMeFlag)
   {
     gettimeofday(&_eventDate, 0);
   }
@@ -30,7 +30,7 @@ private:
   std::string _callingAbonent;
   std::string _calledAbonent;
   unsigned int _calledProfileNotifyFlag;
-  unsigned int _calledProfileWantNotifyMeFlag;
+  unsigned int _callerProfileWantNotifyMeFlag;
 };
 
 class Event_GotMissedCall : private MissedCall_GenericInfo {
@@ -38,9 +38,9 @@ public:
   Event_GotMissedCall(std::string callingAbonent,
                       std::string calledAbonent,
                       unsigned int calledProfileNotifyFlag,
-                      unsigned int calledProfileWantNotifyMeFlag)
+                      unsigned int callerProfileWantNotifyMeFlag)
     : MissedCall_GenericInfo(callingAbonent, calledAbonent,
-                             calledProfileNotifyFlag, calledProfileWantNotifyMeFlag)
+                             calledProfileNotifyFlag, callerProfileWantNotifyMeFlag)
   {}
 
   std::string toString() const;
@@ -51,9 +51,9 @@ public:
   Event_MissedCallInfoDelivered(std::string callingAbonent,
                                 std::string calledAbonent,
                                 unsigned int calledProfileNotifyFlag,
-                                unsigned int calledProfileWantNotifyMeFlag)
+                                unsigned int callerProfileWantNotifyMeFlag)
     : MissedCall_GenericInfo(callingAbonent, calledAbonent,
-                             calledProfileNotifyFlag, calledProfileWantNotifyMeFlag)
+                             calledProfileNotifyFlag, callerProfileWantNotifyMeFlag)
   {}
 
   std::string toString() const;

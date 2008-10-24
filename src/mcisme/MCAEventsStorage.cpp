@@ -27,7 +27,7 @@ MissedCall_GenericInfo::toString(char eventPrintableCode) const
        << "," << _callingAbonent
        << "," << _calledAbonent
        << "," << _calledProfileNotifyFlag
-       << "," << _calledProfileWantNotifyMeFlag;
+       << "," << _callerProfileWantNotifyMeFlag;
 
   return obuf.str();
 }

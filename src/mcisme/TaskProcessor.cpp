@@ -598,9 +598,11 @@ int TaskProcessor::Execute()
         smsc_log_debug(logger, "Event %s->%s skipped because inform disabled for abonent %s and forceInform is false.", event.from.c_str(), event.to.c_str(), to.toString().c_str());
       else if (checkEventMask(profile.eventMask, event.cause))
       {
+        AbonentProfile callerProfile;
+        profileStorage->Get(from, callerProfile);
         time_t schedTime = pDeliveryQueue->Schedule(to, ((event.cause&0x02)==0x02)); //0x02 - BUSY
         pStorage->addEvent(to, outEvent, schedTime);
-        store_A_Event_in_logstore(from, to, profile);
+        store_A_Event_in_logstore(from, to, profile, callerProfile);
         statistics->incMissed();
         smsc_log_debug(logger, "Abonent %s (couse = 0x%02X) was added to Scheduled Delivery Queue", to.toString().c_str(), event.cause);
       }
@@ -703,15 +705,17 @@ TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg, const MCEve
 void
 TaskProcessor::store_D_Event_in_logstore(const AbntAddr& abnt,
                                          const vector<MCEvent>& events,
-                                         const AbonentProfile& abntProfile)
+                                         const AbonentProfile& abntProfile )
 {
   const std::string& calledAbonent = abnt.getText();
   for(vector<MCEvent>::const_iterator iter = events.begin(), end_iter = events.end();
       iter != end_iter; ++iter) {
     const std::string& callingAbonent = AbntAddr(&iter->caller).getText();
+    AbonentProfile callerProfile;
+    profileStorage->Get(callingAbonent, callerProfile);
 
     smsc_log_debug(logger, "TaskProcessor::store_D_Event_in_logstore::: add event to logstore: calledAbonent=%s,callingAbonent=%s,abntProfile.notify=%d,abntProfile.wantNotifyMe=%d", calledAbonent.c_str(), callingAbonent.c_str(), abntProfile.notify, abntProfile.wantNotifyMe);
-    MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_MissedCallInfoDelivered(callingAbonent, calledAbonent, abntProfile.notify, abntProfile.wantNotifyMe));
+    MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_MissedCallInfoDelivered(callingAbonent, calledAbonent, abntProfile.notify, callerProfile.wantNotifyMe));
   }
 }
 
@@ -740,10 +744,11 @@ TaskProcessor::store_N_Event_in_logstore(const std::string& calledAbonent,
 void
 TaskProcessor::store_A_Event_in_logstore(const AbntAddr& callingAbonent,
                                          const AbntAddr& calledAbonent,
-                                         const AbonentProfile& abntProfile)
+                                         const AbonentProfile& abntProfile,
+					 const AbonentProfile& callerProfile )
 {
   smsc_log_debug(logger, "TaskProcessor::store_A_Event_in_logstore::: add event to logstore: calledAbonent=%s,callingAbonent=%s,abntProfile.notify=%d,abntProfile.wantNotifyMe=%d", calledAbonent.getText().c_str(), callingAbonent.getText().c_str(), abntProfile.notify, abntProfile.wantNotifyMe);
-  MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_GotMissedCall(callingAbonent.getText(), calledAbonent.getText(), abntProfile.notify, abntProfile.wantNotifyMe));
+  MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_GotMissedCall(callingAbonent.getText(), calledAbonent.getText(), abntProfile.notify, callerProfile.wantNotifyMe));
 }
 
 bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
@@ -794,12 +799,12 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 }
 
 void
-TaskProcessor::commitMissedCallEvents(const sms_info* pInfo, const AbonentProfile& abntProfile)
+TaskProcessor::commitMissedCallEvents(const sms_info* pInfo, const AbonentProfile& abntProfile )
 {
   statistics->incDelivered(static_cast<unsigned>(pInfo->events.size()));
   pStorage->deleteEvents(pInfo->abnt, pInfo->events);
 
-  store_D_Event_in_logstore(pInfo->abnt, pInfo->events, abntProfile);
+  store_D_Event_in_logstore(pInfo->abnt, pInfo->events, abntProfile );
 
   time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt, smsc::system::Status::OK);
   pStorage->setSchedParams(pInfo->abnt, schedTime, smsc::system::Status::OK);
