@@ -34,7 +34,8 @@ namespace scag { namespace util { namespace singleton
             static bool Compare(const LifetimeTracker* lhs,
                                 const LifetimeTracker* rhs) 
             { 
-                return (lhs->longevity_ < rhs->longevity_); 
+                // NOTE: the trackers should be ordered in longevity decreasing order
+                return (lhs->longevity_ > rhs->longevity_); 
             }
             
         protected:
