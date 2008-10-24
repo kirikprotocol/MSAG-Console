@@ -77,7 +77,7 @@ private:
 
 using namespace scag::util::singleton;
 
-inline unsigned GetLongevity(Convertor*) { return 5; }
+inline unsigned GetLongevity(Convertor*) { return 257; }
 typedef SingletonHolder<ConvertorImpl> SingleC;
 
 

@@ -68,6 +68,7 @@ scag/scag2           gwmain2        \
   \
   -lscag-util-properties \
   -lscag-util-storage \
+  -lscag-util-memory \
   -lscag-util-singleton \
   -lscag-util-encodings \
   -lscag-exc \

@@ -15,7 +15,7 @@ using namespace smsc::util::xml;
 static bool router_inited = false;
 static Mutex router_init_lock;
 
-inline unsigned GetLongevity(MmsRouter* ) { return 5; };
+inline unsigned GetLongevity(MmsRouter* ) { return 251; };
 typedef scag::util::singleton::SingletonHolder<MmsRouterImpl> SingleMR;
 
 MmsRouter& MmsRouter::Instance() {

@@ -57,7 +57,7 @@ class HttpProcessorImpl : public HttpProcessor
 bool  HttpProcessor::inited = false;
 Mutex HttpProcessor::initLock;
 
-inline unsigned GetLongevity(HttpProcessor*) { return 5; }
+inline unsigned GetLongevity(HttpProcessor*) { return 251; }
 typedef SingletonHolder<HttpProcessorImpl> SingleHP;
 
 HttpProcessor& HttpProcessor::Instance()

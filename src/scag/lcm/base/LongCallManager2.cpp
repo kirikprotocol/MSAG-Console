@@ -13,7 +13,7 @@ typedef SingletonHolder< LongCallManager, OuterCreation > Single;
 bool inited = false;
 Mutex mtx;
 
-inline unsigned GetLongevity( LongCallManager* ) { return 5; }
+inline unsigned GetLongevity( LongCallManager* ) { return 251; }
 
 }
 

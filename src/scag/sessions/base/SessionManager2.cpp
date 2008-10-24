@@ -12,7 +12,7 @@ typedef SingletonHolder< SessionManager, OuterCreation > SingleSM;
 bool inited = false;
 Mutex mtx;
 
-inline unsigned GetLongevity( SessionManager* ) { return 6; }
+inline unsigned GetLongevity( SessionManager* ) { return 250; }
 
 }
 

@@ -11,7 +11,7 @@ typedef SingletonHolder< HttpProcessor, OuterCreation > Single;
 bool inited = false;
 Mutex mtx;
 
-inline unsigned GetLongevity( HttpProcessor* ) { return 5; }
+inline unsigned GetLongevity( HttpProcessor* ) { return 251; }
 
 }
 

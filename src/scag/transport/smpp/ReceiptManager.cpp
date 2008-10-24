@@ -136,7 +136,7 @@ namespace scag { namespace sessions
 static bool  bReceiptManagerInited = false;
 static Mutex initReceiptManagerLock;
 
-inline unsigned GetLongevity(ReceiptManager*) { return 7; } // ? Move upper ? 
+inline unsigned GetLongevity(ReceiptManager*) { return 249; } // ? Move upper ?
 typedef SingletonHolder<ReceiptManagerImpl> SingleRM;
 
 

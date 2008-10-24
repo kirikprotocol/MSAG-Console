@@ -383,7 +383,7 @@ time_t SmppManagerImpl::MetaEntity::expirationTimeout=300;
 bool SmppManager::inited = false;
 Mutex SmppManager::initLock;
 
-inline unsigned GetLongevity(SmppManager*) { return 5; }
+inline unsigned GetLongevity(SmppManager*) { return 251; }
 typedef SingletonHolder<SmppManagerImpl> SingleSM;
 
 SmppManager& SmppManager::Instance()

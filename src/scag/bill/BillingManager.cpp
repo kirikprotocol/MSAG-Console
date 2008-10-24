@@ -190,7 +190,7 @@ public:
 static bool  bBillingManagerInited = false;
 static Mutex initBillingManagerLock;
 
-inline unsigned GetLongevity(BillingManager*) { return 5; }
+inline unsigned GetLongevity(BillingManager*) { return 251; }
 typedef SingletonHolder<BillingManagerImpl> SingleBM;
 
 ////////////////////////////////////////////////////////////////////////////

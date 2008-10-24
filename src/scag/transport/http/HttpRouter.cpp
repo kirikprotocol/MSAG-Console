@@ -21,7 +21,7 @@ using namespace scag::util::singleton;
 static bool  inited = false;
 static Mutex initLock;
 
-inline unsigned GetLongevity(HttpTraceRouter*) { return 5; }
+inline unsigned GetLongevity(HttpTraceRouter*) { return 251; }
 typedef SingletonHolder<HttpTraceRouter> SingleHP;
 
 HttpTraceRouter& HttpTraceRouter::Instance()

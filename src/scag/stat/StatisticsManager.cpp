@@ -71,7 +71,7 @@ const char*    SCAG_SMPP_STAT_DIR_NAME_FORMAT  = "SMPP/%04d-%02d";
 const char*    SCAG_HTTP_STAT_DIR_NAME_FORMAT = "HTTP/%04d-%02d";
 const char*    SCAG_STAT_FILE_NAME_FORMAT = "%02d.rts";
 
-inline unsigned GetLongevity(StatisticsManager*) { return 7; }
+inline unsigned GetLongevity(StatisticsManager*) { return 249; }
 //typedef SingletonHolder<StatisticsManager, CreateUsingNew, SingletonWithLongevity> SingleSM;
 typedef SingletonHolder<StatisticsManager> SingleSM;
 

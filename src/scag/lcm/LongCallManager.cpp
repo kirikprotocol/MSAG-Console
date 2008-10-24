@@ -64,7 +64,7 @@ public:
 };
 
 
-inline unsigned GetLongevity(LongCallManager*) { return 5; }
+inline unsigned GetLongevity(LongCallManager*) { return 251; }
 typedef SingletonHolder<LongCallManagerImpl> SingleLCM;
 
 LongCallManager& LongCallManager::Instance()

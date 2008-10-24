@@ -11,7 +11,7 @@ typedef SingletonHolder< HttpManager, OuterCreation > Single;
 bool inited = false;
 Mutex mtx;
 
-inline unsigned GetLongevity( HttpManager* ) { return 5; }
+inline unsigned GetLongevity( HttpManager* ) { return 251; }
 
 }
 

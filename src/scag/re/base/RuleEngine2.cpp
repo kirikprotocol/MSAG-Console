@@ -12,7 +12,7 @@ bool inited = false;
 Mutex mtx;
 
 /// RE is required for sessionmanager.
-inline unsigned GetLongevity( RuleEngine* ) { return 8; }
+inline unsigned GetLongevity( RuleEngine* ) { return 252; }
 
 }
 

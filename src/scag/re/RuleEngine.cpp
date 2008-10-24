@@ -196,7 +196,7 @@ public:
 static bool  bRuleEngineInited = false;
 static Mutex initRuleEngineLock;
 
-inline unsigned GetLongevity(RuleEngineImpl*) { return 7; } // ? Move upper ?
+inline unsigned GetLongevity(RuleEngineImpl*) { return 249; } // ? Move upper ?
 typedef SingletonHolder<RuleEngineImpl> SingleRE;
 
 RuleEngine& RuleEngine::Instance()

@@ -12,7 +12,7 @@ bool inited = false;
 Mutex mtx;
 
 /// BillingManager is required for sessionmanager.
-inline unsigned GetLongevity( BillingManager* ) { return 9; }
+inline unsigned GetLongevity( BillingManager* ) { return 251; }
 
 }
 

@@ -13,7 +13,7 @@ typedef SingletonHolder< ConfigManager, OuterCreation > Single;
 bool inited = false;
 Mutex mtx;
 
-inline unsigned GetLongevity( ConfigManager* ) { return 5; }
+inline unsigned GetLongevity( ConfigManager* ) { return 256; }
 
 }
 

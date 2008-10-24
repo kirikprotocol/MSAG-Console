@@ -144,7 +144,7 @@ Config ConfigManagerImpl::config;
 static bool  bConfigManagerInited = false;
 static Mutex initConfigManagerLock;
 
-inline unsigned GetLongevity(ConfigManagerImpl*) { return 1; }
+inline unsigned GetLongevity(ConfigManagerImpl*) { return 255; }
 typedef SingletonHolder<ConfigManagerImpl> SingleConfig;
 
 void ConfigManager::Init()

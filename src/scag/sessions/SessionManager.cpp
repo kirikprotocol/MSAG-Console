@@ -129,7 +129,7 @@ namespace scag { namespace sessions
 static bool  bSessionManagerInited = false;
 static Mutex initSessionManagerLock;
 
-inline unsigned GetLongevity(SessionManager*) { return 6; } // ? Move upper ?
+inline unsigned GetLongevity(SessionManager*) { return 250; } // ? Move upper ?
 typedef SingletonHolder<SessionManagerImpl> SingleSM;
 
 void SessionManagerCallback(void * sm,Session * session)

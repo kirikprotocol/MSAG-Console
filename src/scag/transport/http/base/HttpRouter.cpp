@@ -11,7 +11,7 @@ typedef SingletonHolder< HttpTraceRouter, OuterCreation > Single;
 bool inited = false;
 Mutex mtx;
 
-inline unsigned GetLongevity( HttpTraceRouter* ) { return 5; }
+inline unsigned GetLongevity( HttpTraceRouter* ) { return 251; }
 
 }
 

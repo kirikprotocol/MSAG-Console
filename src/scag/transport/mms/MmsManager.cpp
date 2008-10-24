@@ -8,7 +8,7 @@ using scag::util::singleton::SingletonHolder;
 bool MmsManager::inited = false;
 Mutex MmsManager::init_lock;
 
-inline unsigned GetLongevity(MmsManager *) { return 5; };
+inline unsigned GetLongevity(MmsManager *) { return 251; };
 typedef SingletonHolder<MmsManagerImpl> SingleMM;
 
 MmsManager& MmsManager::Instance() {

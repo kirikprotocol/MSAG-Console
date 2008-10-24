@@ -11,7 +11,7 @@ typedef SingletonHolder< SmppManager, OuterCreation > Single;
 bool inited = false;
 Mutex mtx;
 
-inline unsigned GetLongevity( SmppManager* ) { return 5; }
+inline unsigned GetLongevity( SmppManager* ) { return 251; }
 
 }
 

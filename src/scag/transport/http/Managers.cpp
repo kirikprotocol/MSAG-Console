@@ -13,7 +13,7 @@ using namespace scag::util::singleton;
 bool HttpManager::inited = false;
 Mutex HttpManager::initLock;
 
-inline unsigned GetLongevity(HttpManager*) { return 5; }
+inline unsigned GetLongevity(HttpManager*) { return 251; }
 typedef SingletonHolder<HttpManagerImpl> SingleHM;
 
 HttpManager& HttpManager::Instance()

@@ -105,7 +105,7 @@ protected:
     LongCallContext* headContext, *tailContext;
 };
 
-inline unsigned GetLongevity(PersClient*) { return 5; }
+inline unsigned GetLongevity(PersClient*) { return 251; }
 typedef SingletonHolder<PersClientImpl> SinglePC;
 
 PersClient& PersClient::Instance()

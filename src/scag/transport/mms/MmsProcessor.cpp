@@ -43,7 +43,7 @@ private:
 static bool inited = false;
 static Mutex init_lock;
 
-inline unsigned GetLongevity(MmsProcessor* ) { return 5; };
+inline unsigned GetLongevity(MmsProcessor* ) { return 251; };
 typedef scag::util::singleton::SingletonHolder<MmsProcessorImpl> SingleMP;
 
 
