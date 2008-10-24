@@ -712,7 +712,7 @@ TaskProcessor::store_D_Event_in_logstore(const AbntAddr& abnt,
       iter != end_iter; ++iter) {
     const std::string& callingAbonent = AbntAddr(&iter->caller).getText();
     AbonentProfile callerProfile;
-    profileStorage->Get(callingAbonent, AbntAddr(&iter->caller));
+    profileStorage->Get(AbntAddr(&iter->caller), callerProfile);
 
     smsc_log_debug(logger, "TaskProcessor::store_D_Event_in_logstore::: add event to logstore: calledAbonent=%s,callingAbonent=%s,abntProfile.notify=%d,abntProfile.wantNotifyMe=%d", calledAbonent.c_str(), callingAbonent.c_str(), abntProfile.notify, abntProfile.wantNotifyMe);
     MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_MissedCallInfoDelivered(callingAbonent, calledAbonent, abntProfile.notify, callerProfile.wantNotifyMe));
