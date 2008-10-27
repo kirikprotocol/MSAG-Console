@@ -136,11 +136,13 @@ public class WHOISDServlet extends HttpServlet
         switch (id) {
           case WHOISDRequest.RULE:
               synchronized(ruleLock){
-                applyTerm(req,isMultipartFormat(req), appContext);
+                  logger.debug( "WHOISDServlet.doPost() applyterm() isMultipartFormat(req)=" + isMultipartFormat(req)  );
+                  applyTerm(req, isMultipartFormat(req), appContext);
               }
               break;
           case WHOISDRequest.TARIFF_MATRIX:
               synchronized(tariffsLock){
+                logger.debug( "WHOISDServlet.doPost() tariffsLock" );
                 appContext.getTMatrixManager().applyTariffMatrix(
                             composePath(GW_LOCATION_TARIFFS_FILE,
                             appContext), req, isMultipartFormat(req),
@@ -246,7 +248,7 @@ public class WHOISDServlet extends HttpServlet
       logger.debug( "WHOISDServlet.applyTerm() line359" );
       if (rulesWHOISD.size()>0)
       {
-          logger.debug( "WHOISDServlet.applyTerm() (rulesWHOISD.size()>0) line362" );
+          logger.debug( "WHOISDServlet.applyTerm() (rulesWHOISD.size()>0) size=" + rulesWHOISD.size() );
           try {
               for (byte i =0 ;i<transports.length;i++) {
                 logger.debug( "WHOISDServlet.applyTerm() for rule '" + transports[i] + "'" );
@@ -267,15 +269,18 @@ public class WHOISDServlet extends HttpServlet
                   throw new WHOISDException(composeErrorMessage( ruleWHOISD,termAsList, e.getMessage(), e.getLineNumber()) );
                 }
                 logger.debug( "WHOISDServlet.applyTerm() ruleWHOISD != null)" + (ruleWHOISD != null) + "curRuleState.getExists()='" + curRuleState.getExists() + "'" );
-                if( ruleWHOISD != null && curRuleState.getExists() ) {
+//                if( ruleWHOISD != null && curRuleState.getExists() ) {
+                if( ruleWHOISD != null && curRuleState.getExists() && appContext.getRuleManager().checkRuleFileExists( service, transports[i] ) ) {
                    logger.debug( "WHOISDServlet.applyTerm() curRuleState.getExists()" );
-                   LinkedList error = ruleManagerWrap.updateRule( ruleWHOISD,service,transports[i] );
-                   logger.debug( "WHOISDServlet.applyTerm() curRuleState.getExists() error='" + error + "'" );
+                   LinkedList error = ruleManagerWrap.updateRule_whoisd( ruleWHOISD, service, transports[i] );
+                   logger.debug( "WHOISDServlet.applyTerm() curRuleState.getExists(), done for service=" + service + ", transport=" + transports[i] +
+                           " with error='" + error + "'" );
                    if (error != null && error.size()>0)
                      throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
-                } else if (ruleWHOISD != null && !curRuleState.getExists()) {
+//                } else if (ruleWHOISD != null && !curRuleState.getExists()) {
+                } else if (ruleWHOISD != null && !appContext.getRuleManager().checkRuleFileExists( service, transports[i] )) {    
                    logger.debug( "WHOISDServlet.applyTerm() (!curRuleState.getExists())" );
-                   LinkedList error = ruleManagerWrap.AddRule(ruleWHOISD,service, transports[i]);
+                   LinkedList error = ruleManagerWrap.AddRule_whoisd(ruleWHOISD,service, transports[i]);
                    logger.debug( "WHOISDServlet.applyTerm() (!curRuleState.getExists()) error='" + error + "'");
                    if (error != null && error.size()>0)
                      throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
