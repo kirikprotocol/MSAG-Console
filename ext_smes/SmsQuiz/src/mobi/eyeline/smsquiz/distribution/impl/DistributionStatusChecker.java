@@ -48,26 +48,24 @@ public class DistributionStatusChecker implements Runnable {
         command.append(statusCommand);
         command.append(" \"").append(id).append("\"");
 
-        if(logger.isInfoEnabled()) {
-          logger.info("Sending console command: "+command.toString());
+        if (logger.isInfoEnabled()) {
+          logger.info("Sending console command: " + command.toString());
         }
 
         response = consoleClient.sendCommand(command.toString());
-        if((response!=null)&&(response.isSuccess())&&(response.getStatus().trim().equals(codeOk))) {
+        if ((response != null) && (response.isSuccess()) && (response.getStatus().trim().equals(codeOk))) {
           String[] lines = response.getLines();
-          if(lines.length>0){
-            String[] tokens =lines[0].trim().split(" ");
-            if(tokens.length<3) {
+          if (lines.length > 0) {
+            String[] tokens = lines[0].trim().split(" ");
+            if (tokens.length < 3) {
               throw new SmscConsoleException("Wrong response");
             }
             String status = tokens[2];
             handle(id, status, entry.getValue());
-          }
-          else {
+          } else {
             throw new SmscConsoleException("Wrong response: response line is empty");
           }
-        }
-        else {
+        } else {
           throw new SmscConsoleException("Wrong response");
         }
       }
@@ -75,7 +73,7 @@ public class DistributionStatusChecker implements Runnable {
     } catch (SmscConsoleException e) {
       logger.error("Error during communicating", e);
       e.printStackTrace();
-    } 
+    }
   }
 
   private void handle(String id, String status, Status task) {

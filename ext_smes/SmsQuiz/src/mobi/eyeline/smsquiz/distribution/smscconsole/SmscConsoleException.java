@@ -3,9 +3,9 @@ package mobi.eyeline.smsquiz.distribution.smscconsole;
 /**
  * author: alkhal
  */
-public class SmscConsoleException extends Exception{
+public class SmscConsoleException extends Exception {
 
- public SmscConsoleException() {
+  public SmscConsoleException() {
   }
 
   public SmscConsoleException(String message) {

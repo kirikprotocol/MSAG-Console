@@ -9,7 +9,7 @@ import java.util.LinkedList;
 /**
  * author: alkhal
  */
-class ConsoleSenderImpl implements ConsoleSender{
+class ConsoleSenderImpl implements ConsoleSender {
   private static Logger logger = Logger.getLogger(ConsoleSenderImpl.class);
 
   private String login;
@@ -31,11 +31,11 @@ class ConsoleSenderImpl implements ConsoleSender{
   }
 
   public void connect() throws SmscConsoleException {
-    if(connected) {
+    if (connected) {
       return;
     }
     connected = true;
-    try{
+    try {
       enterToConsole();
     }
     catch (Exception e) {
@@ -47,7 +47,7 @@ class ConsoleSenderImpl implements ConsoleSender{
 
 
   public void disconnect() {
-    if(!connected) {
+    if (!connected) {
       return;
     }
     connected = false;
@@ -56,10 +56,10 @@ class ConsoleSenderImpl implements ConsoleSender{
   }
 
   public SmscConsoleResponse sendCommand(String comm) throws SmscConsoleException {
-    if(!connected) {
+    if (!connected) {
       throw new SmscConsoleException("You're not connected");
     }
-    if(socket==null) {
+    if (socket == null) {
       try {
         enterToConsole();
       } catch (IOException e) {
@@ -69,20 +69,20 @@ class ConsoleSenderImpl implements ConsoleSender{
     }
 
 
-    try{
+    try {
       return _sendCommand(comm);
     } catch (IOException e) {
-        logger.error("Connection was closed or broked. Try reconnect...", e);
+      logger.error("Connection was closed or broked. Try reconnect...", e);
     }
 
-    try{
+    try {
       leaveConsole();
       enterToConsole();
     } catch (IOException e) {
-        logger.error("Connection was closed or broken. Try reconnect...", e);
+      logger.error("Connection was closed or broken. Try reconnect...", e);
     }
 
-    try{
+    try {
       return _sendCommand(comm);
     } catch (IOException e) {
       logger.error("Connection was closed or broken. Connection failed.", e);
@@ -91,15 +91,15 @@ class ConsoleSenderImpl implements ConsoleSender{
   }
 
 
-  private void enterToConsole() throws IOException{
+  private void enterToConsole() throws IOException {
     socket = new Socket(host, port);
-    if(!authentication()) {
+    if (!authentication()) {
       throw new IOException("Auth failed");
     }
   }
 
   private void leaveConsole() {
-    if(socket!=null) {
+    if (socket != null) {
       try {
         _sendCommand("quit");
       } catch (IOException e) {
@@ -112,48 +112,50 @@ class ConsoleSenderImpl implements ConsoleSender{
     }
   }
 
-  private boolean authentication() throws IOException{
+  private boolean authentication() throws IOException {
     SmscConsoleResponse resp = getResponse();
-    if(resp==null||!resp.isSuccess()) {
+    if (resp == null || !resp.isSuccess()) {
       logger.error("Can't auth");
       return false;
     }
 
     resp = _sendCommand(login);
-    if(resp==null||!resp.isSuccess()) {
+    if (resp == null || !resp.isSuccess()) {
       logger.error("Can't auth: login is incorrect");
       return false;
     }
-    
+
     resp = _sendCommand(password);
-    if(resp==null||!resp.isSuccess()) {
+    if (resp == null || !resp.isSuccess()) {
       logger.error("Can't auth: password is incorrect");
       return false;
     }
 
     logger.info("Auth ok");
     return true;
-    
+
   }
+
   private SmscConsoleResponse _sendCommand(String str) throws IOException {
     PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
     writer.println(str);
     writer.flush();
     return getResponse();
   }
+
   private SmscConsoleResponse getResponse() throws IOException {
     BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     LinkedList<String> list = new LinkedList<String>();
     String str;
 
-    while(true) {
+    while (true) {
       str = in.readLine();
       list.add(str);
-      if(str.length() > 0 && str.charAt(0) != ' ')
+      if (str.length() > 0 && str.charAt(0) != ' ')
         break;
     }
 
-    if(logger.isInfoEnabled()) {
+    if (logger.isInfoEnabled()) {
       final StringBuffer res = new StringBuffer();
       for (String aList : list)
         res.append('\n').append(aList);
@@ -165,7 +167,7 @@ class ConsoleSenderImpl implements ConsoleSender{
       return null;
     }
     boolean success = false;
-    if (tok[0].length() > 0 && tok[0].charAt(0)=='+') {
+    if (tok[0].length() > 0 && tok[0].charAt(0) == '+') {
       success = true;
     }
     String status = tok[1];

@@ -73,7 +73,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
       maxWait = config.getLong("infosme.max.wait.creation") * 1000;
       checkerFirstDleay = config.getLong("status.checker.delay.first");
       checkerPeriod = config.getLong("status.checker.period");
-      long consoleTimeout = config.getLong("smsc.console.connect.timeout")*1000;
+      long consoleTimeout = config.getLong("smsc.console.connect.timeout") * 1000;
       long closerPeriod = config.getLong("smsc.console.closer.period");
 
 
@@ -135,19 +135,19 @@ public class DistributionInfoSmeManager implements DistributionManager {
       command.append(getFormatProp(Boolean.toString(distr.isTxmode())));
       command.append(getFormatProp(distr.getSourceAddress()));
 
-      if(logger.isInfoEnabled()) {
-        logger.info("Sending console command: "+command.toString());
+      if (logger.isInfoEnabled()) {
+        logger.info("Sending console command: " + command.toString());
       }
       response = consoleClient.sendCommand(command.toString());
-      if((response!=null)&&(response.isSuccess())&&(response.getStatus().trim().equals(codeOk))) {
+      if ((response != null) && (response.isSuccess()) && (response.getStatus().trim().equals(codeOk))) {
         String[] lines = response.getLines();
-        if(lines.length>0){
-          String[] tokens =lines[0].trim().split(" ");
-          if(tokens.length<3) {
+        if (lines.length > 0) {
+          String[] tokens = lines[0].trim().split(" ");
+          if (tokens.length < 3) {
             throw new SmscConsoleException("Wrong response");
           }
           String id = tokens[2];
-          if(!id.equals("")) {
+          if (!id.equals("")) {
             tasksMap.put(id, new Status(task, errorFile));
             if (logger.isInfoEnabled()) {
               logger.info("Distribution created, id: " + id);
@@ -181,16 +181,16 @@ public class DistributionInfoSmeManager implements DistributionManager {
       command.append(statusCommand);
       command.append(getFormatProp(id));
 
-      if(logger.isInfoEnabled()) {
-        logger.info("Sending console command: "+command.toString());
+      if (logger.isInfoEnabled()) {
+        logger.info("Sending console command: " + command.toString());
       }
 
       SmscConsoleResponse response = consoleClient.sendCommand(command.toString());
-      if((response!=null)&&(response.isSuccess())&&(response.getStatus().trim().equals(codeOk))) {
+      if ((response != null) && (response.isSuccess()) && (response.getStatus().trim().equals(codeOk))) {
         String[] lines = response.getLines();
-        if(lines.length>0){
-          String[] tokens =lines[0].trim().split(" ");
-          if(tokens.length<3) {
+        if (lines.length > 0) {
+          String[] tokens = lines[0].trim().split(" ");
+          if (tokens.length < 3) {
             throw new SmscConsoleException("Wrong response");
           }
           String status = tokens[2];
@@ -258,11 +258,11 @@ public class DistributionInfoSmeManager implements DistributionManager {
       StringBuilder builder = new StringBuilder();
       int hour = cal.get(Calendar.HOUR_OF_DAY);
       int minute = cal.get(Calendar.MINUTE);
-      if(hour<10) {
+      if (hour < 10) {
         builder.append(0);
       }
       builder.append(hour).append(":");
-      if(minute<10) {
+      if (minute < 10) {
         builder.append(0);
       }
       builder.append(minute);

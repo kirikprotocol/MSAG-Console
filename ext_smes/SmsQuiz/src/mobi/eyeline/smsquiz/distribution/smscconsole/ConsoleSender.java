@@ -5,7 +5,9 @@ package mobi.eyeline.smsquiz.distribution.smscconsole;
  */
 public interface ConsoleSender {
   public void connect() throws SmscConsoleException;
+
   public void disconnect();
+
   public SmscConsoleResponse sendCommand(String command) throws SmscConsoleException;
 
 }

@@ -26,7 +26,7 @@ public class SmscConsoleClient {
     sd = new CachedConsoleSender(login, password, host, port);
     scheduledConnCloser = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
       public Thread newThread(Runnable r) {
-        return new Thread(r,"ConnectionCloser");
+        return new Thread(r, "ConnectionCloser");
       }
     });
     connectionCloser = new ConnectionCloser(sd);
@@ -34,7 +34,7 @@ public class SmscConsoleClient {
   }
 
   public SmscConsoleResponse sendCommand(String command) throws SmscConsoleException {
-    try{
+    try {
       sd.connect();
       return sd.sendCommand(command);
     } finally {
@@ -43,7 +43,7 @@ public class SmscConsoleClient {
   }
 
   public void shutdown() {
-    if(scheduledConnCloser!=null) {
+    if (scheduledConnCloser != null) {
       scheduledConnCloser.shutdown();
     }
     connectionCloser.closefinally();
@@ -68,7 +68,7 @@ public class SmscConsoleClient {
       try {
         senderImpl.connect();
         active = true;
-      } catch(SmscConsoleException e) {
+      } catch (SmscConsoleException e) {
         lock.unlock();
         throw e;
       }
@@ -82,6 +82,7 @@ public class SmscConsoleClient {
     public SmscConsoleResponse sendCommand(String command) throws SmscConsoleException {
       return senderImpl.sendCommand(command);
     }
+
     public long getLastWorkTime() {
       return lastWorkTime;
     }
@@ -98,7 +99,7 @@ public class SmscConsoleClient {
     }
   }
 
-  private class ConnectionCloser implements Runnable{
+  private class ConnectionCloser implements Runnable {
 
     private CachedConsoleSender sender;
     private boolean ignoreTimeout = false;
@@ -115,16 +116,16 @@ public class SmscConsoleClient {
     public void run() {
       logger.info("ConsoleCloser starts...");
       long _timeout = timeout;
-      if(ignoreTimeout) {
+      if (ignoreTimeout) {
         _timeout = 0;
       }
-      if((System.currentTimeMillis() - sender.getLastWorkTime())>_timeout) {
+      if ((System.currentTimeMillis() - sender.getLastWorkTime()) > _timeout) {
         try {
-          if(sender.isActive()) {
+          if (sender.isActive()) {
             sender.connect();
             sender.closeExt();
+            logger.info("ConsoleCloser closed a connection");
           }
-          logger.info("ConsoleCloser closed a connection");
         } catch (SmscConsoleException e) {
           e.printStackTrace();
         }
