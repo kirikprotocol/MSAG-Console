@@ -125,7 +125,7 @@ public class TaskBuilder extends Thread {
         task.setStartDate(taskProps.getDateBegin());
         task.setEndDate(taskProps.getDateEnd());
         task.setActivePeriodStart(taskProps.getTimeBegin());
-        task.setActivePeriodEnd(taskProps.getDateEnd());
+        task.setActivePeriodEnd(taskProps.getTimeEnd());
         task.setAddress(taskProps.getAddress());
         task.setTransactionMode(taskProps.isTxmode());
       }

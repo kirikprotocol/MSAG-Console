@@ -60,7 +60,7 @@ public class Task
   // for new deliveries
   private String subject;
   private int actualRecordsSize;
-  private String status;
+  private String status = "";
 
   public Task(String id) {
     this.id = id;

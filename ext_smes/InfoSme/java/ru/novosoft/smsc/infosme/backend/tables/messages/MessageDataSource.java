@@ -31,7 +31,7 @@ public class MessageDataSource extends AbstractDataSourceImpl {
 
   public MessageDataSource(String storeDir) {
     super(new String[]{"state", "date", "msisdn", "region", "message"});
-    this.storeDir = "/data/users/skv/install/services/InfoSme/store"; //todo
+    this.storeDir = storeDir;
   }
 
   public QueryResultSet query(Query query_to_run) {
