@@ -171,7 +171,7 @@ using namespace scag::stat::sacc;
         Hash   <CommonPerformanceCounter*>  svcWapCounters;
         Hash   <CommonPerformanceCounter*>  svcMmsCounters;
 
-        Array<Socket*> svcSockets;
+        std::vector<Socket*> svcSockets;
         Mutex svcSocketsMutex;
 
         Mutex                             scCountersLock;
@@ -179,10 +179,10 @@ using namespace scag::stat::sacc;
         Hash   <CommonPerformanceCounter*>  scWapCounters;
         Hash   <CommonPerformanceCounter*>  scMmsCounters;
 
-        Array<Socket*> scSockets;
+        std::vector<Socket*> scSockets;
         Mutex scSocketsMutex;
 
-        Array<Socket*> genSockets;
+        std::vector<Socket*> genSockets;
         Mutex genSocketsMutex;
 
         GenStatistics genStatSmpp;
@@ -225,10 +225,11 @@ using namespace scag::stat::sacc;
         void SerializeHttpStat(Hash<HttpStat>& httpStat, SerializationBuffer& buf);
         void incSvcScCounter(const char* systemId, int index, int max_cnt, Hash<CommonPerformanceCounter*>& svcCounters, Mutex& mt);
         void dumpPerfCounters(SerializationBuffer& buf, Hash<CommonPerformanceCounter*>& h);
-        void reportPerformance(bool t, Mutex& mt, Array<Socket*>& socks);
+        void reportPerformance(bool t, Mutex& mt, std::vector<Socket*>& socks);
         void incRouteTraffic(Hash<TrafficRecord>& h,  const char* routeId);
         void dumpTrafficHash(Hash<TrafficRecord>& traff, SerializationBuffer& buf);
         CommonStat* getStat(const char* id, bool sc);
+        void deleteSockets( Mutex& mt, std::vector< Socket* >& socks );
     public:
         void init( const StatManConfig& statManCfg );
 

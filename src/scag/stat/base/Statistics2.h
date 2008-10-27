@@ -223,48 +223,38 @@ using smsc::core::network::Socket;
       int event; // use constants from scag::stat::events::smpp
       int errCode;
 
-      SmppStatEvent()
+      SmppStatEvent() :
+      routeProviderId(-1), srcType(false), dstType(false), event(-1), errCode(-1)
       {
         srcId[0]=0;
         dstId[0]=0;
         routeId[0]=0;
-        routeProviderId=-1;
-        event = -1;
-        errCode = -1;
       }
-        SmppStatEvent(const char* src, bool _srcType, const char* dst,
-                      bool _dstType, int cnt, int errcode)
+      SmppStatEvent(const char* src, bool _srcType, const char* dst,
+                    bool _dstType, int cnt, int errcode) :
+      routeProviderId(-1), srcType(_srcType), dstType(_dstType), event(cnt), errCode(errcode)
       {
         srcId[0] = 0;
         if(src != NULL)
             strncpy(srcId, src, sizeof(srcId));
-        srcType = _srcType;
         dstId[0] = 0;
         if(dst != NULL)
             strncpy(dstId, dst, sizeof(dstId));
-        dstType = _dstType;
         routeId[0]=0;
-
-        routeProviderId=-1;
-        event = cnt;
-        errCode = errcode;
       }
       SmppStatEvent(const char* src, bool _srcType, const char* dst, bool _dstType,
-                    const char* rid, int cnt, int errcode)
+                    const char* rid, int cnt, int errcode) :
+      routeProviderId(-1), srcType(_srcType), dstType(_dstType), event(cnt), errCode(errcode)
       {
         srcId[0] = 0;
         if(src != NULL)
             strncpy(srcId, src, sizeof(srcId));
-        srcType = _srcType;
         dstId[0] = 0;
         if(dst != NULL)
             strncpy(dstId, dst, sizeof(dstId));
-        dstType = _dstType;
         routeId[0]=0;
         if(rid!=NULL)
           strncpy(routeId, rid, sizeof(routeId));
-        event = cnt;
-        errCode = errcode;
       }
       SmppStatEvent(const SmppStatEvent& src)
       {

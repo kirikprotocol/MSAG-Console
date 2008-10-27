@@ -176,6 +176,10 @@ StatisticsManager::~StatisticsManager()
   WaitFor();
   smppFile.Close();
   httpFile.Close();
+
+    deleteSockets( svcSocketsMutex, svcSockets );
+    deleteSockets( scSocketsMutex, scSockets );
+    deleteSockets( genSocketsMutex, genSockets );
     smsc_log_info( logger, "Statistics manager is released" );
 }
 
@@ -204,6 +208,20 @@ CommonStat* StatisticsManager::getStat(const char* id, bool sc)
         }
     }
     return st;
+}
+
+void StatisticsManager::deleteSockets( Mutex& mt, std::vector< Socket* >& socks )
+{
+    MutexGuard mg(mt);
+    for ( std::vector< Socket* >::const_iterator i = socks.begin();
+          i != socks.end();
+          ++i ) {
+        if ( *i ) {
+            (*i)->Abort();
+            delete *i;
+        }
+    }
+    socks.clear();
 }
 
 void StatisticsManager::registerEvent(const SmppStatEvent& se)
@@ -1014,8 +1032,6 @@ void StatisticsManager::incScMmsCounter(const char* systemId, int index)
 
 void StatisticsManager::reportGenPerformance(PerformanceData * data)
 {
-    // TODO: move guard after serialization?
-    MutexGuard g(genSocketsMutex);
     SerializationBuffer buf(256);
 
     uint32_t size = 48 + (PERF_CNT_COUNT + PERF_HTTP_COUNT) * 16;
@@ -1049,17 +1065,18 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
     //ld.inProcessingCount=htonl(ld.inProcessingCount);
     //ld.inScheduler=htonl(ld.inScheduler);
 
-    for(int i=0;i<genSockets.Count();i++)
+    MutexGuard g(genSocketsMutex);
+    for( size_t i = 0; i < genSockets.size(); i++ )
     {
 
-      int wr=genSockets[i]->WriteAll((char*)buf.getBuffer(), buf.getPos());
+      int wr = genSockets[i]->WriteAll((char*)buf.getBuffer(), buf.getPos());
 
       if(uint32_t(wr) != size)
       {
         smsc_log_warn(logger, "Error writing gen performance to socket");
         genSockets[i]->Abort();
         delete genSockets[i];
-        genSockets.Delete(i);
+        genSockets.erase( genSockets.begin() + i );
         i--;
       }
     }
@@ -1121,7 +1138,7 @@ void StatisticsManager::dumpScCounters(SerializationBuffer& buf)
     dumpPerfCounters(buf, scMmsCounters);
 }
 
-void StatisticsManager::reportPerformance(bool t, Mutex& mt, Array<Socket*>& socks)
+void StatisticsManager::reportPerformance(bool t, Mutex& mt, std::vector<Socket*>& socks)
 {
     SerializationBuffer buf(4096);
 
@@ -1139,7 +1156,7 @@ void StatisticsManager::reportPerformance(bool t, Mutex& mt, Array<Socket*>& soc
 
     MutexGuard g(mt);
     
-    for(int i = 0; i < socks.Count(); i++)
+    for( size_t i = 0; i < socks.size(); i++ )
     {
         size += 4;
         nsize = htonl(size);
@@ -1150,7 +1167,7 @@ void StatisticsManager::reportPerformance(bool t, Mutex& mt, Array<Socket*>& soc
       {
         socks[i]->Abort();
         delete socks[i];
-        socks.Delete(i);
+        socks.erase(socks.begin() + i);
         i--;
       }
     }
@@ -1173,7 +1190,7 @@ void StatisticsManager::addSvcSocket(Socket * socket)
     char buf[32];
     socket->GetPeer(buf);
     smsc_log_info(logger, "performance::add connect from %s", buf);
-    svcSockets.Push(socket);
+    svcSockets.push_back(socket);
 }
 
 void StatisticsManager::addScSocket(Socket * socket)
@@ -1183,7 +1200,7 @@ void StatisticsManager::addScSocket(Socket * socket)
     char buf[32];
     socket->GetPeer(buf);
     smsc_log_info(logger, "performance::add connect from %s", buf);
-    scSockets.Push(socket);
+    scSockets.push_back(socket);
 }
 
 void StatisticsManager::addGenSocket(Socket * socket)
@@ -1193,7 +1210,7 @@ void StatisticsManager::addGenSocket(Socket * socket)
     char buf[32];
     socket->GetPeer(buf);
     smsc_log_info(logger, "performance::add connect from %s", buf);
-    genSockets.Push(socket);
+    genSockets.push_back(socket);
 }
 
 int StatisticsManager::indexByCounter(int counter)
