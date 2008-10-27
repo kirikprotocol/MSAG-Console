@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.text.SimpleDateFormat;
 
 import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
-import mobi.eyeline.smsquiz.distribution.Impl.DistributionInfoSmeManager;
+import mobi.eyeline.smsquiz.distribution.impl.DistributionInfoSmeManager;
 import mobi.eyeline.smsquiz.replystats.datasource.impl.FileReplyStatsDataSource;
 import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import mobi.eyeline.smsquiz.subscription.SubManagerException;

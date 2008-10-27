@@ -20,7 +20,7 @@ import mobi.eyeline.smsquiz.quizmanager.service.ReplySMPPService;
 import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
 import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import mobi.eyeline.smsquiz.subscription.SubManagerException;
-import mobi.eyeline.smsquiz.distribution.Impl.DistributionInfoSmeManager;
+import mobi.eyeline.smsquiz.distribution.impl.DistributionInfoSmeManager;
 import mobi.eyeline.smsquiz.replystats.datasource.impl.FileReplyStatsDataSource;
 import com.eyeline.sme.handler.config.ServicesConfig;
 import com.eyeline.sme.handler.config.ServicesConfigReader;

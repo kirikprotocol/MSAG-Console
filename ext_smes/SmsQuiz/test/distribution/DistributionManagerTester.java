@@ -4,7 +4,7 @@ import org.junit.*;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import mobi.eyeline.smsquiz.distribution.*;
-import mobi.eyeline.smsquiz.distribution.Impl.DistributionInfoSmeManager;
+import mobi.eyeline.smsquiz.distribution.impl.DistributionInfoSmeManager;
 import mobi.eyeline.smsquiz.storage.ResultSet;
 import mobi.eyeline.smsquiz.storage.StorageException;
 
