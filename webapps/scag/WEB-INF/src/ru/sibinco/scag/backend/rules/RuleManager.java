@@ -93,10 +93,12 @@ public class RuleManager
     return xslFolder;
   }
 
+    public static final String RULENAME_START = "rule_";
+    public static final String XML_EXT   = ".xml";
 
   public File composeRuleFile(String transport, String serviceId) {
       logger.debug( "Rulemanager.composeRuleFile() start" );
-      String filename="rule_"+ serviceId.toString()+".xml";
+      String filename = RULENAME_START + serviceId.toString() + XML_EXT;
       final File folder = new File(rulesFolder, transport);
       File newFile= new File(folder,filename);
       return newFile;
@@ -104,18 +106,22 @@ public class RuleManager
 
   public File composeRuleBackFile(String transport, String serviceId, String backSuffix ) {
       if( backSuffix == null ) backSuffix = "";
-      String filename="rule_"+ serviceId.toString() + ".xml" + backSuffix;
+      String filename=RULENAME_START + serviceId.toString() + XML_EXT + backSuffix;
       final File folder = new File(rulesFolder, transport);
       File newFile= new File(folder,filename);
       return newFile;
   }
 
   public boolean checkRuleFileExists(String ruleId, String transport) {
+      logger.debug( "Rulemanager.checkRuleFileExists() start with ruleId=" + ruleId + ", transport=" + transport );
+      boolean result = composeRuleFile(transport, ruleId).exists();
+      logger.debug( "Rulemanager.checkRuleFileExists() result=" + result );
     return composeRuleFile(transport, ruleId).exists();
   }
 
   public Rule getRule(String ruleId, String transport)
   {
+      logger.debug( "Rulemanager.getRule() start" );
     Rule rule = null;
     File ruleFile = composeRuleFile(transport, ruleId);
     if (ruleFile.exists())
@@ -183,12 +189,12 @@ public class RuleManager
   }
 
   public void unlockRule(String ruleId, String transport) {
-    System.out.println("!!!!!unlock rule id = " + ruleId + " transport = " + transport);
+    System.out.println("!!!!!RM.unlockRule() id = " + ruleId + " transport = " + transport);
     setRuleState(ruleId, transport, checkRuleFileExists(ruleId, transport), false);
   }
 
   public void unlockRule(String complexRuleId) {
-    System.out.println("!!!!!unlock rule complexString='" + complexRuleId + "'" );
+    System.out.println("!!!!!RM.unlockRule() rule complexString='" + complexRuleId + "'" );
     String[] id_transport = Rule.getIdAndTransport(complexRuleId);
     unlockRule(id_transport[0], id_transport[1]);
   }
@@ -279,12 +285,34 @@ public class RuleManager
     return schema;
   }
 
+    boolean blocked = false;
+
+    public boolean isBlocked(){
+        return blocked;
+    }
+
+    HashSet blockedRules = new HashSet();
+
+    String blockedRule = "";
+
+    public boolean checkBlockedRule( String rule ){
+        return blockedRule.equalsIgnoreCase(rule);
+    }
+
+    public boolean checkBlockedRules( String rule ){
+        return blockedRules.contains( rule.toUpperCase() );
+    }
+
+
   private Rule LoadRule(String _transportDir, File file) throws SibincoException {
+      logger.debug( "Rulemanager.LoadRule() start" );
+
     Rule temp;
     String fileName=file.getName();
-    if (!fileName.endsWith(".xml")) return null;
-
-    logger.debug("enter " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")\ntransportdir='" + _transportDir + "'");
+    if (!fileName.endsWith(XML_EXT)) return null;
+    Long id = null;
+    String transport = "";
+    logger.debug("Rulemanager.LoadRule() enter " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")\ntransportdir='" + _transportDir + "'");
     LinkedList body=LoadXml(file.getAbsolutePath(), _transportDir);
     //long length=file.length();
     //System.out.println("RuleManager.LoadFromFolder file.length= "+length);
@@ -293,16 +321,17 @@ public class RuleManager
     Element el=ruleDoc.getDocumentElement();
     if (!el.getTagName().equals(Rule.ROOT_ELEMENT))
       throw new SibincoException("Root element "+el.getTagName()+" not math with "+Rule.ROOT_ELEMENT);
-    String transport=el.getAttribute("transport");
-    logger.debug( "Rulemanager:LoadRule():transport=" + transport );
+    transport=el.getAttribute("transport");
+    logger.debug( "Rulemanager.LoadRule() transport=" + transport );
     if (transport.equals(""))
       throw new SibincoException("Root element "+el.getTagName()+" not contain attribute 'transport'");
     String ruleId=fileName.substring(5,fileName.length()-4);
     String notes="";
-    Long id=Long.decode(ruleId);
+    id = Long.decode(ruleId);
 
     temp = new Rule(id,notes,transport,body);
-    logger.debug("exit " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
+    logger.debug("Rulemanager.LoadRule() loaded id=" + id + "transport=" + transport );
+    logger.debug("Rulemanager.LoadRule() end " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
 
 } catch (FactoryConfigurationError error) {
   logger.error("Couldn't configure xml parser factory", error);
@@ -312,7 +341,7 @@ public class RuleManager
   throw new SibincoException("Couldn't configure xml parser", e);
 } catch (SAXException e) {
   String fileId=fileName.substring(5,fileName.length()-4);
-  Long id=Long.decode(fileId);
+  id=Long.decode(fileId);
   String notes="Load Error "+e.getMessage();
   temp = new Rule(id, notes, _transportDir,body/*,length*/);
 
@@ -326,6 +355,10 @@ public class RuleManager
   logger.error("Couldn't parse", e);
   throw new SibincoException("Couldn't parse", e);
 }
+//      blocked = true;
+      blockedRule = (id + "_" + transport).toUpperCase();
+//      blockedRules.add( blockedRule.toUpperCase() );
+      logger.debug( "Rulemanager.LoadRule() end with blockedRule='" + blockedRule + "'" );
    return temp;
   }
 
@@ -485,6 +518,64 @@ public class RuleManager
   return errorInfo;
 }
 
+    public synchronized LinkedList AddRule_whoisd(BufferedReader r, final String ruleId, final String transport, int mode, String user) throws SibincoException, IOException
+    {
+     logger.debug("AddNewRule ruleId= "+ruleId + " ,transport = "+transport);
+     LinkedList errorInfo=new LinkedList();
+
+     //instead of scag.addRule(ruleId, transport);
+     if (DEBUG) {
+       String buffer = buffertostring(r);
+       r = new BufferedReader(new StringReader(buffer));
+       errorInfo = errorsImitator(r);
+       r = new BufferedReader(new StringReader(buffer));
+     }
+     logger.debug("Rulemanager:AddRule():saveRule()");
+     saveRule_whoisd(r,ruleId, transport);
+// moved from below
+       if (mode!=TERM_MODE) {
+           finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
+           saveMessage("Added rule: ", user, ruleId, transport);
+       }
+
+     if (!DEBUG) {
+     try {
+         logger.debug("Rulemanager:AddRule():scag.addRule");
+       errorInfo =(LinkedList) scag.addRule(ruleId, transport);
+     } catch (SibincoException e) {
+       if (!(e instanceof StatusDisconnectedException)) {
+           logger.debug("Rulemanager:AddRule():!StatusDisconnectedException");
+         if (mode!=TERM_MODE)
+             saveMessage("Failed to add rule: ", user, ruleId, transport);
+         removeRuleFile(ruleId, transport);
+         finishOperation(ruleId,transport,HSDaemon.REMOVE);
+       } else {
+           logger.debug("Rulemanager:AddRule():StatusDisconnectedException");
+         if (mode!=TERM_MODE) {
+//        finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
+           saveMessage("Added rule: ", user, ruleId, transport);
+         }
+       }
+       logger.error("RuleManager:addRule():error");// e.printStackTrace();
+       logger.error(e.getMessage());// e.printStackTrace();
+       throw e;
+      }
+     }
+     logger.debug("Rulemanager:AddRule():done");
+// moved above
+//  if (errorInfo == null || errorInfo.size() == 0) {
+//    if (mode!=TERM_MODE) {
+//      finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
+//      saveMessage("Added rule: ", user, ruleId, transport);
+//    }
+//  }  else  {
+//    if (mode!=TERM_MODE) saveMessage("Failed to add rule: ", user, ruleId, transport);
+//    removeRuleFile(ruleId, transport);
+//  }
+     return errorInfo;
+   }
+
+
   public synchronized LinkedList updateRule(BufferedReader r, final String ruleId, final String transport, int mode, String user) throws SibincoException,  IOException
  {
    //String ruleId=fileName.substring(5,fileName.length()-4);
@@ -529,7 +620,7 @@ public class RuleManager
          throw e;
        }
     }
-    logger.error("RuleManager:updateRule() finishing" );
+    logger.error( "RuleManager:updateRule() finishing ruleId=" + ruleId + " transport=" + transport );
     if (errorInfo == null || errorInfo.size()==0) {
         if (mode!=TERM_MODE) {
           Functions.SavedFileToBackup(currentRuleFile, ".new");
@@ -544,6 +635,68 @@ public class RuleManager
         }
     }
     logger.error("RuleManager:updateRule() return" );
+    return errorInfo;
+ }
+
+  public synchronized LinkedList updateRule_whoisd( BufferedReader r, final String ruleId, final String transport, int mode, String user) throws SibincoException,  IOException
+ {
+   //String ruleId=fileName.substring(5,fileName.length()-4);
+   Rule rule = getRule(ruleId,transport);
+   logger.debug( "RuleManager.updateRule() ruleId=" + ruleId + " ,transport = " + transport );
+   LinkedList errorInfo = new LinkedList();
+
+   //instead of scag.updateRule(ruleId, transport);
+   if (DEBUG) {
+    String buffer = buffertostring(r);
+    r = new BufferedReader(new StringReader(buffer));
+    errorInfo = errorsImitator(r);
+    r = new BufferedReader(new StringReader(buffer));
+   }
+
+   LinkedList curbody = rule.getBody();
+   // rule_1.xml -> rule_1.xml.new(rule_1.xml.new contains current rule body)
+   File currentRuleFile = saveCurrentRule(curbody,ruleId, transport);
+   saveRule_whois(r,ruleId, transport);
+
+    if (!DEBUG) {
+       try {
+         errorInfo=(LinkedList) scag.updateRule(ruleId, transport);
+       } catch (SibincoException e) {
+         if (e instanceof StatusDisconnectedException) {
+           logger.error("RuleManager.updateRule_whoisd() StatusDisconnectedException!!!");
+           if (mode != TERM_MODE) {
+             Functions.SavedFileToBackup(currentRuleFile,".new");
+             finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
+             saveMessage("Updated rule: ", user, ruleId, transport);
+           }
+         } else {
+           logger.error("RuleManager:updateRule_whoisd() SibincoException!!!");
+           if (mode != TERM_MODE) {
+             saveRule_whoisd(curbody,ruleId,rule.getTransport());
+             currentRuleFile.delete();
+             saveMessage("Failed to update rule: ", user, ruleId, transport);
+           }
+         }
+//         logger.error(e.getMessage());// e.printStackTrace();
+         logger.error("RuleManager:updateRule_whoisd():Exception!!!" + e.getMessage());
+         throw e;
+       }
+    }
+    logger.error( "RuleManager:updateRule_whoisd() finishing ruleId=" + ruleId + ", transport=" + transport );
+    if (errorInfo == null || errorInfo.size()==0) {
+        if (mode!=TERM_MODE) {
+          Functions.SavedFileToBackup(currentRuleFile, ".new");
+          finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
+          saveMessage("Updated rule: ", user, ruleId, transport);
+        }
+    } else {
+        if (mode != TERM_MODE) {
+          saveMessage("Failed to update rule: ", user, ruleId, transport);
+          saveRule(curbody,ruleId,rule.getTransport());
+          currentRuleFile.delete();
+        }
+    }
+    logger.error("RuleManager.updateRule_whoisd() return" );
     return errorInfo;
  }
 
@@ -570,7 +723,7 @@ public class RuleManager
           }
         }
   }
-    boolean checkPermission( String transport){
+    boolean checkSavePermission( String transport){
 //        logger.debug( "RuleManager:checkPermission()" );
         if( transport.equals(Transport.SMPP_TRANSPORT_NAME)){
             return savePermissionSMPP;
@@ -586,7 +739,7 @@ public class RuleManager
     private File saveCurrentRule(LinkedList li,String ruleId, String transport) {
         File ruleFile;
         File newFile = null;
-        if( checkPermission(transport) ){
+        if( checkSavePermission(transport) ){
             logger.debug("RuleManger:saveCurrentRule()");
             ruleFile = composeRuleFile(transport,ruleId);
             newFile = Functions.createNewFilenameForSave(ruleFile);
@@ -607,7 +760,7 @@ public class RuleManager
             }
 
         } else {
-            logger.error( "RuleManger.saveCurrentRule() Attempt to save unlocked rule ruleId='" + ruleId + "' . permission=false for " + transport );
+            logger.error( "RuleManger.saveCurrentRule() Attempt to save unlocked rule, ruleId='" + ruleId + "' . permission=false for " + transport );
 //            throw new SibincoException( "No permossion for save currentRule, id='" + ruleId + "' transport='" + transport + "'" );
         }
         return newFile;
@@ -615,7 +768,7 @@ public class RuleManager
 
   public void saveRule(LinkedList li,String ruleId, String transport) throws SibincoException
   {
-    if( checkPermission(transport) ){
+    if( checkSavePermission(transport) ){
         logger.debug("RuleManager:saveRule():RESAVING current rule body to disc!!!!");
         PrintWriter out = null;
         try {
@@ -643,6 +796,30 @@ public class RuleManager
     }
   }
 
+  public void saveRule_whoisd(LinkedList li,String ruleId, String transport) throws SibincoException
+  {
+        logger.debug("RuleManager:saveRule():RESAVING current rule body to disc!!!!");
+        PrintWriter out = null;
+        try {
+            File newFile= composeRuleFile(transport,ruleId);
+            out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), "UTF-8"));
+            for( Iterator i = li.listIterator(1); i.hasNext(); ){
+                out.println(i.next());
+            }
+        } catch (FileNotFoundException e) {
+            throw new SibincoException("Couldn't save new rule : Couldn't write to destination config filename: " + e.getMessage());
+        } catch (IOException e) {
+            logger.error("Couldn't save new rule settings", e);
+            throw new SibincoException("Couldn't save new rule template", e);
+        } finally {
+            if( out != null ){
+                out.flush();
+                out.close();
+            }
+        }
+
+  }
+
     public static final int STRING_WRITER = 1;
     public static final int CHAR_WRITER   = 0;
 
@@ -653,11 +830,9 @@ public class RuleManager
       PrintWriter out = null;
       File ruleFile = null;
       File tempFile = null;
-//      File tempFile1 = null;
-//      File backFile = null;
       try
       {
-        if( checkPermission(transport) ) {
+        if( checkSavePermission(transport) ) {
             logger.debug("RuleManager.saveRule() Saving rule to disc! file : " + ruleFile);
             ruleFile = composeRuleFile(transport,ruleId);
 
@@ -701,6 +876,109 @@ public class RuleManager
             out.flush();
             out.close();
           }
+          blocked = false;
+      }
+    }
+
+    private void saveRule_whoisd( BufferedReader reader, String ruleId, String transport ) throws SibincoException
+    {
+        logger.debug("RuleManager.saveRule() start" );
+        PrintWriter out = null;
+        File ruleFile = null;
+        File tempFile = null;
+        try
+        {
+              logger.debug("RuleManager.saveRule() Saving rule to disc! file : " + ruleFile);
+              ruleFile = composeRuleFile(transport,ruleId);
+
+              tempFile = composeRuleBackFile( transport, ruleId, ".tmp" );
+              out = new PrintWriter( new OutputStreamWriter( new FileOutputStream(tempFile), "UTF-8" ) ); //alter out = new PrintWriter( new FileWriter(newFile) );
+              ruleWriter( reader, out, STRING_WRITER );
+
+//            backFile = new File( tempFile.getAbsolutePath().substring(0, tempFile.getAbsolutePath().lastIndexOf("/")),
+//                                 tempFile.getName()+Functions.suffixDateFormat.format(new Date()) );
+//            Functions.checkCreateBackupDir( ruleFile );
+//            tempFile1 = composeRuleBackFile( transport, ruleId, ".tmp1" );
+
+
+//            logger.debug("RuleManager.saveRule() Move rule to backup: " + ruleFile);
+//            Functions.MoveFileToBackupDir( ruleFile, "");
+
+              logger.debug("RuleManager.saveRule() Move temp rule to rule: " + tempFile);
+              if( tempFile.renameTo( ruleFile ) ){
+                  return;
+              }
+              else{
+                  throw new SibincoException("Couldn't save new rule template, rename failed" );
+              }
+        }
+        catch (FileNotFoundException e) {
+            logger.error("RuleManager.saveRule() FileNotFoundException", e);
+            throw new SibincoException("Couldn't save new rule : Couldn't write to destination config filename: " + e.getMessage());
+        }
+        catch (IOException e) {
+//        tempFile.delete();    //          Functions.
+            logger.error("RuleManager.saveRule() IOException Couldn't save rule", e);
+            throw new SibincoException("Couldn't save new rule template", e);
+        }
+        finally {
+            if( out != null ){
+              out.flush();
+              out.close();
+            }
+            blocked = false;
+        }
+      }
+
+
+  private void saveRule_whois( BufferedReader reader, String ruleId, String transport ) throws SibincoException
+  {
+      logger.debug("RuleManager.saveRule() start" );
+      PrintWriter out = null;
+      File ruleFile = null;
+      File tempFile = null;
+      try
+      {
+            logger.debug("RuleManager.saveRule() Saving rule to disc! file : " + ruleFile);
+            ruleFile = composeRuleFile(transport,ruleId);
+
+            tempFile = composeRuleBackFile( transport, ruleId, ".tmp" );
+            out = new PrintWriter( new OutputStreamWriter( new FileOutputStream(tempFile), "UTF-8" ) ); //alter out = new PrintWriter( new FileWriter(newFile) );
+            ruleWriter( reader, out, STRING_WRITER );
+
+//            backFile = new File( tempFile.getAbsolutePath().substring(0, tempFile.getAbsolutePath().lastIndexOf("/")),
+//                                 tempFile.getName()+Functions.suffixDateFormat.format(new Date()) );
+//            Functions.checkCreateBackupDir( ruleFile );
+//            tempFile1 = composeRuleBackFile( transport, ruleId, ".tmp1" );
+
+
+//            logger.debug("RuleManager.saveRule() Move rule to backup: " + ruleFile);
+//            Functions.MoveFileToBackupDir( ruleFile, "");
+
+            logger.debug("RuleManager.saveRule() Move temp rule to rule: " + tempFile);
+            if( tempFile.renameTo( ruleFile ) ){
+                return;
+            }
+            else{
+                throw new SibincoException("Couldn't save new rule template, rename failed" );
+            }
+
+      }
+      catch (FileNotFoundException e) {
+          logger.error("RuleManager.saveRule() FileNotFoundException", e);
+          throw new SibincoException("Couldn't save new rule : Couldn't write to destination config filename: " + e.getMessage());
+      }
+      catch (IOException e) {
+//        tempFile.delete();    //          Functions.
+          logger.error("RuleManager.saveRule() IOException Couldn't save rule", e);
+          throw new SibincoException("Couldn't save new rule template", e);
+      }
+      finally {
+          if( out != null ){
+            out.flush();
+            out.close();
+          }
+          blocked = false;
       }
     }
 
@@ -769,7 +1047,7 @@ public class RuleManager
     }
 
     public void saveMessage(final String stringMessage, final String user, final String ruleId, final String transport) {
-      StatMessage message = new StatMessage(user, "Rule", stringMessage + "rule_"+ ruleId+".xml for transport " + transport);
+      StatMessage message = new StatMessage(user, "Rule", stringMessage + RULENAME_START+ ruleId + XML_EXT + " for transport " + transport);
       StatusManager.getInstance().addStatMessages(message);
     }
 
