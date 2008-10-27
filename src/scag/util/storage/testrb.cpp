@@ -645,7 +645,7 @@ public:
         if ( running ) {
             printf( "thread is running\n" );
             running = false;
-            Kill(16);
+            Kill(SIGUSR1);
             mtx_.wait();
         }
         printf( "leaving dtor\n" );

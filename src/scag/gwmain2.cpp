@@ -49,12 +49,12 @@ void registerSignalHandlers()
   sigdelset(&st, SIGHUP);  
   sigprocmask(SIG_SETMASK, &st, NULL);
 
-  sigdelset(&st,17);
+  sigdelset(&st, SIGUSR2);
   sigdelset(&st, SIGALRM);
   sigdelset(&st, SIGABRT);
   sigdelset(&st, SHUTDOWN_SIGNAL);
 
-  sigset(17,      sigHandler);
+  sigset(SIGUSR2, sigHandler);
   sigset(SIGFPE,  sigHandler);
   sigset(SIGILL,  sigHandler);
   signal(SIGABRT, sigHandler);
@@ -195,7 +195,7 @@ int main( int argc, char* argv[] )
 
         if(shutdownFlag == SHUTDOWN_SIGNAL)
             app->shutdown();
-        else if(shutdownFlag == 17)
+        else if(shutdownFlag == SIGUSR2)
             app->abortScag();
         else
             app->dumpScag();
