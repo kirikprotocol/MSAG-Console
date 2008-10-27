@@ -169,6 +169,7 @@ public:
     if(getpeername(sock,(sockaddr*)&addr,&len)==SOCKET_ERROR)
     {
       buf[0]=0;
+      return;
     }
 #ifdef linux
     unsigned char *a=(unsigned char*)&addr.sin_addr.s_addr;
