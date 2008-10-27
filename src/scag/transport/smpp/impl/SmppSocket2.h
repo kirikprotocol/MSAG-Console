@@ -246,6 +246,7 @@ protected:
   void Init()
   {
     lastActivity=time(NULL);
+    lastEnquireLink = time_t(0);
     outMon=0;
     sock=0;
       peer_ = 0;

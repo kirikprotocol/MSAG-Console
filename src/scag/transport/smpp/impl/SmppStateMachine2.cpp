@@ -304,10 +304,10 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
     const char *cmdName;
     switch ( cmdType ) {
     case SUBMIT :
-        cmdName = "SubmitSm";
+        cmdName = "Submit";
         break;
     case DELIVERY:
-        cmdName = "DeliverySm";
+        cmdName = "Delivery";
         break;
     case DATASM :
         cmdName = "DataSm";
@@ -777,23 +777,22 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
 
     if (st.status != re::STATUS_OK )
     {
+        std::auto_ptr< SmppCommand > resp;
         switch (cmd->getCommandId()) {
         case SUBMIT :
-            src->putCommand
-                ( SmppCommand::makeSubmitSmResp
-                  ("0",smscmd.get_orgDialogId(),st.result,sms.getIntProperty(Tag::SMPP_DATA_SM)));
+            resp = SmppCommand::makeSubmitSmResp
+                ("0",smscmd.get_orgDialogId(),st.result,sms.getIntProperty(Tag::SMPP_DATA_SM));
             break;
         case DELIVERY :
-            src->putCommand
-                ( SmppCommand::makeDeliverySmResp( "0", smscmd.get_orgDialogId(), st.result ));
+            resp = SmppCommand::makeDeliverySmResp( "0", smscmd.get_orgDialogId(), st.result );
             break;
         case DATASM :
-            src->putCommand
-                (SmppCommand::makeDataSmResp("0", smscmd.get_orgDialogId(), st.result));
+            resp = SmppCommand::makeDataSmResp("0", smscmd.get_orgDialogId(), st.result);
             break;
         default:
             break;
         }
+        if (resp.get()) src->putCommand( resp );
         registerEvent( statevent, src, dst, (char*)routeId, st.result );
         if ( session.get() ) session->closeCurrentOperation();
         hrt.stop();
@@ -822,6 +821,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             break;
         case DELIVERY:
             resp = SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),failed);
+            break;
         case DATASM:
             resp = SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),failed);
             break;

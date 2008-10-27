@@ -326,6 +326,7 @@ struct SmsCommand : public SmppCommandData
     original_ussd_op(-1),
     orgDialogId_(-1),
     sliceCount_(1), 
+    slicingRespPolicy_(router::SlicingRespPolicy::ALL),
     slicedRespSent_(false),
     ref_(1),
     hasroute_(false) {}
@@ -336,6 +337,7 @@ struct SmsCommand : public SmppCommandData
     original_ussd_op(-1),
     orgDialogId_(-1),
     sliceCount_(1),
+    slicingRespPolicy_(router::SlicingRespPolicy::ALL),
     slicedRespSent_(false),
     ref_(1),
     hasroute_(false) {}

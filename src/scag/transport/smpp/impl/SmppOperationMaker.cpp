@@ -443,9 +443,10 @@ void SmppOperationMaker::postProcess( re::RuleStatus& st )
 
     } else {
 
+        const bool waitreceipt = op->flagSet(OperationFlags::WAIT_RECEIPT);
         if ( op->getStatus() == OPERATION_COMPLETED )
             session_->closeCurrentOperation();
-        if ( op->flagSet(OperationFlags::WAIT_RECEIPT) ) {
+        if ( waitreceipt ) {
             session_->createOperation( *cmd_.get(), CO_RECEIPT );
             // make sure receipt is not a current operation
             session_->setCurrentOperation( SCAGCommand::invalidOpId() );

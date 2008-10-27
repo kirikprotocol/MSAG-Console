@@ -152,7 +152,7 @@ struct SmppEntity
   {
     return info.systemId;
   }
-  void putCommand( std::auto_ptr<SmppCommand> cmd )
+  void putCommand( std::auto_ptr<SmppCommand>& cmd )
   {
     MutexGuard mg(mtx);
     switch(bt)
