@@ -43,7 +43,7 @@ public:
     virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* hrt = 0);
     virtual void processSession(Session& session, RuleStatus& rs);
 
-    virtual Hash<TransportType> getTransportTypeHash() {return TransportTypeHash;}
+    virtual Hash<TransportType>& getTransportTypeHash() {return TransportTypeHash;}
     virtual Hash<Property>& getConstants() { return ConstantsHash; };
 
 //    virtual bool findTransport(const char * name, TransportType& transportType);

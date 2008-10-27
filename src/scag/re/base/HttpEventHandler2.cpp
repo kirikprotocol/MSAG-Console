@@ -1,7 +1,7 @@
 #include "HttpEventHandler2.h"
 #include "HttpAdapter2.h"
 #include "ActionContext2.h"
-#include "scag/sessions/base/SessionManager2.h"
+// #include "scag/sessions/base/SessionManager2.h"
 #include "scag/sessions/base/Operation.h"
 #include "RuleEngine2.h"
 #include "EventHandlerType.h"
