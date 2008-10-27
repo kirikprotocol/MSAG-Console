@@ -65,7 +65,7 @@ public class QuizBuilder {
       logger.error("Parsing exception", e);
       throw new QuizException("Parsing exception", e);
     } finally {
-      if(stream!=null) {
+      if (stream != null) {
         try {
           stream.close();
         } catch (IOException e) {

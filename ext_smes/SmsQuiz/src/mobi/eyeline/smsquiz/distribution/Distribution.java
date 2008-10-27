@@ -94,12 +94,12 @@ public class Distribution {
 
   public String getDays(String delim) {
     StringBuilder builder = new StringBuilder();
-    if(days!=null) {
+    if (days != null) {
       Iterator<WeekDays> iter = days.iterator();
-      if(iter.hasNext()) {
+      if (iter.hasNext()) {
         builder.append(iter.next().toString());
       }
-      while(iter.hasNext()) {
+      while (iter.hasNext()) {
         builder.append(delim).append(iter.next().toString());
       }
     }

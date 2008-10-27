@@ -53,18 +53,19 @@ public class QuizManager implements Observer {
   private String dirModifiedAb;
 
   public static void init(final String configFile, DistributionManager distributionManager, ReplyStatsDataSource replyStatsDataSource,
-                      SubscriptionManager subscriptionManager) throws QuizException  {
+                          SubscriptionManager subscriptionManager) throws QuizException {
     quizManager = new QuizManager(configFile, distributionManager, replyStatsDataSource, subscriptionManager);
   }
 
   public static QuizManager getInstance() {
     return quizManager;
   }
-  private QuizManager(final String configFile,DistributionManager dManager,
+
+  private QuizManager(final String configFile, DistributionManager dManager,
                       ReplyStatsDataSource rSource,
                       SubscriptionManager sManager) throws QuizException {
-    if((configFile==null)||(rSource==null)||(sManager==null)
-                                                          ||(dManager==null)) {
+    if ((configFile == null) || (rSource == null) || (sManager == null)
+        || (dManager == null)) {
       logger.error("Some arguments are null");
       throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
@@ -132,19 +133,19 @@ public class QuizManager implements Observer {
   }
 
   public void stop() {
-    if(scheduledDirListener!=null) {
+    if (scheduledDirListener != null) {
       scheduledDirListener.shutdown();
     }
-    if(scheduledQuizCollector!=null) {
+    if (scheduledQuizCollector != null) {
       scheduledQuizCollector.shutdown();
     }
-    if(replyStatsDataSource!=null) {
+    if (replyStatsDataSource != null) {
       replyStatsDataSource.shutdown();
     }
-    if(subscriptionManager!=null) {
+    if (subscriptionManager != null) {
       subscriptionManager.shutdown();
     }
-    if(distributionManager!=null) {
+    if (distributionManager != null) {
       distributionManager.shutdown();
     }
   }
@@ -157,9 +158,9 @@ public class QuizManager implements Observer {
     if ((quiz = quizesMap.get(address)) != null) {
       return quiz.handleSms(oa, text);
     }
-    logger.warn("Quiz not found for address: "+address);
-    if(logger.isInfoEnabled()) {
-      logger.info("Available addresses: "+quizesMap.keySet().toString());
+    logger.warn("Quiz not found for address: " + address);
+    if (logger.isInfoEnabled()) {
+      logger.info("Available addresses: " + quizesMap.keySet().toString());
     }
     return null;
   }
@@ -205,13 +206,13 @@ public class QuizManager implements Observer {
       writeError(notification.getFileName(), e);
       throw e;
     }
-    if(logger.isInfoEnabled()){
-      logger.info("Quiz modified: "+fileName);
+    if (logger.isInfoEnabled()) {
+      logger.info("Quiz modified: " + fileName);
     }
   }
 
   private void createQuiz(Notification notification) throws QuizException {
-    if(logger.isInfoEnabled()) {
+    if (logger.isInfoEnabled()) {
       logger.info("Create quiz...");
     }
     String fileName = notification.getFileName();
@@ -229,22 +230,21 @@ public class QuizManager implements Observer {
       }
       makeSubscribedOnly(distribution);
       String id;
-      if ((id=quiz.getId())!= null) {
-        if(logger.isInfoEnabled()) {
-          logger.info("Quizes status will be repaired, current id: "+id);
+      if ((id = quiz.getId()) != null) {
+        if (logger.isInfoEnabled()) {
+          logger.info("Quizes status will be repaired, current id: " + id);
         }
 
-        id =  distributionManager.repairStatus(id, fileName+".distr.error",
-            new QuizManagerTask(quizesMap,quiz), distribution);
+        id = distributionManager.repairStatus(id, fileName + ".distr.error",
+            new QuizManagerTask(quizesMap, quiz), distribution);
 
-        if(logger.isInfoEnabled()) {
-          logger.info("Quizes status repaired, new id: "+id);
+        if (logger.isInfoEnabled()) {
+          logger.info("Quizes status repaired, new id: " + id);
         }
-      }
-      else {
+      } else {
         try {
           id = distributionManager.createDistribution(distribution,
-              new QuizManagerTask(quizesMap,quiz), fileName+".distr.error");
+              new QuizManagerTask(quizesMap, quiz), fileName + ".distr.error");
         } catch (DistributionException e) {
           logger.error("Unable to create distribution", e);
           throw new QuizException("Unable to create distribution", e);
@@ -252,8 +252,8 @@ public class QuizManager implements Observer {
       }
       quiz.setId(id);
       resolveConflict(quiz);
-      if(logger.isInfoEnabled()) {
-        logger.info("Quiz created: "+quiz);
+      if (logger.isInfoEnabled()) {
+        logger.info("Quiz created: " + quiz);
       }
     }
     catch (Exception e) {
@@ -285,16 +285,13 @@ public class QuizManager implements Observer {
         if (subscriptionManager.subscribed(msisdn)) {
           writer.print(msisdn);
           writer.print("|");
-          writer.print(tokenizer.nextToken());           
+          writer.print(tokenizer.nextToken());
 
-          while(tokenizer.hasMoreTokens()) {
+          while (tokenizer.hasMoreTokens()) {
             writer.write(",");
             writer.print(tokenizer.nextToken());
           }
           writer.println();
-          if (logger.isInfoEnabled()) {
-            logger.info("Abonent subscribed: " + msisdn);
-          }
         }
       }
       writer.flush();

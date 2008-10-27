@@ -58,7 +58,7 @@ class StatsFileImpl implements StatsFile {
       randomAccessFile.seek(randomAccessFile.length());
     } catch (IOException e) {
       logger.error("Can't create io stream", e);
-      if(randomAccessFile!=null) {
+      if (randomAccessFile != null) {
         try {
           randomAccessFile.close();
         } catch (IOException e1) {
@@ -74,7 +74,7 @@ class StatsFileImpl implements StatsFile {
 
   }
 
-  private void _initTree(){
+  private void _initTree() {
     String truncateName = filePath.substring(0, filePath.lastIndexOf("."));
     treeFileName = truncateName + ".tree";
     stringsRTree = new StringsRTree<List<Long>>();
@@ -93,6 +93,7 @@ class StatsFileImpl implements StatsFile {
   }
 
   private boolean notInitTree = true;
+
   public void add(Reply reply) throws FileStatsException {
     if ((reply.getDate() == null) || (reply.getOa() == null) || (reply.getText() == null)) {
       logger.error("Some arguments are missed");
@@ -100,8 +101,8 @@ class StatsFileImpl implements StatsFile {
     }
 
     try {
-      if(notInitTree) {
-        if ((!new File(treeFileName).exists())&&(randomAccessFile.length() > 1)) {      // ReplyFile isn't empty, tree file doesn't exist => system crushed previously
+      if (notInitTree) {
+        if ((!new File(treeFileName).exists()) && (randomAccessFile.length() > 1)) {      // ReplyFile isn't empty, tree file doesn't exist => system crushed previously
           long prevPosition = randomAccessFile.getFilePointer();
           randomAccessFile.seek(0);
 
@@ -122,7 +123,7 @@ class StatsFileImpl implements StatsFile {
           }
           randomAccessFile.seek(prevPosition);
         }
-        notInitTree=false;
+        notInitTree = false;
       }
       long filePointer = randomAccessFile.getFilePointer();
       randomAccessFile.writeBytes(dateFormat.format(reply.getDate()));
@@ -204,9 +205,9 @@ class StatsFileImpl implements StatsFile {
       reply.setDa(da);
       reply.setDate(date);
       reply.setOa(tokenizer.nextToken());
-      String text=tokenizer.nextToken();
-      while(tokenizer.hasMoreTokens()) {
-        text+=","+tokenizer.nextToken();
+      String text = tokenizer.nextToken();
+      while (tokenizer.hasMoreTokens()) {
+        text += "," + tokenizer.nextToken();
       }
       reply.setText(text);
 

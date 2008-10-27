@@ -1,7 +1,5 @@
 package mobi.eyeline.smsquiz.quizmanager.dirlistener;
 
-import mobi.eyeline.smsquiz.quizmanager.dirlistener.Notification;
-import mobi.eyeline.smsquiz.quizmanager.dirlistener.QuizFile;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
 
 import java.io.File;
@@ -29,7 +27,7 @@ public class DirListener extends Observable implements Runnable {
   private Condition notRun;
   private static final Pattern PATTERN = Pattern.compile("(.*\\.xml)");
   private int run = -1;
-  private int remove =-1;
+  private int remove = -1;
 
   public DirListener(final String quizDir) throws QuizException {
     if (quizDir == null) {
@@ -55,10 +53,10 @@ public class DirListener extends Observable implements Runnable {
 
     try {
       lock.lock();
-      if(remove==1) {
+      if (remove == 1) {
         notRemove.await();
       }
-      run=1;
+      run = 1;
 
       File[] files = dirQuiz.listFiles(fileFilter);
       for (File f : files) {
@@ -83,7 +81,7 @@ public class DirListener extends Observable implements Runnable {
             logger.info("Quiz file created: " + fileName);
           }
         }
-        run=0;
+        run = 0;
         notRun.signal();
       }
     } catch (Exception e) {
@@ -99,21 +97,21 @@ public class DirListener extends Observable implements Runnable {
     if (fileName == null) {
       throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
-    try{
+    try {
       lock.lock();
-      if(run==1) {
+      if (run == 1) {
         notRun.await();
       }
-      remove=1;
+      remove = 1;
       if (rename) {
         File file = new File(fileName);
         file.renameTo(new File(fileName + ".old"));
       }
       filesMap.remove(fileName);
-      remove=0;
+      remove = 0;
       notRemove.signal();
     } catch (InterruptedException e) {
-        logger.error("Error during remove file from storage: "+fileName, e);
+      logger.error("Error during remove file from storage: " + fileName, e);
     } finally {
       lock.unlock();
     }

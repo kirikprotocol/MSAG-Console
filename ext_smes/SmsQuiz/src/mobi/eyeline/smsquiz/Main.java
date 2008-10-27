@@ -36,13 +36,13 @@ public class Main {
   private static int quizIndex = 1;
   private static ScheduledExecutorService scheduledQuizCreator;
 
-  public static void main(String[] args){
+  public static void main(String[] args) {
     //todo remove
-      init();
-    final String conf="conf/config.xml";
+    init();
+    final String conf = "conf/config.xml";
     MessageHandler mh = null;
     QuizManager quizManager = null;
-    try{
+    try {
       ConnectionPoolFactory.init("conf/config.xml");
 
       QuizManager.init(conf, new DistributionInfoSmeManager(conf),
@@ -54,60 +54,59 @@ public class Main {
       final SMPPTransceiver transceiver = new SMPPTransceiver(cfg, "");
       outgoingQueue = transceiver.getOutQueue();
       transceiver.connect();
-      mh = new MessageHandler(conf,transceiver.getInQueue(),transceiver.getOutQueue());
+      mh = new MessageHandler(conf, transceiver.getInQueue(), transceiver.getOutQueue());
       mh.start();
       quizManager.start();
 
-       //todo remove
+      //todo remove
       scheduledQuizCreator = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
         public Thread newThread(Runnable r) {
           return new Thread(r, "QuizCreator");
         }
       });
-      scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(),10 ,1800 ,TimeUnit.SECONDS);
+      scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 1800, TimeUnit.SECONDS);
       //todo remove
 
     } catch (Exception e) {
-      logger.error("",e);
+      logger.error("", e);
       e.printStackTrace();
-      if(quizManager!=null) {
+      if (quizManager != null) {
         quizManager.stop();
       }
-      if(mh!=null) {
+      if (mh != null) {
         try {
           mh.shutdown();
         } catch (InterruptedException e1) {
-          logger.error("Error during stoping sme",e1);
+          logger.error("Error during stoping sme", e1);
           e.printStackTrace();
         }
       }
     }
   }
 
-
   //todo remove all
 
   private static class QuizCreator extends Thread {
     public void run() {
-      try{
-        createAbFile("test_QuizManager/opros"+quizIndex+".xml.csv", 791366, 791367, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros"+quizIndex+".xml", 10, "170", "170","Short question");
+      try {
+        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", 791366, 791367, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 10, "170", "170", "Short question");
         quizIndex++;
-        createAbFile("test_QuizManager/opros"+quizIndex+".xml.csv", 791367, 791368, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros"+quizIndex+".xml", 15, "180", "180", "Medium question");
+        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", 791367, 791368, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 15, "180", "180", "Medium question");
         quizIndex++;
-        createAbFile("test_QuizManager/opros"+quizIndex+".xml.csv", 791368, 791369, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros"+quizIndex+".xml", 20, "190", "190", "Long question");
+        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", 791368, 791369, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 20, "190", "190", "Long question");
         quizIndex++;
       } catch (SubManagerException e) {
-        logger.error("Error creatin quiz files",e);
+        logger.error("Error creatin quiz files", e);
         e.printStackTrace();
       }
     }
   }
 
   public static int send(String da, String oa, String text) {
-    if(outgoingQueue==null) {
+    if (outgoingQueue == null) {
       logger.error("Error during sending message, outgoingQueue==null");
       return 1;
     }
@@ -118,18 +117,17 @@ public class Main {
     m.setMessageString(text);
     outObj.setMessage(m);
     try {
-      outgoingQueue.offer(outObj,3000);
-      if(logger.isInfoEnabled()) {
-        logger.info("Message send to abonent: "+da+" "+oa+" "+text);
+      outgoingQueue.offer(outObj, 3000);
+      if (logger.isInfoEnabled()) {
+        logger.info("Message send to abonent: " + da + " " + oa + " " + text);
       }
       return 0;
     } catch (ShutdownedException e) {
-      logger.error("Error during sending message",e);
+      logger.error("Error during sending message", e);
       e.printStackTrace();
       return 1;
     }
   }
-
 
 
   private static void init() {
@@ -172,8 +170,13 @@ public class Main {
       writer.print("        <date-end>");
       writer.print(dateFormat.format(dateEnd));
       writer.println("</date-end>");
-      writer.print("        <question>");writer.println(question);writer.println("</question>");
-      writer.print("        <abonents-file>");writer.print(fileName);writer.print(".csv");writer.println("</abonents-file>");
+      writer.print("        <question>");
+      writer.println(question);
+      writer.println("</question>");
+      writer.print("        <abonents-file>");
+      writer.print(fileName);
+      writer.print(".csv");
+      writer.println("</abonents-file>");
       writer.println("    </general>");
 
       writer.println("    <distribution>");
@@ -222,8 +225,8 @@ public class Main {
   }
 
   private static void createAbFile(String fileName, long from, long till, SubscriptionManager subscriptionManager) {
-    from*=100000;
-    till*=100000;
+    from *= 100000;
+    till *= 100000;
 
     PrintWriter writer = null;
 

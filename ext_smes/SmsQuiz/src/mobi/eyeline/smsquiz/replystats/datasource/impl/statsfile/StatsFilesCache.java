@@ -1,7 +1,5 @@
 package mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile;
 
-import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.FileStatsException;
-import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.StatsFile;
 import mobi.eyeline.smsquiz.replystats.Reply;
 
 import java.util.*;
@@ -56,7 +54,7 @@ public class StatsFilesCache {
 
       delayFirst = config.getLong("fileCollector.time.first.delay");
       iterationPeriod = config.getLong("fileCollector.time.period");
-      timeLimit = 1000*config.getLong("fileCollector.time.limit");
+      timeLimit = 1000 * config.getLong("fileCollector.time.limit");
       if (fileNamePattern == null) {
         throw new FileStatsException("statsFile.filename.pattern not found in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
       }
@@ -72,7 +70,7 @@ public class StatsFilesCache {
         return new Thread(r, "ReplyFileCollector");
       }
     });
-      
+
     fileCollectorScheduler.scheduleAtFixedRate(new FileCollector(false), delayFirst, iterationPeriod, java.util.concurrent.TimeUnit.SECONDS);
 
   }

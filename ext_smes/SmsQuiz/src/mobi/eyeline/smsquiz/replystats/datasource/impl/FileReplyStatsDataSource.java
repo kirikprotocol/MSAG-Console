@@ -8,7 +8,6 @@ import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
 
 import java.util.*;
-import java.io.File;
 
 import org.apache.log4j.Logger;
 
@@ -49,7 +48,6 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
   }
 
 
- 
   public Reply getLastReply(String oa, String da, Date from, Date till) throws ReplyDataSourceException {
     Reply reply = null;
     if ((oa == null) || (da == null) || (from == null) || (till == null)) {

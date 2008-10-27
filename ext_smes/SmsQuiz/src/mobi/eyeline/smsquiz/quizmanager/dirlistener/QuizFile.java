@@ -11,7 +11,7 @@ class QuizFile {
   private String fileName;
   private long lastModified;
 
-  public QuizFile(String fileName, long lastModified){
+  public QuizFile(String fileName, long lastModified) {
     this.lastModified = lastModified;
     this.fileName = fileName;
   }

@@ -67,11 +67,11 @@ public class Quiz {
     long oaNumber = Long.parseLong(oa.substring(oa.lastIndexOf("+") + 1, oa.length()));
     ReplyPattern replyPattern = getReplyPattern(text);
     if (replyPattern != null) {
-      if(jstore.get(oaNumber)==maxRepeat) {
-        if(logger.isInfoEnabled()) {
-          logger.info("DON'T HANDLE: Max repeat for abonent: "+oa);
+      if (jstore.get(oaNumber) == maxRepeat) {
+        if (logger.isInfoEnabled()) {
+          logger.info("DON'T HANDLE: Max repeat for abonent: " + oa);
         }
-        return  null;
+        return null;
       }
       jstore.put(oaNumber, maxRepeat);
       result = new Result(replyPattern.getAnswer(), Result.ReplyRull.OK, sourceAddress);
@@ -92,8 +92,8 @@ public class Quiz {
         }
       } else {
         jstore.put(oaNumber, 0);
-        if(logger.isInfoEnabled()) {
-          logger.info("DON'T HANDLE: Max repeat for abonent: "+oa);
+        if (logger.isInfoEnabled()) {
+          logger.info("DON'T HANDLE: Max repeat for abonent: " + oa);
           logger.info("Max repeat=0");
         }
         return null;
@@ -102,8 +102,8 @@ public class Quiz {
 
     try {
       replyStatsDataSource.add(new Reply(new Date(), oa, destAddress, text));
-      if(logger.isInfoEnabled()) {
-        logger.info("Sms stored: "+oa+" "+destAddress+" "+text);
+      if (logger.isInfoEnabled()) {
+        logger.info("Sms stored: " + oa + " " + destAddress + " " + text);
       }
     } catch (ReplyDataSourceException e) {
       logger.error("Can't add reply", e);

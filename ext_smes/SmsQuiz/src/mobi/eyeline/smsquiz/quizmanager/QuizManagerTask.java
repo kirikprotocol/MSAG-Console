@@ -9,10 +9,10 @@ import org.apache.log4j.Logger;
 /**
  * author: alkhal
  */
-public class QuizManagerTask implements Runnable{
+public class QuizManagerTask implements Runnable {
 
   private static Logger logger = Logger.getLogger(QuizManagerTask.class);
-  
+
   private Map<String, Quiz> quizMap;
 
   private Quiz quiz;
@@ -24,12 +24,10 @@ public class QuizManagerTask implements Runnable{
 
   public void run() {
     quizMap.put(quiz.getDestAddress(), quiz);
-    if(logger.isInfoEnabled()){
-      logger.info("Quiz is available now for receiving sms: "+ quiz);
+    if (logger.isInfoEnabled()) {
+      logger.info("Quiz is available now for receiving sms: " + quiz);
     }
   }
-
-
 
 
 }
