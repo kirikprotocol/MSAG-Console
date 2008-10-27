@@ -40,13 +40,27 @@ public class RuleManagerWrapper {
     lockedRules = new ArrayList(3);
   }
 
-  public LinkedList AddRule(final Rule rule, final String service, final String transport) throws SibincoException, IOException {
+  public LinkedList AddRule( final Rule rule, final String service, final String transport ) throws SibincoException, IOException {
   try {
-      logger.debug( "RuleManagerWrapper.AddRule() start" );
+    logger.debug( "RuleManagerWrapper.AddRule() start" );
     addRuleCommand("AddRule", service ,transport);
-      rulemanager.setSavePermissions( true );
-      logger.debug( "RuleManagerWrapper.updateRule() return( AddRule(...) )" );
-    return rulemanager.AddRule(getRuleContent(getRuleContentAsString(rule)), service, transport, RuleManager.TERM_MODE, WHOISD_USER);
+    logger.debug( "RuleManagerWrapper.updateRule() return( AddRule(...) )" );
+    return rulemanager.AddRule(getRuleContent( getRuleContentAsString(rule)), service, transport, RuleManager.TERM_MODE, WHOISD_USER );
+  } catch(SibincoException se) {
+    if (se instanceof StatusDisconnectedException) {
+     return null;
+    } else {
+      throw se;
+    }
+   }
+  }
+
+  public LinkedList AddRule_whoisd(final Rule rule, final String service, final String transport) throws SibincoException, IOException {
+  try {
+      logger.debug( "RuleManagerWrapper.AddRule_whoisd() start with service=" + service + ", transport=" + transport);
+      addRuleCommand("AddRule", service ,transport);
+      logger.debug( "RuleManagerWrapper.AddRule_whoisd() return( AddRule(...) )" );
+      return rulemanager.AddRule_whoisd( getRuleContent(getRuleContentAsString(rule)), service, transport, RuleManager.TERM_MODE, WHOISD_USER );
   } catch(SibincoException se) {
     if (se instanceof StatusDisconnectedException) {
      return null;
@@ -58,16 +72,52 @@ public class RuleManagerWrapper {
 
   public LinkedList updateRule(final Rule rule, final String service, final String transport) throws SibincoException, IOException {
   try {
-    logger.debug( "RuleManagerWrapper.updateRule() start" );
+    logger.debug( "RuleManagerWrapper.updateRule() start with service=" + service + " transport=" + transport);
     addRuleCommand("updateRule", service , transport);
-    rulemanager.setSavePermissions( true );
     logger.debug( "RuleManagerWrapper.updateRule() return( updateRule(...) )" );
-    return rulemanager.updateRule(getRuleContent(getRuleContentAsString(rule)),service,transport, RuleManager.TERM_MODE, WHOISD_USER);
+    return rulemanager.updateRule( getRuleContent(getRuleContentAsString(rule)),service,transport, RuleManager.TERM_MODE, WHOISD_USER );
   } catch(SibincoException se) {
      if (se instanceof StatusDisconnectedException) {
-     return null;
-    } else {
-      throw se;
+        return null;
+     } else {
+        throw se;
+    }
+   }
+  }
+
+  public LinkedList updateRule_whoisd( final Rule rule, final String service, final String transport ) throws SibincoException, IOException {
+  try {
+    logger.debug( "RuleManagerWrapper.updateRule_whoisd() start with service=" + service + ", transport=" + transport);
+    addRuleCommand("updateRule", service , transport);
+    logger.debug( "RuleManagerWrapper.updateRule_whoisd() return( updateRule_whoisd(...) )" );
+    return rulemanager.updateRule_whoisd(getRuleContent( getRuleContentAsString(rule)),service,transport, RuleManager.TERM_MODE, WHOISD_USER );
+  } catch(SibincoException se) {
+     if (se instanceof StatusDisconnectedException) {
+        return null;
+     } else {
+        throw se;
+    }
+   }
+  }
+
+  public LinkedList updateRule_new(final Rule rule, final String service, final String transport) throws SibincoException, IOException {
+  try {
+    logger.debug( "RuleManagerWrapper.updateRule() start with service=" + service + " transport=" + transport);
+    String nameForCheck = (service+"_"+transport).toUpperCase();
+    logger.debug( "RuleManagerWrapper.updateRule() name=" + nameForCheck );
+    if( !rulemanager.checkBlockedRule( nameForCheck ) ){
+        addRuleCommand("updateRule", service , transport);
+        logger.debug( "RuleManagerWrapper.updateRule() return( updateRule(...) )" );
+        return rulemanager.updateRule(getRuleContent(getRuleContentAsString(rule)),service,transport, RuleManager.TERM_MODE, WHOISD_USER);
+    }else{
+        logger.debug( "RuleManagerWrapper.updateRule() RULE '" + nameForCheck + "' blocked" );
+        throw new SibincoException( "RMW.updateRule() couldn't update rule for service=" + service + " transport=" + transport);
+    }
+  } catch(SibincoException se) {
+     if (se instanceof StatusDisconnectedException) {
+        return null;
+     } else {
+        throw se;
     }
    }
   }
@@ -87,7 +137,10 @@ public class RuleManagerWrapper {
 
   public RuleState getRuleStateAndLock(String ruleId, String transport) throws WHOISDException {
     RuleState curRuleState =  rulemanager.getRuleStateAndLock(ruleId,transport);
-    if (curRuleState.getLocked()) throw new WHOISDException("Rule ["+transport+"] is editing in MSAG web admin console right now");
+
+    if (curRuleState.getLocked())
+        throw new WHOISDException("Rule [" + transport + "] with id [" + ruleId + "] is editing in MSAG web admin console right now");
+
     lockedRules.add(Rule.composeComplexId(ruleId, transport));
     return curRuleState;
   }
