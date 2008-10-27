@@ -25,7 +25,7 @@ public class Distribution {
   private boolean txmode;
 
   public Distribution() {
-    days = EnumSet.allOf(WeekDays.class);
+    days = EnumSet.noneOf(WeekDays.class);
   }
 
   public String getFilePath() {

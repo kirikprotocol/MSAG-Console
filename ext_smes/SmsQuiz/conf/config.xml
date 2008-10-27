@@ -37,10 +37,12 @@
       <param name="smsc.console.port">39826</param>
       <param name="smsc.console.access.login">admin</param>
       <param name="smsc.console.access.password">password</param>
-      <param name="smsc.console.code.ok">+ 100</param>
+      <param name="smsc.console.code.ok">100</param>
       <param name="smsc.console.command.create">infosme distr create</param>
       <param name="smsc.console.command.status">infosme distr status</param>
-      <param name="infosme.max.wait.creation">300</param> <!-- seconds -->
+      <param name="smsc.console.connect.timeout">20</param> <!-- seconds --> 
+      <param name="smsc.console.closer.period">60</param> <!-- seconds -->
+      <param name="infosme.max.wait.creation">1800</param> <!-- seconds -->
       <param name="infosme.success.status">GENERATED</param>
       <param name="infosme.inprogress.status">INPROGRESS</param>
 

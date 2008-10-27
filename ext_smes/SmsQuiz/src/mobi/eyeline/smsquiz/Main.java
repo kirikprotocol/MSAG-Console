@@ -64,7 +64,7 @@ public class Main {
           return new Thread(r, "QuizCreator");
         }
       });
-      scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 1800, TimeUnit.SECONDS);
+      scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 5400, TimeUnit.SECONDS);
       //todo remove
 
     } catch (Exception e) {
@@ -90,13 +90,13 @@ public class Main {
     public void run() {
       try {
         createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", 791366, 791367, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 10, "170", "170", "Short question");
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 60, "170", "170", "Short question");
         quizIndex++;
         createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", 791367, 791368, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 15, "180", "180", "Medium question");
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 70, "180", "180", "Medium question");
         quizIndex++;
         createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", 791368, 791369, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 20, "190", "190", "Long question");
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 80, "190", "190", "Long question");
         quizIndex++;
       } catch (SubManagerException e) {
         logger.error("Error creatin quiz files", e);
@@ -183,11 +183,16 @@ public class Main {
       writer.print("        <source-address>");
       writer.print(oa);
       writer.println("</source-address>");
-      writer.println("        <time-begin>12:00</time-begin>");
-      writer.println("        <time-end>20:00</time-end>");
-      writer.println("        <days>");
+      writer.println("        <time-begin>00:01</time-begin>");
+      writer.println("        <time-end>23:59</time-end>");
+      writer.println("        <days>");         //Mon, Tue, Wed, Thu, Fri, Sat, Sun
       writer.println("            <day>Mon</day>");
       writer.println("            <day>Sun</day>");
+      writer.println("            <day>Tue</day>");
+      writer.println("            <day>Wed</day>");
+      writer.println("            <day>Thu</day>");
+      writer.println("            <day>Fri</day>");
+      writer.println("            <day>Sat</day>");
       writer.println("        </days>");
       writer.println("        <txmode>transaction</txmode>");
       writer.println("    </distribution>");
