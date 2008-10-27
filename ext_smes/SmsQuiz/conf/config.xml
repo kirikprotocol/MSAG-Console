@@ -40,7 +40,7 @@
       <param name="smsc.console.code.ok">+ 100</param>
       <param name="smsc.console.command.create">infosme distr create</param>
       <param name="smsc.console.command.status">infosme distr status</param>
-      <param name="infosme.max.wait.creation">100000</param> <!-- seconds -->
+      <param name="infosme.max.wait.creation">300</param> <!-- seconds -->
       <param name="infosme.success.status">GENERATED</param>
       <param name="infosme.inprogress.status">INPROGRESS</param>
 
