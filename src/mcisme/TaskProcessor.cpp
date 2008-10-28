@@ -252,7 +252,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   } catch(ConfigException& exc) {
     sendAbntOnlineNotificationPeriodInHours = 12;
   }
-  _sendAbntOnlineNotificationPeriod = sendAbntOnlineNotificationPeriodInHours * 60;
+
+  _sendAbntOnlineNotificationPeriod = sendAbntOnlineNotificationPeriodInHours * 3600;
 
   smsc::misscall::MissedCallProcessor::instance_type_t instance_type;
 
@@ -880,9 +881,10 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
 
   if ( !needNotify(profile, pInfo) ) return;
 
+  smsc_log_info(logger, "_sendAbntOnlineNotificationPeriod=%d, pInfo->lastCallingTime=%d,time(0) - pInfo->lastCallingTime=%d",_sendAbntOnlineNotificationPeriod,pInfo->lastCallingTime,  time(0) - pInfo->lastCallingTime);
   if ( time(0) - pInfo->lastCallingTime > _sendAbntOnlineNotificationPeriod ) {
     char lastCallingTimeStr[32];
-    smsc_log_info(logger, "last calling time=[%s], notificationPeriod was expired. Cancel sending online notification to calling abonent", cTime(&pInfo->lastCallingTime, lastCallingTimeStr, sizeof(lastCallingTimeStr)));
+    smsc_log_info(logger, "last calling time=[%s], notificationPeriod was expired. Cancel sending online notification to calling abonents", cTime(&pInfo->lastCallingTime, lastCallingTimeStr, sizeof(lastCallingTimeStr)));
     return;
   }
 
@@ -926,7 +928,7 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
     smsc_log_debug(logger, "Notify message = %s to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
 
     messageSender->send(messageSender->getSequenceNumber(), msg);
-    store_N_Event_in_logstore(caller.getText(), abnt);
+    store_N_Event_in_logstore(abnt, caller.getText());
   }
 }
 
