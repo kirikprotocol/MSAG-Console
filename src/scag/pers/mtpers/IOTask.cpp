@@ -144,7 +144,7 @@ void IOTask::checkConnectionTimeout(Multiplexer::SockArray& error) {
 }
 
 inline bool IOTask::isTimedOut(Socket* s, time_t now) {
-  return now - SocketData::getTimestamp(s) >= connectionTimeout_ * 1000;
+  return now - SocketData::getTimestamp(s) >= connectionTimeout_;
 }
 
 void IOTask::removeSocket(Multiplexer::SockArray &error) {
