@@ -240,7 +240,7 @@ void StatisticsManager::deleteCommonPerfCounters( Hash< CommonPerformanceCounter
 {
     char* id;
     CommonPerformanceCounter* c;
-    while ( Hash< CommonPerformanceCounter* >::Iterator i(&counters); i.Next(id,c); ) {
+    for ( Hash< CommonPerformanceCounter* >::Iterator i(&counters); i.Next(id,c); ) {
         delete c;
     }
     counters.Empty();
