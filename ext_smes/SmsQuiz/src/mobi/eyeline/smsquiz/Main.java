@@ -6,6 +6,9 @@ import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.OutgoingObject;
 import com.eyeline.sme.smpp.ShutdownedException;
 import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
+import com.sun.jdmk.comm.HtmlAdaptorServer;
+import com.sun.jdmk.comm.AuthInfo;
 
 import java.io.*;
 import java.util.Calendar;
@@ -25,6 +28,8 @@ import mobi.eyeline.smsquiz.quizmanager.QuizManager;
 import org.apache.log4j.Logger;
 import ru.aurorisoft.smpp.Message;
 
+import javax.management.*;
+
 /**
  * author: alkhal
  */
@@ -35,18 +40,20 @@ public class Main {
 
   private static int quizIndex = 1;
   private static ScheduledExecutorService scheduledQuizCreator;
+  final static String conf = "conf/config.xml";
 
   public static void main(String[] args) {
     //todo remove
     init();
-    final String conf = "conf/config.xml";
+
     MessageHandler mh = null;
     QuizManager quizManager = null;
     try {
-      ConnectionPoolFactory.init("conf/config.xml");
+      
+      ConnectionPoolFactory.init(conf);
 
       QuizManager.init(conf, new DistributionInfoSmeManager(conf),
-          new FileReplyStatsDataSource("conf/config.xml"), SubscriptionManager.getInstance());
+          new FileReplyStatsDataSource(conf), SubscriptionManager.getInstance());
       quizManager = QuizManager.getInstance();
 
       PropertiesConfig cfg = new PropertiesConfig();
@@ -57,6 +64,20 @@ public class Main {
       mh = new MessageHandler(conf, transceiver.getInQueue(), transceiver.getOutQueue());
       mh.start();
       quizManager.start();
+
+      final XmlConfig c = new XmlConfig();
+      c.load(new File(conf));
+      if(c.getSection("jmx")!=null) {
+        PropertiesConfig config = new PropertiesConfig(c.getSection("jmx").toProperties("."));
+        int jmxPort = config.getInt("port");
+        String user = config.getString("user");
+        String password = config.getString("password");
+        final MBeanServer mbs = quizManager.getMBeansServer();
+        mbs.registerMBean(transceiver.getInQueueMonitor(), new ObjectName("SMSQUIZ.smpp:mbean=inQueue"));
+        mbs.registerMBean(transceiver.getOutQueueMonitor(), new ObjectName("SMSQUIZ.smpp:mbean=outQueue"));
+        mbs.registerMBean(mh.getHandlerMBean(), new ObjectName("SMSQUIZ.sme:mbean=handler"));
+        registerAdapter(mbs, jmxPort, user, password);
+      }
 
       //todo remove
       scheduledQuizCreator = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
@@ -82,6 +103,12 @@ public class Main {
         }
       }
     }
+  }
+
+  public static void registerAdapter(MBeanServer mBeanServer, int port, String user, String password) throws MBeanRegistrationException, InstanceAlreadyExistsException, NotCompliantMBeanException, MalformedObjectNameException {
+    HtmlAdaptorServer adapter = new HtmlAdaptorServer(port, new AuthInfo[] {new AuthInfo(user, password)});
+    mBeanServer.registerMBean(adapter, new ObjectName("SMSQUIZ:mbean=htmlAdaptor"));
+    adapter.start();
   }
 
   //todo remove all

@@ -7,6 +7,7 @@ import java.io.FilenameFilter;
 import java.util.Observable;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Collection;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.concurrent.locks.Lock;
@@ -14,11 +15,13 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Condition;
 
 import org.apache.log4j.Logger;
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 
 public class DirListener extends Observable implements Runnable {
 
 
   private static final Logger logger = Logger.getLogger(DirListener.class);
+  private AbstractDynamicMBean monitor;
   private Map<String, QuizFile> filesMap;
   private String quizDir;
   private FilenameFilter fileFilter;
@@ -45,6 +48,7 @@ public class DirListener extends Observable implements Runnable {
     lock = new ReentrantLock();
     notRemove = lock.newCondition();
     notRun = lock.newCondition();
+    monitor = new DirListenerMBean(this);
   }
 
   public void run() {
@@ -121,12 +125,20 @@ public class DirListener extends Observable implements Runnable {
     return filesMap.size();
   }
 
+  public Collection<String> getFilesList() {
+    return filesMap.keySet();
+  }
+
   private class XmlFileFilter implements FilenameFilter {
 
     public boolean accept(File dir, String name) {
       Matcher matcher = PATTERN.matcher(name);
       return matcher.matches();
     }
+  }
+
+  public AbstractDynamicMBean getMonitor() {
+    return monitor;
   }
 
 }

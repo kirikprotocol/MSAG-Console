@@ -101,7 +101,7 @@ public class StatsFilesCacheTester {
       Thread thread = new Thread() {
         public void run() {
           try {
-            sleep(filesCache.getIterationPeriod() * 2000);
+            sleep(10 * 2000);
           } catch (InterruptedException e) {
             e.printStackTrace();
           }

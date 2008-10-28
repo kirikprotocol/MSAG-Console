@@ -10,6 +10,7 @@ import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
 import java.util.*;
 
 import org.apache.log4j.Logger;
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 
 public class FileReplyStatsDataSource implements ReplyStatsDataSource {
 
@@ -91,6 +92,10 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
 
   public void shutdown() {
     filesCache.shutdown();
+  }
+
+  public AbstractDynamicMBean getMonitor() {
+    return filesCache.getMonitor();
   }
 
 }

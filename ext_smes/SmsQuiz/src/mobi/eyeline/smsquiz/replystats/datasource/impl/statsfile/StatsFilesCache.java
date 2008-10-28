@@ -16,11 +16,12 @@ import java.io.File;
 import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 import org.apache.log4j.Logger;
 
 public class StatsFilesCache {
 
-  private long iterationPeriod;
+  private AbstractDynamicMBean monitor;
   private long timeLimit;
   private String datePattern;
   private String timePattern;
@@ -35,6 +36,7 @@ public class StatsFilesCache {
   public StatsFilesCache(final String configFile) throws FileStatsException {
     long delayFirst;
     String fileNamePattern;
+    long iterationPeriod;
     try {
       final XmlConfig c = new XmlConfig();
       c.load(new File(configFile));
@@ -72,7 +74,7 @@ public class StatsFilesCache {
     });
 
     fileCollectorScheduler.scheduleAtFixedRate(new FileCollector(false), delayFirst, iterationPeriod, java.util.concurrent.TimeUnit.SECONDS);
-
+    monitor = new StatsFilesCacheMBean(this);
   }
 
   public Collection<StatsFile> getFiles(String da, Date from, Date till) throws FileStatsException {
@@ -266,13 +268,34 @@ public class StatsFilesCache {
     }
   }
 
-  public long getIterationPeriod() {
-    return iterationPeriod;
-  }
 
-  public String getReplyStatsDir() {
+  String getReplyStatsDir() {
     return replyStatsDir.substring(0);
   }
+
+  public AbstractDynamicMBean getMonitor() {
+    return monitor;
+  }
+
+  String getDatePattern() {
+    return datePattern;
+  }
+
+  void setDatePattern(String datePattern) {
+    this.datePattern = datePattern;
+  }
+  String getTimePattern() {
+    return timePattern;
+  }
+
+  void setTimePattern(String timePattern) {
+    this.timePattern = timePattern;
+  }
+
+  void setReplyStatsDir(String replyStatsDir) {
+    this.replyStatsDir = replyStatsDir;
+  }
+
 }
 
 

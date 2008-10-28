@@ -20,8 +20,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 import java.util.*;
+import java.lang.management.ManagementFactory;
 
 import org.apache.log4j.Logger;
+
+import javax.management.*;
 
 /**
  * author: alkhal
@@ -394,6 +397,19 @@ public class QuizManager implements Observer {
       }
     }
     dirListener.remove(newQuiz.getFileName(), false);
+  }
+
+  public MBeanServer getMBeansServer() throws QuizException{
+    final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+    try {
+      mbs.registerMBean(dirListener.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=dirListener"));
+      mbs.registerMBean(replyStatsDataSource.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=replystatsdsource"));
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e,e);
+      throw new QuizException(e);
+    }
+    return  mbs;
   }
 
 

@@ -68,4 +68,10 @@
       <param name="dir.modified.abonents">test_QuizManager</param>
   </section>
 
+  <section name="jmx">
+    <param name="port">32323</param>
+    <param name="user">admin</param>
+    <param name="password">admin</param>
+  </section>
+
 </config>
