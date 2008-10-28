@@ -90,7 +90,7 @@ public class Main {
     public void run() {
       try {
         createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", 791366, 791367, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 60, "170", "170", "Short question");
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 60, "170", "170", "Short\n question");
         quizIndex++;
         createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", 791367, 791368, SubscriptionManager.getInstance());
         createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 70, "180", "180", "Medium question");

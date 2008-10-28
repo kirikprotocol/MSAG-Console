@@ -157,7 +157,7 @@ public class Quiz {
           printWriter.print(",");
           printWriter.print(category);
           printWriter.print(",");
-          printWriter.println(reply.getText());
+          printWriter.println( reply.getText().replace( System.getProperty("line.separator"),"\\n") );
         }
       }
       printWriter.flush();

@@ -228,7 +228,7 @@ public class QuizManager implements Observer {
         writeQuizesConflict(previousQuiz, quiz);
         return;
       }
-      makeSubscribedOnly(distribution);
+      makeSubscribedOnly(distribution, quiz.getQuestion());
       String id;
       if ((id = quiz.getId()) != null) {
         if (logger.isInfoEnabled()) {
@@ -262,8 +262,8 @@ public class QuizManager implements Observer {
     }
   }
 
-  private void makeSubscribedOnly(Distribution distribution) throws QuizException {
-    if ((distribution == null) || (distribution.getFilePath() == null)) {
+  private void makeSubscribedOnly(Distribution distribution, String question) throws QuizException {
+    if ((distribution == null) || (distribution.getFilePath() == null)||(question == null)) {
       return;
     }
     File file = new File(distribution.getFilePath());
@@ -271,6 +271,7 @@ public class QuizManager implements Observer {
       logger.error("Distributions abonents file doesn't exist");
       throw new QuizException("Distributions abonents file doesn't exist", QuizException.ErrorCode.ERROR_INIT);
     }
+    question = question.replace(System.getProperty("line.separator"),"\\n");
     String line;
     StringTokenizer tokenizer;
     PrintWriter writer = null;
@@ -285,12 +286,7 @@ public class QuizManager implements Observer {
         if (subscriptionManager.subscribed(msisdn)) {
           writer.print(msisdn);
           writer.print("|");
-          writer.print(tokenizer.nextToken());
-
-          while (tokenizer.hasMoreTokens()) {
-            writer.write(",");
-            writer.print(tokenizer.nextToken());
-          }
+          writer.print(question);
           writer.println();
         }
       }

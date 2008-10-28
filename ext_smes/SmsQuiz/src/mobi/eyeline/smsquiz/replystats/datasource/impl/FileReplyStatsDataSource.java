@@ -25,6 +25,9 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
   }
 
   public void add(Reply reply) throws ReplyDataSourceException {
+    reply.setText(reply.getText().replace(
+        System.getProperty("line.separator"),"\\n")
+    );
     String da = reply.getDa();
     Date date = reply.getDate();
     if ((da == null) || (date == null)) {

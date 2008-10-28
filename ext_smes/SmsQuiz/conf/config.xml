@@ -47,11 +47,11 @@
       <param name="infosme.inprogress.status">INPROGRESS</param>
 
       <param name="status.checker.delay.first">10</param> <!-- seconds -->
-      <param name="status.checker.period">10</param>    <!-- seconds -->
+      <param name="status.checker.period">30</param>    <!-- seconds -->
       <param name="info.sme.stats.dir">infoSme</param>
       <param name="info.sme.stats.date.dir.pattern">yyMMdd</param>
       <param name="info.sme.stats.time.file.pattern">HH</param>
-      <param name="info.sme.succ.delivery.status">0</param>
+      <param name="info.sme.succ.delivery.status">3</param>
       <param name="info.sme.date.format.in.file">yyMMddHHmmss</param> 
   </section>
 

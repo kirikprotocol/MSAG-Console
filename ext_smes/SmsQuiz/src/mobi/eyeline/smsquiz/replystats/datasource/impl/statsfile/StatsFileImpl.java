@@ -205,7 +205,7 @@ class StatsFileImpl implements StatsFile {
       reply.setDa(da);
       reply.setDate(date);
       reply.setOa(tokenizer.nextToken());
-      String text = tokenizer.nextToken();
+      String text = tokenizer.nextToken().replaceAll("\\\\n", System.getProperty("line.separator"));
       while (tokenizer.hasMoreTokens()) {
         text += "," + tokenizer.nextToken();
       }
