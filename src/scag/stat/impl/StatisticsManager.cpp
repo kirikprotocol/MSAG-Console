@@ -172,14 +172,26 @@ StatisticsManager::~StatisticsManager()
   logger = Logger::getInstance("scag.stat.StatisticsManager");
   sender.reinitPrfSrvLogger();*/
 
-  Stop();
-  WaitFor();
-  smppFile.Close();
-  httpFile.Close();
+    Stop();
+    WaitFor();
+    smppFile.Close();
+    httpFile.Close();
 
     deleteSockets( svcSocketsMutex, svcSockets );
     deleteSockets( scSocketsMutex, scSockets );
     deleteSockets( genSocketsMutex, genSockets );
+    {
+        MutexGuard mg(svcCountersLock);
+        deleteCommonPerfCounters(svcSmppCounters);
+        deleteCommonPerfCounters(svcWapCounters);
+        deleteCommonPerfCounters(svcMmsCounters);
+    }
+    {
+        MutexGuard mg(scCountersLock);
+        deleteCommonPerfCounters(scSmppCounters);
+        deleteCommonPerfCounters(scWapCounters);
+        deleteCommonPerfCounters(scMmsCounters);
+    }
     smsc_log_info( logger, "Statistics manager is released" );
 }
 
@@ -222,6 +234,16 @@ void StatisticsManager::deleteSockets( Mutex& mt, std::vector< Socket* >& socks 
         }
     }
     socks.clear();
+}
+
+void StatisticsManager::deleteCommonPerfCounters( Hash< CommonPerformanceCounter* >& counters )
+{
+    char* id;
+    CommonPerformanceCounter* c;
+    while ( Hash< CommonPerformanceCounter* >::Iterator i(&counters); i.Next(id,c); ) {
+        delete c;
+    }
+    counters.Empty();
 }
 
 void StatisticsManager::registerEvent(const SmppStatEvent& se)
@@ -968,22 +990,23 @@ void StatisticsManager::incSvcScCounter(const char* systemId, int index, int max
     if (!systemId || !systemId[0] || index < 0 || index >= max_cnt) return;
 
     MutexGuard guard(mt);
-
     CommonPerformanceCounter*  counter = 0;
-    CommonPerformanceCounter** pCounter = svcCounters.GetPtr(systemId);
-
-    if (!pCounter) counter = new CommonPerformanceCounter(max_cnt);
-    else if (*pCounter) counter = *pCounter;
-    else {
-        counter = new CommonPerformanceCounter(max_cnt);
-        pCounter = 0; svcCounters.Delete(systemId);
+    {
+        CommonPerformanceCounter** pCounter = svcCounters.GetPtr(systemId);
+        if (!pCounter) {
+            counter = new CommonPerformanceCounter(max_cnt);
+            svcCounters.Insert( systemId, counter );
+        } else if ( *pCounter ) {
+            counter = *pCounter;
+        } else {
+            counter = new CommonPerformanceCounter(max_cnt);
+            *pCounter = counter;
+        }
     }
 
     counter->counters[index]++;
     if (!counter->slots[index]) counter->slots[index] = newSlotCounter();
     counter->slots[index]->Inc();
-
-    if (!pCounter) svcCounters.Insert(systemId, counter);
 }
 
 void StatisticsManager::incSmppCounter(const char* systemId, bool sc, int index)

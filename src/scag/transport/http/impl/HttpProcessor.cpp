@@ -339,10 +339,13 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
         {
             smsc_log_debug(logger, "SERIALIZED REQUEST BEFORE PROCESSING: %s", request.serialize().c_str());
                 
-            if(!parsePath(request.getSitePath(), request))
+            // NOTE (bukind): we have to fetch site path into a local variable
+            // as it will be passed by reference into parsePath
+            const std::string pathToParse = request.getSitePath();
+            if(!parsePath(pathToParse, request))
             {
                 registerEvent( stat::events::http::REQUEST_FAILED, request );
-                smsc_log_debug( logger, "http_request path parse error %s", request.getSitePath().c_str());
+                smsc_log_debug( logger, "http_request path parse error %s", pathToParse.c_str());
                 request.setFailedBeforeSessionCreate(true);
                 return scag::re::STATUS_FAILED;
             }

@@ -230,6 +230,7 @@ using namespace scag::stat::sacc;
         void dumpTrafficHash(Hash<TrafficRecord>& traff, SerializationBuffer& buf);
         CommonStat* getStat(const char* id, bool sc);
         void deleteSockets( Mutex& mt, std::vector< Socket* >& socks );
+        void deleteCommonPerfCounters( Hash< CommonPerformanceCounter* >& counters );
     public:
         void init( const StatManConfig& statManCfg );
 
