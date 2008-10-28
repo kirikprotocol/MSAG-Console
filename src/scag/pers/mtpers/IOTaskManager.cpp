@@ -12,6 +12,13 @@ void TasksSorter::init(uint16_t maxThreads) {
   sortedTasks_[maxThreads + 1] = &tailTask_;  
 }
 
+void TasksSorter::checkAllTasks() {
+  Logger* logger = Logger::getInstance("sorter");
+  for (int i = 1; i <= maxThreads_; ++i) {
+    smsc_log_debug(logger, "task:%p i:%d index:%d sockets:%d", sortedTasks_[i], i, sortedTasks_[i]->index_, sortedTasks_[i]->itemsCount_);
+  }
+}
+
 TasksSorter::~TasksSorter() {
   if (sortedTasks_) {
     delete sortedTasks_;
@@ -90,13 +97,13 @@ bool IOTaskManager::process(ConnectionContext* cx) {
     taskSorter_.reorderTask(t);
     return true;
   } else {
-    smsc_log_warn(logger, "Can't process %p context. Server busy.", cx);
+    smsc_log_warn(logger, "Can't process %p context. Server busy. Max sockets=%d, current sockets=%d", cx,  maxSockets_, t->getSocketsCount());
     return false;
   }
 }
 
-bool IOTaskManager::storageProcess(ConnectionContext* cx) {
-  return storageManager_.process(cx);
+bool IOTaskManager::storageProcess(PersPacket* packet) {
+  return storageManager_.process(packet);
 }
 
 IOTask* IOTaskManager::newTask() {

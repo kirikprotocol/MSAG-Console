@@ -220,39 +220,38 @@ void PersPacket::flushLogs(Logger* log) const {
   }
 }
 
-void PersPacket::setPacketSize(SerialBuffer& sb) const {
-  sb.SetPos(0);
-  sb.WriteInt32(sb.GetSize());
-  sb.SetPos(0);
+void PersPacket::createResponse(PersServerResponseType resp) {
+  response.Empty();
+  response.WriteInt8(resp);
 }
 
-void CommandPacket::execCommand(Profile *pf, SerialBuffer& sb) {
+void PersPacket::sendResponse() {
+  connection->sendResponse();
+}
+
+void CommandPacket::execCommand(Profile *pf) {
   dblogs.clear();
-  sb.SetPos(PACKET_LENGTH_SIZE);
   pf->setChanged(false);
-  command.execute(pf, sb);
-  setPacketSize(sb);
+  command.execute(pf, response);
 }
 
-void BatchPacket::execCommand(Profile *pf, SerialBuffer& sb) {
+void BatchPacket::execCommand(Profile *pf) {
   dblogs.clear();
   pf->setChanged(false);
   if (!transact) {
     for (int i = 0; i < count; ++i) {
-      batch[i].execute(pf, sb);
+      batch[i].execute(pf, response);
     }
-    setPacketSize(sb);
     return;
   }
   for (int i = 0; i < count; ++i) {
-    Response resp = batch[i].execute(pf, sb);
+    Response resp = batch[i].execute(pf, response);
     if (resp != scag::pers::util::RESPONSE_OK) {
       pf->setChanged(false);
       rollback = true;
       break;
     }
   }
-  setPacketSize(sb);
   return;
 }
 

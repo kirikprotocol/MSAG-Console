@@ -50,7 +50,7 @@ int IOTask::Execute() {
 
     removeSocket(error);
 
-    if (multiplexer_.canReadWrite(read, write, error, connectionTimeout_ * 1000)) {
+    if (multiplexer_.canReadWrite(read, write, error, connectionTimeout_)) {
       for (int i = 0; i < write.Count(); ++i) {
         Socket* s = write[i];
         if (!processWriteSocket(s)) {
@@ -137,14 +137,14 @@ void IOTask::checkConnectionTimeout(Multiplexer::SockArray& error) {
   for (int i = 0; i < multiplexer_.count(); i++) {
     Socket *s =  multiplexer_.get(i);
     if (isTimedOut(s, now)) {
-      smsc_log_debug(logger, "%p: socket %p timeout", s);
+      smsc_log_debug(logger, "%p: socket %p timeout", this, s);
       error.Push(s);
     }
   }
 }
 
 inline bool IOTask::isTimedOut(Socket* s, time_t now) {
-  return now - SocketData::getTimestamp(s) >= connectionTimeout_;
+  return now - SocketData::getTimestamp(s) >= connectionTimeout_ * 1000;
 }
 
 void IOTask::removeSocket(Multiplexer::SockArray &error) {
@@ -208,7 +208,7 @@ bool IOTask::processReadSocket(Socket* s) {
     n = sb.getPos();
     sb.SetPos(0);
     cx->packetLen = sb.ReadInt32();
-    smsc_log_debug(logger, "%d bytes will be read from %x", cx->packetLen, s);
+    smsc_log_debug(logger, "%d bytes will be read from %p", cx->packetLen, s);
     if(cx->packetLen > MAX_PACKET_SIZE) {
       smsc_log_warn(logger, "Too big packet from client");
       return false;
@@ -235,7 +235,7 @@ bool IOTask::processReadSocket(Socket* s) {
     changeSocketState(s);
     return true;
   }
-  if (iomanager_.storageProcess(cx)) {
+  if (iomanager_.storageProcess(cx->packet)) {
     removeSocketFromMultiplexer(s);
     //SocketData::setSocketState(s, READWRITE_SOCKET);
   } else {

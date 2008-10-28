@@ -7,7 +7,6 @@
 #include "core/synchronization/MutexGuard.hpp"
 #include "logger/Logger.h"
 
-#include "ConnectionContext.h"
 #include "StorageProcessor.h"
 
 namespace scag { namespace mtpers {
@@ -33,7 +32,7 @@ public:
   virtual ~StorageManager() {};
 
   void init(uint16_t maxWaitingCount, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg);
-  bool process(ConnectionContext* cx);
+  bool process(PersPacket* cx);
   void shutdown();
   unsigned getInfrastructNodeNumber() { return 0; }
 

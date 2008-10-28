@@ -7,7 +7,7 @@
 #include "logger/Logger.h"
 #include "core/threads/ThreadedTask.hpp"
 #include "core/synchronization/EventMonitor.hpp"
-#include "ConnectionContext.h"
+#include "PersCommand.h"
 
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
@@ -70,14 +70,14 @@ public:
   virtual int Execute();
   virtual void stop();
   virtual const char * taskName();
-  bool addContext(ConnectionContext* cx);
-  virtual void process(ConnectionContext* cx) = 0;
+  bool addPacket(PersPacket* packet);
+  virtual void process(PersPacket* packet) = 0;
 
 protected:
   void initGlossary(const string& path, Glossary* glossary);
 
 protected:
-  vector<ConnectionContext* > waitingProcess_;
+  vector<PersPacket* > waitingProcess_;
   unsigned maxWaitingCount_;
   EventMonitor processMonitor_;
   Logger* logger_;
@@ -87,7 +87,7 @@ class AbonentStorageProcessor: public StorageProcessor {
 public:
   AbonentStorageProcessor(unsigned maxWaitingCount, unsigned locationNumber, unsigned storagesCount);
   ~AbonentStorageProcessor();
-  void process(ConnectionContext* cx);
+  void process(PersPacket* packet);
   void initElementStorage(const AbonentStorageConfig& cfg, unsigned index);
 
 private:
@@ -117,7 +117,7 @@ public:
   InfrastructStorageProcessor(unsigned maxWaitingCount):StorageProcessor(maxWaitingCount), provider_(NULL), operator_(NULL), service_(NULL) {};
   ~InfrastructStorageProcessor();
   void init(const InfrastructStorageConfig& cfg);
-  void process(ConnectionContext* cx) ;
+  void process(PersPacket* packet) ;
 
 private:
   //typedef HashedMemoryCache< IntProfileKey, Profile > MemStorage;

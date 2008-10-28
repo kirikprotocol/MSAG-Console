@@ -11,6 +11,8 @@
 #include "scag/pers/util/Profile.h"
 #include "scag/pers/util/AbntAddr.hpp"
 
+#include "Connection.h"
+
 namespace scag { namespace mtpers {
 
 const uint32_t PACKET_LENGTH_SIZE = static_cast<uint32_t>(sizeof(uint32_t));
@@ -62,13 +64,16 @@ private:
 };
 
 struct PersPacket {
-  PersPacket():createProfile(false), rollback(false) {};
+  PersPacket(Connection* connect):createProfile(false), rollback(false), connection(connect) {};
   virtual ~PersPacket() {};
   virtual void deserialize(SerialBuffer& sb);
   bool notAbonentsProfile() const { return profileType != scag::pers::util::PT_ABONENT; };
-  void setPacketSize(SerialBuffer& sb) const;
-  virtual void execCommand(Profile *pf, SerialBuffer& sb) = 0;
+  virtual void execCommand(Profile *pf) = 0;  
   void flushLogs(Logger* log) const;
+  void createResponse(PersServerResponseType resp);
+  void sendResponse();
+  uint32_t getResponseSize() const { return response.GetSize(); };
+  const char* getResponseData() const { return response.c_ptr(); };
 
   ProfileType profileType;
   uint32_t intKey;
@@ -78,22 +83,24 @@ struct PersPacket {
   bool rollback;
 protected:
   vector<string> dblogs;
+  Connection* connection;
+  SerialBuffer response;
 };
 
 struct CommandPacket: public PersPacket {
-  CommandPacket(PersCmd cmdId):command(cmdId, dblogs)  {};
+  CommandPacket(Connection* connect, PersCmd cmdId):PersPacket(connect), command(cmdId, dblogs)  {};
   ~CommandPacket(){};
   void deserialize(SerialBuffer &sb);
-  void execCommand(Profile *pf, SerialBuffer& sb);
+  void execCommand(Profile *pf);
 
   PersCommand command;
 };
 
 struct BatchPacket: public PersPacket {
-  BatchPacket():count(0), transact(false) {};
+  BatchPacket(Connection* connect):PersPacket(connect), count(0), transact(false) {};
   ~BatchPacket(){};
   void deserialize(SerialBuffer &sb);
-  void execCommand(Profile *pf, SerialBuffer& sb);
+  void execCommand(Profile *pf);
 
   uint16_t count;
   bool transact;

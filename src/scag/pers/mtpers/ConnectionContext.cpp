@@ -63,10 +63,10 @@ bool ConnectionContext::parsePacket() {
     }
     if (cmd == scag::pers::util::PC_MTBATCH) {
       smsc_log_debug(logger, "Batch received");
-      packet = new BatchPacket();
+      packet = new BatchPacket(this);
     } else {
       smsc_log_debug(logger, "Command %d received", cmd);
-      packet = new CommandPacket(cmd);
+      packet = new CommandPacket(this, cmd);
     }
     packet->deserialize(inbuf);
     action = PROCESS_REQUEST;
@@ -93,6 +93,13 @@ void ConnectionContext::sendResponse() {
     smsc_log_warn(logger, "%p context, iotsak %p was deleted", this, iotask);
     //return;
   }
+
+  outbuf.Empty();
+  uint32_t responseSize = packet->getResponseSize();
+  outbuf.WriteInt32(responseSize + PACKET_LENGTH_SIZE);
+  outbuf.Append(packet->getResponseData(), responseSize);
+  outbuf.SetPos(0);
+
   iotask->addSocket(socket);
 }
 

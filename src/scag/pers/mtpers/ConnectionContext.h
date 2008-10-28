@@ -7,6 +7,7 @@
 #include "scag/util/storage/SerialBuffer.h"
 #include "scag/pers/util/Types.h"
 #include "PersCommand.h"
+#include "Connection.h"
 
 
 namespace scag { namespace mtpers {
@@ -70,7 +71,7 @@ private:
 
 class IOTask;
 
-struct ConnectionContext {
+struct ConnectionContext : public Connection {
 
 public:
   ConnectionContext(Socket* sock);

@@ -25,6 +25,7 @@ public:
   void reorderTask(SortedTask* t);
   void assignTask(uint16_t index, SortedTask *task);
   SortedTask* getTask(uint16_t index);
+  void checkAllTasks();
 
 private:
   SortedTask headTask_;
@@ -39,7 +40,7 @@ public:
   virtual ~IOTaskManager() {};
 
   bool process(ConnectionContext* cx);
-  bool storageProcess(ConnectionContext* cx);
+  bool storageProcess(PersPacket* packet);
   void shutdown();
   void removeContext(IOTask* t, uint16_t contextsNumber = 1);
   void init(uint16_t maxThreads, uint32_t maxSock, uint16_t timeout, const char *logName);

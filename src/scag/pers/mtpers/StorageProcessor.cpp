@@ -43,7 +43,7 @@ StorageProcessor::~StorageProcessor() {
 
 
 int StorageProcessor::Execute() {
-  vector<ConnectionContext*> process;
+  vector<PersPacket*> process;
   smsc_log_debug(logger_, "%p started", this);
   for (;;) {
     {
@@ -60,7 +60,7 @@ int StorageProcessor::Execute() {
       process.assign(waitingProcess_.begin(), waitingProcess_.end());
       waitingProcess_.clear();
     }
-    for (vector<ConnectionContext*>::iterator i = process.begin(); i < process.end(); ++i) {
+    for (vector<PersPacket*>::iterator i = process.begin(); i < process.end(); ++i) {
       smsc_log_debug(logger_, "%p: process context %p", this, *i);
       try {
 
@@ -70,19 +70,19 @@ int StorageProcessor::Execute() {
 
       } catch (const SerialBufferOutOfBounds &e) {
         smsc_log_warn(logger_, "%p: %p processing error: SerialBufferOutOfBounds", this, *i);
-        (*i)->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
+        (*i)->createResponse(scag::pers::util::RESPONSE_ERROR);
       } catch (const std::runtime_error &e) {
         smsc_log_warn(logger_, "%p: %p processing error: std::runtime_error: %s", this, *i, e.what());
-        (*i)->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
+        (*i)->createResponse(scag::pers::util::RESPONSE_ERROR);
       } catch (const FileException &e) {
         smsc_log_warn(logger_, "%p: %p processing error: FileException: %s", this, *i, e.what());
-        (*i)->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
+        (*i)->createResponse(scag::pers::util::RESPONSE_ERROR);
       } catch (const std::exception &e) {
         smsc_log_warn(logger_, "%p: %p processing error: std::exception: %s", this, *i, e.what());
-        (*i)->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
+        (*i)->createResponse(scag::pers::util::RESPONSE_ERROR);
       } catch (...) {
         smsc_log_warn(logger_, "%p: %p processing error: unknown exception", this, *i);      
-        (*i)->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
+        (*i)->createResponse(scag::pers::util::RESPONSE_ERROR);
       }
       (*i)->sendResponse();
     }
@@ -103,13 +103,13 @@ const char * StorageProcessor::taskName() {
   return "StorageProcessor";
 }
 
-bool StorageProcessor::addContext(ConnectionContext* cx) {
+bool StorageProcessor::addPacket(PersPacket* packet) {
   MutexGuard g(processMonitor_);
   if (waitingProcess_.size() >= maxWaitingCount_) {
-    smsc_log_debug(logger_, "%p: %p waiting process queue limit %d", this, cx, maxWaitingCount_);
+    smsc_log_debug(logger_, "%p: %p waiting process queue limit %d", this, packet, maxWaitingCount_);
     return false;
   }
-  waitingProcess_.push_back(cx);
+  waitingProcess_.push_back(packet);
   processMonitor_.notify();  
   return true;
 }
@@ -154,30 +154,30 @@ void AbonentStorageProcessor::initElementStorage(const AbonentStorageConfig& cfg
   smsc_log_debug(logger_, "abonent storage is assembled");
 }
 
-void AbonentStorageProcessor::process(ConnectionContext* cx) {
-  smsc_log_debug(logger_, "%p: %p createProfile=%d", this, cx, cx->packet->createProfile);
-  unsigned elstorageIndex = static_cast<unsigned>(cx->packet->address.getNumber() % storagesCount_);
+void AbonentStorageProcessor::process(PersPacket* packet) {
+  smsc_log_debug(logger_, "%p: %p createProfile=%d", this, packet, packet->createProfile);
+  unsigned elstorageIndex = static_cast<unsigned>(packet->address.getNumber() % storagesCount_);
   smsc_log_debug(logger_, "%p: %p process profile key='%s' in location: %d, storage: %d",
-                  this, cx, cx->packet->address.toString().c_str(), locationNumber_, elstorageIndex);
+                  this, packet, packet->address.toString().c_str(), locationNumber_, elstorageIndex);
   ElementStorage *elstorage = elementStorages_.GetPtr(elstorageIndex);
   if (!elstorage) {
-    smsc_log_warn(logger_, "%p: %p element storage %d not found in location %d", this, cx, elstorageIndex, locationNumber_);
-    cx->createFakeResponse(scag::pers::util::RESPONSE_ERROR);
+    smsc_log_warn(logger_, "%p: %p element storage %d not found in location %d", this, packet, elstorageIndex, locationNumber_);
+    packet->createResponse(scag::pers::util::RESPONSE_ERROR);
     return;
   }
-  Profile *pf = elstorage->storage->get(cx->packet->address, cx->packet->createProfile);
+  Profile *pf = elstorage->storage->get(packet->address, packet->createProfile);
   if (!pf) {
-    cx->createFakeResponse(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
+    packet->createResponse(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
     return;
   }
-  cx->packet->execCommand(pf, cx->outbuf);
+  packet->execCommand(pf);
   if (pf->isChanged()) {
-    smsc_log_debug(logger_, "%p: %p flush profile %s", this, cx, pf->getKey().c_str());
-    elstorage->storage->flush(cx->packet->address);
-    cx->packet->flushLogs(abntlog_);
-  } else if (cx->packet->rollback) {
-    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, cx, pf->getKey().c_str());
-    elstorage->storage->backup2Profile(cx->packet->address, elstorage->glossary);
+    smsc_log_debug(logger_, "%p: %p flush profile %s", this, packet, pf->getKey().c_str());
+    elstorage->storage->flush(packet->address);
+    packet->flushLogs(abntlog_);
+  } else if (packet->rollback) {
+    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, packet, pf->getKey().c_str());
+    elstorage->storage->backup2Profile(packet->address, elstorage->glossary);
   }
 }
 
@@ -197,31 +197,31 @@ AbonentStorageProcessor::~AbonentStorageProcessor() {
   smsc_log_debug(logger_, "storage processor %d deleted", locationNumber_);
 }
 
-void InfrastructStorageProcessor::process(ConnectionContext* cx) {
+void InfrastructStorageProcessor::process(PersPacket* packet) {
   Logger *dblog = 0;
   InfrastructStorage* storage = 0;
-  switch (cx->packet->profileType) {
+  switch (packet->profileType) {
   case scag::pers::util::PT_OPERATOR: dblog = olog_; storage = operator_; break;
   case scag::pers::util::PT_PROVIDER: dblog = plog_; storage = provider_; break;
   case scag::pers::util::PT_SERVICE:  dblog = slog_; storage = service_; break;
   default: 
-    smsc_log_error(logger_, "cx %p unknown profile type %d", cx, cx->packet->profileType);
-    cx->createFakeResponse(scag::pers::util::RESPONSE_BAD_REQUEST);
+    smsc_log_error(logger_, "cx %p unknown profile type %d", packet, packet->profileType);
+    packet->createResponse(scag::pers::util::RESPONSE_BAD_REQUEST);
     return;
   }
-  IntProfileKey key(cx->packet->intKey);
-  Profile *pf = storage->get(key, cx->packet->createProfile);
+  IntProfileKey key(packet->intKey);
+  Profile *pf = storage->get(key, packet->createProfile);
   if (!pf) {
-    cx->createFakeResponse(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
+    packet->createResponse(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
     return;
   }
-  cx->packet->execCommand(pf, cx->outbuf);
+  packet->execCommand(pf);
   if (pf->isChanged()) {
-    smsc_log_debug(logger_, "%p: %p flush profile %s", this, cx, pf->getKey().c_str());
+    smsc_log_debug(logger_, "%p: %p flush profile %s", this, packet, pf->getKey().c_str());
     storage->flush(key);
-    cx->packet->flushLogs(dblog);
-  } else if (cx->packet->rollback){
-    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, cx, pf->getKey().c_str());
+    packet->flushLogs(dblog);
+  } else if (packet->rollback){
+    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, packet, pf->getKey().c_str());
     storage->backup2Profile(key, &glossary_);
   }
 }

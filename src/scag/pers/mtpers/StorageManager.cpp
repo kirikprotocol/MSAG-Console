@@ -8,7 +8,6 @@ using scag::util::storage::StorageNumbering;
 StorageManager::StorageManager(const NodeConfig& nodeCfg): nodeNumber_(nodeCfg.nodeNumber), locationsCount_(nodeCfg.locationsCount),
                                                            storagesCount_(nodeCfg.storagesCount), logger_(Logger::getInstance("storeman")) {
   StorageNumbering::setInstance(nodeCfg.nodesCount);
-  //storagesCount_ = StorageNumbering::instance().storages();
 }
 
 void StorageManager::init(uint16_t maxWaitingCount, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg) {
@@ -43,20 +42,20 @@ AbonentStorageProcessor* StorageManager::getLocation(unsigned elementStorageNumb
   return storages_[((elementStorageNumber / StorageNumbering::instance().nodes()) % locationsCount_)];
 }
 
-bool StorageManager::process(ConnectionContext* cx) {
-  if (cx->packet->notAbonentsProfile()) {
+bool StorageManager::process(PersPacket* packet) {
+  if (packet->notAbonentsProfile()) {
     if (nodeNumber_ != getInfrastructNodeNumber()) {
-      smsc_log_warn(logger_, "can't process infrastruct request on node number=%d", cx, nodeNumber_);
+      smsc_log_warn(logger_, "can't process infrastruct request on node number=%d", nodeNumber_);
       return false;
     }
-    smsc_log_debug(logger_, "give %p context to not abonent's processor", cx);
-    return infrastructStorage_->addContext(cx);
+    smsc_log_debug(logger_, "give %p packet to not abonent's processor", packet);
+    return infrastructStorage_->addPacket(packet);
   } else {
     unsigned storageNumber = 0;
     try {
-      storageNumber = static_cast<unsigned>(cx->packet->address.getNumber() % storagesCount_);
-      smsc_log_debug(logger_, "give %p context to storage %d in node %d", cx, storageNumber, nodeNumber_);
-      return getLocation(storageNumber)->addContext(cx);      
+      storageNumber = static_cast<unsigned>(packet->address.getNumber() % storagesCount_);
+      smsc_log_debug(logger_, "give %p packet to storage %d in node %d", packet, storageNumber, nodeNumber_);
+      return getLocation(storageNumber)->addPacket(packet);      
     } catch (const std::runtime_error& e) {
       smsc_log_warn(logger_, "Can't find location for elementStorage %d on node %d. std::runtime_error: %s", storageNumber, nodeNumber_, e.what());
       return false;
