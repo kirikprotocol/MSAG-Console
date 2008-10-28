@@ -20,7 +20,7 @@ public class Task
   public final static String[] WEEK_DAYS = {"Mon","Tue","Wed","Thu","Fri","Sat","Sun"};
   private final static String DEFAULT_ACTIVE_WEEK_DAYS = "Mon,Tue,Wed,Thu,Fri";
   private final static SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-  private static final SimpleDateFormat activePeriodDateFormat = new SimpleDateFormat("hh:mm");
+  private static final SimpleDateFormat activePeriodDateFormat = new SimpleDateFormat("HH:mm:ss");
   private static final String TIME_DELIM = ":";
 
   public static final String INFOSME_EXT_PROVIDER = "EXTERNAL";
@@ -370,8 +370,8 @@ public class Task
     this.activePeriodStart = activePeriodStart;
   }
 
-  public void setActivePeriodStart(Calendar cal) {
-    activePeriodStart = calToTime(cal);
+  public void setActivePeriodStart(Date date) {
+    activePeriodStart = activePeriodDateFormat.format(date);
   }
 
   public String getActivePeriodEnd() {
@@ -390,23 +390,10 @@ public class Task
     this.activePeriodEnd = activePeriodEnd;
   }
 
-  public void setActivePeriodEnd(Calendar cal) {
-    activePeriodEnd = calToTime(cal);
+  public void setActivePeriodEnd(Date date) {
+    activePeriodEnd = activePeriodDateFormat.format(date);
   }
-  private String calToTime(Calendar cal) {
-    StringBuffer result = new StringBuffer();
-    int hour = cal.get(Calendar.HOUR_OF_DAY);
-    int minute = cal.get(Calendar.MINUTE);
-    if(hour<10) {
-      result.append("0");
-    }
-    result.append(hour).append(TIME_DELIM);
-    if(minute<10) {
-      result.append("0");
-    }
-    return result.append(minute).substring(0);
 
-  }
   public String getQuery() {
     return query;
   }

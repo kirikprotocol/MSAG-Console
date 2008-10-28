@@ -26,7 +26,7 @@ public class TaskBuilder extends Thread {
   private final static int ESC_LF = 10;
 
   private static final SimpleDateFormat endDateFormat = new SimpleDateFormat("dd.MM.yyyy");
-  private static final SimpleDateFormat activePeriodDateFormat = new SimpleDateFormat("hh:mm:ss");
+  private static final SimpleDateFormat activePeriodDateFormat = new SimpleDateFormat("hh:mm:ss");  //todo probably bug HH
 
   private String file;
   private Config oldConfig;
@@ -127,8 +127,8 @@ public class TaskBuilder extends Thread {
 
         task.setStartDate(distr.getDateBegin());
         task.setEndDate(distr.getDateEnd());
-        task.setActivePeriodStart(distr.getTimeBegin());
-        task.setActivePeriodEnd(distr.getTimeEnd());
+        task.setActivePeriodStart(distr.getTimeBegin().getTime());
+        task.setActivePeriodEnd(distr.getTimeEnd().getTime());
         task.setAddress(distr.getAddress());
         task.setTransactionMode(distr.isTxmode().booleanValue());
       }

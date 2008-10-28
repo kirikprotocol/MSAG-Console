@@ -95,7 +95,7 @@ public class Message
     }
 
     public int getId() {
-      return id;
+      return id;  
     }
 
     public static State getById(int id) {
