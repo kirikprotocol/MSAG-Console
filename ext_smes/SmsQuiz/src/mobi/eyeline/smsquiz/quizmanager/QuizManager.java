@@ -273,7 +273,6 @@ public class QuizManager implements Observer {
     }
     question = question.replace(System.getProperty("line.separator"),"\\n");
     String line;
-    StringTokenizer tokenizer;
     PrintWriter writer = null;
     BufferedReader reader = null;
     String modifiedFileName = dirModifiedAb + "/" + file.getName() + ".mod";
@@ -281,8 +280,7 @@ public class QuizManager implements Observer {
       reader = new BufferedReader(new FileReader(file));
       writer = new PrintWriter(new BufferedWriter(new FileWriter(modifiedFileName)));
       while ((line = reader.readLine()) != null) {
-        tokenizer = new StringTokenizer(line, "|");
-        String msisdn = tokenizer.nextToken();
+        String msisdn = line.trim();
         if (subscriptionManager.subscribed(msisdn)) {
           writer.print(msisdn);
           writer.print("|");

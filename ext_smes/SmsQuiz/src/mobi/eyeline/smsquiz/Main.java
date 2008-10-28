@@ -237,35 +237,12 @@ public class Main {
 
     try {
       writer = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
-      try {
-        subscriptionManager.subscribe("7909");
-        subscriptionManager.subscribe("7910");
-      } catch (SubManagerException e) {
-        e.printStackTrace();
-      }
-      String abonent = "+7909";
-      writer.print(abonent);
-      writer.print("|");
 
-      StringBuilder strBuilder = new StringBuilder(30);
-      int aCode = (int) 'a';
-      for (int j = 0; j < 20; j++) {
-        strBuilder.append((char) (aCode + 26 * Math.random()));
-      }
-      writer.println(strBuilder.substring(0));
-      abonent = "+7910";
-      writer.print(abonent);
-      writer.print("|");
+      String abonent;
 
-      strBuilder = new StringBuilder(20);
-      for (int j = 0; j < 20; j++) {
-        strBuilder.append((char) (aCode + 26 * Math.random()));
-      }
-      writer.println(strBuilder.substring(0));
       for (long i = from; i < till; i++) {
         abonent = "+" + i;
-        writer.print(abonent);
-        writer.print("|");
+        writer.println(abonent);
         if ((i % 500) == 0) {
           try {
             subscriptionManager.subscribe(abonent);
@@ -273,12 +250,6 @@ public class Main {
             e.printStackTrace();
           }
         }
-        strBuilder = new StringBuilder(20);
-        aCode = (int) 'a';
-        for (int j = 0; j < 20; j++) {
-          strBuilder.append((char) (aCode + 26 * Math.random()));
-        }
-        writer.println(strBuilder.substring(0));
       }
       writer.flush();
     } catch (IOException e) {
