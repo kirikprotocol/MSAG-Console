@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.infosme.backend.commands;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.console.commands.infosme.Distribution;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.Task;
@@ -33,7 +34,7 @@ public class TaskBuilder extends Thread {
   private final InfoSmeContext smeContext;
 
   private String taskId;
-  private TaskProps taskProps;
+  private Distribution distr;
   private Task task;
 
   public TaskBuilder(String file, InfoSmeContext smeContext) {
@@ -42,14 +43,9 @@ public class TaskBuilder extends Thread {
     initTask();
   }
 
-  public TaskBuilder(String file, InfoSmeContext smeContext, TaskProps taskProps) {
-    if(!taskProps.validateNull()) {
-      throw new NullPointerException("Some arguments of TaskProps are null");
-    }
-    this.smeContext = smeContext;
-    this.file = file;
-    this.taskProps = taskProps;
-    initTask();
+  public TaskBuilder(InfoSmeContext smeContext, Distribution d) {
+    this(d.getFile(), smeContext);
+    this.distr = d;
   }
 
   private void initTask() {
@@ -115,19 +111,26 @@ public class TaskBuilder extends Thread {
       checkAndPrepareTask(task, smeContext, getFileCount(), false, false);
 
       task.setStatus("INPROGRESS");
-      if(taskProps!=null) {
-        String activeDayStr = taskProps.getDays();
+      if(distr !=null) {
+        Set days = distr.getDays();
         List activeDays = new LinkedList();
-        Functions.addValuesToCollection(activeDays,activeDayStr,",",true);
+        if((days!=null)||(days.size()>0)) {
+          Iterator iter = days.iterator();
+          while(iter.hasNext()) {
+            activeDays.add(Task.WEEK_DAYS[((Integer)iter.next()).intValue()]);
+          }
+        } else {
+          throw new Exception("List of weeks days is empty");
+        }
         task.setActiveWeekDays(activeDays);
         task.setActiveWeekDaysSet(activeDays);
 
-        task.setStartDate(taskProps.getDateBegin());
-        task.setEndDate(taskProps.getDateEnd());
-        task.setActivePeriodStart(taskProps.getTimeBegin());
-        task.setActivePeriodEnd(taskProps.getTimeEnd());
-        task.setAddress(taskProps.getAddress());
-        task.setTransactionMode(taskProps.isTxmode());
+        task.setStartDate(distr.getDateBegin());
+        task.setEndDate(distr.getDateEnd());
+        task.setActivePeriodStart(distr.getTimeBegin());
+        task.setActivePeriodEnd(distr.getTimeEnd());
+        task.setAddress(distr.getAddress());
+        task.setTransactionMode(distr.isTxmode().booleanValue());
       }
       is = new InputStreamReader(new FileInputStream(processedFile), Functions.getLocaleEncoding());
 
@@ -236,7 +239,7 @@ public class TaskBuilder extends Thread {
           if (blm.contains(msisdn))
             continue;
           msg.setAbonent(msisdn);
-          msg.setMessage(st.hasMoreTokens() ? st.nextToken() : task.getText());
+          msg.setMessage(st.hasMoreTokens() ? st.nextToken().replaceAll("(\\\\n)",System.getProperty("line.separator")) : task.getText());
           msg.setState(Message.State.NEW);
           msg.setSendDate(sendDate);
           list.add(msg);

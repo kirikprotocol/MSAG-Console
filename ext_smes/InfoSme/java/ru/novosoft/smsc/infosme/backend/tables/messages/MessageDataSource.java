@@ -133,7 +133,7 @@ public class MessageDataSource extends AbstractDataSourceImpl {
             log.debug(j + " messages have readed from file: " + file.getName());
         }
       }
-      cal.set(Calendar.HOUR, cal.get(Calendar.HOUR) + 1);
+      cal.set(Calendar.HOUR, cal.get(Calendar.HOUR) + 1); //todo?
     }
 
     rs.setTotalSize(total);

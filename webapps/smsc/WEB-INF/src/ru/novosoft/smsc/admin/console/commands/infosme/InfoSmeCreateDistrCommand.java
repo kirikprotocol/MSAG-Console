@@ -48,17 +48,26 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
 
   public void process(CommandContext ctx) {
     try {
-      dateFormat.parse(dateBeginStr);
-      dateFormat.parse(dateEndStr);
-      validateTime(timeBeginStr);
-      validateTime(timeEndStr);
-      validateDays();
+      Date dateBegin = dateFormat.parse(dateBeginStr);
+      Date dateEnd = dateFormat.parse(dateEndStr);
+      Calendar timeBegin = buildTime(timeBeginStr);
+      Calendar timeEnd = buildTime(timeEndStr);
+      Set days = buildDays();
       Boolean bolMod = Boolean.valueOf(txmode);
+
+      Distribution distribution = new Distribution();
+      distribution.setAddress(sourceAddress);
+      distribution.setDateBegin(dateBegin);
+      distribution.setDateEnd(dateEnd);
+      distribution.setDays(days);
+      distribution.setFile(file);
+      distribution.setTimeBegin(timeBegin);
+      distribution.setTimeEnd(timeEnd);
+      distribution.setTxmode(bolMod);
 
       final InfoSmeDistr cmd = (InfoSmeDistr)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeDistrImpl").newInstance();
 
-      cmd.createDistribution(ctx, file, dateBeginStr, dateEndStr,
-          timeBeginStr, timeEndStr, dayStr, Boolean.valueOf(txmode), sourceAddress);
+      cmd.createDistribution(ctx, distribution);
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
       ctx.setMessage("Can't find module InfoSme");
@@ -83,7 +92,8 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
     return "INFOSME_CREATE_DISTR";
   }
 
-  private void validateDays() throws ParseException, NoSuchElementException{
+  private Set buildDays() throws ParseException, NoSuchElementException{
+    Set days = new HashSet();
     StringTokenizer tokenizer = new StringTokenizer(dayStr,",");
     while(tokenizer.hasMoreTokens()){
       String token = tokenizer.nextToken();
@@ -93,6 +103,7 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
       int fl=0;
       for(int i=0;i<weekDays.length;i++) {
         if(weekDays[i].equals(token)) {
+          days.add(new Integer(i));
           fl=1;
           break;
         }
@@ -101,19 +112,22 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
         throw new ParseException("Unsupported day format: "+token,0);
       }
     }
+    return days;
   }
 
-  private void validateTime(String str) throws ParseException, NoSuchElementException {
+  private Calendar buildTime(String str) throws NumberFormatException, NoSuchElementException {
+    Calendar cal = Calendar.getInstance();
     StringTokenizer tokenizer = new StringTokenizer(str,timeFormatDelim);
     String token = tokenizer.nextToken();
     if((token==null)||(token.equals(""))) {
       throw new NoSuchElementException("Hour is null");
     }
-    Integer.parseInt(token);
+    cal.set(Calendar.HOUR_OF_DAY,Integer.parseInt(token));
     if((token=tokenizer.nextToken())==null) {
       throw new NoSuchElementException("Minutes is null");
     }
-    Integer.parseInt(token);
+    cal.set(Calendar.MINUTE,Integer.parseInt(token));
+    return cal;
   }
 
 

@@ -15,8 +15,7 @@ import java.util.Map;
  */
 public interface InfoSmeDistr {
 
-  public void createDistribution(CommandContext ctx, String fileName, String dateBegin, String dateEnd,
-                                 String timeBegin, String timeEnd, String days, Boolean txmode, String address);
+  public void createDistribution(CommandContext ctx, Distribution distibution);
 
   public void getStatus(CommandContext ctx, String taskId);
 
