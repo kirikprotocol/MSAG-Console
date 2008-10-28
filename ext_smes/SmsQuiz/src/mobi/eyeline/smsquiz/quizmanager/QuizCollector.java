@@ -32,8 +32,9 @@ class QuizCollector implements Runnable {
           logger.error("Error removing file from DirListener");
         }
         try {
-          quiz.exportStats();
           quizesMap.remove(entry.getKey());
+          quiz.exportStats();
+          quiz.shutdown();
         } catch (QuizException e) {
           logger.error("Error creating resultStatistics");
         }

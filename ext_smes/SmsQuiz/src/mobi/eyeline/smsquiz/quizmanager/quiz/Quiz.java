@@ -114,6 +114,10 @@ public class Quiz {
 
   }
 
+  public void shutdown() {  
+    jstore.shutdown();
+  }
+
   public void exportStats() throws QuizException {
     if (logger.isInfoEnabled()) {
       logger.info("Export statistics begining for: " + fileName);
