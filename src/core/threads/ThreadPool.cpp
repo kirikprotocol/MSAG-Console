@@ -24,7 +24,7 @@ int PooledThread::Execute()
   int blocksheapquantum;
   sigset_t set;
   sigemptyset(&set);
-  for(int i=1;i<=37;i++)if(i!=16 && i!=SIGPROF)sigaddset(&set,i);
+  for(int i=1;i<=37;i++)if(i!=SIGUSR1 && i!=SIGPROF)sigaddset(&set,i);
 
   if(pthread_sigmask(SIG_SETMASK,&set,NULL)!=0)
   {
@@ -154,7 +154,7 @@ void ThreadPool::shutdown(uint32_t timeout)
         if (!usedThreads[i].destructing) {
           __warning2__("Unfinished task:%s",usedThreads[i].ptr->taskName());
           usedThreads[i].ptr->stopTask();
-          usedThreads[i].ptr->Kill(16);
+          usedThreads[i].ptr->Kill(SIGUSR1);
         }
     }
     Unlock();
