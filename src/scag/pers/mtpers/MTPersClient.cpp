@@ -260,7 +260,7 @@ void MTPersClient::SetProperty(ProfileType pt, const PersKey& key, Property& pro
     ReadPacket(sb);
     SetPropertyResult(sb);
   } catch(const PersClientException& e) {
-    smsc_log_error(log, "Set Failed. %s", e.what());
+    smsc_log_warn(log, "Set Failed. %s", e.what());
   } 
 }
 
@@ -286,7 +286,7 @@ void MTPersClient::GetProperty(ProfileType pt, const PersKey& key, const char *p
     GetPropertyResult(prop, sb);
     actTS = time(NULL);
   } catch(const PersClientException& e) {
-    smsc_log_error(log, "Get Failed. %s", e.what());
+    smsc_log_warn(log, "Get Failed. %s", e.what());
   } 
 }
 
@@ -313,7 +313,7 @@ bool MTPersClient::DelProperty(ProfileType pt, const PersKey& key, const char *p
     actTS = time(NULL);
     return b;
   } catch(const PersClientException& e) {
-    smsc_log_error(log, "Del Failed. %s", e.what());
+    smsc_log_warn(log, "Del Failed. %s", e.what());
     return false;
   }
 }
@@ -344,7 +344,7 @@ int MTPersClient::IncProperty(ProfileType pt, const PersKey& key, Property& prop
     actTS = time(NULL);
     return i;
   } catch(const PersClientException& e) {
-    smsc_log_error(log, "Inc Failed. %s", e.what());
+    smsc_log_warn(log, "Inc Failed. %s", e.what());
     return -1;
   }
 }
@@ -379,7 +379,7 @@ int MTPersClient::IncModProperty(ProfileType pt, const PersKey& key, Property& p
     actTS = time(NULL);
     return i;
   } catch(const PersClientException& e) {
-    smsc_log_error(log, "IncMod Failed. %s", e.what());
+    smsc_log_warn(log, "IncMod Failed. %s", e.what());
     return -1;
   }
 }
@@ -422,7 +422,7 @@ void MTPersClient::testCase(const string& address, int key) {
     GetProperty(PT_ABONENT, address.c_str(), tvs, prop);
     DelProperty(PT_ABONENT, address.c_str(), tvs);
   } catch (const PersClientException& exc) {
-    smsc_log_error(log, "address '%s' PersClientException: %s", address.c_str(), exc.what());
+    smsc_log_warn(log, "address '%s' PersClientException: %s", address.c_str(), exc.what());
   }
 
 }
@@ -533,7 +533,7 @@ void MTPersClient::testCase_CommandProcessing(ProfileType pt, const char* addres
     GetPropertyResult(prop, sb);
     smsc_log_debug(log,  "BATCH>>%s %s: get int(after del) %s", storeName.c_str(), profKey, prop.toString().c_str());
   } catch (const PersClientException& exc) {
-    smsc_log_error(log, "Batch Failed: PersClientException: %s", exc.what());
+    smsc_log_warn(log, "Batch Failed: PersClientException: %s", exc.what());
   }
 }
 
@@ -542,20 +542,20 @@ int ClientTask::Execute() {
   smsc_log_debug(logger, "client task %p started", this);
   char address[20];
   time_t t = time(NULL);
-  int iterCnt = 50;
-  int reqCount = 19 * 4 * iterCnt;
+  int iterCnt = 100;
+  int reqCount = 19 * 2 * iterCnt;
   for (int i = 1; i < iterCnt + 1; i += 2) {
     if (isStopping) {
       break;
     }
     try {
       client.init();
-      sprintf(address, "8913880%04d", i);			
+      sprintf(address, "8913%04d%03d", i, taskIndex);			
       //client.testCase_DelProfile(PT_ABONENT, address, i);
       client.testCase_CommandProcessing(PT_ABONENT, address, i);
       client.testCase_CommandProcessing(PT_PROVIDER, address, i);
-      client.testCase_CommandProcessing(PT_SERVICE, address, i);
-      client.testCase_CommandProcessing(PT_OPERATOR, address, i);
+      //client.testCase_CommandProcessing(PT_SERVICE, address, i);
+      //client.testCase_CommandProcessing(PT_OPERATOR, address, i);
       client.disconnect();
     } catch (const PersClientException& exc) {
       smsc_log_error(logger, "%p: address '%s' PersClientException: %s", this, exc.what());

@@ -86,7 +86,10 @@ private:
 
 class ClientTask: public ThreadedTask {
 public:
-  ClientTask(const string& host, int port):client(host, port, 60, 5) { logger = Logger::getInstance("task");};
+  ClientTask(const string& host, int port, int index):client(host, port, 60, 5), taskIndex(index) { 
+    logger = Logger::getInstance("task");
+    smsc_log_error(logger, "ClientTask created %p", this);
+  };
   ~ClientTask() {};
   virtual int Execute();
   virtual const char * taskName() {
@@ -99,6 +102,7 @@ public:
 private:
   MTPersClient client;
   Logger* logger;
+  int taskIndex;
 };
 
 }//mtpers

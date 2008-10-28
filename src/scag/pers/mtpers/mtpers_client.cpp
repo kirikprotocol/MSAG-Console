@@ -76,26 +76,28 @@ int main(int argc, char* argv[])
 
     try {
         string host = "phoenix";
-        int port = 47111;
+        int port = 27880;
         if (argc > 1) {
           port = atoi(argv[1]);
         }
         string address = "89138907759";
+        int threadCount = 10;
         if (argc > 2) {
-          address = argv[3];
+          threadCount = atoi(argv[2]);
         }
 
-        int threadCount = 0;
-
+        int start = time(NULL);
+        int reqCnt = 19 * 2 * 100 * threadCount;
         ThreadPool pool;
-        for (int i = 0; i < threadCount; ++i) {
-          ClientTask *t = new ClientTask(host, port);
+        for (int i = 1; i < threadCount; ++i) {
+          ClientTask *t = new ClientTask(host, port, i);
           pool.startTask(t);
         }
-        mainTask = new ClientTask(host, port);
+        mainTask = new ClientTask(host, port, 0);
         mainTask->Execute();
+        int reqTime = time(NULL) - start;;
         pool.shutdown();
-        smsc_log_error(logger, "Test Stopped");
+        smsc_log_error(logger, "Test Stopped timings: %d req/sec", (reqCnt / reqTime));
        
     }
     catch (PersClientException& exc) 
