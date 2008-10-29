@@ -110,7 +110,7 @@ public class TaskBuilder extends Thread {
       resetTask(task, false);
       checkAndPrepareTask(task, smeContext, getFileCount(), false, false);
 
-      task.setStatus("INPROGRESS");
+      task.setMessagesHaveLoaded(false);
       if(distr !=null) {
         Set days = distr.getDays();
         List activeDays = new LinkedList();
@@ -153,7 +153,7 @@ public class TaskBuilder extends Thread {
       smeContext.getInfoSme().endDeliveryMessageGeneration(task.getId());
       System.out.println("Task generation ok");
 
-      task.setStatus("GENERATED");
+      task.setMessagesHaveLoaded(true);
       storeTaskToConfig();
     } catch (Exception e) {
       e.printStackTrace();

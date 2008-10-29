@@ -62,7 +62,7 @@ public class Task
   // for new deliveries
   private String subject;
   private int actualRecordsSize;
-  private String status = "";
+  private boolean messagesHaveLoaded = false;
 
   public Task(String id) {
     this.id = id;
@@ -109,7 +109,7 @@ public class Task
     uncommitedInProcess = config.getInt(prefix + ".uncommitedInProcess");
     trackIntegrity = config.getBool(prefix + ".trackIntegrity");
     keepHistory = config.getBool(prefix + ".keepHistory");
-    status = config.getString(prefix + ".status");
+    messagesHaveLoaded = config.getBool(prefix + ".messagesHaveLoaded");
     String activeWeekDaysStr = null;
     try { activeWeekDaysStr = config.getString(prefix + ".activeWeekDays"); }
     catch (Throwable th) { activeWeekDaysStr = DEFAULT_ACTIVE_WEEK_DAYS; }
@@ -155,7 +155,7 @@ public class Task
     config.setBool(prefix + ".keepHistory", keepHistory);
     config.setBool(prefix + ".flash", flash);
     config.setString(prefix + ".activeWeekDays", Functions.collectionToString(activeWeekDays, ","));
-    config.setString(prefix + ".status", status);
+    config.setBool(prefix + ".messagesHaveLoaded", messagesHaveLoaded);
   }
 
   public boolean isContainsInConfig(Config config)
@@ -510,11 +510,11 @@ public class Task
     this.flash = flash;
   }
 
-  public String getStatus() {
-    return status;
+  public boolean isMessagesHaveLoaded() {
+    return messagesHaveLoaded;
   }
 
-  public void setStatus(String status) {
-    this.status = status;
+  public void setMessagesHaveLoaded(boolean messagesHaveLoaded) {
+    this.messagesHaveLoaded = messagesHaveLoaded;
   }
 }

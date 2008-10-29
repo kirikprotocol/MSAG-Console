@@ -7,6 +7,7 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.config.Config;
 
 import java.io.File;
 
@@ -77,8 +78,11 @@ public class InfoSmeDistrImpl implements InfoSmeDistr {
 
       final InfoSmeContext smeContext = InfoSmeContext.getInstance(appContext, "InfoSme");
       final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId);
-      String status = smeContext.getConfig().getString(prefix + ".status");
-      if(status==null) {
+      String status;
+      try{
+        boolean loaded = smeContext.getConfig().getBool(prefix + ".messagesHaveLoaded");
+        status = Boolean.toString(loaded);
+      } catch(Exception e) {
         status="";
       }
       ctx.setMessage(status);

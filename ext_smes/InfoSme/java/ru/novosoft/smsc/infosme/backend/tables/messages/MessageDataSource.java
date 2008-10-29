@@ -42,6 +42,10 @@ public class MessageDataSource extends AbstractDataSourceImpl {
     // Prepare files list
     Date fromDate = filter.getFromDate();
     Date tillDate = filter.getTillDate();
+    if(log.isDebugEnabled()) {
+      log.debug("FromDate: "+fromDate);
+      log.debug("TillDate: "+tillDate);
+    }
     if (tillDate == null)
       tillDate = new Date();
 
@@ -52,9 +56,21 @@ public class MessageDataSource extends AbstractDataSourceImpl {
     while (cal.getTime().before(tillDate) || cal.getTime().equals(tillDate)) {
 
       String dirName = dirNameFormat.format(cal.getTime());
-      final String fileNamePrefix = String.valueOf(cal.get(Calendar.HOUR_OF_DAY));
+      int hour = cal.get(Calendar.HOUR_OF_DAY);
+
+      final String fileNamePrefix;
+      if(hour<10) {
+        fileNamePrefix="0"+ String.valueOf(hour);
+      }
+      else {
+        fileNamePrefix=String.valueOf(hour);
+      }
 
       File dir = new File(storeDir, filter.getTaskId() + '/' + dirName);
+      if(log.isDebugEnabled()) {
+        log.debug("dir: "+dir.getAbsolutePath());
+        log.debug("namePrefix: " + fileNamePrefix);
+      }
       File[] files = dir.listFiles(new FilenameFilter() {
         public boolean accept(File dir, String name) {
           return name.equals(fileNamePrefix + "processed.csv") || name.equals(fileNamePrefix + ".csv");
@@ -109,8 +125,11 @@ public class MessageDataSource extends AbstractDataSourceImpl {
               long id = idbase | ((int)offset);
 
               final MessageDataItem di = new MessageDataItem(id, filter.getTaskId(), state, date, msisdn, region, message);
-
+              if (log.isDebugEnabled())
+                log.debug(line);
               if (filter.isItemAllowed(di)) {
+                if (log.isDebugEnabled())
+                  log.debug("allowed");
                 total++;
                 if (rs.size() < query_to_run.getExpectedResultsQuantity())
                   rs.add(di);
