@@ -196,26 +196,25 @@ Response PersCommand::incResult(Profile *pf, SerialBuffer& sb) {
 }
 
 void PersCommand::createAddLogMsg(string const& key, string const& msg) {
-  dblogs.push_back(string("A key=" + key + " property=" + msg));
+  dblogs->push_back(string("A key=" + key + " property=" + msg));
 }
 
 void PersCommand::createUpdateLogMsg(string const& key, string const& msg) {
-  dblogs.push_back(string("U key=" + key + " property=" + msg));
+  dblogs->push_back(string("U key=" + key + " property=" + msg));
 }
 
 void PersCommand::createDelLogMsg(string const& key, string const& msg) {
-  dblogs.push_back(string("D key=" + key + " name=" + msg));
+  dblogs->push_back(string("D key=" + key + " name=" + msg));
 }
 
 void PersCommand::createExpireLogMsg(string const& key, string const& msg) {
-  dblogs.push_back(string("E key=" + key + " property=" + msg));
+  dblogs->push_back(string("E key=" + key + " property=" + msg));
 }
 
 
 void PersPacket::flushLogs(Logger* log) const {
   smsc_log_debug(log, "flush logs");
-  vector<string>::const_iterator i = dblogs.begin();
-  for (i; i != dblogs.end(); ++i) {
+  for (vector<string>::const_iterator i = dblogs.begin(); i != dblogs.end(); ++i) {
     smsc_log_info(log, "%s", (*i).c_str());
   }
 }

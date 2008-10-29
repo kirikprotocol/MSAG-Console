@@ -98,8 +98,8 @@ private:
   typedef CachedDiskStorage< MemStorage, DiskStorage > AbonentStorage;
 
   struct ElementStorage {
-    ElementStorage(unsigned idx):index(idx), glossary(new Glossary()) {};
-    ElementStorage():index(0), glossary(new Glossary()) {};
+    ElementStorage(unsigned idx):glossary(new Glossary()), index(idx) {};
+    ElementStorage():glossary(new Glossary()), index(0) {};
     AbonentStorage* storage;
     Glossary* glossary;
     unsigned index;
@@ -114,7 +114,7 @@ private:
 
 class InfrastructStorageProcessor: public StorageProcessor {
 public:
-  InfrastructStorageProcessor(unsigned maxWaitingCount):StorageProcessor(maxWaitingCount), provider_(NULL), operator_(NULL), service_(NULL) {};
+  InfrastructStorageProcessor(unsigned maxWaitingCount):StorageProcessor(maxWaitingCount), provider_(NULL), service_(NULL), operator_(NULL) {};
   ~InfrastructStorageProcessor();
   void init(const InfrastructStorageConfig& cfg);
   void process(PersPacket* packet) ;
