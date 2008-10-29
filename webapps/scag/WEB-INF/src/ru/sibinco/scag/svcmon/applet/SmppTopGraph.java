@@ -140,7 +140,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     public static final int DELIMITER = 2;
     boolean viewGraph = false;
 
-    int shiftV = 100;
+    int shiftV = 0;
 
     public SmppTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
@@ -194,9 +194,9 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         this.localeText = localeText;
         this.graphScale = graphScale;
 //        this.graphGrid = graphGrid;
-        this.graphGrid = graphGrid<=5? 5:(int)Math.round(graphGrid*0.1)*10;
-        this.graphHiGrid = graphHiGrid;
-        this.graphHead = graphHead;
+        this.graphGrid   = graphGrid<=5? 5:(int)Math.round(graphGrid*0.1)*10;
+        this.graphHiGrid = graphHiGrid<=5? 5:(int)Math.round(graphHiGrid*0.1)*10;
+        this.graphHead   = graphHiGrid<=5? 5:(int)Math.round(graphHiGrid*0.1)*10;
         this.snapSmppHistory = snapSmppHistory;
         addMouseListener(this);
         addMouseMotionListener(this);
