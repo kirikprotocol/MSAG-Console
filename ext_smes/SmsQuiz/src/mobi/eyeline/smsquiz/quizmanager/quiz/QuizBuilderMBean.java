@@ -12,7 +12,7 @@ public class QuizBuilderMBean extends AbstractDynamicMBean {
   private QuizBuilder builder;
 
   public QuizBuilderMBean(QuizBuilder builder) {
-    super(QuizBuilder.class, "quizBuilderMBean");
+    super(QuizBuilderMBean.class, "quizBuilderMBean");
     this.builder = builder;
     attributes.add(new MBeanAttributeInfo("TimeSeparator", "java.lang.String", "Time separator in xml", true, false, false));
     attributes.add(new MBeanAttributeInfo("DatePattern", "java.lang.String", "Date pattern in xml", true, false, false));

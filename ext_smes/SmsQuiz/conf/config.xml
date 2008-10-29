@@ -40,7 +40,6 @@
     <param name="smsc.console.code.ok">100</param>                        <!-- optional -->
     <param name="smsc.console.connect.timeout">60</param> <!-- seconds --><!-- optional -->
     <param name="smsc.console.closer.period">60</param> <!-- seconds -->  <!-- optional -->
-    <param name="infosme.max.wait.creation">1800</param> <!-- seconds --> <!-- optional -->
 
     <param name="info.sme.succ.delivery.status">3</param>
     <param name="info.sme.stats.dir">infoSme</param>

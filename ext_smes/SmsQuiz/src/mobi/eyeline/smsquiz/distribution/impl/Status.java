@@ -51,26 +51,4 @@ public class Status {
     this.status = status;
   }
 
-  public void generateErrorFile() {
-    File file = new File(errorFile);
-    File parentFile = file.getParentFile();
-    if ((parentFile != null) && (!parentFile.exists())) {
-      parentFile.mkdirs();
-    }
-    PrintWriter writer = null;
-    try {
-      writer = new PrintWriter(new BufferedWriter(new FileWriter(file, true)));
-      writer.println("ERROR: Waiting time of creation distribution has expired");
-      writer.flush();
-    } catch (IOException e) {
-      logger.error("Error during writing error file");
-      e.printStackTrace();
-    } finally {
-      if (writer != null) {
-        writer.close();
-      }
-    }
-
-  }
-
 }

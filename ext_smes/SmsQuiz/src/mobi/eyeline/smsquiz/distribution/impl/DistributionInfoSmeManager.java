@@ -45,7 +45,6 @@ public class DistributionInfoSmeManager implements DistributionManager {
   private String filePattern;
   private long checkerFirstDelay;
   private long checkerPeriod;
-  private long maxWait;
   private String login;
   private String password;
   private String host;
@@ -74,7 +73,6 @@ public class DistributionInfoSmeManager implements DistributionManager {
       port = config.getInt("smsc.console.port");
       login = config.getString("smsc.console.access.login");
       password = config.getString("smsc.console.access.password");
-      maxWait = config.getLong("infosme.max.wait.creation", 1800) * 1000;
       checkerFirstDelay = config.getLong("status.checker.delay.first", 60);
       checkerPeriod = config.getLong("status.checker.period", 60);
       consoleTimeout = config.getLong("smsc.console.connect.timeout", 60) * 1000;
@@ -109,7 +107,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
         return new Thread(r, "DistributionStatusChecker");
       }
     });
-    DistributionStatusChecker statusChecker = new DistributionStatusChecker(tasksMap, maxWait, STATUS_COMMAND, codeOk, consoleClient);
+    DistributionStatusChecker statusChecker = new DistributionStatusChecker(tasksMap, STATUS_COMMAND, codeOk, consoleClient);
     scheduledStatusChecker.scheduleAtFixedRate(statusChecker, checkerFirstDelay, checkerPeriod,
         java.util.concurrent.TimeUnit.SECONDS);
     monitor = new DistributionManagerMBean(this);
@@ -247,15 +245,16 @@ public class DistributionInfoSmeManager implements DistributionManager {
         if (logger.isInfoEnabled()) {
           logger.info("File added for analysis: " + file.getAbsolutePath());
         }
-      }
-      file = new File(path + "/" + dirFormat.format(date) + "/" + fileFormat.format(date) + "processed.csv");
-      if (file.exists()) {
-        files.add(file);
-        if (logger.isInfoEnabled()) {
-          logger.info("File added for analysis: " + file.getAbsolutePath());
+      } else{
+        file = new File(path + "/" + dirFormat.format(date) + "/" + fileFormat.format(date) + "processed.csv");
+        if (file.exists()) {
+          files.add(file);
+          if (logger.isInfoEnabled()) {
+            logger.info("File added for analysis: " + file.getAbsolutePath());
+          }
         }
+        calendar.add(Calendar.HOUR_OF_DAY, 1);
       }
-      calendar.add(Calendar.HOUR_OF_DAY, 1);
     }
 
     ResultSet result = new DistributionResultSet(files, startDate, endDate, succDeliveryStatus, dateInFilePattern);
@@ -304,10 +303,6 @@ public class DistributionInfoSmeManager implements DistributionManager {
 
   Long getCheckerPeriod() {
     return checkerPeriod;
-  }
-
-  Long getMaxWait() {
-    return maxWait;
   }
 
   String getLogin() {

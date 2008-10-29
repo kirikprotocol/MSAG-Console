@@ -12,7 +12,7 @@ public class StatsFilesCacheMBean extends AbstractDynamicMBean {
   private StatsFilesCache cache;
 
   public StatsFilesCacheMBean(StatsFilesCache cache) {
-    super(StatsFilesCache.class, "Statistics files cache's monitor");
+    super(StatsFilesCacheMBean.class, "Statistics files cache's monitor");
     this.cache = cache;
 
     attributes.add(new MBeanAttributeInfo("DatePattern",

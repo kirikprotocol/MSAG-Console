@@ -12,7 +12,7 @@ public class DistributionManagerMBean extends AbstractDynamicMBean {
   private DistributionInfoSmeManager manager;
 
   public DistributionManagerMBean(DistributionInfoSmeManager manager) {
-    super(DistributionInfoSmeManager.class, "distributionManagerMBean");
+    super(DistributionManagerMBean.class, "distributionManagerMBean");
     this.manager = manager;
 
     attributes.add(new MBeanAttributeInfo("DirPattern",
@@ -25,8 +25,6 @@ public class DistributionManagerMBean extends AbstractDynamicMBean {
         "java.lang.Long", "Time to delay the first execution of StatusChecker", true, false, false));
     attributes.add(new MBeanAttributeInfo("CheckerPeriod",
         "java.lang.Long", "Period of StatusChecker's execution", true, false, false));
-    attributes.add(new MBeanAttributeInfo("MaxWait",
-        "java.lang.Long", "Time to wait generation of distribution", true, false, false));
     attributes.add(new MBeanAttributeInfo("Login",
         "java.lang.String", "Console User's name ", true, false, false));
     attributes.add(new MBeanAttributeInfo("Password",
@@ -62,8 +60,6 @@ public class DistributionManagerMBean extends AbstractDynamicMBean {
       return manager.getCheckerFirstDelay();
     } else if (attribute.equals("CheckerPeriod")) {
       return manager.getCheckerPeriod();
-    } else if (attribute.equals("MaxWait")) {
-      return manager.getMaxWait();
     } else if (attribute.equals("Login")) {
       return manager.getLogin();
     } else if (attribute.equals("Password")) {

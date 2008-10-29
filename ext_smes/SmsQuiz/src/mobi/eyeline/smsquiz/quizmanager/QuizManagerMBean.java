@@ -13,7 +13,7 @@ public class QuizManagerMBean extends AbstractDynamicMBean {
   private QuizManager manager;
 
   public QuizManagerMBean(QuizManager manager) {
-    super(QuizManager.class, "quizManagerMBean");
+    super(QuizManagerMBean.class, "quizManagerMBean");
     this.manager = manager;
     attributes.add(new MBeanAttributeInfo("CountActiveQuizes",
         "java.lang.Integer", "Count active quizes", true, false, false));

@@ -13,20 +13,18 @@ import java.util.Map;
 public class DistributionStatusChecker implements Runnable {
 
   private Map<String, Status> tasksMap;
-  private long maxWait;
   private SmscConsoleClient consoleClient;
   private String statusCommand;
   private String codeOk;
 
   private static Logger logger = Logger.getLogger(DistributionStatusChecker.class);
 
-  public DistributionStatusChecker(Map<String, Status> tasksMap, long maxWait,
+  public DistributionStatusChecker(Map<String, Status> tasksMap,
                                    String statusCommand, String codeOk, SmscConsoleClient consoleClient) {
     if ((tasksMap == null) || (statusCommand == null) || (codeOk == null) || (consoleClient == null)) {
       throw new NullPointerException("Some params are null");
     }
     this.tasksMap = tasksMap;
-    this.maxWait = maxWait;
     this.consoleClient = consoleClient;
     this.statusCommand = statusCommand;
     this.codeOk = codeOk;
@@ -84,15 +82,7 @@ public class DistributionStatusChecker implements Runnable {
         tasksMap.remove(id);
         logger.info("Distribution generated, external task begins...");
       }
-    } else {
-      long creationDate = task.getCreationDate();
-      if ((System.currentTimeMillis() - creationDate) > maxWait) {
-        tasksMap.remove(id);
-        task.generateErrorFile();
-        if (logger.isInfoEnabled()) {
-          logger.warn("Time for waiting distribution is expired. Tasks observing deleted for id=" + id);
-        }
-      }
     }
   }
 }
+

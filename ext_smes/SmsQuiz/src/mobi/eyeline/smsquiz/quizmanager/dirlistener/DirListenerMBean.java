@@ -12,7 +12,7 @@ public class DirListenerMBean extends AbstractDynamicMBean {
   private DirListener dirListener;
 
   public DirListenerMBean(DirListener dirListener) {
-    super(DirListener.class, "DirListener's monitor");
+    super(DirListenerMBean.class, "DirListener's monitor");
     this.dirListener = dirListener;
 
     attributes.add(new MBeanAttributeInfo("ActiveFiles",

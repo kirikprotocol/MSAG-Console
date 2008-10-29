@@ -12,7 +12,7 @@ public class DBSubscriptionDataSourceMBean extends AbstractDynamicMBean {
   private DBSubscriptionDataSource ds;
 
   public DBSubscriptionDataSourceMBean(DBSubscriptionDataSource ds) {
-    super(DBSubscriptionDataSource.class, "dbSubscriptionDataSourceMBean");
+    super(DBSubscriptionDataSourceMBean.class, "dbSubscriptionDataSourceMBean");
     this.ds = ds;
     attributes.add(new MBeanAttributeInfo("SQLcommands",
         "java.lang.String", "HashTable of sql commands", true, false, false));
