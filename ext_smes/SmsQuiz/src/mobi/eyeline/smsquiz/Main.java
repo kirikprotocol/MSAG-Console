@@ -82,7 +82,9 @@ public class Main {
           return new Thread(r, "QuizCreator");
         }
       });
-      scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 5400, TimeUnit.SECONDS);
+      scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 6000, TimeUnit.SECONDS);
+      //scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 1800, TimeUnit.SECONDS);
+      //new QuizCreator().run();
       //todo remove
 
     } catch (Exception e) {
@@ -111,22 +113,41 @@ public class Main {
   //todo remove all
 
   private static class QuizCreator extends Thread {
+
     public void run() {
       try {
-        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", 791366, 791367, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 60, "170", "170", "Short\n question");
+        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("79131700000"), Long.parseLong("79131700000"), 500, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 75, "170", "170", "Short\n question");
         quizIndex++;
-        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", 791367, 791368, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 70, "180", "180", "Medium question");
+        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("79131800000"), Long.parseLong("79131800000"), 500, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 85, "180", "180", "Short\n question");
         quizIndex++;
-        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", 791368, 791369, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 80, "190", "190", "Long question");
+        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("79131800000"), Long.parseLong("79131900000"), 500, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 90, "190", "190", "Short\n question");
         quizIndex++;
       } catch (SubManagerException e) {
         logger.error("Error creatin quiz files", e);
         e.printStackTrace();
       }
     }
+
+  /*  public void run() {
+      try {
+          createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("79131700001"), Long.parseLong("79131700010"), 1, SubscriptionManager.getInstance());
+          createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 20, "170", "170", "Short\n question");
+          quizIndex++;
+          createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("79131700001"), Long.parseLong("79131700010"), 1, SubscriptionManager.getInstance());
+          createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 21, "180", "180", "Short\n question");
+          quizIndex++;
+          createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("79131700001"), Long.parseLong("79131700010"), 1, SubscriptionManager.getInstance());
+          createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 22, "190", "190", "Short\n question");
+          quizIndex++;
+        }
+      } catch (SubManagerException e) {
+        logger.error("Error creatin quiz files", e);
+        e.printStackTrace();
+      }
+    }*/
   }
 
   public static int send(String da, String oa, String text) {
@@ -253,9 +274,8 @@ public class Main {
     }
   }
 
-  private static void createAbFile(String fileName, long from, long till, SubscriptionManager subscriptionManager) {
-    from *= 100000;
-    till *= 100000;
+  private static void createAbFile(String fileName, long from, long till, int divider, SubscriptionManager subscriptionManager) {
+
 
     PrintWriter writer = null;
 
@@ -264,10 +284,10 @@ public class Main {
 
       String abonent;
 
-      for (long i = from; i < till; i++) {
+      for (long i = from; i <= till; i++) {
         abonent = "+" + i;
         writer.println(abonent);
-        if ((i % 500) == 0) {
+        if ((i % divider) == 0) {
           try {
             subscriptionManager.subscribe(abonent);
           } catch (SubManagerException e) {
