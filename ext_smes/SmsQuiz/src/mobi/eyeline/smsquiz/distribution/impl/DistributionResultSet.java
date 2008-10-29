@@ -1,16 +1,21 @@
 package mobi.eyeline.smsquiz.distribution.impl;
 
-import org.apache.log4j.Logger;
-
-import java.io.*;
-import java.util.*;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-
-import mobi.eyeline.smsquiz.storage.ResultSet;
-import mobi.eyeline.smsquiz.storage.StorageException;
 import mobi.eyeline.smsquiz.distribution.DistributionException;
 import mobi.eyeline.smsquiz.distribution.StatsDelivery;
+import mobi.eyeline.smsquiz.storage.ResultSet;
+import mobi.eyeline.smsquiz.storage.StorageException;
+import org.apache.log4j.Logger;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.StringTokenizer;
 
 class DistributionResultSet implements ResultSet {
 
@@ -25,7 +30,7 @@ class DistributionResultSet implements ResultSet {
   private String successStatus;
   private SimpleDateFormat dateFormat;
 
-  public DistributionResultSet(final Collection<File> files, Date startDate, Date endDate, String successStatus, String dateInFilePattern) throws DistributionException {
+  public DistributionResultSet(final Collection<File> files, final Date startDate, final Date endDate, final String successStatus, final String dateInFilePattern) throws DistributionException {
     if ((files == null) || (startDate == null) || (endDate == null) || (successStatus == null) || (dateInFilePattern == null)) {
       logger.error("Some arguments in constructor are null");
       throw new DistributionException("Some arguments in constructor are null", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
@@ -87,7 +92,7 @@ class DistributionResultSet implements ResultSet {
     files.clear();
   }
 
-  private boolean parseLine(String line, String successStatus, Date from, Date until) throws StorageException {
+  private boolean parseLine(String line, String successStatus, final Date from, final Date until) throws StorageException {
     StringTokenizer tokenizer = new StringTokenizer(line, ",");
     String status = tokenizer.nextToken();
     if (status.equals(successStatus)) {

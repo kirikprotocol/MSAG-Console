@@ -1,23 +1,22 @@
 package mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile;
 
+import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 import mobi.eyeline.smsquiz.replystats.Reply;
+import org.apache.log4j.Logger;
 
+import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadFactory;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-import java.io.File;
-
-import com.eyeline.utils.config.xml.XmlConfig;
-import com.eyeline.utils.config.properties.PropertiesConfig;
-import com.eyeline.utils.config.ConfigException;
-import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
-import org.apache.log4j.Logger;
 
 public class StatsFilesCache {
 
@@ -25,6 +24,7 @@ public class StatsFilesCache {
   private long timeLimit;
   private String datePattern;
   private String timePattern;
+  private String fileNamePattern;
   private String replyStatsDir;
   private static final Logger logger = Logger.getLogger(StatsFilesCache.class);
 
@@ -32,17 +32,15 @@ public class StatsFilesCache {
   private SimpleDateFormat fileNameFormat;
   private ScheduledExecutorService fileCollectorScheduler;
 
-
   public StatsFilesCache(final String configFile) throws FileStatsException {
     long delayFirst;
-    String fileNamePattern;
     long iterationPeriod;
     try {
       final XmlConfig c = new XmlConfig();
       c.load(new File(configFile));
 
       PropertiesConfig config = new PropertiesConfig(c.getSection("replystats").toProperties("."));
-      fileNamePattern = config.getString("statsFile.filename.pattern");
+      fileNamePattern = config.getString("statsFile.filename.pattern", "yyyyMMdd");
       timePattern = config.getString("statsFile.time.pattern.in.file", "yyyyMMdd");
       datePattern = config.getString("statsFile.date.pattern.in.file", "НН:mm");
       replyStatsDir = config.getString("statsFile.dir.name", null);
@@ -54,9 +52,9 @@ public class StatsFilesCache {
         file.mkdirs();
       }
 
-      delayFirst = config.getLong("fileCollector.time.first.delay");
-      iterationPeriod = config.getLong("fileCollector.time.period");
-      timeLimit = 1000 * config.getLong("fileCollector.time.limit");
+      delayFirst = config.getLong("fileCollector.time.first.delay", 60);
+      iterationPeriod = config.getLong("fileCollector.time.period", 60);
+      timeLimit = 1000 * config.getLong("fileCollector.time.limit", 60);
       if (fileNamePattern == null) {
         throw new FileStatsException("statsFile.filename.pattern not found in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
       }
@@ -77,7 +75,10 @@ public class StatsFilesCache {
     monitor = new StatsFilesCacheMBean(this);
   }
 
-  public Collection<StatsFile> getFiles(String da, Date from, Date till) throws FileStatsException {
+  public Collection<StatsFile> getFiles(final String da, final Date from, final Date till) throws FileStatsException {
+    if (logger.isInfoEnabled()) {
+      logger.info("Getting files for da=" + da + " from=" + from + " till=" + till);
+    }
     if ((da == null) || (from == null) || (till == null)) {
       throw new FileStatsException("Some arguments are null", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
     }
@@ -97,14 +98,28 @@ public class StatsFilesCache {
     resetTillDay(calendar);
     Date modifedTill = calendar.getTime();
 
+    if (logger.isInfoEnabled()) {
+      logger.info("Modified from: " + modifedFrom);
+      logger.info("Modified till: " + modifedTill);
+    }
+
     for (File f : dir.listFiles()) {
       if (f.isFile()) {
         String name = f.getName();
+        if (name.lastIndexOf(".csv") < 0) {
+          continue;
+        }
         try {
           Date date = fileNameFormat.parse(name.substring(0, name.lastIndexOf(".")));
+          if (logger.isInfoEnabled()) {
+            logger.info("Date parsed from file: " + date);
+          }
           if ((date.compareTo(modifedTill) <= 0) && (date.compareTo(modifedFrom) >= 0)) {
             if ((statsFile = lockupFile(da, calendar.getTime(), true)) != null) {
               files.add(statsFile);
+              if (logger.isInfoEnabled()) {
+                logger.info("File added for analysis: " + f.getAbsolutePath());
+              }
             }
           }
         } catch (ParseException e) {
@@ -137,7 +152,7 @@ public class StatsFilesCache {
     new FileCollector(true).run();
   }
 
-  private String buildKey(String da, Date date) {
+  private String buildKey(final String da, final Date date) {
     String result = "";
     result += da + '_' + fileNameFormat.format(date);
     return result;
@@ -202,6 +217,13 @@ public class StatsFilesCache {
       return statsFileImpl.getReplies(oa, from, till);
     }
 
+    public String getName() {
+      if (statsFileImpl != null) {
+        return statsFileImpl.getName();
+      }
+      return null;
+    }
+
     public void close() {
       lock.unlock();
     }
@@ -260,6 +282,14 @@ public class StatsFilesCache {
     }
   }
 
+  public String getOpenedFiles() {
+    StringBuilder builder = new StringBuilder("\n");
+    for (StatsFile file : filesMap.values()) {
+      builder.append(file.getName()).append("\n");
+    }
+    return builder.substring(1);
+  }
+
   public int countOpenedFiles() {
     if (filesMap != null) {
       return filesMap.values().size();
@@ -267,7 +297,6 @@ public class StatsFilesCache {
       return 0;
     }
   }
-
 
   String getReplyStatsDir() {
     return replyStatsDir.substring(0);
@@ -284,6 +313,7 @@ public class StatsFilesCache {
   void setDatePattern(String datePattern) {
     this.datePattern = datePattern;
   }
+
   String getTimePattern() {
     return timePattern;
   }
@@ -294,6 +324,10 @@ public class StatsFilesCache {
 
   void setReplyStatsDir(String replyStatsDir) {
     this.replyStatsDir = replyStatsDir;
+  }
+
+  String getFileNamePattern() {
+    return fileNamePattern;
   }
 
 }

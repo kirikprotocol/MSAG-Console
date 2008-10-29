@@ -1,11 +1,10 @@
 package mobi.eyeline.smsquiz.quizmanager.quiz;
 
+import mobi.eyeline.smsquiz.quizmanager.QuizException;
 import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.Properties;
-
-import mobi.eyeline.smsquiz.quizmanager.QuizException;
 
 /**
  * author: alkhal

@@ -1,5 +1,6 @@
 package mobi.eyeline.smsquiz.distribution;
 
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 import mobi.eyeline.smsquiz.storage.ResultSet;
 
 import java.util.Date;
@@ -11,6 +12,8 @@ public interface DistributionManager {
   public ResultSet getStatistics(String id, Date startDate, Date endDate) throws DistributionException;
 
   public String repairStatus(String id, String errorFile, Runnable task, Distribution distribution) throws DistributionException;
+
+  public AbstractDynamicMBean getMonitor();
 
   public void shutdown();
 

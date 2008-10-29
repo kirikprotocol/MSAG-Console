@@ -1,17 +1,21 @@
 package mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile;
 
 import com.eyeline.utils.FileUtils;
-import com.eyeline.utils.tree.radix.StringsRTree;
 import com.eyeline.utils.tree.radix.FileBasedStringsRTree;
+import com.eyeline.utils.tree.radix.StringsRTree;
 import com.eyeline.utils.tree.radix.UnmodifiableRTree;
-
-import java.util.*;
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-
-import org.apache.log4j.Logger;
 import mobi.eyeline.smsquiz.replystats.Reply;
+import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 class StatsFileImpl implements StatsFile {
   private static Logger logger = Logger.getLogger(StatsFileImpl.class);
@@ -147,7 +151,7 @@ class StatsFileImpl implements StatsFile {
   }
 
 
-  public List<Reply> getReplies(String oa, Date from, Date till) throws FileStatsException {
+  public List<Reply> getReplies(String oa, final Date from, final Date till) throws FileStatsException {
     if ((oa == null) || (from == null) || (till == null)) {
       logger.error("Some arguments are null!");
       throw new FileStatsException("Some arguments are null!", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
@@ -160,7 +164,10 @@ class StatsFileImpl implements StatsFile {
     try {
       long prevPosition = randomAccessFile.getFilePointer();
       for (Long aPos : positions) {
-        result.add(getReply(aPos, false));
+        Reply reply = getReply(aPos, false);
+        if ((reply.getDate().compareTo(till) <= 0) && (reply.getDate().compareTo(from) >= 0)) {
+          result.add(reply);
+        }
       }
       randomAccessFile.seek(prevPosition);
     } catch (IOException e) {
@@ -290,6 +297,10 @@ class StatsFileImpl implements StatsFile {
     file.delete();
     FileBasedStringsRTree.createRTree(stringsRTree, treeFileName, new LongListSerializer());
     logger.info("Tree saved");
+  }
+
+  public String getName() {
+    return filePath;
   }
 
 }

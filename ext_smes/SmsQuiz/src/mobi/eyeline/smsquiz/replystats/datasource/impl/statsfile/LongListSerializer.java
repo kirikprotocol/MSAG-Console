@@ -1,10 +1,10 @@
 package mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile;
 
-import com.eyeline.utils.tree.radix.Serializer;
 import com.eyeline.utils.IOUtils;
+import com.eyeline.utils.tree.radix.Serializer;
 
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * author: alkhal

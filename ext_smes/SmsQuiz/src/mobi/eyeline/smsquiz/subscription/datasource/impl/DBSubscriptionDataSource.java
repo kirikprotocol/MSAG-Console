@@ -1,31 +1,34 @@
 package mobi.eyeline.smsquiz.subscription.datasource.impl;
 
-import mobi.eyeline.smsquiz.subscription.datasource.*;
-import mobi.eyeline.smsquiz.subscription.Subscription;
-import mobi.eyeline.smsquiz.storage.StorageException;
-import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
-
-import java.util.Date;
-import java.sql.*;
-import java.io.InputStream;
-import java.io.IOException;
-
-import snaq.db.ConnectionPool;
-import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
+import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
+import mobi.eyeline.smsquiz.storage.StorageException;
+import mobi.eyeline.smsquiz.subscription.Subscription;
+import mobi.eyeline.smsquiz.subscription.datasource.SubscriptionDataSource;
 import org.apache.log4j.Logger;
+import snaq.db.ConnectionPool;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
 
 
 public class DBSubscriptionDataSource implements SubscriptionDataSource {
 
   private static final Logger logger = Logger.getLogger(DBSubscriptionDataSource.class);
   private final ConnectionPool pool;
+  private AbstractDynamicMBean monitor;
 
   private final String properties = "smsquiz.properties";
   private final PropertiesConfig sql;
 
   public DBSubscriptionDataSource() throws StorageException {
-
     pool = ConnectionPoolFactory.createConnectionPool("smsquiz", Integer.MAX_VALUE, 60000);
     InputStream is = DBSubscriptionDataSource.class.getResourceAsStream(properties);
     sql = new PropertiesConfig();
@@ -42,6 +45,7 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
         logger.error("Can't close stream", e1);
       }
     }
+    monitor = new DBSubscriptionDataSourceMBean(this);
   }
 
   private String getSql(java.lang.String string) throws StorageException {
@@ -156,6 +160,10 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
     return new SubscriptionResultSet(sqlResult, connection, prepStatement);
   }
 
+  public AbstractDynamicMBean getMonitor() {
+    return monitor;
+  }
+
 
   public void remove(String address) throws StorageException {
     if (address == null) {
@@ -211,5 +219,9 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
     } catch (SQLException exc) {
       logger.error("Unable to close connection", exc);
     }
+  }
+
+  String sqlToString() {
+    return sql.toString();
   }
 }

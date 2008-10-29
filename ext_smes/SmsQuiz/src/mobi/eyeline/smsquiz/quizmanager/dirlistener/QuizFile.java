@@ -1,9 +1,5 @@
 package mobi.eyeline.smsquiz.quizmanager.dirlistener;
 
-import mobi.eyeline.smsquiz.quizmanager.QuizException;
-
-import java.io.File;
-
 /**
  * author: alkhal
  */

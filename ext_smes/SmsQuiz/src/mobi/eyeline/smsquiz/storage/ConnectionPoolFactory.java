@@ -1,15 +1,13 @@
 package mobi.eyeline.smsquiz.storage;
 
+import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
 import snaq.db.ConnectionPool;
 
 import java.io.File;
-import java.sql.DriverManager;
 import java.sql.Driver;
-
-import com.eyeline.utils.config.properties.PropertiesConfig;
-import com.eyeline.utils.config.ConfigException;
-import com.eyeline.utils.config.xml.XmlConfig;
-import mobi.eyeline.smsquiz.storage.StorageException;
+import java.sql.DriverManager;
 
 
 public class ConnectionPoolFactory {

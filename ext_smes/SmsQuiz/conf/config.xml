@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <config>
-    <param name="servicesConfig">conf/services.xml</param>
-    <param name="smppConfig">conf/smpp.properties</param>
+  <param name="servicesConfig">conf/services.xml</param>
+  <param name="smppConfig">conf/smpp.properties</param>
 
-      <!-- allowed values for requestHandleStrategy: threadPool, greedyConsumer -->
-    <param name="requestHandleStrategy">threadPool</param>
-    <param name="threadsNumber">10</param>
+  <!-- allowed values for requestHandleStrategy: threadPool, greedyConsumer -->
+  <param name="requestHandleStrategy">threadPool</param>
+  <param name="threadsNumber">10</param>
 
 
   <section name="dbpool">
@@ -19,53 +19,49 @@
   </section>
 
   <section name="replystats">
-      <section name="statsFile">
-        <param name="dir.name">replyStats</param>
-        <param name="date.pattern.in.file">yyyyMMdd</param>
-        <param name="time.pattern.in.file">HH:mm</param>
-        <param name="filename.pattern">yyyyMMdd</param>
-      </section>
-      <section name="fileCollector">
-        <param name="time.limit">10</param>  <!--seconds -->  
-        <param name="time.first.delay">10</param>  <!-- seconds -->
-        <param name="time.period">10</param>       <!-- seconds -->
-      </section>
+    <section name="statsFile">
+      <param name="dir.name">replyStats</param>
+      <param name="date.pattern.in.file">yyyyMMdd</param>                   <!-- optional -->
+      <param name="time.pattern.in.file">HH:mm</param>                      <!-- optional -->
+      <param name="filename.pattern">yyyyMMdd</param>                       <!-- optional -->
+    </section>
+    <section name="fileCollector">
+      <param name="time.limit">60</param>  <!--seconds -->                  <!-- optional -->
+      <param name="time.first.delay">60</param>  <!-- seconds -->           <!-- optional -->
+      <param name="time.period">60</param>       <!-- seconds -->           <!-- optional -->
+    </section>
   </section>
 
   <section name="distribution">
-      <param name="smsc.console.host">phoenix</param>
-      <param name="smsc.console.port">39826</param>
-      <param name="smsc.console.access.login">admin</param>
-      <param name="smsc.console.access.password">password</param>
-      <param name="smsc.console.code.ok">100</param>
-      <param name="smsc.console.command.create">infosme distr create</param>
-      <param name="smsc.console.command.status">infosme distr status</param>
-      <param name="smsc.console.connect.timeout">20</param> <!-- seconds --> 
-      <param name="smsc.console.closer.period">60</param> <!-- seconds -->
-      <param name="infosme.max.wait.creation">1800</param> <!-- seconds -->
-      <param name="infosme.success.status">GENERATED</param>
-      <param name="infosme.inprogress.status">INPROGRESS</param>
+    <param name="smsc.console.host">phoenix</param>
+    <param name="smsc.console.port">39826</param>
+    <param name="smsc.console.access.login">admin</param>
+    <param name="smsc.console.access.password">password</param>
+    <param name="smsc.console.code.ok">100</param>                        <!-- optional -->
+    <param name="smsc.console.connect.timeout">60</param> <!-- seconds --><!-- optional -->
+    <param name="smsc.console.closer.period">60</param> <!-- seconds -->  <!-- optional -->
+    <param name="infosme.max.wait.creation">1800</param> <!-- seconds --> <!-- optional -->
 
-      <param name="status.checker.delay.first">10</param> <!-- seconds -->
-      <param name="status.checker.period">30</param>    <!-- seconds -->
-      <param name="info.sme.stats.dir">infoSme</param>
-      <param name="info.sme.stats.date.dir.pattern">yyMMdd</param>
-      <param name="info.sme.stats.time.file.pattern">HH</param>
-      <param name="info.sme.succ.delivery.status">3</param>
-      <param name="info.sme.date.format.in.file">yyMMddHHmmss</param> 
+    <param name="info.sme.succ.delivery.status">3</param>
+    <param name="info.sme.stats.dir">infoSme</param>
+    <param name="status.checker.delay.first">10</param> <!-- seconds -->  <!-- optional -->
+    <param name="status.checker.period">30</param>    <!-- seconds -->    <!-- optional -->
+    <param name="info.sme.stats.date.dir.pattern">yyMMdd</param>          <!-- optional -->
+    <param name="info.sme.stats.time.file.pattern">HH</param>             <!-- optional -->
+    <param name="info.sme.date.format.in.file">yyMMddHHmmss</param>       <!-- optional -->
   </section>
 
   <section name="quizmanager">
-      <param name="dir.quiz">test_QuizManager</param>
-      <param name="dir.status">test_QuizManager</param>
-      <param name="listener.delay.first">0</param>     <!-- seconds -->
-      <param name="listener.period.repeat">10</param>    <!-- seconds -->
-      <param name="collector.delay.first">10</param>     <!-- seconds -->
-      <param name="collector.period.repeat">10</param>    <!-- seconds -->
-      <param name="quiz.date.pattern">dd.MM.yyyy HH:mm</param>
-      <param name="quiz.time.pattern">HH:mm</param>
-      <param name="dir.result">quizResults</param>
-      <param name="dir.modified.abonents">test_QuizManager</param>
+    <param name="dir.quiz">test_QuizManager</param>
+    <param name="dir.status">test_QuizManager</param>
+    <param name="listener.delay.first">30</param>     <!-- seconds -->    <!-- optional -->
+    <param name="listener.period.repeat">30</param>    <!-- seconds -->   <!-- optional -->
+    <param name="collector.delay.first">30</param>     <!-- seconds -->   <!-- optional -->
+    <param name="collector.period.repeat">30</param>    <!-- seconds -->  <!-- optional -->
+    <param name="quiz.date.pattern">dd.MM.yyyy HH:mm</param>              <!-- optional -->
+    <param name="quiz.time.pattern">HH:mm</param>                         <!-- optional -->
+    <param name="dir.result">quizResults</param>                          
+    <param name="dir.modified.abonents">test_QuizManager</param>
   </section>
 
   <section name="jmx">

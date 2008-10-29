@@ -1,16 +1,15 @@
 package mobi.eyeline.smsquiz.subscription.datasource.impl;
 
+import mobi.eyeline.smsquiz.storage.ResultSet;
 import mobi.eyeline.smsquiz.storage.StorageException;
 import mobi.eyeline.smsquiz.subscription.Subscription;
-import mobi.eyeline.smsquiz.storage.ResultSet;
+import org.apache.log4j.Logger;
 
-import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Date;
-
-import org.apache.log4j.Logger;
 
 
 class SubscriptionResultSet implements ResultSet {

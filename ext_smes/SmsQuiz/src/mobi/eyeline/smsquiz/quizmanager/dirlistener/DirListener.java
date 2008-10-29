@@ -1,21 +1,19 @@
 package mobi.eyeline.smsquiz.quizmanager.dirlistener;
 
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.Observable;
-import java.util.Map;
 import java.util.HashMap;
-import java.util.Collection;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import java.util.Map;
+import java.util.Observable;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.Condition;
-
-import org.apache.log4j.Logger;
-import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DirListener extends Observable implements Runnable {
 
@@ -125,8 +123,8 @@ public class DirListener extends Observable implements Runnable {
     return filesMap.size();
   }
 
-  public Collection<String> getFilesList() {
-    return filesMap.keySet();
+  public String getFilesList() {
+    return filesMap.keySet().toString();
   }
 
   private class XmlFileFilter implements FilenameFilter {

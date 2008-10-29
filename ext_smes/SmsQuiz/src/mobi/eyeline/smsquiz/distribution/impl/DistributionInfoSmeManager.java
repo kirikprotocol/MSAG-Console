@@ -1,29 +1,33 @@
 package mobi.eyeline.smsquiz.distribution.impl;
 
-import com.eyeline.utils.config.xml.XmlConfig;
-import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.ConfigException;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.io.*;
-import java.text.SimpleDateFormat;
-
-import org.apache.log4j.Logger;
-import mobi.eyeline.smsquiz.distribution.DistributionManager;
-import mobi.eyeline.smsquiz.distribution.DistributionException;
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 import mobi.eyeline.smsquiz.distribution.Distribution;
+import mobi.eyeline.smsquiz.distribution.DistributionException;
+import mobi.eyeline.smsquiz.distribution.DistributionManager;
+import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleClient;
 import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleException;
 import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleResponse;
-import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleClient;
 import mobi.eyeline.smsquiz.storage.ResultSet;
+import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 
 public class DistributionInfoSmeManager implements DistributionManager {
 
   private static final Logger logger = Logger.getLogger(DistributionInfoSmeManager.class);
+  private AbstractDynamicMBean monitor;
 
   private ConcurrentHashMap<String, Status> tasksMap;
   private SmscConsoleClient consoleClient;
@@ -36,45 +40,45 @@ public class DistributionInfoSmeManager implements DistributionManager {
   private SimpleDateFormat dirFormat;
   private SimpleDateFormat fileFormat;
   private SimpleDateFormat dateInCommand;
-  private String createCommand;
-  private String statusCommand;
-  private String inprogressStatus;
 
+  private String dirPattern;
+  private String filePattern;
+  private long checkerFirstDelay;
+  private long checkerPeriod;
+  private long maxWait;
+  private String login;
+  private String password;
+  private String host;
+  private int port;
+  long consoleTimeout;
+  long closerPeriod;
 
   private String codeOk;
-
+  private final static String STATUS_COMMAND = "infosme distr status";
+  private final static String CREATE_COMMAND = "infosme distr create";
 
   public DistributionInfoSmeManager(final String configFile) throws DistributionException {
-    String dirPattern;
-    String filePattern;
-    String successStatus;
-    long checkerFirstDleay;
-    long checkerPeriod;
-    long maxWait;
+
     try {
       final XmlConfig c = new XmlConfig();
       c.load(new File(configFile));
       PropertiesConfig config = new PropertiesConfig(c.getSection("distribution").toProperties("."));
 
-      statsDir = config.getString("info.sme.stats.dir", null);
+      statsDir = config.getString("info.sme.stats.dir");
       dirPattern = config.getString("info.sme.stats.date.dir.pattern", "yyMMdd");
       filePattern = config.getString("info.sme.stats.time.file.pattern", "HH");
-      succDeliveryStatus = config.getString("info.sme.succ.delivery.status", null);
+      succDeliveryStatus = config.getString("info.sme.succ.delivery.status");
       dateInFilePattern = config.getString("info.sme.date.format.in.file", "yyMMddHHmmss");
 
-      inprogressStatus = config.getString("infosme.inprogress.status");
-      successStatus = config.getString("infosme.success.status");
-      createCommand = config.getString("smsc.console.command.create");
-      statusCommand = config.getString("smsc.console.command.status");
-      String host = config.getString("smsc.console.host");
-      int port = config.getInt("smsc.console.port");
-      String login = config.getString("smsc.console.access.login");
-      String password = config.getString("smsc.console.access.password");
-      maxWait = config.getLong("infosme.max.wait.creation") * 1000;
-      checkerFirstDleay = config.getLong("status.checker.delay.first");
-      checkerPeriod = config.getLong("status.checker.period");
-      long consoleTimeout = config.getLong("smsc.console.connect.timeout") * 1000;
-      long closerPeriod = config.getLong("smsc.console.closer.period");
+      host = config.getString("smsc.console.host");
+      port = config.getInt("smsc.console.port");
+      login = config.getString("smsc.console.access.login");
+      password = config.getString("smsc.console.access.password");
+      maxWait = config.getLong("infosme.max.wait.creation", 1800) * 1000;
+      checkerFirstDelay = config.getLong("status.checker.delay.first", 60);
+      checkerPeriod = config.getLong("status.checker.period", 60);
+      consoleTimeout = config.getLong("smsc.console.connect.timeout", 60) * 1000;
+      closerPeriod = config.getLong("smsc.console.closer.period", 60);
 
 
       codeOk = config.getString("smsc.console.code.ok");
@@ -105,9 +109,10 @@ public class DistributionInfoSmeManager implements DistributionManager {
         return new Thread(r, "DistributionStatusChecker");
       }
     });
-    DistributionStatusChecker statusChecker = new DistributionStatusChecker(tasksMap, maxWait, statusCommand, codeOk, successStatus, consoleClient);
-    scheduledStatusChecker.scheduleAtFixedRate(statusChecker, checkerFirstDleay, checkerPeriod,
+    DistributionStatusChecker statusChecker = new DistributionStatusChecker(tasksMap, maxWait, STATUS_COMMAND, codeOk, consoleClient);
+    scheduledStatusChecker.scheduleAtFixedRate(statusChecker, checkerFirstDelay, checkerPeriod,
         java.util.concurrent.TimeUnit.SECONDS);
+    monitor = new DistributionManagerMBean(this);
   }
 
 
@@ -119,13 +124,13 @@ public class DistributionInfoSmeManager implements DistributionManager {
       logger.error("Some fields of argument are empty");
       throw new DistributionException("Some fields of argument are empty", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
     }
-    SmscConsoleResponse response = null;
+    SmscConsoleResponse response;
     try {
       File file = new File(distr.getFilePath());
       String fileName = file.getAbsolutePath();
 
       StringBuilder command = new StringBuilder();
-      command.append(createCommand);
+      command.append(CREATE_COMMAND);
       command.append(getFormatProp(fileName));
       command.append(getFormatProp(dateInCommand.format(distr.getDateBegin())));
       command.append(getFormatProp(dateInCommand.format(distr.getDateEnd())));
@@ -178,7 +183,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
 
     try {
       StringBuilder command = new StringBuilder();
-      command.append(statusCommand);
+      command.append(STATUS_COMMAND);
       command.append(getFormatProp(id));
 
       if (logger.isInfoEnabled()) {
@@ -197,7 +202,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
           if (status.equals("")) {
             id = createDistribution(distribution, task, errorFile);
           } else {
-            if (status.equals(inprogressStatus)) {
+            if (status.equals("false")) {
               tasksMap.put(id, new Status(task, errorFile));
             }
           }
@@ -214,9 +219,13 @@ public class DistributionInfoSmeManager implements DistributionManager {
     }
   }
 
-  public ResultSet getStatistics(String id, Date startDate, Date endDate) throws DistributionException {
+  public AbstractDynamicMBean getMonitor() {
+    return monitor;
+  }
+
+  public ResultSet getStatistics(final String id, final Date startDate, final Date endDate) throws DistributionException {
     if (logger.isInfoEnabled()) {
-      logger.info("Getting stats for id: " + id);
+      logger.info("Getting stats for id: " + id + " from=" + startDate + " till=" + endDate);
     }
     if ((id == null) || (startDate == null) || (endDate == null)) {
       throw new DistributionException();
@@ -235,6 +244,16 @@ public class DistributionInfoSmeManager implements DistributionManager {
       File file = new File(path + "/" + dirFormat.format(date) + "/" + fileFormat.format(date) + ".csv");
       if (file.exists()) {
         files.add(file);
+        if (logger.isInfoEnabled()) {
+          logger.info("File added for analysis: " + file.getAbsolutePath());
+        }
+      }
+      file = new File(path + "/" + dirFormat.format(date) + "/" + fileFormat.format(date) + "processed.csv");
+      if (file.exists()) {
+        files.add(file);
+        if (logger.isInfoEnabled()) {
+          logger.info("File added for analysis: " + file.getAbsolutePath());
+        }
       }
       calendar.add(Calendar.HOUR_OF_DAY, 1);
     }
@@ -269,6 +288,74 @@ public class DistributionInfoSmeManager implements DistributionManager {
       res = builder.toString();
     }
     return res;
+  }
+
+  String getDirPattern() {
+    return dirPattern;
+  }
+
+  String getFilePattern() {
+    return filePattern;
+  }
+
+  Long getCheckerFirstDelay() {
+    return checkerFirstDelay;
+  }
+
+  Long getCheckerPeriod() {
+    return checkerPeriod;
+  }
+
+  Long getMaxWait() {
+    return maxWait;
+  }
+
+  String getLogin() {
+    return login;
+  }
+
+  String getPassword() {
+    return password;
+  }
+
+  String getHost() {
+    return host;
+  }
+
+  Integer getport() {
+    return port;
+  }
+
+  String getCodeok() {
+    return codeOk;
+  }
+
+  String getUngeneratedDistributions() {
+    return tasksMap.keySet().toString();
+  }
+
+  Integer countUngeneratedDistributions() {
+    return tasksMap.keySet().size();
+  }
+
+  Long getConsoleTimeout() {
+    return consoleTimeout;
+  }
+
+  Long getCloserPeriod() {
+    return closerPeriod;
+  }
+
+  String getStatsDir() {
+    return statsDir;
+  }
+
+  String getDateInFilePattern() {
+    return dateInFilePattern;
+  }
+
+  String getSuccDeliveryStatus() {
+    return succDeliveryStatus;
   }
 }
  

@@ -1,8 +1,5 @@
 package mobi.eyeline.smsquiz.quizmanager.dirlistener;
 
-import mobi.eyeline.smsquiz.quizmanager.QuizException;
-
-
 public class Notification {
 
   public static enum FileStatus {

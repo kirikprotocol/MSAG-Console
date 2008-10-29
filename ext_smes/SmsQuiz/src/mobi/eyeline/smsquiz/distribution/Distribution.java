@@ -1,6 +1,9 @@
 package mobi.eyeline.smsquiz.distribution;
 
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.Iterator;
 
 public class Distribution {
 

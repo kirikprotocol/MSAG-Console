@@ -1,21 +1,23 @@
 package mobi.eyeline.smsquiz.quizmanager.quiz;
 
-import java.util.*;
-import java.io.*;
-import java.text.SimpleDateFormat;
-
-import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
-import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
-import mobi.eyeline.smsquiz.replystats.Reply;
-import mobi.eyeline.smsquiz.quizmanager.Result;
-import mobi.eyeline.smsquiz.quizmanager.QuizException;
-import mobi.eyeline.smsquiz.distribution.DistributionManager;
+import com.eyeline.jstore.JStore;
 import mobi.eyeline.smsquiz.distribution.DistributionException;
+import mobi.eyeline.smsquiz.distribution.DistributionManager;
 import mobi.eyeline.smsquiz.distribution.StatsDelivery;
+import mobi.eyeline.smsquiz.quizmanager.QuizException;
+import mobi.eyeline.smsquiz.quizmanager.Result;
+import mobi.eyeline.smsquiz.replystats.Reply;
+import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
+import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
 import mobi.eyeline.smsquiz.storage.ResultSet;
 import mobi.eyeline.smsquiz.storage.StorageException;
-import com.eyeline.jstore.JStore;
 import org.apache.log4j.Logger;
+
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * author: alkhal
@@ -35,6 +37,7 @@ public class Quiz {
   private int maxRepeat;
   private String defaultCategory;
   private String dirResult;
+  private String quizName;
 
   private List<ReplyPattern> replyPatterns;
 
@@ -55,7 +58,7 @@ public class Quiz {
       throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
     fileName = file.getAbsolutePath();
-    String quizName = file.getName().substring(0, file.getName().lastIndexOf("."));
+    quizName = file.getName().substring(0, file.getName().lastIndexOf("."));
     jstore.init(fileName + ".bin", 60000, 10);
     status = new Status(statusDir + "/" + quizName + ".status");
     replyPatterns = new ArrayList<ReplyPattern>();
@@ -114,7 +117,7 @@ public class Quiz {
 
   }
 
-  public void shutdown() {  
+  public void shutdown() {
     jstore.shutdown();
   }
 
@@ -123,7 +126,7 @@ public class Quiz {
       logger.info("Export statistics begining for: " + fileName);
     }
     SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
-    String fileName = dirResult + "/" + this.getId() + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
+    String fileName = dirResult + "/" + quizName + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
     dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
 
     File file = new File(fileName);
@@ -140,6 +143,9 @@ public class Quiz {
         StatsDelivery delivery = (StatsDelivery) resultSet.get();
         String oa = delivery.getMsisdn();
         Date dateDelivery = delivery.getDate();
+        if (logger.isInfoEnabled()) {
+          logger.info("Analysis delivery: " + delivery);
+        }
         if ((reply = replyStatsDataSource.getLastReply(oa, destAddress, dateBegin, dateEnd)) != null) {
           String text = reply.getText();
           ReplyPattern replyPattern = getReplyPattern(text);
@@ -161,7 +167,14 @@ public class Quiz {
           printWriter.print(",");
           printWriter.print(category);
           printWriter.print(",");
-          printWriter.println( reply.getText().replace( System.getProperty("line.separator"),"\\n") );
+          printWriter.println(reply.getText().replace(System.getProperty("line.separator"), "\\n"));
+          if (logger.isInfoEnabled()) {
+            logger.info("Last reply for oa=" + oa + " is " + reply + " stored");
+          }
+        } else {
+          if (logger.isInfoEnabled()) {
+            logger.info("Last reply for oa=" + oa + " is empty");
+          }
         }
       }
       printWriter.flush();

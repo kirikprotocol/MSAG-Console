@@ -1,13 +1,12 @@
 package mobi.eyeline.smsquiz.quizmanager;
 
-import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import mobi.eyeline.smsquiz.quizmanager.dirlistener.DirListener;
-
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
-import java.util.Date;
-
+import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import org.apache.log4j.Logger;
+
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 class QuizCollector implements Runnable {
 

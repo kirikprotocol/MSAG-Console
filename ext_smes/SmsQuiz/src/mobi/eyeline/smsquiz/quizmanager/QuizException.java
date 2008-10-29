@@ -1,12 +1,11 @@
 package mobi.eyeline.smsquiz.quizmanager;
 
 import com.eyeline.utils.config.ConfigException;
-
-import java.io.IOException;
-
 import mobi.eyeline.smsquiz.distribution.DistributionException;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
 import mobi.eyeline.smsquiz.storage.StorageException;
+
+import java.io.IOException;
 
 /**
  * author: alkhal

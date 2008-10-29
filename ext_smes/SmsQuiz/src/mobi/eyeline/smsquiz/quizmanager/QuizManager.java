@@ -1,30 +1,32 @@
 package mobi.eyeline.smsquiz.quizmanager;
 
-import mobi.eyeline.smsquiz.distribution.DistributionManager;
-import mobi.eyeline.smsquiz.distribution.DistributionException;
+import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.jmx.log4j.LoggingMBean;
 import mobi.eyeline.smsquiz.distribution.Distribution;
+import mobi.eyeline.smsquiz.distribution.DistributionException;
+import mobi.eyeline.smsquiz.distribution.DistributionManager;
 import mobi.eyeline.smsquiz.quizmanager.dirlistener.DirListener;
 import mobi.eyeline.smsquiz.quizmanager.dirlistener.Notification;
 import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import mobi.eyeline.smsquiz.quizmanager.quiz.QuizBuilder;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
-import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import mobi.eyeline.smsquiz.subscription.SubManagerException;
-import com.eyeline.utils.config.xml.XmlConfig;
-import com.eyeline.utils.config.properties.PropertiesConfig;
-import com.eyeline.utils.config.ConfigException;
-
-import java.io.*;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadFactory;
-import java.util.*;
-import java.lang.management.ManagementFactory;
-
+import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import javax.management.*;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import java.io.*;
+import java.lang.management.ManagementFactory;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * author: alkhal
@@ -38,12 +40,14 @@ public class QuizManager implements Observer {
   private DirListener dirListener;
   private QuizCollector quizCollector;
   private static ReplyStatsDataSource replyStatsDataSource;
-  private static DistributionManager distributionManager;        //init ConnectionPoll for DB needed
-  private static SubscriptionManager subscriptionManager;
+  private static DistributionManager distributionManager;
+  private static SubscriptionManager subscriptionManager;        //init ConnectionPoll for DB needed
 
   private ScheduledExecutorService scheduledDirListener;
   private ScheduledExecutorService scheduledQuizCollector;
   private QuizBuilder quizBuilder;
+
+  private QuizManagerMBean monitor;
 
   private ConcurrentHashMap<String, Quiz> quizesMap;
   private String quizDir;
@@ -81,16 +85,16 @@ public class QuizManager implements Observer {
       final XmlConfig c = new XmlConfig();
       c.load(new File(configFile));
       PropertiesConfig config = new PropertiesConfig(c.getSection("quizmanager").toProperties("."));
-      listenerDelayFirst = config.getLong("listener.delay.first");
-      listenerPeriod = config.getLong("listener.period.repeat");
-      collectorDelayFirst = config.getLong("collector.delay.first");
-      collectorPeriod = config.getLong("collector.period.repeat");
+      listenerDelayFirst = config.getLong("listener.delay.first", 30);
+      listenerPeriod = config.getLong("listener.period.repeat", 30);
+      collectorDelayFirst = config.getLong("collector.delay.first", 30);
+      collectorPeriod = config.getLong("collector.period.repeat", 30);
       quizDir = config.getString("dir.quiz");
       statusDir = config.getString("dir.status");
-      datePattern = config.getString("quiz.date.pattern");
-      timePattern = config.getString("quiz.time.pattern");
-      dirResult = config.getString("dir.result");
-      dirModifiedAb = config.getString("dir.modified.abonents");
+      datePattern = config.getString("quiz.date.pattern", "dd.MM.yyyy HH:mm");
+      timePattern = config.getString("quiz.time.pattern", "HH:mm");
+      dirResult = config.getString("dir.result", "quizResults");
+      dirModifiedAb = config.getString("dir.modified.abonents", "quizManager_ab_mod");
 
       File file = new File(dirModifiedAb);
       if (!file.exists()) {
@@ -128,6 +132,7 @@ public class QuizManager implements Observer {
     if (!file.exists()) {
       file.mkdirs();
     }
+    monitor = new QuizManagerMBean(this);
   }
 
   public void start() {
@@ -266,7 +271,7 @@ public class QuizManager implements Observer {
   }
 
   private void makeSubscribedOnly(Distribution distribution, String question) throws QuizException {
-    if ((distribution == null) || (distribution.getFilePath() == null)||(question == null)) {
+    if ((distribution == null) || (distribution.getFilePath() == null) || (question == null)) {
       return;
     }
     File file = new File(distribution.getFilePath());
@@ -274,7 +279,7 @@ public class QuizManager implements Observer {
       logger.error("Distributions abonents file doesn't exist");
       throw new QuizException("Distributions abonents file doesn't exist", QuizException.ErrorCode.ERROR_INIT);
     }
-    question = question.replace(System.getProperty("line.separator"),"\\n");
+    question = question.replace(System.getProperty("line.separator"), "\\n");
     String line;
     PrintWriter writer = null;
     BufferedReader reader = null;
@@ -399,22 +404,33 @@ public class QuizManager implements Observer {
     dirListener.remove(newQuiz.getFileName(), false);
   }
 
-  public MBeanServer getMBeansServer() throws QuizException{
+  public MBeanServer getMBeansServer() throws QuizException {
     final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
     try {
       mbs.registerMBean(dirListener.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=dirListener"));
       mbs.registerMBean(replyStatsDataSource.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=replystatsdsource"));
+      mbs.registerMBean(distributionManager.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=distributionmanager"));
+      mbs.registerMBean(subscriptionManager.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=subscriptionManager"));
+      mbs.registerMBean(quizBuilder.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=quizBuilder"));
+      mbs.registerMBean(monitor, new ObjectName("SMSQUIZ.quizmanager:mbean=quizManager"));
+      final LoggingMBean lb = new LoggingMBean("SMSQUIZ", LogManager.getLoggerRepository());
+      mbs.registerMBean(lb, new ObjectName("SMSQUIZ:mbean=logging"));
+
     } catch (Exception e) {
       e.printStackTrace();
-      logger.error(e,e);
+      logger.error(e, e);
       throw new QuizException(e);
     }
-    return  mbs;
+    return mbs;
   }
 
 
   public int countQuizes() {
     return quizesMap.size();
+  }
+
+  public String getAvailableQuizes() {
+    return quizesMap.values().toString();
   }
 
   public String getStatusDir() {
@@ -423,6 +439,30 @@ public class QuizManager implements Observer {
 
   public String getDirResult() {
     return dirResult;
+  }
+
+  String getQuizDir() {
+    return quizDir;
+  }
+
+  Long getListenerDelayFirst() {
+    return listenerDelayFirst;
+  }
+
+  Long getListenerPeriod() {
+    return listenerPeriod;
+  }
+
+  Long getCollectorDelayFirst() {
+    return collectorDelayFirst;
+  }
+
+  Long getCollectorPeriod() {
+    return collectorPeriod;
+  }
+
+  String getDirModifiedAb() {
+    return dirModifiedAb;
   }
 
 }

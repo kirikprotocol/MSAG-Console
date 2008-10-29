@@ -1,34 +1,32 @@
 package mobi.eyeline.smsquiz;
 
 import com.eyeline.sme.handler.MessageHandler;
-import com.eyeline.sme.smpp.SMPPTransceiver;
-import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.OutgoingObject;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.SMPPTransceiver;
 import com.eyeline.sme.smpp.ShutdownedException;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
-import com.sun.jdmk.comm.HtmlAdaptorServer;
 import com.sun.jdmk.comm.AuthInfo;
-
-import java.io.*;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.text.SimpleDateFormat;
-
-import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
+import com.sun.jdmk.comm.HtmlAdaptorServer;
 import mobi.eyeline.smsquiz.distribution.impl.DistributionInfoSmeManager;
-import mobi.eyeline.smsquiz.replystats.datasource.impl.FileReplyStatsDataSource;
-import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
-import mobi.eyeline.smsquiz.subscription.SubManagerException;
 import mobi.eyeline.smsquiz.quizmanager.QuizManager;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.FileReplyStatsDataSource;
+import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
+import mobi.eyeline.smsquiz.subscription.SubManagerException;
+import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import org.apache.log4j.Logger;
 import ru.aurorisoft.smpp.Message;
 
 import javax.management.*;
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 /**
  * author: alkhal
@@ -39,7 +37,6 @@ public class Main {
   private static OutgoingQueue outgoingQueue;
 
   private static int quizIndex = 1;
-  private static ScheduledExecutorService scheduledQuizCreator;
   final static String conf = "conf/config.xml";
 
   public static void main(String[] args) {
@@ -49,7 +46,7 @@ public class Main {
     MessageHandler mh = null;
     QuizManager quizManager = null;
     try {
-      
+
       ConnectionPoolFactory.init(conf);
 
       QuizManager.init(conf, new DistributionInfoSmeManager(conf),
@@ -67,7 +64,7 @@ public class Main {
 
       final XmlConfig c = new XmlConfig();
       c.load(new File(conf));
-      if(c.getSection("jmx")!=null) {
+      if (c.getSection("jmx") != null) {
         PropertiesConfig config = new PropertiesConfig(c.getSection("jmx").toProperties("."));
         int jmxPort = config.getInt("port");
         String user = config.getString("user");
@@ -80,7 +77,7 @@ public class Main {
       }
 
       //todo remove
-      scheduledQuizCreator = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+      ScheduledExecutorService scheduledQuizCreator = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
         public Thread newThread(Runnable r) {
           return new Thread(r, "QuizCreator");
         }
@@ -106,7 +103,7 @@ public class Main {
   }
 
   public static void registerAdapter(MBeanServer mBeanServer, int port, String user, String password) throws MBeanRegistrationException, InstanceAlreadyExistsException, NotCompliantMBeanException, MalformedObjectNameException {
-    HtmlAdaptorServer adapter = new HtmlAdaptorServer(port, new AuthInfo[] {new AuthInfo(user, password)});
+    HtmlAdaptorServer adapter = new HtmlAdaptorServer(port, new AuthInfo[]{new AuthInfo(user, password)});
     mBeanServer.registerMBean(adapter, new ObjectName("SMSQUIZ:mbean=htmlAdaptor"));
     adapter.start();
   }

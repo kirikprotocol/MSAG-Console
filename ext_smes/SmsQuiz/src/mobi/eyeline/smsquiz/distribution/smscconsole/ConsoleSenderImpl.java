@@ -2,8 +2,8 @@ package mobi.eyeline.smsquiz.distribution.smscconsole;
 
 import org.apache.log4j.Logger;
 
-import java.net.Socket;
 import java.io.*;
+import java.net.Socket;
 import java.util.LinkedList;
 
 /**

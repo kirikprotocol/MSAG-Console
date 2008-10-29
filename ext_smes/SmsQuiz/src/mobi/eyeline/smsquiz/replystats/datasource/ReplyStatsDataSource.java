@@ -1,12 +1,9 @@
 package mobi.eyeline.smsquiz.replystats.datasource;
 
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 import mobi.eyeline.smsquiz.replystats.Reply;
 
-import java.util.Collection;
 import java.util.Date;
-import java.util.Map;
-
-import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 
 public interface ReplyStatsDataSource {
 

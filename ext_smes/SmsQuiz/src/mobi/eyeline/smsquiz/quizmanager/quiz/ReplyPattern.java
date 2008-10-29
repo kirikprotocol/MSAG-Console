@@ -1,9 +1,7 @@
 package mobi.eyeline.smsquiz.quizmanager.quiz;
 
-import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
-
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class ReplyPattern {
 

@@ -1,10 +1,9 @@
 package mobi.eyeline.smsquiz.replystats.datasource;
 
 import com.eyeline.utils.config.ConfigException;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.FileStatsException;
 
 import java.io.IOException;
-
-import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.FileStatsException;
 
 /**
  * author: alkhal

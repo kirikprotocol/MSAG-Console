@@ -1,7 +1,7 @@
 package mobi.eyeline.smsquiz.storage;
 
-import java.sql.SQLException;
 import java.io.IOException;
+import java.sql.SQLException;
 
 
 public class StorageException extends Exception {

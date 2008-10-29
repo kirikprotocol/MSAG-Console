@@ -1,12 +1,11 @@
 package mobi.eyeline.smsquiz.distribution.impl;
 
+import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleClient;
+import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleException;
+import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleResponse;
 import org.apache.log4j.Logger;
 
 import java.util.Map;
-
-import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleResponse;
-import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleException;
-import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleClient;
 
 /**
  * author: alkhal
@@ -18,13 +17,12 @@ public class DistributionStatusChecker implements Runnable {
   private SmscConsoleClient consoleClient;
   private String statusCommand;
   private String codeOk;
-  private String successStatus;
 
   private static Logger logger = Logger.getLogger(DistributionStatusChecker.class);
 
   public DistributionStatusChecker(Map<String, Status> tasksMap, long maxWait,
-                                   String statusCommand, String codeOk, String successStatus, SmscConsoleClient consoleClient) {
-    if ((tasksMap == null) || (statusCommand == null) || (codeOk == null) || (successStatus == null) || (consoleClient == null)) {
+                                   String statusCommand, String codeOk, SmscConsoleClient consoleClient) {
+    if ((tasksMap == null) || (statusCommand == null) || (codeOk == null) || (consoleClient == null)) {
       throw new NullPointerException("Some params are null");
     }
     this.tasksMap = tasksMap;
@@ -32,7 +30,6 @@ public class DistributionStatusChecker implements Runnable {
     this.consoleClient = consoleClient;
     this.statusCommand = statusCommand;
     this.codeOk = codeOk;
-    this.successStatus = successStatus;
   }
 
   public void run() {
@@ -80,7 +77,7 @@ public class DistributionStatusChecker implements Runnable {
     if (logger.isInfoEnabled()) {
       logger.info("Handling: id=" + id + " status=" + status);
     }
-    if (status.equals(successStatus)) {
+    if (status.equals("true")) {
       if (!task.isExecuted()) {
         task.setStatus(Status.DistrStatus.FINISHED);
         task.start();

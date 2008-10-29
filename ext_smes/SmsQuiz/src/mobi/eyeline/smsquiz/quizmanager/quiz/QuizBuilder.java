@@ -1,19 +1,23 @@
 package mobi.eyeline.smsquiz.quizmanager.quiz;
 
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 import mobi.eyeline.smsquiz.distribution.Distribution;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
-import org.jdom.input.SAXBuilder;
+import org.apache.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
-import org.apache.log4j.Logger;
+import org.jdom.input.SAXBuilder;
 
-import java.io.IOException;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.text.ParseException;
-import java.util.*;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.StringTokenizer;
 
 
 /**
@@ -23,11 +27,15 @@ public class QuizBuilder {
   private static final Logger logger = Logger.getLogger(QuizBuilder.class);
   private final SimpleDateFormat dateFormat;
   private final String timeSeparator;
+  private final String dPattern;
 
+  private AbstractDynamicMBean monitor;
 
   public QuizBuilder(String dPattern, String tSeparotor) {
-    timeSeparator = tSeparotor;
+    this.timeSeparator = tSeparotor;
+    this.dPattern = dPattern;
     dateFormat = new SimpleDateFormat(dPattern);
+    monitor = new QuizBuilderMBean(this);
   }
 
   public void buildQuiz(final String filepath, Distribution distribution, Quiz quiz) throws QuizException {
@@ -290,4 +298,15 @@ public class QuizBuilder {
     }
   }
 
+  String getDatePattern() {
+    return dPattern;
+  }
+
+  String getTimeSeparator() {
+    return timeSeparator;
+  }
+
+  public AbstractDynamicMBean getMonitor() {
+    return monitor;
+  }
 }

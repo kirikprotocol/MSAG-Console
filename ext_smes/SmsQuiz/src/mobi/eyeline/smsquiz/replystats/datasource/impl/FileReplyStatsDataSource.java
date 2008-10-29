@@ -1,16 +1,17 @@
 package mobi.eyeline.smsquiz.replystats.datasource.impl;
 
-import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.StatsFilesCache;
-import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.StatsFile;
-import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.FileStatsException;
-import mobi.eyeline.smsquiz.replystats.Reply;
-import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
-import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
-
-import java.util.*;
-
-import org.apache.log4j.Logger;
 import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
+import mobi.eyeline.smsquiz.replystats.Reply;
+import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
+import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.FileStatsException;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.StatsFile;
+import mobi.eyeline.smsquiz.replystats.datasource.impl.statsfile.StatsFilesCache;
+import org.apache.log4j.Logger;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 public class FileReplyStatsDataSource implements ReplyStatsDataSource {
 
@@ -27,7 +28,7 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
 
   public void add(Reply reply) throws ReplyDataSourceException {
     reply.setText(reply.getText().replace(
-        System.getProperty("line.separator"),"\\n")
+        System.getProperty("line.separator"), "\\n")
     );
     String da = reply.getDa();
     Date date = reply.getDate();
@@ -52,7 +53,10 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
   }
 
 
-  public Reply getLastReply(String oa, String da, Date from, Date till) throws ReplyDataSourceException {
+  public Reply getLastReply(final String oa, final String da, final Date from, final Date till) throws ReplyDataSourceException {
+    if (logger.isInfoEnabled()) {
+      logger.info("Getting last reply for oa=" + oa + " da=" + da + " from=" + from + " till=" + till);
+    }
     Reply reply = null;
     if ((oa == null) || (da == null) || (from == null) || (till == null)) {
       logger.error("Some arguments are null");
@@ -69,6 +73,9 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
     for (StatsFile file : files) {
       try {
         file.open();
+        if (logger.isInfoEnabled()) {
+          logger.info("Analysis file: " + file.getName());
+        }
         replies = file.getReplies(oa, from, till);
         if (replies == null) {
           continue;
@@ -78,6 +85,7 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
             reply = aR;
           }
         }
+
       } catch (FileStatsException e) {
         logger.error("Error during getting replies", e);
         throw new ReplyDataSourceException("Error during getting replies", e);
@@ -85,6 +93,13 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
         if (file != null) {
           file.close();
         }
+      }
+    }
+    if (logger.isInfoEnabled()) {
+      if (reply != null) {
+        logger.info("last reply: " + reply);
+      } else {
+        logger.info("Last reply is null");
       }
     }
     return reply;

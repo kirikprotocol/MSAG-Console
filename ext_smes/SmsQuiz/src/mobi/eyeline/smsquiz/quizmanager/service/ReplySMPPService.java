@@ -1,20 +1,19 @@
 package mobi.eyeline.smsquiz.quizmanager.service;
 
-import mobi.eyeline.smsquiz.quizmanager.QuizManager;
-import mobi.eyeline.smsquiz.quizmanager.QuizException;
-import mobi.eyeline.smsquiz.quizmanager.Result;
-import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
 import com.eyeline.sme.handler.SMPPRequest;
 import com.eyeline.sme.handler.SMPPServiceException;
 import com.eyeline.sme.handler.services.BasicService;
 import com.eyeline.sme.smpp.ShutdownedException;
 import com.logica.smpp.Data;
-
-import java.util.Properties;
-
+import mobi.eyeline.smsquiz.quizmanager.QuizException;
+import mobi.eyeline.smsquiz.quizmanager.QuizManager;
+import mobi.eyeline.smsquiz.quizmanager.Result;
+import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
+import org.apache.log4j.Logger;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.SMPPException;
-import org.apache.log4j.Logger;
+
+import java.util.Properties;
 
 public class ReplySMPPService extends BasicService {
 

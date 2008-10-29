@@ -1,10 +1,9 @@
 package mobi.eyeline.smsquiz.quizmanager;
 
 import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
+import org.apache.log4j.Logger;
 
 import java.util.Map;
-
-import org.apache.log4j.Logger;
 
 /**
  * author: alkhal

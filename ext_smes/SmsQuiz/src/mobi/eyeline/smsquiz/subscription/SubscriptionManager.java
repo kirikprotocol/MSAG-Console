@@ -1,9 +1,9 @@
 package mobi.eyeline.smsquiz.subscription;
 
 
-import mobi.eyeline.smsquiz.subscription.datasource.SubscriptionDataSource;
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 import mobi.eyeline.smsquiz.storage.StorageException;
-import mobi.eyeline.smsquiz.subscription.Subscription;
+import mobi.eyeline.smsquiz.subscription.datasource.SubscriptionDataSource;
 import mobi.eyeline.smsquiz.subscription.datasource.impl.DBSubscriptionDataSource;
 import org.apache.log4j.Logger;
 
@@ -75,5 +75,9 @@ public class SubscriptionManager {
       logger.error("Error init manager", e);
       throw new SubManagerException("Error init manager", e);
     }
+  }
+
+  public AbstractDynamicMBean getMonitor() {
+    return dataSource.getMonitor();
   }
 }

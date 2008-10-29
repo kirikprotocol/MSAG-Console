@@ -16,15 +16,15 @@ public class DirListenerMBean extends AbstractDynamicMBean {
     this.dirListener = dirListener;
 
     attributes.add(new MBeanAttributeInfo("ActiveFiles",
-        "java.util.Colection", "Collection of active quizes files", true, false, false));
+        "java.lang.String", "Collection of active quizes files", true, false, false));
     attributes.add(new MBeanAttributeInfo("CountActiveFiles",
-        "java.util.Integer", "Count active quizes files", true, false, false));    
+        "java.lang.Integer", "Count active quizes files", true, false, false));
   }
 
   public Object getAttribute(String attribute) throws AttributeNotFoundException, MBeanException, ReflectionException {
     if (attribute.equals("ActiveFiles"))
       return dirListener.getFilesList();
-    else if(attribute.equals("CountActiveFiles"))
+    else if (attribute.equals("CountActiveFiles"))
       return dirListener.countFiles();
     throw new AttributeNotFoundException("Attribute " + attribute + " not found");
   }

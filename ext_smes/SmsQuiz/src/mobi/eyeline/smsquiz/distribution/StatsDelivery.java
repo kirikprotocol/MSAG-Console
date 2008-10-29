@@ -1,10 +1,9 @@
 package mobi.eyeline.smsquiz.distribution;
 
 import mobi.eyeline.smsquiz.storage.StorageException;
+import org.apache.log4j.Logger;
 
 import java.util.Date;
-
-import org.apache.log4j.Logger;
 
 /**
  * author: alkhal
