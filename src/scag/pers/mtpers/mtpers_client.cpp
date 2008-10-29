@@ -78,12 +78,15 @@ int main(int argc, char* argv[])
         string host = "phoenix";
         int port = 27880;
         if (argc > 1) {
-          port = atoi(argv[1]);
+          host = argv[1];
+        }
+        if (argc > 2) {
+          port = atoi(argv[2]);
         }
         string address = "89138907759";
         int threadCount = 10;
-        if (argc > 2) {
-          threadCount = atoi(argv[2]);
+        if (argc > 3) {
+          threadCount = atoi(argv[3]);
         }
 
         int start = time(NULL);
