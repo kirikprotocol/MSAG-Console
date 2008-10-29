@@ -407,7 +407,6 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
         SCAGCommand* reqptr(&request);
         se = SessionManager::Instance().getSession( sk, reqptr );
         // FIXME: USR
-        // FIXME: correct actions for missing session
 
         /*
          if(!request.getUSR())
@@ -424,10 +423,12 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
         if (se.get())
         {
             re::RuleEngine::Instance().process(request, *se.get(), rs);
+            HttpCommandRelease rel(request);
             
             if (rs.status == re::STATUS_LONG_CALL)
             {
                 makeLongCall(request, se);
+                rel.leaveLocked();
                 return rs.status;
             }
 
@@ -495,13 +496,11 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
         SCAGCommand* rescmd(&response);
         // FIXME: should session be already there (if not change to true)?
         se = SessionManager::Instance().getSession( sk, rescmd, false );
-        // FIXME: correct status
-        if ( ! se.get() ) return re::STATUS_PROCESS_LATER;
 
         re::RuleStatus rs;
-
         if ( se.get() )
         {
+            HttpCommandRelease rel(response);
             re::RuleEngine::Instance().process(response, *se.get(), rs);
 
             if (rs.status == re::STATUS_OK )
@@ -516,14 +515,31 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
             if (rs.status == re::STATUS_LONG_CALL)
             {
                 makeLongCall(response, se);
+                rel.leaveLocked();
                 return rs.status;
             }
 
-            if (rs.status == re::STATUS_FAILED) {
-                response.trc.result = rs.result;
-            }
-        } else
+        } else {
+
             smsc_log_error( logger, "http_response session not found abonent=%s, USR=%d", response.getAddress().c_str(), response.getUSR());
+            
+            // FIXME: correct status
+            if ( ! rescmd ) {
+                // session is locked by another command
+                smsc_log_error( logger, "http_response session is locked for abonent=%s, USR=%d", response.getAddress().c_str(), response.getUSR());
+                return re::STATUS_PROCESS_LATER;
+            } else {
+                // session is not found
+                smsc_log_error( logger, "http_response session not found abonent=%s, USR=%d", response.getAddress().c_str(), response.getUSR());
+                // return re::STATUS_FAILED;
+                rs.status = re::STATUS_FAILED;
+            }
+        }
+
+        if (rs.status == re::STATUS_FAILED) {
+            response.trc.result = rs.result;
+        }
+
     }
     catch(Exception& e)
     {
@@ -578,6 +594,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         re::RuleStatus rs;
         if (se.get())
         {
+            HttpCommandRelease rel(response);
             response.setCommandId(HTTP_DELIVERY);
             response.setDelivered(delivered);
             re::RuleEngine::Instance().process(response, *se.get(), rs);
@@ -592,6 +609,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             if(rs.status == re::STATUS_LONG_CALL)
             {
                 makeLongCall(response, se);
+                rel.leaveLocked();
                 return rs.status;
             }
         }

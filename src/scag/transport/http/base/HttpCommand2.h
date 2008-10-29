@@ -112,6 +112,10 @@ public:
 
 typedef Hash<Cookie*> CookieHash;
 
+
+// NOTE: this one is to nullify session pointer.
+class HttpCommandRelease;
+
 /**
  * Abstract class represents generic HttpCommand (Request or Response)
  * Defines basic command methods
@@ -119,6 +123,7 @@ typedef Hash<Cookie*> CookieHash;
 class HttpCommand : public SCAGCommand 
 {
     friend class HttpParser;
+    friend class HttpCommandRelease;
 
 public:
     typedef StringHashIterator FieldIterator;
@@ -155,7 +160,6 @@ public:
     virtual Session* getSession() { return session_; }
 
     virtual void print( util::Print& p ) const;
-
 
     // All values accessible by command context methods
     // should be passed to HttpResponse via HttpRequest 
@@ -298,6 +302,22 @@ public:
 private:
     uint32_t  serial_;
 };
+
+
+class HttpCommandRelease
+{
+public:
+    HttpCommandRelease( HttpCommand& c ) : c_(&c) {}
+    ~HttpCommandRelease() { if (c_) c_->setSession(0); }
+    void leaveLocked() { c_ = 0; }
+private:
+    HttpCommandRelease();
+    HttpCommandRelease( const HttpCommandRelease& );
+    HttpCommandRelease& operator = ( const HttpCommandRelease& );
+private:
+    HttpCommand* c_;
+};
+
 
 /**
 * HTTP Request methods
