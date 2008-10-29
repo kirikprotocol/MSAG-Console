@@ -134,6 +134,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     int rest = 0;
     public static final int DELIMITER = 2;
     boolean viewGraph = false;
+    private int shiftV = 0;
 
     public HttpTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
@@ -238,6 +239,23 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
             this.snap.sortHttpSnaps(httpComparator);
         rest += xScale;
         this.viewGraph = viewGraph;
+        repaint();
+    }
+
+    public void setSnap(SvcSnap snap, HashSet viewList, int scale, int maxSpeed, float xScale, double yScale, boolean viewGraph, int shiftV) {
+        System.out.println( "HttpTopGraph:setSnap() '" + snap + "'\nviewList='" + viewList + "'\t\nscale=" + scale + "\t\nmaxSpeed='" + maxSpeed + "'");
+        snapHttpHistory.addSnap(snap);
+        this.snap = new SvcSnap(snap);
+        this.httpViewList = viewList;
+        this.graphScale = scale;
+        this.maxSpeed = maxSpeed;
+        this.yScale = yScale;
+        this.xScale = (int)xScale;
+        if (httpComparator != null)
+            this.snap.sortHttpSnaps(httpComparator);
+        rest += xScale;
+        this.viewGraph = viewGraph;
+        this.shiftV = shiftV;
         repaint();
     }
 
