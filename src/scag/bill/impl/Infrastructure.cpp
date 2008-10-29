@@ -15,6 +15,7 @@
 
 #include <logger/Logger.h>
 
+#include "scag/util/singleton/XercesSingleton.h"
 #include "XMLHandlers.h"
 #include "Infrastructure.h"
 
@@ -57,7 +58,8 @@ InfrastructureImpl::~InfrastructureImpl()
 
 void InfrastructureImpl::init(const std::string& dir)
 {
-    XMLPlatformUtils::Initialize("en_EN.UTF-8");
+    // XMLPlatformUtils::Initialize("en_EN.UTF-8");
+    util::singleton::XercesSingleton::Instance();
 
     logger = Logger::getInstance("bill.inf");
 

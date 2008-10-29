@@ -4,21 +4,19 @@
 #include <sys/stat.h>
 #include <string>
 
-#include "gen2/Inst.h"
-#include "scag/admin/gen2/SCAGSocketListener2.h"
 #include "admin/service/ServiceSocketListener.h"
-// #include "scag/config/ConfigManager.h"
-#include "scag/config/impl/ConfigManager2.h"
-#include "core/threads/Thread.hpp"
 #include "core/buffers/File.hpp"
+#include "core/threads/Thread.hpp"
+#include "gen2/Inst.h"
 #include "gen2/scag2.h"
-// #include "util/config/route/RouteConfig.h"
-// #include "util/findConfigFile.h"
-// #include "util/mirrorfile/mirrorfile.h"
+#include "scag/admin/gen2/SCAGSocketListener2.h"
+#include "scag/config/impl/ConfigManager2.h"
+#include "scag/util/singleton/LoggerSingleton.h"
+#include "scag/util/singleton/XercesSingleton.h"
+#include "scag/util/storage/StorageNumbering.h"
 #include "util/signal.hpp"
 #include "util/xml/init.h"
 #include "version.inc"
-#include "scag/util/storage/StorageNumbering.h"
 
 static const int SHUTDOWN_SIGNAL = SIGTERM;
 
@@ -64,7 +62,7 @@ void registerSignalHandlers()
 
 extern "C" void atExitHandler(void)
 {
-    smsc::util::xml::TerminateXerces();
+    //smsc::util::xml::TerminateXerces();
     //smsc::logger::Logger::Shutdown();
 }
 
@@ -72,9 +70,12 @@ extern "C" void atExitHandler(void)
 namespace scag2 {
 int main( int argc, char* argv[] )
 {
-    Logger::Init();
+    // Logger::Init();
+    util::singleton::LoggerSingleton::Instance();
+    // xerces will be invoked on demand
+    // scag::util::singleton::XercesSingleton::Instance();
 
-    atexit(atExitHandler);
+    // atexit(atExitHandler);
     registerSignalHandlers();
 
     try {

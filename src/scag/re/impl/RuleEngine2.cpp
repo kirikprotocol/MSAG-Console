@@ -20,6 +20,7 @@
 #include "scag/sessions/base/Operation.h"
 #include "util/regexp/RegExp.hpp"
 #include "scag/util/HRTimer.h"
+#include "scag/util/singleton/XercesSingleton.h"
 
 namespace scag2 {
 namespace re {
@@ -382,7 +383,8 @@ void RuleEngineImpl::init( const std::string& dir )
     try
     {
         //XMLPlatformUtils::Initialize("ru_RU.KOI8-R");
-        XMLPlatformUtils::Initialize();
+        //XMLPlatformUtils::Initialize();
+        util::singleton::XercesSingleton::Instance();
     }
     catch (const XMLException& toCatch)
     {

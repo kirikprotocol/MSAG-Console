@@ -3,22 +3,22 @@
 #include <typeinfo>
 
 #include "ConfigManager2.h"
-
+#include "core/buffers/IntHash.hpp"
+#include "license/check/license.hpp"
 #include "logger/Logger.h"
-#include "util/xml/init.h"
-#include "util/xml/utilFunctions.h"
-#include "util/debug.h"
-#include "util/xml/DOMTreeReader.h"
+#include "logger/Logger.h"
+#include "scag/config/base/ConfigListener2.h"
+#include "scag/config/base/ConfigView.h"
 #include "scag/config/route/RouteConfig.h"
 #include "scag/config/stat/StatManConfig.h"
-#include "util/findConfigFile.h"
-#include "scag/config/base/ConfigListener2.h"
-#include "core/buffers/IntHash.hpp"
-#include "scag/config/base/ConfigView.h"
-#include "logger/Logger.h"
-#include "util/findConfigFile.h"
-#include "license/check/license.hpp"
+#include "scag/util/singleton/XercesSingleton.h"
 #include "util/crc32.h"
+#include "util/debug.h"
+#include "util/findConfigFile.h"
+#include "util/findConfigFile.h"
+#include "util/xml/DOMTreeReader.h"
+#include "util/xml/init.h"
+#include "util/xml/utilFunctions.h"
 
 namespace scag2   {
 namespace config {
@@ -51,7 +51,8 @@ logger(smsc::logger::Logger::getInstance("cfgman"))
 
 void ConfigManagerImpl::Init() throw(ConfigException)
 {
-  initXerces();
+    util::singleton::XercesSingleton::Instance();
+    // initXerces();
   //findConfigFile();
   try
   {

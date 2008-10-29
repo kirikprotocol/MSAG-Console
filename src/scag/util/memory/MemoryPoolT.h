@@ -29,7 +29,7 @@ protected:
 
 template < class T >
     unsigned GetLongevity( scag::util::memory::MemoryPoolT< T >* ) {
-        return 0xffffffff;
+        return 0xfffffff0;
     }
 
 #endif /* !_SCAG_UTIL_MEMORY_MEMORYPOOLT_H */

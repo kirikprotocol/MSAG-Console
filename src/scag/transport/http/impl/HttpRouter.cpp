@@ -6,6 +6,7 @@
 #include "scag/transport/http/base/HttpCommand2.h"
 #include "HttpRouter.h"
 #include "scag/util/lltostr.h"
+#include "scag/util/singleton/XercesSingleton.h"
 
 namespace scag2 {
 namespace transport {
@@ -28,7 +29,8 @@ HttpRouterImpl::HttpRouterImpl()
     pathsMap = NULL;
     defInPlace = NULL;
     defOutPlace = NULL;
-    XMLPlatformUtils::Initialize("en_EN.UTF-8");
+    // XMLPlatformUtils::Initialize("en_EN.UTF-8");
+    util::singleton::XercesSingleton::Instance();
 }
 
 
