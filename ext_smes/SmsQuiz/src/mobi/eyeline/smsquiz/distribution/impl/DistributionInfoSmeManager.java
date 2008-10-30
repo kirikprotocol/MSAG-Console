@@ -253,8 +253,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
             logger.info("File added for analysis: " + file.getAbsolutePath());
           }
         }
-        calendar.add(Calendar.HOUR_OF_DAY, 1);
       }
+      calendar.add(Calendar.HOUR_OF_DAY, 1);      
     }
 
     ResultSet result = new DistributionResultSet(files, startDate, endDate, succDeliveryStatus, dateInFilePattern);

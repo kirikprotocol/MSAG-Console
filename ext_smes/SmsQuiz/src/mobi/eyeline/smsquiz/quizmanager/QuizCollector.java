@@ -27,6 +27,10 @@ class QuizCollector implements Runnable {
       if (quiz.getDateEnd().before(new Date())) {
         try {
           dirListener.remove(quiz.getFileName(), true);
+          String statusFile = quiz.getStatusFileName();
+          if(statusFile!=null) {
+            dirListener.remove(quiz.getStatusFileName(), true);
+          }
         } catch (QuizException e) {
           logger.error("Error removing file from DirListener");
         }

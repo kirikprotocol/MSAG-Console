@@ -64,6 +64,10 @@ public class Quiz {
     replyPatterns = new ArrayList<ReplyPattern>();
   }
 
+  public String getStatusFileName() {
+    return status.getStatusFileName(); 
+  }
+
   public Result handleSms(String oa, String text) throws QuizException {
     Result result;
     int count;

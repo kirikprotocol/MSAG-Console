@@ -74,4 +74,8 @@ class Status {
       }
     }
   }
+
+  public String getStatusFileName() {
+    return statusFileName;
+  }
 }

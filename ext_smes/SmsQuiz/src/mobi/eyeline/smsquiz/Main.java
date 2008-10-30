@@ -82,9 +82,9 @@ public class Main {
           return new Thread(r, "QuizCreator");
         }
       });
-      scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 6000, TimeUnit.SECONDS);
-      //scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 1800, TimeUnit.SECONDS);
-      //new QuizCreator().run();
+      //scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 6000, TimeUnit.SECONDS);
+     // scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 900, TimeUnit.SECONDS);
+      new QuizCreator().run();
       //todo remove
 
     } catch (Exception e) {
@@ -114,7 +114,7 @@ public class Main {
 
   private static class QuizCreator extends Thread {
 
-    public void run() {
+ /*   public void run() {
       try {
         createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001700000"), Long.parseLong("79131710000"), 500, SubscriptionManager.getInstance());
         createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 75, "170", "170", "Short\n question");
@@ -129,25 +129,26 @@ public class Main {
         logger.error("Error creatin quiz files", e);
         e.printStackTrace();
       }
-    }
+    }  */
 
-  /*  public void run() {
+    public void run() {
       try {
-          createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001700001"), Long.parseLong("70001700010"), 1, SubscriptionManager.getInstance());
-          createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 20, "170", "170", "Short\n question");
-          quizIndex++;
-          createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001800001"), Long.parseLong("70001800010"), 1, SubscriptionManager.getInstance());
-          createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 21, "180", "180", "Short\n question");
-          quizIndex++;
-          createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001900001"), Long.parseLong("70001900010"), 1, SubscriptionManager.getInstance());
-          createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 22, "190", "190", "Short\n question");
-          quizIndex++;
-        }
-      } catch (SubManagerException e) {
+        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001700001"), Long.parseLong("70001700100"), 1, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 90, "170", "170", "Short\n question");
+        quizIndex++;
+        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001800001"), Long.parseLong("70001800100"), 1, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 105, "180", "180", "Short\n question");
+        quizIndex++;
+        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001900001"), Long.parseLong("70001900100"), 1, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 120, "190", "190", "Short\n question");
+        quizIndex++;
+      }
+      catch (SubManagerException e) {
         logger.error("Error creatin quiz files", e);
         e.printStackTrace();
       }
-    }*/
+
+    }
   }
 
   public static int send(String da, String oa, String text) {
