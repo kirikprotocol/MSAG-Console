@@ -313,6 +313,10 @@ StatusCode HttpParser::parseHeaderFieldLine(char *buf, unsigned int len,
     return OK;
   }
 
+  if ((key.compare(CONNECTION_FIELD) == 0) && (value.compare("close") == 0)) {
+    cmd.setCloseConnection(true);
+  }
+
   if (!strcasecmp(key.c_str(), CONTENT_TYPE_FIELD)) {
     pos = stringStrN(value.c_str(), CHARSET);
 

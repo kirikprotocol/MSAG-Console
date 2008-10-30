@@ -409,8 +409,18 @@ int HttpWriterTask::Execute()
                     }
                     else {
                         smsc_log_info(logger, "%p: %p, response sent", this, cx);
-                        cx->action = FINALIZE_SOCKET;
-                        manager.readerProcess(cx);
+                        if (cx->command->closeConnection()) {
+                          smsc_log_debug(logger, "%p: %p, close connection, finalize socket %p", this, cx, s);
+                          deleteSocket(s, SHUT_WR);
+                          smsc_log_debug(logger, "%p: %p, socket %p finalized", this, cx, s);
+                          cx->user = NULL;
+                          cx->action = PROCESS_STATUS_RESPONSE;
+                          cx->result = 0;
+                          manager.process(cx);
+                        } else {
+                          cx->action = FINALIZE_SOCKET;
+                          manager.readerProcess(cx);
+                        }
                     }
                 }
             }

@@ -138,7 +138,8 @@ public:
     trc(tcx),
     context(cx),
     contentLength(-1), /* totalHeadersSize(0), */
-    serial_(makeSerial())
+    serial_(makeSerial()),
+    closeConnect_(false)
     {}
     virtual ~HttpCommand();
 
@@ -298,9 +299,12 @@ public:
     int contentLength;
     
     void setLengthField(unsigned int length);
+    void setCloseConnection(bool closeConnect) { closeConnect_ = closeConnect; }
+    bool closeConnection() const { return closeConnect_; }
 
 private:
     uint32_t  serial_;
+    bool closeConnect_;
 };
 
 
