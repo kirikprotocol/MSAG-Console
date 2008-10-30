@@ -8,6 +8,8 @@ namespace scag {
 namespace util {
 namespace memory {
 
+// #define FIXEDMEMORYPOOLUSECOUNT
+
 struct MemoryPoolConfig {
     typedef enum {
             MALLOC = 1,
@@ -38,9 +40,14 @@ private:
 
 public:
     FixedMemoryPool( const MemoryPoolConfig& cfg, size_t sz ) :
-    cfg_(cfg), objsize_(sz), queue_(cfg.prealloc), count_(0) {}
+    cfg_(cfg), objsize_(sz), queue_(cfg.prealloc)
+#ifdef FIXEDMEMORYPOOLUSECOUNT
+        , count_(0) 
+#endif
+        {}
 
     ~FixedMemoryPool() {
+        MutexGuard mg(mtx_);
         void* p;
         while ( queue_.Pop(p) ) {
             deallocobj(p);
@@ -51,7 +58,11 @@ public:
     void print( scag::util::Print& pf ) const 
     {
         if ( pf.enabled() )
-            pf.print( "mman@%p sz=%u has %u/%u elts", this, unsigned(objsize()), queue_.Count(), count_ );
+#ifdef FIXEDMEMORYPOOLUSECOUNT
+            pf.print( "mman@%p sz=%u has %u/%u elts: %u in use", this, unsigned(objsize()), queue_.Count(), count_, count_ - queue_.Count() );
+#else
+            pf.print( "mman@%p sz=%u has %u spare elts", this, unsigned(objsize()), queue_.Count() );
+#endif
     }
 
 
@@ -72,7 +83,12 @@ public:
         }
         // allocate an object and return it
         res = ::operator new( objsize() );
-        ++count_;
+#ifdef FIXEDMEMORYPOOLUSECOUNT
+        {
+            MutexGuard mg(mtx_);
+            ++count_;
+        }
+#endif
         // if (cfg_.debug && cfg_.debug->enabled())
         // cfg_.debug->print( "%p+ sz=%u cnt=%u/%u", res, objsize(), queue_.Count(), count_ );
         return res;
@@ -95,7 +111,9 @@ public:
 
 private:
     inline void deallocobj( void* p ) {
+#ifdef FIXEDMEMORYPOOLUSECOUNT
         --count_;
+#endif
         ::operator delete(p);
         // if (cfg_.debug && cfg_.debug->enabled())
         // cfg_.debug->print( "%p- sz=%u cnt=%u/%u", p, objsize(), queue_.Count(), count_ );
@@ -107,11 +125,13 @@ private:
     FixedMemoryPool& operator = ( const FixedMemoryPool& );
 
 private:
-    const MemoryPoolConfig&                cfg_;
+    const MemoryPoolConfig&                   cfg_;
     size_t                                    objsize_;
     smsc::core::buffers::CyclicQueue< void* > queue_;
     Mutex                                     mtx_;
+#ifdef FIXEDMEMORYPOOLUSECOUNT
     unsigned                                  count_;
+#endif
 };
 
 

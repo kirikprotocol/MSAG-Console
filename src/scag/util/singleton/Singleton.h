@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <cassert>
 #include <cstdlib>
+#include <string>
 #include <new>
 
 #include <core/synchronization/Mutex.hpp>
