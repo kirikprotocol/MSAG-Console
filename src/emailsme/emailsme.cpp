@@ -1787,7 +1787,10 @@ public:
       int code=ProcessSmsCodes::INVALIDSMS;
       bool concatRv=false;
       try{
-        concatRv=concatManager.Enqueue(xsm);
+        if(cfg::partitionSms)
+        {
+          concatRv=concatManager.Enqueue(xsm);
+        }
       }catch(std::exception& e)
       {
         smsc_log_warn(log,"Exception in concatManager.Enqueue:'%s'",e.what());
