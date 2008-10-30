@@ -134,19 +134,21 @@ public class TaskBuilder extends Thread {
       }
       is = new InputStreamReader(new FileInputStream(processedFile), Functions.getLocaleEncoding());
 
-      int count = 0;
 
       storeTaskToConfig();
       System.out.println("Task generation....");
       smeContext.getInfoSme().addTask(task.getId());
 
-      long currentTime = System.currentTimeMillis();
-      Collection messages = getMessages(task, is, 1000, new Date(currentTime));
+      final int maxMessagesPerSecond = smeContext.getConfig().getInt("InfoSme.maxMessagesPerSecond");
+
+      int count = 0;
+      long currentTime = task.getStartDate() == null ? System.currentTimeMillis() : task.getStartDateDate().getTime();
+      Collection messages = getMessages(task, is, maxMessagesPerSecond, new Date(currentTime));
       while (messages != null && messages.size() > 0) {
         smeContext.getInfoSme().addDeliveryMessages(task.getId(), messages);
         count += messages.size();
-        currentTime -= 1000;
-        messages = getMessages(task, is, 1000,  new Date(currentTime));
+        currentTime += 1000;
+        messages = getMessages(task, is, maxMessagesPerSecond,  new Date(currentTime));
       }
 
 //      smeContext.getInfoSme().addStatisticRecord(task.getId(), new Date(), count, 0, 0, 0);
@@ -226,7 +228,7 @@ public class TaskBuilder extends Thread {
   }
 
   public List getMessages(Task task, InputStreamReader is, int limit, Date sendDate) throws IOException, AdminException {
-    final List list = new ArrayList();
+    final List list = new ArrayList(limit);
     try {
       String line;
       BlackListManager blm = smeContext.getBlackListManager();
