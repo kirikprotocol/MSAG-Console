@@ -252,8 +252,8 @@ int configure()
     DOMTreeReader reader;
 
     const char* cfgFile=smsc::util::findConfigFile("config.xml");
-    char * filename = new char[strlen(cfgFile) + 1];
-    std::strcpy(filename, cfgFile);
+    char * filename = new char[::strlen(cfgFile) + 1];
+    ::strcpy(filename, cfgFile);
     std::auto_ptr<char>config_filename(filename);
 
     DOMDocument *document = reader.read(config_filename.get());

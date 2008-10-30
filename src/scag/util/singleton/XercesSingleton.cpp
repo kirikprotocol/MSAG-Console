@@ -3,8 +3,22 @@
 
 using namespace scag::util::singleton;
 
-typedef SingletonHolder< XercesSingleton > SingleSM;
-unsigned GetLongevity( XercesSingleton* ) { return 999; }
+namespace scag {
+namespace util {
+namespace singleton {
+
+struct XercesSingletonImpl : public XercesSingleton
+{
+    XercesSingletonImpl() {}
+    ~XercesSingletonImpl() {}
+};
+
+}
+}
+}
+
+typedef SingletonHolder< XercesSingletonImpl > SingleSM;
+unsigned GetLongevity( XercesSingletonImpl* ) { return 999; }
 
 namespace scag {
 namespace util {

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "scag/util/properties/Properties.h"
 #include "logger/Logger.h"

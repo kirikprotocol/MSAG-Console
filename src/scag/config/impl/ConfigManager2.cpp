@@ -60,8 +60,8 @@ void ConfigManagerImpl::Init() throw(ConfigException)
     DOMTreeReader reader;
 
     const char* cfgFile=smsc::util::findConfigFile("config.xml");
-    char * filename = new char[strlen(cfgFile) + 1];
-    std::strcpy(filename, cfgFile);
+    char * filename = new char[::strlen(cfgFile) + 1];
+    ::strcpy(filename, cfgFile);
     config_filename = std::auto_ptr<char>(filename);
 
     DOMDocument *document = reader.read(config_filename.get());

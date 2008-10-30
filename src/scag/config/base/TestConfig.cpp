@@ -6,23 +6,23 @@
 #include "util/debug.h"
 #include "util/findConfigFile.h"
 #include "util/xml/DOMTreeReader.h"
-#include "util/xml/init.h"
+#include "scag/util/singleton/XercesSingleton.h"
 // #include "util/xml/utilFunctions.h"
 
 namespace scag {
 namespace config {
 
-    using namespace smsc::util::xml;
+using namespace smsc::util::xml;
 
     /// gratefully stolen from ConfigManager.cpp
     void TestConfig::init() throw (ConfigException)
     {
-        initXerces();
+        util::singleton::XercesSingleton::Instance();
         DOMTreeReader reader;
 
         const char* cfgFile = smsc::util::findConfigFile("config.xml");
-        char* filename = new char[strlen(cfgFile) + 1];
-        std::strcpy(filename, cfgFile);
+        char* filename = new char[::strlen(cfgFile) + 1];
+        ::strcpy(filename, cfgFile);
         std::auto_ptr<char> config_filename(filename);
 
         DOMDocument *document = reader.read( config_filename.get() );

@@ -14,9 +14,10 @@ class XercesSingleton
 {
 public:
     static XercesSingleton& Instance();
+private:
+    friend class XercesSingletonImpl;
     XercesSingleton();
     ~XercesSingleton();
-private:
     XercesSingleton( const XercesSingleton& );
 };
 
