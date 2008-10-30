@@ -34,6 +34,8 @@ using smsc::logger::Logger;
 const string dfPreambule= "RBTREE_FILE_STORAGE!";
 const int dfVersion_32_1 = 0x01;
 const int dfVersion_64_1 = 0x80000001;
+const size_t PREAMBULE_SIZE = 20;
+const size_t RESERVED_SIZE = 12;
 
 const int dfMode = 0600;
 
@@ -60,21 +62,31 @@ static const size_t WRITE_BUF_SIZE = 10240;
 static const size_t PROFILE_MAX_BLOCKS_COUNT = 10;
 static const size_t MIN_BLOCK_SIZE = 10;
                                           
-
-
 struct DescriptionFile   
 {
+    DescriptionFile(): version(dfVersion_64_1), files_count(0), block_size(0), file_size(0), blocks_used(0), blocks_free(0), first_free_block(0) {
+      memcpy(preamble, dfPreambule.c_str(), PREAMBULE_SIZE);
+      memset(Reserved, 0, RESERVED_SIZE);
+    }
+    DescriptionFile& operator=(const DescriptionFile& descr) {
+      files_count = descr.files_count;
+      block_size = descr.block_size;         
+      file_size = descr.file_size;          
+      blocks_used = descr.blocks_used;
+      blocks_free = descr.blocks_free;
+      first_free_block = descr.first_free_block;
+      return *this;
+    }
     typedef long index_type;
-    char preamble[20];
+    char preamble[PREAMBULE_SIZE];
     int version;
-
     int files_count;
     int block_size;         // in bytes;
     int file_size;          // in blocks
     int blocks_used;
     int blocks_free;
     index_type first_free_block;
-    char Reserved[12];
+    char Reserved[RESERVED_SIZE];
 };
 
 template<class Key>
@@ -156,6 +168,7 @@ public:
         }
         logger = thelog;
         hdrSize = sizeof(DataBlockHeader);
+        memset(&backupHeader, 0, sizeof(BackupHeader));
     }
 
 
@@ -513,7 +526,6 @@ private:
             throw smsc::util::Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count-1);
         }
         size_t bufSize = hdrSize + curBlockSize;
-        //TODO compare bufSize and WRITE_BUF_SIZE
         memcpy(writeBuf, &hdr, hdrSize);
         memcpy(writeBuf + hdrSize, data, curBlockSize);
         try {
@@ -533,6 +545,7 @@ private:
     {
         int dataLength = data.length();
         DataBlockHeader hdr;
+        memset(&hdr, 0, sizeof(DataBlockHeader));
         hdr.block_used = BLOCK_USED;
         hdr.key = key;
         hdr.head = backupStartIndex == 0 ? true : false;
@@ -634,15 +647,8 @@ private:
         }
 
         // initialize Description File structure
-        memcpy((void*)&(descrFile.preamble), dfPreambule.c_str(), sizeof(descrFile.preamble));
-        descrFile.version = dfVersion_64_1;
         descrFile.block_size = _blockSize;
         descrFile.file_size = _fileSize;
-        descrFile.files_count = 0;
-        descrFile.blocks_free = 0;
-        descrFile.blocks_used = 0;
-        descrFile.first_free_block = 0;
-        memset((void*)descrFile.Reserved, 0, sizeof(descrFile.Reserved));
         effectiveBlockSize = descrFile.block_size - sizeof(DataBlockHeader);
         changeDescriptionFile();
         return 0;
@@ -877,6 +883,7 @@ private:
             size_t profileBlocksCount = (backupHeader.dataSize + effectiveBlockSize - 1) / effectiveBlockSize;
             index_type curBlockIndex = backupHeader.curBlockIndex;
             DataBlockHeader hdr;
+            memset(&hdr, 0, sizeof(DataBlockHeader));
             hdr.block_used = BLOCK_USED;
             hdr.key = backupHeader.key;
             hdr.head = true;

@@ -98,8 +98,8 @@ private:
   typedef CachedDiskStorage< MemStorage, DiskStorage > AbonentStorage;
 
   struct ElementStorage {
-    ElementStorage(unsigned idx):glossary(new Glossary()), index(idx) {};
-    ElementStorage():glossary(new Glossary()), index(0) {};
+    ElementStorage(unsigned idx):glossary(0), storage(0), index(idx) {};
+    ElementStorage():glossary(0), storage(0), index(0) {};
     AbonentStorage* storage;
     Glossary* glossary;
     unsigned index;

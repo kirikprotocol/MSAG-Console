@@ -124,6 +124,7 @@ void AbonentStorageProcessor::initElementStorage(const AbonentStorageConfig& cfg
   sprintf(pathSuffix, "%03d", index);			
   string path = string(cfg.locationPath[locationNumber_] + "/") + pathSuffix;
   ElementStorage elStorage(index);
+  elStorage.glossary = new Glossary();
   initGlossary(path, elStorage.glossary);
 
   std::auto_ptr< DiskIndexStorage > dis(new DiskIndexStorage(cfg.dbName, path, cfg.indexGrowth));
