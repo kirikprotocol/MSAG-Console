@@ -9,7 +9,7 @@ import java.util.Date;
 
 public class JournalEvent {
 
-  private Type type;
+  private Type type = Type.Unknown;
   private Date date;
   private String caller;
   private String called;
@@ -65,6 +65,6 @@ public class JournalEvent {
   }
 
   public enum Type {
-    MissedCall, MissedCallAlert, MissedCallAlertFail, MissedCallRemove, ProfileChaged
+    MissedCall, MissedCallAlert, MissedCallAlertFail, MissedCallRemove, ProfileChaged, Unknown
   }
 }

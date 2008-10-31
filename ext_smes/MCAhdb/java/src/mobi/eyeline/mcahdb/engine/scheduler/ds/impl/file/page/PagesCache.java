@@ -1,22 +1,17 @@
 package mobi.eyeline.mcahdb.engine.scheduler.ds.impl.file.page;
 
 import mobi.eyeline.mcahdb.engine.DataSourceException;
-import mobi.eyeline.mcahdb.engine.scheduler.ds.impl.file.page.SchedulePage;
 import mobi.eyeline.mcahdb.engine.scheduler.ds.Task;
-import mobi.eyeline.mcahdb.engine.scheduler.ds.impl.file.page.SchedulePageImpl;
+import org.apache.log4j.Category;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Pattern;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.FilenameFilter;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-
-import org.apache.log4j.Category;
 
 /**
  * User: artem

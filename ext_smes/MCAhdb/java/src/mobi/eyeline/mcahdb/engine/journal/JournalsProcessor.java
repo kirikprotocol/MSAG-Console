@@ -75,9 +75,8 @@ public class JournalsProcessor {
       while ((e = j.nextEvent()) != null) {
         switch (e.getType()) {
           case MissedCall:
-            if (e.isCalledProfileNotify() && e.isCallerProfileWantNotifyMe()) {
+            if (e.isCalledProfileNotify() && e.isCallerProfileWantNotifyMe())
               scheduler.missedCall(e.getCaller(), e.getCalled(), e.getDate());
-            }
             events.add(createEvent(e));
             break;
           case MissedCallAlert:

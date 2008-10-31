@@ -235,7 +235,7 @@ public class JournalDataSourceImpl implements JournalDataSource {
             case 'F': return readMissedCallAlertFail(parseLine(str.substring(2), 3));
             case 'E': return readMissedCallRemove(parseLine(str.substring(2), 3));
             case 'P': return readProfileChanged(parseLine(str.substring(2), 3));
-            default:return null;
+            default : return new JournalEvent(); // Unknown event
           }
         } else
           return null;        
