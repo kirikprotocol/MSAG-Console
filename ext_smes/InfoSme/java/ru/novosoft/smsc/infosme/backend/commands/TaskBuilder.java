@@ -257,7 +257,7 @@ public class TaskBuilder extends Thread {
     task.setProvider(Task.INFOSME_EXT_PROVIDER);
     task.setPriority(10);
     task.setMessagesCacheSize(2000);
-    task.setMessagesCacheSleep(600);
+    task.setMessagesCacheSleep(10);
     task.setUncommitedInGeneration(100);
     task.setUncommitedInProcess(100);
     task.setEnabled(true);
