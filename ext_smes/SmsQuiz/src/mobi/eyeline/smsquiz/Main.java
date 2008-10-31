@@ -83,8 +83,8 @@ public class Main {
         }
       });
       //scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 6000, TimeUnit.SECONDS);
-     // scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 900, TimeUnit.SECONDS);
-      new QuizCreator().run();
+      scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 1500, TimeUnit.SECONDS);
+      //new QuizCreator().run();
       //todo remove
 
     } catch (Exception e) {
@@ -133,8 +133,8 @@ public class Main {
 
     public void run() {
       try {
-        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001700001"), Long.parseLong("70001700010"), 1, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 3, "170", "170", "Short\n question");
+        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001700001"), Long.parseLong("70001700100"), 1, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 20, "170", "170", "Short\n question");
         quizIndex++;
      /*   createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001800001"), Long.parseLong("70001800100"), 1, SubscriptionManager.getInstance());
         createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 105, "180", "180", "Short\n question");

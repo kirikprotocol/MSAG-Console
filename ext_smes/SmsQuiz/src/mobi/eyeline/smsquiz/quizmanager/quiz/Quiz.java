@@ -30,7 +30,7 @@ public class Quiz {
   private String sourceAddress;
   private JStore jstore;
   private String question;
-  private String fileName;
+  private String fileName;             p
   private Date dateBegin;
   private Date dateEnd;
 
@@ -45,8 +45,6 @@ public class Quiz {
   private final DistributionManager distributionManager;
 
   private Status status;
-
-  private boolean generated = false;
 
   public Quiz(final String statusDir, final File file,
               final ReplyStatsDataSource replyStatsDataSource,
@@ -310,11 +308,4 @@ public class Quiz {
     return now.after(dateBegin)&&now.before(dateEnd);
   }
 
-  public boolean isGenerated() {
-    return generated;
-  }
-
-  public void setGenerated(boolean generated) {
-    this.generated = generated;
-  }
 }

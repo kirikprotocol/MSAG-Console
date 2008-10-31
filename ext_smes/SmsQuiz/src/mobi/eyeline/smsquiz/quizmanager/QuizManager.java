@@ -164,7 +164,7 @@ public class QuizManager implements Observer {
       logger.info("Manager handle sms:" + address + " " + oa + " " + text);
     }
     Quiz quiz = quizesMap.get(address);
-    if ((quiz != null)&&(quiz.isGenerated())&&(quiz.isActive())) {
+    if ((quiz != null)&&(quiz.isActive())) {
       return quiz.handleSms(oa, text);
     }
     logger.warn("Quiz not found for address: " + address);
@@ -261,44 +261,24 @@ public class QuizManager implements Observer {
     String fileName = notification.getFileName();
     Distribution distribution;
     File file = new File(fileName);
-    Quiz quiz;
     try {
-      quiz = new Quiz(statusDir, file, replyStatsDataSource, distributionManager, dirResult);
+      final Quiz quiz = new Quiz(statusDir, file, replyStatsDataSource, distributionManager, dirResult);
       distribution = new Distribution();
       quizBuilder.buildQuiz(fileName, distribution, quiz);
-      Quiz previousQuiz;
-      if ((previousQuiz = quizesMap.get(quiz.getDestAddress())) != null) {
-        writeQuizesConflict(previousQuiz, quiz);
-        return;
-      }
-      makeSubscribedOnly(distribution, quiz.getQuestion());
-      String id;
-      if ((id = quiz.getId()) != null) {
-        if (logger.isInfoEnabled()) {
-          logger.info("Quizes status will be repaired, current id: " + id);
-        }
-
-        id = distributionManager.repairStatus(id, fileName + ".distr.error",
-            new QuizManagerTask(quiz), distribution);
-
-        if (logger.isInfoEnabled()) {
-          logger.info("Quizes status repaired, new id: " + id);
-        }
+      QuizCreator quizCreator = new QuizCreator(quiz, distribution);
+      if(quiz.isActive()) {
+        quizCreator.run();
       } else {
-        try {
-          id = distributionManager.createDistribution(distribution,
-              new QuizManagerTask(quiz), fileName + ".distr.error");
-        } catch (DistributionException e) {
-          logger.error("Unable to create distribution", e);
-          throw new QuizException("Unable to create distribution", e);
-        }
+
+        long delay = System.currentTimeMillis() - quiz.getDateBegin().getTime();
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+          public Thread newThread(Runnable r) {
+            return new Thread(r,"QuizCreator: "+quiz.getFileName());
+          }
+        });
+        executor.schedule(quizCreator,delay,java.util.concurrent.TimeUnit.MILLISECONDS);
       }
-      quizesMap.put(quiz.getDestAddress(), quiz);
-      quiz.setId(id);
-      resolveConflict(quiz);
-      if (logger.isInfoEnabled()) {
-        logger.info("Quiz created: " + quiz);
-      }
+
     }
     catch (Exception e) {
       writeError(notification.getFileName(), e);
@@ -352,8 +332,6 @@ public class QuizManager implements Observer {
         }
       }
     }
-
-
   }
 
   private void writeError(String quizFileName, Exception exc) {
@@ -437,7 +415,7 @@ public class QuizManager implements Observer {
         writer.close();
       }
     }
-    dirListener.remove(newQuiz.getFileName(), false);
+    dirListener.remove(newQuiz.getFileName(),true);
   }
 
   public MBeanServer getMBeansServer() throws QuizException {
@@ -499,6 +477,65 @@ public class QuizManager implements Observer {
 
   String getDirModifiedAb() {
     return dirModifiedAb;
+  }
+  
+  private class QuizCreator implements Runnable{
+    private Quiz quiz;
+    private Distribution distr;
+    public QuizCreator(Quiz quiz, Distribution distr) {
+      this.quiz = quiz;
+      this.distr = distr;
+    }
+
+    public void run() {
+      try{
+        if(!new File(quiz.getFileName()).exists()) {
+          writeError(quiz.getFileName(), new Exception("Error during creating quiz: quiz's file was deleted "+quiz.getFileName()));
+          logger.error("Error during creating quiz: quiz's file was deleted "+quiz.getFileName());
+          System.out.println("Error during creating quiz: quiz's file was deleted "+quiz.getFileName());
+          return;
+        }
+        Quiz previousQuiz;
+        if ((previousQuiz = quizesMap.get(quiz.getDestAddress())) != null) {
+          logger.error("Error during creating quiz: quizes conflict");
+          System.out.println("Error during creating quiz: quizes conflict");
+          writeQuizesConflict(previousQuiz, quiz);
+          return;
+        }
+        makeSubscribedOnly(distr, quiz.getQuestion());
+        String id;
+        if ((id = quiz.getId()) != null) {
+          if (logger.isInfoEnabled()) {
+            logger.info("Quizes status will be repaired, current id: " + id);
+          }
+
+          id = distributionManager.repairStatus(id, quiz.getFileName() + ".distr.error",
+              new QuizManagerTask(quizesMap, quiz), distr);
+
+          if (logger.isInfoEnabled()) {
+            logger.info("Quizes status repaired, new id: " + id);
+          }
+        } else {
+          try {
+            id = distributionManager.createDistribution(distr,
+                new QuizManagerTask(quizesMap, quiz), quiz.getFileName() + ".distr.error");
+          } catch (DistributionException e) {
+            logger.error("Unable to create distribution", e);
+            throw new QuizException("Unable to create distribution", e);
+          }
+        }
+        quiz.setId(id);
+        resolveConflict(quiz);
+        if (logger.isInfoEnabled()) {
+          logger.info("Quiz created: " + quiz);
+        }
+      } catch (Exception e) {
+        writeError(quiz.getFileName(), e);
+        logger.error("Error during creating quiz",e);
+        e.printStackTrace();
+      }
+
+    }
   }
 
 }

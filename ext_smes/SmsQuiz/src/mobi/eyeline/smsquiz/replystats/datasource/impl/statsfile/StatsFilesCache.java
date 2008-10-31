@@ -109,7 +109,7 @@ public class StatsFilesCache {
       return files;
     }
 
-    Calendar calendar = Calendar.getInstance();
+    final Calendar calendar = Calendar.getInstance();
     calendar.setTime(from);
     resetTillHour(calendar);
     final Date modifedFrom = calendar.getTime();
@@ -144,10 +144,10 @@ public class StatsFilesCache {
               logger.info("Date parsed from file: " + date);
             }
             if ((date.compareTo(till) <= 0) && (date.compareTo(modifedFrom) >= 0)) {
-              if ((statsFile = lockupFile(da, calendar.getTime(), true)) != null) {
+              if ((statsFile = lockupFile(da, date, true)) != null) {
                 files.add(statsFile);
                 if (logger.isInfoEnabled()) {
-                  logger.info("File added for analysis: " + f.getAbsolutePath());
+                  logger.info("File added for analysis: " + statsFile.getName());
                 }
               }
 
