@@ -32,6 +32,13 @@ BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher
   }
 }
 
+BannerOutputMessageProcessorsDispatcher::~BannerOutputMessageProcessorsDispatcher()
+{
+  try {
+    shutdown();
+  } catch (...) {}
+}
+
 OutputMessageProcessor*
 BannerOutputMessageProcessorsDispatcher::getFreeProcessor()
 {
