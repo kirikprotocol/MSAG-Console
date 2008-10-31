@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz;
+
 
 import com.eyeline.sme.handler.MessageHandler;
 import com.eyeline.sme.smpp.OutgoingObject;
@@ -49,13 +49,13 @@ public class Main {
 
       ConnectionPoolFactory.init(conf);
 
-      QuizManager.init(conf, new DistributionInfoSmeManager(conf),
+      QuizManager.init(conf, new TestDistributionManager(),
           new FileReplyStatsDataSource(conf), SubscriptionManager.getInstance());
       quizManager = QuizManager.getInstance();
 
       PropertiesConfig cfg = new PropertiesConfig();
       cfg.load(new File("conf/smpp.properties"));
-      final SMPPTransceiver transceiver = new SMPPTransceiver(cfg, "");
+      final SMPPTransceiver transceiver = new SMPPTransceiver(new SmsQuizTestMultiplexor(),cfg, "");
       outgoingQueue = transceiver.getOutQueue();
       transceiver.connect();
       mh = new MessageHandler(conf, transceiver.getInQueue(), transceiver.getOutQueue());
@@ -133,8 +133,8 @@ public class Main {
 
     public void run() {
       try {
-        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001700001"), Long.parseLong("70001700010"), 1, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 3, "170", "170", "Short\n question");
+        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001700001"), Long.parseLong("70001710000"), 1, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 50, "170", "170", "Short\n question");
         quizIndex++;
      /*   createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001800001"), Long.parseLong("70001800100"), 1, SubscriptionManager.getInstance());
         createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 105, "180", "180", "Short\n question");

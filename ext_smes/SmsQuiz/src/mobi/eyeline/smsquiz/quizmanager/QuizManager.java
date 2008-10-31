@@ -23,6 +23,7 @@ import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -162,8 +163,8 @@ public class QuizManager implements Observer {
     if (logger.isInfoEnabled()) {
       logger.info("Manager handle sms:" + address + " " + oa + " " + text);
     }
-    Quiz quiz;
-    if ((quiz = quizesMap.get(address)) != null) {
+    Quiz quiz = quizesMap.get(address);
+    if ((quiz != null)&&(quiz.isGenerated())&&(quiz.isActive())) {
       return quiz.handleSms(oa, text);
     }
     logger.warn("Quiz not found for address: " + address);
@@ -177,21 +178,55 @@ public class QuizManager implements Observer {
     logger.info("Updating quizfiles list...");
     Notification notification = (Notification) arg;
     if (notification.getStatus().equals(Notification.FileStatus.MODIFIED)) {
+
       try {
         modifyQuiz(notification);
       } catch (QuizException e) {
         logger.error("Unable to modify quiz: " + notification.getFileName());
       }
-      return;
-    }
-    if (notification.getStatus().equals(Notification.FileStatus.CREATED)) {
+
+    } else if (notification.getStatus().equals(Notification.FileStatus.CREATED)) {
+
       try {
         createQuiz(notification);
       } catch (QuizException e) {
-        logger.error("Unable to update quizes with: " + notification.getFileName());
+        logger.error("Unable to update quize: " + notification.getFileName());
+      }
+    } else if(notification.getStatus().equals(Notification.FileStatus.DELETED)) {
+
+      try{
+        deleteQuiz(notification);
+      }
+      catch (QuizException e) {
+        logger.error("Unable to delete quize: " + notification.getFileName());
       }
     }
     logger.info("Updating finished");
+  }
+
+  @SuppressWarnings({"ThrowableInstanceNeverThrown"})
+  private void deleteQuiz(Notification notification) throws QuizException{
+    String fileName = notification.getFileName();
+    try {
+      Quiz quiz = null;
+      for (Map.Entry<String,Quiz> e : quizesMap.entrySet()) {
+        if (e.getValue().getFileName().equals(fileName)) {
+          if(!e.getValue().isActive()) {
+            quizesMap.remove(e.getKey());
+          }
+          else {
+            writeError(fileName, new Exception("Deleted quiz was active. see it's results"));
+            e.getValue().exportStats();
+          }
+          return;
+        }
+      }
+    }
+    catch (Exception e) {
+      writeError(notification.getFileName(), e);
+      throw new QuizException(e);
+    }
+
   }
 
   private void modifyQuiz(Notification notification) throws QuizException {
@@ -244,7 +279,7 @@ public class QuizManager implements Observer {
         }
 
         id = distributionManager.repairStatus(id, fileName + ".distr.error",
-            new QuizManagerTask(quizesMap, quiz), distribution);
+            new QuizManagerTask(quiz), distribution);
 
         if (logger.isInfoEnabled()) {
           logger.info("Quizes status repaired, new id: " + id);
@@ -252,12 +287,13 @@ public class QuizManager implements Observer {
       } else {
         try {
           id = distributionManager.createDistribution(distribution,
-              new QuizManagerTask(quizesMap, quiz), fileName + ".distr.error");
+              new QuizManagerTask(quiz), fileName + ".distr.error");
         } catch (DistributionException e) {
           logger.error("Unable to create distribution", e);
           throw new QuizException("Unable to create distribution", e);
         }
       }
+      quizesMap.put(quiz.getDestAddress(), quiz);
       quiz.setId(id);
       resolveConflict(quiz);
       if (logger.isInfoEnabled()) {
@@ -409,7 +445,7 @@ public class QuizManager implements Observer {
     try {
       mbs.registerMBean(dirListener.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=dirListener"));
       mbs.registerMBean(replyStatsDataSource.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=replystatsdsource"));
-      mbs.registerMBean(distributionManager.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=distributionmanager"));
+//      mbs.registerMBean(distributionManager.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=distributionmanager"));
       mbs.registerMBean(subscriptionManager.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=subscriptionManager"));
       mbs.registerMBean(quizBuilder.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=quizBuilder"));
       mbs.registerMBean(monitor, new ObjectName("SMSQUIZ.quizmanager:mbean=quizManager"));

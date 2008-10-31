@@ -25,11 +25,13 @@ public class StatsFilesCache {
   private String datePattern;
   private String timePattern;
   private String fileNamePattern;
+  private String dirNamePattern;
   private String replyStatsDir;
   private static final Logger logger = Logger.getLogger(StatsFilesCache.class);
 
   private ConcurrentHashMap<String, CachedStatsFile> filesMap;
   private SimpleDateFormat fileNameFormat;
+  private SimpleDateFormat dirNameFormat;
   private ScheduledExecutorService fileCollectorScheduler;
 
   public StatsFilesCache(final String configFile) throws FileStatsException {
@@ -40,7 +42,8 @@ public class StatsFilesCache {
       c.load(new File(configFile));
 
       PropertiesConfig config = new PropertiesConfig(c.getSection("replystats").toProperties("."));
-      fileNamePattern = config.getString("statsFile.filename.pattern", "yyyyMMdd");
+      fileNamePattern = config.getString("statsFile.filename.pattern", "HH");
+      dirNamePattern = config.getString("statsFile.dirname.pattern", "yyyyMMdd");
       timePattern = config.getString("statsFile.time.pattern.in.file", "yyyyMMdd");
       datePattern = config.getString("statsFile.date.pattern.in.file", "НН:mm");
       replyStatsDir = config.getString("statsFile.dir.name", null);
@@ -55,15 +58,13 @@ public class StatsFilesCache {
       delayFirst = config.getLong("fileCollector.time.first.delay", 60);
       iterationPeriod = config.getLong("fileCollector.time.period", 60);
       timeLimit = 1000 * config.getLong("fileCollector.time.limit", 60);
-      if (fileNamePattern == null) {
-        throw new FileStatsException("statsFile.filename.pattern not found in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
-      }
     } catch (ConfigException e) {
       logger.error("Unable to init StatsFilesCache", e);
       throw new FileStatsException("Unable to init StatsFilesCache", e);
     }
     filesMap = new ConcurrentHashMap<String, CachedStatsFile>();
     fileNameFormat = new SimpleDateFormat(fileNamePattern);
+    dirNameFormat = new SimpleDateFormat(dirNamePattern);
 
     fileCollectorScheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
       public Thread newThread(Runnable r) {
@@ -74,6 +75,24 @@ public class StatsFilesCache {
     fileCollectorScheduler.scheduleAtFixedRate(new FileCollector(false), delayFirst, iterationPeriod, java.util.concurrent.TimeUnit.SECONDS);
     monitor = new StatsFilesCacheMBean(this);
   }
+
+  public static void main(String[] args) throws ParseException {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("HH");
+    System.out.println(new Date(0));
+    System.out.println(dateFormat.parse("23"));
+    System.out.println(dateFormat.parse("23").getTime());
+    Calendar cal = Calendar.getInstance();
+    cal.set(Calendar.HOUR_OF_DAY,0);
+    cal.set(Calendar.MINUTE,0);
+    cal.set(Calendar.SECOND,0);
+    cal.set(Calendar.MILLISECOND,0);
+    cal.setTimeInMillis(cal.getTime().getTime()+dateFormat.parse("23").getTime()+7*60*60*1000);
+    System.out.println(cal.getTime());
+    System.out.println(cal.getTime().getTime());
+
+  }
+
+
 
   public Collection<StatsFile> getFiles(final String da, final Date from, final Date till) throws FileStatsException {
     if (logger.isInfoEnabled()) {
@@ -92,48 +111,59 @@ public class StatsFilesCache {
 
     Calendar calendar = Calendar.getInstance();
     calendar.setTime(from);
-    resetTillDay(calendar);
-    Date modifedFrom = calendar.getTime();
-    calendar.setTime(till);
-    resetTillDay(calendar);
-    Date modifedTill = calendar.getTime();
+    resetTillHour(calendar);
+    final Date modifedFrom = calendar.getTime();
 
     if (logger.isInfoEnabled()) {
       logger.info("Modified from: " + modifedFrom);
-      logger.info("Modified till: " + modifedTill);
+      logger.info("till: " + till);
     }
 
-    for (File f : dir.listFiles()) {
-      if (f.isFile()) {
-        String name = f.getName();
-        if (name.lastIndexOf(".csv") < 0) {
-          continue;
-        }
-        try {
-          Date date = fileNameFormat.parse(name.substring(0, name.lastIndexOf(".")));
-          if (logger.isInfoEnabled()) {
-            logger.info("Date parsed from file: " + date);
+    try {
+      for (File directory : dir.listFiles()) {
+        if(directory.isDirectory()) {
+          String dirName = directory.getName();
+          Date dirDate = dirNameFormat.parse(dirName);
+          if(logger.isInfoEnabled()) {
+            logger.info("DirDate: "+dirDate);
           }
-          if ((date.compareTo(modifedTill) <= 0) && (date.compareTo(modifedFrom) >= 0)) {
-            if ((statsFile = lockupFile(da, calendar.getTime(), true)) != null) {
-              files.add(statsFile);
-              if (logger.isInfoEnabled()) {
-                logger.info("File added for analysis: " + f.getAbsolutePath());
+          for(File f: directory.listFiles()) {
+            if (!f.isFile()) {
+              continue;
+            }
+            String name = f.getName();
+            if (name.lastIndexOf(".csv") < 0) {
+              continue;
+            }
+            Date fileDate = fileNameFormat.parse(name.substring(0, name.lastIndexOf(".")));
+            if(logger.isInfoEnabled()) {
+              logger.info("FileDate: "+fileDate);
+            }
+            Date date = new Date(dirDate.getTime()+fileDate.getTime()+7*60*60*1000);
+            if (logger.isInfoEnabled()) {
+              logger.info("Date parsed from file: " + date);
+            }
+            if ((date.compareTo(till) <= 0) && (date.compareTo(modifedFrom) >= 0)) {
+              if ((statsFile = lockupFile(da, calendar.getTime(), true)) != null) {
+                files.add(statsFile);
+                if (logger.isInfoEnabled()) {
+                  logger.info("File added for analysis: " + f.getAbsolutePath());
+                }
               }
+
             }
           }
-        } catch (ParseException e) {
-          logger.error("Can't parse filename", e);
-          throw new FileStatsException("Can't parse filename", e);
         }
       }
+    } catch (ParseException e) {
+      logger.error("Can't parse filename", e);
+      throw new FileStatsException("Can't parse filename", e);
     }
     return files;
   }
 
-  private void resetTillDay(Calendar calendar) {
+  private void resetTillHour(Calendar calendar) {
     if (calendar != null) {
-      calendar.set(Calendar.HOUR_OF_DAY, 0);
       calendar.set(Calendar.MINUTE, 0);
       calendar.set(Calendar.SECOND, 0);
       calendar.set(Calendar.MILLISECOND, 0);
@@ -152,10 +182,10 @@ public class StatsFilesCache {
     new FileCollector(true).run();
   }
 
-  private String buildKey(final String da, final Date date) {
-    String result = "";
-    result += da + '_' + fileNameFormat.format(date);
-    return result;
+  private String buildKey(final String dest, final Date date) {
+    StringBuilder builder = new StringBuilder();
+    return builder.append(dest).append("/").append(dirNameFormat.format(date))
+        .append("/").append(fileNameFormat.format(date)).toString();
   }
 
   private StatsFile lockupFile(final String dest, final Date date, boolean checkExist) {
@@ -163,7 +193,10 @@ public class StatsFilesCache {
     String key = buildKey(dest, date);
 
     if ((file = filesMap.get(key)) == null) {
-      String filePath = replyStatsDir + '/' + dest + '/' + fileNameFormat.format(date) + ".csv";
+      String filePath = replyStatsDir + "/" + key + ".csv";
+      if(logger.isInfoEnabled()) {
+        logger.info("Search file: "+filePath);
+      }
       if (checkExist) {
         File f = new File(filePath);
         if (!f.exists())

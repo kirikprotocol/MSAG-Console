@@ -236,10 +236,15 @@ public class DistributionInfoSmeManager implements DistributionManager {
     String path = statsDir + "/" + id;
     Date date;
     List<File> files = new LinkedList<File>();
-
+    if(logger.isInfoEnabled()) {
+      logger.info("Comparable date:"+calendar.getTime());
+    }
     while (calendar.getTime().compareTo(endDate) <= 0) {
       date = calendar.getTime();
       File file = new File(path + "/" + dirFormat.format(date) + "/" + fileFormat.format(date) + ".csv");
+      if(logger.isInfoEnabled()) {
+        logger.error("Search file:"+file.getAbsolutePath());
+      }
       if (file.exists()) {
         files.add(file);
         if (logger.isInfoEnabled()) {

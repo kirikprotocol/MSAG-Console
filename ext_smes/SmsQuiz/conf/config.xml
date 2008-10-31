@@ -23,7 +23,8 @@
       <param name="dir.name">replyStats</param>
       <param name="date.pattern.in.file">yyyyMMdd</param>                   <!-- optional -->
       <param name="time.pattern.in.file">HH:mm</param>                      <!-- optional -->
-      <param name="filename.pattern">yyyyMMdd</param>                       <!-- optional -->
+      <param name="filename.pattern">HH</param>                             <!-- optional -->
+      <param name="dirname.pattern">yyyyMMdd</param>                        <!-- optional -->
     </section>
     <section name="fileCollector">
       <param name="time.limit">60</param>  <!--seconds -->                  <!-- optional -->
@@ -53,8 +54,8 @@
   <section name="quizmanager">
     <param name="dir.quiz">test_QuizManager</param>
     <param name="dir.status">test_QuizManager</param>
-    <param name="listener.delay.first">30</param>     <!-- seconds -->    <!-- optional -->
-    <param name="listener.period.repeat">30</param>    <!-- seconds -->   <!-- optional -->
+    <param name="listener.delay.first">10</param>     <!-- seconds -->    <!-- optional -->
+    <param name="listener.period.repeat">10</param>    <!-- seconds -->   <!-- optional -->
     <param name="collector.delay.first">30</param>     <!-- seconds -->   <!-- optional -->
     <param name="collector.period.repeat">30</param>    <!-- seconds -->  <!-- optional -->
     <param name="quiz.date.pattern">dd.MM.yyyy HH:mm</param>              <!-- optional -->

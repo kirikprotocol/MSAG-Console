@@ -3,7 +3,7 @@ package mobi.eyeline.smsquiz.quizmanager.dirlistener;
 public class Notification {
 
   public static enum FileStatus {
-    CREATED, MODIFIED
+    CREATED, MODIFIED, DELETED
   }
 
   private String fileName;

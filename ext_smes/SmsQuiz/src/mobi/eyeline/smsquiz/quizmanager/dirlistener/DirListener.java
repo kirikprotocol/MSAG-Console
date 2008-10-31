@@ -52,7 +52,6 @@ public class DirListener extends Observable implements Runnable {
   public void run() {
     logger.info("Running DirListener...");
     File dirQuiz = new File(quizDir);
-
     try {
       lock.lock();
       if (remove == 1) {
@@ -60,9 +59,8 @@ public class DirListener extends Observable implements Runnable {
       }
       run = 1;
 
-      File[] files = dirQuiz.listFiles(fileFilter);
+      final File[] files = dirQuiz.listFiles(fileFilter);
       for (File f : files) {
-
         String fileName = f.getAbsolutePath();
         long lastModified = f.lastModified();
         QuizFile existFile;
@@ -83,12 +81,19 @@ public class DirListener extends Observable implements Runnable {
             logger.info("Quiz file created: " + fileName);
           }
         }
-        run = 0;
-        notRun.signal();
+      }
+      for(String fileN: filesMap.keySet()) {
+        if(!(new File(fileN)).exists()) {
+          setChanged();
+          notifyObservers(new Notification(fileN, Notification.FileStatus.DELETED));
+          filesMap.remove(fileN);
+        }
       }
     } catch (Exception e) {
       logger.error("Error construct quiz file or notification", e);
     } finally {
+      run = 0;
+      notRun.signal();
       lock.unlock();
     }
 
@@ -101,20 +106,26 @@ public class DirListener extends Observable implements Runnable {
     }
     try {
       lock.lock();
+      if(logger.isInfoEnabled()) {
+        logger.info("Remove file:"+fileName);
+      }
       if (run == 1) {
         notRun.await();
       }
       remove = 1;
       if (rename) {
+        if(logger.isInfoEnabled()) {
+          logger.info("Rename file: "+fileName);
+        }
         File file = new File(fileName);
         file.renameTo(new File(fileName + ".old"));
       }
       filesMap.remove(fileName);
-      remove = 0;
-      notRemove.signal();
     } catch (InterruptedException e) {
       logger.error("Error during remove file from storage: " + fileName, e);
     } finally {
+      remove = 0;
+      notRemove.signal();
       lock.unlock();
     }
   }

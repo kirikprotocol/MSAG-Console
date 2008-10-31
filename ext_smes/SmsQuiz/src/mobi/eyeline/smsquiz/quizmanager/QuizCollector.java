@@ -22,32 +22,36 @@ class QuizCollector implements Runnable {
 
   public void run() {
     logger.info("QuizCollectors starts...");
-    for (Map.Entry<String, Quiz> entry : quizesMap.entrySet()) {
-      Quiz quiz = entry.getValue();
-      if (quiz.getDateEnd().before(new Date())) {
-        try {
-          dirListener.remove(quiz.getFileName(), true);
-          String statusFile = quiz.getStatusFileName();
-          if(statusFile!=null) {
-            dirListener.remove(quiz.getStatusFileName(), true);
+    try {
+      for (Map.Entry<String, Quiz> entry : quizesMap.entrySet()) {
+        Quiz quiz = entry.getValue();
+        if (quiz.getDateEnd().before(new Date())) {
+          try {
+            dirListener.remove(quiz.getFileName(), true);
+            String statusFile = quiz.getStatusFileName();
+            if(statusFile!=null) {
+              dirListener.remove(quiz.getStatusFileName(), true);
+            }
+          } catch (QuizException e) {
+            logger.error("Error removing file from DirListener");
           }
-        } catch (QuizException e) {
-          logger.error("Error removing file from DirListener");
+          try {
+            quizesMap.remove(entry.getKey());
+            quiz.exportStats();
+            quiz.shutdown();
+          } catch (QuizException e) {
+            logger.error("Error creating resultStatistics");
+          }
+          if (logger.isInfoEnabled()) {
+            logger.info("QuizCollector removed quiz: " + quiz);
+          }
         }
-        try {
-          quizesMap.remove(entry.getKey());
-          quiz.exportStats();
-          quiz.shutdown();
-        } catch (QuizException e) {
-          logger.error("Error creating resultStatistics");
-        }
-        if (logger.isInfoEnabled()) {
-          logger.info("QuizCollector removed quiz: " + quiz);
-        }
-
       }
+    } catch (Throwable e) {
+      logger.error(e);
+      e.printStackTrace();
     }
-    logger.info("QuizCollectors finished");
+    logger.info("QuizCollectors finished");      
 
   }
 

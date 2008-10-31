@@ -46,6 +46,8 @@ public class Quiz {
 
   private Status status;
 
+  private boolean generated = false;
+
   public Quiz(final String statusDir, final File file,
               final ReplyStatsDataSource replyStatsDataSource,
               final DistributionManager distributionManager, final String dirResult) throws QuizException {
@@ -301,5 +303,18 @@ public class Quiz {
 
   public void setSourceAddress(String sourceAddress) {
     this.sourceAddress = sourceAddress;
+  }
+
+  public boolean isActive() {
+    Date now = new Date();
+    return now.after(dateBegin)&&now.before(dateEnd);
+  }
+
+  public boolean isGenerated() {
+    return generated;
+  }
+
+  public void setGenerated(boolean generated) {
+    this.generated = generated;
   }
 }

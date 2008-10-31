@@ -12,17 +12,14 @@ public class QuizManagerTask implements Runnable {
 
   private static Logger logger = Logger.getLogger(QuizManagerTask.class);
 
-  private Map<String, Quiz> quizMap;
-
   private Quiz quiz;
 
-  public QuizManagerTask(Map<String, Quiz> quizMap, Quiz quiz) {
+  public QuizManagerTask(Quiz quiz) {
     this.quiz = quiz;
-    this.quizMap = quizMap;
   }
 
   public void run() {
-    quizMap.put(quiz.getDestAddress(), quiz);
+    quiz.setGenerated(true);
     if (logger.isInfoEnabled()) {
       logger.info("Quiz is available now for receiving sms: " + quiz);
     }
