@@ -65,10 +65,7 @@ public class TaskDataSourceImpl implements TaskDataSource {
   }
 
   public void remove(Task task) throws DataSourceException {
-    if (task.getId() != null)
-      remove((TaskPointer)task.getId());
-    else
-      remove(task.getCaller(), task.getCalled());
+    remove(task.getCaller(), task.getCalled());
   }
 
   private Task remove(TaskPointer fp) throws DataSourceException {
