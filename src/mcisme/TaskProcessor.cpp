@@ -469,14 +469,18 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 
 TaskProcessor::~TaskProcessor()
 {
-  this->Stop();
+  try {
+    this->Stop();
+  } catch (...) {}
   delete templateManager;
   delete mciModule;
   delete statistics;
   delete pStorage;
   delete pDeliveryQueue;
   delete timeoutMonitor;
-  smsc::system::common::TimeZoneManager::Shutdown();
+  try {
+    smsc::system::common::TimeZoneManager::Shutdown();
+  } catch (...) {}
   delete _outputMessageProcessorsDispatcher;
 }
 
@@ -554,7 +558,6 @@ void TaskProcessor::Run()
     }
   }
   smsc_log_info(logger, "Message processing loop exited.");
-  _outputMessageProcessorsDispatcher->shutdown();
 }
 
 int TaskProcessor::Execute()
