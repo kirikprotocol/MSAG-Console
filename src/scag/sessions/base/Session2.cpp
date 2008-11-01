@@ -243,7 +243,7 @@ Deserializer& SessionPropertyScope::deserialize( Deserializer& o ) throw (Deseri
         if ( key.size() > 0 ) {
             o >> value;
             AdapterProperty* p = new AdapterProperty( key.c_str(), session_, value );
-            properties_.Insert( smsc::util::cStringCopy(key.c_str()), p );
+            properties_.Insert( key.c_str(), p );
         }
     }
     return o;

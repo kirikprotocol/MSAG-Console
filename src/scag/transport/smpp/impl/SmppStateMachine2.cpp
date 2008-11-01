@@ -34,6 +34,10 @@ struct StateMachine::ResponseRegistry
 {
     ResponseRegistry() : log(0), timeout(60) {}
 
+    ~ResponseRegistry() {
+        // FIXME: cleanup all items in reg
+    }
+
     struct RegKey {
         RegKey(int _uid=-1, int _seq=-1):uid(_uid), seq(_seq) {}
         bool operator==(const RegKey& key)

@@ -217,6 +217,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     // session is not attached to the command
 
     MemStorage::stored_type* v = 0;
+    bool firsttime; // a flag if session should be loaded for the first time
     while ( ! session ) { // fake loop
         MutexGuard mg(cacheLock_);
         if ( stopping_ ) {
@@ -228,8 +229,10 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
         v = cache_->get( key );
         if ( ! v ) {
             // not found
+            firsttime = true;
 
         } else {
+            firsttime = false;
 
             session = cache_->store2val(*v);
             
@@ -282,8 +285,12 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
 
         // if ( !v ) {
         // create a stub to be filled by disk io
-        cache_->set( key, cache_->val2store( allocator_->alloc(key) ));
-        v = cache_->get( key );
+        if ( !v ) {
+            cache_->set( key, cache_->val2store( allocator_->alloc(key) ));
+            v = cache_->get( key );
+        } else {
+            *v = cache_->val2store( allocator_->alloc(key) );
+        }
         const unsigned sz = cache_->size();
         if ( sz > maxcachesize_ ) maxcachesize_ = sz;
 
@@ -334,7 +341,14 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             expiration_->scheduleExpire( session->expirationTime(), session->lastAccessTime(), key );
             session = 0;
         } else {
-            what = " uploaded";
+            // session was just uploaded and is not expired
+            if ( firsttime && ! session->hasPersistentOperation() ) {
+                // session was not persistent
+                session->clear();
+                what = " upload&clear";
+            } else {
+                what = " uploaded";
+            }
         }
     }
 
@@ -503,10 +517,11 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
     Session* session = 0;
     std::vector< SessionKey >::const_iterator i = expired.begin();
     std::vector< std::pair<SessionKey,time_t> >::const_iterator j = flush.begin();
-    unsigned longcall = 0;
+    // unsigned longcall = 0;
     unsigned notexpired = 0;
 
     bool keep = false; // keep session on disk and destroy
+    bool finw = true;   // waiting finalization (only if keep = false)
     unsigned count = 0;
     while ( true ) {
 
@@ -514,15 +529,9 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
 
             if ( keep ) {
                 
-                // FIXME: when stopped, session should be either saved or destroyed on disk!
-                // \Otherwise, they will be loaded from disk.
-                // \Or, another possibility: discard sessions when they are loaded initially.
-                // In that case we need a flag "is session flushed in this run?"
                 if ( !stopping_ || session->needsFlush() || session->hasPersistentOperation() ) {
 
                     // session should be kept on disk.
-                    // NOTE: we'll save session only if cache is overwhelmed,
-                    // otherwise the session should be returned to expirationQueue.
                     smsc_log_debug( log_, "session=%p/%s is being flushed",
                                     session, session->sessionKey().toString().c_str() );
                     scag_plog_debug(pl,log_);
@@ -534,10 +543,10 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
                                     session, session->sessionKey().toString().c_str() );
                 }
 
-            } else if ( ! fin_->finalize( *session ) ) {
+            } else if ( finw && ! fin_->finalize( *session ) ) {
 
                 // session is taken for long call finalization
-                ++longcall;
+                // ++longcall;
                 session = 0;
 
             } else {
@@ -568,6 +577,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
         time_t lastaccess;
         if ( i != expired.end() ) {
             pkey = &(*i);
+            finw = true;
             ++i;
         } else if ( j != flush.end() ) {
             if ( ! diskio_ ) break;
@@ -575,65 +585,62 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             lastaccess = j->second;
             ++j;
             keep = true;
+            finw = false;
         } else {
             break;
         }
         const SessionKey& key = *pkey;
-        // keep = ( std::distance(expired.begin(),i) > expiredCount );
 
         MemStorage::stored_type* v = cache_->get( key );
-        if ( v ) {
-            session = cache_->store2val(*v);
+        session = v ? cache_->store2val(*v) : 0;
+        if ( session ) {
+            // ok
+            if ( stopping_ ) keep = true;
         } else if ( stopping_ ) {
             // storage is stopping and session is not found, ok
-            session = 0;
             continue;
 
         } else if ( keep ) {
-
             // session is already flushed -- ok
-            // ++notexpired;
-            // smsc_log_warn( log_, "session key=%s is already flushed?",
-            // key.toString().c_str() );
-            session = 0;
             continue;
 
         } else if ( diskio_ ) {
             // session is asked to be expired, but is not found in cache:
             // was it flushed to disk?
-            cache_->set( key, cache_->val2store( allocator_->alloc(key)) );
-            v = cache_->get( key );
+            bool firsttime = bool(!v);
+            if ( !v ) {
+                cache_->set( key, cache_->val2store( allocator_->alloc(key)) );
+                v = cache_->get( key );
+            } else {
+                *v = cache_->val2store( allocator_->alloc(key) );
+            }
             session = cache_->store2val(*v);
             session->setCurrentCommand(2);
             ++loadedSessions_;
+            bool uploaded;
             {
                 UnlockMutexGuard umg(cacheLock_);
                 smsc_log_debug(log_,"key=%s to be expired is not found",
                                key.toString().c_str() );
-                if ( ! disk_->get( key, cache_->store2ref(*v) ) ) {
+                uploaded = disk_->get( key, cache_->store2ref(*v) );
+                if ( ! uploaded ) {
                     smsc_log_warn( log_, "session key=%s cannot be uploaded",
                                    key.toString().c_str() );
-                    v = 0;
                 } else {
                     smsc_log_debug( log_,"session=%p/%s has been just uploaded",
                                     session, key.toString().c_str() );
-                    scag_plog_debug(pl,log_);
-                    session->print(pl);
+                    if ( firsttime && ! session->hasPersistentOperation() ) {
+                        smsc_log_debug( log_, "... but session is not persistent" );
+                        finw = false;
+                    } else {
+                        scag_plog_debug(pl,log_);
+                        session->print(pl);
+                    }
                 }
             }
-            if ( !v ) {
-                // --totalSessions_; is has been already deleted in previous attempt
-                --loadedSessions_;
-                delete cache_->release(key);
-                // ++notexpired;
-                session = 0;
-                continue;
-            } else {
-                session->setCurrentCommand(0);
-            }
+            if ( ! uploaded ) ++totalSessions_;
+            session->setCurrentCommand(0);
         } else {
-            session = 0;
-            // ++notexpired;
             continue;
         }
 
@@ -655,10 +662,9 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
 
         if ( stopping_ ) {
             // we are stopping the session should be dropped to disk
-            keep = true;
+            // keep = true;
 
         } else if ( keep ) {
-
             // was the session not accessed for too long time?
 
             const time_t newlastaccess = session->lastAccessTime();
@@ -830,9 +836,17 @@ bool SessionStoreImpl::doSessionFinalization( Session& session, bool keep )
         return false;
     } else {
         // no more commands, delete the session
-        --totalSessions_;
         --loadedSessions_;
-        delete cache_->release( session.sessionKey() );
+        if (keep) {
+            // NOTE: we leave a stub in cache as a flag that session has been processed in this run
+            MemStorage::stored_type* v = cache_->get( session.sessionKey() );
+            __require__( v );
+            cache_->dealloc(*v);
+            *v = cache_->val2store(0);
+        } else {
+            --totalSessions_;
+            delete cache_->release( session.sessionKey() );
+        }
         return true;
     }
 }
