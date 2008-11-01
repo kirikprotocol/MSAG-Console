@@ -30,7 +30,7 @@ public class Quiz {
   private String sourceAddress;
   private JStore jstore;
   private String question;
-  private String fileName;             p
+  private String fileName;
   private Date dateBegin;
   private Date dateEnd;
 
@@ -45,13 +45,15 @@ public class Quiz {
   private final DistributionManager distributionManager;
 
   private Status status;
+  private String dirWork;
 
   public Quiz(final String statusDir, final File file,
               final ReplyStatsDataSource replyStatsDataSource,
-              final DistributionManager distributionManager, final String dirResult) throws QuizException {
+              final DistributionManager distributionManager, final String dirResult, final String dirWork) throws QuizException {
     this.dirResult = dirResult;
     this.replyStatsDataSource = replyStatsDataSource;
     this.distributionManager = distributionManager;
+    this.dirWork = dirWork;
     jstore = new JStore(-1);
     if (file == null) {
       logger.error("Some arguments are null");
@@ -59,8 +61,8 @@ public class Quiz {
     }
     fileName = file.getAbsolutePath();
     quizName = file.getName().substring(0, file.getName().lastIndexOf("."));
-    jstore.init(fileName + ".bin", 60000, 10);
-    status = new Status(statusDir + "/" + quizName + ".status");
+    jstore.init(dirWork+File.separator+file.getName()+ ".bin", 60000, 10);
+    status = new Status(statusDir + File.separator + quizName + ".status");
     replyPatterns = new ArrayList<ReplyPattern>();
   }
 
@@ -130,7 +132,7 @@ public class Quiz {
       logger.info("Export statistics begining for: " + fileName);
     }
     SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
-    String fileName = dirResult + "/" + quizName + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
+    String fileName = dirResult + File.separator + quizName + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
     dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
 
     File file = new File(fileName);

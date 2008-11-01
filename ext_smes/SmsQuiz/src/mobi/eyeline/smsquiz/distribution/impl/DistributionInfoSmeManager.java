@@ -64,10 +64,10 @@ public class DistributionInfoSmeManager implements DistributionManager {
       PropertiesConfig config = new PropertiesConfig(c.getSection("distribution").toProperties("."));
 
       statsDir = config.getString("info.sme.stats.dir");
-      dirPattern = config.getString("info.sme.stats.date.dir.pattern", "yyMMdd");
-      filePattern = config.getString("info.sme.stats.time.file.pattern", "HH");
+      dirPattern = "yyMMdd";
+      filePattern = "HH";
       succDeliveryStatus = config.getString("info.sme.succ.delivery.status");
-      dateInFilePattern = config.getString("info.sme.date.format.in.file", "yyMMddHHmmss");
+      dateInFilePattern = "yyMMddHHmmss";
 
       host = config.getString("smsc.console.host");
       port = config.getInt("smsc.console.port");
@@ -233,7 +233,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
     calendar.set(Calendar.MINUTE, 0);
     calendar.set(Calendar.SECOND, 0);
     calendar.set(Calendar.MILLISECOND, 0);
-    String path = statsDir + "/" + id;
+    String path = statsDir + File.separator + id;
     Date date;
     List<File> files = new LinkedList<File>();
     if(logger.isInfoEnabled()) {
@@ -241,7 +241,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
     }
     while (calendar.getTime().compareTo(endDate) <= 0) {
       date = calendar.getTime();
-      File file = new File(path + "/" + dirFormat.format(date) + "/" + fileFormat.format(date) + ".csv");
+      File file = new File(path + File.separator + dirFormat.format(date) + File.separator + fileFormat.format(date) + ".csv");
       if(logger.isInfoEnabled()) {
         logger.error("Search file:"+file.getAbsolutePath());
       }
@@ -251,7 +251,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
           logger.info("File added for analysis: " + file.getAbsolutePath());
         }
       } else{
-        file = new File(path + "/" + dirFormat.format(date) + "/" + fileFormat.format(date) + "processed.csv");
+        file = new File(path + File.separator + dirFormat.format(date) + File.separator + fileFormat.format(date) + "processed.csv");
         if (file.exists()) {
           files.add(file);
           if (logger.isInfoEnabled()) {

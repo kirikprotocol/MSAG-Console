@@ -58,7 +58,7 @@ public class QuizManager implements Observer {
   private long collectorDelayFirst;
   private long collectorPeriod;
   private String dirResult;
-  private String dirModifiedAb;
+  private String dirWork;
 
   public static void init(final String configFile, DistributionManager distributionManager, ReplyStatsDataSource replyStatsDataSource,
                           SubscriptionManager subscriptionManager) throws QuizException {
@@ -92,12 +92,12 @@ public class QuizManager implements Observer {
       collectorPeriod = config.getLong("collector.period.repeat", 30);
       quizDir = config.getString("dir.quiz");
       statusDir = config.getString("dir.status");
-      datePattern = config.getString("quiz.date.pattern", "dd.MM.yyyy HH:mm");
-      timePattern = config.getString("quiz.time.pattern", "HH:mm");
+      datePattern = "dd.MM.yyyy HH:mm";
+      timePattern = "HH:mm";
       dirResult = config.getString("dir.result", "quizResults");
-      dirModifiedAb = config.getString("dir.modified.abonents", "quizManager_ab_mod");
+      dirWork = config.getString("dir.work", "quizManager_ab_mod");
 
-      File file = new File(dirModifiedAb);
+      File file = new File(dirWork);
       if (!file.exists()) {
         file.mkdirs();
       }
@@ -262,7 +262,7 @@ public class QuizManager implements Observer {
     Distribution distribution;
     File file = new File(fileName);
     try {
-      final Quiz quiz = new Quiz(statusDir, file, replyStatsDataSource, distributionManager, dirResult);
+      final Quiz quiz = new Quiz(statusDir, file, replyStatsDataSource, distributionManager, dirResult, dirWork);
       distribution = new Distribution();
       quizBuilder.buildQuiz(fileName, distribution, quiz);
       QuizCreator quizCreator = new QuizCreator(quiz, distribution);
@@ -299,7 +299,7 @@ public class QuizManager implements Observer {
     String line;
     PrintWriter writer = null;
     BufferedReader reader = null;
-    String modifiedFileName = dirModifiedAb + "/" + file.getName() + ".mod";
+    String modifiedFileName = dirWork + File.separator + file.getName() + ".mod";
     try {
       reader = new BufferedReader(new FileReader(file));
       writer = new PrintWriter(new BufferedWriter(new FileWriter(modifiedFileName)));
@@ -340,7 +340,7 @@ public class QuizManager implements Observer {
     }
     File file = new File(quizFileName);
     String quizName = file.getName().substring(0, file.getName().lastIndexOf("."));
-    String errorFile = quizDir + "/" + quizName + ".error";
+    String errorFile = quizDir + File.separator + quizName + ".error";
     PrintWriter writer = null;
     try {
       writer = new PrintWriter(new BufferedWriter(new FileWriter(errorFile, true)));
@@ -364,7 +364,7 @@ public class QuizManager implements Observer {
 
     File file = new File(quiz.getFileName());
     String quizName = file.getName().substring(0, file.getName().lastIndexOf("."));
-    String errorFile = quizDir + "/" + quizName + ".error";
+    String errorFile = quizDir + File.separator + quizName + ".error";
     file = new File(errorFile);
     if (!file.exists()) {
       return;
@@ -396,7 +396,7 @@ public class QuizManager implements Observer {
     File newQuizfile = new File(newQuiz.getFileName());
     String newQuizName = newQuizfile.getName().substring(0, newQuizfile.getName().lastIndexOf("."));
     PrintWriter writer = null;
-    String errorFile = quizDir + "/" + newQuizName + ".error";
+    String errorFile = quizDir + File.separator + newQuizName + ".error";
     try {
       writer = new PrintWriter(new BufferedWriter(new FileWriter(errorFile, true)));
       writer.println(" Quizes conflict:");
@@ -475,8 +475,8 @@ public class QuizManager implements Observer {
     return collectorPeriod;
   }
 
-  String getDirModifiedAb() {
-    return dirModifiedAb;
+  String getDirWork() {
+    return dirWork;
   }
   
   private class QuizCreator implements Runnable{

@@ -155,7 +155,7 @@ public class QuizManagerTest {
   public void stats() {
     waiting(dateEnd.getTime() - dateBegin.getTime());
     SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
-    String fileName = quizManager.getDirResult() + "/" + da + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
+    String fileName = quizManager.getDirResult() + File.separator + da + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
     File file = new File(fileName);
     assertTrue(file.exists());
     BufferedReader reader = null;

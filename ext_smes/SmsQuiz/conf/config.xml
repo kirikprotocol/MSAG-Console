@@ -8,10 +8,8 @@
   <param name="requestHandleStrategy">threadPool</param>
   <param name="threadsNumber">10</param>
 
-
   <section name="dbpool">
     <section name="jdbc">
-      <param name="driver">com.mysql.jdbc.Driver</param>
       <param name="source">jdbc:mysql://mangal/summer_edu?autoReconnect=true&amp;autoPoolReconnect=true&amp;useUnicode=true&amp;</param>
       <param name="user">student</param>
       <param name="password">student</param>
@@ -21,10 +19,6 @@
   <section name="replystats">
     <section name="statsFile">
       <param name="dir.name">replyStats</param>
-      <param name="date.pattern.in.file">yyyyMMdd</param>                   <!-- optional -->
-      <param name="time.pattern.in.file">HH:mm</param>                      <!-- optional -->
-      <param name="filename.pattern">HH</param>                             <!-- optional -->
-      <param name="dirname.pattern">yyyyMMdd</param>                        <!-- optional -->
     </section>
     <section name="fileCollector">
       <param name="time.limit">60</param>  <!--seconds -->                  <!-- optional -->
@@ -46,9 +40,6 @@
     <param name="info.sme.stats.dir">infoSme</param>
     <param name="status.checker.delay.first">10</param> <!-- seconds -->  <!-- optional -->
     <param name="status.checker.period">30</param>    <!-- seconds -->    <!-- optional -->
-    <param name="info.sme.stats.date.dir.pattern">yyMMdd</param>          <!-- optional -->
-    <param name="info.sme.stats.time.file.pattern">HH</param>             <!-- optional -->
-    <param name="info.sme.date.format.in.file">yyMMddHHmmss</param>       <!-- optional -->
   </section>
 
   <section name="quizmanager">
@@ -58,10 +49,8 @@
     <param name="listener.period.repeat">10</param>    <!-- seconds -->   <!-- optional -->
     <param name="collector.delay.first">30</param>     <!-- seconds -->   <!-- optional -->
     <param name="collector.period.repeat">30</param>    <!-- seconds -->  <!-- optional -->
-    <param name="quiz.date.pattern">dd.MM.yyyy HH:mm</param>              <!-- optional -->
-    <param name="quiz.time.pattern">HH:mm</param>                         <!-- optional -->
     <param name="dir.result">quizResults</param>                          
-    <param name="dir.modified.abonents">test_QuizManager</param>
+    <param name="dir.work">test_QuizManager</param>
   </section>
 
   <section name="jmx">

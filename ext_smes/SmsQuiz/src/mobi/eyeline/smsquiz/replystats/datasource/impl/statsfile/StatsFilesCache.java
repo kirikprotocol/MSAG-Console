@@ -42,10 +42,10 @@ public class StatsFilesCache {
       c.load(new File(configFile));
 
       PropertiesConfig config = new PropertiesConfig(c.getSection("replystats").toProperties("."));
-      fileNamePattern = config.getString("statsFile.filename.pattern", "HH");
-      dirNamePattern = config.getString("statsFile.dirname.pattern", "yyyyMMdd");
-      timePattern = config.getString("statsFile.time.pattern.in.file", "yyyyMMdd");
-      datePattern = config.getString("statsFile.date.pattern.in.file", "НН:mm");
+      fileNamePattern = "HH";
+      dirNamePattern = "yyyyMMdd";
+      timePattern = "НН:mm";
+      datePattern = "yyyyMMdd";
       replyStatsDir = config.getString("statsFile.dir.name", null);
       if (replyStatsDir == null) {
         throw new FileStatsException("dir.name parameter missed in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
@@ -104,7 +104,7 @@ public class StatsFilesCache {
     StatsFile statsFile;
     Collection<StatsFile> files = new LinkedList<StatsFile>();
 
-    File dir = new File(replyStatsDir + "/" + da);
+    File dir = new File(replyStatsDir + File.separator + da);
     if (!dir.exists()) {
       return files;
     }
@@ -184,8 +184,8 @@ public class StatsFilesCache {
 
   private String buildKey(final String dest, final Date date) {
     StringBuilder builder = new StringBuilder();
-    return builder.append(dest).append("/").append(dirNameFormat.format(date))
-        .append("/").append(fileNameFormat.format(date)).toString();
+    return builder.append(dest).append(File.separator).append(dirNameFormat.format(date))
+        .append(File.separator).append(fileNameFormat.format(date)).toString();
   }
 
   private StatsFile lockupFile(final String dest, final Date date, boolean checkExist) {
@@ -193,7 +193,7 @@ public class StatsFilesCache {
     String key = buildKey(dest, date);
 
     if ((file = filesMap.get(key)) == null) {
-      String filePath = replyStatsDir + "/" + key + ".csv";
+      String filePath = replyStatsDir + File.separator + key + ".csv";
       if(logger.isInfoEnabled()) {
         logger.info("Search file: "+filePath);
       }

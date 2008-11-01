@@ -57,7 +57,7 @@ public class QuizManagerMBean extends AbstractDynamicMBean {
     } else if (attribute.equals("CollectorPeriod")) {
       return manager.getCollectorPeriod();
     } else if (attribute.equals("DirModifiedAb")) {
-      return manager.getDirModifiedAb();
+      return manager.getDirWork();
     }
     throw new AttributeNotFoundException("Attribute " + attribute + " not found");
   }
