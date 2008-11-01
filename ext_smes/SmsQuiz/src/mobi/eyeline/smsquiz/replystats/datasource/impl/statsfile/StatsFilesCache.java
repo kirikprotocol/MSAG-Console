@@ -44,7 +44,7 @@ public class StatsFilesCache {
       PropertiesConfig config = new PropertiesConfig(c.getSection("replystats").toProperties("."));
       fileNamePattern = "HH";
       dirNamePattern = "yyyyMMdd";
-      timePattern = "НН:mm";
+      timePattern = "HH:mm";
       datePattern = "yyyyMMdd";
       replyStatsDir = config.getString("statsFile.dir.name", null);
       if (replyStatsDir == null) {
