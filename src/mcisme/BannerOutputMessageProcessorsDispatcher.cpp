@@ -43,7 +43,7 @@ OutputMessageProcessor*
 BannerOutputMessageProcessorsDispatcher::getFreeProcessor()
 {
   core::synchronization::MutexGuard synchonize(_dispatchMonitor);
-  if ( _freeMsgProcessors.empty() ) {
+  while ( _freeMsgProcessors.empty() ) {
     if (_dispatchMonitor.wait())
       throw util::SystemError("BannerOutputMessageProcessorsDispatcher::getFreeProcessor::: EventMonitor.wait() failed");
   }
