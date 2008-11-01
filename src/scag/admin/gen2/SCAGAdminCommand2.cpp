@@ -26,8 +26,8 @@
 
 #include "scag/config/route/RouteStructures.h"
 #include "scag/bill/base/BillingManager.h"
-// #include "scag/transport/http/HttpProcessor.h"
-// #include "scag/transport/http/HttpRouter.h"
+#include "scag/transport/http/base/HttpProcessor.h"
+#include "scag/transport/http/base/HttpRouter.h"
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/transport/smpp/base/SmppManager2.h"
 
@@ -465,9 +465,6 @@ Response * CommandApplySmppRoutes::CreateResponse(Scag * ScagApp)
 
 Response * CommandApplyHttpRoutes::CreateResponse(Scag * SmscApp)
 {
-    // FIXME: implement http command
-    return new Response(Response::Ok, "not impl");
-    /*
     smsc_log_info(logger, "CommandApplyHttpRoutes is processing...");
 
     try {
@@ -484,7 +481,6 @@ Response * CommandApplyHttpRoutes::CreateResponse(Scag * SmscApp)
 
     smsc_log_info(logger, "CommandApplyHttpRoutes processed ok.");
     return new Response(Response::Ok, "none");
-     */
 }
 
 
@@ -560,9 +556,6 @@ Response * CommandReloadTariffMatrix::CreateResponse(Scag * ScagApp)
 
 Response * CommandLoadHttpTraceRoutes::CreateResponse(Scag * ScagApp)
 {
-    // FIXME: implement http
-    return new Response( Response::Ok, "not impl" );
-    /*
     smsc_log_info(logger, "CommandLoadHttpTraceRoutes is processing...");
     Variant result(smsc::admin::service::StringListType);
 
@@ -582,8 +575,8 @@ Response * CommandLoadHttpTraceRoutes::CreateResponse(Scag * ScagApp)
     smsc_log_info(logger, "CommandLoadHttpTraceRoutes processed ok.");
     result.appendValueToStringList("Trace routes successfully loaded.");
     return new Response(Response::Ok, result);
-     */
 }
+
 /*
 Response * CommandLoadHttpTraceRoutes::CreateResponse(Scag * ScagApp)
 {
@@ -605,7 +598,8 @@ Response * CommandLoadHttpTraceRoutes::CreateResponse(Scag * ScagApp)
 
     smsc_log_info(logger, "CommandLoadHttpTraceRoutes processed ok.");
     return new Response(Response::Ok, "CommandLoadHttpTraceRoutes processed ok.");
-}        */
+} */
+
 
 void CommandTraceHttpRoute::init()
 {
@@ -631,10 +625,6 @@ void CommandTraceHttpRoute::init()
 
 Response * CommandTraceHttpRoute::CreateResponse(Scag * ScagApp)
 {
-    // FIXME: implement http
-    return new Response( Response::Ok, "not impl" );
-    
-    /*
     bool b;
     smsc_log_info(logger, "CommandTraceHttpRoute is processing...");
 
@@ -671,7 +661,6 @@ Response * CommandTraceHttpRoute::CreateResponse(Scag * ScagApp)
     }
 
     smsc_log_info(logger, "CommandTraceHttpRoute processed ok.");
-     */
 }
 
 

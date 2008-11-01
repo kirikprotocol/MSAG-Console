@@ -246,6 +246,7 @@ bool HttpProcessorImpl::findPlace(const char* wh, std::string& rs, const Placeme
     return false;
 }
 
+/*
 bool HttpProcessorImpl::findUSR(HttpRequest& request, const PlacementArray& places)
 {
     std::string s;
@@ -258,6 +259,7 @@ bool HttpProcessorImpl::findUSR(HttpRequest& request, const PlacementArray& plac
     }
     return false;
 }
+ */
 
 const PlacementArray& HttpProcessorImpl::getOutPlaces(const HttpRoute& r, uint32_t t)
 {
@@ -296,9 +298,9 @@ void HttpProcessorImpl::setFields(HttpRequest& request, HttpRoute& r)
     for (int i = 0; i < PLACEMENT_KIND_COUNT; ++i) {
       clearPlaces(defInPlaces[i], request);
     }
-    clearPlaces(r.inPlace[PlacementKind::USR], request);
+    // clearPlaces(r.inPlace[PlacementKind::USR], request);
     
-    setPlaces(lltostr(request.getUSR(), buf + 19), getOutPlaces(r, PlacementKind::USR), request, URLField);
+    // setPlaces(lltostr(request.getUSR(), buf + 19), getOutPlaces(r, PlacementKind::USR), request, URLField);
     setPlaces(request.getAbonent(), getOutPlaces(r, PlacementKind::ADDR), request, URLField);
     setPlaces(lltostr(request.getServiceId(), buf + 19), getOutPlaces(r, PlacementKind::SERVICE_ID), request, URLField);
     setPlaces(lltostr(request.getRouteId(), buf + 19), getOutPlaces(r, PlacementKind::ROUTE_ID), request, URLField);
@@ -379,14 +381,14 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 return scag::re::STATUS_OK;
             }
 
-            smsc_log_debug(logger, "Got http_request command host=%s:%d, path=%s, filename=%s, abonent=%s, USR=%d", request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getAbonent().c_str(), request.getUSR());
+            smsc_log_debug(logger, "Got http_request command host=%s:%d, path=%s, filename=%s, abonent=%s", request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getAbonent().c_str());
 
             smsc_log_debug( logger, "httproute found route_id=%d, service_id=%d", r.id, r.service_id);
             request.setServiceId(r.service_id);
             request.setRouteId(r.id);
             request.setProviderId(r.provider_id);
 
-            findUSR(request, getInPlaces(r, PlacementKind::USR));
+            // findUSR(request, getInPlaces(r, PlacementKind::USR));
 
             const std::string& s = request.getAbonent();
             request.setAddress(r.addressPrefix + (s.c_str() + (s[0] == '+' ? 1 : 0)));
@@ -444,7 +446,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 request.trc.result = rs.result;
             }
         } else
-            smsc_log_error( logger, "session not found for addr=%s, USR=%d", request.getAddress().c_str(), request.getUSR());
+            smsc_log_error( logger, "session not found for addr=%s", request.getAddress().c_str());
     }
     catch(RouteNotFoundException& e)
     {
@@ -468,7 +470,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
 
 int HttpProcessorImpl::processResponse(HttpResponse& response)
 {
-    smsc_log_debug( logger, "Got http_response command abonent=%s, USR=%d, route_id=%d, service_id=%d", response.getAbonent().c_str(), response.getUSR(), response.getRouteId(), response.getServiceId());
+    smsc_log_debug( logger, "Got http_response command abonent=%s, route_id=%d, service_id=%d", response.getAbonent().c_str(), response.getRouteId(), response.getServiceId());
     
     if(!response.getAbonent().length())
     {
@@ -521,16 +523,16 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
 
         } else {
 
-            smsc_log_error( logger, "http_response session not found abonent=%s, USR=%d", response.getAddress().c_str(), response.getUSR());
+            smsc_log_error( logger, "http_response session not found abonent=%s", response.getAddress().c_str());
             
             // FIXME: correct status
             if ( ! rescmd ) {
                 // session is locked by another command
-                smsc_log_error( logger, "http_response session is locked for abonent=%s, USR=%d", response.getAddress().c_str(), response.getUSR());
+                smsc_log_error( logger, "http_response session is locked for abonent=%s", response.getAddress().c_str());
                 return re::STATUS_PROCESS_LATER;
             } else {
                 // session is not found
-                smsc_log_error( logger, "http_response session not found abonent=%s, USR=%d", response.getAddress().c_str(), response.getUSR());
+                smsc_log_error( logger, "http_response session not found abonent=%s", response.getAddress().c_str());
                 // return re::STATUS_FAILED;
                 rs.status = re::STATUS_FAILED;
             }
@@ -543,15 +545,15 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
     }
     catch(Exception& e)
     {
-        smsc_log_error( logger, "http_response error processing abonent=%s, USR=%d. %s", response.getAbonent().c_str(), response.getUSR(), e.what());
+        smsc_log_error( logger, "http_response error processing abonent=%s. %s", response.getAbonent().c_str(), e.what());
     }
     catch(const std::runtime_error& e)
     {
-      smsc_log_error( logger, "http_response error processing abonent=%s, USR=%d. runtime_error: %s", response.getAbonent().c_str(), response.getUSR(), e.what());
+      smsc_log_error( logger, "http_response error processing abonent=%s. runtime_error: %s", response.getAbonent().c_str(), e.what());
     }
     catch(...)
     {
-        smsc_log_error( logger, "http_response error processing abonent=%s, USR=%d.", response.getAbonent().c_str(), response.getUSR());
+        smsc_log_error( logger, "http_response error processing abonent=%s.", response.getAbonent().c_str());
     }
 
     // response.setSession(SessionPtr(0));
@@ -564,8 +566,8 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
 
 int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 {
-    smsc_log_debug(logger, "Got http_status_response command abonent=%s, USR=%d, route_id=%d, service_id=%d, delivered=%d",
-             response.getAbonent().c_str(), response.getUSR(), response.getRouteId(), response.getServiceId(), delivered);
+    smsc_log_debug(logger, "Got http_status_response command abonent=%s, route_id=%d, service_id=%d, delivered=%d",
+             response.getAbonent().c_str(), response.getRouteId(), response.getServiceId(), delivered);
              
     if(!response.getAbonent().length())
     {
@@ -614,19 +616,19 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             }
         }
         else
-            smsc_log_error( logger, "http_status_response session not found abonent=%s, USR=%d", response.getAddress().c_str(), response.getUSR());
+            smsc_log_error( logger, "http_status_response session not found abonent=%s", response.getAddress().c_str());
     }
     catch(Exception& e)
     {
-        smsc_log_error( logger, "http_status_response error processing abonent=%s, USR=%d. %s", response.getAbonent().c_str(), response.getUSR(), e.what());
+        smsc_log_error( logger, "http_status_response error processing abonent=%s. %s", response.getAbonent().c_str(), e.what());
     }
     catch(const std::runtime_error& e)
     {
-      smsc_log_error( logger, "http_status_response error processing abonent=%s, USR=%d. runtime_error: %s", response.getAbonent().c_str(), response.getUSR(), e.what());
+      smsc_log_error( logger, "http_status_response error processing abonent=%s. runtime_error: %s", response.getAbonent().c_str(), e.what());
     }
     catch(...)
     {
-        smsc_log_error( logger, "Unknown exception. http_status_response error processing abonent=%s, USR=%d.", response.getAbonent().c_str(), response.getUSR());
+        smsc_log_error( logger, "Unknown exception. http_status_response error processing abonent=%s.", response.getAbonent().c_str());
     }
 
     // if(se.Get())

@@ -45,7 +45,7 @@ struct TransactionContext {
     std::string siteFileName;
     
     int ruleId;
-    uint16_t usr;
+    // uint16_t usr;
 
     int result;
 
@@ -55,7 +55,7 @@ struct TransactionContext {
         providerId = 0;
         ruleId = 0;
         routeId = 0;
-        usr = 0;
+        // usr = 0;
         status = 503;
         sitePort = 80;
         result = 0;
@@ -177,12 +177,14 @@ public:
     
     virtual bool isResponse() = 0;
 
+    /*
     uint16_t getUSR() {
         return trc.usr;
     }
     void setUSR(uint16_t usr) {
         trc.usr = usr;
     }
+     */
 
     const std::string& getAbonent() {
         return trc.abonent;

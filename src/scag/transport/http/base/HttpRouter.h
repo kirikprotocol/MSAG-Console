@@ -29,6 +29,8 @@ public:
                                     uint32_t sid,
                                     std::vector<std::string>& trace ) = 0;
 
+    virtual void ReloadRoutes() = 0;
+
 protected:
     HttpTraceRouter();
 

@@ -25,6 +25,7 @@
 #include "BatchAction2.h"
 #include "PersAction2.h"
 #include "StatAction.h"
+#include "HttpCookieAction.h"
 
 // #include "LongCallTestAction.h"
 
@@ -150,11 +151,12 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             break;
         }
 
+        if (name=="http:get-cookie") return new CookieAction(false);
+        if (name=="http:set-cookie") return new CookieAction(true);
+
     // FIXME: implement other actions
     /* 
     if (name=="traffic:check") return new ActionTrafficCheck();
-    if (name=="http:get-cookie") return new CookieAction(false);
-    if (name=="http:set-cookie") return new CookieAction(true);
 
      */
 

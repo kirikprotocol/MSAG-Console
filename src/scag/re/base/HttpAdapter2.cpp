@@ -17,7 +17,7 @@ Hash<AccessType> HttpCommandAdapter::InitRequestAccess()
     Hash<AccessType> hs;
 
     hs.Insert("abonent", atRead);
-    hs.Insert("usr", atRead);
+    // hs.Insert("usr", atRead);
     hs.Insert("site", atReadWrite);
     hs.Insert("path", atReadWrite);
     hs.Insert("filename", atReadWrite);
@@ -32,7 +32,7 @@ Hash<AccessType> HttpCommandAdapter::InitResponseAccess()
     Hash<AccessType> hs;
 
     hs.Insert("abonent", atRead);
-    hs.Insert("usr", atRead);
+    // hs.Insert("usr", atRead);
     hs.Insert("status", atReadWrite);
     hs.Insert("message", atReadWrite);
 
@@ -44,7 +44,7 @@ Hash<AccessType> HttpCommandAdapter::InitDeliveryAccess()
     Hash<AccessType> hs;
 
     hs.Insert("abonent", atRead);
-    hs.Insert("usr", atRead);
+    // hs.Insert("usr", atRead);
     hs.Insert("status", atRead);
     hs.Insert("delivered", atRead);
 
@@ -113,8 +113,8 @@ Property* HttpCommandAdapter::getRequestProperty(const std::string& name)
         prop = new AdapterProperty(name.c_str(), this, cmd.getSitePort());
     else if(!strcmp(name.c_str(), "message"))
         prop = new AdapterProperty(name.c_str(), this, cmd.getMessageText());
-    else if(!strcmp(name.c_str(), "usr"))
-        prop = new AdapterProperty(name.c_str(), this, cmd.getUSR());
+    // else if(!strcmp(name.c_str(), "usr"))
+    // prop = new AdapterProperty(name.c_str(), this, cmd.getUSR());
 
     if(prop)
         PropertyPool.Insert(name.c_str(), prop);
@@ -137,8 +137,8 @@ Property* HttpCommandAdapter::getResponseProperty(const std::string& name)
         prop = new AdapterProperty(name.c_str(), this, cmd.getStatus());
     else if(!strcmp(name.c_str(), "abonent"))
         prop = new AdapterProperty(name.c_str(), this, cmd.getAddress());
-    else if(!strcmp(name.c_str(), "usr"))
-        prop = new AdapterProperty(name.c_str(), this, cmd.getUSR());
+    // else if(!strcmp(name.c_str(), "usr"))
+    // prop = new AdapterProperty(name.c_str(), this, cmd.getUSR());
     else if(!strcmp(name.c_str(), "message"))
         prop = new AdapterProperty(name.c_str(), this, cmd.getMessageText());
 
@@ -163,8 +163,8 @@ Property* HttpCommandAdapter::getDeliveryProperty(const std::string& name)
         prop = new AdapterProperty(name.c_str(), this, cmd.getStatus());
     else if(!strcmp(name.c_str(), "abonent"))
         prop = new AdapterProperty(name.c_str(), this, cmd.getAddress());
-    else if(!strcmp(name.c_str(), "usr"))
-        prop = new AdapterProperty(name.c_str(), this, cmd.getUSR());
+    // else if(!strcmp(name.c_str(), "usr"))
+    // prop = new AdapterProperty(name.c_str(), this, cmd.getUSR());
     else if(!strcmp(name.c_str(), "delivered"))
         prop = new AdapterProperty(name.c_str(), this, cmd.getDelivered());
 

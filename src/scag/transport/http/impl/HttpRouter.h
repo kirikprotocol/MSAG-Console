@@ -75,7 +75,7 @@ public:
     void getDefaultInPlacement(PlacementKindArray& r) { for(int i= 0; i< PLACEMENT_KIND_COUNT; i++) r[i] = (*defInPlace)[i]; };
     void getDefaultOutPlacement(PlacementKindArray& r) { for(int i= 0; i< PLACEMENT_KIND_COUNT; i++) r[i] = (*defOutPlace)[i]; };
 
-    void ReloadRoutes();
+    virtual void ReloadRoutes();
 
     virtual ~HttpRouterImpl();
 

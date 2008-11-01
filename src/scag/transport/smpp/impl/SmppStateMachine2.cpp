@@ -63,7 +63,7 @@ struct StateMachine::ResponseRegistry
 
     struct HashFunc{
         static unsigned int CalcHash(const RegKey& key) {
-            return key.uid<<9+key.seq;
+            return (key.uid<<9) + key.seq;
         }
     };
 
