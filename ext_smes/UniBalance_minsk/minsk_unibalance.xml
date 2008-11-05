@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<project name="nsk_unibalance" default="all">
-  <property file="nsk_unibalance.properties"/>
+<project name="minsk_unibalance" default="all">
   <!-- Uncomment the following property if no tests compilation is needed -->
   <!-- 
   <property name="skip.tests" value="true"/>

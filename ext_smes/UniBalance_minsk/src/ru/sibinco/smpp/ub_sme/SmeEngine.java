@@ -1,8 +1,12 @@
 package ru.sibinco.smpp.ub_sme;
 
 import com.logica.smpp.Data;
-import com.lorissoft.advertising.syncclient.AdvertisingClientImpl;
-import com.lorissoft.advertising.syncclient.IAdvertisingClient;
+import com.lorissoft.advertising.client.AdvClientConst;
+import com.lorissoft.advertising.client.IAdvertisingClient;
+import com.lorissoft.advertising.client.RequestContext;
+import com.lorissoft.advertising.protocol.BannerResp;
+import com.lorissoft.advertising.syncclient.SyncClientImpl;
+import com.lorissoft.advertising.util.Encode;
 import ru.aurorisoft.smpp.*;
 import ru.sibinco.smpp.ub_sme.util.DBConnectionManager;
 import ru.sibinco.smpp.ub_sme.util.Utils;
@@ -11,7 +15,6 @@ import ru.sibinco.util.threads.ThreadsPool;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -40,9 +43,9 @@ public class SmeEngine implements MessageListener, ResponseListener {
   private byte[] billingSystemsOrder = {1};
 
   private String bannerEngineServiceName = "UniBalance";
-  private int bannerEngineClientID = 1;
   private int bannerEngineTransportType = 1;
   private int bannerEngineCharSet = 1;
+  private int bannerEngineBannerLength = 140;
 
   private boolean bannerEngineClientEnabled = false;
   private IAdvertisingClient bannerEngineClient;
@@ -50,6 +53,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
   private String bannerEngineClientPort = "8555";
   private String bannerEngineClientTimeout = "1000";
   private String bannerEngineClientReconnectTimeout = "1000";
+  private String maxRequestInMemory = "1000";
 
   private boolean smsResponseMode = false;
 
@@ -173,11 +177,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
         throw new InitializationException("Mandatory config parameter \"banner.engine.service.name\" is missed");
       }
       try {
-        bannerEngineClientID = Integer.parseInt(config.getProperty("banner.engine.client.id", Integer.toString(bannerEngineClientID)));
-      } catch (NumberFormatException e) {
-        throw new InitializationException("Invalid value for config parameter \"banner.engine.client.id\": " + config.getProperty("banner.engine.client.id"));
-      }
-      try {
         bannerEngineTransportType = Integer.parseInt(config.getProperty("banner.engine.transport.type", Integer.toString(bannerEngineTransportType)));
       } catch (NumberFormatException e) {
         throw new InitializationException("Invalid value for config parameter \"banner.engine.transport.type\": " + config.getProperty("banner.engine.transport.type"));
@@ -186,6 +185,11 @@ public class SmeEngine implements MessageListener, ResponseListener {
         bannerEngineCharSet = Integer.parseInt(config.getProperty("banner.engine.charset", Integer.toString(bannerEngineCharSet)));
       } catch (NumberFormatException e) {
         throw new InitializationException("Invalid value for config parameter \"banner.engine.charset\": " + config.getProperty("banner.engine.charset"));
+      }
+      try {
+        bannerEngineBannerLength = Integer.parseInt(config.getProperty("banner.engine.banner.length", Integer.toString(bannerEngineBannerLength)));
+      } catch (NumberFormatException e) {
+        throw new InitializationException("Invalid value for config parameter \"banner.engine.banner.length\": " + config.getProperty("banner.engine.banner.length"));
       }
 
       bannerEngineClientHost = config.getProperty("banner.engine.client.host", bannerEngineClientHost);
@@ -204,13 +208,19 @@ public class SmeEngine implements MessageListener, ResponseListener {
       if (bannerEngineClientReconnectTimeout.length() == 0) {
         throw new InitializationException("Mandatory config parameter \"banner.engine.client.reconnect.timeout\" is missed");
       }
+      maxRequestInMemory = config.getProperty("banner.engine.max.request.in.memory", maxRequestInMemory);
+      if (maxRequestInMemory.length() == 0) {
+        throw new InitializationException("Mandatory config parameter \"banner.engine.max.request.in.memory\" is missed");
+      }
       Properties bannerEngineClientConfig = new Properties();
-      bannerEngineClientConfig.put("ip", bannerEngineClientHost);
-      bannerEngineClientConfig.put("port", bannerEngineClientPort);
-      bannerEngineClientConfig.put("CLIENTTIMEOUT", bannerEngineClientTimeout);
-      bannerEngineClientConfig.put("WATCHDOGSLEEP", bannerEngineClientReconnectTimeout);
+      bannerEngineClientConfig.put("advclient.ip", bannerEngineClientHost);
+      bannerEngineClientConfig.put("advclient.port", bannerEngineClientPort);
+      bannerEngineClientConfig.put("advclient.clientTimeOut", bannerEngineClientTimeout);
+      bannerEngineClientConfig.put("advclient.watchDogSleep", bannerEngineClientReconnectTimeout);
+      bannerEngineClientConfig.put("advclient.maxRequestInMemory", maxRequestInMemory);
 
-      bannerEngineClient = new AdvertisingClientImpl();
+
+      bannerEngineClient = new SyncClientImpl();
       bannerEngineClient.init(bannerEngineClientConfig);
     }
 
@@ -317,7 +327,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
       if (logger.isDebugEnabled()) {
         logger.debug(responseType + " handled. ConnID #" + pdu.getConnectionId() + "; SeqN #" + pdu.getSequenceNumber() + "; Status #" + pdu.getStatus());
       }
-      if( outgoingQueue != null ) {
+      if (outgoingQueue != null) {
         if (pdu.getStatusClass() == PDU.STATUS_CLASS_TEMP_ERROR) {
           outgoingQueue.updateOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatus());
         } else {
@@ -349,27 +359,12 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
   }
 
-  /*protected RequestState extractRequestState(String abonent) {
-    synchronized (states) {
-      return (RequestState)states.remove(abonent);
-    }
-  } */
-
-  /*protected void closeRequestState(String abonent) {
-    if (abonent == null) {
-      return;
-    }
-    RequestState state = extractRequestState(abonent);
-    if (state == null)
-      return;
-    closeRequestState(state);
-  }*/
-
   protected void closeRequestState(RequestState state) {
     String abonent = state.getAbonentRequest().getSourceAddress();
     synchronized (state) {
-      if( state.isClosed() ) return;
-      if( !state.isError() && (!state.isBalanceReady() || (bannerEngineClientEnabled && !state.isBannerReady())) ) return;
+      if (state.isClosed()) return;
+      if (!state.isError() && (!state.isBalanceReady() || (bannerEngineClientEnabled && !state.isBannerReady())))
+        return;
       state.setClosed(true);
     }
     state.setStartCloseRequestTime();
@@ -549,22 +544,23 @@ public class SmeEngine implements MessageListener, ResponseListener {
     } else if (!abonent.startsWith(".")) {
       abonent = ".1.1." + abonent;
     }
-    String encoding = "UTF-16BE";
-    int transactionId;
-    synchronized (bannerEngineTransactionIdSyncMonitor) {
-      transactionId = bannerEngineTransactionId++;
-    }
-    byte[] banner = null;
-    if (bannerEngineClientEnabled) {
-      banner = bannerEngineClient.getLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId);
-    }
-    if (banner == null) {
-      return null;
-    }
-    try {
-      return new String(banner, encoding);
-    } catch (UnsupportedEncodingException e) {
-      logger.error("Unsupported encoding: " + encoding, e);
+    RequestContext rc = RequestContext.buildBannerRequest(abonent, bannerEngineServiceName, bannerEngineBannerLength, bannerEngineCharSet);
+    bannerEngineClient.getBanner(rc);
+    BannerResp res = (BannerResp) rc.getResponse();
+    if (res != null && res.getBannerBody() != null) {
+      if(logger.isDebugEnabled())
+        logger.debug(
+          "BE bot banlength=" + res.getBannerBody().length +
+              " tranzact=" + res.getTransactionID() +
+              " banner=" + Encode.decodeUTF16(res.getBannerBody()));
+      return Encode.decodeUTF16(res.getBannerBody());
+    } else {
+      if(logger.isDebugEnabled())
+        try {
+          logger.debug("BE COME NULL! tranzact= " +res.getTransactionID());
+        } catch (Exception e) {
+          ;
+        }
       return null;
     }
   }
