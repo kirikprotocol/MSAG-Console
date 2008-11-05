@@ -154,7 +154,6 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
         if (name=="http:get-cookie") return new CookieAction(false);
         if (name=="http:set-cookie") return new CookieAction(true);
 
-    // FIXME: implement other actions
     /* 
     if (name=="traffic:check") return new ActionTrafficCheck();
 

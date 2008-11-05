@@ -38,7 +38,7 @@ public:
 
     /// process command/session:
     /// 1. analyse the command, determine the type of operation;
-    /// 1a. TODO: create/fetch the session;
+    /// 1a. create/fetch the session (already done);
     /// 2. create/fetch the operation;
     /// 3. preprocess command/operation before RE execution;
     /// 4. invoke RE;

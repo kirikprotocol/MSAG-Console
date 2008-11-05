@@ -8,7 +8,6 @@
 #include "core/synchronization/Mutex.hpp"
 #include "scag/re/actions/impl/MainActionFactory2.h"
 #include "scag/re/base/Rule2.h"
-// #include "scag/re/base/TransportRule.h"
 #include "scag/re/Constants.h"
 
 namespace scag2 {
@@ -45,9 +44,6 @@ public:
 
     virtual Hash<TransportType>& getTransportTypeHash() {return TransportTypeHash;}
     virtual Hash<Property>& getConstants() { return ConstantsHash; };
-
-//    virtual bool findTransport(const char * name, TransportType& transportType);
-
 
 private:
     typedef XHash< RuleKey, Rule*, HashFunc > CRulesHash;
@@ -120,10 +116,6 @@ private:
     };
 
 private:
-
-    // TransportRule* getTransportRule( TransportType tt ) const;
-
-
     RulesReference getRules()
     {
         MutexGuard mg(rulesLock);
@@ -172,7 +164,6 @@ private:
     Hash<TransportType>         TransportTypeHash;
     Mutex  rulesLock;
     Rules* rules;
-    // mutable std::auto_ptr< TransportRule > transportRules_[maxrule];
     Mutex   changeLock;
     Hash<Property> ConstantsHash;
 };

@@ -762,12 +762,10 @@ void Session::closeCurrentOperation()
     if ( opcount == 0 ) {
         expirationTime_ = expirationTimeAtLeast_;
         // smsc_log_debug(log_, "session=%p key=%s has no ops, expiration=%d",
-        // this, sessionKey().toString().c_str(),
-        // int(expirationTime_ - now));
-        time_t now = time(0);
-        if ( expirationTime_ <= now ) {
-            ; // FIXME: push into session manager expiration thread
-        }
+        //    this, sessionKey().toString().c_str(), int(expirationTime_ - now));
+        // NOTE: we don't check for expired session here!
+        // As closeOperation is performed from locked session,
+        // session expiration time will be guaranteedly checked in releaseSession.
     }
 
     smsc_log_debug( log_, "session=%p/%s closeOp(op=%p opid=%u type=%d(%s)) => opcnt=%u etime=%d",
@@ -795,20 +793,6 @@ bool Session::hasPersistentOperation() const
     }
     return false;
 }
-
-
-/*
-void Session::setUSSDref( int32_t ref ) throw (SCAGException)
-{
-    if ( ref <= 0 ) throw SCAGException( "session=%p/%s setUSSDref(ref=%d), ref should be >0",
-                                         this, sessionKey().toString().c_str(), ref );
-    // changing umr is allowed
-    // if ( umr_ > 0 ) throw SCAGException( "setUSSDref(ref=%d), UMR=%d is already set", ref, umr_ );
-    if ( umr_ == -1 ) throw SCAGException( "session=%p/%s setUSSDref(ref=%d), no USSD operation found",
-                                           this, sessionKey().toString().c_str(), ref );
-    umr_ = ref;
-}
- */
 
 
 bool Session::isNew( int serv, int trans ) const {

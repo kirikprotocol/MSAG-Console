@@ -220,7 +220,6 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
                 rulePtr->processSession( session, rs );
                 if ( rs.status == STATUS_FAILED ) {
                     session.dropInitRuleKey( key.serviceId, key.transport );
-                    // session.setNew( key.serviceId, key.transport, false );
                 }
                 if ( rs.status != STATUS_OK ) {
                     hrt.stop();
@@ -327,9 +326,6 @@ void RuleEngineImpl::init( const std::string& dir )
     TransportTypeHash["SMPP"] = SMPP;
     TransportTypeHash["HTTP"] = HTTP;
     TransportTypeHash["MMS"] = MMS;
-
-    // prefetch transport rules
-    // getTransportRule( SMPP );
 
     Property property;
 

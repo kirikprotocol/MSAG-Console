@@ -4,7 +4,6 @@
 namespace scag {
 namespace util {
 
-// TODO: move to uti    l
 template<class T>
 class Reffer
 {

@@ -707,7 +707,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
         switch (FieldId)
         {
         case Tag::SMPP_USER_MESSAGE_REFERENCE:
-            // FIXME: should we also set session UMR?
+            // was fixme: should we also set session UMR?
             // if ( ! command.getSession() )
             // throw SCAGException( "command has no session to change umr in" );
             // if ( command.getSession()->getUSSDref() != -1 ) {

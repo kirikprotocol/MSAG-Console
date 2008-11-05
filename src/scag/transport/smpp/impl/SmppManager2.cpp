@@ -931,7 +931,7 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
     else {
     smsc_log_warn(log, "MSAG Receipt: MsgId is NULL! from=%s, to=%s, state=%d, dst_sme_id=%s",
               from.toString().c_str(), to.toString().c_str(), state, dst_sme_id);
-    //abort(); // TODO: Remove it! For testing purposes only.
+    //abort(); // was todo: Remove it! For testing purposes only.
     return; // Do not send receipt at all (msgId missed)
     }
     sms.setOriginatingAddress(from);

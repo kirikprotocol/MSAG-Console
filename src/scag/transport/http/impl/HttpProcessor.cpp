@@ -388,8 +388,6 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
             request.setRouteId(r.id);
             request.setProviderId(r.provider_id);
 
-            // findUSR(request, getInPlaces(r, PlacementKind::USR));
-
             const std::string& s = request.getAbonent();
             request.setAddress(r.addressPrefix + (s.c_str() + (s[0] == '+' ? 1 : 0)));
 
@@ -408,20 +406,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
         const SessionKey sk( request.getAddress() );
         SCAGCommand* reqptr(&request);
         se = SessionManager::Instance().getSession( sk, reqptr );
-        // FIXME: USR
 
-        /*
-         if(!request.getUSR())
-         {
-         se = SessionManager::Instance().newSession(sk);
-         request.setInitial();
-         request.setUSR(sk.USR);
-         }
-         else
-         if(!SessionManager::Instance().getSession(sk, se, request))
-         return scag::re::STATUS_PROCESS_LATER;
-         */
-            
         if (se.get())
         {
             re::RuleEngine::Instance().process(request, *se.get(), rs);
@@ -496,7 +481,6 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
          */
         const SessionKey sk(response.getAddress());
         SCAGCommand* rescmd(&response);
-        // FIXME: should session be already there (if not change to true)?
         se = SessionManager::Instance().getSession( sk, rescmd, false );
 
         re::RuleStatus rs;
@@ -525,7 +509,6 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
 
             smsc_log_error( logger, "http_response session not found abonent=%s", response.getAddress().c_str());
             
-            // FIXME: correct status
             if ( ! rescmd ) {
                 // session is locked by another command
                 smsc_log_error( logger, "http_response session is locked for abonent=%s", response.getAddress().c_str());

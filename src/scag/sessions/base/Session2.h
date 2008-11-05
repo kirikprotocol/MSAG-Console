@@ -372,11 +372,6 @@ private:
     opid_type   ussdOperationId_;                    // pers
     Operation*  currentOperation_;                   // not pers: reset on load via setCurOp
 
-    // TODO: think about movind operations creation/deletion into smppstatemachine,
-    // then move umr_ field into operation.
-    // ussd reference number (-1 -- invalid, 0 -- pending)
-    // int32_t    umr_;                                 // pers
-    
     /// the hash of operations (int -> Operation)
     IntHash< Operation* > operations_;               // pers
 
