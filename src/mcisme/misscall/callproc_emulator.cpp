@@ -7,8 +7,27 @@
 #include "callproc.hpp"
 #include <logger/Logger.h>
 
+// for test
+#include <sys/types.h>
+#include <string>
+#include <sstream>
+#include <iomanip>
+//
+
 namespace smsc{
 namespace misscall{
+
+std::string
+hexdmp(const char* buf, uint32_t bufSz)
+{
+  std::ostringstream hexBuf;
+  hexBuf.fill('0');
+  hexBuf << std::hex;
+  for (size_t i=0; i<bufSz; ++i)
+    hexBuf << std::setw(2) << (uint32_t) buf[i];
+
+  return hexBuf.str();
+}
 
 static int caseInsensitiveCompare(const std::string& l, const std::string r)
 {
@@ -45,7 +64,10 @@ stringParser(const std::string& inputStr)
   
   if ( pos != std::string::npos ) throw smsc::util::Exception("stringParser::: wrong input string format - unexpected delimeter found at end of string");
   std::string eventType = inputStr.substr(oldPos);
-  printf("eventType=[%s]\n", eventType.c_str());
+  printf("eventType=[%s] eventType=[%s]\n", hexdmp(eventType.c_str(), eventType.size()).c_str(), eventType.c_str());
+  eventType.erase(eventType.size()-2);
+  printf("eventType=[%s] eventType=[%s]\n", hexdmp(eventType.c_str(), eventType.size()).c_str(), eventType.c_str());
+
   if ( !caseInsensitiveCompare(eventType, "ABSENT") )
     event.cause = ABSENT;
   else if ( !caseInsensitiveCompare(eventType, "BUSY") )
@@ -107,7 +129,7 @@ MissedCallProcessorEmulator::MissedCallProcessorEmulator()
 
   char errString[128];
   sprintf(errString, "MissedCallProcessorEmulator:: Failed to init server socket %s:%u", _host.c_str(), _port);
-  if (_serverSocket.InitServer(_host.c_str(), _port, 0) != 0)
+  if (_serverSocket.InitServer(_host.c_str(), _port, 0, 0, 1) != 0)
     throw smsc::util::SystemError(errString);
   if (_serverSocket.StartServer() != 0)
     throw smsc::util::SystemError(errString);
@@ -125,15 +147,13 @@ int MissedCallProcessorEmulator::run()
       if (clntSocket)
       {
         smsc_log_info(_logger, "Connection accepted" );
-      
-        if ( clntSocket->Gets(cmdBuf, sizeof(cmdBuf)) == SOCKET_ERROR ) {
-          smsc_log_info(_logger, "MissedCallProcessorEmulator::run::: socket error, close connection");
-          continue;
+
+        while ( clntSocket->Gets(cmdBuf, sizeof(cmdBuf)) > 0 ) {
+          smsc::misscall::MissedCallEvent event = stringParser(cmdBuf);
+          smsc_log_info(_logger, "MissedCallProcessorEmulator::run::: generated event=[%s,%s,%x]\n", event.from.c_str(), event.to.c_str(), event.cause);
+          fireMissedCallEvent(event);
         }
-        smsc::misscall::MissedCallEvent event = stringParser(cmdBuf);
-        smsc_log_info(_logger, "MissedCallProcessorEmulator::run::: generated event=[%s,%s,%x]\n", event.from.c_str(), event.to.c_str(), event.cause);
-        fireMissedCallEvent(stringParser(cmdBuf));
-      } else break;
+      }
     }
   } catch (std::exception &ex) {
     smsc_log_error(_logger, "MissedCallProcessorEmulator::run::: catched exception [%s]", ex.what());
