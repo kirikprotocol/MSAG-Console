@@ -4,6 +4,8 @@
 
 #include <core/threads/ThreadPool.hpp>
 #include <core/buffers/Array.hpp>
+#include <core/synchronization/RWLock.hpp>
+#include <core/synchronization/RWLockGuard.hpp>
 
 #include <logger/Logger.h>
 #include <util/config/Manager.h>
@@ -234,6 +236,7 @@ private:
   SmppSession*    session;
   Mutex           sendLock;
 
+  RWLock _activeThreadRunningLock;
   MCISmeMessageSender(const MCISmeMessageSender& rhs);
   MCISmeMessageSender& operator=(const MCISmeMessageSender& rhs);
 public:
@@ -245,14 +248,23 @@ public:
     session = 0;
   }
 
+  void waitingForAllOperationsWillComplete()
+  {
+    WriteLockGuard guard(_activeThreadRunningLock);
+  }
+
   virtual int getSequenceNumber()
   {
     MutexGuard guard(sendLock);
+    ReadLockGuard activeThreadRunGuard(_activeThreadRunningLock);
+
     return (session) ? session->getNextSeq():0;
   }
+
   virtual bool send(int seqNumber, const Message& message)
   {
     MutexGuard guard(sendLock);
+    ReadLockGuard activeThreadRunGuard(_activeThreadRunningLock);
 
     if (!session) {
       smsc_log_error(logger, "Smpp session is undefined for MessageSender");
@@ -812,7 +824,8 @@ int main(void)
       smsc_log_info(logger, "Disconnecting from SMSC ...");
       TrafficControl::stopControl();
       processor.assignMessageSender(0);
-      session.close();
+
+      sender.waitingForAllOperationsWillComplete();
     }
     taskProcessor = 0;
   }
