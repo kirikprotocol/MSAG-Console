@@ -47,13 +47,17 @@ public class ReplyDataSource extends AbstractDataSourceImpl {
     final QueryResultSetImpl rs = new QueryResultSetImpl(columnNames, "");
 
     int total = 0;
-    Date dateBegin = filter.getDateBegin();
-    if(dateBegin==null) {
-      dateBegin = new Date(0);
+    Date dateBegin = null;
+    if(filter.isDateBeginEnabled()) {
+      dateBegin = filter.getDateBegin();
+    } else {
+      dateBegin = filter.getQuizDateBegin();
     }
-    Date dateEnd = filter.getDateEnd();
-    if(dateEnd==null) {
-      dateEnd = new Date();
+    Date dateEnd = null;
+    if(filter.isDateEndEnabled()) {
+      dateEnd = filter.getDateEnd();
+    } else {
+      dateEnd = filter.getQuizDateEnd();
     }
     Date tillDay = resetTillDay(dateBegin);
     File dir = new File(replyDir+File.separator+filter.getQuizNumber());

@@ -51,7 +51,8 @@ public class Replies extends SmsQuizBean {
     else pageSize = getSmsQuizContext().getPageSize();
 
     if (!initialized) {
-      replyFilter.setDateBegin(Functions.truncateTime(new Date()));
+      replyFilter.setDateBeginEnabled(false);
+      replyFilter.setDateEndEnabled(false);    
     }
     try {
       String replyDir = getSmsQuizContext().getConfig().getString("replystats.statsFile.dir.name");
@@ -269,17 +270,23 @@ public class Replies extends SmsQuizBean {
   public void setFromDate(String fromDate)
   {
     if (fromDate != null && fromDate.trim().length() > 0) {
+      replyFilter.setDateBeginEnabled(true);
       replyFilter.setDateBegin(convertStringToDate(fromDate));
+    } else {
+      replyFilter.setDateBeginEnabled(false);
     }
   }
   public String getFromDate() {
-    return (replyFilter.getDateBegin()!=null) ? convertDateToString(replyFilter.getDateBegin()) : "";
+    return (replyFilter.isDateBeginEnabled()) ? convertDateToString(replyFilter.getDateBegin()) : "";
   }
 
   public void setTillDate(String tillDate)
   {
     if (tillDate != null && tillDate.trim().length() > 0) {
+      replyFilter.setDateEndEnabled(true);
       replyFilter.setDateEnd(convertStringToDate(tillDate));
+    } else {
+      replyFilter.setDateEndEnabled(false);
     }
   }
   private Date convertStringToDate(String date) {
@@ -294,7 +301,7 @@ public class Replies extends SmsQuizBean {
     return converted;
   }
   public String getTillDate() {
-    return (replyFilter.getDateEnd()!=null) ?  convertDateToString(replyFilter.getDateEnd()) : "";
+    return (replyFilter.isDateEndEnabled()) ?  convertDateToString(replyFilter.getDateEnd()) : "";
   }
   public String convertDateToString(Date date){
     SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);

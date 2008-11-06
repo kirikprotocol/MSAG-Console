@@ -25,6 +25,10 @@ public class ReplyFilter implements Filter {
 
   private Date quizDateEnd;
 
+  private boolean dateBeginEnabled = false;
+
+  private boolean dateEndEnabled = false;
+
 
   public boolean isEmpty() {
     return false;
@@ -34,11 +38,23 @@ public class ReplyFilter implements Filter {
     if((address !=null)&&(!item.getValue("msisdn").equals(address))) {
       return false;
     }
-    if((getDateBegin() !=null)&&(!((Date)item.getValue("replyDate")).after(getDateBegin()))) {
-      return false;
+    if(dateBeginEnabled) {
+      if(!((Date)item.getValue("replyDate")).after(dateBegin)) {
+        return false;
+      }
+    } else {
+      if(!((Date)item.getValue("replyDate")).after(quizDateBegin)) {
+        return false;
+      }
     }
-    if((getDateEnd() !=null)&&(!((Date)item.getValue("replyDate")).before(getDateEnd()))) {
-      return false;
+    if(dateEndEnabled) {
+      if(!((Date)item.getValue("replyDate")).before(dateEnd)) {
+        return false;
+      }
+    } else {
+      if(!((Date)item.getValue("replyDate")).before(quizDateEnd)) {
+        return false;
+      }
     }
     return true;
   }
@@ -60,14 +76,7 @@ public class ReplyFilter implements Filter {
   }
 
   public Date getDateBegin() {
-    if(quizDateBegin==null)
-      return null;
-    if(dateBegin!=null) {
-      if(dateBegin.after(quizDateBegin)) {
-        return dateBegin;
-      }
-    }
-    return quizDateBegin;
+    return dateBeginEnabled ? dateBegin:null;
   }
 
   public void setDateBegin(Date dateBegin) {
@@ -75,14 +84,7 @@ public class ReplyFilter implements Filter {
   }
 
   public Date getDateEnd() {
-    if(quizDateEnd==null)
-      return null;
-    if(dateEnd!=null) {
-      if(dateEnd.before(quizDateEnd)) {
-        return dateEnd;
-      }
-    }
-    return quizDateEnd;
+    return dateEndEnabled ? dateEnd:null;
   }
 
   public void setDateEnd(Date dateEnd) {
@@ -111,5 +113,21 @@ public class ReplyFilter implements Filter {
 
   public void setQuizDateEnd(Date quizDateEnd) {
     this.quizDateEnd = quizDateEnd;
+  }
+
+  public boolean isDateBeginEnabled() {
+    return dateBeginEnabled;
+  }
+
+  public void setDateBeginEnabled(boolean dateBeginEnabled) {
+    this.dateBeginEnabled = dateBeginEnabled;
+  }
+
+  public boolean isDateEndEnabled() {
+    return dateEndEnabled;
+  }
+
+  public void setDateEndEnabled(boolean dateEndEnabled) {
+    this.dateEndEnabled = dateEndEnabled;
   }
 }
