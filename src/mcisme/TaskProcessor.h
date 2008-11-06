@@ -17,6 +17,7 @@
 
 #include <logger/Logger.h>
 
+#include <util/Exception.hpp>
 #include <util/config/ConfigView.h>
 #include <util/config/ConfigException.h>
 
@@ -84,6 +85,15 @@ struct sms_info
 
 class SendMessageEventHandler;
 class TimeoutMonitor;
+
+class RetryException : public util::Exception {
+public:
+  RetryException(const char * fmt, ...)
+    : Exception()
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
 
 class TaskProcessor : public Thread, public MissedCallListener, public AdminInterface
 {
@@ -158,6 +168,14 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
                                  const AbntAddr& calledAbonent,
                                  const AbonentProfile& abntProfile,
 				 const AbonentProfile& callerProfile);
+
+  MessageSender* getMessageSender() {
+    MutexGuard guard(messageSenderLock);
+    if ( !messageSender )
+      throw RetryException("TaskProcessor::getMessageSender::: messageSender is not set");
+    return messageSender;
+  }
+
 public:
 
   TaskProcessor(ConfigView* config);
