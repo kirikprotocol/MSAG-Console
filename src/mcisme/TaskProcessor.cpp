@@ -685,7 +685,14 @@ TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg, const MCEve
 {
   MutexGuard Lock(smsInfoMutex);
 
-  int seqNum = messageSender->getSequenceNumber();
+  int seqNum;
+  try {
+    seqNum = getMessageSender()->getSequenceNumber();
+  } catch (RetryException& ex) {
+    pDeliveryQueue->Reschedule(abnt);
+    throw;
+  }
+
   sms_info* pInfo = new sms_info;
 
   pInfo->sending_time = time(0);
@@ -694,15 +701,22 @@ TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg, const MCEve
   pInfo->events = outEvent.srcEvents;
 
   smsInfo.Insert(seqNum, pInfo);
-  if(!messageSender->send(seqNum, msg))
-  {
-    smsc_log_error(logger, "Send DATA_SM for Abonent %s failed", pInfo->abnt.toString().c_str());
-    pDeliveryQueue->Reschedule(pInfo->abnt);
+
+  try {
+    if(!getMessageSender()->send(seqNum, msg))
+    {
+      smsc_log_error(logger, "Send DATA_SM for Abonent %s failed", pInfo->abnt.toString().c_str());
+      pDeliveryQueue->Reschedule(pInfo->abnt);
+      smsInfo.Delete(seqNum);
+      delete pInfo;
+      return false;
+    }
+  } catch (RetryException& ex) {
+    pDeliveryQueue->Reschedule(abnt);
     smsInfo.Delete(seqNum);
     delete pInfo;
-    return false;
+    throw;
   }
-
   return true;
 }
 
@@ -774,7 +788,7 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
     smsc_log_info(logger, "Recieve a DATA_SM_RESP for Abonent %s seq_num = %d, status = %d", pInfo->abnt.toString().c_str(), seqNum, status);
 
     if(status == smsc::system::Status::OK)
-    {	
+    {
       AbonentProfile abntProfile;
       profileStorage->Get(pInfo->abnt, abntProfile);
 
@@ -930,7 +944,7 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
 
     smsc_log_debug(logger, "Notify message = %s to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
 
-    messageSender->send(messageSender->getSequenceNumber(), msg);
+    getMessageSender()->send(getMessageSender()->getSequenceNumber(), msg);
     store_N_Event_in_logstore(abnt, caller.getText());
   }
 }
