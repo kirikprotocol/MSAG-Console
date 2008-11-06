@@ -87,9 +87,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
   private ProductivityControlObject responses;
   private ProductivityControlObject waitForSmsResponses;
 
-  private int bannerEngineTransactionId;
-  private final Object bannerEngineTransactionIdSyncMonitor = new Object();
-
   public void init(Properties config) throws InitializationException {
     if (logger.isDebugEnabled()) logger.debug("UniBalance SME init started");
 
