@@ -42,7 +42,7 @@ static int parseTime(const char* str)
 {
   int hour, minute, second;
   if (!str || str[0] == '\0' ||
-      sscanf(str, "%02d:%02d:%02d", 
+      sscanf(str, "%d:%02d:%02d", 
              &hour, &minute, &second) != 3) return -1;
 
   return hour*3600+minute*60+second;
@@ -517,6 +517,7 @@ int FSStorage::KillExpiredEvents(dat_file_cell* pAbntEvents)
   while(pAbntEvents->eventCount)
   {
     time_t dt = pAbntEvents->events[0].date;
+
     if((dt + eventLifeTime) < time(0))
     {
       store_E_Event_in_logstore(pAbntEvents->calledNum, pAbntEvents->events[0].callingNum);
