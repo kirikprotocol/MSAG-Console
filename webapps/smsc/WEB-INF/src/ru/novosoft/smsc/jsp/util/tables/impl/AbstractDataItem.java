@@ -10,6 +10,7 @@ import ru.novosoft.smsc.jsp.util.tables.DataItem;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Iterator;
 
 
 public abstract class AbstractDataItem implements DataItem
@@ -28,4 +29,15 @@ public abstract class AbstractDataItem implements DataItem
     else
       return false;
   }
+
+  public String toString() {
+    StringBuffer buffer= new StringBuffer();
+    Iterator iter = values.entrySet().iterator();
+    while(iter.hasNext()) {
+      Map.Entry e = (Map.Entry)iter.next();
+      buffer.append("{").append(e.getKey().toString()).append("=>").append(e.getValue().toString()).append("}");
+    }
+    return buffer.toString();
+  }
+
 }

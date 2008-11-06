@@ -5,8 +5,9 @@
 <%
    ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
 	 TITLE=getLocString("smsquiz.title");
-   bean.process(request);
+   int beanResult = bean.process(request);
 %>
+<%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>

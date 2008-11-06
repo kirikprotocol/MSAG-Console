@@ -1,6 +1,7 @@
 package mobi.eyeline.smsquiz.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.jsp.PageBean;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -20,6 +21,7 @@ public class Index extends SmsQuizBean{
       return start();
     if (mbStop != null)
       return stop();
+
     return result;
   }
 

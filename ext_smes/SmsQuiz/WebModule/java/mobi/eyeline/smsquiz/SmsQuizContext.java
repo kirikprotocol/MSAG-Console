@@ -27,6 +27,9 @@ public class SmsQuizContext implements SMEAppContext {
   private final static Map instances = new HashMap();
   private SmsQuiz smsQuiz;
 
+  private int pageSize = 20;
+  private int maxTotalSize = 1000;
+
   public static SmsQuizContext getInstance(SMSCAppContext appContext, String smeId)  throws AdminException, SAXException, ParserConfigurationException, IOException {
     SmsQuizContext instance = (SmsQuizContext) instances.get(smeId);
     if (instance == null) {
@@ -63,5 +66,21 @@ public class SmsQuizContext implements SMEAppContext {
 
   public SmsQuiz getSmsQuiz() {
     return smsQuiz;
+  }
+
+  public int getPageSize() {
+    return pageSize;
+  }
+
+  public void setPageSize(int pageSize) {
+    this.pageSize = pageSize;
+  }
+
+  public int getMaxTotalSize() {
+    return maxTotalSize;
+  }
+
+  public void setMaxTotalSize(int maxTotalSize) {
+    this.maxTotalSize = maxTotalSize;
   }
 }

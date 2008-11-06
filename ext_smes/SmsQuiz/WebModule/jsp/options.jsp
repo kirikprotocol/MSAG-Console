@@ -6,8 +6,9 @@
 <%
    ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
 	 TITLE = getLocString("smsquiz.title");
-   bean.process(request);
+   int beanResult = bean.process(request);
 %>
+<%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
@@ -26,7 +27,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>DB Password</th>
-  <td><input class=txt name=dbPassword value="<%=StringEncoderDecoder.encode(bean.getDbPassword())%>" maxlength="5"></td>
+  <td><input class=txt name=dbPassword value="<%=StringEncoderDecoder.encode(bean.getDbPassword())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>DB Source</th>
@@ -83,7 +84,7 @@
   <td><input class=txt name=connectCloserPeriod value="<%=StringEncoderDecoder.encode(bean.getConnectCloserPeriod())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>InfoSme's success deliveru</th>
+  <th>InfoSme's success delivery</th>
   <td><input class=txt name=infoSmeSuccDeliveryStat value="<%=StringEncoderDecoder.encode(bean.getInfoSmeSuccDeliveryStat())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
@@ -144,6 +145,10 @@
   <th>JMX user</th>
   <td><input class=txt name=jmxUser value="<%=StringEncoderDecoder.encode(bean.getJmxUser())%>"></td>
 </tr>
+<tr class=row<%=rowN++&1%>>
+  <th>JMX port</th>
+  <td><input class=txt name=jmxPort value="<%=StringEncoderDecoder.encode(bean.getJmxPort())%>"></td>
+</tr>
 <tr>
   <th align="center" colspan="2">SMPP</th>
 </tr>
@@ -173,7 +178,7 @@
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbDone",   "common.buttons.done",  "smsquiz.done_editing");
-page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "smsquiz..cancel_changes", "clickCancel()");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "smsquiz.cancel_changes", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

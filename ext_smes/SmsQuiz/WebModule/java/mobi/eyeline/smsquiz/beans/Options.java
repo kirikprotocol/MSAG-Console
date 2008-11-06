@@ -70,9 +70,9 @@ public class Options extends SmsQuizBean{
         dbPassword = getConfig().getString("dbpool.jdbc.password");
 
         replyDirName = getConfig().getString("replystats.statsFile.dir.name");
-        fileCollectorDelay = getConfig().getInt("replystats.statsFile.time.period");
-        fileCollectorPeriod = getConfig().getInt("replystats.statsFile.time.first.delay");
-        fileOpenedLimit = getConfig().getInt("replystats.statsFile.time.limit");
+        fileCollectorDelay = getConfig().getInt("replystats.fileCollector.time.period");
+        fileCollectorPeriod = getConfig().getInt("replystats.fileCollector.time.first.delay");
+        fileOpenedLimit = getConfig().getInt("replystats.fileCollector.time.limit");
 
         consoleHost = getConfig().getString("distribution.smsc.console.host");
         consolePort = getConfig().getString("distribution.smsc.console.port");
@@ -115,7 +115,7 @@ public class Options extends SmsQuizBean{
   public void initSmppProperties(String fileName) throws Exception{
     File file = new File(fileName);
     if(!file.exists()) {
-      throw new Exception("File with smpp configuration not found!");
+      throw new Exception("File with smpp configuration not found: "+file.getAbsolutePath());
     }
     InputStream inputStream = null;
     try{
@@ -156,9 +156,9 @@ public class Options extends SmsQuizBean{
       getConfig().setString("dbpool.jdbc.password", dbPassword);
 
       getConfig().setString("replystats.statsFile.dir.name",replyDirName);
-      getConfig().setInt("replystats.statsFile.time.period", fileCollectorDelay);
-      getConfig().setInt("replystats.statsFile.time.first.delay", fileCollectorPeriod);
-      getConfig().setInt("replystats.statsFile.time.limit", fileOpenedLimit);
+      getConfig().setInt("replystats.fileCollector.time.period", fileCollectorDelay);
+      getConfig().setInt("replystats.fileCollector.time.first.delay", fileCollectorPeriod);
+      getConfig().setInt("replystats.fileCollector.time.limit", fileOpenedLimit);
 
       getConfig().setString("distribution.smsc.console.host", consoleHost);
       getConfig().setString("distribution.smsc.console.port", consolePort);
@@ -213,7 +213,10 @@ public class Options extends SmsQuizBean{
       prop.setProperty("smpp.connector.smsx.port", Integer.toString(smppConnPort));
       prop.setProperty("smpp.connector.smsx.systemId", smppConnSystemId);
       prop.setProperty("smpp.connector.smsx.password", smppConnPassword);
-      prop.setProperty("smpp.connector.smsx.systemType", smppConnSystemId);
+      if(smppSystemType==null) {
+        smppSystemType="";
+      }
+      prop.setProperty("smpp.connector.smsx.systemType", smppSystemType);
       outputStream = new FileOutputStream(fileName);
       prop.store(outputStream,"");
     } catch(Exception e) {
