@@ -60,16 +60,15 @@ void TasksSorter::assignTask(uint16_t index, SortedTask *task) {
   task->index_ = index;
 }
 
-IOTaskManager::IOTaskManager(StorageManager& storageManager):storageManager_(storageManager) {
-}
-
-void IOTaskManager::init(uint16_t maxThreads, uint32_t maxSockets, uint16_t timeout, const char *logName) {
-  connectionTimeout_ = timeout;
-  logger = Logger::getInstance(logName);
-
-  maxThreads_ = maxThreads;
+IOTaskManager::IOTaskManager(uint16_t maxThreads, uint32_t maxSockets, uint16_t timeout, const char *logName)
+                            :maxThreads_(maxThreads), maxSockets_(maxSockets), connectionTimeout_(timeout), logger(Logger::getInstance(logName))
+{
   int mod = maxSockets % maxThreads;
   maxSockets_ = mod > 0 ? (maxSockets / maxThreads_) + 1 : maxSockets / maxThreads_;
+  //init();
+}
+
+void IOTaskManager::init() {
   pool_.setMaxThreads(maxThreads_);
   taskSorter_.init(maxThreads_);
 
@@ -86,30 +85,6 @@ void IOTaskManager::removeContext(IOTask* t, uint16_t contextsNumber) {
   taskSorter_.reorderTask(t);
 }
 
-bool IOTaskManager::process(ConnectionContext* cx) {
-  MutexGuard g(tasksMutex_);
-  IOTask *t = (IOTask*)taskSorter_.getFirst();
-  if (t->getSocketsCount() < maxSockets_) {
-    cx->socket->Write("OK", 2);
-
-    smsc_log_debug(logger, "%p:%d choosen for context %p", t, t->getSocketsCount(), cx);
-    t->registerContext(cx);
-    taskSorter_.reorderTask(t);
-    return true;
-  } else {
-    smsc_log_warn(logger, "Can't process %p context. Server busy. Max sockets=%d, current sockets=%d", cx,  maxSockets_, t->getSocketsCount());
-    return false;
-  }
-}
-
-bool IOTaskManager::storageProcess(PersPacket* packet) {
-  return storageManager_.process(packet);
-}
-
-IOTask* IOTaskManager::newTask() {
-  return new IOTask(*this, connectionTimeout_);
-}
-
 bool IOTaskManager::canStop() {
   MutexGuard g(tasksMutex_);
   IOTask *task = (IOTask*)taskSorter_.getTask(maxThreads_);
@@ -118,7 +93,6 @@ bool IOTaskManager::canStop() {
 
 void IOTaskManager::shutdown() {
   pool_.shutdown();
-  storageManager_.shutdown();
 }
 
 }//mtpers

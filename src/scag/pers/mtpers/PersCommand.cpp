@@ -61,25 +61,19 @@ bool PersCommand::deserialize(SerialBuffer& sb) {
 }
 
 Response PersCommand::execute(Profile *pf, SerialBuffer& sb) {
-  try {
-    switch (cmdId) {
-      case scag::pers::util::PC_SET        : return set(pf, sb);
-      case scag::pers::util::PC_GET        : return get(pf, sb);
-      case scag::pers::util::PC_DEL        : return del(pf, sb);
-      case scag::pers::util::PC_INC        : return inc(pf, sb);
-      case scag::pers::util::PC_INC_MOD    : return incMod(pf, sb);
-      case scag::pers::util::PC_INC_RESULT : return incResult(pf, sb);
-      default                              : return RESPONSE_NOTSUPPORT;
-    }
-  } catch (const SerialBufferOutOfBounds &e) {
-    smsc_log_warn(logger, "SerialBufferOutOfBounds key=%s bad data in buffer len=%d, data=%s",
-                   pf->getKey().c_str(), sb.length(), sb.toString().c_str());
-    return scag::pers::util::RESPONSE_ERROR;
+  switch (cmdId) {
+    case scag::pers::util::PC_SET        : return set(pf, sb);
+    case scag::pers::util::PC_GET        : return get(pf, sb);
+    case scag::pers::util::PC_DEL        : return del(pf, sb);
+    case scag::pers::util::PC_INC        : return inc(pf, sb);
+    case scag::pers::util::PC_INC_MOD    : return incMod(pf, sb);
+    case scag::pers::util::PC_INC_RESULT : return incResult(pf, sb);
+    default                              : return RESPONSE_NOTSUPPORT;
   }
 }
 
 Response PersCommand::set(Profile *pf, SerialBuffer& sb) {
-  smsc_log_debug(logger, "execute SET command");
+  //smsc_log_debug(logger, "execute SET command");
   if (property.isExpired()) {
     createExpireLogMsg(pf->getKey(), property.toString());
     sb.WriteInt8(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
@@ -103,10 +97,10 @@ Response PersCommand::set(Profile *pf, SerialBuffer& sb) {
 }
 
 Response PersCommand::get(Profile *pf, SerialBuffer& sb) {
-  smsc_log_debug(logger, "execute GET command");
+  //smsc_log_debug(logger, "execute GET command");
   Property* p = pf->GetProperty(propertyName.c_str());
   if (!p) {
-    smsc_log_debug(logger, "profile %s, property '%s' not found", pf->getKey().c_str(), propertyName.c_str());
+    //smsc_log_debug(logger, "profile %s, property '%s' not found", pf->getKey().c_str(), propertyName.c_str());
     sb.WriteInt8(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
     return scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND;
   }
@@ -115,16 +109,16 @@ Response PersCommand::get(Profile *pf, SerialBuffer& sb) {
     pf->setChanged(true);
   }
   property = *p;
-  smsc_log_debug(logger, "profile %s, getProperty=%s", pf->getKey().c_str(), property.toString().c_str());
+  //smsc_log_debug(logger, "profile %s, getProperty=%s", pf->getKey().c_str(), property.toString().c_str());
   sb.WriteInt8(scag::pers::util::RESPONSE_OK);
   property.Serialize(sb);
   return scag::pers::util::RESPONSE_OK;
 }
 
 Response PersCommand::del(Profile *pf, SerialBuffer& sb) {
-  smsc_log_debug(logger, "execute DEL command");
+  //smsc_log_debug(logger, "execute DEL command");
   if (!pf->DeleteProperty(propertyName.c_str())) {
-    smsc_log_debug(logger, "profile %s, property '%s' not found", pf->getKey().c_str(), propertyName.c_str());
+    //smsc_log_debug(logger, "profile %s, property '%s' not found", pf->getKey().c_str(), propertyName.c_str());
     sb.WriteInt8(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
     return scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND;
   }
@@ -172,7 +166,7 @@ Response PersCommand::incModProperty(Profile *pf, uint32_t& result) {
 }
 
 Response PersCommand::inc(Profile *pf, SerialBuffer& sb) {
-  smsc_log_debug(logger, "execute INC command"); 
+  //smsc_log_debug(logger, "execute INC command"); 
   uint32_t result = 0;
   Response resp = incModProperty(pf, result);
   sb.WriteInt8(resp);
@@ -180,7 +174,7 @@ Response PersCommand::inc(Profile *pf, SerialBuffer& sb) {
 }
 
 Response PersCommand::incMod(Profile *pf, SerialBuffer& sb) {
-  smsc_log_debug(logger, "execute INC_MOD command");
+  //smsc_log_debug(logger, "execute INC_MOD command");
   uint32_t result = 0;
   Response resp = incModProperty(pf, result);
   sb.WriteInt8(resp);
@@ -191,7 +185,7 @@ Response PersCommand::incMod(Profile *pf, SerialBuffer& sb) {
 }
 
 Response PersCommand::incResult(Profile *pf, SerialBuffer& sb) {
-  smsc_log_debug(logger, "execute INC_RESULT command");
+  //smsc_log_debug(logger, "execute INC_RESULT command");
   return incMod(pf, sb);
 }
 

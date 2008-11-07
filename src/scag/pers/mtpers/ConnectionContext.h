@@ -4,6 +4,7 @@
 #include <string>
 #include "logger/Logger.h"
 #include "core/network/Socket.hpp"
+#include "core/synchronization/Mutex.hpp"
 #include "scag/util/storage/SerialBuffer.h"
 #include "scag/pers/util/Types.h"
 #include "PersCommand.h"
@@ -18,6 +19,9 @@ using smsc::logger::Logger;
 using scag::pers::util::PersServerResponseType;
 using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
+using smsc::core::synchronization::Mutex;
+
+const uint32_t READ_BUF_SIZE = 1024;
 
 enum SocketState {
   READ_SOCKET,
@@ -28,25 +32,14 @@ enum SocketState {
 enum Action {
   READ_REQUEST,
   PROCESS_REQUEST,
-  SEND_RESPONSE
+  SEND_RESPONSE,
+  DEL_SOCKET
 };
 
 class ConnectionContext;
 
 class SocketData {
 public:
-  static void setSocketState(Socket* s, uint8_t state) {
-    s->setData(STATE, (void*)state);
-  }
-  static SocketState getSocketState(Socket* s) {
-    return (SocketState)((uint64_t)s->getData(STATE));
-  }
-  static void setConnected(Socket* s, bool c) {
-      s->setData(CONNECT_FLAG, (void*)c);
-  }
-  static bool getConnected(Socket* s) {
-      return (bool)s->getData(CONNECT_FLAG);
-  }
   static ConnectionContext* getContext(Socket* s) {
       return (ConnectionContext *)s->getData(CONTEXT);
   }
@@ -69,32 +62,40 @@ private:
   };
 };
 
-class IOTask;
+class WriterTaskManager;
+class ReaderTaskManager;
 
 struct ConnectionContext : public Connection {
 
 public:
-  ConnectionContext(Socket* sock);
+  ConnectionContext(Socket* sock, WriterTaskManager& writerManager, ReaderTaskManager& readerManager);
   ~ConnectionContext();
-  void clearBuffers();
-  void createFakeResponse(PersServerResponseType response);
-  bool parsePacket();
-  void changeSocketState();
   void sendResponse();
-
-public:
-  Socket* socket;
-  IOTask* iotask;
-  SerialBuffer inbuf;
-  SerialBuffer outbuf;
-  Action action;
-  PersPacket* packet;
-  uint32_t packetLen;
-  Logger* logger;
+  bool processReadSocket();
+  bool processWriteSocket();
+  bool canFinalize();
+  Socket* getSocket();
 
 private:
   bool notSupport(PersCmd cmd);
+  void writeData(const char* data, uint32_t size);
+  void createFakeResponse(PersServerResponseType response);
+  bool parsePacket();
+  void sendFakeResponse();
 
+private:
+  SerialBuffer inbuf_;
+  SerialBuffer outbuf_;
+  PersPacket* packet_;
+  uint32_t packetLen_;
+  WriterTaskManager& writerManager_;
+  ReaderTaskManager& readerManager_;
+  Logger* logger_;
+  Action action_;
+  Mutex mutex_;
+  Socket* socket_;
+  uint8_t tasksCount;
+  char readBuf_[READ_BUF_SIZE];
 };
 
 }//mtpers

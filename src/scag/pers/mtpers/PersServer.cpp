@@ -4,10 +4,6 @@ namespace scag { namespace mtpers {
 
 using smsc::util::Exception;
 
-PersServer::PersServer(IOTaskManager& _iomanager):iomanager_(_iomanager)
-{
-}
-
 int PersServer::Execute()
 {
   Socket *clientSocket;
@@ -25,9 +21,9 @@ int PersServer::Execute()
         smsc_log_error(logger, "failed to accept, error: %s", strerror(errno));
         break;
     }
-    ConnectionContext *cx = new ConnectionContext(clientSocket);
+    ConnectionContext *cx = new ConnectionContext(clientSocket, writers_, readers_);
     smsc_log_debug(logger, "Client connected socket:%p context:%p", clientSocket, cx);
-    if (!iomanager_.process(cx)) {
+    if (!readers_.process(cx)) {
       clientSocket->Write("SB", 2);
       smsc_log_warn(logger, "Server Busy sent. Disconnected");
       delete cx;
@@ -53,8 +49,8 @@ void PersServer::shutdown()
   isStopping_ = true;
 
   masterSocket_.Close();
-  //WaitFor();
-  iomanager_.shutdown();
+  readers_.shutdown();
+  writers_.shutdown();
 }
 
 void PersServer::init(const char *host, int port)

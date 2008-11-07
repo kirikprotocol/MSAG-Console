@@ -66,7 +66,7 @@ int StorageProcessor::Execute() {
 
         this->process(*i);
 
-        smsc_log_debug(logger_, "%p: %p processing complite", this, *i);      
+        smsc_log_debug(logger_, "%p: %p processing complete", this, *i);      
 
       } catch (const SerialBufferOutOfBounds &e) {
         smsc_log_warn(logger_, "%p: %p processing error: SerialBufferOutOfBounds", this, *i);
@@ -106,7 +106,7 @@ const char * StorageProcessor::taskName() {
 bool StorageProcessor::addPacket(PersPacket* packet) {
   MutexGuard g(processMonitor_);
   if (waitingProcess_.size() >= maxWaitingCount_) {
-    smsc_log_debug(logger_, "%p: %p waiting process queue limit %d", this, packet, maxWaitingCount_);
+    smsc_log_warn(logger_, "%p: %p waiting process queue limit %d", this, packet, maxWaitingCount_);
     return false;
   }
   waitingProcess_.push_back(packet);

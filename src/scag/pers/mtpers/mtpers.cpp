@@ -13,6 +13,8 @@
 #include "PersServer.h"
 #include "StorageManager.h"
 #include "IOTaskManager.h"
+#include "ReaderTaskManager.h"
+#include "WriterTaskManager.h"
 
 using namespace smsc::util::config;
 using namespace scag::mtpers;
@@ -157,11 +159,10 @@ int main(int argc, char* argv[]) {
       storageManager.init(maxWaitingCount, abntCfg, NULL);
     }
 
-
-    IOTaskManager ioMananger(storageManager);
-    ioMananger.init(ioTasksCount, maxClientCount, timeout, "ioman");
-
-    ps = new PersServer(ioMananger);
+    ReaderTaskManager readers(ioTasksCount, maxClientCount, timeout, storageManager);
+    WriterTaskManager writers(ioTasksCount, maxClientCount, timeout);
+    
+    ps = new PersServer(readers, writers);
     ps->init(host.c_str(), port);
     ps->Execute();
 

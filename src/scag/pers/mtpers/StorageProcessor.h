@@ -7,10 +7,9 @@
 #include "logger/Logger.h"
 #include "core/threads/ThreadedTask.hpp"
 #include "core/synchronization/EventMonitor.hpp"
-#include "PersCommand.h"
 
-#include <util/config/Manager.h>
-#include <util/config/ConfigView.h>
+#include "util/config/Manager.h"
+#include "util/config/ConfigView.h"
 #include "scag/pers/util/AbntAddr.hpp"
 #include "scag/pers/util/Profile.h"
 #include "core/buffers/PageFile.hpp"
@@ -24,6 +23,8 @@
 #include "scag/util/storage/PageFileDiskStorage.h"
 #include "scag/util/storage/BHDiskStorage.h"
 #include "scag/util/storage/Glossary.h"
+
+#include "PersCommand.h"
 
 namespace scag { namespace mtpers {
 

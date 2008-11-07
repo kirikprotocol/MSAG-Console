@@ -6,7 +6,8 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "logger/Logger.h"
 #include "ConnectionContext.h"
-#include "IOTaskManager.h"
+#include "ReaderTaskManager.h"
+#include "WriterTaskManager.h"
 
 namespace scag { namespace mtpers { 
 
@@ -15,17 +16,17 @@ using smsc::core::network::Socket;
 using smsc::core::synchronization::EventMonitor;
 using smsc::logger::Logger;
 
-//class PersServer : public Thread {
 class PersServer {
 public:
-    PersServer(IOTaskManager& _iomanager);
+    PersServer(ReaderTaskManager& readers, WriterTaskManager& writers):readers_(readers), writers_(writers) {};
     void shutdown();
     void init(const char *host, int port);
     virtual int Execute();
     virtual const char* taskName();
 
 private:
-  IOTaskManager& iomanager_;
+  ReaderTaskManager& readers_;
+  WriterTaskManager& writers_;
   Socket masterSocket_;
   Logger *logger;
   bool isStopping_;  

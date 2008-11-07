@@ -34,8 +34,8 @@ class PersCommandNotSupport: public Exception {};
 
 class PersCommand {
 public:
-  PersCommand(vector<string>& logs):cmdId(scag::pers::util::PC_UNKNOWN), mod(0), dblogs(&logs), logger(Logger::getInstance("pers.cmd")) {};
-  PersCommand(PersCmd cmd, vector<string>& logs):cmdId(cmd), mod(0), dblogs(&logs), logger(Logger::getInstance("pers.cmd")) {};
+  PersCommand(vector<string>& logs):cmdId(scag::pers::util::PC_UNKNOWN), mod(0), dblogs(&logs) {};
+  PersCommand(PersCmd cmd, vector<string>& logs):cmdId(cmd), mod(0), dblogs(&logs) {};
   virtual ~PersCommand() {};
   bool deserialize(SerialBuffer& sb);
   Response execute(Profile *pf, SerialBuffer&sb);
@@ -60,7 +60,6 @@ private:
   string logMsg;
   uint32_t mod;
   vector<string>* dblogs; // not owned, not null
-  Logger* logger;
 };
 
 struct PersPacket {

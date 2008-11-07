@@ -36,28 +36,30 @@ private:
 
 class IOTaskManager {
 public:
-  IOTaskManager(StorageManager& storageManager);
+  IOTaskManager(uint16_t maxThreads, uint32_t maxSock, uint16_t timeout, const char *logName);
   virtual ~IOTaskManager() {};
 
-  bool process(ConnectionContext* cx);
-  bool storageProcess(PersPacket* packet);
+  virtual bool process(ConnectionContext* cx) = 0;
   void shutdown();
   void removeContext(IOTask* t, uint16_t contextsNumber = 1);
-  void init(uint16_t maxThreads, uint32_t maxSock, uint16_t timeout, const char *logName);
   bool canStop();
 
 private:
-  IOTask* newTask();
+  virtual IOTask* newTask() = 0;
+
+protected:
+  void init();
+
+protected:
+  TasksSorter taskSorter_;
+  Mutex tasksMutex_;
+  uint32_t maxSockets_;    
+  uint16_t connectionTimeout_;
+  Logger *logger;
 
 private:
   ThreadPool pool_;
-  Mutex tasksMutex_;
-  Logger *logger;
-  uint32_t maxSockets_;    
   uint16_t maxThreads_;
-  uint16_t connectionTimeout_;
-  TasksSorter taskSorter_;
-  StorageManager& storageManager_;
 };
 
 }//mtpers
