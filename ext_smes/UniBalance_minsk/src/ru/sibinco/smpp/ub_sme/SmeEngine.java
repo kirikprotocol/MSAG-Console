@@ -456,7 +456,11 @@ public class SmeEngine implements MessageListener, ResponseListener {
       if (banner != null && banner.length() > 0) {
         MessageFormat bannerFormat = new MessageFormat(bannerAddPattern);
         String messageWithBanner = bannerFormat.format(new String[]{msg.getMessageString(), banner});
-        msg.setMessageString(messageWithBanner);
+        if(messageWithBanner.length()<=ussdMaxLength){
+          msg.setMessageString(messageWithBanner);
+        } else {
+          logger.info("USSD response with banner too long: "+messageWithBanner);
+        }
       } else {
         if (logger.isDebugEnabled())
           logger.debug("Banner is empty");
