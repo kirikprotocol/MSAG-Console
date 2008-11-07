@@ -25,10 +25,12 @@ public class SmsQuizContext implements SMEAppContext {
   private SMSCAppContext appContext;
   private String smeId = "InfoSme";
   private final static Map instances = new HashMap();
-  private SmsQuiz smsQuiz;
 
-  private int pageSize = 20;
-  private int maxTotalSize = 1000;
+  private int messagesPageSize = 20;
+  private int maxMessTotalSize = 1000;
+
+  private int quizesPageSize = 20;
+  private int maxQuizTotalSize = 1000;
 
   public static SmsQuizContext getInstance(SMSCAppContext appContext, String smeId)  throws AdminException, SAXException, ParserConfigurationException, IOException {
     SmsQuizContext instance = (SmsQuizContext) instances.get(smeId);
@@ -44,7 +46,6 @@ public class SmsQuizContext implements SMEAppContext {
     this.smeId = smeId;
     appContext.registerSMEContext(this);
     resetConfig();
-    this.smsQuiz = new SmsQuiz(appContext, config);
   }
 
   public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException{
@@ -64,23 +65,35 @@ public class SmsQuizContext implements SMEAppContext {
     return config;
   }
 
-  public SmsQuiz getSmsQuiz() {
-    return smsQuiz;
+  public int getMessagesPageSize() {
+    return messagesPageSize;
   }
 
-  public int getPageSize() {
-    return pageSize;
+  public void setMessagesPageSize(int messagesPageSize) {
+    this.messagesPageSize = messagesPageSize;
   }
 
-  public void setPageSize(int pageSize) {
-    this.pageSize = pageSize;
+  public int getMaxMessTotalSize() {
+    return maxMessTotalSize;
   }
 
-  public int getMaxTotalSize() {
-    return maxTotalSize;
+  public void setMaxMessTotalSize(int maxMessTotalSize) {
+    this.maxMessTotalSize = maxMessTotalSize;
   }
 
-  public void setMaxTotalSize(int maxTotalSize) {
-    this.maxTotalSize = maxTotalSize;
+  public int getQuizesPageSize() {
+    return quizesPageSize;
+  }
+
+  public void setQuizesPageSize(int quizesPageSize) {
+    this.quizesPageSize = quizesPageSize;
+  }
+
+  public int getMaxQuizTotalSize() {
+    return maxQuizTotalSize;
+  }
+
+  public void setMaxQuizTotalSize(int maxQuizTotalSize) {
+    this.maxQuizTotalSize = maxQuizTotalSize;
   }
 }

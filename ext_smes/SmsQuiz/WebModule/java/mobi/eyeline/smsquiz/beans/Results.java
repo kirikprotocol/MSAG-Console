@@ -45,8 +45,8 @@ public class Results extends SmsQuizBean {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
 
-    if (pageSize != 0) getSmsQuizContext().setPageSize(pageSize);
-    else pageSize = getSmsQuizContext().getPageSize();
+    if (pageSize != 0) getSmsQuizContext().setMessagesPageSize(pageSize);
+    else pageSize = getSmsQuizContext().getMessagesPageSize();
 
     if (!initialized) {
     //todo   filter
@@ -85,7 +85,7 @@ public class Results extends SmsQuizBean {
       startPosition = 0;
       mbQuery = null;
     }
-    results = ds.query(new ResultQuery(getSmsQuizContext().getMaxTotalSize()+1, resultFilter,"", startPosition));
+    results = ds.query(new ResultQuery(getSmsQuizContext().getMaxMessTotalSize()+1, resultFilter,"", startPosition));
 
     return RESULT_OK;
   }

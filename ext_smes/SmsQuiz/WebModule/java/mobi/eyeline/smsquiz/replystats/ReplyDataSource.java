@@ -48,13 +48,13 @@ public class ReplyDataSource extends AbstractDataSourceImpl {
 
     int total = 0;
     Date dateBegin = null;
-    if(filter.isDateBeginEnabled()) {
+    if((filter.isDateBeginEnabled())&&(filter.getDateBegin().after(filter.getQuizDateBegin()))) {
       dateBegin = filter.getDateBegin();
     } else {
       dateBegin = filter.getQuizDateBegin();
     }
     Date dateEnd = null;
-    if(filter.isDateEndEnabled()) {
+    if((filter.isDateEndEnabled())&&(filter.getDateEnd().before(filter.getQuizDateEnd()))) {
       dateEnd = filter.getDateEnd();
     } else {
       dateEnd = filter.getQuizDateEnd();

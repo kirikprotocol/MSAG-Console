@@ -22,6 +22,9 @@
     case SmsQuizBean.RESULT_REPLYSTATS:
       response.sendRedirect("reply_stats.jsp");
       return;
+    case SmsQuizBean.RESULT_QUIZES:
+      response.sendRedirect("quizes.jsp");
+      return;
     default:
       defaultError = true;
   }

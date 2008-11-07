@@ -3,7 +3,6 @@ package mobi.eyeline.smsquiz.beans;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -14,6 +13,8 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 import mobi.eyeline.smsquiz.replystats.*;
+import mobi.eyeline.smsquiz.QuizXmlData;
+import mobi.eyeline.smsquiz.QuizBuilder;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
@@ -47,12 +48,12 @@ public class Replies extends SmsQuizBean {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
 
-    if (pageSize != 0) getSmsQuizContext().setPageSize(pageSize);
-    else pageSize = getSmsQuizContext().getPageSize();
+    if (pageSize != 0) getSmsQuizContext().setMessagesPageSize(pageSize);
+    else pageSize = getSmsQuizContext().getMessagesPageSize();
 
     if (!initialized) {
       replyFilter.setDateBeginEnabled(false);
-      replyFilter.setDateEndEnabled(false);    
+      replyFilter.setDateEndEnabled(false);
     }
     try {
       String replyDir = getSmsQuizContext().getConfig().getString("replystats.statsFile.dir.name");
@@ -88,7 +89,7 @@ public class Replies extends SmsQuizBean {
       startPosition = 0;
       mbQuery = null;
     }
-    replies = ds.query(new ReplyQuery(getSmsQuizContext().getMaxTotalSize()+1, replyFilter,"", startPosition));
+    replies = ds.query(new ReplyQuery(getSmsQuizContext().getMaxMessTotalSize()+1, replyFilter,"", startPosition));
 
     return RESULT_OK;
   }
@@ -254,7 +255,7 @@ public class Replies extends SmsQuizBean {
   public void setQuizPath(String quizPath) {
     replyFilter.setQuizPath(quizPath);
     if(quizPath!=null) {
-      XmlData data = parseQuiz(quizPath);
+      QuizXmlData data = QuizBuilder.parseQuiz(quizPath);
       System.out.println("Parsing completed: address="+data.getAddress()+"," +
           " dateBegin="+data.getDateBegin()+", dateEnd="+data.getDateEnd());
       replyFilter.setQuizNumber(data.getAddress());
@@ -308,57 +309,4 @@ public class Replies extends SmsQuizBean {
     return format.format(date);
   }
 
-  public XmlData parseQuiz(String path) {
-    String address = null;
-    Date dateBegin = null;
-    Date dateEnd = null;
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-
-    SAXBuilder sb = new SAXBuilder();
-    InputStream stream = null;
-    try {
-      stream = new FileInputStream(path);
-      Document doc = sb.build(stream);
-      Element root = doc.getRootElement();
-      Element elem;
-
-      if ((elem = root.getChild("replies")) != null) {
-        if ((elem = elem.getChild("destination-address")) != null) {
-          address = elem.getTextTrim();
-        }
-        else{
-          throw new Exception("Section 'destination-address' doesn't exist in "+path);
-        }
-      } else {
-        throw new Exception("Section 'replies' doesn't exist in "+path);
-      }
-      if ((elem = root.getChild("general")) != null) {
-        Element subElem;
-        if ((subElem = elem.getChild("date-begin")) != null) {
-          dateBegin = dateFormat.parse(subElem.getTextTrim());
-        } else {
-          throw new Exception("Section 'date-begin' doesn't exist in "+path);
-        }
-        if ((subElem = elem.getChild("date-end")) != null) {
-          dateEnd = dateFormat.parse(subElem.getTextTrim());
-        } else {
-          throw new Exception("Section 'date-end' doesn't exist in "+path);
-        }
-      } else {
-        throw new Exception("Section 'general' doesn't exist in "+path);
-      }
-    } catch (Exception e) {
-      logger.error("Parsing exception", e);
-      e.printStackTrace();
-    } finally {
-      if (stream != null) {
-        try {
-          stream.close();
-        } catch (IOException e) {
-          logger.error("Error close stream", e);
-        }
-      }
-    }
-    return new XmlData(address,dateBegin,dateEnd);
-  }
 }

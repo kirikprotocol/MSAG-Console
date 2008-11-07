@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz.replystats;
+package mobi.eyeline.smsquiz;
 
 import java.util.Date;
 
@@ -6,13 +6,13 @@ import java.util.Date;
  * author: alkhal
  * Date: 05.11.2008
  */
-public class XmlData {
+public class QuizXmlData {
 
   private String address;
   private Date dateBegin;
   private Date dateEnd;
 
-  public XmlData(String address, Date dateBegin, Date dateEnd) {
+  public QuizXmlData(String address, Date dateBegin, Date dateEnd) {
     this.address = address;
     this.dateBegin = dateBegin;
     this.dateEnd = dateEnd;

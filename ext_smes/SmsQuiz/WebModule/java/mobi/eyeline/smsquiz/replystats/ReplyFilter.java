@@ -38,7 +38,7 @@ public class ReplyFilter implements Filter {
     if((address !=null)&&(!item.getValue("msisdn").equals(address))) {
       return false;
     }
-    if(dateBeginEnabled) {
+    if(dateBeginEnabled&&(dateBegin.after(quizDateBegin))) {
       if(!((Date)item.getValue("replyDate")).after(dateBegin)) {
         return false;
       }
@@ -47,7 +47,7 @@ public class ReplyFilter implements Filter {
         return false;
       }
     }
-    if(dateEndEnabled) {
+    if(dateEndEnabled&&(dateEnd.before(quizDateEnd))) {
       if(!((Date)item.getValue("replyDate")).before(dateEnd)) {
         return false;
       }
