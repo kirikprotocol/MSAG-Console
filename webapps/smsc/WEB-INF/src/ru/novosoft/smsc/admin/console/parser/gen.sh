@@ -1,8 +1,8 @@
 #!/bin/sh
 
-CLASSOUTPATH=$SMSC_SRCDIR/../webapps/smsc/WEB-INF/classes
+CLASSOUTPATH=/home/artem/Work/projects/smsc/webapps/smsc/WEB-INF/classes
 
-CLASSPATH=$CLASSPATH:$SMSC_SRCDIR/../webapps/libs/antlr.jar:$CLASSOUTPATH
+CLASSPATH=$CLASSPATH:/home/artem/Work/projects/smsc/webapps/libs/antlr.jar:$CLASSOUTPATH
 
 echo Starting code generation ...
 java -classpath $CLASSPATH antlr.Tool lexer.g

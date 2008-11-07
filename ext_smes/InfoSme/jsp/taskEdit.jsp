@@ -205,12 +205,18 @@
 <tr class=row<%=rowN++&1%>>
   <th><label for=retryOnFail>Retry on fail (time)</label></th>
   <td><%if (bean.isSmeRunning()) {%>
-    <input class=check type=checkbox id=retryOnFail name=retryOnFail <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="document.getElementById('retryTime').disabled = document.getElementById('retryTimeButton').disabled = !this.checked;">
-    <input class=timeField id=retryTime name=retryTime value="<%=StringEncoderDecoder.encode(bean.getRetryTime())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button id=retryTimeButton onclick="return showTime(retryTime, false, true);">...</button>
-    <script>document.getElementById('retryTime').disabled = document.getElementById('retryTimeButton').disabled = !document.getElementById('retryOnFail').checked;</script><%
+    <input class=check type=checkbox id=retryOnFail name=retryOnFail <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="document.getElementById('retryPolicy').disabled = !this.checked;">
+    <select id="retryPolicy" name="retryPolicy">
+          <%for (Iterator iter = bean.getRetryPolicies().iterator(); iter.hasNext();) {
+            String policy = (String)iter.next();
+          %>
+          <option value="<%=policy%>" <%=bean.getRetryPolicy() != null && bean.getRetryPolicy().equals(policy) ? "SELECTED" : ""%>><%=StringEncoderDecoder.encode(policy)%></option>
+          <%}%>
+        </select>
+    <script>document.getElementById('retryPolicy').disabled = !document.getElementById('retryOnFail').checked;</script><%
   } else {
-    if (bean.isRetryOnFail() && bean.getRetryTime() != null && bean.getRetryTime().trim().length() > 0) {
-      %>enabled, retry on <%=StringEncoderDecoder.encode(bean.getRetryTime())%> secs<%
+    if (bean.isRetryOnFail() && bean.getRetryPolicy() != null && bean.getRetryPolicy().trim().length() > 0) {
+      %>enabled, retry policy is '<%=StringEncoderDecoder.encode(bean.getRetryPolicy())%>'<%
     } else {
       %>disabled<%
     }

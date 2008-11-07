@@ -30,18 +30,23 @@ public class MessageFilter implements Filter
   public Date getFromDate() {
     return fromDateEnabled ? fromDate : null;
   }
+
   public void setFromDate(Date fromDate) {
     this.fromDate = fromDate;
   }
+
   public boolean isFromDateEnabled() {
     return fromDateEnabled;
   }
+
   public void setFromDateEnabled(boolean fromDateEnabled) {
     this.fromDateEnabled = fromDateEnabled;
   }
+
   public boolean isTillDateEnabled() {
     return tillDateEnabled;
   }
+
   public void setTillDateEnabled(boolean tillDateEnabled) {
     this.tillDateEnabled = tillDateEnabled;
   }
@@ -49,6 +54,7 @@ public class MessageFilter implements Filter
   public Date getTillDate() {
     return tillDateEnabled ? tillDate : null;
   }
+
   public void setTillDate(Date tillDate) {
     this.tillDate = tillDate;
   }
@@ -75,9 +81,9 @@ public class MessageFilter implements Filter
   }
 
   public boolean isEmpty() {
-    // TODO: ???
     return false;
   }
+
   public boolean isItemAllowed(DataItem item) {
     if (!item.getValue("taskId").equals(taskId))
       return false;

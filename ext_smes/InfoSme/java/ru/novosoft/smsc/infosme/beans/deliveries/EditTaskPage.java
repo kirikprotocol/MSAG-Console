@@ -181,6 +181,7 @@ public class EditTaskPage extends DeliveriesPage {
     pageData.activePeriodStart = task.getActivePeriodStart();
     pageData.activePeriodEnd = task.getActivePeriodEnd();
     pageData.recondsNumber = String.valueOf(task.getActualRecordsSize());
+    pageData.retryPolicy = task.getRetryPolicy();
   }
 
   private void pageToTask(Task task) {
@@ -192,6 +193,7 @@ public class EditTaskPage extends DeliveriesPage {
     task.setValidityDate(pageData.validityDate);
     task.setActivePeriodStart(pageData.activePeriodStart);
     task.setActivePeriodEnd(pageData.activePeriodEnd);
+    task.setRetryPolicy(pageData.retryPolicy);
   }
 
 }

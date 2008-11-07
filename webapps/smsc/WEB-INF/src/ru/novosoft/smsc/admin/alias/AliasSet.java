@@ -42,9 +42,11 @@ public class AliasSet {
   public void init(Config config, Smsc smsc) throws AdminException {
     try {
       aliasmanStorePath = config.getString(PARAM_NAME_FILE_NAME);
+//      aliasmanStorePath = "/home/artem/Work/mnt/shulga/build/smsc/distr/services/SMSC/store";
       if (aliasmanStorePath == null || aliasmanStorePath.length() <= 0)
         throw new AdminException("store path is empty");
     } catch (Exception e) {
+      e.printStackTrace();
       throw new AdminException("Failed to obtain " + PARAM_NAME_FILE_NAME + " Details: " + e.getMessage());
     }
     dataSource = new AliasDataSource(aliasmanStorePath);

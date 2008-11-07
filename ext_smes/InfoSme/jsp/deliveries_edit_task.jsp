@@ -92,9 +92,15 @@
     <tr class=row<%=rowN++&1%>>
       <th><label for=retryOnFail><%= getLocString("infosme.label.retry_on_fail")%></label></th>
       <td nowrap>
-        <input class=check type=checkbox id=retryOnFail name=retryOnFail value=true <%=deliveries_bean.isRetryOnFail() ? "checked" : ""%> onClick="document.getElementById('retryTime').disabled = document.getElementById('retryTimeButton').disabled = !this.checked;">
-        <input class=timeField id=retryTime name=retryTime value="<%=StringEncoderDecoder.encode(deliveries_bean.getRetryTime())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button id=retryTimeButton onclick="return showTime(retryTime, false, true);">...</button>
-        <script>document.getElementById('retryTime').disabled = document.getElementById('retryTimeButton').disabled = !document.getElementById('retryOnFail').checked;</script>
+        <input class=check type=checkbox id=retryOnFail name=retryOnFail value=true <%=deliveries_bean.isRetryOnFail() ? "checked" : ""%> onClick="document.getElementById('retryPolicy').disabled = !this.checked;">
+        <select id="retryPolicy" name="retryPolicy">
+          <%for (Iterator iter = deliveries_bean.getRetryPolicies().iterator(); iter.hasNext();) {
+            String policy = (String)iter.next();
+          %>
+          <option value="<%=policy%>" <%=deliveries_bean.getRetryPolicy() != null && deliveries_bean.getRetryPolicy().equals(policy) ? "SELECTED" : ""%>><%=StringEncoderDecoder.encode(policy)%></option>
+          <%}%>
+        </select>
+        <script>document.getElementById('retryPolicy').disabled = !document.getElementById('retryOnFail').checked;</script>
       </td>
     </tr>
 <% } %>

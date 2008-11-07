@@ -17,8 +17,8 @@ public class StatQuery implements Filter
 {
   private String taskId = null;
 
-  private Date fromDate = new Date();
-  private Date tillDate = new Date();
+  private Date fromDate = null;
+  private Date tillDate = null;
 
   private boolean fromDateEnabled = false;
   private boolean tillDateEnabled = false;

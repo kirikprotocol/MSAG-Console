@@ -517,4 +517,12 @@ public class Task
   public void setMessagesHaveLoaded(boolean messagesHaveLoaded) {
     this.messagesHaveLoaded = messagesHaveLoaded;
   }
+
+  public String getRetryPolicy() {
+    return retryPolicy;
+  }
+
+  public void setRetryPolicy(String retryPolicy) {
+    this.retryPolicy = retryPolicy;
+  }
 }

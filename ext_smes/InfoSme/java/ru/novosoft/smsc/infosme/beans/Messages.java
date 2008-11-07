@@ -78,20 +78,20 @@ public class Messages extends InfoSmeBean
     if (pageSize != 0) getInfoSmeContext().setMessagesPageSize(pageSize);
     else pageSize = getInfoSmeContext().getMessagesPageSize();
 
-    if (!initialized) {
-      msgFilter.setFromDate(Functions.truncateTime(new Date()));
-      msgFilter.setFromDateEnabled(true);
-    }
+//    if (!initialized) {
+//      msgFilter.setFromDate(Functions.truncateTime(new Date()));
+//      msgFilter.setFromDateEnabled(true);
+//    }
 
     try {
-        String serviceFolder = appContext.getHostsManager().getServiceInfo("InfoSme").getServiceFolder().getAbsolutePath();
-        String msgStoreDir = getInfoSmeContext().getConfig().getString("InfoSme.storeLocation"); 
-	if( msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/' ) 
-	  msgStoreDir = serviceFolder + '/' + msgStoreDir;
-        ds = new MessageDataSource(msgStoreDir);
-      } catch (Exception e) {
-        return error("Can't init dataa source", e);
-      }
+      String serviceFolder = appContext.getHostsManager().getServiceInfo("InfoSme").getServiceFolder().getAbsolutePath();
+      String msgStoreDir = getInfoSmeContext().getConfig().getString("InfoSme.storeLocation");
+      if( msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/' )
+        msgStoreDir = serviceFolder + '/' + msgStoreDir;
+      ds = new MessageDataSource(getConfig(), msgStoreDir);
+    } catch (Exception e) {
+      return error("Can't init dataa source", e);
+    }
 
     return result;
   }

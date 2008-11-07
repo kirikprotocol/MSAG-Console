@@ -296,4 +296,16 @@ public class DeliveriesNew extends InfoSmeBean {
   public void setSplitDeliveriesFile(boolean val) {
     this.pageData.splitDeliveriesFile = val;
   }
+
+  public List getRetryPolicies() throws AdminException {
+    return pageData.getRetryPolicies();
+  }
+
+  public String getRetryPolicy() {
+    return pageData.retryPolicy;
+  }
+
+  public void setRetryPolicy(String policy) {
+    pageData.retryPolicy = policy;
+  }
 }

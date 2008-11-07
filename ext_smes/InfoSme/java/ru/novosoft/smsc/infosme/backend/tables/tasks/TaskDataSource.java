@@ -46,7 +46,7 @@ public class TaskDataSource extends AbstractDataSourceImpl
       try {
         String endDateStr = config.getString(currentTaskPrefix + ".endDate");
         Date endDate = endDateStr == null || endDateStr.length() == 0 ? null : endDateFormat.parse(endDateStr);
-        add(new TaskDataItem(taskId,
+        TaskDataItem item =new TaskDataItem(taskId,
                              config.getString(currentTaskPrefix + ".name"),
                              config.getString(currentTaskPrefix + ".dsId"),
                              config.getBool(currentTaskPrefix + ".enabled"),
@@ -57,7 +57,10 @@ public class TaskDataSource extends AbstractDataSourceImpl
                              generatingTasks != null ? generatingTasks.contains(taskId) : false,
                              processingTasks != null ? processingTasks.contains(taskId) : false,
                              config.getBool(currentTaskPrefix + ".trackIntegrity"),
-                             endDate));
+                             endDate);
+        if (config.containsParameter(currentTaskPrefix + ".retryPolicy"))
+          item.setRetryPolicy(config.getString(currentTaskPrefix + ".retryPolicy"));
+        add(item);
       } catch (Exception e) {
         logger.error("Couldn't get parameter for task \"" + taskId + "\", task skipped", e);
       }

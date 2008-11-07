@@ -1,14 +1,20 @@
 package ru.novosoft.smsc.infosme.beans;
 
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.Task;
-import ru.novosoft.smsc.infosme.backend.TaskManager;
+import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataItem;
+import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyQuery;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.Transliterator;
 import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.smsc.admin.AdminException;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by igork
@@ -38,7 +44,6 @@ public class TaskEdit extends InfoSmeBean
   private String svcType = "";
   private String endDate = "";
   private String startDate = "";
-  private String retryTime = "";
   private String validityPeriod = "";
   private String validityDate = "";
   private String activePeriodStart = "";
@@ -55,6 +60,7 @@ public class TaskEdit extends InfoSmeBean
   private boolean trackIntegrity = false;
   private boolean keepHistory = false;
   private boolean flash = false;
+  private String retryPolicy = "";
 
   protected int init(List errors)
   {
@@ -118,7 +124,6 @@ public class TaskEdit extends InfoSmeBean
     svcType = task.getSvcType();
     endDate = task.getEndDate();
     startDate = task.getStartDate();
-    retryTime = task.getRetryTime();
     validityPeriod = task.getValidityPeriod();
     validityDate = task.getValidityDate();
     activePeriodStart = task.getActivePeriodStart();
@@ -140,7 +145,7 @@ public class TaskEdit extends InfoSmeBean
     trackIntegrity = task.isTrackIntegrity();
     keepHistory = task.isKeepHistory();
     flash = task.isFlash();
-    System.out.println("Load flash = " + flash);
+    retryPolicy = task.getRetryPolicy();
   }
 
   private void pageToTask(Task task) {
@@ -155,7 +160,6 @@ public class TaskEdit extends InfoSmeBean
     task.setSvcType(svcType);
     task.setEndDate(endDate);
     task.setStartDate(startDate);
-    task.setRetryTime(retryTime);
     task.setValidityPeriod(validityPeriod);
     task.setValidityDate(validityDate);
     task.setActivePeriodStart(activePeriodStart);
@@ -175,6 +179,7 @@ public class TaskEdit extends InfoSmeBean
     task.setTrackIntegrity(trackIntegrity);
     task.setKeepHistory(keepHistory);
     task.setFlash(flash);
+    task.setRetryPolicy(retryPolicy);
   }
 
   protected int done()
@@ -320,12 +325,14 @@ public class TaskEdit extends InfoSmeBean
     this.startDate = startDate;
   }
 
-  public String getRetryTime() {
-    return retryTime;
-  }
-
-  public void setRetryTime(String retryTime) {
-    this.retryTime = retryTime;
+  public List getRetryPolicies() throws AdminException {
+    QueryResultSet rs = new RetryPolicyDataSource().query(getConfig(), new RetryPolicyQuery(1000, "name", 0));
+    List result = new ArrayList(rs.size() + 1);
+    for (int i=0; i<rs.size(); i++) {
+      RetryPolicyDataItem item = (RetryPolicyDataItem)rs.get(i);
+      result.add(item.getName());
+    }
+    return result;
   }
 
   public String getValidityPeriod() {
@@ -560,5 +567,13 @@ public class TaskEdit extends InfoSmeBean
 
   public void setFlash(boolean flash) {
     this.flash = flash;
+  }
+
+  public String getRetryPolicy() {
+    return retryPolicy;
+  }
+
+  public void setRetryPolicy(String retryPolicy) {
+    this.retryPolicy = retryPolicy;
   }
 }

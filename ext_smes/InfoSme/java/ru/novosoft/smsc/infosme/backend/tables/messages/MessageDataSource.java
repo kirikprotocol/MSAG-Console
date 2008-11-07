@@ -4,9 +4,12 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.Query;
+import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.infosme.backend.Message;
+import ru.novosoft.smsc.infosme.backend.Task;
 import ru.novosoft.smsc.util.AdvancedStringTokenizer;
 import ru.novosoft.smsc.util.RandomAccessFileReader;
+import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
 import java.util.*;
@@ -28,10 +31,12 @@ public class MessageDataSource extends AbstractDataSourceImpl {
   private static final SimpleDateFormat msgDateFormat = new SimpleDateFormat("yyMMddhhmmss");
 
   private final String storeDir;
+  private final Config config;
 
-  public MessageDataSource(String storeDir) {
+  public MessageDataSource(Config config, String storeDir) {
     super(new String[]{"state", "date", "msisdn", "region", "message"});
     this.storeDir = storeDir;
+    this.config = config;
   }
 
   public QueryResultSet query(Query query_to_run) {
@@ -46,8 +51,17 @@ public class MessageDataSource extends AbstractDataSourceImpl {
       log.debug("FromDate: "+fromDate);
       log.debug("TillDate: "+tillDate);
     }
+    if (fromDate == null) {
+      try {
+        Task t = new Task(config, filter.getTaskId());
+        fromDate = t.getStartDateDate();
+      } catch (Exception e) {
+        e.printStackTrace();
+        return new EmptyResultSet();
+      }
+    }
     if (tillDate == null)
-      tillDate = new Date();
+      tillDate = new Date();    
 
     Calendar cal = Calendar.getInstance();
     cal.setTime(fromDate);
@@ -153,7 +167,6 @@ public class MessageDataSource extends AbstractDataSourceImpl {
         }
       }
       cal.add(Calendar.HOUR, 1);
-//      cal.set(Calendar.HOUR, cal.get(Calendar.HOUR) + 1);
     }
 
     rs.setTotalSize(total);

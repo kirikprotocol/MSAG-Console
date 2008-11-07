@@ -45,6 +45,9 @@
     case InfoSmeBean.RESULT_BLACK_LIST:
       response.sendRedirect("black_list.jsp");
       return;
+    case InfoSmeBean.RESULT_RETRY_POLICIES:
+      response.sendRedirect("retryPolicies.jsp");
+      return;
     default:
       defaultError = true;
   }

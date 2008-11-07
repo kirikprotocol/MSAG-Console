@@ -2,11 +2,15 @@ package ru.novosoft.smsc.infosme.beans.deliveries;
 
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.MultiTask;
+import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyQuery;
+import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataItem;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * User: artem
@@ -51,6 +55,7 @@ public class DeliveriesPageData {
   public boolean flash;
   public String sourceAddress;
   public String errorStr;
+  public String retryPolicy;
 
   public boolean splitDeliveriesFile = true;
 
@@ -94,6 +99,7 @@ public class DeliveriesPageData {
     text = null;
     recondsNumber = null;
     sourceAddress = null;
+    retryPolicy = null;
     flash = false;
 
     deliveriesGenProgr = null;
@@ -177,5 +183,15 @@ public class DeliveriesPageData {
 
   public void setSplitDeliveriesFile(boolean splitDeliveriesFile) {
     this.splitDeliveriesFile = splitDeliveriesFile;
+  } 
+
+  public List getRetryPolicies() throws AdminException {
+    QueryResultSet rs = new RetryPolicyDataSource().query(infoSmeContext.getConfig(), new RetryPolicyQuery(1000, "name", 0));
+    List result = new ArrayList(rs.size() + 1);
+    for (int i=0; i<rs.size(); i++) {
+      RetryPolicyDataItem item = (RetryPolicyDataItem)rs.get(i);
+      result.add(item.getName());
+    }
+    return result;
   }
 }

@@ -27,6 +27,14 @@ public class TaskDataItem extends AbstractDataItem
     values.put("endDate", endDate);
   }
 
+  public void setRetryPolicy(String policy) {
+    values.put("retryPolicy", policy);
+  }
+
+  public String getRetryPolicy() {
+    return (String)values.get("retryPolicy");
+  }
+
   public String getId()
   {
     return (String) values.get("id");

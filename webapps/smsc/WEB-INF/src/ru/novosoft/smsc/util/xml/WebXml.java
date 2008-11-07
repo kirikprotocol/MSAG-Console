@@ -73,6 +73,7 @@ public class WebXml
 
   public List getRoleNames()
   {
+    System.out.println("get role names");
     List result = new SortedList();
     NodeList roleNameElements = document.getElementsByTagName("role-name");
     for (int i = 0; i < roleNameElements.getLength(); i++) {
@@ -82,8 +83,10 @@ public class WebXml
         Element parentElement = (Element) parentNode;
         if (parentElement.getTagName().equals("security-role")) {
           final String roleName = Utils.getNodeText(roleNameNode).trim();
-          if (roleName.startsWith(ROLE_NAME_PREFIX))
+          if (roleName.startsWith(ROLE_NAME_PREFIX)) {
+            System.out.println("Role name = " + roleName);
             result.add(roleName);
+          }
         }
       }
     }

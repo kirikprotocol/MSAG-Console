@@ -54,15 +54,15 @@ public class TasksStatistics extends InfoSmeBean
         String statsStoreDir = getInfoSmeContext().getConfig().getString("InfoSme.statStoreLocation");
 	if( statsStoreDir.length() > 0 && statsStoreDir.charAt(0) != '/' )
 	  statsStoreDir = serviceFolder + '/' + statsStoreDir;
-        ds = new StatisticsDataSource(statsStoreDir);
+        ds = new StatisticsDataSource(getConfig(), statsStoreDir);
       } catch (Exception e) {
         return error("Can't init dataa source", e);
       }
 
-      if (!initialized) {
-          query.setFromDate(Functions.truncateTime(new Date()));
-          query.setFromDateEnabled(true);
-      }
+//      if (!initialized) {
+//          query.setFromDate(Functions.truncateTime(new Date()));
+//          query.setFromDateEnabled(true);
+//      }
 
         return RESULT_OK;
     }
