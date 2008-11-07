@@ -436,6 +436,7 @@ public:
     }
   }
   int Count(){return count;}
+  int Count() const {return count;}
   File& GetFile()
   {
     return f;
