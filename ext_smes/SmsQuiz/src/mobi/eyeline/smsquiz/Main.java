@@ -198,8 +198,8 @@ public class Main {
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     Calendar cal = Calendar.getInstance();
     cal.setTimeInMillis(System.currentTimeMillis());
+    Date dateBegin = new Date(cal.getTime().getTime()+180000);
     cal.set(Calendar.SECOND, 0);
-    Date dateBegin = cal.getTime();
     cal.add(Calendar.MINUTE, minutes);
     Date dateEnd = cal.getTime();
 

@@ -306,8 +306,15 @@ public class Quiz {
   }
 
   public boolean isActive() {
+    System.out.println("Datebegin: "+ dateBegin);
+    System.out.println("DateEnd: "+ dateEnd);
     Date now = new Date();
+    System.out.println("DateNow: "+ now);
     return now.after(dateBegin)&&now.before(dateEnd);
+  }
+
+  public String getQuizName() {
+    return quizName;
   }
 
 }

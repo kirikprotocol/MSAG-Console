@@ -269,8 +269,7 @@ public class QuizManager implements Observer {
       if(quiz.isActive()) {
         quizCreator.run();
       } else {
-
-        long delay = System.currentTimeMillis() - quiz.getDateBegin().getTime();
+        long delay = quiz.getDateBegin().getTime() -System.currentTimeMillis();
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
           public Thread newThread(Runnable r) {
             return new Thread(r,"QuizCreator: "+quiz.getFileName());
@@ -286,7 +285,7 @@ public class QuizManager implements Observer {
     }
   }
 
-  private void makeSubscribedOnly(Distribution distribution, String question) throws QuizException {
+  private void makeSubscribedOnly(Distribution distribution, String question, String quizId) throws QuizException {
     if ((distribution == null) || (distribution.getFilePath() == null) || (question == null)) {
       return;
     }
@@ -299,7 +298,7 @@ public class QuizManager implements Observer {
     String line;
     PrintWriter writer = null;
     BufferedReader reader = null;
-    String modifiedFileName = dirWork + File.separator + file.getName() + ".mod";
+    String modifiedFileName = dirWork + File.separator + quizId + ".mod";
     try {
       reader = new BufferedReader(new FileReader(file));
       writer = new PrintWriter(new BufferedWriter(new FileWriter(modifiedFileName)));
@@ -502,7 +501,7 @@ public class QuizManager implements Observer {
           writeQuizesConflict(previousQuiz, quiz);
           return;
         }
-        makeSubscribedOnly(distr, quiz.getQuestion());
+        makeSubscribedOnly(distr, quiz.getQuestion(), quiz.getQuizName());
         String id;
         if ((id = quiz.getId()) != null) {
           if (logger.isInfoEnabled()) {
