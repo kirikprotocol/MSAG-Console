@@ -28,8 +28,10 @@ public:
   int addRW(Socket* sock) { return addSocket(sock, POLLIN|POLLOUT); }
 
   int canReadWrite(SockArray& read, SockArray& write, SockArray& error, int timeout = -1);
+  int canRead(SockArray& read, SockArray& error, int timeout = -1);
+  int canWrite(SockArray& write, SockArray& error, int timeout = -1);
   
-  int count() {return sockets.Count(); };
+  int count() const {return sockets.Count(); };
   Socket* get(int i) {return sockets[i];};
   
   void _remove(int i)

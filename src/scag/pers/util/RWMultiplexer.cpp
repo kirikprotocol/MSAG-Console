@@ -55,6 +55,60 @@ int RWMultiplexer::canReadWrite(SockArray& read, SockArray& write, SockArray& er
   return read.Count() + write.Count() + error.Count();
 }
 
+int RWMultiplexer::canRead(SockArray& read, SockArray& error, int timeout)
+{
+  read.Empty();
+  error.Empty();
+
+  int fdsCount = fds.Count();
+  if(!fdsCount || poll(&fds[0], fdsCount, timeout) <= 0) {
+    return 0;
+  }
+
+  for(int i = 0; i < fdsCount; ++i)
+  {
+    Socket *s = sockets[i];
+    short revents = fds[i].revents;
+    if(revents & (POLLNVAL | POLLERR | POLLHUP))
+	{
+		error.Push(s);
+		continue;
+	}
+    if(revents & POLLIN) {
+      read.Push(s);
+      smsc_log_debug(logger, "socket: %p ready for Read", s);
+    }
+  }
+  return read.Count() + error.Count();
+}
+
+int RWMultiplexer::canWrite(SockArray& write, SockArray& error, int timeout)
+{
+  write.Empty();
+  error.Empty();
+
+  int fdsCount = fds.Count();
+  if(!fdsCount || poll(&fds[0], fdsCount, timeout) <= 0) {
+    return 0;
+  }
+
+  for(int i = 0; i < fdsCount; ++i)
+  {
+    Socket *s = sockets[i];
+    short revents = fds[i].revents;
+    if(revents & (POLLNVAL | POLLERR | POLLHUP))
+	{
+		error.Push(s);
+		continue;
+	}
+    if(revents & POLLOUT) {
+      write.Push(s);
+      smsc_log_debug(logger, "socket: %p ready for Write", s);
+    }
+  }
+  return write.Count() + error.Count();
+}
+
 }//util
 }//pers
 }//scag
