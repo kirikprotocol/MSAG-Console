@@ -1,6 +1,11 @@
 #ifndef BUFFER_SERIALIZATION_DECLARATIONS
 #define BUFFER_SERIALIZATION_DECLARATIONS
 
+#include <string.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <inttypes.h>
+
 #include "util/int.h"
 #include <stdexcept>
 #include <string>
