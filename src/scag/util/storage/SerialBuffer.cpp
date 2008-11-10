@@ -1,6 +1,42 @@
 /* $Id$ */
 
 #include "SerialBuffer.h"
+#include "core/synchronization/Mutex.hpp"
+
+namespace {
+
+const unsigned digitlen = 5;
+smsc::core::synchronization::Mutex digitmtx;
+
+const std::string& digitstring()
+{
+    static bool done = false;
+    static std::string ds;
+    if ( ! done ) {
+        smsc::core::synchronization::MutexGuard mg(digitmtx);
+        if ( ! done ) {
+            ds.reserve(256*digitlen+1);
+            char buf[10];
+            for ( unsigned i = 0; i < 256; ++i ) {
+                sprintf( buf, "%02x(%c)", i, (i>32 && i<128 ? i : '*' ));
+                ds.append(buf);
+            }
+            done = true;
+        }
+    }
+    return ds;
+}
+
+void bufdump( std::string& out, const char* inbuf, unsigned insize )
+{
+    out.reserve( out.size() + insize*digitlen + 10 );
+    const char* digits = digitstring().c_str();
+    for ( ; insize-- > 0; ++inbuf ) {
+        out.append( digits + ((*inbuf)*digitlen), digitlen );
+    }
+}
+
+}
 
 namespace scag {
 namespace util {
@@ -9,20 +45,10 @@ namespace storage {
 std::string SerialBuffer::toString()
 {
     std::string str;
-    int i = 0, j = length(), k = GetPos();
-    char buf[10];
-
-    uint8_t b;
-    SetPos(0);
-    while(i++ < j)
-    {
-		b = ReadInt8();
-        sprintf(buf, "%02x(%c)", (int)b, (b > 32 && b < 128 ? b : '*'));
-        str += buf;
-    }
-    SetPos(k);
+    bufdump( str, c_ptr(), GetPos() );
     return str;
 }
+
 
 void SerialBuffer::ReadString(std::string &str)
 {
@@ -148,7 +174,7 @@ void SerialBuffer::WriteInt8(uint8_t i)
 
 void SerialBuffer::WriteString(const char *str)
 {
-    uint16_t len = std::strlen(str);
+    uint16_t len = ::strlen(str);
     WriteInt16(len);
     blkwrite(str, len);
 }

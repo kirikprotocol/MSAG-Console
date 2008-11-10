@@ -158,19 +158,19 @@ public:
 		return len;
 	}
 
-	const char* c_ptr(void) const
+	inline const char* c_ptr(void) const
 	{
 		return block;
 	}
-	const char* c_curPtr(void) const
+        inline const char* c_curPtr(void) const
 	{
 		return block+pos;
 	}
-	int length(void) const
+	inline int length(void) const
 	{
 		return block_len;
 	}
-	int getPos(void) const
+        inline int getPos(void) const
 	{
 		return pos;
 	}

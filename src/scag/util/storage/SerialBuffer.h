@@ -59,4 +59,10 @@ public:
 } // namespace util
 } // namespace scag
 
+namespace scag2 {
+namespace util {
+namespace storage = scag::util::storage;
+}
+}
+
 #endif /* ! _SCAG_UTIL_STORAGE_SERIALBUFFER_H */
