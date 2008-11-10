@@ -265,12 +265,13 @@ public class DeliveriesGenerator {
       timezones.load(c.getTimezonesFile(), c.getRoutesFile());
 
       DeliveriesGenerator generator = new DeliveriesGenerator(distrDS, subscrDS);
-      for (Iterator<DistributionInfo> distrs = c.getDistrInfos().iterator(); distrs.hasNext();)
-        generator.addDistribution(distrs.next());
+      for (DistributionInfo distributionInfo : c.getDistrInfos()) {
+        System.out.println("Add distr: " + distributionInfo.getDistributionName());
+        generator.addDistribution(distributionInfo);
+      }
 
-      SmscTimezone tz;
-      for (Iterator iter = timezones.getTimezones().iterator(); iter.hasNext();) {
-        tz = (SmscTimezone)iter.next();
+      for (SmscTimezone tz : timezones.getTimezones()) {
+        System.out.println("Add TZ: " + tz.getName());
         generator.addTimezone(TimeZone.getTimeZone(tz.getName()));
       }
 

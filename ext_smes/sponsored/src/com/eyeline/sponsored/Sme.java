@@ -71,7 +71,7 @@ public class Sme {
       handler.start();
 
       // Check JMX mode
-      if (startArgs.containsAttr("-jmx"))
+      if (xmlConfig.getSection("jmx") != null)      
         startJMX(xmlConfig, smppTranceiver, distributionSme, handler);
 
       final ScheduledExecutorService configReloader = startConfigReloader(timezones, conf);

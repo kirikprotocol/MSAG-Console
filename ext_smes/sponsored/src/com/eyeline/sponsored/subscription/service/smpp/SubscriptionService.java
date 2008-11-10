@@ -37,7 +37,7 @@ public class SubscriptionService extends BasicService {
       final PropertiesConfig conf = new PropertiesConfig(initParams);
       successResponse = conf.getString("successResponse");
       subscriptionClosedResponse = conf.getString("subscriptionClosedResponse");
-      invalidVolumeResponse = conf.getString("invalidVolumeResponse");      
+      invalidVolumeResponse = conf.getString("invalidVolumeResponse");
       volumes = new HashSet<Integer>(10);
       final int[] volumesArray = conf.getIntArray("volumes", ",");
       for (int i = 0; i < volumesArray.length; i++)
@@ -82,31 +82,44 @@ public class SubscriptionService extends BasicService {
 
       } else {
 
-        // Subscribe
-        final SubscriptionProcessor.SubscriptionResult result = SubscriptionProcessor.getInstance().subscribe(reqMsg.getSourceAddress(), distributionName, volume);
+        String forwardIfNotSubscribed = request.getParameter("forward_if_not_subscribed");
 
-        // Prepare response
-        switch (result) {
-          case SUCCESS:
-            responseText = successResponse;
-            break;
-          default:
-            responseText = subscriptionClosedResponse;
+        if (!SubscriptionProcessor.getInstance().isSubscribed(reqMsg.getSourceAddress(), distributionName) && forwardIfNotSubscribed != null) {
+
+          try {
+            forward(request.getInObj(), forwardIfNotSubscribed);
+          } catch (ShutdownedException e) {
+            log.error("Send message failed", e);
+          }
+
+        } else {
+          // Subscribe
+          final SubscriptionProcessor.SubscriptionResult result = SubscriptionProcessor.getInstance().subscribe(reqMsg.getSourceAddress(), distributionName, volume);
+
+          // Prepare response
+          switch (result) {
+            case SUCCESS:
+              responseText = successResponse;
+              break;
+            default:
+              responseText = subscriptionClosedResponse;
+          }
+
+          // Send response
+          final Message respMsg = new Message();
+          respMsg.setSourceAddress(reqMsg.getDestinationAddress());
+          respMsg.setDestinationAddress(reqMsg.getSourceAddress());
+          respMsg.setMessageString(responseText);
+          try {
+            send(respMsg);
+          } catch (ShutdownedException e) {
+            log.error("Send message failed", e);
+          }
+
+          respond(request.getInObj(), Data.ESME_ROK);
         }
       }
 
-      // Send response
-      final Message respMsg = new Message();
-      respMsg.setSourceAddress(reqMsg.getDestinationAddress());
-      respMsg.setDestinationAddress(reqMsg.getSourceAddress());
-      respMsg.setMessageString(responseText);        
-      try {
-        send(respMsg);
-      } catch (ShutdownedException e) {
-        log.error("Send message failed", e);
-      }
-
-      respond(request.getInObj(), Data.ESME_ROK);
     } catch (ProcessorException e) {
       log.error("Subscription failed", e);
       return false;

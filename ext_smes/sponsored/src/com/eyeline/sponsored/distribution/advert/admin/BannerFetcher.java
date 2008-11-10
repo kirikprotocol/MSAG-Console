@@ -34,7 +34,7 @@ public class BannerFetcher {
       System.out.println(banner);
 
     } catch (Throwable e) {
-      e.printStackTrace();;
+      e.printStackTrace();
     } finally {
       if (client != null)
         client.close();

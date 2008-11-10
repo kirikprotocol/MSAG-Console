@@ -112,12 +112,34 @@ public class SubscriptionProcessor {
     }
   }
 
+  public boolean isSubscribed(String subscriberAddress, String distributionName) throws ProcessorException {
+    DataSourceTransaction t = null;
+    try {
+      t = ds.createTransaction();
+
+      // Lookup active subscription on this distribution
+      return getActiveSubscription(subscriberAddress, distributionName, t) != null;
+    } catch (Throwable e) {
+      if (t != null) {
+        try {
+          t.rollback();
+        } catch (DataSourceException ex) {
+          log.error("Couldn't roll back transaction", ex);
+        }
+      }
+      throw new ProcessorException("Subscription failed", e);
+    } finally {
+      if (t != null) {
+        t.close();
+      }
+    }
+  }
+
   /**
    * Subscribe specified subscriber on specified distribution
    * @param subscriberAddress
    * @param distributionName
    * @return true, if subscription opened and false otherwise
-   * @throws com.eyeline.sponsored.subscription.service.ServiceException
    */
   public SubscriptionResult subscribe(String subscriberAddress, String distributionName, int volume) throws ProcessorException {
     DataSourceTransaction t = null;

@@ -30,11 +30,7 @@
     <init-param>
       <param-name>respConnName</param-name>
       <param-value>smsx</param-value>
-    </init-param>
-    <init-param>
-      <param-name>respSrcAddr</param-name>
-      <param-value>741</param-value>
-    </init-param>
+    </init-param>    
   </service>
   
   <service>
@@ -112,12 +108,46 @@
   </request>
 
   <request>
-    <request-name>anketa</request-name>
-    <message-pattern>(0|1|2|3|4|5|6|7|8|9)</message-pattern>
+    <request-name>anketa_start</request-name>
+    <message-pattern>anketa</message-pattern>
+    <request-param>
+      <param-name>forwardTo</param-name>
+      <param-value>0015</param-value>
+    </request-param>
     <request-param>
-      <param-name>forwardTo</param-name>
-      <param-value>684</param-value>
-    </request-param>
+      <param-name>message</param-name>
+      <param-value>anketa</param-value>
+    </request-param>
+    <request-param>
+      <param-name>connection</param-name>
+      <param-value>smsx</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>anketa_answer</request-name>
+    <message-pattern>\d(\s*,\s*\d)*</message-pattern>
+    <request-param>
+      <param-name>forwardTo</param-name>
+      <param-value>0015</param-value>
+    </request-param>
+    <request-param>
+      <param-name>connection</param-name>
+      <param-value>smsx</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>anketa_date</request-name>
+    <message-pattern>\d\d\.\d\d\.\d\d\d\d\s*</message-pattern>
+    <request-param>
+      <param-name>forwardTo</param-name>
+      <param-value>0015</param-value>
+    </request-param>
+    <request-param>
+      <param-name>connection</param-name>
+      <param-value>smsx</param-value>
+    </request-param>
   </request>
 
   <request>
@@ -130,13 +160,30 @@
     <message-pattern>\s*(\d+)\s*</message-pattern>     
     <request-param>
       <param-name>distributionName</param-name>
-      <param-value>sponsored1</param-value>
+      <param-value>sponsored</param-value>
     </request-param>    
     <request-param>
       <param-name>distributionVolume</param-name>
       <param-value>{1}</param-value>
-    </request-param>    
-  </request>    
+    </request-param>
+    <request-param>
+      <param-name>forward_if_not_subscribed</param-name>
+      <param-value>0015</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>sponsored_subscription_after_anketa</request-name>
+    <message-pattern>sponsored \s*(\d+)\s*</message-pattern>
+    <request-param>
+      <param-name>distributionName</param-name>
+      <param-value>sponsored</param-value>
+    </request-param>
+    <request-param>
+      <param-name>distributionVolume</param-name>
+      <param-value>{1}</param-value>
+    </request-param>
+  </request>
   
   <request>
     <request-name>sponsored_unsubscription</request-name>
@@ -154,7 +201,7 @@
   </request-mapping>
 
   <request-mapping>
-    <request-name>sponsored_subscription</request-name>
+    <request-name>sponsored_subscription*</request-name>
     <service-name>subscription</service-name>
   </request-mapping>   
   
@@ -169,7 +216,7 @@
   </request-mapping>
 
   <request-mapping>
-    <request-name>anketa</request-name>
+    <request-name>anketa*</request-name>
     <service-name>forwarder</service-name>
   </request-mapping>
   

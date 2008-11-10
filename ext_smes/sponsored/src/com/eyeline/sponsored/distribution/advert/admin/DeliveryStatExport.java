@@ -240,6 +240,8 @@ public class DeliveryStatExport {
     }
 
     public void setCost(String cost) {
+      if (cost == null)
+        throw new IllegalArgumentException("Invalid cost");
       try {
         this.cost = Float.parseFloat(cost);
       } catch (NumberFormatException e) {
