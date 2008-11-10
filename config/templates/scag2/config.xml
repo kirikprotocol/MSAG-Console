@@ -98,6 +98,7 @@
         <param name="pingTimeout" type="int">@pers_client.ping_timeout@</param> <!--in seconds-->
         <param name="reconnectTimeout" type="int">@pers_client.reconnect_timeout@</param> <!--in seconds-->
         <param name="maxWaitingRequestsCount" type="int">@pers_client.max_waiting_requests_count@</param>
+        <param name="connections" type="int">@pers_client.connections@</param> <!-- a number of connections -->
     </section>
 
     <section name="LongCallManager">
