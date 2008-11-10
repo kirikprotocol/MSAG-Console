@@ -1,5 +1,6 @@
 /* $Id$ */
 
+#include <limits.h>
 #include <string.h>
 #include <stdlib.h>
 #include "Property.h"
@@ -70,7 +71,7 @@ std::string Property::toString() const
     switch(type)
     {
         case INT:
-            sprintf(buf, " INT: %d", i_val);
+            sprintf(buf, " INT: %lld", static_cast<long long int>(i_val));
             str += buf;
             break;
         case STRING:
@@ -90,6 +91,9 @@ std::string Property::toString() const
     str += " TIME_POLICY: ";
     switch(time_policy)
     {
+        case UNKNOWN:
+            str += "UNKNOWN";
+            break;
         case FIXED:
             str += "FIXED";
             break;

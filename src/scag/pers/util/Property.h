@@ -15,6 +15,8 @@ using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
 using scag::util::storage::GlossaryBase;
 
+namespace perstypes {
+
 enum TimePolicy{
     UNKNOWN,
     INFINIT,
@@ -30,6 +32,10 @@ enum PropertyType{
     BOOL,
     DATE
 };
+
+}
+    
+using namespace perstypes;
 
 class Property {
 protected:
@@ -101,5 +107,16 @@ public:
 }//util
 }//pers
 }//scag
+
+namespace scag2 {
+namespace pers {
+namespace util {
+
+using namespace scag::pers::util::perstypes;
+using scag::pers::util::Property;
+
+}
+}
+}
 
 #endif

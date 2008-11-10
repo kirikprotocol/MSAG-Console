@@ -5,6 +5,8 @@
 
 namespace scag { namespace pers { namespace util {
 
+namespace perstypes {
+
 enum ProfileType{
     PT_UNKNOWN,
     PT_ABONENT,
@@ -21,7 +23,7 @@ enum PersCmd{
     PC_INC,
     PC_INC_MOD,
     PC_PING,
-	PC_BATCH,
+    PC_BATCH,
     PC_TRANSACT_BATCH,
     PC_INC_RESULT,
     PC_MTBATCH
@@ -65,10 +67,22 @@ static const char* RESPONSE_TEXT[] = {
   "not support"
 };
 
+}
+
+using namespace perstypes;
 
 }//util
 }//pers
 }//scag
+
+
+namespace scag2 {
+namespace pers {
+namespace util {
+using namespace scag::pers::util::perstypes;
+}
+}
+}
 
 #endif
 

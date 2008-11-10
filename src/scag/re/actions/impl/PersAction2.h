@@ -8,17 +8,21 @@
 #include "scag/re/base/LongCallContext.h"
 
 #include "scag/pers/util/Property.h"
-#include "scag/pers/util/PersClient.h"
-#include "scag/pers/util/Types.h"
+#include "scag/pers/util/ProfileProxy.h"
+#include "TimeField.h"
 
-namespace scag2 { namespace re { namespace actions {
+// #include "scag/pers/util/PersClient2.h"
+// #include "scag/pers/util/Types.h"
 
-using namespace scag::pers::util;
-using std::string;
 
-extern const char* OPTIONAL_KEY;
-extern uint32_t getKey(const CommandProperty& cp, ProfileType pt);
+namespace scag2 {
+namespace re {
+namespace actions {
 
+// extern const char* OPTIONAL_KEY;
+// extern uint32_t getKey(const CommandProperty& cp, ProfileType pt);
+
+/*
 class PersCallParams : public LongCallParams{
 public:
     PersCallParams() : error(0), result(0) {};
@@ -32,92 +36,139 @@ public:
     int32_t error;
     uint32_t result;
 };
+ */
 
-class PersActionCommand : public Action {
+class PersActionCommand : public Action, public pers::util::PropertyProxy
+{
 public:
-  PersActionCommand() : cmd(PC_GET), finalDate(-1), lifeTime(-1), policy(UNKNOWN),
-                        ftLifeTime(ftUnknown), ftFinalDate(ftUnknown), mod(0) {};
-  PersActionCommand(PersCmd c) : cmd(c), finalDate(-1), lifeTime(-1), policy(UNKNOWN),
-                                 ftLifeTime(ftUnknown), ftFinalDate(ftUnknown), mod(0) {};
-  virtual ~PersActionCommand() {};
-  void init(const SectionParams& params, PropertyObject propertyObject);
-  bool run(ActionContext& context) { return true; };
-  IParserHandler * StartXMLSubSection(const string& name,const SectionParams& params,const ActionFactory& factory);
-  bool FinishXMLSubSection(const string& name);
-  bool RunBeforePostpone(ActionContext& context, PersCallParams* params);
-  void ContinueRunning(ActionContext& context);
-  const char* getVar();
-  bool batchPrepare(ActionContext& context, SerialBuffer& sb);
-  int batchResult(ActionContext& context, SerialBuffer& sb, bool transactMode = false);
-  const string& getStatus() { return status; };
-  const string& getMsg() { return msg; };
+    PersActionCommand() :
+    cmd(pers::util::PC_GET),
+    mod(0),
+    policy(pers::util::UNKNOWN),
+    ftFinalDate(ftUnknown),
+    finalDate(-1)
+    {}
+
+    PersActionCommand( pers::util::PersCmd c ) :
+    cmd(c),
+    mod(0),
+    policy(pers::util::UNKNOWN),
+    ftFinalDate(ftUnknown),
+    finalDate(-1)
+    {}
+
+    virtual ~PersActionCommand() {}
+
+    virtual void init( const SectionParams& params, PropertyObject propertyObject );
+
+    /// command type
+    virtual pers::util::PersCmd cmdType() const { return cmd; }
+
+    /// writing to sb
+    virtual int fillSB( ActionContext& ctx, util::storage::SerialBuffer& sb );
+
+    /// reading from sb
+    virtual int readSB( ActionContext& ctx, util::storage::SerialBuffer& sb );
+
+    virtual const std::string& statusName() const { return status; }
+    virtual const std::string& msgName() const { return msg; }
+
+    inline const char* propertyName() const { return var.c_str(); }
+
+    // bool RunBeforePostpone(ActionContext& context, PersCallParams* params);
+    // void ContinueRunning(ActionContext& context);
+
+    // const char* getVar();
+    // bool batchPrepare(ActionContext& context, SerialBuffer& sb);
+    // int batchResult(ActionContext& context, SerialBuffer& sb, bool transactMode = false);
+    // const string& getStatus() { return status; };
+    // const string& getMsg() { return msg; };
 
 private:
-  TimePolicy getPolicyFromStr(const string& str);
-  time_t parseFinalDate(const char* s);
-  uint32_t parseLifeTime(const char* s);
+    virtual IParserHandler* StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
+    virtual bool FinishXMLSubSection(const std::string& name);
+
+    inline const char* name() const { return "PersAction"; }
+
+    // not used
+    virtual bool run( ActionContext& context ) { return true; }
+
+    pers::util::TimePolicy getPolicyFromStr( const std::string& str );
+    time_t parseFinalDate(const char* s);
 
 private:
-  PersCmd cmd;
-  TimePolicy policy;
-  time_t finalDate;
-  uint32_t lifeTime;
-  uint32_t mod;
-  FieldType ftLifeTime;
-  FieldType ftFinalDate;
-  FieldType ftValue;
-  FieldType ftModValue;
-  FieldType ftVar;
-  string sLifeTime;
-  string sFinalDate;
-  string sValue;
-  string sMod;
-  string sResult;
-  util::properties::Property::string_type var;
-  string status;
-  string msg;
+    pers::util::PersCmd cmd;
+    // --- property name
+    FieldType ftVar;
+    util::properties::Property::string_type var;
+    // --- property value/increment
+    FieldType ftValue;
+    std::string sValue;
+    // --- status/msg variables
+    std::string status;
+    std::string msg;
+    // --- modulus for inc_mod
+    FieldType ftModValue;
+    std::string sMod;
+    uint32_t mod;
+    // --- time policy
+    pers::util::TimePolicy policy;
+    // --- final date for fixed policy
+    FieldType ftFinalDate;
+    std::string sFinalDate;
+    time_t finalDate;
+    // --- lifetime
+    TimeField lifetime_;
+    // --- variable name for inc and inc_mod result
+    std::string sResult;
 };
 
-class PersActionBase : public LongCallAction {
+
+class PersActionBase : public LongCallAction 
+{
 public:
-  PersActionBase(PersCmd c): cmd(c), profile(PT_UNKNOWN), hasOptionalKey(false),
-                             optionalIkey(0), ftOptionalKey(ftUnknown) {};
-  virtual ~PersActionBase() {};
+    PersActionBase(pers::util::PersCmd c):
+    cmd(c),
+    profile(pers::util::PT_UNKNOWN),
+    optionalKeyInt(0),
+    hasOptionalKey(false),
+    ftOptionalKey(ftUnknown) 
+    {}
+    virtual ~PersActionBase() {}
 
 protected:
-  virtual void init(const SectionParams& params,PropertyObject propertyObject);
-  ProfileType getProfileTypeFromStr(const string& str);
-  void getOptionalKey(const string& key_str);
-  string getAbntAddress(const char* _address);
-  bool setKey(ActionContext& context, PersCallParams* params);
-  void setStatus(ActionContext& context, int status, const string& statusName, const string& msgName, int actionIdx = 0);
-  bool canProcessRequest(ActionContext& context, const string& statusName, const string& msgName);
+    virtual void init(const SectionParams& params,PropertyObject propertyObject);
+    pers::util::ProfileType getProfileTypeFromStr( const std::string& str );
+    std::string getAbntAddress(const char* _address);
+    /// set the profile key
+    bool setKey( ActionContext& context, pers::util::PersCallParams* params );
 
 protected:
-  PersCmd cmd;
-  ProfileType profile;
-  string optionalSkey;
-  uint32_t optionalIkey;
-  string optionalKeyStr;
-  bool hasOptionalKey;
-  FieldType ftOptionalKey;
+    pers::util::PersCmd     cmd;
+    pers::util::ProfileType profile;
+    uint32_t                optionalKeyInt;
+    std::string             optionalKeyStr;
+    bool                    hasOptionalKey;
+    FieldType               ftOptionalKey;
 };
 
-class PersAction : public PersActionBase {
+
+class PersAction : public PersActionBase 
+{
 public:
-  PersAction() : PersActionBase(PC_GET) {}
-  PersAction(PersCmd c) : PersActionBase(c), persCommand(c) {}
-  ~PersAction() {}
-  virtual bool RunBeforePostpone(ActionContext& context);
-  virtual void ContinueRunning(ActionContext& context);
-  virtual void init(const SectionParams& params, PropertyObject propertyObject);
+    PersAction() : PersActionBase(pers::util::PC_GET) {}
+    PersAction(pers::util::PersCmd c) : PersActionBase(c), persCommand(c) {}
+    virtual ~PersAction() {}
+    virtual void init(const SectionParams& params, PropertyObject propertyObject);
+    virtual bool RunBeforePostpone(ActionContext& context);
+    virtual void ContinueRunning(ActionContext& context);
 
 protected:
-  virtual IParserHandler * StartXMLSubSection(const string& name,const SectionParams& params,const ActionFactory& factory);
-  virtual bool FinishXMLSubSection(const string& name);
+    virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
+    virtual bool FinishXMLSubSection(const std::string& name);
 
 protected:
-  PersActionCommand persCommand;
+    PersActionCommand persCommand;
 };
 
 }//actions
