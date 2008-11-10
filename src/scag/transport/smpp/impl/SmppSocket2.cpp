@@ -8,6 +8,7 @@ namespace {
 
 smsc::core::synchronization::Mutex digitmtx;
 
+const unsigned digitlen = 3;
 const std::string& digitstring()
 {
     static bool done = false;
@@ -15,7 +16,7 @@ const std::string& digitstring()
     if ( ! done ) {
         MutexGuard mg(digitmtx);
         if ( ! done ) {
-            ds.reserve(256*3+1);
+            ds.reserve(256*digitlen+1);
             char buf[10];
             for ( unsigned i = 0; i < 256; ++i ) {
                 sprintf( buf, "%02x ", i );
@@ -29,10 +30,10 @@ const std::string& digitstring()
 
 void bufdump( std::string& out, const unsigned char* inbuf, unsigned insize )
 {
-    out.reserve( out.size() + insize*3 + 10 );
+    out.reserve( out.size() + insize*digitlen + 10 );
     const char* digits = digitstring().c_str();
     for ( ; insize-- > 0; ++inbuf ) {
-        out.append( digits + ((*inbuf)*3), 3 );
+        out.append( digits + ((*inbuf)*digitlen), digitlen );
     }
 }
 }
