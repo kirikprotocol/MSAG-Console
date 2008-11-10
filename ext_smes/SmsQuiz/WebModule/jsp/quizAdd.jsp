@@ -2,24 +2,39 @@
 <%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder"%>
 <%@ page import="mobi.eyeline.smsquiz.beans.QuizAdd"%>
 <%@ page import="ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper"%>
+<%@ page import="ru.novosoft.util.jsp.MultipartServletRequest"%>
+<%@ page import="ru.novosoft.util.jsp.MultipartDataSource"%>
+<%@ page import="java.io.*"%>
 <jsp:useBean id="bean" scope="page" class="mobi.eyeline.smsquiz.beans.QuizAdd" />
+<%
+  if (request.getAttribute("multipart.request") != null) {
+    request = (MultipartServletRequest)request.getAttribute("multipart.request");
+  }
+%>
 <jsp:setProperty name="bean" property="*"/>
 <%
 
   bean.getTableHelper().processRequest(request);
-  //ServiceIDForShowStatus = ;
-	TITLE=getLocString("smsquiz.title");
-	MENU0_SELECTION = "MENU0_SERVICES";
-	//MENU1_SELECTION = "WSME_INDEX";
+
+  TITLE=getLocString("smsquiz.title");
+  MENU0_SELECTION = "MENU0_SERVICES";
+  FORM_METHOD = "POST";
+  FORM_ENCTYPE = "multipart/form-data";
+  FORM_URI = CPATH +"/upload";
 
   int beanResult = bean.process(request);
   switch(beanResult)
   {
     case QuizAdd.RESULT_DONE:
-      response.sendRedirect("quizes.jsp");
+      response.sendRedirect(CPATH+"/esme_SmsQuiz/quizes.jsp");
       return;
   }
   int rowN = 0;
+  if (request.getAttribute("multipart.request") != null) {
+    System.out.println("multipart exist");
+    //response.sendRedirect(request.getContextPath() + "/smsc/esme_SmsQuiz/quizAdd.jsp");
+  }
+
 %>
 <%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
@@ -55,7 +70,9 @@
 </tr>
   <tr class=row<%=rowN++&1%>>
   <th>Abonents file</th>
-  <td><input validation="nonEmpty" class=txt name=abFile value="<%=StringEncoderDecoder.encode(bean.getAbFile())%>"></td>
+  <td><input type="hidden" name="jsp" value="/esme_SmsQuiz/quizAdd.jsp">
+  <input class=txt type=file name=file id=file></td>
+ <!--<td><input validation="nonEmpty" class=txt name=abFile value="<%=StringEncoderDecoder.encode(bean.getAbFile())%>"></td> -->
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Source address</th>
@@ -109,9 +126,6 @@
 </tr><tr class=row<%=rowN++&1%>>
   <th>Default category</th>
   <td><input validation="nonEmpty" class=txt name=defaultCategory value="<%=StringEncoderDecoder.encode(bean.getDefaultCategory())%>"></td>
-</tr>
-<tr>
-  <th colspan="2"><div class=page_subtitle>Categories</div></th>
 </tr>
  <tr>
   <td colspan="2">

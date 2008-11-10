@@ -1,17 +1,25 @@
 package mobi.eyeline.smsquiz.beans;
 
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.jsp.util.helper.Validation;
+import ru.novosoft.smsc.jsp.util.helper.dynamictable.IncorrectValueException;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.util.jsp.MultipartServletRequest;
+import ru.novosoft.util.jsp.MultipartDataSource;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Date;
-import java.util.LinkedList;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 import mobi.eyeline.smsquiz.quizes.adding.CategoriesTableHelper;
+import mobi.eyeline.smsquiz.quizes.view.QuizFullData;
+import mobi.eyeline.smsquiz.QuizBuilder;
 
 /**
  * author: alkhal
@@ -85,26 +93,70 @@ public class QuizAdd extends SmsQuizBean{
     if(result!=RESULT_OK) {
       return result;
     }
+    MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");
+    if(multi!=null) {
 
-    if (mbDone != null) result = save();
+    }
+    if (mbDone != null) result = save(multi);
     else if (mbCancel != null) result = RESULT_DONE;
 
     return result;
   }
 
-  private int save() {
+  private int save(HttpServletRequest request) {
     System.out.println("Saving...");
-    System.out.println(tableHelper.getCategories());
     int result;
-    if((result = validation())!=RESULT_OK) {
+    if((result = validation(request))!=RESULT_OK) {
       return result;
     }
-    //todo
+    QuizFullData data = new QuizFullData();
+    MultipartDataSource ds = null;
+    InputStream is = null;
+    File file = null;
+    try {
+      ds= ((MultipartServletRequest)request.getAttribute("multipart.request")).getMultipartDataSource("file");
+      is = ds.getInputStream();
+      file = new File(quizDir+File.separator+quiz+".csv");
+      file = Functions.saveFileToTemp(is, file);
+
+      for(int j=0;j<activeWeekDays.length;j++) {
+        if(activeWeekDays[j]!=null) {
+          data.addActiveDay(activeWeekDays[j]);
+        }
+      }
+      data.setDateBegin(dateBegin);
+      data.setDateEnd(dateEnd);
+      data.setDefaultCategory(defaultCategory);
+      data.setDestAddress(destAddress);
+      data.setMaxRepeat(maxRepeat);
+      data.setQuestion(question);
+      data.setQuiz(quiz);
+      data.setSourceAddress(sourceAddress);
+      data.setTimeBegin(timeBegin);
+      data.setTimeEnd(timeEnd);
+      data.setTxmode(Boolean.toString(txmode));
+      data.setAbFile(file.getAbsolutePath());
+      QuizBuilder.saveQuiz(data, quizDir+File.separator+quiz+".xml");
+    } catch (Exception e) {
+      logger.error(e);
+      e.printStackTrace();
+      return error(e.getMessage());
+    } finally{
+      if(ds!=null) {
+        ds.close();
+      }
+      if(is!=null) {
+        try {
+          is.close();
+        } catch (IOException e) {}
+      }
+    }
+
     return RESULT_DONE;
   }
 
 
-  private int validation(){
+  private int validation(HttpServletRequest request){
     System.out.println("Validation...");
     try{
       dateFormat.parse(dateBegin);
@@ -236,7 +288,6 @@ public class QuizAdd extends SmsQuizBean{
   }
 
 
-
   public String[] getActiveWeekDays() {
     return activeWeekDays;
   }
@@ -245,10 +296,11 @@ public class QuizAdd extends SmsQuizBean{
   }
 
   public boolean isWeekDayActive(String weekday) {
+    if(activeWeekDays!=null) {
     for(int i=0; i<activeWeekDays.length; i++)
       if ((activeWeekDays[i]!=null)&&(activeWeekDays[i].equals(weekday))) {
         return true;
-      }
+      }                       }
     return false;
   }
 

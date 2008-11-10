@@ -3,6 +3,8 @@ package mobi.eyeline.smsquiz;
 import org.jdom.input.SAXBuilder;
 import org.jdom.Document;
 import org.jdom.Element;
+import org.jdom.output.SAXOutputter;
+import org.jdom.output.XMLOutputter;
 import org.apache.log4j.Category;
 
 import java.util.*;
@@ -312,6 +314,10 @@ public class QuizBuilder {
       logger.error("Unsupported time format", exc);
       throw new QuizParsingException("Unsupported time format", exc);
     }
+  }
+
+  public static void saveQuiz(QuizFullData data, String filePath) throws Exception{
+  //todo
   }
 
 
