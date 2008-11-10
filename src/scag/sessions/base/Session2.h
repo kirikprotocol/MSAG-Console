@@ -3,7 +3,6 @@
 
 #include <list>
 
-// #include "util/stringhash.hpp"
 #include "SessionKey.h"
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/IntHash.hpp"
