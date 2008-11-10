@@ -19,7 +19,7 @@
 <col width="99%">
 <% int rowN = 0;%>
 <tr>
-  <th align="center" colspan="2">DB</th>
+  <th align="center" colspan="2"><div class=page_subtitle>DB</div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>DB User</th>
@@ -34,7 +34,7 @@
   <td><input class=txt name=dbSource value="<%=StringEncoderDecoder.encode(bean.getDbSource())%>"></td>
 </tr>
 <tr>
-  <th align="center" colspan="2">Reply statistics</th>
+  <th align="center" colspan="2"><div class=page_subtitle>Reply statistics</div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Replies directory name</th>
@@ -53,7 +53,7 @@
   <td><input class=txt name=fileOpenedLimit value="<%=StringEncoderDecoder.encode(bean.getFileOpenedLimit())%>"></td>
 </tr>
 <tr>
-  <th align="center" colspan="2">Distribution</th>
+  <th align="center" colspan="2"><div class=page_subtitle>Distribution</div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Console's host</th>
@@ -100,7 +100,7 @@
   <td><input class=txt name=statusCheckerPeriod value="<%=StringEncoderDecoder.encode(bean.getStatusCheckerPeriod())%>"></td>
 </tr>
 <tr>
-  <th align="center" colspan="2">QuizManager</th>
+  <th align="center" colspan="2"><div class=page_subtitle>QuizManager</div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Quizes directory</th>
@@ -135,7 +135,7 @@
   <td><input class=txt name=dirWork value="<%=StringEncoderDecoder.encode(bean.getDirWork())%>"></td>
 </tr>
 <tr>
-  <th align="center" colspan="2">JMX</th>
+  <th align="center" colspan="2"><div class=page_subtitle>JMX</div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>JMX password</th>
@@ -150,7 +150,7 @@
   <td><input class=txt name=jmxPort value="<%=StringEncoderDecoder.encode(bean.getJmxPort())%>"></td>
 </tr>
 <tr>
-  <th align="center" colspan="2">SMPP</th>
+  <th align="center" colspan="2"><div class=page_subtitle>SMPP</div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>SMPP host</th>

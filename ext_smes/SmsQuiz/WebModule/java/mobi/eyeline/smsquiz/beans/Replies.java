@@ -13,11 +13,8 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 import mobi.eyeline.smsquiz.replystats.*;
-import mobi.eyeline.smsquiz.QuizXmlData;
+import mobi.eyeline.smsquiz.quizes.view.QuizShortData;
 import mobi.eyeline.smsquiz.QuizBuilder;
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.input.SAXBuilder;
 
 /**
  * author: alkhal
@@ -254,13 +251,18 @@ public class Replies extends SmsQuizBean {
   }
   public void setQuizPath(String quizPath) {
     replyFilter.setQuizPath(quizPath);
-    if(quizPath!=null) {
-      QuizXmlData data = QuizBuilder.parseQuiz(quizPath);
-      System.out.println("Parsing completed: address="+data.getAddress()+"," +
-          " dateBegin="+data.getDateBegin()+", dateEnd="+data.getDateEnd());
-      replyFilter.setQuizNumber(data.getAddress());
-      replyFilter.setQuizDateBegin(data.getDateBegin());
-      replyFilter.setQuizDateEnd(data.getDateEnd());
+    try{
+      if(quizPath!=null) {
+        QuizShortData data = QuizBuilder.parseQuiz(quizPath);
+        System.out.println("Parsing completed: address="+data.getAddress()+"," +
+            " dateBegin="+data.getDateBegin()+", dateEnd="+data.getDateEnd());
+        replyFilter.setQuizNumber(data.getAddress());
+        replyFilter.setQuizDateBegin(data.getDateBegin());
+        replyFilter.setQuizDateEnd(data.getDateEnd());
+      }
+    }catch(Exception e) {
+      e.printStackTrace();
+      logger.error(e);
     }
   }
 

@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz.quizes;
+package mobi.eyeline.smsquiz.quizes.view;
 
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.text.SimpleDateFormat;
+
+import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
 
 /**
  * author: alkhal

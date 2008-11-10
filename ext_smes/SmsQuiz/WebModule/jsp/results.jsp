@@ -61,13 +61,15 @@
   </select></td>
 </tr>
 </table>
-<%}%>
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "smsquiz.query_results");
 page_menu_space(out);
 page_menu_end(out);
-
+  }
+  else {
+  %><div style="color:blue">No results to show</div><%
+}
 if (bean.isInitialized()) {
 %><div class=content><%
 QueryResultSet allResults = bean.getResults();

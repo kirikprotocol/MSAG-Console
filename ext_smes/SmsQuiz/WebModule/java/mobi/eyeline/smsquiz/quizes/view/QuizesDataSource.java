@@ -1,7 +1,6 @@
-package mobi.eyeline.smsquiz.quizes;
+package mobi.eyeline.smsquiz.quizes.view;
 
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
-import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 
@@ -10,10 +9,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 
 import org.apache.log4j.Category;
-import mobi.eyeline.smsquiz.QuizXmlData;
 import mobi.eyeline.smsquiz.QuizBuilder;
-
-import javax.servlet.http.HttpServletRequest;
+import mobi.eyeline.smsquiz.quizes.view.QuizDataItem;
 
 /**
  * author: alkhal
@@ -30,7 +27,7 @@ public class QuizesDataSource extends AbstractDataSourceImpl {
   public static final String DATE_BEGIN = "dateBegin";
 
   public static final String DATE_END = "dateEnd";
-  
+
   public static final String STATE = "state";
 
   public QuizesDataSource(String quizDir) {
@@ -56,27 +53,31 @@ public class QuizesDataSource extends AbstractDataSourceImpl {
       return null;
     }
 
+    try{
+      for(int j=0;j<files.length;j++) {
+        String state;
+        File file = files[j];
+        String quizId = file.getName().substring(0,file.getName().indexOf("."));
+        QuizShortData quizData = QuizBuilder.parseQuiz(file.getAbsolutePath());
 
-    for(int j=0;j<files.length;j++) {
-      String state;
-      File file = files[j];
-      String quizId = file.getName().substring(0,file.getName().indexOf("."));
-      QuizXmlData quizData = QuizBuilder.parseQuiz(file.getAbsolutePath());
-
-      if(!new File(file.getParent()+File.separator+quizId+".error").exists()) {
-        Date now = new Date();
-        if(now.before(quizData.getDateBegin())) {
-          state = QuizState.INACTIVE;
-        } else if(now.after(quizData.getDateEnd())) {
-          state = QuizState.FINISHED;
-        } else {
-          state= QuizState.ACTIVE;
+        if(!new File(file.getParent()+File.separator+quizId+".error").exists()) {
+          Date now = new Date();
+          if(now.before(quizData.getDateBegin())) {
+            state = QuizState.INACTIVE;
+          } else if(now.after(quizData.getDateEnd())) {
+            state = QuizState.FINISHED;
+          } else {
+            state= QuizState.ACTIVE;
+          }
         }
+        else {
+          state = QuizState.FINISHED_WITH_ERROR;
+        }
+        add(new QuizDataItem(quizId, quizData.getDateBegin(), quizData.getDateEnd(), state));
       }
-      else {
-        state = QuizState.FINISHED_WITH_ERROR;
-      }
-      add(new QuizDataItem(quizId, quizData.getDateBegin(), quizData.getDateEnd(), state));
+    }catch(Exception e) {
+      logger.error(e);
+      e.printStackTrace();
     }
 
     return super.query(query_to_run);

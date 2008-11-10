@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz.quizes;
+package mobi.eyeline.smsquiz.quizes.view;
 
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
 

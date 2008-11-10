@@ -1,7 +1,6 @@
 package mobi.eyeline.smsquiz.beans;
 
 import ru.novosoft.smsc.jsp.SMSCJspException;
-import ru.novosoft.smsc.jsp.util.SessionContentManager;
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 
 import javax.servlet.http.HttpServletRequest;
@@ -10,10 +9,10 @@ import java.util.Iterator;
 import java.util.Date;
 import java.io.File;
 
-import mobi.eyeline.smsquiz.quizes.QuizesDataSource;
-import mobi.eyeline.smsquiz.quizes.QuizesStaticTableHelper;
+import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
+import mobi.eyeline.smsquiz.quizes.view.QuizesStaticTableHelper;
 import mobi.eyeline.smsquiz.QuizBuilder;
-import mobi.eyeline.smsquiz.QuizXmlData;
+import mobi.eyeline.smsquiz.quizes.view.QuizShortData;
 
 /**
  * author: alkhal
@@ -66,7 +65,7 @@ public class QuizesList extends SmsQuizBean {
       return result;
 
     try {
-      if (tableHelper.isDataCellSelected()) {                                       
+      if (tableHelper.isDataCellSelected()) {
         result = processEdit(request, tableHelper.getSelectedCellId());
 
       } else if (mbAdd != null) {
@@ -93,25 +92,32 @@ public class QuizesList extends SmsQuizBean {
   private int processDelete(HttpServletRequest request){
     String warnings = "";
     System.out.println("Deleting quizes...");
-    for (Iterator iter = tableHelper.getSelectedQuizesList(request).iterator(); iter.hasNext(); ) {
-      final String quizId = (String)iter.next();
-      System.out.println("Selected checkbox: "+quizId);
-      String quizPath = quizDir+ File.separator+quizId+".xml";
-      if(!new File(quizPath).exists()) {
-        quizPath = quizDir+ File.separator+quizId+".xml.old";
+    try{
+      for (Iterator iter = tableHelper.getSelectedQuizesList(request).iterator(); iter.hasNext(); ) {
+        final String quizId = (String)iter.next();
+        System.out.println("Selected checkbox: "+quizId);
+        String quizPath = quizDir+ File.separator+quizId+".xml";
         if(!new File(quizPath).exists()) {
-          warnings+="Quiz's  file not found for id:"+quizId+System.getProperty("line.separator");
+          quizPath = quizDir+ File.separator+quizId+".xml.old";
+          if(!new File(quizPath).exists()) {
+            warnings+="Quiz's  file not found for id:"+quizId+System.getProperty("line.separator");
+          }
+        }
+        QuizShortData quizData =  QuizBuilder.parseQuiz(quizPath);
+        Date now = new Date();
+        if(now.before(quizData.getDateEnd())&&now.after(quizData.getDateBegin())) {
+          warnings+="Quiz is active, it can't be deleted: "+quizId;
+        }
+        else {
+          delete(quizId, quizPath);
         }
       }
-      QuizXmlData quizData =  QuizBuilder.parseQuiz(quizPath);
-      Date now = new Date();
-      if(now.before(quizData.getDateEnd())&&now.after(quizData.getDateBegin())) {
-          warnings+="Quiz is active, it can't be deleted: "+quizId;
-      }
-      else {
-        delete(quizId, quizPath);
-      }
     }
+    catch(Exception e) {
+      logger.error(e);
+      e.printStackTrace();
+    }
+
     System.out.println("Deleting completed");
     tableHelper.setStartPosition(0);
     if(!warnings.equals("")) {
