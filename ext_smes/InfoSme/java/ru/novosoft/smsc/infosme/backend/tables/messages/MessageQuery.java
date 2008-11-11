@@ -11,7 +11,7 @@ import java.util.Vector;
  */
 
 public class MessageQuery extends AbstractQueryImpl {
-  public MessageQuery(int expectedResultsQuantity, MessageFilter filter, String sortOrder, int startPosition) {
+  public MessageQuery(int expectedResultsQuantity, Filter filter, String sortOrder, int startPosition) {
     super(expectedResultsQuantity, filter, sortOrder, startPosition);
   }
 }

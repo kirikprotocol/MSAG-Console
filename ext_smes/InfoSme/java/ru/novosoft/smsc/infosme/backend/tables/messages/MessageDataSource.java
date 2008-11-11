@@ -5,6 +5,7 @@ import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
+import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.Task;
 import ru.novosoft.smsc.util.AdvancedStringTokenizer;
@@ -28,21 +29,28 @@ public class MessageDataSource extends AbstractDataSourceImpl {
   private static final Category log = Category.getInstance(MessageDataSource.class);
 
   private static final SimpleDateFormat dirNameFormat = new SimpleDateFormat("yyMMdd");
-  private static final SimpleDateFormat msgDateFormat = new SimpleDateFormat("yyMMddhhmmss");
+  public static final SimpleDateFormat msgDateFormat = new SimpleDateFormat("yyMMddHHmmss");
 
   private final String storeDir;
   private final Config config;
 
+  public static final String STATE = "state";
+  public static final String DATE = "date";
+  public static final String MSISDN = "msisdn";
+  public static final String REGION = "region";
+  public static final String MESSAGE ="message";
+  public static final String ID = "id";
+  public static final String TASK_ID = "taskId";
+
   public MessageDataSource(Config config, String storeDir) {
-    super(new String[]{"state", "date", "msisdn", "region", "message"});
+    super(new String[]{STATE, DATE, MSISDN, REGION, MESSAGE});
     this.storeDir = storeDir;
     this.config = config;
   }
 
   public QueryResultSet query(Query query_to_run) {
+    clear();
     MessageFilter filter = (MessageFilter)query_to_run.getFilter();
-
-    final QueryResultSetImpl rs = new QueryResultSetImpl(columnNames, "");
 
     // Prepare files list
     Date fromDate = filter.getFromDate();
@@ -145,8 +153,10 @@ public class MessageDataSource extends AbstractDataSourceImpl {
                 if (log.isDebugEnabled())
                   log.debug("allowed");
                 total++;
-                if (rs.size() < query_to_run.getExpectedResultsQuantity())
-                  rs.add(di);
+                if (total < query_to_run.getExpectedResultsQuantity()) {
+                  add(di);
+                  total++;
+                }
               }
             }
           } catch (FileNotFoundException e) {
@@ -169,9 +179,9 @@ public class MessageDataSource extends AbstractDataSourceImpl {
       cal.add(Calendar.HOUR, 1);
     }
 
-    rs.setTotalSize(total);
-
-    return rs;
+    query_to_run = new MessageQuery(query_to_run.getExpectedResultsQuantity(),
+        new EmptyFilter(), (String)query_to_run.getSortOrder().get(0), query_to_run.getStartPosition());
+    return super.query(query_to_run);
   }
 
   private static String prepareMessage(String m) {

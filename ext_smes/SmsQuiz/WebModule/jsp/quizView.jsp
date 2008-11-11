@@ -1,8 +1,8 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="java.util.*, ru.novosoft.smsc.util.Functions,
                  java.text.SimpleDateFormat"%>
-<%@ page import="mobi.eyeline.smsquiz.quizes.QuizFullData"%>
 <%@ page import="mobi.eyeline.smsquiz.beans.QuizView"%>
+<%@ page import="mobi.eyeline.smsquiz.quizes.AnswerCategory"%>
 <%@ page import="mobi.eyeline.smsquiz.quizes.view.QuizFullData"%>
 <jsp:useBean id="bean" scope="page" class="mobi.eyeline.smsquiz.beans.QuizView" />
 <jsp:setProperty name="bean" property="*"/>
@@ -65,7 +65,19 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Active days</th>
-  <td><%=StringEncoderDecoder.encode(quizData.getActiveDays())%></td>
+  <td><%
+    if(quizData.getActiveDays()!=null) {
+      Iterator iter = quizData.getActiveDays().iterator();
+
+      while(iter.hasNext()) {
+        %><%=StringEncoderDecoder.encode((String)iter.next())%><%
+        if(iter.hasNext()) {
+        %><%=","%><%
+        }
+      }
+
+    }
+  %></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Tx mode</th>
@@ -88,7 +100,7 @@
 <%
   Iterator categories = quizData.getCategories();
   while(categories.hasNext()) {
-    QuizFullData.Category cat = (QuizFullData.Category) categories.next();
+    AnswerCategory cat = (AnswerCategory) categories.next();
 %>
     <tr>
       <th align="center" colspan="2"><div class=page_subtitle>Category</div></th>

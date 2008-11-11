@@ -13,9 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 import mobi.eyeline.smsquiz.quizes.adding.CategoriesTableHelper;
 import mobi.eyeline.smsquiz.quizes.view.QuizFullData;
@@ -94,16 +92,13 @@ public class QuizAdd extends SmsQuizBean{
       return result;
     }
     MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");
-    if(multi!=null) {
-
-    }
     if (mbDone != null) result = save(multi);
     else if (mbCancel != null) result = RESULT_DONE;
 
     return result;
   }
 
-  private int save(HttpServletRequest request) {
+  private int save(MultipartServletRequest request) {
     System.out.println("Saving...");
     int result;
     if((result = validation(request))!=RESULT_OK) {
@@ -112,18 +107,31 @@ public class QuizAdd extends SmsQuizBean{
     QuizFullData data = new QuizFullData();
     MultipartDataSource ds = null;
     InputStream is = null;
+    BufferedOutputStream outputStream = null;
     File file = null;
     try {
-      ds= ((MultipartServletRequest)request.getAttribute("multipart.request")).getMultipartDataSource("file");
+      ds= request.getMultipartDataSource("file");
       is = ds.getInputStream();
+
       file = new File(quizDir+File.separator+quiz+".csv");
-      file = Functions.saveFileToTemp(is, file);
+      outputStream = new BufferedOutputStream(new FileOutputStream(file));
+      byte buffer[] = new byte[2048];
+      boolean begin = true;
+      for (int readed = 0; (readed = is.read(buffer)) > -1;) {
+        if(begin&&(readed<=-1)) {
+          return warning("Abonent's file is empty");
+        }
+        begin = false;
+        outputStream.write(buffer, 0, readed);
+      }
 
       for(int j=0;j<activeWeekDays.length;j++) {
         if(activeWeekDays[j]!=null) {
           data.addActiveDay(activeWeekDays[j]);
         }
       }
+      List categories = tableHelper.getCategories();
+      data.setCategory(categories);
       data.setDateBegin(dateBegin);
       data.setDateEnd(dateEnd);
       data.setDefaultCategory(defaultCategory);
@@ -150,13 +158,18 @@ public class QuizAdd extends SmsQuizBean{
           is.close();
         } catch (IOException e) {}
       }
+      if(outputStream!=null) {
+        try {
+          outputStream.close();
+        } catch (IOException e) {}
+      }
     }
 
     return RESULT_DONE;
   }
 
 
-  private int validation(HttpServletRequest request){
+  private int validation(MultipartServletRequest request){
     System.out.println("Validation...");
     try{
       dateFormat.parse(dateBegin);
@@ -176,6 +189,20 @@ public class QuizAdd extends SmsQuizBean{
     if((activeWeekDays==null)||(activeWeekDays.length==0)) {
       System.out.println("Please select one or more active days");
       return warning("Please select one or more active days");
+    }
+    if((tableHelper.getCategories()==null)||(tableHelper.getCategories().size()==0)) {
+      System.out.println("Please select one or more answer's categories");
+      return warning("Please select one or more answer's categories");
+    }
+    try {
+      if(request.getMultipartDataSource("file")==null) {
+        System.out.println("File data source is null, select the file");
+        return warning("Please select abonents file");
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+      logger.error(e);
+      return warning("Error during upload abonents file");
     }
 
     return RESULT_OK;

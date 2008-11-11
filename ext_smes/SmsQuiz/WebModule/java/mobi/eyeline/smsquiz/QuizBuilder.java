@@ -3,16 +3,12 @@ package mobi.eyeline.smsquiz;
 import org.jdom.input.SAXBuilder;
 import org.jdom.Document;
 import org.jdom.Element;
-import org.jdom.output.SAXOutputter;
 import org.jdom.output.XMLOutputter;
-import org.apache.log4j.Category;
+import org.jdom.output.Format;
 
 import java.util.*;
 import java.text.SimpleDateFormat;
-import java.io.InputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.File;
+import java.io.*;
 
 import mobi.eyeline.smsquiz.quizes.view.QuizShortData;
 import mobi.eyeline.smsquiz.quizes.view.QuizFullData;
@@ -24,7 +20,7 @@ import mobi.eyeline.smsquiz.quizes.AnswerCategory;
  */
 public class QuizBuilder {
 
-  private static Category logger = Category.getInstance(QuizBuilder.class);
+  private static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(QuizBuilder.class);
 
   private static String datePattern = "dd.MM.yyyy HH:mm";
 
@@ -316,9 +312,138 @@ public class QuizBuilder {
     }
   }
 
-  public static void saveQuiz(QuizFullData data, String filePath) throws Exception{
-  //todo
+  public static void saveQuiz(QuizFullData data, String filePath){
+    XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
+
+    OutputStream outputStream = null;
+    try {
+      outputStream = new FileOutputStream(filePath);
+      Document doc = new Document();
+      Element root = new Element("opros");
+      doc.setRootElement(root);
+      root.addContent(buildGeneral(data));
+      root.addContent(buildDistribution(data));
+      root.addContent(buildReplies(data));
+      outputter.output(doc, outputStream);
+
+    } catch (IOException e) {
+      logger.error(e);
+      e.printStackTrace();
+    } finally{
+      if(outputStream!=null) {
+        try {
+          outputStream.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+    }
   }
 
+  private static Element buildGeneral(QuizFullData data) {
+    Element general = new Element("general");
+    Element element = new Element("date-begin");
+    element.setText(data.getDateBegin().trim());
+    general.addContent(element);
+
+    element = new Element("date-end");
+    element.setText(data.getDateEnd().trim());
+    general.addContent(element);
+
+    element = new Element("question");
+    element.setText(data.getQuestion().trim());
+    general.addContent(element);
+
+    element = new Element("abonents-file");
+    element.setText(data.getAbFile().trim());
+    general.addContent(element);
+
+    return general;
+
+  }
+
+  private static Element buildDistribution(QuizFullData data) {
+    Element distr = new Element("distribution");
+
+    Element element = new Element("source-address");
+    element.setText(data.getSourceAddress().trim());
+    distr.addContent(element);
+
+    element = new Element("time-begin");
+    element.setText(data.getTimeBegin().trim());
+    distr.addContent(element);
+
+    element = new Element("time-end");
+    element.setText(data.getTimeEnd().trim());
+    distr.addContent(element);
+
+    element = new Element("source-address");
+    element.setText(data.getSourceAddress().trim());
+    distr.addContent(element);
+
+
+    element = new Element("days");
+    Element subEl;
+
+    Iterator iter = data.getActiveDays().iterator();
+    while(iter.hasNext()) {
+      String day = (String)iter.next();
+      subEl = new Element("day");
+      subEl.setText(day.trim());
+      element.addContent(subEl);
+    }
+    distr.addContent(element);
+
+    element = new Element("txmode");
+    element.setText((Boolean.valueOf(data.getTxmode().trim())).toString());
+    distr.addContent(element);
+
+    return distr;
+  }
+
+  private static Element buildReplies(QuizFullData data) {
+    Element replies = new Element("replies");
+
+    Element element = new Element("destination-address");
+    element.setText(data.getDestAddress().trim());
+    replies.addContent(element);
+
+    String maxRepeat = data.getMaxRepeat();
+    if((maxRepeat!=null)&&(!maxRepeat.trim().equals(""))) {
+      maxRepeat = maxRepeat.trim();
+      element = new Element("max-repeat");
+      element.setText(maxRepeat);
+      replies.addContent(element);
+    }
+
+    String def = data.getDefaultCategory();
+    if((def!=null)&&(!def.trim().equals(""))) {
+      def = def.trim();
+      element = new Element("default");
+      element.setText(def);
+      replies.addContent(element);
+    }
+
+    Iterator iter = data.getCategories();
+    while(iter.hasNext()) {
+      element = new Element("reply");
+      AnswerCategory cat = (AnswerCategory)iter.next();
+
+      Element subEl = new Element("category");
+      subEl.setText(cat.getName().trim());
+      element.addContent(subEl);
+
+      subEl = new Element("pattern");
+      subEl.setText(cat.getPattern().trim());
+      element.addContent(subEl);
+
+      subEl = new Element("answer");
+      subEl.setText(cat.getAnswer().trim());
+      element.addContent(subEl);
+
+      replies.addContent(element);
+    }
+    return replies;
+  }
 
 }

@@ -125,7 +125,7 @@
   <td><input validation="nonEmpty" class=txt name=maxRepeat value="<%=StringEncoderDecoder.encode(bean.getMaxRepeat())%>"></td>
 </tr><tr class=row<%=rowN++&1%>>
   <th>Default category</th>
-  <td><input validation="nonEmpty" class=txt name=defaultCategory value="<%=StringEncoderDecoder.encode(bean.getDefaultCategory())%>"></td>
+  <td><input class=txt name=defaultCategory value="<%=StringEncoderDecoder.encode(bean.getDefaultCategory())%>"></td>
 </tr>
  <tr>
   <td colspan="2">

@@ -19,5 +19,6 @@ public interface InfoSmeDistr {
 
   public void getStatus(CommandContext ctx, String taskId);
 
+  public void resendMessage(CommandContext ctx, String msisdn, String taskId);
 
 }

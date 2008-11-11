@@ -3,12 +3,10 @@ package ru.novosoft.smsc.infosme.beans;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.InfoSmeTransport;
-import ru.novosoft.smsc.infosme.backend.tables.messages.MessageFilter;
-import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
-import ru.novosoft.smsc.infosme.backend.tables.messages.MessageQuery;
-import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataItem;
+import ru.novosoft.smsc.infosme.backend.tables.messages.*;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
@@ -37,14 +35,11 @@ public class Messages extends InfoSmeBean
   public static final int RESULT_EXPORT_ALL = PRIVATE_RESULT + 4;
 
   private String sort = null;
-  private String[] checked = new String[0];
-  private Collection checkedSet = null;
   private int startPosition = 0;
   private int pageSize = 0;
 
   private MessageFilter  msgFilter = new MessageFilter();
-  private String message2update;
-  private QueryResultSet messages = null;
+  private String message2update;      //todo
 
   private String mbQuery     = null;
   private String mbResend    = null;
@@ -66,17 +61,13 @@ public class Messages extends InfoSmeBean
 
   private MessageDataSource ds;
 
+  private MessagesTableHelper tableHelper = new MessagesTableHelper("message_table_helper");
+
   protected int init(List errors)
   {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
 
-    checkedSet = new HashSet(Arrays.asList(checked));
-
-    if (sort != null)  getInfoSmeContext().setMessagesSort(sort);
-    else sort = getInfoSmeContext().getMessagesSort();
-    if (pageSize != 0) getInfoSmeContext().setMessagesPageSize(pageSize);
-    else pageSize = getInfoSmeContext().getMessagesPageSize();
 
 //    if (!initialized) {
 //      msgFilter.setFromDate(Functions.truncateTime(new Date()));
@@ -89,6 +80,13 @@ public class Messages extends InfoSmeBean
       if( msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/' )
         msgStoreDir = serviceFolder + '/' + msgStoreDir;
       ds = new MessageDataSource(getConfig(), msgStoreDir);
+      pageSize = getInfoSmeContext().getMessagesPageSize();
+      int maxTotalSize = getInfoSmeContext().getMaxMessagesTotalSize();
+
+      tableHelper.setFilter(msgFilter);
+      tableHelper.setDs(ds);
+      tableHelper.setPageSize(pageSize);
+      tableHelper.setMaxTotalSize(maxTotalSize);
     } catch (Exception e) {
       return error("Can't init dataa source", e);
     }
@@ -105,15 +103,21 @@ public class Messages extends InfoSmeBean
     Collection allTasks = getAllTasks();
     if (allTasks == null || allTasks.size() <= 0)
       return warning("infosme.warn.no_task_for_msg");
-
+    if (initialized)
+      try {
+        tableHelper.fillTable();
+      } catch (TableHelperException e) {
+        e.printStackTrace();
+        logger.error(e);
+        return error(e.getMessage());
+      }
     try { // Order is important here!
-      if (mbDelete != null || mbDeleteAll != null) return processDelete();
-      else if (mbResend != null || mbResendAll != null) return processResend();
+      if (mbDelete != null || mbDeleteAll != null) return processDelete(request);
+      else if (mbResend != null || mbResendAll != null) return processResend(request);
       else if (mbUpdateAll != null) return processUpdateAll();
       else if (mbExportAll != null) return processExportAll();
       else if (mbUpdate != null) return processUpdate();
       else if (mbCancelUpdate != null) return processCancelUpdate();
-      else if (mbQuery != null || (initialized && messages == null)) return processQuery();
     } catch (AdminException e) {
       logger.error("Process error", e);
       error("Error", e);
@@ -143,18 +147,18 @@ public class Messages extends InfoSmeBean
 //                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), 5000000);
 //      final Collection messages = result.getMessages();
 
-      QueryResultSet messages = ds.query(new MessageQuery(5000000, msgFilter, sort, 0));
+      QueryResultSet messages = ds.query(new MessageQuery(5000000, msgFilter, MessagesTableHelper.DEFAULT_SORT, 0));
 
       StringBuffer buffer = new StringBuffer();
       MessageDataItem msg;
       for (Iterator iter = messages.iterator(); iter.hasNext();) {
 
         msg = (MessageDataItem)iter.next();
-        buffer.append(StringEncoderDecoder.encode((String)msg.getValue("taskId"))).append(",")
-            .append(StringEncoderDecoder.encode((String)msg.getValue("msisdn"))).append(",")
-            .append(StringEncoderDecoder.encode(getStateName((Message.State)msg.getValue("state")))).append(",")
-            .append(StringEncoderDecoder.encode(convertDateToString((Date)msg.getValue("date")))).append(",")
-            .append(StringEncoderDecoder.encode((String)msg.getValue("message"))).append('\n');
+        buffer.append(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.TASK_ID))).append(",")
+            .append(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.MSISDN))).append(",")
+            .append(StringEncoderDecoder.encode(getStateName((Message.State)msg.getValue(MessageDataSource.STATE)))).append(",")
+            .append(StringEncoderDecoder.encode(convertDateToString((Date)msg.getValue(MessageDataSource.DATE)))).append(",")
+            .append(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.MESSAGE))).append('\n');
         out.print(buffer);
         buffer.setLength(0);
       }
@@ -204,37 +208,33 @@ public class Messages extends InfoSmeBean
 
 
   private int processQuery() throws AdminException {
-    if (mbQuery != null) { startPosition = 0; mbQuery = null; }
-
-//    final InfoSmeTransport.GetMessagesResult result = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
-//                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), getInfoSmeContext().getMaxMessagesTotalSize()+1);
-//
-//    messages = result.getMessages();
-
-      messages = ds.query(new MessageQuery(getInfoSmeContext().getMaxMessagesTotalSize()+1, msgFilter, sort, startPosition));
-
-//    if (messages.size() > getInfoSmeContext().getMaxMessagesTotalSize())
-//      return _error(new SMSCJspException("Messages size is more than " + getInfoSmeContext().getMaxMessagesTotalSize() + ", show first " + getInfoSmeContext().getMaxMessagesTotalSize() + " messages",
-//                    SMSCJspException.ERROR_CLASS_MESSAGE));
-
-//    return message("Total messages count: " + messages.getTotalSize());
+    try {
+      tableHelper.fillTable();
+    } catch (TableHelperException e) {
+      e.printStackTrace();
+      logger.error(e);
+      throw new AdminException(e.getMessage());
+    }
     return RESULT_OK;
   }
 
-  private int processDelete() throws AdminException {
+  private int processDelete(HttpServletRequest request) throws AdminException {
 
     if (mbDelete != null)
-      deleteChecked();
+      deleteChecked(request);
     else if (mbDeleteAll != null)
       deleteAll();
 
-    resetChecked();
     mbDelete = mbDeleteAll = null;
 
     return processQuery();
   }
 
-  private int deleteChecked() {
+  private int deleteChecked(HttpServletRequest request) {
+    String[] checked = tableHelper.getSelectedMessagesArray(request);
+    if(checked==null) {
+      return warning("Checked messages list is empty");
+    }
     int deleted = 0;
     try {
       for (int i = 0; i < checked.length; i++) {
@@ -261,22 +261,26 @@ public class Messages extends InfoSmeBean
     return message("Messages have been resended");
   }
 
-  private int processResend() throws AdminException {
+  private int processResend(HttpServletRequest request) throws AdminException {
     if (mbResend != null)
-      resendChecked();
+      resendChecked(request);
     else if (mbResendAll != null)
       resendAll();
 
-    resetChecked();
     mbResend = mbResendAll = null;
 
     return processQuery();
   }
 
-  private int resendChecked() {
+  private int resendChecked(HttpServletRequest request) {
+    String[] checked = tableHelper.getSelectedMessagesArray(request);
+    if(checked==null) {
+      return warning("Checked messages list is empty");
+    }
     int resent = 0;
     try {
       for (int i = 0; i < checked.length; i++) {
+        System.out.println("Resend message for id:"+checked[i]);
         String id = checked[i];
         getInfoSme().resendMessages(msgFilter.getTaskId(), id, Message.State.NEW, new Date());
         resent++;
@@ -300,20 +304,7 @@ public class Messages extends InfoSmeBean
     return message("Messages resending");
   }
 
-  private void resetChecked() {
-    checked = new String[0];
-    checkedSet = new HashSet(Arrays.asList(checked));
-  }
 
-  public QueryResultSet getMessages() {
-    return messages;
-  }
-  public int getTotalSize() {
-    return (messages == null) ? 0 : messages.getTotalSize();
-  }
-  public int getTotalSizeInt() {
-    return getTotalSize();
-  }
 
   public boolean isInitialized() {
     return initialized;
@@ -406,19 +397,6 @@ public class Messages extends InfoSmeBean
     this.sort = sort;
   }
 
-  protected Collection getCheckedSet() {
-    return checkedSet;
-  }
-  public boolean isMessageChecked(String messageId) {
-    return checkedSet.contains(messageId);
-  }
-  public String[] getChecked() {
-    return checked;
-  }
-  public void setChecked(String[] checked)
-  {
-    this.checked = checked;
-  }
 
   /* -------------------------- MessagesQuery delegates -------------------------- */
   public void setFromDate(String fromDate)
@@ -535,4 +513,8 @@ public class Messages extends InfoSmeBean
 //  public byte[] getExportFile() {
 //    return exportFile;
 //  }
+
+  public MessagesTableHelper getTableHelper() {
+    return tableHelper;
+  }
 }

@@ -15,7 +15,7 @@ public class QuizFullData {
 
   private String quiz;
 
-  private String activeDays="";
+  private List activeDays = null;
 
   private String dateBegin;
 
@@ -74,11 +74,11 @@ public class QuizFullData {
     this.question = question;
   }
 
-  public String getActiveDays() {
+  public List getActiveDays() {
     return activeDays;
   }
 
-  public void setActiveDays(String activeDays) {
+  public void setActiveDays(List activeDays) {
     this.activeDays = activeDays;
   }
 
@@ -100,10 +100,10 @@ public class QuizFullData {
 
   public void addActiveDay(String day) {
     if((day!=null)&&(!day.equals(""))) {
-      if(!activeDays.equals("")) {
-        activeDays+=",";
+      if(activeDays==null) {
+        activeDays = new LinkedList();
       }
-      activeDays+=day;
+      activeDays.add(day);
     }
   }
 
@@ -150,6 +150,12 @@ public class QuizFullData {
   public void addCategory(AnswerCategory cat) {
     if(cat!=null) {
       categories.add(cat);
+    }
+  }
+
+  public void setCategory(List cat) {
+    if(cat!=null) {
+      categories = new LinkedList(cat);
     }
   }
 

@@ -133,31 +133,32 @@ OPT_NICK="nick"=133
 OPT_TASK="task"=134
 OPT_CREATE="create"=135
 OPT_STATUS="status"=136
-VAL_FORCE="force"=137
-VAL_SUPPRESS="suppress"=138
-VAL_PASS="pass"=139
-VAL_FULL="full"=140
-VAL_FINAL="final"=141
-VAL_NONE="none"=142
-VAL_DEF="default"=143
-VAL_UCS2="ucs2"=144
-VAL_LATIN1="latin1"=145
-VAL_UCS2LATIN1="ucs2-latin1"=146
-VAL_STORE="store"=147
-VAL_FORWARD="forward"=148
-VAL_DATAGRAM="datagram"=149
-VAL_TX="TX"=150
-VAL_RX="RX"=151
-VAL_TRX="TRX"=152
-VAL_SMPP="SMPP"=153
-VAL_SS7="SS7"=154
-WS=155
-STR("more input")=156
-QSTR("quoted string")=157
-ESTR("empty string")=158
-STR_WS=159
-STR_CHR=160
-COMMA("comma character ','")=161
-ESC=162
-DIGIT=163
-TSTR=164
+OPT_RESEND="resend"=137
+VAL_FORCE="force"=138
+VAL_SUPPRESS="suppress"=139
+VAL_PASS="pass"=140
+VAL_FULL="full"=141
+VAL_FINAL="final"=142
+VAL_NONE="none"=143
+VAL_DEF="default"=144
+VAL_UCS2="ucs2"=145
+VAL_LATIN1="latin1"=146
+VAL_UCS2LATIN1="ucs2-latin1"=147
+VAL_STORE="store"=148
+VAL_FORWARD="forward"=149
+VAL_DATAGRAM="datagram"=150
+VAL_TX="TX"=151
+VAL_RX="RX"=152
+VAL_TRX="TRX"=153
+VAL_SMPP="SMPP"=154
+VAL_SS7="SS7"=155
+WS=156
+STR("more input")=157
+QSTR("quoted string")=158
+ESTR("empty string")=159
+STR_WS=160
+STR_CHR=161
+COMMA("comma character ','")=162
+ESC=163
+DIGIT=164
+TSTR=165

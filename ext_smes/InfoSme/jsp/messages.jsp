@@ -5,6 +5,7 @@
                  ru.novosoft.smsc.infosme.beans.Messages,
                  java.io.*"%>
 <%@ page import="ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataItem"%>
+<%@ page import="ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper"%>
 <jsp:useBean id="bean" scope="request" class="ru.novosoft.smsc.infosme.beans.Messages" />
 <% if (!bean.isProcessed()) {%>
   <jsp:setProperty name="bean" property="*"/>
@@ -14,7 +15,7 @@
 	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
-
+  bean.getTableHelper().processRequest(request);
   int rowN = 0;
   int beanResult = bean.process(request);
   if (beanResult == Messages.RESULT_EXPORT_ALL) {
@@ -41,8 +42,6 @@ function setSort(sorting)
 </script>
 <div class=content>
 <input type=hidden name=initialized value=true>
-<input type=hidden name=startPosition id=startPosition value="<%=bean.getStartPosition()%>">
-<input type=hidden name=sort>
 <%Collection allTasks = bean.getAllTasks();
   if (allTasks.size() > 0) {%>
 <table class=properties_list>
@@ -97,45 +96,11 @@ page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "infosme.hin
 page_menu_space(out);
 page_menu_end(out);
 if (bean.isInitialized()) {
-%><div class=content><%
-QueryResultSet allMessages = bean.getMessages();
-if (allMessages == null || allMessages.size() == 0)
-{%><span style='color:blue;'><%= getLocString("infosme.msg.no_messages_matched")%></span><%}
-else
-{%>
-<div class=page_subtitle><%= getLocString("infosme.label.query_results_b")%>&nbsp;<%= bean.getTotalSize()%>&nbsp;<%= getLocString("infosme.label.query_results_e")%></div>
-<table class=list cellspacing=0>
-<col width="1%">
-<col width="15%">
-<col width="13%">
-<col width="22%">
-<col width="40%">
-<thead><tr class=row<%=rowN++&1%>>
-  <th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-  <th style="text-align:left"><a href="#" <%=bean.getSort().endsWith(Message.SORT_BY_ABONENT) ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_abonent")%>" onclick='return setSort("<%= Message.SORT_BY_ABONENT%>")'><%= getLocString("infosme.label.abonent")%></a></th>
-  <th style="text-align:left"><a href="#" <%=bean.getSort().endsWith(Message.SORT_BY_STATUS)  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_msg_status")%>" onclick='return setSort("<%= Message.SORT_BY_STATUS%>")'><%= getLocString("infosme.label.msg_status")%></a></th>
-  <th style="text-align:left"><a href="#" <%=bean.getSort().endsWith(Message.SORT_BY_DATE)    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_date")%>" onclick='return setSort("<%= Message.SORT_BY_DATE%>")'><%= getLocString("infosme.label.date")%></a></th>
-  <th style="text-align:left"><%= getLocString("infosme.label.message")%></th>
-</tr></thead>
-<tbody><%
-  int start = bean.getStartPositionInt();
-  int end = start + bean.getPageSizeInt();
-  int pos = 0;
-  for (Iterator i=allMessages.iterator(); i.hasNext() && pos < end; pos++) {
-    MessageDataItem message = (MessageDataItem)i.next();
-    if (pos >= start) {
-    %><tr class=row<%=rowN++&1%>>
-      <td><input class=check type=checkbox name=checked value="<%=message.getValue("id")%>" <%=bean.isMessageChecked(String.valueOf(message.getValue("id"))) ? "checked" : ""%>></td>
-      <td><%=StringEncoderDecoder.encode((String)message.getValue("msisdn"))%></td>
-      <td><%=StringEncoderDecoder.encode(bean.getStateName((Message.State)message.getValue("state")))%></td>
-      <td nowrap><%=StringEncoderDecoder.encode(bean.convertDateToString((Date)message.getValue("date")))%></td>
-      <td nowrap><%=StringEncoderDecoder.encodeHTML((String)message.getValue("message"))%></td>
-    </tr>
-<%  }
-  }%>
-</tbody>
-</table>
-<%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%>
+%>
+<div class=content>
+  <%{final PagedStaticTableHelper tableHelper = bean.getTableHelper();%>
+  <%@ include file="/WEB-INF/inc/paged_static_table.jsp"%>
+  <%}%>
 </div>
 <%
 page_menu_begin(out);
@@ -147,5 +112,5 @@ page_menu_button(session, out, "mbDeleteAll", "infosme.button.delete_all", "info
 page_menu_button(session, out, "mbResendAll", "infosme.button.resend_all", "infosme.hint.resend_all");
 page_menu_button(session, out, "mbExportAll", "infosme.button.export_all", "infosme.hint.export_all");
 page_menu_end(out);
-}}%><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
+}%><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

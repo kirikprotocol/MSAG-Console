@@ -151,6 +151,7 @@ tokens {
   OPT_TASK = "task";
   OPT_CREATE    = "create";
   OPT_STATUS    = "status";
+  OPT_RESEND    = "resend";
 
   VAL_FORCE     = "force";
   VAL_SUPPRESS  = "suppress";
