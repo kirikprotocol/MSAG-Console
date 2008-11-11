@@ -37,13 +37,18 @@ public:
                int _maxCallsCount,
                unsigned clients );
 
-    lcm::LongCallContextBase* getContext();
+    lcm::LongCallContextBase* getContext( int tmo );
 
     /// increment connection count
     void incConnect();
 
     /// decrement connection count, if count == 0 then finish all current queued calls
     void decConnect();
+
+    void wait( int sec ) {
+        MutexGuard mg(queueMonitor_);
+        queueMonitor_.wait( sec*1000 );
+    }
 
 private:
     // void init();
@@ -58,11 +63,12 @@ private:
 
 public:
     std::string host;
-    int port;
-    int timeout, pingTimeout;
+    int         port;
+    int         timeout;
+    int         pingTimeout;
+    int         reconnectTimeout;
 
 private:
-    int      reconnectTimeout;
     int      maxCallsCount;
     unsigned clients_;
 
@@ -176,6 +182,11 @@ void PersClientImpl::Stop()
 {
     isStopping = true;
     tp_.stopNotify();
+    {
+        MutexGuard mg(queueMonitor_);
+        queueMonitor_.notifyAll();
+        queueMonitor_.wait(50);
+    }
     tp_.shutdown();
     lcm::LongCallContextBase* ctx = 0;
     {
@@ -209,20 +220,21 @@ void PersClientImpl::init( const char *_host, int _port, int _timeout, int _ping
 }
 
 
-lcm::LongCallContextBase* PersClientImpl::getContext()
+lcm::LongCallContextBase* PersClientImpl::getContext( int tmo )
 {
     if ( isStopping || !connected_ ) return 0;
     lcm::LongCallContextBase* ctx = 0;
     MutexGuard mg(queueMonitor_);
     if ( !headContext_) {
-        queueMonitor_.wait( pingTimeout * 1000 );
+        queueMonitor_.wait( tmo * 1000 );
+        if ( isStopping || !connected_ ) return 0;
     }
     ctx = headContext_;
     if (headContext_) {
         headContext_ = headContext_->next;
         if (!headContext_) tailContext_ = 0;
+        --callsCount_;
     }
-    --callsCount_;
     return ctx;
 }
 
@@ -267,7 +279,7 @@ void PersClientImpl::finishCalls( lcm::LongCallContextBase* ctx )
 
 bool PersClientImpl::call( lcm::LongCallContextBase* ctx )
 {
-    if ( isStopping || !connected_ ) return false;
+    if ( isStopping || !connected_ || !ctx ) return false;
     MutexGuard mg(queueMonitor_);
     if ( isStopping || !connected_ ) return false;
     if ( callsCount_ >= maxCallsCount ) return false;
@@ -308,21 +320,32 @@ actTS_(0)
 int PersClientTask::Execute()
 {
     smsc_log_debug( log_, "perstask started" );
-    try {
-        this->connect();
-    } catch (...) {
-    }
     while ( true ) {
 
         if ( isStopping ) break;
 
-        lcm::LongCallContextBase* ctx = pers_->getContext();
-        if ( ! ctx ) {
+        if ( ! connected_ ) {
+            try {
+                this->connect();
+            } catch (...) {
+            }
+            if ( ! connected_ ) {
+                if ( isStopping ) break;
+                pers_->wait( pers_->reconnectTimeout );
+                continue;
+            }
+        }
 
-            if ( isStopping ) break;
+        int tmo = actTS_ + pers_->pingTimeout - time(0);
+        lcm::LongCallContextBase* ctx = pers_->getContext( tmo );
+        if ( isStopping ) {
+            if ( ctx ) ctx->initiator->continueExecution( ctx, true );
+            break;
+        }
+
+        if ( ! ctx ) {
             ping();
             continue;
-
         }
 
         // processing
@@ -355,9 +378,8 @@ int PersClientTask::Execute()
 
 void PersClientTask::ping()
 {
-    if ( !connected_ || isStopping ) return;
     time_t now = time(0);
-    if ( actTS_ + pers_->pingTimeout >= now ) return;
+    if ( actTS_ + pers_->pingTimeout > now ) return;
     SerialBuffer sb;
     uint32_t sz = 0;
     sb.WriteInt32(sz);
@@ -377,9 +399,7 @@ void PersClientTask::ping()
     } catch ( PersClientException& e ) {
         smsc_log_error( log_, "ping failed: %s", e.what() );
         this->disconnect();
-        try {
-            this->connect();
-        } catch (...) {}
+        // it will try to connect later
     } catch (...) {
         smsc_log_error(log_, "unknown exception");
     }
