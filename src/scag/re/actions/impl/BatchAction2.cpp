@@ -105,7 +105,7 @@ void BatchAction::ContinueRunning(ActionContext& context)
         return;
     }
     smsc_log_debug(logger,"ContinueRunning Action 'BatchAction' (skey=%s ikey=%d)",
-                   p->proxy().getKey().skey, p->proxy().getKey().ikey );
+                   p->getStringKey(), p->getIntKey() );
     try {
         p->readSB( context );
         /*

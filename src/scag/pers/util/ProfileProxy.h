@@ -149,7 +149,7 @@ public:
     const char* getStringKey() const { return skey_.c_str(); }
     int32_t getIntKey() const { return ikey_; };
 
-    inline ProfileProxy& proxy() { return proxy_; }
+    // inline ProfileProxy& proxy() { return proxy_; }
 
     /// set batch operation
     void batch( std::vector< PropertyProxy* >& proxies, bool transact );
@@ -166,6 +166,8 @@ public:
 
     /// get results (simply parse buffer).
     void readSB( re::actions::ActionContext& ctx );
+
+    inline SerialBuffer& buffer() { return buf_; }
 
 private:
     virtual pers::util::PersCmd cmdType() const;

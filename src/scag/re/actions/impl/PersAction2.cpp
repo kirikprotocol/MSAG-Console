@@ -452,8 +452,8 @@ void PersAction::ContinueRunning(ActionContext& context)
     PersCallParams *params = (PersCallParams*)context.getSession().getLongCallContext().getParams();
     smsc_log_debug(logger, "ContinueRunning: cmd=%s (skey=%s ikey=%d) var=%s",
                    getStrCmd(cmd),
-                   params->proxy().getKey().skey,
-                   params->proxy().getKey().ikey,
+                   params->getStringKey(),
+                   params->getIntKey(),
                    persCommand.propertyName() );
     params->readSB( context );
     // setStatus(context, params->error, persCommand.getStatus(), persCommand.getMsg());

@@ -34,7 +34,7 @@ public:
                int _timeout,
                int _pingTimeout,
                int _reconnectTimeout,
-               int _maxCallsCount,
+               unsigned _maxCallsCount,
                unsigned clients );
 
     lcm::LongCallContextBase* getContext( int tmo );
@@ -69,7 +69,7 @@ public:
     int         reconnectTimeout;
 
 private:
-    int      maxCallsCount_;
+    unsigned maxCallsCount_;
     unsigned clients_;
 
     // smsc::core::network::Socket sock;
@@ -139,7 +139,7 @@ void PersClient::Init( const char *_host,
                        int _timeout,
                        int _pingTimeout,
                        int _reconnectTimeout,
-                       int _maxCallsCount,
+                       unsigned _maxCallsCount,
                        unsigned clients ) //throw(PersClientException)
 {
     if (!inited)
@@ -207,7 +207,7 @@ void PersClientImpl::Stop()
 }
 
 
-void PersClientImpl::init( const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount, unsigned clients )
+void PersClientImpl::init( const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, unsigned _maxCallsCount, unsigned clients )
 {
     smsc_log_info( log_, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d reconnectTimeout=%d maxWaitingRequestsCount=%d connections=%d",
                    _host, _port, _timeout, _pingTimeout, _reconnectTimeout, _maxCallsCount,
@@ -363,7 +363,7 @@ int PersClientTask::Execute()
         smsc_log_debug(log_, "ExecutePersCall: command=%d %s/%d", ctx->callCommandId, p->getStringKey(), p->getIntKey() );
         try {
             if ( p->error == 0 ) {
-                SerialBuffer& b = p->proxy().buffer();
+                SerialBuffer& b = p->buffer();
                 sendPacket( b );
                 readPacket( b );
             }
