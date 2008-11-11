@@ -305,7 +305,7 @@ public class QuizBuilder {
   String getTimeSeparator() {
     return timeSeparator;
   }
-
+  
   public AbstractDynamicMBean getMonitor() {
     return monitor;
   }

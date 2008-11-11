@@ -39,9 +39,8 @@ public class ReplySMPPService extends BasicService {
       smppRequest.getInObj().respond(Data.ESME_ROK);
       if (result != null) {
         Result.ReplyRull replyRull = result.getReplyRull();
-        if ((replyRull.equals(Result.ReplyRull.OK)) || (replyRull.equals(Result.ReplyRull.REPEAT))) {
+        if (replyRull.equals(Result.ReplyRull.OK)) {
           Message respMsg = new Message();
-
           respMsg.setSourceAddress(result.getSourceAddress());
           respMsg.setDestinationAddress(oa);
           respMsg.setMessageString(result.getText());

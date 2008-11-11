@@ -83,7 +83,9 @@ public class Main {
         }
       });
       //scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 6000, TimeUnit.SECONDS);
-      scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 1500, TimeUnit.SECONDS);
+      if((args!=null)&&(args.length>0)) {
+        scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 1500, TimeUnit.SECONDS);
+      }
       //new QuizCreator().run();
       //todo remove
 

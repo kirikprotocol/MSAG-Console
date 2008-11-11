@@ -55,6 +55,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
   private String codeOk;
   private final static String STATUS_COMMAND = "infosme distr status";
   private final static String CREATE_COMMAND = "infosme distr create";
+  private final static String RESEND_COMMAND = "infosme distr resend";
 
   public DistributionInfoSmeManager(final String configFile) throws DistributionException {
 
@@ -172,6 +173,29 @@ public class DistributionInfoSmeManager implements DistributionManager {
     }
     consoleClient.shutdown();
     logger.info("DistributionManager shutdowned");
+  }
+
+  public void resend (String msisdn, String taskId) throws DistributionException{
+    if((msisdn==null)||(taskId==null)) {
+      logger.error("Some arguments are null");
+      throw new DistributionException("Some arguments are null", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
+    }
+    StringBuilder builder = new StringBuilder();
+    builder.append(RESEND_COMMAND).append(getFormatProp(taskId)).append(getFormatProp(msisdn));
+    String command = builder.toString();
+    if (logger.isInfoEnabled()) {
+      logger.info("Sending console command: " + command);
+    }
+    try {
+      SmscConsoleResponse response = consoleClient.sendCommand(command);
+      if ((response == null) || (!response.isSuccess()) || (!response.getStatus().trim().equals(codeOk))) {
+        throw new SmscConsoleException("Wrong response");
+      }
+    } catch (SmscConsoleException e) {
+      logger.error("Can't send command",e);
+      throw new DistributionException("Can't send command", e);
+    }
+
   }
 
   public String repairStatus(String id, String errorFile, Runnable task, Distribution distribution) throws DistributionException {

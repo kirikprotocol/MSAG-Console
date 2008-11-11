@@ -13,6 +13,8 @@ public interface DistributionManager {
 
   public String repairStatus(String id, String errorFile, Runnable task, Distribution distribution) throws DistributionException;
 
+  public void resend (String msisdn, String taskId) throws DistributionException;
+
   public AbstractDynamicMBean getMonitor();
 
   public void shutdown();

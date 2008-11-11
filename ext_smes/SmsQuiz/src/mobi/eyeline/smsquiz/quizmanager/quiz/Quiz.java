@@ -118,7 +118,15 @@ public class Quiz {
       logger.error("Can't add reply", e);
       throw new QuizException("Can't add reply", e);
     }
-
+    if(result.getReplyRull().equals(Result.ReplyRull.REPEAT)) {
+      try {
+        distributionManager.resend(oa, status.getId());
+      } catch (DistributionException e) {
+        e.printStackTrace();
+        logger.error("Can't resend the message", e);
+        throw new QuizException("Can't resend the message", e);
+      }
+    }
     return result;
 
   }
@@ -306,10 +314,7 @@ public class Quiz {
   }
 
   public boolean isActive() {
-    System.out.println("Datebegin: "+ dateBegin);
-    System.out.println("DateEnd: "+ dateEnd);
     Date now = new Date();
-    System.out.println("DateNow: "+ now);
     return now.after(dateBegin)&&now.before(dateEnd);
   }
 
