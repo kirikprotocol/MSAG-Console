@@ -113,6 +113,7 @@ protected:
 private:
     PersClientImpl*             pers_;
     smsc::logger::Logger*       log_;
+    smsc::logger::Logger*       logd_;
     smsc::core::network::Socket sock;
     bool                        connected_;
     time_t                      actTS_;
@@ -162,11 +163,18 @@ void PersClient::Init( const config::PersClientConfig& cfg )
 // =========================================================================
 PersClientImpl::PersClientImpl() :
 config::ConfigListener(config::PERSCLIENT_CFG),
-callsCount_(0),
+port(0),
+timeout(10),
+pingTimeout(100),
+reconnectTimeout(10),
+maxCallsCount_(1000),
+clients_(0),
 isStopping(true),
 log_(0),
-connected_(0),
-clients_(0)
+headContext_(0),
+tailContext_(0),
+callsCount_(0),
+connected_(0)
 {
     log_ = smsc::logger::Logger::getInstance("persclient");
 }
@@ -310,10 +318,12 @@ int PersClientImpl::getClientStatus()
 PersClientTask::PersClientTask( PersClientImpl* pers ) :
 pers_(pers),
 log_(0),
+logd_(0),
 connected_(false),
-actTS_(0)
+actTS_(time(0))
 {
     log_ = smsc::logger::Logger::getInstance("perstask");
+    logd_ = smsc::logger::Logger::getInstance("pers.dump");
 }
 
 
@@ -458,7 +468,7 @@ void PersClientTask::sendPacket( SerialBuffer& bsb )
         try{
             this->connect();
             writeAllTo( bsb.c_ptr(), bsb.length() );
-            smsc_log_debug( log_, "write to socket: len=%d, data=%s", bsb.length(), bsb.toString().c_str() );
+            smsc_log_debug( logd_, "write to socket: len=%d, data=%s", bsb.length(), bsb.toString().c_str() );
             return;
         }
         catch ( PersClientException &e )
@@ -482,7 +492,7 @@ void PersClientTask::readPacket( SerialBuffer& bsb )
     bsb.Append(tmp_buf, static_cast<uint32_t>(sizeof(uint32_t)));
     bsb.SetPos(0);
     uint32_t sz = bsb.ReadInt32() - static_cast<uint32_t>(sizeof(uint32_t));
-    smsc_log_debug(log_, "%d bytes will be read from socket", sz);
+    smsc_log_debug(logd_, "%d bytes will be read from socket", sz);
 
     while (sz > 0)
     {
@@ -491,7 +501,7 @@ void PersClientTask::readPacket( SerialBuffer& bsb )
         bsb.Append(tmp_buf, minsz);
         sz -= minsz;
     }
-    smsc_log_debug(log_, "read from socket: len=%d, data=%s", bsb.length(), bsb.toString().c_str());
+    smsc_log_debug(logd_, "read from socket: len=%d, data=%s", bsb.length(), bsb.toString().c_str());
     sz = bsb.ReadInt32();
 }
 
