@@ -8,61 +8,82 @@ using smsc::core::synchronization::MutexGuard;
 const size_t MAX_PACKET_SIZE = 100000;
 
 ConnectionContext::ConnectionContext(Socket* sock, WriterTaskManager& writerManager, ReaderTaskManager& readerManager)
-                   :socket_(sock), action_(READ_REQUEST), packetLen_(0), packet_(NULL), writerManager_(writerManager), 
-                    readerManager_(readerManager), tasksCount(1)
+                   :socket_(sock), action_(READ_REQUEST), packetLen_(0), writerManager_(writerManager), 
+                    readerManager_(readerManager), tasksCount_(1), asynch_(false), sequenceNumber_(0), packetsCount_(0)
 {
   if (socket_) {
     SocketData::setContext(socket_, this);
   }
   logger_ = Logger::getInstance("context");
-}
+  memset(respBuf_, 0, RESP_BUF_SIZE);
+} 
 
 ConnectionContext::~ConnectionContext() {
   if (socket_) {
     delete socket_;
-  }
-  if (packet_) {
-    delete packet_;
   }
 }
 
 void ConnectionContext::createFakeResponse(PersServerResponseType response) {
   smsc_log_debug(logger_, "%p: Create Fake response %d", this, response);
   action_ = SEND_RESPONSE;
-  writeData(reinterpret_cast<const char*>(&response), static_cast<uint32_t>(sizeof(uint8_t)));
+  if (asynch_) {
+    memset(respBuf_, 0, RESP_BUF_SIZE);
+    respBuf_[0] = response;
+    memcpy(respBuf_ + 1, &sequenceNumber_, sizeof(uint32_t));
+    writeData(respBuf_, RESP_BUF_SIZE);
+  } else {
+    char resp = response;
+    writeData(&resp, static_cast<uint32_t>(sizeof(uint8_t)));
+  }
 }
 
 bool ConnectionContext::notSupport(PersCmd cmd) {
   return (cmd > scag::pers::util::PC_MTBATCH || cmd == scag::pers::util::PC_BATCH
-          || cmd == scag::pers::util::PC_TRANSACT_BATCH) ? true : false;
+          || cmd == scag::pers::util::PC_TRANSACT_BATCH || cmd == scag::pers::util::PC_UNKNOWN) ? true : false;
 }
 
-bool ConnectionContext::parsePacket() {
+PersPacket* ConnectionContext::parsePacket() {
   PersServerResponseType response = scag::pers::util::RESPONSE_BAD_REQUEST;
   try {
+    sequenceNumber_ = 0;
+    if (asynch_) {
+      sequenceNumber_ = inbuf_.ReadInt32();
+    }
+    smsc_log_debug(logger_, "sequence number %d", sequenceNumber_);
     PersCmd cmd = (PersCmd)inbuf_.ReadInt8();
+    if (cmd == scag::pers::util::PC_BIND_ASYNCH) {
+      smsc_log_debug(logger_, "Asynch Bind received");
+      if (asynch_) {
+        createFakeResponse(scag::pers::util::RESPONSE_ERROR);
+      } else {
+        createFakeResponse(scag::pers::util::RESPONSE_OK);
+        asynch_ = true;
+      }
+      return NULL;
+    }
+    smsc_log_debug(logger_, "Command %d received", cmd);
     if (cmd == scag::pers::util::PC_PING) {
       smsc_log_debug(logger_, "Ping received");
       createFakeResponse(scag::pers::util::RESPONSE_OK);
-      return false;
+      return NULL;
     }
     if (notSupport(cmd)) {
       createFakeResponse(scag::pers::util::RESPONSE_NOTSUPPORT);
-      return false;
+      return NULL;
     }
-    if (packet_) {
-      delete packet_;
-    }
+    std::auto_ptr<PersPacket> packet;
     if (cmd == scag::pers::util::PC_MTBATCH) {
       smsc_log_debug(logger_, "Batch received");
-      packet_ = new BatchPacket(this);
+      packet.reset( new BatchPacket(this, asynch_, sequenceNumber_) );
     } else {
-      smsc_log_debug(logger_, "Command %d received", cmd);
-      packet_ = new CommandPacket(this, cmd);
+      //smsc_log_debug(logger_, "Command %d received", cmd);
+      packet.reset( new CommandPacket(this, cmd, asynch_, sequenceNumber_) );
     }
-    packet_->deserialize(inbuf_);
+    packet->deserialize(inbuf_);
+    ++packetsCount_;
     action_ = PROCESS_REQUEST;
-    return true;
+    return packet.release();
   } catch(const SerialBufferOutOfBounds& e) {
     smsc_log_warn(logger_, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s",
                    inbuf_.length(), inbuf_.toString().c_str());
@@ -75,26 +96,35 @@ bool ConnectionContext::parsePacket() {
     response = scag::pers::util::RESPONSE_NOTSUPPORT;
   }
   createFakeResponse(response);
-  return false;
+  return NULL;
 }
 
 void ConnectionContext::sendFakeResponse() {
   if (writerManager_.process(this)) {
-    ++tasksCount;
+    ++tasksCount_;
   }
 }
 
-void ConnectionContext::sendResponse() {
+void ConnectionContext::sendResponse(const char* data, uint32_t dataSize, uint32_t sequenceNumber) {
   {
     MutexGuard mg(mutex_);
     action_ = SEND_RESPONSE;
-    writeData(packet_->getResponseData(), packet_->getResponseSize());
+    bool inprocess = outbuf_.GetSize() == 0 ? false : true;
+    writeData(data, dataSize);
+    --packetsCount_;
+    if (tasksCount_ >= 2) {
+      smsc_log_debug(logger_, "cx:%p socket %p error tasksCounr=%d", this, socket_, tasksCount_);
+    }
+    if (inprocess) {
+      smsc_log_debug(logger_, "cx:%p socket %p already in multiplexer", this, socket_);
+      return;
+    }
+    ++tasksCount_;
   }
-  bool canProcess = writerManager_.process(this);
-  if (!canProcess) {
+  if (!writerManager_.process(this)) {
     //TODO: error, response must be processed
     MutexGuard mg(mutex_);
-    --tasksCount;
+    --tasksCount_;
   }
 }
 
@@ -109,10 +139,10 @@ void ConnectionContext::writeData(const char* data, uint32_t size) {
 
 
 bool ConnectionContext::processReadSocket() {
-  bool parseResult = false;
+  PersPacket* packet = NULL;
   {
     MutexGuard mg(mutex_);
-    if (action_ != READ_REQUEST) {
+    if (!asynch_ && action_ != READ_REQUEST) {
       smsc_log_warn(logger_, "cx:%p socket %p error action=%d, must be READ_REQUEST", this, socket_, action_);
       return false;
     }
@@ -157,27 +187,32 @@ bool ConnectionContext::processReadSocket() {
     }
     smsc_log_debug(logger_, "read from socket:%p len=%d, data=%s", socket_, sb.length(), sb.toString().c_str());
     inbuf_.SetPos(PACKET_LENGTH_SIZE);
-    parseResult = parsePacket();
-    ++tasksCount;
+    packet = parsePacket();
+    if (!packet) {
+      ++tasksCount_;
+    }
     inbuf_.Empty();
+    packetLen_ = 0;
   }
   //
-  if (!parseResult) {
+  if (!packet) {
     if (!writerManager_.process(this)) {
       MutexGuard mg(mutex_);
-      --tasksCount;
+      --tasksCount_;
       //ERROR!!!
     }
     return true;
   }
-  if (!readerManager_.processPacket(packet_)) {
+  if (!readerManager_.processPacket(packet)) {
     {
       MutexGuard mg(mutex_);
+      --packetsCount_;
       createFakeResponse(scag::pers::util::RESPONSE_ERROR);
+      ++tasksCount_;
     }
     if (!writerManager_.process(this)) {
       MutexGuard mg(mutex_);
-      --tasksCount;
+      --tasksCount_;
       //ERROR!!!
     }
   }
@@ -203,6 +238,7 @@ bool ConnectionContext::processWriteSocket() {
     SocketData::updateTimestamp(socket_, time(NULL));
   } else {
     smsc_log_warn(logger_, "Error: %s(%d)", strerror(errno), errno);
+    outbuf_.Empty();
     return false;
   }
   if (sb.GetPos() >= len) {
@@ -220,7 +256,7 @@ Socket* ConnectionContext::getSocket() {
 
 bool ConnectionContext::canFinalize() {
   MutexGuard mg(mutex_);
-  return --tasksCount > 0 ? false : true;
+  return (--tasksCount_ > 0 || packetsCount_ > 0) ? false : true;
 }
 
 }

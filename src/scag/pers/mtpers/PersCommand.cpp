@@ -18,19 +18,19 @@ void PersPacket::deserialize(SerialBuffer& sb) {
 
 void CommandPacket::deserialize(SerialBuffer& sb) {
   PersPacket::deserialize(sb);
-  createProfile = command.deserialize(sb);
+  createProfile = command_.deserialize(sb);
 }
 
 void BatchPacket::deserialize(SerialBuffer& sb) {
   PersPacket::deserialize(sb);
-  count = sb.ReadInt16();
-  transact = (bool)sb.ReadInt8();
+  count_ = sb.ReadInt16();
+  transact_ = (bool)sb.ReadInt8();
   createProfile = false;
-  for (int i = 0; i < count; ++i) {
+  for (int i = 0; i < count_; ++i) {
     PersCmd cmdId = (PersCmd)sb.ReadInt8();
-    PersCommand command(cmdId, dblogs);
+    PersCommand command(cmdId, dblogs_);
     createProfile = command.deserialize(sb) || createProfile;
-    batch.push_back(command);
+    batch_.push_back(command);
   }
 }
 
@@ -208,37 +208,49 @@ void PersCommand::createExpireLogMsg(string const& key, string const& msg) {
 
 void PersPacket::flushLogs(Logger* log) const {
   smsc_log_debug(log, "flush logs");
-  for (vector<string>::const_iterator i = dblogs.begin(); i != dblogs.end(); ++i) {
+  for (vector<string>::const_iterator i = dblogs_.begin(); i != dblogs_.end(); ++i) {
     smsc_log_info(log, "%s", (*i).c_str());
   }
 }
 
+PersPacket::PersPacket(Connection* connect, bool async, uint32_t sequenseNumber):createProfile(false), rollback(false), connection_(connect),
+                                                                                 asynch_(async), sequenseNumber_(sequenseNumber)
+{
+  if (asynch_) {
+    response_.WriteInt32(sequenseNumber_);
+  }
+}
+
+
 void PersPacket::createResponse(PersServerResponseType resp) {
-  response.Empty();
-  response.WriteInt8(resp);
+  response_.Empty();
+  if (asynch_) {
+    response_.WriteInt32(sequenseNumber_);
+  }
+  response_.WriteInt8(resp);
 }
 
 void PersPacket::sendResponse() {
-  connection->sendResponse();
+  connection_->sendResponse(response_.c_ptr(), response_.GetSize(), sequenseNumber_);
 }
 
 void CommandPacket::execCommand(Profile *pf) {
-  dblogs.clear();
+  dblogs_.clear();
   pf->setChanged(false);
-  command.execute(pf, response);
+  command_.execute(pf, response_);
 }
 
 void BatchPacket::execCommand(Profile *pf) {
-  dblogs.clear();
+  dblogs_.clear();
   pf->setChanged(false);
-  if (!transact) {
-    for (int i = 0; i < count; ++i) {
-      batch[i].execute(pf, response);
+  if (!transact_) {
+    for (int i = 0; i < count_; ++i) {
+      batch_[i].execute(pf, response_);
     }
     return;
   }
-  for (int i = 0; i < count; ++i) {
-    Response resp = batch[i].execute(pf, response);
+  for (int i = 0; i < count_; ++i) {
+    Response resp = batch_[i].execute(pf, response_);
     if (resp != scag::pers::util::RESPONSE_OK) {
       pf->setChanged(false);
       rollback = true;

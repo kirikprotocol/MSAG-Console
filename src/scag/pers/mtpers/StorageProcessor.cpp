@@ -85,6 +85,7 @@ int StorageProcessor::Execute() {
         (*i)->createResponse(scag::pers::util::RESPONSE_ERROR);
       }
       (*i)->sendResponse();
+      delete *i;
     }
     process.clear();
   }

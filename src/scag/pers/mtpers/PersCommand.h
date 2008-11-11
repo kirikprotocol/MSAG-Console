@@ -63,7 +63,7 @@ private:
 };
 
 struct PersPacket {
-  PersPacket(Connection* connect):createProfile(false), rollback(false), connection(connect) {};
+  PersPacket(Connection* connect, bool async, uint32_t sequenseNumber);
   virtual ~PersPacket() {};
   virtual void deserialize(SerialBuffer& sb);
   bool notAbonentsProfile() const { return profileType != scag::pers::util::PT_ABONENT; };
@@ -71,8 +71,9 @@ struct PersPacket {
   void flushLogs(Logger* log) const;
   void createResponse(PersServerResponseType resp);
   void sendResponse();
-  uint32_t getResponseSize() const { return response.GetSize(); };
-  const char* getResponseData() const { return response.c_ptr(); };
+  //uint32_t getResponseSize() const { return response_.GetSize(); };
+  //const char* getResponseData() const { return response_.c_ptr(); };
+  uint32_t getSequenceNumber() const { return sequenseNumber_; }
 
   ProfileType profileType;
   uint32_t intKey;
@@ -81,29 +82,34 @@ struct PersPacket {
   bool createProfile;
   bool rollback;
 protected:
-  vector<string> dblogs;
-  Connection* connection;
-  SerialBuffer response;
+  vector<string> dblogs_;
+  Connection* connection_;
+  SerialBuffer response_;
+private:
+  uint32_t sequenseNumber_;
+  bool asynch_;
 };
 
 struct CommandPacket: public PersPacket {
-  CommandPacket(Connection* connect, PersCmd cmdId):PersPacket(connect), command(cmdId, dblogs)  {};
+  CommandPacket(Connection* connect, PersCmd cmdId, bool async, uint32_t sequenseNumber)
+                :PersPacket(connect, async, sequenseNumber), command_(cmdId, dblogs_)  {};
   ~CommandPacket(){};
   void deserialize(SerialBuffer &sb);
   void execCommand(Profile *pf);
-
-  PersCommand command;
+private:
+  PersCommand command_;
 };
 
 struct BatchPacket: public PersPacket {
-  BatchPacket(Connection* connect):PersPacket(connect), count(0), transact(false) {};
+  BatchPacket(Connection* connect, bool async, uint32_t sequenseNumber)
+              :PersPacket(connect, async, sequenseNumber), count_(0), transact_(false) {};
   ~BatchPacket(){};
   void deserialize(SerialBuffer &sb);
   void execCommand(Profile *pf);
-
-  uint16_t count;
-  bool transact;
-  vector<PersCommand> batch;
+private:
+  uint16_t count_;
+  bool transact_;
+  vector<PersCommand> batch_;
 };
 
 }//mtpers

@@ -22,6 +22,7 @@ using scag::util::storage::SerialBufferOutOfBounds;
 using smsc::core::synchronization::Mutex;
 
 const uint32_t READ_BUF_SIZE = 1024;
+const uint32_t RESP_BUF_SIZE = 5;
 
 enum SocketState {
   READ_SOCKET,
@@ -70,7 +71,7 @@ struct ConnectionContext : public Connection {
 public:
   ConnectionContext(Socket* sock, WriterTaskManager& writerManager, ReaderTaskManager& readerManager);
   ~ConnectionContext();
-  void sendResponse();
+  void sendResponse(const char* data, uint32_t dataSize, uint32_t sequenceNumber);
   bool processReadSocket();
   bool processWriteSocket();
   bool canFinalize();
@@ -80,13 +81,12 @@ private:
   bool notSupport(PersCmd cmd);
   void writeData(const char* data, uint32_t size);
   void createFakeResponse(PersServerResponseType response);
-  bool parsePacket();
+  PersPacket* parsePacket();
   void sendFakeResponse();
 
 private:
   SerialBuffer inbuf_;
   SerialBuffer outbuf_;
-  PersPacket* packet_;
   uint32_t packetLen_;
   WriterTaskManager& writerManager_;
   ReaderTaskManager& readerManager_;
@@ -94,7 +94,11 @@ private:
   Action action_;
   Mutex mutex_;
   Socket* socket_;
-  uint8_t tasksCount;
+  uint8_t tasksCount_;
+  uint32_t packetsCount_;
+  bool asynch_;
+  uint32_t sequenceNumber_;
+  char respBuf_[RESP_BUF_SIZE];
   char readBuf_[READ_BUF_SIZE];
 };
 

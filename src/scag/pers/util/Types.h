@@ -26,7 +26,8 @@ enum PersCmd{
     PC_BATCH,
     PC_TRANSACT_BATCH,
     PC_INC_RESULT,
-    PC_MTBATCH
+    PC_MTBATCH,
+    PC_BIND_ASYNCH
 };
 
 namespace CentralPersCmd{
