@@ -360,7 +360,7 @@ int PersClientTask::Execute()
         } catch ( PersClientException& e ) {
             p->error = e.getType();
             p->exception = e.what();
-        } catch ( Exception& e ) {
+        } catch ( std::exception& e ) {
             p->error = -1;
             p->exception = e.what();
         } catch (...) {

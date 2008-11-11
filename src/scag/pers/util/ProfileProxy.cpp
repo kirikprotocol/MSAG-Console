@@ -38,6 +38,7 @@ void PropertyProxyBase::setStatus( re::actions::ActionContext& context,
     while (msgProp) {
         const char* m = "Ok";
         if (status != 0) {
+            if ( status < 0 ) status = 0;
             m = pers::util::strs[status];
             if (actionIdx > 0) {
                 std::string msg = m;
