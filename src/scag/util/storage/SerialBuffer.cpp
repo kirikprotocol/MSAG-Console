@@ -32,7 +32,7 @@ void bufdump( std::string& out, const char* inbuf, unsigned insize )
     out.reserve( out.size() + insize*digitlen + 10 );
     const char* digits = digitstring().c_str();
     for ( ; insize-- > 0; ++inbuf ) {
-        out.append( digits + ((*inbuf)*digitlen), digitlen );
+        out.append( digits + (static_cast<unsigned char>(*inbuf)*digitlen), digitlen );
     }
 }
 
