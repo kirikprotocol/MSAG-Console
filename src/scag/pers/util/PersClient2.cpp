@@ -69,7 +69,7 @@ public:
     int         reconnectTimeout;
 
 private:
-    int      maxCallsCount;
+    int      maxCallsCount_;
     unsigned clients_;
 
     // smsc::core::network::Socket sock;
@@ -219,7 +219,7 @@ void PersClientImpl::init( const char *_host, int _port, int _timeout, int _ping
     timeout = _timeout;
     pingTimeout = _pingTimeout;
     reconnectTimeout = _reconnectTimeout;
-    maxCallsCount = _maxCallsCount;
+    maxCallsCount_ = _maxCallsCount;
     clients_ = clients;
     for ( unsigned i = 0; i < clients_; ++i ) {
         tp_.startTask( new PersClientTask(this) );
@@ -290,7 +290,7 @@ bool PersClientImpl::call( lcm::LongCallContextBase* ctx )
     if ( isStopping || !connected_ || !ctx ) return false;
     MutexGuard mg(queueMonitor_);
     if ( isStopping || !connected_ ) return false;
-    if ( callsCount_ >= maxCallsCount ) return false;
+    if ( callsCount_ >= maxCallsCount_ ) return false;
 
     ctx->next = 0;
     if ( headContext_ )
@@ -308,7 +308,7 @@ int PersClientImpl::getClientStatus()
 {
     if ( ! connected_ ) return NOT_CONNECTED;
     MutexGuard mg(queueMonitor_);
-    if ( callsCount_ >= maxCallsCount ) return CLIENT_BUSY;
+    if ( callsCount_ >= maxCallsCount_ ) return CLIENT_BUSY;
     return 0;
 }
 
