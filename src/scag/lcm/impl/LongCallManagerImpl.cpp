@@ -90,7 +90,9 @@ LongCallContextBase* LongCallManagerImpl::getContext()
     if(stopped) return NULL;
     if(!headContext) mtx.wait();
     LongCallContextBase *ctx = headContext;    
-    if(headContext) headContext = headContext->next;
+    if (headContext) {
+        headContext = headContext->next;
+    }
     return ctx;        
 }
 

@@ -228,11 +228,16 @@ public:
   {
     {
         smsc::core::synchronization::MutexGuard mg(queueMon);
-        if(!running) return;
+        if(!running) {
+            queueMon.notifyAll();
+            return;
+        }
         running=false;
         queueMon.notifyAll();
     }
     smsc_log_debug(log, "SmppManager shutting down");
+    Thread::Yield();
+    // tp.stopNotify();
     tp.shutdown(0);
     sm.shutdown();
     smsc_log_debug(log, "SmppManager shutdown");
