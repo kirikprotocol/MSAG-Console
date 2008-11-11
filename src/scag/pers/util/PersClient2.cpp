@@ -373,6 +373,7 @@ int PersClientTask::Execute()
     }
     this->disconnect();
     smsc_log_debug( log_, "perstask finished" );
+    return 0;
 }
 
 
