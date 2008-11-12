@@ -368,9 +368,11 @@ int PersClientTask::Execute()
                 readPacket( b );
             }
         } catch ( PersClientException& e ) {
+            smsc_log_warn( log_, "execute failed: pers exc=%s", e.what() );
             p->error = e.getType();
             p->exception = e.what();
         } catch ( std::exception& e ) {
+            smsc_log_warn( log_, "execute failed: exc=%s", e.what() );
             p->error = -1;
             p->exception = e.what();
         } catch (...) {
@@ -408,7 +410,7 @@ void PersClientTask::ping()
         actTS_ = now;
         smsc_log_debug( log_, "ping sent");
     } catch ( PersClientException& e ) {
-        smsc_log_error( log_, "ping failed: %s", e.what() );
+        smsc_log_warn( log_, "ping failed: %s", e.what() );
         this->disconnect();
         // it will try to connect later
     } catch (...) {

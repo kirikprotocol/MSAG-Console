@@ -123,7 +123,7 @@ int PersCallParams::fillSB( re::actions::ActionContext& ctx, SerialBuffer& sb )
     assert( single_ || batch_ );
     // fill the header
     sb.Empty();
-    sb.setPos(4);
+    sb.WriteInt32(0);
     const PersCmd cmd = cmdType();
     sb.WriteInt8( uint8_t(cmd) );
     sb.WriteInt8( uint8_t(proxy_.getType()) );
