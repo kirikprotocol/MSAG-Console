@@ -45,7 +45,7 @@ namespace storage {
 std::string SerialBuffer::toString()
 {
     std::string str;
-    bufdump( str, c_ptr(), GetPos() );
+    bufdump( str, c_ptr(), length() );
     return str;
 }
 
