@@ -79,12 +79,13 @@ class PrintString : public Print
 public:
     PrintString( char* buf, size_t sz ) : Print(buf), buf_(buf), sz_(sz) {}
 
-    virtual void printva( const char* fmt, va_list args ) throw () {
-        vsnprintf(buf_, sz_, fmt, args );
-    }
-
     const char* buf() const {
         return buf_;
+    }
+
+protected:
+    virtual void printva( const char* fmt, va_list args ) throw () {
+        vsnprintf(buf_, sz_, fmt, args );
     }
 
 private:
