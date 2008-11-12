@@ -37,7 +37,7 @@ public class QuizFullData {
 
   private String maxRepeat;
 
-  private String defaultCategory="";
+  private String defaultCategory = "";
 
   private List categories = new LinkedList();
 
@@ -99,8 +99,8 @@ public class QuizFullData {
   }
 
   public void addActiveDay(String day) {
-    if((day!=null)&&(!day.equals(""))) {
-      if(activeDays==null) {
+    if ((day != null) && (!day.equals(""))) {
+      if (activeDays == null) {
         activeDays = new LinkedList();
       }
       activeDays.add(day);
@@ -148,13 +148,13 @@ public class QuizFullData {
   }
 
   public void addCategory(AnswerCategory cat) {
-    if(cat!=null) {
+    if (cat != null) {
       categories.add(cat);
     }
   }
 
   public void setCategory(List cat) {
-    if(cat!=null) {
+    if (cat != null) {
       categories = new LinkedList(cat);
     }
   }

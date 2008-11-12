@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz.quizes.view;
+package mobi.eyeline.smsquiz;
 
 import java.util.Date;
 

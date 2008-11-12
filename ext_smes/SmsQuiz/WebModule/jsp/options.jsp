@@ -1,12 +1,17 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="java.util.*, ru.novosoft.smsc.util.Functions,
                  java.text.SimpleDateFormat"%>
+<%@ page import="mobi.eyeline.smsquiz.beans.Options"%>
 <jsp:useBean id="bean" scope="page" class="mobi.eyeline.smsquiz.beans.Options" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-   ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
-	 TITLE = getLocString("smsquiz.title");
-   int beanResult = bean.process(request);
+  ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
+  TITLE = getLocString("smsquiz.title");
+  int beanResult = bean.process(request);
+  if(beanResult == Options.RESULT_SAVED) {
+    session.setAttribute("message_to_restart","restart");
+    beanResult = Options.RESULT_DONE;
+  }
 %>
 <%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
@@ -19,157 +24,157 @@
 <col width="99%">
 <% int rowN = 0;%>
 <tr>
-  <th align="center" colspan="2"><div class=page_subtitle>DB</div></th>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.db")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>DB User</th>
+  <th><%=getLocString("smsquiz.label.dbuser")%></th>
   <td><input class=txt name=dbUser value="<%=StringEncoderDecoder.encode(bean.getDbUser())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>DB Password</th>
+  <th><%=getLocString("smsquiz.label.dbpassword")%></th>
   <td><input class=txt name=dbPassword value="<%=StringEncoderDecoder.encode(bean.getDbPassword())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>DB Source</th>
-  <td><input class=txt name=dbSource value="<%=StringEncoderDecoder.encode(bean.getDbSource())%>"></td>
+  <th><%=getLocString("smsquiz.label.dbsource")%></th>
+  <td><input class=txt validation="nonEmpty" name=dbSource value="<%=StringEncoderDecoder.encode(bean.getDbSource())%>"></td>
 </tr>
 <tr>
-  <th align="center" colspan="2"><div class=page_subtitle>Reply statistics</div></th>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.reply")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Replies directory name</th>
-  <td><input class=txt name=replyDirName value="<%=StringEncoderDecoder.encode(bean.getReplyDirName())%>"></td>
+  <th><%=getLocString("smsquiz.label.replydir")%></th>
+  <td><input class=txt validation="nonEmpty" name=replyDirName value="<%=StringEncoderDecoder.encode(bean.getReplyDirName())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Files collector start delay</th>
-  <td><input class=txt name=fileCollectorDelay value="<%=StringEncoderDecoder.encode(bean.getFileCollectorDelay())%>"></td>
+  <th><%=getLocString("smsquiz.label.filecoll.start_delay")%></th>
+  <td><input class=txt validation="positive" name=fileCollectorDelay value="<%=StringEncoderDecoder.encode(bean.getFileCollectorDelay())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Files collector's period</th>
-  <td><input class=txt name=fileCollectorPeriod value="<%=StringEncoderDecoder.encode(bean.getFileCollectorPeriod())%>"></td>
+  <th><%=getLocString("smsquiz.label.filecoll.period")%></th>
+  <td><input class=txt validation="positive" name=fileCollectorPeriod value="<%=StringEncoderDecoder.encode(bean.getFileCollectorPeriod())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Files opened limit</th>
-  <td><input class=txt name=fileOpenedLimit value="<%=StringEncoderDecoder.encode(bean.getFileOpenedLimit())%>"></td>
+  <th><%=getLocString("smsquiz.label.files_open_limit")%></th>
+  <td><input class=txt validation="positive" name=fileOpenedLimit value="<%=StringEncoderDecoder.encode(bean.getFileOpenedLimit())%>"></td>
 </tr>
 <tr>
-  <th align="center" colspan="2"><div class=page_subtitle>Distribution</div></th>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.distribution")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Console's host</th>
-  <td><input class=txt name=consoleHost value="<%=StringEncoderDecoder.encode(bean.getConsoleHost())%>"></td>
+  <th><%=getLocString("smsquiz.label.console.host")%></th>
+  <td><input class=txt validation="nonEmpty" name=consoleHost value="<%=StringEncoderDecoder.encode(bean.getConsoleHost())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Console's port</th>
-  <td><input class=txt name=consolePort value="<%=StringEncoderDecoder.encode(bean.getConsolePort())%>"></td>
+  <th><%=getLocString("smsquiz.label.console.port")%></th>
+  <td><input class=txt validation="port" name=consolePort value="<%=StringEncoderDecoder.encode(bean.getConsolePort())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Console's user</th>
+  <th><%=getLocString("smsquiz.label.console.user")%></th>
   <td><input class=txt name=consoleUser value="<%=StringEncoderDecoder.encode(bean.getConsoleUser())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Console's password</th>
+  <th><%=getLocString("smsquiz.label.console.password")%></th>
   <td><input class=txt name=consolePasssword value="<%=StringEncoderDecoder.encode(bean.getConsolePasssword())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Console's success code</th>
-  <td><input class=txt name=codeOk value="<%=StringEncoderDecoder.encode(bean.getCodeOk())%>"></td>
+  <th><%=getLocString("smsquiz.label.console.succ_code")%></th>
+  <td><input class=txt validation="nonEmpty" name=codeOk value="<%=StringEncoderDecoder.encode(bean.getCodeOk())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Console's connection timeout</th>
-  <td><input class=txt name=connectTimeout value="<%=StringEncoderDecoder.encode(bean.getConnectTimeout())%>"></td>
+  <th><%=getLocString("smsquiz.label.console.conn.timeout")%></th>
+  <td><input class=txt validation="positive" name=connectTimeout value="<%=StringEncoderDecoder.encode(bean.getConnectTimeout())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Console's closer period</th>
-  <td><input class=txt name=connectCloserPeriod value="<%=StringEncoderDecoder.encode(bean.getConnectCloserPeriod())%>"></td>
+  <th><%=getLocString("smsquiz.label.console.conn.close")%></th>
+  <td><input class=txt validation="positive" name=connectCloserPeriod value="<%=StringEncoderDecoder.encode(bean.getConnectCloserPeriod())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>InfoSme's success delivery</th>
-  <td><input class=txt name=infoSmeSuccDeliveryStat value="<%=StringEncoderDecoder.encode(bean.getInfoSmeSuccDeliveryStat())%>"></td>
+  <th><%=getLocString("smsquiz.label.infosme.succ_delivery")%></th>
+  <td><input class=txt validation="nonEmpty" name=infoSmeSuccDeliveryStat value="<%=StringEncoderDecoder.encode(bean.getInfoSmeSuccDeliveryStat())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>InfoSme's stats dir</th>
-  <td><input class=txt name=infoSmeStatsDir value="<%=StringEncoderDecoder.encode(bean.getInfoSmeStatsDir())%>"></td>
+  <th><%=getLocString("smsquiz.label.infosme.stats_dir")%></th>
+  <td><input class=txt validation="nonEmpty" name=infoSmeStatsDir value="<%=StringEncoderDecoder.encode(bean.getInfoSmeStatsDir())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>InfoSme's status checker's delay</th>
-  <td><input class=txt name=statusCheckerDelay value="<%=StringEncoderDecoder.encode(bean.getStatusCheckerDelay())%>"></td>
+  <th><%=getLocString("smsquiz.label.infosme.checker.start_delay")%></th>
+  <td><input class=txt validation="positive" name=statusCheckerDelay value="<%=StringEncoderDecoder.encode(bean.getStatusCheckerDelay())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>InfoSme's status checker's period</th>
-  <td><input class=txt name=statusCheckerPeriod value="<%=StringEncoderDecoder.encode(bean.getStatusCheckerPeriod())%>"></td>
+  <th><%=getLocString("smsquiz.label.infosme.checker.period")%></th>
+  <td><input class=txt validation="positive" name=statusCheckerPeriod value="<%=StringEncoderDecoder.encode(bean.getStatusCheckerPeriod())%>"></td>
 </tr>
 <tr>
-  <th align="center" colspan="2"><div class=page_subtitle>QuizManager</div></th>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.quizmanager")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Quizes directory</th>
-  <td><input class=txt name=quizDir value="<%=StringEncoderDecoder.encode(bean.getQuizDir())%>"></td>
+  <th><%=getLocString("smsquiz.label.quiz.dir")%></th>
+  <td><input class=txt validation="nonEmpty" name=quizDir value="<%=StringEncoderDecoder.encode(bean.getQuizDir())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Quizes status dir</th>
-  <td><input class=txt name=quizStatusDir value="<%=StringEncoderDecoder.encode(bean.getQuizStatusDir())%>"></td>
+  <th><%=getLocString("smsquiz.label.quiz.status_dir")%></th>
+  <td><input class=txt validation="nonEmpty" name=quizStatusDir value="<%=StringEncoderDecoder.encode(bean.getQuizStatusDir())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>DirListener delay</th>
-  <td><input class=txt name=dirListenerDelay value="<%=StringEncoderDecoder.encode(bean.getDirListenerDelay())%>"></td>
+  <th><%=getLocString("smsquiz.label.quiz.listener.start_delay")%></th>
+  <td><input class=txt validation="positive" name=dirListenerDelay value="<%=StringEncoderDecoder.encode(bean.getDirListenerDelay())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>DirListener period</th>
-  <td><input class=txt name=dirListenerPeriod value="<%=StringEncoderDecoder.encode(bean.getDirListenerPeriod())%>"></td>
+  <th><%=getLocString("smsquiz.label.quiz.listener.period")%></th>
+  <td><input class=txt validation="positive" name=dirListenerPeriod value="<%=StringEncoderDecoder.encode(bean.getDirListenerPeriod())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>QuizCollector delay</th>
-  <td><input class=txt name=quizCollDelay value="<%=StringEncoderDecoder.encode(bean.getQuizCollDelay())%>"></td>
+  <th><%=getLocString("smsquiz.label.quiz.coll.start_delay")%></th>
+  <td><input class=txt validation="positive" name=quizCollDelay value="<%=StringEncoderDecoder.encode(bean.getQuizCollDelay())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>QuizCollector period</th>
-  <td><input class=txt name=quizCollPeriod value="<%=StringEncoderDecoder.encode(bean.getQuizCollPeriod())%>"></td>
+  <th><%=getLocString("smsquiz.label.quiz.coll.period")%></th>
+  <td><input class=txt validation="positive" name=quizCollPeriod value="<%=StringEncoderDecoder.encode(bean.getQuizCollPeriod())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Results dir</th>
-  <td><input class=txt name=dirResults value="<%=StringEncoderDecoder.encode(bean.getDirResults())%>"></td>
+  <th><%=getLocString("smsquiz.label.quiz.res_dir")%></th>
+  <td><input class=txt validation="nonEmpty" name=dirResults value="<%=StringEncoderDecoder.encode(bean.getDirResults())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Working dir</th>
-  <td><input class=txt name=dirWork value="<%=StringEncoderDecoder.encode(bean.getDirWork())%>"></td>
+  <th><%=getLocString("smsquiz.label.quiz.work_dir")%></th>
+  <td><input class=txt validation="nonEmpty" name=dirWork value="<%=StringEncoderDecoder.encode(bean.getDirWork())%>"></td>
 </tr>
 <tr>
-  <th align="center" colspan="2"><div class=page_subtitle>JMX</div></th>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.jmx")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>JMX password</th>
+  <th><%=getLocString("smsquiz.label.jmx.password")%></th>
   <td><input class=txt name=jmxPassword value="<%=StringEncoderDecoder.encode(bean.getJmxPassword())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>JMX user</th>
+  <th><%=getLocString("smsquiz.label.jmx.user")%></th>
   <td><input class=txt name=jmxUser value="<%=StringEncoderDecoder.encode(bean.getJmxUser())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>JMX port</th>
-  <td><input class=txt name=jmxPort value="<%=StringEncoderDecoder.encode(bean.getJmxPort())%>"></td>
+  <th><%=getLocString("smsquiz.label.jmx.port")%></th>
+  <td><input class=txt validation="port" name=jmxPort value="<%=StringEncoderDecoder.encode(bean.getJmxPort())%>"></td>
 </tr>
 <tr>
-  <th align="center" colspan="2"><div class=page_subtitle>SMPP</div></th>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.smpp")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>SMPP host</th>
-  <td><input class=txt name=smppConnHost value="<%=StringEncoderDecoder.encode(bean.getSmppConnHost())%>"></td>
+  <th><%=getLocString("smsquiz.label.smpp.host")%></th>
+  <td><input class=txt validation="nonEmpty" name=smppConnHost value="<%=StringEncoderDecoder.encode(bean.getSmppConnHost())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>SMPP port</th>
-  <td><input class=txt name=smppConnPort value="<%=StringEncoderDecoder.encode(bean.getSmppConnPort())%>"></td>
+  <th><%=getLocString("smsquiz.label.smpp.port")%></th>
+  <td><input class=txt validation="port" name=smppConnPort value="<%=StringEncoderDecoder.encode(bean.getSmppConnPort())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>SMPP systemId</th>
+  <th><%=getLocString("smsquiz.label.smpp.system.id")%></th>
   <td><input class=txt name=smppConnSystemId value="<%=StringEncoderDecoder.encode(bean.getSmppConnSystemId())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>SMPP password</th>
+  <th><%=getLocString("smsquiz.label.smpp.password")%></th>
   <td><input class=txt name=smppConnPassword value="<%=StringEncoderDecoder.encode(bean.getSmppConnPassword())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>SMPP systemType</th>
+  <th><%=getLocString("smsquiz.label.smpp.system.type")%></th>
   <td><input class=txt name=smppSystemType value="<%=StringEncoderDecoder.encode(bean.getSmppSystemType())%>"></td>
 </tr>
 

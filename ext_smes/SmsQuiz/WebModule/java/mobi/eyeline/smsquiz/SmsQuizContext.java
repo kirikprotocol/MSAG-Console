@@ -32,7 +32,7 @@ public class SmsQuizContext implements SMEAppContext {
   private int quizesPageSize = 20;
   private int maxQuizTotalSize = 1000;
 
-  public static SmsQuizContext getInstance(SMSCAppContext appContext, String smeId)  throws AdminException, SAXException, ParserConfigurationException, IOException {
+  public static SmsQuizContext getInstance(SMSCAppContext appContext, String smeId) throws AdminException, SAXException, ParserConfigurationException, IOException {
     SmsQuizContext instance = (SmsQuizContext) instances.get(smeId);
     if (instance == null) {
       instance = new SmsQuizContext(appContext, smeId);
@@ -48,18 +48,20 @@ public class SmsQuizContext implements SMEAppContext {
     resetConfig();
   }
 
-  public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException{
+  public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException {
     config = loadCurrentConfig();
   }
+
   public Config loadCurrentConfig()
       throws AdminException, IOException, SAXException, ParserConfigurationException {
-    System.out.println("Config parent: "+appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder().getAbsolutePath());
+    System.out.println("Config parent: " + appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder().getAbsolutePath());
     return new Config(new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(),
         "conf" + File.separatorChar + "config.xml"));
   }
 
 
-  public void shutdown() throws IOException {}
+  public void shutdown() throws IOException {
+  }
 
   public Config getConfig() {
     return config;

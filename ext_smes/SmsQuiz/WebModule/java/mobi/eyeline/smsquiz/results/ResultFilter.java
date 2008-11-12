@@ -19,17 +19,14 @@ public class ResultFilter implements Filter {
   }
 
   public boolean isItemAllowed(DataItem item) {
-    if(!item.getValue("quizId").equals(quizId)) {
+    if (!item.getValue("quizId").equals(quizId)) {
       return false;
     }
-    if((address !=null)&&(!item.getValue("msisdn").equals(address))) {
-      return false;
-    }
-    return true;
+    return !((address != null) && (!item.getValue("msisdn").equals(address)));
   }
 
   public String getAddress() {
-    return (address == null) ? "":address;
+    return (address == null) ? "" : address;
   }
 
   public void setAddress(String address) {
@@ -37,7 +34,7 @@ public class ResultFilter implements Filter {
   }
 
   public String getQuizId() {
-    return (quizId == null) ? "":quizId;
+    return (quizId == null) ? "" : quizId;
   }
 
   public void setQuizId(String quizId) {

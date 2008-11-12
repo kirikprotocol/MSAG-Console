@@ -24,7 +24,7 @@ import mobi.eyeline.smsquiz.QuizBuilder;
  * Date: 10.11.2008
  */
 
-public class QuizAdd extends SmsQuizBean{
+public class QuizAdd extends SmsQuizBean {
 
   private String mbDone;
   private String mbCancel;
@@ -33,7 +33,7 @@ public class QuizAdd extends SmsQuizBean{
   private SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
   private String[] activeWeekDays = new String[7];
 
-  private final CategoriesTableHelper tableHelper = new CategoriesTableHelper("Categories","categories", 30, Validation.NON_EMPTY, true);
+  private final CategoriesTableHelper tableHelper = new CategoriesTableHelper("smsquiz.label.category", "categories", 30, Validation.NON_EMPTY, true);
 
   private String quiz;
 
@@ -65,33 +65,33 @@ public class QuizAdd extends SmsQuizBean{
 
   protected int init(List errors) {
     int result = super.init(errors);
-    if(result!=RESULT_OK) {
+    if (result != RESULT_OK) {
       return result;
     }
-    try{
+    try {
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.quiz");
     }
-    catch(Exception e) {
+    catch (Exception e) {
       logger.error(e);
       e.printStackTrace();
       return RESULT_ERROR;
     }
-    if(!initialized) {
-      timeBegin="00:00";
+    if (!initialized) {
+      timeBegin = "00:00";
       timeEnd = "23:59";
       txmode = false;
       maxRepeat = "3";
-      activeWeekDays[0]="Mon";
+      activeWeekDays[0] = "Mon";
     }
     return result;
   }
 
   public int process(HttpServletRequest request) {
     int result = super.process(request);
-    if(result!=RESULT_OK) {
+    if (result != RESULT_OK) {
       return result;
     }
-    MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");
+    MultipartServletRequest multi = (MultipartServletRequest) request.getAttribute("multipart.request");
     if (mbDone != null) result = save(multi);
     else if (mbCancel != null) result = RESULT_DONE;
 
@@ -101,32 +101,32 @@ public class QuizAdd extends SmsQuizBean{
   private int save(MultipartServletRequest request) {
     System.out.println("Saving...");
     int result;
-    if((result = validation(request))!=RESULT_OK) {
+    if ((result = validation(request)) != RESULT_OK) {
       return result;
     }
     QuizFullData data = new QuizFullData();
     MultipartDataSource ds = null;
     InputStream is = null;
     BufferedOutputStream outputStream = null;
-    File file = null;
+    File file;
     try {
-      ds= request.getMultipartDataSource("file");
+      ds = request.getMultipartDataSource("file");
       is = ds.getInputStream();
 
-      file = new File(quizDir+File.separator+quiz+".csv");
+      file = new File(quizDir + File.separator + quiz + ".csv");
       outputStream = new BufferedOutputStream(new FileOutputStream(file));
       byte buffer[] = new byte[2048];
       boolean begin = true;
-      for (int readed = 0; (readed = is.read(buffer)) > -1;) {
-        if(begin&&(readed<=-1)) {
+      for (int readed; (readed = is.read(buffer)) > -1;) {
+        if (begin && (readed <= -1)) {
           return warning("Abonent's file is empty");
         }
         begin = false;
         outputStream.write(buffer, 0, readed);
       }
 
-      for(int j=0;j<activeWeekDays.length;j++) {
-        if(activeWeekDays[j]!=null) {
+      for (int j = 0; j < activeWeekDays.length; j++) {
+        if (activeWeekDays[j] != null) {
           data.addActiveDay(activeWeekDays[j]);
         }
       }
@@ -144,24 +144,26 @@ public class QuizAdd extends SmsQuizBean{
       data.setTimeEnd(timeEnd);
       data.setTxmode(Boolean.toString(txmode));
       data.setAbFile(file.getAbsolutePath());
-      QuizBuilder.saveQuiz(data, quizDir+File.separator+quiz+".xml");
+      QuizBuilder.saveQuiz(data, quizDir + File.separator + quiz + ".xml");
     } catch (Exception e) {
       logger.error(e);
       e.printStackTrace();
       return error(e.getMessage());
-    } finally{
-      if(ds!=null) {
+    } finally {
+      if (ds != null) {
         ds.close();
       }
-      if(is!=null) {
+      if (is != null) {
         try {
           is.close();
-        } catch (IOException e) {}
+        } catch (IOException e) {
+        }
       }
-      if(outputStream!=null) {
+      if (outputStream != null) {
         try {
           outputStream.close();
-        } catch (IOException e) {}
+        } catch (IOException e) {
+        }
       }
     }
 
@@ -169,9 +171,9 @@ public class QuizAdd extends SmsQuizBean{
   }
 
 
-  private int validation(MultipartServletRequest request){
+  private int validation(MultipartServletRequest request) {
     System.out.println("Validation...");
-    try{
+    try {
       dateFormat.parse(dateBegin);
       dateFormat.parse(dateEnd);
       timeFormat.parse(timeBegin);
@@ -182,20 +184,20 @@ public class QuizAdd extends SmsQuizBean{
       return warning(e.getMessage());
     }
     String path = quizDir + File.separator + quiz + ".xml";
-    if((new File(path).exists())||(new File(path+".old").exists())) {
+    if ((new File(path).exists()) || (new File(path + ".old").exists())) {
       System.out.println("Quiz with this name already exists");
       return warning("Quiz with this name already exists");
     }
-    if((activeWeekDays==null)||(activeWeekDays.length==0)) {
+    if ((activeWeekDays == null) || (activeWeekDays.length == 0)) {
       System.out.println("Please select one or more active days");
       return warning("Please select one or more active days");
     }
-    if((tableHelper.getCategories()==null)||(tableHelper.getCategories().size()==0)) {
+    if ((tableHelper.getCategories() == null) || (tableHelper.getCategories().size() == 0)) {
       System.out.println("Please select one or more answer's categories");
       return warning("Please select one or more answer's categories");
     }
     try {
-      if(request.getMultipartDataSource("file")==null) {
+      if (request.getMultipartDataSource("file") == null) {
         System.out.println("File data source is null, select the file");
         return warning("Please select abonents file");
       }
@@ -233,7 +235,7 @@ public class QuizAdd extends SmsQuizBean{
   }
 
   public String getDateBegin() {
-    return (dateBegin==null) ? "" : dateBegin;
+    return (dateBegin == null) ? "" : dateBegin;
   }
 
   public void setDateBegin(String dateBegin) {
@@ -241,7 +243,7 @@ public class QuizAdd extends SmsQuizBean{
   }
 
   public String getDateEnd() {
-    return (dateEnd==null) ? "" : dateEnd;
+    return (dateEnd == null) ? "" : dateEnd;
   }
 
   public void setDateEnd(String dateEnd) {
@@ -310,7 +312,7 @@ public class QuizAdd extends SmsQuizBean{
   }
 
   public void setMaxRepeat(String maxRepeat) {
-      this.maxRepeat = maxRepeat;
+    this.maxRepeat = maxRepeat;
 
   }
 
@@ -318,32 +320,51 @@ public class QuizAdd extends SmsQuizBean{
   public String[] getActiveWeekDays() {
     return activeWeekDays;
   }
+
   public void setActiveWeekDays(String[] activeWeekDays) {
     this.activeWeekDays = activeWeekDays;
   }
 
   public boolean isWeekDayActive(String weekday) {
-    if(activeWeekDays!=null) {
-    for(int i=0; i<activeWeekDays.length; i++)
-      if ((activeWeekDays[i]!=null)&&(activeWeekDays[i].equals(weekday))) {
-        return true;
-      }                       }
+    if (activeWeekDays != null) {
+      for (int i = 0; i < activeWeekDays.length; i++)
+        if ((activeWeekDays[i] != null) && (activeWeekDays[i].equals(weekday))) {
+          return true;
+        }
+    }
     return false;
   }
 
-  public String getActiveWeekDaysString()
-  {
+  public String getActiveWeekDaysString() {
     String str = "";
     int total = activeWeekDays.length;
     if (total > 0) {
-      int added=0;
-      if (isWeekDayActive("Mon")) { str += "Monday";    if (++added < total) str += ", "; }
-      if (isWeekDayActive("Tue")) { str += "Tuesday";   if (++added < total) str += ", "; }
-      if (isWeekDayActive("Wed")) { str += "Wednesday"; if (++added < total) str += ", "; }
-      if (isWeekDayActive("Thu")) { str += "Thursday";  if (++added < total) str += ", "; }
-      if (isWeekDayActive("Fri")) { str += "Friday";    if (++added < total) str += ", "; }
-      if (isWeekDayActive("Sat")) { str += "Saturday";  if (++added < total) str += ", "; }
-      if (isWeekDayActive("Sun"))   str += "Sunday";
+      int added = 0;
+      if (isWeekDayActive("Mon")) {
+        str += "Monday";
+        if (++added < total) str += ", ";
+      }
+      if (isWeekDayActive("Tue")) {
+        str += "Tuesday";
+        if (++added < total) str += ", ";
+      }
+      if (isWeekDayActive("Wed")) {
+        str += "Wednesday";
+        if (++added < total) str += ", ";
+      }
+      if (isWeekDayActive("Thu")) {
+        str += "Thursday";
+        if (++added < total) str += ", ";
+      }
+      if (isWeekDayActive("Fri")) {
+        str += "Friday";
+        if (++added < total) str += ", ";
+      }
+      if (isWeekDayActive("Sat")) {
+        str += "Saturday";
+        if (++added < total) str += ", ";
+      }
+      if (isWeekDayActive("Sun")) str += "Sunday";
     }
     return str;
   }
@@ -361,7 +382,7 @@ public class QuizAdd extends SmsQuizBean{
   }
 
   public void setDefaultCategory(String defaultCategory) {
-    if(defaultCategory.equals("")) {
+    if (defaultCategory.equals("")) {
       defaultCategory = null;
     }
     this.defaultCategory = defaultCategory;

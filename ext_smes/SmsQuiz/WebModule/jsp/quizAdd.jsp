@@ -5,8 +5,11 @@
 <%@ page import="ru.novosoft.util.jsp.MultipartServletRequest"%>
 <%@ page import="ru.novosoft.util.jsp.MultipartDataSource"%>
 <%@ page import="java.io.*"%>
+<%@ page import="ru.novosoft.smsc.util.Functions"%>
 <jsp:useBean id="bean" scope="page" class="mobi.eyeline.smsquiz.beans.QuizAdd" />
 <%
+
+  ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
   if (request.getAttribute("multipart.request") != null) {
     request = (MultipartServletRequest)request.getAttribute("multipart.request");
   }
@@ -47,47 +50,47 @@
 <col width="1%">
 <col width="99%">
 <tr>
-  <th align="center" colspan="2"><div class=page_subtitle>General</div></th>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.general")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Quiz</th>
+  <th><%=getLocString("smsquiz.label.quiz")%></th>
   <td><input class=txt name=quiz validation="nonEmpty" value="<%=StringEncoderDecoder.encode(bean.getQuiz())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Start date</th>
+  <th><%=getLocString("smsquiz.label.startDate")%></th>
   <td><input validation="nonEmpty" class=calendarField id=fromDate name=dateBegin value="<%=StringEncoderDecoder.encode(bean.getDateBegin())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>End date</th>
+  <th><%=getLocString("smsquiz.label.endDate")%></th>
   <td><input validation="nonEmpty" class=calendarField id=tillDate name=dateEnd value="<%=StringEncoderDecoder.encode(bean.getDateEnd())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Question</th>
+  <th><%=getLocString("smsquiz.label.question")%></th>
   <td><input validation="nonEmpty" class=txt name=question value="<%=StringEncoderDecoder.encode(bean.getQuestion())%>"></td>
 </tr>
 <tr>
-  <th align="center" colspan="2"><div class=page_subtitle>Distribution</div></th>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.distribution")%></div></th>
 </tr>
   <tr class=row<%=rowN++&1%>>
-  <th>Abonents file</th>
+  <th><%=getLocString("smsquiz.label.abfile")%></th>
   <td><input type="hidden" name="jsp" value="/esme_SmsQuiz/quizAdd.jsp">
   <input class=txt type=file name=file id=file></td>
  <!--<td><input validation="nonEmpty" class=txt name=abFile value="<%=StringEncoderDecoder.encode(bean.getAbFile())%>"></td> -->
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Source address</th>
+  <th><%=getLocString("smsquiz.label.sa")%>S</th>
   <td><input validation="nonEmpty" class=txt name=sourceAddress value="<%=StringEncoderDecoder.encode(bean.getSourceAddress())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Start time</th>
+  <th><%=getLocString("smsquiz.label.startTime")%></th>
   <td><input validation="nonEmpty" class=txt name=timeBegin value="<%=StringEncoderDecoder.encode(bean.getTimeBegin())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>End time</th>
+  <th><%=getLocString("smsquiz.label.endTime")%></th>
   <td><input validation="nonEmpty" class=txt name=timeEnd value="<%=StringEncoderDecoder.encode(bean.getTimeEnd())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Active days</th>
+  <th><%=getLocString("smsquiz.label.activeDays")%></th>
   <td>
   <table>
     <col width="1%"><col width="32%">
@@ -110,21 +113,21 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Tx mode</th>
+  <th><%=getLocString("smsquiz.label.txmode")%></th>
   <td><input validation="nonEmpty" class=txt name=txMode value="<%=StringEncoderDecoder.encode(bean.getTxmode())%>"></td>
 </tr>
 <tr>
-  <th align="center" colspan="2"><div class=page_subtitle>Replies</div></th>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.replies")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Dest address</th>
+  <th><%=getLocString("smsquiz.label.da")%></th>
   <td><input validation="nonEmpty" class=txt name=destAddress value="<%=StringEncoderDecoder.encode(bean.getDestAddress())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Max repeat</th>
+  <th><%=getLocString("smsquiz.label.maxrepeat")%></th>
   <td><input validation="nonEmpty" class=txt name=maxRepeat value="<%=StringEncoderDecoder.encode(bean.getMaxRepeat())%>"></td>
 </tr><tr class=row<%=rowN++&1%>>
-  <th>Default category</th>
+  <th><%=getLocString("smsquiz.label.defcat")%></th>
   <td><input class=txt name=defaultCategory value="<%=StringEncoderDecoder.encode(bean.getDefaultCategory())%>"></td>
 </tr>
  <tr>

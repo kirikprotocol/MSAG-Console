@@ -9,12 +9,12 @@ import java.util.Date;
  * Date: 05.11.2008
  */
 public class ResultDataItem extends AbstractDataItem {
-    public ResultDataItem(String quizId, Date replyDate, Date deliveryDate, String msisdn, String category, String message) {
-      values.put("quizId", quizId);
-      values.put("replyDate", replyDate);
-      values.put("msisdn", msisdn);
-      values.put("deliveryDate", deliveryDate);
-      values.put("category", category);
-      values.put("message", message);
+  public ResultDataItem(String quizId, Date replyDate, Date deliveryDate, String msisdn, String category, String message) {
+    values.put(ResultDataSource.QUIZ_ID, quizId);
+    values.put(ResultDataSource.REPLY_DATE, replyDate);
+    values.put(ResultDataSource.MSISDN, msisdn);
+    values.put(ResultDataSource.DELIVERY_DATE, deliveryDate);
+    values.put(ResultDataSource.CATEGORY, category);
+    values.put(ResultDataSource.MESSAGE, message);
   }
 }

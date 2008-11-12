@@ -10,7 +10,6 @@ import java.util.*;
 import java.text.SimpleDateFormat;
 import java.io.*;
 
-import mobi.eyeline.smsquiz.quizes.view.QuizShortData;
 import mobi.eyeline.smsquiz.quizes.view.QuizFullData;
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
 
@@ -25,7 +24,7 @@ public class QuizBuilder {
   private static String datePattern = "dd.MM.yyyy HH:mm";
 
 
-  public static QuizShortData parseQuiz(String path) throws QuizParsingException{
+  public static QuizShortData parseQuiz(String path) throws QuizParsingException {
     String address = null;
     Date dateBegin = null;
     Date dateEnd = null;
@@ -42,27 +41,26 @@ public class QuizBuilder {
       if ((elem = root.getChild("replies")) != null) {
         if ((elem = elem.getChild("destination-address")) != null) {
           address = elem.getTextTrim();
-        }
-        else{
-          throw new Exception("Section 'destination-address' doesn't exist in "+path);
+        } else {
+          throw new Exception("Section 'destination-address' doesn't exist in " + path);
         }
       } else {
-        throw new Exception("Section 'replies' doesn't exist in "+path);
+        throw new Exception("Section 'replies' doesn't exist in " + path);
       }
       if ((elem = root.getChild("general")) != null) {
         Element subElem;
         if ((subElem = elem.getChild("date-begin")) != null) {
           dateBegin = dateFormat.parse(subElem.getTextTrim());
         } else {
-          throw new Exception("Section 'date-begin' doesn't exist in "+path);
+          throw new Exception("Section 'date-begin' doesn't exist in " + path);
         }
         if ((subElem = elem.getChild("date-end")) != null) {
           dateEnd = dateFormat.parse(subElem.getTextTrim());
         } else {
-          throw new Exception("Section 'date-end' doesn't exist in "+path);
+          throw new Exception("Section 'date-end' doesn't exist in " + path);
         }
       } else {
-        throw new Exception("Section 'general' doesn't exist in "+path);
+        throw new Exception("Section 'general' doesn't exist in " + path);
       }
     } catch (Exception e) {
       logger.error("Parsing exception", e);
@@ -77,12 +75,12 @@ public class QuizBuilder {
         }
       }
     }
-    return new QuizShortData(address,dateBegin,dateEnd);
+    return new QuizShortData(address, dateBegin, dateEnd);
   }
 
-  public static QuizFullData parseAll(String filepath) throws QuizParsingException{
+  public static QuizFullData parseAll(String filepath) throws QuizParsingException {
     File file = new File(filepath);
-    String quizName = file.getName().substring(0,file.getName().indexOf("."));
+    String quizName = file.getName().substring(0, file.getName().indexOf("."));
 
     SAXBuilder sb = new SAXBuilder();
     InputStream stream = null;
@@ -130,7 +128,7 @@ public class QuizBuilder {
     String question = null;
     String abFileName = null;
     if ((elem = generalElem.getChild("date-begin")) != null) {
-      dateBegin =elem.getTextTrim();
+      dateBegin = elem.getTextTrim();
     } else {
       errorNotFound("date-begin");
     }
@@ -187,24 +185,18 @@ public class QuizBuilder {
       errorNotFound("time-end");
     }
 
-      if ((elem = distrlElem.getChild("days")) != null) {
-        List list;
-        if ((list = elem.getChildren("day")) != null) {
-            Iterator iter = list.iterator();
-            while (iter.hasNext()) {
-              data.addActiveDay(((Element)iter.next()).getTextTrim());
-            }
-        } else {
-          errorNotFound("day");
+    if ((elem = distrlElem.getChild("days")) != null) {
+      List list;
+      if ((list = elem.getChildren("day")) != null) {
+        Iterator iter = list.iterator();
+        while (iter.hasNext()) {
+          data.addActiveDay(((Element) iter.next()).getTextTrim());
         }
       } else {
-        errorNotFound("days");
+        errorNotFound("day");
       }
-
-    if ((elem = distrlElem.getChild("time-end")) != null) {
-      String time = elem.getTextTrim();
     } else {
-      errorNotFound("time-end");
+      errorNotFound("days");
     }
 
     if ((elem = distrlElem.getChild("txmode")) != null) {
@@ -237,7 +229,7 @@ public class QuizBuilder {
       errorNotFound("destination-address");
     }
     if ((elem = repliesElem.getChild("max-repeat")) != null) {
-        data.setMaxRepeat(elem.getTextTrim());
+      data.setMaxRepeat(elem.getTextTrim());
     } else {
       data.setMaxRepeat("0");
     }
@@ -248,7 +240,7 @@ public class QuizBuilder {
     if ((list = repliesElem.getChildren("reply")) != null) {
       Iterator iter = list.iterator();
       while (iter.hasNext()) {
-        Element el = (Element)iter.next();
+        Element el = (Element) iter.next();
         Element subEl;
         String category = null;
         String answer = null;
@@ -296,23 +288,13 @@ public class QuizBuilder {
 
   }
 
-  private static void errorNotFound(String element) throws QuizParsingException{
+  private static void errorNotFound(String element) throws QuizParsingException {
     logger.error("Parsing exception, element not found: " + element);
     throw new QuizParsingException("Parsing exception, element not found" + element);
   }
 
-  private static void makeTime(Calendar cal, String time) throws QuizParsingException{
-    StringTokenizer tokenizer = new StringTokenizer(time, ":");
-    try {
-      cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(tokenizer.nextToken()));
-      cal.set(Calendar.MINUTE, Integer.parseInt(tokenizer.nextToken()));
-    } catch (NumberFormatException exc) {
-      logger.error("Unsupported time format", exc);
-      throw new QuizParsingException("Unsupported time format", exc);
-    }
-  }
 
-  public static void saveQuiz(QuizFullData data, String filePath){
+  public static void saveQuiz(QuizFullData data, String filePath) {
     XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
 
     OutputStream outputStream = null;
@@ -329,8 +311,8 @@ public class QuizBuilder {
     } catch (IOException e) {
       logger.error(e);
       e.printStackTrace();
-    } finally{
-      if(outputStream!=null) {
+    } finally {
+      if (outputStream != null) {
         try {
           outputStream.close();
         } catch (IOException e) {
@@ -386,8 +368,8 @@ public class QuizBuilder {
     Element subEl;
 
     Iterator iter = data.getActiveDays().iterator();
-    while(iter.hasNext()) {
-      String day = (String)iter.next();
+    while (iter.hasNext()) {
+      String day = (String) iter.next();
       subEl = new Element("day");
       subEl.setText(day.trim());
       element.addContent(subEl);
@@ -409,7 +391,7 @@ public class QuizBuilder {
     replies.addContent(element);
 
     String maxRepeat = data.getMaxRepeat();
-    if((maxRepeat!=null)&&(!maxRepeat.trim().equals(""))) {
+    if ((maxRepeat != null) && (!maxRepeat.trim().equals(""))) {
       maxRepeat = maxRepeat.trim();
       element = new Element("max-repeat");
       element.setText(maxRepeat);
@@ -417,7 +399,7 @@ public class QuizBuilder {
     }
 
     String def = data.getDefaultCategory();
-    if((def!=null)&&(!def.trim().equals(""))) {
+    if ((def != null) && (!def.trim().equals(""))) {
       def = def.trim();
       element = new Element("default");
       element.setText(def);
@@ -425,9 +407,9 @@ public class QuizBuilder {
     }
 
     Iterator iter = data.getCategories();
-    while(iter.hasNext()) {
+    while (iter.hasNext()) {
       element = new Element("reply");
-      AnswerCategory cat = (AnswerCategory)iter.next();
+      AnswerCategory cat = (AnswerCategory) iter.next();
 
       Element subEl = new Element("category");
       subEl.setText(cat.getName().trim());

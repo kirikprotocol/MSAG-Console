@@ -3,9 +3,12 @@
 <%@ page import="ru.novosoft.smsc.jsp.*"%>
 <%@ page import="mobi.eyeline.smsquiz.beans.QuizesList"%>
 <%@ page import="ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper"%>
+<%@ page import="ru.novosoft.smsc.util.Functions"%>
 <jsp:useBean id="bean" scope="page" class="mobi.eyeline.smsquiz.beans.QuizesList" />
 <jsp:setProperty name="bean" property="*"/>
 <%
+
+  ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
   bean.getTableHelper().processRequest(request);
 	TITLE=getLocString("smsquiz.title");
 	MENU0_SELECTION = "MENU0_SERVICES";

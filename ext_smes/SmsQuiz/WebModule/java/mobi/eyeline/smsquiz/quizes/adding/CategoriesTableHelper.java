@@ -23,14 +23,13 @@ public class CategoriesTableHelper extends DynamicTableHelper {
   private Column nameColumn;
   private Column patternColumn;
   private Column answerColumn;
-  private Column delColumn;
 
   public CategoriesTableHelper(String name, String uid, int width, Validation validation, boolean allowEditPropsAfterAdd) {
     super(name, uid);
-    nameColumn = new TextColumn(this, "Name", uid+"_name", width/3, validation, allowEditPropsAfterAdd);
-    patternColumn = new TextColumn(this, "Pattern", uid+"_pattern", width/3, validation, allowEditPropsAfterAdd);
-    answerColumn = new TextColumn(this, "Answer", uid+"_answer", width/3, validation, allowEditPropsAfterAdd);
-    delColumn = new RowControlButtonColumn(this, "", "delColumn");
+    nameColumn = new TextColumn(this, "smsquiz.label.category.name", uid + "_name", width / 3, validation, allowEditPropsAfterAdd);
+    patternColumn = new TextColumn(this, "smsquiz.label.category.pattern", uid + "_pattern", width / 3, validation, allowEditPropsAfterAdd);
+    answerColumn = new TextColumn(this, "smsquiz.label.category.answer", uid + "_answer", width / 3, validation, allowEditPropsAfterAdd);
+    Column delColumn = new RowControlButtonColumn(this, "", "delColumn");
     addColumn(nameColumn);
     addColumn(patternColumn);
     addColumn(answerColumn);
@@ -43,11 +42,11 @@ public class CategoriesTableHelper extends DynamicTableHelper {
   public List getCategories() {
     final List result = new LinkedList();
     for (Iterator iter = getRows(); iter.hasNext();) {
-      Row row = (Row)iter.next();
-      String name = (String)(row.getValue(nameColumn));
-      String pattern = (String)(row.getValue(patternColumn));
-      String answer = (String)(row.getValue(answerColumn));
-      result.add(new AnswerCategory(pattern,name,answer));
+      Row row = (Row) iter.next();
+      String name = (String) (row.getValue(nameColumn));
+      String pattern = (String) (row.getValue(patternColumn));
+      String answer = (String) (row.getValue(answerColumn));
+      result.add(new AnswerCategory(pattern, name, answer));
     }
     return result;
   }

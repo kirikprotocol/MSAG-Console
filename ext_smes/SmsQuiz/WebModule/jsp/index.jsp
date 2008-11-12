@@ -18,8 +18,15 @@
     page_menu_button(session, out, "mbStart", "common.buttons.start", "smsquiz.start");
     page_menu_button(session, out, "mbStop",  "common.buttons.stop",  "smsquiz.stop");
     page_menu_end(out);
+    if(session.getAttribute("message_to_restart")!=null) {
+      %>
+      <div style="color:blue">
+      <%=getLocString("smsquiz.message.restart")%>
+      </div>
+      <%
+      session.setAttribute("message_to_restart",null);
+    }
 %>
-
 
 
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

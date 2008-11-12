@@ -10,7 +10,9 @@ import java.io.*;
  * author: alkhal
  * Date: 01.11.2008
  */
-public class Options extends SmsQuizBean{
+public class Options extends SmsQuizBean {
+
+  public static final int RESULT_SAVED = SmsQuizBean.PRIVATE_RESULT + 1;
 
   private String dbUser;
   private String dbPassword;
@@ -57,13 +59,13 @@ public class Options extends SmsQuizBean{
   private String mbCancel;
 
   private boolean initialized = false;
-  protected int init(List errors)
-  {
+
+  protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK)
       return result;
 
-    if(!initialized) {
+    if (!initialized) {
       try {
         dbSource = getConfig().getString("dbpool.jdbc.source");
         dbUser = getConfig().getString("dbpool.jdbc.user");
@@ -112,13 +114,13 @@ public class Options extends SmsQuizBean{
     return result;
   }
 
-  public void initSmppProperties(String fileName) throws Exception{
+  public void initSmppProperties(String fileName) throws Exception {
     File file = new File(fileName);
-    if(!file.exists()) {
-      throw new Exception("File with smpp configuration not found: "+file.getAbsolutePath());
+    if (!file.exists()) {
+      throw new Exception("File with smpp configuration not found: " + file.getAbsolutePath());
     }
     InputStream inputStream = null;
-    try{
+    try {
       inputStream = new FileInputStream(fileName);
       Properties prop = new Properties();
       prop.load(inputStream);
@@ -127,15 +129,14 @@ public class Options extends SmsQuizBean{
       smppConnSystemId = prop.getProperty("smpp.connector.smsx.systemId");
       smppConnPassword = prop.getProperty("smpp.connector.smsx.password");
       smppSystemType = prop.getProperty("smpp.connector.smsx.systemType");
-    } finally{
-      if(inputStream != null) {
+    } finally {
+      if (inputStream != null) {
         inputStream.close();
       }
     }
   }
 
-  public int process(HttpServletRequest request)
-  {
+  public int process(HttpServletRequest request) {
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
@@ -148,14 +149,13 @@ public class Options extends SmsQuizBean{
     return result;
   }
 
-  private int save()
-  {
+  private int save() {
     try {
       getConfig().setString("dbpool.jdbc.source", dbSource);
       getConfig().setString("dbpool.jdbc.user", dbUser);
       getConfig().setString("dbpool.jdbc.password", dbPassword);
 
-      getConfig().setString("replystats.statsFile.dir.name",replyDirName);
+      getConfig().setString("replystats.statsFile.dir.name", replyDirName);
       getConfig().setInt("replystats.fileCollector.time.period", fileCollectorDelay);
       getConfig().setInt("replystats.fileCollector.time.first.delay", fileCollectorPeriod);
       getConfig().setInt("replystats.fileCollector.time.limit", fileOpenedLimit);
@@ -195,17 +195,17 @@ public class Options extends SmsQuizBean{
       return error("smsquiz.error.config_param", e.getMessage());
     }
     //getInfoSmeContext().setChangedOptions(true);
-    return RESULT_DONE;
+    return RESULT_SAVED;
   }
 
   private void storeSmppProperties(String fileName) throws Exception {
     File file = new File(fileName);
-    if(!file.exists()) {
+    if (!file.exists()) {
       throw new Exception("File with smpp configuration not found!");
     }
     InputStream inputStream = null;
     OutputStream outputStream = null;
-    try{
+    try {
       inputStream = new FileInputStream(fileName);
       Properties prop = new Properties();
       prop.load(inputStream);
@@ -213,28 +213,28 @@ public class Options extends SmsQuizBean{
       prop.setProperty("smpp.connector.smsx.port", Integer.toString(smppConnPort));
       prop.setProperty("smpp.connector.smsx.systemId", smppConnSystemId);
       prop.setProperty("smpp.connector.smsx.password", smppConnPassword);
-      if(smppSystemType==null) {
-        smppSystemType="";
+      if (smppSystemType == null) {
+        smppSystemType = "";
       }
       prop.setProperty("smpp.connector.smsx.systemType", smppSystemType);
       outputStream = new FileOutputStream(fileName);
-      prop.store(outputStream,"");
-    } catch(Exception e) {
+      prop.store(outputStream, "");
+    } catch (Exception e) {
       logger.error(e);
       e.printStackTrace();
       throw e;
-    } finally{
-      if(inputStream != null) {
-        try{
-        inputStream.close();
-        } catch(Exception e) {
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (Exception e) {
           logger.error("Can't close inputStream", e);
         }
       }
-      if(outputStream!=null) {
-        try{
-        outputStream.close();
-        } catch(Exception e) {
+      if (outputStream != null) {
+        try {
+          outputStream.close();
+        } catch (Exception e) {
           logger.error("Can't close outputStream", e);
         }
       }
@@ -283,9 +283,9 @@ public class Options extends SmsQuizBean{
 
   public void setFileCollectorDelay(String fileCollectorDelay) {
     try {
-    this.fileCollectorDelay = Integer.parseInt(fileCollectorDelay);
-    } catch(NumberFormatException e) {
-      logger.error("Can't parse int value: "+fileCollectorDelay);
+      this.fileCollectorDelay = Integer.parseInt(fileCollectorDelay);
+    } catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + fileCollectorDelay);
       e.printStackTrace();
     }
   }
@@ -298,8 +298,8 @@ public class Options extends SmsQuizBean{
     try {
       this.fileCollectorPeriod = Integer.parseInt(fileCollectorPeriod);
     }
-    catch(NumberFormatException e) {
-      logger.error("Can't parse int value: "+fileCollectorPeriod);
+    catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + fileCollectorPeriod);
       e.printStackTrace();
     }
   }
@@ -312,8 +312,8 @@ public class Options extends SmsQuizBean{
     try {
       this.fileOpenedLimit = Integer.parseInt(fileOpenedLimit);
     }
-    catch(NumberFormatException e) {
-      logger.error("Can't parse int value: "+fileOpenedLimit);
+    catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + fileOpenedLimit);
       e.printStackTrace();
     }
   }
@@ -363,11 +363,11 @@ public class Options extends SmsQuizBean{
   }
 
   public void setConnectTimeout(String connectTimeout) {
-    try{
+    try {
       this.connectTimeout = Integer.parseInt(connectTimeout);
     }
-    catch(NumberFormatException e) {
-      logger.error("Can't parse int value: "+connectTimeout);
+    catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + connectTimeout);
       e.printStackTrace();
     }
   }
@@ -380,8 +380,8 @@ public class Options extends SmsQuizBean{
     try {
       this.connectCloserPeriod = Integer.parseInt(connectCloserPeriod);
     }
-    catch(NumberFormatException e) {
-      logger.error("Can't parse int value: "+connectCloserPeriod, e);
+    catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + connectCloserPeriod, e);
       e.printStackTrace();
     }
   }
@@ -410,8 +410,8 @@ public class Options extends SmsQuizBean{
     try {
       this.statusCheckerDelay = Integer.parseInt(statusCheckerDelay);
     }
-    catch(NumberFormatException e) {
-      logger.error("Can't parse int value: "+statusCheckerDelay, e);
+    catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + statusCheckerDelay, e);
       e.printStackTrace();
     }
   }
@@ -424,8 +424,8 @@ public class Options extends SmsQuizBean{
     try {
       this.statusCheckerPeriod = Integer.parseInt(statusCheckerPeriod);
     }
-    catch(NumberFormatException e) {
-      logger.error("Can't parse int value: "+statusCheckerPeriod, e);
+    catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + statusCheckerPeriod, e);
       e.printStackTrace();
     }
   }
@@ -454,8 +454,8 @@ public class Options extends SmsQuizBean{
     try {
       this.dirListenerDelay = Integer.parseInt(dirListenerDelay);
     }
-    catch(NumberFormatException e) {
-      logger.error("Can't parse int value: "+dirListenerDelay, e);
+    catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + dirListenerDelay, e);
       e.printStackTrace();
     }
   }
@@ -465,11 +465,11 @@ public class Options extends SmsQuizBean{
   }
 
   public void setDirListenerPeriod(String dirListenerPeriod) {
-    try{
+    try {
       this.dirListenerPeriod = Integer.parseInt(dirListenerPeriod);
     }
-    catch(NumberFormatException e){
-      logger.error("Can't parse int value: "+dirListenerPeriod, e);
+    catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + dirListenerPeriod, e);
       e.printStackTrace();
     }
   }
@@ -479,11 +479,11 @@ public class Options extends SmsQuizBean{
   }
 
   public void setQuizCollDelay(String quizCollDelay) {
-    try{
-    this.quizCollDelay = Integer.parseInt(quizCollDelay);
+    try {
+      this.quizCollDelay = Integer.parseInt(quizCollDelay);
     }
-    catch(NumberFormatException e) {
-      logger.error("Can't parse int value: "+quizCollDelay, e);
+    catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + quizCollDelay, e);
       e.printStackTrace();
     }
   }
@@ -493,11 +493,11 @@ public class Options extends SmsQuizBean{
   }
 
   public void setQuizCollPeriod(String quizCollPeriod) {
-    try{
+    try {
       this.quizCollPeriod = Integer.parseInt(quizCollPeriod);
     }
-    catch(NumberFormatException e) {
-      logger.error("Can't parse int value: "+quizCollPeriod, e);
+    catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + quizCollPeriod, e);
       e.printStackTrace();
     }
   }
@@ -523,11 +523,11 @@ public class Options extends SmsQuizBean{
   }
 
   public void setJmxPort(String jmxPort) {
-    try{
+    try {
       this.jmxPort = Integer.parseInt(jmxPort);
     }
-    catch(NumberFormatException e) {
-      logger.error("Can't parse int value: "+jmxPort, e);
+    catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + jmxPort, e);
       e.printStackTrace();
     }
   }
@@ -564,8 +564,8 @@ public class Options extends SmsQuizBean{
     try {
       this.smppConnPort = Integer.parseInt(smppConnPort);
     }
-    catch(NumberFormatException e) {
-      logger.error("Can't parse int value: "+jmxPort, e);
+    catch (NumberFormatException e) {
+      logger.error("Can't parse int value: " + jmxPort, e);
       e.printStackTrace();
     }
   }

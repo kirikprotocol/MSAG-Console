@@ -26,45 +26,45 @@
 <col width="99%">
 <% int rowN = 0;%>
 <tr>
-  <th align="center" colspan="2"><div class=page_subtitle>General</div></th>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.general")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Quiz</th>
+  <th><%=getLocString("smsquiz.label.quiz")%></th>
   <td><input class=txt name=quiz value="<%=StringEncoderDecoder.encode(bean.getQuiz())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Start date</th>
+  <th><%=getLocString("smsquiz.label.startDate")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getDateBegin())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>End date</th>
+  <th><%=getLocString("smsquiz.label.endDate")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getDateEnd())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Question</th>
+  <th><%=getLocString("smsquiz.label.question")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getQuestion())%></td>
 </tr>
 <tr>
   <th align="center" colspan="2"><div class=page_subtitle>Distribution</div></th>
 </tr>
   <tr class=row<%=rowN++&1%>>
-  <th>Abonents file</th>
+  <th><%=getLocString("smsquiz.label.abfile")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getAbFile())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Source address</th>
+  <th><%=getLocString("smsquiz.label.sa")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getSourceAddress())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Start time</th>
+  <th><%=getLocString("smsquiz.label.startTime")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getTimeBegin())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>End time</th>
+  <th><%=getLocString("smsquiz.label.endTime")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getTimeEnd())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Active days</th>
+  <th><%=getLocString("smsquiz.label.activeDays")%></th>
   <td><%
     if(quizData.getActiveDays()!=null) {
       Iterator iter = quizData.getActiveDays().iterator();
@@ -80,21 +80,21 @@
   %></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Tx mode</th>
+  <th><%=getLocString("smsquiz.label.txmode")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getTxmode())%></td>
 </tr>
 <tr>
-  <th align="center" colspan="2"><div class=page_subtitle>Replies</div></th>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.replies")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Dest address</th>
+  <th><%=getLocString("smsquiz.label.da")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getDestAddress())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Max repeat</th>
+  <th><%=getLocString("smsquiz.label.maxrepeat")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getMaxRepeat())%></td>
 </tr><tr class=row<%=rowN++&1%>>
-  <th>Default category</th>
+  <th><%=getLocString("smsquiz.label.defcat")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getDefaultCategory())%></td>
 </tr>
 <%
@@ -103,18 +103,18 @@
     AnswerCategory cat = (AnswerCategory) categories.next();
 %>
     <tr>
-      <th align="center" colspan="2"><div class=page_subtitle>Category</div></th>
+      <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.category")%></div></th>
     </tr>
     <tr class=row<%=rowN++&1%>>
-      <th>Name</th>
+      <th><%=getLocString("smsquiz.label.category.name")%></th>
       <td><%=StringEncoderDecoder.encode(cat.getName())%></td>
     </tr>
     <tr class=row<%=rowN++&1%>>
-      <th>Pattern</th>
+      <th><%=getLocString("smsquiz.label.category.pattern")%></th>
       <td><%=StringEncoderDecoder.encode(cat.getPattern())%></td>
     </tr>
     <tr class=row<%=rowN++&1%>>
-      <th>Answer</th>
+      <th><%=getLocString("smsquiz.label.category.answer")%></th>
       <td><%=StringEncoderDecoder.encode(cat.getAnswer())%></td>
     </tr>
 <%  }

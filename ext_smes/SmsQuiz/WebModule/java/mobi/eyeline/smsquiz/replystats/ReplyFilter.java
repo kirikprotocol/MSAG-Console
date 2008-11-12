@@ -35,24 +35,24 @@ public class ReplyFilter implements Filter {
   }
 
   public boolean isItemAllowed(DataItem item) {
-    if((address !=null)&&(!item.getValue("msisdn").equals(address))) {
+    if ((address != null) && (!item.getValue("msisdn").equals(address))) {
       return false;
     }
-    if(dateBeginEnabled&&(dateBegin.after(quizDateBegin))) {
-      if(!((Date)item.getValue("replyDate")).after(dateBegin)) {
+    if (dateBeginEnabled && (dateBegin.after(quizDateBegin))) {
+      if (!((Date) item.getValue("replyDate")).after(dateBegin)) {
         return false;
       }
     } else {
-      if(!((Date)item.getValue("replyDate")).after(quizDateBegin)) {
+      if (!((Date) item.getValue("replyDate")).after(quizDateBegin)) {
         return false;
       }
     }
-    if(dateEndEnabled&&(dateEnd.before(quizDateEnd))) {
-      if(!((Date)item.getValue("replyDate")).before(dateEnd)) {
+    if (dateEndEnabled && (dateEnd.before(quizDateEnd))) {
+      if (!((Date) item.getValue("replyDate")).before(dateEnd)) {
         return false;
       }
     } else {
-      if(!((Date)item.getValue("replyDate")).before(quizDateEnd)) {
+      if (!((Date) item.getValue("replyDate")).before(quizDateEnd)) {
         return false;
       }
     }
@@ -60,7 +60,7 @@ public class ReplyFilter implements Filter {
   }
 
   public String getAddress() {
-    return (address == null) ? "":address;
+    return (address == null) ? "" : address;
   }
 
   public void setAddress(String address) {
@@ -68,7 +68,7 @@ public class ReplyFilter implements Filter {
   }
 
   public String getQuizNumber() {
-    return (quizNumber == null) ? "":quizNumber;
+    return (quizNumber == null) ? "" : quizNumber;
   }
 
   public void setQuizNumber(String quizNumber) {
@@ -76,7 +76,7 @@ public class ReplyFilter implements Filter {
   }
 
   public Date getDateBegin() {
-    return dateBeginEnabled ? dateBegin:null;
+    return dateBeginEnabled ? dateBegin : null;
   }
 
   public void setDateBegin(Date dateBegin) {
@@ -84,7 +84,7 @@ public class ReplyFilter implements Filter {
   }
 
   public Date getDateEnd() {
-    return dateEndEnabled ? dateEnd:null;
+    return dateEndEnabled ? dateEnd : null;
   }
 
   public void setDateEnd(Date dateEnd) {
@@ -92,7 +92,7 @@ public class ReplyFilter implements Filter {
   }
 
   public String getQuizPath() {
-    return (quizPath!=null) ? quizPath : "";
+    return (quizPath != null) ? quizPath : "";
   }
 
   public void setQuizPath(String quizPath) {

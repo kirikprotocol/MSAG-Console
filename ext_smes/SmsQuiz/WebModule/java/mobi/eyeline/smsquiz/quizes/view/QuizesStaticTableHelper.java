@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.text.SimpleDateFormat;
 
 import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
+import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 
 /**
  * author: alkhal
@@ -39,7 +40,7 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
 
   private int totalSize = 0;
 
-  private String sortOrder ="";
+  private String sortOrder = "";
 
 
   public QuizesStaticTableHelper(String uid) {
@@ -54,26 +55,25 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
 
   private void buildSortOrder() {
     SortOrderElement[] sortOrderElements = getSortOrder();
-    if((sortOrderElements!=null)&&(sortOrderElements.length>0)) {
+    if ((sortOrderElements != null) && (sortOrderElements.length > 0)) {
       SortOrderElement element = sortOrderElements[0];
-      if(element!=null) {
-        sortOrder=element.getColumnId();
-        if(sortOrder!=null) {
-          if(element.getOrderType()== OrderType.DESC) {
-            sortOrder="+"+sortOrder;
-          }
-          else {
-            sortOrder="-"+sortOrder;
+      if (element != null) {
+        sortOrder = element.getColumnId();
+        if (sortOrder != null) {
+          if (element.getOrderType() == OrderType.DESC) {
+            sortOrder = "+" + sortOrder;
+          } else {
+            sortOrder = "-" + sortOrder;
           }
           return;
         }
       }
     }
-    sortOrder="+"+QuizesDataSource.QUIZ_ID;
+    sortOrder = "+" + QuizesDataSource.QUIZ_ID;
   }
 
   protected void fillTable(int start, int size) throws TableHelperException {
-    try{
+    try {
       buildSortOrder();
       final QueryResultSet quizesList = ds.query(new QuizQuery(maxTotalSize, sortOrder, 0));
 
@@ -86,23 +86,23 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
         row.addCell(checkColumn, new CheckBoxCell("chb" + quizId, false));
         row.addCell(quizidColumn, new StringCell(quizId, quizId, true));
         row.addCell(dateBeginColumn, new StringCell(quizId,
-            convertDateToString((Date)item.getValue(QuizesDataSource.DATE_BEGIN)), false));
+            convertDateToString((Date) item.getValue(QuizesDataSource.DATE_BEGIN)), false));
         row.addCell(dateEndColumn, new StringCell(quizId,
-            convertDateToString((Date)item.getValue(QuizesDataSource.DATE_END)), false));
+            convertDateToString((Date) item.getValue(QuizesDataSource.DATE_END)), false));
         row.addCell(stateColumn, new StringCell(quizId,
-            (String)item.getValue(QuizesDataSource.STATE), false));
+            (String) item.getValue(QuizesDataSource.STATE), false));
       }
       totalSize = quizesList.size();
 
-    } catch(Exception e) {
+    } catch (Exception e) {
       throw new TableHelperException(e);
     }
   }
 
   public List getSelectedQuizesList(HttpServletRequest request) {
     final ArrayList result = new ArrayList();
-    for (Iterator iter = request.getParameterMap().keySet().iterator(); iter.hasNext(); ) {
-      final String paramName = (String)iter.next();
+    for (Iterator iter = request.getParameterMap().keySet().iterator(); iter.hasNext();) {
+      final String paramName = (String) iter.next();
       if (paramName.startsWith("chb"))
         result.add(paramName.substring(3));
     }

@@ -18,19 +18,19 @@ public class QuizDataItem extends AbstractDataItem {
   }
 
   public String getQuizId() {
-    return (String)values.get(QuizesDataSource.QUIZ_ID);
+    return (String) values.get(QuizesDataSource.QUIZ_ID);
   }
 
   public Date getDateBegin() {
-    return (Date)values.get(QuizesDataSource.DATE_BEGIN);
+    return (Date) values.get(QuizesDataSource.DATE_BEGIN);
   }
 
   public Date getDateEnd() {
-    return (Date)values.get(QuizesDataSource.DATE_END);
+    return (Date) values.get(QuizesDataSource.DATE_END);
   }
 
   public String getState() {
-    return (String)values.get(QuizesDataSource.STATE);
+    return (String) values.get(QuizesDataSource.STATE);
   }
 
 }

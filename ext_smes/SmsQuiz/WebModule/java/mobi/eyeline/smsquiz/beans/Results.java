@@ -1,10 +1,7 @@
 package mobi.eyeline.smsquiz.beans;
 
 
-import mobi.eyeline.smsquiz.results.ResultDataSource;
-import mobi.eyeline.smsquiz.results.ResultFilter;
-import mobi.eyeline.smsquiz.results.ResultQuery;
-import mobi.eyeline.smsquiz.results.ResultDataItem;
+import mobi.eyeline.smsquiz.results.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,35 +23,35 @@ import ru.novosoft.smsc.util.StringEncoderDecoder;
  */
 public class Results extends SmsQuizBean {
 
-  public static final int RESULT_EXPORT_ALL = PRIVATE_RESULT+1;
+  public static final int RESULT_EXPORT_ALL = PRIVATE_RESULT + 1;
 
-  private int pageSize;
+  private int pageSize = 0;
   private String mbExportAll = null;
   private String mbQuery = null;
-  private QueryResultSet results = null;
-  private int startPosition = 0;
   private ResultFilter resultFilter = new ResultFilter();
 
   private ResultDataSource ds;
 
   private boolean initialized = false;
-  private boolean processed = false;
 
-  protected int init(List errors)
-  {
+  private final ResultTableHelper tableHelper = new ResultTableHelper("result_table_helper");
+
+  protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
 
-    if (pageSize != 0) getSmsQuizContext().setMessagesPageSize(pageSize);
-    else pageSize = getSmsQuizContext().getMessagesPageSize();
-
-    if (!initialized) {
-    //todo   filter
+    if (pageSize == 0) {
+      pageSize = getSmsQuizContext().getMessagesPageSize();
     }
+    int maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
 
     try {
       String resultDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.result");
       ds = new ResultDataSource(resultDir);
+      tableHelper.setPageSize(pageSize);
+      tableHelper.setMaxTotalSize(maxTotalSize);
+      tableHelper.setFilter(resultFilter);
+      tableHelper.setDs(ds);
     } catch (Exception e) {
       return error("Can't init data source", e);
     }
@@ -64,15 +61,18 @@ public class Results extends SmsQuizBean {
 
 
   public int process(HttpServletRequest request) {
-    processed = true;
     int result = super.process(request);
     if (result != RESULT_OK) return result;
 
 
     try {
-      if (mbExportAll != null) return processExportAll();
-      else if (mbQuery != null || (initialized && results == null)) return processQuery();
-    } catch (AdminException e) {
+      if (mbExportAll != null) {
+        result = processExportAll();
+      }
+      if (initialized) {
+        tableHelper.fillTable();
+      }
+    } catch (Exception e) {
       logger.error("Process error", e);
       error("Error", e);
     }
@@ -80,17 +80,7 @@ public class Results extends SmsQuizBean {
   }
 
 
-  private int processQuery() throws AdminException {
-    if (mbQuery != null) {
-      startPosition = 0;
-      mbQuery = null;
-    }
-    results = ds.query(new ResultQuery(getSmsQuizContext().getMaxMessTotalSize()+1, resultFilter,"", startPosition));
-
-    return RESULT_OK;
-  }
-
-    private int processExportAll() throws AdminException {
+  private int processExportAll() {
     mbExportAll = null;
 
     return RESULT_EXPORT_ALL;
@@ -102,17 +92,17 @@ public class Results extends SmsQuizBean {
 
     try {
       out.clear();
-      QueryResultSet messages = ds.query(new ResultQuery(5000000, resultFilter,"", 0));
+      QueryResultSet messages = ds.query(new ResultQuery(5000000, resultFilter, ResultTableHelper.DEFAULT_SORT, 0));
 
       StringBuffer buffer = new StringBuffer();
       ResultDataItem res;
       for (Iterator iter = messages.iterator(); iter.hasNext();) {
-        res = (ResultDataItem)iter.next();
-        buffer.append(StringEncoderDecoder.encode((String)res.getValue("msisdn"))).append(",")
-            .append(StringEncoderDecoder.encode(convertDateToString((Date)res.getValue("deliveryDate")))).append(",")
-            .append(StringEncoderDecoder.encode(convertDateToString((Date)res.getValue("replyDate")))).append(",")
-            .append(StringEncoderDecoder.encode((String)res.getValue("category"))).append(",")
-            .append(StringEncoderDecoder.encode((String)res.getValue("message"))).append(System.getProperty("line.separator"));
+        res = (ResultDataItem) iter.next();
+        buffer.append(StringEncoderDecoder.encode((String) res.getValue(ResultDataSource.MSISDN))).append(",")
+            .append(StringEncoderDecoder.encode(convertDateToString((Date) res.getValue(ResultDataSource.DELIVERY_DATE)))).append(",")
+            .append(StringEncoderDecoder.encode(convertDateToString((Date) res.getValue(ResultDataSource.REPLY_DATE)))).append(",")
+            .append(StringEncoderDecoder.encode((String) res.getValue(ResultDataSource.CATEGORY))).append(",")
+            .append(StringEncoderDecoder.encode((String) res.getValue(ResultDataSource.MESSAGE))).append(System.getProperty("line.separator"));
         out.print(buffer);
         buffer.setLength(0);
       }
@@ -133,17 +123,13 @@ public class Results extends SmsQuizBean {
   }
 
   public boolean isQuizId(String quizId) {
-      return resultFilter.getQuizId().equals(quizId);
+    return resultFilter.getQuizId().equals(quizId);
   }
-  public int getTotalSize() {
-    return (results == null) ? 0 : results.getTotalSize();
-  }
-  public int getTotalSizeInt() {
-    return getTotalSize();
-  }
+
   public String getAddress() {
     return resultFilter.getAddress();
   }
+
   public void setAddress(String address) {
     resultFilter.setAddress(address);
   }
@@ -163,20 +149,15 @@ public class Results extends SmsQuizBean {
       this.pageSize = 0;
     }
   }
+
   public String getPageSize() {
     return Integer.toString(pageSize);
   }
+
   public int getPageSizeInt() {
     return pageSize;
   }
 
-  public boolean isProcessed() {
-    return processed;
-  }
-
-  public void setProcessed(boolean processed) {
-    this.processed = processed;
-  }
 
   public String getMbExportAll() {
     return mbExportAll;
@@ -193,23 +174,6 @@ public class Results extends SmsQuizBean {
   public void setMbQuery(String mbQuery) {
     this.mbQuery = mbQuery;
   }
-  public QueryResultSet getResults() {
-    return results;
-  }
-
-  public String getStartPosition() {
-    return String.valueOf(startPosition);
-  }
-  public int getStartPositionInt() {
-    return startPosition;
-  }
-  public void setStartPosition(String startPosition) {
-    try {
-      this.startPosition = Integer.decode(startPosition).intValue();
-    } catch (NumberFormatException e) {
-      this.startPosition = 0;
-    }
-  }
 
   public void setQuizId(String quizId) {
     resultFilter.setQuizId(quizId);
@@ -217,5 +181,9 @@ public class Results extends SmsQuizBean {
 
   public String getQuizId() {
     return resultFilter.getQuizId();
+  }
+
+  public ResultTableHelper getTableHelper() {
+    return tableHelper;
   }
 }

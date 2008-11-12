@@ -9,13 +9,13 @@ import javax.servlet.http.HttpServletRequest;
  * author: alkhal
  * Date: 01.11.2008
  */
-public class Index extends SmsQuizBean{
+public class Index extends SmsQuizBean {
 
   private String mbStart = null;
   private String mbStop = null;
 
 
-  public int process(HttpServletRequest request){
+  public int process(HttpServletRequest request) {
     int result = super.process(request);
     if (mbStart != null)
       return start();
@@ -43,12 +43,12 @@ public class Index extends SmsQuizBean{
 
   protected int stop() {
     int result = RESULT_DONE;
-      try {
-        getAppContext().getHostsManager().shutdownService(getSmeId());
-      } catch (AdminException e) {
-        logger.error("Could not stop Info SME", e);
-        result = error("infosme.error.stop", e);
-      }
+    try {
+      getAppContext().getHostsManager().shutdownService(getSmeId());
+    } catch (AdminException e) {
+      logger.error("Could not stop Info SME", e);
+      result = error("infosme.error.stop", e);
+    }
     return result;
   }
 

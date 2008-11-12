@@ -16,11 +16,12 @@ import javax.servlet.http.HttpServletRequest;
 public class SmsQuizBean extends PageBean {
 
 
-  public static final int RESULT_OPTIONS    = PageBean.PRIVATE_RESULT + 0;
-  public static final int RESULT_QUIZES    = PageBean.PRIVATE_RESULT + 1;
-  public static final int RESULT_REPLYSTATS   = PageBean.PRIVATE_RESULT + 2;
-  public static final int RESULT_RESULTS   = PageBean.PRIVATE_RESULT + 3;
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 4;
+  public static final int RESULT_OPTIONS = PageBean.PRIVATE_RESULT;
+  public static final int RESULT_QUIZES = PageBean.PRIVATE_RESULT + 1;
+  public static final int RESULT_REPLYSTATS = PageBean.PRIVATE_RESULT + 2;
+  public static final int RESULT_RESULTS = PageBean.PRIVATE_RESULT + 3;
+  public static final int RESULT_DISTR = PageBean.PRIVATE_RESULT + 4;
+  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 5;
 
   protected SmsQuizContext smsQuizContext;
   protected Config config;
@@ -47,15 +48,16 @@ public class SmsQuizBean extends PageBean {
     return result;
   }
 
-  public int process(HttpServletRequest request){
-    int result =  super.process(request);
+  public int process(HttpServletRequest request) {
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
-    System.out.println("MBMenu: "+mbMenu);
-    if ("quizes".equals(mbMenu))           result = RESULT_QUIZES;
-    else if ("options".equals(mbMenu))    result = RESULT_OPTIONS;
-    else if ("reply_stats".equals(mbMenu))    result = RESULT_REPLYSTATS;
-    else if ("quiz_result".equals(mbMenu))    result = RESULT_RESULTS;
+    System.out.println("MBMenu: " + mbMenu);
+    if ("quizes".equals(mbMenu)) result = RESULT_QUIZES;
+    else if ("options".equals(mbMenu)) result = RESULT_OPTIONS;
+    else if ("reply_stats".equals(mbMenu)) result = RESULT_REPLYSTATS;
+    else if ("quiz_result".equals(mbMenu)) result = RESULT_RESULTS;
+    else if ("distr".equals(mbMenu)) result = RESULT_DISTR;
 
     mbMenu = null;
     return result;
@@ -70,13 +72,14 @@ public class SmsQuizBean extends PageBean {
     return smsQuizContext;
   }
 
-  public String getSmeId(){
+  public String getSmeId() {
     return smeId;
   }
 
   public String getMbMenu() {
     return mbMenu;
   }
+
   public void setMbMenu(String mbMenu) {
     this.mbMenu = mbMenu;
   }
