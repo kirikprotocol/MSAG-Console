@@ -267,7 +267,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
       date = calendar.getTime();
       File file = new File(path + File.separator + dirFormat.format(date) + File.separator + fileFormat.format(date) + ".csv");
       if(logger.isInfoEnabled()) {
-        logger.error("Search file:"+file.getAbsolutePath());
+        logger.info("Search file:"+file.getAbsolutePath());
       }
       if (file.exists()) {
         files.add(file);
