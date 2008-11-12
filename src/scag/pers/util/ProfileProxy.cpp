@@ -2,6 +2,14 @@
 #include "ProfileProxy.h"
 #include "scag/re/base/ActionContext2.h"
 #include "PersClient2.h"
+#include "core/synchronization/Mutex.hpp"
+#include "logger/Logger.h"
+
+namespace {
+smsc::logger::Logger*              log_;
+smsc::core::synchronization::Mutex logMtx;
+}
+
 
 namespace scag2 {
 
@@ -51,6 +59,41 @@ void PropertyProxyBase::setStatus( re::actions::ActionContext& context,
         }
         msgProp->setStr(m);
         break;
+    }
+}
+
+
+int PropertyProxyBase::readServerStatus( re::actions::ActionContext& ctx,
+                                         SerialBuffer& sb )
+{
+    int status = 0;
+    switch ( PersServerResponseType(sb.ReadInt8()) ) {
+    case (RESPONSE_OK) : break;
+    case (RESPONSE_PROPERTY_NOT_FOUND) : status = PROPERTY_NOT_FOUND; break;
+    case (RESPONSE_ERROR) : status = SERVER_ERROR; break;
+    case (RESPONSE_BAD_REQUEST) : status = BAD_REQUEST; break;
+    case (RESPONSE_TYPE_INCONSISTENCE) : status = TYPE_INCONSISTENCE; break;
+    case (RESPONSE_PROFILE_LOCKED) : status = PROFILE_LOCKED; break;
+    default: status = UNKNOWN_RESPONSE;
+    }
+    if ( status ) {
+        setStatus( ctx, status );
+    }
+    return status;
+}
+
+
+// =================================================================
+
+PersCallParams::PersCallParams( ProfileType pt, const std::string& statusName, const std::string& msgName ) :
+error(0),
+ikey_(0),
+proxy_(pt, buf_),
+single_(0), batch_(0), statusName_(statusName), msgName_(msgName) 
+{
+    if ( !log_ ) {
+        MutexGuard mg(logMtx);
+        if (!log_) log_ = smsc::logger::Logger::getInstance("pers.dump");
     }
 }
 
@@ -150,6 +193,7 @@ int PersCallParams::fillSB( re::actions::ActionContext& ctx, SerialBuffer& sb )
         for ( std::vector< PropertyProxy* >::const_iterator i = batch_->begin();
               i != batch_->end();
               ++i ) {
+            sb.WriteInt8( uint8_t((*i)->cmdType()) );
             status = (*i)->fillSB( ctx, sb );
             if ( status > 0 ) {
                 setStatus( ctx, status, i - batch_->begin() + 1 );
@@ -172,20 +216,12 @@ int PersCallParams::fillSB( re::actions::ActionContext& ctx, SerialBuffer& sb )
 int PersCallParams::readSB( re::actions::ActionContext& ctx, SerialBuffer& sb )
 {
     assert( single_ || batch_ );
+    // int status = readServerStatus(ctx,sb);
+    // if ( status ) {
+    // smsc_log_debug( log_, "server status is %d", status );
+    // return status;
+    // }
     int status = 0;
-    switch ( PersServerResponseType(sb.ReadInt8()) ) {
-    case (RESPONSE_OK) : break;
-    case (RESPONSE_PROPERTY_NOT_FOUND) : status = PROPERTY_NOT_FOUND; break;
-    case (RESPONSE_ERROR) : status = SERVER_ERROR; break;
-    case (RESPONSE_BAD_REQUEST) : status = BAD_REQUEST; break;
-    case (RESPONSE_TYPE_INCONSISTENCE) : status = TYPE_INCONSISTENCE; break;
-    case (RESPONSE_PROFILE_LOCKED) : status = PROFILE_LOCKED; break;
-    default: status = UNKNOWN_RESPONSE;
-    } // switch
-    if ( status ) {
-        setStatus( ctx, status );
-        return status;
-    }
 
     // reading data
     if ( single_ ) {
@@ -199,7 +235,11 @@ int PersCallParams::readSB( re::actions::ActionContext& ctx, SerialBuffer& sb )
             if ( stat > 0 && status == 0 ) {
                 status = stat;
                 setStatus( ctx, stat, i - batch_->begin() + 1 );
+                if ( transact_ ) break;
             }
+        }
+        if ( status == 0 ) {
+            setStatus( ctx, status );
         }
     }
     return status;

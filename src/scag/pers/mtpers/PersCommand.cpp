@@ -1,6 +1,11 @@
 #include "PersCommand.h"
+#include "scag/util/Print.h"
 
-namespace scag { namespace mtpers {
+namespace scag {
+
+using namespace util;
+
+namespace mtpers {
 
 const int32_t INC_PROPERTY_ERROR = -1;
 
@@ -41,6 +46,11 @@ bool PersCommand::deserialize(SerialBuffer& sb) {
     return false;
   case PC_SET:
     property.Deserialize(sb);
+    if ( dblogs ) {
+        PrintAString pa;
+        pa.print( "pc_set: prop=%s", property.toString().c_str() );
+        dblogs->push_back( pa.buf() );
+    }
     return true;
   case PC_GET:
     sb.ReadString(propertyName);
@@ -190,19 +200,19 @@ Response PersCommand::incResult(Profile *pf, SerialBuffer& sb) {
 }
 
 void PersCommand::createAddLogMsg(string const& key, string const& msg) {
-  dblogs->push_back(string("A key=" + key + " property=" + msg));
+  if (dblogs) dblogs->push_back(string("A key=" + key + " property=" + msg));
 }
 
 void PersCommand::createUpdateLogMsg(string const& key, string const& msg) {
-  dblogs->push_back(string("U key=" + key + " property=" + msg));
+  if (dblogs) dblogs->push_back(string("U key=" + key + " property=" + msg));
 }
 
 void PersCommand::createDelLogMsg(string const& key, string const& msg) {
-  dblogs->push_back(string("D key=" + key + " name=" + msg));
+  if (dblogs) dblogs->push_back(string("D key=" + key + " name=" + msg));
 }
 
 void PersCommand::createExpireLogMsg(string const& key, string const& msg) {
-  dblogs->push_back(string("E key=" + key + " property=" + msg));
+  if (dblogs) dblogs->push_back(string("E key=" + key + " property=" + msg));
 }
 
 

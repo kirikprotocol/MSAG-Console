@@ -120,6 +120,7 @@ public:
     void setStatus( re::actions::ActionContext& ctx,
                     int status,
                     int actionIdx = 0 );
+    int readServerStatus( re::actions::ActionContext& ctx, SerialBuffer& sb );
 };
 
 
@@ -137,11 +138,7 @@ class PersCallParams : public lcm::LongCallParams, public PropertyProxy
 public:
     PersCallParams( ProfileType pt,
                     const std::string& statusName,
-                    const std::string& msgName ) :
-    error(0),
-    ikey_(0),
-    proxy_(pt, buf_),
-    single_(0), batch_(0), statusName_(statusName), msgName_(msgName) {}
+                    const std::string& msgName );
 
     void setKey( const std::string& key );
     void setKey( int32_t key );

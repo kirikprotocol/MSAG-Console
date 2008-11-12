@@ -85,8 +85,8 @@ PersPacket* ConnectionContext::parsePacket() {
     action_ = PROCESS_REQUEST;
     return packet.release();
   } catch(const SerialBufferOutOfBounds& e) {
-    smsc_log_warn(logger_, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s",
-                   inbuf_.length(), inbuf_.toString().c_str());
+    smsc_log_warn(logger_, "SerialBufferOutOfBounds Bad data in buffer received len=%d, curpos=%d, data=%s",
+                   inbuf_.length(), inbuf_.GetPos(), inbuf_.toString().c_str());
   } catch(const std::runtime_error& e) {
     smsc_log_warn(logger_, "std::runtime_error: Error profile key: %s. received buffer len=%d, data=%s",
                    e.what(), inbuf_.length(), inbuf_.toString().c_str());

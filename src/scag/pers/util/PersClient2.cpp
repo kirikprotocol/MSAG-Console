@@ -57,7 +57,7 @@ private:
 
     // virtual int Execute();
 
-    void finishCalls( lcm::LongCallContextBase* ctx );
+    void finishCalls( lcm::LongCallContextBase* ctx, bool drop );
     virtual bool call( lcm::LongCallContextBase* ctx );
     virtual int getClientStatus();
 
@@ -203,7 +203,7 @@ void PersClientImpl::Stop()
         headContext_ = tailContext_ = 0;
         callsCount_ = 0;
     }
-    finishCalls(ctx);
+    finishCalls(ctx,true);
 }
 
 
@@ -265,7 +265,7 @@ void PersClientImpl::decConnect()
             callsCount_ = 0;
         }
     }
-    finishCalls( ctx );
+    finishCalls(ctx,false);
 }
 
 
@@ -275,12 +275,17 @@ void PersClientImpl::configChanged()
 }
 
 
-void PersClientImpl::finishCalls( lcm::LongCallContextBase* ctx )
+void PersClientImpl::finishCalls( lcm::LongCallContextBase* ctx, bool drop )
 {
     while ( ctx ) {
         lcm::LongCallContextBase* c = ctx;
+        PersCallParams* persParam = (PersCallParams*)ctx->getParams();
+        if ( persParam ) {
+            persParam->error = NOT_CONNECTED;
+            persParam->exception = strs[NOT_CONNECTED];
+        }
         ctx = ctx->next;
-        c->initiator->continueExecution( c, true );
+        c->initiator->continueExecution(c,drop);
     }
 }
 
@@ -371,6 +376,7 @@ int PersClientTask::Execute()
             smsc_log_warn( log_, "execute failed: pers exc=%s", e.what() );
             p->error = e.getType();
             p->exception = e.what();
+            this->disconnect();
         } catch ( std::exception& e ) {
             smsc_log_warn( log_, "execute failed: exc=%s", e.what() );
             p->error = -1;
@@ -448,7 +454,7 @@ void PersClientTask::connect()
     connected_ = true;
     pers_->incConnect();
     actTS_ = time(0);
-    smsc_log_debug(log_, "PersClient connected");
+    smsc_log_debug(log_, "PersClientTask connected");
 }
 
 
@@ -457,7 +463,7 @@ void PersClientTask::disconnect()
     pers_->decConnect();
     sock.Close();
     connected_ = false;
-    smsc_log_debug( log_, "PersClient disconnected" );
+    smsc_log_debug( log_, "PersClientTask disconnected" );
 }
 
 
@@ -475,7 +481,7 @@ void PersClientTask::sendPacket( SerialBuffer& bsb )
         }
         catch ( PersClientException &e )
         {
-            smsc_log_debug( log_, "PersClientException: %s", e.what() );
+            smsc_log_warn( log_, "PersClientException: %s", e.what() );
             this->disconnect();
             if (++t >= 2) throw;
         }
@@ -504,6 +510,7 @@ void PersClientTask::readPacket( SerialBuffer& bsb )
         sz -= minsz;
     }
     smsc_log_debug(logd_, "read from socket: len=%d, data=%s", bsb.length(), bsb.toString().c_str());
+    bsb.SetPos(0);
     sz = bsb.ReadInt32();
 }
 

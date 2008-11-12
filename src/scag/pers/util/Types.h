@@ -15,8 +15,10 @@ enum ProfileType{
     PT_SERVICE
 };
 
+const char* persProfileType(ProfileType pt);
+
 enum PersCmd{
-    PC_UNKNOWN,
+    PC_UNKNOWN = 0,
     PC_DEL,
     PC_SET,
     PC_GET,
@@ -29,6 +31,8 @@ enum PersCmd{
     PC_MTBATCH,
     PC_BIND_ASYNCH
 };
+
+const char* persCmdName(PersCmd c);
 
 namespace CentralPersCmd{
     enum{
