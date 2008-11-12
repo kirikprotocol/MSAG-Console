@@ -56,6 +56,10 @@ public class TestDistributionManager implements DistributionManager {
     return null;
   }
 
+  public void resend(String str1, String str2) throws DistributionException{
+    
+  }
+
   public String repairStatus(String id, String errorFile, Runnable task, Distribution distribution) throws DistributionException {
     return null;
   }

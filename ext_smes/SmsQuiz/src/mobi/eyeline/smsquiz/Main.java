@@ -38,6 +38,7 @@ public class Main {
 
   private static int quizIndex = 1;
   final static String conf = "conf/config.xml";
+  private static ScheduledExecutorService scheduledQuizCreator;
 
   public static void main(String[] args) {
     //todo remove
@@ -77,7 +78,7 @@ public class Main {
       }
 
       //todo remove
-      ScheduledExecutorService scheduledQuizCreator = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+      scheduledQuizCreator = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
         public Thread newThread(Runnable r) {
           return new Thread(r, "QuizCreator");
         }
@@ -135,6 +136,7 @@ public class Main {
 
     public void run() {
       try {
+        if(quizIndex<26) {
         createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001700001"), Long.parseLong("70001700100"), 1, SubscriptionManager.getInstance());
         createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 20, "170", "170", "Short\n question");
         quizIndex++;
@@ -144,6 +146,10 @@ public class Main {
         createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001900001"), Long.parseLong("70001900100"), 1, SubscriptionManager.getInstance());
         createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 120, "190", "190", "Short\n question");
         quizIndex++;*/
+        }
+        else {
+          scheduledQuizCreator.shutdown();
+        }
       }
       catch (SubManagerException e) {
         logger.error("Error creatin quiz files", e);
