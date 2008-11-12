@@ -105,9 +105,14 @@ function checkApplyResetButtons()
       <td><%=configStatus(bean.isChangedTasks())%></td>
     </tr>
     <tr class=row0 id=schedsRow>
-      <td><input class=check type=checkbox name=apply value=scheds id=schedsCheck onCLick="checkApplyResetButtons();" <%=bean.isInfosmeStarted() && bean.isChangedShedules() && !bean.isChangedAll() && !bean.isChangedTasks() ? "" : "disabled"%>></td>
+      <td><input class=check type=checkbox name=apply value=scheds id=schedsCheck onCLick="checkApplyResetButtons();" <%=bean.isInfosmeStarted() && bean.isChangedShedules() && !bean.isChangedAll() && !bean.isChangedTasks() && !bean.isChangedRetryPolicies() ? "" : "disabled"%>></td>
       <th><label for=schedsCheck><%= getLocString("infosme.label.sched_config")%></label></th>
       <td><%=configStatus(bean.isChangedShedules())%></td>
+    </tr>
+    <tr class=row1 id=retriesRow>
+      <td><input class=check type=checkbox name=apply value=retries id=retriesCheck onCLick="checkApplyResetButtons();" <%=bean.isInfosmeStarted() && bean.isChangedRetryPolicies() && !bean.isChangedAll() && !bean.isChangedTasks() && !bean.isChangedShedules() ? "" : "disabled"%>></td>
+      <th><label for=schedsCheck><%= getLocString("infosme.label.retries_config")%></label></th>
+      <td><%=configStatus(bean.isChangedRetryPolicies())%></td>
     </tr>
     </table>
   </td>

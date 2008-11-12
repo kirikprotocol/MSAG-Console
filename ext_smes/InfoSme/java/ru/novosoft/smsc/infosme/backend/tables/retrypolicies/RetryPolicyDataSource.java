@@ -20,7 +20,7 @@ import java.io.IOException;
  */
 public class RetryPolicyDataSource extends AbstractDataSourceImpl {
 
-  private static final String RETRY_POLICIES_SECTION = "InfoSme.RetryPolicies";
+  public static final String RETRY_POLICIES_SECTION = "InfoSme.RetryPolicies";
 
   public RetryPolicyDataSource() {
     super(new String[]{"name", "errors"});
@@ -35,7 +35,7 @@ public class RetryPolicyDataSource extends AbstractDataSourceImpl {
       ErrorRetryPolicy e = (ErrorRetryPolicy)iter.next();
       infoSmeConfig.setInt(secName + e.getErrorCode(), e.getPolicy());
     }
-    ctx.setChangedOptions(true);
+    ctx.setChangedRetryPolicies(true);
   }
 
   public boolean remove(InfoSmeContext ctx, String retryPolicyName) throws AdminException {
@@ -51,7 +51,7 @@ public class RetryPolicyDataSource extends AbstractDataSourceImpl {
 
       // Remove retry policy
       ctx.getConfig().removeSection(RETRY_POLICIES_SECTION + '.' + retryPolicyName);
-      ctx.setChangedOptions(true);
+      ctx.setChangedRetryPolicies(true);
       return true;
     } catch (Exception e) {
       e.printStackTrace();

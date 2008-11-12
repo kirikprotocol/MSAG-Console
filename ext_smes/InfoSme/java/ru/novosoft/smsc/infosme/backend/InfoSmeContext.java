@@ -57,6 +57,7 @@ public class InfoSmeContext implements SMEAppContext
   private boolean changedProviders = false;
   private boolean changedTasks = false;
   private boolean changedSchedules = false;
+  private boolean changedRetryPolicies = false;
   private BlackListManager blackListManager;
   private String smeId = "InfoSme";
   //private Long appContextId = null;
@@ -250,4 +251,11 @@ public class InfoSmeContext implements SMEAppContext
     return blackListManager;
   }
 
+  public boolean isChangedRetryPolicies() {
+    return changedRetryPolicies;
+  }
+
+  public void setChangedRetryPolicies(boolean changedRetryPolicies) {
+    this.changedRetryPolicies = changedRetryPolicies;
+  }
 }

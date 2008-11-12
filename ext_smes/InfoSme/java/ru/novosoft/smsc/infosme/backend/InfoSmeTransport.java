@@ -28,6 +28,8 @@ public class InfoSmeTransport extends Service
   private static final String method_removeTask_ID = "removeTask";
   private static final String method_changeTask_ID = "changeTask";
 
+  private static final String method_applyRetryPolicies_ID = "applyRetryPolicies";
+
   private static final String method_isTaskEnabled_ID = "isTaskEnabled";
   private static final String method_setTaskEnabled_ID = "setTaskEnabled";
 
@@ -413,6 +415,10 @@ public class InfoSmeTransport extends Service
     args.put("messages", list);
 
     callMethod(ADD_DELIVERY_MESSAGES_METHOD_ID, Type.Types[Type.StringType], args);
+  }
+
+  public void applyRetryPolicies() throws AdminException {
+    callMethod(method_applyRetryPolicies_ID, Type.Types[Type.StringType], new HashMap());
   }
 
   public void addStatisticRecord(String taskId, Date period, int generated, int delivered, int retried, int failed) throws AdminException {

@@ -7,6 +7,7 @@ import ru.novosoft.smsc.infosme.backend.schedules.Schedule;
 import ru.novosoft.smsc.infosme.backend.tables.schedules.ScheduleDataSource;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataSource;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
 
@@ -107,8 +108,10 @@ public class Index extends IndexProperties
         if (getInfoSmeContext().isChangedTasks())
           return error("infosme.error.apply_schedules_wo_tasks");
         return applyScheds(oldConfig, getConfig());
-      } else {
-
+      } else if (isApply("retries")) {
+        if (getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedProviders())
+          return error("infosme.error.apply_schedules_wo_global");
+        applyRetryPolicies(oldConfig, getConfig());
       }
     } catch (Throwable e) {
       logger.error("Couldn't save InfoSME config", e);
@@ -278,6 +281,32 @@ public class Index extends IndexProperties
     Schedule oldSchedule = Schedule.getInstance(schedId, oldConfig);
     Schedule newSchedule = Schedule.getInstance(schedId, newConfig);
     return !oldSchedule.equals(newSchedule);
+  }
+
+  private int applyRetryPolicies(Config oldConfig, Config newConfig) {
+    int result = RESULT_DONE;
+    try {
+      logger.debug("applyRetryPolicies");
+      oldConfig.removeSection(RetryPolicyDataSource.RETRY_POLICIES_SECTION);
+      oldConfig.copySectionFromConfig(newConfig, RetryPolicyDataSource.RETRY_POLICIES_SECTION);
+      oldConfig.save();
+
+      if (getInfoSme().getInfo().isOnline()) {
+        try {
+          getInfoSmeContext().getInfoSme().applyRetryPolicies();
+        } catch (AdminException e) {
+          logger.error("Could not apply retry policies", e);
+          result = error("infosme.error.apply_retries", e);
+        }
+      }
+
+      getInfoSmeContext().setChangedRetryPolicies(false);
+
+    } catch (Throwable e) {
+      logger.error("Could not apply tasks", e);
+      return error("infosme.error.apply_tasks", e);
+    }
+    return result;
   }
 
   private int applyTasks(Config oldConfig, Config newConfig)

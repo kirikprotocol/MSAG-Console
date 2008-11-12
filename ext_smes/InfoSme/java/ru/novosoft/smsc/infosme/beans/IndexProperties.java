@@ -125,6 +125,10 @@ public abstract class IndexProperties extends TasksListBean
     return getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedProviders();
   }
 
+  public boolean isChangedRetryPolicies() {
+    return getInfoSmeContext().isChangedRetryPolicies();
+  }
+
   public boolean isChangedTasks()
   {
     return getInfoSmeContext().isChangedTasks();
@@ -134,6 +138,7 @@ public abstract class IndexProperties extends TasksListBean
   {
     return getInfoSmeContext().isChangedSchedules();
   }
+
 
   public String[] getApply()
   {
