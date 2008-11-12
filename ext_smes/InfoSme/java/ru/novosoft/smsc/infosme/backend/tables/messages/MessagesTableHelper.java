@@ -9,6 +9,8 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.smsc.infosme.backend.Message;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,19 +35,23 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
 
   private int maxTotalSize = 0;
 
-  private MessageDataSource ds;
+  private AbstractDataSourceImpl ds;
 
   private int totalSize = 0;
 
   private String sortOrder ="";
 
-  private MessageFilter filter;
+  private Filter filter;
+
+  private boolean addCheck = true;
 
 
-  public MessagesTableHelper(String uid) {
+  public MessagesTableHelper(String uid, boolean addCheck) {
     super(uid, false);
-
-    addColumn(checkColumn);
+    this.addCheck = addCheck;
+    if(addCheck){
+      addColumn(checkColumn);
+    }
     addColumn(msisdnColumn);
     addColumn(stateColumn);
     addColumn(dateColumn);
@@ -83,7 +89,9 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
         final Row row = createNewRow();
 
         final String msisdn = (String) item.getValue(MessageDataSource.MSISDN);
-        row.addCell(checkColumn, new CheckBoxCell("chb" + item.getValue(MessageDataSource.ID), false));
+        if(addCheck) {
+          row.addCell(checkColumn, new CheckBoxCell("chb" + item.getValue(MessageDataSource.ID), false));
+        }
         row.addCell(msisdnColumn, new StringCell(msisdn, msisdn, false));
         row.addCell(dateColumn, new StringCell(msisdn,
             convertDateToString((Date)item.getValue(MessageDataSource.DATE)), false));
@@ -111,11 +119,11 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
     this.maxTotalSize = maxTotalSize;
   }
 
-  public MessageDataSource getDs() {
+  public AbstractDataSourceImpl getDs() {
     return ds;
   }
 
-  public void setDs(MessageDataSource ds) {
+  public void setDs(AbstractDataSourceImpl ds) {
     this.ds = ds;
   }
 
@@ -151,11 +159,11 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
     return DATE_FORMAT.format(date);
   }
 
-  public MessageFilter getFilter() {
+  public Filter getFilter() {
     return filter;
   }
 
-  public void setFilter(MessageFilter filter) {
+  public void setFilter(Filter filter) {
     this.filter = filter;
   }
 

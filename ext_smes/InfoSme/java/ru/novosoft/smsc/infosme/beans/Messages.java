@@ -34,12 +34,10 @@ public class Messages extends InfoSmeBean
   public static final int RESULT_CANCEL_UPDATE = PRIVATE_RESULT + 3;
   public static final int RESULT_EXPORT_ALL = PRIVATE_RESULT + 4;
 
-  private String sort = null;
-  private int startPosition = 0;
   private int pageSize = 0;
 
   private MessageFilter  msgFilter = new MessageFilter();
-  private String message2update;      //todo
+  private String message2update;
 
   private String mbQuery     = null;
   private String mbResend    = null;
@@ -53,15 +51,13 @@ public class Messages extends InfoSmeBean
   private String mbDeleteAll = null;
   private String mbExportAll = null;
 
-  private StringBuffer exportFile;
-
   private boolean initialized = false;
 
   private boolean processed = false;
 
   private MessageDataSource ds;
 
-  private MessagesTableHelper tableHelper = new MessagesTableHelper("message_table_helper");
+  private MessagesTableHelper tableHelper = new MessagesTableHelper("message_table_helper", true);
 
   protected int init(List errors)
   {
@@ -80,7 +76,9 @@ public class Messages extends InfoSmeBean
       if( msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/' )
         msgStoreDir = serviceFolder + '/' + msgStoreDir;
       ds = new MessageDataSource(getConfig(), msgStoreDir);
-      pageSize = getInfoSmeContext().getMessagesPageSize();
+      if(pageSize==0) {
+        pageSize = getInfoSmeContext().getMessagesPageSize();
+      }
       int maxTotalSize = getInfoSmeContext().getMaxMessagesTotalSize();
 
       tableHelper.setFilter(msgFilter);
@@ -103,7 +101,19 @@ public class Messages extends InfoSmeBean
     Collection allTasks = getAllTasks();
     if (allTasks == null || allTasks.size() <= 0)
       return warning("infosme.warn.no_task_for_msg");
-    if (initialized)
+
+    try { // Order is important here!
+      if (mbDelete != null || mbDeleteAll != null) result = processDelete(request);
+      else if (mbResend != null || mbResendAll != null) result =  processResend(request);
+      else if (mbUpdateAll != null) result =  processUpdateAll();
+      else if (mbExportAll != null) result =  processExportAll();
+      else if (mbUpdate != null) result = processUpdate();
+      else if (mbCancelUpdate != null) result =  processCancelUpdate();
+    } catch (AdminException e) {
+      logger.error("Process error", e);
+      error("Error", e);
+    }
+    if (initialized) {
       try {
         tableHelper.fillTable();
       } catch (TableHelperException e) {
@@ -111,16 +121,6 @@ public class Messages extends InfoSmeBean
         logger.error(e);
         return error(e.getMessage());
       }
-    try { // Order is important here!
-      if (mbDelete != null || mbDeleteAll != null) return processDelete(request);
-      else if (mbResend != null || mbResendAll != null) return processResend(request);
-      else if (mbUpdateAll != null) return processUpdateAll();
-      else if (mbExportAll != null) return processExportAll();
-      else if (mbUpdate != null) return processUpdate();
-      else if (mbCancelUpdate != null) return processCancelUpdate();
-    } catch (AdminException e) {
-      logger.error("Process error", e);
-      error("Error", e);
     }
     return result;
   }
@@ -362,19 +362,7 @@ public class Messages extends InfoSmeBean
   }
 
   /* -------------------------- IndexBean delegates -------------------------- */
-  public String getStartPosition() {
-    return String.valueOf(startPosition);
-  }
-  public int getStartPositionInt() {
-    return startPosition;
-  }
-  public void setStartPosition(String startPosition) {
-    try {
-      this.startPosition = Integer.decode(startPosition).intValue();
-    } catch (NumberFormatException e) {
-      this.startPosition = 0;
-    }
-  }
+
 
   public void setPageSize(String pageSize) {
     try {
@@ -390,12 +378,6 @@ public class Messages extends InfoSmeBean
     return pageSize;
   }
 
-  public String getSort() {
-    return sort;
-  }
-  public void setSort(String sort) {
-    this.sort = sort;
-  }
 
 
   /* -------------------------- MessagesQuery delegates -------------------------- */

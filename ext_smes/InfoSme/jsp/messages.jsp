@@ -19,27 +19,26 @@
   int rowN = 0;
   int beanResult = bean.process(request);
   if (beanResult == Messages.RESULT_EXPORT_ALL) {
-    bean.exportAll(response, out);
-    return;
+    if(session.getAttribute("Export mess done")==null) {
+      session.setAttribute("Export mess done",Boolean.TRUE);
+      bean.exportAll(response, out);
+      return;
+    } else {
+      beanResult = Messages.RESULT_OK;
+      session.setAttribute("Export mess done",null);
+    }
   } else if (beanResult == Messages.RESULT_UPDATE_ALL) {
+    session.setAttribute("Export mess done",null);
     request.getRequestDispatcher("updateMessages.jsp").forward(request, response);
     return;
+  } else {
+    session.setAttribute("Export mess done",null);
   }
 %><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <%@ include file="inc/header.jsp"%>
-<script type="text/javascript">
-function setSort(sorting)
-{
-	if (sorting == "<%=bean.getSort()%>")
-		opForm.sort.value = "-<%=bean.getSort()%>";
-	else
-		opForm.sort.value = sorting;
-	opForm.submit();
-	return false;
-}
-</script>
+
 <div class=content>
 <input type=hidden name=initialized value=true>
 <%Collection allTasks = bean.getAllTasks();
@@ -89,12 +88,18 @@ function setSort(sorting)
   </select></td>
 </tr>
 </table>
-<%}%>
+
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "infosme.hint.query_messages");
 page_menu_space(out);
 page_menu_end(out);
+<%}
+else {
+%>
+<div style="color:blue"><%=getLocString("infosme.warn.no_task_for_msg")%></div>
+<%
+}
 if (bean.isInitialized()) {
 %>
 <div class=content>

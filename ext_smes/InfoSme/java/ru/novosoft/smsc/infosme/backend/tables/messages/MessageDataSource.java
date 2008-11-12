@@ -26,13 +26,13 @@ import org.apache.log4j.Category;
 
 public class MessageDataSource extends AbstractDataSourceImpl {
 
-  private static final Category log = Category.getInstance(MessageDataSource.class);
+  protected static final Category log = Category.getInstance(MessageDataSource.class);
 
-  private static final SimpleDateFormat dirNameFormat = new SimpleDateFormat("yyMMdd");
+  protected static final SimpleDateFormat dirNameFormat = new SimpleDateFormat("yyMMdd");
   public static final SimpleDateFormat msgDateFormat = new SimpleDateFormat("yyMMddHHmmss");
 
-  private final String storeDir;
-  private final Config config;
+  protected final String storeDir;
+  protected final Config config;
 
   public static final String STATE = "state";
   public static final String DATE = "date";
@@ -51,26 +51,39 @@ public class MessageDataSource extends AbstractDataSourceImpl {
   public QueryResultSet query(Query query_to_run) {
     clear();
     MessageFilter filter = (MessageFilter)query_to_run.getFilter();
-
+    Date fromDate = null;
+    Date tillDate = null;
     // Prepare files list
-    Date fromDate = filter.getFromDate();
-    Date tillDate = filter.getTillDate();
-    if(log.isDebugEnabled()) {
-      log.debug("FromDate: "+fromDate);
-      log.debug("TillDate: "+tillDate);
-    }
-    if (fromDate == null) {
-      try {
-        Task t = new Task(config, filter.getTaskId());
-        fromDate = t.getStartDateDate();
-      } catch (Exception e) {
-        e.printStackTrace();
-        return new EmptyResultSet();
+    try{
+      fromDate = filter.getFromDate();
+      tillDate = filter.getTillDate();
+
+      if (fromDate == null) {
+        try {
+          Task t = new Task(config, filter.getTaskId());
+          fromDate = t.getStartDateDate();
+        } catch (Exception e) {
+          e.printStackTrace();
+          return new EmptyResultSet();
+        }
+      }
+      if (tillDate == null)
+        tillDate = new Date();
+
+
+      fromDate = msgDateFormat.parse(msgDateFormat.format(fromDate));   // to format, where year is yy
+      tillDate = msgDateFormat.parse(msgDateFormat.format(tillDate));
+
+      if(log.isDebugEnabled()) {
+        log.debug("FromDate: "+fromDate);
+        log.debug("TillDate: "+tillDate);
       }
     }
-    if (tillDate == null)
-      tillDate = new Date();    
-
+    catch(Exception e) {
+      log.error(e);
+      e.printStackTrace();
+      return new EmptyResultSet();
+    }
     Calendar cal = Calendar.getInstance();
     cal.setTime(fromDate);
 
@@ -140,6 +153,9 @@ public class MessageDataSource extends AbstractDataSourceImpl {
                 continue;
 
               Date date = msgDateFormat.parse(st.nextToken().trim());
+              if (!date.after(fromDate) || !date.before(tillDate)) {
+                continue;
+              }
               String msisdn = st.nextToken().trim();
               String region = st.nextToken();
               String message = prepareMessage(st.nextToken());
@@ -176,7 +192,7 @@ public class MessageDataSource extends AbstractDataSourceImpl {
             log.debug(j + " messages have readed from file: " + file.getName());
         }
       }
-      cal.add(Calendar.HOUR, 1);
+      cal.add(Calendar.HOUR_OF_DAY, 1);
     }
 
     query_to_run = new MessageQuery(query_to_run.getExpectedResultsQuantity(),
