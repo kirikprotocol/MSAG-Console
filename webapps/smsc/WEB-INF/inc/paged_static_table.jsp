@@ -18,7 +18,7 @@
     <td class=prev><a <%=makeHref("navigatePage('" + startPositionPrefix + "'," + pageSize + "," + (pageCurrent - 1) + ")")%>><img src="/images/nav_prev.gif" width="12" height="11" alt="<%=getLocString("navbar.prevPage")%>"></a></td>
     <%}
   for(int pageNum=pageFirst;pageNum<=pageLast;pageNum++) {%>
-    <td class="<%=pageNum==pageCurrent ? "current":"page"%>"><a <%=makeHref("navigatePage('" + startPositionPrefix + "'," + pageSize + "," + pageNum + ")")%> title="<%=getLocString("navbar.pagePre") + pageNum + 1%>"><%=pageNum + 1%></a></td>
+    <td class="<%=pageNum==pageCurrent ? "current":"page"%>"><a <%=makeHref("navigatePage('" + startPositionPrefix + "'," + pageSize + "," + pageNum + ")")%> title="<%=getLocString("navbar.pagePre") + (pageNum + 1)%>"><%=pageNum + 1%></a></td>
   <%}%>
   <%if(pageCurrent+1 < pageTotal){%>
     <td class=next><a <%=makeHref("navigatePage('" + startPositionPrefix + "'," + pageSize + "," + (pageCurrent + 1) + ")")%>><img src="/images/nav_next.gif" width="12" height="11" alt="<%=getLocString("navbar.nextPage")%>"></a></td>
