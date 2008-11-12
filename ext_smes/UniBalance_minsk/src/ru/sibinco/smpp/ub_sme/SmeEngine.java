@@ -104,17 +104,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
     cbossConnectionErrorPattern = Utils.aggregateRegexp(cbossConnectionErrorPattern);
 
-    for (int i = 0; i < billingSystemsOrder.length; i++) {
-      String bso = config.getProperty("billing.system." + i + ".order", "");
-      if (bso.length() > 0) {
-        try {
-          billingSystemsOrder[i] = Byte.parseByte(bso);
-        } catch (NumberFormatException e) {
-          throw new InitializationException("Invalid value for config parameter \"billing.system." + i + ".order\": " + bso);
-        }
-      }
-    }
-
     numberFormatPattern = config.getProperty("balance.number.format.pattern", numberFormatPattern);
     String decimalSeparator = config.getProperty("balance.number.format.decimal.separator", ".");
     if (decimalSeparator.length() == 0 || decimalSeparator.length() > 1) {
@@ -554,7 +543,18 @@ public class SmeEngine implements MessageListener, ResponseListener {
           "BE bot banlength=" + res.getBannerBody().length +
               " tranzact=" + res.getTransactionID() +
               " banner=" + Encode.decodeUTF16(res.getBannerBody()));
-      return Encode.decodeUTF16(res.getBannerBody());
+      switch(bannerEngineCharSet){
+        case (AdvClientConst.UTF16BE):
+          return Encode.decodeUTF16(res.getBannerBody());
+        case (AdvClientConst.GSMSMS):
+          return Encode.decodeGSM(res.getBannerBody(), false);
+        case (AdvClientConst.GSMUSSD):
+          return Encode.decodeGSM(res.getBannerBody(), true);
+        case (AdvClientConst.ASCII_TRANSLIT):
+          return Encode.decodeASCII(res.getBannerBody());
+        default:
+          return Encode.decodeUTF16(res.getBannerBody());
+      }
     } else {
       if(logger.isDebugEnabled())
         try {
