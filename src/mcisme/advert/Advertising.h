@@ -4,6 +4,7 @@
 #include <string>
 
 #include <core/synchronization/Mutex.hpp>
+#include <logger/Logger.h>
 
 using namespace smsc::core::synchronization;
 
@@ -17,7 +18,8 @@ enum
   {
     UTF16BE = 1,
     GSMSMS,
-    GSMUSSD
+    GSMUSSD,
+    ASCII_TRANSLIT
   };
 
 enum
@@ -50,7 +52,7 @@ struct BannerRequest
   std::string banner; // filled by Advertising module
   int         transportType;
   uint32_t    charSet;
-
+  uint32_t bannerId, ownerId, rotatorId;
   /**
    *  constructor
    *
@@ -64,7 +66,9 @@ struct BannerRequest
   BannerRequest(const std::string& _abonent, const std::string& _serviceName,
                 int _transportType, uint32_t _charSet)
     : abonent(_abonent), serviceName(_serviceName), banner(""),
-      transportType(_transportType), charSet(_charSet), id(getNextId()) {}
+      transportType(_transportType), charSet(_charSet),
+      bannerId(-1), ownerId(0), rotatorId(0),
+      id(getNextId()) {}
 
   /**
    *  return value of Id
@@ -113,7 +117,10 @@ public:
   virtual ~Advertising() {}
 
 protected:
-  Advertising() {}
+  Advertising()
+    : _logger(logger::Logger::getInstance("scag.advert.Advertising")) {}
+
+  logger::Logger* _logger;
 };
 
 }}
