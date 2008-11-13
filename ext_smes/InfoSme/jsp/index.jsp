@@ -46,7 +46,7 @@ refreshTaskStatuses();
 <script type="text/javascript">
 function checkApplyResetButtons()
 {
-  document.getElementById('mbApply').disabled = !(document.getElementById('allCheck').checked || document.getElementById('tasksCheck').checked || document.getElementById('schedsCheck').checked);
+  document.getElementById('mbApply').disabled = !(document.getElementById('allCheck').checked || document.getElementById('tasksCheck').checked || document.getElementById('schedsCheck').checked || document.getElementById('retriesCheck').checked);
   document.getElementById('mbReset').disabled = !(   (<%=bean.isChangedAll()%> && document.getElementById('allCheck').checked)
                                   || (<%=bean.isChangedTasks()%> && document.getElementById('tasksCheck').checked)
                                   || (<%=bean.isChangedShedules()%> && document.getElementById('schedsCheck').checked)
