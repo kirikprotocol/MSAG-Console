@@ -15,9 +15,9 @@ public:
   IOTask* newTask() {
     return new MTPersReader(*this, connectionTimeout_);
   }
-  ~ReaderTaskManager() {
-    storageManager_.shutdown();
-  }
+  //~ReaderTaskManager() {
+    //storageManager_.shutdown();
+  //}
 
   bool process(ConnectionContext* cx) {
     MutexGuard g(tasksMutex_);
@@ -36,6 +36,11 @@ public:
   }
   bool processPacket(PersPacket* packet) {
     return storageManager_.process(packet);
+  }
+
+  void shutdown() {
+    storageManager_.shutdown();
+    IOTaskManager::shutdown();
   }
 
 private:

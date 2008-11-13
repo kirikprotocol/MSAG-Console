@@ -92,6 +92,11 @@ int StorageProcessor::Execute() {
     }
     process.clear();
   }
+  for (vector<PersPacket*>::iterator i = waitingProcess_.begin(); i != waitingProcess_.end(); ++i) {
+    if (*i) {
+      delete *i;
+    }
+  }
   waitingProcess_.clear();
   return 0;
 }

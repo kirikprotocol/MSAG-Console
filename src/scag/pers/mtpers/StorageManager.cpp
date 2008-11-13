@@ -64,6 +64,7 @@ bool StorageManager::process(PersPacket* packet) {
 }
 
 void StorageManager::shutdown() {
+  infrastructStorage_->stop();
   pool_.shutdown();
 }
 

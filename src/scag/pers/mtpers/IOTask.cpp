@@ -57,6 +57,7 @@ int IOTask::Execute() {
 
     while (multiplexer_.count()) {
       s = multiplexer_.get(0);
+      smsc_log_debug(logger, "%p: delete socket %p", this, s);
       cx = SocketData::getContext(s);
       multiplexer_._remove(0);
       delete cx;

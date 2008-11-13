@@ -40,7 +40,7 @@ public:
   virtual ~IOTaskManager() {};
 
   virtual bool process(ConnectionContext* cx) = 0;
-  void shutdown();
+  virtual void shutdown();
   void removeContext(IOTask* t, uint16_t contextsNumber = 1);
   bool canStop();
 
