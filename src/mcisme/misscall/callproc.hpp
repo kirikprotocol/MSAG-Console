@@ -27,11 +27,16 @@ static const uint8_t UNCOND  = 0x08;
 static const uint8_t DETACH  = 0x10;
 static const uint8_t ALL     = 0xFF;
 
+// missed call event flags
+static const uint8_t NON_ANTI_AON_FOR_CALLER = 0;
+static const uint8_t ANTI_AON_FOR_CALLER = 0x01;
+
 struct MissedCallEvent{
   string from;
   string to;
   time_t time;
   uint8_t cause;
+  uint8_t flags;
 };
 class MissedCallListener{
   public:
