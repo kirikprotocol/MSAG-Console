@@ -116,12 +116,8 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
   }
   else
   {
-    schedTime = time(0);
-    if(onBusy)
-    {
-      schedTime += schedTimeOnBusy;
-      smsc_log_info(logger, "Abonent %s was BUSY waiting up to %s", strAbnt.c_str(), cTime(&schedTime, curSchedTimeStr, sizeof(curSchedTimeStr)));
-    }
+    schedTime = calculateSchedTime(onBusy);
+    smsc_log_info(logger, "Abonent %s scheduling on time %s", strAbnt.c_str(), cTime(&schedTime, curSchedTimeStr, sizeof(curSchedTimeStr)));
   }
 
   deliveryQueue.insert(multimap<time_t, AbntAddr>::value_type(schedTime, abnt));
@@ -130,6 +126,15 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
   AbntsStatus.Insert(strAbnt.c_str(), schedParam);
   deliveryQueueMonitor.notify();
   total++;
+
+  return schedTime;
+}
+
+time_t DeliveryQueue::calculateSchedTime(bool onBusy) const
+{
+  time_t schedTime = time(0);
+  if(onBusy)
+    schedTime += schedTimeOnBusy;
 
   return schedTime;
 }
