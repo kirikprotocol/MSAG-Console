@@ -27,7 +27,6 @@
 namespace smsc {
 namespace mcisme {
 
-using smsc::core::network::Socket;
 using smsc::core::threads::ThreadedTask;
 using smsc::admin::util::SocketListener;
 
@@ -67,7 +66,7 @@ struct ProfileMessage
 class ProfStorageCommandDispatcher: public ThreadedTask 
 {
 public:
-  ProfStorageCommandDispatcher(Socket * admSocket)
+  ProfStorageCommandDispatcher(core::network::Socket * admSocket)
     : logger(smsc::logger::Logger::getInstance("mcisme.prof")),
       task_name("ProfStorageCmdDisp"), pProfStorage(0), timeout(15)
   {
@@ -290,7 +289,7 @@ protected:
     return true;
   }
 
-  Socket * sock;
+  core::network::Socket * sock;
   smsc::logger::Logger *logger;
   const char * const task_name;
   ProfilesStorage* pProfStorage;
