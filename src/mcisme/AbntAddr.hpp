@@ -299,19 +299,21 @@ struct MCEvent
   time_t        dt;
   AbntAddrValue	caller;
   uint16_t      callCount;
+  uint8_t       missCallFlags;
 
-  MCEvent(const uint8_t& _id):id(_id),dt(0),callCount(0) {}
-  MCEvent():id(0), dt(0), callCount(0)
+  MCEvent(const uint8_t& _id):id(_id), dt(0), callCount(0), missCallFlags(0) {}
+  MCEvent():id(0), dt(0), callCount(0), missCallFlags(0)
   {
     memset((void*)&(caller.full_addr), 0xFF, sizeof(caller.full_addr));
   }
 
-  MCEvent(const MCEvent& e): id(e.id), dt(e.dt), callCount(e.callCount)
+  MCEvent(const MCEvent& e): id(e.id), dt(e.dt), callCount(e.callCount), missCallFlags(e.missCallFlags)
   {
     memcpy((void*)&(caller.full_addr), (void*)&(e.caller.full_addr), sizeof(caller.full_addr));
   }
   MCEvent& operator=(const AbntAddr& addr)
   {
+    id = 0; dt = 0; callCount = 1; missCallFlags = 0;
     memcpy((void*)&(caller.full_addr), (void*)addr.getAddrSig(), sizeof(caller.full_addr));
     return *this;
   }
@@ -321,7 +323,7 @@ struct MCEvent
     if(&e == this)
       return *this;
 
-    id = e.id; dt = e.dt; callCount = e.callCount;
+    id = e.id; dt = e.dt; callCount = e.callCount; missCallFlags = e.missCallFlags;
     memcpy((void*)&(caller.full_addr), (void*)&(e.caller.full_addr), sizeof(caller.full_addr));
     return *this;
   }
@@ -332,7 +334,8 @@ struct MCEvent
     result << "id=" << uint_t(id)
            << ",dt=" << dt
            << ",caller=" << AbntAddr(&caller).getText()
-           << ",callCount=" << callCount;
+           << ",callCount=" << callCount
+           << std::hex << ",missCallFlags=0x" << missCallFlags;
 
     return result.str();
   }
