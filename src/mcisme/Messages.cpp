@@ -2,6 +2,7 @@
 #include "Messages.h"
 #include <sms/sms_const.h>
 #include <util/smstext.h>
+#include "misscall/callproc.hpp"
 
 namespace smsc {
 namespace mcisme {
@@ -124,8 +125,8 @@ MessageFormatter::formatMessage(const AbntAddr& abnt,
 
   const std::string& toAbnt = abnt.getText();
   ContextEnvironment ctx;
-  const std::string unknownCaller = formatter->getUnknownCaller();
-  size_t            mc_events_count = mc_events.size();
+  std::string unknownCaller = formatter->getUnknownCaller();
+  size_t mc_events_count = mc_events.size();
 
   int total = 0;
 
@@ -135,7 +136,7 @@ MessageFormatter::formatMessage(const AbntAddr& abnt,
     smsc_log_debug(logger, "MessageFormatter::formatMessage::: process next event: event idx=%d", i);
     AbntAddr from(&(mc_events[i].caller));
 
-    const std::string& fromAbnt = (from.getText().empty() ? unknownCaller : from.getText());
+    const std::string& fromAbnt = ((mc_events[i].missCallFlags & misscall::ANTI_AON_FOR_CALLER) ? unknownCaller : from.getText());
 
     const std::string& report_msg_for_client =
       produceMessageForAbonent(toAbnt, fromAbnt, mc_events[i].callCount, mc_events[i].dt + timeOffset, &total, &ctx);
