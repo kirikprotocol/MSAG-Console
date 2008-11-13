@@ -57,7 +57,7 @@ FSStorage::~FSStorage()
   smsc_log_debug(logger, "FSStorage: Destroed.\n");
 }
 
-int FSStorage::Init(ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue, const std::string& fileVersionExt)
+int FSStorage::Init(ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue)
 {
   MutexGuard lock(mut);
 
@@ -83,10 +83,7 @@ int FSStorage::Init(ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue, co
   try { bdFilesIncr = storageConfig->getInt("bdFilesIncr"); } catch (...){bdFilesIncr = DEFAULT_BDFILES_INCR;
     smsc_log_warn(logger, "Parameter <MCISme.Storage.bdFilesIncr> missed. Default value is %s.", DEFAULT_BDFILES_INCR);}
 
-  std::string fileVersionSuffix(fileVersionExt);
-  if ( !fileVersionSuffix.empty() && fileVersionSuffix[0] != '.' )
-    fileVersionSuffix.insert(fileVersionSuffix.begin(), '.');
-
+  std::string fileVersionSuffix = ".v3";
   pathDatFile = location + "dat_file" + fileVersionSuffix;
 
   if(maxEvents > MAX_EVENTS) maxEvents = MAX_EVENTS;
@@ -114,7 +111,9 @@ int FSStorage::Init(const string& location, time_t _eventLifeTime, uint8_t _maxE
   if ( directory[directory.size() - 1] != '/' )
     directory += '/';
 
-  pathDatFile = directory + "dat_file";
+  std::string fileVersionSuffix = ".v3";
+  pathDatFile = location + "dat_file" + fileVersionSuffix;
+
   eventLifeTime = _eventLifeTime;
   maxEvents <= MAX_EVENTS? maxEvents = _maxEvents: maxEvents = MAX_EVENTS;
 
@@ -168,7 +167,6 @@ void FSStorage::setSchedParams(const AbntAddr& CalledNum, time_t schedTime, uint
 bool FSStorage::getEvents(const AbntAddr& CalledNum, vector<MCEvent>& events)
 {
   MutexGuard lock(mut);
-  MCEvent e;
 
   smsc_log_debug(logger, "FSStorage::getEvents::: try get events for called abonent=[%s]", CalledNum.getText().c_str());
   if(hashAbnt.Exists(CalledNum))
@@ -189,12 +187,14 @@ bool FSStorage::getEvents(const AbntAddr& CalledNum, vector<MCEvent>& events)
 
     for(int i = 0; i < AbntEvents.eventCount; i++)
     {
+      MCEvent e;
       e.id = AbntEvents.events[i].id;
       e.dt = AbntEvents.events[i].date;
+      e.missCallFlags = AbntEvents.events[i].flags;
       e.callCount = AbntEvents.events[i].callCount;
       memcpy((void*)&(e.caller), (void*)&(AbntEvents.events[i].callingNum), sizeof(e.caller));
       events.push_back(e);
-      smsc_log_debug(logger, "FSStorage::getEvents::: AbntEvents.events[%d].id=%d,AbntEvents.events[%d].date=%x,AbntEvents.events[%d].callingNum=%s,AbntEvents.events[%d].callCount=%d",i,AbntEvents.events[i].id,i,AbntEvents.events[i].date,i,AbntAddr(&AbntEvents.events[i].callingNum).getText().c_str(),i,AbntEvents.events[i].callCount);
+      smsc_log_debug(logger, "FSStorage::getEvents::: AbntEvents.events[%d].id=%d,AbntEvents.events[%d].date=%x,AbntEvents.events[%d].callingNum=%s,AbntEvents.events[%d].callCount=%d,AbntEvents.events[%d].flags=%d",i,AbntEvents.events[i].id,i,AbntEvents.events[i].date,i,AbntAddr(&AbntEvents.events[i].callingNum).getText().c_str(),i,AbntEvents.events[i].callCount,AbntEvents.events[i].flags);
     }
     return 1;
   }
@@ -304,8 +304,9 @@ int FSStorage::CreateAbntEvents(const AbntAddr& CalledNum, const MCEvent& event,
   dat.events[0].id = 0;
   memcpy((void*)&(dat.events[0].callingNum), (void*)&(event.caller), sizeof(dat.events[0].callingNum));
   dat.events[0].callCount = 1;
+  dat.events[0].flags = event.missCallFlags;
 
-  smsc_log_debug(logger, "FSStorage::CreateAbntEvents::: called addr=[%s],dat.events[0].callingNum=[%s]", AbntAddr(&dat.calledNum).getText().c_str(), AbntAddr(&dat.events[0].callingNum).getText().c_str());
+  smsc_log_debug(logger, "FSStorage::insertEventIntoPosition:::  called addr=[%s], insert event into idx=0, event_cell.date=0x%x,event_cell.id=%d,event_cell.callingNum=%s,event_cell.callCount=%d,event_cell.flags=0x%x", AbntAddr(&dat.calledNum).getText().c_str(), dat.events[0].date, dat.events[0].id, AbntAddr(&dat.events[0].callingNum).getText().c_str(), dat.events[0].callCount, dat.events[0].flags);
   if(freeCells.Empty())
     IncrStorage(bdFilesIncr);
 
@@ -465,7 +466,8 @@ FSStorage::insertEventIntoPosition(dat_file_cell* pAbntEvents,
 
   memcpy((void*)&(pAbntEvents->events[idx].callingNum), (void*)&(event.caller.full_addr), sizeof(pAbntEvents->events[idx].callingNum));
   pAbntEvents->events[idx].callCount = 1;
-  smsc_log_debug(logger, "FSStorage::insertEventIntoPosition::: insert event into idx=%d, event_cell.date=%x,event_cell.id=%d,event_cell.callingNum=%s,event_cell.callCount=%d", idx, pAbntEvents->events[idx].date, pAbntEvents->events[idx].id,  AbntAddr(&pAbntEvents->events[idx].callingNum).getText().c_str(), pAbntEvents->events[idx].callCount);
+  pAbntEvents->events[idx].flags = event.missCallFlags;
+  smsc_log_debug(logger, "FSStorage::insertEventIntoPosition::: called addr=[%s], insert event into idx=%d, event_cell.date=0x%x,event_cell.id=%d,event_cell.callingNum=%s,event_cell.callCount=%d,event_cell.flags=0x%x", AbntAddr(&pAbntEvents->calledNum).getText().c_str(), idx, pAbntEvents->events[idx].date, pAbntEvents->events[idx].id,  AbntAddr(&pAbntEvents->events[idx].callingNum).getText().c_str(), pAbntEvents->events[idx].callCount,pAbntEvents->events[idx].flags);
 }
 
 void
