@@ -128,7 +128,7 @@ public:
   int Get(vector<SchedItem>& items, int count);
   void Remove(const AbntAddr& abnt);
   void Erase(void);
-
+  time_t calculateSchedTime(bool onBusy) const;
 private:
 
   void Resched(const AbntAddr& abnt, time_t oldSchedTime, time_t newSchedTime);
