@@ -3,7 +3,8 @@
 #include <scag/exc/SCAGExceptions.h>
 
 #include "Exceptions.hpp"
-#include "advert/AdvertisingImpl.h"
+#include "advert/BEProtocolV1SimpleClient.hpp"
+#include "advert/BEProtocolV2SimpleClient.hpp"
 
 namespace smsc {
 namespace mcisme {
@@ -50,7 +51,22 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
     smsc_log_warn(_logger, "Parameter <MCISme.Advertising.connectTimeout> missed. Default value is '15'.");
   }
 
-  _advertising = new SimpleAdvertisingClient(advertServer, advertPort, advertTimeout);
+  try {
+    int bannerEngineProtocolVersion = advertCfg->getInt("BEProtocolVersion");
+    switch (bannerEngineProtocolVersion) {
+    case BEProtocolV1SimpleClient::PROTOCOL_VERSION:
+      _advertising = new BEProtocolV1SimpleClient(advertServer, advertPort, advertTimeout);
+      break;
+    case BEProtocolV2SimpleClient::PROTOCOL_VERSION:
+      _advertising = new BEProtocolV2SimpleClient(advertServer, advertPort, advertTimeout);
+      break;
+    default:
+      throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: invalid Advertising.BEProtocolVersion value [%d]", bannerEngineProtocolVersion);
+    }
+  } catch (ConfigException& ex) {
+    _advertising = new BEProtocolV1SimpleClient(advertServer, advertPort, advertTimeout);
+  }
+
   try {
     _advertising->init(_connectTimeout);
   } catch (std::exception& ex) {
@@ -155,7 +171,7 @@ SendMessageEventHandler::getBanner(const AbntAddr& abnt)
 
   smsc_log_debug(_logger, "SendMessageEventHandler::getBanner::: call to BE for abonent '%s'", abnt.getText().c_str());
   try {
-    rc = _advertising->getBanner(abnt.toString(), _taskProcessor.getSvcType(), SMPP_SMS, UTF16BE, ret);
+    rc = _advertising->getBanner(abnt.toString(), _taskProcessor.getSvcTypeForBE(), SMPP_SMS, UTF16BE, ret);
     if(rc == 0)
     {
       try {
@@ -176,6 +192,9 @@ SendMessageEventHandler::getBanner(const AbntAddr& abnt)
       smsc_log_debug(_logger, "getBanner Error. Error code = %d", rc);
   } catch (NetworkException& ex) {
     smsc_log_error(_logger, "SendMessageEventHandler::getBanner::: catched NetworkException '%s'", ex.what());
+    _advertising->reinit(_connectTimeout);
+  } catch (UnrecoveredProtocolError& ex) {
+    smsc_log_error(_logger, "SendMessageEventHandler::getBanner::: catched UnrecoveredProtocolError");
     _advertising->reinit(_connectTimeout);
   }
 
