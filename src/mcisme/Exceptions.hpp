@@ -17,6 +17,19 @@ protected:
   NetworkException() {}
 };
 
+class TimeoutException : public NetworkException {
+public:
+  TimeoutException(const char * fmt, ...)
+    : NetworkException()
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
+
+class UnrecoveredProtocolError : public util::Exception {
+public:
+};
+
 }}
 
 #endif
