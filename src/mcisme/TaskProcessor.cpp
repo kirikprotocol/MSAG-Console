@@ -441,6 +441,12 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   ConfigView* advertCfg = advertCfgGuard.get();
 
   try {
+    svcTypeForBe = advertCfg->getString("SvcTypeForBe");
+  } catch(ConfigException& exc) {
+    svcTypeForBe = "";
+  }
+
+  try {
     if (advertCfg->getBool("useAdvert"))
       _outputMessageProcessorsDispatcher = new BannerOutputMessageProcessorsDispatcher(*this, advertCfg);
     else
@@ -452,8 +458,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 
   std::auto_ptr<ConfigView> storageCfgGuard(config->getSubConfig("Storage"));
   pStorage = new FSStorage();
-  const char* v2_suffix = ".v2";
-  int ret = pStorage->Init(storageCfgGuard.get(), pDeliveryQueue, v2_suffix);
+  int ret = pStorage->Init(storageCfgGuard.get(), pDeliveryQueue);
   smsc_log_warn(logger, "ret = %d", ret);
 
   string sResponseWaitTime;
@@ -595,6 +600,8 @@ int TaskProcessor::Execute()
       MCEvent  outEvent;
       outEvent = from;
       outEvent.dt = time(0);
+      outEvent.missCallFlags = event.flags;
+
       AbonentProfile profile;
       profileStorage->Get(to, profile);
 
@@ -604,8 +611,11 @@ int TaskProcessor::Execute()
       {
         AbonentProfile callerProfile;
         profileStorage->Get(from, callerProfile);
-        time_t schedTime = pDeliveryQueue->Schedule(to, ((event.cause&0x02)==0x02)); //0x02 - BUSY
+
+        time_t schedTime = pDeliveryQueue->calculateSchedTime((event.cause&0x02)==0x02); //0x02 - BUSY
         pStorage->addEvent(to, outEvent, schedTime);
+        pDeliveryQueue->Schedule(to, ((event.cause&0x02)==0x02), schedTime);
+
         store_A_Event_in_logstore(from, to, profile, callerProfile);
         statistics->incMissed();
         smsc_log_debug(logger, "Abonent %s (couse = 0x%02X) was added to Scheduled Delivery Queue", to.toString().c_str(), event.cause);
@@ -683,8 +693,6 @@ TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt,
 bool
 TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg, const MCEventOut& outEvent)
 {
-  MutexGuard Lock(smsInfoMutex);
-
   int seqNum;
   try {
     seqNum = getMessageSender()->getSequenceNumber();
@@ -700,20 +708,20 @@ TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg, const MCEve
   pInfo->lastCallingTime = outEvent.lastCallingTime;
   pInfo->events = outEvent.srcEvents;
 
-  smsInfo.Insert(seqNum, pInfo);
+  insertSmsInfo(seqNum, pInfo);
 
   try {
     if(!getMessageSender()->send(seqNum, msg))
     {
       smsc_log_error(logger, "Send DATA_SM for Abonent %s failed", pInfo->abnt.toString().c_str());
       pDeliveryQueue->Reschedule(pInfo->abnt);
-      smsInfo.Delete(seqNum);
+      deleteSmsInfo(seqNum);
       delete pInfo;
       return false;
     }
   } catch (RetryException& ex) {
     pDeliveryQueue->Reschedule(abnt);
-    smsInfo.Delete(seqNum);
+    deleteSmsInfo(seqNum);
     delete pInfo;
     throw;
   }
