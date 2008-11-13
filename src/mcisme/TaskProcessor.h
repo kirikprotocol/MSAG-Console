@@ -102,7 +102,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   smsc::logger::Logger *logger;
 
   int              protocolId, daysValid;
-  std::string      svcType, svcTypeOnLine, address;
+  std::string      svcType, svcTypeOnLine, svcTypeForBe, address;
 
   int              releaseCallsStrategy;
   int              stkTemplateId;
@@ -176,6 +176,15 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
     return messageSender;
   }
 
+  inline void insertSmsInfo(int seqNum, sms_info* pInfo) {
+    MutexGuard Lock(smsInfoMutex);
+    smsInfo.Insert(seqNum, pInfo);
+  }
+
+  inline void deleteSmsInfo(int seqNum) {
+    MutexGuard Lock(smsInfoMutex);
+    smsInfo.Delete(seqNum);
+  }
 public:
 
   TaskProcessor(ConfigView* config);
@@ -189,8 +198,10 @@ public:
   int getDaysValid()       { return daysValid;  }
   int getProtocolId()      { return protocolId; }
 
-  const char* getSvcType() const { return (svcType.c_str()!="") ? svcType.c_str():"MCISme"; }
-  const char* getSvcTypeOnLine() const { return (svcTypeOnLine.c_str()!="") ? svcTypeOnLine.c_str():"MCISme"; }
+  const char* getSvcType() const { return (svcType != "") ? svcType.c_str():"MCISme"; }
+  const char* getSvcTypeOnLine() const { return (svcTypeOnLine != "") ? svcTypeOnLine.c_str():"MCISme"; }
+  const char* getSvcTypeForBE() const { return (svcTypeForBe != "") ? svcTypeForBe.c_str(): getSvcType(); }
+
   const std::string& getAddress() const { return address; }
 
   void assignMessageSender(MessageSender* sender) {
