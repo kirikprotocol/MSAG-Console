@@ -150,7 +150,6 @@ int MissedCallProcessorEmulator::run()
 
         while ( clntSocket->Gets(cmdBuf, sizeof(cmdBuf)) > 0 ) {
           smsc::misscall::MissedCallEvent event = stringParser(cmdBuf);
-          smsc_log_info(_logger, "MissedCallProcessorEmulator::run::: generated event=[%s,%s,%x]\n", event.from.c_str(), event.to.c_str(), event.cause);
           fireMissedCallEvent(event);
         }
       }
