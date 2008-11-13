@@ -1,5 +1,12 @@
 #include <time.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
+
 #include <sstream>
+
 #include <util/Exception.hpp>
 #include "MCAEventsStorage.hpp"
 
@@ -16,6 +23,54 @@ time2string(const timeval& tp)
 
   snprintf(timeStr + strlen(timeStr), sizeof(timeStr) - strlen(timeStr), "%3.3u", msec);
   return timeStr;
+}
+
+void
+MCAEventsFileStorage::findMatchedFiles(const std::string& dirName,
+                                       const std::string& baseName,
+                                       const std::string& suffix,
+                                       std::vector<std::string>* machedFiles)
+{
+  errno = 0;
+  DIR* dir = opendir(dirName.c_str());
+  if (!dir) {
+    std::string errMsg = "moveMatchedFiles::: can't open directory=[";
+    errMsg += dirName + "]";
+    throw util::SystemError(errMsg);
+  }
+
+  struct dirent dirEntry, *realDirEntry=NULL;
+  char BUFFER[1024];
+  while (!readdir_r(dir, (struct dirent*)BUFFER, &realDirEntry) && realDirEntry) {
+    if ( !strncmp(realDirEntry->d_name, baseName.c_str(), baseName.length()) &&
+         !strncmp(realDirEntry->d_name + strlen(realDirEntry->d_name) - suffix.length(), suffix.c_str(), suffix.length()) )
+      machedFiles->push_back(realDirEntry->d_name);
+    realDirEntry=NULL;
+  }
+
+  closedir(dir);
+
+  if (errno)
+    throw util::SystemError("moveMatchedFiles::: can't read directory entry");
+}
+
+void
+MCAEventsFileStorage::moveFiles(const std::string& dirName,
+                                const std::vector<std::string>& originalFiles,
+                                const std::string& oldSuffix,
+                                const std::string& newSuffix)
+{
+  for(std::vector<std::string>::const_iterator i = originalFiles.begin(), end_iter = originalFiles.end();
+      i != end_iter; ++i) {
+    std::string oldFullFileName = dirName + ((dirName[dirName.length()-1] == '/') ? "" : std::string("/")) + (*i);
+    std::string newFullFileName = oldFullFileName.substr(0, oldFullFileName.length() - oldSuffix.length()) + newSuffix;
+    smsc_log_debug(_logger, "MCAEventsFileStorage::moveFiles::: rename %s to %s", oldFullFileName.c_str(), newFullFileName.c_str());
+    if ( rename(oldFullFileName.c_str(), newFullFileName.c_str()) ) {
+      std::string errMsg("moveFiles::: can't rename file ");
+      errMsg += oldFullFileName + "to " + newFullFileName;
+      throw SystemError(errMsg);
+    }
+  }
 }
 
 std::string
@@ -91,14 +146,29 @@ MCAEventsFileStorage::MCAEventsFileStorage(const std::string& dirName,
   : _rollingInterval(rollingInterval), _lastRollingTime(time(0)),
     _logger(logger::Logger::getInstance("mcastrg"))
 {
-  _fileNamePrefix = dirName + fileNamePrefix;
+  _dirName = dirName;
+  _fileNamePrefix = fileNamePrefix;
 
+  moveAllPendingCSVFiles();
   formLogFileNameAndOpenIt(_lastRollingTime);
 }
 
 MCAEventsFileStorage::~MCAEventsFileStorage()
 {
   fclose(_eventFileFD);
+}
+
+void
+MCAEventsFileStorage::moveAllPendingCSVFiles()
+{
+  std::vector<std::string> matchedFiles;
+
+  findMatchedFiles(_dirName, _fileNamePrefix, "log", &matchedFiles);
+
+  moveFiles(_dirName,
+            matchedFiles,
+            ".log",
+            ".csv");
 }
 
 std::string
@@ -134,8 +204,8 @@ MCAEventsFileStorage::formLogFileNameAndOpenIt(time_t curTime)
 {
   std::string timeStampString = calculateTimeStamp(curTime);
 
-  _logFileName = _fileNamePrefix + timeStampString + ".log";
-  _cvsFileName = _fileNamePrefix + timeStampString + ".csv";
+  _logFileName = _dirName + _fileNamePrefix + timeStampString + ".log";
+  _cvsFileName = _dirName + _fileNamePrefix + timeStampString + ".csv";
 
   if ( !(_eventFileFD = fopen(_logFileName.c_str(), "a+")) ) {
     char errMsg[128];
