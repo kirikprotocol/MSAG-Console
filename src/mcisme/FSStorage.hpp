@@ -18,12 +18,7 @@
 
 #include <core/buffers/Array.hpp>
 
-//#include <core/threads/Thread.hpp>
-//#include <core/threads/ThreadPool.hpp>
-
 #include <core/synchronization/Mutex.hpp>
-//#include <core/synchronization/Event.hpp>
-//#include <core/synchronization/EventMonitor.hpp>
 
 #include <sms/sms.h>
 #include <core/buffers/Hash.hpp>
@@ -47,18 +42,15 @@ const int MAX_EVENTS = 50;
 const int MAX_BDFILES_INCR = 10000;
 const int DEFAULT_BDFILES_INCR = 1000;
 
-//	ќписани€ сопутствующих структур данных.
-
-//	структура "событие дл€ абонента" 
 struct event_cell
 {
   time_t          date;
   uint8_t         id;
   AbntAddrValue	  callingNum;
   uint16_t        callCount;
+  uint8_t         flags;
 };
 
-//	структура файла событий дл€ абонентов
 struct dat_file_cell
 {
   time_t        schedTime;
@@ -69,10 +61,9 @@ struct dat_file_cell
   event_cell    events[MAX_EVENTS];
 };
 
-//	очередь свободных €чеек(позици€ в файле) дл€ файла индексов и файла событий дл€ абонентов.
 class FreeCells
 {
-  list<uint32_t>	free_cells;
+  list<uint32_t> free_cells;
 
 public:
   FreeCells(){}
@@ -92,10 +83,10 @@ public:
   void Erase(void){free_cells.clear();}
 };
 
-typedef uint32_t	cell_t;
+typedef uint32_t cell_t;
 class HashAbnt
 {
-  Hash<cell_t>	num_cell;	//	таблица местоположиний записей в файлах данных и индексов об абонентне (ключ - Address)
+  Hash<cell_t>	num_cell;
 
 public:
   HashAbnt(){}
@@ -132,7 +123,7 @@ public:
   FSStorage();
   ~FSStorage();
 
-  virtual int Init(smsc::util::config::ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue, const std::string& fileVersionSuffix);
+  virtual int Init(smsc::util::config::ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue);
   virtual int Init(const string& location, time_t eventLifeTime, uint8_t maxEvents, DeliveryQueue* pDeliveryQueue);
   virtual void addEvent(const AbntAddr& CalledNum, const MCEvent& event, time_t schedTime);
   virtual void setSchedParams(const AbntAddr& CalledNum, time_t schedTime, uint16_t lastError = -1);
@@ -141,12 +132,8 @@ public:
 
 private:
   smsc::logger::Logger *logger;
-  FreeCells	freeCells;			//	список свободных €чеек(номер €чейки).
+  FreeCells	freeCells;
 
-  //	хэш-таблица абонентов, дл€ которых существуют событи€.
-  //	 люч - абонент, значение - индекс в файле событий дл€ абонентов
-  //				(номер записи. позици€ в файле определ€етс€ индекс*размер_записи).
-  //
   HashAbnt  hashAbnt;
 
   string    pathDatFile;
@@ -173,7 +160,7 @@ private:
   void AddAbntEvent(dat_file_cell* pAbntEvents, const MCEvent& event);
   void RemoveAbntEvents(dat_file_cell* pAbntEvents, const vector<MCEvent>& events);
   void RemoveEvent(dat_file_cell* pAbntEvents, const MCEvent& event);
-  int KillExpiredEvents(dat_file_cell* pAbntEvents);		// убирает событи€ у которых истек срок доставки и возвращает кол-во уничтоженны событий.
+  int KillExpiredEvents(dat_file_cell* pAbntEvents);
 
   int IncrDatFile(const uint32_t& num_cells);
   int IncrStorage(const uint32_t& num_cells);
