@@ -1,8 +1,8 @@
 package ru.sibinco.smsx.engine.service.calendar;
 
-import com.eyeline.sme.utils.worker.IterativeWorker;
-import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.OutgoingObject;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.utils.worker.IterativeWorker;
 import com.eyeline.utils.ThreadFactoryWithCounter;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
@@ -10,11 +10,13 @@ import ru.aurorisoft.smpp.PDU;
 import ru.aurorisoft.smpp.SubmitResponse;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarDataSource;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarMessage;
-import ru.sibinco.smsx.utils.DataSourceException;
+import ru.sibinco.smsx.network.advertising.AdvertisingClient;
+import ru.sibinco.smsx.network.advertising.AdvertisingClientException;
 
 import java.util.Date;
-import java.util.Iterator;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * User: artem
@@ -32,15 +34,20 @@ class CalendarEngine extends IterativeWorker {
   private final long workingInterval;
   private final CalendarDataSource ds;
   private final ThreadPoolExecutor executor;
+  private final AdvertisingClient advClient;
+  private String advDelim;
+  private int advSize;
+  private String advService;
 
   private volatile int rejectedTasks;  
 
-  CalendarEngine(OutgoingQueue outQueue, MessagesQueue messagesQueue, CalendarDataSource ds, long workingInterval) {
+  CalendarEngine(OutgoingQueue outQueue, MessagesQueue messagesQueue, CalendarDataSource ds, AdvertisingClient advClient, long workingInterval) {
     super(log);
 
     this.outQueue = outQueue;
     this.workingInterval = workingInterval;
     this.ds = ds;
+    this.advClient = advClient;
     this.messagesQueue = messagesQueue;
     this.executor = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue(100), new ThreadFactoryWithCounter("CalEngine-Executor-"));
   }
@@ -72,6 +79,30 @@ class CalendarEngine extends IterativeWorker {
         log.error("Can't remove msg: ", e);
       }
     }
+  }
+
+  public String getAdvDelim() {
+    return advDelim;
+  }
+
+  public void setAdvDelim(String advDelim) {
+    this.advDelim = advDelim;
+  }
+
+  public int getAdvSize() {
+    return advSize;
+  }
+
+  public void setAdvSize(int advSize) {
+    this.advSize = advSize;
+  }
+
+  public String getAdvService() {
+    return advService;
+  }
+
+  public void setAdvService(String advService) {
+    this.advService = advService;
   }
 
   public Date getEndDate() {
@@ -110,12 +141,21 @@ class CalendarEngine extends IterativeWorker {
       final Message msg = new Message();
       msg.setSourceAddress(message.getSourceAddress());
       msg.setDestinationAddress(message.getDestinationAddress());
-      msg.setMessageString(message.getMessage());
       msg.setDestAddrSubunit(message.getDestAddressSubunit());
       msg.setConnectionName(message.getConnectionName());
       msg.setMscAddress(message.getMscAddress());
       if (message.isSaveDeliveryStatus())
         msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
+
+      String messageString = message.getMessage();
+      if (message.isAppendAdvertising()) {
+        final String banner = (advSize > 0) ? getBannerForAbonent(message.getSourceAddress(), advSize - messageString.length() - advDelim.length()) : getBannerForAbonent(message.getSourceAddress());
+        if (log.isInfoEnabled())
+          log.info("Append banner: " + banner);
+        if (banner != null)
+          messageString += advDelim + banner;
+      }
+      msg.setMessageString(messageString);
 
       final CalendarTransportObject outObj = new CalendarTransportObject(message);
       outObj.setMessage(msg);
@@ -123,6 +163,24 @@ class CalendarEngine extends IterativeWorker {
 
     } catch (Throwable e) {
       log.error("Can't send msg: ",e);
+    }
+  }
+
+  private String getBannerForAbonent(final String abonentAddress) {
+    try {
+      return advClient.getBanner(advService, abonentAddress);
+    } catch (AdvertisingClientException e) {
+      log.error("Can't get banner for abonent " + abonentAddress, e);
+      return null;
+    }
+  }
+
+  private String getBannerForAbonent(final String abonentAddress, int maxBannerLength) {
+    try {
+      return advClient.getBanner(advService, abonentAddress, maxBannerLength);
+    } catch (AdvertisingClientException e) {
+      log.error("Can't get banner for abonent " + abonentAddress, e);
+      return null;
     }
   }
 

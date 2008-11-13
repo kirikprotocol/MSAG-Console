@@ -17,10 +17,15 @@ public interface SecretDataSource {
   public void removeSecretUser(final SecretUser secretUser) throws DataSourceException;
   public Map<String, SecretUser> loadSecretUsersByAddresses(final String[] addresses) throws DataSourceException;
 
+  public DataSourceTransaction createTransaction() throws DataSourceException;
+
   public Collection<SecretMessage> loadSecretMessagesByAddress(final String address) throws DataSourceException;
   public SecretMessage loadSecretMessageById(int id) throws DataSourceException;
   public int loadMessagesCountByAddress(final String address) throws DataSourceException;
+
   public void saveSecretMessage(final SecretMessage secretMessage) throws DataSourceException;
+  public void saveSecretMessage(SecretMessage secretMessage, DataSourceTransaction tx) throws DataSourceException;
+
   public void removeSecretMessage(final SecretMessage secretMessage) throws DataSourceException;
   public void updateMessageStatus(SecretMessage secretMessage) throws DataSourceException;
   public int updateMessageStatus(long smppId, int status) throws DataSourceException;

@@ -51,7 +51,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
 
   }
@@ -74,7 +74,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
   }
 
@@ -104,7 +104,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -128,7 +128,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -159,7 +159,15 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
+    }
+  }
+
+  public DataSourceTransaction createTransaction() throws DataSourceException {
+    try {
+      return new DBDataSourceTransaction(pool.getConnection());
+    } catch (SQLException e) {
+      throw new DataSourceException(e);
     }
   }
 
@@ -192,13 +200,14 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
         msg.setNotifyOriginator(rs.getInt(10) == 1);
         msg.setConnectionName(rs.getString(11));
         msg.setMscAddress(rs.getString(12));
+        msg.setAppendAdvertising(rs.getInt(13) == 1);
         messages.add(msg);
       }
 
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
 
     return messages;
@@ -230,6 +239,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
         msg.setNotifyOriginator(rs.getInt(10) == 1);
         msg.setConnectionName(rs.getString(11));
         msg.setMscAddress(rs.getString(12));
+        msg.setAppendAdvertising(rs.getInt(13) == 1);
         return msg;
       }
 
@@ -238,7 +248,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
   }
 
@@ -263,15 +273,30 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
   }
 
   public void saveSecretMessage(SecretMessage secretMessage) throws DataSourceException {
-    Connection conn = null;
+    DataSourceTransaction tx = null;
+    try {
+      tx = createTransaction();
+      saveSecretMessage(secretMessage, tx);
+      tx.commit();
+    } catch (DataSourceException e) {
+      if (tx != null)
+        tx.rollback();
+      throw new DataSourceException(e);
+    } finally {
+      if (tx != null)
+        tx.close();
+    }
+  }
+
+  public void saveSecretMessage(SecretMessage secretMessage, DataSourceTransaction tx) throws DataSourceException {
     PreparedStatement ps = null;
     try {
-      conn = pool.getConnection();
+      Connection conn = ((DBDataSourceTransaction)tx).conn;
 
       ps = conn.prepareStatement(getSql((!secretMessage.isExists()) ? "secret.message.insert" : "secret.message.update"));
 
@@ -285,6 +310,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       ps.setInt(8, secretMessage.isNotifyOriginator() ? 1 : 0);
       ps.setString(9, secretMessage.getConnectionName());
       ps.setString(10, secretMessage.getMscAddress());
+      ps.setInt(11, secretMessage.isAppendAdvertising() ? 1 : 0);
 
       if (!secretMessage.isExists()) {
         synchronized (idLock) {
@@ -293,14 +319,14 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
         }
       }
 
-      ps.setInt(11, secretMessage.getId());
+      ps.setInt(12, secretMessage.getId());
 
       ps.executeUpdate();
 
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, null);
     }
   }
 
@@ -321,7 +347,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -343,7 +369,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -363,7 +389,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -385,7 +411,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -424,6 +450,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
         msg.setNotifyOriginator(rs.getInt(11) == 1);
         msg.setConnectionName(rs.getString(12));
         msg.setMscAddress(rs.getString(13));
+        msg.setAppendAdvertising(rs.getInt(14) == 1);
         messages.add(msg);
       }
 
@@ -441,6 +468,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
         msg.setNotifyOriginator(rs.getInt(11) == 1);
         msg.setConnectionName(rs.getString(12));
         msg.setMscAddress(rs.getString(13));
+        msg.setAppendAdvertising(rs.getInt(14) == 1);
         messages.add(msg);
       }
 
@@ -449,11 +477,46 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
   }
 
   public void release() {
     pool.release();
+  }
+
+  private class DBDataSourceTransaction implements DataSourceTransaction {
+
+    private final Connection conn;
+
+    private DBDataSourceTransaction(Connection conn) throws SQLException {
+      this.conn = conn;
+      if (conn.getAutoCommit())
+        conn.setAutoCommit(false);
+    }
+
+    public void commit() throws DataSourceException {
+      try {
+        conn.commit();
+      } catch (SQLException e) {
+        throw new DataSourceException(e);
+      }
+    }
+
+    public void rollback() throws DataSourceException {
+      try {
+        conn.rollback();
+      } catch (SQLException e) {
+        throw new DataSourceException(e);
+      }
+    }
+
+    public void close() throws DataSourceException {
+      try {
+        conn.setAutoCommit(true);
+      } catch (SQLException e) {
+      }
+      _close(null, null, conn);
+    }
   }
 }

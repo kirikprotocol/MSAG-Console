@@ -3,6 +3,7 @@ package ru.sibinco.smsx.engine.service.calendar;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.config.xml.XmlConfigSection;
 import ru.sibinco.smsx.engine.service.ServiceInitializationException;
 import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStatusCmd;
@@ -10,6 +11,8 @@ import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarHandleReceiptCmd;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarDataSource;
 import ru.sibinco.smsx.engine.service.calendar.datasource.DBCalendarDataSource;
+import ru.sibinco.smsx.network.advertising.AdvertisingClient;
+import ru.sibinco.smsx.network.advertising.AdvertisingClientFactory;
 
 import java.io.File;
 
@@ -23,17 +26,25 @@ public class CalendarServiceImpl implements CalendarService {
   private final CalendarProcessor processor;
   private final CalendarEngine engine;
   private final CalendarDataSource dataSource;
+  private final AdvertisingClient advClient;
 
   public CalendarServiceImpl(XmlConfig config, final OutgoingQueue outQueue) {
     try {
 
       dataSource = new DBCalendarDataSource();
 
+      advClient = AdvertisingClientFactory.createAdvertisingClient();
+
       MessagesQueue messagesQueue = new MessagesQueue();
 
-      engine = new CalendarEngine(outQueue, messagesQueue, dataSource, config.getSection("calendar").getLong("engine.working.interval"));
+      XmlConfigSection cal = config.getSection("calendar");
 
-      processor = new CalendarProcessor(messagesQueue, dataSource, config.getSection("calendar").getInt("send.date.max.year"));
+      engine = new CalendarEngine(outQueue, messagesQueue, dataSource, advClient, cal.getLong("engine.working.interval"));
+      engine.setAdvDelim(cal.getString("advertising.delimiter"));
+      engine.setAdvSize(cal.getInt("advertising.size"));
+      engine.setAdvService(cal.getString("advertising.service"));
+
+      processor = new CalendarProcessor(messagesQueue, dataSource, cal.getInt("send.date.max.year"));
 
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);
@@ -58,6 +69,7 @@ public class CalendarServiceImpl implements CalendarService {
 
   public void stopService() {
     engine.stop();
+    advClient.close();
     dataSource.release();
   }
 

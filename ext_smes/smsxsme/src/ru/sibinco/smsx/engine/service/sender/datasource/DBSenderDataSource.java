@@ -48,7 +48,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
 
   }
@@ -75,7 +75,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
 
   }
@@ -106,7 +106,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -129,7 +129,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -150,7 +150,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -174,7 +174,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 

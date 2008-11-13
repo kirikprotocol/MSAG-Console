@@ -7,10 +7,18 @@
 
 package ru.sibinco.smsx.engine.soaphandler.smsxsender;
 
+import org.apache.axis.MessageContext;
+import org.apache.axis.Message;
+import org.apache.axis.attachments.Attachments;
+
+import javax.xml.soap.AttachmentPart;
+import javax.xml.soap.SOAPException;
 import java.rmi.RemoteException;
+import java.io.InputStream;
+import java.io.IOException;
 
 public class SmsXSenderSoapService implements SmsXSender, org.apache.axis.wsdl.Skeleton {
-  private SmsXSender impl;
+  private SmsXSenderHandler impl;
   private static java.util.Map _myOperations = new java.util.Hashtable();
   private static java.util.Collection _myOperationsList = new java.util.ArrayList();
 
@@ -97,15 +105,31 @@ public class SmsXSenderSoapService implements SmsXSender, org.apache.axis.wsdl.S
       _myOperations.put("checkStatus", new java.util.ArrayList());
     }
     ((java.util.List)_myOperations.get("checkStatus")).add(_oper);
+
+    _params = new org.apache.axis.description.ParameterDesc [] {
+      new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SourceAddress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
+      new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "Message"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
+      new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SMSXExpress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), java.lang.String.class, false, false),
+    };
+    _oper = new org.apache.axis.description.OperationDesc("batchSecret", _params, new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "checkStatusReturn"));
+    _oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
+    _oper.setElementQName(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "batchSecret"));
+    _oper.setSoapAction("");
+    _myOperationsList.add(_oper);
+    if (_myOperations.get("batchSecret") == null) {
+      _myOperations.put("batchSecret", new java.util.ArrayList());
+    }
+    ((java.util.List)_myOperations.get("batchSecret")).add(_oper);
   }
 
   public SmsXSenderSoapService() {
     this.impl = SmsXSenderFactory.createSmsXSenderHandler();
   }
 
-  public SmsXSenderSoapService(SmsXSender impl) {
+  public SmsXSenderSoapService(SmsXSenderHandler impl) {
     this.impl = impl;
   }
+
   public SmsXSenderResponse sendSms(java.lang.String MSISDN, java.lang.String message, boolean SMSXExpress, boolean SMSXSecret, boolean SMSXCalendar, long SMSXCalendarTimeUTC, boolean SMSXAdvertising) throws java.rmi.RemoteException
   {
     return impl.sendSms(MSISDN, message, SMSXExpress, SMSXSecret, SMSXCalendar, SMSXCalendarTimeUTC, SMSXAdvertising);
@@ -117,6 +141,25 @@ public class SmsXSenderSoapService implements SmsXSender, org.apache.axis.wsdl.S
 
   public SmsXSenderResponse checkStatus(java.lang.String SMSXIdMessage) throws java.rmi.RemoteException {
     return impl.checkStatus(SMSXIdMessage);
+  }
+
+  public int batchSecret(String oa, String message, boolean express) throws RemoteException {
+    MessageContext ctx = MessageContext.getCurrentContext();
+    Message reqMessage = ctx.getRequestMessage();
+    Attachments attachments = reqMessage.getAttachmentsImpl();
+    AttachmentPart attachement = (AttachmentPart)attachments.getAttachmentByReference("destinations");
+
+    InputStream is = null;
+    if (attachement != null) {
+      try {
+        is = attachement.getDataHandler().getInputStream();
+      } catch (Exception e) {
+        e.printStackTrace();
+        is = null;
+      }
+    }
+
+    return impl.batchSecret(oa, message, express, is);  
   }
 
   public int sendSysSms(String oa, String da, String message) throws RemoteException {

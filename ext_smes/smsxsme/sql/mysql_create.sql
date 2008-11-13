@@ -60,27 +60,6 @@ CREATE TABLE smpp_messages (
 ) CHARACTER SET koi8r, ENGINE InnoDB;
 
 
---TABLES FOR SPONSORED
-CREATE TABLE sponsored_distribution_info (
-  abonent CHAR(20) NOT NULL,
-  cnt SMALLINT NOT NULL DEFAULT 0,
-  today_cnt SMALLINT NOT NULL DEFAULT 0,
-  cur_cnt SMALLINT NOT NULL DEFAULT 0,
-  tm TIMESTAMP DEFAULT now(),
-
-  PRIMARY KEY(abonent),
-  INDEX(today_cnt)
-) CHARACTER SET koi8r, ENGINE InnoDB;
-
-CREATE TABLE sponsored_delivery_stats (
-  address CHAR(20) NOT NULL,
-  date DATE NOT NULL,
-  cnt SMALLINT NOT NULL default 1,
-
-  PRIMARY KEY (address, date)
-) ENGINE InnoDB;
-
-
 --TABLES FOR NICKS
 CREATE TABLE nicks (
   address CHAR(20) NOT NULL,

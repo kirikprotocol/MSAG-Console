@@ -14,6 +14,7 @@ import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStat
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
 import ru.sibinco.smsx.engine.service.secret.commands.SecretGetMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.secret.commands.SecretSendMessageCmd;
+import ru.sibinco.smsx.engine.service.secret.commands.SecretBatchCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
 import ru.sibinco.smsx.engine.soaphandler.SOAPHandlerInitializationException;
@@ -22,10 +23,11 @@ import ru.sibinco.smsx.network.advertising.AdvertisingClientException;
 import ru.sibinco.smsx.utils.operators.Operator;
 
 import java.io.File;
+import java.io.InputStream;
 import java.rmi.RemoteException;
 import java.util.Date;
 
-class SmsXSenderHandler implements SmsXSender {
+class SmsXSenderHandler  {
 
   private static final Category log = Category.getInstance(SmsXSenderHandler.class);
 
@@ -35,6 +37,7 @@ class SmsXSenderHandler implements SmsXSender {
 
   // Secret service errors
   private static final int STATUS_SECRET_WRONG_DESTINATION_ADDRESS = -201;
+  private static final int STATUS_SECRET_DESTINATIONS_ARE_EMPTY = -202;
 
   // Calendar service errors
   private static final int STATUS_CALENDAR_WRONG_SEND_DATE = -100;
@@ -104,21 +107,12 @@ class SmsXSenderHandler implements SmsXSender {
         return new SmsXSenderResponse(null, -1, STATUS_DESTINATION_ABONENT_IN_BLACK_LIST);
       }
 
-      // Prepare message
-      if (advertising && appendAdvertising) {
-        final String banner = (advertisingRestriction > 0) ? getBannerForAbonent(msisdn, advertisingRestriction - message.length() - advertisingDelimiter.length()) : getBannerForAbonent(msisdn);
-        if (log.isInfoEnabled())
-          log.info("Append banner: " + banner);
-        if (banner != null)
-          message += advertisingDelimiter + banner;
-      }
-
       if (calendar)
-        return sendCalendarMessage(serviceAddress, msisdn, message, express, calendarTimeUTC, null);
+        return sendCalendarMessage(serviceAddress, msisdn, message, express, calendarTimeUTC, null, advertising);
       else if (secret)
-        return sendSecretMessage(serviceAddress, msisdn, message, express, null);
+        return sendSecretMessage(serviceAddress, msisdn, message, express, null, advertising);
       else
-        return sendSenderMessage(serviceAddress, msisdn, message, express, null);
+        return sendSenderMessage(serviceAddress, msisdn, message, express, null, advertising);
       
     } catch (Throwable e) {
       return new SmsXSenderResponse(null, -1, STATUS_SYSTEM_ERROR);
@@ -136,11 +130,11 @@ class SmsXSenderHandler implements SmsXSender {
         log.info("Send SMS: oa=" + oa + "; da=" + da + "; msg=" + message + "; express=" + express + "; secret=" + secret + "; calendar=" + calendar + "; time=" + new Date(calendarTimeUTC));
 
       if (calendar)
-        return sendCalendarMessage(oa, da, message, express, calendarTimeUTC, mscAddress);
+        return sendCalendarMessage(oa, da, message, express, calendarTimeUTC, mscAddress, false);
       else if (secret)
-        return sendSecretMessage(oa, da, message, express, mscAddress);
+        return sendSecretMessage(oa, da, message, express, mscAddress, false);
       else
-        return sendSenderMessage(oa, da, message, express, mscAddress);
+        return sendSenderMessage(oa, da, message, express, mscAddress, false);
 
     } catch (Throwable e) {
       return new SmsXSenderResponse(null, -1, STATUS_SYSTEM_ERROR);
@@ -173,7 +167,17 @@ class SmsXSenderHandler implements SmsXSender {
     return status;
   }
 
-  private SmsXSenderResponse sendSenderMessage(String sourceAddress, String destinationAddress, String message, boolean express, String mscAddress) {
+  private SmsXSenderResponse sendSenderMessage(String sourceAddress, String destinationAddress, String message, boolean express, String mscAddress, boolean advertising) {
+
+    // Prepare message
+    if (advertising && appendAdvertising) {
+      final String banner = (advertisingRestriction > 0) ? getBannerForAbonent(sourceAddress, advertisingRestriction - message.length() - advertisingDelimiter.length()) : getBannerForAbonent(sourceAddress);
+      if (log.isInfoEnabled())
+        log.info("Append banner: " + banner);
+      if (banner != null)
+        message += advertisingDelimiter + banner;
+    }
+
     SenderSendMessageCmd c = new SenderSendMessageCmd();
     c.setSourceAddress(sourceAddress);
     c.setDestinationAddress(destinationAddress);
@@ -201,7 +205,7 @@ class SmsXSenderHandler implements SmsXSender {
     return new SmsXSenderResponse(id_message, 0, status);
   }
 
-  private SmsXSenderResponse sendCalendarMessage(String sourceAddress, String destinationAddress, String message, boolean express, long calendarTimeUTC, String mscAddress) {
+  private SmsXSenderResponse sendCalendarMessage(String sourceAddress, String destinationAddress, String message, boolean express, long calendarTimeUTC, String mscAddress, boolean advertising) {
     final CalendarSendMessageCmd c = new CalendarSendMessageCmd();
     c.setSourceAddress(sourceAddress);
     c.setDestinationAddress(destinationAddress);
@@ -211,6 +215,7 @@ class SmsXSenderHandler implements SmsXSender {
     c.setStoreDeliveryStatus(true);
     c.setSourceId(AsyncCommand.SOURCE_SOAP);
     c.setMscAddress(mscAddress);
+    c.setAppendAdvertising(advertising);
 
     String id_message = null;
     int status;
@@ -234,7 +239,7 @@ class SmsXSenderHandler implements SmsXSender {
     return new SmsXSenderResponse(id_message, 0, status);
   }
 
-  private SmsXSenderResponse sendSecretMessage(String sourceAddress, String destinationAddress, String message, boolean express, String mscAddress) throws CommandExecutionException {
+  private SmsXSenderResponse sendSecretMessage(String sourceAddress, String destinationAddress, String message, boolean express, String mscAddress, boolean advertising) throws CommandExecutionException {
     final SecretSendMessageCmd c = new SecretSendMessageCmd();
     c.setSourceAddress(sourceAddress);
     c.setDestinationAddress(destinationAddress);
@@ -244,6 +249,7 @@ class SmsXSenderHandler implements SmsXSender {
     c.setNotifyOriginator(false);
     c.setSourceId(AsyncCommand.SOURCE_SOAP);
     c.setMscAddress(mscAddress);
+    c.setAppendAdverising(advertising);
 
     String id_message = null;
     int status;
@@ -292,6 +298,36 @@ class SmsXSenderHandler implements SmsXSender {
     }
 
     return new SmsXSenderResponse(messageId, smppStatus, messageStatus);
+  }
+
+  public int batchSecret(String oa, String message, boolean express, InputStream destinations) throws RemoteException {
+    if (log.isInfoEnabled())
+      log.info("Batch secret: oa=" + oa + "; msg=" + message);
+    long start = System.currentTimeMillis();
+
+    if (destinations == null) {
+      log.warn("Destinations are empty.");
+      return STATUS_SECRET_DESTINATIONS_ARE_EMPTY;
+    }
+
+    SecretBatchCmd cmd = new SecretBatchCmd();
+    cmd.setDestAddressSubunit(express ? 1 : 0);
+    cmd.setDestinations(destinations);
+    cmd.setMessage(message);
+    cmd.setSourceAddress(oa);
+    cmd.setSourceId(SecretBatchCmd.SOURCE_SOAP);
+
+    try {
+      Services.getInstance().getSecretService().execute(cmd);
+
+      return STATUS_ACCEPTED;
+    } catch (CommandExecutionException e) {
+      log.error(e,e);
+      return STATUS_SYSTEM_ERROR;
+    } finally {
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
+    }
   }
 
 

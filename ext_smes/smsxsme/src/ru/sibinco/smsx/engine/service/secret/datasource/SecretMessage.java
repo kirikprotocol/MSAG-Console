@@ -27,6 +27,7 @@ public class SecretMessage {
   private String connectionName;
   private long smppId;
   private String mscAddress;
+  private boolean appendAdvertising;
 
   public SecretMessage() {
     this(-1);
@@ -138,6 +139,14 @@ public class SecretMessage {
 
   public void setMscAddress(String mscAddress) {
     this.mscAddress = mscAddress;
+  }
+
+  public boolean isAppendAdvertising() {
+    return appendAdvertising;
+  }
+
+  public void setAppendAdvertising(boolean appendAdvertising) {
+    this.appendAdvertising = appendAdvertising;
   }
 
   public boolean isExists() {

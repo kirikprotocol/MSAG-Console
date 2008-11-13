@@ -4,7 +4,6 @@ import ru.sibinco.smsx.utils.DataSourceException;
 import ru.sibinco.smsx.utils.DBDataSource;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
 
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -43,7 +42,7 @@ public class DBSubscriptionDataSource extends DBDataSource implements Subscripti
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
   }
 

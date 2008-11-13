@@ -1,7 +1,7 @@
 package ru.sibinco.smsx.engine.service.secret;
 
-import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.OutgoingObject;
+import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.ShutdownedException;
 import com.eyeline.utils.ThreadFactoryWithCounter;
 import org.apache.log4j.Category;
@@ -10,13 +10,14 @@ import ru.aurorisoft.smpp.PDU;
 import ru.aurorisoft.smpp.SubmitResponse;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretDataSource;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretMessage;
+import ru.sibinco.smsx.network.advertising.AdvertisingClient;
+import ru.sibinco.smsx.network.advertising.AdvertisingClientException;
 import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.sql.Timestamp;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * User: artem
@@ -29,6 +30,7 @@ class MessageSender {
 
   private final SecretDataSource ds;
   private final OutgoingQueue outQueue;
+  private final AdvertisingClient advClient;
   private final ThreadPoolExecutor executor;
 
   private String serviceAddress;
@@ -36,13 +38,43 @@ class MessageSender {
   private String msgDestinationAbonentInvitation;
   private String msgDeliveryReport;
 
+  private String advDelim;
+  private int advSize;
+  private String advService;
+
+
   private volatile int rejectedTasks;
 
 
-  MessageSender(SecretDataSource ds, OutgoingQueue outQueue) {
+  MessageSender(SecretDataSource ds, OutgoingQueue outQueue, AdvertisingClient advClient) {
     this.ds = ds;
     this.outQueue = outQueue;
-    this.executor = new ThreadPoolExecutor(3, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue(1000), new ThreadFactoryWithCounter("SecMsgSender-Executor-"));    
+    this.advClient = advClient;
+    this.executor = new ThreadPoolExecutor(3, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1000), new ThreadFactoryWithCounter("SecMsgSender-Executor-"));
+  }
+
+  public String getAdvDelim() {
+    return advDelim;
+  }
+
+  public void setAdvDelim(String advDelim) {
+    this.advDelim = advDelim;
+  }
+
+  public int getAdvSize() {
+    return advSize;
+  }
+
+  public void setAdvSize(int advSize) {
+    this.advSize = advSize;
+  }
+
+  public String getAdvService() {
+    return advService;
+  }
+
+  public void setAdvService(String advService) {
+    this.advService = advService;
   }
 
   public int getExecutorActiveCount() {
@@ -99,11 +131,20 @@ class MessageSender {
     outMsg.setSourceAddress(message.getSourceAddress());
     outMsg.setDestinationAddress(message.getDestinationAddress());
     outMsg.setDestAddrSubunit(message.getDestAddressSubunit());
-    outMsg.setMessageString(message.getMessage());
     outMsg.setConnectionName(message.getConnectionName());
     outMsg.setMscAddress(message.getMscAddress());
     if (message.isSaveDeliveryStatus())
       outMsg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
+
+    String messageString = message.getMessage();
+    if (message.isAppendAdvertising()) {
+      final String banner = (advSize > 0) ? getBannerForAbonent(message.getSourceAddress(), advSize - messageString.length() - advDelim.length()) : getBannerForAbonent(message.getSourceAddress());
+      if (log.isInfoEnabled())
+        log.info("Append banner: " + banner);
+      if (banner != null)
+        messageString += advDelim + banner;
+    }
+    outMsg.setMessageString(messageString);
 
     final SecretTransportObject outObj = new SecretTransportObject(message);
     outObj.setMessage(outMsg);
@@ -124,6 +165,24 @@ class MessageSender {
     // Send notification to originator
     if (message.isNotifyOriginator())
       sendMessage(serviceAddress, message.getSourceAddress(), prepareDeliveryReport(message.getDestinationAddress(), message.getSendDate()), message.getConnectionName());
+  }
+
+  private String getBannerForAbonent(final String abonentAddress) {
+    try {
+      return advClient.getBanner(advService, abonentAddress);
+    } catch (AdvertisingClientException e) {
+      log.error("Can't get banner for abonent " + abonentAddress, e);
+      return null;
+    }
+  }
+
+  private String getBannerForAbonent(final String abonentAddress, int maxBannerLength) {
+    try {
+      return advClient.getBanner(advService, abonentAddress, maxBannerLength);
+    } catch (AdvertisingClientException e) {
+      log.error("Can't get banner for abonent " + abonentAddress, e);
+      return null;
+    }
   }
 
   private void sendMessage(String sourceAddress, String destinationAddress, String msg, String connectionName) {
@@ -147,6 +206,10 @@ class MessageSender {
 
   private String prepareInformMessage(final String toAbonent, final String fromAbonent) throws DataSourceException {
     return msgDestinationAbonentInform;
+  }
+
+  public void shutdown() {
+    executor.shutdownNow();
   }
 
 

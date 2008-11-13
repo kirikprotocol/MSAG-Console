@@ -19,6 +19,7 @@ public class SecretSendMessageCmd extends Command {
   private boolean saveDeliveryStatus;
   private boolean notifyOriginator;
   private String mscAddress;
+  private boolean appendAdverising;
 
 
   public String getSourceAddress() {
@@ -75,6 +76,14 @@ public class SecretSendMessageCmd extends Command {
 
   public void setNotifyOriginator(boolean notifyOriginator) {
     this.notifyOriginator = notifyOriginator;
+  }
+
+  public boolean isAppendAdverising() {
+    return appendAdverising;
+  }
+
+  public void setAppendAdverising(boolean appendAdverising) {
+    this.appendAdverising = appendAdverising;
   }
 
   public interface Receiver {

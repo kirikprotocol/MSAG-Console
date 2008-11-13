@@ -39,7 +39,7 @@ public class DBBlackListDataSource extends DBDataSource implements BlackListData
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
 
   }
@@ -57,7 +57,7 @@ public class DBBlackListDataSource extends DBDataSource implements BlackListData
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -78,7 +78,7 @@ public class DBBlackListDataSource extends DBDataSource implements BlackListData
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
 
   }

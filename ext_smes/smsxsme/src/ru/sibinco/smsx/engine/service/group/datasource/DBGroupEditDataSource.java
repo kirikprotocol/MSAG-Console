@@ -49,7 +49,7 @@ public class DBGroupEditDataSource extends DBDataSource implements GroupEditData
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -68,7 +68,7 @@ public class DBGroupEditDataSource extends DBDataSource implements GroupEditData
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -87,7 +87,7 @@ public class DBGroupEditDataSource extends DBDataSource implements GroupEditData
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -121,7 +121,7 @@ public class DBGroupEditDataSource extends DBDataSource implements GroupEditData
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
   }
 

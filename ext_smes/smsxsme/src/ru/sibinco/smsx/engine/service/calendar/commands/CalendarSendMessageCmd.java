@@ -22,6 +22,7 @@ public class CalendarSendMessageCmd extends Command {
   private Date sendDate;
   private int destAddressSubunit;
   private boolean storeDeliveryStatus;
+  private boolean appendAdvertising = false;
   private String mscAddress;
 
   public String getSourceAddress() {
@@ -78,6 +79,14 @@ public class CalendarSendMessageCmd extends Command {
 
   public void setMscAddress(String mscAddress) {
     this.mscAddress = mscAddress;
+  }
+
+  public boolean isAppendAdvertising() {
+    return appendAdvertising;
+  }
+
+  public void setAppendAdvertising(boolean appendAdvertising) {
+    this.appendAdvertising = appendAdvertising;
   }
 
   public interface Receiver {

@@ -55,7 +55,7 @@ public class DBDataSource {
     }
   }
 
-  protected static void close(java.sql.ResultSet rs, java.sql.PreparedStatement ps, java.sql.Connection conn) {
+  protected static void _close(java.sql.ResultSet rs, java.sql.PreparedStatement ps, java.sql.Connection conn) {
     if (rs != null)
       try {
         rs.close();

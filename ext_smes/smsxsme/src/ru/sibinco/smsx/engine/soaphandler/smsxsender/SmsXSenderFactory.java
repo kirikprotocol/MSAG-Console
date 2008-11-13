@@ -14,7 +14,7 @@ import java.util.concurrent.locks.Condition;
 
 public class SmsXSenderFactory {
 
-  private static SmsXSender sender;
+  private static SmsXSenderHandler sender;
 
   private static final Lock lock = new ReentrantLock();
   private static final Condition cond = lock.newCondition();
@@ -33,7 +33,7 @@ public class SmsXSenderFactory {
 
   }
 
-  public static SmsXSender createSmsXSenderHandler() {
+  public static SmsXSenderHandler createSmsXSenderHandler() {
     try {
       lock.lock();
       if (sender == null)

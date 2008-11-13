@@ -48,7 +48,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
 
   }
@@ -81,6 +81,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
         msg.setSmppStatus(rs.getInt(9));
         msg.setConnectionName(rs.getString(10));
         msg.setMscAddress(rs.getString(11));
+        msg.setAppendAdvertising(rs.getInt(12) == 1);
 
         messagesList.add(msg);
       }
@@ -88,7 +89,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
 
     return messagesList;
@@ -118,6 +119,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
         msg.setSmppStatus(rs.getInt(9));
         msg.setConnectionName(rs.getString(10));
         msg.setMscAddress(rs.getString(11));
+        msg.setAppendAdvertising(rs.getInt(12) == 1);
         return msg;
       }
 
@@ -126,7 +128,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(rs, ps, conn);
+      _close(rs, ps, conn);
     }
   }
 
@@ -145,7 +147,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -166,6 +168,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
       ps.setInt(8, calendarMessage.getSmppStatus());
       ps.setString(9, calendarMessage.getConnectionName());
       ps.setString(10, calendarMessage.getMscAddress());
+      ps.setInt(11, calendarMessage.isAppendAdvertising() ? 1 : 0);
 
       if (!calendarMessage.isExists()) {
         synchronized (idLock) {
@@ -174,14 +177,14 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
         }
       }
 
-      ps.setInt(11, calendarMessage.getId());
+      ps.setInt(12, calendarMessage.getId());
 
 
       ps.executeUpdate();
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -199,7 +202,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -217,7 +220,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
@@ -235,11 +238,33 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     } catch (SQLException e) {
       throw new DataSourceException(e.getMessage());
     } finally {
-      close(null, ps, conn);
+      _close(null, ps, conn);
     }
   }
 
   public void release() {
     pool.release();
+  }
+
+  public static void main(String args[]) throws DataSourceException {
+    System.out.println("\u00AE \u0041");
+    DBCalendarDataSource ds = null;
+    try {
+      ConnectionPoolFactory.init("conf");
+      ds = new DBCalendarDataSource();
+      CalendarMessage m = new CalendarMessage();
+      m.setConnectionName("smsx");
+      m.setDestAddressSubunit(0);
+      m.setDestinationAddress("1");
+      m.setMessage("test @ ������ \u00AE " + args[0]);
+      m.setMscAddress("");
+      m.setSaveDeliveryStatus(false);
+      m.setSendDate(new Timestamp(System.currentTimeMillis()));
+      m.setSourceAddress("0");
+      ds.saveCalendarMessage(m);
+    } finally {
+      if (ds != null)
+        ds.release();
+    }
   }
 }

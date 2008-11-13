@@ -1,14 +1,13 @@
 package ru.sibinco.smsx.engine.service.calendar;
 
 import org.apache.log4j.Category;
+import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStatusCmd;
-import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarHandleReceiptCmd;
+import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarDataSource;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarMessage;
-import ru.sibinco.smsx.engine.service.AsyncCommand;
-import ru.sibinco.smsx.engine.service.CommandExecutionException;
-import ru.sibinco.smsx.engine.service.Command;
 import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.sql.Timestamp;
@@ -69,6 +68,7 @@ class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarChec
       calendarMessage.setSaveDeliveryStatus(cmd.isStoreDeliveryStatus());
       calendarMessage.setConnectionName(cmd.getSourceId() == Command.SOURCE_SMPP ? "smsx" : "websms");
       calendarMessage.setMscAddress(cmd.getMscAddress());
+      calendarMessage.setAppendAdvertising(cmd.isAppendAdvertising());
 
       // Save message
       ds.saveCalendarMessage(calendarMessage);

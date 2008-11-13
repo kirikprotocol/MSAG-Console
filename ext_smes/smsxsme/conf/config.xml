@@ -5,6 +5,9 @@
     <param name="service.address">147</param>
     <param name="send.date.max.year">2009</param>
     <param name="engine.working.interval">60000</param>
+    <param name="advertising.delimiter">@</param>
+    <param name="advertising.size">240</param>
+    <param name="advertising.service">SMSX</param>
   </section>
 
   <section name="secret">
@@ -12,6 +15,10 @@
     <param name="destination.abonent.inform">У Вас 1 SMS-Секрет. Получить? Отправьте Get&lt;пробел&gt;пароль на номер 147.</param>
     <param name="destination.abonent.invitation">Вам отправлено секретное сообщение. Для его получения зарегистрируйтесь в сервисе "SMS-ЭКСТРА". Подробнее на *147#</param>
     <param name="delivery.report">Абоненту {to_abonent} сообщение доставлено.</param>
+    <param name="advertising.delimiter">@</param>
+    <param name="advertising.size">240</param>
+    <param name="advertising.service">SMSX</param>
+    <param name="store.dir">store/secret</param>
   </section>
 
   <section name="nick">
@@ -54,7 +61,7 @@
   <section name="dbpool">
     <section name="jdbc">
       <param name="driver">com.mysql.jdbc.Driver</param>
-      <param name="source">jdbc:mysql://localhost/smsx?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</param>
+      <param name="source">jdbc:mysql://localhost/smsx?useUnicode=true&amp;characterEncoding=KOI8R&amp;autoReconnect=true</param>
       <param name="user">root</param>
       <param name="password">laefeeza1</param>
     </section>

@@ -26,6 +26,7 @@ public class CalendarMessage  {
   private String connectionName;
   private long smppId;
   private String mscAddress;
+  private boolean appendAdvertising;
 
 
   CalendarMessage(final int id) {
@@ -130,6 +131,14 @@ public class CalendarMessage  {
 
   public void setMscAddress(String mscAddress) {
     this.mscAddress = mscAddress;
+  }
+
+  public boolean isAppendAdvertising() {
+    return appendAdvertising;
+  }
+
+  public void setAppendAdvertising(boolean appendAdvertising) {
+    this.appendAdvertising = appendAdvertising;
   }
 
   public boolean isExists() {
