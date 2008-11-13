@@ -202,23 +202,23 @@ public class Index extends EditBean {
 //            logger.debug( "config/Index.save() S key='" + key + "'");
             if (parameter != null) {
                 if (parameter instanceof String){
-                    gwConfig.setString(key, (String)value);
                     logger.debug( "config/Index.save() param S value='" + (String) value + "'");
+                    gwConfig.setString(key, (String)value);
                 }
                 else if (parameter instanceof Integer || parameter instanceof Long){
                     try {
-                        gwConfig.setInt( key, Integer.parseInt( ((String)value).trim() ) );
                         logger.debug( "config/Index.save() param I value='" + Integer.parseInt( ( (String)value).trim() ) + "'");
-                    } catch (NumberFormatException e) {
+                        gwConfig.setInt( key, Integer.parseInt( ((String)value).trim() ) );
+                     } catch (NumberFormatException e) {
                         logger.debug( "config/Index.save() INVALID_INTEGER");
                         throw new SCAGJspException(Constants.errors.config.INVALID_INTEGER, (String) entry.getValue());
                     }
                 } else if (parameter instanceof Boolean){
+                    logger.debug( "config/Index.save() param  B value='" + ((String)value).trim() + "'");
                     gwConfig.setBool( key, Boolean.valueOf((String)value).booleanValue() );
-                    logger.debug( "config/Index.save() param  B value='" + Integer.parseInt(((String)value).trim()) + "'");
                 } else {
-                    gwConfig.setString(key, ((String)value).trim());
                     logger.debug( "config/Index.save() param O value='" + (String)value + "'");
+                    gwConfig.setString(key, ((String)value).trim());
                 }
             } else {
                 try {
