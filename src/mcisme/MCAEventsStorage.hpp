@@ -157,12 +157,24 @@ private:
     fprintf(_eventFileFD, "%s\n", event.toString().c_str());
   }
 
+  void findMatchedFiles(const std::string& dirName,
+                        const std::string& baseName,
+                        const std::string& suffix,
+                        std::vector<std::string>* machedFiles);
+
+  void moveFiles(const std::string& dirName,
+                 const std::vector<std::string>& originalFiles,
+                 const std::string& oldSuffix,
+                 const std::string& newSuffix);
+
+  void moveAllPendingCSVFiles();
+
   std::string calculateTimeStamp(time_t curTime) const;
   void rollLoggingFileIfNeeded();
   void formLogFileNameAndOpenIt(time_t curTime);
 
   FILE* _eventFileFD;
-  std::string _fileNamePrefix, _logFileName, _cvsFileName;
+  std::string _dirName, _fileNamePrefix, _logFileName, _cvsFileName;
   time_t _rollingInterval, _lastRollingTime;
   smsc::core::synchronization::Mutex _lock;
   smsc::logger::Logger* _logger;
