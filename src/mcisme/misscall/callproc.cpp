@@ -71,9 +71,9 @@ enum State{
       UNBLOCKING,
       WORKING
 } state;
-std::string getStateDescription(State state)
+std::string getStateDescription(State aState)
 {
-  switch(state)
+  switch(aState)
   {
     case INIT: return "INIT";
     case MGMTBINDING: return "MGMTBINDING";
@@ -228,7 +228,7 @@ struct Connection {
                MGMT_ID,
                ISUP_ID,
                0x0B/*UNBLOCK CURCUITS*/,
-               sizeof(UBL),
+               static_cast<USHORT_T>(sizeof(UBL)),
                UBL,
                NO_WAIT);
 
@@ -310,7 +310,7 @@ struct InternalRule {
                      "rule='%s' rx='%s' compiling failed",
                      rule.name.c_str(),rule.rx.c_str());
     m.resize(exp.GetBracketsCount());
-    n=m.size();
+    n=static_cast<int>(m.size());
   }
   int match(const char* rx,UCHAR_T* cause,UCHAR_T* inform)
   {
@@ -739,6 +739,9 @@ using smsc::misscall::connections;
 using smsc::misscall::InternalRule;
 using smsc::misscall::rules;
 using smsc::misscall::countryCode;
+using smsc::misscall::NON_ANTI_AON_FOR_CALLER;
+using smsc::misscall::ANTI_AON_FOR_CALLER;
+
 using namespace smsc::misscall::util;
 using smsc::sms::MAX_FULL_ADDRESS_VALUE_LENGTH;
 
@@ -814,9 +817,9 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValu
   redirectionNumber.natureOfAddr = EINSS7_I97_NATIONAL_NO;
   redirectionNumber.numberPlan = EINSS7_I97_ISDN_PLAN;
   redirectionNumber.internalNetwNumb = EINSS7_I97_INTERNAL_ROUT;
-  redirectionNumber.noOfAddrSign = strlen(r);
+  redirectionNumber.noOfAddrSign = static_cast<UCHAR_T>(strlen(r));
   UCHAR_T* addr = new UCHAR_T[(strlen(r)+1)/2];
-  pack_addr(addr,r,strlen(r));
+  pack_addr(addr,r,static_cast<int>(strlen(r)));
   redirectionNumber.addrSign_p = addr;
   smsc_log_debug(missedCallProcessorLogger,"IsupReleaseReq %s cause=%u",getHeadDescription(isupHead_sp).c_str(),cause.causeValue);
   res = EINSS7_I97IsupReleaseReq(isupHead_sp, /*to do может ли он быть нулевой*/
@@ -846,9 +849,9 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
   time(&event.time);
   if (calling &&
       calling->noOfAddrSign > 0 &&
-      calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH &&
-      calling->presentationRestr == EINSS7_I97_PRES_ALLOWED)
+      calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH)
   {
+
     /*max length of .ton.npi.digits = 1+3+1+1+1+20 = 27*/
     char cgaddr[32] = {0};
     int pos = snprintf(cgaddr,sizeof(cgaddr),".%d.%d.",calling->natureOfAddr,calling->numberPlan);
@@ -858,7 +861,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
     using smsc::util::regexp::SMatch;
     std::vector<SMatch> m(maskRx.GetBracketsCount());
 
-    int n=m.size();
+    int n=static_cast<int>(m.size());
     if(maskRx.Match(cgaddr,&m[0],n))
     {
       cgaddr[0] = 0;
@@ -884,7 +887,13 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
       {
         unpack_addr(cgaddr, calling->addrSign_p, calling->noOfAddrSign);
       }
+
       event.from = cgaddr;
+      if ( calling->presentationRestr == EINSS7_I97_PRES_ALLOWED ) {
+        event.flags = NON_ANTI_AON_FOR_CALLER;
+      } else {
+        event.flags = ANTI_AON_FOR_CALLER;
+      }
     }
   }
   /* skip prohibited or unknown caller */
@@ -904,7 +913,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
     using smsc::util::regexp::SMatch;
     std::vector<SMatch> m(calledMaskRx.GetBracketsCount());
 
-    int n=m.size();
+    int n=static_cast<int>(m.size());
     if(calledMaskRx.Match(cdaddr,&m[0],n))
     {
       cdaddr[0] = 0;
@@ -921,7 +930,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
         unpack_addr(cdaddr+1, called->addrSign_p, called->noOfAddrSign);
       }
       event.to = cdaddr;
-      smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s type=%x",event.from.c_str(),event.to.c_str(),event.cause);
+      smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s, flags=0x%x, type=0x%x",event.from.c_str(),event.to.c_str(), event.flags, event.cause);
       MissedCallProcessor::instance()->fireMissedCallEvent(event);
     }
   }
@@ -947,7 +956,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
   {
     char cdaddr[32] = {0};
     unpack_addr(cdaddr, called->addrSign_p, called->noOfAddrSign);
-    int addrlen = strlen(cdaddr);
+    int addrlen = static_cast<int>(strlen(cdaddr));
     if (addrlen > 10)
     {
       int skip = 0; while(cdaddr[skip] == '7') skip++;
@@ -975,7 +984,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
   {
     char claddr[32] = {0};
     unpack_addr(claddr, calling->addrSign_p, calling->noOfAddrSign);
-    int addrlen = strlen(claddr);
+    int addrlen = static_cast<int>(strlen(claddr));
 
     int skip = 0; while(claddr[skip] == '0') skip++;
 
@@ -999,8 +1008,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
 
   if (calling &&
       calling->noOfAddrSign > 0 &&
-      calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH &&
-      calling->presentationRestr == EINSS7_I97_PRES_ALLOWED)
+      calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH)
   {
     /*max length of .ton.npi.digits = 1+3+1+1+1+20 = 27*/
     char cgaddr[32] = {0};
@@ -1011,7 +1019,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
     using smsc::util::regexp::SMatch;
     std::vector<SMatch> m(maskRx.GetBracketsCount());
 
-    int n=m.size();
+    int n=static_cast<int>(m.size());
     if(maskRx.Match(cgaddr,&m[0],n))
     {
       cgaddr[0] = 0;
@@ -1037,7 +1045,13 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
       {
         unpack_addr(cgaddr, calling->addrSign_p, calling->noOfAddrSign);
       }
+
       event.from = cgaddr;
+      if ( calling->presentationRestr == EINSS7_I97_PRES_ALLOWED ) {
+        event.flags = NON_ANTI_AON_FOR_CALLER;
+      } else {
+        event.flags = ANTI_AON_FOR_CALLER;
+      }
     }
   }
   /* skip prohibited or unknown caller */
@@ -1057,7 +1071,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
     using smsc::util::regexp::SMatch;
     std::vector<SMatch> m(calledMaskRx.GetBracketsCount());
 
-    int n=m.size();
+    int n=static_cast<int>(m.size());
     if(calledMaskRx.Match(cdaddr,&m[0],n))
     {
       cdaddr[0] = 0;
@@ -1074,7 +1088,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
         unpack_addr(cdaddr+1, called->addrSign_p, called->noOfAddrSign);
       }
       event.to = cdaddr;
-      smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s type=%x",event.from.c_str(),event.to.c_str(),event.cause);
+      smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s, flags=0x%x, type=0x%x",event.from.c_str(),event.to.c_str(), event.flags, event.cause);
       MissedCallProcessor::instance()->fireMissedCallEvent(event);
     }
   }
@@ -1128,13 +1142,13 @@ void taif(
     char cdaddr[32] = {0};
     UCHAR_T tmpcdaddr[32] = {0};
     unpack_addr(cdaddr, called->addrSign_p, called->noOfAddrSign);
-    pack_addr(tmpcdaddr, cdaddr + 2, strlen(cdaddr) - 2);
+    pack_addr(tmpcdaddr, cdaddr + 2, static_cast<int>(strlen(cdaddr) - 2));
 
     EINSS7_I97_CALLEDNUMB_T tmpcalled;
     tmpcalled.natureOfAddr = called->natureOfAddr;
     tmpcalled.numberPlan = called->numberPlan;
     tmpcalled.internalNetwNumb = called->internalNetwNumb;
-    tmpcalled.noOfAddrSign = strlen(cdaddr) - 2 ;
+    tmpcalled.noOfAddrSign = static_cast<UCHAR_T>(strlen(cdaddr) - 2);
     tmpcalled.addrSign_p = tmpcdaddr;
 
     registerEvent(calling,&tmpcalled,eventType);
