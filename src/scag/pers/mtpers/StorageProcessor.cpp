@@ -60,8 +60,11 @@ int StorageProcessor::Execute() {
       process.assign(waitingProcess_.begin(), waitingProcess_.end());
       waitingProcess_.clear();
     }
-    for (vector<PersPacket*>::iterator i = process.begin(); i < process.end(); ++i) {
-      smsc_log_debug(logger_, "%p: process context %p", this, *i);
+    smsc_log_debug(logger_, "%p: %d packets ready for process", this, process.size());
+    int pn = 1;
+    for (vector<PersPacket*>::iterator i = process.begin(); i != process.end(); ++i) {
+      smsc_log_debug(logger_, "%p: process packet %p - number %d", this, *i, pn);
+      ++pn;
       try {
 
         this->process(*i);
