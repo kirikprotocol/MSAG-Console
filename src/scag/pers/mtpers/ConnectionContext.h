@@ -75,6 +75,7 @@ public:
   bool processReadSocket();
   bool processWriteSocket();
   bool canFinalize();
+  bool canDelete();
   Socket* getSocket();
 
 private:

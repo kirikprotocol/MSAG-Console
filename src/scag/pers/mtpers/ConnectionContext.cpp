@@ -259,6 +259,12 @@ bool ConnectionContext::canFinalize() {
   return (--tasksCount_ > 0 || packetsCount_ > 0) ? false : true;
 }
 
+bool ConnectionContext::canDelete() {
+  MutexGuard mg(mutex_);
+  return --tasksCount_ > 0 ? false : true;
+}
+
+
 }
 }
 
