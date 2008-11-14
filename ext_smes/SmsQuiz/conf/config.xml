@@ -31,12 +31,10 @@
     <param name="smsc.console.host">phoenix</param>
     <param name="smsc.console.port">39826</param>
     <param name="smsc.console.access.login">admin</param>
-    <param name="smsc.console.access.password">password</param>
-    <param name="smsc.console.code.ok">100</param>                        <!-- optional -->
+    <param name="smsc.console.access.password">password</param>                  
     <param name="smsc.console.connect.timeout">60</param> <!-- seconds --><!-- optional -->
     <param name="smsc.console.closer.period">60</param> <!-- seconds -->  <!-- optional -->
 
-    <param name="info.sme.succ.delivery.status">3</param>
     <param name="info.sme.stats.dir">infoSme</param>
     <param name="status.checker.delay.first">10</param> <!-- seconds -->  <!-- optional -->
     <param name="status.checker.period">30</param>    <!-- seconds -->    <!-- optional -->

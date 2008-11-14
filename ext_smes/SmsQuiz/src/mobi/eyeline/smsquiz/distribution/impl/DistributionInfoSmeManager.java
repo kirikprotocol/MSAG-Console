@@ -67,7 +67,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
       statsDir = config.getString("info.sme.stats.dir");
       dirPattern = "yyMMdd";
       filePattern = "HH";
-      succDeliveryStatus = config.getString("info.sme.succ.delivery.status");
+      succDeliveryStatus = "3";
       dateInFilePattern = "yyMMddHHmmss";
 
       host = config.getString("smsc.console.host");
@@ -80,7 +80,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
       closerPeriod = config.getLong("smsc.console.closer.period", 60);
 
 
-      codeOk = config.getString("smsc.console.code.ok");
+      codeOk = "100";
       if (statsDir == null) {
         throw new DistributionException("info.sme.stats.dir parameter missed in config file", DistributionException.ErrorCode.ERROR_NOT_INITIALIZED);
       }
