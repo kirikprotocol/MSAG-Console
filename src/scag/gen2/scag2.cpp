@@ -161,12 +161,7 @@ void Scag::init( unsigned mynode )
         pers::util::PersClient::Init(cfg.getPersClientConfig());
 
         smsc_log_info(log, "Personalization client initialized");
-    }catch(Exception& e)
-    {
-        throw Exception("Exception during initialization of PersClient: %s", e.what());
-    }catch (pers::util::PersClientException& e)
-    {
-        //smsc_log_error(log, "Exception during initialization of PersClient: %s", e.what());
+    } catch(std::exception& e) {
         throw Exception("Exception during initialization of PersClient: %s", e.what());
     }catch (...)
     {

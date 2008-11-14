@@ -1,3 +1,5 @@
+#if 0
+
 #include <cassert>
 #include "ProfileProxy.h"
 #include "scag/re/base/ActionContext2.h"
@@ -249,3 +251,5 @@ int PersCallParams::readSB( re::actions::ActionContext& ctx, SerialBuffer& sb )
 }
 }
 }
+
+#endif

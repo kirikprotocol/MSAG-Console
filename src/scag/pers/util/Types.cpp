@@ -38,6 +38,18 @@ const char* persCmdName( PersCmd c )
     }
 }
 
+const char* RESPONSE_TEXT[] = {
+  "unknown",
+  "ok",
+  "error",
+  "property not found",
+  "bad request",
+  "type inconsistence",
+  "command in process",
+  "profile locked",
+  "not support"
+};
+
 }
 }
 }

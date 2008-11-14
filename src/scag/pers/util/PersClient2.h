@@ -1,7 +1,8 @@
 #ifndef _SCAG_PERS_UTIL_PERSCLIENT2_H
 #define _SCAG_PERS_UTIL_PERSCLIENT2_H
 
-#include "ProfileProxy.h"
+// #include "ProfileProxy.h"
+#include "scag/re/base/LongCallContextBase.h"
 #include "scag/config/base/ConfigManager2.h"
 
 namespace scag2 {

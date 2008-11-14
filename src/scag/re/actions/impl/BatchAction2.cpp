@@ -5,23 +5,6 @@
 #include "scag/re/base/ActionFactory2.h"
 #include "scag/pers/util/PersClient2.h"
 
-namespace {
-
-class ConnectionCheck : public scag2::pers::util::PropertyProxyBase
-{
-public:
-    ConnectionCheck( const std::string& stat, const std::string& msg ) :
-    stat_(stat), msg_(msg) {}
-    virtual const std::string& statusName() const { return stat_; }
-    virtual const std::string& msgName() const { return msg_; }
-private:
-    const std::string& stat_;
-    const std::string& msg_;
-};
-
-}
-
-
 namespace scag2 { 
 namespace re {
 namespace actions {
@@ -33,6 +16,17 @@ using namespace scag::stat;
 const std::string TRANSACTIONAL_MODE = "TRANSACTIONAL";
 const std::string NORMAL_MODE = "NORMAL";
 const char* BATCH_MODE = "mode";
+
+
+BatchAction::~BatchAction()
+{
+    for ( std::vector< PersActionCommand* >::iterator i = actions.begin();
+          i != actions.end();
+          ++i ) {
+        if (*i) delete *i;
+    }
+}
+
 
 
 void BatchAction::init(const SectionParams& params, PropertyObject propertyObject)
@@ -67,34 +61,17 @@ void BatchAction::init(const SectionParams& params, PropertyObject propertyObjec
 
 bool BatchAction::RunBeforePostpone(ActionContext& context)
 {
-    if ( proxies.size() == 0 ) return false;
-
+    if ( actions.size() == 0 ) return false;
     smsc_log_debug(logger,"Run Action 'BatchAction' in %s mode...", transactMode ? TRANSACTIONAL_MODE.c_str() : NORMAL_MODE.c_str());
-    ::ConnectionCheck ck( batchStatus, batchMsg );
-    if ( ! ck.canProcessRequest(context) ) {
-        return false;
-    }
-    auto_ptr<PersCallParams> params(new PersCallParams(profile, batchStatus, batchMsg));
-
-    if ( !setKey(context, params.get()) ) {
-        return false;
-    }
-
-    // prepare batch
-    params->batch( proxies, transactMode );
-    if ( !params->fillSB(context) ) {
-        return false;
-    }
-    // failed to fill serial buffer (property not found?)
-    // params->error = scag::pers::util::BATCH_ERROR;
-    // params->exception = scag::pers::util::strs[scag::pers::util::BATCH_ERROR];
-    // setStatus(context, params->error, batchStatus, batchMsg, i + 1);
+    auto_ptr< PersCallParams > params = makeParams(context,*this);
+    if ( ! params.get() ) return false;
     context.getSession().getLongCallContext().callCommandId = PERS_BATCH;
     context.getSession().getLongCallContext().setParams( params.release() );
     return true;
 }
 
 
+/*
 void BatchAction::ContinueRunning(ActionContext& context)
 {
     smsc_log_debug(logger,"ContinueRunning Action 'BatchAction'...");
@@ -108,35 +85,23 @@ void BatchAction::ContinueRunning(ActionContext& context)
                    p->getStringKey(), p->getIntKey() );
     try {
         p->readSB( context );
-        /*
-        int result = 0;
-        int error_result_idx = 0;
-        for ( int i = 0; i < actions.size(); i++) {
-            action_idx = i + 1;
-            int action_result = actions[i]->batchResult( context, p->sb, transactMode );
-            setStatus(context, action_result, actions[i]->getStatus(), actions[i]->getMsg());
-            if (!result) {
-                result = action_result;
-                error_result_idx = i + 1;
-            }
-        }
-         */
         // setStatus(context, result, batchStatus, batchMsg, error_result_idx);
     } catch (const PersClientException& e) {
         p->setStatus(context, e.getType());
         smsc_log_debug(logger, "'BatchAction' abort. Error code=%d", e.getType(), e.what());
     }
 }
+ */
 
 IParserHandler * BatchAction::StartXMLSubSection(const std::string& name, const SectionParams& params, const ActionFactory& factory)
 {
     smsc_log_debug(logger, "BatchAction: %s", name.c_str());
-    PersActionCommand* act = (PersActionCommand*)( factory.CreateAction(name) );
+    std::auto_ptr<PersActionCommand> act( (PersActionCommand*)( factory.CreateAction(name) ) );
     act->init(params, pobj);
-    actions.push_back(act);
-    proxies.push_back(act);
+    actions.push_back(act.release());
     return NULL;
 }
+
 
 bool BatchAction::FinishXMLSubSection(const std::string& name)
 {
@@ -144,6 +109,26 @@ bool BatchAction::FinishXMLSubSection(const std::string& name)
     //return (name=="profile:batch");
     return (name=="batch:batch");
 }
+
+
+std::auto_ptr< pers::util::PersCommand > BatchAction::makeCommand( ActionContext& ctx )
+{
+    std::auto_ptr< pers::util::PersCommand > res;
+    std::vector< pers::util::PersCommandSingle > batch;
+    batch.resize( actions.size() );
+    for ( std::vector< PersActionCommand* >::const_iterator i = actions.begin();
+          i != actions.end();
+          ++i ) {
+        int stat = (*i)->fillCommand( ctx, batch[i-actions.begin()] );
+        if ( stat ) {
+            setStatus( ctx, stat, i-actions.begin() + 1);
+            return res;
+        }
+    }
+    res.reset( new pers::util::PersCommandBatch(*this,batch,transactMode) );
+    return res;
+}
+
 
 }//actions
 }//re

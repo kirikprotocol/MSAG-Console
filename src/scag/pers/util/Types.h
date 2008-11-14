@@ -60,19 +60,9 @@ enum PersServerResponseType{
   RESPONSE_NOTSUPPORT
 };
 
-static const char* RESPONSE_TEXT[] = {
-  "unknown",
-  "ok",
-  "error",
-  "property not found",
-  "bad request",
-  "type inconsistence",
-  "command in process",
-  "profile locked",
-  "not support"
-};
+extern const char* RESPONSE_TEXT[];
 
-}
+} // perstypes
 
 using namespace perstypes;
 

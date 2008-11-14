@@ -1,5 +1,6 @@
 #include <poll.h>
 #include "PersClient2.h"
+#include "PersCallParams.h"
 #include "scag/util/singleton/Singleton2.h"
 #include "core/threads/Thread.hpp"
 #include "core/threads/ThreadPool.hpp"
@@ -281,8 +282,8 @@ void PersClientImpl::finishCalls( lcm::LongCallContextBase* ctx, bool drop )
         lcm::LongCallContextBase* c = ctx;
         PersCallParams* persParam = (PersCallParams*)ctx->getParams();
         if ( persParam ) {
-            persParam->error = NOT_CONNECTED;
-            persParam->exception = strs[NOT_CONNECTED];
+            persParam->setStatus(NOT_CONNECTED);
+            // persParam->exception = strs[NOT_CONNECTED];
         }
         ctx = ctx->next;
         c->initiator->continueExecution(c,drop);
@@ -365,25 +366,26 @@ int PersClientTask::Execute()
 
         // processing
         PersCallParams* p = static_cast< PersCallParams* >(ctx->getParams());
-        smsc_log_debug(log_, "ExecutePersCall: command=%d %s/%d", ctx->callCommandId, p->getStringKey(), p->getIntKey() );
+        smsc_log_debug(log_, "ExecutePersCall: lcmcmd=%d perscmd=%d/%s %s/%d",
+                       ctx->callCommandId, p->cmdType(), persCmdName(p->cmdType()), p->getStringKey(), p->getIntKey() );
         try {
-            if ( p->error == 0 ) {
-                SerialBuffer& b = p->buffer();
-                sendPacket( b );
-                readPacket( b );
+            SerialBuffer sb;
+            p->fillSB( sb );
+            if ( p->status() == 0 ) {
+                // SerialBuffer& b = p->buffer();
+                sendPacket(sb);
+                readPacket(sb);
             }
+            p->readSB( sb );
         } catch ( PersClientException& e ) {
             smsc_log_warn( log_, "execute failed: pers exc=%s", e.what() );
-            p->error = e.getType();
-            p->exception = e.what();
+            p->setStatus( e.getType(), e.what() );
             this->disconnect();
         } catch ( std::exception& e ) {
             smsc_log_warn( log_, "execute failed: exc=%s", e.what() );
-            p->error = -1;
-            p->exception = e.what();
+            p->setStatus( -1, e.what() );
         } catch (...) {
-            p->error = -1;
-            p->exception = "lcm: Unknown exception";
+            p->setStatus( -1, "lcm: Unknown exception" );
         }
 
         ctx->initiator->continueExecution( ctx, false );
