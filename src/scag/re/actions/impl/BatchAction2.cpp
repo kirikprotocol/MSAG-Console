@@ -119,7 +119,7 @@ std::auto_ptr< pers::util::PersCommand > BatchAction::makeCommand( ActionContext
     for ( std::vector< PersActionCommand* >::const_iterator i = actions.begin();
           i != actions.end();
           ++i ) {
-        int stat = (*i)->fillCommand( ctx, batch[i-actions.begin()] );
+        int stat = (*i)->fillCommand( ctx, batch[i - actions.begin()] );
         if ( stat ) {
             setStatus( ctx, stat, i-actions.begin() + 1);
             return res;

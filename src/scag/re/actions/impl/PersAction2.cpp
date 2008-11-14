@@ -214,6 +214,8 @@ void PersActionCommand::init( const SectionParams& params, PropertyObject proper
     
 int PersActionCommand::fillCommand( ActionContext& context, pers::util::PersCommandSingle& command )
 {
+    command.setCreator( *this );
+
     // --- get property name
     int stat = 0;
     do {
