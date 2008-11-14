@@ -156,9 +156,20 @@ class StatsFileImpl implements StatsFile {
       logger.error("Some arguments are null!");
       throw new FileStatsException("Some arguments are null!", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
     }
+
+    String oa2;
+    if(oa.startsWith("+7")) {
+      oa2 = "8"+oa.substring(2);
+    } else {
+      oa2 = "+7"+oa.substring(1);
+    }
+    
     List<Long> positions = stringsRTree.get(oa);
     if (positions == null) {
-      return null;
+      positions = stringsRTree.get(oa2);
+      if(positions == null) {
+        return null;
+      }
     }
     List<Reply> result = new LinkedList<Reply>();
     try {

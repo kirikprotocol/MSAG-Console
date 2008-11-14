@@ -159,6 +159,12 @@ public class InfoSmeDistrImpl implements InfoSmeDistr {
 
     long idbase = y2 << 60 | y1 << 56 | m2 << 52 | m1 << 48 | d2 << 44 | d1 << 40 | h2 << 36 | h1 << 32;
 
+    String msisdn2;
+    if(msisdn.startsWith("+7")) {
+      msisdn2="8"+msisdn.substring(2);
+    } else {
+      msisdn2 = "+7"+msisdn.substring(1);
+    }
     while(iter.hasNext()) {
       File file = (File)iter.next();
       System.out.println("Analysis file:"+file.getAbsolutePath());
@@ -187,7 +193,8 @@ public class InfoSmeDistrImpl implements InfoSmeDistr {
             continue;
 
           st.nextToken();
-          if(!st.nextToken().trim().equals(msisdn)){
+          String ms = st.nextToken().trim();
+          if((!ms.equals(msisdn))&&(!ms.equals(msisdn2))){
             continue;
           }
           id = idbase | ((int)offset);
