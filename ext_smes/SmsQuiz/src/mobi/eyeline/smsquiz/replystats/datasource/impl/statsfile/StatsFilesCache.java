@@ -86,7 +86,7 @@ public class StatsFilesCache {
     cal.set(Calendar.MINUTE,0);
     cal.set(Calendar.SECOND,0);
     cal.set(Calendar.MILLISECOND,0);
-    cal.setTimeInMillis(cal.getTime().getTime()+dateFormat.parse("23").getTime()+7*60*60*1000);
+    cal.setTimeInMillis(cal.getTime().getTime()+dateFormat.parse("23").getTime()+ Calendar.getInstance().getTimeZone().getRawOffset());
     System.out.println(cal.getTime());
     System.out.println(cal.getTime().getTime());
 
