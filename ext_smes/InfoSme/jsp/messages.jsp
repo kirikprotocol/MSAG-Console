@@ -94,7 +94,7 @@ page_menu_begin(out);
 page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "infosme.hint.query_messages");
 page_menu_space(out);
 page_menu_end(out);
-<%}
+}
 else {
 %>
 <div style="color:blue"><%=getLocString("infosme.warn.no_task_for_msg")%></div>

@@ -2,22 +2,23 @@ package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.Message;
-import ru.novosoft.smsc.infosme.backend.InfoSmeTransport;
 import ru.novosoft.smsc.infosme.backend.tables.messages.*;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
-import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspWriter;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.io.IOException;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -105,10 +106,10 @@ public class Messages extends InfoSmeBean
     try { // Order is important here!
       if (mbDelete != null || mbDeleteAll != null) result = processDelete(request);
       else if (mbResend != null || mbResendAll != null) result =  processResend(request);
-      else if (mbUpdateAll != null) result =  processUpdateAll();
+      else if (mbUpdateAll != null) return processUpdateAll();
       else if (mbExportAll != null) result =  processExportAll();
-      else if (mbUpdate != null) result = processUpdate();
-      else if (mbCancelUpdate != null) result =  processCancelUpdate();
+      else if (mbUpdate != null) return processUpdate();
+      else if (mbCancelUpdate != null) return processCancelUpdate();
     } catch (AdminException e) {
       logger.error("Process error", e);
       error("Error", e);
@@ -204,19 +205,7 @@ public class Messages extends InfoSmeBean
       return "DELETED";
 
     return "";
-  }
-
-
-  private int processQuery() throws AdminException {
-    try {
-      tableHelper.fillTable();
-    } catch (TableHelperException e) {
-      e.printStackTrace();
-      logger.error(e);
-      throw new AdminException(e.getMessage());
-    }
-    return RESULT_OK;
-  }
+  }  
 
   private int processDelete(HttpServletRequest request) throws AdminException {
 
@@ -227,7 +216,7 @@ public class Messages extends InfoSmeBean
 
     mbDelete = mbDeleteAll = null;
 
-    return processQuery();
+    return RESULT_OK;
   }
 
   private int deleteChecked(HttpServletRequest request) {
@@ -258,7 +247,7 @@ public class Messages extends InfoSmeBean
       logger.debug("Messages delete failed", e);
       return error("infosme.error.ds_msg_del_failed", e);
     }
-    return message("Messages have been resended");
+    return message("Messages have been deleted");
   }
 
   private int processResend(HttpServletRequest request) throws AdminException {
@@ -269,7 +258,7 @@ public class Messages extends InfoSmeBean
 
     mbResend = mbResendAll = null;
 
-    return processQuery();
+    return RESULT_OK;
   }
 
   private int resendChecked(HttpServletRequest request) {
