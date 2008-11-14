@@ -6,9 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
-import ru.sibinco.smpp.ub_sme.InitializationException;
-import ru.sibinco.smpp.ub_sme.ProductivityControllable;
-
 /**
  * Copyright (c)
  * EyeLine Communications
@@ -75,15 +72,15 @@ public class ProductivityController extends Thread {
   }
 
   public void run() {
-    while (!stop) {
-      for (int i = 0; i < controlObjects.size(); i++) {
-        ProductivityControllable object = (ProductivityControllable) controlObjects.get(i);
-        long tm = (System.currentTimeMillis() - object.getCounterStartTime());
-        if (logger.isInfoEnabled() && tm != 0)
-          logger.info(object.getName() + ": " + (1000L * object.getEventsCount() / tm) + " / sec.");
-        object.resetEventsCounter();
-      }
-      synchronized (monitor) {
+    synchronized (monitor) {
+      while (!stop) {
+        for (int i = 0; i < controlObjects.size(); i++) {
+          ProductivityControllable object = (ProductivityControllable) controlObjects.get(i);
+          long tm = (System.currentTimeMillis() - object.getCounterStartTime());
+          if (logger.isInfoEnabled() && tm != 0)
+            logger.info(object.getName() + ": " + (1000L * object.getEventsCount() / tm) + " / sec.");
+          object.resetEventsCounter();
+        }
         try {
           monitor.wait(pollingInterval);
         } catch (InterruptedException e) {
