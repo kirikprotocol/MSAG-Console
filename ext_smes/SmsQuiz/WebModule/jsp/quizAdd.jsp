@@ -43,6 +43,7 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
+<%@ include file="/WEB-INF/inc/time.jsp"%>
 <div class=content>
 <input type=hidden name=initialized value=true>
 
@@ -83,12 +84,17 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.startTime")%></th>
-  <td><input validation="nonEmpty" class=txt name=timeBegin value="<%=StringEncoderDecoder.encode(bean.getTimeBegin())%>"></td>
+  <td>
+    <input validation="nonEmpty" class=timeField id=activePeriodStart name=timeBegin value="<%=StringEncoderDecoder.encode(bean.getTimeBegin())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodStart, false, true);">...</button>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.endTime")%></th>
-  <td><input validation="nonEmpty" class=txt name=timeEnd value="<%=StringEncoderDecoder.encode(bean.getTimeEnd())%>"></td>
-</tr>
+    <td>
+    <input validation="nonEmpty" class=timeField id=activePeriodEnd name=timeEnd value="<%=StringEncoderDecoder.encode(bean.getTimeEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodEnd, false, true);">...</button>
+  </td>
+
+  </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.activeDays")%></th>
   <td>

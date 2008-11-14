@@ -13,7 +13,7 @@ public class InfoSmeGetStatusCommand extends CommandClass {
 
   public void process(CommandContext ctx) {
     try {
-      final InfoSmeDistr cmd = (InfoSmeDistr)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeDistrImpl").newInstance();
+      final InfoSmeCommands cmd = (InfoSmeCommands)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeCommandsImpl").newInstance();
       cmd.getStatus(ctx,taskId);
     } catch (ClassNotFoundException e) {
       e.printStackTrace();

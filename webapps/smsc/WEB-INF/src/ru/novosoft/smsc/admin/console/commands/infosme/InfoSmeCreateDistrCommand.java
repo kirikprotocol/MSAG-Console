@@ -65,7 +65,7 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
       distribution.setTimeEnd(timeEnd);
       distribution.setTxmode(bolMod);
 
-      final InfoSmeDistr cmd = (InfoSmeDistr)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeDistrImpl").newInstance();
+      final InfoSmeCommands cmd = (InfoSmeCommands)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeCommandsImpl").newInstance();
 
       cmd.createDistribution(ctx, distribution);
     } catch (ClassNotFoundException e) {

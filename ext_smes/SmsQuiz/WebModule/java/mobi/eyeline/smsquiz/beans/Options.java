@@ -27,11 +27,9 @@ public class Options extends SmsQuizBean {
   private String consolePort;
   private String consoleUser;
   private String consolePasssword;
-  private String codeOk;
   private int connectTimeout;
   private int connectCloserPeriod;
 
-  private String infoSmeSuccDeliveryStat;
   private String infoSmeStatsDir;
   private int statusCheckerDelay;
   private int statusCheckerPeriod;
@@ -80,11 +78,9 @@ public class Options extends SmsQuizBean {
         consolePort = getConfig().getString("distribution.smsc.console.port");
         consoleUser = getConfig().getString("distribution.smsc.console.access.login");
         consolePasssword = getConfig().getString("distribution.smsc.console.access.password");
-        codeOk = getConfig().getString("distribution.smsc.console.code.ok");
         connectTimeout = getConfig().getInt("distribution.smsc.console.connect.timeout");
         connectCloserPeriod = getConfig().getInt("distribution.smsc.console.closer.period");
 
-        infoSmeSuccDeliveryStat = getConfig().getString("distribution.info.sme.succ.delivery.status");
         infoSmeStatsDir = getConfig().getString("distribution.info.sme.stats.dir");
         statusCheckerDelay = getConfig().getInt("distribution.status.checker.delay.first");
         statusCheckerPeriod = getConfig().getInt("distribution.status.checker.period");
@@ -164,11 +160,9 @@ public class Options extends SmsQuizBean {
       getConfig().setString("distribution.smsc.console.port", consolePort);
       getConfig().setString("distribution.smsc.console.access.login", consoleUser);
       getConfig().setString("distribution.smsc.console.access.password", consolePasssword);
-      getConfig().setString("distribution.smsc.console.code.ok", codeOk);
       getConfig().setInt("distribution.smsc.console.connect.timeout", connectTimeout);
       getConfig().setInt("distribution.smsc.console.closer.period", connectCloserPeriod);
 
-      getConfig().setString("distribution.info.sme.succ.delivery.status", infoSmeSuccDeliveryStat);
       getConfig().setString("distribution.info.sme.stats.dir", infoSmeStatsDir);
       getConfig().setInt("distribution.status.checker.delay.first", statusCheckerDelay);
       getConfig().setInt("distribution.status.checker.period", statusCheckerPeriod);
@@ -350,14 +344,6 @@ public class Options extends SmsQuizBean {
     this.consolePasssword = consolePasssword;
   }
 
-  public String getCodeOk() {
-    return codeOk;
-  }
-
-  public void setCodeOk(String codeOk) {
-    this.codeOk = codeOk;
-  }
-
   public String getConnectTimeout() {
     return Integer.toString(connectTimeout);
   }
@@ -384,14 +370,6 @@ public class Options extends SmsQuizBean {
       logger.error("Can't parse int value: " + connectCloserPeriod, e);
       e.printStackTrace();
     }
-  }
-
-  public String getInfoSmeSuccDeliveryStat() {
-    return infoSmeSuccDeliveryStat;
-  }
-
-  public void setInfoSmeSuccDeliveryStat(String infoSmeSuccDeliveryStat) {
-    this.infoSmeSuccDeliveryStat = infoSmeSuccDeliveryStat;
   }
 
   public String getInfoSmeStatsDir() {

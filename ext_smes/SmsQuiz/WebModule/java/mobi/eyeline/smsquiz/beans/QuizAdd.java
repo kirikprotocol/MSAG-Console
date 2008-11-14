@@ -77,8 +77,8 @@ public class QuizAdd extends SmsQuizBean {
       return RESULT_ERROR;
     }
     if (!initialized) {
-      timeBegin = "00:00";
-      timeEnd = "23:59";
+      timeBegin = "00:00:00";
+      timeEnd = "23:59:00";
       txmode = false;
       maxRepeat = "3";
       activeWeekDays[0] = "Mon";

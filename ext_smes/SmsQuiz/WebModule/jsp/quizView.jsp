@@ -10,6 +10,9 @@
    ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
 	 TITLE = getLocString("smsquiz.title");
    int beanResult = bean.process(request);
+   if(beanResult == QuizView.RESULT_DONE) {
+    response.sendRedirect("quizes.jsp");
+   }
 %>
 <%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
@@ -126,6 +129,11 @@
 </div>
 <%
   }
+  page_menu_begin(out);
+  page_menu_button(session, out, "mbDone",   "common.buttons.done",  "smsquiz.done_editing");
+  page_menu_space(out);
+  page_menu_end(out);
+
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -83,8 +83,6 @@ public class Distribution extends SmsQuizBean {
     if (result != RESULT_OK) return result;
 
     Collection allQuizes = getAllQuizes();
-    if (allQuizes == null || allQuizes.size() <= 0)
-      return warning("smsquiz.message.no.quiz");
     if (mbExportAll != null)
       result = processExportAll();
     if (initialized) {

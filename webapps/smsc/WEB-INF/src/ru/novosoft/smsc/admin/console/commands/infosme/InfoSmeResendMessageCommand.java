@@ -15,7 +15,7 @@ public class InfoSmeResendMessageCommand extends CommandClass {
 
   public void process(CommandContext ctx) {
     try{
-      final InfoSmeDistr cmd = (InfoSmeDistr)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeDistrImpl").newInstance();
+      final InfoSmeCommands cmd = (InfoSmeCommands)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeCommandsImpl").newInstance();
       cmd.resendMessage(ctx, msisdn, taskId);
     } catch (Throwable e) {
       e.printStackTrace();

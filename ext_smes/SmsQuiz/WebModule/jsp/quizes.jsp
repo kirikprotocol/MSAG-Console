@@ -33,17 +33,23 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <div class=content>
-  <%{final PagedStaticTableHelper tableHelper = bean.getTableHelper();%>
-  <%@ include file="/WEB-INF/inc/paged_static_table.jsp"%>
-  <%}%>
+  <%final PagedStaticTableHelper tableHelper = bean.getTableHelper();
+    if(tableHelper.getSize()>0) {%>
+      <%@ include file="/WEB-INF/inc/paged_static_table.jsp"%>
+    <%}
+    else %>
+      <div style="color:blue"><%=getLocString("smsquiz.message.no.quiz")%></div>
+    <%
+    %>
 </div>
 <%
-page_menu_begin(out);
-page_menu_button(session, out, "mbAdd",    "common.buttons.add",    "smsquiz.quiz.add");
-page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "smsquiz.quiz.delete", getLocString("smsquiz.confirm.quiz.delete"));
-
-page_menu_space(out);
-page_menu_end(out);
+  page_menu_begin(out);
+  page_menu_button(session, out, "mbAdd",    "common.buttons.add",    "smsquiz.quiz.add");
+  if(tableHelper.getSize()>0) {
+    page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "smsquiz.quiz.delete", getLocString("smsquiz.confirm.quiz.delete"));
+  }
+  page_menu_space(out);
+  page_menu_end(out);
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

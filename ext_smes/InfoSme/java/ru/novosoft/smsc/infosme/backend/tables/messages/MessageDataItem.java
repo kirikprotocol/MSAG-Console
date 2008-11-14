@@ -22,4 +22,9 @@ public class MessageDataItem extends AbstractDataItem {
     values.put(MessageDataSource.REGION, region);
     values.put(MessageDataSource.MESSAGE, message);
   }
+
+  public long getId() {
+    return ((Long)getValue(MessageDataSource.ID)).longValue();
+  }
+
 }

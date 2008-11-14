@@ -77,20 +77,12 @@
   <td><input class=txt name=consolePasssword value="<%=StringEncoderDecoder.encode(bean.getConsolePasssword())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.console.succ_code")%></th>
-  <td><input class=txt validation="nonEmpty" name=codeOk value="<%=StringEncoderDecoder.encode(bean.getCodeOk())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.console.conn.timeout")%></th>
   <td><input class=txt validation="positive" name=connectTimeout value="<%=StringEncoderDecoder.encode(bean.getConnectTimeout())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.console.conn.close")%></th>
   <td><input class=txt validation="positive" name=connectCloserPeriod value="<%=StringEncoderDecoder.encode(bean.getConnectCloserPeriod())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.infosme.succ_delivery")%></th>
-  <td><input class=txt validation="nonEmpty" name=infoSmeSuccDeliveryStat value="<%=StringEncoderDecoder.encode(bean.getInfoSmeSuccDeliveryStat())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.infosme.stats_dir")%></th>
@@ -143,12 +135,12 @@
   <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.jmx")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.jmx.password")%></th>
-  <td><input class=txt name=jmxPassword value="<%=StringEncoderDecoder.encode(bean.getJmxPassword())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.jmx.user")%></th>
   <td><input class=txt name=jmxUser value="<%=StringEncoderDecoder.encode(bean.getJmxUser())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th><%=getLocString("smsquiz.label.jmx.password")%></th>
+  <td><input class=txt name=jmxPassword value="<%=StringEncoderDecoder.encode(bean.getJmxPassword())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.jmx.port")%></th>

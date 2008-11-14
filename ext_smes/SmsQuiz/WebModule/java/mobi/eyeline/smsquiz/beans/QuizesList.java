@@ -37,6 +37,8 @@ public class QuizesList extends SmsQuizBean {
 
   private String dirWork;
 
+  private String quizRes;
+
   protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK)
@@ -47,6 +49,7 @@ public class QuizesList extends SmsQuizBean {
       maxTotalSize = getSmsQuizContext().getMaxQuizTotalSize();
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.quiz");
       dirWork = getSmsQuizContext().getConfig().getString("quizmanager.dir.work");
+      quizRes = getSmsQuizContext().getConfig().getString("quizmanager.dir.result");
       tableHelper.setMaxTotalSize(maxTotalSize);
       tableHelper.setPageSize(pageSize);
       tableHelper.setQuizesDataSource(new QuizesDataSource(quizDir));
@@ -171,6 +174,22 @@ public class QuizesList extends SmsQuizBean {
       System.out.println("try to delete file: " + file.getName());
       file.delete();
     } catch (Exception e) {
+      logger.error(e);
+    }
+
+    try{
+      file = new File(quizRes);
+      File files[] = file.listFiles();
+      if(files!=null) {
+        for(int j=0;j<files.length;j++) {
+          file = files[j];
+          if((file.isFile())&&(file.getName().startsWith(quizId))) {
+            file.delete();
+            break;
+          }
+        }
+      }
+    } catch(Exception e) {
       logger.error(e);
     }
 
