@@ -5,11 +5,12 @@ namespace scag2 {
 namespace pers {
 namespace util {
 
-int PersCallParams::fillSB( SerialBuffer& sb )
+int PersCallParams::fillSB( SerialBuffer& sb, int32_t serial )
 {
     assert( sb.getPos() == 0 );
     sb.Empty();
     sb.WriteInt32(0); // length to be
+    if ( serial ) sb.WriteInt32( serial );
     sb.WriteInt8( uint8_t( cmd_->cmdType() ) );
     sb.WriteInt8( uint8_t( getType() ) );
     if ( getType() == PT_ABONENT ) {

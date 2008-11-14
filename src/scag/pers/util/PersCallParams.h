@@ -26,7 +26,7 @@ public:
     inline int32_t getIntKey() const { return ikey_; }
 
     // fill a serial buffer
-    int fillSB( SerialBuffer& sb );
+    int fillSB( SerialBuffer& sb, int32_t serial = 0 );
     int readSB( SerialBuffer& sb );
     inline void storeResults( re::actions::ActionContext& ctx ) { cmd_->storeResults(ctx); }
 

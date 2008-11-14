@@ -20,7 +20,9 @@ public:
                       int pingTimeout,
                       int reconnectTimeout,
                       unsigned maxCallsCount,
-                      unsigned clients );
+                      int expireTimeout,
+                      unsigned clients,
+                      bool async );
 
     static void Init( const config::PersClientConfig& cfg );
 

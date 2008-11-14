@@ -27,4 +27,11 @@ typedef UnlockMutexGuardTmpl< smsc::core::synchronization::Mutex >  UnlockMutexG
 } // namespace util
 } // namespace scag
 
+namespace scag2 {
+namespace util {
+using scag::util::UnlockMutexGuardTmpl;
+using scag::util::UnlockMutexGuard;
+}
+}
+
 #endif /* !_SCAG_UTIL_UNLOCKMUTEXGUARD_H */
