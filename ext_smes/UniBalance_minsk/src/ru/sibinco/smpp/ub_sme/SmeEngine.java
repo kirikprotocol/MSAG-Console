@@ -19,10 +19,7 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.text.MessageFormat;
-import java.text.NumberFormat;
 import java.util.*;
 
 public class SmeEngine implements MessageListener, ResponseListener {
@@ -40,8 +37,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
   private String cbossConnectionErrorPattern = "Connection,NullPointerException";
 
-  private byte[] billingSystemsOrder = {1};
-
   private String bannerEngineServiceName = "UniBalance";
   private int bannerEngineTransportType = 1;
   private int bannerEngineCharSet = 1;
@@ -56,9 +51,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
   private String maxRequestInMemory = "1000";
 
   private boolean smsResponseMode = false;
-
-  private DecimalFormatSymbols decimalFormatSymbols;
-  private String numberFormatPattern = "#.##";
 
   private File responsePatternConfigFile;
 
@@ -103,14 +95,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
       throw new InitializationException("Mandatory config parameter \"cboss.connection.error.pattern\" is missed");
     }
     cbossConnectionErrorPattern = Utils.aggregateRegexp(cbossConnectionErrorPattern);
-
-    numberFormatPattern = config.getProperty("balance.number.format.pattern", numberFormatPattern);
-    String decimalSeparator = config.getProperty("balance.number.format.decimal.separator", ".");
-    if (decimalSeparator.length() == 0 || decimalSeparator.length() > 1) {
-      throw new InitializationException("Invalid value for config parameter \"balance.number.format.decimal.separator\": " + decimalSeparator);
-    }
-    decimalFormatSymbols = new DecimalFormatSymbols(Locale.US);
-    decimalFormatSymbols.setDecimalSeparator(decimalSeparator.charAt(0));
 
     String responsePatternConfigFileName = config.getProperty("response.pattern.config.file", "response.pattern.properties");
     responsePatternConfigFile = new File(responsePatternConfigFileName);
@@ -564,10 +548,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
         }
       return null;
     }
-  }
-
-  protected NumberFormat getNumberFormat() {
-    return new DecimalFormat(numberFormatPattern, decimalFormatSymbols);
   }
 
   protected MessageFormat getMessageFormat() {
