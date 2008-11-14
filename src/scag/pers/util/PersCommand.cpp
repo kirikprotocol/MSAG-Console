@@ -129,9 +129,13 @@ int PersCommandBatch::readSB( SerialBuffer& sb )
 
 void PersCommandBatch::storeResults( re::actions::ActionContext& ctx )
 {
+    int stopat = batch_.size();
+    if ( status() ) stopat = failIndex();
+    int idx = 0;
     for ( std::vector< PersCommandSingle >::iterator i = batch_.begin();
           i != batch_.end();
           ++i ) {
+        if ( idx++ >= stopat ) break;
         i->storeResults( ctx );
     }
     PersCommand::storeResults( ctx );

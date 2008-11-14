@@ -78,7 +78,7 @@ public:
 
     // the status of the last action
     inline int status() const { return status_; }
-    inline int setStatus( int stat ) { return status_ = stat; }
+    inline int setStatus( int stat ) { return status_ = int8_t(stat); }
 
     virtual int failIndex() const { return 0; }
 
@@ -86,7 +86,7 @@ public:
     // PersCommand* makeCommand( PersCmd cmd );
 
 protected:
-    PersCommand() : creator_(0), cmdType_(PC_UNKNOWN) {}
+    PersCommand() : creator_(0), cmdType_(PC_UNKNOWN), status_(0) {}
     // default is ok
     // PersCommand( const PersCommand& );
     // PersCommand& operator = ( const PersCommand& );
@@ -96,7 +96,7 @@ protected:
     PersCmd                           cmdType_;  // the type of pers cmd
 
 private:
-    int                               status_;   // the status of the last action
+    int8_t                            status_;   // the status of the last action
 };
 
 
@@ -142,7 +142,8 @@ protected:
     // friend PersCommand::makeCommand;
     // virtual Property* property() { return 0; }
     /// commands gets owned, unless exception is thrown
-    void setStatus( int status, int idx = 0 ) { setStatus(status); index_ = idx; }
+    inline int setStatus( int stat ) { return PersCommand::setStatus(stat); }
+    inline int setStatus( int stat, int idx ) { index_ = idx; return setStatus(stat); }
 
 private:
     std::vector< PersCommandSingle > batch_;
