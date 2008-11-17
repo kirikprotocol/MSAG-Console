@@ -21,7 +21,8 @@ public class SmsQuizBean extends PageBean {
   public static final int RESULT_REPLYSTATS = PageBean.PRIVATE_RESULT + 2;
   public static final int RESULT_RESULTS = PageBean.PRIVATE_RESULT + 3;
   public static final int RESULT_DISTR = PageBean.PRIVATE_RESULT + 4;
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 5;
+  public static final int RESULT_MAIN = PageBean.PRIVATE_RESULT + 5;
+  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 6;
 
   protected SmsQuizContext smsQuizContext;
   protected Config config;
@@ -58,6 +59,7 @@ public class SmsQuizBean extends PageBean {
     else if ("reply_stats".equals(mbMenu)) result = RESULT_REPLYSTATS;
     else if ("quiz_result".equals(mbMenu)) result = RESULT_RESULTS;
     else if ("distr".equals(mbMenu)) result = RESULT_DISTR;
+    else if ("main".equals(mbMenu)) result = RESULT_MAIN;
 
     mbMenu = null;
     return result;

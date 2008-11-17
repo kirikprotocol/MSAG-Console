@@ -33,7 +33,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.quiz")%></th>
-  <td><input class=txt name=quiz value="<%=StringEncoderDecoder.encode(bean.getQuiz())%>"></td>
+  <td><input class=txt readonly="true" name=quiz value="<%=StringEncoderDecoder.encode(bean.getQuiz())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.startDate")%></th>

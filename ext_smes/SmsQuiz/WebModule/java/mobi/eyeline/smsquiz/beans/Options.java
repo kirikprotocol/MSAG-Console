@@ -137,10 +137,14 @@ public class Options extends SmsQuizBean {
     if (result != RESULT_OK)
       return result;
 
-    if (mbDone != null)
+    if (mbDone != null) {
+      mbDone = null;
       return save();
-    if (mbCancel != null)
+    }
+    if (mbCancel != null) {
+      mbCancel = null;
       return RESULT_DONE;
+    }
 
     return result;
   }

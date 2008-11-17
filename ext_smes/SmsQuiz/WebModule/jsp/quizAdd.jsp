@@ -79,7 +79,7 @@
  <!--<td><input validation="nonEmpty" class=txt name=abFile value="<%=StringEncoderDecoder.encode(bean.getAbFile())%>"></td> -->
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.sa")%>S</th>
+  <th><%=getLocString("smsquiz.label.sa")%></th>
   <td><input validation="nonEmpty" class=txt name=sourceAddress value="<%=StringEncoderDecoder.encode(bean.getSourceAddress())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>

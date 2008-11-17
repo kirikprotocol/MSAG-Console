@@ -295,7 +295,10 @@ public class QuizBuilder {
 
 
   public static void saveQuiz(QuizFullData data, String filePath) {
-    XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
+    Format format = Format.getPrettyFormat();
+    format.setEncoding(System.getProperty("file.encoding"));
+    XMLOutputter outputter = new XMLOutputter(format);
+
 
     OutputStream outputStream = null;
     try {

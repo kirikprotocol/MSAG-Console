@@ -9,6 +9,7 @@ import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataItem;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
@@ -74,7 +75,11 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
           +File.separator+config.getString("InfoSme.storeLocation");
 
       MessageDataSource ds = new MessageDataSource(config,storeDir);
-      long id = ds.getMessage(msisdn, taskId).getId();
+      MessageDataItem mess = ds.getMessage(msisdn, taskId);
+      if(mess==null) {
+        throw new Exception("Message not found for taskId="+taskId+" msisdn="+msisdn);
+      }
+      long id = mess.getId();
 
       if(id>=0) {
         context.getInfoSme().resendMessages(taskId, Long.toString(id), Message.State.NEW, new Date());
@@ -86,6 +91,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       ctx.setStatus(CommandContext.CMD_OK);
     } catch (Exception e) {
       e.printStackTrace();
+      log.error(e);
       ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
     }
 

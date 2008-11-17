@@ -17,16 +17,20 @@ public class Index extends SmsQuizBean {
 
   public int process(HttpServletRequest request) {
     int result = super.process(request);
-    if (mbStart != null)
+    if (mbStart != null) {
+      mbStart = null;
       return start();
-    if (mbStop != null)
+    }
+    if (mbStop != null) {
+      mbStop = null;
       return stop();
+    }
 
     return result;
   }
 
   protected int start() {
-    int result = RESULT_DONE;
+    int result = RESULT_OK;
     try {
       getAppContext().getHostsManager().startService(getSmeId());
       try {
@@ -67,4 +71,12 @@ public class Index extends SmsQuizBean {
   public void setMbStop(String mbStop) {
     this.mbStop = mbStop;
   }
+
+  public boolean isOnline() {
+    try {
+      return getAppContext().getHostsManager().getServiceInfo(getSmeId()).isOnline();
+    } catch (Exception e) {}
+    return false;
+  }
+
 }

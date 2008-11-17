@@ -25,6 +25,9 @@
     case SmsQuizBean.RESULT_QUIZES:
       response.sendRedirect("quizes.jsp");
       return;
+    case SmsQuizBean.RESULT_MAIN:
+      response.sendRedirect("index.jsp");
+      return;
     case SmsQuizBean.RESULT_DISTR:
       response.sendRedirect("distribution.jsp");
       return;

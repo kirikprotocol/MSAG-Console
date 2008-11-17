@@ -37,9 +37,9 @@
     if(tableHelper.getSize()>0) {%>
       <%@ include file="/WEB-INF/inc/paged_static_table.jsp"%>
     <%}
-    else %>
+    else {%>
       <div style="color:blue"><%=getLocString("smsquiz.message.no.quiz")%></div>
-    <%
+    <%}
     %>
 </div>
 <%

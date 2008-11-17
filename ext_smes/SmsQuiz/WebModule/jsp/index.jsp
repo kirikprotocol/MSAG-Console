@@ -13,21 +13,26 @@
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 
 <%
+  if(session.getAttribute("message_to_restart")!=null) {
+    if(bean.isOnline()) {
+    %>
+      <div style="color:blue">
+      <%=getLocString("smsquiz.message.restart")%>
+      </div>
+    <%
+    }
+    session.setAttribute("message_to_restart",null);
+  }
+%>
+
+
+<%
     page_menu_begin(out);
     page_menu_space(out);
     page_menu_button(session, out, "mbStart", "common.buttons.start", "smsquiz.start");
     page_menu_button(session, out, "mbStop",  "common.buttons.stop",  "smsquiz.stop");
     page_menu_end(out);
-    if(session.getAttribute("message_to_restart")!=null) {
-      %>
-      <div style="color:blue">
-      <%=getLocString("smsquiz.message.restart")%>
-      </div>
-      <%
-      session.setAttribute("message_to_restart",null);
-    }
+
 %>
-
-
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

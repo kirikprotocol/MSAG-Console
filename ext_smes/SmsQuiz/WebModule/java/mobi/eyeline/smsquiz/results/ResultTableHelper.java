@@ -59,9 +59,7 @@ public class ResultTableHelper extends PagedStaticTableHelper {
       if (element != null) {
         sortOrder = element.getColumnId();
         if (sortOrder != null) {
-          if (element.getOrderType() == OrderType.DESC) {
-            sortOrder = "+" + sortOrder;
-          } else {
+          if (element.getOrderType() != OrderType.ASC) {
             sortOrder = "-" + sortOrder;
           }
           return;

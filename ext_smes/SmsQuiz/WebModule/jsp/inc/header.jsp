@@ -7,6 +7,7 @@
     sme_menu_button(out, "mbMenu",  "quiz_result",   "Quiz results",  "Quiz results");
     sme_menu_button(out, "mbMenu",  "distr",   "Distribution",  "Distribution");
     sme_menu_space(out);
+    sme_menu_button(out, "mbMenu",  "main",    "Main",    "Main page");
     sme_menu_button(out, "mbMenu",  "options",    "Options",    "Global SmsQuiz options");
     sme_menu_end(out);
 %>
