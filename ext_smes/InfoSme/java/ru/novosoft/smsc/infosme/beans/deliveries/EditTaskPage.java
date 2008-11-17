@@ -140,6 +140,9 @@ public class EditTaskPage extends DeliveriesPage {
     else
       task.setAddress(pageData.sourceAddress);
 
+    if (pageData.secret && (pageData.secretText == null || pageData.secretText.trim().length() == 0))
+      throw new AdminException("infosme.error.empty_secret_text");
+
     task.setFlash(pageData.flash);
 
     task.setActiveWeekDays(Arrays.asList(pageData.activeWeekDays));

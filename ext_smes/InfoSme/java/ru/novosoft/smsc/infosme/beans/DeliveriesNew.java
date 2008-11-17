@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
 import ru.novosoft.smsc.infosme.beans.deliveries.DeliveriesGenerationProgress;
 import ru.novosoft.smsc.infosme.beans.deliveries.DeliveriesPage;
 import ru.novosoft.smsc.infosme.beans.deliveries.DeliveriesPageData;
@@ -197,6 +198,14 @@ public class DeliveriesNew extends InfoSmeBean {
     this.pageData.text = text;
   }
 
+  public String getSecretText() {
+    return pageData.secretText;
+  }
+
+  public void setSecretText(String text) {
+    pageData.secretText = text;
+  }
+
   public Map getGenerationProgress() {
     return pageData.deliveriesGenProgr;
   }
@@ -235,6 +244,18 @@ public class DeliveriesNew extends InfoSmeBean {
 
   public void setFlash(boolean flash) {
     this.pageData.flash = flash;
+  }
+
+  public boolean isSecret() {
+    return pageData.secret;
+  }
+
+  public void setSecret(boolean val) {
+    pageData.secret = val;
+  }
+
+  public boolean isSupportExtProfile() {
+    return SupportExtProfile.enabled;
   }
 
   public String getSourceAddress() {

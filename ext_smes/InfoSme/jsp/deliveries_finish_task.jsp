@@ -10,6 +10,7 @@
 <%
   page_menu_begin(out);
   page_menu_button(session, out, "mbNext", "common.buttons.done", "infosme.hint.main_page");
+  page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "infosme.hint.main_page");
   page_menu_space(out);
   page_menu_end(out);
 %>

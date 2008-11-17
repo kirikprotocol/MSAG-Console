@@ -21,8 +21,10 @@ import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.admin.closedgroups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.region.RegionsManager;
 import ru.novosoft.smsc.admin.fraud.FraudConfigManager;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.WebXml;
+import ru.novosoft.smsc.util.smsxsender.SmsXSender;
 import ru.novosoft.util.jsp.AppContext;
 
 import java.util.Locale;
@@ -82,6 +84,8 @@ public interface SMSCAppContext extends AppContext {
     SmscList getSmscList();
 
     ServiceManager getServiceManager();
+
+    SmsXSender getSmsXSender() throws AdminException;
 
     Long registerSMEContext(SMEAppContext smeContext);
 

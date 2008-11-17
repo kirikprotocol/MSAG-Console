@@ -54,7 +54,7 @@ public class TasksStatistics extends InfoSmeBean
         String statsStoreDir = getInfoSmeContext().getConfig().getString("InfoSme.statStoreLocation");
 	if( statsStoreDir.length() > 0 && statsStoreDir.charAt(0) != '/' )
 	  statsStoreDir = serviceFolder + '/' + statsStoreDir;
-        ds = new StatisticsDataSource(getConfig(), statsStoreDir);
+        ds = new StatisticsDataSource(statsStoreDir);
       } catch (Exception e) {
         return error("Can't init dataa source", e);
       }

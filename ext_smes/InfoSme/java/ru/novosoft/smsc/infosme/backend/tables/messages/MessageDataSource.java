@@ -287,7 +287,7 @@ public class MessageDataSource extends AbstractDataSourceImpl {
           if (name.lastIndexOf(".csv") < 0)
             continue;
 
-          Date fileDate = fileNameFormat.parse(dirName + '/' + name.substring(0, name.lastIndexOf(".")));
+          Date fileDate = fileNameFormat.parse(dirName + '/' + name.substring(0, 2));
           if ((tillFile == null || fileDate.compareTo(tillFile) <= 0) && (fromFile == null || fileDate.compareTo(fromFile) >= 0))
             files.add(f);
         }

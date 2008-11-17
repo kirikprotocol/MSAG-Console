@@ -2,6 +2,7 @@ package ru.novosoft.smsc.jsp;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
 import ru.novosoft.smsc.admin.fraud.FraudConfigManager;
 import ru.novosoft.smsc.admin.region.RegionsManager;
 import ru.novosoft.smsc.admin.acl.AclManager;
@@ -24,6 +25,8 @@ import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.topmon.TopServer;
 import ru.novosoft.smsc.util.LocaleMessages;
 import ru.novosoft.smsc.util.WebAppFolders;
+import ru.novosoft.smsc.util.smsxsender.SmsXSenderServiceLocator;
+import ru.novosoft.smsc.util.smsxsender.SmsXSender;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.util.jsp.AppContextImpl;
@@ -36,6 +39,8 @@ import java.util.*;
 
 import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
+
+import javax.xml.rpc.ServiceException;
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext {
 
@@ -66,6 +71,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     private ServiceManager serviceManager = null;
     private ClosedGroupManager closedGroupManager = null;
     private PersonalizationClientPool persClientPool = null;
+    private SmsXSenderServiceLocator smsxSenderLocator = null;
 
     private Smsc smsc = null;
     private SmscList smscList = null;
@@ -168,6 +174,10 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
               persProps.setProperty("personalization.max.shutdown.time", webappConfig.getString("personalization.maxShutdownTime"));
 
               persClientPool = new PersonalizationClientPool(persProps);
+            }
+            if (SupportExtProfile.enabled) {
+              smsxSenderLocator = new SmsXSenderServiceLocator();
+              smsxSenderLocator.setSmsXSenderEndpointAddress(webappConfig.getString("smsx.smsxSenderUrl"));
             }
             System.out.println("SMSC Administration Web Application Started  **************************************************");
             Set autoStart = webappConfig.getSectionChildParamsNames("autostart");
@@ -347,6 +357,14 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
     public ServiceManager getServiceManager() {
         return serviceManager;
+    }
+
+    public SmsXSender getSmsXSender() throws AdminException {
+      try {
+        return smsxSenderLocator.getSmsXSender();
+      } catch (ServiceException e) {
+        throw new AdminException(e.getMessage());
+      }
     }
 
     public void setTopMonSmscHost(String smscHost) {

@@ -1,20 +1,17 @@
 package ru.novosoft.smsc.infosme.backend.tables.stat;
 
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
-import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.Query;
+import ru.novosoft.smsc.infosme.backend.StatQuery;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
-import ru.novosoft.smsc.infosme.backend.StatQuery;
-import ru.novosoft.smsc.infosme.backend.Task;
-import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.jsp.util.tables.Query;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
+import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.StringTokenizer;
-import java.text.SimpleDateFormat;
 import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * User: artem
@@ -23,59 +20,42 @@ import java.io.*;
 
 public class StatisticsDataSource extends AbstractDataSourceImpl {
 
-  private static final SimpleDateFormat dirNameFormat = new SimpleDateFormat("yyyyMMdd");
-  private static final SimpleDateFormat fileNameFormat = new SimpleDateFormat("HH");
+  private static String DIR_DATE_FORMAT = "yyyyMMdd";
+  private static String FILE_DATE_FORMAT = "HH";
 
   private final String storeDir;
-  private final Config config;
 
-  public StatisticsDataSource(Config config, String storeDir) {
+  public StatisticsDataSource(String storeDir) {
     super(new String[] {"period", "taskId", "taskName", "generated", "delivered", "retried", "failed"});
     this.storeDir = storeDir;
-    this.config = config;
   }
 
   public QueryResultSet query(Query query_to_run) {
     final StatQuery filter = (StatQuery)query_to_run.getFilter();
 
     Date fromDate = filter.getFromDate();
-    if (fromDate == null) {
-      try {
-        Task t = new Task(config, filter.getTaskId());
-        fromDate = t.getStartDateDate();
-      } catch (Exception e) {
-        e.printStackTrace();
-        return new EmptyResultSet();
-      }
-    }
-
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(fromDate);
-
     Date endDate = filter.getTillDate();
-    if (endDate == null)
-      endDate = new Date();
 
-    final QueryResultSetImpl rs = new QueryResultSetImpl(columnNames, "");
+    try {
+      List files = getFiles(fromDate, endDate);
+      if (files.isEmpty())
+        return new EmptyResultSet();
 
+      final QueryResultSetImpl rs = new QueryResultSetImpl(columnNames, "");
 
-    while (cal.getTime().before(endDate)) {
+      final SimpleDateFormat fileDateFormat = new SimpleDateFormat(DIR_DATE_FORMAT + '/' + FILE_DATE_FORMAT);
 
-      final String dirName = dirNameFormat.format(cal.getTime());
+      for (Iterator iter = files.iterator(); iter.hasNext();) {
+        File f = (File)iter.next();
 
-      final String fileNamePrefix = fileNameFormat.format(cal.getTime());
-
-      File f = new File(storeDir, dirName + "/" + fileNamePrefix + ".csv");
-
-      if (f.exists()) {
-        System.out.println("processFile " + f.getAbsolutePath());
+        Date fileDate = fileDateFormat.parse(f.getParentFile().getName() + '/' + f.getName());
 
         BufferedReader is = null;
 
         try {
           is = new BufferedReader(new FileReader(f));
 
-          String line = is.readLine();
+          String line = is.readLine(); // Skip first line
 
           while((line = is.readLine()) != null) {
             StringTokenizer st = new StringTokenizer(line, ",");
@@ -87,7 +67,7 @@ public class StatisticsDataSource extends AbstractDataSourceImpl {
             String retried = st.nextToken();
             String failed = st.nextToken();
 
-            final DataItem item = new StatisticDataItem(cal.getTime(), taskId, taskName, Integer.valueOf(generated),
+            final DataItem item = new StatisticDataItem(fileDate, taskId, taskName, Integer.valueOf(generated),
                 Integer.valueOf(delivered), Integer.valueOf(retried), Integer.valueOf(failed));
 
             if (filter.isItemAllowed(item))
@@ -105,10 +85,66 @@ public class StatisticsDataSource extends AbstractDataSourceImpl {
             }
         }
       }
-      cal.add(Calendar.HOUR, 1);
-     // cal.set(Calendar.HOUR, cal.get(Calendar.HOUR) + 1);    
+
+      return rs;
+
+    } catch (ParseException e) {
+      e.printStackTrace();
     }
 
-    return rs;
+    return new EmptyResultSet();
+  }
+
+  private List getFiles (Date from, Date till) throws ParseException {
+
+    List files = new LinkedList();
+
+    File dir = new File(storeDir);
+    if(dir.exists()) {
+
+      final SimpleDateFormat dirNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT);
+      final SimpleDateFormat fileNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT + '/' + FILE_DATE_FORMAT);
+      final SimpleDateFormat fileDateFormat = new SimpleDateFormat(DIR_DATE_FORMAT + FILE_DATE_FORMAT);
+
+      final Date fromDir = from == null ? null : dirNameFormat.parse(dirNameFormat.format(from));
+      final Date fromFile = from == null ? null : fileDateFormat.parse(fileDateFormat.format(from));
+      final Date tillDir = till == null ? null : dirNameFormat.parse(dirNameFormat.format(till));
+      final Date tillFile = till == null ? null : fileDateFormat.parse(fileDateFormat.format(till));
+
+      // Fetch directories
+      File[] dirArr = dir.listFiles(new FileFilter() {
+        public boolean accept(File file) {
+          if (!file.isDirectory())
+            return false;
+          try {
+            Date dirDate = dirNameFormat.parse(file.getName());
+            return (fromDir == null || dirDate.compareTo(fromDir) >= 0) && (tillDir == null || dirDate.compareTo(tillDir) <= 0);
+          } catch (ParseException e) {
+            return false;
+          }
+        }
+      });
+
+      // Fetch files
+      for (int i=0;i<dirArr.length;i++) {
+        File directory = dirArr[i];
+        String dirName = directory.getName();
+        File[] fileArr = directory.listFiles();
+
+        for(int j=0;j<fileArr.length;j++) {
+          File f = fileArr[j];
+          if (!f.isFile())
+            continue;
+          String name = f.getName();
+          if (name.lastIndexOf(".csv") < 0)
+            continue;
+
+          Date fileDate = fileNameFormat.parse(dirName + '/' + name.substring(0, 2));
+          if ((tillFile == null || fileDate.compareTo(tillFile) <= 0) && (fromFile == null || fileDate.compareTo(fromFile) >= 0))
+            files.add(f);
+        }
+      }
+    }
+    return files;
   }
 }

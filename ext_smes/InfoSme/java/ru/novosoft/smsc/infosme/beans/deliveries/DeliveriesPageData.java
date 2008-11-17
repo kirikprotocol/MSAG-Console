@@ -53,6 +53,8 @@ public class DeliveriesPageData {
   public String text;
   public String recondsNumber;
   public boolean flash;
+  public boolean secret;
+  public String secretText;
   public String sourceAddress;
   public String errorStr;
   public String retryPolicy;
@@ -85,7 +87,7 @@ public class DeliveriesPageData {
     activeTaskSubject = null;
     oldActiveTaskSubject = null;
     name = null;
-    splitDeliveriesFile=true;
+    splitDeliveriesFile=false;
     transliterate = false;
     retryOnFail = false;
     retryTime = null;
@@ -101,6 +103,8 @@ public class DeliveriesPageData {
     sourceAddress = null;
     retryPolicy = null;
     flash = false;
+    secret = false;
+    secretText = null;
 
     deliveriesGenProgr = null;
     deliveriesGenStatus = STATUS_INITIALIZATION;
