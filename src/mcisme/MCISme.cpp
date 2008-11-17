@@ -125,24 +125,26 @@ public:
   static void incOutgoing()
   {
     MutexGuard guard(trafficMonitor);
-    outgoing.Inc(); 
+
     if (TrafficControl::stopped) return;
 
+    outgoing.Inc();
     int out = outgoing.Get();
     int inc = incoming.Get();
     int difference = out-inc;
 
-    if (difference >= unrespondedMessagesMax) {
-      smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)", 
-                     difference, difference*unrespondedMessagesSleep, out, inc);
+    while (difference >= unrespondedMessagesMax) {
+      smsc_log_debug(logger, "wait %d (o=%d, i=%d)",
+                     difference*unrespondedMessagesSleep, out, inc);
       trafficMonitor.wait(difference*unrespondedMessagesSleep);
+      out = outgoing.Get(); inc = incoming.Get(); difference = out-inc;
+      if (TrafficControl::stopped) return;
     }
 
-    uint32_t pause;
     while(limitSpeed.Get() >= outgoingSpeedMax)
     {
       trafficMonitor.wait(10);
-      pause+=10;
+      if (TrafficControl::stopped) return;
     }
     limitSpeed.Inc();
   }
@@ -157,8 +159,8 @@ public:
   static void incIncoming()
   {
     MutexGuard guard(trafficMonitor);
-    incoming.Inc();
     if (TrafficControl::stopped) return;
+    incoming.Inc();
     if ((outgoing.Get()-incoming.Get()) < unrespondedMessagesMax) {
       trafficMonitor.notifyAll();
     }
@@ -229,12 +231,11 @@ public:
   }
 };
 
-class MCISmeMessageSender: public MessageSender
+class MCISmeMessageSender : public MessageSender
 {
 private:
-  TaskProcessor&  processor;
-  SmppSession*    session;
-  Mutex           sendLock;
+  TaskProcessor& processor;
+  SmppSession*   session;
 
   RWLock _activeThreadRunningLock;
   MCISmeMessageSender(const MCISmeMessageSender& rhs);
@@ -242,20 +243,20 @@ private:
 public:
 
   MCISmeMessageSender(TaskProcessor& processor, SmppSession* session) 
-    : MessageSender(), processor(processor), session(session) {};
+    : MessageSender(), processor(processor), session(session) {}
+
   virtual ~MCISmeMessageSender() {
-    MutexGuard guard(sendLock);
+    WriteLockGuard activeThreadRunGuard(_activeThreadRunningLock);
     session = 0;
   }
 
   void waitingForAllOperationsWillComplete()
   {
-    WriteLockGuard guard(_activeThreadRunningLock);
+    WriteLockGuard activeThreadRunGuard(_activeThreadRunningLock);
   }
 
   virtual int getSequenceNumber()
   {
-    MutexGuard guard(sendLock);
     ReadLockGuard activeThreadRunGuard(_activeThreadRunningLock);
 
     return (session) ? session->getNextSeq():0;
@@ -263,7 +264,6 @@ public:
 
   virtual bool send(int seqNumber, const Message& message)
   {
-    MutexGuard guard(sendLock);
     ReadLockGuard activeThreadRunGuard(_activeThreadRunningLock);
 
     if (!session) {
@@ -312,6 +312,7 @@ public:
       sm.get_header().set_commandStatus(0);
       sm.get_header().set_sequenceNumber(seqNumber);
 
+      TrafficControl::incOutgoing();
       asyncTransmitter->sendPdu(&(sm.get_header()));
     }
     else if(message.data_sm)
@@ -359,9 +360,9 @@ public:
 
       if (msgBuf) delete msgBuf;
 
+      TrafficControl::incOutgoing();
       smsc_log_debug(logger, "Sending DATA_SM to %s with seqNum = %d", daStr, sm.get_header().get_sequenceNumber());
       asyncTransmitter->sendPdu(&(sm.get_header()));
-      TrafficControl::incOutgoing();
     }
     else if(message.secured_data)
     {
@@ -400,9 +401,9 @@ public:
 
       if (msgBuf) delete msgBuf;
 
+      TrafficControl::incOutgoing();
       smsc_log_debug(logger, "Sending DATA_SM to %s with seqNum = %d", daStr, sm.get_header().get_sequenceNumber());
       asyncTransmitter->sendPdu(&(sm.get_header()));
-      TrafficControl::incOutgoing();
     }
     else
     {
@@ -470,9 +471,9 @@ public:
 
       if (msgBuf) delete msgBuf;
 
+      TrafficControl::incOutgoing();
       smsc_log_debug(logger, "Sending SUBMIT_SM to %s with seqNum = %d", daStr, sm.get_header().get_sequenceNumber());
       asyncTransmitter->sendPdu(&(sm.get_header()));
-      TrafficControl::incOutgoing();
     }
     return true;
   }
