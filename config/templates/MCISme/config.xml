@@ -44,6 +44,8 @@
         <param name="StackEmulatorHost" type="string">127.0.0.1</param>
         <param name="StackEmulatorPort" type="int">37000</param>
 
+        <param name="SendAbntOnlineNotificationPeriod" type="int">12</param>
+
         <section name="MCAEventStorage">
            <param name="location" type="string">@mcisme.mcastorage.location@</param>
            <param name="rollingInterval" type="int">60</param>
@@ -120,12 +122,14 @@
         </section>
 
 	<section name="Advertising">
+            <param name="BEProtocolVersion" type="int">2</param>
 	    <param name="useAdvert" type="bool">false</param>
 	    <param name="server" type="string">@mcisme.Advertising.server@</param>
 	    <param name="port" type="int">@mcisme.Advertising.port@</param>
 	    <param name="timeout" type="int">@mcisme.Advertising.timeout@</param>
 	    <param name="connectTimeout" type="int">@mcisme.Advertising.timeout@</param>
 	    <param name="proxyCount" type="int">10</param>
+            <param name="SvcTypeForBe" type="string">MCA</param>
 	</section>
 
 	<section name="Statistics">
