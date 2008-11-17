@@ -124,4 +124,8 @@
     <param name="poolControllerInterval" type="string">@poolControllerInterval</param>
     <param name="maxShutdownTime" type="string">@maxShutdownTime</param>
   </section>
+  
+  <section name="smsx">
+    <param name="smsxSenderUrl">@smsxSenderSoapServiceURL</param>
+  </section>
 </config>
