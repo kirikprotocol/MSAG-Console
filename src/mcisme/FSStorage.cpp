@@ -306,7 +306,7 @@ int FSStorage::CreateAbntEvents(const AbntAddr& CalledNum, const MCEvent& event,
   dat.events[0].callCount = 1;
   dat.events[0].flags = event.missCallFlags;
 
-  smsc_log_debug(logger, "FSStorage::insertEventIntoPosition:::  called addr=[%s], insert event into idx=0, event_cell.date=0x%x,event_cell.id=%d,event_cell.callingNum=%s,event_cell.callCount=%d,event_cell.flags=0x%x", AbntAddr(&dat.calledNum).getText().c_str(), dat.events[0].date, dat.events[0].id, AbntAddr(&dat.events[0].callingNum).getText().c_str(), dat.events[0].callCount, dat.events[0].flags);
+  smsc_log_debug(logger, "FSStorage::CreateAbntEvents::: called addr=[%s], insert event into idx=0, event_cell.date=0x%x,event_cell.id=%d,event_cell.callingNum=%s,event_cell.callCount=%d,event_cell.flags=0x%x", AbntAddr(&dat.calledNum).getText().c_str(), dat.events[0].date, dat.events[0].id, AbntAddr(&dat.events[0].callingNum).getText().c_str(), dat.events[0].callCount, dat.events[0].flags);
   if(freeCells.Empty())
     IncrStorage(bdFilesIncr);
 
