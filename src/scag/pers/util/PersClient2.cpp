@@ -495,12 +495,13 @@ int PersClientTask::Execute()
                        ctx->callCommandId, p->cmdType(), persCmdName(p->cmdType()), p->getStringKey(), p->getIntKey() );
         try {
             SerialBuffer sb;
-            int32_t serial = getNextSerial();
+            int32_t serial = async_ ? getNextSerial() : 0;
             p->fillSB(sb,serial);
             if ( ! p->status() ) {
                 sendPacket(sb);
                 if ( async_ ) {
                     addCall(serial,ctx);
+                    continue;
                 } else {
                     readPacket(sb);
                     p->readSB(sb);
@@ -518,7 +519,7 @@ int PersClientTask::Execute()
         }
 
         ctx->initiator->continueExecution(ctx,false);
-        actTS_ = time(0);
+        // actTS_ = time(0);
     }
     this->disconnect(false);
     smsc_log_debug( log_, "perstask finished" );
@@ -705,6 +706,7 @@ void PersClientTask::sendPacket( SerialBuffer& bsb )
             this->connect();
             if ( hasRequests() ) asyncRead();
             writeAllTo( bsb.c_ptr(), bsb.length() );
+            actTS_ = time(0);
             smsc_log_debug( logd_, "write to socket: len=%d, data=%s", bsb.length(), bsb.toString().c_str() );
             return;
         }
@@ -740,6 +742,7 @@ void PersClientTask::readPacket( SerialBuffer& bsb )
     smsc_log_debug(logd_, "read from socket: len=%d, data=%s", bsb.length(), bsb.toString().c_str());
     bsb.SetPos(0);
     sz = bsb.ReadInt32();
+    actTS_ = time(0);
 }
 
 

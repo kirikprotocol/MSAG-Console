@@ -31,8 +31,8 @@ int PersCallParams::fillSB( SerialBuffer& sb, int32_t serial )
 
 int PersCallParams::readSB( SerialBuffer& sb )
 {
-    sb.SetPos(0);
-    sb.ReadInt32();
+    // sb.SetPos(0);
+    // sb.ReadInt32();
     return cmd_->readSB(sb);
 }
 

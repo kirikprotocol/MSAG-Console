@@ -78,6 +78,7 @@ int PersCommandSingle::readStatus( SerialBuffer& sb )
     case (RESPONSE_BAD_REQUEST) : stat = BAD_REQUEST; break;
     case (RESPONSE_TYPE_INCONSISTENCE) : stat = TYPE_INCONSISTENCE; break;
     case (RESPONSE_PROFILE_LOCKED) : stat = PROFILE_LOCKED; break;
+    case (RESPONSE_NOTSUPPORT) : stat = COMMAND_NOTSUPPORT; break;
     default: stat = UNKNOWN_RESPONSE;
     }
     if ( stat ) setStatus( stat );
