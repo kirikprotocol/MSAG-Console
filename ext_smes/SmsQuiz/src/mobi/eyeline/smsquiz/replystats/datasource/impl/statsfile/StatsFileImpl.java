@@ -29,6 +29,7 @@ class StatsFileImpl implements StatsFile {
   private SimpleDateFormat csvDateFormat;
   private String filePath;
   private String treeFileName;
+  private String encoding;
 
 
   public StatsFileImpl(final String da, final String filePath) throws FileStatsException {
@@ -36,7 +37,7 @@ class StatsFileImpl implements StatsFile {
   }
 
   public StatsFileImpl(final String da, final String filePath, String timePattern, String datePattern) throws FileStatsException {
-    this.da = da;
+        this.da = da;
     this.filePath = filePath;
 
     dateFormat = new SimpleDateFormat(datePattern);
@@ -54,6 +55,8 @@ class StatsFileImpl implements StatsFile {
         throw new FileStatsException("Unable to truncate file", e);
       }
     }
+    encoding = System.getProperty("file.encoding");
+
   }
 
   public void open() throws FileStatsException {
@@ -129,15 +132,16 @@ class StatsFileImpl implements StatsFile {
         }
         notInitTree = false;
       }
+      byte[] comma = ",".getBytes(encoding);
       long filePointer = randomAccessFile.getFilePointer();
-      randomAccessFile.writeBytes(dateFormat.format(reply.getDate()));
-      randomAccessFile.writeBytes(",");
-      randomAccessFile.writeBytes(timeFormat.format(reply.getDate()));
-      randomAccessFile.writeBytes(",");
-      randomAccessFile.writeBytes(reply.getOa());
-      randomAccessFile.writeBytes(",");
-      randomAccessFile.writeBytes(reply.getText());
-      randomAccessFile.writeBytes(System.getProperty("line.separator"));
+      randomAccessFile.write(dateFormat.format(reply.getDate()).getBytes(encoding));
+      randomAccessFile.write(comma);
+      randomAccessFile.write(timeFormat.format(reply.getDate()).getBytes(encoding));
+      randomAccessFile.write(comma);
+      randomAccessFile.write(reply.getOa().getBytes(encoding));
+      randomAccessFile.write(comma);
+      randomAccessFile.write(reply.getText().getBytes(encoding));
+      randomAccessFile.write(System.getProperty("line.separator").getBytes(encoding));
       put(reply.getOa(), filePointer);
     } catch (IOException e) {
       logger.error("Unable to write reply", e);

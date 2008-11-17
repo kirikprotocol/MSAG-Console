@@ -51,7 +51,7 @@ class QuizCollector implements Runnable {
       logger.error(e);
       e.printStackTrace();
     }
-    logger.info("QuizCollectors finished");      
+    logger.info("QuizCollectors finished");
 
   }
 

@@ -44,6 +44,8 @@ public class Quiz {
   private ReplyStatsDataSource replyStatsDataSource;
   private final DistributionManager distributionManager;
 
+  private int answerHandled = -5;
+
   private Status status;
   private String dirWork;
 
@@ -82,14 +84,15 @@ public class Quiz {
         }
         return null;
       }
-      jstore.put(oaNumber, maxRepeat);
+      jstore.put(oaNumber, answerHandled);
       result = new Result(replyPattern.getAnswer(), Result.ReplyRull.OK, sourceAddress);
 
     } else {
       if (maxRepeat > 0) {
         if ((count = jstore.get(oaNumber)) != -1) {
           if (count >= maxRepeat) {
-            return null;
+            jstore.put(oaNumber, answerHandled);
+            result = null;
           } else {
             count++;
             jstore.put(oaNumber, count);
@@ -118,7 +121,7 @@ public class Quiz {
       logger.error("Can't add reply", e);
       throw new QuizException("Can't add reply", e);
     }
-    if(result.getReplyRull().equals(Result.ReplyRull.REPEAT)) {
+    if((result!=null)&&(result.getReplyRull().equals(Result.ReplyRull.REPEAT))) {
       try {
         distributionManager.resend(oa, status.getId());
       } catch (DistributionException e) {
@@ -149,9 +152,11 @@ public class Quiz {
       parentFile.mkdirs();
     }
     PrintWriter printWriter = null;
+    String encoding = System.getProperty("file.encoding");
     try {
-      printWriter = new PrintWriter(new BufferedWriter(new FileWriter(file)));
+      printWriter = new PrintWriter(file,encoding);
       ResultSet resultSet = distributionManager.getStatistics(this.getId(), dateBegin, dateEnd);
+      String comma = ",";
       while (resultSet.next()) {
         Reply reply;
         StatsDelivery delivery = (StatsDelivery) resultSet.get();
@@ -173,14 +178,29 @@ public class Quiz {
               continue;
             }
           }
+         /* String oaEnc = new String(oa.getBytes(),encoding);
+          String deliveryDate  = new String(dateFormat.format(dateDelivery).getBytes(),encoding);
+          String replyDate  = new String(dateFormat.format(reply.getDate()).getBytes(),encoding);
+          String categoryEnc  = new String(category.getBytes(),encoding);
+          String replyText = reply.getText().replace(System.getProperty("line.separator"), "\\n");
+          replyText = new String(replyText.getBytes(),encoding);
+          printWriter.print(oaEnc);
+          printWriter.print(comma);
+          printWriter.print(deliveryDate);
+          printWriter.print(comma);
+          printWriter.print(replyDate);
+          printWriter.print(comma);
+          printWriter.print(categoryEnc);
+          printWriter.print(comma);
+          printWriter.println(replyText);    */
           printWriter.print(oa);
-          printWriter.print(",");
+          printWriter.print(comma);
           printWriter.print(dateFormat.format(dateDelivery));
-          printWriter.print(",");
+          printWriter.print(comma);
           printWriter.print(dateFormat.format(reply.getDate()));
-          printWriter.print(",");
+          printWriter.print(comma);
           printWriter.print(category);
-          printWriter.print(",");
+          printWriter.print(comma);
           printWriter.println(reply.getText().replace(System.getProperty("line.separator"), "\\n"));
           if (logger.isInfoEnabled()) {
             logger.info("Last reply for oa=" + oa + " is " + reply + " stored");
