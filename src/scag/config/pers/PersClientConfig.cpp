@@ -16,7 +16,6 @@ void PersClientConfig::init(const ConfigView& cv)   throw(ConfigException)
         timeout = cv.getInt("ioTimeout", NULL);
         pingTimeout = cv.getInt("pingTimeout", NULL);
         reconnectTimeout = cv.getInt("reconnectTimeout", NULL);
-        expireTimeout = cv.getInt("expireTimeout", NULL);
         maxCallsCount = cv.getInt("maxWaitingRequestsCount", NULL);
         connections = cv.getInt("connections", NULL);
         async = cv.getBool("async", NULL);
@@ -34,7 +33,6 @@ bool PersClientConfig::check(const ConfigView& cv)   throw(ConfigException)
         return timeout != cv.getInt("timeout", NULL) || pingTimeout != cv.getInt("pingTimeout", NULL) ||
             port != cv.getInt("port", NULL) || strcmp(host.c_str(), h.get()) ||
             reconnectTimeout != cv.getInt("reconnectTimeout", NULL) ||
-            expireTimeout != cv.getInt("expireTimeout", NULL) ||
             maxCallsCount != cv.getInt("maxWaitingRequestsCount", NULL) ||
             connections != cv.getInt("connections", NULL) ||
             async != cv.getBool("async", NULL);

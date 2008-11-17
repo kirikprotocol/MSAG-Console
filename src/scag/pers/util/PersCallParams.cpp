@@ -31,18 +31,9 @@ int PersCallParams::fillSB( SerialBuffer& sb, int32_t serial )
 
 int PersCallParams::readSB( SerialBuffer& sb )
 {
-    // sb.SetPos(0);
-    // sb.ReadInt32();
     return cmd_->readSB(sb);
 }
 
-
-/*
-void PersCallParams::storeResults( re::actions::ActionContext& ctx )
-{
-    if ( cmd_->creator() ) cmd_->creator()->storeResults( ctx, * cmd_.get() );
-}
- */
 
 void PersCallParams::setStatus( int stat, const char* what )
 {

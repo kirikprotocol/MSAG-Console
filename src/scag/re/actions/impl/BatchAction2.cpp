@@ -1,6 +1,5 @@
 #include "BatchAction2.h"
 #include "scag/stat/Statistics.h"
-// #include "scag/util/properties/Properties2.h"
 #include "scag/re/base/CommandAdapter2.h"
 #include "scag/re/base/ActionFactory2.h"
 #include "scag/pers/util/PersClient2.h"
@@ -9,7 +8,6 @@ namespace scag2 {
 namespace re {
 namespace actions {
 
-// using util::properties::Property;
 using namespace pers::util;
 using namespace scag::stat;
 
@@ -71,28 +69,6 @@ bool BatchAction::RunBeforePostpone(ActionContext& context)
 }
 
 
-/*
-void BatchAction::ContinueRunning(ActionContext& context)
-{
-    smsc_log_debug(logger,"ContinueRunning Action 'BatchAction'...");
-    PersCallParams* p = (PersCallParams*)context.getSession().getLongCallContext().getParams();
-    if (p->error) {
-        smsc_log_debug(logger, "'BatchAction' abort. Error code=%d : %s", p->error, p->exception.c_str());
-        p->setStatus( context, p->error );
-        return;
-    }
-    smsc_log_debug(logger,"ContinueRunning Action 'BatchAction' (skey=%s ikey=%d)",
-                   p->getStringKey(), p->getIntKey() );
-    try {
-        p->readSB( context );
-        // setStatus(context, result, batchStatus, batchMsg, error_result_idx);
-    } catch (const PersClientException& e) {
-        p->setStatus(context, e.getType());
-        smsc_log_debug(logger, "'BatchAction' abort. Error code=%d", e.getType(), e.what());
-    }
-}
- */
-
 IParserHandler * BatchAction::StartXMLSubSection(const std::string& name, const SectionParams& params, const ActionFactory& factory)
 {
     smsc_log_debug(logger, "BatchAction: %s", name.c_str());
@@ -106,7 +82,6 @@ IParserHandler * BatchAction::StartXMLSubSection(const std::string& name, const 
 bool BatchAction::FinishXMLSubSection(const std::string& name)
 {
     smsc_log_debug(logger, "BatchAction: FinishXMLSubsection %s", name.c_str());
-    //return (name=="profile:batch");
     return (name=="batch:batch");
 }
 

@@ -9,30 +9,6 @@ namespace {
 
 const char* OPTIONAL_KEY = "key";
 
-/*
-const char* getStrCmd(scag2::pers::util::PersCmd cmd)
-{
-    switch(cmd)
-    {
-    case scag2::pers::util::PC_DEL:
-        return "profile:del";
-    case scag2::pers::util::PC_SET:
-        return "profile:set";
-    case scag2::pers::util::PC_GET:
-        return "profile:get";
-    case scag2::pers::util::PC_INC:
-        return "profile:inc";
-    case scag2::pers::util::PC_INC_MOD:
-        return "profile:inc-mod";
-    case scag2::pers::util::PC_MTBATCH:
-    case scag2::pers::util::PC_BATCH:
-        return "profile:batch";
-    default:
-        return "unknown";
-    };
-}
- */
-
 static uint32_t cmdToLongCallCmd(uint32_t c)
 {
     switch(c)
@@ -77,18 +53,15 @@ void PersActionCommandCreator::setStatus( ActionContext& context, int status, in
     }
     REProperty *msgProp = context.getProperty(msgName());
     while (msgProp) {
-        const char* m = "Ok";
-        if (status != 0) {
-            if ( status < 0 ) status = 0;
-            m = pers::util::strs[status];
-            if (actionIdx > 0) {
-                std::string msg = m;
-                char idx_buffer[40];
-                snprintf(idx_buffer, sizeof(idx_buffer), " in action %d", actionIdx);
-                msg += idx_buffer;
-                msgProp->setStr(msg.c_str());
-                break;
-            }
+        if ( status < 0 ) status = pers::util::UNKNOWN_EXCEPTION;
+        const char* m = pers::util::strs[status];
+        if (status != 0 && actionIdx > 0) {
+            std::string msg = m;
+            char idx_buffer[40];
+            snprintf(idx_buffer, sizeof(idx_buffer), " in action %d", actionIdx);
+            msg += idx_buffer;
+            msgProp->setStr(msg.c_str());
+            break;
         }
         msgProp->setStr(m);
         break;
@@ -359,57 +332,6 @@ std::auto_ptr< pers::util::PersCommand > PersActionCommand::makeCommand( ActionC
 }
 
 
-/*
-int PersActionCommand::readSB( ActionContext& context, SerialBuffer& sb )
-{
-    int result = readServerStatus(context,sb);
-    if ( result == 0 ) {
-
-        switch (cmd) {
-        case (PC_DEL) :
-        case (PC_SET) :
-            break;
-        case (PC_INC_RESULT) :
-        case (PC_INC_MOD) : {
-            uint32_t i = sb.ReadInt32();
-            REProperty* rp = context.getProperty(sResult);
-            if (rp) rp->setInt(i);
-            break;
-        }
-        case (PC_GET) : {
-            pers::util::Property prop;
-            prop.Deserialize( sb );
-            REProperty* rp = context.getProperty( sValue );
-            if (rp) {
-                switch (prop.getType()) {
-                case (INT) :
-                    rp->setInt(prop.getIntValue());
-                    break;
-                case (BOOL) :
-                    rp->setBool(prop.getBoolValue());
-                    break;
-                case (DATE) :
-                    rp->setDate(prop.getDateValue());
-                    break;
-                case (STRING) :
-                    rp->setStr(prop.getStringValue().c_str());
-                    break;
-                default :
-                    result = pers::util::INVALID_PROPERTY_TYPE;
-                }
-            }
-            break;
-        }
-        default :
-            result = pers::util::COMMAND_NOTSUPPORT;
-        }
-    }
-    setStatus(context,result);
-    return result;
-}
- */
-
-
 IParserHandler * PersActionCommand::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
 {
     throw SCAGException("Action 'profile:': cannot have a child object");
@@ -576,53 +498,6 @@ void PersActionBase::ContinueRunning(ActionContext& context)
     // persCommand.ContinueRunning(context);
     params->storeResults( context );
 }
-
-
-/*
-bool PersActionBase::setKey( ActionContext& context, PersCallParams* params )
-{
-    if ( !hasOptionalKey ) {
-        CommandProperty& cp = context.getCommandProperty();
-        switch (profile) {
-        case (PT_ABONENT) : params->setKey( cp.abonentAddr.toString() ); break;
-        case (PT_SERVICE) : params->setKey( cp.serviceId ); break;
-        case (PT_OPERATOR) : params->setKey( cp.operatorId ); break;
-        case (PT_PROVIDER) : params->setKey( cp.providerId ); break;
-        default :
-            params->setStatus( context, pers::util::BAD_REQUEST );
-            return false;
-        }
-        return true;
-    }
-
-    if ( ftOptionalKey != ftUnknown ) {
-        REProperty *rp = context.getProperty(optionalKeyStr);
-        if(!rp) {
-            smsc_log_error(logger, "'%s' parameter '%s' not found in action context",
-                           OPTIONAL_KEY, optionalKeyStr.c_str());
-            params->setStatus(context,pers::util::PROPERTY_NOT_FOUND);
-            return false;
-        }
-        if (profile == PT_ABONENT) {
-            try {
-                params->setKey( getAbntAddress(rp->getStr().c_str()) );
-            } catch(const std::runtime_error& e) {
-                smsc_log_error(logger, "'%s' parameter has error abonent profile key: %s",
-                               OPTIONAL_KEY, e.what());
-                params->setStatus(context,pers::util::INVALID_KEY);
-                return false;
-            }
-        } else {
-            params->setKey( static_cast<uint32_t>(rp->getInt()) );
-        }
-    } else if ( profile == PT_ABONENT ) {
-        params->setKey( optionalKeyStr );
-    } else {
-        params->setKey( optionalKeyInt );
-    }
-    return true;
-}
- */
 
 
 // =========================================================================

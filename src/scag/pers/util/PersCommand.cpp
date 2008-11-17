@@ -4,28 +4,6 @@ namespace scag2 {
 namespace pers {
 namespace util {
 
-
-/*
-PersCommand* PersCommand::makeCommand( PersCmd cmd )
-{
-    switch (cmd) {
-    case PC_DEL :
-    case PC_SET :
-    case PC_GET :
-    case PC_INC_MOD :
-    case PC_PING :
-    case PC_INC_RESULT :
-    case PC_BIND_ASYNCH :
-        return new PersCommandSingle( cmd );
-    case PC_MTBATCH :
-        return new PersCommandBatch();
-    default:
-        throw PersClientException(COMMAND_NOTSUPPORT);
-    }
-}
- */
-
-
 int PersCommandSingle::fillSB( SerialBuffer& sb )
 {
     if ( cmdType() == PC_PING || cmdType() == PC_BIND_ASYNCH ) {
@@ -84,15 +62,6 @@ int PersCommandSingle::readStatus( SerialBuffer& sb )
     if ( stat ) setStatus( stat );
     return stat;
 }
-
-/*
-bool PersCommandBatch::setBatch( const std::vector< PersCommandSingle >& cmds ) 
-{
-    if ( cmds.size() == 0 ) throw PersClientException(BATCH_ERROR);
-    batch_ = cmds;
-    return true;
-}
- */
 
 
 int PersCommandBatch::fillSB( SerialBuffer& sb )

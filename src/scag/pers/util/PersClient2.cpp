@@ -1,3 +1,4 @@
+#include <sys/time.h>
 #include <poll.h>
 #include "PersClient2.h"
 #include "PersCallParams.h"
@@ -38,11 +39,10 @@ public:
                int _pingTimeout,
                int _reconnectTimeout,
                unsigned _maxCallsCount,
-               int expireTmo,
                unsigned clients,
                bool     async );
 
-    lcm::LongCallContextBase* getContext( int tmo, PersClientTask& task );
+    lcm::LongCallContextBase* getContext( int tmomsec, PersClientTask& task );
 
     /// increment connection count
     void incConnect();
@@ -50,18 +50,13 @@ public:
     /// decrement connection count, if count == 0 then finish all current queued calls
     void decConnect();
 
-    void wait( int sec ) {
+    void wait( int msec ) {
         MutexGuard mg(queueMonitor_);
-        queueMonitor_.wait( sec*1000 );
+        queueMonitor_.wait( msec );
     }
 
 private:
-    // void init();
-    // void startClients();
     virtual void configChanged();
-
-    // virtual int Execute();
-
     void finishCalls( lcm::LongCallContextBase* ctx, bool drop );
     virtual bool call( lcm::LongCallContextBase* ctx );
     virtual int getClientStatus();
@@ -72,18 +67,15 @@ public:
     int         timeout;
     int         pingTimeout;
     int         reconnectTimeout;
-    int         expireTimeout;
 
 private:
     unsigned maxCallsCount_;
     unsigned clients_;
     bool     async_;
 
-    // smsc::core::network::Socket sock;
     bool isStopping;
     smsc::logger::Logger* log_;
-    // Mutex mtx;
-    // EventMonitor connectMonitor;
+
 
     struct Pipe {
         Pipe() { ::pipe(fd); }
@@ -93,8 +85,6 @@ private:
         bool operator == ( const Pipe& p ) const {
             return (fd[0] == p.fd[0]) && (fd[1] == p.fd[1]);
         }
-
-        // inline int wpipe() const { return fd[1];}
     private:
         int fd[2];
     };
@@ -105,7 +95,7 @@ private:
     unsigned                  callsCount_;
     unsigned                  connected_;
     std::list<Pipe>           waitingPipes_;   // a list of waiting pipes
-    std::list<Pipe>           freePipes_;      // a list of free pipes
+    std::list<Pipe>           freePipes_;      // a list of free pipes (cached)
     unsigned                  waitingStreams_; // a number of streams waiting w/o pipe
     smsc::core::threads::ThreadPool tp_;
 };
@@ -115,32 +105,32 @@ private:
 class PersClientTask : public smsc::core::threads::ThreadedTask
 {
 protected:
+    /// return current time (msec) counting from thread start time
+    typedef unsigned utime_type;
+    utime_type utime() const;
+
     /// a request sent to a server
     struct Call {
-        Call(lcm::LongCallContextBase* c, int32_t s ) : serial(s), ctx(c), stamp(time(0)) {}
+        Call(lcm::LongCallContextBase* c, int32_t s, utime_type t ) : serial(s), ctx(c), stamp(t) {}
         int32_t                   serial;
         lcm::LongCallContextBase* ctx;
-        time_t                    stamp;
+        utime_type                stamp;
     };
 
 public:
     PersClientTask( PersClientImpl* pers, bool async );
-    // : pers_(pers) {
-    // log_ = smsc::logger::Logger::getInstance( "perstask" );
-    // }
 
     /// return true if the task has any asynchronous requests
     bool hasRequests() const { return ! callqueue_.empty(); } // no locking here
 
     /// controlled poll
-    void pollwait( int tmo, int rpipe );
+    void pollwait( int tmomsec, int rpipe );
 
 protected:
     virtual int Execute();
     virtual const char* taskName() { return "perstask"; }
     virtual void onRelease() { this->disconnect(); }
 
-    // void stop();
     void ping();
     bool asyncRead();
     void connect( bool fromDisconnect = false );
@@ -154,6 +144,7 @@ protected:
 
 private:
     PersClientImpl*             pers_;
+    struct timeval              time0_;
     bool                        async_;
     smsc::logger::Logger*       log_;
     smsc::logger::Logger*       logd_;
@@ -189,16 +180,15 @@ void PersClient::Init( const char *_host,
                        int _pingTimeout,
                        int _reconnectTimeout,
                        unsigned _maxCallsCount,
-                       int expireTmo,
                        unsigned clients,
-                       bool     async ) //throw(PersClientException)
+                       bool     async )
 {
     if (!inited)
     {
         MutexGuard guard(initLock);
         if(!inited) {
             PersClientImpl& pc = SinglePC::Instance();
-            pc.init( _host, _port, _timeout, _pingTimeout, _reconnectTimeout, _maxCallsCount, expireTmo, clients, async );
+            pc.init( _host, _port, _timeout, _pingTimeout, _reconnectTimeout, _maxCallsCount, clients, async );
             inited = true;
         }
     }
@@ -207,7 +197,7 @@ void PersClient::Init( const char *_host,
 
 void PersClient::Init( const config::PersClientConfig& cfg )
 {
-    Init( cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout, cfg.reconnectTimeout, cfg.maxCallsCount, cfg.expireTimeout, cfg.connections, cfg.async );
+    Init( cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout, cfg.reconnectTimeout, cfg.maxCallsCount, cfg.connections, cfg.async );
 } 
 
 
@@ -218,7 +208,6 @@ port(0),
 timeout(10),
 pingTimeout(100),
 reconnectTimeout(10),
-expireTimeout(10),
 maxCallsCount_(1000),
 clients_(0),
 async_(false),
@@ -272,13 +261,11 @@ void PersClientImpl::init( const char *_host,
                            int _pingTimeout,
                            int _reconnectTimeout,
                            unsigned _maxCallsCount,
-                           int expireTmo,
                            unsigned clients,
                            bool async )
 {
-    smsc_log_info( log_, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d reconnectTimeout=%d maxWaitingRequestsCount=%d expireTmo=%d connections=%d async=%d",
+    smsc_log_info( log_, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d reconnectTimeout=%d maxWaitingRequestsCount=%d connections=%d async=%d",
                    _host, _port, _timeout, _pingTimeout, _reconnectTimeout, _maxCallsCount,
-                   expireTmo,
                    clients, async ? 1 : 0 );
     connected_ = 0;
     callsCount_ = 0;
@@ -287,7 +274,6 @@ void PersClientImpl::init( const char *_host,
     timeout = _timeout;
     pingTimeout = _pingTimeout;
     reconnectTimeout = _reconnectTimeout;
-    expireTimeout = expireTmo;
     maxCallsCount_ = _maxCallsCount;
     clients_ = clients;
     async_ = async;
@@ -298,13 +284,13 @@ void PersClientImpl::init( const char *_host,
 }
 
 
-lcm::LongCallContextBase* PersClientImpl::getContext( int tmo, PersClientTask& task )
+lcm::LongCallContextBase* PersClientImpl::getContext( int tmomsec, PersClientTask& task )
 {
     if ( isStopping || !connected_ ) return 0;
     lcm::LongCallContextBase* ctx = 0;
     MutexGuard mg(queueMonitor_);
     do {
-        if ( headContext_ || tmo <= 0 ) break;
+        if ( headContext_ || tmomsec <= 0 ) break;
 
         // no context found
         if ( task.hasRequests() ) {
@@ -317,7 +303,7 @@ lcm::LongCallContextBase* PersClientImpl::getContext( int tmo, PersClientTask& t
             Pipe p( waitingPipes_.back() );
             {
                 UnlockMutexGuard umg(queueMonitor_);
-                task.pollwait(tmo,p.rpipe());
+                task.pollwait(tmomsec,p.rpipe());
             }
             std::list<Pipe>::iterator i = std::find( waitingPipes_.begin(), waitingPipes_.end(), p );
             if ( i != waitingPipes_.end() ) {
@@ -326,7 +312,7 @@ lcm::LongCallContextBase* PersClientImpl::getContext( int tmo, PersClientTask& t
             freePipes_.push_back(p);
         } else {
             ++waitingStreams_;
-            queueMonitor_.wait( tmo * 1000 );
+            queueMonitor_.wait( tmomsec );
             --waitingStreams_;
         }
         if ( isStopping || !connected_ ) return 0;
@@ -376,7 +362,6 @@ void PersClientImpl::finishCalls( lcm::LongCallContextBase* ctx, bool drop )
         PersCallParams* persParam = (PersCallParams*)ctx->getParams();
         if ( persParam ) {
             persParam->setStatus(NOT_CONNECTED);
-            // persParam->exception = strs[NOT_CONNECTED];
         }
         ctx = ctx->next;
         c->initiator->continueExecution(c,drop);
@@ -420,6 +405,15 @@ int PersClientImpl::getClientStatus()
 
 // ==================================================================
 
+PersClientTask::utime_type PersClientTask::utime() const
+{
+    struct timeval tv;
+    ::gettimeofday( &tv, 0 );
+    utime_type t = utime_type((tv.tv_sec - time0_.tv_sec)*1000 + (int(tv.tv_usec) - int(time0_.tv_usec)) / 1000);
+    return t;
+}
+
+
 PersClientTask::PersClientTask( PersClientImpl* pers, bool async ) :
 pers_(pers),
 async_(async),
@@ -429,19 +423,20 @@ connected_(false),
 actTS_(time(0)),
 serial_(0)
 {
+    ::gettimeofday(&time0_, 0);
     log_ = smsc::logger::Logger::getInstance("perstask");
     logd_ = smsc::logger::Logger::getInstance("pers.dump");
 }
 
 
-void PersClientTask::pollwait( int tmo, int rpipe )
+void PersClientTask::pollwait( int tmomsec, int rpipe )
 {
     struct pollfd pfd[2];
     pfd[0].fd = sock.getSocket();
     pfd[0].events = POLLIN;
     pfd[1].fd = rpipe;
     pfd[1].events = POLLIN;
-    int rc = poll( pfd, 2, tmo*1000 );
+    int rc = poll( pfd, 2, tmomsec );
     if ( rc < 0 ) {
         smsc_log_warn(log_, "pollwait failed: %d", rc);
     } else if ( rc > 0 ) {
@@ -478,6 +473,8 @@ int PersClientTask::Execute()
         }
 
         int tmo = actTS_ + pers_->pingTimeout - time(0);
+        if ( tmo < 0 ) tmo = 0;
+        tmo *= 1000;
         lcm::LongCallContextBase* ctx = pers_->getContext(tmo, *this);
         if ( isStopping ) {
             if ( ctx ) ctx->initiator->continueExecution(ctx, true);
@@ -513,13 +510,12 @@ int PersClientTask::Execute()
             this->disconnect( true );
         } catch ( std::exception& e ) {
             smsc_log_warn( log_, "execute failed: exc=%s", e.what() );
-            p->setStatus( -1, e.what() );
+            p->setStatus( UNKNOWN_EXCEPTION, e.what() );
         } catch (...) {
-            p->setStatus( -1, "lcm: Unknown exception" );
+            p->setStatus( UNKNOWN_EXCEPTION, "lcm: Unknown exception" );
         }
 
         ctx->initiator->continueExecution(ctx,false);
-        // actTS_ = time(0);
     }
     this->disconnect(false);
     smsc_log_debug( log_, "perstask finished" );
@@ -529,6 +525,7 @@ int PersClientTask::Execute()
 
 void PersClientTask::ping()
 {
+    if ( pers_->pingTimeout <= 0 ) return;
     time_t now = time(0);
     if ( actTS_ + pers_->pingTimeout > now ) return;
     SerialBuffer sb;
@@ -557,7 +554,7 @@ void PersClientTask::ping()
         smsc_log_debug( log_, "ping sent");
     } catch ( PersClientException& e ) {
         smsc_log_warn( log_, "ping failed: %s", e.what() );
-        this->disconnect();
+        this->disconnect( true );
         // it will try to connect later
     } catch (...) {
         smsc_log_error(log_, "unknown exception");
@@ -570,11 +567,11 @@ bool PersClientTask::asyncRead()
     pollfd pfd;
     pfd.fd = sock.getSocket();
     pfd.events = POLLIN;
-    time_t now = time(0);
+    const utime_type now = utime();
     // remove old requests
     while ( hasRequests() ) {
         Call& c = callqueue_.front();
-        if ( c.stamp + pers_->expireTimeout < now ) {
+        if ( c.stamp + pers_->timeout < now ) {
             smsc_log_info( log_, "async request has expired: %d", c.serial );
             if ( c.ctx ) {
                 PersCallParams* params = static_cast<PersCallParams*>(c.ctx->getParams());
@@ -817,7 +814,7 @@ void PersClientTask::addCall( int32_t serial, lcm::LongCallContextBase* ctx )
         ctx->initiator->continueExecution( ctx, false );
         return;
     }
-    callqueue_.push_back( Call(ctx,serial) );
+    callqueue_.push_back( Call(ctx,serial,utime()) );
     Callqueue::iterator i = callqueue_.end();
     callhash_.Insert( serial, --i );
 }

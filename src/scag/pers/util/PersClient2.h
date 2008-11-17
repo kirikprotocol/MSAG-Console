@@ -1,7 +1,6 @@
 #ifndef _SCAG_PERS_UTIL_PERSCLIENT2_H
 #define _SCAG_PERS_UTIL_PERSCLIENT2_H
 
-// #include "ProfileProxy.h"
 #include "scag/re/base/LongCallContextBase.h"
 #include "scag/config/base/ConfigManager2.h"
 
@@ -20,7 +19,6 @@ public:
                       int pingTimeout,
                       int reconnectTimeout,
                       unsigned maxCallsCount,
-                      int expireTimeout,
                       unsigned clients,
                       bool async );
 

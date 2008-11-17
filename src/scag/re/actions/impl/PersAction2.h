@@ -16,25 +16,6 @@ namespace scag2 {
 namespace re {
 namespace actions {
 
-// extern const char* OPTIONAL_KEY;
-// extern uint32_t getKey(const CommandProperty& cp, ProfileType pt);
-
-/*
-class PersCallParams : public LongCallParams{
-public:
-    PersCallParams() : error(0), result(0) {};
-    ProfileType pt;
-	SerialBuffer sb;
-	uint32_t ikey;
-    string skey;
-    string propName;
-	scag::pers::util::Property prop;
-    uint32_t mod;
-    int32_t error;
-    uint32_t result;
-};
- */
-
 class PersActionCommandCreator : public pers::util::PersCommandCreator
 {
 public:
@@ -77,13 +58,6 @@ public:
     // command type
     virtual pers::util::PersCmd cmdType() const { return cmdType_; }
 
-    // writing to sb
-    // virtual int fillSB( ActionContext& ctx, util::storage::SerialBuffer& sb );
-
-    // reading from sb
-    // virtual int readSB( ActionContext& ctx, util::storage::SerialBuffer& sb );
-
-    /// NOTE: command must be created as PersCommandSingle(*this,cmd)
     virtual void storeResults( ActionContext& ctx, pers::util::PersCommand& command );
     virtual std::auto_ptr< pers::util::PersCommand > makeCommand( ActionContext& ctx );
     int fillCommand( ActionContext& ctx, pers::util::PersCommandSingle& command );
@@ -92,13 +66,6 @@ public:
     virtual const std::string& msgName() const { return msg; }
 
     inline const char* propertyName() const { return var.c_str(); }
-
-    // bool RunBeforePostpone(ActionContext& context, PersCallParams* params);
-    // void ContinueRunning(ActionContext& context);
-
-    // const char* getVar();
-    // bool batchPrepare(ActionContext& context, SerialBuffer& sb);
-    // int batchResult(ActionContext& context, SerialBuffer& sb, bool transactMode = false);
 
 private:
     virtual IParserHandler* StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
