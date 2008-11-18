@@ -1432,7 +1432,26 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
 
     try{
       int rv=SendEMail(fromdecor,to,subj,body);
-      if(haveprofile)storage.incGsm2EmlLimit(fromaddress);
+      if(haveprofile)
+      {
+        storage.incGsm2EmlLimit(fromaddress);
+      }else
+      {
+        __trace2__("Creating implicit profile creation for address %s",fromaddress.c_str());
+        AbonentProfile prof;
+        prof.addr=fromaddress;
+        prof.user=fromaddress;
+        //prof.forwardEmail;
+        //prof.realName;
+        prof.ltype=cfg::defaultLimitType;
+        prof.limitDate=time(NULL);
+        prof.numberMap=false;
+        prof.limitValue=cfg::defaultLimitValue;
+        prof.limitCountGsm2Eml=1;
+        prof.limitCountEml2Gsm=0;
+        storage.CreateProfile(prof);
+      }
+      
       if(rv!=ProcessSmsCodes::OK)
       {
         statCollector.IncSms2Eml(false);
@@ -1797,13 +1816,13 @@ public:
       }
       if(!concatRv)
       {
-        getPduText(xsm,buf,sizeof(buf));
-        /*Address addr(
-        ((PduXSm*)pdu)->get_message().get_source().value.size(),
-        ((PduXSm*)pdu)->get_message().get_source().get_typeOfNumber(),
-        ((PduXSm*)pdu)->get_message().get_source().get_numberingPlan(),
-        ((PduXSm*)pdu)->get_message().get_source().get_value());*/
         try{
+          getPduText(xsm,buf,sizeof(buf));
+          /*Address addr(
+           ((PduXSm*)pdu)->get_message().get_source().value.size(),
+           ((PduXSm*)pdu)->get_message().get_source().get_typeOfNumber(),
+           ((PduXSm*)pdu)->get_message().get_source().get_numberingPlan(),
+           ((PduXSm*)pdu)->get_message().get_source().get_value());*/
           code=processSms(buf,xsm->get_message().get_source().get_value(),xsm->get_message().get_dest().get_value());
         }catch(std::exception& e)
         {
