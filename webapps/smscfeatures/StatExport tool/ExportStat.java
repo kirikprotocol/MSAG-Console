@@ -205,11 +205,13 @@ public class ExportStat {
   private Date fromDate = null;
   private Date tillDate = null;
   private int  minuteInterval = 5;
+  private boolean useFromDateInHeaders;
 
-  public ExportStat(String src, String dest, String minuteInterval, String dateTime) {
+  public ExportStat(String src, String dest, String minuteInterval, String dateTime, String useFromDateInHeaders) {
     srcDir = new File(src);
     destDir = new File(dest);
     try {
+      this.useFromDateInHeaders = useFromDateInHeaders != null && useFromDateInHeaders.equals("true");
       gmtDateFormat.setCalendar(calendar);
       gmtDateDayFormat.setCalendar(calendar);
       dateFormat.setCalendar(localCalendar);
@@ -341,7 +343,10 @@ public class ExportStat {
     String datePrefix = destFilePrefixFormat.format(fromDate);
     File dest = new File(destDir, "sme_stats_" + datePrefix + ".csv");
     PrintWriter r = new PrintWriter(new FileWriter(dest, true));
-    r.println("#"+destDateFormat.format(fromDate));
+    if (!useFromDateInHeaders)
+      r.println("#"+destDateFormat.format(tillDate));
+    else
+      r.println("#"+destDateFormat.format(fromDate));
     for (Iterator i = smeCounters.keySet().iterator(); i.hasNext();) {
       String smeId = (String) i.next();
       SmeIdCountersSet set = (SmeIdCountersSet) smeCounters.get(smeId);
@@ -534,11 +539,12 @@ public class ExportStat {
   public static void main(String[] args) {
     ExportStat stat = null;
     try {
-      stat = new ExportStat(args[0], args[1], args[2], args.length > 3? args[3] : null);
+      stat = new ExportStat(args[0], args[1], args[2], args.length > 3? args[3] : null, args.length > 4 ? args[4] : null);
     }
     catch (Exception e) {
-      System.out.println("java ExportStat srcDir destDir ExportDate");
+      System.out.println("java ExportStat srcDir destDir [ExportDate] [UseStartDateInHeader]");
       System.out.println("ExportDate in yyyy-MM-dd-HH format");
+      System.out.println("UseStartDateInHeader=true/false");
       return;
     }
 
