@@ -1154,6 +1154,7 @@ protected:
     buffer=initBuffer;
     bufferSize=sizeof(initBuffer);
     bufferPosition=0;
+    bufferUsed=0;
   }
 
   void ResizeBuffer(size_t newsz)
