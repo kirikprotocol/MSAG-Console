@@ -98,6 +98,7 @@ int StorageProcessor::Execute() {
     }
   }
   waitingProcess_.clear();
+  shutdownStorages();
   return 0;
 }
 
@@ -191,7 +192,10 @@ void AbonentStorageProcessor::process(PersPacket* packet) {
   }
 }
 
-AbonentStorageProcessor::~AbonentStorageProcessor() {
+void AbonentStorageProcessor::shutdownStorages() {
+  if (elementStorages_.Count() <= 0) {
+    return;
+  }
   IntHash<ElementStorage>::Iterator it(elementStorages_);
   ElementStorage elstorage;
   int key = 0;
@@ -204,6 +208,11 @@ AbonentStorageProcessor::~AbonentStorageProcessor() {
       delete elstorage.glossary;
     }
   }
+  elementStorages_.Empty();
+}
+
+AbonentStorageProcessor::~AbonentStorageProcessor() {
+  shutdownStorages();
   smsc_log_debug(logger_, "storage processor %d deleted", locationNumber_);
 }
 
@@ -277,16 +286,23 @@ InfrastructStorageProcessor::InfrastructStorage* InfrastructStorageProcessor::in
   return new InfrastructStorage(ms.release(), ds.release());
 }
 
-InfrastructStorageProcessor::~InfrastructStorageProcessor() {
+void InfrastructStorageProcessor::shutdownStorages() {
   if (provider_) {
     delete provider_;
+    provider_ = 0;
   }
   if (operator_) {
     delete operator_;
+    operator_ = 0;
   }
   if (service_) {
     delete service_;
+    service_ = 0;
   }
+}
+
+InfrastructStorageProcessor::~InfrastructStorageProcessor() {
+  shutdownStorages();
   smsc_log_debug(logger_, "infrastruct storage processor deleted");
 }
 

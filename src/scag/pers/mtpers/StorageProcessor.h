@@ -72,10 +72,11 @@ public:
   virtual void stop();
   virtual const char * taskName();
   bool addPacket(PersPacket* packet);
-  virtual void process(PersPacket* packet) = 0;
 
 protected:
   void initGlossary(const string& path, Glossary* glossary);
+  virtual void process(PersPacket* packet) = 0;
+  virtual void shutdownStorages() = 0;
 
 protected:
   vector<PersPacket* > waitingProcess_;
@@ -88,8 +89,11 @@ class AbonentStorageProcessor: public StorageProcessor {
 public:
   AbonentStorageProcessor(unsigned maxWaitingCount, unsigned locationNumber, unsigned storagesCount);
   ~AbonentStorageProcessor();
-  void process(PersPacket* packet);
   void initElementStorage(const AbonentStorageConfig& cfg, unsigned index);
+
+protected:
+  void process(PersPacket* packet);
+  void shutdownStorages();
 
 private:
   typedef HashedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
@@ -118,7 +122,10 @@ public:
   InfrastructStorageProcessor(unsigned maxWaitingCount):StorageProcessor(maxWaitingCount), provider_(NULL), service_(NULL), operator_(NULL) {};
   ~InfrastructStorageProcessor();
   void init(const InfrastructStorageConfig& cfg);
-  void process(PersPacket* packet) ;
+
+protected:
+  void process(PersPacket* packet);
+  void shutdownStorages();
 
 private:
   //typedef HashedMemoryCache< IntProfileKey, Profile > MemStorage;
