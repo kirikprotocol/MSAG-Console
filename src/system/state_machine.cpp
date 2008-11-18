@@ -1699,10 +1699,10 @@ StateType StateMachine::submit(Tuple& t)
   if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
   {
     sms->setValidTime(now+maxValidTime);
-    __trace2__("maxValidTime=%d",maxValidTime);
+    debug2(smsLog,"maxValidTime=%d",maxValidTime);
   }
 
-  __trace2__("Valid time for sms %lld=%u",t.msgId,(unsigned int)sms->getValidTime());
+  debug2(smsLog,"Valid time for sms %lld=%u",t.msgId,(unsigned int)sms->getValidTime());
 
 
 
@@ -2647,13 +2647,14 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   repGuard.active=false;
 
   sms->lastResult=Status::OK;
-  info2(smsLog, "SBM: submit ok, seqnum=%d Id=%lld;seq=%d;%s;%s;srcprx=%s;dstprx=%s",
+  info2(smsLog,"SBM: submit ok, seqnum=%d Id=%lld;seq=%d;%s;%s;srcprx=%s;dstprx=%s;valid=%lu",
     dialogId2,
     t.msgId,dialogId,
     AddrPair("oa",sms->getOriginatingAddress(),"ooa",srcOriginal).c_str(),
     AddrPair("da",dstOriginal,"dda",sms->getDestinationAddress()).c_str(),
     src_proxy->getSystemId(),
-    sms->getDestinationSmeId()
+    sms->getDestinationSmeId(),
+    sms->getValidTime()
   );
   return DELIVERING_STATE;
 }
