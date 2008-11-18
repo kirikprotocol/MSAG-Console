@@ -21,9 +21,32 @@ BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher
     _proxyCount = 1;
   }
 
+  int connectTimeout;
+  try {
+    connectTimeout = advertCfg->getInt("connectTimeout");
+    if ( connectTimeout < 0 )
+      throw util::Exception("BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher::: invalid Advertising.connectTimeout value < 0");
+  } catch (...) {
+    connectTimeout = 15;
+    smsc_log_warn(_logger, "Parameter <MCISme.Advertising.connectTimeout> missed. Default value is '15'.");
+  }
+
+  int reconnectionAttemptPeriod;
+  try {
+    reconnectionAttemptPeriod = advertCfg->getInt("reconnectionAttemptPeriod");
+    if ( reconnectionAttemptPeriod < 0 )
+      throw util::Exception("BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher::: invalid Advertising.reconnectionAttemptPeriod value < 0");
+  } catch (...) {
+    reconnectionAttemptPeriod = 1;
+    smsc_log_warn(_logger, "Parameter <MCISme.Advertising.reconnectionAttemptPeriod> missed. Default value is '1'.");
+  }
+
+  _reconnectorThread = new BEReconnector(connectTimeout, reconnectionAttemptPeriod);
+  _reconnectorThread->Start();
+
   for(unsigned i=0; i < _proxyCount; ++i) {
     try {
-      OutputMessageProcessor* outputMsgProc = new OutputMessageProcessor(taskProcessor, advertCfg, *this);
+      OutputMessageProcessor* outputMsgProc = new OutputMessageProcessor(taskProcessor, advertCfg, *this, *_reconnectorThread);
       outputMsgProc->Start();
       _freeMsgProcessors.insert(outputMsgProc);
     } catch(util::Exception& ex) {
@@ -121,6 +144,8 @@ BannerOutputMessageProcessorsDispatcher::shutdown()
     else
       break;
   } while (true);
+
+  _reconnectorThread->stop();
 }
 
 }}
