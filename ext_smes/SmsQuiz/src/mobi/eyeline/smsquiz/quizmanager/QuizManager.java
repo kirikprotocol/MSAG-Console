@@ -181,7 +181,7 @@ public class QuizManager implements Observer {
 
       try {
         modifyQuiz(notification);
-      } catch (QuizException e) {
+      } catch (Exception e) {
         logger.error("Unable to modify quiz: " + notification.getFileName());
       }
 
@@ -189,7 +189,7 @@ public class QuizManager implements Observer {
 
       try {
         createQuiz(notification);
-      } catch (QuizException e) {
+      } catch (Exception e) {
         logger.error("Unable to update quize: " + notification.getFileName());
       }
     } else if(notification.getStatus().equals(Notification.FileStatus.DELETED)) {
@@ -197,7 +197,7 @@ public class QuizManager implements Observer {
       try{
         deleteQuiz(notification);
       }
-      catch (QuizException e) {
+      catch (Exception e) {
         logger.error("Unable to delete quize: " + notification.getFileName());
       }
     }
@@ -258,16 +258,17 @@ public class QuizManager implements Observer {
     if (logger.isInfoEnabled()) {
       logger.info("Create quiz...");
     }
-    String fileName = notification.getFileName();
-    Distribution distribution;
-    File file = new File(fileName);
     try {
+      String fileName = notification.getFileName();
+      Distribution distribution;
+      File file = new File(fileName);
+
       final Quiz quiz = new Quiz(statusDir, file, replyStatsDataSource, distributionManager, dirResult, dirWork);
       distribution = new Distribution();
       quizBuilder.buildQuiz(fileName, distribution, quiz);
       QuizCreator quizCreator = new QuizCreator(quiz, distribution);
       if(quiz.isActive()) {
-        quizCreator.run();
+        quizCreator.start();
       } else {
         long delay = quiz.getDateBegin().getTime() -System.currentTimeMillis();
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
@@ -333,7 +334,7 @@ public class QuizManager implements Observer {
     }
   }
 
-  private void writeError(String quizFileName, Exception exc) {
+  private void writeError(String quizFileName, Throwable exc) {
     if (quizFileName == null) {
       return;
     }
@@ -346,7 +347,12 @@ public class QuizManager implements Observer {
       writer.println("Error during creating quiz:");
       exc.printStackTrace(writer);
       writer.flush();
-    } catch (IOException e) {
+      dirListener.remove(quizFileName,true);
+      String statusFile = dirWork + File.separator + quizName + ".error";
+      if(new File(statusFile).exists()) {
+        dirListener.remove(statusFile,true);        
+      }
+    } catch (Exception e) {
       logger.error("Unable to create error file: " + errorFile, e);
     } finally {
       if (writer != null) {
@@ -406,6 +412,7 @@ public class QuizManager implements Observer {
       writer.println("New quiz");
       writer.println(newQuiz);
       writer.flush();
+      dirListener.remove(newQuiz.getFileName(),true);
     } catch (IOException e) {
       logger.error("Unable to create error file: " + errorFile, e);
       throw new QuizException("Unable to create error file: " + errorFile, e);
@@ -478,7 +485,7 @@ public class QuizManager implements Observer {
     return dirWork;
   }
   
-  private class QuizCreator implements Runnable{
+  private class QuizCreator extends Thread{
     private Quiz quiz;
     private Distribution distr;
     public QuizCreator(Quiz quiz, Distribution distr) {
@@ -528,7 +535,7 @@ public class QuizManager implements Observer {
         if (logger.isInfoEnabled()) {
           logger.info("Quiz created: " + quiz);
         }
-      } catch (Exception e) {
+      } catch (Throwable e) {
         writeError(quiz.getFileName(), e);
         logger.error("Error during creating quiz",e);
         e.printStackTrace();

@@ -89,7 +89,7 @@ public class DirListener extends Observable implements Runnable {
           filesMap.remove(fileN);
         }
       }
-    } catch (Exception e) {
+    } catch (Throwable e) {
       logger.error("Error construct quiz file or notification", e);
     } finally {
       run = 0;
@@ -121,7 +121,7 @@ public class DirListener extends Observable implements Runnable {
         file.renameTo(new File(fileName + ".old"));
       }
       filesMap.remove(fileName);
-    } catch (InterruptedException e) {
+    } catch (Throwable e) {
       logger.error("Error during remove file from storage: " + fileName, e);
     } finally {
       remove = 0;

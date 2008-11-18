@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.ByteArrayOutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -132,7 +133,7 @@ class StatsFileImpl implements StatsFile {
         }
         notInitTree = false;
       }
-      byte[] comma = ",".getBytes(encoding);
+      byte[] comma = ",".getBytes();
       long filePointer = randomAccessFile.getFilePointer();
       randomAccessFile.write(dateFormat.format(reply.getDate()).getBytes(encoding));
       randomAccessFile.write(comma);
@@ -180,7 +181,7 @@ class StatsFileImpl implements StatsFile {
       long prevPosition = randomAccessFile.getFilePointer();
       for (Long aPos : positions) {
         Reply reply = getReply(aPos, false);
-        if ((reply.getDate().compareTo(till) <= 0) && (reply.getDate().compareTo(from) >= 0)) {
+        if ((reply!=null)&&(reply.getDate().compareTo(till) <= 0) && (reply.getDate().compareTo(from) >= 0)) {
           result.add(reply);
         }
       }
@@ -220,7 +221,32 @@ class StatsFileImpl implements StatsFile {
       }
 
       randomAccessFile.seek(position);
-      String line = randomAccessFile.readLine();
+      ByteArrayOutputStream str = new ByteArrayOutputStream();
+      int c = -1;
+      boolean eol = false;
+
+      while (!eol) {
+        switch (c = randomAccessFile.read()) {
+          case -1:
+          case '\n':
+            eol = true;
+            break;               
+          case '\r':
+            eol = true;
+            long cur = randomAccessFile.getFilePointer();
+            if ((randomAccessFile.read()) != '\n')
+              randomAccessFile.seek(cur);
+            break;
+          default:
+            str.write(c);
+            break;
+        }
+      }
+
+      if ((c == -1) && (str.size() == 0)) {
+        throw new FileStatsException("Index file damaged. Reply not found at position: "+position);
+      }
+      String line = str.toString(encoding);
       StringTokenizer tokenizer = new StringTokenizer(line, ",");
 
       Date date = csvDateFormat.parse(tokenizer.nextToken() + " " + tokenizer.nextToken());

@@ -224,9 +224,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
           if (status.equals("")) {
             id = createDistribution(distribution, task, errorFile);
           } else {
-            if (status.equals("false")) {
               tasksMap.put(id, new Status(task, errorFile));
-            }
           }
           if (logger.isInfoEnabled()) {
             logger.info("Repair status ends, new id: " + id);

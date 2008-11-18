@@ -74,11 +74,18 @@ public class Quiz {
 
   public Result handleSms(String oa, String text) throws QuizException {
     Result result;
-    int count;
     long oaNumber = Long.parseLong(oa.substring(oa.lastIndexOf("+") + 1, oa.length()));
+
+    int count = jstore.get(oaNumber);
+    if((count==answerHandled)) {
+      if (logger.isInfoEnabled()) {
+        logger.info("DON'T HANDLE: already handled for abonent: " + oa);
+      }
+      return null;
+    }
     ReplyPattern replyPattern = getReplyPattern(text);
     if (replyPattern != null) {
-      if (jstore.get(oaNumber) == maxRepeat) {
+      if (count == maxRepeat) {
         if (logger.isInfoEnabled()) {
           logger.info("DON'T HANDLE: Max repeat for abonent: " + oa);
         }
@@ -89,10 +96,10 @@ public class Quiz {
 
     } else {
       if (maxRepeat > 0) {
-        if ((count = jstore.get(oaNumber)) != -1) {
+        if (count != -1) {
           if (count >= maxRepeat) {
             jstore.put(oaNumber, answerHandled);
-            result = null;
+            return null;
           } else {
             count++;
             jstore.put(oaNumber, count);
@@ -108,12 +115,14 @@ public class Quiz {
           logger.info("DON'T HANDLE: Max repeat for abonent: " + oa);
           logger.info("Max repeat=0");
         }
-        return null;
+        result = null;
       }
     }
 
     try {
+
       replyStatsDataSource.add(new Reply(new Date(), oa, destAddress, text));
+
       if (logger.isInfoEnabled()) {
         logger.info("Sms stored: " + oa + " " + destAddress + " " + text);
       }
