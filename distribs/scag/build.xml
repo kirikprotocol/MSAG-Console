@@ -65,8 +65,8 @@ Targets:
     <echo message="${MAKE_ARGS}"/>
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="scag"/>
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
-    <copy file="${SMSC_DIR}/src/scag/util/setupnodes.py" todir="${BUILD_DIR}/bin/scag"/>
-    <chmod file="${BUILD_DIR}/bin/scag/setupnodes.py" perm="755"/>
+    <!--copy file="${SMSC_DIR}/src/scag/util/setupnodes.py" todir="${BUILD_DIR}/bin/scag"/>
+    <chmod file="${BUILD_DIR}/bin/scag/setupnodes.py" perm="755"/-->
   </target>
 
   <target name="makeweb">
@@ -167,6 +167,8 @@ Targets:
     <copy file="${BUILD_BIN}/scag/setupnodes.py" todir="${DISTR_DIR}/bin"/>
     <copy file="${BUILD_BIN}/scag/pers" todir="${DISTR_DIR}/services/pers/bin"/>
     <chmod file="${DISTR_DIR}/services/pers/bin/pers" perm="755"/>
+    <copy file="${BUILD_BIN}/scag/mtpers" todir="${DISTR_DIR}/services/mtpers/bin"/>
+    <chmod file="${DISTR_DIR}/services/mtpers/bin/mtpers" perm="755"/>
 
     <chmod perm="755">
       <fileset dir="${DISTR_DIR}/lib" includes="*"/>
