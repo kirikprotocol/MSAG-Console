@@ -5,11 +5,12 @@
 # include <util/config/ConfigView.h>
 # include <core/threads/Thread.hpp>
 # include <core/synchronization/EventMonitor.hpp>
-
+# include <core/buffers/RefPtr.hpp>
 # include <mcisme/Profiler.h>
 # include <mcisme/AbntAddr.hpp>
-# include <mcisme/advert/Advertising.h>
 # include <mcisme/TaskProcessor.h>
+# include <mcisme/advert/AdvertisingImpl.h>
+# include <mcisme/advert/BEReconnector.hpp>
 # include <mcisme/OutputMessageProcessorsDispatcher.hpp>
 
 namespace smsc {
@@ -19,27 +20,28 @@ struct sms_info;
 
 class SendMessageEventHandler {
 public:
-  SendMessageEventHandler(TaskProcessor& taskProcessor, int connectTimeout, Advertising* advertising)
-    : _taskProcessor(taskProcessor), _connectTimeout(connectTimeout),
+  SendMessageEventHandler(TaskProcessor& taskProcessor, BEReconnector& reconnectorThread,
+                          core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex>& advertising)
+    : _taskProcessor(taskProcessor), _reconnectorThread(reconnectorThread),
       _advertising(advertising), _logger(logger::Logger::getInstance("outputprc")) {}
   virtual ~SendMessageEventHandler() {}
   virtual void handle() = 0;
   std::string getBanner(const AbntAddr& abnt);
 protected:
   TaskProcessor& _taskProcessor;
-  int _connectTimeout;
-  Advertising* _advertising;
+  BEReconnector& _reconnectorThread;
+  core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex> _advertising;
   logger::Logger* _logger;
 };
 
 class SendAbonentOnlineNotificationEventHandler : public SendMessageEventHandler {
 public:
   SendAbonentOnlineNotificationEventHandler(TaskProcessor& taskProcessor,
-                                            int connectTimeout,
-                                            Advertising* advertising,
+                                            BEReconnector& reconnectorThread,
+                                            core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex>& advertising,
                                             const sms_info* pInfo,
                                             const AbonentProfile& abntProfile)
-    : SendMessageEventHandler(taskProcessor, connectTimeout, advertising),
+    : SendMessageEventHandler(taskProcessor, reconnectorThread, advertising),
       _pInfo(pInfo), _abntProfile(abntProfile) {}
   virtual ~SendAbonentOnlineNotificationEventHandler() { delete _pInfo; }
   virtual void handle();
@@ -51,10 +53,10 @@ private:
 class SendMissedCallMessageEventHandler : public SendMessageEventHandler {
 public:
   SendMissedCallMessageEventHandler(TaskProcessor& taskProcessor,
-                                    int connectTimeout,
-                                    Advertising* advertising,
+                                    BEReconnector& reconnectorThread,
+                                    core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex>& advertising,
                                     const AbntAddr& calledAbnt)
-    : SendMessageEventHandler(taskProcessor, connectTimeout, advertising), _calledAbnt(calledAbnt) {}
+    : SendMessageEventHandler(taskProcessor, reconnectorThread, advertising), _calledAbnt(calledAbnt) {}
   virtual void handle();
 private:
   void formOutputMessageAndSendIt(const AbntAddr& abnt);
@@ -62,11 +64,12 @@ private:
   AbntAddr _calledAbnt;
 };
 
-class OutputMessageProcessor : public smsc::core::threads::Thread {
+class OutputMessageProcessor : public core::threads::Thread {
 public:
   OutputMessageProcessor(TaskProcessor& taskProcessor,
                          util::config::ConfigView* advertCfg,
-                         OutputMessageProcessorsDispatcher& dispatcher);
+                         OutputMessageProcessorsDispatcher& dispatcher,
+                         BEReconnector& reconnectorThread);
   virtual int Execute();
 
   void assignMessageOutputWork(const AbntAddr& calledAbnt);
@@ -79,12 +82,12 @@ private:
   TaskProcessor& _taskProcessor;
 
   bool _isStopped, _eventWasSignalled;
-  smsc::core::synchronization::EventMonitor _outputEventMonitor;
-  Advertising* _advertising;
+  core::synchronization::EventMonitor _outputEventMonitor;
+  core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex> _advertising;
   logger::Logger* _logger;
   SendMessageEventHandler* _handler;
-  int _connectTimeout;
   OutputMessageProcessorsDispatcher& _messagesProcessorsDispatcher;
+  BEReconnector& _reconnectorThread;
 };
 
 }}

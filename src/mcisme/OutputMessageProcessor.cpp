@@ -5,15 +5,18 @@
 #include "Exceptions.hpp"
 #include "advert/BEProtocolV1SimpleClient.hpp"
 #include "advert/BEProtocolV2SimpleClient.hpp"
+#include "advert/BEReconnector.hpp"
 
 namespace smsc {
 namespace mcisme {
 
 OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
                                                util::config::ConfigView* advertCfg,
-                                               OutputMessageProcessorsDispatcher& dispatcher)
+                                               OutputMessageProcessorsDispatcher& dispatcher,
+                                               BEReconnector& reconnectorThread)
   : _taskProcessor(taskProcessor), _isStopped(false), _eventWasSignalled(false),
-    _logger(logger::Logger::getInstance("omsgprc")), _handler(NULL), _messagesProcessorsDispatcher(dispatcher)
+    _logger(logger::Logger::getInstance("omsgprc")), _handler(NULL),
+    _messagesProcessorsDispatcher(dispatcher), _reconnectorThread(reconnectorThread)
 {
   if(!advertCfg->getBool("useAdvert"))
     throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: Fatal! Advertising.useAdvert = false");
@@ -42,12 +45,13 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
     smsc_log_warn(_logger, "Parameter <MCISme.Advertising.timeout> missed. Default value is '15'.");
   }
 
+  int connectTimeout;
   try {
-    _connectTimeout = advertCfg->getInt("connectTimeout");
-    if ( _connectTimeout < 0 )
+    connectTimeout = advertCfg->getInt("connectTimeout");
+    if ( connectTimeout < 0 )
       throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: invalid Advertising.connectTimeout value < 0");
   } catch (...) {
-    _connectTimeout = 15;
+    connectTimeout = 15;
     smsc_log_warn(_logger, "Parameter <MCISme.Advertising.connectTimeout> missed. Default value is '15'.");
   }
 
@@ -68,9 +72,10 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
   }
 
   try {
-    _advertising->init(_connectTimeout);
+    _advertising->init(connectTimeout);
   } catch (std::exception& ex) {
     smsc_log_error(_logger, "OutputMessageProcessor::OutputMessageProcessor::: advertising client can't be initialized - catched exception '%s'", ex.what());
+    _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
   }
 }
 
@@ -105,7 +110,7 @@ OutputMessageProcessor::Execute()
   }
 
   try {
-    delete _advertising; _advertising = 0;
+    /*delete _advertising; */_advertising = 0;
   } catch (...) {}
 
   _messagesProcessorsDispatcher.deleteMessageProcessor(this);
@@ -117,7 +122,7 @@ void
 OutputMessageProcessor::assignMessageOutputWork(const AbntAddr& calledAbnt)
 {
   core::synchronization::MutexGuard synchronize(_outputEventMonitor);
-  _handler = new SendMissedCallMessageEventHandler(_taskProcessor, _connectTimeout, _advertising, calledAbnt);
+  _handler = new SendMissedCallMessageEventHandler(_taskProcessor, _reconnectorThread, _advertising, calledAbnt);
 
   _eventWasSignalled = true;
   _outputEventMonitor.notify();
@@ -127,7 +132,7 @@ void
 OutputMessageProcessor::assignMessageOutputWork(const sms_info* pInfo, const AbonentProfile& abntProfile)
 {
   core::synchronization::MutexGuard synchronize(_outputEventMonitor);
-  _handler = new SendAbonentOnlineNotificationEventHandler(_taskProcessor, _connectTimeout, _advertising, pInfo, abntProfile);
+  _handler = new SendAbonentOnlineNotificationEventHandler(_taskProcessor, _reconnectorThread, _advertising, pInfo, abntProfile);
 
   _eventWasSignalled = true;
   _outputEventMonitor.notify();
@@ -140,7 +145,7 @@ OutputMessageProcessor::waitingForHandler()
 
   while ( !_eventWasSignalled ) {
     if ( _outputEventMonitor.wait() )
-      throw smsc::util::SystemError("OutputMessageProcessor::waitingForHandler::: call to EventMonitor::wait failed");
+      throw util::SystemError("OutputMessageProcessor::waitingForHandler::: call to EventMonitor::wait failed");
   }
 
   _eventWasSignalled = false;
@@ -192,10 +197,10 @@ SendMessageEventHandler::getBanner(const AbntAddr& abnt)
       smsc_log_debug(_logger, "getBanner Error. Error code = %d", rc);
   } catch (NetworkException& ex) {
     smsc_log_error(_logger, "SendMessageEventHandler::getBanner::: catched NetworkException '%s'", ex.what());
-    _advertising->reinit(_connectTimeout);
+    _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
   } catch (UnrecoveredProtocolError& ex) {
     smsc_log_error(_logger, "SendMessageEventHandler::getBanner::: catched UnrecoveredProtocolError");
-    _advertising->reinit(_connectTimeout);
+    _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
   }
 
   return banner;
