@@ -8,6 +8,7 @@
 # include <util/config/ConfigView.h>
 # include <mcisme/TaskProcessor.h>
 # include <mcisme/OutputMessageProcessorsDispatcher.hpp>
+# include <mcisme/advert/BEReconnector.hpp>
 
 namespace smsc {
 namespace mcisme {
@@ -32,6 +33,7 @@ private:
   msg_processors_t _usedMsgProcessors;
   core::synchronization::EventMonitor _dispatchMonitor;
   logger::Logger* _logger;
+  BEReconnector* _reconnectorThread;
 };
 
 }}
