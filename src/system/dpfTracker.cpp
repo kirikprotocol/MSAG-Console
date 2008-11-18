@@ -119,6 +119,10 @@ void DpfTracker::ApplyChanges(const std::string &fileName)
   while(f.Pos()<sz)
   {
     changesCount++;
+    if((changesCount%50000)==0)
+    {
+      smsc_log_info(log,"reading changes:%d(%lld/%lld)",changesCount,f.Pos(),sz);
+    }
     c.Read(f);
     if(c.ct==ctRegisterSme)
     {
@@ -314,8 +318,11 @@ int DpfTracker::Execute()
         {
           if(changesCount>0)
           {
-            smsc_log_debug(log,"start compacting by time");
-            StartCompacting();
+            smsc_log_info(log,"start compacting by time");
+            if(StartCompacting())
+            {
+              changesCount=0;
+            }
           }
           lastCompact=now;
         }
@@ -337,8 +344,11 @@ int DpfTracker::Execute()
       }
       if(now-lastCompact>compactTime && changesCount>0)
       {
-        smsc_log_debug(log,"start compacting by time");
-        StartCompacting();
+        smsc_log_info(log,"start compacting by time");
+        if(StartCompacting())
+        {
+          changesCount=0;
+        }
         lastCompact=now;
       }
       if(expirations.empty())
@@ -383,6 +393,7 @@ int DpfTracker::Execute()
 
 void DpfTracker::sendAlertNotify(uint64_t abonent, const smsc::sms::Address &smeAddr,const SystemIdStr& smeId, int status)
 {
+  
   try{
     Smsc& smsc=Smsc::getInstance();
     SmeProxy* proxy=smsc.getSmeProxy(smeId);
@@ -420,7 +431,7 @@ void DpfTracker::SaveChange(const Change &c)
   {
     if(StartCompacting())
     {
-      smsc_log_debug(log,"Start compacting by count");
+      smsc_log_info(log,"Start compacting by count");
       changesCount=0;
       lastCompact=time(NULL);
     }
@@ -451,6 +462,7 @@ int DpfTracker::CompactingThread::Execute()
   std::string newbinFile=storeLocation+"dpfstore.new";
   std::string joldFile=storeLocation+"dpfjournal.old";
   smsc::logger::Logger* log=smsc::logger::Logger::getInstance("dpf.cmpct");
+  smsc_log_info(log,"compactification thread started");
   while(!isStopping)
   {
     try
@@ -472,6 +484,7 @@ int DpfTracker::CompactingThread::Execute()
         compacting=true;
         needCompacting=false;
       }
+      smsc_log_info(log,"starting compactification");
       File f;
       RecSet rs;
       SmallRecord sr;
@@ -543,12 +556,15 @@ int DpfTracker::CompactingThread::Execute()
       f.Flush();
       f.RenameExt("bin");
       buf::File::Unlink(joldFile.c_str());
+      smsc_log_info(log,"finished compactification");
       compacting=false;
     } catch(std::exception& e)
     {
       smsc_log_warn(log,"exception during compactification:'%s'",e.what());
+      compacting=false;
     }
   }
+  smsc_log_info(log,"compactification thread finished");
   return 0;
 }
 
