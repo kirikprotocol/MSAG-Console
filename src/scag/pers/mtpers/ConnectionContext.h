@@ -71,7 +71,7 @@ struct ConnectionContext : public Connection {
 public:
   ConnectionContext(Socket* sock, WriterTaskManager& writerManager, ReaderTaskManager& readerManager);
   ~ConnectionContext();
-  void sendResponse(const char* data, uint32_t dataSize, uint32_t sequenceNumber);
+  void sendResponse(const char* data, uint32_t dataSize);
   bool processReadSocket();
   bool processWriteSocket();
   bool canFinalize();
@@ -88,6 +88,7 @@ private:
 private:
   SerialBuffer inbuf_;
   SerialBuffer outbuf_;
+  SerialBuffer fakeResp_;
   uint32_t packetLen_;
   WriterTaskManager& writerManager_;
   ReaderTaskManager& readerManager_;
@@ -99,7 +100,6 @@ private:
   uint32_t packetsCount_;
   bool asynch_;
   uint32_t sequenceNumber_;
-  char respBuf_[RESP_BUF_SIZE];
   char readBuf_[READ_BUF_SIZE];
 };
 

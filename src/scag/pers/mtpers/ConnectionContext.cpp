@@ -15,7 +15,6 @@ ConnectionContext::ConnectionContext(Socket* sock, WriterTaskManager& writerMana
     SocketData::setContext(socket_, this);
   }
   logger_ = Logger::getInstance("context");
-  memset(respBuf_, 0, RESP_BUF_SIZE);
 } 
 
 ConnectionContext::~ConnectionContext() {
@@ -26,16 +25,11 @@ ConnectionContext::~ConnectionContext() {
 
 void ConnectionContext::createFakeResponse(PersServerResponseType response) {
   smsc_log_debug(logger_, "%p: Create Fake response %d", this, response);
-  action_ = SEND_RESPONSE;
+  fakeResp_.Empty();
   if (asynch_) {
-    memset(respBuf_, 0, RESP_BUF_SIZE);
-    respBuf_[0] = response;
-    memcpy(respBuf_ + 1, &sequenceNumber_, sizeof(uint32_t));
-    writeData(respBuf_, RESP_BUF_SIZE);
-  } else {
-    char resp = response;
-    writeData(&resp, static_cast<uint32_t>(sizeof(uint8_t)));
+    fakeResp_.WriteInt32(sequenceNumber_);
   }
+  fakeResp_.WriteInt8(static_cast<uint8_t>(response));
 }
 
 bool ConnectionContext::notSupport(PersCmd cmd) {
@@ -77,12 +71,9 @@ PersPacket* ConnectionContext::parsePacket() {
       smsc_log_debug(logger_, "Batch received");
       packet.reset( new BatchPacket(this, asynch_, sequenceNumber_) );
     } else {
-      //smsc_log_debug(logger_, "Command %d received", cmd);
       packet.reset( new CommandPacket(this, cmd, asynch_, sequenceNumber_) );
     }
     packet->deserialize(inbuf_);
-    ++packetsCount_;
-    action_ = PROCESS_REQUEST;
     return packet.release();
   } catch(const SerialBufferOutOfBounds& e) {
     smsc_log_warn(logger_, "SerialBufferOutOfBounds Bad data in buffer received len=%d, curpos=%d, data=%s",
@@ -105,7 +96,7 @@ void ConnectionContext::sendFakeResponse() {
   }
 }
 
-void ConnectionContext::sendResponse(const char* data, uint32_t dataSize, uint32_t sequenceNumber) {
+void ConnectionContext::sendResponse(const char* data, uint32_t dataSize) {
   {
     MutexGuard mg(mutex_);
     action_ = SEND_RESPONSE;
@@ -146,75 +137,60 @@ bool ConnectionContext::processReadSocket() {
       smsc_log_warn(logger_, "cx:%p socket %p error action=%d, must be READ_REQUEST", this, socket_, action_);
       return false;
     }
-    SerialBuffer& sb = inbuf_;
   
-    if(sb.GetSize() < PACKET_LENGTH_SIZE) {
-      int n = socket_->Read(readBuf_, PACKET_LENGTH_SIZE - sb.GetSize());
+    if(inbuf_.GetSize() < PACKET_LENGTH_SIZE) {
+      int n = socket_->Read(readBuf_, PACKET_LENGTH_SIZE - inbuf_.GetSize());
       smsc_log_debug(logger_, "cx:%p read(len) %u bytes from %p", this, n, socket_);
       if (n <= 0) {
         if (n) smsc_log_warn(logger_, "%p: read error: %s(%d)", this, strerror(errno), errno);
         return false;
       }
-      sb.Append(readBuf_, n);
-      if (sb.GetSize() < PACKET_LENGTH_SIZE) {
+      inbuf_.Append(readBuf_, n);
+      if (inbuf_.GetSize() < PACKET_LENGTH_SIZE) {
         SocketData::updateTimestamp(socket_, time(NULL));
         return true;
       }
-      n = sb.getPos();
-      sb.SetPos(0);
-      packetLen_ = sb.ReadInt32();
+      n = inbuf_.getPos();
+      inbuf_.SetPos(0);
+      packetLen_ = inbuf_.ReadInt32();
       smsc_log_debug(logger_, "%d bytes will be read from %p", packetLen_, socket_);
       if(packetLen_ > MAX_PACKET_SIZE) {
         smsc_log_warn(logger_, "Too big packet from client");
         return false;
       }
-      sb.SetPos(n);
+      inbuf_.SetPos(n);
     } 
-    int n = packetLen_ - sb.GetSize();
+    int n = packetLen_ - inbuf_.GetSize();
     n = socket_->Read(readBuf_, n > READ_BUF_SIZE ? READ_BUF_SIZE : n);
   
     smsc_log_debug(logger_, "read %u bytes from %p", n, socket_);
   
     if (n > 0) {
       SocketData::updateTimestamp(socket_, time(NULL));
-      sb.Append(readBuf_, n);
+      inbuf_.Append(readBuf_, n);
     } else if(errno != EWOULDBLOCK) {
       if (n) smsc_log_warn(logger_, "read error: %s(%d)", strerror(errno), errno);
       return false;
     }
-    if (sb.GetSize() < packetLen_) {
+    if (inbuf_.GetSize() < packetLen_) {
       return true;
     }
-    smsc_log_debug(logger_, "read from socket:%p len=%d, data=%s", socket_, sb.length(), sb.toString().c_str());
-    inbuf_.SetPos(PACKET_LENGTH_SIZE);
-    packet = parsePacket();
-    if (!packet) {
-      ++tasksCount_;
-    }
-    inbuf_.Empty();
-    packetLen_ = 0;
+    ++packetsCount_;
+    action_ = PROCESS_REQUEST;
   }
-  //
+  smsc_log_debug(logger_, "read from socket:%p len=%d, data=%s", socket_, inbuf_.length(), inbuf_.toString().c_str());
+  inbuf_.SetPos(PACKET_LENGTH_SIZE);
+  packet = parsePacket();
+  inbuf_.Empty();
+  packetLen_ = 0;
+
   if (!packet) {
-    if (!writerManager_.process(this)) {
-      MutexGuard mg(mutex_);
-      --tasksCount_;
-      //ERROR!!!
-    }
+    sendResponse(fakeResp_.c_ptr(), fakeResp_.GetSize());
     return true;
   }
   if (!readerManager_.processPacket(packet)) {
-    {
-      MutexGuard mg(mutex_);
-      --packetsCount_;
-      createFakeResponse(scag::pers::util::RESPONSE_ERROR);
-      ++tasksCount_;
-    }
-    if (!writerManager_.process(this)) {
-      MutexGuard mg(mutex_);
-      --tasksCount_;
-      //ERROR!!!
-    }
+    createFakeResponse(scag::pers::util::RESPONSE_ERROR);
+    sendResponse(fakeResp_.c_ptr(), fakeResp_.GetSize());
   }
   return true;
 }
