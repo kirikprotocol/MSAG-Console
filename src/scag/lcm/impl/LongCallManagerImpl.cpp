@@ -130,13 +130,17 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
             LongCallParams *lp = (LongCallParams*)context->getParams();            
             lp->exception = e.what();
             context->initiator->continueExecution(context, false);
+            return false;
         }
 
     }
     else if(context->callCommandId >= PERS_GET && context->callCommandId <= PERS_BATCH)
     {
         // PersCallParams* p = (PersCallParams*) context->getParams();
-        if (!PersClient::Instance().call(context) ) return false;
+        if (!PersClient::Instance().call(context) ) {
+            context->initiator->continueExecution(context, false);
+            return false;
+        }
     }
     else
     {
@@ -160,7 +164,7 @@ int LongCallTask::Execute()
 {
     LongCallContextBase* ctx;
     
-    while(!isStopping)
+    while (!isStopping)
     {
         ctx = manager->getContext();
         if(isStopping || !ctx) break;

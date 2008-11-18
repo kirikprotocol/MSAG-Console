@@ -386,6 +386,7 @@ protected:
   int queueLimit;
 
   uint32_t lcmProcessingCount;
+    uint32_t queuedCmdCount;
   std::string cfgFileName;
 };
 

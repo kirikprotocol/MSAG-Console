@@ -112,6 +112,7 @@ protected:
     /// a request sent to a server
     struct Call {
         Call(lcm::LongCallContextBase* c, int32_t s, utime_type t ) : serial(s), ctx(c), stamp(t) {}
+        void continueExecution( int stat, bool drop );
         int32_t                   serial;
         lcm::LongCallContextBase* ctx;
         utime_type                stamp;
@@ -371,10 +372,21 @@ void PersClientImpl::finishCalls( lcm::LongCallContextBase* ctx, bool drop )
 
 bool PersClientImpl::call( lcm::LongCallContextBase* ctx )
 {
-    if ( isStopping || !connected_ || !ctx ) return false;
+    if ( !ctx ) return false;
     MutexGuard mg(queueMonitor_);
-    if ( isStopping || !connected_ ) return false;
-    if ( callsCount_ >= maxCallsCount_ ) return false;
+    do {
+        PersCallParams* p = static_cast<PersCallParams*>(ctx->getParams());
+        if ( isStopping ) {
+            p->setStatus( CANT_CONNECT );
+        } else if ( !connected_ ) {
+            p->setStatus( NOT_CONNECTED );
+        } else if ( callsCount_ >= maxCallsCount_ ) {
+            p->setStatus( CLIENT_BUSY );
+        } else {
+            break;
+        }
+        return false;
+    } while ( false );
 
     ctx->next = 0;
     if ( headContext_ )
@@ -411,6 +423,15 @@ PersClientTask::utime_type PersClientTask::utime() const
     ::gettimeofday( &tv, 0 );
     utime_type t = utime_type((tv.tv_sec - time0_.tv_sec)*1000 + (int(tv.tv_usec) - int(time0_.tv_usec)) / 1000);
     return t;
+}
+
+
+void PersClientTask::Call::continueExecution( int stat, bool drop )
+{
+    if ( ! ctx ) return;
+    PersCallParams* p = static_cast<PersCallParams*>(ctx->getParams());
+    p->setStatus( stat );
+    ctx->initiator->continueExecution(ctx,drop);
 }
 
 
@@ -472,7 +493,7 @@ int PersClientTask::Execute()
             if ( asyncRead() ) continue;
         }
 
-        int tmo = actTS_ + pers_->pingTimeout - time(0);
+        int tmo = int(actTS_ + pers_->pingTimeout - time(0));
         if ( tmo < 0 ) tmo = 0;
         tmo *= 1000;
         lcm::LongCallContextBase* ctx = pers_->getContext(tmo, *this);
@@ -573,11 +594,7 @@ bool PersClientTask::asyncRead()
         Call& c = callqueue_.front();
         if ( c.stamp + pers_->timeout < now ) {
             smsc_log_info( log_, "async request has expired: %d", c.serial );
-            if ( c.ctx ) {
-                PersCallParams* params = static_cast<PersCallParams*>(c.ctx->getParams());
-                params->setStatus(TIMEOUT);
-                c.ctx->initiator->continueExecution(c.ctx,false);
-            }
+            c.continueExecution(TIMEOUT,false);
             callhash_.Delete( c.serial );
             callqueue_.pop_front();
         } else {
@@ -626,54 +643,67 @@ bool PersClientTask::asyncRead()
 void PersClientTask::connect( bool fromDisconnect )
 {
     if ( connected_ ) return;
-    smsc_log_info( log_, "Connecting to persserver host=%s:%d timeout=%d",
-                   pers_->host.c_str(), pers_->port, pers_->timeout );
+    int res = 0;
+    do {
+        smsc_log_info( log_, "Connecting to persserver host=%s:%d timeout=%d",
+                       pers_->host.c_str(), pers_->port, pers_->timeout );
 
-    if ( sock.Init( pers_->host.c_str(), pers_->port, pers_->timeout) == -1 ||
-         sock.Connect() == -1 )
-        throw PersClientException(CANT_CONNECT);
-
-    char resp[3];
-    if (sock.Read(resp, 2) != 2)
-    {
-        sock.Close();
-        throw PersClientException(CANT_CONNECT);
-    }
-    resp[2] = 0;
-    if (!strcmp(resp, "SB"))
-    {
-        sock.Close();
-        throw PersClientException(SERVER_BUSY);
-    } else if (strcmp(resp, "OK"))
-    {
-        sock.Close();
-        throw PersClientException(UNKNOWN_RESPONSE);
-    }
-
-    if ( async_ ) {
-        SerialBuffer sb;
-        sb.WriteInt32(0);
-        sb.WriteInt8(PC_BIND_ASYNCH);
-        uint32_t len = sb.length();
-        sb.SetPos(0);
-        sb.WriteInt32(len);
-        sb.SetPos(len);
-        try {
-            async_ = false;
-            sendPacket(sb);
-            readPacket(sb);
-            PersServerResponseType rt = (PersServerResponseType)sb.ReadInt8();
-            if ( rt != RESPONSE_OK )
-                throw PersClientException( SERVER_ERROR );
-        } catch (...) {
-            async_ = true;
-            throw;
+        if ( sock.Init( pers_->host.c_str(), pers_->port, pers_->timeout) == -1 ||
+             sock.Connect() == -1 ) {
+            res = CANT_CONNECT;
+            break;
         }
-        async_ = true;
+
+        char resp[3];
+        if (sock.Read(resp, 2) != 2)
+        {
+            sock.Close();
+            res = CANT_CONNECT;
+            break;
+        }
+        resp[2] = 0;
+        if (!strcmp(resp, "SB"))
+        {
+            sock.Close();
+            res = SERVER_BUSY;
+            break;
+        } else if (strcmp(resp, "OK")) {
+            sock.Close();
+            res = UNKNOWN_RESPONSE;
+            break;
+        }
+
+        if ( async_ ) {
+            SerialBuffer sb;
+            sb.WriteInt32(0);
+            sb.WriteInt8(PC_BIND_ASYNCH);
+            uint32_t len = sb.length();
+            sb.SetPos(0);
+            sb.WriteInt32(len);
+            sb.SetPos(len);
+            try {
+                async_ = false;
+                sendPacket(sb);
+                readPacket(sb);
+                PersServerResponseType rt = (PersServerResponseType)sb.ReadInt8();
+                if ( rt != RESPONSE_OK ) {
+                    res = SERVER_ERROR;
+                }
+            } catch (...) {
+                res = UNKNOWN_EXCEPTION;
+            }
+            async_ = true;
+        }
+    } while ( false );
+
+    if ( res )  {
+        smsc_log_info( log_, "Connection failed: %d %s", res, strs[res] );
+        throw PersClientException(PersClientExceptionType(res));
+    } else {
+        connected_ = true;
+        if (!fromDisconnect) pers_->incConnect();
+        actTS_ = time(0);
     }
-    connected_ = true;
-    if (!fromDisconnect) pers_->incConnect();
-    actTS_ = time(0);
     smsc_log_debug(log_, "PersClientTask connected");
 }
 
@@ -690,6 +720,13 @@ bool PersClientTask::disconnect( bool tryToReconnect )
     } catch (...) {
     }
     pers_->decConnect();
+    // clean up all sent packets
+    while ( hasRequests() ) {
+        Call& c = callqueue_.front();
+        c.continueExecution( CANT_CONNECT, !tryToReconnect );
+        callqueue_.pop_front();
+    }
+    callhash_.Empty();
     smsc_log_debug( log_, "PersClientTask disconnected" );
     return false;
 }

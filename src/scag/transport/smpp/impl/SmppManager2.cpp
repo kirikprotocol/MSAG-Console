@@ -312,6 +312,7 @@ ConfigListener(SMPPMAN_CFG), sm(this,this), licenseCounter(10,20), testRouter_(0
   lastUid=0;
   lastExpireProcess=0;
   lcmProcessingCount = 0;
+    queuedCmdCount = 0;
   lastLicenseExpTest=0;
   licenseFileCheckHour=0;
 }
@@ -963,7 +964,7 @@ bool SmppManagerImpl::getCommand(SmppCommand*& cmd)
 {
     MutexGuard mg(queueMon);
 
-    while((running || lcmProcessingCount) && !queue.Count() && !lcmQueue.Count() && !respQueue.Count())
+    while((running || lcmProcessingCount || queuedCmdCount) && !queue.Count() && !lcmQueue.Count() && !respQueue.Count())
     {
         queueMon.wait(5000);
 
@@ -1099,10 +1100,10 @@ unsigned SmppManagerImpl::pushSessionCommand( SmppCommand* cmd, int action )
 
     MutexGuard mg(queueMon);
     if ( action == SCAGCommandQueue::RESERVE ) {
-        ++lcmProcessingCount;
+        ++queuedCmdCount;
         smsc_log_debug( log, "reserve place for a cmd=%p: respQsz=%u, Qsz=%u, lcmCount=%u", cmd, respQueue.Count(), queue.Count(), lcmProcessingCount );
         // FIXME: should we return -1 when stopped ?
-        return lcmProcessingCount;
+        return queuedCmdCount;
     }
 
     if ( action == SCAGCommandQueue::PUSH ) {
@@ -1113,7 +1114,7 @@ unsigned SmppManagerImpl::pushSessionCommand( SmppCommand* cmd, int action )
     assert( action == SCAGCommandQueue::MOVE );
 
     // action MOVE
-    if ( lcmProcessingCount > 0 ) --lcmProcessingCount;
+    if ( queuedCmdCount > 0 ) --queuedCmdCount;
     if ( cmd->isResp() ) {
         respQueue.Push( cmd );
     } else {
@@ -1121,10 +1122,10 @@ unsigned SmppManagerImpl::pushSessionCommand( SmppCommand* cmd, int action )
         // for being decremented in getCommand
         if ( cmd->getEntity() ) cmd->getEntity()->incQueueCount();
     }
-    smsc_log_debug( log, "reserved cmd=%p moved onto queue: respQsz=%u, Qsz=%u, lcmCount=%u",
-                    cmd, respQueue.Count(), queue.Count(), lcmProcessingCount );
+    smsc_log_debug( log, "reserved cmd=%p moved onto queue: respQsz=%u, Qsz=%u, queuedCount=%u",
+                    cmd, respQueue.Count(), queue.Count(), queuedCmdCount );
     queueMon.notify();
-    return lcmProcessingCount;
+    return queuedCmdCount;
 }
 
 
