@@ -5,7 +5,7 @@ namespace scag { namespace mtpers {
 
 class Connection {
 public:
-  virtual void sendResponse(const char* data, uint32_t dataSize, uint32_t sequenceNumber) = 0;
+  virtual void sendResponse(const char* data, uint32_t dataSize) = 0;
   virtual ~Connection() {};
 };
 

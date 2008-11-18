@@ -241,7 +241,7 @@ void PersPacket::createResponse(PersServerResponseType resp) {
 }
 
 void PersPacket::sendResponse() {
-  connection_->sendResponse(response_.c_ptr(), response_.GetSize(), sequenseNumber_);
+  connection_->sendResponse(response_.c_ptr(), response_.GetSize());
 }
 
 void CommandPacket::execCommand(Profile *pf) {
