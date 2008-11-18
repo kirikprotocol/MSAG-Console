@@ -157,7 +157,7 @@ void MapIoTask::connect(unsigned timeout) {
     kill(getpid(),17);
   }
   int tries = 0;
-  while( tries < 60 ) {
+  while( !isStopping && tries < 60 ) {
     result = MsgConn(MY_USER_ID,ETSIMAP_ID);
 //    result = EINSS7CpMsgConnInst(MY_USER_ID, ETSIMAP_ID, 0);
     if ( result != MSG_OK ) {
@@ -167,6 +167,10 @@ void MapIoTask::connect(unsigned timeout) {
     } else {
       break;
     }
+  }
+  if(isStopping)
+  {
+    return;
   }
   if( tries >= 60 ) {
     __map_warn2__("MsgConn error, %d attempts failed, aborting", tries);
@@ -396,9 +400,9 @@ void MapIoTask::dispatcher()
       }
 
       __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
-      if ( smsc::logger::_mapmsg_cat->isDebugEnabled() && message.size <= 1024)
+      if ( smsc::logger::_mapmsg_cat->isDebugEnabled() && message.size <= 2048)
       {
-        char text[4097];
+        char text[8193];
         int k = 0;
         for ( int i=0; i<message.size; i++)
         {
