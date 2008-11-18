@@ -1376,6 +1376,15 @@ TaskInfo TaskProcessor::getTaskInfo(uint32_t taskId)
   Task* task = taskGuard.get();
   return task?task->getInfo():TaskInfo();
 }
+  
+void TaskProcessor::applyRetryPolicies()
+{
+  Manager::reinit();
+  Manager& config = Manager::getInstance();
+  ConfigView retryPlcCfg(config,"RetryPolicies");
+  retryPlcs.Load(&retryPlcCfg);
+}
+
 
 
 }}

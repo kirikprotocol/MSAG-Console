@@ -292,6 +292,7 @@ void CsvStore::setMsgState(uint64_t msgId, uint8_t state)
   //file can be closed
   if(file.readAll && file.openMessages==0)
   {
+    printf("can close\n");
     canClose(file);
   }
 }
@@ -436,7 +437,8 @@ bool CsvStore::CsvFile::Open(bool cancreate)
       {
         continue;
       }
-      msgMap.insert(MessageMap::value_type(rec.msg.id,rec));
+      TimeMap::iterator it=timeMap.insert(TimeMap::value_type(rec.msg.date,rec));
+      msgMap.insert(MessageMap::value_type(rec.msg.id,it));
       if(rec.state<DELIVERED)//calculate number of messages in non-final state
       {
         openMessages++;
@@ -444,7 +446,7 @@ bool CsvStore::CsvFile::Open(bool cancreate)
       }
     }
     readAll=!haveNonFinal;
-    curMsg=msgMap.begin();
+    curMsg=timeMap.begin();
   }else
   {
     if(!cancreate)
@@ -474,6 +476,7 @@ void CsvStore::CsvFile::Close(bool argProcessed)
   }
   processed=argProcessed;
   f.Close();
+  timeMap.clear();
   msgMap.clear();
 }
 
@@ -484,13 +487,13 @@ CsvStore::CsvFile::Record& CsvStore::CsvFile::findRecord(uint64_t msgId)
   {
     throw smsc::util::Exception("Message #%llx not found in %s",msgId,fullPath().c_str());
   }
-  return it->second;
+  return it->second->second;
 }
 
 
 CsvStore::CsvFile::GetRecordResult CsvStore::CsvFile::getNextRecord(CsvStore::CsvFile::Record& rec,time_t rdate,bool onlyNew)
 {
-  if(msgMap.empty() || curMsg==msgMap.end())
+  if(timeMap.empty() || curMsg==timeMap.end())
   {
     readAll=true;
     return grrNoMoreMessages;
@@ -504,7 +507,7 @@ CsvStore::CsvFile::GetRecordResult CsvStore::CsvFile::getNextRecord(CsvStore::Cs
     while(curMsg->second.state>WAIT)
     {
       curMsg++;
-      if(curMsg==msgMap.end())
+      if(curMsg==timeMap.end())
       {
         readAll=true;
         return grrNoMoreMessages;
@@ -602,9 +605,10 @@ void CsvStore::CsvFile::ReadRecord(buf::File &f, CsvStore::CsvFile::Record& rec)
 void CsvStore::CsvFile::setState(uint64_t msgId, uint8_t state)
 {
   Record& rec=findRecord(msgId);
-  if(state>ENROUTE)
+  if(rec.state<=ENROUTE && state>ENROUTE)
   {
     openMessages--;
+    printf("open messages=%d\n",openMessages);
   }
   rec.state=state;
   uint64_t off;
@@ -653,10 +657,11 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
   rec.msg=message;
   rec.msg.date=fdate;
   rec.msg.id=msgId;
-  MessageMap::iterator it=msgMap.insert(MessageMap::value_type(msgId,rec)).first;
-  if(curMsg==msgMap.end())
+  TimeMap::iterator tmIt=timeMap.insert(TimeMap::value_type(rec.msg.date,rec));
+  MessageMap::iterator it=msgMap.insert(MessageMap::value_type(msgId,tmIt)).first;
+  if(curMsg==timeMap.end() || curMsg->second.msg.date>fdate)
   {
-    curMsg=it;
+    curMsg=tmIt;
   }
   char timestamp[16];// YYMMDDhhmmss
   struct tm t;
@@ -677,7 +682,7 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
   f.WriteByte('\n');
   f.Flush();
   readAll=false;
-  openMessages++;
+  if(state<=ENROUTE)openMessages++;
   return msgId;
 }
 
@@ -690,6 +695,7 @@ uint8_t CsvStore::CsvFile::getState(uint64_t msgId)
 void CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uint8_t state, time_t fdate)
 {
   Record& rec=findRecord(msgId);
+  uint8_t oldState=rec.state;
   rec.state=state;
   int rdate,rhour;
   uint64_t off;
@@ -703,7 +709,7 @@ void CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uint8_t state, time_t fda
   sprintf(tsbuf,"%02d%02d%02d%02d%02d%02d",t.tm_year%100,t.tm_mon+1,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec);
   f.Write(tsbuf,12);
   f.Flush();
-  if(state>ENROUTE)
+  if(oldState<=ENROUTE && state>ENROUTE)
   {
     openMessages--;
   }

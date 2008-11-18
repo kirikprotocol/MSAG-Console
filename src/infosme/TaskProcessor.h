@@ -506,6 +506,7 @@ namespace smsc { namespace infosme
         virtual void changeDeliveryTextMessageByCompositCriterion(uint32_t taskId,
                                                                   const std::string& newTextMsg,
                                                                   const InfoSme_T_SearchCriterion& searchCrit);
+      void applyRetryPolicies();
     };
 
 }}

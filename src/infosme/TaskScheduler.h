@@ -116,7 +116,7 @@ namespace smsc { namespace infosme
          * 
          * @param id            schedule id
          * @return false if schedule not found, else returns true.
-         */
+         */ 
         bool removeSchedule(std::string id);
 
         /**

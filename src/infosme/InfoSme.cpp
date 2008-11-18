@@ -328,12 +328,12 @@ public:
         try
         {
             if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
-                sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, outLen);
-                sms.setIntProperty(Tag::SMPP_SM_LENGTH, outLen);
+                sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
+                sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
             } else {
                 sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out,
-                                   (outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
-                                    outLen :  MAX_ALLOWED_PAYLOAD_LENGTH);
+                                   (unsigned)((outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
+                                    outLen :  MAX_ALLOWED_PAYLOAD_LENGTH));
             }
         }
         catch (...) {

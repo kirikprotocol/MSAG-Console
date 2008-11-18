@@ -52,7 +52,7 @@ public:
     CsvFile(int argDate,int argHour,Directory* argDir):readAll(false),processed(false),date(argDate),hour(argHour),dir(argDir)
     {
       openMessages=0;
-      curMsg=msgMap.end();
+      curMsg=timeMap.end();
     }
     bool readAll;
     bool processed;
@@ -66,10 +66,12 @@ public:
       uint8_t state;
     };
 
-    typedef std::map<uint64_t,Record> MessageMap;
+    typedef std::multimap<time_t,Record> TimeMap;
+    typedef std::map<uint64_t,TimeMap::iterator> MessageMap;
 
+    TimeMap timeMap;
     MessageMap msgMap;
-    MessageMap::iterator curMsg;
+    TimeMap::iterator curMsg;
     int openMessages;
 
     bool isOpened()

@@ -64,7 +64,7 @@ int TaskScheduler::Execute()
             time_t scheduleTime = -1;
             schedule = getNextSchedule(scheduleTime);
             if (scheduleTime > 0 && schedule) {
-                toSleep = scheduleTime-time(NULL);
+                toSleep = (int)(scheduleTime-time(NULL));
                 scheduleId = schedule->id;
             }
             bChanged = false;
