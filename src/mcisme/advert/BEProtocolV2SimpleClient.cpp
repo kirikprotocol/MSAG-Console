@@ -23,7 +23,7 @@ BEProtocolV2SimpleClient::readPacket(char* buf)
   if (packetLen > MAX_PACKET_LEN - CMD_HEADER_SIZE)
   {
     smsc_log_warn(_logger, "BEProtocolV2SimpleClient::readPacket::: got too long packet, packetLen==%d", packetLen);
-    throw UnrecoveredProtocolError();
+    generateUnrecoveredProtocolError();
   }
 
   readFromSocket(buf, packetLen, "BEProtocolV2SimpleClient::readPacket");

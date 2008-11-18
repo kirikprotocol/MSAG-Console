@@ -25,15 +25,15 @@ BEProtocolV1SimpleClient::readPacket(core::buffers::TmpBuf<char, MAX_PACKET_LEN>
   uint32_t word = ntohl(s[0]);
   if (word != CMD_BANNER_RSP)                     // тип должен быть ответом на запрос баннера
   {
-    smsc_log_error(_logger, "BEProtocolV1SimpleClient::readPacket::: incorrect packet type %d", word);
-    throw UnrecoveredProtocolError();
+    smsc_log_warn(_logger, "BEProtocolV1SimpleClient::readPacket::: incorrect packet type %d", word);
+    generateUnrecoveredProtocolError();
   }
 
   uint32_t pak_len = ntohl(s[1]) + static_cast<uint32_t>(CMD_HEADER_SIZE);    // длина всего пакета
   if (pak_len > MAX_PACKET_LEN)
   {
     smsc_log_warn(_logger, "BEProtocolV1SimpleClient::readPacket::: bad packet length");
-    throw UnrecoveredProtocolError();
+    generateUnrecoveredProtocolError();
   }
 
   readFromSocket(buf->GetCurPtr(), pak_len-len, "BEProtocolV1SimpleClient::readPacket");
