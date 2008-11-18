@@ -17,6 +17,7 @@ enum
   ERR_ADV_PACKET_LEN,     // неверная длина пакета
   ERR_ADV_PACKET_MEMBER,  // неверный элемент пакета
   ERR_ADV_QUEUE_FULL,     // очередь запросов переполнена
+  ERR_ADV_NOT_CONNECTED,
   ERR_ADV_OTHER
 };
 
