@@ -37,7 +37,6 @@ public class GenerateDeliveriesPage extends DeliveriesPage {
   }
 
   public DeliveriesPage mbUpdate(HttpServletRequest request) throws AdminException {
-    System.out.println("Update " + thread.getStatus());
     pageData.deliveriesGenProgr = thread.getGenerationProgress();
     pageData.deliveriesGenStatus = thread.getStatus();
     pageData.errorStr = thread.getErrorText();
