@@ -82,7 +82,7 @@ IParserHandler * BatchAction::StartXMLSubSection(const std::string& name, const 
 bool BatchAction::FinishXMLSubSection(const std::string& name)
 {
     smsc_log_debug(logger, "BatchAction: FinishXMLSubsection %s", name.c_str());
-    return (name=="batch:batch");
+    return (name=="profile:batch");
 }
 
 

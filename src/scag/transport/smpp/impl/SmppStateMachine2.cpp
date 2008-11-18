@@ -217,8 +217,9 @@ int StateMachine::Execute()
                 std::auto_ptr<SmppCommand> aucmd(cmd);
                 
                 if ( cmd->getCommandId() != PROCESSEXPIREDRESP ) {
-                    smsc_log_debug(log_,"Exec: processing command %p %d(%s) from %s",
+                    smsc_log_debug(log_,"Exec: processing cmd=%p serial=%u %d(%s) from %s",
                                    cmd,
+                                   cmd->getSerial(),
                                    cmd->getCommandId(),
                                    commandIdName(cmd->getCommandId()),
                                    cmd->getEntity() ? cmd->getEntity()->getSystemId():"" );
@@ -813,7 +814,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
 
     if (session.get()) session->getLongCallContext().runPostProcessActions();
 
-    smsc_log_debug(log_, "%s: processed", where );
+    smsc_log_debug(log_, "%s: processed, fail=%d", where, failed ? 1 : 0 );
 
     if (failed)
     {

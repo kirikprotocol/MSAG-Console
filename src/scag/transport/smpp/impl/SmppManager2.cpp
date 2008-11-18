@@ -1031,7 +1031,7 @@ void SmppManagerImpl::continueExecution( LongCallContextBase* lcmCtx, bool dropp
     std::auto_ptr<SmppCommand> cx
         (reinterpret_cast<SmppCommand*>(lcmCtx->stateMachineContext));
     lcmCtx->stateMachineContext = 0;
-    lcmCtx->continueExec = true;
+    lcmCtx->continueExec = ! dropped;
 
     Session* session = cx->getSession();
     __require__( session );

@@ -450,7 +450,7 @@ void SessionManagerImpl::continueExecution( LongCallContextBase* lcmCtx, bool dr
 {
     /// long call in session_destroy
     Session* session = reinterpret_cast<Session*>( lcmCtx->stateMachineContext );
-    lcmCtx->continueExec = true;
+    lcmCtx->continueExec = ! dropped;
 
     // special finalization command
     assert( session && session->currentCommand() == 1 );

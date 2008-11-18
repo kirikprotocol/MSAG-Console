@@ -99,64 +99,73 @@ LongCallContextBase* LongCallManagerImpl::getContext()
 
 bool LongCallManagerImpl::call(LongCallContextBase* context)
 {
-    if(stopped) return false;
+    bool res = false;
+    while ( !stopped ) {
     
-    // smsc_log_debug( logger, "call context=%p session=%p cmdid=%d",
-    // context, & context->getActionContext()->getSession(),
-    // context->callCommandId );
+        // smsc_log_debug( logger, "call context=%p session=%p cmdid=%d",
+        // context, & context->getActionContext()->getSession(),
+        // context->callCommandId );
 
-    if (context->callCommandId == BILL_OPEN || context->callCommandId == BILL_COMMIT || context->callCommandId == BILL_ROLLBACK)
-    {
-        try {
+        if ( context->callCommandId == BILL_OPEN ||
+             context->callCommandId == BILL_COMMIT ||
+             context->callCommandId == BILL_ROLLBACK ) {
 
-            if(context->callCommandId == BILL_OPEN)
-            {
-                BillOpenCallParams * bp = (BillOpenCallParams*)context->getParams();
-                bill::BillingManager::Instance().Open(bp->billingInfoStruct, bp->tariffRec, (LongCallContext*)context);
+            try {
+                if(context->callCommandId == BILL_OPEN)
+                {
+                    BillOpenCallParams * bp = (BillOpenCallParams*)context->getParams();
+                    bill::BillingManager::Instance().Open(bp->billingInfoStruct, bp->tariffRec, (LongCallContext*)context);
+                }
+                else if(context->callCommandId == BILL_COMMIT)
+                {
+                    BillCloseCallParams * bp = (BillCloseCallParams*)context->getParams();
+                    bill::BillingManager::Instance().Commit(bp->BillId, (LongCallContext*)context);
+                }
+                else if(context->callCommandId == BILL_ROLLBACK)
+                {
+                    BillCloseCallParams * bp = (BillCloseCallParams*)context->getParams();
+                    bill::BillingManager::Instance().Rollback(bp->BillId, (LongCallContext*)context);
+                }
             }
-            else if(context->callCommandId == BILL_COMMIT)
+            catch(SCAGException& e)
             {
-                BillCloseCallParams * bp = (BillCloseCallParams*)context->getParams();
-                bill::BillingManager::Instance().Commit(bp->BillId, (LongCallContext*)context);
+                LongCallParams *lp = (LongCallParams*)context->getParams();            
+                lp->exception = e.what();
+                // NOTE: we should not do continueExecution if longcall has failed!
+                // This is because the initiator->continueExecution will typically put
+                // the command to the transport queue and it may become being processed
+                // in parallel in another state machine!
+                // context->initiator->continueExecution(context, false);
+                break;
             }
-            else if(context->callCommandId == BILL_ROLLBACK)
-            {
-                BillCloseCallParams * bp = (BillCloseCallParams*)context->getParams();
-                bill::BillingManager::Instance().Rollback(bp->BillId, (LongCallContext*)context);
-            }
+
         }
-        catch(SCAGException& e)
+        else if(context->callCommandId >= PERS_GET && context->callCommandId <= PERS_BATCH)
         {
-            LongCallParams *lp = (LongCallParams*)context->getParams();            
-            lp->exception = e.what();
-            context->initiator->continueExecution(context, false);
-            return false;
+            // PersCallParams* p = (PersCallParams*) context->getParams();
+            if (!PersClient::Instance().call(context) ) {
+                // context->initiator->continueExecution(context, false);
+                break;
+            }
         }
-
-    }
-    else if(context->callCommandId >= PERS_GET && context->callCommandId <= PERS_BATCH)
-    {
-        // PersCallParams* p = (PersCallParams*) context->getParams();
-        if (!PersClient::Instance().call(context) ) {
-            context->initiator->continueExecution(context, false);
-            return false;
-        }
-    }
-    else
-    {
-        MutexGuard mt(mtx);
-        if(stopped) return false;
-        context->next = NULL;
-
-        if(headContext)
-            tailContext->next = context;
         else
-            headContext = context;
-        tailContext = context;
-        
-        mtx.notify();        
+        {
+            MutexGuard mt(mtx);
+            if (stopped) break;
+            context->next = NULL;
+
+            if(headContext)
+                tailContext->next = context;
+            else
+                headContext = context;
+            tailContext = context;
+            mtx.notify();        
+        }
+        res = true;
+        break;
     }
-    return true;
+    if ( ! res ) context->continueExec = false;
+    return res;
 }
     
 
