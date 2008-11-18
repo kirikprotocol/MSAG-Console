@@ -341,7 +341,7 @@ public class ExportStat {
     String datePrefix = destFilePrefixFormat.format(fromDate);
     File dest = new File(destDir, "sme_stats_" + datePrefix + ".csv");
     PrintWriter r = new PrintWriter(new FileWriter(dest, true));
-    r.println("#"+destDateFormat.format(tillDate));
+    r.println("#"+destDateFormat.format(fromDate));
     for (Iterator i = smeCounters.keySet().iterator(); i.hasNext();) {
       String smeId = (String) i.next();
       SmeIdCountersSet set = (SmeIdCountersSet) smeCounters.get(smeId);
