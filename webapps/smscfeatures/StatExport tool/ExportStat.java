@@ -211,7 +211,17 @@ public class ExportStat {
     srcDir = new File(src);
     destDir = new File(dest);
     try {
-      this.useFromDateInHeaders = useFromDateInHeaders != null && useFromDateInHeaders.equals("true");
+      if (useFromDateInHeaders != null) {
+        this.useFromDateInHeaders = useFromDateInHeaders != null && useFromDateInHeaders.equals("true");
+      } else if (dateTime != null) {
+        if (dateTime.equals("false")) {
+          this.useFromDateInHeaders = false;
+          dateTime = null;
+        } else if (dateTime.equals("true")) {
+          this.useFromDateInHeaders = true;
+          dateTime = null;
+        }
+      }
       gmtDateFormat.setCalendar(calendar);
       gmtDateDayFormat.setCalendar(calendar);
       dateFormat.setCalendar(localCalendar);
