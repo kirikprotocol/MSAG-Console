@@ -739,7 +739,7 @@ void SetOption(SmppSession& ss,const string& args)
           if(val=="def")options[i].asInt()=0;
           else if(val=="dg")options[i].asInt()=1;
           else if(val=="fwd")options[i].asInt()=2;
-          else if(val=="store")options[i].asInt()=4;
+          else if(val=="store")options[i].asInt()=3;
         }break;
         case 'd':
         {
