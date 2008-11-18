@@ -175,7 +175,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
               persClientPool = new PersonalizationClientPool(persProps);
             }
-            if (SupportExtProfile.enabled) {
+            if (SupportExtProfile.enabled && webappConfig.containsParameter("smsx.smsxSenderUrl")) {
               smsxSenderLocator = new SmsXSenderServiceLocator();
               smsxSenderLocator.setSmsXSenderEndpointAddress(webappConfig.getString("smsx.smsxSenderUrl"));
             }
@@ -361,7 +361,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
     public SmsXSender getSmsXSender() throws AdminException {
       try {
-        return smsxSenderLocator.getSmsXSender();
+        return smsxSenderLocator != null ? smsxSenderLocator.getSmsXSender() : null;
       } catch (ServiceException e) {
         throw new AdminException(e.getMessage());
       }

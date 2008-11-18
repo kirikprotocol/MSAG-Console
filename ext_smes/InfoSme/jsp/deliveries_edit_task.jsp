@@ -120,6 +120,7 @@
     <script type="text/javascript">
       function checkSecretText() {
         document.getElementById("secretText").disabled = !document.getElementById("secret").checked;
+        document.getElementById("secretFlash").disabled = !document.getElementById("secret").checked;
       }
     </script>
     <tr class=row<%=rowN++&1%>>
@@ -127,8 +128,12 @@
       <td><input class=check type=checkbox id=secret name=secret value=true <%=deliveries_bean.isSecret() ? "checked" : ""%> onchange="checkSecretText()"></td>
     </tr>
     <tr class=row<%=rowN++&1%>>
-      <th><%= getLocString("infosme.label.message_text")%></th>
+      <th><%= getLocString("infosme.label.secret_message_text")%></th>
       <td><textarea name=secretText id="secretText"><%=StringEncoderDecoder.encode(deliveries_bean.getSecretText())%></textarea></td>
+    </tr>
+    <tr class=row<%=rowN++&1%>>
+      <th><%= getLocString("infosme.label.secret_flash")%></th>
+      <td><input class=check type=checkbox id=secretFlash name=secretFlash value=true <%=deliveries_bean.isSecretFlash() ? "checked" : ""%> onchange="checkSecretText()"></td>
     </tr>
     <script type="text/javascript">
       checkSecretText();

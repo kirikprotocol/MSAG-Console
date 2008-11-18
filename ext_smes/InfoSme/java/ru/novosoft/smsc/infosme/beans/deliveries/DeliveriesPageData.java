@@ -55,6 +55,7 @@ public class DeliveriesPageData {
   public boolean flash;
   public boolean secret;
   public String secretText;
+  public boolean secretFlash;
   public String sourceAddress;
   public String errorStr;
   public String retryPolicy;
@@ -104,6 +105,7 @@ public class DeliveriesPageData {
     retryPolicy = null;
     flash = false;
     secret = false;
+    secretFlash = false;
     secretText = null;
 
     deliveriesGenProgr = null;

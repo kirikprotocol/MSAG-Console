@@ -12,6 +12,7 @@ import org.apache.axis.attachments.AttachmentPart;
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
 import java.io.File;
+import java.rmi.RemoteException;
 
 public class SmsXSenderSoapBindingStub extends org.apache.axis.client.Stub implements SmsXSender {
     private java.util.Vector cachedSerClasses = new java.util.Vector();
@@ -22,7 +23,7 @@ public class SmsXSenderSoapBindingStub extends org.apache.axis.client.Stub imple
     static org.apache.axis.description.OperationDesc [] _operations;
 
     static {
-        _operations = new org.apache.axis.description.OperationDesc[5];
+        _operations = new org.apache.axis.description.OperationDesc[6];
         _initOperationDesc1();
     }
 
@@ -86,20 +87,32 @@ public class SmsXSenderSoapBindingStub extends org.apache.axis.client.Stub imple
         oper.setUse(org.apache.axis.constants.Use.LITERAL);
         _operations[2] = oper;
 
-        oper = new org.apache.axis.description.OperationDesc();
-        oper.setName("batchSecret");
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SourceAddress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
-        oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "Message"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
-        oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SMSXExpress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
-        oper.addParameter(param);
-        oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
-        oper.setReturnClass(int.class);
-        oper.setReturnQName(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "batchSecretReturn"));
-        oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
-        oper.setUse(org.apache.axis.constants.Use.LITERAL);
-        _operations[3] = oper;
+      oper = new org.apache.axis.description.OperationDesc();
+      oper.setName("batchSecret");
+      param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SourceAddress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+      oper.addParameter(param);
+      param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "Message"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+      oper.addParameter(param);
+      param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SMSXExpress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+      oper.addParameter(param);
+      oper.setReturnType(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SmsXSenderResponse"));
+      oper.setReturnClass(SmsXSenderResponse.class);
+      oper.setReturnQName(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "batchSecretReturn"));
+      oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
+      oper.setUse(org.apache.axis.constants.Use.LITERAL);
+      _operations[3] = oper;
+
+      oper = new org.apache.axis.description.OperationDesc();
+      oper.setName("checkBatchSecretStatus");
+      param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SMSXIdMessage"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+      oper.addParameter(param);
+      oper.setReturnType(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SmsXSenderResponse"));
+      oper.setReturnClass(SmsXSenderResponse.class);
+      oper.setReturnQName(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "checkBatchSecretStatusReturn"));
+      oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
+      oper.setUse(org.apache.axis.constants.Use.LITERAL);
+      _operations[4] = oper;
+
 
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("sendSysSms");
@@ -114,7 +127,7 @@ public class SmsXSenderSoapBindingStub extends org.apache.axis.client.Stub imple
         oper.setReturnQName(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "sendSysSmsReturn"));
         oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
         oper.setUse(org.apache.axis.constants.Use.LITERAL);
-        _operations[4] = oper;
+        _operations[5] = oper;
 
     }
 
@@ -322,7 +335,7 @@ public class SmsXSenderSoapBindingStub extends org.apache.axis.client.Stub imple
 }
     }
 
-    public int batchSecret(java.lang.String sourceAddress, java.lang.String message, boolean SMSXExpress, File destinations) throws java.rmi.RemoteException {
+    public SmsXSenderResponse batchSecret(java.lang.String sourceAddress, java.lang.String message, boolean SMSXExpress, File destinations) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
@@ -352,9 +365,9 @@ public class SmsXSenderSoapBindingStub extends org.apache.axis.client.Stub imple
         else {
             extractAttachments(_call);
             try {
-                return ((java.lang.Integer) _resp).intValue();
+                return (SmsXSenderResponse) _resp;
             } catch (java.lang.Exception _exception) {
-                return ((java.lang.Integer) org.apache.axis.utils.JavaUtils.convert(_resp, int.class)).intValue();
+                return (SmsXSenderResponse) org.apache.axis.utils.JavaUtils.convert(_resp, SmsXSenderResponse.class);
             }
         }
   } catch (org.apache.axis.AxisFault axisFaultException) {
@@ -362,12 +375,46 @@ public class SmsXSenderSoapBindingStub extends org.apache.axis.client.Stub imple
 }
     }
 
-    public int sendSysSms(java.lang.String sourceAddress, java.lang.String destinationAddress, java.lang.String message) throws java.rmi.RemoteException {
+  public SmsXSenderResponse checkBatchSecretStatus(String SMSXIdMessage) throws RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[4]);
+        _call.setUseSOAPAction(true);
+        _call.setSOAPActionURI("");
+        _call.setEncodingStyle(null);
+        _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
+        _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
+        _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
+        _call.setOperationName(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "checkBatchSecretStatus"));
+
+        setRequestHeaders(_call);
+        setAttachments(_call);
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {SMSXIdMessage});
+
+        if (_resp instanceof java.rmi.RemoteException) {
+            throw (java.rmi.RemoteException)_resp;
+        }
+        else {
+            extractAttachments(_call);
+            try {
+                return (SmsXSenderResponse) _resp;
+            } catch (java.lang.Exception _exception) {
+                return (SmsXSenderResponse) org.apache.axis.utils.JavaUtils.convert(_resp, SmsXSenderResponse.class);
+            }
+        }
+  } catch (org.apache.axis.AxisFault axisFaultException) {
+  throw axisFaultException;
+}
+  }
+
+    public int sendSysSms(java.lang.String sourceAddress, java.lang.String destinationAddress, java.lang.String message) throws java.rmi.RemoteException {
+        if (super.cachedEndpoint == null) {
+            throw new org.apache.axis.NoEndPointException();
+        }
+        org.apache.axis.client.Call _call = createCall();
+        _call.setOperation(_operations[5]);
         _call.setUseSOAPAction(true);
         _call.setSOAPActionURI("");
         _call.setEncodingStyle(null);

@@ -206,6 +206,14 @@ public class DeliveriesNew extends InfoSmeBean {
     pageData.secretText = text;
   }
 
+  public boolean isSecretFlash() {
+    return pageData.secretFlash;
+  }
+
+  public void setSecretFlash(boolean val) {
+    pageData.secretFlash = val;
+  }
+
   public Map getGenerationProgress() {
     return pageData.deliveriesGenProgr;
   }
@@ -255,7 +263,12 @@ public class DeliveriesNew extends InfoSmeBean {
   }
 
   public boolean isSupportExtProfile() {
-    return SupportExtProfile.enabled;
+    try {
+      return SupportExtProfile.enabled && appContext.getSmsXSender() != null;
+    } catch (AdminException e) {
+      logger.error(e,e);
+      return false;
+    }
   }
 
   public String getSourceAddress() {

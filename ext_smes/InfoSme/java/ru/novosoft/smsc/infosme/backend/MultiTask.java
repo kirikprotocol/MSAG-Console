@@ -177,4 +177,11 @@ public class MultiTask {
       ((Task)iter.next()).setDelivery(delivery);
   }
 
+  public int getActualRecordsSize() {
+    int result = 0;
+    for (Iterator iter = tasks().iterator(); iter.hasNext();)
+      result += ((Task)iter.next()).getActualRecordsSize();
+    return result;
+  }
+
 }

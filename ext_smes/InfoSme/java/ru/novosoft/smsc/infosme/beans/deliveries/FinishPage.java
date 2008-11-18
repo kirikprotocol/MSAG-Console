@@ -5,6 +5,7 @@ import ru.novosoft.smsc.infosme.backend.Task;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.smsxsender.SmsXSender;
+import ru.novosoft.smsc.util.smsxsender.SmsXSenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Iterator;
@@ -47,9 +48,9 @@ public class FinishPage extends DeliveriesPage {
           SmsXSender smsxSender = pageData.getAppContext().getSmsXSender();
           for (Iterator iter = pageData.getInputFiles().values().iterator(); iter.hasNext();) {
             File f = (File)iter.next();
-            int res = smsxSender.batchSecret(pageData.sourceAddress, pageData.secretText, pageData.flash, f);
-            if (res != 0)
-              throw new AdminException("Batch secret error: code=" + res);
+            SmsXSenderResponse r = smsxSender.batchSecret(pageData.sourceAddress, pageData.secretText, pageData.secretFlash, f);
+            if (r.getStatus() != 0)
+              throw new AdminException("Batch secret error: code=" + r.getStatus());
           }
         } catch (Throwable e) {
           log.error(e,e);
