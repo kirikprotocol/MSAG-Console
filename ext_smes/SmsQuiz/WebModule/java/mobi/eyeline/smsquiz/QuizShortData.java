@@ -11,17 +11,18 @@ public class QuizShortData {
   private String address;
   private Date dateBegin;
   private Date dateEnd;
+  private String abFile;
 
-  public QuizShortData(String address, Date dateBegin, Date dateEnd) {
+  public QuizShortData(String address, Date dateBegin, Date dateEnd, String abFile) {
     this.address = address;
     this.dateBegin = dateBegin;
     this.dateEnd = dateEnd;
+    this.abFile = abFile;
   }
 
   public String getAddress() {
     return address;
   }
-
 
   public Date getDateBegin() {
     return dateBegin;
@@ -29,5 +30,9 @@ public class QuizShortData {
 
   public Date getDateEnd() {
     return dateEnd;
+  }
+
+  public String getAbFile() {
+    return abFile;
   }
 }

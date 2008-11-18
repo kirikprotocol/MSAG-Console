@@ -108,10 +108,11 @@ public class QuizesList extends SmsQuizBean {
         }
         QuizShortData quizData = QuizBuilder.parseQuiz(quizPath);
         Date now = new Date();
-        if (now.before(quizData.getDateEnd()) && now.after(quizData.getDateBegin())) {
+        if ((!new File(quizDir + File.separator + quizId + ".error").exists())
+            &&(now.before(quizData.getDateEnd()) && now.after(quizData.getDateBegin()))) {
           warnings += "Quiz is active, it can't be deleted: " + quizId;
         } else {
-          delete(quizId, quizPath);
+          delete(quizId, quizPath, quizData.getAbFile());
         }
       }
     }
@@ -128,73 +129,46 @@ public class QuizesList extends SmsQuizBean {
     return RESULT_OK;
   }
 
-  private void delete(String quizId, String path) {
+  private void delete(String quizId, String path, String abFile) {
     System.out.println("Deleting quiz: " + quizId);
-    File file;
-    try {
-      file = new File(path);
-      System.out.println("try to delete file: " + file.getName());
-      file.delete();
-    } catch (Exception e) {
-      logger.error(e);
-    }
+
+    deleteFile(new File(abFile));
+    deleteFile(new File(path));
+
     String parentSlashQuizId = dirWork + File.separator + quizId;
 
-    try {
-      file = new File(parentSlashQuizId + ".status");
-      if (!file.exists()) {
-        file = new File(parentSlashQuizId + ".status.old");
-      }
-      System.out.println("try to delete file: " + file.getName());
-      file.delete();
-    } catch (Exception e) {
-      logger.error(e);
-    }
-    try {
-      file = new File(parentSlashQuizId + ".xml.bin");
-      System.out.println("try to delete file: " + file.getName());
-      file.delete();
-    } catch (Exception e) {
-      logger.error(e);
-    }
 
-    try {
-      file = new File(parentSlashQuizId + ".xml.bin.j");
-      System.out.println("try to delete file: " + file.getName());
-      file.delete();
-    } catch (Exception e) {
-      logger.error(e);
-    }
+    deleteFile(new File(parentSlashQuizId + ".status"));
+    deleteFile(new File(parentSlashQuizId + ".status.old"));
+    deleteFile(new File(parentSlashQuizId + ".xml.bin"));
+    deleteFile(new File(parentSlashQuizId + ".error"));
+    deleteFile(new File(parentSlashQuizId + ".distr.error"));
+    deleteFile(new File(parentSlashQuizId + ".xml.bin.j"));
+    deleteFile(new File(parentSlashQuizId + ".mod"));
+    deleteFile(new File(parentSlashQuizId + ".mod.processed"));
 
-    try {
-      file = new File(parentSlashQuizId + ".mod");
-      if (!file.exists()) {
-        file = new File(parentSlashQuizId + ".mod.processed");
-      }
-      System.out.println("try to delete file: " + file.getName());
-      file.delete();
-    } catch (Exception e) {
-      logger.error(e);
-    }
 
-    try{
-      file = new File(quizRes);
-      File files[] = file.listFiles();
-      if(files!=null) {
-        for(int j=0;j<files.length;j++) {
-          file = files[j];
-          if((file.isFile())&&(file.getName().startsWith(quizId))) {
-            file.delete();
-            break;
-          }
+    File file = new File(quizRes);
+    File files[] = file.listFiles();
+    if(files!=null) {
+      for(int j=0;j<files.length;j++) {
+        file = files[j];
+        if((file.isFile())&&(file.getName().startsWith(quizId))) {
+          break;
         }
       }
+    }
+    deleteFile(file);
+  }
+
+  private void deleteFile(File file) {
+    try{
+      System.out.println("try to delete file: " + file.getAbsolutePath());
+      file.delete();
     } catch(Exception e) {
       logger.error(e);
     }
-
   }
-
   private int processAdd() {
     return RESULT_ADD;
   }

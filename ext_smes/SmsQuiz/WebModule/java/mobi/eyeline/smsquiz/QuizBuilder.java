@@ -25,6 +25,7 @@ public class QuizBuilder {
 
 
   public static QuizShortData parseQuiz(String path) throws QuizParsingException {
+    String abFile = null;
     String address = null;
     Date dateBegin = null;
     Date dateEnd = null;
@@ -59,6 +60,11 @@ public class QuizBuilder {
         } else {
           throw new Exception("Section 'date-end' doesn't exist in " + path);
         }
+        if ((subElem = elem.getChild("abonents-file")) != null) {
+         abFile = subElem.getTextTrim();
+        } else {
+          throw new Exception("Section 'abonents-file' doesn't exist in " + path);
+        }
       } else {
         throw new Exception("Section 'general' doesn't exist in " + path);
       }
@@ -75,7 +81,7 @@ public class QuizBuilder {
         }
       }
     }
-    return new QuizShortData(address, dateBegin, dateEnd);
+    return new QuizShortData(address, dateBegin, dateEnd, abFile);
   }
 
   public static QuizFullData parseAll(String filepath) throws QuizParsingException {

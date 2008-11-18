@@ -87,6 +87,7 @@ public class ReplyDataSource extends AbstractDataSourceImpl {
           String dirName = directories[i].getName();
           Date dirDate = DIR_FORMAT.parse(dirName);
           File[] files = directories[i].listFiles();
+          String encoding = System.getProperty("file.encoding");
           for (int s = 0; s < files.length; s++) {
             File file = files[s];
             if (!file.isFile() || (!file.getName().endsWith(".csv"))) {
@@ -99,7 +100,6 @@ public class ReplyDataSource extends AbstractDataSourceImpl {
               log.debug("File name date: " + date);
             }
             if ((date.compareTo(dateEnd) <= 0) && (date.compareTo(tillHour) >= 0)) {
-              String encoding = System.getProperty("file.encoding");
               if (log.isDebugEnabled()) {
                 log.debug("Start reading results from file: " + file.getName());
               }
