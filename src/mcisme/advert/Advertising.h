@@ -97,7 +97,7 @@ protected:
 class Advertising {
 public:
   virtual void init(int connectTimeout=0) = 0;
-  virtual void reinit(int connectTimeout=0) = 0;
+  virtual bool reinit(int connectTimeout=0) = 0;
   /**
    * Returns 0 - if OK  or  error code (see AdvertErrors.h)
    *
@@ -118,7 +118,7 @@ public:
 
 protected:
   Advertising()
-    : _logger(logger::Logger::getInstance("scag.advert.Advertising")) {}
+    : _logger(logger::Logger::getInstance("advert")) {}
 
   logger::Logger* _logger;
 };
