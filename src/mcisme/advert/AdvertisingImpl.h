@@ -51,22 +51,24 @@ struct advertising_item
 class AdvertisingImpl : public Advertising {
 public:
   virtual void init(int connectTimeout=0);
-  virtual void reinit(int connectTimeout=0);
+  virtual bool reinit(int connectTimeout=0);
 
   virtual uint32_t getBanner(const std::string& abonent,
                              const std::string& serviceName,
                              uint32_t transportType, uint32_t charSet,
                              std::string &banner);
 
+  std::string toString() const;
 protected:
   std::string _host;
   in_port_t _port;
   uint32_t _timeout;
+  bool _isConnected;
   Socket _socket;
   static const unsigned int CMD_HEADER_SIZE = sizeof(uint32_t) + sizeof(uint32_t);
 
-  AdvertisingImpl(const std::string& host, int port, int timeout) :
-    _host(host), _port(port), _timeout(timeout)
+  AdvertisingImpl(const std::string& host, int port, int timeout)
+    : _host(host), _port(port), _timeout(timeout), _isConnected(false)
   {}
 
   void writeErrorToLog(char* where, int errCode);
@@ -97,6 +99,8 @@ protected:
                              BannerRequest& banReq,
                              int rc,
                              const std::string& where) = 0;
+
+  void generateUnrecoveredProtocolError();
 };
 
 }}

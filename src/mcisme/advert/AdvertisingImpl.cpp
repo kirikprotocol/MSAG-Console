@@ -31,21 +31,30 @@ void
 AdvertisingImpl::init(int connectTimeout)
 {
   if ( _socket.Init(_host.c_str(), _port, _timeout) )
-    throw util::Exception("AdvertisingImpl::init::: can't init socket for host=[%s],port=[%d] - '%s'", _host.c_str(), _port, strerror(errno));
+    throw util::Exception("AdvertisingImpl::init::: can't init socket to connect to %s - '%s'", toString().c_str(), strerror(errno));
 
   _socket.setConnectTimeout(connectTimeout);
 
   if ( _socket.Connect() )
-    throw util::Exception("AdvertisingImpl::init::: can't establish connection to host=[%s],port=[%d] - '%s'", _host.c_str(), _port, strerror(errno));
+    throw util::Exception("AdvertisingImpl::init::: can't establish connection to %s - '%s'", toString().c_str(), strerror(errno));
+
+  _isConnected = true;
 }
 
-void
+bool
 AdvertisingImpl::reinit(int connectTimeout)
 {
   _socket.setConnectTimeout(connectTimeout);
 
-  if ( _socket.Connect() )
-    smsc_log_error(_logger, "AdvertisingImpl::reinit::: can't establish connection to host=[%s],port=[%d] - %s", _host.c_str(), _port, strerror(errno));
+  if ( _socket.Connect() ) {
+    char errBuf[512];
+    strerror_r(errno, errBuf, sizeof(errBuf));
+    smsc_log_error(_logger, "AdvertisingImpl::reinit::: can't establish connection to %s - %s", toString().c_str(), errBuf);
+    return false;
+  }
+
+  _isConnected = true;
+  return true;
 }
 
 void
@@ -78,6 +87,7 @@ AdvertisingImpl::writeToSocket(const void* dataBuf, int dataSz, const std::strin
 {
   smsc_log_debug(_logger,"AdvertisingImpl::writeToSocket::: try write data=[%s]", hexdmp((uint8_t*)dataBuf, dataSz).c_str());
   if ( _socket.WriteAll((char *)dataBuf, dataSz) < 0 ) {
+    _isConnected = false;
     std::string errMsg = where + " socket write error [" + strerror(errno) + "]";
     smsc_log_warn(_logger, errMsg);
     throw NetworkException(errMsg.c_str());
@@ -93,16 +103,20 @@ AdvertisingImpl::readFromSocket(char *dataBuf, int bytesToRead, const std::strin
   {
     if ( _timeout > 0 ) {
       res = _socket.canRead(_timeout);
-      if ( res < 0 )
+      if ( res < 0 ) {
+        _isConnected = false;
         throw NetworkException("AdvertisingImpl::readFromSocket::: read socket error = %d", errno);
-      else if ( !res )
+      } else if ( !res )
         throw TimeoutException("AdvertisingImpl::readFromSocket::: read timeout was expired (timeout value=%d)", _timeout);
     }
     res = _socket.Read(dataBuf+rd,bytesToRead-rd);
-    if (res<0)
+    if (res<0) {
+      _isConnected = false;
       throw NetworkException("AdvertisingImpl::readFromSocket::: read socket error = %d", errno);
-    else if (!res)
+    } else if (!res) {
+      _isConnected = false;
       throw NetworkException("AdvertisingImpl::readFromSocket::: connection closed by remote side");
+    }
     smsc_log_debug(_logger, "AdvertisingImpl::readFromSocket: _socket.read returned %d",res);
     rd+=res;
   }
@@ -127,6 +141,7 @@ AdvertisingImpl::getBanner(const std::string& abonent,
                            uint32_t transportType, uint32_t charSet,
                            std::string &banner)
 {
+  if ( !_isConnected ) return ERR_ADV_NOT_CONNECTED;
   BannerRequest req(abonent, serviceName, transportType, charSet);
   uint32_t rc = getBanner(req);
   banner = req.banner;
@@ -160,6 +175,22 @@ AdvertisingImpl::sendRequestAndGetResponse(advertising_item* advItem, util::Seri
   writeToSocket(req->getBuffer(), req_len, "AdvertisingImpl::sendRequestAndGetResponse");
 
   return readAdvert(advItem);
+}
+
+void
+AdvertisingImpl::generateUnrecoveredProtocolError()
+{
+  _socket.Close();
+  throw UnrecoveredProtocolError();
+}
+
+std::string
+AdvertisingImpl::toString() const
+{
+  char strBuf[128];
+  snprintf(strBuf, sizeof(strBuf), "%s.%d", _host.c_str(), _port);
+
+  return strBuf;
 }
 
 } // advert
