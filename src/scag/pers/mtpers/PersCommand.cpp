@@ -46,11 +46,6 @@ bool PersCommand::deserialize(SerialBuffer& sb) {
     return false;
   case PC_SET:
     property.Deserialize(sb);
-    if ( dblogs ) {
-        PrintAString pa;
-        pa.print( "pc_set: prop=%s", property.toString().c_str() );
-        dblogs->push_back( pa.buf() );
-    }
     return true;
   case PC_GET:
     sb.ReadString(propertyName);
@@ -83,7 +78,6 @@ Response PersCommand::execute(Profile *pf, SerialBuffer& sb) {
 }
 
 Response PersCommand::set(Profile *pf, SerialBuffer& sb) {
-  //smsc_log_debug(logger, "execute SET command");
   if (property.isExpired()) {
     createExpireLogMsg(pf->getKey(), property.toString());
     sb.WriteInt8(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
@@ -107,10 +101,8 @@ Response PersCommand::set(Profile *pf, SerialBuffer& sb) {
 }
 
 Response PersCommand::get(Profile *pf, SerialBuffer& sb) {
-  //smsc_log_debug(logger, "execute GET command");
   Property* p = pf->GetProperty(propertyName.c_str());
   if (!p) {
-    //smsc_log_debug(logger, "profile %s, property '%s' not found", pf->getKey().c_str(), propertyName.c_str());
     sb.WriteInt8(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
     return scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND;
   }
@@ -119,16 +111,13 @@ Response PersCommand::get(Profile *pf, SerialBuffer& sb) {
     pf->setChanged(true);
   }
   property = *p;
-  //smsc_log_debug(logger, "profile %s, getProperty=%s", pf->getKey().c_str(), property.toString().c_str());
   sb.WriteInt8(scag::pers::util::RESPONSE_OK);
   property.Serialize(sb);
   return scag::pers::util::RESPONSE_OK;
 }
 
 Response PersCommand::del(Profile *pf, SerialBuffer& sb) {
-  //smsc_log_debug(logger, "execute DEL command");
   if (!pf->DeleteProperty(propertyName.c_str())) {
-    //smsc_log_debug(logger, "profile %s, property '%s' not found", pf->getKey().c_str(), propertyName.c_str());
     sb.WriteInt8(scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND);
     return scag::pers::util::RESPONSE_PROPERTY_NOT_FOUND;
   }
@@ -176,7 +165,6 @@ Response PersCommand::incModProperty(Profile *pf, uint32_t& result) {
 }
 
 Response PersCommand::inc(Profile *pf, SerialBuffer& sb) {
-  //smsc_log_debug(logger, "execute INC command"); 
   uint32_t result = 0;
   Response resp = incModProperty(pf, result);
   sb.WriteInt8(resp);
@@ -184,7 +172,6 @@ Response PersCommand::inc(Profile *pf, SerialBuffer& sb) {
 }
 
 Response PersCommand::incMod(Profile *pf, SerialBuffer& sb) {
-  //smsc_log_debug(logger, "execute INC_MOD command");
   uint32_t result = 0;
   Response resp = incModProperty(pf, result);
   sb.WriteInt8(resp);
@@ -195,24 +182,23 @@ Response PersCommand::incMod(Profile *pf, SerialBuffer& sb) {
 }
 
 Response PersCommand::incResult(Profile *pf, SerialBuffer& sb) {
-  //smsc_log_debug(logger, "execute INC_RESULT command");
   return incMod(pf, sb);
 }
 
 void PersCommand::createAddLogMsg(string const& key, string const& msg) {
-  if (dblogs) dblogs->push_back(string("A key=" + key + " property=" + msg));
+  dblogs->push_back(string("A key=" + key + " property=" + msg));
 }
 
 void PersCommand::createUpdateLogMsg(string const& key, string const& msg) {
-  if (dblogs) dblogs->push_back(string("U key=" + key + " property=" + msg));
+  dblogs->push_back(string("U key=" + key + " property=" + msg));
 }
 
 void PersCommand::createDelLogMsg(string const& key, string const& msg) {
-  if (dblogs) dblogs->push_back(string("D key=" + key + " name=" + msg));
+  dblogs->push_back(string("D key=" + key + " name=" + msg));
 }
 
 void PersCommand::createExpireLogMsg(string const& key, string const& msg) {
-  if (dblogs) dblogs->push_back(string("E key=" + key + " property=" + msg));
+  dblogs->push_back(string("E key=" + key + " property=" + msg));
 }
 
 
