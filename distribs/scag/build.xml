@@ -100,6 +100,8 @@ Targets:
     <mkdir dir="${DISTR_DIR}/services/scag2/bin"/>
     <mkdir dir="${DISTR_DIR}/services/pers"/>
     <mkdir dir="${DISTR_DIR}/services/pers/bin"/>
+    <mkdir dir="${DISTR_DIR}/services/mtpers"/>
+    <mkdir dir="${DISTR_DIR}/services/mtpers/bin"/>
     <mkdir dir="${DISTR_DIR}/webapps"/>
     <mkdir dir="${DISTR_DIR}/tomcat"/>
     <mkdir dir="${DISTR_DIR}/tomcat/common/lib"/>
@@ -124,6 +126,7 @@ Targets:
     <mkdir dir="${DISTR_DIR}/services/scag2/conf/rules/HTTP"/>
     <mkdir dir="${DISTR_DIR}/services/scag2/conf/rules/MMS"/>
     <mkdir dir="${DISTR_DIR}/services/pers/conf"/>
+    <mkdir dir="${DISTR_DIR}/services/mtpers/conf"/>
     <mkdir dir="${DISTR_DIR}/daemon/conf"/>
     <mkdir dir="${DISTR_DIR}/applet"/>
            
@@ -133,6 +136,8 @@ Targets:
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/scag2"/>
     <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/pers"/>
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/pers"/>
+    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/mtpers"/>
+    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/mtpers"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd"          link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd"         link="${DISTR_DIR}/services/scag/conf"/>
@@ -144,6 +149,7 @@ Targets:
     <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd"       link="${DISTR_DIR}/services/scag2/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/scag2/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/pers/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/mtpers/conf"/>
 
     <symlink resource="${DAEMON2HOME_PATH}/logs" link="${DISTR_DIR}/daemon"/>
     <symlink resource="${DAEMON2HOME_PATH}/../conf/command.dtd" link="${DISTR_DIR}/daemon/conf"/>
@@ -325,6 +331,18 @@ Targets:
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
 
+    <copy tofile="${DISTR_DIR}/services/mtpers/logger.properties" file="${TEMPL_DIR}/logger/msag_mtpers.logger">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy tofile="${DISTR_DIR}/services/mtpers/bin/service" file="${TEMPL_DIR}/service/msag_mtpers">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <chmod file="${DISTR_DIR}/services/mtpers/bin/service" perm="755"/>
+    <copy todir="${DISTR_DIR}/services/mtpers/conf" flatten="yes">
+      <fileset dir="${TEMPL_DIR}/scag/mtpers" includes="config.xml"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+
     <!-- turn scripts be executable -->
     <chmod perm="755">
       <fileset dir="${DISTR_DIR}" includes="**/*.sh"/>
@@ -332,6 +350,7 @@ Targets:
     <mkdir dir="${scag.session.location}" description="create sessions dir #1"/>
     <mkdir dir="${scag2.session.location}" description="create sessions dir #2"/>
     <mkdir dir="${pers.storage_dir}" description="create personalization storage dir"/>
+    <mkdir dir="${mtpers.storage_dir}" description="create mtpers storage dir"/>
     <mkdir dir="${stat.dir}" description="create statistics dir"/>
     <mkdir dir="${stat.traffic_dir}" description="create traffic dir"/>
   </target>
@@ -791,6 +810,7 @@ Targets:
         <include name="services/scag/bin/scag"/>
         <include name="services/scag2/bin/scag2"/>
 	<include name="services/pers/bin/pers"/>
+	<include name="services/mtpers/bin/mtpers"/>
         <include name="tomcat/bin/*.sh"/>
       </tarfileset>
       <tarfileset dir="${DISTR_DIR}" mode="664">
@@ -800,6 +820,7 @@ Targets:
         <exclude name="services/scag/bin/scag"/>
         <exclude name="services/scag2/bin/scag2"/>
 	<exclude name="services/pers/bin/pers"/>
+	<exclude name="services/mtpers/bin/mtpers"/>
         <exclude name="tomcat/bin/*.sh"/>
         <include name="**/*"/>
       </tarfileset>
