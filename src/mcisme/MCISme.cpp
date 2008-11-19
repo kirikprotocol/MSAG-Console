@@ -128,7 +128,6 @@ public:
 
     if (TrafficControl::stopped) return;
 
-    outgoing.Inc();
     int out = outgoing.Get();
     int inc = incoming.Get();
     int difference = out-inc;
@@ -140,6 +139,7 @@ public:
       out = outgoing.Get(); inc = incoming.Get(); difference = out-inc;
       if (TrafficControl::stopped) return;
     }
+    outgoing.Inc();
 
     while(limitSpeed.Get() >= outgoingSpeedMax)
     {
@@ -161,9 +161,8 @@ public:
     MutexGuard guard(trafficMonitor);
     if (TrafficControl::stopped) return;
     incoming.Inc();
-    if ((outgoing.Get()-incoming.Get()) < unrespondedMessagesMax) {
+    if ((outgoing.Get()-incoming.Get()) < unrespondedMessagesMax)
       trafficMonitor.notifyAll();
-    }
   }
 
   static void stopControl()
@@ -312,7 +311,6 @@ public:
       sm.get_header().set_commandStatus(0);
       sm.get_header().set_sequenceNumber(seqNumber);
 
-      TrafficControl::incOutgoing();
       asyncTransmitter->sendPdu(&(sm.get_header()));
     }
     else if(message.data_sm)
@@ -505,11 +503,11 @@ private:
   void processDataSmResp(SmppHeader *pdu)
   {
     if (!pdu) return;
+
     int cmdId	= pdu->get_commandId();
     int seqNum	= pdu->get_sequenceNumber();
     int status	= pdu->get_commandStatus();
 
-    TrafficControl::incIncoming();
     processor.invokeProcessDataSmResp(cmdId, status, seqNum);
   }
   void processAlertNotification(SmppHeader *pdu)
@@ -557,6 +555,7 @@ public:
     switch (pdu->get_commandId())
     {
     case SmppCommandSet::DATA_SM_RESP:
+      TrafficControl::incIncoming();
       processDataSmResp(pdu);
       break;
     case SmppCommandSet::ALERT_NOTIFICATION:
