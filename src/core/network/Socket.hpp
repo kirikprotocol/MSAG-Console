@@ -162,7 +162,7 @@ public:
     timeOut=newto;
     return old;
   }
-  void GetPeer(char* buf)
+  void GetPeer(char* buf) const
   {
     sockaddr_in addr;
     socklen_t len=sizeof(addr);
