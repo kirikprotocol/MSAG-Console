@@ -99,6 +99,7 @@
         <param name="reconnectTimeout" type="int">@pers_client.reconnect_timeout@</param> <!--in seconds-->
         <param name="maxWaitingRequestsCount" type="int">@pers_client.max_waiting_requests_count@</param>
         <param name="connections" type="int">@pers_client.connections@</param> <!-- a number of connections -->
+        <param name="async" type="bool">@pers_client.async@</param> <!-- a number of connections -->
     </section>
 
     <section name="LongCallManager">

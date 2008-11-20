@@ -135,8 +135,8 @@ Targets:
     <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/scag2"/>
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/scag2"/>
     <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/pers"/>
-    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/pers"/>
     <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/mtpers"/>
+    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/pers"/>
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/mtpers"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd"          link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/scag/conf"/>
@@ -322,12 +322,23 @@ Targets:
     <copy tofile="${DISTR_DIR}/services/pers/logger.properties" file="${TEMPL_DIR}/logger/msag_pers.logger">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
+    <copy tofile="${DISTR_DIR}/services/mtpers/logger.properties" file="${TEMPL_DIR}/logger/msag_mtpers.logger">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
     <copy tofile="${DISTR_DIR}/services/pers/bin/service" file="${TEMPL_DIR}/service/msag_pers">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
+    <copy tofile="${DISTR_DIR}/services/mtpers/bin/service" file="${TEMPL_DIR}/service/msag_mtpers">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
     <chmod file="${DISTR_DIR}/services/pers/bin/service" perm="755"/>
+    <chmod file="${DISTR_DIR}/services/mtpers/bin/service" perm="755"/>
     <copy todir="${DISTR_DIR}/services/pers/conf" flatten="yes">
       <fileset dir="${TEMPL_DIR}/scag/pers" includes="config.xml"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy todir="${DISTR_DIR}/services/mtpers/conf" flatten="yes">
+      <fileset dir="${TEMPL_DIR}/scag/mtpers" includes="config.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
 
