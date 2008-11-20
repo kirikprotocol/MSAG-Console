@@ -106,7 +106,7 @@ class PersClientTask : public smsc::core::threads::ThreadedTask
 {
 protected:
     /// return current time (msec) counting from thread start time
-    typedef unsigned utime_type;
+    typedef int utime_type;
     utime_type utime() const;
 
     /// a request sent to a server
@@ -124,8 +124,8 @@ public:
     /// return true if the task has any asynchronous requests
     bool hasRequests() const { return ! callqueue_.empty(); } // no locking here
 
-    /// controlled poll
-    void pollwait( int tmomsec, int rpipe );
+    /// controlled poll, return true if something has been read from socket
+    bool pollwait(int tmomsec, int rpipe);
 
 protected:
     virtual int Execute();
@@ -137,11 +137,11 @@ protected:
     void connect( bool fromDisconnect = false );
     bool disconnect( bool tryToReconnect = false );
     void sendPacket(SerialBuffer& sb);
-    void readPacket(SerialBuffer& sb);
+    int32_t readPacket(SerialBuffer& sb);
     void writeAllTo( const char* buf, uint32_t sz );
     void readAllTo( char* buf, uint32_t sz );
     int32_t getNextSerial();
-    void addCall( int32_t serial, lcm::LongCallContextBase* ctx );
+    void addCall( int32_t serial, lcm::LongCallContextBase* ctx, utime_type utm );
 
 private:
     PersClientImpl*             pers_;
@@ -450,28 +450,47 @@ serial_(0)
 }
 
 
-void PersClientTask::pollwait( int tmomsec, int rpipe )
+bool PersClientTask::pollwait(int tmomsec,int rpipe)
 {
+    bool res = false;
     struct pollfd pfd[2];
     pfd[0].fd = sock.getSocket();
     pfd[0].events = POLLIN;
-    pfd[1].fd = rpipe;
-    pfd[1].events = POLLIN;
-    int rc = poll( pfd, 2, tmomsec );
+    int np = 1;
+    if ( rpipe > 0 ) {
+        np = 2;
+        pfd[1].fd = rpipe;
+        pfd[1].events = POLLIN;
+    }
+    // smsc_log_debug( log_, "perspoll: tmo=%d", tmomsec );
+    int rc = poll( pfd, np, tmomsec );
     if ( rc < 0 ) {
         smsc_log_warn(log_, "pollwait failed: %d", rc);
     } else if ( rc > 0 ) {
-        if ( ( pfd[1].revents & POLLIN ) ) {
+        if ( rpipe > 0 && ( pfd[1].revents & POLLIN ) ) {
+            // smsc_log_debug( log_, "perspoll: waked up, on ctrl" );
             char buf[10];
-            read( rpipe, buf, sizeof(buf) );
+            ::read( rpipe, buf, sizeof(buf) );
+            // smsc_log_debug( log_, "perspoll: ctrl has been read" );
+            // } else {
+            // smsc_log_debug( log_, "perspoll: waked up, no ctrl" );
         }
+        if ( pfd[0].revents & POLLIN ) {
+            try {
+                res = asyncRead();
+            } catch(...) {
+            }
+        }
+        // } else {
+        // smsc_log_debug( log_, "perspoll: timeouted" );
     }
+    return res;
 }
 
 
 int PersClientTask::Execute()
 {
-    smsc_log_debug( log_, "perstask started" );
+    smsc_log_info( log_, "perstask started" );
     while ( true ) {
 
         if ( isStopping ) break;
@@ -488,11 +507,6 @@ int PersClientTask::Execute()
             }
         }
 
-        if ( hasRequests() ) {
-            // check if there is any results from server
-            if ( asyncRead() ) continue;
-        }
-
         int tmo = int(actTS_ + pers_->pingTimeout - time(0));
         if ( tmo < 0 ) tmo = 0;
         tmo *= 1000;
@@ -505,20 +519,29 @@ int PersClientTask::Execute()
         if ( ! ctx ) {
             ping();
             continue;
+        } else if ( hasRequests() ) {
+            // try to pollwait again
+            pollwait(0,0);
         }
 
         // processing
         PersCallParams* p = static_cast< PersCallParams* >(ctx->getParams());
-        smsc_log_debug(log_, "ExecutePersCall: lcmcmd=%d perscmd=%d/%s %s/%d",
-                       ctx->callCommandId, p->cmdType(), persCmdName(p->cmdType()), p->getStringKey(), p->getIntKey() );
+        int32_t serial = async_ ? getNextSerial() : 0;
         try {
             SerialBuffer sb;
-            int32_t serial = async_ ? getNextSerial() : 0;
             p->fillSB(sb,serial);
             if ( ! p->status() ) {
                 sendPacket(sb);
+                const utime_type utm = utime();
+                smsc_log_debug(log_, "perscall: serial=%d lcmcmd=%d stamp=%u perscmd=%d/%s %s/%d",
+                               serial,
+                               ctx->callCommandId,
+                               utm,
+                               p->cmdType(),
+                               persCmdName(p->cmdType()), 
+                               p->getStringKey(), p->getIntKey() );
                 if ( async_ ) {
-                    addCall(serial,ctx);
+                    addCall(serial,ctx,utm);
                     continue;
                 } else {
                     readPacket(sb);
@@ -526,20 +549,21 @@ int PersClientTask::Execute()
                 }
             }
         } catch ( PersClientException& e ) {
-            smsc_log_warn( log_, "execute failed: pers exc=%s", e.what() );
+            smsc_log_warn( log_, "execute pers exception: exc=%s", e.what() );
             p->setStatus( e.getType(), e.what() );
             this->disconnect( true );
         } catch ( std::exception& e ) {
-            smsc_log_warn( log_, "execute failed: exc=%s", e.what() );
+            smsc_log_warn( log_, "execute exception: exc=%s", e.what() );
             p->setStatus( UNKNOWN_EXCEPTION, e.what() );
         } catch (...) {
+            smsc_log_warn( log_, "execute unknown exception" );
             p->setStatus( UNKNOWN_EXCEPTION, "lcm: Unknown exception" );
         }
 
         ctx->initiator->continueExecution(ctx,false);
     }
     this->disconnect(false);
-    smsc_log_debug( log_, "perstask finished" );
+    smsc_log_info( log_, "perstask finished" );
     return 0;
 }
 
@@ -564,7 +588,10 @@ void PersClientTask::ping()
     try {
         sendPacket(sb);
         if ( async_ ) {
-            addCall(serial,0);
+            const utime_type utm = utime();
+            smsc_log_debug(log_, "persping: serial=%d lcmcmd=%d stamp=%u",
+                           serial, PC_PING, utm );
+            addCall(serial,0,utm);
         } else {
             readPacket(sb);
             PersServerResponseType rt = (PersServerResponseType)sb.ReadInt8();
@@ -572,66 +599,73 @@ void PersClientTask::ping()
                 throw PersClientException( SERVER_ERROR );
             actTS_ = now;
         }
-        smsc_log_debug( log_, "ping sent");
+        // smsc_log_debug( log_, "ping sent");
     } catch ( PersClientException& e ) {
         smsc_log_warn( log_, "ping failed: %s", e.what() );
         this->disconnect( true );
         // it will try to connect later
     } catch (...) {
-        smsc_log_error(log_, "unknown exception");
+        smsc_log_warn(log_, "ping: unknown exception");
     }
 }
 
 
 bool PersClientTask::asyncRead()
 {
-    pollfd pfd;
-    pfd.fd = sock.getSocket();
-    pfd.events = POLLIN;
+    bool res = false;
+    do {
+        SerialBuffer sb;
+        int32_t serial = readPacket(sb);
+        // find out a given call
+        Callqueue::iterator* i = callhash_.GetPtr(serial);
+        if ( !i ) {
+            smsc_log_debug( log_, "async unknown serial=%d", serial );
+            // continue;
+        } else {
+            Call c = **i;
+            callhash_.Delete(serial);
+            callqueue_.erase(*i);
+            if ( c.ctx ) {
+                // valid context
+                PersCallParams* params = static_cast<PersCallParams*>( c.ctx->getParams() );
+                try {
+                    params->readSB(sb);
+                } catch (...) {
+                    params->setStatus(BAD_RESPONSE);
+                }
+                c.ctx->initiator->continueExecution( c.ctx, false );
+                res = true;
+            }
+        }
+
+        // trying to poll one more time
+        if ( ! hasRequests() ) break;
+
+        pollfd pfd;
+        pfd.fd = sock.getSocket();
+        pfd.events = POLLIN;
+        int rc = poll( &pfd, 1, 0);
+        if ( rc < 0 ) {
+            smsc_log_warn( log_, "async poll failed: %d", rc );
+            break;
+        } else if ( (rc > 0) && (pfd.revents & POLLIN) != 0 ) {
+            continue;
+        } else {
+            break;
+        }
+    } while ( true );
+
     const utime_type now = utime();
     // remove old requests
     while ( hasRequests() ) {
         Call& c = callqueue_.front();
-        if ( c.stamp + pers_->timeout < now ) {
-            smsc_log_info( log_, "async request has expired: %d", c.serial );
+        const utime_type tmo = now - (c.stamp + pers_->timeout);
+        if ( tmo > 0 ) {
+            smsc_log_debug( log_, "async request has expired: serial=%d, stamp=%u, tmo=%u",
+                            c.serial, c.stamp, tmo );
             c.continueExecution(TIMEOUT,false);
             callhash_.Delete( c.serial );
             callqueue_.pop_front();
-        } else {
-            break;
-        }
-    }
-
-    if ( ! hasRequests() ) return false;
-
-    bool res = false;
-    while ( true ) {
-        int rc = poll( &pfd, 1, 0);
-        if ( rc < 0 ) {
-            smsc_log_warn( log_, "async poll failed: %d", rc );
-            throw PersClientException(READ_FAILED);
-        } else if ( (rc > 0) && (pfd.revents & POLLIN) != 0 ) {
-            SerialBuffer sb;
-            readPacket(sb);
-            int32_t serial = sb.ReadInt32();
-            // find out a given call
-            Callqueue::iterator* i = callhash_.GetPtr(serial);
-            if ( !i ) {
-                smsc_log_warn( log_, "async unknown serial: %d", serial );
-                continue;
-            }
-            Call c = **i;
-            callhash_.Delete(serial);
-            callqueue_.erase(*i);
-            if ( ! c.ctx ) continue; // a ping ?
-            PersCallParams* params = static_cast<PersCallParams*>( c.ctx->getParams() );
-            try {
-                params->readSB(sb);
-            } catch (...) {
-                params->setStatus(BAD_RESPONSE);
-            }
-            c.ctx->initiator->continueExecution( c.ctx, false );
-            res = true;
         } else {
             break;
         }
@@ -704,7 +738,7 @@ void PersClientTask::connect( bool fromDisconnect )
         if (!fromDisconnect) pers_->incConnect();
         actTS_ = time(0);
     }
-    smsc_log_debug(log_, "PersClientTask connected");
+    smsc_log_info(log_, "PersClientTask connected");
 }
 
 
@@ -727,7 +761,7 @@ bool PersClientTask::disconnect( bool tryToReconnect )
         callqueue_.pop_front();
     }
     callhash_.Empty();
-    smsc_log_debug( log_, "PersClientTask disconnected" );
+    smsc_log_info( log_, "PersClientTask disconnected" );
     return false;
 }
 
@@ -738,7 +772,7 @@ void PersClientTask::sendPacket( SerialBuffer& bsb )
     {
         try{
             this->connect();
-            if ( hasRequests() ) asyncRead();
+            if ( hasRequests() ) pollwait(0,0);
             writeAllTo( bsb.c_ptr(), bsb.length() );
             actTS_ = time(0);
             smsc_log_debug( logd_, "write to socket: len=%d, data=%s", bsb.length(), bsb.toString().c_str() );
@@ -753,7 +787,7 @@ void PersClientTask::sendPacket( SerialBuffer& bsb )
 }
 
 
-void PersClientTask::readPacket( SerialBuffer& bsb )
+int32_t PersClientTask::readPacket( SerialBuffer& bsb )
 {
     if (!connected_)
         throw PersClientException(NOT_CONNECTED);
@@ -777,6 +811,13 @@ void PersClientTask::readPacket( SerialBuffer& bsb )
     bsb.SetPos(0);
     sz = bsb.ReadInt32();
     actTS_ = time(0);
+    int32_t serial = async_ ? bsb.ReadInt32() : 0;
+    unsigned int pos = bsb.GetPos();
+    int8_t resp = bsb.ReadInt8();
+    bsb.SetPos(pos);
+    smsc_log_debug( log_, "persread: serial=%d sz=%u result=%u/%s", serial, sz,
+                    resp, RESPONSE_TEXT[( resp > RESPONSE_NOTSUPPORT ? 0 : resp )] );
+    return serial;
 }
 
 
@@ -795,7 +836,7 @@ void PersClientTask::writeAllTo( const char* buf, uint32_t sz )
             throw PersClientException(SEND_FAILED);
         } else if ( rc == 0 ) {
             // timeout
-            if ( wr == 0 && hasRequests() && asyncRead() ) continue;
+            if ( wr == 0 && hasRequests() && pollwait(0,0) ) continue;
             throw PersClientException(TIMEOUT);
         } else if ( pfd.revents & (POLLERR | POLLHUP | POLLNVAL) ) {
             throw PersClientException(SEND_FAILED);
@@ -844,14 +885,14 @@ int32_t PersClientTask::getNextSerial()
 }
 
 
-void PersClientTask::addCall( int32_t serial, lcm::LongCallContextBase* ctx )
+void PersClientTask::addCall( int32_t serial, lcm::LongCallContextBase* ctx, utime_type utm )
 {
     if ( callhash_.Exist(serial) ) {
         smsc_log_error( log_, "non-unique serial %d", serial );
         ctx->initiator->continueExecution( ctx, false );
         return;
     }
-    callqueue_.push_back( Call(ctx,serial,utime()) );
+    callqueue_.push_back( Call(ctx,serial,utm) );
     Callqueue::iterator i = callqueue_.end();
     callhash_.Insert( serial, --i );
 }

@@ -82,7 +82,9 @@ IParserHandler * BatchAction::StartXMLSubSection(const std::string& name, const 
 bool BatchAction::FinishXMLSubSection(const std::string& name)
 {
     smsc_log_debug(logger, "BatchAction: FinishXMLSubsection %s", name.c_str());
-    return (name=="profile:batch");
+    // NOTE: we have a buggy xerces_c parser at niagara, which returns batch:batch
+    // instead of profile:batch so we'll check for both
+    return (name=="profile:batch" || name == "batch:batch");
 }
 
 

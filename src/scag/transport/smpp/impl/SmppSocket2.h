@@ -67,21 +67,6 @@ struct SmppSocket:SmppChannel{
     sock->setData(0,this);
   }
 
-  virtual ~SmppSocket()
-  {
-    smsc_log_debug(log, "SmmpSocket destroying: %x", sock);
-    delete [] wrBuffer;
-    delete [] rdBuffer;
-    if(sock)delete sock;
-      dropPeer();
-    if ( outQueue.Count() > 0 ) {
-        smsc_log_warn(log, "destructor: there are %u commands to send", outQueue.Count() );
-        SmppCommand* cmd;
-        while ( outQueue.Pop(cmd) )
-            delete cmd;
-    }
-  }
-
   void acquire()
   {
     MutexGuard mg(mtx);
@@ -191,6 +176,24 @@ struct SmppSocket:SmppChannel{
   }
 
 protected:
+
+  virtual ~SmppSocket()
+  {
+      MutexGuard mg(mtx);
+    smsc_log_debug(log, "SmmpSocket destroying: %x", sock);
+    delete [] wrBuffer;
+    wrBufUsed = 0;
+    delete [] rdBuffer;
+    rdBufUsed = 0;
+    if(sock)delete sock;
+      dropPeer();
+    if ( outQueue.Count() > 0 ) {
+        smsc_log_warn(log, "destructor: there are %u commands to send", outQueue.Count() );
+        SmppCommand* cmd;
+        while ( outQueue.Pop(cmd) )
+            delete cmd;
+    }
+  }
 
     const char* getCachedPeer() const {
         if ( ! sock ) return "";

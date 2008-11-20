@@ -132,7 +132,7 @@ void ConnectionContext::writeData(const char* data, uint32_t size) {
 bool ConnectionContext::processReadSocket() {
   PersPacket* packet = NULL;
   {
-    MutexGuard mg(mutex_);
+    // MutexGuard mg(mutex_);
     if (!asynch_ && action_ != READ_REQUEST) {
       smsc_log_warn(logger_, "cx:%p socket %p error action=%d, must be READ_REQUEST", this, socket_, action_);
       return false;
@@ -175,6 +175,7 @@ bool ConnectionContext::processReadSocket() {
     if (inbuf_.GetSize() < packetLen_) {
       return true;
     }
+    MutexGuard mg(mutex_);
     ++packetsCount_;
     action_ = PROCESS_REQUEST;
   }
@@ -197,7 +198,7 @@ bool ConnectionContext::processReadSocket() {
 
 bool ConnectionContext::processWriteSocket() {
   MutexGuard mg(mutex_);
-  if (action_ != SEND_RESPONSE) {
+  if (!asynch_ && (action_ != SEND_RESPONSE)) {
     return true;
   }
   SerialBuffer& sb = outbuf_;
