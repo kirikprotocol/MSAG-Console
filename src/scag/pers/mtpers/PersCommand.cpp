@@ -210,7 +210,7 @@ void PersPacket::flushLogs(Logger* log) const {
 }
 
 PersPacket::PersPacket(Connection* connect, bool async, uint32_t sequenseNumber):createProfile(false), rollback(false), connection_(connect),
-                                                                                 asynch_(async), sequenseNumber_(sequenseNumber)
+                                                                                 asynch_(async), sequenseNumber_(sequenseNumber), intKey(0)
 {
   if (asynch_) {
     response_.WriteInt32(sequenseNumber_);
