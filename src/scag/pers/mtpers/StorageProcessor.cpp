@@ -24,6 +24,7 @@ const uint32_t DEF_RECORD_COUNT = 1000;
 StorageProcessor::StorageProcessor(unsigned maxWaitingCount): maxWaitingCount_(maxWaitingCount)
 {
   logger_ = Logger::getInstance("storeproc");
+  debuglogger_ = Logger::getInstance("ctx");
 }
 
 
@@ -69,8 +70,6 @@ int StorageProcessor::Execute() {
 
         this->process(*i);
 
-        smsc_log_debug(logger_, "%p: %p processing complete", this, *i);      
-
       } catch (const SerialBufferOutOfBounds &e) {
         smsc_log_warn(logger_, "%p: %p processing error: SerialBufferOutOfBounds", this, *i);
         (*i)->createResponse(scag::pers::util::RESPONSE_ERROR);
@@ -88,6 +87,8 @@ int StorageProcessor::Execute() {
         (*i)->createResponse(scag::pers::util::RESPONSE_ERROR);
       }
       (*i)->sendResponse();
+      smsc_log_info(debuglogger_, "complete seq.number:%d packet:%p key:%d/'%s'",
+                    (*i)->getSequenceNumber(), *i, (*i)->intKey, (*i)->address.toString().c_str());      
       delete *i;
     }
     process.clear();

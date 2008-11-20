@@ -83,6 +83,7 @@ protected:
   unsigned maxWaitingCount_;
   EventMonitor processMonitor_;
   Logger* logger_;
+  Logger* debuglogger_;
 };
 
 class AbonentStorageProcessor: public StorageProcessor {
