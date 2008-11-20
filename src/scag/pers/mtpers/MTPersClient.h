@@ -52,6 +52,7 @@ public:
   void init();
   void disconnect();
   void testCase(const string& address, int key);
+  void asynchTest(const string& address, int key);
   void testCase_CommandProcessing(ProfileType pt, const char* address, int key);
   void testCase_DelProfile(ProfileType pt, const char* address, int intKey);
 
@@ -71,6 +72,7 @@ private:
   PersServerResponseType GetServerResponse(SerialBuffer& bsb);
   void ping();
   void CheckServerResponse(SerialBuffer& bsb);
+  bool bind();
 
 private:
   string host;
@@ -82,11 +84,13 @@ private:
   bool connected;
   Logger * log;
   SerialBuffer sb;
+  bool asynch;
+  uint32_t sequenceNumber;
 };
 
 class ClientTask: public ThreadedTask {
 public:
-  ClientTask(const string& host, int port, int index):client(host, port, 60, 5), taskIndex(index) { 
+  ClientTask(const string& host, int port, int index):client(host, port, 2000, 5), taskIndex(index) { 
     logger = Logger::getInstance("task");
     smsc_log_error(logger, "ClientTask created %p", this);
   };

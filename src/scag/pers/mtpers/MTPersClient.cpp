@@ -5,7 +5,7 @@
 namespace scag { namespace mtpers {
 
 MTPersClient::MTPersClient(const string& _host, int _port, int _timeout, int _pingTimeout):connected(false),
-                           host(_host), port(_port), timeout(_timeout), pingTimeout(_pingTimeout)
+                           host(_host), port(_port), timeout(_timeout), pingTimeout(_pingTimeout), asynch(false), sequenceNumber(1)
 {
   log = Logger::getInstance("client");
 }
@@ -23,6 +23,7 @@ void MTPersClient::init()
   if (connected) {
     return;
   }
+  asynch = false;
 
   smsc_log_info(log, "Connecting to persserver host=%s:%d timeout=%d", host.c_str(), port, timeout);
 
@@ -43,6 +44,9 @@ void MTPersClient::init()
     throw PersClientException(UNKNOWN_RESPONSE);
   }
   connected = true;
+  //if (!asynch) {
+   // bind();
+  //}
 }
 
 void MTPersClient::ReadAllTO(char* buf, uint32_t sz)
@@ -54,7 +58,8 @@ void MTPersClient::ReadAllTO(char* buf, uint32_t sz)
   while(sz) {
     pfd.fd = sock.getSocket();
     pfd.events = POLLIN;
-    if (poll(&pfd, 1, timeout * 1000) <= 0 || !(pfd.revents & POLLIN)) {
+    if (poll(&pfd, 1, timeout) <= 0 || !(pfd.revents & POLLIN)) {
+      //if (poll(&pfd, 1, timeout * 1000) <= 0 || !(pfd.revents & POLLIN)) {
       throw PersClientException(TIMEOUT);
     }
 
@@ -77,7 +82,8 @@ void MTPersClient::WriteAllTO(const char* buf, uint32_t sz)
   while(sz) {
     pfd.fd = sock.getSocket();
     pfd.events = POLLOUT | POLLIN;
-    if (poll(&pfd, 1, timeout * 1000) <= 0) {
+    if (poll(&pfd, 1, timeout) <= 0) {
+      //if (poll(&pfd, 1, timeout * 1000) <= 0) {
       throw PersClientException(TIMEOUT);
     } else if (!(pfd.revents & POLLOUT) || (pfd.revents & POLLIN)) {
       throw PersClientException(SEND_FAILED);		
@@ -155,6 +161,10 @@ uint32_t MTPersClient::getPacketSize(SerialBuffer& bsb)
 PersServerResponseType MTPersClient::GetServerResponse(SerialBuffer& bsb)
 {
   try {
+    if (asynch) {
+      uint32_t number = bsb.ReadInt32();
+      smsc_log_debug(log, "read %d packet", number);
+    }
     return (PersServerResponseType)bsb.ReadInt8();
   } catch(SerialBufferOutOfBounds &e) {
     throw PersClientException(BAD_RESPONSE);
@@ -163,6 +173,11 @@ PersServerResponseType MTPersClient::GetServerResponse(SerialBuffer& bsb)
 
 void MTPersClient::FillHead(PersCmd pc, ProfileType pt, const PersKey& key, SerialBuffer& bsb, bool batch)
 {
+  if (asynch) {
+    bsb.WriteInt32(sequenceNumber);
+    smsc_log_debug(log, "prepare %d packet", sequenceNumber);
+    ++sequenceNumber;
+  }
   bsb.WriteInt8((uint8_t)pc);
   if (batch) {
     return;
@@ -257,8 +272,31 @@ void MTPersClient::SetProperty(ProfileType pt, const PersKey& key, Property& pro
     emptyPacket(sb);
     SetPropertyPrepare(pt, key, prop, sb, batch);
     SendPacket(sb);
+    if (asynch) {
+      emptyPacket(sb);
+      SetPropertyPrepare(pt, key, prop, sb, batch);
+      SendPacket(sb);
+
+      emptyPacket(sb);
+      SetPropertyPrepare(pt, key, prop, sb, batch);
+      SendPacket(sb);
+
+      emptyPacket(sb);
+      SetPropertyPrepare(pt, key, prop, sb, batch);
+      SendPacket(sb);
+    }
     ReadPacket(sb);
     SetPropertyResult(sb);
+    if (asynch) {
+      ReadPacket(sb);
+      SetPropertyResult(sb);
+
+      ReadPacket(sb);
+      SetPropertyResult(sb);
+
+      ReadPacket(sb);
+      SetPropertyResult(sb);
+    }
   } catch(const PersClientException& e) {
     smsc_log_warn(log, "Set Failed. %s", e.what());
   } 
@@ -314,6 +352,24 @@ bool MTPersClient::DelProperty(ProfileType pt, const PersKey& key, const char *p
     return b;
   } catch(const PersClientException& e) {
     smsc_log_warn(log, "Del Failed. %s", e.what());
+    return false;
+  }
+}
+
+bool MTPersClient::bind() {
+  try {
+    SerialBuffer bindSb;
+    bindSb.SetPos(4);
+    bindSb.WriteInt8(PC_BIND_ASYNCH);
+    SendPacket(bindSb);
+    bindSb.Empty();
+    ReadPacket(bindSb);
+    CheckServerResponse(bindSb);
+    actTS = time(NULL);
+    asynch = true;
+    return true;
+  } catch(const PersClientException& e) {
+    smsc_log_warn(log, "Bind Failed. %s", e.what());
     return false;
   }
 }
@@ -405,6 +461,21 @@ void MTPersClient::disconnect() {
     sock.Close();
     connected = false;
     smsc_log_debug(log, "disconnect");
+  }
+}
+
+void MTPersClient::asynchTest(const string& address, int key) {
+  Property prop;
+  char tvs[30];
+  sprintf(tvs, "test_prop%s", address.c_str());						
+  prop.setString(tvs, "test value", INFINIT, -1, 20);
+  try {
+    //if (!asynch) {
+      //return;
+    //}
+    SetProperty(PT_ABONENT, address.c_str(), prop);
+  } catch (const PersClientException& exc) {
+    smsc_log_warn(log, "address '%s' PersClientException: %s", address.c_str(), exc.what());
   }
 }
 
@@ -542,21 +613,23 @@ int ClientTask::Execute() {
   smsc_log_debug(logger, "client task %p started", this);
   char address[20];
   time_t t = time(NULL);
-  int iterCnt = 100;
-  int reqCount = 19 * 2 * iterCnt;
-  for (int i = 1; i < iterCnt + 1; i += 2) {
+  //int iterCnt = 100;
+  int iterCnt = 400;
+  int reqCount = 14 * iterCnt * 2;
+  client.init();
+  for (int i = 1; i < iterCnt + 1; ++i) {
     if (isStopping) {
       break;
     }
     try {
-      client.init();
       sprintf(address, "8913%04d%03d", i, taskIndex);			
+      //client.asynchTest(address, i);
       //client.testCase_DelProfile(PT_ABONENT, address, i);
       client.testCase_CommandProcessing(PT_ABONENT, address, i);
-      client.testCase_CommandProcessing(PT_PROVIDER, address, i);
+      client.testCase_CommandProcessing(PT_PROVIDER, address, 20);
       //client.testCase_CommandProcessing(PT_SERVICE, address, i);
       //client.testCase_CommandProcessing(PT_OPERATOR, address, i);
-      client.disconnect();
+      //client.disconnect();
     } catch (const PersClientException& exc) {
       smsc_log_error(logger, "%p: address '%s' PersClientException: %s", this, exc.what());
     }

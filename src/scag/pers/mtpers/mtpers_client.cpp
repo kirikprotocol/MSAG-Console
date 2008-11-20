@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
         }
 
         int start = time(NULL);
-        int reqCnt = 19 * 2 * 100 * threadCount;
+        int reqCnt = 14 * 2 * 400 * threadCount;
         ThreadPool pool;
         for (int i = 1; i < threadCount; ++i) {
           ClientTask *t = new ClientTask(host, port, i);
@@ -100,7 +100,9 @@ int main(int argc, char* argv[])
         mainTask->Execute();
         int reqTime = time(NULL) - start;;
         pool.shutdown();
-        smsc_log_error(logger, "Test Stopped timings: %d req/sec", (reqCnt / reqTime));
+        if (reqTime > 0) {
+          smsc_log_error(logger, "Test Stopped timings: %d req/sec", (reqCnt / reqTime));
+        }
        
     }
     catch (PersClientException& exc) 
