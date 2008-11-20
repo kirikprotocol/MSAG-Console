@@ -7,7 +7,7 @@ use File::Copy;
 use Time::Local qw(timegm timelocal);
 use Fcntl ':flock';
 
-use constant EXTRAMSC => '79169860220';
+use constant EXTRAMSC => '79168960220';
 
 use constant POSTPAID=>1;
 use constant PREPAID=>2;
@@ -254,18 +254,23 @@ sub process{
     my $outfields={};
     %$outfields=%$infields;
 
+    my $ihsuffix='';
     #changed by request (paid websms/webgroups support) 11.09.2008
-    if(($infields->{SRC_SME_ID} eq 'webgroup' || $infields->{SRC_SME_ID} eq 'websms') && $infields->{SRC_MSC} ne '')
+    #changed by request (paid websms/webgroups support) 07.11.2008
+    #if(($infields->{SRC_SME_ID} eq 'webgroup' || $infields->{SRC_SME_ID} eq 'websms') && $infields->{SRC_MSC} ne '')
+    if($infields->{SRC_MSC} eq 'GT')
     {
-      $infields->{DST_ADDR}=$infields->{DST_ADDR}.'IH';
+#      $infields->{DST_ADDR}=$infields->{DST_ADDR}.'IH';
+      $ihsuffix='IH';
     }
 
     #changed by request 19.10.2007
-    if($infields->{SRC_SME_ID} ne 'MAP_PROXY' && $infields->{SRC_MSC} eq '')
+    #changed for webgroups/websms 07.11.2008
+    if(($infields->{SRC_SME_ID} ne 'MAP_PROXY' && $infields->{SRC_MSC} eq '') || $infields->{SRC_MSC} eq 'GT')
     {
       $infields->{SRC_MSC}=EXTRAMSC;
     }
-    if($infields->{DST_SME_ID} ne 'MAP_PROXY' && $infields->{DST_MSC} eq '')
+    if(($infields->{DST_SME_ID} ne 'MAP_PROXY' && $infields->{DST_MSC} eq '') || $infields->{DST_MSC} eq 'GT')
     {
       $infields->{DST_MSC}=EXTRAMSC;
     }
@@ -345,7 +350,7 @@ sub process{
     $outfields->{PAYER_ADDR}=conv_addr($infields->{SRC_ADDR});
     $outfields->{PAYER_IMSI}=$infields->{SRC_IMSI};
     $outfields->{PAYER_MSC}=$infields->{SRC_MSC};
-    $outfields->{OTHER_ADDR}=conv_addr($infields->{DST_ADDR});
+    $outfields->{OTHER_ADDR}=conv_addr($infields->{DST_ADDR}).$ihsuffix;
     if($makeOutRec)
     {
       for my $off(1 .. $outfields->{PARTS_NUM})
@@ -376,7 +381,7 @@ sub process{
         $outfields->{PAYER_ADDR}=conv_addr($infields->{DIVERTED_FOR});
         $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
         $outfields->{PAYER_MSC}=$infields->{DST_MSC};
-        $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
+        $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR}).$ihsuffix;
         for my $off(1 .. $outfields->{PARTS_NUM})
         {
           $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT},$off);
@@ -403,7 +408,7 @@ sub process{
         $outfields->{PAYER_ADDR}=conv_addr($infields->{DST_ADDR});
         $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
         $outfields->{PAYER_MSC}=$infields->{DST_MSC};
-        $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
+        $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR}).$ihsuffix;
         for my $off(1 .. $outfields->{PARTS_NUM})
         {
           $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT},$off);
