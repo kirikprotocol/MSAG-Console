@@ -10,6 +10,8 @@
     <param name="timeout" type="int">@mtpers.timeout@</param>
     <param name="ioPoolSize" type="int">@mtpers.io_pool_size@</param>
     <param name="storageQueueSize" type="int">@mtpers.storage_queue_size@</param>
+    <param name="perfCounterOn" type="bool">@mtpers.perf_counter_on@</param>
+    <param name="perfCounterPeriod" type="int">@mtpers.perf_counter_period@</param>
 
     <param name="storages" type="int">@mtpers.storages@</param>
     <param name="nodes" type="int">@mtpers.nodes@</param>
