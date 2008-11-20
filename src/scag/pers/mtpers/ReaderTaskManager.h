@@ -9,15 +9,19 @@ namespace scag { namespace mtpers {
 
 class ReaderTaskManager : public IOTaskManager {
 public:
-  ReaderTaskManager(uint16_t maxThreads, uint32_t maxSock, uint16_t timeout, StorageManager& storageManager) 
-                   : IOTaskManager(maxThreads, maxSock, timeout, "readerman"), storageManager_(storageManager) { init(); }; 
+  ReaderTaskManager(uint16_t maxThreads, uint32_t maxSock, uint16_t timeout, StorageManager& storageManager, bool perfCounterOn = false) 
+                   : IOTaskManager(maxThreads, maxSock, timeout, "readerman"), storageManager_(storageManager), perfCounterOn_(perfCounterOn)
+  {
+     init();
+  }; 
 
   IOTask* newTask() {
-    return new MTPersReader(*this, connectionTimeout_);
+    MTPersReader* reader = new MTPersReader(*this, connectionTimeout_);
+    if (perfCounterOn_) {
+      readers_.push_back(reader);
+    }
+    return reader;
   }
-  //~ReaderTaskManager() {
-    //storageManager_.shutdown();
-  //}
 
   bool process(ConnectionContext* cx) {
     MutexGuard g(tasksMutex_);
@@ -34,17 +38,31 @@ public:
       return false;
     }
   }
+
   bool processPacket(PersPacket* packet) {
     return storageManager_.process(packet);
   }
 
   void shutdown() {
+    readers_.clear();
     storageManager_.shutdown();
     IOTaskManager::shutdown();
   }
 
+  Performance getPerformance() {
+    Performance perf;
+    if (!perfCounterOn_) {
+      return perf;
+    }
+    for (std::vector<MTPersReader*>::iterator i = readers_.begin(); i != readers_.end(); ++i) {
+      perf.inc((*i)->getPerformance());
+    }
+    return perf;
+  }
 private:
   StorageManager& storageManager_;
+  std::vector<MTPersReader*> readers_;
+  bool perfCounterOn_;
 };
 
 }//mtpers

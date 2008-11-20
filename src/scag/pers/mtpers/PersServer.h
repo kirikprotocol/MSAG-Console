@@ -18,7 +18,7 @@ using smsc::logger::Logger;
 
 class PersServer {
 public:
-    PersServer(ReaderTaskManager& readers, WriterTaskManager& writers):readers_(readers), writers_(writers) {};
+    PersServer(ReaderTaskManager& readers, WriterTaskManager& writers, bool perfCounterOn = false, int perfCounterPeriod = 10);
     void shutdown();
     void init(const char *host, int port);
     virtual int Execute();
@@ -30,6 +30,8 @@ private:
   Socket masterSocket_;
   Logger *logger;
   bool isStopping_;  
+  bool perfCounterOn_;
+  int perfCounterPeriod_;
 };
 
 }//mtpers

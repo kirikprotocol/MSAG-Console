@@ -42,11 +42,11 @@ int IOTask::Execute() {
       }
     }
 
-    checkConnectionTimeout(error);
+    time_t now = checkConnectionTimeout(error);
 
     removeSocket(error);
 
-    processSockets(ready, error);
+    processSockets(ready, error, now);
 
     removeSocket(error);
   }
@@ -89,9 +89,10 @@ void IOTask::registerContext(ConnectionContext* cx) {
   addSocket(cx->getSocket());
 }
 
-void IOTask::checkConnectionTimeout(Multiplexer::SockArray& error) {
+time_t IOTask::checkConnectionTimeout(Multiplexer::SockArray& error) {
   error.Empty();
   time_t now = time(NULL);
+  //TODO: do not check every time 
   for (int i = 0; i < multiplexer_.count(); i++) {
     Socket *s =  multiplexer_.get(i);
     if (isTimedOut(s, now)) {
@@ -99,6 +100,7 @@ void IOTask::checkConnectionTimeout(Multiplexer::SockArray& error) {
       error.Push(s);
     }
   }
+  return now;
 }
 
 inline bool IOTask::isTimedOut(Socket* s, time_t now) {
@@ -160,18 +162,47 @@ void MTPersReader::addSocketToMultiplexer(Socket* s) {
   multiplexer_.addR(s);
 }
 
-void MTPersReader::processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error) {
+void MTPersReader::processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now) {
   if (!multiplexer_.canRead(ready, error, connectionTimeout_)) {
     return;
   }
   for (int i = 0; i < ready.Count(); ++i) {
     Socket* s = ready[i];
     ConnectionContext* cx = SocketData::getContext(s);
-    if (!cx->processReadSocket()) {
+    if (!cx->processReadSocket(now)) {
       error.Push(s);
     }
   }
 }
+
+void MTPersReader::disconnectSocket(Socket *s) {
+  ConnectionContext* cx = SocketData::getContext(s);
+  performance_.inc(cx->getPerfCounter());
+  multiplexer_.remove(s);
+  smsc_log_debug(logger, "%p: context %p socket %p removed  from multiplexer", this, cx, s);
+  if (cx->canFinalize()) {
+    smsc_log_debug(logger, "%p: context %p socket %p deleted", this, cx, s);
+    delete cx;
+  }
+}
+
+Performance MTPersReader::getPerformance() {
+  MutexGuard mg(socketMonitor_);
+  int mpcount = multiplexer_.count();
+  Performance perf;
+  perf.inc(performance_);
+  performance_.reset();
+  if (!mpcount) {
+    return perf;
+  }
+  for (int i = 0; i < mpcount; ++i) {
+    ConnectionContext* cx = SocketData::getContext(multiplexer_.get(i));
+    PerfCounter &pf = cx->getPerfCounter();
+    perf.inc(pf);
+  }
+  return perf;
+}
+
 
 const char* MTPersWriter::taskName() {
   return "MTPersWriter";
@@ -181,7 +212,7 @@ void MTPersWriter::addSocketToMultiplexer(Socket* s) {
   multiplexer_.addW(s);
 }
 
-void MTPersWriter::processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error) {
+void MTPersWriter::processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now) {
   if (!multiplexer_.canWrite(ready, error, connectionTimeout_)) {
     return;
   }
@@ -192,6 +223,16 @@ void MTPersWriter::processSockets(Multiplexer::SockArray &ready, Multiplexer::So
       error.Push(s);
     }
   }
+}
+
+void MTPersWriter::addSocket(Socket* s) {
+  MutexGuard g(socketMonitor_);
+  waitingAdd_.Push(s);
+  socketMonitor_.notify();
+}
+
+time_t MTPersWriter::checkConnectionTimeout(Multiplexer::SockArray& error) {
+  return 0;
 }
 
 }//mtpers

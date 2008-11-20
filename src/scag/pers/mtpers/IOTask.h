@@ -47,17 +47,17 @@ public:
 
   void registerContext(ConnectionContext* cx);
   uint32_t getSocketsCount() const;
-  void addSocket(Socket* s);
 
 protected:
-  virtual void processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error) = 0;
+  virtual void processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now) = 0;
   virtual void addSocketToMultiplexer(Socket* s) = 0;
-  void checkConnectionTimeout(Multiplexer::SockArray& error);
+  virtual time_t checkConnectionTimeout(Multiplexer::SockArray& error);
+  virtual void addSocket(Socket* s);
   inline bool isTimedOut(Socket* s, time_t now);
   void removeSocket(Multiplexer::SockArray &error);
   void removeSocket(Socket *s);
   void removeSocketFromMultiplexer(Socket* s);
-  void disconnectSocket(Socket *s);
+  virtual void disconnectSocket(Socket *s);
   bool idle() const;
 
 protected:
@@ -74,9 +74,13 @@ class MTPersReader: public IOTask {
 public:
   MTPersReader(IOTaskManager& iomanager, uint16_t connectionTimeout):IOTask(iomanager, connectionTimeout, "reader") {};
   virtual const char * taskName();
+  Performance getPerformance();
 protected:
   void addSocketToMultiplexer(Socket* s);
-  void processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error);
+  void processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now);
+  void disconnectSocket(Socket *s);
+protected:
+  Performance performance_;
 };
 
 class MTPersWriter: public IOTask {
@@ -85,7 +89,9 @@ public:
   virtual const char * taskName();
 protected:
   void addSocketToMultiplexer(Socket* s);
-  void processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error);
+  void processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now);
+  time_t checkConnectionTimeout(Multiplexer::SockArray& error); 
+  void addSocket(Socket* s);
 };
 
 }//mtpers

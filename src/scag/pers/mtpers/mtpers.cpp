@@ -128,6 +128,20 @@ int main(int argc, char* argv[]) {
     } catch (...) {
       smsc_log_warn(logger, "Parameter <MTPers.storages> missed. Defaul value is %d", nodeCfg.storagesCount);
     };
+    bool perfCounterOn = false;
+    int perfCounterPeriod = 10;
+    try { 
+      perfCounterOn = persConfig.getBool("perfCounterOn");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <MTPers.perfCounterOn> missed. Defaul value is false");
+    };
+    if (perfCounterOn) {
+      try { 
+        perfCounterPeriod = persConfig.getInt("perfCounterPeriod");
+      } catch (...) {
+        smsc_log_warn(logger, "Parameter <MTPers.perfCounterPeriod> missed. Defaul value is %d", perfCounterPeriod);
+      }
+    }
 
     ConfigView abntStorageConfig(manager, "MTPers.AbonentStorage");
     AbonentStorageConfig abntCfg(abntStorageConfig, "AbonentStorage", logger);
@@ -159,10 +173,10 @@ int main(int argc, char* argv[]) {
       storageManager.init(maxWaitingCount, abntCfg, NULL);
     }
 
-    ReaderTaskManager readers(ioTasksCount, maxClientCount, timeout, storageManager);
+    ReaderTaskManager readers(ioTasksCount, maxClientCount, timeout, storageManager, perfCounterOn);
     WriterTaskManager writers(ioTasksCount, maxClientCount, timeout);
     
-    ps = new PersServer(readers, writers);
+    ps = new PersServer(readers, writers, perfCounterOn);
     ps->init(host.c_str(), port);
     ps->Execute();
 

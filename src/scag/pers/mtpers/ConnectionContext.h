@@ -9,6 +9,7 @@
 #include "scag/pers/util/Types.h"
 #include "PersCommand.h"
 #include "Connection.h"
+#include "PerformanceCounter.h"
 
 
 namespace scag { namespace mtpers {
@@ -69,14 +70,15 @@ class ReaderTaskManager;
 struct ConnectionContext : public Connection {
 
 public:
-  ConnectionContext(Socket* sock, WriterTaskManager& writerManager, ReaderTaskManager& readerManager);
+  ConnectionContext(Socket* sock, WriterTaskManager& writerManager, ReaderTaskManager& readerManager, bool perfCounterOn = false);
   ~ConnectionContext();
   void sendResponse(const char* data, uint32_t dataSize);
-  bool processReadSocket();
+  bool processReadSocket(const time_t& now);
   bool processWriteSocket();
   bool canFinalize();
   bool canDelete();
   Socket* getSocket();
+  PerfCounter& getPerfCounter() { return perfCounter_; }
 
 private:
   bool notSupport(PersCmd cmd);
@@ -93,13 +95,15 @@ private:
   WriterTaskManager& writerManager_;
   ReaderTaskManager& readerManager_;
   Logger* logger_;
+  Logger* debuglogger_;
   Action action_;
   Mutex mutex_;
   Socket* socket_;
   uint8_t tasksCount_;
   uint32_t packetsCount_;
-  bool asynch_;
+  bool async_;
   uint32_t sequenceNumber_;
+  PerfCounter perfCounter_;
   char readBuf_[READ_BUF_SIZE];
 };
 
