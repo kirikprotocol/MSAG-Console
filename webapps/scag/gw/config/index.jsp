@@ -93,7 +93,7 @@
 <%--            </td></tr>--%>
 <%--            <sm-et:txt title="Location" name="location" type="string" onchanged="configChanged();"/>--%>
 <%--            <sm-et:txt title="Name" name="name" type="string" onchanged="configChanged();"/>--%>
-            <sm-et:txt title="Expire Interval"    name="expireInterval"     type="int"  onchanged="configChanged();"/>
+            <sm-et:txt title="ExpireInterval"    name="expireInterval"     type="int"  onchanged="configChanged();"/>
             <sm-et:txt title="IndexGrowth"        name="indexGrowth"        type="int"  onchanged="configChanged();"/>
             <sm-et:txt title="Pagesize"           name="pagesize"           type="int"  onchanged="configChanged();"/>
             <sm-et:txt title="Prealloc"           name="prealloc"           type="int"  onchanged="configChanged();"/>
@@ -101,7 +101,8 @@
             <sm-et:txt title="FlushTimeLimit"     name="flushTimeLimit"     type="int"  onchanged="configChanged();"/>
             <sm-et:txt title="initUploadCount"    name="initUploadCount"    type="int"  onchanged="configChanged();"/>
             <sm-et:txt title="initUploadInterval" name="initUploadInterval" type="int"  onchanged="configChanged();"/>
-            <sm-et:txt title="Diskio"             name="diskio"             type="bool" onchanged="configChanged();"/>
+<%--            <sm-et:txt title="Diskio"             name="diskio"             type="bool" onchanged="configChanged();"/>--%>
+            <sm-et:checkin title="Diskio"         name="diskio"                         onchanged="configChanged();"/>
 <%--                <sm-et:section title="OldLocations" name="Locations" type="table">--%>
 <%--                    <sm-ep:properties id="Locations" display="none">--%>
 <%--                        <sm-et:txt title="Name" name="name" type="string" onchanged="configChanged();"/>--%>
@@ -148,22 +149,27 @@
 
     <sm-et:section title="SMPP" name="smpp" type="table" >
         <sm-ep:properties id="smpp" display="none">
-            <sm-et:txt title="Host" name="host" type="string" onchanged="configChanged();"/>
-            <sm-et:txt title="Port" name="port" type="int" validation="port" onchanged="configChanged();"/>
-            <sm-et:txt title="Inactivity Time" name="inactivityTime" type="int" onchanged="configChanged();"/>
-            <sm-et:txt title="Inactivity Time Out" name="inactivityTimeOut" type="int" onchanged="configChanged();"/>
-            <sm-et:txt title="Read Timeout" name="readTimeout" type="int" onchanged="configChanged();"/>
-            <sm-et:txt title="Max Sms PerSecond" name="maxSmsPerSecond" type="int" onchanged="configChanged();"/>
-            <sm-et:txt title="Transit Optional Tags" name="transitOptionalTags" type="string" validation="transitOptionalTags" onchanged="configChanged();" comments="config.section.txt.transit_optional_tags.comments"/>
+            <sm-et:txt title="Host"                  name="host"                type="string" onchanged="configChanged();"/>
+            <sm-et:txt title="Port"                  name="port"                type="int"    onchanged="configChanged();" validation="port"/>
+            <sm-et:txt title="Inactivity Time"       name="inactivityTime"      type="int"    onchanged="configChanged();"/>
+            <sm-et:txt title="Inactivity Time Out"   name="inactivityTimeOut"   type="int"    onchanged="configChanged();"/>
+            <sm-et:txt title="Read Timeout"          name="readTimeout"         type="int"    onchanged="configChanged();"/>
+            <sm-et:txt title="Max Sms PerSecond"     name="maxSmsPerSecond"     type="int"    onchanged="configChanged();"/>
+            <sm-et:txt title="Transit Optional Tags" name="transitOptionalTags" type="string" onchanged="configChanged();"  validation="transitOptionalTags"
+                       comments="config.section.txt.transit_optional_tags.comments"/>
             <tr><td colspan=2>
                 <sm-et:section title="Core" name="core" type="table">
                     <sm-ep:properties id="core" display="none">
-                        <sm-et:txt title="Event Queue Limit" name="eventQueueLimit" type="int" onchanged="configChanged();"/>
-                        <sm-et:txt title="Protocol Id" name="protocol_id" type="int"/>
-                        <sm-et:txt title="State Machines Count" name="state_machines_count" type="int"
-                                   onchanged="configChanged();"/>
-                        <sm-et:txt title="Ussd Transaction Timeout" name="ussdTransactionTimeout" type="int"
-                                   onchanged="configChanged();"/>
+                        <sm-et:txt title="Event Queue Limit"        name="eventQueueLimit"        type="int" onchanged="configChanged();"/>
+                        <sm-et:txt title="Protocol Id"              name="protocol_id"            type="int" onchanged="configChanged();"/>
+                        <sm-et:txt title="State Machines Count"     name="state_machines_count"   type="int" onchanged="configChanged();"/>
+                        <sm-et:txt title="Ussd Transaction Timeout" name="ussdTransactionTimeout" type="int" onchanged="configChanged();"/>
+
+                        <sm-et:txt title="bindWaitTimeout (sec)"    name="bindWaitTimeout"        type="int" onchanged="configChanged();"/>
+                        <sm-et:txt title="connectionsPerIp"         name="connectionsPerIp"       type="int" onchanged="configChanged();"/>
+                        <sm-et:txt title="ipBlockingTime (sec)"     name="ipBlockingTime"         type="int" onchanged="configChanged();"/>
+                        <sm-et:txt title="maxRWMultiplexersCount"   name="maxRWMultiplexersCount" type="int" onchanged="configChanged();"/>
+                        <sm-et:txt title="socketsPerMultiplexer"    name="socketsPerMultiplexer"  type="int" onchanged="configChanged();"/>
                     </sm-ep:properties>
                 </sm-et:section>
             </td></tr>
