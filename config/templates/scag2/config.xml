@@ -81,7 +81,7 @@
             <param name="bindWaitTimeout" type="int">10</param> <!-- max time in unbound state (sec) -->
             <param name="connectionsPerIp" type="int">100</param>
             <param name="ipBlockingTime" type="int">60</param> <!-- time to block ip when failed to bind (sec) -->
-            <param name="maxMultiplexersCount" type="int">100</param> <!-- max number of R/W multiplexers -->
+            <param name="maxRWMultiplexersCount" type="int">100</param> <!-- max number of R/W multiplexers -->
         </section>
     </section>
 
