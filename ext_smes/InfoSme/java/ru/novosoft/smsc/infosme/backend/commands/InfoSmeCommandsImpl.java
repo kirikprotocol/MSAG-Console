@@ -1,27 +1,21 @@
 package ru.novosoft.smsc.infosme.backend.commands;
 
+import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.infosme.InfoSmeCommands;
 import ru.novosoft.smsc.admin.console.commands.infosme.Distribution;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.route.SmeStatus;
+import ru.novosoft.smsc.admin.console.commands.infosme.InfoSmeCommands;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.Message;
-import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
-import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
+import ru.novosoft.smsc.infosme.backend.Task;
 import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataItem;
+import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.RandomAccessFileReader;
+import ru.novosoft.smsc.util.config.Config;
 
 import java.io.File;
-import java.io.RandomAccessFile;
-import java.io.IOException;
-import java.util.*;
-import java.text.SimpleDateFormat;
-
-import org.apache.log4j.Category;
+import java.util.Date;
 
 /**
  * User: artem
@@ -107,12 +101,15 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       }
       final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
 
-      //todo
+      Task t = new Task(taskId);
+      t.removeFromConfig(context.getConfig());
+      context.getInfoSme().removeTask(t.getId());
+      context.getConfig().save();
 
       ctx.setMessage("OK");
       ctx.setStatus(CommandContext.CMD_OK);
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Unable to remove task:" + taskId, e);
       log.error(e);
       ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
     }
