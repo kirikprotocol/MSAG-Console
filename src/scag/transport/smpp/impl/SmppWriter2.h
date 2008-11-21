@@ -7,12 +7,16 @@ namespace scag2 {
 namespace transport {
 namespace smpp {
 
+class SmppSocketManager;
+
 class SmppWriter:public SmppIOBase
 {
 public:
-  const char* taskName(){return "SmppWriter";}
-  int Execute();
+    SmppWriter( const SmppSocketManager& mgr ) : SmppIOBase(), mgr_(&mgr) {}
+    const char* taskName(){return "SmppWriter";}
+    int Execute();
 protected:
+    const SmppSocketManager* mgr_;
 };
 
 }//smpp

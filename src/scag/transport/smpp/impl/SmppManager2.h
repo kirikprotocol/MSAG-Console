@@ -245,149 +245,157 @@ public:
 
 protected:
 
-
-  struct MetaEntity{
-    struct MetaInfo{
-      SmppEntity* ptr;
-    };
-    MetaEntity():lastEntity(0)
+    struct MetaEntity
     {
-      seed=(unsigned int)time(NULL);
-    }
-    MetaEntityInfo info;
-    typedef std::vector<MetaInfo> MetaEntsVector;
-    MetaEntsVector ents;
-    unsigned int lastEntity;
-    unsigned int seed;
-    smsc::core::synchronization::Mutex mtx;
 
-    static time_t expirationTimeout;
+        struct MetaInfo{
+            SmppEntity* ptr;
+        };
 
-    struct MappingValue;
+        struct MappingValue;
+        typedef std::vector<MetaInfo> MetaEntsVector;
+        typedef std::map<Address,MappingValue> AbonentsMap;
+        typedef std::multimap<time_t,AbonentsMap::iterator> TimeoutsMap;
 
-      typedef std::map<Address,MappingValue> AbonentsMap;
-      typedef std::multimap<time_t,AbonentsMap::iterator> TimeoutsMap;
-
-    struct MappingValue{
-      SmppEntity* ptr;
-      MappingValue():ptr(0)
-      {
-      }
-      MappingValue(SmppEntity* argPtr):ptr(argPtr)
-      {
-      }
-      TimeoutsMap::iterator toit;
-    };
-
-    AbonentsMap storedMappings;
-    TimeoutsMap timeMap;
-
-    SmppEntity* getStoredMapping(const Address& addr)
-    {
-      AbonentsMap::iterator it=storedMappings.find(addr);
-      if(it==storedMappings.end())return 0;
-      timeMap.erase(it->second.toit);
-      timeMap.insert(TimeoutsMap::value_type(time(NULL)+expirationTimeout,it));
-      return it->second.ptr;
-    }
-
-    void createStoredMapping(const Address& addr,SmppEntity* ptr)
-    {
-      AbonentsMap::iterator it=storedMappings.insert(AbonentsMap::value_type(addr,MappingValue(ptr))).first;
-      it->second.toit=timeMap.insert(TimeoutsMap::value_type(time(NULL)+expirationTimeout,it));
-    }
-
-    void expireMappings()
-    {
-      time_t now=time(NULL);
-      TimeoutsMap::iterator it;
-      while(!timeMap.empty() && now>(it=timeMap.begin())->first)
-      {
-        storedMappings.erase(it->second);
-        timeMap.erase(it);
-      }
-    }
-
-    SmppEntity* getEntity(const Address& addr)
-    {
-      smsc::core::synchronization::MutexGuard mg(mtx);
-      SmppEntity* ptr=getStoredMapping(addr);
-      if(!ptr)
-      {
-        mtx.Unlock();
-        try{
-          ptr=getEntity();
-          createStoredMapping(addr,ptr);
-        }catch(...)
+        struct MappingValue
         {
+            SmppEntity* ptr;
+            MappingValue():ptr(0)
+            {
+            }
+            MappingValue(SmppEntity* argPtr):ptr(argPtr)
+            {
+            }
+            TimeoutsMap::iterator toit;
+        };
 
-        }
-        mtx.Lock();
-      }
-      expireMappings();
-      return ptr;
-    }
-
-    SmppEntity* getEntity()
-    {
-      smsc::core::synchronization::MutexGuard mg(mtx);
-      if(info.policy==bpRandom)
-      {
-        double val=rand_r(&seed);
-        val/=RAND_MAX;
-        lastEntity=val*ents.size();
-      }
-      for(unsigned i=0;i<ents.size();i++)
-      {
-        lastEntity++;
-        if(lastEntity>=ents.size())
+    public:
+        MetaEntity():lastEntity(0)
         {
-          lastEntity=0;
+            seed=(unsigned int)time(NULL);
         }
-        smsc::core::synchronization::MutexGuard mg2(ents[lastEntity].ptr->mtx);
-        if(ents[lastEntity].ptr->bt==btNone || !ents[lastEntity].ptr->info.enabled)continue;
-        return ents[lastEntity].ptr;
-      }
-      return 0;
-    }
-  };
 
-  smsc::logger::Logger* log;
-  smsc::logger::Logger* limitsLog;
-  smsc::core::buffers::Hash<SmppEntity*> registry;
-  smsc::core::buffers::Hash<MetaEntity*> metaRegistry;
-  mutable smsc::core::synchronization::Mutex regMtx;
-  SmppSocketManager sm;
+        SmppEntity* getStoredMapping(const Address& addr)
+        {
+            AbonentsMap::iterator it=storedMappings.find(addr);
+            if(it==storedMappings.end())return 0;
+            timeMap.erase(it->second.toit);
+            timeMap.insert(TimeoutsMap::value_type(time(NULL)+expirationTimeout,it));
+            return it->second.ptr;
+        }
 
-  smsc::util::TimeSlotCounter<> licenseCounter;
-  time_t lastLicenseExpTest;
-  int licenseFileCheckHour;
+        void createStoredMapping(const Address& addr,SmppEntity* ptr)
+        {
+            AbonentsMap::iterator it=storedMappings.insert(AbonentsMap::value_type(addr,MappingValue(ptr))).first;
+            it->second.toit=timeMap.insert(TimeoutsMap::value_type(time(NULL)+expirationTimeout,it));
+        }
+
+        void expireMappings()
+        {
+            time_t now=time(NULL);
+            TimeoutsMap::iterator it;
+            while(!timeMap.empty() && now>(it=timeMap.begin())->first)
+            {
+                storedMappings.erase(it->second);
+                timeMap.erase(it);
+            }
+        }
+
+        SmppEntity* getEntity(const Address& addr)
+        {
+            smsc::core::synchronization::MutexGuard mg(mtx);
+            SmppEntity* ptr=getStoredMapping(addr);
+            if(!ptr)
+            {
+                mtx.Unlock();
+                try{
+                    ptr=getEntity();
+                    createStoredMapping(addr,ptr);
+                }catch(...)
+                    {
+                        
+                    }
+                mtx.Lock();
+            }
+            expireMappings();
+            return ptr;
+        }
+
+        SmppEntity* getEntity()
+        {
+            smsc::core::synchronization::MutexGuard mg(mtx);
+            if(info.policy==bpRandom)
+            {
+                double val=rand_r(&seed);
+                val/=RAND_MAX;
+                lastEntity=val*ents.size();
+            }
+            for(unsigned i=0;i<ents.size();i++)
+            {
+                lastEntity++;
+                if(lastEntity>=ents.size())
+                {
+                    lastEntity=0;
+                }
+                smsc::core::synchronization::MutexGuard mg2(ents[lastEntity].ptr->mtx);
+                if(ents[lastEntity].ptr->bt==btNone || !ents[lastEntity].ptr->info.enabled)continue;
+                return ents[lastEntity].ptr;
+            }
+            return 0;
+        }
+
+    public:
+        static time_t expirationTimeout;
+
+    public:
+        MetaEntityInfo info;
+        MetaEntsVector ents;
+        unsigned int lastEntity;
+        unsigned int seed;
+        smsc::core::synchronization::Mutex mtx;
+        AbonentsMap storedMappings;
+        TimeoutsMap timeMap;
+    };
 
 
-  bool running;
+protected:
+    unsigned getUnsigned( const char* name, unsigned defval ) const;
+
+protected:
+    smsc::logger::Logger* log;
+    smsc::logger::Logger* limitsLog;
+    smsc::core::buffers::Hash<SmppEntity*> registry;
+    smsc::core::buffers::Hash<MetaEntity*> metaRegistry;
+    mutable smsc::core::synchronization::Mutex regMtx;
+    SmppSocketManager sm;
+
+    smsc::util::TimeSlotCounter<> licenseCounter;
+    time_t lastLicenseExpTest;
+    int licenseFileCheckHour;
+
+    bool running;
 
     // command queues (owned)
     smsc::core::buffers::CyclicQueue< SmppCommand* > queue, lcmQueue, respQueue;
     smsc::core::synchronization::EventMonitor queueMon;
     time_t lastExpireProcess;
 
-  typedef RefPtr<router::RouteManager,smsc::core::synchronization::Mutex> RouterRef;
-  RouterRef routeMan;
-  smsc::core::synchronization::Mutex routerSwitchMtx;
+    typedef RefPtr<router::RouteManager,smsc::core::synchronization::Mutex> RouterRef;
+    RouterRef routeMan;
+    smsc::core::synchronization::Mutex routerSwitchMtx;
 //  std::string routerConfigFile;
 
-  Mutex routerSwitchMutex;
+    Mutex routerSwitchMutex;
     util::Reffer<router::RouteManager>* testRouter_;
 
+    smsc::core::threads::ThreadPool tp;
 
-  smsc::core::threads::ThreadPool tp;
+    int lastUid;
+    int queueLimit;
 
-  int lastUid;
-  int queueLimit;
-
-  uint32_t lcmProcessingCount;
+    uint32_t lcmProcessingCount;
     uint32_t queuedCmdCount;
-  std::string cfgFileName;
+    std::string cfgFileName;
 };
 
 }//smpp

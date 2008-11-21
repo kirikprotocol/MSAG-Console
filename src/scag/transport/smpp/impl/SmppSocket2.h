@@ -51,21 +51,43 @@ protected:
 };
 
 
-struct SmppSocket:SmppChannel{
-
-  SmppSocket()
-  {
-    Init();
-  }
-
-  SmppSocket(Socket* s)
-  {
-    Init();
-    smsc_log_debug(log, "SmmpSocket init: %x", s);      
-    sock=s;
-    connected=true;
-    sock->setData(0,this);
-  }
+struct SmppSocket : SmppChannel
+{
+    SmppSocket( Socket* s = 0 ) :
+    outMon(0),
+    cmdQueue(0),
+    chReg(0),
+    sm(0),
+    sock(s),
+    peer_(0),
+    peerAddrFilled_(false),
+    bindFailed_(false),
+    refCount(1),
+    connected(bool(s)),
+    bindType(btNone),
+    sockType(etUnknown),
+    lastActivity(time(0)),
+    lastEnquireLink(lastActivity),
+    rdBuffer(0),
+    rdToRead(0),
+    rdBufSize(DefaultBufferSize),
+    rdBufUsed(0),
+    wrBuffer(0),
+    wrBufSize(DefaultBufferSize),
+    wrBufUsed(0),
+    wrBufSent(0),
+    log(0),
+    dump(0)
+    {
+        rdBuffer = new char[rdBufSize];
+        wrBuffer = new char[wrBufSize];
+        log = smsc::logger::Logger::getInstance("smpp.io");
+        dump = smsc::logger::Logger::getInstance("smpp.dmp");
+        if ( s ) {
+            smsc_log_debug( log, "SmppSocket init: %x", s );
+            sock->setData(0,this);
+        }
+    }
 
   void acquire()
   {
@@ -80,18 +102,18 @@ struct SmppSocket:SmppChannel{
     {
       MutexGuard mg(mtx);
       cnt=--refCount;
-      smsc_log_debug(log, "release:%p(%s)/%d",this,systemId.c_str(),refCount);
     }
+    smsc_log_debug(log, "release:%p(%s)/%d",this,systemId.c_str(),cnt);
     if(!cnt)
     {
-      smsc_log_debug(log, "Deleting socket for %s",systemId.c_str());
+      smsc_log_debug(log, "Deleting socket for %s(%s)", systemId.c_str(), getPeer());
       if(bindType!=btNone)
       {
         smsc_log_debug(log, "unregisterChannel(bt=%d)",bindType);
         chReg->unregisterChannel(this);
         bindType=btNone;
       }
-      sm->unregisterSocket(this);
+      if (sm) sm->unregisterSocket(this);
       delete this;
     }
   }
@@ -124,6 +146,9 @@ struct SmppSocket:SmppChannel{
       dropPeer();
   }
 
+  /// NOTE: in case this method return false, the connection should be in bound state!
+  virtual bool processPdu(PduGuard& pdu) = 0;
+
   void processInput();
 
   bool wantToSend()
@@ -148,12 +173,15 @@ struct SmppSocket:SmppChannel{
     return bindType;
   }
 
+    bool hasBindFailed() const
+    {
+        return bindFailed_;
+    }
+
   const char* getSystemId()const
   {
     return systemId.c_str();
   }
-
-  virtual bool processPdu(PduGuard& pdu)=0;
 
   void putCommand(std::auto_ptr<SmppCommand> cmd)
   {
@@ -164,19 +192,33 @@ struct SmppSocket:SmppChannel{
 
   bool checkTimeout(int to)
   {
-    return time(NULL)-lastActivity>to;
+      return time(NULL) - lastActivity > to;
   }
 
   void genEnquireLink(int to);
 
-  virtual std::string getPeer()
-  {
-      std::string str = getCachedPeer();
-      return str;
-  }
+    const char* getPeer() const {
+        if ( ! sock ) return "";
+        if ( ! peer_ ) {
+            MutexGuard mg(const_cast<SmppSocket*>(this)->mtx);
+            peer_ = new char[32];
+            Socket::PrintAddrPort( getPeerAddress(), peer_ );
+        }
+        return peer_;
+    }
+
+    const sockaddr_in& getPeerAddress() const
+    {
+        if ( sock && !peerAddrFilled_ ) {
+            MutexGuard mg(const_cast<SmppSocket*>(this)->mtx);
+            peerAddrFilled_ = true;
+            socklen_t len = sizeof(peerAddr_);
+            getpeername(sock->getSocket(),(sockaddr*)&peerAddr_,&len); // no error checking
+        }
+        return peerAddr_;
+    }
 
 protected:
-
   virtual ~SmppSocket()
   {
       MutexGuard mg(mtx);
@@ -195,86 +237,53 @@ protected:
     }
   }
 
-    const char* getCachedPeer() const {
-        if ( ! sock ) return "";
-        if ( ! peer_ ) {
-            peer_ = new char[32];
-            sock->GetPeer(peer_);
-        }
-        return peer_;
-    }
     inline void dropPeer() {
         if (peer_) { delete[] peer_; peer_ = 0; }
     }
 
+
+    SmppSocket(const SmppSocket&);
+    void operator=(const SmppSocket&);
+
 protected:
-  EventMonitor* outMon;
-  SmppCommandQueue* cmdQueue;
-  SmppChannelRegistrator* chReg;
+    enum {DefaultBufferSize=4096};
 
-  SmppSMInterface* sm;
-
-  Socket* sock;
+protected:
+    EventMonitor* outMon;
+    SmppCommandQueue* cmdQueue;
+    SmppChannelRegistrator* chReg;
+    SmppSMInterface* sm;
+    Socket* sock;
     mutable char* peer_;
-  Mutex mtx;
-  int refCount;
-  bool connected;
+    mutable sockaddr_in peerAddr_;
+    mutable bool        peerAddrFilled_;
+    bool                bindFailed_;
+    Mutex mtx;
+    int refCount;
+    bool connected;
+    std::string systemId;
+    SmppBindType bindType;
+    SmppEntityType sockType;
 
-  std::string systemId;
+    time_t lastActivity;
+    time_t lastEnquireLink;
 
-  SmppBindType bindType;
-  SmppEntityType sockType;
+    char* rdBuffer;
+    int   rdToRead;
+    int   rdBufSize;
+    int   rdBufUsed;
 
-  time_t lastActivity;
-  time_t lastEnquireLink;
+    char* wrBuffer;
+    int   wrBufSize;
+    int   wrBufUsed;
+    int   wrBufSent;
 
-  char* rdBuffer;
-  int   rdToRead;
-  int   rdBufSize;
-  int   rdBufUsed;
+    CyclicQueue<SmppCommand*> outQueue;
+    Mutex outMtx;
 
-  char* wrBuffer;
-  int   wrBufSize;
-  int   wrBufUsed;
-  int   wrBufSent;
+    smsc::logger::Logger* log;
+    smsc::logger::Logger* dump;
 
-  CyclicQueue<SmppCommand*> outQueue;
-  Mutex outMtx;
-
-  smsc::logger::Logger* log;
-  smsc::logger::Logger* dump;
-
-  enum{DefaultBufferSize=4096};
-
-  void Init()
-  {
-    lastActivity=time(NULL);
-    lastEnquireLink = time_t(0);
-    outMon=0;
-    sock=0;
-      peer_ = 0;
-    refCount=1;
-    connected=false;
-    sockType=etUnknown;
-    bindType=btNone;
-    rdBuffer=new char[DefaultBufferSize];
-    rdBufSize=DefaultBufferSize;
-    rdBufUsed=0;
-    rdToRead=0;
-
-    wrBuffer=new char[DefaultBufferSize];
-    wrBufSize=DefaultBufferSize;
-    wrBufUsed=0;
-    wrBufSent=0;
-
-    cmdQueue=0;
-
-    log=smsc::logger::Logger::getInstance("smpp.io");
-    dump=smsc::logger::Logger::getInstance("smpp.dmp");
-  }
-
-  SmppSocket(const SmppSocket&);
-  void operator=(const SmppSocket&);
 };
 
 inline SmppSocket* getSmppSocket(Socket* sock)

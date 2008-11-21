@@ -8,7 +8,7 @@ namespace scag2 {
 namespace transport {
 namespace smpp {
 
-class SmppChannel{
+class SmppChannel {
 public:
   virtual SmppBindType getBindType()const=0;
   virtual const char* getSystemId()const=0;
@@ -17,7 +17,7 @@ public:
   virtual void disconnect()=0;
   void setUid(int argUid){uid=argUid;}
   int  getUid(){return uid;}
-  virtual std::string getPeer() = 0;
+  virtual const char* getPeer() const = 0;
 protected:
   int uid;
 };

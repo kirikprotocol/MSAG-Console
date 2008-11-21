@@ -11,8 +11,9 @@ namespace smpp {
 struct SmeSocket:SmppSocket{
   SmeSocket(Socket* s):SmppSocket(s)
   {
-    sockType=etService;
-    connected=true;
+      sockType=etService;
+      bindFailed_ = true;
+      connected = true;
   }
 
   bool processPdu(PduGuard& pdu)
@@ -49,13 +50,15 @@ struct SmeSocket:SmppSocket{
       switch(res)
       {
         case rarOk:
-          bindType=bt;
-          systemId=sid;
+          bindType = bt;
+          systemId = sid;
+          bindFailed_ = false;
           break;
         case rarFailed:code=St::BINDFAIL;break;
-        case rarAlready:code=St::ALYBND;break;
+        case rarAlready: code=St::ALYBND; break;
       }
     }
+
     putCommand(SmppCommand::makeCommand(resp,pdu->get_sequenceNumber(),code,0));
     return true;
   }

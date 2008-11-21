@@ -69,7 +69,7 @@ void SmppSocket::processInput()
     rdToRead=ntohl(rdToRead);
     if(rdToRead>70000)
     {
-        smsc_log_warn(log,"command received from %s too large:%d",getCachedPeer(),rdToRead);
+        smsc_log_warn(log,"command received from %s too large:%d",getPeer(),rdToRead);
         MutexGuard mg(mtx);
         disconnect();
         return;
@@ -101,7 +101,7 @@ void SmppSocket::processInput()
       std::string out;
       ::bufdump( out, reinterpret_cast<const unsigned char*>(rdBuffer), rdToRead );
       dump->log(smsc::logger::Logger::LEVEL_DEBUG, "in from %s(%s): %s",
-                getCachedPeer(), systemId.c_str(), out.c_str());
+                getPeer(), systemId.c_str(), out.c_str());
   }
   SmppStream s;
   assignStreamWith(&s,rdBuffer,rdBufUsed,true);
@@ -110,11 +110,19 @@ void SmppSocket::processInput()
   PduGuard pdu(smsc::smpp::fetchSmppPdu(&s));
   if(pdu.isNull())
   {
-      smsc_log_warn(log, "Failed to parse pdu from %s, closing connection",getCachedPeer());
+      smsc_log_warn(log, "Failed to parse pdu from %s, closing connection",getPeer());
       disconnect();
       return;
   }
   if(processPdu(pdu))return;
+
+  if ( bindType == btNone ) {
+      // we cannot be unbound here!
+      smsc_log_warn(log, "Unbound state: wrong command %x/%x from %s, closing connection",
+                    pdu->get_sequenceNumber(), pdu->get_commandId(), getPeer() );
+      disconnect();
+      return;
+  }
 
   switch(pdu->get_commandId())
   {
@@ -207,7 +215,7 @@ void SmppSocket::processInput()
 
 void SmppSocket::sendData()
 {
-    smsc_log_debug(log, "sendData: %d/%d(%s)",wrBufSent,wrBufUsed,getCachedPeer());
+    smsc_log_debug(log, "sendData: %d/%d(%s)",wrBufSent,wrBufUsed,getPeer());
   if(wrBufUsed && wrBufSent<wrBufUsed)
   {
     int res;
@@ -266,7 +274,7 @@ void SmppSocket::sendData()
       std::string out;
       ::bufdump( out, reinterpret_cast<const unsigned char*>(wrBuffer), sz );
       dump->log(smsc::logger::Logger::LEVEL_DEBUG, "out to %s(%s),%d: %s",
-                getCachedPeer(), systemId.c_str(), outQueue.Count(), out.c_str());
+                getPeer(), systemId.c_str(), outQueue.Count(), out.c_str());
   }
   wrBufSent=0;
   wrBufUsed=sz;
@@ -276,8 +284,8 @@ void SmppSocket::sendData()
 
 void SmppSocket::genEnquireLink(int to)
 {
-    MutexGuard mg(outMtx);
     time_t now=time(NULL);
+    MutexGuard mg(outMtx);
     if(now-lastEnquireLink<to)
     {
         return;

@@ -502,7 +502,7 @@ int PersClientTask::Execute()
             }
             if ( ! connected_ ) {
                 if ( isStopping ) break;
-                pers_->wait( pers_->reconnectTimeout );
+                pers_->wait( pers_->reconnectTimeout*1000 );
                 continue;
             }
         }

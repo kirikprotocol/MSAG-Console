@@ -351,6 +351,15 @@ void SmppManagerImpl::Init(const char* cfgFile)
   ParseTag(this,list,etSmsc);
 
   LoadRoutes("conf/smpp_routes.xml");
+
+    // initialization of sm
+    unsigned socketsPerThread = getUnsigned( "smpp.core.socketsPerMultiplexer", 16 );
+    unsigned bindTimeout = getUnsigned( "smpp.core.bindTimeout", 10 );
+    unsigned connectionsPerIp = getUnsigned( "smpp.core.connectionsPerIp", 100 );
+    unsigned failTimeout = getUnsigned( "smpp.core.ipBlockingTime", 60 );
+    unsigned maxReaderCount = getUnsigned( "smpp.core.maxReaderCount", 100 );
+    sm.init( socketsPerThread, bindTimeout, connectionsPerIp, failTimeout, maxReaderCount );
+
   running=true;
 
   int stmCnt = 0;
@@ -1154,6 +1163,22 @@ void SmppManagerImpl::getQueueLen(uint32_t& reqQueueLen, uint32_t& respQueueLen,
     reqQueueLen = queue.Count();
     respQueueLen = respQueue.Count();
     lcmQueueLen = lcmQueue.Count();
+}
+
+
+unsigned SmppManagerImpl::getUnsigned( const char* name, unsigned defval ) const
+{
+    try {
+        int val = ConfigManager::Instance().getConfig()->getInt( name );
+        if ( val < 0 ) throw SCAGException( "parameter %s should not be negative", name );
+        return unsigned(val);
+    } catch ( std::exception& e ) {
+        smsc_log_warn( log, "exception on config param %s (%s), using %u", name, e.what(), defval );
+        return defval;
+    } catch (...) {
+        smsc_log_warn( log, "unknown exception on config param %s, using %u", name, defval );
+        return defval;
+    }
 }
 
 }//smpp

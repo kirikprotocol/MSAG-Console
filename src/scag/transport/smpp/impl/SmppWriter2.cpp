@@ -1,4 +1,5 @@
 #include "SmppWriter2.h"
+#include "SmppSocketManager2.h"
 #include "scag/util/HRTimer.h"
 
 namespace scag2 {
@@ -45,6 +46,12 @@ int SmppWriter::Execute()
               {
                   mul.add(sockets[i]->getSocket());
                   ++haveData;
+              } else if ( sockets[i]->getBindType() == btNone &&
+                          sockets[i]->isConnected() &&
+                          sockets[i]->checkTimeout(mgr_->bindTimeout()) ) {
+                  smsc_log_warn(log, "SmppWriter: bind timeout on socket: %s", sockets[i]->getPeer() );
+                  sockets[i]->disconnect();
+                  continue;
               }
           }
           if(!haveData)
