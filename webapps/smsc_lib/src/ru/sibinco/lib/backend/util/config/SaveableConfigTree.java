@@ -31,18 +31,18 @@ public class SaveableConfigTree
 
   public void putParameter(String name, Object value)
   {
-    int dotpos = name.indexOf('.');
-    if (dotpos < 0) {
+    int dotPos = name.indexOf('.');
+    if (dotPos < 0) {
       params.put(name, value);
-    } else if (dotpos == 0) {
+    } else if (dotPos == 0) {
       putParameter(name.substring(1), value);
     } else {
-      SaveableConfigTree sec = (SaveableConfigTree) sections.get(name.substring(0, dotpos));
+      SaveableConfigTree sec = (SaveableConfigTree) sections.get(name.substring(0, dotPos));
       if (sec == null) {
         sec = new SaveableConfigTree();
-        sections.put(name.substring(0, dotpos), sec);
+        sections.put(name.substring(0, dotPos), sec);
       }
-      sec.putParameter(name.substring(dotpos + 1), value);
+      sec.putParameter(name.substring(dotPos + 1), value);
     }
   }
 
