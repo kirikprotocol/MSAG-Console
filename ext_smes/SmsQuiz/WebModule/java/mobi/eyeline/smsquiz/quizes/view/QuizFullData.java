@@ -2,10 +2,7 @@ package mobi.eyeline.smsquiz.quizes.view;
 
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
 
-import java.util.Date;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * author: alkhal
@@ -40,6 +37,8 @@ public class QuizFullData {
   private String defaultCategory = "";
 
   private List categories = new LinkedList();
+
+  private String distrDateEnd;
 
 
   public String getDateBegin() {
@@ -159,8 +158,12 @@ public class QuizFullData {
     }
   }
 
-  public Iterator getCategories() {
+  public Iterator getCategoriesIter() {
     return categories.iterator();
+  }
+
+  public Collection getCategories() {
+    return categories;
   }
 
   public String getQuiz() {
@@ -171,4 +174,11 @@ public class QuizFullData {
     this.quiz = quiz;
   }
 
+  public String getDistrDateEnd() {
+    return distrDateEnd;
+  }
+
+  public void setDistrDateEnd(String distrDateEnd) {
+    this.distrDateEnd = distrDateEnd;
+  }
 }

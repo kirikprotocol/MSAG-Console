@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz.quizes.adding;
+package mobi.eyeline.smsquiz.quizes;
 
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper;
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.Column;
@@ -7,10 +7,7 @@ import ru.novosoft.smsc.jsp.util.helper.dynamictable.column.TextColumn;
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.column.RowControlButtonColumn;
 import ru.novosoft.smsc.jsp.util.helper.Validation;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
 
@@ -50,4 +47,18 @@ public class CategoriesTableHelper extends DynamicTableHelper {
     }
     return result;
   }
+
+  public void fillCategories(Collection categories) {
+    if(categories!=null){
+      Iterator iter = categories.iterator();
+      while(iter.hasNext()) {
+        AnswerCategory cat = (AnswerCategory)iter.next();
+        Row row = createNewRow();
+        row.addValue(nameColumn,cat.getName());
+        row.addValue(patternColumn, cat.getPattern());
+        row.addValue(answerColumn, cat.getAnswer());
+      }
+    }
+  }
+
 }

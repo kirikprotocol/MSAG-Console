@@ -58,6 +58,8 @@ public class Options extends SmsQuizBean {
 
   private boolean initialized = false;
 
+  private String archiveDir;
+
   protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK)
@@ -93,6 +95,7 @@ public class Options extends SmsQuizBean {
         quizCollPeriod = getConfig().getInt("quizmanager.collector.period.repeat");
         dirResults = getConfig().getString("quizmanager.dir.result");
         dirWork = getConfig().getString("quizmanager.dir.work");
+        archiveDir = getConfig().getString("quizmanager.dir.archive");
 
         jmxPort = getConfig().getInt("jmx.port");
         jmxPassword = getConfig().getString("jmx.user");
@@ -179,6 +182,7 @@ public class Options extends SmsQuizBean {
       getConfig().setInt("quizmanager.collector.period.repeat", quizCollPeriod);
       getConfig().setString("quizmanager.dir.result", dirResults);
       getConfig().setString("quizmanager.dir.work", dirWork);
+      getConfig().setString("quizmanager.dir.archive", archiveDir);
 
       getConfig().setInt("jmx.port", jmxPort);
       getConfig().setString("jmx.user", jmxPassword);
@@ -598,5 +602,13 @@ public class Options extends SmsQuizBean {
 
   public void setInitialized(boolean initialized) {
     this.initialized = initialized;
+  }
+
+  public String getArchiveDir() {
+    return archiveDir;
+  }
+
+  public void setArchiveDir(String archiveDir) {
+    this.archiveDir = archiveDir;
   }
 }

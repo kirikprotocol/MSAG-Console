@@ -159,11 +159,6 @@ public class QuizBuilder {
 
     data.setQuestion(question);
 
-    /*
-    <date-begin>10.10.2008 09:00</date-begin>
-    <date-end>15.20.2008 22:00</date-end>
-    <question>Question</question>
-    <abonents-file>opros1/abonents.csv</abonents-file>*/
   }
 
   private static void parseDistribution(Element distrlElem, QuizFullData data) throws QuizParsingException {
@@ -172,6 +167,7 @@ public class QuizBuilder {
     String timeBegin = null;
     String timeEnd = null;
     String txmode = null;
+    String distrDateEnd = null;
 
     if ((elem = distrlElem.getChild("source-address")) != null) {
       sourceaddress = elem.getTextTrim();
@@ -189,6 +185,12 @@ public class QuizBuilder {
       timeEnd = elem.getTextTrim();
     } else {
       errorNotFound("time-end");
+    }
+
+    if ((elem = distrlElem.getChild("date-end")) != null) {
+      distrDateEnd = elem.getTextTrim();
+    } else {
+      errorNotFound("date-end");
     }
 
     if ((elem = distrlElem.getChild("days")) != null) {
@@ -215,15 +217,7 @@ public class QuizBuilder {
     data.setTimeEnd(timeEnd);
     data.setTxmode(txmode);
     data.setSourceAddress(sourceaddress);
-
-    /*         <source-address>148</source-address>
-  <time-begin>12:00</time-begin>
-  <time-end>20:00</time-end>
-  <days>
-      <day>Mon</day>
-      <day>Sun</day>
-  </days>
-  <txmode>transaction</txmode>  */
+    data.setDistrDateEnd(distrDateEnd);
   }
 
   private static void parseReplies(Element repliesElem, QuizFullData data) throws QuizParsingException {
@@ -271,26 +265,6 @@ public class QuizBuilder {
     } else {
       errorNotFound("reply");
     }
-
-    /* <replies>
-     <destination-address>148</destination-address>
-     <max-repeat>3</max-repeat>
-
-     <reply>
-         <category>Да</category>
-         <pattern>(yes|y|1|да|д)</pattern>
-         <answer>Thanks</answer>
-     </reply>
-
-     <reply>
-         <category>Нет</category>
-         <pattern>(no|n|0|нет|н)</pattern>
-         <answer>Thanks</answer>
-     </reply>
-
-     <default>Да</default>
-
- </replies>   */
 
   }
 
@@ -368,6 +342,10 @@ public class QuizBuilder {
     element.setText(data.getTimeEnd().trim());
     distr.addContent(element);
 
+    element = new Element("date-end");
+    element.setText(data.getDistrDateEnd().trim());
+    distr.addContent(element);
+
     element = new Element("source-address");
     element.setText(data.getSourceAddress().trim());
     distr.addContent(element);
@@ -415,7 +393,7 @@ public class QuizBuilder {
       replies.addContent(element);
     }
 
-    Iterator iter = data.getCategories();
+    Iterator iter = data.getCategoriesIter();
     while (iter.hasNext()) {
       element = new Element("reply");
       AnswerCategory cat = (AnswerCategory) iter.next();

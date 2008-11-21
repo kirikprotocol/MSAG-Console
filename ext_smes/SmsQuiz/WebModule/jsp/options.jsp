@@ -131,6 +131,10 @@
   <th><%=getLocString("smsquiz.label.quiz.work_dir")%></th>
   <td><input class=txt validation="nonEmpty" name=dirWork value="<%=StringEncoderDecoder.encode(bean.getDirWork())%>"></td>
 </tr>
+<tr class=row<%=rowN++&1%>>
+  <th><%=getLocString("smsquiz.label.quiz.arch_dir")%></th>
+  <td><input class=txt validation="nonEmpty" name=archiveDir value="<%=StringEncoderDecoder.encode(bean.getArchiveDir())%>"></td>
+</tr>
 <tr>
   <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.jmx")%></div></th>
 </tr>

@@ -53,7 +53,6 @@ public class SmsQuizBean extends PageBean {
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
-    System.out.println("MBMenu: " + mbMenu);
     if ("quizes".equals(mbMenu)) result = RESULT_QUIZES;
     else if ("options".equals(mbMenu)) result = RESULT_OPTIONS;
     else if ("reply_stats".equals(mbMenu)) result = RESULT_REPLYSTATS;

@@ -33,11 +33,6 @@
       return;
   }
   int rowN = 0;
-  if (request.getAttribute("multipart.request") != null) {
-    System.out.println("multipart exist");
-    //response.sendRedirect(request.getContextPath() + "/smsc/esme_SmsQuiz/quizAdd.jsp");
-  }
-
 %>
 <%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
@@ -93,8 +88,11 @@
     <td>
     <input validation="nonEmpty" class=timeField id=activePeriodEnd name=timeEnd value="<%=StringEncoderDecoder.encode(bean.getTimeEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodEnd, false, true);">...</button>
   </td>
-
-  </tr>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th><%=getLocString("smsquiz.label.endDate")%></th>
+  <td><input validation="nonEmpty" class=calendarField id=distrTillDate name=distrDateEnd value="<%=StringEncoderDecoder.encode(bean.getDistrDateEnd())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(distrTillDate, false, true);">...</button></td>
+</tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.activeDays")%></th>
   <td>
@@ -120,7 +118,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.txmode")%></th>
-  <td><input validation="nonEmpty" class=txt name=txMode value="<%=StringEncoderDecoder.encode(bean.getTxmode())%>"></td>
+  <td><input type=checkbox class=check id=tx_mode name=txmode <%=bean.isTxmode() ? "checked" : ""%>></td>
 </tr>
 <tr>
   <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.replies")%></div></th>

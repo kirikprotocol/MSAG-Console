@@ -1,11 +1,6 @@
 package mobi.eyeline.smsquiz.beans;
 
-import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.jsp.util.helper.Validation;
-import ru.novosoft.smsc.jsp.util.helper.dynamictable.IncorrectValueException;
-import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.util.jsp.MultipartServletRequest;
 import ru.novosoft.util.jsp.MultipartDataSource;
 
@@ -15,7 +10,7 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.io.*;
 
-import mobi.eyeline.smsquiz.quizes.adding.CategoriesTableHelper;
+import mobi.eyeline.smsquiz.quizes.CategoriesTableHelper;
 import mobi.eyeline.smsquiz.quizes.view.QuizFullData;
 import mobi.eyeline.smsquiz.QuizBuilder;
 
@@ -57,10 +52,11 @@ public class QuizAdd extends SmsQuizBean {
 
   private String maxRepeat;
 
-
   private String quizDir;
 
   private String defaultCategory;
+
+  private String distrDateEnd;
 
 
   protected int init(List errors) {
@@ -144,6 +140,7 @@ public class QuizAdd extends SmsQuizBean {
       data.setTimeEnd(timeEnd);
       data.setTxmode(Boolean.toString(txmode));
       data.setAbFile(file.getAbsolutePath());
+      data.setDistrDateEnd(distrDateEnd);
       QuizBuilder.saveQuiz(data, quizDir + File.separator + quiz + ".xml");
     } catch (Exception e) {
       logger.error(e);
@@ -176,6 +173,7 @@ public class QuizAdd extends SmsQuizBean {
     try {
       dateFormat.parse(dateBegin);
       dateFormat.parse(dateEnd);
+      dateFormat.parse(distrDateEnd);
       timeFormat.parse(timeBegin);
       timeFormat.parse(timeEnd);
     } catch (ParseException e) {
@@ -282,13 +280,9 @@ public class QuizAdd extends SmsQuizBean {
     this.timeEnd = timeEnd;
   }
 
-  public String getTxmode() {
-    return Boolean.toString(txmode);
-  }
+  public void setTxmode(boolean txmode) {
 
-  public void setTxmode(String txmode) {
-
-    this.txmode = Boolean.valueOf(txmode).booleanValue();
+    this.txmode = txmode;
   }
 
   public String getSourceAddress() {
@@ -390,5 +384,17 @@ public class QuizAdd extends SmsQuizBean {
 
   public CategoriesTableHelper getTableHelper() {
     return tableHelper;
+  }
+
+  public String getDistrDateEnd() {
+    return distrDateEnd;
+  }
+
+  public void setDistrDateEnd(String distrDateEnd) {
+    this.distrDateEnd = distrDateEnd;
+  }
+
+  public boolean isTxmode() {
+    return txmode;
   }
 }

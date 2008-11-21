@@ -16,12 +16,15 @@ public class QuizView extends SmsQuizBean {
   private QuizFullData quizData = new QuizFullData();
 
   public static final int RESULT_DONE = SmsQuizBean.PRIVATE_RESULT + 1;
+  public static final int RESULT_EDIT = SmsQuizBean.PRIVATE_RESULT + 2;
 
   private String quiz;
 
   private String quizDir;
 
   private String mbDone = null;
+
+  private String mbEdit = null;
 
   protected int init(List errors) {
     int result = super.init(errors);
@@ -51,6 +54,10 @@ public class QuizView extends SmsQuizBean {
     if(mbDone != null) {
       mbDone = null;
       return RESULT_DONE;
+    }
+    if(mbEdit!=null) {
+      mbEdit = null;
+      return RESULT_EDIT;
     }
     return result;
   }
@@ -96,5 +103,13 @@ public class QuizView extends SmsQuizBean {
 
   public void setMbDone(String mbDone) {
     this.mbDone = mbDone;
+  }
+
+  public String getMbEdit() {
+    return mbEdit;
+  }
+
+  public void setMbEdit(String mbEdit) {
+    this.mbEdit = mbEdit;
   }
 }

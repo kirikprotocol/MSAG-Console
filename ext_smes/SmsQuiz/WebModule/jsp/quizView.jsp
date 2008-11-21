@@ -13,6 +13,9 @@
    if(beanResult == QuizView.RESULT_DONE) {
     response.sendRedirect("quizes.jsp");
    }
+   if(beanResult == QuizView.RESULT_EDIT) {
+    response.sendRedirect("quizEdit.jsp?quiz="+bean.getQuiz());
+   }
 %>
 <%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
@@ -28,7 +31,7 @@
 <col width="1%">
 <col width="99%">
 <% int rowN = 0;%>
-<tr>
+<tr class=row<%=rowN++&1%>>
   <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.general")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
@@ -100,30 +103,34 @@
   <th><%=getLocString("smsquiz.label.defcat")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getDefaultCategory())%></td>
 </tr>
+<tr>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.category")%></div></th>
+</tr>
+<tr>
+  <td align="center" colspan="2">
+    <table class=list cellspacing=0>
+      <tr>
+        <th><%=getLocString("smsquiz.label.category.name")%></th>
+        <th><%=getLocString("smsquiz.label.category.pattern")%></th>
+        <th><%=getLocString("smsquiz.label.category.answer")%></th>
+      </tr>
 <%
-  Iterator categories = quizData.getCategories();
+  Iterator categories = quizData.getCategoriesIter();
   while(categories.hasNext()) {
     AnswerCategory cat = (AnswerCategory) categories.next();
 %>
-    <tr>
-      <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.category")%></div></th>
-    </tr>
-    <tr class=row<%=rowN++&1%>>
-      <th><%=getLocString("smsquiz.label.category.name")%></th>
-      <td><%=StringEncoderDecoder.encode(cat.getName())%></td>
-    </tr>
-    <tr class=row<%=rowN++&1%>>
-      <th><%=getLocString("smsquiz.label.category.pattern")%></th>
-      <td><%=StringEncoderDecoder.encode(cat.getPattern())%></td>
-    </tr>
-    <tr class=row<%=rowN++&1%>>
-      <th><%=getLocString("smsquiz.label.category.answer")%></th>
-      <td><%=StringEncoderDecoder.encode(cat.getAnswer())%></td>
-    </tr>
+      <tr class=row<%=rowN++&1%>>
+        <td><%=StringEncoderDecoder.encode(cat.getName())%></td>
+        <td><%=StringEncoderDecoder.encode(cat.getPattern())%></td>
+        <td><%=StringEncoderDecoder.encode(cat.getAnswer())%></td>
+      </tr>
 <%  }
 
 %>
 
+    </table>
+  </td>
+</tr>
 </table>
 
 </div>
@@ -131,6 +138,7 @@
   }
   page_menu_begin(out);
   page_menu_button(session, out, "mbDone",   "common.buttons.done",  "smsquiz.done_editing");
+  page_menu_button(session, out, "mbEdit",   "common.buttons.edit",  "smsquiz.edit");
   page_menu_space(out);
   page_menu_end(out);
 
