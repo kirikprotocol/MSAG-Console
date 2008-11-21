@@ -298,7 +298,7 @@ public:
     _data=newdata;
   }
 
-  int Count(){return _count;}
+  // int Count(){return _count;}
   int Count()const{return _count;}
 
   void Clean()
