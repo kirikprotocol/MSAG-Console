@@ -183,7 +183,8 @@ bool ConnectionContext::processReadSocket(const time_t& now) {
     return true;
   }
   perfCounter_.incAccepted();
-  MutexGuard mg(mutex_); {
+  {
+    MutexGuard mg(mutex_);
     ++packetsCount_;
     action_ = PROCESS_REQUEST;
   }
