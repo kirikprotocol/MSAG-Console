@@ -213,7 +213,7 @@ infosme returns [Command cmd] {
     cmd = null;
 }
   : TGT_IMPORT cmd = infosmeimport
-  | TGT_DISTR cmd = infosmedistr
+  | OPT_TASK cmd = infosmedistr
   ;
 
 /* ----------------------- Common names parser ------------------------- */

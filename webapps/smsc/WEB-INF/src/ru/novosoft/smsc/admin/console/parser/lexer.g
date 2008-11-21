@@ -59,7 +59,6 @@ tokens {
   TGT_GROUP     = "group";
   TGT_EMAILSME  = "emailsme";
   TGT_IMPORT    = "import";
-  TGT_DISTR     = "distr";
 
   OPT_ID        = "id";
   OPT_NAME      = "name";

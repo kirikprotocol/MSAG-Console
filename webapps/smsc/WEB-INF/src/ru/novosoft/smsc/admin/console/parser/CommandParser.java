@@ -771,9 +771,9 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=infosmeimport();
 			break;
 		}
-		case TGT_DISTR:
+		case OPT_TASK:
 		{
-			match(TGT_DISTR);
+			match(OPT_TASK);
 			cmd=infosmedistr();
 			break;
 		}
@@ -6219,7 +6219,6 @@ public CommandParser(ParserSharedInputState state) {
 		"\"group\"",
 		"\"emailsme\"",
 		"\"import\"",
-		"\"distr\"",
 		"\"id\"",
 		"\"name\"",
 		"\"hide\"",
