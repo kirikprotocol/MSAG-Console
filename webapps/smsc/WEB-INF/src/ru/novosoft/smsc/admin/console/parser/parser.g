@@ -1094,6 +1094,7 @@ infosmedistr returns [Command cmd] {
 }  : OPT_CREATE cmd = infosmecreatedistr
    | OPT_STATUS cmd = infosmestatusdistr
    | OPT_RESEND cmd = infosmeresendmess
+   | OPT_REMOVE cmd = infosmeremovetask
    ;
 
 infosmecreatedistr returns [InfoSmeCreateDistrCommand cmd] {
@@ -1123,6 +1124,12 @@ infosmeresendmess returns [InfoSmeResendMessageCommand cmd] {
 } : {
       cmd.setTaskId(getnameid("task id"));
       cmd.setMsisdn(getnameid("msisdn"));
+      }
+  ;
+infosmeremovetask returns [InfoSmeRemoveTaskCommand cmd] {
+      cmd = new InfoSmeRemoveTaskCommand();
+} : {
+      cmd.setTaskId(getnameid("task id"));
       }
   ;
 /* ------------------ Misc commands parsers ---------------- */

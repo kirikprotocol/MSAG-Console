@@ -97,6 +97,27 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
 
   }
 
+  public void removeTask(CommandContext ctx, String taskId) {
+    try {
+      final SMSCAppContext appContext = ctx.getOwner().getContext();
+      if (!appContext.getSmeManager().smeStatus("InfoSme").isConnected()) {
+        ctx.setMessage("InfoSme is not started");
+        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        return;
+      }
+      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
+
+      //todo
+
+      ctx.setMessage("OK");
+      ctx.setStatus(CommandContext.CMD_OK);
+    } catch (Exception e) {
+      e.printStackTrace();
+      log.error(e);
+      ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+    }
+  }
+
   public void createDistribution(CommandContext ctx, Distribution d) {
     try {
       try{

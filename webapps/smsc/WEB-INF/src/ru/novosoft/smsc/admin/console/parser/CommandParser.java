@@ -3371,6 +3371,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=infosmeresendmess();
 			break;
 		}
+		case OPT_REMOVE:
+		{
+			match(OPT_REMOVE);
+			cmd=infosmeremovetask();
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -6152,6 +6158,19 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final InfoSmeRemoveTaskCommand  infosmeremovetask() throws RecognitionException, TokenStreamException {
+		InfoSmeRemoveTaskCommand cmd;
+		
+		
+		cmd = new InfoSmeRemoveTaskCommand();
+		
+		
+		
+		cmd.setTaskId(getnameid("task id"));
+		
+		return cmd;
+	}
+	
 	
 	public static final String[] _tokenNames = {
 		"<0>",
@@ -6292,6 +6311,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"create\"",
 		"\"status\"",
 		"\"resend\"",
+		"\"remove\"",
 		"\"force\"",
 		"\"suppress\"",
 		"\"pass\"",

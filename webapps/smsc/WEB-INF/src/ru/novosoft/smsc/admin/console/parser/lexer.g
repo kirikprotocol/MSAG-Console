@@ -152,6 +152,7 @@ tokens {
   OPT_CREATE    = "create";
   OPT_STATUS    = "status";
   OPT_RESEND    = "resend";
+  OPT_REMOVE    = "remove";
 
   VAL_FORCE     = "force";
   VAL_SUPPRESS  = "suppress";
