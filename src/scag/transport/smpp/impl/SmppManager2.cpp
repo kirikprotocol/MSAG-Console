@@ -354,11 +354,11 @@ void SmppManagerImpl::Init(const char* cfgFile)
 
     // initialization of sm
     unsigned socketsPerThread = getUnsigned( "smpp.core.socketsPerMultiplexer", 16 );
-    unsigned bindTimeout = getUnsigned( "smpp.core.bindTimeout", 10 );
+    unsigned bindTimeout = getUnsigned( "smpp.core.bindWaitTimeout", 10 );
     unsigned connectionsPerIp = getUnsigned( "smpp.core.connectionsPerIp", 100 );
     unsigned failTimeout = getUnsigned( "smpp.core.ipBlockingTime", 60 );
-    unsigned maxReaderCount = getUnsigned( "smpp.core.maxReaderCount", 100 );
-    sm.init( socketsPerThread, bindTimeout, connectionsPerIp, failTimeout, maxReaderCount );
+    unsigned maxMultiCount = getUnsigned( "smpp.core.maxMultiplexersCount", 100 );
+    sm.init( socketsPerThread, bindTimeout, connectionsPerIp, failTimeout, maxMultiCount );
 
   running=true;
 
