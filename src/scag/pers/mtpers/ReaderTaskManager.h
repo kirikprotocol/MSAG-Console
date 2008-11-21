@@ -1,11 +1,14 @@
 #ifndef __SCAG_MTPERS_READERTASKMANAGER_H__
 #define __SCAG_MTPERS_READERTASKMANAGER_H__
 
+#include "scag/util/RelockMutexGuard.h"
 #include "IOTaskManager.h"
 #include "IOTask.h"
 #include "StorageManager.h"
 
 namespace scag { namespace mtpers {
+
+using scag::util::RelockMutexGuard;
 
 class ReaderTaskManager : public IOTaskManager {
 public:
@@ -24,16 +27,16 @@ public:
   }
 
   bool process(ConnectionContext* cx) {
-    MutexGuard g(tasksMutex_);
+    RelockMutexGuard g(tasksMutex_);
     IOTask *t = (IOTask*)taskSorter_.getFirst();
     if (t->getSocketsCount() < maxSockets_) {
       cx->getSocket()->Write("OK", 2);
-
-      smsc_log_debug(logger, "%p:%d choosen for context %p", t, t->getSocketsCount(), cx);
       t->registerContext(cx);
       taskSorter_.reorderTask(t);
+      smsc_log_debug(logger, "%p:%d choosen for context %p", t, t->getSocketsCount(), cx);
       return true;
     } else {
+      g.Unlock();
       smsc_log_warn(logger, "Can't process %p context. Server busy. Max sockets=%d, current sockets=%d", cx,  maxSockets_, t->getSocketsCount());
       return false;
     }

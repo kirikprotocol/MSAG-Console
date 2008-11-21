@@ -2,7 +2,7 @@
 #include "core/synchronization/MutexGuard.hpp"
 #include "core/buffers/File.hpp"
 #include <exception>
-
+#include "scag/util/RelockMutexGuard.h"
 
 
 namespace scag { namespace mtpers {
@@ -10,6 +10,7 @@ namespace scag { namespace mtpers {
 using smsc::core::synchronization::MutexGuard;
 using smsc::core::buffers::File;
 using smsc::core::buffers::FileException;
+using scag::util::RelockMutexGuard;
 
 const char* DEF_STORAGE_NAME    = "abonent";
 const char* DEF_LOCAL_PATH      = "infrastruct";
@@ -115,8 +116,9 @@ const char * StorageProcessor::taskName() {
 }
 
 bool StorageProcessor::addPacket(PersPacket* packet) {
-  MutexGuard g(processMonitor_);
+  RelockMutexGuard g(processMonitor_);
   if (waitingProcess_.size() >= maxWaitingCount_) {
+    g.Unlock();
     smsc_log_warn(logger_, "%p: %p waiting process queue limit %d", this, packet, maxWaitingCount_);
     return false;
   }

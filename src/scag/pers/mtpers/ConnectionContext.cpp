@@ -2,9 +2,13 @@
 #include "WriterTaskManager.h"
 #include "ReaderTaskManager.h"
 
+#include "scag/util/RelockMutexGuard.h"
+
 namespace scag { namespace mtpers { 
 
 using smsc::core::synchronization::MutexGuard;
+using scag::util::RelockMutexGuard;
+
 const size_t MAX_PACKET_SIZE = 100000;
 
 ConnectionContext::ConnectionContext(Socket* sock, WriterTaskManager& writerManager, ReaderTaskManager& readerManager, bool perfCounterOn)
@@ -98,12 +102,12 @@ void ConnectionContext::sendFakeResponse() {
 }
 
 void ConnectionContext::sendResponse(const char* data, uint32_t dataSize) {
-  perfCounter_.incProcessed();
   {
     MutexGuard mg(mutex_);
     action_ = SEND_RESPONSE;
     bool inprocess = outbuf_.GetSize() == 0 ? false : true;
     writeData(data, dataSize);
+    perfCounter_.incProcessed();
     --packetsCount_;
     if (tasksCount_ >= 2) {
       smsc_log_debug(logger_, "cx:%p socket %p error tasksCounr=%d", this, socket_, tasksCount_);
@@ -133,8 +137,9 @@ void ConnectionContext::writeData(const char* data, uint32_t size) {
 
 bool ConnectionContext::processReadSocket(const time_t& now) {
   if (!async_) {
-    MutexGuard mg(mutex_);
+    RelockMutexGuard mg(mutex_);
     if (action_ != READ_REQUEST) {
+      mg.Unlock();
       smsc_log_warn(logger_, "cx:%p socket %p error action=%d, must be READ_REQUEST", this, socket_, action_);
       return false;
     }
@@ -168,7 +173,7 @@ bool ConnectionContext::processReadSocket(const time_t& now) {
   smsc_log_debug(logger_, "read %u bytes from %p", n, socket_);
 
   if (n > 0) {
-    SocketData::updateTimestamp(socket_, time(NULL));
+    SocketData::updateTimestamp(socket_, now);
     inbuf_.Append(readBuf_, n);
   } else if(errno != EWOULDBLOCK) {
     if (n) smsc_log_warn(logger_, "read error: %s(%d)", strerror(errno), errno);
@@ -202,7 +207,7 @@ bool ConnectionContext::processReadSocket(const time_t& now) {
 }
 
 bool ConnectionContext::processWriteSocket() {
-  MutexGuard mg(mutex_);
+  RelockMutexGuard mg(mutex_);
   if (!async_ && action_ != SEND_RESPONSE) {
     return true;
   }
@@ -218,8 +223,9 @@ bool ConnectionContext::processWriteSocket() {
   if (n > 0) {
     sb.SetPos(sb.GetPos() + n);
   } else {
-    smsc_log_warn(logger_, "Error: %s(%d)", strerror(errno), errno);
     outbuf_.Empty();
+    mg.Unlock();
+    smsc_log_warn(logger_, "Error: %s(%d)", strerror(errno), errno);
     return false;
   }
   if (sb.GetPos() >= len) {
