@@ -53,9 +53,10 @@ public class DistributionInfoSmeManager implements DistributionManager {
   long closerPeriod;
 
   private String codeOk;
-  private final static String STATUS_COMMAND = "infosme distr status";
-  private final static String CREATE_COMMAND = "infosme distr create";
-  private final static String RESEND_COMMAND = "infosme distr resend";
+  private final static String STATUS_COMMAND = "infosme task status";
+  private final static String CREATE_COMMAND = "infosme task create";
+  private final static String RESEND_COMMAND = "infosme task resend";
+  private final static String REMOVE_COMMAND = "infosme task remove";
 
   public DistributionInfoSmeManager(final String configFile) throws DistributionException {
 
@@ -120,7 +121,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
     if ((distr == null) || (distr.getFilePath() == null) || (distr.getDateBegin() == null)
         || (distr.getDateEnd() == null) || (distr.getDays() == null) || (task == null)
         || (distr.getTimeBegin() == null) || (distr.getTimeEnd() == null)) {
-      logger.error("Some fields of argument are empty");
+      logger.error("Some fields of argument are empty. Date: ");
       throw new DistributionException("Some fields of argument are empty", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
     }
     SmscConsoleResponse response;
@@ -197,6 +198,29 @@ public class DistributionInfoSmeManager implements DistributionManager {
     }
 
   }
+
+  public void removeTask (String taskId) throws DistributionException{
+    if(taskId==null) {
+      logger.error("Some arguments are null");
+      throw new DistributionException("Some arguments are null", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
+    }
+    StringBuilder builder = new StringBuilder();
+    builder.append(REMOVE_COMMAND).append(getFormatProp(taskId));
+    String command = builder.toString();
+    if (logger.isInfoEnabled()) {
+      logger.info("Sending console command: " + command);
+    }
+    try {
+      SmscConsoleResponse response = consoleClient.sendCommand(command);
+      if ((response == null) || (!response.isSuccess()) || (!response.getStatus().trim().equals(codeOk))) {
+        throw new SmscConsoleException("Wrong response");
+      }
+    } catch (SmscConsoleException e) {
+      logger.error("Can't send command",e);
+      throw new DistributionException("Can't send command", e);
+    }
+
+  }  
 
   public String repairStatus(String id, String errorFile, Runnable task, Distribution distribution) throws DistributionException {
     if (logger.isInfoEnabled()) {

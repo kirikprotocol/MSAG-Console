@@ -38,12 +38,12 @@ public class QuizBuilder {
     monitor = new QuizBuilderMBean(this);
   }
 
-  public void buildQuiz(final String filepath, Distribution distribution, Quiz quiz) throws QuizException {
+  public void buildQuiz(final String filepath, Quiz quiz) throws QuizException {
     if (quiz == null) {
-      logger.error("Argument 'quiz' is null");
-      throw new QuizException("Argument 'quiz' is null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
+      logger.error("Some argument are null");
+      throw new QuizException("Some argument are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
-
+    Distribution distribution = quiz.getDistribution();
     SAXBuilder sb = new SAXBuilder();
     InputStream stream = null;
     try {
@@ -116,7 +116,6 @@ public class QuizBuilder {
     }
     if (distribution != null) {
       distribution.setDateBegin(dateBegin);
-      distribution.setDateEnd(dateEnd);
       distribution.setFilePath(abFileName);
     }
 
@@ -124,11 +123,6 @@ public class QuizBuilder {
     quiz.setDateEnd(dateEnd);
     quiz.setQuestion(question);
 
-    /*
-    <date-begin>10.10.2008 09:00</date-begin>
-    <date-end>15.20.2008 22:00</date-end>
-    <question>Question</question>
-    <abonents-file>opros1/abonents.csv</abonents-file>*/
   }
 
   @SuppressWarnings({"unchecked"})
@@ -177,6 +171,16 @@ public class QuizBuilder {
       } else {
         errorNotFound("days");
       }
+      if ((elem = distrlElem.getChild("date-end")) != null) {
+        try {
+          distribution.setDateEnd(dateFormat.parse(elem.getTextTrim()));
+        } catch (ParseException e) {
+          logger.error("Parsing exception", e);
+          throw new QuizException("Parsing exception", e);
+        }
+      } else {
+        errorNotFound("date-end");
+      }
     }
     if ((elem = distrlElem.getChild("time-end")) != null) {
       String time = elem.getTextTrim();
@@ -199,14 +203,6 @@ public class QuizBuilder {
     }
     quiz.setSourceAddress(sourceaddress);
 
-    /*         <source-address>148</source-address>
-  <time-begin>12:00</time-begin>
-  <time-end>20:00</time-end>
-  <days>
-      <day>Mon</day>
-      <day>Sun</day>
-  </days>
-  <txmode>transaction</txmode>  */
   }
 
   @SuppressWarnings({"unchecked"})
@@ -259,27 +255,134 @@ public class QuizBuilder {
     } else {
       errorNotFound("reply");
     }
+  }
 
-    /* <replies>
-     <destination-address>148</destination-address>
-     <max-repeat>3</max-repeat>
+  public void buildModifyActive(final String filepath, Quiz quiz) throws QuizException{
+    if ((filepath==null)||(quiz == null)) {
+      logger.error("Some argument are null");
+      throw new QuizException("Some argument are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
+    }
+    SAXBuilder sb = new SAXBuilder();
+    InputStream stream = null;
+    try {
+      stream = new FileInputStream(filepath);
+      Document doc = sb.build(stream);
+      Element root = doc.getRootElement();
+      Element repliesElem;
+      if ((repliesElem = root.getChild("replies")) != null) {
+        Element elem;
+        if ((elem = repliesElem.getChild("max-repeat")) != null) {
+          try {
+            quiz.setMaxRepeat(Integer.parseInt(elem.getTextTrim()));
+          } catch (NumberFormatException e) {
+            logger.error("Unsupported format for integer: " + elem.getTextTrim());
+            throw new QuizException("Unsupported format for integer: " + elem.getTextTrim());
+          }
+        } else {
+          quiz.setMaxRepeat(0);
+        }
+        if ((elem = repliesElem.getChild("default")) != null) {
+          quiz.setDefaultCategory(elem.getTextTrim());
+        }
+      } else {
+        errorNotFound("replies");
+      }
+    } catch (JDOMException e) {
+      logger.error("Parsing exception", e);
+      throw new QuizException("Parsing exception", e);
+    } catch (IOException e) {
+      logger.error("Parsing exception", e);
+      throw new QuizException("Parsing exception", e);
+    } finally {
+      if (stream != null) {
+        try {
+          stream.close();
+        } catch (IOException e) {
+          logger.error("Error close stream", e);
+        }
+      }
+    }
+  }
 
-     <reply>
-         <category>Да</category>
-         <pattern>(yes|y|1|да|д)</pattern>
-         <answer>Thanks</answer>
-     </reply>
-
-     <reply>
-         <category>Нет</category>
-         <pattern>(no|n|0|нет|н)</pattern>
-         <answer>Thanks</answer>
-     </reply>
-
-     <default>Да</default>
-
- </replies>   */
-
+  public void buildModifyUnactive(final String filepath, Quiz quiz) throws QuizException{
+    if ((filepath==null)||(quiz == null)) {
+      logger.error("Some argument are null");
+      throw new QuizException("Some argument are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
+    }
+    SAXBuilder sb = new SAXBuilder();
+    InputStream stream = null;
+    try {
+      stream = new FileInputStream(filepath);
+      Document doc = sb.build(stream);
+      Element root = doc.getRootElement();
+      Element repliesElem;
+      if ((repliesElem = root.getChild("replies")) != null) {
+        Element elem;
+        if ((elem = repliesElem.getChild("destination-address")) != null) {
+          quiz.setDestAddress(elem.getTextTrim());
+        } else {
+          errorNotFound("destination-address");
+        }
+        if ((elem = repliesElem.getChild("max-repeat")) != null) {
+          try {
+            quiz.setMaxRepeat(Integer.parseInt(elem.getTextTrim()));
+          } catch (NumberFormatException e) {
+            logger.error("Unsupported format for integer: " + elem.getTextTrim());
+            throw new QuizException("Unsupported format for integer: " + elem.getTextTrim());
+          }
+        } else {
+          quiz.setMaxRepeat(0);
+        }
+        if ((elem = repliesElem.getChild("default")) != null) {
+          quiz.setDefaultCategory(elem.getTextTrim());
+        }
+        List<Element> list;
+        if ((list = repliesElem.getChildren("reply")) != null) {
+          quiz.clearPatterns();
+          for (Element el : list) {
+            Element subEl;
+            String category = null;
+            String answer = null;
+            String pattern = null;
+            if ((subEl = el.getChild("category")) != null) {
+              category = subEl.getTextTrim();
+            } else {
+              errorNotFound("category");
+            }
+            if ((subEl = el.getChild("pattern")) != null) {
+              pattern = subEl.getTextTrim();
+            } else {
+              errorNotFound("pattern");
+            }
+            if ((subEl = el.getChild("answer")) != null) {
+              answer = subEl.getTextTrim();
+            } else {
+              errorNotFound("answer");
+            }
+            quiz.addReplyPattern(new ReplyPattern(pattern, category, answer));
+          }
+        } else {
+          errorNotFound("reply");
+        }
+      } else {
+        errorNotFound("replies");
+      }
+    }
+      catch (JDOMException e) {
+      logger.error("Parsing exception", e);
+      throw new QuizException("Parsing exception", e);
+    } catch (IOException e) {
+      logger.error("Parsing exception", e);
+      throw new QuizException("Parsing exception", e);
+    } finally {
+      if (stream != null) {
+        try {
+          stream.close();
+        } catch (IOException e) {
+          logger.error("Error close stream", e);
+        }
+      }
+    }
   }
 
   private void errorNotFound(String element) throws QuizException {

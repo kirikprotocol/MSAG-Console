@@ -4,6 +4,7 @@ import com.eyeline.jstore.JStore;
 import mobi.eyeline.smsquiz.distribution.DistributionException;
 import mobi.eyeline.smsquiz.distribution.DistributionManager;
 import mobi.eyeline.smsquiz.distribution.StatsDelivery;
+import mobi.eyeline.smsquiz.distribution.Distribution;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
 import mobi.eyeline.smsquiz.quizmanager.Result;
 import mobi.eyeline.smsquiz.replystats.Reply;
@@ -49,13 +50,18 @@ public class Quiz {
   private Status status;
   private String dirWork;
 
-  public Quiz(final String statusDir, final File file,
+  private boolean generated = false;
+
+  private final Distribution distribution;
+
+  public Quiz(final String statusDir, final File file, Distribution distribution,
               final ReplyStatsDataSource replyStatsDataSource,
               final DistributionManager distributionManager, final String dirResult, final String dirWork) throws QuizException {
     this.dirResult = dirResult;
     this.replyStatsDataSource = replyStatsDataSource;
     this.distributionManager = distributionManager;
     this.dirWork = dirWork;
+    this.distribution = distribution;
     jstore = new JStore(-1);
     if (file == null) {
       logger.error("Some arguments are null");
@@ -351,4 +357,23 @@ public class Quiz {
     return quizName;
   }
 
+  public void setGenerated(boolean generated) {
+    this.generated = generated;
+  }
+
+  public boolean isGenerates() {
+    return generated;
+  }
+
+  public Distribution getDistribution() {
+    return distribution;
+  }
+
+  public void setQuizStatus(Status.QuizStatus quizStatus) throws QuizException{
+    status.setQuizStatus(quizStatus);
+  }
+
+  public void setError(QuizError error, String reason) throws QuizException{
+    status.setQuizErrorStatus(error, reason);  
+  }
 }

@@ -84,7 +84,7 @@ public class MainTest {
             return new Thread(r, "QuizCreator");
           }
         });
-        scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 1500, TimeUnit.SECONDS);
+        scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 900, TimeUnit.SECONDS);
 
 
     } catch (Exception e) {
@@ -133,9 +133,9 @@ public class MainTest {
 
     public void run() {
       try {
-        if(quizIndex<26) {
+        if(quizIndex<16) {
         createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001700001"), Long.parseLong("70001700100"), 1, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 20, "170", "170", "Short\n question");
+        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 10, "170", "170", "Short\n question");
         quizIndex++;
      /*   createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001800001"), Long.parseLong("70001800100"), 1, SubscriptionManager.getInstance());
         createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 105, "180", "180", "Short\n question");
@@ -203,7 +203,7 @@ public class MainTest {
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     Calendar cal = Calendar.getInstance();
     cal.setTimeInMillis(System.currentTimeMillis());
-    Date dateBegin = new Date(cal.getTime().getTime()+180000);
+    Date dateBegin = new Date(cal.getTime().getTime()+60000);
     cal.set(Calendar.SECOND, 0);
     cal.add(Calendar.MINUTE, minutes);
     Date dateEnd = cal.getTime();
@@ -245,7 +245,11 @@ public class MainTest {
       writer.println("            <day>Fri</day>");
       writer.println("            <day>Sat</day>");
       writer.println("        </days>");
-      writer.println("        <txmode>transaction</txmode>");
+      writer.print("        <date-end>");
+      cal.add(Calendar.MINUTE,-1);
+      writer.print(dateFormat.format(cal.getTime()));
+      writer.println("</date-end>");
+      writer.println("        <txmode>false</txmode>");
       writer.println("    </distribution>");
 
       writer.println("    <replies>");

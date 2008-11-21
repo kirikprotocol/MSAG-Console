@@ -60,6 +60,10 @@ public class TestDistributionManager implements DistributionManager {
     
   }
 
+  public void removeTask(String taskId) throws DistributionException {
+    //To change body of implemented methods use File | Settings | File Templates.
+  }
+
   public String repairStatus(String id, String errorFile, Runnable task, Distribution distribution) throws DistributionException {
     return null;
   }

@@ -2,6 +2,7 @@ package mobi.eyeline.smsquiz.quizmanager;
 
 import mobi.eyeline.smsquiz.quizmanager.dirlistener.DirListener;
 import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
+import mobi.eyeline.smsquiz.quizmanager.quiz.Status;
 import org.apache.log4j.Logger;
 
 import java.util.Date;
@@ -39,6 +40,7 @@ class QuizCollector implements Runnable {
             quizesMap.remove(entry.getKey());
             quiz.exportStats();
             quiz.shutdown();
+            quiz.setQuizStatus(Status.QuizStatus.FINISHED);
           } catch (QuizException e) {
             logger.error("Error creating resultStatistics");
           }

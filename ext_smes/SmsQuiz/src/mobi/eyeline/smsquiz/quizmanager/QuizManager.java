@@ -11,6 +11,8 @@ import mobi.eyeline.smsquiz.quizmanager.dirlistener.DirListener;
 import mobi.eyeline.smsquiz.quizmanager.dirlistener.Notification;
 import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import mobi.eyeline.smsquiz.quizmanager.quiz.QuizBuilder;
+import mobi.eyeline.smsquiz.quizmanager.quiz.QuizError;
+import mobi.eyeline.smsquiz.quizmanager.quiz.Status;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
 import mobi.eyeline.smsquiz.subscription.SubManagerException;
 import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
@@ -28,10 +30,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * author: alkhal
  */
+@SuppressWarnings({"EmptyCatchBlock", "EmptyCatchBlock"})
 public class QuizManager implements Observer {
 
   private static final Logger logger = Logger.getLogger(QuizManager.class);
@@ -59,6 +65,13 @@ public class QuizManager implements Observer {
   private long collectorPeriod;
   private String dirResult;
   private String dirWork;
+
+  private Lock lock;
+  private Condition notUpdate;
+  private Condition notRun;
+
+  private int run = -1;
+  private int update = -1;
 
   public static void init(final String configFile, DistributionManager distributionManager, ReplyStatsDataSource replyStatsDataSource,
                           SubscriptionManager subscriptionManager) throws QuizException {
@@ -134,6 +147,9 @@ public class QuizManager implements Observer {
       file.mkdirs();
     }
     monitor = new QuizManagerMBean(this);
+    lock = new ReentrantLock();
+    notUpdate = lock.newCondition();
+    notRun = lock.newCondition();    
   }
 
   public void start() {
@@ -164,10 +180,10 @@ public class QuizManager implements Observer {
       logger.info("Manager handle sms:" + address + " " + oa + " " + text);
     }
     Quiz quiz = quizesMap.get(address);
-    if ((quiz != null)&&(quiz.isActive())) {
+    if ((quiz != null)&&(quiz.isGenerates())&&(quiz.isActive())) {
       return quiz.handleSms(oa, text);
     }
-    logger.warn("Quiz not found for address: " + address);
+    logger.warn("Active and generated Quiz not found for address: " + address);
     if (logger.isInfoEnabled()) {
       logger.info("Available addresses: " + quizesMap.keySet().toString());
     }
@@ -175,78 +191,112 @@ public class QuizManager implements Observer {
   }
 
   public void update(Observable o, Object arg) {
-    logger.info("Updating quizfiles list...");
-    Notification notification = (Notification) arg;
-    if (notification.getStatus().equals(Notification.FileStatus.MODIFIED)) {
-
-      try {
-        modifyQuiz(notification);
-      } catch (Exception e) {
-        logger.error("Unable to modify quiz: " + notification.getFileName());
+    try{
+      lock.lock();
+      if (run == 1) {
+        notRun.await();
       }
+      update = 1;
+      logger.info("Updating quizfiles list... Lock");
+      Notification notification = (Notification) arg;
+      if (notification.getStatus().equals(Notification.FileStatus.MODIFIED)) {
 
-    } else if (notification.getStatus().equals(Notification.FileStatus.CREATED)) {
+        try {
+          modifyQuiz(notification);
+        } catch (Exception e) {
+          logger.error("Unable to modify quiz: " + notification.getFileName());
+        }
 
-      try {
-        createQuiz(notification);
-      } catch (Exception e) {
-        logger.error("Unable to update quize: " + notification.getFileName());
-      }
-    } else if(notification.getStatus().equals(Notification.FileStatus.DELETED)) {
+      } else if (notification.getStatus().equals(Notification.FileStatus.CREATED)) {
 
-      try{
-        deleteQuiz(notification);
-      }
-      catch (Exception e) {
-        logger.error("Unable to delete quize: " + notification.getFileName());
+        try {
+          createQuiz(notification);
+        } catch (Exception e) {
+          logger.error("Unable to update quize: " + notification.getFileName());
+        }
+      } else if(notification.getStatus().equals(Notification.FileStatus.DELETED)) {
+
+        try{
+          deleteQuiz(notification);
+        }
+        catch (Exception e) {
+          logger.error("Unable to delete quize: " + notification.getFileName());
+        }
       }
     }
-    logger.info("Updating finished");
+    catch (Throwable e) {
+      logger.error(e,e);
+    } finally {
+      update = 0;
+      notUpdate.signal();
+      lock.unlock();
+      logger.info("Updating completed. Unlock.");
+    }
   }
 
   @SuppressWarnings({"ThrowableInstanceNeverThrown"})
   private void deleteQuiz(Notification notification) throws QuizException{
-    String fileName = notification.getFileName();
+    Quiz quiz = null;
     try {
-      Quiz quiz = null;
+      String fileName = notification.getFileName();
       for (Map.Entry<String,Quiz> e : quizesMap.entrySet()) {
         if (e.getValue().getFileName().equals(fileName)) {
-          if(!e.getValue().isActive()) {
+          quiz = e.getValue();
+          if(!quiz.isActive()) {
             quizesMap.remove(e.getKey());
           }
           else {
             writeError(fileName, new Exception("Deleted quiz was active. see it's results"));
-            e.getValue().exportStats();
+            quiz.exportStats();
           }
-          return;
+          break;
         }
       }
+      if(quiz!=null) {
+        quizesMap.remove(quiz.getDestAddress());
+        String taskId = quiz.getId();
+        if(taskId!=null) {
+          distributionManager.removeTask(taskId);
+        }
+        try{
+          quiz.setError(QuizError.WARNING,"Quiz deleted");
+        }catch (QuizException e) {}
+      }
     }
-    catch (Exception e) {
+    catch (Throwable e) {
       writeError(notification.getFileName(), e);
       throw new QuizException(e);
+    } finally {
+      if(quiz!=null) {
+        quiz.setQuizStatus(Status.QuizStatus.FINISHED_ERROR);
+      }
     }
-
   }
 
   private void modifyQuiz(Notification notification) throws QuizException {
 
     String fileName = notification.getFileName();
-    try {
-      Quiz quiz = null;
-      for (Quiz q : quizesMap.values()) {
-        if (q.getFileName().equals(fileName)) {
-          quiz = q;
-        }
-      }
-      if (quiz == null) {
-        logger.error("Can't find quiz into map with key: " + notification.getFileName());
-        throw new QuizException("Can't find quiz into map with key: " + notification.getFileName());
-      }
 
-      quizBuilder.buildQuiz(fileName, null, quiz);
+    Quiz quiz = null;
+    for (Quiz q : quizesMap.values()) {
+      if (q.getFileName().equals(fileName)) {
+        quiz = q;
+      }
+    }
+    if (quiz == null) {
+      logger.error("Can't find quiz into map with key: " + notification.getFileName());
+      throw new QuizException("Can't find quiz into map with key: " + notification.getFileName());
+    }
+
+    try {
+      if(quiz.isActive()) {
+        quizBuilder.buildModifyActive(fileName, quiz);
+      }else {
+        quizBuilder.buildModifyUnactive(fileName, quiz);
+      }
     } catch (QuizException e) {
       writeError(notification.getFileName(), e);
+      quiz.setError(QuizError.CREATE_ERROR, "Parsing exception during modification");
       throw e;
     }
     if (logger.isInfoEnabled()) {
@@ -254,33 +304,60 @@ public class QuizManager implements Observer {
     }
   }
 
-  private void createQuiz(Notification notification) throws QuizException {
+  private void createQuiz(final Notification notification) throws QuizException {
     if (logger.isInfoEnabled()) {
       logger.info("Create quiz...");
     }
+    Quiz quiz = null;
     try {
       String fileName = notification.getFileName();
-      Distribution distribution;
       File file = new File(fileName);
 
-      final Quiz quiz = new Quiz(statusDir, file, replyStatsDataSource, distributionManager, dirResult, dirWork);
-      distribution = new Distribution();
-      quizBuilder.buildQuiz(fileName, distribution, quiz);
-      QuizCreator quizCreator = new QuizCreator(quiz, distribution);
-      if(quiz.isActive()) {
-        quizCreator.start();
-      } else {
-        long delay = quiz.getDateBegin().getTime() -System.currentTimeMillis();
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-          public Thread newThread(Runnable r) {
-            return new Thread(r,"QuizCreator: "+quiz.getFileName());
-          }
-        });
-        executor.schedule(quizCreator,delay,java.util.concurrent.TimeUnit.MILLISECONDS);
-      }
+      quiz = new Quiz(statusDir, file, new Distribution(),
+          replyStatsDataSource, distributionManager, dirResult, dirWork);
+      quizBuilder.buildQuiz(fileName, quiz);
 
+      Quiz previousQuiz = quizesMap.get(quiz.getDestAddress());
+      if(previousQuiz!=null) {
+        logger.error("Error during creating quiz: quizes conflict");
+        writeQuizesConflict(previousQuiz, quiz.getFileName());
+        try{
+          quiz.setError(QuizError.QUIZES_CONFLICT,"Quiz for this destaination address already exists");
+        }catch (QuizException e) {}
+        return;
+      }
+      quizesMap.put(quiz.getDestAddress(), quiz);
+      try{
+        QuizCreator quizCreator = new QuizCreator(quiz.getDestAddress(), quiz.getFileName());
+        try{
+          quiz.setQuizStatus(Status.QuizStatus.GENERATION);
+        }catch (QuizException e) {
+          logger.error(e,e);
+        }
+        if(quiz.isActive()) {
+          quizCreator.start();
+        } else {
+          long delay = quiz.getDateBegin().getTime() - System.currentTimeMillis();
+          ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+              return new Thread(r,"QuizCreator: "+notification.getFileName());
+            }
+          });
+          executor.schedule(quizCreator,delay,java.util.concurrent.TimeUnit.MILLISECONDS);
+        }
+      }catch (Throwable e) {
+        quizesMap.remove(quiz.getDestAddress());
+        logger.error(e,e);
+        throw new QuizException(e.toString(),e);
+      }
     }
-    catch (Exception e) {
+    catch (QuizException e) {
+      if(quiz!=null) {
+        try{
+          quiz.setError(QuizError.CREATE_ERROR,e.getMessage());
+        }catch (Exception ex) {}
+      }
+      logger.error(e,e);
       writeError(notification.getFileName(), e);
       throw new QuizException(e);
     }
@@ -347,10 +424,10 @@ public class QuizManager implements Observer {
       writer.println("Error during creating quiz:");
       exc.printStackTrace(writer);
       writer.flush();
-      dirListener.remove(quizFileName,true);
+   //todo   dirListener.remove(quizFileName,true);
       String statusFile = dirWork + File.separator + quizName + ".error";
       if(new File(statusFile).exists()) {
-        dirListener.remove(statusFile,true);        
+    //todo    dirListener.remove(statusFile,true);
       }
     } catch (Exception e) {
       logger.error("Unable to create error file: " + errorFile, e);
@@ -392,13 +469,13 @@ public class QuizManager implements Observer {
     }
   }
 
-  private void writeQuizesConflict(Quiz prevQuiz, Quiz newQuiz) throws QuizException {
-    if ((prevQuiz == null) || (newQuiz == null)) {
+  private void writeQuizesConflict(Quiz prevQuiz, String newQuizFileName) throws QuizException {
+    if ((prevQuiz == null) || (newQuizFileName == null)) {
       logger.error("Some arguments are null");
       throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
     logger.warn("Conflict quizes");
-    File newQuizfile = new File(newQuiz.getFileName());
+    File newQuizfile = new File(newQuizFileName);
     String newQuizName = newQuizfile.getName().substring(0, newQuizfile.getName().lastIndexOf("."));
     PrintWriter writer = null;
     String errorFile = quizDir + File.separator + newQuizName + ".error";
@@ -410,9 +487,9 @@ public class QuizManager implements Observer {
       writer.println(prevQuiz);
       writer.println();
       writer.println("New quiz");
-      writer.println(newQuiz);
+      writer.println(newQuizFileName);
       writer.flush();
-      dirListener.remove(newQuiz.getFileName(),true);
+   //todo   dirListener.remove(newQuizFileName,true);
     } catch (IOException e) {
       logger.error("Unable to create error file: " + errorFile, e);
       throw new QuizException("Unable to create error file: " + errorFile, e);
@@ -421,7 +498,6 @@ public class QuizManager implements Observer {
         writer.close();
       }
     }
-    dirListener.remove(newQuiz.getFileName(),true);
   }
 
   public MBeanServer getMBeansServer() throws QuizException {
@@ -429,7 +505,6 @@ public class QuizManager implements Observer {
     try {
       mbs.registerMBean(dirListener.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=dirListener"));
       mbs.registerMBean(replyStatsDataSource.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=replystatsdsource"));
-//      mbs.registerMBean(distributionManager.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=distributionmanager"));
       mbs.registerMBean(subscriptionManager.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=subscriptionManager"));
       mbs.registerMBean(quizBuilder.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=quizBuilder"));
       mbs.registerMBean(monitor, new ObjectName("SMSQUIZ.quizmanager:mbean=quizManager"));
@@ -486,59 +561,91 @@ public class QuizManager implements Observer {
   }
   
   private class QuizCreator extends Thread{
-    private Quiz quiz;
-    private Distribution distr;
-    public QuizCreator(Quiz quiz, Distribution distr) {
-      this.quiz = quiz;
-      this.distr = distr;
+
+    private String destAddress;
+
+    private String fileName;
+
+    public QuizCreator(String destAddress, String fileName) throws IllegalArgumentException{
+      if((destAddress==null)||(fileName==null)) {
+        logger.error("Some arguments are null");
+        throw new IllegalArgumentException("Some arguments are null") ;
+      }
+      this.destAddress = destAddress;
+      this.fileName = fileName;
     }
 
+    @SuppressWarnings({"ThrowableInstanceNeverThrown"})
     public void run() {
       try{
-        if(!new File(quiz.getFileName()).exists()) {
-          writeError(quiz.getFileName(), new Exception("Error during creating quiz: quiz's file was deleted "+quiz.getFileName()));
-          logger.error("Error during creating quiz: quiz's file was deleted "+quiz.getFileName());
-          System.out.println("Error during creating quiz: quiz's file was deleted "+quiz.getFileName());
+        lock.lock();
+        if (update == 1) {
+          notUpdate.await();
+        }
+        run = 1;
+        if(logger.isInfoEnabled()) {
+          logger.info("Runing quizCreator. Lock.");
+        }
+
+        Quiz quiz = quizesMap.get(destAddress);
+        if((!new File(fileName).exists())||(quiz == null)) {
+          writeError(fileName, new Exception("Error during creating quiz: quiz's file was deleted "+fileName));
+          logger.warn("Error during creating quiz: quiz's file was deleted "+fileName);
           return;
         }
-        Quiz previousQuiz;
-        if ((previousQuiz = quizesMap.get(quiz.getDestAddress())) != null) {
-          logger.error("Error during creating quiz: quizes conflict");
-          System.out.println("Error during creating quiz: quizes conflict");
-          writeQuizesConflict(previousQuiz, quiz);
-          return;
-        }
-        makeSubscribedOnly(distr, quiz.getQuestion(), quiz.getQuizName());
-        String id;
-        if ((id = quiz.getId()) != null) {
-          if (logger.isInfoEnabled()) {
-            logger.info("Quizes status will be repaired, current id: " + id);
-          }
 
-          id = distributionManager.repairStatus(id, quiz.getFileName() + ".distr.error",
-              new QuizManagerTask(quizesMap, quiz), distr);
+        try{
+          Distribution distr = quiz.getDistribution();
+          makeSubscribedOnly(distr, quiz.getQuestion(), quiz.getQuizName());
 
+          String id;
+          if ((id = quiz.getId()) != null) {
+            if (logger.isInfoEnabled()) {
+              logger.info("Quizes status will be repaired, current id: " + id);
+            }
+
+            id = distributionManager.repairStatus(id, quiz.getFileName() + ".distr.error",
+                new QuizManagerTask(quiz), distr);
+
+            if (logger.isInfoEnabled()) {
+              logger.info("Quizes status repaired, new id: " + id);
+            }
+          } else {
+            try {
+              id = distributionManager.createDistribution(distr,
+                  new QuizManagerTask(quiz), quiz.getFileName() + ".distr.error");
+            } catch (DistributionException e) {
+              logger.error("Unable to create distribution", e);
+              throw new QuizException("Unable to create distribution", e);
+            }
+          }
+          quiz.setId(id);
+          try{
+            quiz.setQuizStatus(Status.QuizStatus.AWAIT);
+          }catch (QuizException e){
+            logger.error(e,e);
+          }
+          resolveConflict(quiz);
           if (logger.isInfoEnabled()) {
-            logger.info("Quizes status repaired, new id: " + id);
+            logger.info("Quiz created: " + quiz);
           }
-        } else {
-          try {
-            id = distributionManager.createDistribution(distr,
-                new QuizManagerTask(quizesMap, quiz), quiz.getFileName() + ".distr.error");
-          } catch (DistributionException e) {
-            logger.error("Unable to create distribution", e);
-            throw new QuizException("Unable to create distribution", e);
-          }
-        }
-        quiz.setId(id);
-        resolveConflict(quiz);
-        if (logger.isInfoEnabled()) {
-          logger.info("Quiz created: " + quiz);
+        } catch (Throwable e) {
+          try{
+            quiz.setError(QuizError.DISTR_ERROR, e.getMessage());
+          }catch (QuizException ex) {}
+          quizesMap.remove(destAddress);
+          throw e;
         }
       } catch (Throwable e) {
-        writeError(quiz.getFileName(), e);
-        logger.error("Error during creating quiz",e);
-        e.printStackTrace();
+        writeError(fileName, e);
+        logger.error(e,e);
+      } finally {
+        run = 0;
+        notRun.signal();
+        lock.unlock();
+        if(logger.isInfoEnabled()) {
+          logger.info("Creating quiz completed. Unlock.");
+        }
       }
 
     }

@@ -10,13 +10,26 @@ import java.util.Properties;
  * author: alkhal
  */
 
-class Status {
+public class Status {
 
+
+  private static final Logger logger = Logger.getLogger(Status.class);
 
   private String ident;
   private String statusFileName;
-  private static final Logger logger = Logger.getLogger(Status.class);
+  private QuizStatus quizStatus;
 
+  public static enum QuizStatus {NEW, AWAIT, GENERATION, FINISHED,
+    FINISHED_ERROR, ACTIVE}
+
+  private static final String DISTR_ID = "distribution.id";
+  private static final String QUIZ_ST = "quiz.status";
+  private static final String ERROR_REASON = "quiz.error.reason";
+  private static final String ERROR_CODE = "quiz.error.id";
+
+  private Properties prop;
+
+  @SuppressWarnings({"EmptyCatchBlock"})
   Status(String statusFileName) throws QuizException {
     this.statusFileName = statusFileName;
     File stFile = new File(statusFileName);
@@ -24,58 +37,76 @@ class Status {
     if ((parentFile != null) && (!parentFile.exists())) {
       parentFile.mkdirs();
     }
-    if (stFile.exists()) {
-      Properties prop = new Properties();
-      try {
-        prop.load(new FileInputStream(stFile));
-        String ident;
-        if ((ident = prop.getProperty("distribution.id")) != null) {  // if property exist => distribution already created
-          this.ident = ident;
-        }
-      } catch (IOException e) {
-        logger.error("Unable to open status file", e);
-        throw new QuizException("Unable to open status file", e);
+    InputStream inputStream = null;
+    try{
+      prop = new Properties();
+      if (!stFile.exists()) {
+        stFile.createNewFile();
+      }
+      inputStream = new FileInputStream(stFile);
+      prop = new Properties();
+      prop.load(inputStream);
+      String ident;
+      if ((ident = prop.getProperty(DISTR_ID)) != null) {  // if property exist => distribution already created
+        this.ident = ident;
+      }
+      setQuizStatus(QuizStatus.NEW);
+    }catch (IOException e) {
+      logger.error(e, e);
+      throw new QuizException(e.toString(), e);
+    } finally {
+      if(inputStream!=null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {}
       }
     }
   }
 
-  public String getId() {
+  String getId() {
     return ident;
   }
 
   void setId(String ident) throws QuizException {
     this.ident = ident;
-    writeStatusFile(new File(statusFileName), ident);
+    prop.setProperty(DISTR_ID,ident);
+    storeProps();
   }
 
-  private void writeStatusFile(File file, String id) throws QuizException {
-    if (file == null) {
-      return;
-    }
-    File parentFile;
-    if ((parentFile = file.getParentFile()) != null) {
-      if (!parentFile.exists()) {
-        parentFile.mkdirs();
-      }
-    }
-    PrintWriter printWriter = null;
-    try {
-      printWriter = new PrintWriter(new BufferedWriter(new FileWriter(file)));
-      printWriter.print("distribution.id=");
-      printWriter.println(id);
-      printWriter.flush();
+  void setQuizStatus(QuizStatus quizStatus) throws QuizException {
+    this.quizStatus = quizStatus;
+    prop.setProperty(QUIZ_ST, quizStatus.toString());
+    storeProps();
+  }
 
-    } catch (IOException e) {
-      logger.error("Unable to open status file", e);
-      throw new QuizException("Unable to open status file", e);
+  void setQuizErrorStatus(QuizError error, String reason) throws QuizException {
+    this.quizStatus = QuizStatus.FINISHED_ERROR;
+    prop.setProperty(ERROR_CODE, error.getCode());
+    prop.setProperty(ERROR_REASON, reason);
+    storeProps();
+  }
+
+  @SuppressWarnings({"EmptyCatchBlock"})
+  private void storeProps() throws QuizException {
+    OutputStream outputStream = null;
+    try{
+      outputStream = new FileOutputStream(statusFileName);
+      prop.store(outputStream,"");
+    }catch (IOException e) {
+      logger.error(e, e);
+      throw new QuizException(e.toString(), e);
     } finally {
-      if (printWriter != null) {
-        printWriter.close();
+      if(outputStream!=null) {
+        try {
+          outputStream.close();
+        } catch (IOException e) {}
       }
     }
   }
 
-  public String getStatusFileName() {
+  String getStatusFileName() {
     return statusFileName;
   }
+
+
 }

@@ -67,6 +67,7 @@ public class DirListener extends Observable implements Runnable {
 
         if ((existFile = filesMap.get(fileName)) != null) {
           if (existFile.getLastModified() < lastModified) {
+            setChanged();
             notifyObservers(new Notification(fileName, Notification.FileStatus.MODIFIED));
             existFile.modifyDate(lastModified);
             if (logger.isInfoEnabled()) {
