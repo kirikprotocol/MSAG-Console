@@ -190,8 +190,6 @@ bool ConnectionContext::processReadSocket(const time_t& now) {
   smsc_log_debug(logger_, "read from socket:%p len=%d, data=%s", socket_, inbuf_.length(), inbuf_.toString().c_str());
   inbuf_.SetPos(PACKET_LENGTH_SIZE);
   PersPacket* packet = parsePacket();
-  smsc_log_info(debuglogger_, "process seq.number:%d packet:%p key:%d/'%s' packet_size:%d socket:%p",
-                             packet->getSequenceNumber(), packet, packet->intKey, packet->address.toString().c_str(), packetLen_, socket_);
   inbuf_.Empty();
   packetLen_ = 0;
 
@@ -199,6 +197,10 @@ bool ConnectionContext::processReadSocket(const time_t& now) {
     sendResponse(fakeResp_.c_ptr(), fakeResp_.GetSize());
     return true;
   }
+
+  smsc_log_info(debuglogger_, "process seq.number:%d packet:%p key:%d/'%s' packet_size:%d socket:%p",
+                             packet->getSequenceNumber(), packet, packet->intKey, packet->address.toString().c_str(), packetLen_, socket_);
+
   if (!readerManager_.processPacket(packet)) {
     createFakeResponse(scag::pers::util::RESPONSE_ERROR);
     sendResponse(fakeResp_.c_ptr(), fakeResp_.GetSize());
