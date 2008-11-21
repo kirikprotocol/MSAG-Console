@@ -100,14 +100,14 @@ struct SmeRecord
 
   SmeRecord()
   {
-    std::memset(this, 0, sizeof(*this));
+    ::memset(this, 0, sizeof(*this));
     rectype = SMPP_SME;
     recdata.smppSme.accessMask=1;
   }
 
   SmeRecord(const SmeRecord & copy)
   {
-    std::memcpy(this, &copy, sizeof(copy));
+    ::memcpy(this, &copy, sizeof(copy));
     smeUid = cStringCopy(copy.smeUid);
     if (rectype == SMPP_SME)
     {
@@ -132,7 +132,7 @@ struct SmeRecord
     } else {
       // !!! not yet implemented
     }
-    std::memset(this, 0, sizeof(*this));
+    ::memset(this, 0, sizeof(*this));
   }
 };
 

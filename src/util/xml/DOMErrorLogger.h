@@ -1,6 +1,7 @@
 #ifndef SMSC_UTIL_XML_DOM_ERROR_LOGGER
 #define SMSC_UTIL_XML_DOM_ERROR_LOGGER
 
+#include <memory>
 #include <xercesc/dom/DOM.hpp>
 #include "util/cstrings.h"
 //#include <xercesc/dom/DOMErrorHandler.hpp>

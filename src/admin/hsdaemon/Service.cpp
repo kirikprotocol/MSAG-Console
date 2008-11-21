@@ -156,7 +156,7 @@ pid_t Service::start()
           std::string cmd=hostUp;
           cmd+=" ";
           cmd+=info.hostName;
-          std::system(cmd.c_str());
+          ::system(cmd.c_str());
         }
         execv(service_exe, createArguments());
         smsc_log_error(logger, "Couldn't start service (\"%s/%s\"), nested: %u: %s",

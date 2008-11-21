@@ -1,3 +1,4 @@
+#include <memory>
 #include <admin/service/Variant.h>
 
 #include <admin/AdminException.h>

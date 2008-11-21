@@ -12,8 +12,8 @@ inline char * cStringCopy(const char * const src)
 {
   if (src != 0)
   {
-    char * dst = new char[std::strlen(src)+1];
-    std::strcpy(dst, src);
+    char * dst = new char[::strlen(src)+1];
+    ::strcpy(dst, src);
     return dst;
   } else
     return 0;

@@ -1,3 +1,4 @@
+#include <memory>
 #include "Response.h"
 #include <sys/types.h>
 #include <string.h>
