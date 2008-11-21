@@ -67,6 +67,8 @@ protected:
   Logger* logger;
   Array<Socket*> waitingAdd_;
   uint16_t connectionTimeout_;
+  uint16_t checkTimeoutPeriod_;
+  time_t lastCheckTime_;
 };
 
 

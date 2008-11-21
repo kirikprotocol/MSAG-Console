@@ -53,6 +53,13 @@ struct Performance {
       ++incCount;
     }
   }
+  void inc(int accept, int proc) {
+    processed += proc;
+    accepted += accept;
+    if (proc > 0 || accept > 0) {
+      ++incCount;
+    }
+  }
   void reset() {
     processed = 0;
     accepted = 0;

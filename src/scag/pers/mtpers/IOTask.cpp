@@ -10,6 +10,7 @@ IOTask::IOTask(IOTaskManager& iomanager, uint16_t connectionTimeout, const char*
 {
   logger = Logger::getInstance(logName);
   smsc_log_debug(logger, "%p %s task created", this, logName);
+  checkTimeoutPeriod_ = connectionTimeout_ / 10 > 0 ? connectionTimeout_ / 10 : 1;
 }
 
 bool IOTask::idle() const {
@@ -22,6 +23,8 @@ int IOTask::Execute() {
 
   smsc_log_debug(logger, "%p started", this);
 
+  lastCheckTime_ = time(NULL);
+  
   for (;;) {
     {
       MutexGuard g(socketMonitor_);
@@ -92,7 +95,9 @@ void IOTask::registerContext(ConnectionContext* cx) {
 time_t IOTask::checkConnectionTimeout(Multiplexer::SockArray& error) {
   error.Empty();
   time_t now = time(NULL);
-  //TODO: do not check every time 
+  if (now - lastCheckTime_ < checkTimeoutPeriod_) {
+    return now;
+  }
   for (int i = 0; i < multiplexer_.count(); i++) {
     Socket *s =  multiplexer_.get(i);
     if (isTimedOut(s, now)) {
@@ -196,9 +201,13 @@ Performance MTPersReader::getPerformance() {
     return perf;
   }
   for (int i = 0; i < mpcount; ++i) {
-    ConnectionContext* cx = SocketData::getContext(multiplexer_.get(i));
+    Socket *s = multiplexer_.get(i);
+    ConnectionContext* cx = SocketData::getContext(s);
     PerfCounter &pf = cx->getPerfCounter();
-    perf.inc(pf);
+    int accepted = pf.getAccepted();
+    int processed = pf.getProcessed();
+    smsc_log_info(logger, "context:%p socket:%p current performance %d:%d", cx, s, accepted, processed);
+    perf.inc(accepted, processed);
   }
   return perf;
 }
