@@ -171,12 +171,18 @@ public:
       buf[0]=0;
       return;
     }
+    PrintAddrPort(addr,buf);
+  }
+
+  static void PrintAddrPort( const sockaddr_in& addr, char* buf )
+  {
 #ifdef linux
     unsigned char *a=(unsigned char*)&addr.sin_addr.s_addr;
 #else
     unsigned char *a=(unsigned char*)&addr.sin_addr.S_un.S_addr;
 #endif
-    sprintf(buf,"%d.%d.%d.%d:%d",(int)a[0],(int)a[1],(int)a[2],(int)a[3],addr.sin_port);
+    unsigned char *p=(unsigned char*)&addr.sin_port;
+    sprintf(buf,"%d.%d.%d.%d:%d",(int)a[0],(int)a[1],(int)a[2],(int)a[3],unsigned(p[0])*256 + p[1]);
   }
 
   void SetNoDelay(bool nd)
