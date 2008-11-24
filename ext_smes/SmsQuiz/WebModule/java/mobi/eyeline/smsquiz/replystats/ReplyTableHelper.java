@@ -26,7 +26,7 @@ public class ReplyTableHelper extends PagedStaticTableHelper {
   private final TextColumn dateColumn = new TextColumn(ReplyDataSource.REPLY_DATE, "smsquiz.label.replyDate", true, 25);
   private final TextColumn messageColumn = new TextColumn(ReplyDataSource.MESSAGE, "smsquiz.label.message", true, 50);
 
-  public static final String DEFAULT_SORT = "+" + ReplyDataSource.MSISDN;
+  public static final String DEFAULT_SORT = ReplyDataSource.MSISDN;
 
   private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yy HH:mm");
 

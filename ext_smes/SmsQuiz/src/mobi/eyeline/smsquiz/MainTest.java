@@ -134,8 +134,8 @@ public class MainTest {
     public void run() {
       try {
         if(quizIndex<16) {
-        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001700001"), Long.parseLong("70001700100"), 1, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 15, "170", "170", "Short\n question");
+        createAbFile("test_QuizManager",quizIndex, Long.parseLong("70001700001"), Long.parseLong("70001700100"), 1, SubscriptionManager.getInstance());
+        createQuizFile("test_QuizManager", quizIndex, 15, "170", "170", "Short\n question");
         quizIndex++;
      /*   createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001800001"), Long.parseLong("70001800100"), 1, SubscriptionManager.getInstance());
         createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 105, "180", "180", "Short\n question");
@@ -198,8 +198,8 @@ public class MainTest {
 
   }
 
-  private static void createQuizFile(String fileName, int minutes, String oa, String da, String question) {
-
+  private static void createQuizFile(String fileDir, int name, int minutes, String oa, String da, String question) {
+    String fileName = fileDir+File.separator+name+".xml";
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     Calendar cal = Calendar.getInstance();
     cal.setTimeInMillis(System.currentTimeMillis());
@@ -207,6 +207,7 @@ public class MainTest {
     cal.set(Calendar.SECOND, 0);
     cal.add(Calendar.MINUTE, minutes);
     Date dateEnd = cal.getTime();
+    String quizName = "quiz"+name;
 
     PrintWriter writer = null;
     try {
@@ -215,6 +216,9 @@ public class MainTest {
       writer.println("<opros>");
 
       writer.println("    <general>");
+      writer.print("        <name>");
+      writer.print(quizName);
+      writer.println("</name>");
       writer.print("        <date-begin>");
       writer.print(dateFormat.format(dateBegin));
       writer.println("</date-begin>");
@@ -284,8 +288,8 @@ public class MainTest {
     }
   }
 
-  private static void createAbFile(String fileName, long from, long till, int divider, SubscriptionManager subscriptionManager) {
-
+  private static void createAbFile(String dir, int name, long from, long till, int divider, SubscriptionManager subscriptionManager) {
+    String fileName = dir+File.separator+name+".xml.csv";
 
     PrintWriter writer = null;
 

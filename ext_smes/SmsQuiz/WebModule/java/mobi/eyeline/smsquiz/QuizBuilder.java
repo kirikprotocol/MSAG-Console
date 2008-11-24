@@ -29,6 +29,7 @@ public class QuizBuilder {
     String address = null;
     Date dateBegin = null;
     Date dateEnd = null;
+    String name = null;
     SimpleDateFormat dateFormat = new SimpleDateFormat(datePattern);
 
     SAXBuilder sb = new SAXBuilder();
@@ -50,6 +51,11 @@ public class QuizBuilder {
       }
       if ((elem = root.getChild("general")) != null) {
         Element subElem;
+        if ((subElem = elem.getChild("name")) != null) {
+          name = subElem.getTextTrim();
+        } else {
+          throw new Exception("Section 'name' doesn't exist in " + path);
+        }
         if ((subElem = elem.getChild("date-begin")) != null) {
           dateBegin = dateFormat.parse(subElem.getTextTrim());
         } else {
@@ -81,17 +87,15 @@ public class QuizBuilder {
         }
       }
     }
-    return new QuizShortData(address, dateBegin, dateEnd, abFile);
+    return new QuizShortData(address, dateBegin, dateEnd, abFile, name);
   }
 
   public static QuizFullData parseAll(String filepath) throws QuizParsingException {
     File file = new File(filepath);
-    String quizName = file.getName().substring(0, file.getName().indexOf("."));
 
     SAXBuilder sb = new SAXBuilder();
     InputStream stream = null;
     QuizFullData data = new QuizFullData();
-    data.setQuiz(quizName);
     try {
       stream = new FileInputStream(filepath);
       Document doc = sb.build(stream);
@@ -133,6 +137,12 @@ public class QuizBuilder {
     String dateEnd = null;
     String question = null;
     String abFileName = null;
+    String name = null;
+    if ((elem = generalElem.getChild("name")) != null) {
+      name = elem.getTextTrim();
+    } else {
+      errorNotFound("name");
+    }
     if ((elem = generalElem.getChild("date-begin")) != null) {
       dateBegin = elem.getTextTrim();
     } else {
@@ -153,6 +163,7 @@ public class QuizBuilder {
     } else {
       errorNotFound("abonents-file");
     }
+    data.setName(name);
     data.setDateBegin(dateBegin);
     data.setDateEnd(dateEnd);
     data.setAbFile(abFileName);
@@ -309,6 +320,10 @@ public class QuizBuilder {
     Element general = new Element("general");
     Element element = new Element("date-begin");
     element.setText(data.getDateBegin().trim());
+    general.addContent(element);
+
+    element = new Element("name");
+    element.setText(data.getName().trim());
     general.addContent(element);
 
     element = new Element("date-end");

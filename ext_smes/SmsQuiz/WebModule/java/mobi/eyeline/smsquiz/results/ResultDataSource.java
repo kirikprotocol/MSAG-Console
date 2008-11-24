@@ -125,22 +125,4 @@ public class ResultDataSource extends AbstractDataSourceImpl {
     return resultDir;
   }
 
-  public Collection getAllQuizes() {
-    Collection quizes = new LinkedList();
-    File dir = new File(resultDir);
-    File[] files = dir.listFiles(new FilenameFilter() {
-      public boolean accept(File dir, String name) {
-        return name.endsWith(".res");
-      }
-    });
-    if (files == null) {
-      return quizes;
-    }
-    for (int j = 0; j < files.length; j++) {
-      String fileName = files[j].getName();
-      quizes.add(fileName.substring(0, fileName.indexOf(".")));
-    }
-    return quizes;
-  }
-
 }

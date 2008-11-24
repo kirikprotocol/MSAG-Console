@@ -3,6 +3,7 @@ package mobi.eyeline.smsquiz.beans;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.infosme.backend.tables.messages.*;
@@ -19,6 +20,8 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 import mobi.eyeline.smsquiz.distribution.InfoSmeMessagesDataSource;
+import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
+import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 
 /**
  * author: alkhal
@@ -47,6 +50,8 @@ public class Distribution extends SmsQuizBean {
 
   private InfoSmeMessagesDataSource ds;
 
+  private String quizId;
+
   private MessagesTableHelper tableHelper = new MessagesTableHelper("message_table_helper", false);
 
   protected int init(List errors) {
@@ -59,12 +64,14 @@ public class Distribution extends SmsQuizBean {
       initQuizes();
       String msgStoreDir = getConfig().getString("distribution.info.sme.stats.dir");
       String workDir = getConfig().getString("quizmanager.dir.work");
-      ds = new InfoSmeMessagesDataSource(msgStoreDir, workDir);
+      ds = new InfoSmeMessagesDataSource(getSmsQuizContext().getConfig(),msgStoreDir, workDir, quizDir);
       if (pageSize == 0) {
         pageSize = getSmsQuizContext().getMessagesPageSize();
       }
       int maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
-
+      if(quizId!=null) {
+        msgFilter.setTaskId(quizId);
+      }
       tableHelper.setFilter(msgFilter);
       tableHelper.setDs(ds);
       tableHelper.setPageSize(pageSize);
@@ -82,7 +89,6 @@ public class Distribution extends SmsQuizBean {
     int result = super.process(request);
     if (result != RESULT_OK) return result;
 
-    Collection allQuizes = getAllQuizes();
     if (mbExportAll != null)
       result = processExportAll();
     if (initialized) {
@@ -99,19 +105,13 @@ public class Distribution extends SmsQuizBean {
 
   private void initQuizes() {
     try {
-      File dir = new File(quizDir);
-      if (!dir.exists()) {
-        throw new Exception("Quizes dir doesn't exists: " + quizDir);
-      }
-      File[] files = dir.listFiles(new FilenameFilter() {
-        public boolean accept(File dir, String name) {
-          return name.endsWith(".xml") || name.endsWith(".xml.old");
-        }
-      });
-      for (int j = 0; j < files.length; j++) {
-        String name = files[j].getName();
-        name = name.substring(0, name.indexOf("."));
-        quizMap.put(name, files[j].getAbsolutePath());
+      QuizesDataSource ds = new QuizesDataSource(quizDir);
+      QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
+      for (int i = 0; i < quizesList.size(); i++) {
+        DataItem item = quizesList.get(i);
+        String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);
+        String quizId = (String)item.getValue(QuizesDataSource.QUIZ_ID);
+        quizMap.put(quizId,quizName);
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -119,19 +119,16 @@ public class Distribution extends SmsQuizBean {
     }
   }
 
-  public Collection getAllQuizes() {
-    if (quizMap != null) {
-      return quizMap.keySet();
-    }
-    return null;
+  public Map getAllQuizes() {
+      return quizMap;
   }
 
-  public String getQuizPath(String key) {
-    if (quizMap != null) {
-      return (String) quizMap.get(key);
-    }
-    logger.warn("Quiz doesn't exist with path: " + key);
-    return null;
+  public String getQuizId() {
+    return quizId;
+  }
+
+  public boolean isQuizId(String quizId) {
+    return (this.quizId != null) && quizId.equals(this.quizId);
   }
 
   private int processExportAll() {
@@ -304,12 +301,8 @@ public class Distribution extends SmsQuizBean {
     return msgFilter.getTaskId();
   }
 
-  public void setQuiz(String taskId) {
-    msgFilter.setTaskId(taskId);
-  }
-
-  public boolean isQuiz(String quiz) {
-    return msgFilter.getTaskId().equals(quiz);
+  public void setQuiz(String quizId) {
+    msgFilter.setTaskId(quizId);
   }
 
   public String getAddress() {
@@ -348,4 +341,7 @@ public class Distribution extends SmsQuizBean {
     return tableHelper;
   }
 
+  public void setQuizId(String quizId) {
+    this.quizId = quizId;
+  }
 }

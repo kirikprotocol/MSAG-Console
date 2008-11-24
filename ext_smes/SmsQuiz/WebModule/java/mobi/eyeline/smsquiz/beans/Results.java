@@ -2,19 +2,21 @@ package mobi.eyeline.smsquiz.beans;
 
 
 import mobi.eyeline.smsquiz.results.*;
+import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
+import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspWriter;
-import java.util.List;
-import java.util.Iterator;
-import java.util.Date;
-import java.util.Collection;
+import java.util.*;
 import java.io.IOException;
+import java.io.File;
+import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 /**
@@ -36,6 +38,8 @@ public class Results extends SmsQuizBean {
 
   private final ResultTableHelper tableHelper = new ResultTableHelper("result_table_helper");
 
+  Map quizesMap = new HashMap();
+
   protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
@@ -47,6 +51,8 @@ public class Results extends SmsQuizBean {
 
     try {
       String resultDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.result");
+      String quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.quiz");
+      makeQuizMap(quizDir);
       ds = new ResultDataSource(resultDir);
       tableHelper.setPageSize(pageSize);
       tableHelper.setMaxTotalSize(maxTotalSize);
@@ -59,6 +65,16 @@ public class Results extends SmsQuizBean {
     return result;
   }
 
+  private void makeQuizMap(String quizDir) {
+    QuizesDataSource ds = new QuizesDataSource(quizDir);
+    QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
+    for (int i = 0; i < quizesList.size(); i++) {
+      DataItem item = quizesList.get(i);
+      String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);
+      String quizId = (String)item.getValue(QuizesDataSource.QUIZ_ID);
+      quizesMap.put(quizId,quizName);
+    }
+  }
 
   public int process(HttpServletRequest request) {
     int result = super.process(request);
@@ -118,8 +134,8 @@ public class Results extends SmsQuizBean {
     return format.format(date);
   }
 
-  public Collection getAllQuizes() {
-    return ds.getAllQuizes();
+  public Map getAllQuizes() {
+    return quizesMap;
   }
 
   public boolean isQuizId(String quizId) {

@@ -6,6 +6,7 @@ import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 
 import java.util.Date;
+import java.util.Map;
 import java.io.File;
 import java.io.FilenameFilter;
 
@@ -25,6 +26,8 @@ public class QuizesDataSource extends AbstractDataSourceImpl {
   private String quizDir;
 
   public static final String QUIZ_ID = "quiz_id";
+
+  public static final String QUIZ_NAME = "quizName";
 
   public static final String DATE_BEGIN = "dateBegin";
 
@@ -73,15 +76,13 @@ public class QuizesDataSource extends AbstractDataSourceImpl {
         } else {
           state = QuizState.FINISHED_WITH_ERROR;
         }
-        add(new QuizDataItem(quizId, quizData.getDateBegin(), quizData.getDateEnd(), state));
+        add(new QuizDataItem(quizId, quizData.getName(), quizData.getDateBegin(), quizData.getDateEnd(), state));
       }
     } catch (Exception e) {
       logger.error(e);
       e.printStackTrace();
     }
-
     return super.query(query_to_run);
-
   }
 
 

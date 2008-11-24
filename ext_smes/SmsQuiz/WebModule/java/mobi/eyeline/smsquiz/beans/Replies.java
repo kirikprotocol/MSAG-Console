@@ -1,6 +1,7 @@
 package mobi.eyeline.smsquiz.beans;
 
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.admin.AdminException;
@@ -17,6 +18,8 @@ import java.text.ParseException;
 import mobi.eyeline.smsquiz.replystats.*;
 import mobi.eyeline.smsquiz.QuizShortData;
 import mobi.eyeline.smsquiz.QuizBuilder;
+import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
+import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 
 /**
  * author: alkhal
@@ -41,6 +44,10 @@ public class Replies extends SmsQuizBean {
 
   private final ReplyTableHelper tableHelper = new ReplyTableHelper("reply_table_helper");
 
+  private String quizId;
+
+  private String quizDir;
+
   protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
@@ -55,12 +62,26 @@ public class Replies extends SmsQuizBean {
     }
     try {
       String replyDir = getSmsQuizContext().getConfig().getString("replystats.statsFile.dir.name");
+      quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.quiz");
       initQuizes();
       ds = new ReplyDataSource(replyDir);
       if (pageSize == 0) {
         pageSize = getSmsQuizContext().getMessagesPageSize();
       }
       int maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
+      if(quizId!=null) {
+        File file = new File(quizDir+File.separator+quizId+".xml");
+        if(!file.exists()) {
+          file = new File(file.getAbsolutePath()+".old");
+        }
+        replyFilter.setQuizPath(file.getAbsolutePath());
+        QuizShortData data = QuizBuilder.parseQuiz(replyFilter.getQuizPath());
+        System.out.println("Parsing completed: address=" + data.getAddress() + "," +
+            " dateBegin=" + data.getDateBegin() + ", dateEnd=" + data.getDateEnd());
+        replyFilter.setQuizNumber(data.getAddress());
+        replyFilter.setQuizDateBegin(data.getDateBegin());
+        replyFilter.setQuizDateEnd(data.getDateEnd());
+      }
       tableHelper.setFilter(replyFilter);
       tableHelper.setDs(ds);
       tableHelper.setPageSize(pageSize);
@@ -134,20 +155,13 @@ public class Replies extends SmsQuizBean {
 
   private void initQuizes() {
     try {
-      String quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.quiz");
-      File dir = new File(quizDir);
-      if (!dir.exists()) {
-        throw new Exception("Quizes dir doesn't exists: " + quizDir);
-      }
-      File[] files = dir.listFiles(new FilenameFilter() {
-        public boolean accept(File dir, String name) {
-          return name.endsWith(".xml") || name.endsWith(".xml.old");
-        }
-      });
-      for (int j = 0; j < files.length; j++) {
-        String name = files[j].getName();
-        name = name.substring(0, name.indexOf("."));
-        quizMap.put(name, files[j].getAbsolutePath());
+      QuizesDataSource ds = new QuizesDataSource(quizDir);
+      QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
+      for (int i = 0; i < quizesList.size(); i++) {
+        DataItem item = quizesList.get(i);
+        String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);
+        String quizId = (String)item.getValue(QuizesDataSource.QUIZ_ID);
+        quizMap.put(quizId,quizName);
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -155,24 +169,14 @@ public class Replies extends SmsQuizBean {
     }
   }
 
-  public Collection getAllQuizes() {
-    if (quizMap != null) {
-      return quizMap.keySet();
-    }
-    return null;
+  public Map getAllQuizes() {
+    return quizMap;
   }
 
-  public String getQuizPath(String key) {
-    if (quizMap != null) {
-      return (String) quizMap.get(key);
-    }
-    logger.warn("Quiz doesn't exist with path: " + key);
-    return null;
+  public String getQuizPath() {
+    return quizId;
   }
 
-  public boolean isQuizId(String quizId) {
-    return replyFilter.getQuizNumber().equals(quizId);
-  }
 
   public int getTotalSize() {
     return (replies == null) ? 0 : replies.getTotalSize();
@@ -235,12 +239,13 @@ public class Replies extends SmsQuizBean {
     return replies;
   }
 
-  public String getQuizPath() {
-    return replyFilter.getQuizPath();
+  public String getQuizId() {
+    return quizId;
   }
 
-  public void setQuizPath(String quizPath) {
-    replyFilter.setQuizPath(quizPath);
+  public void setQuizId(String quizId) {
+    this.quizId = quizId;
+  /*  replyFilter.setQuizPath(quizPath);
     try {
       if (quizPath != null) {
         QuizShortData data = QuizBuilder.parseQuiz(quizPath);
@@ -253,11 +258,11 @@ public class Replies extends SmsQuizBean {
     } catch (Exception e) {
       e.printStackTrace();
       logger.error(e);
-    }
+    } */
   }
 
-  public boolean isQuizPath(String path) {
-    return replyFilter.getQuizPath().equals(path);
+  public boolean isQuizId(String quizId) {
+    return (this.quizId != null) && quizId.equals(this.quizId);
   }
 
   public void setFromDate(String fromDate) {

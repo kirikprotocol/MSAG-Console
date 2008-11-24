@@ -8,16 +8,18 @@ import java.util.Date;
  */
 public class QuizShortData {
 
+  private String name;
   private String address;
   private Date dateBegin;
   private Date dateEnd;
   private String abFile;
 
-  public QuizShortData(String address, Date dateBegin, Date dateEnd, String abFile) {
+  public QuizShortData(String address, Date dateBegin, Date dateEnd, String abFile, String name) {
     this.address = address;
     this.dateBegin = dateBegin;
     this.dateEnd = dateEnd;
     this.abFile = abFile;
+    this.name = name;
   }
 
   public String getAddress() {
@@ -34,5 +36,13 @@ public class QuizShortData {
 
   public String getAbFile() {
     return abFile;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 }

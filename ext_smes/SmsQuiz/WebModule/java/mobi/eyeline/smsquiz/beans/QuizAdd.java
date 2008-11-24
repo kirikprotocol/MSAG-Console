@@ -1,6 +1,8 @@
 package mobi.eyeline.smsquiz.beans;
 
 import ru.novosoft.smsc.jsp.util.helper.Validation;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.util.jsp.MultipartServletRequest;
 import ru.novosoft.util.jsp.MultipartDataSource;
 
@@ -8,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.io.*;
@@ -15,6 +18,8 @@ import java.io.*;
 import mobi.eyeline.smsquiz.quizes.CategoriesTableHelper;
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
 import mobi.eyeline.smsquiz.quizes.view.QuizFullData;
+import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
+import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 import mobi.eyeline.smsquiz.QuizBuilder;
 
 /**
@@ -33,7 +38,7 @@ public class QuizAdd extends SmsQuizBean {
 
   private final CategoriesTableHelper tableHelper = new CategoriesTableHelper("smsquiz.label.category", "categories", 30, Validation.NON_EMPTY, true);
 
-  private String quiz;
+  private String quizName;
 
   private String dateBegin;
 
@@ -112,7 +117,8 @@ public class QuizAdd extends SmsQuizBean {
       ds = request.getMultipartDataSource("file");
       is = ds.getInputStream();
 
-      file = new File(quizDir + File.separator + quiz + ".csv");
+      String quizId = Integer.toString(getUniqName());
+      file = new File(quizDir + File.separator + quizId + ".csv");
       outputStream = new BufferedOutputStream(new FileOutputStream(file));
       byte buffer[] = new byte[2048];
       boolean begin = true;
@@ -137,14 +143,14 @@ public class QuizAdd extends SmsQuizBean {
       data.setDestAddress(destAddress);
       data.setMaxRepeat(maxRepeat);
       data.setQuestion(question);
-      data.setQuiz(quiz);
+      data.setName(quizName);
       data.setSourceAddress(sourceAddress);
       data.setTimeBegin(timeBegin);
       data.setTimeEnd(timeEnd);
       data.setTxmode(Boolean.toString(txmode));
       data.setAbFile(file.getAbsolutePath());
       data.setDistrDateEnd(distrDateEnd);
-      QuizBuilder.saveQuiz(data, quizDir + File.separator + quiz + ".xml");
+      QuizBuilder.saveQuiz(data, quizDir + File.separator + quizId + ".xml");
     } catch (Exception e) {
       logger.error(e);
       e.printStackTrace();
@@ -184,8 +190,7 @@ public class QuizAdd extends SmsQuizBean {
       e.printStackTrace();
       return warning(e.getMessage());
     }
-    String path = quizDir + File.separator + quiz + ".xml";
-    if ((new File(path).exists()) || (new File(path + ".old").exists())) {
+    if (!validateQuizName()) {
       System.out.println("Quiz with this name already exists");
       return warning("Quiz with this name already exists");
     }
@@ -224,6 +229,43 @@ public class QuizAdd extends SmsQuizBean {
     }
 
     return RESULT_OK;
+  }
+
+  private boolean validateQuizName() {
+    QuizesDataSource ds = new QuizesDataSource(quizDir);
+    QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
+    for (int i = 0; i < quizesList.size(); i++) {
+      final DataItem item = quizesList.get(i);
+      final String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);
+      System.out.println("Compare "+this.quizName+" with "+quizName);
+      if(quizName.equalsIgnoreCase(this.quizName)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private int getUniqName() {
+    File dir = new File(quizDir);
+    File[] files = dir.listFiles(new FilenameFilter() {
+      public boolean accept(File dir, String name) {
+        return name.endsWith(".xml") || name.endsWith(".xml.old");
+      }
+    });
+    int result = 1;
+    for(int i=0;i<files.length;i++) {
+      String filename = files[i].getName();
+      int subRes = 0;
+      filename = filename.substring(0,filename.indexOf("."));
+      try{
+        subRes = Integer.parseInt(filename);
+        System.out.println(result+" compare with file's number: "+subRes);
+        if(result<=subRes) {
+          result=subRes+1;
+        }
+      } catch(NumberFormatException e) {}
+    }
+    return result;
   }
 
   public String getMbDone() {
@@ -381,14 +423,6 @@ public class QuizAdd extends SmsQuizBean {
     return str;
   }
 
-  public String getQuiz() {
-    return quiz;
-  }
-
-  public void setQuiz(String quiz) {
-    this.quiz = quiz;
-  }
-
   public String getDefaultCategory() {
     return defaultCategory;
   }
@@ -414,5 +448,13 @@ public class QuizAdd extends SmsQuizBean {
 
   public boolean isTxmode() {
     return txmode;
+  }
+
+  public String getQuizName() {
+    return quizName;
+  }
+
+  public void setQuizName(String quizName) {
+    this.quizName = quizName;
   }
 }

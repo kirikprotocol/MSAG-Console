@@ -33,7 +33,7 @@
 <%@ include file="inc/header.jsp"%>
 <div class=content>
 <input type=hidden name=initialized value=true>
-<%Collection allQuizes = bean.getAllQuizes();
+<%Map allQuizes = bean.getAllQuizes();
   if ((allQuizes!=null)&&(allQuizes.size() > 0)) {%>
 <table class=properties_list>
 <col width="10%">
@@ -43,10 +43,13 @@
 <tr class=row<%=rowN++&1%>>
   <th style="text-align:left"><%= getLocString("smsquiz.label.quiz")%></th>
   <td><select name=quizId><%
-  for (Iterator i = allQuizes.iterator(); i.hasNext();) {
-    String quizId = (String) i.next();
+  for (Iterator i = allQuizes.entrySet().iterator(); i.hasNext();) {
+    Map.Entry e = (Map.Entry)i.next();
+    String quizId = (String) e.getKey();
     String quizIdEnc = StringEncoderDecoder.encode(quizId);
-  %><option value="<%=quizIdEnc%>" <%= (bean.isQuizId(quizIdEnc)) ? "selected":""%>><%=StringEncoderDecoder.encode(quizIdEnc)%></option>
+    String quizName = (String) e.getValue();
+    String quizNameEnc = StringEncoderDecoder.encode(quizName);
+  %><option value="<%=quizIdEnc%>" <%= (bean.isQuizId(quizIdEnc)) ? "selected":""%>><%=quizNameEnc%></option>
 <%}%></select></td>
 </tr>
 <tr class=row<%=rowN++&1%>>

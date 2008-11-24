@@ -67,7 +67,7 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
         }
       }
     }
-    sortOrder = "+" + QuizesDataSource.QUIZ_ID;
+    sortOrder = QuizesDataSource.QUIZ_NAME;
   }
 
   protected void fillTable(int start, int size) throws TableHelperException {
@@ -81,8 +81,9 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
         final Row row = createNewRow();
 
         final String quizId = (String) item.getValue(QuizesDataSource.QUIZ_ID);
+        final String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);
         row.addCell(checkColumn, new CheckBoxCell("chb" + quizId, false));
-        row.addCell(quizidColumn, new StringCell(quizId, quizId, true));
+        row.addCell(quizidColumn, new StringCell(quizId, quizName, true));
         row.addCell(dateBeginColumn, new StringCell(quizId,
             convertDateToString((Date) item.getValue(QuizesDataSource.DATE_BEGIN)), false));
         row.addCell(dateEndColumn, new StringCell(quizId,

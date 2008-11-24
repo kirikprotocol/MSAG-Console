@@ -10,8 +10,9 @@ import java.util.Date;
  */
 public class QuizDataItem extends AbstractDataItem {
 
-  public QuizDataItem(String quizId, Date dateBegin, Date dateEnd, String state) {
+  public QuizDataItem(String quizId, String quizName, Date dateBegin, Date dateEnd, String state) {
     values.put(QuizesDataSource.QUIZ_ID, quizId);
+    values.put(QuizesDataSource.QUIZ_NAME, quizName);
     values.put(QuizesDataSource.DATE_BEGIN, dateBegin);
     values.put(QuizesDataSource.DATE_END, dateEnd);
     values.put(QuizesDataSource.STATE, state);
@@ -19,6 +20,10 @@ public class QuizDataItem extends AbstractDataItem {
 
   public String getQuizId() {
     return (String) values.get(QuizesDataSource.QUIZ_ID);
+  }
+
+  public String getQuizName() {
+    return (String) values.get(QuizesDataSource.QUIZ_NAME);
   }
 
   public Date getDateBegin() {

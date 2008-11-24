@@ -3,7 +3,7 @@
 <%@ page import="ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper"%>
 <%@ page import="mobi.eyeline.smsquiz.beans.Distribution"%>
 <%@ page import="ru.novosoft.smsc.util.*"%>
-<jsp:useBean id="bean" scope="request" class="mobi.eyeline.smsquiz.beans.Distribution" />
+<jsp:useBean id="bean" scope="page" class="mobi.eyeline.smsquiz.beans.Distribution" />
 <% if (!bean.isProcessed()) {%>
   <jsp:setProperty name="bean" property="*"/>
 <% } %>
@@ -35,7 +35,7 @@
 <%@ include file="inc/header.jsp"%>
 <div class=content>
 <input type=hidden name=initialized value=true>
-<%Collection allQuizes = bean.getAllQuizes();
+<%Map allQuizes = bean.getAllQuizes();
   if (allQuizes.size() > 0) {%>
 <table class=properties_list>
 <col width="10%">
@@ -44,12 +44,14 @@
 <col width="40%">
 <tr class=row<%=rowN++&1%>>
   <th style="text-align:left">Task:</th>
-  <td><select name=quiz><%
-  for (Iterator i = allQuizes.iterator(); i.hasNext();) {
-    String quizId = (String) i.next();
+  <td><select name=quizId><%
+  for (Iterator i = allQuizes.entrySet().iterator(); i.hasNext();) {
+    Map.Entry e = (Map.Entry)i.next();
+    String quizId = (String) e.getKey();
     String quizIdEnc = StringEncoderDecoder.encode(quizId);
-    String quizPathEnc = StringEncoderDecoder.encode(bean.getQuizPath(quizId));
-  %><option value="<%=quizPathEnc%>" <%= (bean.isQuiz(quizPathEnc)) ? "selected":""%>><%=StringEncoderDecoder.encode(quizIdEnc)%></option>
+    String quizName = (String)e.getValue();
+    String quizNameEnc = StringEncoderDecoder.encode(quizName);
+  %><option value="<%=quizIdEnc%>" <%= (bean.isQuizId(quizIdEnc)) ? "selected":""%>><%=quizNameEnc%></option>
 <%}%></select></td>
   <th style="text-align:left"><%= getLocString("smsquiz.label.msg_state")%></th>
   <td><select name=status>

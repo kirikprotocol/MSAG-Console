@@ -32,6 +32,16 @@
     <tr class=row<%=rowN++&1%>>
       <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.info")%></div></th>
     </tr>
+
+    <tr class=row<%=rowN++&1%>>
+      <th>
+      <%=getLocString("smsquiz.label.quiz.id")%>
+      </th>
+      <td>
+      <input class=txt readonly="true" name=quizId value="<%=StringEncoderDecoder.encode(bean.getQuizId())%>">
+      </td>
+    </tr>
+
     <tr class=row<%=rowN++&1%>>
       <th>
       <%=getLocString("smsquiz.label.quiz.status")%>
@@ -77,7 +87,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.quiz")%></th>
-  <td><input class=txt readonly="true" name=quiz value="<%=StringEncoderDecoder.encode(bean.getQuiz())%>"></td>
+  <td><%=StringEncoderDecoder.encode(quizData.getName())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.startDate")%></th>
@@ -93,11 +103,6 @@
 </tr>
 <tr>
   <th align="center" colspan="2"><div class=page_subtitle>Distribution</div></th>
-</tr>
-  <tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.abfile")%></th>
-  <td><%=StringEncoderDecoder.encode(quizData.getAbFile())%></td>
-</tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.sa")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getSourceAddress())%></td>

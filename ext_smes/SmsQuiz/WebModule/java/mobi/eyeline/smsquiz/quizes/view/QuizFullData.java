@@ -10,7 +10,7 @@ import java.util.*;
  */
 public class QuizFullData {
 
-  private String quiz;
+  private String name;
 
   private List activeDays = null;
 
@@ -166,12 +166,12 @@ public class QuizFullData {
     return categories;
   }
 
-  public String getQuiz() {
-    return quiz;
+  public String getName() {
+    return name;
   }
 
-  public void setQuiz(String quiz) {
-    this.quiz = quiz;
+  public void setName(String name) {
+    this.name = name;
   }
 
   public String getDistrDateEnd() {

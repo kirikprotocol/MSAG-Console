@@ -28,7 +28,7 @@ public class QuizView extends SmsQuizBean {
 
   private static String datePattern = "dd.MM.yyyy HH:mm";
 
-  private String quiz;
+  private String quizId;
 
   private String quizDir;
 
@@ -55,7 +55,7 @@ public class QuizView extends SmsQuizBean {
     if (result != RESULT_OK) {
       return result;
     }
-    if((quiz==null)||("".equals(quiz))) {
+    if((quizId ==null)||("".equals(quizId))) {
       return RESULT_DONE;
     }
     try {
@@ -71,9 +71,9 @@ public class QuizView extends SmsQuizBean {
       result = error(e.getMessage());
     }
     if (!buildData()) {
-      logger.error("Can't read quiz: quizId doesn't exist with id=" + quiz);
-      System.out.println("Can't read quiz: quizId doesn't exist with id=" + quiz);
-      return error("Can't read quiz: quizId doesn't exist with id=" + quiz);
+      logger.error("Can't read quiz: quizId doesn't exist with id=" + quizId);
+      System.out.println("Can't read quiz: quizId doesn't exist with id=" + quizId);
+      return error("Can't read quiz: quizId doesn't exist with id=" + quizId);
     }
     if(!initialized) {
       defaultCategory = quizData.getDefaultCategory();
@@ -149,7 +149,7 @@ public class QuizView extends SmsQuizBean {
       quizData.setCategory(tableHelper.getCategories());
       quizData.setDestAddress(destAddress);
     }
-    QuizBuilder.saveQuiz(quizData,quizDir+File.separator+quiz+".xml");
+    QuizBuilder.saveQuiz(quizData,quizDir+File.separator+quizId +".xml");
     return RESULT_DONE;
   }
 
@@ -227,10 +227,10 @@ public class QuizView extends SmsQuizBean {
 
 
   private boolean buildData() {
-    if (quiz == null) {
+    if (quizId == null) {
       return false;
     }
-    String path = quizDir + File.separator + quiz + ".xml";
+    String path = quizDir + File.separator + quizId + ".xml";
     File file = new File(path);
     if (!file.exists()) {
       file = new File(path + ".old");
@@ -250,7 +250,7 @@ public class QuizView extends SmsQuizBean {
   private int readStatus(String dirWork) {
     InputStream is = null;
     try {
-      is = new FileInputStream(dirWork + File.separator + quiz + ".status");
+      is = new FileInputStream(dirWork + File.separator + quizId + ".status");
       Properties prop = new Properties();
       prop.load(is);
       status = prop.getProperty("quiz.status");
@@ -276,12 +276,12 @@ public class QuizView extends SmsQuizBean {
     return quizData;
   }
 
-  public String getQuiz() {
-    return quiz;
+  public String getQuizId() {
+    return quizId;
   }
 
-  public void setQuiz(String quiz) {
-    this.quiz = quiz;
+  public void setQuizId(String quizId) {
+    this.quizId = quizId;
   }
 
   public String getMbDone() {

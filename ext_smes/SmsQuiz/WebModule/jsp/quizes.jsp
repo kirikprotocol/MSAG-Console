@@ -23,7 +23,7 @@
           response.sendRedirect("quizAdd.jsp");
           return;
       case QuizesList.RESULT_VIEW :
-          response.sendRedirect("quizView.jsp?quiz=" + URLEncoder.encode(bean.getSelectedQuizId()));
+          response.sendRedirect("quizView.jsp?quizId=" + URLEncoder.encode(bean.getSelectedQuizId()));
           return;
       default :
           errorMessages.add(new SMSCJspException(ru.novosoft.smsc.jsp.SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
