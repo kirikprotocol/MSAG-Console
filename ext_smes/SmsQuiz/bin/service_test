@@ -1,0 +1,17 @@
+#!/bin/bash
+if [ -f logs/smsquiz.err ]; then
+  mv logs/smsquiz.err logs/smsquiz.err.old
+  fi
+  while true;
+    do
+      platform="solaris9"
+        cls="conf/"
+          for i in lib/*.jar ; do cls=$cls:$i ; done
+
+            PARAM="-Xmx128m -cp $cls -Dfile.encoding=windows-1251 -Djava.library.path=lib/platform/$platform  mobi.eyeline.smsquiz.MainTest"
+              $JAVA_HOME/bin/java $PARAM $@ 1>logs/out 2>logs/err &
+                PID=$!
+                  export PID
+                    trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
+                      wait $PID
+                      done
