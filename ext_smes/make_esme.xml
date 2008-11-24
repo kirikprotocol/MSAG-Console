@@ -17,10 +17,12 @@
   <property name="java_lib" location="${exploded}/lib"/>
   <property name="libs_path" location="${SMSC_DIR}/webapps/libs"/>
   <property name="smsc_package_path" value="ru/novosoft/smsc"/>
+  <property name="jsp_dir" value="jsp"/>
 
   <path id="esme_classpath">
     <pathelement path="${java_src}"/>
     <pathelement path="${java_out}"/>
+    <dirset dir="${BUILD_DIR}/classes"/>
     <pathelement path="${BUILD_DIR}/classes/smsc"/>
     <fileset dir="${libs_path}" includes="*.jar"/>
     <fileset dir="${CATALINA_HOME}/common/lib" includes="servlet.jar"/>
@@ -48,35 +50,35 @@
     </jar>
     <mkdir dir="${exploded}/jsp"/>
     <copy todir="${exploded}/jsp" preservelastmodified="yes">
-      <fileset dir="jsp" includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc"/>
+      <fileset dir="${jsp_dir}" includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc"/>
     </copy>
   </target>
 
   <target name="distr" description="installs the webapp">
-    <copy tofile="${exploded}/conf/config.xml" file="${TEMPL_DIR}/${esme_name}/config.xml" preservelastmodified="yes">
+    <copy tofile="${exploded}/conf/config.xml" file="${TEMPL_DIR}/${esme_name}/config.xml" preservelastmodified="yes" failonerror="false">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy todir="${exploded}/bin" file="${BUILD_BIN}/${esme_bin_path}/${esme_bin_name}" flatten="yes" preservelastmodified="yes"/>
-    <copy tofile="${exploded}/bin/service" file="${TEMPL_DIR}/service/${esme_name}" preservelastmodified="yes">
+    <copy todir="${exploded}/bin" file="${BUILD_BIN}/${esme_bin_path}/${esme_bin_name}" flatten="yes" preservelastmodified="yes" failonerror="false"/>
+    <copy tofile="${exploded}/bin/service" file="${TEMPL_DIR}/service/${esme_name}" preservelastmodified="yes" failonerror="false">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy tofile="${exploded}/logger.properties" file="${TEMPL_DIR}/logger/${esme_name}.logger" preservelastmodified="yes">
+    <copy tofile="${exploded}/logger.properties" file="${TEMPL_DIR}/logger/${esme_name}.logger" preservelastmodified="yes" failonerror="false">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy tofile="${exploded}/config.xml" file="${TEMPL_DIR}/${esme_name}/war.xml" preservelastmodified="yes">
+    <copy tofile="${exploded}/config.xml" file="${TEMPL_DIR}/${esme_name}/war.xml" preservelastmodified="yes" failonerror="false">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <jar basedir="${exploded}" jarfile="${DISTR_DIR}/services/${esme_name}.war" compress="9"/>
   </target>
 
   <target name="update" description="update existing installation">
-    <copy todir="${DISTR_DIR}/services/${esme_name}/bin" file="${BUILD_BIN}/${esme_bin_path}/${esme_bin_name}" flatten="yes" preservelastmodified="yes"/>
-    <chmod file="${DISTR_DIR}/services/${esme_name}/bin/${esme_bin_name}" perm="775"/>
-    <copy todir="${DISTR_DIR}/conf/sql" preservelastmodified="yes">
+    <copy todir="${DISTR_DIR}/services/${esme_name}/bin" file="${BUILD_BIN}/${esme_bin_path}/${esme_bin_name}" flatten="yes" preservelastmodified="yes" failonerror="false"/>
+    <chmod file="${DISTR_DIR}/services/${esme_name}/bin/${esme_bin_name}" perm="775" failonerror="false"/>
+    <copy todir="${DISTR_DIR}/conf/sql" preservelastmodified="yes" failonerror="false">
       <fileset dir="${TEMPL_DIR}/sql" includes="${esme_name}.sql updates/${esme_name}*.sql"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy todir="${DISTR_DIR}/webapps/smsc/esme_${esme_name}" preservelastmodified="yes">
+    <copy todir="${DISTR_DIR}/webapps/smsc/esme_${esme_name}" preservelastmodified="yes" failonerror="false">
       <fileset dir="${exploded}/jsp"/>
     </copy>
     <copy todir="${DISTR_DIR}/webapps/smsc/WEB-INF/lib" file="${exploded}/lib/${esme_name}.jar" preservelastmodified="yes"/>

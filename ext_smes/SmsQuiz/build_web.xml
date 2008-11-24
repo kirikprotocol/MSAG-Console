@@ -4,6 +4,7 @@
   <property name="esme_bin_name" value="smsquiz"/>
 
   <property name="java_src" value="WebModule/java"/>
+  <property name="jsp_dir" value="WebModule/jsp"/>
 
   <target name="help">
     <echo message="Do not build from this file directly"/>

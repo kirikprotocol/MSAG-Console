@@ -65,6 +65,6 @@
 
   <target name="distr" depends="install,conf,install_web"/>
 
-  <target name="update" depends="install,install_web"/>
+  <target name="update" depends="install,update_web"/>
 
 </project>
