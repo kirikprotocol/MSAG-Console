@@ -606,7 +606,10 @@ sub process{
       #DIVERTED_FOR = C - real destination
       $outfields->{OTHER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
       # A -> B
-      $billed|=outrow($out,$outfields) if $makeoutrec;
+      for(1..$infields->{PARTS_NUM})
+      {
+        $billed|=outrow($out,$outfields) if $makeoutrec;
+      }
       
       $outfields->{RECORD_TYPE}=10;
 #      $outfields->{RECORD_TYPE}=30;
@@ -616,7 +619,10 @@ sub process{
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
       $outfields->{OTHER_ADDR}=conv_addr_other($infields->{DIVERTED_FOR});
       # B -> C
-      $billed|=outrow($out,$outfields) if $makeoutrec;
+      for(1..$infields->{PARTS_NUM})
+      {
+        $billed|=outrow($out,$outfields) if $makeoutrec;
+      }
 
       
       $outfields->{RECORD_TYPE}=20;
@@ -631,7 +637,10 @@ sub process{
         $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?21:$infields->{SERVICE_ID};
       }
       # B <- A
-      $billed|=outrow($out,$outfields);
+      for(1..$infields->{PARTS_NUM})
+      {
+        $billed|=outrow($out,$outfields);
+      }
       
       $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DIVERTED_FOR});
       $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
@@ -639,10 +648,16 @@ sub process{
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
       $outfields->{OTHER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
       # C <- B
-      $billed|=outrow($out,$outfields);
+      for(1..$infields->{PARTS_NUM})
+      {
+        $billed|=outrow($out,$outfields);
+      }
     }else
     {
-      $billed|=outrow($out,$outfields) if $makeoutrec;
+      for(1..$infields->{PARTS_NUM})
+      {
+        $billed|=outrow($out,$outfields) if $makeoutrec;
+      }
       
       $outfields->{RECORD_TYPE}=20;
       $outfields->{CALL_DIRECTION}='I';
@@ -658,7 +673,10 @@ sub process{
       {
         $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?21:$infields->{SERVICE_ID};
       }
-      $billed|=outrow($out,$outfields);
+      for(1..$infields->{PARTS_NUM})
+      {
+        $billed|=outrow($out,$outfields);
+      }
     }
   }
   unless($billed)
