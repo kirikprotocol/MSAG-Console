@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config>
+  <param name="servicesConfig">conf/services.xml</param>
+  <param name="smppConfig">conf/smpp.properties</param>
+
+  <!-- allowed values for requestHandleStrategy: threadPool, greedyConsumer -->
+  <param name="requestHandleStrategy">threadPool</param>
+  <param name="threadsNumber">10</param>
+
+  <section name="dbpool">
+    <section name="jdbc">
+      <param name="source">@jdbc_source</param>
+      <param name="user">@jdbc_user</param>
+      <param name="password">@jdbc_password</param>
+    </section>
+  </section>
+
+  <section name="replystats">
+    <section name="statsFile">
+      <param name="dir.name">@store_reply</param>
+    </section>
+    <section name="fileCollector">
+      <param name="time.limit">60</param>        <!--seconds -->            <!-- optional -->
+      <param name="time.first.delay">60</param>  <!-- seconds -->           <!-- optional -->
+      <param name="time.period">60</param>       <!-- seconds -->           <!-- optional -->
+    </section>
+  </section>
+
+  <section name="distribution">
+    <param name="smsc.console.host">@smsc_console_host</param>
+    <param name="smsc.console.port">@smsc_console_port</param>
+    <param name="smsc.console.access.login">@smsc_console_login</param>
+    <param name="smsc.console.access.password">@smsc_console_password</param>
+    <param name="smsc.console.connect.timeout">60</param> <!-- seconds -->  <!-- optional -->
+    <param name="smsc.console.closer.period">60</param>   <!-- seconds -->  <!-- optional -->
+
+    <param name="info.sme.stats.dir">@infosme_stats_dir</param>
+    <param name="status.checker.delay.first">10</param> <!-- seconds -->  <!-- optional -->
+    <param name="status.checker.period">30</param>      <!-- seconds -->  <!-- optional -->
+  </section>
+
+  <section name="quizmanager">
+    <param name="dir.quiz">@store_quizes</param>
+    <param name="dir.status">@store_quizes</param>
+    <param name="listener.delay.first">10</param>     <!-- seconds -->  <!-- optional -->
+    <param name="listener.period.repeat">10</param>   <!-- seconds -->  <!-- optional -->
+    <param name="collector.delay.first">30</param>    <!-- seconds -->  <!-- optional -->
+    <param name="collector.period.repeat">30</param>  <!-- seconds -->  <!-- optional -->
+    <param name="dir.result">@store_quizes</param>
+    <param name="dir.work">@store_quizes</param>
+  </section>
+
+  <section name="jmx">
+    <param name="port">@jmx_port</param>
+    <param name="user">@jmx_login</param>
+    <param name="password">@jmx_password</param>
+  </section>
+
+</config>

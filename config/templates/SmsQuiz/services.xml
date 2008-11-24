@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config>
+
+  <service>
+    <service-name>smsquiz_on</service-name>
+    <service-class>mobi.eyeline.smsquiz.subscription.service.SubscriptionOnSMPPService</service-class>
+    <init-param>
+      <param-name>send.subscribe</param-name>
+      <param-value>Услуга успешно добавлена</param-value>
+    </init-param>
+  </service>
+
+  <service>
+    <service-name>smsquiz_off</service-name>
+    <service-class>mobi.eyeline.smsquiz.subscription.service.SubscriptionOffSMPPService</service-class>
+    <init-param>
+      <param-name>send.unsubscribe</param-name>
+      <param-value>Услуга успешно удалена</param-value>
+    </init-param>
+  </service>
+
+  <service>
+    <service-name>smsquiz_help</service-name>
+    <service-class>com.eyeline.sme.handler.services.SimpleResponder</service-class>
+    <init-param>
+      <param-name>responseCode</param-name>
+      <param-value>0</param-value>
+    </init-param>
+    <init-param>
+      <param-name>responseText</param-name>
+      <param-value>Подсказка: 'on' - добавление услуги, 'off' - удаление услуги</param-value>
+    </init-param>
+  </service>
+
+  <service>
+    <service-name>smsquiz_reply</service-name>
+    <service-class>mobi.eyeline.smsquiz.quizmanager.service.ReplySMPPService</service-class>
+  </service>
+
+  <!--  ========================================= SmsQuiz requests ================================================ -->
+
+  <request>
+    <request-name>smsquiz_on</request-name>
+    <destination-address>177</destination-address>
+    <message-pattern>(on|ON|On)</message-pattern>
+  </request>
+
+  <request>
+    <request-name>smsquiz_off</request-name>
+    <destination-address>177</destination-address>
+    <message-pattern>(off|Off|OFF)</message-pattern>
+  </request>
+
+  <request>
+    <request-name>smsquiz_help</request-name>
+    <destination-address>177</destination-address>
+    <message-pattern>(.*)</message-pattern>
+  </request>
+
+  <request>
+    <request-name>smsquiz_reply</request-name>
+    <message-pattern>(.*)</message-pattern>
+  </request>
+
+
+
+  <!-- ============================================ Request mapping ================================================ -->
+
+
+  <request-mapping>
+    <request-name>smsquiz_on</request-name>
+    <service-name>smsquiz_on</service-name>
+  </request-mapping>
+
+  <request-mapping>
+    <request-name>smsquiz_off</request-name>
+    <service-name>smsquiz_off</service-name>
+  </request-mapping>
+
+  <request-mapping>
+    <request-name>smsquiz_help</request-name>
+    <service-name>smsquiz_help</service-name>
+  </request-mapping>
+
+  <request-mapping>
+    <request-name>smsquiz_reply</request-name>
+    <service-name>smsquiz_reply</service-name>
+  </request-mapping>
+
+  <!-- ========================================== Default ================================================== -->
+
+  <default-service>
+    <service-name>smsquiz_help</service-name>
+  </default-service>
+
+
+</config>
