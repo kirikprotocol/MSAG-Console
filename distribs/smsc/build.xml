@@ -481,4 +481,12 @@ Targets:
   <target name="exportarchive" depends="makeweb">
     <ant dir="${SMSC_DIR}/webapps/smscfeatures/smsexportarchive" target="copy"/>
   </target>
+
+  <target name="smsquiz_update" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="smsquiz_update"/>
+  </target>
+  <target name="smsquiz_distr" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="smsquiz_distr"/>
+  </target>
+
 </project>

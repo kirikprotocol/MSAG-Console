@@ -82,6 +82,12 @@ Modules:
   <target name="mcahdb_update">
     <ant dir="MCAhdb" antfile="build.xml" target="update"/>
   </target>
+  <target name="smsquiz_distr">
+    <ant dir="SmsQuiz" antfile="build.xml" target="distr"/>
+  </target>
+  <target name="smsquiz_update">
+    <ant dir="SmsQuiz" antfile="build.xml" target="update"/>
+  </target>
   <target name="unibalance_distr">
     <ant dir="unibalance" antfile="build.xml" target="distr"/>
   </target>
