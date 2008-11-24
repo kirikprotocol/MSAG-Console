@@ -6,11 +6,14 @@ import ru.novosoft.util.jsp.MultipartDataSource;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Collection;
+import java.util.Iterator;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.io.*;
 
 import mobi.eyeline.smsquiz.quizes.CategoriesTableHelper;
+import mobi.eyeline.smsquiz.quizes.AnswerCategory;
 import mobi.eyeline.smsquiz.quizes.view.QuizFullData;
 import mobi.eyeline.smsquiz.QuizBuilder;
 
@@ -193,6 +196,21 @@ public class QuizAdd extends SmsQuizBean {
     if ((tableHelper.getCategories() == null) || (tableHelper.getCategories().size() == 0)) {
       System.out.println("Please select one or more answer's categories");
       return warning("Please select one or more answer's categories");
+    }
+    if((defaultCategory!=null)&&(!"".equals(defaultCategory))) {
+      Collection categories = tableHelper.getCategories();
+      Iterator iter = categories.iterator();
+      int flag=0;
+      while(iter.hasNext()) {
+        AnswerCategory cat = (AnswerCategory)iter.next();
+        if(cat.getName().equals(defaultCategory)) {
+          flag=1;
+          break;
+        }
+      }
+      if(flag==0) {
+        return warning("Default category must be included in answer's categories");
+      }
     }
     try {
       if (request.getMultipartDataSource("file") == null) {

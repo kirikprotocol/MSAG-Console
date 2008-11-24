@@ -37,6 +37,8 @@ public class QuizesList extends SmsQuizBean {
 
   private String dirWork;
 
+  private String arcDir;
+
   private String quizRes;
 
   protected int init(List errors) {
@@ -49,6 +51,7 @@ public class QuizesList extends SmsQuizBean {
       maxTotalSize = getSmsQuizContext().getMaxQuizTotalSize();
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.quiz");
       dirWork = getSmsQuizContext().getConfig().getString("quizmanager.dir.work");
+      arcDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.archive");
       quizRes = getSmsQuizContext().getConfig().getString("quizmanager.dir.result");
       tableHelper.setMaxTotalSize(maxTotalSize);
       tableHelper.setPageSize(pageSize);
@@ -107,13 +110,7 @@ public class QuizesList extends SmsQuizBean {
           }
         }
         QuizShortData quizData = QuizBuilder.parseQuiz(quizPath);
-        Date now = new Date();
-        if ((!new File(quizDir + File.separator + quizId + ".error").exists())
-            &&(now.before(quizData.getDateEnd()) && now.after(quizData.getDateBegin()))) {
-          warnings += "Quiz is active, it can't be deleted: " + quizId;
-        } else {
-          delete(quizId, quizPath, quizData.getAbFile());
-        }
+        delete(quizId, quizPath, quizData.getAbFile());
       }
     }
     catch (Exception e) {
@@ -130,25 +127,29 @@ public class QuizesList extends SmsQuizBean {
   }
 
   private void delete(String quizId, String path, String abFile) {
+    File file =(new File(path)).getParentFile();
+    if(!file.exists()) {
+      file.mkdirs();
+    }
     System.out.println("Deleting quiz: " + quizId);
 
-    deleteFile(new File(abFile));
-    deleteFile(new File(path));
+    renameFile(new File(abFile));
+    renameFile(new File(path));
 
     String parentSlashQuizId = dirWork + File.separator + quizId;
 
-
-    deleteFile(new File(parentSlashQuizId + ".status"));
-    deleteFile(new File(parentSlashQuizId + ".status.old"));
+    renameFile(new File(parentSlashQuizId + ".status"));
+    renameFile(new File(parentSlashQuizId + ".status.old"));
     deleteFile(new File(parentSlashQuizId + ".xml.bin"));
-    deleteFile(new File(parentSlashQuizId + ".error"));
-    deleteFile(new File(parentSlashQuizId + ".distr.error"));
     deleteFile(new File(parentSlashQuizId + ".xml.bin.j"));
-    deleteFile(new File(parentSlashQuizId + ".mod"));
-    deleteFile(new File(parentSlashQuizId + ".mod.processed"));
+    renameFile(new File(parentSlashQuizId + ".error"));
+    renameFile(new File(parentSlashQuizId + ".distr.error"));
+    renameFile(new File(parentSlashQuizId + "(SmsQuiz).mod"));
+    renameFile(new File(parentSlashQuizId + ".mod"));
+    renameFile(new File(parentSlashQuizId + ".mod.processed"));
+    renameFile(new File(parentSlashQuizId + "(SmsQuiz).mod.processed"));
 
-
-    File file = new File(quizRes);
+    file = new File(quizRes);
     File files[] = file.listFiles();
     if(files!=null) {
       for(int j=0;j<files.length;j++) {
@@ -161,6 +162,15 @@ public class QuizesList extends SmsQuizBean {
     deleteFile(file);
   }
 
+  private void renameFile(File file) {
+    try{
+      System.out.println("try to rename file: " + file.getAbsolutePath());
+      String name = file.getName();
+      file.renameTo(new File(arcDir+File.separator+name));
+    }catch(Exception e) {
+      logger.error(e,e);
+    }
+  }
   private void deleteFile(File file) {
     try{
       System.out.println("try to delete file: " + file.getAbsolutePath());
