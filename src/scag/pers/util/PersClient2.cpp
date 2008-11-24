@@ -551,7 +551,7 @@ int PersClientTask::Execute()
         } catch ( PersClientException& e ) {
             smsc_log_warn( log_, "execute pers exception: exc=%s", e.what() );
             p->setStatus( e.getType(), e.what() );
-            this->disconnect( true );
+            this->disconnect(true);
         } catch ( std::exception& e ) {
             smsc_log_warn( log_, "execute exception: exc=%s", e.what() );
             p->setStatus( UNKNOWN_EXCEPTION, e.what() );
@@ -602,7 +602,7 @@ void PersClientTask::ping()
         // smsc_log_debug( log_, "ping sent");
     } catch ( PersClientException& e ) {
         smsc_log_warn( log_, "ping failed: %s", e.what() );
-        this->disconnect( true );
+        this->disconnect(true);
         // it will try to connect later
     } catch (...) {
         smsc_log_warn(log_, "ping: unknown exception");
@@ -707,6 +707,10 @@ void PersClientTask::connect( bool fromDisconnect )
             break;
         }
 
+        connected_ = true;
+        if (!fromDisconnect) pers_->incConnect();
+        actTS_ = time(0);
+
         if ( async_ ) {
             SerialBuffer sb;
             sb.WriteInt32(0);
@@ -731,12 +735,9 @@ void PersClientTask::connect( bool fromDisconnect )
     } while ( false );
 
     if ( res )  {
+        disconnect(false);
         smsc_log_info( log_, "Connection failed: %d %s", res, strs[res] );
         throw PersClientException(PersClientExceptionType(res));
-    } else {
-        connected_ = true;
-        if (!fromDisconnect) pers_->incConnect();
-        actTS_ = time(0);
     }
     smsc_log_info(log_, "PersClientTask connected");
 }
@@ -744,6 +745,7 @@ void PersClientTask::connect( bool fromDisconnect )
 
 bool PersClientTask::disconnect( bool tryToReconnect )
 {
+    if ( !connected_ ) return false;
     try {
         sock.Close();
         connected_ = false;
