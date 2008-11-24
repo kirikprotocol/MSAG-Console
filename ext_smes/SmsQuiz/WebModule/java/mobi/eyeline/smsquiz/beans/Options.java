@@ -35,7 +35,6 @@ public class Options extends SmsQuizBean {
   private int statusCheckerPeriod;
 
   private String quizDir;
-  private String quizStatusDir;
   private int dirListenerDelay;
   private int dirListenerPeriod;
   private int quizCollDelay;
@@ -88,7 +87,6 @@ public class Options extends SmsQuizBean {
         statusCheckerPeriod = getConfig().getInt("distribution.status.checker.period");
 
         quizDir = getConfig().getString("quizmanager.dir.quiz");
-        quizStatusDir = getConfig().getString("quizmanager.dir.status");
         dirListenerDelay = getConfig().getInt("quizmanager.listener.delay.first");
         dirListenerPeriod = getConfig().getInt("quizmanager.listener.period.repeat");
         quizCollDelay = getConfig().getInt("quizmanager.collector.delay.first");
@@ -175,7 +173,6 @@ public class Options extends SmsQuizBean {
       getConfig().setInt("distribution.status.checker.period", statusCheckerPeriod);
 
       getConfig().setString("quizmanager.dir.quiz", quizDir);
-      getConfig().setString("quizmanager.dir.status", quizStatusDir);
       getConfig().setInt("quizmanager.listener.delay.first", dirListenerDelay);
       getConfig().setInt("quizmanager.listener.period.repeat", dirListenerPeriod);
       getConfig().setInt("quizmanager.collector.delay.first", quizCollDelay);
@@ -422,14 +419,6 @@ public class Options extends SmsQuizBean {
 
   public void setQuizDir(String quizDir) {
     this.quizDir = quizDir;
-  }
-
-  public String getQuizStatusDir() {
-    return quizStatusDir;
-  }
-
-  public void setQuizStatusDir(String quizStatusDir) {
-    this.quizStatusDir = quizStatusDir;
   }
 
   public String getDirListenerDelay() {

@@ -104,10 +104,6 @@
   <td><input class=txt validation="nonEmpty" name=quizDir value="<%=StringEncoderDecoder.encode(bean.getQuizDir())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.quiz.status_dir")%></th>
-  <td><input class=txt validation="nonEmpty" name=quizStatusDir value="<%=StringEncoderDecoder.encode(bean.getQuizStatusDir())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.quiz.listener.start_delay")%></th>
   <td><input class=txt validation="positive" name=dirListenerDelay value="<%=StringEncoderDecoder.encode(bean.getDirListenerDelay())%>"></td>
 </tr>

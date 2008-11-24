@@ -55,7 +55,6 @@ public class QuizManager implements Observer {
 
   private ConcurrentHashMap<String, Quiz> quizesMap;
   private String quizDir;
-  private String statusDir;
   private long listenerDelayFirst;
   private long listenerPeriod;
   private long collectorDelayFirst;
@@ -103,7 +102,6 @@ public class QuizManager implements Observer {
       collectorDelayFirst = config.getLong("collector.delay.first", 30);
       collectorPeriod = config.getLong("collector.period.repeat", 30);
       quizDir = config.getString("dir.quiz");
-      statusDir = config.getString("dir.status");
       datePattern = "dd.MM.yyyy HH:mm";
       timePattern = "HH:mm";
       dirResult = config.getString("dir.result", "quizResults");
@@ -141,7 +139,7 @@ public class QuizManager implements Observer {
     quizesMap = new ConcurrentHashMap<String, Quiz>();
     quizCollector = new QuizCollector(quizesMap, dirListener);
 
-    File file = new File(statusDir);
+    File file = new File(dirWork);
     if (!file.exists()) {
       file.mkdirs();
     }
@@ -307,7 +305,7 @@ public class QuizManager implements Observer {
       String fileName = notification.getFileName();
       File file = new File(fileName);
 
-      quiz = new Quiz(statusDir, file, new Distribution(),
+      quiz = new Quiz(file, new Distribution(),
           replyStatsDataSource, distributionManager, dirResult, dirWork);
       quizBuilder.buildQuiz(fileName, quiz);
 
@@ -526,9 +524,6 @@ public class QuizManager implements Observer {
     return quizesMap.values().toString();
   }
 
-  public String getStatusDir() {
-    return statusDir;
-  }
 
   public String getDirResult() {
     return dirResult;

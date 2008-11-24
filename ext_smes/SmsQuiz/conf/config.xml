@@ -85,7 +85,6 @@
       <param name="archive" type="string">/home/alkhal/smsc/build/install/services/SmsQuiz/archive</param>
       <param name="quiz" type="string">/home/alkhal/smsc/build/install/services/SmsQuiz/test_QuizManager</param>
       <param name="result" type="string">/home/alkhal/smsc/build/install/services/SmsQuiz/quizResults</param>
-      <param name="status" type="string">test_QuizManager</param>
       <param name="work" type="string">/home/alkhal/smsc/build/install/services/SmsQuiz/test_QuizManager</param>
     </section>
 

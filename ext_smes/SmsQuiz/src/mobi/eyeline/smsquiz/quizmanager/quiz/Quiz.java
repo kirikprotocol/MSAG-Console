@@ -54,7 +54,7 @@ public class Quiz {
 
   private final Distribution distribution;
 
-  public Quiz(final String statusDir, final File file, Distribution distribution,
+  public Quiz(final File file, Distribution distribution,
               final ReplyStatsDataSource replyStatsDataSource,
               final DistributionManager distributionManager, final String dirResult, final String dirWork) throws QuizException {
     this.dirResult = dirResult;
@@ -70,7 +70,7 @@ public class Quiz {
     fileName = file.getAbsolutePath();
     quizName = file.getName().substring(0, file.getName().lastIndexOf("."));
     jstore.init(dirWork+File.separator+file.getName()+ ".bin", 60000, 10);
-    status = new Status(statusDir + File.separator + quizName + ".status");
+    status = new Status(dirWork + File.separator + quizName + ".status");
     replyPatterns = new ArrayList<ReplyPattern>();
   }
 
