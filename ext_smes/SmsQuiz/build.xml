@@ -28,11 +28,9 @@
   </target>
 
   <target name="build" depends="compile">
-    <copy todir="${out_dir}/mobi/eyeline/smsquiz/subscription/datasource/impl">
-        <fileset file="${SMS_QUIZ_HOME}/src/mobi/eyeline/smsquiz/subscription/datasource/impl/smsquiz.properties"/>
-    </copy>
-    <jar jarfile="${out_dir}/${module_name}.jar" manifest="${SMS_QUIZ_HOME}/MANIFEST.MF">
+    <jar jarfile="${out_dir}/${esme_name}.jar" manifest="${SMS_QUIZ_HOME}/MANIFEST.MF">
       <fileset dir="${out_dir}" excludes="*.jar" />
+      <fileset dir="${src_dir}" includes="**/*.properties"/>
     </jar>
   </target>
 
