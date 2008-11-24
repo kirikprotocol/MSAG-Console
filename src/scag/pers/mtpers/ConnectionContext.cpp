@@ -35,6 +35,7 @@ void ConnectionContext::createFakeResponse(PersServerResponseType response) {
     fakeResp_.WriteInt32(sequenceNumber_);
   }
   fakeResp_.WriteInt8(static_cast<uint8_t>(response));
+  sendResponse(fakeResp_.c_ptr(), fakeResp_.GetSize());
 }
 
 bool ConnectionContext::notSupport(PersCmd cmd) {
@@ -161,7 +162,7 @@ bool ConnectionContext::processReadSocket(const time_t& now) {
     inbuf_.SetPos(0);
     packetLen_ = inbuf_.ReadInt32();
     smsc_log_debug(logger_, "%d bytes will be read from %p", packetLen_, socket_);
-    if(packetLen_ > MAX_PACKET_SIZE) {
+    if (packetLen_ > MAX_PACKET_SIZE) {
       smsc_log_warn(logger_, "Too big packet from client");
       return false;
     }
@@ -175,7 +176,7 @@ bool ConnectionContext::processReadSocket(const time_t& now) {
   if (n > 0) {
     SocketData::updateTimestamp(socket_, now);
     inbuf_.Append(readBuf_, n);
-  } else if(errno != EWOULDBLOCK) {
+  } else if (errno != EWOULDBLOCK) {
     if (n) smsc_log_warn(logger_, "read error: %s(%d)", strerror(errno), errno);
     return false;
   }
@@ -192,19 +193,19 @@ bool ConnectionContext::processReadSocket(const time_t& now) {
   inbuf_.SetPos(PACKET_LENGTH_SIZE);
   PersPacket* packet = parsePacket();
   inbuf_.Empty();
-  packetLen_ = 0;
 
   if (!packet) {
-    sendResponse(fakeResp_.c_ptr(), fakeResp_.GetSize());
+    packetLen_ = 0;
     return true;
   }
 
   smsc_log_info(debuglogger_, "process seq.number:%d packet:%p key:%d/'%s' packet_size:%d socket:%p",
                              packet->getSequenceNumber(), packet, packet->intKey, packet->address.toString().c_str(), packetLen_, socket_);
+  packetLen_ = 0;
 
   if (!readerManager_.processPacket(packet)) {
+    delete packet;
     createFakeResponse(scag::pers::util::RESPONSE_ERROR);
-    sendResponse(fakeResp_.c_ptr(), fakeResp_.GetSize());
   }
   return true;
 }
