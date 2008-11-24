@@ -84,7 +84,7 @@ public class MainTest {
             return new Thread(r, "QuizCreator");
           }
         });
-        scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 780, TimeUnit.SECONDS);
+        scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 1200, TimeUnit.SECONDS);
 
 
     } catch (Exception e) {
