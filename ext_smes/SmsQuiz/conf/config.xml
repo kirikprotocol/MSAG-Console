@@ -1,60 +1,133 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
 
 <config>
-  <param name="servicesConfig">conf/services.xml</param>
-  <param name="smppConfig">conf/smpp.properties</param>
-
-  <!-- allowed values for requestHandleStrategy: threadPool, greedyConsumer -->
-  <param name="requestHandleStrategy">threadPool</param>
-  <param name="threadsNumber">10</param>
+  <param name="requestHandleStrategy" type="string">threadPool</param>
+  <param name="servicesConfig" type="string">conf/services.xml</param>
+  <param name="smppConfig" type="string">/home/alkhal/smsc/build/install/services/SmsQuiz/conf/smpp.properties</param>
+  <param name="threadsNumber" type="string">10</param>
 
   <section name="dbpool">
-    <section name="jdbc">
-      <param name="source">jdbc:mysql://mangal/summer_edu?autoReconnect=true&amp;autoPoolReconnect=true&amp;useUnicode=true&amp;</param>
-      <param name="user">student</param>
-      <param name="password">student</param>
-    </section>
-  </section>
 
-  <section name="replystats">
-    <section name="statsFile">
-      <param name="dir.name">replyStats</param>
-    </section>
-    <section name="fileCollector">
-      <param name="time.limit">60</param>  <!--seconds -->                  <!-- optional -->
-      <param name="time.first.delay">60</param>  <!-- seconds -->           <!-- optional -->
-      <param name="time.period">60</param>       <!-- seconds -->           <!-- optional -->
+    <section name="jdbc">
+      <param name="driver" type="string">com.mysql.jdbc.Driver</param>
+      <param name="password" type="string">student</param>
+      <param name="source" type="string">jdbc:mysql://mangal/summer_edu?autoReconnect=true&amp;autoPoolReconnect=true&amp;useUnicode=true&amp;</param>
+      <param name="user" type="string">student</param>
     </section>
   </section>
 
   <section name="distribution">
-    <param name="smsc.console.host">phoenix</param>
-    <param name="smsc.console.port">39826</param>
-    <param name="smsc.console.access.login">admin</param>
-    <param name="smsc.console.access.password">password</param>                  
-    <param name="smsc.console.connect.timeout">60</param> <!-- seconds --><!-- optional -->
-    <param name="smsc.console.closer.period">60</param> <!-- seconds -->  <!-- optional -->
 
-    <param name="info.sme.stats.dir">infoSme</param>
-    <param name="status.checker.delay.first">10</param> <!-- seconds -->  <!-- optional -->
-    <param name="status.checker.period">30</param>    <!-- seconds -->    <!-- optional -->
-  </section>
+    <section name="info">
 
-  <section name="quizmanager">
-    <param name="dir.quiz">test_QuizManager</param>
-    <param name="dir.status">test_QuizManager</param>
-    <param name="listener.delay.first">10</param>     <!-- seconds -->    <!-- optional -->
-    <param name="listener.period.repeat">10</param>    <!-- seconds -->   <!-- optional -->
-    <param name="collector.delay.first">30</param>     <!-- seconds -->   <!-- optional -->
-    <param name="collector.period.repeat">30</param>    <!-- seconds -->  <!-- optional -->
-    <param name="dir.result">quizResults</param>                          
-    <param name="dir.work">test_QuizManager</param>
+      <section name="sme">
+
+        <section name="stats">
+          <param name="dir" type="string">/home/alkhal/smsc/build/install/services/InfoSme/store</param>
+        </section>
+      </section>
+    </section>
+
+    <section name="smsc">
+
+      <section name="console">
+        <param name="host" type="string">phoenix</param>
+        <param name="port" type="string">39826</param>
+
+        <section name="access">
+          <param name="login" type="string">admin</param>
+          <param name="password" type="string">password</param>
+        </section>
+
+        <section name="closer">
+          <param name="period" type="int">60</param>
+        </section>
+
+        <section name="connect">
+          <param name="timeout" type="int">60</param>
+        </section>
+      </section>
+    </section>
+
+    <section name="status">
+
+      <section name="checker">
+        <param name="period" type="int">30</param>
+
+        <section name="delay">
+          <param name="first" type="int">10</param>
+        </section>
+      </section>
+    </section>
   </section>
 
   <section name="jmx">
-    <param name="port">32323</param>
-    <param name="user">admin</param>
-    <param name="password">admin</param>
+    <param name="password" type="string">admin</param>
+    <param name="port" type="int">32323</param>
+    <param name="user" type="string">admin</param>
   </section>
 
+  <section name="quizmanager">
+
+    <section name="collector">
+
+      <section name="delay">
+        <param name="first" type="int">30</param>
+      </section>
+
+      <section name="period">
+        <param name="repeat" type="int">30</param>
+      </section>
+    </section>
+
+    <section name="dir">
+      <param name="archive" type="string">/home/alkhal/smsc/build/install/services/SmsQuiz/archive</param>
+      <param name="quiz" type="string">/home/alkhal/smsc/build/install/services/SmsQuiz/test_QuizManager</param>
+      <param name="result" type="string">/home/alkhal/smsc/build/install/services/SmsQuiz/quizResults</param>
+      <param name="status" type="string">test_QuizManager</param>
+      <param name="work" type="string">/home/alkhal/smsc/build/install/services/SmsQuiz/test_QuizManager</param>
+    </section>
+
+    <section name="listener">
+
+      <section name="delay">
+        <param name="first" type="int">15</param>
+      </section>
+
+      <section name="period">
+        <param name="repeat" type="int">30</param>
+      </section>
+    </section>
+  </section>
+
+  <section name="replystats">
+
+    <section name="fileCollector">
+
+      <section name="time">
+        <param name="limit" type="int">60</param>
+        <param name="period" type="int">60</param>
+
+        <section name="first">
+          <param name="delay" type="int">60</param>
+        </section>
+      </section>
+    </section>
+
+    <section name="statsFile">
+
+      <section name="dir">
+        <param name="name" type="string">/home/alkhal/smsc/build/install/services/SmsQuiz/replyStats</param>
+      </section>
+
+      <section name="time">
+        <param name="limit" type="int">601</param>
+
+        <section name="first">
+          <param name="delay" type="int">601</param>
+        </section>
+      </section>
+    </section>
+  </section>
 </config>
