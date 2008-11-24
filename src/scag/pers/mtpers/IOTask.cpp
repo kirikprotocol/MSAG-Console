@@ -71,14 +71,12 @@ int IOTask::Execute() {
       }
     }
     while(waitingAdd_.Count()) {
-      Socket *s;
       waitingAdd_.Pop(s);
       cx = SocketData::getContext(s);
       if (cx->canDelete()) {
         delete cx;
       }
     }
-
   }
   smsc_log_debug(logger, "%p quit", this);
 
