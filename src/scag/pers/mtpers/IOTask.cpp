@@ -6,11 +6,11 @@ namespace scag { namespace mtpers {
 using smsc::core::synchronization::MutexGuard;
 
 IOTask::IOTask(IOTaskManager& iomanager, uint16_t connectionTimeout, const char* logName):iomanager_(iomanager),
-               connectionTimeout_(connectionTimeout)
+               connectionTimeout_(connectionTimeout), lastCheckTime_(0)
 {
   logger = Logger::getInstance(logName);
   smsc_log_debug(logger, "%p %s task created", this, logName);
-  checkTimeoutPeriod_ = connectionTimeout_ / 10 > 0 ? connectionTimeout_ / 10 : 1;
+  checkTimeoutPeriod_ = connectionTimeout_ / 10 > 1 ? connectionTimeout_ / 10 : 1;
 }
 
 bool IOTask::idle() const {
@@ -53,10 +53,13 @@ int IOTask::Execute() {
 
     removeSocket(error);
   }
+  smsc_log_debug(logger, "stopping iotask %p ...", this);
+  int socketsCount = 0;
   {
     Socket* s;
     ConnectionContext* cx;
     MutexGuard g(socketMonitor_);
+    socketsCount = multiplexer_.count();
 
     while (multiplexer_.count()) {
       s = multiplexer_.get(0);
@@ -67,8 +70,16 @@ int IOTask::Execute() {
         delete cx;
       }
     }
-  }
+    while(waitingAdd_.Count()) {
+      Socket *s;
+      waitingAdd_.Pop(s);
+      cx = SocketData::getContext(s);
+      if (cx->canDelete()) {
+        delete cx;
+      }
+    }
 
+  }
   smsc_log_debug(logger, "%p quit", this);
 
   return 0;
@@ -153,6 +164,7 @@ void IOTask::removeSocketFromMultiplexer(Socket* s) {
 }
 
 void IOTask::stop() {
+  smsc_log_debug(logger, "stop iotask %p", this);
   isStopping = true;
 
   MutexGuard g(socketMonitor_);

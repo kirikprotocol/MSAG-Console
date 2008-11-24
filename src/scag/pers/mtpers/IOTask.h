@@ -61,14 +61,15 @@ protected:
   bool idle() const;
 
 protected:
+  uint16_t connectionTimeout_;
+  uint16_t checkTimeoutPeriod_;
+  time_t lastCheckTime_;
+  Performance performance_;
   RWMultiplexer multiplexer_;
   EventMonitor socketMonitor_;
   IOTaskManager& iomanager_;
   Logger* logger;
   Array<Socket*> waitingAdd_;
-  uint16_t connectionTimeout_;
-  uint16_t checkTimeoutPeriod_;
-  time_t lastCheckTime_;
 };
 
 
@@ -81,8 +82,6 @@ protected:
   void addSocketToMultiplexer(Socket* s);
   void processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now);
   void disconnectSocket(Socket *s);
-protected:
-  Performance performance_;
 };
 
 class MTPersWriter: public IOTask {

@@ -32,7 +32,7 @@ public:
   virtual ~StorageManager() {};
 
   void init(uint16_t maxWaitingCount, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg);
-  bool process(PersPacket* cx);
+  bool process(PersPacket* packet);
   void shutdown();
   unsigned getInfrastructNodeNumber() { return 0; }
 
@@ -42,6 +42,7 @@ private:
 private:
   ThreadPool pool_;
   Mutex procMutex_;
+  bool isStopped_;
   Logger *logger_;
   Array<AbonentStorageProcessor*> storages_;
   unsigned locationsCount_;

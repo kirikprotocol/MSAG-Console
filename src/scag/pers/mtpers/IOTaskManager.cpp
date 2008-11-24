@@ -61,7 +61,8 @@ void TasksSorter::assignTask(uint16_t index, SortedTask *task) {
 }
 
 IOTaskManager::IOTaskManager(uint16_t maxThreads, uint32_t maxSockets, uint16_t timeout, const char *logName)
-                            :maxThreads_(maxThreads), maxSockets_(maxSockets), connectionTimeout_(timeout), logger(Logger::getInstance(logName))
+                            :maxThreads_(maxThreads), maxSockets_(maxSockets), connectionTimeout_(timeout), logger_(Logger::getInstance(logName)),
+                             isStopped_(true)
 {
   int mod = maxSockets % maxThreads;
   maxSockets_ = mod > 0 ? (maxSockets / maxThreads_) + 1 : maxSockets / maxThreads_;
@@ -77,6 +78,7 @@ void IOTaskManager::init() {
     taskSorter_.assignTask(i, t);
     pool_.startTask(t);
   }
+  isStopped_ = false;
 }
 
 void IOTaskManager::removeContext(IOTask* t, uint16_t contextsNumber) {
@@ -92,6 +94,10 @@ bool IOTaskManager::canStop() {
 }
 
 void IOTaskManager::shutdown() {
+  {
+    MutexGuard g(tasksMutex_);
+    isStopped_ = true;
+  }
   pool_.shutdown();
 }
 

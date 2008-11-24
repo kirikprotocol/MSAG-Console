@@ -179,6 +179,11 @@ int main(int argc, char* argv[]) {
     ps = new PersServer(readers, writers, perfCounterOn);
     ps->init(host.c_str(), port);
     ps->Execute();
+    delete ps;
+
+    storageManager.shutdown();
+    readers.shutdown();
+    writers.shutdown();
 
     smsc_log_error(logger, "PersServer stopped");
   } catch (const ConfigException& exc) {

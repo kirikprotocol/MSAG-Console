@@ -94,17 +94,23 @@ int StorageProcessor::Execute() {
     }
     process.clear();
   }
-  for (vector<PersPacket*>::iterator i = waitingProcess_.begin(); i != waitingProcess_.end(); ++i) {
-    if (*i) {
-      delete *i;
+  smsc_log_debug(logger_, "stopping storage processor %p ...", this);
+  {
+    MutexGuard g(processMonitor_);
+    for (vector<PersPacket*>::iterator i = waitingProcess_.begin(); i != waitingProcess_.end(); ++i) {
+      if (*i) {
+        delete *i;
+      }
     }
+    waitingProcess_.clear();
   }
-  waitingProcess_.clear();
   shutdownStorages();
+  smsc_log_debug(logger_, "stoped storage processor %p", this);
   return 0;
 }
 
 void StorageProcessor::stop() {
+  smsc_log_debug(logger_, "stop storage processor %p", this);
   isStopping = true;
 
   MutexGuard g(processMonitor_);

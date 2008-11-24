@@ -13,10 +13,7 @@ using scag::util::RelockMutexGuard;
 class ReaderTaskManager : public IOTaskManager {
 public:
   ReaderTaskManager(uint16_t maxThreads, uint32_t maxSock, uint16_t timeout, StorageManager& storageManager, bool perfCounterOn = false) 
-                   : IOTaskManager(maxThreads, maxSock, timeout, "readerman"), storageManager_(storageManager), perfCounterOn_(perfCounterOn)
-  {
-     init();
-  }; 
+                   : IOTaskManager(maxThreads, maxSock, timeout, "readerman"), storageManager_(storageManager), perfCounterOn_(perfCounterOn) {}
 
   IOTask* newTask() {
     MTPersReader* reader = new MTPersReader(*this, connectionTimeout_);
@@ -28,16 +25,19 @@ public:
 
   bool process(ConnectionContext* cx) {
     RelockMutexGuard g(tasksMutex_);
+    if (isStopped_) {
+      return false;
+    }
     IOTask *t = (IOTask*)taskSorter_.getFirst();
     if (t->getSocketsCount() < maxSockets_) {
       cx->getSocket()->Write("OK", 2);
       t->registerContext(cx);
       taskSorter_.reorderTask(t);
-      smsc_log_debug(logger, "%p:%d choosen for context %p", t, t->getSocketsCount(), cx);
+      smsc_log_debug(logger_, "%p:%d choosen for context %p", t, t->getSocketsCount(), cx);
       return true;
     } else {
       g.Unlock();
-      smsc_log_warn(logger, "Can't process %p context. Server busy. Max sockets=%d, current sockets=%d", cx,  maxSockets_, t->getSocketsCount());
+      smsc_log_warn(logger_, "Can't process %p context. Server busy. Max sockets=%d, current sockets=%d", cx,  maxSockets_, t->getSocketsCount());
       return false;
     }
   }
@@ -48,7 +48,6 @@ public:
 
   void shutdown() {
     readers_.clear();
-    storageManager_.shutdown();
     IOTaskManager::shutdown();
   }
 

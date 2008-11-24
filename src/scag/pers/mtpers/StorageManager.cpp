@@ -5,7 +5,7 @@ namespace scag { namespace mtpers {
 
 using scag::util::storage::StorageNumbering;
 
-StorageManager::StorageManager(const NodeConfig& nodeCfg): nodeNumber_(nodeCfg.nodeNumber), locationsCount_(nodeCfg.locationsCount),
+StorageManager::StorageManager(const NodeConfig& nodeCfg): nodeNumber_(nodeCfg.nodeNumber), locationsCount_(nodeCfg.locationsCount), isStopped_(true),
                                                            storagesCount_(nodeCfg.storagesCount), logger_(Logger::getInstance("storeman")) {
   StorageNumbering::setInstance(nodeCfg.nodesCount);
 }
@@ -36,6 +36,8 @@ void StorageManager::init(uint16_t maxWaitingCount, const AbonentStorageConfig& 
     pool_.startTask(infrastructStorage_);
   }
 
+  isStopped_ = false;
+
 }
 
 AbonentStorageProcessor* StorageManager::getLocation(unsigned elementStorageNumber) {
@@ -43,6 +45,9 @@ AbonentStorageProcessor* StorageManager::getLocation(unsigned elementStorageNumb
 }
 
 bool StorageManager::process(PersPacket* packet) {
+  if (isStopped_) {
+    return false;
+  }
   if (packet->notAbonentsProfile()) {
     if (nodeNumber_ != getInfrastructNodeNumber()) {
       smsc_log_warn(logger_, "can't process infrastruct request on node number=%d", nodeNumber_);
@@ -64,6 +69,7 @@ bool StorageManager::process(PersPacket* packet) {
 }
 
 void StorageManager::shutdown() {
+  isStopped_ = true;
   infrastructStorage_->stop();
   pool_.shutdown();
 }

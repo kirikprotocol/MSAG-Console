@@ -43,19 +43,18 @@ public:
   virtual void shutdown();
   void removeContext(IOTask* t, uint16_t contextsNumber = 1);
   bool canStop();
+  void init();
 
 private:
   virtual IOTask* newTask() = 0;
-
-protected:
-  void init();
 
 protected:
   TasksSorter taskSorter_;
   Mutex tasksMutex_;
   uint32_t maxSockets_;    
   uint16_t connectionTimeout_;
-  Logger *logger;
+  Logger *logger_;
+  bool isStopped_;
 
 private:
   ThreadPool pool_;

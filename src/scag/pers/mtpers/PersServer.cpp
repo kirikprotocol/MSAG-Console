@@ -8,6 +8,8 @@ PersServer::PersServer(ReaderTaskManager& readers, WriterTaskManager& writers, b
                        :readers_(readers), writers_(writers), perfCounterOn_(perfCounterOn) 
 {
   perfCounterPeriod_ = perfCounterOn_ ? perfCounterPeriod : 0;
+  readers_.init();
+  writers_.init();
 }
 
 int PersServer::Execute()
@@ -75,10 +77,7 @@ const char* PersServer::taskName()
 void PersServer::shutdown()
 {
   isStopping_ = true;
-
   masterSocket_.Close();
-  readers_.shutdown();
-  writers_.shutdown();
 }
 
 void PersServer::init(const char *host, int port)
