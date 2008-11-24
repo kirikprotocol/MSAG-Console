@@ -46,7 +46,7 @@
       <fileset dir="${out_dir}" includes="*.jar"/>
     </copy>
     <copy todir="${SMS_QUIZ_DISTR_DIR}/bin">
-        <fileset dir="${SMS_QUIZ_HOME}/bin"/>
+      <fileset dir="${SMS_QUIZ_HOME}/bin"/>
     </copy>
 
   </target>
@@ -60,7 +60,7 @@
   </target>
 
   <target name="conf" depends="install">
-    <copydir src="${SMS_QUIZ_HOME}/conf" dest="${SMS_QUIZ_DISTR_DIR}/conf"/>
+    <copydir src="${TEMPL_DIR}/${esme_name}" dest="${SMS_QUIZ_DISTR_DIR}/conf"/>    
   </target>
 
   <target name="distr" depends="install,conf,install_web"/>
