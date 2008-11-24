@@ -80,7 +80,8 @@ public class Status {
   }
 
   void setQuizErrorStatus(QuizError error, String reason) throws QuizException {
-    this.quizStatus = QuizStatus.FINISHED_ERROR;
+    quizStatus = QuizStatus.FINISHED_ERROR;
+    prop.setProperty(QUIZ_ST, quizStatus.toString());
     prop.setProperty(ERROR_CODE, error.getCode());
     prop.setProperty(ERROR_REASON, reason);
     storeProps();

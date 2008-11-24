@@ -26,10 +26,7 @@ import java.lang.management.ManagementFactory;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -72,6 +69,8 @@ public class QuizManager implements Observer {
 
   private int run = -1;
   private int update = -1;
+
+  private ThreadPoolExecutor removeExecutor;
 
   public static void init(final String configFile, DistributionManager distributionManager, ReplyStatsDataSource replyStatsDataSource,
                           SubscriptionManager subscriptionManager) throws QuizException {
@@ -149,7 +148,13 @@ public class QuizManager implements Observer {
     monitor = new QuizManagerMBean(this);
     lock = new ReentrantLock();
     notUpdate = lock.newCondition();
-    notRun = lock.newCondition();    
+    notRun = lock.newCondition();
+
+    removeExecutor = new ThreadPoolExecutor(1,10,30,TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory(){
+      public Thread newThread(Runnable r) {
+        return new Thread(r,"FileRemover");
+      }
+    });
   }
 
   public void start() {
@@ -245,10 +250,6 @@ public class QuizManager implements Observer {
           if(!quiz.isActive()) {
             quizesMap.remove(e.getKey());
           }
-          else {
-            writeError(fileName, new Exception("Deleted quiz was active. see it's results"));
-            quiz.exportStats();
-          }
           break;
         }
       }
@@ -258,18 +259,11 @@ public class QuizManager implements Observer {
         if(taskId!=null) {
           distributionManager.removeTask(taskId);
         }
-        try{
-          quiz.setError(QuizError.WARNING,"Quiz deleted");
-        }catch (QuizException e) {}
       }
     }
     catch (Throwable e) {
       writeError(notification.getFileName(), e);
       throw new QuizException(e);
-    } finally {
-      if(quiz!=null) {
-        quiz.setQuizStatus(Status.QuizStatus.FINISHED_ERROR);
-      }
     }
   }
 
@@ -376,7 +370,7 @@ public class QuizManager implements Observer {
     String line;
     PrintWriter writer = null;
     BufferedReader reader = null;
-    String modifiedFileName = dirWork + File.separator + quizId + ".mod";
+    String modifiedFileName = dirWork + File.separator + quizId + "(SmsQuiz)" + ".mod";
     try {
       reader = new BufferedReader(new FileReader(file));
       writer = new PrintWriter(new BufferedWriter(new FileWriter(modifiedFileName)));
@@ -424,10 +418,10 @@ public class QuizManager implements Observer {
       writer.println("Error during creating quiz:");
       exc.printStackTrace(writer);
       writer.flush();
-   //todo   dirListener.remove(quizFileName,true);
-      String statusFile = dirWork + File.separator + quizName + ".error";
-      if(new File(statusFile).exists()) {
-    //todo    dirListener.remove(statusFile,true);
+      try{
+        removeExecutor.execute(new FileRemover(quizFileName,true));
+      }catch (Exception e) {
+        logger.error(e,e);
       }
     } catch (Exception e) {
       logger.error("Unable to create error file: " + errorFile, e);
@@ -489,7 +483,11 @@ public class QuizManager implements Observer {
       writer.println("New quiz");
       writer.println(newQuizFileName);
       writer.flush();
-   //todo   dirListener.remove(newQuizFileName,true);
+      try{
+        removeExecutor.execute(new FileRemover(newQuizFileName,true));
+      }catch (Exception e) {
+        logger.error(e,e);
+      }
     } catch (IOException e) {
       logger.error("Unable to create error file: " + errorFile, e);
       throw new QuizException("Unable to create error file: " + errorFile, e);
@@ -589,7 +587,6 @@ public class QuizManager implements Observer {
 
         Quiz quiz = quizesMap.get(destAddress);
         if((!new File(fileName).exists())||(quiz == null)) {
-          writeError(fileName, new Exception("Error during creating quiz: quiz's file was deleted "+fileName));
           logger.warn("Error during creating quiz: quiz's file was deleted "+fileName);
           return;
         }
@@ -648,6 +645,22 @@ public class QuizManager implements Observer {
         }
       }
 
+    }
+  }
+  private class FileRemover extends Thread{
+    private String filename;
+    private boolean rename;
+
+    public FileRemover(String filename, boolean rename) {
+      this.filename = filename;
+      this.rename = rename;
+    }
+    public void run() {
+      try {
+        dirListener.remove(filename, rename);
+      } catch (Exception e) {
+        logger.error(e,e);
+      }
     }
   }
 

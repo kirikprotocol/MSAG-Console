@@ -203,7 +203,7 @@ public class MainTest {
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     Calendar cal = Calendar.getInstance();
     cal.setTimeInMillis(System.currentTimeMillis());
-    Date dateBegin = new Date(cal.getTime().getTime()+60000);
+    Date dateBegin = new Date(cal.getTime().getTime());
     cal.set(Calendar.SECOND, 0);
     cal.add(Calendar.MINUTE, minutes);
     Date dateEnd = cal.getTime();
