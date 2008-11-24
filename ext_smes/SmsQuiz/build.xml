@@ -55,10 +55,16 @@
     <ant antfile="build_web.xml" target="distr"/>
   </target>
 
+  <target name="update_web">
+    <ant antfile="build_web.xml" target="update"/>
+  </target>
+
   <target name="conf" depends="install">
     <copydir src="${SMS_QUIZ_HOME}/conf" dest="${SMS_QUIZ_DISTR_DIR}/conf"/>
   </target>
 
   <target name="distr" depends="install,conf,install_web"/>
+
+  <target name="update" depends="install,install_web"/>
 
 </project>
