@@ -25,6 +25,7 @@ int RWMultiplexer::add(Socket* sock, int type)
 
 int RWMultiplexer::canReadWrite(SockArray& read, SockArray& write, SockArray& error, int timeout)
 {
+  smsc_log_debug(logger, "can read/write");
   read.Empty();
   write.Empty();
   error.Empty();
@@ -33,7 +34,7 @@ int RWMultiplexer::canReadWrite(SockArray& read, SockArray& write, SockArray& er
   if(!fdsCount || poll(&fds[0], fdsCount, timeout) <= 0) {
     return 0;
   }
-
+  smsc_log_debug(logger, "%d sockets can read/write", fdsCount);
   for(int i = 0; i < fdsCount; ++i)
   {
     Socket *s = sockets[i];
