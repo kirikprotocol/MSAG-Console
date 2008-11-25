@@ -3,6 +3,7 @@
 
 #include "scag/pers/BlocksHSStorage.h"
 #include "scag/util/storage/SerialBuffer.h"
+#include "scag/util/storage/Glossary.h"
 #include "scag/pers/Profile.h"
 #include "scag/pers/util/PersClient.h"
 
@@ -13,6 +14,7 @@ namespace scag { namespace pers { namespace util {
   using namespace scag::pers;
   using scag::pers::util::PersClient;
   using scag::pers::util::PersClientException;
+  using scag::util::storage::GlossaryBase;
 
 
   static const char* restore_properties[] = {
@@ -93,7 +95,7 @@ public:
         return 0;
     }
     
-    int readDataFiles(int files_count, bool sendToPers) {
+    int readDataFiles(int files_count, bool sendToPers, GlossaryBase* glossary) {
       if (!files_count) {
         return 0;
       }
@@ -143,7 +145,7 @@ public:
               //dataFile.Read((void*)data_buff, effectiveBlockSize);
               dataFile.Read((void*)data_buff, hdr.data_size);
               //status_profiles += restoreProfile(hdr.key, data, sendToPers);
-              status_profiles += restoreProfileCompletely(hdr.key, data, sendToPers);
+              status_profiles += restoreProfileCompletely(hdr.key, data, sendToPers, glossary);
             }
             total_count += profiles_count;
             total_status_profiles += status_profiles;
@@ -160,10 +162,10 @@ public:
       return 0;
     }
 private:
-  int restoreProfileCompletely(const Key& key, SerialBuffer& data, bool sendToPers) {
+  int restoreProfileCompletely(const Key& key, SerialBuffer& data, bool sendToPers, GlossaryBase* glossary) {
     try {
       Profile pf(key.toString());   
-      pf.Deserialize(data, true);
+      pf.Deserialize(data, true, glossary);
       SerialBuffer batch;
       
       if (sendToPers) {
@@ -175,17 +177,22 @@ private:
       char *key = 0;
       int prop_count = 0;
       while(it.Next(key, prop)) {
-        pc.SetPropertyPrepare(*prop, batch);
+        if (sendToPers) {
+          pc.SetPropertyPrepare(*prop, batch);
+        }
+        smsc_log_debug(logger, "abnt:'%s' property:'%s'", pf.getKey().c_str(), prop->toString().c_str());
         ++prop_count;
       }
       if (sendToPers) {
         pc.RunBatch(batch);
         smsc_log_debug(logger, "send %d properties to pers for profile %s", prop_count, pf.getKey().c_str());
       }
-      for (int i = 0; i < prop_count; ++i) {
-        pc.SetPropertyResult(batch);
+      if (sendToPers) {
+        for (int i = 0; i < prop_count; ++i) {
+          pc.SetPropertyResult(batch);
+        }
+        return 1;
       }
-      return 1;
     } catch (const SerialBufferOutOfBounds &e) {
       smsc_log_warn(logger, "SerialBufferOutOfBounds Bad data in buffer read");
       return 0;
@@ -195,10 +202,10 @@ private:
     }
   }
 
-  int restoreProfile(const Key& key, SerialBuffer& data, bool sendToPers) {
+  int restoreProfile(const Key& key, SerialBuffer& data, bool sendToPers, GlossaryBase* glossary) {
     try {
       Profile pf(key.toString());   
-      pf.Deserialize(data, true);
+      pf.Deserialize(data, true, glossary);
       if (!pf.GetProperty(STATUS_PROPERTY)) {
         return 0;
       }
