@@ -51,7 +51,6 @@ public class RandomAccessFileReader {
 
     while (!eol) {
       switch (c = read()) {
-        case -1:
         case '\n':
           eol = true;
           break;

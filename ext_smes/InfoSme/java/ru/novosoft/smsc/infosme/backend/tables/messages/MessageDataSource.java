@@ -8,6 +8,7 @@ import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.smsc.util.RandomAccessFileReader;
+import ru.novosoft.smsc.util.AdvancedStringTokenizer;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
@@ -89,7 +90,7 @@ public class MessageDataSource extends AbstractDataSourceImpl {
 
             j++;
 
-            StringTokenizer st = new StringTokenizer(line, ",");
+            AdvancedStringTokenizer st = new AdvancedStringTokenizer(line, ",");
             int state = Integer.parseInt(st.nextToken().trim());
             if (state == Message.State.DELETED.getId())
               continue;
@@ -100,7 +101,7 @@ public class MessageDataSource extends AbstractDataSourceImpl {
 
             String msisdn = st.nextToken().trim();
             String region = st.nextToken();
-            String message = prepareMessage(st.nextToken());
+            String message = st.nextToken();
 
             long id = getId(idbase, offset);
 
@@ -158,17 +159,15 @@ public class MessageDataSource extends AbstractDataSourceImpl {
     return y2 << 60 | y1 << 56 | m2 << 52 | m1 << 48 | d2 << 44 | d1 << 40 | h2 << 36 | h1 << 32;
   }
 
-  private static String prepareMessage(String m) {
-    String message = m;
-    message = message.trim();
-    // remove braces
-    message = message.substring(1, message.length() - 1);
-
-    message = message.replaceAll("\\\\n", "\n");
-    message = message.replaceAll("\\\\\"", "\"");
-
-    return message;
-  }
+//  private static String prepareMessage(String m) {
+//    String message = m;
+//    message = message.trim();
+//     remove braces
+//    message = message.replaceAll("\\\\n", "\n");
+//    message = message.replaceAll("\\\\\"", "\"");
+//
+//    return message;
+//  }
 
   public MessageDataItem getMessage(String msisdn, String taskId) throws Exception{
 
@@ -207,7 +206,7 @@ public class MessageDataSource extends AbstractDataSourceImpl {
             break;
 
           j++;
-          StringTokenizer st = new StringTokenizer(line, ",");
+          AdvancedStringTokenizer st = new AdvancedStringTokenizer(line, ",");
           int state = Integer.parseInt(st.nextToken().trim());
           if (state != Message.State.DELIVERED.getId())
             continue;
@@ -218,7 +217,7 @@ public class MessageDataSource extends AbstractDataSourceImpl {
             continue;
           }
           String region = st.nextToken();
-          String message = prepareMessage(st.nextToken());
+          String message = st.nextToken();
           id = getId(idbase, offset);
           dataItem = new MessageDataItem(id,taskId,state,date,msisdn,region,message);
         }
