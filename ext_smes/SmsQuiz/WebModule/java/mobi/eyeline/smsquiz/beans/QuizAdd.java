@@ -73,7 +73,7 @@ public class QuizAdd extends SmsQuizBean {
       return result;
     }
     try {
-      quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.quiz");
+      quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
     }
     catch (Exception e) {
       logger.error(e);

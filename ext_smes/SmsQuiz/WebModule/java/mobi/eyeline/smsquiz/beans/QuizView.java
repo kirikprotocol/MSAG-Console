@@ -59,8 +59,8 @@ public class QuizView extends SmsQuizBean {
       return RESULT_DONE;
     }
     try {
-      quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.quiz");
-      String workDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.work");
+      quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
+      String workDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
       result = readStatus(workDir);
       if (result != RESULT_OK) {
         return result;

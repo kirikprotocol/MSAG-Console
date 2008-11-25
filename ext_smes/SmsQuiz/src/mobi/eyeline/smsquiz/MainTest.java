@@ -199,7 +199,7 @@ public class MainTest {
   }
 
   private static void createQuizFile(String fileDir, int name, int minutes, String oa, String da, String question) {
-    String fileName = fileDir+File.separator+name+".xml";
+    String fileName = fileDir+File.separator+(100+name)+".xml";
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     Calendar cal = Calendar.getInstance();
     cal.setTimeInMillis(System.currentTimeMillis());
@@ -289,7 +289,7 @@ public class MainTest {
   }
 
   private static void createAbFile(String dir, int name, long from, long till, int divider, SubscriptionManager subscriptionManager) {
-    String fileName = dir+File.separator+name+".xml.csv";
+    String fileName = dir+File.separator+(100+name)+".xml.csv";
 
     PrintWriter writer = null;
 

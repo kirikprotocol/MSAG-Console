@@ -2,7 +2,7 @@
 <%@ page import="java.util.*, ru.novosoft.smsc.util.Functions"%>
 <%@ page import="mobi.eyeline.smsquiz.beans.Results"%>
 <%@ page import="ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper"%>
-<jsp:useBean id="bean" scope="request" class="mobi.eyeline.smsquiz.beans.Results" />
+<jsp:useBean id="bean" scope="page" class="mobi.eyeline.smsquiz.beans.Results" />
 
 <jsp:setProperty name="bean" property="*"/>
 

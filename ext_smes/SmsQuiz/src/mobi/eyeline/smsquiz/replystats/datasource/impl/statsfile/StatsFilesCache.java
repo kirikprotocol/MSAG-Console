@@ -46,18 +46,18 @@ public class StatsFilesCache {
       dirNamePattern = "yyyyMMdd";              
       timePattern = "HH:mm";
       datePattern = "yyyyMMdd";
-      replyStatsDir = config.getString("statsFile.dir.name", null);
+      replyStatsDir = config.getString("statsFile_dir", null);
       if (replyStatsDir == null) {
-        throw new FileStatsException("dir.name parameter missed in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
+        throw new FileStatsException("statsFile_dir parameter missed in config file", FileStatsException.ErrorCode.ERROR_NOT_INITIALIZED);
       }
       File file = new File(replyStatsDir);
       if (!file.exists()) {
         file.mkdirs();
       }
 
-      delayFirst = config.getLong("fileCollector.time.first.delay", 60);
-      iterationPeriod = config.getLong("fileCollector.time.period", 60);
-      timeLimit = 1000 * config.getLong("fileCollector.time.limit", 60);
+      delayFirst = config.getLong("fileCollector_delay", 60);
+      iterationPeriod = config.getLong("fileCollector_period", 60);
+      timeLimit = 1000 * config.getLong("fileCollector_limit", 60);
     } catch (ConfigException e) {
       logger.error("Unable to init StatsFilesCache", e);
       throw new FileStatsException("Unable to init StatsFilesCache", e);

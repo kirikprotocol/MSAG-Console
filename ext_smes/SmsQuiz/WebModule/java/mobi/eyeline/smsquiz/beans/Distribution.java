@@ -19,7 +19,6 @@ import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
-import mobi.eyeline.smsquiz.distribution.InfoSmeMessagesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 
@@ -48,7 +47,7 @@ public class Distribution extends SmsQuizBean {
 
   private boolean processed = false;
 
-  private InfoSmeMessagesDataSource ds;
+  private MessageDataSource ds;
 
   private String quizId;
 
@@ -60,17 +59,18 @@ public class Distribution extends SmsQuizBean {
 
 
     try {
-      quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.quiz");
+      quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
       initQuizes();
-      String msgStoreDir = getConfig().getString("distribution.info.sme.stats.dir");
-      String workDir = getConfig().getString("quizmanager.dir.work");
-      ds = new InfoSmeMessagesDataSource(getSmsQuizContext().getConfig(),msgStoreDir, workDir, quizDir);
+      String msgStoreDir = getConfig().getString("distribution.infosme_stats_dir");
+      String workDir = getConfig().getString("quizmanager.dir_work");
+      ds = new MessageDataSource(getSmsQuizContext().getConfig(),msgStoreDir);
       if (pageSize == 0) {
         pageSize = getSmsQuizContext().getMessagesPageSize();
       }
       int maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
       if(quizId!=null) {
-        msgFilter.setTaskId(quizId);
+        String id = QuizesDataSource.getTaskId(workDir, quizId);
+        msgFilter.setTaskId(id);
       }
       tableHelper.setFilter(msgFilter);
       tableHelper.setDs(ds);

@@ -40,6 +40,8 @@ public class Results extends SmsQuizBean {
 
   Map quizesMap = new HashMap();
 
+  private String quizId;
+
   protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
@@ -50,9 +52,13 @@ public class Results extends SmsQuizBean {
     int maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
 
     try {
-      String resultDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.result");
-      String quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.quiz");
+      String resultDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_result");
+      String quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
       makeQuizMap(quizDir);
+      System.out.println(quizId);
+      if(quizId!=null) {
+        resultFilter.setQuizId(quizId);
+      }
       ds = new ResultDataSource(resultDir);
       tableHelper.setPageSize(pageSize);
       tableHelper.setMaxTotalSize(maxTotalSize);
@@ -139,7 +145,7 @@ public class Results extends SmsQuizBean {
   }
 
   public boolean isQuizId(String quizId) {
-    return resultFilter.getQuizId().equals(quizId);
+    return (this.quizId != null) && this.quizId.equals(quizId);
   }
 
   public String getAddress() {
@@ -192,11 +198,11 @@ public class Results extends SmsQuizBean {
   }
 
   public void setQuizId(String quizId) {
-    resultFilter.setQuizId(quizId);
+    this.quizId = quizId;
   }
 
   public String getQuizId() {
-    return resultFilter.getQuizId();
+    return quizId;
   }
 
   public ResultTableHelper getTableHelper() {

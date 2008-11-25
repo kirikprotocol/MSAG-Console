@@ -89,7 +89,13 @@ public class QuizBuilder {
     Date dateEnd = null;
     String question = null;
     String abFileName = null;
+    String name = null;
     try {
+      if ((elem = generalElem.getChild("name")) != null) {
+        name = elem.getTextTrim();
+      } else {
+        errorNotFound("name");
+      }
       if ((elem = generalElem.getChild("date-begin")) != null) {
         dateBegin = dateFormat.parse(elem.getTextTrim());
       } else {
@@ -117,12 +123,14 @@ public class QuizBuilder {
     if (distribution != null) {
       distribution.setDateBegin(dateBegin);
       distribution.setFilePath(abFileName);
+      distribution.setTaskName(name+"(SmsQuiz)");
     }
-
-    quiz.setDateBegin(dateBegin);
-    quiz.setDateEnd(dateEnd);
-    quiz.setQuestion(question);
-
+    if(quiz!=null) {
+      quiz.setDateBegin(dateBegin);
+      quiz.setDateEnd(dateEnd);
+      quiz.setQuestion(question);
+      quiz.setQuizName(name);
+    } 
   }
 
   @SuppressWarnings({"unchecked"})

@@ -51,7 +51,7 @@ public class ResultDataSource extends AbstractDataSourceImpl {
     System.out.println("QuizId: " + filter.getQuizId());
     File[] files = dir.listFiles(new FilenameFilter() {
       public boolean accept(File dir, String name) {
-        return (name.endsWith(".res")) && (name.lastIndexOf(filter.getQuizId()) >= 0);
+        return (name.endsWith(".res")) && (name.indexOf(filter.getQuizId()+".") == 0);
       }
     });
     if ((files != null) && (files.length > 0)) {

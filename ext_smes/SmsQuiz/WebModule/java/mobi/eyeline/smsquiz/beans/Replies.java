@@ -61,8 +61,8 @@ public class Replies extends SmsQuizBean {
       replyFilter.setDateEndEnabled(false);
     }
     try {
-      String replyDir = getSmsQuizContext().getConfig().getString("replystats.statsFile.dir.name");
-      quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.quiz");
+      String replyDir = getSmsQuizContext().getConfig().getString("replystats.statsFile_dir");
+      quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
       initQuizes();
       ds = new ReplyDataSource(replyDir);
       if (pageSize == 0) {

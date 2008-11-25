@@ -66,34 +66,34 @@ public class Options extends SmsQuizBean {
 
     if (!initialized) {
       try {
-        dbSource = getConfig().getString("dbpool.jdbc.source");
-        dbUser = getConfig().getString("dbpool.jdbc.user");
-        dbPassword = getConfig().getString("dbpool.jdbc.password");
+        dbSource = getConfig().getString("dbpool.source");
+        dbUser = getConfig().getString("dbpool.user");
+        dbPassword = getConfig().getString("dbpool.password");
 
-        replyDirName = getConfig().getString("replystats.statsFile.dir.name");
-        fileCollectorDelay = getConfig().getInt("replystats.fileCollector.time.period");
-        fileCollectorPeriod = getConfig().getInt("replystats.fileCollector.time.first.delay");
-        fileOpenedLimit = getConfig().getInt("replystats.fileCollector.time.limit");
+        replyDirName = getConfig().getString("replystats.statsFile_dir");
+        fileCollectorDelay = getConfig().getInt("replystats.fileCollector_period");
+        fileCollectorPeriod = getConfig().getInt("replystats.fileCollector_delay");
+        fileOpenedLimit = getConfig().getInt("replystats.fileCollector_limit");
 
-        consoleHost = getConfig().getString("distribution.smsc.console.host");
-        consolePort = getConfig().getString("distribution.smsc.console.port");
-        consoleUser = getConfig().getString("distribution.smsc.console.access.login");
-        consolePasssword = getConfig().getString("distribution.smsc.console.access.password");
-        connectTimeout = getConfig().getInt("distribution.smsc.console.connect.timeout");
-        connectCloserPeriod = getConfig().getInt("distribution.smsc.console.closer.period");
+        consoleHost = getConfig().getString("distribution.smsc_console_host");
+        consolePort = getConfig().getString("distribution.smsc_console_port");
+        consoleUser = getConfig().getString("distribution.smsc_console_login");
+        consolePasssword = getConfig().getString("distribution.smsc_console_password");
+        connectTimeout = getConfig().getInt("distribution.smsc_console_connect_timeout");
+        connectCloserPeriod = getConfig().getInt("distribution.smsc_console_closer_period");
 
-        infoSmeStatsDir = getConfig().getString("distribution.info.sme.stats.dir");
-        statusCheckerDelay = getConfig().getInt("distribution.status.checker.delay.first");
-        statusCheckerPeriod = getConfig().getInt("distribution.status.checker.period");
+        infoSmeStatsDir = getConfig().getString("distribution.infosme_stats_dir");
+        statusCheckerDelay = getConfig().getInt("distribution.status_checker_delay");
+        statusCheckerPeriod = getConfig().getInt("distribution.status_checker_period");
 
-        quizDir = getConfig().getString("quizmanager.dir.quiz");
-        dirListenerDelay = getConfig().getInt("quizmanager.listener.delay.first");
-        dirListenerPeriod = getConfig().getInt("quizmanager.listener.period.repeat");
-        quizCollDelay = getConfig().getInt("quizmanager.collector.delay.first");
-        quizCollPeriod = getConfig().getInt("quizmanager.collector.period.repeat");
-        dirResults = getConfig().getString("quizmanager.dir.result");
-        dirWork = getConfig().getString("quizmanager.dir.work");
-        archiveDir = getConfig().getString("quizmanager.dir.archive");
+        quizDir = getConfig().getString("quizmanager.dir_quiz");
+        dirListenerDelay = getConfig().getInt("quizmanager.listener_delay");
+        dirListenerPeriod = getConfig().getInt("quizmanager.listener_period");
+        quizCollDelay = getConfig().getInt("quizmanager.collector_delay");
+        quizCollPeriod = getConfig().getInt("quizmanager.collector_period");
+        dirResults = getConfig().getString("quizmanager.dir_result");
+        dirWork = getConfig().getString("quizmanager.dir_work");
+        archiveDir = getConfig().getString("quizmanager.dir_archive");
 
         jmxPort = getConfig().getInt("jmx.port");
         jmxPassword = getConfig().getString("jmx.user");
@@ -152,34 +152,34 @@ public class Options extends SmsQuizBean {
 
   private int save() {
     try {
-      getConfig().setString("dbpool.jdbc.source", dbSource);
-      getConfig().setString("dbpool.jdbc.user", dbUser);
-      getConfig().setString("dbpool.jdbc.password", dbPassword);
+      getConfig().setString("dbpool.source", dbSource);
+      getConfig().setString("dbpool.user", dbUser);
+      getConfig().setString("dbpool.password", dbPassword);
 
-      getConfig().setString("replystats.statsFile.dir.name", replyDirName);
-      getConfig().setInt("replystats.fileCollector.time.period", fileCollectorDelay);
-      getConfig().setInt("replystats.fileCollector.time.first.delay", fileCollectorPeriod);
-      getConfig().setInt("replystats.fileCollector.time.limit", fileOpenedLimit);
+      getConfig().setString("replystats.statsFile_dir", replyDirName);
+      getConfig().setInt("replystats.fileCollector_period", fileCollectorDelay);
+      getConfig().setInt("replystats.fileCollector_delay", fileCollectorPeriod);
+      getConfig().setInt("replystats.fileCollector_limit", fileOpenedLimit);
 
-      getConfig().setString("distribution.smsc.console.host", consoleHost);
-      getConfig().setString("distribution.smsc.console.port", consolePort);
-      getConfig().setString("distribution.smsc.console.access.login", consoleUser);
-      getConfig().setString("distribution.smsc.console.access.password", consolePasssword);
-      getConfig().setInt("distribution.smsc.console.connect.timeout", connectTimeout);
-      getConfig().setInt("distribution.smsc.console.closer.period", connectCloserPeriod);
+      getConfig().setString("distribution.smsc_console_host", consoleHost);
+      getConfig().setString("distribution.smsc_console_port", consolePort);
+      getConfig().setString("distribution.smsc_console_login", consoleUser);
+      getConfig().setString("distribution.smsc_console_password", consolePasssword);
+      getConfig().setInt("distribution.smsc_console_connect_timeout", connectTimeout);
+      getConfig().setInt("distribution.smsc_console_closer_period", connectCloserPeriod);
 
-      getConfig().setString("distribution.info.sme.stats.dir", infoSmeStatsDir);
-      getConfig().setInt("distribution.status.checker.delay.first", statusCheckerDelay);
-      getConfig().setInt("distribution.status.checker.period", statusCheckerPeriod);
+      getConfig().setString("distribution.infosme_stats_dir", infoSmeStatsDir);
+      getConfig().setInt("distribution.status_checker_delay", statusCheckerDelay);
+      getConfig().setInt("distribution.status_checker_period", statusCheckerPeriod);
 
-      getConfig().setString("quizmanager.dir.quiz", quizDir);
-      getConfig().setInt("quizmanager.listener.delay.first", dirListenerDelay);
-      getConfig().setInt("quizmanager.listener.period.repeat", dirListenerPeriod);
-      getConfig().setInt("quizmanager.collector.delay.first", quizCollDelay);
-      getConfig().setInt("quizmanager.collector.period.repeat", quizCollPeriod);
-      getConfig().setString("quizmanager.dir.result", dirResults);
-      getConfig().setString("quizmanager.dir.work", dirWork);
-      getConfig().setString("quizmanager.dir.archive", archiveDir);
+      getConfig().setString("quizmanager.dir_quiz", quizDir);
+      getConfig().setInt("quizmanager.listener_delay", dirListenerDelay);
+      getConfig().setInt("quizmanager.listener_period", dirListenerPeriod);
+      getConfig().setInt("quizmanager.collector_delay", quizCollDelay);
+      getConfig().setInt("quizmanager.collector_period", quizCollPeriod);
+      getConfig().setString("quizmanager.dir_result", dirResults);
+      getConfig().setString("quizmanager.dir_work", dirWork);
+      getConfig().setString("quizmanager.dir_archive", archiveDir);
 
       getConfig().setInt("jmx.port", jmxPort);
       getConfig().setString("jmx.user", jmxPassword);

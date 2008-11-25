@@ -49,10 +49,10 @@ public class QuizesList extends SmsQuizBean {
     try {
       int pageSize = getSmsQuizContext().getQuizesPageSize();
       maxTotalSize = getSmsQuizContext().getMaxQuizTotalSize();
-      quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.quiz");
-      dirWork = getSmsQuizContext().getConfig().getString("quizmanager.dir.work");
-      arcDir = getSmsQuizContext().getConfig().getString("quizmanager.dir.archive");
-      quizRes = getSmsQuizContext().getConfig().getString("quizmanager.dir.result");
+      quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
+      dirWork = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
+      arcDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_archive");
+      quizRes = getSmsQuizContext().getConfig().getString("quizmanager.dir_result");
       tableHelper.setMaxTotalSize(maxTotalSize);
       tableHelper.setPageSize(pageSize);
       tableHelper.setQuizesDataSource(new QuizesDataSource(quizDir));

@@ -38,6 +38,8 @@ public class Quiz {
   private int maxRepeat;
   private String defaultCategory;
   private String dirResult;
+  private String quizId;
+
   private String quizName;
 
   private List<ReplyPattern> replyPatterns;
@@ -68,9 +70,9 @@ public class Quiz {
       throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
     fileName = file.getAbsolutePath();
-    quizName = file.getName().substring(0, file.getName().lastIndexOf("."));
+    quizId = file.getName().substring(0, file.getName().lastIndexOf("."));
     jstore.init(dirWork+File.separator+file.getName()+ ".bin", 60000, 10);
-    status = new Status(dirWork + File.separator + quizName + ".status");
+    status = new Status(dirWork + File.separator + quizId + ".status");
     replyPatterns = new ArrayList<ReplyPattern>();
   }
 
@@ -158,7 +160,7 @@ public class Quiz {
       logger.info("Export statistics begining for: " + fileName);
     }
     SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
-    String fileName = dirResult + File.separator + quizName + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
+    String fileName = dirResult + File.separator + quizId + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
     dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
 
     File file = new File(fileName);
@@ -353,8 +355,8 @@ public class Quiz {
     return now.after(dateBegin)&&now.before(dateEnd);
   }
 
-  public String getQuizName() {
-    return quizName;
+  public String getQuizId() {
+    return quizId;
   }
 
   public void setGenerated(boolean generated) {
@@ -375,5 +377,13 @@ public class Quiz {
 
   public void setError(QuizError error, String reason) throws QuizException{
     status.setQuizErrorStatus(error, reason);  
+  }
+
+  public String getQuizName() {
+    return quizName;
+  }
+
+  public void setQuizName(String quizName) {
+    this.quizName = quizName;
   }
 }

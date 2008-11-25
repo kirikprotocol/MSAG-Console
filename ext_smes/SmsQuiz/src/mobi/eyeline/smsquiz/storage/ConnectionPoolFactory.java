@@ -21,9 +21,9 @@ public class ConnectionPoolFactory {
       final XmlConfig c = new XmlConfig();
       c.load(new File(configFile));
       final PropertiesConfig config = new PropertiesConfig(c.getSection("dbpool").toProperties("."));
-      url = config.getString("jdbc.source");
-      login = config.getString("jdbc.user");
-      password = config.getString("jdbc.password");
+      url = config.getString("source");
+      login = config.getString("user");
+      password = config.getString("password");
 
       // Register JDBC driver
       try {

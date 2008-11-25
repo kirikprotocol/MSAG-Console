@@ -6,6 +6,13 @@ import java.util.EnumSet;
 import java.util.Iterator;
 
 public class Distribution {
+  public String getTaskName() {
+    return taskName;
+  }
+
+  public void setTaskName(String taskName) {
+    this.taskName = taskName;
+  }
 
   public static enum WeekDays {
     Mon, Tue, Wed, Thu, Fri, Sat, Sun
@@ -26,6 +33,8 @@ public class Distribution {
   private final EnumSet<WeekDays> days;
 
   private boolean txmode;
+
+  private String taskName;
 
   public Distribution() {
     days = EnumSet.noneOf(WeekDays.class);

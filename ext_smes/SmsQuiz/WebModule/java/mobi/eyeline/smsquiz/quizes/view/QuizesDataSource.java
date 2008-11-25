@@ -6,9 +6,8 @@ import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 
 import java.util.Date;
-import java.util.Map;
-import java.io.File;
-import java.io.FilenameFilter;
+import java.util.Properties;
+import java.io.*;
 
 import org.apache.log4j.Category;
 import mobi.eyeline.smsquiz.QuizBuilder;
@@ -21,7 +20,7 @@ import mobi.eyeline.smsquiz.quizes.view.QuizDataItem;
  */
 public class QuizesDataSource extends AbstractDataSourceImpl {
 
-  private Category logger = Category.getInstance(this.getClass());
+  private static final Category logger = Category.getInstance(QuizesDataSource.class);
 
   private String quizDir;
 
@@ -88,6 +87,44 @@ public class QuizesDataSource extends AbstractDataSourceImpl {
 
   public String getQuizDir() {
     return quizDir;
+  }
+
+  public static String getTaskId(String workDir, String quizId) {
+    String res = null;
+    String path = workDir + File.separator + quizId + ".status";
+    File file = new File(path);
+    if (!file.exists()) {
+      path += ".old";
+      if (!(file = new File(path)).exists()) {
+        logger.warn("Status file doen't exist for quiz: " + quizId);
+        System.err.println("WARNING: Status file doen't exist for quiz: " + quizId);
+        return null;
+      }
+    }
+    InputStream stream = null;
+    try {
+      stream = new FileInputStream(file);
+      Properties prop = new Properties();
+      prop.load(stream);
+      String id = prop.getProperty("distribution.id");
+      if ((id != null) && (!id.trim().equals(""))) {
+        res = id;
+      } else {
+        logger.warn("Property id doesn't exist in " + path);
+        System.err.println("WARNING: Property id doesn't exist in " + path);
+      }
+    } catch (IOException e) {
+      logger.error(e,e);
+      e.printStackTrace();
+    } finally {
+      if (stream != null) {
+        try {
+          stream.close();
+        } catch (IOException e) {
+        }
+      }
+    }
+    return res;
   }
 
 }

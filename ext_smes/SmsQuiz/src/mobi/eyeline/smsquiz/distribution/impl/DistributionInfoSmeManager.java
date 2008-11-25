@@ -65,28 +65,25 @@ public class DistributionInfoSmeManager implements DistributionManager {
       c.load(new File(configFile));
       PropertiesConfig config = new PropertiesConfig(c.getSection("distribution").toProperties("."));
 
-      statsDir = config.getString("info.sme.stats.dir");
+      statsDir = config.getString("infosme_stats_dir");
       dirPattern = "yyMMdd";
       filePattern = "HH";
       succDeliveryStatus = "3";
       dateInFilePattern = "yyMMddHHmmss";
 
-      host = config.getString("smsc.console.host");
-      port = config.getInt("smsc.console.port");
-      login = config.getString("smsc.console.access.login");
-      password = config.getString("smsc.console.access.password");
-      checkerFirstDelay = config.getLong("status.checker.delay.first", 60);
-      checkerPeriod = config.getLong("status.checker.period", 60);
-      consoleTimeout = config.getLong("smsc.console.connect.timeout", 60) * 1000;
-      closerPeriod = config.getLong("smsc.console.closer.period", 60);
+      host = config.getString("smsc_console_host");
+      port = config.getInt("smsc_console_port");
+      login = config.getString("smsc_console_login");
+      password = config.getString("smsc_console_password");
+      checkerFirstDelay = config.getLong("status_checker_delay", 60);
+      checkerPeriod = config.getLong("status_checker_period", 60);
+      consoleTimeout = config.getLong("smsc_console_connect_timeout", 60) * 1000;
+      closerPeriod = config.getLong("smsc_console_closer_period", 60);
 
 
       codeOk = "100";
       if (statsDir == null) {
-        throw new DistributionException("info.sme.stats.dir parameter missed in config file", DistributionException.ErrorCode.ERROR_NOT_INITIALIZED);
-      }
-      if (succDeliveryStatus == null) {
-        throw new DistributionException("info.sme.succ.delivery.status parameter missed in config file", DistributionException.ErrorCode.ERROR_NOT_INITIALIZED);
+        throw new DistributionException("infosme_stats_dir parameter missed in config file", DistributionException.ErrorCode.ERROR_NOT_INITIALIZED);
       }
       File file = new File(statsDir);
       if (!file.exists()) {
@@ -121,7 +118,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
     if ((distr == null) || (distr.getFilePath() == null) || (distr.getDateBegin() == null)
         || (distr.getDateEnd() == null) || (distr.getDays() == null) || (task == null)
         || (distr.getTimeBegin() == null) || (distr.getTimeEnd() == null)) {
-      logger.error("Some fields of argument are empty. Date: ");
+      logger.error("Some fields of argument are empty");
       throw new DistributionException("Some fields of argument are empty", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
     }
     SmscConsoleResponse response;
@@ -132,6 +129,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
       StringBuilder command = new StringBuilder();
       command.append(CREATE_COMMAND);
       command.append(getFormatProp(fileName));
+      command.append(getFormatProp(distr.getTaskName()));
       command.append(getFormatProp(dateInCommand.format(distr.getDateBegin())));
       command.append(getFormatProp(dateInCommand.format(distr.getDateEnd())));
       command.append(getFormatProp(formatCal(distr.getTimeBegin())));
