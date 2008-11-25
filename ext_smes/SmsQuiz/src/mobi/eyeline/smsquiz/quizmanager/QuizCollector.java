@@ -1,6 +1,5 @@
 package mobi.eyeline.smsquiz.quizmanager;
 
-import mobi.eyeline.smsquiz.quizmanager.dirlistener.DirListener;
 import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import mobi.eyeline.smsquiz.quizmanager.quiz.Status;
 import org.apache.log4j.Logger;
@@ -14,30 +13,23 @@ class QuizCollector implements Runnable {
   private static final Logger logger = Logger.getLogger(QuizCollector.class);
 
   private final ConcurrentHashMap<String, Quiz> quizesMap;
-  private final DirListener dirListener;
+  private final ConcurrentHashMap<String, Quiz> qInternal;
 
-  public QuizCollector(ConcurrentHashMap<String, Quiz> quizesMap, DirListener dirListener) {
+  public QuizCollector(ConcurrentHashMap<String, Quiz> quizesMap, ConcurrentHashMap<String, Quiz> qInternal) {
     this.quizesMap = quizesMap;
-    this.dirListener = dirListener;
+    this.qInternal = qInternal;
   }
 
   public void run() {
     logger.info("QuizCollectors starts...");
     try {
-      for (Map.Entry<String, Quiz> entry : quizesMap.entrySet()) {
+      for (Map.Entry<String, Quiz> entry : qInternal.entrySet()) {
         Quiz quiz = entry.getValue();
-        if (quiz.getDateEnd().before(new Date())) {
-          try {
-            dirListener.remove(quiz.getFileName(), true);
-            String statusFile = quiz.getStatusFileName();
-            if(statusFile!=null) {
-              dirListener.remove(quiz.getStatusFileName(), true);
-            }
-          } catch (QuizException e) {
-            logger.error("Error removing file from DirListener");
-          }
+        Date now = new Date();
+        if (quiz.getDateEnd().before(now)) {
           try {
             quizesMap.remove(entry.getKey());
+            qInternal.remove(entry.getKey());
             quiz.exportStats();
             quiz.shutdown();
             quiz.setQuizStatus(Status.QuizStatus.FINISHED);
@@ -46,6 +38,11 @@ class QuizCollector implements Runnable {
           }
           if (logger.isInfoEnabled()) {
             logger.info("QuizCollector removed quiz: " + quiz);
+          }
+        }
+        else {
+          if((!quiz.getQuizStatus().equals(Status.QuizStatus.ACTIVE))&&(quiz.isGenerated())&&(now.after(quiz.getDateBegin()))) {
+            quiz.setQuizStatus(Status.QuizStatus.ACTIVE);
           }
         }
       }

@@ -87,6 +87,10 @@ public class Status {
     storeProps();
   }
 
+  QuizStatus getQuizStatus(){
+    return quizStatus; 
+  }
+
   @SuppressWarnings({"EmptyCatchBlock"})
   private void storeProps() throws QuizException {
     OutputStream outputStream = null;

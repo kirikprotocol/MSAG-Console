@@ -19,8 +19,6 @@ public class QuizManagerMBean extends AbstractDynamicMBean {
         "java.lang.Integer", "Count active quizes", true, false, false));
     attributes.add(new MBeanAttributeInfo("ActiveQuizes",
         "java.lang.String", "List of active quizes", true, false, false));
-    attributes.add(new MBeanAttributeInfo("StatusDir",
-        "java.lang.String", "Directory with 'status' files", true, false, false));
     attributes.add(new MBeanAttributeInfo("ResultsDir",
         "java.lang.String", "Directory with quiz results", true, false, false));
     attributes.add(new MBeanAttributeInfo("QuizDir",
@@ -42,8 +40,6 @@ public class QuizManagerMBean extends AbstractDynamicMBean {
       return manager.countQuizes();
     } else if (attribute.equals("ActiveQuizes")) {
       return manager.getAvailableQuizes();
-    } else if (attribute.equals("StatusDir")) {
-      return manager.getStatusDir();
     } else if (attribute.equals("ResultsDir")) {
       return manager.getDirResult();
     } else if (attribute.equals("QuizDir")) {

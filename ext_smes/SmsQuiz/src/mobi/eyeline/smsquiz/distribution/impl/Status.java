@@ -19,15 +19,13 @@ public class Status {
   private Runnable origTask;
   private long creationDate;
 
-  private String errorFile;
 
   private boolean executed = false;
 
-  public Status(Runnable origTask, String errorFile) {
+  public Status(Runnable origTask) {
     creationDate = System.currentTimeMillis();
     status = DistrStatus.INPROGRESS;
     this.origTask = origTask;
-    this.errorFile = errorFile;
   }
 
   public void start() {

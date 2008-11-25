@@ -22,19 +22,21 @@ public class DirListener extends Observable implements Runnable {
   private AbstractDynamicMBean monitor;
   private Map<String, QuizFile> filesMap;
   private String quizDir;
+  private String dirWork;
+  private String dirArchive;
+  private String dirResult;
   private FilenameFilter fileFilter;
-  private Lock lock;
-  private Condition notRemove;
-  private Condition notRun;
   private static final Pattern PATTERN = Pattern.compile("(.*\\.xml)");
-  private int run = -1;
-  private int remove = -1;
 
-  public DirListener(final String quizDir) throws QuizException {
+  public DirListener(final String quizDir, final String dirWork,
+                     final String dirArchive, final String dirResult) throws QuizException {
     if (quizDir == null) {
       throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
     this.quizDir = quizDir;
+    this.dirWork = dirWork;
+    this.dirArchive = dirArchive;
+    this.dirResult = dirResult;
     File file = new File(quizDir);
     if (!file.exists()) {
       logger.info("Create quizDir");
@@ -42,10 +44,6 @@ public class DirListener extends Observable implements Runnable {
     }
     filesMap = new HashMap<String, QuizFile>();
     fileFilter = new XmlFileFilter();
-
-    lock = new ReentrantLock();
-    notRemove = lock.newCondition();
-    notRun = lock.newCondition();
     monitor = new DirListenerMBean(this);
   }
 
@@ -53,11 +51,6 @@ public class DirListener extends Observable implements Runnable {
     logger.info("Running DirListener...");
     File dirQuiz = new File(quizDir);
     try {
-      lock.lock();
-      if (remove == 1) {
-        notRemove.await();
-      }
-      run = 1;
 
       final File[] files = dirQuiz.listFiles(fileFilter);
       for (File f : files) {
@@ -92,43 +85,8 @@ public class DirListener extends Observable implements Runnable {
       }
     } catch (Throwable e) {
       logger.error("Error construct quiz file or notification", e);
-    } finally {
-      run = 0;
-      notRun.signal();
-      lock.unlock();
     }
-
     logger.info("DirListener finished...");
-  }
-
-  public void remove(String fileName, boolean rename) throws QuizException {
-    if (fileName == null) {
-      throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
-    }
-    try {
-      lock.lock();
-      if(logger.isInfoEnabled()) {
-        logger.info("Remove file:"+fileName);
-      }
-      if (run == 1) {
-        notRun.await();
-      }
-      remove = 1;
-      if (rename) {
-        if(logger.isInfoEnabled()) {
-          logger.info("Rename file: "+fileName);
-        }
-        File file = new File(fileName);
-        file.renameTo(new File(fileName + ".old"));
-      }
-      filesMap.remove(fileName);
-    } catch (Throwable e) {
-      logger.error("Error during remove file from storage: " + fileName, e);
-    } finally {
-      remove = 0;
-      notRemove.signal();
-      lock.unlock();
-    }
   }
 
   public int countFiles() {
@@ -149,6 +107,67 @@ public class DirListener extends Observable implements Runnable {
 
   public AbstractDynamicMBean getMonitor() {
     return monitor;
+  }
+
+  public void delete(String quizId, String abFile) throws QuizException{
+    if((quizId==null)||(abFile==null)) {
+      logger.error("Some arguments are null");
+      throw new QuizException("Some arguments are null");
+    }
+    File file =new File(dirArchive);
+    if(!file.exists()) {
+      file.mkdirs();
+    }
+
+    file = new File(abFile);
+    if(file.exists()) {
+      renameFile(new File(abFile));
+    } else {
+      file = new File(quizDir+File.separator+file.getName());
+      renameFile(file);
+    }
+
+    String parentSlashQuizId = dirWork + File.separator + quizId;
+
+    renameFile(new File(parentSlashQuizId + ".status"));
+    deleteFile(new File(parentSlashQuizId + ".xml.bin"));
+    deleteFile(new File(parentSlashQuizId + ".xml.bin.j"));
+    renameFile(new File(parentSlashQuizId + ".error"));
+    renameFile(new File(parentSlashQuizId + ".mod"));
+    renameFile(new File(parentSlashQuizId + ".mod.processed"));
+
+    file = new File(dirResult);
+    File files[] = file.listFiles();
+    file = null;
+    if(files!=null) {
+      for (File file1 : files) {
+        if ((file1.isFile()) && (file1.getName().startsWith(quizId + "."))) {
+          file = file1;
+          break;
+        }
+      }
+    }
+    if(file!=null) {
+      renameFile(file);
+    }
+  }
+
+  private void renameFile(File file) {
+    try{
+      System.out.println("try to rename file: " + file.getAbsolutePath());
+      String name = file.getName();
+      file.renameTo(new File(dirArchive+File.separator+name));
+    }catch(Exception e) {
+      logger.error(e,e);
+    }
+  }
+  private void deleteFile(File file) {
+    try{
+      System.out.println("try to delete file: " + file.getAbsolutePath());
+      file.delete();
+    } catch(Exception e) {
+      logger.error(e);
+    }
   }
 
 }

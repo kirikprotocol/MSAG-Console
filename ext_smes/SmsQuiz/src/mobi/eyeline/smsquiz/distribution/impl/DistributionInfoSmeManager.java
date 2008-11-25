@@ -113,7 +113,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
   }
 
 
-  public String createDistribution(final Distribution distr, Runnable task, String errorFile) throws DistributionException {
+  public String createDistribution(final Distribution distr, Runnable task) throws DistributionException {
     logger.info("Create distribution...");
     if ((distr == null) || (distr.getFilePath() == null) || (distr.getDateBegin() == null)
         || (distr.getDateEnd() == null) || (distr.getDays() == null) || (task == null)
@@ -151,7 +151,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
           }
           String id = tokens[2];
           if (!id.equals("")) {
-            tasksMap.put(id, new Status(task, errorFile));
+            tasksMap.put(id, new Status(task));
             if (logger.isInfoEnabled()) {
               logger.info("Distribution created, id: " + id);
             }
@@ -220,7 +220,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
 
   }  
 
-  public String repairStatus(String id, String errorFile, Runnable task, Distribution distribution) throws DistributionException {
+  public String repairStatus(String id, Runnable task, Distribution distribution) throws DistributionException {
     if (logger.isInfoEnabled()) {
       logger.info("Repair status begins for id: " + id);
     }
@@ -244,9 +244,9 @@ public class DistributionInfoSmeManager implements DistributionManager {
           }
           String status = tokens[2];
           if (status.equals("")) {
-            id = createDistribution(distribution, task, errorFile);
+            id = createDistribution(distribution, task);
           } else {
-              tasksMap.put(id, new Status(task, errorFile));
+              tasksMap.put(id, new Status(task));
           }
           if (logger.isInfoEnabled()) {
             logger.info("Repair status ends, new id: " + id);

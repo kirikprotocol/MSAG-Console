@@ -195,21 +195,6 @@ public class Quiz {
               continue;
             }
           }
-         /* String oaEnc = new String(oa.getBytes(),encoding);
-          String deliveryDate  = new String(dateFormat.format(dateDelivery).getBytes(),encoding);
-          String replyDate  = new String(dateFormat.format(reply.getDate()).getBytes(),encoding);
-          String categoryEnc  = new String(category.getBytes(),encoding);
-          String replyText = reply.getText().replace(System.getProperty("line.separator"), "\\n");
-          replyText = new String(replyText.getBytes(),encoding);
-          printWriter.print(oaEnc);
-          printWriter.print(comma);
-          printWriter.print(deliveryDate);
-          printWriter.print(comma);
-          printWriter.print(replyDate);
-          printWriter.print(comma);
-          printWriter.print(categoryEnc);
-          printWriter.print(comma);
-          printWriter.println(replyText);    */
           printWriter.print(oa);
           printWriter.print(comma);
           printWriter.print(dateFormat.format(dateDelivery));
@@ -354,6 +339,10 @@ public class Quiz {
     Date now = new Date();
     return now.after(dateBegin)&&now.before(dateEnd);
   }
+  public boolean isFinished() {
+    Date now = new Date();
+    return now.after(dateEnd);
+  }
 
   public String getQuizId() {
     return quizId;
@@ -363,7 +352,7 @@ public class Quiz {
     this.generated = generated;
   }
 
-  public boolean isGenerates() {
+  public boolean isGenerated() {
     return generated;
   }
 
@@ -373,6 +362,10 @@ public class Quiz {
 
   public void setQuizStatus(Status.QuizStatus quizStatus) throws QuizException{
     status.setQuizStatus(quizStatus);
+  }
+
+  public Status.QuizStatus getQuizStatus() throws QuizException{
+    return status.getQuizStatus();
   }
 
   public void setError(QuizError error, String reason) throws QuizException{

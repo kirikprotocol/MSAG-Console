@@ -7,11 +7,11 @@ import java.util.Date;
 
 public interface DistributionManager {
 
-  public String createDistribution(Distribution distr, Runnable task, String errorFile) throws DistributionException;
+  public String createDistribution(Distribution distr, Runnable task) throws DistributionException;
 
   public ResultSet getStatistics(String id, Date startDate, Date endDate) throws DistributionException;
 
-  public String repairStatus(String id, String errorFile, Runnable task, Distribution distribution) throws DistributionException;
+  public String repairStatus(String id, Runnable task, Distribution distribution) throws DistributionException;
 
   public void resend (String msisdn, String taskId) throws DistributionException;
 

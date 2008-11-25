@@ -41,7 +41,6 @@ public class MainTest {
   private static ScheduledExecutorService scheduledQuizCreator;
 
   public static void main(String[] args) {
-      init();
 
 
     MessageHandler mh = null;
@@ -50,6 +49,7 @@ public class MainTest {
 
       ConnectionPoolFactory.init(conf);
 
+      init();
       QuizManager.init(conf, new DistributionInfoSmeManager(conf),
           new FileReplyStatsDataSource(conf), SubscriptionManager.getInstance());
       quizManager = QuizManager.getInstance();
@@ -114,42 +114,20 @@ public class MainTest {
 
   private static class QuizCreator extends Thread {
 
- /*   public void run() {
-      try {
-        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001700000"), Long.parseLong("79131710000"), 500, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 75, "170", "170", "Short\n question");
-        quizIndex++;
-        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001800000"), Long.parseLong("79131810000"), 500, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 85, "180", "180", "Short\n question");
-        quizIndex++;
-        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001900000"), Long.parseLong("79131910000"), 500, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 90, "190", "190", "Short\n question");
-        quizIndex++;
-      } catch (SubManagerException e) {
-        logger.error("Error creatin quiz files", e);
-        e.printStackTrace();
-      }
-    }  */
-
     public void run() {
       try {
         if(quizIndex<16) {
-        createAbFile("test_QuizManager",quizIndex, Long.parseLong("70001700001"), Long.parseLong("70001700100"), 1, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager", quizIndex, 15, "170", "170", "Short\n question");
+        createAbFile("quizes",quizIndex, Long.parseLong("70001700001"), Long.parseLong("70001700100"), 1, SubscriptionManager.getInstance());
+        createQuizFile("quizes", quizIndex, 15, "170", "170", "Short\n question");
         quizIndex++;
-     /*   createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001800001"), Long.parseLong("70001800100"), 1, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 105, "180", "180", "Short\n question");
-        quizIndex++;
-        createAbFile("test_QuizManager/opros" + quizIndex + ".xml.csv", Long.parseLong("70001900001"), Long.parseLong("70001900100"), 1, SubscriptionManager.getInstance());
-        createQuizFile("test_QuizManager/opros" + quizIndex + ".xml", 120, "190", "190", "Short\n question");
-        quizIndex++;*/
+
         }
         else {
           scheduledQuizCreator.shutdown();
         }
       }
       catch (SubManagerException e) {
-        logger.error("Error creatin quiz files", e);
+        logger.error("Error creating quiz files", e);
         e.printStackTrace();
       }
 
@@ -180,9 +158,27 @@ public class MainTest {
     }
   }
 
+  private static void subscribeSomeAb(SubscriptionManager manager) throws Exception{
+    if(!manager.subscribed("+79135100000")) {
+      for (long i = Long.parseLong("79135000001"); i <= Long.parseLong("79135100000"); i++) {
+        String abonent = "+" + i;
+        try {
+          manager.subscribe(abonent);
+          System.out.println("Abonent subscribed: "+i);
+        } catch (SubManagerException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+  }
 
   private static void init() {
-    File file = new File("test_QuizManager");
+    try{
+      subscribeSomeAb(SubscriptionManager.getInstance());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    File file = new File("quizes");
     if (file.exists()) {
       removeAll(file);
     }
@@ -195,6 +191,7 @@ public class MainTest {
     if (file.exists()) {
       removeAll(file);
     }
+
 
   }
 
