@@ -66,6 +66,7 @@ sub generate{
   {
     my $moddeps;
     next if $m=~/^\s*(?:$|#)/;
+    $m=~s/^\?//;
     my $dirname=$prefix.(length($prefix)?'/':'').$m;
     my $modlib='lib'.$dirname;
     $modlib=~s!/!-!g;
@@ -179,7 +180,13 @@ sub generate{
     if(-f $dirname.'/modules-list')
     {
       $mods=readmodules($dirname.'/modules-list');
-      $moddeps.=" $modname.$_" for @$mods;
+      for(@$mods)
+      {
+        unless(/^\?/)
+        {
+          $moddeps.=" $modname.$_";
+        }
+      }
       generate($dirname,$mods);
     }
     
