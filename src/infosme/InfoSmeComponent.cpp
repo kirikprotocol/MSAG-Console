@@ -54,7 +54,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
                               "getGeneratingTasksMethod", empty_params, StringListType);
   Method get_processing_tasks((unsigned)getProcessingTasksMethod, 
                               "getProcessingTasksMethod", empty_params, StringListType);
-  Method apply_retry_policies((unsigned)applyRetryPoliciesMethod,"applyRetryPolicies",empty_params,StringListType);
+  Method apply_retry_policies((unsigned)applyRetryPoliciesMethod,"applyRetryPolicies",empty_params,StringType);
 
   Parameters id_params;
   id_params[ARGUMENT_NAME_ID] = Parameter(ARGUMENT_NAME_ID, StringType);
