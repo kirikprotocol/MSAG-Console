@@ -107,6 +107,7 @@ function setSort(sorting)
       boolean generating = task.isGenerating();
       boolean processing = task.isProcessing();
       boolean retryOnFail = task.isRetryOnFail();
+      String  retryPolicy = task.getRetryPolicy();
       boolean replaceMessage = task.isReplaceMessage();
       boolean trackIntegrity = task.isTrackIntegrity();
       String svcType = task.getSvcType();
@@ -125,7 +126,7 @@ function setSort(sorting)
         <td><span id="gen<%=idHex%>" datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating    ){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
         <td><span id="prc<%=idHex%>" datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="prc<%=idHex%>"><%if (processing    ){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
         <td><%=priority%></td>
-        <td><%if (retryOnFail   ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td><%if (retryOnFail){%><%=StringEncoderDecoder.encode(retryPolicy)%><%}%></td>
         <td><%if (replaceMessage){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
         <td><%if (trackIntegrity){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
         <td nowrap><%=svcTypeEnc == null || svcTypeEnc.trim().length() == 0 ? "&nbsp;" : svcTypeEnc%></td>

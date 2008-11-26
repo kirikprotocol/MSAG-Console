@@ -1,14 +1,14 @@
 package ru.novosoft.smsc.infosme.backend.tables.messages;
 
 import org.apache.log4j.Category;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.Message;
-import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
-import ru.novosoft.smsc.util.RandomAccessFileReader;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
 import ru.novosoft.smsc.util.AdvancedStringTokenizer;
+import ru.novosoft.smsc.util.RandomAccessFileReader;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
@@ -21,7 +21,7 @@ import java.util.*;
  * Date: 29.05.2008
  */
 
-public class MessageDataSource extends AbstractDataSourceImpl {
+public class MessageDataSource extends AbstractDataSource {
 
   protected static final Category log = Category.getInstance(MessageDataSource.class);
 
@@ -47,7 +47,7 @@ public class MessageDataSource extends AbstractDataSourceImpl {
   }
 
   public QueryResultSet query(Query query_to_run) {
-    clear();
+    init(query_to_run);
     MessageFilter filter = (MessageFilter)query_to_run.getFilter();
 
     try {
@@ -59,10 +59,11 @@ public class MessageDataSource extends AbstractDataSourceImpl {
       if (files.isEmpty())
         return new EmptyResultSet();
 
-      Date fromDate = filter.getFromDate() == null ? null : msgDateFormat.parse(msgDateFormat.format(filter.getFromDate()));
-      Date tillDate = filter.getTillDate() == null ? null : msgDateFormat.parse(msgDateFormat.format(filter.getTillDate()));
+      String fromDateString = filter.getFromDate() == null ? null : msgDateFormat.format(filter.getFromDate());
+      Date fromDate = filter.getFromDate() == null ? null : msgDateFormat.parse(fromDateString);
+      String tillDateString = filter.getTillDate() == null ? null : msgDateFormat.format(filter.getTillDate());
+      Date tillDate = filter.getTillDate() == null ? null : msgDateFormat.parse(tillDateString);
 
-      int total = 0;
       String encoding = System.getProperty("file.encoding");
 
       for (Iterator iter = files.iterator(); iter.hasNext();) {
@@ -90,34 +91,37 @@ public class MessageDataSource extends AbstractDataSourceImpl {
 
             j++;
 
-            AdvancedStringTokenizer st = new AdvancedStringTokenizer(line, ",");
-            int state = Integer.parseInt(st.nextToken().trim());
+            int i = line.indexOf(',');
+            int state = Integer.parseInt(line.substring(0, i));
             if (state == Message.State.DELETED.getId())
               continue;
 
-            Date date = msgDateFormat.parse(st.nextToken().trim());
-            if ((fromDate != null && !date.after(fromDate)) || (tillDate != null && !date.before(tillDate)))
+            int k = i + 1;
+            i = line.indexOf(',', k);
+
+            String dateStr = line.substring(k, i);
+            if ((fromDateString != null && fromDateString.compareTo(dateStr) > 0) || (tillDateString != null && tillDateString.compareTo(dateStr) < 0))
               continue;
 
-            String msisdn = st.nextToken().trim();
-            String region = st.nextToken();
-            String message = st.nextToken();
+            k = i+1;
+            i = line.indexOf(',', k);
+            String msisdn = line.substring(k, i);
+
+            k = i+1;
+            i = line.indexOf(',', k);
+            String region = line.substring(k, i);
+
+            String message = prepareMessage(line.substring(i+2, line.length() - 1));
 
             long id = getId(idbase, offset);
 
-            final MessageDataItem di = new MessageDataItem(id, filter.getTaskId(), state, date, msisdn, region, message);
-            if (filter.isItemAllowed(di)) {
-              total++;
-              if (total < query_to_run.getExpectedResultsQuantity()) {
-                add(di);
-                total++;
-              }
-            }
+            add(new MessageDataItem(id, filter.getTaskId(), state, msgDateFormat.parse(dateStr), msisdn, region, message));              
+
           }
         } catch (EOFException e) {
         } catch (IOException e) {
           e.printStackTrace();
-        } catch (ParseException e) {
+        } catch (AdminException e) {
           e.printStackTrace();
         } finally {
           if (f != null)
@@ -128,16 +132,13 @@ public class MessageDataSource extends AbstractDataSourceImpl {
         }
         if (log.isDebugEnabled())
           log.debug(j + " messages have readed from file: " + file.getName());
-
       }
 
     } catch (ParseException e) {
-
+      e.printStackTrace();
     }
 
-    query_to_run = new MessageQuery(query_to_run.getExpectedResultsQuantity(),
-        new EmptyFilter(), (String)query_to_run.getSortOrder().get(0), query_to_run.getStartPosition());
-    return super.query(query_to_run);
+    return getResults();
   }
 
   private static long getId(long idbase, long offset) {
@@ -159,15 +160,14 @@ public class MessageDataSource extends AbstractDataSourceImpl {
     return y2 << 60 | y1 << 56 | m2 << 52 | m1 << 48 | d2 << 44 | d1 << 40 | h2 << 36 | h1 << 32;
   }
 
-//  private static String prepareMessage(String m) {
-//    String message = m;
-//    message = message.trim();
-//     remove braces
-//    message = message.replaceAll("\\\\n", "\n");
-//    message = message.replaceAll("\\\\\"", "\"");
-//
-//    return message;
-//  }
+  private static String prepareMessage(String m) {
+    String message = m;
+    message = message.trim();
+    message = message.replaceAll("\\\\n", "\n");
+    message = message.replaceAll("\\\\\"", "\"");
+
+    return message;
+  }
 
   public MessageDataItem getMessage(String msisdn, String taskId) throws Exception{
 
@@ -211,7 +211,8 @@ public class MessageDataSource extends AbstractDataSourceImpl {
           if (state != Message.State.DELIVERED.getId())
             continue;
 
-          Date date = msgDateFormat.parse(st.nextToken().trim());
+          String dateStr = st.nextToken().trim();
+          Date date = msgDateFormat.parse(dateStr);
           String ms = st.nextToken().trim();
           if((!ms.equals(msisdn))&&(!ms.equals(msisdn2))){
             continue;

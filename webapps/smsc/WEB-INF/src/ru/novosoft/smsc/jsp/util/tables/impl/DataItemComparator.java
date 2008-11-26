@@ -15,13 +15,26 @@ import java.util.Vector;
 class DataItemComparator implements Comparator
 {
   private String fieldName = null;
+  private boolean reverse;
 
   public DataItemComparator(String fieldNameToCompare)
   {
-    fieldName = fieldNameToCompare;
+    this(fieldNameToCompare, false);
   }
 
-  public int compare(Object o1, Object o2)
+  public DataItemComparator(String fieldName, boolean reverse) {
+    this.fieldName = fieldName;
+    this.reverse = reverse;
+  }
+
+  public int compare(Object o1, Object o2) {
+    if (reverse)
+      return -_compare(o1, o2);
+    else
+      return _compare(o1, o2);
+  }
+
+  public int _compare(Object o1, Object o2)
   {
     DataItem i1 = (DataItem) o1;
     DataItem i2 = (DataItem) o2;

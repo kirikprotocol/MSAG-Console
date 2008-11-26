@@ -41,6 +41,10 @@ public class QueryResultSetImpl implements QueryResultSet
     this.sortOrder.add(sortOrder);
   }
 
+  public void setResults(Vector results) {
+    this.results = results;
+  }
+
   public Iterator iterator()
   {
     return results.iterator();

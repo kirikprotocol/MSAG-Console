@@ -203,7 +203,7 @@
 </tr>
 <%}}%>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=retryOnFail>Retry on fail (time)</label></th>
+  <th><label for=retryOnFail>Retry policy</label></th>
   <td><%if (bean.isSmeRunning()) {%>
     <input class=check type=checkbox id=retryOnFail name=retryOnFail <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="document.getElementById('retryPolicy').disabled = !this.checked;">
     <select id="retryPolicy" name="retryPolicy">

@@ -11,6 +11,7 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
 import ru.novosoft.smsc.infosme.backend.Message;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,17 +30,17 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
   private final TextColumn dateColumn = new TextColumn(MessageDataSource.DATE, "infosme.label.date", true, 20);
   private final TextColumn messageColumn = new TextColumn(MessageDataSource.MESSAGE,"infosme.label.message", true, 30);
 
-  public static final String DEFAULT_SORT = "+"+MessageDataSource.MSISDN;
+  public static final String DEFAULT_SORT = null;
 
   private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yy HH:mm");
 
   private int maxTotalSize = 0;
 
-  private AbstractDataSourceImpl ds;
+  private AbstractDataSource ds;
 
   private int totalSize = 0;
 
-  private String sortOrder ="";
+  private String sortOrder;
 
   private Filter filter;
 
@@ -78,9 +79,9 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
   protected void fillTable(int start, int size) throws TableHelperException {
     try{
       buildSortOrder();
-      final QueryResultSet messages = ds.query(new MessageQuery(maxTotalSize, filter, sortOrder, 0));
+      final QueryResultSet messages = ds.query(new MessageQuery(size, filter, sortOrder, start));
 
-      for (int i = start; i < messages.size() && i < start + size; i++) {
+      for (int i = 0; i < messages.size(); i++) {
         final DataItem item = messages.get(i);
 
         final Row row = createNewRow();
@@ -97,7 +98,7 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
         row.addCell(messageColumn, new StringCell(msisdn,
             (String)item.getValue(MessageDataSource.MESSAGE), false));
       }
-      totalSize = messages.size();
+      totalSize = messages.getTotalSize();
 
     } catch(Exception e) {
       throw new TableHelperException(e);
@@ -116,11 +117,11 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
     this.maxTotalSize = maxTotalSize;
   }
 
-  public AbstractDataSourceImpl getDs() {
+  public AbstractDataSource getDs() {
     return ds;
   }
 
-  public void setDs(AbstractDataSourceImpl ds) {
+  public void setDs(AbstractDataSource ds) {
     this.ds = ds;
   }
 
