@@ -2,6 +2,7 @@
 # define __SCAG_UTIL_LLTOSTR_H 1
 
 # ifdef __GNUC__
+#include <string.h>
 #include <sstream>
 namespace {
 
@@ -11,7 +12,7 @@ namespace {
     s << v;
     const std::string ss = s.str();
     endptr -= ss.size();
-    memcpy( endptr, ss.c_str(), ss.size() );
+    ::memcpy( endptr, ss.c_str(), ss.size() );
     return endptr;
   }
 

@@ -36,7 +36,7 @@ bool Inst::IsProcDir(char* oldpid)
     
     if(!dirp) return false;
     
-    while((dp = readdir(dirp)) && std::strcmp(dp->d_name, oldpid));
+    while((dp = readdir(dirp)) && ::strcmp(dp->d_name, oldpid));
     
     closedir(dirp);    
     
