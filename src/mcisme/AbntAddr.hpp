@@ -329,15 +329,10 @@ struct MCEvent
   }
 
   std::string toString() const {
-    std::ostringstream result;
+    char textString[128];
+    snprintf(textString, sizeof(textString), "id=%d,dt=%d,caller=%s,callCount=%d,missCallFlags=0x%02X", id, dt, AbntAddr(&caller).getText().c_str(), callCount, missCallFlags);
 
-    result << "id=" << uint_t(id)
-           << ",dt=" << dt
-           << ",caller=" << AbntAddr(&caller).getText()
-           << ",callCount=" << callCount
-           << std::hex << ",missCallFlags=0x" << missCallFlags;
-
-    return result.str();
+    return textString;
   }
 };
 
