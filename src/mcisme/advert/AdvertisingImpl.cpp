@@ -47,9 +47,7 @@ AdvertisingImpl::reinit(int connectTimeout)
   _socket.setConnectTimeout(connectTimeout);
 
   if ( _socket.Connect() ) {
-    char errBuf[512];
-    strerror_r(errno, errBuf, sizeof(errBuf));
-    smsc_log_error(_logger, "AdvertisingImpl::reinit::: can't establish connection to %s - %s", toString().c_str(), errBuf);
+    smsc_log_error(_logger, "AdvertisingImpl::reinit::: can't establish connection to %s - %s", toString().c_str(), strerror(errno));
     return false;
   }
 
