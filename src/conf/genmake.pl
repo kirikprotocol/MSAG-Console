@@ -18,7 +18,7 @@ if($ENV{VERBOSE} eq 'YES')
 sub readmodules{
   my $fn=shift;
   open(my $f,$fn) || die "Failed to open $fn:'$!'";
-  my @rv=grep!/^\s*(?:#|$)/,map{s/[\x0d\x0a]//g;/^(\w+)/;$1}<$f>;
+  my @rv=grep!/^\s*(?:#|$)/,map{s/[\x0d\x0a]//g;/^([\w\?]+)/;$1}<$f>;
   return \@rv;
 }
 
@@ -62,8 +62,10 @@ close($mkf);
 sub generate{
   my $prefix=shift;
   my $ml=shift;
+  # print STDERR "generate dir=$prefix\n";
   for my $m(@$ml)
   {
+    # print STDERR "generate mod=$m\n";
     my $moddeps;
     next if $m=~/^\s*(?:$|#)/;
     $m=~s/^\?//;
@@ -180,6 +182,7 @@ sub generate{
     if(-f $dirname.'/modules-list')
     {
       $mods=readmodules($dirname.'/modules-list');
+      # print STDERR "modlist: [".join(',',@$mods)."]\n";
       for(@$mods)
       {
         unless(/^\?/)
