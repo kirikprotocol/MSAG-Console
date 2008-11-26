@@ -136,7 +136,7 @@ MessageFormatter::formatMessage(const AbntAddr& abnt,
     smsc_log_debug(logger, "MessageFormatter::formatMessage::: process next event: event idx=%d", i);
     AbntAddr from(&(mc_events[i].caller));
 
-    const std::string& fromAbnt = (from.getText().empty() ? unknownCaller : from.getText());
+    std::string fromAbnt = (from.getText().empty() ? unknownCaller : from.getText());
     if( mc_events[i].missCallFlags & misscall::ANTI_AON_FOR_CALLER ) fromAbnt = unknownCaller;
     
     const std::string& report_msg_for_client =
