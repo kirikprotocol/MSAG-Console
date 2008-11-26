@@ -25,6 +25,8 @@ public class DeliveriesNew extends InfoSmeBean {
   // Page data
   private String mbNext;
   private String mbCancel;
+  private String mbDlstat = null;
+  private String mbStat   = null;
 
   protected int init(List errors) {
     int result = super.init(errors);
@@ -51,6 +53,12 @@ public class DeliveriesNew extends InfoSmeBean {
       } else if (mbCancel != null) {
         mbCancel = null;
         activePage = activePage.mbCancel(request);
+      } else if (mbStat != null) {
+        mbStat = null;
+        return InfoSmeBean.RESULT_STAT;
+      } else if (mbDlstat != null) {
+        mbDlstat = null;
+        return InfoSmeBean.RESULT_DLSTAT;
       } else
         activePage = activePage.mbUpdate(request);
     } catch (AdminException e) {
@@ -232,6 +240,22 @@ public class DeliveriesNew extends InfoSmeBean {
 
   public void setMbCancel(String mbCancel) {
     this.mbCancel = mbCancel;
+  }
+
+  public String getMbDlstat() {
+    return mbDlstat;
+  }
+
+  public void setMbDlstat(String mbDlstat) {
+    this.mbDlstat = mbDlstat;
+  }
+
+  public String getMbStat() {
+    return mbStat;
+  }
+
+  public void setMbStat(String mbStat) {
+    this.mbStat = mbStat;
   }
 
   public String getStatusStr() {

@@ -7,6 +7,14 @@
 
 <%
   int beanResult = deliveries_bean.process(request);
+  switch(beanResult) {
+    case InfoSmeBean.RESULT_STAT:
+      response.sendRedirect("stat.jsp");
+      return;
+    case InfoSmeBean.RESULT_DLSTAT:
+      response.sendRedirect("stat.jsp?csv=true");
+      return;
+  }
 %>
 <%@ include file="inc/menu_switch.jsp"%>
 <%
