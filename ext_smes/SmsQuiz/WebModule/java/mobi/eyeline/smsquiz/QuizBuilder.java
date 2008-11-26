@@ -8,9 +8,10 @@ import org.jdom.output.Format;
 
 import java.util.*;
 import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.io.*;
 
-import mobi.eyeline.smsquiz.quizes.view.QuizFullData;
+import mobi.eyeline.smsquiz.quizes.view.QuizData;
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
 
 /**
@@ -21,81 +22,16 @@ public class QuizBuilder {
 
   private static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(QuizBuilder.class);
 
-  private static String datePattern = "dd.MM.yyyy HH:mm";
+
+  private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 
 
-  public static QuizShortData parseQuiz(String path) throws QuizParsingException {
-    String abFile = null;
-    String address = null;
-    Date dateBegin = null;
-    Date dateEnd = null;
-    String name = null;
-    SimpleDateFormat dateFormat = new SimpleDateFormat(datePattern);
+
+  public static QuizData parseAll(String filepath) throws QuizParsingException {
 
     SAXBuilder sb = new SAXBuilder();
     InputStream stream = null;
-    try {
-      stream = new FileInputStream(path);
-      Document doc = sb.build(stream);
-      Element root = doc.getRootElement();
-      Element elem;
-
-      if ((elem = root.getChild("replies")) != null) {
-        if ((elem = elem.getChild("destination-address")) != null) {
-          address = elem.getTextTrim();
-        } else {
-          throw new Exception("Section 'destination-address' doesn't exist in " + path);
-        }
-      } else {
-        throw new Exception("Section 'replies' doesn't exist in " + path);
-      }
-      if ((elem = root.getChild("general")) != null) {
-        Element subElem;
-        if ((subElem = elem.getChild("name")) != null) {
-          name = subElem.getTextTrim();
-        } else {
-          throw new Exception("Section 'name' doesn't exist in " + path);
-        }
-        if ((subElem = elem.getChild("date-begin")) != null) {
-          dateBegin = dateFormat.parse(subElem.getTextTrim());
-        } else {
-          throw new Exception("Section 'date-begin' doesn't exist in " + path);
-        }
-        if ((subElem = elem.getChild("date-end")) != null) {
-          dateEnd = dateFormat.parse(subElem.getTextTrim());
-        } else {
-          throw new Exception("Section 'date-end' doesn't exist in " + path);
-        }
-        if ((subElem = elem.getChild("abonents-file")) != null) {
-         abFile = subElem.getTextTrim();
-        } else {
-          throw new Exception("Section 'abonents-file' doesn't exist in " + path);
-        }
-      } else {
-        throw new Exception("Section 'general' doesn't exist in " + path);
-      }
-    } catch (Exception e) {
-      logger.error("Parsing exception", e);
-      e.printStackTrace();
-      throw new QuizParsingException(e);
-    } finally {
-      if (stream != null) {
-        try {
-          stream.close();
-        } catch (IOException e) {
-          logger.error("Error close stream", e);
-        }
-      }
-    }
-    return new QuizShortData(address, dateBegin, dateEnd, abFile, name);
-  }
-
-  public static QuizFullData parseAll(String filepath) throws QuizParsingException {
-    File file = new File(filepath);
-
-    SAXBuilder sb = new SAXBuilder();
-    InputStream stream = null;
-    QuizFullData data = new QuizFullData();
+    QuizData data = new QuizData();
     try {
       stream = new FileInputStream(filepath);
       Document doc = sb.build(stream);
@@ -131,7 +67,7 @@ public class QuizBuilder {
     return data;
   }
 
-  private static void parseGeneral(Element generalElem, QuizFullData data) throws QuizParsingException {
+  private static void parseGeneral(Element generalElem, QuizData data) throws QuizParsingException {
     Element elem;
     String dateBegin = null;
     String dateEnd = null;
@@ -164,15 +100,20 @@ public class QuizBuilder {
       errorNotFound("abonents-file");
     }
     data.setName(name);
-    data.setDateBegin(dateBegin);
-    data.setDateEnd(dateEnd);
+    try {
+      data.setDateBegin(dateFormat.parse(dateBegin));
+      data.setDateEnd(dateFormat.parse(dateEnd));
+    } catch (ParseException e) {
+      logger.error(e,e);
+      throw new QuizParsingException(e.toString(),e);
+    }
     data.setAbFile(abFileName);
 
     data.setQuestion(question);
 
   }
 
-  private static void parseDistribution(Element distrlElem, QuizFullData data) throws QuizParsingException {
+  private static void parseDistribution(Element distrlElem, QuizData data) throws QuizParsingException {
     Element elem;
     String sourceaddress = null;
     String timeBegin = null;
@@ -227,11 +168,16 @@ public class QuizBuilder {
     data.setTimeBegin(timeBegin);
     data.setTimeEnd(timeEnd);
     data.setTxmode(txmode);
-    data.setSourceAddress(sourceaddress);
-    data.setDistrDateEnd(distrDateEnd);
+    data.setSourceAddress(sourceaddress);     
+    try{
+      data.setDistrDateEnd(dateFormat.parse(distrDateEnd));
+    }catch(Exception e) {
+      logger.error(e,e);
+      throw new QuizParsingException(e);
+    }
   }
 
-  private static void parseReplies(Element repliesElem, QuizFullData data) throws QuizParsingException {
+  private static void parseReplies(Element repliesElem, QuizData data) throws QuizParsingException {
     Element elem;
 
     if ((elem = repliesElem.getChild("destination-address")) != null) {
@@ -285,7 +231,7 @@ public class QuizBuilder {
   }
 
 
-  public static void saveQuiz(QuizFullData data, String filePath) {
+  public static void saveQuiz(QuizData data, String filePath) {
     Format format = Format.getPrettyFormat();
     format.setEncoding(System.getProperty("file.encoding"));
     XMLOutputter outputter = new XMLOutputter(format);
@@ -316,10 +262,10 @@ public class QuizBuilder {
     }
   }
 
-  private static Element buildGeneral(QuizFullData data) {
+  private static Element buildGeneral(QuizData data) {
     Element general = new Element("general");
     Element element = new Element("date-begin");
-    element.setText(data.getDateBegin().trim());
+    element.setText(data.getDateBeginStr().trim());
     general.addContent(element);
 
     element = new Element("name");
@@ -327,7 +273,7 @@ public class QuizBuilder {
     general.addContent(element);
 
     element = new Element("date-end");
-    element.setText(data.getDateEnd().trim());
+    element.setText(data.getDateEndStr().trim());
     general.addContent(element);
 
     element = new Element("question");
@@ -342,7 +288,7 @@ public class QuizBuilder {
 
   }
 
-  private static Element buildDistribution(QuizFullData data) {
+  private static Element buildDistribution(QuizData data) {
     Element distr = new Element("distribution");
 
     Element element = new Element("source-address");
@@ -358,7 +304,7 @@ public class QuizBuilder {
     distr.addContent(element);
 
     element = new Element("date-end");
-    element.setText(data.getDistrDateEnd().trim());
+    element.setText(data.getDistrDateEndStr().trim());
     distr.addContent(element);
 
     element = new Element("source-address");
@@ -385,7 +331,7 @@ public class QuizBuilder {
     return distr;
   }
 
-  private static Element buildReplies(QuizFullData data) {
+  private static Element buildReplies(QuizData data) {
     Element replies = new Element("replies");
 
     Element element = new Element("destination-address");

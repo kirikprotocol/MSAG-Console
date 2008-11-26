@@ -125,6 +125,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
         validateNull(d.getDays(),"days");
         validateNull(d.isTxmode(),"txmode");
         validateNull(d.getAddress(),"address");
+        validateNull(d.getTaskName(),"taskName");
       } catch(Exception e) {
         ctx.setMessage("Wrong reguest command, some parameters type is unsupported: "+e.getMessage());
         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

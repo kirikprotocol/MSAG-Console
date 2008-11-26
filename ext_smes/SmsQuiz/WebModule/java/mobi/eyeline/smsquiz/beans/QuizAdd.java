@@ -1,6 +1,7 @@
 package mobi.eyeline.smsquiz.beans;
 
 import ru.novosoft.smsc.jsp.util.helper.Validation;
+import ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.util.jsp.MultipartServletRequest;
@@ -17,7 +18,7 @@ import java.io.*;
 
 import mobi.eyeline.smsquiz.quizes.CategoriesTableHelper;
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
-import mobi.eyeline.smsquiz.quizes.view.QuizFullData;
+import mobi.eyeline.smsquiz.quizes.view.QuizData;
 import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 import mobi.eyeline.smsquiz.QuizBuilder;
@@ -62,6 +63,8 @@ public class QuizAdd extends SmsQuizBean {
 
   private String quizDir;
 
+  private String workDir;
+
   private String defaultCategory;
 
   private String distrDateEnd;
@@ -74,6 +77,7 @@ public class QuizAdd extends SmsQuizBean {
     }
     try {
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
+      workDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
     }
     catch (Exception e) {
       logger.error(e);
@@ -86,6 +90,13 @@ public class QuizAdd extends SmsQuizBean {
       txmode = false;
       maxRepeat = "3";
       activeWeekDays[0] = "Mon";
+      activeWeekDays[1] = "Tue";
+      activeWeekDays[2] = "Wed";
+      activeWeekDays[3] = "Thu";
+      activeWeekDays[4] = "Fri";
+      activeWeekDays[5] = "Sat";
+      activeWeekDays[6] = "Sun";
+
     }
     return result;
   }
@@ -108,7 +119,7 @@ public class QuizAdd extends SmsQuizBean {
     if ((result = validation(request)) != RESULT_OK) {
       return result;
     }
-    QuizFullData data = new QuizFullData();
+    QuizData data = new QuizData();
     MultipartDataSource ds = null;
     InputStream is = null;
     BufferedOutputStream outputStream = null;
@@ -137,8 +148,13 @@ public class QuizAdd extends SmsQuizBean {
       }
       List categories = tableHelper.getCategories();
       data.setCategory(categories);
-      data.setDateBegin(dateBegin);
-      data.setDateEnd(dateEnd);
+      try{
+        data.setDateBegin(dateFormat.parse(dateBegin));
+        data.setDateEnd(dateFormat.parse(dateEnd));
+        data.setDistrDateEnd(dateFormat.parse(distrDateEnd));
+      } catch(Exception e) {
+        return error(e.getMessage());
+      }
       data.setDefaultCategory(defaultCategory);
       data.setDestAddress(destAddress);
       data.setMaxRepeat(maxRepeat);
@@ -149,7 +165,6 @@ public class QuizAdd extends SmsQuizBean {
       data.setTimeEnd(timeEnd);
       data.setTxmode(Boolean.toString(txmode));
       data.setAbFile(file.getAbsolutePath());
-      data.setDistrDateEnd(distrDateEnd);
       QuizBuilder.saveQuiz(data, quizDir + File.separator + quizId + ".xml");
     } catch (Exception e) {
       logger.error(e);
@@ -190,10 +205,7 @@ public class QuizAdd extends SmsQuizBean {
       e.printStackTrace();
       return warning(e.getMessage());
     }
-    if (!validateQuizName()) {
-      System.out.println("Quiz with this name already exists");
-      return warning("Quiz with this name already exists");
-    }
+
     if ((activeWeekDays == null) || (activeWeekDays.length == 0)) {
       System.out.println("Please select one or more active days");
       return warning("Please select one or more active days");
@@ -219,30 +231,49 @@ public class QuizAdd extends SmsQuizBean {
     }
     try {
       if (request.getMultipartDataSource("file") == null) {
-        System.out.println("File data source is null, select the file");
         return warning("Please select abonents file");
       }
     } catch (IOException e) {
-      e.printStackTrace();
       logger.error(e);
-      return warning("Error during upload abonents file");
+      return warning("Error during upload abonents file: "+e);
     }
-
+    int result = validateQuiz();
+    if (result!=RESULT_OK) {
+      return result;
+    }
     return RESULT_OK;
   }
 
-  private boolean validateQuizName() {
-    QuizesDataSource ds = new QuizesDataSource(quizDir);
+  private int validateQuiz() {
+    QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
     QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
     for (int i = 0; i < quizesList.size(); i++) {
-      final DataItem item = quizesList.get(i);
-      final String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);
-      System.out.println("Compare "+this.quizName+" with "+quizName);
+      DataItem item = quizesList.get(i);
+      String da = (String)item.getValue(QuizesDataSource.DA);
+      String sa = (String)item.getValue(QuizesDataSource.SA);
+      Date dateBeginPrev = (Date)item.getValue(QuizesDataSource.DATE_BEGIN);
+      Date dateEndPrev = (Date)item.getValue(QuizesDataSource.DATE_END);
+      String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);
+
       if(quizName.equalsIgnoreCase(this.quizName)) {
-        return false;
+        return warning("Quiz with this name already exists");
+      }
+      if((da.equals(destAddress))||(sa.equals(sourceAddress))) {
+        try{
+          Date dateBegin = dateFormat.parse(this.dateBegin);
+          Date dateEnd = dateFormat.parse(this.dateEnd);
+          if((dateBeginPrev.compareTo(dateEnd)<=0)&&(dateBegin.compareTo(dateEndPrev)<=0)) {
+            return warning("Quiz with this destination or source addresses already exists in this period");
+          }
+        } catch(Exception e) {
+          logger.error(e,e);
+          return error("Internal error");
+
+        }
+
       }
     }
-    return true;
+    return RESULT_OK;
   }
 
   private int getUniqName() {
@@ -260,7 +291,7 @@ public class QuizAdd extends SmsQuizBean {
       try{
         subRes = Integer.parseInt(filename);
         System.out.println(result+" compare with file's number: "+subRes);
-        if(result<=subRes) {
+        if(result==subRes) {
           result=subRes+1;
         }
       } catch(NumberFormatException e) {}
@@ -434,7 +465,7 @@ public class QuizAdd extends SmsQuizBean {
     this.defaultCategory = defaultCategory;
   }
 
-  public CategoriesTableHelper getTableHelper() {
+  public DynamicTableHelper getTableHelper() {
     return tableHelper;
   }
 

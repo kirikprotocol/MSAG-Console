@@ -1102,6 +1102,7 @@ infosmecreatedistr returns [InfoSmeCreateDistrCommand cmd] {
 } : {
       cmd = new InfoSmeCreateDistrCommand();
       cmd.setFile(getnameid("distr file"));
+      cmd.setTaskName(getnameid("task name"));
       cmd.setDateBeginStr(getnameid("date begin"));
       cmd.setDateEndStr(getnameid("date end"));
       cmd.setTimeBeginStr(getnameid("time begin"));

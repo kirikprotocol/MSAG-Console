@@ -9,6 +9,7 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.jsp.util.tables.DataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 
 import java.text.SimpleDateFormat;
@@ -30,9 +31,7 @@ public class ReplyTableHelper extends PagedStaticTableHelper {
 
   private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yy HH:mm");
 
-  private int maxTotalSize = 0;
-
-  private AbstractDataSourceImpl ds;
+  private DataSource ds;
 
   private int totalSize = 0;
 
@@ -69,9 +68,9 @@ public class ReplyTableHelper extends PagedStaticTableHelper {
   protected void fillTable(int start, int size) throws TableHelperException {
     try {
       buildSortOrder();
-      final QueryResultSet messages = ds.query(new ReplyQuery(maxTotalSize, filter, sortOrder, 0));
+      final QueryResultSet messages = ds.query(new ReplyQuery(size, filter, sortOrder, start));
 
-      for (int i = start; i < messages.size() && i < start + size; i++) {
+      for (int i = 0; i < messages.size(); i++) {
         final DataItem item = messages.get(i);
 
         final Row row = createNewRow();
@@ -83,7 +82,7 @@ public class ReplyTableHelper extends PagedStaticTableHelper {
         row.addCell(messageColumn, new StringCell(msisdn,
             (String) item.getValue(ReplyDataSource.MESSAGE), false));
       }
-      totalSize = messages.size();
+      totalSize = messages.getTotalSize();
 
     } catch (Exception e) {
       throw new TableHelperException(e);
@@ -94,19 +93,11 @@ public class ReplyTableHelper extends PagedStaticTableHelper {
     return totalSize;
   }
 
-  public int getMaxTotalSize() {
-    return maxTotalSize;
-  }
-
-  public void setMaxTotalSize(int maxTotalSize) {
-    this.maxTotalSize = maxTotalSize;
-  }
-
-  public AbstractDataSourceImpl getDs() {
+  public DataSource getDs() {
     return ds;
   }
 
-  public void setDs(AbstractDataSourceImpl ds) {
+  public void setDs(DataSource ds) {
     this.ds = ds;
   }
 

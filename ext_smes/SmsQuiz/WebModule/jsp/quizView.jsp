@@ -3,7 +3,7 @@
                  java.text.SimpleDateFormat"%>
 <%@ page import="mobi.eyeline.smsquiz.beans.QuizView"%>
 <%@ page import="mobi.eyeline.smsquiz.quizes.AnswerCategory"%>
-<%@ page import="mobi.eyeline.smsquiz.quizes.view.QuizFullData"%>
+<%@ page import="mobi.eyeline.smsquiz.quizes.view.QuizData"%>
 <%@ page import="ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper"%>
 <jsp:useBean id="bean" scope="page" class="mobi.eyeline.smsquiz.beans.QuizView" />
 <jsp:setProperty name="bean" property="*"/>
@@ -22,7 +22,7 @@
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 <%
 
-   QuizFullData quizData = bean.getQuizData();
+   QuizData quizData = bean.getQuizData();
 %>
 <div class=content>
 <% int rowN = 0;%>
@@ -91,15 +91,15 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.startDate")%></th>
-  <td><%=StringEncoderDecoder.encode(quizData.getDateBegin())%></td>
+  <td><%=StringEncoderDecoder.encode(quizData.getDateBeginStr())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.endDate")%></th>
-  <td><%=StringEncoderDecoder.encode(quizData.getDateEnd())%></td>
+  <td><%=StringEncoderDecoder.encode(quizData.getDateEndStr())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.question")%></th>
-  <td><%=StringEncoderDecoder.encode(quizData.getQuestion())%></td>
+  <td><textarea readonly="true"><%=StringEncoderDecoder.encode(quizData.getQuestion())%></textarea></td>
 </tr>
 <tr>
   <th align="center" colspan="2"><div class=page_subtitle>Distribution</div></th>
@@ -114,6 +114,10 @@
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.endTime")%></th>
   <td><%=StringEncoderDecoder.encode(quizData.getTimeEnd())%></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th><%=getLocString("smsquiz.label.endDate")%></th>
+  <td><%=StringEncoderDecoder.encode(quizData.getDistrDateEndStr())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.activeDays")%></th>

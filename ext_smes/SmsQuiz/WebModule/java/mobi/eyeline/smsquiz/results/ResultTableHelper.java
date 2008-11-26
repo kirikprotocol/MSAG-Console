@@ -10,6 +10,7 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.DataSource;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -31,9 +32,7 @@ public class ResultTableHelper extends PagedStaticTableHelper {
 
   private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yy HH:mm");
 
-  private int maxTotalSize = 0;
-
-  private AbstractDataSourceImpl ds;
+  private DataSource ds;
 
   private int totalSize = 0;
 
@@ -72,9 +71,9 @@ public class ResultTableHelper extends PagedStaticTableHelper {
   protected void fillTable(int start, int size) throws TableHelperException {
     try {
       buildSortOrder();
-      final QueryResultSet messages = ds.query(new ResultQuery(maxTotalSize, filter, sortOrder, 0));
+      final QueryResultSet messages = ds.query(new ResultQuery(size, filter, sortOrder, start));
 
-      for (int i = start; i < messages.size() && i < start + size; i++) {
+      for (int i = 0; i < messages.size(); i++) {
         final DataItem item = messages.get(i);
 
         final Row row = createNewRow();
@@ -90,7 +89,7 @@ public class ResultTableHelper extends PagedStaticTableHelper {
         row.addCell(categoryColumn, new StringCell(msisdn,
             (String) item.getValue(ResultDataSource.CATEGORY), false));
       }
-      totalSize = messages.size();
+      totalSize = messages.getTotalSize();
 
     } catch (Exception e) {
       throw new TableHelperException(e);
@@ -101,19 +100,11 @@ public class ResultTableHelper extends PagedStaticTableHelper {
     return totalSize;
   }
 
-  public int getMaxTotalSize() {
-    return maxTotalSize;
-  }
-
-  public void setMaxTotalSize(int maxTotalSize) {
-    this.maxTotalSize = maxTotalSize;
-  }
-
-  public AbstractDataSourceImpl getDs() {
+  public DataSource getDs() {
     return ds;
   }
 
-  public void setDs(AbstractDataSourceImpl ds) {
+  public void setDs(DataSource ds) {
     this.ds = ds;
   }
 

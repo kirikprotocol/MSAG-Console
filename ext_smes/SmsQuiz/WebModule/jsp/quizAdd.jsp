@@ -62,7 +62,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.question")%></th>
-  <td><input validation="nonEmpty" class=txt name=question value="<%=StringEncoderDecoder.encode(bean.getQuestion())%>"></td>
+  <td><textarea validation="nonEmpty" name=question><%=StringEncoderDecoder.encode(bean.getQuestion())%></textarea></td>
 </tr>
 <tr>
   <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.distribution")%></div></th>

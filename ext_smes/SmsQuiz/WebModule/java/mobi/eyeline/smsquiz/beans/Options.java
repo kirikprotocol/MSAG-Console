@@ -19,32 +19,18 @@ public class Options extends SmsQuizBean {
   private String dbSource;
 
   private String replyDirName;
-  private int fileCollectorDelay;
-  private int fileCollectorPeriod;
-  private int fileOpenedLimit;
 
   private String consoleHost;
   private String consolePort;
   private String consoleUser;
   private String consolePasssword;
-  private int connectTimeout;
-  private int connectCloserPeriod;
 
   private String infoSmeStatsDir;
-  private int statusCheckerDelay;
-  private int statusCheckerPeriod;
 
   private String quizDir;
-  private int dirListenerDelay;
   private int dirListenerPeriod;
-  private int quizCollDelay;
-  private int quizCollPeriod;
   private String dirResults;
   private String dirWork;
-
-  private int jmxPort;
-  private String jmxPassword;
-  private String jmxUser;
 
   private String smppConnHost;
   private int smppConnPort;
@@ -71,33 +57,19 @@ public class Options extends SmsQuizBean {
         dbPassword = getConfig().getString("dbpool.password");
 
         replyDirName = getConfig().getString("replystats.statsFile_dir");
-        fileCollectorDelay = getConfig().getInt("replystats.fileCollector_period");
-        fileCollectorPeriod = getConfig().getInt("replystats.fileCollector_delay");
-        fileOpenedLimit = getConfig().getInt("replystats.fileCollector_limit");
 
         consoleHost = getConfig().getString("distribution.smsc_console_host");
         consolePort = getConfig().getString("distribution.smsc_console_port");
         consoleUser = getConfig().getString("distribution.smsc_console_login");
         consolePasssword = getConfig().getString("distribution.smsc_console_password");
-        connectTimeout = getConfig().getInt("distribution.smsc_console_connect_timeout");
-        connectCloserPeriod = getConfig().getInt("distribution.smsc_console_closer_period");
 
         infoSmeStatsDir = getConfig().getString("distribution.infosme_stats_dir");
-        statusCheckerDelay = getConfig().getInt("distribution.status_checker_delay");
-        statusCheckerPeriod = getConfig().getInt("distribution.status_checker_period");
 
         quizDir = getConfig().getString("quizmanager.dir_quiz");
-        dirListenerDelay = getConfig().getInt("quizmanager.listener_delay");
         dirListenerPeriod = getConfig().getInt("quizmanager.listener_period");
-        quizCollDelay = getConfig().getInt("quizmanager.collector_delay");
-        quizCollPeriod = getConfig().getInt("quizmanager.collector_period");
         dirResults = getConfig().getString("quizmanager.dir_result");
         dirWork = getConfig().getString("quizmanager.dir_work");
         archiveDir = getConfig().getString("quizmanager.dir_archive");
-
-        jmxPort = getConfig().getInt("jmx.port");
-        jmxPassword = getConfig().getString("jmx.user");
-        jmxUser = getConfig().getString("jmx.password");
 
         String smppFileName = getConfig().getString("smppConfig");
         initSmppProperties(smppFileName);
@@ -157,33 +129,19 @@ public class Options extends SmsQuizBean {
       getConfig().setString("dbpool.password", dbPassword);
 
       getConfig().setString("replystats.statsFile_dir", replyDirName);
-      getConfig().setInt("replystats.fileCollector_period", fileCollectorDelay);
-      getConfig().setInt("replystats.fileCollector_delay", fileCollectorPeriod);
-      getConfig().setInt("replystats.fileCollector_limit", fileOpenedLimit);
 
       getConfig().setString("distribution.smsc_console_host", consoleHost);
       getConfig().setString("distribution.smsc_console_port", consolePort);
       getConfig().setString("distribution.smsc_console_login", consoleUser);
       getConfig().setString("distribution.smsc_console_password", consolePasssword);
-      getConfig().setInt("distribution.smsc_console_connect_timeout", connectTimeout);
-      getConfig().setInt("distribution.smsc_console_closer_period", connectCloserPeriod);
 
       getConfig().setString("distribution.infosme_stats_dir", infoSmeStatsDir);
-      getConfig().setInt("distribution.status_checker_delay", statusCheckerDelay);
-      getConfig().setInt("distribution.status_checker_period", statusCheckerPeriod);
 
       getConfig().setString("quizmanager.dir_quiz", quizDir);
-      getConfig().setInt("quizmanager.listener_delay", dirListenerDelay);
       getConfig().setInt("quizmanager.listener_period", dirListenerPeriod);
-      getConfig().setInt("quizmanager.collector_delay", quizCollDelay);
-      getConfig().setInt("quizmanager.collector_period", quizCollPeriod);
       getConfig().setString("quizmanager.dir_result", dirResults);
       getConfig().setString("quizmanager.dir_work", dirWork);
       getConfig().setString("quizmanager.dir_archive", archiveDir);
-
-      getConfig().setInt("jmx.port", jmxPort);
-      getConfig().setString("jmx.user", jmxPassword);
-      getConfig().setString("jmx.password", jmxUser);
 
       storeSmppProperties(getConfig().getString("smppConfig"));
       config.save();
@@ -275,48 +233,6 @@ public class Options extends SmsQuizBean {
     this.replyDirName = replyDirName;
   }
 
-
-  public String getFileCollectorDelay() {
-    return Integer.toString(fileCollectorDelay);
-  }
-
-  public void setFileCollectorDelay(String fileCollectorDelay) {
-    try {
-      this.fileCollectorDelay = Integer.parseInt(fileCollectorDelay);
-    } catch (NumberFormatException e) {
-      logger.error("Can't parse int value: " + fileCollectorDelay);
-      e.printStackTrace();
-    }
-  }
-
-  public String getFileCollectorPeriod() {
-    return Integer.toString(fileCollectorPeriod);
-  }
-
-  public void setFileCollectorPeriod(String fileCollectorPeriod) {
-    try {
-      this.fileCollectorPeriod = Integer.parseInt(fileCollectorPeriod);
-    }
-    catch (NumberFormatException e) {
-      logger.error("Can't parse int value: " + fileCollectorPeriod);
-      e.printStackTrace();
-    }
-  }
-
-  public String getFileOpenedLimit() {
-    return Integer.toString(fileOpenedLimit);
-  }
-
-  public void setFileOpenedLimit(String fileOpenedLimit) {
-    try {
-      this.fileOpenedLimit = Integer.parseInt(fileOpenedLimit);
-    }
-    catch (NumberFormatException e) {
-      logger.error("Can't parse int value: " + fileOpenedLimit);
-      e.printStackTrace();
-    }
-  }
-
   public String getConsoleHost() {
     return consoleHost;
   }
@@ -349,34 +265,6 @@ public class Options extends SmsQuizBean {
     this.consolePasssword = consolePasssword;
   }
 
-  public String getConnectTimeout() {
-    return Integer.toString(connectTimeout);
-  }
-
-  public void setConnectTimeout(String connectTimeout) {
-    try {
-      this.connectTimeout = Integer.parseInt(connectTimeout);
-    }
-    catch (NumberFormatException e) {
-      logger.error("Can't parse int value: " + connectTimeout);
-      e.printStackTrace();
-    }
-  }
-
-  public String getConnectCloserPeriod() {
-    return Integer.toString(connectCloserPeriod);
-  }
-
-  public void setConnectCloserPeriod(String connectCloserPeriod) {
-    try {
-      this.connectCloserPeriod = Integer.parseInt(connectCloserPeriod);
-    }
-    catch (NumberFormatException e) {
-      logger.error("Can't parse int value: " + connectCloserPeriod, e);
-      e.printStackTrace();
-    }
-  }
-
   public String getInfoSmeStatsDir() {
     return infoSmeStatsDir;
   }
@@ -385,54 +273,12 @@ public class Options extends SmsQuizBean {
     this.infoSmeStatsDir = infoSmeStatsDir;
   }
 
-  public String getStatusCheckerDelay() {
-    return Integer.toString(statusCheckerDelay);
-  }
-
-  public void setStatusCheckerDelay(String statusCheckerDelay) {
-    try {
-      this.statusCheckerDelay = Integer.parseInt(statusCheckerDelay);
-    }
-    catch (NumberFormatException e) {
-      logger.error("Can't parse int value: " + statusCheckerDelay, e);
-      e.printStackTrace();
-    }
-  }
-
-  public String getStatusCheckerPeriod() {
-    return Integer.toString(statusCheckerPeriod);
-  }
-
-  public void setStatusCheckerPeriod(String statusCheckerPeriod) {
-    try {
-      this.statusCheckerPeriod = Integer.parseInt(statusCheckerPeriod);
-    }
-    catch (NumberFormatException e) {
-      logger.error("Can't parse int value: " + statusCheckerPeriod, e);
-      e.printStackTrace();
-    }
-  }
-
   public String getQuizDir() {
     return quizDir;
   }
 
   public void setQuizDir(String quizDir) {
     this.quizDir = quizDir;
-  }
-
-  public String getDirListenerDelay() {
-    return Integer.toString(dirListenerDelay);
-  }
-
-  public void setDirListenerDelay(String dirListenerDelay) {
-    try {
-      this.dirListenerDelay = Integer.parseInt(dirListenerDelay);
-    }
-    catch (NumberFormatException e) {
-      logger.error("Can't parse int value: " + dirListenerDelay, e);
-      e.printStackTrace();
-    }
   }
 
   public String getDirListenerPeriod() {
@@ -445,34 +291,6 @@ public class Options extends SmsQuizBean {
     }
     catch (NumberFormatException e) {
       logger.error("Can't parse int value: " + dirListenerPeriod, e);
-      e.printStackTrace();
-    }
-  }
-
-  public String getQuizCollDelay() {
-    return Integer.toString(quizCollDelay);
-  }
-
-  public void setQuizCollDelay(String quizCollDelay) {
-    try {
-      this.quizCollDelay = Integer.parseInt(quizCollDelay);
-    }
-    catch (NumberFormatException e) {
-      logger.error("Can't parse int value: " + quizCollDelay, e);
-      e.printStackTrace();
-    }
-  }
-
-  public String getQuizCollPeriod() {
-    return Integer.toString(quizCollPeriod);
-  }
-
-  public void setQuizCollPeriod(String quizCollPeriod) {
-    try {
-      this.quizCollPeriod = Integer.parseInt(quizCollPeriod);
-    }
-    catch (NumberFormatException e) {
-      logger.error("Can't parse int value: " + quizCollPeriod, e);
       e.printStackTrace();
     }
   }
@@ -493,35 +311,7 @@ public class Options extends SmsQuizBean {
     this.dirWork = dirWork;
   }
 
-  public String getJmxPort() {
-    return Integer.toString(jmxPort);
-  }
 
-  public void setJmxPort(String jmxPort) {
-    try {
-      this.jmxPort = Integer.parseInt(jmxPort);
-    }
-    catch (NumberFormatException e) {
-      logger.error("Can't parse int value: " + jmxPort, e);
-      e.printStackTrace();
-    }
-  }
-
-  public String getJmxPassword() {
-    return jmxPassword;
-  }
-
-  public void setJmxPassword(String jmxPassword) {
-    this.jmxPassword = jmxPassword;
-  }
-
-  public String getJmxUser() {
-    return jmxUser;
-  }
-
-  public void setJmxUser(String jmxUser) {
-    this.jmxUser = jmxUser;
-  }
 
   public String getSmppConnHost() {
     return smppConnHost;
@@ -540,7 +330,7 @@ public class Options extends SmsQuizBean {
       this.smppConnPort = Integer.parseInt(smppConnPort);
     }
     catch (NumberFormatException e) {
-      logger.error("Can't parse int value: " + jmxPort, e);
+      logger.error("Can't parse int value: " + smppConnPort, e);
       e.printStackTrace();
     }
   }

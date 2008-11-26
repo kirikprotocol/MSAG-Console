@@ -49,19 +49,18 @@ public class Results extends SmsQuizBean {
     if (pageSize == 0) {
       pageSize = getSmsQuizContext().getMessagesPageSize();
     }
-    int maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
 
     try {
       String resultDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_result");
       String quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
-      makeQuizMap(quizDir);
+      String workDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
+      makeQuizMap(quizDir, workDir);
       System.out.println(quizId);
       if(quizId!=null) {
         resultFilter.setQuizId(quizId);
       }
       ds = new ResultDataSource(resultDir);
       tableHelper.setPageSize(pageSize);
-      tableHelper.setMaxTotalSize(maxTotalSize);
       tableHelper.setFilter(resultFilter);
       tableHelper.setDs(ds);
     } catch (Exception e) {
@@ -71,8 +70,8 @@ public class Results extends SmsQuizBean {
     return result;
   }
 
-  private void makeQuizMap(String quizDir) {
-    QuizesDataSource ds = new QuizesDataSource(quizDir);
+  private void makeQuizMap(String quizDir, String workDir) {
+    QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
     QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
     for (int i = 0; i < quizesList.size(); i++) {
       DataItem item = quizesList.get(i);

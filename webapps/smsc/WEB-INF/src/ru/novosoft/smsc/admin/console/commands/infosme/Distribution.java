@@ -18,6 +18,8 @@ public class Distribution {
   private Boolean txmode;
   private Set days;
 
+  private String taskName;
+
   public String getFile() {
     return file;
   }
@@ -80,5 +82,13 @@ public class Distribution {
 
   public void setDays(Set days) {
     this.days = days;
+  }
+
+  public String getTaskName() {
+    return taskName;
+  }
+
+  public void setTaskName(String taskName) {
+    this.taskName = taskName;
   }
 }

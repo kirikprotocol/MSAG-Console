@@ -3,8 +3,6 @@ package mobi.eyeline.smsquiz.beans;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
-import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
-import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,10 +14,10 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 import mobi.eyeline.smsquiz.replystats.*;
-import mobi.eyeline.smsquiz.QuizShortData;
 import mobi.eyeline.smsquiz.QuizBuilder;
 import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
+import mobi.eyeline.smsquiz.quizes.view.QuizData;
 
 /**
  * author: alkhal
@@ -48,6 +46,8 @@ public class Replies extends SmsQuizBean {
 
   private String quizDir;
 
+  private String workDir;
+
   protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
@@ -63,29 +63,31 @@ public class Replies extends SmsQuizBean {
     try {
       String replyDir = getSmsQuizContext().getConfig().getString("replystats.statsFile_dir");
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
+      workDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
       initQuizes();
       ds = new ReplyDataSource(replyDir);
       if (pageSize == 0) {
         pageSize = getSmsQuizContext().getMessagesPageSize();
       }
-      int maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
       if(quizId!=null) {
         File file = new File(quizDir+File.separator+quizId+".xml");
         if(!file.exists()) {
           file = new File(file.getAbsolutePath()+".old");
         }
         replyFilter.setQuizPath(file.getAbsolutePath());
-        QuizShortData data = QuizBuilder.parseQuiz(replyFilter.getQuizPath());
-        System.out.println("Parsing completed: address=" + data.getAddress() + "," +
-            " dateBegin=" + data.getDateBegin() + ", dateEnd=" + data.getDateEnd());
-        replyFilter.setQuizNumber(data.getAddress());
-        replyFilter.setQuizDateBegin(data.getDateBegin());
+        QuizData data = QuizBuilder.parseAll(replyFilter.getQuizPath());
+        replyFilter.setQuizNumber(data.getDestAddress());
+        Date date = QuizesDataSource.getActualStartDate(workDir, quizId);
+        if(date!=null) {
+          replyFilter.setQuizDateBegin(date);
+        } else {
+          replyFilter.setQuizDateBegin(data.getDateBegin());
+        }
         replyFilter.setQuizDateEnd(data.getDateEnd());
       }
       tableHelper.setFilter(replyFilter);
       tableHelper.setDs(ds);
       tableHelper.setPageSize(pageSize);
-      tableHelper.setMaxTotalSize(maxTotalSize);
 
     } catch (Exception e) {
       return error("Can't init data source", e);
@@ -155,7 +157,7 @@ public class Replies extends SmsQuizBean {
 
   private void initQuizes() {
     try {
-      QuizesDataSource ds = new QuizesDataSource(quizDir);
+      QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
       QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
       for (int i = 0; i < quizesList.size(); i++) {
         DataItem item = quizesList.get(i);
@@ -245,20 +247,6 @@ public class Replies extends SmsQuizBean {
 
   public void setQuizId(String quizId) {
     this.quizId = quizId;
-  /*  replyFilter.setQuizPath(quizPath);
-    try {
-      if (quizPath != null) {
-        QuizShortData data = QuizBuilder.parseQuiz(quizPath);
-        System.out.println("Parsing completed: address=" + data.getAddress() + "," +
-            " dateBegin=" + data.getDateBegin() + ", dateEnd=" + data.getDateEnd());
-        replyFilter.setQuizNumber(data.getAddress());
-        replyFilter.setQuizDateBegin(data.getDateBegin());
-        replyFilter.setQuizDateEnd(data.getDateEnd());
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-      logger.error(e);
-    } */
   }
 
   public boolean isQuizId(String quizId) {

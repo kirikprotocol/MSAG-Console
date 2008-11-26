@@ -9,6 +9,7 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.DataSource;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
@@ -34,9 +35,7 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
 
   private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yy HH:mm");
 
-  private int maxTotalSize = 0;
-
-  private QuizesDataSource ds;
+  private DataSource ds;
 
   private int totalSize = 0;
 
@@ -73,9 +72,9 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
   protected void fillTable(int start, int size) throws TableHelperException {
     try {
       buildSortOrder();
-      final QueryResultSet quizesList = ds.query(new QuizQuery(maxTotalSize, sortOrder, 0));
+      final QueryResultSet quizesList = ds.query(new QuizQuery(size, sortOrder, start));
 
-      for (int i = start; i < quizesList.size() && i < start + size; i++) {
+      for (int i = 0; i < quizesList.size(); i++) {
         final DataItem item = quizesList.get(i);
 
         final Row row = createNewRow();
@@ -91,7 +90,7 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
         row.addCell(stateColumn, new StringCell(quizId,
             (String) item.getValue(QuizesDataSource.STATE), false));
       }
-      totalSize = quizesList.size();
+      totalSize = quizesList.getTotalSize();
 
     } catch (Exception e) {
       throw new TableHelperException(e);
@@ -112,14 +111,6 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
     return totalSize;
   }
 
-  public int getMaxTotalSize() {
-    return maxTotalSize;
-  }
-
-  public void setMaxTotalSize(int maxTotalSize) {
-    this.maxTotalSize = maxTotalSize;
-  }
-
   public int getTotalSize() {
     return totalSize;
   }
@@ -133,7 +124,7 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
   }
 
 
-  public void setQuizesDataSource(QuizesDataSource ds) {
+  public void setDataSource(DataSource ds) {
     this.ds = ds;
   }
 

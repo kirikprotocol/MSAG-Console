@@ -38,7 +38,9 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
   private final String[] weekDays = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
 
   private String txmode;
-    // infosme distr create "/home/alkhal/file.txt" "10.08.2010 10:56" "10.08.2010 12:56" "10:45" "10:57" "Mon,Tue" "rx" "144"
+
+  private String taskName;
+    // infosme distr create "/home/alkhal/file.txt" "task1" "10.08.2010 10:56" "10.08.2010 12:56" "10:45" "10:57" "Mon,Tue" "rx" "144"
 
   public InfoSmeCreateDistrCommand() {
     super();
@@ -61,6 +63,7 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
       distribution.setDateEnd(dateEnd);
       distribution.setDays(days);
       distribution.setFile(file);
+      distribution.setTaskName(taskName);
       distribution.setTimeBegin(timeBegin);
       distribution.setTimeEnd(timeEnd);
       distribution.setTxmode(bolMod);
@@ -195,5 +198,13 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
 
   public void setFile(String file) {
     this.file = file;
+  }
+
+  public String getTaskName() {
+    return taskName;
+  }
+
+  public void setTaskName(String taskName) {
+    this.taskName = taskName;
   }
 }

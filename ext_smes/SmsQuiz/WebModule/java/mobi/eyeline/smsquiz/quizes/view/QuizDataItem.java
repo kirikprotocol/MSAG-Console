@@ -2,7 +2,7 @@ package mobi.eyeline.smsquiz.quizes.view;
 
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
 
-import java.util.Date;
+import java.util.*;
 
 /**
  * author: alkhal
@@ -10,32 +10,100 @@ import java.util.Date;
  */
 public class QuizDataItem extends AbstractDataItem {
 
-  public QuizDataItem(String quizId, String quizName, Date dateBegin, Date dateEnd, String state) {
+  public QuizDataItem() {
+  }
+
+  public QuizDataItem(QuizData d, String quizId, String state) {
+    if((d!=null)&&(quizId!=null)&&(state!=null)) {
+      setAbFile(d.getAbFile());
+      setActiveDays(d.getActiveDays());
+      setCategories(d.getCategories());
+      setDateBegin(d.getDateBegin());
+      setDateEnd(d.getDateEnd());
+      setDefaultCategory(d.getDefaultCategory());
+      setDestAddress(d.getDestAddress());
+      setDistrDateEnd(d.getDistrDateEnd());
+      setMaxRepeat(d.getMaxRepeat());
+      setName(d.getName());
+      setQuestion(d.getQuestion());
+      setQuizId(quizId);
+      setSourceAddress(d.getSourceAddress());
+      setState(state);
+      setTimeBegin(d.getTimeBegin());
+      setTimeEnd(d.getTimeEnd());
+      setTxmode(d.getTxmode());
+    }
+    else {
+      throw new IllegalArgumentException("Some argument are null");
+    }
+  }
+
+  public void setQuizId(String quizId) {
     values.put(QuizesDataSource.QUIZ_ID, quizId);
-    values.put(QuizesDataSource.QUIZ_NAME, quizName);
+  }
+
+  public void setDateBegin(Date dateBegin) {
     values.put(QuizesDataSource.DATE_BEGIN, dateBegin);
-    values.put(QuizesDataSource.DATE_END, dateEnd);
+  }
+
+  public void setState(String state) {
     values.put(QuizesDataSource.STATE, state);
   }
 
-  public String getQuizId() {
-    return (String) values.get(QuizesDataSource.QUIZ_ID);
+  public void setDateEnd(Date dateEnd) {
+    values.put(QuizesDataSource.DATE_END, dateEnd);
   }
 
-  public String getQuizName() {
-    return (String) values.get(QuizesDataSource.QUIZ_NAME);
+  public void setAbFile(String abFile) {
+    values.put(QuizesDataSource.AB_FILE, abFile);
   }
 
-  public Date getDateBegin() {
-    return (Date) values.get(QuizesDataSource.DATE_BEGIN);
+  public void setQuestion(String question) {
+    values.put(QuizesDataSource.QUESTION, question);
   }
 
-  public Date getDateEnd() {
-    return (Date) values.get(QuizesDataSource.DATE_END);
+  public void setActiveDays(List activeDays) {
+    values.put(QuizesDataSource.ACTIVE_DAYS, activeDays);
   }
 
-  public String getState() {
-    return (String) values.get(QuizesDataSource.STATE);
+  public void setTimeBegin(String timeBegin) {
+    values.put(QuizesDataSource.TIME_BEGIN, timeBegin);
+  }
+
+  public void setTimeEnd(String timeEnd) {
+    values.put(QuizesDataSource.TIME_END, timeEnd);
+  }
+
+  public void setTxmode(String txmode) {
+    values.put(QuizesDataSource.TX_MODE, txmode);
+  }
+
+  public void setSourceAddress(String sourceAddress) {
+    values.put(QuizesDataSource.SA, sourceAddress);
+  }
+
+  public void setDestAddress(String destAddress) {
+    values.put(QuizesDataSource.DA, destAddress);
+  }
+
+  public void setMaxRepeat(String maxRepeat) {
+    values.put(QuizesDataSource.MAX_REPEAT, maxRepeat);
+  }
+
+  public void setDefaultCategory(String defaultCategory) {
+    values.put(QuizesDataSource.DEFAULT_CAT, defaultCategory);
+  }
+
+  public void setCategories(Collection cat) {
+    values.put(QuizesDataSource.CATEGORIES, cat);
+  }
+
+  public void setName(String name) {
+    values.put(QuizesDataSource.QUIZ_NAME, name);
+  }
+
+  public void setDistrDateEnd(Date distrDateEnd) {
+    values.put(QuizesDataSource.DISTR_DATE_END, distrDateEnd);
   }
 
 }

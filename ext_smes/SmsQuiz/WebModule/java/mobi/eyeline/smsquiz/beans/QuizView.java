@@ -1,6 +1,6 @@
 package mobi.eyeline.smsquiz.beans;
 
-import mobi.eyeline.smsquiz.quizes.view.QuizFullData;
+import mobi.eyeline.smsquiz.quizes.view.QuizData;
 import mobi.eyeline.smsquiz.quizes.CategoriesTableHelper;
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
 import mobi.eyeline.smsquiz.QuizBuilder;
@@ -8,7 +8,6 @@ import mobi.eyeline.smsquiz.QuizBuilder;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.io.*;
-import java.text.SimpleDateFormat;
 
 import ru.novosoft.smsc.jsp.util.helper.Validation;
 
@@ -18,7 +17,7 @@ import ru.novosoft.smsc.jsp.util.helper.Validation;
  */
 public class QuizView extends SmsQuizBean {
 
-  private QuizFullData quizData = new QuizFullData();
+  private QuizData quizData = new QuizData();
 
   public static final int RESULT_DONE = SmsQuizBean.PRIVATE_RESULT + 1;
 
@@ -104,30 +103,20 @@ public class QuizView extends SmsQuizBean {
   }
 
   public boolean isActive(){
-    SimpleDateFormat format = new SimpleDateFormat(datePattern);
     if(quizData!=null) {
-      try{
-        Date dateBegin = format.parse(quizData.getDateBegin());
-        Date dateEnd = format.parse(quizData.getDateEnd());
+        Date dateBegin = quizData.getDateBegin();
+        Date dateEnd = quizData.getDateEnd();
         Date now = new Date();
         return dateBegin.before(now)&&dateEnd.after(now);
-      }catch(Exception e) {
-        logger.error(e,e);
-      }
     }
     return false;
   }
 
   public boolean isFinished() {
-    SimpleDateFormat format = new SimpleDateFormat(datePattern);
     if(quizData!=null) {
-      try{
-        Date dateEnd = format.parse(quizData.getDateEnd());
+        Date dateEnd = quizData.getDateEnd();
         Date now = new Date();
         return now.after(dateEnd);
-      }catch(Exception e) {
-        logger.error(e,e);
-      }
     }
     return false;
   }
@@ -272,7 +261,7 @@ public class QuizView extends SmsQuizBean {
       }
     }
   }
-  public QuizFullData getQuizData() {
+  public QuizData getQuizData() {
     return quizData;
   }
 

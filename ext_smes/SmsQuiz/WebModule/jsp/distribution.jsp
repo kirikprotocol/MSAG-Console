@@ -43,7 +43,7 @@
 <col width="10%">
 <col width="40%">
 <tr class=row<%=rowN++&1%>>
-  <th style="text-align:left">Task:</th>
+  <th style="text-align:left"><%= getLocString("smsquiz.label.quiz")%></th>
   <td><select name=quizId><%
   for (Iterator i = allQuizes.entrySet().iterator(); i.hasNext();) {
     Map.Entry e = (Map.Entry)i.next();

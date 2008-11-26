@@ -3,20 +3,21 @@ package mobi.eyeline.smsquiz.quizes.view;
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
 
 import java.util.*;
+import java.text.SimpleDateFormat;
 
 /**
  * author: alkhal
  * Date: 10.11.2008
  */
-public class QuizFullData {
+public class QuizData {
 
   private String name;
 
   private List activeDays = null;
 
-  private String dateBegin;
+  private Date dateBegin;
 
-  private String dateEnd;
+  private Date dateEnd;
 
   private String abFile;
 
@@ -38,22 +39,31 @@ public class QuizFullData {
 
   private List categories = new LinkedList();
 
-  private String distrDateEnd;
+  private Date distrDateEnd;
 
+  private static final SimpleDateFormat DF = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 
-  public String getDateBegin() {
+  public Date getDateBegin() {
     return dateBegin;
   }
 
-  public void setDateBegin(String dateBegin) {
+  public String getDateBeginStr() {
+    return DF.format(dateBegin);
+  }
+
+  public void setDateBegin(Date dateBegin) {
     this.dateBegin = dateBegin;
   }
 
-  public String getDateEnd() {
+  public String getDateEndStr() {
+    return DF.format(dateEnd);
+  }
+
+  public Date getDateEnd() {
     return dateEnd;
   }
 
-  public void setDateEnd(String dateEnd) {
+  public void setDateEnd(Date dateEnd) {
     this.dateEnd = dateEnd;
   }
 
@@ -174,11 +184,15 @@ public class QuizFullData {
     this.name = name;
   }
 
-  public String getDistrDateEnd() {
+  public Date getDistrDateEnd() {
     return distrDateEnd;
   }
 
-  public void setDistrDateEnd(String distrDateEnd) {
+  public String getDistrDateEndStr() {
+    return DF.format(distrDateEnd);
+  }
+
+  public void setDistrDateEnd(Date distrDateEnd) {
     this.distrDateEnd = distrDateEnd;
   }
 }

@@ -2,6 +2,7 @@ package mobi.eyeline.smsquiz.results;
 
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
@@ -18,7 +19,7 @@ import java.io.*;
  * author: alkhal
  * Date: 05.11.2008
  */
-public class ResultDataSource extends AbstractDataSourceImpl {
+public class ResultDataSource extends AbstractDataSource {
 
   private static final Category log = Category.getInstance(ResultDataSource.class);
 
@@ -39,10 +40,8 @@ public class ResultDataSource extends AbstractDataSourceImpl {
   }
 
   public QueryResultSet query(Query query_to_run) {
-    clear();
+    init(query_to_run);
     final ResultFilter filter = (ResultFilter) query_to_run.getFilter();
-
-    int total = 0;
 
     File dir = new File(resultDir);
     if (log.isDebugEnabled()) {
@@ -63,7 +62,6 @@ public class ResultDataSource extends AbstractDataSourceImpl {
       if (log.isDebugEnabled()) {
         log.debug("Start reading results from file: " + file.getName());
       }
-      int j = 0;
       try {
         f = new RandomAccessFile(file, "r");
 
@@ -72,9 +70,9 @@ public class ResultDataSource extends AbstractDataSourceImpl {
         String line;
         while (true) {
           line = is.readLine(encoding);
-          if (line == null)
+          if (line == null) {
             break;
-
+          }
           StringTokenizer st = new StringTokenizer(line, ",");
 
           String msisdn = st.nextToken().trim();
@@ -85,25 +83,13 @@ public class ResultDataSource extends AbstractDataSourceImpl {
           while (st.hasMoreTokens()) {
             message += "," + st.nextToken();
           }
-          j++;
+
           final ResultDataItem di = new ResultDataItem(filter.getQuizId(), replyDate, deliveryDate, msisdn, category, message);
-          if (log.isDebugEnabled())
-            log.debug(line);
-          if (filter.isItemAllowed(di)) {
-            if (log.isDebugEnabled())
-              log.debug("allowed");
-            total++;
-            if (total < query_to_run.getExpectedResultsQuantity()) {
-              add(di);
-              total++;
-            }
-          }
+          add(di);
         }
-      } catch (FileNotFoundException e) {
       } catch (EOFException e) {
-      } catch (IOException e) {
-        e.printStackTrace();
-      } catch (ParseException e) {
+      } catch (Exception e) {
+        log.error(e,e);
         e.printStackTrace();
       } finally {
         if (f != null)
@@ -112,13 +98,9 @@ public class ResultDataSource extends AbstractDataSourceImpl {
           } catch (IOException e) {
           }
       }
-      if (log.isDebugEnabled())
-        log.debug(j + " messages have readed from file: " + file.getName());
-
     }
-    query_to_run = new ResultQuery(query_to_run.getExpectedResultsQuantity(),
-        new EmptyFilter(), (String) query_to_run.getSortOrder().get(0), query_to_run.getStartPosition());
-    return super.query(query_to_run);
+
+    return getResults();
   }
 
   public String getResultDir() {

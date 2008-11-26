@@ -1,30 +1,31 @@
 package mobi.eyeline.smsquiz.replystats;
 
 import org.apache.log4j.Category;
-
-import java.text.SimpleDateFormat;
-import java.io.*;
-import java.util.*;
-
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.Query;
-import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
+import ru.novosoft.smsc.jsp.util.tables.Query;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
 import ru.novosoft.smsc.util.RandomAccessFileReader;
+
+import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * author: alkhal
  * Date: 05.11.2008
  */
-public class ReplyDataSource extends AbstractDataSourceImpl {
+public class ReplyDataSource extends AbstractDataSource {
 
   private static final Category log = Category.getInstance(ReplyDataSource.class);
 
   public static final SimpleDateFormat DATE_IN_FILE_FORMAT = new SimpleDateFormat("yyyyMMdd HH:mm");
   public static final SimpleDateFormat DIR_FORMAT = new SimpleDateFormat("yyyyMMdd");
   public static final SimpleDateFormat FILE_FORMAT = new SimpleDateFormat("HH");
+
+  private static String DIR_DATE_FORMAT = "yyyyMMdd";
+  private static String FILE_DATE_FORMAT = "HH";
 
   private final String replyDir;
 
@@ -48,11 +49,10 @@ public class ReplyDataSource extends AbstractDataSourceImpl {
   }
 
   public QueryResultSet query(Query query_to_run) {
-    clear();
+    init(query_to_run);
 
     final ReplyFilter filter = (ReplyFilter) query_to_run.getFilter();
 
-    int total = 0;
     Date dateBegin;
     if ((filter.isDateBeginEnabled()) && (filter.getDateBegin().after(filter.getQuizDateBegin()))) {
       dateBegin = filter.getDateBegin();
@@ -79,90 +79,105 @@ public class ReplyDataSource extends AbstractDataSourceImpl {
       log.debug("DateBegin till day: " + tillDay);
       log.debug("DateBegin till hour:" + tillHour);
     }
-    RandomAccessFile f = null;
+
+
     try {
-      File[] directories = dir.listFiles();
-      for (int i = 0; i < directories.length; i++) {
-        if (directories[i].isDirectory()) {
-          String dirName = directories[i].getName();
-          Date dirDate = DIR_FORMAT.parse(dirName);
-          File[] files = directories[i].listFiles();
-          String encoding = System.getProperty("file.encoding");
-          for (int s = 0; s < files.length; s++) {
-            File file = files[s];
-            if (!file.isFile() || (!file.getName().endsWith(".csv"))) {
-              continue;
-            }
-            String name = file.getName();
-            Date fileDate = FILE_FORMAT.parse(name.substring(0, name.lastIndexOf(".")));
-            Date date = new Date(dirDate.getTime() + fileDate.getTime() + 7 * 60 * 60 * 1000);
-            if (log.isDebugEnabled()) {
-              log.debug("File name date: " + date);
-            }
-            if ((date.compareTo(dateEnd) <= 0) && (date.compareTo(tillHour) >= 0)) {
-              if (log.isDebugEnabled()) {
-                log.debug("Start reading results from file: " + file.getName());
-              }
-              int j = 0;
-              try {
-                f = new RandomAccessFile(file, "r");
-                RandomAccessFileReader is = new RandomAccessFileReader(f);
+      String encoding = System.getProperty("file.encoding");
+      for (Iterator iter = getFiles(filter.getQuizNumber(), dateBegin, dateEnd).iterator(); iter.hasNext();) {
+        File file = (File)iter.next();
+        RandomAccessFile f = null;
+        try {
+          f = new RandomAccessFile(file, "r");
+          RandomAccessFileReader is = new RandomAccessFileReader(f);
 
-                String line;
-                while (true) {
-                  line = is.readLine(encoding);
-                  if (line == null)
-                    break;
+          String line;
+          while (true) {
+            line = is.readLine(encoding);
+            if (line == null)
+              break;
 
-                  StringTokenizer st = new StringTokenizer(line, ",");
-                  String dateStr = st.nextToken().trim();
-                  String timeStr = st.nextToken().trim();
-                  String msisdn = st.nextToken().trim();
-                  Date replyDate = DATE_IN_FILE_FORMAT.parse(dateStr + " " + timeStr);
-                  if (log.isDebugEnabled()) {
-                    log.debug("Reply date: " + replyDate);
-                  }
-                  String text = st.nextToken().trim();
-                  while (st.hasMoreTokens()) {
-                    text += "," + st.nextToken();
-                  }
-                  j++;
-                  final ReplyDataItem di = new ReplyDataItem(replyDate, msisdn, text);
-                  if (log.isDebugEnabled())
-                    log.debug(line);
-                  if (filter.isItemAllowed(di)) {
-                    if (log.isDebugEnabled())
-                      log.debug("allowed");
-                    total++;
-                    if (total < query_to_run.getExpectedResultsQuantity()) {
-                      add(di);
-                      total++;
-                    }
-                  }
+            StringTokenizer st = new StringTokenizer(line, ",");
+            String dateStr = st.nextToken().trim();
+            String timeStr = st.nextToken().trim();
+            String msisdn = st.nextToken().trim();
+            Date replyDate = DATE_IN_FILE_FORMAT.parse(dateStr + " " + timeStr);
 
-                }
-              } catch (EOFException e) {
-              }
-              if (log.isDebugEnabled())
-                log.debug(j + " messages have readed from file: " + file.getName());
+            String text = st.nextToken().trim();
+            while (st.hasMoreTokens()) {
+              text += "," + st.nextToken();
             }
+
+            final ReplyDataItem di = new ReplyDataItem(replyDate, msisdn, text);
+            add(di);
+
           }
+        } catch (EOFException e) {
+        }  finally {
+          if (f != null)
+            try {
+              f.close();
+            } catch (IOException e) {}
         }
       }
     } catch (Exception e) {
-      log.error(e);
-      e.printStackTrace();
+      log.error(e,e);
       return new EmptyResultSet();
-    } finally {
-      if (f != null)
-        try {
-          f.close();
-        } catch (IOException e) {
-        }
     }
-    query_to_run = new ReplyQuery(query_to_run.getExpectedResultsQuantity(),
-        new EmptyFilter(), (String) query_to_run.getSortOrder().get(0), query_to_run.getStartPosition());
-    return super.query(query_to_run);
+
+    return getResults();
+  }
+
+  private List getFiles (String dstAddr, Date from, Date till) throws ParseException {
+
+    List files = new LinkedList();
+
+    File dir = new File(replyDir + File.separator + dstAddr);
+    if(dir.exists()) {
+
+      final SimpleDateFormat dirNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT);
+      final SimpleDateFormat fileNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT + '/' + FILE_DATE_FORMAT);
+      final SimpleDateFormat fileDateFormat = new SimpleDateFormat(DIR_DATE_FORMAT + FILE_DATE_FORMAT);
+
+      final Date fromDir = from == null ? null : dirNameFormat.parse(dirNameFormat.format(from));
+      final Date fromFile = from == null ? null : fileDateFormat.parse(fileDateFormat.format(from));
+      final Date tillDir = till == null ? null : dirNameFormat.parse(dirNameFormat.format(till));
+      final Date tillFile = till == null ? null : fileDateFormat.parse(fileDateFormat.format(till));
+
+      // Fetch directories
+      File[] dirArr = dir.listFiles(new FileFilter(){
+        public boolean accept(File file) {
+          if (!file.isDirectory())
+            return false;
+          try {
+            Date dirDate = dirNameFormat.parse(file.getName());
+            return (fromDir == null || dirDate.compareTo(fromDir) >= 0) && (tillDir == null || dirDate.compareTo(tillDir) <= 0);
+          } catch (ParseException e) {
+            return false;
+          }
+        }
+      });
+
+      // Fetch files
+      for (int i=0;i<dirArr.length;i++) {
+        File directory = dirArr[i];
+        String dirName = directory.getName();
+        File[] fileArr = directory.listFiles();
+
+        for(int j=0;j<fileArr.length;j++) {
+          File f = fileArr[j];
+          if (!f.isFile())
+            continue;
+          String name = f.getName();
+          if (name.lastIndexOf(".csv") < 0)
+            continue;
+
+          Date fileDate = fileNameFormat.parse(dirName + '/' + name.substring(0, 2));
+          if ((tillFile == null || fileDate.compareTo(tillFile) <= 0) && (fromFile == null || fileDate.compareTo(fromFile) >= 0))
+            files.add(f);
+        }
+      }
+    }
+    return files;
   }
 
   private Date resetTillHour(Date date) {

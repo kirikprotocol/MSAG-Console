@@ -14,8 +14,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspWriter;
 import java.util.*;
 import java.io.IOException;
-import java.io.File;
-import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
@@ -41,6 +39,8 @@ public class Distribution extends SmsQuizBean {
 
   private String quizDir;
 
+  private String workDir;
+
   private boolean initialized = false;
 
   private HashMap quizMap = new HashMap();
@@ -62,7 +62,7 @@ public class Distribution extends SmsQuizBean {
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
       initQuizes();
       String msgStoreDir = getConfig().getString("distribution.infosme_stats_dir");
-      String workDir = getConfig().getString("quizmanager.dir_work");
+      workDir = getConfig().getString("quizmanager.dir_work");
       ds = new MessageDataSource(getSmsQuizContext().getConfig(),msgStoreDir);
       if (pageSize == 0) {
         pageSize = getSmsQuizContext().getMessagesPageSize();
@@ -105,7 +105,7 @@ public class Distribution extends SmsQuizBean {
 
   private void initQuizes() {
     try {
-      QuizesDataSource ds = new QuizesDataSource(quizDir);
+      QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
       QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
       for (int i = 0; i < quizesList.size(); i++) {
         DataItem item = quizesList.get(i);
@@ -139,15 +139,10 @@ public class Distribution extends SmsQuizBean {
 
   public void exportAll(HttpServletResponse response, JspWriter out) {
     response.setContentType("file/csv; filename=messages.csv; charset=windows-1251");
-//    response.setContentLength(exportFile.length());
     response.setHeader("Content-Disposition", "attachment; filename=messages.csv");
 
     try {
       out.clear();
-//      final InfoSmeTransport.GetMessagesResult result = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
-//                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), 5000000);
-//      final Collection messages = result.getMessages();
-
       QueryResultSet messages = ds.query(new MessageQuery(5000000, msgFilter, MessagesTableHelper.DEFAULT_SORT, 0));
 
       StringBuffer buffer = new StringBuffer();
