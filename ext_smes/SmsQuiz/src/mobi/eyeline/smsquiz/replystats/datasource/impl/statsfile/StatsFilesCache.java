@@ -8,6 +8,7 @@ import mobi.eyeline.smsquiz.replystats.Reply;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -86,7 +87,8 @@ public class StatsFilesCache {
     cal.set(Calendar.MINUTE, 0);
     cal.set(Calendar.SECOND, 0);
     cal.set(Calendar.MILLISECOND, 0);
-    cal.setTimeInMillis(cal.getTime().getTime() + dateFormat.parse("23").getTime() + Calendar.getInstance().getTimeZone().getRawOffset());
+    System.out.println("Gmt: "+cal.get(Calendar.ZONE_OFFSET));
+    cal.setTimeInMillis(cal.getTime().getTime() + dateFormat.parse("23").getTime() + cal.get(Calendar.ZONE_OFFSET));
     System.out.println(cal.getTime());
     System.out.println(cal.getTime().getTime());
 
@@ -107,52 +109,54 @@ public class StatsFilesCache {
     if (!dir.exists()) {
       return files;
     }
-
-    final Calendar calendar = Calendar.getInstance();
-    calendar.setTime(from);
-    resetTillHour(calendar);
-    final Date modifedFrom = calendar.getTime();
-
-    if (logger.isInfoEnabled()) {
-      logger.info("Modified from: " + modifedFrom);
-      logger.info("till: " + till);
-    }
-
     try {
-      for (File directory : dir.listFiles()) {
-        if (directory.isDirectory()) {
-          String dirName = directory.getName();
-          Date dirDate = dirNameFormat.parse(dirName);
-          if (logger.isInfoEnabled()) {
-            logger.info("DirDate: " + dirDate);
-          }
-          for (File f : directory.listFiles()) {
-            if (!f.isFile()) {
-              continue;
-            }
-            String name = f.getName();
-            if (name.lastIndexOf(".csv") < 0) {
-              continue;
-            }
-            Date fileDate = fileNameFormat.parse(name.substring(0, name.lastIndexOf(".")));
-            if (logger.isInfoEnabled()) {
-              logger.info("FileDate: " + fileDate);
-            }
-            Date date = new Date(dirDate.getTime() + fileDate.getTime() + Calendar.getInstance().getTimeZone().getRawOffset());
-            if (logger.isInfoEnabled()) {
-              logger.info("Date parsed from file: " + date);
-            }
-            if ((date.compareTo(till) <= 0) && (date.compareTo(modifedFrom) >= 0)) {
-              if ((statsFile = lockupFile(da, date, true)) != null) {
-                files.add(statsFile);
-                if (logger.isInfoEnabled()) {
-                  logger.info("File added for analysis: " + statsFile.getName());
-                }
-              }
+      final SimpleDateFormat dirNameFormat = new SimpleDateFormat(dirNamePattern);
+      final SimpleDateFormat fileNameFormat = new SimpleDateFormat(dirNamePattern + '/' + fileNamePattern);
+      final SimpleDateFormat fileDateFormat = new SimpleDateFormat(dirNamePattern+fileNamePattern);
 
-            }
+      final Date fromDir = dirNameFormat.parse(dirNameFormat.format(from));
+      final Date fromFile = fileDateFormat.parse(fileDateFormat.format(from));
+      final Date tillDir = dirNameFormat.parse(dirNameFormat.format(till));
+      final Date tillFile = fileDateFormat.parse(fileDateFormat.format(till));
+
+      // Fetch directories
+      File[] dirArr = dir.listFiles(new FileFilter(){
+        public boolean accept(File file) {
+          if (!file.isDirectory())
+            return false;
+          try {
+            Date dirDate = dirNameFormat.parse(file.getName());
+            return (fromDir == null || dirDate.compareTo(fromDir) >= 0) && (tillDir == null || dirDate.compareTo(tillDir) <= 0);
+          } catch (ParseException e) {
+            return false;
           }
         }
+      });
+
+      // Fetch files
+      int i=0;
+      while (i<dirArr.length) {
+        File directory = dirArr[i];
+        String dirName = directory.getName();
+        File[] fileArr = directory.listFiles();
+
+        for (File f : fileArr) {
+          if (!f.isFile())
+            continue;
+          String name = f.getName();
+          if (name.lastIndexOf(".csv") < 0)
+            continue;
+
+          Date fileDate = fileNameFormat.parse(dirName + '/' + name.substring(0, 2));
+          if ((tillFile == null || fileDate.compareTo(tillFile) <= 0) && (fromFile == null || fileDate.compareTo(fromFile) >= 0))
+            if ((statsFile = lockupFile(da, fileDate, true)) != null) {
+              files.add(statsFile);
+              if (logger.isInfoEnabled()) {
+                logger.info("File added for analysis: " + statsFile.getName());
+              }
+            }
+        }
+        i++;
       }
     } catch (ParseException e) {
       logger.error("Can't parse filename", e);
@@ -160,7 +164,12 @@ public class StatsFilesCache {
     }
     return files;
   }
-
+  /*              if ((statsFile = lockupFile(da, date, true)) != null) {
+                files.add(statsFile);
+                if (logger.isInfoEnabled()) {
+                  logger.info("File added for analysis: " + statsFile.getName());
+                }
+              }*/
   private void resetTillHour(Calendar calendar) {
     if (calendar != null) {
       calendar.set(Calendar.MINUTE, 0);
