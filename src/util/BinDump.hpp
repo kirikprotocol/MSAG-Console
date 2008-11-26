@@ -5,6 +5,7 @@
 #ifndef __SMSC_UTIL_BINDUMP_HPP__
 #define __SMSC_UTIL_BINDUMP_HPP__
 
+#include <memory>
 #include "util/vformat.hpp"
 
 namespace smsc {

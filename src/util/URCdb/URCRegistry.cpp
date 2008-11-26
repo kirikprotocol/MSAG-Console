@@ -6,6 +6,7 @@ static char const ident[] = "$Id$";
  * Provides transformation from pair { retrunCodeSpace,errcode} to uint32_t
  * hash and vice versa. 
  * ************************************************************************* */
+#include <memory>
 #include "util/URCdb/URCRegistry.hpp"
 
 namespace smsc {
