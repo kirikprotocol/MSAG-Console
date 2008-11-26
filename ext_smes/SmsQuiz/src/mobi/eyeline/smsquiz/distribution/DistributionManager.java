@@ -13,9 +13,9 @@ public interface DistributionManager {
 
   public String repairStatus(String id, Runnable task, Distribution distribution) throws DistributionException;
 
-  public void resend (String msisdn, String taskId) throws DistributionException;
+  public void resend(String msisdn, String taskId) throws DistributionException;
 
-  public void removeTask (String taskId) throws DistributionException;  
+  public void removeTask(String taskId) throws DistributionException;
 
   public AbstractDynamicMBean getMonitor();
 

@@ -17,7 +17,6 @@ public class QuizError {
   public static final QuizError DISTR_ERROR = new QuizError("4");
 
 
-
   private final String code;
 
   private QuizError(String code) {

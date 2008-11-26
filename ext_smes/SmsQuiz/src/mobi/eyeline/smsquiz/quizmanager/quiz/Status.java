@@ -4,6 +4,9 @@ import mobi.eyeline.smsquiz.quizmanager.QuizException;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 
 /**
@@ -19,13 +22,18 @@ public class Status {
   private String statusFileName;
   private QuizStatus quizStatus;
 
-  public static enum QuizStatus {NEW, AWAIT, GENERATION, FINISHED,
-    FINISHED_ERROR, ACTIVE}
+  public static enum QuizStatus {
+    NEW, AWAIT, GENERATION, FINISHED,
+    FINISHED_ERROR, ACTIVE
+  }
 
-  private static final String DISTR_ID = "distribution.id";
+  public static final String DISTR_ID = "distribution.id";
   private static final String QUIZ_ST = "quiz.status";
   private static final String ERROR_REASON = "quiz.error.reason";
   private static final String ERROR_CODE = "quiz.error.id";
+  private static final String ACTUAL_START_DATE = "quiz.start";
+
+  private final static SimpleDateFormat DF = new SimpleDateFormat("yyyyMMddHHmmss");
 
   private Properties prop;
 
@@ -38,7 +46,7 @@ public class Status {
       parentFile.mkdirs();
     }
     InputStream inputStream = null;
-    try{
+    try {
       prop = new Properties();
       if (!stFile.exists()) {
         stFile.createNewFile();
@@ -51,14 +59,15 @@ public class Status {
         this.ident = ident;
       }
       setQuizStatus(QuizStatus.NEW);
-    }catch (IOException e) {
+    } catch (IOException e) {
       logger.error(e, e);
       throw new QuizException(e.toString(), e);
     } finally {
-      if(inputStream!=null) {
+      if (inputStream != null) {
         try {
           inputStream.close();
-        } catch (IOException e) {}
+        } catch (IOException e) {
+        }
       }
     }
   }
@@ -69,7 +78,7 @@ public class Status {
 
   void setId(String ident) throws QuizException {
     this.ident = ident;
-    prop.setProperty(DISTR_ID,ident);
+    prop.setProperty(DISTR_ID, ident);
     storeProps();
   }
 
@@ -87,24 +96,25 @@ public class Status {
     storeProps();
   }
 
-  QuizStatus getQuizStatus(){
-    return quizStatus; 
+  QuizStatus getQuizStatus() {
+    return quizStatus;
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})
   private void storeProps() throws QuizException {
     OutputStream outputStream = null;
-    try{
+    try {
       outputStream = new FileOutputStream(statusFileName);
-      prop.store(outputStream,"");
-    }catch (IOException e) {
+      prop.store(outputStream, "");
+    } catch (IOException e) {
       logger.error(e, e);
       throw new QuizException(e.toString(), e);
     } finally {
-      if(outputStream!=null) {
+      if (outputStream != null) {
         try {
           outputStream.close();
-        } catch (IOException e) {}
+        } catch (IOException e) {
+        }
       }
     }
   }
@@ -113,5 +123,25 @@ public class Status {
     return statusFileName;
   }
 
+  void setActualStartDate(Date date) throws QuizException {
+    Date now = new Date();
+    if (now.before(date)) {
+      prop.setProperty(ACTUAL_START_DATE, DF.format(date));
+    } else {
+      prop.setProperty(ACTUAL_START_DATE, DF.format(now));
+    }
+    storeProps();
+  }
+
+  Date getActualStartDate() throws QuizException {
+    Date date;
+    try {
+      date = DF.parse(prop.getProperty(ACTUAL_START_DATE));
+    } catch (ParseException e) {
+      logger.error(e, e);
+      throw new QuizException(e);
+    }
+    return date;
+  }
 
 }

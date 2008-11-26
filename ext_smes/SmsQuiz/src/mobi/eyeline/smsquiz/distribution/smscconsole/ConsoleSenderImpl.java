@@ -98,6 +98,7 @@ class ConsoleSenderImpl implements ConsoleSender {
     }
   }
 
+  @SuppressWarnings({"EmptyCatchBlock"})
   private void leaveConsole() {
     if (socket != null) {
       try {

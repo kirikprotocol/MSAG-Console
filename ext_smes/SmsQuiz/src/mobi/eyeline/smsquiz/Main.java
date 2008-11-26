@@ -1,10 +1,8 @@
 package mobi.eyeline.smsquiz;
 
 import com.eyeline.sme.handler.MessageHandler;
-import com.eyeline.sme.smpp.OutgoingObject;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.SMPPTransceiver;
-import com.eyeline.sme.smpp.ShutdownedException;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
 import com.sun.jdmk.comm.AuthInfo;
@@ -13,20 +11,12 @@ import mobi.eyeline.smsquiz.distribution.impl.DistributionInfoSmeManager;
 import mobi.eyeline.smsquiz.quizmanager.QuizManager;
 import mobi.eyeline.smsquiz.replystats.datasource.impl.FileReplyStatsDataSource;
 import mobi.eyeline.smsquiz.storage.ConnectionPoolFactory;
-import mobi.eyeline.smsquiz.subscription.SubManagerException;
 import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import org.apache.log4j.Logger;
-import ru.aurorisoft.smpp.Message;
 
 import javax.management.*;
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.concurrent.Executors;
+import java.io.File;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 /**
  * author: alkhal

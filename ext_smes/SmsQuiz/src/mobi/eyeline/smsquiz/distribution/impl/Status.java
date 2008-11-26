@@ -2,8 +2,6 @@ package mobi.eyeline.smsquiz.distribution.impl;
 
 import org.apache.log4j.Logger;
 
-import java.io.*;
-
 /**
  * author: alkhal
  */

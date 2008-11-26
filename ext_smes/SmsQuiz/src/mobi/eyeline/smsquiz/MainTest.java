@@ -78,13 +78,12 @@ public class MainTest {
       }
 
 
-
-        scheduledQuizCreator = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-          public Thread newThread(Runnable r) {
-            return new Thread(r, "QuizCreator");
-          }
-        });
-        scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 1200, TimeUnit.SECONDS);
+      scheduledQuizCreator = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+          return new Thread(r, "QuizCreator");
+        }
+      });
+      scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 1200, TimeUnit.SECONDS);
 
 
     } catch (Exception e) {
@@ -116,13 +115,12 @@ public class MainTest {
 
     public void run() {
       try {
-        if(quizIndex<16) {
-        createAbFile("quizes",quizIndex, Long.parseLong("70001700001"), Long.parseLong("70001700100"), 1, SubscriptionManager.getInstance());
-        createQuizFile("quizes", quizIndex, 15, "170", "170", "Short\n question");
-        quizIndex++;
+        if (quizIndex < 16) {
+          createAbFile("quizes", quizIndex, Long.parseLong("70001700001"), Long.parseLong("70001700100"), 1, SubscriptionManager.getInstance());
+          createQuizFile("quizes", quizIndex, 15, "170", "170", "Short\n question");
+          quizIndex++;
 
-        }
-        else {
+        } else {
           scheduledQuizCreator.shutdown();
         }
       }
@@ -158,13 +156,13 @@ public class MainTest {
     }
   }
 
-  private static void subscribeSomeAb(SubscriptionManager manager) throws Exception{
-    if(!manager.subscribed("+79135100000")) {
+  private static void subscribeSomeAb(SubscriptionManager manager) throws Exception {
+    if (!manager.subscribed("+79135100000")) {
       for (long i = Long.parseLong("79135000001"); i <= Long.parseLong("79135100000"); i++) {
         String abonent = "+" + i;
         try {
           manager.subscribe(abonent);
-          System.out.println("Abonent subscribed: "+i);
+          System.out.println("Abonent subscribed: " + i);
         } catch (SubManagerException e) {
           e.printStackTrace();
         }
@@ -173,30 +171,15 @@ public class MainTest {
   }
 
   private static void init() {
-    try{
+    try {
       subscribeSomeAb(SubscriptionManager.getInstance());
     } catch (Exception e) {
       e.printStackTrace();
     }
-    File file = new File("quizes");
-    if (file.exists()) {
-      removeAll(file);
-    }
-    file.mkdirs();
-    file = new File("replyStats");
-    if (file.exists()) {
-      removeAll(file);
-    }
-    file = new File("quizResults");
-    if (file.exists()) {
-      removeAll(file);
-    }
-
-
   }
 
   private static void createQuizFile(String fileDir, int name, int minutes, String oa, String da, String question) {
-    String fileName = fileDir+File.separator+(100+name)+".xml";
+    String fileName = fileDir + File.separator + (100 + name) + ".xml";
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     Calendar cal = Calendar.getInstance();
     cal.setTimeInMillis(System.currentTimeMillis());
@@ -204,12 +187,12 @@ public class MainTest {
     cal.set(Calendar.SECOND, 0);
     cal.add(Calendar.MINUTE, minutes);
     Date dateEnd = cal.getTime();
-    String quizName = "quiz"+name;
+    String quizName = "quiz" + name;
 
     PrintWriter writer = null;
     try {
-      writer = new PrintWriter(fileName,System.getProperty("file.encoding"));
-      writer.println("<?xml version=\"1.0\" encoding=\""+System.getProperty("file.encoding")+"\"?>");
+      writer = new PrintWriter(fileName, System.getProperty("file.encoding"));
+      writer.println("<?xml version=\"1.0\" encoding=\"" + System.getProperty("file.encoding") + "\"?>");
       writer.println("<opros>");
 
       writer.println("    <general>");
@@ -247,7 +230,7 @@ public class MainTest {
       writer.println("            <day>Sat</day>");
       writer.println("        </days>");
       writer.print("        <date-end>");
-      cal.add(Calendar.MINUTE,-1);
+      cal.add(Calendar.MINUTE, -1);
       writer.print(dateFormat.format(cal.getTime()));
       writer.println("</date-end>");
       writer.println("        <txmode>false</txmode>");
@@ -285,8 +268,12 @@ public class MainTest {
     }
   }
 
+  public static void tmain(String[] args) throws Exception {
+    createAbFile("test/", 1111, Long.parseLong("79135000001"), Long.parseLong("79135100000"), 1, SubscriptionManager.getInstance());
+  }
+
   private static void createAbFile(String dir, int name, long from, long till, int divider, SubscriptionManager subscriptionManager) {
-    String fileName = dir+File.separator+(100+name)+".xml.csv";
+    String fileName = dir + File.separator + (100 + name) + ".xml.csv";
 
     PrintWriter writer = null;
 
@@ -299,11 +286,11 @@ public class MainTest {
         abonent = "+" + i;
         writer.println(abonent);
         if ((i % divider) == 0) {
-          try {
-            subscriptionManager.subscribe(abonent);
-          } catch (SubManagerException e) {
-            e.printStackTrace();
-          }
+//          try {
+//            subscriptionManager.subscribe(abonent);
+//          } catch (SubManagerException e) {
+//            e.printStackTrace();
+//          }
         }
       }
       writer.flush();

@@ -5,7 +5,7 @@ import mobi.eyeline.smsquiz.quizmanager.quiz.Status;
 import org.apache.log4j.Logger;
 
 import java.util.Date;
-import java.util.Map;
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 
 class QuizCollector implements Runnable {
@@ -13,9 +13,9 @@ class QuizCollector implements Runnable {
   private static final Logger logger = Logger.getLogger(QuizCollector.class);
 
   private final ConcurrentHashMap<String, Quiz> quizesMap;
-  private final ConcurrentHashMap<String, Quiz> qInternal;
+  private final LinkedList<Quiz> qInternal;
 
-  public QuizCollector(ConcurrentHashMap<String, Quiz> quizesMap, ConcurrentHashMap<String, Quiz> qInternal) {
+  public QuizCollector(ConcurrentHashMap<String, Quiz> quizesMap, LinkedList<Quiz> qInternal) {
     this.quizesMap = quizesMap;
     this.qInternal = qInternal;
   }
@@ -23,13 +23,11 @@ class QuizCollector implements Runnable {
   public void run() {
     logger.info("QuizCollectors starts...");
     try {
-      for (Map.Entry<String, Quiz> entry : qInternal.entrySet()) {
-        Quiz quiz = entry.getValue();
+      for (Quiz quiz : qInternal) {
         Date now = new Date();
-        if (quiz.getDateEnd().before(now)) {
+        if ((quiz.getDateEnd().before(now)) && (!quiz.isExported())) {
           try {
-            quizesMap.remove(entry.getKey());
-            qInternal.remove(entry.getKey());
+            quizesMap.remove(quiz.getDestAddress());
             quiz.exportStats();
             quiz.shutdown();
             quiz.setQuizStatus(Status.QuizStatus.FINISHED);
@@ -39,9 +37,8 @@ class QuizCollector implements Runnable {
           if (logger.isInfoEnabled()) {
             logger.info("QuizCollector removed quiz: " + quiz);
           }
-        }
-        else {
-          if((!quiz.getQuizStatus().equals(Status.QuizStatus.ACTIVE))&&(quiz.isGenerated())&&(now.after(quiz.getDateBegin()))) {
+        } else {
+          if ((!quiz.getQuizStatus().equals(Status.QuizStatus.ACTIVE)) && (quiz.isGenerated()) && (quiz.isActive())) {
             quiz.setQuizStatus(Status.QuizStatus.ACTIVE);
           }
         }

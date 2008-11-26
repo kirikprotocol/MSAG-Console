@@ -6,12 +6,8 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Observable;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,6 +23,8 @@ public class DirListener extends Observable implements Runnable {
   private String dirResult;
   private FilenameFilter fileFilter;
   private static final Pattern PATTERN = Pattern.compile("(.*\\.xml)");
+
+  private SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
 
   public DirListener(final String quizDir, final String dirWork,
                      final String dirArchive, final String dirResult) throws QuizException {
@@ -76,12 +74,16 @@ public class DirListener extends Observable implements Runnable {
           }
         }
       }
-      for(String fileN: filesMap.keySet()) {
-        if(!(new File(fileN)).exists()) {
+      LinkedList<String> toRemove = new LinkedList<String>();
+      for (String fileN : filesMap.keySet()) {
+        if (!(new File(fileN)).exists()) {
           setChanged();
           notifyObservers(new Notification(fileN, Notification.FileStatus.DELETED));
-          filesMap.remove(fileN);
+          toRemove.add(fileN);
         }
+      }
+      for (String r : toRemove) {
+        filesMap.remove(r);
       }
     } catch (Throwable e) {
       logger.error("Error construct quiz file or notification", e);
@@ -109,21 +111,21 @@ public class DirListener extends Observable implements Runnable {
     return monitor;
   }
 
-  public void delete(String quizId, String abFile) throws QuizException{
-    if((quizId==null)||(abFile==null)) {
+  public void delete(String quizId, String abFile) throws QuizException {
+    if ((quizId == null) || (abFile == null)) {
       logger.error("Some arguments are null");
       throw new QuizException("Some arguments are null");
     }
-    File file =new File(dirArchive);
-    if(!file.exists()) {
+    File file = new File(dirArchive);
+    if (!file.exists()) {
       file.mkdirs();
     }
 
     file = new File(abFile);
-    if(file.exists()) {
+    if (file.exists()) {
       renameFile(new File(abFile));
     } else {
-      file = new File(quizDir+File.separator+file.getName());
+      file = new File(quizDir + File.separator + file.getName());
       renameFile(file);
     }
 
@@ -139,7 +141,7 @@ public class DirListener extends Observable implements Runnable {
     file = new File(dirResult);
     File files[] = file.listFiles();
     file = null;
-    if(files!=null) {
+    if (files != null) {
       for (File file1 : files) {
         if ((file1.isFile()) && (file1.getName().startsWith(quizId + "."))) {
           file = file1;
@@ -147,25 +149,26 @@ public class DirListener extends Observable implements Runnable {
         }
       }
     }
-    if(file!=null) {
+    if (file != null) {
       renameFile(file);
     }
   }
 
   private void renameFile(File file) {
-    try{
+    try {
       System.out.println("try to rename file: " + file.getAbsolutePath());
       String name = file.getName();
-      file.renameTo(new File(dirArchive+File.separator+name));
-    }catch(Exception e) {
-      logger.error(e,e);
+      file.renameTo(new File(dirArchive + File.separator + name + "." + df.format(new Date())));
+    } catch (Exception e) {
+      logger.error(e, e);
     }
   }
+
   private void deleteFile(File file) {
-    try{
+    try {
       System.out.println("try to delete file: " + file.getAbsolutePath());
       file.delete();
-    } catch(Exception e) {
+    } catch (Exception e) {
       logger.error(e);
     }
   }

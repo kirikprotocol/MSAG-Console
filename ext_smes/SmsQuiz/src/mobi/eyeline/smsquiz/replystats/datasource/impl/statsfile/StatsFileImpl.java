@@ -7,10 +7,10 @@ import com.eyeline.utils.tree.radix.UnmodifiableRTree;
 import mobi.eyeline.smsquiz.replystats.Reply;
 import org.apache.log4j.Logger;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.io.ByteArrayOutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -38,7 +38,7 @@ class StatsFileImpl implements StatsFile {
   }
 
   public StatsFileImpl(final String da, final String filePath, String timePattern, String datePattern) throws FileStatsException {
-        this.da = da;
+    this.da = da;
     this.filePath = filePath;
 
     dateFormat = new SimpleDateFormat(datePattern);
@@ -163,16 +163,16 @@ class StatsFileImpl implements StatsFile {
     }
 
     String oa2;
-    if(oa.startsWith("+7")) {
-      oa2 = "8"+oa.substring(2);
+    if (oa.startsWith("+7")) {
+      oa2 = "8" + oa.substring(2);
     } else {
-      oa2 = "+7"+oa.substring(1);
+      oa2 = "+7" + oa.substring(1);
     }
-    
+
     List<Long> positions = stringsRTree.get(oa);
     if (positions == null) {
       positions = stringsRTree.get(oa2);
-      if(positions == null) {
+      if (positions == null) {
         return null;
       }
     }
@@ -181,7 +181,7 @@ class StatsFileImpl implements StatsFile {
       long prevPosition = randomAccessFile.getFilePointer();
       for (Long aPos : positions) {
         Reply reply = getReply(aPos, false);
-        if ((reply!=null)&&(reply.getDate().compareTo(till) <= 0) && (reply.getDate().compareTo(from) >= 0)) {
+        if ((reply != null) && (reply.getDate().compareTo(till) <= 0) && (reply.getDate().compareTo(from) >= 0)) {
           result.add(reply);
         }
       }
@@ -230,7 +230,7 @@ class StatsFileImpl implements StatsFile {
           case -1:
           case '\n':
             eol = true;
-            break;               
+            break;
           case '\r':
             eol = true;
             long cur = randomAccessFile.getFilePointer();
@@ -244,7 +244,7 @@ class StatsFileImpl implements StatsFile {
       }
 
       if ((c == -1) && (str.size() == 0)) {
-        throw new FileStatsException("Index file damaged. Reply not found at position: "+position);
+        throw new FileStatsException("Index file damaged. Reply not found at position: " + position);
       }
       String line = str.toString(encoding);
       StringTokenizer tokenizer = new StringTokenizer(line, ",");

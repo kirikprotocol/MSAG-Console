@@ -52,8 +52,16 @@ public class TestDistributionManager implements DistributionManager {
     return Integer.toString(id);
   }
 
+  public String createDistribution(Distribution distr, Runnable task) throws DistributionException {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
+  }
+
   public ResultSet getStatistics(String id, Date startDate, Date endDate) throws DistributionException {
     return null;
+  }
+
+  public String repairStatus(String id, Runnable task, Distribution distribution) throws DistributionException {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
   }
 
   public void resend(String str1, String str2) throws DistributionException{

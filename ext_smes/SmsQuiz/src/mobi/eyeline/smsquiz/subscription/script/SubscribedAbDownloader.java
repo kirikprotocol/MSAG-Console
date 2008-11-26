@@ -7,10 +7,7 @@ import mobi.eyeline.smsquiz.subscription.Subscription;
 import mobi.eyeline.smsquiz.subscription.datasource.SubscriptionDataSource;
 import mobi.eyeline.smsquiz.subscription.datasource.impl.DBSubscriptionDataSource;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -59,6 +56,11 @@ public class SubscribedAbDownloader {
     if (wantedDate == null) {
       wantedDate = new Date();
     }
+    File file = new File(dest).getParentFile();
+    if ((file != null) && (!file.exists())) {
+      file.mkdirs();
+    }
+
     try {
       writer = new PrintWriter(new BufferedWriter(new FileWriter(dest)));
       dataSource = new DBSubscriptionDataSource();

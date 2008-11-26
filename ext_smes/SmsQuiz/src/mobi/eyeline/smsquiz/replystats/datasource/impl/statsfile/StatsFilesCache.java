@@ -43,7 +43,7 @@ public class StatsFilesCache {
 
       PropertiesConfig config = new PropertiesConfig(c.getSection("replystats").toProperties("."));
       fileNamePattern = "HH";
-      dirNamePattern = "yyyyMMdd";              
+      dirNamePattern = "yyyyMMdd";
       timePattern = "HH:mm";
       datePattern = "yyyyMMdd";
       replyStatsDir = config.getString("statsFile_dir", null);
@@ -82,16 +82,15 @@ public class StatsFilesCache {
     System.out.println(dateFormat.parse("23"));
     System.out.println(dateFormat.parse("23").getTime());
     Calendar cal = Calendar.getInstance();
-    cal.set(Calendar.HOUR_OF_DAY,0);
-    cal.set(Calendar.MINUTE,0);
-    cal.set(Calendar.SECOND,0);
-    cal.set(Calendar.MILLISECOND,0);
-    cal.setTimeInMillis(cal.getTime().getTime()+dateFormat.parse("23").getTime()+ Calendar.getInstance().getTimeZone().getRawOffset());
+    cal.set(Calendar.HOUR_OF_DAY, 0);
+    cal.set(Calendar.MINUTE, 0);
+    cal.set(Calendar.SECOND, 0);
+    cal.set(Calendar.MILLISECOND, 0);
+    cal.setTimeInMillis(cal.getTime().getTime() + dateFormat.parse("23").getTime() + Calendar.getInstance().getTimeZone().getRawOffset());
     System.out.println(cal.getTime());
     System.out.println(cal.getTime().getTime());
 
   }
-
 
 
   public Collection<StatsFile> getFiles(final String da, final Date from, final Date till) throws FileStatsException {
@@ -121,13 +120,13 @@ public class StatsFilesCache {
 
     try {
       for (File directory : dir.listFiles()) {
-        if(directory.isDirectory()) {
+        if (directory.isDirectory()) {
           String dirName = directory.getName();
           Date dirDate = dirNameFormat.parse(dirName);
-          if(logger.isInfoEnabled()) {
-            logger.info("DirDate: "+dirDate);
+          if (logger.isInfoEnabled()) {
+            logger.info("DirDate: " + dirDate);
           }
-          for(File f: directory.listFiles()) {
+          for (File f : directory.listFiles()) {
             if (!f.isFile()) {
               continue;
             }
@@ -136,10 +135,10 @@ public class StatsFilesCache {
               continue;
             }
             Date fileDate = fileNameFormat.parse(name.substring(0, name.lastIndexOf(".")));
-            if(logger.isInfoEnabled()) {
-              logger.info("FileDate: "+fileDate);
+            if (logger.isInfoEnabled()) {
+              logger.info("FileDate: " + fileDate);
             }
-            Date date = new Date(dirDate.getTime()+fileDate.getTime()+7*60*60*1000);
+            Date date = new Date(dirDate.getTime() + fileDate.getTime() + Calendar.getInstance().getTimeZone().getRawOffset());
             if (logger.isInfoEnabled()) {
               logger.info("Date parsed from file: " + date);
             }
@@ -194,8 +193,8 @@ public class StatsFilesCache {
 
     if ((file = filesMap.get(key)) == null) {
       String filePath = replyStatsDir + File.separator + key + ".csv";
-      if(logger.isInfoEnabled()) {
-        logger.info("Search file: "+filePath);
+      if (logger.isInfoEnabled()) {
+        logger.info("Search file: " + filePath);
       }
       if (checkExist) {
         File f = new File(filePath);

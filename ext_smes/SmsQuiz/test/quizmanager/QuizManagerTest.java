@@ -87,8 +87,8 @@ public class QuizManagerTest {
         quizManager.handleSms(da, number1, "asfaf");
       }
       assertNull(quizManager.handleSms(da, number1, "asfaf"));
-      File file = new File(quizManager.getStatusDir() + "/opros_test.status");
-      assertTrue(file.exists());
+ ///     File file = new File(quizManager.getStatusDir() + "/opros_test.status");
+ //     assertTrue(file.exists());
       waiting(25000);
     } catch (QuizException e) {
       e.printStackTrace();

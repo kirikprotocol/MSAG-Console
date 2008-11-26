@@ -1,10 +1,10 @@
 package mobi.eyeline.smsquiz.quizmanager.quiz;
 
 import com.eyeline.jstore.JStore;
+import mobi.eyeline.smsquiz.distribution.Distribution;
 import mobi.eyeline.smsquiz.distribution.DistributionException;
 import mobi.eyeline.smsquiz.distribution.DistributionManager;
 import mobi.eyeline.smsquiz.distribution.StatsDelivery;
-import mobi.eyeline.smsquiz.distribution.Distribution;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
 import mobi.eyeline.smsquiz.quizmanager.Result;
 import mobi.eyeline.smsquiz.replystats.Reply;
@@ -14,7 +14,9 @@ import mobi.eyeline.smsquiz.storage.ResultSet;
 import mobi.eyeline.smsquiz.storage.StorageException;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -50,9 +52,10 @@ public class Quiz {
   private int answerHandled = -5;
 
   private Status status;
-  private String dirWork;
 
   private boolean generated = false;
+
+  private boolean exported = false;
 
   private final Distribution distribution;
 
@@ -62,7 +65,7 @@ public class Quiz {
     this.dirResult = dirResult;
     this.replyStatsDataSource = replyStatsDataSource;
     this.distributionManager = distributionManager;
-    this.dirWork = dirWork;
+    String dirWork1 = dirWork;
     this.distribution = distribution;
     jstore = new JStore(-1);
     if (file == null) {
@@ -71,13 +74,13 @@ public class Quiz {
     }
     fileName = file.getAbsolutePath();
     quizId = file.getName().substring(0, file.getName().lastIndexOf("."));
-    jstore.init(dirWork+File.separator+file.getName()+ ".bin", 60000, 10);
+    jstore.init(dirWork + File.separator + file.getName() + ".bin", 60000, 10);
     status = new Status(dirWork + File.separator + quizId + ".status");
     replyPatterns = new ArrayList<ReplyPattern>();
   }
 
   public String getStatusFileName() {
-    return status.getStatusFileName(); 
+    return status.getStatusFileName();
   }
 
   public Result handleSms(String oa, String text) throws QuizException {
@@ -85,7 +88,7 @@ public class Quiz {
     long oaNumber = Long.parseLong(oa.substring(oa.lastIndexOf("+") + 1, oa.length()));
 
     int count = jstore.get(oaNumber);
-    if((count==answerHandled)) {
+    if ((count == answerHandled)) {
       if (logger.isInfoEnabled()) {
         logger.info("DON'T HANDLE: already handled for abonent: " + oa);
       }
@@ -128,9 +131,7 @@ public class Quiz {
     }
 
     try {
-
       replyStatsDataSource.add(new Reply(new Date(), oa, destAddress, text));
-
       if (logger.isInfoEnabled()) {
         logger.info("Sms stored: " + oa + " " + destAddress + " " + text);
       }
@@ -138,7 +139,7 @@ public class Quiz {
       logger.error("Can't add reply", e);
       throw new QuizException("Can't add reply", e);
     }
-    if((result!=null)&&(result.getReplyRull().equals(Result.ReplyRull.REPEAT))) {
+    if ((result != null) && (result.getReplyRull().equals(Result.ReplyRull.REPEAT))) {
       try {
         distributionManager.resend(oa, status.getId());
       } catch (DistributionException e) {
@@ -159,6 +160,7 @@ public class Quiz {
     if (logger.isInfoEnabled()) {
       logger.info("Export statistics begining for: " + fileName);
     }
+    Date realStartDate = status.getActualStartDate();
     SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
     String fileName = dirResult + File.separator + quizId + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
     dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
@@ -171,8 +173,8 @@ public class Quiz {
     PrintWriter printWriter = null;
     String encoding = System.getProperty("file.encoding");
     try {
-      printWriter = new PrintWriter(file,encoding);
-      ResultSet resultSet = distributionManager.getStatistics(this.getId(), dateBegin, dateEnd);
+      printWriter = new PrintWriter(file, encoding);
+      ResultSet resultSet = distributionManager.getStatistics(this.getId(), realStartDate, dateEnd);
       String comma = ",";
       while (resultSet.next()) {
         Reply reply;
@@ -182,7 +184,7 @@ public class Quiz {
         if (logger.isInfoEnabled()) {
           logger.info("Analysis delivery: " + delivery);
         }
-        if ((reply = replyStatsDataSource.getLastReply(oa, destAddress, dateBegin, dateEnd)) != null) {
+        if ((reply = replyStatsDataSource.getLastReply(oa, destAddress, realStartDate, dateEnd)) != null) {
           String text = reply.getText();
           ReplyPattern replyPattern = getReplyPattern(text);
           String category;
@@ -214,6 +216,7 @@ public class Quiz {
         }
       }
       printWriter.flush();
+      exported = true;
     } catch (DistributionException e) {
       logger.error("Can't get statisctics", e);
       throw new QuizException("Can't get statisctics", e);
@@ -238,8 +241,9 @@ public class Quiz {
     return dateBegin;
   }
 
-  public void setDateBegin(Date dateBegin) {
+  public void setDateBegin(Date dateBegin) throws QuizException {
     this.dateBegin = dateBegin;
+    status.setActualStartDate(dateBegin);
   }
 
   public Date getDateEnd() {
@@ -311,7 +315,6 @@ public class Quiz {
       }
     }
     return null;
-
   }
 
   public String toString() {
@@ -337,8 +340,9 @@ public class Quiz {
 
   public boolean isActive() {
     Date now = new Date();
-    return now.after(dateBegin)&&now.before(dateEnd);
+    return now.after(dateBegin) && now.before(dateEnd);
   }
+
   public boolean isFinished() {
     Date now = new Date();
     return now.after(dateEnd);
@@ -360,16 +364,16 @@ public class Quiz {
     return distribution;
   }
 
-  public void setQuizStatus(Status.QuizStatus quizStatus) throws QuizException{
+  public void setQuizStatus(Status.QuizStatus quizStatus) throws QuizException {
     status.setQuizStatus(quizStatus);
   }
 
-  public Status.QuizStatus getQuizStatus() throws QuizException{
+  public Status.QuizStatus getQuizStatus(){
     return status.getQuizStatus();
   }
 
-  public void setError(QuizError error, String reason) throws QuizException{
-    status.setQuizErrorStatus(error, reason);  
+  public void setError(QuizError error, String reason) throws QuizException {
+    status.setQuizErrorStatus(error, reason);
   }
 
   public String getQuizName() {
@@ -378,5 +382,9 @@ public class Quiz {
 
   public void setQuizName(String quizName) {
     this.quizName = quizName;
+  }
+
+  public boolean isExported() {
+    return exported;
   }
 }

@@ -174,8 +174,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
     logger.info("DistributionManager shutdowned");
   }
 
-  public void resend (String msisdn, String taskId) throws DistributionException{
-    if((msisdn==null)||(taskId==null)) {
+  public void resend(String msisdn, String taskId) throws DistributionException {
+    if ((msisdn == null) || (taskId == null)) {
       logger.error("Some arguments are null");
       throw new DistributionException("Some arguments are null", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
     }
@@ -191,14 +191,14 @@ public class DistributionInfoSmeManager implements DistributionManager {
         throw new SmscConsoleException("Wrong response");
       }
     } catch (SmscConsoleException e) {
-      logger.error("Can't send command",e);
+      logger.error("Can't send command", e);
       throw new DistributionException("Can't send command", e);
     }
 
   }
 
-  public void removeTask (String taskId) throws DistributionException{
-    if(taskId==null) {
+  public void removeTask(String taskId) throws DistributionException {
+    if (taskId == null) {
       logger.error("Some arguments are null");
       throw new DistributionException("Some arguments are null", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
     }
@@ -214,11 +214,11 @@ public class DistributionInfoSmeManager implements DistributionManager {
         throw new SmscConsoleException("Wrong response");
       }
     } catch (SmscConsoleException e) {
-      logger.error("Can't send command",e);
+      logger.error("Can't send command", e);
       throw new DistributionException("Can't send command", e);
     }
 
-  }  
+  }
 
   public String repairStatus(String id, Runnable task, Distribution distribution) throws DistributionException {
     if (logger.isInfoEnabled()) {
@@ -246,7 +246,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
           if (status.equals("")) {
             id = createDistribution(distribution, task);
           } else {
-              tasksMap.put(id, new Status(task));
+            tasksMap.put(id, new Status(task));
           }
           if (logger.isInfoEnabled()) {
             logger.info("Repair status ends, new id: " + id);
@@ -280,21 +280,21 @@ public class DistributionInfoSmeManager implements DistributionManager {
     String path = statsDir + File.separator + id;
     Date date;
     List<File> files = new LinkedList<File>();
-    if(logger.isInfoEnabled()) {
-      logger.info("Comparable date:"+calendar.getTime());
+    if (logger.isInfoEnabled()) {
+      logger.info("Comparable date:" + calendar.getTime());
     }
     while (calendar.getTime().compareTo(endDate) <= 0) {
       date = calendar.getTime();
       File file = new File(path + File.separator + dirFormat.format(date) + File.separator + fileFormat.format(date) + ".csv");
-      if(logger.isInfoEnabled()) {
-        logger.info("Search file:"+file.getAbsolutePath());
+      if (logger.isInfoEnabled()) {
+        logger.info("Search file:" + file.getAbsolutePath());
       }
       if (file.exists()) {
         files.add(file);
         if (logger.isInfoEnabled()) {
           logger.info("File added for analysis: " + file.getAbsolutePath());
         }
-      } else{
+      } else {
         file = new File(path + File.separator + dirFormat.format(date) + File.separator + fileFormat.format(date) + "processed.csv");
         if (file.exists()) {
           files.add(file);
@@ -303,7 +303,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
           }
         }
       }
-      calendar.add(Calendar.HOUR_OF_DAY, 1);      
+      calendar.add(Calendar.HOUR_OF_DAY, 1);
     }
 
     ResultSet result = new DistributionResultSet(files, startDate, endDate, succDeliveryStatus, dateInFilePattern);
@@ -315,7 +315,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
 
   private String getFormatProp(String prop) {
     StringBuilder builder = new StringBuilder();
-    builder.append(" \"").append(prop).append("\"");
+    builder.append(" \"").append(prop.replace("\"", "\\\"")).append("\"");
     return builder.toString();
   }
 

@@ -19,7 +19,7 @@ public class DirListenerTest {
   @Before
   public void init() {
     try {
-      dirListener = new DirListener("test_QuizManager");
+      dirListener = new DirListener("test_QuizManager",null,null,null);
       File file = new File("test_QuizManager");
       if (file.exists()) {
         removeAll(file);

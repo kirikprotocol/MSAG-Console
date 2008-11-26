@@ -123,14 +123,14 @@ public class QuizBuilder {
     if (distribution != null) {
       distribution.setDateBegin(dateBegin);
       distribution.setFilePath(abFileName);
-      distribution.setTaskName(name+"(SmsQuiz)");
+      distribution.setTaskName(name + "(SmsQuiz)");
     }
-    if(quiz!=null) {
+    if (quiz != null) {
       quiz.setDateBegin(dateBegin);
       quiz.setDateEnd(dateEnd);
       quiz.setQuestion(question);
       quiz.setQuizName(name);
-    } 
+    }
   }
 
   @SuppressWarnings({"unchecked"})
@@ -265,8 +265,8 @@ public class QuizBuilder {
     }
   }
 
-  public void buildModifyActive(final String filepath, Quiz quiz) throws QuizException{
-    if ((filepath==null)||(quiz == null)) {
+  public void buildModifyActive(final String filepath, Quiz quiz) throws QuizException {
+    if ((filepath == null) || (quiz == null)) {
       logger.error("Some argument are null");
       throw new QuizException("Some argument are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
@@ -312,8 +312,9 @@ public class QuizBuilder {
     }
   }
 
-  public void buildModifyUnactive(final String filepath, Quiz quiz) throws QuizException{
-    if ((filepath==null)||(quiz == null)) {
+  @SuppressWarnings({"unchecked"})
+  public void buildModifyUnactive(final String filepath, Quiz quiz) throws QuizException {
+    if ((filepath == null) || (quiz == null)) {
       logger.error("Some argument are null");
       throw new QuizException("Some argument are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
@@ -376,7 +377,7 @@ public class QuizBuilder {
         errorNotFound("replies");
       }
     }
-      catch (JDOMException e) {
+    catch (JDOMException e) {
       logger.error("Parsing exception", e);
       throw new QuizException("Parsing exception", e);
     } catch (IOException e) {
@@ -416,7 +417,7 @@ public class QuizBuilder {
   String getTimeSeparator() {
     return timeSeparator;
   }
-  
+
   public AbstractDynamicMBean getMonitor() {
     return monitor;
   }
