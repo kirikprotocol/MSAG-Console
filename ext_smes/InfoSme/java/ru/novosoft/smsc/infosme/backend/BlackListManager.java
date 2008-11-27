@@ -22,7 +22,13 @@ public class BlackListManager {
     this.pool = pool;
   }
 
+  public boolean isEnabled() {
+    return pool != null;
+  }
+
   public void add(String msisdn) throws AdminException {
+    if( pool == null )
+      return;
     PersonalizationClient client = null;
     try {
       client = pool.getClient();
@@ -37,6 +43,8 @@ public class BlackListManager {
   }
 
   public void remove(String msisdn) throws AdminException {
+    if (pool == null)
+      return;
     PersonalizationClient client = null;
     try {
       client = pool.getClient();

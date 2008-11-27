@@ -9,8 +9,9 @@
     sme_menu_button(out, "mbMenu",  "drivers",    "Drivers",    "DB drivers");
     sme_menu_button(out, "mbMenu",  "retryPolicies",    "Retry Policies",    "Retry Policies");
     if (request.isUserInRole(InfoSmeBean.INFOSME_MARKET_ROLE)) {
-    sme_menu_button(out, "mbMenu",  "deliveries", "Deliveries", "Message deliveries");
-    sme_menu_button(out, "mbMenu",  "black_list", "Black List", "Black List");
+      sme_menu_button(out, "mbMenu",  "deliveries", "Deliveries", "Message deliveries");
+      if (bean.isBlackListEnabled())
+        sme_menu_button(out, "mbMenu",  "black_list", "Black List", "Black List");
     }
     sme_menu_space(out);
     sme_menu_button(out, "mbMenu",  "messages",  "Messages",  "Messages set");

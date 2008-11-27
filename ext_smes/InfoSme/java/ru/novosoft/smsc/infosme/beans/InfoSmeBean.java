@@ -115,6 +115,10 @@ public class InfoSmeBean extends PageBean
     return infoSme;
   }
 
+  public boolean isBlackListEnabled() {
+    return infoSmeContext.getBlackListManager().isEnabled();
+  }
+
   public boolean isSmeRunning()
   {
     return smeRunning;
