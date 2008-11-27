@@ -62,11 +62,7 @@ class DistributionResultSet implements ResultSet {
 
       return false;
     } catch (Exception e) {
-      logger.error("Error during getting line from file", e);
-      if (currentFile != null) {
-        files.removeFirst();
-        currentFile = null;
-      }
+      logger.error("Error during getting line from file", e);      
       if (reader != null) {
         try {
           reader.close();
