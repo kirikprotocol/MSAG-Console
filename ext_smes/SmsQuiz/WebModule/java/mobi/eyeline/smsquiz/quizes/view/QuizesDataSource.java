@@ -78,7 +78,7 @@ public class QuizesDataSource extends AbstractDataSource {
     }
     File[] files = dir.listFiles(new FilenameFilter() {
       public boolean accept(File dir, String name) {
-        return name.endsWith(".xml") || name.endsWith(".xml.old");
+        return name.endsWith(".xml");
       }
     });
     if (files == null) {

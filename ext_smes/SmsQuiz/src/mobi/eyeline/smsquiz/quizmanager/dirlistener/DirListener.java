@@ -156,7 +156,6 @@ public class DirListener extends Observable implements Runnable {
 
   private void renameFile(File file) {
     try {
-      System.out.println("try to rename file: " + file.getAbsolutePath());
       String name = file.getName();
       file.renameTo(new File(dirArchive + File.separator + name + "." + df.format(new Date())));
     } catch (Exception e) {
@@ -166,7 +165,6 @@ public class DirListener extends Observable implements Runnable {
 
   private void deleteFile(File file) {
     try {
-      System.out.println("try to delete file: " + file.getAbsolutePath());
       file.delete();
     } catch (Exception e) {
       logger.error(e);

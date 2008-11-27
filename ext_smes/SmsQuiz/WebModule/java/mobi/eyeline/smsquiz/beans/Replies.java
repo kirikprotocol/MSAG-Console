@@ -71,9 +71,6 @@ public class Replies extends SmsQuizBean {
       }
       if(quizId!=null) {
         File file = new File(quizDir+File.separator+quizId+".xml");
-        if(!file.exists()) {
-          file = new File(file.getAbsolutePath()+".old");
-        }
         replyFilter.setQuizPath(file.getAbsolutePath());
         QuizData data = QuizBuilder.parseAll(replyFilter.getQuizPath());
         replyFilter.setQuizNumber(data.getDestAddress());

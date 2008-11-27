@@ -18,6 +18,7 @@ import java.io.*;
 
 import mobi.eyeline.smsquiz.quizes.CategoriesTableHelper;
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
+import mobi.eyeline.smsquiz.quizes.QuizFileIndex;
 import mobi.eyeline.smsquiz.quizes.view.QuizData;
 import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
@@ -128,7 +129,7 @@ public class QuizAdd extends SmsQuizBean {
       ds = request.getMultipartDataSource("file");
       is = ds.getInputStream();
 
-      String quizId = Integer.toString(getUniqName());
+      String quizId = Integer.toString(QuizFileIndex.getUniqIndex(quizDir));
       file = new File(quizDir + File.separator + quizId + ".csv");
       outputStream = new BufferedOutputStream(new FileOutputStream(file));
       byte buffer[] = new byte[2048];
@@ -274,29 +275,6 @@ public class QuizAdd extends SmsQuizBean {
       }
     }
     return RESULT_OK;
-  }
-
-  private int getUniqName() {
-    File dir = new File(quizDir);
-    File[] files = dir.listFiles(new FilenameFilter() {
-      public boolean accept(File dir, String name) {
-        return name.endsWith(".xml") || name.endsWith(".xml.old");
-      }
-    });
-    int result = 1;
-    for(int i=0;i<files.length;i++) {
-      String filename = files[i].getName();
-      int subRes = 0;
-      filename = filename.substring(0,filename.indexOf("."));
-      try{
-        subRes = Integer.parseInt(filename);
-        System.out.println(result+" compare with file's number: "+subRes);
-        if(result==subRes) {
-          result=subRes+1;
-        }
-      } catch(NumberFormatException e) {}
-    }
-    return result;
   }
 
   public String getMbDone() {

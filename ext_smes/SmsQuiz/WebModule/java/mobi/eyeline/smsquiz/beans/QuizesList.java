@@ -83,7 +83,7 @@ public class QuizesList extends SmsQuizBean {
       }
 
       this.tableHelper.fillTable();
-     
+
     } catch (Exception e) {
       logger.error("Can't process request", e);
       return _error(new SMSCJspException("Can't create table", SMSCJspException.ERROR_CLASS_ERROR, e));
@@ -101,10 +101,7 @@ public class QuizesList extends SmsQuizBean {
         System.out.println("Selected checkbox: " + quizId);
         String quizPath = quizDir + File.separator + quizId + ".xml";
         if (!new File(quizPath).exists()) {
-          quizPath = quizDir + File.separator + quizId + ".xml.old";
-          if (!new File(quizPath).exists()) {
-            warnings += "Quiz's  file not found for id:" + quizId + System.getProperty("line.separator");
-          }
+          warnings += "Quiz's  file not found for id:" + quizId + System.getProperty("line.separator");
         }
         QuizData quizData = QuizBuilder.parseAll(quizPath);
         delete(quizId, quizPath, quizData.getAbFile());

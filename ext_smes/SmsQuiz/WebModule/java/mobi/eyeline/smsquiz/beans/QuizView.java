@@ -222,9 +222,6 @@ public class QuizView extends SmsQuizBean {
     String path = quizDir + File.separator + quizId + ".xml";
     File file = new File(path);
     if (!file.exists()) {
-      file = new File(path + ".old");
-    }
-    if (!file.exists()) {
       return false;
     }
     try {
