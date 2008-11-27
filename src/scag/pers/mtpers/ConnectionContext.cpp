@@ -111,7 +111,7 @@ void ConnectionContext::sendResponse(const char* data, uint32_t dataSize) {
     perfCounter_.incProcessed();
     --packetsCount_;
     if (tasksCount_ >= 2) {
-      smsc_log_debug(logger_, "cx:%p socket %p error tasksCounr=%d", this, socket_, tasksCount_);
+      smsc_log_debug(logger_, "cx:%p socket %p error tasksCount=%d", this, socket_, tasksCount_);
     }
     if (inprocess) {
       smsc_log_debug(logger_, "cx:%p socket %p already in multiplexer", this, socket_);
