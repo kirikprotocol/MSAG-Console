@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "scag/util/lltostr.h"
 
 void Inst::check(const char* fname)
