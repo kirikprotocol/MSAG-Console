@@ -13,9 +13,11 @@ import org.apache.axis.attachments.Attachments;
 
 import javax.xml.soap.AttachmentPart;
 import javax.xml.soap.SOAPException;
+import javax.activation.DataHandler;
 import java.rmi.RemoteException;
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.Iterator;
 
 public class SmsXSenderSoapService implements SmsXSender, org.apache.axis.wsdl.Skeleton {
   private SmsXSenderHandler impl;
@@ -79,21 +81,6 @@ public class SmsXSenderSoapService implements SmsXSender, org.apache.axis.wsdl.S
     ((java.util.List)_myOperations.get("sendPaidSms")).add(_oper);
 
     _params = new org.apache.axis.description.ParameterDesc [] {
-      new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SourceAddress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
-      new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "DestinationAddress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
-      new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "Message"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
-    };
-    _oper = new org.apache.axis.description.OperationDesc("sendSysSms", _params, new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "sendSysSmsReturn"));
-    _oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
-    _oper.setElementQName(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "sendSysSms"));
-    _oper.setSoapAction("");
-    _myOperationsList.add(_oper);
-    if (_myOperations.get("sendSysSms") == null) {
-      _myOperations.put("sendSysSms", new java.util.ArrayList());
-    }
-    ((java.util.List)_myOperations.get("sendSysSms")).add(_oper);
-
-    _params = new org.apache.axis.description.ParameterDesc [] {
       new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SMSXIdMessage"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
     };
     _oper = new org.apache.axis.description.OperationDesc("checkStatus", _params, new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "checkStatusReturn"));
@@ -109,10 +96,10 @@ public class SmsXSenderSoapService implements SmsXSender, org.apache.axis.wsdl.S
     _params = new org.apache.axis.description.ParameterDesc [] {
       new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SourceAddress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
       new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "Message"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
-      new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SMSXExpress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), java.lang.String.class, false, false),
+      new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SMSXExpress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false),
     };
-    _oper = new org.apache.axis.description.OperationDesc("batchSecret", _params, new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "checkStatusReturn"));
-    _oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
+    _oper = new org.apache.axis.description.OperationDesc("batchSecret", _params, new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "batchSecretReturn"));
+    _oper.setReturnType(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SmsXSenderResponse"));
     _oper.setElementQName(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "batchSecret"));
     _oper.setSoapAction("");
     _myOperationsList.add(_oper);
@@ -120,6 +107,34 @@ public class SmsXSenderSoapService implements SmsXSender, org.apache.axis.wsdl.S
       _myOperations.put("batchSecret", new java.util.ArrayList());
     }
     ((java.util.List)_myOperations.get("batchSecret")).add(_oper);
+
+    _params = new org.apache.axis.description.ParameterDesc [] {
+      new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "BatchId"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
+    };
+    _oper = new org.apache.axis.description.OperationDesc("checkBatchSecretStatus", _params, new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "checkBatchSecretStatusReturn"));
+    _oper.setReturnType(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SmsXSenderResponse"));
+    _oper.setElementQName(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "checkBatchSecretStatus"));
+    _oper.setSoapAction("");
+    _myOperationsList.add(_oper);
+    if (_myOperations.get("checkBatchSecretStatus") == null) {
+      _myOperations.put("checkBatchSecretStatus", new java.util.ArrayList());
+    }
+    ((java.util.List)_myOperations.get("checkBatchSecretStatus")).add(_oper);
+
+    _params = new org.apache.axis.description.ParameterDesc [] {
+      new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SourceAddress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
+      new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "DestinationAddress"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
+      new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "Message"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
+    };
+    _oper = new org.apache.axis.description.OperationDesc("sendSysSms", _params, new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "sendSysSmsReturn"));
+    _oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
+    _oper.setElementQName(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "sendSysSms"));
+    _oper.setSoapAction("");
+    _myOperationsList.add(_oper);
+    if (_myOperations.get("sendSysSms") == null) {
+      _myOperations.put("sendSysSms", new java.util.ArrayList());
+    }
+    ((java.util.List)_myOperations.get("sendSysSms")).add(_oper);
   }
 
   public SmsXSenderSoapService() {
@@ -143,7 +158,7 @@ public class SmsXSenderSoapService implements SmsXSender, org.apache.axis.wsdl.S
     return impl.checkStatus(SMSXIdMessage);
   }
 
-  public int batchSecret(String oa, String message, boolean express) throws RemoteException {
+  public SmsXSenderResponse batchSecret(String oa, String message, boolean express) throws RemoteException {
     MessageContext ctx = MessageContext.getCurrentContext();
     Message reqMessage = ctx.getRequestMessage();
     Attachments attachments = reqMessage.getAttachmentsImpl();
@@ -160,6 +175,10 @@ public class SmsXSenderSoapService implements SmsXSender, org.apache.axis.wsdl.S
     }
 
     return impl.batchSecret(oa, message, express, is);  
+  }
+
+  public SmsXSenderResponse checkBatchSecretStatus(String msgId) throws RemoteException {
+    return impl.checkBatchSecretStatus(msgId);
   }
 
   public int sendSysSms(String oa, String da, String message) throws RemoteException {

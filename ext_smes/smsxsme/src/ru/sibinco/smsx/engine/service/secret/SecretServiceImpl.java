@@ -53,7 +53,7 @@ public class SecretServiceImpl implements SecretService {
         throw new ServiceInitializationException("Can't create archives dir: " + archivesDir.getAbsolutePath());
 
       batchEngine = new BatchEngine(dataSource, storeDir, archivesDir);
-      processor = new SecretProcessor(dataSource, messageSender, batchEngine, storeDir);
+      processor = new SecretProcessor(dataSource, messageSender);
 
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);
@@ -102,7 +102,11 @@ public class SecretServiceImpl implements SecretService {
     return new SecretMBean(messageSender);
   }
 
-  public void execute(SecretBatchCmd cmd) throws CommandExecutionException {
-    processor.execute(cmd);
+  public String execute(SecretBatchCmd cmd) throws CommandExecutionException {
+    return batchEngine.execute(cmd);
+  }
+
+  public int execute(SecretGetBatchStatusCmd cmd) throws CommandExecutionException {
+    return batchEngine.execute(cmd);
   }
 }

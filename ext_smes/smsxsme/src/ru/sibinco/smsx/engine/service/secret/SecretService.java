@@ -13,5 +13,6 @@ public interface SecretService extends Service,
                                        SecretChangePasswordCmd.Receiver, SecretGetMessagesCmd.Receiver,
                                        SecretGetMessageStatusCmd.Receiver, SecretRegisterAbonentCmd.Receiver,
                                        SecretSendMessageCmd.Receiver, SecretUnregisterAbonentCmd.Receiver,
-                                       SecretHandleReceiptCmd.Receiver, SecretBatchCmd.Receiver {
+                                       SecretHandleReceiptCmd.Receiver, SecretBatchCmd.Receiver,
+                                       SecretGetBatchStatusCmd.Receiver {
 }

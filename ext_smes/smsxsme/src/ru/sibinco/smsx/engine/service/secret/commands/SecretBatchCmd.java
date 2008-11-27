@@ -50,7 +50,7 @@ public class SecretBatchCmd extends Command {
   }
 
   public interface Receiver {
-    public void execute(SecretBatchCmd cmd) throws CommandExecutionException;
+    public String execute(SecretBatchCmd cmd) throws CommandExecutionException;
   }
   
 }

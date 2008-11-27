@@ -273,4 +273,12 @@ public class SmsXSenderStub extends org.apache.axis.client.Stub implements SmsXS
     }
   }
 
+  public SmsXSenderResponse batchSecret(String oa, String message, boolean express) throws RemoteException {
+    return null;
+  }
+
+  public SmsXSenderResponse checkBatchSecretStatus(String msgId) throws RemoteException {
+    return null;
+  }
+
 }

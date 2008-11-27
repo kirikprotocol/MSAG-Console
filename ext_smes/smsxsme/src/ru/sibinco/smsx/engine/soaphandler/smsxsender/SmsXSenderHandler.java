@@ -15,6 +15,7 @@ import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
 import ru.sibinco.smsx.engine.service.secret.commands.SecretGetMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.secret.commands.SecretSendMessageCmd;
 import ru.sibinco.smsx.engine.service.secret.commands.SecretBatchCmd;
+import ru.sibinco.smsx.engine.service.secret.commands.SecretGetBatchStatusCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
 import ru.sibinco.smsx.engine.soaphandler.SOAPHandlerInitializationException;
@@ -300,14 +301,14 @@ class SmsXSenderHandler  {
     return new SmsXSenderResponse(messageId, smppStatus, messageStatus);
   }
 
-  public int batchSecret(String oa, String message, boolean express, InputStream destinations) throws RemoteException {
+  public SmsXSenderResponse batchSecret(String oa, String message, boolean express, InputStream destinations) throws RemoteException {
     if (log.isInfoEnabled())
       log.info("Batch secret: oa=" + oa + "; msg=" + message);
     long start = System.currentTimeMillis();
 
     if (destinations == null) {
       log.warn("Destinations are empty.");
-      return STATUS_SECRET_DESTINATIONS_ARE_EMPTY;
+      return new SmsXSenderResponse(null, 0, STATUS_SECRET_DESTINATIONS_ARE_EMPTY);
     }
 
     SecretBatchCmd cmd = new SecretBatchCmd();
@@ -318,18 +319,36 @@ class SmsXSenderHandler  {
     cmd.setSourceId(SecretBatchCmd.SOURCE_SOAP);
 
     try {
-      Services.getInstance().getSecretService().execute(cmd);
+      String id = Services.getInstance().getSecretService().execute(cmd);
 
-      return STATUS_ACCEPTED;
-    } catch (CommandExecutionException e) {
+      return new SmsXSenderResponse(id, 0, STATUS_ACCEPTED);
+    } catch (Throwable e) {
       log.error(e,e);
-      return STATUS_SYSTEM_ERROR;
+      return new SmsXSenderResponse(null, 0, STATUS_SYSTEM_ERROR);
     } finally {
       if (log.isInfoEnabled())
         log.info("Time=" + (System.currentTimeMillis() - start));
     }
   }
 
+  public SmsXSenderResponse checkBatchSecretStatus(String msgId) throws RemoteException {
+    if (log.isInfoEnabled())
+      log.info("Get Batch status: msgId=" + msgId);
+
+    long start = System.currentTimeMillis();
+
+    SecretGetBatchStatusCmd cmd = new SecretGetBatchStatusCmd(msgId);
+    try {
+      int status = Services.getInstance().getSecretService().execute(cmd);
+      return new SmsXSenderResponse(msgId, 0, status);
+    } catch (CommandExecutionException e) {
+      log.error(e,e);
+      return new SmsXSenderResponse(null, 0, STATUS_SYSTEM_ERROR);
+    } finally {
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
+    }
+  }
 
   private static SmsXSenderResponse getCalendarMessageStatus(String messageId) {
 

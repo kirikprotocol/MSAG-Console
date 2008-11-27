@@ -7,5 +7,6 @@ public interface SmsXSender extends java.rmi.Remote {
   public SmsXSenderResponse sendPaidSms(String oa, String da, String message, boolean SMSXExpress, boolean SMSXSecret, boolean SMSXCalendar, long SMSXCalendarTimeUTC) throws java.rmi.RemoteException;
   public int sendSysSms(String oa, String da, String message) throws java.rmi.RemoteException;
   public SmsXSenderResponse checkStatus(java.lang.String SMSXIdMessage) throws java.rmi.RemoteException;
-  public int batchSecret(String oa, String message, boolean express) throws RemoteException;
+  public SmsXSenderResponse batchSecret(String oa, String message, boolean express) throws RemoteException;
+  public SmsXSenderResponse checkBatchSecretStatus(String msgId) throws RemoteException;
 }

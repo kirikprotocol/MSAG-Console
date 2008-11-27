@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMessagesCmd.Receiver,
                                  SecretGetMessageStatusCmd.Receiver, SecretRegisterAbonentCmd.Receiver,
                                  SecretSendMessageCmd.Receiver, SecretUnregisterAbonentCmd.Receiver,
-                                 SecretHandleReceiptCmd.Receiver, SecretBatchCmd.Receiver {
+                                 SecretHandleReceiptCmd.Receiver {
 
   private static final Category log = Category.getInstance("SECRET");
 
@@ -34,14 +34,10 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
 
   private final SecretDataSource ds;
   private final MessageSender messageSender;
-  private final File storeDir;
-  private final BatchEngine batchEngine;
 
-  SecretProcessor(SecretDataSource ds, MessageSender messageSender, BatchEngine batchEngine, File storeDir) {
+  SecretProcessor(SecretDataSource ds, MessageSender messageSender) {
     this.ds = ds;
     this.messageSender = messageSender;
-    this.batchEngine = batchEngine;
-    this.storeDir = storeDir;
   }
 
 
@@ -265,59 +261,5 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
       log.error(e,e);
       throw new CommandExecutionException("Error: " + e.getMessage(), SecretHandleReceiptCmd.ERR_SYS_ERROR);
     }
-  }
-
-
-  private final Lock secretBatchLock = new ReentrantLock();
-
-  public void execute(SecretBatchCmd cmd) throws CommandExecutionException {
-
-    // Prepare file name = <time in millis>.batch
-    File outputFile;
-    long time = System.currentTimeMillis();
-    do {
-      time++;
-      outputFile = new File(storeDir, String.valueOf(time));
-    } while (outputFile.exists());
-
-    // Store batch to file
-    BufferedReader is = null;
-    BufferedWriter os = null;
-    try {
-      secretBatchLock.lock();
-      is = new BufferedReader(new InputStreamReader(cmd.getDestinations()));
-
-      os = new BufferedWriter(new FileWriter(outputFile));
-
-      String prefix = cmd.getSourceAddress() + '|';
-      String postfix = '|' + cmd.getMessage() + '|' + (cmd.getDestAddressSubunit());
-      String msisdn;
-      while((msisdn = is.readLine()) != null) {
-        msisdn = msisdn.trim();
-        if (msisdn.length() == 0)
-          continue;
-        StringBuilder sb = new StringBuilder(prefix.length() + msisdn.length() + postfix.length() + 2);
-        sb.append(prefix).append(msisdn).append(postfix).append('\n');
-        os.write(sb.toString());
-      }
-
-      os.flush();
-    } catch (IOException e) {
-      throw new CommandExecutionException("Can't store batch", SecretBatchCmd.ERR_SYS_ERROR);
-    } finally {
-      secretBatchLock.unlock();
-      if (is != null)
-        try {
-          is.close();
-        } catch (IOException e) {
-        }
-      if (os != null)
-        try {
-          os.close();
-        } catch (IOException e) {
-        }
-    }
-
-    batchEngine.acceptFile(outputFile);
   }
 }
