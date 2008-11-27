@@ -44,22 +44,23 @@ class DistributionResultSet implements ResultSet {
 
   public boolean next() throws StorageException {
     try {
-      String line;
-      if (files.size() == 0) {
-        return false;
-      }
-      if (currentFile == null) {
-        currentFile = files.getFirst();
-        reader = new BufferedReader(new FileReader(currentFile));
-      }
-      if ((line = reader.readLine()) != null) {
-        return parseLine(line, successStatus, startDate, endDate) || next();
-      } else {
+      while(!files.isEmpty()) {        
+        if (currentFile == null) {
+          currentFile = files.remove(0);
+          reader = new BufferedReader(new FileReader(currentFile));
+        }
+
+        String line;
+        while ((line = reader.readLine()) != null) {
+          if (parseLine(line, successStatus, startDate, endDate))
+            return true;
+        }
+
         reader.close();
-        files.removeFirst();
         currentFile = null;
-        return next();
       }
+
+      return false;
     } catch (Exception e) {
       logger.error("Error during getting line from file", e);
       if (currentFile != null) {
