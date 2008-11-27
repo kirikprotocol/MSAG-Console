@@ -20,6 +20,12 @@
     <param name="mappingMaxChanges" type="int">10000</param>
     <param name="mappingRollTime" type="int">600</param>
 
+    <section name="RetryPolicies">
+      <section name="default">
+        <param name="default" type="int">3600</param>
+      </section>
+    </section>
+
 
     <section name="Admin">
       <param name="host" type="string">@listen.host@</param>
