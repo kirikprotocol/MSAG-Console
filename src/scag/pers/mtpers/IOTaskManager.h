@@ -37,7 +37,7 @@ private:
 class IOTaskManager {
 public:
   IOTaskManager(uint16_t maxThreads, uint32_t maxSock, uint16_t timeout, const char *logName);
-  virtual ~IOTaskManager() {};
+  virtual ~IOTaskManager();
 
   virtual bool process(ConnectionContext* cx) = 0;
   virtual void shutdown();

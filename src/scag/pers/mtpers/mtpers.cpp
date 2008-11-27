@@ -21,7 +21,7 @@ using namespace scag::mtpers;
 using smsc::logger::Logger;
 using smsc::core::threads::ThreadedTask;
 
-static PersServer *ps = NULL;
+static PersServer *persServer = NULL;
 
 extern "C" void appSignalHandler(int sig)
 {
@@ -29,7 +29,7 @@ extern "C" void appSignalHandler(int sig)
     smsc_log_debug(logger, "Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT)
     {
-        if(ps) ps->shutdown();
+        if(persServer) persServer->stop();
         smsc_log_info(logger, "Stopping ...");
     }
     else if(sig == SIGHUP)
@@ -176,10 +176,10 @@ int main(int argc, char* argv[]) {
     ReaderTaskManager readers(ioTasksCount, maxClientCount, timeout, storageManager, perfCounterOn);
     WriterTaskManager writers(ioTasksCount, maxClientCount, timeout);
     
-    ps = new PersServer(readers, writers, perfCounterOn);
+    persServer = new PersServer(readers, writers, perfCounterOn);
+    std::auto_ptr<PersServer> ps(persServer);
     ps->init(host.c_str(), port);
     ps->Execute();
-    delete ps;
 
     storageManager.shutdown();
     readers.shutdown();

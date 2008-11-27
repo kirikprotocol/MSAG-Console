@@ -29,7 +29,7 @@ struct NodeConfig {
 class StorageManager {
 public:
   StorageManager(const NodeConfig& nodeCfg);
-  virtual ~StorageManager() {};
+  virtual ~StorageManager();
 
   void init(uint16_t maxWaitingCount, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg);
   bool process(PersPacket* packet);

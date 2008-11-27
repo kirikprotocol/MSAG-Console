@@ -13,16 +13,17 @@ namespace scag { namespace mtpers {
 
 using smsc::core::threads::Thread;
 using smsc::core::network::Socket;
-using smsc::core::synchronization::EventMonitor;
+using smsc::core::synchronization::Mutex;
 using smsc::logger::Logger;
 
 class PersServer {
 public:
-    PersServer(ReaderTaskManager& readers, WriterTaskManager& writers, bool perfCounterOn = false, int perfCounterPeriod = 10);
-    void shutdown();
-    void init(const char *host, int port);
-    virtual int Execute();
-    virtual const char* taskName();
+  PersServer(ReaderTaskManager& readers, WriterTaskManager& writers, bool perfCounterOn = false, int perfCounterPeriod = 10);
+  void stop();
+  bool isStopped();
+  void init(const char *host, int port);
+  virtual int Execute();
+  virtual const char* taskName();
 
 private:
   ReaderTaskManager& readers_;
@@ -32,6 +33,7 @@ private:
   bool isStopping_;  
   bool perfCounterOn_;
   int perfCounterPeriod_;
+  Mutex mutex_;
 };
 
 }//mtpers

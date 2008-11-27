@@ -60,13 +60,11 @@ void TasksSorter::assignTask(uint16_t index, SortedTask *task) {
   task->index_ = index;
 }
 
-IOTaskManager::IOTaskManager(uint16_t maxThreads, uint32_t maxSockets, uint16_t timeout, const char *logName)
-                            :maxThreads_(maxThreads), maxSockets_(maxSockets), connectionTimeout_(timeout), logger_(Logger::getInstance(logName)),
-                             isStopped_(true)
+IOTaskManager::IOTaskManager(uint16_t maxThreads, uint32_t maxSockets, uint16_t timeout, const char *logName):isStopped_(true),
+                            maxThreads_(maxThreads), maxSockets_(maxSockets), connectionTimeout_(timeout), logger_(Logger::getInstance(logName))
 {
   int mod = maxSockets % maxThreads;
   maxSockets_ = mod > 0 ? (maxSockets / maxThreads_) + 1 : maxSockets / maxThreads_;
-  //init();
 }
 
 void IOTaskManager::init() {
@@ -99,6 +97,16 @@ void IOTaskManager::shutdown() {
     isStopped_ = true;
   }
   pool_.shutdown();
+}
+
+IOTaskManager::~IOTaskManager() {
+  {
+    MutexGuard mg(tasksMutex_);
+    if (isStopped_) {
+      return;
+    }
+  }
+  shutdown();
 }
 
 }//mtpers

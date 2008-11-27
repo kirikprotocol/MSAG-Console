@@ -3,9 +3,10 @@
 namespace scag { namespace mtpers {
 
 using smsc::util::Exception;
+using smsc::core::synchronization::MutexGuard;
 
 PersServer::PersServer(ReaderTaskManager& readers, WriterTaskManager& writers, bool perfCounterOn, int perfCounterPeriod)
-                       :readers_(readers), writers_(writers), perfCounterOn_(perfCounterOn) 
+                       :readers_(readers), writers_(writers), perfCounterOn_(perfCounterOn), isStopping_(true) 
 {
   perfCounterPeriod_ = perfCounterOn_ ? perfCounterPeriod : 0;
   readers_.init();
@@ -21,12 +22,13 @@ int PersServer::Execute()
   time_t lastTime = time(NULL);
 
   Performance averPerf;
-  for (;;) {
+  while (!isStopped()) {
 
     clientSocket = masterSocket_.Accept(perfCounterPeriod_);
 
-    if (isStopping_)
-        break;
+    if (isStopped()) {
+      break;
+    }
 
     if (!clientSocket) {
       if (!perfCounterOn_) {
@@ -66,7 +68,7 @@ int PersServer::Execute()
 
   smsc_log_debug(logger, "quit");
 
-  return isStopping_ == false;
+  return 1;
 }
 
 const char* PersServer::taskName()
@@ -74,16 +76,19 @@ const char* PersServer::taskName()
   return "MTPersServer";
 }
 
-void PersServer::shutdown()
+void PersServer::stop()
 {
+  MutexGuard mg(mutex_);
   isStopping_ = true;
-  masterSocket_.Close();
+}
+
+bool PersServer::isStopped() {
+  MutexGuard mg(mutex_);
+  return isStopping_;
 }
 
 void PersServer::init(const char *host, int port)
 {
-  isStopping_ = false;
-
   logger = Logger::getInstance("acceptor");
 
   if (masterSocket_.InitServer(host, port, 0, 0) == -1) {          
@@ -95,8 +100,10 @@ void PersServer::init(const char *host, int port)
     throw Exception("Socket::StartServer() failed");
   }
   smsc_log_debug(logger, "Pers Server inited on %s:%d", host, port);
-
-  //Start();
+  {
+    MutexGuard mg(mutex_);
+    isStopping_ = false;
+  }
 }
 
 }//mtpers

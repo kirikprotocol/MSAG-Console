@@ -74,5 +74,12 @@ void StorageManager::shutdown() {
   pool_.shutdown();
 }
 
+StorageManager::~StorageManager() {
+  if (!isStopped_) {
+    shutdown();
+  }
+}
+
+
 }//mtpers
 }//scag
