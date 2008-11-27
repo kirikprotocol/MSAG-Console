@@ -1,10 +1,10 @@
 #!/bin/bash
-if [ -f logs/cpers.err ]; then
-  mv logs/cpers.err logs/cpers.err.old
+if [ -f logs/pvcp.err ]; then
+  mv logs/pvcp.err logs/pvcp.err.old
 fi
 while true;
 do
-bin/cpers 1>/dev/null 2>>logs/cpers.err&
+bin/pvcp 1>/dev/null 2>>logs/pvcp.err&
 PID=$!
 export PID
 trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
@@ -14,11 +14,11 @@ if [ -f core ]; then
 
   mkdir "$DATE"
   mv core "$DATE"
-  mv logs/cpers.err "$DATE"
-  if [ -f logs/cpers.err.old ]; then
-    mv logs/cpers.err.old "$DATE"
+  mv logs/pvcp.err "$DATE"
+  if [ -f logs/pvcp.err.old ]; then
+    mv logs/pvcp.err.old "$DATE"
   fi
-  mv logs/cpers.log* "$DATE"
-  cp -p bin/cpers "$DATE"
+  mv logs/pvcp.log* "$DATE"
+  cp -p bin/pvcp "$DATE"
 fi
 done

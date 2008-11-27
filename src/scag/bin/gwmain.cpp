@@ -4,22 +4,18 @@
 #include <sys/stat.h>
 #include <string>
 
-#include "scag.h"
-
+#include "scag/scag.h"
 #include "util/config/route/RouteConfig.h"
-#include <admin/service/ServiceSocketListener.h>
-#include <util/signal.hpp>
-#include <util/xml/init.h>
-#include <util/findConfigFile.h>
-#include <core/threads/Thread.hpp>
-
+#include "admin/service/ServiceSocketListener.h"
+#include "util/signal.hpp"
+#include "util/xml/init.h"
+#include "util/findConfigFile.h"
+#include "core/threads/Thread.hpp"
 #include "util/mirrorfile/mirrorfile.h"
-
-#include "admin/SCAGSocketListener.h"
-#include "config/ConfigManager.h"
-#include "Inst.h"
-
-#include "version.inc"
+#include "scag/admin/SCAGSocketListener.h"
+#include "scag/config/ConfigManager.h"
+#include "scag/Inst.h"
+#include "scag/version.inc"
 
 static const int SHUTDOWN_SIGNAL = SIGTERM;
 

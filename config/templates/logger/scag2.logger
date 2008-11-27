@@ -3,6 +3,6 @@ cat.smpp.io=WARN
 cat.statman=WARN
 cat.tp=WARN
 
-appender.default.file.name=@logs.dir@/scag2.log
+appender.default.file.name=@logs.dir@/msag.log
 appender.default.file.maxsize=10Mb
 appender.default.file.maxindex=5

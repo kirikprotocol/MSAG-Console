@@ -1,5 +1,5 @@
 root=@logger.default.category@, default
 
-appender.default.file.name=@logs.dir@/cpers.log
+appender.default.file.name=@logs.dir@/pvcp.log
 appender.default.file.maxsize=5Mb
 appender.default.file.maxindex=5

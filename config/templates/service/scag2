@@ -1,10 +1,10 @@
 #!/bin/bash
-if [ -f logs/scag2.err ]; then
-  mv logs/scag2.err logs/scag2.err.old
+if [ -f logs/msag.err ]; then
+  mv logs/msag.err logs/msag.err.old
 fi
 while true;
 do
-bin/scag2 1>/dev/null 2>>logs/scag2.err&
+bin/msag 1>/dev/null 2>>logs/msag.err&
 PID=$!
 export PID
 trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
@@ -14,11 +14,11 @@ if [ -f core ]; then
 
   mkdir "$DATE"
   mv core "$DATE"
-  mv logs/scag2.err "$DATE"
-  if [ -f logs/scag2.err.old ]; then
-    mv logs/scag2.err.old "$DATE"
+  mv logs/msag.err "$DATE"
+  if [ -f logs/msag.err.old ]; then
+    mv logs/msag.err.old "$DATE"
   fi
-  mv logs/scag2.log* "$DATE"
-  cp -p bin/scag2 "$DATE"
+  mv logs/msag.log* "$DATE"
+  cp -p bin/msag "$DATE"
 fi
 done

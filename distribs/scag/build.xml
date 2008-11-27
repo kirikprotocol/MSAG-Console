@@ -1,44 +1,64 @@
 <project name="SCA gateway" default="help">
-  <property file="build.properties"/>
-  <property file="msag.properties"/>
-  <condition property="INIT_FAILED" value="yes" >
-    <not>
-      <and>
-        <isset property="BUILD_DIR"/>
-        <isset property="DISTR_DIR"/>
-        <isset property="SMSC_DIR"/>
-        <isset property="TEMPLATE_PROPS"/>
-        <isset property="CATALINA_HOME"/>
-        <isset property="CATALINA_BASE"/>
-        <isset property="MAKE_ARGS"/>
-      </and>
-    </not>
-  </condition>
-  <fail if="INIT_FAILED" message="Please configure build.properties file"/>
-  <available file="${TEMPLATE_PROPS}" property="TEMPLATE_PROPS_FOUND" value="yes"/>
-  <fail unless="TEMPLATE_PROPS_FOUND" message="Template properties file not found"/>
-  <tstamp/>
-  <property environment="env"/>
-  <!--property name="DISTR_DIR" value="${BUILD_DIR}/distr"/-->
-  <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
-  <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
-  <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
-  <property name="WEBSRC_DIR" value="${SMSC_DIR}/webapps"/>
-  <property name="JEDIT_DIR" value="${SMSC_DIR}/webapps/jedit"/>
-  <property name="WEBINF_DIR" value="${DISTR_DIR}/webapps/msag/WEB-INF"/>
-  <property name="EXPLODED_DIR" location="${BUILD_DIR}/exploded/msag"/>
-  <property name="xmlcommon_lib" location="${JEDIT_DIR}/lib/xml-commons-resolver.jar"/>
-  <property name="htmlparser_lib" location="${JEDIT_DIR}/lib/htmlparser.jar"/>
-  <property name="SERVICE2HOME_PATH" value="../.."/>
-  <property name="DAEMON2HOME_PATH" value=".."/>
-  
-  <target name="help">
+    <description>
+        MSAG components compilation and installation/update.
+
+Usage: ant SELECTIONS ACTION
+
+where SELECTIONS are the list of selection targets specifying
+which components of MSAG system should be subjected by the following ACTION.
+
+ACTION is one of:
+
+ make      compile the selected components into the build dir;
+ install   make + create a fresh distributive into the distr dir;
+ update    make + create an update into the distr dir;
+
+The possible SELECTIONS are listed below under Main targets.
+    </description>
+    <property file="build.properties"/>
+    <condition property="INIT_FAILED" value="yes" >
+        <not>
+            <and>
+                <isset property="BUILD_DIR"/>
+                <isset property="DISTR_DIR"/>
+                <isset property="SMSC_DIR"/>
+                <isset property="TEMPLATE_PROPS"/>
+                <isset property="CATALINA_HOME"/>
+                <isset property="CATALINA_BASE"/>
+                <isset property="MAKE_ARGS"/>
+            </and>
+        </not>
+    </condition>
+    <fail if="INIT_FAILED" message="Please configure build.properties file"/>
+    <available file="${TEMPLATE_PROPS}" property="TEMPLATE_PROPS_FOUND" value="yes"/>
+    <fail unless="TEMPLATE_PROPS_FOUND" message="Template properties file not found"/>
+    <property file="${TEMPLATE_PROPS}"/>
+    <tstamp/>
+    <property environment="env"/>
+
+<!-- ==================================================================== -->
+<!--                            PROPERTIES                                -->
+<!-- ==================================================================== -->
+    <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
+    <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
+    <property name="WEBSRC_DIR" value="${SMSC_DIR}/webapps"/>
+    <property name="JEDIT_DIR" value="${SMSC_DIR}/webapps/jedit"/>
+    <property name="EXPLODED_DIR" location="${BUILD_DIR}/exploded/msag"/>
+    <property name="WEBINF_DIR" value="webapps/msag/WEB-INF"/>
+    <property name="xmlcommon_lib" location="${JEDIT_DIR}/lib/xml-commons-resolver.jar"/>
+    <property name="htmlparser_lib" location="${JEDIT_DIR}/lib/htmlparser.jar"/>
+    <property name="SERVICE2HOME" value="../.."/>
+    <property name="DAEMON2HOME" value=".."/>
+
+<!-- ==================================================================== -->
+    <target name="help">
+<!-- 
     <echo>
 MSA Gateway &amp; Co  build script
 Targets:
 
     makedeps    Creates dependencies for C++ MSAG sources
-    distr       Builds C++ MSAG, Admin Daemon, WebAdmin sorces. 
+    distr       Builds C++ MSAG, Admin Daemon, WebAdmin sources. 
                 Creates and moves distribute tree into DISTR_DIR.
     rmdistr     Removes distribute tree from DISTR_DIR.
     rmbuild     Removes build directory from BUILD_DIR.
@@ -51,431 +71,264 @@ Targets:
     TODO: The rest of !!!!
     
     </echo>
-  </target>
+-->
+        <!-- ant antfile="./build.xml" target="-projecthelp"/ -->
+        <echo>
+Issue "ant -p" to see available targets.
+        </echo>
+    </target>
 
-  <target name="makedeps">
-    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="deps"/>
-  </target>
+
+    <!-- ======================================================== -->
+    <!--                    SETUP TARGETS                         -->
+    <!-- ======================================================== -->
+    <target name="admin"
+            description="-&gt; admin daemon">
+        <fail if="SETUP_DONE" message="You should specify 'admin' before any actions"/>
+        <property name="SETUP_MAKE_ADMIN" value="admin"/>
+        <property name="SETUP_MAKE_CXX" value="true"/>
+    </target>
+
+    <target name="scag"
+            description="-&gt; old SCAG (v 1.0)">
+        <fail if="SETUP_DONE" message="You should specify 'scag' before any actions"/>
+        <property name="SETUP_MAKE_SCAG" value="scag.bin"/>
+        <property name="SETUP_MAKE_CXX" value="true"/>
+    </target>
+
+    <target name="msag"
+            description="-&gt; MSAG v 2.0 (aka scag2)">
+        <fail if="SETUP_DONE" message="You should specify 'msag' before any actions"/>
+        <property name="SETUP_MAKE_MSAG" value="scag.gen2"/>
+        <property name="SETUP_MAKE_CXX" value="true"/>
+    </target>
+
+    <target name="pers"
+            description="-&gt; old personalization server">
+        <fail if="SETUP_DONE" message="You should specify 'pers' before any actions"/>
+        <property name="SETUP_MAKE_PERS" value="scag.pers"/>
+        <property name="SETUP_MAKE_CXX" value="true"/>
+    </target>
+
+    <target name="pvss"
+            description="-&gt; personalization server (aka mtpers)">
+        <fail if="SETUP_DONE" message="You should specify 'pvss' before any actions"/>
+        <property name="SETUP_MAKE_PVSS" value="scag.pers.mtpers"/>
+        <property name="SETUP_MAKE_CXX" value="true"/>
+    </target>
+
+    <!-- target name="cpers"
+            description="Selection: old central personalization">
+        <fail if="SETUP_DONE" message="You should specify 'cpers' before any actions"/>
+        <property name="SETUP_MAKE_CPERS" value="scag.pers"/>
+    </target -->
+
+    <target name="pvcp"
+            description="-&gt; central personalization (aka cpers)">
+        <fail if="SETUP_DONE" message="You should specify 'pvcp' before any actions"/>
+        <property name="SETUP_MAKE_PVCP" value="scag.pers"/>
+        <property name="SETUP_MAKE_CXX" value="true"/>
+    </target>
+
+    <target name="pvgw"
+            description="-&gt; personalization gateway">
+        <fail if="SETUP_DONE" message="You should specify 'pvgw' before any actions"/>
+        <property name="SETUP_MAKE_PVGW" value="scag.pers.pvgw"/>
+        <fail if="SETUP_MAKE_PVGW" message="Not implemented yet"/>
+        <property name="SETUP_MAKE_CXX" value="true"/>
+    </target>
+
+    <target name="web"
+            description="-&gt; web interface (tomcat+jedit+webapps)">
+        <fail if="SETUP_DONE" message="You should specify 'webapp' before any actions"/>
+        <property name="SETUP_MAKE_WEBAPP" value="true"/>
+        <property name="SETUP_MAKE_JEDIT" value="true"/>
+    </target>
+
+    <!-- target name="jedit"
+            description="Target specification: web iface rule editor">
+        <fail if="SETUP_DONE" message="You should specify 'jedit' before any actions"/>
+    </target -->
+    
+    <target name="-setupdone" unless="SETUP_DONE">
+        <condition property="SETUP_DONE">
+            <or>
+                <isset property="SETUP_MAKE_MSAG"/>
+                <isset property="SETUP_MAKE_SCAG"/>
+                <isset property="SETUP_MAKE_PERS"/>
+                <isset property="SETUP_MAKE_PVSS"/>
+                <isset property="SETUP_MAKE_PVGW"/>
+                <isset property="SETUP_MAKE_PVCP"/>
+                <isset property="SETUP_MAKE_ADMIN"/>
+                <isset property="SETUP_MAKE_WEBAPP"/>
+                <isset property="SETUP_MAKE_JEDIT"/>
+            </or>
+        </condition>
+        <fail unless="SETUP_DONE">
+            You should specify at least one of 
+            'scag', 'msag', 'pers', 'pvss', 'pvgw', 'pvcp', 'admin', 'webapp', 'jedit' before any action
+        </fail>
+        <!-- property name="SETUP_DONE" value="true"/ -->
+        <!-- condition property="SETUP_MAKE_MSAG" value=""><not><isset property="SETUP_MAKE_MSAG"/></not></condition>
+        <condition property="SETUP_MAKE_SCAG" value=""><not><isset property="SETUP_MAKE_SCAG"/></not></condition>
+        <condition property="SETUP_MAKE_PERS" value=""><not><isset property="SETUP_MAKE_PERS"/></not></condition>
+        <condition property="SETUP_MAKE_PVSS" value=""><not><isset property="SETUP_MAKE_PVSS"/></not></condition -->
+        <echo>Setup finished</echo>
+    </target>
+
+    <!-- ======================================================== -->
+    <!--                    BUILD TARGETS                         -->
+    <!-- ======================================================== -->
+
+    <target name="makedeps" if="SETUP_MAKE_CXX">
+        <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="deps"/>
+        <!-- property name="MAKEDEPS_DONE" value="true"/ -->
+    </target>
   
-  <target name="makemod">
-    <ant dir="${SRC_DIR}" target="mod"/>
-  </target>  
+    <target name="-make.scag" depends="makedeps" if="SETUP_MAKE_SCAG">
+        <echo>Building ${SETUP_MAKE_SCAG} ${MAKE_ARGS}</echo>
+        <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
+            <property name="targets" value="${SETUP_MAKE_SCAG}"/>
+        </ant>
+    </target>
 
-  <target name="makegw">
-    <echo message="${MAKE_ARGS}"/>
-    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="scag"/>
-    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
-    <!--copy file="${SMSC_DIR}/src/scag/util/setupnodes.py" todir="${BUILD_DIR}/bin/scag"/>
-    <chmod file="${BUILD_DIR}/bin/scag/setupnodes.py" perm="755"/-->
-  </target>
+    <target name="-make.msag" depends="makedeps" if="SETUP_MAKE_MSAG">
+        <echo>Building ${SETUP_MAKE_MSAG} ${MAKE_ARGS}</echo>
+        <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
+            <property name="targets" value="${SETUP_MAKE_MSAG}"/>
+        </ant>
+    </target>
 
-  <target name="makeweb">
-    <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat5.tar.gz" dest="${DISTR_DIR}/tomcat"/>
-    <chmod perm="775">
-        <fileset dir="${DISTR_DIR}/tomcat/bin" includes="*.sh"/>
-    </chmod>
-    <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="build"/>
-    <copy file="${SMSC_DIR}/config/tomcat/xalan.jar" todir="${DISTR_DIR}/tomcat/common/endorsed"/>  
-  </target>
+    <target name="-make.pers" depends="makedeps" if="SETUP_MAKE_PERS">
+        <echo>Building ${SETUP_MAKE_PERS} ${MAKE_ARGS}</echo>
+        <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
+            <property name="targets" value="${SETUP_MAKE_PERS}"/>
+        </ant>
+    </target>
 
-  <target name="rmdistr">
-    <delete dir="${DISTR_DIR}"/>
-  </target>
+    <target name="-make.pvcp" depends="makedeps" if="SETUP_MAKE_PVCP">
+        <echo>Building ${SETUP_MAKE_PVCP} ${MAKE_ARGS}</echo>
+        <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
+            <property name="targets" value="${SETUP_MAKE_PVCP}"/>
+        </ant>
+    </target>
 
-  <target name="rmbuild">
-    <delete dir="${BUILD_DIR}"/>
-  </target>
+    <target name="-make.pvss" depends="makedeps" if="SETUP_MAKE_PVSS">
+        <echo>Building ${SETUP_MAKE_PVSS}</echo>
+        <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
+            <property name="targets" value="${SETUP_MAKE_PVSS}"/>
+        </ant>
+    </target>
 
-  <target name="create_distr_tree_update" depends="rmdistr" >
-    <mkdir dir="${DISTR_DIR}"/>
-    <mkdir dir="${DISTR_DIR}/conf"/>
-    <mkdir dir="${DISTR_DIR}/lib"/>
-    <mkdir dir="${DISTR_DIR}/bin"/>
-    <mkdir dir="${DISTR_DIR}/daemon"/>
-    <mkdir dir="${DISTR_DIR}/daemon/bin"/>
-    <mkdir dir="${DISTR_DIR}/services"/>
-    <mkdir dir="${DISTR_DIR}/services/scag"/>
-    <mkdir dir="${DISTR_DIR}/services/scag/bin"/>
-    <mkdir dir="${DISTR_DIR}/services/scag2"/>
-    <mkdir dir="${DISTR_DIR}/services/scag2/bin"/>
-    <mkdir dir="${DISTR_DIR}/services/pers"/>
-    <mkdir dir="${DISTR_DIR}/services/pers/bin"/>
-    <mkdir dir="${DISTR_DIR}/services/mtpers"/>
-    <mkdir dir="${DISTR_DIR}/services/mtpers/bin"/>
-    <mkdir dir="${DISTR_DIR}/webapps"/>
-    <mkdir dir="${DISTR_DIR}/tomcat"/>
-    <mkdir dir="${DISTR_DIR}/tomcat/common/lib"/>
-    <mkdir dir="${DISTR_DIR}/tomcat/server/lib"/>
-    <mkdir dir="${DISTR_DIR}/tomcat/shared/lib"/>
-    <mkdir dir="${DISTR_DIR}/tomcat/shared/classes"/>
-  </target>
+    <target name="-make.pvgw" depends="makedeps" if="SETUP_MAKE_PVGW">
+        <echo>Building ${SETUP_MAKE_PVGW}</echo>
+        <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
+            <property name="targets" value="${SETUP_MAKE_PVGW}"/>
+        </ant>
+    </target>
 
-  <target name="create_distr_tree" depends="create_distr_tree_update" >
-    <mkdir dir="${DISTR_DIR}/temp"/>
-    <mkdir dir="${DISTR_DIR}/logs"/>
-    <mkdir dir="${DISTR_DIR}/work"/>
-    <mkdir dir="${DISTR_DIR}/daemon/lib"/>
-    <mkdir dir="${DISTR_DIR}/services/scag/conf"/>
-    <mkdir dir="${DISTR_DIR}/services/scag/conf/rules"/>
-    <mkdir dir="${DISTR_DIR}/services/scag/conf/rules/SMPP"/>
-    <mkdir dir="${DISTR_DIR}/services/scag/conf/rules/HTTP"/>
-    <mkdir dir="${DISTR_DIR}/services/scag/conf/rules/MMS"/>
-    <mkdir dir="${DISTR_DIR}/services/scag2/conf"/>
-    <mkdir dir="${DISTR_DIR}/services/scag2/conf/rules"/>
-    <mkdir dir="${DISTR_DIR}/services/scag2/conf/rules/SMPP"/>
-    <mkdir dir="${DISTR_DIR}/services/scag2/conf/rules/HTTP"/>
-    <mkdir dir="${DISTR_DIR}/services/scag2/conf/rules/MMS"/>
-    <mkdir dir="${DISTR_DIR}/services/pers/conf"/>
-    <mkdir dir="${DISTR_DIR}/services/mtpers/conf"/>
-    <mkdir dir="${DISTR_DIR}/daemon/conf"/>
-    <mkdir dir="${DISTR_DIR}/applet"/>
-           
-    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/scag"/>
-    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/scag"/>
-    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/scag2"/>
-    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/scag2"/>
-    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/pers"/>
-    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/mtpers"/>
-    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/pers"/>
-    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/mtpers"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd"          link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd"         link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd"       link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd"          link="${DISTR_DIR}/services/scag2/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/scag2/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd"         link="${DISTR_DIR}/services/scag2/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd"       link="${DISTR_DIR}/services/scag2/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/scag2/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/pers/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/mtpers/conf"/>
+    <target name="-make.admin" depends="makedeps" if="SETUP_MAKE_ADMIN">
+        <echo>Building ${SETUP_MAKE_ADMIN}</echo>
+        <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
+            <property name="targets" value="${SETUP_MAKE_ADMIN}"/>
+        </ant>
+    </target>
 
-    <symlink resource="${DAEMON2HOME_PATH}/logs" link="${DISTR_DIR}/daemon"/>
-    <symlink resource="${DAEMON2HOME_PATH}/../conf/command.dtd" link="${DISTR_DIR}/daemon/conf"/>
-    <symlink resource="${DAEMON2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
-    <symlink resource="${DAEMON2HOME_PATH}/../conf/response.dtd" link="${DISTR_DIR}/daemon/conf"/>
+    <target name="-make.webapp" depends="-install.tomcat" if="SETUP_MAKE_WEBAPP">
+        <echo>Building web apps</echo>
+        <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="build"/>
+    </target>
 
-    <symlink resource="${WEBINF_DIR}/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
-  </target>
+    <target name="-make.jedit" if="SETUP_MAKE_JEDIT">
+        <echo>Building jedit</echo>
+        <mkdir dir="${BUILD_DIR}/jedit"/>
+        <unjar src="${htmlparser_lib}" dest="${BUILD_DIR}/jedit"/>
+        <javac   srcdir="${JEDIT_DIR}/src"
+                 destdir="${BUILD_DIR}/jedit"
+                 deprecation="on"
+                 includeJavaRuntime="no"
+                 debug="yes" 
+                 encoding="UTF8"
+                 source="1.4"
+                 target="1.4"
+                 classpath="${BUILD_DIR}/jedit">
+            <include name="bsh/**/*.java"/>
+            <include name="com/microstar/xml/*.java"/>
+            <include name="errorlist/*.java"/>
+            <include name="gatchan/highlight/*.java"/>
+            <include name="gnu/regexp/*.java"/>
+            <include name="org/**/*.java"/>
+            <include name="sidekick/*.java"/>
+            <include name="xml/**/*.java"/>
+        </javac>
 
-  <target name="create_update" depends="create_distr_tree_update, makegw, makeweb, copy_to_dist_dir">
-  </target>
+        <jar jarfile="${BUILD_DIR}/jedit/jedit.jar"
+             manifest="${JEDIT_DIR}/src/org/gjt/sp/jedit/jedit.manifest"
+             compress="true">
+            <fileset dir="${BUILD_DIR}/jedit">
+                <include name="bsh/**/*.class"/>
+                <include name="com/**/*.class"/>
+                <include name="errorlist/*.class"/>
+                <include name="gatchan/highlight/*.class"/>
+                <include name="gnu/**/*.class"/>
+                <include name="javax/**/*.class"/>
+                <include name="org/**/*.class"/>
+                <include name="sidekick/*.class"/>
+                <include name="xml/**/*.class"/>
+                <exclude name="com/loomcom/**/*.class"/>
+            </fileset>
 
-  <target name="copy_to_dist_dir">
-    <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
-    <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
-    <!-- copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/ -->
-    <copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/>
-    <chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/>
-    <copy file="${BUILD_BIN}/scag/scag2" todir="${DISTR_DIR}/services/scag2/bin"/>
-    <chmod file="${DISTR_DIR}/services/scag2/bin/scag2" perm="755"/>
-    <copy file="${BUILD_BIN}/scag/setupnodes.py" todir="${DISTR_DIR}/bin"/>
-    <copy file="${BUILD_BIN}/scag/pers" todir="${DISTR_DIR}/services/pers/bin"/>
-    <chmod file="${DISTR_DIR}/services/pers/bin/pers" perm="755"/>
-    <copy file="${BUILD_BIN}/scag/mtpers" todir="${DISTR_DIR}/services/mtpers/bin"/>
-    <chmod file="${DISTR_DIR}/services/mtpers/bin/mtpers" perm="755"/>
+            <fileset dir="${JEDIT_DIR}/src">
+                <include name="bsh/commands/*.bsh"/>
+                <include name="gnu/regexp/MessagesBundle.properties"/>
 
-    <chmod perm="755">
-      <fileset dir="${DISTR_DIR}/lib" includes="*"/>
-    </chmod>
-    <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${SMSC_DIR}/config"
-               includes="command.dtd configuration.dtd response.dtd scag/command_gw.dtd resourcemanager/locale_resources.dtd"/>
-    </copy>
-    <copy todir="${DISTR_DIR}/services/scag/conf" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${SMSC_DIR}/config"
-               includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag/smpp_routes.dtd scag/http_routes.dtd"/>
-    </copy>
-    <copy todir="${DISTR_DIR}/services/scag2/conf" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${SMSC_DIR}/config"
-               includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag2/smpp_routes.dtd scag/http_routes.dtd"/>
-    </copy>
-
-    <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
-    <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
-    <copy file="${BUILD_BIN}/admin/daemon/hs_smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
-    <chmod file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" perm="755"/>
-    <copy file="${BUILD_BIN}/admin/daemon/hsadmin" todir="${DISTR_DIR}/daemon/bin"/>
-    <chmod file="${DISTR_DIR}/daemon/bin/hsadmin" perm="755"/>
-  </target>
-  
-  <target name="clear_build_bin_dir">
-    <delete dir="${BUILD_BIN}"/>
-  </target>
-
-  <!-- target name="updategw" depends="clear_build_bin_dir, makegw, copy_to_dist_dir, copy_rules_files" -->
-  <target name="updategw" depends="makegw, copy_to_dist_dir, copy_rules_files">
-    <property name="FIRST_TARGET_INSTALLED" value="true"/>
-  </target>
-  
-  <target name="updateweb" depends="distjedit, makeweb">
-    <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="update"/>  
-  </target>
-  
-  <target name="update" depends="updategw, updateweb">
-  </target>
-  
-  <target name="copy_rules_files">     
-    <!-- rules files -->
-    <copy todir="${DISTR_DIR}/services/scag/conf/rules/" flatten="yes" >
-      <fileset dir="${TEMPL_DIR}">
-               <include name="scag/rules/*"/>
-      </fileset>
-    </copy>
-    <copy todir="${DISTR_DIR}/services/scag2/conf/rules/" flatten="yes" >
-      <fileset dir="${TEMPL_DIR}">
-               <include name="scag2/rules/*"/>
-      </fileset>
-    </copy>
-    <copy todir="${DISTR_DIR}/services/scag/conf/rules/xsd" flatten="yes" >
-      <fileset dir="${TEMPL_DIR}">
-               <include name="scag/rules/xsd/*"/>
-      </fileset>
-    </copy>
-    <copy todir="${DISTR_DIR}/services/scag2/conf/rules/xsd" flatten="yes" >
-      <fileset dir="${TEMPL_DIR}">
-               <include name="scag2/rules/xsd/*"/>
-      </fileset>
-    </copy>
-    <copy todir="${DISTR_DIR}/services/scag/conf/rules/xsl" flatten="yes" >
-      <fileset dir="${TEMPL_DIR}">
-               <include name="scag/rules/xsl/*"/>
-      </fileset>
-    </copy>
-    <copy todir="${DISTR_DIR}/services/scag2/conf/rules/xsl" flatten="yes" >
-      <fileset dir="${TEMPL_DIR}">
-               <include name="scag2/rules/xsl/*"/>
-      </fileset>
-    </copy>
-  </target>
-
-  <target name="configure" depends="create_distr_tree, copy_rules_files" >
-    <!-- webapps configuration -->
-    <copy todir="${DISTR_DIR}/conf" flatten="yes" >
-      <fileset dir="${TEMPL_DIR}">
-        <include name="scag/tomcat/*"/>
-      </fileset>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy todir="${WEBINF_DIR}/classes/" file="${TEMPL_DIR}/log4j.properties" flatten="yes" >
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy todir="${DISTR_DIR}" flatten="yes">
-      <fileset dir="${TEMPL_DIR}" includes="start_tomcat.sh stop_tomcat.sh"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/tomcat/tomcat_runner.sh" file="${TEMPL_DIR}/tomcat_runner.sh">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/conf/webconfig.xml" file="${TEMPL_DIR}/scag/webapp.xml">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/conf/webconfig.xml" file="${TEMPL_DIR}/scag/webapp.xml">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-
-    <copy tofile="${WEBINF_DIR}/web.xml" file="${TEMPL_DIR}/scag/web.xml">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-
-    <!-- daemon configuration-->
-    <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/daemon.xml">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <symlink resource="../daemon/conf/daemon.xml" link="${DISTR_DIR}/conf/daemon.xml" overwrite="yes"/>
-    <copy todir="${DISTR_DIR}" flatten="yes">
-      <fileset dir="${TEMPL_DIR}" includes="start_daemon.sh stop_daemon.sh"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/daemon/bin/daemon.sh" file="${TEMPL_DIR}/daemon_alt.sh">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-
-    <!-- gateway configuration-->
-    <copy tofile="${DISTR_DIR}/services/scag/logger.properties" file="${TEMPL_DIR}/logger/scag.logger">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/services/scag2/logger.properties" file="${TEMPL_DIR}/logger/scag2.logger">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/services/scag/bin/service" file="${TEMPL_DIR}/service/scag">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/services/scag2/bin/service" file="${TEMPL_DIR}/service/scag2">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <chmod file="${DISTR_DIR}/services/scag/bin/service" perm="755"/>
-    <chmod file="${DISTR_DIR}/services/scag2/bin/service" perm="755"/>
-    <copy todir="${DISTR_DIR}/services/scag/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/scag" includes="config.xml smpp.xml smpp_routes.xml http_routes.xml operators.xml tariffs.xml services.xml"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy todir="${DISTR_DIR}/services/scag2/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/scag2" includes="controller.xml config.xml smpp.xml smpp_routes.xml http_routes.xml operators.xml tariffs.xml services.xml"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-
-    <copy tofile="${DISTR_DIR}/services/pers/logger.properties" file="${TEMPL_DIR}/logger/msag_pers.logger">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/services/mtpers/logger.properties" file="${TEMPL_DIR}/logger/msag_mtpers.logger">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/services/pers/bin/service" file="${TEMPL_DIR}/service/msag_pers">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/services/mtpers/bin/service" file="${TEMPL_DIR}/service/msag_mtpers">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <chmod file="${DISTR_DIR}/services/pers/bin/service" perm="755"/>
-    <chmod file="${DISTR_DIR}/services/mtpers/bin/service" perm="755"/>
-    <copy todir="${DISTR_DIR}/services/pers/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/scag/pers" includes="config.xml"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy todir="${DISTR_DIR}/services/mtpers/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/scag/mtpers" includes="config.xml"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-
-    <copy tofile="${DISTR_DIR}/services/mtpers/logger.properties" file="${TEMPL_DIR}/logger/msag_mtpers.logger">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/services/mtpers/bin/service" file="${TEMPL_DIR}/service/msag_mtpers">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <chmod file="${DISTR_DIR}/services/mtpers/bin/service" perm="755"/>
-    <copy todir="${DISTR_DIR}/services/mtpers/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/scag/mtpers" includes="config.xml"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-
-    <!-- turn scripts be executable -->
-    <chmod perm="755">
-      <fileset dir="${DISTR_DIR}" includes="**/*.sh"/>
-    </chmod>
-    <mkdir dir="${scag.session.location}" description="create sessions dir #1"/>
-    <mkdir dir="${scag2.session.location}" description="create sessions dir #2"/>
-    <mkdir dir="${pers.storage_dir}" description="create personalization storage dir"/>
-    <mkdir dir="${mtpers.storage_dir}" description="create mtpers storage dir"/>
-    <mkdir dir="${stat.dir}" description="create statistics dir"/>
-    <mkdir dir="${stat.traffic_dir}" description="create traffic dir"/>
-  </target>
-
-  <target name="extra_libs" depends="" unless="FIRST_TARGET_INSTALLED">
-    <copy todir="${DISTR_DIR}/lib" flatten="yes" failonerror="yes">
-      <fileset dir="/" includesfile="./extra_libs.list"/>
-    </copy>
-    <copy todir="${DISTR_DIR}/lib" file="extra_lib_links.list" flatten="yes"/>
-    <symlink action="recreate">
-      <fileset dir="${DISTR_DIR}/lib" includes="extra_lib_links.list"/>
-    </symlink>
-    <delete file="${DISTR_DIR}/lib/extra_lib_links.list"/>
-    <chmod perm="755">
-      <fileset dir="${DISTR_DIR}/lib" includes="*"/>
-    </chmod>
-  </target>
-  
-  <target name="compile" >
-    <copy todir="${DISTR_DIR}/applet">
-      <fileset dir="${WEBSRC_DIR}/jedit/dirs" includes="**/*"/>
-    </copy>
-    <mkdir dir="${JEDIT_DIR}/build"/>
-    <unjar src="${htmlparser_lib}" dest="${JEDIT_DIR}/build"/>
-    <javac   srcdir="${JEDIT_DIR}/src"
-             destdir="${JEDIT_DIR}/build"
-             deprecation="on"
-             includeJavaRuntime="no"
-             debug="yes"  encoding="UTF8"
-             source="1.4" target="1.4"
-             classpath="${JEDIT_DIR}/build" 
-	     >
-             <include name="bsh/**/*.java"/>
-             <include name="com/microstar/xml/*.java"/>
-             <include name="errorlist/*.java"/>
-             <include name="gatchan/highlight/*.java"/>
-             <include name="gnu/regexp/*.java"/>
-             <include name="org/**/*.java"/>
-             <include name="sidekick/*.java"/>
-             <include name="xml/**/*.java"/>
-     </javac>
-  </target>
-
-  <target name="distjedit" depends="compile" description="Compile and package jEdit.">
-    <jar
-    jarfile="${JEDIT_DIR}/build/jedit.jar"
-    manifest="${JEDIT_DIR}/src/org/gjt/sp/jedit/jedit.manifest"
-    compress="true">
-        <fileset dir="${JEDIT_DIR}/build">
-            <include name="bsh/**/*.class"/>
-            <include name="com/**/*.class"/>
-            <include name="errorlist/*.class"/>
-            <include name="gatchan/highlight/*.class"/>
-            <include name="gnu/**/*.class"/>
-            <include name="javax/**/*.class"/>
-	    <include name="org/**/*.class"/>
-            <include name="sidekick/*.class"/>
-            <include name="xml/**/*.class"/>
-            <exclude name="com/loomcom/**/*.class"/>
-        </fileset>
-
-        <fileset dir="${JEDIT_DIR}/src">
-            <include name="bsh/commands/*.bsh"/>
-            <include name="gnu/regexp/MessagesBundle.properties"/>
-
-            <include name="errorlist/actions.xml"/>
-            <include name="errorlist/*.props"/>
-            <include name="errorlist/dockables.xml"/>
-            <include name="errorlist/*.png"/>
+                <include name="errorlist/actions.xml"/>
+                <include name="errorlist/*.props"/>
+                <include name="errorlist/dockables.xml"/>
+                <include name="errorlist/*.png"/>
 																																																																														
-            <include name="gatchan/highlight/actions.xml"/>
-            <include name="gatchan/highlight/*.props"/>
-            <include name="gatchan/highlight/dockables.xml"/>
+                <include name="gatchan/highlight/actions.xml"/>
+                <include name="gatchan/highlight/*.props"/>
+                <include name="gatchan/highlight/dockables.xml"/>
 
-            <include name="org/apache/xerces/impl/msg/*.properties"/>
-            <include name="org/apache/xerces/impl/xpath/regex/*.properties"/>
-            <include name="org/apache/xerces/jaxp/*.SAXParserFactory"/>
-            <include name="org/apache/xerces/jaxp/*.DocumentBuilderFactory"/>
-            <include name="org/apache/xerces/parsers/*.driver"/>
-            <include name="org/apache/xml/serialize/*.res"/>
+                <include name="org/apache/xerces/impl/msg/*.properties"/>
+                <include name="org/apache/xerces/impl/xpath/regex/*.properties"/>
+                <include name="org/apache/xerces/jaxp/*.SAXParserFactory"/>
+                <include name="org/apache/xerces/jaxp/*.DocumentBuilderFactory"/>
+                <include name="org/apache/xerces/parsers/*.driver"/>
+                <include name="org/apache/xml/serialize/*.res"/>
 
+                <include name="org/gjt/sp/jedit/**/*.dtd"/>
+                <include name="org/gjt/sp/jedit/icons/*.gif"/>
+                <include name="org/gjt/sp/jedit/icons/*.jpg"/>
+                <include name="org/gjt/sp/jedit/icons/*.png"/>
+                <include name="org/gjt/sp/jedit/*.props"/>
+                <include name="org/gjt/sp/jedit/actions.xml"/>
+                <include name="org/gjt/sp/jedit/browser.actions.xml"/>
+                <include name="org/gjt/sp/jedit/dockables.xml"/>
+                <include name="org/gjt/sp/jedit/services.xml"/>
 
-            <include name="org/gjt/sp/jedit/**/*.dtd"/>
-            <include name="org/gjt/sp/jedit/icons/*.gif"/>
-            <include name="org/gjt/sp/jedit/icons/*.jpg"/>
-            <include name="org/gjt/sp/jedit/icons/*.png"/>
-            <include name="org/gjt/sp/jedit/*.props"/>
-            <include name="org/gjt/sp/jedit/actions.xml"/>
-            <include name="org/gjt/sp/jedit/browser.actions.xml"/>
-            <include name="org/gjt/sp/jedit/dockables.xml"/>
-            <include name="org/gjt/sp/jedit/services.xml"/>
+                <include name="org/gjt/sp/jedit/default.abbrevs"/>
 
-            <include name="org/gjt/sp/jedit/default.abbrevs"/>
+                <include name="sidekick/actions.xml"/>
+                <include name="sidekick/*.props"/>
+                <include name="sidekick/dockables.xml"/>
+                <include name="sidekick/services.xml"/>
 
-            <include name="sidekick/actions.xml"/>
-            <include name="sidekick/*.props"/>
-            <include name="sidekick/dockables.xml"/>
-            <include name="sidekick/services.xml"/>
+                <include name="xml/actions.xml"/>
+                <include name="xml/*.props"/>
+                <include name="xml/dockables.xml"/>
+                <include name="xml/services.xml"/>
+                <include name="xml/*.png"/>
+                <include name="xml/completion/*.xml"/>
+                <include name="xml/dtds/*"/>
+                <include name="xml/dtds/**/*.*"/>
+                <include name="xml/ent/*.ent"/>
+                <include name="xml/jedit/*.dtd"/>
+            </fileset>
+        </jar>
 
-            <include name="xml/actions.xml"/>
-            <include name="xml/*.props"/>
-            <include name="xml/dockables.xml"/>
-            <include name="xml/services.xml"/>
-            <include name="xml/*.png"/>
-            <include name="xml/completion/*.xml"/>
-            <include name="xml/dtds/*"/>
-            <include name="xml/dtds/**/*.*"/>
-	    <include name="xml/ent/*.ent"/>
-            <include name="xml/jedit/*.dtd"/>
-
-        </fileset>
-    </jar>
-
-    <!--delete file="${JEDIT_DIR}/src/.keystore"/>
+        <!--delete file="${JEDIT_DIR}/src/.keystore"/>
     <genkey alias="msag" storepass="password" keystore="${JEDIT_DIR}/src/.keystore">
      <dname>
       <param name="CN" value="somebody"/>
@@ -485,357 +338,454 @@ Targets:
      </dname>
     </genkey-->
 
-    <signjar jar="${JEDIT_DIR}/build/jedit.jar" alias="msag" storepass="password" keystore="${JEDIT_DIR}/src/.keystore"/>
-  </target>
-																																																																																																		
-  <target name="applet" depends="distjedit">
-	 <copy todir="${DISTR_DIR}/webapps/scag/rules/rules" preservelastmodified="yes">
-               <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
+        <signjar jar="${BUILD_DIR}/jedit/jedit.jar" alias="msag" storepass="password" keystore="${JEDIT_DIR}/src/.keystore"/>
+    </target>
+
+    <target name="make" 
+            depends="-setupdone, -make.scag, -make.msag, -make.pers, -make.pvss, -make.pvgw, -make.pvcp, -make.admin, -make.webapp, -make.jedit"
+            unless="MAKE_DONE">
+        <!-- description="Action: Compile previously selected targets" -->
+        <!-- antcall target="makedeps"/ -->
+        <echo>Compilation finished</echo>
+        <property name="MAKE_DONE" value="true"/>
+    </target>
+
+    <target name="makemod">
+        <ant dir="${SRC_DIR}" target="mod"/>
+    </target>  
+
+    <!-- ======================================================== -->
+    <!--                 UPDATE TARGETS                           -->
+    <!-- ======================================================== -->
+
+    <target name="-update.tree" unless="INSTALL_CLEAN">
+        <echo>Cleanup the distribution</echo>
+        <exec executable="rm">
+            <arg value="-r"/>
+            <arg file="${DISTR_DIR}"/>
+        </exec>
+        <echo>Filling it up</echo>
+        <mkdir dir="${DISTR_DIR}"/>
+        <mkdir dir="${DISTR_DIR}/conf"/>
+        <property name="INSTALL_CLEAN" value="true"/>
+    </target>
+
+    <target name="-update.libs" depends="-update.tree, make" if="SETUP_MAKE_CXX">
+        <!-- mkdir dir="${DISTR_DIR}/bin"/>
+        <copy file="${BUILD_DIR}/bin/scag/setupnodes.py" todir="${DISTR_DIR}/bin"/>
+        <chmod file="${DISTR_DIR}/bin/setupnodes.py" perm="755"/ -->
+        <mkdir dir="${DISTR_DIR}/lib"/>
+        <mkdir dir="${DISTR_DIR}/services"/>
+        <copy file="${BUILD_DIR}/bin/liblogger.so" todir="${DISTR_DIR}/lib"/>
+        <copy file="${BUILD_DIR}/bin/db/exceptions/libdb_exc.so"
+              todir="${DISTR_DIR}/lib"
+              failonerror="false"/>
+        <chmod perm="755">
+            <fileset dir="${DISTR_DIR}/lib" includes="*.so*"/>
+        </chmod>
+        <copy todir="${DISTR_DIR}/conf"
+              preservelastmodified="yes"
+              flatten="yes">
+            <fileset dir="${SMSC_DIR}/config"
+                     includes="command.dtd configuration.dtd response.dtd scag/command_gw.dtd resourcemanager/locale_resources.dtd"/>
         </copy>
-         <copy todir="${WEBSRC_DIR}/scag/rules/rules" preservelastmodified="yes">
-	        <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
+        <!-- property name="UPDATE_LIBS" value="true"/ -->
+    </target>
+
+    <target name="-update.scag" depends="-update.libs" if="SETUP_MAKE_SCAG">
+        <mkdir dir="${DISTR_DIR}/services/scag"/>
+        <mkdir dir="${DISTR_DIR}/services/scag/bin"/>
+        <mkdir dir="${DISTR_DIR}/services/scag/conf"/>
+        <copy file="${BUILD_DIR}/bin/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/>
+        <chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/>
+        <copy todir="${DISTR_DIR}/services/scag/conf"
+              preservelastmodified="yes"
+              flatten="yes" >
+            <fileset dir="${SMSC_DIR}/config"
+                     includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag/smpp_routes.dtd scag/http_routes.dtd"/>
         </copy>
-  </target>
-		       
-  <target name="create_distr" depends="create_distr_tree, create_update, distjedit">
-    <!-- Additionaly on distr build perform:
-	 1) copy liblogger.so to daemon/lib 
-	 2) copy smsc_ssdaemon to smsc_ssdaemon.cur
-	 3) copy hs_smsc_ssdaemon to hs_smsc_ssdaemon.cur
-	 4) copy hsadmin to hsadmin.cur
-	 5) create & copy update_daemon.sh script
-	 6) create symlink ${daemon.link.name} to ${daemon.bin.name}.cur
-	 7) create symlink ${daemon.hsadmin.link.name} to hsadmin.cur -->
-    <copy file="${DISTR_DIR}/lib/liblogger.so" todir="${DISTR_DIR}/daemon/lib"/>
-    <copy file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" tofile="${DISTR_DIR}/daemon/bin/smsc_ssdaemon.cur"/>
-    <copy file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" tofile="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon.cur"/>
-    <copy file="${DISTR_DIR}/daemon/bin/hsadmin" tofile="${DISTR_DIR}/daemon/bin/hsadmin.cur"/>
-    <copy file="${TEMPL_DIR}/update_daemon.sh" tofile="${DISTR_DIR}/daemon/update_daemon.sh" >
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <chmod perm="755">
-      <fileset dir="${DISTR_DIR}/daemon"     includes="update_daemon.sh"/>
-      <fileset dir="${DISTR_DIR}/daemon/lib" includes="liblogger.so"/>
-      <fileset dir="${DISTR_DIR}/daemon/bin" includes="hsadmin.cur"/>
-      <fileset dir="${DISTR_DIR}/daemon/bin" includes="smsc_ssdaemon"/>
-      <fileset dir="${DISTR_DIR}/daemon/bin" includes="smsc_ssdaemon.cur"/>
-      <fileset dir="${DISTR_DIR}/daemon/bin" includes="hs_smsc_ssdaemon"/>
-      <fileset dir="${DISTR_DIR}/daemon/bin" includes="hs_smsc_ssdaemon.cur"/>
-    </chmod>
-    <symlink resource="./${daemon.bin.name}.cur" link="${DISTR_DIR}/daemon/bin/${daemon.link.name}"/>
-    <symlink resource="./hsadmin.cur" link="${DISTR_DIR}/daemon/bin/${daemon.hsadmin.link.name}"/>
-  </target>
+        <copy todir="${DISTR_DIR}/services/scag/conf/rules/" 
+              preservelastmodified="yes"
+              flatten="yes" >
+            <fileset dir="${TEMPL_DIR}">
+                <include name="scag/rules/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${DISTR_DIR}/services/scag/conf/rules/xsd"
+              preservelastmodified="yes"
+              flatten="yes">
+            <fileset dir="${TEMPL_DIR}">
+                <include name="scag/rules/xsd/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${DISTR_DIR}/services/scag/conf/rules/xsl"
+              preservelastmodified="yes"
+              flatten="yes">
+            <fileset dir="${TEMPL_DIR}">
+                <include name="scag/rules/xsl/*"/>
+            </fileset>
+        </copy>
+    </target>
 
-  <target name="distr" depends="create_distr, extra_libs, configure">
-    <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="install"/>
-    <property name="FIRST_TARGET_INSTALLED" value="true"/>
-    <property name="MSAG_INSTALLED" value="true"/>
-  </target>
+    <target name="-update.msag" depends="-update.libs" if="SETUP_MAKE_MSAG">
+        <mkdir dir="${DISTR_DIR}/services/msag"/>
+        <mkdir dir="${DISTR_DIR}/services/msag/bin"/>
+        <mkdir dir="${DISTR_DIR}/services/msag/conf"/>
+        <copy file="${BUILD_DIR}/bin/scag/msag" todir="${DISTR_DIR}/services/msag/bin"/>
+        <chmod file="${DISTR_DIR}/services/msag/bin/msag" perm="755"/>
+        <copy todir="${DISTR_DIR}/services/msag/conf"
+              preservelastmodified="yes"
+              flatten="yes">
+            <fileset dir="${SMSC_DIR}/config"
+                     includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag2/smpp_routes.dtd scag/http_routes.dtd"/>
+        </copy>
+        <copy todir="${DISTR_DIR}/services/msag/conf/rules/"
+              preservelastmodified="yes"
+              flatten="yes">
+            <fileset dir="${TEMPL_DIR}">
+                <include name="scag2/rules/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${DISTR_DIR}/services/msag/conf/rules/xsd"
+              preservelastmodified="yes"
+              flatten="yes">
+            <fileset dir="${TEMPL_DIR}">
+                <include name="scag2/rules/xsd/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${DISTR_DIR}/services/msag/conf/rules/xsl"
+              preservelastmodified="yes"
+              flatten="yes">
+            <fileset dir="${TEMPL_DIR}">
+                <include name="scag2/rules/xsl/*"/>
+            </fileset>
+        </copy>
+    </target>
 
-<!--Personalization-->
+    <target name="-update.pers" depends="-update.libs" if="SETUP_MAKE_PERS">
+        <mkdir dir="${DISTR_DIR}/services/pers"/>
+        <mkdir dir="${DISTR_DIR}/services/pers/bin"/>
+        <mkdir dir="${DISTR_DIR}/services/pers/conf"/>
+        <copy file="${BUILD_DIR}/bin/scag/pers" todir="${DISTR_DIR}/services/pers/bin"/>
+        <chmod file="${DISTR_DIR}/services/pers/bin/pers" perm="755"/>
+    </target>
 
-  <target name="rmdistr_pers" unless="FIRST_TARGET_INSTALLED">
-    <delete dir="${DISTR_DIR}"/>
-  </target>
+    <target name="-update.pvcp" depends="-update.libs" if="SETUP_MAKE_PVCP">
+        <mkdir dir="${DISTR_DIR}/services/pvcp"/>
+        <mkdir dir="${DISTR_DIR}/services/pvcp/bin"/>
+        <mkdir dir="${DISTR_DIR}/services/pvcp/conf"/>
+        <copy file="${BUILD_DIR}/bin/scag/pvcp" todir="${DISTR_DIR}/services/pvcp/bin"/>
+        <chmod file="${DISTR_DIR}/services/pvcp/bin/pvcp" perm="755"/>
+    </target>
 
-  <target name="create_distr_tree_pers_common" depends="rmdistr_pers" unless="FIRST_TARGET_INSTALLED">
-    <mkdir dir="${DISTR_DIR}"/>
-    <mkdir dir="${DISTR_DIR}/conf"/>
-    <mkdir dir="${DISTR_DIR}/lib"/>
-    <mkdir dir="${DISTR_DIR}/logs"/>
-    <mkdir dir="${DISTR_DIR}/daemon"/>
-    <mkdir dir="${DISTR_DIR}/daemon/bin"/>
-    <mkdir dir="${DISTR_DIR}/daemon/lib"/>
-    <mkdir dir="${DISTR_DIR}/daemon/conf"/>
-    <mkdir dir="${DISTR_DIR}/services"/>
-    <symlink resource="${DAEMON2HOME_PATH}/logs" link="${DISTR_DIR}/daemon"/>
-    <symlink resource="${DAEMON2HOME_PATH}/../conf/command.dtd" link="${DISTR_DIR}/daemon/conf"/>
-    <symlink resource="${DAEMON2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
-    <symlink resource="${DAEMON2HOME_PATH}/../conf/response.dtd" link="${DISTR_DIR}/daemon/conf"/>
-  </target>
+    <target name="-update.pvss" depends="-update.libs" if="SETUP_MAKE_PVSS">
+        <mkdir dir="${DISTR_DIR}/services/pvss"/>
+        <mkdir dir="${DISTR_DIR}/services/pvss/bin"/>
+        <mkdir dir="${DISTR_DIR}/services/pvss/conf"/>
+        <copy file="${BUILD_DIR}/bin/scag/pvss" todir="${DISTR_DIR}/services/pvss/bin"/>
+        <chmod file="${DISTR_DIR}/services/pvss/bin/pvss" perm="755"/>
+    </target>
 
-  <target name="create_distr_tree_pers" depends="create_distr_tree_pers_common" >
-    <mkdir dir="${DISTR_DIR}/services/pers"/>
-    <mkdir dir="${DISTR_DIR}/services/pers/bin"/>
-    <mkdir dir="${DISTR_DIR}/services/pers/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/pers"/>
-    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/pers"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/pers/conf"/>
-  </target>
+    <target name="-update.pvgw" depends="-update.libs" if="SETUP_MAKE_PVGW">
+        <mkdir dir="${DISTR_DIR}/services/pvgw"/>
+        <mkdir dir="${DISTR_DIR}/services/pvgw/bin"/>
+        <mkdir dir="${DISTR_DIR}/services/pvgw/conf"/>
+        <copy file="${BUILD_DIR}/bin/scag/pvgw" todir="${DISTR_DIR}/services/pvgw/bin"/>
+        <chmod file="${DISTR_DIR}/services/pvgw/bin/pvgw" perm="755"/>
+    </target>
 
-  <target name="create_distr_tree_cpers" depends="create_distr_tree_pers_common" >
-    <mkdir dir="${DISTR_DIR}/services/cpers"/>
-    <mkdir dir="${DISTR_DIR}/services/cpers/bin"/>
-    <mkdir dir="${DISTR_DIR}/services/cpers/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/cpers"/>
-    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/cpers"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/cpers/conf"/>
-  </target>
+    <target name="-update.admin" depends="-update.libs" if="SETUP_MAKE_ADMIN">
+        <mkdir dir="${DISTR_DIR}/daemon"/>
+        <mkdir dir="${DISTR_DIR}/daemon/bin"/>
+        <mkdir dir="${DISTR_DIR}/daemon/conf"/>
+        <copy file="${BUILD_DIR}/bin/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
+        <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
+        <copy file="${BUILD_DIR}/bin/admin/daemon/hs_smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
+        <chmod file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" perm="755"/>
+        <copy file="${BUILD_DIR}/bin/admin/daemon/hsadmin" todir="${DISTR_DIR}/daemon/bin"/>
+        <chmod file="${DISTR_DIR}/daemon/bin/hsadmin" perm="755"/>
+    </target>
 
-  <target name="create_distr_tree_mtpers" depends="create_distr_tree_pers_common" >
-    <mkdir dir="${DISTR_DIR}/services/mtpers"/>
-    <mkdir dir="${DISTR_DIR}/services/mtpers/bin"/>
-    <mkdir dir="${DISTR_DIR}/services/mtpers/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/mtpers"/>
-    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/mtpers"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/mtpers/conf"/>
-  </target>
+    <target name="-update.webapp" depends="-install.tomcat" if="SETUP_MAKE_WEBAPP">
+        <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="update"/>
+    </target>
 
-  <target name="configure_pers_common" unless="FIRST_TARGET_INSTALLED">
-    <!-- daemon configuration-->
-    <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <symlink resource="../daemon/conf/daemon.xml" link="${DISTR_DIR}/conf/daemon.xml" overwrite="yes"/>
-    <copy todir="${DISTR_DIR}" flatten="yes">
-      <fileset dir="${TEMPL_DIR}" includes="start_daemon.sh stop_daemon.sh"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/daemon/bin/daemon.sh" file="${TEMPL_DIR}/daemon_alt.sh">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <!-- turn scripts be executable -->
-    <chmod perm="755">
-      <fileset dir="${DISTR_DIR}" includes="**/*.sh"/>
-    </chmod>
-  </target>
-  
-  <target name="copy_pers_cpers_daemon" depends="" if="CPERS_INSTALLED">
-    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/pers/daemon_cpers.xml" overwrite="yes">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-  </target>
+    <target name="-update.jedit" if="SETUP_MAKE_JEDIT">
+        <mkdir dir="${DISTR_DIR}/applet"/>
+        <mkdir dir="${DISTR_DIR}/webapps"/>
+        <copy todir="${DISTR_DIR}/applet">
+            <fileset dir="${WEBSRC_DIR}/jedit/dirs" includes="**/*"/>
+        </copy>
+        <copy todir="${DISTR_DIR}/webapps/scag/rules/rules" preservelastmodified="yes">
+            <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
+        </copy>
+    </target>
 
-  <target name="copy_pers_daemon" depends="copy_pers_cpers_daemon" unless="FIRST_TARGET_INSTALLED">
-    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/pers/daemon_pers.xml">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-  </target>
+    <target name="update"
+            depends="make, -update.scag, -update.msag, -update.pers, -update.pvss, -update.pvgw, -update.pvcp, -update.admin, -update.webapp, -update.jedit">
+        <!-- description="Action: update previously selected targets" -->
+    </target>
 
-  <target name="copy_cpers_pers_daemon" depends="" if="PERS_INSTALLED">
-    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/cpers/daemon_pers.xml" overwrite="yes">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-  </target>
+    <!-- ======================================================== -->
+    <!--                 INSTALL TARGETS                          -->
+    <!-- ======================================================== -->
 
-  <target name="copy_msag_cpers_pers_daemon" depends="" if="MSAG_INSTALLED">
-    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/cpers/daemon.xml" overwrite="yes">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-  </target>
+    <target name="-install.tree" depends="-update.tree" unless="INSTALL_TREE">
+        <mkdir dir="${DISTR_DIR}/logs"/>
+        <mkdir dir="${DISTR_DIR}/temp"/>
+        <mkdir dir="${DISTR_DIR}/work"/>
+        <property name="INSTALL_TREE" value="true"/>
+    </target>
 
-  <target name="copy_cpers_daemon" depends="copy_cpers_pers_daemon, copy_msag_cpers_pers_daemon" unless="FIRST_TARGET_INSTALLED">
-    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/cpers/daemon_cpers.xml">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-  </target>
+    <target name="-install.tomcat" depends="-update.tree" if="SETUP_MAKE_WEBAPP">
+        <!-- install tomcat sources into distribution dir -->
+        <!-- it is ugly, because it is required for -make.webapp -->
+        <mkdir dir="${DISTR_DIR}/tomcat"/>
+        <mkdir dir="${DISTR_DIR}/tomcat/common/lib"/>
+        <mkdir dir="${DISTR_DIR}/tomcat/server/lib"/>
+        <mkdir dir="${DISTR_DIR}/tomcat/shared/lib"/>
+        <mkdir dir="${DISTR_DIR}/tomcat/shared/classes"/>
+        <untar compression="gzip"
+               src="${SMSC_DIR}/config/tomcat/tomcat5.tar.gz"
+               dest="${DISTR_DIR}/tomcat"/>
+        <chmod perm="775">
+            <fileset dir="${DISTR_DIR}/tomcat/bin" includes="*.sh"/>
+        </chmod>
+        <copy file="${SMSC_DIR}/config/tomcat/xalan.jar"
+              todir="${DISTR_DIR}/tomcat/common/endorsed"/>
+        <property name="INSTALL_TOMCAT" value="true"/>
+    </target>
 
-  <target name="copy_mtpers_pers_daemon" depends="" if="PERS_INSTALLED">
-    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/mtpers/daemon_pers.xml" overwrite="yes">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-  </target>
+    <target name="-install.extralibs" depends="-update.libs" unless="INSTALL_EXTRALIBS">
+        <copy todir="${DISTR_DIR}/lib" flatten="yes" failonerror="yes">
+            <fileset dir="/" includesfile="./extra_libs.list"/>
+        </copy>
+        <copy todir="${DISTR_DIR}/lib" file="extra_lib_links.list" flatten="yes"/>
+        <symlink action="recreate">
+            <fileset dir="${DISTR_DIR}/lib" includes="extra_lib_links.list"/>
+        </symlink>
+        <delete file="${DISTR_DIR}/lib/extra_lib_links.list"/>
+        <chmod perm="755">
+            <fileset dir="${DISTR_DIR}/lib" includes="*.so*"/>
+        </chmod>
+        <property name="INSTALL_EXTRALIBS" value="true"/>
+    </target>
 
-  <target name="copy_msag_mtpers_pers_daemon" depends="" if="MSAG_INSTALLED">
-    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/mtpers/daemon.xml" overwrite="yes">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-  </target>
+    <target name="-install.scag" depends="-update.scag" if="SETUP_MAKE_SCAG">
+        <mkdir dir="${DISTR_DIR}/services/scag/conf/rules"/>
+        <mkdir dir="${DISTR_DIR}/services/scag/conf/rules/HTTP"/>
+        <mkdir dir="${DISTR_DIR}/services/scag/conf/rules/MMS"/>
+        <mkdir dir="${DISTR_DIR}/services/scag/conf/rules/SMPP"/>
+        <symlink resource="${SERVICE2HOME}" link="${DISTR_DIR}/services/scag/.base"/>
+        <symlink resource=".base/logs" link="${DISTR_DIR}/services/scag"/>
+        <symlink resource=".base/lib" link="${DISTR_DIR}/services/scag"/>
+        <symlink resource="../.base/conf/command.dtd"          link="${DISTR_DIR}/services/scag/conf"/>
+        <symlink resource="../.base/conf/configuration.dtd"    link="${DISTR_DIR}/services/scag/conf"/>
+        <symlink resource="../.base/conf/response.dtd"         link="${DISTR_DIR}/services/scag/conf"/>
+        <symlink resource="../.base/conf/command_gw.dtd"       link="${DISTR_DIR}/services/scag/conf"/>
+        <symlink resource="../.base/conf/locale_resources.dtd" link="${DISTR_DIR}/services/scag/conf"/>
+        <copy tofile="${DISTR_DIR}/services/scag/logger.properties"
+              file="${TEMPL_DIR}/logger/scag.logger">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <copy tofile="${DISTR_DIR}/services/scag/bin/service" file="${TEMPL_DIR}/service/scag">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <chmod file="${DISTR_DIR}/services/scag/bin/service" perm="755"/>
+        <copy todir="${DISTR_DIR}/services/scag/conf"
+              flatten="yes">
+            <fileset dir="${TEMPL_DIR}/scag" includes="config.xml smpp.xml smpp_routes.xml http_routes.xml operators.xml tariffs.xml services.xml"/>
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <mkdir dir="${scag.session.location}" description="create sessions dir #1"/>
+        <mkdir dir="${stat.dir}" description="create statistics dir"/>
+        <mkdir dir="${stat.traffic_dir}" description="create traffic dir"/>
+    </target>
 
-  <target name="copy_mtpers_daemon" depends="copy_mtpers_pers_daemon, copy_msag_mtpers_pers_daemon" unless="FIRST_TARGET_INSTALLED">
-    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/mtpers/daemon_mtpers.xml">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-  </target>
+    <target name="-install.msag" depends="-update.msag" if="SETUP_MAKE_MSAG">
+        <echo>Making a backward-compatibility link scag2</echo>
+        <symlink resource="msag" link="${DISTR_DIR}/services/scag2"/>
+        <mkdir dir="${DISTR_DIR}/services/msag/conf/rules"/>
+        <mkdir dir="${DISTR_DIR}/services/msag/conf/rules/HTTP"/>
+        <mkdir dir="${DISTR_DIR}/services/msag/conf/rules/MMS"/>
+        <mkdir dir="${DISTR_DIR}/services/msag/conf/rules/SMPP"/>
+        <symlink resource="${SERVICE2HOME}" link="${DISTR_DIR}/services/msag/.base"/>
+        <symlink resource=".base/logs" link="${DISTR_DIR}/services/msag"/>
+        <symlink resource=".base/lib" link="${DISTR_DIR}/services/msag"/>
+        <symlink resource="../.base/conf/command.dtd"          link="${DISTR_DIR}/services/msag/conf"/>
+        <symlink resource="../.base/conf/configuration.dtd"    link="${DISTR_DIR}/services/msag/conf"/>
+        <symlink resource="../.base/conf/response.dtd"         link="${DISTR_DIR}/services/msag/conf"/>
+        <symlink resource="../.base/conf/command_gw.dtd"       link="${DISTR_DIR}/services/msag/conf"/>
+        <symlink resource="../.base/conf/locale_resources.dtd" link="${DISTR_DIR}/services/msag/conf"/>
+        <copy tofile="${DISTR_DIR}/services/msag/logger.properties" file="${TEMPL_DIR}/logger/scag2.logger">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <copy tofile="${DISTR_DIR}/services/msag/bin/service" file="${TEMPL_DIR}/service/scag2">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <chmod file="${DISTR_DIR}/services/msag/bin/service" perm="755"/>
+        <copy todir="${DISTR_DIR}/services/msag/conf"
+              flatten="yes">
+            <fileset dir="${TEMPL_DIR}/scag2" includes="controller.xml config.xml smpp.xml smpp_routes.xml http_routes.xml operators.xml tariffs.xml services.xml"/>
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <mkdir dir="${scag2.session.location}" description="create sessions dir #1"/>
+        <mkdir dir="${stat.dir}" description="create statistics dir"/>
+        <mkdir dir="${stat.traffic_dir}" description="create traffic dir"/>
+    </target>
 
-  <target name="configure_pers" depends="copy_to_dist_dir_pers, configure_pers_common, copy_pers_daemon">
-    <!--pers-->
-    <copy tofile="${DISTR_DIR}/services/pers/logger.properties" file="${TEMPL_DIR}/logger/msag_pers.logger">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/services/pers/bin/service" file="${TEMPL_DIR}/service/msag_pers">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <chmod file="${DISTR_DIR}/services/pers/bin/service" perm="755"/>
-    <copy todir="${DISTR_DIR}/services/pers/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/scag/pers" includes="config.xml"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <mkdir dir="${pers.storage_dir}" description="create pers storage dir"/>
-  </target>
+    <target name="-install.pers" depends="-update.pers" if="SETUP_MAKE_PERS">
+        <symlink resource="${SERVICE2HOME}" link="${DISTR_DIR}/services/pers/.base"/>
+        <symlink resource=".base/logs" link="${DISTR_DIR}/services/pers"/>
+        <symlink resource=".base/lib" link="${DISTR_DIR}/services/pers"/>
+        <symlink resource="../.base/conf/configuration.dtd"    link="${DISTR_DIR}/services/pers/conf"/>
+        <copy tofile="${DISTR_DIR}/services/pers/logger.properties" file="${TEMPL_DIR}/logger/msag_pers.logger">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <copy tofile="${DISTR_DIR}/services/pers/bin/service" file="${TEMPL_DIR}/service/msag_pers">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <chmod file="${DISTR_DIR}/services/pers/bin/service" perm="755"/>
+        <copy todir="${DISTR_DIR}/services/pers/conf"
+              flatten="yes">
+            <fileset dir="${TEMPL_DIR}/scag/pers" includes="config.xml"/>
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <mkdir dir="${pers.storage_dir}" description="create personalization storage dir"/>
+    </target>
 
-  <target name="configure_cpers" depends="copy_to_dist_dir_cpers, configure_pers_common, copy_cpers_daemon">
-    <!--cpers-->
-    <copy tofile="${DISTR_DIR}/services/cpers/logger.properties" file="${TEMPL_DIR}/logger/msag_cpers.logger">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/services/cpers/bin/service" file="${TEMPL_DIR}/service/msag_cpers">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <chmod file="${DISTR_DIR}/services/cpers/bin/service" perm="755"/>
-    <copy todir="${DISTR_DIR}/services/cpers/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/scag/cpers" includes="config.xml"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <mkdir dir="${cpers.storage_dir}" description="create cpers storage dir"/>
-  </target>
+    <target name="-install.pvcp" depends="-update.pvcp" if="SETUP_MAKE_PVCP">
+        <echo>Making a backward-compatibility link cpers</echo>
+        <symlink resource="pvcp" link="${DISTR_DIR}/services/cpers"/>
+        <symlink resource="${SERVICE2HOME}" link="${DISTR_DIR}/services/pvcp/.base"/>
+        <symlink resource=".base/logs" link="${DISTR_DIR}/services/pvcp"/>
+        <symlink resource=".base/lib" link="${DISTR_DIR}/services/pvcp"/>
+        <symlink resource="../.base/conf/configuration.dtd"    link="${DISTR_DIR}/services/pvcp/conf"/>
+        <copy tofile="${DISTR_DIR}/services/pvcp/logger.properties" file="${TEMPL_DIR}/logger/msag_cpers.logger">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <copy tofile="${DISTR_DIR}/services/pvcp/bin/service" file="${TEMPL_DIR}/service/msag_cpers">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <chmod file="${DISTR_DIR}/services/pvcp/bin/service" perm="755"/>
+        <copy todir="${DISTR_DIR}/services/pvcp/conf"
+              flatten="yes">
+            <fileset dir="${TEMPL_DIR}/scag/cpers" includes="config.xml region.xml"/>
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <mkdir dir="${cpers.storage_dir}" description="create pvcp storage dir"/>
+        <!-- extra configs -->
+        <copy file="${SMSC_DIR}/config/scag/region.dtd" todir="${DISTR_DIR}/conf"/>
+        <symlink resource="../.base/conf/region.dtd"    link="${DISTR_DIR}/services/pvcp/conf"/>
+    </target>
 
-  <!--target name="configure_mtpers" depends="copy_to_dist_dir_mtpers, configure_pers_common"-->
-  <target name="configure_mtpers" depends="copy_to_dist_dir_mtpers, configure_pers_common, copy_mtpers_daemon">
-    <!--mtpers-->
-    <copy tofile="${DISTR_DIR}/services/mtpers/logger.properties" file="${TEMPL_DIR}/logger/msag_mtpers.logger">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <copy tofile="${DISTR_DIR}/services/mtpers/bin/service" file="${TEMPL_DIR}/service/msag_mtpers">
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <chmod file="${DISTR_DIR}/services/mtpers/bin/service" perm="755"/>
-    <copy todir="${DISTR_DIR}/services/mtpers/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/scag/mtpers" includes="config.xml"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <mkdir dir="${mtpers.storage_dir}" description="create mtpers storage dir"/>
-  </target>
+    <target name="-install.pvss" depends="-update.pvss" if="SETUP_MAKE_PVSS">
+        <echo>Making a backward-compatibility link mtpers</echo>
+        <symlink resource="pvss" link="${DISTR_DIR}/services/mtpers"/>
+        <symlink resource="${SERVICE2HOME}" link="${DISTR_DIR}/services/pvss/.base"/>
+        <symlink resource=".base/logs" link="${DISTR_DIR}/services/pvss"/>
+        <symlink resource=".base/lib" link="${DISTR_DIR}/services/pvss"/>
+        <symlink resource="../.base/conf/configuration.dtd"    link="${DISTR_DIR}/services/pvss/conf"/>
+        <copy tofile="${DISTR_DIR}/services/pvss/logger.properties" file="${TEMPL_DIR}/logger/msag_mtpers.logger">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <copy tofile="${DISTR_DIR}/services/pvss/bin/service" file="${TEMPL_DIR}/service/msag_mtpers">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <chmod file="${DISTR_DIR}/services/pvss/bin/service" perm="755"/>
+        <copy todir="${DISTR_DIR}/services/pvss/conf"
+              flatten="yes">
+            <fileset dir="${TEMPL_DIR}/scag/mtpers" includes="config.xml"/>
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <mkdir dir="${mtpers.storage_dir}" description="create pvss storage dir"/>
+    </target>
 
-  <target name="create_distr_pers" unless="FIRST_TARGET_INSTALLED">
-    <copy file="${DISTR_DIR}/lib/liblogger.so" todir="${DISTR_DIR}/daemon/lib"/>
-    <copy file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" tofile="${DISTR_DIR}/daemon/bin/smsc_ssdaemon.cur"/>
-    <copy file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" tofile="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon.cur"/>
-    <copy file="${DISTR_DIR}/daemon/bin/hsadmin" tofile="${DISTR_DIR}/daemon/bin/hsadmin.cur"/>
-    <copy file="${TEMPL_DIR}/update_daemon.sh" tofile="${DISTR_DIR}/daemon/update_daemon.sh" >
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <chmod perm="755">
-      <fileset dir="${DISTR_DIR}/daemon"     includes="update_daemon.sh"/>
-      <fileset dir="${DISTR_DIR}/daemon/lib" includes="liblogger.so"/>
-      <fileset dir="${DISTR_DIR}/daemon/bin" includes="hsadmin.cur"/>
-      <fileset dir="${DISTR_DIR}/daemon/bin" includes="smsc_ssdaemon"/>
-      <fileset dir="${DISTR_DIR}/daemon/bin" includes="smsc_ssdaemon.cur"/>
-      <fileset dir="${DISTR_DIR}/daemon/bin" includes="hs_smsc_ssdaemon"/>
-      <fileset dir="${DISTR_DIR}/daemon/bin" includes="hs_smsc_ssdaemon.cur"/>
-    </chmod>
-    <symlink resource="./${daemon.bin.name}.cur" link="${DISTR_DIR}/daemon/bin/${daemon.link.name}"/>
-    <symlink resource="./hsadmin.cur" link="${DISTR_DIR}/daemon/bin/${daemon.hsadmin.link.name}"/>
-  </target>
+    <target name="-install.pvgw" depends="-update.pvgw" if="SETUP_MAKE_PVGW">
+        <symlink resource="${SERVICE2HOME}" link="${DISTR_DIR}/services/pvgw/.base"/>
+        <symlink resource=".base/logs" link="${DISTR_DIR}/services/pvgw"/>
+        <symlink resource=".base/lib" link="${DISTR_DIR}/services/pvgw"/>
+        <symlink resource="../.base/conf/configuration.dtd"    link="${DISTR_DIR}/services/pvgw/conf"/>
+    </target>
 
-  <target name="copy_to_dist_dir_pers_common" unless="FIRST_TARGET_INSTALLED">
-    <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
-    <chmod perm="755">
-      <fileset dir="${DISTR_DIR}/lib" includes="*"/>
-    </chmod>
-    <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${SMSC_DIR}/config"
-               includes="command.dtd configuration.dtd response.dtd resourcemanager/locale_resources.dtd"/>
-    </copy>
-    <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
-    <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
-    <copy file="${BUILD_BIN}/admin/daemon/hs_smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
-    <chmod file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" perm="755"/>
-    <copy file="${BUILD_BIN}/admin/daemon/hsadmin" todir="${DISTR_DIR}/daemon/bin"/>
-    <chmod file="${DISTR_DIR}/daemon/bin/hsadmin" perm="755"/>
-  </target>
+    <target name="-install.admin" depends="-update.admin" if="SETUP_MAKE_ADMIN">
+        <symlink resource="${DAEMON2HOME}" link="${DISTR_DIR}/daemon/.base"/>
+        <symlink resource=".base/logs" link="${DISTR_DIR}/daemon"/>
+        <symlink resource=".base/lib" link="${DISTR_DIR}/daemon"/>
+        <symlink resource="../.base/conf/command.dtd" link="${DISTR_DIR}/daemon/conf"/>
+        <symlink resource="../.base/conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
+        <symlink resource="../.base/conf/response.dtd" link="${DISTR_DIR}/daemon/conf"/>
 
-  <target name="copy_to_dist_dir_pers" depends="copy_to_dist_dir_pers_common">
-    <copy file="${BUILD_BIN}/scag/pers" todir="${DISTR_DIR}/services/pers/bin"/>
-    <chmod file="${DISTR_DIR}/services/pers/bin/pers" perm="755"/>
-  </target>
+        <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml"
+              file="${TEMPL_DIR}/scag/daemon.xml">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <symlink resource="../daemon/conf/daemon.xml" link="${DISTR_DIR}/conf/daemon.xml" overwrite="yes"/>
+        <copy todir="${DISTR_DIR}" flatten="yes">
+            <fileset dir="${TEMPL_DIR}" includes="start_daemon.sh stop_daemon.sh"/>
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <copy tofile="${DISTR_DIR}/daemon/bin/daemon.sh" file="${TEMPL_DIR}/daemon_alt.sh">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <chmod perm="755">
+            <fileset dir="${DISTR_DIR}" includes="start_daemon.sh stop_daemon.sh daemon/bin/daemon.sh"/>
+        </chmod>
 
-  <target name="copy_to_dist_dir_cpers" depends="copy_to_dist_dir_pers_common">
-    <copy file="${BUILD_BIN}/scag/cpers" todir="${DISTR_DIR}/services/cpers/bin"/>
-    <chmod file="${DISTR_DIR}/services/cpers/bin/cpers" perm="755"/>
-  </target>
+        <!-- additional actions -->
+        <copy file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" tofile="${DISTR_DIR}/daemon/bin/smsc_ssdaemon.cur"/>
+        <copy file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" tofile="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon.cur"/>
+        <copy file="${DISTR_DIR}/daemon/bin/hsadmin" tofile="${DISTR_DIR}/daemon/bin/hsadmin.cur"/>
+        <copy file="${TEMPL_DIR}/update_daemon.sh" tofile="${DISTR_DIR}/daemon/update_daemon.sh" >
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <chmod perm="755">
+            <fileset dir="${DISTR_DIR}/daemon"     includes="update_daemon.sh"/>
+            <fileset dir="${DISTR_DIR}/daemon/bin" includes="hsadmin.cur smsc_ssdaemon smsc_ssdaemon.cur hs_smsc_ssdaemon hs_smsc_ssdaemon.cur"/>
+        </chmod>
+        <symlink resource="./${daemon.bin.name}.cur" link="${DISTR_DIR}/daemon/bin/${daemon.link.name}"/>
+        <symlink resource="./hsadmin.cur" link="${DISTR_DIR}/daemon/bin/${daemon.hsadmin.link.name}"/>
+    </target>
 
-  <target name="copy_to_dist_dir_mtpers" depends="copy_to_dist_dir_pers_common">
-    <copy file="${BUILD_BIN}/scag/mtpers" todir="${DISTR_DIR}/services/mtpers/bin"/>
-    <chmod file="${DISTR_DIR}/services/mtpers/bin/mtpers" perm="755"/>
-  </target>
+    <target name="-install.webapp" depends="-install.tomcat" if="SETUP_MAKE_WEBAPP">
+        <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="install"/>
 
-  <target name="clear_pers_build_bin_dir" unless="FIRST_TARGET_INSTALLED">
-    <delete dir="${BUILD_BIN}"/>
-  </target>
+        <copy todir="${DISTR_DIR}/conf" flatten="yes" >
+            <fileset dir="${TEMPL_DIR}">
+                <include name="scag/tomcat/*"/>
+            </fileset>
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <copy todir="${WEBINF_DIR}/classes/" file="${TEMPL_DIR}/log4j.properties" flatten="yes" >
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <symlink resource="../${WEBINF_DIR}/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
+        <copy todir="${DISTR_DIR}" flatten="yes">
+            <fileset dir="${TEMPL_DIR}" includes="start_tomcat.sh stop_tomcat.sh"/>
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <copy tofile="${DISTR_DIR}/tomcat/tomcat_runner.sh" file="${TEMPL_DIR}/tomcat_runner.sh">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <chmod perm="755">
+            <fileset dir="${DISTR_DIR}" includes="start_tomcat.sh stop_tomcat.sh tomcat/tomcat_runner.sh"/>
+        </chmod>
+        <copy tofile="${DISTR_DIR}/conf/webconfig.xml"
+              file="${TEMPL_DIR}/scag/webapp.xml">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <copy tofile="${WEBINF_DIR}/web.xml"
+              file="${TEMPL_DIR}/scag/web.xml">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+    </target>
 
-  <target name="makegw_pers" unless="FIRST_TARGET_INSTALLED">
-    <echo message="${MAKE_ARGS}"/>
-    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
-    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="scag.pers"/>
-  </target>
-
-<!--cpers-->
-
-  <target name="distr_cpers" depends="create_distr_tree_cpers, makegw_pers, configure_cpers, create_distr_pers, extra_libs">
-    <copy file="${SMSC_DIR}/config/scag/region.dtd" todir="${DISTR_DIR}/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/region.dtd"    link="${DISTR_DIR}/services/cpers/conf"/>
-    <copy todir="${DISTR_DIR}/services/cpers/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/scag/cpers" includes="region.xml"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
-    <property name="FIRST_TARGET_INSTALLED" value="true"/>
-    <property name="CPERS_INSTALLED" value="true"/>
-  </target>
-
-  <target name="update_cpers" depends="clear_pers_build_bin_dir, makegw_pers, copy_to_dist_dir_cpers">
-    <property name="FIRST_TARGET_INSTALLED" value="true"/>
-  </target>
-
-<!--pers-->
-
-  <target name="distr_pers" depends="create_distr_tree_pers, makegw_pers, configure_pers, create_distr_pers, extra_libs">
-    <property name="FIRST_TARGET_INSTALLED" value="true"/>
-    <property name="PERS_INSTALLED" value="true"/>
-  </target>
-
-  <target name="update_pers" depends="clear_pers_build_bin_dir, makegw_pers, copy_to_dist_dir_pers">
-    <property name="FIRST_TARGET_INSTALLED" value="true"/>
-  </target>
-
-<!--mtpers-->
-
-  <target name="distr_mtpers" depends="create_distr_tree_mtpers, makegw_pers, configure_mtpers, create_distr_pers, extra_libs">
-    <property name="FIRST_TARGET_INSTALLED" value="true"/>
-    <property name="PERS_INSTALLED" value="true"/>
-  </target>
-
-  <target name="update_mtpers" depends="clear_pers_build_bin_dir, makegw_pers, copy_to_dist_dir_mtpers">
-    <property name="FIRST_TARGET_INSTALLED" value="true"/>
-  </target>
-
-<!--Personalization End-->
-
-  <target name="notomcat" description="removes tomcat distrib from update. Use before tar">
-    <delete>
-      <fileset dir="${DISTR_DIR}/tomcat">
-        <exclude name="server/lib/sibinco_tomcat_auth_server.jar"/>
-        <exclude name="common/lib/sibinco_tomcat_auth_common.jar"/>
-        <include name="**/*"/>
-      </fileset>
-    </delete>
-  </target>
-
-  <target name="tar" description="tar distr directory">
-    <tar destfile="${DISTR_DIR}/scag_update_${DSTAMP}_${TSTAMP}.tar.gz" compression="gzip">
-      <tarfileset dir="${DISTR_DIR}" mode="775">
-        <include name="lib/*"/>
-        <include name="daemon/bin/hsadmin"/>
-	<include name="daemon/bin/smsc_ssdaemon"/>
-	<include name="daemon/bin/hs_smsc_ssdaemon"/>
-        <include name="services/scag/bin/scag"/>
-        <include name="services/scag2/bin/scag2"/>
-	<include name="services/pers/bin/pers"/>
-	<include name="services/mtpers/bin/mtpers"/>
-        <include name="tomcat/bin/*.sh"/>
-      </tarfileset>
-      <tarfileset dir="${DISTR_DIR}" mode="664">
-        <exclude name="lib/*"/>
-        <exclude name="daemon/bin/*"/>
-	<exclude name="daemon/lib/*"/>
-        <exclude name="services/scag/bin/scag"/>
-        <exclude name="services/scag2/bin/scag2"/>
-	<exclude name="services/pers/bin/pers"/>
-	<exclude name="services/mtpers/bin/mtpers"/>
-        <exclude name="tomcat/bin/*.sh"/>
-        <include name="**/*"/>
-      </tarfileset>
-    </tar>
-  </target>
+    <target name="install"
+            depends="make, -install.tree, -install.scag, -install.msag, -install.pers, -install.pvss, -install.admin, -install.webapp">
+        <!-- description="Action: install previously selected targets" -->
+    </target>
 
 </project>

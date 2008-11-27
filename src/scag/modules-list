@@ -9,5 +9,6 @@ re
 pers
 admin
 lcm
-tests
-gen2
+?tests
+?bin
+?gen2

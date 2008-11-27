@@ -3,7 +3,7 @@
 
 # binary name                            source name     libraries         
 
-scag/mtpers                              mtpers          @liblogger.so \
+scag/pvss                                mtpers          @liblogger.so \
 	-L$(SMSC_BUILDDIR)/bin -llogger \
         -lscag-pers-mtpers -lscag-pers-util -lutil-mirrorfile \
         -lcore-network -lcore-threads -lrt -lutil -lutil-config \

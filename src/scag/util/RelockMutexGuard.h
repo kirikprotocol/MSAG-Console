@@ -10,7 +10,7 @@ template < class T >
 class RelockMutexGuardTmpl 
 {
 public:
-    RelockMutexGuardTmpl( T& lock ) : lock_(lock), locked_(false) {
+    RelockMutexGuardTmpl( T& lock ) : locked_(false), lock_(lock) {
         lock_.Lock(); locked_ = true;
     }
     ~RelockMutexGuardTmpl() {
