@@ -232,14 +232,14 @@ public class QuizManager implements Observer {
       if (quiz != null) {
         qInternal.remove(quiz);
         quizesMap.remove(quiz.getDestAddress());
+        quiz.shutdown();
         if (!quiz.isExported()) {
           try {
             quiz.exportStats();
-          } catch (Exception e) {
+          } catch (Throwable e) {
             logger.error(e, e);
           }
         }
-        quiz.shutdown();
 
         String taskId = quiz.getId();
 
