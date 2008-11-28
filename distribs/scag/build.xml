@@ -12,7 +12,7 @@ ACTION is one of:
 
  make      compile the selected components into the build dir;
  install   make + create a fresh distributive into the distr dir;
- update    make + create an update into the distr dir;
+ update    make + update the distr dir;
 
 The possible SELECTIONS are listed below under Main targets.
     </description>
@@ -171,12 +171,15 @@ Issue "ant -p" to see available targets.
         <echo>SETUP_MAKE_PVSS = ${SETUP_MAKE_PVSS}</echo>
         <echo>SETUP_MAKE_ADMIN = ${SETUP_MAKE_ADMIN}</echo>
         <!-- ugly hack against Ant's stupidity -->
-        <condition property="INSTALL_CLEAN">
+        <condition property="UPDATE_TREE">
             <not>
-                <or>
-                    <isset property="SETUP_UPDATE"/>
-                    <isset property="SETUP_MAKE_WEBAPP"/>
-                </or>
+                <and>
+                    <or>
+                        <isset property="SETUP_UPDATE"/>
+                        <isset property="SETUP_MAKE_WEBAPP"/>
+                    </or>
+                    <not><available file="${DISTR_DIR}/conf" type="dir"/></not>
+                </and>
             </not>
         </condition>
         <property name="SETUP_DONE" value="true"/>
@@ -375,16 +378,11 @@ Issue "ant -p" to see available targets.
     <!--                 UPDATE TARGETS                           -->
     <!-- ======================================================== -->
 
-    <target name="-update.tree" unless="INSTALL_CLEAN">
-        <echo>Cleanup the distribution</echo>
-        <exec executable="rm">
-            <arg value="-r"/>
-            <arg file="${DISTR_DIR}"/>
-        </exec>
+    <target name="-update.tree" unless="UPDATE_TREE">
         <echo>Filling it up</echo>
         <mkdir dir="${DISTR_DIR}"/>
         <mkdir dir="${DISTR_DIR}/conf"/>
-        <property name="INSTALL_CLEAN" value="true"/>
+        <property name="UPDATE_TREE" value="true"/>
     </target>
 
     <target name="-update.libs" depends="-update.tree, make" if="SETUP_MAKE_CXX">
@@ -546,6 +544,14 @@ Issue "ant -p" to see available targets.
     <!-- ======================================================== -->
     <!--                 INSTALL TARGETS                          -->
     <!-- ======================================================== -->
+
+    <target name="-install.clean">
+        <echo>Cleanup the distribution</echo>
+        <exec executable="rm">
+            <arg value="-r"/>
+            <arg file="${DISTR_DIR}"/>
+        </exec>
+    </target>
 
     <target name="-install.tree" depends="-update.tree" unless="INSTALL_TREE">
         <mkdir dir="${DISTR_DIR}/logs"/>
@@ -801,7 +807,7 @@ Issue "ant -p" to see available targets.
     </target>
 
     <target name="install"
-            depends="-setup.update, make, -install.tree, -install.scag, -install.msag, -install.pers, -install.pvss, -install.admin, -install.webapp">
+            depends="-setup.update, -install.clean, make, -install.tree, -install.scag, -install.msag, -install.pers, -install.pvss, -install.admin, -install.webapp">
         <!-- description="Action: install previously selected targets" -->
     </target>
 
