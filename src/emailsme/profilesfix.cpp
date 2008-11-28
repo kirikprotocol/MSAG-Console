@@ -25,7 +25,8 @@ int main(int argc,char* argv[])
       AbonentProfile p;
       p.Read(buf);
       totalCnt++;
-      if(p.addr.value[0]==7 && (p.addr.type!=1 || p.addr.plan!=1))
+//      printf(".%d.%d.%s\n",p.addr.type,p.addr.plan,p.addr.value);
+      if(p.addr.value[0]=='7' && (p.addr.type!=1 || p.addr.plan!=1))
       {
         fixedCnt++;
         p.addr.type=1;
@@ -35,7 +36,7 @@ int main(int argc,char* argv[])
         pf.Update(off,buf2.getBuffer(),buf.getPos());
       }
     }
-    printf("Total profiles found:%d, fixed profiles::%d\n",totalCnt,fixedCnt);
+    printf("Total profiles found:%d, fixed profiles:%d\n",totalCnt,fixedCnt);
   }catch(std::exception& e)
   {
     printf("exception:%s\n",e.what());
