@@ -130,6 +130,7 @@ public class QuizBuilder {
       quiz.setDateEnd(dateEnd);
       quiz.setQuestion(question);
       quiz.setQuizName(name);
+      quiz.setOrigAbFile(abFileName);
     }
   }
 

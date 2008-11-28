@@ -22,7 +22,12 @@ public class QuizManagerTask implements Runnable {
     quiz.setGenerated(true);
     try {
       if (quiz.getQuizStatus().equals(Status.QuizStatus.GENERATION)) {
-        quiz.setQuizStatus(Status.QuizStatus.AWAIT);
+        if(!quiz.isActive()) {
+          quiz.setQuizStatus(Status.QuizStatus.AWAIT);
+        }
+        else {
+          quiz.setQuizStatus(Status.QuizStatus.ACTIVE);
+        }
       }
     } catch (QuizException e) {
       logger.error(e, e);

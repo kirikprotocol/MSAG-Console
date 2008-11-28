@@ -38,7 +38,9 @@ class QuizCollector implements Runnable {
             logger.info("QuizCollector removed quiz: " + quiz);
           }
         } else {
-          if ((!quiz.getQuizStatus().equals(Status.QuizStatus.ACTIVE)) && (quiz.isGenerated()) && (quiz.isActive())) {
+          if ((quiz.getQuizStatus().equals(Status.QuizStatus.GENERATION)
+              ||quiz.getQuizStatus().equals(Status.QuizStatus.AWAIT))
+              && (quiz.isGenerated()) && (quiz.isActive())) {
             quiz.setQuizStatus(Status.QuizStatus.ACTIVE);
           }
         }

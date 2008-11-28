@@ -197,13 +197,13 @@ public class DistributionInfoSmeManager implements DistributionManager {
 
   }
 
-  public void removeTask(String taskId) throws DistributionException {
-    if (taskId == null) {
+  public void removeDistribution(String distrId) throws DistributionException {
+    if (distrId == null) {
       logger.error("Some arguments are null");
       throw new DistributionException("Some arguments are null", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
     }
     StringBuilder builder = new StringBuilder();
-    builder.append(REMOVE_COMMAND).append(getFormatProp(taskId));
+    builder.append(REMOVE_COMMAND).append(getFormatProp(distrId));
     String command = builder.toString();
     if (logger.isInfoEnabled()) {
       logger.info("Sending console command: " + command);

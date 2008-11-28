@@ -15,7 +15,7 @@ public interface DistributionManager {
 
   public void resend(String msisdn, String taskId) throws DistributionException;
 
-  public void removeTask(String taskId) throws DistributionException;
+  public void removeDistribution(String distrId) throws DistributionException;
 
   public AbstractDynamicMBean getMonitor();
 

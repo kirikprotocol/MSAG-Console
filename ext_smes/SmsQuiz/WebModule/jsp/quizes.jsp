@@ -45,7 +45,7 @@
 <%
   page_menu_begin(out);
   page_menu_button(session, out, "mbAdd",    "common.buttons.add",    "smsquiz.quiz.add");
-  if(tableHelper.getSize()>0) {
+  if((tableHelper.getSize()>0)&&(bean.isOnline())) {
     page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "smsquiz.quiz.delete", getLocString("smsquiz.confirm.quiz.delete"));
   }
   page_menu_space(out);

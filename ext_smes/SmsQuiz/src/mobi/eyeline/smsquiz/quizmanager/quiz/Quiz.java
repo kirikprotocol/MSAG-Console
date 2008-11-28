@@ -59,6 +59,8 @@ public class Quiz {
 
   private final Distribution distribution;
 
+  private String origAbFile;
+
   public Quiz(final File file, Distribution distribution,
               final ReplyStatsDataSource replyStatsDataSource,
               final DistributionManager distributionManager, final String dirResult, final String dirWork) throws QuizException {
@@ -386,5 +388,13 @@ public class Quiz {
 
   public boolean isExported() {
     return exported;
+  }
+
+  public String getOrigAbFile() {
+    return origAbFile;
+  }
+
+  public void setOrigAbFile(String origAbFile) {
+    this.origAbFile = origAbFile;
   }
 }

@@ -245,12 +245,12 @@ public class QuizManager implements Observer {
 
         if (taskId != null) {
           try {
-            distributionManager.removeTask(taskId);
+            distributionManager.removeDistribution(taskId);
           } catch (Exception e) {
             logger.error(e, e);
           }
         }
-        dirListener.delete(quiz.getQuizId(), quiz.getDistribution().getFilePath());
+        dirListener.delete(quiz.getQuizId(), quiz.getOrigAbFile());
 
       }
     }
@@ -345,7 +345,7 @@ public class QuizManager implements Observer {
       try {
         try {
           quiz.setQuizStatus(Status.QuizStatus.GENERATION);
-          createTask(quiz);
+          createDistribution(quiz);
         } catch (QuizException e) {
           logger.error(e, e);
         }
@@ -555,12 +555,11 @@ public class QuizManager implements Observer {
   }
 
   @SuppressWarnings({"ThrowableInstanceNeverThrown"})
-  private void createTask(final Quiz quiz) throws QuizException {
+  private void createDistribution(final Quiz quiz) throws QuizException {
     try {
       if (logger.isInfoEnabled()) {
-        logger.info("Runing quizCreator.");
+        logger.info("Create distribution...");
       }
-
       Distribution distr = quiz.getDistribution();
       String id;
       if ((id = quiz.getId()) != null) {
@@ -601,6 +600,7 @@ public class QuizManager implements Observer {
       try {
         resolveConflict(quiz);
       } catch (Throwable e) {
+        logger.error(e,e);
       }
       if (logger.isInfoEnabled()) {
         logger.info("Quiz created: " + quiz);
@@ -636,6 +636,9 @@ public class QuizManager implements Observer {
           quizesMap.put(quiz.getDestAddress(), quiz);
           if (logger.isInfoEnabled()) {
             logger.info("Quiz added to map: " + quiz);
+          }
+          if (quiz.getQuizStatus().equals(Status.QuizStatus.AWAIT)) {
+            quiz.setQuizStatus(Status.QuizStatus.ACTIVE);
           }
         }
       } catch (Exception e) {

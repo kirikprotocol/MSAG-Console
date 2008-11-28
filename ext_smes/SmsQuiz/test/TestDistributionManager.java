@@ -68,7 +68,7 @@ public class TestDistributionManager implements DistributionManager {
     
   }
 
-  public void removeTask(String taskId) throws DistributionException {
+  public void removeDistribution(String taskId) throws DistributionException {
     //To change body of implemented methods use File | Settings | File Templates.
   }
 

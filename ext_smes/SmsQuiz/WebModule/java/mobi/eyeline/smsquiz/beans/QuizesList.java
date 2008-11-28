@@ -12,8 +12,6 @@ import java.text.SimpleDateFormat;
 
 import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizesStaticTableHelper;
-import mobi.eyeline.smsquiz.quizes.view.QuizData;
-import mobi.eyeline.smsquiz.QuizBuilder;
 
 /**
  * author: alkhal
@@ -34,11 +32,7 @@ public class QuizesList extends SmsQuizBean {
 
   private String quizDir;
 
-  private String dirWork;
-
   private String arcDir;
-
-  private String quizRes;
 
   private SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
 
@@ -50,9 +44,8 @@ public class QuizesList extends SmsQuizBean {
     try {
       int pageSize = getSmsQuizContext().getQuizesPageSize();
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
-      dirWork = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
+      String dirWork = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
       arcDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_archive");
-      quizRes = getSmsQuizContext().getConfig().getString("quizmanager.dir_result");
       tableHelper.setPageSize(pageSize);
       tableHelper.setDataSource(new QuizesDataSource(quizDir, dirWork));
     } catch (Exception e) {
@@ -93,6 +86,9 @@ public class QuizesList extends SmsQuizBean {
   }
 
   private int processDelete(HttpServletRequest request) {
+    if(!isOnline()) {
+      return warning("Service SmsQuiz is offline");
+    }
     String warnings = "";
     System.out.println("Deleting quizes...");
     try {
@@ -103,8 +99,7 @@ public class QuizesList extends SmsQuizBean {
         if (!new File(quizPath).exists()) {
           warnings += "Quiz's  file not found for id:" + quizId + System.getProperty("line.separator");
         }
-        QuizData quizData = QuizBuilder.parseAll(quizPath);
-        delete(quizId, quizPath, quizData.getAbFile());
+        delete(quizPath);
       }
     }
     catch (Exception e) {
@@ -120,46 +115,12 @@ public class QuizesList extends SmsQuizBean {
     return RESULT_OK;
   }
 
-  private void delete(String quizId, String path, String abFile) {
-    File file =new File(arcDir);
+  private void delete(String path) {
+    File file = new File(arcDir);
     if(!file.exists()) {
       file.mkdirs();
     }
-    System.out.println("Deleting quiz: " + quizId);
-
-    file = new File(abFile);
-    if(file.exists()) {
-      renameFile(new File(abFile));
-    } else {
-      file = new File(quizDir+File.separator+file.getName());
-      renameFile(file);
-    }
-    renameFile(new File(abFile));
     renameFile(new File(path));
-
-    String parentSlashQuizId = dirWork + File.separator + quizId;
-
-    renameFile(new File(parentSlashQuizId + ".status"));
-    deleteFile(new File(parentSlashQuizId + ".xml.bin"));
-    deleteFile(new File(parentSlashQuizId + ".xml.bin.j"));
-    renameFile(new File(parentSlashQuizId + ".error"));
-    renameFile(new File(parentSlashQuizId + ".mod"));
-    renameFile(new File(parentSlashQuizId + ".mod.processed"));
-
-    file = new File(quizRes);
-    File files[] = file.listFiles();
-    file = null;
-    if(files!=null) {
-      for(int j=0;j<files.length;j++) {
-        if((files[j].isFile())&&(files[j].getName().startsWith(quizId+"."))) {
-          file = files[j];
-          break;
-        }
-      }
-    }
-    if(file!=null) {
-      renameFile(file);
-    }
   }
 
   private void renameFile(File file) {
@@ -169,14 +130,6 @@ public class QuizesList extends SmsQuizBean {
       file.renameTo(new File(arcDir+File.separator+name+"."+df.format(new Date())));
     }catch(Exception e) {
       logger.error(e,e);
-    }
-  }
-  private void deleteFile(File file) {
-    try{
-      System.out.println("try to delete file: " + file.getAbsolutePath());
-      file.delete();
-    } catch(Exception e) {
-      logger.error(e);
     }
   }
   private int processAdd() {
@@ -211,6 +164,15 @@ public class QuizesList extends SmsQuizBean {
 
   public String getSelectedQuizId() {
     return selectedQuizId;
+  }
+
+  public boolean isOnline() {
+    try {
+      return getAppContext().getHostsManager().getServiceInfo(getSmeId()).isOnline();
+    } catch (Exception e) {
+      logger.error(e,e);
+    }
+    return false;
   }
 
 }
