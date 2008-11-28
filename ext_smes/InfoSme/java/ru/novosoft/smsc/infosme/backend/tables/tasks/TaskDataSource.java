@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat;
 public class TaskDataSource extends AbstractDataSourceImpl
 {
   public static final String TASKS_PREFIX = "InfoSme.Tasks";
-  private static final SimpleDateFormat endDateFormat = new SimpleDateFormat("dd.MM.yyyy hh:mm:ss");
+  private static final SimpleDateFormat endDateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
   private Category logger = Category.getInstance(this.getClass());
   private final InfoSme infoSme;
 
