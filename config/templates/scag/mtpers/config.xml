@@ -5,7 +5,7 @@
 
   <section name="MTPers">
     <param name="host" type="string">@mtpers.listen_host@</param>
-    <param name="port" type="int">@mtpers.port@</param>
+    <param type="int" name="port">@mtpers.port@</param>
     <param name="maxClientsCount" type="int">@mtpers.connections@</param>
     <param name="timeout" type="int">@mtpers.timeout@</param>
     <param name="ioPoolSize" type="int">@mtpers.io_pool_size@</param>

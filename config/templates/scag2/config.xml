@@ -14,7 +14,7 @@
     <section name="BillingManager">
         <param name="configDir" type="string">@bill.config_dir@</param>
         <param name="BillingServerHost" type="string">@bill.server_host@</param>
-        <param name="BillingServerPort" type="int">@bill.server_port@</param>
+        <param type="int" name="BillingServerPort">@bill.server_port@</param>
         <param name="BillingTimeOut" type="int">@bill.time_out@</param> <!-- sec. -->
         <param name="BillingReconnectTimeOut" type="int">@bill.reconnect_time_out@</param> <!-- sec. -->
     </section>
@@ -45,10 +45,10 @@
     <section name="StatisticsManager">
         <param name="statisticsDir" type="string">@stat.dir@</param>
         <param name="perfHost" type="string">@stat.perf_host@</param>
-        <param name="perfGenPort" type="int">@stat.perf_port@</param>
-        <param name="perfSvcPort" type="int">@stat.perf_svc_port@</param>
-        <param name="perfScPort" type="int">@stat.perf_sc_port@</param>
-        <param name="saccPort" type="int">@stat.sacc_port@</param>
+        <param type="int" name="perfGenPort">@stat.perf_port@</param>
+        <param type="int" name="perfSvcPort">@stat.perf_svc_port@</param>
+        <param type="int" name="perfScPort">@stat.perf_sc_port@</param>
+        <param type="int" name="saccPort">@stat.sacc_port@</param>
         <param name="saccHost" type="string">@stat.sacc_host@</param>
         <param name="connect_timeout" type="int">@stat.sacc_connect_timeout@</param>
         <param name="queue_length" type="int">@stat.sacc_queue_length@</param>
@@ -60,12 +60,12 @@
 
     <section name="admin">
         <param name="host" type="string">@listen.host@</param>
-        <param name="port" type="int">@gateway.admin.port@</param>
+        <param type="int" name="port">@gateway.admin.port@</param>
     </section>
 
     <section name="smpp">
         <param name="host" type="string">@listen.host@</param>
-        <param name="port" type="int">@gateway.smpp.port@</param>
+        <param type="int" name="port">@gateway.smpp.port@</param>
         <param name="inactivityTime" type="int">30</param>
         <param name="inactivityTimeOut" type="int">30</param>
         <param name="readTimeout" type="int">60</param>
@@ -87,7 +87,7 @@
 
     <section name="HttpTransport">
         <param name="host" type="string">@listen.host@</param>
-        <param name="port" type="int">@gateway.http.port@</param>
+        <param type="int" name="port">@gateway.http.port@</param>
         <param name="readerSockets" type="int">10</param>
         <param name="writerSockets" type="int">10</param>
         <param name="readerPoolSize" type="int">10</param>
@@ -99,7 +99,7 @@
 
     <section name="Personalization">
         <param name="host" type="string">@mtpers.connect_host@</param>
-        <param name="port" type="int">@mtpers.port@</param>
+        <param type="int" name="port">@mtpers.port@</param>
         <param name="ioTimeout" type="int">@pers_client.io_timeout@</param> <!--in miliseconds-->
         <param name="pingTimeout" type="int">@pers_client.ping_timeout@</param> <!--in seconds-->
         <param name="reconnectTimeout" type="int">@pers_client.reconnect_timeout@</param> <!--in seconds-->
