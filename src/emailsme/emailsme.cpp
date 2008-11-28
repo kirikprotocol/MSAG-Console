@@ -999,9 +999,9 @@ const int OK           =256;
 void CheckCode(Socket& s,int code)
 {
   char buf[1024];
-  if(s.Gets(buf,(int)sizeof(buf))==-1)throw Exception("");
+  if(s.Gets(buf,(int)sizeof(buf))==-1)throw Exception("Failed to read response from smtp server");
   int retcode;
-  if(sscanf(buf,"%d",&retcode)!=1)throw Exception("");;
+  if(sscanf(buf,"%d",&retcode)!=1)throw Exception("failed to scan response code from '%s'",buf);
   if(code<10)retcode/=100;
   if(retcode!=code)
   {
@@ -1437,9 +1437,14 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
         storage.incGsm2EmlLimit(fromaddress);
       }else
       {
-        __trace2__("Creating implicit profile creation for address %s",fromaddress.c_str());
+        __trace2__("Creating implicit profile for address %s",fromaddress);
         AbonentProfile prof;
         prof.addr=fromaddress;
+        if(prof.addr.value[0]=='7')
+        {
+          prof.addr.type=1;
+          prof.addr.plan=1;
+        }
         prof.user=fromaddress;
         //prof.forwardEmail;
         //prof.realName;
@@ -2432,6 +2437,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   int rc=StatusCodes::STATUS_CODE_TEMPORARYERROR;
   if(resp)
   {
+    smsc_log_info(log,"Received resp with statusCode=%d",resp->get_header().get_commandStatus());
     switch(resp->get_header().get_commandStatus())
     {
       case SmppStatusSet::ESME_ROK:rc=StatusCodes::STATUS_CODE_OK;break;
@@ -2445,6 +2451,11 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
         __trace2__("Creating implicit profile creation for address %s",dst.c_str());
         AbonentProfile prof;
         prof.addr=dst.c_str();
+        if(prof.addr.value[0]=='7')
+        {
+          prof.addr.type=1;
+          prof.addr.plan=1;
+        }
         prof.user=dstUser.c_str();
         //prof.forwardEmail;
         //prof.realName;
@@ -2463,6 +2474,9 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
         __warning2__("failed to inc counter:%s",e.what());
       }
     }
+  }else
+  {
+    smsc_log_info(log,"submit sms resp timed out");
   }
   if(rc==StatusCodes::STATUS_CODE_OK)
   {
