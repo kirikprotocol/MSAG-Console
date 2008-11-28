@@ -2,7 +2,8 @@
     <description>
         MSAG components compilation and installation/update.
 
-Usage: ant SELECTIONS ACTION
+Usage: ant &lt;SELECTIONS&gt; &lt;ACTION&gt;
+       ant -DMOD=&lt;MODNAME&gt; makemod
 
 where SELECTIONS are the list of selection targets specifying
 which components of MSAG system should be subjected by the following ACTION.
@@ -52,27 +53,6 @@ The possible SELECTIONS are listed below under Main targets.
 
 <!-- ==================================================================== -->
     <target name="help">
-<!-- 
-    <echo>
-MSA Gateway &amp; Co  build script
-Targets:
-
-    makedeps    Creates dependencies for C++ MSAG sources
-    distr       Builds C++ MSAG, Admin Daemon, WebAdmin sources. 
-                Creates and moves distribute tree into DISTR_DIR.
-    rmdistr     Removes distribute tree from DISTR_DIR.
-    rmbuild     Removes build directory from BUILD_DIR.
-    makegw      Builds C++ MSAG, PVSS, AdminDaemon sources into BUILD_DIR.
-    makeweb     Builds WebAdmin sorces into BUILD_DIR.
-    update      Rebuilds C++ MSAG, PVSS, WebAdmin, AdminDaemon sources into DISTR_DIR.	
-    updategw    Rebuilds C++ MSAG, PVSS, AdminDaemon sources into DISTR_DIR.
-    updateweb   Rebuilds WebAdmin sources into DISTR_DIR.
-    
-    TODO: The rest of !!!!
-    
-    </echo>
--->
-        <!-- ant antfile="./build.xml" target="-projecthelp"/ -->
         <echo>
 Issue "ant -p" to see available targets.
         </echo>
@@ -85,35 +65,35 @@ Issue "ant -p" to see available targets.
     <target name="admin"
             description="-&gt; admin daemon">
         <fail if="SETUP_DONE" message="You should specify 'admin' before any actions"/>
-        <property name="SETUP_MAKE_ADMIN" value="admin"/>
+        <property name="SETUP_MAKE_ADMIN" value="true"/>
         <property name="SETUP_MAKE_CXX" value="true"/>
     </target>
 
     <target name="scag"
             description="-&gt; old SCAG (v 1.0)">
         <fail if="SETUP_DONE" message="You should specify 'scag' before any actions"/>
-        <property name="SETUP_MAKE_SCAG" value="scag.bin"/>
+        <property name="SETUP_MAKE_SCAG" value="true"/>
         <property name="SETUP_MAKE_CXX" value="true"/>
     </target>
 
     <target name="msag"
             description="-&gt; MSAG v 2.0 (aka scag2)">
         <fail if="SETUP_DONE" message="You should specify 'msag' before any actions"/>
-        <property name="SETUP_MAKE_MSAG" value="scag.gen2"/>
+        <property name="SETUP_MAKE_MSAG" value="true"/>
         <property name="SETUP_MAKE_CXX" value="true"/>
     </target>
 
     <target name="pers"
             description="-&gt; old personalization server">
         <fail if="SETUP_DONE" message="You should specify 'pers' before any actions"/>
-        <property name="SETUP_MAKE_PERS" value="scag.pers"/>
+        <property name="SETUP_MAKE_PERS" value="true"/>
         <property name="SETUP_MAKE_CXX" value="true"/>
     </target>
 
     <target name="pvss"
             description="-&gt; personalization server (aka mtpers)">
         <fail if="SETUP_DONE" message="You should specify 'pvss' before any actions"/>
-        <property name="SETUP_MAKE_PVSS" value="scag.pers.mtpers"/>
+        <property name="SETUP_MAKE_PVSS" value="true"/>
         <property name="SETUP_MAKE_CXX" value="true"/>
     </target>
 
@@ -126,14 +106,14 @@ Issue "ant -p" to see available targets.
     <target name="pvcp"
             description="-&gt; central personalization (aka cpers)">
         <fail if="SETUP_DONE" message="You should specify 'pvcp' before any actions"/>
-        <property name="SETUP_MAKE_PVCP" value="scag.pers"/>
+        <property name="SETUP_MAKE_PVCP" value="true"/>
         <property name="SETUP_MAKE_CXX" value="true"/>
     </target>
 
     <target name="pvgw"
             description="-&gt; personalization gateway">
         <fail if="SETUP_DONE" message="You should specify 'pvgw' before any actions"/>
-        <property name="SETUP_MAKE_PVGW" value="scag.pers.pvgw"/>
+        <property name="SETUP_MAKE_PVGW" value="true"/>
         <fail if="SETUP_MAKE_PVGW" message="Not implemented yet"/>
         <property name="SETUP_MAKE_CXX" value="true"/>
     </target>
@@ -150,8 +130,8 @@ Issue "ant -p" to see available targets.
         <fail if="SETUP_DONE" message="You should specify 'jedit' before any actions"/>
     </target -->
     
-    <target name="-setupdone" unless="SETUP_DONE">
-        <condition property="SETUP_DONE">
+    <target name="-checksetup" unless="SETUP_MAKE_DONE">
+        <condition property="SETUP_MAKE_DONE">
             <or>
                 <isset property="SETUP_MAKE_MSAG"/>
                 <isset property="SETUP_MAKE_SCAG"/>
@@ -164,73 +144,107 @@ Issue "ant -p" to see available targets.
                 <isset property="SETUP_MAKE_JEDIT"/>
             </or>
         </condition>
-        <fail unless="SETUP_DONE">
-            You should specify at least one of 
-            'scag', 'msag', 'pers', 'pvss', 'pvgw', 'pvcp', 'admin', 'webapp', 'jedit' before any action
+    </target>
+
+    <target name="-usedefaults" depends="-checksetup" unless="SETUP_MAKE_DONE">
+        <echo>Using default selections: 'msag', 'pvss', 'admin'</echo>
+        <!-- THIS F**KING ANT IS WRITTEN BY SOME BRAIN-DEAD STUDENT. -->
+        <!-- IT HAS VERY POOR SUPPORT FOR BRANCHING, LOOPING, AND SUBROUTINES. -->
+        <!-- SO WE'LL USE SIMPLE PROPERTY SETTING HERE INSTEAD OF CLEVER SUBTARGET CALL. -->
+        <property name="SETUP_MAKE_MSAG" value="true"/>
+        <property name="SETUP_MAKE_PVSS" value="true"/>
+        <property name="SETUP_MAKE_ADMIN" value="true"/>
+        <property name="SETUP_MAKE_CXX" value="true"/>
+        <!-- antcall target="msag" inheritRefs="true"/>
+        <antcall target="pvss" inheritRefs="true"/>
+        <antcall target="admin" inheritRefs="true"/ -->
+        <property name="SETUP_MAKE_DONE" value="true"/>
+    </target>
+
+    <target name="-setupdone" depends="-usedefaults" unless="SETUP_DONE">
+        <fail unless="SETUP_MAKE_DONE">
+            You should specify at least one selection before any action, see 'ant -p' for usage
         </fail>
-        <!-- property name="SETUP_DONE" value="true"/ -->
-        <!-- condition property="SETUP_MAKE_MSAG" value=""><not><isset property="SETUP_MAKE_MSAG"/></not></condition>
-        <condition property="SETUP_MAKE_SCAG" value=""><not><isset property="SETUP_MAKE_SCAG"/></not></condition>
-        <condition property="SETUP_MAKE_PERS" value=""><not><isset property="SETUP_MAKE_PERS"/></not></condition>
-        <condition property="SETUP_MAKE_PVSS" value=""><not><isset property="SETUP_MAKE_PVSS"/></not></condition -->
         <echo>Setup finished</echo>
+        <echo>SETUP_MAKE_SCAG = ${SETUP_MAKE_SCAG}</echo>
+        <echo>SETUP_MAKE_MSAG = ${SETUP_MAKE_MSAG}</echo>
+        <echo>SETUP_MAKE_PVSS = ${SETUP_MAKE_PVSS}</echo>
+        <echo>SETUP_MAKE_ADMIN = ${SETUP_MAKE_ADMIN}</echo>
+        <!-- ugly hack against Ant's stupidity -->
+        <condition property="INSTALL_CLEAN">
+            <not>
+                <or>
+                    <isset property="SETUP_UPDATE"/>
+                    <isset property="SETUP_MAKE_WEBAPP"/>
+                </or>
+            </not>
+        </condition>
+        <property name="SETUP_DONE" value="true"/>
+    </target>
+
+    <target name="-setup.update">
+        <property name="SETUP_UPDATE" value="true"/>
     </target>
 
     <!-- ======================================================== -->
     <!--                    BUILD TARGETS                         -->
     <!-- ======================================================== -->
 
-    <target name="makedeps" if="SETUP_MAKE_CXX">
+    <target name="-makedeps" unless="MAKEDEPS_DONE">
+        <echo>Make arguments are:
+   ${MAKE_ARGS}
+        </echo>
         <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="deps"/>
-        <!-- property name="MAKEDEPS_DONE" value="true"/ -->
+        <property name="MAKEDEPS_DONE" value="true"/>
     </target>
+    <target name="makedeps" depends="-makedeps" if="SETUP_MAKE_CXX"/>
   
     <target name="-make.scag" depends="makedeps" if="SETUP_MAKE_SCAG">
-        <echo>Building ${SETUP_MAKE_SCAG} ${MAKE_ARGS}</echo>
+        <echo>Building scag</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
-            <property name="targets" value="${SETUP_MAKE_SCAG}"/>
+            <property name="targets" value="scag.bin"/>
         </ant>
     </target>
 
     <target name="-make.msag" depends="makedeps" if="SETUP_MAKE_MSAG">
-        <echo>Building ${SETUP_MAKE_MSAG} ${MAKE_ARGS}</echo>
+        <echo>Building msag</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
-            <property name="targets" value="${SETUP_MAKE_MSAG}"/>
+            <property name="targets" value="scag.gen2"/>
         </ant>
     </target>
 
     <target name="-make.pers" depends="makedeps" if="SETUP_MAKE_PERS">
-        <echo>Building ${SETUP_MAKE_PERS} ${MAKE_ARGS}</echo>
+        <echo>Building pers</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
-            <property name="targets" value="${SETUP_MAKE_PERS}"/>
+            <property name="targets" value="scag.pers"/>
         </ant>
     </target>
 
     <target name="-make.pvcp" depends="makedeps" if="SETUP_MAKE_PVCP">
-        <echo>Building ${SETUP_MAKE_PVCP} ${MAKE_ARGS}</echo>
+        <echo>Building pvcp</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
-            <property name="targets" value="${SETUP_MAKE_PVCP}"/>
+            <property name="targets" value="scag.pers"/>
         </ant>
     </target>
 
     <target name="-make.pvss" depends="makedeps" if="SETUP_MAKE_PVSS">
-        <echo>Building ${SETUP_MAKE_PVSS}</echo>
+        <echo>Building pvss</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
-            <property name="targets" value="${SETUP_MAKE_PVSS}"/>
+            <property name="targets" value="scag.pers.mtpers"/>
         </ant>
     </target>
 
     <target name="-make.pvgw" depends="makedeps" if="SETUP_MAKE_PVGW">
-        <echo>Building ${SETUP_MAKE_PVGW}</echo>
+        <echo>Building pvgw</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
-            <property name="targets" value="${SETUP_MAKE_PVGW}"/>
+            <property name="targets" value="scag.pers.pvgw"/>
         </ant>
     </target>
 
     <target name="-make.admin" depends="makedeps" if="SETUP_MAKE_ADMIN">
-        <echo>Building ${SETUP_MAKE_ADMIN}</echo>
+        <echo>Building admin daemon</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
-            <property name="targets" value="${SETUP_MAKE_ADMIN}"/>
+            <property name="targets" value="admin"/>
         </ant>
     </target>
 
@@ -351,6 +365,9 @@ Issue "ant -p" to see available targets.
     </target>
 
     <target name="makemod">
+        <fail unless="MOD">
+            Please specify a module name via -DMOD=&lt;MODNAME&gt; command line argument
+        </fail>
         <ant dir="${SRC_DIR}" target="mod"/>
     </target>  
 
@@ -522,7 +539,7 @@ Issue "ant -p" to see available targets.
     </target>
 
     <target name="update"
-            depends="make, -update.scag, -update.msag, -update.pers, -update.pvss, -update.pvgw, -update.pvcp, -update.admin, -update.webapp, -update.jedit">
+            depends="-setup.update, make, -update.scag, -update.msag, -update.pers, -update.pvss, -update.pvgw, -update.pvcp, -update.admin, -update.webapp, -update.jedit">
         <!-- description="Action: update previously selected targets" -->
     </target>
 
@@ -784,7 +801,7 @@ Issue "ant -p" to see available targets.
     </target>
 
     <target name="install"
-            depends="make, -install.tree, -install.scag, -install.msag, -install.pers, -install.pvss, -install.admin, -install.webapp">
+            depends="-setup.update, make, -install.tree, -install.scag, -install.msag, -install.pers, -install.pvss, -install.admin, -install.webapp">
         <!-- description="Action: install previously selected targets" -->
     </target>
 
