@@ -124,6 +124,7 @@ Required environment: ORACLE_HOME
   </target>
 
   <target name="mod">
+    <echo>Building module ${MOD}</echo>
     <ant antfile="${SRC_DIR}/conf/make.xml">
       <property name="targets" value="${MOD}"/>
     </ant>
