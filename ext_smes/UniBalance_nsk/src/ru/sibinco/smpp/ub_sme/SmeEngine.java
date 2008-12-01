@@ -557,7 +557,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       }
 
       if (pdu.getStatusClass() == PDU.STATUS_CLASS_TEMP_ERROR) {
-        outgoingQueue.updateOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatus());
+        if( outgoingQueue != null ) outgoingQueue.updateOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatus());
       } else {
 
         if (isBillingSystemEnabled(CONTRACT_TYPE_UNKNOWN, BILLING_SYSTEM_FORIS_MG)) {
@@ -571,7 +571,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
           }
         }
 
-        outgoingQueue.removeOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatusClass());
+        if( outgoingQueue != null ) outgoingQueue.removeOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatusClass());
       }
     }
 
@@ -789,20 +789,18 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private void processIncomingMessage(Message message, long abonentRequestTime) {
     RequestState state;
     if (!message.getSourceAddress().equals(mgAddress)) { // abonent request
-      if (logger.isDebugEnabled())
-        logger.debug("Got request from " + message.getSourceAddress());
+      if (logger.isInfoEnabled())
+        logger.info("Got request from " + message.getSourceAddress());
       state = getRequestState(message.getSourceAddress());
 
       if (state != null) {
-        if (logger.isDebugEnabled())
-          logger.debug("Request rejected because another request from this abonent is already processing");
+        logger.warn("Request rejected because another request from this abonent is already processing");
         sendDeliverSmResponse(message, Data.ESME_RMSGQFUL);
         return;
       }
 
       if (states.size() >= maxProcessingRequests) {
-        if (logger.isDebugEnabled())
-          logger.debug("Request rejected because max processing requests count is reached");
+        logger.warn("Request rejected because max processing requests count is reached");
         sendDeliverSmResponse(message, Data.ESME_RMSGQFUL);
         return;
       }
@@ -814,11 +812,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       state = new RequestState(message, abonentRequestTime);
       addRequestState(state);
       try {
-        if(logger.isDebugEnabled())
-          logger.debug("Starting BalanceProcessor thread");
         threadsPool.execute(new BalanceProcessor(this, state));
-        if(logger.isDebugEnabled())
-          logger.debug("BalanceProcessor thread started");        
       } catch (RuntimeException e) {
         logger.error("Exception occured during creating balance processor: " + e, e);
         synchronized (state) {
@@ -830,19 +824,15 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       }
       if (bannerEngineClientEnabled) {
         try {
-          if(logger.isDebugEnabled())
-            logger.debug("Starting BannerRequest thread");
           threadsPool.execute(new BannerRequestThread(state));
-          if(logger.isDebugEnabled())
-            logger.debug("BannerRequest thread started");
         } catch (RuntimeException e) {
           logger.error("Exception occured during creating banner processor: " + e, e);
         }
       }
       sendDeliverSmResponse(message, Data.ESME_ROK);
     } else {  // mg response
-      if (logger.isDebugEnabled())
-        logger.debug("Got FORIS response for " + message.getDestinationAddress());
+      if (logger.isInfoEnabled())
+        logger.info("Got FORIS response for " + message.getDestinationAddress());
       sendDeliverSmResponse(message, Data.ESME_ROK);
       state = getRequestState(message.getDestinationAddress());
       if (state == null)

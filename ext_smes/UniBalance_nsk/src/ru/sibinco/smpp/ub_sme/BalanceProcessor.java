@@ -46,8 +46,8 @@ public class BalanceProcessor implements Runnable {
       }
       loopDetector++;
 
-      if (logger.isDebugEnabled())
-        logger.debug("currentBillingSystemId=" + currentBillingSystemId);
+      if( logger.isInfoEnabled() )
+        logger.info("Processing "+abonent+" billSys = "+currentBillingSystemId);
 
       switch (currentBillingSystemId) {
         case SmeEngine.BILLING_SYSTEM_IN_MAN_CONTRACT_TYPE:
@@ -62,19 +62,6 @@ public class BalanceProcessor implements Runnable {
               } catch (InManPDUException e) {
                 logger.error("InMan result Exception: " + e, e);
               }
-            }
-            switch (contractType) {
-              case SmeEngine.CONTRACT_TYPE_PREPAID:
-                if (logger.isDebugEnabled())
-                  logger.debug("This is PREPAID abonent contract");
-                break;
-              case SmeEngine.CONTRACT_TYPE_POSTPAID:
-                if (logger.isDebugEnabled())
-                  logger.debug("This is POSTPAID abonent contract");
-                break;
-              default:
-                if (logger.isDebugEnabled())
-                  logger.debug("Abonent contract type is UNKNOWN");
             }
             state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
             currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getAbonentContractType(), state.getCurrentBillingSystemIndex());
