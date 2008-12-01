@@ -251,7 +251,6 @@ public class QuizAdd extends SmsQuizBean {
     for (int i = 0; i < quizesList.size(); i++) {
       DataItem item = quizesList.get(i);
       String da = (String)item.getValue(QuizesDataSource.DA);
-      String sa = (String)item.getValue(QuizesDataSource.SA);
       Date dateBeginPrev = (Date)item.getValue(QuizesDataSource.DATE_BEGIN);
       Date dateEndPrev = (Date)item.getValue(QuizesDataSource.DATE_END);
       String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);
@@ -259,12 +258,12 @@ public class QuizAdd extends SmsQuizBean {
       if(quizName.equalsIgnoreCase(this.quizName)) {
         return warning("Quiz with this name already exists");
       }
-      if((da.equals(destAddress))||(sa.equals(sourceAddress))) {
+      if(da.equals(destAddress)) {
         try{
           Date dateBegin = dateFormat.parse(this.dateBegin);
           Date dateEnd = dateFormat.parse(this.dateEnd);
           if((dateBeginPrev.compareTo(dateEnd)<=0)&&(dateBegin.compareTo(dateEndPrev)<=0)) {
-            return warning("Quiz with this destination or source addresses already exists in this period");
+            return warning("Quiz with this destination address already exists in this period");
           }
         } catch(Exception e) {
           logger.error(e,e);

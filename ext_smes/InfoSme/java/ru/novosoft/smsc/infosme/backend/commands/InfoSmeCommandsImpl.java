@@ -11,6 +11,7 @@ import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataItem;
 import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
 
@@ -179,7 +180,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
         boolean loaded = smeContext.getConfig().getBool(prefix + ".messagesHaveLoaded");
         status = Boolean.toString(loaded);
       } catch(Exception e) {
-        status="";
+        status="error";
       }
       ctx.setMessage(status);
       ctx.setStatus(CommandContext.CMD_OK);
