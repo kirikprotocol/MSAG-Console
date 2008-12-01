@@ -58,12 +58,14 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
   public void resendMessage(CommandContext ctx, String msisdn, String taskId) {
     try {
       final SMSCAppContext appContext = ctx.getOwner().getContext();
-      if (!appContext.getSmeManager().smeStatus("InfoSme").isConnected()) {
+      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
+
+      if (!context.getInfoSme().getInfo().isOnline()) {
         ctx.setMessage("InfoSme is not started");
         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         return;
       }
-      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
+
       Config config = new Config(new File(appContext.getHostsManager().getServiceInfo("InfoSme").getServiceFolder(),
         "conf" + File.separatorChar + "config.xml"));
       String storeDir = appContext.getHostsManager().getServiceInfo("InfoSme").getServiceFolder()
@@ -95,12 +97,13 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
   public void removeTask(CommandContext ctx, String taskId) {
     try {
       final SMSCAppContext appContext = ctx.getOwner().getContext();
-      if (!appContext.getSmeManager().smeStatus("InfoSme").isConnected()) {
+      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
+      if (!context.getInfoSme().getInfo().isOnline()) {
         ctx.setMessage("InfoSme is not started");
         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         return;
       }
-      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
+//      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
 
       Task t = new Task(taskId);
       t.removeFromConfig(context.getConfig());
@@ -141,13 +144,14 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
 
 
       final SMSCAppContext appContext = ctx.getOwner().getContext();
-      if (!appContext.getSmeManager().smeStatus("InfoSme").isConnected()) {
+      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
+      if (!context.getInfoSme().getInfo().isOnline()) {
         ctx.setMessage("InfoSme is not started");
         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         return;
       }
 
-      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
+//      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
 
 
       TaskBuilder taskBuilder = new TaskBuilder(context, d);
@@ -167,7 +171,8 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
   public void getStatus(CommandContext ctx, String taskId) {
     try{
       final SMSCAppContext appContext = ctx.getOwner().getContext();
-      if (!appContext.getSmeManager().smeStatus("InfoSme").isConnected()) {
+      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
+      if (!context.getInfoSme().getInfo().isOnline()) {
         ctx.setMessage("InfoSme is not started");
         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         return;
