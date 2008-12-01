@@ -21,8 +21,6 @@
     <param name="smsc_console_password" type="string">password</param>
     <param name="smsc_console_closer_period" type="int">60</param>
     <param name="smsc_console_connect_timeout" type="int">60</param>
-    <param name="status_checker_period" type="int">30</param>
-    <param name="status_checker_delay" type="int">10</param>
   </section>
 
   <section name="jmx">
@@ -40,6 +38,8 @@
     <param name="dir_work" type="string">/home/alkhal/smsc/build/install/services/SmsQuiz/test_QuizManager</param>
     <param name="listener_delay" type="int">15</param>
     <param name="listener_period" type="int">30</param>
+    <param name="status_checker_period" type="int">30</param>
+    <param name="status_checker_delay" type="int">10</param>
   </section>
 
   <section name="replystats">
