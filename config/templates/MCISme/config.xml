@@ -8,7 +8,7 @@
 	<param name="CalledMask"  type="string">/^\d{10}$/</param>
 	<param name="CallingMask" type="string">/^(?:\.3\.\d\.\d{10}|\.4\.\d\.\d{1,20})$/</param>
 	<param name="SvcType" type="string">MCA</param>
-	<param name="SvcTypeOnline" type="string">MCAONL</param>
+	<param name="SvcTypeOnLine" type="string">MCAONL</param>
         <param name="ProtocolId" type="int">0</param>
 
 	<param name="DaysValid"  type="int">1</param>
