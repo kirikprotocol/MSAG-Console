@@ -44,7 +44,7 @@ public abstract class AbstractDataSource implements DataSource {
     if (data == null)
       throw new AdminException("Data source is not initialized.");
 
-    if (query.getFilter() == null || query.getFilter().isItemAllowed(item)) {
+    if ((query.getFilter() == null || query.getFilter().isItemAllowed(item))) {
       totalSize++;
       data.add(item);
     }
@@ -111,7 +111,7 @@ public abstract class AbstractDataSource implements DataSource {
 
       } else {
         if (size < maxSize)
-          _insert(item, head);
+          _insert(item, head.prev);
       }
     }
 

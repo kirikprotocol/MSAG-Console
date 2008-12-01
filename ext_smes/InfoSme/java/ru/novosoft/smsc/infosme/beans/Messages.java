@@ -104,13 +104,18 @@ public class Messages extends InfoSmeBean
       return warning("infosme.warn.no_task_for_msg");
 
     try { // Order is important here!
+      tableHelper.processRequest(request);
       if (mbDelete != null || mbDeleteAll != null) result = processDelete(request);
       else if (mbResend != null || mbResendAll != null) result =  processResend(request);
       else if (mbUpdateAll != null) return processUpdateAll();
       else if (mbExportAll != null) result =  processExportAll();
       else if (mbUpdate != null) return processUpdate();
       else if (mbCancelUpdate != null) return processCancelUpdate();
+      else if (mbQuery != null) processQuery();
     } catch (AdminException e) {
+      logger.error("Process error", e);
+      error("Error", e);
+    } catch (TableHelperException e) {
       logger.error("Process error", e);
       error("Error", e);
     }
@@ -126,8 +131,16 @@ public class Messages extends InfoSmeBean
     return result;
   }
 
+  private int processQuery() {
+    initialized = true;
+    tableHelper.reset();
+    mbQuery = null;
+    return RESULT_OK;
+  }
+
   private int processUpdateAll() {
     mbUpdateAll = null;
+    tableHelper.reset();
     return RESULT_UPDATE_ALL;
   }
 
@@ -178,6 +191,7 @@ public class Messages extends InfoSmeBean
       logger.debug("Messages update failed", e);
       return error("infosme.error.ds_msg_update_failed", e);
     }
+    tableHelper.reset();
     return RESULT_UPDATE;
   }
 
@@ -208,6 +222,8 @@ public class Messages extends InfoSmeBean
   }  
 
   private int processDelete(HttpServletRequest request) throws AdminException {
+
+    tableHelper.reset();
 
     if (mbDelete != null)
       deleteChecked(request);
@@ -257,6 +273,8 @@ public class Messages extends InfoSmeBean
       resendAll();
 
     mbResend = mbResendAll = null;
+
+    tableHelper.reset();
 
     return RESULT_OK;
   }

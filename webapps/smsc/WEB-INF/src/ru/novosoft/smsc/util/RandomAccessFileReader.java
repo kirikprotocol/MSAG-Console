@@ -45,7 +45,7 @@ public class RandomAccessFileReader {
   }
 
   public String readLine(String encoding) throws IOException {
-    ByteArrayOutputStream str = new ByteArrayOutputStream();
+    ByteArrayOutputStream str = new ByteArrayOutputStream(200);
     int c = -1;
     boolean eol = false;
 

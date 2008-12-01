@@ -1,9 +1,9 @@
 <%@ page import="ru.novosoft.smsc.infosme.beans.Messages"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="request" class="ru.novosoft.smsc.infosme.beans.Messages" />
-<% if (!bean.isProcessed()) {%>
+<%--<% if (!bean.isProcessed()) {%>--%>
   <jsp:setProperty name="bean" property="*"/>
-<% } %>
+<%--<% } %>--%>
 <%
 	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
@@ -13,6 +13,8 @@
   if (beanResult == Messages.RESULT_UPDATE || beanResult == Messages.RESULT_CANCEL_UPDATE) {
     request.getRequestDispatcher("messages.jsp").forward(request, response);
     return;
+  } else {
+    beanResult = InfoSmeBean.RESULT_OK;
   }
 %>
 <%@ include file="inc/menu_switch.jsp"%>

@@ -15,6 +15,7 @@
       response.sendRedirect("stat.jsp?csv=true");
       return;
   }
+  ru.novosoft.smsc.infosme.beans.DeliveriesNew bean = deliveries_bean;
 %>
 <%@ include file="inc/menu_switch.jsp"%>
 <%

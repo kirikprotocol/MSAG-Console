@@ -10,6 +10,7 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.jsp.util.tables.DataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
 import ru.novosoft.smsc.infosme.backend.Message;
@@ -36,15 +37,17 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
 
   private int maxTotalSize = 0;
 
-  private AbstractDataSource ds;
+  private DataSource ds;
 
   private int totalSize = 0;
 
-  private String sortOrder;
+  private String sortOrder, prevSortOrder;
 
   private Filter filter;
 
   private boolean addCheck = true;
+
+  private QueryResultSet messages;
 
 
   public MessagesTableHelper(String uid, boolean addCheck) {
@@ -78,10 +81,19 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
 
   protected void fillTable(int start, int size) throws TableHelperException {
     try{
-      buildSortOrder();
-      final QueryResultSet messages = ds.query(new MessageQuery(size, filter, sortOrder, start));
 
-      for (int i = 0; i < messages.size(); i++) {
+      buildSortOrder();
+      if (sortOrder != null && (prevSortOrder == null || !prevSortOrder.equals(sortOrder))) {
+        messages = null;
+        prevSortOrder = sortOrder;
+      }
+
+      if (messages == null) {
+        messages = ds.query(new MessageQuery(maxTotalSize, filter, sortOrder, 0));
+      }
+
+      clear();
+      for (int i = start; i < start + size && i < messages.size(); i++) {
         final DataItem item = messages.get(i);
 
         final Row row = createNewRow();
@@ -117,7 +129,7 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
     this.maxTotalSize = maxTotalSize;
   }
 
-  public AbstractDataSource getDs() {
+  public DataSource getDs() {
     return ds;
   }
 
@@ -151,6 +163,10 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
       return "DELETED";
 
     return "";
+  }
+
+  public void reset() {
+    messages = null;
   }
 
   private String convertDateToString(Date date) {

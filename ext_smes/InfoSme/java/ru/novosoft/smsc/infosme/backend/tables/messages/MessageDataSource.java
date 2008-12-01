@@ -47,8 +47,14 @@ public class MessageDataSource extends AbstractDataSource {
   }
 
   public QueryResultSet query(Query query_to_run) {
-    init(query_to_run);
+
     MessageFilter filter = (MessageFilter)query_to_run.getFilter();
+    final String deletedStateStr = String.valueOf(Message.State.DELETED.getId());
+    final String filterStateStr = (filter.getStatus() == null || filter.getStatus() == Message.State.UNDEFINED) ? null : String.valueOf(filter.getStatus().getId());
+    final String filterAbonentStr = filter.getAddress() == null || filter.getAddress().length()==0 ? null : filter.getAddress();
+
+    // Set empty filter because we make filtering here, in data source (for performance purposes)
+    init(new MessageQuery(query_to_run.getExpectedResultsQuantity(), null, query_to_run.getSortOrder(), query_to_run.getStartPosition()));
 
     try {
 
@@ -60,9 +66,7 @@ public class MessageDataSource extends AbstractDataSource {
         return new EmptyResultSet();
 
       String fromDateString = filter.getFromDate() == null ? null : msgDateFormat.format(filter.getFromDate());
-      Date fromDate = filter.getFromDate() == null ? null : msgDateFormat.parse(fromDateString);
       String tillDateString = filter.getTillDate() == null ? null : msgDateFormat.format(filter.getTillDate());
-      Date tillDate = filter.getTillDate() == null ? null : msgDateFormat.parse(tillDateString);
 
       String encoding = System.getProperty("file.encoding");
 
@@ -72,7 +76,6 @@ public class MessageDataSource extends AbstractDataSource {
         long idbase = getIdBase(fileNameFormat.parse(file.getParentFile().getName() + '/' + file.getName()));
 
         RandomAccessFile f = null;
-        int j=0;
         if (log.isDebugEnabled())
           log.debug("Start reading messages from file: " + file.getName());
 
@@ -89,12 +92,11 @@ public class MessageDataSource extends AbstractDataSource {
             if (line == null)
               break;
 
-            j++;
-
             int i = line.indexOf(',');
-            int state = Integer.parseInt(line.substring(0, i));
-            if (state == Message.State.DELETED.getId())
+            String stateStr = line.substring(0,i);
+            if (stateStr.equals(deletedStateStr) || (filterStateStr != null && !stateStr.equals(filterStateStr)))
               continue;
+            int state = Integer.parseInt(stateStr);
 
             int k = i + 1;
             i = line.indexOf(',', k);
@@ -106,6 +108,8 @@ public class MessageDataSource extends AbstractDataSource {
             k = i+1;
             i = line.indexOf(',', k);
             String msisdn = line.substring(k, i);
+            if (filterAbonentStr != null && !filterAbonentStr.equals(msisdn))
+              continue;
 
             k = i+1;
             i = line.indexOf(',', k);
@@ -115,7 +119,7 @@ public class MessageDataSource extends AbstractDataSource {
 
             long id = getId(idbase, offset);
 
-            add(new MessageDataItem(id, filter.getTaskId(), state, msgDateFormat.parse(dateStr), msisdn, region, message));              
+            add(new MessageDataItem(id, filter.getTaskId(), state, msgDateFormat.parse(dateStr), msisdn, region, message));
 
           }
         } catch (EOFException e) {
@@ -130,8 +134,6 @@ public class MessageDataSource extends AbstractDataSource {
             } catch (IOException e) {
             }
         }
-        if (log.isDebugEnabled())
-          log.debug(j + " messages have readed from file: " + file.getName());
       }
 
     } catch (ParseException e) {

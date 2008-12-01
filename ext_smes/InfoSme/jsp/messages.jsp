@@ -6,18 +6,15 @@
                  java.io.*"%>
 <%@ page import="ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataItem"%>
 <%@ page import="ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper"%>
-<jsp:useBean id="bean" scope="request" class="ru.novosoft.smsc.infosme.beans.Messages" />
-<% if (!bean.isProcessed()) {%>
-  <jsp:setProperty name="bean" property="*"/>
-<% } %>
+<jsp:useBean id="bean" scope="session" class="ru.novosoft.smsc.infosme.beans.Messages" />
+<jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
 	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
-  bean.getTableHelper().processRequest(request);
   int rowN = 0;
-  int beanResult = bean.process(request);
+  int beanResult = bean.process(request);  
   if (beanResult == Messages.RESULT_EXPORT_ALL) {
     if(session.getAttribute("Export mess done")==null) {
       session.setAttribute("Export mess done",Boolean.TRUE);
@@ -28,7 +25,7 @@
       session.setAttribute("Export mess done",null);
     }
   } else if (beanResult == Messages.RESULT_UPDATE_ALL) {
-    session.setAttribute("Export mess done",null);
+    session.setAttribute("Export mess done",null);    
     request.getRequestDispatcher("updateMessages.jsp").forward(request, response);
     return;
   } else {
@@ -40,7 +37,7 @@
 <%@ include file="inc/header.jsp"%>
 
 <div class=content>
-<input type=hidden name=initialized value=true>
+<%--<input type=hidden name=initialized id=initialized value=<%=bean.isInitialized()%>>--%>
 <%Collection allTasks = bean.getAllTasks();
   if (allTasks.size() > 0) {%>
 <table class=properties_list>
