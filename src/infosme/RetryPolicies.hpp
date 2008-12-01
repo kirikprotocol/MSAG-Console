@@ -4,6 +4,7 @@
 #include "core/buffers/IntHash.hpp"
 #include "core/buffers/Hash.hpp"
 #include "core/synchronization/Mutex.hpp"
+#include "logger/Logger.h"
 
 namespace smsc{
 namespace infosme{
@@ -14,8 +15,13 @@ namespace conf=smsc::util::config;
 
 class RetryPolicies{
 public:
+  RetryPolicies()
+  {
+    log=smsc::logger::Logger::getInstance("retryPlcy");
+  }
   void Load(conf::ConfigView* cv)
   {
+    smsc_log_info(log,"Loading Retry Policies");
     sync::MutexGuard mg(mtx);
     n2p.Empty();
     std::auto_ptr<conf::CStrSet> pnames(cv->getShortSectionNames());
@@ -35,11 +41,25 @@ public:
         }
       }
     }
+    smsc_log_info(log,"loaded %d policies",n2p.GetCount());
+    if(!n2p.Exists("default"))
+    {
+      Policy def;
+      def.deftime=3600;
+      smsc_log_warn(log,"default policy not found! created with default time %d",def.deftime);
+      n2p["default"]=def;
+    }
   }
   int getRetryTime(const char* policy,int errorCode)
   {
     sync::MutexGuard mg(mtx);
-    const Policy& p=n2p[policy];
+    Policy* pptr=n2p.GetPtr(policy);
+    if(!pptr)
+    {
+      smsc_log_warn(log,"policy %s not found! returned default retry time 3600.");
+      return 3600;
+    }
+    const Policy& p=*pptr;
     if(p.c2t.Exist(errorCode))
     {
       return p.c2t.Get(errorCode);
@@ -55,6 +75,7 @@ protected:
   typedef buf::Hash<Policy> Name2Policy;
   Name2Policy n2p;
   sync::Mutex mtx;
+  smsc::logger::Logger* log;
 };
 
 }
