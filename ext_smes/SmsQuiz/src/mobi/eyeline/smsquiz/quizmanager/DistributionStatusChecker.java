@@ -51,6 +51,10 @@ public class DistributionStatusChecker implements Runnable {
           return;
         }
         String id = quiz.getDistrId();
+        if(id==null) {
+          logger.error("Distr id is null for quiz: "+quiz);
+          return;
+        }
         DistributionManager.State state = dm.getState(id);
         if(state.equals(DistributionManager.State.GENERATED)) {
           quiz.setGenerated(true);

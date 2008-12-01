@@ -24,10 +24,12 @@ import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.text.SimpleDateFormat;
 
 /**
  * author: alkhal
@@ -179,32 +181,30 @@ public class QuizManager implements Observer {
   public void update(Observable o, Object arg) {
     try {
       logger.info("Updating quizfiles list...");
-      Notification notification = (Notification) arg;
-      if (notification.getStatus().equals(Notification.FileStatus.MODIFIED)) {
+      Collection<Notification> ns = (Collection<Notification>) arg;
+      for(Notification notification : ns) {
+        if (notification.getStatus().equals(Notification.FileStatus.MODIFIED)) {
+          try {
+            modifyQuiz(notification);
+          } catch (Exception e) {
+            logger.error("Unable to modify quiz: " + notification.getFileName());
+          }
 
-        try {
-          modifyQuiz(notification);
-        } catch (Exception e) {
-          logger.error("Unable to modify quiz: " + notification.getFileName());
-        }
-
-      } else if (notification.getStatus().equals(Notification.FileStatus.CREATED)) {
-
-        try {
-          createQuiz(notification);
-        } catch (Exception e) {
-          logger.error("Unable to update quize: " + notification.getFileName());
-        }
-      } else if (notification.getStatus().equals(Notification.FileStatus.DELETED)) {
-
-        try {
-          deleteQuiz(notification);
-        }
-        catch (Exception e) {
-          logger.error("Unable to delete quize: " + notification.getFileName());
+        } else if (notification.getStatus().equals(Notification.FileStatus.CREATED)) {
+          try {
+            createQuiz(notification);
+          } catch (Exception e) {
+            logger.error("Unable to update quize: " + notification.getFileName());
+          }
+        } else if (notification.getStatus().equals(Notification.FileStatus.DELETED)) {
+          try {
+            deleteQuiz(notification);
+          }
+          catch (Exception e) {
+            logger.error("Unable to delete quize: " + notification.getFileName());
+          }
         }
       }
-
       quizCollector.alert();
     }
     catch (Throwable e) {
@@ -299,7 +299,8 @@ public class QuizManager implements Observer {
       if (!quiz.isFinished()) {
         Quiz prev = quizes.getQuizByDestination(quiz.getDestAddress());
         if (prev != null) {
-          if ((prev.getDateBegin().compareTo(quiz.getDateEnd()) <= 0) && (quiz.getDateBegin().compareTo(prev.getDateEnd()) <= 0)) {
+          if ((prev.getDateBegin().compareTo(quiz.getDateEnd()) <= 0)
+              && (quiz.getDateBegin().compareTo(prev.getDateEnd()) <= 0)) {
             logger.error("Error during creating quiz: quizes conflict");
             writeQuizesConflict(prev, quiz.getFileName());
             try {
@@ -321,8 +322,20 @@ public class QuizManager implements Observer {
           logger.error(e, e);
           throw new QuizException(e.toString(), e);
         }
+      } 
+      else {
+        if(quiz.getDistrId()==null) {
+          logger.warn("Quiz is finished, but it's distribution id doesn't exist: "+quiz);
+          quiz.setExported(true);
+        } else {
+          SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
+          String resFileName = dirResult + File.separator + quiz.getQuizId() + "."
+              + dateFormat.format(quiz.getDateBegin()) + "-" + dateFormat.format(quiz.getDateEnd()) + ".res";
+          if (new File(resFileName).exists()) {
+            quiz.setExported(true);
+          }
+        }
       }
-
       quizes.add(quiz);
 
     } catch (QuizException e) {

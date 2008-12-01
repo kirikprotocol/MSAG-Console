@@ -34,10 +34,21 @@ class QuizCollector {
   }
 
   public void alert() throws QuizException{
-    long time = calcTime().getTime() - System.currentTimeMillis();
-    executor.schedule(new Task(), time , TimeUnit.MILLISECONDS);
+    long time = calcTime().getTime();
+    if (time == Long.MAX_VALUE)
+      return;
+
+    time = time - System.currentTimeMillis();
+    if (time < 0)
+      time = 0;
+    try{
+      executor.schedule(new Task(), time , TimeUnit.MILLISECONDS);
+    }catch (RejectedExecutionException e) {
+      logger.error(e,e);
+      throw new QuizException(e);
+    }
     if(logger.isInfoEnabled()) {
-      logger.info("Task will be run after: "+time);
+      logger.info("Task will be run after: "+time+" ms");
     }
   }
 
@@ -104,7 +115,7 @@ class QuizCollector {
         if (quizesMap.get(quiz.getDestAddress()) == quiz) {
           quizesMap.remove(quiz.getDestAddress());
           if (logger.isInfoEnabled()) {
-            logger.info("QuizCollector removed quiz: " + quiz);
+            logger.info("QuizCollector removed quiz from map: " + quiz);
           }
         }
         executor.execute(new Runnable() {
@@ -114,13 +125,16 @@ class QuizCollector {
               quiz.shutdown();
               quiz.setQuizStatus(Status.QuizStatus.FINISHED);
             } catch (QuizException e) {
-              logger.error("Error creating resultStatistics");
+              logger.error("Error creating result statistics");
             }
           }
         });
       } else {
         quizesMap.put(quiz.getDestAddress(), quiz);
         quiz.setQuizStatus(Status.QuizStatus.ACTIVE);
+        if (logger.isInfoEnabled()) {
+          logger.info("QuizCollector added quiz into map: " + quiz);
+        }
       }
     }
   }

@@ -49,7 +49,7 @@ public class QuizFileHandler extends Observable implements Runnable {
     logger.info("Running QuizFileHandler...");
     File dirQuiz = new File(quizDir);
     try {
-
+      Collection<Notification> notifications = new LinkedList<Notification>();
       final File[] files = dirQuiz.listFiles(fileFilter);
       for (File f : files) {
         String fileName = f.getAbsolutePath();
@@ -58,8 +58,7 @@ public class QuizFileHandler extends Observable implements Runnable {
 
         if ((existFile = filesMap.get(fileName)) != null) {
           if (existFile.getLastModified() < lastModified) {
-            setChanged();
-            notifyObservers(new Notification(fileName, Notification.FileStatus.MODIFIED));
+            notifications.add(new Notification(fileName, Notification.FileStatus.MODIFIED));
             existFile.modifyDate(lastModified);
             if (logger.isInfoEnabled()) {
               logger.info("Quiz file modified: " + fileName);
@@ -67,8 +66,7 @@ public class QuizFileHandler extends Observable implements Runnable {
           }
         } else {
           filesMap.put(fileName, new QuizFile(fileName, lastModified));
-          setChanged();
-          notifyObservers(new Notification(fileName, Notification.FileStatus.CREATED));
+          notifications.add(new Notification(fileName, Notification.FileStatus.CREATED));
           if (logger.isInfoEnabled()) {
             logger.info("Quiz file created: " + fileName);
           }
@@ -77,13 +75,16 @@ public class QuizFileHandler extends Observable implements Runnable {
       LinkedList<String> toRemove = new LinkedList<String>();
       for (String fileN : filesMap.keySet()) {
         if (!(new File(fileN)).exists()) {
-          setChanged();
-          notifyObservers(new Notification(fileN, Notification.FileStatus.DELETED));
+          notifications.add(new Notification(fileN, Notification.FileStatus.DELETED));
           toRemove.add(fileN);
         }
       }
       for (String r : toRemove) {
         filesMap.remove(r);
+      }
+      if(!notifications.isEmpty()) {
+          setChanged();
+          notifyObservers(notifications);
       }
     } catch (Throwable e) {
       logger.error("Error construct quiz file or notification", e);
