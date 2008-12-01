@@ -87,7 +87,7 @@ public class StatsFilesCache {
     cal.set(Calendar.MINUTE, 0);
     cal.set(Calendar.SECOND, 0);
     cal.set(Calendar.MILLISECOND, 0);
-    System.out.println("Gmt: "+cal.get(Calendar.ZONE_OFFSET));
+    System.out.println("Gmt: " + cal.get(Calendar.ZONE_OFFSET));
     cal.setTimeInMillis(cal.getTime().getTime() + dateFormat.parse("23").getTime() + cal.get(Calendar.ZONE_OFFSET));
     System.out.println(cal.getTime());
     System.out.println(cal.getTime().getTime());
@@ -112,7 +112,7 @@ public class StatsFilesCache {
     try {
       final SimpleDateFormat dirNameFormat = new SimpleDateFormat(dirNamePattern);
       final SimpleDateFormat fileNameFormat = new SimpleDateFormat(dirNamePattern + '/' + fileNamePattern);
-      final SimpleDateFormat fileDateFormat = new SimpleDateFormat(dirNamePattern+fileNamePattern);
+      final SimpleDateFormat fileDateFormat = new SimpleDateFormat(dirNamePattern + fileNamePattern);
 
       final Date fromDir = dirNameFormat.parse(dirNameFormat.format(from));
       final Date fromFile = fileDateFormat.parse(fileDateFormat.format(from));
@@ -120,7 +120,7 @@ public class StatsFilesCache {
       final Date tillFile = fileDateFormat.parse(fileDateFormat.format(till));
 
       // Fetch directories
-      File[] dirArr = dir.listFiles(new FileFilter(){
+      File[] dirArr = dir.listFiles(new FileFilter() {
         public boolean accept(File file) {
           if (!file.isDirectory())
             return false;
@@ -134,8 +134,8 @@ public class StatsFilesCache {
       });
 
       // Fetch files
-      int i=0;
-      while (i<dirArr.length) {
+      int i = 0;
+      while (i < dirArr.length) {
         File directory = dirArr[i];
         String dirName = directory.getName();
         File[] fileArr = directory.listFiles();
@@ -164,12 +164,13 @@ public class StatsFilesCache {
     }
     return files;
   }
+
   /*              if ((statsFile = lockupFile(da, date, true)) != null) {
-                files.add(statsFile);
-                if (logger.isInfoEnabled()) {
-                  logger.info("File added for analysis: " + statsFile.getName());
-                }
-              }*/
+    files.add(statsFile);
+    if (logger.isInfoEnabled()) {
+      logger.info("File added for analysis: " + statsFile.getName());
+    }
+  }*/
   private void resetTillHour(Calendar calendar) {
     if (calendar != null) {
       calendar.set(Calendar.MINUTE, 0);

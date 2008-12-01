@@ -24,9 +24,9 @@ public class QuizManagerMBean extends AbstractDynamicMBean {
     attributes.add(new MBeanAttributeInfo("QuizDir",
         "java.lang.String", "Directory with quiz's files", true, false, false));
     attributes.add(new MBeanAttributeInfo("ListenerDelayFirst",
-        "java.lang.Long", "Time to delay QuizFileHandler's execution", true, false, false));
+        "java.lang.Long", "Time to delay DirListener's execution", true, false, false));
     attributes.add(new MBeanAttributeInfo("ListenerPeriod",
-        "java.lang.Long", "Period of QuizFileHandler's execution", true, false, false));
+        "java.lang.Long", "Period of DirListener's execution", true, false, false));
     attributes.add(new MBeanAttributeInfo("CollectorDelayFirst",
         "java.lang.Long", "Time to delay QuizCollector's execution", true, false, false));
     attributes.add(new MBeanAttributeInfo("CollectorPeriod",
@@ -58,7 +58,7 @@ public class QuizManagerMBean extends AbstractDynamicMBean {
       return manager.getCollectorPeriod();
     } else if (attribute.equals("DirModifiedAb")) {
       return manager.getDirWork();
-    }  else if (attribute.equals("CheckerFirstDelay")) {
+    } else if (attribute.equals("CheckerFirstDelay")) {
       return manager.getCheckerFirstDelay();
     } else if (attribute.equals("CheckerPeriod")) {
       return manager.getCheckerPeriod();

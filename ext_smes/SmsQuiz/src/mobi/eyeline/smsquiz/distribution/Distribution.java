@@ -37,7 +37,7 @@ public abstract class Distribution {
   private boolean txmode;
 
   private String taskName;
-  
+
   private String question;
 
   public Distribution() {

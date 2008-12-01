@@ -119,11 +119,11 @@ public class QuizBuilder {
       logger.error("Parsing exception", e);
       throw new QuizException("Parsing exception", e);
     }
-      quiz.setDateBegin(dateBegin);
-      quiz.setDateEnd(dateEnd);
-      quiz.setQuestion(question);
-      quiz.setQuizName(name);
-      quiz.setOrigAbFile(abFileName);
+    quiz.setDateBegin(dateBegin);
+    quiz.setDateEnd(dateEnd);
+    quiz.setQuestion(question);
+    quiz.setQuizName(name);
+    quiz.setOrigAbFile(abFileName);
   }
 
   @SuppressWarnings({"unchecked"})

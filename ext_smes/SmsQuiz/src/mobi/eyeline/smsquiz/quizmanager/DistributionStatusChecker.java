@@ -2,8 +2,8 @@ package mobi.eyeline.smsquiz.quizmanager;
 
 import mobi.eyeline.smsquiz.distribution.DistributionManager;
 import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
-import mobi.eyeline.smsquiz.quizmanager.quiz.Status;
 import mobi.eyeline.smsquiz.quizmanager.quiz.QuizError;
+import mobi.eyeline.smsquiz.quizmanager.quiz.Status;
 import org.apache.log4j.Logger;
 
 import java.util.Map;
@@ -22,7 +22,7 @@ public class DistributionStatusChecker implements Runnable {
   private final Map<String, Quiz> quizesMap;
 
   public DistributionStatusChecker(DistributionManager dm, Quizes quizes, Map<String, Quiz> quizesMap) {
-    if ((dm == null) || (quizes == null)||(quizesMap == null)) {
+    if ((dm == null) || (quizes == null) || (quizesMap == null)) {
       throw new NullPointerException("Some params are null");
     }
     this.dm = dm;
@@ -46,44 +46,42 @@ public class DistributionStatusChecker implements Runnable {
   private class StatusVisitor implements Quizes.Visitor {
 
     public void visit(Quiz quiz) throws QuizException {
-      try{
-        if(quiz.isGenerated()||quiz.getQuizStatus().equals(Status.QuizStatus.FINISHED_ERROR)) {
+      try {
+        if (quiz.isGenerated() || quiz.getQuizStatus().equals(Status.QuizStatus.FINISHED_ERROR)) {
           return;
         }
         String id = quiz.getDistrId();
-        if(id==null) {
-          logger.error("Distr id is null for quiz: "+quiz);
+        if (id == null) {
+          logger.error("Distr id is null for quiz: " + quiz);
           return;
         }
         DistributionManager.State state = dm.getState(id);
-        if(state.equals(DistributionManager.State.GENERATED)) {
+        if (state.equals(DistributionManager.State.GENERATED)) {
           quiz.setGenerated(true);
           if (quiz.getQuizStatus().equals(Status.QuizStatus.GENERATION)) {
-            if(!quiz.isActive()) {
+            if (!quiz.isActive()) {
               quiz.setQuizStatus(Status.QuizStatus.AWAIT);
-            }
-            else {
+            } else {
               quiz.setQuizStatus(Status.QuizStatus.ACTIVE);
             }
           }
-        } else if(state.equals(DistributionManager.State.ERROR)) {
+        } else if (state.equals(DistributionManager.State.ERROR)) {
           logger.error("Quiz's distribution generation failed: " + quiz);
-          if(quizesMap.get(quiz.getDestAddress())==quiz) {
+          if (quizesMap.get(quiz.getDestAddress()) == quiz) {
             quizesMap.remove(quiz.getDestAddress());
           }
           try {
             quiz.setError(QuizError.DISTR_ERROR, "Distribution generation failed");
           } catch (QuizException e) {
-            logger.error(e,e);
+            logger.error(e, e);
           }
         }
-      }catch (Exception e) {
-        logger.error(e,e);
+      } catch (Exception e) {
+        logger.error(e, e);
         throw new QuizException(e);
       }
     }
   }
-
 
 
 }

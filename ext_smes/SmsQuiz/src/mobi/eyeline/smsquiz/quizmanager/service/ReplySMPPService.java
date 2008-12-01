@@ -19,7 +19,6 @@ public class ReplySMPPService extends BasicService {
 
   private static final Logger logger = Logger.getLogger(ReplySMPPService.class);
 
-  private ReplyStatsDataSource replyStatsDataSource;
   private QuizManager quizManager;
 
   public boolean serve(SMPPRequest smppRequest) {

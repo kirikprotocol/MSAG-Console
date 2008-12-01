@@ -7,7 +7,9 @@ import java.util.Date;
 
 public interface DistributionManager {
 
-  public static enum State {GENERATED, UNGENERATED, ERROR}
+  public static enum State {
+    GENERATED, UNGENERATED, ERROR
+  }
 
   public String createDistribution(Distribution distr) throws DistributionException;
 

@@ -8,9 +8,9 @@ import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.File;
 import java.util.concurrent.ScheduledExecutorService;
 
 public class DistributionImpl extends Distribution {
@@ -21,16 +21,14 @@ public class DistributionImpl extends Distribution {
 
   private SubscriptionManager subscriptionManager;
 
-  private ScheduledExecutorService executor;
-
-  public DistributionImpl(String abFile, SubscriptionManager subscriptionManager) throws QuizException{
-    if(abFile==null) {
+  public DistributionImpl(String abFile, SubscriptionManager subscriptionManager) throws QuizException {
+    if (abFile == null) {
       logger.error("Some arguments are null");
-      throw  new IllegalArgumentException("Some arguments are null");
+      throw new IllegalArgumentException("Some arguments are null");
     }
-    if(!new File(abFile).exists()) {
-      logger.error("Abonents file doesn't exist: "+abFile);
-      throw  new QuizException("Abonents file doesn't exist: "+abFile);
+    if (!new File(abFile).exists()) {
+      logger.error("Abonents file doesn't exist: " + abFile);
+      throw new QuizException("Abonents file doesn't exist: " + abFile);
 
     }
     this.abFile = abFile;
@@ -42,7 +40,7 @@ public class DistributionImpl extends Distribution {
     return new AbonentsResultSet(new File(abFile));
   }
 
-  private class AbonentsResultSet implements ResultSet{
+  private class AbonentsResultSet implements ResultSet {
 
     private File file;
 
@@ -51,7 +49,7 @@ public class DistributionImpl extends Distribution {
     private String currentAbonent = null;
 
     AbonentsResultSet(File file) {
-      if(file==null) {
+      if (file == null) {
         logger.error("Some arguments are null");
         throw new IllegalArgumentException("Some arguments are null");
       }
@@ -60,7 +58,7 @@ public class DistributionImpl extends Distribution {
 
     public boolean next() throws StorageException {
       try {
-        if(reader == null) {
+        if (reader == null) {
           reader = new BufferedReader(new FileReader(file));
         }
         String line;
@@ -71,7 +69,7 @@ public class DistributionImpl extends Distribution {
         reader.close();
         return false;
       } catch (Exception e) {
-        logger.error("Error during getting line from file "+abFile, e);
+        logger.error("Error during getting line from file " + abFile, e);
         if (reader != null) {
           try {
             reader.close();
@@ -83,7 +81,7 @@ public class DistributionImpl extends Distribution {
       }
     }
 
-    private boolean subscribed(String line) throws SubManagerException{
+    private boolean subscribed(String line) throws SubManagerException {
       String msisdn = line.trim();
       if (subscriptionManager.subscribed(msisdn)) {
         currentAbonent = msisdn;
@@ -97,10 +95,11 @@ public class DistributionImpl extends Distribution {
     }
 
     public void close() {
-      if(reader!=null) {
+      if (reader != null) {
         try {
           reader.close();
-        } catch (IOException e) {}
+        } catch (IOException e) {
+        }
       }
     }
 

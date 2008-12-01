@@ -11,19 +11,17 @@ import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleClient;
 import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleException;
 import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleResponse;
 import mobi.eyeline.smsquiz.storage.ResultSet;
-import mobi.eyeline.smsquiz.quizmanager.DistributionStatusChecker;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 
 public class DistributionInfoSmeManager implements DistributionManager {
 
@@ -99,19 +97,19 @@ public class DistributionInfoSmeManager implements DistributionManager {
     monitor = new DistributionManagerMBean(this);
   }
 
-  private String createAbFile(Distribution distr) throws DistributionException{
-   File file = new File(workDir);
-   if(!file.exists()) {
-     file.mkdirs();
-   }
-   PrintWriter writer = null;
+  private String createAbFile(Distribution distr) throws DistributionException {
+    File file = new File(workDir);
+    if (!file.exists()) {
+      file.mkdirs();
+    }
+    PrintWriter writer = null;
     try {
-      file = new File(workDir+File.separator+ distr.getTaskName().hashCode()+".csv");
+      file = new File(workDir + File.separator + distr.getTaskName().hashCode() + ".csv");
       writer = new PrintWriter(new BufferedWriter(new FileWriter(file)));
       ResultSet rs = distr.abonents();
       String question = distr.getQuestion().replace(System.getProperty("line.separator"), "\\n");
       while (rs.next()) {
-        String msisdn = (String)rs.get();
+        String msisdn = (String) rs.get();
         writer.print(msisdn);
         writer.print("|");
         writer.print(question);
@@ -119,9 +117,9 @@ public class DistributionInfoSmeManager implements DistributionManager {
       }
       writer.flush();
     } catch (Exception e) {
-      logger.error(e,e);
+      logger.error(e, e);
       throw new DistributionException("Unable to modified abonents list: ", e);
-    }  finally {
+    } finally {
       if (writer != null) {
         writer.close();
       }
@@ -133,7 +131,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
   public String createDistribution(final Distribution distr) throws DistributionException {
     logger.info("Create distribution...");
     if ((distr == null) || (distr.getDateBegin() == null)
-        || (distr.getQuestion() == null) ||(distr.getDateEnd() == null) || (distr.getDays() == null)
+        || (distr.getQuestion() == null) || (distr.getDateEnd() == null) || (distr.getDays() == null)
         || (distr.getTimeBegin() == null) || (distr.getTimeEnd() == null)) {
       logger.error("Some fields of argument are empty");
       throw new DistributionException("Some fields of argument are empty", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
@@ -260,13 +258,13 @@ public class DistributionInfoSmeManager implements DistributionManager {
           String status = tokens[2];
           if (status.equals("true")) {
             return State.GENERATED;
-          } else if (status.equals("false")){
+          } else if (status.equals("false")) {
             return State.UNGENERATED;
-          } else if(status.equals("error")) {
+          } else if (status.equals("error")) {
             return State.ERROR;
           } else {
-            logger.error("Unknown status for taskId="+id+". Status: "+ status);
-            throw new DistributionException("Unknown status for taskId="+id+". Status: "+ status);
+            logger.error("Unknown status for taskId=" + id + ". Status: " + status);
+            throw new DistributionException("Unknown status for taskId=" + id + ". Status: " + status);
           }
         }
       }

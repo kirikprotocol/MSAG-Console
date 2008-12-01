@@ -27,7 +27,7 @@ public class Status {
     FINISHED_ERROR, ACTIVE
   }
 
-  public static final String DISTR_ID = "distribution.id";
+  private  static final String DISTR_ID = "distribution.id";
   private static final String QUIZ_ST = "quiz.status";
   private static final String ERROR_REASON = "quiz.error.reason";
   private static final String ERROR_CODE = "quiz.error.id";
@@ -124,7 +124,7 @@ public class Status {
   }
 
   void setActualStartDate(Date date) throws QuizException {
-    if((prop.getProperty(ACTUAL_START_DATE)==null)||(prop.getProperty(ACTUAL_START_DATE).equals(""))) {
+    if ((prop.getProperty(ACTUAL_START_DATE) == null) || (prop.getProperty(ACTUAL_START_DATE).equals(""))) {
       Date now = new Date();
       if (now.before(date)) {
         prop.setProperty(ACTUAL_START_DATE, DF.format(date));

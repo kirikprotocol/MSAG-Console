@@ -9,11 +9,11 @@ import javax.management.*;
  */
 public class QuizFIleHandlerMBean extends AbstractDynamicMBean {
 
-  private QuizFileHandler quizFileHandler;
+  private DirListener dirListener;
 
-  public QuizFIleHandlerMBean(QuizFileHandler quizFileHandler) {
-    super(QuizFIleHandlerMBean.class, "QuizFileHandler's monitor");
-    this.quizFileHandler = quizFileHandler;
+  public QuizFIleHandlerMBean(DirListener dirListener) {
+    super(QuizFIleHandlerMBean.class, "DirListener's monitor");
+    this.dirListener = dirListener;
 
     attributes.add(new MBeanAttributeInfo("ActiveFiles",
         "java.lang.String", "Collection of active quizes files", true, false, false));
@@ -23,9 +23,9 @@ public class QuizFIleHandlerMBean extends AbstractDynamicMBean {
 
   public Object getAttribute(String attribute) throws AttributeNotFoundException, MBeanException, ReflectionException {
     if (attribute.equals("ActiveFiles"))
-      return quizFileHandler.getFilesList();
+      return dirListener.getFilesList();
     else if (attribute.equals("CountActiveFiles"))
-      return quizFileHandler.countFiles();
+      return dirListener.countFiles();
     throw new AttributeNotFoundException("Attribute " + attribute + " not found");
   }
 

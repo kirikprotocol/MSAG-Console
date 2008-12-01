@@ -24,11 +24,8 @@ import java.util.concurrent.ScheduledExecutorService;
 public class Main {
 
   private static final Logger logger = Logger.getLogger(MainTest.class);
-  private static OutgoingQueue outgoingQueue;
 
-  private static int quizIndex = 1;
   final static String conf = "conf/config.xml";
-  private static ScheduledExecutorService scheduledQuizCreator;
 
   public static void main(String[] args) {
 
@@ -49,7 +46,6 @@ public class Main {
       cfg = new PropertiesConfig();
       cfg.load(new File("conf/smpp.properties"));
       final SMPPTransceiver transceiver = new SMPPTransceiver(cfg, "");
-      outgoingQueue = transceiver.getOutQueue();
       transceiver.connect();
       mh = new MessageHandler(conf, transceiver.getInQueue(), transceiver.getOutQueue());
       mh.start();

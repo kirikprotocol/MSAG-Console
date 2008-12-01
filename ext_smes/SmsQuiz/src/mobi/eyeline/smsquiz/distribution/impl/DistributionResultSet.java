@@ -44,7 +44,7 @@ class DistributionResultSet implements ResultSet {
 
   public boolean next() throws StorageException {
     try {
-      while(!files.isEmpty()) {
+      while (!files.isEmpty()) {
         if (currentFile == null) {
           currentFile = files.getFirst();
           reader = new BufferedReader(new FileReader(currentFile));
@@ -62,7 +62,7 @@ class DistributionResultSet implements ResultSet {
 
       return false;
     } catch (Exception e) {
-      logger.error("Error during getting line from file", e);      
+      logger.error("Error during getting line from file", e);
       if (reader != null) {
         try {
           reader.close();
@@ -90,8 +90,8 @@ class DistributionResultSet implements ResultSet {
   }
 
   private boolean parseLine(String line, String successStatus, final Date from, final Date until) throws StorageException {
-    if(logger.isInfoEnabled()) {
-      logger.info("Parse line: "+line);
+    if (logger.isInfoEnabled()) {
+      logger.info("Parse line: " + line);
     }
     StringTokenizer tokenizer = new StringTokenizer(line, ",");
     String status = tokenizer.nextToken();
@@ -100,8 +100,8 @@ class DistributionResultSet implements ResultSet {
         Date date = dateFormat.parse(tokenizer.nextToken());
         if ((date.compareTo(until) <= 0) && (date.compareTo(from) >= 0)) {
           currentStatsDelivery = new StatsDelivery(tokenizer.nextToken(), date);
-          if(logger.isInfoEnabled()) {
-            logger.info("Validation 'true' for line: "+line);
+          if (logger.isInfoEnabled()) {
+            logger.info("Validation 'true' for line: " + line);
           }
           return true;
         }
@@ -109,8 +109,8 @@ class DistributionResultSet implements ResultSet {
         logger.error("Unable to parse date", e);
       }
     }
-    if(logger.isInfoEnabled()) {
-      logger.info("Validation 'false' for line: "+line);
+    if (logger.isInfoEnabled()) {
+      logger.info("Validation 'false' for line: " + line);
     }
     return false;
   }

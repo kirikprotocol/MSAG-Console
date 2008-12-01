@@ -19,13 +19,14 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * author: alkhal
  */
 
+@SuppressWarnings({"ResultOfMethodCallIgnored"})
 public class Quiz {
   private static final Logger logger = Logger.getLogger(Quiz.class);
 
@@ -46,6 +47,9 @@ public class Quiz {
   private int maxRepeat;
   private String defaultCategory;
   private String dirResult;
+  private String archiveDir;
+  private String quizDir;
+  private String workDir;
   private String quizId;
 
   private String quizName;
@@ -67,10 +71,16 @@ public class Quiz {
 
   private final Lock exportLock = new ReentrantLock();
 
-  public Quiz(final File file,
-              final ReplyStatsDataSource replyStatsDataSource,
-              final DistributionManager distributionManager, final String dirResult, final String dirWork) throws QuizException {
+  private SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
+
+
+  public Quiz(final File file, final ReplyStatsDataSource replyStatsDataSource,
+              final DistributionManager distributionManager, final String dirResult,
+              final String dirWork, final String archiveDir, final String quizDir) throws QuizException {
     this.dirResult = dirResult;
+    this.archiveDir = archiveDir;
+    this.quizDir = quizDir;
+    this.workDir = dirWork;
     this.replyStatsDataSource = replyStatsDataSource;
     this.distributionManager = distributionManager;
     jstore = new JStore(-1);
@@ -181,6 +191,11 @@ public class Quiz {
       dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
 
       File file = new File(fileName);
+      if (file.exists()) {
+        logger.info("Results already exist for quiz: " + quizId);
+        return;
+      }
+      File fileTmp = new File(file.getAbsolutePath() + "." + dateFormat.format(new Date()));
       File parentFile = file.getParentFile();
       if ((parentFile != null) && (!parentFile.exists())) {
         parentFile.mkdirs();
@@ -189,7 +204,7 @@ public class Quiz {
       PrintWriter printWriter = null;
       String encoding = System.getProperty("file.encoding");
       try {
-        printWriter = new PrintWriter(file, encoding);
+        printWriter = new PrintWriter(fileTmp, encoding);
         ResultSet resultSet = distributionManager.getStatistics(this.getDistrId(), realStartDate, dateEnd);
         String comma = ",";
         while (resultSet.next()) {
@@ -248,6 +263,10 @@ public class Quiz {
         if (printWriter != null) {
           printWriter.close();
         }
+      }
+      if (!fileTmp.renameTo(file)) {
+        logger.error("Can't rename file: " + fileTmp.getAbsolutePath() + " to " + file.getAbsolutePath());
+        throw new QuizException("Can't rename file: " + fileTmp.getAbsolutePath() + " to " + file.getAbsolutePath());
       }
       logger.info("Export statistics finished");
     } finally {
@@ -382,7 +401,7 @@ public class Quiz {
     status.setQuizStatus(quizStatus);
   }
 
-  public Status.QuizStatus getQuizStatus(){
+  public Status.QuizStatus getQuizStatus() {
     return status.getQuizStatus();
   }
 
@@ -411,8 +430,9 @@ public class Quiz {
   }
 
   public void setExported(boolean exported) {
-    this.exported = exported;    
+    this.exported = exported;
   }
+
   public Calendar getTimeBegin() {
     return timeBegin;
   }
@@ -446,11 +466,65 @@ public class Quiz {
   }
 
   public Date getDistrDateEnd() {
-    return  distrDateEnd;
+    return distrDateEnd;
   }
 
   public void setDistrDateEnd(Date distrDateEnd) {
     this.distrDateEnd = distrDateEnd;
-  }   
+  }
+
+  public void remove() {
+    File file = new File(archiveDir);
+    if (!file.exists()) {
+      file.mkdirs();
+    }
+
+    file = new File(origAbFile);
+    if (file.exists()) {
+      renameFile(new File(origAbFile));
+    } else {
+      file = new File(quizDir + File.separator + file.getName());
+      renameFile(file);
+    }
+
+    String parentSlashQuizId = workDir + File.separator + quizId;
+
+    renameFile(new File(parentSlashQuizId + ".status"));
+    deleteFile(new File(parentSlashQuizId + ".xml.bin"));
+    deleteFile(new File(parentSlashQuizId + ".xml.bin.j"));
+    renameFile(new File(parentSlashQuizId + ".error"));
+    file = new File(dirResult);
+    File files[] = file.listFiles();
+    file = null;
+    if (files != null) {
+      for (File file1 : files) {
+        if ((file1.isFile()) && (file1.getName().startsWith(quizId + "."))) {
+          file = file1;
+          break;
+        }
+      }
+    }
+    if (file != null) {
+      renameFile(file);
+    }
+  }
+
+  private void renameFile(File file) {
+    try {
+      String name = file.getName();
+      System.out.println("Try to rename: " + file.getAbsolutePath());
+      file.renameTo(new File(archiveDir + File.separator + name + "." + dateFormat.format(new Date())));
+    } catch (Exception e) {
+      logger.error(e, e);
+    }
+  }
+
+  private void deleteFile(File file) {
+    try {
+      file.delete();
+    } catch (Exception e) {
+      logger.error(e);
+    }
+  }
 
 }

@@ -31,8 +31,8 @@ public class SmscConsoleResponse {
     StringBuilder builder = new StringBuilder();
     builder.append("\nstatus=").append(status).append("\n")
         .append("success=").append(success);
-    if(lines!=null) {
-      for(String l: lines) {
+    if (lines != null) {
+      for (String l : lines) {
         builder.append("\n").append(l);
       }
     }
