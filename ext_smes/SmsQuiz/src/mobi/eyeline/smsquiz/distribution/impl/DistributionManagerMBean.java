@@ -21,10 +21,6 @@ public class DistributionManagerMBean extends AbstractDynamicMBean {
         "java.lang.String", "Pattern of infosme stats file", true, false, false));
     attributes.add(new MBeanAttributeInfo("StatsDir",
         "java.lang.String", "Infosme stats directory", true, false, false));
-    attributes.add(new MBeanAttributeInfo("CheckerFirstDelay",
-        "java.lang.Long", "Time to delay the first execution of StatusChecker", true, false, false));
-    attributes.add(new MBeanAttributeInfo("CheckerPeriod",
-        "java.lang.Long", "Period of StatusChecker's execution", true, false, false));
     attributes.add(new MBeanAttributeInfo("Login",
         "java.lang.String", "Console User's name ", true, false, false));
     attributes.add(new MBeanAttributeInfo("Password",
@@ -35,10 +31,6 @@ public class DistributionManagerMBean extends AbstractDynamicMBean {
         "java.lang.Integer", "Console's port", true, false, false));
     attributes.add(new MBeanAttributeInfo("CodeOk",
         "java.lang.String", "Success code of communication with console", true, false, false));
-    attributes.add(new MBeanAttributeInfo("UngeneratedDistributions",
-        "java.lang.String", "Get ungenerated distributions", true, false, false));
-    attributes.add(new MBeanAttributeInfo("CountUngeneratedDistributions",
-        "java.lang.Integer", "Count ungenerated distributions", true, false, false));
     attributes.add(new MBeanAttributeInfo("ConsoleTimeout",
         "java.lang.Long", "Timeout between closing console", true, false, false));
     attributes.add(new MBeanAttributeInfo("ConsoleCloserPeriod",
@@ -56,10 +48,6 @@ public class DistributionManagerMBean extends AbstractDynamicMBean {
       return manager.getFilePattern();
     } else if (attribute.equals("StatsDir")) {
       return manager.getStatsDir();
-    } else if (attribute.equals("CheckerFirstDelay")) {
-      return manager.getCheckerFirstDelay();
-    } else if (attribute.equals("CheckerPeriod")) {
-      return manager.getCheckerPeriod();
     } else if (attribute.equals("Login")) {
       return manager.getLogin();
     } else if (attribute.equals("Password")) {
@@ -70,10 +58,6 @@ public class DistributionManagerMBean extends AbstractDynamicMBean {
       return manager.getport();
     } else if (attribute.equals("CodeOk")) {
       return manager.getCodeok();
-    } else if (attribute.equals("UngeneratedDistributions")) {
-      return manager.getUngeneratedDistributions();
-    } else if (attribute.equals("CountUngeneratedDistributions")) {
-      return manager.countUngeneratedDistributions();
     } else if (attribute.equals("ConsoleTimeout")) {
       return manager.getConsoleTimeout();
     } else if (attribute.equals("ConsoleCloserPeriod")) {

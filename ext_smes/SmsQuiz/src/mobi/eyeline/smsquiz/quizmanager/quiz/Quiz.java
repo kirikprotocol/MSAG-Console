@@ -18,9 +18,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Lock;
 
 /**
  * author: alkhal
@@ -36,6 +36,12 @@ public class Quiz {
   private String fileName;
   private Date dateBegin;
   private Date dateEnd;
+  private Calendar timeBegin;
+  private Calendar timeEnd;
+  private boolean txmode;
+  private final EnumSet<Distribution.WeekDays> days = EnumSet.noneOf(Distribution.WeekDays.class);
+  private Date distrDateEnd;
+
 
   private int maxRepeat;
   private String defaultCategory;
@@ -57,18 +63,16 @@ public class Quiz {
 
   private boolean exported = false;
 
-  private final Distribution distribution;
-
   private String origAbFile;
 
-  public Quiz(final File file, Distribution distribution,
+  private final Lock exportLock = new ReentrantLock();
+
+  public Quiz(final File file,
               final ReplyStatsDataSource replyStatsDataSource,
               final DistributionManager distributionManager, final String dirResult, final String dirWork) throws QuizException {
     this.dirResult = dirResult;
     this.replyStatsDataSource = replyStatsDataSource;
     this.distributionManager = distributionManager;
-    String dirWork1 = dirWork;
-    this.distribution = distribution;
     jstore = new JStore(-1);
     if (file == null) {
       logger.error("Some arguments are null");
@@ -159,84 +163,96 @@ public class Quiz {
   }
 
   public void exportStats() throws QuizException {
-    if (logger.isInfoEnabled()) {
-      logger.info("Export statistics begining for: " + fileName);
-    }
-    Date realStartDate = status.getActualStartDate();
-    SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
-    String fileName = dirResult + File.separator + quizId + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
-    dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
+    if (exported)
+      return;
 
-    File file = new File(fileName);
-    File parentFile = file.getParentFile();
-    if ((parentFile != null) && (!parentFile.exists())) {
-      parentFile.mkdirs();
-    }
-    PrintWriter printWriter = null;
-    String encoding = System.getProperty("file.encoding");
     try {
-      printWriter = new PrintWriter(file, encoding);
-      ResultSet resultSet = distributionManager.getStatistics(this.getId(), realStartDate, dateEnd);
-      String comma = ",";
-      while (resultSet.next()) {
-        Reply reply;
-        StatsDelivery delivery = (StatsDelivery) resultSet.get();
-        String oa = delivery.getMsisdn();
-        Date dateDelivery = delivery.getDate();
-        if (logger.isInfoEnabled()) {
-          logger.info("Analysis delivery: " + delivery);
-        }
-        if ((reply = replyStatsDataSource.getLastReply(oa, destAddress, realStartDate, dateEnd)) != null) {
-          String text = reply.getText();
-          ReplyPattern replyPattern = getReplyPattern(text);
-          String category;
-          if (replyPattern != null) {
-            category = replyPattern.getCategory();
-          } else {
-            if (defaultCategory != null) {
-              category = defaultCategory;
+      exportLock.lock();
+
+      if (exported)
+        return;
+      exported = true;
+      if (logger.isInfoEnabled()) {
+        logger.info("Export statistics begining for: " + fileName);
+      }
+      Date realStartDate = status.getActualStartDate();
+      SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
+      String fileName = dirResult + File.separator + quizId + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
+      dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
+
+      File file = new File(fileName);
+      File parentFile = file.getParentFile();
+      if ((parentFile != null) && (!parentFile.exists())) {
+        parentFile.mkdirs();
+      }
+
+      PrintWriter printWriter = null;
+      String encoding = System.getProperty("file.encoding");
+      try {
+        printWriter = new PrintWriter(file, encoding);
+        ResultSet resultSet = distributionManager.getStatistics(this.getDistrId(), realStartDate, dateEnd);
+        String comma = ",";
+        while (resultSet.next()) {
+          Reply reply;
+          StatsDelivery delivery = (StatsDelivery) resultSet.get();
+          String oa = delivery.getMsisdn();
+          Date dateDelivery = delivery.getDate();
+          if (logger.isInfoEnabled()) {
+            logger.info("Analysis delivery: " + delivery);
+          }
+          if ((reply = replyStatsDataSource.getLastReply(oa, destAddress, realStartDate, dateEnd)) != null) {
+            String text = reply.getText();
+            ReplyPattern replyPattern = getReplyPattern(text);
+            String category;
+            if (replyPattern != null) {
+              category = replyPattern.getCategory();
             } else {
-              continue;
+              if (defaultCategory != null) {
+                category = defaultCategory;
+              } else {
+                continue;
+              }
+            }
+            printWriter.print(oa);
+            printWriter.print(comma);
+            printWriter.print(dateFormat.format(dateDelivery));
+            printWriter.print(comma);
+            printWriter.print(dateFormat.format(reply.getDate()));
+            printWriter.print(comma);
+            printWriter.print(category);
+            printWriter.print(comma);
+            printWriter.println(reply.getText().replace(System.getProperty("line.separator"), "\\n"));
+            if (logger.isInfoEnabled()) {
+              logger.info("Last reply for oa=" + oa + " is " + reply + " stored");
+            }
+          } else {
+            if (logger.isInfoEnabled()) {
+              logger.info("Last reply for oa=" + oa + " is empty");
             }
           }
-          printWriter.print(oa);
-          printWriter.print(comma);
-          printWriter.print(dateFormat.format(dateDelivery));
-          printWriter.print(comma);
-          printWriter.print(dateFormat.format(reply.getDate()));
-          printWriter.print(comma);
-          printWriter.print(category);
-          printWriter.print(comma);
-          printWriter.println(reply.getText().replace(System.getProperty("line.separator"), "\\n"));
-          if (logger.isInfoEnabled()) {
-            logger.info("Last reply for oa=" + oa + " is " + reply + " stored");
-          }
-        } else {
-          if (logger.isInfoEnabled()) {
-            logger.info("Last reply for oa=" + oa + " is empty");
-          }
+        }
+        printWriter.flush();
+      } catch (DistributionException e) {
+        logger.error("Can't get statisctics", e);
+        throw new QuizException("Can't get statisctics", e);
+      } catch (ReplyDataSourceException e) {
+        logger.error("Can't get replies", e);
+        throw new QuizException("Can't get replies", e);
+      } catch (StorageException e) {
+        logger.error("Can't read ResultSet", e);
+        throw new QuizException("Can't read ResultSet", e);
+      } catch (IOException e) {
+        logger.error("Error during writing file", e);
+        throw new QuizException("Error during writing file", e);
+      } finally {
+        if (printWriter != null) {
+          printWriter.close();
         }
       }
-      printWriter.flush();
-      exported = true;
-    } catch (DistributionException e) {
-      logger.error("Can't get statisctics", e);
-      throw new QuizException("Can't get statisctics", e);
-    } catch (ReplyDataSourceException e) {
-      logger.error("Can't get replies", e);
-      throw new QuizException("Can't get replies", e);
-    } catch (StorageException e) {
-      logger.error("Can't read ResultSet", e);
-      throw new QuizException("Can't read ResultSet", e);
-    } catch (IOException e) {
-      logger.error("Error during writing file", e);
-      throw new QuizException("Error during writing file", e);
+      logger.info("Export statistics finished");
     } finally {
-      if (printWriter != null) {
-        printWriter.close();
-      }
+      exportLock.unlock();
     }
-    logger.info("Export statistics finished");
   }
 
   public Date getDateBegin() {
@@ -280,11 +296,11 @@ public class Quiz {
     this.destAddress = destAddress;
   }
 
-  public String getId() {
+  public String getDistrId() {
     return status.getId();
   }
 
-  public void setId(String id) throws QuizException {
+  public void setDistrId(String id) throws QuizException {
     status.setId(id);
   }
 
@@ -328,7 +344,7 @@ public class Quiz {
     strBuilder.append("question: ").append(question).append(sep);
     strBuilder.append("dateBegin: ").append(dateBegin).append(sep);
     strBuilder.append("dateEnd: ").append(dateEnd).append(sep);
-    strBuilder.append("id: ").append(this.getId()).append(sep);
+    strBuilder.append("id: ").append(this.getDistrId()).append(sep);
     return strBuilder.substring(0);
   }
 
@@ -362,10 +378,6 @@ public class Quiz {
     return generated;
   }
 
-  public Distribution getDistribution() {
-    return distribution;
-  }
-
   public void setQuizStatus(Status.QuizStatus quizStatus) throws QuizException {
     status.setQuizStatus(quizStatus);
   }
@@ -397,4 +409,48 @@ public class Quiz {
   public void setOrigAbFile(String origAbFile) {
     this.origAbFile = origAbFile;
   }
+
+  public void setExported(boolean exported) {
+    this.exported = exported;    
+  }
+  public Calendar getTimeBegin() {
+    return timeBegin;
+  }
+
+  public void setTimeBegin(Calendar timeBegin) {
+    this.timeBegin = timeBegin;
+  }
+
+  public Calendar getTimeEnd() {
+    return timeEnd;
+  }
+
+  public void setTimeEnd(Calendar timeEnd) {
+    this.timeEnd = timeEnd;
+  }
+
+  public void addDay(Distribution.WeekDays weekDays) {
+    days.add(weekDays);
+  }
+
+  public EnumSet<Distribution.WeekDays> getDays() {
+    return EnumSet.copyOf(days);
+  }
+
+  public boolean isTxmode() {
+    return txmode;
+  }
+
+  public void setTxmode(boolean txmode) {
+    this.txmode = txmode;
+  }
+
+  public Date getDistrDateEnd() {
+    return  distrDateEnd;
+  }
+
+  public void setDistrDateEnd(Date distrDateEnd) {
+    this.distrDateEnd = distrDateEnd;
+  }   
+
 }

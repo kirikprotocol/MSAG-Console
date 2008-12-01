@@ -24,15 +24,19 @@ public class QuizManagerMBean extends AbstractDynamicMBean {
     attributes.add(new MBeanAttributeInfo("QuizDir",
         "java.lang.String", "Directory with quiz's files", true, false, false));
     attributes.add(new MBeanAttributeInfo("ListenerDelayFirst",
-        "java.lang.Long", "Time to delay DirListener's execution", true, false, false));
+        "java.lang.Long", "Time to delay QuizFileHandler's execution", true, false, false));
     attributes.add(new MBeanAttributeInfo("ListenerPeriod",
-        "java.lang.Long", "Period of DirListener's execution", true, false, false));
+        "java.lang.Long", "Period of QuizFileHandler's execution", true, false, false));
     attributes.add(new MBeanAttributeInfo("CollectorDelayFirst",
         "java.lang.Long", "Time to delay QuizCollector's execution", true, false, false));
     attributes.add(new MBeanAttributeInfo("CollectorPeriod",
         "java.lang.Long", "Period of QuizCollector's execution", true, false, false));
     attributes.add(new MBeanAttributeInfo("DirModifiedAb",
         "java.lang.String", "Directory with modified abonent's files", true, false, false));
+    attributes.add(new MBeanAttributeInfo("CheckerFirstDelay",
+        "java.lang.Long", "Time to delay the first execution of StatusChecker", true, false, false));
+    attributes.add(new MBeanAttributeInfo("CheckerPeriod",
+        "java.lang.Long", "Period of StatusChecker's execution", true, false, false));
   }
 
   public Object getAttribute(String attribute) throws AttributeNotFoundException, MBeanException, ReflectionException {
@@ -54,6 +58,10 @@ public class QuizManagerMBean extends AbstractDynamicMBean {
       return manager.getCollectorPeriod();
     } else if (attribute.equals("DirModifiedAb")) {
       return manager.getDirWork();
+    }  else if (attribute.equals("CheckerFirstDelay")) {
+      return manager.getCheckerFirstDelay();
+    } else if (attribute.equals("CheckerPeriod")) {
+      return manager.getCheckerPeriod();
     }
     throw new AttributeNotFoundException("Attribute " + attribute + " not found");
   }

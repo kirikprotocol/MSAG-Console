@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz.quizmanager.dirlistener;
+package mobi.eyeline.smsquiz.quizmanager.filehandler;
 
 import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
@@ -11,10 +11,10 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DirListener extends Observable implements Runnable {
+public class QuizFileHandler extends Observable implements Runnable {
 
 
-  private static final Logger logger = Logger.getLogger(DirListener.class);
+  private static final Logger logger = Logger.getLogger(QuizFileHandler.class);
   private AbstractDynamicMBean monitor;
   private Map<String, QuizFile> filesMap;
   private String quizDir;
@@ -26,7 +26,7 @@ public class DirListener extends Observable implements Runnable {
 
   private SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
 
-  public DirListener(final String quizDir, final String dirWork,
+  public QuizFileHandler(final String quizDir, final String dirWork,
                      final String dirArchive, final String dirResult) throws QuizException {
     if (quizDir == null) {
       throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
@@ -42,11 +42,11 @@ public class DirListener extends Observable implements Runnable {
     }
     filesMap = new HashMap<String, QuizFile>();
     fileFilter = new XmlFileFilter();
-    monitor = new DirListenerMBean(this);
+    monitor = new QuizFIleHandlerMBean(this);
   }
 
   public void run() {
-    logger.info("Running DirListener...");
+    logger.info("Running QuizFileHandler...");
     File dirQuiz = new File(quizDir);
     try {
 
@@ -88,7 +88,7 @@ public class DirListener extends Observable implements Runnable {
     } catch (Throwable e) {
       logger.error("Error construct quiz file or notification", e);
     }
-    logger.info("DirListener finished...");
+    logger.info("QuizFileHandler finished...");
   }
 
   public int countFiles() {
@@ -111,7 +111,7 @@ public class DirListener extends Observable implements Runnable {
     return monitor;
   }
 
-  public void delete(String quizId, String abFile) throws QuizException {
+  public void delete(String quizId, String quizName, String abFile) throws QuizException {
     if ((quizId == null) || (abFile == null)) {
       logger.error("Some arguments are null");
       throw new QuizException("Some arguments are null");
@@ -135,15 +135,20 @@ public class DirListener extends Observable implements Runnable {
     deleteFile(new File(parentSlashQuizId + ".xml.bin"));
     deleteFile(new File(parentSlashQuizId + ".xml.bin.j"));
     renameFile(new File(parentSlashQuizId + ".error"));
-    renameFile(new File(parentSlashQuizId + ".mod"));
-    renameFile(new File(parentSlashQuizId + ".mod.processed"));
-
+    try{
+      int code = (quizName+"(SmsQuiz)").hashCode();
+      renameFile(new File(dirWork + File.separator + code + ".csv"));
+      renameFile(new File(dirWork + File.separator + code + ".csv.processed"));
+    } catch (Exception e) {
+      logger.error(e,e);
+      throw new QuizException(e);
+    }
     file = new File(dirResult);
     File files[] = file.listFiles();
     file = null;
     if (files != null) {
       for (File file1 : files) {
-        if ((file1.isFile()) && (file1.getName().startsWith(quizId + "."))) {
+        if ((file1.isFile()) && (file1.getName().startsWith(quizId + "."))) {         //todo
           file = file1;
           break;
         }
@@ -157,6 +162,7 @@ public class DirListener extends Observable implements Runnable {
   private void renameFile(File file) {
     try {
       String name = file.getName();
+      System.out.println("Try to rename: "+file.getAbsolutePath());
       file.renameTo(new File(dirArchive + File.separator + name + "." + df.format(new Date())));
     } catch (Exception e) {
       logger.error(e, e);

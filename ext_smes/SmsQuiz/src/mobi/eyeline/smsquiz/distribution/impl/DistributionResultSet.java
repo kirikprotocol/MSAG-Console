@@ -44,9 +44,9 @@ class DistributionResultSet implements ResultSet {
 
   public boolean next() throws StorageException {
     try {
-      while(!files.isEmpty()) {        
+      while(!files.isEmpty()) {
         if (currentFile == null) {
-          currentFile = files.remove(0);
+          currentFile = files.getFirst();
           reader = new BufferedReader(new FileReader(currentFile));
         }
 
@@ -55,8 +55,8 @@ class DistributionResultSet implements ResultSet {
           if (parseLine(line, successStatus, startDate, endDate))
             return true;
         }
-
         reader.close();
+        files.removeFirst();
         currentFile = null;
       }
 
@@ -90,6 +90,9 @@ class DistributionResultSet implements ResultSet {
   }
 
   private boolean parseLine(String line, String successStatus, final Date from, final Date until) throws StorageException {
+    if(logger.isInfoEnabled()) {
+      logger.info("Parse line: "+line);
+    }
     StringTokenizer tokenizer = new StringTokenizer(line, ",");
     String status = tokenizer.nextToken();
     if (status.equals(successStatus)) {
@@ -97,11 +100,17 @@ class DistributionResultSet implements ResultSet {
         Date date = dateFormat.parse(tokenizer.nextToken());
         if ((date.compareTo(until) <= 0) && (date.compareTo(from) >= 0)) {
           currentStatsDelivery = new StatsDelivery(tokenizer.nextToken(), date);
+          if(logger.isInfoEnabled()) {
+            logger.info("Validation 'true' for line: "+line);
+          }
           return true;
         }
       } catch (ParseException e) {
         logger.error("Unable to parse date", e);
       }
+    }
+    if(logger.isInfoEnabled()) {
+      logger.info("Validation 'false' for line: "+line);
     }
     return false;
   }

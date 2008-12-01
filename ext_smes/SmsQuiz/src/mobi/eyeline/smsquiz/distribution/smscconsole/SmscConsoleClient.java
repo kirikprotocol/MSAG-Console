@@ -46,7 +46,7 @@ public class SmscConsoleClient {
     if (scheduledConnCloser != null) {
       scheduledConnCloser.shutdown();
     }
-    connectionCloser.closefinally();
+    connectionCloser.closeFinally();
   }
 
   private class CachedConsoleSender implements ConsoleSender {
@@ -108,7 +108,7 @@ public class SmscConsoleClient {
       this.sender = sender;
     }
 
-    public void closefinally() {
+    public void closeFinally() {
       ignoreTimeout = true;
       run();
     }

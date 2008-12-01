@@ -43,7 +43,6 @@ public class QuizBuilder {
       logger.error("Some argument are null");
       throw new QuizException("Some argument are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
-    Distribution distribution = quiz.getDistribution();
     SAXBuilder sb = new SAXBuilder();
     InputStream stream = null;
     try {
@@ -52,12 +51,12 @@ public class QuizBuilder {
       Element root = doc.getRootElement();
       Element elem;
       if ((elem = root.getChild("general")) != null) {
-        parseGeneral(elem, distribution, quiz);
+        parseGeneral(elem, quiz);
       } else {
         errorNotFound("general");
       }
       if ((elem = root.getChild("distribution")) != null) {
-        parseDistribution(elem, distribution, quiz);
+        parseDistribution(elem, quiz);
       } else {
         errorNotFound("distribution");
       }
@@ -83,7 +82,7 @@ public class QuizBuilder {
     }
   }
 
-  private void parseGeneral(Element generalElem, Distribution distribution, Quiz quiz) throws QuizException {
+  private void parseGeneral(Element generalElem, Quiz quiz) throws QuizException {
     Element elem;
     Date dateBegin = null;
     Date dateEnd = null;
@@ -120,27 +119,21 @@ public class QuizBuilder {
       logger.error("Parsing exception", e);
       throw new QuizException("Parsing exception", e);
     }
-    if (distribution != null) {
-      distribution.setDateBegin(dateBegin);
-      distribution.setFilePath(abFileName);
-      distribution.setTaskName(name + "(SmsQuiz)");
-    }
-    if (quiz != null) {
       quiz.setDateBegin(dateBegin);
       quiz.setDateEnd(dateEnd);
       quiz.setQuestion(question);
       quiz.setQuizName(name);
       quiz.setOrigAbFile(abFileName);
-    }
   }
 
   @SuppressWarnings({"unchecked"})
-  private void parseDistribution(Element distrlElem, Distribution distribution, Quiz quiz) throws QuizException {
+  private void parseDistribution(Element distrlElem, Quiz quiz) throws QuizException {
     Element elem;
     String sourceaddress = null;
     Calendar timeBegin = Calendar.getInstance();
     Calendar timeEnd = Calendar.getInstance();
     String txmode = null;
+    Date distrDateEnd = null;
 
     if ((elem = distrlElem.getChild("source-address")) != null) {
       sourceaddress = elem.getTextTrim();
@@ -161,35 +154,33 @@ public class QuizBuilder {
     } else {
       errorNotFound("time-end");
     }
-    if (distribution != null) {
-      if ((elem = distrlElem.getChild("days")) != null) {
-        List<Element> list;
-        if ((list = elem.getChildren("day")) != null) {
-          for (Element el : list) {
-            Distribution.WeekDays day;
-            if ((day = Distribution.WeekDays.valueOf(el.getTextTrim())) != null) {
-              distribution.addDay(day);
-            } else {
-              logger.error("Error during parsing week days, unsupported format of day: " + el.getTextTrim());
-              throw new QuizException("Error during parsing week days, unsupported format of day: " + el.getTextTrim());
-            }
+    if ((elem = distrlElem.getChild("days")) != null) {
+      List<Element> list;
+      if ((list = elem.getChildren("day")) != null) {
+        for (Element el : list) {
+          Distribution.WeekDays day;
+          if ((day = Distribution.WeekDays.valueOf(el.getTextTrim())) != null) {
+            quiz.addDay(day);
+          } else {
+            logger.error("Error during parsing week days, unsupported format of day: " + el.getTextTrim());
+            throw new QuizException("Error during parsing week days, unsupported format of day: " + el.getTextTrim());
           }
-        } else {
-          errorNotFound("day");
         }
       } else {
-        errorNotFound("days");
+        errorNotFound("day");
       }
-      if ((elem = distrlElem.getChild("date-end")) != null) {
-        try {
-          distribution.setDateEnd(dateFormat.parse(elem.getTextTrim()));
-        } catch (ParseException e) {
-          logger.error("Parsing exception", e);
-          throw new QuizException("Parsing exception", e);
-        }
-      } else {
-        errorNotFound("date-end");
+    } else {
+      errorNotFound("days");
+    }
+    if ((elem = distrlElem.getChild("date-end")) != null) {
+      try {
+        distrDateEnd = dateFormat.parse(elem.getTextTrim());
+      } catch (ParseException e) {
+        logger.error("Parsing exception", e);
+        throw new QuizException("Parsing exception", e);
       }
+    } else {
+      errorNotFound("date-end");
     }
     if ((elem = distrlElem.getChild("time-end")) != null) {
       String time = elem.getTextTrim();
@@ -204,13 +195,11 @@ public class QuizBuilder {
       errorNotFound("txmode");
     }
 
-    if (distribution != null) {
-      distribution.setTimeBegin(timeBegin);
-      distribution.setTimeEnd(timeEnd);
-      distribution.setTxmode(Boolean.valueOf(txmode));
-      distribution.setSourceAddress(sourceaddress);
-    }
+    quiz.setTimeBegin(timeBegin);
+    quiz.setTimeEnd(timeEnd);
+    quiz.setTxmode(Boolean.valueOf(txmode));
     quiz.setSourceAddress(sourceaddress);
+    quiz.setDistrDateEnd(distrDateEnd);
 
   }
 

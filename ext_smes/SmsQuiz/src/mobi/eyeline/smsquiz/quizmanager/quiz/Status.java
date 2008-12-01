@@ -124,13 +124,15 @@ public class Status {
   }
 
   void setActualStartDate(Date date) throws QuizException {
-    Date now = new Date();
-    if (now.before(date)) {
-      prop.setProperty(ACTUAL_START_DATE, DF.format(date));
-    } else {
-      prop.setProperty(ACTUAL_START_DATE, DF.format(now));
+    if((prop.getProperty(ACTUAL_START_DATE)==null)||(prop.getProperty(ACTUAL_START_DATE).equals(""))) {
+      Date now = new Date();
+      if (now.before(date)) {
+        prop.setProperty(ACTUAL_START_DATE, DF.format(date));
+      } else {
+        prop.setProperty(ACTUAL_START_DATE, DF.format(now));
+      }
+      storeProps();
     }
-    storeProps();
   }
 
   Date getActualStartDate() throws QuizException {

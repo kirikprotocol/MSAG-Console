@@ -1,11 +1,13 @@
 package mobi.eyeline.smsquiz.distribution;
 
+import mobi.eyeline.smsquiz.storage.ResultSet;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Iterator;
 
-public class Distribution {
+public abstract class Distribution {
   public String getTaskName() {
     return taskName;
   }
@@ -20,7 +22,7 @@ public class Distribution {
 
   private String sourceAddress;
 
-  private String filePath;
+//  private String filePath;
 
   private Date dateBegin;
 
@@ -35,18 +37,14 @@ public class Distribution {
   private boolean txmode;
 
   private String taskName;
+  
+  private String question;
 
   public Distribution() {
     days = EnumSet.noneOf(WeekDays.class);
   }
 
-  public String getFilePath() {
-    return filePath;
-  }
-
-  public void setFilePath(String filePath) {
-    this.filePath = filePath;
-  }
+  public abstract ResultSet abonents();
 
   public Date getDateBegin() {
     return dateBegin;
@@ -116,6 +114,19 @@ public class Distribution {
       }
     }
     return builder.toString();
+  }
+
+
+  public String getQuestion() {
+    return question;
+  }
+
+  public void setQuestion(String question) {
+    this.question = question;
+  }
+
+  public void addDays(EnumSet<WeekDays> days) {
+    this.days.addAll(days);
   }
 }
  

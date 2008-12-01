@@ -46,15 +46,17 @@ public class MainTest {
     MessageHandler mh = null;
     QuizManager quizManager = null;
     try {
+      final XmlConfig c = new XmlConfig();
+      c.load(new File(conf));
 
       ConnectionPoolFactory.init(conf);
+      PropertiesConfig cfg = new PropertiesConfig(c.getSection("quizmanager").toProperties("."));
 
-      init();
-      QuizManager.init(conf, new DistributionInfoSmeManager(conf),
+      QuizManager.init(conf, new DistributionInfoSmeManager(conf, cfg.getString("dir_work")),
           new FileReplyStatsDataSource(conf), SubscriptionManager.getInstance());
       quizManager = QuizManager.getInstance();
 
-      PropertiesConfig cfg = new PropertiesConfig();
+      cfg = new PropertiesConfig();
       cfg.load(new File("conf/smpp.properties"));
       final SMPPTransceiver transceiver = new SMPPTransceiver(cfg, "");
       outgoingQueue = transceiver.getOutQueue();
@@ -63,8 +65,6 @@ public class MainTest {
       mh.start();
       quizManager.start();
 
-      final XmlConfig c = new XmlConfig();
-      c.load(new File(conf));
       if (c.getSection("jmx") != null) {
         PropertiesConfig config = new PropertiesConfig(c.getSection("jmx").toProperties("."));
         int jmxPort = config.getInt("port");

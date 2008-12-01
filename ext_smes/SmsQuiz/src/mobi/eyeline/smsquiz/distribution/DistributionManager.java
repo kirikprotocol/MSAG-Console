@@ -7,15 +7,17 @@ import java.util.Date;
 
 public interface DistributionManager {
 
-  public String createDistribution(Distribution distr, Runnable task) throws DistributionException;
+  public static enum State {GENERATED, UNGENERATED, ERROR}
 
-  public ResultSet getStatistics(String id, Date startDate, Date endDate) throws DistributionException;
-
-  public String repairStatus(String id, Runnable task, Distribution distribution) throws DistributionException;
-
-  public void resend(String msisdn, String taskId) throws DistributionException;
+  public String createDistribution(Distribution distr) throws DistributionException;
 
   public void removeDistribution(String distrId) throws DistributionException;
+
+  public ResultSet getStatistics(String distrId, Date startDate, Date endDate) throws DistributionException;
+
+  public State getState(String distrId) throws DistributionException;
+
+  public void resend(String msisdn, String distrId) throws DistributionException;
 
   public AbstractDynamicMBean getMonitor();
 

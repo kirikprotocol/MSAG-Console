@@ -11,9 +11,10 @@ import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleClient;
 import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleException;
 import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleResponse;
 import mobi.eyeline.smsquiz.storage.ResultSet;
+import mobi.eyeline.smsquiz.quizmanager.DistributionStatusChecker;
 import org.apache.log4j.Logger;
 
-import java.io.File;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -29,9 +30,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
   private static final Logger logger = Logger.getLogger(DistributionInfoSmeManager.class);
   private AbstractDynamicMBean monitor;
 
-  private ConcurrentHashMap<String, Status> tasksMap;
   private SmscConsoleClient consoleClient;
-  private ScheduledExecutorService scheduledStatusChecker;
 
   private String statsDir;
   private String dateInFilePattern;
@@ -43,14 +42,14 @@ public class DistributionInfoSmeManager implements DistributionManager {
 
   private String dirPattern;
   private String filePattern;
-  private long checkerFirstDelay;
-  private long checkerPeriod;
   private String login;
   private String password;
   private String host;
   private int port;
-  long consoleTimeout;
-  long closerPeriod;
+  private long consoleTimeout;
+  private long closerPeriod;
+
+  private String workDir;
 
   private String codeOk;
   private final static String STATUS_COMMAND = "infosme task status";
@@ -58,8 +57,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
   private final static String RESEND_COMMAND = "infosme task resend";
   private final static String REMOVE_COMMAND = "infosme task remove";
 
-  public DistributionInfoSmeManager(final String configFile) throws DistributionException {
-
+  public DistributionInfoSmeManager(final String configFile, final String workDir) throws DistributionException {
     try {
       final XmlConfig c = new XmlConfig();
       c.load(new File(configFile));
@@ -75,11 +73,10 @@ public class DistributionInfoSmeManager implements DistributionManager {
       port = config.getInt("smsc_console_port");
       login = config.getString("smsc_console_login");
       password = config.getString("smsc_console_password");
-      checkerFirstDelay = config.getLong("status_checker_delay", 60);
-      checkerPeriod = config.getLong("status_checker_period", 60);
       consoleTimeout = config.getLong("smsc_console_connect_timeout", 60) * 1000;
       closerPeriod = config.getLong("smsc_console_closer_period", 60);
 
+      this.workDir = workDir;
 
       codeOk = "100";
       if (statsDir == null) {
@@ -96,35 +93,54 @@ public class DistributionInfoSmeManager implements DistributionManager {
       throw new DistributionException("Unable to init StatsFilesCache", e);
     }
 
-    tasksMap = new ConcurrentHashMap<String, Status>();
     dirFormat = new SimpleDateFormat(dirPattern);
     fileFormat = new SimpleDateFormat(filePattern);
     dateInCommand = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-
-    scheduledStatusChecker = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-      public Thread newThread(Runnable r) {
-        return new Thread(r, "DistributionStatusChecker");
-      }
-    });
-    DistributionStatusChecker statusChecker = new DistributionStatusChecker(tasksMap, STATUS_COMMAND, codeOk, consoleClient);
-    scheduledStatusChecker.scheduleAtFixedRate(statusChecker, checkerFirstDelay, checkerPeriod,
-        java.util.concurrent.TimeUnit.SECONDS);
     monitor = new DistributionManagerMBean(this);
   }
 
+  private String createAbFile(Distribution distr) throws DistributionException{
+   File file = new File(workDir);
+   if(!file.exists()) {
+     file.mkdirs();
+   }
+   PrintWriter writer = null;
+    try {
+      file = new File(workDir+File.separator+ distr.getTaskName().hashCode()+".csv");
+      writer = new PrintWriter(new BufferedWriter(new FileWriter(file)));
+      ResultSet rs = distr.abonents();
+      String question = distr.getQuestion().replace(System.getProperty("line.separator"), "\\n");
+      while (rs.next()) {
+        String msisdn = (String)rs.get();
+        writer.print(msisdn);
+        writer.print("|");
+        writer.print(question);
+        writer.println();
+      }
+      writer.flush();
+    } catch (Exception e) {
+      logger.error(e,e);
+      throw new DistributionException("Unable to modified abonents list: ", e);
+    }  finally {
+      if (writer != null) {
+        writer.close();
+      }
+    }
+    return file.getAbsolutePath();
+  }
 
-  public String createDistribution(final Distribution distr, Runnable task) throws DistributionException {
+
+  public String createDistribution(final Distribution distr) throws DistributionException {
     logger.info("Create distribution...");
-    if ((distr == null) || (distr.getFilePath() == null) || (distr.getDateBegin() == null)
-        || (distr.getDateEnd() == null) || (distr.getDays() == null) || (task == null)
+    if ((distr == null) || (distr.getDateBegin() == null)
+        || (distr.getQuestion() == null) ||(distr.getDateEnd() == null) || (distr.getDays() == null)
         || (distr.getTimeBegin() == null) || (distr.getTimeEnd() == null)) {
       logger.error("Some fields of argument are empty");
       throw new DistributionException("Some fields of argument are empty", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
     }
     SmscConsoleResponse response;
     try {
-      File file = new File(distr.getFilePath());
-      String fileName = file.getAbsolutePath();
+      String fileName = createAbFile(distr);
 
       StringBuilder command = new StringBuilder();
       command.append(CREATE_COMMAND);
@@ -151,15 +167,15 @@ public class DistributionInfoSmeManager implements DistributionManager {
           }
           String id = tokens[2];
           if (!id.equals("")) {
-            tasksMap.put(id, new Status(task));
             if (logger.isInfoEnabled()) {
-              logger.info("Distribution created, id: " + id);
+              logger.info("Distribution task sent in InfoSme, id: " + id);
             }
             return id;
           }
         }
       }
-      throw new SmscConsoleException("Wrong response");
+      logger.error("Wrong response: " + response);
+      throw new DistributionException("Wrong response: " + response);
     } catch (SmscConsoleException e) {
       logger.error("Unable to create distribution", e);
       throw new DistributionException("Unable to create distribution", e);
@@ -167,9 +183,6 @@ public class DistributionInfoSmeManager implements DistributionManager {
   }
 
   public void shutdown() {
-    if (scheduledStatusChecker != null) {
-      scheduledStatusChecker.shutdown();
-    }
     consoleClient.shutdown();
     logger.info("DistributionManager shutdowned");
   }
@@ -188,7 +201,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
     try {
       SmscConsoleResponse response = consoleClient.sendCommand(command);
       if ((response == null) || (!response.isSuccess()) || (!response.getStatus().trim().equals(codeOk))) {
-        throw new SmscConsoleException("Wrong response");
+        logger.error("Wrong response: " + response);
+        throw new DistributionException("Wrong response: " + response);
       }
     } catch (SmscConsoleException e) {
       logger.error("Can't send command", e);
@@ -211,7 +225,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
     try {
       SmscConsoleResponse response = consoleClient.sendCommand(command);
       if ((response == null) || (!response.isSuccess()) || (!response.getStatus().trim().equals(codeOk))) {
-        throw new SmscConsoleException("Wrong response");
+        logger.error("Wrong response: " + response);
+        throw new DistributionException("Wrong response: " + response);
       }
     } catch (SmscConsoleException e) {
       logger.error("Can't send command", e);
@@ -220,9 +235,9 @@ public class DistributionInfoSmeManager implements DistributionManager {
 
   }
 
-  public String repairStatus(String id, Runnable task, Distribution distribution) throws DistributionException {
+  public State getState(String id) throws DistributionException {
     if (logger.isInfoEnabled()) {
-      logger.info("Repair status begins for id: " + id);
+      logger.info("Get status begins for id: " + id);
     }
 
     try {
@@ -243,18 +258,20 @@ public class DistributionInfoSmeManager implements DistributionManager {
             throw new SmscConsoleException("Wrong response");
           }
           String status = tokens[2];
-          if (status.equals("")) {
-            id = createDistribution(distribution, task);
+          if (status.equals("true")) {
+            return State.GENERATED;
+          } else if (status.equals("false")){
+            return State.UNGENERATED;
+          } else if(status.equals("error")) {
+            return State.ERROR;
           } else {
-            tasksMap.put(id, new Status(task));
+            logger.error("Unknown status for taskId="+id+". Status: "+ status);
+            throw new DistributionException("Unknown status for taskId="+id+". Status: "+ status);
           }
-          if (logger.isInfoEnabled()) {
-            logger.info("Repair status ends, new id: " + id);
-          }
-          return id;
         }
       }
-      throw new SmscConsoleException("Wrong response");
+      logger.error("Wrong response: " + response);
+      throw new DistributionException("Wrong response: " + response);
     } catch (SmscConsoleException e) {
       logger.error("Error during repair status", e);
       throw new DistributionException("Error during repair status", e);
@@ -346,14 +363,6 @@ public class DistributionInfoSmeManager implements DistributionManager {
     return filePattern;
   }
 
-  Long getCheckerFirstDelay() {
-    return checkerFirstDelay;
-  }
-
-  Long getCheckerPeriod() {
-    return checkerPeriod;
-  }
-
   String getLogin() {
     return login;
   }
@@ -372,14 +381,6 @@ public class DistributionInfoSmeManager implements DistributionManager {
 
   String getCodeok() {
     return codeOk;
-  }
-
-  String getUngeneratedDistributions() {
-    return tasksMap.keySet().toString();
-  }
-
-  Integer countUngeneratedDistributions() {
-    return tasksMap.keySet().size();
   }
 
   Long getConsoleTimeout() {
