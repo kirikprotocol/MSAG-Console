@@ -3,6 +3,8 @@
 
 <config>
 
+  <!-- ulimit -n 16384 !!! -->
+
   <section name="MTPers">
     <param name="host" type="string">@mtpers.listen_host@</param>
     <param type="int" name="port">@mtpers.port@</param>
