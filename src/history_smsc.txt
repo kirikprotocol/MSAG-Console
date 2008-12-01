@@ -189,4 +189,45 @@ B3010:
 
 B3011:
     MCISme	fix for task processor thread loop caused by IntHash
+    MCISme	don't write mca events journal if no events location specified
+    MCISme	multithreaded banner engine integration
+    MCISme	different service_type in callers and called notifications
     Archiver	fix for incorrect indexing some cases caused by DiskXTree
+
+B3012:
+    MCAHdb	Added jmx support for resource usage monitoring
+    INMan	Add service_type SMSC provided field into CSV files
+    SMSC	Provide SMPP service_type field to INMan
+    SMSC	Fix for destroy previous unreferenced router not in working mutex
+
+B3013:
+    InfoSme	createDistr/getStatus commands
+    InfoSme	enddate's view in index page bug fixed
+    InfoSme	Fix black list manager
+    InfoSme	default retry policy if no policy specified
+    InfoSme	fix for view messages
+    InfoSme	Fix view and download stats from deliveries page
+    InfoSme	Increase messages list in InfoSme Fix retry policy
+    InfoSme	added new InfoSme console's command: remove task
+    InfoSme	Add secret messages sent support from Info SME
+    InfoSme	smsquiz options, distribution commands, quizView changed
+    InfoSme	working with msisdn, which starts with 8 and +7
+    InfoSme	Add Retry policies
+    InfoSme	Fix deliveries time
+    Emailsme	additional logging profiles creation 7913->+7913 fix
+    Emailsme	auto create profile for email->sms case if allowed by config
+    Emailsme	fix profiles with addr .0.1.7* to .1.1.7*
+    MCISme	Allow to send abonent online notifications to subscribers with antiaon enabled
+    MCISme	Banner engine connection mgr added, reconect failed BE sockets in separate thread, 
+		Advertising.reconnectionAttemptPeriod parameter was added
+    MCISme	at TrafficControl::incOutgoing: call to outgoing.Inc() after checking for 
+		condition 'difference >= unrespondedMessagesMax'
+    MCISme	added 'flags' field into 'MissedCallEvent' struct. Storage file should be converted.
+    MCISme	events history fix on start moving old log files to csv
+    MCISme	banner rotator protocol V2 support
+    SMSC	MapIoTask stop reconnect if smsc is stopping
+    SMSC	fix for File object reuse that caused stop DPF rolling
+    StatExport	Change stats file format. Use fromDate instead of tillDate in headers
+    Webapp	Fix bugs in auth
+    Webapp	Remove "not specified" write into empty fields
+    
