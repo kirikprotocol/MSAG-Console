@@ -31,13 +31,15 @@ int PersServer::Execute()
     }
 
     if (!clientSocket) {
-      if (!perfCounterOn_) {
+      time_t now = time(NULL);
+      if (!perfCounterOn_ || now - lastTime < perfCounterPeriod_) {
         smsc_log_error(logger, "failed to accept, error: %s", strerror(errno));
-        break;
+        continue;
       }
       Performance perf = readers_.getPerformance();
       averPerf.inc(perf);
       smsc_log_info(logger, "current performance %d:%d req/sec", perf.accepted, perf.processed);
+      lastTime = now;
       continue;
     }
 
