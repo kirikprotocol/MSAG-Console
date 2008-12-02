@@ -314,6 +314,17 @@
     }%>
   </td>
 </tr>
+<% if (bean.isDelivery() && !bean.isCreate() && bean.isSecret()) { %>
+<tr class=row<%=rowN++&1%>>
+  <th>secret message</th>
+  <td><%=StringEncoderDecoder.encode(bean.getSecretMessage())%></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>secret flash</th>
+  <td><%=bean.isSecretFlash() ? "enabled" : "disabled"%></td>
+</tr>
+
+<% } %>
 </table>
 </div><%
 page_menu_begin(out);

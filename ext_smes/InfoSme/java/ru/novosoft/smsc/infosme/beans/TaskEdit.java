@@ -61,6 +61,9 @@ public class TaskEdit extends InfoSmeBean
   private boolean keepHistory = false;
   private boolean flash = false;
   private String retryPolicy = "";
+  private boolean secret;
+  private boolean secretFlash;
+  private String secretMessage;
 
   protected int init(List errors)
   {
@@ -146,6 +149,9 @@ public class TaskEdit extends InfoSmeBean
     keepHistory = task.isKeepHistory();
     flash = task.isFlash();
     retryPolicy = task.getRetryPolicy();
+    secret = task.isSecret();
+    secretFlash = task.isSecretFlash();
+    secretMessage = task.getSecretMessage();
   }
 
   private void pageToTask(Task task) {
@@ -575,5 +581,17 @@ public class TaskEdit extends InfoSmeBean
 
   public void setRetryPolicy(String retryPolicy) {
     this.retryPolicy = retryPolicy;
+  }
+
+  public boolean isSecret() {
+    return secret;
+  }
+
+  public boolean isSecretFlash() {
+    return secretFlash;
+  }
+
+  public String getSecretMessage() {
+    return secretMessage;
   }
 }

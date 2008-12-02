@@ -63,6 +63,10 @@ public class Task
   private String subject;
   private int actualRecordsSize;
   private boolean messagesHaveLoaded = false;
+  // for secret
+  private boolean secret;
+  private boolean secretFlash;
+  private String secretMessage="";
 
   public Task(String id) {
     this.id = id;
@@ -119,6 +123,15 @@ public class Task
     try { delivery = config.getBool(prefix + ".delivery"); }
     catch (Throwable th) { delivery = false; }
     if (delivery) provider = Task.INFOSME_EXT_PROVIDER;
+    try {
+      secret = config.getBool(prefix + ".secret");
+      secretFlash = config.getBool(prefix + ".secretFlash");
+      secretMessage = config.getString(prefix + ".secretMessage");
+    } catch (Config.ParamNotFoundException e) {
+      secret = false;
+      secretFlash = false;
+      secretMessage = "";
+    }
   }
 
   public void storeToConfig(Config config)
@@ -156,6 +169,9 @@ public class Task
     config.setBool(prefix + ".flash", flash);
     config.setString(prefix + ".activeWeekDays", Functions.collectionToString(activeWeekDays, ","));
     config.setBool(prefix + ".messagesHaveLoaded", messagesHaveLoaded);
+    config.setBool(prefix + ".secret", secret);
+    config.setBool(prefix + ".secretFlash", secretFlash);
+    config.setString(prefix + ".secretMessage", secretMessage);
   }
 
   public boolean isContainsInConfig(Config config)
@@ -217,7 +233,10 @@ public class Task
               && this.trackIntegrity == task.trackIntegrity
               && this.keepHistory == task.keepHistory
               && this.activeWeekDays.equals(task.activeWeekDays)
-              && this.retryPolicy.equals(task.retryPolicy);
+              && this.retryPolicy.equals(task.retryPolicy)
+              && this.secret == task.secret
+              && this.secretFlash == task.secretFlash
+              && this.secretMessage.equals(task.secretMessage);
     } else
       return false;
   }
@@ -524,5 +543,29 @@ public class Task
 
   public void setRetryPolicy(String retryPolicy) {
     this.retryPolicy = retryPolicy;
+  }
+
+  public boolean isSecret() {
+    return secret;
+  }
+
+  public void setSecret(boolean secret) {
+    this.secret = secret;
+  }
+
+  public boolean isSecretFlash() {
+    return secretFlash;
+  }
+
+  public void setSecretFlash(boolean secretFlash) {
+    this.secretFlash = secretFlash;
+  }
+
+  public String getSecretMessage() {
+    return secretMessage;
+  }
+
+  public void setSecretMessage(String secretMessage) {
+    this.secretMessage = secretMessage;
   }
 }
