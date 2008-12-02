@@ -61,7 +61,16 @@ SessionStoreImpl::~SessionStoreImpl()
 {
     stop();
     MutexGuard mg(cacheLock_);
+    unsigned pass = 0;
     while ( lockedSessions_ > 0 ) {
+        if ( lockedSessions_ < 300 && ++pass == 10 ) {
+            smsc_log_info( log_, "the following %d sessions are still locked:", lockedSessions_ );
+            scag_plog_info(pl,log_);
+            for ( MemStorage::iterator_type i = cache_->begin(); i.next(); ) {
+                Session* s = cache_->store2val(i.value());
+                if (s) s->print(pl);
+            }
+        }
         cacheLock_.wait( 100 );
     }
     // smsc_log_debug(log_, "node=%u destroyed", nodeNumber_ );

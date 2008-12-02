@@ -552,7 +552,13 @@ void Session::clear()
         for ( Hash< ExternalTransaction* >::Iterator i(transactions_);
               i.Next(key,value); ) {
             if ( !value ) continue;
-            value->rollback();
+            try {
+                value->rollback();
+            } catch ( std::exception& e ) {
+                smsc_log_debug(log_, "exception while rolling back: %s", e.what() );
+            } catch (...) {
+                smsc_log_debug(log_, "unknown exception while rolling back" );
+            }
             delete value;
         }
         transactions_->Empty();
