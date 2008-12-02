@@ -113,10 +113,10 @@ public class QuizView extends SmsQuizBean {
   }
 
   public boolean isFinished() {
-    if(quizData!=null) {
-        Date dateEnd = quizData.getDateEnd();
-        Date now = new Date();
-        return now.after(dateEnd);
+    if(status!=null) {
+      if(status.startsWith("FINISHED")) {
+        return true;
+      }
     }
     return false;
   }
