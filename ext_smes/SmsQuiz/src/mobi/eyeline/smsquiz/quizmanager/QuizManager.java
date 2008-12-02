@@ -22,10 +22,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.io.*;
 import java.lang.management.ManagementFactory;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Observable;
-import java.util.Observer;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -294,6 +291,7 @@ public class QuizManager implements Observer {
 
       quiz = new Quiz(file, replyStatsDataSource, distributionManager, dirResult, dirWork, archiveDir, quizDir);
       quizBuilder.buildQuiz(fileName, quiz);
+      validateDates(quiz);
 
       if (!quiz.isFinished()) {
         ConflictVisitor visitor = new ConflictVisitor(quiz);
@@ -342,6 +340,19 @@ public class QuizManager implements Observer {
       logger.error(e, e);
       writeError(notification.getFileName(), e);
       throw new QuizException(e);
+    }
+  }
+
+  private void validateDates(Quiz quiz) throws QuizException{
+    Date dateBegin = quiz.getDateBegin();
+    Date dateEnd = quiz.getDateEnd();
+    Date distrEndDate = quiz.getDistrDateEnd();
+    Date now = new Date();
+    if(dateEnd.before(now)||dateEnd.before(dateBegin)) {
+      throw new QuizException("Invalid end date: "+dateEnd);
+    }
+    if(distrEndDate.before(now)||distrEndDate.before(dateBegin)||distrEndDate.after(dateEnd)) {
+      throw new QuizException("Invalid distribution end date: "+distrEndDate);
     }
   }
 

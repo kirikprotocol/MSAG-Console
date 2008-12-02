@@ -114,6 +114,7 @@ public class QuizAdd extends SmsQuizBean {
     return result;
   }
 
+  /** @noinspection EmptyCatchBlock*/
   private int save(MultipartServletRequest request) {
     System.out.println("Saving...");
     int result;
@@ -196,9 +197,16 @@ public class QuizAdd extends SmsQuizBean {
   private int validation(MultipartServletRequest request) {
     System.out.println("Validation...");
     try {
-      dateFormat.parse(dateBegin);
-      dateFormat.parse(dateEnd);
-      dateFormat.parse(distrDateEnd);
+      Date startDate = dateFormat.parse(dateBegin);
+      Date endDate = dateFormat.parse(dateEnd);
+      Date now = new Date();
+      if(endDate.before(startDate)||endDate.before(now)) {
+        return warning("Incorrect end date");
+      }
+      Date distrDate =  dateFormat.parse(distrDateEnd);
+      if(distrDate.before(now)||distrDate.after(endDate)||distrDate.before(startDate)) {
+        return warning("Incorrect distribution end date");
+      }
       timeFormat.parse(timeBegin);
       timeFormat.parse(timeEnd);
     } catch (ParseException e) {
