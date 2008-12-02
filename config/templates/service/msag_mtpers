@@ -1,4 +1,5 @@
 #!/bin/bash
+ulimit -n 16384 || ulimit -n 1024
 if [ -f logs/pvss.err ]; then
   mv logs/pvss.err logs/pvss.err.old
 fi

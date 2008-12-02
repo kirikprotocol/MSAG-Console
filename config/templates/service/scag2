@@ -1,4 +1,5 @@
 #!/bin/bash
+ulimit -n 16384 || ulimit -n 1024
 if [ -f logs/msag.err ]; then
   mv logs/msag.err logs/msag.err.old
 fi
