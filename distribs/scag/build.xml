@@ -17,6 +17,13 @@ ACTION is one of:
 The possible SELECTIONS are listed below under Main targets.
     </description>
     <property file="build.properties"/>
+    <tstamp/>
+    <property environment="env"/>
+    <condition property="BUILD_DIR" value="${env.HOME}/msag_build-${DSTAMP}${TSTAMP}">
+        <not>
+            <isset property="BUILD_DIR"/>
+        </not>
+    </condition>
     <condition property="INIT_FAILED" value="yes" >
         <not>
             <and>
@@ -34,8 +41,6 @@ The possible SELECTIONS are listed below under Main targets.
     <available file="${TEMPLATE_PROPS}" property="TEMPLATE_PROPS_FOUND" value="yes"/>
     <fail unless="TEMPLATE_PROPS_FOUND" message="Template properties file not found"/>
     <property file="${TEMPLATE_PROPS}"/>
-    <tstamp/>
-    <property environment="env"/>
 
 <!-- ==================================================================== -->
 <!--                            PROPERTIES                                -->
