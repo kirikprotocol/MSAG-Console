@@ -71,6 +71,12 @@ bool StorageManager::process(PersPacket* packet) {
 void StorageManager::shutdown() {
   isStopped_ = true;
   infrastructStorage_->stop();
+  for (unsigned i = 0; i < locationsCount_; ++i) {
+    storages_[i]->stop();
+  }
+  smsc_log_warn(logger_, "waiting 10 seconds while storage processors stopping...");
+  sleep(10);
+  smsc_log_warn(logger_, "shutdown storage processors pool");
   pool_.shutdown();
 }
 
