@@ -17,10 +17,10 @@ class RetryPolicies{
 public:
   RetryPolicies()
   {
-    log=smsc::logger::Logger::getInstance("retryPlcy");
   }
   void Load(conf::ConfigView* cv)
   {
+    log=smsc::logger::Logger::getInstance("retryPlcy");
     smsc_log_info(log,"Loading Retry Policies");
     sync::MutexGuard mg(mtx);
     n2p.Empty();
