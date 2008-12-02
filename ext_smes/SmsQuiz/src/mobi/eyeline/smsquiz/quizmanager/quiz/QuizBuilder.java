@@ -214,7 +214,12 @@ public class QuizBuilder {
     }
     if ((elem = repliesElem.getChild("max-repeat")) != null) {
       try {
-        quiz.setMaxRepeat(Integer.parseInt(elem.getTextTrim()));
+        String mr = elem.getTextTrim();
+        if(!mr.equals("")) {
+          quiz.setMaxRepeat(Integer.parseInt(elem.getTextTrim()));
+        } else {
+          quiz.setMaxRepeat(0);
+        }
       } catch (NumberFormatException e) {
         logger.error("Unsupported format for integer: " + elem.getTextTrim());
         throw new QuizException("Unsupported format for integer: " + elem.getTextTrim());
@@ -223,7 +228,10 @@ public class QuizBuilder {
       quiz.setMaxRepeat(0);
     }
     if ((elem = repliesElem.getChild("default")) != null) {
-      quiz.setDefaultCategory(elem.getTextTrim());
+      String def = elem.getTextTrim();
+      if(!def.equals("")) {
+        quiz.setDefaultCategory(def);
+      }
     }
     List<Element> list;
     if ((list = repliesElem.getChildren("reply")) != null) {

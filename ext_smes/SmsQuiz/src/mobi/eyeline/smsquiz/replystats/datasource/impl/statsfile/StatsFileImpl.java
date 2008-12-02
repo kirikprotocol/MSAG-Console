@@ -18,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+@SuppressWarnings({"ResultOfMethodCallIgnored"})
 class StatsFileImpl implements StatsFile {
   private static Logger logger = Logger.getLogger(StatsFileImpl.class);
 
