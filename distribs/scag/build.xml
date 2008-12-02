@@ -62,6 +62,19 @@ Issue "ant -p" to see available targets.
     <!-- ======================================================== -->
     <!--                    SETUP TARGETS                         -->
     <!-- ======================================================== -->
+    <target name="src"
+            description="-&gt; put sources into build directory">
+        <fail if="SETUP_DONE" message="You should specify 'src' before any actions"/>
+        <condition property="SETUP_COPY_SRC">
+            <and>
+                <equals arg1="${SRC_DIR}" arg2="${SMSC_DIR}/src"/>
+                <not>
+                    <equals arg1="${BUILD_DIR}/src" arg2="${SRC_DIR}"/>
+                </not>
+            </and>
+        </condition>
+    </target>
+
     <target name="admin"
             description="-&gt; admin daemon">
         <fail if="SETUP_DONE" message="You should specify 'admin' before any actions"/>
@@ -133,6 +146,7 @@ Issue "ant -p" to see available targets.
     <target name="-checksetup" unless="SETUP_MAKE_DONE">
         <condition property="SETUP_MAKE_DONE">
             <or>
+                <isset property="SETUP_COPY_SRC"/>
                 <isset property="SETUP_MAKE_MSAG"/>
                 <isset property="SETUP_MAKE_SCAG"/>
                 <isset property="SETUP_MAKE_PERS"/>
@@ -202,6 +216,82 @@ Issue "ant -p" to see available targets.
     </target>
     <target name="makedeps" depends="-makedeps" if="SETUP_MAKE_CXX"/>
   
+    <target name="-make.src" if="SETUP_COPY_SRC">
+        <mkdir dir="${BUILD_DIR}/src"/>
+        <mkdir dir="${BUILD_DIR}/distribs/scag"/>
+        <mkdir dir="${BUILD_DIR}/config/templates"/>
+        <copy todir="${BUILD_DIR}/src" preservelastmodified="true">
+            <fileset dir="${SRC_DIR}"
+                     defaultexcludes="no"
+                     excludes="*~"
+                     includes="build.xml modules-list makefile conf/** logger/** db/** smpp/** core/** util/** sms/** admin/** smeman/** router/** system/** license/** sme/** inman/** scag/**"/>
+            <fileset dir="${SRC_DIR}"
+                     defaultexcludes="no"
+                     excludes="*~"
+                     includes="acls/**.h acls/**.hpp acls/CVS/**"/>
+            <fileset dir="${SRC_DIR}"
+                     defaultexcludes="no"
+                     excludes="*~"
+                     includes="alias/**.h alias/**.hpp alias/CVS/**"/>
+            <fileset dir="${SRC_DIR}"
+                     defaultexcludes="no"
+                     excludes="*~"
+                     includes="closedgroups/**.h closedgroups/**.hpp closedgroups/CVS/**"/>
+            <fileset dir="${SRC_DIR}"
+                     defaultexcludes="no"
+                     excludes="*~"
+                     includes="cluster/**.h cluster/**.hpp cluster/CVS/**"/>
+            <fileset dir="${SRC_DIR}"
+                     defaultexcludes="no"
+                     excludes="*~"
+                     includes="distrlist/**.h distrlist/**.hpp distrlist/CVS/**"/>
+            <fileset dir="${SRC_DIR}"
+                     defaultexcludes="no"
+                     excludes="*~"
+                     includes="mscman/**.h mscman/**.hpp mscman/CVS/**"/>
+            <fileset dir="${SRC_DIR}"
+                     defaultexcludes="no"
+                     excludes="*~"
+                     includes="profiler/**.h profiler/**.hpp profiler/CVS/**"/>
+            <fileset dir="${SRC_DIR}"
+                     defaultexcludes="no"
+                     excludes="*~"
+                     includes="resourcemanager/**.h resourcemanager/**.hpp resourcemanager/CVS/**"/>
+            <fileset dir="${SRC_DIR}"
+                     defaultexcludes="no"
+                     excludes="*~"
+                     includes="snmp/**.h snmp/**.hpp snmp/CVS/**"/>
+            <fileset dir="${SRC_DIR}"
+                     defaultexcludes="no"
+                     excludes="*~"
+                     includes="stat/**.h stat/**.hpp stat/CVS/**"/>
+            <fileset dir="${SRC_DIR}"
+                     defaultexcludes="no"
+                     excludes="*~"
+                     includes="store/**.h store/**.hpp store/CVS/**"/>
+        </copy>
+        <copy todir="${BUILD_DIR}/distribs/scag" preservelastmodified="true">
+            <fileset dir="${SMSC_DIR}/distribs/scag"
+                     defaultexcludes="no"
+                     excludes="*~"/>
+        </copy>
+        <copy todir="${BUILD_DIR}/config" preservelastmodified="true">
+            <fileset dir="${SMSC_DIR}/config"
+                     defaultexcludes="no"
+                     includes="scag/** scag2/**"
+                     excludes="*~"/>
+        </copy>
+        <copy todir="${BUILD_DIR}/config/templates" preservelastmodified="true">
+            <fileset dir="${SMSC_DIR}/config/templates"
+                     defaultexcludes="no"
+                     includes="*.sh logger/** scag/** scag2/** service/**"
+                     excludes="*~"/>
+        </copy>
+        <chmod perm="755">
+            <fileset dir="${BUILD_DIR}/src/conf" includes="*.pl *.sh colorederr"/>
+        </chmod>
+    </target>
+
     <target name="-make.scag" depends="makedeps" if="SETUP_MAKE_SCAG">
         <echo>Building scag</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
@@ -359,7 +449,7 @@ Issue "ant -p" to see available targets.
     </target>
 
     <target name="make" 
-            depends="-setupdone, -make.scag, -make.msag, -make.pers, -make.pvss, -make.pvgw, -make.pvcp, -make.admin, -make.webapp, -make.jedit"
+            depends="-setupdone, -make.scag, -make.msag, -make.pers, -make.pvss, -make.pvgw, -make.pvcp, -make.admin, -make.webapp, -make.jedit, -make.src"
             unless="MAKE_DONE">
         <!-- description="Action: Compile previously selected targets" -->
         <!-- antcall target="makedeps"/ -->
@@ -782,7 +872,7 @@ Issue "ant -p" to see available targets.
             </fileset>
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
-        <copy todir="${WEBINF_DIR}/classes/" file="${TEMPL_DIR}/log4j.properties" flatten="yes" >
+        <copy todir="${DISTR_DIR}/${WEBINF_DIR}/classes/" file="${TEMPL_DIR}/log4j.properties" flatten="yes" >
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
         <symlink resource="../${WEBINF_DIR}/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
@@ -800,7 +890,7 @@ Issue "ant -p" to see available targets.
               file="${TEMPL_DIR}/scag/webapp.xml">
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
-        <copy tofile="${WEBINF_DIR}/web.xml"
+        <copy tofile="${DISTR_DIR}/${WEBINF_DIR}/web.xml"
               file="${TEMPL_DIR}/scag/web.xml">
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
