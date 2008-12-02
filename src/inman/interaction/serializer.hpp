@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "util/Uint64Converter.h"
 using smsc::util::Uint64Converter;
