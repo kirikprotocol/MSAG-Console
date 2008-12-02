@@ -111,9 +111,9 @@ int StorageProcessor::Execute() {
 
 void StorageProcessor::stop() {
   smsc_log_debug(logger_, "stop storage processor %p", this);
-  isStopping = true;
 
   MutexGuard g(processMonitor_);
+  isStopping = true;
   processMonitor_.notify();
 }
 

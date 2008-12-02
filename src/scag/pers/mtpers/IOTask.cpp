@@ -163,9 +163,9 @@ void IOTask::removeSocketFromMultiplexer(Socket* s) {
 
 void IOTask::stop() {
   smsc_log_debug(logger, "stop iotask %p", this);
-  isStopping = true;
 
   MutexGuard g(socketMonitor_);
+  isStopping = true;
   socketMonitor_.notify();
 }
 
