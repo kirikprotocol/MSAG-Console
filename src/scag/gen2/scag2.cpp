@@ -268,11 +268,11 @@ void Scag::shutdown()
     // __trace__("shutting down");
     smsc_log_info( log, "SCAG is shutting down\n\n");
     pers::util::PersClient::Instance().Stop();   // to prevent dangling longcalls
+    bill::BillingManager::Instance().Stop();     // to prevent dangling longcalls
     lcm::LongCallManager::Instance().shutdown(); // to prevent dangling longcalls
     transport::http::HttpManager::Instance().shutdown();
     transport::smpp::SmppManager::Instance().shutdown();
     sessions::SessionManager::Instance().Stop();
-    // bill::BillingManager::Instance().Stop();
     // stat::Statistics::Instance().Stop();
 }
 
