@@ -31,6 +31,7 @@
     <jar jarfile="${out_dir}/${esme_name}.jar" manifest="${SMS_QUIZ_HOME}/MANIFEST.MF">
       <fileset dir="${out_dir}" excludes="*.jar" />
       <fileset dir="${src_dir}" includes="**/*.properties"/>
+      <fileset dir="${SMS_QUIZ_HOME}" includes="history.txt"/>
     </jar>
   </target>
 
