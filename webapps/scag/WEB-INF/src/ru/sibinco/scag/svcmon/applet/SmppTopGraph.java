@@ -194,9 +194,14 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         this.localeText = localeText;
         this.graphScale = graphScale;
 //        this.graphGrid = graphGrid;
-        this.graphGrid   = graphGrid<=5? 5:(int)Math.round(graphGrid*0.1)*10;
-        this.graphHiGrid = graphHiGrid<=5? 5:(int)Math.round(graphHiGrid*0.1)*10;
-        this.graphHead   = graphHiGrid<=5? 5:(int)Math.round(graphHiGrid*0.1)*10;
+//        this.graphGrid   = graphGrid<=5? 5:(int)Math.round(graphGrid*0.1)*10;
+//        this.graphHiGrid = graphHiGrid<=5? 5:(int)Math.round(graphHiGrid*0.1)*10;
+//        this.graphHead   = graphHiGrid<=5? 5:(int)Math.round(graphHead*0.1)*10;
+
+        this.graphGrid   = graphGrid   < 3?   3: graphGrid;
+        this.graphHiGrid = graphHiGrid < 3? 3: graphHiGrid;
+        this.graphHead   = graphHead   < 3?   3: graphHead;
+
         this.snapSmppHistory = snapSmppHistory;
         addMouseListener(this);
         addMouseMotionListener(this);
@@ -520,7 +525,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         }
     }
 
-    int drawBars(Graphics g, int y, int top, int barwidth, SmppSnap smesnap){
+    int drawBars(Graphics g, int top, int y, int barwidth, SmppSnap smesnap){
 // draw bars
         int spent = 0;
         int barX = pad + graphTextWidth + barSeparator + pad + barwidth-2;
@@ -528,6 +533,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.setColor(graphBarBGColor);
 
         g.drawString( "XS=" + xScale, barX-20, y+10);
+
         g.drawString( "YS=" + yScale, barX+10, y+10);
 
     // last Rejected
@@ -576,7 +582,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         return barX;
     }
 
-    void drawHorizontal( Graphics g, int y, int top, int barX, int barWidth, int rightX ){
+    void drawHorizontal( Graphics g, int top, int y, int barX, int barWidth, int rightX ){
 //  performance values
         FontMetrics fm = getFontMetrics( graphFont );
         for (int i = 0; y + shiftV - (i * graphScale) >= top; i += graphHead) {
@@ -606,7 +612,9 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         }
     }
 
-    void drawGraph(Graphics g, Dimension size) {
+
+
+    void drawGraph_(Graphics g, Dimension size) {
         System.out.println("drawGraph():start");
 
         SmppSnap smesnap = snapSmppHistory.getSmppLast();
@@ -715,62 +723,66 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         int right = size.width - pad - pad;
 //        int graphStart = 2 * pad + separatorWidth;
 
-//        int lastVert = 0 ;
+
+
+
 //  draw separator bars/graph
         int graphXLeft = barX + barwidth*3;
-        int posX = graphXLeft;
+//        int posX = graphXLeft;
+//
+//
+//        g.setColor(colorBackground);
+//        for(int ii = 1; ii<=barwidth; ii++){
+//            posX = graphXLeft-ii;
+//            g.drawLine(posX, top, posX, y+1);
+//        }
 
+        java.util.Set timePoints = drawVertical( g, top, y, barwidth, right, graphXLeft );
 
-        g.setColor(colorBackground);
-        for(int ii = 1; ii<=barwidth; ii++){
-            posX = graphXLeft-ii;
-            g.drawLine(posX, top, posX, y+1);
-        }
-
-        int start = right - rest;
-        java.util.Set timePoints = new java.util.TreeSet();
-//        int toLeft = 0;
-        int toRight = 0;
-        for (int i = 0; ; i += graphGrid) {
-            int posToLeft = start - (int)(i * graphScale);
-            int posToRight = start + (int)(i * graphScale);
-            if (posToLeft < graphXLeft && posToRight > right) {
-                break;
-            }
-            boolean add = false;
-            if( (i % graphHiGrid) == 0 ){
-                if( (++toRight % 2)==0 ){
-                    add = true;
-                }
-            }
-            if(posToLeft > graphXLeft){
-                if ((i % graphHiGrid) == 0){
-                    g.setColor(graphHiGridColor);
-                    if( add ){
-                        timePoints.add( new Integer(posToLeft) );
-                    }
-                }
-                else{
-                    g.setColor(graphGridColor);
-                }
-                g.drawLine(posToLeft, top+1, posToLeft, y-1);
-            }
-
-            if( posToRight < right && posToRight > graphXLeft ){
-                if ((i % graphHiGrid) == 0){
-                    g.setColor(graphHiGridColor);
-
-                    if( add ) {
-                        timePoints.add( new Integer(posToRight) );
-                    }
-                }
-                else{
-                    g.setColor(graphGridColor);
-                }
-                g.drawLine(posToRight, top+1, posToRight, y-1);
-            }
-
-        }
+//        int start = right - rest;
+//        java.util.Set timePoints = new java.util.TreeSet();
+////        int toLeft = 0;
+//        int toRight = 0;
+//        for (int i = 0; ; i += graphGrid) {
+//            int posToLeft = start - (int)(i * graphScale);
+//            int posToRight = start + (int)(i * graphScale);
+//            if (posToLeft < graphXLeft && posToRight > right) {
+//                break;
+//            }
+//            boolean add = false;
+//            if( (i % graphHiGrid) == 0 ){
+//                if( (++toRight % 2)==0 ){
+//                    add = true;
+//                }
+//            }
+//            if(posToLeft > graphXLeft){
+//                if ((i % graphHiGrid) == 0){
+//                    g.setColor(graphHiGridColor);
+//                    if( add ){
+//                        timePoints.add( new Integer(posToLeft) );
+//                    }
+//                }
+//                else{
+//                    g.setColor(graphGridColor);
+//                }
+//                g.drawLine(posToLeft, top+1, posToLeft, y-1);
+//            }
+//
+//            if( posToRight < right && posToRight > graphXLeft ){
+//                if ((i % graphHiGrid) == 0){
+//                    g.setColor(graphHiGridColor);
+//
+//                    if( add ) {
+//                        timePoints.add( new Integer(posToRight) );
+//                    }
+//                }
+//                else{
+//                    g.setColor(graphGridColor);
+//                }
+//                g.drawLine(posToRight, top+1, posToRight, y-1);
+//            }
+//
+//        }
 
 //        int gsz = (snapSmppHistory.countSmmp - 1) * graphScale;
         int gsz = (snapSmppHistory.countSmmp - 1) * xScale;
@@ -847,6 +859,168 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.drawLine(separatorWidth + 1, top - 1, separatorWidth + 1, size.height);
         g.setFont(getFont());
         System.out.println("drawGraph():end");
+    }
+
+    void drawGraph(Graphics g, Dimension size) {
+        System.out.println("drawGraph():start");
+
+        SmppSnap smesnap = snapSmppHistory.getSmppLast();
+        if (smesnap == null) return;
+        if ( !viewGraph ) return;
+
+        SmppSnap prevsnap = smesnap;
+//        int spent = 0;
+        g.setColor(graphHiGridColor);
+        FontMetrics fm = getFontMetrics(graphFont);
+        int fh = fm.getHeight();
+        int height = 0;
+        int top = size.height - height;
+        top = top_sep + 10;
+        int y = size.height - pad - fh - pad;
+        int barwidth = (graphTextWidth - 3 * barSeparator - 5 * pad) / 2;
+        g.setFont(graphFont);
+
+// draw bars
+        int barX = pad + graphTextWidth + barSeparator + pad + barwidth-2;
+        barX = drawBars( g, top, y, barwidth, smesnap );
+
+// draw horizontal lines
+        drawHorizontal( g, top, y, barX, barwidth, (size.width - pad) );
+
+        int right = size.width - pad - pad;
+        int graphXLeft = barX + barwidth*3;
+// draw vertical lines
+        java.util.Set timePoints = new java.util.TreeSet();
+        timePoints = drawVertical( g, top, y, barwidth, right, graphXLeft );
+
+        int gsz = (snapSmppHistory.countSmmp - 1) * xScale;
+// draw graph
+        for (int i = 0; i < gsz; i += xScale) {
+            int pos = right - i;
+            if (pos-xScale < graphXLeft) { break; }
+
+            if (prevsnap != null) {
+                smesnap = snapSmppHistory.getPrevSmpp();
+                if (smesnap != null && pos>graphXLeft) {
+                    int add = shiftV;
+                    drawGraphLine( g, pos, y, smesnap.smppSpeed[SmppSnap.REJECTED_INDEX], prevsnap.smppSpeed[SmppSnap.REJECTED_INDEX],
+                                   0, 0, colorGraphRejected, add );
+
+                    drawGraphLine( g, pos, y, smesnap.smppSpeed[SmppSnap.GW_REJECTED_INDEX], prevsnap.smppSpeed[SmppSnap.GW_REJECTED_INDEX],
+                                   0, 0, colorGraphGwRejected, add );
+
+                    int value = smesnap.smppSpeed[SmppSnap.ACCEPTED_INDEX];
+                    int valuePrev = prevsnap.smppSpeed[SmppSnap.ACCEPTED_INDEX];
+
+                    drawGraphLine( g, pos, y, value, valuePrev,
+                                   0, 0, colorGraphAccepted, add );
+
+                    value += 300;
+                    valuePrev += 300;
+                    drawGraphLine( g, pos, y, value, valuePrev,
+                                   0, 0, colorGraphAccepted, add );
+
+                    drawGraphLine( g, pos, y, smesnap.smppSpeed[SmppSnap.FAILED_INDEX], prevsnap.smppSpeed[SmppSnap.FAILED_INDEX],
+                                   0, 0, colorGraphFailed, add );
+
+                    drawGraphLine( g, pos, y, smesnap.smppSpeed[SmppSnap.DELIVERED_INDEX], prevsnap.smppSpeed[SmppSnap.DELIVERED_INDEX],
+                                   0, 0, colorGraphDeliver, add );
+                }
+                prevsnap = smesnap;
+            }
+        }
+        if( null != timePoints ){
+            drawTime( g, timePoints, size, top, y, right );
+        }
+        System.out.println("drawGraph():end");
+    }
+
+    void drawTime( Graphics g, java.util.Set timePoints, Dimension size, int top, int y, int right){
+        FontMetrics fm = getFontMetrics( graphFont );
+
+        g.setColor(graphColor);
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        cal = Calendar.getInstance();
+        g.setColor( new Color(0, 224, 0) );
+        int ty = size.height - pad - fm.getDescent();
+        java.util.Iterator iter = timePoints.iterator();
+//  draw time
+        while( iter.hasNext() ){
+            cal = Calendar.getInstance();
+            int val = (int)( (Integer)(iter.next()) ).intValue();
+            if( val < 0 ){
+                break;
+            }
+            int app = (right-val)/xScale;
+            cal.add( Calendar.SECOND, -app );
+            String str = sdf.format( cal.getTime() );
+            int sw = fm.stringWidth( String.valueOf(str) ) / 2;
+            g.drawString( str, val - sw, ty);
+            g.drawLine( val, top, val, y+4 );
+        }
+
+        g.setColor(colorBackground);
+        g.drawLine(0, top - 1, 0, size.height);
+        g.drawLine(separatorWidth + 1, top - 1, separatorWidth + 1, size.height);
+        g.setFont(getFont());
+    }
+
+    private java.util.Set drawVertical( Graphics g, int top, int y, int barwidth, int right, int graphXLeft ) {
+        int posX = graphXLeft;
+//  draw separator bars/graph
+        g.setColor(colorBackground);
+        for(int ii = 1; ii<=barwidth; ii++){
+            posX = graphXLeft-ii;
+            g.drawLine(posX, top, posX, y+1);
+        }
+
+        int start = right - rest;
+        java.util.Set timePoints = new java.util.TreeSet();
+//        int toLeft = 0;
+        int toRight = 0;
+        for (int i = 0; ; i += graphGrid) {
+            int posToLeft = start - (int)(i * graphScale);
+            int posToRight = start + (int)(i * graphScale);
+            if (posToLeft < graphXLeft && posToRight > right) {
+                break;
+            }
+            boolean add = false;
+            if( (i % graphHiGrid) == 0 ){
+                if( (++toRight % 2)==0 ){
+                    add = true;
+                }
+            }
+            if(posToLeft > graphXLeft){
+                if ((i % graphHiGrid) == 0){
+                    g.setColor(graphHiGridColor);
+                    if( add ){
+                        timePoints.add( new Integer(posToLeft) );
+                    }
+                }
+                else{
+                    g.setColor(graphGridColor);
+                }
+                g.drawLine(posToLeft, top+1, posToLeft, y-1);
+            }
+
+            if( posToRight < right && posToRight > graphXLeft ){
+                if ((i % graphHiGrid) == 0){
+                    g.setColor(graphHiGridColor);
+
+                    if( add ) {
+                        timePoints.add( new Integer(posToRight) );
+                    }
+                }
+                else{
+                    g.setColor(graphGridColor);
+                }
+                g.drawLine(posToRight, top+1, posToRight, y-1);
+            }
+
+        }
+        return timePoints;
+
     }
 
     protected void drawGraphLine(Graphics g, int x, int y, int snapVal, int prevSnapVal, int underGraphVal, int underGraphPrevVal, Color color , int add) {
