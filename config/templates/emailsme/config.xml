@@ -51,6 +51,7 @@
   </section>
 
   <section name="mail">
+    <param name="threadsCount" type="int">4</param>
     <param name="domain" type="string">@emailsme.mail.domain@</param>
     <param name="stripper" type="string">bin/mailreaper.pl</param>
     <param name="format" type="string">#template=emailsmenotify#{from}="$$string import=from$$" {to}="$$string import=to$$" {subj}="$$string import=subj$$" {body}="$$string import=body$$"</param>
