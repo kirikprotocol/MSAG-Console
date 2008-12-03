@@ -3,17 +3,17 @@
 <%@ page import="ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper"%>
 <%@ page import="mobi.eyeline.smsquiz.beans.Distribution"%>
 <%@ page import="ru.novosoft.smsc.util.*"%>
-<jsp:useBean id="bean" scope="page" class="mobi.eyeline.smsquiz.beans.Distribution" />
-<% if (!bean.isProcessed()) {%>
-  <jsp:setProperty name="bean" property="*"/>
-<% } %>
+<jsp:useBean id="smsQuizDistributionBean" scope="session" class="mobi.eyeline.smsquiz.beans.Distribution" />
+<% smsQuizDistributionBean.clean(); %>
+<jsp:setProperty name="smsQuizDistributionBean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
 	TITLE=getLocString("smsquiz.title");
   ServiceIDForShowStatus = ru.novosoft.smsc.util.Functions.getServiceId(request.getServletPath());
   MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
-  bean.getTableHelper().processRequest(request);
+
+  Distribution bean = smsQuizDistributionBean;
   int rowN = 0;
   int beanResult = bean.process(request);
   if (beanResult == Distribution.RESULT_EXPORT_ALL) {
@@ -34,7 +34,6 @@
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <div class=content>
-<input type=hidden name=initialized value=true>
 <%Map allQuizes = bean.getAllQuizes();
   if (allQuizes.size() > 0) {%>
 <table class=properties_list>

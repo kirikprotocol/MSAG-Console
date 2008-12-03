@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 /**
@@ -42,6 +43,10 @@ public class Results extends SmsQuizBean {
 
   private String quizId;
 
+  public void clean() {
+    resultFilter.setAddress(null);
+  }
+
   protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
@@ -54,6 +59,7 @@ public class Results extends SmsQuizBean {
       String resultDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_result");
       String quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
       String workDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
+      int maxResults = getSmsQuizContext().getMaxResultsTotalSize();
       makeQuizMap(quizDir, workDir);
       System.out.println(quizId);
       if(quizId!=null) {
@@ -63,6 +69,7 @@ public class Results extends SmsQuizBean {
       tableHelper.setPageSize(pageSize);
       tableHelper.setFilter(resultFilter);
       tableHelper.setDs(ds);
+      tableHelper.setMaxRows(maxResults);
     } catch (Exception e) {
       return error("Can't init data source", e);
     }
@@ -87,8 +94,12 @@ public class Results extends SmsQuizBean {
 
 
     try {
+      tableHelper.processRequest(request);
       if (mbExportAll != null) {
         result = processExportAll();
+      }
+      if(mbQuery !=null ) {
+        processQuery();
       }
       if (initialized) {
         tableHelper.fillTable();
@@ -100,6 +111,12 @@ public class Results extends SmsQuizBean {
     return result;
   }
 
+  private int processQuery() {
+    initialized = true;
+    mbQuery = null;
+    tableHelper.reset();
+    return RESULT_OK;
+  }
 
   private int processExportAll() {
     mbExportAll = null;
@@ -204,7 +221,7 @@ public class Results extends SmsQuizBean {
     return quizId;
   }
 
-  public ResultTableHelper getTableHelper() {
+  public PagedStaticTableHelper getTableHelper() {
     return tableHelper;
   }
 }

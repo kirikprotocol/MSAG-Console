@@ -56,10 +56,6 @@ public class Replies extends SmsQuizBean {
       pageSize = getSmsQuizContext().getMessagesPageSize();
     }
 
-    if (!initialized) {
-      replyFilter.setDateBeginEnabled(false);
-      replyFilter.setDateEndEnabled(false);
-    }
     try {
       String replyDir = getSmsQuizContext().getConfig().getString("replystats.statsFile_dir");
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
@@ -69,6 +65,7 @@ public class Replies extends SmsQuizBean {
       if (pageSize == 0) {
         pageSize = getSmsQuizContext().getMessagesPageSize();
       }
+      int maxReplies = getSmsQuizContext().getMaxRepliesTotalSize();
       if(quizId!=null) {
         File file = new File(quizDir+File.separator+quizId+".xml");
         replyFilter.setQuizPath(file.getAbsolutePath());
@@ -85,6 +82,7 @@ public class Replies extends SmsQuizBean {
       tableHelper.setFilter(replyFilter);
       tableHelper.setDs(ds);
       tableHelper.setPageSize(pageSize);
+      tableHelper.setMaxRows(maxReplies);
 
     } catch (Exception e) {
       return error("Can't init data source", e);
@@ -93,14 +91,28 @@ public class Replies extends SmsQuizBean {
     return result;
   }
 
+  public void clean() {
+    replyFilter.setDateBeginEnabled(false);
+    replyFilter.setDateEndEnabled(false);
+    replyFilter.setDateBegin(null);
+    replyFilter.setDateEnd(null);
+    replyFilter.setAddress(null);
+  }
+
 
   public int process(HttpServletRequest request) {
     int result = super.process(request);
     if (result != RESULT_OK) return result;
 
     try {
+
+      tableHelper.processRequest(request);
+
       if (mbExportAll != null) {
         result = processExportAll();
+      }
+      if(mbQuery != null) {
+        processQuery();
       }
       if (initialized) {
         tableHelper.fillTable();
@@ -112,6 +124,13 @@ public class Replies extends SmsQuizBean {
     return result;
   }
 
+  private int processQuery() {
+    initialized = true;
+    mbQuery = null;
+    tableHelper.reset();
+
+    return RESULT_OK;
+  }
 
   private int processExportAll() {
     mbExportAll = null;
@@ -174,15 +193,6 @@ public class Replies extends SmsQuizBean {
 
   public String getQuizPath() {
     return quizId;
-  }
-
-
-  public int getTotalSize() {
-    return (replies == null) ? 0 : replies.getTotalSize();
-  }
-
-  public int getTotalSizeInt() {
-    return getTotalSize();
   }
 
   public String getAddress() {

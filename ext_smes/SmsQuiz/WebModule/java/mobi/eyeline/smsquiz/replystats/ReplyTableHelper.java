@@ -10,7 +10,6 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.DataSource;
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -35,10 +34,13 @@ public class ReplyTableHelper extends PagedStaticTableHelper {
 
   private int totalSize = 0;
 
-  private String sortOrder = "";
+  private String sortOrder;
+
+  private String prevSortOrder;
+
+  private QueryResultSet replies;
 
   private Filter filter;
-
 
   public ReplyTableHelper(String uid) {
     super(uid, false);
@@ -68,10 +70,18 @@ public class ReplyTableHelper extends PagedStaticTableHelper {
   protected void fillTable(int start, int size) throws TableHelperException {
     try {
       buildSortOrder();
-      final QueryResultSet messages = ds.query(new ReplyQuery(size, filter, sortOrder, start));
+      if (sortOrder != null && (prevSortOrder == null || !prevSortOrder.equals(sortOrder))) {
+        replies = null;
+        prevSortOrder = sortOrder;
+      }
 
-      for (int i = 0; i < messages.size(); i++) {
-        final DataItem item = messages.get(i);
+      if(replies == null) {
+        replies = ds.query(new ReplyQuery(getMaxRows(), filter, sortOrder, 0));
+      }
+
+      clear();
+      for (int i = start; i < start + size && i < replies.size(); i++) {
+        final DataItem item = replies.get(i);
 
         final Row row = createNewRow();
 
@@ -82,7 +92,7 @@ public class ReplyTableHelper extends PagedStaticTableHelper {
         row.addCell(messageColumn, new StringCell(msisdn,
             (String) item.getValue(ReplyDataSource.MESSAGE), false));
       }
-      totalSize = messages.getTotalSize();
+      totalSize = replies.getTotalSize();
 
     } catch (Exception e) {
       throw new TableHelperException(e);
@@ -120,5 +130,11 @@ public class ReplyTableHelper extends PagedStaticTableHelper {
   public void setFilter(Filter filter) {
     this.filter = filter;
   }
+
+  public void reset() {
+    setStartPosition(0);
+    replies = null;
+  }
+
 }
 

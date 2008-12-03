@@ -33,7 +33,7 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
   private final TextColumn dateColumn = new TextColumn(MessageDataSource.DATE, "infosme.label.date", true, 20);
   private final TextColumn messageColumn = new TextColumn(MessageDataSource.MESSAGE,"infosme.label.message", true, 30);
 
-  public static final String DEFAULT_SORT = null;
+  public static final String DEFAULT_SORT = MessageDataSource.MSISDN;
 
   private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yy HH:mm");
 
@@ -151,6 +151,7 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
   }
 
   public void reset() {
+    setStartPosition(0);
     messages = null;
   }
 

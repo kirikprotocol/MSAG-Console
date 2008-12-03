@@ -2,6 +2,7 @@ package mobi.eyeline.smsquiz.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
+import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
@@ -45,11 +46,13 @@ public class Distribution extends SmsQuizBean {
 
   private HashMap quizMap = new HashMap();
 
-  private boolean processed = false;
-
   private MessageDataSource ds;
 
   private String quizId;
+
+  private String msgStoreDir;
+
+  private int maxTotalSize;
 
   private MessagesTableHelper tableHelper = new MessagesTableHelper("message_table_helper", false);
 
@@ -57,17 +60,16 @@ public class Distribution extends SmsQuizBean {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
 
-
     try {
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
-      initQuizes();
-      String msgStoreDir = getConfig().getString("distribution.infosme_stats_dir");
+      msgStoreDir = getConfig().getString("distribution.infosme_stats_dir");
       workDir = getConfig().getString("quizmanager.dir_work");
       ds = new MessageDataSource(getSmsQuizContext().getConfig(),msgStoreDir);
+      maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
       if (pageSize == 0) {
         pageSize = getSmsQuizContext().getMessagesPageSize();
       }
-      int maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
+      initQuizes();
       if(quizId!=null) {
         String id = QuizesDataSource.getTaskId(workDir, quizId);
         msgFilter.setTaskId(id);
@@ -75,32 +77,41 @@ public class Distribution extends SmsQuizBean {
       tableHelper.setFilter(msgFilter);
       tableHelper.setDs(ds);
       tableHelper.setPageSize(pageSize);
-      tableHelper.setMaxTotalSize(maxTotalSize);
+      tableHelper.setMaxRows(maxTotalSize);
     } catch (Exception e) {
       return error("Can't init dataa source", e);
     }
-
     return result;
+  }
+
+  public void clean() {
+    msgFilter.setTillDate(null);
+    msgFilter.setFromDate(null);
+    msgFilter.setAddress(null);
+    msgFilter.setTillDateEnabled(false);
+    msgFilter.setFromDateEnabled(false);
   }
 
 
   public int process(HttpServletRequest request) {
-    processed = true;
     int result = super.process(request);
     if (result != RESULT_OK) return result;
-
-    if (mbExportAll != null)
-      result = processExportAll();
-    if (initialized) {
-      try {
-        tableHelper.fillTable();
-      } catch (TableHelperException e) {
-        e.printStackTrace();
-        logger.error(e);
-        return error(e.getMessage());
+    try{
+      tableHelper.processRequest(request);
+      if (mbExportAll != null)
+        result = processExportAll();
+      if(mbQuery!=null) {
+        processQuery();
       }
+      if (initialized) {
+        tableHelper.fillTable();
+      }
+      return result;
+    }catch(Exception e) {
+      logger.error(e,e);
+      e.printStackTrace();
+      return error(e.getMessage());
     }
-    return result;
   }
 
   private void initQuizes() {
@@ -188,6 +199,9 @@ public class Distribution extends SmsQuizBean {
 
   private int processQuery() throws AdminException {
     try {
+      initialized = true;
+      mbQuery = null;
+      tableHelper.reset();
       tableHelper.fillTable();
     } catch (TableHelperException e) {
       e.printStackTrace();
@@ -328,11 +342,7 @@ public class Distribution extends SmsQuizBean {
     this.mbExportAll = mbExportAll;
   }
 
-  public boolean isProcessed() {
-    return processed;
-  }
-
-  public MessagesTableHelper getTableHelper() {
+  public PagedStaticTableHelper getTableHelper() {
     return tableHelper;
   }
 

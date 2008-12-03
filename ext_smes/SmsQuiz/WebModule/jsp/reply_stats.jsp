@@ -4,13 +4,13 @@
 <%@ page import="mobi.eyeline.smsquiz.replystats.ReplyDataItem"%>
 <%@ page import="ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper"%>
 <%@ page import="mobi.eyeline.smsquiz.beans.Replies"%>
-<jsp:useBean id="bean" scope="page" class="mobi.eyeline.smsquiz.beans.Replies" />
-
-<jsp:setProperty name="bean" property="*"/>
+<jsp:useBean id="smsQuizRepliesBean" scope="session" class="mobi.eyeline.smsquiz.beans.Replies" />
+<% smsQuizRepliesBean.clean(); %>
+<jsp:setProperty name="smsQuizRepliesBean" property="*"/>
 
 
 <%
-  bean.getTableHelper().processRequest(request);
+  Replies bean = smsQuizRepliesBean;
   ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
   TITLE = getLocString("smsquiz.title");
 
@@ -36,7 +36,6 @@
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <div class=content>
-<input type=hidden name=initialized value=true>
 <%Map allQuizes = bean.getAllQuizes();
   if (allQuizes.size() > 0) {%>
 <table class=properties_list>

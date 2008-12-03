@@ -6,7 +6,6 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.jsp.util.helper.statictable.Row;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
@@ -28,7 +27,7 @@ public class ResultTableHelper extends PagedStaticTableHelper {
   private final TextColumn messageColumn = new TextColumn(ResultDataSource.MESSAGE, "smsquiz.label.message", true, 20);
   private final TextColumn categoryColumn = new TextColumn(ResultDataSource.CATEGORY, "smsquiz.label.category", true, 20);
 
-  public static final String DEFAULT_SORT = "+" + ResultDataSource.MSISDN;
+  public static final String DEFAULT_SORT = ResultDataSource.MSISDN;
 
   private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yy HH:mm");
 
@@ -36,14 +35,17 @@ public class ResultTableHelper extends PagedStaticTableHelper {
 
   private int totalSize = 0;
 
-  private String sortOrder = "";
+  private String sortOrder;
+
+  private String prevSortOrder;
 
   private Filter filter;
+
+  private QueryResultSet results;
 
 
   public ResultTableHelper(String uid) {
     super(uid, false);
-
     addColumn(msisdnColumn);
     addColumn(deliveryDateColumn);
     addColumn(replyDateColumn);
@@ -71,10 +73,17 @@ public class ResultTableHelper extends PagedStaticTableHelper {
   protected void fillTable(int start, int size) throws TableHelperException {
     try {
       buildSortOrder();
-      final QueryResultSet messages = ds.query(new ResultQuery(size, filter, sortOrder, start));
+      if (sortOrder != null && (prevSortOrder == null || !prevSortOrder.equals(sortOrder))) {
+        results = null;
+        prevSortOrder = sortOrder;
+      }
+      if(results == null) {
+        results = ds.query(new ResultQuery(getMaxRows(), filter, sortOrder, 0));
+      }
 
-      for (int i = 0; i < messages.size(); i++) {
-        final DataItem item = messages.get(i);
+      clear();
+      for (int i = start; i < start + size && i < results.size(); i++) {
+        final DataItem item = results.get(i);
 
         final Row row = createNewRow();
 
@@ -89,7 +98,7 @@ public class ResultTableHelper extends PagedStaticTableHelper {
         row.addCell(categoryColumn, new StringCell(msisdn,
             (String) item.getValue(ResultDataSource.CATEGORY), false));
       }
-      totalSize = messages.getTotalSize();
+      totalSize = results.getTotalSize();
 
     } catch (Exception e) {
       throw new TableHelperException(e);
@@ -126,6 +135,11 @@ public class ResultTableHelper extends PagedStaticTableHelper {
 
   public void setFilter(Filter filter) {
     this.filter = filter;
+  }
+
+  public void reset() {
+    setStartPosition(0);
+    results = null;
   }
 }
 

@@ -2,13 +2,13 @@
 <%@ page import="java.util.*, ru.novosoft.smsc.util.Functions"%>
 <%@ page import="mobi.eyeline.smsquiz.beans.Results"%>
 <%@ page import="ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper"%>
-<jsp:useBean id="bean" scope="page" class="mobi.eyeline.smsquiz.beans.Results" />
-
-<jsp:setProperty name="bean" property="*"/>
+<jsp:useBean id="smsQuizResultsBean" scope="session" class="mobi.eyeline.smsquiz.beans.Results" />
+<% smsQuizResultsBean.clean(); %>
+<jsp:setProperty name="smsQuizResultsBean" property="*"/>
 
 <%
 
-  bean.getTableHelper().processRequest(request);
+  Results bean = smsQuizResultsBean;
   ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
 	TITLE = getLocString("smsquiz.title");
 
@@ -32,7 +32,6 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <div class=content>
-<input type=hidden name=initialized value=true>
 <%Map allQuizes = bean.getAllQuizes();
   if ((allQuizes!=null)&&(allQuizes.size() > 0)) {%>
 <table class=properties_list>

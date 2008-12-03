@@ -5,6 +5,7 @@ import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.tables.messages.*;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
+import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
@@ -92,6 +93,14 @@ public class Messages extends InfoSmeBean
     }
 
     return result;
+  }
+
+  public void clean() {
+    msgFilter.setTillDate(null);
+    msgFilter.setFromDate(null);
+    msgFilter.setAddress(null);
+    msgFilter.setTillDateEnabled(false);
+    msgFilter.setFromDateEnabled(false);
   }
 
   public int process(HttpServletRequest request)
@@ -504,7 +513,7 @@ public class Messages extends InfoSmeBean
 //    return exportFile;
 //  }
 
-  public MessagesTableHelper getTableHelper() {
+  public PagedStaticTableHelper getTableHelper() {
     return tableHelper;
   }
 }

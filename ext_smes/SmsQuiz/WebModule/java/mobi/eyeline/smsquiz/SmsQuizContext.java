@@ -28,6 +28,8 @@ public class SmsQuizContext implements SMEAppContext {
 
   private int messagesPageSize = 20;
   private int maxMessTotalSize = 1000;
+  private int maxRepliesTotalSize = 1000;
+  private int maxResultsTotalSize = 1000;
 
   private int quizesPageSize = 20;
   private int maxQuizTotalSize = 1000;
@@ -97,5 +99,21 @@ public class SmsQuizContext implements SMEAppContext {
 
   public void setMaxQuizTotalSize(int maxQuizTotalSize) {
     this.maxQuizTotalSize = maxQuizTotalSize;
+  }
+
+  public int getMaxRepliesTotalSize() {
+    return maxRepliesTotalSize;
+  }
+
+  public void setMaxRepliesTotalSize(int maxRepliesTotalSize) {
+    this.maxRepliesTotalSize = maxRepliesTotalSize;
+  }
+
+  public int getMaxResultsTotalSize() {
+    return maxResultsTotalSize;
+  }
+
+  public void setMaxResultsTotalSize(int maxResultsTotalSize) {
+    this.maxResultsTotalSize = maxResultsTotalSize;
   }
 }
