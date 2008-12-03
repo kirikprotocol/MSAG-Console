@@ -1,141 +1,92 @@
+/* ************************************************************************** *
+ * POSIX Synchronization primitive(s): Statefulll Event
+ * ************************************************************************** */
 #ifndef __CORE_SYNCHRONIZATION_EVENT_HPP__
+#ident "@(#)$Id$"
 #define __CORE_SYNCHRONIZATION_EVENT_HPP__
 
-#ifdef _WIN32
-#include <windows.h>
-#else
 #include <pthread.h>
 #include <sys/time.h>
-#endif
-#include "Mutex.hpp"
+#include "core/synchronization/Mutex.hpp"
 
-namespace smsc{
-namespace core{
-namespace synchronization{
+namespace smsc {
+namespace core {
+namespace synchronization {
 
-class Event{
-public:
-  Event()
-  {
-#ifdef _WIN32
-    event=CreateEvent(NULL,FALSE,FALSE,NULL);
-#else
-    pthread_cond_init(&event,NULL);
-    signaled=0;
-#endif
-  }
-  ~Event()
-  {
-#ifdef _WIN32
-    CloseHandle(event);
-#else
-    pthread_cond_destroy(&event);
-#endif
-  }
-  int Wait()
-  {
-#ifdef _WIN32
-    return WaitForSingleObject(event,INFINITE);
-#else
-    mutex.Lock();
-    if(signaled)
-    {
-      signaled=0;
-      mutex.Unlock();
-      return 0;
-    }
-    int retval=pthread_cond_wait(&event,&mutex.mutex);
-    signaled=0;
-    mutex.Unlock();
-    return retval;
-#endif
-  }
-  int Wait(int timeout)
-  {
-#ifdef _WIN32
-    return WaitForSingleObject(event,timeout);
-#else
-    mutex.Lock();
-    if(signaled)
-    {
-      signaled=0;
-      mutex.Unlock();
-      return 0;
-    }
-#ifdef linux
-    struct timeval now;
-    struct timespec tv;
-    // int retcode;
-
-    gettimeofday(&now,0);
-    tv.tv_sec = now.tv_sec + timeout/1000;
-    tv.tv_nsec = now.tv_usec * 1000+(timeout%1000)*1000000;
-
-    if(tv.tv_nsec>1000000000L)
-    {
-      tv.tv_sec++;
-      tv.tv_nsec-=1000000000L;
-    }
-
-#else
-    timestruc_t tv={0,0};
-    clock_gettime(CLOCK_REALTIME,&tv);
-    tv.tv_sec+=timeout/1000;
-    tv.tv_nsec+=(timeout%1000)*1000000L;
-    if(tv.tv_nsec>1000000000L)
-    {
-      tv.tv_sec++;
-      tv.tv_nsec-=1000000000L;
-    }
-#endif
-    int retval=pthread_cond_timedwait(&event,&mutex.mutex,&tv);
-    signaled=0;
-    mutex.Unlock();
-    return retval;
-#endif
-  }
-  void Signal()
-  {
-#ifdef _WIN32
-    SetEvent(event);
-#else
-    mutex.Lock();
-    signaled=1;
-    pthread_cond_signal(&event);
-    mutex.Unlock();
-#endif
-  }
-#ifndef _WIN32
-  int isSignaled()
-  {
-    mutex.Lock();
-    int retval=signaled;
-    mutex.Unlock();
-    return retval;
-  }
-#endif
-#ifndef _WIN32
-  void SignalAll()
-  {
-    mutex.Lock();
-    signaled=1;
-    pthread_cond_broadcast(&event);
-    mutex.Unlock();
-  }
-#endif
+class Event {
 protected:
-#ifdef _WIN32
-  HANDLE event;
-#else
-  pthread_cond_t event;
-  Mutex mutex;
-  int signaled;
-#endif
-};//Event
+  pthread_cond_t    event;
+  mutable Mutex     mutex;
+  bool              signaled;
+
+public:
+    Event() : signaled(false)
+    {
+        pthread_cond_init(&event, NULL);
+    }
+    ~Event()
+    {
+        pthread_cond_destroy(&event);
+    }
+    int Wait()
+    {
+        mutex.Lock();
+        if (signaled) {
+            signaled = false;
+            mutex.Unlock();
+            return 0;
+        }
+        int retval = pthread_cond_wait(&event, &mutex.mutex);
+        signaled = false;
+        mutex.Unlock();
+        return retval;
+    }
+    int Wait(int timeout_sec)
+    {
+        mutex.Lock();
+        if (signaled) {
+            signaled = false;
+            mutex.Unlock();
+            return 0;
+        }
+
+        struct timespec tv = {0,0}; //time with nanosecs
+        //Note: on Solaris requires -D__EXTENSIONS__
+        clock_gettime(CLOCK_REALTIME, &tv);
+        tv.tv_sec += timeout_sec/1000;
+        tv.tv_nsec += (timeout_sec % 1000)*1000000L;
+        if (tv.tv_nsec > 1000000000L) {
+            ++tv.tv_sec;
+            tv.tv_nsec -= 1000000000L;
+        }
+
+        int retval = pthread_cond_timedwait(&event, &mutex.mutex, &tv);
+        signaled = false;
+        mutex.Unlock();
+        return retval;
+    }
+    void Signal()
+    {
+        MutexGuard tmp(mutex);
+        signaled = true;
+        pthread_cond_signal(&event);
+    }
+    bool isSignaled() const
+    {
+        MutexGuard tmp(mutex);
+        return signaled;
+    }
+    void SignalAll()
+    {
+        MutexGuard tmp(mutex);
+        signaled = true;
+        pthread_cond_broadcast(&event);
+    }
+};
 
 }//synchronization
 }//core
 }//smsc
 
+#endif /* __CORE_SYNCHRONIZATION_EVENT_HPP__ */
 
-#endif
