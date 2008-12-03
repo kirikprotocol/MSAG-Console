@@ -60,9 +60,10 @@
             paramCheck(out, "users.roles.regions", "roles", "role31", "regions", bean.isUserInRole("regions"), null);
             paramCheck(out, "users.roles.emailsme", "roles", "role32", "emailsme", bean.isUserInRole("emailsme"), null);
             paramCheck(out, "users.roles.snmp", "roles", "role33", "snmp", bean.isUserInRole("snmp"), null);
-            if (SupportExtProfile.enabled)
-              paramCheck(out, "users.roles.smscenters", "roles", "role34", "smscenters", bean.isUserInRole("smscenters"), null);
+          if (SupportExtProfile.enabled)
+            paramCheck(out, "users.roles.smscenters", "roles", "role34", "smscenters", bean.isUserInRole("smscenters"), null);
             paramCheck(out, "users.roles.fraud", "roles", "role35", "fraud", bean.isUserInRole("fraud"), null);
+            paramCheck(out, "users.roles.smsquiz-admin", "roles", "role36", "smsquiz-admin", bean.isUserInRole("smsquiz-admin"), null);
 
             if (bean.getServiceRoles().size() > 0)
                 for (Iterator i = bean.getServiceRoles().iterator(); i.hasNext();) {
