@@ -108,6 +108,14 @@ public class ServiceInfo {
         this.serviceFolder = new File(serviceFolder);
     }
 
+    public ServiceInfo(final String id, final String host, final String serviceFolder, final String args, final boolean autostart, final SME sme,
+                       final byte status, final Map components) {
+        this(id, host, serviceFolder, args, autostart, sme, status);
+        if((components!=null)&&(!components.isEmpty())) {
+          this.components.putAll(components);
+        }
+    }
+
     public String getHost() {
         return host;
     }

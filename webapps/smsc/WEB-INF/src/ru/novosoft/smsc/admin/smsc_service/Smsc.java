@@ -113,27 +113,41 @@ public class Smsc extends Service {
 
     private SMSCAppContext appContext = null;
 
-    public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString, SMSCAppContext smscAppContext) throws AdminException {
-        super(new ServiceInfo(SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_OFFLINE), smscPort);
+  public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString, SMSCAppContext smscAppContext) throws AdminException {
+    super(new ServiceInfo(SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_OFFLINE), smscPort);
+    initFields(smscConfFolderString, smscAppContext);
+    distributionListAdmin = new DistributionListManager(super.getInfo(), smscPort);
+  }
 
-        try {
-            this.configFolder = new File(smscConfFolderString);
-            //final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
-            aliases = new AliasSet();
-            aliases.init(getSmscConfig(),this);
-            profileDataFile = new ProfileDataFile();
-            profileDataFile.init(getSmscConfig(), getConfigFolder().getAbsolutePath());
+  public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString,
+              SMSCAppContext smscAppContext, String distrHost, int distrPort) throws AdminException {
+    super(new ServiceInfo(SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_OFFLINE), smscPort);
+    initFields(smscConfFolderString, smscAppContext);
+    ServiceInfo s = super.getInfo();
+    ServiceInfo distrInfo = new ServiceInfo(s.getId(), distrHost, s.getServiceFolder().getAbsolutePath(),
+        s.getArgs(), s.isAutostart(), s.getSme(), s.getStatus(), s.getComponents());
+    distributionListAdmin = new DistributionListManager(distrInfo, distrPort);
+  }
 
-            if (SupportExtProfile.enabled) {
-              blackNickDataFile = new BlackNickDataFile();
-              blackNickDataFile.init(getSmscConfig());
-            }
+  private void initFields(final String smscConfFolderString, SMSCAppContext smscAppContext) throws AdminException{
+    try {
+      this.configFolder = new File(smscConfFolderString);
+      //final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
+      aliases = new AliasSet();
+      aliases.init(getSmscConfig(),this);
+      profileDataFile = new ProfileDataFile();
+      profileDataFile.init(getSmscConfig(), getConfigFolder().getAbsolutePath());
 
-            initDefaultProfileProps();
-        } catch (FactoryConfigurationError error) {
-            logger.error("Couldn't configure xml parser factory", error);
-            throw new AdminException("Couldn't configure xml parser factory: " + error.getMessage());
-        }/* catch (ParserConfigurationException e) {
+      if (SupportExtProfile.enabled) {
+        blackNickDataFile = new BlackNickDataFile();
+        blackNickDataFile.init(getSmscConfig());
+      }
+
+      initDefaultProfileProps();
+    } catch (FactoryConfigurationError error) {
+      logger.error("Couldn't configure xml parser factory", error);
+      throw new AdminException("Couldn't configure xml parser factory: " + error.getMessage());
+    }/* catch (ParserConfigurationException e) {
             logger.error("Couldn't configure xml parser", e);
             throw new AdminException("Couldn't configure xml parser: " + e.getMessage());
         } catch (SAXException e) {
@@ -143,14 +157,11 @@ public class Smsc extends Service {
             logger.error("Couldn't read", e);
             throw new AdminException("Couldn't read: " + e.getMessage());
         }*/ catch (NullPointerException e) {
-            logger.error("Couldn't parse", e);
-            throw new AdminException("Couldn't parse: " + e.getMessage());
-        }
-
-        distributionListAdmin = new DistributionListManager(super.getInfo(), smscPort);
-
-        appContext = smscAppContext;
+      logger.error("Couldn't parse", e);
+      throw new AdminException("Couldn't parse: " + e.getMessage());
     }
+        appContext = smscAppContext;
+  }
 
 /*    protected PrintWriter storeAliases(final PrintWriter out) {
         Functions.storeConfigHeader(out, "aliases", "AliasRecords.dtd");

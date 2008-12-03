@@ -52,7 +52,18 @@ public final class SmscList {
             }
             String smscConfFolder = webappConfig.getString("smsc.config folder");
             WebAppFolders.setSmscConfFolder(new File(smscConfFolder));
-            smsc = new Smsc(Constants.SMSC_SME_ID, webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), smscConfFolder, smscAppContext);
+
+            if (webappConfig.containsParameter("smsx.host") && webappConfig.containsParameter("smsx.port")) {
+              String distrHost = webappConfig.getString("smsx.host");
+              int distrPort = webappConfig.getInt("smsx.port");
+              if (logger.isDebugEnabled())
+                logger.debug("Use separate host and port for distr lists manager: " + distrHost + ":" + distrPort);
+              smsc = new Smsc(Constants.SMSC_SME_ID, webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"),
+                  smscConfFolder, smscAppContext, distrHost, distrPort);
+            } else {
+              smsc = new Smsc(Constants.SMSC_SME_ID, webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"),
+                  smscConfFolder, smscAppContext);
+            }
             logger.debug("SMSC added");
         }
         catch (AdminException e) {
