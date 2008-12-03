@@ -780,7 +780,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
             <fileset dir="${TEMPL_DIR}/scag/pers" includes="config.xml"/>
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
-        <!-- mkdir dir="${pers.storage_dir}" description="create personalization storage dir"/ -->
+        <mkdir dir="${pers.storage_dir}" description="create personalization storage dir"/>
     </target>
 
     <target name="-install.pvcp" depends="-update.pvcp" if="SETUP_MAKE_PVCP">
@@ -802,7 +802,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
             <fileset dir="${TEMPL_DIR}/scag/cpers" includes="config.xml region.xml"/>
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
-        <!-- mkdir dir="${cpers.storage_dir}" description="create pvcp storage dir"/ -->
+        <mkdir dir="${cpers.storage_dir}" description="create pvcp storage dir"/>
         <!-- extra configs -->
         <copy file="${SMSC_DIR}/config/scag/region.dtd" todir="${DISTR_DIR}/conf"/>
         <symlink resource="../.base/conf/region.dtd"    link="${DISTR_DIR}/services/pvcp/conf"/>
@@ -827,7 +827,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
             <fileset dir="${TEMPL_DIR}/scag/mtpers" includes="config.xml"/>
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
-        <!-- mkdir dir="${mtpers.storage_dir}" description="create pvss storage dir"/ -->
+        <mkdir dir="${pvss.storage_dir}" description="create pvss storage dir"/>
     </target>
 
     <target name="-install.pvgw" depends="-update.pvgw" if="SETUP_MAKE_PVGW">
