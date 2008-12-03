@@ -7,14 +7,41 @@ namespace mcisme {
 TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
 {
   // loadup xml config & init formatters
-    
+
   std::auto_ptr<ConfigView> informCfgGuard(config->getSubConfig("Inform"));
   ConfigView* informCfg = informCfgGuard.get();
   std::auto_ptr< std::set<std::string> > informSetGuard(informCfg->getShortSectionNames());
   std::set<std::string>* informSet = informSetGuard.get();
-  //	std::set<std::string>* informSet = informCfg->getShortSectionNames();
+  //std::set<std::string>* informSet = informCfg->getShortSectionNames();
   //int sz = informSet->size();
   //printf("Total templates is %d\n", sz);
+
+  defaultInformTemplateId = (int32_t)informCfg->getInt("default");
+  if (defaultInformTemplateId < 0 || !informTemplates.Exist(defaultInformTemplateId))
+    throw ConfigException("Default inform template id=%d is invalid or wasn't specified",
+                          defaultInformTemplateId);
+
+  std::string defaultMultiTemplate;
+  for (std::set<std::string>::iterator i=informSet->begin();i!=informSet->end();i++)
+  {
+    const char* templateName = (const char *)i->c_str();
+    if (!templateName || !templateName[0])
+      throw ConfigException("Inform template name empty or wasn't specified");
+
+    std::auto_ptr<ConfigView> templateConfigGuard(informCfg->getSubConfig(templateName));
+    ConfigView* templateConfig = templateConfigGuard.get();
+
+    int  templateId = templateConfig->getInt("id");
+    if (templateId < 0 || informTemplates.Exist(templateId))
+      throw ConfigException("Inform template id=%d is invalid or already registered", templateId);
+
+    if ( templateId==defaultInformTemplateId ) {
+      try {
+        defaultMultiTemplate = templateConfig->getString("multiRow"); break;
+      } catch (...) {}
+    }
+  }
+
   for (std::set<std::string>::iterator i=informSet->begin();i!=informSet->end();i++)
   {
     const char* templateName = (const char *)i->c_str();
@@ -35,14 +62,19 @@ TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
 
     if (group) {
       std::string multiTemplate = templateConfig->getString("multiRow");
-      informTemplates.Insert (templateId, 
-                              new InformTemplateFormatter(messageTemplate, unknownCaller, 
-                                                          singleTemplate, multiTemplate));
+      informTemplates.Insert(templateId,
+                             new InformTemplateFormatter(messageTemplate, unknownCaller,
+                                                         singleTemplate, multiTemplate));
+    } else {
+      if (defaultMultiTemplate.empty())
+        informTemplates.Insert(templateId,
+                               new InformTemplateFormatter(messageTemplate, unknownCaller,
+                                                           singleTemplate));
+      else
+        informTemplates.Insert(templateId,
+                               new InformTemplateFormatter(messageTemplate, unknownCaller,
+                                                           singleTemplate, defaultMultiTemplate));
     }
-    else informTemplates.Insert(templateId, 
-                                new InformTemplateFormatter(messageTemplate, unknownCaller,
-                                                            singleTemplate));
-
     //printf("\ntemplateName = %s\n", templateName);
     //printf("templateId = %d\n", templateId);
     //printf("group = %d\n", group);
@@ -51,12 +83,7 @@ TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
     //const char* tmp = messageTemplate.c_str();
     //printf("unknownCaller = %s\n", unknownCaller.c_str());
     //printf("singleTemplate = %s\n", singleTemplate.c_str());
-
   }
-  defaultInformTemplateId = (int32_t)informCfg->getInt("default");
-  if (defaultInformTemplateId < 0 || !informTemplates.Exist(defaultInformTemplateId)) 
-    throw ConfigException("Default inform template id=%d is invalid or wasn't specified", 
-                          defaultInformTemplateId);
 
   std::auto_ptr<ConfigView> notifyCfgGuard(config->getSubConfig("Notify"));
   ConfigView* notifyCfg = notifyCfgGuard.get();
@@ -79,8 +106,8 @@ TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
     notifyTemplates.Insert(templateId, new NotifyTemplateFormatter(messageTemplate));
   }
   defaultNotifyTemplateId = (int32_t)notifyCfg->getInt("default");
-  if (defaultNotifyTemplateId < 0 || !notifyTemplates.Exist(defaultNotifyTemplateId)) 
-    throw ConfigException("Default notify template id=%d is invalid or wasn't specified", 
+  if (defaultNotifyTemplateId < 0 || !notifyTemplates.Exist(defaultNotifyTemplateId))
+    throw ConfigException("Default notify template id=%d is invalid or wasn't specified",
                           defaultNotifyTemplateId);
 }
 
