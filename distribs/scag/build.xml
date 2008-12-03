@@ -24,6 +24,16 @@ The possible SELECTIONS are listed below under Main targets.
             <isset property="BUILD_DIR"/>
         </not>
     </condition>
+    <condition property="CATALINA_BASE" value="${DISTR_DIR}">
+        <not>
+            <isset property="CATALINA_BASE"/>
+        </not>
+    </condition>
+    <condition property="CATALINA_HOME" value="${CATALINA_BASE}/tomcat">
+        <not>
+            <isset property="CATALINA_HOME"/>
+        </not>
+    </condition>
     <condition property="INIT_FAILED" value="yes" >
         <not>
             <and>
