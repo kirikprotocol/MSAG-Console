@@ -108,4 +108,8 @@
   <section name="smsx">
     <param name="smsxSenderUrl">@smsxSenderSoapServiceURL</param>
   </section>
+  
+  <!--section name="autostart">
+     <param name="MCIMML" type="string">ru.novosoft.smsc.mcisme.backend.MMLConsole</param>
+  </section-->
 </config>
