@@ -1,23 +1,25 @@
 package ru.novosoft.smsc.infosme.backend.tables.messages;
 
-import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
-import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
+import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.jsp.util.helper.statictable.OrderType;
+import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.jsp.util.helper.statictable.Row;
+import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.CheckBoxCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
-import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.DataSource;
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
-import ru.novosoft.smsc.infosme.backend.Message;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * author: alkhal
@@ -34,8 +36,6 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
   public static final String DEFAULT_SORT = null;
 
   private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yy HH:mm");
-
-  private int maxTotalSize = 0;
 
   private DataSource ds;
 
@@ -89,7 +89,7 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
       }
 
       if (messages == null) {
-        messages = ds.query(new MessageQuery(maxTotalSize, filter, sortOrder, 0));
+        messages = ds.query(new MessageQuery(getMaxRows(), filter, sortOrder, 0));
       }
 
       clear();
@@ -121,14 +121,6 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
     return totalSize;
   }
 
-  public int getMaxTotalSize() {
-    return maxTotalSize;
-  }
-
-  public void setMaxTotalSize(int maxTotalSize) {
-    this.maxTotalSize = maxTotalSize;
-  }
-
   public DataSource getDs() {
     return ds;
   }
@@ -137,13 +129,6 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
     this.ds = ds;
   }
 
-  public int getTotalSize() {
-    return totalSize;
-  }
-
-  public void setTotalSize(int totalSize) {
-    this.totalSize = totalSize;
-  }
   private String getStateName(Message.State state) {
     if (state == Message.State.UNDEFINED)
       return "ALL";

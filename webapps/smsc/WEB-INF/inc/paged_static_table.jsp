@@ -3,9 +3,12 @@
     int pageCurrent = tableHelper.getStartPosition() / tableHelper.getPageSize(); // 1
     int pageFirst = (pageCurrent - 4) < 0 ? 0 : (pageCurrent - 4); // 0
     int pageTotal = (itemsTotal / tableHelper.getPageSize()) + ((itemsTotal % tableHelper.getPageSize()) > 0 ? 1 : 0); // 2
-    int pageLast = (pageCurrent + 4) > (pageTotal - 1) ? (pageTotal - 1) : (pageCurrent + 4);
-    String startPositionPrefix = tableHelper.getStartPositionPrefix();
     int pageSize = tableHelper.getPageSize();
+    int maxPages = tableHelper.getMaxRows() / pageSize;
+    if (maxPages > 0 && pageTotal > maxPages)
+      pageTotal = maxPages;
+    int pageLast = (pageCurrent + 4) > (pageTotal - 1) ? (pageTotal - 1) : (pageCurrent + 4);
+    String startPositionPrefix = tableHelper.getStartPositionPrefix();    
     if (request.getAttribute("paged_table_js_included") == null) {%>
 <script src="/scripts/paged_static_table.js" type="text/javascript"></script>
 <%    request.setAttribute("paged_table_js_included", new Object()); }%>

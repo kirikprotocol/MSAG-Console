@@ -18,10 +18,16 @@ public abstract class PagedStaticTableHelper extends StaticTableHelper {
 
   private String mbFilter = null;
   private final boolean filterEnabled;
+  private int maxRows;
 
   public PagedStaticTableHelper(String uid, boolean filterEnabled) {
+    this(uid, filterEnabled, -1);
+  }
+
+  public PagedStaticTableHelper(String uid, boolean filterEnabled, int maxRows) {
     super(uid);
     this.filterEnabled = filterEnabled;
+    this.maxRows = maxRows;
   }
 
 
@@ -100,5 +106,13 @@ public abstract class PagedStaticTableHelper extends StaticTableHelper {
 
   public boolean isShowFilter() {
     return mbFilter != null;
+  }
+
+  public int getMaxRows() {
+    return maxRows;
+  }
+
+  public void setMaxRows(int maxRows) {
+    this.maxRows = maxRows;
   }
 }

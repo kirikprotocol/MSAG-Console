@@ -80,14 +80,15 @@ public class Messages extends InfoSmeBean
       if(pageSize==0) {
         pageSize = getInfoSmeContext().getMessagesPageSize();
       }
-      int maxTotalSize = getInfoSmeContext().getMaxMessagesTotalSize();
 
+      int maxTotalSize = getInfoSmeContext().getMaxMessagesTotalSize();
       tableHelper.setFilter(msgFilter);
       tableHelper.setDs(ds);
       tableHelper.setPageSize(pageSize);
-      tableHelper.setMaxTotalSize(maxTotalSize);
+      tableHelper.setMaxRows(maxTotalSize);
+
     } catch (Exception e) {
-      return error("Can't init dataa source", e);
+      return error("Can't init data source", e);
     }
 
     return result;
