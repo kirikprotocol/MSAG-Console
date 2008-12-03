@@ -675,7 +675,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
         <property name="INSTALL_TOMCAT" value="true"/>
     </target>
 
-    <target name="-install.extralibs" depends="-update.libs" unless="INSTALL_EXTRALIBS">
+    <target name="-install.extralibs" depends="-update.libs" if="SETUP_MAKE_CXX">
         <copy todir="${DISTR_DIR}/lib" flatten="yes" failonerror="yes">
             <fileset dir="/" includesfile="./extra_libs.list"/>
         </copy>
@@ -687,7 +687,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
         <chmod perm="755">
             <fileset dir="${DISTR_DIR}/lib" includes="*.so*"/>
         </chmod>
-        <property name="INSTALL_EXTRALIBS" value="true"/>
+        <!-- property name="INSTALL_EXTRALIBS" value="true"/ -->
     </target>
 
     <target name="-install.scag" depends="-update.scag" if="SETUP_MAKE_SCAG">
@@ -903,7 +903,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
     </target>
 
     <target name="install"
-            depends="-setup.update, -install.clean, make, -install.tree, -install.scag, -install.msag, -install.pers, -install.pvss, -install.admin, -install.webapp">
+            depends="-setup.update, -install.clean, make, -install.tree, -install.extralibs, -install.scag, -install.msag, -install.pers, -install.pvss, -install.admin, -install.webapp">
         <!-- description="Action: install previously selected targets" -->
     </target>
 
