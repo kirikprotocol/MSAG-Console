@@ -35,22 +35,22 @@ public:
     {
         return pthread_cond_wait(cnd,&mutex);
     }
-    int wait(pthread_cond_t* cnd, int timeout_sec)
+    int wait(pthread_cond_t* cnd, int timeout_msec) //timeout unit: millisecs
     {
         struct timespec tv = {0,0}; //time with nanosecs
         //Note: on Solaris requires -D__EXTENSIONS__
         clock_gettime(CLOCK_REALTIME, &tv);
-        tv.tv_sec += timeout_sec/1000;
-        tv.tv_nsec += (timeout_sec % 1000)*1000000L;
+        tv.tv_sec += timeout_msec/1000;
+        tv.tv_nsec += (timeout_msec % 1000)*1000000L;
         if (tv.tv_nsec > 1000000000L) {
             ++tv.tv_sec;
             tv.tv_nsec -= 1000000000L;
         }
         return pthread_cond_timedwait(cnd, &mutex, &tv);
     }
-    int wait(int timeout_sec)
+    int wait(int timeout_msec)
     {
-        return wait(&event, timeout_sec);
+        return wait(&event, timeout_msec);
     }
     void notify()
     {

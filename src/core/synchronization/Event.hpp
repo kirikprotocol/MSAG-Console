@@ -41,7 +41,7 @@ public:
         mutex.Unlock();
         return retval;
     }
-    int Wait(int timeout_sec)
+    int Wait(int timeout_msec) //timeout unit: millisecs
     {
         mutex.Lock();
         if (signaled) {
@@ -53,8 +53,8 @@ public:
         struct timespec tv = {0,0}; //time with nanosecs
         //Note: on Solaris requires -D__EXTENSIONS__
         clock_gettime(CLOCK_REALTIME, &tv);
-        tv.tv_sec += timeout_sec/1000;
-        tv.tv_nsec += (timeout_sec % 1000)*1000000L;
+        tv.tv_sec += timeout_msec/1000;
+        tv.tv_nsec += (timeout_msec % 1000)*1000000L;
         if (tv.tv_nsec > 1000000000L) {
             ++tv.tv_sec;
             tv.tv_nsec -= 1000000000L;
