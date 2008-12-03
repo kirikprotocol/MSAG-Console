@@ -9,12 +9,15 @@ int main(int argc,char* argv[])
   using namespace smsc::emailsme;
   if(argc==1)
   {
-    printf("Usage:%s {emailsmestorefile.bin}\n",argv[0]);
+    printf("Usage:%s [-d] {emailsmestorefile.bin}\n",argv[0]);
+    printf("\t-d dump\n");
     return 0;
   }
+  bool dump=strcmp(argv[1],"-d")==0;
+  std::string fileName=dump?argv[2]:argv[1];
   try{
     PageFile pf;
-    pf.Open(argv[1]);
+    pf.Open(fileName.c_str());
     File::offset_type roff=0,off;
     std::vector<unsigned char> data;
     smsc::util::SerializationBuffer buf;
