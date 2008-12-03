@@ -19,7 +19,7 @@ The possible SELECTIONS are listed below under Main targets.
     <property file="build.properties"/>
     <tstamp/>
     <property environment="env"/>
-    <condition property="BUILD_DIR" value="${env.HOME}/msag_build-${DSTAMP}${TSTAMP}">
+    <condition property="BUILD_DIR" value="${env.HOME}/msag_build-${DSTAMP}">
         <not>
             <isset property="BUILD_DIR"/>
         </not>
