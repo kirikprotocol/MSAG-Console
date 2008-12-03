@@ -368,7 +368,7 @@ TO ALL: Insert log record for all significant changes & fixes here.
 #################################################################################################################
 
 =================================================================================================================
-03.12.2008 11:00 makar [!!! CVS: revision marked by tag BUILD_03_12_2008, also by tag MSAG_VERSION_2.0 !!!]
+03.12.2008 11:00 makar [!!! CVS: revision marked by tag MSAG_BUILD_03_12_2008, also by tag MSAG_VERSION_2-0 !!!]
 1) SCAG CHANGE: Old MSAG v1.0 (aka SCAG) renamed to SCAG component,
    'scag' module wasn't changed, just was rebuilt on shared util SMSC sources.
    WARNING: to use it check it first! Not tested yet.
