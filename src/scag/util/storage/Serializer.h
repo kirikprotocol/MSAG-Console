@@ -45,23 +45,31 @@ public:
     GlossaryBase* getGlossary() const { return glossary_; }
     virtual ~SerializerBase() {};
     
-protected:
-    SerializerBase( GlossaryBase* glossary ) : glossary_(glossary){}
+    /// get the version which is requested by the serialized data (if written externally).
+    inline int32_t version() const {
+        return version_;
+    }
+    inline void setVersion( int32_t v ) {
+        version_ = v;
+    }
 
-    uint32_t dochecksum( const Buf& buf, size_t pos1, size_t pos2 ) const;
+protected:
+    SerializerBase( GlossaryBase* glossary ) : glossary_(glossary), version_(0) {}
+
+    uint32_t dochecksum( const unsigned char* buf, size_t pos1, size_t pos2 ) const;
 
     EndianConverter cvt;
 
 private:
     GlossaryBase* glossary_;
-
+    int32_t       version_;
 };
 
 
 class Serializer : public SerializerBase
 {
 public:
-    Serializer( Buf& b, GlossaryBase* glossary = NULL ) : SerializerBase(glossary) ,buf_(b) {}
+    Serializer( Buf& b, GlossaryBase* glossary = NULL ) : SerializerBase(glossary) ,buf_(&b) {}
 
     Serializer& operator << ( uint8_t );
     Serializer& operator << ( uint16_t );
@@ -72,11 +80,11 @@ public:
     Serializer& operator << ( const Buf& );
 
     size_t size() const {
-        return buf_.size();
+        return buf_->size();
     }
 
     const unsigned char* data() const {
-        return buf_.size() ? &(buf_[0]) : 0;
+        return buf_->size() ? &(buf_->front()) : 0;
     }
 
     /// write buffer of size sz.
@@ -85,23 +93,31 @@ public:
     void write( uint32_t sz, const char* buf );
     
     uint32_t checksum( size_t pos1, size_t pos2 ) const {
-        return dochecksum( buf_, pos1, pos2 );
+        assert( pos2 < buf_->size() );
+        return dochecksum( &(buf_->front()), pos1, pos2 );
     }
 
 
 private:
     // returns an iterator to a chunk of given size
     Buf::iterator ensure( uint32_t chunk );
+    Serializer();
 
 private:
-    Buf& buf_;  // NOTE the reference
+    Buf* buf_;
 };
 
 
 class Deserializer : public SerializerBase
 {
 public:
-    Deserializer( const Buf& buf, GlossaryBase* glossary = NULL ) : SerializerBase(glossary), buf_(buf), rpos_(0) {}
+    // a special constructor from a chunk of data in memory to avoid an extra copying
+    Deserializer( const unsigned char* buf, size_t bufsize, GlossaryBase* glossary = NULL ) :
+    SerializerBase(glossary), buf_(0), rpos_(0), ebuf_(buf), esize_(bufsize) {}
+
+    // a ctor from standard buffer
+    Deserializer( const Buf& buf, GlossaryBase* glossary = NULL ) :
+    SerializerBase(glossary), buf_(&buf), rpos_(0), ebuf_(0), esize_(buf_->size()) {}
 
     Deserializer& operator >> ( uint8_t& ) throw ( DeserializerException );
     Deserializer& operator >> ( uint16_t& ) throw ( DeserializerException );
@@ -116,7 +132,7 @@ public:
     const char* read( uint32_t& sz ) throw (DeserializerException);
 
     inline size_t size() const {
-        return buf_.size();
+        return esize_;
     }
     
     inline size_t rpos() const {
@@ -129,7 +145,7 @@ public:
     }
 
     uint32_t checksum( size_t pos1, size_t pos2 ) const {
-        return dochecksum( buf_, pos1, pos2 );
+        return dochecksum( buf_ ? &(buf_->front()) : ebuf_, pos1, pos2 );
     }
 
 private:
@@ -139,13 +155,25 @@ private:
     /// 1. checks that buffer has enough data to read;
     /// 2. if not raise an exception.
     inline void rcheck( size_t sz ) const throw ( DeserializerException ) {
-        if ( rpos_ + sz > buf_.size() )
+        if ( rpos_ + sz > size() )
             throw DeserializerException::bufferUnderrun();
     }
 
 private:
-    const Buf&   buf_;  // NOTE the reference
-    size_t rpos_;
+    Deserializer();
+
+    inline const unsigned char* curpos() const {
+        return buf_ ? &((*buf_)[rpos_]) : &(ebuf_[rpos_]);
+    }
+    inline const char* curposc() const {
+        return reinterpret_cast< const char* >(curpos());
+    }
+
+private:
+    const Buf*           buf_;
+    size_t               rpos_;
+    const unsigned char* ebuf_;
+    size_t               esize_;
 };
     
     

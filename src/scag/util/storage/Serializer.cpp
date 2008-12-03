@@ -8,14 +8,14 @@ namespace util {
 namespace storage {
 
     Serializer& Serializer::operator << ( uint8_t i ) {
-        buf_.push_back( i );
+        buf_->push_back( i );
         return *this;
     }
 
     Serializer& Serializer::operator << ( uint16_t i ) {
         uint8_t* p = cvt.uset(i);
-        buf_.push_back( *p++ );
-        buf_.push_back( *p );
+        buf_->push_back( *p++ );
+        buf_->push_back( *p );
         return *this;
     }
 
@@ -102,7 +102,7 @@ namespace storage {
             if (sz) throw DeserializerException::stringMismatch();
             return *this;
         }
-        if ( strncmp( str, reinterpret_cast<const char*>(&(buf_[rpos_])), sz ) )
+        if ( strncmp( str, curposc(), sz ) )
             throw DeserializerException::stringMismatch();
         return *this;
     }
@@ -113,7 +113,7 @@ namespace storage {
         uint32_t sz;
         *this >> sz;
         rcheck( sz );
-        i.assign( reinterpret_cast< const char* >( &(buf_[rpos_]) ), sz );
+        i.assign( curposc(), sz );
         rpos_ += sz;
         return *this;
     }
@@ -124,7 +124,7 @@ namespace storage {
         uint32_t sz;
         *this >> sz;
         rcheck( sz );
-        i.assign( &(buf_[rpos_]), &(buf_[rpos_]) + sz );
+        i.assign( curpos(), curpos() + sz );
         rpos_ += sz;
         return *this;
     }
@@ -136,27 +136,27 @@ namespace storage {
         *this >> sz;
         rcheck( sz );
         size = sz;
-        const char* ret = reinterpret_cast<const char*>(&buf_[rpos_]);
+        const char* ret = curposc();
         rpos_ += sz;
         return ret;
     }
 
 
-    uint32_t SerializerBase::dochecksum( const Buf& buf, size_t pos1, size_t pos2 ) const
+    uint32_t SerializerBase::dochecksum( const unsigned char* buf, size_t pos1, size_t pos2 ) const
     {
-        assert( (pos1 <= pos2) && (pos2 <= buf.size()) );
+        assert(pos1 <= pos2); // && (pos2 <= buf.size()) );
         return smsc::util::crc32( 0, &(buf[pos1]), pos2 - pos1 );
     }
 
 
     Serializer::Buf::iterator Serializer::ensure( uint32_t chunk )
     {
-        uint32_t resv = buf_.capacity() - buf_.size();
+        uint32_t resv = buf_->capacity() - buf_->size();
         if ( resv < chunk ) {
-            buf_.reserve( buf_.capacity() + chunk + 1024 );
+            buf_->reserve( buf_->capacity() + chunk + 1024 );
         }
-        Serializer::Buf::iterator res = buf_.end();
-        buf_.resize( buf_.size() + chunk );
+        Serializer::Buf::iterator res = buf_->end();
+        buf_->resize( buf_->size() + chunk );
         return res;
     }
 
@@ -164,7 +164,7 @@ namespace storage {
     void Deserializer::readbuf( unsigned char* ptr, size_t sz ) throw ( DeserializerException )
     {
         rcheck( sz );
-        std::copy( &(buf_[rpos_]), &(buf_[rpos_]) + sz, ptr );
+        std::copy( &curpos(), &curpos() + sz, ptr );
         rpos_ += sz;
     }
 
