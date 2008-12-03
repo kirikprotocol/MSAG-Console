@@ -359,3 +359,23 @@ TO ALL: Insert log record for all significant changes & fixes here.
 4) MSAG CHANGE/FIX: Network initiated USSD dialogs fixes. Start dialog by USSN_REQ feature added
 5) MSAG CHANGE: URL encode/decode implemented in HTTP transport
 6) MSAG Admin CHANGE: Performance monitoring for Svcs & Smscs extended & fixed
+
+#################################################################################################################
+#                                                                                                               #
+#   ATTENTION !!!                                                                                               #
+#   03.12.2008 11:00: MSAG v2.0 & PVSS v3.0 avaliable! Yeeees, we did it!                                       #
+#                                                                                                               #
+#################################################################################################################
+
+=================================================================================================================
+03.12.2008 11:00 makar [!!! CVS: revision marked by tag BUILD_03_12_2008, also by tag MSAG_VERSION_2.0 !!!]
+1) SCAG CHANGE: Old MSAG v1.0 (aka SCAG) renamed to SCAG component,
+   'scag' module wasn't changed, just was rebuilt on shared util SMSC sources.
+   WARNING: to use it check it first! Not tested yet.
+2) MSAG CHANGE: New MSAG v2.0 now named MSAG (not SCAG).
+3) PERS CHANGE: Old PVSS v2.7 (aka PERS) leaved as PERS component,
+   'pers' module wasn't changed, just was rebuilt on shared util SMSC sources.
+   WARNING: to use it check it first! Not tested yet.
+4) PVSS CHANGE: New PVSS v3.0 now named PVSS (not PERS).
+5) PVSS UPDATE: New PVCP v1.0 & PVGW v1.0 modules added
+6) BUILD SYSTEM CHANGE: New format is: ant <components> <actions>
