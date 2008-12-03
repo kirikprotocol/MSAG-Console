@@ -4,7 +4,8 @@ use MIME::Parser;
 use Lingua::DetectCharset;
 use Convert::Cyrillic;
 
-my $logfile='logs/mailreaper.log';
+my $idx=shift @ARGV;
+my $logfile="logs/mailreaper$idx.log";
 my $maxlogsize=100*1024*1024;
 
 
@@ -21,7 +22,7 @@ sub Log{
   {
     if(open($logfh,'>>'.$logfile))
     {
-      print $logfh "=== log started ===\n";
+      print $logfh "log started at ".localtime(time)."\n";
       select($logfh);
       $|=1;
       select(STDOUT);
@@ -51,8 +52,8 @@ while(my $sz=<STDIN>)
   Log("Read:$raw");
   my $parser=new MIME::Parser;
   $parser->decode_headers(1);
-  $parser->output_under('tmp');
-  mkdir 'tmp' unless -f 'tmp';
+  $parser->output_under('tmp'.$idx);
+  mkdir 'tmp'.$idx unless -f 'tmp'.$idx;
   #$parser->output_to_core(1);#'tmp');
   #$parser->tmp_to_core(1);
   #$parser->tmp_recycling(1);
@@ -77,13 +78,13 @@ while(my $sz=<STDIN>)
       for my $num(0..$e->parts-1)
       {
         my $part=$e->parts($num);
-        if($part->head->get('Content-Type') =~ m'text/plain'i)
+        if($part->head->get('Content-Type') =~ m'text/plain')
         {
           $$msgref=$part->bodyhandle->as_string;
           $$msgctref='text';
           last;
         }
-        if($part->head->get('Content-Type') =~ m'text/html'i)
+        if($part->head->get('Content-Type') =~ m'text/html')
         {
           $$msgref=$part->bodyhandle->as_string;
           $$msgctref='html';
@@ -98,7 +99,7 @@ while(my $sz=<STDIN>)
   }else
   {
     $msg=$entity->bodyhandle->as_string;
-    if($entity->head->get('Content-Type')=~m'text/html'i)
+    if($entity->head->get('Content-Type')=~m'text/html')
     {
       $msgct='html';
     }else
@@ -167,10 +168,10 @@ while(my $sz=<STDIN>)
   print $msg;
   Log("write resp ok");
   $parser->filer->purge;
-  opendir(D,'tmp');
+  opendir(D,'tmp'.$idx);
   for(readdir(D))
   {
-    rmdir('tmp/'.$_);
+    rmdir("tmp$idx/".$_);
   }
   closedir(D);
 }

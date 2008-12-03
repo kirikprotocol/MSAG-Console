@@ -6,22 +6,37 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
+#include "core/synchronization/Mutex.hpp"
+#include "util/Exception.hpp"
 
 namespace smsc{
 namespace emailsme{
 namespace util{
 
-bool childRunning=false;
-static bool brPipe=false;
-
-static bool sigInit=false;
-
-extern "C" typedef void (*SignalHandler)(int);
-static void sig_pipe(int signo)
+static std::vector<bool> childRunning;
+static std::vector<pid_t> owningThreads;
+static smsc::core::synchronization::Mutex childsMutex;
+  
+bool isChildRunning(int idx)
 {
-//  fprintf(stderr,"broken pipe or sig child\n");
-  childRunning=false;
-  brPipe=true;
+  return childRunning[idx];
+}
+  
+extern "C" typedef void (*SignalHandler)(int);
+static void sig_child(int signo)
+{
+  pid_t pid;
+  while ((pid=waitpid(-1,0,WNOHANG))>0)
+  {
+    for(size_t i=0;i<owningThreads.size();i++)
+    {
+      if(owningThreads[i]==pid)
+      {
+        childRunning[i]=false;
+        break;
+      }
+    }
+  }
 }
 
 struct PipeGuard{
@@ -110,16 +125,30 @@ static pid_t piped_child(char **command, int *f_in, int *f_out)
   return pid;
 }
 
-
-
-pid_t ForkPipedCmd(const char *cmd, FILE*& f_in,FILE*& f_out)
+void PipesInit(int threadsNum)
 {
-  if(!sigInit)
+  sigignore(SIGPIPE);
+  if(sigset(SIGCHLD, (SignalHandler)sig_child) == SIG_ERR)fprintf(stderr, "signal SIGCHILD error.\n");
+  owningThreads.resize(threadsNum,-1);
+  childRunning.resize(threadsNum,false);
+}
+  
+int InitPipeThread()
+{
+  smsc::core::synchronization::MutexGuard mg(childsMutex);
+  for(int i=0;i<owningThreads.size();i++)
   {
-    if(sigset(SIGPIPE, (SignalHandler)sig_pipe) == SIG_ERR)fprintf(stderr, "signal SIGPIPE error.\n");
-    if(sigset(SIGCHLD, (SignalHandler)sig_pipe) == SIG_ERR)fprintf(stderr, "signal SIGCHILD error.\n");
-    sigInit=true;
+    if(owningThreads[i]==-1)
+    {
+      owningThreads[i]=0;
+      return i;
+    }
   }
+  throw smsc::util::Exception("Too many pipe threads");
+}
+
+pid_t ForkPipedCmd(int idx,const char *cmd, FILE*& f_in,FILE*& f_out)
+{
   std::vector<char*> args;
   pid_t ret;
   char *tok;
@@ -132,18 +161,21 @@ pid_t ForkPipedCmd(const char *cmd, FILE*& f_in,FILE*& f_out)
   {
     args.push_back(tok);
   }
+  char idxbuf[32];
+  sprintf(idxbuf,"%d",idx);
+  args.push_back(idxbuf);
   args.push_back(0);
-  brPipe=false;
+  childRunning[idx]=true;
   ret = piped_child(&args[0],&in,&out);
   sleep(1);
-  if(ret>0 && !brPipe)
+  if(ret>0 && childRunning[idx])
   {
     f_in=fdopen(in,"rb");
     f_out=fdopen(out,"wb");
-    childRunning=true;
+    owningThreads[idx]=ret;
   }
   delete [] str;
-  return brPipe?-1:ret;
+  return ret;
 }
 
 }

@@ -56,8 +56,6 @@ using namespace smsc::emailsme;
 
 using namespace std;
 
-FILE *emlIn;
-FILE *emlOut;
 
 char hostName[256];
 
@@ -369,12 +367,25 @@ public:
     }
   }
 
-  void CreateProfile(const AbonentProfile& p)
+  bool CreateProfile(const AbonentProfile& p)
   {
     smsc_log_debug(log,"Create profile for %s/%s",p.addr.toString().c_str(),p.user.c_str());
     File::offset_type off;
     {
+      MutexGuard mg(cacheMtx);
+      CacheList::iterator* ptr=abonentCache.GetPtr(p.addr.toString().c_str());
+      if(ptr)
+      {
+        return false;
+      }
+    }
+    {
       MutexGuard mg(diskMtx);
+      Int64Key value;
+      if(abonentIndex.LookUp(p.addr.toString().c_str(),value))
+      {
+        return false;
+      }
       SerializationBuffer sb;
       p.Write(sb);
       off=store.Append(sb.getBuffer(),sb.getPos());
@@ -394,6 +405,7 @@ public:
       emailCache.Insert(p.user.c_str(),it);
       CheckCacheLimit();
     }
+    return true;
   }
   bool getProfileByAddress(const char* addr,AbonentProfile& p)
   {
@@ -809,40 +821,44 @@ public:
   virtual void enqueueAnswer(PduSubmitSm* pdu)=0;
 };
 
+class EmailProcessor;
 namespace cfg{
- string sourceAddress;
- int protocolId;
- string serviceType;
- SmppTransmitter *tr;
- SmppTransmitter *atr;
- IAnswerQueue* aq;
- int mainId;
- bool stopSme=false;
- string smtpHost;
- int smtpPort=25;
- int retryTime=5;
- bool pauseAfterDisconnect=false;
- //int defaultDailyLimit;
- int annotationSize;
- string maildomain;
- vector<string> validDomains;
- string mailstripper;
- OutputFormatter *msgFormat;
- Hash<OutputFormatter*> answerFormats;
- string storeDir;
- bool allowGsm2EmlWithoutProfile=false;
- bool allowEml2GsmWithoutProfile=false;
- LimitType defaultLimitType=ltDay;
- int defaultLimitValue=10;
- bool sendSuccessAnswer=true;
-
- std::string helpDeskAddress;
-
- bool useTransformRegexp=false;
- RegExp reTransform;
- std::string transformResult;
- bool partitionSms=false;
- int maxUdhParts=10;
+  string sourceAddress;
+  int protocolId;
+  string serviceType;
+  SmppTransmitter *tr;
+  SmppTransmitter *atr;
+  IAnswerQueue* aq;
+  int mainId;
+  bool stopSme=false;
+  string smtpHost;
+  int smtpPort=25;
+  int retryTime=5;
+  bool pauseAfterDisconnect=false;
+  //int defaultDailyLimit;
+  int annotationSize;
+  string maildomain;
+  vector<string> validDomains;
+  string mailstripper;
+  int mailthreadsCount;
+  EmailProcessor* mailThreads;
+  
+  OutputFormatter *msgFormat;
+  Hash<OutputFormatter*> answerFormats;
+  string storeDir;
+  bool allowGsm2EmlWithoutProfile=false;
+  bool allowEml2GsmWithoutProfile=false;
+  LimitType defaultLimitType=ltDay;
+  int defaultLimitValue=10;
+  bool sendSuccessAnswer=true;
+  
+  std::string helpDeskAddress;
+  
+  bool useTransformRegexp=false;
+  // RegExp reTransform;
+  std::string transformResult;
+  bool partitionSms=false;
+  int maxUdhParts=10;
 };
 
 class StatisticsCollector:public smsc::core::threads::Thread{
@@ -1432,10 +1448,7 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
 
     try{
       int rv=SendEMail(fromdecor,to,subj,body);
-      if(haveprofile)
-      {
-        storage.incGsm2EmlLimit(fromaddress);
-      }else
+      if(!haveprofile)
       {
         __trace2__("Creating implicit profile for address %s",fromaddress);
         AbonentProfile prof;
@@ -1454,9 +1467,16 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
         prof.limitValue=cfg::defaultLimitValue;
         prof.limitCountGsm2Eml=1;
         prof.limitCountEml2Gsm=0;
-        storage.CreateProfile(prof);
+        if(!storage.CreateProfile(prof))
+        {
+          haveprofile=true;
+        }
       }
-      
+      if(haveprofile)
+      {
+        storage.incGsm2EmlLimit(fromaddress);
+      }
+        
       if(rv!=ProcessSmsCodes::OK)
       {
         statCollector.IncSms2Eml(false);
@@ -2187,12 +2207,172 @@ protected:
   }
 }multiPartSendQueue;
 
-int sendSms(std::string from,const std::string to,const char* msg,int msglen)
+
+struct XBuffer{
+  char* buffer;
+  int size;
+  int offset;
+  
+  XBuffer(){buffer=0;size=0;offset=0;}
+  ~XBuffer(){if(buffer)delete [] buffer;}
+  
+  void setSize(int newsize)
+  {
+    if(newsize<size)return;
+    char *newbuf=new char[newsize];
+    if(offset)memcpy(newbuf,buffer,offset);
+    if(buffer)delete [] buffer;
+    buffer=newbuf;
+    size=newsize;
+  }
+  void append(char *mem,int count)
+  {
+    if(offset+count>size)setSize((offset+count)+(offset+count)/2);
+    memcpy(buffer+offset,mem,count);
+    offset+=count;
+  }
+  char* current(){return buffer+offset;}
+  int freeSpace(){return size-offset;}
+};
+
+
+class EmailProcessor:public smsc::core::threads::Thread{
+public:
+  EmailProcessor()
+  {
+    busy=false;
+    needToStop=false;
+    log=smsc::logger::Logger::getInstance("eml.proc");
+    clnt=0;
+    emlOut=0;
+    emlIn=0;
+    needRestartChild=false;
+  }
+  int Execute()
+  {
+    idx=util::InitPipeThread();
+    XBuffer buf;
+    while(!needToStop)
+    {
+      {
+        MutexGuard mg(mon);
+        if(busy)
+        {
+          busyCount--;
+          busy=false;
+          mon.notifyAll();
+        }
+        while(!clnt && !needToStop)
+        {
+          mon.wait();
+        }
+        if(needToStop)break;
+        if(!clnt)continue;
+      }
+      int sz;
+      clnt->setTimeOut(10);
+      smsc_log_debug(log,"Got connection");
+      if(clnt->ReadAll((char*)&sz,4)==-1)continue;
+      sz=ntohl(sz);
+      smsc_log_debug(log,"Message size:%d",sz);
+      buf.setSize(sz+1);
+      if(clnt->ReadAll(buf.buffer,sz)==-1)continue;
+      smsc_log_debug(log,"Processing message");
+      int retCode;
+      try{
+        buf.buffer[sz]=0;
+        static smsc::logger::Logger* dumplog=smsc::logger::Logger::getInstance("msgdmp");
+        smsc_log_debug(dumplog,"msgdump:\n=== begin ===\n%s\n=== end ===",buf.buffer);
+        retCode=ProcessMessage(buf.buffer,sz);
+      }catch(exception& e)
+      {
+        smsc_log_warn(log,"process message failed:%s",e.what());
+        retCode=StatusCodes::STATUS_CODE_UNKNOWNERROR;
+      }
+      smsc_log_debug(log,"Processing finished, code=%d",retCode);
+      retCode=htonl(retCode);
+      clnt->WriteAll(&retCode,4);
+      delete clnt;
+      clnt=0;
+    }
+    if(emlIn)
+    {
+      fclose(emlIn);
+      emlIn=0;
+    }
+    if(emlOut)
+    {
+      fclose(emlOut);
+      emlOut=0;
+    }
+    return 0;
+  }
+  int sendSms(std::string from,const std::string to,const char* msg,int msglen);
+  int ProcessMessage(const char *msg,int msglen);
+  static void startEmailProcessing(Socket* s);
+  void assignTransformRegexp(const char* reSrc)
+  {
+    reTransform.Compile(reSrc,OP_OPTIMIZE);
+  }
+  bool isBusy()const
+  {
+    return busy;
+  }
+  void processSocket(Socket* s)
+  {
+    clnt=s;
+    busy=true;
+    busyCount++;
+  }
+  void stop()
+  {
+    needToStop=true;
+    MutexGuard mg(mon);
+    mon.notifyAll();
+  }
+protected:
+  int idx;
+  bool needToStop;
+  RegExp reTransform;
+  FILE* emlIn;
+  FILE* emlOut;
+  Socket* clnt;
+  bool busy;
+  bool needRestartChild;
+  static smsc::logger::Logger* log;
+  static int busyCount;
+  static EventMonitor mon;
+};
+
+int EmailProcessor::busyCount=0;
+EventMonitor EmailProcessor::mon;
+smsc::logger::Logger* EmailProcessor::log=0;
+
+void EmailProcessor::startEmailProcessing(Socket* s)
+{
+  MutexGuard mg(mon);
+  while(busyCount==cfg::mailthreadsCount)
+  {
+    smsc_log_debug(log,"all mail processing threads are busy. waiting");
+    mon.wait();
+  }
+  for(int i=0;i<cfg::mailthreadsCount;i++)
+  {
+    if(!cfg::mailThreads[i].isBusy())
+    {
+      smsc_log_debug(log,"starting mail processing on thread %d",i);
+      cfg::mailThreads[i].processSocket(s);
+      mon.notifyAll();
+      break;
+    }
+  }
+}
+
+int EmailProcessor::sendSms(std::string from,const std::string to,const char* msg,int msglen)
 {
   AbonentProfile p;
   bool noProfile=true;
 
-  static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("sendSms");
 
   string dstUser=to.substr(0,to.find('@'));
   toLower(dstUser);
@@ -2201,29 +2381,29 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   {
     SMatch m[10];
     int n=10;
-    if(cfg::reTransform.Match(dstUser.c_str(),m,n))
+    if(reTransform.Match(dstUser.c_str(),m,n))
     {
-      __trace2__("performing transformation for username %s",dstUser.c_str());
+      smsc_log_debug(log,"performing transformation for username %s",dstUser.c_str());
       dstUser=RxSubst(dstUser,cfg::transformResult,m,n);
-      __trace2__("transformation result:%s",dstUser.c_str());
+      smsc_log_debug(log,"transformation result:%s",dstUser.c_str());
     }
   }
 
   if(!storage.getProfileByEmail(dstUser.c_str(),p))
   {
-    __trace2__("no profile for user:%s",dstUser.c_str());
+    smsc_log_debug(log,"no profile for user:%s",dstUser.c_str());
     std::string addr=dstUser;
     if(storage.getProfileByAddress(addr.c_str(),p))
     {
       if(!p.numberMap)
       {
-        __trace2__("number map turned off for address:%s",addr.c_str());
+        smsc_log_debug(log,"number map turned off for address:%s",addr.c_str());
         return StatusCodes::STATUS_CODE_NOUSER;
       }
       noProfile=false;
     }else
     {
-      __trace2__("no profile for address:%s",dstUser.c_str());
+      smsc_log_debug(log,"no profile for address:%s",dstUser.c_str());
       //return StatusCodes::STATUS_CODE_NOUSER;
     }
   }else
@@ -2241,45 +2421,48 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   {
     if(!storage.checkEml2GsmLimit(dstUser.c_str()))
     {
-      __trace2__("limit exceeded for user:%s",dstUser.c_str());
+      smsc_log_debug(log,"limit exceeded for user:%s",dstUser.c_str());
       return StatusCodes::STATUS_CODE_LIMIEXCEEDED;
     }
   }
 
-  if(!util::childRunning)
+  if(!util::isChildRunning(idx) || needRestartChild)
   {
-    __trace2__("forking mailstripper child:%s",cfg::mailstripper.c_str());
+    smsc_log_debug(log,"forking mailstripper[%d] child:%s",idx,cfg::mailstripper.c_str());
     if(emlIn){fclose(emlIn);emlIn=0;}
     if(emlOut){fclose(emlOut);emlOut=0;}
-    if(util::ForkPipedCmd(cfg::mailstripper.c_str(),emlIn,emlOut)<=0)
+    if(util::ForkPipedCmd(idx,cfg::mailstripper.c_str(),emlIn,emlOut)<=0)
     {
-      __trace2__("failed to fork mailstripper child:%s",strerror(errno));
+      smsc_log_debug(log,"failed to fork mailstripper child:%s",strerror(errno));
       return StatusCodes::STATUS_CODE_TEMPORARYERROR;
     }
-  };
-  __trace2__("write msg size:%d",msglen);
+    needRestartChild=false;
+  }
+  smsc_log_debug(log,"write msg size:%d",msglen);
   fprintf(emlOut,"%d\n",msglen);fflush(emlOut);
-  __trace__("write msg");
+  smsc_log_debug(log,"write msg");
   size_t sz=0;
   while(sz<msglen)
   {
     size_t wr=fwrite(msg+sz,1,msglen-sz,emlOut);fflush(emlOut);
     if(wr==0)
     {
-      __trace__("failed to write data for mailstripper");
+      smsc_log_warn(log,"failed to write data for mailstripper");
+      needRestartChild=true;
       return StatusCodes::STATUS_CODE_TEMPORARYERROR;
     }
     sz+=wr;
   }
-  __trace__("read resp len");
+  smsc_log_debug(log,"read resp len");
   char buf[16];
   if(!fgets(buf,(int)sizeof(buf),emlIn))
   {
-    __trace__("failed to read data from mailstripper");
+    smsc_log_warn(log,"failed to read data from mailstripper");
+    needRestartChild=true;
     return StatusCodes::STATUS_CODE_TEMPORARYERROR;
   }
   int len=atoi(buf);
-  __trace2__("resp len=%d",len);
+  smsc_log_debug(log,"resp len=%d",len);
   auto_ptr<char> newmsg(new char[len+1]);
 
   sz=0;
@@ -2288,14 +2471,14 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
     size_t rv=fread(newmsg.get(),1,len-sz,emlIn);
     if(rv==0)
     {
-      __trace__("failed to read data from mailstripper");
+      smsc_log_debug(log,"failed to read data from mailstripper");
       return StatusCodes::STATUS_CODE_TEMPORARYERROR;
     }
     sz+=rv;
   }
   newmsg.get()[len]=0;
 
-  __trace2__("newmsg:%s",newmsg.get());
+  smsc_log_debug(log,"newmsg:%s",newmsg.get());
 
   //cfg::annotationSize
 
@@ -2321,8 +2504,8 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   string dst=noProfile?'+'+dstUser:MapEmailToAddress(dstUser,fwd);
   if(fwd.length())
   {
-    __trace2__("forwarding email to %s",fwd.c_str());
-    __trace2__("fwd body(%d):%s",msglen,msg);
+    smsc_log_debug(log,"forwarding email to %s",fwd.c_str());
+    smsc_log_debug(log,"fwd body(%d):%s",msglen,msg);
     try{
       Array<string> to2;
       to2.Push(fwd);
@@ -2330,7 +2513,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
       SendEMail(from,to2,"",body,true);
     }catch(exception& e)
     {
-      __warning2__("Failed to forward msg to %s:%s",fwd.c_str(),e.what());
+      smsc_log_warn(log,"Failed to forward msg to %s:%s",fwd.c_str(),e.what());
     }
   }
 
@@ -2368,7 +2551,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   text="";
   cfg::msgFormat->format(text,ga,ce);
 
-  __trace2__("result:%s",text.c_str());
+  smsc_log_debug(log,"result:%s",text.c_str());
 
 
 
@@ -2448,7 +2631,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
     {
       if(noProfile)
       {
-        __trace2__("Creating implicit profile creation for address %s",dst.c_str());
+        smsc_log_info(log,"Creating implicit profile creation for address %s",dst.c_str());
         AbonentProfile prof;
         prof.addr=dst.c_str();
         if(prof.addr.value[0]=='7')
@@ -2471,7 +2654,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
         storage.incEml2GsmLimit(dstUser.c_str());
       }catch(exception& e)
       {
-        __warning2__("failed to inc counter:%s",e.what());
+        smsc_log_warn(log,"failed to inc counter:%s",e.what());
       }
     }
   }else
@@ -2492,7 +2675,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   return rc;
 }
 
-int ProcessMessage(const char *msg,int msglen)
+int EmailProcessor::ProcessMessage(const char *msg,int msglen)
 {
   string line,name,value,from,to;
   std::vector<std::string> toarr;
@@ -2592,33 +2775,6 @@ int ProcessMessage(const char *msg,int msglen)
   }
   return rc;
 }
-
-struct XBuffer{
-  char* buffer;
-  int size;
-  int offset;
-
-  XBuffer(){buffer=0;size=0;offset=0;}
-  ~XBuffer(){if(buffer)delete [] buffer;}
-
-  void setSize(int newsize)
-  {
-    if(newsize<size)return;
-    char *newbuf=new char[newsize];
-    if(offset)memcpy(newbuf,buffer,offset);
-    if(buffer)delete [] buffer;
-    buffer=newbuf;
-    size=newsize;
-  }
-  void append(char *mem,int count)
-  {
-    if(offset+count>size)setSize((offset+count)+(offset+count)/2);
-    memcpy(buffer+offset,mem,count);
-    offset+=count;
-  }
-  char* current(){return buffer+offset;}
-  int freeSpace(){return size-offset;}
-};
 
 
 bool reconnectFlag=false;
@@ -2740,353 +2896,390 @@ int main(int argc,char* argv[])
 
   try{
 
-  using namespace smsc::util;
-  //using namespace smsc::db;
-  config::Manager::init("conf/config.xml");
-  config::Manager& cfgman= config::Manager::getInstance();
-
-  config::ConfigView *dsConfig = new config::ConfigView(cfgman, "StartupLoader");
-
-
-  cfg::smtpHost=cfgman.getString("smtp.host");
-  try{
-    cfg::smtpPort=cfgman.getInt("smtp.port");
-  }catch(...)
-  {
-    __warning__("smpp.port not found, using default");
-  }
-  try{
-    cfg::retryTime=cfgman.getInt("smpp.retryTime");
-  }catch(...)
-  {
-    __warning__("smpp.retryTime not found, using default");
-  }
-
-  try
-  {
-    cfg::pauseAfterDisconnect=cfgman.getBool("smpp.pauseAfterDisconnect");
-
-  } catch(...)
-  {
-    __warning__("smpp.pauseAfterDisconnect not found, disabled");
-  }
-
-  try{
-    cfg::allowGsm2EmlWithoutProfile=cfgman.getBool("admin.allowGsm2EmlWithoutProfile");
-  }catch(...)
-  {
-    __warning__("admin.allowGsm2EmlWithoutProfile not found, disabled by default");
-  }
-
-  try{
-    cfg::allowEml2GsmWithoutProfile=cfgman.getBool("admin.allowEml2GsmWithoutProfile");
-  }catch(...)
-  {
-    __warning__("admin.allowEml2GsmWithoutProfile not found, disabled by default");
-  }
-
-  try
-  {
-    initRegions(cfgman.getString("admin.regionsconfig"),cfgman.getString("admin.routesconfig"));
-  } catch(std::exception& e)
-  {
-    __warning__("regions support disabled");
-  }
-
-  try
-  {
-    cfg::helpDeskAddress=Address(cfgman.getString("admin.helpdeskAddress")).value;
-  } catch(std::exception& e)
-  {
-    __warning__("helpdesk support disabled");
-  }
-
-  bool haveStats=false;
-  try
-  {
-    statCollector.Init(cfgman.getString("stat.storeLocation"),cfgman.getInt("stat.flushPeriodInSec"));
-    haveStats=true;
-    statCollector.Start();
-
-  } catch(std::exception&e)
-  {
-    __warning2__("stats disabled:%s",e.what());
-  }
-
-  try{
-    const char* lmt=cfgman.getString("admin.defaultLimit");
-    int val;
-    char type;
-    if(sscanf(lmt,"%d%c",&val,&type)!=2)
+    using namespace smsc::util;
+    //using namespace smsc::db;
+    config::Manager::init("conf/config.xml");
+    config::Manager& cfgman= config::Manager::getInstance();
+    
+    config::ConfigView *dsConfig = new config::ConfigView(cfgman, "StartupLoader");
+    
+    
+    cfg::smtpHost=cfgman.getString("smtp.host");
+    try{
+      cfg::smtpPort=cfgman.getInt("smtp.port");
+    }catch(...)
     {
-      throw smsc::util::Exception("Invalid limit format:%s",lmt);
+      __warning__("smpp.port not found, using default");
     }
-    cfg::defaultLimitValue=val;
-    switch(type)
+    try{
+      cfg::retryTime=cfgman.getInt("smpp.retryTime");
+    }catch(...)
     {
-      case 'd':cfg::defaultLimitType=ltDay;break;
-      case 'w':cfg::defaultLimitType=ltWeek;break;
-      case 'm':cfg::defaultLimitType=ltMonth;break;
-      default:throw smsc::util::Exception("Invalid limit format:%s",lmt);
-    }
-  }catch(std::exception& e)
-  {
-    __warning2__("parameter admin.defaultLimit parsing exception:%s, using default",e.what());
-  }
-  catch(...)
-  {
-    __warning__("parameter admin.defaultLimit not found, using default value");
-  }
-
-  cfg::storeDir=cfgman.getString("store.dir");
-
-
-
-  storage.Open(cfg::storeDir.c_str());
-
-
-  SmeConfig cfg;
-  cfg.host=cfgman.getString("smpp.host");
-  cfg.port=cfgman.getInt("smpp.port");
-  cfg.sid=cfgman.getString("smpp.systemId");
-  cfg.timeOut=cfgman.getInt("smpp.timeout");
-  cfg.password=cfgman.getString("smpp.password");
-  cfg.origAddr=cfgman.getString("smpp.sourceAddress");
-  try
-  {
-    cfg.systemType=cfgman.getString("smpp.systemType");
-  } catch(...)
-  {
-  }
-
-  try
-  {
-    cfg::partitionSms=cfgman.getBool("smpp.partitionSms");
-    cfg::maxUdhParts=cfgman.getInt("smpp.maxUdhParts");
-  } catch(...)
-  {
-  }
-
-  if(cfg::partitionSms)
-  {
-    int sendSpeed=cfgman.getInt("smpp.partsSendSpeedPerHour");
-    int sendDelay=3600*1000/sendSpeed;
-    multiPartSendQueue.Init(cfgman.getString("store.queueDir"),sendDelay);
-
-    std::string concatStore=cfg::storeDir;
-    if(concatStore.length() && *concatStore.rbegin()!='/')
-    {
-      concatStore+='/';
-    }
-    concatStore+="concat";
-    if(!File::Exists(concatStore.c_str()))
-    {
-      File::MkDir(concatStore.c_str());
-    }
-    concatManager.Init(concatStore,cfgman.getInt("smpp.concatTimeout"));
-  }
-
-  cfg::serviceType=cfgman.getString("smpp.serviceType");
-  cfg::protocolId=cfgman.getInt("smpp.protocolId");
-
-  cfg::maildomain=cfgman.getString("mail.domain");
-
-  {
-    std::string validToDomains=cfgman.getString("mail.validToDomains");
-    size_t pos=0;
-    size_t comma=0;
-    do{
-      pos=comma;
-      while(pos<validToDomains.length() && isspace(validToDomains[pos]))
-      {
-        pos++;
-      }
-      comma=validToDomains.find(',',comma);
-      cfg::validDomains.push_back(trimSpaces(validToDomains.substr(pos,comma==std::string::npos?std::string::npos:comma-pos).c_str()));
-      if(comma!=std::string::npos)
-      {
-        comma++;
-      }
-    }while(comma!=std::string::npos);
-  }
-
-
-  try{
-    const char* re=cfgman.getString("mail.userNameTransformRegexp");
-    cfg::transformResult=cfgman.getString("mail.userNameTransformResult");
-    if(!cfg::reTransform.Compile(re,OP_OPTIMIZE))
-    {
-      __warning2__("Username Transformation Regexp compilation error(%d). Transformation disabled!",cfg::reTransform.LastError());
-    }else
-    {
-      cfg::useTransformRegexp=true;
-    }
-  }catch(std::exception& e)
-  {
-    __warning2__("Missing optional parameter:%s",e.what());
-  }
-
-  AdminCommandsListener acl;
-
-  acl.Init(cfgman.getString("admin.host"),cfgman.getInt("admin.port"));
-  acl.Start();
-
-  Socket srv;
-
-  if(srv.InitServer(cfgman.getString("listener.host"),cfgman.getInt("listener.port"),0,0)==-1)
-  {
-    __warning2__("emailsme: Failed to init listener at %s:%d",cfgman.getString("listener.host"),cfgman.getInt("listener.port"));
-    return -1;
-  };
-  if(srv.StartServer()==-1)
-  {
-    __warning__("Failed to start listener");
-    return -1;
-  };
-
-
-  cfg::mailstripper=cfgman.getString("mail.stripper");
-  if(util::ForkPipedCmd(cfg::mailstripper.c_str(),emlIn,emlOut)<=0)
-  {
-    __warning2__("Failed to execute mail stripper:%s",strerror(errno));
-    fprintf(stderr,"Failed to execute mail stripper:%s",strerror(errno));
-    return -1;
-  }
-
-  cfg::sendSuccessAnswer=cfgman.getBool("answers.sendSuccessAnswer");
-
-  cfg::msgFormat=new OutputFormatter(cfgman.getString("mail.format"));
-
-  {
-    const char* answers[]=
-    {
-      "alias",
-      "aliasfailed",
-      "aliasbusy",
-      "noalias",
-      "forward",
-      "forwardfailed",
-      "forwardoff",
-      "realname",
-      "numberon",
-      "numberoff",
-      "numberfailed",
-      "systemerror",
-      "unknowncommand",
-      "messagesent",
-      "messagefailedlimit",
-      "messagefailednoprofile",
-      "messagefailedsendmail",
-      "messagefailedsystem",
-      "norealname"
-    };
-    for(int i=0;i<sizeof(answers)/sizeof(answers[0]);i++)
-    {
-      std::string fullCfgString="answers.";
-      fullCfgString+=answers[i];
-      cfg::answerFormats.Insert(answers[i],new OutputFormatter(cfgman.getString(fullCfgString.c_str())));
-    }
-  }
-
-  //cfg::defaultDailyLimit=cfgman.getInt("defaults.dailyLimit");
-  cfg::annotationSize=cfgman.getInt("defaults.annotationSize");
-
-  __trace2__("defaults.annotationSize:%d",cfg::annotationSize);
-
-  MyListener lst;
-  cfg::aq=&lst;
-
-  SmppSession ss(cfg,&lst);
-  cfg::tr=ss.getSyncTransmitter();
-  cfg::atr=ss.getAsyncTransmitter();
-  cfg::sourceAddress=cfgman.getString("smpp.sourceAddress");
-  lst.setTrans(cfg::tr);
-  XBuffer buf;
-
-  while(!cfg::stopSme)
-  {
-    for(;;)
-    {
-      if(cfg::stopSme)break;
-      try{
-        ss.connect();
-      }catch(...)
-      {
-        sleep(cfg::retryTime);
-        continue;
-      }
-      break;
-    }
-    if(cfg::stopSme)break;
-    if(cfg::partitionSms)
-    {
-      multiPartSendQueue.Start();
-      concatManager.Start();
+      __warning__("smpp.retryTime not found, using default");
     }
     
-    reconnectFlag=false;
+    try
+    {
+      cfg::pauseAfterDisconnect=cfgman.getBool("smpp.pauseAfterDisconnect");
+      
+    } catch(...)
+    {
+      __warning__("smpp.pauseAfterDisconnect not found, disabled");
+    }
+    
+    try{
+      cfg::allowGsm2EmlWithoutProfile=cfgman.getBool("admin.allowGsm2EmlWithoutProfile");
+    }catch(...)
+    {
+      __warning__("admin.allowGsm2EmlWithoutProfile not found, disabled by default");
+    }
+    
+    try{
+      cfg::allowEml2GsmWithoutProfile=cfgman.getBool("admin.allowEml2GsmWithoutProfile");
+    }catch(...)
+    {
+      __warning__("admin.allowEml2GsmWithoutProfile not found, disabled by default");
+    }
+    
+    try
+    {
+      initRegions(cfgman.getString("admin.regionsconfig"),cfgman.getString("admin.routesconfig"));
+    } catch(std::exception& e)
+    {
+      __warning__("regions support disabled");
+    }
+    
+    try
+    {
+      cfg::helpDeskAddress=Address(cfgman.getString("admin.helpdeskAddress")).value;
+    } catch(std::exception& e)
+    {
+      __warning__("helpdesk support disabled");
+    }
+    
+    bool haveStats=false;
+    try
+    {
+      statCollector.Init(cfgman.getString("stat.storeLocation"),cfgman.getInt("stat.flushPeriodInSec"));
+      haveStats=true;
+      statCollector.Start();
+      
+    } catch(std::exception&e)
+    {
+      __warning2__("stats disabled:%s",e.what());
+    }
+    
+    try{
+      const char* lmt=cfgman.getString("admin.defaultLimit");
+      int val;
+      char type;
+      if(sscanf(lmt,"%d%c",&val,&type)!=2)
+      {
+        throw smsc::util::Exception("Invalid limit format:%s",lmt);
+      }
+      cfg::defaultLimitValue=val;
+      switch(type)
+      {
+        case 'd':cfg::defaultLimitType=ltDay;break;
+        case 'w':cfg::defaultLimitType=ltWeek;break;
+        case 'm':cfg::defaultLimitType=ltMonth;break;
+        default:throw smsc::util::Exception("Invalid limit format:%s",lmt);
+      }
+    }catch(std::exception& e)
+    {
+      __warning2__("parameter admin.defaultLimit parsing exception:%s, using default",e.what());
+    }
+    catch(...)
+    {
+      __warning__("parameter admin.defaultLimit not found, using default value");
+    }
+    
+    cfg::storeDir=cfgman.getString("store.dir");
+    
+    
+    
+    storage.Open(cfg::storeDir.c_str());
+    
+    
+    SmeConfig cfg;
+    cfg.host=cfgman.getString("smpp.host");
+    cfg.port=cfgman.getInt("smpp.port");
+    cfg.sid=cfgman.getString("smpp.systemId");
+    cfg.timeOut=cfgman.getInt("smpp.timeout");
+    cfg.password=cfgman.getString("smpp.password");
+    cfg.origAddr=cfgman.getString("smpp.sourceAddress");
+    try
+    {
+      cfg.systemType=cfgman.getString("smpp.systemType");
+    } catch(...)
+    {
+    }
+    
+    try
+    {
+      cfg::partitionSms=cfgman.getBool("smpp.partitionSms");
+      cfg::maxUdhParts=cfgman.getInt("smpp.maxUdhParts");
+    } catch(...)
+    {
+    }
+    
+    if(cfg::partitionSms)
+    {
+      int sendSpeed=cfgman.getInt("smpp.partsSendSpeedPerHour");
+      int sendDelay=3600*1000/sendSpeed;
+      multiPartSendQueue.Init(cfgman.getString("store.queueDir"),sendDelay);
+      
+      std::string concatStore=cfg::storeDir;
+      if(concatStore.length() && *concatStore.rbegin()!='/')
+      {
+        concatStore+='/';
+      }
+      concatStore+="concat";
+      if(!File::Exists(concatStore.c_str()))
+      {
+        File::MkDir(concatStore.c_str());
+      }
+      concatManager.Init(concatStore,cfgman.getInt("smpp.concatTimeout"));
+    }
+    
+    cfg::serviceType=cfgman.getString("smpp.serviceType");
+    cfg::protocolId=cfgman.getInt("smpp.protocolId");
+    
+    cfg::maildomain=cfgman.getString("mail.domain");
+    
+    {
+      std::string validToDomains=cfgman.getString("mail.validToDomains");
+      size_t pos=0;
+      size_t comma=0;
+      do{
+        pos=comma;
+        while(pos<validToDomains.length() && isspace(validToDomains[pos]))
+        {
+          pos++;
+        }
+        comma=validToDomains.find(',',comma);
+        cfg::validDomains.push_back(trimSpaces(validToDomains.substr(pos,comma==std::string::npos?std::string::npos:comma-pos).c_str()));
+        if(comma!=std::string::npos)
+        {
+          comma++;
+        }
+      }while(comma!=std::string::npos);
+    }
+    
+    std::string reSrc;
+    try{
+      reSrc=cfgman.getString("mail.userNameTransformRegexp");
+      cfg::transformResult=cfgman.getString("mail.userNameTransformResult");
+      if(reSrc.length())
+      {
+        RegExp re;
+        if(!re.Compile(reSrc.c_str(),OP_OPTIMIZE))
+        {
+          __warning2__("Username Transformation Regexp compilation error(%d). Transformation disabled!",re.LastError());
+        }else
+        {
+          cfg::useTransformRegexp=true;
+        }
+      }
+    }catch(std::exception& e)
+    {
+      __warning2__("Missing optional parameter:%s",e.what());
+    }
+    
+    AdminCommandsListener acl;
+    
+    acl.Init(cfgman.getString("admin.host"),cfgman.getInt("admin.port"));
+    acl.Start();
+    
+    Socket srv;
+    
+    if(srv.InitServer(cfgman.getString("listener.host"),cfgman.getInt("listener.port"),0,0)==-1)
+    {
+      __warning2__("emailsme: Failed to init listener at %s:%d",cfgman.getString("listener.host"),cfgman.getInt("listener.port"));
+      return -1;
+    };
+    if(srv.StartServer()==-1)
+    {
+      __warning__("Failed to start listener");
+      return -1;
+    };
+    
+    
+    cfg::mailstripper=cfgman.getString("mail.stripper");
+    try{
+      cfg::mailthreadsCount=cfgman.getInt("mail.threadsCount");
+    }catch(...)
+    {
+      __warning__("mail.threadsCount not found. using default=1");
+    }
+    if(cfg::mailthreadsCount<1)
+    {
+      __warning__("mail.threadsCount cannot be less than 1");
+      cfg::mailthreadsCount=1;
+    }
+    util::PipesInit(cfg::mailthreadsCount);
+    cfg::mailThreads=new EmailProcessor[cfg::mailthreadsCount];
+    for(int i=0;i<cfg::mailthreadsCount;i++)
+    {
+      cfg::mailThreads[i].assignTransformRegexp(reSrc.c_str());
+      cfg::mailThreads[i].Start();
+    }
+    
+    /*if(util::ForkPipedCmd(cfg::mailstripper.c_str(),emlIn,emlOut)<=0)
+     {
+     __warning2__("Failed to execute mail stripper:%s",strerror(errno));
+     fprintf(stderr,"Failed to execute mail stripper:%s",strerror(errno));
+     return -1;
+     }
+     */
+    
+    cfg::sendSuccessAnswer=cfgman.getBool("answers.sendSuccessAnswer");
+    
+    cfg::msgFormat=new OutputFormatter(cfgman.getString("mail.format"));
+    
+    {
+      const char* answers[]=
+      {
+        "alias",
+        "aliasfailed",
+        "aliasbusy",
+        "noalias",
+        "forward",
+        "forwardfailed",
+        "forwardoff",
+        "realname",
+        "numberon",
+        "numberoff",
+        "numberfailed",
+        "systemerror",
+        "unknowncommand",
+        "messagesent",
+        "messagefailedlimit",
+        "messagefailednoprofile",
+        "messagefailedsendmail",
+        "messagefailedsystem",
+        "norealname"
+      };
+      for(int i=0;i<sizeof(answers)/sizeof(answers[0]);i++)
+      {
+        std::string fullCfgString="answers.";
+        fullCfgString+=answers[i];
+        cfg::answerFormats.Insert(answers[i],new OutputFormatter(cfgman.getString(fullCfgString.c_str())));
+      }
+    }
+    
+    //cfg::defaultDailyLimit=cfgman.getInt("defaults.dailyLimit");
+    cfg::annotationSize=cfgman.getInt("defaults.annotationSize");
+    
+    __trace2__("defaults.annotationSize:%d",cfg::annotationSize);
+    
+    MyListener lst;
+    cfg::aq=&lst;
+    
+    SmppSession ss(cfg,&lst);
+    cfg::tr=ss.getSyncTransmitter();
+    cfg::atr=ss.getAsyncTransmitter();
+    cfg::sourceAddress=cfgman.getString("smpp.sourceAddress");
+    lst.setTrans(cfg::tr);
+    
     while(!cfg::stopSme)
     {
-      if(reconnectFlag)
+      for(;;)
       {
-        __trace__("reconnecting");
+        if(cfg::stopSme)break;
+        try{
+          ss.connect();
+        }catch(...)
+        {
+          sleep(cfg::retryTime);
+          continue;
+        }
         break;
       }
+      if(cfg::stopSme)break;
+      if(cfg::partitionSms)
       {
-        if(srv.canRead(2)<=0)continue;
-        auto_ptr<Socket> clnt(srv.Accept());
-        if(!clnt.get() || reconnectFlag)
+        multiPartSendQueue.Start();
+        concatManager.Start();
+      }
+      
+      reconnectFlag=false;
+      while(!cfg::stopSme)
+      {
+        if(reconnectFlag)
         {
           __trace__("reconnecting");
           break;
         }
-        int sz;
-        clnt->setTimeOut(10);
-        __trace__("Got connection");
-        if(clnt->ReadAll((char*)&sz,4)==-1)continue;
-        sz=ntohl(sz);
-        __trace2__("Message size:%d",sz);
-        buf.setSize(sz+1);
-        if(clnt->ReadAll(buf.buffer,sz)==-1)continue;
-        __trace__("Processing message");
-        int retcode;
-        try{
-          buf.buffer[sz]=0;
-          static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("msgdmp");
-          smsc_log_debug(log,"msgdump:\n=== begin ===\n%s\n=== end ===",buf.buffer);
-          retcode=ProcessMessage(buf.buffer,sz);
-        }catch(exception& e)
         {
-          __warning2__("process message failed:%s",e.what());
-          retcode=StatusCodes::STATUS_CODE_UNKNOWNERROR;
+          if(srv.canRead(2)<=0)continue;
+          Socket* clnt=srv.Accept();
+          if(!clnt || reconnectFlag)
+          {
+            __trace__("reconnecting");
+            break;
+          }
+          EmailProcessor::startEmailProcessing(clnt);
+          /*
+          auto_ptr<Socket> clnt(srv.Accept());
+          if(!clnt.get() || reconnectFlag)
+          {
+            __trace__("reconnecting");
+            break;
+          }
+          int sz;
+          clnt->setTimeOut(10);
+          __trace__("Got connection");
+          if(clnt->ReadAll((char*)&sz,4)==-1)continue;
+          sz=ntohl(sz);
+          __trace2__("Message size:%d",sz);
+          buf.setSize(sz+1);
+          if(clnt->ReadAll(buf.buffer,sz)==-1)continue;
+          __trace__("Processing message");
+          int retcode;
+          try{
+            buf.buffer[sz]=0;
+            static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("msgdmp");
+            smsc_log_debug(log,"msgdump:\n=== begin ===\n%s\n=== end ===",buf.buffer);
+            retcode=ProcessMessage(buf.buffer,sz);
+          }catch(exception& e)
+          {
+            __warning2__("process message failed:%s",e.what());
+            retcode=StatusCodes::STATUS_CODE_UNKNOWNERROR;
+          }
+          __trace2__("Processing finished, code=%d",retcode);
+          retcode=htonl(retcode);
+          clnt->WriteAll(&retcode,4);
+           */
         }
-        __trace2__("Processing finished, code=%d",retcode);
-        retcode=htonl(retcode);
-        clnt->WriteAll(&retcode,4);
+      }
+      __trace__("exiting loop, closing session");
+      if(cfg::partitionSms)
+      {
+        multiPartSendQueue.Stop();
+        multiPartSendQueue.WaitFor();
+        concatManager.Stop();
+        concatManager.WaitFor();
+      }
+      ss.close();
+      if(!cfg::stopSme && cfg::pauseAfterDisconnect)
+      {
+        sleep(cfg::retryTime);
       }
     }
-    __trace__("exiting loop, closing session");
-    if(cfg::partitionSms)
+    if(haveStats)
     {
-      multiPartSendQueue.Stop();
-      multiPartSendQueue.WaitFor();
-      concatManager.Stop();
-      concatManager.WaitFor();
+      statCollector.Stop();
+      statCollector.WaitFor();
     }
-    ss.close();
-    if(!cfg::stopSme && cfg::pauseAfterDisconnect)
+    __trace__("exiting");
+    //srv.Close();
+    srv.Abort();
+    for(int i=0;i<cfg::mailthreadsCount;i++)
     {
-      sleep(cfg::retryTime);
+      cfg::mailThreads[i].stop();
     }
-  }
-  if(haveStats)
-  {
-    statCollector.Stop();
-    statCollector.WaitFor();
-  }
-  __trace__("exiting");
-  //srv.Close();
-  srv.Abort();
+    delete [] cfg::mailThreads;
   }catch(exception& e)
   {
     __warning2__("Top level exception:%s",e.what());
@@ -3095,7 +3288,6 @@ int main(int argc,char* argv[])
   {
     __warning__("Top level exception:unknown");
   }
-  if(emlIn)fclose(emlIn);
-  if(emlOut)fclose(emlOut);
+  statCollector.Stop();
   return 0;
 }
