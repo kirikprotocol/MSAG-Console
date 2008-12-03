@@ -9,6 +9,7 @@
 #include <string>
 
 #include <util/templates/Formatters.h>
+#include <logger/Logger.h>
 
 namespace smsc {
 namespace mcisme {
@@ -94,6 +95,10 @@ public:
     return unknownCaller;
   }
   inline OutputFormatter* getMultiFormatter() {
+    if ( !multiFormatter ) {
+      logger::Logger* logger = logger::Logger::getInstance("frmtr");
+      smsc_log_error(logger, "InformTemplateFormatter::getMultiFormatter::: multiFormatter is NULL");
+    }
     return multiFormatter;
   };
   inline OutputFormatter* getSingleFormatter() {
