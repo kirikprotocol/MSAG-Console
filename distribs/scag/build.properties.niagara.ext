@@ -1,4 +1,4 @@
-TEMPLATE_PROPS=msag.properties
+TEMPLATE_PROPS=msag.properties.niagara.ext
 
 # Uncomment it to create usual build
 # Comment it to create date separated build (to track external installations)
