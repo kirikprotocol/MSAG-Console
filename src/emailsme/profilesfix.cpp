@@ -9,12 +9,14 @@ int main(int argc,char* argv[])
   using namespace smsc::emailsme;
   if(argc==1)
   {
-    printf("Usage:%s [-d] {emailsmestorefile.bin}\n",argv[0]);
-    printf("\t-d dump\n");
+    printf("Usage:%s [-d|-ad] {emailsmestorefile.bin}\n",argv[0]);
+    printf("\t-d full dump\n");
+    printf("\t-ad address dump\n");
     return 0;
   }
   bool dump=strcmp(argv[1],"-d")==0;
-  std::string fileName=dump?argv[2]:argv[1];
+  bool addrDump=strcmp(argv[1],"-ad")==0;
+  std::string fileName=dump||addrDump?argv[2]:argv[1];
   try{
     PageFile pf;
     pf.Open(fileName.c_str());
@@ -28,18 +30,33 @@ int main(int argc,char* argv[])
       AbonentProfile p;
       p.Read(buf);
       totalCnt++;
-//      printf(".%d.%d.%s\n",p.addr.type,p.addr.plan,p.addr.value);
-      if(p.addr.value[0]=='7' && (p.addr.type!=1 || p.addr.plan!=1))
+      if(dump)
       {
-        fixedCnt++;
-        p.addr.type=1;
-        p.addr.plan=1;
-        SerializationBuffer buf2;
-        p.Write(buf2);
-        pf.Update(off,buf2.getBuffer(),buf.getPos());
+        printf("addr=.%d.%d.%s;user=%s;limit=%d%s;nm=%s;cntEml2Gsm=%d;cntGsm2Eml=%d\n",p.addr.type,p.addr.plan,p.addr.value,p.user.c_str(),p.limitValue,
+               p.ltype==ltDay?"D":p.ltype==ltWeek?"W":"M",p.numberMap?"Y":"N",
+               p.limitCountEml2Gsm,p.limitCountGsm2Eml);
+      }
+      if(addrDump)
+      {
+        printf("%s\n",p.addr.toString().c_str());
+      }
+      if(!dump && !addrDump)
+      {
+        if(p.addr.value[0]=='7' && (p.addr.type!=1 || p.addr.plan!=1))
+        {
+          fixedCnt++;
+          p.addr.type=1;
+          p.addr.plan=1;
+          SerializationBuffer buf2;
+          p.Write(buf2);
+          pf.Update(off,buf2.getBuffer(),buf.getPos());
+        }
       }
     }
-    printf("Total profiles found:%d, fixed profiles:%d\n",totalCnt,fixedCnt);
+    if(!dump && !addrDump)
+    {
+      printf("Total profiles found:%d, fixed profiles:%d\n",totalCnt,fixedCnt);
+    }
   }catch(std::exception& e)
   {
     printf("exception:%s\n",e.what());
