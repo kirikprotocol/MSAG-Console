@@ -210,7 +210,7 @@ public class MessageDataSource extends AbstractDataSource {
           j++;
           AdvancedStringTokenizer st = new AdvancedStringTokenizer(line, ",");
           int state = Integer.parseInt(st.nextToken().trim());
-          if (state != Message.State.DELIVERED.getId())
+          if (state == Message.State.DELETED.getId())
             continue;
 
           String dateStr = st.nextToken().trim();

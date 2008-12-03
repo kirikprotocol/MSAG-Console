@@ -180,7 +180,7 @@ public class QuizesDataSource extends AbstractDataSource {
       stream = new FileInputStream(file);
       Properties prop = new Properties();
       prop.load(stream);
-      String id = prop.getProperty("distribution.id");
+      String id = prop.getProperty("quiz.start");
       if ((id != null) && (!id.trim().equals(""))) {
         date = df.parse(id);
       } else {
