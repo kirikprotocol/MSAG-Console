@@ -6,26 +6,26 @@
   <!-- ulimit -n 16384 !!! -->
 
   <section name="MTPers">
-    <param name="host" type="string">@mtpers.listen_host@</param>
-    <param type="int" name="port">@mtpers.port@</param>
-    <param name="maxClientsCount" type="int">@mtpers.connections@</param>
-    <param name="timeout" type="int">@mtpers.timeout@</param>
-    <param name="ioPoolSize" type="int">@mtpers.io_pool_size@</param>
-    <param name="storageQueueSize" type="int">@mtpers.storage_queue_size@</param>
-    <param name="perfCounterOn" type="bool">@mtpers.perf_counter_on@</param>
-    <param name="perfCounterPeriod" type="int">@mtpers.perf_counter_period@</param> <!-- seconds -->
+    <param name="host" type="string">@pvss.listen_host@</param>
+    <param type="int" name="port">@pvss.port@</param>
+    <param name="maxClientsCount" type="int">@pvss.connections@</param>
+    <param name="timeout" type="int">@pvss.timeout@</param>
+    <param name="ioPoolSize" type="int">@pvss.io_pool_size@</param>
+    <param name="storageQueueSize" type="int">@pvss.storage_queue_size@</param>
+    <param name="perfCounterOn" type="bool">@pvss.perf_counter_on@</param>
+    <param name="perfCounterPeriod" type="int">@pvss.perf_counter_period@</param> <!-- seconds -->
 
-    <param name="storages" type="int">@mtpers.storages@</param>
-    <param name="nodes" type="int">@mtpers.nodes@</param>
-    <param name="node" type="int">@mtpers.node@</param>
+    <param name="storages" type="int">@pvss.storages@</param>
+    <param name="nodes" type="int">@pvss.nodes@</param>
+    <param name="node" type="int">@pvss.node@</param>
 
     <section name="AbonentStorage">
         <section name="Locations">
-	    <param name="1" type="string">@mtpers.location1_path@</param>
-	    <!--param name="2" type="string">@mtpers.location2_path@</param-->
+	    <param name="1" type="string">@pvss.location1_path@</param>
+	    <!--param name="2" type="string">@pvss.location2_path@</param-->
 	</section>
 	
-        <param name="storageName" type="string">@mtpers.abonent_storage_name@</param>
+        <param name="storageName" type="string">@pvss.abonent_storage_name@</param>
         <param name="indexGrowth" type="int">10000</param>
         <param name="dataBlockSize" type="int">2048</param>
         <param name="blocksInFile" type="int">5000</param>
@@ -33,7 +33,7 @@
     </section>
 
     <section name="InfrastructStorage">
-        <param name="storagePath" type="string">@mtpers.infrastruct_storage_path@</param>
+        <param name="storagePath" type="string">@pvss.infrastruct_storage_dir@</param>
         <param name="initRecordCount" type="int">10000</param>
         <param name="cacheSize" type="int">10000</param>
     </section>
