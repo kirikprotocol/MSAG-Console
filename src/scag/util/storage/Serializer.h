@@ -69,8 +69,9 @@ private:
 class Serializer : public SerializerBase
 {
 public:
-    Serializer( Buf& b, GlossaryBase* glossary = NULL ) : SerializerBase(glossary) ,buf_(&b) {}
+    Serializer( Buf& b, GlossaryBase* glossary = NULL ) : SerializerBase(glossary) ,buf_(&b), wpos_(0) {}
 
+    // writing at wpos
     Serializer& operator << ( uint8_t );
     Serializer& operator << ( uint16_t );
     Serializer& operator << ( uint32_t );
@@ -79,19 +80,37 @@ public:
     Serializer& operator << ( const std::string& );
     Serializer& operator << ( const Buf& );
 
-    size_t size() const {
+    inline size_t size() const {
         return buf_->size();
     }
 
-    const unsigned char* data() const {
+    inline void reserve( size_t sz ) {
+        buf_->reserve(sz);
+    }
+
+    inline size_t wpos() const {
+        return wpos_;
+    }
+
+    inline void setWpos( size_t wp ) {
+        wpos_ = wp;
+        if ( wpos_ > size() ) buf_->resize(wpos_); // do we need this?
+    }
+
+    inline const unsigned char* data() const {
         return buf_->size() ? &(buf_->front()) : 0;
     }
 
     /// write buffer of size sz.
     /// This method is provided to co-work with other serializer types.
     /// NOTE: see also Deserializer::read().
+    /// NOTE: this method adds a length to buffer.
     void write( uint32_t sz, const char* buf );
-    
+
+    /// NOTE: this method does not add a length to the buffer.
+    /// NOTE: see also Deserializer::readAsIs().
+    void writeAsIs( uint32_t sz, const char* buf );
+
     uint32_t checksum( size_t pos1, size_t pos2 ) const {
         assert( pos2 < buf_->size() );
         return dochecksum( &(buf_->front()), pos1, pos2 );
@@ -104,7 +123,8 @@ private:
     Serializer();
 
 private:
-    Buf* buf_;
+    Buf*   buf_;
+    size_t wpos_;  // current writing position
 };
 
 
@@ -130,6 +150,8 @@ public:
     /// read buffer previously written via Serializer::write().
     /// you have to treat the return value as a buffer of length sz!
     const char* read( uint32_t& sz ) throw (DeserializerException);
+
+    const char* readAsIs( uint32_t sz ) throw (DeserializerException);
 
     inline size_t size() const {
         return esize_;

@@ -8,14 +8,16 @@ namespace util {
 namespace storage {
 
     Serializer& Serializer::operator << ( uint8_t i ) {
-        buf_->push_back( i );
+        if ( wpos() >= size() ) buf_->resize(wpos()+1);
+        buf_[wpos_++] = i;
         return *this;
     }
 
     Serializer& Serializer::operator << ( uint16_t i ) {
         uint8_t* p = cvt.uset(i);
-        buf_->push_back( *p++ );
-        buf_->push_back( *p );
+        if ( wpos()+1 >= size() ) buf_->resize(wpos()+2);
+        buf_[wpos_++] = *p++;
+        buf_[wpos_++] = *p;
         return *this;
     }
 
@@ -61,6 +63,12 @@ namespace storage {
         std::copy( buf, buf+sz,
                    std::copy( p, p+4, ensure(sz+4) ));
     }
+
+
+void Serializer::writeAsIs( uint32_t sz, const char* buf )
+{
+    std::copy( buf, buf+sz, ensure(sz) );
+}
 
 
     Deserializer& Deserializer::operator >> ( uint8_t& i ) throw (DeserializerException )
@@ -141,6 +149,14 @@ namespace storage {
         return ret;
     }
 
+const char* Deserializer::readAsIs( uint32_t size ) throw (DeserializerException)
+{
+    rcheck(sz);
+    const char* ret = curposc();
+    rpos += sz;
+    return ret;
+}
+
 
     uint32_t SerializerBase::dochecksum( const unsigned char* buf, size_t pos1, size_t pos2 ) const
     {
@@ -151,20 +167,23 @@ namespace storage {
 
     Serializer::Buf::iterator Serializer::ensure( uint32_t chunk )
     {
-        uint32_t resv = buf_->capacity() - buf_->size();
+        uint32_t resv = buf_->capacity() - wpos();
         if ( resv < chunk ) {
-            buf_->reserve( buf_->capacity() + chunk + 1024 );
+            const uint32_t need = buf_->capacity() + chunk;
+            buf_->reserve( need < 16 ? need+16 :
+                           need+128 );
         }
-        Serializer::Buf::iterator res = buf_->end();
-        buf_->resize( buf_->size() + chunk );
-        return res;
+        if ( wpos()+chunk > size() ) {
+            buf_->resize(wpos()+chunk);
+        }
+        return buf_->begin() + wpos();
     }
 
 
     void Deserializer::readbuf( unsigned char* ptr, size_t sz ) throw ( DeserializerException )
     {
         rcheck( sz );
-        std::copy( &curpos(), &curpos() + sz, ptr );
+        std::copy( curpos(), curpos() + sz, ptr );
         rpos_ += sz;
     }
 
