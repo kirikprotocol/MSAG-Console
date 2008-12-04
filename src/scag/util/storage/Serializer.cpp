@@ -9,15 +9,15 @@ namespace storage {
 
     Serializer& Serializer::operator << ( uint8_t i ) {
         if ( wpos() >= size() ) buf_->resize(wpos()+1);
-        buf_[wpos_++] = i;
+        (*buf_)[wpos_++] = i;
         return *this;
     }
 
     Serializer& Serializer::operator << ( uint16_t i ) {
         uint8_t* p = cvt.uset(i);
         if ( wpos()+1 >= size() ) buf_->resize(wpos()+2);
-        buf_[wpos_++] = *p++;
-        buf_[wpos_++] = *p;
+        (*buf_)[wpos_++] = *p++;
+        (*buf_)[wpos_++] = *p;
         return *this;
     }
 
@@ -149,11 +149,11 @@ void Serializer::writeAsIs( uint32_t sz, const char* buf )
         return ret;
     }
 
-const char* Deserializer::readAsIs( uint32_t size ) throw (DeserializerException)
+const char* Deserializer::readAsIs( uint32_t sz ) throw (DeserializerException)
 {
     rcheck(sz);
     const char* ret = curposc();
-    rpos += sz;
+    rpos_ += sz;
     return ret;
 }
 
@@ -176,7 +176,9 @@ const char* Deserializer::readAsIs( uint32_t size ) throw (DeserializerException
         if ( wpos()+chunk > size() ) {
             buf_->resize(wpos()+chunk);
         }
-        return buf_->begin() + wpos();
+        uint32_t w = wpos();
+        wpos_ += chunk;
+        return buf_->begin() + w;
     }
 
 

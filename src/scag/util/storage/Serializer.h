@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <netinet/in.h>
+#include <cassert>
 
 #include "GlossaryBase.h"
 #include "EndianConverter.h"
