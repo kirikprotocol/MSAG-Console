@@ -66,12 +66,9 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
         return;
       }
 
-      Config config = new Config(new File(appContext.getHostsManager().getServiceInfo("InfoSme").getServiceFolder(),
-        "conf" + File.separatorChar + "config.xml"));
-      String storeDir = appContext.getHostsManager().getServiceInfo("InfoSme").getServiceFolder()
-          +File.separator+config.getString("InfoSme.storeLocation");
+      String storeDir = context.getConfig().getString("InfoSme.storeLocation");
 
-      MessageDataSource ds = new MessageDataSource(config,storeDir);
+      MessageDataSource ds = new MessageDataSource(context.getConfig(), storeDir);
       long id = ds.getMessageId(msisdn, taskId);
       if(id == -1) {
         throw new Exception("Message not found for taskId="+taskId+" msisdn="+msisdn);
