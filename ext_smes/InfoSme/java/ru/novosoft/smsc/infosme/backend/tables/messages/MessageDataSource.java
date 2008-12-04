@@ -171,65 +171,61 @@ public class MessageDataSource extends AbstractDataSource {
     return message;
   }
 
-  public MessageDataItem getMessage(String msisdn, String taskId) throws Exception{
+  public long getMessageId(String msisdn, String taskId) {
 
-    final SimpleDateFormat msgDateFormat = new SimpleDateFormat(MSG_DATE_FORMAT);
-
-    MessageDataItem dataItem = null;
-    List files = getFiles(taskId, null, new Date());
-    Iterator iter = files.iterator();
-    long id=-1;
     long idbase = getIdBase(new Date());
 
-    String msisdn2;
-    if(msisdn.startsWith("+7")) {
-      msisdn2="8"+msisdn.substring(2);
-    } else {
-      msisdn2 = "+7"+msisdn.substring(1);
+    String msisdn2 = (msisdn.startsWith("+7")) ? "8" + msisdn.substring(2) : "+7" + msisdn.substring(1);
+
+    String deletedStateStr = String.valueOf(Message.State.DELETED.getId());
+
+    String encoding = System.getProperty("file.encoding");
+
+    List files;
+    try {
+      files = getFiles(taskId, null, new Date());
+    } catch (ParseException e) {
+      e.printStackTrace();
+      return -1;
     }
-    while(iter.hasNext()) {
+
+    for(Iterator iter = files.iterator(); iter.hasNext();) {
       File file = (File)iter.next();
-      System.out.println("Analysis file:"+file.getAbsolutePath());
       RandomAccessFile f = null;
-      int j=0;
-      if (log.isDebugEnabled())
-        log.debug("Start reading messages from file: " + file.getName());
+
       try {
         f = new RandomAccessFile(file, "r");
-
         RandomAccessFileReader is = new RandomAccessFileReader(f);
-        String encoding = System.getProperty("file.encoding");
-        String line = is.readLine(encoding); // Skip first string
 
+        String line = is.readLine(encoding); // Skip header
+
+        int i,k;
         while(true) {
-          long offset =is.getFilePointer();
+          long offset = is.getFilePointer();
           line = is.readLine(encoding);
           if (line == null)
             break;
 
-          j++;
-          AdvancedStringTokenizer st = new AdvancedStringTokenizer(line, ",");
-          int state = Integer.parseInt(st.nextToken().trim());
-          if (state == Message.State.DELETED.getId())
+          // Read state
+          i = line.indexOf(',');
+          String stateStr = line.substring(0,i);
+          if (stateStr.equals(deletedStateStr))
             continue;
 
-          String dateStr = st.nextToken().trim();
-          Date date = msgDateFormat.parse(dateStr);
-          String ms = st.nextToken().trim();
-          if((!ms.equals(msisdn))&&(!ms.equals(msisdn2))){
-            continue;
-          }
-          String region = st.nextToken();
-          String message = st.nextToken();
-          id = getId(idbase, offset);
-          dataItem = new MessageDataItem(id,taskId,state,date,msisdn,region,message);
+          // Skip date
+          i = line.indexOf(',', i + 1);
+
+          // Read msisdn
+          k = i + 1;
+          i = line.indexOf(',', k);
+          String ms = line.substring(k, i);
+          if (ms.equals(msisdn) || ms.equals(msisdn2))
+            return getId(idbase, offset);
         }
-        if(id>0) {
-          break;
-        }
+
       } catch (EOFException e) {
-      } catch (Exception e) {
-        throw e;
+      } catch (IOException e) {
+        e.printStackTrace();
       }  finally {
         if (f != null)
           try {
@@ -237,12 +233,9 @@ public class MessageDataSource extends AbstractDataSource {
           } catch (IOException e) {
           }
       }
-      if (log.isDebugEnabled())
-        log.debug(j + " messages have readed from file: " + file.getName());
-
     }
-    return dataItem;
 
+    return -1;
   }
 
   private List getFiles (String taskId, Date from, Date till) throws ParseException {

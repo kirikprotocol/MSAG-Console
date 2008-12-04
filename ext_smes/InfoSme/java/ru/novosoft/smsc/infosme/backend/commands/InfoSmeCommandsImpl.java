@@ -72,18 +72,14 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
           +File.separator+config.getString("InfoSme.storeLocation");
 
       MessageDataSource ds = new MessageDataSource(config,storeDir);
-      MessageDataItem mess = ds.getMessage(msisdn, taskId);
-      if(mess==null) {
+      long id = ds.getMessageId(msisdn, taskId);
+      if(id == -1) {
         throw new Exception("Message not found for taskId="+taskId+" msisdn="+msisdn);
       }
-      long id = mess.getId();
 
-      if(id>=0) {
-        context.getInfoSme().resendMessages(taskId, Long.toString(id), Message.State.NEW, new Date());
-        System.out.println("Line "+id+" found in Store for msisdn="+msisdn);
-      } else {
-        System.out.println("Line not found in Store for msisdn="+msisdn);
-      }
+      context.getInfoSme().resendMessages(taskId, Long.toString(id), Message.State.NEW, new Date());
+      System.out.println("Line "+id+" found in Store for msisdn="+msisdn);
+
       ctx.setMessage("OK");
       ctx.setStatus(CommandContext.CMD_OK);
     } catch (Exception e) {
