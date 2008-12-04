@@ -661,6 +661,7 @@ Response * CommandTraceHttpRoute::CreateResponse(Scag * ScagApp)
     }
 
     smsc_log_info(logger, "CommandTraceHttpRoute processed ok.");
+    return new Response(Response::Ok, result);
 }
 
 
