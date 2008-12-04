@@ -45,14 +45,51 @@ public class ResponseReader {
             return null;
 
 //        logger.debug( "ResponseReader.read() source BAIS" );
+
+        printResponse( buffer );
+
         InputSource source = new InputSource(new ByteArrayInputStream(buffer));
         logger.debug( "ResponseReader.read() source with new InputStreamReader( BAIS, \"Cp1251\" )" );
         source = new InputSource( new InputStreamReader( new ByteArrayInputStream(buffer), "Cp1251") ); //added
+
         try {
-            return new Response(builder.parse(source));
+            return new Response( builder.parse(source) );
         } catch (SAXException e) {
             logger.debug("Couldn' parse received response", e);
             throw new SibincoException("Couldn' parse received response", e);
+        }
+    }
+
+    private void printResponse(byte[] buffer) {
+        BufferedReader br = null;
+        try{
+            br = new BufferedReader( new InputStreamReader( new ByteArrayInputStream(buffer), "Cp1251") );
+            logger.debug( "ResponseReader.printResponse() start\n--------" );
+            String s;
+            s=br.readLine();
+            while( s != null ){
+                String sNext = br.readLine();
+                if( sNext == null ){
+                    logger.debug( s + "\n--------" );
+                }else{
+                    logger.debug( s );
+                }
+                s = sNext;
+            }
+            logger.debug( "ResponseReader.printResponse() end." );
+        } catch (UnsupportedEncodingException e) {
+            logger.debug( "ResponseReader.printResponse() UnsupportedEncodingException" );
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }catch( IOException e ){
+            logger.debug( "ResponseReader.printResponse() IOException" );
+            e.printStackTrace();
+        }finally{
+            try {
+                if( br!= null ) br.close();
+            } catch (IOException e) {
+                logger.debug( "ResponseReader.printResponse() Exception, finally" );
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
         }
     }
 
@@ -72,7 +109,8 @@ public class ResponseReader {
                 return null;
             readed += readedNow;
         }
-        logger.debug("Response:\n" + new String(buffer));
+//        logger.debug("ResponseReader.readBytes() buffer:\n" + new String(buffer) + "\n--------------");
+        printResponse( buffer );
         return buffer;
     }
 
