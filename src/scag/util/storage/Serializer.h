@@ -81,6 +81,12 @@ public:
     Serializer& operator << ( const std::string& );
     Serializer& operator << ( const Buf& );
 
+    inline void reset() {
+        buf_->clear();
+        wpos_ = 0;
+    }
+
+
     inline size_t size() const {
         return buf_->size();
     }
