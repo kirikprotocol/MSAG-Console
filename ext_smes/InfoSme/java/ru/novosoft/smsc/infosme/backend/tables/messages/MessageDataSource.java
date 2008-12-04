@@ -173,11 +173,10 @@ public class MessageDataSource extends AbstractDataSource {
 
   public long getMessageId(String msisdn, String taskId) {
 
-    long idbase = getIdBase(new Date());
-
     String msisdn2 = (msisdn.startsWith("+7")) ? "8" + msisdn.substring(2) : "+7" + msisdn.substring(1);
 
     String deletedStateStr = String.valueOf(Message.State.DELETED.getId());
+    final SimpleDateFormat fileNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT + '/' + FILE_DATE_FORMAT);
 
     String encoding = System.getProperty("file.encoding");
 
@@ -198,6 +197,8 @@ public class MessageDataSource extends AbstractDataSource {
         RandomAccessFileReader is = new RandomAccessFileReader(f);
 
         String line = is.readLine(encoding); // Skip header
+
+        long idbase = getIdBase(fileNameFormat.parse(file.getParentFile().getName() + '/' + file.getName()));
 
         int i,k;
         while(true) {
@@ -226,7 +227,9 @@ public class MessageDataSource extends AbstractDataSource {
       } catch (EOFException e) {
       } catch (IOException e) {
         e.printStackTrace();
-      }  finally {
+      } catch (ParseException e) {
+        e.printStackTrace();
+      } finally {
         if (f != null)
           try {
             f.close();
