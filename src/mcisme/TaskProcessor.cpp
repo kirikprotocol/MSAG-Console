@@ -680,7 +680,7 @@ TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt,
 
   msg.abonent = abnt.getText();
   msg.message = mcEventOut.msg;
-  msg.caller_abonent = mcEventOut.caller;
+  msg.caller_abonent = _originatingAddressIsMCIAddress ? getAddress : mcEventOut.caller;
 
   if(bannerEngineProxy)
     addBanner(msg, bannerEngineProxy->getBanner(abnt));

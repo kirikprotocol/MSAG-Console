@@ -166,7 +166,7 @@ MessageFormatter::createMCEventOut(MCEventOut* forSend,
                                    const std::string& reportMsgForClient,
                                    unsigned int maxMsgLen)
 {
-  if ( originatingAddressIsMciSmeAddress ) {
+/*  if ( originatingAddressIsMciSmeAddress ) {
     if ( forSend->msg.length() + reportMsgForClient.length() < maxMsgLen ) {
       forSend->msg += reportMsgForClient;
       forSend->srcEvents.push_back(eventFromStorage);
@@ -180,14 +180,14 @@ MessageFormatter::createMCEventOut(MCEventOut* forSend,
       }
       return true;
     }
-  } else {
+  } else {*/
     const std::string& messageToClient = ( reportMsgForClient.length() < maxMsgLen ) ? reportMsgForClient : reportMsgForClient.substr(0, maxMsgLen);
     MCEventOut outEvent(messageOriginatingAddress, messageToClient);
     outEvent.srcEvents.push_back(eventFromStorage);
     *forSend = outEvent;
 
     return true;
-  }
+/*  }*/
 }
 
 std::string
