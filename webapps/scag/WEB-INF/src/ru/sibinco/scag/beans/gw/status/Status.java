@@ -23,14 +23,10 @@ public class Status extends SCAGBean {
         super.process(request, response);
         final Daemon scagDaemon = appContext.getScagDaemon();
         try {
-            logger.debug("Status.process() refreshServices()");
+            logger.debug( "Status.process() refreshServices()" );
             scagDaemon.refreshServices(appContext.getSmppManager());
-            logger.debug("Status.process() appContext.getScag().getId()='" + appContext.getScag().getId() + "'" );
+            logger.debug( "Status.process() appContext.getScag().getId()='" + appContext.getScag().getId() + "'" );
             Object gwService = scagDaemon.getServiceInfo( appContext.getScag().getId() );
-            if( gwService == null ){
-                logger.debug("Status.process() appContext.getScag().getId2()='" + appContext.getScag().getId2() + "'" );
-                gwService = scagDaemon.getServiceInfo( appContext.getScag().getId2() );
-            }
             logger.debug("Status.process() scagDaemon.getServiceInfo()='" + gwService +"'" );
             if (gwService instanceof ServiceInfo) {
                 logger.debug("Status.process() (gwService instanceof ServiceInfo)" );
