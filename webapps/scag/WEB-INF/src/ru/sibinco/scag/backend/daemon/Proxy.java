@@ -53,7 +53,7 @@ public class Proxy {
             connect(host, port);
         }
         try {
-            logger.debug("Proxy.runCommand() L55 write command: " + command);
+            logger.debug("Proxy.runCommand() L55 write command: " + command.getSystemId() );
             writer.write(command);
             logger.debug("Proxy.runCommand() reading response...");
             return reader.read();
@@ -71,7 +71,10 @@ public class Proxy {
                 logger.error( "Proxy.runCommand() Couldn't write command or read response");
                 throw new SibincoException("Couldn't write command or read response", e1);
             }
-        } catch (NullPointerException npe) {throw new SibincoException("CommandWriter or ResponseReader is null");}
+        } catch (NullPointerException npe) {
+            logger.debug("Proxy.runCommand() NullPointerException command: " + command);
+            throw new SibincoException("CommandWriter or ResponseReader is null");
+        }
     }
 
 
