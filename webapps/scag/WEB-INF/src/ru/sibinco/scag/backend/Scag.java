@@ -36,13 +36,11 @@ import java.util.*;
 /**
  * Created by igork Date: 25.05.2004 Time: 15:50:34
  */
-public class Scag extends Proxy {                           
+public class Scag extends Proxy {
 
     private final String id;
-    private final String id2;
 
-    private static final String SCAG_COMPONENT_ID = "scag";
-    private static final String SCAG_COMPONENT_ID2 = "scag2";
+    private static final String SCAG_COMPONENT_ID = "msag";
     //************************ SMPP ROUTES **************************************//
     private static final String LOAD_SMPP_ROUTES_METHOD_ID = "loadSmppTraceRoutes";
     private static final String TRACE_SMPP_ROUTE_METHOD_ID = "traceSmppRoute";
@@ -61,7 +59,6 @@ public class Scag extends Proxy {
         logger.debug( "Scag.Scag(final ServiceInfo gwServiceInfo, final int port)=Scag(" + gwServiceInfo + "," + port + ")" );
         logger.debug( "Scag.Scag() gwServiceInfo.getId()=" + gwServiceInfo.getId() );
         id  = gwServiceInfo.getId();
-        id2 = gwServiceInfo.getId();
     }
 
     public Scag(final String host, final int port) {
@@ -69,7 +66,6 @@ public class Scag extends Proxy {
         logger.debug( "Scag.Scag(final String host, final int port)=Scag(" + host + "," + port + ")" );
         logger.debug( "Scag.Scag() id, id2" );
         id  = SCAG_COMPONENT_ID;
-        id2 = SCAG_COMPONENT_ID2;
     }
 
     public Scag(final String host, final int port, String serviceId) {
@@ -77,15 +73,10 @@ public class Scag extends Proxy {
         logger.debug( "Scag.Scag(final String host, final int port, String serviceId)=Scag(" + host + "," + port + "," + serviceId +")" );
         logger.debug( "Scag.Scag() serviceId=" + serviceId );
         id  = serviceId;
-        id2 = serviceId;
-    }
-                                    
-    public String getId() {
-        return id;
     }
 
-    public String getId2() {
-        return id2;
+    public String getId() {
+        return id;
     }
 
     protected void apply(final String subject) throws SibincoException {
@@ -249,13 +240,9 @@ public class Scag extends Proxy {
 
     //apply routes
     protected void applySmppRoutes() throws SibincoException {
-        logger.debug( "Scag.applySmppRoutes() start" );
         final Response response = super.runCommand(new ApplySmppRoutes());
-        logger.debug( "Scag.applySmppRoutes() after response STATUS='" + response.getStatus() + "'" );
-        if (Response.STATUS_OK != response.getStatus()){
-            logger.debug( "Scag.applySmppRoutes() Response.STATUS_ERROR" );
+        if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't apply smpp routes, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
-        }
     }
 
     protected void applyHttpRoutes() throws SibincoException {
@@ -342,7 +329,7 @@ public class Scag extends Proxy {
         String err = "Couldn't trace route , nested: ";
         final Map args = new HashMap();
         args.put("sid", new Integer(serviceId));
-        args.put("rid", new Integer(routeId));      
+        args.put("rid", new Integer(routeId));
         args.put("abonent", abonent);
         args.put("site", site);
         args.put("path", path);
@@ -455,12 +442,11 @@ public class Scag extends Proxy {
           try
           {
               Method commandMethod;
+              logger.debug( "Scag.invokeCommand() commandName='" +commandName + "' paramsObject==null is '" + (paramsObject==null) + "'" );
               if (paramsObject==null) {
-                  logger.debug( "Scag.invokeCommand() params commandName='" + commandName + "'" );
                   commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{});
                   commandMethod.invoke(appContext.getScag(),null);
               } else {
-                  logger.debug( "Scag.invokeCommand() with commandName='" + commandName + "'" );
                   commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{paramsObject.getClass()});
                   commandMethod.invoke(appContext.getScag(),new Object[]{paramsObject});
               }
@@ -474,22 +460,20 @@ public class Scag extends Proxy {
           }
         } catch (SibincoException se) {
             //5. does service started?
-            logger.error( "Scag.invokeCommand() SibincoException" );
             if (getStatus() == STATUS_DISCONNECTED) {
               //5. N0(service isn't started)
               //9. save smpp.xml to backup!
               //10. delete smpp.xml.old
             //          Functions.SavedFileToBackup(temporary,".old");
             //          appContext.getHSDaemon().store(configFile);
-                logger.error("Scag.invokeCommand() SibincoException STATUS_DISCONNECTED");
+                logger.error("Scag:invokeCommand1:SibincoException:(getStatus() == STATUS_DISCONNECTED)");
                 appContext.getHSDaemon().store(Functions.ReturnSavedFileToBackup(temporary,".old"));
-                logger.error("Scag.invokeCommand() SibincoException STATUS_DISCONNECTED throw new StatusDisconnectedException(host,port)");
                 throw new StatusDisconnectedException(host,port);
             } else {
                 //5. YES(service is started)
                 //6. service return error
                 //7. Restore config from temporary file(smpp.xml.new -> smpp.xml)
-                logger.error("Scag.invokeCommand() SibincoException:(getStatus() != STATUS_DISCONNECTED)");
+                logger.error("Scag:invokeCommand1:SibincoException:(getStatus() != STATUS_DISCONNECTED)");
                 Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
                 appContext.getHSDaemon().store(configFile);
                 //Paint error on the screen by throwing exception(next string)
