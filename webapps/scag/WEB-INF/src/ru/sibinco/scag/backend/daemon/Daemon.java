@@ -56,7 +56,7 @@ public class Daemon extends Proxy {
         final long now = System.currentTimeMillis();
 //        System.out.println("Daemon.refreshServices() 'now - lastRefreshMillis'='" + (now - lastRefreshMillis)
 //                + " '(getStatus() == STATUS_CONNECTED)='" + (getStatus() == STATUS_CONNECTED) + "'");
-        if (REFRESH_TIMEOUT < now - lastRefreshMillis && getStatus() == STATUS_CONNECTED) {
+        if ( now > lastRefreshMillis + REFRESH_TIMEOUT  && getStatus() == STATUS_CONNECTED) {
             logger.debug( "Daemon.refreshServices() in IF" );
             final Response response = runCommand(new CommandListServices());
             if (Response.STATUS_OK != response.getStatus()) {
@@ -68,8 +68,8 @@ public class Daemon extends Proxy {
             for (int i = 0; i < list.getLength(); i++) {
                 final Element serviceElement = (Element) list.item(i);
                 final ServiceInfo serviceInfo = new ServiceInfo(serviceElement, host, smppManager, daemonServicesFolder);
-                logger.debug("Daemon.refreshServices() serviceElement='" + serviceElement + "\n'getNodeName='" + serviceElement.getNodeName()
-                        + "' serviceInfo.getStatus()='" + serviceInfo.getStatus() + "'");
+//                logger.debug("Daemon.refreshServices() serviceElement='" + serviceElement + "'\ngetNodeName='" + serviceElement.getNodeName()
+//                        + "' serviceInfo.getStatus()='" + serviceInfo.getStatus() + "'");
                 services.put(serviceInfo.getId(), serviceInfo);
             }
             lastRefreshMillis = now;
@@ -90,16 +90,15 @@ public class Daemon extends Proxy {
 
     public ServiceInfo getServiceInfo(final String serviceId) {
         logger.debug( "Daemon.getServiceInfo() start with serviceId='"  + serviceId + "'" );
-//        System.out.println( "Daemon.getServiceInfo() printServices()" );
         printServices();
         return (ServiceInfo) services.get(serviceId);
     }
 
     private void printServices() {
-//        System.out.println( "Daemon.printServices() start" );
+        logger.debug( "Daemon.printServices() start" );
         for( Iterator iter = services.keySet().iterator(); iter.hasNext(); ){
             Object key = iter.next();
-            System.out.println( "Daemon.printServices() key='" + key + "' value='" + services.get(key)+ "'" );
+            logger.debug( "Daemon.printServices() key='" + key + "' value='" + ((ServiceInfo)services.get(key)).getStatus() + "'" );
         }
     }
 
