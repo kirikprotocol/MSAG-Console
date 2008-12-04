@@ -56,7 +56,7 @@ public:
     Policy* pptr=n2p.GetPtr(policy);
     if(!pptr)
     {
-      smsc_log_warn(log,"policy %s not found! returned default retry time 3600.");
+      smsc_log_warn(log,"policy %s not found! returned default retry time 3600.",policy);
       return 3600;
     }
     const Policy& p=*pptr;
