@@ -12,13 +12,10 @@ TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
   ConfigView* informCfg = informCfgGuard.get();
   std::auto_ptr< std::set<std::string> > informSetGuard(informCfg->getShortSectionNames());
   std::set<std::string>* informSet = informSetGuard.get();
-  //std::set<std::string>* informSet = informCfg->getShortSectionNames();
-  //int sz = informSet->size();
-  //printf("Total templates is %d\n", sz);
 
   defaultInformTemplateId = (int32_t)informCfg->getInt("default");
-  if (defaultInformTemplateId < 0 || !informTemplates.Exist(defaultInformTemplateId))
-    throw ConfigException("Default inform template id=%d is invalid or wasn't specified",
+  if (defaultInformTemplateId < 0)
+    throw ConfigException("Default inform template id=%d is invalid",
                           defaultInformTemplateId);
 
   std::string defaultMultiTemplate;
@@ -84,7 +81,9 @@ TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
     //printf("unknownCaller = %s\n", unknownCaller.c_str());
     //printf("singleTemplate = %s\n", singleTemplate.c_str());
   }
-
+  if (!informTemplates.Exist(defaultInformTemplateId))
+    throw ConfigException("Default inform template id=%d is wasn't specified",
+                          defaultInformTemplateId);
   std::auto_ptr<ConfigView> notifyCfgGuard(config->getSubConfig("Notify"));
   ConfigView* notifyCfg = notifyCfgGuard.get();
   std::auto_ptr< std::set<std::string> > notifySetGuard(notifyCfg->getShortSectionNames());
