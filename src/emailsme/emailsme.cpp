@@ -848,6 +848,7 @@ namespace cfg{
   string storeDir;
   bool allowGsm2EmlWithoutProfile=false;
   bool allowEml2GsmWithoutProfile=false;
+  bool autoCreateGsm2EmlProfile=false;
   LimitType defaultLimitType=ltDay;
   int defaultLimitValue=10;
   bool sendSuccessAnswer=true;
@@ -1448,7 +1449,7 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
 
     try{
       int rv=SendEMail(fromdecor,to,subj,body);
-      if(!haveprofile)
+      if(!haveprofile && cfg::autoCreateGsm2EmlProfile)
       {
         __trace2__("Creating implicit profile for address %s",fromaddress);
         AbonentProfile prof;
@@ -2939,6 +2940,13 @@ int main(int argc,char* argv[])
     }catch(...)
     {
       __warning__("admin.allowEml2GsmWithoutProfile not found, disabled by default");
+    }
+    
+    try{
+      cfg::autoCreateGsm2EmlProfile=cfgman.getBool("admin.autoCreateGsm2EmlProfile");
+    }catch(...)
+    {
+      __warning__("admin.autoCreateGsm2EmlProfile not found disabled by default");
     }
     
     try
