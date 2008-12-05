@@ -140,7 +140,7 @@ public:
 
   const uint8_t* getAddrSig(void) const
   {
-    return (uint8_t*)&(value.full_addr);
+    return (uint8_t*)(value.full_addr);
   }
 
   /**
@@ -293,8 +293,19 @@ public:
     memcpy(value.full_addr, val, ADDRESS_VALUE_SIZE);
   }
 
+  const char* getContentSignals() const {
+    return (const char*)value.addr_content.signals;
+  }
+
+  void setAllValues(uint8_t len, uint8_t plan, uint8_t type, const char* signals) {
+    value.addr_content.length = len;
+    value.addr_content.plan = plan;
+    value.addr_content.type = type;
+    memcpy(value.addr_content.signals, signals, getValueSize());
+  }
+
   uint32_t getValueSize() const {
-    return ADDRESS_VALUE_SIZE;
+    return ADDRESS_VALUE_SIZE - 2;
   }
 
 private:
@@ -308,14 +319,26 @@ private:
 
 inline scag::util::storage::Serializer& operator << (scag::util::storage::Serializer& ser, 
                                                      const scag::pers::util::AbntAddr& addr) { 
-  ser.writeAsIs(addr.getValueSize(), (const char*)(addr.getAddrSig()));
+  uint8_t len = addr.getLength() & 0x1F;
+  uint8_t plan = (addr.getNumberingPlan() & 0x07) << 5;
+  uint8_t res = len | plan;
+  ser << res;
+  ser << addr.getTypeOfNumber();
+
+  ser.writeAsIs(addr.getValueSize(), (const char*)(addr.getContentSignals()));
   return ser; 
 };
 
 inline scag::util::storage::Deserializer& operator >> (scag::util::storage::Deserializer& deser,
                                                  scag::pers::util::AbntAddr& addr) { 
+  uint8_t lenplan = 0;
+  deser >> lenplan;
+  uint8_t type = 0;
+  deser >> type;
+  uint8_t len = lenplan & 0x1F;
+  uint8_t plan = (lenplan >> 5) & 0x07;
   const char* buf = deser.readAsIs(addr.getValueSize());
-  addr.setAddrValue(buf);
+  addr.setAllValues(len, plan, type, buf);
   return deser;
 };
 
