@@ -55,6 +55,10 @@ public:
         return msisdn_;
     }
 
+    inline void setMSISDN( uint64_t m ) {
+        msisdn_ = m;
+    }
+
     // from sms::Address
     // const StoredSessionKey& operator = ( const smsc::sms::Address& a );
 
@@ -85,6 +89,19 @@ protected:
     // smsc::sms::Address addr_;
 };
 
+
+inline Serializer& operator << ( Serializer& s, const StoredSessionKey& sk )
+{
+    return s << sk.toIndex();
+}
+
+
+inline Deserializer& operator >> ( Deserializer& s, StoredSessionKey& sk )
+{
+    uint64_t m;
+    s >> m; sk.setMSISDN(m);
+    return s;
+}
 
 
 class SessionKey : public StoredSessionKey
