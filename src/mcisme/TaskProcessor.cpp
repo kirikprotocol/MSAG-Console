@@ -682,8 +682,9 @@ TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt,
   msg.message = mcEventOut.msg;
   msg.caller_abonent = _originatingAddressIsMCIAddress ? getAddress() : mcEventOut.caller;
 
+  bool needBannerInTranslit = !hasHighBit(msg.message.c_str(), msg.message.size());
   if(bannerEngineProxy)
-    addBanner(msg, bannerEngineProxy->getBanner(abnt));
+    addBanner(msg, bannerEngineProxy->getBanner(abnt, needBannerInTranslit));
 
   smsc_log_info(logger, "ProcessAbntEvents: prepared message = '%s' for sending to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
 
@@ -947,8 +948,10 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
     msg.caller_abonent = abnt;
     msg.notification = true;
 
+    bool needBannerInTranslit = !hasHighBit(msg.message.c_str(), msg.message.size());
+
     if(bannerEngineProxy)
-      addBanner(msg, bannerEngineProxy->getBanner(pInfo->abnt));
+      addBanner(msg, bannerEngineProxy->getBanner(pInfo->abnt,needBannerInTranslit));
 
     smsc_log_debug(logger, "Notify message = %s to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
 
