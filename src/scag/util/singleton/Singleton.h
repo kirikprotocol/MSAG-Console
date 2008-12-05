@@ -66,12 +66,12 @@ namespace scag { namespace util { namespace singleton
             ConcreteLifetimeTracker(T* p,unsigned int longevity, Destroyer d) :
             LifetimeTracker(longevity), pTracked_(p), destroyer_(d) 
             {
-                fprintf( stderr, "singleton instance=%p, longevity=%u: lifetracker created\n",
-                         p, longevity );
+                //fprintf( stderr, "singleton instance=%p, longevity=%u: lifetracker created\n",
+                    //     p, longevity );
             }
             ~ConcreteLifetimeTracker() {
-                fprintf( stderr, "singleton instance=%p, longevity=%u: is to be destroyed\n",
-                         pTracked_, longevity_ );
+                //fprintf( stderr, "singleton instance=%p, longevity=%u: is to be destroyed\n",
+                    //     pTracked_, longevity_ );
                 destroyer_(pTracked_);
             }
             
