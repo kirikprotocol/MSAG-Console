@@ -15,16 +15,16 @@ public:
     ~BlocksHSBackupData() {}
 
     /// block list backup
-    void addDataToBackup( long nextblock ) {
+    void addDataToBackup( int64_t nextblock ) {
         backup_.push_back( nextblock );
     }
     void clearBackup() {
         backup_.clear();
     }
-    const std::vector< long >& getBackup() const {
+    const std::vector< int64_t >& getBackup() const {
         return backup_;
     }
-    void setBackup( const std::vector<long>& bkp ) {
+    void setBackup( const std::vector<int64_t>& bkp ) {
         backup_ = bkp;
     }
     
@@ -41,8 +41,8 @@ public:
     /// NOTE: restoreBackup should not be here
 
 private:
-    std::vector< long > backup_;     // indices of datablocks
-    std::string         previous_;   // previous serialized state
+    std::vector< int64_t > backup_;     // indices of datablocks
+    std::string            previous_;   // previous serialized state
 };
 
 } // namespace storage
