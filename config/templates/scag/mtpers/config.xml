@@ -5,7 +5,7 @@
 
   <!-- ulimit -n 16384 !!! -->
 
-  <section name="MTPers">
+  <section name="PVSS">
     <param name="host" type="string">@pvss.listen_host@</param>
     <param type="int" name="port">@pvss.port@</param>
     <param name="maxClientsCount" type="int">@pvss.connections@</param>
