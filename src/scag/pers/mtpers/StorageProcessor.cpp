@@ -151,13 +151,17 @@ void AbonentStorageProcessor::initElementStorage(const AbonentStorageConfig& cfg
   std::auto_ptr< DiskDataStorage::storage_type > bs(new DiskDataStorage::storage_type(elStorage.glossary));
   int ret = -1;
   const string fn(cfg.dbName + "-data");
-  try {
-    ret = bs->Open(fn, path);
-  } catch (...) {
-    ret = -1;
+
+  ret = bs->Open(fn, path);
+
+  if (ret == BlocksHSStorage< AbntAddr, Profile >::DESCR_FILE_OPEN_FAILED) {
+    if (bs->Create(fn, path, cfg.fileSize, cfg.blockSize) < 0) {
+      throw Exception("can't create data disk storage: %s", path.c_str());
+    }
+    ret = 0;
   }
   if (ret < 0) {
-    bs->Create(fn, path, cfg.fileSize, cfg.blockSize);
+    throw Exception("can't open data disk storage: %s", path.c_str());
   }
   std::auto_ptr< DiskDataStorage > dds(new DiskDataStorage(bs.release()));
   smsc_log_debug(logger_, "data disk storage %d is created", index);
