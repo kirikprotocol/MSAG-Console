@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspWriter;
 import java.util.*;
 import java.io.IOException;
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
@@ -71,8 +72,14 @@ public class Distribution extends SmsQuizBean {
       }
       initQuizes();
       if(quizId!=null) {
-        String id = QuizesDataSource.getTaskId(workDir, quizId);
-        msgFilter.setTaskId(id);
+        if(new File(quizDir+File.separator+quizId+".xml").exists()) {
+          String id = QuizesDataSource.getTaskId(workDir, quizId);
+          msgFilter.setTaskId(id);
+        } else {
+          quizId = null;
+          initialized = false;
+          tableHelper.reset();
+        }
       }
       tableHelper.setFilter(msgFilter);
       tableHelper.setDs(ds);
@@ -118,6 +125,7 @@ public class Distribution extends SmsQuizBean {
     try {
       QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
       QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
+      quizMap.clear();
       for (int i = 0; i < quizesList.size(); i++) {
         DataItem item = quizesList.get(i);
         String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);

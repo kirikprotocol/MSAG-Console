@@ -63,7 +63,13 @@ public class Results extends SmsQuizBean {
       makeQuizMap(quizDir, workDir);
       System.out.println(quizId);
       if(quizId!=null) {
-        resultFilter.setQuizId(quizId);
+        if(new File(quizDir+File.separator+quizId+".xml").exists()) {
+          resultFilter.setQuizId(quizId);
+        } else {
+          quizId = null;
+          initialized = false;
+          tableHelper.reset();
+        }
       }
       ds = new ResultDataSource(resultDir);
       tableHelper.setPageSize(pageSize);
@@ -80,6 +86,7 @@ public class Results extends SmsQuizBean {
   private void makeQuizMap(String quizDir, String workDir) {
     QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
     QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
+    quizesMap.clear();
     for (int i = 0; i < quizesList.size(); i++) {
       DataItem item = quizesList.get(i);
       String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);

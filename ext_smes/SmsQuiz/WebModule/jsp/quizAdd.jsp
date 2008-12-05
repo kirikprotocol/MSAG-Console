@@ -70,8 +70,7 @@
   <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.abfile")%></th>
   <td><input type="hidden" name="jsp" value="/esme_SmsQuiz/quizAdd.jsp">
-  <input class=txt type=file name=file id=file></td>
- <!--<td><input validation="nonEmpty" class=txt name=abFile value="<%=StringEncoderDecoder.encode(bean.getAbFile())%>"></td> -->
+  <input class=txt type=file name=file id=file value="<%=StringEncoderDecoder.encode(bean.getFile())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.sa")%></th>

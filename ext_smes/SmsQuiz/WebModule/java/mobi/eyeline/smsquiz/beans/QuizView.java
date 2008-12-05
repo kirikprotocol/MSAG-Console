@@ -23,7 +23,7 @@ public class QuizView extends SmsQuizBean {
 
   public static final int RESULT_EDIT = SmsQuizBean.PRIVATE_RESULT + 2;
 
-  private final CategoriesTableHelper tableHelper = new CategoriesTableHelper("smsquiz.label.category", "categories", 30, Validation.NON_EMPTY, true);
+  private final CategoriesTableHelper tableHelper = new CategoriesTableHelper("smsquiz.label.category", "categories", 70, Validation.NON_EMPTY, true);
 
   private static String datePattern = "dd.MM.yyyy HH:mm";
 

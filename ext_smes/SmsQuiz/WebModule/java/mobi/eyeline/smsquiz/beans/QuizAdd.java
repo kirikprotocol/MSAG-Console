@@ -38,7 +38,7 @@ public class QuizAdd extends SmsQuizBean {
   private SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
   private String[] activeWeekDays = new String[7];
 
-  private final CategoriesTableHelper tableHelper = new CategoriesTableHelper("smsquiz.label.category", "categories", 30, Validation.NON_EMPTY, true);
+  private final CategoriesTableHelper tableHelper = new CategoriesTableHelper("smsquiz.label.category", "categories", 70, Validation.NON_EMPTY, true);
 
   private String quizName;
 
@@ -69,6 +69,8 @@ public class QuizAdd extends SmsQuizBean {
   private String defaultCategory;
 
   private String distrDateEnd;
+
+  private String file;
 
 
   protected int init(List errors) {
@@ -116,7 +118,6 @@ public class QuizAdd extends SmsQuizBean {
 
   /** @noinspection EmptyCatchBlock*/
   private int save(MultipartServletRequest request) {
-    System.out.println("Saving...");
     int result;
     if ((result = validation(request)) != RESULT_OK) {
       return result;
@@ -134,13 +135,18 @@ public class QuizAdd extends SmsQuizBean {
       file = new File(quizDir + File.separator + quizId + ".csv");
       outputStream = new BufferedOutputStream(new FileOutputStream(file));
       byte buffer[] = new byte[2048];
-      boolean begin = true;
+      int countBytes = 0;
       for (int readed; (readed = is.read(buffer)) > -1;) {
-        if (begin && (readed <= -1)) {
-          return warning("Abonent's file is empty");
-        }
-        begin = false;
+        countBytes+=readed;
         outputStream.write(buffer, 0, readed);
+      }
+      if(countBytes<2) {
+        try{
+          if(outputStream!=null)
+            outputStream.close();
+        }catch(IOException e){}
+        file.delete();
+        return warning("Invalid abonents file");
       }
 
       for (int j = 0; j < activeWeekDays.length; j++) {
@@ -472,5 +478,13 @@ public class QuizAdd extends SmsQuizBean {
 
   public void setQuizName(String quizName) {
     this.quizName = quizName;
+  }
+
+  public String getFile() {
+    return file;
+  }
+
+  public void setFile(String file) {
+    this.file = file;
   }
 }

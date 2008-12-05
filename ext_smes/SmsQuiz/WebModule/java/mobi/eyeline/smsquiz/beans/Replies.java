@@ -55,7 +55,6 @@ public class Replies extends SmsQuizBean {
     if (pageSize == 0) {
       pageSize = getSmsQuizContext().getMessagesPageSize();
     }
-
     try {
       String replyDir = getSmsQuizContext().getConfig().getString("replystats.statsFile_dir");
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
@@ -68,16 +67,22 @@ public class Replies extends SmsQuizBean {
       int maxReplies = getSmsQuizContext().getMaxRepliesTotalSize();
       if(quizId!=null) {
         File file = new File(quizDir+File.separator+quizId+".xml");
-        replyFilter.setQuizPath(file.getAbsolutePath());
-        QuizData data = QuizBuilder.parseAll(replyFilter.getQuizPath());
-        replyFilter.setQuizNumber(data.getDestAddress());
-        Date date = QuizesDataSource.getActualStartDate(workDir, quizId);
-        if(date!=null) {
-          replyFilter.setQuizDateBegin(date);
+        if(file.exists()) {
+          replyFilter.setQuizPath(file.getAbsolutePath());
+          QuizData data = QuizBuilder.parseAll(replyFilter.getQuizPath());
+          replyFilter.setQuizNumber(data.getDestAddress());
+          Date date = QuizesDataSource.getActualStartDate(workDir, quizId);
+          if(date!=null) {
+            replyFilter.setQuizDateBegin(date);
+          } else {
+            replyFilter.setQuizDateBegin(data.getDateBegin());
+          }
+          replyFilter.setQuizDateEnd(data.getDateEnd());
         } else {
-          replyFilter.setQuizDateBegin(data.getDateBegin());
+          quizId = null;
+          initialized = false;
+          tableHelper.reset();
         }
-        replyFilter.setQuizDateEnd(data.getDateEnd());
       }
       tableHelper.setFilter(replyFilter);
       tableHelper.setDs(ds);
@@ -173,6 +178,7 @@ public class Replies extends SmsQuizBean {
 
   private void initQuizes() {
     try {
+      quizMap.clear();
       QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
       QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
       for (int i = 0; i < quizesList.size(); i++) {

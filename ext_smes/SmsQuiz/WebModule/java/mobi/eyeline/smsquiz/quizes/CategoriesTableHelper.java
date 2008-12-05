@@ -23,9 +23,9 @@ public class CategoriesTableHelper extends DynamicTableHelper {
 
   public CategoriesTableHelper(String name, String uid, int width, Validation validation, boolean allowEditPropsAfterAdd) {
     super(name, uid);
-    nameColumn = new TextColumn(this, "smsquiz.label.category.name", uid + "_name", width / 3, validation, allowEditPropsAfterAdd);
-    patternColumn = new TextColumn(this, "smsquiz.label.category.pattern", uid + "_pattern", width / 3, validation, allowEditPropsAfterAdd);
-    answerColumn = new TextColumn(this, "smsquiz.label.category.answer", uid + "_answer", width / 3, validation, allowEditPropsAfterAdd);
+    nameColumn = new TextColumn(this, "smsquiz.label.category.name", uid + "_name", width / 5, validation, allowEditPropsAfterAdd);
+    patternColumn = new TextColumn(this, "smsquiz.label.category.pattern", uid + "_pattern", width / 5, validation, allowEditPropsAfterAdd);
+    answerColumn = new TextColumn(this, "smsquiz.label.category.answer", uid + "_answer", width* 3 / 5, validation, allowEditPropsAfterAdd);
     Column delColumn = new RowControlButtonColumn(this, "", "delColumn");
     addColumn(nameColumn);
     addColumn(patternColumn);
