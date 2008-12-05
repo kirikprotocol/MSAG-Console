@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
   sigset(SIGINT, appSignalHandler);
   sigset(SIGHUP, appSignalHandler);   
   int resultCode = 0;
-  Logger* logger = Logger::getInstance("mtpers");
+  Logger* logger = Logger::getInstance("pvss");
 
   try{
     smsc_log_info(logger,  "Starting up ");
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
     Manager::init("config.xml");
     Manager& manager = Manager::getInstance();
 
-    ConfigView persConfig(manager, "MTPers");
+    ConfigView persConfig(manager, "PVSS");
 
     string storageName;
     string storagePath = "./storage";
@@ -85,70 +85,70 @@ int main(int argc, char* argv[]) {
     try { 
       host = persConfig.getString("host");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.host> missed. Defaul value is '%s'", host.c_str());
+      smsc_log_warn(logger, "Parameter <PVSS.host> missed. Defaul value is '%s'", host.c_str());
     };
     try { 
       port = persConfig.getInt("port");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.port> missed. Defaul value is %d", port);
+      smsc_log_warn(logger, "Parameter <PVSS.port> missed. Defaul value is %d", port);
     };
     try { 
       maxClientCount = persConfig.getInt("maxClientsCount");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.maxClientsCount> missed. Defaul value is %d", maxClientCount);
+      smsc_log_warn(logger, "Parameter <PVSS.maxClientsCount> missed. Defaul value is %d", maxClientCount);
     };
     try { 
       timeout = persConfig.getInt("timeout");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.timeout> missed. Defaul value is %d", timeout);
+      smsc_log_warn(logger, "Parameter <PVSS.timeout> missed. Defaul value is %d", timeout);
     };
     try { 
       ioTasksCount = persConfig.getInt("ioPoolSize");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.ioPoolSize> missed. Defaul value is %d", ioTasksCount);
+      smsc_log_warn(logger, "Parameter <PVSS.ioPoolSize> missed. Defaul value is %d", ioTasksCount);
     };
     try { 
       maxWaitingCount = persConfig.getInt("storageQueueSize");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.storageQueueSize> missed. Defaul value is %d", maxWaitingCount);
+      smsc_log_warn(logger, "Parameter <PVSS.storageQueueSize> missed. Defaul value is %d", maxWaitingCount);
     };
     NodeConfig nodeCfg;
     try { 
       nodeCfg.nodesCount = persConfig.getInt("nodes");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.nodes> missed. Defaul value is %d", nodeCfg.nodesCount);
+      smsc_log_warn(logger, "Parameter <PVSS.nodes> missed. Defaul value is %d", nodeCfg.nodesCount);
     };
     try { 
       nodeCfg.nodeNumber = persConfig.getInt("node");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.node> missed. Defaul value is %d", nodeCfg.nodeNumber);
+      smsc_log_warn(logger, "Parameter <PVSS.node> missed. Defaul value is %d", nodeCfg.nodeNumber);
     };
     try { 
       nodeCfg.storagesCount = persConfig.getInt("storages");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.storages> missed. Defaul value is %d", nodeCfg.storagesCount);
+      smsc_log_warn(logger, "Parameter <PVSS.storages> missed. Defaul value is %d", nodeCfg.storagesCount);
     };
     bool perfCounterOn = false;
     int perfCounterPeriod = 10;
     try { 
       perfCounterOn = persConfig.getBool("perfCounterOn");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <MTPers.perfCounterOn> missed. Defaul value is false");
+      smsc_log_warn(logger, "Parameter <PVSS.perfCounterOn> missed. Defaul value is false");
     };
     if (perfCounterOn) {
       try { 
         perfCounterPeriod = persConfig.getInt("perfCounterPeriod");
       } catch (...) {
-        smsc_log_warn(logger, "Parameter <MTPers.perfCounterPeriod> missed. Defaul value is %d", perfCounterPeriod);
+        smsc_log_warn(logger, "Parameter <PVSS.perfCounterPeriod> missed. Defaul value is %d", perfCounterPeriod);
       }
     }
 
-    ConfigView abntStorageConfig(manager, "MTPers.AbonentStorage");
+    ConfigView abntStorageConfig(manager, "PVSS.AbonentStorage");
     AbonentStorageConfig abntCfg(abntStorageConfig, "AbonentStorage", logger);
     abntCfg.dbPath = storagePath;
 
     try {
-      ConfigView locationsConfig(manager, "MTPers.AbonentStorage.Locations");
+      ConfigView locationsConfig(manager, "PVSS.AbonentStorage.Locations");
       std::auto_ptr<CStrSet> locations(locationsConfig.getStrParamNames());
       for (CStrSet::iterator i = locations.get()->begin(); i != locations.get()->end(); ++i) {
         string loc = locationsConfig.getString((*i).c_str());
@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
         ++nodeCfg.locationsCount;
       }
     } catch (...) {
-      smsc_log_warn(logger, "Section <MTPers.AbonentStorage.Locations> missed.");
+      smsc_log_warn(logger, "Section <PVSS.AbonentStorage.Locations> missed.");
     }
     if (abntCfg.locationPath.empty()) {
       throw Exception("Locations paths is not specified");
@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
     StorageManager storageManager(nodeCfg);
 
     if (nodeCfg.nodeNumber == storageManager.getInfrastructNodeNumber()) {
-      ConfigView infStorageConfig(manager, "MTPers.InfrastructStorage");
+      ConfigView infStorageConfig(manager, "PVSS.InfrastructStorage");
       std::auto_ptr<InfrastructStorageConfig> infCfg(new InfrastructStorageConfig(infStorageConfig, "InfrastructStorage", logger));
       storageManager.init(maxWaitingCount, abntCfg, infCfg.get());
     } else {
