@@ -32,6 +32,7 @@ public class ConservativeDistributionEngine implements DistributionEngine {
   private final Map<String, DistributionInfo> distrInfos;
 
   private Work worker;
+  private int validityPeriod;
 
 
   public ConservativeDistributionEngine(OutgoingQueue outQueue, DeliveriesDataSource distrDS, AdvertisingClientFactory advClientFactory, BannerMap bannerMap) {
@@ -50,8 +51,9 @@ public class ConservativeDistributionEngine implements DistributionEngine {
     return null;
   }
 
-  public void init(int limit, int interval) {
+  public void init(int limit, int interval, int validityPeriod) {
     this.worker = new Work(interval, limit);
+    this.validityPeriod = validityPeriod * 3600 * 1000;
   }
 
   public void start() {
@@ -115,7 +117,7 @@ public class ConservativeDistributionEngine implements DistributionEngine {
               }
 
               // Send message
-              final OutgoingObject o = new OutgoingObjectWithBanner(srcAddress, d.getSubscriberAddress(), bannerMap, banner);
+              final OutgoingObject o = new OutgoingObjectWithBanner(srcAddress, d.getSubscriberAddress(), bannerMap, banner, new Date(startTime + sendDelay * i + validityPeriod));
 
               try {
                 if (log.isDebugEnabled()) {

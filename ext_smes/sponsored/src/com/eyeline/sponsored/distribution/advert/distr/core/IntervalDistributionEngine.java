@@ -41,6 +41,7 @@ public class IntervalDistributionEngine implements DistributionEngine {
 
   private long fetchInterval;
   private long prepareInterval;
+  private int validityPeriod;
 
   private IntervalDistributionEngineMBean mbean;
 
@@ -52,11 +53,12 @@ public class IntervalDistributionEngine implements DistributionEngine {
                                     DeliveriesDataSource distrDS,
                                     AdvertisingClientFactory advClientFactory,
                                     BannerMap bannerMap,
-                                    long fetchInterval, long prepareInterval, int poolSize) {
+                                    long fetchInterval, long prepareInterval, int poolSize, int validityPeriod) {
     this.outQueue = outQueue;
     this.distrDS = distrDS;
     this.distrInfos = new HashMap<String, DistributionInfo>(10);
     this.bannerMap = bannerMap;
+    this.validityPeriod = validityPeriod * 3600 * 1000; // Convert hours to milliseconds
 
     this.deliveriesQueue = new DeliveriesQueue();
     this.fetchInterval = fetchInterval;
@@ -225,7 +227,7 @@ public class IntervalDistributionEngine implements DistributionEngine {
                 }
 
                 // Send message
-                final OutgoingObject o = new OutgoingObjectWithBanner(srcAddress, d.getSubscriberAddress(), bannerMap, banner);
+                final OutgoingObject o = new OutgoingObjectWithBanner(srcAddress, d.getSubscriberAddress(), bannerMap, banner, new Date(d.getSendDate().getTime() + validityPeriod));
 
                 try {
                   if (log.isDebugEnabled())

@@ -48,6 +48,8 @@
     <param name="deliveriesSendSpeedLimit">450</param>
     <param name="deliveriesPrepareInterval">5000</param>
     <param name="poolSize">5</param>
+    <!-- Messages validity period in hours -->
+    <param name="messageValidityPeriod">3</param>
 
     <!-- Delivery stats collector parameters -->
 

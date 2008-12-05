@@ -104,7 +104,7 @@ public class DistributionSme extends Sme {
                                                                                    deliveriesDataSource,
                                                                                    advertisingClientFactory,
                                                                                    bannerMap);
-        engine.init(c.getDeliveriesSendSpeedLimit(), c.getDeliveriesFetchInterval());
+        engine.init(c.getDeliveriesSendSpeedLimit(), c.getDeliveriesFetchInterval(), c.getValidityPeriod());
         distrEngine = engine;
       } else if (c.getEngineType().equals("interval")) {
         distrEngine = new IntervalDistributionEngine(outQueue,
@@ -113,7 +113,7 @@ public class DistributionSme extends Sme {
                                                      bannerMap,
                                                      c.getDeliveriesFetchInterval(),
                                                      c.getDeliveriesPrepareInterval(),
-                                                     c.getPoolSize());        
+                                                     c.getPoolSize(), c.getValidityPeriod());        
       } else
         throw new InitException("Unknown distribution engine type: " + c.getEngineType());
 

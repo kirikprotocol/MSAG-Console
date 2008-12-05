@@ -91,6 +91,7 @@ public class SubscriptionService extends BasicService {
           } catch (ShutdownedException e) {
             log.error("Send message failed", e);
           }
+          return true;
 
         } else {
           // Subscribe
@@ -104,20 +105,20 @@ public class SubscriptionService extends BasicService {
             default:
               responseText = subscriptionClosedResponse;
           }
-
-          // Send response
-          final Message respMsg = new Message();
-          respMsg.setSourceAddress(reqMsg.getDestinationAddress());
-          respMsg.setDestinationAddress(reqMsg.getSourceAddress());
-          respMsg.setMessageString(responseText);
-          try {
-            send(respMsg);
-          } catch (ShutdownedException e) {
-            log.error("Send message failed", e);
-          }
-
-          respond(request.getInObj(), Data.ESME_ROK);
         }
+
+        // Send response
+        final Message respMsg = new Message();
+        respMsg.setSourceAddress(reqMsg.getDestinationAddress());
+        respMsg.setDestinationAddress(reqMsg.getSourceAddress());
+        respMsg.setMessageString(responseText);
+        try {
+          send(respMsg);
+        } catch (ShutdownedException e) {
+          log.error("Send message failed", e);
+        }
+
+        respond(request.getInObj(), Data.ESME_ROK);
       }
 
     } catch (ProcessorException e) {
