@@ -195,8 +195,8 @@ SendMessageEventHandler::getBanner(const AbntAddr& abnt, bool needBannerInTransl
           smsc_log_error(_logger, "Exc: %s", e.what());
           return banner="";
         }
-      }
-      smsc_log_debug(_logger, "rc = %d; Banner: %s (%s)", rc, banner.c_str(), ret.c_str());
+      } else 
+        banner = ret;
     }
     else
       smsc_log_debug(_logger, "getBanner Error. Error code = %d", rc);
