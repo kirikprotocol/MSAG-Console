@@ -15,7 +15,7 @@ class ReplyPattern {
   public ReplyPattern(String p, String category, String answer) {
     this.category = category;
     this.answer = answer;
-    pattern = Pattern.compile(p);
+    pattern = Pattern.compile(p, Pattern.CASE_INSENSITIVE);
   }
 
   public boolean matches(String str) {

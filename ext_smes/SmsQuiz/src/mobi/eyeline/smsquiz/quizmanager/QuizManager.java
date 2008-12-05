@@ -4,7 +4,6 @@ import com.eyeline.utils.config.ConfigException;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.jmx.log4j.LoggingMBean;
-import mobi.eyeline.smsquiz.distribution.Distribution;
 import mobi.eyeline.smsquiz.distribution.DistributionException;
 import mobi.eyeline.smsquiz.distribution.DistributionManager;
 import mobi.eyeline.smsquiz.quizmanager.filehandler.DirListener;
@@ -12,7 +11,7 @@ import mobi.eyeline.smsquiz.quizmanager.filehandler.Notification;
 import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import mobi.eyeline.smsquiz.quizmanager.quiz.QuizBuilder;
 import mobi.eyeline.smsquiz.quizmanager.quiz.QuizError;
-import mobi.eyeline.smsquiz.quizmanager.quiz.Status;
+import mobi.eyeline.smsquiz.quizmanager.quiz.QuizData;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
 import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import org.apache.log4j.LogManager;
@@ -45,7 +44,6 @@ public class QuizManager implements Observer {
   private SubscriptionManager subscriptionManager;        //init ConnectionPoll for DB needed
 
   private ScheduledExecutorService scheduledDirListener;
-  private ScheduledExecutorService scheduledStatusChecker;
   private QuizBuilder quizBuilder;
 
   private QuizManagerMBean monitor;
@@ -56,8 +54,6 @@ public class QuizManager implements Observer {
   private long listenerPeriod;
   private long collectorDelayFirst;
   private long collectorPeriod;
-  private long checkerFirstDelay;
-  private long checkerPeriod;
   private String dirResult;
   private String dirWork;
   private String archiveDir;
@@ -95,8 +91,6 @@ public class QuizManager implements Observer {
       listenerPeriod = config.getLong("listener_period", 30);
       collectorDelayFirst = config.getLong("collector_delay", 30);
       collectorPeriod = config.getLong("collector_period", 30);
-      checkerFirstDelay = config.getLong("status_checker_delay", 60);
-      checkerPeriod = config.getLong("status_checker_period", 60);
       quizDir = config.getString("dir_quiz");
       archiveDir = config.getString("dir_archive");
       datePattern = "dd.MM.yyyy HH:mm";
@@ -128,15 +122,9 @@ public class QuizManager implements Observer {
       }
     });
 
-    scheduledStatusChecker = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-      public Thread newThread(Runnable r) {
-        return new Thread(r, "DistributionStatusChecker");
-      }
-    });
-
     quizBuilder = new QuizBuilder(datePattern, timePattern);
     quizesMap = new ConcurrentHashMap<String, Quiz>();
-    quizCollector = new QuizCollector(quizesMap, quizes);
+    quizCollector = new QuizCollector(quizesMap, quizes, distributionManager, subscriptionManager);
 
     File file = new File(dirWork);
     if (!file.exists()) {
@@ -147,8 +135,6 @@ public class QuizManager implements Observer {
 
   public void start() {
     scheduledDirListener.scheduleAtFixedRate(dirListener, listenerDelayFirst, listenerPeriod, java.util.concurrent.TimeUnit.SECONDS);
-    scheduledStatusChecker.scheduleAtFixedRate(new DistributionStatusChecker(distributionManager, quizes, quizesMap),
-        checkerFirstDelay, checkerPeriod, java.util.concurrent.TimeUnit.SECONDS);
     quizCollector.start();
   }
 
@@ -157,7 +143,7 @@ public class QuizManager implements Observer {
     replyStatsDataSource.shutdown();
     subscriptionManager.shutdown();
     distributionManager.shutdown();
-    scheduledStatusChecker.shutdown();
+    quizCollector.shutdown();
   }
 
   public Result handleSms(String address, String oa, String text) throws QuizException {
@@ -165,10 +151,10 @@ public class QuizManager implements Observer {
       logger.info("Manager handle sms:" + address + " " + oa + " " + text);
     }
     Quiz quiz = quizesMap.get(address);
-    if ((quiz != null) && (quiz.isGenerated()) && (quiz.isActive())) {
+    if (quiz != null) {
       return quiz.handleSms(oa, text);
     }
-    logger.warn("Active and generated Quiz not found for address: " + address);
+    logger.warn("Active Quiz not found for address: " + address);
     if (logger.isInfoEnabled()) {
       logger.info("Available addresses: " + quizesMap.keySet().toString());
     }
@@ -184,25 +170,24 @@ public class QuizManager implements Observer {
           try {
             modifyQuiz(notification);
           } catch (Exception e) {
-            logger.error("Unable to modify quiz: " + notification.getFileName());
+            logger.error("Unable to modify quiz: " + notification.getFileName(), e);
           }
 
         } else if (notification.getStatus().equals(Notification.FileStatus.CREATED)) {
           try {
             createQuiz(notification);
           } catch (Exception e) {
-            logger.error("Unable to update quize: " + notification.getFileName());
+            logger.error("Unable to update quize: " + notification.getFileName(), e);
           }
         } else if (notification.getStatus().equals(Notification.FileStatus.DELETED)) {
           try {
             deleteQuiz(notification);
           }
           catch (Exception e) {
-            logger.error("Unable to delete quize: " + notification.getFileName());
+            logger.error("Unable to delete quize: " + notification.getFileName(), e);
           }
         }
       }
-      quizCollector.alert();
     }
     catch (Throwable e) {
       logger.error(e, e);
@@ -213,10 +198,9 @@ public class QuizManager implements Observer {
 
   @SuppressWarnings({"ThrowableInstanceNeverThrown"})
   private void deleteQuiz(Notification notification) throws QuizException {
-    Quiz quiz;
+    String fileName = notification.getFileName();
+    Quiz quiz = quizes.getQuizByFile(fileName);
     try {
-      String fileName = notification.getFileName();
-      quiz = quizes.getQuizByFile(fileName);
       if (quiz != null) {
         quizes.remove(quiz);
         Quiz foundQuiz = quizesMap.get(quiz.getDestAddress());
@@ -246,7 +230,9 @@ public class QuizManager implements Observer {
       }
     }
     catch (Throwable e) {
-      writeError(notification.getFileName(), e);
+      if(quiz!=null) {
+        quiz.writeError(e);
+      }
       throw new QuizException(e);
     }
   }
@@ -259,21 +245,19 @@ public class QuizManager implements Observer {
     Quiz quiz;
     quiz = quizes.getQuizByFile(fileName);
 
-    if (quiz == null) {
-      createQuiz(notification);
-      return;
-    }
-
     try {
-      if (quiz.isActive()) {
-        quizBuilder.buildModifyActive(fileName, quiz);
-      } else {
-        quizBuilder.buildModifyUnactive(fileName, quiz);
+      if (quiz == null) {
+        createQuiz(notification);
+        return;
       }
-    } catch (QuizException e) {
-      writeError(notification.getFileName(), e);
-      quiz.setError(QuizError.CREATE_ERROR, "Parsing exception during modification");
-      throw e;
+      QuizData data = quizBuilder.buildQuiz(quiz.getFileName());
+      quiz.updateQuiz(data);
+    } catch (Exception e) {
+      if(quiz!=null) {
+        quiz.writeError(e);
+        quiz.setQuizStatus(QuizError.CREATE_ERROR, "Parsing exception during modification");
+      }
+      throw new QuizException(e);
     }
     if (logger.isInfoEnabled()) {
       logger.info("Quiz modified: " + fileName);
@@ -289,38 +273,28 @@ public class QuizManager implements Observer {
       String fileName = notification.getFileName();
       File file = new File(fileName);
 
-      quiz = new Quiz(file, replyStatsDataSource, distributionManager, dirResult, dirWork, archiveDir, quizDir);
-      quizBuilder.buildQuiz(fileName, quiz);
-      validateDates(quiz);
+      quiz = new Quiz(file, replyStatsDataSource, quizCollector,distributionManager, dirResult, dirWork, archiveDir, quizDir);
 
-      if (!quiz.isFinished()) {
-        ConflictVisitor visitor = new ConflictVisitor(quiz);
+      QuizData data = quizBuilder.buildQuiz(fileName);
+
+      validateDates(data);
+
+      if (!new Date().after(data.getDateEnd())) {
+        ConflictVisitor visitor = new ConflictVisitor(data.getDestAddress());
         quizes.visit(visitor);
         for (Quiz prev : visitor.getConflicts()) {
           if (prev != null) {
-            if ((prev.getDateBegin().compareTo(quiz.getDateEnd()) <= 0)
-                && (quiz.getDateBegin().compareTo(prev.getDateEnd()) <= 0)) {
+            if ((prev.getDateBegin().compareTo(data.getDateEnd()) <= 0)
+                && (data.getDateBegin().compareTo(prev.getDateEnd()) <= 0)) {
               logger.error("Error during creating quiz: quizes conflict");
-              writeQuizesConflict(prev, quiz.getFileName());
+              quiz.writeQuizesConflict(fileName, prev);
               try {
-                quiz.setError(QuizError.QUIZES_CONFLICT, "Quiz for one or more of this addresses already exists");
+                quiz.setQuizStatus(QuizError.QUIZES_CONFLICT, "Quiz for one or more of this addresses already exists");
               } catch (QuizException e) {
               }
               return;
             }
           }
-        }
-        try {
-          try {
-            quiz.setQuizStatus(Status.QuizStatus.GENERATION);
-            createDistribution(quiz);
-          } catch (QuizException e) {
-            logger.error(e, e);
-            return;
-          }
-        } catch (Throwable e) {
-          logger.error(e, e);
-          throw new QuizException(e.toString(), e);
         }
       } else {
         if (quiz.getDistrId() == null) {
@@ -329,82 +303,30 @@ public class QuizManager implements Observer {
         }
       }
       quizes.add(quiz);
+      quiz.updateQuiz(data);
 
-    } catch (QuizException e) {
+    } catch (Exception e) {
       if (quiz != null) {
         try {
-          quiz.setError(QuizError.CREATE_ERROR, e.getMessage());
+          quiz.setQuizStatus(QuizError.CREATE_ERROR, e.getMessage());
         } catch (Exception ex) {
         }
+        quiz.writeError(e);
       }
       logger.error(e, e);
-      writeError(notification.getFileName(), e);
       throw new QuizException(e);
     }
   }
 
-  private void validateDates(Quiz quiz) throws QuizException{
+  private void validateDates(QuizData quiz) throws QuizException{
     Date dateBegin = quiz.getDateBegin();
     Date dateEnd = quiz.getDateEnd();
     Date distrEndDate = quiz.getDistrDateEnd();
-    Date now = new Date();
-    if(dateEnd.before(now)||dateEnd.before(dateBegin)) {
+    if(dateEnd.before(dateBegin)) {
       throw new QuizException("Invalid end date: "+dateEnd);
     }
-    if(distrEndDate.before(now)||distrEndDate.before(dateBegin)||distrEndDate.after(dateEnd)) {
+    if(distrEndDate.before(dateBegin)||distrEndDate.after(dateEnd)) {
       throw new QuizException("Invalid distribution end date: "+distrEndDate);
-    }
-  }
-
-  private void writeError(String quizFileName, Throwable exc) {
-    if (quizFileName == null) {
-      return;
-    }
-    File file = new File(quizFileName);
-    String quizName = file.getName().substring(0, file.getName().lastIndexOf("."));
-    String errorFile = dirWork + File.separator + quizName + ".error";
-    PrintWriter writer = null;
-    try {
-      writer = new PrintWriter(new BufferedWriter(new FileWriter(errorFile, true)));
-      writer.println("Error during creating quiz:");
-      exc.printStackTrace(writer);
-      writer.flush();
-    } catch (Exception e) {
-      logger.error("Unable to create error file: " + errorFile, e);
-    } finally {
-      if (writer != null) {
-        writer.close();
-      }
-    }
-  }
-
-  private void writeQuizesConflict(Quiz prevQuiz, String newQuizFileName) throws QuizException {
-    if ((prevQuiz == null) || (newQuizFileName == null)) {
-      logger.error("Some arguments are null");
-      throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
-    }
-    logger.warn("Conflict quizes");
-    File newQuizfile = new File(newQuizFileName);
-    String newQuizName = newQuizfile.getName().substring(0, newQuizfile.getName().lastIndexOf("."));
-    PrintWriter writer = null;
-    String errorFile = dirWork + File.separator + newQuizName + ".error";
-    try {
-      writer = new PrintWriter(new BufferedWriter(new FileWriter(errorFile, true)));
-      writer.println(" Quizes conflict:");
-      writer.println();
-      writer.println("Previous quiz");
-      writer.println(prevQuiz);
-      writer.println();
-      writer.println("New quiz");
-      writer.println(newQuizFileName);
-      writer.flush();
-    } catch (IOException e) {
-      logger.error("Unable to create error file: " + errorFile, e);
-      throw new QuizException("Unable to create error file: " + errorFile, e);
-    } finally {
-      if (writer != null) {
-        writer.close();
-      }
     }
   }
 
@@ -465,94 +387,22 @@ public class QuizManager implements Observer {
     return dirWork;
   }
 
-  @SuppressWarnings({"ThrowableInstanceNeverThrown"})
-  private void createDistribution(final Quiz quiz) throws QuizException {
-    try {
-      if (logger.isInfoEnabled()) {
-        logger.info("Create distribution...");
-      }
-
-      String id;
-      DistributionManager.State state;
-      boolean create = true;
-      if ((id = quiz.getDistrId()) != null) {
-        if (logger.isInfoEnabled()) {
-          logger.info("Quiz will be repaired: " + quiz);
-        }
-        state = distributionManager.getState(id);
-        if (!state.equals(DistributionManager.State.ERROR)) {
-          create = false;
-        }
-      }
-
-      try {
-        if (create) {
-          Distribution distr = buildDistribution(quiz);
-          id = distributionManager.createDistribution(distr);
-        }
-      } catch (DistributionException e) {
-        logger.error("Unable to create distribution", e);
-        throw new QuizException("Unable to create distribution", e);
-      }
-
-      quiz.setDistrId(id);
-      if (logger.isInfoEnabled()) {
-        logger.info("Quiz created: " + quiz);
-      }
-
-    } catch (Throwable e) {
-      try {
-        quiz.setError(QuizError.DISTR_ERROR, e.getMessage());
-      } catch (QuizException ex) {
-      }
-      writeError(quiz.getFileName(), e);
-      logger.error(e, e);
-      throw new QuizException(e.toString(), e);
-    } finally {
-      if (logger.isInfoEnabled()) {
-        logger.info("Creating quiz completed.");
-      }
-    }
-  }
-
-  private Distribution buildDistribution(Quiz quiz) throws QuizException {
-    Distribution distr = new DistributionImpl(quiz.getOrigAbFile(), subscriptionManager);
-    distr.setQuestion(quiz.getQuestion());
-    distr.setDateBegin(quiz.getDateBegin());
-    distr.setDateEnd(quiz.getDistrDateEnd());
-    distr.setSourceAddress(quiz.getSourceAddress());
-    distr.setTaskName(quiz.getQuizName() + "(SmsQuiz)");
-    distr.setTimeBegin(quiz.getTimeBegin());
-    distr.setTimeEnd(quiz.getTimeEnd());
-    distr.setTxmode(quiz.isTxmode());
-    distr.addDays(quiz.getDays());
-    return distr;
-  }
-
-  public long getCheckerFirstDelay() {
-    return checkerFirstDelay;
-  }
-
-  public long getCheckerPeriod() {
-    return checkerPeriod;
-  }
-
   private class ConflictVisitor implements Quizes.Visitor {
 
     private Collection<Quiz> conflicts = new LinkedList<Quiz>();
 
-    private final Quiz newcomer;
+    private final String newcomerDa;
 
-    private ConflictVisitor(Quiz newcomer) {
-      if (newcomer == null) {
+    private ConflictVisitor(String newcomerDa) {
+      if (newcomerDa == null) {
         logger.error("Some arguments are null");
         throw new IllegalArgumentException("Some arguments are null");
       }
-      this.newcomer = newcomer;
+      this.newcomerDa = newcomerDa;
     }
 
     public void visit(Quiz quiz) throws QuizException {
-      if (quiz.getDestAddress().equals(newcomer.getDestAddress())) {
+      if (quiz.getDestAddress().equals(newcomerDa)) {
         conflicts.add(quiz);
       }
     }

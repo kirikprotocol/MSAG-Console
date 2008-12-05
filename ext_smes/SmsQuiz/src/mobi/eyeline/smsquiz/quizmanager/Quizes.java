@@ -52,9 +52,6 @@ public class Quizes {
     }
     try {
       lock.lock();
-      if (logger.isInfoEnabled()) {
-        logger.info("Adding quiz to quizes: " + quiz);
-      }
       qInternal.add(quiz);
 
     } finally {
@@ -70,9 +67,6 @@ public class Quizes {
     }
     try {
       lock.lock();
-      if (logger.isInfoEnabled()) {
-        logger.info("Removing quiz from quizes: " + quiz);
-      }
       qInternal.remove(quiz);
 
     } finally {

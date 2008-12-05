@@ -38,33 +38,35 @@ public class QuizBuilder {
     monitor = new QuizBuilderMBean(this);
   }
 
-  public void buildQuiz(final String filepath, Quiz quiz) throws QuizException {
-    if (quiz == null) {
+  public QuizData buildQuiz(final String filepath) throws QuizException {
+    if (filepath == null) {
       logger.error("Some argument are null");
       throw new QuizException("Some argument are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
     }
     SAXBuilder sb = new SAXBuilder();
     InputStream stream = null;
     try {
+      QuizData data = new QuizData();
       stream = new FileInputStream(filepath);
       Document doc = sb.build(stream);
       Element root = doc.getRootElement();
       Element elem;
       if ((elem = root.getChild("general")) != null) {
-        parseGeneral(elem, quiz);
+        parseGeneral(elem, data);
       } else {
         errorNotFound("general");
       }
       if ((elem = root.getChild("distribution")) != null) {
-        parseDistribution(elem, quiz);
+        parseDistribution(elem, data);
       } else {
         errorNotFound("distribution");
       }
       if ((elem = root.getChild("replies")) != null) {
-        parseReplies(elem, quiz);
+        parseReplies(elem, data);
       } else {
         errorNotFound("replies");
       }
+      return data;
     } catch (JDOMException e) {
       logger.error("Parsing exception", e);
       throw new QuizException("Parsing exception", e);
@@ -82,7 +84,7 @@ public class QuizBuilder {
     }
   }
 
-  private void parseGeneral(Element generalElem, Quiz quiz) throws QuizException {
+  private void parseGeneral(Element generalElem, QuizData quiz) throws QuizException {
     Element elem;
     Date dateBegin = null;
     Date dateEnd = null;
@@ -127,7 +129,7 @@ public class QuizBuilder {
   }
 
   @SuppressWarnings({"unchecked"})
-  private void parseDistribution(Element distrlElem, Quiz quiz) throws QuizException {
+  private void parseDistribution(Element distrlElem, QuizData quiz) throws QuizException {
     Element elem;
     String sourceaddress = null;
     Calendar timeBegin = Calendar.getInstance();
@@ -204,7 +206,7 @@ public class QuizBuilder {
   }
 
   @SuppressWarnings({"unchecked"})
-  private void parseReplies(Element repliesElem, Quiz quiz) throws QuizException {
+  private void parseReplies(Element repliesElem, QuizData quiz) throws QuizException {
     Element elem;
 
     if ((elem = repliesElem.getChild("destination-address")) != null) {
@@ -260,135 +262,6 @@ public class QuizBuilder {
       }
     } else {
       errorNotFound("reply");
-    }
-  }
-
-  public void buildModifyActive(final String filepath, Quiz quiz) throws QuizException {
-    if ((filepath == null) || (quiz == null)) {
-      logger.error("Some argument are null");
-      throw new QuizException("Some argument are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
-    }
-    SAXBuilder sb = new SAXBuilder();
-    InputStream stream = null;
-    try {
-      stream = new FileInputStream(filepath);
-      Document doc = sb.build(stream);
-      Element root = doc.getRootElement();
-      Element repliesElem;
-      if ((repliesElem = root.getChild("replies")) != null) {
-        Element elem;
-        if ((elem = repliesElem.getChild("max-repeat")) != null) {
-          try {
-            quiz.setMaxRepeat(Integer.parseInt(elem.getTextTrim()));
-          } catch (NumberFormatException e) {
-            logger.error("Unsupported format for integer: " + elem.getTextTrim());
-            throw new QuizException("Unsupported format for integer: " + elem.getTextTrim());
-          }
-        } else {
-          quiz.setMaxRepeat(0);
-        }
-        if ((elem = repliesElem.getChild("default")) != null) {
-          quiz.setDefaultCategory(elem.getTextTrim());
-        }
-      } else {
-        errorNotFound("replies");
-      }
-    } catch (JDOMException e) {
-      logger.error("Parsing exception", e);
-      throw new QuizException("Parsing exception", e);
-    } catch (IOException e) {
-      logger.error("Parsing exception", e);
-      throw new QuizException("Parsing exception", e);
-    } finally {
-      if (stream != null) {
-        try {
-          stream.close();
-        } catch (IOException e) {
-          logger.error("Error close stream", e);
-        }
-      }
-    }
-  }
-
-  @SuppressWarnings({"unchecked"})
-  public void buildModifyUnactive(final String filepath, Quiz quiz) throws QuizException {
-    if ((filepath == null) || (quiz == null)) {
-      logger.error("Some argument are null");
-      throw new QuizException("Some argument are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
-    }
-    SAXBuilder sb = new SAXBuilder();
-    InputStream stream = null;
-    try {
-      stream = new FileInputStream(filepath);
-      Document doc = sb.build(stream);
-      Element root = doc.getRootElement();
-      Element repliesElem;
-      if ((repliesElem = root.getChild("replies")) != null) {
-        Element elem;
-        if ((elem = repliesElem.getChild("destination-address")) != null) {
-          quiz.setDestAddress(elem.getTextTrim());
-        } else {
-          errorNotFound("destination-address");
-        }
-        if ((elem = repliesElem.getChild("max-repeat")) != null) {
-          try {
-            quiz.setMaxRepeat(Integer.parseInt(elem.getTextTrim()));
-          } catch (NumberFormatException e) {
-            logger.error("Unsupported format for integer: " + elem.getTextTrim());
-            throw new QuizException("Unsupported format for integer: " + elem.getTextTrim());
-          }
-        } else {
-          quiz.setMaxRepeat(0);
-        }
-        if ((elem = repliesElem.getChild("default")) != null) {
-          quiz.setDefaultCategory(elem.getTextTrim());
-        }
-        List<Element> list;
-        if ((list = repliesElem.getChildren("reply")) != null) {
-          quiz.clearPatterns();
-          for (Element el : list) {
-            Element subEl;
-            String category = null;
-            String answer = null;
-            String pattern = null;
-            if ((subEl = el.getChild("category")) != null) {
-              category = subEl.getTextTrim();
-            } else {
-              errorNotFound("category");
-            }
-            if ((subEl = el.getChild("pattern")) != null) {
-              pattern = subEl.getTextTrim();
-            } else {
-              errorNotFound("pattern");
-            }
-            if ((subEl = el.getChild("answer")) != null) {
-              answer = subEl.getTextTrim();
-            } else {
-              errorNotFound("answer");
-            }
-            quiz.addReplyPattern(new ReplyPattern(pattern, category, answer));
-          }
-        } else {
-          errorNotFound("reply");
-        }
-      } else {
-        errorNotFound("replies");
-      }
-    }
-    catch (JDOMException e) {
-      logger.error("Parsing exception", e);
-      throw new QuizException("Parsing exception", e);
-    } catch (IOException e) {
-      logger.error("Parsing exception", e);
-      throw new QuizException("Parsing exception", e);
-    } finally {
-      if (stream != null) {
-        try {
-          stream.close();
-        } catch (IOException e) {
-          logger.error("Error close stream", e);
-        }
-      }
     }
   }
 

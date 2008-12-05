@@ -20,12 +20,7 @@ public class Status {
 
   private String ident;
   private String statusFileName;
-  private QuizStatus quizStatus;
-
-  public static enum QuizStatus {
-    NEW, AWAIT, GENERATION, FINISHED,
-    FINISHED_ERROR, ACTIVE
-  }
+  private Quiz.QuizStatus quizStatus;
 
   private  static final String DISTR_ID = "distribution.id";
   private static final String QUIZ_ST = "quiz.status";
@@ -37,7 +32,7 @@ public class Status {
 
   private Properties prop;
 
-  @SuppressWarnings({"EmptyCatchBlock"})
+  @SuppressWarnings({"EmptyCatchBlock", "ResultOfMethodCallIgnored"})
   Status(String statusFileName) throws QuizException {
     this.statusFileName = statusFileName;
     File stFile = new File(statusFileName);
@@ -58,7 +53,7 @@ public class Status {
       if ((ident = prop.getProperty(DISTR_ID)) != null) {  // if property exist => distribution already created
         this.ident = ident;
       }
-      setQuizStatus(QuizStatus.NEW);
+      setQuizStatus(Quiz.QuizStatus.NEW);
     } catch (IOException e) {
       logger.error(e, e);
       throw new QuizException(e.toString(), e);
@@ -82,21 +77,21 @@ public class Status {
     storeProps();
   }
 
-  void setQuizStatus(QuizStatus quizStatus) throws QuizException {
+  void setQuizStatus(Quiz.QuizStatus quizStatus) throws QuizException {
     this.quizStatus = quizStatus;
     prop.setProperty(QUIZ_ST, quizStatus.toString());
     storeProps();
   }
 
   void setQuizErrorStatus(QuizError error, String reason) throws QuizException {
-    quizStatus = QuizStatus.FINISHED_ERROR;
+    quizStatus = Quiz.QuizStatus.FINISHED_ERROR;
     prop.setProperty(QUIZ_ST, quizStatus.toString());
     prop.setProperty(ERROR_CODE, error.getCode());
     prop.setProperty(ERROR_REASON, reason);
     storeProps();
   }
 
-  QuizStatus getQuizStatus() {
+  Quiz.QuizStatus getQuizStatus() {
     return quizStatus;
   }
 
