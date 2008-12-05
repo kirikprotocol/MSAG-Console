@@ -63,7 +63,7 @@ public:
     BlocksHSReader(PersClient& _pc, const string& _dbName, const string& _dbPath, int _blockSize = BLOCK_SIZE,
                     int _blocksInFile = BLOCKS_IN_FILE): pc(_pc), dbName(_dbName), dbPath(_dbPath),
                      blockSize(_blockSize), blocksInFile(_blocksInFile) { 
-      logger = smsc::logger::Logger::getInstance("pers_up");
+      logger = smsc::logger::Logger::getInstance("pers.up");
       smsc_log_debug(logger, "dbName='%s' dbPath='%s' blockSize=%d blocksInFile=%d",
                      dbName.c_str(), dbPath.c_str(), blockSize, blocksInFile);
     }
@@ -119,17 +119,19 @@ public:
             File dataFile;
             dataFile.ROpen(name.c_str());
             dataFile.SetUnbuffered();
+            DataBlockHeader hdr;
             for (int j = 0; j < blocksInFile; ++j) {
-              smsc_log_debug(logger, "seek pos = %d", j * blockSize);
+              //smsc_log_debug(logger, "seek pos = %d", j * blockSize);
               dataFile.Seek(j * blockSize, SEEK_SET);
-              DataBlockHeader hdr;
+              memset((void*)&hdr, 0, sizeof(DataBlockHeader));
               dataFile.Read((void*)&hdr, sizeof(DataBlockHeader));
               if (hdr.block_used != BLOCK_USED) {
-                smsc_log_warn(logger, "data block number=%d is not used", j);
+                //smsc_log_debug(logger, "data block number=%d is not used", j);
                 continue;
               }
               if (!hdr.head) {
-                smsc_log_error(logger, "long data block number=%d pfkey=%s", j, hdr.key.toString().c_str());
+                smsc_log_error(logger, "long data block number=%d pfkey=%s blocks:%d data size:%d",
+                                j, hdr.key.toString().c_str(), hdr.total_blocks, hdr.data_size);
                 continue;
               }
               ++profiles_count;
@@ -158,7 +160,7 @@ public:
           }
       }
       smsc_log_info(logger, "total profiles count = %d in %d files", total_count, files_count);
-      smsc_log_info(logger, "total uploaded profiles = %d", STATUS_PROPERTY, total_status_profiles);
+      smsc_log_info(logger, "total uploaded profiles = %d", total_status_profiles);
       return 0;
     }
 private:
@@ -180,12 +182,12 @@ private:
         if (sendToPers) {
           pc.SetPropertyPrepare(*prop, batch);
         }
-        smsc_log_debug(logger, "abnt:'%s' property:'%s'", pf.getKey().c_str(), prop->toString().c_str());
+        smsc_log_debug(logger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
         ++prop_count;
       }
       if (sendToPers) {
         pc.RunBatch(batch);
-        smsc_log_debug(logger, "send %d properties to pers for profile %s", prop_count, pf.getKey().c_str());
+        smsc_log_debug(logger, "send %d properties to pers for profile key=%s", prop_count, pf.getKey().c_str());
       }
       if (sendToPers) {
         for (int i = 0; i < prop_count; ++i) {
@@ -194,12 +196,11 @@ private:
         return 1;
       }
     } catch (const SerialBufferOutOfBounds &e) {
-      smsc_log_warn(logger, "SerialBufferOutOfBounds Bad data in buffer read");
-      return 0;
+      smsc_log_warn(logger, "SerialBufferOutOfBounds: bad data in buffer read. profile key=%s", key.toString().c_str());
     } catch (const PersClientException& ex) {
-      smsc_log_warn(logger, "Error uploading profile. PersClientException: %s", ex.what());
-      return 0;
+      smsc_log_warn(logger, "Error uploading profile key=%s. PersClientException: %s", key.toString().c_str(), ex.what());
     }
+    return 0;
   }
 
   int restoreProfile(const Key& key, SerialBuffer& data, bool sendToPers, GlossaryBase* glossary) {
