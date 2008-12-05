@@ -240,10 +240,6 @@ public:
       return  crc32(0, key.value.full_addr, sizeof(key.value.full_addr));
   }
 
-  uint64_t getNumber() const {
-    return number;
-  }
-
   void setAddress(const char* address) {
     if(!address || !*address)
     {
@@ -277,15 +273,10 @@ public:
     value.addr_content.plan = (uint8_t)iplan;
     value.addr_content.length = static_cast<uint8_t>(strlen(addr_value));
     setValue(value.addr_content.length, addr_value);
-    number = atoll(addr_value);
-    if (number == 0) {
-      throw runtime_error(string("AbntAddr::setAddress: bad address ") + address);
-    }
   }
 
 private:
   AbntAddrValue value;
-  uint64_t number;
 };
 
 };	//  namespace pers
