@@ -334,35 +334,35 @@ AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg, const char* storageT
     dbName = cfg.getString("storageName"); 
   } catch (...) {
     dbName = DEF_STORAGE_NAME;
-    smsc_log_warn(logger, "Parameter <MTPers.%s.storageName> missed. Defaul value is '%s'",
+    smsc_log_warn(logger, "Parameter <PVSS.%s.storageName> missed. Defaul value is '%s'",
                    storageType, DEF_STORAGE_NAME);
   }
   try {
     indexGrowth = cfg.getInt("indexGrowth"); 
   } catch (...) {
     indexGrowth = DEF_INDEX_GROWTH;
-    smsc_log_warn(logger, "Parameter <MTPers.%s.indexGrowth> missed. Defaul value is %d",
+    smsc_log_warn(logger, "Parameter <PVSS.%s.indexGrowth> missed. Defaul value is %d",
                    storageType, DEF_INDEX_GROWTH);
   }
   try {
     blockSize = cfg.getInt("dataBlockSize"); 
   } catch (...) {
     blockSize = DEF_BLOCK_SIZE;
-    smsc_log_warn(logger, "Parameter <MTPers.%s.blockSize> missed. Defaul value is %d",
+    smsc_log_warn(logger, "Parameter <PVSS.%s.blockSize> missed. Defaul value is %d",
                    storageType, DEF_BLOCK_SIZE);
   }
   try {
     fileSize = cfg.getInt("blocksInFile"); 
   } catch (...) {
     fileSize = DEF_FILE_SIZE;
-    smsc_log_warn(logger, "Parameter <MTPers.%s.blocksInFile> missed. Defaul value is %d",
+    smsc_log_warn(logger, "Parameter <PVSS.%s.blocksInFile> missed. Defaul value is %d",
                    storageType, DEF_FILE_SIZE);
   }
   try {
     cacheSize = cfg.getInt("cacheSize"); 
   } catch (...) {
     cacheSize = DEF_CACHE_SIZE;
-    smsc_log_warn(logger, "Parameter <MTPers.%s.cacheSize> missed. Defaul value is %d",
+    smsc_log_warn(logger, "Parameter <PVSS.%s.cacheSize> missed. Defaul value is %d",
                    storageType, DEF_CACHE_SIZE);
   }
 }
@@ -378,21 +378,21 @@ InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* 
     dbPath = cfg.getString("storagePath"); 
   } catch (...) {
     dbPath = "./storage";
-    smsc_log_warn(logger, "Parameter <MTPers.%s.storageDir> missed. Defaul value is '/'",
+    smsc_log_warn(logger, "Parameter <PVSS.%s.storageDir> missed. Defaul value is '/'",
                    storageType);
   }
   try {
     recordCount = cfg.getInt("initRecordCount"); 
   } catch (...) {
     recordCount = DEF_BLOCK_SIZE;
-    smsc_log_warn(logger, "Parameter <MTPers.%s.initRecordCount> missed. Defaul value is %d",
+    smsc_log_warn(logger, "Parameter <PVSS.%s.initRecordCount> missed. Defaul value is %d",
                    storageType, DEF_RECORD_COUNT);
   }
   try {
     cacheSize = cfg.getInt("cacheSize"); 
   } catch (...) {
     cacheSize = DEF_CACHE_SIZE;
-    smsc_log_warn(logger, "Parameter <MTPers.%s.cacheSize> missed. Defaul value is %d",
+    smsc_log_warn(logger, "Parameter <PVSS.%s.cacheSize> missed. Defaul value is %d",
                    storageType, DEF_CACHE_SIZE);
   }
 }
