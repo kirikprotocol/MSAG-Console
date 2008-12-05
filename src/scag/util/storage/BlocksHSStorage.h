@@ -163,9 +163,9 @@ public:
     BlocksHSStorage(GlossaryBase* g = NULL,
                     smsc::logger::Logger* thelog = 0): glossary_(g), running(false), iterBlockIndex(0)
     {
-        if (!glossary_) {
-          throw std::runtime_error("BlocksHSStorage: glossary should be provided!");
-        }
+        // if (!glossary_) {
+        //  throw std::runtime_error("BlocksHSStorage: glossary should be provided!");
+        // }
         logger = thelog;
         hdrSize = sizeof(DataBlockHeader);
         memset(&backupHeader, 0, sizeof(BackupHeader));

@@ -73,9 +73,13 @@ public:
     Serializer( Buf& b, GlossaryBase* glossary = NULL ) : SerializerBase(glossary) ,buf_(&b), wpos_(0) {}
 
     // writing at wpos
+    inline Serializer& operator << ( int8_t x ) { return *this << uint8_t(x); }
     Serializer& operator << ( uint8_t );
+    inline Serializer& operator << ( int16_t x ) { return *this << uint16_t(x); }
     Serializer& operator << ( uint16_t );
+    inline Serializer& operator << ( int32_t x ) { return *this << uint32_t(x); }
     Serializer& operator << ( uint32_t );
+    inline Serializer& operator << ( int64_t x ) { return *this << uint64_t(x); }
     Serializer& operator << ( uint64_t );
     Serializer& operator << ( const char* );
     Serializer& operator << ( const std::string& );
@@ -99,7 +103,7 @@ public:
         return wpos_;
     }
 
-    inline void setWpos( size_t wp ) {
+    inline void setwpos( size_t wp ) {
         wpos_ = wp;
         if ( wpos_ > size() ) buf_->resize(wpos_); // do we need this?
     }
@@ -146,9 +150,13 @@ public:
     Deserializer( const Buf& buf, GlossaryBase* glossary = NULL ) :
     SerializerBase(glossary), buf_(&buf), rpos_(0), ebuf_(0), esize_(buf_->size()) {}
 
+    inline Deserializer& operator >> ( int8_t& x ) throw ( DeserializerException ) { return *this >> (uint8_t&)x; }
     Deserializer& operator >> ( uint8_t& ) throw ( DeserializerException );
+    inline Deserializer& operator >> ( int16_t& x ) throw ( DeserializerException ) { return *this >> (uint16_t&)x; }
     Deserializer& operator >> ( uint16_t& ) throw ( DeserializerException );
+    inline Deserializer& operator >> ( int32_t& x ) throw ( DeserializerException ) { return *this >> (uint32_t&)x; }
     Deserializer& operator >> ( uint32_t& ) throw ( DeserializerException );
+    inline Deserializer& operator >> ( int64_t& x ) throw ( DeserializerException ) { return *this >> (uint64_t&)x; }
     Deserializer& operator >> ( uint64_t& ) throw ( DeserializerException );
     Deserializer& operator >> ( const char* ) throw ( DeserializerException );
     Deserializer& operator >> ( std::string& ) throw ( DeserializerException );
@@ -177,6 +185,13 @@ public:
         return dochecksum( buf_ ? &(buf_->front()) : ebuf_, pos1, pos2 );
     }
 
+    inline const unsigned char* curpos() const {
+        return buf_ ? &((*buf_)[rpos_]) : &(ebuf_[rpos_]);
+    }
+    inline const char* curposc() const {
+        return reinterpret_cast< const char* >(curpos());
+    }
+
 private:
     /// read from buffer into \ptr.
     void readbuf( unsigned char* ptr, size_t size ) throw ( DeserializerException );
@@ -190,13 +205,6 @@ private:
 
 private:
     Deserializer();
-
-    inline const unsigned char* curpos() const {
-        return buf_ ? &((*buf_)[rpos_]) : &(ebuf_[rpos_]);
-    }
-    inline const char* curposc() const {
-        return reinterpret_cast< const char* >(curpos());
-    }
 
 private:
     const Buf*           buf_;

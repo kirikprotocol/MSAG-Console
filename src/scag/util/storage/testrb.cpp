@@ -17,7 +17,7 @@
 #include "GlossaryBase.h"
 
 // please comment out for BHS
-// #define USEPAGEFILE
+#define USEPAGEFILE
 #ifdef USEPAGEFILE
 #include "PageFileDiskStorage.h"
 #else
@@ -302,59 +302,72 @@ struct Address
 };
 
 
-    struct CSessionKey {
+struct CSessionKey 
+{
 
-        CSessionKey() {}
-        CSessionKey( const Address& a ) : abonentAddr(a) {}
+    CSessionKey() {}
+    CSessionKey( const Address& a ) : abonentAddr(a) {}
 
-        inline bool operator ==(const CSessionKey& sk) const
+    inline bool operator ==(const CSessionKey& sk) const
+    {
+        return ( this->abonentAddr == sk.abonentAddr );
+    }
+
+    bool operator < ( const CSessionKey& sk ) const
+    {
+        if ( abonentAddr < sk.abonentAddr ) return true;
+        if ( sk.abonentAddr < abonentAddr ) return false;
+        // if ( USR < sk.USR ) return true;
+        return false;
+    }
+
+    //CSessionKey() : USR(-1) {}
+    static uint32_t CalcHash(const CSessionKey& key)
+    {
+        uint32_t retval = key.abonentAddr.type ^ key.abonentAddr.plan;
+        int i;
+        for(i=0;i<key.abonentAddr.length;i++)
         {
-            return ( this->abonentAddr == sk.abonentAddr );
+            retval=retval*10+(key.abonentAddr.value[i]-'0');
         }
+        return retval;
+    }
 
-        bool operator < ( const CSessionKey& sk ) const
-        {
-            if ( abonentAddr < sk.abonentAddr ) return true;
-            if ( sk.abonentAddr < abonentAddr ) return false;
-            // if ( USR < sk.USR ) return true;
-            return false;
-        }
+    const std::string toString() const {
+        // char buf[30];
+        // snprintf(buf,sizeof(buf),":%d",USR);
+        return abonentAddr.toString();
+    }
 
-        //CSessionKey() : USR(-1) {}
-        static uint32_t CalcHash(const CSessionKey& key)
-        {
-            uint32_t retval = key.abonentAddr.type ^ key.abonentAddr.plan;
-            int i;
-            for(i=0;i<key.abonentAddr.length;i++)
-            {
-                retval=retval*10+(key.abonentAddr.value[i]-'0');
+    long long toIndex() const {
+        // calculation of the index
+        const std::string s = toString();
+        long long idx = 0;
+        for ( size_t i = 0; i < s.size(); ++i ) {
+            if ( s[i] >= '0' && s[i] <= '9' ) {
+                idx = idx*10 + (s[i] - '0');
             }
-            return retval;
         }
+        return idx;
+    }
 
-        const std::string toString() const {
-            // char buf[30];
-            // snprintf(buf,sizeof(buf),":%d",USR);
-            return abonentAddr.toString();
-        }
-
-        long long toIndex() const {
-            // calculation of the index
-            const std::string s = toString();
-            long long idx = 0;
-            for ( size_t i = 0; i < s.size(); ++i ) {
-                if ( s[i] >= '0' && s[i] <= '9' ) {
-                    idx = idx*10 + (s[i] - '0');
-                }
-            }
-            return idx;
-        }
-
-    public:
-        Address abonentAddr;
-    };
+public:
+    Address abonentAddr;
+};
 
 
+Serializer& operator << ( Serializer& s, const CSessionKey& sk )
+{
+    s << sk.abonentAddr.length << sk.abonentAddr.type << sk.abonentAddr.plan;
+    s.writeAsIs(MAX_ADDRESS_VALUE_LENGTH+1,sk.abonentAddr.value);
+}
+
+Deserializer& operator >> ( Deserializer& s, CSessionKey& sk )
+{
+    s >> sk.abonentAddr.length >> sk.abonentAddr.type >> sk.abonentAddr.plan;
+    strncpy(sk.abonentAddr.value,s.readAsIs(MAX_ADDRESS_VALUE_LENGTH+1),MAX_ADDRESS_VALUE_LENGTH);
+    sk.abonentAddr.value[MAX_ADDRESS_VALUE_LENGTH] = '\0';
+}
 
 
     class Session 
@@ -434,15 +447,15 @@ void Session::Deserialize( SerialBuffer& buf, bool, GlossaryBase* g )
     }
 
 
-    Serializer& operator << ( Serializer& s, const Session& ss ) {
-        ss.serialize( s );
-        return s;
-    }
+Serializer& operator << ( Serializer& s, const Session& ss ) {
+    ss.serialize( s );
+    return s;
+}
 
-    Deserializer& operator >> ( Deserializer& s, Session& ss ) {
-        ss.deserialize( s );
-        return s;
-    }
+Deserializer& operator >> ( Deserializer& s, Session& ss ) {
+    ss.deserialize( s );
+    return s;
+}
 
 
 
