@@ -169,27 +169,32 @@ SendMissedCallMessageEventHandler::formOutputMessageAndSendIt(const AbntAddr& ab
 }
 
 string
-SendMessageEventHandler::getBanner(const AbntAddr& abnt)
+SendMessageEventHandler::getBanner(const AbntAddr& abnt, bool needBannerInTranslit)
 {
   string banner, ret, ret1;
   int rc;
 
   smsc_log_debug(_logger, "SendMessageEventHandler::getBanner::: call to BE for abonent '%s'", abnt.getText().c_str());
   try {
-    rc = _advertising->getBanner(abnt.toString(), _taskProcessor.getSvcTypeForBE(), SMPP_SMS, UTF16BE, ret);
+    uint32_t bannerCharSet = UTF16BE;
+    if ( needBannerInTranslit )
+      bannerCharSet = ASCII_TRANSLIT;
+    rc = _advertising->getBanner(abnt.toString(), _taskProcessor.getSvcTypeForBE(), SMPP_SMS, bannerCharSet, ret);
     if(rc == 0)
     {
-      try {
-        scag::util::encodings::Convertor::convert("UTF-16BE", "UTF-8", ret.c_str(), ret.length(), ret1);
-      } catch(scag::exceptions::SCAGException e) {
-        smsc_log_error(_logger, "Exc: %s", e.what());
-        return banner="";
-      }
-      try {
-        scag::util::encodings::Convertor::convert("UTF-8", "CP1251", ret1.c_str(), ret1.length(), banner);
-      } catch(scag::exceptions::SCAGException e) {
-        smsc_log_error(_logger, "Exc: %s", e.what());
-        return banner="";
+      if ( bannerCharSet == UTF16BE ) {
+        try {
+          scag::util::encodings::Convertor::convert("UTF-16BE", "UTF-8", ret.c_str(), ret.length(), ret1);
+        } catch(scag::exceptions::SCAGException e) {
+          smsc_log_error(_logger, "Exc: %s", e.what());
+          return banner="";
+        }
+        try {
+          scag::util::encodings::Convertor::convert("UTF-8", "CP1251", ret1.c_str(), ret1.length(), banner);
+        } catch(scag::exceptions::SCAGException e) {
+          smsc_log_error(_logger, "Exc: %s", e.what());
+          return banner="";
+        }
       }
       smsc_log_debug(_logger, "rc = %d; Banner: %s (%s)", rc, banner.c_str(), ret.c_str());
     }
