@@ -48,10 +48,10 @@ public:
 };
 
 // partial specialization for long
-template <> void RBTreeSerializer< long >::serialize( Serializer& s, const long& k ) {
+template <> inline void RBTreeSerializer< long >::serialize( Serializer& s, const long& k ) {
     int64_t x = k; s << x;
 }
-template <> void RBTreeSerializer< long >::deserialize( Deserializer& d, long& k ) {
+template <> inline void RBTreeSerializer< long >::deserialize( Deserializer& d, long& k ) {
     int64_t x; d >> x; k = static_cast<long>(x);
 }
 
