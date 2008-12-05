@@ -427,7 +427,7 @@ bool TaskProcessor::processTask(Task* task)
     {
         if ( controlTrafficSpeedByRegion(task, message) != TRAFFIC_SUSPENDED ) {
           int seqNum = messageSender->getSequenceNumber();
-          smsc_log_debug(logger, "TaskId=[%d/%s]: Sending message #%llx,sq=%d for '%s': %s", 
+          smsc_log_debug(logger, "TaskId=[%d/%s]: Sending message #%llx,seqNum=%d for '%s': %s", 
                          info.uid,info.name.c_str(), message.id, seqNum, message.abonent.c_str(), message.message.c_str());
           {
             {
@@ -617,12 +617,12 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
 {
     if (!internal)
     {
-      smsc_log_info(logger, "Responce: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
-                                 rd.seqNum, rd.accepted, rd.retry, rd.immediate);
+      smsc_log_info(logger, "Response: seqNum=%d, smscMsgId=%s, accepted=%d, retry=%d, immediate=%d",
+                                 rd.seqNum, rd.msgId.c_str(),rd.accepted, rd.retry, rd.immediate);
     }
     else
     {
-       smsc_log_info(logger, "Responce for seqNum=%d is timed out.", rd.seqNum);
+       smsc_log_info(logger, "Response for seqNum=%d is timed out.", rd.seqNum);
     }
 
     TaskMsgId tmIds;
