@@ -82,7 +82,7 @@ inline scag::util::storage::Serializer& operator << (scag::util::storage::Serial
     ser << *(dataBlock.value);
     const char* data = reinterpret_cast<const char*>(ser.data());
     size_t end = ser.size();
-    dataBlock.backup->setBackupData(data + start, end - start);
+    dataBlock.backup->setBackupData(data + start, static_cast<unsigned>(end - start));
     return ser; 
 };
 
