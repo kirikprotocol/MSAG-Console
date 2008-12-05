@@ -682,13 +682,14 @@ private:
             if (logger) smsc_log_warn( logger, "version %d is not implemented in rbtree, using version #1", s.version() );
             throw smsc::util::Exception( "version %d is not implemented in rbtree", s.version() );
         }
-        int32_t align = 0;
         s <<
             uint64_t(addr2index(int64_t(node->parent))*header_.persistentCellSize) <<
             uint64_t(addr2index(int64_t(node->left))*header_.persistentCellSize) <<
             uint64_t(addr2index(int64_t(node->right))*header_.persistentCellSize) <<
-            uint32_t(node->color) << align;
+            uint32_t(node->color);
         KS ks; ks.serialize(s,node->key);
+        int32_t align = 0;
+        s << align;
         VS vs; vs.serialize(s,node->value);
     }
     void deserializeCell( Deserializer& d, RBTreeNode* node ) const {
@@ -722,8 +723,8 @@ private:
         uint32_t j;
         d >> j;
         node->color = j;
-        d >> j; // alignment
         KS ks; ks.deserialize(d,node->key);
+        d >> j; // alignment
         VS vs; vs.deserialize(d,node->value);
     }
 
