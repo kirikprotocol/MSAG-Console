@@ -10,6 +10,7 @@
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 
+#include "version.inc"
 #include "PersServer.h"
 #include "StorageManager.h"
 #include "IOTaskManager.h"
@@ -65,7 +66,7 @@ int main(int argc, char* argv[]) {
   Logger* logger = Logger::getInstance("pvss");
 
   try{
-    smsc_log_info(logger,  "Starting up ");
+    smsc_log_info(logger,  "Starting up %s", getStrVersion());
 
     Manager::init("config.xml");
     Manager& manager = Manager::getInstance();
