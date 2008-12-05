@@ -360,6 +360,7 @@ Serializer& operator << ( Serializer& s, const CSessionKey& sk )
 {
     s << sk.abonentAddr.length << sk.abonentAddr.type << sk.abonentAddr.plan;
     s.writeAsIs(MAX_ADDRESS_VALUE_LENGTH+1,sk.abonentAddr.value);
+    return s;
 }
 
 Deserializer& operator >> ( Deserializer& s, CSessionKey& sk )
@@ -367,6 +368,7 @@ Deserializer& operator >> ( Deserializer& s, CSessionKey& sk )
     s >> sk.abonentAddr.length >> sk.abonentAddr.type >> sk.abonentAddr.plan;
     strncpy(sk.abonentAddr.value,s.readAsIs(MAX_ADDRESS_VALUE_LENGTH+1),MAX_ADDRESS_VALUE_LENGTH);
     sk.abonentAddr.value[MAX_ADDRESS_VALUE_LENGTH] = '\0';
+    return s;
 }
 
 

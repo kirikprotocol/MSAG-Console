@@ -174,7 +174,7 @@ public:
             abort();
         newNode = addr2node( header_.first_free_cell );
         if (logger) smsc_log_debug(logger, "allocateNode rbtree_body_ = %p, header_.first_free_cell = %lld, node=%p", rbtree_body_, header_.first_free_cell, newNode );
-        header_.first_free_cell = int32_t(newNode->parent);
+        header_.first_free_cell = (int64_t)newNode->parent;
         newNode->parent = newNode->left = newNode->right = 0;
         header_.cells_used++;
         header_.cells_free--;
@@ -532,12 +532,19 @@ private:
 
         // reading cells
         rbtree_f.Seek( rbtFileHeaderDump_.size() );
-        unsigned char buf[header_.persistentCellSize];
-        Deserializer ds(buf,header_.persistentCellSize);
+        unsigned char buf[1024];
+        const bool neednew = header_.persistentCellSize > 1024;
+        std::auto_ptr<unsigned char> ppbuf;
+        unsigned char* pbuf = buf;
+        if (neednew) {
+            ppbuf.reset( new unsigned char[header_.persistentCellSize] );
+            pbuf = ppbuf.get();
+        }
+        Deserializer ds(pbuf,header_.persistentCellSize);
         ds.setVersion( header_.version );
         for ( int32_t i = 0; i < header_.cells_count; ++i ) {
             // FIXME: read cell
-            rbtree_f.Read(buf,header_.persistentCellSize);
+            rbtree_f.Read(pbuf,header_.persistentCellSize);
             ds.setrpos(0);
             deserializeCell( ds, addr2node(index2addr(i)) );
         }
