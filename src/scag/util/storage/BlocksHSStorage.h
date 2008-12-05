@@ -22,6 +22,7 @@
 #include "GlossaryBase.h"
 #include "DataBlockBackup.h"
 #include "util/Exception.hpp"
+#include "util/Uint64Converter.h"
 
 namespace scag {
 namespace util {
@@ -30,30 +31,21 @@ namespace storage {
 using std::vector;
 using std::string;
 using smsc::logger::Logger;
+using smsc::util::Uint64Converter;
 
 const string dfPreambule= "RBTREE_FILE_STORAGE!";
 const int dfVersion_32_1 = 0x01;
-const int dfVersion_64_1 = 0x80000001;
-const size_t PREAMBULE_SIZE = 20;
-const size_t RESERVED_SIZE = 12;
+const int32_t dfVersion_64_1 = 0x80000001; // pers 
+const int32_t dfVersion_64_2 = 0x80000002; // PVSS 2.0
+const uint32_t PREAMBULE_SIZE = 20;
+const uint32_t RESERVED_SIZE = 12;
 
 const int dfMode = 0600;
 
-//const int SUCCESS                 = 0;
-//const int RBTREE_FILE_NOT_SPECIFIED   = -1;
 const int CANNOT_CREATE_DESCR_FILE  = -2;
 const int CANNOT_CREATE_DATA_FILE   = -3;
 const int CANNOT_OPEN_DESCR_FILE    = -4;
 const int CANNOT_OPEN_DATA_FILE     = -5;
-const int DESCR_FILE_MAP_FAILED     = -6;
-//const int RBTREE_FILE_ERROR           = -10;
-
-//const int defaultBlockSize = 8192; // in bytes
-//const int defaultFileSize = 10000; // in blocks
-
-const int defaultBlockSize = 56; // in bytes
-const int defaultFileSize = 3; // in blocks 
-const long long BLOCK_USED   = (long long)1 << 63;
 
 static const uint8_t TRX_COMPLETE   = 0;
 static const uint8_t TRX_INCOMPLETE = 1;
@@ -61,10 +53,12 @@ static const uint8_t TRX_INCOMPLETE = 1;
 static const size_t WRITE_BUF_SIZE = 10240;
 static const size_t PROFILE_MAX_BLOCKS_COUNT = 10;
 static const size_t MIN_BLOCK_SIZE = 10;
-                                          
+
+static const uint32_t DESCRIPTION_FILE_SIZE = 64;
+
 struct DescriptionFile   
 {
-    DescriptionFile(): version(dfVersion_64_1), files_count(0), block_size(0), file_size(0), blocks_used(0), blocks_free(0), first_free_block(0) {
+    DescriptionFile(): version(dfVersion_64_2), files_count(0), block_size(0), file_size(0), blocks_used(0), blocks_free(0), first_free_block(0) {
       memcpy(preamble, dfPreambule.c_str(), PREAMBULE_SIZE);
       memset(Reserved, 0, RESERVED_SIZE);
     }
@@ -77,27 +71,106 @@ struct DescriptionFile
       first_free_block = descr.first_free_block;
       return *this;
     }
-    typedef long index_type;
-    char preamble[PREAMBULE_SIZE];
-    int version;
-    int files_count;
-    int block_size;         // in bytes;
-    int file_size;          // in blocks
-    int blocks_used;
-    int blocks_free;
+    typedef int64_t index_type;
+    int32_t version;
+    int32_t files_count;
+    int32_t block_size;         // in bytes;
+    int32_t file_size;          // in blocks
+    int32_t blocks_used;
+    int32_t blocks_free;
     index_type first_free_block;
+    char preamble[PREAMBULE_SIZE];
     char Reserved[RESERVED_SIZE];
+
+    void deserialize(Deserializer& deser) {
+      deser.setrpos(0);
+      uint32_t val = 0;
+      const char* buf = deser.readAsIs(PREAMBULE_SIZE);
+      memcpy(preamble, buf, PREAMBULE_SIZE);
+      deser >> val;
+      version = val;
+      if (version != dfVersion_64_2) {
+        return;
+      }
+
+      deser >> val;
+      files_count = val;
+
+      deser >> val;
+      block_size = val;
+
+      deser >> val;
+      file_size = val;
+
+      deser >> val;
+      blocks_used = val;
+
+      deser >> val;
+      blocks_free = val;
+
+      uint64_t ffb;
+      deser >> ffb;
+      first_free_block = ffb;
+
+      buf = deser.readAsIs(RESERVED_SIZE);
+      memcpy(Reserved, buf, RESERVED_SIZE);
+    }
+
+    void serialize(Serializer& ser) const {
+      ser.setWpos(0);
+      ser.writeAsIs(PREAMBULE_SIZE, preamble);
+      ser << (uint32_t)version;
+      ser << (uint32_t)files_count;
+      ser << (uint32_t)block_size;
+      ser << (uint32_t)file_size;
+      ser << (uint32_t)blocks_used;
+      ser << (uint32_t)blocks_free;
+      ser << (uint64_t)first_free_block;
+      ser.writeAsIs(RESERVED_SIZE, Reserved);
+    }
+
+    static uint32_t size() {
+      return DESCRIPTION_FILE_SIZE;
+    }
 };
+
+static const uint32_t BACKUP_HEADER_SIZE = 34;
 
 template<class Key>
 struct templBackupHeader {
-    typedef DescriptionFile::index_type index_type;
-  long blocksCount;
-  long dataSize;
+  typedef DescriptionFile::index_type index_type;
+  uint64_t blocksCount;
+  uint64_t dataSize;
   index_type curBlockIndex;
   Key key;
+  void deserialize(Deserializer& deser){
+    deser.setrpos(0);
+    uint64_t val;
+    deser >> val;
+    blocksCount = val;
+
+    deser >> val;
+    dataSize = val;
+
+    deser >> val;
+    curBlockIndex = val;
+
+    deser >> key;
+  }
+  void serialize(Serializer& ser) const {
+    ser.setWpos(0);
+    ser << (uint64_t)blocksCount;
+    ser << (uint64_t)dataSize;
+    ser << (uint64_t)curBlockIndex;
+    ser << key;
+  }
+
+  static uint32_t size() {
+    return BACKUP_HEADER_SIZE;
+  }
 };
 
+static const uint32_t DATA_BLOCK_HEADER_SIZE = 43;
 
 template<class Key>
 struct templDataBlockHeader
@@ -106,13 +179,49 @@ struct templDataBlockHeader
     union
     {
         index_type next_free_block;
-        long block_used;
+        index_type block_used;
     };
-    Key     key;
-    long    total_blocks;
-    long    data_size;
-    index_type    next_block;
-    bool    head;
+    uint64_t   total_blocks;
+    uint64_t   data_size;
+    index_type next_block;
+    Key        key;
+    bool       head;
+
+    void deserialize(Deserializer& deser) {
+      deser.setrpos(0);
+      uint64_t val;
+      deser >> val;
+      next_free_block = val;
+
+      deser >> key;
+
+      deser >> val;
+      total_blocks = val;
+
+      deser >> val;
+      data_size = val;
+
+      deser >> val;
+      next_block = val;
+
+      uint8_t boolval;
+      deser >> boolval;
+      head = (bool)boolval;
+    }
+
+    void serialize(Serializer& ser) const {
+      ser.setWpos(0);
+      ser << (uint64_t)next_free_block;
+      ser << key;
+      ser << (uint64_t)total_blocks;
+      ser << (uint64_t)data_size;
+      ser << (uint64_t)next_block;
+      ser << (uint8_t)head;
+    }
+
+    static uint32_t size() {
+      return DATA_BLOCK_HEADER_SIZE;
+    }
 };
 
 template<class Key>
@@ -124,10 +233,9 @@ struct templDataBlock {
   templDataBlock(const templDataBlockHeader<Key>& _hdr)
                  :hdr(_hdr), data(0) {}
   templDataBlock():data(0) {
-    memset((void*)&hdr, 0, sizeof(templDataBlockHeader<Key>));
+    memset((void*)&hdr, 0, sizeof(hdr));
   }
 };
-
 
 template<class Key, class Profile>
 class BlocksHSStorage
@@ -158,17 +266,19 @@ public:
 
     static const int defaultBlockSize = 2048; // in bytes
     static const int defaultFileSize = 100; // in blocks 
-    static const long BLOCK_USED	= long(uint64_t(1) << 63);
+    static const int64_t BLOCK_USED	= int64_t(1) << 63;
 
     BlocksHSStorage(GlossaryBase* g = NULL,
-                    smsc::logger::Logger* thelog = 0): glossary_(g), running(false), iterBlockIndex(0)
+                    smsc::logger::Logger* thelog = 0): glossary_(g), running(false), iterBlockIndex(0), ser_(serBuf_)
     {
-        // if (!glossary_) {
-        //  throw std::runtime_error("BlocksHSStorage: glossary should be provided!");
-        // }
+        if (!glossary_) {
+          throw std::runtime_error("BlocksHSStorage: glossary should be provided!");
+        }
         logger = thelog;
-        hdrSize = sizeof(DataBlockHeader);
+        hdrSize = DataBlockHeader::size();
         memset(&backupHeader, 0, sizeof(BackupHeader));
+        serBuf_.reserve(DescriptionFile::size());
+        memset(deserBuf_, 0, DescriptionFile::size());
     }
 
 
@@ -179,8 +289,8 @@ public:
 
 
     int Create(const string& _dbName, const string& _dbPath = "",
-               long _fileSize = defaultFileSize,
-               long _blockSize = defaultBlockSize)
+               int32_t _fileSize = defaultFileSize,
+               int32_t _blockSize = defaultBlockSize)
     {
         dbName = _dbName;
         dbPath = _dbPath;
@@ -360,7 +470,8 @@ public:
             off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
             File* f = dataFile_f[file_number];
             f->Seek(offset, SEEK_SET);
-            f->Read((void*)&hdr, hdrSize);
+            deserialize(f, hdr);
+
             if(hdr.block_used != BLOCK_USED)
                 return false;
             if(curBlockIndex == blockIndex)
@@ -391,8 +502,6 @@ public:
         char* buff;
         index_type curBlockIndex = blockIndex;
         int i = 0;
-        //SerialBuffer data;
-        //TODO: catch file exceptions
         profileData.Empty();
         do
         {
@@ -402,7 +511,8 @@ public:
             off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
             File* f = dataFile_f[file_number];
             f->Seek(offset, SEEK_SET);
-            f->Read((void*)&hdr, hdrSize);
+            deserialize(f, hdr);
+
             if(hdr.block_used != BLOCK_USED) {
                 if (logger) smsc_log_error(logger, "block index=%d unused", curBlockIndex);
                 return false;
@@ -470,7 +580,8 @@ public:
             off_t offset = (iterBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
             File* f = dataFile_f[file_number];
             f->Seek(offset, SEEK_SET);
-            f->Read((void*)&hdr, hdrSize);
+            deserialize(f, hdr);
+
             blockIndex = iterBlockIndex++;            
             if(hdr.block_used == BLOCK_USED && hdr.head)
             {
@@ -497,7 +608,7 @@ private:
   File backupFile_f;
   vector<File*> dataFile_f;
   index_type iterBlockIndex;
-  long effectiveBlockSize;	
+  int effectiveBlockSize;	
 
   vector<index_type> dataBlockBackup;
   char writeBuf[WRITE_BUF_SIZE];
@@ -506,7 +617,18 @@ private:
   CompleteDataBlock completeDataBlock;
   BackupHeader backupHeader;
 
+  std::vector< unsigned char > serBuf_;
+  unsigned char deserBuf_[DESCRIPTION_FILE_SIZE];
+  Serializer ser_;
+
 private:
+
+  template<class T> void deserialize(File* f, T& hdr) {
+     memset(deserBuf_, 0, DescriptionFile::size());
+     f->Read((void*)deserBuf_, T::size());
+     Deserializer ds(deserBuf_, T::size());
+     hdr.deserialize(ds);
+  }
 
     void printHdr(const DataBlockHeader& hdr) {
         if (!logger) return;
@@ -526,8 +648,10 @@ private:
             throw smsc::util::Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count-1);
         }
         size_t bufSize = hdrSize + curBlockSize;
-        memcpy(writeBuf, &hdr, hdrSize);
-        memcpy(writeBuf + hdrSize, data, curBlockSize);
+        serBuf_.resize(0);
+        hdr.serialize(ser_);
+        memcpy(writeBuf, ser_.data(), ser_.size());
+        memcpy(writeBuf + ser_.size(), data, curBlockSize);
         try {
             File* f = dataFile_f[fileNumber];
             f->Seek(offset, SEEK_SET);
@@ -572,7 +696,6 @@ private:
         return curBlockIndex;
     }
 
-
     index_type getFirstFreeBlock(int fileNumber, off_t offset)
     {
         if (!checkfn(fileNumber)) {
@@ -580,8 +703,7 @@ private:
         }
         File* f = dataFile_f[fileNumber];
         f->Seek(offset, SEEK_SET);
-        index_type ffb = 0;
-        f->Read((void*)&(ffb), sizeof(descrFile.first_free_block));
+        index_type ffb = f->ReadNetInt64();
         if (ffb == -1) {
             ffb = descrFile.files_count * descrFile.file_size;
             CreateDataFile();
@@ -606,7 +728,7 @@ private:
             off_t offset = (blockIndex - file_number * descrFile.file_size) * descrFile.block_size;
             File* f = dataFile_f[file_number];
             f->Seek(offset);
-            f->Write((void*)(&ffb), sizeof(descrFile.first_free_block));
+            f->WriteNetInt64(ffb);
             ffb = blockIndex;
             blockIndex = dataBlockBackup[backupIndex];
             ++backupIndex;
@@ -619,7 +741,7 @@ private:
             if (logger) smsc_log_debug(logger, "Create backup file");
             backupFile_f.RWCreate((dbPath + '/' + dbName + ".trx").c_str());
             backupFile_f.SetUnbuffered();
-            backupFile_f.Write((void*)&TRX_COMPLETE, sizeof(TRX_COMPLETE));
+            backupFile_f.WriteByte(TRX_COMPLETE);
             return 0;
         } catch (const std::exception& e) {
             if (logger) smsc_log_error(logger, "FSStorage: error create backup file: '%s'", e.what());
@@ -627,7 +749,7 @@ private:
         }
     }
 
-    int CreateDescriptionFile(long _blockSize, long _fileSize)
+    int CreateDescriptionFile(int32_t _blockSize, int32_t _fileSize)
     {
         try
         {
@@ -649,7 +771,7 @@ private:
         // initialize Description File structure
         descrFile.block_size = _blockSize;
         descrFile.file_size = _fileSize;
-        effectiveBlockSize = descrFile.block_size - sizeof(DataBlockHeader);
+        effectiveBlockSize = descrFile.block_size - hdrSize;
         changeDescriptionFile();
         return 0;
     }
@@ -702,16 +824,20 @@ private:
 
             //	create list of free blocks
             emptyBlock = new char[descrFile.block_size];
-            index_type* next_block = (index_type*)emptyBlock;
+            //index_type* next_block = (index_type*)emptyBlock;
             index_type endBlock = (descrFile.files_count + 1) * descrFile.file_size;
 
             memset(emptyBlock, 0x00, descrFile.block_size);
             for(index_type i = startBlock + 1; i < endBlock; i++)
             {
-                *next_block = i;
+                //*next_block = i;
+                uint64_t ni = Uint64Converter::toNetworkOrder(i);
+                memcpy(emptyBlock, &ni, sizeof(ni));
                 data_f->Write(emptyBlock, descrFile.block_size);
             }
-            *next_block = -1;
+            //*next_block = -1;
+            uint64_t ni = Uint64Converter::toNetworkOrder(-1);
+            memcpy(emptyBlock, &ni, sizeof(ni));
             data_f->Write(emptyBlock, descrFile.block_size);
             delete[] emptyBlock;
         }
@@ -736,7 +862,9 @@ private:
         try {
             if (logger) smsc_log_debug(logger, "Change description file");
             descrFile_f.Seek(0, SEEK_SET);        
-            descrFile_f.Write((char*)&descrFile, sizeof(DescriptionFile));
+            serBuf_.resize(0);
+            descrFile.serialize(ser_);
+            descrFile_f.Write(ser_.data(), ser_.size());
             printDescrFile();
             return;
         } catch (const std::exception& ex) {
@@ -749,7 +877,9 @@ private:
             tmpFile.RWCreate(name.c_str());
             tmpFile.SetUnbuffered();
             tmpFile.Seek(0, SEEK_SET);
-            tmpFile.Write((char*)&descrFile, sizeof(DescriptionFile));
+            serBuf_.resize(0);
+            descrFile.serialize(ser_);
+            tmpFile.Write(ser_.data(), ser_.size());
             if (logger) smsc_log_error(logger, "Last description data saved in file '%s'", name.c_str());
         } catch (const std::exception& ex) {
             if (logger) smsc_log_error(logger, "Can't save temp description file. std::exception: '%s'", ex.what());
@@ -774,15 +904,16 @@ private:
             backupFile_f.Seek(0);
             uint8_t trx = backupFile_f.ReadByte();
             if (trx == TRX_COMPLETE) {
-                if (logger) smsc_log_debug(logger, "Last transaction is complited");
+                if (logger) smsc_log_debug(logger, "Last transaction is complete");
                 return;
             }
-            if (logger) smsc_log_warn(logger, "Last transaction is incomplited. Load transaction data");
-            backupFile_f.Read((void*)&descrFile, sizeof(DescriptionFile));
-            backupFile_f.Read((void*)&backupHeader, sizeof(BackupHeader));
+            if (logger) smsc_log_warn(logger, "Last transaction is incomplete. Load transaction data");
+
+            deserialize(&backupFile_f, descrFile);
+            deserialize(&backupFile_f, backupHeader);
+
             for (int i = 0; i < backupHeader.blocksCount; ++i) {
-                index_type nextBlock;
-                backupFile_f.Read((void *)&nextBlock, sizeof(nextBlock));
+                index_type nextBlock = backupFile_f.ReadNetInt64();
                 dataBlockBackup.push_back(nextBlock);
             }
             if (backupHeader.dataSize > 0) {
@@ -826,17 +957,23 @@ private:
         {
             descrFile_f.RWOpen(name.c_str());
             descrFile_f.SetUnbuffered();
-            descrFile_f.Read((char*)&descrFile, sizeof(DescriptionFile));
+            deserialize(&descrFile_f, descrFile);
+
+            if (descrFile.version != dfVersion_64_2) {
+              if (logger) smsc_log_error(logger, "FSStorage: invalid version of data storage:0x%x, correct version:0x%x", descrFile.version, dfVersion_64_2);
+              return CANNOT_OPEN_EXISTS_DESCR_FILE;
+            }
+
             if (logger) smsc_log_debug(logger, "OpenDescrFile: files_count=%d, block_size=%d, file_size=%d, blocks_used=%d, blocks_free=%d, first_free_block=%d",
                            descrFile.files_count, descrFile.block_size, descrFile.file_size, descrFile.blocks_used, descrFile.blocks_free, descrFile.first_free_block);
-            effectiveBlockSize = descrFile.block_size - sizeof(DataBlockHeader);
+            effectiveBlockSize = descrFile.block_size - hdrSize;
             return 0;
         }
-        catch(const FileException& ex)
+        catch(const std::exception& ex)
         {
             if (File::Exists(name.c_str())) {
                 if (logger) smsc_log_error(logger, "FSStorage: idx_file - exists, but can't be opened : %s\n", ex.what());
-                return CANNOT_OPEN_EXISTS_DESCR_FILE;
+                return OpenBackupFile();
             }
             if (logger) smsc_log_debug(logger, "FSStorage: error idx_file - %s\n", ex.what());
             return DESCR_FILE_OPEN_FAILED;
@@ -852,7 +989,7 @@ private:
         }
         char	buff[10];
         string path = dbPath + '/' + dbName;
-        for(long i = 0; i < descrFile.files_count; i++)
+        for(int i = 0; i < descrFile.files_count; i++)
         {
             snprintf(buff, 10, "-%.7d", i);
             string name = path + buff;
@@ -913,7 +1050,7 @@ private:
                 curBlockIndex = dataBlockBackup[i];
                 File* f = dataFile_f[file_number];
                 f->Seek(offset);
-                f->Write((void*)(&curBlockIndex), sizeof(descrFile.first_free_block));
+                f->WriteNetInt64(curBlockIndex);
                 if (logger) smsc_log_debug(logger, "restore next_free_block=%d offset=%d", curBlockIndex, offset);
             }
             clearBackup();
@@ -926,22 +1063,31 @@ private:
 
 
     void writeBackup(File& f, const DescriptionFile& _descrFile, const char* backupData) {
-        size_t bufSize = sizeof(TRX_INCOMPLETE) + sizeof(DescriptionFile) + sizeof(BackupHeader) +
+        size_t bufSize = sizeof(TRX_INCOMPLETE) + DescriptionFile::size() + BackupHeader::size() +
             backupHeader.blocksCount * sizeof(descrFile.first_free_block) + backupHeader.dataSize;
         char* buf = new char[bufSize];
+
         try {
             memcpy(buf, &TRX_INCOMPLETE, 1);
             size_t bufOffset = 1;
-            memcpy(buf + bufOffset, &_descrFile, sizeof(DescriptionFile));
-            bufOffset += sizeof(DescriptionFile);
-            memcpy(buf + bufOffset, &backupHeader, sizeof(BackupHeader));
-            bufOffset += sizeof(BackupHeader);
-            for (int i = 0; i < backupHeader.blocksCount; ++i) {
-                memcpy(buf + bufOffset, (void*)(&dataBlockBackup[i]), sizeof(descrFile.first_free_block));
-                bufOffset += sizeof(descrFile.first_free_block);
+
+            serBuf_.resize(0);
+            _descrFile.serialize(ser_);
+            memcpy(buf + bufOffset, ser_.data(), ser_.size());
+            bufOffset += ser_.size();
+
+            serBuf_.resize(0);
+            backupHeader.serialize(ser_);
+            memcpy(buf + bufOffset, ser_.data(), ser_.size());
+            bufOffset += ser_.size();
+
+            for (int i = 0; i < backupHeader.blocksCount; ++i) { 
+                uint64_t ni = Uint64Converter::toNetworkOrder(dataBlockBackup[i]);
+                memcpy(buf + bufOffset, (void*)(&ni), sizeof(ni)); 
+                bufOffset += sizeof(ni);
             }
             if (backupHeader.dataSize > 0) {
-                memcpy(buf + bufOffset, backupData, backupHeader.dataSize);
+                memcpy(buf + bufOffset, backupData, backupHeader.dataSize);           
             }
             f.Seek(0);
             f.Write(buf, bufSize);
@@ -1051,7 +1197,6 @@ private:
             exit(-1);
         }
     }
-
 
     /// check file number
     inline bool checkfn( int fn ) const {
