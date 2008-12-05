@@ -117,7 +117,7 @@ struct DescriptionFile
     }
 
     void serialize(Serializer& ser) const {
-      ser.setWpos(0);
+      ser.setwpos(0);
       ser.writeAsIs(PREAMBULE_SIZE, preamble);
       ser << (uint32_t)version;
       ser << (uint32_t)files_count;
@@ -158,7 +158,7 @@ struct templBackupHeader {
     deser >> key;
   }
   void serialize(Serializer& ser) const {
-    ser.setWpos(0);
+    ser.setwpos(0);
     ser << (uint64_t)blocksCount;
     ser << (uint64_t)dataSize;
     ser << (uint64_t)curBlockIndex;
@@ -210,7 +210,7 @@ struct templDataBlockHeader
     }
 
     void serialize(Serializer& ser) const {
-      ser.setWpos(0);
+      ser.setwpos(0);
       ser << (uint64_t)next_free_block;
       ser << key;
       ser << (uint64_t)total_blocks;
