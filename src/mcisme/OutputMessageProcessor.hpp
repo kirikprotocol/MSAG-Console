@@ -26,7 +26,7 @@ public:
       _advertising(advertising), _logger(logger::Logger::getInstance("outputprc")) {}
   virtual ~SendMessageEventHandler() {}
   virtual void handle() = 0;
-  std::string getBanner(const AbntAddr& abnt);
+  std::string getBanner(const AbntAddr& abnt, bool needBannerInTranslit);
 protected:
   TaskProcessor& _taskProcessor;
   BEReconnector& _reconnectorThread;
