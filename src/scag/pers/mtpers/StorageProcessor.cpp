@@ -134,7 +134,7 @@ bool StorageProcessor::addPacket(PersPacket* packet) {
 }
 
 AbonentStorageProcessor::AbonentStorageProcessor(unsigned maxWaitingCount, unsigned locationNumber, unsigned storagesCount):
-                         StorageProcessor(maxWaitingCount), locationNumber_(locationNumber), storagesCount_(storagesCount) {  
+                         StorageProcessor(maxWaitingCount), locationNumber_(locationNumber), storagesCount_(storagesCount) {
   abntlog_ = Logger::getInstance("pvss.abnt");
 }
 
@@ -146,9 +146,12 @@ void AbonentStorageProcessor::initElementStorage(const AbonentStorageConfig& cfg
   elStorage.glossary = new Glossary();
   initGlossary(path, elStorage.glossary);
 
-  std::auto_ptr< DiskIndexStorage > dis(new DiskIndexStorage(cfg.dbName, path, cfg.indexGrowth));
+  std::auto_ptr< DiskIndexStorage > dis(new DiskIndexStorage( cfg.dbName, path, cfg.indexGrowth,
+                                                              false, smsc::logger::Logger::getInstance("pvss.idx")));
   smsc_log_debug(logger_, "data index storage %d is created", index);
-  std::auto_ptr< DiskDataStorage::storage_type > bs(new DiskDataStorage::storage_type(elStorage.glossary));
+  std::auto_ptr< DiskDataStorage::storage_type > bs
+        (new DiskDataStorage::storage_type(elStorage.glossary,
+                                           smsc::logger::Logger::getInstance("pvss.bhdisk")));
   int ret = -1;
   const string fn(cfg.dbName + "-data");
 
@@ -163,7 +166,9 @@ void AbonentStorageProcessor::initElementStorage(const AbonentStorageConfig& cfg
   if (ret < 0) {
     throw Exception("can't open data disk storage: %s", path.c_str());
   }
-  std::auto_ptr< DiskDataStorage > dds(new DiskDataStorage(bs.release()));
+  std::auto_ptr< DiskDataStorage > dds
+        (new DiskDataStorage(bs.release(),
+                             smsc::logger::Logger::getInstance("pvss.disk.d")));
   smsc_log_debug(logger_, "data disk storage %d is created", index);
 
   std::auto_ptr< DiskStorage > ds(new DiskStorage(dis.release(), dds.release()));
