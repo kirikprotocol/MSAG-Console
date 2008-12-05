@@ -945,7 +945,7 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
       continue;
     }
 
-    msg.caller_abonent = abnt;
+    msg.caller_abonent = _originatingAddressIsMCIAddress ? getAddress() : abnt;
     msg.notification = true;
 
     bool needBannerInTranslit = !hasHighBit(msg.message.c_str(), msg.message.size());
