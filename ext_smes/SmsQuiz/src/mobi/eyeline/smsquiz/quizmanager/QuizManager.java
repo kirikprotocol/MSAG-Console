@@ -296,12 +296,8 @@ public class QuizManager implements Observer {
             }
           }
         }
-      } else {
-        if (quiz.getDistrId() == null) {
-          logger.warn("Quiz is finished, but it's distribution id doesn't exist: " + quiz);
-          quiz.setExported(true);
-        }
       }
+      
       quizes.add(quiz);
       quiz.updateQuiz(data);
 

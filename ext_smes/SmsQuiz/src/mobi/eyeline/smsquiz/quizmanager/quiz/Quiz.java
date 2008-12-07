@@ -12,7 +12,6 @@ import mobi.eyeline.smsquiz.replystats.Reply;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
 import mobi.eyeline.smsquiz.storage.ResultSet;
-import mobi.eyeline.smsquiz.storage.StorageException;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -27,18 +26,17 @@ import java.util.concurrent.locks.ReentrantLock;
 
 @SuppressWarnings({"ResultOfMethodCallIgnored"})
 public class Quiz {
+
   private static final Logger logger = Logger.getLogger(Quiz.class);
 
+  public static enum Status {
+    NEW, GENERATION, AWAIT, ACTIVE, EXPORTING, FINISHED, FINISHED_ERROR
+  }
 
   private JStore jstore;
   private String fileName;
 
   private QuizData quizData = null;
-
-  public static enum QuizStatus {
-    NEW, AWAIT, GENERATION, FINISHED,
-    FINISHED_ERROR, ACTIVE
-  }
 
   private long lastDistrStatusCheck = System.currentTimeMillis();
 
@@ -48,14 +46,13 @@ public class Quiz {
   private String workDir;
   private String quizId;
 
-
   private final ReplyStatsDataSource replyStatsDataSource;
   private final DistributionManager distributionManager;
   private final QuizCollector quizCollector;
 
   private int answerHandled = -5;
 
-  private Status status;
+  private StatusFile statusFile;
 
   private boolean exported = false;
 
@@ -82,11 +79,11 @@ public class Quiz {
     fileName = file.getAbsolutePath();
     quizId = file.getName().substring(0, file.getName().lastIndexOf("."));
     jstore.init(dirWork + File.separator + file.getName() + ".bin", 60000, 10);
-    status = new Status(dirWork + File.separator + quizId + ".status");
+    statusFile = new StatusFile(dirWork + File.separator + quizId + ".status");
   }
 
   public String getStatusFileName() {
-    return status.getStatusFileName();
+    return statusFile.getStatusFileName();
   }
 
   public Result handleSms(String oa, String text) throws QuizException {
@@ -138,7 +135,7 @@ public class Quiz {
     }
     if ((result != null) && (result.getReplyRull().equals(Result.ReplyRull.REPEAT))) {
       try {
-        distributionManager.resend(oa, status.getId());
+        distributionManager.resend(oa, statusFile.getDistrId());
       } catch (DistributionException e) {
         e.printStackTrace();
         logger.error("Can't resend the message", e);
@@ -154,9 +151,6 @@ public class Quiz {
   }
 
   public void exportStats() throws QuizException {
-    if (exported)
-      return;
-
     try {
       exportLock.lock();
 
@@ -169,7 +163,7 @@ public class Quiz {
       Date dateBegin = quizData.getDateBegin();
       Date dateEnd = quizData.getDateEnd();
       String da = quizData.getDestAddress();
-      Date realStartDate = status.getActualStartDate();
+      Date realStartDate = statusFile.getActualStartDate();
       SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
       String fileName = dirResult + File.separator + quizId + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
       dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
@@ -257,10 +251,9 @@ public class Quiz {
   public void setDateBegin(Date dateBegin) throws QuizException {
     if((quizData.getDateBegin() == null)||(!quizData.getDateBegin().equals(dateBegin))) {
       quizData.setDateBegin(dateBegin);
-//      quizCollector.alert(this);
-      quizCollector.alert();
+      statusFile.setActualStartDate(dateBegin);
+      quizCollector.alert(this);
     }
-    status.setActualStartDate(dateBegin);
   }
 
   public Date getDateEnd() {
@@ -270,8 +263,7 @@ public class Quiz {
   public void setDateEnd(Date dateEnd) throws QuizException{
     if((quizData.getDateEnd() == null)||(!quizData.getDateEnd().equals(dateEnd))) {
       quizData.setDateEnd(dateEnd);
-//      quizCollector.alert(this);
-      quizCollector.alert();
+      quizCollector.alert(this);
     }
   }
 
@@ -300,11 +292,11 @@ public class Quiz {
   }
 
   public String getDistrId() {
-    return status.getId();
+    return statusFile.getDistrId();
   }
 
   public void setDistrId(String id) throws QuizException {
-    status.setId(id);
+    statusFile.setDistrId(id);
   }
 
   public void addReplyPattern(ReplyPattern replyPattern) {
@@ -369,23 +361,21 @@ public class Quiz {
     return quizId;
   }
 
-  public void setQuizStatus(QuizStatus quizStatus) throws QuizException {
-    if(quizStatus != getQuizStatus()) {
-      status.setQuizStatus(quizStatus);
-//      quizCollector.alert(this);
-      quizCollector.alert();
+  public void setQuizStatus(Status status) throws QuizException {
+    if(status != getQuizStatus()) {
+      statusFile.setQuizStatus(status);
+      quizCollector.alert(this);
     }
   }
 
-  public QuizStatus getQuizStatus() {
-    return status.getQuizStatus();
+  public Status getQuizStatus() {
+    return statusFile.getQuizStatus();
   }
 
   public void setQuizStatus(QuizError error, String reason) throws QuizException {
-    if (getQuizStatus() != QuizStatus.FINISHED_ERROR) {
-      status.setQuizErrorStatus(error, reason);
-//      quizCollector.alert(this);
-      quizCollector.alert();
+    if (getQuizStatus() != Status.FINISHED_ERROR) {
+      statusFile.setQuizErrorStatus(error, reason);
+      quizCollector.alert(this);
     }
   }
 
@@ -407,10 +397,6 @@ public class Quiz {
 
   public void setOrigAbFile(String origAbFile) {
     quizData.setOrigAbFile(origAbFile);
-  }
-
-  public void setExported(boolean exported) {
-    this.exported = exported;
   }
 
   public Calendar getTimeBegin() {
@@ -561,8 +547,7 @@ public void writeError(Throwable exc) {
   public void setLastDistrStatusCheck(long l) throws QuizException{
     if(this.lastDistrStatusCheck != l) {
       this.lastDistrStatusCheck = l;
-//      quizCollector.alert(this);
-      quizCollector.alert();
+      quizCollector.alert(this);
     }
   }
 
@@ -579,7 +564,7 @@ public void writeError(Throwable exc) {
       case NEW:
         if (quizData == null) {
           quizData = data;
-          status.setActualStartDate(quizData.getDateBegin());
+          statusFile.setActualStartDate(quizData.getDateBegin());
           break;
         }
       case GENERATION:
@@ -590,8 +575,7 @@ public void writeError(Throwable exc) {
         setMaxRepeat(data.getMaxRepeat());
         setDefaultCategory(data.getDefaultCategory());
     }
-//      quizCollector.alert(this);
-      quizCollector.alert();
+      quizCollector.alert(this);
   }
 
   public QuizData getQuizData() throws QuizException{
