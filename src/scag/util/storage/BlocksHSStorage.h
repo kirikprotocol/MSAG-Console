@@ -134,7 +134,7 @@ struct DescriptionFile
     }
 };
 
-static const uint32_t BACKUP_HEADER_SIZE = 34;
+static const uint32_t BACKUP_HEADER_SIZE = 35;
 
 template<class Key>
 struct templBackupHeader {
@@ -170,7 +170,7 @@ struct templBackupHeader {
   }
 };
 
-static const uint32_t DATA_BLOCK_HEADER_SIZE = 43;
+static const uint32_t DATA_BLOCK_HEADER_SIZE = 44;
 
 template<class Key>
 struct templDataBlockHeader
@@ -964,7 +964,7 @@ private:
               return CANNOT_OPEN_EXISTS_DESCR_FILE;
             }
 
-            if (logger) smsc_log_debug(logger, "OpenDescrFile: files_count=%d, block_size=%d, file_size=%d, blocks_used=%d, blocks_free=%d, first_free_block=%d",
+            if (logger) smsc_log_info(logger, "OpenDescrFile: storage version:0x%x, files count:%d, block size:%d, file size:%d, blocks used:%d, blocks free:%d, first free block:%d",
                            descrFile.files_count, descrFile.block_size, descrFile.file_size, descrFile.blocks_used, descrFile.blocks_free, descrFile.first_free_block);
             effectiveBlockSize = descrFile.block_size - hdrSize;
             return 0;
