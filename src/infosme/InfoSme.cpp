@@ -4,6 +4,8 @@
 #include <sys/time.h>
 #include <signal.h>
 
+#ident "@(#)$Id$"
+
 #include <core/threads/ThreadPool.hpp>
 #include <core/buffers/Array.hpp>
 

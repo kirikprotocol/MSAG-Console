@@ -5,6 +5,8 @@
 #include <util/timeslotcounter.hpp>
 #include <util/config/region/RegionFinder.hpp>
 
+#ident "@(#)$Id$"
+
 extern bool isMSISDNAddress(const char* string);
 
 namespace smsc { namespace infosme 
