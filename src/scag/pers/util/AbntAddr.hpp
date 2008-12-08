@@ -13,32 +13,29 @@
 namespace scag { namespace pers { namespace util {
 
 using std::string;
-using smsc::sms::Address;
-using smsc::sms::AddressValue;
 using smsc::util::crc32;
-
 using std::runtime_error;
-
-static const uint32_t ADDRESS_VALUE_SIZE = 10;
-
-union AbntAddrValue
-{
-  uint8_t full_addr[ADDRESS_VALUE_SIZE];
-  struct _addr_content
-  {
-    uint8_t length:5;
-    uint8_t plan:3;
-    uint8_t type;
-    uint8_t signals[8];
-  } addr_content;
-};
-
 
 class AbntAddr
 {
+private:
+    static const uint32_t ADDRESS_VALUE_SIZE = 8;
+
+    union AbntAddrValue
+    {
+        uint8_t full_addr[ADDRESS_VALUE_SIZE+3];
+        struct _addr_content
+        {
+            uint8_t length;
+            uint8_t plan;
+            uint8_t type;
+            uint8_t signals[ADDRESS_VALUE_SIZE];
+        } addr_content;
+    };
+
 public:
 
-  AbntAddr() { memset((void*)&value, 0x00, sizeof(value));}
+    AbntAddr() : number(0) { memset((void*)&value, 0x00, sizeof(value));}
   AbntAddr(uint8_t _len, uint8_t _type, uint8_t _plan, const char* _value)
   {
     value.addr_content.type = _type;
@@ -46,6 +43,8 @@ public:
     setValue(_len, _value);
   };
 
+    /*
+     * // extra constructors are EVIL!
   AbntAddr(const AbntAddrValue* _full_addr)
   {
     if (!_full_addr) {
@@ -53,7 +52,6 @@ public:
     }
     memcpy((void*)&value.full_addr, (void*)_full_addr, sizeof(value.full_addr));
   };
-
   AbntAddr(const uint8_t* _full_addr)
   {
     if (!_full_addr) {
@@ -61,11 +59,12 @@ public:
     }
     memcpy((void*)&value.full_addr, (void*)_full_addr, sizeof(value.full_addr));
   };
+     */
 
-  AbntAddr(const AbntAddr& addr)
-  {
-    memcpy((void*)&(value.full_addr), (void*)&(addr.value.full_addr), sizeof(value.full_addr));
-  };
+    AbntAddr(const AbntAddr& addr) : number(addr.number)
+    {
+        memcpy((void*)&(value.full_addr), (void*)&(addr.value.full_addr), sizeof(value.full_addr));
+    };
 
   ~AbntAddr(){};
 
@@ -74,7 +73,7 @@ public:
     setAddress(text);
   }
 
-  AbntAddr(const Address& addr)
+  AbntAddr(const smsc::sms::Address& addr)
   {
     value.addr_content.type = (uint8_t)addr.type;
     value.addr_content.plan = (uint8_t)addr.plan;
@@ -88,13 +87,16 @@ public:
     if(&addr == this)
       return (*this);
 		
+      number = addr.number;
     memcpy((void*)&(value.full_addr), (void*)&(addr.value.full_addr), sizeof(value.full_addr));
     return (*this);
   };
 
   inline int operator ==(const AbntAddr& addr)const
   {
-    return (memcmp((void*)&value, (void*)&addr.value, sizeof(value)) == 0);
+      // we only compare first 3 bytes of full_addr: length, plan, type
+      return ( number == addr.number && memcmp(value.full_addr,addr.value.full_addr,3) == 0 );
+      // return (memcmp((void*)&value, (void*)&addr.value, sizeof(value)) == 0);
   };
 
   inline int operator !=(const AbntAddr& addr)const
@@ -102,46 +104,19 @@ public:
     return !(*this==addr);
   };
 
-  bool operator<(const AbntAddr& addr)const
+  bool operator < (const AbntAddr& addr)const
   {
-    return (memcmp((void*)&value, (void*)&addr.value, sizeof(value)) < 0);
+      return ( number < addr.number || 
+               ( number == addr.number && memcmp(value.full_addr,addr.value.full_addr,3) < 0) );
+      // return (memcmp((void*)&value, (void*)&addr.value, sizeof(value)) < 0);
   }
 
-  inline void setValue(uint8_t _len, const char* _value)
-  {
-    if (!_len || !_value || !*_value) {
-      throw runtime_error("AbntAddr::setValue: bad address NULL");
-    }
-    if ((_len >= sizeof(value.addr_content.signals) * 2) || (!isdigit(_value[_len - 1]))) {
-      throw runtime_error(string("AbntAddr::setValue: bad address ") + _value);
-    }
-    number = atoll(_value);
-    if (number == 0) {
-      throw runtime_error(string("AbntAddr::setValue: bad address ") + _value);
-    }
-
-    memset((void*)&value.addr_content.signals, 0xFF, sizeof(value.addr_content.signals));
-    uint8_t	sig1, sig2, i;
-
-    for(i = 0; i < _len>>1; i++)
-    {
-      if (!isdigit(_value[i*2]) || !isdigit(_value[i*2+1])) {
-        throw runtime_error(string("AbntAddr::setValue: bad address ") + _value);
-      }
-      sig1 = _value[i*2] - 0x30;
-      sig2 = _value[i*2+1] - 0x30;
-      value.addr_content.signals[i] = (sig2 << 4) | sig1;
-    }
-    if( ((_len>>1)<<1) != _len)
-      value.addr_content.signals[i] = 0xF0 | (uint8_t)(_value[i*2] - 0x30);
-
-    value.addr_content.length = _len;
-  };
-
+    /*
   const uint8_t* getAddrSig(void) const
   {
     return (uint8_t*)(value.full_addr);
   }
+     */
 
   /**
    * Метод копирует значение адреса и возвращает его длинну
@@ -196,9 +171,9 @@ public:
     return value.addr_content.plan;
   };
 
-  Address getAddress(void) const
+  smsc::sms::Address getAddress(void) const
   {
-    return Address(getText().c_str());
+      return smsc::sms::Address(getText().c_str());
   };
 
   inline std::string getText(void) const
@@ -233,18 +208,19 @@ public:
 
   void Clear()
   {
+      number = 0;
     memset((void*)&value, 0x00, sizeof(value));
   }
 	
   uint32_t HashCode(uint32_t attempt)const
   {
-    uint32_t res = crc32(0, value.full_addr, sizeof(value.full_addr));
-    for(; attempt > 0; attempt--) res = crc32(res, value.full_addr, sizeof(value.full_addr));
+    uint32_t res = crc32(0, value.full_addr, ADDRESS_VALUE_SIZE+3);
+    for(; attempt > 0; attempt--) res = crc32(res, value.full_addr, ADDRESS_VALUE_SIZE+3);
     return res;
   }
   static uint32_t CalcHash(AbntAddr key)
   {
-      return  crc32(0, key.value.full_addr, sizeof(key.value.full_addr));
+      return  crc32(0, key.value.full_addr, ADDRESS_VALUE_SIZE+3);
   }
 
   uint64_t getNumber() const {
@@ -256,7 +232,7 @@ public:
     {
       throw runtime_error("AbntAddr::setAddress: bad address NULL");
     }
-    AddressValue addr_value;
+    smsc::sms::AddressValue addr_value;
     int iplan,itype;
     memset(addr_value,0,sizeof(addr_value));
     int scaned = sscanf(address,".%d.%d.%15s", &itype, &iplan, addr_value);
@@ -286,17 +262,21 @@ public:
     setValue(value.addr_content.length, addr_value);
   }
 
+    /*
   void setAddrValue(const char* val) {
     if (!val) {
       return;
     }
     memcpy(value.full_addr, val, ADDRESS_VALUE_SIZE);
   }
+     */
 
+    // necessary for serialization
   const char* getContentSignals() const {
     return (const char*)value.addr_content.signals;
   }
 
+    // from deserialization
   void setAllValues(uint8_t len, uint8_t plan, uint8_t type, const char* signals) {
     value.addr_content.length = len;
     value.addr_content.plan = plan;
@@ -304,9 +284,43 @@ public:
     memcpy(value.addr_content.signals, signals, getValueSize());
   }
 
+    // for serialization
   uint32_t getValueSize() const {
-    return ADDRESS_VALUE_SIZE - 2;
+     return ADDRESS_VALUE_SIZE;
   }
+
+protected:
+  inline void setValue(uint8_t _len, const char* _value)
+  {
+    if (!_len || !_value || !*_value) {
+      throw runtime_error("AbntAddr::setValue: bad address NULL");
+    }
+    if ((_len >= ADDRESS_VALUE_SIZE * 2) || (!isdigit(_value[_len - 1]))) {
+      throw runtime_error(string("AbntAddr::setValue: bad address ") + _value);
+    }
+    number = atoll(_value);
+    if (number == 0) {
+      throw runtime_error(string("AbntAddr::setValue: bad address ") + _value);
+    }
+
+    memset((void*)&value.addr_content.signals, 0xFF, sizeof(value.addr_content.signals));
+    uint8_t	sig1, sig2, i;
+
+    for(i = 0; i < _len>>1; i++)
+    {
+      if (!isdigit(_value[i*2]) || !isdigit(_value[i*2+1])) {
+        throw runtime_error(string("AbntAddr::setValue: bad address ") + _value);
+      }
+      sig1 = _value[i*2] - 0x30;
+      sig2 = _value[i*2+1] - 0x30;
+      value.addr_content.signals[i] = (sig2 << 4) | sig1;
+    }
+    if( ((_len>>1)<<1) != _len)
+      value.addr_content.signals[i] = 0xF0 | (uint8_t)(_value[i*2] - 0x30);
+
+    value.addr_content.length = _len;
+  };
+
 
 private:
   AbntAddrValue value;
