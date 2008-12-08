@@ -307,11 +307,6 @@ public class QuizBuilder {
     element.setText(data.getDistrDateEndStr().trim());
     distr.addContent(element);
 
-    element = new Element("source-address");
-    element.setText(data.getSourceAddress().trim());
-    distr.addContent(element);
-
-
     element = new Element("days");
     Element subEl;
 
