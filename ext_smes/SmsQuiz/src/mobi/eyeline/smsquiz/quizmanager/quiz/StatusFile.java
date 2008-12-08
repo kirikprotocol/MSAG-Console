@@ -18,9 +18,7 @@ public class StatusFile {
 
   private static final Logger logger = Logger.getLogger(StatusFile.class);
 
-  private String distrId;
   private String statusFileName;
-  private Quiz.Status status;
 
   private static final String DISTR_ID = "distribution.id";
   private static final String QUIZ_ST = "quiz.status";
@@ -28,7 +26,7 @@ public class StatusFile {
   private static final String ERROR_CODE = "quiz.error.id";
   private static final String ACTUAL_START_DATE = "quiz.start";
 
-  private final SimpleDateFormat DF = new SimpleDateFormat("yyyyMMddHHmmss");
+  private final static SimpleDateFormat DF = new SimpleDateFormat("yyyyMMddHHmmss");
 
   private Properties prop;
 
@@ -49,11 +47,11 @@ public class StatusFile {
       inputStream = new FileInputStream(stFile);
       prop = new Properties();
       prop.load(inputStream);
-      String ident;
-      if ((ident = prop.getProperty(DISTR_ID)) != null) {  // if property exist => distribution already created
-        this.distrId = ident;
+      String tmp;
+      if ((tmp = prop.getProperty(DISTR_ID)) != null) {  // if property exist => distribution already created
+        prop.setProperty(DISTR_ID, tmp);
       }
-      setQuizStatus(Quiz.Status.NEW);
+      prop.setProperty(QUIZ_ST,Quiz.Status.NEW.toString());
     } catch (IOException e) {
       logger.error(e, e);
       throw new QuizException(e.toString(), e);
@@ -68,31 +66,28 @@ public class StatusFile {
   }
 
   String getDistrId() {
-    return distrId;
+    return prop.getProperty(DISTR_ID);
   }
 
-  void setDistrId(String distrId) throws QuizException {
-    this.distrId = distrId;
-    prop.setProperty(DISTR_ID, distrId);
+  void setDistrId(String ident) throws QuizException {
+    prop.setProperty(DISTR_ID, ident);
     storeProps();
   }
 
-  void setQuizStatus(Quiz.Status status) throws QuizException {
-    this.status = status;
-    prop.setProperty(QUIZ_ST, status.toString());
+  void setQuizStatus(Quiz.Status quizStatus) throws QuizException {
+    prop.setProperty(QUIZ_ST, quizStatus.toString());
     storeProps();
   }
 
   void setQuizErrorStatus(QuizError error, String reason) throws QuizException {
-    status = Quiz.Status.FINISHED_ERROR;
-    prop.setProperty(QUIZ_ST, status.toString());
+    prop.setProperty(QUIZ_ST, Quiz.Status.FINISHED_ERROR.toString());
     prop.setProperty(ERROR_CODE, error.getCode());
     prop.setProperty(ERROR_REASON, reason);
     storeProps();
   }
 
   Quiz.Status getQuizStatus() {
-    return status;
+    return (prop.getProperty(QUIZ_ST) == null) ? null : Quiz.Status.valueOf(prop.getProperty(QUIZ_ST));
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})
@@ -119,26 +114,24 @@ public class StatusFile {
   }
 
   void setActualStartDate(Date date) throws QuizException {
-    if ((prop.getProperty(ACTUAL_START_DATE) == null) || (prop.getProperty(ACTUAL_START_DATE).equals(""))) {
-      Date now = new Date();
-      if (now.before(date)) {
-        prop.setProperty(ACTUAL_START_DATE, DF.format(date));
-      } else {
-        prop.setProperty(ACTUAL_START_DATE, DF.format(now));
-      }
-      storeProps();
+    if (date == null) {
+      logger.error("Some arguments are null");
+      throw new IllegalArgumentException("Some arguments are null");
     }
+    prop.setProperty(ACTUAL_START_DATE, DF.format(date));
+    storeProps();
   }
 
   Date getActualStartDate() throws QuizException {
-    Date date;
     try {
-      date = DF.parse(prop.getProperty(ACTUAL_START_DATE));
+      if (prop.getProperty(ACTUAL_START_DATE) == null) {
+        return null;
+      }
+      return DF.parse(prop.getProperty(ACTUAL_START_DATE));
     } catch (ParseException e) {
       logger.error(e, e);
       throw new QuizException(e);
     }
-    return date;
   }
 
 }

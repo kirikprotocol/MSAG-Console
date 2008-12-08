@@ -36,7 +36,7 @@ public class Quiz {
   private JStore jstore;
   private String fileName;
 
-  private QuizData quizData = null;
+  private QuizData quizData = new QuizData();
 
   private long lastDistrStatusCheck = System.currentTimeMillis();
 
@@ -56,14 +56,21 @@ public class Quiz {
 
   private boolean exported = false;
 
-  private final Lock exportLock = new ReentrantLock();
+  private final Lock lock = new ReentrantLock();
 
   private SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
 
 
   public Quiz(final File file, final ReplyStatsDataSource replyStatsDataSource, final QuizCollector quizCollector,
               final DistributionManager distributionManager, final String dirResult,
-              final String dirWork, final String archiveDir, final String quizDir) throws QuizException {
+              final String dirWork, final String archiveDir, final String quizDir, final QuizData quizData) throws QuizException {
+
+    if((file == null)||(replyStatsDataSource == null)||(quizCollector == null)||(distributionManager == null) ||
+        (dirResult == null)||(dirWork == null)||(archiveDir == null)||(quizDir == null)||(quizData == null)) {
+      logger.error("Some arguments are null");
+      throw new IllegalArgumentException("Some arguments are null");
+    }
+    this.quizData = quizData;
     this.dirResult = dirResult;
     this.archiveDir = archiveDir;
     this.quizDir = quizDir;
@@ -72,37 +79,37 @@ public class Quiz {
     this.distributionManager = distributionManager;
     this.quizCollector = quizCollector;
     jstore = new JStore(-1);
-    if (file == null) {
-      logger.error("Some arguments are null");
-      throw new QuizException("Some arguments are null", QuizException.ErrorCode.ERROR_WRONG_REQUEST);
-    }
     fileName = file.getAbsolutePath();
     quizId = file.getName().substring(0, file.getName().lastIndexOf("."));
     jstore.init(dirWork + File.separator + file.getName() + ".bin", 60000, 10);
     statusFile = new StatusFile(dirWork + File.separator + quizId + ".status");
+    setActualStartDate(quizData.getDateBegin());
   }
 
   public String getStatusFileName() {
     return statusFile.getStatusFileName();
   }
 
-  public Result handleSms(String oa, String text) throws QuizException {
-    Result result;
+  public synchronized Result handleSms(String oa, String text) throws QuizException {
+    if ((exported) || (!statusFile.getQuizStatus().equals(Status.ACTIVE))) {
+      return null;
+    }
+    Result result = null;
     long oaNumber = Long.parseLong(oa.substring(oa.lastIndexOf("+") + 1, oa.length()));
     int maxRepeat = quizData.getMaxRepeat();
     int count = jstore.get(oaNumber);
-    if ((count == answerHandled)) {
+    if (count == answerHandled) {
       if (logger.isInfoEnabled()) {
         logger.info("DON'T HANDLE: already handled for abonent: " + oa);
       }
       return null;
     }
-    if(logger.isInfoEnabled()) {
-      logger.info("maxrepeat: "+ maxRepeat);
-      logger.info("count: "+ count);
-      logger.info("oa: "+ oa);
+    if (logger.isInfoEnabled()) {
+      logger.info("maxrepeat: " + maxRepeat);
+      logger.info("count: " + count);
+      logger.info("oa: " + oa);
     }
-    if(count >= maxRepeat) {
+    if (count > maxRepeat) {
       return null;
     }
     ReplyPattern replyPattern = getReplyPattern(text);
@@ -110,17 +117,14 @@ public class Quiz {
       jstore.put(oaNumber, answerHandled);
       result = new Result(replyPattern.getAnswer(), Result.ReplyRull.OK, quizData.getSourceAddress());
     } else {
-      if (maxRepeat > 0) {
-        if (count != -1) {
-          count++;
-          jstore.put(oaNumber, count);
-        } else {
-          jstore.put(oaNumber, 1);
-        }
-        result = new Result(quizData.getQuestion(), Result.ReplyRull.REPEAT, quizData.getSourceAddress());
+      if (count != -1) {
+        count++;
+        jstore.put(oaNumber, count);
       } else {
-        jstore.put(oaNumber, 0);
-        result = null;
+        jstore.put(oaNumber, 1);
+      }
+      if (count <= maxRepeat) {
+        result = new Result(quizData.getQuestion(), Result.ReplyRull.REPEAT, quizData.getSourceAddress());
       }
     }
 
@@ -146,19 +150,23 @@ public class Quiz {
 
   }
 
-  public void shutdown() {
+  public synchronized void shutdown() {
     jstore.shutdown();
   }
 
   public void exportStats() throws QuizException {
+    if (exported)
+      return;
     try {
-      exportLock.lock();
-
-      if (exported)
-        return;
+      lock.lock();
       exported = true;
       if (logger.isInfoEnabled()) {
         logger.info("Export statistics begining for: " + fileName);
+      }
+      String distrId = getDistrId();
+      if (distrId == null) {
+        logger.error("Distribution id doesn't exists for quiz: " + this);
+        throw new QuizException("Distribution id doesn't exists for quiz: " + this);
       }
       Date dateBegin = quizData.getDateBegin();
       Date dateEnd = quizData.getDateEnd();
@@ -183,7 +191,7 @@ public class Quiz {
       String encoding = System.getProperty("file.encoding");
       try {
         printWriter = new PrintWriter(fileTmp, encoding);
-        ResultSet resultSet = distributionManager.getStatistics(this.getDistrId(), realStartDate, dateEnd);
+        ResultSet resultSet = distributionManager.getStatistics(distrId, realStartDate, dateEnd);
         String comma = ",";
         while (resultSet.next()) {
           Reply reply;
@@ -240,30 +248,30 @@ public class Quiz {
       }
       logger.info("Export statistics finished");
     } finally {
-      exportLock.unlock();
+      lock.unlock();
     }
   }
 
-  public Date getDateBegin() {
+  public synchronized Date getDateBegin() {
     return quizData.getDateBegin();
   }
 
-  public void setDateBegin(Date dateBegin) throws QuizException {
-    if((quizData.getDateBegin() == null)||(!quizData.getDateBegin().equals(dateBegin))) {
+  public synchronized void setDateBegin(Date dateBegin) throws QuizException {
+    if ((quizData.getDateBegin() == null) || (!quizData.getDateBegin().equals(dateBegin))) {
       quizData.setDateBegin(dateBegin);
-      statusFile.setActualStartDate(dateBegin);
-      quizCollector.alert(this);
+      setActualStartDate(dateBegin);
+      quizCollector.alert();
     }
   }
 
-  public Date getDateEnd() {
+  public synchronized Date getDateEnd() {
     return quizData.getDateEnd();
   }
 
-  public void setDateEnd(Date dateEnd) throws QuizException{
-    if((quizData.getDateEnd() == null)||(!quizData.getDateEnd().equals(dateEnd))) {
+  public synchronized void setDateEnd(Date dateEnd) throws QuizException {
+    if ((quizData.getDateEnd() == null) || (!quizData.getDateEnd().equals(dateEnd))) {
       quizData.setDateEnd(dateEnd);
-      quizCollector.alert(this);
+      quizCollector.alert();
     }
   }
 
@@ -330,17 +338,34 @@ public class Quiz {
     return null;
   }
 
+  private void setActualStartDate(Date date) throws QuizException {
+    Date prev = statusFile.getActualStartDate();
+    if (prev == null) {
+      Date now = new Date();
+      if (now.before(date)) {
+        statusFile.setActualStartDate(date);
+      } else {
+        statusFile.setActualStartDate(now);
+      }
+    }
+  }
+
   public String toString() {
     String sep = System.getProperty("line.separator");
     StringBuilder strBuilder = new StringBuilder();
     strBuilder.append(sep);
     strBuilder.append("fileName: ").append(fileName).append(sep);
-    strBuilder.append("dest address: ").append(quizData.getDestAddress()).append(sep);
-    strBuilder.append("question: ").append(quizData.getQuestion()).append(sep);
-    strBuilder.append("dateBegin: ").append(quizData.getDateBegin()).append(sep);
-    strBuilder.append("dateEnd: ").append(quizData.getDateEnd()).append(sep);
-    strBuilder.append("id: ").append(this.getDistrId()).append(sep);
-    strBuilder.append("status: ").append(this.getQuizStatus().toString()).append(sep);
+    if (quizData != null) {
+      strBuilder.append("dest address: ").append(quizData.getDestAddress()).append(sep);
+      strBuilder.append("question: ").append(quizData.getQuestion()).append(sep);
+      strBuilder.append("dateBegin: ").append(quizData.getDateBegin()).append(sep);
+      strBuilder.append("dateEnd: ").append(quizData.getDateEnd()).append(sep);
+    }
+    strBuilder.append("distrId: ").append(this.getDistrId()).append(sep);
+    Status status = getQuizStatus();
+    if (status != null) {
+      strBuilder.append("status: ").append(status.toString()).append(sep);
+    }
     return strBuilder.substring(0);
   }
 
@@ -352,30 +377,25 @@ public class Quiz {
     quizData.setSourceAddress(sourceAddress);
   }
 
-  public boolean isActive() {
-    Date now = new Date();
-    return now.after(quizData.getDateBegin()) && now.before(quizData.getDateEnd());
-  }
-
   public String getQuizId() {
     return quizId;
   }
 
-  public void setQuizStatus(Status status) throws QuizException {
-    if(status != getQuizStatus()) {
+  public synchronized void setQuizStatus(Status status) throws QuizException {
+    if (status != statusFile.getQuizStatus()) {
       statusFile.setQuizStatus(status);
-      quizCollector.alert(this);
+      quizCollector.alert();
     }
   }
 
-  public Status getQuizStatus() {
+  public synchronized Status getQuizStatus() {
     return statusFile.getQuizStatus();
   }
 
-  public void setQuizStatus(QuizError error, String reason) throws QuizException {
-    if (getQuizStatus() != Status.FINISHED_ERROR) {
+  public synchronized void setQuizStatus(QuizError error, String reason) throws QuizException {
+    if (statusFile.getQuizStatus() != Status.FINISHED_ERROR) {
       statusFile.setQuizErrorStatus(error, reason);
-      quizCollector.alert(this);
+      quizCollector.alert();
     }
   }
 
@@ -438,25 +458,28 @@ public class Quiz {
   public void setDistrDateEnd(Date distrDateEnd) {
     quizData.setDistrDateEnd(distrDateEnd);
   }
+
   public void setReplyPatterns(List<ReplyPattern> replyPatterns) {
-    if(replyPatterns==null) {
+    if (replyPatterns == null) {
       throw new IllegalArgumentException("Some arguments are null");
     }
     quizData.setReplyPatterns(replyPatterns);
   }
 
-  public void remove() {
+  public synchronized void remove() {
     File file = new File(archiveDir);
     if (!file.exists()) {
       file.mkdirs();
     }
-
-    file = new File(getOrigAbFile());
-    if (file.exists()) {
-      renameFile(new File(getOrigAbFile()));
-    } else {
-      file = new File(quizDir + File.separator + file.getName());
-      renameFile(file);
+    String orgiAbFile = getOrigAbFile();
+    if(orgiAbFile!=null) {
+      file = new File(orgiAbFile);
+      if (file.exists()) {
+        renameFile(new File(orgiAbFile));
+      } else {
+        file = new File(quizDir + File.separator + file.getName());
+        renameFile(file);
+      }
     }
 
     String parentSlashQuizId = workDir + File.separator + quizId;
@@ -498,26 +521,26 @@ public class Quiz {
     }
   }
 
-public void writeError(Throwable exc) {
-  File file = new File(getFileName());
-  String quizName = file.getName().substring(0, file.getName().lastIndexOf("."));
-  String errorFile = workDir + File.separator + quizName + ".error";
-  PrintWriter writer = null;
-  try {
-    writer = new PrintWriter(new BufferedWriter(new FileWriter(errorFile, true)));
-    writer.println("Error during creating quiz:");
-    exc.printStackTrace(writer);
-    writer.flush();
-  } catch (Exception e) {
-    logger.error("Unable to create error file: " + errorFile, e);
-  } finally {
-    if (writer != null) {
-      writer.close();
+  public synchronized void writeError(Throwable exc) {
+    File file = new File(getFileName());
+    String quizName = file.getName().substring(0, file.getName().lastIndexOf("."));
+    String errorFile = workDir + File.separator + quizName + ".error";
+    PrintWriter writer = null;
+    try {
+      writer = new PrintWriter(new BufferedWriter(new FileWriter(errorFile, true)));
+      writer.println("Error during creating quiz:");
+      exc.printStackTrace(writer);
+      writer.flush();
+    } catch (Exception e) {
+      logger.error("Unable to create error file: " + errorFile, e);
+    } finally {
+      if (writer != null) {
+        writer.close();
+      }
     }
   }
-}
 
-  public void writeQuizesConflict(String newQuizFileName, Quiz prevQuiz) {
+  public synchronized void writeQuizesConflict(String newQuizFileName, Quiz prevQuiz) {
     if (newQuizFileName == null) {
       logger.error("Some arguments are null");
       throw new IllegalArgumentException("Some arguments are null");
@@ -544,27 +567,27 @@ public void writeError(Throwable exc) {
     }
   }
 
-  public void setLastDistrStatusCheck(long l) throws QuizException{
-    if(this.lastDistrStatusCheck != l) {
+  public synchronized void setLastDistrStatusCheck(long l) throws QuizException {
+    if (this.lastDistrStatusCheck != l) {
       this.lastDistrStatusCheck = l;
-      quizCollector.alert(this);
+      quizCollector.alert();
     }
   }
 
-  public Long getLastDistrStatusCheck(){
+  public synchronized Long getLastDistrStatusCheck() {
     return lastDistrStatusCheck;
   }
 
-  public void updateQuiz(QuizData data) throws QuizException {
-    if(data == null) {
+  public synchronized void updateQuiz(QuizData data) throws QuizException {
+    if (data == null) {
       logger.error("Some arguments are null");
       throw new IllegalArgumentException("Some arguments are null");
     }
-    switch (getQuizStatus()) {
+    switch (statusFile.getQuizStatus()) {
       case NEW:
-        if (quizData == null) {
+        if (quizData.getQuizName() == null) {       // quizData didn't init yet
           quizData = data;
-          statusFile.setActualStartDate(quizData.getDateBegin());
+          setActualStartDate(quizData.getDateBegin());
           break;
         }
       case GENERATION:
@@ -575,10 +598,10 @@ public void writeError(Throwable exc) {
         setMaxRepeat(data.getMaxRepeat());
         setDefaultCategory(data.getDefaultCategory());
     }
-      quizCollector.alert(this);
+    quizCollector.alert();
   }
 
-  public QuizData getQuizData() throws QuizException{
+  public QuizData getQuizData() throws QuizException {
     return quizData;
   }
 

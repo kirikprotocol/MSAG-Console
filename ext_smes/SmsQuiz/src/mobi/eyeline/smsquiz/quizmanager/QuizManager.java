@@ -158,7 +158,7 @@ public class QuizManager implements Observer {
     if (logger.isInfoEnabled()) {
       logger.info("Available addresses: " + quizesMap.keySet().toString());
     }
-    return null;
+    return new Result("",Result.ReplyRull.SERVICE_NOT_FOUND, "");
   }
 
   public void update(Observable o, Object arg) {
@@ -202,18 +202,16 @@ public class QuizManager implements Observer {
     Quiz quiz = quizes.getQuizByFile(fileName);
     try {
       if (quiz != null) {
+        if (logger.isInfoEnabled()) {
+          logger.info("Removing quiz from quizes: " + quiz);
+        }
         quizes.remove(quiz);
-        Quiz foundQuiz = quizesMap.get(quiz.getDestAddress());
-        if (foundQuiz == quiz) {
-          quizesMap.remove(quiz.getDestAddress());
-        } else {
-          if (logger.isInfoEnabled()) {
-            logger.warn("Found quiz not equals removed quiz");
-            logger.warn("Removed " + quiz);
-            logger.warn("Found " + foundQuiz);
+        if (quiz.getDestAddress() != null) {
+          Quiz foundQuiz = quizesMap.get(quiz.getDestAddress());
+          if (foundQuiz == quiz) {
+            quizesMap.remove(quiz.getDestAddress());
           }
         }
-
         quiz.shutdown();
 
         String taskId = quiz.getDistrId();
@@ -230,7 +228,7 @@ public class QuizManager implements Observer {
       }
     }
     catch (Throwable e) {
-      if(quiz!=null) {
+      if (quiz != null) {
         quiz.writeError(e);
       }
       throw new QuizException(e);
@@ -253,7 +251,7 @@ public class QuizManager implements Observer {
       QuizData data = quizBuilder.buildQuiz(quiz.getFileName());
       quiz.updateQuiz(data);
     } catch (Exception e) {
-      if(quiz!=null) {
+      if (quiz != null) {
         quiz.writeError(e);
         quiz.setQuizStatus(QuizError.CREATE_ERROR, "Parsing exception during modification");
       }
@@ -273,9 +271,10 @@ public class QuizManager implements Observer {
       String fileName = notification.getFileName();
       File file = new File(fileName);
 
-      quiz = new Quiz(file, replyStatsDataSource, quizCollector,distributionManager, dirResult, dirWork, archiveDir, quizDir);
-
       QuizData data = quizBuilder.buildQuiz(fileName);
+
+      quiz = new Quiz(file, replyStatsDataSource, quizCollector, distributionManager,
+          dirResult, dirWork, archiveDir, quizDir, data);
 
       validateDates(data);
 
@@ -304,7 +303,7 @@ public class QuizManager implements Observer {
     } catch (Exception e) {
       if (quiz != null) {
         try {
-          quiz.setQuizStatus(QuizError.CREATE_ERROR, e.getMessage());
+          quiz.setQuizStatus(QuizError.CREATE_ERROR, "Unable to create quiz");
         } catch (Exception ex) {
         }
         quiz.writeError(e);
@@ -314,15 +313,15 @@ public class QuizManager implements Observer {
     }
   }
 
-  private void validateDates(QuizData quiz) throws QuizException{
+  private void validateDates(QuizData quiz) throws QuizException {
     Date dateBegin = quiz.getDateBegin();
     Date dateEnd = quiz.getDateEnd();
     Date distrEndDate = quiz.getDistrDateEnd();
-    if(dateEnd.before(dateBegin)) {
-      throw new QuizException("Invalid end date: "+dateEnd);
+    if (dateEnd.before(dateBegin)) {
+      throw new QuizException("Invalid end date: " + dateEnd);
     }
-    if(distrEndDate.before(dateBegin)||distrEndDate.after(dateEnd)) {
-      throw new QuizException("Invalid distribution end date: "+distrEndDate);
+    if (distrEndDate.before(dateBegin) || distrEndDate.after(dateEnd)) {
+      throw new QuizException("Invalid distribution end date: " + distrEndDate);
     }
   }
 
@@ -391,13 +390,13 @@ public class QuizManager implements Observer {
 
     private ConflictVisitor(String newcomerDa) {
       if (newcomerDa == null) {
-        logger.error("Some arguments are null");
         throw new IllegalArgumentException("Some arguments are null");
       }
       this.newcomerDa = newcomerDa;
     }
 
     public void visit(Quiz quiz) throws QuizException {
+      System.out.println(quiz);
       if (quiz.getDestAddress().equals(newcomerDa)) {
         conflicts.add(quiz);
       }

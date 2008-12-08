@@ -24,7 +24,7 @@ public class Quizes {
   private Lock lock = new ReentrantLock();
 
 
-  public Quiz getQuizByFile(String filename){
+  public Quiz getQuizByFile(String filename) {
     if (filename == null) {
       logger.error("Some arguments are null");
       throw new IllegalArgumentException("Some arguments are null");
@@ -45,7 +45,7 @@ public class Quizes {
     }
   }
 
-  public void add(Quiz quiz){
+  public void add(Quiz quiz) {
     if (quiz == null) {
       logger.error("Some arguments are null");
       throw new IllegalArgumentException("Some arguments are null");
@@ -60,7 +60,7 @@ public class Quizes {
 
   }
 
-  public void remove(Quiz quiz){
+  public void remove(Quiz quiz) {
     if (quiz == null) {
       logger.error("Some arguments are null");
       throw new IllegalArgumentException("Some arguments are null");

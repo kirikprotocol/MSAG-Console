@@ -217,7 +217,7 @@ public class QuizBuilder {
     if ((elem = repliesElem.getChild("max-repeat")) != null) {
       try {
         String mr = elem.getTextTrim();
-        if(!mr.equals("")) {
+        if (!mr.equals("")) {
           quiz.setMaxRepeat(Integer.parseInt(elem.getTextTrim()));
         } else {
           quiz.setMaxRepeat(0);
@@ -231,7 +231,7 @@ public class QuizBuilder {
     }
     if ((elem = repliesElem.getChild("default")) != null) {
       String def = elem.getTextTrim();
-      if(!def.equals("")) {
+      if (!def.equals("")) {
         quiz.setDefaultCategory(def);
       }
     }

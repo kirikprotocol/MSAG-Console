@@ -3,7 +3,7 @@ package mobi.eyeline.smsquiz.quizmanager;
 public class Result {
 
   public static enum ReplyRull {
-    OK, REPEAT, DOESNT_EXIST
+    OK, REPEAT, SERVICE_NOT_FOUND
   }
 
   private String text;

@@ -82,9 +82,15 @@ public class DistributionImpl extends Distribution {
     }
 
     private boolean subscribed(String line) throws SubManagerException {
-      String msisdn = line.trim();
-      if (subscriptionManager.subscribed(msisdn)) {
-        currentAbonent = msisdn;
+      String msisdn1 = line.trim();
+      String msisdn2 = null;
+      if (msisdn1.startsWith("+7") && (msisdn1.length() > 2)) {
+        msisdn2 = "8" + msisdn1.substring(2);
+      } else if (msisdn1.startsWith("8") && (msisdn1.length() > 1)) {
+        msisdn2 = "+7" + msisdn1.substring(1);
+      }
+      if (subscriptionManager.subscribed(msisdn1) || ((msisdn2 != null) && subscriptionManager.subscribed(msisdn2))) {
+        currentAbonent = msisdn1;
         return true;
       }
       return false;

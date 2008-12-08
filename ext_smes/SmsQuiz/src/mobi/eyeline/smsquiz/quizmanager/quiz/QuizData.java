@@ -157,14 +157,14 @@ public class QuizData {
   }
 
   public void setDays(EnumSet<Distribution.WeekDays> weekDays) {
-    if(weekDays==null) {
+    if (weekDays == null) {
       throw new IllegalArgumentException("Some arguments are null");
     }
     this.days = weekDays;
   }
 
   public void setReplyPatterns(List<ReplyPattern> replyPatterns) {
-    if(replyPatterns==null) {
+    if (replyPatterns == null) {
       throw new IllegalArgumentException("Some arguments are null");
     }
     this.replyPatterns = replyPatterns;

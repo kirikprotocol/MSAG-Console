@@ -1,4 +1,3 @@
-
 package mobi.eyeline.smsquiz.quizmanager;
 
 import com.eyeline.utils.ThreadFactoryWithCounter;
@@ -29,11 +28,13 @@ public class QuizCollector {
   private ScheduledExecutorService scheduler;
   private ExecutorService executor;
   private ScheduledFuture currentTask;
-  private long currentTaskTime;
+//  private long currentTaskTime;
 
-  private final Lock scheduleLock = new ReentrantLock();
+//  private final Lock scheduleLock = new ReentrantLock();
 
   private final long checkTimeot = 30000;
+
+  private Lock lock = new ReentrantLock();
 
   public QuizCollector(ConcurrentHashMap<String, Quiz> quizesMap, Quizes quizes,
                        DistributionManager dm, SubscriptionManager sm) {
@@ -44,13 +45,13 @@ public class QuizCollector {
   }
 
   public void start() {
-    scheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory(){
+    scheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
       public Thread newThread(Runnable r) {
         return new Thread(r, "QuizCollector");
       }
     });
     executor = new ThreadPoolExecutor(1, 10, 60000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(),
-                                      new ThreadFactoryWithCounter("QuizCollectorExecutor-"));
+        new ThreadFactoryWithCounter("QuizCollectorExecutor-"));
   }
 
   public void shutdown() {
@@ -61,52 +62,62 @@ public class QuizCollector {
   private void updateSchedule(long newStartTime) throws QuizException {
     if (newStartTime != Long.MAX_VALUE) {
       try {
-        scheduleLock.lock();
-        if(logger.isInfoEnabled()) {
-          logger.info("New task scheduled at: "+ new Date(newStartTime));
-        }
+//        if(logger.isInfoEnabled()) {
+//          logger.info("New task try to schedule at: "+ new Date(newStartTime));
+//        }
         if (currentTask != null) { // Check we need to cancel current task
-          if (currentTaskTime > System.currentTimeMillis() && currentTaskTime <= newStartTime)
-            return; // We already have scheduled task which start time before newStartTime
+//          if (currentTaskTime > System.currentTimeMillis() && currentTaskTime <= newStartTime)
+//            return; // We already have scheduled task which start time before newStartTime
           currentTask.cancel(false); // Cancel current task if new task starts before
         }
         long newTaskDelay = Math.max(0, newStartTime - System.currentTimeMillis()); // delay for new task
         currentTask = scheduler.schedule(new Task(), newTaskDelay, TimeUnit.MILLISECONDS);
-        currentTaskTime = newStartTime;
+//        currentTaskTime = newStartTime;
         if (logger.isInfoEnabled())
           logger.info("Task will be run at: " + new Date(newStartTime));
       } catch (RejectedExecutionException e) {
         logger.error(e, e);
         throw new QuizException(e);
-      } finally {
-        scheduleLock.unlock();
       }
     }
   }
 
-  public void alert(Quiz quiz) throws QuizException {
-    if(logger.isInfoEnabled()) {
-      logger.info("Alert executed for: " + quiz);
-    }
-    updateSchedule(calcMinStartTime(quiz));
-  }
+//  public void alert(Quiz quiz) throws QuizException {
+//    if(logger.isInfoEnabled()) {
+//      logger.info("Alert executed for: " + quiz);
+//    }
+//    updateSchedule(calcMinStartTime(quiz));
+//  }
 
   public void alert() throws QuizException {
-    if(logger.isInfoEnabled()) {
-      logger.info("Alert executed");
+    try {
+      if (logger.isInfoEnabled()) {
+        logger.info("Alert executed");
+      }
+      updateSchedule(calcMinStartTime());
+    } catch (Throwable e) {
+      logger.error(e, e);
+      throw new QuizException(e);
     }
-    updateSchedule(calcMinStartTime());
   }
 
   private long calcMinStartTime(Quiz quiz) {
     if (quiz.getDateBegin() != null && quiz.getDateEnd() != null) {
-      switch (quiz.getQuizStatus()) {             //todo syncronize setQuizStatus and getQuizStatus
-        case NEW: return quiz.getDateBegin().getTime();
-        case GENERATION: return quiz.getLastDistrStatusCheck() + checkTimeot;
-        case AWAIT: return quiz.getDateBegin().getTime();
-        case ACTIVE: return quiz.getDateEnd().getTime();
-        case FINISHED: if(!quiz.isExported()) return System.currentTimeMillis(); break; // break was missed!
-        case FINISHED_ERROR: return System.currentTimeMillis();
+      switch (quiz.getQuizStatus()) {
+        case NEW:
+          return quiz.getDateBegin().getTime();
+        case GENERATION:
+          return quiz.getLastDistrStatusCheck() + checkTimeot;
+        case AWAIT:
+          return quiz.getDateBegin().getTime();
+        case ACTIVE:
+          return quiz.getDateEnd().getTime();
+        case FINISHED:
+          if (!quiz.isExported()) return System.currentTimeMillis();
+          break;
+        case FINISHED_ERROR:
+          if ((quiz.getDestAddress() != null) && (quizesMap.get(quiz.getDestAddress()) == quiz))
+            return System.currentTimeMillis();
       }
     }
     return Long.MAX_VALUE;
@@ -134,11 +145,14 @@ public class QuizCollector {
     public void run() {
       logger.info("QuizCollector starts...");
       try {
+        lock.lock();
         Quizes.Visitor visitor = new VisitorForTask();
         quizes.visit(visitor);
       } catch (Throwable e) {
         logger.error(e);
         e.printStackTrace();
+      } finally {
+        lock.unlock();
       }
       logger.info("QuizCollector finished");
     }
@@ -151,20 +165,20 @@ public class QuizCollector {
     public void visit(final Quiz quiz) throws QuizException {
       if (quiz.getQuizStatus() == Quiz.Status.ACTIVE) { // If quiz time expired
         if (quiz.getDateEnd().getTime() <= now) {
-          if(logger.isInfoEnabled())
+          if (logger.isInfoEnabled())
             logger.info("Active quiz with expired end date was found and will be finished: " + quiz);
           setFinished(quiz);
         }
 
-      } else if(quiz.getQuizStatus() == Quiz.Status.FINISHED) { // Export stats if needed
-        if(logger.isInfoEnabled())
+      } else if (quiz.getQuizStatus() == Quiz.Status.FINISHED) { // Export stats if needed
+        if (logger.isInfoEnabled())
           logger.info("Finished quiz was found, execute task to export it's results: " + quiz);
         exportStats(quiz);
 
-      } else if(quiz.getQuizStatus() == Quiz.Status.FINISHED_ERROR) { // Quiz failed
-        if(logger.isInfoEnabled())
+      } else if (quiz.getQuizStatus() == Quiz.Status.FINISHED_ERROR) { // Quiz failed
+        if (logger.isInfoEnabled())
           logger.info("Failed quiz was found and will be deleted from dest addr map: " + quiz);
-        deleteFormMap(quiz);
+        deleteFromMap(quiz);
 
       } else if (quiz.getQuizStatus() == Quiz.Status.EXPORTING) {
         // do nothing
@@ -172,29 +186,38 @@ public class QuizCollector {
 
         if (quiz.getDateEnd().getTime() > now) {
 
-          if (quiz.getQuizStatus() == Quiz.Status.AWAIT && quiz.getDateBegin().getTime() <= now ) { // Quiz have to start
-            if(logger.isInfoEnabled())
+          if (quiz.getQuizStatus() == Quiz.Status.AWAIT && quiz.getDateBegin().getTime() <= now) { // Quiz have to start
+            if (logger.isInfoEnabled())
               logger.info("Await quiz with expired start date was found and will be activated: " + quiz);
             setActive(quiz);
 
           } else if (quiz.getQuizStatus() == Quiz.Status.GENERATION) { // Check distribution status
-            if(logger.isInfoEnabled())
+            if (logger.isInfoEnabled())
               logger.info("Generated quiz was found, it generation state will be checked: " + quiz);
             checkState(quiz);
 
-          } else if(quiz.getQuizStatus() == Quiz.Status.NEW)   {   // Create distribution
-            if(logger.isInfoEnabled())
+          } else if (quiz.getQuizStatus() == Quiz.Status.NEW) {   // Create distribution
+            if (logger.isInfoEnabled())
               logger.info("New quiz was found, create distr for it: " + quiz);
             createDistribution(quiz);
 
           }
         } else {
-          if(logger.isInfoEnabled())
+          if (logger.isInfoEnabled())
             logger.warn("Found quiz in state " + quiz.getQuizStatus() + " and expired end date was found and will be marked as UKNOWN: " + quiz);
-          quiz.setQuizStatus(QuizError.UNKNOWN, "Quiz failed, it's time expired");
+          try {
+            if(logger.isInfoEnabled()) {
+              logger.warn("Trying to export stats for it: ");
+              exportStats(quiz);
+            }
+            quiz.setQuizStatus(QuizError.UNKNOWN, "Quiz failed, it's time expired");
+          } catch (Exception e) {
+            logger.error(e, e);
+            throw new QuizException(e);
+          }
 
         }
-      }    
+      }
     }
   }
 
@@ -232,7 +255,9 @@ public class QuizCollector {
         if (logger.isInfoEnabled()) {
           logger.info("Quiz created: " + quiz);
         }
-        quiz.setQuizStatus(Quiz.Status.GENERATION);
+        quiz.setLastDistrStatusCheck(System.currentTimeMillis());   //todo? here alert
+        quiz.setQuizStatus(Quiz.Status.GENERATION);                //todo? and here
+
       } catch (Throwable e) {
         logger.error(e, e);
         throw new QuizException(e.toString(), e);
@@ -243,8 +268,9 @@ public class QuizCollector {
       }
     } catch (Throwable e) {
       try {
-        quiz.setQuizStatus(QuizError.DISTR_ERROR, e.getMessage());
-      } catch (QuizException ex) {}
+        quiz.setQuizStatus(QuizError.DISTR_ERROR, "Error during creating distribution");
+      } catch (QuizException ex) {
+      }
       quiz.writeError(e);
       logger.error(e, e);
       throw new QuizException(e.toString(), e);
@@ -265,19 +291,24 @@ public class QuizCollector {
     return distr;
   }
 
-  private void setActive(Quiz quiz) throws QuizException{
+  private void setActive(Quiz quiz) throws QuizException {
     quizesMap.put(quiz.getDestAddress(), quiz);
-    quiz.setQuizStatus(Quiz.Status.ACTIVE);
+    try {
+      quiz.setQuizStatus(Quiz.Status.ACTIVE);
+    } catch (Exception e) {
+      logger.error(e, e);
+      throw new QuizException(e);
+    }
     if (logger.isInfoEnabled())
       logger.info("QuizCollector added quiz into map: " + quiz);
   }
 
-  private void setFinished(Quiz quiz) throws QuizException{
-    deleteFormMap(quiz);
+  private void setFinished(Quiz quiz) throws QuizException {
+    deleteFromMap(quiz);
     exportStats(quiz);
   }
 
-  private void deleteFormMap(Quiz quiz) {
+  private void deleteFromMap(Quiz quiz) {
     if (quizesMap.get(quiz.getDestAddress()) == quiz) {
       quizesMap.remove(quiz.getDestAddress());
       if (logger.isInfoEnabled())
@@ -285,13 +316,13 @@ public class QuizCollector {
     }
   }
 
-  private void checkState(Quiz quiz) throws QuizException{
+  private void checkState(Quiz quiz) throws QuizException {
     String id = quiz.getDistrId();
     if (id == null) {
       logger.error("Distr id is null for quiz: " + quiz);
       return;
     }
-    try{
+    try {
       DistributionManager.State state = dm.getState(id);
       if (state.equals(DistributionManager.State.GENERATED)) {
         quiz.setQuizStatus(Quiz.Status.AWAIT);
@@ -305,7 +336,7 @@ public class QuizCollector {
       } else {
         quiz.setLastDistrStatusCheck(System.currentTimeMillis());
       }
-    } catch (DistributionException e) {
+    } catch (Exception e) {
       logger.error(e, e);
       throw new QuizException(e);
     }
@@ -313,27 +344,33 @@ public class QuizCollector {
   }
 
   private void exportStats(final Quiz quiz) throws QuizException {
-    if (!quiz.isExported()) {
-      quiz.setQuizStatus(Quiz.Status.EXPORTING);
-      executor.execute(new Runnable() {
-        public void run() {
-          try {
-            quiz.exportStats();
-            quiz.shutdown();
-          } catch (QuizException e) {
-            logger.error("Error creating result statistics for quiz:" + quiz, e);
-          } finally {
+    try {
+      if (!quiz.isExported()) {
+        quiz.setQuizStatus(Quiz.Status.EXPORTING);
+        executor.execute(new Runnable() {
+          public void run() {
             try {
+              quiz.exportStats();
               quiz.setQuizStatus(Quiz.Status.FINISHED);
+              quiz.shutdown();
             } catch (QuizException e) {
+              quiz.writeError(e);
+              try {
+                quiz.setQuizStatus(QuizError.UNKNOWN, "Error during export stats");
+              } catch (QuizException ex) {
+              }
+              logger.error("Error creating result statistics for quiz:" + quiz, e);
             }
           }
-        }
-      });
-    } else
-      quiz.setQuizStatus(Quiz.Status.FINISHED);
+        });
+      } else {
+        quiz.setQuizStatus(Quiz.Status.FINISHED);
+      }
+    } catch (Exception e) {
+      logger.error(e, e);
+      throw new QuizException(e);
+    }
   }
-
 }
 
 

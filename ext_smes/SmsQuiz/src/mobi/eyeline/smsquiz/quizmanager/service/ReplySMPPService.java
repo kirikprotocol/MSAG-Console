@@ -34,11 +34,11 @@ public class ReplySMPPService extends BasicService {
         logger.error("Unable to handle sms");
         return false;
       }
+      if(result != null) {
 
-      smppRequest.getInObj().respond(Data.ESME_ROK);
-      if (result != null) {
         Result.ReplyRull replyRull = result.getReplyRull();
-        if (replyRull.equals(Result.ReplyRull.OK)) {
+        if (replyRull.equals(Result.ReplyRull.OK)) { 
+          smppRequest.getInObj().respond(Data.ESME_ROK);
           Message respMsg = new Message();
           respMsg.setSourceAddress(result.getSourceAddress());
           respMsg.setDestinationAddress(oa);
@@ -48,6 +48,10 @@ public class ReplySMPPService extends BasicService {
           } catch (ShutdownedException e) {
             logger.error("Shutdowned.", e);
           }
+
+        } else if(replyRull.equals(Result.ReplyRull.SERVICE_NOT_FOUND)) {
+
+          return false;
         }
       }
     } catch (SMPPException e) {
