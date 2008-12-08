@@ -477,6 +477,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
         <fail unless="MOD">
             Please specify a module name via -DMOD=&lt;MODNAME&gt; command line argument
         </fail>
+        <antcall target="makedeps"/>
         <ant dir="${SRC_DIR}" target="mod"/>
     </target>  
 
