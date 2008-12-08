@@ -379,3 +379,9 @@ TO ALL: Insert log record for all significant changes & fixes here.
 4) PVSS CHANGE: New PVSS v3.0 now named PVSS (not PERS).
 5) PVSS UPDATE: New PVCP v1.0 & PVGW v1.0 modules added
 6) BUILD SYSTEM CHANGE: New format is: ant <components> <actions>
+
+=================================================================================================================
+08.12.2008 11:00 makar [!!! CVS: tags MSAG_BUILD_03_12_2008 & MSAG_VERSION_2-0 moved !!!]
+1) PVSS/MSAG CRITICAL CHANGE: Storages serialization/seserialization refactoring & fixes.
+   Now it machine independed: 32/64 & BE/LE.
+2) MSAG FIX: Admin commands processing fixes (e.g. httpTraceRoute)
