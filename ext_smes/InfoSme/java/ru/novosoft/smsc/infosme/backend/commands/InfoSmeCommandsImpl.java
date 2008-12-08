@@ -39,13 +39,15 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       }
 
       final SMSCAppContext appContext = ctx.getOwner().getContext();
-      if (!appContext.getSmeManager().smeStatus("InfoSme").isConnected()) {
+      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
+
+      if (!context.getInfoSme().getInfo().isOnline()) {
         ctx.setMessage("InfoSme is not started");
         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         return;
       }
 
-      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
+
 
       new TaskBuilder(file, context).start();
       ctx.setMessage("File " + file + " was added to process queue");
