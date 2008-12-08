@@ -84,7 +84,7 @@ public class TaskBuilder extends Thread {
     System.out.println("Task builder started");
     final String fileName = new File(file).getName();
 
-    String taskName = (distr.getTaskName()==null) ? fileName : distr.getTaskName();
+    String taskName = (distr==null) ? fileName : distr.getTaskName();
     System.out.println("Task name=" + taskName);
 //    task.setId(taskName);
     task.setName(taskName);
@@ -129,6 +129,8 @@ public class TaskBuilder extends Thread {
         task.setActivePeriodEnd(distr.getTimeEnd().getTime());
         task.setAddress(distr.getAddress());
         task.setTransactionMode(distr.isTxmode().booleanValue());
+      } else {
+        task.setStartDate(new Date());
       }
       is = new InputStreamReader(new FileInputStream(processedFile), Functions.getLocaleEncoding());
 
