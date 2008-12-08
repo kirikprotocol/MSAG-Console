@@ -149,7 +149,7 @@ class CalendarEngine extends IterativeWorker {
 
       String messageString = message.getMessage();
       if (message.isAppendAdvertising()) {
-        final String banner = (advSize > 0) ? getBannerForAbonent(message.getSourceAddress(), advSize - messageString.length() - advDelim.length()) : getBannerForAbonent(message.getSourceAddress());
+        final String banner = (advSize > 0) ? getBannerForAbonent(message.getDestinationAddress(), advSize - messageString.length() - advDelim.length()) : getBannerForAbonent(message.getDestinationAddress());
         if (log.isInfoEnabled())
           log.info("Append banner: " + banner);
         if (banner != null)
