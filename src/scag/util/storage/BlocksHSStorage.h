@@ -965,7 +965,7 @@ private:
             }
 
             if (logger) smsc_log_info(logger, "OpenDescrFile: storage version:0x%x, files count:%d, block size:%d, file size:%d, blocks used:%d, blocks free:%d, first free block:%d",
-                           descrFile.files_count, descrFile.block_size, descrFile.file_size, descrFile.blocks_used, descrFile.blocks_free, descrFile.first_free_block);
+                          descrFile.version, descrFile.files_count, descrFile.block_size, descrFile.file_size, descrFile.blocks_used, descrFile.blocks_free, descrFile.first_free_block);
             effectiveBlockSize = descrFile.block_size - hdrSize;
             return 0;
         }
