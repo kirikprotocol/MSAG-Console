@@ -12,9 +12,9 @@ scag.service.name=scag
 scag.service.args=MSAG v1
 scag.service.autostart=false
 
-scag2.service.name=msag
-scag2.service.args=MSAG v2
-scag2.service.autostart=true
+msag.service.name=msag
+msag.service.args=MSAG v2
+msag.service.autostart=true
 
 listen.host=0.0.0.0
 connect.host=127.0.0.1
