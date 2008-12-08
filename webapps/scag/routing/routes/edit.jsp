@@ -117,6 +117,10 @@
           var mask = newDstMask.value;
 //          var smeSelect = opForm.all.newDstMaskSme;
           var smeSelect = getElementByIdUni("newDstMaskSme");
+          if( smeSelect.selectedIndex < 0 ){
+              alert( "Could't add mask with empty sme!" );
+              return;
+          }
           var sme = smeSelect.options[smeSelect.selectedIndex].value;
 //          var tbl = opForm.all.destinations_table;
           var tbl = getElementByIdUni("destinations_table");
