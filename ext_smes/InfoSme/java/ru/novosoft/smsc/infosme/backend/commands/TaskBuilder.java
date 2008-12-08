@@ -305,8 +305,8 @@ public class TaskBuilder extends Thread {
     if (task.isContainsInConfigByName(smeContext.getConfig()))
       errors.add("Task with name='"+taskName+"' already exists. Please specify another name");
 
-    if (!admin)
-      calculateRetryOnFail(task, smeContext, contentCount);
+//    if (!admin)
+//      calculateRetryOnFail(task, smeContext, contentCount);
 
     return errors;
   }
