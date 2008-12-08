@@ -54,6 +54,8 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       ctx.setStatus(CommandContext.CMD_OK);
     } catch (Exception e) {
       e.printStackTrace();
+      log.error(e);
+      ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
     }
   }
 
