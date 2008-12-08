@@ -9,7 +9,7 @@ namespace scag { namespace mtpers {
 using smsc::core::synchronization::MutexGuard;
 using scag::util::RelockMutexGuard;
 
-const size_t MAX_PACKET_SIZE = 100000;
+const size_t MAX_PACKET_SIZE = 102400;
 
 ConnectionContext::ConnectionContext(Socket* sock, WriterTaskManager& writerManager, ReaderTaskManager& readerManager, bool perfCounterOn)
                    :socket_(sock), action_(READ_REQUEST), packetLen_(0), writerManager_(writerManager), 
@@ -163,7 +163,7 @@ bool ConnectionContext::processReadSocket(const time_t& now) {
     packetLen_ = inbuf_.ReadInt32();
     smsc_log_debug(logger_, "%d bytes will be read from %p", packetLen_, socket_);
     if (packetLen_ > MAX_PACKET_SIZE) {
-      smsc_log_warn(logger_, "Too big packet from client");
+      smsc_log_warn(logger_, "Too big packet from client: %d bytes. Max packet size: %d bytes", packetLen_, MAX_PACKET_SIZE);
       return false;
     }
     inbuf_.SetPos(n);
