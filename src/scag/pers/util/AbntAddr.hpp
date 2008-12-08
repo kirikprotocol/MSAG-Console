@@ -196,7 +196,9 @@ public:
 
   inline std::string toString()const
   {
-    if(value.addr_content.length>32)abort();
+    if (value.addr_content.length > ADDRESS_VALUE_SIZE * 2) {
+      throw runtime_error("AbntAddr::toString: error address length");
+    }
     char vl[32];
     char buf[48];
     if(getSignals(vl))
@@ -336,24 +338,33 @@ private:
 
 inline scag::util::storage::Serializer& operator << (scag::util::storage::Serializer& ser, 
                                                      const scag::pers::util::AbntAddr& addr) { 
-  uint8_t len = addr.getLength() & 0x1F;
-  uint8_t plan = (addr.getNumberingPlan() & 0x07) << 5;
-  uint8_t res = len | plan;
-  ser << res;
-  ser << addr.getTypeOfNumber();
+  //uint8_t len = addr.getLength() & 0x1F;
+  //uint8_t plan = (addr.getNumberingPlan() & 0x07) << 5;
+  //uint8_t res = len | plan;
+  //ser << res;
 
+  ser << addr.getLength();
+  ser << addr.getNumberingPlan();
+  ser << addr.getTypeOfNumber();
   ser.writeAsIs(addr.getValueSize(), (const char*)(addr.getContentSignals()));
   return ser; 
 };
 
 inline scag::util::storage::Deserializer& operator >> (scag::util::storage::Deserializer& deser,
                                                  scag::pers::util::AbntAddr& addr) { 
-  uint8_t lenplan = 0;
-  deser >> lenplan;
+  //uint8_t lenplan = 0;
+  //deser >> lenplan;
+  //uint8_t type = 0;
+  //deser >> type;
+  //uint8_t len = lenplan & 0x1F;
+  //uint8_t plan = (lenplan >> 5) & 0x07;
+
+  uint8_t len = 0;
+  deser >> len;
+  uint8_t plan = 0;
+  deser >> plan;
   uint8_t type = 0;
   deser >> type;
-  uint8_t len = lenplan & 0x1F;
-  uint8_t plan = (lenplan >> 5) & 0x07;
   const char* buf = deser.readAsIs(addr.getValueSize());
   addr.setAllValues(len, plan, type, buf);
   return deser;
