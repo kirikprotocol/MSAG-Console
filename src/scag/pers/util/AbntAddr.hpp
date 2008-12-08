@@ -136,8 +136,8 @@ public:
     {
       for(int i=0; i<value.addr_content.length; i++)
         _value[i] = "0123456789"[i%2 ? value.addr_content.signals[i/2] >> 4 :value.addr_content.signals[i/2] & 0x0F];
-      _value[value.addr_content.length] = '\0';
     }
+    _value[value.addr_content.length] = '\0';
     return value.addr_content.length;
   }
 
@@ -282,6 +282,9 @@ public:
     value.addr_content.plan = plan;
     value.addr_content.type = type;
     memcpy(value.addr_content.signals, signals, getValueSize());
+      char buf[32];
+      getSignals(buf);
+      number = atoll(buf);
   }
 
     // for serialization
