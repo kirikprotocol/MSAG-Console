@@ -313,7 +313,8 @@
               <sm-ep:properties title="routes.edit.properties.route_options" noColoredLines="false" noHeaders="false">
                   <sm-ep:check title="routes.edit.check.active" name="active"/>
                   <sm-ep:check title="routes.edit.check.enabled" name="enabled"/>
-                  <sm-ep:check title="routes.edit.check.archived" name="archived"/>
+<%--                  <sm-ep:check title="routes.edit.check.archived" name="archived"/>--%>
+                  <sm-ep:check title="routes.edit.check.transit" name="transit"/>
               </sm-ep:properties>
           </td>
       </tr>

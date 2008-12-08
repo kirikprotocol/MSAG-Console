@@ -10,10 +10,11 @@ public class PerfSnap {
 
     public int uptime;
     public int sctime;
-    
+
     public int sessionCount;
+    public int sessionLoadedCount;
     public int sessionLockedCount;
-    
+
     public int smppReqQueueLen;
     public int smppResQueueLen;
     public int smppLCMQueueLen;
@@ -27,14 +28,15 @@ public class PerfSnap {
 
     public String strUptime;
     public String strSctime;
-    
+
     public String strSessionCount ="";
+    public String strSessionLoadedCount ="";
     public String strSessionLockedCount ="";
-    
+
     public String strSmppReqQueueLen ="";
     public String strSmppResQueueLen ="";
     public String strSmppLCMQueueLen ="";
-    
+
     public String strHttpReqQueueLen ="";
     public String strHttpResQueueLen ="";
     public String strHttpLCMQueueLen ="";
@@ -81,28 +83,30 @@ public class PerfSnap {
 
         uptime = snap.uptime;
         sctime = snap.sctime;
-	
+
         sessionCount = snap.sessionCount;
+        sessionLoadedCount = snap.sessionLoadedCount;
 	    sessionLockedCount = snap.sessionLockedCount;
-	
+
 	    smppReqQueueLen = snap.smppReqQueueLen;
 	    smppResQueueLen = snap.smppResQueueLen;
 	    smppLCMQueueLen = snap.smppLCMQueueLen;
-	
+
         httpReqQueueLen = snap.httpReqQueueLen;
 	    httpResQueueLen = snap.httpResQueueLen;
 	    httpLCMQueueLen = snap.httpLCMQueueLen;
-	
+
         strSctime = new String(snap.strSctime);
         strUptime = new String(snap.strUptime);
-	
+
         strSessionCount = new String(snap.strSessionCount);
+        strSessionLoadedCount = new String(snap.strSessionLoadedCount);
 	    strSessionLockedCount = new String(snap.strSessionLockedCount);
-	
+
         strSmppReqQueueLen = new String(snap.strSmppReqQueueLen);
 	    strSmppResQueueLen = new String(snap.strSmppResQueueLen);
 	    strSmppLCMQueueLen = new String(snap.strSmppLCMQueueLen);
-	
+
         strHttpReqQueueLen = new String(snap.strHttpReqQueueLen);
 	    strHttpResQueueLen = new String(snap.strHttpResQueueLen);
 	    strHttpLCMQueueLen = new String(snap.strHttpLCMQueueLen);
@@ -158,14 +162,15 @@ public class PerfSnap {
         }
         {
             strSctime = PerfMon.dateFormat.format(new Date(((long) sctime) * 1000));
-            
+
 	        strSessionCount = new Integer(sessionCount).toString();
+            strSessionLoadedCount = new Integer(sessionLoadedCount).toString();
 	        strSessionLockedCount = new Integer(sessionLockedCount).toString();
-	    
+
             strSmppReqQueueLen = new Integer(smppReqQueueLen).toString();
 	        strSmppResQueueLen = new Integer(smppResQueueLen).toString();
 	        strSmppLCMQueueLen = new Integer(smppLCMQueueLen).toString();
-            
+
 	        strHttpReqQueueLen = new Integer(httpReqQueueLen).toString();
 	        strHttpResQueueLen = new Integer(httpResQueueLen).toString();
 	        strHttpLCMQueueLen = new Integer(httpLCMQueueLen).toString();
@@ -174,19 +179,20 @@ public class PerfSnap {
 
     public void write(java.io.DataOutputStream out) throws IOException {
         out.writeInt(sessionCount);
+        out.writeInt(sessionLoadedCount);
 	    out.writeInt(sessionLockedCount);
-	
+
         out.writeInt(smppReqQueueLen);
 	    out.writeInt(smppResQueueLen);
 	    out.writeInt(smppLCMQueueLen);
-	
+
         out.writeInt(httpReqQueueLen);
 	    out.writeInt(httpResQueueLen);
 	    out.writeInt(httpLCMQueueLen);
-        
+
 	    out.writeInt(uptime);
         out.writeInt(sctime);
-	
+
         writeArray(out, smppSnap.last);
         writeArray(out, smppSnap.avg);
         writeArray(out, smppSnap.total);
@@ -203,13 +209,14 @@ public class PerfSnap {
 
     public void read(java.io.DataInputStream in) throws IOException {
         sessionCount = in.readInt();
+        sessionLoadedCount = in.readInt();
 	    sessionLockedCount = in.readInt();
-        System.out.println("PerfSnap.read()\nsessionCount=" + sessionCount + "\nsessionLockedCount=" + sessionLockedCount + "\n---------------------");
+        System.out.println("PerfSnap.read()\nsessionCount=" + sessionCount + "\nsessionLoadedCount=" + sessionLoadedCount + "\nsessionLockedCount=" + sessionLockedCount + "\n---------------------");
 
         smppReqQueueLen = in.readInt();
 	    smppResQueueLen = in.readInt();
 	    smppLCMQueueLen = in.readInt();
-	
+
         httpReqQueueLen = in.readInt();
 	    httpResQueueLen = in.readInt();
 	    httpLCMQueueLen = in.readInt();
@@ -235,13 +242,14 @@ public class PerfSnap {
     public void init(SnapBufferReader in) throws IOException {
 
         sessionCount = in.readNetworkInt();
+        sessionLoadedCount = in.readNetworkInt();
 	    sessionLockedCount = in.readNetworkInt();
-        System.out.println("PerfSnap.init()\nsessionCount=" + sessionCount + "\nsessionLockedCount=" + sessionLockedCount + "\n---------------------");
+        System.out.println("PerfSnap.init()\nsessionCount=" + sessionCount + "\nsessionLoadedCount=" + sessionLoadedCount + "\nsessionLockedCount=" + sessionLockedCount + "\n---------------------");
 
         smppReqQueueLen = in.readNetworkInt();
 	    smppResQueueLen = in.readNetworkInt();
 	    smppLCMQueueLen = in.readNetworkInt();
-	
+
         httpReqQueueLen = in.readNetworkInt();
 	    httpResQueueLen = in.readNetworkInt();
 	    httpLCMQueueLen = in.readNetworkInt();
