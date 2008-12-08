@@ -543,11 +543,18 @@ private:
         Deserializer ds(pbuf,header_.persistentCellSize);
         ds.setVersion( header_.version );
         for ( int32_t i = 0; i < header_.cells_count; ++i ) {
-            // FIXME: read cell
             rbtree_f.Read(pbuf,header_.persistentCellSize);
             ds.setrpos(0);
             deserializeCell( ds, addr2node(index2addr(i)) );
         }
+        if (logger) smsc_log_info( logger, "OpenRBTree: version=%d cells_count=%d cells_used=%d cells_free=%d root_cell=%lld first_free_cell=%lld pers_cell_size=%d",
+                                   header_.version,
+                                   header_.cells_count,
+                                   header_.cells_used,
+                                   header_.cells_free,
+                                   int64_t(addr2index(header_.root_cell)),
+                                   int64_t(addr2index(header_.first_free_cell)),
+                                   int(header_.persistentCellSize) );
         return ret;
     }
     
@@ -662,7 +669,7 @@ private:
 
         if (logger) smsc_log_debug(logger, "RepairRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d",
                                    rbtHdr.cells_used, rbtHdr.cells_free, rbtHdr.cells_count, rbtHdr.first_free_cell, rbtHdr.root_cell, rbtHdr.nil_cell);
-        if (logger) smsc_log_info(logger, "repairRBTreeFile transHdr.nodes_count = %d, transHdr.status=%d", transHdr.nodes_count, status);
+        if (logger) smsc_log_debug(logger, "repairRBTreeFile transHdr.nodes_count = %d, transHdr.status=%d", transHdr.nodes_count, status);
 		
         for ( int32_t i = 0; i < transHdr.nodes_count; i++ )
         {
