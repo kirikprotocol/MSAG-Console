@@ -396,7 +396,6 @@ public class QuizManager implements Observer {
     }
 
     public void visit(Quiz quiz) throws QuizException {
-      System.out.println(quiz);
       if (quiz.getDestAddress().equals(newcomerDa)) {
         conflicts.add(quiz);
       }

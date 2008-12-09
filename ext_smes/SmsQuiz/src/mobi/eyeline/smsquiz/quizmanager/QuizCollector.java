@@ -30,7 +30,7 @@ public class QuizCollector {
   private ScheduledFuture currentTask;
 //  private long currentTaskTime;
 
-//  private final Lock scheduleLock = new ReentrantLock();
+  private final Lock scheduleLock = new ReentrantLock();
 
   private final long checkTimeot = 30000;
 
@@ -60,26 +60,29 @@ public class QuizCollector {
   }
 
   private void updateSchedule(long newStartTime) throws QuizException {
-    if (newStartTime != Long.MAX_VALUE) {
       try {
+        scheduleLock.lock();
+        if (newStartTime != Long.MAX_VALUE) {
 //        if(logger.isInfoEnabled()) {
 //          logger.info("New task try to schedule at: "+ new Date(newStartTime));
 //        }
-        if (currentTask != null) { // Check we need to cancel current task
+          if (currentTask != null) { // Check we need to cancel current task
 //          if (currentTaskTime > System.currentTimeMillis() && currentTaskTime <= newStartTime)
 //            return; // We already have scheduled task which start time before newStartTime
-          currentTask.cancel(false); // Cancel current task if new task starts before
-        }
-        long newTaskDelay = Math.max(0, newStartTime - System.currentTimeMillis()); // delay for new task
-        currentTask = scheduler.schedule(new Task(), newTaskDelay, TimeUnit.MILLISECONDS);
+            currentTask.cancel(false); // Cancel current task if new task starts before
+          }
+          long newTaskDelay = Math.max(0, newStartTime - System.currentTimeMillis()); // delay for new task
+          currentTask = scheduler.schedule(new Task(), newTaskDelay, TimeUnit.MILLISECONDS);
 //        currentTaskTime = newStartTime;
-        if (logger.isInfoEnabled())
-          logger.info("Task will be run at: " + new Date(newStartTime));
-      } catch (RejectedExecutionException e) {
+          if (logger.isInfoEnabled())
+            logger.info("Task will be run at: " + new Date(newStartTime));
+        }
+      } catch (Throwable e) {
         logger.error(e, e);
         throw new QuizException(e);
+      } finally {
+        scheduleLock.unlock();
       }
-    }
   }
 
 //  public void alert(Quiz quiz) throws QuizException {
@@ -89,7 +92,7 @@ public class QuizCollector {
 //    updateSchedule(calcMinStartTime(quiz));
 //  }
 
-  public void alert() throws QuizException {
+  public void alert() throws QuizException {              //todo
     try {
       if (logger.isInfoEnabled()) {
         logger.info("Alert executed");
@@ -152,6 +155,11 @@ public class QuizCollector {
         logger.error(e);
         e.printStackTrace();
       } finally {
+        try {
+          alert();
+        } catch (QuizException e) {
+          logger.error(e,e);
+        }
         lock.unlock();
       }
       logger.info("QuizCollector finished");
@@ -170,12 +178,13 @@ public class QuizCollector {
           setFinished(quiz);
         }
 
-      } else if (quiz.getQuizStatus() == Quiz.Status.FINISHED) { // Export stats if needed
+      } else if ((quiz.getQuizStatus() == Quiz.Status.FINISHED) && (!quiz.isExported())) { // Export stats if needed
         if (logger.isInfoEnabled())
           logger.info("Finished quiz was found, execute task to export it's results: " + quiz);
         exportStats(quiz);
 
-      } else if (quiz.getQuizStatus() == Quiz.Status.FINISHED_ERROR) { // Quiz failed
+      } else if ((quiz.getQuizStatus() == Quiz.Status.FINISHED_ERROR)
+          && (quiz.getDestAddress() != null) && (quizesMap.get(quiz.getDestAddress()) == quiz)) { // Quiz failed
         if (logger.isInfoEnabled())
           logger.info("Failed quiz was found and will be deleted from dest addr map: " + quiz);
         deleteFromMap(quiz);
@@ -204,13 +213,12 @@ public class QuizCollector {
           }
         } else {
           if (logger.isInfoEnabled())
-            logger.warn("Found quiz in state " + quiz.getQuizStatus() + " and expired end date was found and will be marked as UKNOWN: " + quiz);
+            logger.warn("Found quiz in state " + quiz.getQuizStatus() + " and expired end date was found:" + quiz);
           try {
             if(logger.isInfoEnabled()) {
               logger.warn("Trying to export stats for it: ");
               exportStats(quiz);
             }
-            quiz.setQuizStatus(QuizError.UNKNOWN, "Quiz failed, it's time expired");
           } catch (Exception e) {
             logger.error(e, e);
             throw new QuizException(e);
@@ -222,7 +230,7 @@ public class QuizCollector {
   }
 
   @SuppressWarnings({"ThrowableInstanceNeverThrown"})
-  private void createDistribution(final Quiz quiz) throws QuizException {
+  private void createDistribution(final Quiz quiz) throws QuizException {     //todo
     try {
       try {
         if (logger.isInfoEnabled()) {
@@ -317,6 +325,8 @@ public class QuizCollector {
   }
 
   private void checkState(Quiz quiz) throws QuizException {
+    if (quiz.getLastDistrStatusCheck() + checkTimeot > System.currentTimeMillis())
+      return;
     String id = quiz.getDistrId();
     if (id == null) {
       logger.error("Distr id is null for quiz: " + quiz);

@@ -90,7 +90,7 @@ public class Quiz {
     return statusFile.getStatusFileName();
   }
 
-  public synchronized Result handleSms(String oa, String text) throws QuizException {
+  public synchronized Result handleSms(String oa, String text) throws QuizException {     //todo
     if ((exported) || (!statusFile.getQuizStatus().equals(Status.ACTIVE))) {
       return null;
     }
@@ -117,14 +117,19 @@ public class Quiz {
       jstore.put(oaNumber, answerHandled);
       result = new Result(replyPattern.getAnswer(), Result.ReplyRull.OK, quizData.getSourceAddress());
     } else {
-      if (count != -1) {
-        count++;
-        jstore.put(oaNumber, count);
+      if(maxRepeat>0) {
+        if (count != -1) {
+          count++;
+          jstore.put(oaNumber, count);
+        } else {
+          jstore.put(oaNumber, 1);
+        }
+        if (count <= maxRepeat) {
+          result = new Result(quizData.getQuestion(), Result.ReplyRull.REPEAT, quizData.getSourceAddress());
+        }
       } else {
-        jstore.put(oaNumber, 1);
-      }
-      if (count <= maxRepeat) {
-        result = new Result(quizData.getQuestion(), Result.ReplyRull.REPEAT, quizData.getSourceAddress());
+        jstore.put(oaNumber, 0);
+        result = null;
       }
     }
 
@@ -252,11 +257,11 @@ public class Quiz {
     }
   }
 
-  public synchronized Date getDateBegin() {
+  public Date getDateBegin() {
     return quizData.getDateBegin();
   }
 
-  public synchronized void setDateBegin(Date dateBegin) throws QuizException {
+  public void setDateBegin(Date dateBegin) throws QuizException {
     if ((quizData.getDateBegin() == null) || (!quizData.getDateBegin().equals(dateBegin))) {
       quizData.setDateBegin(dateBegin);
       setActualStartDate(dateBegin);
@@ -264,11 +269,11 @@ public class Quiz {
     }
   }
 
-  public synchronized Date getDateEnd() {
+  public Date getDateEnd() {
     return quizData.getDateEnd();
   }
 
-  public synchronized void setDateEnd(Date dateEnd) throws QuizException {
+  public void setDateEnd(Date dateEnd) throws QuizException {
     if ((quizData.getDateEnd() == null) || (!quizData.getDateEnd().equals(dateEnd))) {
       quizData.setDateEnd(dateEnd);
       quizCollector.alert();
@@ -381,18 +386,18 @@ public class Quiz {
     return quizId;
   }
 
-  public synchronized void setQuizStatus(Status status) throws QuizException {
+  public void setQuizStatus(Status status) throws QuizException {      //todo
     if (status != statusFile.getQuizStatus()) {
       statusFile.setQuizStatus(status);
       quizCollector.alert();
     }
   }
 
-  public synchronized Status getQuizStatus() {
+  public Status getQuizStatus() {
     return statusFile.getQuizStatus();
   }
 
-  public synchronized void setQuizStatus(QuizError error, String reason) throws QuizException {
+  public void setQuizStatus(QuizError error, String reason) throws QuizException {
     if (statusFile.getQuizStatus() != Status.FINISHED_ERROR) {
       statusFile.setQuizErrorStatus(error, reason);
       quizCollector.alert();
@@ -567,18 +572,18 @@ public class Quiz {
     }
   }
 
-  public synchronized void setLastDistrStatusCheck(long l) throws QuizException {
+  public void setLastDistrStatusCheck(long l) throws QuizException {
     if (this.lastDistrStatusCheck != l) {
       this.lastDistrStatusCheck = l;
       quizCollector.alert();
     }
   }
 
-  public synchronized Long getLastDistrStatusCheck() {
+  public Long getLastDistrStatusCheck() {
     return lastDistrStatusCheck;
   }
 
-  public synchronized void updateQuiz(QuizData data) throws QuizException {
+  public void updateQuiz(QuizData data) throws QuizException {
     if (data == null) {
       logger.error("Some arguments are null");
       throw new IllegalArgumentException("Some arguments are null");
