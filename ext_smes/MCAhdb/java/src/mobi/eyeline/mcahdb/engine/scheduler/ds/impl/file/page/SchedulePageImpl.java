@@ -74,11 +74,26 @@ class SchedulePageImpl implements SchedulePage {
   }
 
   private Task readTask(String str, long pointer) throws ParseException {
-    StringTokenizer st = new StringTokenizer(str.substring(1), ",");
-    Date time = df.parse(st.nextToken());
-    String caller = st.nextToken().trim();
-    String called = st.nextToken().trim();
-    int type = Integer.parseInt(st.nextToken());
+    int i, k;
+    i = str.indexOf(',', 1);
+    Date time = df.parse(str.substring(1, i));
+
+    k = i + 1;
+    i = str.indexOf(',', k);
+    String caller = str.substring(k,i).trim();
+
+    k = i + 1;
+    i = str.indexOf(',', k);
+    String called = str.substring(k,i).trim();
+
+    k = i + 1;
+    int type = Integer.parseInt(str.substring(k));
+
+//    StringTokenizer st = new StringTokenizer(str.substring(1), ",");
+//    Date time = df.parse(st.nextToken());
+//    String caller = st.nextToken().trim();
+//    String called = st.nextToken().trim();
+//    int type = Integer.parseInt(st.nextToken());
 
     Task t = new Task(caller, called);
     t.setTime(time);
