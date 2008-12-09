@@ -209,9 +209,13 @@ public class QuizAdd extends SmsQuizBean {
       if(endDate.before(startDate)||endDate.before(now)) {
         return warning("Incorrect end date");
       }
-      Date distrDate =  dateFormat.parse(distrDateEnd);
-      if(distrDate.before(now)||distrDate.after(endDate)||distrDate.before(startDate)) {
-        return warning("Incorrect distribution end date");
+      if((distrDateEnd == null)||(distrDateEnd.equals(""))) {
+        distrDateEnd = dateEnd;
+      } else {
+        Date distrDate =  dateFormat.parse(distrDateEnd);
+        if(distrDate.before(now)||distrDate.after(endDate)||distrDate.before(startDate)) {
+          return warning("Incorrect distribution end date");
+        }
       }
       timeFormat.parse(timeBegin);
       timeFormat.parse(timeEnd);

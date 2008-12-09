@@ -8,7 +8,7 @@
 <jsp:setProperty name="smsQuizDistributionBean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE=getLocString("smsquiz.title");
+	TITLE=getLocString("smsquiz.title")+": "+getLocString("smsquiz.label.messages");
   ServiceIDForShowStatus = ru.novosoft.smsc.util.Functions.getServiceId(request.getServletPath());
   MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";

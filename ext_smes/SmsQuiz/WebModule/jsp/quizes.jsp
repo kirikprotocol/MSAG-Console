@@ -10,7 +10,7 @@
 
   ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
   bean.getTableHelper().processRequest(request);
-	TITLE=getLocString("smsquiz.title");
+	TITLE=getLocString("smsquiz.title")+": "+getLocString("smsquiz.label.quizes");
 	MENU0_SELECTION = "MENU0_SERVICES";
 
 	int beanResult = bean.process(request);

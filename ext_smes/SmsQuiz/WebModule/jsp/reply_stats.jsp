@@ -12,7 +12,7 @@
 <%
   Replies bean = smsQuizRepliesBean;
   ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
-  TITLE = getLocString("smsquiz.title");
+  TITLE = getLocString("smsquiz.title")+": "+getLocString("smsquiz.label.replies");
 
   int rowN = 0;
   int beanResult = bean.process(request);

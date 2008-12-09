@@ -9,7 +9,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
   ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
-  TITLE = getLocString("smsquiz.title");
+  TITLE = getLocString("smsquiz.title")+": "+getLocString("smsquiz.label.quizes");
   bean.getTableHelper().processRequest(request);
   int beanResult = bean.process(request);
   if(beanResult == QuizView.RESULT_DONE) {

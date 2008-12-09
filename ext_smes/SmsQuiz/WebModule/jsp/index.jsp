@@ -4,7 +4,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
    ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
-	 TITLE=getLocString("smsquiz.title");
+	 TITLE=getLocString("smsquiz.title")+": "+getLocString("smsquiz.label.main");
    int beanResult = bean.process(request);
 %>
 <%@ include file="inc/menu_switch.jsp"%>

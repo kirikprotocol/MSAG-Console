@@ -6,7 +6,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
   ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
-  TITLE = getLocString("smsquiz.title");
+  TITLE = getLocString("smsquiz.title")+": "+getLocString("smsquiz.label.options");
   int beanResult = bean.process(request);
   if(beanResult == Options.RESULT_SAVED) {
     session.setAttribute("message_to_restart","restart");

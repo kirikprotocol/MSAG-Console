@@ -19,7 +19,7 @@
 
   bean.getTableHelper().processRequest(request);
 
-  TITLE=getLocString("smsquiz.title");
+  TITLE=getLocString("smsquiz.title")+": "+getLocString("smsquiz.label.quizes");
   MENU0_SELECTION = "MENU0_SERVICES";
   FORM_METHOD = "POST";
   FORM_ENCTYPE = "multipart/form-data";
@@ -90,7 +90,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.endDate")%></th>
-  <td><input validation="nonEmpty" class=calendarField id=distrTillDate name=distrDateEnd value="<%=StringEncoderDecoder.encode(bean.getDistrDateEnd())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(distrTillDate, false, true);">...</button></td>
+  <td><input class=calendarField id=distrTillDate name=distrDateEnd value="<%=StringEncoderDecoder.encode(bean.getDistrDateEnd())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(distrTillDate, false, true);">...</button></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.activeDays")%></th>
