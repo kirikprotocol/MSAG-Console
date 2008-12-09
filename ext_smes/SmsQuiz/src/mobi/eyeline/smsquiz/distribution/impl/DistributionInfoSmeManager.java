@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+@SuppressWarnings({"ResultOfMethodCallIgnored"})
 public class DistributionInfoSmeManager implements DistributionManager {
 
   private static final Logger logger = Logger.getLogger(DistributionInfoSmeManager.class);

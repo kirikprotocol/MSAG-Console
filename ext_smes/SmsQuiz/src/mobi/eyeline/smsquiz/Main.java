@@ -1,7 +1,6 @@
 package mobi.eyeline.smsquiz;
 
 import com.eyeline.sme.handler.MessageHandler;
-import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.SMPPTransceiver;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
@@ -16,7 +15,6 @@ import org.apache.log4j.Logger;
 
 import javax.management.*;
 import java.io.File;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * author: alkhal

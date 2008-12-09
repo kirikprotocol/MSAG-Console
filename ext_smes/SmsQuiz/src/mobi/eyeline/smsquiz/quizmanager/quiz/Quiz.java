@@ -5,18 +5,23 @@ import mobi.eyeline.smsquiz.distribution.Distribution;
 import mobi.eyeline.smsquiz.distribution.DistributionException;
 import mobi.eyeline.smsquiz.distribution.DistributionManager;
 import mobi.eyeline.smsquiz.distribution.StatsDelivery;
+import mobi.eyeline.smsquiz.quizmanager.DistributionImpl;
+import mobi.eyeline.smsquiz.quizmanager.QuizCollector;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
 import mobi.eyeline.smsquiz.quizmanager.Result;
-import mobi.eyeline.smsquiz.quizmanager.QuizCollector;
 import mobi.eyeline.smsquiz.replystats.Reply;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyDataSourceException;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
 import mobi.eyeline.smsquiz.storage.ResultSet;
+import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -46,39 +51,43 @@ public class Quiz {
   private String workDir;
   private String quizId;
 
-  private final ReplyStatsDataSource replyStatsDataSource;
-  private final DistributionManager distributionManager;
+  private final ReplyStatsDataSource rds;
+  private final DistributionManager dm;
+  private final SubscriptionManager sm;
   private final QuizCollector quizCollector;
 
-  private int answerHandled = -5;
+  private int answerHandled = -1;
 
   private StatusFile statusFile;
 
   private boolean exported = false;
+
+  private boolean distrGenerated = false;
 
   private final Lock lock = new ReentrantLock();
 
   private SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
 
 
-  public Quiz(final File file, final ReplyStatsDataSource replyStatsDataSource, final QuizCollector quizCollector,
-              final DistributionManager distributionManager, final String dirResult,
+  public Quiz(final File file, final ReplyStatsDataSource rds, final QuizCollector quizCollector,
+              final DistributionManager dm, final SubscriptionManager sm, final String dirResult,
               final String dirWork, final String archiveDir, final String quizDir, final QuizData quizData) throws QuizException {
 
-    if((file == null)||(replyStatsDataSource == null)||(quizCollector == null)||(distributionManager == null) ||
-        (dirResult == null)||(dirWork == null)||(archiveDir == null)||(quizDir == null)||(quizData == null)) {
+    if ((file == null) || (rds == null) || (quizCollector == null) || (dm == null) || (sm == null) ||
+        (dirResult == null) || (dirWork == null) || (archiveDir == null) || (quizDir == null) || (quizData == null)) {
       logger.error("Some arguments are null");
       throw new IllegalArgumentException("Some arguments are null");
     }
+    this.sm = sm;
     this.quizData = quizData;
     this.dirResult = dirResult;
     this.archiveDir = archiveDir;
     this.quizDir = quizDir;
     this.workDir = dirWork;
-    this.replyStatsDataSource = replyStatsDataSource;
-    this.distributionManager = distributionManager;
+    this.rds = rds;
+    this.dm = dm;
     this.quizCollector = quizCollector;
-    jstore = new JStore(-1);
+    jstore = new JStore(0);
     fileName = file.getAbsolutePath();
     quizId = file.getName().substring(0, file.getName().lastIndexOf("."));
     jstore.init(dirWork + File.separator + file.getName() + ".bin", 60000, 10);
@@ -90,12 +99,12 @@ public class Quiz {
     return statusFile.getStatusFileName();
   }
 
-  public synchronized Result handleSms(String oa, String text) throws QuizException {     //todo
+  public synchronized Result handleSms(String oa, String text) throws QuizException {
     if ((exported) || (!statusFile.getQuizStatus().equals(Status.ACTIVE))) {
       return null;
     }
     Result result = null;
-    long oaNumber = Long.parseLong(oa.substring(oa.lastIndexOf("+") + 1, oa.length()));
+    long oaNumber = Long.parseLong(oa.substring(oa.lastIndexOf("+") + 2, oa.length()));   //todo right?
     int maxRepeat = quizData.getMaxRepeat();
     int count = jstore.get(oaNumber);
     if (count == answerHandled) {
@@ -117,24 +126,14 @@ public class Quiz {
       jstore.put(oaNumber, answerHandled);
       result = new Result(replyPattern.getAnswer(), Result.ReplyRull.OK, quizData.getSourceAddress());
     } else {
-      if(maxRepeat>0) {
-        if (count != -1) {
-          count++;
-          jstore.put(oaNumber, count);
-        } else {
-          jstore.put(oaNumber, 1);
-        }
-        if (count <= maxRepeat) {
-          result = new Result(quizData.getQuestion(), Result.ReplyRull.REPEAT, quizData.getSourceAddress());
-        }
-      } else {
-        jstore.put(oaNumber, 0);
-        result = null;
+      count++;
+      jstore.put(oaNumber, count);
+      if (count <= maxRepeat) {
+        result = new Result(quizData.getQuestion(), Result.ReplyRull.REPEAT, quizData.getSourceAddress());
       }
     }
-
     try {
-      replyStatsDataSource.add(new Reply(new Date(), oa, quizData.getDestAddress(), text));
+      rds.add(new Reply(new Date(), oa, quizData.getDestAddress(), text));
       if (logger.isInfoEnabled()) {
         logger.info("Sms stored: " + oa + " " + quizData.getDestAddress() + " " + text);
       }
@@ -144,7 +143,7 @@ public class Quiz {
     }
     if ((result != null) && (result.getReplyRull().equals(Result.ReplyRull.REPEAT))) {
       try {
-        distributionManager.resend(oa, statusFile.getDistrId());
+        dm.resend(oa, statusFile.getDistrId());
       } catch (DistributionException e) {
         e.printStackTrace();
         logger.error("Can't resend the message", e);
@@ -181,13 +180,13 @@ public class Quiz {
       String fileName = dirResult + File.separator + quizId + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
       dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
 
-      File file = new File(fileName);
-      if (file.exists()) {
+      File resultFile = new File(fileName);
+      if (resultFile.exists()) {
         logger.info("Results already exist for quiz: " + quizId);
         return;
       }
-      File fileTmp = new File(file.getAbsolutePath() + "." + dateFormat.format(new Date()));
-      File parentFile = file.getParentFile();
+      File fileTmp = new File(resultFile.getAbsolutePath() + "." + dateFormat.format(new Date()));
+      File parentFile = resultFile.getParentFile();
       if ((parentFile != null) && (!parentFile.exists())) {
         parentFile.mkdirs();
       }
@@ -196,7 +195,7 @@ public class Quiz {
       String encoding = System.getProperty("file.encoding");
       try {
         printWriter = new PrintWriter(fileTmp, encoding);
-        ResultSet resultSet = distributionManager.getStatistics(distrId, realStartDate, dateEnd);
+        ResultSet resultSet = dm.getStatistics(distrId, realStartDate, dateEnd);
         String comma = ",";
         while (resultSet.next()) {
           Reply reply;
@@ -206,7 +205,7 @@ public class Quiz {
           if (logger.isInfoEnabled()) {
             logger.info("Analysis delivery: " + delivery);
           }
-          if ((reply = replyStatsDataSource.getLastReply(oa, da, realStartDate, dateEnd)) != null) {
+          if ((reply = rds.getLastReply(oa, da, realStartDate, dateEnd)) != null) {
             String text = reply.getText();
             ReplyPattern replyPattern = getReplyPattern(text);
             String category;
@@ -247,9 +246,9 @@ public class Quiz {
           printWriter.close();
         }
       }
-      if (!fileTmp.renameTo(file)) {
-        logger.error("Can't rename file: " + fileTmp.getAbsolutePath() + " to " + file.getAbsolutePath());
-        throw new QuizException("Can't rename file: " + fileTmp.getAbsolutePath() + " to " + file.getAbsolutePath());
+      if (!fileTmp.renameTo(resultFile)) {
+        logger.error("Can't rename file: " + fileTmp.getAbsolutePath() + " to " + resultFile.getAbsolutePath());
+        throw new QuizException("Can't rename file: " + fileTmp.getAbsolutePath() + " to " + resultFile.getAbsolutePath());
       }
       logger.info("Export statistics finished");
     } finally {
@@ -386,7 +385,7 @@ public class Quiz {
     return quizId;
   }
 
-  public void setQuizStatus(Status status) throws QuizException {      //todo
+  public void setQuizStatus(Status status) throws QuizException {
     if (status != statusFile.getQuizStatus()) {
       statusFile.setQuizStatus(status);
       quizCollector.alert();
@@ -477,7 +476,7 @@ public class Quiz {
       file.mkdirs();
     }
     String orgiAbFile = getOrigAbFile();
-    if(orgiAbFile!=null) {
+    if (orgiAbFile != null) {
       file = new File(orgiAbFile);
       if (file.exists()) {
         renameFile(new File(orgiAbFile));
@@ -610,4 +609,69 @@ public class Quiz {
     return quizData;
   }
 
+  @SuppressWarnings({"EmptyCatchBlock"})
+  public void createDistribution() throws QuizException {
+    if (distrGenerated) {
+      return;
+    }
+    try {
+      lock.lock();
+      if (distrGenerated) {
+        return;
+      }
+      distrGenerated = true;
+      if (logger.isInfoEnabled()) {
+        logger.info("Create distribution for quiz: " + quizId + "...");
+      }
+      String id;
+      DistributionManager.State state;
+      boolean create = true;
+      if ((id = getDistrId()) != null) {
+        if (logger.isInfoEnabled()) {
+          logger.info("Quiz will be repaired: " + this);
+        }
+        state = dm.getState(id);
+        if (!state.equals(DistributionManager.State.ERROR)) {
+          create = false;
+        }
+      }
+      if (create) {
+        Distribution distr = buildDistribution();
+        id = dm.createDistribution(distr);
+      }
+
+      setDistrId(id);
+      if (logger.isInfoEnabled()) {
+        logger.info("Distribution created for: " + this);
+      }
+    } catch (Throwable e) {
+      try {
+        setQuizStatus(QuizError.DISTR_ERROR, "Error during creating distribution");
+      } catch (QuizException ex) {
+      }
+      writeError(e);
+      logger.error(e, e);
+      throw new QuizException(e.toString(), e);
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  private Distribution buildDistribution() throws QuizException {
+    Distribution distr = new DistributionImpl(quizData.getOrigAbFile(), sm);
+    distr.setQuestion(quizData.getQuestion());
+    distr.setDateBegin(quizData.getDateBegin());
+    distr.setDateEnd(quizData.getDistrDateEnd());
+    distr.setSourceAddress(quizData.getSourceAddress());
+    distr.setTaskName(quizData.getQuizName() + "(SmsQuiz)");
+    distr.setTimeBegin(quizData.getTimeBegin());
+    distr.setTimeEnd(quizData.getTimeEnd());
+    distr.setTxmode(quizData.isTxmode());
+    distr.addDays(quizData.getDays());
+    return distr;
+  }
+
+  public boolean isDistrGenerated() {
+    return distrGenerated;
+  }
 }

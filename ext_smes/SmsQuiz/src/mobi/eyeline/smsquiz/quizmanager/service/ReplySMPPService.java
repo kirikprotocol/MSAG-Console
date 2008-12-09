@@ -8,7 +8,6 @@ import com.logica.smpp.Data;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
 import mobi.eyeline.smsquiz.quizmanager.QuizManager;
 import mobi.eyeline.smsquiz.quizmanager.Result;
-import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
 import org.apache.log4j.Logger;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.SMPPException;
@@ -34,10 +33,10 @@ public class ReplySMPPService extends BasicService {
         logger.error("Unable to handle sms");
         return false;
       }
-      if(result != null) {
+      if (result != null) {
 
         Result.ReplyRull replyRull = result.getReplyRull();
-        if (replyRull.equals(Result.ReplyRull.OK)) { 
+        if (replyRull.equals(Result.ReplyRull.OK)) {
           smppRequest.getInObj().respond(Data.ESME_ROK);
           Message respMsg = new Message();
           respMsg.setSourceAddress(result.getSourceAddress());
@@ -49,7 +48,7 @@ public class ReplySMPPService extends BasicService {
             logger.error("Shutdowned.", e);
           }
 
-        } else if(replyRull.equals(Result.ReplyRull.SERVICE_NOT_FOUND)) {
+        } else if (replyRull.equals(Result.ReplyRull.SERVICE_NOT_FOUND)) {
 
           return false;
         }

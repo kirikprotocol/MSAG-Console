@@ -165,20 +165,6 @@ public class StatsFilesCache {
     return files;
   }
 
-  /*              if ((statsFile = lockupFile(da, date, true)) != null) {
-    files.add(statsFile);
-    if (logger.isInfoEnabled()) {
-      logger.info("File added for analysis: " + statsFile.getName());
-    }
-  }*/
-  private void resetTillHour(Calendar calendar) {
-    if (calendar != null) {
-      calendar.set(Calendar.MINUTE, 0);
-      calendar.set(Calendar.SECOND, 0);
-      calendar.set(Calendar.MILLISECOND, 0);
-    }
-  }
-
   public StatsFile getFile(String da, Date date) throws FileStatsException {
     if ((da == null) || (date == null)) {
       throw new FileStatsException("Some arguments are null", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);

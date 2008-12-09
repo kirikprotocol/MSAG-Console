@@ -124,7 +124,7 @@ class StatsFileImpl implements StatsFile {
           while ((b = randomAccessFile.read()) != -1) {
             if (b == nByte) {
               endPos = randomAccessFile.getFilePointer();
-              if ((msisdn = getMsisdn(beginPos, false)) != null) {
+              if ((msisdn = getMsisdn(beginPos)) != null) {
                 put(msisdn, beginPos);
               }
               beginPos = endPos + 1;
@@ -181,7 +181,7 @@ class StatsFileImpl implements StatsFile {
     try {
       long prevPosition = randomAccessFile.getFilePointer();
       for (Long aPos : positions) {
-        Reply reply = getReply(aPos, false);
+        Reply reply = getReply(aPos);
         if ((reply != null) && (reply.getDate().compareTo(till) <= 0) && (reply.getDate().compareTo(from) >= 0)) {
           result.add(reply);
         }
@@ -213,14 +213,9 @@ class StatsFileImpl implements StatsFile {
     }
   }
 
-  private Reply getReply(long position, final boolean seekBack) throws FileStatsException {
-    long prevPosition = 0;
+  private Reply getReply(long position) throws FileStatsException {
     Reply reply = new Reply();
     try {
-      if (seekBack) {
-        prevPosition = randomAccessFile.getFilePointer();
-      }
-
       randomAccessFile.seek(position);
       ByteArrayOutputStream str = new ByteArrayOutputStream();
       int c = -1;
@@ -260,10 +255,6 @@ class StatsFileImpl implements StatsFile {
       }
       reply.setText(text);
 
-      if (seekBack) {
-        randomAccessFile.seek(prevPosition);
-      }
-
       return reply;
 
     } catch (IOException e) {
@@ -280,13 +271,9 @@ class StatsFileImpl implements StatsFile {
     }
   }
 
-  private String getMsisdn(long position, final boolean seekBack) throws FileStatsException {
+  private String getMsisdn(long position) throws FileStatsException {
     long prevPosition = 0;
     try {
-      if (seekBack) {
-        prevPosition = randomAccessFile.getFilePointer();
-      }
-
       randomAccessFile.seek(position);
       String line = randomAccessFile.readLine();
       if (line == null) {
@@ -297,10 +284,6 @@ class StatsFileImpl implements StatsFile {
 
       tokenizer.nextToken();
       tokenizer.nextToken();
-
-      if (seekBack) {
-        randomAccessFile.seek(prevPosition);
-      }
 
       return tokenizer.nextToken();
 

@@ -51,7 +51,7 @@ public class StatusFile {
       if ((tmp = prop.getProperty(DISTR_ID)) != null) {  // if property exist => distribution already created
         prop.setProperty(DISTR_ID, tmp);
       }
-      prop.setProperty(QUIZ_ST,Quiz.Status.NEW.toString());
+      prop.setProperty(QUIZ_ST, Quiz.Status.NEW.toString());
     } catch (IOException e) {
       logger.error(e, e);
       throw new QuizException(e.toString(), e);

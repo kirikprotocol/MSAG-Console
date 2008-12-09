@@ -9,12 +9,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Created by IntelliJ IDEA.
- * User: alkhal
- * Date: 28.11.2008
- * Time: 15:03:20
- * To change this template use File | Settings | File Templates.
+ * autor: alkhal
+ *
  */
+
 public class Quizes {
 
   private static final Logger logger = Logger.getLogger(Quizes.class);

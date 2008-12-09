@@ -2,5 +2,7 @@ Date        | Version   | User          | Description
 ------------------------------------------------------------------------------------------------------------------------
 2008-12-02  | 1.0       | alkhal        | Initial
 ------------------------------------------------------------------------------------------------------------------------
-2008-12-09  | 1.1       | alkhal        | Stable release: simplify classes structure, fix bugs in QuizCollector 
+2008-12-09  | 1.1       | alkhal        | Stable release: simplify classes structure, fix bugs in QuizCollector, big refactoring
+------------------------------------------------------------------------------------------------------------------------
+2008-12-09  | 1.11      | alkhal        | Simplify code, make createDistribution in separate thread, fix small bugs
 ------------------------------------------------------------------------------------------------------------------------

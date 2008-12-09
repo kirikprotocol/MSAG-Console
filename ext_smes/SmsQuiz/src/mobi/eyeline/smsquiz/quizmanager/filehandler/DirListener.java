@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings({"ResultOfMethodCallIgnored"})
 public class DirListener extends Observable implements Runnable {
 
 

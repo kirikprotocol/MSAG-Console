@@ -11,7 +11,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.concurrent.ScheduledExecutorService;
 
 public class DistributionImpl extends Distribution {
 
@@ -100,6 +99,7 @@ public class DistributionImpl extends Distribution {
       return currentAbonent;
     }
 
+    @SuppressWarnings({"EmptyCatchBlock"})
     public void close() {
       if (reader != null) {
         try {

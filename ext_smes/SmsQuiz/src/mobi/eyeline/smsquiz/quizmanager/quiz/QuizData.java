@@ -1,8 +1,8 @@
 package mobi.eyeline.smsquiz.quizmanager.quiz;
 
-import java.util.*;
-
 import mobi.eyeline.smsquiz.distribution.Distribution;
+
+import java.util.*;
 
 /**
  * author: alkhal

@@ -4,14 +4,13 @@ import com.eyeline.utils.config.ConfigException;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.jmx.log4j.LoggingMBean;
-import mobi.eyeline.smsquiz.distribution.DistributionException;
 import mobi.eyeline.smsquiz.distribution.DistributionManager;
 import mobi.eyeline.smsquiz.quizmanager.filehandler.DirListener;
 import mobi.eyeline.smsquiz.quizmanager.filehandler.Notification;
 import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import mobi.eyeline.smsquiz.quizmanager.quiz.QuizBuilder;
-import mobi.eyeline.smsquiz.quizmanager.quiz.QuizError;
 import mobi.eyeline.smsquiz.quizmanager.quiz.QuizData;
+import mobi.eyeline.smsquiz.quizmanager.quiz.QuizError;
 import mobi.eyeline.smsquiz.replystats.datasource.ReplyStatsDataSource;
 import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import org.apache.log4j.LogManager;
@@ -19,7 +18,7 @@ import org.apache.log4j.Logger;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
-import java.io.*;
+import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -124,7 +123,7 @@ public class QuizManager implements Observer {
 
     quizBuilder = new QuizBuilder(datePattern, timePattern);
     quizesMap = new ConcurrentHashMap<String, Quiz>();
-    quizCollector = new QuizCollector(quizesMap, quizes, distributionManager, subscriptionManager);
+    quizCollector = new QuizCollector(quizesMap, quizes, distributionManager);
 
     File file = new File(dirWork);
     if (!file.exists()) {
@@ -158,9 +157,10 @@ public class QuizManager implements Observer {
     if (logger.isInfoEnabled()) {
       logger.info("Available addresses: " + quizesMap.keySet().toString());
     }
-    return new Result("",Result.ReplyRull.SERVICE_NOT_FOUND, "");
+    return new Result("", Result.ReplyRull.SERVICE_NOT_FOUND, "");
   }
 
+  @SuppressWarnings({"unchecked"})
   public void update(Observable o, Object arg) {
     try {
       logger.info("Updating quizfiles list...");
@@ -224,7 +224,6 @@ public class QuizManager implements Observer {
           }
         }
         quiz.remove();
-
       }
     }
     catch (Throwable e) {
@@ -273,7 +272,7 @@ public class QuizManager implements Observer {
 
       QuizData data = quizBuilder.buildQuiz(fileName);
 
-      quiz = new Quiz(file, replyStatsDataSource, quizCollector, distributionManager,
+      quiz = new Quiz(file, replyStatsDataSource, quizCollector, distributionManager, subscriptionManager,
           dirResult, dirWork, archiveDir, quizDir, data);
 
       validateDates(data);
@@ -296,7 +295,7 @@ public class QuizManager implements Observer {
           }
         }
       }
-      
+
       quizes.add(quiz);
       quiz.updateQuiz(data);
 
