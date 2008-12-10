@@ -15,16 +15,17 @@ public:
 
   static const unsigned int PROTOCOL_VERSION = 2;
 protected:
-  virtual uint32_t readAdvert(advertising_item* advItem);
+  virtual uint32_t readAdvert(advertising_item* advItem,
+                              BannerResponseTrace* bannerRespTrace);
 
   virtual uint32_t prepareBannerReqCmd(util::SerializationBuffer* req /* буфер*/,
                                        BannerRequest* par /*параметры запроса банера*/);
 
-  virtual uint32_t prepareErrorInfoCmd(util::SerializationBuffer* req /* буфер*/,
-                                       BannerRequest* par /*параметры запроса банера*/,
-                                       uint32_t errCode);
+  uint32_t prepareErrorInfoCmd(util::SerializationBuffer* req /* буфер*/,
+                               const BannerRequest& par /*параметры запроса банера*/,
+                               uint32_t errCode);
 
-  uint32_t readPacket(char* buf);
+  uint32_t readPacket(char* buf, size_t bufSize);
 
   int extractBanner(core::buffers::TmpBuf<char, MAX_PACKET_LEN>& incomingPacketBuf,
                     std::string* banner);
@@ -46,8 +47,7 @@ protected:
                               uint32_t* len);
 
 
-  virtual void sendErrorInfo(util::SerializationBuffer& req,
-                             BannerRequest& banReq,
+  virtual void sendErrorInfo(const BannerRequest& banReq,
                              int rc,
                              const std::string& where);
 

@@ -58,17 +58,7 @@ AdvertisingImpl::reinit(int connectTimeout)
 void
 AdvertisingImpl::writeErrorToLog(char* where, int errCode)
 {
-  switch(errCode)
-  {
-  case ERR_ADV_SOCKET     : smsc_log_error(_logger, "%s, server hangs", where); break;
-  case ERR_ADV_SOCK_WRITE   : smsc_log_error(_logger, "%s, socket closed", where); break;
-  case ERR_ADV_PACKET_TYPE  : smsc_log_error(_logger, "%s, bad packet type", where); break;
-  case ERR_ADV_PACKET_LEN   : smsc_log_error(_logger, "%s, bad packet length", where); break;
-  case ERR_ADV_PACKET_MEMBER  : smsc_log_error(_logger, "%s, bad packet member", where); break;
-  case ERR_ADV_QUEUE_FULL     : smsc_log_error(_logger, "%s, queue is overloaded", where); break;
-
-  default           : smsc_log_error(_logger, "%s, error %d", where, errCode);
-  }
+  smsc_log_error(_logger, "%s, error %d", where, errCode);
 }
 
 void
@@ -137,17 +127,29 @@ uint32_t
 AdvertisingImpl::getBanner(const std::string& abonent,
                            const std::string& serviceName,
                            uint32_t transportType, uint32_t charSet,
-                           std::string &banner)
+                           std::string* banner,
+                           BannerResponseTrace* bannerRespTrace)
 {
   if ( !_isConnected ) return ERR_ADV_NOT_CONNECTED;
+
   BannerRequest req(abonent, serviceName, transportType, charSet);
-  uint32_t rc = getBanner(req);
-  banner = req.banner;
+  uint32_t rc = getBanner(req, bannerRespTrace);
+  *banner = req.banner;
   return  rc;
 }
 
+void
+AdvertisingImpl::rollbackBanner(uint32_t transactionId,
+                                uint32_t bannerId,
+                                uint32_t ownerId,
+                                uint32_t rotatorId)
+{
+  BannerRequest banReqInfo(transactionId, bannerId, ownerId, rotatorId);
+  sendErrorInfo(banReqInfo, ERR_ADV_OTHER, "AdvertisingImpl::rollbackBanner:::");
+}
+
 uint32_t
-AdvertisingImpl::getBanner(BannerRequest& banReq)
+AdvertisingImpl::getBanner(BannerRequest& banReq, BannerResponseTrace* bannerRespTrace)
 {
   checkBannerRequest(banReq);
 
@@ -157,22 +159,22 @@ AdvertisingImpl::getBanner(BannerRequest& banReq)
   // заполнение буфера протокольной команды
   uint32_t len = prepareBannerReqCmd(&req, &banReq);
 
-  int rc = sendRequestAndGetResponse(&curAdvItem, &req, len);
+  int rc = sendRequestAndGetResponse(&curAdvItem, &req, len, bannerRespTrace);
   if (rc != 0)
   {
     writeErrorToLog((char*)"AdvertisingImpl::getBanner", rc);
-    sendErrorInfo(req, banReq, rc, "AdvertisingImpl::getBanner:::");
+    sendErrorInfo(banReq, rc, "AdvertisingImpl::getBanner:::");
   }
 
   return rc;
 }
 
 int
-AdvertisingImpl::sendRequestAndGetResponse(advertising_item* advItem, util::SerializationBuffer* req, uint32_t req_len)
+AdvertisingImpl::sendRequestAndGetResponse(advertising_item* advItem, util::SerializationBuffer* req, uint32_t req_len, BannerResponseTrace* bannerRespTrace)
 {
   writeToSocket(req->getBuffer(), req_len, "AdvertisingImpl::sendRequestAndGetResponse");
 
-  return readAdvert(advItem);
+  return readAdvert(advItem, bannerRespTrace);
 }
 
 void

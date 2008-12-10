@@ -81,6 +81,7 @@ struct sms_info
   AbntAddr        abnt;
   time_t          lastCallingTime;
   vector<MCEvent> events;
+  BannerResponseTrace bannerRespTrace;
 };
 
 class SendMessageEventHandler;
@@ -128,13 +129,31 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   IntHash<sms_info*> smsInfo;
   Mutex	             smsInfoMutex;
 
+  IntHash<BannerResponseTrace> _bannerInNotificationRegistry;
+  Mutex _bannerInNotificationRegistryLock;
+
+  void insertBannerInfo(int seqNum, const BannerResponseTrace& bannerRespTrace) {
+    core::synchronization::MutexGuard synchronize(_bannerInNotificationRegistryLock);
+    _bannerInNotificationRegistry.Insert(seqNum, bannerRespTrace);
+  }
+
+  BannerResponseTrace deleteBannerInfo(int seqNum) {
+    core::synchronization::MutexGuard synchronize(_bannerInNotificationRegistryLock);
+    BannerResponseTrace bannerRespTrace;
+    if ( _bannerInNotificationRegistry.Exist(seqNum) ) {
+      bannerRespTrace = _bannerInNotificationRegistry.Get(seqNum);
+      _bannerInNotificationRegistry.Delete(seqNum);
+    }
+    return bannerRespTrace;
+  }
+
   bool    forceInform, forceNotify;
 
   Mutex   startLock;
   Event   exitedEvent;
   bool    bStarted, bInQueueOpen, bOutQueueOpen, bStopProcessing;
-  int                             maxInQueueSize; //, maxOutQueueSize;
-  EventMonitor                    inQueueMonitor; //, outQueueMonitor;
+  int                             maxInQueueSize;
+  EventMonitor                    inQueueMonitor;
   CyclicQueue<MissedCallEvent>    inQueue;
 
   bool _isUseWantNotifyPolicy;
@@ -152,7 +171,9 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
 
   bool needNotify(const AbonentProfile& profile, const sms_info* pInfo) const;
 
-  bool sendMessage(const AbntAddr& abnt, const Message& msg, const MCEventOut& outEvent);
+  bool sendMessage(const AbntAddr& abnt, const Message& msg,
+                   const MCEventOut& outEvent,
+                   const BannerResponseTrace& bannerRespTrace);
 
   void store_D_Event_in_logstore(const AbntAddr& abnt,
                                  const vector<MCEvent>& events,
@@ -176,12 +197,12 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
     return messageSender;
   }
 
-  inline void insertSmsInfo(int seqNum, sms_info* pInfo) {
+  void insertSmsInfo(int seqNum, sms_info* pInfo) {
     MutexGuard Lock(smsInfoMutex);
     smsInfo.Insert(seqNum, pInfo);
   }
 
-  inline void deleteSmsInfo(int seqNum) {
+  void deleteSmsInfo(int seqNum) {
     MutexGuard Lock(smsInfoMutex);
     smsInfo.Delete(seqNum);
   }
@@ -222,9 +243,10 @@ public:
     putToInQueue(event);
   }
 
-  virtual bool invokeProcessDataSmResp(int cmdId, int status, int seqNum);
-  virtual void invokeProcessDataSmTimeout(void);
-  virtual bool invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt);
+  bool invokeProcessDataSmResp(int cmdId, int status, int seqNum);
+  bool invokeProcessSubmitSmResp(int cmdId, int status, int seqNum);
+  void invokeProcessDataSmTimeout(void);
+  bool invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt);
 
   void commitMissedCallEvents(const sms_info* pInfo, const AbonentProfile& abntProfile);
   /* ------------------------ Admin interface ------------------------ */

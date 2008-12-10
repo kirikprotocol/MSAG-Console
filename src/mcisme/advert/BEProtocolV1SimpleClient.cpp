@@ -15,7 +15,7 @@ BEProtocolV1SimpleClient::readPacket(core::buffers::TmpBuf<char, MAX_PACKET_LEN>
   buf->SetPos(0);
   uint32_t *s = (uint32_t*)buf->GetCurPtr();
 
-  int len = CMD_HEADER_SIZE + TRANSACTION_ID_LV_SIZE + BANNER_LEN_SIZE;
+  int len = CMD_HEADER_SIZE + TRANSACTION_ID_LV_SIZE + BANNER_ID_LV_SIZE + BANNER_LEN_SIZE;
 
   // читаем в буфер заголовок
   readFromSocket(buf->GetCurPtr(), len, "BEProtocolV1SimpleClient::readPacket");
@@ -23,13 +23,13 @@ BEProtocolV1SimpleClient::readPacket(core::buffers::TmpBuf<char, MAX_PACKET_LEN>
   buf->SetPos(len);
 
   uint32_t word = ntohl(s[0]);
-  if (word != CMD_BANNER_RSP)                     // тип должен быть ответом на запрос баннера
+  if (word != CMD_GET_BANNER_WITH_ID_RSP)   // тип должен быть ответом на запрос баннера
   {
     smsc_log_warn(_logger, "BEProtocolV1SimpleClient::readPacket::: incorrect packet type %d", word);
     generateUnrecoveredProtocolError();
   }
 
-  uint32_t pak_len = ntohl(s[1]) + static_cast<uint32_t>(CMD_HEADER_SIZE);    // длина всего пакета
+  uint32_t pak_len = ntohl(s[1]) + static_cast<uint32_t>(CMD_HEADER_SIZE);   // длина всего пакета
   if (pak_len > MAX_PACKET_LEN)
   {
     smsc_log_warn(_logger, "BEProtocolV1SimpleClient::readPacket::: bad packet length");
@@ -40,11 +40,12 @@ BEProtocolV1SimpleClient::readPacket(core::buffers::TmpBuf<char, MAX_PACKET_LEN>
 
   buf->SetPos(pak_len);
 
-  return ntohl(s[3]);                     //  значение TransactID
+  return ntohl(s[3]);   //  значение TransactID
 }
 
 uint32_t
-BEProtocolV1SimpleClient::readAdvert(advertising_item* advItem)
+BEProtocolV1SimpleClient::readAdvert(advertising_item* advItem,
+                                     BannerResponseTrace* bannerRespTrace)
 {
   smsc_log_debug(_logger, "BEProtocolV1SimpleClient::readAdvert");
 
@@ -58,18 +59,25 @@ BEProtocolV1SimpleClient::readAdvert(advertising_item* advItem)
     return ERR_ADV_TIMEOUT;
   }
 
-  extractBanner(incomingPacketBuf, &advItem->banReq->banner);
- 
+  bannerRespTrace->transactionId = advItem->TransactID;
+  extractBanner(incomingPacketBuf, &advItem->banReq->banner, &bannerRespTrace->bannerId);
+
   return 0;
 }
 
 int
 BEProtocolV1SimpleClient::extractBanner(core::buffers::TmpBuf<char, MAX_PACKET_LEN>& incomingPacketBuf,
-                                       std::string* banner)
+                                        std::string* banner, uint32_t* bannerId)
 {
   util::SerializationBuffer buf4parsing;
-  buf4parsing.setExternalBuffer(incomingPacketBuf.get() + BANNER_OFFSET_IN_PACKET, static_cast<uint32_t>(incomingPacketBuf.GetPos() - BANNER_OFFSET_IN_PACKET));
+  buf4parsing.setExternalBuffer(incomingPacketBuf.get() + BANNER_ID_OFFSET_IN_PACKET, static_cast<uint32_t>(incomingPacketBuf.GetPos() - BANNER_ID_OFFSET_IN_PACKET));
 
+  uint32_t bannerIdParamLen = buf4parsing.ReadNetInt32();
+  if ( bannerIdParamLen != BANNER_ID_LEN_SIZE ) {
+    smsc_log_warn(_logger, "BEProtocolV1SimpleClient::extractBanner::: bad banner id length (%d), expected (%d)", bannerIdParamLen, BANNER_ID_LEN_SIZE);
+    generateUnrecoveredProtocolError();
+  }
+  *bannerId = buf4parsing.ReadNetInt32();
   buf4parsing.ReadString<uint32_t>(*banner);
 
   return 0;
@@ -78,7 +86,7 @@ BEProtocolV1SimpleClient::extractBanner(core::buffers::TmpBuf<char, MAX_PACKET_L
 uint32_t
 BEProtocolV1SimpleClient::prepareBannerReqCmd(util::SerializationBuffer* req, BannerRequest* par)
 {
-  uint32_t totalPacketSize = prepareHeader(CMD_BANNER_REQ, static_cast<uint32_t>(GET_BANNER_REQ_LEN + par->abonent.length() + par->serviceName.length()), req);
+  uint32_t totalPacketSize = prepareHeader(CMD_GET_BANNER_WITH_ID_REQ, static_cast<uint32_t>(GET_BANNER_REQ_LEN + par->abonent.length() + par->serviceName.length()), req);
 
   //TransactId
   req->WriteNetInt32(static_cast<uint32_t>(sizeof(uint32_t))); //Param length
@@ -116,33 +124,52 @@ BEProtocolV1SimpleClient::prepareBannerReqCmd(util::SerializationBuffer* req, Ba
 }
 
 uint32_t
-BEProtocolV1SimpleClient::prepareErrorInfoCmd(util::SerializationBuffer* req, BannerRequest* par,
-                                              uint32_t cmdInfo)
+BEProtocolV1SimpleClient::prepareErrorInfoCmd(util::SerializationBuffer* req,
+                                              const BannerRequest& par)
 {
   uint32_t totalPacketSize = prepareHeader(CMD_ERR_INFO, ERR_INFO_LEN, req);
 
-  //TransactId45
+  //TransactId
   req->WriteNetInt32(static_cast<uint32_t>(sizeof(uint32_t))); //Param length
-  req->WriteNetInt32(par->getId());   //Param body
+  req->WriteNetInt32(par.getId());   //Param body
 
   req->WriteNetInt32(static_cast<uint32_t>(sizeof(uint32_t)));
-  req->WriteNetInt32(cmdInfo);
+  req->WriteNetInt32(BANNER_RESPONSE_TIMEOUT);
+
+  return totalPacketSize;
+}
+
+uint32_t
+BEProtocolV1SimpleClient::prepareRollbackBannerCmd(util::SerializationBuffer* req,
+                                                   const BannerRequest& par)
+{
+  uint32_t totalPacketSize = prepareHeader(CMD_ROLLBACK_BANNER, ROLLBACK_BANNER_LEN, req);
+
+  //bannerId
+  req->WriteNetInt32(static_cast<uint32_t>(sizeof(uint32_t))); //Param length
+  req->WriteNetInt32(par.bannerId);   //Param body
+
+  req->WriteNetInt32(static_cast<uint32_t>(sizeof(uint32_t)));
+  req->WriteNetInt32(BANNER_OTHER_ERROR);
 
   return totalPacketSize;
 }
 
 void
-BEProtocolV1SimpleClient::sendErrorInfo(util::SerializationBuffer& req,
-                                        BannerRequest& banReq,
+BEProtocolV1SimpleClient::sendErrorInfo(const BannerRequest& banReq,
                                         int rc,
                                         const std::string& where)
 {
-  if (rc == ERR_ADV_TIMEOUT)
-  {
-    //если таймаут сервера - сообщить серверу об этой ошибке
-    int len = prepareErrorInfoCmd(&req, &banReq, ERR_ADV_TIMEOUT);
-    writeToSocket(req.getBuffer(), len, where);
-  }
+  util::SerializationBuffer req;
+  int len;
+  if ( rc == ERR_ADV_TIMEOUT )
+    len = prepareErrorInfoCmd(&req, banReq);
+  else if ( rc == ERR_ADV_OTHER )
+    len = prepareRollbackBannerCmd(&req, banReq);
+  else
+    throw util::Exception("BEProtocolV1SimpleClient::sendErrorInfo::: unknown error reason value=[%d]", rc);
+
+  writeToSocket(req.getBuffer(), len, where);
 }
 
 }}

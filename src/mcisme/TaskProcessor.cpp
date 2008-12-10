@@ -683,16 +683,18 @@ TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt,
   msg.caller_abonent = _originatingAddressIsMCIAddress ? getAddress() : mcEventOut.caller;
 
   bool needBannerInTranslit = !hasHighBit(msg.message.c_str(), msg.message.size());
+  BannerResponseTrace bannerRespTrace;
   if(bannerEngineProxy)
-    addBanner(msg, bannerEngineProxy->getBanner(abnt, needBannerInTranslit));
+    addBanner(msg, bannerEngineProxy->getBanner(abnt, &bannerRespTrace, needBannerInTranslit));
 
   smsc_log_info(logger, "ProcessAbntEvents: prepared message = '%s' for sending to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
 
-  sendMessage(abnt, msg, mcEventOut);
+  sendMessage(abnt, msg, mcEventOut, bannerRespTrace);
 }
 
 bool
-TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg, const MCEventOut& outEvent)
+TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg,
+                           const MCEventOut& outEvent, const BannerResponseTrace& bannerRespTrace)
 {
   int seqNum;
   try {
@@ -708,7 +710,7 @@ TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg, const MCEve
   pInfo->abnt = abnt;
   pInfo->lastCallingTime = outEvent.lastCallingTime;
   pInfo->events = outEvent.srcEvents;
-
+  pInfo->bannerRespTrace = bannerRespTrace;
   insertSmsInfo(seqNum, pInfo);
 
   try {
@@ -780,47 +782,57 @@ TaskProcessor::store_A_Event_in_logstore(const AbntAddr& callingAbonent,
 
 bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 {
-  if(cmdId == smsc::smpp::SmppCommandSet::DATA_SM_RESP)
+  std::auto_ptr<sms_info> pInfo;
   {
-    std::auto_ptr<sms_info> pInfo;
+    MutexGuard Lock(smsInfoMutex);
+    if(!smsInfo.Exist(seqNum))
     {
-      MutexGuard Lock(smsInfoMutex);
-      if(!smsInfo.Exist(seqNum))
-      {
-        smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
-        return false;
-      }
-      pInfo.reset(smsInfo.Get(seqNum));
-      smsInfo.Delete(seqNum);
+      smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
+      return false;
     }
+    pInfo.reset(smsInfo.Get(seqNum));
+    smsInfo.Delete(seqNum);
+  }
 
-    smsc_log_info(logger, "Recieve a DATA_SM_RESP for Abonent %s seq_num = %d, status = %d", pInfo->abnt.toString().c_str(), seqNum, status);
+  smsc_log_info(logger, "Recieve a DATA_SM_RESP for Abonent %s seq_num=%d, status=%d", pInfo->abnt.toString().c_str(), seqNum, status);
 
-    if(status == smsc::system::Status::OK)
-    {
-      AbonentProfile abntProfile;
-      profileStorage->Get(pInfo->abnt, abntProfile);
+  if(status == smsc::system::Status::OK)
+  {
+    AbonentProfile abntProfile;
+    profileStorage->Get(pInfo->abnt, abntProfile);
 
-      _outputMessageProcessorsDispatcher->dispatchSendAbntOnlineNotifications(pInfo.release(), abntProfile);
-    }
-    else if(smsc::system::Status::isErrorPermanent(status))
-    {
-      statistics->incFailed(static_cast<unsigned>(pInfo->events.size()));
+    _outputMessageProcessorsDispatcher->dispatchSendAbntOnlineNotifications(pInfo.release(), abntProfile);
+  } else {
+    BannerResponseTrace emptyBannerRespTrace;
+    if ( pInfo->bannerRespTrace != emptyBannerRespTrace )
+      _outputMessageProcessorsDispatcher->dispatchBERollbackRequest(pInfo->bannerRespTrace);
 
+    statistics->incFailed(static_cast<unsigned>(pInfo->events.size()));
+    store_F_Event_in_logstore(pInfo->abnt, pInfo->events);
+
+    if(smsc::system::Status::isErrorPermanent(status)) {
       pStorage->deleteEvents(pInfo->abnt, pInfo->events);
-
-      store_F_Event_in_logstore(pInfo->abnt, pInfo->events);
+    } else {
       time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt, status);
       pStorage->setSchedParams(pInfo->abnt, schedTime, status);
     }
-    else
-    {
-      statistics->incFailed(static_cast<unsigned>(pInfo->events.size()));
+  }
 
-      store_F_Event_in_logstore(pInfo->abnt, pInfo->events);
-      time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt, status);
-      pStorage->setSchedParams(pInfo->abnt, schedTime, status);
-    }
+  return true;
+}
+
+bool
+TaskProcessor::invokeProcessSubmitSmResp(int cmdId, int status, int seqNum)
+{
+  smsc_log_debug(logger, "Recieve a SUBMIT_SM_RESP seq_num=%d, status=%d", seqNum);
+
+  BannerResponseTrace bannerRespTrace = deleteBannerInfo(seqNum);
+  BannerResponseTrace emptyBannerRespTrace;
+
+  if(status != smsc::system::Status::OK &&
+     bannerRespTrace != emptyBannerRespTrace)
+  {
+    _outputMessageProcessorsDispatcher->dispatchBERollbackRequest(bannerRespTrace);
   }
   return true;
 }
@@ -841,7 +853,8 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
 {
   MutexGuard Lock(smsInfoMutex);
   int count_old = smsInfo.Count();
-  smsc_log_debug(logger, "Start serching unresponded DATA_SM. Total SMS in Hash is %d", smsInfo.Count());
+  if ( !count_old ) return;
+  smsc_log_debug(logger, "Start searching unresponded DATA_SM. Total SMS in Hash is %d", count_old);
   smsc::core::buffers::IntHash<sms_info*>::Iterator It(smsInfo.First());
 
   sms_info* pInfo=0;
@@ -855,6 +868,11 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
       smsc_log_info(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
 
       statistics->incFailed(static_cast<unsigned>(pInfo->events.size()));
+
+      BannerResponseTrace emptyBannerRespTrace;
+      if ( pInfo->bannerRespTrace != emptyBannerRespTrace )
+        _outputMessageProcessorsDispatcher->dispatchBERollbackRequest(pInfo->bannerRespTrace);
+
       time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
       pStorage->setSchedParams(pInfo->abnt, schedTime, -1);
       smsInfo.Delete(seqNum);
@@ -863,7 +881,7 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
     count++;
   }
   int count_new = smsInfo.Count();
-  smsc_log_debug(logger, "Complete serching unresponded DATA_SM. Total SMS in Hash is %d, removed %d (%d)", count_new, count_old - count_new, count);
+  smsc_log_debug(logger, "Complete searching unresponded DATA_SM. Total SMS in Hash is %d, removed %d (%d)", count_new, count_old - count_new, count);
 }
 
 bool TaskProcessor::invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt)
@@ -902,7 +920,6 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
                                            const AbonentProfile& profile,
                                            SendMessageEventHandler* bannerEngineProxy)
 {
-  smsc_log_debug(logger, "Process Notify message");
   statistics->incNotified();
 
   if ( !needNotify(profile, pInfo) ) return;
@@ -950,12 +967,15 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
 
     bool needBannerInTranslit = !hasHighBit(msg.message.c_str(), msg.message.size());
 
+    BannerResponseTrace bannerRespTrace;
     if(bannerEngineProxy)
-      addBanner(msg, bannerEngineProxy->getBanner(pInfo->abnt,needBannerInTranslit));
+      addBanner(msg, bannerEngineProxy->getBanner(pInfo->abnt, &bannerRespTrace, needBannerInTranslit));
 
     smsc_log_debug(logger, "Notify message = %s to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
 
-    getMessageSender()->send(getMessageSender()->getSequenceNumber(), msg);
+    int seqNum = getMessageSender()->getSequenceNumber();
+    insertBannerInfo(seqNum, bannerRespTrace);
+    getMessageSender()->send(seqNum, msg);
     store_N_Event_in_logstore(abnt, caller.getText());
   }
 }

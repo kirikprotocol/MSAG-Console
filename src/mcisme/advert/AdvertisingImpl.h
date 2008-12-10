@@ -56,7 +56,13 @@ public:
   virtual uint32_t getBanner(const std::string& abonent,
                              const std::string& serviceName,
                              uint32_t transportType, uint32_t charSet,
-                             std::string &banner);
+                             std::string* banner,
+                             BannerResponseTrace* bannerRespTrace);
+
+  virtual void rollbackBanner(uint32_t transactionId,
+                              uint32_t bannerId,
+                              uint32_t ownerId,
+                              uint32_t rotatorId);
 
   std::string toString() const;
 protected:
@@ -78,25 +84,21 @@ protected:
 
   void checkBannerRequest(BannerRequest& banReq, int async = 0);
 
-  uint32_t getBanner(BannerRequest& banReq);
+  uint32_t getBanner(BannerRequest& banReq, BannerResponseTrace* bannerRespTrace);
 
   int sendRequestAndGetResponse(advertising_item* advItem,
                                 util::SerializationBuffer* req,
-                                uint32_t req_len);
+                                uint32_t req_len,
+                                BannerResponseTrace* bannerRespTrace);
 
-  virtual uint32_t readAdvert(advertising_item* advItem) = 0;
+  virtual uint32_t readAdvert(advertising_item* advItem, BannerResponseTrace* bannerRespTrace) = 0;
 
   virtual uint32_t prepareHeader(uint32_t cmndType, uint32_t reqBodyLen, util::SerializationBuffer* req);
 
   virtual uint32_t prepareBannerReqCmd(util::SerializationBuffer* req /* буфер*/,
-                               BannerRequest* par /*параметры запроса банера*/) = 0;
+                                       BannerRequest* par /*параметры запроса банера*/) = 0;
 
-  virtual uint32_t prepareErrorInfoCmd(util::SerializationBuffer* req /* буфер*/,
-                               BannerRequest* par /*параметры запроса банера*/,
-                               uint32_t cmdInfo) = 0;
-
-  virtual void sendErrorInfo(util::SerializationBuffer& req,
-                             BannerRequest& banReq,
+  virtual void sendErrorInfo(const BannerRequest& banReq,
                              int rc,
                              const std::string& where) = 0;
 
