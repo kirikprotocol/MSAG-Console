@@ -138,6 +138,16 @@ OutputMessageProcessor::assignMessageOutputWork(const sms_info* pInfo, const Abo
   _outputEventMonitor.notify();
 }
 
+void
+OutputMessageProcessor::assignMessageOutputWork(const BannerResponseTrace& bannerRespTrace)
+{
+  core::synchronization::MutexGuard synchronize(_outputEventMonitor);
+  _handler = new RollbackBERequestHandler(_taskProcessor, _reconnectorThread, _advertising, bannerRespTrace);
+
+  _eventWasSignalled = true;
+  _outputEventMonitor.notify();
+}
+
 SendMessageEventHandler*
 OutputMessageProcessor::waitingForHandler()
 {
@@ -169,17 +179,16 @@ SendMissedCallMessageEventHandler::formOutputMessageAndSendIt(const AbntAddr& ab
 }
 
 string
-SendMessageEventHandler::getBanner(const AbntAddr& abnt, bool needBannerInTranslit)
+SendMessageEventHandler::getBanner(const AbntAddr& abnt, BannerResponseTrace* bannerRespTrace, bool needBannerInTranslit)
 {
   string banner, ret, ret1;
-  int rc;
 
   smsc_log_debug(_logger, "SendMessageEventHandler::getBanner::: call to BE for abonent '%s'", abnt.getText().c_str());
   try {
     uint32_t bannerCharSet = UTF16BE;
     if ( needBannerInTranslit )
       bannerCharSet = ASCII_TRANSLIT;
-    rc = _advertising->getBanner(abnt.toString(), _taskProcessor.getSvcTypeForBE(), SMPP_SMS, bannerCharSet, ret);
+    int rc = _advertising->getBanner(abnt.toString(), _taskProcessor.getSvcTypeForBE(), SMPP_SMS, bannerCharSet, &ret, bannerRespTrace);
     if(rc == 0)
     {
       if ( bannerCharSet == UTF16BE ) {
@@ -212,10 +221,32 @@ SendMessageEventHandler::getBanner(const AbntAddr& abnt, bool needBannerInTransl
 }
 
 void
+SendMessageEventHandler::rollbackBanner(const BannerResponseTrace& bannerRespTrace)
+{
+  smsc_log_debug(_logger, "SendMessageEventHandler::rollbackBanner::: rollback banner [transactionId=%d,bannerId=%d,ownerId=%d,rotatorId=%d]", bannerRespTrace.transactionId, bannerRespTrace.bannerId, bannerRespTrace.ownerId, bannerRespTrace.rotatorId);
+  try {
+    _advertising->rollbackBanner(bannerRespTrace.transactionId, bannerRespTrace.bannerId, bannerRespTrace.ownerId, bannerRespTrace.rotatorId);
+  } catch (NetworkException& ex) {
+    smsc_log_error(_logger, "SendMessageEventHandler::rollbackBanner::: catched NetworkException '%s'", ex.what());
+    _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
+  } catch (UnrecoveredProtocolError& ex) {
+    smsc_log_error(_logger, "SendMessageEventHandler::rollbackBanner::: catched UnrecoveredProtocolError");
+    _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
+  }
+
+}
+
+void
 SendAbonentOnlineNotificationEventHandler::handle()
 {
   _taskProcessor.SendAbntOnlineNotifications(_pInfo, _abntProfile, this);
   _taskProcessor.commitMissedCallEvents(_pInfo, _abntProfile);
+}
+
+void
+RollbackBERequestHandler::handle()
+{
+  rollbackBanner(_bannerRespTrace);
 }
 
 }}
