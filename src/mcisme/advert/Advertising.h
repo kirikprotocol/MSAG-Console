@@ -30,21 +30,6 @@ enum
     MMS
   };
 
-struct BannerRequest;
-struct BannerDispatcher
-{
-  // On banner received
-  virtual void  processBanner(const BannerRequest& req) = 0;
-
-  // On error occurred
-  virtual void processError(const BannerRequest& req, uint32_t status) = 0;
-
-protected:
-
-  BannerDispatcher() {}
-  virtual ~BannerDispatcher() {}
-};
-
 struct BannerRequest
 {
   std::string abonent;
@@ -70,10 +55,13 @@ struct BannerRequest
       bannerId(-1), ownerId(0), rotatorId(0),
       id(getNextId()) {}
 
+  BannerRequest(uint32_t aTransactionId, uint32_t aBannerId, uint32_t anOwnerId, uint32_t aRotatorId)
+    : id(aTransactionId), bannerId(aBannerId),
+      ownerId(anOwnerId), rotatorId(aRotatorId) {}
   /**
    *  return value of Id
    */
-  inline uint32_t getId() {
+  inline uint32_t getId() const {
     return id;
   }
 protected:
@@ -91,6 +79,23 @@ protected:
   static uint32_t getNextId() {
     MutexGuard mg(lastIdMutex);
     return ++lastId;
+  }
+};
+
+struct BannerResponseTrace {
+  BannerResponseTrace()
+    : transactionId(0), bannerId(0), ownerId(0), rotatorId(0) {}
+    
+  uint32_t transactionId, bannerId, ownerId, rotatorId;
+
+  bool operator != (const BannerResponseTrace& rhs) {
+    if ( transactionId != rhs.transactionId ||
+         bannerId != rhs.bannerId ||
+         ownerId != rhs.ownerId ||
+         rotatorId != rhs.rotatorId )
+      return true;
+    else
+      return false;
   }
 };
 
@@ -112,7 +117,13 @@ public:
   virtual uint32_t getBanner(const std::string& abonent,
                              const std::string& serviceName,
                              uint32_t transportType, uint32_t charSet,
-                             std::string &banner) = 0;
+                             std::string* banner,
+                             BannerResponseTrace* bannerRespTrace) = 0;
+
+  virtual void rollbackBanner(uint32_t transactionId,
+                              uint32_t bannerId,
+                              uint32_t ownerId,
+                              uint32_t rotatorId) = 0;
 
   virtual ~Advertising() {}
 
