@@ -510,6 +510,16 @@ private:
 
     processor.invokeProcessDataSmResp(cmdId, status, seqNum);
   }
+  void processSubmitSmResp(SmppHeader *pdu)
+  {
+    if (!pdu) return;
+
+    int cmdId	= pdu->get_commandId();
+    int seqNum	= pdu->get_sequenceNumber();
+    int status	= pdu->get_commandStatus();
+
+    processor.invokeProcessSubmitSmResp(cmdId, status, seqNum);
+  }
   void processAlertNotification(SmppHeader *pdu)
   {
     if (!pdu) return;
@@ -570,7 +580,7 @@ public:
       break;
     case SmppCommandSet::SUBMIT_SM_RESP:
       TrafficControl::incIncoming();
-      smsc_log_debug(logger, "SUBMIT_SM_RESP seq_num = %d", pdu->get_sequenceNumber());
+      processSubmitSmResp(pdu);
       break;
     case SmppCommandSet::ENQUIRE_LINK: case SmppCommandSet::ENQUIRE_LINK_RESP:
       break;
