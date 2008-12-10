@@ -80,6 +80,7 @@ int answerMr;
 Address answerAddress;
 
 std::set<Address> tempBlock;
+int tempBlockMode=2;
 std::set<Address> permBlock;
 
 
@@ -346,6 +347,7 @@ Option options[]={
 {"srcport",'i',&src_port},
 {"dstport",'i',&dst_port},
 {"datacoding",'d',&dataCoding},
+{"blockmode",'l',&tempBlockMode},
 {"esmclass",'i',&esmclass},
 {"source",'s',&sourceAddress},
 {"echo",'b',&cmdecho},
@@ -689,6 +691,26 @@ static void ShowOption(Option& opt,bool singleopt=false)
         }
       }
     }break;
+    case 'l':
+    {
+      if(opt.asInt()==0)
+      {
+        CmdOut("org\n");
+      }else if(opt.asInt()==1)
+      {
+        CmdOut("dst\n");
+      }else if(opt.asInt()==2)
+      {
+        CmdOut("both\n");
+      }
+      if(singleopt)
+      {
+        CmdOut("Available temp block modes:\n");
+        CmdOut("org\n");
+        CmdOut("dst\n");
+        CmdOut("both\n");
+      }
+    }break;
     case 's':CmdOut("%s\n",opt.asString().c_str());break;
   }
 }
@@ -750,6 +772,22 @@ void SetOption(SmppSession& ss,const string& args)
           }else
           {
             CmdOut("Error: unknown dcs %s\n",val.c_str());
+          }
+        }break;
+        case 'l':
+        {
+          if(val=="org")
+          {
+            tempBlockMode=0;
+          }else if (val=="dst")
+          {
+            tempBlockMode=1;
+          }else if (val=="both")
+          {
+            tempBlockMode=2;
+          }else
+          {
+            CmdOut("Error: unknown block  mode %s\n",val.c_str());
           }
         }break;
         case 's':options[i].asString()=val;break;
@@ -1378,7 +1416,8 @@ public:
       {
         Address org,dst;
         ExtractAddresses(pdu,org,dst);
-        if(tempBlock.find(org)!=tempBlock.end() || tempBlock.find(dst)!=tempBlock.end())
+        if(((tempBlockMode==0 || tempBlockMode==2) && tempBlock.find(org)!=tempBlock.end()) || 
+           ((tempBlockMode==1 || tempBlockMode==2) && tempBlock.find(dst)!=tempBlock.end()))
         {
           sendResp(pdu->get_sequenceNumber(),SmppStatusSet::ESME_RX_T_APPN,isDataSm,0);
           if(!silent)
