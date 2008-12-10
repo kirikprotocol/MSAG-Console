@@ -95,6 +95,13 @@ BannerOutputMessageProcessorsDispatcher::dispatchSendAbntOnlineNotifications(con
 }
 
 void
+BannerOutputMessageProcessorsDispatcher::dispatchBERollbackRequest(const BannerResponseTrace& bannerRespTrace)
+{
+  OutputMessageProcessor* msgProc = getFreeProcessor();
+  msgProc->assignMessageOutputWork(bannerRespTrace);
+}
+
+void
 BannerOutputMessageProcessorsDispatcher::markMessageProcessorAsFree(OutputMessageProcessor* freeMessageProcessor)
 {
   core::synchronization::MutexGuard synchonize(_dispatchMonitor);

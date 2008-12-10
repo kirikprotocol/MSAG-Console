@@ -16,6 +16,7 @@ public:
 
   virtual void dispatchSendMissedCallNotification(const AbntAddr& abnt);
   virtual void dispatchSendAbntOnlineNotifications(const sms_info* pInfo, const AbonentProfile& abntProfile);
+  virtual void dispatchBERollbackRequest(const BannerResponseTrace& bannerRespTrace) {}
   virtual void markMessageProcessorAsFree(OutputMessageProcessor* freeMessageProcessor) {}
   virtual void deleteMessageProcessor(OutputMessageProcessor* terminatedMessageProcessor) {}
 private:
