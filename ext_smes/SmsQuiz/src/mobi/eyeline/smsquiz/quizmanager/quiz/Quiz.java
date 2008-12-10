@@ -104,7 +104,7 @@ public class Quiz {
       return null;
     }
     Result result = null;
-    long oaNumber = Long.parseLong(oa.substring(oa.lastIndexOf("+") + 2, oa.length()));   //todo right?
+    long oaNumber = Long.parseLong(oa.substring(oa.lastIndexOf("+") + 2, oa.length()));
     int maxRepeat = quizData.getMaxRepeat();
     int count = jstore.get(oaNumber);
     if (count == answerHandled) {

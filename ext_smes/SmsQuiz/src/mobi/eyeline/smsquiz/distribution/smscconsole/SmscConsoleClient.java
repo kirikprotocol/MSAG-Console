@@ -11,7 +11,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * author: alkhal
  */
-public class SmscConsoleClient {
+public class SmscConsoleClient {      //todo remove
 
   private static Logger logger = Logger.getLogger(SmscConsoleClient.class);
 
@@ -33,7 +33,7 @@ public class SmscConsoleClient {
     scheduledConnCloser.scheduleAtFixedRate(connectionCloser, 10, closerPeriod, java.util.concurrent.TimeUnit.SECONDS);
   }
 
-  public SmscConsoleResponse sendCommand(String command) throws SmscConsoleException {
+  public ConsoleResponse sendCommand(String command) throws ConsoleException {
     try {
       sd.connect();
       return sd.sendCommand(command);
@@ -62,13 +62,13 @@ public class SmscConsoleClient {
       lastWorkTime = System.currentTimeMillis();
     }
 
-    public void connect() throws SmscConsoleException {
+    public void connect() throws ConsoleException {
       lock.lock();
       logger.info("Console's locked..");
       try {
         senderImpl.connect();
         active = true;
-      } catch (SmscConsoleException e) {
+      } catch (ConsoleException e) {
         lock.unlock();
         throw e;
       }
@@ -79,8 +79,12 @@ public class SmscConsoleClient {
       logger.info("Console's unlocked");
     }
 
-    public SmscConsoleResponse sendCommand(String command) throws SmscConsoleException {
+    public ConsoleResponse sendCommand(String command) throws ConsoleException {
       return senderImpl.sendCommand(command);
+    }
+
+    public boolean isConnected() {
+      return senderImpl.isConnected();
     }
 
     public long getLastWorkTime() {
@@ -126,7 +130,7 @@ public class SmscConsoleClient {
             sender.closeExt();
             logger.info("ConsoleCloser closed a connection");
           }
-        } catch (SmscConsoleException e) {
+        } catch (ConsoleException e) {
           e.printStackTrace();
         }
       }

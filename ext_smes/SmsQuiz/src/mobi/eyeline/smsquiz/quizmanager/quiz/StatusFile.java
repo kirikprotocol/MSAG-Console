@@ -8,6 +8,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Lock;
 
 /**
  * author: alkhal
@@ -29,6 +31,8 @@ public class StatusFile {
   private final static SimpleDateFormat DF = new SimpleDateFormat("yyyyMMddHHmmss");
 
   private Properties prop;
+
+  private Lock writeLock = new ReentrantLock();
 
   @SuppressWarnings({"EmptyCatchBlock", "ResultOfMethodCallIgnored"})
   StatusFile(String statusFileName) throws QuizException {
@@ -94,18 +98,19 @@ public class StatusFile {
   private void storeProps() throws QuizException {
     OutputStream outputStream = null;
     try {
+      writeLock.lock();
       outputStream = new FileOutputStream(statusFileName);
       prop.store(outputStream, "");
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error(e, e);
       throw new QuizException(e.toString(), e);
     } finally {
       if (outputStream != null) {
         try {
           outputStream.close();
-        } catch (IOException e) {
-        }
+        } catch (Exception e) {}
       }
+      writeLock.unlock();
     }
   }
 

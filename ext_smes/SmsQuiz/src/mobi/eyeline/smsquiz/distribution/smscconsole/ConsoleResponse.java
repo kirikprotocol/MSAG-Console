@@ -3,13 +3,13 @@ package mobi.eyeline.smsquiz.distribution.smscconsole;
 /**
  * author: alkhal
  */
-public class SmscConsoleResponse {
+public class ConsoleResponse {
 
   private boolean success;
   private String status;
   private String[] lines;
 
-  public SmscConsoleResponse(boolean success, String status, String[] lines) {
+  public ConsoleResponse(boolean success, String status, String[] lines) {
     this.success = success;
     this.status = status;
     this.lines = lines;

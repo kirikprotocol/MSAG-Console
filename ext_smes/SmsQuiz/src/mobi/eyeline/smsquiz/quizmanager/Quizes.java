@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
+
 /**
  * autor: alkhal
  *
@@ -17,10 +19,17 @@ public class Quizes {
 
   private static final Logger logger = Logger.getLogger(Quizes.class);
 
-  private LinkedList<Quiz> qInternal = new LinkedList<Quiz>();
+  private final LinkedList<Quiz> qInternal;
 
-  private Lock lock = new ReentrantLock();
+  private final Lock lock;
 
+  private final AbstractDynamicMBean monitor;
+
+  public Quizes() {
+    qInternal = new LinkedList<Quiz>();
+    lock  = new ReentrantLock();
+    monitor = new QuizesMBean(this);
+  }
 
   public Quiz getQuizByFile(String filename) {
     if (filename == null) {
@@ -88,7 +97,29 @@ public class Quizes {
     }
   }
 
+  public int countQuizes() {
+    return qInternal.size();
+  }
+
+  public String getQuizesToString(String separator) {
+    try {
+      lock.lock();
+      StringBuilder sb = new StringBuilder();
+      for (Quiz quiz : qInternal) {
+        sb.append(quiz).append(separator);
+      }
+      return sb.toString();
+    } finally {
+      lock.unlock();
+    }
+  }
+
   public interface Visitor {
     public void visit(Quiz quiz) throws QuizException;
   }
+
+  public AbstractDynamicMBean getMonitor() {
+    return monitor;
+  }  
+
 }

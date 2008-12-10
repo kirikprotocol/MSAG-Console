@@ -332,6 +332,7 @@ public class QuizManager implements Observer {
       mbs.registerMBean(subscriptionManager.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=subscriptionManager"));
       mbs.registerMBean(quizBuilder.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=quizBuilder"));
       mbs.registerMBean(monitor, new ObjectName("SMSQUIZ.quizmanager:mbean=quizManager"));
+      mbs.registerMBean(quizes.getMonitor(), new ObjectName("SMSQUIZ.quizmanager:mbean=quizes"));
       final LoggingMBean lb = new LoggingMBean("SMSQUIZ", LogManager.getLoggerRepository());
       mbs.registerMBean(lb, new ObjectName("SMSQUIZ:mbean=logging"));
 

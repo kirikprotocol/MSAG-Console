@@ -30,7 +30,7 @@ class ConsoleSenderImpl implements ConsoleSender {
     this.host = host;
   }
 
-  public void connect() throws SmscConsoleException {
+  public void connect() throws ConsoleException {
     if (connected) {
       return;
     }
@@ -40,7 +40,7 @@ class ConsoleSenderImpl implements ConsoleSender {
     }
     catch (Exception e) {
       logger.error("Unable to connect to the console", e);
-      throw new SmscConsoleException("Unable to connect to the console", e);
+      throw new ConsoleException("Unable to connect to the console", e);
     }
     logger.info("Console connected");
   }
@@ -55,16 +55,16 @@ class ConsoleSenderImpl implements ConsoleSender {
     logger.info("Console disconnected");
   }
 
-  public SmscConsoleResponse sendCommand(String comm) throws SmscConsoleException {
+  public ConsoleResponse sendCommand(String comm) throws ConsoleException {
     if (!connected) {
-      throw new SmscConsoleException("You're not connected");
+      throw new ConsoleException("You're not connected");
     }
     if (socket == null) {
       try {
         enterToConsole();
       } catch (IOException e) {
         logger.error("Unable to connect to the console", e);
-        throw new SmscConsoleException("Unable to connect to the console", e);
+        throw new ConsoleException("Unable to connect to the console", e);
       }
     }
 
@@ -86,7 +86,7 @@ class ConsoleSenderImpl implements ConsoleSender {
       return _sendCommand(comm);
     } catch (IOException e) {
       logger.error("Connection was closed or broken. Connection failed.", e);
-      throw new SmscConsoleException("Connection was closed or broken. Connection failed.", e);
+      throw new ConsoleException("Connection was closed or broken. Connection failed.", e);
     }
   }
 
@@ -114,7 +114,7 @@ class ConsoleSenderImpl implements ConsoleSender {
   }
 
   private boolean authentication() throws IOException {
-    SmscConsoleResponse resp = getResponse();
+    ConsoleResponse resp = getResponse();
     if (resp == null || !resp.isSuccess()) {
       logger.error("Can't auth");
       return false;
@@ -137,14 +137,14 @@ class ConsoleSenderImpl implements ConsoleSender {
 
   }
 
-  private SmscConsoleResponse _sendCommand(String str) throws IOException {
+  private ConsoleResponse _sendCommand(String str) throws IOException {
     PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
     writer.println(str);
     writer.flush();
     return getResponse();
   }
 
-  private SmscConsoleResponse getResponse() throws IOException {
+  private ConsoleResponse getResponse() throws IOException {
     BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     LinkedList<String> list = new LinkedList<String>();
     String str;
@@ -173,8 +173,10 @@ class ConsoleSenderImpl implements ConsoleSender {
     }
     String status = tok[1];
     String[] lines = list.toArray(new String[list.size()]);
-    return new SmscConsoleResponse(success, status, lines);
+    return new ConsoleResponse(success, status, lines);
   }
 
-
+  public boolean isConnected() {
+    return connected;
+  }
 }

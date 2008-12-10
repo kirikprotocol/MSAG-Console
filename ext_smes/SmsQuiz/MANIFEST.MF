@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
 Created-By: Eyeline Communications Inc.
-Implementation-Version: 1.11
+Implementation-Version: 1.12

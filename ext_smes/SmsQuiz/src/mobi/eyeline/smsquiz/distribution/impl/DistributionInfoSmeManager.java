@@ -7,9 +7,7 @@ import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 import mobi.eyeline.smsquiz.distribution.Distribution;
 import mobi.eyeline.smsquiz.distribution.DistributionException;
 import mobi.eyeline.smsquiz.distribution.DistributionManager;
-import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleClient;
-import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleException;
-import mobi.eyeline.smsquiz.distribution.smscconsole.SmscConsoleResponse;
+import mobi.eyeline.smsquiz.distribution.smscconsole.*;
 import mobi.eyeline.smsquiz.storage.ResultSet;
 import org.apache.log4j.Logger;
 
@@ -29,7 +27,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
   private static final Logger logger = Logger.getLogger(DistributionInfoSmeManager.class);
   private AbstractDynamicMBean monitor;
 
-  private SmscConsoleClient consoleClient;
+  private ConsoleConnPool consoleConnPool;
 
   private String statsDir;
   private String dateInFilePattern;
@@ -72,8 +70,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
       port = config.getInt("smsc_console_port");
       login = config.getString("smsc_console_login");
       password = config.getString("smsc_console_password");
-      consoleTimeout = config.getLong("smsc_console_connect_timeout", 60) * 1000;
-      closerPeriod = config.getLong("smsc_console_closer_period", 60);
+      consoleTimeout = config.getLong("smsc_console_connect_timeout", 60) * 1000;    //todo
+      closerPeriod = config.getLong("smsc_console_closer_period", 60);               //todo
 
       this.workDir = workDir;
 
@@ -85,8 +83,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
       if (!file.exists()) {
         file.mkdirs();
       }
-
-      consoleClient = new SmscConsoleClient(login, password, host, port, consoleTimeout, closerPeriod);
+      ConsoleConnPoolFactory.init(login, password, host, port);
+      consoleConnPool = ConsoleConnPoolFactory.getConnectionPool(10, 120000);
     } catch (ConfigException e) {
       logger.error("Unable to init StatsFilesCache", e);
       throw new DistributionException("Unable to init StatsFilesCache", e);
@@ -137,7 +135,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
       logger.error("Some fields of argument are empty");
       throw new DistributionException("Some fields of argument are empty", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
     }
-    SmscConsoleResponse response;
+    ConsoleResponse response;
+    ConsoleConnection conn = null;
     try {
       String fileName = createAbFile(distr);
 
@@ -156,13 +155,14 @@ public class DistributionInfoSmeManager implements DistributionManager {
       if (logger.isInfoEnabled()) {
         logger.info("Sending console command: " + command.toString());
       }
-      response = consoleClient.sendCommand(command.toString());
+      conn = consoleConnPool.getConnection();
+      response = conn.sendCommand(command.toString());
       if ((response != null) && (response.isSuccess()) && (response.getStatus().trim().equals(codeOk))) {
         String[] lines = response.getLines();
         if (lines.length > 0) {
           String[] tokens = lines[0].trim().split(" ");
           if (tokens.length < 3) {
-            throw new SmscConsoleException("Wrong response");
+            throw new ConsoleException("Wrong response");
           }
           String id = tokens[2];
           if (!id.equals("")) {
@@ -175,14 +175,17 @@ public class DistributionInfoSmeManager implements DistributionManager {
       }
       logger.error("Wrong response: " + response);
       throw new DistributionException("Wrong response: " + response);
-    } catch (SmscConsoleException e) {
+    } catch (Exception e) {
       logger.error("Unable to create distribution", e);
       throw new DistributionException("Unable to create distribution", e);
+    } finally {
+      if(conn!=null)
+        conn.close();
     }
   }
 
   public void shutdown() {
-    consoleClient.shutdown();
+    consoleConnPool.shutdown();
     logger.info("DistributionManager shutdowned");
   }
 
@@ -197,15 +200,22 @@ public class DistributionInfoSmeManager implements DistributionManager {
     if (logger.isInfoEnabled()) {
       logger.info("Sending console command: " + command);
     }
+
+    ConsoleConnection conn = null;
     try {
-      SmscConsoleResponse response = consoleClient.sendCommand(command);
+      conn = consoleConnPool.getConnection();
+      ConsoleResponse response = conn.sendCommand(command);
       if ((response == null) || (!response.isSuccess()) || (!response.getStatus().trim().equals(codeOk))) {
         logger.error("Wrong response: " + response);
         throw new DistributionException("Wrong response: " + response);
       }
-    } catch (SmscConsoleException e) {
+    } catch (Exception e) {
       logger.error("Can't send command", e);
       throw new DistributionException("Can't send command", e);
+    } finally {
+      if(conn!=null) {
+        conn.close();
+      }
     }
 
   }
@@ -221,15 +231,21 @@ public class DistributionInfoSmeManager implements DistributionManager {
     if (logger.isInfoEnabled()) {
       logger.info("Sending console command: " + command);
     }
+    ConsoleConnection conn = null;
     try {
-      SmscConsoleResponse response = consoleClient.sendCommand(command);
+      conn = consoleConnPool.getConnection();
+      ConsoleResponse response = conn.sendCommand(command);
       if ((response == null) || (!response.isSuccess()) || (!response.getStatus().trim().equals(codeOk))) {
         logger.error("Wrong response: " + response);
         throw new DistributionException("Wrong response: " + response);
       }
-    } catch (SmscConsoleException e) {
+    } catch (ConsoleException e) {
       logger.error("Can't send command", e);
       throw new DistributionException("Can't send command", e);
+    } finally {
+      if(conn!=null) {
+        conn.close();
+      }
     }
 
   }
@@ -239,6 +255,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
       logger.info("Get status begins for id: " + id);
     }
 
+    ConsoleConnection conn = null;
+
     try {
       StringBuilder command = new StringBuilder();
       command.append(STATUS_COMMAND);
@@ -247,14 +265,15 @@ public class DistributionInfoSmeManager implements DistributionManager {
       if (logger.isInfoEnabled()) {
         logger.info("Sending console command: " + command.toString());
       }
+      conn = consoleConnPool.getConnection();
+      ConsoleResponse response = conn.sendCommand(command.toString());
 
-      SmscConsoleResponse response = consoleClient.sendCommand(command.toString());
       if ((response != null) && (response.isSuccess()) && (response.getStatus().trim().equals(codeOk))) {
         String[] lines = response.getLines();
         if (lines.length > 0) {
           String[] tokens = lines[0].trim().split(" ");
           if (tokens.length < 3) {
-            throw new SmscConsoleException("Wrong response");
+            throw new ConsoleException("Wrong response");
           }
           String status = tokens[2];
           if (status.equals("true")) {
@@ -271,9 +290,13 @@ public class DistributionInfoSmeManager implements DistributionManager {
       }
       logger.error("Wrong response: " + response);
       throw new DistributionException("Wrong response: " + response);
-    } catch (SmscConsoleException e) {
+    } catch (Exception e) {
       logger.error("Error during repair status", e);
       throw new DistributionException("Error during repair status", e);
+    } finally {
+      if(conn!=null) {
+        conn.close();
+      }
     }
   }
 

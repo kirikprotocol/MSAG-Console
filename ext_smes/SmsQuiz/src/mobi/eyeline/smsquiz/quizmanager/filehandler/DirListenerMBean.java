@@ -7,12 +7,12 @@ import javax.management.*;
 /**
  * author: alkhal
  */
-public class QuizFIleHandlerMBean extends AbstractDynamicMBean {
+public class DirListenerMBean extends AbstractDynamicMBean {
 
   private DirListener dirListener;
 
-  public QuizFIleHandlerMBean(DirListener dirListener) {
-    super(QuizFIleHandlerMBean.class, "DirListener's monitor");
+  public DirListenerMBean(DirListener dirListener) {
+    super(DirListenerMBean.class, "DirListener's monitor");
     this.dirListener = dirListener;
 
     attributes.add(new MBeanAttributeInfo("ActiveFiles",

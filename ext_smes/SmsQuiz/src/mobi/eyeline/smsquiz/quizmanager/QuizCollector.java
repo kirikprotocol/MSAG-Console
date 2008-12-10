@@ -28,8 +28,6 @@ public class QuizCollector {
 
   private final long checkTimeot = 15000;
 
-  private Lock lock = new ReentrantLock();
-
   public QuizCollector(ConcurrentHashMap<String, Quiz> quizesMap, Quizes quizes,
                        DistributionManager dm) {
     this.quizesMap = quizesMap;
@@ -130,9 +128,8 @@ public class QuizCollector {
     public void run() {
       logger.info("QuizCollector starts...");
       try {
-        lock.lock();
         Quizes.Visitor visitor = new VisitorForTask();
-        quizes.visit(visitor);
+        quizes.visit(visitor);       //already synchronized
       } catch (Throwable e) {
         logger.error(e);
         e.printStackTrace();
@@ -142,7 +139,6 @@ public class QuizCollector {
         } catch (QuizException e) {
           logger.error(e, e);
         }
-        lock.unlock();
       }
       logger.info("QuizCollector finished");
     }
@@ -219,9 +215,11 @@ public class QuizCollector {
         executor.execute(new Runnable() {
           public void run() {
             try {
-              quiz.createDistribution();
-              quiz.setLastDistrStatusCheck(System.currentTimeMillis());
-              quiz.setQuizStatus(Quiz.Status.GENERATION);
+              if(!quiz.isDistrGenerated()) {
+                quiz.createDistribution();      //already synchronized
+                quiz.setLastDistrStatusCheck(System.currentTimeMillis());
+                quiz.setQuizStatus(Quiz.Status.GENERATION);
+              }
             } catch (Throwable e) {
               logger.error(e, e);
             }
@@ -296,7 +294,7 @@ public class QuizCollector {
         executor.execute(new Runnable() {
           public void run() {
             try {
-              quiz.exportStats();
+              quiz.exportStats();         //already synchronized
               quiz.setQuizStatus(Quiz.Status.FINISHED);
               quiz.shutdown();
             } catch (QuizException e) {

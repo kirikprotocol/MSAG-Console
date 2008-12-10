@@ -33,7 +33,7 @@ public class DirListener extends Observable implements Runnable {
     }
     filesMap = new HashMap<String, QuizFile>();
     fileFilter = new XmlFileFilter();
-    monitor = new QuizFIleHandlerMBean(this);
+    monitor = new DirListenerMBean(this);
   }
 
   public void run() {
