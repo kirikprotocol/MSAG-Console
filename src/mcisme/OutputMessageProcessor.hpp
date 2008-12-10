@@ -26,7 +26,8 @@ public:
       _advertising(advertising), _logger(logger::Logger::getInstance("outputprc")) {}
   virtual ~SendMessageEventHandler() {}
   virtual void handle() = 0;
-  std::string getBanner(const AbntAddr& abnt, bool needBannerInTranslit);
+  std::string getBanner(const AbntAddr& abnt, BannerResponseTrace* bannerRespTrace, bool needBannerInTranslit);
+  void rollbackBanner(const BannerResponseTrace& bannerRespTrace);
 protected:
   TaskProcessor& _taskProcessor;
   BEReconnector& _reconnectorThread;
@@ -64,6 +65,20 @@ private:
   AbntAddr _calledAbnt;
 };
 
+class RollbackBERequestHandler : public SendMessageEventHandler {
+public:
+  RollbackBERequestHandler(TaskProcessor& taskProcessor,
+                           BEReconnector& reconnectorThread,
+                           core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex>& advertising,
+                           const BannerResponseTrace& bannerRespTrace)
+    : SendMessageEventHandler(taskProcessor, reconnectorThread, advertising),
+      _bannerRespTrace(bannerRespTrace)
+  {}
+  virtual void handle();
+private:
+  BannerResponseTrace _bannerRespTrace;
+};
+
 class OutputMessageProcessor : public core::threads::Thread {
 public:
   OutputMessageProcessor(TaskProcessor& taskProcessor,
@@ -74,6 +89,7 @@ public:
 
   void assignMessageOutputWork(const AbntAddr& calledAbnt);
   void assignMessageOutputWork(const sms_info* pInfo, const AbonentProfile& abntProfile);
+  void assignMessageOutputWork(const BannerResponseTrace& bannerRespTrace);
 
   void stop();
 private:
