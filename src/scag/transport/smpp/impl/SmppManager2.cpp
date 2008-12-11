@@ -38,6 +38,7 @@ tag_timeout,
 tag_mode,
 tag_enabled,
 tag_providerId,
+tag_snmpWatch,
 tag_maxSmsPerSec,
 tag_metaGroup,
 tag_persistance,
@@ -74,6 +75,7 @@ TAGDEF(port),
 TAGDEF(althost),
 TAGDEF(altport),
 TAGDEF(enabled),
+TAGDEF(snmpWatch),
 TAGDEF(uid),
 TAGDEF(bindSystemId),
 TAGDEF(bindPassword),
@@ -96,6 +98,11 @@ struct ParamsHash:public smsc::core::buffers::Hash<ParamTag>{
 };
 
 static const ParamsHash paramsHash;
+
+XmlStr GetNodeName( DOMNamedNodeMap* attr )
+{
+    return attr->getNamedItem(XmlStr("name"))->getNodeValue();
+}
 
 template <int SZ>
 void FillStringValue(DOMNamedNodeMap* attr,buf::FixedLengthString<SZ>& str)
@@ -138,7 +145,8 @@ bool GetBoolValue(DOMNamedNodeMap* attr)
   for(size_t i=0;i<len;i++)bindTypeName[i]=tolower(bindTypeName[i]);
   if     (!strcmp(bindTypeName,"true")) return true;
   else if(!strcmp(bindTypeName,"false")) return false;
-  throw smsc::util::Exception("Invalid value for param 'enabled':%s",bindTypeName);
+  XmlStr paramName(GetNodeName(attr));
+  throw smsc::util::Exception("Invalid bool value for param '%s':%s",paramName.c_str(),bindTypeName);
 }
 
 static void FillEntity(SmppEntityInfo& entity,DOMNode* record)
@@ -154,7 +162,7 @@ static void FillEntity(SmppEntityInfo& entity,DOMNode* record)
     {
       throw smsc::util::Exception("Invalid smpp.xml configuration file");
     }
-    XmlStr paramName(attrs->getNamedItem(XmlStr("name"))->getNodeValue());
+    XmlStr paramName(GetNodeName(attrs));
     const ParamTag* tagPtr=paramsHash.GetPtr(paramName.c_str());
     if(!tagPtr)
     {
@@ -198,6 +206,9 @@ static void FillEntity(SmppEntityInfo& entity,DOMNode* record)
         break;
       case tag_enabled:
         entity.enabled=GetBoolValue(attrs);
+        break;
+      case tag_snmpWatch:
+        entity.snmpWatch = GetBoolValue(attrs);
         break;
       case tag_uid:
         entity.uid=GetIntValue(attrs);
@@ -268,7 +279,7 @@ static void FillMetaEntity(MetaEntityInfo& entity,DOMNode* record)
     {
       throw smsc::util::Exception("Invalid smpp.xml configuration file");
     }
-    XmlStr paramName(attrs->getNamedItem(XmlStr("name"))->getNodeValue());
+    XmlStr paramName(GetNodeName(attrs));
     if(paramName=="policy")
     {
       entity.policy=GetPolicyValue(attrs);
@@ -303,8 +314,9 @@ static void ParseMetaTag(SmppManagerImpl* smppMan,DOMNodeList* list,MetaEntityTy
 }
 
 
-SmppManagerImpl::SmppManagerImpl() :
-ConfigListener(SMPPMAN_CFG), sm(this,this), licenseCounter(10,20), testRouter_(0)
+SmppManagerImpl::SmppManagerImpl( snmp::TrapRecordQueue* snmpqueue ) :
+ConfigListener(SMPPMAN_CFG), sm(this,this), licenseCounter(10,20), testRouter_(0),
+snmpqueue_(snmpqueue)
 {
   log=smsc::logger::Logger::getInstance("smppMan");
   limitsLog=smsc::logger::Logger::getInstance("smpp.lmt");
@@ -716,129 +728,181 @@ SmppEntityAdminInfoList * SmppManagerImpl::getEntityAdminInfoList(SmppEntityType
 
 int SmppManagerImpl::registerSmeChannel(const char* sysId,const char* pwd,SmppBindType bt,SmppChannel* ch)
 {
-  sync::MutexGuard mg(regMtx);
-  SmppEntity** ptr=registry.GetPtr(sysId);
-  if(!ptr)
-  {
-    smsc_log_info(log,"Failed to register sme with sysId='%s' - Not found",sysId);
-    return rarFailed;
-  }
-  if(!(*ptr)->info.enabled)
-  {
-    smsc_log_info(log,"Failed to register sme with sysId='%s' - disabled",sysId);
-    return rarFailed;
-  }
-  SmppEntity& ent=**ptr;
-  if(!(ent.info.password == pwd))
-  {
-    smsc_log_info(log,"Failed to register sme with sysId='%s' - password mismatch:'%s'!='%s'",sysId,ent.info.password.c_str(),pwd);
-    return rarFailed;
-  }
-  {
-    MutexGuard mg2(ent.mtx);
-    if(ent.info.type==etUnknown)
-    {
-      smsc_log_warn(log,"Failed to register sme with sysId='%s' - Entity deleted",sysId);
-      return rarFailed;
-    }
-    if(ent.info.type!=etService)
-    {
-      smsc_log_warn(log,"Failed to register sme with sysId='%s' - Entity type is not sme",sysId);
-      return rarFailed;
-    }
+    const char* text = 0;
+    int ret = rarFailed;
+    do {
+        sync::MutexGuard mg(regMtx);
+        SmppEntity** ptr=registry.GetPtr(sysId);
+        if (!ptr)
+        {
+            smsc_log_info(log,"Failed to register sme with sysId='%s' - Not found",sysId);
+            text = "sme is not found";
+            break;
+        }
+        if(!(*ptr)->info.enabled)
+        {
+            smsc_log_info(log,"Failed to register sme with sysId='%s' - disabled",sysId);
+            text = "sme is disabled";
+            break;
+        }
+        SmppEntity& ent=**ptr;
+        if(!(ent.info.password == pwd))
+        {
+            smsc_log_info(log,"Failed to register sme with sysId='%s' - password mismatch:'%s'!='%s'",sysId,ent.info.password.c_str(),pwd);
+            text = "sme password mismatch";
+            break;
+        }
+        {
+            MutexGuard mg2(ent.mtx);
+            if(ent.info.type==etUnknown)
+            {
+                smsc_log_warn(log,"Failed to register sme with sysId='%s' - Entity deleted",sysId);
+                text = "sme was deleted";
+                break;
+            }
+            if(ent.info.type!=etService)
+            {
+                smsc_log_warn(log,"Failed to register sme with sysId='%s' - Entity type is not sme",sysId);
+                text = "sme type is not sme";
+                break;
+            }
+            
+            if((ent.info.bindType==btReceiver && bt!=btReceiver)||
+               (ent.info.bindType==btTransmitter && bt!=btTransmitter))
+            {
+                smsc_log_info(log,"Failed to register sme with sysId='%s' - Invalid bind type",sysId);
+                text = "sme bind type is invalid";
+                break;
+            }
+            if((ent.bt==btReceiver && bt==btReceiver)||
+               (ent.bt==btTransmitter && bt==btTransmitter)||
+               (ent.bt!=btNone))
+            {
+                smsc_log_info(log,"Failed to register sme with sysId='%s' - Already registered",sysId);
+                ret = rarAlready;
+                break;
+            }
 
-    if((ent.info.bindType==btReceiver && bt!=btReceiver)||
-       (ent.info.bindType==btTransmitter && bt!=btTransmitter))
-    {
-      smsc_log_info(log,"Failed to register sme with sysId='%s' - Invalid bind type",sysId);
-      return rarFailed;
+            if(ent.bt==btNone) {
+                ent.bt=bt;
+            } else {
+                ent.bt=btRecvAndTrans;
+            }
+
+            if (bt==btTransceiver) {
+                ent.channel=ch;
+            } else if(bt==btReceiver) {
+                ent.recvChannel=ch;
+            } else if(bt==btTransmitter) {
+                ent.transChannel=ch;
+            }
+        }
+        ent.info.host = ch->getPeer();
+        ent.connected = true;
+        ent.setUid(++lastUid);
+        smsc_log_info(log,"Registered sme with sysId='%s'",sysId);
+        text = "connected";
+        ret = rarOk;
+    } while ( false );
+
+    if ( text && snmpqueue_ ) {
+        snmp::TrapRecord* trap = new snmp::TrapRecord;
+        trap->recordType = snmp::TrapRecord::Trap;
+        trap->status = ( ret == rarFailed ? snmp::TrapRecord::STATNEW : snmp::TrapRecord::STATCLEAR );
+        trap->id = sysId;
+        trap->category = "SME";
+        trap->severity = ( ret == rarFailed ? snmp::TrapRecord::MAJOR : snmp::TrapRecord::CLEAR );
+        trap->text = text;
+        snmpqueue_->Push( trap );
     }
-    if((ent.bt==btReceiver && bt==btReceiver)||
-       (ent.bt==btTransmitter && bt==btTransmitter)||
-       (ent.bt!=btNone))
-    {
-      smsc_log_info(log,"Failed to register sme with sysId='%s' - Already registered",sysId);
-      return rarAlready;
-    }
-    if(ent.bt==btNone)
-    {
-      ent.bt=bt;
-    }else
-    {
-      ent.bt=btRecvAndTrans;
-    }
-    if(bt==btTransceiver)
-    {
-      ent.channel=ch;
-    }else if(bt==btReceiver)
-    {
-      ent.recvChannel=ch;
-    }else if(bt==btTransmitter)
-    {
-      ent.transChannel=ch;
-    }
-  }
-  ent.info.host = ch->getPeer();
-  ent.connected = true;
-  ent.setUid(++lastUid);
-  smsc_log_info(log,"Registered sme with sysId='%s'",sysId);
-  return rarOk;
+    return ret;
 }
 
 int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
 {
-  sync::MutexGuard mg(regMtx);
-  SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
-  if(!ptr || (**ptr).info.bindType==btNone)
-  {
-    smsc_log_info(log,"Failed to register smsc with sysId='%s' - Not found",ch->getSystemId());
-    return rarFailed;
-  }
-  if(!(**ptr).info.enabled)
-  {
-    smsc_log_info(log,"Failed to register smsc with sysId='%s' - Not found",ch->getSystemId());
-    return rarFailed;
-  }
-  SmppEntity& ent=**ptr;
-  {
-    MutexGuard mg2(ent.mtx);
-    ent.bt=btTransceiver;
-    ent.channel=ch;
-    smsc_log_info(log,"Registered smsc connection with sysId='%s'",ch->getSystemId());
-  }
-  ent.connected = true;
-  ent.setUid(++lastUid);
-  return rarOk;
+    const char* text = 0;
+    int ret = rarFailed;
+    do {
+        sync::MutexGuard mg(regMtx);
+        SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
+        if(!ptr || (**ptr).info.bindType==btNone)
+        {
+            smsc_log_info(log,"Failed to register smsc with sysId='%s' - Not found",ch->getSystemId());
+            text = "smsc is not found";
+            break;
+        }
+        if(!(**ptr).info.enabled)
+        {
+            smsc_log_info(log,"Failed to register smsc with sysId='%s' - Not found",ch->getSystemId());
+            text = "smsc is disabled";
+            break;
+        }
+        SmppEntity& ent=**ptr;
+        {
+            MutexGuard mg2(ent.mtx);
+            ent.bt=btTransceiver;
+            ent.channel=ch;
+        }
+        smsc_log_info(log,"Registered smsc connection with sysId='%s'",ch->getSystemId());
+        ent.connected = true;
+        ent.setUid(++lastUid);
+        text = "connected";
+        ret = rarOk;
+    } while ( false );
+
+    if ( text && snmpqueue_ ) {
+        snmp::TrapRecord* trap = new snmp::TrapRecord;
+        trap->recordType = snmp::TrapRecord::Trap;
+        trap->status = ( ret == rarFailed ? snmp::TrapRecord::STATNEW : snmp::TrapRecord::STATCLEAR );
+        trap->id = ch->getSystemId();
+        trap->category = "SMSC";
+        trap->severity = ( ret == rarFailed ? snmp::TrapRecord::MAJOR : snmp::TrapRecord::CLEAR );
+        trap->text = text;
+        snmpqueue_->Push( trap );
+    }
+    return ret;
 }
+
 void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
 {
-  sync::MutexGuard mg(regMtx);
-  SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
-  if(!ptr || (**ptr).bt==btNone)
-  {
-    smsc_log_info(log,"Failed to unregister smsc with sysId='%s' - Not found",ch->getSystemId());
-    return;
-  }
-  SmppEntity& ent=**ptr;
-  MutexGuard mg2(ent.mtx);
-  if(ent.bt==btRecvAndTrans)
-  {
-    if(ch->getBindType()==btReceiver)
-    {
-      ent.bt=btTransmitter;
-    }else if(ch->getBindType()==btTransmitter)
-    {
-      ent.bt=btReceiver;
-    }else
-    {
-      smsc_log_warn(log,"Attempt to unregister channel with invalid bind type for sysId='%s'",ch->getSystemId());
+    const char* text = 0;
+    bool isSME = false;
+    do {
+        sync::MutexGuard mg(regMtx);
+        SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
+        if(!ptr || (**ptr).bt==btNone)
+        {
+            smsc_log_info(log,"Failed to unregister smsc with sysId='%s' - Not found",ch->getSystemId());
+            break; // no snmp
+        }
+        SmppEntity& ent=**ptr;
+        MutexGuard mg2(ent.mtx);
+        isSME = ( ent.info.type == etService );
+        if(ent.bt==btRecvAndTrans) {
+            if(ch->getBindType()==btReceiver) {
+                ent.bt=btTransmitter;
+            } else if(ch->getBindType()==btTransmitter) {
+                ent.bt=btReceiver;
+            } else {
+                smsc_log_warn(log,"Attempt to unregister channel with invalid bind type for sysId='%s'",ch->getSystemId());
+            }
+        } else {
+            ent.bt=btNone;
+        }
+        ent.connected = false;
+        if (ent.info.type == etService) ent.info.host = "";
+        text = "disconnected";
+    } while ( false );
+    if ( text && snmpqueue_ ) {
+        snmp::TrapRecord* trap = new snmp::TrapRecord;
+        trap->recordType = snmp::TrapRecord::Trap;
+        trap->status = snmp::TrapRecord::STATNEW;
+        trap->id = ch->getSystemId();
+        trap->category = ( isSME ? "SME" : "SMSC" );
+        trap->severity = snmp::TrapRecord::MAJOR;
+        trap->text = text;
+        snmpqueue_->Push( trap );
     }
-  }else
-  {
-    ent.bt=btNone;
-  }
-  ent.connected = false;
-  if (ent.info.type == etService) ent.info.host = "";
 }
 
 

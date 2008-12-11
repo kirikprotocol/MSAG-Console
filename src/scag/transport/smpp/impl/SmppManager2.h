@@ -12,6 +12,7 @@
 #include "logger/Logger.h"
 #include "scag/config/base/ConfigListener2.h"
 #include "SmppSocketManager2.h"
+#include "scag/snmp/TrapRecord.h"
 
 namespace scag2 {
 namespace transport {
@@ -20,7 +21,7 @@ namespace smpp {
 class SmppManagerImpl : public SmppManager, public ConfigListener
 {
 public:
-    SmppManagerImpl();
+    SmppManagerImpl( snmp::TrapRecordQueue* snmpqueue );
     virtual ~SmppManagerImpl();
 
     void Init(const char* cfgFile);
@@ -396,6 +397,8 @@ protected:
     uint32_t lcmProcessingCount;
     uint32_t queuedCmdCount;
     std::string cfgFileName;
+
+    snmp::TrapRecordQueue* snmpqueue_;    // not owned
 };
 
 }//smpp

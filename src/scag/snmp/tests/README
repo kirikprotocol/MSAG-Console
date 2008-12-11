@@ -1,0 +1,16 @@
+How to test:
+
+0. mkdir -p $HOME/.snmp/mibs
+
+1. copy your preferred MIBS to $HOME/.snmp/mibs
+   and create the conf file:
+   cat <<<EOF >$HOME/.snmp/snmpd.conf
+master agentx
+agentXSocket tcp:0.0.0.0:2705
+EOF
+
+2. start an agent (on linux) via:
+/usr/sbin/snmpd -a -d -f -Lo -r -V udp:0.0.0.0:2705
+
+3. start an application testsnmp
+   and enjoy the hexdumps.

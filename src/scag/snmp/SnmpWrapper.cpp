@@ -1,0 +1,158 @@
+#include <net-snmp/net-snmp-config.h>
+#include <net-snmp/net-snmp-includes.h>
+#include <net-snmp/agent/net-snmp-agent-includes.h>
+#include <string.h>
+#include "SnmpWrapper.h"
+
+namespace {
+
+const char* msagnamed = "msag";
+const char* msagname = "msag";
+
+oid snmptrap_oid[] = {1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0};
+oid alertMessage_oid[] = { 1,3,6,1,4,1,26757,2,5, 0 };
+oid alertSeverity_oid[] = { 1,3,6,1,4,1,26757,2,7, 0 };
+oid alertObjCategory_oid[] = { 1,3,6,1,4,1,26757,2,9, 0 };
+oid alertId_oid[] = { 1,3,6,1,4,1,26757,2,8, 0 };
+
+oid msagNewAlertFFMR_oid[] = { 1,3,6,1,4,1,26757,2,0,4 };
+oid msagClearAlertFFMR_oid[] = { 1,3,6,1,4,1,26757,2,0,5 };
+
+void init_msag()
+{
+    // do nothing right now
+}
+
+}
+
+namespace scag2 {
+namespace snmp {
+
+SnmpWrapper::SnmpWrapper( const std::string& socket ) :
+log_(0)
+{
+    log_ = smsc::logger::Logger::getInstance( "snmp" );
+    // FIXME: uncomment
+    // snmp_disable_stderrlog();
+    netsnmp_ds_set_boolean( NETSNMP_DS_APPLICATION_ID,
+                            NETSNMP_DS_AGENT_ROLE, 1 ); // we are a subagent
+
+    if ( ! socket.empty() ) {
+        netsnmp_ds_set_string( NETSNMP_DS_APPLICATION_ID,
+                               NETSNMP_DS_AGENT_X_SOCKET, socket.c_str() ); // setting a connection
+    }
+
+    init_agent( ::msagnamed );  // initialize the agent library
+    ::init_msag();             // initialize mib code
+    init_snmp( ::msagname );   // read .conf files
+}
+
+
+SnmpWrapper::~SnmpWrapper()
+{
+    snmp_shutdown( ::msagnamed );
+}
+
+
+void SnmpWrapper::sendTrap( const TrapRecord& rec )
+{
+    switch ( rec.recordType ) {
+
+    case ( TrapRecord::Trap ) : {
+
+        oid* poid = 0;
+        size_t poidlen = 0;
+        switch (rec.status) {
+
+        case (TrapRecord::STATNEW) : {
+            poid = msagNewAlertFFMR_oid;
+            poidlen = OID_LENGTH(msagNewAlertFFMR_oid);
+            break;
+        }
+        case (TrapRecord::STATCLEAR) : {
+            poid = msagClearAlertFFMR_oid;
+            poidlen = OID_LENGTH(msagClearAlertFFMR_oid);
+            break;
+        }
+        default : {
+            smsc_log_warn( log_, "trap(id=%s, object=%s, severity=%d, text=%s): unknown status=%d",
+                           rec.id.c_str(),
+                           rec.category.c_str(),
+                           rec.severity,
+                           rec.text.c_str(),
+                           rec.status );
+            break;
+        }
+        } // switch rec.status
+        if ( ! poid ) break;
+
+        smsc_log_debug( log_, "trap(id=%s, object=%s, severity=%d, text=%s)",
+                        rec.id.c_str(),
+                        rec.category.c_str(),
+                        rec.severity,
+                        rec.text.c_str() );
+
+        netsnmp_variable_list  *var_list = NULL;
+        u_char* buf; size_t buflen;
+        if ( rec.text.length() ) {
+            buf = (u_char*)rec.text.c_str(); buflen = rec.text.length();
+            snmp_varlist_add_variable(&var_list,
+                                      alertMessage_oid, 
+                                      OID_LENGTH(alertMessage_oid),
+                                      ASN_OCTET_STR,
+                                      buf,
+                                      buflen );
+        }
+        {
+            uint32_t n = htonl( uint32_t(rec.severity) );
+            buf = (u_char*)&n; buflen = sizeof(n);
+            snmp_varlist_add_variable(&var_list,
+                                      alertSeverity_oid,
+                                      OID_LENGTH(alertSeverity_oid),
+                                      ASN_INTEGER,
+                                      buf,
+                                      buflen );
+        }
+        if ( rec.category.length() ) {
+            buf = (u_char*)rec.category.c_str(); buflen = rec.category.length();
+            snmp_varlist_add_variable(&var_list,
+                                      alertObjCategory_oid,
+                                      OID_LENGTH(alertObjCategory_oid),
+                                      ASN_OCTET_STR,
+                                      buf,
+                                      buflen);
+        }
+        if ( rec.id.length() ) {
+            buf = (u_char*)rec.id.c_str(); buflen = rec.id.length();
+            snmp_varlist_add_variable(&var_list,
+                                      alertId_oid,
+                                      OID_LENGTH(alertId_oid),
+                                      ASN_OCTET_STR,
+                                      buf,
+                                      buflen );
+        }
+
+        send_enterprise_trap_vars( SNMP_TRAP_ENTERPRISESPECIFIC, 1,
+                                   poid, (int)poidlen, var_list );
+        snmp_free_varbind(var_list);
+        break;
+    }
+
+    case ( TrapRecord::Notification ) : {
+        smsc_log_warn( log_, "notification trap is not impl yet" );
+        break;
+    }
+
+    case ( TrapRecord::StatusChange ) : {
+        smsc_log_warn( log_, "status change trap is not impl yet" );
+        break;
+    }
+    default :
+        smsc_log_warn( log_, "unknown trap record type" );
+
+    } // switch on record type
+
+}
+
+}
+}

@@ -196,6 +196,23 @@ void Scag::init( unsigned mynode )
         sessman->Start();
     }
 
+    //************** SNMP thread initialization **************
+    try {
+        const bool enabled = cfg.getConfig()->getBool("snmp.enabled");
+        if ( enabled ) {
+            const std::string socket = cfg.getConfig()->getString("snmp.socket");
+            if ( socket.size() > 0 ) {
+                snmp_.reset(new snmp::SnmpWrapper(socket));
+                snmpthread_.reset(new snmp::SnmpTrapThread(snmp_.get()));
+                snmpthread_->Start();
+            }
+        }
+    } catch (std::exception& e) {
+        smsc_log_warn(log, "cannot initialize snmp: %s", e.what());
+    } catch (...) {
+        smsc_log_warn(log, "cannot initialize snmp: unknown exception" );
+    }
+
     //************** SmppManager initialization **************
 
     scagHost=cfg.getConfig()->getString("smpp.host");
@@ -203,7 +220,8 @@ void Scag::init( unsigned mynode )
 
     try {
         smsc_log_info(log, "Smpp Manager is starting");
-        SmppManagerImpl* sm = new SmppManagerImpl();
+        SmppManagerImpl* sm = new SmppManagerImpl
+            ( snmpthread_.get() ? snmpthread_.get()->getQueue() : 0 );
         sm->Init( findConfigFile("../conf/smpp.xml") );
         smsc_log_info(log, "Smpp Manager started");
     } catch(Exception& e) {
@@ -273,6 +291,7 @@ void Scag::shutdown()
     transport::http::HttpManager::Instance().shutdown();
     transport::smpp::SmppManager::Instance().shutdown();
     sessions::SessionManager::Instance().Stop();
+    snmpthread_->Stop();
     // stat::Statistics::Instance().Stop();
 }
 
