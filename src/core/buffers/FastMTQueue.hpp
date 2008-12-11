@@ -60,6 +60,12 @@ public:
     mtx.wait();
   }
 
+  // useful when stopping
+  void notify() {
+    MutexGuard g(mtx);
+    mtx.notify();
+  }
+
   int Count()const
   {
     MutexGuard g(mtx);
