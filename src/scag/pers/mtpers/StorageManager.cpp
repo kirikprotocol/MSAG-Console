@@ -6,7 +6,7 @@ namespace scag { namespace mtpers {
 using scag::util::storage::StorageNumbering;
 
 StorageManager::StorageManager(const NodeConfig& nodeCfg): nodeNumber_(nodeCfg.nodeNumber), locationsCount_(nodeCfg.locationsCount), isStopped_(true),
-                                                           storagesCount_(nodeCfg.storagesCount), logger_(Logger::getInstance("storeman")) {
+                                                           storagesCount_(nodeCfg.storagesCount), logger_(Logger::getInstance("storeman")), startedProc_(0) {
   StorageNumbering::setInstance(nodeCfg.nodesCount);
 }
 
@@ -16,7 +16,7 @@ void StorageManager::init(uint16_t maxWaitingCount, const AbonentStorageConfig& 
       smsc_log_debug(logger_, "create storage dir '%s'", abntcfg.locationPath[locationNumber].c_str());
       File::MkDir(abntcfg.locationPath[locationNumber].c_str());
     }
-    AbonentStorageProcessor* proc = new AbonentStorageProcessor(maxWaitingCount, locationNumber, storagesCount_);
+    AbonentStorageProcessor* proc = new AbonentStorageProcessor(maxWaitingCount, locationNumber, storagesCount_, this);
     storages_.Push(proc);
   }
   for (unsigned i = 0; i < storagesCount_; ++i) {
@@ -26,14 +26,16 @@ void StorageManager::init(uint16_t maxWaitingCount, const AbonentStorageConfig& 
   }
   for (unsigned locationNumber = 0; locationNumber < locationsCount_; ++locationNumber) {
     pool_.startTask(storages_[locationNumber]);
+    ++startedProc_;
   }
   if (nodeNumber_ == getInfrastructNodeNumber()) {
     if (!infcfg) {
       throw Exception("Erorr init infrastruct storage, config in NULL");
     }
-    infrastructStorage_ = new InfrastructStorageProcessor(maxWaitingCount);
+    infrastructStorage_ = new InfrastructStorageProcessor(maxWaitingCount, this);
     infrastructStorage_->init(*infcfg);
     pool_.startTask(infrastructStorage_);
+    ++startedProc_;
   }
 
   isStopped_ = false;
@@ -42,6 +44,16 @@ void StorageManager::init(uint16_t maxWaitingCount, const AbonentStorageConfig& 
 
 AbonentStorageProcessor* StorageManager::getLocation(unsigned elementStorageNumber) {
   return storages_[((elementStorageNumber / StorageNumbering::instance().nodes()) % locationsCount_)];
+}
+
+void StorageManager::procStopped() {
+  MutexGuard mg(procMutex_);
+  --startedProc_;
+}
+
+bool StorageManager::allprocessorsStopped() {
+  MutexGuard mg(procMutex_);
+  return startedProc_ > 0 ? false : true;
 }
 
 bool StorageManager::process(PersPacket* packet) {
@@ -74,8 +86,10 @@ void StorageManager::shutdown() {
   for (unsigned i = 0; i < locationsCount_; ++i) {
     storages_[i]->stop();
   }
-  smsc_log_warn(logger_, "waiting 10 seconds while storage processors stopping...");
-  sleep(10);
+  while (!allprocessorsStopped()) {
+    smsc_log_warn(logger_, "waiting 5 seconds while storage processors stopping...");
+    sleep(5);
+  }
   smsc_log_warn(logger_, "shutdown storage processors pool");
   pool_.shutdown();
 }

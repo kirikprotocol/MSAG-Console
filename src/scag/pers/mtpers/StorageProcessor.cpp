@@ -3,6 +3,7 @@
 #include "core/buffers/File.hpp"
 #include <exception>
 #include "scag/util/RelockMutexGuard.h"
+#include "StorageManager.h"
 
 
 namespace scag { namespace mtpers {
@@ -22,7 +23,7 @@ const uint32_t DEF_FILE_SIZE    = 50000;
 const uint32_t DEF_CACHE_SIZE   = 1000;
 const uint32_t DEF_RECORD_COUNT = 1000;
 
-StorageProcessor::StorageProcessor(unsigned maxWaitingCount): maxWaitingCount_(maxWaitingCount)
+StorageProcessor::StorageProcessor(unsigned maxWaitingCount, StorageManager* manager): maxWaitingCount_(maxWaitingCount), manager_(manager)
 {
   logger_ = Logger::getInstance("storeproc");
   debuglogger_ = Logger::getInstance("ctx");
@@ -106,6 +107,7 @@ int StorageProcessor::Execute() {
   }
   shutdownStorages();
   smsc_log_debug(logger_, "stoped storage processor %p", this);
+  manager_->procStopped();
   return 0;
 }
 
@@ -133,8 +135,8 @@ bool StorageProcessor::addPacket(PersPacket* packet) {
   return true;
 }
 
-AbonentStorageProcessor::AbonentStorageProcessor(unsigned maxWaitingCount, unsigned locationNumber, unsigned storagesCount):
-                         StorageProcessor(maxWaitingCount), locationNumber_(locationNumber), storagesCount_(storagesCount) {
+AbonentStorageProcessor::AbonentStorageProcessor(unsigned maxWaitingCount, unsigned locationNumber, unsigned storagesCount, StorageManager* manager):
+                         StorageProcessor(maxWaitingCount, manager), locationNumber_(locationNumber), storagesCount_(storagesCount) {
   abntlog_ = Logger::getInstance("pvss.abnt");
 }
 

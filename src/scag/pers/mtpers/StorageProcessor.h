@@ -64,9 +64,11 @@ struct InfrastructStorageConfig {
   uint32_t recordCount;
 };
 
+class StorageManager;
+
 class StorageProcessor: public ThreadedTask {
 public:
-  StorageProcessor(unsigned maxWaitingCount);
+  StorageProcessor(unsigned maxWaitingCount, StorageManager* manager);
   virtual ~StorageProcessor();
   virtual int Execute();
   virtual void stop();
@@ -84,11 +86,12 @@ protected:
   EventMonitor processMonitor_;
   Logger* logger_;
   Logger* debuglogger_;
+  StorageManager* manager_;
 };
 
 class AbonentStorageProcessor: public StorageProcessor {
 public:
-  AbonentStorageProcessor(unsigned maxWaitingCount, unsigned locationNumber, unsigned storagesCount);
+  AbonentStorageProcessor(unsigned maxWaitingCount, unsigned locationNumber, unsigned storagesCount, StorageManager* manager);
   ~AbonentStorageProcessor();
   void initElementStorage(const AbonentStorageConfig& cfg, unsigned index);
 
@@ -120,7 +123,8 @@ private:
 
 class InfrastructStorageProcessor: public StorageProcessor {
 public:
-  InfrastructStorageProcessor(unsigned maxWaitingCount):StorageProcessor(maxWaitingCount), provider_(NULL), service_(NULL), operator_(NULL) {};
+  InfrastructStorageProcessor(unsigned maxWaitingCount, StorageManager* manager):StorageProcessor(maxWaitingCount, manager),
+                              provider_(NULL), service_(NULL), operator_(NULL) {};
   ~InfrastructStorageProcessor();
   void init(const InfrastructStorageConfig& cfg);
 

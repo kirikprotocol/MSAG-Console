@@ -35,13 +35,16 @@ public:
   bool process(PersPacket* packet);
   void shutdown();
   unsigned getInfrastructNodeNumber() { return 0; }
+  void procStopped();
 
 private:
   AbonentStorageProcessor* getLocation(unsigned elementStorageNumber);
+  bool allprocessorsStopped();
 
 private:
   ThreadPool pool_;
   Mutex procMutex_;
+  uint16_t startedProc_;
   bool isStopped_;
   Logger *logger_;
   Array<AbonentStorageProcessor*> storages_;
