@@ -559,7 +559,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
               preservelastmodified="yes"
               flatten="yes">
             <fileset dir="${SMSC_DIR}/config"
-                     includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag2/smpp_routes.dtd scag/http_routes.dtd"/>
+                     includes="scag2/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag2/smpp_routes.dtd scag/http_routes.dtd"/>
         </copy>
         <copy todir="${DISTR_DIR}/services/msag/conf/rules/"
               preservelastmodified="yes"
