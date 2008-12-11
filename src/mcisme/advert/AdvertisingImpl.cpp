@@ -62,15 +62,6 @@ AdvertisingImpl::writeErrorToLog(char* where, int errCode)
 }
 
 void
-AdvertisingImpl::checkBannerRequest(BannerRequest& banReq, int async)
-{
-  smsc_log_debug(_logger,"AdvertisingImpl::checkBannerRequest() abonent = %s, serviceName = %s, transportType = %d, charSet = %d, async = %d",
-                 banReq.abonent.c_str(), banReq.serviceName.c_str(), banReq.transportType, banReq.charSet, async);
-
-  __require__(banReq.abonent.length() > 5 && banReq.abonent.length() < 21);
-}
-
-void
 AdvertisingImpl::writeToSocket(const void* dataBuf, int dataSz, const std::string& where)
 {
   smsc_log_debug(_logger,"AdvertisingImpl::writeToSocket::: try write data=[%s]", hexdmp((uint8_t*)dataBuf, dataSz).c_str());
@@ -151,8 +142,6 @@ AdvertisingImpl::rollbackBanner(uint32_t transactionId,
 uint32_t
 AdvertisingImpl::getBanner(BannerRequest& banReq, BannerResponseTrace* bannerRespTrace)
 {
-  checkBannerRequest(banReq);
-
   advertising_item curAdvItem(&banReq);
 
   util::SerializationBuffer req;

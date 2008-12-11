@@ -82,8 +82,6 @@ protected:
   void readFromSocket(char *dataBuf, int bytesToRead, const std::string& where);
   void writeToSocket(const void* buf, int bufSize, const std::string& where);
 
-  void checkBannerRequest(BannerRequest& banReq, int async = 0);
-
   uint32_t getBanner(BannerRequest& banReq, BannerResponseTrace* bannerRespTrace);
 
   int sendRequestAndGetResponse(advertising_item* advItem,
