@@ -21,8 +21,9 @@ public:
     }
     virtual ~SnmpTrapThread();
     virtual int Execute();
-    virtual void onStart() {
+    void Start() {
         stopping_ = false;
+        smsc::core::threads::Thread::Start();
     }
     void Stop() {
         if ( ! stopping_ ) {
