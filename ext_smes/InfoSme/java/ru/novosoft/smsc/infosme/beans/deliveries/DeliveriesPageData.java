@@ -41,6 +41,7 @@ public class DeliveriesPageData {
   public String oldActiveTaskSubject;
   public String name;
   public boolean transliterate;
+  public boolean transactionMode;
   public boolean retryOnFail;
   public String retryTime;
   public String endDate;
@@ -90,6 +91,7 @@ public class DeliveriesPageData {
     name = null;
     splitDeliveriesFile=false;
     transliterate = false;
+    transactionMode = false;
     retryOnFail = false;
     retryTime = null;
     endDate = null;

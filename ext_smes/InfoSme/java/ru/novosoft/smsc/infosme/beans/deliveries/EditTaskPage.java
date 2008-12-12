@@ -145,7 +145,7 @@ public class EditTaskPage extends DeliveriesPage {
 
     task.setFlash(pageData.flash);
 
-    task.setActiveWeekDays(Arrays.asList(pageData.activeWeekDays));
+    task.setActiveWeekDays(Arrays.asList(pageData.activeWeekDays));        
 
     if (!isUserAdmin(request))
       calculateRetryOnFail(task);
@@ -188,6 +188,7 @@ public class EditTaskPage extends DeliveriesPage {
     pageData.secret = task.isSecret();
     pageData.secretFlash = task.isSecretFlash();
     pageData.secretText = task.getSecretMessage();
+    pageData.transactionMode = task.isTransactionMode();
   }
 
   private void pageToTask(Task task) {
@@ -203,6 +204,7 @@ public class EditTaskPage extends DeliveriesPage {
     task.setSecret(pageData.secret);
     task.setSecretFlash(pageData.secretFlash);
     task.setSecretMessage(pageData.secretText);
+    task.setTransactionMode(pageData.transactionMode);
   }
 
 }

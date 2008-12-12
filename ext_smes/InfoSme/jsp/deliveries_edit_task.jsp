@@ -92,7 +92,7 @@
     <tr class=row<%=rowN++&1%>>
       <th><label for=retryOnFail><%= getLocString("infosme.label.retry_on_fail")%></label></th>
       <td nowrap>
-        <input class=check type=checkbox id=retryOnFail name=retryOnFail value=true <%=deliveries_bean.isRetryOnFail() ? "checked" : ""%> onClick="document.getElementById('retryPolicy').disabled = !this.checked;">
+        <input class=check type=checkbox id=retryOnFail name=retryOnFail value=true <%=deliveries_bean.isRetryOnFail() ? "checked" : ""%> onClick="retryOnFailUpdated()">
         <select id="retryPolicy" name="retryPolicy">
           <%for (Iterator iter = deliveries_bean.getRetryPolicies().iterator(); iter.hasNext();) {
             String policy = (String)iter.next();
@@ -100,9 +100,20 @@
           <option value="<%=policy%>" <%=deliveries_bean.getRetryPolicy() != null && deliveries_bean.getRetryPolicy().equals(policy) ? "SELECTED" : ""%>><%=StringEncoderDecoder.encode(policy)%></option>
           <%}%>
         </select>
-        <script>document.getElementById('retryPolicy').disabled = !document.getElementById('retryOnFail').checked;</script>
       </td>
     </tr>
+    <tr class=row<%=rowN++&1%>>
+      <th><label for="transactionMode"><%= getLocString("infosme.label.transaction_mode")%></label></th>
+      <td><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=deliveries_bean.isTransactionMode() ? "checked" : ""%>></td>
+    </tr>
+    <script>
+      function retryOnFailUpdated() {
+        document.getElementById('retryPolicy').disabled = !document.getElementById('retryOnFail').checked;
+        if (document.getElementById('retryOnFail').checked)
+          document.getElementById('transactionMode').checked=true;
+      }
+      retryOnFailUpdated();
+    </script>
 <% } %>
     <tr class=row<%=rowN++&1%>>
       <th><%= getLocString("infosme.label.message_text")%></th>

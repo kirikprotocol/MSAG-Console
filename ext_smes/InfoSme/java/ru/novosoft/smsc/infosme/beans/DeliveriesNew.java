@@ -100,11 +100,21 @@ public class DeliveriesNew extends InfoSmeBean {
     this.pageData.transliterate = transliterate;
   }
 
+  public boolean isTransactionMode() {
+    return pageData.transactionMode;
+  }
+
+  public void setTransactionMode(boolean val) {
+    System.out.println("Set TX = " + val);
+    this.pageData.transactionMode = val;
+  }
+
   public boolean isRetryOnFail() {
     return pageData.retryOnFail;
   }
 
   public void setRetryOnFail(boolean retryOnFail) {
+    System.out.println("Set Retry = " + retryOnFail);
     this.pageData.retryOnFail = retryOnFail;
   }
 
