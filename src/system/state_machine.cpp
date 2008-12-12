@@ -1552,8 +1552,17 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   SmeInfo dstSmeInfo=smsc->getSmeInfo(c.dest_proxy_index);
-
+  
 #ifdef SMSEXTRA
+  
+  SmeInfo srcSmeInfo=smsc->getSmeInfo(c.src_proxy->getSystemId());
+  
+  if(srcSmeInfo.SME_N==EXTRA_GROUPS)
+  {
+    smsc_log_debug(smsLog,"added EXTRA_GROUPS to SMSC_EXTRAFLAGS from smeN");
+    sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_GROUPS);
+  }
+  
   /*
   if((sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_NICK) &&
      (
@@ -1637,7 +1646,6 @@ StateType StateMachine::submit(Tuple& t)
 
 #ifdef SMSEXTRA
   {
-    SmeInfo srcSmeInfo=smsc->getSmeInfo(c.src_proxy->getSystemId());
     if(c.toMap && (srcSmeInfo.interfaceVersion&0x0f)==0x09 && sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS))
     {
       smsc_log_debug(smsLog,"Filling descriptor from smpp fields:%s/%s",sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str(),sms->getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str());

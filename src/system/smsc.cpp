@@ -396,6 +396,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
         si.systemType=rec->recdata.smppSme.systemType;
         si.password=rec->recdata.smppSme.password;
         si.systemId=rec->smeUid;
+        si.SME_N=rec->recdata.smppSme.smeN;
         si.timeout = rec->recdata.smppSme.timeout;
         si.wantAlias = rec->recdata.smppSme.wantAlias;
         si.forceDC = rec->recdata.smppSme.forceDC;
