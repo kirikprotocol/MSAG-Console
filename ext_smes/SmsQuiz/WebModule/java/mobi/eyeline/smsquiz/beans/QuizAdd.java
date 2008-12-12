@@ -24,6 +24,7 @@ import mobi.eyeline.smsquiz.quizes.view.QuizData;
 import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 import mobi.eyeline.smsquiz.QuizBuilder;
+import mobi.eyeline.smsquiz.DistributionHelper;
 
 /**
  * author: alkhal
@@ -37,7 +38,6 @@ public class QuizAdd extends SmsQuizBean {
   private boolean initialized = false;
   private SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
   private SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
-  private String[] activeWeekDays = new String[7];
 
   private final CategoriesTableHelper tableHelper = new CategoriesTableHelper("smsquiz.label.category", "categories", 70, Validation.NON_EMPTY, true);
 
@@ -51,14 +51,6 @@ public class QuizAdd extends SmsQuizBean {
 
   private String question;
 
-  private String timeBegin;
-
-  private String timeEnd;
-
-  private boolean txmode;
-
-  private String sourceAddress;
-
   private String destAddress;
 
   private String maxRepeat;
@@ -69,9 +61,9 @@ public class QuizAdd extends SmsQuizBean {
 
   private String defaultCategory;
 
-  private String distrDateEnd;
-
   private String file;
+
+  private DistributionHelper distributionHelper = new DistributionHelper("SmsQuiz");
 
 
   protected int init(List errors) {
@@ -89,18 +81,7 @@ public class QuizAdd extends SmsQuizBean {
       return RESULT_ERROR;
     }
     if (!initialized) {
-      timeBegin = "00:00:00";
-      timeEnd = "23:59:00";
-      txmode = false;
       maxRepeat = "3";
-      activeWeekDays[0] = "Mon";
-      activeWeekDays[1] = "Tue";
-      activeWeekDays[2] = "Wed";
-      activeWeekDays[3] = "Thu";
-      activeWeekDays[4] = "Fri";
-      activeWeekDays[5] = "Sat";
-      activeWeekDays[6] = "Sun";
-
     }
     return result;
   }
@@ -110,6 +91,7 @@ public class QuizAdd extends SmsQuizBean {
     if (result != RESULT_OK) {
       return result;
     }
+    distributionHelper.processRequest(request);
     MultipartServletRequest multi = (MultipartServletRequest) request.getAttribute("multipart.request");
     if (mbDone != null) result = save(multi);
     else if (mbCancel != null) result = RESULT_DONE;
@@ -150,9 +132,10 @@ public class QuizAdd extends SmsQuizBean {
         return warning("Invalid abonents file");
       }
 
-      for (int j = 0; j < activeWeekDays.length; j++) {
-        if (activeWeekDays[j] != null) {
-          data.addActiveDay(activeWeekDays[j]);
+      String[] days = distributionHelper.getActiveWeekDays();
+      for (int j = 0; j < days.length; j++) {
+        if (days[j] != null) {
+          data.addActiveDay(days[j]);
         }
       }
       List categories = tableHelper.getCategories();
@@ -160,7 +143,11 @@ public class QuizAdd extends SmsQuizBean {
       try{
         data.setDateBegin(dateFormat.parse(dateBegin));
         data.setDateEnd(dateFormat.parse(dateEnd));
-        data.setDistrDateEnd(dateFormat.parse(distrDateEnd));
+        if(distributionHelper.getDistrDateEnd()!=null && !distributionHelper.getDistrDateEnd().trim().equals("")) {
+          data.setDistrDateEnd(dateFormat.parse(distributionHelper.getDistrDateEnd()));
+        } else {
+          data.setDistrDateEnd(dateFormat.parse(dateEnd));
+        }
       } catch(Exception e) {
         return error(e.getMessage());
       }
@@ -169,10 +156,10 @@ public class QuizAdd extends SmsQuizBean {
       data.setMaxRepeat(maxRepeat);
       data.setQuestion(question);
       data.setName(quizName);
-      data.setSourceAddress(sourceAddress);
-      data.setTimeBegin(timeBegin);
-      data.setTimeEnd(timeEnd);
-      data.setTxmode(Boolean.toString(txmode));
+      data.setSourceAddress(distributionHelper.getSourceAddress());
+      data.setTimeBegin(distributionHelper.getTimeBegin());
+      data.setTimeEnd(distributionHelper.getTimeEnd());
+      data.setTxmode(Boolean.toString(distributionHelper.isTxmode()));
       data.setAbFile(file.getAbsolutePath());
       QuizBuilder.saveQuiz(data, quizDir + File.separator + quizId + ".xml");
     } catch (Exception e) {
@@ -210,7 +197,8 @@ public class QuizAdd extends SmsQuizBean {
       if(endDate.before(startDate)||endDate.before(now)) {
         return warning("Incorrect end date");
       }
-      if((distrDateEnd == null)||(distrDateEnd.equals(""))) {
+      String distrDateEnd = distributionHelper.getDistrDateEnd();
+      if((distrDateEnd == null)||(distrDateEnd.trim().equals(""))) {
         distrDateEnd = dateEnd;
       } else {
         Date distrDate =  dateFormat.parse(distrDateEnd);
@@ -218,14 +206,14 @@ public class QuizAdd extends SmsQuizBean {
           return warning("Incorrect distribution end date");
         }
       }
-      timeFormat.parse(timeBegin);
-      timeFormat.parse(timeEnd);
+      timeFormat.parse(distributionHelper.getTimeBegin());
+      timeFormat.parse(distributionHelper.getTimeEnd());
     } catch (ParseException e) {
       logger.warn(e);
       e.printStackTrace();
       return warning(e.getMessage());
     }
-
+    String[] activeWeekDays = distributionHelper.getActiveWeekDays();
     if ((activeWeekDays == null) || (activeWeekDays.length == 0)) {
       System.out.println("Please select one or more active days");
       return warning("Please select one or more active days");
@@ -351,35 +339,6 @@ public class QuizAdd extends SmsQuizBean {
     this.question = question;
   }
 
-  public String getTimeBegin() {
-    return timeBegin;
-  }
-
-  public void setTimeBegin(String timeBegin) {
-    this.timeBegin = timeBegin;
-  }
-
-  public String getTimeEnd() {
-    return timeEnd;
-  }
-
-  public void setTimeEnd(String timeEnd) {
-    this.timeEnd = timeEnd;
-  }
-
-  public void setTxmode(boolean txmode) {
-
-    this.txmode = txmode;
-  }
-
-  public String getSourceAddress() {
-    return sourceAddress;
-  }
-
-  public void setSourceAddress(String sourceAddress) {
-    this.sourceAddress = sourceAddress;
-  }
-
   public String getDestAddress() {
     return destAddress;
   }
@@ -397,59 +356,6 @@ public class QuizAdd extends SmsQuizBean {
 
   }
 
-
-  public String[] getActiveWeekDays() {
-    return activeWeekDays;
-  }
-
-  public void setActiveWeekDays(String[] activeWeekDays) {
-    this.activeWeekDays = activeWeekDays;
-  }
-
-  public boolean isWeekDayActive(String weekday) {
-    if (activeWeekDays != null) {
-      for (int i = 0; i < activeWeekDays.length; i++)
-        if ((activeWeekDays[i] != null) && (activeWeekDays[i].equals(weekday))) {
-          return true;
-        }
-    }
-    return false;
-  }
-
-  public String getActiveWeekDaysString() {
-    String str = "";
-    int total = activeWeekDays.length;
-    if (total > 0) {
-      int added = 0;
-      if (isWeekDayActive("Mon")) {
-        str += "Monday";
-        if (++added < total) str += ", ";
-      }
-      if (isWeekDayActive("Tue")) {
-        str += "Tuesday";
-        if (++added < total) str += ", ";
-      }
-      if (isWeekDayActive("Wed")) {
-        str += "Wednesday";
-        if (++added < total) str += ", ";
-      }
-      if (isWeekDayActive("Thu")) {
-        str += "Thursday";
-        if (++added < total) str += ", ";
-      }
-      if (isWeekDayActive("Fri")) {
-        str += "Friday";
-        if (++added < total) str += ", ";
-      }
-      if (isWeekDayActive("Sat")) {
-        str += "Saturday";
-        if (++added < total) str += ", ";
-      }
-      if (isWeekDayActive("Sun")) str += "Sunday";
-    }
-    return str;
-  }
-
   public String getDefaultCategory() {
     return defaultCategory;
   }
@@ -463,18 +369,6 @@ public class QuizAdd extends SmsQuizBean {
 
   public DynamicTableHelper getTableHelper() {
     return tableHelper;
-  }
-
-  public String getDistrDateEnd() {
-    return distrDateEnd;
-  }
-
-  public void setDistrDateEnd(String distrDateEnd) {
-    this.distrDateEnd = distrDateEnd;
-  }
-
-  public boolean isTxmode() {
-    return txmode;
   }
 
   public String getQuizName() {
@@ -491,5 +385,9 @@ public class QuizAdd extends SmsQuizBean {
 
   public void setFile(String file) {
     this.file = file;
+  }
+
+  public DistributionHelper getDistributionHelper() {
+    return distributionHelper;
   }
 }

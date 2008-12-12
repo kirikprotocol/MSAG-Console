@@ -6,6 +6,7 @@
 <%@ page import="ru.novosoft.util.jsp.MultipartDataSource"%>
 <%@ page import="java.io.*"%>
 <%@ page import="ru.novosoft.smsc.util.Functions"%>
+<%@ page import="mobi.eyeline.smsquiz.DistributionHelper"%>
 <jsp:useBean id="bean" scope="page" class="mobi.eyeline.smsquiz.beans.QuizAdd" />
 <%
 
@@ -72,53 +73,12 @@
   <td><input type="hidden" name="jsp" value="/esme_SmsQuiz/quizAdd.jsp">
   <input class=txt type=file name=file id=file value="<%=StringEncoderDecoder.encode(bean.getFile())%>"></td>
 </tr>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.sa")%></th>
-  <td><input validation="nonEmpty" class=txt name=sourceAddress value="<%=StringEncoderDecoder.encode(bean.getSourceAddress())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.startTime")%></th>
-  <td>
-    <input validation="nonEmpty" class=timeField id=activePeriodStart name=timeBegin value="<%=StringEncoderDecoder.encode(bean.getTimeBegin())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodStart, false, true);">...</button>
-  </td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.endTime")%></th>
-    <td>
-    <input validation="nonEmpty" class=timeField id=activePeriodEnd name=timeEnd value="<%=StringEncoderDecoder.encode(bean.getTimeEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodEnd, false, true);">...</button>
-  </td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.endDate")%></th>
-  <td><input class=calendarField id=distrTillDate name=distrDateEnd value="<%=StringEncoderDecoder.encode(bean.getDistrDateEnd())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(distrTillDate, false, true);">...</button></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.activeDays")%></th>
-  <td>
-  <table>
-    <col width="1%"><col width="32%">
-    <col width="1%"><col width="32%">
-    <col width="1%"><col width="32%">
-    <tr>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Mon value=Mon <%=bean.isWeekDayActive("Mon") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Mon>Monday</label></td>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Thu value=Thu <%=bean.isWeekDayActive("Thu") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Thu>Thursday</label></td>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Sat value=Sat <%=bean.isWeekDayActive("Sat") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Sat>Saturday</label></td>
-    <tr>
-    <tr>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Tue value=Tue <%=bean.isWeekDayActive("Tue") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Tue>Tuesday</label></td>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Fri value=Fri <%=bean.isWeekDayActive("Fri") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Fri>Friday</label></td>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Sun value=Sun <%=bean.isWeekDayActive("Sun") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Sun>Sunday</label></td>
-    <tr>
-    <tr>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Wed value=Wed <%=bean.isWeekDayActive("Wed") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Wed>Wednesday</label></td>
-    <tr>
-    </table>
-  </td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.txmode")%></th>
-  <td><input type=checkbox class=check id=tx_mode name=txmode <%=bean.isTxmode() ? "checked" : ""%>></td>
-</tr>
+<%{
+  DistributionHelper distributionHelper = bean.getDistributionHelper();
+  %>
+  <%@ include file="./distributionHelper.jsp"%>
+  <%
+}%>
 <tr>
   <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.replies")%></div></th>
 </tr>

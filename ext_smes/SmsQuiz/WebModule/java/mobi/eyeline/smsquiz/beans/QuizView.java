@@ -1,13 +1,17 @@
 package mobi.eyeline.smsquiz.beans;
 
 import mobi.eyeline.smsquiz.quizes.view.QuizData;
+import mobi.eyeline.smsquiz.quizes.view.QuizDataItem;
 import mobi.eyeline.smsquiz.quizes.CategoriesTableHelper;
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
 import mobi.eyeline.smsquiz.QuizBuilder;
+import mobi.eyeline.smsquiz.DistributionHelper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.io.*;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 import ru.novosoft.smsc.jsp.util.helper.Validation;
 
@@ -24,6 +28,9 @@ public class QuizView extends SmsQuizBean {
   public static final int RESULT_EDIT = SmsQuizBean.PRIVATE_RESULT + 2;
 
   private final CategoriesTableHelper tableHelper = new CategoriesTableHelper("smsquiz.label.category", "categories", 70, Validation.NON_EMPTY, true);
+
+  private SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+  private SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
 
   private static String datePattern = "dd.MM.yyyy HH:mm";
 
@@ -48,6 +55,8 @@ public class QuizView extends SmsQuizBean {
   private String reason;
 
   private boolean initialized = false;
+
+  DistributionHelper distributionHelper = new DistributionHelper("SmsQuiz");
 
   protected int init(List errors) {
     int result = super.init(errors);
@@ -81,6 +90,17 @@ public class QuizView extends SmsQuizBean {
         destAddress = quizData.getDestAddress();
         tableHelper.fillCategories(quizData.getCategories());
       }
+      String[] activeWeekDays = new String[quizData.getActiveDays().size()];
+      for(int i=0;i<activeWeekDays.length;i++) {
+        activeWeekDays[i] =((String)quizData.getActiveDays().get(i)).substring(0);
+        System.out.println("Write "+activeWeekDays[i]);
+      }
+      distributionHelper.setActiveWeekDays(activeWeekDays);
+      distributionHelper.setTimeBegin(quizData.getTimeBegin());
+      distributionHelper.setTimeEnd(quizData.getTimeEnd());
+      distributionHelper.setTxmode(quizData.getTxmode());
+      distributionHelper.setSourceAddress(quizData.getSourceAddress());
+      distributionHelper.setDistrDateEnd(quizData.getDistrDateEndStr());
     }
     return result;
   }
@@ -90,7 +110,9 @@ public class QuizView extends SmsQuizBean {
     if (result != RESULT_OK) {
       return result;
     }
-
+    if(initialized) {
+      distributionHelper.processRequest(request);
+    }
     if(mbDone != null) {
       mbDone = null;
       result = save();
@@ -103,20 +125,16 @@ public class QuizView extends SmsQuizBean {
   }
 
   public boolean isActive(){
-    if(quizData!=null) {
-        Date dateBegin = quizData.getDateBegin();
-        Date dateEnd = quizData.getDateEnd();
-        Date now = new Date();
-        return dateBegin.before(now)&&dateEnd.after(now);
+    if(status!=null) {
+        return status.equals(QuizDataItem.State.ACTIVE);
     }
     return false;
   }
 
   public boolean isFinished() {
     if(status!=null) {
-      if(status.startsWith("FINISHED")) {
-        return true;
-      }
+      return status.equals(QuizDataItem.State.FINISHED.getName())||status.equals(QuizDataItem.State.FINISHED_ERROR.getName());
+
     }
     return false;
   }
@@ -138,21 +156,65 @@ public class QuizView extends SmsQuizBean {
       quizData.setCategory(tableHelper.getCategories());
       quizData.setDestAddress(destAddress);
     }
-    QuizBuilder.saveQuiz(quizData,quizDir+File.separator+quizId +".xml");
+    try {
+      if(distributionHelper.getDistrDateEnd()!=null && !distributionHelper.getDistrDateEnd().equals("")) {
+        quizData.setDistrDateEnd(dateFormat.parse(distributionHelper.getDistrDateEnd()));
+      }
+    } catch (ParseException e) {
+      e.printStackTrace();
+      logger.error(e,e);
+      return warning(e.getMessage());
+    }
+
+    try{
+      quizData.setTimeBegin(distributionHelper.getTimeBegin());
+      quizData.setTimeEnd(distributionHelper.getTimeEnd());
+      quizData.setSourceAddress(distributionHelper.getSourceAddress());
+      quizData.setActiveDays(distributionHelper.getActiveWeekDays());
+      quizData.setTxmode(Boolean.toString(distributionHelper.isTxmode()));
+
+      QuizBuilder.saveQuiz(quizData,quizDir+File.separator+quizId +".xml");
+    }catch(Exception e) {
+      e.printStackTrace();
+    }
     return RESULT_DONE;
   }
 
   private boolean isChanged() {
+    String[] activeWeekDays = distributionHelper.getActiveWeekDays();
+    String distrDateEnd = distributionHelper.getDistrDateEnd();
+    String sa = distributionHelper.getSourceAddress();
+    String timeBegin = distributionHelper.getTimeBegin();
+    String timeEnd = distributionHelper.getTimeEnd();
+    boolean txmode = distributionHelper.isTxmode();
     if((!maxRepeat.equals(quizData.getMaxRepeat()))
         ||((defaultCategory!=null)&&(quizData.getDefaultCategory()==null))
         ||((defaultCategory==null)&&(quizData.getDefaultCategory()!=null))
         ||((defaultCategory!=null)&&(quizData.getDefaultCategory()!=null)
-            &&(!defaultCategory.equals(quizData.getDefaultCategory())))) {
+            &&(!defaultCategory.equals(quizData.getDefaultCategory())))
+        ||(!distrDateEnd.equals(quizData.getDistrDateEndStr()))||(!sa.equals(quizData.getSourceAddress()))
+        ||(!timeBegin.equals(quizData.getTimeBegin()))||(!timeEnd.equals(quizData.getTimeEnd()))
+        ||(txmode != Boolean.valueOf(quizData.getTxmode()).booleanValue())
+        ||(activeWeekDays.length != quizData.getActiveDays().size())) {
       return true;
     }
+    Iterator iter = quizData.getActiveDays().iterator();
+    while(iter.hasNext()) {
+      String day1 = (String)iter.next();
+      boolean flag = false;
+      for(int i = 0; i<activeWeekDays.length;i++) {
+        if(day1.equals(activeWeekDays[i])) {
+         flag = true; break;
+        }
+      }
+      if(!flag) {
+        return true;
+      }
+    }
+
     Collection newCat = tableHelper.getCategories();
     if(newCat==null) {
-      return false;
+      return true;
     }
     Collection oldCat = quizData.getCategories();
     if(newCat.size()!=oldCat.size()) {
@@ -186,7 +248,6 @@ public class QuizView extends SmsQuizBean {
 
 
   private int validation() {
-
     if ((!isActive())&&((tableHelper.getCategories() == null) || (tableHelper.getCategories().size() == 0))) {
       System.out.println("Please select one or more answer's categories");
       return warning("Please select one or more answer's categories");
@@ -211,6 +272,26 @@ public class QuizView extends SmsQuizBean {
         return warning("Default category must be included in answer's categories");
       }
     }
+
+    try {
+      String distrDateEnd = distributionHelper.getDistrDateEnd();
+      if ((distrDateEnd != null) && (!distrDateEnd.trim().equals(""))) {
+        Date distrDate =  dateFormat.parse(distrDateEnd);
+        if(distrDate.before(new Date())||distrDate.after(quizData.getDateEnd())||distrDate.before(quizData.getDateBegin())) {
+          return warning("Incorrect distribution end date");
+        }
+      }
+      timeFormat.parse(distributionHelper.getTimeBegin());
+      timeFormat.parse(distributionHelper.getTimeEnd());
+    } catch (ParseException e) {
+      logger.warn(e);
+      e.printStackTrace();
+      return warning(e.getMessage());
+    }
+    if(distributionHelper.getActiveWeekDays().length == 0) {
+      return warning("Select one or more active days");
+    }
+
     return RESULT_OK;
   }
 
@@ -344,5 +425,9 @@ public class QuizView extends SmsQuizBean {
 
   public CategoriesTableHelper getTableHelper() {
     return tableHelper;
+  }
+
+  public DistributionHelper getDistributionHelper() {
+    return distributionHelper;
   }
 }

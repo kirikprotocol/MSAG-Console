@@ -91,6 +91,14 @@ public class QuizData {
     this.activeDays = activeDays;
   }
 
+  public void setActiveDays(String[] activeDays) {
+    this.activeDays = new LinkedList();
+    for(int i=0; i<activeDays.length;i++) {
+      System.out.println("QuizData activeDays: "+activeDays[i]);
+      this.activeDays.add(activeDays[i]);
+    }
+  }
+
   public String getTimeBegin() {
     return timeBegin;
   }

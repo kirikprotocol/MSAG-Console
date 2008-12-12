@@ -18,6 +18,8 @@
 %>
 <%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%@ include file="/WEB-INF/inc/calendar.jsp"%>
+<%@ include file="/WEB-INF/inc/time.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 <%
@@ -103,41 +105,13 @@
 </tr>
 <tr>
   <th align="center" colspan="2"><div class=page_subtitle>Distribution</div></th>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.sa")%></th>
-  <td><%=StringEncoderDecoder.encode(quizData.getSourceAddress())%></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.startTime")%></th>
-  <td><%=StringEncoderDecoder.encode(quizData.getTimeBegin())%></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.endTime")%></th>
-  <td><%=StringEncoderDecoder.encode(quizData.getTimeEnd())%></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.endDate")%></th>
-  <td><%=StringEncoderDecoder.encode(quizData.getDistrDateEndStr())%></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.activeDays")%></th>
-  <td><%
-    if(quizData.getActiveDays()!=null) {
-      Iterator iter = quizData.getActiveDays().iterator();
-
-      while(iter.hasNext()) {
-        %><%=StringEncoderDecoder.encode((String)iter.next())%><%
-        if(iter.hasNext()) {
-        %><%=","%><%
-        }
-      }
-    }
-  %></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.txmode")%></th>
-  <td><%=StringEncoderDecoder.encode(quizData.getTxmode())%></td>
-</tr>
+<tr>
+<%{
+  DistributionHelper distributionHelper = bean.getDistributionHelper();
+  %>
+  <%@ include file="./distributionHelper.jsp"%>
+  <%
+}%>
 <tr>
   <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.replies")%></div></th>
 </tr>
