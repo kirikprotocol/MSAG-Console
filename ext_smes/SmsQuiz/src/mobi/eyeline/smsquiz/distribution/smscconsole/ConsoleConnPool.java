@@ -61,10 +61,6 @@ public class ConsoleConnPool {
 
   public ConsoleConnection getConnection() throws ConsoleException {
     try{
-      if(shutdowned) {
-        logger.error("ConnectionPool was shutdowned");
-        throw new ConsoleException("ConnectionPool was shutdowned");
-      }
       lock.lock();
       if(shutdowned) {
         logger.error("ConnectionPool was shutdowned");

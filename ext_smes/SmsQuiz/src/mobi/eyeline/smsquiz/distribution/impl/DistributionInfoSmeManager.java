@@ -44,7 +44,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
   private String host;
   private int port;
   private long consoleTimeout;
-  private long closerPeriod;
+  private int countConn;
 
   private String workDir;
 
@@ -70,8 +70,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
       port = config.getInt("smsc_console_port");
       login = config.getString("smsc_console_login");
       password = config.getString("smsc_console_password");
-      consoleTimeout = config.getLong("smsc_console_connect_timeout", 60) * 1000;    //todo
-      closerPeriod = config.getLong("smsc_console_closer_period", 60);               //todo
+      consoleTimeout = config.getLong("smsc_console_connect_timeout", 120) * 1000;
+      countConn = config.getInt("smsc_console_connections", 10);
 
       this.workDir = workDir;
 
@@ -84,7 +84,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
         file.mkdirs();
       }
       ConsoleConnPoolFactory.init(login, password, host, port);
-      consoleConnPool = ConsoleConnPoolFactory.getConnectionPool(10, 120000);
+      consoleConnPool = ConsoleConnPoolFactory.getConnectionPool(countConn, consoleTimeout);
     } catch (ConfigException e) {
       logger.error("Unable to init StatsFilesCache", e);
       throw new DistributionException("Unable to init StatsFilesCache", e);
@@ -409,8 +409,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
     return consoleTimeout;
   }
 
-  Long getCloserPeriod() {
-    return closerPeriod;
+  Integer getCountConn() {
+    return countConn;
   }
 
   String getStatsDir() {

@@ -33,8 +33,8 @@ public class DistributionManagerMBean extends AbstractDynamicMBean {
         "java.lang.String", "Success code of communication with console", true, false, false));
     attributes.add(new MBeanAttributeInfo("ConsoleTimeout",
         "java.lang.Long", "Timeout between closing console", true, false, false));
-    attributes.add(new MBeanAttributeInfo("ConsoleCloserPeriod",
-        "java.lang.Long", "Period of ConsoleCloser's execution ", true, false, false));
+    attributes.add(new MBeanAttributeInfo("MaxConsoleConnections",
+        "java.lang.Integer", "MaxConsoleConnections", true, false, false));
     attributes.add(new MBeanAttributeInfo("DateInFilePattern",
         "java.lang.String", "pattern of date in stats file ", true, false, false));
     attributes.add(new MBeanAttributeInfo("SuccDeliveryStatus",
@@ -60,8 +60,8 @@ public class DistributionManagerMBean extends AbstractDynamicMBean {
       return manager.getCodeok();
     } else if (attribute.equals("ConsoleTimeout")) {
       return manager.getConsoleTimeout();
-    } else if (attribute.equals("ConsoleCloserPeriod")) {
-      return manager.getCloserPeriod();
+    } else if (attribute.equals("MaxConsoleConnections")) {
+      return manager.getCountConn();
     } else if (attribute.equals("DateInFilePattern")) {
       return manager.getDateInFilePattern();
     } else if (attribute.equals("SuccDeliveryStatus")) {

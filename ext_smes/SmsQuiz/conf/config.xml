@@ -19,7 +19,7 @@
     <param name="smsc_console_port" type="string">39826</param>
     <param name="smsc_console_login" type="string">admin</param>
     <param name="smsc_console_password" type="string">password</param>
-    <param name="smsc_console_closer_period" type="int">60</param>
+    <param name="smsc_console_connections" type="int">10</param>
     <param name="smsc_console_connect_timeout" type="int">60</param>
   </section>
 
