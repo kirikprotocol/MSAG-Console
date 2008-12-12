@@ -21,6 +21,8 @@ public interface DistributionManager {
 
   public void resend(String msisdn, String distrId) throws DistributionException;
 
+  public void alterDistribution(final Distribution distr, final String taskId) throws DistributionException;
+
   public AbstractDynamicMBean getMonitor();
 
   public void shutdown();

@@ -163,6 +163,8 @@ public class Quiz {
       return;
     try {
       lock.lock();
+      if (exported)
+        return;
       exported = true;
       if (logger.isInfoEnabled()) {
         logger.info("Export statistics begining for: " + fileName);
@@ -583,26 +585,91 @@ public class Quiz {
   }
 
   public void updateQuiz(QuizData data) throws QuizException {
-    if (data == null) {
-      logger.error("Some arguments are null");
-      throw new IllegalArgumentException("Some arguments are null");
-    }
-    switch (statusFile.getQuizStatus()) {
-      case NEW:
-        if (quizData.getQuizName() == null) {       // quizData didn't init yet
-          quizData = data;
-          setActualStartDate(quizData.getDateBegin());
-          break;
+    try{
+      lock.lock();
+      if (data == null) {
+        logger.error("Some arguments are null");
+        throw new IllegalArgumentException("Some arguments are null");
+      }
+
+      boolean alertDistribution = false;
+
+      switch (statusFile.getQuizStatus()) {
+        case NEW:
+          if (quizData.getQuizName() == null) {       // quizData didn't init yet
+            quizData = data;
+            setActualStartDate(quizData.getDateBegin());
+            break;
+          }
+        case GENERATION:
+        case AWAIT:
+          setReplyPatterns(data.getPatterns());
+          setDestAddress(data.getDestAddress());
+        case ACTIVE:
+          setMaxRepeat(data.getMaxRepeat());
+          setDefaultCategory(data.getDefaultCategory());
+
+          if(!data.getQuestion().equals(getQuestion())) {        //distribution properties
+            setQuestion(data.getQuestion());
+            alertDistribution = true;
+          }
+          if(!data.getDistrDateEnd().equals(getDistrDateEnd())) {
+            setDistrDateEnd(data.getDistrDateEnd());
+            alertDistribution = true;
+          }
+          if(!data.getSourceAddress().equals(getSourceAddress())) {
+            setSourceAddress(data.getSourceAddress());
+            alertDistribution = true;
+          }
+          if(data.getTimeBegin().getTimeInMillis() != getTimeBegin().getTimeInMillis()) {
+            setTimeBegin(data.getTimeBegin());
+            alertDistribution = true;
+          }
+          if(data.getTimeEnd().getTimeInMillis() != getTimeEnd().getTimeInMillis()) {
+            setTimeEnd(data.getTimeEnd());
+            alertDistribution = true;
+          }
+          if(data.isTxmode() != isTxmode()) {
+            setTxmode(data.isTxmode());
+            alertDistribution = true;
+          }
+          if(data.getDays().size()!=getDays().size()) {
+            quizData.setDays(data.getDays());
+            alertDistribution = true;
+          } else {
+            for(Distribution.WeekDays day1: data.getDays()) {
+              boolean flag = false;
+              for(Distribution.WeekDays day2: getDays()) {
+                if(day1 == day2) {
+                  flag = true; break;
+                }
+              }
+              if(!flag) {
+                alertDistribution = true;
+                quizData.setDays(data.getDays());
+                break;
+              }
+            }
+          }
+      }
+      quizCollector.alert();
+      if(alertDistribution) {
+        if(getDistrId() == null) {
+          logger.error("Distribution doesn't exist for quiz: "+this+ "\n It can't be alerted");
+          throw new QuizException("Distribution doesn't exist for quiz: "+this+ "\n It can't be alerted");
         }
-      case GENERATION:
-      case AWAIT:
-        setReplyPatterns(data.getPatterns());
-        setDestAddress(data.getDestAddress());
-      case ACTIVE:
-        setMaxRepeat(data.getMaxRepeat());
-        setDefaultCategory(data.getDefaultCategory());
+        try{
+          dm.alterDistribution(buildDistribution(), getDistrId());
+        } catch (DistributionException e) {
+          throw new QuizException(e);
+        }
+      }
+    }catch (Exception e) {
+      logger.error(e,e);
+      throw new QuizException(e);
+    } finally {
+      lock.unlock();
     }
-    quizCollector.alert();
   }
 
   public QuizData getQuizData() throws QuizException {

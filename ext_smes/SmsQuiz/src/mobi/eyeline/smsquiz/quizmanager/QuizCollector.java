@@ -189,6 +189,8 @@ public class QuizCollector {
               if (logger.isInfoEnabled())
                 logger.info("New quiz was found, create distr for it: " + quiz);
               createDistribution(quiz);
+            } else {
+              quiz.setQuizStatus(Quiz.Status.AWAIT);              //todo before: deleting from map, then: add to map and...
             }
           }
         } else {

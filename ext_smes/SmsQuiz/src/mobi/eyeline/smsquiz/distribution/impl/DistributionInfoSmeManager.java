@@ -51,6 +51,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
   private String codeOk;
   private final static String STATUS_COMMAND = "infosme task status";
   private final static String CREATE_COMMAND = "infosme task create";
+  private final static String ALTER_COMMAND = "infosme task alter";
   private final static String RESEND_COMMAND = "infosme task resend";
   private final static String REMOVE_COMMAND = "infosme task remove";
 
@@ -175,6 +176,47 @@ public class DistributionInfoSmeManager implements DistributionManager {
       }
       logger.error("Wrong response: " + response);
       throw new DistributionException("Wrong response: " + response);
+    } catch (Exception e) {
+      logger.error("Unable to create distribution", e);
+      throw new DistributionException("Unable to create distribution", e);
+    } finally {
+      if(conn!=null)
+        conn.close();
+    }
+  }
+
+  public void alterDistribution(final Distribution distr, final String taskId) throws DistributionException{
+    logger.info("Alter distribution...");
+    if ((distr == null) || (distr.getDateBegin() == null)
+        || (distr.getQuestion() == null) || (distr.getDateEnd() == null) || (distr.getDays() == null)
+        || (distr.getTimeBegin() == null) || (distr.getTimeEnd() == null)) {
+      logger.error("Some fields of argument are empty");
+      throw new DistributionException("Some fields of argument are empty", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
+    }
+    ConsoleResponse response;
+    ConsoleConnection conn = null;
+    try {
+      StringBuilder command = new StringBuilder();
+      command.append(ALTER_COMMAND);
+      command.append(getFormatProp(taskId));
+      command.append(getFormatProp(distr.getTaskName()));
+      command.append(getFormatProp(dateInCommand.format(distr.getDateBegin())));
+      command.append(getFormatProp(dateInCommand.format(distr.getDateEnd())));
+      command.append(getFormatProp(formatCal(distr.getTimeBegin())));
+      command.append(getFormatProp(formatCal(distr.getTimeEnd())));
+      command.append(getFormatProp(distr.getDays(",")));
+      command.append(getFormatProp(Boolean.toString(distr.isTxmode())));
+      command.append(getFormatProp(distr.getSourceAddress()));
+
+      if (logger.isInfoEnabled()) {
+        logger.info("Sending console command: " + command.toString());
+      }
+      conn = consoleConnPool.getConnection();
+      response = conn.sendCommand(command.toString());
+      if ((response == null) || (!response.isSuccess()) || (!response.getStatus().trim().equals(codeOk))) {
+        logger.error("Wrong response: " + response);
+        throw new DistributionException("Wrong response: " + response);
+      }
     } catch (Exception e) {
       logger.error("Unable to create distribution", e);
       throw new DistributionException("Unable to create distribution", e);
