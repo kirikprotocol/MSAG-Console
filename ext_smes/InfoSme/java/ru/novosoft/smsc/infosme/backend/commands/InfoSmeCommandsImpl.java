@@ -7,11 +7,9 @@ import ru.novosoft.smsc.admin.console.commands.infosme.InfoSmeCommands;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.Task;
-import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataItem;
 import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
 
@@ -100,7 +98,6 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         return;
       }
-//      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
 
       Task t = new Task(taskId);
       t.removeFromConfig(context.getConfig());
@@ -119,14 +116,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
   public void createDistribution(CommandContext ctx, Distribution d) {
     try {
       try{
-        validateNull(d.getDateBegin(),"dateBegin");
-        validateNull(d.getDateEnd(),"dateEnd");
-        validateNull(d.getTimeBegin(),"timeBegin");
-        validateNull(d.getTimeEnd(),"timeEnd");
-        validateNull(d.getDays(),"days");
-        validateNull(d.isTxmode(),"txmode");
-        validateNull(d.getAddress(),"address");
-        validateNull(d.getTaskName(),"taskName");
+        validateDistribution(d);
       } catch(Exception e) {
         ctx.setMessage("Wrong reguest command, some parameters type is unsupported: "+e.getMessage());
         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
@@ -148,9 +138,6 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
         return;
       }
 
-//      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
-
-
       TaskBuilder taskBuilder = new TaskBuilder(context, d);
       String taskId;
       if((taskId = taskBuilder.getTaskId())==null) {
@@ -161,8 +148,46 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       ctx.setStatus(CommandContext.CMD_OK);
     } catch (Exception e) {
       e.printStackTrace();
+      log.error(e,e);
       ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
     }
+  }
+
+  public void alterDistribution(CommandContext ctx, Distribution d, String taskId) {
+    try{
+      validateDistribution(d);
+      validateNull(taskId, "TaskId");
+    } catch(Exception e) {
+      ctx.setMessage("Wrong reguest command, some parameters type is unsupported: "+e.getMessage());
+      ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+      return;
+    }
+    try{
+      final SMSCAppContext appContext = ctx.getOwner().getContext();
+      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
+      if (!context.getInfoSme().getInfo().isOnline()) {
+        ctx.setMessage("InfoSme is not started");
+        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        return;
+      }
+      final Config config = context.getConfig();
+      Task task = new Task(taskId);
+      if(!task.isContainsInConfig(config)) {
+        ctx.setMessage("Task doesn't exist in InfoSme with id: " + taskId);
+        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        return;
+      }
+      TaskBuilder.resetTask(task, false);
+      TaskBuilder.copyDistrToTask(task, d);
+      task.removeFromConfig(config);
+      task.storeToConfig(config);
+      config.save();
+    } catch (Exception e) {
+      e.printStackTrace();
+      log.error(e,e);
+      ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+    }
+
   }
 
   public void getStatus(CommandContext ctx, String taskId) {
@@ -193,9 +218,21 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
     }
   }
 
-  private void validateNull(Object obj, String name) throws Exception{
-    if((obj==null)||(obj.toString().equals(""))) {
-      throw new Exception("Param empty: "+name);
+  private void validateDistribution(Distribution d) {
+    validateNull(d,"Distribution");
+    validateNull(d.getDateBegin(),"dateBegin");
+    validateNull(d.getDateEnd(),"dateEnd");
+    validateNull(d.getTimeBegin(),"timeBegin");
+    validateNull(d.getTimeEnd(),"timeEnd");
+    validateNull(d.getDays(),"days");
+    validateNull(d.isTxmode(),"txmode");
+    validateNull(d.getAddress(),"address");
+    validateNull(d.getTaskName(),"taskName");
+  }
+
+  private void validateNull(Object obj, String name){
+    if(obj==null) {
+      throw new IllegalArgumentException("Param empty: "+name);
     }
   }
 

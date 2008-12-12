@@ -2,6 +2,7 @@ package mobi.eyeline.smsquiz.beans;
 
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
@@ -180,7 +181,7 @@ public class Replies extends SmsQuizBean {
     try {
       quizMap.clear();
       QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
-      QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
+      QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
       for (int i = 0; i < quizesList.size(); i++) {
         DataItem item = quizesList.get(i);
         String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);

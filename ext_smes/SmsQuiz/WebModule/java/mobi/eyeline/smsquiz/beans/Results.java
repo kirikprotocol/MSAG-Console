@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
@@ -85,7 +86,7 @@ public class Results extends SmsQuizBean {
 
   private void makeQuizMap(String quizDir, String workDir) {
     QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
-    QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
+    QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
     quizesMap.clear();
     for (int i = 0; i < quizesList.size(); i++) {
       DataItem item = quizesList.get(i);

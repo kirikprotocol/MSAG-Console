@@ -92,7 +92,7 @@ public class QuizesDataSource extends AbstractDataSource {
         String quizId = file.getName().substring(0, file.getName().indexOf("."));
         QuizData quizData = QuizBuilder.parseAll(file.getAbsolutePath());
         state =  getStatus(quizId);
-        add(new QuizDataItem(quizData, quizId, state));
+        add(new QuizDataItem(quizData, quizId, QuizDataItem.State.getStateByName(state)));
       }
     } catch (Exception e) {
       logger.error(e);

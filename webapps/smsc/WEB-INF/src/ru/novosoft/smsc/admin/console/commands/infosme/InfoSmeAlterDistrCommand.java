@@ -1,29 +1,24 @@
 package ru.novosoft.smsc.admin.console.commands.infosme;
-
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 
-import java.util.*;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
+import java.util.*;
 
 /**
- *
- * User: alkhal
- * Date: 22.10.2008
- *
+ * author: alkhal
+ * Date: Dec 12, 2008
  */
+public class InfoSmeAlterDistrCommand extends CommandClass {
 
-public class InfoSmeCreateDistrCommand extends CommandClass {
-
+  private String taskId;
 
   private SimpleDateFormat dateFormat;
 
   private String timeFormatDelim;
 
   private String sourceAddress;
-
-  private String file;
 
   private String dateBeginStr;
 
@@ -40,21 +35,23 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
   private String txmode;
 
   private String taskName;
-    // infosme task create "/home/alkhal/file.txt" "task1" "10.08.2010 10:56" "10.08.2010 12:56" "10:45" "10:57" "Mon,Tue" "rx" "144"
 
-  public InfoSmeCreateDistrCommand() {
+  public InfoSmeAlterDistrCommand() {
     super();
     dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     timeFormatDelim = ":";
   }
 
+  //infosme task alter "1252" "task1" "10.08.2010 10:56" "10.08.2010 12:56" "10:45" "10:57" "Mon,Tue" "rx" "144"
+
   public void process(CommandContext ctx) {
     try {
+
       Distribution distribution = buildDistribution();
 
       final InfoSmeCommands cmd = (InfoSmeCommands)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeCommandsImpl").newInstance();
 
-      cmd.createDistribution(ctx, distribution);
+      cmd.alterDistribution(ctx, distribution, taskId);
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
       ctx.setMessage("Can't find module InfoSme");
@@ -71,10 +68,10 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
       ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
       ctx.setMessage(e.getMessage());
     }
-
   }
 
-  private Distribution buildDistribution() throws ParseException{
+
+  private Distribution buildDistribution() throws ParseException {
     Date dateBegin = dateFormat.parse(dateBeginStr);
     Date dateEnd = dateFormat.parse(dateEndStr);
     Calendar timeBegin = buildTime(timeBeginStr);
@@ -87,19 +84,16 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
     distribution.setDateBegin(dateBegin);
     distribution.setDateEnd(dateEnd);
     distribution.setDays(days);
-    distribution.setFile(file);
     distribution.setTaskName(taskName);
     distribution.setTimeBegin(timeBegin);
     distribution.setTimeEnd(timeEnd);
     distribution.setTxmode(bolMod);
+    distribution.setFile("");
     return distribution;
   }
 
-  public String getId() {
-    return "INFOSME_CREATE_DISTR";
-  }
 
-  private Set buildDays() throws ParseException, NoSuchElementException{
+  private Set buildDays() throws ParseException, NoSuchElementException {
     Set days = new HashSet();
     StringTokenizer tokenizer = new StringTokenizer(dayStr,",");
     while(tokenizer.hasMoreTokens()){
@@ -136,8 +130,6 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
     cal.set(Calendar.MINUTE,Integer.parseInt(token));
     return cal;
   }
-
-
 
   public void setTxmode(String txmode) {
     this.txmode = txmode;
@@ -196,19 +188,22 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
     this.dayStr = dayStr;
   }
 
-  public String getFile() {
-    return file;
-  }
-
-  public void setFile(String file) {
-    this.file = file;
-  }
-
   public String getTaskName() {
     return taskName;
   }
 
   public void setTaskName(String taskName) {
     this.taskName = taskName;
+  }
+  public String getId() {
+    return "INFOSME_ALTER_DISTR";
+  }
+
+  public String getTaskId() {
+    return taskId;
+  }
+
+  public void setTaskId(String taskId) {
+    this.taskId = taskId;
   }
 }

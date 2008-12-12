@@ -17,4 +17,6 @@ public interface InfoSmeCommands {
   public void resendMessage(CommandContext ctx, String msisdn, String taskId);
 
   public void removeTask(CommandContext ctx, String taskId);
+  
+  public void alterDistribution(CommandContext ctx, Distribution d, String taskId);
 }

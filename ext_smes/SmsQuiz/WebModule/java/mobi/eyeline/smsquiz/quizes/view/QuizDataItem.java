@@ -10,10 +10,7 @@ import java.util.*;
  */
 public class QuizDataItem extends AbstractDataItem {
 
-  public QuizDataItem() {
-  }
-
-  public QuizDataItem(QuizData d, String quizId, String state) {
+  public QuizDataItem(QuizData d, String quizId, State state) {
     if((d!=null)&&(quizId!=null)&&(state!=null)) {
       setAbFile(d.getAbFile());
       setActiveDays(d.getActiveDays());
@@ -46,7 +43,7 @@ public class QuizDataItem extends AbstractDataItem {
     values.put(QuizesDataSource.DATE_BEGIN, dateBegin);
   }
 
-  public void setState(String state) {
+  public void setState(State state) {
     values.put(QuizesDataSource.STATE, state);
   }
 
@@ -106,4 +103,62 @@ public class QuizDataItem extends AbstractDataItem {
     values.put(QuizesDataSource.DISTR_DATE_END, distrDateEnd);
   }
 
+
+
+  public static class State {
+
+    private String name;
+
+    public static final State NEW = new State("NEW");
+    public static final State GENERATION = new State("GENERATION");
+    public static final State AWAIT = new State("AWAIT");
+    public static final State ACTIVE = new State("ACTIVE");
+    public static final State FINISHED = new State("FINISHED");
+    public static final State FINISHED_ERROR = new State("FINISHED_ERROR");
+    public static final State EXPORTING = new State("EXPORTING");
+
+    private State(String name) {
+      this.name = name;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public static State getStateByName(String name) {
+      if(name.equalsIgnoreCase(NEW.getName())) {
+        return NEW;
+      }
+      if(name.equalsIgnoreCase(GENERATION.getName())) {
+        return GENERATION;
+      }
+      if(name.equalsIgnoreCase(AWAIT.getName())) {
+        return AWAIT;
+      }
+      if(name.equalsIgnoreCase(ACTIVE.getName())) {
+        return ACTIVE;
+      }
+      if(name.equalsIgnoreCase(FINISHED_ERROR.getName())) {
+        return FINISHED_ERROR;
+      }
+      if(name.equalsIgnoreCase(FINISHED.getName())) {
+        return FINISHED;
+      }
+      if(name.equalsIgnoreCase(EXPORTING.getName())) {
+        return FINISHED;
+      }
+      return null;
+    }
+    public static List getStateStringList() {
+      LinkedList list = new LinkedList();
+      list.add(NEW.getName());
+      list.add(GENERATION.getName());
+      list.add(AWAIT.getName());
+      list.add(ACTIVE.getName());
+      list.add(FINISHED.getName());
+      list.add(FINISHED_ERROR.getName());
+      list.add(EXPORTING.getName());
+      return list;
+    }
+  }
 }

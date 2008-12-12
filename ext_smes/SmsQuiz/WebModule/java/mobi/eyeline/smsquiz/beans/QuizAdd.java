@@ -4,6 +4,7 @@ import ru.novosoft.smsc.jsp.util.helper.Validation;
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
 import ru.novosoft.util.jsp.MultipartServletRequest;
 import ru.novosoft.util.jsp.MultipartDataSource;
 
@@ -265,7 +266,7 @@ public class QuizAdd extends SmsQuizBean {
 
   private int validateQuiz() {
     QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
-    QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
+    QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
     for (int i = 0; i < quizesList.size(); i++) {
       DataItem item = quizesList.get(i);
       String da = (String)item.getValue(QuizesDataSource.DA);

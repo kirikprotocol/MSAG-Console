@@ -5,6 +5,7 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.infosme.backend.tables.messages.*;
@@ -124,7 +125,7 @@ public class Distribution extends SmsQuizBean {
   private void initQuizes() {
     try {
       QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
-      QueryResultSet quizesList = ds.query(new QuizQuery(1000, QuizesDataSource.QUIZ_NAME, 0));
+      QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
       quizMap.clear();
       for (int i = 0; i < quizesList.size(); i++) {
         DataItem item = quizesList.get(i);

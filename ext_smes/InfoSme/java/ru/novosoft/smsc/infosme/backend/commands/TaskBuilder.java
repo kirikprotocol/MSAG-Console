@@ -84,10 +84,10 @@ public class TaskBuilder extends Thread {
     System.out.println("Task builder started");
     final String fileName = new File(file).getName();
 
-    String taskName = (distr==null) ? fileName : distr.getTaskName();
-    System.out.println("Task name=" + taskName);
+//    String taskName = (distr==null) ? fileName : distr.getTaskName();
+//    System.out.println("Task name=" + taskName);
 //    task.setId(taskName);
-    task.setName(taskName);
+//    task.setName(taskName);
 
     System.out.println("Copy file: " + file);
 
@@ -110,26 +110,9 @@ public class TaskBuilder extends Thread {
 
       task.setMessagesHaveLoaded(false);
       if(distr !=null) {
-        Set days = distr.getDays();
-        List activeDays = new LinkedList();
-        if((days!=null)||(days.size()>0)) {
-          Iterator iter = days.iterator();
-          while(iter.hasNext()) {
-            activeDays.add(Task.WEEK_DAYS[((Integer)iter.next()).intValue()]);
-          }
-        } else {
-          throw new Exception("List of weeks days is empty");
-        }
-        task.setActiveWeekDays(activeDays);
-        task.setActiveWeekDaysSet(activeDays);
-
-        task.setStartDate(distr.getDateBegin());
-        task.setEndDate(distr.getDateEnd());
-        task.setActivePeriodStart(distr.getTimeBegin().getTime());
-        task.setActivePeriodEnd(distr.getTimeEnd().getTime());
-        task.setAddress(distr.getAddress());
-        task.setTransactionMode(distr.isTxmode().booleanValue());
+       copyDistrToTask(task, distr);
       } else {
+        task.setName(fileName);
         task.setStartDate(new Date());
       }
       is = new InputStreamReader(new FileInputStream(processedFile), Functions.getLocaleEncoding());
@@ -252,7 +235,36 @@ public class TaskBuilder extends Thread {
     return list;
   }
 
-  public void resetTask(Task task, boolean admin) {
+  public static void copyDistrToTask(Task task, Distribution distr){
+    if(task == null || distr == null) {
+      throw new IllegalArgumentException("Some arguments are null");
+    }
+    task.setName(distr.getTaskName());
+    Set days = distr.getDays();
+    List activeDays = new LinkedList();
+    if((days!=null)||(days.size()>0)) {
+      Iterator iter = days.iterator();
+      while(iter.hasNext()) {
+        activeDays.add(Task.WEEK_DAYS[((Integer)iter.next()).intValue()]);
+      }
+    } else {
+      throw new IllegalArgumentException("List of weeks days is empty");
+    }
+    task.setActiveWeekDays(activeDays);
+    task.setActiveWeekDaysSet(activeDays);
+
+    task.setStartDate(distr.getDateBegin());
+    task.setEndDate(distr.getDateEnd());
+    task.setActivePeriodStart(distr.getTimeBegin().getTime());
+    task.setActivePeriodEnd(distr.getTimeEnd().getTime());
+    task.setAddress(distr.getAddress());
+    task.setTransactionMode(distr.isTxmode().booleanValue());
+  }
+
+  public static void resetTask(Task task, boolean admin) {
+    if(task == null) {
+      throw new IllegalArgumentException("Some arguments are null");
+    }
     task.setDelivery(true);
     task.setProvider(Task.INFOSME_EXT_PROVIDER);
     task.setPriority(10);

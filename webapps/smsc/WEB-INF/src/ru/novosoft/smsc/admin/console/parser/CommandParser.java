@@ -3377,6 +3377,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=infosmeremovetask();
 			break;
 		}
+		case ACT_ALTER:
+		{
+			match(ACT_ALTER);
+			cmd=infosmealtertask();
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -6168,6 +6174,28 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		cmd.setTaskId(getnameid("task id"));
+		
+		return cmd;
+	}
+	
+	public final InfoSmeAlterDistrCommand  infosmealtertask() throws RecognitionException, TokenStreamException {
+		InfoSmeAlterDistrCommand cmd;
+		
+		
+		cmd = new InfoSmeAlterDistrCommand();
+		
+		
+		
+		cmd = new InfoSmeAlterDistrCommand();
+		cmd.setTaskId(getnameid("taskId"));
+		cmd.setTaskName(getnameid("task name"));
+		cmd.setDateBeginStr(getnameid("date begin"));
+		cmd.setDateEndStr(getnameid("date end"));
+		cmd.setTimeBeginStr(getnameid("time begin"));
+		cmd.setTimeEndStr(getnameid("time end"));
+		cmd.setDayStr(getnameid("week days"));
+		cmd.setTxmode(getnameid("trans mode"));
+		cmd.setSourceAddress(getnameid("address"));
 		
 		return cmd;
 	}

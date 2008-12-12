@@ -10,6 +10,7 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.DataSource;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
@@ -18,8 +19,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.text.SimpleDateFormat;
 
-import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
-import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 
 /**
  * author: alkhal
@@ -40,6 +39,8 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
   private int totalSize = 0;
 
   private String sortOrder = "";
+
+  private Filter filter;
 
 
   public QuizesStaticTableHelper(String uid) {
@@ -72,7 +73,7 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
   protected void fillTable(int start, int size) throws TableHelperException {
     try {
       buildSortOrder();
-      final QueryResultSet quizesList = ds.query(new QuizQuery(size, sortOrder, start));
+      final QueryResultSet quizesList = ds.query(new QuizQuery(size, filter, sortOrder, start));
 
       for (int i = 0; i < quizesList.size(); i++) {
         final DataItem item = quizesList.get(i);
@@ -88,7 +89,7 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
         row.addCell(dateEndColumn, new StringCell(quizId,
             convertDateToString((Date) item.getValue(QuizesDataSource.DATE_END)), false));
         row.addCell(stateColumn, new StringCell(quizId,
-            (String) item.getValue(QuizesDataSource.STATE), false));
+            ((QuizDataItem.State)item.getValue(QuizesDataSource.STATE)).getName(), false));
       }
       totalSize = quizesList.getTotalSize();
 
@@ -128,4 +129,11 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
     this.ds = ds;
   }
 
+  public Filter getFilter() {
+    return filter;
+  }
+
+  public void setFilter(Filter filter) {
+    this.filter = filter;
+  }
 }

@@ -1095,7 +1095,24 @@ infosmedistr returns [Command cmd] {
    | OPT_STATUS cmd = infosmestatusdistr
    | OPT_RESEND cmd = infosmeresendmess
    | OPT_REMOVE cmd = infosmeremovetask
+   | ACT_ALTER cmd =  infosmealtertask
    ;
+
+infosmealtertask returns [InfoSmeAlterDistrCommand cmd] {
+      cmd = new InfoSmeAlterDistrCommand();
+} : {
+      cmd = new InfoSmeAlterDistrCommand();
+      cmd.setTaskId(getnameid("taskId"));
+      cmd.setTaskName(getnameid("task name"));
+      cmd.setDateBeginStr(getnameid("date begin"));
+      cmd.setDateEndStr(getnameid("date end"));
+      cmd.setTimeBeginStr(getnameid("time begin"));
+      cmd.setTimeEndStr(getnameid("time end"));
+      cmd.setDayStr(getnameid("week days"));
+      cmd.setTxmode(getnameid("trans mode"));
+      cmd.setSourceAddress(getnameid("address"));
+      }
+  ;
 
 infosmecreatedistr returns [InfoSmeCreateDistrCommand cmd] {
       cmd = new InfoSmeCreateDistrCommand();

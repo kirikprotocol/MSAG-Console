@@ -9,9 +9,12 @@ import java.util.Iterator;
 import java.util.Date;
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizesStaticTableHelper;
+import mobi.eyeline.smsquiz.quizes.view.QuizFilter;
+import mobi.eyeline.smsquiz.quizes.view.QuizDataItem;
 
 /**
  * author: alkhal
@@ -28,13 +31,27 @@ public class QuizesList extends SmsQuizBean {
 
   private QuizesStaticTableHelper tableHelper = new QuizesStaticTableHelper("quizesTable");
 
+  private QuizFilter filter = new QuizFilter();
+
   private String selectedQuizId;
 
   private String quizDir;
 
   private String arcDir;
 
-  private SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
+  private  static final SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
+
+  private static final SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+
+  private String startDate;
+
+  private String tillDate;
+
+  private String prefix;
+
+  private String state;
+
+  private List stateStringList;
 
   protected int init(List errors) {
     int result = super.init(errors);
@@ -42,12 +59,26 @@ public class QuizesList extends SmsQuizBean {
       return result;
 
     try {
+      stateStringList = QuizDataItem.State.getStateStringList();
       int pageSize = getSmsQuizContext().getQuizesPageSize();
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
       String dirWork = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
       arcDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_archive");
       tableHelper.setPageSize(pageSize);
       tableHelper.setDataSource(new QuizesDataSource(quizDir, dirWork));
+      tableHelper.setFilter(filter);
+      if(prefix!=null&&!prefix.trim().equals("")) {
+        filter.setPrefix(prefix);
+      }
+      if(startDate!=null && !startDate.trim().equals("")) {
+        filter.setStartDate(convertStringToDate(startDate));
+      }
+      if(tillDate!=null && !tillDate.trim().equals("")) {
+        filter.setTillDate(convertStringToDate(tillDate));
+      }
+      if(state!=null && !state.trim().equals("")) {
+        filter.setState(state);
+      }
     } catch (Exception e) {
       logger.error(e);
       e.printStackTrace();
@@ -175,4 +206,56 @@ public class QuizesList extends SmsQuizBean {
     return false;
   }
 
+  public String getStartDate() {
+    return (startDate == null) ? "" : startDate;
+  }
+
+  public void setStartDate(String startDate) {
+    this.startDate = startDate;
+  }
+
+  public String getTillDate() {
+    return (tillDate == null) ? "" : tillDate;
+  }
+
+  public void setTillDate(String tillDate) {
+    this.tillDate = tillDate;
+  }
+
+  public String getPrefix() {
+    return (prefix == null) ? "" : prefix;
+  }
+
+  public void setPrefix(String prefix) {
+    this.prefix = prefix;
+  }
+  private Date convertStringToDate(String date) {
+    Date converted = new Date();
+    try {
+      converted = formatter.parse(date);
+    } catch (ParseException e) {
+      e.printStackTrace();
+      logger.error(e);
+    }
+    return converted;
+  }
+
+  public String convertDateToString(Date date) {
+    return formatter.format(date);
+  }
+
+  public String getState() {
+    return state;
+  }
+
+  public void setState(String state) {
+    this.state = state;
+  }
+
+  public List getStateStringList() {
+    return stateStringList;
+  }
+  public boolean isState(String state) {
+    return (this.state != null) && state.equals(this.state);
+  }
 }
