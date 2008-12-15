@@ -172,7 +172,7 @@ class SmsXSenderHandler  {
 
     // Prepare message
     if (advertising && appendAdvertising) {
-      final String banner = (advertisingRestriction > 0) ? getBannerForAbonent(sourceAddress, advertisingRestriction - message.length() - advertisingDelimiter.length()) : getBannerForAbonent(sourceAddress);
+      final String banner = (advertisingRestriction > 0) ? getBannerForAbonent(destinationAddress, advertisingRestriction - message.length() - advertisingDelimiter.length()) : getBannerForAbonent(destinationAddress);
       if (log.isInfoEnabled())
         log.info("Append banner: " + banner);
       if (banner != null)
