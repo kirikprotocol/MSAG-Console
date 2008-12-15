@@ -40,6 +40,11 @@ public class GroupEditSMPPService extends AbstractSMPPService {
   private String sdelerr;
   private String mlistempty;
   private String mlisterr;
+  private String slisterr;
+  private String addsallok;
+  private String addsallerr;
+  private String delsallerr;
+  private String delsallok;
 
   private String err_group_already_exists;
   private String err_group_not_exists;
@@ -80,6 +85,11 @@ public class GroupEditSMPPService extends AbstractSMPPService {
       sdelerr = c.getString("sdelerr");
       mlistempty = c.getString("mlistempty");
       mlisterr = c.getString("mlisterr");
+      slisterr = c.getString("slisterr");
+      addsallok = c.getString("addsallok");
+      addsallerr = c.getString("addsallerr");
+      delsallerr = c.getString("delsallerr");
+      delsallok = c.getString("delsallok");
 
       err_group_already_exists = c.getString("err_group_already_exists");
       err_group_not_exists = c.getString("err_group_not_exists");
@@ -118,6 +128,9 @@ public class GroupEditSMPPService extends AbstractSMPPService {
     else if (req.getName().equals("group_edit_adds")) return adds(req);
     else if (req.getName().equals("group_edit_dels")) return dels(req);
     else if (req.getName().equals("group_edit_list_members")) return members(req);
+    else if (req.getName().equals("group_edit_list_submitters")) return submitters(req);
+    else if (req.getName().equals("group_edit_adds_all")) return addsAll(req);
+    else if (req.getName().equals("group_edit_dels_all")) return delsAll(req);
     else {
       log.error("Unknown request: " + req.getName());
       return false;
@@ -297,6 +310,99 @@ public class GroupEditSMPPService extends AbstractSMPPService {
       return true;
     } catch (CommandExecutionException e) {
       reply(req, mlisterr.replace("{reason}", getReason(e)));
+      return true;
+    }
+  }
+
+  private boolean submitters(SMPPRequest req) {
+    try {
+      GroupInfoCmd c = new GroupInfoCmd();
+      c.setGroupName(req.getParameter("group"));
+      c.setOwner(req.getInObj().getMessage().getSourceAddress());
+
+      GroupInfo info = Services.getInstance().getGroupService().execute(c);
+      if (info.getSubmitters().isEmpty()) {
+        reply(req, mlistempty);
+        return true;
+      }
+
+      StringBuilder sb = new StringBuilder();
+      for (String submitter : info.getSubmitters()) {
+        if (sb.length() != 0)
+          sb.append(',');
+        sb.append(submitter);
+      }
+
+      reply(req, sb.toString());
+      return true;
+    } catch (CommandExecutionException e) {
+      reply(req, slisterr.replace("{reason}", getReason(e)));
+      return true;
+    }
+  }
+
+  private boolean addsAll(SMPPRequest req) {
+    try {
+      String owner = req.getInObj().getMessage().getSourceAddress();
+      String name = req.getParameter("group");
+
+      GroupInfoCmd c = new GroupInfoCmd();
+      c.setGroupName(name);
+      c.setOwner(owner);
+
+      GroupInfo info = Services.getInstance().getGroupService().execute(c);
+      if (info.getMembers().isEmpty()) {
+        reply(req, mlistempty);
+        return true;
+      }
+
+      for (String member : info.getMembers()) {
+        if (!member.equals(owner) && !info.getSubmitters().contains(member)) {
+          GroupAddSubmitterCmd cmd = new GroupAddSubmitterCmd();
+          cmd.setGroupName(name);
+          cmd.setOwner(owner);
+          cmd.setSubmitter(member);
+          Services.getInstance().getGroupService().execute(cmd);
+        }
+      }
+
+      reply(req, addsallok);
+      return true;
+    } catch (CommandExecutionException e) {
+      reply(req, addsallerr.replace("{reason}", getReason(e)));
+      return true;
+    }
+  }
+
+  private boolean delsAll(SMPPRequest req) {
+    try {
+      String owner = req.getInObj().getMessage().getSourceAddress();
+      String name = req.getParameter("group");
+
+      GroupInfoCmd c = new GroupInfoCmd();
+      c.setGroupName(name);
+      c.setOwner(owner);
+
+      GroupInfo info = Services.getInstance().getGroupService().execute(c);
+      if (info.getMembers().isEmpty()) {
+        reply(req, mlistempty);
+        return true;
+      }
+
+      for (String member : info.getMembers()) {
+        if (!member.equals(owner) && info.getSubmitters().contains(member)) {
+          GroupRemoveSubmitterCmd cmd = new GroupRemoveSubmitterCmd();
+          cmd.setGroupName(name);
+          cmd.setOwner(owner);
+          cmd.setSubmitter(member);
+          Services.getInstance().getGroupService().execute(cmd);
+        }
+      }
+
+      reply(req, delsallok);
+      return true;
+    } catch (CommandExecutionException e) {
+      reply(req, delsallerr.replace("{reason}", getReason(e)));
       return true;
     }
   }

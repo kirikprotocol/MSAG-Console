@@ -178,6 +178,26 @@
       <param-value>Ошибка: {reason}</param-value>
     </init-param>
     <init-param>
+      <param-name>slisterr</param-name>
+      <param-value>Ошибка: {reason}</param-value>
+    </init-param>
+    <init-param>
+      <param-name>addsallok</param-name>
+      <param-value>Право ответа дано всем участникам группы</param-value>
+    </init-param>
+    <init-param>
+      <param-name>addsallerr</param-name>
+      <param-value>Ошибка: {reason}</param-value>
+    </init-param>
+    <init-param>
+      <param-name>delsallok</param-name>
+      <param-value>Право ответа изъято у всех участников группы</param-value>
+    </init-param>
+    <init-param>
+      <param-name>delsallerr</param-name>
+      <param-value>Ошибка: {reason}</param-value>
+    </init-param>
+    <init-param>
       <param-name>err_group_already_exists</param-name>
       <param-value>Группа с таким названием уже существует.</param-value>
     </init-param>
@@ -462,6 +482,15 @@
   <!-- ===== Group edit ===== -->
 
   <request>
+    <request-name>group_edit_list_submitters</request-name>
+    <message-pattern>SLIS(T|т|Т)\s+(\S+)</message-pattern>
+    <request-param>
+      <param-name>group</param-name>
+      <param-value>{2}</param-value>
+    </request-param>
+  </request>
+
+  <request>
     <request-name>group_edit_list_members</request-name>
     <message-pattern>((LIS(T|т|Т))|((K|К|к)(T|Т|т)(O|О|о)))\s+(\S+)</message-pattern>
     <request-param>
@@ -533,6 +562,15 @@
   </request>
 
   <request>
+    <request-name>group_edit_adds_all</request-name>
+    <message-pattern>(((A|а|А)DDS(A|а|А)LL)|((В|в)(С|с)(Е|е)(М|м)))\s+(\S+)</message-pattern>
+    <request-param>
+      <param-name>group</param-name>
+      <param-value>{10}</param-value>
+    </request-param>
+  </request>
+
+  <request>
     <request-name>group_edit_dels</request-name>
     <message-pattern>((D(E|Е|е)LS)|(N(O|О|о)|(H|Н|н)(E|Е|е)(T|Т|т)))(\s+(\S+)\s+(\S+))</message-pattern>
     <request-param>
@@ -541,6 +579,15 @@
     </request-param>
     <request-param>
       <param-name>submitter</param-name>
+      <param-value>{11}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>group_edit_dels_all</request-name>
+    <message-pattern>((D(E|Е|е)LS(A|а|А)LL)|((Н|н)(И|и)(К|к)(О|о)(М|м)(У|у)))\s+(\S+)</message-pattern>
+    <request-param>
+      <param-name>group</param-name>
       <param-value>{11}</param-value>
     </request-param>
   </request>
