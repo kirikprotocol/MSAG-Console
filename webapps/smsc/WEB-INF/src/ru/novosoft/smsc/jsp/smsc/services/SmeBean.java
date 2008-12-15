@@ -27,6 +27,7 @@ public class SmeBean extends PageBean {
     protected int schedlimit = 0;
 
     protected int accessMask = 1;
+    protected int extraFlag = -1;
 
 
     protected int convertInterfaceVersion(String version) {
@@ -257,5 +258,18 @@ public class SmeBean extends PageBean {
             logger.error("schedlimit int parameter misformatted: \"" + schedlimit + "\", skipped");
             this.schedlimit = 0;
         }
+    }
+
+    public String getExtraFlag() {
+        return String.valueOf(extraFlag);
+    }
+
+    public void setExtraFlag(String extraFlag) {
+      try {
+          this.extraFlag = Integer.parseInt(extraFlag);
+      } catch (NumberFormatException e) {
+          logger.error("extraFlag int parameter misformatted: \"" + extraFlag + "\", skipped");
+          this.extraFlag = -1;
+      }
     }
 }

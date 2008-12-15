@@ -55,6 +55,7 @@ public class ServiceEditSme extends SmeBean {
             proclimit = sme.getProclimit();
             schedlimit = sme.getSchedlimit();
             accessMask = sme.getAccessMask();
+            extraFlag = sme.getSmeN();
         }
 
         return RESULT_OK;
@@ -89,7 +90,7 @@ public class ServiceEditSme extends SmeBean {
             return error(SMSCErrors.error.services.invalidPriority, String.valueOf(priority));
 
         try {
-            SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit, accessMask);
+            SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, extraFlag, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit, accessMask);
             if (hostsManager.isService(serviceId))
                 hostsManager.getServiceInfo(serviceId).setSme(sme);
             appContext.getSmeManager().update(sme);

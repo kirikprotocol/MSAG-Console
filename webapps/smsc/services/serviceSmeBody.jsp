@@ -1,4 +1,5 @@
 <%@ page import="ru.novosoft.smsc.admin.route.SME" %>
+<%@ page import="ru.novosoft.smsc.admin.profiler.SupportExtProfile" %>
 <col width="15%" align=right>
 <col width="85%">
 <tr class=row<%=(rowN++) & 1%>>
@@ -107,5 +108,11 @@
 <%//todo штука для редактирования масок%>
     <td><input class=txt type="text" name="accessMask" value="<%=bean.getAccessMask()%>"></td>
 </tr>
+<%if (SupportExtProfile.enabled) { %>
+<tr class=row<%=(rowN++) & 1%>>
+    <th><%=getLocString("services.extraFlag")%></th>
+    <td><input class=txt type="text" name="extraFlag" value="<%=bean.getExtraFlag()%>"></td>
+</tr>
+<%}%>
 
 

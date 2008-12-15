@@ -179,7 +179,7 @@ public class ServiceAddExternalAdm extends SmeBean
                       appContext.getHostsManager().getDaemonServicesFolder(hostName) + File.separatorChar + serviceId,
                       startupArgs, autostart,
                       new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password,
-                              rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit, accessMask),
+                              rangeOfAddress, extraFlag, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit, accessMask),
                       ServiceInfo.STATUS_OFFLINE);
     } catch (AdminException e) {
       return error(SMSCErrors.error.services.coudntAddService, e);

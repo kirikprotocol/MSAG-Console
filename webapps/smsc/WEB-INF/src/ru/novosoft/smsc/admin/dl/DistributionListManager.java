@@ -95,7 +95,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     // final StringBuffer buffer = new StringBuffer(listStr.size());
     final List result = new LinkedList();
     int i = 0;
-    while (i < listStr.size()) {
+    while (i + 2 < listStr.size()) {
       String address = (String) listStr.get(i++);
       int maxLists = Integer.parseInt((String) listStr.get(i++));
       int maxElements = Integer.parseInt((String) listStr.get(i++));
@@ -279,7 +279,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
       return new LinkedList();
     final List result = new LinkedList();
     int i = 0;
-    while (i < listStr.size()) {
+    while (i+2 < listStr.size()) {
       String name = (String) listStr.get(i++);
       String owner = (String) listStr.get(i++);
       if (owner.equals("")) owner = null;
