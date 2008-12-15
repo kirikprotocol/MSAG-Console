@@ -21,7 +21,6 @@ import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
 import ru.sibinco.smsx.engine.soaphandler.SOAPHandlerInitializationException;
 import ru.sibinco.smsx.network.advertising.AdvertisingClient;
 import ru.sibinco.smsx.network.advertising.AdvertisingClientException;
-import ru.sibinco.smsx.utils.operators.Operator;
 
 import java.io.File;
 import java.io.InputStream;
@@ -92,8 +91,8 @@ class SmsXSenderHandler  {
         log.info("Send SMS: dstaddr=" + msisdn + "; msg=" + message + "; express=" + express + "; secret=" + secret + "; calendar=" + calendar + "; time=" + new Date(calendarTimeUTC) + "; advertising=" + advertising);
 
       // Check operator
-      final Operator operator = Context.getInstance().getOperators().getOperatorByAddress(msisdn);
-      if (operator == null || !operator.getName().equals("MTS")) {
+      final String operator = Context.getInstance().getOperators().getOperatorByAddress(msisdn);
+      if (operator == null) {
         log.error("Unknown or incorrect operator for dstaddr=" + msisdn);
         return new SmsXSenderResponse(null, -1, STATUS_DESTINATION_ABONENT_UNKNOWN);
       }
@@ -172,7 +171,7 @@ class SmsXSenderHandler  {
 
     // Prepare message
     if (advertising && appendAdvertising) {
-      final String banner = (advertisingRestriction > 0) ? getBannerForAbonent(destinationAddress, advertisingRestriction - message.length() - advertisingDelimiter.length()) : getBannerForAbonent(destinationAddress);
+      final String banner = (advertisingRestriction > 0) ? getBannerForAbonent(destinationAddress, advertisingRestriction - message.length() - advertisingDelimiter.length()) : getBannerForAbonent(sourceAddress);
       if (log.isInfoEnabled())
         log.info("Append banner: " + banner);
       if (banner != null)

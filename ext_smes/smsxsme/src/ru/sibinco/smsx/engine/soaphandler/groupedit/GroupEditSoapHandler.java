@@ -1,13 +1,22 @@
 package ru.sibinco.smsx.engine.soaphandler.groupedit;
 
-import java.rmi.RemoteException;
-import java.util.List;
-
+import com.eyeline.sme.smpp.OutgoingObject;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.ShutdownedException;
+import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.config.xml.XmlConfig;
+import org.apache.log4j.Category;
+import ru.aurorisoft.smpp.Message;
+import ru.sibinco.smsx.InitializationException;
 import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.Services;
 import ru.sibinco.smsx.engine.service.group.commands.*;
-import ru.sibinco.smsc.utils.admin.dl.DistributionList;
-import org.apache.log4j.Category;
+import ru.sibinco.smsx.engine.service.group.datasource.DistrList;
+
+import java.io.File;
+import java.rmi.RemoteException;
+import java.util.Collection;
+import java.util.Properties;
 
 /**
  * User: artem
@@ -32,7 +41,20 @@ class GroupEditSoapHandler implements GroupEdit {
   private static final int RESULT_MEMBER_ALREADY_EXISTS = -11;
   private static final int RESULT_LOCKED_BY_OWNER = -12;
 
-  GroupEditSoapHandler(String configDir) {
+  private final OutgoingQueue outQueue;
+  private final Properties texts;
+  private final String oa;
+
+  GroupEditSoapHandler(String configDir, OutgoingQueue outQueue) {
+    this.outQueue = outQueue;
+    XmlConfig config = new XmlConfig();
+    try {
+      config.load(new File(configDir, "soaphandlers/groupedit.xml"));
+      texts = config.getSection("notifications").toProperties("");
+      oa = config.getString("sourceAddress");
+    } catch (ConfigException e) {
+      throw new InitializationException(e);
+    }
   }
 
   public GroupListResp groupList(String owner) throws RemoteException {
@@ -44,11 +66,11 @@ class GroupEditSoapHandler implements GroupEdit {
     try {
       final GroupListCmd cmd = new GroupListCmd();
       cmd.setOwner(owner);
-      List<DistributionList> res = Services.getInstance().getGroupService().execute(cmd);
+      Collection<DistrList> res = Services.getInstance().getGroupService().execute(cmd);
 
       String[] names = new String[res.size()];
       int i=0;
-      for (DistributionList l : res)
+      for (DistrList l : res)
         names[i++] = l.getName();
 
       response.setGroups(names);
@@ -56,9 +78,18 @@ class GroupEditSoapHandler implements GroupEdit {
     } catch (CommandExecutionException e) {
       log.error("Group list failed", e);
       response.setStatus(getStatus(e.getErrCode()));
+    } catch (Throwable e) {
+      log.error(e, e);
+      response.setStatus(RESULT_SYSTEM_ERROR);
     }
 
     return response;
+  }
+
+  private GroupEditGetProfileCmd.Result getProfile(String owner) throws CommandExecutionException {
+    GroupEditGetProfileCmd c = new GroupEditGetProfileCmd();
+    c.setAddress(owner);
+    return Services.getInstance().getGroupService().execute(c);
   }
 
   public int addGroup(String groupName, String owner) throws RemoteException {
@@ -66,14 +97,25 @@ class GroupEditSoapHandler implements GroupEdit {
       log.debug("Group add req: group=" + groupName + "; owner=" + owner);
 
     try {
+      GroupEditGetProfileCmd.Result profile = getProfile(owner);
+      if (profile.lockEdit)
+        return RESULT_LOCKED_BY_OWNER;
+
       GroupAddCmd c = new GroupAddCmd();
       c.setGroupName(groupName);
       c.setOwner(owner);
       Services.getInstance().getGroupService().execute(c);
+
+      if (profile.sendNotification)
+        sendMessage(owner, texts.getProperty("add.group").replace("{1}", groupName));
+
       return RESULT_OK;
     } catch (CommandExecutionException e) {
       log.error("Group add failed", e);
       return getStatus(e.getErrCode());
+    } catch (Throwable e) {
+      log.error(e, e);
+      return RESULT_SYSTEM_ERROR;
     }
   }
 
@@ -82,14 +124,25 @@ class GroupEditSoapHandler implements GroupEdit {
       log.debug("Group remove req: group=" + groupName + "; owner=" + owner);
 
     try {
+      GroupEditGetProfileCmd.Result profile = getProfile(owner);
+      if (profile.lockEdit)
+        return RESULT_LOCKED_BY_OWNER;
+
       GroupRemoveCmd c = new GroupRemoveCmd();
       c.setGroupName(groupName);
       c.setOwner(owner);
       Services.getInstance().getGroupService().execute(c);
+
+      if (profile.sendNotification)
+        sendMessage(owner, texts.getProperty("remove.group").replace("{1}", groupName));
+
       return RESULT_OK;
     } catch (CommandExecutionException e) {
       log.error("Group remove failed", e);
       return getStatus(e.getErrCode());
+    } catch (Throwable e) {
+      log.error(e, e);
+      return RESULT_SYSTEM_ERROR;
     }
   }
 
@@ -118,6 +171,9 @@ class GroupEditSoapHandler implements GroupEdit {
     } catch (CommandExecutionException e) {
       log.error("Group info failed", e);
       resp.setStatus(getStatus(e.getErrCode()));
+    } catch (Throwable e) {
+      log.error(e, e);
+      resp.setStatus(RESULT_SYSTEM_ERROR);
     }
 
     return resp;
@@ -128,15 +184,26 @@ class GroupEditSoapHandler implements GroupEdit {
       log.debug("Group add member req: groupName=" + groupName + "; owner=" + owner + "; member=" + member);
 
     try {
+      GroupEditGetProfileCmd.Result profile = getProfile(owner);
+      if (profile.lockEdit)
+        return RESULT_LOCKED_BY_OWNER;
+
       GroupAddMemberCmd c = new GroupAddMemberCmd();
       c.setGroupName(groupName);
       c.setOwner(owner);
       c.setMember(member);
       Services.getInstance().getGroupService().execute(c);
+
+      if (profile.sendNotification)
+        sendMessage(owner, texts.getProperty("add.member").replace("{1}", groupName).replace("{2}", member));
+
       return RESULT_OK;
     } catch (CommandExecutionException e) {
       log.error("Group add member failed", e);
       return getStatus(e.getErrCode());
+    } catch (Throwable e) {
+      log.error(e, e);
+      return RESULT_SYSTEM_ERROR;
     }
   }
 
@@ -145,15 +212,26 @@ class GroupEditSoapHandler implements GroupEdit {
       log.debug("Group remove member req: group=" + groupName + "; owner=" + owner + "; member=" + member);
 
     try {
+      GroupEditGetProfileCmd.Result profile = getProfile(owner);
+      if (profile.lockEdit)
+        return RESULT_LOCKED_BY_OWNER;
+
       GroupRemoveMemberCmd c = new GroupRemoveMemberCmd();
       c.setGroupName(groupName);
       c.setOwner(owner);
       c.setMember(member);
       Services.getInstance().getGroupService().execute(c);
+
+      if (profile.sendNotification)
+        sendMessage(owner, texts.getProperty("remove.member").replace("{1}", groupName).replace("{2}", member));
+
       return RESULT_OK;
     } catch (CommandExecutionException e) {
       log.error("Group remove member failed", e);
       return getStatus(e.getErrCode());
+    } catch (Throwable e) {
+      log.error(e, e);
+      return RESULT_SYSTEM_ERROR;
     }
   }
 
@@ -162,15 +240,26 @@ class GroupEditSoapHandler implements GroupEdit {
       log.debug("Group rename req: group=" + groupName + "; owner=" + owner + "; newName=" + newName);
 
     try {
+      GroupEditGetProfileCmd.Result profile = getProfile(owner);
+      if (profile.lockEdit)
+        return RESULT_LOCKED_BY_OWNER;
+
       GroupRenameCmd c = new GroupRenameCmd();
       c.setGroupName(groupName);
       c.setOwner(owner);
       c.setNewGroupName(newName);
       Services.getInstance().getGroupService().execute(c);
+
+      if (profile.sendNotification)
+        sendMessage(owner, texts.getProperty("rename.group").replace("{1}", groupName).replace("{2}", newName));
+
       return RESULT_OK;
     } catch (CommandExecutionException e) {
       log.error("Group rename failed", e);
       return getStatus(e.getErrCode());
+    } catch (Throwable e) {
+      log.error(e, e);
+      return RESULT_SYSTEM_ERROR;
     }
   }
 
@@ -179,15 +268,43 @@ class GroupEditSoapHandler implements GroupEdit {
       log.debug("Group copy req: group=" + groupName + "; owner=" + owner + "; newName=" + newName);
 
     try {
+      GroupEditGetProfileCmd.Result profile = getProfile(owner);
+      if (profile.lockEdit)
+        return RESULT_LOCKED_BY_OWNER;
+
       GroupCopyCmd c = new GroupCopyCmd();
       c.setGroupName(groupName);
       c.setOwner(owner);
       c.setNewGroupName(newName);
       Services.getInstance().getGroupService().execute(c);
+
+      if (profile.sendNotification)
+        sendMessage(owner, texts.getProperty("copy.group").replace("{1}", groupName).replace("{2}", newName));
+
       return RESULT_OK;
     } catch (CommandExecutionException e) {
       log.error("Group copy failed", e);
       return getStatus(e.getErrCode());
+    } catch (Throwable e) {
+      log.error(e, e);
+      return RESULT_SYSTEM_ERROR;
+    }
+  }
+
+  private void sendMessage(String da, String text) {
+    Message m = new Message();
+    m.setSourceAddress(oa);
+    m.setDestinationAddress(da);
+    m.setMessageString(text);
+    m.setConnectionName("smsx");
+
+    OutgoingObject o = new OutgoingObject();
+    o.setMessage(m);
+
+    try {
+      outQueue.offer(o);
+    } catch (ShutdownedException e) {
+      log.error("Can't send message", e);
     }
   }
 

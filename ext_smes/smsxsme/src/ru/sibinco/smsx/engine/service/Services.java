@@ -5,41 +5,46 @@
 
 package ru.sibinco.smsx.engine.service;
 
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.utils.config.xml.XmlConfig;
 import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.blacklist.BlackListService;
 import ru.sibinco.smsx.engine.service.blacklist.BlackListServiceImpl;
 import ru.sibinco.smsx.engine.service.calendar.CalendarService;
 import ru.sibinco.smsx.engine.service.calendar.CalendarServiceImpl;
+import ru.sibinco.smsx.engine.service.group.GroupService;
+import ru.sibinco.smsx.engine.service.group.GroupServiceImpl;
 import ru.sibinco.smsx.engine.service.nick.NickService;
 import ru.sibinco.smsx.engine.service.nick.NickServiceImpl;
 import ru.sibinco.smsx.engine.service.secret.SecretService;
 import ru.sibinco.smsx.engine.service.secret.SecretServiceImpl;
 import ru.sibinco.smsx.engine.service.sender.SenderService;
 import ru.sibinco.smsx.engine.service.sender.SenderServiceImpl;
-import ru.sibinco.smsx.engine.service.group.GroupService;
-import ru.sibinco.smsx.engine.service.group.GroupServiceImpl;
 import ru.sibinco.smsx.engine.service.subscription.SubscriptionService;
 import ru.sibinco.smsx.engine.service.subscription.SubscriptionServiceImpl;
-import com.eyeline.sme.smpp.OutgoingQueue;
-import com.eyeline.utils.config.xml.XmlConfig;
-import com.eyeline.utils.ThreadFactoryWithCounter;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
 
 public class Services {
+
   private static final Category log = Category.getInstance("SERVICES");
 
   private static Services ourInstance;
 
+  private static final CountDownLatch initLatch = new CountDownLatch(1);
+
   public static Services getInstance() {
+    try {
+      initLatch.await();
+    } catch (InterruptedException e) {
+      return null;
+    }
     return ourInstance;
   }
 
   public static void init(XmlConfig config, OutgoingQueue outQueue) {
     ourInstance = new Services(config, outQueue);
+    initLatch.countDown();
   }
 
   private final CalendarService calendarService;
@@ -55,12 +60,19 @@ public class Services {
 
 
   private Services(XmlConfig config, OutgoingQueue outQueue) {
+    System.out.println("  Init Sender...");
     senderService = new SenderServiceImpl(config, outQueue);
+    System.out.println("  Init Calendar...");
     calendarService = new CalendarServiceImpl(config, outQueue);
+    System.out.println("  Init Secret...");
     secretService = new SecretServiceImpl(config, outQueue);
+    System.out.println("  Init Black List...");
     blackListService = new BlackListServiceImpl(config);
+    System.out.println("  Init Nick...");
     nickService = new NickServiceImpl(config, outQueue);
+    System.out.println("  Init Group...");
     groupService = new GroupServiceImpl(config, outQueue);
+    System.out.println("  Init Subscription...");
     subscriptionService = new SubscriptionServiceImpl(config);
   }
 

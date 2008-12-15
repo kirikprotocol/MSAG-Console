@@ -244,27 +244,5 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
 
   public void release() {
     pool.release();
-  }
-
-  public static void main(String args[]) throws DataSourceException {
-    System.out.println("\u00AE \u0041");
-    DBCalendarDataSource ds = null;
-    try {
-      ConnectionPoolFactory.init("conf");
-      ds = new DBCalendarDataSource();
-      CalendarMessage m = new CalendarMessage();
-      m.setConnectionName("smsx");
-      m.setDestAddressSubunit(0);
-      m.setDestinationAddress("1");
-      m.setMessage("test @ ������ \u00AE " + args[0]);
-      m.setMscAddress("");
-      m.setSaveDeliveryStatus(false);
-      m.setSendDate(new Timestamp(System.currentTimeMillis()));
-      m.setSourceAddress("0");
-      ds.saveCalendarMessage(m);
-    } finally {
-      if (ds != null)
-        ds.release();
-    }
-  }
+  }  
 }

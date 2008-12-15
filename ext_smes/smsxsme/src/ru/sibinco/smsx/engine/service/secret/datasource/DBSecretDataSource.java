@@ -142,8 +142,8 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       conn = pool.getConnection();
 
       final StringBuilder buffer = new StringBuilder(addresses.length*12+addresses.length);
-      for (int i=0; i<addresses.length; i++)
-        buffer.append(buffer.length() > 0 ? "," : "").append('\'').append(addresses[i]).append('\'');
+      for (String address : addresses)
+        buffer.append(buffer.length() > 0 ? "," : "").append('\'').append(address).append('\'');
 
       ps = conn.prepareStatement(loadUserByAddresses.replaceAll(buffer.toString()));
 
@@ -485,7 +485,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     pool.release();
   }
 
-  private class DBDataSourceTransaction implements DataSourceTransaction {
+  private static class DBDataSourceTransaction implements DataSourceTransaction {
 
     private final Connection conn;
 

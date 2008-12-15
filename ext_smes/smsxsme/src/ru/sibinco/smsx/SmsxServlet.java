@@ -21,7 +21,7 @@ public class SmsxServlet extends AxisServlet {
       sme = new Sme(getServletConfig().getInitParameter("configDir"), testMode);
 
     } catch (Throwable e) {
-      e.printStackTrace();;
+      e.printStackTrace();
       throw new ServletException(e);
     }
   }

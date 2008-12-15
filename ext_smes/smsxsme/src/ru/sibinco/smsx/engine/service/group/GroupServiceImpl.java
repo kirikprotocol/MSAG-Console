@@ -1,20 +1,20 @@
 package ru.sibinco.smsx.engine.service.group;
 
-import ru.sibinco.smsx.engine.service.group.commands.*;
-import ru.sibinco.smsx.engine.service.group.datasource.GroupSendDataSource;
-import ru.sibinco.smsx.engine.service.group.datasource.JStoreGroupSendDataSource;
-import ru.sibinco.smsx.engine.service.group.datasource.GroupEditDataSource;
-import ru.sibinco.smsx.engine.service.group.datasource.DBGroupEditDataSource;
-import ru.sibinco.smsx.engine.service.CommandExecutionException;
-import ru.sibinco.smsx.engine.service.ServiceInitializationException;
-import ru.sibinco.smsx.engine.service.Service;
-import ru.sibinco.smsc.utils.admin.dl.DistributionList;
-import ru.sibinco.smsc.utils.admin.dl.DistributionListManager;
+import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.xml.XmlConfigSection;
-import com.eyeline.sme.smpp.OutgoingQueue;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
+import ru.sibinco.smsx.engine.service.Service;
+import ru.sibinco.smsx.engine.service.ServiceInitializationException;
+import ru.sibinco.smsx.engine.service.group.commands.*;
+import ru.sibinco.smsx.engine.service.group.datasource.*;
+import ru.sibinco.smsx.engine.service.group.datasource.impl.distrlist.FileDistrListDataSource;
+import ru.sibinco.smsx.engine.service.group.datasource.impl.principal.FilePrincipalDataSource;
+import ru.sibinco.smsx.engine.service.group.datasource.impl.profile.DBGroupEditProfileDataSource;
+import ru.sibinco.smsx.Context;
 
-import java.util.List;
+import java.io.File;
+import java.util.Collection;
 
 /**
  * User: artem
@@ -24,23 +24,26 @@ import java.util.List;
 public class GroupServiceImpl implements Service, GroupService {
 
   private final GroupSendProcessor sendProcessor;
-  private final GroupSendDataSource groupSendDS;
-  private final GroupEditDataSource groupEditDS;
+  private final GroupEditProfileDataSource groupEditDSProfile;
   private final GroupEditProcessor editProcessor;
-  private final DistributionListManager dlManager;
+  private final DistrListDataSource listsDS;
+  private final PrincipalDataSource principalDS;
+  private final RepliesMap replies;
+  private final GroupProfileProcessor profileProcessor;
 
   public GroupServiceImpl(XmlConfig config, OutgoingQueue outQueue) throws ServiceInitializationException {
-    XmlConfigSection group = config.getSection("group");
-
     try {
-      this.groupSendDS = new JStoreGroupSendDataSource(group.getString("store.file"), group.getInt("store.data.life.time"));
-      this.sendProcessor = new GroupSendProcessor(outQueue, groupSendDS, group.getString("group.address"));
+      XmlConfigSection g = config.getSection("group");
 
-      this.dlManager = new DistributionListManager(group.getString("smsc.host"), group.getInt("smsc.port"), "windows-1251",
-                                                   group.getInt("manager.pool.size"), group.getInt("manager.connection.timeout"));
-      
-      this.groupEditDS = new DBGroupEditDataSource();
-      this.editProcessor = new GroupEditProcessor(outQueue, dlManager, groupEditDS, group.getString("source.address"), group.getSection("notifications").toProperties(""));
+      String storeDir = g.getString("store.dir");
+      this.listsDS = new FileDistrListDataSource(new File(storeDir, "members.bin"), new File(storeDir, "submitters.bin"), new File(storeDir, "lists.bin"));
+      this.principalDS = new FilePrincipalDataSource(new File(storeDir, "principals.bin"));
+      this.groupEditDSProfile = new DBGroupEditProfileDataSource();
+
+      this.replies = new RepliesMap(new File(storeDir, "groupreplies.bin"), g.getInt("replies.cache.size"));
+      this.sendProcessor = new GroupSendProcessor(g, outQueue, listsDS, replies, Context.getInstance().getOperators());
+      this.editProcessor = new GroupEditProcessor(g, listsDS, principalDS, Context.getInstance().getOperators());
+      this.profileProcessor = new GroupProfileProcessor(groupEditDSProfile);
     } catch (Exception e) {
       throw new ServiceInitializationException(e);
     }
@@ -50,15 +53,22 @@ public class GroupServiceImpl implements Service, GroupService {
   }
 
   public void stopService() {
-    groupSendDS.shutdown();
-    groupEditDS.shutdown();    
+    sendProcessor.shutdown();
+    groupEditDSProfile.shutdown();
+    listsDS.close();
+    principalDS.close();
+    replies.shutdown();
   }
 
   public Object getMBean(String domain) {
-    return new GroupMBean(domain, sendProcessor, dlManager);
+    return new GroupMBean(replies, listsDS);
   }
 
   public long execute(GroupSendCmd cmd) throws CommandExecutionException {
+    return sendProcessor.execute(cmd);
+  }
+
+  public long execute(GroupReplyCmd cmd) throws CommandExecutionException {
     return sendProcessor.execute(cmd);
   }
 
@@ -66,7 +76,7 @@ public class GroupServiceImpl implements Service, GroupService {
     sendProcessor.execute(cmd);
   }
 
-  public GroupSendStatusCmd.MessageStatus execute(GroupSendStatusCmd cmd) throws CommandExecutionException {
+  public DeliveryStatus execute(GroupSendStatusCmd cmd) throws CommandExecutionException {
     return sendProcessor.execute(cmd);
   }
 
@@ -94,15 +104,51 @@ public class GroupServiceImpl implements Service, GroupService {
     return editProcessor.execute(cmd);
   }
 
-  public List<DistributionList> execute(GroupListCmd cmd) throws CommandExecutionException {
+  public Collection<DistrList> execute(GroupListCmd cmd) throws CommandExecutionException {
     return editProcessor.execute(cmd);
   }
 
   public void execute(GroupEditAlterProfileCmd cmd) throws CommandExecutionException {
-    editProcessor.execute(cmd);
+    profileProcessor.execute(cmd);
   }
 
   public void execute(GroupCopyCmd cmd) throws CommandExecutionException {
+    editProcessor.execute(cmd);
+  }
+
+  public GroupEditGetProfileCmd.Result execute(GroupEditGetProfileCmd cmd) throws CommandExecutionException {
+    return profileProcessor.execute(cmd);
+  }
+
+  public void execute(GroupAddSubmitterCmd cmd) throws CommandExecutionException {
+    editProcessor.execute(cmd);
+  }
+
+  public void execute(GroupRemoveSubmitterCmd cmd) throws CommandExecutionException {
+    editProcessor.execute(cmd);
+  }
+
+  public void execute(PrincipalAddCmd cmd) throws CommandExecutionException {
+    editProcessor.execute(cmd);
+  }
+
+  public void execute(PrincipalRemoveCmd cmd) throws CommandExecutionException {
+    editProcessor.execute(cmd);
+  }
+
+  public Collection<Principal> execute(PrincipalListCmd cmd) throws CommandExecutionException {
+    return editProcessor.execute(cmd);
+  }
+
+  public Principal execute(PrincipalGetCmd cmd) throws CommandExecutionException {
+    return editProcessor.execute(cmd);
+  }
+
+  public void execute(PrincipalAlterCmd cmd) throws CommandExecutionException {
+    editProcessor.execute(cmd);
+  }
+
+  public void execute(GroupAlterCmd cmd) throws CommandExecutionException {
     editProcessor.execute(cmd);
   }
 }

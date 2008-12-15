@@ -2,9 +2,7 @@ package ru.sibinco.smsx.engine.soaphandler.smsxsubscription;
 
 import ru.sibinco.smsx.engine.soaphandler.SOAPHandlerInitializationException;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.Condition;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * User: artem
@@ -14,33 +12,22 @@ import java.util.concurrent.locks.Condition;
 public class SmsXSubscriptionFactory {
   private static SmsXSubscription handler;
 
-  private static final Lock lock = new ReentrantLock();
-  private static final Condition cond = lock.newCondition();
+  private static final CountDownLatch initLatch = new CountDownLatch(1);
 
   private SmsXSubscriptionFactory() {
   }
 
   public static void init(String configDir) throws SOAPHandlerInitializationException {
-    try {
-      lock.lock();
-      handler = new SmsXSubscriptionSoapHandler(configDir);
-      cond.signal();
-    } finally {
-      lock.unlock();
-    }
+    handler = new SmsXSubscriptionSoapHandler(configDir);
+    initLatch.countDown();
   }
 
   public static SmsXSubscription createGroupEdit() {
     try {
-      lock.lock();
-      if (handler == null)
-        cond.await();
-      return handler;
+      initLatch.await();
     } catch (InterruptedException e) {
       e.printStackTrace();
-      return null;
-    } finally {
-      lock.unlock();
     }
+    return handler;
   }
 }

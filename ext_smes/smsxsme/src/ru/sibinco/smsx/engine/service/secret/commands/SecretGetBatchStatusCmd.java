@@ -9,9 +9,9 @@ import ru.sibinco.smsx.engine.service.CommandExecutionException;
  */
 public class SecretGetBatchStatusCmd extends Command {
 
-  public static int BATCH_STATUS_PROCESSED = -1;
-  public static int BATCH_STATUS_ERROR = -2;
-  public static int BATCH_STATUS_UNKNOWN = -3;
+  public static final int BATCH_STATUS_PROCESSED = -1;
+  public static final int BATCH_STATUS_ERROR = -2;
+  public static final int BATCH_STATUS_UNKNOWN = -3;
 
   private String batchId;
 

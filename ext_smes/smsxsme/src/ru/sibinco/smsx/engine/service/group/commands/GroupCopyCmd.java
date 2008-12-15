@@ -18,6 +18,10 @@ public class GroupCopyCmd extends GroupEditCommand {
     this.newGroupName = newGroupName;
   }
 
+  public String toString() {
+    return "GroupCopyCmd: name=" + groupName + "; owner=" + owner + "; newName=" + newGroupName;
+  }
+
   public interface Receiver {
     public void execute(GroupCopyCmd cmd) throws CommandExecutionException;
   }

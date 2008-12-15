@@ -9,7 +9,21 @@ import ru.sibinco.smsx.engine.service.CommandExecutionException;
 
 public class GroupAddCmd extends GroupEditCommand {
 
+  private int maxElements = -1;
+
+  public int getMaxElements() {
+    return maxElements;
+  }
+
+  public void setMaxElements(int maxElements) {
+    this.maxElements = maxElements;
+  }
+
   public interface Receiver {
     public void execute(GroupAddCmd cmd) throws CommandExecutionException;
+  }
+
+  public String toString() {
+    return "GroupAddCmd: name=" + groupName + "; owner=" + owner + "; max=" + maxElements;
   }
 }

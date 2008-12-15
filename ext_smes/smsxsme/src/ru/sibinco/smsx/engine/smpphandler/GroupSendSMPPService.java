@@ -1,11 +1,18 @@
 package ru.sibinco.smsx.engine.smpphandler;
 
 import com.eyeline.sme.handler.SMPPRequest;
+import com.eyeline.sme.handler.SMPPServiceException;
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.ConfigException;
 import com.logica.smpp.Data;
 import ru.sibinco.smsx.engine.service.group.commands.GroupDeliveryReportCmd;
-import ru.sibinco.smsx.engine.service.CommandExecutionException;
-import ru.sibinco.smsx.engine.service.Services;
+import ru.sibinco.smsx.engine.service.group.commands.GroupSendCmd;
+import ru.sibinco.smsx.engine.service.group.commands.GroupReplyCmd;
+import ru.sibinco.smsx.engine.service.group.commands.GroupSendCommand;
+import ru.sibinco.smsx.engine.service.group.DeliveryStatus;
+import ru.sibinco.smsx.engine.service.*;
 import ru.aurorisoft.smpp.SMPPException;
+import ru.aurorisoft.smpp.Message;
 import org.apache.log4j.Category;
 
 /**
@@ -17,36 +24,161 @@ public class GroupSendSMPPService extends AbstractSMPPService {
 
   private static final Category log = Category.getInstance(GroupSendSMPPService.class);
 
-  public boolean serve(SMPPRequest smppRequest) {
+  private String sendReport;
+  private String unknownGroup;
+  private String unknownSubmitter;
+
+  protected void init(java.util.Properties properties) throws SMPPServiceException {
+    super.init(properties);
     try {
-      smppRequest.getInObj().respond(Data.ESME_ROK);
-    } catch (SMPPException e) {
-      log.error(e);
+      PropertiesConfig cfg = new PropertiesConfig(properties);
+      sendReport = cfg.getString("send.report");
+      unknownGroup = cfg.getString("unknown.group");
+      unknownSubmitter = cfg.getString("unknown.submitter");
+    } catch (ConfigException e) {
+      throw new SMPPServiceException(e);
     }
 
+    if (sendReport == null)
+      throw new SMPPServiceException("Property send.report is not set in GroupSendSMPPService");
+  }
+
+  public boolean serve(SMPPRequest smppRequest) {
+    if (smppRequest.getName().equals("group_send")) 
+      return groupSend(smppRequest);
+    else if (smppRequest.getInObj().getMessage().isReceipt())
+      return receipt(smppRequest);
+    else if (smppRequest.getName().equals("group_send_reply"))
+      return groupReply(smppRequest);
+    return false;
+  }
+
+  private boolean groupReply(SMPPRequest request) {
+    final Message m = request.getInObj().getMessage();
+    GroupReplyCmd cmd = new GroupReplyCmd();
+
+    String msgText = request.getParameter("message");
+    if (msgText == null)
+      return false;
+
+    cmd.setMessage(msgText);
+    cmd.setSubmitter(m.getSourceAddress());
+    cmd.setDestAddrSubunit(m.getDestAddrSubunit());
+    cmd.setImsi(m.getImsi());
+    cmd.setMscAddress(m.getMscAddress());
+    cmd.setStorable(false);
+    cmd.setSourceId(Command.SOURCE_SMPP);
+    cmd.addExecutionObserver(new CommandObserver() {
+      public void update(AsyncCommand command) {
+        if (command.getStatus() == AsyncCommand.STATUS_SUCCESS) {
+          DeliveryStatus s = ((GroupSendCommand)command).getDeliveryStatus();
+          byte[] statuses = s.statuses();
+          int sent = 0;
+          for (byte status : statuses)
+            if (status > 0) sent++;
+          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), sendReport.replace("{actual}", String.valueOf(sent)).replace("{total}", String.valueOf(statuses.length)));
+        }
+      }
+    });
+
+    try {
+      Services.getInstance().getGroupService().execute(cmd);
+
+      try {
+        request.getInObj().respond(Data.ESME_ROK);
+      } catch (SMPPException e) {
+        log.error(e);
+      }
+
+      return true;
+    } catch (CommandExecutionException e) {
+      switch (e.getErrCode()) {
+        case GroupSendCmd.ERR_UNKNOWN_GROUP:
+          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), unknownGroup);
+          break;
+        case GroupSendCmd.ERR_UNKNOWN_SUBMITTER:
+          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), unknownSubmitter);
+          break;
+        default:
+          log.error(e,e);
+      }
+      return false;
+    }
+  }
+
+  private boolean groupSend(SMPPRequest smppRequest) {
+    final Message m = smppRequest.getInObj().getMessage();
+    GroupSendCmd cmd = new GroupSendCmd();
+
+    String group = smppRequest.getParameter("group");
+    String owner;
+    int i = group.indexOf('/');
+    if (i > 0) {
+      owner = group.substring(0, i);
+      group = group.substring(i+1);
+    } else
+      owner = m.getSourceAddress();
+
+    cmd.setGroupName(group);
+    cmd.setOwner(owner);
+    cmd.setSubmitter(m.getSourceAddress());
+    cmd.setDestAddrSubunit(m.getDestAddrSubunit());
+    cmd.setImsi(m.getImsi());
+    cmd.setMscAddress(m.getMscAddress());
+    cmd.setMessage(smppRequest.getParameter("message"));
+    cmd.setStorable(false);
+    cmd.setSourceId(Command.SOURCE_SMPP);
+
+    cmd.addExecutionObserver(new CommandObserver() {
+      public void update(AsyncCommand command) {
+        if (command.getStatus() == AsyncCommand.STATUS_SUCCESS) {
+          DeliveryStatus s = ((GroupSendCommand)command).getDeliveryStatus();
+          byte[] statuses = s.statuses();
+          int sent = 0;
+          for (byte status : statuses)
+            if (status > 0) sent++;
+          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), sendReport.replace("{actual}", String.valueOf(sent)).replace("{total}", String.valueOf(statuses.length)));
+        }
+      }
+    });
+
+    try {
+      Services.getInstance().getGroupService().execute(cmd);
+
+      try {
+        smppRequest.getInObj().respond(Data.ESME_ROK);
+      } catch (SMPPException e) {
+        log.error(e);
+      }
+
+      return true;
+    } catch (CommandExecutionException e) {
+      switch (e.getErrCode()) {
+        case GroupSendCmd.ERR_UNKNOWN_GROUP:
+          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), unknownGroup);
+          break;
+        case GroupSendCmd.ERR_UNKNOWN_SUBMITTER:
+          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), unknownSubmitter);
+          break;
+        default:
+          log.error(e,e);
+      }
+      return false;
+    }
+  }
+
+  private boolean receipt(SMPPRequest smppRequest) {
+    final Message m = smppRequest.getInObj().getMessage();
     GroupDeliveryReportCmd cmd = new GroupDeliveryReportCmd();
-    cmd.setOwner(smppRequest.getInObj().getMessage().getDestinationAddress());
-    cmd.setUmr(smppRequest.getInObj().getMessage().getUserMessageReference());
-
-    if (smppRequest.getName().equalsIgnoreCase("group_send_delivery_ok")) {
-      cmd.setDeliveryStatus(GroupDeliveryReportCmd.DeliveryStatus.DELIVERED);
-
-    } else if (smppRequest.getName().equalsIgnoreCase("group_send_delivery_failed")) {
-      String reason = smppRequest.getParameter("reason");
-      if (reason != null) {
-        if (reason.equalsIgnoreCase("dl.reason.list_not_found"))
-          cmd.setDeliveryStatus(GroupDeliveryReportCmd.DeliveryStatus.LIST_NOT_FOUND);
-        else
-          cmd.setDeliveryStatus(GroupDeliveryReportCmd.DeliveryStatus.SYS_ERR);
-      }     
-    }
+    cmd.setAddress(m.getSourceAddress());
+    cmd.setUmr(m.getUserMessageReference());
+    cmd.setDelivered(m.getMessageState() == Message.MSG_STATE_DELIVERED);
 
     try {
       Services.getInstance().getGroupService().execute(cmd);
     } catch (CommandExecutionException e) {
-      log.error(e,e);
-    }
 
+    }
     return true;
   }
 }

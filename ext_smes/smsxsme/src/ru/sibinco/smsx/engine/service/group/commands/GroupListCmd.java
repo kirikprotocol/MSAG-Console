@@ -1,9 +1,10 @@
 package ru.sibinco.smsx.engine.service.group.commands;
 
 import ru.sibinco.smsx.engine.service.CommandExecutionException;
-import ru.sibinco.smsc.utils.admin.dl.DistributionList;
+import ru.sibinco.smsx.engine.service.group.datasource.DistrList;
 
 import java.util.List;
+import java.util.Collection;
 
 /**
  * User: artem
@@ -11,7 +12,11 @@ import java.util.List;
  */
 
 public class GroupListCmd extends GroupEditCommand {
+  public String toString() {
+    return "GroupListCmd: owner=" + owner;
+  }
+
   public interface Receiver {
-    public List<DistributionList> execute(GroupListCmd cmd) throws CommandExecutionException;
+    public Collection<DistrList> execute(GroupListCmd cmd) throws CommandExecutionException;
   }
 }

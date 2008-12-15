@@ -3,6 +3,7 @@ package ru.sibinco.smsx.engine.soaphandler.groupsend;
 import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.group.commands.GroupSendCmd;
 import ru.sibinco.smsx.engine.service.group.commands.GroupSendStatusCmd;
+import ru.sibinco.smsx.engine.service.group.DeliveryStatus;
 import ru.sibinco.smsx.engine.service.*;
 import ru.sibinco.smsx.engine.soaphandler.SOAPHandlerInitializationException;
 
@@ -21,6 +22,7 @@ class GroupSendSoapHandler implements GroupSend {
   private static final int STATUS_UNKNOWN_OWNER = -2;
   private static final int STATUS_UNKNOWN_GROUP = -3;
   private static final int STATUS_INVALID_MSGID = -4;
+  private static final int STATUS_UNKNOWN = -5;
 
   private final String mscAddress;
 
@@ -41,13 +43,14 @@ class GroupSendSoapHandler implements GroupSend {
       log.debug("SendSms: owner=" + owner + "; group=" + groupName + "; express=" + express);
 
     final GroupSendCmd cmd = new GroupSendCmd();
-    cmd.setExpress(express)
-      .setGroupName(groupName)
-      .setOwner(owner)
-      .setMessage(message)
-      .setStorable(true)
-      .setMscAddress(mscAddress)
-      .setSourceId(AsyncCommand.SOURCE_SOAP);
+    cmd.setDestAddrSubunit(express ? 1 : 0);
+    cmd.setGroupName(groupName);
+    cmd.setOwner(owner);
+    cmd.setSubmitter(owner);
+    cmd.setMessage(message);
+    cmd.setStorable(true);
+    cmd.setMscAddress(mscAddress);
+    cmd.setSourceId(AsyncCommand.SOURCE_SOAP);
 
     final GroupSendResp r = new GroupSendResp();
     try {
@@ -70,7 +73,7 @@ class GroupSendSoapHandler implements GroupSend {
     final GroupSendResp resp = new GroupSendResp();
     resp.setMsgId(msgId);
     try {
-      cmd.setMsgId(Long.valueOf(msgId));
+      cmd.setMsgId(Integer.parseInt(msgId));
     } catch (NumberFormatException e) {
       log.error("Invalid msgId=" + msgId);
       resp.setStatus(STATUS_INVALID_MSGID);
@@ -78,7 +81,7 @@ class GroupSendSoapHandler implements GroupSend {
     }
 
     try {
-      GroupSendStatusCmd.MessageStatus status = Services.getInstance().getGroupService().execute(cmd);
+      DeliveryStatus status = Services.getInstance().getGroupService().execute(cmd);
       resp.setStatus(getStatus(status));
     } catch (CommandExecutionException e) {
       log.error("Check status err.", e);
@@ -88,13 +91,7 @@ class GroupSendSoapHandler implements GroupSend {
     return resp;
   }
 
-  private static int getStatus(GroupSendStatusCmd.MessageStatus cmdStatus) {
-    switch (cmdStatus) {
-      case ACCEPTED: return STATUS_ACCEPTED;
-      case DELIVERED: return STATUS_DELIVERED;
-      case LIST_NOT_FOUND: return STATUS_UNKNOWN_GROUP;
-      case OWNER_NOT_FOUND: return STATUS_UNKNOWN_OWNER;
-      default: return STATUS_SYSTEM_ERROR;
-    }
+  private static int getStatus(DeliveryStatus status) {
+    return status == null ? STATUS_UNKNOWN : status.statuses()[0]/*STATUS_ACCEPTED*/;     
   }
 }

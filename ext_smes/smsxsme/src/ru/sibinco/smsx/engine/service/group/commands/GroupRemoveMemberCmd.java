@@ -18,6 +18,10 @@ public class GroupRemoveMemberCmd extends GroupEditCommand {
     this.member = member;
   }
 
+  public String toString() {
+    return "GroupRemoveMemberCmd: name=" + groupName + "; owner=" + owner + "; member=" + member;
+  }
+
   public interface Receiver {
     public void execute(GroupRemoveMemberCmd cmd) throws CommandExecutionException;
   }

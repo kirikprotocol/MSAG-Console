@@ -12,4 +12,8 @@ public class GroupRemoveCmd extends GroupEditCommand {
   public interface Receiver {
     public void execute(GroupRemoveCmd cmd) throws CommandExecutionException;
   }
+
+  public String toString() {
+    return "GroupRemoveCmd: name=" + groupName + "; owner=" + owner;
+  }
 }

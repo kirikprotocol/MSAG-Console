@@ -8,6 +8,10 @@ import ru.sibinco.smsx.engine.service.CommandExecutionException;
  */
 
 public class GroupInfoCmd extends GroupEditCommand {
+  public String toString() {
+    return "GroupInfoCmd: name=" + groupName + "; owner=" + owner;
+  }
+
   public interface Receiver {
     public GroupInfo execute(GroupInfoCmd cmd) throws CommandExecutionException;
   }

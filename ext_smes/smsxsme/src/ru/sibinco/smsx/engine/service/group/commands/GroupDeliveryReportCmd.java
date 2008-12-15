@@ -10,24 +10,24 @@ import ru.sibinco.smsx.engine.service.Command;
 
 public class GroupDeliveryReportCmd extends Command {
 
-  private DeliveryStatus deliveryStatus;
-  private String owner;
+  private String address;
+  private boolean delivered;
   private int umr;
 
-  public DeliveryStatus getDeliveryStatus() {
-    return deliveryStatus;
+  public String getAddress() {
+    return address;
   }
 
-  public void setDeliveryStatus(DeliveryStatus deliveryStatus) {
-    this.deliveryStatus = deliveryStatus;
+  public void setAddress(String address) {
+    this.address = address;
   }
 
-  public String getOwner() {
-    return owner;
+  public boolean isDelivered() {
+    return delivered;
   }
 
-  public void setOwner(String owner) {
-    this.owner = owner;
+  public void setDelivered(boolean delivered) {
+    this.delivered = delivered;
   }
 
   public int getUmr() {
@@ -40,9 +40,5 @@ public class GroupDeliveryReportCmd extends Command {
 
   public interface Receiver {
     public void execute(GroupDeliveryReportCmd cmd) throws CommandExecutionException;
-  }
-
-  public enum DeliveryStatus {
-    DELIVERED, LIST_NOT_FOUND, OWNER_NOT_FOUND, ACCESS_DENIED, SYS_ERR
   }
 }

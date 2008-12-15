@@ -3,12 +3,15 @@ package ru.sibinco.smsx;
 import org.apache.log4j.Category;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesList;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesListException;
-import ru.sibinco.smsx.utils.operators.OperatorsList;
+import ru.sibinco.smsx.utils.OperatorsList;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+
+import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.config.ConfigException;
 
 /**
  * User: artem
@@ -29,7 +32,7 @@ public class Context {
   private OperatorsList operatorsList;
   private ScheduledExecutorService configReloader;
 
-  public static void init() {
+  public static void init(XmlConfig config) throws ConfigException {
     instance = new Context();
 
     instance.timezonesList = new SmscTimezonesList();
@@ -39,7 +42,7 @@ public class Context {
       throw new InitializationException(e);
     }
 
-    instance.operatorsList = new OperatorsList("conf/operators.xml");
+    instance.operatorsList = new OperatorsList(config.getSection("operators"));
 
     instance.configReloader = Executors.newSingleThreadScheduledExecutor(new ThreadFactory(){
       public Thread newThread(Runnable r) {
@@ -54,8 +57,6 @@ public class Context {
         } catch (Throwable e) {
           log.error("Can't reload timezones list", e);
         }
-
-        instance.operatorsList.reloadOperators();
       }
     }, 600, 600, TimeUnit.SECONDS);
   }

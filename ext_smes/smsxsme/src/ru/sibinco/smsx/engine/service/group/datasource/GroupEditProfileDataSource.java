@@ -7,7 +7,7 @@ import ru.sibinco.smsx.utils.DataSourceException;
  * Date: 25.07.2008
  */
 
-public interface GroupEditDataSource {
+public interface GroupEditProfileDataSource {
   public void saveProfile(GroupEditProfile profile) throws DataSourceException;
   public GroupEditProfile loadProfile(String address) throws DataSourceException;
   public void shutdown();

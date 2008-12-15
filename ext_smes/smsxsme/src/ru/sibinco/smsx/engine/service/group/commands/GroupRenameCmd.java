@@ -19,6 +19,10 @@ public class GroupRenameCmd extends GroupEditCommand {
     this.newGroupName = newGroupName;
   }
 
+  public String toString() {
+    return "GroupRenameCmd: name=" + groupName + "; owner=" + owner + "; newName=" + newGroupName;
+  }
+
   public interface Receiver {
     public void execute(GroupRenameCmd cmd) throws CommandExecutionException;
   }

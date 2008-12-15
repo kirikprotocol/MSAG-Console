@@ -1,0 +1,11 @@
+<config>
+  <param name="sourceAddress">147</param>
+  <section name="notifications">
+    <param name="add.group">Группа {1} добавлена.</param>
+    <param name="remove.group">Группа {1} удалена.</param>
+    <param name="rename.group">Группа {1} переименована в {2}.</param>
+    <param name="copy.group">Группа {1} скопирована в {2}.</param>
+    <param name="add.member">В группу {1} добавлен реципиент {2}.</param>
+    <param name="remove.member">Из группы {1} удален реципиент {2}.</param>
+  </section>
+</config>

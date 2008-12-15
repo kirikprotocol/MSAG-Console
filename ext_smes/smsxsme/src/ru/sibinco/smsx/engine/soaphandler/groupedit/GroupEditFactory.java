@@ -1,11 +1,9 @@
 package ru.sibinco.smsx.engine.soaphandler.groupedit;
 
-import ru.sibinco.smsx.engine.soaphandler.groupsend.GroupSend;
+import com.eyeline.sme.smpp.OutgoingQueue;
 import ru.sibinco.smsx.engine.soaphandler.SOAPHandlerInitializationException;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.Condition;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * User: artem
@@ -16,33 +14,22 @@ public class GroupEditFactory {
   
   private static GroupEdit handler;
 
-  private static final Lock lock = new ReentrantLock();
-  private static final Condition cond = lock.newCondition();
+  private static final CountDownLatch initLatch = new CountDownLatch(1);
 
   private GroupEditFactory() {
   }
 
-  public static void init(String configDir) throws SOAPHandlerInitializationException {
-    try {
-      lock.lock();
-      handler = new GroupEditSoapHandler(configDir);
-      cond.signal();
-    } finally {
-      lock.unlock();
-    }
+  public static void init(String configDir, OutgoingQueue outQueue) throws SOAPHandlerInitializationException {
+    handler = new GroupEditSoapHandler(configDir, outQueue);
+    initLatch.countDown();
   }
 
   public static GroupEdit createGroupEdit() {
     try {
-      lock.lock();
-      if (handler == null)
-        cond.await();
-      return handler;
+      initLatch.await();
     } catch (InterruptedException e) {
       e.printStackTrace();
-      return null;
-    } finally {
-      lock.unlock();
     }
+    return handler;
   }
 }

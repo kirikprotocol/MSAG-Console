@@ -3,8 +3,8 @@
 <config>
   <section name="calendar">
     <param name="service.address">147</param>
-    <param name="send.date.max.year">2009</param>
-    <param name="engine.working.interval">60000</param>
+    <param name="send.date.max.year">2009</param>  <!-- optional -->
+    <param name="engine.working.interval">60000</param> <!-- optional -->
     <param name="advertising.delimiter">@</param>
     <param name="advertising.size">240</param>
     <param name="advertising.service">SMSX</param>
@@ -19,6 +19,7 @@
     <param name="advertising.size">240</param>
     <param name="advertising.service">SMSX</param>
     <param name="store.dir">store/secret</param>
+    <param name="archives.dir">store/secret/archives</param>
   </section>
 
   <section name="nick">
@@ -27,23 +28,14 @@
   </section>
 
   <section name="group">
-    <param name="group.address">011</param>
-    <param name="manager.pool.size">10</param>
-    <param name="manager.connection.timeout">60000</param>
-    <param name="store.file">webapps/smsx/WEB-INF/store/group.bin</param>
-    <param name="store.data.life.time">1800000</param>
-    <param name="smsc.host">phoenix</param>
-    <param name="smsc.port">37811</param>
     <param name="source.address">147</param>
+    <param name="reply.invitation">Группа:{size} номеров.</param>
 
-    <section name="notifications">
-      <param name="add.group">Группа {1} добавлена.</param>
-      <param name="remove.group">Группа {1} удалена.</param>
-      <param name="rename.group">Группа {1} переименована в {2}.</param>
-      <param name="copy.group">Группа {1} скопирована в {2}.</param>
-      <param name="add.member">В группу {1} добавлен реципиент {2}.</param>
-      <param name="remove.member">Из группы {1} удален реципиент {2}.</param>
-    </section>
+    <param name="store.dir">webapps/smsx/WEB-INF/store</param>
+    <param name="replies.cache.size">1000</param>
+    <param name="statuses.cache.size">1000</param>
+    <param name="max.lists">50</param>
+    <param name="max.elements">50</param>
   </section>
 
   <section name="jmx">
@@ -61,7 +53,7 @@
   <section name="dbpool">
     <section name="jdbc">
       <param name="driver">com.mysql.jdbc.Driver</param>
-      <param name="source">jdbc:mysql://localhost/smsx?useUnicode=true&amp;characterEncoding=KOI8R&amp;autoReconnect=true</param>
+      <param name="source">jdbc:mysql://192.168.1.194/smsx?useUnicode=true&amp;characterEncoding=KOI8R&amp;autoReconnect=true</param>
       <param name="user">root</param>
       <param name="password">laefeeza1</param>
     </section>
@@ -87,5 +79,15 @@
     <param name="login">a</param>
     <param name="password">a</param>
     <param name="timeout">10000</param>
+  </section>
+
+  <section name="adminserver">
+    <param name="port">10000</param>
+    <param name="poolSize">20</param>
+    <param name="timeout">10000</param>
+  </section>
+
+  <section name="operators">
+    <param name="MTS">+791????????</param>
   </section>
 </config>

@@ -18,6 +18,10 @@ public class GroupAddMemberCmd extends GroupEditCommand {
     this.member = member;
   }
 
+  public String toString() {
+    return "GroupAddMemberCmd: name=" + groupName + "; owner=" + owner + "; member=" + member;
+  }
+
   public interface Receiver {
     public void execute(GroupAddMemberCmd cmd) throws CommandExecutionException;
   }

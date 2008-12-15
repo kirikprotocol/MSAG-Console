@@ -1,15 +1,14 @@
 package ru.sibinco.smsx.network.dbconnection;
 
-import snaq.db.ConnectionPool;
-
-import java.io.File;
-import java.sql.DriverManager;
-import java.sql.Driver;
-
-import ru.sibinco.smsx.InitializationException;
-import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.ConfigException;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.config.xml.XmlConfigSection;
+import ru.sibinco.smsx.InitializationException;
+import snaq.db.ConnectionPool;
+
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * User: artem
@@ -21,31 +20,37 @@ public class ConnectionPoolFactory {
   private static String url;
   private static String login;
   private static String password;
+  private static CountDownLatch initLatch = new CountDownLatch(1);
 
-  public static void init(final String configDir) {
+  public static void init(XmlConfig c) {
     try {
-      final XmlConfig c = new XmlConfig();
-      c.load(new File(configDir, "config.xml"));
-      final PropertiesConfig config = new PropertiesConfig(c.getSection("dbpool").toProperties("."));
+      XmlConfigSection s = c.getSection("dbpool").getSection("jdbc");
 
       // Read main parameters
-      url = config.getString("jdbc.source");
-      login = config.getString("jdbc.user");
-      password = config.getString("jdbc.password");
+      url = s.getString("source");
+      login = s.getString("user");
+      password = s.getString("password");
 
       // Register JDBC driver
       try {
-        DriverManager.registerDriver((Driver)Class.forName(config.getString("jdbc.driver")).newInstance());
+        DriverManager.registerDriver((Driver)Class.forName(s.getString("driver")).newInstance());
       } catch (Exception e) {
         throw new InitializationException("Can't register JDBC driver", e);
       }
 
+      initLatch.countDown();
+
     } catch (ConfigException e) {
-      throw new InitializationException("Invalid config file " + new File(configDir, "dbpool.properties").getAbsolutePath() + ": " + e.getMessage());
+      throw new InitializationException(e.getMessage());
     }
   }
 
   public static ConnectionPool createConnectionPool(final String name, final int size, final long connectionTimeout) {
+    try {
+      initLatch.await();
+    } catch (InterruptedException e) {
+      return null;
+    }
     final ConnectionPool pool = new ConnectionPool(name, size, size, connectionTimeout, url, login, password);
     pool.setCaching(false, true, false);
     return pool;

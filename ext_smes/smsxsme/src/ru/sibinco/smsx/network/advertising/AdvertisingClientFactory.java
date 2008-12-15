@@ -1,12 +1,11 @@
 package ru.sibinco.smsx.network.advertising;
 
-import ru.sibinco.smsx.InitializationException;
-
-import java.io.File;
-
-import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.ConfigException;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.config.xml.XmlConfigSection;
+import ru.sibinco.smsx.InitializationException;
+
+import java.util.concurrent.CountDownLatch;
 
 /**
  * User: artem
@@ -21,23 +20,23 @@ public class AdvertisingClientFactory {
   private static String host;
   private static int port;
   private static long timeout;
+  private static final CountDownLatch initLatch = new CountDownLatch(1);
 
   /**
    * Init factory from file "advertising.properties"
-   * @param configDir directory contains file "advertising.properties"
+   * @param c XmlConfig
    */
-  public static void init(String configDir) {
+  public static void init(XmlConfig c) {
     try {
-      final XmlConfig c = new XmlConfig();
-      c.load(new File(configDir, "config.xml"));
-      final PropertiesConfig config = new PropertiesConfig(c.getSection("advertising").toProperties("."));            
+      XmlConfigSection section = c.getSection("advertising");
 
-      host = config.getString("host");
-      port = config.getInt("port");
-      timeout = config.getLong("timeout");
+      host = section.getString("host");
+      port = section.getInt("port");
+      timeout = section.getLong("timeout");
 
+      initLatch.countDown();
     } catch (ConfigException e) {
-      throw new InitializationException("Invalid config file " + new File(configDir, "advertising.properties").getAbsolutePath() + ": " + e);
+      throw new InitializationException(e.getMessage());
     }
   }
 
@@ -46,6 +45,11 @@ public class AdvertisingClientFactory {
    * @return new instance of AdvertisingClient
    */
   public static AdvertisingClient createAdvertisingClient() {
+    try {
+      initLatch.await();
+    } catch (InterruptedException e) {
+      return null;
+    }
     return new AdvertisingClientImpl(host, port, timeout);
   }
 

@@ -1,8 +1,10 @@
-package ru.sibinco.smsx.engine.service.group.datasource;
+package ru.sibinco.smsx.engine.service.group.datasource.impl.profile;
 
 import ru.sibinco.smsx.utils.DataSourceException;
 import ru.sibinco.smsx.utils.DBDataSource;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
+import ru.sibinco.smsx.engine.service.group.datasource.GroupEditProfileDataSource;
+import ru.sibinco.smsx.engine.service.group.datasource.GroupEditProfile;
 import snaq.db.ConnectionPool;
 
 import java.sql.Connection;
@@ -15,12 +17,12 @@ import java.sql.ResultSet;
  * Date: 25.07.2008
  */
 
-public class DBGroupEditDataSource extends DBDataSource implements GroupEditDataSource {
+public class DBGroupEditProfileDataSource extends DBDataSource implements GroupEditProfileDataSource {
 
   private final ConnectionPool pool;
 
-  public DBGroupEditDataSource() throws DataSourceException {
-    super(DBGroupEditDataSource.class.getResourceAsStream("groupedit.properties"), "");
+  public DBGroupEditProfileDataSource() throws DataSourceException {
+    super(DBGroupEditProfileDataSource.class.getResourceAsStream("groupedit.properties"), "");
 
     pool = ConnectionPoolFactory.createConnectionPool("groupedit", Integer.MAX_VALUE, 60000);
     pool.init(1);

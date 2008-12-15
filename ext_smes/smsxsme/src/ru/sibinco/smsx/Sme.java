@@ -21,10 +21,12 @@ import ru.sibinco.smsx.engine.soaphandler.groupedit.GroupEditFactory;
 import ru.sibinco.smsx.engine.soaphandler.smsxsubscription.SmsXSubscriptionFactory;
 import ru.sibinco.smsx.engine.service.Services;
 import ru.sibinco.smsx.engine.service.ServiceManagerMBean;
+import ru.sibinco.smsx.engine.admhandler.GroupService;
 import ru.sibinco.smsx.network.advertising.AdvertisingClientFactory;
 import ru.sibinco.smsx.network.advertising.AdvertisingClient;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
 import ru.sibinco.smsx.network.personalization.PersonalizationClientPoolFactory;
+import ru.sibinco.smsx.network.admserver.AdmServer;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -47,17 +49,28 @@ public class Sme {
   public Sme(String configDir, boolean testMode) throws SmeException {
 
     try {
+      final XmlConfig config = new XmlConfig();
+      config.load(new File(configDir, "config.xml"));
+
       // Init DB connection pool
-      ConnectionPoolFactory.init(configDir);
+      System.out.println("Initiate DB Connection pool...");
+      ConnectionPoolFactory.init(config);
 
       // Init personalization clients factory
-      PersonalizationClientPoolFactory.init(configDir);
+      System.out.println("Initiate personalization...");
+      PersonalizationClientPoolFactory.init(config);
 
       // Init advertising clients factory
-      AdvertisingClientFactory.init(configDir);
+      System.out.println("Initiate banner engine client...");
+      AdvertisingClientFactory.init(config);
+
+      // Init adm server
+      System.out.println("Initiate command server...");
+      AdmServer.init(config);
 
       // Init context
-      Context.init();
+      System.out.println("Initiate context...");
+      Context.init(config);
 
       // Init SMPP multiplexor
       PropertiesConfig smppProperties = new PropertiesConfig();
@@ -71,25 +84,31 @@ public class Sme {
       handler = new MessageHandler("conf/smpphandlers/handler.xml", transceiver.getInQueue(), transceiver.getOutQueue());
 
       // Init services
-      final XmlConfig config = new XmlConfig();
-      config.load(new File(configDir, "config.xml"));      
+      System.out.println("Initiate services...");
+
       Services.init(config, transceiver.getOutQueue());
       Services.getInstance().startServices();
 
       // Init SOAP
+      System.out.println("Initiate SOAP...");
       BlacklistSoapFactory.init(configDir);
       senderAdvertisingClient = AdvertisingClientFactory.createAdvertisingClient();
       senderAdvertisingClient.connect();
       SmsXSenderFactory.init(configDir, senderAdvertisingClient);
       GroupSendFactory.init(configDir);
-      GroupEditFactory.init(configDir);
+      GroupEditFactory.init(configDir, transceiver.getOutQueue());
       SmsXSubscriptionFactory.init(configDir);
 
+      // Init commands services
+      System.out.println("Initiate command services...");
+      GroupService gs = new GroupService();
+      AdmServer.getInstance().registerService(gs, gs.createDescription());
+
+      System.out.println("Connecting...");
       transceiver.connect();
       handler.start();
 
-
-      if (config.getSection("jmx") != null) {
+      if (config.containsSection("jmx")) {
         System.out.println("SMSX started in JMX mode");
         int jmxPort = config.getSection("jmx").getInt("port");
         String user = config.getSection("jmx").getString("user");
@@ -149,6 +168,10 @@ public class Sme {
     log.info("Stopping reload config executor...");
     Context.getInstance().shutdown();
     log.info("Reload config executor stopped.");
+
+    log.info("Stopping Adm Server...");
+    AdmServer.shutdown();
+    log.info("Adm server stopped.");
   }
 
   private static class Multiplexor extends TestMultiplexor {
