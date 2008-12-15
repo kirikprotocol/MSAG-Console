@@ -1107,7 +1107,7 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
             break;
         }
 
-        /*
+        /**/
         if ( ( count > 1 ) && ( k < prevk ) ) {
             fprintf( stderr, "WARNING: keys out of order: %s >= %s\n",
                      prevk.toString().c_str(),
@@ -1118,7 +1118,7 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
             ok = false;
         }
         prevk = k;
-         */
+        /**/
         if ( count % 100 == 0 ) {
             // fprintf( stderr, "store check pass #%d, key=%s\n",
             // count, k.toString().c_str() );

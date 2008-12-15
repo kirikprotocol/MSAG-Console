@@ -19,6 +19,7 @@ private:
     typedef RBTree<StoredKey,Idx>                 IndexStorage;    // transient
     typedef RBTreeHSAllocator<StoredKey,Idx>      IndexAllocator;
     typedef typename IndexStorage::RBTreeNode     IndexNode;
+    typedef typename IndexNode::nodeptr_type      nodeptr_type;
 
 public:
     typedef StoredKey storedkey_type;
@@ -31,6 +32,7 @@ public:
                         bool cleanup = false,
                         smsc::logger::Logger* thelog = 0 ) :
     index_(0,0,thelog),
+    cacheaddr_(0),
     cache_(0),
     invalid_(0)
     {
@@ -43,6 +45,7 @@ public:
 
         index_.SetAllocator( allocator_.get() );
         index_.SetChangesObserver( allocator_.get() );
+        invalidateCache();
     }
 
     ~RBTreeIndexStorage() {
@@ -58,6 +61,7 @@ public:
     /// set invalid index
     void setInvalidIndex( index_type i ) {
         invalid_ = i;
+        invalidateCache();
     }
 
 
@@ -76,7 +80,7 @@ public:
     bool setIndex( const key_type& k, index_type i ) {
         IndexNode* node = getNode( k );
         if ( node ) {
-            index_.setNodeValue( node, i );
+            index_.setNodeValue( cacheaddr_, i );
         } else {
             // the tree may be changed by reallocation
             invalidateCache();
@@ -91,7 +95,7 @@ public:
         IndexNode* node = getNode( k );
         if ( node ) {
             index_type i = node->value;
-            index_.setNodeValue( node, invalid_ );
+            index_.setNodeValue( cacheaddr_, invalid_ );
             return i;
         }
         return invalid_;
@@ -151,24 +155,31 @@ public:
     }
 
 private:
+    // NOTE: the side effect is filling the cache in case an item is found in index
+    // So, if result is not NULL, you may rely on cache_ and cacheaddr_.
     inline IndexNode* getNode( const key_type& k ) const
     {
         if ( cache_ && cache_->key == k ) {
             return cache_;
         } else if ( negativekey_ == k ) {
-            return NULL;
+            return 0;
         } else {
-            IndexNode* node = const_cast< IndexStorage& >(index_).Get( k );
-            if ( node )
-                cache_ = node;
-            else
+            nodeptr_type node = const_cast< IndexStorage& >(index_).Get( k );
+            IndexNode* res;
+            if ( node != allocator_->getNilNode() ) {
+                cacheaddr_ = node;
+                cache_ = res = allocator_->realAddr(node);
+            } else {
                 negativekey_ = k;
-            return node;
+                res = 0;
+            }
+            return res;
         }
     }
 
     inline void invalidateCache() const {
-        cache_ = NULL;
+        cache_ = 0;
+        cacheaddr_ = allocator_->getNilNode();
         key_type k;
         negativekey_ = k;
     }
@@ -176,6 +187,7 @@ private:
 private:
     IndexStorage                    index_;
     std::auto_ptr< IndexAllocator > allocator_;
+    mutable nodeptr_type            cacheaddr_;   // for successive get/set
     mutable IndexNode*              cache_;       // for successive get/set
     mutable key_type                negativekey_; // for absent key
     index_type                      invalid_;

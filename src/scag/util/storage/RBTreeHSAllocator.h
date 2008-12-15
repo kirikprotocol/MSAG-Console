@@ -61,6 +61,7 @@ template< class Key = long, class Value = long, class KS = RBTreeSerializer<Key>
 {
 protected:
     typedef typename RBTreeAllocator<Key,Value>::RBTreeNode RBTreeNode;
+    typedef typename RBTreeNode::nodeptr_type               nodeptr_type;
 
 public:
     static const int32_t version_32_1 = 0x01;             // prehistoric version
@@ -80,10 +81,10 @@ private:
         int32_t cells_count;                 // 4
         int32_t cells_used;                  // 4
         int32_t cells_free;                  // 4
-        int64_t root_cell;                   // 8
-        int64_t first_free_cell;             // 8 an offset (transient) to a first free cell
-        int64_t nil_cell;                    // 8
-        int64_t growth;                      // 8
+        nodeptr_type root_cell;              // they are an indices
+        nodeptr_type first_free_cell;        // ...
+        nodeptr_type nil_cell;               // ...
+        int32_t growth;                      // 8
         // char reserved[160];               // 160
 
         int32_t persistentCellSize;          // this is not a persistent field
@@ -121,18 +122,13 @@ public:
     static const int ATTEMPT_INIT_RUNNING_PROC	= -20;
 
     RBTreeHSAllocator( smsc::logger::Logger* thelog ):
-    rbtree_body_(0),
-    growth(100000000),
+    growth(1000000),
     running(false),
     currentOperation(0),
     logger(thelog),
     rbtFileHeaderDump_(rbtFileHeaderBuf_)
     {
     }
-
-    // void Create(void){}
-    // void Open(void){}
-    // void Close(void){}
 
     int Init(const string& _rbtree_file="", off_t _growth = default_growth, bool clearFile = false)
     {
@@ -160,59 +156,60 @@ public:
 
     virtual ~RBTreeHSAllocator()
     {
-        if (rbtree_body_) delete rbtree_body_;
-        if(running) {
-            running = false;
+        if (running) running = false;
+        for ( std::vector< caddr_t >::iterator i = chunks_.begin();
+              i != chunks_.end(); ++i ) {
+            delete *i;
         }
     }
 
-    virtual RBTreeNode* allocateNode(void)
+    virtual nodeptr_type allocateNode(void)
     {
-        if(!running) return 0;
-        RBTreeNode* newNode;
-        if (!header_.cells_free && ReallocRBTreeFile() != SUCCESS)
-            abort();
-        newNode = addr2node( header_.first_free_cell );
-        if (logger) smsc_log_debug(logger, "allocateNode rbtree_body_ = %p, header_.first_free_cell = %lld, node=%p", rbtree_body_, header_.first_free_cell, newNode );
-        header_.first_free_cell = (int64_t)newNode->parent;
-        newNode->parent = newNode->left = newNode->right = 0;
+        if (!running) return 0;
+        if (!header_.cells_free && ReallocRBTreeFile() != SUCCESS) abort();
+        nodeptr_type newNode = header_.first_free_cell;
+        if (logger) smsc_log_debug( logger, "allocateNode node=%ld", (long)newNode );
+        RBTreeNode* node = addr2node(newNode);
+        header_.first_free_cell = node->parent;
+        node->parent = node->left = node->right = header_.nil_cell;
         header_.cells_used++;
         header_.cells_free--;
         return newNode;
     }
 
-    virtual void releaseNode(RBTreeNode* node)
+    virtual void releaseNode( nodeptr_type node )
     {
         if(!running) return;
-        node->parent = (RBTreeNode*)header_.first_free_cell;
-        header_.first_free_cell = node2addr(node);
+        RBTreeNode* theNode = addr2node(node);
+        theNode->parent = header_.first_free_cell;
+        header_.first_free_cell = node;
         header_.cells_used--;
         header_.cells_free++;
     }
 
-    virtual RBTreeNode* getRootNode(void)
+    virtual nodeptr_type getRootNode(void)
     {
-        if (!running) return 0;
-        if (-1 == header_.root_cell)	return 0;
-        return addr2node(header_.root_cell);
+        if (!running) return header_.nil_cell;
+        if (-1 == header_.root_cell) return header_.nil_cell;
+        return header_.root_cell;
     }
 
-    virtual void setRootNode(RBTreeNode* node)
+    virtual void setRootNode( nodeptr_type node )
     {
         if (!running) return;
-        header_.root_cell = node2addr(node);
+        header_.root_cell = node;
 		
-        if (logger) smsc_log_debug(logger, "SetRoot node = %p, header_.root_cell=%lld", node, header_.root_cell);
+        if (logger) smsc_log_debug( logger, "SetRoot header_.root_cell=%ld", (long)header_.root_cell);
         //printf("SetRoot (long)node = %X", (long)node);
         //printf("(long)rbtree_body_ = %X", (long)rbtree_body_);
         //printf("((long)node - (long)rbtree_body_) = %d", ((long)node - (long)rbtree_body_));
         //printf("header_.root_cell = %d\n", header_.root_cell);
     }
 
-    virtual RBTreeNode* getNilNode()
+    virtual nodeptr_type getNilNode()
     {
-        if (!running) return 0;
-        return addr2node(header_.nil_cell);
+        // if (!running) return 0;
+        return header_.nil_cell;
     }
 
     virtual long getSize(void) const
@@ -221,21 +218,21 @@ public:
         return header_.cells_used;
     }
 
-    virtual long getOffset(void) const
+    virtual RBTreeNode* realAddr(nodeptr_type n) const
     {
-        if (!running) return 0;
-        return long(rbtree_body_);
+        return addr2node(n);
     }
 
-    virtual void startChanges(RBTreeNode* node, int operation)
+
+    virtual void startChanges( nodeptr_type node, int operation )
     {
         if ( changedNodes.size() > 0 ) completeChanges();
-        if (logger) smsc_log_debug(logger, "startChanges. node = (%lld)%p, operation = %d", node2addr(node), node, operation);
+        if (logger) smsc_log_debug(logger, "startChanges. node = (%ld)%p, operation = %d", (long)node, realAddr(node), operation);
         currentOperation = operation;
         changedNodes.push_back(node);
     }
 
-    virtual void nodeChanged(RBTreeNode* node)
+    virtual void nodeChanged( nodeptr_type node)
     {
         //	    smsc_log_debug(logger, "Node changed=%d(%p)", node2addr(node), node);
         changedNodes.push_back(node);
@@ -254,7 +251,7 @@ public:
     }
 
     /// a temporary method to check free cells integrity
-    virtual std::vector< RBTreeNode* > freenodes()
+    virtual std::vector< nodeptr_type > freenodes()
     {
         // check header integrity
         if ( header_.cells_count != header_.cells_used + header_.cells_free ) {
@@ -266,10 +263,21 @@ public:
         }
          */
 
+        // dump the tree if it is quite small
+        /*
+        if ( logger ) {
+            unsigned cc = header_.cells_count < 100 ? header_.cells_count : 100;
+            for ( unsigned i = 0; i < cc; ++i ) {
+                RBTreeNode* cell = addr2node(i);
+                smsc_log_debug( logger, "node #%u parent=%u left=%u right=%u", i, cell->parent, cell->left, cell->right );
+            }
+        }
+         */
+
         // check free cells integrity
-        int64_t rbtree_len = index2addr(header_.cells_count);
-        int64_t celladdr = header_.first_free_cell;
-        std::vector< RBTreeNode* > fnl;
+        nodeptr_type rbtree_len = header_.cells_count;
+        nodeptr_type celladdr = header_.first_free_cell;
+        std::vector< nodeptr_type > fnl;
         fnl.reserve( header_.cells_free );
         for ( int32_t cf = 0; cf < header_.cells_free; ++cf ) {
             // if ( cf < 20 )
@@ -280,9 +288,8 @@ public:
                 throw smsc::util::Exception( "RBTreeAlloc: free cell %d address is too big %lld filelen=%lld", cf, celladdr, rbtree_len );
                 break;
             }
-            RBTreeNode* cell = addr2node(celladdr);
-            fnl.push_back(cell);
-            celladdr = int64_t(cell->parent);
+            fnl.push_back(celladdr);
+            celladdr = addr2node(celladdr)->parent;
         }
         std::sort( fnl.begin(), fnl.end() );
         const size_t fnc = fnl.size();
@@ -297,19 +304,20 @@ public:
 
 
 private:
-    inline RBTreeNode* addr2node( int64_t offset ) const
+    inline RBTreeNode* addr2node( nodeptr_type offset ) const
     {
-        return reinterpret_cast< RBTreeNode* >( int64_t(rbtree_body_) + offset );
+        register unsigned chunkidx = offset / growth;
+        assert( chunkidx < chunks_.size() );
+        return reinterpret_cast< RBTreeNode* >(int64_t(chunks_[chunkidx]) + cellsize()*int64_t(offset%growth) );
     }
-    inline int64_t node2addr( const RBTreeNode* node ) const
+    /*
+    inline nodeptr_type node2addr( const RBTreeNode* node ) const
     {
-        return int64_t(node) - int64_t(rbtree_body_);
+        return nodeptr_type((int64_t(node) - int64_t(rbtree_body_)) / cellsize());
     }
-    inline int32_t addr2index( int64_t a ) const {
-        return a / sizeof(RBTreeNode);
-    }
-    inline int64_t index2addr( int32_t i ) const {
-        return int64_t(i) * sizeof(RBTreeNode);
+     */
+    inline int32_t cellsize() const {
+        return sizeof(RBTreeNode);
     }
 
     bool isFileExists(void)
@@ -320,13 +328,13 @@ private:
     
     int ReallocRBTreeFile(void)
     {
-        const bool creation = ! rbtree_body_;
+        const bool creation = ( chunks_.size() == 0 );
         if ( changedNodes.size() > 0 ) {
             // we have to make sure that no pending nodes are on the list
             completeChanges();
         }
 
-        const uint32_t newChunkSize = index2addr(growth + header_.cells_count);
+        const int64_t newChunkSize = int64_t(cellsize()*growth);
         std::auto_ptr<char> newMem(new char[newChunkSize]);
         if(!newMem.get())
         {
@@ -339,13 +347,8 @@ private:
                                   int64_t(header_.cells_count+growth) );
         // smsc_log_debug(logger, "RBTree address range is [%p..%p)", newMem, newMem + newRbtFileLen );
 
-        if (rbtree_body_)
-        {
-            memcpy( newMem.get(), rbtree_body_, index2addr(header_.cells_count) );
-            delete rbtree_body_;
-        }
-        memset( newMem.get() + index2addr(header_.cells_count), 0, index2addr(growth) );
-        rbtree_body_ = newMem.release();
+        memset( newMem.get(), 0, growth*cellsize() );
+        chunks_.push_back( newMem.release() );
 
         int32_t oldcellcount = header_.cells_count;
         int32_t freecell = header_.cells_count;
@@ -367,25 +370,24 @@ private:
         // rbtree_addr = newMem;
         // memset(rbtree_addr + rbtFileLen, 0x00, size_t(growth * sizeof(RBTreeNode)));
         
-        RBTreeNode* cell = addr2node(index2addr(freecell));
-        for ( unsigned long i = freecell + 1;
+        RBTreeNode* cell = addr2node(freecell);
+        for ( int32_t i = freecell + 1;
               i < header_.cells_count;
               ++i ) {
             // if ( growth < 100 )
             // smsc_log_debug( logger, "RBTree cell #%d has address [%x..%x)", i-1, (caddr_t)cell, (caddr_t)cell + sizeof(RBTreeNode) );
-            cell->parent = (RBTreeNode*)index2addr(i);
-            ++cell;
+            cell = addr2node( cell->parent = i );
         }
-        header_.first_free_cell = index2addr(freecell);
+        header_.first_free_cell = freecell;
 
-        serializeRbtHeader(rbtFileHeaderDump_, header_);
+        serializeRbtHeader( rbtFileHeaderDump_, header_ );
         rbtree_f.Seek( rbtFileHeaderDump_.size() + header_.persistentCellSize * oldcellcount, SEEK_SET);
         std::vector< unsigned char > buf;
         Serializer sr(buf);
         sr.setVersion( header_.version );
         for ( int32_t i = oldcellcount; i < header_.cells_count; ++i ) {
             sr.reset();
-            serializeCell( sr, addr2node(index2addr(i)) );
+            serializeCell( sr, addr2node(i) );
             rbtree_f.Write(sr.data(), sr.size());
         }
 
@@ -423,8 +425,6 @@ private:
             if (logger) smsc_log_error(logger, "FSStorage: error idx_file: %s, reason: %s\n", rbtree_file.c_str(), ex.what());
             return CANNOT_CREATE_RBTREE_FILE;
         }
-
-        rbtree_body_ = NULL;
 
         try
         {
@@ -515,6 +515,7 @@ private:
             assert( ds.rpos() == rbtFileHeaderDump_.size() );
             uint64_t expectedLen = rbtFileHeaderDump_.size() + header_.cells_count*header_.persistentCellSize;
             if ( len != expectedLen ) {
+                // FIXME: we should fix it oneday
                 if (logger) smsc_log_warn(logger, "OpenRBTree: file size differ from what expected: headersize=%d cells_count=%lld cellsize=%d expectedlen=%lld len=%lld",
                                           int(rbtFileHeaderDump_.size()),
                                           int64_t(header_.cells_count),
@@ -527,33 +528,80 @@ private:
             }
         }
 
-        rbtree_body_ = new char[index2addr(header_.cells_count)];
-        if ( rbtree_body_ == 0 ) return BTREE_FILE_MAP_FAILED;
+        // create the necessary number of chunks
+        for ( unsigned i = 0; i < ((header_.cells_count-1)/growth + 1); ++i ) {
+            std::auto_ptr<char> mem( new char[growth*cellsize()] );
+            if ( ! mem.get() ) return BTREE_FILE_MAP_FAILED;
+            chunks_.push_back( mem.release() );
+        }
+        // rbtree_body_ = new char[header_.cells_count*cellsize()];
+        // if ( rbtree_body_ == 0 ) return BTREE_FILE_MAP_FAILED;
 
         // reading cells
         rbtree_f.Seek( rbtFileHeaderDump_.size() );
-        unsigned char buf[1024];
-        const bool neednew = header_.persistentCellSize > 1024;
-        std::auto_ptr<unsigned char> ppbuf;
-        unsigned char* pbuf = buf;
-        if (neednew) {
-            ppbuf.reset( new unsigned char[header_.persistentCellSize] );
-            pbuf = ppbuf.get();
-        }
-        Deserializer ds(pbuf,header_.persistentCellSize);
+        std::auto_ptr<unsigned char> pbuf(new unsigned char[header_.persistentCellSize]);
+        Deserializer ds(pbuf.get(),header_.persistentCellSize);
         ds.setVersion( header_.version );
         for ( int32_t i = 0; i < header_.cells_count; ++i ) {
-            rbtree_f.Read(pbuf,header_.persistentCellSize);
+            rbtree_f.Read(pbuf.get(),header_.persistentCellSize);
             ds.setrpos(0);
-            deserializeCell( ds, addr2node(index2addr(i)) );
+            deserializeCell(ds,addr2node(i) );
         }
-        if (logger) smsc_log_info( logger, "OpenRBTree: version=%d cells_count=%d cells_used=%d cells_free=%d root_cell=%lld first_free_cell=%lld pers_cell_size=%d",
+
+        bool fixheader = false;
+        if ( header_.cells_count != chunks_.size() * growth ) {
+            // Now we have a problem if the growth mismatches the one which was in file.
+            // We have to update the file to the new value of growth.
+            fixheader = true;
+            unsigned lastcell = header_.cells_count;
+            unsigned needcells = growth - (header_.cells_count % growth);
+            if ( logger ) smsc_log_debug( logger, "filling %ld cells starting from %ld to the rbtree to match the growth chunks",
+                                          long(needcells), long(lastcell) );
+            // looking for the last free cell
+            if ( header_.cells_free > 0 ) {
+                unsigned freecell = header_.first_free_cell;
+                for ( unsigned i = header_.cells_free; i > 1 ; --i ) {
+                    freecell = addr2node(freecell)->parent;
+                }
+                addr2node(freecell)->parent = lastcell;
+                startChanges(freecell, RBTreeChangesObserver<Key,Value>::OPER_CHANGE );
+            } else {
+                header_.first_free_cell = lastcell;
+                startChanges(getRootNode(), RBTreeChangesObserver<Key,Value>::OPER_CHANGE );
+            }
+
+            memset( chunks_.back() + (growth-needcells)*cellsize(), 0, cellsize()*needcells );
+            rbtree_f.Seek( rbtFileHeaderDump_.size() + header_.persistentCellSize * lastcell, SEEK_SET );
+            std::vector<unsigned char> pbuf;
+            pbuf.reserve(header_.persistentCellSize);
+            Serializer ss(pbuf);
+            ss.setVersion(header_.version);
+            for ( unsigned i = lastcell; i < chunks_.size()*growth; ) {
+                RBTreeNode* cell = addr2node(i);
+                cell->parent = ++i;
+                ss.setwpos(0);
+                serializeCell(ss,cell);
+                rbtree_f.Write(ss.data(),ss.size());
+            }
+            header_.cells_count += needcells;
+            header_.cells_free += needcells;
+        } else if ( growth != header_.growth  ) {
+            fixheader = true;
+            startChanges( getRootNode(), RBTreeChangesObserver<Key,Value>::OPER_CHANGE );
+        }
+
+        if ( fixheader ) {
+            rbtree_f.Flush();
+            completeChanges();
+        }
+
+        if (logger) smsc_log_info( logger, "OpenRBTree: version=%d cells_count=%d cells_used=%d cells_free=%d root_cell=%d first_free_cell=%d pers_cell_size=%d",
                                    header_.version,
                                    header_.cells_count,
                                    header_.cells_used,
                                    header_.cells_free,
-                                   int64_t(addr2index(header_.root_cell)),
-                                   int64_t(addr2index(header_.first_free_cell)),
+                                   int32_t(header_.root_cell),
+                                   int32_t(header_.first_free_cell),
                                    int(header_.persistentCellSize) );
         return ret;
     }
@@ -594,16 +642,16 @@ private:
         Serializer ser(transactionBuf_);
         ser.setVersion(header_.version);
         transactionBuf_.reserve( transactionNodes_.size()*header_.persistentCellSize );
-        for ( typename std::vector< RBTreeNode* >::const_iterator i = transactionNodes_.begin();
+        for ( typename std::vector< nodeptr_type >::const_iterator i = transactionNodes_.begin();
               i != transactionNodes_.end();
               ++i ) {
             //printf("0x%p\n", *It);
-            const int32_t idx = addr2index(node2addr(*i));
+            const int32_t idx = *i;
             // long nodeAddr = (long)*It - (long)rbtree_addr;
             //printf("nodeAddr = 0x%X", nodeAddr);
             trans_f.WriteNetInt32( idx );
             const size_t pos = ser.size();
-            serializeCell( ser, *i ); // node serialization
+            serializeCell( ser, addr2node(*i) ); // node serialization
             trans_f.Write( &(ser.data()[pos]), header_.persistentCellSize );
         }
 	return 0;
@@ -622,10 +670,10 @@ private:
         rbtree_f.Write(rbtFileHeaderDump_.data(), rbtFileHeaderDump_.size());
 
         uint32_t pos = 0;
-        for ( typename std::vector< RBTreeNode* >::const_iterator i = transactionNodes_.begin();
+        for ( typename std::vector< nodeptr_type >::const_iterator i = transactionNodes_.begin();
               i != transactionNodes_.end();
               ++i ) {
-            rbtree_f.Seek( addr2index(node2addr(*i)) * header_.persistentCellSize + rbtFileHeaderDump_.size() );
+            rbtree_f.Seek( (*i) * header_.persistentCellSize + rbtFileHeaderDump_.size() );
             rbtree_f.Write( &transactionBuf_.front() + pos, header_.persistentCellSize );
             pos += header_.persistentCellSize;
             // rbtree_f.Seek((long)*It - (long)rbtree_addr , SEEK_SET);
@@ -667,8 +715,8 @@ private:
         rbtree_f.Write( ds.curposc(), rbtLen );
         ds.setrpos(rbtPos+rbtLen);
 
-        if (logger) smsc_log_debug(logger, "RepairRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d",
-                                   rbtHdr.cells_used, rbtHdr.cells_free, rbtHdr.cells_count, rbtHdr.first_free_cell, rbtHdr.root_cell, rbtHdr.nil_cell);
+        if (logger) smsc_log_debug(logger, "RepairRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %ld, root_cell %ld, nil_cell %ld",
+                                   rbtHdr.cells_used, rbtHdr.cells_free, rbtHdr.cells_count, (long)rbtHdr.first_free_cell, (long)rbtHdr.root_cell, (long)rbtHdr.nil_cell);
         if (logger) smsc_log_debug(logger, "repairRBTreeFile transHdr.nodes_count = %d, transHdr.status=%d", transHdr.nodes_count, status);
 		
         for ( int32_t i = 0; i < transHdr.nodes_count; i++ )
@@ -689,11 +737,11 @@ private:
             if (logger) smsc_log_warn( logger, "version %d is not implemented in rbtree, using version #1", s.version() );
             throw smsc::util::Exception( "version %d is not implemented in rbtree", s.version() );
         }
-        s <<
-            uint64_t(addr2index(int64_t(node->parent))*header_.persistentCellSize) <<
-            uint64_t(addr2index(int64_t(node->left))*header_.persistentCellSize) <<
-            uint64_t(addr2index(int64_t(node->right))*header_.persistentCellSize) <<
-            uint32_t(node->color);
+        s << 
+            int64_t(node->parent)*header_.persistentCellSize <<
+            int64_t(node->left)*header_.persistentCellSize <<
+            int64_t(node->right)*header_.persistentCellSize <<
+            int32_t(node->color);
         KS ks; ks.serialize(s,node->key);
         int32_t align = 0;
         s << align;
@@ -711,21 +759,21 @@ private:
             d >> i;
             shift = uint32_t(i % header_.persistentCellSize);
             if ( shift ) { fail = "parent"; break; }
-            node->parent = (RBTreeNode*)index2addr(i/header_.persistentCellSize);
+            node->parent = i/header_.persistentCellSize;
             d >> i;
             shift = uint32_t(i % header_.persistentCellSize);
             if ( shift ) { fail = "left"; break; }
-            node->left = (RBTreeNode*)index2addr(i/header_.persistentCellSize);
+            node->left = i/header_.persistentCellSize;
             d >> i;
             shift = uint32_t(i % header_.persistentCellSize);
             if ( shift ) { fail = "right"; break; }
-            node->right = (RBTreeNode*)index2addr(i/header_.persistentCellSize);
+            node->right = i/header_.persistentCellSize;
         } while ( false );
         if ( fail ) {
-            if (logger) smsc_log_warn( logger, "rbtree: reading %d node: %s field (%lld) is shifted via %d bytes",
-                                       addr2index(node2addr(node)), fail, i, shift );
-            throw smsc::util::Exception( "rbtree: reading %d node: %s field (%lld) is shifted via %d bytes",
-                                         addr2index(node2addr(node)), fail, i, shift );
+            if (logger) smsc_log_warn( logger, "rbtree: reading node @ %p: %s field (%lld) is shifted via %d bytes",
+                                       node, fail, i, shift );
+            throw smsc::util::Exception( "rbtree: reading node @ %p: %s field (%lld) is shifted via %d bytes",
+                                         node, fail, i, shift );
         }
         uint32_t j;
         d >> j;
@@ -742,13 +790,13 @@ private:
         int32_t alignment = 0;
         s << hdr.version << hdr.cells_count << hdr.cells_used << hdr.cells_free <<
             alignment <<
-            int64_t(addr2index(hdr.root_cell) * hdr.persistentCellSize) <<
-            int64_t(addr2index(hdr.first_free_cell) * hdr.persistentCellSize) <<
-            int64_t(addr2index(hdr.nil_cell) * hdr.persistentCellSize) <<
+            int64_t(hdr.root_cell * hdr.persistentCellSize) <<
+            int64_t(hdr.first_free_cell * hdr.persistentCellSize) <<
+            int64_t(hdr.nil_cell * hdr.persistentCellSize) <<
             int64_t(hdr.growth);
         if ( first ) 
             s.writeAsIs( 160,
-                         "This is a dummy message which serves as a placeholder "
+                         "Written by db. This is a dummy message which serves as a placeholder "
                          "for future extension of RBTreeHSAllocator and should be discarded "
                          "at deserialization stage. " 
                          "ABCDEFGHIKLMNOPQRSTUVWXYZ"
@@ -776,13 +824,13 @@ private:
         do {
             shift = int32_t( hdr.root_cell % hdr.persistentCellSize );
             if ( shift ) { fail = "root_cell"; break; }
-            hdr.root_cell = index2addr(hdr.root_cell / hdr.persistentCellSize);
+            hdr.root_cell = hdr.root_cell / hdr.persistentCellSize;
             shift = int32_t( hdr.first_free_cell % hdr.persistentCellSize );
             if ( shift ) { fail = "first_free_cell"; break; }
-            hdr.first_free_cell = index2addr(hdr.first_free_cell / hdr.persistentCellSize);
+            hdr.first_free_cell = hdr.first_free_cell / hdr.persistentCellSize;
             shift = int32_t( hdr.nil_cell % hdr.persistentCellSize );
             if ( shift ) { fail = "nil_cell"; break; }
-            hdr.nil_cell = index2addr(hdr.nil_cell / hdr.persistentCellSize);
+            hdr.nil_cell = hdr.nil_cell / hdr.persistentCellSize;
         } while ( false );
         if ( fail ) {
             if ( logger ) smsc_log_error( logger, "rbtree header field %s is shifted %d bytes, values are: root_cell=%lld, first_free_cell=%lld, nil_cell=%lld, cellsize=%d",
@@ -808,9 +856,9 @@ private:
     {
         assert( header.version );
         RBTreeNode n;
-        memset( (void*)&n, 0, sizeof(RBTreeNode) );
+        memset( (void*)&n, 0, cellsize() );
         std::vector< unsigned char > buf;
-        buf.reserve(sizeof(RBTreeNode));
+        buf.reserve(cellsize()*2);
         Serializer s(buf);
         s.setVersion( header.version );
         serializeCell( s, &n );
@@ -823,12 +871,12 @@ private:
     File			rbtree_f;
     File			trans_f;
 
-    caddr_t			rbtree_body_;    // a pointer to a memory chunk
     off_t			growth;
     bool			running;
     RbtFileHeader		header_;          // transient header
+    std::vector< caddr_t >      chunks_;
 
-    list<RBTreeNode*>	        changedNodes;
+    list<nodeptr_type>	        changedNodes;
     int			        currentOperation;
     smsc::logger::Logger*       logger;
 
@@ -836,7 +884,7 @@ private:
     std::vector< unsigned char > rbtFileHeaderBuf_;
     Serializer                   rbtFileHeaderDump_;
     // a buffer where serialized cells are kept during transaction
-    std::vector< RBTreeNode* >   transactionNodes_;
+    std::vector< nodeptr_type >  transactionNodes_;
     std::vector< unsigned char > transactionBuf_;
 };
 

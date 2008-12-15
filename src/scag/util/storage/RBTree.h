@@ -19,62 +19,48 @@ namespace scag {
 namespace util {
 namespace storage {
 
-// transient representation of the node
-template<class Key, class Value>
-struct templRBTreeNode
-{
-    templRBTreeNode<Key, Value>* parent; // also is used as a next_free_cell (if the cell is empty)
-    templRBTreeNode<Key, Value>* left;
-    templRBTreeNode<Key, Value>* right;
-    int32_t     color;
-    Key		key;
-    Value	value;
-};
-
-
 template<class Key=long, class Value=long, class DefaultAllocator = SimpleAllocator<Key, Value>, class DefaultChangesObserver = EmptyChangesObserver<Key, Value> >
 class RBTree
 {
 public:
-    typedef templRBTreeNode<Key, Value> RBTreeNode;
+    typedef templRBTreeNode<Key, Value>       RBTreeNode;
+    typedef typename RBTreeNode::nodeptr_type nodeptr_type;
+
     RBTree( RBTreeAllocator<Key, Value>* _allocator=0,
             RBTreeChangesObserver<Key, Value>* _changesObserver=0,
             smsc::logger::Logger* thelog = 0 ) : 
-    defaultAllocator(false), defaultChangesObserver(false)
+    defaultAllocator(false), defaultChangesObserver(false), logger(thelog)
     {
-        logger = thelog;
-        if(!_allocator)
-        {
+        if (!_allocator) {
             allocator = new DefaultAllocator;
             defaultAllocator = true;
-        }
-        else
+        } else {
             allocator = _allocator;
+        }
         rootNode = allocator->getRootNode();
         nilNode = allocator->getNilNode();
         // size = allocator->getSize();
 		
-        if(!_changesObserver)
-        {
+        if(!_changesObserver) {
             changesObserver = new DefaultChangesObserver;
             defaultChangesObserver = true;
-        }
-        else
+        } else {
             changesObserver = _changesObserver;
+        }
     }
 
     virtual ~RBTree()
     {
-        if(defaultAllocator)
+        if (defaultAllocator)
             delete allocator;
-        if(defaultChangesObserver)
+        if (defaultChangesObserver)
             delete  changesObserver;
     }
 
-    void SetAllocator(RBTreeAllocator<Key, Value>* _allocator)
+    void SetAllocator( RBTreeAllocator<Key, Value>* _allocator )
     {
-        if(!_allocator)	return;
-        if(defaultAllocator)
+        if (!_allocator) return;
+        if (defaultAllocator)
         {
             delete allocator;
             defaultAllocator = false;
@@ -84,19 +70,21 @@ public:
         nilNode = allocator->getNilNode();
         // offset = allocator->getOffset();
         // size = allocator->getSize();
+        /*
         if ( ! rootNode || ! nilNode ) {
             fprintf( stderr, "SetAllocator: rootNode=%ld, nilNode=%ld\n", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
             if (logger) smsc_log_error( logger, "SetAllocator: rootNode=%ld, nilNode=%ld", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
         }
-        const std::vector< RBTreeNode* > freenodes = allocator->freenodes();
+         */
+        const std::vector< nodeptr_type > freenodes = allocator->freenodes();
         int cnt = dumpcheck( freenodes, rootNode, nilNode, 0, "" );
         if (logger) smsc_log_info( logger, "SetAllocator: rbtree nodes=%d", cnt );
     }
 
-    void SetChangesObserver(RBTreeChangesObserver<Key, Value>* _changesObserver)
+    void SetChangesObserver( RBTreeChangesObserver<Key, Value>* _changesObserver)
     {
-        if(!_changesObserver)	return;
-        if(defaultChangesObserver)
+        if (!_changesObserver) return;
+        if (defaultChangesObserver)
         {
             delete changesObserver;
             defaultChangesObserver = false;
@@ -104,96 +92,83 @@ public:
         changesObserver = _changesObserver;
     }
     
+    /*
     const RBTreeAllocator<Key, Value>* SetAllocator(void)
     {
         return allocator;
     }
+     */
 
-    int Insert(const Key& k, const Value& v)
+    int Insert( const Key& k, const Value& v )
     {
         if (logger) smsc_log_debug(logger, "Start Insert: k=%s val=%lld", k.toString().c_str(), (long long)v);
-        RBTreeNode* newNode = allocator->allocateNode();
+        nodeptr_type nn = allocator->allocateNode();
+        RBTreeNode* newNode = allocator->realAddr(nn);
         rootNode = allocator->getRootNode();
         nilNode = allocator->getNilNode();
         // offset = allocator->getOffset();
         newNode->key = k;
         newNode->value = v;
-        if (logger) smsc_log_debug(logger, "Insert: %ld k=%s val=%lld", (long)relativeAddr(newNode), k.toString().c_str(), (long long)v);
-        changesObserver->startChanges(newNode, RBTreeChangesObserver<Key, Value>::OPER_INSERT);
-        bstInsert(newNode);
+        if (logger) smsc_log_debug(logger, "Insert: %ld k=%s val=%lld", (long)nn, k.toString().c_str(), (long long)v);
+        changesObserver->startChanges( nn, RBTreeChangesObserver<Key, Value>::OPER_INSERT );
+        bstInsert( nn );
         newNode->color = RED;
-        changesObserver->nodeChanged(newNode);
-        rbtRecovery(newNode);
+        changesObserver->nodeChanged( nn );
+        rbtRecovery( nn );
         changesObserver->completeChanges();
-        if (logger) smsc_log_debug(logger, "End Insert: %ld k=%s val=%lld", (long)relativeAddr(newNode), k.toString().c_str(), (long long)v);
+        if (logger) smsc_log_debug(logger, "End Insert: %ld k=%s val=%lld", (long)nn, k.toString().c_str(), (long long)v);
         return 1;
     }
 
-    bool Set(const Key& k, const Value& val) {
-        RBTreeNode*	node = rootNode;
-        while( (node != nilNode) && !(node->key == k) )
-        {
-            if(node->key < k)
-                node = realAddr(node->right);
-            else
-                node = realAddr(node->left);
-        }
+    bool Set( const Key& k, const Value& val ) {
+        nodeptr_type node = findNode(k);
         if (node == nilNode) {
-            Insert(k, val);
+            Insert( k, val );
             return false;
         }
         setNodeValue( node, val );
-        // node->value = val;
-        // changesObserver->completeChanges();
         return true;
     }
 
-    void setNodeValue(RBTreeNode* node, const Value& val) {
+    void setNodeValue( nodeptr_type iNode, const Value& val ) 
+    {
+        RBTreeNode* node = allocator->realAddr(iNode);
         if (!node || node->value == val) {
             return;
         }
-        if (logger) smsc_log_debug(logger, "Node %ld k=%s value has changed. old=%lld new=%lld",
-                                   (long)relativeAddr(node),
-                                   node->key.toString().c_str(),
-                                   (long long)node->value, (long long)val);
+        if (logger) smsc_log_debug( logger, "Node %ld k=%s value has changed. old=%lld new=%lld",
+                                    (long)iNode,
+                                    node->key.toString().c_str(),
+                                    (long long)node->value, (long long)val);
         node->value = val;
-        changesObserver->startChanges(node, RBTreeChangesObserver<Key, Value>::OPER_CHANGE);
+        changesObserver->startChanges( iNode, RBTreeChangesObserver<Key, Value>::OPER_CHANGE );
         // changesObserver->nodeChanged(node);
         changesObserver->completeChanges();
         if (logger) smsc_log_debug( logger, "Node key=%s setNodeValue finished",
                                     node->key.toString().c_str() );
     }
 
-    bool Get(const Key& k, Value& val)
+    bool Get( const Key& k, Value& val )
     {
-        RBTreeNode*	node = rootNode;
-        while( (node != nilNode) && !(node->key == k) )
-        {
-            if(node->key < k)
-                node = realAddr(node->right);
-            else
-                node = realAddr(node->left);
-        }
-        
-        if(node == nilNode) {
+        nodeptr_type node = findNode(k);
+        if ( node == nilNode ) {
             if (logger) smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
             return false;
         } 
-        val = node->value;
-        if (logger) smsc_log_debug(logger, "Get: %ld k=%s val=%lld", (long)relativeAddr(node), k.toString().c_str(), (long long)val);
+        val = allocator->realAddr(node)->value;
+        if (logger) smsc_log_debug(logger, "Get: %ld k=%s val=%lld", (long)node, k.toString().c_str(), (long long)val);
         return true;
     }
 
-    RBTreeNode* Get(const Key& k) {
-        RBTreeNode* node = rootNode;
-        while ((node != nilNode) && !(node->key == k)) {
-            node = node->key < k ? realAddr(node->right) : realAddr(node->left);
-        }
-        if(node == nilNode) {
+    nodeptr_type Get(const Key& k) 
+    {
+        nodeptr_type node = findNode(k);
+        if (node == nilNode ) {
             if (logger) smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
-            return 0;
+            return nilNode;
         }
-        if (logger) smsc_log_debug(logger, "Get: %ld k=%s val=%lld", (long)relativeAddr(node), k.toString().c_str(), (long long)node->value);
+        if (logger) smsc_log_debug(logger, "Get: %ld k=%s val=%lld", (long)node, k.toString().c_str(),
+                                   (long long)allocator->realAddr(node)->value );
         return node;
     }
 
@@ -205,24 +180,25 @@ public:
         if ( rootNode != nilNode ) moveLeft();
     }
 
-    bool Next(Key& k, Value& val)
+    bool Next( Key& k, Value& val )
     {
         if ( iterNode == nilNode ) return false;
-        k = iterNode->key;
-        val = iterNode->value;
+        RBTreeNode* iter = allocator->realAddr(iterNode);
+        k = iter->key;
+        val = iter->value;
 
         // shownode( "iter at Next", iterNode );
 
-        RBTreeNode *right = realAddr(iterNode->right);
+        nodeptr_type right = iter->right;
         // shownode( "iter->right", right );
         if (right != nilNode) {
             iterNode = right;
             moveLeft();
         } else {
             while ( true ) {
-                RBTreeNode* parent = realAddr(iterNode->parent);
+                nodeptr_type parent = iter->parent;
                 // shownode( "iter->parent", parent );
-                if ( realAddr(parent->left) == iterNode ) {
+                if ( allocator->realAddr(parent)->left == iterNode ) {
                     // smsc_log_debug( logger, "right parent found" );
                     iterNode = parent;
                     break;
@@ -233,6 +209,7 @@ public:
                     break;
                 }
                 iterNode = parent;
+                iter = allocator->realAddr(iterNode);
                 // smsc_log_debug( logger, "move up" );
             }
         }
@@ -241,20 +218,37 @@ public:
 
 protected:
 
+    nodeptr_type findNode( const Key& k )
+    {
+        nodeptr_type nn = rootNode;
+        while ( nn != nilNode ) {
+            RBTreeNode* node = allocator->realAddr(nn);
+            if ( node->key == k ) break;
+            if ( node->key < k ) {
+                nn = node->right;
+            } else {
+                nn = node->left;
+            }
+        }
+        return nn;
+    }
+
+
+    // move iterator to a far left node starting from current one
     void moveLeft()
     {
         while ( true ) {
             // shownode( "moving left", iterNode );
-            RBTreeNode* left = realAddr( iterNode->left );
+            nodeptr_type left = allocator->realAddr(iterNode)->left;
             if ( left == nilNode ) break;
             iterNode = left;
         }
         // shownode( "after moveLeft", iterNode );
     }
 
-    int dumpcheck( const std::vector< RBTreeNode* >& freenodes,
-                   RBTreeNode* node,
-                   RBTreeNode* parent,
+    int dumpcheck( const std::vector< nodeptr_type >& freenodes,
+                   nodeptr_type node,
+                   nodeptr_type parent,
                    int depth = 0,
                    const std::string& path = "" ) const
     {
@@ -267,9 +261,10 @@ protected:
             snprintf( buf, sizeof(buf), "%d ", depth );
             shownode( (std::string(buf) + path).c_str(), node );
         }
-        RBTreeNode* realparent = realAddr(node->parent);
-        RBTreeNode* left = realAddr(node->left);
-        RBTreeNode* right = realAddr(node->right);
+        RBTreeNode* theNode = allocator->realAddr(node);
+        nodeptr_type realparent = theNode->parent;
+        nodeptr_type left = theNode->left;
+        nodeptr_type right = theNode->right;
         const char* fail = NULL;
         do {
 
@@ -291,14 +286,14 @@ protected:
 
             ++depth;
             if ( left != nilNode ) {
-                if ( ! (left->key < node->key) ) {
+                if ( ! (allocator->realAddr(left)->key < theNode->key) ) {
                     fail = "order/left";
                     break;
                 }
                 res += dumpcheck( freenodes, left, node, depth, path + "l" );
             }
             if ( right != nilNode ) {
-                if ( ! (node->key < right->key) ) {
+                if ( ! (theNode->key < allocator->realAddr(right)->key) ) {
                     fail = "order/right";
                     break;
                 }
@@ -313,244 +308,220 @@ protected:
                             fail,
                             depth,
                             path.c_str(),
-                            (long)relativeAddr(node), nodekey(node).c_str(),
-                            (long)relativeAddr(parent), nodekey(parent).c_str(),
-                            (long)relativeAddr(realparent), nodekey(realparent).c_str(),
-                            (long)relativeAddr(left), nodekey(left).c_str(),
-                            (long)relativeAddr(right), nodekey(right).c_str() );
+                            (long)node, nodekey(node).c_str(),
+                            (long)parent, nodekey(parent).c_str(),
+                            (long)realparent, nodekey(realparent).c_str(),
+                            (long)left, nodekey(left).c_str(),
+                            (long)right, nodekey(right).c_str() );
             throw std::runtime_error("RBTree structure corrupted");
         }
         return res+1;
     }
 
 
-    void shownode( const char* text, RBTreeNode* node ) const
+    void shownode( const char* text, nodeptr_type node ) const
     {
         if ( !logger ) return;
         if ( node == nilNode ) {
             smsc_log_debug( logger, "%s: nilnode" );
         } else {
+            RBTreeNode* theNode = allocator->realAddr(node);
             smsc_log_debug( logger, "%s: (%ld:%s) left=(%ld:%s) right=(%ld:%s) parent=(%ld:%s)",
                             text,
-                            (long)relativeAddr(node), nodekey(node).c_str(),
-                            (long)node->left, nodekey(realAddr(node->left)).c_str(),
-                            (long)node->right, nodekey(realAddr(node->right)).c_str(),
-                            (long)node->parent, nodekey(realAddr(node->parent)).c_str() );
+                            (long)node, nodekey(node).c_str(),
+                            (long)theNode->left, nodekey(theNode->left).c_str(),
+                            (long)theNode->right, nodekey(theNode->right).c_str(),
+                            (long)theNode->parent, nodekey(theNode->parent).c_str() );
         }
     }
 
-    std::string nodekey( const RBTreeNode* node ) const
+    std::string nodekey( nodeptr_type node ) const
     {
         if ( node == nilNode ) return "nil";
-        return node->key.toString();
+        return allocator->realAddr(node)->key.toString();
     }
 
-    inline RBTreeNode* realAddr( RBTreeNode* node) const
-    {
-        return (RBTreeNode*)(int64_t(node) + allocator->getOffset());
-    }
-    inline RBTreeNode* relativeAddr( RBTreeNode* node) const
-    {
-        return (RBTreeNode*)(int64_t(node) - allocator->getOffset());
-    }
+    /*
     inline RBTreeNode* set(RBTreeNode** to, RBTreeNode* from)
     {
         *to = from;
         return *to;
     }
+     */
 	
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!	
 	//		��� ���������� ��������� �� RBTreeNode �������� ���������� ���������, 
 	//	����� ��� ���� �������� RBTreeNode - ��� ��������� ������ ������� ���������,
 	//	�.�. ��������� ������������ ���������� �� offset.
 	//
-	void rbtRotateLeft(RBTreeNode* node)
-	{
-		RBTreeNode*	tempNode = realAddr(node->right);	//node->right;
-		node->right = tempNode->left;				
-		changesObserver->nodeChanged(node);
+    void rbtRotateLeft( nodeptr_type iNode )
+    {
+        RBTreeNode* node = allocator->realAddr(iNode);
+        nodeptr_type iTempNode = node->right;
+        RBTreeNode* tempNode = allocator->realAddr(iTempNode);
+        node->right = tempNode->left;				
+        changesObserver->nodeChanged(iNode);
 
-		if(realAddr(tempNode->left) != nilNode)
-		{
-			realAddr(tempNode->left)->parent = relativeAddr(node); 
-			changesObserver->nodeChanged(realAddr(tempNode->left));
-		}
-		tempNode->parent = node->parent;
-		changesObserver->nodeChanged(tempNode);
+        if( tempNode->left != nilNode ) {
+            allocator->realAddr(tempNode->left)->parent = iNode;
+            changesObserver->nodeChanged(tempNode->left);
+        }
+        tempNode->parent = node->parent;
+        changesObserver->nodeChanged(iTempNode);
 
-		if(realAddr(node->parent) == nilNode)
-		{
-			rootNode = tempNode;
-			allocator->setRootNode(rootNode);
-		}
-		else
-			if( node == realAddr(realAddr(node->parent)->left) ) //node == node->parent->left)
-			{
-				realAddr(node->parent)->left = relativeAddr(tempNode); //node->parent->left = tempNode;
-				changesObserver->nodeChanged(realAddr(node->parent));
-			}
-			else
-			{
-				realAddr(node->parent)->right = relativeAddr(tempNode); //node->parent->right = tempNode;
-				changesObserver->nodeChanged(realAddr(node->parent));
-			}
+        if ( node->parent == nilNode ) {
+            rootNode = iTempNode;
+            allocator->setRootNode(rootNode);
+        } else {
+            RBTreeNode* nodeParent = allocator->realAddr(node->parent);
+            if ( iNode == nodeParent->left ) {
+                nodeParent->left = iTempNode;
+            } else {
+                nodeParent->right = iTempNode;
+            }
+            changesObserver->nodeChanged(node->parent);
+        }
+        
+        tempNode->left = iNode;
+        node->parent = iTempNode;
 
-		tempNode->left = relativeAddr(node);
-		node->parent = relativeAddr(tempNode);
+        changesObserver->nodeChanged(iTempNode);
+        changesObserver->nodeChanged(iNode);
+    }
 
-		changesObserver->nodeChanged(tempNode);
-		changesObserver->nodeChanged(node);
+    void rbtRotateRight( nodeptr_type iNode)
+    {
+        RBTreeNode* node = allocator->realAddr(iNode);
+        nodeptr_type iTempNode = node->left;
+        RBTreeNode* tempNode = allocator->realAddr(iTempNode);
+        node->left = tempNode->right;
+        changesObserver->nodeChanged(iNode);
 
-	}
-	void rbtRotateRight(RBTreeNode* node)
-	{
-		RBTreeNode*	tempNode = realAddr(node->left);
-		node->left = tempNode->right;
-		changesObserver->nodeChanged(node);
+        if ( tempNode->right != nilNode ) {
+            allocator->realAddr(tempNode->right)->parent = iNode;
+            changesObserver->nodeChanged(tempNode->right);
+        }
+        tempNode->parent = node->parent;
+        changesObserver->nodeChanged(iTempNode);
 
-		if(realAddr(tempNode->right) != nilNode)
-		{
-			realAddr(tempNode->right)->parent = relativeAddr(node);
-			changesObserver->nodeChanged(realAddr(tempNode->right));
-		}
-		tempNode->parent = node->parent;
-		changesObserver->nodeChanged(tempNode);
+        if ( node->parent == nilNode ) {
+            rootNode = iTempNode;
+            allocator->setRootNode(rootNode);
+        } else {
+            RBTreeNode* nodeParent = allocator->realAddr(node->parent);
+            if ( iNode == nodeParent->right ) {
+                nodeParent->right = iTempNode;
+            } else {
+                nodeParent->left = iTempNode;
+            }
+            changesObserver->nodeChanged(node->parent);
+        }
+        tempNode->right = iNode;
+        node->parent = iTempNode;
 
-		if(realAddr(node->parent) == nilNode)
-		{
-			rootNode = tempNode;
-			allocator->setRootNode(rootNode);
-//			changesObserver->nodeChanged(rootNode);
-		}
-		else
-			if(node == realAddr(realAddr(node->parent)->right) ) //node == node->parent->right
-			{
-				realAddr(node->parent)->right = relativeAddr(tempNode);
-				changesObserver->nodeChanged(realAddr(node->parent));
-			}
-			else
-			{
-				realAddr(node->parent)->left = relativeAddr(tempNode); //node->parent->left = tempNode;
-				changesObserver->nodeChanged(realAddr(node->parent));
-			}
-		tempNode->right = relativeAddr(node);
-		node->parent = relativeAddr(tempNode);
+        changesObserver->nodeChanged(iTempNode);
+        changesObserver->nodeChanged(iNode);
+    }
 
-		changesObserver->nodeChanged(tempNode);
-		changesObserver->nodeChanged(node);
-	}
-	int bstInsert(RBTreeNode* newNode)
-	{
-		RBTreeNode*	tempNode = rootNode;
-		RBTreeNode* parentNode = nilNode;
-//		printf("bstInsert 111 rootNode = %p, nilNode = %p, tempNode = %p\n", rootNode, nilNode, tempNode);
-		while(tempNode != nilNode)
-		{
-			parentNode = tempNode;
-			if(newNode->key < tempNode->key)
-				tempNode = realAddr(tempNode->left);
-			else
-				tempNode = realAddr(tempNode->right);
-		}
-		newNode->parent = relativeAddr(parentNode);
-		changesObserver->nodeChanged(newNode);
-		if(parentNode == nilNode )
-		{
-			rootNode = newNode;
-			allocator->setRootNode(rootNode);
-		}
-		else
-		{
-			if(newNode->key < parentNode->key)
-				parentNode->left = relativeAddr(newNode);
-			else
-				parentNode->right =  relativeAddr(newNode);
-			changesObserver->nodeChanged(parentNode);
-		}
-		return 0;
-	}
 
-	int rbtRecovery(RBTreeNode* node)
-	{
-		RBTreeNode*	tempNode;
+    void bstInsert( nodeptr_type iNewNode )
+    {
+        RBTreeNode* newNode = allocator->realAddr(iNewNode);
+        nodeptr_type tempNode = rootNode;
+        nodeptr_type parentNode = nilNode;
+        //		printf("bstInsert 111 rootNode = %p, nilNode = %p, tempNode = %p\n", rootNode, nilNode, tempNode);
+        while (tempNode != nilNode)
+        {
+            parentNode = tempNode;
+            RBTreeNode* temp = allocator->realAddr(tempNode);
+            if (newNode->key < temp->key)
+                tempNode = temp->left;
+            else
+                tempNode = temp->right;
+        }
+        newNode->parent = parentNode;
+        changesObserver->nodeChanged(iNewNode);
+        if (parentNode == nilNode ) {
+            rootNode = iNewNode;
+            allocator->setRootNode(rootNode);
+        } else {
+            RBTreeNode* parent = allocator->realAddr(parentNode);
+            if (newNode->key < parent->key)
+                parent->left = iNewNode;
+            else
+                parent->right = iNewNode;
+            changesObserver->nodeChanged(parentNode);
+        }
+    }
 
-		while( (node != rootNode) && (realAddr(node->parent)->color == RED) )
-		{
-			if(node->parent == realAddr(realAddr(node->parent)->parent)->left)
-			{
-				tempNode = realAddr(realAddr(realAddr(node->parent)->parent)->right);
-				if(tempNode->color == RED) //if(tempNode &&tempNode->color == RED)
-				{
-					realAddr(node->parent)->color = BLACK;
-					tempNode->color = BLACK; 
-					realAddr(realAddr(node->parent)->parent)->color = RED;
 
-					changesObserver->nodeChanged(realAddr(node->parent));
-					changesObserver->nodeChanged(tempNode);
-					changesObserver->nodeChanged(realAddr(realAddr(node->parent)->parent));
-                    
-					node = realAddr(realAddr(node->parent)->parent);                    
-				}
-				else
-				{
-					if( node == realAddr(realAddr(node->parent)->right) )
-					{
-						node = realAddr(node->parent);
-						rbtRotateLeft(node);
-					}
-					realAddr(node->parent)->color = BLACK;
-					realAddr(realAddr(node->parent)->parent)->color = RED;
-					rbtRotateRight(realAddr(realAddr(node->parent)->parent));
+    void rbtRecovery( nodeptr_type node )
+    {
+        while ( node != rootNode ) {
+            RBTreeNode* theNode = allocator->realAddr(node);
+            RBTreeNode* parent = allocator->realAddr(theNode->parent);
+            if ( parent->color != RED ) break;
+            RBTreeNode* grandpa = allocator->realAddr(parent->parent);
 
-					changesObserver->nodeChanged(realAddr(node->parent));
-					changesObserver->nodeChanged(realAddr(realAddr(node->parent)->parent));
-				}
-			}
-			else
-			{
-				tempNode = realAddr(realAddr(realAddr(node->parent)->parent)->left);
-				if(tempNode->color == RED)
-				{
-					realAddr(node->parent)->color = BLACK;
-					tempNode->color = BLACK;
-					realAddr(realAddr(node->parent)->parent)->color = RED;
-					
-					changesObserver->nodeChanged(realAddr(node->parent));
-					changesObserver->nodeChanged(tempNode);
-					changesObserver->nodeChanged(realAddr(realAddr(node->parent)->parent));
-                    
-					node = realAddr(realAddr(node->parent)->parent);                    
-				}
-				else
-				{
-					if( node == realAddr(realAddr(node->parent)->left) )
-					{
-						node = realAddr(node->parent);
-						rbtRotateRight(node);
-					}
-					realAddr(node->parent)->color = BLACK;
-					realAddr(realAddr(node->parent)->parent)->color = RED;
-					rbtRotateLeft(realAddr(realAddr(node->parent)->parent));
+            if ( theNode->parent == grandpa->left ) {
+                nodeptr_type iTempNode = grandpa->right;
+                RBTreeNode* tempNode = allocator->realAddr(iTempNode);
+                if (tempNode->color == RED ) {
+                    parent->color = BLACK;
+                    tempNode->color = BLACK; 
+                    grandpa->color = RED;
+                    changesObserver->nodeChanged(theNode->parent);
+                    changesObserver->nodeChanged(iTempNode);
+                    changesObserver->nodeChanged(parent->parent);
+                    node = parent->parent;
+                } else {
+                    if( node == parent->right ) {
+                        node = theNode->parent;
+                        rbtRotateLeft(node);
+                    }
+                    parent->color = BLACK;
+                    grandpa->color = RED;
+                    rbtRotateRight( parent->parent );
+                    changesObserver->nodeChanged(theNode->parent);
+                    changesObserver->nodeChanged(parent->parent);
+                }
 
-					changesObserver->nodeChanged(realAddr(node->parent));
-					changesObserver->nodeChanged(realAddr(realAddr(node->parent)->parent));
-				}
-			}
-		}
-		rootNode->color = BLACK;
-		changesObserver->nodeChanged(rootNode);
-		return 1;
-	}
+            } else { // parent is at right
+
+                nodeptr_type iTempNode = grandpa->left;
+                RBTreeNode* tempNode = allocator->realAddr(iTempNode);
+                if (tempNode->color == RED) {
+                    parent->color = BLACK;
+                    tempNode->color = BLACK;
+                    grandpa->color = RED;
+                    changesObserver->nodeChanged(theNode->parent);
+                    changesObserver->nodeChanged(iTempNode);
+                    changesObserver->nodeChanged(parent->parent);
+                    node = parent->parent;
+                } else {
+                    if ( node == parent->left ) {
+                        node = theNode->parent;
+                        rbtRotateRight(node);
+                    }
+                    parent->color = BLACK;
+                    grandpa->color = RED;
+                    rbtRotateLeft( parent->parent );
+                    changesObserver->nodeChanged( theNode->parent );
+                    changesObserver->nodeChanged( parent->parent );
+                }
+            }
+        }
+        allocator->realAddr(rootNode)->color = BLACK;
+        changesObserver->nodeChanged(rootNode);
+    }
 
 private:
     smsc::logger::Logger*               logger;
     RBTreeAllocator<Key, Value>*	allocator;
     RBTreeChangesObserver<Key, Value>*	changesObserver;
-    RBTreeNode*		                rootNode;
-    RBTreeNode*		                nilNode;
-    RBTreeNode*                         iterNode;
-    // long			offset;
-    // long			size;
+    nodeptr_type	                rootNode;
+    nodeptr_type	                nilNode;
+    nodeptr_type                        iterNode;
     bool			        defaultAllocator;
     bool			        defaultChangesObserver;
 };
@@ -561,7 +532,6 @@ private:
 } // namespace scag
 
 #endif /* ! _SCAG_UTIL_STORAGE_RBTREE_H */
-
 
 //	void rbtRotateLeft(RBTreeNode* node)
 //	{
@@ -689,4 +659,3 @@ private:
 //		return 1;
 //	}
 //};
-
