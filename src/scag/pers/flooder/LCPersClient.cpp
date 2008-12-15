@@ -4,7 +4,6 @@
 #include "LCPersClient.h"
 #include "scag/pers/util/Property.h"
 #include "util/timeslotcounter.hpp"
-#include "util/sleep.h"
 
 namespace scag2 { namespace pers { namespace util {
 void LCPersClient::execute(int addrsCount, int getsetCount) {
@@ -36,7 +35,7 @@ void LCPersClient::execute(int addrsCount, int getsetCount) {
 void LCPersClient::doCall(LongCallContextBase* context) {
   int status = persClient_.getClientStatus();
   if (status == CLIENT_BUSY) {
-    smsc_log_warn(logger_, "pers client busy!");
+    smsc_log_warn(logger_, "can't send request: pers client busy!");
     delete context;
     if (busyRejects_ > maxRejects_) {
       //throw PersClientException(CLIENT_BUSY);
@@ -51,6 +50,7 @@ void LCPersClient::doCall(LongCallContextBase* context) {
   busyRejects_ = busyRejects_ > 0 ? busyRejects_ - 1 : 0;
   persClient_.call(context);
   ++callsCount_;
+  ++sentCalls_;
   smsc_log_debug(logger_, "call cx:%p calls count %d", context, callsCount_);
   delay();
 }
@@ -59,8 +59,13 @@ void LCPersClient::continueExecution(LongCallContextBase* context, bool dropped)
   --callsCount_;
   smsc_log_debug(logger_, "continue execution cx:%p, calls count %d", context, callsCount_);
   PersCallParams *callParams = static_cast<PersCallParams *>(context->getParams());
-  if (callParams->status() != 0) {
-    smsc_log_debug(logger_, "error long call result: %s", strs[callParams->status()]);
+  //if (callParams->status() != 0 ) {
+    //smsc_log_debug(logger_, "error long call result: %s", strs[callParams->status()]);
+  //}
+  if (callParams->status() == PERSCLIENTOK || callParams->status() == PROPERTY_NOT_FOUND) {
+    ++successCalls_;
+  } else {
+    ++errorCalls_;
   }
   delete context;
 }
@@ -225,6 +230,26 @@ void LCPersClient::shutdown() {
   isStopped_ = true;
 }
 
+int LCPersClient::getSuccess() {
+    int ret = successCalls_;
+    successCalls_ = 0;
+    return ret;
+}
+int LCPersClient::getError() {
+    int ret = errorCalls_;
+    errorCalls_ = 0;
+    return ret;
+}
+int LCPersClient::getSent() {
+    int ret = sentCalls_;
+    sentCalls_ = 0;
+    return ret;
+}
+int LCPersClient::getBusy() {
+    int ret = busyRejects_;
+    busyRejects_ = 0;
+    return ret;
+}
 
 
 

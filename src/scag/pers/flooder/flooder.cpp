@@ -102,8 +102,10 @@ int main(int argc, char* argv[]) {
     };
 
     lcClient = new LCPersClient(PersClient::Instance(), speed);
+    CallsCounter counter(lcClient, 5);
 
     lcClient->execute(addressesCount, getsetCount);
+    counter.stop();
     delete lcClient;
   }
   catch (const PersClientException& exc) 
