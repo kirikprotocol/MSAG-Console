@@ -1,0 +1,13 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name                            source name     libraries         
+
+scag/pvss_flooder   flooder  @liblogger.so -L$(SMSC_BUILDDIR)/bin \
+    -lscag-pers-flooder -lscag-pers-util -lscag-config-impl -lscag-config -lscag-config-lcm\
+    -lscag-config-smpp -lscag-config-http -lscag-config-bill -lscag-config-pers\
+    -lscag-config-stat -lscag-config-sessn -lscag-config-route -lscag-config-base\
+    -lutil-mirrorfile -lcore-network -lcore-threads -llogger \
+    -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl $(SSL_LIB) -llicense-check\
+    -lscag-util-storage -lscag-util-singleton -lscag-pers-util\
+    -lscag-exc
