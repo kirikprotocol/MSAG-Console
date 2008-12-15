@@ -4,6 +4,8 @@ import ru.sibinco.smsx.engine.soaphandler.SOAPHandlerInitializationException;
 
 import java.util.concurrent.CountDownLatch;
 
+import com.eyeline.sme.smpp.OutgoingQueue;
+
 /**
  * User: artem
  * Date: 17.07.2008
@@ -18,8 +20,8 @@ public class GroupSendFactory {
   private GroupSendFactory() {
   }
 
-  public static void init(String configDir) throws SOAPHandlerInitializationException {
-    handler = new GroupSendSoapHandler(configDir);
+  public static void init(String configDir, OutgoingQueue outQueue) throws SOAPHandlerInitializationException {
+    handler = new GroupSendSoapHandler(configDir, outQueue);
     initLatch.countDown();
   }
 

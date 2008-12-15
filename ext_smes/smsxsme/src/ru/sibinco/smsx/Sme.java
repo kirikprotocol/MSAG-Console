@@ -95,7 +95,7 @@ public class Sme {
       senderAdvertisingClient = AdvertisingClientFactory.createAdvertisingClient();
       senderAdvertisingClient.connect();
       SmsXSenderFactory.init(configDir, senderAdvertisingClient);
-      GroupSendFactory.init(configDir);
+      GroupSendFactory.init(configDir, transceiver.getOutQueue());
       GroupEditFactory.init(configDir, transceiver.getOutQueue());
       SmsXSubscriptionFactory.init(configDir);
 
