@@ -17,8 +17,9 @@ for(@l)
 {
 	next unless /.csv$/;
 	print "get $_\n";
-	$ftp->get($_) || die "Failed to get $_:".$ftp->message;
+	$ftp->get($_,$_.'.tmp') || die "Failed to get $_:".$ftp->message;
 	print "delete $_\n";
 	$ftp->delete($_) || die "Failed to rm $_:".$ftp->message;
+        rename($_.'.tmp',$_);
 }
 $ftp->quit;
