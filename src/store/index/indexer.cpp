@@ -85,6 +85,7 @@ int main(int argc,char* argv[])
     printf("Usage: %s path_to_arc_dir [max read/write speed in kb/sec]\n");
     return 0;
   }
+  try{
   dir=argv[1];
   if(dir.length() && *dir.rbegin()!='/')
   {
@@ -185,6 +186,10 @@ int main(int argc,char* argv[])
     routeidguard.release();
     srcaddrguard.release();
     dstaddrguard.release();
+  }
+  }catch(std::exception& e)
+  {
+    printf("Exception:'%s'\n",e.what());
   }
 }
 
