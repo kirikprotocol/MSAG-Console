@@ -230,4 +230,22 @@ B3013:
     StatExport	Change stats file format. Use fromDate instead of tillDate in headers
     Webapp	Fix bugs in auth
     Webapp	Remove "not specified" write into empty fields
+
+B3014:
+    SMSC	set EXTRA_GROUP bit for service with SME_N==EXTRA_GROUP (SMSX)
+    Webapp	Add extra flag support to sme edit page (SMSX)
+    InfoSme	add InfoSme alter task command
+    InfoSme	Add transaction mode flag to deliveries edit task page, set it checked automatically after select retryOnFail	
+    InfoSme	Fix TaskBuilder script
+    InfoSme	script for import csv files into infosme with smsc console commands
+    InfoSme	retry policy read from config fix
+    MCISme	meaningless method checkBannerRequest was removed
+    MCISme	added support for banner request rollback
+    MCISme	Fix for sending notifications from MCA number (in mca number as orig mode)
+    MCISme	Traliterated banners support if template has no non-ascii symbols
+    MCISme	orig address fix for msg addr is mci addr, also one event per msg in this mode
+    MCISme	get multiRow format string from default template if it's absent in current formatter
+    mcahdb	Fix empty caller in Scheduler
+    emailsme	admin.autoCreateGsm2EmlProfile parameter
+    emailsme	multithreaded version,  mail.threadsCount param added
     
