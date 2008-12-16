@@ -740,13 +740,13 @@ protected:
       uint8_t high=(off&0x000000ff00000000ull)>>32;
       uint32_t low=off&0xffffffff;
       f.WriteByte(high);
-      f.WriteInt32(low);
+      f.WriteNetInt32(low);
     }
     static File::offset_type Read40BitOffset(File& f)
     {
       File::offset_type rv;
       uint8_t high=f.ReadByte();
-      uint32_t low=f.ReadInt32();
+      uint32_t low=f.ReadNetInt32();
       rv=high;
       rv<<=32;
       rv|=low;
