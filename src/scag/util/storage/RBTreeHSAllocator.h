@@ -244,6 +244,7 @@ public:
         // changedNodes.sort();
         // changedNodes.unique();
         //printf("%d\n", changedNodes.size());
+        if ( changedNodes.empty() ) return;
         startTransaction();
         writeChanges();
         endTransaction();
@@ -328,80 +329,91 @@ private:
     
     int ReallocRBTreeFile(void)
     {
+        if ( header_.cells_free >= growth ) return SUCCESS;
+
         const bool creation = ( chunks_.size() == 0 );
         if ( changedNodes.size() > 0 ) {
             // we have to make sure that no pending nodes are on the list
             completeChanges();
         }
 
-        const int64_t newChunkSize = int64_t(cellsize()*growth);
-        std::auto_ptr<char> newMem(new char[newChunkSize]);
-        if(!newMem.get())
-        {
-            if (logger) smsc_log_error(logger, "Error reallocating memory for RBTree, reason: %s", strerror(errno));
-            return BTREE_FILE_MAP_FAILED;
-        }
+        int32_t realgrowth = growth - header_.cells_count % growth;
+        if ( realgrowth == growth ) {
+            // new chunk is needed
+            const int64_t newChunkSize = int64_t(cellsize()*realgrowth);
+            std::auto_ptr<char> newMem(new char[newChunkSize]);
+            if(!newMem.get())
+            {
+                if (logger) smsc_log_error(logger, "Error reallocating memory for RBTree, reason: %s", strerror(errno));
+                return BTREE_FILE_MAP_FAILED;
+            }
 
+            // smsc_log_debug(logger, "RBTree address range is [%p..%p)", newMem, newMem + newRbtFileLen );
+            chunks_.push_back( newMem.release() );
+        } else {
+            // we don't need a new chunk, the last one is quite enough
+        }
+        memset( chunks_.back()+(growth-realgrowth)*cellsize(), 0, realgrowth*cellsize() );
         if (logger) smsc_log_info(logger, "RBTree index realloc from %lld to %lld cells",
                                   int64_t(header_.cells_count),
-                                  int64_t(header_.cells_count+growth) );
-        // smsc_log_debug(logger, "RBTree address range is [%p..%p)", newMem, newMem + newRbtFileLen );
+                                  int64_t(header_.cells_count+realgrowth) );
 
-        memset( newMem.get(), 0, growth*cellsize() );
-        chunks_.push_back( newMem.release() );
+        nodeptr_type freecell = header_.cells_count;
+        if ( header_.cells_free > 0 ) {
+            // we have to find the last free cell
+            nodeptr_type lastfreecell = header_.first_free_cell;
+            for ( unsigned i = header_.cells_free; i > 1; --i ) {
+                lastfreecell = addr2node(lastfreecell)->parent;
+            }
+            addr2node(lastfreecell)->parent = freecell;
+            nodeChanged(lastfreecell);
+        } else {
+            header_.first_free_cell = freecell;
+        }
 
-        int32_t oldcellcount = header_.cells_count;
-        int32_t freecell = header_.cells_count;
-        header_.cells_count += growth;
-        header_.cells_free += growth;
-        if (creation) {
-            header_.version = version_current;
-            header_.cells_used = 1;
+        // filling free cells links
+        for ( nodeptr_type i = 0; i < realgrowth-1; ++i ) {
+            RBTreeNode* cell = addr2node(freecell);
+            cell->parent = ++freecell;
+        }
+
+        nodeptr_type startcell = header_.cells_count;
+        header_.cells_count += realgrowth;
+        header_.cells_free += realgrowth;
+        if ( creation ) {
+            header_.cells_used = header_.first_free_cell = 1;
             --header_.cells_free;
-            freecell = 1;
-            header_.root_cell = 0; //-1;
+            header_.root_cell = 0;
             header_.nil_cell = 0;
             header_.growth = growth;
-            persistentCellSize( header_ );
-            // memcpy(header_.preamble, "RBTREE_FILE_STORAGE!", sizeof("RBTREE_FILE_STORAGE!"));            
-        }
-        // bool newfile = (!rbtree_addr);
-        
-        // rbtree_addr = newMem;
-        // memset(rbtree_addr + rbtFileLen, 0x00, size_t(growth * sizeof(RBTreeNode)));
-        
-        RBTreeNode* cell = addr2node(freecell);
-        for ( int32_t i = freecell + 1;
-              i < header_.cells_count;
-              ++i ) {
-            // if ( growth < 100 )
-            // smsc_log_debug( logger, "RBTree cell #%d has address [%x..%x)", i-1, (caddr_t)cell, (caddr_t)cell + sizeof(RBTreeNode) );
-            cell = addr2node( cell->parent = i );
-        }
-        header_.first_free_cell = freecell;
-
-        serializeRbtHeader( rbtFileHeaderDump_, header_ );
-        rbtree_f.Seek( rbtFileHeaderDump_.size() + header_.persistentCellSize * oldcellcount, SEEK_SET);
-        std::vector< unsigned char > buf;
-        Serializer sr(buf);
-        sr.setVersion( header_.version );
-        for ( int32_t i = oldcellcount; i < header_.cells_count; ++i ) {
-            sr.reset();
-            serializeCell( sr, addr2node(i) );
-            rbtree_f.Write(sr.data(), sr.size());
+            persistentCellSize(header_);
+            // clearing a nil_node
+            memset(addr2node(0),0,cellsize());
+            serializeRbtHeader(rbtFileHeaderDump_, header_);
         }
 
-        // should be in transactional manner
-        // rbtFileLen = newRbtFileLen;
+        {
+            // writing new cells to disk
+            std::vector< unsigned char > buf;
+            Serializer ss(buf);
+            ss.setVersion(header_.version);
+            rbtree_f.Seek( rbtFileHeaderDump_.size() + header_.persistentCellSize * startcell, SEEK_SET );
+            for ( nodeptr_type i = 0; i < realgrowth; ++i ) {
+                ss.reset();
+                serializeCell(ss, addr2node(startcell++) );
+                rbtree_f.Write(ss.data(), ss.size() );
+            }
+        }
+
         if ( creation ) {
             rbtree_f.Seek(0, SEEK_SET);
             rbtree_f.Write( rbtFileHeaderDump_.data(), rbtFileHeaderDump_.size());
             rbtree_f.Flush();
         } else {
             rbtree_f.Flush();
-            startChanges( getRootNode(), RBTreeChangesObserver<Key,Value>::OPER_CHANGE );
             completeChanges();
         }
+
         if (logger) smsc_log_debug( logger, "ReallocRBTree: cells_used %ld, cells_free %ld, cells_count %ld, first_free_cell %ld, root_cell %ld, nil_cell %ld, perscellsize %d",
                                     long(header_.cells_used), long(header_.cells_free),
                                     long(header_.cells_count), long(header_.first_free_cell),
@@ -514,9 +526,9 @@ private:
             serializeRbtHeader(rbtFileHeaderDump_,header_);
             assert( ds.rpos() == rbtFileHeaderDump_.size() );
             uint64_t expectedLen = rbtFileHeaderDump_.size() + header_.cells_count*header_.persistentCellSize;
-            if ( len != expectedLen ) {
+            if ( len < expectedLen ) {
                 // FIXME: we should fix it oneday
-                if (logger) smsc_log_warn(logger, "OpenRBTree: file size differ from what expected: headersize=%d cells_count=%lld cellsize=%d expectedlen=%lld len=%lld",
+                if (logger) smsc_log_warn(logger, "OpenRBTree: file size is smaller than what expected: headersize=%d cells_count=%lld cellsize=%d expectedlen=%lld len=%lld",
                                           int(rbtFileHeaderDump_.size()),
                                           int64_t(header_.cells_count),
                                           int(header_.persistentCellSize),
@@ -548,6 +560,7 @@ private:
             deserializeCell(ds,addr2node(i) );
         }
 
+        /*
         bool fixheader = false;
         if ( header_.cells_count != chunks_.size() * growth ) {
             // Now we have a problem if the growth mismatches the one which was in file.
@@ -594,6 +607,7 @@ private:
             rbtree_f.Flush();
             completeChanges();
         }
+         */
 
         if (logger) smsc_log_info( logger, "OpenRBTree: version=%d cells_count=%d cells_used=%d cells_free=%d root_cell=%d first_free_cell=%d pers_cell_size=%d",
                                    header_.version,
