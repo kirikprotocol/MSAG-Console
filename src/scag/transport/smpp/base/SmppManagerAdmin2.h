@@ -47,7 +47,7 @@ struct SmppEntityInfo {
   int inQueueLimit;
   int outQueueLimit;
   bool enabled;
-  bool snmpWatch;    // watch on this sme via snmp
+  bool snmpTracking;    // watch on this sme via snmp
 
   SmppEntityInfo()
   {
@@ -60,7 +60,7 @@ struct SmppEntityInfo {
     inQueueLimit=0;
     outQueueLimit=0;
     enabled=false;
-    snmpWatch=false;
+    snmpTracking=false;
   }
 };
 

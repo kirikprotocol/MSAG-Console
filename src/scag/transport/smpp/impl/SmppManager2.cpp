@@ -38,7 +38,7 @@ tag_timeout,
 tag_mode,
 tag_enabled,
 tag_providerId,
-tag_snmpWatch,
+tag_snmpTracking,
 tag_maxSmsPerSec,
 tag_metaGroup,
 tag_persistance,
@@ -75,7 +75,7 @@ TAGDEF(port),
 TAGDEF(althost),
 TAGDEF(altport),
 TAGDEF(enabled),
-TAGDEF(snmpWatch),
+TAGDEF(snmpTracking),
 TAGDEF(uid),
 TAGDEF(bindSystemId),
 TAGDEF(bindPassword),
@@ -207,8 +207,8 @@ static void FillEntity(SmppEntityInfo& entity,DOMNode* record)
       case tag_enabled:
         entity.enabled=GetBoolValue(attrs);
         break;
-      case tag_snmpWatch:
-        entity.snmpWatch = GetBoolValue(attrs);
+      case tag_snmpTracking:
+        entity.snmpTracking = GetBoolValue(attrs);
         break;
       case tag_uid:
         entity.uid=GetIntValue(attrs);
@@ -730,15 +730,20 @@ int SmppManagerImpl::registerSmeChannel(const char* sysId,const char* pwd,SmppBi
 {
     const char* text = 0;
     int ret = rarFailed;
+    bool snmpTracking = true;
     do {
         sync::MutexGuard mg(regMtx);
         SmppEntity** ptr=registry.GetPtr(sysId);
         if (!ptr)
         {
             smsc_log_info(log,"Failed to register sme with sysId='%s' - Not found",sysId);
+            // TODO: We have no SME info information here,
+            // so we cannot determine if we should report on this failure via SNMP.
+            // Right now, we do report about this activity.
             text = "sme is not found";
             break;
         }
+        snmpTracking = (*ptr)->info.snmpTracking;
         if(!(*ptr)->info.enabled)
         {
             smsc_log_info(log,"Failed to register sme with sysId='%s' - disabled",sysId);
@@ -805,7 +810,7 @@ int SmppManagerImpl::registerSmeChannel(const char* sysId,const char* pwd,SmppBi
         ret = rarOk;
     } while ( false );
 
-    if ( text && snmpqueue_ ) {
+    if ( text && snmpqueue_ && snmpTracking ) {
         snmp::TrapRecord* trap = new snmp::TrapRecord;
         trap->recordType = snmp::TrapRecord::Trap;
         trap->status = ( ret == rarFailed ? snmp::TrapRecord::STATNEW : snmp::TrapRecord::STATCLEAR );
@@ -822,6 +827,7 @@ int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
 {
     const char* text = 0;
     int ret = rarFailed;
+    bool snmpTracking = true;
     do {
         sync::MutexGuard mg(regMtx);
         SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
@@ -829,8 +835,10 @@ int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
         {
             smsc_log_info(log,"Failed to register smsc with sysId='%s' - Not found",ch->getSystemId());
             text = "smsc is not found";
+            // TODO: see the same code for registerSmeChannel above
             break;
         }
+        snmpTracking = (*ptr)->info.snmpTracking;
         if(!(**ptr).info.enabled)
         {
             smsc_log_info(log,"Failed to register smsc with sysId='%s' - Not found",ch->getSystemId());
@@ -850,7 +858,7 @@ int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
         ret = rarOk;
     } while ( false );
 
-    if ( text && snmpqueue_ ) {
+    if ( text && snmpqueue_ && snmpTracking ) {
         snmp::TrapRecord* trap = new snmp::TrapRecord;
         trap->recordType = snmp::TrapRecord::Trap;
         trap->status = ( ret == rarFailed ? snmp::TrapRecord::STATNEW : snmp::TrapRecord::STATCLEAR );
@@ -867,6 +875,8 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
 {
     const char* text = 0;
     bool isSME = false;
+    bool snmpTracking = true;
+    bool isDeleted = false;  // if the sme was deleted (i.e. the unregister is legal)
     do {
         sync::MutexGuard mg(regMtx);
         SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
@@ -876,6 +886,8 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
             break; // no snmp
         }
         SmppEntity& ent=**ptr;
+        snmpTracking = ent.info.snmpTracking;
+        isDeleted = (ent.info.enabled == false);
         MutexGuard mg2(ent.mtx);
         isSME = ( ent.info.type == etService );
         if(ent.bt==btRecvAndTrans) {
@@ -893,13 +905,13 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
         if (ent.info.type == etService) ent.info.host = "";
         text = "disconnected";
     } while ( false );
-    if ( text && snmpqueue_ ) {
+    if ( text && snmpqueue_ && snmpTracking ) {
         snmp::TrapRecord* trap = new snmp::TrapRecord;
         trap->recordType = snmp::TrapRecord::Trap;
-        trap->status = snmp::TrapRecord::STATNEW;
+        trap->status = isDeleted ? snmp::TrapRecord::STATCLEAR ? snmp::TrapRecord::STATNEW;
         trap->id = ch->getSystemId();
         trap->category = ( isSME ? "SME" : "SMSC" );
-        trap->severity = snmp::TrapRecord::MAJOR;
+        trap->severity = isDeleted ? snmp::TrapRecord::CLEAR ? snmp::TrapRecord::MAJOR;
         trap->text = text;
         snmpqueue_->Push( trap );
     }

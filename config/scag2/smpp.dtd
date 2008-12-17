@@ -8,7 +8,7 @@
 <!ELEMENT param (#PCDATA)>
 <!ATTLIST param 
 name (systemId|password|timeout|mode|enabled|host|port|althost|altport|uid|
-      bindSystemId|bindPassword|providerId|addressRange|systemType|snmpWatch|
+      bindSystemId|bindPassword|providerId|addressRange|systemType|snmpTracking|
       inQueueLimit|outQueueLimit|maxSmsPerSec|policy|metaGroup|persistence) #REQUIRED
 value CDATA #REQUIRED>
 

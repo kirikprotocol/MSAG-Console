@@ -85,6 +85,13 @@
         </section>
     </section>
 
+    <section name="snmp"> <!-- optional section -->
+        <param name="enabled" type="bool">false</param>
+        <!-- The socket to connect to agentX.  It is better be specified 
+             via snmp config file, see "man snmpd.conf"  -->
+        <param name="socket" type="string"></param>
+    </section>
+
     <section name="HttpTransport">
         <param name="host" type="string">@listen.host@</param>
         <param type="int" name="port">@gateway.http.port@</param>
