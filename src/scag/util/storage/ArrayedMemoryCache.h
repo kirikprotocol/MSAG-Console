@@ -52,6 +52,7 @@ public:
         uint32_t index = getIndex(k);
         CacheItem* item = hash_.GetPtr(index);
         if (!item) {
+          if (cachelog_) smsc_log_debug( cachelog_, "set: insert %s", k.toString().c_str() );
           hash_.Insert(index, CacheItem(k, v));
           return false;
         }
@@ -68,6 +69,7 @@ public:
               ( "Itemlist: two items with the same keys found\n"
                 "It may mean that you issue set() w/o prior get()" );
         }
+        if (cachelog_) smsc_log_debug( cachelog_, "set: do not replace %s by %s", item->key.toString().c_str(), k.toString().c_str() );
         return true;
     }
 
@@ -79,6 +81,21 @@ public:
 
     stored_type* get( const key_type& k ) const {
         CacheItem* item = getCacheItem(k);
+        if (!item) {
+          if (cachelog_) smsc_log_debug( cachelog_, "get: %s miss: item not found", k.toString().c_str());
+          return 0;
+        }
+        if (!(item->key == k)) {
+          if (cachelog_) smsc_log_debug( cachelog_, "get: %s miss: item key=%s != insert key=%s", item->key.toString().c_str(), k.toString().c_str());
+          return 0;
+        }
+        if (!store2val(item->vv)) {
+          if (cachelog_) smsc_log_debug( cachelog_, "get: %s miss: item value is null", k.toString().c_str());
+          return 0;
+        }
+        if (cachelog_) smsc_log_debug( cachelog_, "get: %s hit", k.toString().c_str());
+        return &(item->vv);
+        /*
         if (item && item->key == k && store2val(item->vv)) {
           if (cachelog_) smsc_log_debug( cachelog_, "get: %s hit", k.toString().c_str());
           return &(item->vv);
@@ -86,6 +103,7 @@ public:
           if (cachelog_) smsc_log_debug( cachelog_, "get: %s miss", k.toString().c_str());
           return 0;
         }
+        */
     }
 
 
@@ -116,7 +134,8 @@ public:
 private: 
 
   uint32_t getIndex( const key_type& k ) const {
-      return HF::CalcHash(k) % cachesize_;
+      //return HF::CalcHash(k) % cachesize_;
+      return k.HashCode(0) % cachesize_;
   }
 
   CacheItem* getCacheItem(  const key_type& k ) const {
