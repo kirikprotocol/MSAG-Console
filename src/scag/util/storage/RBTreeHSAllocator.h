@@ -154,6 +154,7 @@ public:
         return SUCCESS;
     }
 
+
     virtual ~RBTreeHSAllocator()
     {
         if (running) running = false;
@@ -162,6 +163,7 @@ public:
             delete *i;
         }
     }
+
 
     virtual nodeptr_type allocateNode(void)
     {
@@ -305,6 +307,7 @@ public:
 
 
 private:
+    
     inline RBTreeNode* addr2node( nodeptr_type offset ) const
     {
         register unsigned chunkidx = offset / growth;
@@ -509,10 +512,13 @@ private:
             repairRBTreeFile();
         }
 		
-        {
+        try {
+            // determining the length of the file
             rbtree_f.Seek(0, SEEK_END);
             const off_t len = rbtree_f.Pos();
             rbtree_f.Seek(0, SEEK_SET);
+
+            // reading the header
             off_t buflen = len;
             if ( buflen > sizeof(RbtFileHeader)*2+1024 ) {
                 // taking sufficient chunk from the head of the file
@@ -525,89 +531,96 @@ private:
             rbtFileHeaderBuf_.clear();
             serializeRbtHeader(rbtFileHeaderDump_,header_);
             assert( ds.rpos() == rbtFileHeaderDump_.size() );
-            uint64_t expectedLen = rbtFileHeaderDump_.size() + header_.cells_count*header_.persistentCellSize;
+            const off_t expectedLen = off_t(rbtFileHeaderDump_.size() + header_.cells_count*header_.persistentCellSize);
+
+            nodeptr_type maxcells = header_.cells_count;
+            if ( len < expectedLen ) {
+                maxcells = ( len - rbtFileHeaderDump_.size() ) / header_.persistentCellSize;
+            }
+
+            // create the necessary number of chunks
+            unsigned needchunks = (maxcells-1) / growth + 1;
+            chunks_.reserve( needchunks );
+            for ( unsigned i = 0; i < needchunks; ++i ) {
+                std::auto_ptr<char> mem( new char[growth*cellsize()] );
+                if ( ! mem.get() ) return BTREE_FILE_MAP_FAILED;
+                chunks_.push_back( mem.release() );
+            }
+
+            // reading cells
+            rbtree_f.Seek( rbtFileHeaderDump_.size() );
+            std::auto_ptr<unsigned char> pbuf(new unsigned char[header_.persistentCellSize]);
+            Deserializer dds(pbuf.get(),header_.persistentCellSize);
+            dds.setVersion( header_.version );
+            for ( int32_t i = 0; i < maxcells; ++i ) {
+                rbtree_f.Read(pbuf.get(),header_.persistentCellSize);
+                dds.setrpos(0);
+                deserializeCell(dds,addr2node(i) );
+            }
+            
             if ( len < expectedLen ) {
                 // FIXME: we should fix it oneday
-                if (logger) smsc_log_warn(logger, "OpenRBTree: file size is smaller than what expected: headersize=%d cells_count=%lld cellsize=%d expectedlen=%lld len=%lld",
-                                          int(rbtFileHeaderDump_.size()),
-                                          int64_t(header_.cells_count),
-                                          int(header_.persistentCellSize),
-                                          expectedLen,
-                                          int64_t(len) );
-                // FIXME: we should return some failure status here
-                // throw std::runtime_error("rbtree len differs");
-                return CANNOT_OPEN_RBTREE_FILE;
-            }
-        }
-
-        // create the necessary number of chunks
-        for ( unsigned i = 0; i < ((header_.cells_count-1)/growth + 1); ++i ) {
-            std::auto_ptr<char> mem( new char[growth*cellsize()] );
-            if ( ! mem.get() ) return BTREE_FILE_MAP_FAILED;
-            chunks_.push_back( mem.release() );
-        }
-        // rbtree_body_ = new char[header_.cells_count*cellsize()];
-        // if ( rbtree_body_ == 0 ) return BTREE_FILE_MAP_FAILED;
-
-        // reading cells
-        rbtree_f.Seek( rbtFileHeaderDump_.size() );
-        std::auto_ptr<unsigned char> pbuf(new unsigned char[header_.persistentCellSize]);
-        Deserializer ds(pbuf.get(),header_.persistentCellSize);
-        ds.setVersion( header_.version );
-        for ( int32_t i = 0; i < header_.cells_count; ++i ) {
-            rbtree_f.Read(pbuf.get(),header_.persistentCellSize);
-            ds.setrpos(0);
-            deserializeCell(ds,addr2node(i) );
-        }
-
-        /*
-        bool fixheader = false;
-        if ( header_.cells_count != chunks_.size() * growth ) {
-            // Now we have a problem if the growth mismatches the one which was in file.
-            // We have to update the file to the new value of growth.
-            fixheader = true;
-            unsigned lastcell = header_.cells_count;
-            unsigned needcells = growth - (header_.cells_count % growth);
-            if ( logger ) smsc_log_debug( logger, "filling %ld cells starting from %ld to the rbtree to match the growth chunks",
-                                          long(needcells), long(lastcell) );
-            // looking for the last free cell
-            if ( header_.cells_free > 0 ) {
-                unsigned freecell = header_.first_free_cell;
-                for ( unsigned i = header_.cells_free; i > 1 ; --i ) {
-                    freecell = addr2node(freecell)->parent;
+                if (logger) smsc_log_warn( logger, "OpenRBTree: file size is smaller than what expected: headersize=%d expected_cells_count=%lld actual_cells_count=%lld cellsize=%d expectedlen=%lld len=%lld, I'll try to recover...",
+                                           int(rbtFileHeaderDump_.size()),
+                                           int64_t(header_.cells_count),
+                                           int64_t(maxcells),
+                                           int(header_.persistentCellSize),
+                                           expectedLen,
+                                           int64_t(len) );
+                // trying to recover the file
+                RBTreeChecker< Key, Value > checker( *this,
+                                                     maxcells,
+                                                     logger,
+                                                     10 );
+                if ( ! checker.check(header_.root_cell, header_.nil_cell) ) {
+                    if ( logger ) smsc_log_error( logger,
+                                                  "cannot recover the tree: %s at depth=%u in node %ld path=%s",
+                                                  checker.failedMsg(),
+                                                  checker.failedDepth(),
+                                                  long(checker.failedNode()),
+                                                  checker.failedPath() );
+                    return CANNOT_OPEN_RBTREE_FILE;
                 }
-                addr2node(freecell)->parent = lastcell;
-                startChanges(freecell, RBTreeChangesObserver<Key,Value>::OPER_CHANGE );
-            } else {
-                header_.first_free_cell = lastcell;
-                startChanges(getRootNode(), RBTreeChangesObserver<Key,Value>::OPER_CHANGE );
+
+                // fix header.
+                // NOTE: we don't truncate the file here.
+                header_.cells_count = header_.cells_used = checker.maxUsedCell() + 1;
+                header_.cells_free = 0;
+                header_.first_free_cell = 0;
+                if (logger) smsc_log_debug( logger, "Hoorah! It seems that we could recover, the cells_count=cells_used=%d actual_used_cells=%d",
+                                            int(header_.cells_count),
+                                            int(checker.usedCells()) );
+
+            } else if ( logger ) {
+
+                if ( len != expectedLen && logger->isDebugEnabled() ) {
+                    smsc_log_warn( logger, "RBTree file size differ: expectedlen=%lld len=%lld",
+                                   int64_t(expectedLen), int64_t(len) );
+
+                    RBTreeChecker< Key, Value > checker( *this,
+                                                         header_.cells_count,
+                                                         logger,
+                                                         10 );
+                
+                    if ( ! checker.check(header_.root_cell, header_.nil_cell) ) {
+                        smsc_log_error( logger, "RBTree file is corrupted: %s at depth=%u in node %ld path=%s",
+                                        checker.failedMsg(),
+                                        checker.failedDepth(),
+                                        long(checker.failedNode()),
+                                        checker.failedPath() );
+                        return CANNOT_OPEN_RBTREE_FILE;
+                    }
+                }
+
             }
 
-            memset( chunks_.back() + (growth-needcells)*cellsize(), 0, cellsize()*needcells );
-            rbtree_f.Seek( rbtFileHeaderDump_.size() + header_.persistentCellSize * lastcell, SEEK_SET );
-            std::vector<unsigned char> pbuf;
-            pbuf.reserve(header_.persistentCellSize);
-            Serializer ss(pbuf);
-            ss.setVersion(header_.version);
-            for ( unsigned i = lastcell; i < chunks_.size()*growth; ) {
-                RBTreeNode* cell = addr2node(i);
-                cell->parent = ++i;
-                ss.setwpos(0);
-                serializeCell(ss,cell);
-                rbtree_f.Write(ss.data(),ss.size());
-            }
-            header_.cells_count += needcells;
-            header_.cells_free += needcells;
-        } else if ( growth != header_.growth  ) {
-            fixheader = true;
-            startChanges( getRootNode(), RBTreeChangesObserver<Key,Value>::OPER_CHANGE );
+        } catch (std::exception& e) {
+            if ( logger ) smsc_log_error(logger, "OpenRBTree: exception %s", e.what() );
+            return CANNOT_OPEN_RBTREE_FILE;
+        } catch (...) {
+            if ( logger ) smsc_log_error(logger, "OpenRBTree: unknown exception");
+            return CANNOT_OPEN_RBTREE_FILE;
         }
-
-        if ( fixheader ) {
-            rbtree_f.Flush();
-            completeChanges();
-        }
-         */
 
         if (logger) smsc_log_info( logger, "OpenRBTree: version=%d cells_count=%d cells_used=%d cells_free=%d root_cell=%d first_free_cell=%d pers_cell_size=%d",
                                    header_.version,

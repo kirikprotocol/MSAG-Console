@@ -76,9 +76,10 @@ public:
             if (logger) smsc_log_error( logger, "SetAllocator: rootNode=%ld, nilNode=%ld", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
         }
          */
-        const std::vector< nodeptr_type > freenodes = allocator->freenodes();
-        int cnt = dumpcheck( freenodes, rootNode, nilNode, 0, "" );
-        if (logger) smsc_log_info( logger, "SetAllocator: rbtree nodes=%d", cnt );
+        // All checking has been moved to allocator
+        // const std::vector< nodeptr_type > freenodes = allocator->freenodes();
+        // int cnt = dumpcheck( freenodes, rootNode, nilNode, 0, "" );
+        // if (logger) smsc_log_info( logger, "SetAllocator: rbtree nodes=%d", cnt );
     }
 
     void SetChangesObserver( RBTreeChangesObserver<Key, Value>* _changesObserver)
@@ -104,8 +105,8 @@ public:
         if (logger) smsc_log_debug(logger, "Start Insert: k=%s val=%lld", k.toString().c_str(), (long long)v);
         nodeptr_type nn = allocator->allocateNode();
         RBTreeNode* newNode = allocator->realAddr(nn);
-        rootNode = allocator->getRootNode();
-        nilNode = allocator->getNilNode();
+        // rootNode = allocator->getRootNode();
+        // nilNode = allocator->getNilNode();
         // offset = allocator->getOffset();
         newNode->key = k;
         newNode->value = v;
@@ -113,8 +114,28 @@ public:
         changesObserver->startChanges( nn, RBTreeChangesObserver<Key, Value>::OPER_INSERT );
         bstInsert( nn );
         newNode->color = RED;
+        /*
+        if ( logger ) {
+            smsc_log_debug( logger, "after bstInsert" );
+            RBTreeChecker< Key, Value > checker( *allocator,
+                                                 0,
+                                                 logger,
+                                                 100 );
+            checker.check( allocator->getRootNode(), allocator->getNilNode() );
+        }
+         */
         changesObserver->nodeChanged( nn );
         rbtRecovery( nn );
+        /*
+        if ( logger ) {
+            smsc_log_debug( logger, "after rbtRecovery" );
+            RBTreeChecker< Key, Value > checker( *allocator,
+                                                 0,
+                                                 logger,
+                                                 100 );
+            checker.check( allocator->getRootNode(), allocator->getNilNode() );
+        }
+         */
         changesObserver->completeChanges();
         if (logger) smsc_log_debug(logger, "End Insert: %ld k=%s val=%lld", (long)nn, k.toString().c_str(), (long long)v);
         return 1;
@@ -246,6 +267,7 @@ protected:
         // shownode( "after moveLeft", iterNode );
     }
 
+    /*
     int dumpcheck( const std::vector< nodeptr_type >& freenodes,
                    nodeptr_type node,
                    nodeptr_type parent,
@@ -317,7 +339,7 @@ protected:
         }
         return res+1;
     }
-
+     */
 
     void shownode( const char* text, nodeptr_type node ) const
     {
@@ -370,8 +392,7 @@ protected:
         changesObserver->nodeChanged(iTempNode);
 
         if ( node->parent == nilNode ) {
-            rootNode = iTempNode;
-            allocator->setRootNode(rootNode);
+            allocator->setRootNode(rootNode = iTempNode );
         } else {
             RBTreeNode* nodeParent = allocator->realAddr(node->parent);
             if ( iNode == nodeParent->left ) {
@@ -405,8 +426,7 @@ protected:
         changesObserver->nodeChanged(iTempNode);
 
         if ( node->parent == nilNode ) {
-            rootNode = iTempNode;
-            allocator->setRootNode(rootNode);
+            allocator->setRootNode(rootNode = iTempNode);
         } else {
             RBTreeNode* nodeParent = allocator->realAddr(node->parent);
             if ( iNode == nodeParent->right ) {
@@ -442,8 +462,7 @@ protected:
         newNode->parent = parentNode;
         changesObserver->nodeChanged(iNewNode);
         if (parentNode == nilNode ) {
-            rootNode = iNewNode;
-            allocator->setRootNode(rootNode);
+            allocator->setRootNode(rootNode = iNewNode);
         } else {
             RBTreeNode* parent = allocator->realAddr(parentNode);
             if (newNode->key < parent->key)
@@ -478,9 +497,11 @@ protected:
                     if( node == parent->right ) {
                         node = theNode->parent;
                         rbtRotateLeft(node);
+                        theNode = allocator->realAddr(node);
+                        parent = allocator->realAddr(theNode->parent);
                     }
                     parent->color = BLACK;
-                    grandpa->color = RED;
+                    allocator->realAddr(parent->parent)->color = RED;
                     rbtRotateRight( parent->parent );
                     changesObserver->nodeChanged(theNode->parent);
                     changesObserver->nodeChanged(parent->parent);
@@ -502,9 +523,11 @@ protected:
                     if ( node == parent->left ) {
                         node = theNode->parent;
                         rbtRotateRight(node);
+                        theNode = allocator->realAddr(node);
+                        parent = allocator->realAddr(theNode->parent);
                     }
                     parent->color = BLACK;
-                    grandpa->color = RED;
+                    allocator->realAddr(parent->parent)->color = RED;
                     rbtRotateLeft( parent->parent );
                     changesObserver->nodeChanged( theNode->parent );
                     changesObserver->nodeChanged( parent->parent );
