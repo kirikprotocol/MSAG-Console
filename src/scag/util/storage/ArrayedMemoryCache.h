@@ -83,21 +83,6 @@ public:
 
     stored_type* get( const key_type& k ) const {
         CacheItem* item = getCacheItem(k);
-        if (!item) {
-          if (cachelog_) smsc_log_debug( cachelog_, "get: %s miss: item not found", k.toString().c_str());
-          return 0;
-        }
-        if (!(item->key == k)) {
-          if (cachelog_) smsc_log_debug( cachelog_, "get: %s miss: item key=%s != insert key=%s", item->key.toString().c_str(), k.toString().c_str());
-          return 0;
-        }
-        if (!store2val(item->vv)) {
-          if (cachelog_) smsc_log_debug( cachelog_, "get: %s miss: item value is null", k.toString().c_str());
-          return 0;
-        }
-        if (cachelog_) smsc_log_debug( cachelog_, "get: %s hit", k.toString().c_str());
-        return &(item->vv);
-        /*
         if (item && item->key == k && store2val(item->vv)) {
           if (cachelog_) smsc_log_debug( cachelog_, "get: %s hit", k.toString().c_str());
           return &(item->vv);
@@ -105,7 +90,6 @@ public:
           if (cachelog_) smsc_log_debug( cachelog_, "get: %s miss", k.toString().c_str());
           return 0;
         }
-        */
     }
 
 
@@ -136,8 +120,7 @@ public:
 private: 
 
   uint32_t getIndex( const key_type& k ) const {
-      //return HF::CalcHash(k) % cachesize_;
-      return k.HashCode(0) % cachesize_;
+      return HF::CalcHash(k) % cachesize_;
   }
 
   CacheItem* getCacheItem(  const key_type& k ) const {
