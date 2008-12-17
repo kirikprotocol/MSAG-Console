@@ -117,7 +117,6 @@ struct DescriptionFile
     }
 
     void serialize(Serializer& ser) const {
-      ser.setwpos(0);
       ser.writeAsIs(PREAMBULE_SIZE, preamble);
       ser << (uint32_t)version;
       ser << (uint32_t)files_count;
@@ -158,7 +157,6 @@ struct templBackupHeader {
     deser >> key;
   }
   void serialize(Serializer& ser) const {
-    ser.setwpos(0);
     ser << (uint64_t)blocksCount;
     ser << (uint64_t)dataSize;
     ser << (uint64_t)curBlockIndex;
@@ -210,7 +208,6 @@ struct templDataBlockHeader
     }
 
     void serialize(Serializer& ser) const {
-      ser.setwpos(0);
       ser << (uint64_t)next_free_block;
       ser << key;
       ser << (uint64_t)total_blocks;
@@ -269,7 +266,8 @@ public:
     static const int64_t BLOCK_USED	= int64_t(1) << 63;
 
     BlocksHSStorage(GlossaryBase* g = NULL,
-                    smsc::logger::Logger* thelog = 0): glossary_(g), running(false), iterBlockIndex(0), ser_(serBuf_)
+                    smsc::logger::Logger* thelog = 0): glossary_(g), running(false), iterBlockIndex(0),
+                    serDescrBuf_(DescriptionFile::size()), serBackupBuf_(BackupHeader::size()), serHdrBuf_(DataBlockHeader::size())
     {
         if (!glossary_) {
           throw std::runtime_error("BlocksHSStorage: glossary should be provided!");
@@ -277,7 +275,6 @@ public:
         logger = thelog;
         hdrSize = DataBlockHeader::size();
         memset(&backupHeader, 0, sizeof(BackupHeader));
-        serBuf_.reserve(DescriptionFile::size());
         memset(deserBuf_, 0, DescriptionFile::size());
     }
 
@@ -288,9 +285,7 @@ public:
     }
 
 
-    int Create(const string& _dbName, const string& _dbPath = "",
-               int32_t _fileSize = defaultFileSize,
-               int32_t _blockSize = defaultBlockSize)
+    int Create(const string& _dbName, const string& _dbPath, int32_t _fileSize, int32_t _blockSize)
     {
         dbName = _dbName;
         dbPath = _dbPath;
@@ -319,7 +314,7 @@ public:
     }
 
 
-    int Open(const string& _dbName, const string& _dbPath = 0)
+    int Open(const string& _dbName, const string& _dbPath)
     {
         dbName = _dbName;
         dbPath = _dbPath;
@@ -617,9 +612,10 @@ private:
   CompleteDataBlock completeDataBlock;
   BackupHeader backupHeader;
 
-  std::vector< unsigned char > serBuf_;
+  std::vector< unsigned char > serDescrBuf_;
+  std::vector< unsigned char > serBackupBuf_;
+  std::vector< unsigned char > serHdrBuf_;
   unsigned char deserBuf_[DESCRIPTION_FILE_SIZE];
-  Serializer ser_;
 
 private:
 
@@ -643,15 +639,15 @@ private:
         if (logger)
             smsc_log_debug(logger, "write data block fn=%d, offset=%d, blockSize=%d", fileNumber,
                            offset, curBlockSize);
-        //printHdr(hdr);
         if ( !checkfn(fileNumber) ) {
             throw smsc::util::Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count-1);
         }
         size_t bufSize = hdrSize + curBlockSize;
-        serBuf_.resize(0);
-        hdr.serialize(ser_);
-        memcpy(writeBuf, ser_.data(), ser_.size());
-        memcpy(writeBuf + ser_.size(), data, curBlockSize);
+        memset(&(serHdrBuf_[0]), 0, DataBlockHeader::size());
+        Serializer ser(serHdrBuf_);
+        hdr.serialize(ser);
+        memcpy(writeBuf, ser.data(), ser.size());
+        memcpy(writeBuf + ser.size(), data, curBlockSize);
         try {
             File* f = dataFile_f[fileNumber];
             f->Seek(offset, SEEK_SET);
@@ -791,7 +787,7 @@ private:
     int CreateDataFile(void)
     {
         const std::string name = makeDataFileName(descrFile.files_count);
-        if (logger) smsc_log_debug(logger, "Create data file: '%s'", name.c_str());
+        if (logger) smsc_log_info(logger, "Create data file: '%s'", name.c_str());
         if (File::Exists(name.c_str())) {
             // we move the old file and create a new one
             for ( int backnum = 0;; ++backnum ) {
@@ -854,6 +850,7 @@ private:
         descrFile.first_free_block = startBlock;
         printDescrFile();
         changeDescriptionFile();
+        if (logger) smsc_log_info(logger, "data file:'%s' created", name.c_str());
         return 0;
     }
 
@@ -862,9 +859,10 @@ private:
         try {
             if (logger) smsc_log_debug(logger, "Change description file");
             descrFile_f.Seek(0, SEEK_SET);        
-            serBuf_.resize(0);
-            descrFile.serialize(ser_);
-            descrFile_f.Write(ser_.data(), ser_.size());
+            memset(&(serDescrBuf_[0]), 0, DescriptionFile::size());
+            Serializer ser(serDescrBuf_);
+            descrFile.serialize(ser);
+            descrFile_f.Write(ser.data(), ser.size());
             printDescrFile();
             return;
         } catch (const std::exception& ex) {
@@ -877,9 +875,10 @@ private:
             tmpFile.RWCreate(name.c_str());
             tmpFile.SetUnbuffered();
             tmpFile.Seek(0, SEEK_SET);
-            serBuf_.resize(0);
-            descrFile.serialize(ser_);
-            tmpFile.Write(ser_.data(), ser_.size());
+            memset(&(serDescrBuf_[0]), 0, DescriptionFile::size());
+            Serializer ser(serDescrBuf_);
+            descrFile.serialize(ser);
+            tmpFile.Write(ser.data(), ser.size());
             if (logger) smsc_log_error(logger, "Last description data saved in file '%s'", name.c_str());
         } catch (const std::exception& ex) {
             if (logger) smsc_log_error(logger, "Can't save temp description file. std::exception: '%s'", ex.what());
@@ -1071,15 +1070,17 @@ private:
             memcpy(buf, &TRX_INCOMPLETE, 1);
             size_t bufOffset = 1;
 
-            serBuf_.resize(0);
-            _descrFile.serialize(ser_);
-            memcpy(buf + bufOffset, ser_.data(), ser_.size());
-            bufOffset += ser_.size();
+            memset(&(serDescrBuf_[0]), 0, DescriptionFile::size());
+            Serializer descrser(serDescrBuf_);
+            _descrFile.serialize(descrser);
+            memcpy(buf + bufOffset, descrser.data(), descrser.size());
+            bufOffset += descrser.size();
 
-            serBuf_.resize(0);
-            backupHeader.serialize(ser_);
-            memcpy(buf + bufOffset, ser_.data(), ser_.size());
-            bufOffset += ser_.size();
+            memset(&(serBackupBuf_[0]), 0, BackupHeader::size());
+            Serializer backupser(serBackupBuf_);
+            backupHeader.serialize(backupser);
+            memcpy(buf + bufOffset, backupser.data(), backupser.size());
+            bufOffset += backupser.size();
 
             for (int i = 0; i < backupHeader.blocksCount; ++i) { 
                 uint64_t ni = Uint64Converter::toNetworkOrder(dataBlockBackup[i]);
