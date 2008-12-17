@@ -58,10 +58,13 @@ public:
         }
         if ( ! (item->key == k)) {
           if (cachelog_) smsc_log_debug( cachelog_, "set: replace %s by %s", item->key.toString().c_str(), k.toString().c_str() );
-          //if (store2val(item->vv)) dealloc(item->vv);
-          dealloc(item->vv);
+          if (store2val(item->vv)) dealloc(item->vv);
+          //dealloc(item->vv);
           item->vv = v;
           item->key = k;
+        } else if (!store2val(item->vv)) {
+          if (cachelog_) smsc_log_debug( cachelog_, "set: not null value for %s", item->key.toString().c_str() );
+          item->vv = v;
         } else if (store2val(item->vv) && store2val(v)) {
           dealloc(v);
           // FIXME: should we replace with warning?
@@ -69,7 +72,6 @@ public:
               ( "Itemlist: two items with the same keys found\n"
                 "It may mean that you issue set() w/o prior get()" );
         }
-        if (cachelog_) smsc_log_debug( cachelog_, "set: do not replace %s by %s", item->key.toString().c_str(), k.toString().c_str() );
         return true;
     }
 
