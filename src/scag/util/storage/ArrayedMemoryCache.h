@@ -1,5 +1,5 @@
-#ifndef _SCAG_UTIL_STORAGE_HASHEDMEMORYCACHE_H
-#define _SCAG_UTIL_STORAGE_HASHEDMEMORYCACHE_H
+#ifndef _SCAG_UTIL_STORAGE_ARRAYEDMEMORYCACHE_H
+#define _SCAG_UTIL_STORAGE_ARRAYEDMEMORYCACHE_H
 
 // This storage meets the requirements on the
 // template class parameter MemStorage of CachedDiskStorage
@@ -39,8 +39,8 @@ public:
     ArrayedMemoryCache( smsc::logger::Logger* thelog = 0,
                        unsigned int cachesize = 10000 ) :
     hash_(cachesize),
-    cachesize_(cachesize),
-    cachelog_(thelog) {
+    cachelog_(thelog),
+    cachesize_(cachesize) {
     }
 
     ~ArrayedMemoryCache() {
@@ -55,7 +55,7 @@ public:
           hash_.Insert(index, CacheItem(k, v));
           return false;
         }
-        if (item->key != k) {
+        if ( ! (item->key == k)) {
           if (cachelog_) smsc_log_debug( cachelog_, "set: replace %s by %s", item->key.toString().c_str(), k.toString().c_str() );
           //if (store2val(item->vv)) dealloc(item->vv);
           dealloc(item->vv);
@@ -93,7 +93,7 @@ public:
         if (cachelog_) smsc_log_debug( cachelog_, "clr: %s", k.toString().c_str() );
         uint32_t index = getIndex(k);
         CacheItem* item = hash_.GetPtr(index);
-        if (!item || item->key != k) {
+        if ( !item || !(item->key == k)) {
           return store2val(this->val2store(NULL));
         }
         stored_type v = item->vv;
@@ -116,7 +116,7 @@ public:
 private: 
 
   uint32_t getIndex( const key_type& k ) const {
-    return k.HashCode(0) % cachesize_;
+      return HF::CalcHash(k) % cachesize_;
   }
 
   CacheItem* getCacheItem(  const key_type& k ) const {
@@ -136,7 +136,7 @@ public:
             return iter_.Next( key_, val_ );
         }
         const key_type& key() const {
-            return key_;
+            return val_.key;
         }
         stored_type& value() {
             return val_.vv;
