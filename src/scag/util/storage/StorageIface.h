@@ -446,7 +446,7 @@ public:
 
 
     ~CachedDiskStorage() {
-        flushAll();
+        //flushAll();
         cache_->dealloc(spare_);
         cache_->clean();
         delete disk_;
