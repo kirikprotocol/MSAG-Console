@@ -35,7 +35,7 @@ private:
 
 public:
 
-    AbntAddr() : number(0) { memset((void*)&value, 0x00, sizeof(value));}
+  AbntAddr() : number(0) { memset((void*)&value, 0x00, sizeof(value));}
   AbntAddr(uint8_t _len, uint8_t _type, uint8_t _plan, const char* _value)
   {
     value.addr_content.type = _type;
@@ -43,28 +43,10 @@ public:
     setValue(_len, _value);
   };
 
-    /*
-     * // extra constructors are EVIL!
-  AbntAddr(const AbntAddrValue* _full_addr)
+  AbntAddr(const AbntAddr& addr) : number(addr.number)
   {
-    if (!_full_addr) {
-      throw runtime_error("AbntAddr: bad address NULL");
-    }
-    memcpy((void*)&value.full_addr, (void*)_full_addr, sizeof(value.full_addr));
+    memcpy((void*)&(value.full_addr), (void*)&(addr.value.full_addr), sizeof(value.full_addr));
   };
-  AbntAddr(const uint8_t* _full_addr)
-  {
-    if (!_full_addr) {
-      throw runtime_error("AbntAddr: bad address NULL");
-    }
-    memcpy((void*)&value.full_addr, (void*)_full_addr, sizeof(value.full_addr));
-  };
-     */
-
-    AbntAddr(const AbntAddr& addr) : number(addr.number)
-    {
-        memcpy((void*)&(value.full_addr), (void*)&(addr.value.full_addr), sizeof(value.full_addr));
-    };
 
   ~AbntAddr(){};
 
@@ -111,24 +93,8 @@ public:
       // return (memcmp((void*)&value, (void*)&addr.value, sizeof(value)) < 0);
   }
 
-    /*
-  const uint8_t* getAddrSig(void) const
-  {
-    return (uint8_t*)(value.full_addr);
-  }
-     */
-
-  /**
-   * Метод копирует значение адреса и возвращает его длинну
-   *
-   * @param _value указатель на буфер куда будет скопированно значение адреса
-   *               буфер должен иметь размер не меньше
-   *               MAX_ADDRESS_VALUE_LENGTH+1, чтобы принять любое значение
-   * @return длинна адреса
-   */
   inline uint8_t getSignals(char* _value) const
   {
-    //__require__(_value);
     if (!_value) {
       return 0;
     }
@@ -141,11 +107,6 @@ public:
     return value.addr_content.length;
   }
 
-  /**
-   * Возвращает длинну адреса
-   *
-   * @return длинна адреса
-   */
   inline uint8_t getLength() const
   {
     return value.addr_content.length;
@@ -263,15 +224,6 @@ public:
     value.addr_content.length = static_cast<uint8_t>(strlen(addr_value));
     setValue(value.addr_content.length, addr_value);
   }
-
-    /*
-  void setAddrValue(const char* val) {
-    if (!val) {
-      return;
-    }
-    memcpy(value.full_addr, val, ADDRESS_VALUE_SIZE);
-  }
-     */
 
     // necessary for serialization
   const char* getContentSignals() const {
