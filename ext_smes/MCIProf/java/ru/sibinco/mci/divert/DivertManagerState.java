@@ -64,18 +64,18 @@ public class DivertManagerState
   {
     DivertInfo info = (DivertInfo)state.getAttribute(Constants.ATTR_DIVERT);
     if (info == null) {
-      info = divertManager.getDivertInfo(state.getAbonent());
+      if( divertManager != null ) info = divertManager.getDivertInfo(state.getAbonent());
       if (info != null) state.setAttribute(Constants.ATTR_DIVERT, info);
     }
     return info;
   }
   protected void setDivertInfo(ScenarioState state, DivertInfo info) throws DivertManagerException
   {
-    divertManager.setDivertInfo(state.getAbonent(), info);
+    if( divertManager != null ) divertManager.setDivertInfo(state.getAbonent(), info);
     state.setAttribute(Constants.ATTR_DIVERT, info);
   }
   protected boolean checkReason(String reason)
   {
-    return divertManager.checkReason(reason);
+    return divertManager != null && divertManager.checkReason(reason);
   }
 }

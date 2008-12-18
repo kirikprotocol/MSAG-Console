@@ -25,9 +25,10 @@ public class DivertManager extends Thread
 
   public static DivertManager getInstance() throws ScenarioInitializationException
   {
-    synchronized(syncObj) {
+    return null; // It will be never used and supported
+/*    synchronized(syncObj) {
       return (instance == null) ? (instance = new DivertManager()):instance;
-    }
+    }*/
   }
 
   private int    mscPort = -1;
