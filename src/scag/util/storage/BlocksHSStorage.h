@@ -143,10 +143,6 @@ public:
     }
 };
 
-#ifndef __GNUC__
-// This f**king SunOS's CC is a shit.
-uint32_t DescriptionFile::size_ = 0;
-#endif
 
 template<class Key>
 struct templBackupHeader 
