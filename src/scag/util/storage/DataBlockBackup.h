@@ -59,13 +59,13 @@ public:
         return v;
     }
 
-    inline void dealloc( stored_type v ) const {
-        delete v.value;
-        delete v.backup;
+    inline void dealloc( stored_type& v ) const {
+        if (v.value) { delete v.value; v.value = 0; }
+        if (v.backup) { delete v.backup; v.backup = 0; }
     }
 protected:
     inline void releaseval( stored_type& v ) const {
-        v.value = NULL;
+        v.value = 0;
     }
 };
 

@@ -58,12 +58,13 @@ public:
         }
         if ( ! (item->key == k)) {
           if (cachelog_) smsc_log_debug( cachelog_, "set: replace %s by %s", item->key.toString().c_str(), k.toString().c_str() );
-          if (store2val(item->vv)) dealloc(item->vv);
-          //dealloc(item->vv);
+          // if (store2val(item->vv)) dealloc(item->vv);
+          dealloc(item->vv);
           item->vv = v;
           item->key = k;
         } else if (!store2val(item->vv)) {
           if (cachelog_) smsc_log_debug( cachelog_, "set: not null value for %s", item->key.toString().c_str() );
+          dealloc(item->vv);
           item->vv = v;
         } else if (store2val(item->vv) && store2val(v)) {
           dealloc(v);
@@ -98,7 +99,7 @@ public:
         uint32_t index = getIndex(k);
         CacheItem* item = hash_.GetPtr(index);
         if ( !item || !(item->key == k)) {
-          return store2val(this->val2store(NULL));
+          return NULL;
         }
         stored_type v = item->vv;
         hash_.Delete( index );

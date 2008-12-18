@@ -7,6 +7,7 @@
 #include <time.h>   // nanosleep
 #include "RBTreeIndexStorage.h"
 #include "HashedMemoryCache.h"
+#include "ArrayedMemoryCache.h"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/MutexGuard.hpp"
 #include "core/threads/Thread.hpp"
@@ -17,7 +18,7 @@
 #include "GlossaryBase.h"
 
 // please comment out for BHS
-#define USEPAGEFILE
+//#define USEPAGEFILE
 #ifdef USEPAGEFILE
 #include "PageFileDiskStorage.h"
 #else
@@ -313,12 +314,17 @@ struct CSessionKey
         return ( this->abonentAddr == sk.abonentAddr );
     }
 
+    inline bool operator !=(const CSessionKey& sk) const
+    {
+        return ! ( this->abonentAddr == sk.abonentAddr );
+    }
+
     bool operator < ( const CSessionKey& sk ) const
     {
-        if ( abonentAddr < sk.abonentAddr ) return true;
-        if ( sk.abonentAddr < abonentAddr ) return false;
+        return ( abonentAddr < sk.abonentAddr );
+        // if ( sk.abonentAddr < abonentAddr ) return false;
         // if ( USR < sk.USR ) return true;
-        return false;
+        // return false;
     }
 
     //CSessionKey() : USR(-1) {}
@@ -406,20 +412,22 @@ Deserializer& operator >> ( Deserializer& s, CSessionKey& sk )
     };
 
 
-    void Session::serialize( Serializer& pfb ) const
-    {
-        pfb << sessionKey.toString() << uint32_t(lastAccessTime) << somedata;
-    }
+void Session::serialize( Serializer& pfb ) const
+{
+    pfb << sessionKey << uint32_t(lastAccessTime);
+    pfb << somedata;
+}
 
 
-    void Session::deserialize( Deserializer& pfb )
-    {
-        std::string s;
-        uint32_t tm;
-        pfb >> s >> tm >> somedata;
-        sessionKey = CSessionKey(Address(s.c_str()));
-        lastAccessTime = time_t(tm);
-    }
+void Session::deserialize( Deserializer& pfb )
+{
+    uint32_t tm;
+    CSessionKey sk;
+    pfb >> sk >> tm;
+    pfb >> somedata;
+    sessionKey = sk;
+    lastAccessTime = time_t(tm);
+}
 
 
 #ifndef USEPAGEFILE
@@ -433,9 +441,7 @@ void Session::Serialize( SerialBuffer& buf, bool, GlossaryBase* g ) const
 
 void Session::Deserialize( SerialBuffer& buf, bool, GlossaryBase* g )
 {
-    const unsigned char* bp = reinterpret_cast<const unsigned char*>(buf.c_ptr());
-    std::vector< unsigned char > v( bp, bp + buf.length() );
-    Deserializer d( v );
+    Deserializer d( reinterpret_cast<const unsigned char*>(buf.c_ptr()), buf.length() );
     deserialize( d );
 }
 #endif
@@ -517,10 +523,12 @@ protected:
 
 
 #ifdef USEPAGEFILE
-typedef HashedMemoryCache< CSessionKey, Session > MemStorage;
+//typedef HashedMemoryCache< CSessionKey, Session > MemStorage;
+typedef ArrayedMemoryCache< CSessionKey, Session > MemStorage;
 typedef PageFileDiskStorage< CSessionKey, Session, DelayedPageFile > DiskDataStorage;
 #else
-typedef HashedMemoryCache< CSessionKey, Session, DataBlockBackupTypeJuggling > MemStorage;
+// typedef HashedMemoryCache< CSessionKey, Session, DataBlockBackupTypeJuggling > MemStorage;
+typedef ArrayedMemoryCache< CSessionKey, Session, DataBlockBackupTypeJuggling > MemStorage;
 typedef BHDiskStorage< CSessionKey, Session > DiskDataStorage;
 #endif
 typedef RBTreeIndexStorage< CSessionKey, DiskDataStorage::index_type > DiskIndexStorage;
@@ -768,7 +776,7 @@ int main( int argc, char** argv )
                 pf->Create( fn, cfg.pagesize, cfg.preallocate );
             }
 #else
-            pf.reset( new DiskDataStorage::storage_type );
+            pf.reset( new DiskDataStorage::storage_type(0,smsc::logger::Logger::getInstance("diskstore")) );
             int ret = -1;
             const std::string fn( cfg.storagename + storagesuffix + idxstr + "-data" );
             try {

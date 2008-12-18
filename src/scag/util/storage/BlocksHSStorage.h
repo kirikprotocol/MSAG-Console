@@ -54,10 +54,12 @@ static const size_t WRITE_BUF_SIZE = 10240;
 static const size_t PROFILE_MAX_BLOCKS_COUNT = 10;
 static const size_t MIN_BLOCK_SIZE = 10;
 
-static const uint32_t DESCRIPTION_FILE_SIZE = 64;
-
 struct DescriptionFile   
 {
+private:
+    static uint32_t size_;
+    
+public:
     DescriptionFile(): version(dfVersion_64_2), files_count(0), block_size(0), file_size(0), blocks_used(0), blocks_free(0), first_free_block(0) {
       memcpy(preamble, dfPreambule.c_str(), PREAMBULE_SIZE);
       memset(Reserved, 0, RESERVED_SIZE);
@@ -128,21 +130,27 @@ struct DescriptionFile
       ser.writeAsIs(RESERVED_SIZE, Reserved);
     }
 
-    static uint32_t size() {
-      return DESCRIPTION_FILE_SIZE;
+    // persistent size!!
+    static uint32_t persistentSize() {
+        if ( ! size_ ) {
+            std::vector< unsigned char > buf;
+            Serializer ser(buf);
+            DescriptionFile df;
+            df.serialize( ser );
+            size_ = ser.size();
+        }
+        return size_;
     }
 };
 
-static const uint32_t BACKUP_HEADER_SIZE = 35;
-
 template<class Key>
-struct templBackupHeader {
+struct templBackupHeader 
+{
+private:
+    static uint32_t size_;
+public:
   typedef DescriptionFile::index_type index_type;
-  uint64_t blocksCount;
-  uint64_t dataSize;
-  index_type curBlockIndex;
-  Key key;
-  void deserialize(Deserializer& deser){
+  void deserialize(Deserializer& deser) {
     deser.setrpos(0);
     uint64_t val;
     deser >> val;
@@ -163,16 +171,36 @@ struct templBackupHeader {
     ser << key;
   }
 
-  static uint32_t size() {
-    return BACKUP_HEADER_SIZE;
-  }
+    // persistent size!!
+    static uint32_t persistentSize() {
+        if ( ! size_ ) {
+            std::vector< unsigned char > buf;
+            Serializer ser(buf);
+            templBackupHeader<Key> df;
+            df.serialize( ser );
+            size_ = ser.size();
+        }
+        return size_;
+    }
+
+public:
+  uint64_t blocksCount;
+  uint64_t dataSize;
+  index_type curBlockIndex;
+  Key key;
 };
 
-static const uint32_t DATA_BLOCK_HEADER_SIZE = 44;
+template< class Key > uint32_t templBackupHeader< Key >::size_ = 0;
+
+// static const uint32_t DATA_BLOCK_HEADER_SIZE = 44;
 
 template<class Key>
 struct templDataBlockHeader
 {
+private:
+    static uint32_t size_;
+
+public:
     typedef DescriptionFile::index_type index_type;
     union
     {
@@ -216,10 +244,20 @@ struct templDataBlockHeader
       ser << (uint8_t)head;
     }
 
-    static uint32_t size() {
-      return DATA_BLOCK_HEADER_SIZE;
+    // persistent size!!!
+    static uint32_t persistentSize() {
+        if ( ! size_ ) {
+            std::vector< unsigned char > buf;
+            Serializer ser(buf);
+            templDataBlockHeader<Key> hdr;
+            hdr.serialize(ser);
+            size_ = ser.size();
+        }
+        return size_;
     }
 };
+
+template< class Key > uint32_t templDataBlockHeader< Key >::size_ = 0;
 
 template<class Key>
 struct templDataBlock {
@@ -266,22 +304,24 @@ public:
     static const int64_t BLOCK_USED	= int64_t(1) << 63;
 
     BlocksHSStorage(GlossaryBase* g = NULL,
-                    smsc::logger::Logger* thelog = 0): glossary_(g), running(false), iterBlockIndex(0),
-                    serDescrBuf_(DescriptionFile::size()), serBackupBuf_(BackupHeader::size()), serHdrBuf_(DataBlockHeader::size())
+                    smsc::logger::Logger* thelog = 0): glossary_(g), running(false), iterBlockIndex(0), deserBuf_(0)
     {
+        /*
         if (!glossary_) {
           throw std::runtime_error("BlocksHSStorage: glossary should be provided!");
         }
+         */
         logger = thelog;
-        hdrSize = DataBlockHeader::size();
+        hdrSize = DataBlockHeader::persistentSize();
         memset(&backupHeader, 0, sizeof(BackupHeader));
-        memset(deserBuf_, 0, DescriptionFile::size());
+        deserBuf_ = new unsigned char[deserBufSize_ = 70];
     }
 
 
     virtual ~BlocksHSStorage()
     {
         Close();
+        if (deserBuf_) delete[] deserBuf_;
     }
 
 
@@ -615,15 +655,20 @@ private:
   std::vector< unsigned char > serDescrBuf_;
   std::vector< unsigned char > serBackupBuf_;
   std::vector< unsigned char > serHdrBuf_;
-  unsigned char deserBuf_[DESCRIPTION_FILE_SIZE];
+    unsigned char* deserBuf_;
+    unsigned deserBufSize_;
 
 private:
 
   template<class T> void deserialize(File* f, T& hdr) {
-     memset(deserBuf_, 0, DescriptionFile::size());
-     f->Read((void*)deserBuf_, T::size());
-     Deserializer ds(deserBuf_, T::size());
-     hdr.deserialize(ds);
+      unsigned needsize = T::persistentSize();
+      if ( deserBufSize_ < needsize ) {
+          delete [] deserBuf_;
+          deserBuf_ = new unsigned char[deserBufSize_ = needsize];
+      }
+      f->Read( (void*)deserBuf_, needsize );
+      Deserializer ds( deserBuf_, needsize );
+      hdr.deserialize(ds);
   }
 
     void printHdr(const DataBlockHeader& hdr) {
@@ -643,7 +688,7 @@ private:
             throw smsc::util::Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count-1);
         }
         size_t bufSize = hdrSize + curBlockSize;
-        memset(&(serHdrBuf_[0]), 0, DataBlockHeader::size());
+        // memset(&(serHdrBuf_[0]), 0, DataBlockHeader::persistentSize());
         Serializer ser(serHdrBuf_);
         hdr.serialize(ser);
         memcpy(writeBuf, ser.data(), ser.size());
@@ -859,7 +904,6 @@ private:
         try {
             if (logger) smsc_log_debug(logger, "Change description file");
             descrFile_f.Seek(0, SEEK_SET);        
-            memset(&(serDescrBuf_[0]), 0, DescriptionFile::size());
             Serializer ser(serDescrBuf_);
             descrFile.serialize(ser);
             descrFile_f.Write(ser.data(), ser.size());
@@ -875,7 +919,6 @@ private:
             tmpFile.RWCreate(name.c_str());
             tmpFile.SetUnbuffered();
             tmpFile.Seek(0, SEEK_SET);
-            memset(&(serDescrBuf_[0]), 0, DescriptionFile::size());
             Serializer ser(serDescrBuf_);
             descrFile.serialize(ser);
             tmpFile.Write(ser.data(), ser.size());
@@ -1062,23 +1105,25 @@ private:
 
 
     void writeBackup(File& f, const DescriptionFile& _descrFile, const char* backupData) {
-        size_t bufSize = sizeof(TRX_INCOMPLETE) + DescriptionFile::size() + BackupHeader::size() +
-            backupHeader.blocksCount * sizeof(descrFile.first_free_block) + backupHeader.dataSize;
+
+        // serialization
+        Serializer descrser(serDescrBuf_);
+        _descrFile.serialize(descrser);
+        Serializer backupser(serBackupBuf_);
+        backupHeader.serialize(backupser);
+
+        const size_t bufSize = sizeof(TRX_INCOMPLETE) + descrser.size() + 
+            backupser.size() +
+            backupHeader.blocksCount * sizeof(descrFile.first_free_block) +
+            backupHeader.dataSize;
         char* buf = new char[bufSize];
 
         try {
-            memcpy(buf, &TRX_INCOMPLETE, 1);
-            size_t bufOffset = 1;
 
-            memset(&(serDescrBuf_[0]), 0, DescriptionFile::size());
-            Serializer descrser(serDescrBuf_);
-            _descrFile.serialize(descrser);
+            memcpy(buf, &TRX_INCOMPLETE, 1);
+            size_t bufOffset = sizeof(TRX_INCOMPLETE);
             memcpy(buf + bufOffset, descrser.data(), descrser.size());
             bufOffset += descrser.size();
-
-            memset(&(serBackupBuf_[0]), 0, BackupHeader::size());
-            Serializer backupser(serBackupBuf_);
-            backupHeader.serialize(backupser);
             memcpy(buf + bufOffset, backupser.data(), backupser.size());
             bufOffset += backupser.size();
 

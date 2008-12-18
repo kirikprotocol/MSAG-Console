@@ -23,8 +23,8 @@ public:
     inline value_type& store2ref( stored_type v ) const {
         return *v;
     }
-    inline void dealloc( stored_type v ) const {
-        delete v;
+    inline void dealloc( stored_type& v ) const {
+        if (v) { delete v; v = 0; }
     }
 
 protected:
