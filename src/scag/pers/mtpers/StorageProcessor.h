@@ -18,7 +18,8 @@
 #include "scag/util/storage/BlocksHSStorage.h"
 #include "scag/util/storage/RBTreeIndexStorage.h"
 #include "scag/util/storage/DiskHashIndexStorage.h"
-#include "scag/util/storage/HashedMemoryCache.h"
+//#include "scag/util/storage/HashedMemoryCache.h"
+#include "scag/util/storage/ArrayedMemoryCache.h"
 #include "scag/util/storage/StorageIface.h"
 #include "scag/util/storage/PageFileDiskStorage.h"
 #include "scag/util/storage/BHDiskStorage.h"
@@ -100,7 +101,8 @@ protected:
   void shutdownStorages();
 
 private:
-  typedef HashedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
+  //typedef HashedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
+  typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
   typedef BHDiskStorage< AbntAddr, Profile > DiskDataStorage;
   typedef RBTreeIndexStorage< AbntAddr, DiskDataStorage::index_type > DiskIndexStorage;
   typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
@@ -135,7 +137,8 @@ protected:
 private:
   //typedef HashedMemoryCache< IntProfileKey, Profile > MemStorage;
   //typedef PageFileDiskStorage< IntProfileKey, Profile, PageFile > DiskDataStorage;
-  typedef HashedMemoryCache< IntProfileKey, Profile, DataBlockBackupTypeJuggling > MemStorage;
+  //typedef HashedMemoryCache< IntProfileKey, Profile, DataBlockBackupTypeJuggling > MemStorage;
+  typedef ArrayedMemoryCache< IntProfileKey, Profile, DataBlockBackupTypeJuggling > MemStorage;
   typedef PageFileDiskStorage< IntProfileKey, DataBlockBackup<Profile>, PageFile > DiskDataStorage;
   typedef DiskHashIndexStorage< IntProfileKey, DiskDataStorage::index_type > DiskIndexStorage;
   typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
