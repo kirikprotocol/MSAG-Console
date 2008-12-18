@@ -84,7 +84,7 @@ private:
   bool notSupport(PersCmd cmd);
   void writeData(const char* data, uint32_t size);
   void createFakeResponse(PersServerResponseType response);
-  PersPacket* parsePacket();
+  PersPacket* parsePacket(const time_t& now);
   void sendFakeResponse();
 
 private:

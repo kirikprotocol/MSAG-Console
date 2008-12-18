@@ -43,7 +43,7 @@ bool ConnectionContext::notSupport(PersCmd cmd) {
           || cmd == scag::pers::util::PC_TRANSACT_BATCH || cmd == scag::pers::util::PC_UNKNOWN) ? true : false;
 }
 
-PersPacket* ConnectionContext::parsePacket() {
+PersPacket* ConnectionContext::parsePacket(const time_t& now) {
   PersServerResponseType response = scag::pers::util::RESPONSE_BAD_REQUEST;
   try {
     sequenceNumber_ = 0;
@@ -75,9 +75,9 @@ PersPacket* ConnectionContext::parsePacket() {
     std::auto_ptr<PersPacket> packet;
     if (cmd == scag::pers::util::PC_MTBATCH) {
       smsc_log_debug(logger_, "Batch received");
-      packet.reset( new BatchPacket(this, async_, sequenceNumber_) );
+      packet.reset( new BatchPacket(this, async_, sequenceNumber_, now) );
     } else {
-      packet.reset( new CommandPacket(this, cmd, async_, sequenceNumber_) );
+      packet.reset( new CommandPacket(this, cmd, async_, sequenceNumber_, now) );
     }
     packet->deserialize(inbuf_);
     return packet.release();
@@ -191,7 +191,7 @@ bool ConnectionContext::processReadSocket(const time_t& now) {
   }
   smsc_log_debug(logger_, "read from socket:%p len=%d, data=%s", socket_, inbuf_.length(), inbuf_.toString().c_str());
   inbuf_.SetPos(PACKET_LENGTH_SIZE);
-  PersPacket* packet = parsePacket();
+  PersPacket* packet = parsePacket(now);
   inbuf_.Empty();
 
   if (!packet) {
