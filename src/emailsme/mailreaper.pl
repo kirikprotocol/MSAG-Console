@@ -78,13 +78,13 @@ while(my $sz=<STDIN>)
       for my $num(0..$e->parts-1)
       {
         my $part=$e->parts($num);
-        if($part->head->get('Content-Type') =~ m'text/plain')
+        if($part->head->get('Content-Type') =~ m'text/plain'i)
         {
           $$msgref=$part->bodyhandle->as_string;
           $$msgctref='text';
           last;
         }
-        if($part->head->get('Content-Type') =~ m'text/html')
+        if($part->head->get('Content-Type') =~ m'text/html'i)
         {
           $$msgref=$part->bodyhandle->as_string;
           $$msgctref='html';
@@ -99,7 +99,7 @@ while(my $sz=<STDIN>)
   }else
   {
     $msg=$entity->bodyhandle->as_string;
-    if($entity->head->get('Content-Type')=~m'text/html')
+    if($entity->head->get('Content-Type')=~m'text/html'i)
     {
       $msgct='html';
     }else
