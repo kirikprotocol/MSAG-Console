@@ -32,13 +32,19 @@ typedef scag::pers::util::PersServerResponseType Response;
 
 class PersCommandNotSupport: public Exception {};
 
+static const string UPDATE_LOG = "U key=";
+
 class PersCommand {
 public:
-  PersCommand(vector<string>& logs):cmdId(scag::pers::util::PC_UNKNOWN), mod(0), dblogs(&logs) {};
-  PersCommand(PersCmd cmd, vector<string>& logs):cmdId(cmd), mod(0), dblogs(&logs) {};
+  //PersCommand(vector<string>& logs):cmdId(scag::pers::util::PC_UNKNOWN), mod(0), dblogs(&logs), dblogMsg_(UPDATE_LOG) {};
+  //PersCommand(PersCmd cmd, vector<string>& logs):cmdId(cmd), mod(0), dblogs(&logs), dblogMsg_(UPDATE_LOG) {};
+  PersCommand():cmdId(scag::pers::util::PC_UNKNOWN), mod(0), dblogMsg_(UPDATE_LOG) {};
+  PersCommand(PersCmd cmd):cmdId(cmd), mod(0), dblogMsg_(UPDATE_LOG) {};
   virtual ~PersCommand() {};
   bool deserialize(SerialBuffer& sb);
   Response execute(Profile *pf, SerialBuffer&sb);
+  const char* dbLog() const;
+  void setCmdId(PersCmd cmd);
 
 private:
   Response set(Profile *pf, SerialBuffer& sb);
@@ -57,18 +63,17 @@ private:
   PersCmd cmdId;
   Property property;
   string propertyName;
-  string logMsg;
   uint32_t mod;
-  vector<string>* dblogs; // not owned, not null
+  string dblogMsg_;
 };
 
 struct PersPacket {
-  PersPacket(Connection* connect, bool async, uint32_t sequenseNumber);
+  PersPacket(Connection* connect, bool async, uint32_t sequenseNumber, time_t requestTime);
   virtual ~PersPacket() {};
   virtual void deserialize(SerialBuffer& sb);
   bool notAbonentsProfile() const { return profileType != scag::pers::util::PT_ABONENT; };
   virtual void execCommand(Profile *pf) = 0;  
-  void flushLogs(Logger* log) const;
+  virtual void flushLogs(Logger* log) const = 0;
   void createResponse(PersServerResponseType resp);
   void sendResponse();
   //uint32_t getResponseSize() const { return response_.GetSize(); };
@@ -82,30 +87,32 @@ struct PersPacket {
   bool createProfile;
   bool rollback;
 protected:
-  vector<string> dblogs_;
   Connection* connection_;
   SerialBuffer response_;
 private:
   uint32_t sequenseNumber_;
   bool asynch_;
+  time_t requestTime_;
 };
 
 struct CommandPacket: public PersPacket {
-  CommandPacket(Connection* connect, PersCmd cmdId, bool async, uint32_t sequenseNumber)
-                :PersPacket(connect, async, sequenseNumber), command_(cmdId, dblogs_)  {};
+  CommandPacket(Connection* connect, PersCmd cmdId, bool async, uint32_t sequenseNumber, time_t requestTime)
+                :PersPacket(connect, async, sequenseNumber, requestTime), command_(cmdId)  {};
   ~CommandPacket(){};
   void deserialize(SerialBuffer &sb);
   void execCommand(Profile *pf);
+  void flushLogs(Logger* log) const;
 private:
   PersCommand command_;
 };
 
 struct BatchPacket: public PersPacket {
-  BatchPacket(Connection* connect, bool async, uint32_t sequenseNumber)
-              :PersPacket(connect, async, sequenseNumber), count_(0), transact_(false) {};
+  BatchPacket(Connection* connect, bool async, uint32_t sequenseNumber, time_t requestTime)
+              :PersPacket(connect, async, sequenseNumber, requestTime), count_(0), transact_(false) {};
   ~BatchPacket(){};
   void deserialize(SerialBuffer &sb);
   void execCommand(Profile *pf);
+  void flushLogs(Logger* log) const;
 private:
   uint16_t count_;
   bool transact_;

@@ -8,6 +8,8 @@ using namespace util;
 namespace mtpers {
 
 const int32_t INC_PROPERTY_ERROR = -1;
+static const string PROPERTY_LOG = " property=";
+static const string NAME_LOG = " name=";
 
 using namespace scag::pers;
 
@@ -31,12 +33,17 @@ void BatchPacket::deserialize(SerialBuffer& sb) {
   count_ = sb.ReadInt16();
   transact_ = (bool)sb.ReadInt8();
   createProfile = false;
+  batch_.reserve(count_);
+  PersCommand command;
   for (int i = 0; i < count_; ++i) {
-    PersCmd cmdId = (PersCmd)sb.ReadInt8();
-    PersCommand command(cmdId, dblogs_);
+    command.setCmdId((PersCmd)sb.ReadInt8());
     createProfile = command.deserialize(sb) || createProfile;
     batch_.push_back(command);
   }
+}
+
+void PersCommand::setCmdId(PersCmd cmd) {
+  cmdId = cmd;
 }
 
 bool PersCommand::deserialize(SerialBuffer& sb) {
@@ -186,31 +193,50 @@ Response PersCommand::incResult(Profile *pf, SerialBuffer& sb) {
 }
 
 void PersCommand::createAddLogMsg(string const& key, string const& msg) {
-  dblogs->push_back(string("A key=" + key + " property=" + msg));
+  dblogMsg_[0] = 'A';
+  dblogMsg_.append(key);
+  dblogMsg_.append(PROPERTY_LOG);
+  dblogMsg_.append(msg);
 }
 
 void PersCommand::createUpdateLogMsg(string const& key, string const& msg) {
-  dblogs->push_back(string("U key=" + key + " property=" + msg));
+  dblogMsg_.append(key);
+  dblogMsg_.append(PROPERTY_LOG);
+  dblogMsg_.append(msg);
 }
 
 void PersCommand::createDelLogMsg(string const& key, string const& msg) {
-  dblogs->push_back(string("D key=" + key + " name=" + msg));
+  dblogMsg_[0] = 'D';
+  dblogMsg_.append(key);
+  dblogMsg_.append(NAME_LOG);
+  dblogMsg_.append(msg);
 }
 
 void PersCommand::createExpireLogMsg(string const& key, string const& msg) {
-  dblogs->push_back(string("E key=" + key + " property=" + msg));
+  dblogMsg_[0] = 'E';
+  dblogMsg_.append(key);
+  dblogMsg_.append(PROPERTY_LOG);
+  dblogMsg_.append(msg);
 }
 
+const char* PersCommand::dbLog() const {
+  return dblogMsg_.c_str();
+}
 
-void PersPacket::flushLogs(Logger* log) const {
+void CommandPacket::flushLogs(Logger* log) const {
   smsc_log_debug(log, "flush logs");
-  for (vector<string>::const_iterator i = dblogs_.begin(); i != dblogs_.end(); ++i) {
-    smsc_log_info(log, "%s", (*i).c_str());
+  smsc_log_info(log, "%s", command_.dbLog());
+}
+
+void BatchPacket::flushLogs(Logger* log) const {
+  smsc_log_debug(log, "flush logs");
+  for (vector<PersCommand>::const_iterator i = batch_.begin(); i != batch_.end(); ++i) {
+    smsc_log_info(log, "%s", (*i).dbLog());
   }
 }
 
-PersPacket::PersPacket(Connection* connect, bool async, uint32_t sequenseNumber):createProfile(false), rollback(false), connection_(connect),
-                                                                                 asynch_(async), sequenseNumber_(sequenseNumber), intKey(0)
+PersPacket::PersPacket(Connection* connect, bool async, uint32_t sequenseNumber, time_t requestTime):createProfile(false), rollback(false),
+            connection_(connect), asynch_(async), sequenseNumber_(sequenseNumber), intKey(0), requestTime_(requestTime)
 {
   if (asynch_) {
     response_.WriteInt32(sequenseNumber_);
@@ -231,22 +257,20 @@ void PersPacket::sendResponse() {
 }
 
 void CommandPacket::execCommand(Profile *pf) {
-  dblogs_.clear();
   pf->setChanged(false);
   command_.execute(pf, response_);
 }
 
 void BatchPacket::execCommand(Profile *pf) {
-  dblogs_.clear();
   pf->setChanged(false);
   if (!transact_) {
-    for (int i = 0; i < count_; ++i) {
-      batch_[i].execute(pf, response_);
+    for (vector<PersCommand>::iterator i = batch_.begin(); i != batch_.end(); ++i) {
+      (*i).execute(pf, response_);
     }
     return;
   }
-  for (int i = 0; i < count_; ++i) {
-    Response resp = batch_[i].execute(pf, response_);
+  for (vector<PersCommand>::iterator i = batch_.begin(); i != batch_.end(); ++i) {
+    Response resp = (*i).execute(pf, response_);
     if (resp != scag::pers::util::RESPONSE_OK) {
       pf->setChanged(false);
       rollback = true;
