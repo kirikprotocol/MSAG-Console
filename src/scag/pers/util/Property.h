@@ -26,6 +26,15 @@ enum TimePolicy{
     W_ACCESS
 };
 
+static const char* TimePolicyStr[] = {
+  " TIME_POLICY: UNKNOWN",
+  " TIME_POLICY: INFINIT",
+  " TIME_POLICY: FIXED",
+  " TIME_POLICY: ACCESS",
+  " TIME_POLICY: R_ACCESS",
+  " TIME_POLICY: W_ACCESS"
+};
+
 enum PropertyType{
     INT = 1,
     STRING,
@@ -36,6 +45,8 @@ enum PropertyType{
 }
     
 using namespace perstypes;
+
+static const size_t STRBUF_SIZE = 64;
 
 class Property {
 protected:
@@ -52,6 +63,11 @@ protected:
 
     void copy(const Property& cp);
     static void StringFromBuf(SerialBuffer& buf, std::string &str);
+
+    void setPropertyName(const char* nm);
+
+    std::string propertyStr;
+    char strBuf[STRBUF_SIZE];
 
 public:
 
@@ -89,7 +105,7 @@ public:
     TimePolicy getTimePolicy() { return time_policy; };
     bool isExpired();
 	bool isExpired(time_t cur_time);
-    std::string toString() const;
+    const std::string& toString();
 
     void setInt(const char *nm, int32_t i, TimePolicy policy, time_t fd, uint32_t lt);
     void setBool(const char *nm, bool b, TimePolicy policy, time_t fd, uint32_t lt);

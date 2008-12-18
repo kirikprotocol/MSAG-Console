@@ -7,9 +7,22 @@
 
 namespace scag { namespace pers { namespace util {
 
+static const char* BOOL_TRUE = " BOOL: true";
+static const char* BOOL_FALSE = " BOOL: false";
+static const char* STRING_PREF = " STRING: \"";
+
+void Property::setPropertyName(const char* nm) {
+  name.clear();
+  name.append(nm);
+  propertyStr.clear();
+  propertyStr.append(1, '"');
+  propertyStr.append(name);
+  propertyStr.append(1, '"');
+}
+
 void Property::assign(const char *nm, const char *str, TimePolicy policy, time_t fd, uint32_t lt)
 {
-    name = nm;
+    setPropertyName(nm);
     setTimePolicy(policy, fd, lt);
     setValue(str);
 }
@@ -54,7 +67,7 @@ void Property::setValue(const Property &cp)
 
 void Property::copy(const Property& cp)
 {
-    name = cp.name;
+    setPropertyName(cp.name.c_str());
     time_policy = cp.time_policy;
     final_date = cp.final_date;
     life_time = cp.life_time;
@@ -62,64 +75,41 @@ void Property::copy(const Property& cp)
     setValue(cp);
 }
 
-std::string Property::toString() const
+const std::string& Property::toString()
 {
-    char buf[32];
-    std::string str;
+    memset(strBuf, 0, STRBUF_SIZE);
 
-    str = '"' + name + '"';
+    propertyStr.erase(name.size() + 2);
     switch(type)
     {
         case INT:
-            sprintf(buf, " INT: %lld", static_cast<long long int>(i_val));
-            str += buf;
+            sprintf(strBuf, " INT: %lld", static_cast<long long int>(i_val));
+            propertyStr.append(strBuf);
             break;
         case STRING:
-            str += " STRING: \"" + s_val + '"';
+            propertyStr.append(STRING_PREF);
+            propertyStr.append(s_val);
+            propertyStr += '"';
             break;
         case BOOL:
-            str += " BOOL: ";
-            str += (b_val ? "true" : "false");
+            propertyStr.append(b_val ? BOOL_TRUE : BOOL_FALSE);
             break;
         case DATE:
-            strftime(buf, 32, "%Y/%m/%d %H:%M:%S", gmtime(&d_val));
-            str += " DATE: ";
-            str += buf;
+            strftime(strBuf, STRBUF_SIZE, " DATE: %Y/%m/%d %H:%M:%S", gmtime(&d_val));
+            propertyStr.append(strBuf);
             break;
     }
 
-    str += " TIME_POLICY: ";
-    switch(time_policy)
-    {
-        case UNKNOWN:
-            str += "UNKNOWN";
-            break;
-        case FIXED:
-            str += "FIXED";
-            break;
-        case INFINIT:
-            str += "INFINIT";
-            break;
-        case R_ACCESS:
-            str += "R_ACCESS";
-            break;
-        case W_ACCESS:
-            str += "W_ACCESS";
-            break;
-        case ACCESS:
-            str += "ACCESS";
-            break;
-    }
+    propertyStr.append(TimePolicyStr[time_policy]);
+
     if(time_policy != INFINIT)
     {
-        strftime(buf, 32, "%Y/%m/%d %H:%M:%S", gmtime(&final_date));
-        str += " FINAL_DATE: ";
-        str += buf;
-        sprintf(buf, "%d", life_time);
-        str += " LIFE_TIME: ";
-        str += buf;
+        strftime(strBuf, STRBUF_SIZE, " FINAL_DATE: %Y/%m/%d %H:%M:%S", gmtime(&final_date));
+        propertyStr.append(strBuf);
+        sprintf(strBuf, " LIFE_TIME: %d", life_time);
+        propertyStr.append(strBuf);
     }
-    return str;
+    return propertyStr;
 }
 
 Property::Property(const Property& cp)
@@ -162,28 +152,28 @@ bool Property::isExpired(time_t cur_time)
 }
 void Property::setInt(const char *nm, int32_t i, TimePolicy policy, time_t fd, uint32_t lt)
 {
-    name = nm;
+    setPropertyName(nm);
     setIntValue(i);
     setTimePolicy(policy, fd, lt);
 }
 
 void Property::setBool(const char *nm, bool b, TimePolicy policy, time_t fd, uint32_t lt)
 {
-    name = nm;
+    setPropertyName(nm);
     setBoolValue(b);
     setTimePolicy(policy, fd, lt);
 }
 
 void Property::setString(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt)
 {
-    name = nm;
+    setPropertyName(nm);
     setStringValue(str);
     setTimePolicy(policy, fd, lt);
 }
 
 void Property::setDate(const char *nm, time_t t, TimePolicy policy, time_t fd, uint32_t lt)
 {
-    name = nm;
+    setPropertyName(nm);
     setDateValue(t);
     setTimePolicy(policy, fd, lt);
 }
@@ -194,21 +184,21 @@ void Property::Serialize(SerialBuffer& buf, bool toFSDB, GlossaryBase* glossary)
     buf.WriteInt8((uint8_t)time_policy);
     buf.WriteInt32((uint32_t)final_date);
     buf.WriteInt32(life_time);
-    if(toFSDB)
-    {
-	int i_name;
-	if(GlossaryBase::NO_VALUE == (i_name = glossary->GetValueByKey(name)))
-		i_name = glossary->Add(name);
+    if(toFSDB) {
+ 	    int i_name;
+	    if(GlossaryBase::NO_VALUE == (i_name = glossary->GetValueByKey(name))) {
+            i_name = glossary->Add(name);
+        }
     	buf.WriteInt32(i_name);
+    } else {
+         buf.WriteString(name.c_str());
     }
-    else
-	buf.WriteString(name.c_str());
 
     switch(type) {
-        case INT:   buf.WriteInt32(static_cast<uint32_t>(i_val));          break;
-        case STRING:buf.WriteString(s_val.c_str()); break;
-        case BOOL:  buf.WriteInt8((uint8_t)b_val);  break;
-        case DATE:  buf.WriteInt32((uint32_t)d_val);break;
+        case INT:   buf.WriteInt32(static_cast<uint32_t>(i_val)); break;
+        case STRING:buf.WriteString(s_val.c_str());               break;
+        case BOOL:  buf.WriteInt8((uint8_t)b_val);                break;
+        case DATE:  buf.WriteInt32((uint32_t)d_val);              break;
     }
 }
 
@@ -218,19 +208,21 @@ void Property::Deserialize(SerialBuffer& buf, bool fromFSDB, GlossaryBase* gloss
     time_policy = (TimePolicy)buf.ReadInt8();
     final_date = (time_t)buf.ReadInt32();
     life_time = buf.ReadInt32();
-    if(fromFSDB)
-    {
-	int i_name = buf.ReadInt32();
-	if(GlossaryBase::SUCCESS != glossary->GetKeyByValue(i_name, name))
-	{
-		char buff[32];
-		snprintf(buff, 32, "%d", i_name);
-		name = buff;
-	}
+    if (fromFSDB) {
+        int i_name = buf.ReadInt32();
+        if(GlossaryBase::SUCCESS != glossary->GetKeyByValue(i_name, name)) {
+            char buff[32];
+            snprintf(buff, 32, "%d", i_name);
+            setPropertyName(buff);
+        }
+    } else {
+        buf.ReadString(name);
     }
-    else
-	buf.ReadString(name);
 
+    propertyStr.clear();
+    propertyStr.append(1, '"');
+    propertyStr.append(name);
+    propertyStr.append(1, '"');
     switch(type) {
         case INT:   i_val = buf.ReadInt32();        break;
         case STRING:buf.ReadString(s_val);          break;
