@@ -21,14 +21,14 @@ namespace util {
 using smsc::logger::Logger;
 using std::string;
 
-class LCPersClient
+class LCPersClient : public PersCallInitiator
 {
 public:
   LCPersClient(PersClient& pc, int speed):persClient_(pc), isStopped_(false), callsCount_(0), logger_(Logger::getInstance("lcclient")),
                                           speed_(speed > 0 ? speed : 1), delay_(1000000/speed_), overdelay_(0), startTime_(0),
                                           busyRejects_(0), maxRejects_(1000), sentCalls_(0), successCalls_(0), errorCalls_(0) {};
   void execute(int addrsCount, int getsetCount);
-  void continueExecution( PersCall* context, bool dropped );
+  virtual void continuePersCall( PersCall* context, bool dropped );
   void shutdown();
   bool canStop();
 

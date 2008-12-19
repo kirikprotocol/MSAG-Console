@@ -97,6 +97,7 @@ int PersCommandBatch::readSB( SerialBuffer& sb )
 }
 
 
+/*
 void PersCommandBatch::storeResults( void* ctx )
 {
     int stopat = batch_.size();
@@ -110,6 +111,7 @@ void PersCommandBatch::storeResults( void* ctx )
     }
     PersCommand::storeResults( ctx );
 }
+ */
 
 }
 }

@@ -5,7 +5,7 @@ namespace scag2 {
 namespace pers {
 namespace util {
 
-int PersCallData::fillSB( SerialBuffer& sb, int32_t serial )
+int PersCall::fillSB( SerialBuffer& sb, int32_t serial )
 {
     assert( sb.getPos() == 0 );
     sb.Empty();
@@ -29,13 +29,13 @@ int PersCallData::fillSB( SerialBuffer& sb, int32_t serial )
 }
 
 
-int PersCallData::readSB( SerialBuffer& sb )
+int PersCall::readSB( SerialBuffer& sb )
 {
     return cmd_->readSB(sb);
 }
 
 
-void PersCallData::setStatus( int stat, const char* what )
+void PersCall::setStatus( int stat, const char* what )
 {
     cmd_->setStatus( stat );
     if ( what ) {

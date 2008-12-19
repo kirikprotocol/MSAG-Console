@@ -11,40 +11,15 @@
 namespace scag2 {
 namespace lcm {
 
-class PersCallWrapper : public pers::util::PersCall
-{
-public:
-    PersCallWrapper( pers::util::ProfileType  pt,
-                     pers::util::PersCommand* cmd ) :
-    ctx_(0), data_(pt,cmd) {}
-    virtual pers::util::PersCallData& data() { return data_; }
-    virtual void continuePersCall( bool drop ) {
-        assert( ctx_ );
-        ctx_->initiator->continueExecution( ctx_, drop );
-    }
-private:
-    PersCallWrapper();
-    PersCallWrapper( const PersCallWrapper& );
-    PersCallWrapper& operator = ( const PersCallWrapper& );
-
-public:
-    LongCallContextBase*     ctx_;
-private:
-    pers::util::PersCallData data_;
-};
-
-
 class PersCallParams : public LongCallParams
 {
 public:
     PersCallParams( pers::util::ProfileType  pt,
                     pers::util::PersCommand* cmd ) :
-    perscall_(pt,cmd) {}
-
+    perscall_(pt,cmd,0) {}
     inline pers::util::PersCall* getPersCall() { return &perscall_; }
-    inline void setContext( LongCallContextBase* ctx ) { perscall_.ctx_ = ctx; }
 private:
-    PersCallWrapper perscall_;
+    pers::util::PersCall perscall_;
 };
 
 

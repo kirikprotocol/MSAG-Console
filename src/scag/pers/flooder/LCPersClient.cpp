@@ -15,6 +15,7 @@ PersCommandSingle* addcmd( std::vector< PersCommandSingle >& cmds )
 }
 
 
+/*
 class RealPersCall : public PersCall
 {
 public:
@@ -30,7 +31,7 @@ private:
     PersCallData  data_;
     LCPersClient& initiator_;
 };
-
+ */
 
 }
 
@@ -79,21 +80,20 @@ void LCPersClient::doCall( PersCall* context ) {
     throw PersClientException(NOT_CONNECTED);
   }
   busyRejects_ = busyRejects_ > 0 ? busyRejects_ - 1 : 0;
-  persClient_.call(context);
+  persClient_.callAsync( context, *this );
   ++callsCount_;
   ++sentCalls_;
   smsc_log_debug(logger_, "call cx:%p calls count %d", context, callsCount_);
   delay();
 }
 
-void LCPersClient::continueExecution( PersCall* context, bool dropped ) {
+void LCPersClient::continuePersCall( PersCall* context, bool dropped ) {
   --callsCount_;
   smsc_log_debug(logger_, "continue execution cx:%p, calls count %d", context, callsCount_);
-  PersCallData& callParams = context->data();
   //if (callParams->status() != 0 ) {
     //smsc_log_debug(logger_, "error long call result: %s", strs[callParams->status()]);
   //}
-  if (callParams.status() == PERSCLIENTOK || callParams.status() == PROPERTY_NOT_FOUND) {
+  if (context->status() == PERSCLIENTOK || context->status() == PROPERTY_NOT_FOUND) {
     ++successCalls_;
   } else {
     ++errorCalls_;
@@ -116,11 +116,11 @@ PersCall* LCPersClient::createPersCall( ProfileType pfType,
                                         std::auto_ptr<PersCommand> cmd )
 {
     startTime_ = gethrtime();
-    PersCall* call = new RealPersCall( pfType, cmd, *this );
+    PersCall* call = new PersCall( pfType, cmd.release(), 0 );
     if (pfType == PT_ABONENT) {
-        call->data().setKey(addr);
+        call->setKey(addr);
     } else {
-        call->data().setKey(intKey);
+        call->setKey(intKey);
     }
     return call;
 }

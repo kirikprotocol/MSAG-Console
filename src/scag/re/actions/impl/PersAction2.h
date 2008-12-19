@@ -16,23 +16,24 @@ namespace scag2 {
 namespace re {
 namespace actions {
 
-class PersActionCommandCreator : public pers::util::PersCommandCreator
+class PersActionResultRetriever
 {
 public:
-    virtual ~PersActionCommandCreator() {}
+    virtual ~PersActionResultRetriever() {}
 
     bool canProcessRequest( ActionContext& ctx );
     void setStatus( ActionContext& ctx, int status, int actionIdx = 0 );
     // std::auto_ptr< PersCallParams > makeParams( ActionContext& ctx );
-    virtual void storeResults( pers::util::PersCommand& cmd, void* ctx );
-    virtual std::auto_ptr< pers::util::PersCommand > makeCommand( ActionContext& ctx ) = 0;
+    virtual void storeResults( pers::util::PersCommand& cmd, ActionContext& ctx );
+    virtual pers::util::PersCommand* makeCommand( ActionContext& ctx ) = 0;
+    virtual pers::util::PersCmd cmdType() const = 0;
 
     virtual const std::string& statusName() const = 0;
     virtual const std::string& msgName() const = 0;
 };
 
 
-class PersActionCommand : public Action, public PersActionCommandCreator
+class PersActionCommand : public Action, public PersActionResultRetriever
 {
 public:
     PersActionCommand() :
@@ -58,8 +59,8 @@ public:
     // command type
     virtual pers::util::PersCmd cmdType() const { return cmdType_; }
 
-    virtual void storeResults( pers::util::PersCommand& command, void* ctx );
-    virtual std::auto_ptr< pers::util::PersCommand > makeCommand( ActionContext& ctx );
+    virtual void storeResults( pers::util::PersCommand& command, ActionContext& ctx );
+    virtual pers::util::PersCommand* makeCommand( ActionContext& ctx );
     int fillCommand( ActionContext& ctx, pers::util::PersCommandSingle& command );
 
     virtual const std::string& statusName() const { return status; }
@@ -124,8 +125,9 @@ protected:
     pers::util::ProfileType getProfileTypeFromStr( const std::string& str );
     std::string getAbntAddress(const char* _address);
     std::auto_ptr< lcm::LongCallParams > makeParams( ActionContext& context,
-                                                     PersActionCommandCreator& creator );
+                                                     PersActionResultRetriever& creator );
     virtual void ContinueRunning(ActionContext& context);
+    virtual PersActionResultRetriever& results() = 0;
 
 protected:
     pers::util::PersCmd     cmdType_;
@@ -149,6 +151,10 @@ public:
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
+    virtual void storeResults( pers::util::PersCommand& cmd, ActionContext& ctx ) {
+        persCommand.storeResults( cmd, ctx );
+    }
+    virtual PersActionResultRetriever& results() { return persCommand; }
 
 protected:
     PersActionCommand persCommand;

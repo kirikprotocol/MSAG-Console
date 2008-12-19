@@ -33,7 +33,7 @@ typedef reprop::Property REProperty;
 using namespace pers::util;
 
 
-bool PersActionCommandCreator::canProcessRequest( ActionContext& ctx )
+bool PersActionResultRetriever::canProcessRequest( ActionContext& ctx )
 {
     int status = pers::util::PersClient::Instance().getClientStatus();
     if ( status > 0 ) {
@@ -44,7 +44,7 @@ bool PersActionCommandCreator::canProcessRequest( ActionContext& ctx )
 }
 
 
-void PersActionCommandCreator::setStatus( ActionContext& context, int status, int actionIdx )
+void PersActionResultRetriever::setStatus( ActionContext& context, int status, int actionIdx )
 {
     __trace2__("pers: setting status %d, actionidx %d", status, actionIdx );
 
@@ -70,9 +70,9 @@ void PersActionCommandCreator::setStatus( ActionContext& context, int status, in
 }
 
 
-void PersActionCommandCreator::storeResults( PersCommand& cmd, void* ctx )
+void PersActionResultRetriever::storeResults( PersCommand& cmd, ActionContext& ctx )
 {
-    setStatus( *(ActionContext*)ctx, cmd.status(), cmd.failIndex() );
+    setStatus( ctx, cmd.status(), cmd.failIndex() );
 }
 
 
@@ -188,8 +188,6 @@ void PersActionCommand::init( const SectionParams& params, PropertyObject proper
     
 int PersActionCommand::fillCommand( ActionContext& context, pers::util::PersCommandSingle& command )
 {
-    command.setCreator( *this );
-
     // --- get property name
     int stat = 0;
     do {
@@ -276,11 +274,11 @@ int PersActionCommand::fillCommand( ActionContext& context, pers::util::PersComm
 }
 
 
-void PersActionCommand::storeResults( pers::util::PersCommand& command, void* ctx )
+void PersActionCommand::storeResults( pers::util::PersCommand& command, ActionContext& context )
 {
-    ActionContext& context = *(ActionContext*)ctx;
-    PersActionCommandCreator::storeResults( command, ctx );
-    pers::util::PersCommandSingle& cmd = static_cast< pers::util::PersCommandSingle& >( command );
+    PersActionResultRetriever::storeResults( command, context );
+    pers::util::PersCommandSingle* cmd = command.castSingle();
+    assert(cmd);
     if ( 0 == command.status() ) {
         int result = 0;
         switch (cmdType()) {
@@ -291,14 +289,14 @@ void PersActionCommand::storeResults( pers::util::PersCommand& command, void* ct
         case (PC_INC_MOD) : {
             // uint32_t i = sb.ReadInt32();
             REProperty* rp = context.getProperty(sResult);
-            if (rp) rp->setInt( cmd.result() );
+            if (rp) rp->setInt( cmd->result() );
             break;
         }
         case (PC_GET) : {
             // prop.Deserialize( sb );
             REProperty* rp = context.getProperty( sValue );
             if (rp) {
-                pers::util::Property& prop = cmd.property();
+                pers::util::Property& prop = cmd->property();
                 switch (prop.getType()) {
                 case (INT) :
                     rp->setInt(prop.getIntValue());
@@ -326,11 +324,11 @@ void PersActionCommand::storeResults( pers::util::PersCommand& command, void* ct
 }
 
 
-std::auto_ptr< pers::util::PersCommand > PersActionCommand::makeCommand( ActionContext& ctx )
+pers::util::PersCommand* PersActionCommand::makeCommand( ActionContext& ctx )
 {
-    std::auto_ptr< pers::util::PersCommand > res(new PersCommandSingle(*this));
+    std::auto_ptr< pers::util::PersCommand > res( new PersCommandSingle( cmdType() ) );
     if ( fillCommand(ctx,static_cast<PersCommandSingle&>(*res.get())) != 0 ) res.reset(0);
-    return res;
+    return res.release();
 }
 
 
@@ -430,18 +428,18 @@ std::string PersActionBase::getAbntAddress(const char* _address) {
 
 
 std::auto_ptr< lcm::LongCallParams > PersActionBase::makeParams( ActionContext& context,
-                                                                 PersActionCommandCreator& creator )
+                                                                 PersActionResultRetriever& creator )
 {
     std::auto_ptr< lcm::LongCallParams > res;
     do {
 
         if ( ! creator.canProcessRequest(context) ) break;
 
-        std::auto_ptr< PersCommand > cmd = creator.makeCommand(context);
-        if ( ! cmd.get() ) break;
+        PersCommand* cmd = creator.makeCommand(context);
+        if ( ! cmd ) break;
 
-        PersCallParams* params = new PersCallParams(profile, cmd.release());
-        PersCallData* data = & params->getPersCall()->data();
+        PersCallParams* params = new PersCallParams(profile,cmd);
+        PersCall* data = params->getPersCall();
         res.reset( params );
 
         if ( !hasOptionalKey ) {
@@ -493,15 +491,15 @@ std::auto_ptr< lcm::LongCallParams > PersActionBase::makeParams( ActionContext& 
 void PersActionBase::ContinueRunning(ActionContext& context)
 {
     PersCallParams *params = (PersCallParams*)context.getSession().getLongCallContext().getParams();
-    PersCallData& data = params->getPersCall()->data();
+    PersCall* data = params->getPersCall();
     smsc_log_debug(logger, "ContinueRunning: cmd=%s (skey=%s ikey=%d)",
                    pers::util::persCmdName(cmdType_),
-                   data.getStringKey(),
-                   data.getIntKey() );
+                   data->getStringKey(),
+                   data->getIntKey() );
     // params->readSB( context );
     // setStatus( context, params->status(), 0 );
     // persCommand.ContinueRunning(context);
-    data.storeResults( &context );
+    results().storeResults( * data->command(), context );
 }
 
 

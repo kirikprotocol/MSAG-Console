@@ -6,7 +6,7 @@
 
 namespace scag2 { namespace re { namespace actions {  
 
-class BatchAction : public PersActionBase, public PersActionCommandCreator
+class BatchAction : public PersActionBase, public PersActionResultRetriever
 {
 public:
     BatchAction():PersActionBase(pers::util::PC_MTBATCH), transactMode(false) {}
@@ -22,7 +22,8 @@ protected:
     virtual const std::string& statusName() const { return batchStatus; }
     virtual const std::string& msgName() const { return batchMsg; }
     virtual pers::util::PersCmd cmdType() const { return pers::util::PC_MTBATCH; }
-    virtual std::auto_ptr< pers::util::PersCommand > makeCommand( ActionContext& ctx );
+    virtual pers::util::PersCommand* makeCommand( ActionContext& ctx );
+    virtual PersActionResultRetriever& results() { return *this; }
 
 protected:
     std::vector<PersActionCommand *> actions; // owned

@@ -21,17 +21,25 @@ public:
                       int reconnectTimeout,
                       unsigned maxCallsCount,
                       unsigned clients,
-                      bool async );
+                      bool async = true );
 
     // static void Init( const config::PersClientConfig& cfg );
 
-    /// run the proxy and return the result
-    virtual bool call( PersCall* acall ) = 0;
+    /// tries to put the call to the queue
+    /// if the call cannot be processed, return false
+    virtual bool callAsync( PersCall* call, PersCallInitiator& fromwho ) = 0;
+
+    /// tries to execute the call.
+    /// if the call cannot be processed, return false
+    virtual bool callSync( PersCall* call ) = 0;
 
     virtual int getClientStatus() = 0;
     virtual void Stop() = 0;
 
 protected:
+    inline void setNext( PersCall* c, PersCall* n ) const { c->next_ = n; }
+    inline void setInitiator( PersCall* c, PersCallInitiator* i ) const { c->initiator_ = i; }
+    
     PersClient() {}
     virtual ~PersClient() {}
 };

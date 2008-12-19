@@ -144,8 +144,9 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
         else if(context->callCommandId >= PERS_GET && context->callCommandId <= PERS_BATCH)
         {
             PersCallParams* p = (PersCallParams*) context->getParams();
-            p->setContext( context );
-            if (!PersClient::Instance().call(p->getPersCall()) ) {
+            PersCall* call = p->getPersCall();
+            call->setContext(context);
+            if (!PersClient::Instance().callAsync(call,*this) ) {
                 // context->initiator->continueExecution(context, false);
                 break;
             }
@@ -189,6 +190,13 @@ int LongCallTask::Execute()
     }
 //    smsc_log_debug(logger, "Stopped lcm task");
     return 0;
+}
+
+
+void LongCallManagerImpl::continuePersCall( PersCall* pc, bool drop )
+{
+    LongCallContextBase* context = (LongCallContextBase*)pc->context();
+    context->initiator->continueExecution(context, drop);
 }
 
 }}

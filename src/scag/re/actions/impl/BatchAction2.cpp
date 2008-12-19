@@ -88,7 +88,7 @@ bool BatchAction::FinishXMLSubSection(const std::string& name)
 }
 
 
-std::auto_ptr< pers::util::PersCommand > BatchAction::makeCommand( ActionContext& ctx )
+pers::util::PersCommand* BatchAction::makeCommand( ActionContext& ctx )
 {
     std::auto_ptr< pers::util::PersCommand > res;
     std::vector< pers::util::PersCommandSingle > batch;
@@ -99,11 +99,11 @@ std::auto_ptr< pers::util::PersCommand > BatchAction::makeCommand( ActionContext
         int stat = (*i)->fillCommand( ctx, batch[i - actions.begin()] );
         if ( stat ) {
             setStatus( ctx, stat, i-actions.begin() + 1);
-            return res;
+            return res.release();
         }
     }
-    res.reset( new pers::util::PersCommandBatch(*this,batch,transactMode) );
-    return res;
+    res.reset( new pers::util::PersCommandBatch(batch,transactMode) );
+    return res.release();
 }
 
 

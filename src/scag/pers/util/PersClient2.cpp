@@ -3,6 +3,7 @@
 #include "PersCallParams.h"
 #include "PersClient2.h"
 #include "core/buffers/IntHash.hpp"
+#include "core/buffers/XHash.hpp"
 #include "core/network/Socket.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
@@ -28,7 +29,7 @@ namespace util {
 
 class PersClientTask;
 
-class PersClientImpl : public PersClient
+class PersClientImpl : public PersClient, public PersCallInitiator
 {
 public:
     PersClientImpl();
@@ -59,7 +60,9 @@ public:
 private:
     // virtual void configChanged();
     void finishCalls( PersCall* call, bool drop );
-    virtual bool call( PersCall* call );
+    virtual bool callAsync( PersCall* call, PersCallInitiator& fromwho );
+    virtual bool callSync( PersCall* call );
+    virtual void continuePersCall( PersCall* call, bool drop );
     virtual int getClientStatus();
 
 public:
@@ -99,6 +102,10 @@ private:
     std::list<Pipe>           freePipes_;      // a list of free pipes (cached)
     unsigned                  waitingStreams_; // a number of streams waiting w/o pipe
     smsc::core::threads::ThreadPool tp_;
+    
+    // for sync calls
+    EventMonitor                                     syncMonitor_;
+    smsc::core::buffers::XHash< PersCall*, uint8_t > syncRequests_;
 };
 
 
@@ -367,12 +374,12 @@ void PersClientImpl::finishCalls( PersCall* ctx, bool drop )
         ctx->setStatus(NOT_CONNECTED);
         PersCall* c = ctx;
         ctx = ctx->next();
-        c->continuePersCall(drop);
+        c->initiator()->continuePersCall(c, drop);
     }
 }
 
 
-bool PersClientImpl::call( PersCall* ctx )
+bool PersClientImpl::callAsync( PersCall* ctx, PersCallInitiator& fromwho )
 {
     if ( !ctx ) return false;
     MutexGuard mg(queueMonitor_);
@@ -384,15 +391,17 @@ bool PersClientImpl::call( PersCall* ctx )
             ctx->setStatus( NOT_CONNECTED );
         } else if ( callsCount_ >= maxCallsCount_ ) {
             ctx->setStatus( CLIENT_BUSY );
+        } else if ( ctx->initiator() && ctx->initiator() != &fromwho ) {
+            smsc_log_warn(log_, "perscall already has initiator" );
+            ctx->setStatus( BAD_REQUEST );
         } else {
+            setInitiator( ctx, &fromwho );
             break;
         }
         return false;
     } while ( false );
-
-    ctx->setNext(0);
     if ( headContext_ )
-        tailContext_->setNext( ctx );
+        setNext( tailContext_, ctx );
     else
         headContext_ = ctx;
     tailContext_ = ctx;
@@ -405,6 +414,27 @@ bool PersClientImpl::call( PersCall* ctx )
         waitingPipes_.erase( waitingPipes_.begin() );
     }
     return true;
+}
+
+
+bool PersClientImpl::callSync( PersCall* call )
+{
+    if ( ! callAsync(call,*this) ) return false;
+    MutexGuard mg(syncMonitor_);
+    syncRequests_.Insert( call, 1 );
+    while ( true ) {
+        syncMonitor_.wait(1000);
+        uint8_t* v = syncRequests_.GetPtr( call );
+        if ( !v ) break;
+    }
+    return true;
+}
+
+
+void PersClientImpl::continuePersCall( PersCall* call, bool )
+{
+    MutexGuard mg(syncMonitor_);
+    syncRequests_.Delete(call);
 }
 
 
@@ -432,7 +462,7 @@ void PersClientTask::Call::continueExecution( int stat, bool drop )
 {
     if ( ! ctx ) return;
     ctx->setStatus( stat );
-    ctx->continuePersCall(drop);
+    ctx->initiator()->continuePersCall( ctx, drop );
 }
 
 
@@ -513,7 +543,7 @@ int PersClientTask::Execute()
         tmo *= 1000;
         PersCall* ctx = pers_->getCall(tmo, *this);
         if ( isStopping ) {
-            if ( ctx ) ctx->continuePersCall(true);
+            if ( ctx ) ctx->initiator()->continuePersCall(ctx,true);
             break;
         }
 
@@ -527,40 +557,39 @@ int PersClientTask::Execute()
 
         // processing
         int32_t serial = async_ ? getNextSerial() : 0;
-        PersCallData& p = ctx->data();
         try {
             SerialBuffer sb;
-            p.fillSB(sb,serial);
-            if ( ! p.status() ) {
+            ctx->fillSB(sb,serial);
+            if ( ! ctx->status() ) {
                 sendPacket(sb);
                 const utime_type utm = utime();
                 smsc_log_debug(log_, "perscall: serial=%d stamp=%u perscmd=%d/%s %s/%d",
                                serial,
                                utm,
-                               p.cmdType(),
-                               persCmdName(p.cmdType()),
-                               p.getStringKey(), p.getIntKey() );
+                               ctx->cmdType(),
+                               persCmdName(ctx->cmdType()),
+                               ctx->getStringKey(), ctx->getIntKey() );
                 if ( async_ ) {
-                    addCall(serial,ctx,utm);
+                    addCall( serial,ctx,utm );
                     continue;
                 } else {
                     readPacket(sb);
-                    p.readSB(sb);
+                    ctx->readSB(sb);
                 }
             }
         } catch ( PersClientException& e ) {
             smsc_log_warn( log_, "execute pers exception: exc=%s", e.what() );
-            p.setStatus( e.getType(), e.what() );
+            ctx->setStatus( e.getType(), e.what() );
             this->disconnect(true);
         } catch ( std::exception& e ) {
             smsc_log_warn( log_, "execute exception: exc=%s", e.what() );
-            p.setStatus( UNKNOWN_EXCEPTION, e.what() );
+            ctx->setStatus( UNKNOWN_EXCEPTION, e.what() );
         } catch (...) {
             smsc_log_warn( log_, "execute unknown exception" );
-            p.setStatus( UNKNOWN_EXCEPTION, "pers: Unknown exception" );
+            ctx->setStatus( UNKNOWN_EXCEPTION, "pers: Unknown exception" );
         }
 
-        ctx->continuePersCall(false);
+        ctx->initiator()->continuePersCall(ctx,false);
     }
     this->disconnect(false);
     smsc_log_info( log_, "perstask finished" );
@@ -627,13 +656,12 @@ bool PersClientTask::asyncRead()
             callqueue_.erase(*i);
             if ( c.ctx ) {
                 // valid context
-                PersCallData& params = c.ctx->data();
                 try {
-                    params.readSB(sb);
+                    c.ctx->readSB(sb);
                 } catch (...) {
-                    params.setStatus(BAD_RESPONSE);
+                    c.ctx->setStatus(BAD_RESPONSE);
                 }
-                c.ctx->continuePersCall( false );
+                c.ctx->initiator()->continuePersCall(c.ctx,false);
                 res = true;
             }
         }
@@ -891,7 +919,7 @@ void PersClientTask::addCall( int32_t serial, PersCall* ctx, utime_type utm )
 {
     if ( callhash_.Exist(serial) ) {
         smsc_log_error( log_, "non-unique serial %d", serial );
-        ctx->continuePersCall( false );
+        ctx->initiator()->continuePersCall( ctx, false );
         return;
     }
     callqueue_.push_back( Call(ctx,serial,utm) );
