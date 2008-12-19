@@ -43,6 +43,19 @@ public class Index extends EditBean {
         this.diskio = diskio;
     }
 
+    protected boolean enabled;
+
+    public boolean isEnabled() {
+        logger.debug( "config/Index.isEnabled()=" + enabled );
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        logger.debug( "config/Index.setEnabled()=" + enabled );
+        this.enabled = enabled;
+    }
+
+
     private String test = "myvalue";
 
     public String getTest() {
@@ -65,7 +78,7 @@ public class Index extends EditBean {
         logger.debug( "config/Index.process() start" );
 //        setDiskio( true );
 
-        logger.debug( "config/Index.process() start diskio='" + isDiskio() + "'" );
+//        logger.debug( "config/Index.process() start diskio='" + isDiskio() + "'" );
 
         requestParams = request.getParameterMap();
         logger.debug( "config/Index.process() listParameters(requestParams)" );
@@ -122,12 +135,15 @@ public class Index extends EditBean {
         logger.debug( "Index.load() start \nlistParameters( requestParams )" );
         listParameters( requestParams );
         for (Iterator i = requestParams.entrySet().iterator(); i.hasNext();) {
+
             Map.Entry entry = (Map.Entry) i.next();
             String keyExt = (String)entry.getKey();
             logger.debug( "Index.load() keyExt='" + keyExt + "'" );
+
             if (entry.getKey() instanceof String) {
                 String key = (String) entry.getKey();
                 logger.debug( "Index.load() from requestPram key='" + key + "'" );
+
                 if (key.startsWith(COLLAPSING_TREE_PARAM_PREFIX)) {         // after save() such params exists
                     String name = key.substring(COLLAPSING_TREE_PARAM_PREFIX.length());
                     StringBuffer value = new StringBuffer();
@@ -149,16 +165,9 @@ public class Index extends EditBean {
                 String name = (String) i.next();
                 logger.debug( "Index.load() name='" + name + "'" );
                 Object value = gwConfig.getParameter(name);
-                if( name.indexOf( "diskio" ) != -1 ){
-                    logger.debug( "Index.load() diskio='" + String.valueOf( ((Boolean)value).booleanValue() ) + "'" );
-                    if( "true".equalsIgnoreCase( String.valueOf( ((Boolean)value).booleanValue() ) ) ){
-                        logger.debug( "Index.load() set diskio to TRUE" );
-                        setDiskio( true );
-                    } else{
-                        logger.debug( "Index.load() set diskio to FALSE" );
-                        setDiskio( false );
-                    }
-                }
+
+                setBools( name, value );
+
                 if (value instanceof String)
                     params.put(name, value);
                 else if (value instanceof Boolean) {
@@ -197,6 +206,7 @@ public class Index extends EditBean {
 
             final Object parameter = gwConfig.getParameter(key);
             logger.debug( "config/Index.save() key='" + key + "'--- value='" + value + "'" );
+
             if (parameter != null) {
                 logger.debug( "config/Index.save() (parameter != null)");
                 if (parameter instanceof String){
@@ -333,6 +343,29 @@ public class Index extends EditBean {
 
     public String getColTreeParamPrefix() {
         return COLLAPSING_TREE_PARAM_PREFIX;
+    }
+
+    void setBools( String name, Object value ){
+        if( name.indexOf( ".diskio" ) != -1 ){
+            logger.debug( "Index.load() diskio='" + String.valueOf( ((Boolean)value).booleanValue() ) + "'" );
+            if( "true".equalsIgnoreCase( String.valueOf( ((Boolean)value).booleanValue() ) ) ){
+                logger.debug( "Index.load() set diskio to TRUE" );
+                setDiskio( true );
+            } else{
+                logger.debug( "Index.load() set diskio to FALSE" );
+                setDiskio( false );
+            }
+        }
+        if( name.indexOf( ".enabled" ) != -1 ){
+            logger.debug( "Index.load() enabled='" + String.valueOf( ((Boolean)value).booleanValue() ) + "'" );
+            if( "true".equalsIgnoreCase( String.valueOf( ((Boolean)value).booleanValue() ) ) ){
+                logger.debug( "Index.load() set enabled to TRUE" );
+                setEnabled( true );
+            } else{
+                logger.debug( "Index.load() set enabled to FALSE" );
+                setEnabled( false );
+            }
+        }
     }
 
 //    public void setColTreeParamPrefix(String str){
