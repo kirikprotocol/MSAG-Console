@@ -247,6 +247,14 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
     boolean responseTimeControllerEnabled = Boolean.valueOf(config.getProperty("response.time.controller.enabled", "true")).booleanValue();
     if (responseTimeControllerEnabled) {
+
+      long responseTimeControllerPoolingInterval = 60000L;
+      try {
+        responseTimeControllerPoolingInterval = Long.parseLong(config.getProperty("response.time.controller.pooling.interval", Long.toString(responseTimeControllerPoolingInterval)));
+      } catch (NumberFormatException e) {
+        throw new InitializationException("Invalid value for config parameter \"response.time.controller.pooling.interval\": " + config.getProperty("response.time.controller.pooling.interval"));
+      }
+
       try {
         balanceWarnIntervalStart = Long.parseLong(config.getProperty("balance.warning.interval.start", Long.toString(balanceWarnIntervalStart)));
       } catch (NumberFormatException e) {
@@ -263,7 +271,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
         logger.error("Illegal long value: " + config.getProperty("balance.critical.interval.start"), e);
       }
 
-      balanceCounter = new AvgCounter();
+      balanceCounter = new AvgCounter(responseTimeControllerPoolingInterval);
 
       if (bannerEngineClientEnabled) {
         try {
@@ -287,16 +295,10 @@ public class SmeEngine implements MessageListener, ResponseListener {
         } catch (NumberFormatException e) {
           logger.error("Illegal long value: " + config.getProperty("banner.disable.on.error.timeout"), e);
         }
-        bannerCounter = new AvgCounter();
+        bannerCounter = new AvgCounter(responseTimeControllerPoolingInterval);
       }
 
-      long responseTimeControllerPoolingInterval = 60000L;
-      try {
-        responseTimeControllerPoolingInterval = Long.parseLong(config.getProperty("response.time.controller.pooling.interval", Long.toString(responseTimeControllerPoolingInterval)));
-      } catch (NumberFormatException e) {
-        throw new InitializationException("Invalid value for config parameter \"response.time.controller.pooling.interval\": " + config.getProperty("response.time.controller.pooling.interval"));
-      }
-      (new ResponseTimeControllerThread(responseTimeControllerPoolingInterval)).startService();      
+      (new ResponseTimeControllerThread(responseTimeControllerPoolingInterval)).startService();
 
     }
 
@@ -484,10 +486,11 @@ public class SmeEngine implements MessageListener, ResponseListener {
         logger.debug(abonent + " request state closed.");
     }
 
-    if(bannerCounter!=null && state.isBannerQueried()){
-      bannerCounter.add(state.getBannerRequestTime()-state.getBannerResponseTime());
+    if (bannerCounter != null && state.isBannerQueried()) {
+      //bannerCounter.add(250 + (new Random()).nextInt(750) + state.getBannerResponseTime() - state.getBannerRequestTime());
+      bannerCounter.add(state.getBannerResponseTime() - state.getBannerRequestTime());
     }
-    balanceCounter.add(state.getBillingResponseDelay());    
+    balanceCounter.add(state.getBillingResponseDelay());
 
     state.setSendingResponseTime();
     sendResponse(state);
@@ -962,76 +965,75 @@ public class SmeEngine implements MessageListener, ResponseListener {
     public void run() {
       while (started) {
 
-        long balanceAvgTime=balanceCounter.getAvg();
+        long balanceAvgTime = balanceCounter.getAvg();
         if (logger.isDebugEnabled())
-          logger.debug("Avg balance response time: "+balanceAvgTime);
+          logger.debug("Avg balance response time: " + balanceAvgTime);
 
         byte newBalanceSeverity = SNMP_SEVERITY_NORMAL;
-        if(balanceAvgTime>balanceCriticalIntervalStart){
+        if (balanceAvgTime > balanceCriticalIntervalStart) {
           newBalanceSeverity = SNMP_SEVERITY_CRITICAL;
-        } else
-        if(balanceAvgTime>balanceErrorIntervalStart){
+        } else if (balanceAvgTime > balanceErrorIntervalStart) {
           newBalanceSeverity = SNMP_SEVERITY_ERROR;
-        } else
-        if(balanceAvgTime>balanceWarnIntervalStart){
+        } else if (balanceAvgTime > balanceWarnIntervalStart) {
           newBalanceSeverity = SNMP_SEVERITY_WARNING;
         }
 
-        if(newBalanceSeverity != currentBalanceSeverity){
-          if(logger.isDebugEnabled())
-            logger.debug("Balance counter threshold crossed "+currentBalanceSeverity+"->"+newBalanceSeverity);
+        if (newBalanceSeverity != currentBalanceSeverity) {
+          if (logger.isDebugEnabled())
+            logger.debug("Balance counter threshold crossed " + currentBalanceSeverity + "->" + newBalanceSeverity);
 
           byte status;
-          if(newBalanceSeverity > currentBalanceSeverity){
-            status=SNMP_STATUS_ACTIVE;
+          if (newBalanceSeverity > currentBalanceSeverity) {
+            status = SNMP_STATUS_ACTIVE;
           } else {
-            status=SNMP_STATUS_CLEARED;
+            status = SNMP_STATUS_CLEARED;
           }
-          currentBalanceSeverity=newBalanceSeverity;
-          if(logger.isDebugEnabled())
-            logger.debug("Generate SNMP trap: "+SNMP_STATUS[status]+" UNIBALANCE BillingSystem Threshold crossed (AlarmID=BillingSystem; severity="+currentBalanceSeverity+")");
+          currentBalanceSeverity = newBalanceSeverity;
+          if (logger.isDebugEnabled())
+            logger.debug("Generate SNMP trap: " + SNMP_STATUS[status] + " UNIBALANCE BillingSystem Threshold crossed (AlarmID=BillingSystem; severity=" + currentBalanceSeverity + ")");
           // TODO: generate SNMP trap
         } else {
-          logger.debug("Balance counter threshold not crossed");
+          logger.debug("Balance counter severity unchanged");
         }
 
-        if(bannerEngineClientEnabled){
-          long bannerAvgTime=bannerCounter.getAvg();
-          if (logger.isDebugEnabled())
-            logger.debug("Avg banner response time: "+bannerAvgTime);
+        if (bannerEngineClientEnabled) {
+          long bannerAvgTime = bannerCounter.getAvg();
+          if (bannerAvgTime != -1) {
+            if (logger.isDebugEnabled())
+              logger.debug("Avg banner response time: " + bannerAvgTime);
 
-          byte newBannerSeverity = SNMP_SEVERITY_NORMAL;
-          if(bannerAvgTime>bannerCriticalIntervalStart){
-            newBannerSeverity = SNMP_SEVERITY_CRITICAL;
-          } else
-          if(bannerAvgTime>bannerErrorIntervalStart){
-            newBannerSeverity = SNMP_SEVERITY_ERROR;
-          } else
-          if(bannerAvgTime>bannerWarnIntervalStart){
-            newBannerSeverity = SNMP_SEVERITY_WARNING;
-          }
+            byte newBannerSeverity = SNMP_SEVERITY_NORMAL;
+            if (bannerAvgTime > bannerCriticalIntervalStart) {
+              newBannerSeverity = SNMP_SEVERITY_CRITICAL;
+            } else if (bannerAvgTime > bannerErrorIntervalStart) {
+              newBannerSeverity = SNMP_SEVERITY_ERROR;
+            } else if (bannerAvgTime > bannerWarnIntervalStart) {
+              newBannerSeverity = SNMP_SEVERITY_WARNING;
+            }
 
-          if(newBannerSeverity != currentBannerSeverity){
-            if(logger.isDebugEnabled())
-              logger.debug("Banner counter threshold crossed "+currentBannerSeverity+"->"+newBannerSeverity);
+            if (newBannerSeverity != currentBannerSeverity) {
+              if (logger.isDebugEnabled())
+                logger.debug("Banner counter threshold crossed " + currentBannerSeverity + "->" + newBannerSeverity);
 
-            byte status;
-            if(newBannerSeverity > currentBannerSeverity){
-              status=SNMP_STATUS_ACTIVE;
+              byte status;
+              if (newBannerSeverity > currentBannerSeverity) {
+                status = SNMP_STATUS_ACTIVE;
+              } else {
+                status = SNMP_STATUS_CLEARED;
+              }
+              currentBannerSeverity = newBannerSeverity;
+              if (logger.isDebugEnabled())
+                logger.debug("Generate SNMP trap: " + SNMP_STATUS[status] + " UNIBALANCE BannerRotator Threshold crossed (AlarmID=BannerEngine; severity=" + currentBannerSeverity + ")");
+              // TODO: generate SNMP trap
+
+              if (status == SNMP_STATUS_ACTIVE && currentBannerSeverity > SNMP_SEVERITY_WARNING && bannerDisableOnErrorTimeout > 0) {
+                logger.info("BannerEngine client disabled for " + bannerDisableOnErrorTimeout + " ms");
+                bannerEngineClientEnabled = false;
+                (new BannerDisableTimeoutThread(bannerDisableOnErrorTimeout)).start();
+              }
             } else {
-              status=SNMP_STATUS_CLEARED;
+              logger.debug("Banner counter severity unchanged");
             }
-            currentBannerSeverity=newBannerSeverity;
-            if(logger.isDebugEnabled())
-              logger.debug("Generate SNMP trap: "+SNMP_STATUS[status]+" UNIBALANCE BannerRotator Threshold crossed (AlarmID=BannerEngine; severity="+currentBannerSeverity+")");
-            // TODO: generate SNMP trap
-
-            if(status==SNMP_STATUS_ACTIVE && currentBannerSeverity > SNMP_SEVERITY_WARNING && bannerDisableOnErrorTimeout>0){
-              logger.info("BannerEngine client disabled for "+bannerDisableOnErrorTimeout+" ms");
-              bannerEngineClientEnabled=false;
-            }
-          } else {
-            logger.debug("Banner counter threshold not crossed");
           }
         }
 
@@ -1065,8 +1067,9 @@ public class SmeEngine implements MessageListener, ResponseListener {
       try {
         Thread.sleep(timeout);
       } catch (InterruptedException e) {
-        logger.error("BannerDisableTimeoutThread was interrupted: "+e, e);
+        logger.error("BannerDisableTimeoutThread was interrupted: " + e, e);
       }
+      bannerCounter.reset();
       bannerEngineClientEnabled = true;
       logger.info("BannerEngine client enabled");
     }

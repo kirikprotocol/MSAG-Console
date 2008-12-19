@@ -10,18 +10,37 @@ package ru.sibinco.smpp.ub_sme;
 public class AvgCounter {
 
   private int count;
-  private long avgTime;
+  private long time;
+  private long startTime;
+  private long minAvgCountTime;
+
+  public AvgCounter(long minAvgCountTime) {
+    this.minAvgCountTime = minAvgCountTime;
+    reset();
+  }
 
   public synchronized void add(long time){
+    this.time = this.time + time;
     count++;
-    avgTime =((count-1)* avgTime + time)/count;
   }
 
   public synchronized long getAvg(){
-    long res=avgTime;
-    avgTime=0;
-    count=0;
+    if(System.currentTimeMillis() - startTime < minAvgCountTime){
+      return -1;
+    }
+    if(count==0){
+      return 0;
+    }
+    long res = time / count;
+    time = 0;
+    count = 0;
     return res;
+  }
+
+  public synchronized void reset(){
+    time = 0;
+    count = 0;
+    startTime=System.currentTimeMillis();
   }
 
 }
