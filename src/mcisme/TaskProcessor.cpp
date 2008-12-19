@@ -851,37 +851,48 @@ TaskProcessor::commitMissedCallEvents(const sms_info* pInfo, const AbonentProfil
 
 void TaskProcessor::invokeProcessDataSmTimeout(void)
 {
-  MutexGuard Lock(smsInfoMutex);
-  int count_old = smsInfo.Count();
-  if ( !count_old ) return;
-  smsc_log_debug(logger, "Start searching unresponded DATA_SM. Total SMS in Hash is %d", count_old);
-  smsc::core::buffers::IntHash<sms_info*>::Iterator It(smsInfo.First());
-
-  sms_info* pInfo=0;
-  int seqNum=0;
-  int count = 0;
+  typedef std::pair<int,sms_info*> sms_info_entry_t;
+  std::list<sms_info_entry_t> smsInfoCache;
+  sms_info* pInfo = 0;
+  int seqNum = 0, count = 0;
   time_t curTime = time(0);
-  while(It.Next(seqNum, pInfo))
   {
-    if(curTime > (pInfo->sending_time + responseWaitTime))
-    {
-      smsc_log_info(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
+    MutexGuard Lock(smsInfoMutex);
+    int count_old = smsInfo.Count();
+    if ( !count_old ) return;
+    smsc_log_debug(logger, "Start searching unresponded DATA_SM. Total SMS in Hash is %d", count_old);
+    smsc::core::buffers::IntHash<sms_info*>::Iterator It(smsInfo.First());
 
-      statistics->incFailed(static_cast<unsigned>(pInfo->events.size()));
+    while (It.Next(seqNum, pInfo)) {
+      if(curTime > (pInfo->sending_time + responseWaitTime)) {
+        smsc_log_info(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
 
+        statistics->incFailed(static_cast<unsigned>(pInfo->events.size()));
+        smsInfoCache.push_back(std::make_pair(seqNum, pInfo));
+        smsInfo.Delete(seqNum);
+        count++;
+      }
+    }
+    int count_new = smsInfo.Count();
+    smsc_log_debug(logger, "Complete searching unresponded DATA_SM. Total SMS in Hash is %d, removed %d (%d)", count_new, count_old - count_new, count);
+  }
+
+  for(std::list<sms_info_entry_t>::iterator iter = smsInfoCache.begin(), end_iter=smsInfoCache.end();
+      iter != end_iter; ++iter) {
+    seqNum = (*iter).first; pInfo = (*iter).second;
+    try {
       BannerResponseTrace emptyBannerRespTrace;
       if ( pInfo->bannerRespTrace != emptyBannerRespTrace )
         _outputMessageProcessorsDispatcher->dispatchBERollbackRequest(pInfo->bannerRespTrace);
 
       time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
       pStorage->setSchedParams(pInfo->abnt, schedTime, -1);
-      smsInfo.Delete(seqNum);
-      delete pInfo;
+
+    } catch (std::exception& ex) {
+      smsc_log_error(logger, "TaskProcessor::invokeProcessDataSmTimeout::: catched unexpected exception [%s]", ex.what());
     }
-    count++;
+    delete pInfo;
   }
-  int count_new = smsInfo.Count();
-  smsc_log_debug(logger, "Complete searching unresponded DATA_SM. Total SMS in Hash is %d, removed %d (%d)", count_new, count_old - count_new, count);
 }
 
 bool TaskProcessor::invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt)
