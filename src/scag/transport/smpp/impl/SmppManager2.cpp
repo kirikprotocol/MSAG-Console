@@ -908,10 +908,10 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
     if ( text && snmpqueue_ && snmpTracking ) {
         snmp::TrapRecord* trap = new snmp::TrapRecord;
         trap->recordType = snmp::TrapRecord::Trap;
-        trap->status = isDeleted ? snmp::TrapRecord::STATCLEAR ? snmp::TrapRecord::STATNEW;
+        trap->status = isDeleted ? snmp::TrapRecord::STATCLEAR : snmp::TrapRecord::STATNEW;
         trap->id = ch->getSystemId();
         trap->category = ( isSME ? "SME" : "SMSC" );
-        trap->severity = isDeleted ? snmp::TrapRecord::CLEAR ? snmp::TrapRecord::MAJOR;
+        trap->severity = isDeleted ? snmp::TrapRecord::CLEAR : snmp::TrapRecord::MAJOR;
         trap->text = text;
         snmpqueue_->Push( trap );
     }
