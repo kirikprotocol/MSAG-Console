@@ -279,8 +279,8 @@
     finishSection(out);
     //################################## INMAN #############################
     List chargingPolicyOptions = new LinkedList();
-    chargingPolicyOptions.add(getLocString("chargingPolicy.deliver"));
-    chargingPolicyOptions.add(getLocString("chargingPolicy.submit"));
+    chargingPolicyOptions.add("deliver"); // do not localize it - it's option name that understood by SMSC
+    chargingPolicyOptions.add("submit");
 
     startSection(out, "inman", "smsc.inman", false);
     startParams(out);
