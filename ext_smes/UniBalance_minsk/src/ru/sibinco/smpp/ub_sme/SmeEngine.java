@@ -64,14 +64,45 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
   private int maxProcessingRequests = 10000;
 
+  // SNMP counters
+  private AvgCounter balanceCounter;
+  private AvgCounter bannerCounter;
+
+  private long balanceWarnIntervalStart = 250;
+  private long balanceErrorIntervalStart = 500;
+  private long balanceCriticalIntervalStart = 1000;
+
+  private long bannerWarnIntervalStart = 250;
+  private long bannerErrorIntervalStart = 500;
+  private long bannerCriticalIntervalStart = 1000;
+
+  private long bannerDisableOnErrorTimeout = 60000;
+
+  private byte currentBalanceSeverity = SNMP_SEVERITY_NORMAL;
+  private byte currentBannerSeverity = SNMP_SEVERITY_NORMAL;
+
+  public final static byte SNMP_SEVERITY_NORMAL = 1;
+  public final static byte SNMP_SEVERITY_WARNING = 2;
+  public final static byte SNMP_SEVERITY_ERROR = 3;
+  public final static byte SNMP_SEVERITY_CRITICAL = 4;
+
+  public final static byte SNMP_STATUS_ACTIVE = 0;
+  public final static byte SNMP_STATUS_CLEARED = 1;
+
+  public final static String[] SNMP_STATUS = {"ACTIVE", "CLEARED"};
+
+  //
+
+
   private ThreadsPool threadsPool = null;
   private ThreadsPool bannerThreadsPool = null;
   private Multiplexor multiplexor = null;
   private OutgoingQueue outgoingQueue;
 
   private DBConnectionManager connectionManager = DBConnectionManager.getInstance();
-  private Map states = new HashMap();
-  private List statesExpire = new LinkedList();
+  private final Map states = new HashMap();
+  private final Map bannerRequests = new HashMap();
+  private final List statesExpire = new LinkedList();
 
   private Map cbossStatements = new HashMap();
 
@@ -214,27 +245,82 @@ public class SmeEngine implements MessageListener, ResponseListener {
       productivityController.startService();
     }
 
+    boolean responseTimeControllerEnabled = Boolean.valueOf(config.getProperty("response.time.controller.enabled", "true")).booleanValue();
+    if (responseTimeControllerEnabled) {
+      try {
+        balanceWarnIntervalStart = Long.parseLong(config.getProperty("balance.warning.interval.start", Long.toString(balanceWarnIntervalStart)));
+      } catch (NumberFormatException e) {
+        logger.error("Illegal long value: " + config.getProperty("balance.warning.interval.start"), e);
+      }
+      try {
+        balanceErrorIntervalStart = Long.parseLong(config.getProperty("balance.error.interval.start", Long.toString(balanceErrorIntervalStart)));
+      } catch (NumberFormatException e) {
+        logger.error("Illegal long value: " + config.getProperty("balance.error.interval.start"), e);
+      }
+      try {
+        balanceCriticalIntervalStart = Long.parseLong(config.getProperty("balance.critical.interval.start", Long.toString(balanceCriticalIntervalStart)));
+      } catch (NumberFormatException e) {
+        logger.error("Illegal long value: " + config.getProperty("balance.critical.interval.start"), e);
+      }
+
+      balanceCounter = new AvgCounter();
+
+      if (bannerEngineClientEnabled) {
+        try {
+          bannerWarnIntervalStart = Long.parseLong(config.getProperty("banner.warning.interval.start", Long.toString(bannerWarnIntervalStart)));
+        } catch (NumberFormatException e) {
+          logger.error("Illegal long value: " + config.getProperty("banner.warning.interval.start"), e);
+        }
+        try {
+          bannerErrorIntervalStart = Long.parseLong(config.getProperty("banner.error.interval.start", Long.toString(bannerErrorIntervalStart)));
+        } catch (NumberFormatException e) {
+          logger.error("Illegal long value: " + config.getProperty("banner.error.interval.start"), e);
+        }
+        try {
+          bannerCriticalIntervalStart = Long.parseLong(config.getProperty("banner.critical.interval.start", Long.toString(bannerCriticalIntervalStart)));
+        } catch (NumberFormatException e) {
+          logger.error("Illegal long value: " + config.getProperty("banner.critical.interval.start"), e);
+        }
+
+        try {
+          bannerDisableOnErrorTimeout = Long.parseLong(config.getProperty("banner.disable.on.error.timeout", Long.toString(bannerDisableOnErrorTimeout)));
+        } catch (NumberFormatException e) {
+          logger.error("Illegal long value: " + config.getProperty("banner.disable.on.error.timeout"), e);
+        }
+        bannerCounter = new AvgCounter();
+      }
+
+      long responseTimeControllerPoolingInterval = 60000L;
+      try {
+        responseTimeControllerPoolingInterval = Long.parseLong(config.getProperty("response.time.controller.pooling.interval", Long.toString(responseTimeControllerPoolingInterval)));
+      } catch (NumberFormatException e) {
+        throw new InitializationException("Invalid value for config parameter \"response.time.controller.pooling.interval\": " + config.getProperty("response.time.controller.pooling.interval"));
+      }
+      (new ResponseTimeControllerThread(responseTimeControllerPoolingInterval)).startService();      
+
+    }
+
+
     new RequestStatesController(requestStatesControllerPollingInterval).startService();
 
     if (logger.isDebugEnabled()) logger.debug("UniBalance SME init fineshed");
   }
 
   private void initResponsePatterns() throws InitializationException {
-    Properties patternConfig;
+    Properties config;
     try {
-      patternConfig = new Properties();
-      patternConfig.load(new FileInputStream(responsePatternConfigFile));
+      config = new Properties();
+      config.load(new FileInputStream(responsePatternConfigFile));
     } catch (IOException e) {
       logger.error("Exception occured during loading response pattern configuration from " + responsePatternConfigFile.getName(), e);
       throw new InitializationException("Exception occured during loading response pattern configuration.", e);
     }
 
-    balanceResponsePattern = patternConfig.getProperty("balance.response.pattern", balanceResponsePattern);
-    waitForSmsResponsePattern = patternConfig.getProperty("balance.wait.for.sms.response.pattern", waitForSmsResponsePattern);
-    errorPattern = patternConfig.getProperty("balance.error.pattern", errorPattern);
+    balanceResponsePattern = config.getProperty("balance.response.pattern", balanceResponsePattern);
+    waitForSmsResponsePattern = config.getProperty("balance.wait.for.sms.response.pattern", waitForSmsResponsePattern);
+    errorPattern = config.getProperty("balance.error.pattern", errorPattern);
 
-    bannerAddPattern = patternConfig.getProperty("balance.banner.add.pattern", bannerAddPattern);
-
+    bannerAddPattern = config.getProperty("balance.banner.add.pattern", bannerAddPattern);
   }
 
   public SmeEngine(Multiplexor multiplexor, OutgoingQueue messagesQueue, ThreadsPool threadsPool, ThreadsPool banneThreadsPool) {
@@ -282,30 +368,69 @@ public class SmeEngine implements MessageListener, ResponseListener {
   }
 
   public void handleResponse(PDU pdu) throws SMPPException {
-    String responseType = "SUBMIT_SM_RESP";
+    String responseType;
     switch (pdu.getType()) {
-      case Data.ENQUIRE_LINK_RESP:
-        responseType = "ENQUIRE_LINK_RESP";
+      case Data.SUBMIT_SM_RESP:
+        responseType = "SUBMIT_SM_RESP";
         break;
       case Data.DATA_SM_RESP:
         responseType = "DATA_SM_RESP";
         break;
+      case Data.ENQUIRE_LINK_RESP:
+        responseType = "ENQUIRE_LINK_RESP";
+        break;
+      default:
+        responseType = "UNKNOWN";
     }
 
-    if (pdu.getType() == Data.SUBMIT_SM_RESP || pdu.getType() == Data.DATA_SM_RESP) { // TODO: check for ussd_service_op
-
+    if (pdu.getType() == Data.SUBMIT_SM_RESP || pdu.getType() == Data.DATA_SM_RESP) {
       if (logger.isDebugEnabled()) {
         logger.debug(responseType + " handled. ConnID #" + pdu.getConnectionId() + "; SeqN #" + pdu.getSequenceNumber() + "; Status #" + pdu.getStatus());
       }
       if (outgoingQueue != null) {
-        if (pdu.getStatusClass() == PDU.STATUS_CLASS_TEMP_ERROR) {
-          outgoingQueue.updateOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatus());
-        } else {
-          outgoingQueue.removeOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatusClass());
+        switch (pdu.getStatusClass()) {
+          case PDU.STATUS_CLASS_TEMP_ERROR:
+            int updateResult = outgoingQueue.updateOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatus());
+            switch (updateResult) {
+              case OutgoingQueueProxy.OUTGOING_OBJECT_UPDATED:
+                break;
+              case OutgoingQueueProxy.OUTGOING_OBJECT_REMOVED_BY_ERROR:
+                rollbackSentBannerByResponse(pdu);
+                break;
+              case OutgoingQueueProxy.OUTGOING_OBJECT_REMOVED_BY_MAX_ATTEMPS_REACHED:
+                rollbackSentBannerByResponse(pdu);
+                break;
+              case OutgoingQueueProxy.OUTGOING_OBJECT_NOT_FOUND:
+                break;
+            }
+
+            break;
+          case PDU.STATUS_CLASS_PERM_ERROR:
+            outgoingQueue.removeOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatusClass());
+            rollbackSentBannerByResponse(pdu);
+            break;
+          case PDU.STATUS_CLASS_NO_ERROR:
+            outgoingQueue.removeOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatusClass());
+            synchronized (bannerRequests) {
+              bannerRequests.remove(new Long((((long) pdu.getConnectionId()) << 8) | (long) pdu.getSequenceNumber()));
+            }
+            break;
         }
       }
     }
 
+  }
+
+  private void rollbackSentBannerByResponse(PDU response) {
+    RequestContext rc;
+    synchronized (bannerRequests) {
+      rc = (RequestContext) bannerRequests.get(new Long((((long) response.getConnectionId()) << 8) | (long) response.getSequenceNumber()));
+    }
+    if (rc != null) {
+      if (logger.isDebugEnabled())
+        logger.debug("Rollback banner by resp sn=" + response.getSequenceNumber() + "; status=" + response.getStatus());
+      bannerThreadsPool.execute(new BannerRollbackThread(rc));
+    }
   }
 
   protected void addRequestState(RequestState state) {
@@ -358,6 +483,12 @@ public class SmeEngine implements MessageListener, ResponseListener {
       if (logger.isDebugEnabled())
         logger.debug(abonent + " request state closed.");
     }
+
+    if(bannerCounter!=null && state.isBannerQueried()){
+      bannerCounter.add(state.getBannerRequestTime()-state.getBannerResponseTime());
+    }
+    balanceCounter.add(state.getBillingResponseDelay());    
+
     state.setSendingResponseTime();
     sendResponse(state);
     state.setResponseSentTime();
@@ -393,7 +524,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
   }
 
-
   private void sendDeliverSmResponse(Message msg, int status) {
     try {
       msg.setStatus(status);
@@ -424,19 +554,26 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
   private void sendResponse(RequestState state) {
     Message msg = state.getAbonentResponse();
-    if (bannerEngineClientEnabled && !state.isError()) {
-      String banner = state.getBanner();
-      if (banner != null && banner.length() > 0) {
-        MessageFormat bannerFormat = new MessageFormat(bannerAddPattern);
-        String messageWithBanner = bannerFormat.format(new String[]{msg.getMessageString(), banner});
-        if(messageWithBanner.length()<=ussdMaxLength){
-          msg.setMessageString(messageWithBanner);
+    if (bannerEngineClientEnabled && state.isBannerReady()) {
+      if (!state.isError()) {
+        String banner = state.getBanner();
+        if (banner != null && banner.length() > 0) {
+          MessageFormat bannerFormat = new MessageFormat(bannerAddPattern);
+          String messageWithBanner = bannerFormat.format(new String[]{msg.getMessageString(), banner});
+          if (messageWithBanner.length() <= ussdMaxLength) {
+            msg.setMessageString(messageWithBanner);
+          } else {
+            logger.info("USSD response with banner too long: " + messageWithBanner);
+          }
         } else {
-          logger.info("USSD response with banner too long: "+messageWithBanner);
+          if (logger.isDebugEnabled())
+            logger.debug("Banner is empty");
         }
       } else {
         if (logger.isDebugEnabled())
-          logger.debug("Banner is empty");
+          logger.debug("Rollback banner by balance error for abonent " + state.getAbonentRequest().getSourceAddress());
+        bannerThreadsPool.execute(new BannerRollbackThread(state.getBannerRequestContext()));
+        state.setBannerRequestContext(null);
       }
     }
     if (((msg.getMessageString().length() > ussdMaxLength) || smsResponseMode) && !state.isUssdSessionClosed()) {
@@ -448,25 +585,35 @@ public class SmeEngine implements MessageListener, ResponseListener {
       msg.setDestAddrSubunit(1); // for Flash SMS
     }
     state.setAbonentResponseTime(System.currentTimeMillis());
-    sendMessage(msg, state.getAbonentRequest().getConnectionName());
+    int sn = sendMessage(msg, state.getAbonentRequest().getConnectionName());
+    if (sn != -1 && state.getBannerRequestContext() != null && bannerEngineClientEnabled) {
+      long snKey = (((long) msg.getConnectionId()) << 8) | ((long) sn);
+      synchronized (bannerRequests) {
+        bannerRequests.put(new Long(snKey), state.getBannerRequestContext());
+      }
+    }
     if (responses != null) {
       responses.count();
     }
   }
 
-  private void sendMessage(Message msg, String connectionName) {
+  private int sendMessage(Message msg, String connectionName) {
     try {
+      multiplexor.assingSequenceNumber(msg, connectionName);
       if (outgoingQueue != null) {
         outgoingQueue.addOutgoingObject(new OutgoingObject(msg));
       } else {
-        multiplexor.assingSequenceNumber(msg, connectionName);
         multiplexor.sendMessage(msg, false);
       }
+
       if (logger.isDebugEnabled())
         logger.debug("MSG sent. ConnID #" + msg.getConnectionId() + "; SeqN #" + msg.getSequenceNumber() + "; USSD #" + msg.getUssdServiceOp() + "; destination #" + msg.getDestinationAddress() + "; source #" + msg.getSourceAddress() + "; msg: " + msg.getMessageString());
+
+      return msg.getSequenceNumber();
     } catch (SMPPException e) {
       logger.error("Could not send message.", e);
     }
+    return -1;
   }
 
   private void processIncomingMessage(Message message, long abonentRequestTime) {
@@ -512,7 +659,9 @@ public class SmeEngine implements MessageListener, ResponseListener {
     sendDeliverSmResponse(message, Data.ESME_ROK);
   }
 
-  private String getBanner(String abonent) {
+  private String getBanner(RequestState state) {
+    String abonent = state.getAbonentRequest().getSourceAddress();
+
     if (abonent.startsWith("+")) {
       abonent = ".1.1." + abonent.substring(1);
     } else if (!abonent.startsWith(".")) {
@@ -522,31 +671,40 @@ public class SmeEngine implements MessageListener, ResponseListener {
     bannerEngineClient.getBanner(rc);
     BannerResp res = (BannerResp) rc.getResponse();
     if (res != null && res.getBannerBody() != null) {
-      if(logger.isDebugEnabled())
+      if (logger.isDebugEnabled())
         logger.debug(
-          "BE bot banlength=" + res.getBannerBody().length +
-              " tranzact=" + res.getTransactionID() +
-              " banner=" + Encode.decodeUTF16(res.getBannerBody()));
-      switch(bannerEngineCharSet){
-        case (AdvClientConst.UTF16BE):
+            "BE got banlength=" + res.getBannerBody().length +
+                " tranzact=" + res.getTransactionID() +
+                " banner=" + Encode.decodeUTF16(res.getBannerBody()));
+
+      state.setBannerRequestContext(rc);
+
+      switch (bannerEngineCharSet) {
+        case(AdvClientConst.UTF16BE):
           return Encode.decodeUTF16(res.getBannerBody());
-        case (AdvClientConst.GSMSMS):
+        case(AdvClientConst.GSMSMS):
           return Encode.decodeGSM(res.getBannerBody(), false);
-        case (AdvClientConst.GSMUSSD):
+        case(AdvClientConst.GSMUSSD):
           return Encode.decodeGSM(res.getBannerBody(), true);
-        case (AdvClientConst.ASCII_TRANSLIT):
+        case(AdvClientConst.ASCII_TRANSLIT):
           return Encode.decodeASCII(res.getBannerBody());
         default:
           return Encode.decodeUTF16(res.getBannerBody());
       }
     } else {
-      if(logger.isDebugEnabled())
+      if (logger.isDebugEnabled())
         try {
-          logger.debug("BE COME NULL! tranzact= " +res.getTransactionID());
+          logger.debug("BE COME NULL! tranzact= " + res.getTransactionID());
         } catch (Exception e) {
           ;
         }
       return null;
+    }
+  }
+
+  private void rollbackBanner(RequestContext rc) {
+    if (rc != null) {
+      bannerEngineClient.rollBackBanner(rc);
     }
   }
 
@@ -595,7 +753,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
   }
 
-  public boolean isCbossConnectionError(Exception e) {
+  protected boolean isCbossConnectionError(Exception e) {
     if (e.toString().matches(cbossConnectionErrorPattern)) {
       return true;
     } else {
@@ -611,8 +769,8 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
     private boolean started = false;
     private long pollingInterval = 5000L;
-    private Object monitor = new Object();
-    private Object shutmonitor = new Object();
+    private final Object monitor = new Object();
+    private final Object shutmonitor = new Object();
 
     public RequestStatesController(long pollingInterval) {
       setName("RequestStatesController");
@@ -673,8 +831,8 @@ public class SmeEngine implements MessageListener, ResponseListener {
     public void run() {
       try {
         state.setBannerRequestTime(System.currentTimeMillis());
-        String banner = getBanner(state.getAbonentRequest().getSourceAddress());
-        state.setBanner(banner);
+        String banner = getBanner(state);
+        state.setBanner(banner, System.currentTimeMillis());
         closeRequestState(state);
       } catch (Throwable t) {
         state.setError(true);
@@ -685,15 +843,34 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
   }
 
+  class BannerRollbackThread implements Runnable {
+    private RequestContext rc;
+
+    public BannerRollbackThread(RequestContext rc) {
+      this.rc = rc;
+    }
+
+    public void run() {
+      try {
+        rollbackBanner(rc);
+      } catch (Throwable t) {
+        if (logger.isInfoEnabled())
+          logger.info("Can not rollback banner " + rc);
+        logger.error("Unexpected exception occured during processing request.", t);
+      }
+    }
+  }
+
   class ResponcePatternConfigController extends Thread {
     private boolean started = false;
-    private Object monitor = new Object();
-    private Object shutmonitor = new Object();
+    private final Object monitor = new Object();
+    private final Object shutmonitor = new Object();
 
     private long pollingInterval = 60000L;
     private long fileLastModified;
 
     public ResponcePatternConfigController(long pollingInterval) {
+      super("ResponcePatternConfigController");
       this.pollingInterval = pollingInterval;
       this.fileLastModified = responsePatternConfigFile.lastModified();
     }
@@ -748,6 +925,151 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
     }
 
+  }
+
+  class ResponseTimeControllerThread extends Thread {
+    private boolean started = false;
+    private final Object monitor = new Object();
+    private final Object shutmonitor = new Object();
+
+    private long pollingInterval = 601000L;
+
+    public ResponseTimeControllerThread(long pollingInterval) {
+      super("ResponseTimeControllerThread");
+      this.pollingInterval = pollingInterval;
+    }
+
+    public void startService() {
+      started = true;
+      if (logger.isInfoEnabled()) logger.info(getName() + " started.");
+      start();
+    }
+
+    public void stopService() {
+      synchronized (shutmonitor) {
+        synchronized (monitor) {
+          started = false;
+          monitor.notifyAll();
+        }
+        try {
+          shutmonitor.wait();
+        } catch (InterruptedException e) {
+          logger.warn(getName() + " shutting down exception:", e);
+        }
+      }
+    }
+
+    public void run() {
+      while (started) {
+
+        long balanceAvgTime=balanceCounter.getAvg();
+        if (logger.isDebugEnabled())
+          logger.debug("Avg balance response time: "+balanceAvgTime);
+
+        byte newBalanceSeverity = SNMP_SEVERITY_NORMAL;
+        if(balanceAvgTime>balanceCriticalIntervalStart){
+          newBalanceSeverity = SNMP_SEVERITY_CRITICAL;
+        } else
+        if(balanceAvgTime>balanceErrorIntervalStart){
+          newBalanceSeverity = SNMP_SEVERITY_ERROR;
+        } else
+        if(balanceAvgTime>balanceWarnIntervalStart){
+          newBalanceSeverity = SNMP_SEVERITY_WARNING;
+        }
+
+        if(newBalanceSeverity != currentBalanceSeverity){
+          if(logger.isDebugEnabled())
+            logger.debug("Balance counter threshold crossed "+currentBalanceSeverity+"->"+newBalanceSeverity);
+
+          byte status;
+          if(newBalanceSeverity > currentBalanceSeverity){
+            status=SNMP_STATUS_ACTIVE;
+          } else {
+            status=SNMP_STATUS_CLEARED;
+          }
+          currentBalanceSeverity=newBalanceSeverity;
+          if(logger.isDebugEnabled())
+            logger.debug("Generate SNMP trap: "+SNMP_STATUS[status]+" UNIBALANCE BillingSystem Threshold crossed (AlarmID=BillingSystem; severity="+currentBalanceSeverity+")");
+          // TODO: generate SNMP trap
+        } else {
+          logger.debug("Balance counter threshold not crossed");
+        }
+
+        if(bannerEngineClientEnabled){
+          long bannerAvgTime=bannerCounter.getAvg();
+          if (logger.isDebugEnabled())
+            logger.debug("Avg banner response time: "+bannerAvgTime);
+
+          byte newBannerSeverity = SNMP_SEVERITY_NORMAL;
+          if(bannerAvgTime>bannerCriticalIntervalStart){
+            newBannerSeverity = SNMP_SEVERITY_CRITICAL;
+          } else
+          if(bannerAvgTime>bannerErrorIntervalStart){
+            newBannerSeverity = SNMP_SEVERITY_ERROR;
+          } else
+          if(bannerAvgTime>bannerWarnIntervalStart){
+            newBannerSeverity = SNMP_SEVERITY_WARNING;
+          }
+
+          if(newBannerSeverity != currentBannerSeverity){
+            if(logger.isDebugEnabled())
+              logger.debug("Banner counter threshold crossed "+currentBannerSeverity+"->"+newBannerSeverity);
+
+            byte status;
+            if(newBannerSeverity > currentBannerSeverity){
+              status=SNMP_STATUS_ACTIVE;
+            } else {
+              status=SNMP_STATUS_CLEARED;
+            }
+            currentBannerSeverity=newBannerSeverity;
+            if(logger.isDebugEnabled())
+              logger.debug("Generate SNMP trap: "+SNMP_STATUS[status]+" UNIBALANCE BannerRotator Threshold crossed (AlarmID=BannerEngine; severity="+currentBannerSeverity+")");
+            // TODO: generate SNMP trap
+
+            if(status==SNMP_STATUS_ACTIVE && currentBannerSeverity > SNMP_SEVERITY_WARNING && bannerDisableOnErrorTimeout>0){
+              logger.info("BannerEngine client disabled for "+bannerDisableOnErrorTimeout+" ms");
+              bannerEngineClientEnabled=false;
+            }
+          } else {
+            logger.debug("Banner counter threshold not crossed");
+          }
+        }
+
+        synchronized (monitor) {
+          if (!started) break;
+          try {
+            monitor.wait(pollingInterval);
+          } catch (InterruptedException e) {
+            logger.warn(getName() + " was interrupted.", e);
+          }
+        }
+      }
+      synchronized (shutmonitor) {
+        shutmonitor.notifyAll();
+      }
+
+    }
+
+
+  }
+
+  class BannerDisableTimeoutThread extends Thread {
+    private long timeout;
+
+
+    public BannerDisableTimeoutThread(long timeout) {
+      this.timeout = timeout;
+    }
+
+    public void run() {
+      try {
+        Thread.sleep(timeout);
+      } catch (InterruptedException e) {
+        logger.error("BannerDisableTimeoutThread was interrupted: "+e, e);
+      }
+      bannerEngineClientEnabled = true;
+      logger.info("BannerEngine client enabled");
+    }
   }
 
 }

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4" relativePaths="false">
-  <component name="BookmarkManager" />
+  <component name="BookmarkManager">
+    <editor_bookmark url="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/SmeEngine.java" line="487" number="1" />
+  </component>
   <component name="ChangeBrowserSettings">
     <option name="MAIN_SPLITTER_PROPORTION" value="0.3" />
     <option name="MESSAGES_SPLITTER_PROPORTION" value="0.8" />
@@ -17,12 +19,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/RequestState.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/RequestState.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UniBalance_minsk.iws" afterPath="$PROJECT_DIR$/UniBalance_minsk.iws" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/lib/adv-client.jar" afterPath="$PROJECT_DIR$/lib/adv-client.jar" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/lib/unibalance.jar" afterPath="$PROJECT_DIR$/lib/unibalance.jar" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UniBalance_minsk.iml" afterPath="$PROJECT_DIR$/UniBalance_minsk.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/SmeEngine.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/SmeEngine.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config/sme.properties" afterPath="$PROJECT_DIR$/config/sme.properties" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UniBalance_minsk.ipr" afterPath="$PROJECT_DIR$/UniBalance_minsk.ipr" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config/log4j.properties" afterPath="$PROJECT_DIR$/config/log4j.properties" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/AvgCounter.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/lib/unibalance.jar" afterPath="$PROJECT_DIR$/lib/unibalance.jar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueue.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueue.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/BalanceProcessor.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/BalanceProcessor.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MessageSender.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MessageSender.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueueProxy.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueueProxy.java" />
     </list>
   </component>
   <component name="ChangeListSynchronizer" />
@@ -135,20 +143,29 @@
   <component name="FavoritesManager">
     <favorites_list name="UniBalance_minsk" />
   </component>
-  <component name="FavoritesProjectViewPane" />
+  <component name="FavoritesProjectViewPane">
+    <subPane subId="UniBalance_minsk">
+      <PATH>
+        <PATH_ELEMENT>
+          <option name="myItemId" />
+          <option name="myItemType" value="com.intellij.ide.favoritesTreeView.FavoritesTreeNodeDescriptor" />
+        </PATH_ELEMENT>
+      </PATH>
+    </subPane>
+  </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="SmeEngine.java" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="SmeEngine.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/SmeEngine.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="129" column="8" selection-start="5415" selection-end="5415" vertical-scroll-proportion="0.53846157">
+            <state line="1000" column="67" selection-start="40068" selection-end="40068" vertical-scroll-proportion="0.4661558">
               <folding>
-                <element signature="imports" expanded="true" />
                 <element signature="method#initResponsePatterns#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#SmeEngine#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#getName#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#handleMessage#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#handleResponse#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#rollbackSentBannerByResponse#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#addRequestState#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#getRequestState#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#removeRequestState#0;class#SmeEngine#0" expanded="false" />
@@ -156,6 +173,17 @@
                 <element signature="method#processRequestStates#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#sendDeliverSmResponse#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#sendWaitForSmsMessage#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#sendResponse#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#sendMessage#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#processIncomingMessage#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#getBanner#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#rollbackBanner#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#getMessageFormat#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#getCbossQuery#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#getCbossStatement#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#closeCbossStatement#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#isCbossConnectionError#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#getCbossConnection#0;class#SmeEngine#0" expanded="false" />
                 <element signature="class#RequestStatesController#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#RequestStatesController#0;class#RequestStatesController#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#startService#0;class#RequestStatesController#0;class#SmeEngine#0" expanded="false" />
@@ -165,12 +193,116 @@
                 <element signature="class#BannerRequestThread#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#BannerRequestThread#0;class#BannerRequestThread#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#run#0;class#BannerRequestThread#0;class#SmeEngine#0" expanded="false" />
+                <element signature="class#BannerRollbackThread#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#BannerRollbackThread#0;class#BannerRollbackThread#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#run#0;class#BannerRollbackThread#0;class#SmeEngine#0" expanded="false" />
                 <element signature="class#ResponcePatternConfigController#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#ResponcePatternConfigController#0;class#ResponcePatternConfigController#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#startService#0;class#ResponcePatternConfigController#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#stopService#0;class#ResponcePatternConfigController#0;class#SmeEngine#0" expanded="false" />
                 <element signature="method#run#0;class#ResponcePatternConfigController#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#ResponseTimeControllerThread#0;class#ResponseTimeControllerThread#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#startService#0;class#ResponseTimeControllerThread#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#stopService#0;class#ResponseTimeControllerThread#0;class#SmeEngine#0" expanded="false" />
+                <element signature="class#BannerDisableTimeoutThread#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#BannerDisableTimeoutThread#0;class#BannerDisableTimeoutThread#0;class#SmeEngine#0" expanded="false" />
+                <element signature="method#run#0;class#BannerDisableTimeoutThread#0;class#SmeEngine#0" expanded="false" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="sme.properties" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/config/sme.properties">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AvgCounter.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/AvgCounter.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="25" column="2" selection-start="478" selection-end="478" vertical-scroll-proportion="0.4385965">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="RequestState.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/RequestState.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="160" column="0" selection-start="3937" selection-end="3937" vertical-scroll-proportion="0.31162196">
+              <folding>
+                <element signature="method#RequestState#0;class#RequestState#0" expanded="false" />
+                <element signature="method#getAbonentRequest#0;class#RequestState#0" expanded="false" />
+                <element signature="method#getAbonentResponse#0;class#RequestState#0" expanded="false" />
+                <element signature="method#setAbonentResponse#0;class#RequestState#0" expanded="false" />
+                <element signature="method#getBanner#0;class#RequestState#0" expanded="false" />
+                <element signature="method#getAbonentRequestTime#0;class#RequestState#0" expanded="false" />
+                <element signature="method#setAbonentResponseTime#0;class#RequestState#0" expanded="false" />
+                <element signature="method#isError#0;class#RequestState#0" expanded="false" />
+                <element signature="method#setError#0;class#RequestState#0" expanded="false" />
+                <element signature="method#isBannerReady#0;class#RequestState#0" expanded="false" />
+                <element signature="method#isBalanceReady#0;class#RequestState#0" expanded="false" />
+                <element signature="method#setBalanceReady#0;class#RequestState#0" expanded="false" />
+                <element signature="method#isUssdSessionClosed#0;class#RequestState#0" expanded="false" />
+                <element signature="method#setUssdSessionClosed#0;class#RequestState#0" expanded="false" />
+                <element signature="method#isClosed#0;class#RequestState#0" expanded="false" />
+                <element signature="method#setClosed#0;class#RequestState#0" expanded="false" />
+                <element signature="method#isBillingSystemQueried#0;class#RequestState#0" expanded="false" />
+                <element signature="method#setBillingSystemQueried#0;class#RequestState#0" expanded="false" />
+                <element signature="method#setBillingSystemResponseTime#0;class#RequestState#0" expanded="false" />
+                <element signature="method#setStartCloseRequestTime#0;class#RequestState#0" expanded="false" />
+                <element signature="method#setSendingResponseTime#0;class#RequestState#0" expanded="false" />
+                <element signature="method#setResponseSentTime#0;class#RequestState#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="OutgoingQueue.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueue.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="181" column="0" selection-start="7839" selection-end="7839" vertical-scroll-proportion="0.017879948">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="OutgoingQueueProxy.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueueProxy.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="2" column="35" selection-start="50" selection-end="68" vertical-scroll-proportion="0.03508772">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="OutgoingObject.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingObject.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="58" column="11" selection-start="1224" selection-end="1226" vertical-scroll-proportion="0.69604087">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="MessageStatusChangedNotifier.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MessageStatusChangedNotifier.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="44" column="35" selection-start="1300" selection-end="1300" vertical-scroll-proportion="0.017879948">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Sme.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/Sme.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="93" column="21" selection-start="3417" selection-end="3417" vertical-scroll-proportion="0.017879948">
+              <folding />
             </state>
           </provider>
         </entry>
@@ -178,27 +310,7 @@
       <file leaf-file-name="BalanceProcessor.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/BalanceProcessor.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="38" column="39" selection-start="1184" selection-end="1184" vertical-scroll-proportion="0.30769232">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Test.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Test.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="42" column="27" selection-start="1262" selection-end="1262" vertical-scroll-proportion="0.705036">
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Sme.java" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/Sme.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="52" column="40" selection-start="1734" selection-end="1734" vertical-scroll-proportion="-0.017094018">
+            <state line="58" column="19" selection-start="2069" selection-end="2069" vertical-scroll-proportion="0.017879948">
               <folding />
             </state>
           </provider>
@@ -316,29 +428,7 @@
           <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
         </PATH_ELEMENT>
         <PATH_ELEMENT>
-          <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/src" />
-          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-        </PATH_ELEMENT>
-      </PATH>
-      <PATH>
-        <PATH_ELEMENT>
-          <option name="myItemId" value="UniBalance_minsk.ipr" />
-          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-        </PATH_ELEMENT>
-        <PATH_ELEMENT>
-          <option name="myItemId" value="UniBalance_minsk" />
-          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewModuleNode" />
-        </PATH_ELEMENT>
-        <PATH_ELEMENT>
-          <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$" />
-          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-        </PATH_ELEMENT>
-        <PATH_ELEMENT>
-          <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/src" />
-          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-        </PATH_ELEMENT>
-        <PATH_ELEMENT>
-          <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme" />
+          <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/config" />
           <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
         </PATH_ELEMENT>
       </PATH>
@@ -355,7 +445,7 @@
       <showLibraryContents />
       <hideEmptyPackages />
       <abbreviatePackageNames />
-      <showStructure ProjectPane="false" Scope="false" />
+      <showStructure ProjectPane="false" Scope="false" Favorites="false" />
       <autoscrollToSource />
       <autoscrollFromSource />
       <sortByType />
@@ -364,8 +454,8 @@
   <component name="PropertiesComponent">
     <property name="GoToFile.includeJavaFiles" value="false" />
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
-    <property name="RunManagerConfig.compileBeforeRunning" value="true" />
     <property name="RunManagerConfig.showSettingsBeforeRunnig" value="true" />
+    <property name="RunManagerConfig.compileBeforeRunning" value="true" />
     <property name="MemberChooser.sorted" value="false" />
     <property name="MemberChooser.showClasses" value="true" />
     <property name="GoToClass.includeLibraries" value="false" />
@@ -396,6 +486,13 @@
         <option name="Make" value="true" />
       </method>
     </configuration>
+    <configuration default="true" type="Remote" factoryName="Remote">
+      <option name="USE_SOCKET_TRANSPORT" value="true" />
+      <option name="SERVER_MODE" value="false" />
+      <option name="SHMEM_ADDRESS" value="javadebug" />
+      <option name="HOST" value="localhost" />
+      <option name="PORT" value="5005" />
+    </configuration>
     <configuration default="true" type="Application" factoryName="Application" enabled="false" merge="false">
       <option name="MAIN_CLASS_NAME" />
       <option name="VM_PARAMETERS" />
@@ -408,13 +505,6 @@
       <method>
         <option name="Make" value="true" />
       </method>
-    </configuration>
-    <configuration default="true" type="Remote" factoryName="Remote">
-      <option name="USE_SOCKET_TRANSPORT" value="true" />
-      <option name="SERVER_MODE" value="false" />
-      <option name="SHMEM_ADDRESS" value="javadebug" />
-      <option name="HOST" value="localhost" />
-      <option name="PORT" value="5005" />
     </configuration>
     <configuration default="true" type="Applet" factoryName="Applet">
       <module name="" />
@@ -523,26 +613,26 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1278" height="990" extended-state="0" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
-      <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="-1" />
-      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="-1" />
-      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="-1" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24979524" order="1" />
+      <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="3" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="8" />
+      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="3" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.15561016" order="1" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32947975" order="1" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" order="3" />
-      <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="-1" />
-      <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="-1" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="-1" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32947975" order="-1" />
+      <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="8" />
+      <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="3" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="8" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32947975" order="8" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="7" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" order="1" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3996724" order="0" />
-      <window_info id="CVS" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="-1" />
-      <window_info id="Module Dependencies" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="-1" />
-      <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="-1" />
-      <window_info id="File View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="-1" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24979524" order="0" />
+      <window_info id="CVS" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="8" />
+      <window_info id="Module Dependencies" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="3" />
+      <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="8" />
+      <window_info id="File View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="3" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.22113022" order="0" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" order="2" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" order="6" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32947975" order="2" />
@@ -645,66 +735,156 @@
   </component>
   <component name="com.intellij.openapi.roots.ui.configuration.projectRoot.ProjectRootMasterDetailsConfigurable" proportions="0.16666667" version="1">
     <option name="myPlainMode" value="false" />
-    <option name="myLastEditedConfigurable" value="jcharset.jar" />
+    <option name="myLastEditedConfigurable" value="UniBalance_minsk" />
   </component>
   <component name="com.intellij.profile.ui.ErrorOptionsConfigurable" proportions="" version="1">
     <option name="myLastEditedConfigurable" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/GetBalanceResult.java">
+    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueueController.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="2" column="13" selection-start="46" selection-end="46" vertical-scroll-proportion="0.033573143">
+        <state line="3" column="13" selection-start="47" selection-end="47" vertical-scroll-proportion="0.051282052">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/manifest.mf">
+    <entry file="jar://$PROJECT_DIR$/lib/jsmppapi.jar!/ru/aurorisoft/smpp/AbstractPDU.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="13" selection-start="13" selection-end="13" vertical-scroll-proportion="0.0">
+        <state line="27" column="13" selection-start="823" selection-end="823" vertical-scroll-proportion="0.41247">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/history.txt">
+    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MessageSender.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="22" column="0" selection-start="2158" selection-end="2158" vertical-scroll-proportion="0.36930457">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minsk_unibalance.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="18" column="83" selection-start="599" selection-end="631" vertical-scroll-proportion="-1.3418803">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$PROJECT_DIR$/lib/adv-client.jar!/com/lorissoft/advertising/util/Encode.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="5" column="13" selection-start="168" selection-end="168" vertical-scroll-proportion="0.06714629">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Test.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="42" column="27" selection-start="1262" selection-end="1262" vertical-scroll-proportion="0.705036">
+        <state line="100" column="12" selection-start="3647" selection-end="3647" vertical-scroll-proportion="0.9650437">
           <folding>
-            <element signature="imports" expanded="true" />
+            <element signature="method#MessageSender#0;class#MessageSender#0" expanded="false" />
+            <element signature="method#setSyncSendTimeout#0;class#MessageSender#0" expanded="false" />
+            <element signature="method#setSendDelay#0;class#MessageSender#0" expanded="false" />
+            <element signature="method#startService#0;class#MessageSender#0" expanded="false" />
+            <element signature="method#stopService#0;class#MessageSender#0" expanded="false" />
+            <element signature="method#isStarted#0;class#MessageSender#0" expanded="false" />
+            <element signature="method#getSendMonitor#0;class#MessageSender#0" expanded="false" />
+            <element signature="method#getEventsCount#0;class#MessageSender#0" expanded="false" />
+            <element signature="method#count#0;class#MessageSender#0" expanded="false" />
+            <element signature="method#setEventsCounterEnabled#0;class#MessageSender#0" expanded="false" />
+            <element signature="method#resetEventsCounter#0;class#MessageSender#0" expanded="false" />
+            <element signature="method#getCounterStartTime#0;class#MessageSender#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueue.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="181" column="0" selection-start="7839" selection-end="7839" vertical-scroll-proportion="0.017879948">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueueProxy.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="2" column="35" selection-start="50" selection-end="68" vertical-scroll-proportion="0.03508772">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingObject.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="58" column="11" selection-start="1224" selection-end="1226" vertical-scroll-proportion="0.69604087">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MessageStatusChangedNotifier.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="44" column="35" selection-start="1300" selection-end="1300" vertical-scroll-proportion="0.017879948">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/Sme.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="93" column="21" selection-start="3417" selection-end="3417" vertical-scroll-proportion="0.017879948">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/BalanceProcessor.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="58" column="19" selection-start="2069" selection-end="2069" vertical-scroll-proportion="0.017879948">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///opt/sun-jdk-1.5.0.16/src.zip!/java/lang/Thread.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1011" column="24" selection-start="40585" selection-end="40585" vertical-scroll-proportion="0.33333334">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///opt/sun-jdk-1.5.0.16/src.zip!/java/lang/Object.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="13" selection-start="508" selection-end="508" vertical-scroll-proportion="0.24019608">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/AvgCounter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="25" column="2" selection-start="478" selection-end="478" vertical-scroll-proportion="0.4385965">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/RequestState.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="160" column="0" selection-start="3937" selection-end="3937" vertical-scroll-proportion="0.31162196">
+          <folding>
+            <element signature="method#RequestState#0;class#RequestState#0" expanded="false" />
+            <element signature="method#getAbonentRequest#0;class#RequestState#0" expanded="false" />
+            <element signature="method#getAbonentResponse#0;class#RequestState#0" expanded="false" />
+            <element signature="method#setAbonentResponse#0;class#RequestState#0" expanded="false" />
+            <element signature="method#getBanner#0;class#RequestState#0" expanded="false" />
+            <element signature="method#getAbonentRequestTime#0;class#RequestState#0" expanded="false" />
+            <element signature="method#setAbonentResponseTime#0;class#RequestState#0" expanded="false" />
+            <element signature="method#isError#0;class#RequestState#0" expanded="false" />
+            <element signature="method#setError#0;class#RequestState#0" expanded="false" />
+            <element signature="method#isBannerReady#0;class#RequestState#0" expanded="false" />
+            <element signature="method#isBalanceReady#0;class#RequestState#0" expanded="false" />
+            <element signature="method#setBalanceReady#0;class#RequestState#0" expanded="false" />
+            <element signature="method#isUssdSessionClosed#0;class#RequestState#0" expanded="false" />
+            <element signature="method#setUssdSessionClosed#0;class#RequestState#0" expanded="false" />
+            <element signature="method#isClosed#0;class#RequestState#0" expanded="false" />
+            <element signature="method#setClosed#0;class#RequestState#0" expanded="false" />
+            <element signature="method#isBillingSystemQueried#0;class#RequestState#0" expanded="false" />
+            <element signature="method#setBillingSystemQueried#0;class#RequestState#0" expanded="false" />
+            <element signature="method#setBillingSystemResponseTime#0;class#RequestState#0" expanded="false" />
+            <element signature="method#setStartCloseRequestTime#0;class#RequestState#0" expanded="false" />
+            <element signature="method#setSendingResponseTime#0;class#RequestState#0" expanded="false" />
+            <element signature="method#setResponseSentTime#0;class#RequestState#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config/sme.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/SmeEngine.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="129" column="8" selection-start="5415" selection-end="5415" vertical-scroll-proportion="0.53846157">
+        <state line="1000" column="67" selection-start="40068" selection-end="40068" vertical-scroll-proportion="0.4661558">
           <folding>
-            <element signature="imports" expanded="true" />
             <element signature="method#initResponsePatterns#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#SmeEngine#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#getName#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#handleMessage#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#handleResponse#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#rollbackSentBannerByResponse#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#addRequestState#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#getRequestState#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#removeRequestState#0;class#SmeEngine#0" expanded="false" />
@@ -712,6 +892,17 @@
             <element signature="method#processRequestStates#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#sendDeliverSmResponse#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#sendWaitForSmsMessage#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#sendResponse#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#sendMessage#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#processIncomingMessage#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#getBanner#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#rollbackBanner#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#getMessageFormat#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#getCbossQuery#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#getCbossStatement#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#closeCbossStatement#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#isCbossConnectionError#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#getCbossConnection#0;class#SmeEngine#0" expanded="false" />
             <element signature="class#RequestStatesController#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#RequestStatesController#0;class#RequestStatesController#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#startService#0;class#RequestStatesController#0;class#SmeEngine#0" expanded="false" />
@@ -721,26 +912,21 @@
             <element signature="class#BannerRequestThread#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#BannerRequestThread#0;class#BannerRequestThread#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#run#0;class#BannerRequestThread#0;class#SmeEngine#0" expanded="false" />
+            <element signature="class#BannerRollbackThread#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#BannerRollbackThread#0;class#BannerRollbackThread#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#run#0;class#BannerRollbackThread#0;class#SmeEngine#0" expanded="false" />
             <element signature="class#ResponcePatternConfigController#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#ResponcePatternConfigController#0;class#ResponcePatternConfigController#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#startService#0;class#ResponcePatternConfigController#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#stopService#0;class#ResponcePatternConfigController#0;class#SmeEngine#0" expanded="false" />
             <element signature="method#run#0;class#ResponcePatternConfigController#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#ResponseTimeControllerThread#0;class#ResponseTimeControllerThread#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#startService#0;class#ResponseTimeControllerThread#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#stopService#0;class#ResponseTimeControllerThread#0;class#SmeEngine#0" expanded="false" />
+            <element signature="class#BannerDisableTimeoutThread#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#BannerDisableTimeoutThread#0;class#BannerDisableTimeoutThread#0;class#SmeEngine#0" expanded="false" />
+            <element signature="method#run#0;class#BannerDisableTimeoutThread#0;class#SmeEngine#0" expanded="false" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/BalanceProcessor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="38" column="39" selection-start="1184" selection-end="1184" vertical-scroll-proportion="0.30769232">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/Sme.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="52" column="40" selection-start="1734" selection-end="1734" vertical-scroll-proportion="-0.017094018">
-          <folding />
         </state>
       </provider>
     </entry>

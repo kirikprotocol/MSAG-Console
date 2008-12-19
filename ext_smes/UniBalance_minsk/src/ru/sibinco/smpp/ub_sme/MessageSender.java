@@ -97,8 +97,9 @@ public class MessageSender extends Thread implements ProductivityControllable {
           // connector SHOULD be defined here !!!
           if (connector == null)
             throw new SMPPUserException(Data.ESME_RINVADR, "No route found for message: source #" + msg.getSourceAddress() + "; destination #" + msg.getDestinationAddress());
-
-          multiplexor.assingSequenceNumber(msg, connector.getName());
+          if(msg.getSequenceNumber()==-1){
+            multiplexor.assingSequenceNumber(msg, connector.getName());
+          }
           outQueue.messageSubmitted(obj);
           if (Logger.isInfoEnabled())
             Logger.info("Sending message in async mode, address #" + msg.getSourceAddress() + "; abonent #" + msg.getDestinationAddress());

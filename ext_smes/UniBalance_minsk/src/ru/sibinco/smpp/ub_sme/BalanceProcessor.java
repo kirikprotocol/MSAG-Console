@@ -18,10 +18,6 @@ public class BalanceProcessor implements Runnable {
     this.state = state;
   }
 
-  public BalanceProcessor(SmeEngine smeEngine) {
-    this.smeEngine = smeEngine;
-  }
-
   private void process() {
     if (state == null)
       return;
@@ -149,14 +145,6 @@ public class BalanceProcessor implements Runnable {
         }
     }
     return new GetBalanceResult(balance);
-  }
-
-  private static String cutAbonentAddress(String abonent) {
-    if (abonent.length() <= 10) {
-      return abonent;
-    } else {
-      return abonent.substring(abonent.length() - 10);
-    }
   }
 
   public void run() {

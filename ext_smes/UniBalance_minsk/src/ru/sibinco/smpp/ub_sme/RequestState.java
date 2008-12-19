@@ -6,6 +6,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.lorissoft.advertising.client.RequestContext;
+
 public class RequestState {
 
   private Message abonentRequest = null;
@@ -17,6 +19,7 @@ public class RequestState {
   private String banner;
   private long bannerRequestTime;
   private long bannerResponseTime;
+  private RequestContext bannerRequestContext;
 
   private long startCloseRequestTime;
   private long sendingResponseTime;
@@ -40,28 +43,35 @@ public class RequestState {
     this.abonentRequestTime = abonentRequestTime;
   }
 
-  Message getAbonentRequest() {
+  public Message getAbonentRequest() {
     return abonentRequest;
   }
 
-  Message getAbonentResponse() {
+  public Message getAbonentResponse() {
     return abonentResponse;
   }
 
-  void setAbonentResponse(Message abonentResponse) {
+  public void setAbonentResponse(Message abonentResponse) {
     this.abonentResponse = abonentResponse;
   }
 
-  String getBanner() {
+  public String getBanner() {
     return banner;
   }
 
-  void setBanner(String banner) {
+  public void setBanner(String banner, long bannerResponseTime) {
     this.banner = banner;
     bannerReady=true;
-    bannerResponseTime = System.currentTimeMillis();
+    this.bannerResponseTime = bannerResponseTime;
   }
 
+  public RequestContext getBannerRequestContext() {
+    return bannerRequestContext;
+  }
+
+  public void setBannerRequestContext(RequestContext bannerRequestContext) {
+    this.bannerRequestContext = bannerRequestContext;
+  }
 
   public long getBannerRequestTime() {
     return bannerRequestTime;
@@ -69,6 +79,14 @@ public class RequestState {
 
   public void setBannerRequestTime(long bannerRequestTime) {
     this.bannerRequestTime = bannerRequestTime;
+  }
+
+  public long getBannerResponseTime() {
+    return bannerResponseTime>0 ? bannerResponseTime : System.currentTimeMillis();
+  }
+
+  public boolean isBannerQueried(){
+    return bannerRequestTime>0;
   }
 
   public long getAbonentRequestTime() {
@@ -140,6 +158,16 @@ public class RequestState {
     responseSentTime = System.currentTimeMillis();
   }
 
+  public long getBillingResponseDelay(){
+    long delay=0;
+    for(int i = 0; i < SmeEngine.BILLING_SYSTEMS_COUNT; i++) {
+      if(billingSystemQueried[i]){
+        delay=delay+billingSystemsResponseTime[i]-billingSystemsRequestTime[i];
+      }
+    }
+    return delay;
+  }
+
   private final static DateFormat dateFormat=new SimpleDateFormat("HH:mm:ss.SSS");
 
   public String toString() {
@@ -164,9 +192,9 @@ public class RequestState {
     long bannerEngineDelay = 0;
     if(bannerReady){
       sb.append("BE response=");
-      bannerEngineDelay = bannerResponseTime-bannerRequestTime;
+      bannerEngineDelay = getBannerResponseTime()-getBannerRequestTime();
       sb.append(String.valueOf(bannerEngineDelay)).append('/');
-      sb.append(String.valueOf(bannerRequestTime - abonentRequestTime));
+      sb.append(String.valueOf(getBannerRequestTime() - abonentRequestTime));
       sb.append(" ms; ");
     }
     sb.append("abonent response=");

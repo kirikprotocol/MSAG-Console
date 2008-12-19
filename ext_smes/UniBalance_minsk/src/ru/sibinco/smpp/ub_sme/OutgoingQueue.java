@@ -129,7 +129,6 @@ public class OutgoingQueue implements OutgoingQueueProxy {
       }
     } else {
       if (Logger.isDebugEnabled()) Logger.debug("OUT [CID=" + connectionId + ";SN=" + sequenceId + "] not found in sendTasks container");
-      return;
     }
   }
 
@@ -156,11 +155,7 @@ public class OutgoingQueue implements OutgoingQueueProxy {
     }
   }
 
-  public void updateOutgoingObject(int connectionId, int sequenceId) {
-    updateOutgoingObject(connectionId, sequenceId, -1);
-  }
-
-  public synchronized void updateOutgoingObject(int connectionId, int sequenceId, int status) {
+  public synchronized int updateOutgoingObject(int connectionId, int sequenceId, int status) {
     int idx = sendTasks.indexOf(new OutgoingObjectIndex(connectionId, sequenceId));
     if (idx > -1) {
       OutgoingObject obj = (OutgoingObject) sendTasks.remove(idx);
@@ -171,16 +166,20 @@ public class OutgoingQueue implements OutgoingQueueProxy {
         if (obj.getOutgoingMessage().hasUssdServiceOp()) {
           if (Logger.isDebugEnabled()) Logger.debug("OUT [CID=" + connectionId + ";SN=" + sequenceId + ";AB=" + ab_addr + "] finalized, submit failed but USSD could not be rescheduled: " + status);
           messageStatusChangedNotifier.notifyListener(obj.getMessageStatusListenerName(), obj.getId(), status);
+          return OUTGOING_OBJECT_REMOVED_BY_ERROR;
         } else {
           retryTasks.add(new RetryTask(obj));
           if (Logger.isDebugEnabled()) Logger.debug("OUT [CID=" + connectionId + ";SN=" + sequenceId + ";AB=" + ab_addr + "] rescheduled, attempt #" + obj.getRetries() + " submit failed: " + status);
+          return OUTGOING_OBJECT_UPDATED;
         }
       } else {
         if (Logger.isDebugEnabled()) Logger.debug("OUT [CID=" + connectionId + ";SN=" + sequenceId + ";AB=" + ab_addr + "] finalized, max attempts value was reached: " + status);
         messageStatusChangedNotifier.notifyListener(obj.getMessageStatusListenerName(), obj.getId(), status);
+        return OUTGOING_OBJECT_REMOVED_BY_MAX_ATTEMPS_REACHED;
       }
     } else {
       if (Logger.isDebugEnabled()) Logger.debug("OUT [CID=" + connectionId + ";SN=" + sequenceId + "] not found in sendTasks container: " + status);
+      return OUTGOING_OBJECT_NOT_FOUND;
     }
   }
 
