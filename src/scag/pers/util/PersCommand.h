@@ -8,17 +8,10 @@
 #include "Property.h"
 
 namespace scag2 {
-
-namespace re {
-namespace actions {
-class ActionContext;
-}
-}
-
-using util::storage::SerialBuffer;
-
 namespace pers {
 namespace util {
+
+using scag2::util::storage::SerialBuffer;
 
 class PersCommand;
 
@@ -28,7 +21,7 @@ class PersCommandCreator
 {
 public:
     virtual PersCmd cmdType() const = 0;
-    virtual void storeResults( re::actions::ActionContext& ctx, PersCommand& cmd ) = 0;
+    virtual void storeResults( PersCommand& cmd, void* ctx ) = 0;
 };
 
 
@@ -49,6 +42,7 @@ class PersCommand
 {
 public:
     inline PersCmd cmdType() const { return cmdType_; }
+    inline void setType( PersCmd cmdtype ) { cmdType_ = cmdtype; }
     virtual ~PersCommand() {}
 
     /// fill serial buffer (w/o cmdType) and return the status
@@ -58,8 +52,8 @@ public:
     virtual int readSB( SerialBuffer& sb ) = 0;
 
     /// store results of command processing via command creator
-    virtual void storeResults( re::actions::ActionContext& ctx ) {
-        creator_->storeResults( ctx, *this );
+    virtual void storeResults( void* context ) {
+        if ( creator_ ) creator_->storeResults( *this, context );
     }
 
     // the status of the last action
@@ -68,9 +62,16 @@ public:
 
     virtual int failIndex() const { return 0; }
 
+    inline PersCommandCreator* creator() const {
+        return creator_;
+    }
+
 protected:
-    PersCommand( PersCommandCreator& c, PersCmd cmd ) : creator_(&c), cmdType_(cmd), status_(0) {}
     PersCommand() : creator_(0), cmdType_(PC_UNKNOWN), status_(0) {}
+    PersCommand( PersCommandCreator& creator ) :
+    creator_(&creator), cmdType_(creator.cmdType()), status_(0) {}
+    PersCommand( PersCmd cmdtype ) :
+    creator_(0), cmdType_(cmdtype), status_(0) {}
     // default is ok
     // PersCommand( const PersCommand& );
     // PersCommand& operator = ( const PersCommand& );
@@ -89,7 +90,8 @@ class PersCommandSingle : public PersCommand
 {
 public:
     PersCommandSingle() : PersCommand() {}
-    PersCommandSingle( PersCommandCreator& c, PersCmd cmd ) : PersCommand(c,cmd) {}
+    PersCommandSingle( PersCommandCreator& c ) : PersCommand(c) {}
+    PersCommandSingle( PersCmd cmdtype ) : PersCommand( cmdtype ) {}
     Property& property() { return property_; }
     int32_t result() const { return result_; }
     void setResult( int32_t res ) { result_ = res; }
@@ -110,11 +112,14 @@ public:
     PersCommandBatch( PersCommandCreator& c,
                       const std::vector< PersCommandSingle >& cmds,
                       bool trans ) :
-    PersCommand(c,PC_MTBATCH), batch_(cmds), transact_(trans), index_(0) {}
+    PersCommand(c), batch_(cmds), transact_(trans), index_(0) {}
+    PersCommandBatch( const std::vector< PersCommandSingle >& cmds,
+                      bool trans ) :
+    PersCommand(PC_MTBATCH), batch_(cmds), transact_(trans), index_(0) {}
     virtual ~PersCommandBatch() {}
     virtual int fillSB( SerialBuffer& sb );
     virtual int readSB( SerialBuffer& sb );
-    virtual void storeResults( re::actions::ActionContext& ctx );
+    virtual void storeResults( void* ctx );
 
     virtual int failIndex() const { return index_; }
 

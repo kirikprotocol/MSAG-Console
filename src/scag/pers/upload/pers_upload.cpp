@@ -14,7 +14,7 @@
 //#include "Glossary.h"
 #include "scag/util/storage/Glossary.h"
 #include "scag/pers/BlocksHSReader.h"
-#include "scag/pers/util/PersClient.h"
+#include "PersClient.h"
 
 using std::string;
 using scag::pers::AbntAddr;

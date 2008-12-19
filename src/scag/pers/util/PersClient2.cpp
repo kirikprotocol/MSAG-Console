@@ -1,14 +1,15 @@
 #include <sys/time.h>
 #include <poll.h>
-#include "PersClient2.h"
 #include "PersCallParams.h"
-#include "scag/util/singleton/Singleton2.h"
+#include "PersClient2.h"
+#include "core/buffers/IntHash.hpp"
+#include "core/network/Socket.hpp"
+#include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
 #include "core/threads/ThreadPool.hpp"
-#include "core/synchronization/EventMonitor.hpp"
-#include "core/network/Socket.hpp"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/util/UnlockMutexGuard.h"
+#include "scag/util/singleton/Singleton2.h"
 
 namespace {
 
@@ -27,7 +28,7 @@ namespace util {
 
 class PersClientTask;
 
-class PersClientImpl : public PersClient, public config::ConfigListener
+class PersClientImpl : public PersClient
 {
 public:
     PersClientImpl();
@@ -42,7 +43,7 @@ public:
                unsigned clients,
                bool     async );
 
-    lcm::LongCallContextBase* getContext( int tmomsec, PersClientTask& task );
+    PersCall* getCall( int tmomsec, PersClientTask& task );
 
     /// increment connection count
     void incConnect();
@@ -56,9 +57,9 @@ public:
     }
 
 private:
-    virtual void configChanged();
-    void finishCalls( lcm::LongCallContextBase* ctx, bool drop );
-    virtual bool call( lcm::LongCallContextBase* ctx );
+    // virtual void configChanged();
+    void finishCalls( PersCall* call, bool drop );
+    virtual bool call( PersCall* call );
     virtual int getClientStatus();
 
 public:
@@ -90,8 +91,8 @@ private:
     };
 
     EventMonitor              queueMonitor_;
-    lcm::LongCallContextBase* headContext_;
-    lcm::LongCallContextBase* tailContext_;
+    PersCall*                 headContext_;
+    PersCall*                 tailContext_;
     unsigned                  callsCount_;
     unsigned                  connected_;
     std::list<Pipe>           waitingPipes_;   // a list of waiting pipes
@@ -111,10 +112,10 @@ protected:
 
     /// a request sent to a server
     struct Call {
-        Call(lcm::LongCallContextBase* c, int32_t s, utime_type t ) : serial(s), ctx(c), stamp(t) {}
+        Call( PersCall* c, int32_t s, utime_type t ) : serial(s), ctx(c), stamp(t) {}
         void continueExecution( int stat, bool drop );
         int32_t                   serial;
-        lcm::LongCallContextBase* ctx;
+        PersCall*                 ctx;
         utime_type                stamp;
     };
 
@@ -141,7 +142,7 @@ protected:
     void writeAllTo( const char* buf, uint32_t sz );
     void readAllTo( char* buf, uint32_t sz );
     int32_t getNextSerial();
-    void addCall( int32_t serial, lcm::LongCallContextBase* ctx, utime_type utm );
+    void addCall( int32_t serial, PersCall* ctx, utime_type utm );
 
 private:
     PersClientImpl*             pers_;
@@ -196,15 +197,17 @@ void PersClient::Init( const char *_host,
 }
 
 
+/*
 void PersClient::Init( const config::PersClientConfig& cfg )
 {
     Init( cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout, cfg.reconnectTimeout, cfg.maxCallsCount, cfg.connections, cfg.async );
 } 
+ */
 
 
 // =========================================================================
 PersClientImpl::PersClientImpl() :
-config::ConfigListener(config::PERSCLIENT_CFG),
+// config::ConfigListener(config::PERSCLIENT_CFG),
 port(0),
 timeout(10),
 pingTimeout(100),
@@ -245,7 +248,7 @@ void PersClientImpl::Stop()
         queueMonitor_.wait(50);
     }
     tp_.shutdown();
-    lcm::LongCallContextBase* ctx = 0;
+    PersCall* ctx = 0;
     {
         MutexGuard mg(queueMonitor_);
         ctx = headContext_;
@@ -285,10 +288,10 @@ void PersClientImpl::init( const char *_host,
 }
 
 
-lcm::LongCallContextBase* PersClientImpl::getContext( int tmomsec, PersClientTask& task )
+PersCall* PersClientImpl::getCall( int tmomsec, PersClientTask& task )
 {
     if ( isStopping || !connected_ ) return 0;
-    lcm::LongCallContextBase* ctx = 0;
+    PersCall* ctx = 0;
     MutexGuard mg(queueMonitor_);
     do {
         if ( headContext_ || tmomsec <= 0 ) break;
@@ -320,7 +323,7 @@ lcm::LongCallContextBase* PersClientImpl::getContext( int tmomsec, PersClientTas
     } while ( false );
     ctx = headContext_;
     if (headContext_) {
-        headContext_ = headContext_->next;
+        headContext_ = headContext_->next();
         // if (!headContext_) tailContext_ = 0;
         --callsCount_;
     }
@@ -337,7 +340,7 @@ void PersClientImpl::incConnect()
 
 void PersClientImpl::decConnect()
 {
-    lcm::LongCallContextBase* ctx = 0;
+    PersCall* ctx = 0;
     {
         MutexGuard mg(queueMonitor_);
         if ( --connected_ == 0 ) {
@@ -350,47 +353,46 @@ void PersClientImpl::decConnect()
 }
 
 
+/*
 void PersClientImpl::configChanged()
 {
     // FIXME: any reaction on config change?
 }
+ */
 
 
-void PersClientImpl::finishCalls( lcm::LongCallContextBase* ctx, bool drop )
+void PersClientImpl::finishCalls( PersCall* ctx, bool drop )
 {
     while ( ctx ) {
-        lcm::LongCallContextBase* c = ctx;
-        PersCallParams* persParam = (PersCallParams*)ctx->getParams();
-        if ( persParam ) {
-            persParam->setStatus(NOT_CONNECTED);
-        }
-        ctx = ctx->next;
-        c->initiator->continueExecution(c,drop);
+        ctx->setStatus(NOT_CONNECTED);
+        PersCall* c = ctx;
+        ctx = ctx->next();
+        c->continuePersCall(drop);
     }
 }
 
 
-bool PersClientImpl::call( lcm::LongCallContextBase* ctx )
+bool PersClientImpl::call( PersCall* ctx )
 {
     if ( !ctx ) return false;
     MutexGuard mg(queueMonitor_);
     do {
-        PersCallParams* p = static_cast<PersCallParams*>(ctx->getParams());
+        // PersCallParams* p = static_cast<PersCallParams*>(ctx->getParams());
         if ( isStopping ) {
-            p->setStatus( CANT_CONNECT );
+            ctx->setStatus( CANT_CONNECT );
         } else if ( !connected_ ) {
-            p->setStatus( NOT_CONNECTED );
+            ctx->setStatus( NOT_CONNECTED );
         } else if ( callsCount_ >= maxCallsCount_ ) {
-            p->setStatus( CLIENT_BUSY );
+            ctx->setStatus( CLIENT_BUSY );
         } else {
             break;
         }
         return false;
     } while ( false );
 
-    ctx->next = 0;
+    ctx->setNext(0);
     if ( headContext_ )
-        tailContext_->next = ctx;
+        tailContext_->setNext( ctx );
     else
         headContext_ = ctx;
     tailContext_ = ctx;
@@ -429,9 +431,8 @@ PersClientTask::utime_type PersClientTask::utime() const
 void PersClientTask::Call::continueExecution( int stat, bool drop )
 {
     if ( ! ctx ) return;
-    PersCallParams* p = static_cast<PersCallParams*>(ctx->getParams());
-    p->setStatus( stat );
-    ctx->initiator->continueExecution(ctx,drop);
+    ctx->setStatus( stat );
+    ctx->continuePersCall(drop);
 }
 
 
@@ -510,9 +511,9 @@ int PersClientTask::Execute()
         int tmo = int(actTS_ + pers_->pingTimeout - time(0));
         if ( tmo < 0 ) tmo = 0;
         tmo *= 1000;
-        lcm::LongCallContextBase* ctx = pers_->getContext(tmo, *this);
+        PersCall* ctx = pers_->getCall(tmo, *this);
         if ( isStopping ) {
-            if ( ctx ) ctx->initiator->continueExecution(ctx, true);
+            if ( ctx ) ctx->continuePersCall(true);
             break;
         }
 
@@ -525,42 +526,41 @@ int PersClientTask::Execute()
         }
 
         // processing
-        PersCallParams* p = static_cast< PersCallParams* >(ctx->getParams());
         int32_t serial = async_ ? getNextSerial() : 0;
+        PersCallData& p = ctx->data();
         try {
             SerialBuffer sb;
-            p->fillSB(sb,serial);
-            if ( ! p->status() ) {
+            p.fillSB(sb,serial);
+            if ( ! p.status() ) {
                 sendPacket(sb);
                 const utime_type utm = utime();
-                smsc_log_debug(log_, "perscall: serial=%d lcmcmd=%d stamp=%u perscmd=%d/%s %s/%d",
+                smsc_log_debug(log_, "perscall: serial=%d stamp=%u perscmd=%d/%s %s/%d",
                                serial,
-                               ctx->callCommandId,
                                utm,
-                               p->cmdType(),
-                               persCmdName(p->cmdType()), 
-                               p->getStringKey(), p->getIntKey() );
+                               p.cmdType(),
+                               persCmdName(p.cmdType()),
+                               p.getStringKey(), p.getIntKey() );
                 if ( async_ ) {
                     addCall(serial,ctx,utm);
                     continue;
                 } else {
                     readPacket(sb);
-                    p->readSB(sb);
+                    p.readSB(sb);
                 }
             }
         } catch ( PersClientException& e ) {
             smsc_log_warn( log_, "execute pers exception: exc=%s", e.what() );
-            p->setStatus( e.getType(), e.what() );
+            p.setStatus( e.getType(), e.what() );
             this->disconnect(true);
         } catch ( std::exception& e ) {
             smsc_log_warn( log_, "execute exception: exc=%s", e.what() );
-            p->setStatus( UNKNOWN_EXCEPTION, e.what() );
+            p.setStatus( UNKNOWN_EXCEPTION, e.what() );
         } catch (...) {
             smsc_log_warn( log_, "execute unknown exception" );
-            p->setStatus( UNKNOWN_EXCEPTION, "lcm: Unknown exception" );
+            p.setStatus( UNKNOWN_EXCEPTION, "pers: Unknown exception" );
         }
 
-        ctx->initiator->continueExecution(ctx,false);
+        ctx->continuePersCall(false);
     }
     this->disconnect(false);
     smsc_log_info( log_, "perstask finished" );
@@ -627,13 +627,13 @@ bool PersClientTask::asyncRead()
             callqueue_.erase(*i);
             if ( c.ctx ) {
                 // valid context
-                PersCallParams* params = static_cast<PersCallParams*>( c.ctx->getParams() );
+                PersCallData& params = c.ctx->data();
                 try {
-                    params->readSB(sb);
+                    params.readSB(sb);
                 } catch (...) {
-                    params->setStatus(BAD_RESPONSE);
+                    params.setStatus(BAD_RESPONSE);
                 }
-                c.ctx->initiator->continueExecution( c.ctx, false );
+                c.ctx->continuePersCall( false );
                 res = true;
             }
         }
@@ -887,11 +887,11 @@ int32_t PersClientTask::getNextSerial()
 }
 
 
-void PersClientTask::addCall( int32_t serial, lcm::LongCallContextBase* ctx, utime_type utm )
+void PersClientTask::addCall( int32_t serial, PersCall* ctx, utime_type utm )
 {
     if ( callhash_.Exist(serial) ) {
         smsc_log_error( log_, "non-unique serial %d", serial );
-        ctx->initiator->continueExecution( ctx, false );
+        ctx->continuePersCall( false );
         return;
     }
     callqueue_.push_back( Call(ctx,serial,utm) );

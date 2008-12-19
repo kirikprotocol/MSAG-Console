@@ -61,7 +61,7 @@ bool BatchAction::RunBeforePostpone(ActionContext& context)
 {
     if ( actions.size() == 0 ) return false;
     smsc_log_debug(logger,"Run Action 'BatchAction' in %s mode...", transactMode ? TRANSACTIONAL_MODE.c_str() : NORMAL_MODE.c_str());
-    auto_ptr< PersCallParams > params = makeParams(context,*this);
+    auto_ptr< lcm::LongCallParams > params = makeParams(context,*this);
     if ( ! params.get() ) return false;
     context.getSession().getLongCallContext().callCommandId = PERS_BATCH;
     context.getSession().getLongCallContext().setParams( params.release() );

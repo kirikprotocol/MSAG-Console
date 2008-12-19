@@ -10,11 +10,8 @@
 #include <logger/Logger.h>
 
 #include "scag/pers/version.inc"
-
 #include "core/threads/ThreadPool.hpp"
-
 #include "scag/pers/mtpers/MTPersClient.h"
-
 #include "scag/config/ConfigManager.h"
 
 using namespace std;

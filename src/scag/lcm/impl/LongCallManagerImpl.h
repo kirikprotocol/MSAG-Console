@@ -5,6 +5,7 @@
 #include "core/threads/ThreadPool.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "scag/config/base/ConfigListener2.h"
+#include "scag/re/base/LongCallContextBase.h"
 #include "scag/lcm/base/LongCallManager2.h"
 
 namespace scag2 {

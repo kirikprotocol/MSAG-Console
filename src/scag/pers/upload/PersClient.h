@@ -7,8 +7,9 @@
 #include "scag/util/storage/SerialBuffer.h"
 #include "scag/config/pers/PersClientConfig.h"
 #include "scag/re/base/LongCallContextBase.h"
-#include "Property.h"
-#include "Types.h"
+#include "scag/pers/util/PersClientException.h"
+#include "scag/pers/util/Property.h"
+#include "scag/pers/util/Types.h"
 
 namespace scag { namespace pers { namespace util {
 
@@ -17,67 +18,6 @@ using scag2::lcm::LongCallParams;
 using scag2::lcm::LongCallContextBase;
 using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
-
-enum PersClientExceptionType{
-  CANT_CONNECT = 1,
-  SERVER_BUSY,
-  UNKNOWN_RESPONSE,
-  SEND_FAILED,
-  READ_FAILED,
-  TIMEOUT,
-  NOT_CONNECTED,
-  BAD_RESPONSE,
-  SERVER_ERROR,
-  PROPERTY_NOT_FOUND,
-  INVALID_KEY,
-  INVALID_PROPERTY_TYPE,
-  BAD_REQUEST,
-  TYPE_INCONSISTENCE,
-  BATCH_ERROR,
-  PROFILE_LOCKED,
-  COMMAND_NOTSUPPORT,
-  CLIENT_BUSY
-};
-
-static const char* strs[] = {
-  "Unknown exception",
-  "Cant connect to persserver",
-  "Server busy",
-  "Unknown server response",
-  "Send failed",
-  "Read failed",
-  "Read/write timeout",
-  "Not connected",
-  "Bad response",
-  "Server error",
-  "Property not found",
-  "Invalid key",
-  "Invalid property type(should be int or date)",
-  "Bad request",
-  "Types inconsistence",
-  "Batch prepare error",
-  "Profile locked",
-  "Command Not Supports",
-  "Client busy"
-};
-
-class PersClientException{
-protected:
-    PersClientExceptionType et;
-public:
-    PersClientException(PersClientExceptionType e) { et = e; };
-    PersClientExceptionType getType() const { return et; };
-    const char* what() const { return strs[et]; };
-};
-
-union PersKey{
-	const char* skey;
-	uint32_t ikey;
-	PersKey() {};
-	PersKey(const char* s) {skey = s;};
-	PersKey(uint32_t i) {ikey = i;};
-};
-
 
 class PersCallParams : public LongCallParams {
 public:

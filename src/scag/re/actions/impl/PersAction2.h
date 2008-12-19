@@ -24,7 +24,7 @@ public:
     bool canProcessRequest( ActionContext& ctx );
     void setStatus( ActionContext& ctx, int status, int actionIdx = 0 );
     // std::auto_ptr< PersCallParams > makeParams( ActionContext& ctx );
-    virtual void storeResults( re::actions::ActionContext& ctx, pers::util::PersCommand& cmd );
+    virtual void storeResults( pers::util::PersCommand& cmd, void* ctx );
     virtual std::auto_ptr< pers::util::PersCommand > makeCommand( ActionContext& ctx ) = 0;
 
     virtual const std::string& statusName() const = 0;
@@ -58,7 +58,7 @@ public:
     // command type
     virtual pers::util::PersCmd cmdType() const { return cmdType_; }
 
-    virtual void storeResults( ActionContext& ctx, pers::util::PersCommand& command );
+    virtual void storeResults( pers::util::PersCommand& command, void* ctx );
     virtual std::auto_ptr< pers::util::PersCommand > makeCommand( ActionContext& ctx );
     int fillCommand( ActionContext& ctx, pers::util::PersCommandSingle& command );
 
@@ -123,8 +123,8 @@ protected:
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
     pers::util::ProfileType getProfileTypeFromStr( const std::string& str );
     std::string getAbntAddress(const char* _address);
-    std::auto_ptr< pers::util::PersCallParams > makeParams( ActionContext& context,
-                                                            PersActionCommandCreator& creator );
+    std::auto_ptr< lcm::LongCallParams > makeParams( ActionContext& context,
+                                                     PersActionCommandCreator& creator );
     virtual void ContinueRunning(ActionContext& context);
 
 protected:

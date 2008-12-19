@@ -97,7 +97,7 @@ int PersCommandBatch::readSB( SerialBuffer& sb )
 }
 
 
-void PersCommandBatch::storeResults( re::actions::ActionContext& ctx )
+void PersCommandBatch::storeResults( void* ctx )
 {
     int stopat = batch_.size();
     if ( status() ) stopat = failIndex();

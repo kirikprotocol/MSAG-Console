@@ -6,6 +6,7 @@
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/pers/util/PersClient2.h"
+#include "scag/re/base/PersCallWrapper.h"
 #include "scag/pers/util/Types.h"
 #include "scag/re/base/ActionContext2.h"
 
@@ -142,8 +143,9 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
         }
         else if(context->callCommandId >= PERS_GET && context->callCommandId <= PERS_BATCH)
         {
-            // PersCallParams* p = (PersCallParams*) context->getParams();
-            if (!PersClient::Instance().call(context) ) {
+            PersCallParams* p = (PersCallParams*) context->getParams();
+            p->setContext( context );
+            if (!PersClient::Instance().call(p->getPersCall()) ) {
                 // context->initiator->continueExecution(context, false);
                 break;
             }

@@ -3,16 +3,28 @@
 #ifndef SCAG_PERS_TYPES
 #define SCAG_PERS_TYPES
 
+#include "util/int.h" // for uint32_t
+
 namespace scag { namespace pers { namespace util {
 
 namespace perstypes {
 
-enum ProfileType{
+enum ProfileType
+{
     PT_UNKNOWN,
     PT_ABONENT,
     PT_OPERATOR,
     PT_PROVIDER,
     PT_SERVICE
+};
+
+// NOTE: this union is deprecated and should not be used unless necessary by legacy code.
+union PersKey {
+    const char* skey;
+    uint32_t    ikey;
+    PersKey() {}
+    PersKey( const char* s ) { skey = s;}
+    PersKey( uint32_t i ) {ikey = i;}
 };
 
 const char* persProfileType(ProfileType pt);

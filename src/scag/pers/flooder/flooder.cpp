@@ -10,7 +10,6 @@
 #include "util/Exception.hpp"
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/config/impl/ConfigManager2.h"
-
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 #include "LCPersClient.h"
@@ -73,8 +72,16 @@ int main(int argc, char* argv[]) {
     }
   
     ConfigManager& cfgs = ConfigManager::Instance();
+      scag2::config::PersClientConfig& pcfg = cfgs.getPersClientConfig();
     
-    PersClient::Init(cfgs.getPersClientConfig());
+      PersClient::Init( pcfg.host.c_str(),
+                        pcfg.port,
+                        pcfg.timeout,
+                        pcfg.pingTimeout,
+                        pcfg.reconnectTimeout,
+                        pcfg.maxCallsCount,
+                        pcfg.connections,
+                        pcfg.async );
     if (argc > 1) {
       speed = atoi(argv[1]);
     }

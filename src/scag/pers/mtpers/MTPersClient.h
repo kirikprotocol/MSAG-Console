@@ -6,12 +6,15 @@
 #include "core/threads/ThreadPool.hpp"
 #include "core/threads/ThreadedTask.hpp"
 
-#include "scag/pers/util/PersClient.h"
+#include "scag/pers/util/Types.h"
+#include "scag/pers/util/Property.h"
+#include "scag/pers/util/PersClientException.h"
 #include "scag/util/storage/SerialBuffer.h"
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
 
-namespace scag { namespace mtpers {
+namespace scag {
+namespace mtpers {
 
 using namespace scag::pers::util;
 using smsc::logger::Logger;

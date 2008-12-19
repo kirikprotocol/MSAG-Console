@@ -1,9 +1,11 @@
 #ifndef _SCAG_PERS_UTIL_PERSCLIENTEXCEPTION_H
 #define _SCAG_PERS_UTIL_PERSCLIENTEXCEPTION_H
 
-namespace scag2 {
+namespace scag {
 namespace pers {
 namespace util {
+
+namespace perstypes {
 
 enum PersClientExceptionType 
 {
@@ -65,6 +67,20 @@ public:
 protected:
     PersClientExceptionType et;
 };
+
+} // namespace perstypes
+
+using namespace perstypes;
+
+}
+}
+}
+
+namespace scag2 {
+namespace pers {
+namespace util {
+
+using namespace scag::pers::util::perstypes;
 
 }
 }

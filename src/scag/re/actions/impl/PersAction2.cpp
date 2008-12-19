@@ -2,6 +2,7 @@
 #include "scag/stat/Statistics.h"
 #include "scag/util/properties/Properties2.h"
 #include "scag/re/base/CommandAdapter2.h"
+#include "scag/re/base/PersCallWrapper.h"
 #include "scag/pers/util/PersClient2.h"
 #include "sms/sms.h"
   
@@ -69,9 +70,9 @@ void PersActionCommandCreator::setStatus( ActionContext& context, int status, in
 }
 
 
-void PersActionCommandCreator::storeResults( ActionContext& ctx, PersCommand& cmd )
+void PersActionCommandCreator::storeResults( PersCommand& cmd, void* ctx )
 {
-    setStatus( ctx, cmd.status(), cmd.failIndex() );
+    setStatus( *(ActionContext*)ctx, cmd.status(), cmd.failIndex() );
 }
 
 
@@ -275,9 +276,10 @@ int PersActionCommand::fillCommand( ActionContext& context, pers::util::PersComm
 }
 
 
-void PersActionCommand::storeResults( ActionContext& context, pers::util::PersCommand& command )
+void PersActionCommand::storeResults( pers::util::PersCommand& command, void* ctx )
 {
-    PersActionCommandCreator::storeResults( context, command );
+    ActionContext& context = *(ActionContext*)ctx;
+    PersActionCommandCreator::storeResults( command, ctx );
     pers::util::PersCommandSingle& cmd = static_cast< pers::util::PersCommandSingle& >( command );
     if ( 0 == command.status() ) {
         int result = 0;
@@ -326,7 +328,7 @@ void PersActionCommand::storeResults( ActionContext& context, pers::util::PersCo
 
 std::auto_ptr< pers::util::PersCommand > PersActionCommand::makeCommand( ActionContext& ctx )
 {
-    std::auto_ptr< pers::util::PersCommand > res(new PersCommandSingle( *this, cmdType() ));
+    std::auto_ptr< pers::util::PersCommand > res(new PersCommandSingle(*this));
     if ( fillCommand(ctx,static_cast<PersCommandSingle&>(*res.get())) != 0 ) res.reset(0);
     return res;
 }
@@ -427,10 +429,10 @@ std::string PersActionBase::getAbntAddress(const char* _address) {
 }
 
 
-std::auto_ptr< pers::util::PersCallParams > PersActionBase::makeParams( ActionContext& context,
-                                                                        PersActionCommandCreator& creator )
+std::auto_ptr< lcm::LongCallParams > PersActionBase::makeParams( ActionContext& context,
+                                                                 PersActionCommandCreator& creator )
 {
-    std::auto_ptr< PersCallParams > params;
+    std::auto_ptr< lcm::LongCallParams > res;
     do {
 
         if ( ! creator.canProcessRequest(context) ) break;
@@ -438,18 +440,20 @@ std::auto_ptr< pers::util::PersCallParams > PersActionBase::makeParams( ActionCo
         std::auto_ptr< PersCommand > cmd = creator.makeCommand(context);
         if ( ! cmd.get() ) break;
 
-        params.reset( new PersCallParams(profile, cmd) );
+        PersCallParams* params = new PersCallParams(profile, cmd.release());
+        PersCallData* data = & params->getPersCall()->data();
+        res.reset( params );
 
         if ( !hasOptionalKey ) {
             CommandProperty& cp = context.getCommandProperty();
             switch (profile) {
-            case (PT_ABONENT) : params->setKey( cp.abonentAddr.toString() ); break;
-            case (PT_SERVICE) : params->setKey( cp.serviceId ); break;
-            case (PT_OPERATOR) : params->setKey( cp.operatorId ); break;
-            case (PT_PROVIDER) : params->setKey( cp.providerId ); break;
+            case (PT_ABONENT) : data->setKey( cp.abonentAddr.toString() ); break;
+            case (PT_SERVICE) : data->setKey( cp.serviceId ); break;
+            case (PT_OPERATOR) : data->setKey( cp.operatorId ); break;
+            case (PT_PROVIDER) : data->setKey( cp.providerId ); break;
             default :
                 creator.setStatus(context,pers::util::BAD_REQUEST);
-                params.reset(0);
+                res.reset(0);
             }
             break;
         }
@@ -460,43 +464,44 @@ std::auto_ptr< pers::util::PersCallParams > PersActionBase::makeParams( ActionCo
                 smsc_log_error(logger, "'%s' parameter '%s' not found in action context",
                                OPTIONAL_KEY, optionalKeyStr.c_str());
                 creator.setStatus(context,pers::util::PROPERTY_NOT_FOUND);
-                params.reset(0);
+                res.reset(0);
                 break;
             }
             if (profile == PT_ABONENT) {
                 try {
-                    params->setKey( getAbntAddress(rp->getStr().c_str()) );
+                    data->setKey( getAbntAddress(rp->getStr().c_str()) );
                 } catch(const std::runtime_error& e) {
                     smsc_log_error(logger, "'%s' parameter has error abonent profile key: %s",
                                    OPTIONAL_KEY, e.what());
                     creator.setStatus(context,pers::util::INVALID_KEY);
-                    params.reset(0);
+                    res.reset(0);
                     break;
                 }
             } else {
-                params->setKey( static_cast<uint32_t>(rp->getInt()) );
+                data->setKey( static_cast<uint32_t>(rp->getInt()) );
             }
         } else if ( profile == PT_ABONENT ) {
-            params->setKey( optionalKeyStr );
+            data->setKey( optionalKeyStr );
         } else {
-            params->setKey( optionalKeyInt );
+            data->setKey( optionalKeyInt );
         }
     } while ( false );
-    return params;
+    return res;
 }
 
 
 void PersActionBase::ContinueRunning(ActionContext& context)
 {
     PersCallParams *params = (PersCallParams*)context.getSession().getLongCallContext().getParams();
+    PersCallData& data = params->getPersCall()->data();
     smsc_log_debug(logger, "ContinueRunning: cmd=%s (skey=%s ikey=%d)",
                    pers::util::persCmdName(cmdType_),
-                   params->getStringKey(),
-                   params->getIntKey() );
+                   data.getStringKey(),
+                   data.getIntKey() );
     // params->readSB( context );
     // setStatus( context, params->status(), 0 );
     // persCommand.ContinueRunning(context);
-    params->storeResults( context );
+    data.storeResults( &context );
 }
 
 
@@ -513,7 +518,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 bool PersAction::RunBeforePostpone(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'PersAction cmd=%s, profile=%d var=%s'...", pers::util::persCmdName(cmdType_), profile, persCommand.propertyName());
-    auto_ptr<PersCallParams> params = makeParams(context, persCommand);
+    auto_ptr<lcm::LongCallParams> params = makeParams(context, persCommand);
     if ( ! params.get() ) return false;
     context.getSession().getLongCallContext().callCommandId = cmdToLongCallCmd(cmdType_);
     context.getSession().getLongCallContext().setParams(params.release());

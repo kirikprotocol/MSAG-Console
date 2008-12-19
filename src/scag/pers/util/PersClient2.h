@@ -1,8 +1,9 @@
 #ifndef _SCAG_PERS_UTIL_PERSCLIENT2_H
 #define _SCAG_PERS_UTIL_PERSCLIENT2_H
 
-#include "scag/re/base/LongCallContextBase.h"
-#include "scag/config/base/ConfigManager2.h"
+// #include "scag/re/base/LongCallContextBase.h"
+// #include "scag/config/base/ConfigManager2.h"
+#include "PersCallParams.h"
 
 namespace scag2 {
 namespace pers {
@@ -22,10 +23,11 @@ public:
                       unsigned clients,
                       bool async );
 
-    static void Init( const config::PersClientConfig& cfg );
+    // static void Init( const config::PersClientConfig& cfg );
 
     /// run the proxy and return the result
-    virtual bool call( lcm::LongCallContextBase* context ) = 0;
+    virtual bool call( PersCall* acall ) = 0;
+
     virtual int getClientStatus() = 0;
     virtual void Stop() = 0;
 

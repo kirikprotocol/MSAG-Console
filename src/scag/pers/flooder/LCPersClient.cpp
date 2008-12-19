@@ -3,9 +3,40 @@
 #include <stdlib.h>
 #include "LCPersClient.h"
 #include "scag/pers/util/Property.h"
-#include "util/timeslotcounter.hpp"
+#include "util/debug.h"
+
+namespace {
+
+using namespace scag2::pers::util;
+PersCommandSingle* addcmd( std::vector< PersCommandSingle >& cmds )
+{
+    cmds.push_back( PersCommandSingle() );
+    return &(cmds.back());
+}
+
+
+class RealPersCall : public PersCall
+{
+public:
+    RealPersCall( ProfileType pt,
+                  std::auto_ptr< PersCommand > cmd,
+                  LCPersClient& initiator ) :
+    data_(pt,cmd.release()), initiator_(initiator) {}
+
+    virtual PersCallData& data() { return data_; }
+    virtual void continuePersCall( bool drop ) { initiator_.continueExecution(this, drop); }
+
+private:
+    PersCallData  data_;
+    LCPersClient& initiator_;
+};
+
+
+}
+
 
 namespace scag2 { namespace pers { namespace util {
+
 void LCPersClient::execute(int addrsCount, int getsetCount) {
 
   smsc_log_info(logger_, "execution...");
@@ -32,7 +63,7 @@ void LCPersClient::execute(int addrsCount, int getsetCount) {
   persClient_.Stop();
 }
 
-void LCPersClient::doCall(LongCallContextBase* context) {
+void LCPersClient::doCall( PersCall* context ) {
   int status = persClient_.getClientStatus();
   if (status == CLIENT_BUSY) {
     smsc_log_warn(logger_, "can't send request: pers client busy!");
@@ -55,14 +86,14 @@ void LCPersClient::doCall(LongCallContextBase* context) {
   delay();
 }
 
-void LCPersClient::continueExecution(LongCallContextBase* context, bool dropped) {
+void LCPersClient::continueExecution( PersCall* context, bool dropped ) {
   --callsCount_;
   smsc_log_debug(logger_, "continue execution cx:%p, calls count %d", context, callsCount_);
-  PersCallParams *callParams = static_cast<PersCallParams *>(context->getParams());
+  PersCallData& callParams = context->data();
   //if (callParams->status() != 0 ) {
     //smsc_log_debug(logger_, "error long call result: %s", strs[callParams->status()]);
   //}
-  if (callParams->status() == PERSCLIENTOK || callParams->status() == PROPERTY_NOT_FOUND) {
+  if (callParams.status() == PERSCLIENTOK || callParams.status() == PROPERTY_NOT_FOUND) {
     ++successCalls_;
   } else {
     ++errorCalls_;
@@ -70,22 +101,28 @@ void LCPersClient::continueExecution(LongCallContextBase* context, bool dropped)
   delete context;
 }
 
+/*
 LongCallContextBase* LCPersClient::getCallContext(PersCallParams *callParams) {
   LongCallContextBase* context = new LongCallContextBase();
   context->initiator = this;
   context->setParams(callParams);
   return context;
 }
+ */
 
-PersCallParams* LCPersClient::getPersPersCallParams(ProfileType pfType, const string& addr, int intKey, std::auto_ptr<PersCommand> cmd){
-  startTime_ = gethrtime();
-  PersCallParams *callParams = new PersCallParams(pfType, cmd);
-  if (pfType == PT_ABONENT) {
-    callParams->setKey(addr);
-  } else {
-    callParams->setKey(intKey);
-  }
-  return callParams;
+PersCall* LCPersClient::createPersCall( ProfileType pfType,
+                                        const string& addr,
+                                        int intKey,
+                                        std::auto_ptr<PersCommand> cmd )
+{
+    startTime_ = gethrtime();
+    PersCall* call = new RealPersCall( pfType, cmd, *this );
+    if (pfType == PT_ABONENT) {
+        call->data().setKey(addr);
+    } else {
+        call->data().setKey(intKey);
+    }
+    return call;
 }
 
 void LCPersClient::delay() {
@@ -116,9 +153,9 @@ void LCPersClient::commandsSetConfigured(const string& addr, int intKey, const s
     string setVal("test_string_value_");
     setVal.append(suffix);
     std::auto_ptr<PersCommand> cmd1( getCmd(setStrName) );
-    doCall( getCallContext(getPersPersCallParams(pfType,addr,intKey,cmd1)) );  
+    doCall( createPersCall(pfType,addr,intKey,cmd1) );
     std::auto_ptr<PersCommand> cmd2( setCmd(setStrName, setVal) );
-    doCall( getCallContext(getPersPersCallParams(pfType,addr,intKey,cmd2)) );  
+    doCall( createPersCall(pfType,addr,intKey,cmd2) );
   }
 }
 
@@ -126,17 +163,17 @@ void LCPersClient::commandsSet(const string& addr, int intKey, const string& pro
 
   string setStrName = propName + "_set_str";
   std::auto_ptr<PersCommand> cmd1( setCmd(setStrName, "test_string_value") );
-  doCall( getCallContext(getPersPersCallParams(pfType,addr,intKey,cmd1)) );  
+  doCall( createPersCall(pfType,addr,intKey,cmd1) );
 
   string setIntName = propName + "_set_int";
-  std::auto_ptr<PersCommand> cmd2( setCmd(setIntName,"", 100) );
-  doCall( getCallContext(getPersPersCallParams(pfType,addr,intKey,cmd2)) );  
+  std::auto_ptr<PersCommand> cmd2( setCmd(setIntName,100) );
+  doCall( createPersCall(pfType,addr,intKey,cmd2) );
 
   std::auto_ptr<PersCommand> cmd3( getCmd(setStrName) );
-  doCall( getCallContext(getPersPersCallParams(pfType,addr,intKey,cmd3)) );  
+  doCall( createPersCall(pfType,addr,intKey,cmd3) );
 
   std::auto_ptr<PersCommand> cmd4( getCmd(setIntName) );
-  doCall( getCallContext(getPersPersCallParams(pfType,addr,intKey,cmd4)) );  
+  doCall( createPersCall(pfType,addr,intKey,cmd4) );
 /*
   string incName = propName + "_inc";
   int incValue = 10;
@@ -162,35 +199,44 @@ void LCPersClient::commandsSet(const string& addr, int intKey, const string& pro
 */
 }
 
-PersCommandSingle* LCPersClient::getCmd(const string& propName) {
-  PersCommandSingle* persCmd = new PersCommandSingle(creator, scag::pers::util::perstypes::PC_GET);
+PersCommandSingle* LCPersClient::getCmd(const string& propName, PersCommandSingle* cmd ) {
+  PersCommandSingle* persCmd = cmd ? cmd : new PersCommandSingle( PC_GET );
+  if ( cmd ) cmd->setType( PC_GET );
   Property& prop = persCmd->property();
   prop.setName(propName);
   return persCmd;
 }
 
-PersCommandSingle* LCPersClient::setCmd(const string& propName, const string& strVal, int intVal) {
-  PersCommandSingle* persCmd = new PersCommandSingle(creator, scag::pers::util::perstypes::PC_SET);
+PersCommandSingle* LCPersClient::setCmd(const string& propName, const string& strVal, PersCommandSingle* cmd ) {
+  PersCommandSingle* persCmd = cmd ? cmd : new PersCommandSingle( PC_SET );
+  if ( cmd ) cmd->setType( PC_SET );
   Property& prop = persCmd->property();
   prop.setName(propName);
-  if (strVal.empty()) {
-    prop.setIntValue(intVal);
-  } else {
-    prop.setStringValue(strVal.c_str());
-  }
+  prop.setStringValue(strVal.c_str());
   return persCmd;
 }
 
-PersCommandSingle* LCPersClient::incCmd(const string& propName, int inc) {
-  PersCommandSingle* persCmd = new PersCommandSingle(creator, scag::pers::util::perstypes::PC_INC_RESULT);
+PersCommandSingle* LCPersClient::setCmd(const string& propName, int intVal, PersCommandSingle* cmd ) {
+  PersCommandSingle* persCmd = cmd ? cmd : new PersCommandSingle( PC_SET );
+  if ( cmd ) cmd->setType( PC_SET );
+  Property& prop = persCmd->property();
+  prop.setName(propName);
+  prop.setIntValue(intVal);
+  return persCmd;
+}
+
+PersCommandSingle* LCPersClient::incCmd(const string& propName, int inc, PersCommandSingle* cmd ) {
+  PersCommandSingle* persCmd = cmd ? cmd : new PersCommandSingle(PC_INC_RESULT);
+  if ( cmd ) cmd->setType( PC_INC_RESULT );
   Property& prop = persCmd->property();
   prop.setName(propName);
   prop.setIntValue(inc);
   return persCmd;
 }
 
-PersCommandSingle* LCPersClient::incModCmd(const string& propName, int inc, int mod) {
-  PersCommandSingle* persCmd = new PersCommandSingle(creator, scag::pers::util::perstypes::PC_INC_RESULT);
+PersCommandSingle* LCPersClient::incModCmd(const string& propName, int inc, int mod, PersCommandSingle* cmd ) {
+  PersCommandSingle* persCmd = cmd ? cmd : new PersCommandSingle(PC_INC_MOD);
+  if ( cmd ) cmd->setType( PC_INC_MOD );
   Property& prop = persCmd->property();
   prop.setName(propName);
   prop.setIntValue(inc);
@@ -199,27 +245,15 @@ PersCommandSingle* LCPersClient::incModCmd(const string& propName, int inc, int 
 }
 
 PersCommandBatch* LCPersClient::batchCmd(const string& propName, bool trans) {
-  string name = propName + "_batch";
-  std::vector<PersCommandSingle> cmds;
-  PersCommandSingle* cmd = setCmd(name,"", 100);
-  cmds.push_back(*cmd);
-  delete cmd;
-  cmd = incCmd(name, 10);
-  cmds.push_back(*cmd);
-  delete cmd;
-  cmd = incCmd(name, 10);
-  cmds.push_back(*cmd);
-  delete cmd;
-  cmd = incModCmd(name, 15, 3);
-  cmds.push_back(*cmd);
-  delete cmd;
-  cmd = incModCmd(name, 34, 10);
-  cmds.push_back(*cmd);
-  delete cmd;
-  cmd = getCmd(name);
-  cmds.push_back(*cmd);
-  delete cmd;
-  return new PersCommandBatch(creator, cmds, trans);
+    string name = propName + "_batch";
+    std::vector< PersCommandSingle > cmds;
+    cmds.reserve(5);
+    setCmd(name, 100, ::addcmd(cmds) );
+    incCmd(name, 10, ::addcmd(cmds));
+    incModCmd(name, 15, 3, ::addcmd(cmds));
+    incModCmd(name, 34, 10, ::addcmd(cmds));
+    getCmd(name, ::addcmd(cmds));
+    return new PersCommandBatch(cmds, trans);
 }
 
 bool LCPersClient::canStop() {
@@ -250,9 +284,5 @@ int LCPersClient::getBusy() {
     busyRejects_ = 0;
     return ret;
 }
-
-
-
-
 
 }}}

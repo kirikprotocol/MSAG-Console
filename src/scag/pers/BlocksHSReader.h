@@ -5,7 +5,7 @@
 #include "scag/util/storage/SerialBuffer.h"
 #include "scag/util/storage/Glossary.h"
 #include "scag/pers/Profile.h"
-#include "scag/pers/util/PersClient.h"
+#include "scag/pers/upload/PersClient.h"
 
 namespace scag { namespace pers { namespace util {
 

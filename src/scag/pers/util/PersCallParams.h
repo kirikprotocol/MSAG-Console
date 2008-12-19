@@ -3,18 +3,21 @@
 
 #include <memory>
 #include "PersCommand.h"
-#include "scag/re/base/LongCallContextBase.h"
 
 namespace scag2 {
 namespace pers {
 namespace util {
 
+class PersCall;
 
-class PersCallParams : public lcm::LongCallParams
+class PersCallData
 {
 public:
-    PersCallParams( ProfileType pt,
-                    std::auto_ptr<PersCommand> cmd ) : type_(pt), cmd_(cmd), ikey_(0) {}
+    friend class PersCall;
+
+    PersCallData( ProfileType  pt,
+                  PersCommand* cmd ) :
+    type_(pt), cmd_(cmd), ikey_(0) {}
 
     inline PersCmd cmdType() const { return cmd_->cmdType(); }
     inline ProfileType getType() const { return type_; }
@@ -28,17 +31,43 @@ public:
     // fill a serial buffer
     int fillSB( SerialBuffer& sb, int32_t serial = 0 );
     int readSB( SerialBuffer& sb );
-    inline void storeResults( re::actions::ActionContext& ctx ) { cmd_->storeResults(ctx); }
+    inline void storeResults( void* ctx ) { cmd_->storeResults(ctx); }
 
     inline int status() const { return cmd_->status(); }
     void setStatus( int, const char* what = 0 );
+    const std::string& exception() const { return exception_; }
 
 private:
     ProfileType                   type_;
     std::auto_ptr< PersCommand >  cmd_;
     std::string                   skey_;
     int32_t                       ikey_;
+    std::string                   exception_;
+    PersCall*                     next_;
 };
+
+
+// an interface to a pers call
+class PersCall
+{
+public:
+    inline PersCall* next() {
+        return data().next_;
+    }
+    inline void setNext( PersCall* n ) {
+        data().next_ = n;
+    }
+    inline void setStatus( int s, const char* what = 0 ) {
+        data().setStatus( s, what );
+    }
+    inline int status() const {
+        return const_cast< PersCall* >(this)->data().status();
+    }
+
+    virtual PersCallData& data() = 0;
+    virtual void continuePersCall( bool drop ) = 0;
+};
+
 
 }
 }
