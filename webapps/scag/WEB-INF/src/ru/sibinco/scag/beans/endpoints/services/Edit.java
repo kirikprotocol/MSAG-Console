@@ -40,6 +40,7 @@ public class Edit extends EditBean {
     protected String password = null;
     protected int timeout = 0;
     protected boolean enabled;
+    protected boolean snmptracking;
     protected byte mode = Svc.MODE_TRX;
     protected long providerId = -1;
     protected long transportId = 1;
@@ -51,6 +52,7 @@ public class Edit extends EditBean {
     private int inQueueLimit = 0;
     private int outQueueLimit = 0;
     private int maxSmsPerSec = 0;
+
 
 
     private void init() throws SCAGJspException {
@@ -105,12 +107,14 @@ public class Edit extends EditBean {
         this.providerId = -1;//svc.getProvider().getId();
         this.timeout = svc.getTimeout();
         this.enabled = svc.isEnabled();
+        this.snmptracking = svc.isSnmptracking();
         this.maxSmsPerSec = svc.getMaxSmsPerSec();
         this.inQueueLimit = svc.getInQueueLimit();
         this.outQueueLimit = svc.getOutQueueLimit();
     }
 
     protected void save() throws SCAGJspException {
+        logger.debug( "services/Edit save() start");
         if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
             throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
 //        if( Functions.valdateString( id, Functions.VALIDATION_TYPE_ID )){
@@ -119,27 +123,35 @@ public class Edit extends EditBean {
         if( !validateString(id, VALIDATION_TYPE_ID) ){
             throw new SCAGJspException(Constants.errors.sme.COULDNT_SAVE_NOT_VALID_ID);
         }
-        if (null == password || getPassword().length() == 0)
+        if (null == password || getPassword().length() == 0){
             password = "";
+        }
+        logger.debug( "services/Edit save() 126");
         final Provider providerObj = null;
         final Map svcs = appContext.getSmppManager().getSvcs();
+        logger.debug( "services/Edit save() 128");
         if (svcs.containsKey(id) && (isAdd() || !id.equals(getEditId())))
             throw new SCAGJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);
         Svc oldSvc = null;
         final Svc svc;
+        logger.debug( "services/Edit save() 134");
         if (!isAdd()) {
+            logger.debug( "services/Edit save() 136");
             oldSvc = (Svc) svcs.get(getEditId());
             svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj,
-                          inQueueLimit, outQueueLimit, maxSmsPerSec, oldSvc.getMetaGroup());
+                          inQueueLimit, outQueueLimit, maxSmsPerSec, oldSvc.getMetaGroup(), snmptracking);
         }else{
+            logger.debug( "services/Edit save() 141, snmptracking=" + snmptracking );
             svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj,
-                          inQueueLimit, outQueueLimit, maxSmsPerSec);
+                          inQueueLimit, outQueueLimit, maxSmsPerSec, "", snmptracking);
         }
+        logger.debug( "services/Edit save() 145");
         svcs.remove(getEditId());
         svcs.put(getId(), svc);
 //        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj);
 //        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj, inQueueLimit, maxSmsPerSec);
         final Scag scag = appContext.getScag();
+        logger.debug( "services/Edit save() 151");
         appContext.getSmppManager().createUpdateServicePoint(getLoginedPrincipal().getName(),
                 svc, isAdd(), isEnabled(), appContext, oldSvc);
         throw new DoneException();
@@ -158,8 +170,20 @@ public class Edit extends EditBean {
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
+        Map map = request.getParameterMap();
+        listParameters( map );
+
         super.process(request, response);
         this.init();
+    }
+
+    private void listParameters( Map params ) {
+        logger.debug( "\n---------------------------------------" );
+        logger.debug( "services/Edit.listParameters() params.size()=" + params.size() );
+        for( Iterator i = params.entrySet().iterator(); i.hasNext();  ){
+            logger.debug( "\tIndex.listParameter().entry='" + i.next() + "'" );
+        }
+        logger.debug( "\n---------------------------------------" );
     }
 
     public void setId(String id) {
@@ -203,6 +227,14 @@ public class Edit extends EditBean {
 
     public void setEnabled(final boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isSnmptracking() {
+        return snmptracking;
+    }
+
+    public void setSnmptracking(final boolean snmptracking) {
+        this.snmptracking = snmptracking;
     }
 
     public byte getMode() {

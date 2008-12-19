@@ -46,6 +46,7 @@
             <sm-ep:txtEmpty title="sp.edit.txt.inQueueLimit" name="inQueueLimit" maxlength="6" validation="unsignedOrEmpty"/>
             <sm-ep:txtEmpty title="sp.edit.txt.outQueueLimit" name="outQueueLimit" maxlength="6" validation="unsignedOrEmpty"/>
             <sm-ep:txtEmpty title="sp.edit.txt.maxSmsPerSec" name="maxSmsPerSec" maxlength="6" validation="unsignedOrEmpty"/>
+            <sm-ep:check title="sp.edit.check.snmptracking.title" head="sp.edit.check.snmptracking.head" name="snmptracking"/>
             </sm-ep:properties>
         </c:when>
         <c:when test="${bean.transportId == 2}">

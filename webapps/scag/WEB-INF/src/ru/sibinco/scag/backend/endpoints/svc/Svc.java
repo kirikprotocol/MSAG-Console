@@ -41,6 +41,7 @@ public class Svc {
     private String password = "";
     private int timeout = 0;
     private boolean enabled = true;
+    private boolean snmptracking;
     private byte mode = MODE_TRX;
     private Provider provider;
     private String transport = "SMPP";
@@ -124,6 +125,27 @@ public class Svc {
         this.metaGroup = metaGroup;
     }
 
+        public Svc(final String id, final String password, final int timeout,
+               final boolean enabled, final byte mode, final Provider provider,
+               final int inQueueLimit, final int outQueueLimit, final int maxSmsPerSec,
+               final String metaGroup, final boolean snmptracking)
+               throws NullPointerException
+    {
+        if (null == id)
+            throw new NullPointerException("SME ID or  password  is null");
+        this.id = id.trim();
+        this.password = password;
+        this.timeout = timeout;
+        this.enabled = enabled;
+        this.snmptracking = snmptracking;
+        this.mode = mode;
+        this.provider = provider;
+        this.inQueueLimit = inQueueLimit;
+        this.outQueueLimit = outQueueLimit;
+        this.maxSmsPerSec = maxSmsPerSec;
+        this.metaGroup = metaGroup;
+    }
+
     public Svc(final Element svcElement, final ProviderManager providerManager)
             throws NullPointerException {
         final NodeList list = svcElement.getElementsByTagName("param");
@@ -140,6 +162,8 @@ public class Svc {
                     timeout = Integer.decode(value).intValue();
                 } else if ("enabled".equals(name)) {
                     enabled = Boolean.valueOf(value).booleanValue();
+                } else if ("snmptracking".equals(name)) {
+                    snmptracking = Boolean.valueOf(value).booleanValue();
                 } else if ("mode".equals(name)) {
                     mode = getMode(value);
                 } else if ("providerId".equals(name)) {
@@ -167,6 +191,7 @@ public class Svc {
         this.password = svc.getPassword();
         this.timeout = svc.getTimeout();
         this.enabled = svc.isEnabled();
+        this.snmptracking = svc.isSnmptracking();
         this.mode = svc.getMode();
         this.inQueueLimit = svc.getInQueueLimit();
         this.outQueueLimit = svc.getOutQueueLimit();
@@ -191,6 +216,7 @@ public class Svc {
         out.println("    <param name=\"timeout\"\tvalue=\"" + timeout + "\"/>");
         out.println("    <param name=\"mode\"\t\tvalue=\"" + getModeStr() + "\"/>");
         out.println("    <param name=\"enabled\"\tvalue=\"" + enabled + "\"/>");
+        out.println("    <param name=\"snmptracking\"\tvalue=\"" + snmptracking + "\"/>");
 //        out.println("    <param name=\"providerId\"\tvalue=\"" + -1/*provider.getId()*/ + "\"/>");
         out.println("    <param name=\"" + IN_QUEUE_LIMIT +  "\"\tvalue=\"" + intToString(getInQueueLimit()) + "\"/>");
         out.println("    <param name=\"" + OUT_QUEUE_LIMIT + "\"\tvalue=\"" + intToString(getOutQueueLimit()) + "\"/>");
@@ -247,6 +273,7 @@ public class Svc {
         password = newSvc.getPassword();
         timeout = newSvc.getTimeout();
         enabled = newSvc.isEnabled();
+        snmptracking = newSvc.isSnmptracking();
         mode = newSvc.getMode();
         inQueueLimit =  newSvc.getInQueueLimit();
         outQueueLimit = newSvc.getOutQueueLimit();
@@ -292,6 +319,14 @@ public class Svc {
 
     public void setEnabled(final boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isSnmptracking() {
+        return snmptracking;
+    }
+
+    public void setSnmptracking(final boolean isSnmptracking) {
+        this.snmptracking = isSnmptracking;
     }
 
     public byte getMode() {

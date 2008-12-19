@@ -44,6 +44,7 @@ public class Center {
     private String altHost;
     private int altPort;
     private boolean enabled = true;
+    private boolean snmptracking;
     private Provider provider;
     private int uid = -1;
     private String bindSystemId;
@@ -161,6 +162,35 @@ public class Center {
         this.metaGroup = metaGroup;
     }
 
+    public Center(String id, int timeout, byte mode, String host, int port, String altHost,
+                  int altPort, boolean enabled, final Provider provider,
+                  final int uid, final String bindSystemId, final String bindPassword, final String systemType,
+                  final String addressRange, final int inQueueLimit, final int outQueueLimit,
+                  final int maxSmsPerSec, final String metaGroup, final boolean snmptracking)
+                  throws NullPointerException {
+        if (null == id || bindSystemId == null)
+            throw new NullPointerException("SMSC ID or bind Password or bind SystemId  is null");
+        this.id = id;
+        this.timeout = timeout;
+        this.mode = mode;
+        this.host = host;
+        this.port = port;
+        this.altHost = altHost;
+        this.altPort = altPort;
+        this.enabled = enabled;
+        this.snmptracking = snmptracking;
+        this.provider = provider;
+        this.uid = uid;
+        this.bindSystemId = bindSystemId;
+        this.bindPassword = bindPassword;
+        this.systemType = systemType;
+        this.addressRange = addressRange;
+        this.inQueueLimit = inQueueLimit;
+        this.outQueueLimit = outQueueLimit;
+        this.maxSmsPerSec = maxSmsPerSec;
+        this.metaGroup = metaGroup;
+    }
+
     public Center(final Element centersElement, final ProviderManager providerManager) throws NullPointerException {
         final NodeList list = centersElement.getElementsByTagName("param");
         for (int i = 0; i < list.getLength(); i++) {
@@ -174,6 +204,8 @@ public class Center {
                     timeout = Integer.decode(value).intValue();
                 } else if ("enabled".equals(name)) {
                     enabled = Boolean.valueOf(value).booleanValue();
+                } else if ("snmptracking".equals(name)) {
+                    snmptracking = Boolean.valueOf(value).booleanValue();
                 } else if ("mode".equals(name)) {
                     mode = getMode(value);
                 } else if ("host".equals(name)) {
@@ -225,6 +257,7 @@ public class Center {
         this.altHost = center.getAltHost();
         this.altPort = center.getAltPort();
         this.enabled = center.isEnabled();
+        this.snmptracking = center.isSnmptracking();
         this.provider = center.getProvider();
         this.uid = center.getUid();
         this.addressRange = center.getAddressRange();
@@ -260,6 +293,7 @@ public class Center {
         out.println("    <param name=\"althost\"\tvalue=\"" + altHost + "\"/>");
         out.println("    <param name=\"altport\"\tvalue=\"" + altPort + "\"/>");
         out.println("    <param name=\"enabled\"\tvalue=\"" + enabled + "\"/>");
+        out.println("    <param name=\"snmptracking\"\tvalue=\"" + snmptracking + "\"/>");
         out.println("    <param name=\"uid\"\tvalue=\"" + uid + "\"/>");
         out.println("    <param name=\"providerId\"\tvalue=\"" + -1/*provider.getId()*/ + "\"/>");
         out.println("    <param name=\"addressRange\"\tvalue=\"" + addressRange.trim() + "\"/>");
@@ -396,6 +430,14 @@ public class Center {
 
     public void setEnabled(final boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isSnmptracking() {
+        return snmptracking;
+    }
+
+    public void setSnmptracking(final boolean snmptracking) {
+        this.snmptracking = snmptracking;
     }
 
     public Provider getProvider() {

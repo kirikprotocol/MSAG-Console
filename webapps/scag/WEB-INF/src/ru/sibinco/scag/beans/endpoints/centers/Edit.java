@@ -44,6 +44,7 @@ public class Edit extends EditBean
     private String altHost = null;
     private int altPort = 0;
     private boolean enabled;
+    private boolean snmptracking;
     private String bindSystemId;
     private String bindPassword;
     private String systemType;
@@ -120,6 +121,7 @@ public class Edit extends EditBean
         this.altHost = center.getAltHost();
         this.altPort = center.getAltPort();
         this.enabled = center.isEnabled();
+        this.snmptracking = center.isSnmptracking();
         this.providerId = -1;//center.getProvider().getId();
         this.uid = center.getUid();
         this.bindSystemId = center.getBindSystemId();
@@ -161,11 +163,11 @@ public class Edit extends EditBean
             oldCenter = (Center) centers.get(getEditId());
             center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
                     enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
-                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, oldCenter.getMetaGroup());
+                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, oldCenter.getMetaGroup(), snmptracking);
         }else{
             center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
                     enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
-                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec);
+                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, "", snmptracking);
         }
         centers.remove(getEditId());
         centers.put(id, center);
@@ -271,6 +273,14 @@ public class Edit extends EditBean
 
     public void setEnabled(final boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isSnmptracking() {
+        return snmptracking;
+    }
+
+    public void setSnmptracking(final boolean snmptracking) {
+        this.snmptracking = snmptracking;
     }
 
     public String[] getTransportIds() {
