@@ -214,10 +214,8 @@
 
     <sm-et:section title="SNMP" name="snmp" type="table" >
         <sm-ep:properties id="snmp" display="none">
-<%--        <table id="admin" style="display:none">--%>
             <sm-et:txt     name="socket" type="string" onchanged="configChanged();"/>
             <sm-et:checkin title="enabled" name="enabled" onchanged="configChanged();"/>
-<%--        </table>--%>
         </sm-ep:properties>
     </sm-et:section>
 
