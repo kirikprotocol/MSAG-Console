@@ -96,6 +96,7 @@ void LCPersClient::continuePersCall( PersCall* context, bool dropped ) {
   if (context->status() == PERSCLIENTOK || context->status() == PROPERTY_NOT_FOUND) {
     ++successCalls_;
   } else {
+    smsc_log_warn(logger_, "request result: %s", strs[callParams->status()]);
     ++errorCalls_;
   }
   delete context;
