@@ -12,7 +12,8 @@
 namespace {
 struct PersCallPtrHFunc
 {
-    inline static unsigned int CalcHash( const scag2::pers::util::PersCall* key )
+public:
+    static unsigned int CalcHash( const scag2::pvss::PersCall* key )
     {
         return unsigned(reinterpret_cast<int64_t>
                         (reinterpret_cast<const void*>(key)));

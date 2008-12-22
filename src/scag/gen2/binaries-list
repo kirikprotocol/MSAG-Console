@@ -36,7 +36,7 @@ scag/msag           gwmain2        \
   -lscag-config-pers -lscag-config-lcm \
   -lscag-config-base \
   \
-  -lscag-snmp \
+  $(if $(filter YES,$(SNMP)),-lscag-snmp) \
   \
   -lscag-util-properties \
   -lscag-util-storage \
@@ -64,7 +64,7 @@ scag/msag           gwmain2        \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil-URCdb -lutil \
   $(__LIBRARIES) \
-  -lnetsnmpmibs -lnetsnmpagent -lnetsnmphelpers -lnetsnmp \
+  $(SNMP_LIBS) \
   $(SSL_LIB) \
   -lrt -ldl \
   $(LIBMALLOC)  

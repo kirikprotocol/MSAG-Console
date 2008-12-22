@@ -20,7 +20,10 @@
 // #include "scag/sessions/base/SessionManager2.h"
 //#include "sme/SmppBase.hpp"
 //#include "util/config/smeman/SmeManConfig.h"
+
+#ifdef SNMP
 #include "scag/snmp/SnmpTrapThread.h"
+#endif
 
 namespace scag2
 {
@@ -168,9 +171,11 @@ protected:
 
   friend class StatusSme;
 
+#ifdef SNMP
     // std::auto_ptr< sessions::SessionManager >  sessman_;
     std::auto_ptr< snmp::SnmpWrapper > snmp_;
     std::auto_ptr< snmp::SnmpTrapThread > snmpthread_;
+#endif
 };
 
 } // scag2

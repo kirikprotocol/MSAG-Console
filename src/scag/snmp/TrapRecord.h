@@ -1,6 +1,7 @@
 #ifndef _SCAG_SNMP_TRAPRECORD_H
 #define _SCAG_SNMP_TRAPRECORD_H
 
+#include <time.h>
 #include "core/buffers/FixedLengthString.hpp"
 
 namespace scag2 {
