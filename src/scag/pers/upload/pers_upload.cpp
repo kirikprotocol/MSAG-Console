@@ -11,8 +11,7 @@
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 
-//#include "Glossary.h"
-#include "scag/util/storage/Glossary.h"
+#include "scag/pers/Glossary.h"
 #include "scag/pers/BlocksHSReader.h"
 #include "PersClient.h"
 
@@ -22,8 +21,7 @@ using scag::pers::util::PersClient;
 using scag::pers::util::PersClientException;
 using namespace smsc::util::config;
 using scag::pers::util::BlocksHSReader;
-using scag::util::storage::Glossary;
-using scag::util::storage::GlossaryBase;
+using scag::pers::Glossary;
 
 extern "C" void appSignalHandler(int sig)
 {
@@ -134,8 +132,7 @@ int main(int argc, char* argv[])
           filesCount = atoi(argv[1]);
         } 
 
-        Glossary glossary;
-        if ((open_result = glossary.Open(storagePath + "/glossary")) != Glossary::SUCCESS) {
+        if ((open_result = Glossary::Open(storagePath + "/glossary")) != Glossary::SUCCESS) {
            throw Exception("Glossary open error");  
         }
 
@@ -144,12 +141,12 @@ int main(int argc, char* argv[])
           PersClient& pc = PersClient::Instance();
           BlocksHSReader<AbntAddr> reader(pc, storageName, storagePath, dataBlockSize, blocksInFile);
           smsc_log_debug(logger, "will be read %d files", filesCount);
-          reader.readDataFiles(filesCount, sendToPers, &glossary);
+          reader.readDataFiles(filesCount, sendToPers);
         } else {
           PersClient* pc = 0;
           BlocksHSReader<AbntAddr> reader(*pc, storageName, storagePath, dataBlockSize, blocksInFile);
           smsc_log_debug(logger, "will be read %d files", filesCount);
-          reader.readDataFiles(filesCount, sendToPers, &glossary);
+          reader.readDataFiles(filesCount, sendToPers);
         }
     }
 
@@ -178,5 +175,8 @@ int main(int argc, char* argv[])
         smsc_log_error(logger, "Unknown exception: '...' caught. Exiting.");
         resultCode = -5;
     }   
+    if (open_result == Glossary::SUCCESS) {
+      Glossary::Close();
+    }
     return resultCode;
 }
