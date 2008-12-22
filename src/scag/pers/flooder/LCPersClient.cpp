@@ -2,12 +2,12 @@
 #include <vector>
 #include <stdlib.h>
 #include "LCPersClient.h"
-#include "scag/pers/util/Property.h"
+#include "scag/pvss/base/Property.h"
+#include "scag/pvss/base/PersClientException.h"
 #include "util/debug.h"
 
+using namespace scag2::pvss;
 namespace {
-
-using namespace scag2::pers::util;
 PersCommandSingle* addcmd( std::vector< PersCommandSingle >& cmds )
 {
     cmds.push_back( PersCommandSingle() );

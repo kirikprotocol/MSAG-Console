@@ -1,14 +1,13 @@
 /* $Id$ */
 
 #include "LongCallManagerImpl.h"
-
 #include "scag/bill/base/BillingManager.h"
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/exc/SCAGExceptions.h"
-#include "scag/pers/util/PersClient2.h"
-#include "scag/re/base/PersCallWrapper.h"
-#include "scag/pers/util/Types.h"
+#include "scag/pvss/base/PersClient.h"
+#include "scag/pvss/base/Types.h"
 #include "scag/re/base/ActionContext2.h"
+#include "scag/re/base/PersCallWrapper.h"
 
 namespace scag2 {
 namespace lcm {
@@ -18,8 +17,6 @@ using smsc::logger::Logger;
 using namespace smsc::core::threads;
 using namespace scag::exceptions;
 using namespace scag2::config;
-
-using namespace pers::util;
 using bill::BillOpenCallParams;
 using bill::BillCloseCallParams;
 
@@ -144,9 +141,9 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
         else if(context->callCommandId >= PERS_GET && context->callCommandId <= PERS_BATCH)
         {
             PersCallParams* p = (PersCallParams*) context->getParams();
-            PersCall* call = p->getPersCall();
+            pvss::PersCall* call = p->getPersCall();
             call->setContext(context);
-            if (!PersClient::Instance().callAsync(call,*this) ) {
+            if (!pvss::PersClient::Instance().callAsync(call,*this) ) {
                 // context->initiator->continueExecution(context, false);
                 break;
             }
@@ -193,7 +190,7 @@ int LongCallTask::Execute()
 }
 
 
-void LongCallManagerImpl::continuePersCall( PersCall* pc, bool drop )
+void LongCallManagerImpl::continuePersCall( pvss::PersCall* pc, bool drop )
 {
     LongCallContextBase* context = (LongCallContextBase*)pc->context();
     context->initiator->continueExecution(context, drop);

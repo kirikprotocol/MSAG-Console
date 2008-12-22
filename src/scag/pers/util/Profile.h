@@ -14,12 +14,13 @@
 #include "scag/util/storage/Serializer.h"
 #include "scag/util/storage/GlossaryBase.h"
 
-#include "Property.h"
+#include "scag/pvss/base/Property.h"
 #include "AbntAddr.hpp"
 
 
 namespace scag { namespace pers { namespace util {
 
+using namespace pvss;
 using namespace std;
 using namespace smsc::core::buffers;
 using smsc::logger::Logger;

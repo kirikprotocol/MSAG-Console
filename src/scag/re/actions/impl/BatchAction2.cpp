@@ -2,13 +2,13 @@
 #include "scag/stat/Statistics.h"
 #include "scag/re/base/CommandAdapter2.h"
 #include "scag/re/base/ActionFactory2.h"
-#include "scag/pers/util/PersClient2.h"
+// #include "scag/pvss/base/PersClient.h"
 
 namespace scag2 { 
 namespace re {
 namespace actions {
 
-using namespace pers::util;
+using namespace pvss;
 using namespace scag::stat;
 
 const std::string TRANSACTIONAL_MODE = "TRANSACTIONAL";
@@ -88,10 +88,10 @@ bool BatchAction::FinishXMLSubSection(const std::string& name)
 }
 
 
-pers::util::PersCommand* BatchAction::makeCommand( ActionContext& ctx )
+pvss::PersCommand* BatchAction::makeCommand( ActionContext& ctx )
 {
-    std::auto_ptr< pers::util::PersCommand > res;
-    std::vector< pers::util::PersCommandSingle > batch;
+    std::auto_ptr< pvss::PersCommand > res;
+    std::vector< pvss::PersCommandSingle > batch;
     batch.resize( actions.size() );
     for ( std::vector< PersActionCommand* >::const_iterator i = actions.begin();
           i != actions.end();
@@ -102,10 +102,29 @@ pers::util::PersCommand* BatchAction::makeCommand( ActionContext& ctx )
             return res.release();
         }
     }
-    res.reset( new pers::util::PersCommandBatch(batch,transactMode) );
+    res.reset( new pvss::PersCommandBatch(batch,transactMode) );
     return res.release();
 }
 
+
+void BatchAction::storeResults( const pvss::PersCommand& command, ActionContext& context )
+{
+    const pvss::PersCommandBatch* cmd = 
+        const_cast< pvss::PersCommand& >(command).castBatch();
+    assert(cmd);
+    const std::vector< pvss::PersCommandSingle >& batchcmds = cmd->batch();
+    assert( batchcmds.size() == actions.size() );
+    int stopat = actions.size();
+    if ( command.status() ) stopat = command.failIndex();
+    int idx = 0;
+    for ( std::vector< PersActionCommand* >::iterator i = actions.begin();
+          i != actions.end();
+          ++i ) {
+        if ( idx++ >= stopat ) break;
+        (*i)->storeResults( batchcmds[idx], context );
+    }
+    PersActionResultRetriever::storeResults( command, context );
+}
 
 }//actions
 }//re

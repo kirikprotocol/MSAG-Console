@@ -1,19 +1,18 @@
-#ifndef _SCAG_PERS_UTIL_PERSCLIENT2_H
-#define _SCAG_PERS_UTIL_PERSCLIENT2_H
+#ifndef _SCAG_PVSS_BASE_PERSCLIENT_H
+#define _SCAG_PVSS_BASE_PERSCLIENT_H
 
-// #include "scag/re/base/LongCallContextBase.h"
-// #include "scag/config/base/ConfigManager2.h"
-#include "PersCallParams.h"
+#include "PersCall.h"
 
 namespace scag2 {
-namespace pers {
-namespace util {
+namespace pvss {
 
 class PersClient
 {
 public:
+    virtual ~PersClient();
     static PersClient& Instance();
 
+    /*
     static void Init( const char* host,
                       int port,
                       int timeout,
@@ -22,8 +21,7 @@ public:
                       unsigned maxCallsCount,
                       unsigned clients,
                       bool async = true );
-
-    // static void Init( const config::PersClientConfig& cfg );
+     */
 
     /// tries to put the call to the queue
     /// if the call cannot be processed, return false
@@ -40,12 +38,10 @@ protected:
     inline void setNext( PersCall* c, PersCall* n ) const { c->next_ = n; }
     inline void setInitiator( PersCall* c, PersCallInitiator* i ) const { c->initiator_ = i; }
     
-    PersClient() {}
-    virtual ~PersClient() {}
+    PersClient();
 };
 
 }
 }
-}
 
-#endif /* ! _SCAG_PERS_UTIL_PERSCLIENT2_H */
+#endif /* ! _SCAG_PVSS_BASE_PERSCLIENT_H */

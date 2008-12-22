@@ -7,6 +7,7 @@
 #include "scag/util/singleton/Singleton.h"
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/config/base/ConfigListener2.h"
+#include "scag/pvss/base/PersServerResponse.h"
 
 #include "PersClient.h"
 
@@ -741,7 +742,7 @@ void PersClientImpl::finishCalls() {
     PersCallParams* persParams = (PersCallParams*)ctx->getParams();
     if (persParams) {
       persParams->error = NOT_CONNECTED;
-      persParams->exception = strs[NOT_CONNECTED];
+      persParams->exception = persServerResponse(NOT_CONNECTED);
     }
     --callsCount;
     ctx->initiator->continueExecution(ctx, false);

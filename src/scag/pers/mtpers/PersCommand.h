@@ -6,8 +6,9 @@
 #include "core/buffers/Array.hpp"
 #include "util/Exception.hpp"
 #include "scag/util/storage/SerialBuffer.h"
-#include "scag/pers/util/Types.h"
-#include "scag/pers/util/Property.h"
+#include "scag/pvss/base/Types.h"
+#include "scag/pvss/base/Property.h"
+#include "scag/pvss/base/PersServerResponse.h"
 #include "scag/pers/util/Profile.h"
 #include "scag/pers/util/AbntAddr.hpp"
 
@@ -28,7 +29,7 @@ using std::vector;
 using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
 
-typedef scag::pers::util::PersServerResponseType Response;
+typedef scag::pvss::PersServerResponseType Response;
 
 class PersCommandNotSupport: public Exception {};
 

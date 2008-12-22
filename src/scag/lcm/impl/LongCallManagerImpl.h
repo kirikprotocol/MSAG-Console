@@ -7,12 +7,12 @@
 #include "scag/config/base/ConfigListener2.h"
 #include "scag/re/base/LongCallContextBase.h"
 #include "scag/lcm/base/LongCallManager2.h"
-#include "scag/pers/util/PersCallParams.h"
+#include "scag/pvss/base/PersCall.h"
 
 namespace scag2 {
 namespace lcm {
 
-class LongCallManagerImpl: public LongCallManager, public config::ConfigListener, public pers::util::PersCallInitiator
+class LongCallManagerImpl: public LongCallManager, public config::ConfigListener, public pvss::PersCallInitiator
 {
 public:
     LongCallManagerImpl(): ConfigListener(config::LONGCALLMAN_CFG), stopped(true) {}
@@ -28,7 +28,7 @@ public:
 
 protected:
     virtual void configChanged();
-    virtual void continuePersCall( pers::util::PersCall* pc, bool drop );
+    virtual void continuePersCall( pvss::PersCall* pc, bool drop );
 
 protected:
     bool stopped;

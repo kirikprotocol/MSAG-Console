@@ -4,11 +4,9 @@
 #define SCAG_LC_PERS_CLIENT_H
 
 #include <string>
-#include "scag/pers/util/PersClient2.h"
-// #include "scag/re/base/LongCallContextBase.h"
-// #include "scag/re/base/ActionContext2.h"
-#include "scag/pers/util/PersCommand.h"
-#include "scag/pers/util/PersCallParams.h"
+#include "scag/pvss/base/PersClient.h"
+#include "scag/pvss/base/PersCommand.h"
+#include "scag/pvss/base/PersCall.h"
 #include "logger/Logger.h"
 #include "core/threads/Thread.hpp"
 #include "util/timeslotcounter.hpp"
@@ -21,14 +19,14 @@ namespace util {
 using smsc::logger::Logger;
 using std::string;
 
-class LCPersClient : public PersCallInitiator
+class LCPersClient : public pvss::PersCallInitiator
 {
 public:
-  LCPersClient(PersClient& pc, int speed):persClient_(pc), isStopped_(false), callsCount_(0), logger_(Logger::getInstance("lcclient")),
+    LCPersClient(pvss::PersClient& pc, int speed):persClient_(pc), isStopped_(false), callsCount_(0), logger_(Logger::getInstance("lcclient")),
                                           speed_(speed > 0 ? speed : 1), delay_(1000000/speed_), overdelay_(0), startTime_(0),
                                           busyRejects_(0), maxRejects_(1000), sentCalls_(0), successCalls_(0), errorCalls_(0) {};
   void execute(int addrsCount, int getsetCount);
-  virtual void continuePersCall( PersCall* context, bool dropped );
+    virtual void continuePersCall( pvss::PersCall* context, bool dropped );
   void shutdown();
   bool canStop();
 
@@ -38,21 +36,20 @@ public:
   int getBusy();
 
 private:
-  void doCall( PersCall* context );
-  PersCommandSingle* getCmd(const string& propName, PersCommandSingle* cmd = 0 );
-  PersCommandSingle* setCmd(const string& propName, const string& strVal, PersCommandSingle* cmd = 0 );
-  PersCommandSingle* setCmd( const string& propName, int intVal, PersCommandSingle* cmd = 0 );
-  PersCommandSingle* incCmd(const string& propName, int inc, PersCommandSingle* cmd = 0 );
-  PersCommandSingle* incModCmd(const string& propName, int inc, int mod, PersCommandSingle* cmd = 0 );
-  PersCommandBatch* batchCmd(const string& propName, bool trans);
-  void commandsSet(const string& addr, int intKey, const string& propName, ProfileType pfType);
-  void commandsSetConfigured(const string& addr, int intKey, const string& propName, ProfileType pfType, int cmdsCount);
-  // LongCallContextBase* getCallContext(PersCallParams *callParams);
-  PersCall* createPersCall( ProfileType pfType, const string& addr, int intKey, std::auto_ptr<PersCommand> cmd );
+    void doCall( pvss::PersCall* context );
+    pvss::PersCommandSingle* getCmd(const string& propName, pvss::PersCommandSingle* cmd = 0 );
+    pvss::PersCommandSingle* setCmd(const string& propName, const string& strVal, pvss::PersCommandSingle* cmd = 0 );
+    pvss::PersCommandSingle* setCmd( const string& propName, int intVal, pvss::PersCommandSingle* cmd = 0 );
+    pvss::PersCommandSingle* incCmd(const string& propName, int inc, pvss::PersCommandSingle* cmd = 0 );
+    pvss::PersCommandSingle* incModCmd(const string& propName, int inc, int mod, pvss::PersCommandSingle* cmd = 0 );
+    pvss::PersCommandBatch* batchCmd(const string& propName, bool trans);
+    void commandsSet(const string& addr, int intKey, const string& propName, pvss::ProfileType pfType);
+    void commandsSetConfigured(const string& addr, int intKey, const string& propName, pvss::ProfileType pfType, int cmdsCount);
+    pvss::PersCall* createPersCall( pvss::ProfileType pfType, const string& addr, int intKey, std::auto_ptr<pvss::PersCommand> cmd );
   void delay();
 
 private:
-  PersClient& persClient_;
+    pvss::PersClient& persClient_;
   bool isStopped_;
   uint32_t callsCount_;
   Logger* logger_;

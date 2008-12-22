@@ -3,11 +3,25 @@
 
 # binary name                            source name     libraries         
 
-scag/pers_upload                         pers_upload     @liblogger.so\
-  -L$(SMSC_BUILDDIR)/bin -llogger -llogger-additional \
+scag/pers_upload                         pers_upload     \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -llogger-additional \
   -lscag-pers-upload \
-  -lscag-pers -lscag-pers-util -lscag-util-encodings -lscag-exc -lscag-util-storage -lscag-config-base\
+  -lscag-pvss-base \
+  -lscag-pers \
+  -lscag-util-encodings -lscag-exc -lscag-util-storage -lscag-config-base \
   -lscag-util-properties -lscag-util-singleton \
-  -lutil -lutil-regexp -lutil-config -lutil-xml\
-  -lcore-threads -lcore-network -lcore-buffers -lsms \
-  -lnsl -lrt -lpthread $(SOCKETLIB) $(__LIBRARIES) -L$(SMSC_BUILDDIR)/bin -ldl $(XERCES_LIB)
+  \
+  -lcore-buffers \
+  -lcore-network $(SOCKETLIB) -lnsl \
+  -lcore-threads \
+  -lutil-mirrorfile \
+  -lutil-config \
+  -lutil-xml \
+  -lutil-regexp \
+  $(XERCES_LIB) \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil-URCdb -lutil \
+  $(__LIBRARIES) \
+  -lnetsnmpmibs -lnetsnmpagent -lnetsnmphelpers -lnetsnmp \
+  $(SSL_LIB) \
+  -lrt -ldl

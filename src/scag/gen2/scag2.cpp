@@ -7,7 +7,7 @@
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/config/base/ConfigView.h"
 #include "scag/lcm/impl/LongCallManagerImpl.h"
-#include "scag/pers/util/PersClient2.h"
+#include "scag/pvss/client/PvssStreamClient.h"
 #include "scag/re/base/XMLHandlers2.h" // for StrX
 #include "scag/re/impl/RuleEngine2.h"
 #include "scag/sessions/impl/SessionManager2.h"
@@ -159,15 +159,15 @@ void Scag::init( unsigned mynode )
         smsc_log_warn(log, "Personalization client initializing host=%s port=%d", cfg.getPersClientConfig().host.c_str(), cfg.getPersClientConfig().port);
 
         const config::PersClientConfig& pcfg = cfg.getPersClientConfig();
-        pers::util::PersClient::Init( pcfg.host.c_str(),
-                                      pcfg.port,
-                                      pcfg.timeout,
-                                      pcfg.pingTimeout,
-                                      pcfg.reconnectTimeout,
-                                      pcfg.maxCallsCount,
-                                      pcfg.connections,
-                                      pcfg.async );
-
+        pvss::PvssStreamClient* pc = new pvss::PvssStreamClient;
+        pc->init( pcfg.host.c_str(),
+                  pcfg.port,
+                  pcfg.timeout,
+                  pcfg.pingTimeout,
+                  pcfg.reconnectTimeout,
+                  pcfg.maxCallsCount,
+                  pcfg.connections,
+                  pcfg.async );
         smsc_log_info(log, "Personalization client initialized");
     } catch(std::exception& e) {
         throw Exception("Exception during initialization of PersClient: %s", e.what());
@@ -293,7 +293,7 @@ void Scag::shutdown()
 {
     // __trace__("shutting down");
     smsc_log_info( log, "SCAG is shutting down\n\n");
-    pers::util::PersClient::Instance().Stop();   // to prevent dangling longcalls
+    pvss::PersClient::Instance().Stop();   // to prevent dangling longcalls
     bill::BillingManager::Instance().Stop();     // to prevent dangling longcalls
     lcm::LongCallManager::Instance().shutdown(); // to prevent dangling longcalls
     transport::http::HttpManager::Instance().shutdown();

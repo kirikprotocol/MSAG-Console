@@ -7,12 +7,14 @@
 #include "scag/util/storage/SerialBuffer.h"
 #include "scag/config/pers/PersClientConfig.h"
 #include "scag/re/base/LongCallContextBase.h"
-#include "scag/pers/util/PersClientException.h"
-#include "scag/pers/util/Property.h"
-#include "scag/pers/util/Types.h"
+#include "scag/pvss/base/PersClientException.h"
+#include "scag/pvss/base/Property.h"
+#include "scag/pvss/base/Types.h"
+#include "scag/pers/util/PersKey.h"
 
 namespace scag { namespace pers { namespace util {
 
+using namespace pvss;
 using smsc::core::network::Socket;
 using scag2::lcm::LongCallParams;
 using scag2::lcm::LongCallContextBase;

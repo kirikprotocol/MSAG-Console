@@ -1,8 +1,9 @@
 #include "PersCommand.h"
+#include "PersClientException.h"
+#include "PersServerResponse.h"
 
 namespace scag2 {
-namespace pers {
-namespace util {
+namespace pvss {
 
 int PersCommandSingle::fillSB( SerialBuffer& sb )
 {
@@ -96,23 +97,5 @@ int PersCommandBatch::readSB( SerialBuffer& sb )
     return status();
 }
 
-
-/*
-void PersCommandBatch::storeResults( void* ctx )
-{
-    int stopat = batch_.size();
-    if ( status() ) stopat = failIndex();
-    int idx = 0;
-    for ( std::vector< PersCommandSingle >::iterator i = batch_.begin();
-          i != batch_.end();
-          ++i ) {
-        if ( idx++ >= stopat ) break;
-        i->storeResults( ctx );
-    }
-    PersCommand::storeResults( ctx );
-}
- */
-
-}
 }
 }

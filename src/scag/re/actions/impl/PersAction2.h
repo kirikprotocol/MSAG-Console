@@ -8,8 +8,8 @@
 #include "scag/re/base/LongCallContext.h"
 
 // #include "scag/pers/util/Property.h"
-#include "scag/pers/util/PersCommand.h"
-#include "scag/pers/util/PersCallParams.h"
+#include "scag/pvss/base/PersCommand.h"
+#include "scag/pvss/base/PersCall.h"
 #include "TimeField.h"
 
 namespace scag2 {
@@ -24,9 +24,9 @@ public:
     bool canProcessRequest( ActionContext& ctx );
     void setStatus( ActionContext& ctx, int status, int actionIdx = 0 );
     // std::auto_ptr< PersCallParams > makeParams( ActionContext& ctx );
-    virtual void storeResults( pers::util::PersCommand& cmd, ActionContext& ctx );
-    virtual pers::util::PersCommand* makeCommand( ActionContext& ctx ) = 0;
-    virtual pers::util::PersCmd cmdType() const = 0;
+    virtual void storeResults( const pvss::PersCommand& cmd, ActionContext& ctx );
+    virtual pvss::PersCommand* makeCommand( ActionContext& ctx ) = 0;
+    virtual pvss::PersCmd cmdType() const = 0;
 
     virtual const std::string& statusName() const = 0;
     virtual const std::string& msgName() const = 0;
@@ -37,17 +37,17 @@ class PersActionCommand : public Action, public PersActionResultRetriever
 {
 public:
     PersActionCommand() :
-    cmdType_(pers::util::PC_GET),
+    cmdType_(pvss::PC_GET),
     mod(0),
-    policy(pers::util::UNKNOWN),
+    policy(pvss::UNKNOWN),
     ftFinalDate(ftUnknown),
     finalDate(-1)
     {}
 
-    PersActionCommand( pers::util::PersCmd c ) :
+    PersActionCommand( pvss::PersCmd c ) :
     cmdType_(c),
     mod(0),
-    policy(pers::util::UNKNOWN),
+    policy(pvss::UNKNOWN),
     ftFinalDate(ftUnknown),
     finalDate(-1)
     {}
@@ -57,11 +57,11 @@ public:
     virtual void init( const SectionParams& params, PropertyObject propertyObject );
 
     // command type
-    virtual pers::util::PersCmd cmdType() const { return cmdType_; }
+    virtual pvss::PersCmd cmdType() const { return cmdType_; }
 
-    virtual void storeResults( pers::util::PersCommand& command, ActionContext& ctx );
-    virtual pers::util::PersCommand* makeCommand( ActionContext& ctx );
-    int fillCommand( ActionContext& ctx, pers::util::PersCommandSingle& command );
+    virtual void storeResults( const pvss::PersCommand& command, ActionContext& ctx );
+    virtual pvss::PersCommand* makeCommand( ActionContext& ctx );
+    int fillCommand( ActionContext& ctx, pvss::PersCommandSingle& command );
 
     virtual const std::string& statusName() const { return status; }
     virtual const std::string& msgName() const { return msg; }
@@ -77,11 +77,11 @@ private:
     // not used
     virtual bool run( ActionContext& context ) { return true; }
 
-    pers::util::TimePolicy getPolicyFromStr( const std::string& str );
+    pvss::TimePolicy getPolicyFromStr( const std::string& str );
     time_t parseFinalDate(const char* s);
 
 private:
-    pers::util::PersCmd cmdType_;
+    pvss::PersCmd cmdType_;
     // --- property name
     FieldType ftVar;
     util::properties::Property::string_type var;
@@ -96,7 +96,7 @@ private:
     std::string sMod;
     uint32_t mod;
     // --- time policy
-    pers::util::TimePolicy policy;
+    pvss::TimePolicy policy;
     // --- final date for fixed policy
     FieldType ftFinalDate;
     std::string sFinalDate;
@@ -111,9 +111,9 @@ private:
 class PersActionBase : public LongCallAction 
 {
 public:
-    PersActionBase(pers::util::PersCmd c):
+    PersActionBase(pvss::PersCmd c):
     cmdType_(c),
-    profile(pers::util::PT_UNKNOWN),
+    profile(pvss::PT_UNKNOWN),
     optionalKeyInt(0),
     hasOptionalKey(false),
     ftOptionalKey(ftUnknown) 
@@ -122,7 +122,7 @@ public:
 
 protected:
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
-    pers::util::ProfileType getProfileTypeFromStr( const std::string& str );
+    pvss::ProfileType getProfileTypeFromStr( const std::string& str );
     std::string getAbntAddress(const char* _address);
     std::auto_ptr< lcm::LongCallParams > makeParams( ActionContext& context,
                                                      PersActionResultRetriever& creator );
@@ -130,8 +130,8 @@ protected:
     virtual PersActionResultRetriever& results() = 0;
 
 protected:
-    pers::util::PersCmd     cmdType_;
-    pers::util::ProfileType profile;
+    pvss::PersCmd     cmdType_;
+    pvss::ProfileType profile;
     uint32_t                optionalKeyInt;
     std::string             optionalKeyStr;
     bool                    hasOptionalKey;
@@ -142,8 +142,8 @@ protected:
 class PersAction : public PersActionBase 
 {
 public:
-    PersAction() : PersActionBase(pers::util::PC_GET) {}
-    PersAction(pers::util::PersCmd c) : PersActionBase(c), persCommand(c) {}
+    PersAction() : PersActionBase(pvss::PC_GET) {}
+    PersAction(pvss::PersCmd c) : PersActionBase(c), persCommand(c) {}
     virtual ~PersAction() {}
     virtual void init(const SectionParams& params, PropertyObject propertyObject);
     virtual bool RunBeforePostpone(ActionContext& context);
@@ -151,7 +151,7 @@ public:
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
-    virtual void storeResults( pers::util::PersCommand& cmd, ActionContext& ctx ) {
+    virtual void storeResults( const pvss::PersCommand& cmd, ActionContext& ctx ) {
         persCommand.storeResults( cmd, ctx );
     }
     virtual PersActionResultRetriever& results() { return persCommand; }

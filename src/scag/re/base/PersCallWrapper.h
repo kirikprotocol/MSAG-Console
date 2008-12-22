@@ -6,7 +6,7 @@
 // it is very ugly to include this file here
 // because it is in implementation package of other system.
 // it should be moved to a separate package someday.
-#include "scag/pers/util/PersCallParams.h"
+#include "scag/pvss/base/PersCall.h"
 
 namespace scag2 {
 namespace lcm {
@@ -14,12 +14,12 @@ namespace lcm {
 class PersCallParams : public LongCallParams
 {
 public:
-    PersCallParams( pers::util::ProfileType  pt,
-                    pers::util::PersCommand* cmd ) :
+    PersCallParams( pvss::ProfileType  pt,
+                    pvss::PersCommand* cmd ) :
     perscall_(pt,cmd,0) {}
-    inline pers::util::PersCall* getPersCall() { return &perscall_; }
+    inline pvss::PersCall* getPersCall() { return &perscall_; }
 private:
-    pers::util::PersCall perscall_;
+    pvss::PersCall perscall_;
 };
 
 

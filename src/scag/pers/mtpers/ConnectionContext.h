@@ -6,7 +6,7 @@
 #include "core/network/Socket.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "scag/util/storage/SerialBuffer.h"
-#include "scag/pers/util/Types.h"
+#include "scag/pvss/base/Types.h"
 #include "PersCommand.h"
 #include "Connection.h"
 #include "PerformanceCounter.h"

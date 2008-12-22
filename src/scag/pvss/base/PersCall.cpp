@@ -1,9 +1,9 @@
 #include <cassert>
-#include "PersCallParams.h"
+#include "PersCall.h"
+#include "PersClientException.h"
 
 namespace scag2 {
-namespace pers {
-namespace util {
+namespace pvss {
 
 int PersCall::fillSB( SerialBuffer& sb, int32_t serial )
 {
@@ -41,10 +41,9 @@ void PersCall::setStatus( int stat, const char* what )
     if ( what ) {
         exception_ = what;
     } else if ( stat > 0 ) {
-        exception_ = strs[stat];
+        exception_ = exceptionReasons[stat];
     }
 }
 
-}
 }
 }

@@ -6,9 +6,11 @@
 #include "core/threads/ThreadPool.hpp"
 #include "core/threads/ThreadedTask.hpp"
 
-#include "scag/pers/util/Types.h"
-#include "scag/pers/util/Property.h"
-#include "scag/pers/util/PersClientException.h"
+#include "scag/pvss/base/Types.h"
+#include "scag/pvss/base/Property.h"
+#include "scag/pvss/base/PersClientException.h"
+#include "scag/pvss/base/PersServerResponse.h"
+#include "scag/pers/util/PersKey.h"
 #include "scag/util/storage/SerialBuffer.h"
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
@@ -16,7 +18,8 @@
 namespace scag {
 namespace mtpers {
 
-using namespace scag::pers::util;
+using namespace pvss;
+using namespace pers::util;
 using smsc::logger::Logger;
 using std::string;
 using smsc::core::network::Socket;

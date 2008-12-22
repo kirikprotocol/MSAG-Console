@@ -1,6 +1,8 @@
 #include "Types.h"
+#include "util/int.h" // for uint32_t
 
-namespace scag { namespace pers { namespace util {
+namespace scag2 {
+namespace pvss {
 namespace perstypes {
 
 const char* persProfileType( ProfileType pt )
@@ -38,6 +40,7 @@ const char* persCmdName( PersCmd c )
     }
 }
 
+/*
 const char* RESPONSE_TEXT[] = {
   "unknown",
   "ok",
@@ -49,8 +52,8 @@ const char* RESPONSE_TEXT[] = {
   "profile locked",
   "not support"
 };
+ */
 
-}
 }
 }
 }

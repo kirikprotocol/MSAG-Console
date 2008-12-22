@@ -1,123 +1,21 @@
-#include <util/int.h>
 #include <sys/time.h>
 #include <poll.h>
-#include "PersCallParams.h"
-#include "PersClient2.h"
-#include "core/buffers/IntHash.hpp"
-#include "core/buffers/XHash.hpp"
+#include <algorithm>
+
 #include "core/network/Socket.hpp"
-#include "core/synchronization/EventMonitor.hpp"
-#include "core/threads/Thread.hpp"
+// #include "core/threads/Thread.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/util/UnlockMutexGuard.h"
-#include "scag/util/singleton/Singleton2.h"
-
-namespace {
-
-bool inited = false;
-Mutex initLock;
-
-struct PersCallPtrHFunc
-{
-    inline static unsigned int CalcHash( const scag2::pers::util::PersCall* key )
-    {
-        return unsigned(reinterpret_cast<int64_t>
-                        (reinterpret_cast<const void*>(key)));
-    }
-};
-
-}
+#include "scag/pvss/base/PersCall.h"
+#include "scag/pvss/base/PersClientException.h"
+#include "scag/pvss/base/PersServerResponse.h"
+#include "PvssStreamClient.h"
 
 namespace scag2 {
-
 using util::UnlockMutexGuard;
-using util::singleton::SingletonHolder;
 
-namespace pers {
-namespace util {
-
-class PersClientTask;
-
-class PersClientImpl : public PersClient, public PersCallInitiator
-{
-public:
-    PersClientImpl();
-    virtual ~PersClientImpl();
-    virtual void Stop();
-    void init( const char *_host,
-               int _port,
-               int _timeout,
-               int _pingTimeout,
-               int _reconnectTimeout,
-               unsigned _maxCallsCount,
-               unsigned clients,
-               bool     async );
-
-    PersCall* getCall( int tmomsec, PersClientTask& task );
-
-    /// increment connection count
-    void incConnect();
-
-    /// decrement connection count, if count == 0 then finish all current queued calls
-    void decConnect();
-
-    void wait( int msec ) {
-        MutexGuard mg(queueMonitor_);
-        queueMonitor_.wait( msec );
-    }
-
-private:
-    // virtual void configChanged();
-    void finishCalls( PersCall* call, bool drop );
-    virtual bool callAsync( PersCall* call, PersCallInitiator& fromwho );
-    virtual bool callSync( PersCall* call );
-    virtual void continuePersCall( PersCall* call, bool drop );
-    virtual int getClientStatus();
-
-public:
-    std::string host;
-    int         port;
-    int         timeout;
-    int         pingTimeout;
-    int         reconnectTimeout;
-
-private:
-    unsigned maxCallsCount_;
-    unsigned clients_;
-    bool     async_;
-
-    bool isStopping;
-    smsc::logger::Logger* log_;
-
-
-    struct Pipe {
-        Pipe() { ::pipe(fd); }
-        inline void notify() const { ::write(fd[1], "0", 1); }
-        inline int rpipe() const { return fd[0];}
-        inline void close() { ::close(fd[0]); ::close(fd[1]); }
-        bool operator == ( const Pipe& p ) const {
-            return (fd[0] == p.fd[0]) && (fd[1] == p.fd[1]);
-        }
-    private:
-        int fd[2];
-    };
-
-    EventMonitor              queueMonitor_;
-    PersCall*                 headContext_;
-    PersCall*                 tailContext_;
-    unsigned                  callsCount_;
-    unsigned                  connected_;
-    std::list<Pipe>           waitingPipes_;   // a list of waiting pipes
-    std::list<Pipe>           freePipes_;      // a list of free pipes (cached)
-    unsigned                  waitingStreams_; // a number of streams waiting w/o pipe
-    smsc::core::threads::ThreadPool tp_;
-    
-    // for sync calls
-    EventMonitor                                     syncMonitor_;
-    smsc::core::buffers::XHash< PersCall*, uint8_t, PersCallPtrHFunc > syncRequests_;
-};
-
+namespace pvss {
 
 // ============================================================
 class PersClientTask : public smsc::core::threads::ThreadedTask
@@ -137,7 +35,7 @@ protected:
     };
 
 public:
-    PersClientTask( PersClientImpl* pers, bool async );
+    PersClientTask( PvssStreamClient* pers, bool async );
 
     /// return true if the task has any asynchronous requests
     bool hasRequests() const { return ! callqueue_.empty(); } // no locking here
@@ -162,7 +60,7 @@ protected:
     void addCall( int32_t serial, PersCall* ctx, utime_type utm );
 
 private:
-    PersClientImpl*             pers_;
+    PvssStreamClient*           pers_;
     struct timeval              time0_;
     bool                        async_;
     smsc::logger::Logger*       log_;
@@ -179,52 +77,8 @@ private:
 };
 
 
-
-inline unsigned GetLongevity(PersClient*) { return 251; }
-typedef SingletonHolder< PersClientImpl > SinglePC;
-
-PersClient& PersClient::Instance() 
-{
-    if ( ! inited ) {
-        MutexGuard mg(initLock);
-        if (!inited) throw exceptions::SCAGException("Pers client not inited");
-    }
-    return SinglePC::Instance();
-}
-
-
-void PersClient::Init( const char *_host,
-                       int _port,
-                       int _timeout,
-                       int _pingTimeout,
-                       int _reconnectTimeout,
-                       unsigned _maxCallsCount,
-                       unsigned clients,
-                       bool     async )
-{
-    if (!inited)
-    {
-        MutexGuard guard(initLock);
-        if(!inited) {
-            PersClientImpl& pc = SinglePC::Instance();
-            pc.init( _host, _port, _timeout, _pingTimeout, _reconnectTimeout, _maxCallsCount, clients, async );
-            inited = true;
-        }
-    }
-}
-
-
-/*
-void PersClient::Init( const config::PersClientConfig& cfg )
-{
-    Init( cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout, cfg.reconnectTimeout, cfg.maxCallsCount, cfg.connections, cfg.async );
-} 
- */
-
-
 // =========================================================================
-PersClientImpl::PersClientImpl() :
-// config::ConfigListener(config::PERSCLIENT_CFG),
+PvssStreamClient::PvssStreamClient() :
 port(0),
 timeout(10),
 pingTimeout(100),
@@ -244,13 +98,13 @@ waitingStreams_(0)
 }
 
 
-PersClientImpl::~PersClientImpl()
+PvssStreamClient::~PvssStreamClient()
 {
     Stop();
 }
 
 
-void PersClientImpl::Stop()
+void PvssStreamClient::Stop()
 {
     isStopping = true;
     tp_.stopNotify();
@@ -276,7 +130,7 @@ void PersClientImpl::Stop()
 }
 
 
-void PersClientImpl::init( const char *_host,
+void PvssStreamClient::init( const char *_host,
                            int _port,
                            int _timeout, 
                            int _pingTimeout,
@@ -305,7 +159,7 @@ void PersClientImpl::init( const char *_host,
 }
 
 
-PersCall* PersClientImpl::getCall( int tmomsec, PersClientTask& task )
+PersCall* PvssStreamClient::getCall( int tmomsec, PersClientTask& task )
 {
     if ( isStopping || !connected_ ) return 0;
     PersCall* ctx = 0;
@@ -348,14 +202,14 @@ PersCall* PersClientImpl::getCall( int tmomsec, PersClientTask& task )
 }
 
 
-void PersClientImpl::incConnect()
+void PvssStreamClient::incConnect()
 {
     MutexGuard mg(queueMonitor_);
     ++connected_;
 }
 
 
-void PersClientImpl::decConnect()
+void PvssStreamClient::decConnect()
 {
     PersCall* ctx = 0;
     {
@@ -371,14 +225,14 @@ void PersClientImpl::decConnect()
 
 
 /*
-void PersClientImpl::configChanged()
+void PvssStreamClient::configChanged()
 {
     // FIXME: any reaction on config change?
 }
  */
 
 
-void PersClientImpl::finishCalls( PersCall* ctx, bool drop )
+void PvssStreamClient::finishCalls( PersCall* ctx, bool drop )
 {
     while ( ctx ) {
         ctx->setStatus(NOT_CONNECTED);
@@ -389,7 +243,7 @@ void PersClientImpl::finishCalls( PersCall* ctx, bool drop )
 }
 
 
-bool PersClientImpl::callAsync( PersCall* ctx, PersCallInitiator& fromwho )
+bool PvssStreamClient::callAsync( PersCall* ctx, PersCallInitiator& fromwho )
 {
     if ( !ctx ) return false;
     MutexGuard mg(queueMonitor_);
@@ -427,7 +281,7 @@ bool PersClientImpl::callAsync( PersCall* ctx, PersCallInitiator& fromwho )
 }
 
 
-bool PersClientImpl::callSync( PersCall* call )
+bool PvssStreamClient::callSync( PersCall* call )
 {
     if ( ! callAsync(call,*this) ) return false;
     MutexGuard mg(syncMonitor_);
@@ -441,14 +295,14 @@ bool PersClientImpl::callSync( PersCall* call )
 }
 
 
-void PersClientImpl::continuePersCall( PersCall* call, bool )
+void PvssStreamClient::continuePersCall( PersCall* call, bool )
 {
     MutexGuard mg(syncMonitor_);
     syncRequests_.Delete(call);
 }
 
 
-int PersClientImpl::getClientStatus()
+int PvssStreamClient::getClientStatus()
 {
     if ( ! connected_ ) return NOT_CONNECTED;
     MutexGuard mg(queueMonitor_);
@@ -476,7 +330,7 @@ void PersClientTask::Call::continueExecution( int stat, bool drop )
 }
 
 
-PersClientTask::PersClientTask( PersClientImpl* pers, bool async ) :
+PersClientTask::PersClientTask( PvssStreamClient* pers, bool async ) :
 pers_(pers),
 async_(async),
 log_(0),
@@ -774,7 +628,7 @@ void PersClientTask::connect( bool fromDisconnect )
 
     if ( res )  {
         disconnect(false);
-        smsc_log_info( log_, "Connection failed: %d %s", res, strs[res] );
+        smsc_log_info( log_, "Connection failed: %d %s", res, exceptionReasons[res] );
         throw PersClientException(PersClientExceptionType(res));
     }
     smsc_log_info(log_, "PersClientTask connected");
@@ -856,7 +710,7 @@ int32_t PersClientTask::readPacket( SerialBuffer& bsb )
     int8_t resp = bsb.ReadInt8();
     bsb.SetPos(pos);
     smsc_log_debug( log_, "persread: serial=%d sz=%u result=%u/%s", serial, sz,
-                    resp, RESPONSE_TEXT[( resp > RESPONSE_NOTSUPPORT ? 0 : resp )] );
+                    resp, persServerResponse(resp) );
     return serial;
 }
 
@@ -937,6 +791,5 @@ void PersClientTask::addCall( int32_t serial, PersCall* ctx, utime_type utm )
     callhash_.Insert( serial, --i );
 }
 
-}
 }
 }

@@ -13,12 +13,15 @@
 #include "core/threads/ThreadPool.hpp"
 #include "scag/pers/mtpers/MTPersClient.h"
 #include "scag/config/ConfigManager.h"
+#include "scag/pvss/base/PersClientException.h"
 
 using namespace std;
 using namespace smsc::logger;
 using namespace scag::pers::util;
+using namespace scag::util::storage;
 using namespace scag::pers;
 using namespace scag::config;
+using namespace scag2::pvss;
 using smsc::core::network::Socket;
 using scag::mtpers::ClientTask;
 

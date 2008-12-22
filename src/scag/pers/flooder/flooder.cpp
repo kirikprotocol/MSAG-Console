@@ -13,9 +13,12 @@
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 #include "LCPersClient.h"
+#include "scag/pvss/base/PersClientException.h"
+#include "scag/pvss/client/PvssStreamClient.h"
 
 using std::string;
 using namespace scag2::pers::util;
+using namespace scag2::pvss;
 using smsc::logger::Logger;
 using scag2::config::ConfigManager;
 using scag2::config::ConfigManagerImpl;
@@ -74,14 +77,15 @@ int main(int argc, char* argv[]) {
     ConfigManager& cfgs = ConfigManager::Instance();
       scag2::config::PersClientConfig& pcfg = cfgs.getPersClientConfig();
     
-      PersClient::Init( pcfg.host.c_str(),
-                        pcfg.port,
-                        pcfg.timeout,
-                        pcfg.pingTimeout,
-                        pcfg.reconnectTimeout,
-                        pcfg.maxCallsCount,
-                        pcfg.connections,
-                        pcfg.async );
+      PvssStreamClient* pc = new PvssStreamClient;
+      pc->init( pcfg.host.c_str(),
+                pcfg.port,
+                pcfg.timeout,
+                pcfg.pingTimeout,
+                pcfg.reconnectTimeout,
+                pcfg.maxCallsCount,
+                pcfg.connections,
+                pcfg.async );
     if (argc > 1) {
       speed = atoi(argv[1]);
     }

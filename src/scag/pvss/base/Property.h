@@ -1,7 +1,7 @@
 /* $Id$ */
 
-#ifndef SCAG_PERS_STORE_PROPERTY
-#define SCAG_PERS_STORE_PROPERTY
+#ifndef SCAG_PVSS_BASE_PROPERTY
+#define SCAG_PVSS_BASE_PROPERTY
 
 #include <list>
 #include <string>
@@ -9,11 +9,8 @@
 #include "scag/util/storage/SerialBuffer.h"
 #include "scag/util/storage/GlossaryBase.h"
 
-namespace scag { namespace pers { namespace util {
-
-using scag::util::storage::SerialBuffer;
-using scag::util::storage::SerialBufferOutOfBounds;
-using scag::util::storage::GlossaryBase;
+namespace scag2 {
+namespace pvss {
 
 namespace perstypes {
 
@@ -48,7 +45,8 @@ using namespace perstypes;
 
 static const size_t STRBUF_SIZE = 64;
 
-class Property {
+class Property 
+{
 protected:
     PropertyType type;
     std::string name;
@@ -62,12 +60,12 @@ protected:
     uint32_t life_time;
 
     void copy(const Property& cp);
-    static void StringFromBuf(SerialBuffer& buf, std::string &str);
+    static void StringFromBuf( util::storage::SerialBuffer& buf, std::string &str );
 
     void setPropertyName(const char* nm);
 
-    std::string propertyStr;
-    char strBuf[STRBUF_SIZE];
+    mutable std::string propertyStr;
+    mutable char strBuf[STRBUF_SIZE];
 
 public:
 
@@ -90,22 +88,22 @@ public:
 
     const char* getName() const { return name.c_str(); };
     void setName(const std::string& nm) { name = nm; };
-    int64_t getIntValue() { return i_val; };
-    bool getBoolValue() { return b_val; };
-    time_t getDateValue() { return d_val; };
-    const std::string& getStringValue() { return s_val; };
+    int64_t getIntValue() const { return i_val; };
+    bool getBoolValue() const { return b_val; };
+    time_t getDateValue() const { return d_val; };
+    const std::string& getStringValue() const { return s_val; };
     void setValue(const Property& cp);
     void setValue(const char* str);
     void setIntValue(int64_t i) { i_val = i; type = INT; };
     void setBoolValue(bool b) { b_val = b; type = BOOL; };
     void setDateValue(time_t d) { d_val = d; type = DATE; };
     void setStringValue(const char* s) { s_val = s; type = STRING; };
-    uint8_t getType() { return type; };
+    uint8_t getType() const { return type; };
     void setTimePolicy(TimePolicy policy, time_t fd, uint32_t lt);
-    TimePolicy getTimePolicy() { return time_policy; };
-    bool isExpired();
-	bool isExpired(time_t cur_time);
-    const std::string& toString();
+    TimePolicy getTimePolicy() const { return time_policy; };
+    bool isExpired() const;
+    bool isExpired(time_t cur_time) const;
+    const std::string& toString() const;
 
     void setInt(const char *nm, int32_t i, TimePolicy policy, time_t fd, uint32_t lt);
     void setBool(const char *nm, bool b, TimePolicy policy, time_t fd, uint32_t lt);
@@ -114,24 +112,20 @@ public:
 
     void assign(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt);
 
-    void Serialize(SerialBuffer& buf, bool fromFSDB = false, GlossaryBase* glossary = NULL) const;
-    void Deserialize(SerialBuffer& buf, bool toFSDB = false, GlossaryBase* glossary = NULL);
+    void Serialize(util::storage::SerialBuffer& buf, bool fromFSDB = false, util::storage::GlossaryBase* glossary = NULL) const;
+    void Deserialize(util::storage::SerialBuffer& buf, bool toFSDB = false, util::storage::GlossaryBase* glossary = NULL);
 
     bool convertToInt();
 };
 
-}//util
-}//pers
-}//scag
+}//pvss
+}//scag2
 
-namespace scag2 {
-namespace pers {
-namespace util {
+namespace scag {
+namespace pvss {
 
-using namespace scag::pers::util::perstypes;
-using scag::pers::util::Property;
+using scag2::pvss::Property;
 
-}
 }
 }
 

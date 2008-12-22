@@ -128,20 +128,20 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             break;
         }
         if ( 0 == strncmp(name.c_str(), "profile:", 8 ) ) {
-            if (name=="profile:set") return new PersAction(pers::util::PC_SET);
-            if (name=="profile:get") return new PersAction(pers::util::PC_GET);
-            if (name=="profile:del") return new PersAction(pers::util::PC_DEL);
-            if (name=="profile:inc") return new PersAction(pers::util::PC_INC_RESULT);
-            if (name=="profile:inc-mod") return new PersAction(pers::util::PC_INC_MOD);
+            if (name=="profile:set") return new PersAction(pvss::PC_SET);
+            if (name=="profile:get") return new PersAction(pvss::PC_GET);
+            if (name=="profile:del") return new PersAction(pvss::PC_DEL);
+            if (name=="profile:inc") return new PersAction(pvss::PC_INC_RESULT);
+            if (name=="profile:inc-mod") return new PersAction(pvss::PC_INC_MOD);
             if (name=="profile:batch") return new BatchAction();
             break;
         }
         if ( 0 == strncmp(name.c_str(), "batch:", 6 ) ) {
-            if (name=="batch:set") return new PersActionCommand(pers::util::PC_SET);
-            if (name=="batch:get") return new PersActionCommand(pers::util::PC_GET);
-            if (name=="batch:del") return new PersActionCommand(pers::util::PC_DEL);
-            if (name=="batch:inc") return new PersActionCommand(pers::util::PC_INC_RESULT);
-            if (name=="batch:inc-mod") return new PersActionCommand(pers::util::PC_INC_MOD);
+            if (name=="batch:set") return new PersActionCommand(pvss::PC_SET);
+            if (name=="batch:get") return new PersActionCommand(pvss::PC_GET);
+            if (name=="batch:del") return new PersActionCommand(pvss::PC_DEL);
+            if (name=="batch:inc") return new PersActionCommand(pvss::PC_INC_RESULT);
+            if (name=="batch:inc-mod") return new PersActionCommand(pvss::PC_INC_MOD);
             break;
         }
         if ( 0 == strncmp(name.c_str(), "stat:", 5 ) ) {

@@ -1,16 +1,14 @@
-#ifndef _SCAG_PERS_UTIL_PERSCALLPARAMS_H
-#define _SCAG_PERS_UTIL_PERSCALLPARAMS_H
+#ifndef _SCAG_PVSS_BASE_PERSCALL_H
+#define _SCAG_PVSS_BASE_PERSCALL_H
 
 #include <memory>
 #include "PersCommand.h"
 
 namespace scag2 {
-namespace pers {
-namespace util {
+namespace pvss {
 
 class PersCall;
 class PersClient;
-
 
 class PersCallInitiator
 {
@@ -63,9 +61,7 @@ private:
     PersCallInitiator*            initiator_;
 };
 
+} // pvss
+} // scag2
 
-}
-}
-}
-
-#endif /* ! _SCAG_PERS_UTIL_PERSCALLPARAMS_H */
+#endif /* ! _SCAG_PVSS_BASE_PERSCALLPARAMS_H */

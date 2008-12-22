@@ -1,9 +1,8 @@
-#ifndef _SCAG_PERS_UTIL_PERSCLIENTEXCEPTION_H
-#define _SCAG_PERS_UTIL_PERSCLIENTEXCEPTION_H
+#ifndef _SCAG_PVSS_BASE_PERSCLIENTEXCEPTION_H
+#define _SCAG_PVSS_BASE_PERSCLIENTEXCEPTION_H
 
-namespace scag {
-namespace pers {
-namespace util {
+namespace scag2 {
+namespace pvss {
 
 namespace perstypes {
 
@@ -33,7 +32,7 @@ enum PersClientExceptionType
         CLIENT_BUSY
 };
 
-static const char* strs[] = {
+static const char* exceptionReasons[] = {
         "Ok",
         "Property not found",
         "Invalid key",
@@ -63,7 +62,7 @@ class PersClientException
 public:
     PersClientException(PersClientExceptionType e) { et = e; };
     PersClientExceptionType getType() const { return et; };
-    const char* what() const { return strs[et]; };
+    const char* what() const { return exceptionReasons[et]; };
 protected:
     PersClientExceptionType et;
 };
@@ -74,16 +73,13 @@ using namespace perstypes;
 
 }
 }
-}
 
-namespace scag2 {
-namespace pers {
-namespace util {
+namespace scag {
+namespace pvss {
 
-using namespace scag::pers::util::perstypes;
+using namespace scag2::pvss::perstypes;
 
 }
 }
-}
 
-#endif /* !_SCAG_PERS_UTIL_PERSCLIENTEXCEPTION_H */
+#endif /* !_SCAG_PVSS_BASE_PERSCLIENTEXCEPTION_H */

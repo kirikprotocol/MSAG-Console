@@ -1,17 +1,15 @@
-#ifndef _SCAG_PERS_UTIL_PERSCOMMAND_H
-#define _SCAG_PERS_UTIL_PERSCOMMAND_H
+#ifndef _SCAG_PVSS_BASE_PERSCOMMAND_H
+#define _SCAG_PVSS_BASE_PERSCOMMAND_H
 
 #include <vector>
 #include "scag/util/storage/SerialBuffer.h"
-#include "PersClientException.h"
 #include "Types.h"
 #include "Property.h"
 
 namespace scag2 {
-namespace pers {
-namespace util {
+namespace pvss {
 
-using scag2::util::storage::SerialBuffer;
+using util::storage::SerialBuffer;
 
 class PersCommandSingle;
 class PersCommandBatch;
@@ -39,20 +37,22 @@ public:
     /// fill serial buffer (w/o cmdType) and return the status
     virtual int fillSB( SerialBuffer& sb ) = 0;
 
-    /// read from SB and return the status
+    /// read response from SB and return the status
     virtual int readSB( SerialBuffer& sb ) = 0;
 
     // the status of the last action
     inline int status() const { return status_; }
     inline int setStatus( int stat ) { return status_ = int8_t(stat); }
-    virtual int failIndex() const { return 0; }
 
+    /// valid for batch
+    virtual int failIndex() const { return 0; }
     virtual PersCommandSingle* castSingle() { return 0; }
     virtual PersCommandBatch* castBatch() { return 0; }
 
 protected:
     PersCommand() : cmdType_(PC_UNKNOWN), status_(0) {}
     PersCommand( PersCmd cmdtype ) : cmdType_(cmdtype), status_(0) {}
+
     // default is ok
     // PersCommand( const PersCommand& );
     // PersCommand& operator = ( const PersCommand& );
@@ -71,7 +71,8 @@ class PersCommandSingle : public PersCommand
 public:
     PersCommandSingle() : PersCommand() {}
     PersCommandSingle( PersCmd cmdtype ) : PersCommand( cmdtype ) {}
-    Property& property() { return property_; }
+    inline const Property& property() const { return property_; }
+    inline Property& property() { return property_; }
     int32_t result() const { return result_; }
     void setResult( int32_t res ) { result_ = res; }
     virtual int fillSB( SerialBuffer& sb );
@@ -96,6 +97,7 @@ public:
     virtual int readSB( SerialBuffer& sb );
     virtual int failIndex() const { return index_; }
     virtual PersCommandBatch* castBatch() { return this; }
+    const std::vector< PersCommandSingle >& batch() const { return batch_; }
 
 protected:
     inline int setStatus( int stat ) { return PersCommand::setStatus(stat); }
@@ -109,6 +111,5 @@ private:
 
 }
 }
-}
 
-#endif /* !_SCAG_PERS_UTIL_PERSCOMMAND_H */
+#endif /* !_SCAG_PVSS_BASE_PERSCOMMAND_H */

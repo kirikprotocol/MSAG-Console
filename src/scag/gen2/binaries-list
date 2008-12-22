@@ -15,8 +15,7 @@ scag/msag           gwmain2        \
   -lscag-config-impl \
   -lscag-transport-smpp-impl \
   -lscag-transport-http-impl \
-  \
-  -lscag-pers-util \
+  -lscag-pvss-client \
   \
   -lscag-sessions-base \
   -lscag-lcm-base \
@@ -27,6 +26,7 @@ scag/msag           gwmain2        \
   -lscag-transport-smpp-router \
   -lscag-transport-http-base \
   -lscag-stat-base \
+  -lscag-pvss-base \
   \
   -lscag-transport \
   \

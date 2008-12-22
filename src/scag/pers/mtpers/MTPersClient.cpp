@@ -1,8 +1,12 @@
 #include <poll.h>
 #include "MTPersClient.h"
-#include "scag/pers/util/Types.h"
+#include "scag/pvss/base/Types.h"
 
-namespace scag { namespace mtpers {
+
+namespace scag {
+using namespace pvss;
+
+namespace mtpers {
 
 MTPersClient::MTPersClient(const string& _host, int _port, int _timeout, int _pingTimeout):connected(false),
                            host(_host), port(_port), timeout(_timeout), pingTimeout(_pingTimeout), asynch(false), sequenceNumber(1)
@@ -539,10 +543,10 @@ void MTPersClient::testCase_CommandProcessing(ProfileType pt, const char* addres
   }
   string storeName;
   switch (pt) {
-  case scag::pers::util::PT_ABONENT: storeName = "ABONENT"; break;
-  case scag::pers::util::PT_SERVICE: storeName = "SERVICE"; break;
-  case scag::pers::util::PT_PROVIDER: storeName = "PROVIDER"; break;
-  case scag::pers::util::PT_OPERATOR: storeName = "OPERATOR"; break;
+  case PT_ABONENT: storeName = "ABONENT"; break;
+  case PT_SERVICE: storeName = "SERVICE"; break;
+  case PT_PROVIDER: storeName = "PROVIDER"; break;
+  case PT_OPERATOR: storeName = "OPERATOR"; break;
   }
   Property prop;
 
