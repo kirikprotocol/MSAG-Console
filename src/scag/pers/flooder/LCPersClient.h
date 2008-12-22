@@ -81,7 +81,6 @@ public:
     smsc_log_info(logger_, "counter started");
     while (!stopped_) {
       sleep(period_);
-      //millisleep(period_ * 1000);
       if (stopped_) {
         break;
       }
