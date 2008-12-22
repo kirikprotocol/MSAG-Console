@@ -1,3 +1,4 @@
+#include <util/int.h>
 #include <sys/time.h>
 #include <poll.h>
 #include "PersCallParams.h"
@@ -16,6 +17,15 @@ namespace {
 
 bool inited = false;
 Mutex initLock;
+
+struct PersCallPtrHFunc
+{
+    inline static unsigned int CalcHash( const scag2::pers::util::PersCall* key )
+    {
+        return unsigned(reinterpret_cast<int64_t>
+                        (reinterpret_cast<const void*>(key)));
+    }
+};
 
 }
 
@@ -105,7 +115,7 @@ private:
     
     // for sync calls
     EventMonitor                                     syncMonitor_;
-    smsc::core::buffers::XHash< PersCall*, uint8_t > syncRequests_;
+    smsc::core::buffers::XHash< PersCall*, uint8_t, PersCallPtrHFunc > syncRequests_;
 };
 
 
