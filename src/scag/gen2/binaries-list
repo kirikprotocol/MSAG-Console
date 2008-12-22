@@ -64,7 +64,7 @@ scag/msag           gwmain2        \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil-URCdb -lutil \
   $(__LIBRARIES) \
-  $(SNMP_LIBS) \
+  $(SNMP_LIBS_CORE) \
   $(SSL_LIB) \
   -lrt -ldl \
   $(LIBMALLOC)  
