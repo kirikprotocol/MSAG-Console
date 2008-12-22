@@ -49,8 +49,8 @@ enum PersServerResponseType{
     RESPONSE_BAD_REQUEST,
     RESPONSE_TYPE_INCONSISTENCE,
     COMMAND_IN_PROCESS,
-    RESPONSE_PROFILE_LOCKED,
-    RESPONSE_NOTSUPPORT
+    RESPONSE_PROFILE_LOCKED
+    //RESPONSE_NOTSUPPORT
 };
 
     static const char* RESPONSE_TEXT[] = {
@@ -61,8 +61,8 @@ enum PersServerResponseType{
       "bad request",
       "type inconsistence",
       "command in process",
-      "profile locked",
-      "not support"
+      "profile locked"
+      //"not support"
     };
 
 
