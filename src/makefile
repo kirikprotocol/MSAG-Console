@@ -174,11 +174,17 @@ CXXFLAGS := $(CXXFLAGS) -DNOMAPPROXY
 endif
 
 ifeq ($(SNMP),YES)
-SNMP_LIBS := -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -lsnmp -ladm -lsnmp-smestattable -lsnmp-smeerrtable
-CXXFLAGS := $(CXXFLAGS) -DSNMP
+ifeq ($(CXX),CC)
+SNMP_LIBS_CORE = -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -ladm
 ifeq ($(SFW),YES)
-SNMP_LIBS := $(SNMP_LIBS) -lpkcs11
+SNMP_LIBS_CORE += -lpkcs11
 endif
+else
+SNMP_LIBS_CORE = `net-snmp-config --agent-libs`
+endif # CXX != CC
+SNMP_LIBS = -lsnmp -lsnmp-smestattable -lsnmp-smeerrtable $(SNMP_LIBS_CORE)
+CXXFLAGS := $(CXXFLAGS) -DSNMP
+export SNMP_LIBS_CORE
 export SNMP_LIBS
 endif
 
