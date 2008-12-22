@@ -16,7 +16,7 @@
 #include "AbntAddr.hpp"
 
 #include "scag/util/storage/Serializer.h"
-#include "scag/util/storage/GlossaryBase.h"
+#include "scag/pers/Glossary.h"
 
 
 
@@ -140,25 +140,5 @@ public:
 };
 
 }}
-/*
-inline scag::util::storage::Serializer& operator << (scag::util::storage::Serializer& ser, 
-                                                     const scag::pers::Profile& pf) { 
-  scag::util::storage::SerialBuffer buf;
-  pf.Serialize(buf, true, ser.getGlossary());
-  ser.write(buf.GetSize(), buf.c_ptr());
-  return ser; 
-};
-
-inline scag::util::storage::Deserializer& operator >> (scag::util::storage::Deserializer& deser,
-                                                 scag::pers::Profile& pf) { 
-  uint32_t size = 0;
-  const char* buf = deser.read(size);
-  scag::util::storage::SerialBuffer sb(size);
-  sb.Append(buf, size);
-  sb.SetPos(0);
-  pf.Deserialize(sb, true, deser.getGlossary());
-  return deser;
-};
-*/
 #endif
 

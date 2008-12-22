@@ -22,7 +22,7 @@ void Profile::Serialize(SerialBuffer& buf, bool toFSDB, GlossaryBase* glossary) 
     Property* prop;
     char *key = 0;
     while(it.Next(key, prop))
-        prop->Serialize(buf, toFSDB, glossary);
+        prop->Serialize(buf, toFSDB);
 }
 
 void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB, GlossaryBase* glossary)
@@ -42,7 +42,7 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB, GlossaryBase* glossa
     while(cnt) {
         prop = new Property();
         do{
-            prop->Deserialize(buf, fromFSDB, glossary);
+            prop->Deserialize(buf, fromFSDB);
             cnt--;
             if(log && prop->isExpired(cur_time))
                 smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), prop->getName());

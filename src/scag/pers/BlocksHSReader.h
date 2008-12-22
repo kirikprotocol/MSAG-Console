@@ -3,7 +3,6 @@
 
 #include "scag/pers/BlocksHSStorage.h"
 #include "scag/util/storage/SerialBuffer.h"
-#include "scag/util/storage/Glossary.h"
 #include "scag/pers/Profile.h"
 #include "scag/pers/upload/PersClient.h"
 
@@ -95,7 +94,7 @@ public:
         return 0;
     }
     
-    int readDataFiles(int files_count, bool sendToPers, GlossaryBase* glossary) {
+    int readDataFiles(int files_count, bool sendToPers) {
       if (!files_count) {
         return 0;
       }
@@ -147,7 +146,7 @@ public:
               //dataFile.Read((void*)data_buff, effectiveBlockSize);
               dataFile.Read((void*)data_buff, hdr.data_size);
               //status_profiles += restoreProfile(hdr.key, data, sendToPers);
-              status_profiles += restoreProfileCompletely(hdr.key, data, sendToPers, glossary);
+              status_profiles += restoreProfileCompletely(hdr.key, data, sendToPers);
             }
             total_count += profiles_count;
             total_status_profiles += status_profiles;
@@ -164,10 +163,10 @@ public:
       return 0;
     }
 private:
-  int restoreProfileCompletely(const Key& key, SerialBuffer& data, bool sendToPers, GlossaryBase* glossary) {
+  int restoreProfileCompletely(const Key& key, SerialBuffer& data, bool sendToPers) {
     try {
       Profile pf(key.toString());   
-      pf.Deserialize(data, true, glossary);
+      pf.Deserialize(data, true);
       SerialBuffer batch;
       
       if (sendToPers) {
@@ -203,10 +202,10 @@ private:
     return 0;
   }
 
-  int restoreProfile(const Key& key, SerialBuffer& data, bool sendToPers, GlossaryBase* glossary) {
+  int restoreProfile(const Key& key, SerialBuffer& data, bool sendToPers) {
     try {
       Profile pf(key.toString());   
-      pf.Deserialize(data, true, glossary);
+      pf.Deserialize(data, true);
       if (!pf.GetProperty(STATUS_PROPERTY)) {
         return 0;
       }

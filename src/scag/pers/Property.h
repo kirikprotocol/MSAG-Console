@@ -7,14 +7,14 @@
 #include <string>
 
 #include "scag/util/storage/SerialBuffer.h"
-#include "scag/util/storage/GlossaryBase.h"
+#include "scag/pers/Glossary.h"
 
 namespace scag{ namespace pers{
 
 //using namespace smsc::core::buffers;
 using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
-using scag::util::storage::GlossaryBase;
+//using scag::util::storage::GlossaryBase;
 
 enum TimePolicy{
     UNKNOWN,
@@ -93,8 +93,8 @@ public:
 
     void assign(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt);
 
-    void Serialize(SerialBuffer& buf, bool fromFSDB = false, GlossaryBase* glossary = NULL) const;
-    void Deserialize(SerialBuffer& buf, bool toFSDB = false, GlossaryBase* glossary = NULL);
+    void Serialize(SerialBuffer& buf, bool fromFSDB = false) const;
+    void Deserialize(SerialBuffer& buf, bool toFSDB = false);
 
     bool convertToInt();
 };
