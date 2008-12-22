@@ -44,7 +44,7 @@ public class Edit extends EditBean
     private String altHost = null;
     private int altPort = 0;
     private boolean enabled;
-    private boolean snmptracking;
+    private boolean snmpTracking;
     private String bindSystemId;
     private String bindPassword;
     private String systemType;
@@ -121,7 +121,7 @@ public class Edit extends EditBean
         this.altHost = center.getAltHost();
         this.altPort = center.getAltPort();
         this.enabled = center.isEnabled();
-        this.snmptracking = center.isSnmptracking();
+        this.snmpTracking = center.isSnmpTracking();
         this.providerId = -1;//center.getProvider().getId();
         this.uid = center.getUid();
         this.bindSystemId = center.getBindSystemId();
@@ -163,11 +163,11 @@ public class Edit extends EditBean
             oldCenter = (Center) centers.get(getEditId());
             center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
                     enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
-                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, oldCenter.getMetaGroup(), snmptracking);
+                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, oldCenter.getMetaGroup(), snmpTracking);
         }else{
             center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
                     enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
-                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, "", snmptracking);
+                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, "", snmpTracking);
         }
         centers.remove(getEditId());
         centers.put(id, center);
@@ -275,12 +275,12 @@ public class Edit extends EditBean
         this.enabled = enabled;
     }
 
-    public boolean isSnmptracking() {
-        return snmptracking;
+    public boolean isSnmpTracking() {
+        return snmpTracking;
     }
 
-    public void setSnmptracking(final boolean snmptracking) {
-        this.snmptracking = snmptracking;
+    public void setSnmpTracking(final boolean snmpTracking) {
+        this.snmpTracking = snmpTracking;
     }
 
     public String[] getTransportIds() {

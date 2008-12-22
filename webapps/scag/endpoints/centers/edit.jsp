@@ -57,7 +57,7 @@
                         </c:when>
                         <c:otherwise></c:otherwise>
                     </c:choose>
-                    <sm-ep:check title="centers.edit.check.snmptracking.title" head="centers.edit.check.snmptracking.head" name="snmptracking"/>
+                    <sm-ep:check title="centers.edit.check.snmptracking.title" head="centers.edit.check.snmptracking.head" name="snmpTracking"/>
                 </sm-ep:properties>
             </c:when>
             <c:when test="${bean.transportId == 2}">

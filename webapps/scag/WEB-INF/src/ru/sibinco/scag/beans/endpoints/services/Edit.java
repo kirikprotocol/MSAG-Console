@@ -40,7 +40,7 @@ public class Edit extends EditBean {
     protected String password = null;
     protected int timeout = 0;
     protected boolean enabled;
-    protected boolean snmptracking;
+    protected boolean snmpTracking;
     protected byte mode = Svc.MODE_TRX;
     protected long providerId = -1;
     protected long transportId = 1;
@@ -107,7 +107,7 @@ public class Edit extends EditBean {
         this.providerId = -1;//svc.getProvider().getId();
         this.timeout = svc.getTimeout();
         this.enabled = svc.isEnabled();
-        this.snmptracking = svc.isSnmptracking();
+        this.snmpTracking = svc.isSnmpTracking();
         this.maxSmsPerSec = svc.getMaxSmsPerSec();
         this.inQueueLimit = svc.getInQueueLimit();
         this.outQueueLimit = svc.getOutQueueLimit();
@@ -139,11 +139,11 @@ public class Edit extends EditBean {
             logger.debug( "services/Edit save() 136");
             oldSvc = (Svc) svcs.get(getEditId());
             svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj,
-                          inQueueLimit, outQueueLimit, maxSmsPerSec, oldSvc.getMetaGroup(), snmptracking);
+                          inQueueLimit, outQueueLimit, maxSmsPerSec, oldSvc.getMetaGroup(), snmpTracking);
         }else{
-            logger.debug( "services/Edit save() 141, snmptracking=" + snmptracking );
+            logger.debug( "services/Edit save() 141, snmpTracking=" + snmpTracking );
             svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj,
-                          inQueueLimit, outQueueLimit, maxSmsPerSec, "", snmptracking);
+                          inQueueLimit, outQueueLimit, maxSmsPerSec, "", snmpTracking);
         }
         logger.debug( "services/Edit save() 145");
         svcs.remove(getEditId());
@@ -229,12 +229,12 @@ public class Edit extends EditBean {
         this.enabled = enabled;
     }
 
-    public boolean isSnmptracking() {
-        return snmptracking;
+    public boolean isSnmpTracking() {
+        return snmpTracking;
     }
 
-    public void setSnmptracking(final boolean snmptracking) {
-        this.snmptracking = snmptracking;
+    public void setSnmpTracking(final boolean snmpTracking) {
+        this.snmpTracking = snmpTracking;
     }
 
     public byte getMode() {
