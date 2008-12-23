@@ -119,10 +119,24 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
         <property name="SETUP_MAKE_CXX" value="true"/>
     </target>
 
+    <target name="pers.upload"
+            description="-&gt; upload data from old personalization server">
+        <fail if="SETUP_DONE" message="You should specify 'pers.upload' before any actions"/>
+        <property name="SETUP_MAKE_PERS_UPLOAD" value="true"/>
+        <property name="SETUP_MAKE_CXX" value="true"/>
+    </target>
+
     <target name="pvss"
             description="-&gt; personalization server (aka mtpers)">
         <fail if="SETUP_DONE" message="You should specify 'pvss' before any actions"/>
         <property name="SETUP_MAKE_PVSS" value="true"/>
+        <property name="SETUP_MAKE_CXX" value="true"/>
+    </target>
+
+    <target name="pvss.flooder"
+            description="-&gt; flooder for personalization server ">
+        <fail if="SETUP_DONE" message="You should specify 'pvss.flooder' before any actions"/>
+        <property name="SETUP_MAKE_PVSS_FLOODER" value="true"/>
         <property name="SETUP_MAKE_CXX" value="true"/>
     </target>
 
@@ -166,7 +180,9 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
                 <isset property="SETUP_MAKE_MSAG"/>
                 <isset property="SETUP_MAKE_SCAG"/>
                 <isset property="SETUP_MAKE_PERS"/>
+                <isset property="SETUP_MAKE_PERS_UPLOAD"/>
                 <isset property="SETUP_MAKE_PVSS"/>
+                <isset property="SETUP_MAKE_PVSS_FLOODER"/>
                 <isset property="SETUP_MAKE_PVGW"/>
                 <isset property="SETUP_MAKE_PVCP"/>
                 <isset property="SETUP_MAKE_ADMIN"/>
@@ -329,6 +345,13 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
         </ant>
     </target>
 
+    <target name="-make.pers.upload" depends="makedeps" if="SETUP_MAKE_PERS_UPLOAD">
+        <echo>Building pers</echo>
+        <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
+            <property name="targets" value="scag.pers.upload"/>
+        </ant>
+    </target>
+
     <target name="-make.pvcp" depends="makedeps" if="SETUP_MAKE_PVCP">
         <echo>Building pvcp</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
@@ -339,7 +362,14 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
     <target name="-make.pvss" depends="makedeps" if="SETUP_MAKE_PVSS">
         <echo>Building pvss</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
-            <property name="targets" value="scag.pers.mtpers"/>
+            <property name="targets" value="scag.pvss.server"/>
+        </ant>
+    </target>
+
+    <target name="-make.pvss.flooder" depends="makedeps" if="SETUP_MAKE_PVSS_FLOODER">
+        <echo>Building pvss</echo>
+        <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
+            <property name="targets" value="scag.pvss.flooder"/>
         </ant>
     </target>
 
@@ -465,7 +495,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
     </target>
 
     <target name="make" 
-            depends="-setupdone, -make.scag, -make.msag, -make.pers, -make.pvss, -make.pvgw, -make.pvcp, -make.admin, -make.webapp, -make.jedit, -make.src"
+            depends="-setupdone, -make.scag, -make.msag, -make.pers, -make.pers.upload, -make.pvss, -make.pvss.flooder,-make.pvgw, -make.pvcp, -make.admin, -make.webapp, -make.jedit, -make.src"
             unless="MAKE_DONE">
         <!-- description="Action: Compile previously selected targets" -->
         <!-- antcall target="makedeps"/ -->
