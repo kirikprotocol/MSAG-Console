@@ -10,7 +10,6 @@
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 
-#include "scag/pvss/flooder/LCPersClient.h"
 #include "version.inc"
 #include "PersServer.h"
 #include "StorageManager.h"
