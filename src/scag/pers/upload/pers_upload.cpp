@@ -11,9 +11,10 @@
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 
+#include "scag/config/ConfigManager.h"
 #include "scag/pers/Glossary.h"
-#include "scag/pers/BlocksHSReader.h"
-#include "PersClient.h"
+#include "scag/pers/upload/BlocksHSReader.h"
+#include "scag/pers/upload/PersClient.h"
 
 using std::string;
 using scag::pers::AbntAddr;

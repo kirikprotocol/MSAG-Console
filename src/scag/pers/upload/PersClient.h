@@ -5,12 +5,11 @@
  
 #include "core/network/Socket.hpp"
 #include "scag/util/storage/SerialBuffer.h"
-#include "scag/config/pers/PersClientConfig.h"
 #include "scag/re/base/LongCallContextBase.h"
 #include "scag/pvss/base/PersClientException.h"
 #include "scag/pvss/base/Property.h"
 #include "scag/pvss/base/Types.h"
-#include "scag/pers/util/PersKey.h"
+#include "scag/pers/upload/PersKey.h"
 
 namespace scag { namespace pers { namespace util {
 
@@ -43,7 +42,6 @@ protected:
 public:
     static PersClient& Instance();
     static void Init(const char *_host, int _port, int timeout, int pingTimeout, int _reconnectTimeout, int _maxCallsCount);// throw(PersClientException);
-    static void Init(const scag::config::PersClientConfig& cfg);// throw(PersClientException);    
 
     virtual void SetProperty(ProfileType pt, const PersKey& key, Property& prop) = 0;
     virtual void GetProperty(ProfileType pt, const PersKey& key, const char *property_name, Property& prop) = 0;

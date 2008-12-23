@@ -6,9 +6,9 @@
 scag/pers_upload                         pers_upload     \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -llogger-additional \
   -lscag-pers-upload \
-  -lscag-pvss-base \
   -lscag-pers \
-  -lscag-util-encodings -lscag-exc -lscag-util-storage -lscag-config-base \
+  -lscag-pvss-base \
+  -lscag-util-encodings -lscag-exc -lscag-util-storage \
   -lscag-util-properties -lscag-util-singleton \
   \
   -lcore-buffers \
@@ -22,6 +22,5 @@ scag/pers_upload                         pers_upload     \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil-URCdb -lutil \
   $(__LIBRARIES) \
-  -lnetsnmpmibs -lnetsnmpagent -lnetsnmphelpers -lnetsnmp \
   $(SSL_LIB) \
   -lrt -ldl

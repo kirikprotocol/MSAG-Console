@@ -5,8 +5,6 @@
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "scag/util/singleton/Singleton.h"
-#include "scag/config/base/ConfigManager2.h"
-#include "scag/config/base/ConfigListener2.h"
 #include "scag/pvss/base/PersServerResponse.h"
 
 #include "PersClient.h"
@@ -23,10 +21,10 @@ using namespace scag2::lcm;
 bool  PersClient::inited = false;
 Mutex PersClient::initLock;
 
-class PersClientImpl: public PersClient, public scag2::config::ConfigListener, public Thread {
+class PersClientImpl: public PersClient, public Thread {
 //    friend class PersClient;
 public:
-    PersClientImpl(): connected(false), headContext(NULL), ConfigListener(scag::config::PERSCLIENT_CFG) {};
+    PersClientImpl(): connected(false), headContext(NULL) {};
     ~PersClientImpl() { Stop(); if(connected) sock.Close(); };
 
     void SetProperty(ProfileType pt, const PersKey& key, Property& prop);
@@ -69,7 +67,6 @@ public:
 	
 protected:
     void setBatchCount(uint32_t cnt, SerialBuffer& bsb);    
-    void configChanged();
     void init();
     void reinit(const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount);
     void setPacketSize(SerialBuffer& bsb);
@@ -138,19 +135,6 @@ void PersClient::Init(const char *_host, int _port, int _timeout, int _pingTimeo
     }
 }
 
-void PersClient::Init(const scag::config::PersClientConfig& cfg)// throw(PersClientException);    
-{
-    if (!PersClient::inited)
-    {
-        MutexGuard guard(PersClient::initLock);
-        if(!inited) {
-            PersClientImpl& pc = SinglePC::Instance();
-            pc.init_internal(cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout, cfg.reconnectTimeout, cfg.maxCallsCount);
-            PersClient::inited = true;
-        }
-    }
-} 
-
 void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount) //throw(PersClientException)
 {
     log = Logger::getInstance("persclient");
@@ -173,13 +157,6 @@ void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, i
         smsc_log_error(log, "Error during initialization. %s", e.what());
     }
     StartClient();
-}
-
-void PersClientImpl::configChanged()
-{
-    scag2::config::PersClientConfig& cfg = scag2::config::ConfigManager::Instance().getPersClientConfig();
-    
-    reinit(cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout, cfg.reconnectTimeout, cfg.maxCallsCount);
 }
 
 void PersClientImpl::reinit(const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount) //throw(PersClientException)
