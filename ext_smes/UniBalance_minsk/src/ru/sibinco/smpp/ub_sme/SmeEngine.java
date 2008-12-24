@@ -10,6 +10,7 @@ import com.lorissoft.advertising.util.Encode;
 import ru.aurorisoft.smpp.*;
 import ru.sibinco.smpp.ub_sme.util.DBConnectionManager;
 import ru.sibinco.smpp.ub_sme.util.Utils;
+import ru.sibinco.smpp.ub_sme.snmp.Agent;
 import ru.sibinco.util.threads.ThreadsPool;
 
 import java.io.File;
@@ -45,7 +46,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
   private boolean bannerEngineClientEnabled = false;
   private IAdvertisingClient bannerEngineClient;
   private String bannerEngineClientHost = "localhost";
-  private String bannerEngineClientPort = "8555";
+  private String bannerEngineClientPort = "";
   private String bannerEngineClientTimeout = "1000";
   private String bannerEngineClientReconnectTimeout = "1000";
   private String maxRequestInMemory = "1000";
@@ -69,30 +70,23 @@ public class SmeEngine implements MessageListener, ResponseListener {
   private AvgCounter bannerCounter;
 
   private long balanceWarnIntervalStart = 250;
-  private long balanceErrorIntervalStart = 500;
+  private long balanceMinorIntervalStart = 500;
+  private long balanceMajorIntervalStart = 1000;
   private long balanceCriticalIntervalStart = 1000;
 
   private long bannerWarnIntervalStart = 250;
-  private long bannerErrorIntervalStart = 500;
+  private long bannerMinorIntervalStart = 500;
+  private long bannerMajorIntervalStart = 750;
   private long bannerCriticalIntervalStart = 1000;
 
   private long bannerDisableOnErrorTimeout = 60000;
 
-  private byte currentBalanceSeverity = SNMP_SEVERITY_NORMAL;
-  private byte currentBannerSeverity = SNMP_SEVERITY_NORMAL;
+  private byte currentBalanceSeverity = Agent.SNMP_SEVERITY_NORMAL;
+  private byte currentBannerSeverity = Agent.SNMP_SEVERITY_NORMAL;
 
-  public final static byte SNMP_SEVERITY_NORMAL = 1;
-  public final static byte SNMP_SEVERITY_WARNING = 2;
-  public final static byte SNMP_SEVERITY_ERROR = 3;
-  public final static byte SNMP_SEVERITY_CRITICAL = 4;
-
-  public final static byte SNMP_STATUS_ACTIVE = 0;
-  public final static byte SNMP_STATUS_CLEARED = 1;
-
-  public final static String[] SNMP_STATUS = {"ACTIVE", "CLEARED"};
+  private Agent snmpAgent;
 
   //
-
 
   private ThreadsPool threadsPool = null;
   private ThreadsPool bannerThreadsPool = null;
@@ -261,9 +255,14 @@ public class SmeEngine implements MessageListener, ResponseListener {
         logger.error("Illegal long value: " + config.getProperty("balance.warning.interval.start"), e);
       }
       try {
-        balanceErrorIntervalStart = Long.parseLong(config.getProperty("balance.error.interval.start", Long.toString(balanceErrorIntervalStart)));
+        balanceMinorIntervalStart = Long.parseLong(config.getProperty("balance.minor.interval.start", Long.toString(balanceMinorIntervalStart)));
       } catch (NumberFormatException e) {
-        logger.error("Illegal long value: " + config.getProperty("balance.error.interval.start"), e);
+        logger.error("Illegal long value: " + config.getProperty("balance.minor.interval.start"), e);
+      }
+      try {
+        balanceMajorIntervalStart = Long.parseLong(config.getProperty("balance.major.interval.start", Long.toString(balanceMajorIntervalStart)));
+      } catch (NumberFormatException e) {
+        logger.error("Illegal long value: " + config.getProperty("balance.major.interval.start"), e);
       }
       try {
         balanceCriticalIntervalStart = Long.parseLong(config.getProperty("balance.critical.interval.start", Long.toString(balanceCriticalIntervalStart)));
@@ -280,9 +279,14 @@ public class SmeEngine implements MessageListener, ResponseListener {
           logger.error("Illegal long value: " + config.getProperty("banner.warning.interval.start"), e);
         }
         try {
-          bannerErrorIntervalStart = Long.parseLong(config.getProperty("banner.error.interval.start", Long.toString(bannerErrorIntervalStart)));
+          bannerMinorIntervalStart = Long.parseLong(config.getProperty("banner.minor.interval.start", Long.toString(bannerMinorIntervalStart)));
         } catch (NumberFormatException e) {
-          logger.error("Illegal long value: " + config.getProperty("banner.error.interval.start"), e);
+          logger.error("Illegal long value: " + config.getProperty("banner.minor.interval.start"), e);
+        }
+        try {
+          bannerMajorIntervalStart = Long.parseLong(config.getProperty("banner.major.interval.start", Long.toString(bannerMajorIntervalStart)));
+        } catch (NumberFormatException e) {
+          logger.error("Illegal long value: " + config.getProperty("banner.major.interval.start"), e);
         }
         try {
           bannerCriticalIntervalStart = Long.parseLong(config.getProperty("banner.critical.interval.start", Long.toString(bannerCriticalIntervalStart)));
@@ -296,6 +300,17 @@ public class SmeEngine implements MessageListener, ResponseListener {
           logger.error("Illegal long value: " + config.getProperty("banner.disable.on.error.timeout"), e);
         }
         bannerCounter = new AvgCounter(responseTimeControllerPoolingInterval);
+
+        boolean snmpAgentEnabled=Boolean.valueOf(config.getProperty("snmp.agent.enabled", "false")).booleanValue();
+        if(snmpAgentEnabled){
+          snmpAgent=new Agent();
+          try {
+            snmpAgent.init(config);
+          } catch (InitializationException e) {
+            logger.error("Error while init SNMP Agent: "+e, e);
+            snmpAgent=null;
+          }
+        }
       }
 
       (new ResponseTimeControllerThread(responseTimeControllerPoolingInterval)).startService();
@@ -927,7 +942,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
       }
 
     }
-
   }
 
   class ResponseTimeControllerThread extends Thread {
@@ -969,13 +983,15 @@ public class SmeEngine implements MessageListener, ResponseListener {
         if (logger.isDebugEnabled())
           logger.debug("Avg balance response time: " + balanceAvgTime);
 
-        byte newBalanceSeverity = SNMP_SEVERITY_NORMAL;
+        byte newBalanceSeverity = Agent.SNMP_SEVERITY_NORMAL;
         if (balanceAvgTime > balanceCriticalIntervalStart) {
-          newBalanceSeverity = SNMP_SEVERITY_CRITICAL;
-        } else if (balanceAvgTime > balanceErrorIntervalStart) {
-          newBalanceSeverity = SNMP_SEVERITY_ERROR;
+          newBalanceSeverity = Agent.SNMP_SEVERITY_CRITICAL;
+        } else if (balanceAvgTime > balanceMajorIntervalStart) {
+          newBalanceSeverity = Agent.SNMP_SEVERITY_MAJOR;
+        } else if (balanceAvgTime > balanceMinorIntervalStart) {
+          newBalanceSeverity = Agent.SNMP_SEVERITY_MINOR;
         } else if (balanceAvgTime > balanceWarnIntervalStart) {
-          newBalanceSeverity = SNMP_SEVERITY_WARNING;
+          newBalanceSeverity = Agent.SNMP_SEVERITY_WARNING;
         }
 
         if (newBalanceSeverity != currentBalanceSeverity) {
@@ -984,14 +1000,17 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
           byte status;
           if (newBalanceSeverity > currentBalanceSeverity) {
-            status = SNMP_STATUS_ACTIVE;
+            status = Agent.SNMP_STATUS_NEW;
           } else {
-            status = SNMP_STATUS_CLEARED;
+            status = Agent.SNMP_STATUS_CLEAR;
           }
           currentBalanceSeverity = newBalanceSeverity;
           if (logger.isDebugEnabled())
-            logger.debug("Generate SNMP trap: " + SNMP_STATUS[status] + " UNIBALANCE BillingSystem Threshold crossed (AlarmID=BillingSystem; severity=" + currentBalanceSeverity + ")");
-          // TODO: generate SNMP trap
+            logger.debug("Generated trap: " + Agent.SNMP_STATUS[status] + " UNIBALANCE BillingSystem Threshold crossed (AlarmID=BillingSystem; severity=" + currentBalanceSeverity + ")");
+
+          if(snmpAgent!=null){
+            snmpAgent.sendTrap(status, "BillingSystem", currentBalanceSeverity);
+          }
         } else {
           logger.debug("Balance counter severity unchanged");
         }
@@ -1002,13 +1021,15 @@ public class SmeEngine implements MessageListener, ResponseListener {
             if (logger.isDebugEnabled())
               logger.debug("Avg banner response time: " + bannerAvgTime);
 
-            byte newBannerSeverity = SNMP_SEVERITY_NORMAL;
+            byte newBannerSeverity = Agent.SNMP_SEVERITY_NORMAL;
             if (bannerAvgTime > bannerCriticalIntervalStart) {
-              newBannerSeverity = SNMP_SEVERITY_CRITICAL;
-            } else if (bannerAvgTime > bannerErrorIntervalStart) {
-              newBannerSeverity = SNMP_SEVERITY_ERROR;
+              newBannerSeverity = Agent.SNMP_SEVERITY_CRITICAL;
+            } else if (bannerAvgTime > bannerMajorIntervalStart) {
+              newBannerSeverity = Agent.SNMP_SEVERITY_MAJOR;
+            } else if (bannerAvgTime > bannerMinorIntervalStart) {
+              newBannerSeverity = Agent.SNMP_SEVERITY_MINOR;
             } else if (bannerAvgTime > bannerWarnIntervalStart) {
-              newBannerSeverity = SNMP_SEVERITY_WARNING;
+              newBannerSeverity = Agent.SNMP_SEVERITY_WARNING;
             }
 
             if (newBannerSeverity != currentBannerSeverity) {
@@ -1017,16 +1038,20 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
               byte status;
               if (newBannerSeverity > currentBannerSeverity) {
-                status = SNMP_STATUS_ACTIVE;
+                status = Agent.SNMP_STATUS_NEW;
               } else {
-                status = SNMP_STATUS_CLEARED;
+                status = Agent.SNMP_STATUS_CLEAR;
               }
               currentBannerSeverity = newBannerSeverity;
-              if (logger.isDebugEnabled())
-                logger.debug("Generate SNMP trap: " + SNMP_STATUS[status] + " UNIBALANCE BannerRotator Threshold crossed (AlarmID=BannerEngine; severity=" + currentBannerSeverity + ")");
-              // TODO: generate SNMP trap
 
-              if (status == SNMP_STATUS_ACTIVE && currentBannerSeverity > SNMP_SEVERITY_WARNING && bannerDisableOnErrorTimeout > 0) {
+              if (logger.isDebugEnabled())
+                logger.debug("Generate trap: " + Agent.SNMP_STATUS[status] + " UNIBALANCE BannerRotator Threshold crossed (AlarmID=BannerRotator; severity=" + currentBannerSeverity + ")");
+
+              if(snmpAgent!=null){
+                snmpAgent.sendTrap(status, "BannerRotator", currentBannerSeverity);
+              }
+
+              if (status == Agent.SNMP_STATUS_NEW && currentBannerSeverity > Agent.SNMP_SEVERITY_WARNING && bannerDisableOnErrorTimeout > 0) {
                 logger.info("BannerEngine client disabled for " + bannerDisableOnErrorTimeout + " ms");
                 bannerEngineClientEnabled = false;
                 (new BannerDisableTimeoutThread(bannerDisableOnErrorTimeout)).start();
@@ -1051,13 +1076,10 @@ public class SmeEngine implements MessageListener, ResponseListener {
       }
 
     }
-
-
   }
 
   class BannerDisableTimeoutThread extends Thread {
     private long timeout;
-
 
     public BannerDisableTimeoutThread(long timeout) {
       this.timeout = timeout;
