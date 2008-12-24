@@ -8,20 +8,16 @@
 
 #include "logger/Logger.h"
 #include "util/Exception.hpp"
-#include "scag/config/base/ConfigManager2.h"
-#include "scag/config/impl/ConfigManager2.h"
-#include <util/config/Manager.h>
-#include <util/config/ConfigView.h>
-#include "PvssFlooder.h"
+#include "util/config/Manager.h"
+#include "util/config/ConfigView.h"
 #include "scag/pvss/base/PersClientException.h"
 #include "scag/pvss/client/PvssStreamClient.h"
+#include "PvssFlooder.h"
 
 using std::string;
 using namespace scag2::pvss::flooder;
 using namespace scag2::pvss;
 using smsc::logger::Logger;
-using scag2::config::ConfigManager;
-using scag2::config::ConfigManagerImpl;
 
 int resultCode = 0;
 PvssFlooder* lcClient = 0;
@@ -68,30 +64,77 @@ int main(int argc, char* argv[]) {
   sigset(SIGHUP, appSignalHandler);   
 
   try {
-    logger = Logger::getInstance("lcclient");
-    {
-      ConfigManagerImpl *cfg = new ConfigManagerImpl();
-      cfg->Init();
-    }
-  
-    ConfigManager& cfgs = ConfigManager::Instance();
-      scag2::config::PersClientConfig& pcfg = cfgs.getPersClientConfig();
-    
-      PvssStreamClient* pc = new PvssStreamClient;
-      pc->init( pcfg.host.c_str(),
-                pcfg.port,
-                pcfg.timeout,
-                pcfg.pingTimeout,
-                pcfg.reconnectTimeout,
-                pcfg.maxCallsCount,
-                pcfg.connections,
-                pcfg.async );
+    logger = Logger::getInstance("flooder");
+
     if (argc > 1) {
       speed = atoi(argv[1]);
     }
+    smsc_log_info(logger,  "Starting up pvss flooder...");
 
     smsc::util::config::Manager::init("config.xml");
     smsc::util::config::Manager& manager = smsc::util::config::Manager::getInstance();
+
+    smsc::util::config::ConfigView clientConfig(manager, "PvssClient");
+
+    string host("phoenix");
+    try { 
+      host = clientConfig.getString("host");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <PvssClient.host> missed. Defaul value is %s", host.c_str());
+    };
+    int port = 27880;
+    try { 
+      port = clientConfig.getInt("port");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <PvssClient.port> missed. Defaul value is %d", port);
+    };
+    int timeout = 300;
+    try { 
+      timeout = clientConfig.getInt("ioTimeout");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <PvssClient.ioTimeout> missed. Defaul value is %d", timeout);
+    };
+    int pingtimeout = 300;
+    try { 
+      pingtimeout = clientConfig.getInt("pingTimeout");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <PvssClient.pingTimeout> missed. Defaul value is %d", pingtimeout);
+    };
+    int recontimeout = 10;
+    try { 
+      recontimeout = clientConfig.getInt("reconnectTimeout");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <PvssClient.reconnectTimeout> missed. Defaul value is %d", recontimeout);
+    };
+    int maxwait = 1000;
+    try { 
+      maxwait = clientConfig.getInt("maxWaitingRequestsCount");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <PvssClient.maxWaitingRequestsCount> missed. Defaul value is %d", maxwait);
+    };
+    int connects = 1;
+    try { 
+      connects = clientConfig.getInt("connections");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <PvssClient.connections> missed. Defaul value is %d", connects);
+    };
+    bool async = false;
+    try { 
+      async = clientConfig.getBool("async");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <PvssClient.async> missed. Defaul value is false");
+    };
+
+    PvssStreamClient* pc = new PvssStreamClient;
+    pc->init( host.c_str(),
+              port,
+              timeout,
+              pingtimeout,
+              recontimeout,
+              maxwait,
+              connects,
+              async );
+
     smsc::util::config::ConfigView flooderConfig(manager, "Flooder");
     
     try { 

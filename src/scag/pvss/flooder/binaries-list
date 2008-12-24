@@ -6,11 +6,7 @@
 scag/pvss_flooder   flooder  \
     -lscag-pvss-client \
     -lscag-pvss-flooder \
-    \
     -lscag-pvss-base \
-    -lscag-config-impl -lscag-config -lscag-config-lcm \
-    -lscag-config-smpp -lscag-config-http -lscag-config-bill -lscag-config-pers\
-    -lscag-config-stat -lscag-config-sessn -lscag-config-route -lscag-config-base \
     \
     -lscag-util-storage -lscag-util-singleton -lscag-exc \
     \
