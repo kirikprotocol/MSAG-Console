@@ -1,9 +1,9 @@
 package ru.sibinco.smpp.ub_sme.snmp;
 
-//import com.sun.management.comm.SnmpAdaptorServer;
-//import com.sun.management.snmp.*;
-import com.sun.jmx.snmp.daemon.SnmpAdaptorServer;
-import com.sun.jmx.snmp.*;
+import com.sun.management.comm.SnmpAdaptorServer;
+import com.sun.management.snmp.*;
+//import com.sun.jmx.snmp.daemon.SnmpAdaptorServer;
+//import com.sun.jmx.snmp.*;
 
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
@@ -14,6 +14,7 @@ import ru.sibinco.smpp.ub_sme.InitializationException;
 import java.util.Properties;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.MessageFormat;
 
 import org.apache.log4j.Category;
 
@@ -30,7 +31,7 @@ public class Agent {
   private SnmpAdaptorServer snmpAdaptor = null;
   private InetAddress addr;
   private String communityString="public";
-
+  private String alertMessagePattern ="Threshold crossed (AlarmID={0}; severity={1})";
 
   public final static String smscNewAlertFFMR_OID = "1.3.6.1.4.1.26757.1.0.4";
 
@@ -78,6 +79,11 @@ public class Agent {
       throw new InitializationException("Mandatory config parameter \"snmp.agent.community.string\" is missed!");
     }
 
+    alertMessagePattern =config.getProperty("snmp.agent.alarm.message.pattern", alertMessagePattern);
+    if(alertMessagePattern.length()==0){
+      throw new InitializationException("Mandatory config parameter \"snmp.agent.alarm.message.pattern\" is missed!");
+    }
+
     try {
       server = MBeanServerFactory.createMBeanServer();
       String domain = server.getDefaultDomain();
@@ -102,8 +108,10 @@ public class Agent {
   }
 
   public void sendTrap(int status, String alarmId, int severity){
+    String message=MessageFormat.format(alertMessagePattern, new Object[]{alarmId, new Integer(severity)});
+
     if(logger.isDebugEnabled())
-      logger.debug("Send trap: " + Agent.SNMP_STATUS[status] + " UNIBALANCE BannerRotator Threshold crossed (AlarmID="+alarmId+"; severity=" + severity+")");
+      logger.debug("Send trap: " + Agent.SNMP_STATUS[status] + " UNIBALANCE BannerRotator "+message);
 
     SnmpAdaptorServer snmpAdaptor = getSnmpAdaptor();
     SnmpVarBindList varBindList = new SnmpVarBindList();
@@ -111,7 +119,7 @@ public class Agent {
     SnmpOid smscNewAlertFFMR_OID = new SnmpOid(Agent.smscNewAlertFFMR_OID);
 
     SnmpOid alertMessage_OID = new SnmpOid(Agent.alertMessage_OID);
-    SnmpString alertMessage = new SnmpString("Threshold crossed (AlarmID="+alarmId+"; severity="+severity+")");
+    SnmpString alertMessage = new SnmpString(message);
     SnmpVarBind alertMessageBind = new SnmpVarBind(alertMessage_OID, alertMessage);
     varBindList.addVarBind(alertMessageBind);
 
@@ -133,7 +141,7 @@ public class Agent {
     try {
       snmpAdaptor.snmpV2Trap(addr, communityString, smscNewAlertFFMR_OID, varBindList);
     } catch (Exception e) {
-      logger.error("Can't send trap: " + Agent.SNMP_STATUS[status] + " UNIBALANCE BannerRotator Threshold crossed (AlarmID="+alarmId+"; severity=" + severity + "): "+e, e);
+      logger.error("Can't send trap: " + Agent.SNMP_STATUS[status] + " UNIBALANCE BannerRotator "+message+": "+e, e);
     }
   }
 
