@@ -43,6 +43,7 @@ scag/msag           gwmain2        \
   -lscag-util-memory \
   -lscag-util-singleton \
   -lscag-util-encodings \
+  -lscag-util \
   -lscag-exc \
   \
   $(MSAG_INMAN_LIBS) \

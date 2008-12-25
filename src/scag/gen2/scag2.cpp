@@ -159,15 +159,14 @@ void Scag::init( unsigned mynode )
         smsc_log_warn(log, "Personalization client initializing host=%s port=%d", cfg.getPersClientConfig().host.c_str(), cfg.getPersClientConfig().port);
 
         const config::PersClientConfig& pcfg = cfg.getPersClientConfig();
-        pvss::PvssStreamClient* pc = new pvss::PvssStreamClient;
+        pvss::client::PvssStreamClient* pc = new pvss::client::PvssStreamClient;
         pc->init( pcfg.host.c_str(),
                   pcfg.port,
                   pcfg.timeout,
                   pcfg.pingTimeout,
                   pcfg.reconnectTimeout,
                   pcfg.maxCallsCount,
-                  pcfg.connections,
-                  pcfg.async );
+                  pcfg.connections );
         smsc_log_info(log, "Personalization client initialized");
     } catch(std::exception& e) {
         throw Exception("Exception during initialization of PersClient: %s", e.what());

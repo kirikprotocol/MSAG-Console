@@ -1,33 +1,34 @@
 #ifndef _SCAG_PVSS_CLIENT_PVSSSTREAMCLIENT_H
 #define _SCAG_PVSS_CLIENT_PVSSSTREAMCLIENT_H
 
-#include <unistd.h>
-#include "core/buffers/IntHash.hpp"
 #include "core/buffers/XHash.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "scag/pvss/base/PersCall.h"
 #include "scag/pvss/base/PersClient.h"
 
-namespace {
-struct PersCallPtrHFunc
-{
-public:
-    static unsigned int CalcHash( const scag2::pvss::PersCall* key )
-    {
-        return unsigned(reinterpret_cast<int64_t>
-                        (reinterpret_cast<const void*>(key)));
-    }
-};
-}
-
 namespace scag2 {
 namespace pvss {
+namespace client {
 
-class PersClientTask;
+class PvssReader;
+class PvssWriter;
+class PvssConnector;
+class PvssConnection;
 
 class PvssStreamClient : public PersClient, public PersCallInitiator
 {
+private:
+    struct PersCallPtrHFunc
+    {
+    public:
+        static unsigned int CalcHash( const scag2::pvss::PersCall* key )
+        {
+            return unsigned(reinterpret_cast<int64_t>
+                            (reinterpret_cast<const void*>(key)));
+        }
+    };
+
 public:
     PvssStreamClient();
     virtual ~PvssStreamClient();
@@ -38,21 +39,23 @@ public:
                int _pingTimeout,
                int _reconnectTimeout,
                unsigned _maxCallsCount,
-               unsigned clients,
-               bool     async );
+               unsigned clients );
 
-    PersCall* getCall( int tmomsec, PersClientTask& task );
+    // check for a call in queue
+    PersCall* getCall();
+    PersCall* createPingCall();
+    PersCall* createAuthCall();
 
     /// increment connection count
-    void incConnect();
-
+    void connected( PvssConnection& conn );
+    
     /// decrement connection count, if count == 0 then finish all current queued calls
-    void decConnect();
+    void disconnected( PvssConnection& conn );
 
-    void wait( int msec ) {
-        MutexGuard mg(queueMonitor_);
-        queueMonitor_.wait( msec );
-    }
+    /// check connections.
+    /// This method is invoked from connector task after it tries to connect.
+    /// So, if all connections failed, the client should empty the call queue.
+    void checkConnections();
 
 private:
     // virtual void configChanged();
@@ -66,45 +69,34 @@ public:
     std::string host;
     int         port;
     int         timeout;
-    int         pingTimeout;
-    int         reconnectTimeout;
+    int         pingTimeout;             // seconds
+    int         reconnectTimeout;        // seconds
 
 private:
     unsigned maxCallsCount_;
     unsigned clients_;
-    bool     async_;
 
     bool isStopping;
     smsc::logger::Logger* log_;
 
-
-    struct Pipe {
-        Pipe() { ::pipe(fd); }
-        inline void notify() const { ::write(fd[1], "0", 1); }
-        inline int rpipe() const { return fd[0];}
-        inline void close() { ::close(fd[0]); ::close(fd[1]); }
-        bool operator == ( const Pipe& p ) const {
-            return (fd[0] == p.fd[0]) && (fd[1] == p.fd[1]);
-        }
-    private:
-        int fd[2];
-    };
-
-    EventMonitor              queueMonitor_;
-    PersCall*                 headContext_;
-    PersCall*                 tailContext_;
-    unsigned                  callsCount_;
-    unsigned                  connected_;
-    std::list<Pipe>           waitingPipes_;   // a list of waiting pipes
-    std::list<Pipe>           freePipes_;      // a list of free pipes (cached)
-    unsigned                  waitingStreams_; // a number of streams waiting w/o pipe
+    EventMonitor                    queueMonitor_;
+    PersCall*                       headContext_;
+    PersCall*                       tailContext_;
+    unsigned                        callsCount_;
     smsc::core::threads::ThreadPool tp_;
     
     // for sync calls
-    EventMonitor                                     syncMonitor_;
+    EventMonitor                    syncMonitor_;
     smsc::core::buffers::XHash< PersCall*, uint8_t, PersCallPtrHFunc > syncRequests_;
+
+    PvssReader*                                   reader_;
+    PvssWriter*                                   writer_;
+    PvssConnector*                                connector_;
+    smsc::core::buffers::Array< PvssConnection* > connections_; // owned
+    smsc::core::buffers::Array< PvssConnection* > connected_;   // not owned
 };
 
+}
 }
 }
 

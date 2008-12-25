@@ -12,11 +12,13 @@ int PersCall::fillSB( SerialBuffer& sb, int32_t serial )
     sb.WriteInt32(0); // length to be
     if ( serial ) sb.WriteInt32( serial );
     sb.WriteInt8( uint8_t( cmd_->cmdType() ) );
-    sb.WriteInt8( uint8_t( getType() ) );
-    if ( getType() == PT_ABONENT ) {
-        sb.WriteString( getStringKey() );
-    } else {
-        sb.WriteInt32( getIntKey() );
+    if ( getType() != PT_UNKNOWN ) {
+        sb.WriteInt8( uint8_t( getType() ) );
+        if ( getType() == PT_ABONENT ) {
+            sb.WriteString( getStringKey() );
+        } else {
+            sb.WriteInt32( getIntKey() );
+        }
     }
     cmd_->fillSB( sb );
     if ( 0 == cmd_->status() ) {

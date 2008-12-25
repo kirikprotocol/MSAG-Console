@@ -5,6 +5,36 @@
 namespace scag2 {
 namespace pvss {
 
+int PersCommand::readStatus( SerialBuffer& sb )
+{
+    int stat = 0;
+    switch ( PersServerResponseType(sb.ReadInt8()) ) {
+    case (RESPONSE_OK) : break;
+    case (RESPONSE_PROPERTY_NOT_FOUND) : stat = PROPERTY_NOT_FOUND; break;
+    case (RESPONSE_ERROR) : stat = SERVER_ERROR; break;
+    case (RESPONSE_BAD_REQUEST) : stat = BAD_REQUEST; break;
+    case (RESPONSE_TYPE_INCONSISTENCE) : stat = TYPE_INCONSISTENCE; break;
+    case (RESPONSE_PROFILE_LOCKED) : stat = PROFILE_LOCKED; break;
+    case (RESPONSE_NOTSUPPORT) : stat = COMMAND_NOTSUPPORT; break;
+    default: stat = UNKNOWN_RESPONSE;
+    }
+    if ( stat ) setStatus( stat );
+    return stat;
+}
+
+
+int PersCommandPing::readSB( SerialBuffer& sb )
+{
+    readStatus(sb);
+}
+
+
+int PersCommandAuth::readSB( SerialBuffer& sb )
+{
+    readStatus(sb);
+}
+
+
 int PersCommandSingle::fillSB( SerialBuffer& sb )
 {
     if ( cmdType() == PC_PING || cmdType() == PC_BIND_ASYNCH ) {
@@ -44,24 +74,6 @@ int PersCommandSingle::readSB( SerialBuffer& sb )
         }
     }
     return status();
-}
-
-
-int PersCommandSingle::readStatus( SerialBuffer& sb )
-{
-    int stat = 0;
-    switch ( PersServerResponseType(sb.ReadInt8()) ) {
-    case (RESPONSE_OK) : break;
-    case (RESPONSE_PROPERTY_NOT_FOUND) : stat = PROPERTY_NOT_FOUND; break;
-    case (RESPONSE_ERROR) : stat = SERVER_ERROR; break;
-    case (RESPONSE_BAD_REQUEST) : stat = BAD_REQUEST; break;
-    case (RESPONSE_TYPE_INCONSISTENCE) : stat = TYPE_INCONSISTENCE; break;
-    case (RESPONSE_PROFILE_LOCKED) : stat = PROFILE_LOCKED; break;
-    case (RESPONSE_NOTSUPPORT) : stat = COMMAND_NOTSUPPORT; break;
-    default: stat = UNKNOWN_RESPONSE;
-    }
-    if ( stat ) setStatus( stat );
-    return stat;
 }
 
 

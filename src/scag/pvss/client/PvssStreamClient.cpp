@@ -2,21 +2,40 @@
 #include <poll.h>
 #include <algorithm>
 
-#include "core/network/Socket.hpp"
+// #include "core/network/Socket.hpp"
 // #include "core/threads/Thread.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "scag/exc/SCAGExceptions.h"
-#include "scag/util/UnlockMutexGuard.h"
+// #include "scag/util/UnlockMutexGuard.h"
 #include "scag/pvss/base/PersCall.h"
 #include "scag/pvss/base/PersClientException.h"
 #include "scag/pvss/base/PersServerResponse.h"
 #include "PvssStreamClient.h"
+#include "PvssConnection.h"
+#include "PvssConnector.h"
+#include "PvssReader.h"
+#include "PvssWriter.h"
+
+namespace {
+
+class PvssCmdDestroy : public scag2::pvss::PersCallInitiator
+{
+public:
+    virtual void continuePersCall( scag2::pvss::PersCall* call, bool ) {
+        delete call;
+    }
+};
+
+PvssCmdDestroy pvssCmdDestroy;
+
+}
+
 
 namespace scag2 {
-using util::UnlockMutexGuard;
-
 namespace pvss {
+namespace client {
 
+/*
 // ============================================================
 class PersClientTask : public smsc::core::threads::ThreadedTask
 {
@@ -75,6 +94,7 @@ private:
     Callqueue                 callqueue_;
     Callhash                  callhash_;
 };
+ */
 
 
 // =========================================================================
@@ -85,22 +105,24 @@ pingTimeout(100),
 reconnectTimeout(10),
 maxCallsCount_(1000),
 clients_(0),
-async_(false),
 isStopping(true),
-log_(0),
+log_(smsc::logger::Logger::getInstance("pvss.clnt")),
 headContext_(0),
 tailContext_(0),
 callsCount_(0),
-connected_(0),
-waitingStreams_(0)
+reader_(0),
+writer_(0),
+connector_(0)
 {
-    log_ = smsc::logger::Logger::getInstance("persclient");
 }
 
 
 PvssStreamClient::~PvssStreamClient()
 {
     Stop();
+    reader_ = 0;
+    writer_ = 0;
+    connector_ = 0;
 }
 
 
@@ -111,12 +133,10 @@ void PvssStreamClient::Stop()
     {
         MutexGuard mg(queueMonitor_);
         queueMonitor_.notifyAll();
-        for ( std::list<Pipe>::const_iterator i = waitingPipes_.begin();
-              i != waitingPipes_.end();
-              ++i ) {
-            i->notify();
-        }
         queueMonitor_.wait(50);
+        reader_ = 0;
+        writer_ = 0;
+        connector_ = 0;
     }
     tp_.shutdown();
     PersCall* ctx = 0;
@@ -127,22 +147,26 @@ void PvssStreamClient::Stop()
         callsCount_ = 0;
     }
     finishCalls(ctx,true);
+    for ( int i = 0; i < connections_.Count(); ++i ) {
+        delete connections_[i];
+    }
+    connections_.Empty();
 }
 
 
 void PvssStreamClient::init( const char *_host,
-                           int _port,
-                           int _timeout, 
-                           int _pingTimeout,
-                           int _reconnectTimeout,
-                           unsigned _maxCallsCount,
-                           unsigned clients,
-                           bool async )
+                             int _port,
+                             int _timeout, 
+                             int _pingTimeout,
+                             int _reconnectTimeout,
+                             unsigned _maxCallsCount,
+                             unsigned clients )
 {
-    smsc_log_info( log_, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d reconnectTimeout=%d maxWaitingRequestsCount=%d connections=%d async=%d",
-                   _host, _port, _timeout, _pingTimeout, _reconnectTimeout, _maxCallsCount,
-                   clients, async ? 1 : 0 );
-    connected_ = 0;
+    if ( ! isStopping ) return;
+    isStopping = false;
+    smsc_log_info( log_, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d reconnectTimeout=%d maxWaitingRequestsCount=%d connections=%d",
+                   _host, _port, _timeout, _pingTimeout, _reconnectTimeout,
+                   _maxCallsCount, clients );
     callsCount_ = 0;
     host = _host;
     port = _port;
@@ -151,76 +175,88 @@ void PvssStreamClient::init( const char *_host,
     reconnectTimeout = _reconnectTimeout;
     maxCallsCount_ = _maxCallsCount;
     clients_ = clients;
-    async_ = async;
+    tp_.startTask( reader_ = new PvssReader( *this ) );
+    tp_.startTask( writer_ = new PvssWriter( *this, &queueMonitor_ ) );
+    tp_.startTask( connector_ = new PvssConnector( *this ) );
     for ( unsigned i = 0; i < clients_; ++i ) {
-        tp_.startTask( new PersClientTask(this, async_) );
+        PvssConnection* con = new PvssConnection( *this );
+        connections_.Push( con );
+        connector_->addConnection( *con );
     }
-    isStopping = false;
 }
 
 
-PersCall* PvssStreamClient::getCall( int tmomsec, PersClientTask& task )
+PersCall* PvssStreamClient::getCall()
 {
-    if ( isStopping || !connected_ ) return 0;
-    PersCall* ctx = 0;
+    if ( isStopping ) return 0;
     MutexGuard mg(queueMonitor_);
-    do {
-        if ( headContext_ || tmomsec <= 0 ) break;
-
-        // no context found
-        if ( task.hasRequests() ) {
-            if ( freePipes_.empty() ) {
-                waitingPipes_.push_back( Pipe() );
-            } else {
-                waitingPipes_.push_back( freePipes_.back() );
-                freePipes_.pop_back();
-            }
-            Pipe p( waitingPipes_.back() );
-            {
-                UnlockMutexGuard umg(queueMonitor_);
-                task.pollwait(tmomsec,p.rpipe());
-            }
-            std::list<Pipe>::iterator i = std::find( waitingPipes_.begin(), waitingPipes_.end(), p );
-            if ( i != waitingPipes_.end() ) {
-                waitingPipes_.erase(i);
-            }
-            freePipes_.push_back(p);
-        } else {
-            ++waitingStreams_;
-            queueMonitor_.wait( tmomsec );
-            --waitingStreams_;
-        }
-        if ( isStopping || !connected_ ) return 0;
-    } while ( false );
-    ctx = headContext_;
-    if (headContext_) {
-        headContext_ = headContext_->next();
-        // if (!headContext_) tailContext_ = 0;
-        --callsCount_;
-    }
+    if ( ! connected_.Count() ) return 0;
+    if ( ! headContext_ ) return 0;
+    PersCall* ctx = headContext_;
+    headContext_ = headContext_->next();
+    --callsCount_;
     return ctx;
 }
 
 
-void PvssStreamClient::incConnect()
+PersCall* PvssStreamClient::createPingCall()
 {
-    MutexGuard mg(queueMonitor_);
-    ++connected_;
+    if ( isStopping ) return 0;
+    PersCall* ctx = new PersCall( PT_UNKNOWN, new PersCommandPing, 0 );
+    setInitiator( ctx, &pvssCmdDestroy );
+    return ctx;
 }
 
 
-void PvssStreamClient::decConnect()
+PersCall* PvssStreamClient::createAuthCall()
+{
+    if ( isStopping ) return 0;
+    PersCall* ctx = new PersCall( PT_UNKNOWN, new PersCommandAuth, 0 );
+    setInitiator( ctx, &pvssCmdDestroy );
+    return ctx;
+}
+
+
+void PvssStreamClient::connected( PvssConnection& conn )
+{
+    MutexGuard mg(queueMonitor_);
+    // we increment it twice
+    for ( int i = 0; i < connected_.Count(); ++i ) {
+        if ( connected_[i] == &conn ) return;
+    }
+    if ( isStopping ) return;
+    connected_.Push(&conn);
+    if ( reader_ ) reader_->addConnection( conn );
+    if ( writer_ ) writer_->addConnection( conn );
+}
+
+
+void PvssStreamClient::disconnected( PvssConnection& conn )
+{
+    MutexGuard mg(queueMonitor_);
+    for ( int i = 0; i < connected_.Count(); ++i ) {
+        if ( connected_[i] == &conn ) {
+            connected_.Delete(i);
+            if ( ! isStopping && connector_ ) {
+                connector_->addConnection(conn);
+            }
+        }
+    }
+}
+
+
+void PvssStreamClient::checkConnections()
 {
     PersCall* ctx = 0;
     {
         MutexGuard mg(queueMonitor_);
-        if ( --connected_ == 0 ) {
+        if ( connected_.Count() == 0 ) {
             ctx = headContext_;
             headContext_ = tailContext_ = 0;
             callsCount_ = 0;
         }
     }
-    finishCalls(ctx,false);
+    if ( ctx ) finishCalls( ctx, isStopping );
 }
 
 
@@ -251,7 +287,7 @@ bool PvssStreamClient::callAsync( PersCall* ctx, PersCallInitiator& fromwho )
         // PersCallParams* p = static_cast<PersCallParams*>(ctx->getParams());
         if ( isStopping ) {
             ctx->setStatus( CANT_CONNECT );
-        } else if ( !connected_ ) {
+        } else if ( ! connected_.Count() ) {
             ctx->setStatus( NOT_CONNECTED );
         } else if ( callsCount_ >= maxCallsCount_ ) {
             ctx->setStatus( CLIENT_BUSY );
@@ -270,13 +306,7 @@ bool PvssStreamClient::callAsync( PersCall* ctx, PersCallInitiator& fromwho )
         headContext_ = ctx;
     tailContext_ = ctx;
     ++callsCount_;
-    if ( waitingStreams_ > 0 ) {
-        queueMonitor_.notify();
-    } else if ( ! waitingPipes_.empty() ) {
-        waitingPipes_.front().notify();
-        freePipes_.push_back( waitingPipes_.front() );
-        waitingPipes_.erase( waitingPipes_.begin() );
-    }
+    queueMonitor_.notify();
     return true;
 }
 
@@ -304,15 +334,15 @@ void PvssStreamClient::continuePersCall( PersCall* call, bool )
 
 int PvssStreamClient::getClientStatus()
 {
-    if ( ! connected_ ) return NOT_CONNECTED;
     MutexGuard mg(queueMonitor_);
+    if ( ! connected_.Count() ) return NOT_CONNECTED;
     if ( callsCount_ >= maxCallsCount_ ) return CLIENT_BUSY;
     return 0;
 }
 
 
 // ==================================================================
-
+/*
 PersClientTask::utime_type PersClientTask::utime() const
 {
     struct timeval tv;
@@ -790,6 +820,8 @@ void PersClientTask::addCall( int32_t serial, PersCall* ctx, utime_type utm )
     Callqueue::iterator i = callqueue_.end();
     callhash_.Insert( serial, --i );
 }
+ */
 
+}
 }
 }

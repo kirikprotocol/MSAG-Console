@@ -53,6 +53,7 @@ protected:
     PersCommand() : cmdType_(PC_UNKNOWN), status_(0) {}
     PersCommand( PersCmd cmdtype ) : cmdType_(cmdtype), status_(0) {}
 
+    int readStatus( SerialBuffer& sb );
     // default is ok
     // PersCommand( const PersCommand& );
     // PersCommand& operator = ( const PersCommand& );
@@ -64,6 +65,24 @@ private:
     int8_t                            status_;   // the status of the last action
 };
 
+
+class PersCommandPing : public PersCommand
+{
+public:
+    PersCommandPing() : PersCommand( PC_PING ) {}
+    virtual int fillSB( SerialBuffer& sb ) { return 0; }
+    virtual int readSB( SerialBuffer& sb );
+};
+
+
+// it is temporary an async command
+class PersCommandAuth : public PersCommand
+{
+public:
+    PersCommandAuth() : PersCommand( PC_BIND_ASYNCH ) {}
+    virtual int fillSB( SerialBuffer& sb ) { return 0; }
+    virtual int readSB( SerialBuffer& sb );
+};
 
 
 class PersCommandSingle : public PersCommand
@@ -78,8 +97,6 @@ public:
     virtual int fillSB( SerialBuffer& sb );
     virtual int readSB( SerialBuffer& sb );
     virtual PersCommandSingle* castSingle() { return this; }
-protected:
-    int readStatus( SerialBuffer& sb );
 private:
     Property  property_;
     int32_t   result_;
