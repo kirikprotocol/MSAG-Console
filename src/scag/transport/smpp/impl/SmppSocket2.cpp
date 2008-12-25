@@ -51,7 +51,7 @@ void SmppSocket::processInput()
     int res;
     {
       MutexGuard mg(mtx);
-      res=sock->Read(rdBuffer,4);
+      res=sock->Read(rdBuffer+rdBufUsed,4-rdBufUsed);
     }
     if(res<=0)
     {
@@ -221,7 +221,7 @@ void SmppSocket::sendData()
     int res;
     {
       MutexGuard mg(mtx);
-      res=sock->Write(wrBuffer,wrBufUsed-wrBufSent);
+      res=sock->Write(wrBuffer+wrBufSent,wrBufUsed-wrBufSent);
     }
     if(res<=0)
     {
