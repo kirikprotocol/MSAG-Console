@@ -174,20 +174,26 @@ public:
 	{
 		return pos;
 	}
+
+    void reserve( int sz )
+    {
+        if ( sz < buff_len ) return;
+        char* temp = block;
+        buff_len = sz;
+        block = new char[buff_len];
+        if ( temp ) {
+            if ( block_len ) memcpy( (void*)block, temp, block_len );
+            delete[] temp;
+        }
+    }
+
 	int setPos(int _pos)
 	{
 		if(_pos < block_len)
 			return pos = _pos;
 		if(_pos >= buff_len)
 		{
-			char* temp = block;
-			buff_len = (_pos)*2;
-			block = new char[buff_len];
-			if(temp)
-			{
-				memcpy((void*)block, temp, block_len);
-				delete[] temp;
-			}
+                    reserve(_pos*2);
 		}
 		return block_len = pos = _pos;
 	}
