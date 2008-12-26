@@ -179,6 +179,7 @@ sub generate{
     
     
     my $mods=[];
+    my $allmoddeps = $moddeps;
     if(-f $dirname.'/modules-list')
     {
       $mods=readmodules($dirname.'/modules-list');
@@ -188,15 +189,19 @@ sub generate{
         unless(/^\?/)
         {
           $moddeps.=" $modname.$_";
+        } else {
+            s/^\?//;
+            $allmoddeps.=" $modname.$_.all";
         }
       }
       generate($dirname,$mods);
     }
     
     $moddeps.=' '.readstring($dirname.'/.depends') if -f $dirname.'/.depends';
+    $allmoddeps.=' '.readstring($dirname.'/.depends') if -f $dirname.'/.depends';
     
     print $mkf "$modname: $moddeps\n\n" if $moddeps;
-    
+    print $mkf "$modname.all: $allmoddeps\n\n" if $allmoddeps;
     print $mkf "$modname.rclean: $modname.clean".(join('',map{" $modname.$_.rclean"}@$mods))."\n\n";
   }
 }
