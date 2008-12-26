@@ -2,6 +2,7 @@
 #define _SCAG_PVSS_SERVER_CONNECTIONCONTEXT_H_
 
 #include <string>
+#include <vector>
 #include "logger/Logger.h"
 #include "core/network/Socket.hpp"
 #include "core/synchronization/Mutex.hpp"
@@ -18,6 +19,7 @@ namespace pvss  {
 
 using smsc::core::network::Socket;
 using std::string;
+using std::vector;
 using smsc::logger::Logger;
 using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
@@ -73,7 +75,7 @@ struct ConnectionContext : public Connection {
 public:
   ConnectionContext(Socket* sock, WriterTaskManager& writerManager, ReaderTaskManager& readerManager, bool perfCounterOn = false);
   ~ConnectionContext();
-  void sendResponse(const char* data, uint32_t dataSize);
+  void sendResponse(const char* data, uint32_t dataSize, const std::vector<DbLog>* dbLogs);
   bool processReadSocket(const time_t& now);
   bool processWriteSocket();
   bool canFinalize();
@@ -87,6 +89,7 @@ private:
   void createFakeResponse(PersServerResponseType response);
   PersPacket* parsePacket(const time_t& now);
   void sendFakeResponse();
+  void flushLogs();
 
 private:
   SerialBuffer inbuf_;
@@ -105,6 +108,7 @@ private:
   bool async_;
   uint32_t sequenceNumber_;
   PerfCounter perfCounter_;
+  vector<DbLog> dbLogs_;
   char readBuf_[READ_BUF_SIZE];
 };
 

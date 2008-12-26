@@ -33,12 +33,10 @@ typedef scag::pvss::PersServerResponseType Response;
 
 class PersCommandNotSupport: public Exception {};
 
-static const string UPDATE_LOG = "U key=";
-
 class PvssCommand {
 public:
-  PvssCommand():cmdId(PC_UNKNOWN), mod(0), dblogMsg_(UPDATE_LOG) {};
-  PvssCommand(PersCmd cmd):cmdId(cmd), mod(0), dblogMsg_(UPDATE_LOG) {};
+  PvssCommand():cmdId(PC_UNKNOWN), mod(0) {};
+  PvssCommand(PersCmd cmd):cmdId(cmd), mod(0) {};
   virtual ~PvssCommand() {};
   bool deserialize(SerialBuffer& sb);
   Response execute(Profile *pf, SerialBuffer&sb);
@@ -71,8 +69,9 @@ struct PersPacket {
   virtual ~PersPacket() {};
   virtual void deserialize(SerialBuffer& sb);
   bool notAbonentsProfile() const { return profileType != PT_ABONENT; };
-  virtual void execCommand(Profile *pf) = 0;  
-  virtual void flushLogs(Logger* log) const = 0;
+  virtual void execCommand(Profile *pf, Logger* dblog) = 0;  
+  //virtual void flushLogs(Logger* log) = 0;
+  //virtual void flushLogs(Logger* log) const = 0;
   void createResponse(PersServerResponseType resp);
   void sendResponse();
   //uint32_t getResponseSize() const { return response_.GetSize(); };
@@ -88,6 +87,7 @@ struct PersPacket {
 protected:
   Connection* connection_;
   SerialBuffer response_;
+  vector<DbLog> dbLogs_;
 private:
   uint32_t sequenseNumber_;
   bool asynch_;
@@ -99,8 +99,8 @@ struct CommandPacket: public PersPacket {
                 :PersPacket(connect, async, sequenseNumber, requestTime), command_(cmdId)  {};
   ~CommandPacket(){};
   void deserialize(SerialBuffer &sb);
-  void execCommand(Profile *pf);
-  void flushLogs(Logger* log) const;
+  void execCommand(Profile *pf, Logger* dblog);
+  //void flushLogs(Logger* log);
 private:
   PvssCommand command_;
 };
@@ -110,8 +110,8 @@ struct BatchPacket: public PersPacket {
               :PersPacket(connect, async, sequenseNumber, requestTime), count_(0), transact_(false) {};
   ~BatchPacket(){};
   void deserialize(SerialBuffer &sb);
-  void execCommand(Profile *pf);
-  void flushLogs(Logger* log) const;
+  void execCommand(Profile *pf, Logger* dblog);
+  //void flushLogs(Logger* log);
 private:
   uint16_t count_;
   bool transact_;

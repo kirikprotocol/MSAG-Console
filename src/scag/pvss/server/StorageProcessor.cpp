@@ -202,11 +202,11 @@ void AbonentStorageProcessor::process(PersPacket* packet) {
     packet->createResponse(RESPONSE_PROPERTY_NOT_FOUND);
     return;
   }
-  packet->execCommand(pf);
+  packet->execCommand(pf, abntlog_);
   if (pf->isChanged()) {
     smsc_log_debug(logger_, "%p: %p flush profile %s", this, packet, pf->getKey().c_str());
     elstorage->storage->flush(packet->address);
-    packet->flushLogs(abntlog_);
+    //packet->flushLogs(abntlog_);
   } else if (packet->rollback) {
     smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, packet, pf->getKey().c_str());
     elstorage->storage->backup2Profile(packet->address, elstorage->glossary);
@@ -255,11 +255,11 @@ void InfrastructStorageProcessor::process(PersPacket* packet) {
     packet->createResponse(RESPONSE_PROPERTY_NOT_FOUND);
     return;
   }
-  packet->execCommand(pf);
+  packet->execCommand(pf, dblog);
   if (pf->isChanged()) {
     smsc_log_debug(logger_, "%p: %p flush profile %s", this, packet, pf->getKey().c_str());
     storage->flush(key);
-    packet->flushLogs(dblog);
+    //packet->flushLogs(dblog);
   } else if (packet->rollback){
     smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, packet, pf->getKey().c_str());
     storage->backup2Profile(key, &glossary_);

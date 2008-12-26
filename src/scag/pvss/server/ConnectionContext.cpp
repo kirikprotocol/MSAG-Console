@@ -36,7 +36,7 @@ void ConnectionContext::createFakeResponse(PersServerResponseType response) {
     fakeResp_.WriteInt32(sequenceNumber_);
   }
   fakeResp_.WriteInt8(static_cast<uint8_t>(response));
-  sendResponse(fakeResp_.c_ptr(), fakeResp_.GetSize());
+  sendResponse(fakeResp_.c_ptr(), fakeResp_.GetSize(), NULL);
 }
 
 bool ConnectionContext::notSupport(PersCmd cmd) {
@@ -103,10 +103,13 @@ void ConnectionContext::sendFakeResponse() {
   }
 }
 
-void ConnectionContext::sendResponse(const char* data, uint32_t dataSize) {
+void ConnectionContext::sendResponse(const char* data, uint32_t dataSize, const std::vector<DbLog>* dbLogs) {
   {
     MutexGuard mg(mutex_);
     action_ = SEND_RESPONSE;
+    if (dbLogs && !dbLogs->empty()) {
+      dbLogs_.insert(dbLogs_.end(), dbLogs->begin(), dbLogs->end());
+    }
     bool inprocess = outbuf_.GetSize() == 0 ? false : true;
     writeData(data, dataSize);
     perfCounter_.incProcessed();
@@ -211,6 +214,16 @@ bool ConnectionContext::processReadSocket(const time_t& now) {
   return true;
 }
 
+void ConnectionContext::flushLogs() {
+  if (dbLogs_.empty()) {
+    return;
+  }
+  for (vector<DbLog>::iterator i = dbLogs_.begin(); i != dbLogs_.end(); ++i) {
+    (*i).flush();
+  }
+  dbLogs_.clear();
+}
+
 bool ConnectionContext::processWriteSocket() {
   RelockMutexGuard mg(mutex_);
   if (!async_ && action_ != SEND_RESPONSE) {
@@ -225,6 +238,7 @@ bool ConnectionContext::processWriteSocket() {
                   len, socket_, sb.GetCurPtr(), sb.GetPos(), sb.toString().c_str());
 
   int n = socket_->Write(sb.GetCurPtr(), len - sb.getPos());
+  flushLogs();
   if (n > 0) {
     sb.SetPos(sb.GetPos() + n);
   } else {
