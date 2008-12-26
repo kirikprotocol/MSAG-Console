@@ -54,6 +54,7 @@ public:
     void connect();
     void disconnect();
     void dropCalls();
+    void dropExpiredCalls();
 
 protected:
     void prepareWrBuffer( PersCall* ctx );

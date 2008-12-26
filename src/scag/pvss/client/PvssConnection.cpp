@@ -260,6 +260,27 @@ void PvssConnection::dropCalls()
 }
 
 
+void PvssConnection::dropExpiredCalls()
+{
+    MutexGuard mg(regmtx_);
+    const msectime_type now = msectime();
+    while ( ! callqueue_.empty() ) {
+        Call c = callqueue_.front();
+        const msectime_type tmo = now - (c.stamp + pers_->timeout);
+        if ( tmo > 0 ) {
+            if ( c.ctx) {
+                c.ctx->setStatus(TIMEOUT);
+                c.ctx->initiator()->continuePersCall(c.ctx,false);
+            }
+            callhash_.Delete( c.seqnum );
+            callqueue_.pop_front();
+        } else {
+            break;
+        }
+    }
+}
+
+
 void PvssConnection::prepareWrBuffer( PersCall* ctx )
 {
     assert( wrBuffer.getPos() == 0 && wrBuffer.length() == 0 && wrBufSent == 0 );

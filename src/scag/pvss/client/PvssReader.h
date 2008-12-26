@@ -17,8 +17,10 @@ public:
 protected:
     virtual bool setupSocket( PvssConnection& conn ) { mul_.add(conn.socket()); return true; }
     virtual bool hasEvents() { return mul_.canRead(ready_, error_, 200); }
-    virtual void process( PvssConnection& con ) { con.processInput(); }
-
+    virtual void process( PvssConnection& con ) {
+        con.processInput();
+        con.dropExpiredCalls();
+    }
 };
 
 } // namespace client
