@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+  <section name="ussbalance">
+    <param name="host" type="string">127.0.0.1</param>
+    <param name="port" type="int">9688</param>
+    <param name="maxConn" type="int">10</param>
+  </section>
+
+  <section name="RequestProcessingRules">
+    <param name="mandatoryDelay" type="int">500</param> <!-- in mili sec-->
+
+    <param name="oneSecondDelayProbability" type="int">10</param>
+    <param name="twoSecondsDelayProbability" type="int">10</param>
+    <param name="fourSecondsDelayProbability" type="int">10</param>
+
+    <param name="rejectProbability" type="int">10</param>
+
+    <param name="nonOkStatusProbability" type="int">10</param>
+  </section>
+</config>
