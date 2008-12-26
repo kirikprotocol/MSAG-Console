@@ -114,25 +114,22 @@ void USSMessageAC::save(ObjectBuffer& out) const
 
 void USSMessageAC::load(ObjectBuffer& in) throw(SerializerException)
 {
-//  smsc_log_debug(_logger, "USSMessageAC::load::: enter it");
   in >> _flg;
   if ( _flg != PREPARED_USS_REQ &&
-       _flg != LATIN1_USS_TEXT) 
+       _flg != LATIN1_USS_TEXT &&
+       _flg != UCS2_USS_TEXT ) 
     throw SerializerException("invalid flg value" , SerializerException::invObjData, NULL);
 
   if ( _flg == PREPARED_USS_REQ ) {
     in >> _dCS;
     _dCS_wasRead = true;
-//    smsc_log_debug(_logger, "USSMessageAC::load::: read dcs=%d", _dCS);
   }
   in >> _ussData;
   if ( _flg == LATIN1_USS_TEXT )
     _latin1Text.assign((char*)&_ussData[0], _ussData.size());
 
-//  smsc_log_debug(_logger, "USSMessageAC::load::: read ussdata");
   std::string sadr;
   in >> sadr;
-//  smsc_log_debug(_logger, "USSMessageAC::load::: read sadr=%s", sadr.c_str());
   if (!_msAdr.fromText(sadr.c_str()))
     throw SerializerException("invalid msisdn" , SerializerException::invObjData
 , NULL);
