@@ -16,6 +16,7 @@
 
 using std::string;
 using namespace scag2::pvss::flooder;
+using namespace scag2::pvss::client;
 using namespace scag2::pvss;
 using smsc::logger::Logger;
 
@@ -132,8 +133,7 @@ int main(int argc, char* argv[]) {
               pingtimeout,
               recontimeout,
               maxwait,
-              connects,
-              async );
+              connects );
 
     smsc::util::config::ConfigView flooderConfig(manager, "Flooder");
     

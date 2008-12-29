@@ -8,7 +8,7 @@ scag/pvss_flooder   flooder  \
     -lscag-pvss-flooder \
     -lscag-pvss-base \
     \
-    -lscag-util-storage -lscag-util-singleton -lscag-exc \
+    -lscag-util-storage -lscag-util-singleton -lscag-util -lscag-exc \
     \
     @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
     -llicense-check \

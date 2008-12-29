@@ -38,8 +38,8 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
     number = (rand() * RAND_MAX + 1) | (rand() + 1);
     number = number % addrsCount;
     sprintf(addr, "791%08d", number);			
-    commandsSetConfigured(addr, number, "test_abnt_prop", PT_ABONENT, getsetCount);
-    //commandsSet(addr, number, "test_serv_prop", PT_PROVIDER);
+    //commandsSetConfigured(addr, number, "test_abnt_prop", PT_ABONENT, getsetCount);
+    commandsSet(addr, number, "test_serv_prop", PT_ABONENT);
     //number = number > addrsCount ? 0 : number + 1;
   }
 
@@ -159,29 +159,29 @@ void PvssFlooder::commandsSet(const string& addr, int intKey, const string& prop
 
   std::auto_ptr<PersCommand> cmd4( getCmd(setIntName) );
   doCall( createPersCall(pfType,addr,intKey,cmd4) );
-/*
+
   string incName = propName + "_inc";
   int incValue = 10;
   std::auto_ptr<PersCommand> cmd5( incCmd(incName, incValue) );
-  doCall( getCallContext(getPersPersCallParams(pfType,addr,intKey,cmd5)) );  
+  doCall( createPersCall(pfType,addr,intKey,cmd5) );  
 
   std::auto_ptr<PersCommand> cmd6( incCmd(incName, incValue) );
-  doCall( getCallContext(getPersPersCallParams(pfType,addr,intKey,cmd6)) );  
+  doCall( createPersCall(pfType,addr,intKey,cmd6) );  
 
   string incModName = propName + "_inc_mod";
   int modValue = 3;
   std::auto_ptr<PersCommand> cmd7( incModCmd(incModName, incValue, modValue) );
-  doCall( getCallContext(getPersPersCallParams(pfType,addr,intKey,cmd7)) );  
+  doCall( createPersCall(pfType,addr,intKey,cmd7) );  
 
   std::auto_ptr<PersCommand> cmd8( getCmd(incName) );
-  doCall( getCallContext(getPersPersCallParams(pfType,addr,intKey,cmd8)) );  
+  doCall( createPersCall(pfType,addr,intKey,cmd8) );  
 
   std::auto_ptr<PersCommand> cmd9( getCmd(incModName) );
-  doCall( getCallContext(getPersPersCallParams(pfType,addr,intKey,cmd9)) );  
+  doCall( createPersCall(pfType,addr,intKey,cmd9) );  
 
   std::auto_ptr<PersCommand> cmd10( batchCmd(propName, true) );
-  doCall( getCallContext(getPersPersCallParams(pfType,addr,intKey,cmd10)) );  
-*/
+  doCall( createPersCall(pfType,addr,intKey,cmd10) );  
+
 }
 
 PersCommandSingle* PvssFlooder::getCmd(const string& propName, PersCommandSingle* cmd ) {
