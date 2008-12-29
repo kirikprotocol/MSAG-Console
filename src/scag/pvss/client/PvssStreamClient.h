@@ -16,7 +16,7 @@ class PvssWriter;
 class PvssConnector;
 class PvssConnection;
 
-class PvssStreamClient : public PersClient, public PersCallInitiator
+class PvssStreamClient : public PersClient
 {
 private:
     struct PersCallPtrHFunc
@@ -62,7 +62,6 @@ private:
     void finishCalls( PersCall* call, bool drop );
     virtual bool callAsync( PersCall* call, PersCallInitiator& fromwho );
     virtual bool callSync( PersCall* call );
-    virtual void continuePersCall( PersCall* call, bool drop );
     virtual int getClientStatus();
 
 public:
@@ -85,10 +84,6 @@ private:
     unsigned                        callsCount_;
     smsc::core::threads::ThreadPool tp_;
     
-    // for sync calls
-    EventMonitor                    syncMonitor_;
-    smsc::core::buffers::XHash< PersCall*, uint8_t, PersCallPtrHFunc > syncRequests_;
-
     PvssReader*                                   reader_;
     PvssWriter*                                   writer_;
     PvssConnector*                                connector_;

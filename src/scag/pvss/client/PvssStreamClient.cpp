@@ -28,6 +28,27 @@ public:
 
 PvssCmdDestroy pvssCmdDestroy;
 
+class PvssReqSyncer : public scag2::pvss::PersCallInitiator
+{
+public:
+    PvssReqSyncer( scag2::pvss::PersClient& c ) : c_(c) {}
+    bool call( scag2::pvss::PersCall* call ) {
+        MutexGuard mg(mon_);
+        if ( ! c_.callAsync(call,*this) ) return false;
+        mon_.wait();
+        return true;
+    }
+    virtual void continuePersCall( scag2::pvss::PersCall*, bool )
+    {
+        MutexGuard mg(mon_);
+        mon_.notify();
+    }
+
+private:
+    smsc::core::synchronization::EventMonitor mon_;
+    scag2::pvss::PersClient&                  c_; 
+};
+
 }
 
 
@@ -313,22 +334,8 @@ bool PvssStreamClient::callAsync( PersCall* ctx, PersCallInitiator& fromwho )
 
 bool PvssStreamClient::callSync( PersCall* call )
 {
-    if ( ! callAsync(call,*this) ) return false;
-    MutexGuard mg(syncMonitor_);
-    syncRequests_.Insert( call, 1 );
-    while ( true ) {
-        syncMonitor_.wait(1000);
-        uint8_t* v = syncRequests_.GetPtr( call );
-        if ( !v ) break;
-    }
-    return true;
-}
-
-
-void PvssStreamClient::continuePersCall( PersCall* call, bool )
-{
-    MutexGuard mg(syncMonitor_);
-    syncRequests_.Delete(call);
+    PvssReqSyncer s(*this);
+    return s.call( call );
 }
 
 
