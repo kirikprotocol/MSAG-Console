@@ -76,12 +76,12 @@ public class Agent {
 
     communityString=config.getProperty("snmp.agent.community.string",communityString);
     if(communityString.length()==0){
-      throw new InitializationException("Mandatory config parameter \"snmp.agent.community.string\" is missed!");
+      throw new InitializationException("Mandatory config parameter \"snmp.alert.community.string\" is missed!");
     }
 
     alertMessagePattern =config.getProperty("snmp.agent.alarm.message.pattern", alertMessagePattern);
     if(alertMessagePattern.length()==0){
-      throw new InitializationException("Mandatory config parameter \"snmp.agent.alarm.message.pattern\" is missed!");
+      throw new InitializationException("Mandatory config parameter \"snmp.agent.alert.message.pattern\" is missed!");
     }
 
     try {
