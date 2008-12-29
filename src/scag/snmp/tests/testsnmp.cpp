@@ -1,14 +1,18 @@
 #include <time.h>
 #include <string>
+#include <stdio.h>
 #include "logger/Logger.h"
-#include "scag/snmp/SnmpWrapper.h"
 
+#ifdef SNMP
+#include "scag/snmp/SnmpWrapper.h"
 using namespace scag2::snmp;
+#endif
 
 int main()
 {
     smsc::logger::Logger::Init();
 
+#ifdef SNMP
     const std::string socket = "tcp:localhost:2705";
     SnmpWrapper snmp( socket );
 
@@ -26,5 +30,8 @@ int main()
     tm.tv_sec = 5;
     tm.tv_nsec = 0;
     nanosleep( &tm, NULL );
+#else
+    printf( "NOTE: SNMP build property is not set, so this test does nothing\n" );
+#endif
     return 0;
 }

@@ -1,5 +1,6 @@
 scag/tests/testsnmp	testsnmp	\
    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
-   $(__LIBRARIES) -lscag-snmp \
-   $(if $(filter YES,$(SNMP)),-lnetsnmpmibs -lnetsnmpagent -lnetsnmphelpers -lnetsnmp) \
+   $(__LIBRARIES) \
+   $(if $(filter YES,$(SNMP)),-lscag-snmp) \
+   $(SNMP_LIBS_CORE) \
    -lrt -ldl $(LIBMALLOC)

@@ -25,13 +25,13 @@ int PersCommand::readStatus( SerialBuffer& sb )
 
 int PersCommandPing::readSB( SerialBuffer& sb )
 {
-    readStatus(sb);
+    return readStatus(sb);
 }
 
 
 int PersCommandAuth::readSB( SerialBuffer& sb )
 {
-    readStatus(sb);
+    return readStatus(sb);
 }
 
 
