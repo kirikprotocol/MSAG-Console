@@ -90,6 +90,7 @@ private:
   PersPacket* parsePacket(const time_t& now);
   void sendFakeResponse();
   void flushLogs();
+  void getPeerIp();
 
 private:
   SerialBuffer inbuf_;
@@ -109,6 +110,7 @@ private:
   uint32_t sequenceNumber_;
   PerfCounter perfCounter_;
   vector<DbLog> dbLogs_;
+  string peerIp_;
   char readBuf_[READ_BUF_SIZE];
 };
 

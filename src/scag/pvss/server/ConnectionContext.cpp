@@ -21,12 +21,27 @@ ConnectionContext::ConnectionContext(Socket* sock, WriterTaskManager& writerMana
   }
   logger_ = Logger::getInstance("context");
   debuglogger_ = Logger::getInstance("ctx");
+  getPeerIp();
 } 
 
 ConnectionContext::~ConnectionContext() {
   if (socket_) {
     delete socket_;
   }
+}
+
+void ConnectionContext::getPeerIp() {
+  if (!socket_) {
+    return;
+  }
+  char peerNameBuf[32];
+  socket_->GetPeer(peerNameBuf);
+  peerIp_ = peerNameBuf;
+  string::size_type pos = peerIp_.find_first_of(':');
+  if (pos != string::npos) {
+    peerIp_.erase(pos);
+  }
+  smsc_log_info(logger_, "Connection accepted from %s", peerIp_.c_str());
 }
 
 void ConnectionContext::createFakeResponse(PersServerResponseType response) {
