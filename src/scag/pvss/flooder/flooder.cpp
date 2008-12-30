@@ -119,6 +119,13 @@ int main(int argc, char* argv[]) {
     } catch (...) {
       smsc_log_warn(logger, "Parameter <PvssClient.connections> missed. Defaul value is %d", connects);
     };
+    int connPerThread = 5;
+    try { 
+      connPerThread = clientConfig.getInt("connPerThread");
+    } catch (...) {
+      smsc_log_warn(logger, "Parameter <PvssClient.connPerThread> missed. Defaul value is %d", connPerThread);
+    };
+
       /*
     bool async = true;
     try { 
@@ -135,7 +142,8 @@ int main(int argc, char* argv[]) {
               pingtimeout,
               recontimeout,
               maxwait,
-              connects );
+              connects,
+              connPerThread );
 
     smsc::util::config::ConfigView flooderConfig(manager, "Flooder");
     

@@ -18,7 +18,6 @@ seqnum_(0),
 rdToRead(0),
 wrBufSent(0)
 {
-    ::gettimeofday(&time0_,0);
     sock_.setData(0,this);
 }
 
@@ -327,16 +326,6 @@ void PvssConnection::prepareWrBuffer( PersCall* ctx )
         wrBuffer.setLength(0);
         ctx->initiator()->continuePersCall(ctx,false);
     }
-}
-
-
-PvssConnection::msectime_type PvssConnection::msectime() const
-{
-    struct timeval tv;
-    ::gettimeofday( &tv, 0 );
-    msectime_type t = msectime_type((tv.tv_sec - time0_.tv_sec)*1000 + 
-                                    (int(tv.tv_usec) - int(time0_.tv_usec)) / 1000);
-    return t;
 }
 
 

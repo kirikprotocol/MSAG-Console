@@ -7,6 +7,7 @@
 #include "core/buffers/IntHash.hpp"
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
+#include "scag/util/MsecTime.h"
 
 namespace scag2 {
 namespace pvss {
@@ -17,10 +18,11 @@ class PvssStreamClient;
 /// a connection to a pvss
 class PvssConnection
 {
-private:
+public:
     /// current time (msec) counting from some reference point.
-    typedef int msectime_type;
+    typedef util::MsecTime::time_type msectime_type;
 
+private:
     /// a request sent to a server
     struct Call 
     {
@@ -49,19 +51,18 @@ public:
     bool wantToSend();
     inline bool isConnected() { return connected_; }
     inline smsc::core::network::Socket* socket() { return &sock_; }
-    inline bool isReady() const { return ready_; }
-    inline void setReady( bool rdy ) { ready_ = rdy; }
 
     void connect();
     void disconnect();
     void dropCalls();
     void dropExpiredCalls();
 
+    inline msectime_type msectime() const { return time0_.msectime(); }
+
 protected:
     void prepareWrBuffer( PersCall* ctx );
 
     // registry access
-    msectime_type msectime() const;
     void addCall( int32_t seqnum, PersCall* ctx );
     PersCall* getCall( int32_t seqnum );
 
@@ -70,11 +71,10 @@ private:
     smsc::logger::Logger*       logd_;
     smsc::core::network::Socket sock_;
     bool                        connected_;
-    bool                        ready_;
     time_t                      lastActivity_;
     time_t                      lastConnect_;
     PvssStreamClient*           pers_;
-    struct timeval              time0_;
+    util::MsecTime              time0_;
 
     int32_t                     seqnum_;
 

@@ -22,6 +22,9 @@ public:
 
     void addConnection( PvssConnection& con );
     virtual int Execute();
+    inline unsigned sockets() const {
+        return sockets_.Count();
+    }
 
 protected:
     /// setup things prior the invocation of hasEvents()
@@ -36,8 +39,8 @@ protected:
     /// process events
     virtual void processEvents() = 0;
 
-    /// process no events
-    virtual void processNoEvents() {}
+    /// post processing
+    virtual void postProcess() {}
 
 protected:
     smsc::core::synchronization::EventMonitor     mon_;

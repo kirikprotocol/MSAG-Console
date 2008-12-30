@@ -18,6 +18,7 @@ void PersClientConfig::init(const ConfigView& cv)   throw(ConfigException)
         reconnectTimeout = cv.getInt("reconnectTimeout", NULL);
         maxCallsCount = cv.getInt("maxWaitingRequestsCount", NULL);
         connections = cv.getInt("connections", NULL);
+        connPerThread = cv.getInt("connPerThread", NULL);
         async = cv.getBool("async", NULL);
     }catch(ConfigException& e){
         throw ConfigException(e.what());
@@ -35,6 +36,7 @@ bool PersClientConfig::check(const ConfigView& cv)   throw(ConfigException)
             reconnectTimeout != cv.getInt("reconnectTimeout", NULL) ||
             maxCallsCount != cv.getInt("maxWaitingRequestsCount", NULL) ||
             connections != cv.getInt("connections", NULL) ||
+            connPerThread != cv.getInt("connPerThread",NULL) ||
             async != cv.getBool("async", NULL);
     }catch(ConfigException& e){
         throw ConfigException(e.what());

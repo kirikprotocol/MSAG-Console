@@ -131,8 +131,6 @@ log_(smsc::logger::Logger::getInstance("pvss.clnt")),
 headContext_(0),
 tailContext_(0),
 callsCount_(0),
-reader_(0),
-writer_(0),
 connector_(0)
 {
 }
@@ -141,8 +139,8 @@ connector_(0)
 PvssStreamClient::~PvssStreamClient()
 {
     Stop();
-    reader_ = 0;
-    writer_ = 0;
+    readers_.Empty();
+    writers_.Empty();
     connector_ = 0;
 }
 
@@ -155,8 +153,8 @@ void PvssStreamClient::Stop()
         MutexGuard mg(queueMonitor_);
         queueMonitor_.notifyAll();
         queueMonitor_.wait(50);
-        reader_ = 0;
-        writer_ = 0;
+        readers_.Empty();
+        writers_.Empty();
         connector_ = 0;
     }
     tp_.shutdown();
@@ -181,13 +179,14 @@ void PvssStreamClient::init( const char *_host,
                              int _pingTimeout,
                              int _reconnectTimeout,
                              unsigned _maxCallsCount,
-                             unsigned clients )
+                             unsigned clients,
+                             unsigned connPerThread )
 {
     if ( ! isStopping ) return;
     isStopping = false;
-    smsc_log_info( log_, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d reconnectTimeout=%d maxWaitingRequestsCount=%d connections=%d",
+    smsc_log_info( log_, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d reconnectTimeout=%d maxWaitingRequestsCount=%d connections=%d connPerThread=%d",
                    _host, _port, _timeout, _pingTimeout, _reconnectTimeout,
-                   _maxCallsCount, clients );
+                   _maxCallsCount, clients, connPerThread );
     callsCount_ = 0;
     host = _host;
     port = _port;
@@ -196,10 +195,17 @@ void PvssStreamClient::init( const char *_host,
     reconnectTimeout = _reconnectTimeout;
     maxCallsCount_ = _maxCallsCount;
     clients_ = clients;
-    tp_.startTask( reader_ = new PvssReader( *this ) );
-    tp_.startTask( writer_ = new PvssWriter( *this, &queueMonitor_ ) );
+    connPerThread_ = connPerThread;
     tp_.startTask( connector_ = new PvssConnector( *this ) );
     for ( unsigned i = 0; i < clients_; ++i ) {
+        if ( i % connPerThread_ == 0 ) {
+            PvssReader* r = new PvssReader( *this );
+            tp_.startTask(r);
+            readers_.Push(r);
+            PvssWriter* w = new PvssWriter( *this, &queueMonitor_ );
+            tp_.startTask(w);
+            writers_.Push(w);
+        }
         PvssConnection* con = new PvssConnection( *this );
         connections_.Push( con );
         connector_->addConnection( *con );
@@ -247,8 +253,19 @@ void PvssStreamClient::connected( PvssConnection& conn )
     }
     if ( isStopping ) return;
     connected_.Push(&conn);
-    if ( reader_ ) reader_->addConnection( conn );
-    if ( writer_ ) writer_->addConnection( conn );
+    int i = 0;
+    for ( ; i < readers_.Count(); ++i ) {
+        if ( readers_[i]->sockets() < connPerThread_ ) {
+            readers_[i]->addConnection( conn );
+            writers_[i]->addConnection( conn );
+            queueMonitor_.notify();
+            break;
+        }
+    }
+    if ( i >= readers_.Count() ) {
+        smsc_log_error( log_, "logic error: no r/w thread available" );
+        abort();
+    }
 }
 
 

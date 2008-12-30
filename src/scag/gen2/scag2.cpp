@@ -166,7 +166,8 @@ void Scag::init( unsigned mynode )
                   pcfg.pingTimeout,
                   pcfg.reconnectTimeout,
                   pcfg.maxCallsCount,
-                  pcfg.connections );
+                  pcfg.connections,
+                  pcfg.connPerThread );
         smsc_log_info(log, "Personalization client initialized");
     } catch(std::exception& e) {
         throw Exception("Exception during initialization of PersClient: %s", e.what());

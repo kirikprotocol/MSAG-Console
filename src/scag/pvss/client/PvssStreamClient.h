@@ -39,7 +39,8 @@ public:
                int _pingTimeout,
                int _reconnectTimeout,
                unsigned _maxCallsCount,
-               unsigned clients );
+               unsigned clients,
+               unsigned connPerThread );
 
     // check for a call in queue
     PersCall* getCall();
@@ -74,6 +75,7 @@ public:
 private:
     unsigned maxCallsCount_;
     unsigned clients_;
+    unsigned connPerThread_;
 
     bool isStopping;
     smsc::logger::Logger* log_;
@@ -84,8 +86,8 @@ private:
     unsigned                        callsCount_;
     smsc::core::threads::ThreadPool tp_;
     
-    PvssReader*                                   reader_;
-    PvssWriter*                                   writer_;
+    smsc::core::buffers::Array< PvssReader* >     readers_;
+    smsc::core::buffers::Array< PvssWriter* >     writers_;
     PvssConnector*                                connector_;
     smsc::core::buffers::Array< PvssConnection* > connections_; // owned
     smsc::core::buffers::Array< PvssConnection* > connected_;   // not owned

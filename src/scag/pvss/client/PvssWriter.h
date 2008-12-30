@@ -24,7 +24,7 @@ protected:
     }
     virtual void setupFailed() {
         smsc::core::synchronization::MutexGuard mg(*queuemon_);
-        queuemon_->wait(200);
+        queuemon_->wait(500);
     }
     virtual bool hasEvents() { return mul_.canWrite(ready_, error_, 200); }
     virtual void process( PvssConnection& con ) { con.sendData(); }

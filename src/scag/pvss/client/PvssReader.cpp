@@ -1,4 +1,5 @@
 #include "PvssReader.h"
+#include "PvssStreamClient.h"
 
 namespace scag2 {
 namespace pvss {
@@ -6,31 +7,20 @@ namespace client {
 
 bool PvssReader::setupSocket( PvssConnection& con )
 {
-    con.setReady( false );
     mul_.add( con.socket() );
     return true;
 }
 
 
-void PvssReader::processEvents()
+void PvssReader::postProcess()
 {
-    PvssIOTask::processEvents();
+    const util::MsecTime::time_type now = time0_.msectime();
+    if ( now - (lastCheck_ + pers_->timeout) <= 0 ) return;
+    lastCheck_ = now;
     // cleanup sockets w/o events
     for ( int i = 0; i < sockets_.Count(); ++i ) {
         PvssConnection* con = sockets_[i];
-        if ( con->isConnected() && ! con->isReady() ) {
-            // no activity on this socket
-            con->dropExpiredCalls();
-        }
-    }
-}
-
-
-void PvssReader::processNoEvents()
-{
-    for ( int i = 0; i < sockets_.Count(); ++i ) {
-        PvssConnection* con = sockets_[i];
-        if (con->isConnected()) con->dropExpiredCalls();
+        if ( con->isConnected() ) con->dropExpiredCalls();
     }
 }
 

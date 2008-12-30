@@ -30,9 +30,8 @@ int PvssConnTask::Execute()
 
             if ( hasEvents() ) {
                 processEvents();
-            } else {
-                processNoEvents();
             }
+            postProcess();
 
         } catch ( std::exception& e ) {
             smsc_log_warn( log_, "exception in %s: %s", taskName(), e.what() );
