@@ -119,12 +119,14 @@ int main(int argc, char* argv[]) {
     } catch (...) {
       smsc_log_warn(logger, "Parameter <PvssClient.connections> missed. Defaul value is %d", connects);
     };
-    bool async = false;
+      /*
+    bool async = true;
     try { 
       async = clientConfig.getBool("async");
     } catch (...) {
       smsc_log_warn(logger, "Parameter <PvssClient.async> missed. Defaul value is false");
     };
+       */
 
     PvssStreamClient* pc = new PvssStreamClient;
     pc->init( host.c_str(),

@@ -30,6 +30,8 @@ int PvssConnTask::Execute()
 
             if ( hasEvents() ) {
                 processEvents();
+            } else {
+                processNoEvents();
             }
 
         } catch ( std::exception& e ) {

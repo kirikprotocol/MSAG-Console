@@ -36,6 +36,9 @@ protected:
     /// process events
     virtual void processEvents() = 0;
 
+    /// process no events
+    virtual void processNoEvents() {}
+
 protected:
     smsc::core::synchronization::EventMonitor     mon_;
     smsc::core::buffers::Array< PvssConnection* > sockets_;

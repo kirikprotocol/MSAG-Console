@@ -39,7 +39,6 @@ public:
     static PvssConnection* fromSocket( smsc::core::network::Socket* s ) {
         return (PvssConnection*) s->getData(0);
     }
-
     PvssConnection( PvssStreamClient& pers );
 
     // these methods are invoked
@@ -50,6 +49,8 @@ public:
     bool wantToSend();
     inline bool isConnected() { return connected_; }
     inline smsc::core::network::Socket* socket() { return &sock_; }
+    inline bool isReady() const { return ready_; }
+    inline void setReady( bool rdy ) { ready_ = rdy; }
 
     void connect();
     void disconnect();
@@ -69,6 +70,7 @@ private:
     smsc::logger::Logger*       logd_;
     smsc::core::network::Socket sock_;
     bool                        connected_;
+    bool                        ready_;
     time_t                      lastActivity_;
     time_t                      lastConnect_;
     PvssStreamClient*           pers_;
