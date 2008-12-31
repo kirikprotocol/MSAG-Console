@@ -51,6 +51,7 @@ static const uint8_t TRX_COMPLETE   = 0;
 static const uint8_t TRX_INCOMPLETE = 1;
 
 static const size_t WRITE_BUF_SIZE = 10240;
+static const size_t BACKUP_BUF_SIZE = 10240;
 static const size_t PROFILE_MAX_BLOCKS_COUNT = 10;
 static const size_t MIN_BLOCK_SIZE = 10;
 
@@ -88,7 +89,7 @@ public:
       deser.setrpos(0);
       uint32_t val = 0;
       const char* buf = deser.readAsIs(PREAMBULE_SIZE);
-      memcpy(preamble, buf, PREAMBULE_SIZE);
+      //memcpy(preamble, buf, PREAMBULE_SIZE);
       deser >> val;
       version = val;
       if (version != dfVersion_64_2) {
@@ -115,7 +116,7 @@ public:
       first_free_block = ffb;
 
       buf = deser.readAsIs(RESERVED_SIZE);
-      memcpy(Reserved, buf, RESERVED_SIZE);
+      //memcpy(Reserved, buf, RESERVED_SIZE);
     }
 
     void serialize(Serializer& ser) const {
@@ -137,7 +138,7 @@ public:
             Serializer ser(buf);
             DescriptionFile df;
             df.serialize( ser );
-            size_ = ser.size();
+            size_ = static_cast<uint32_t>(ser.size());
         }
         return size_;
     }
@@ -316,6 +317,7 @@ public:
         hdrSize = DataBlockHeader::persistentSize();
         memset(&backupHeader, 0, sizeof(BackupHeader));
         deserBuf_ = new unsigned char[deserBufSize_ = 70];
+        memset(backupBuf, 0, BACKUP_BUF_SIZE);
     }
 
 
@@ -648,6 +650,7 @@ private:
 
   vector<index_type> dataBlockBackup;
   char writeBuf[WRITE_BUF_SIZE];
+  char backupBuf[BACKUP_BUF_SIZE];
   size_t hdrSize;
   SerialBuffer profileData;
   CompleteDataBlock completeDataBlock;
@@ -1113,11 +1116,17 @@ private:
         Serializer backupser(serBackupBuf_);
         backupHeader.serialize(backupser);
 
-        const size_t bufSize = sizeof(TRX_INCOMPLETE) + descrser.size() + 
+        const size_t backupSize = sizeof(TRX_INCOMPLETE) + descrser.size() + 
             backupser.size() +
             backupHeader.blocksCount * sizeof(descrFile.first_free_block) +
             backupHeader.dataSize;
-        char* buf = new char[bufSize];
+        char* buf = 0;
+        if (backupSize > BACKUP_BUF_SIZE) {
+          buf = new char[backupSize];
+        } else {
+          //memset(backupBuf, 0, BACKUP_BUF_SIZE);
+          buf = backupBuf;
+        }
 
         try {
 
@@ -1128,20 +1137,25 @@ private:
             memcpy(buf + bufOffset, backupser.data(), backupser.size());
             bufOffset += backupser.size();
 
+            uint64_t ni = 0;
             for (int i = 0; i < backupHeader.blocksCount; ++i) { 
-                uint64_t ni = Uint64Converter::toNetworkOrder(dataBlockBackup[i]);
-                memcpy(buf + bufOffset, (void*)(&ni), sizeof(ni)); 
+                ni = Uint64Converter::toNetworkOrder(dataBlockBackup[i]);
+                memcpy(buf + bufOffset, &ni, sizeof(ni)); 
                 bufOffset += sizeof(ni);
             }
             if (backupHeader.dataSize > 0) {
                 memcpy(buf + bufOffset, backupData, backupHeader.dataSize);           
             }
             f.Seek(0);
-            f.Write(buf, bufSize);
-            delete[] buf;
+            f.Write(buf, backupSize);
+            if (backupSize > BACKUP_BUF_SIZE) {
+              delete[] buf;
+            }
         } catch (...) {
+          if (backupSize > BACKUP_BUF_SIZE) {
             delete[] buf;
-            throw;
+          }
+          throw;
         }
     }
 
