@@ -163,6 +163,10 @@ private:
 namespace scag2 {
 namespace util {
 using scag::util::Print;
+using scag::util::PrintLog;
+using scag::util::PrintFile;
+using scag::util::PrintString;
+using scag::util::PrintAString;
 }
 }
 
