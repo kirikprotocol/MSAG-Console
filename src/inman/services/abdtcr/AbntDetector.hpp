@@ -83,11 +83,13 @@ private:
     bool StartTimer(void)
     {
         iapTimer.reset(new TimerHdl(_cfg.abtTimeout.CreateTimer(this)));
-        if (iapTimer->Id() && (iapTimer->Start() == TimeWatcherITF::errOk)) {
+        TimeWatcherITF::Error tErr = TimeWatcherITF::errBadTimer;
+        if (iapTimer->Id() && ((tErr = iapTimer->Start()) == TimeWatcherITF::errOk)) {
             smsc_log_debug(logger, "%s: started timer[%s]", _logId, iapTimer->IdStr());
             return true;
         }
-        smsc_log_error(logger, "%s: failed to start timer[%s]", _logId, iapTimer->IdStr());
+        smsc_log_error(logger, "%s: failed to start timer[%s], code: %u",
+                       _logId, iapTimer->IdStr(), tErr);
         return false;
     }
     void StopTimer(void)

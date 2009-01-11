@@ -195,6 +195,7 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
                     //execution will continue in onIAPQueried()/onTimerEvent() by another thread.
                     return false;
                 }
+                _wErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
                 smsc_log_error(logger, "%s: startQuery(%s) failed!", _logId,
                                abNumber.getSignals());
             }
@@ -277,8 +278,11 @@ void AbonentDetector::ConfigureSCF(void)
         //look for single IN serving
         if (_cfg.iaPol->ScfMap().size() == 1)
             abScf = _cfg.iaPol->ScfMap().begin()->second;
-        if (!abScf)
+        if (!abScf) {
+            if (!_wErr)
+                _wErr = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
             smsc_log_error(logger, "%s: unable to get gsmSCF from config.xml", _logId);
+        }
     }
     if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
         if (!abRec.getSCFinfo(TDPCategory::dpMO_SM) && abScf) {
