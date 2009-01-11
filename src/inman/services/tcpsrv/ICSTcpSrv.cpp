@@ -80,7 +80,7 @@ void ICSTcpServer::onPacketReceived(Connect* conn,
         //      (bindSockId session type)
         newSess.sId = ++lastSessId;
         if (!(hdl = newSess.connSrv->getConnManager(newSess.sId, conn)))
-            throw CustomException("%s: failed to get ConnManager for: %u", _logId,
+            throw CustomException("%s: failed to get ConnManager for: %s", _logId,
                                   newSess.pCs->CsName());
         sockets.insert(SocketsMap::value_type(conn->getId(), newSess.sId));
         sessions.insert(SessionsMap::value_type(newSess.sId, newSess));

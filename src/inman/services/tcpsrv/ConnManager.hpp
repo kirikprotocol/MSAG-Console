@@ -110,7 +110,11 @@ public:
     {
         MutexGuard grd(mutex);
         if (!workers.empty()) { //abort all active workers
-            smsc_log_error(logger, "%s: aborting, reason: %s", _logId, reason);
+            if (reason && reason[0])
+                smsc_log_error(logger, "%s: aborting, reason: %s", _logId, reason);
+            else
+                smsc_log_error(logger, "%s: aborting ..", _logId);
+
             for (WorkersMap::iterator it = workers.begin(); it != workers.end(); ++it) {
                 WorkerAC * worker = it->second;
                 worker->Abort(reason);
