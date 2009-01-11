@@ -118,7 +118,7 @@ void PvssConnection::processInput( bool hasSeqnum )
     }
     rdBuffer.setPos(0);
     rdBuffer.setLength(0);
-    setReading( false );
+    if (!pers_->async) setReading( false );
 }
 
 
@@ -142,7 +142,7 @@ void PvssConnection::sendData()
             wrBufSent=0;
             wrBuffer.setPos(0);
             wrBuffer.setLength(0);
-            setReading(true);
+            if (!pers_->async) setReading(true);
         }
         smsc_log_debug(log_, "sendData: sent %d bytes",res);
         return;
