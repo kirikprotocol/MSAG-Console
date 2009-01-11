@@ -456,9 +456,6 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
     Invoke  invoke(invId, op[0]);
     {
         MutexGuard tmp(dlgGrd);
-        if (lastComp)
-            updateState(true);
-
         if (pmlen) { //operation parameters present
             Component* comp = acFab->createArg(op[0], logger);
             if (comp) {
@@ -476,11 +473,22 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
                                _logId, (unsigned)invId, (unsigned)op[0]);
             }
         }
-        if (!pUser.get())
+        if (!pUser.get()) {
+            if (lastComp)
+                updateState(true);
             return MSG_OK;
+        }
+        //postponing invokes cleanUp on T_END until return from TC User callback
+        if (lastComp)
+            updateState();
         pUser.Lock();
     }
     pUser->onDialogInvoke(&invoke, lastComp);
+    if (lastComp)
+    {
+        MutexGuard dtmp(dlgGrd);
+        cleanUpInvokes();
+    }
     unlockUser();
     return MSG_OK;
 }
