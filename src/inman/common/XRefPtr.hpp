@@ -48,7 +48,7 @@ public:
     //Increases references counter
     virtual unsigned Ref(void) const = 0;
     //Decreases references counter, utilizes designated object
-    //ig no more references exist
+    //if no more references exist
     virtual unsigned UnRef(void) = 0;
 
     //Creates a new referee for given object with same settings as this one
