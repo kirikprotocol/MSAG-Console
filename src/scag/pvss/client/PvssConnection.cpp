@@ -4,6 +4,26 @@
 #include "scag/pvss/base/PersClientException.h"
 #include "PvssStreamClient.h"
 
+namespace {
+using namespace scag2::pvss::client;
+using namespace scag2::util::storage;
+
+std::auto_ptr<char> bufdump( SerialBuffer& buffer, unsigned buflen )
+{
+    scag2::util::HexDump hd;
+    std::auto_ptr<char> buf(new char[hd.hexdumpsize(buflen)+hd.strdumpsize(buflen)+10]);
+    char* outbuf = buf.get();
+    outbuf = hd.hexdump(outbuf,buffer.ptr(),buflen);
+    outbuf = hd.addstr(outbuf," (");
+    outbuf = hd.strdump(outbuf,buffer.ptr(),buflen);
+    outbuf = hd.addstr(outbuf,")");
+    *outbuf = '\0';
+    return buf;
+}
+
+}
+
+
 namespace scag2 {
 namespace pvss {
 namespace client {
@@ -16,7 +36,8 @@ lastActivity_(0),
 pers_(&pers),
 seqnum_(0),
 rdToRead(0),
-wrBufSent(0)
+wrBufSent(0),
+isReading_(false)
 {
     sock_.setData(0,this);
 }
@@ -65,23 +86,12 @@ void PvssConnection::processInput( bool hasSeqnum )
     lastActivity_ = time(NULL);
     rdBuffer.setPos(rdBuffer.getPos() + res);
     if (rdBuffer.getPos() < rdToRead) return;
-    if ( logd_->isDebugEnabled())
-    {
-        util::HexDump hd;
-        std::auto_ptr<char> buf
-            (new char[hd.hexdumpsize(rdToRead)+hd.strdumpsize(rdToRead)+10]);
-        char* outbuf = buf.get();
-        outbuf = hd.hexdump(outbuf,rdBuffer.ptr(),rdToRead);
-        outbuf = hd.addstr(outbuf," (");
-        outbuf = hd.strdump(outbuf,rdBuffer.ptr(),rdToRead);
-        outbuf = hd.addstr(outbuf,")");
-        *outbuf = '\0';
-        smsc_log_debug( logd_, "in len=%d: %s", rdToRead, buf.get() );
-    }
     int32_t seqnum;
     if ( hasSeqnum ) {
         if ( rdBuffer.getPos() < 8 ) {
-            smsc_log_warn( log_, "failed to parse pvss input: seqnum" );
+            std::auto_ptr< char > buf = ::bufdump( rdBuffer, rdToRead );
+            smsc_log_warn( log_, "failed to parse pvss input from=%p (seqnum): %s",
+                           this, buf.get() );
             disconnect();
             return;
         }
@@ -91,22 +101,13 @@ void PvssConnection::processInput( bool hasSeqnum )
         seqnum = 0;
         rdBuffer.setPos(4);
     }
+    if ( logd_->isDebugEnabled())
+    {
+        std::auto_ptr<char> buf = ::bufdump( rdBuffer, rdToRead );
+        smsc_log_debug( logd_, "in from=%p len=%d seq=%d: %s", this, rdToRead, seqnum, buf.get() );
+    }
     rdToRead = 0;
     PersCall* call = getCall(seqnum);
-    /*
-    {
-        MutexGuard mg(regmtx);
-        Callqueue::iterator* i = callhash_.GetPtr(seqnum);
-        if ( !i ) {
-            smsc_log_debug( log_, "unknown seqnum=%d", seqnum );
-            FIXME();
-        } else {
-            call = **i;
-            callhash_.Delete(seqnum);
-            callqueue_.erase(*i);
-        }
-    }
-     */
     if ( call ) {
         try {
             call->readSB(rdBuffer);
@@ -117,6 +118,7 @@ void PvssConnection::processInput( bool hasSeqnum )
     }
     rdBuffer.setPos(0);
     rdBuffer.setLength(0);
+    setReading( false );
 }
 
 
@@ -140,6 +142,7 @@ void PvssConnection::sendData()
             wrBufSent=0;
             wrBuffer.setPos(0);
             wrBuffer.setLength(0);
+            setReading(true);
         }
         smsc_log_debug(log_, "sendData: sent %d bytes",res);
         return;
@@ -162,6 +165,13 @@ bool PvssConnection::wantToSend()
     if ( ! ctx ) return false;
     prepareWrBuffer( ctx );
     return true;
+}
+
+
+bool PvssConnection::isReading() const
+{
+    MutexGuard mg(regmtx_);
+    return isReading_;
 }
 
 
@@ -204,6 +214,7 @@ void PvssConnection::connect()
             break;
         }
         connected_ = true;
+        isReading_ = false;
         smsc_log_info( log_, "Connected to pvss host=%s:%d",
                        pers_->host.c_str(), pers_->port );
         // cleanup
@@ -214,15 +225,17 @@ void PvssConnection::connect()
         rdBuffer.setLength(0);
         rdToRead = 0;
 
-        PersCall* ctx = pers_->createAuthCall();
-        if ( ctx ) prepareWrBuffer( ctx );
-        while ( connected_ && wrBuffer.length() > 0 ) {
-            sendData();
+        if ( pers_->async ) {
+            PersCall* ctx = pers_->createAuthCall();
+            if ( ctx ) prepareWrBuffer( ctx );
+            while ( connected_ && wrBuffer.length() > 0 ) {
+                sendData();
+            }
+            // receiving answer
+            do {
+                processInput( false );
+            } while ( connected_ && rdBuffer.getPos() != 0 );
         }
-        // receiving answer
-        do {
-            processInput( false );
-        } while ( connected_ && rdBuffer.getPos() != 0 );
     } while ( false );
     if ( res ) {
         smsc_log_warn( log_, "Cannot connect to pvss host=%s:%d: status=%d msg=%s",
@@ -284,7 +297,7 @@ void PvssConnection::prepareWrBuffer( PersCall* ctx )
 {
     assert( wrBuffer.getPos() == 0 && wrBuffer.length() == 0 && wrBufSent == 0 );
     int32_t seqnum;
-    if ( ctx->cmdType() == PC_BIND_ASYNCH ) {
+    if ( ctx->cmdType() == PC_BIND_ASYNCH || ! pers_->async ) {
         seqnum = 0;
     } else {
         seqnum = ++seqnum_;
@@ -295,20 +308,11 @@ void PvssConnection::prepareWrBuffer( PersCall* ctx )
         if ( ctx->status() == 0 ) {
             wrBufSent = 0;
             if ( logd_->isDebugEnabled() ) {
-                util::HexDump hd;
-                std::auto_ptr<char> buf
-                    (new char[hd.hexdumpsize(wrBuffer.length())+
-                              hd.strdumpsize(wrBuffer.length())+10]);
-                char* outbuf = buf.get();
-                outbuf = hd.hexdump(outbuf,wrBuffer.ptr(),wrBuffer.length());
-                outbuf = hd.addstr(outbuf," (");
-                outbuf = hd.strdump(outbuf,wrBuffer.ptr(),wrBuffer.length());
-                outbuf = hd.addstr(outbuf,")");
-                *outbuf = '\0';
-                smsc_log_debug( logd_, "out len=%d: %s", wrBuffer.length(), buf.get() );
+                std::auto_ptr<char> buf = ::bufdump( wrBuffer, wrBuffer.length() );
+                smsc_log_debug( logd_, "out to=%p len=%d seq=%d: %s", this, wrBuffer.length(), seqnum, buf.get() );
             }
             addCall(seqnum,ctx);
-            smsc_log_debug(log_,"Prepared buffer size %d",wrBuffer.length());
+            // smsc_log_debug(log_,"Prepared buffer size %d",wrBuffer.length());
             ctx = 0;
         }
     } catch ( PersClientException& e ) {
@@ -362,6 +366,12 @@ PersCall* PvssConnection::getCall( int32_t seqnum )
     return 0;
 }
 
+
+void PvssConnection::setReading( bool state )
+{
+    MutexGuard mg(regmtx_);
+    isReading_ = state;
+}
 
 } // namespace client
 } // namespace pvss

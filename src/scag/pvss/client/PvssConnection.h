@@ -49,6 +49,9 @@ public:
     void processInput( bool hasSeqnum = true );
     void sendData();
     bool wantToSend();
+    /// only for sync mode: connection is in reading state
+    bool isReading() const;
+
     inline bool isConnected() { return connected_; }
     inline smsc::core::network::Socket* socket() { return &sock_; }
 
@@ -65,6 +68,8 @@ protected:
     // registry access
     void addCall( int32_t seqnum, PersCall* ctx );
     PersCall* getCall( int32_t seqnum );
+
+    void setReading( bool state );
 
 private:
     smsc::logger::Logger*       log_;
@@ -87,9 +92,11 @@ private:
     SerialBuffer                wrBuffer;
 
     // registry
-    smsc::core::synchronization::Mutex regmtx_;
+    mutable smsc::core::synchronization::Mutex regmtx_;
     Callqueue                          callqueue_;
     Callhash                           callhash_;
+
+    bool                               isReading_; // for sync mode
 };
 
 } // namespace client

@@ -26,7 +26,7 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
 
   smsc_log_info(logger_, "execution...");
 
-  while (persClient_.getClientStatus() != 0) {
+  while (persClient_.getClientStatus() != 0 && !isStopped_ ) {
     smsc_log_warn(logger_, "waiting while pers client connecting to server...");
     sleep(1);
   }
@@ -117,7 +117,7 @@ void PvssFlooder::delay() {
   if (delay_ > procTime + overdelay_) {
     startTime_ = gethrtime();
     unsigned sleepTime = delay_ - procTime - overdelay_;
-    __trace2__("try to sleep:%d", sleepTime);
+    __trace2__("try to sleep:%d ms", sleepTime);
     millisleep(sleepTime);
     overdelay_ = (gethrtime() - startTime_) / 1000 - sleepTime;
   } else {

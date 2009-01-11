@@ -40,9 +40,11 @@ public:
                int _reconnectTimeout,
                unsigned _maxCallsCount,
                unsigned clients,
-               unsigned connPerThread );
+               unsigned connPerThread,
+               bool     async = true );
 
     // check for a call in queue
+    void      waitForCalls( int msec );
     PersCall* getCall();
     PersCall* createPingCall();
     PersCall* createAuthCall();
@@ -71,6 +73,7 @@ public:
     int         timeout;
     int         pingTimeout;             // seconds
     int         reconnectTimeout;        // seconds
+    bool        async;                   // async regime
 
 private:
     unsigned maxCallsCount_;

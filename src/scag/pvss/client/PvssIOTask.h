@@ -10,9 +10,9 @@ namespace client {
 
 class PvssIOTask : public PvssConnTask
 {
-public:
-    PvssIOTask( PvssStreamClient& pers ) :
-    PvssConnTask(pers, smsc::logger::Logger::getInstance("pvss.io")) {}
+protected:
+    PvssIOTask( PvssStreamClient& pers, const char* logname ) :
+    PvssConnTask(pers, smsc::logger::Logger::getInstance(logname)) {}
     
 protected:
     virtual bool setupSockets();

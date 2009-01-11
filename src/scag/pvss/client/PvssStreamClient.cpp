@@ -124,6 +124,7 @@ port(0),
 timeout(10),
 pingTimeout(100),
 reconnectTimeout(10),
+async(true),
 maxCallsCount_(1000),
 clients_(0),
 isStopping(true),
@@ -148,6 +149,9 @@ PvssStreamClient::~PvssStreamClient()
 void PvssStreamClient::Stop()
 {
     isStopping = true;
+    for ( int i = 0; i < writers_.Count(); ++i ) {
+        writers_[i]->notify();
+    }
     tp_.stopNotify();
     {
         MutexGuard mg(queueMonitor_);
@@ -180,7 +184,8 @@ void PvssStreamClient::init( const char *_host,
                              int _reconnectTimeout,
                              unsigned _maxCallsCount,
                              unsigned clients,
-                             unsigned connPerThread )
+                             unsigned connPerThread,
+                             bool aSync )
 {
     if ( ! isStopping ) return;
     isStopping = false;
@@ -196,20 +201,30 @@ void PvssStreamClient::init( const char *_host,
     maxCallsCount_ = _maxCallsCount;
     clients_ = clients;
     connPerThread_ = connPerThread;
+    async = aSync;
     tp_.startTask( connector_ = new PvssConnector( *this ) );
     for ( unsigned i = 0; i < clients_; ++i ) {
         if ( i % connPerThread_ == 0 ) {
-            PvssReader* r = new PvssReader( *this );
-            tp_.startTask(r);
-            readers_.Push(r);
-            PvssWriter* w = new PvssWriter( *this, &queueMonitor_ );
+            PvssWriter* w = new PvssWriter( *this );
             tp_.startTask(w);
             writers_.Push(w);
+            PvssReader* r = new PvssReader( *this, w );
+            tp_.startTask(r);
+            readers_.Push(r);
         }
         PvssConnection* con = new PvssConnection( *this );
         connections_.Push( con );
         connector_->addConnection( *con );
     }
+}
+
+
+void PvssStreamClient::waitForCalls( int msec )
+{
+    MutexGuard mg(queueMonitor_);
+    if ( isStopping ) return;
+    if ( headContext_ ) return;
+    queueMonitor_.wait( msec );
 }
 
 
@@ -258,7 +273,8 @@ void PvssStreamClient::connected( PvssConnection& conn )
         if ( readers_[i]->sockets() < connPerThread_ ) {
             readers_[i]->addConnection( conn );
             writers_[i]->addConnection( conn );
-            queueMonitor_.notify();
+            // writers_[i]->notify();
+            // queueMonitor_.notify();
             break;
         }
     }
