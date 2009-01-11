@@ -33,7 +33,7 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
   //int addrsCount = 1000000;
   char addr[20];
 
-  int number = 0;
+  unsigned number = 0;
   while (!isStopped_) {
     number = (rand() * RAND_MAX + 1) | (rand() + 1);
     number = number % addrsCount;
