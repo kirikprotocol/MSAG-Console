@@ -1,8 +1,8 @@
-#ident "@(#)$Id$"
 /* ************************************************************************** *
  * TonNpiAddress and GsmSCFinfo helper classes.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_TONNPIADDR_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_UTIL_TONNPIADDR_HPP__
 
 #include <inttypes.h>
@@ -151,7 +151,7 @@ struct GsmSCFinfo { //gsmSCF paramaters
     GsmSCFinfo() : serviceKey(0)
     { }
     GsmSCFinfo(const TonNpiAddress & use_scf, uint32_t use_key)
-        : scfAddress(use_scf), serviceKey(use_key)
+        : serviceKey(use_key), scfAddress(use_scf)
     { }
 
     void Reset(void) { serviceKey = 0; scfAddress.clear(); }
