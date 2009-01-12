@@ -1,14 +1,13 @@
 /* ************************************************************************** *
- * POSIX Synchronization primitive(s): EventMonitor
+ * Synchronization primitive(s): Stateless event monitor
  * ************************************************************************** */
 #ifndef __CORE_SYNCHRONIZATION_EVENTMONITOR_HPP__
 #ident "@(#)$Id$"
 #define __CORE_SYNCHRONIZATION_EVENTMONITOR_HPP__
 
-#include <pthread.h>
+#define EXPLICIT_PTHREAD_API  //support old code in store/ConnectionManager, system/mapio
 
-#include "Mutex.hpp"
-#include <sys/time.h>
+#include "core/synchronization/Condition.hpp"
 
 namespace smsc {
 namespace core {
@@ -16,54 +15,75 @@ namespace synchronization {
 
 class EventMonitor : public Mutex {
 protected:
-    pthread_cond_t event;
+    Condition       condVar;
+
+    EventMonitor(const EventMonitor &);
+    void operator=(const EventMonitor &);
 
 public:
     EventMonitor()
-    {
-        pthread_cond_init(&event, NULL);
-    }
+    { }
     ~EventMonitor()
+    { }
+
+    int wait(void)
     {
-        pthread_cond_destroy(&event);
+        return condVar.WaitOn(*this);
     }
-    int wait()
+    int wait(const TimeSlice & use_timeout)
     {
-        return pthread_cond_wait(&event,&mutex);
+        return condVar.WaitOn(*this, use_timeout);
     }
+    int wait(const struct timespec & abs_time)
+    {
+        return condVar.WaitOn(*this, abs_time);
+    }
+    //this one is kept for compatibility issue
+    int wait(int timeout_msec) //timeout unit: millisecs
+    {
+        return wait(TimeSlice(timeout_msec, TimeSlice::tuMSecs));
+    }
+
+    void notify(void)       { condVar.Signal(); }
+    void notifyAll(void)    { condVar.SignalAll(); }
+
+
+    int wait(Condition & use_cond)
+    {
+        return use_cond.WaitOn(*this);
+    }
+    int wait(Condition & use_cond, const TimeSlice & use_timeout)
+    {
+        return use_cond.WaitOn(*this, use_timeout);
+    }
+    int wait(Condition & use_cond, const struct timespec & abs_time)
+    {
+        return use_cond.WaitOn(*this, abs_time);
+    }
+    //this one is kept for compatibility issue
+    int wait(Condition & use_cond, int timeout_msec) //timeout unit: millisecs
+    {
+        return wait(use_cond, TimeSlice(timeout_msec, TimeSlice::tuMSecs));
+    }
+
+#ifdef EXPLICIT_PTHREAD_API
     int wait(pthread_cond_t* cnd)
     {
-        return pthread_cond_wait(cnd,&mutex);
+        return pthread_cond_wait(cnd, &mutex);
     }
+
     int wait(pthread_cond_t* cnd, int timeout_msec) //timeout unit: millisecs
     {
-        struct timespec tv = {0,0}; //time with nanosecs
-        //Note: on Solaris requires -D__EXTENSIONS__
-        clock_gettime(CLOCK_REALTIME, &tv);
-        tv.tv_sec += timeout_msec/1000;
-        tv.tv_nsec += (timeout_msec % 1000)*1000000L;
-        if (tv.tv_nsec > 1000000000L) {
-            ++tv.tv_sec;
-            tv.tv_nsec -= 1000000000L;
-        }
+        TimeSlice tmo(timeout_msec, TimeSlice::tuMSecs);
+        struct timespec tv = tmo.adjust2Nano();
         return pthread_cond_timedwait(cnd, &mutex, &tv);
     }
-    int wait(int timeout_msec)
-    {
-        return wait(&event, timeout_msec);
-    }
-    void notify()
-    {
-        pthread_cond_signal(&event);
-    }
+
     void notify(pthread_cond_t* cnd)
     {
         pthread_cond_signal(cnd);
     }
-    void notifyAll()
-    {
-        pthread_cond_broadcast(&event);
-    }
+#endif /* EXPLICIT_PTHREAD_API */
 };
 
 }//synchronization

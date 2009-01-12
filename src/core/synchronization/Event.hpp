@@ -1,13 +1,11 @@
 /* ************************************************************************** *
- * POSIX Synchronization primitive(s): Statefulll Event
+ * Synchronization primitive(s): Statefulll Event
  * ************************************************************************** */
 #ifndef __CORE_SYNCHRONIZATION_EVENT_HPP__
 #ident "@(#)$Id$"
 #define __CORE_SYNCHRONIZATION_EVENT_HPP__
 
-#include <pthread.h>
-#include <sys/time.h>
-#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/Condition.hpp"
 
 namespace smsc {
 namespace core {
@@ -15,61 +13,65 @@ namespace synchronization {
 
 class Event {
 protected:
-  pthread_cond_t    event;
-  mutable Mutex     mutex;
-  bool              signaled;
+    Condition       condVar;
+    mutable Mutex   mutex;
+    bool            signaled;
+
+    Event(const Event &);
+    void operator=(const Event &);
+
+    enum TGTTime { ttNone = 0, ttTimeout, ttAbsTime };
+    int condWait(TGTTime tgt_time, const void * use_time = 0)
+    {
+        mutex.Lock();
+        if (signaled) {
+            signaled = false;
+            mutex.Unlock();
+            return 0;
+        }
+        int retval;
+        if (tgt_time == ttNone)
+            retval = condVar.WaitOn(mutex);
+        else if (tgt_time == ttTimeout)
+            retval = condVar.WaitOn(mutex, *(const TimeSlice *)use_time);
+        else //ttAbsTime
+            retval = condVar.WaitOn(mutex, *(const struct timespec *)use_time);
+
+        signaled = false;
+        mutex.Unlock();
+        return retval;
+    }
 
 public:
     Event() : signaled(false)
-    {
-        pthread_cond_init(&event, NULL);
-    }
+    { }
     ~Event()
-    {
-        pthread_cond_destroy(&event);
-    }
+    { }
+
     int Wait()
     {
-        mutex.Lock();
-        if (signaled) {
-            signaled = false;
-            mutex.Unlock();
-            return 0;
-        }
-        int retval = pthread_cond_wait(&event, &mutex.mutex);
-        signaled = false;
-        mutex.Unlock();
-        return retval;
+        return condWait(ttNone);
     }
+    int Wait(const TimeSlice & use_timeout)
+    {
+        return condWait(ttTimeout, &use_timeout);
+    }
+    int Wait(const struct timespec & abs_time)
+    {
+        return condWait(ttAbsTime, &abs_time);
+    }
+
+    //this one is kept for compatibility issue
     int Wait(int timeout_msec) //timeout unit: millisecs
     {
-        mutex.Lock();
-        if (signaled) {
-            signaled = false;
-            mutex.Unlock();
-            return 0;
-        }
-
-        struct timespec tv = {0,0}; //time with nanosecs
-        //Note: on Solaris requires -D__EXTENSIONS__
-        clock_gettime(CLOCK_REALTIME, &tv);
-        tv.tv_sec += timeout_msec/1000;
-        tv.tv_nsec += (timeout_msec % 1000)*1000000L;
-        if (tv.tv_nsec > 1000000000L) {
-            ++tv.tv_sec;
-            tv.tv_nsec -= 1000000000L;
-        }
-
-        int retval = pthread_cond_timedwait(&event, &mutex.mutex, &tv);
-        signaled = false;
-        mutex.Unlock();
-        return retval;
+        return Wait(TimeSlice(timeout_msec, TimeSlice::tuMSecs));
     }
+
     void Signal()
     {
         MutexGuard tmp(mutex);
         signaled = true;
-        pthread_cond_signal(&event);
+        condVar.Signal();
     }
     bool isSignaled() const
     {
@@ -80,7 +82,7 @@ public:
     {
         MutexGuard tmp(mutex);
         signaled = true;
-        pthread_cond_broadcast(&event);
+        condVar.SignalAll();
     }
 };
 
