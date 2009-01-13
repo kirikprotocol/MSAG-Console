@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * TimeWatchers service.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_TIME_WATCHER_HPP
+#ident "@(#)$Id$"
 #define __INMAN_ICS_TIME_WATCHER_HPP
 
 #include "inman/services/ICSrvDefs.hpp"
@@ -68,11 +68,11 @@ public:
     }
     //Returns TimeWatcherTMO responsible for given timeout (optionally started)
     TimeWatcherTMO *
-        getTmoTimeWatcher(long timeout, bool unit_mlsecs = false,
+        getTmoTimeWatcher(const TimeSlice & use_tmo,
                           uint32_t num_tmrs = 0, bool do_start = true)
     {
         MutexGuard grd(_sync);
-        return twReg->getTmoTimeWatcher(timeout, unit_mlsecs, num_tmrs, do_start);
+        return twReg->getTmoTimeWatcher(use_tmo, num_tmrs, do_start);
     }
 };
 

@@ -8,12 +8,109 @@ namespace smsc {
 namespace core {
 namespace timers {
 
-#define TIMEOUT_STEP 50 //millisecs
+//#define TIMEOUT_STEP 50 //millisecs
+static TimeSlice    TIMEOUT_STEP(50, TimeSlice::tuMSecs);
+
+/* ************************************************************************** *
+ * class TimeWatcherAC::StopWatch implementation:
+ * ************************************************************************** */
+//switches FSM to swIsToSignal
+bool TimeWatcherAC::StopWatch::setToSignal(void)
+{
+    MutexGuard grd(*this);
+    if (_swState != swActive)
+        return false;
+    _swState = swIsToSignal;
+    return true;
+}
+// -- ******************************************************************** --
+// -- NOTE: all next FSM switching methods require StopWatch being locked !!!
+// -- ******************************************************************** --
+//switches FSM to swInited
+bool TimeWatcherAC::StopWatch::init(TimerListenerITF * listener, const SWTgtTime & tgt_time,
+          const OPAQUE_OBJ * opaque_obj/* = NULL*/)
+{
+    if (_swState != swIdle)
+        return false;
+    _eventHdl = listener;
+    if (opaque_obj)
+        _opaqueObj = *opaque_obj;
+    else
+        _opaqueObj.clear();
+
+    _swState = swInited;
+    ++_usage;
+    _tgtTime = tgt_time;
+    mkIdent();
+    return true;
+}
+//switches FSM to swActive
+bool TimeWatcherAC::StopWatch::activate(void)
+{
+    if (_swState != swInited)
+        return false;
+    _swState = swActive;
+    return true;
+}
+//tries to switche FSM to swInited, returns true if succeded,
+//false if stopwatch is currently signaling
+bool TimeWatcherAC::StopWatch::stop(void)
+{
+    if (_swState == swIsToSignal) {
+        _nextState = swInited;
+        return false;
+    }
+    _swState = swInited;
+    _nextState = swIsToSignal;
+    return true;
+}
+
+//tries to switche FSM to swIdle, returns true if succeded,
+//false if stopwatch is currently signaling
+bool TimeWatcherAC::StopWatch::release(void)
+{
+    if (_swState == swIsToSignal) {
+        _nextState = swIdle;
+        return false;
+    }
+    _swState = swIdle;
+    _nextState = swIsToSignal;
+    return true;
+}
+
+TimeWatcherITF::SignalResult TimeWatcherAC::StopWatch::notify(void)
+{
+    TimerListenerITF *  evtHdl = NULL;
+    OPAQUE_OBJ          evtObj;
+    {
+        MutexGuard grd(*this);
+        if (_swState != swIsToSignal)       //wrong state
+            return TimeWatcherITF::evtOk;
+        if (_nextState != swIsToSignal) {   //signalling was cancelled
+            _swState = _nextState;
+            return TimeWatcherITF::evtOk;
+        }
+        evtHdl = _eventHdl;
+        evtObj = _opaqueObj;
+        _nextState = swInited;
+    }
+    TimeWatcherITF::SignalResult rval =
+        evtHdl->onTimerEvent(TimerHdl(_id, _owner), evtObj.kind ? &evtObj : NULL);
+
+    if (rval == TimeWatcherITF::evtOk) {
+        MutexGuard grd(*this);
+        //switch to _nextState (swIdle or swInited)
+        _swState = _nextState;
+        _nextState = swIsToSignal;
+    }
+    return rval;
+}
+
 
 /* ************************************************************************** *
  * class TimeWatcherAC::SWNotifier implementation:
  * ************************************************************************** */
-bool TimeWatcherAC::SWNotifier::isRunning(void)
+bool TimeWatcherAC::SWNotifier::isRunning(void) const
 {
     MutexGuard grd(_sync);
     return _running;
@@ -85,7 +182,7 @@ int TimeWatcherAC::SWNotifier::Execute(void)
     return 0;
 }
 
-void TimeWatcherAC::SWNotifier::signalTimer(TimerHdl & sw_id)
+void TimeWatcherAC::SWNotifier::signalTimer(const TimerHdl & sw_id)
 {
     MutexGuard grd(_sync);
     timers.push_back(sw_id);
@@ -104,8 +201,8 @@ void TimeWatcherAC::SWNotifier::signalTimers(TimersLIST & tmm)
  * ************************************************************************** */
 TimeWatcherAC::TimeWatcherAC(const char * use_id, SWQueueITF & use_queue,
                              uint32_t init_tmrs/* = 0*/, Logger * uselog/* = NULL*/)
-    : _running(false), _lastId(0), swQueue(use_queue)
-    , _ident(use_id), _idStr("TmWT[")
+    : _running(false), _ident(use_id), _idStr("TmWT[")
+    , _lastId(0), swQueue(use_queue)
 {
     _idStr += use_id; _idStr += ']';
     logger = uselog ? uselog : Logger::getInstance(TIMEWATCHER_DFLT_LOGGER);
@@ -128,7 +225,7 @@ void TimeWatcherAC::Reserve(uint32_t num_tmrs)
     swReg.reserve(num_tmrs); //reallocate only if num_tmrs > size()
 }
 
-bool TimeWatcherAC::isRunning(void)
+bool TimeWatcherAC::isRunning(void) const
 {
     MutexGuard grd(_sync);
     return _running;
@@ -210,7 +307,7 @@ int TimeWatcherAC::Execute(void)
     _running = true;
     _sync.notify();
     while (_running) {
-        struct timeval tms, tmNext;
+        struct timespec tms, tmNext;
         getTime(tms);
         if (!swQueue.empty()) {
             //determine expired timers, pass them to Notifier,
@@ -232,14 +329,8 @@ int TimeWatcherAC::Execute(void)
                 _sync.Lock();
             } while (!swQueue.empty());
         }
-        if (swQueue.empty()) {
-            tmNext = tms;
-            tmNext.tv_usec += 1000L*TIMEOUT_STEP;
-            if (tmNext.tv_usec > 1000000L) {
-                tmNext.tv_sec++;
-                tmNext.tv_usec = tmNext.tv_usec % 1000000L;
-            }
-        }
+        if (swQueue.empty())
+            tmNext = TIMEOUT_STEP.adjust2Nano(&tms);
         _sync.wait(tmNext);
     } /* eow */
 
@@ -269,19 +360,19 @@ const char * TimeWatcherAC::IdStr(uint32_t tmr_id) const
     TimeWatcherAC::StopWatch * pSw = getTimer(tmr_id);
     return pSw ? pSw->IdStr() : "unknown";
 }
-
+//
 TMError TimeWatcherAC::StartTimer(uint32_t tmr_id)
 {
     TimeWatcherAC::StopWatch * pSw = getTimer(tmr_id);
     if (!pSw)
         return TimeWatcherITF::errBadTimer;
 
-    struct timeval cur_time;
+    struct timespec cur_time;
     getTime(cur_time);
-    struct timeval tgt_time = pSw->tgtTime(cur_time);
-    if (cur_time >= tgt_time)
-        return TimeWatcherITF::errBadTimeVal;
-    return activateTimer(pSw, tgt_time);
+    struct timespec tgt_time = pSw->tgtTime(&cur_time);
+    if (cur_time < tgt_time)
+        return activateTimer(pSw, tgt_time);
+    return TimeWatcherITF::errBadTimeVal;
 }
 //
 TMError TimeWatcherAC::StopTimer(uint32_t tmr_id)
@@ -296,7 +387,7 @@ TMError TimeWatcherAC::StopTimer(uint32_t tmr_id)
     }
     return TimeWatcherITF::errBadTimer;
 }
-
+//
 TMError TimeWatcherAC::RefTimer(uint32_t tmr_id)
 {
     TimeWatcherAC::StopWatch * pSw = getTimer(tmr_id);
@@ -308,7 +399,7 @@ TMError TimeWatcherAC::RefTimer(uint32_t tmr_id)
     }
     return TimeWatcherITF::errBadTimer;
 }
-
+//
 TMError TimeWatcherAC::UnRefTimer(uint32_t tmr_id)
 {
     TimeWatcherAC::StopWatch * pSw = getTimer(tmr_id);
@@ -321,7 +412,6 @@ TMError TimeWatcherAC::UnRefTimer(uint32_t tmr_id)
     }
     return TimeWatcherITF::errBadTimer;
 }
-
 //
 TimeWatcherITF::SignalResult TimeWatcherAC::SignalTimer(uint32_t tmr_id)
 {
@@ -371,23 +461,23 @@ TimeWatcher * TimeWatchersRegistry::getTimeWatcher(uint32_t num_tmrs/* = 0*/,
 
 //Returns TimeWatcherUNI adjusted for given timeout
 TimeWatcherTMO * TimeWatchersRegistry::getTmoTimeWatcher(
-                            long timeout, bool unit_mlsecs/* = false*/,
+                            const TimeSlice & use_tmo,
                             uint32_t num_tmrs/* = 0*/, bool do_start/* = true*/)
 {
     TimeWatcherTMO * pTw = NULL;
-    if (timeout) {
-        SWTgtTime   tmo(timeout, unit_mlsecs);
+    {
+        SWTgtTime   tmo(use_tmo);
         if (!(pTw = twReg.find(tmo))) {
             char buf[sizeof(uint32_t)*3 + 2];
             snprintf(buf, sizeof(buf)-1, "%u", ++_lastId);
-            pTw = new TimeWatcherTMO(buf, num_tmrs, timeout, unit_mlsecs, logger);
+            pTw = new TimeWatcherTMO(buf, num_tmrs, use_tmo, logger);
             twReg.insert(tmo, pTw);
         } else if (num_tmrs)
             pTw->Reserve(num_tmrs);
 
         if (!pTw->isRunning() && do_start) {
-            smsc_log_info(logger, "TWReg: starting %s, tmo: %ld %ssecs", pTw->logId(),
-                          timeout, unit_mlsecs ? "ml" : "");
+            smsc_log_info(logger, "TWReg: starting %s, tmo: %ld %s", pTw->logId(),
+                          use_tmo.Value(), use_tmo.nmUnit());
             pTw->Start();
         }
     }
