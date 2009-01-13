@@ -1,22 +1,23 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
- * 
+ * INMan Configurable Services: configuration parsing classes
  * ************************************************************************** */
 #ifndef __INMAN_ICSERVICE_CFG_READER_HPP__
+#ident "@(#)$Id$"
 #define __INMAN_ICSERVICE_CFG_READER_HPP__
 
 #include "inman/common/XCFManager.hpp"
 #include "inman/common/XCFView.hpp"
+#include "inman/services/ICSrvDefs.hpp"
+
+namespace smsc  {
+namespace inman {
+
 using smsc::util::config::XCFManager;
 using smsc::util::config::Config;
 using smsc::util::config::XConfigView;
 using smsc::util::config::CStrSet;
 using smsc::util::config::ConfigException;
 
-#include "inman/services/ICSrvDefs.hpp"
-
-namespace smsc  {
-namespace inman {
 
 typedef std::map<ICSUId, CStrSet /*ics_arg*/> ICSArgsMap;
 
@@ -49,9 +50,9 @@ public:
             ics_deps.insert(it->first);
     }
     //
-    inline bool empty(void) const { return icsArgs.empty(); }
+    bool empty(void) const { return icsArgs.empty(); }
     //
-    inline const ICSArgsMap & Map(void) const { return icsArgs; }
+    const ICSArgsMap & Map(void) const { return icsArgs; }
     //
     const ICSArgsMap::value_type * LookUp(ICSUId uid) const
     {
@@ -59,19 +60,19 @@ public:
         return (it == icsArgs.end()) ? NULL : it.operator->();
     }
 
-    inline void insert(ICSUId uid) { getNode(uid); }
+    void insert(ICSUId uid) { getNode(uid); }
     //
     void insert(const ICSIdsSet & ics_ids)
     {
         for (ICSIdsSet::const_iterator it = ics_ids.begin(); it != ics_ids.end(); ++it)
             getNode(*it);
     }
-    inline void insert(ICSUId uid, const std::string & ics_arg)
+    void insert(ICSUId uid, const std::string & ics_arg)
     {
         getNode(uid)->second.insert(ics_arg);
     }
     //
-    inline void insert(ICSUId uid, CStrSet & ics_arg)
+    void insert(ICSUId uid, CStrSet & ics_arg)
     {
         getNode(uid)->second.insert(ics_arg.begin(), ics_arg.end());
     }
@@ -111,16 +112,16 @@ public:
     virtual ~ICSrvCfgReaderAC()
     { }
 
-    inline CfgState icsCfgState(void) const { return cfgState; }
-    inline const char * nmCfgSection(void) const { return icsSec.c_str(); }
+    CfgState icsCfgState(void) const { return cfgState; }
+    const char * nmCfgSection(void) const { return icsSec.c_str(); }
     //returns true if there are settings to read
-    inline bool hasToRead(void) const
+    bool hasToRead(void) const
     {
         return (!cfgState || (!icsArg.empty()
                               && (cfgState == ICSrvCfgReaderAC::cfgPartial)));
     }
     //should be used only after readConfig() call
-    inline const ICSCfgDeps & Deps(void) const { return icsDeps; }
+    const ICSCfgDeps & Deps(void) const { return icsDeps; }
     //NOTE: argument '*' is a reserved one.
     void addArgument(const std::string & use_arg)
     {
@@ -180,12 +181,12 @@ public:
 template <class _CfgTArg>
 class ICSMultiSectionCfgReaderAC_T : public ICSrvCfgReaderAC_T<_CfgTArg> {
 protected:
-    typedef std::map<std::string, CfgState> SectionRegistry;
+    typedef std::map<std::string, ICSrvCfgReaderAC::CfgState> SectionRegistry;
 
     SectionRegistry     secReg;
     std::auto_ptr<XConfigView> _cfgXCV;
 
-    CfgState sectionState(const std::string & nm_sec) const
+    ICSrvCfgReaderAC::CfgState sectionState(const std::string & nm_sec) const
     {
         SectionRegistry::const_iterator it = secReg.find(nm_sec);
         return (it == secReg.end()) ? ICSrvCfgReaderAC::cfgNone : it->second;
@@ -194,7 +195,7 @@ protected:
     //Parses section settings. if parsing may yeld various results
     // depending on arguments, section state should be set to
     //ICSrvCfgReaderAC::cfgPartial instead of ICSrvCfgReaderAC::cfgComplete.
-    virtual CfgState
+    virtual ICSrvCfgReaderAC::CfgState
         parseSection(XConfigView * cfg_sec, const std::string & nm_sec, void * opaque_arg = NULL)
             throw(ConfigException) = 0;
 
@@ -203,20 +204,21 @@ protected:
     // -- ------------------------------------
     //Returns true if service depends on other ones
     //Clears arguments upon return
-    CfgState parseConfig(void * opaque_arg = NULL) throw(ConfigException)
+    ICSrvCfgReaderAC::CfgState parseConfig(void * opaque_arg = NULL) throw(ConfigException)
     {
         if (!_cfgXCV.get())
-            _cfgXCV.reset(new XConfigView(rootSec, nmCfgSection()));
+            _cfgXCV.reset(new XConfigView(this->rootSec, this->nmCfgSection()));
 
         std::auto_ptr<CStrSet> subs(_cfgXCV->getShortSectionNames());
 
         const CStrSet * nm_lst;
-        if (icsArg.empty() || !icsArg.begin()->compare("*")) {
+        if (this->icsArg.empty() || !this->icsArg.begin()->compare("*")) {
             nm_lst = subs.get();
         } else {
-            nm_lst = &icsArg;
+            nm_lst = &(this->icsArg);
             //check for requested sections presence
-            for (CStrSet::const_iterator cit = icsArg.begin(); cit != icsArg.end(); ++cit) {
+            for (CStrSet::const_iterator cit = this->icsArg.begin();
+                                            cit != this->icsArg.end(); ++cit) {
                 if (subs->find(*cit) == subs->end())
                     throw ConfigException("subsection is missed: %s", cit->c_str());
             }
@@ -230,7 +232,7 @@ protected:
         }
 
         //check overall state
-        CfgState nextState = ICSrvCfgReaderAC::cfgComplete;
+        ICSrvCfgReaderAC::CfgState nextState = ICSrvCfgReaderAC::cfgComplete;
         for (CStrSet::const_iterator cit = subs->begin(); cit != subs->end(); ++cit) {
             if (sectionState(*cit) != ICSrvCfgReaderAC::cfgComplete) {
                 nextState = ICSrvCfgReaderAC::cfgPartial;

@@ -335,7 +335,7 @@ public:
 
     inline bool operator== (const URefPtr_T & ref2) const
     {
-        return (objData == ref2.objData) ? true : false;
+        return (XRefPtr_T<TArg>::objData == ref2.objData) ? true : false;
     }
 };
 
@@ -377,7 +377,7 @@ public:
 
     inline bool operator== (const MTRefPtr_T & ref2) const
     {
-        return (objData == ref2.objData) ? true : false;
+        return (XRefPtr_T<TArg>::objData == ref2.objData) ? true : false;
     }
 };
 

@@ -56,7 +56,7 @@ protected:
                       const AbonentSubscription & ab_info, RCHash qry_status);
     //-- TimerListenerITF interface methods:
     TimeWatcherITF::SignalResult
-        onTimerEvent(TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj);
+        onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj);
 
 private:
     mutable Mutex   _mutex;

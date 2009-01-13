@@ -43,7 +43,9 @@ public:
         char buf[sizeof("Invoke[%u]{%u}: respType: %u, status: %u") + (sizeof(unsigned)*3)*4];
         int n = snprintf(buf, sizeof(buf)-1, "Invoke[%u]{%u}: respType: %u, status: %u",
                          (unsigned)id, (unsigned)opcode, (unsigned)_respType, (unsigned)_status);
-        buf[n]=0;
+        if ((n < 1) || (n >= (int)sizeof(buf))) {
+            buf[0]='?'; buf[1]=0;
+        }
         return buf;
     }
 

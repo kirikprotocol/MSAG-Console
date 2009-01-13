@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Configurable Services Host config file parsing.
  * ************************************************************************** */
 #ifndef __INMAN_SVCHOST_CONFIG_PARSING__
+#ident "@(#)$Id$"
 #define __INMAN_SVCHOST_CONFIG_PARSING__
 
 #include "inman/common/CSVList.hpp"
@@ -22,8 +22,9 @@ private:
     void printKnownUIds(void) const
     {
         ICSIdsSet ids = ICSLoadupsReg::get().knownUIds();
-        if (!ids.empty())
+        if (!ids.empty()) {
             smsc_log_info(logger, "Known UIds: %s", ids.toString().c_str());
+        }
     }
 
     //param value has one of two forms:
@@ -32,7 +33,6 @@ private:
                      const char * value)
         throw(ConfigException)
     {
-        static const char * alg[] = { "uid", "dll"};
         CSVList prm(value, ':');
         if (prm.size() != 2)
             throw ConfigException("  param %s: value is invalid", nm_prm.c_str());
@@ -197,9 +197,10 @@ protected:
                             //load Dll and get producer
                             smsc_log_info(logger, "Loading ICService driver '%s' ..", ldUp->dllNm.c_str());
                             allc = ICSLoadupsReg::get().getProducer(ldUp->icsUId);
-                            if (allc)
+                            if (allc) {
                                 smsc_log_info(logger, "loaded '%s', ICSUId: %s", ldUp->dllNm.c_str(),
-                                          ICSIdent::uid2Name(allc->icsUId()));
+                                              ICSIdent::uid2Name(allc->icsUId()));
+                            }
                         } else
                             allc = ldUp->prod;
                         if (!allc)

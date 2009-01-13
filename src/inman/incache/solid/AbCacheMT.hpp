@@ -1,4 +1,3 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Abonents contract and gsmSCFs data cache. Multithreaded implementation with
  * real-time response. Two-layers schema is used: preemptive RAM cache over
@@ -7,6 +6,7 @@
  * 1) RAMCache, 2) FileCacheUpdater, 3) FileCacheRehasher (if needed)
  * ************************************************************************* */
 #ifndef __INMAN_ABNT_MTCACHE_HPP
+#ident "@(#)$Id$"
 #define __INMAN_ABNT_MTCACHE_HPP
 
 #include "logger/Logger.h"
@@ -367,14 +367,15 @@ protected:
 
         //Takes ownership of fs_cache!!!
         FSCacheMonitor(FileCache * fs_cache, RAMCache *ram_cache, Logger * use_log = NULL)
-            : ramCache(ram_cache), _running(false), _rehashOn(false), _rehashMode(true)
+            : _rehashOn(false), _running(false), _rehashMode(true), ramCache(ram_cache)
         { 
             logger = use_log ? use_log : Logger::getInstance("smsc.inman.InCache");
             fsCache.reset(fs_cache);
             _rehashMode = fsCache->rehashAllowed();
-            if (!_rehashMode)
+            if (!_rehashMode) {
                 smsc_log_info(logger, "FSCache: rehash mode is OFF for %s",
                               fsCache->Details().c_str());
+            }
         }
         ~FSCacheMonitor()
         {

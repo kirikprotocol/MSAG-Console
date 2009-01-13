@@ -1,4 +1,3 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Acquisition Connect: accumulates data from socket until whole length
  * prefixed packet is get, deserializes it and then passes to listeners.
@@ -6,6 +5,7 @@
  * checks socket for incoming data and calls Connect methods.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_ACQ_CONNECT_HPP
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_ACQ_CONNECT_HPP
 
 #include "logger/Logger.h"
@@ -29,7 +29,7 @@ namespace interaction {
  * ************************************************************************** */
 class PckAcquirer : public SocketAcquirerAC {
 public:
-    typedef enum { pckIdle = 0, pckLength, pckBody } PckState;
+    enum PckState { pckIdle = 0, pckLength, pckBody };
 
     std::auto_ptr<ObjectBuffer>     objBuf;
     std::auto_ptr<CustomException>  exc;
@@ -49,13 +49,13 @@ protected:
 
 public:
     PckAcquirer()
-        : SocketAcquirerAC(len.buf, 4), _state(pckIdle), logId("")
-        , logger(NULL), maxPckSz(1024)
+        : SocketAcquirerAC(len.buf, 4), maxPckSz(1024), _state(pckIdle)
+        , logId(""), logger(NULL)
     { }
 
     PckAcquirer(uint32_t max_pckSize, const char * log_id, Logger * use_log)
-        : SocketAcquirerAC(len.buf, 4), _state(pckIdle), logId(log_id)
-        , logger(use_log), maxPckSz(max_pckSize)
+        : SocketAcquirerAC(len.buf, 4), maxPckSz(max_pckSize), _state(pckIdle)
+        , logId(log_id), logger(use_log)
     { }
 
     void Init(uint32_t max_pckSize, const char * log_id, Logger * use_log)

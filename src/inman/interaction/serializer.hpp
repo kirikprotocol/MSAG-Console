@@ -102,7 +102,7 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str ) throw(Seri
 
     while (len) {
         char strBuf[255 + 1];
-        int num2r = (len <= 255) ? len : 255;
+        unsigned num2r = (len <= 255) ? len : 255;
         
         if (buf.Read((unsigned char*)strBuf, num2r) < num2r)
             throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),

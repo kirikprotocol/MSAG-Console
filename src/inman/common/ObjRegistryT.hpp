@@ -1,11 +1,12 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Object Registry templates.
  * ************************************************************************** */
 #ifndef __UTIL_STRKEY_REGISTRY_HPP__
+#ident "@(#)$Id$"
 #define __UTIL_STRKEY_REGISTRY_HPP__
 
 #include <map>
+#include <string>
 //#include "logger/Logger.h"
 //using smsc::logger::Logger;
 
@@ -28,7 +29,7 @@ public:
     ~POBJRegistry_T()
     {
 //	smsc_log_debug(Logger::getInstance("smsc.util"), "~POBJRegistry_T(): %p", this);
-        for (TRegistry::iterator sit = registry.begin(); sit != registry.end(); ++sit)
+        for (typename TRegistry::iterator sit = registry.begin(); sit != registry.end(); ++sit)
             delete sit->second;
     }
 
@@ -49,7 +50,7 @@ public:
         ~const_iterator()
         { }
 
-        inline const_iterator & operator=(const const_iterator & use_it) { rit = use_it.rIt; }
+        inline const_iterator & operator=(const const_iterator & use_it) { rIt = use_it.rIt; }
         inline const value_type & operator*() const { return *rIt; }
         inline const value_type * operator->() const { return rIt.operator->(); }
 
@@ -94,20 +95,20 @@ public:
 
     inline _TArg * find(const _KeyTArg & use_key) const
     {
-        TRegistry::const_iterator it = registry.find(use_key);
+        typename TRegistry::const_iterator it = registry.find(use_key);
         return (it != registry.end()) ? it->second : NULL;
     }
 
     inline bool insert(const _KeyTArg & use_key, _TArg * p_obj)
     {
-        std::pair<TRegistry::iterator, bool> res =
-            registry.insert(TRegistry::value_type(use_key, p_obj));
+        std::pair<typename TRegistry::iterator, bool> res =
+            registry.insert(typename TRegistry::value_type(use_key, p_obj));
         return res.second;
     }
 
     void reset(const _KeyTArg & use_key, _TArg * p_obj)
     {
-        TRegistry::iterator it = registry.find(use_key);
+        typename TRegistry::iterator it = registry.find(use_key);
         if (it != registry.end()) {
             delete it->second;
             it->second = p_obj;
@@ -117,7 +118,7 @@ public:
 
     bool erase(const _KeyTArg & use_key)
     {
-        TRegistry::iterator it = registry.find(use_key);
+        typename TRegistry::iterator it = registry.find(use_key);
         if (it != registry.end()) {
             delete it->second;
             registry.erase(it);

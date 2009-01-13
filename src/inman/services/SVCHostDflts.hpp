@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * ICServices host loadUp facility definitions and helpers.
  * ************************************************************************** */
 #ifndef __INMAN_SVCHOST_DEFAULTS_HPP__
+#ident "@(#)$Id$"
 #define __INMAN_SVCHOST_DEFAULTS_HPP__
 
 #include <assert.h>
@@ -38,17 +38,17 @@ struct ICSLoadupCFG {
     ICSProducerAC * prod;   //producer in case of static linkage 
 
     ICSLoadupCFG()
-        : ldType(icsLdNone), icsUId(ICSIdent::icsIdUnknown), prod(0)
+        : icsUId(ICSIdent::icsIdUnknown), ldType(icsLdNone), prod(0)
     { }
     ICSLoadupCFG(ICSUId ics_uid, ICSProducerAC * use_prod,
                  const char * nm_sec = NULL)
-        : ldType(icsLdLib), icsUId(ics_uid), prod(use_prod)
+        : icsUId(ics_uid), ldType(icsLdLib), prod(use_prod)
     {
         if (nm_sec)
             secNm = nm_sec;
     }
     ICSLoadupCFG(ICSUId ics_uid, const char * nm_dll, const char * nm_sec = NULL)
-        : ldType(icsLdDll), icsUId(ics_uid), dllNm(nm_dll), prod(0)
+        : icsUId(ics_uid), ldType(icsLdDll), dllNm(nm_dll), prod(0)
     {
         if (nm_sec)
             secNm = nm_sec;

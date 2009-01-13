@@ -93,11 +93,11 @@ inline int unpackTBCD2String(const unsigned char* bcd, char* str, unsigned bcdLe
             if (str[k] == 0x0F)
                 break;
             if (str[k] == 0x0B)
-                str[k++] == '*';
+                str[k++] = '*';
             else if (str[k] == 0x0C)
-                str[k++] == '#';
+                str[k++] = '#';
             else {
-                str[k++] == '?';
+                str[k++] = '?';
                 illegal = true;
             }
         } else

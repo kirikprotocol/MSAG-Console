@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * INMan configurable services facility interfaces and classes definition. 
  * ************************************************************************** */
 #ifndef __INMAN_CONFIGURABLE_SERVICES_DEFS_HPP__
+#ident "@(#)$Id$"
 #define __INMAN_CONFIGURABLE_SERVICES_DEFS_HPP__
 
 #include "inman/services/ICSrvIDs.hpp"
@@ -32,11 +32,12 @@ public:
     };
 
 protected:
-    const ICSUId        _icsUid;
-    State               _icsState;
-    ICSIdsSet           _icsDeps;  //ICServices this one depends on
-    Logger *            logger;
-    const ICServicesHostITF * _icsHost;
+    const ICSUId                _icsUid;
+    State                       _icsState;
+    ICSIdsSet                   _icsDeps;  //ICServices this one depends on
+    const ICServicesHostITF *   _icsHost;
+    Logger *                    logger;
+
 
     RCode   checkDeps(State tgt_state);
 

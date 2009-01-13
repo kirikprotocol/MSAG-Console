@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * INMan Configurable Services Host types, interfaces and helpers definitions
  * ************************************************************************* */
 #ifndef __INMAN_SVC_HOST_DEFS_HPP
+#ident "@(#)$Id$"
 #define __INMAN_SVC_HOST_DEFS_HPP
 
 #include "inman/common/ObjRegistryT.hpp"
@@ -54,7 +54,7 @@ public:
                     && (it->first != exclude_id))
                     return it->second;
             }
-            exclude_id == ICSIdent::icsIdUnknown;
+            exclude_id = ICSIdent::icsIdUnknown;
         } while ((++i) < 2);
         return NULL;
     }

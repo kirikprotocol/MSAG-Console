@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * 
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_CONNECT_MANAGER_HPP
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_CONNECT_MANAGER_HPP
 
 #include "inman/interaction/connect.hpp"
@@ -20,9 +20,9 @@ class ConnectManagerAC;
 
 class WorkerAC {
 protected:
-    unsigned  _wId; //unique worker id
-    Logger *  logger;
-    ConnectManagerAC * _mgr;
+    unsigned            _wId; //unique worker id
+    ConnectManagerAC *  _mgr;
+    Logger *            logger;
 
 public:
     WorkerAC(unsigned w_id, ConnectManagerAC * owner, Logger * use_log = NULL)
@@ -108,7 +108,7 @@ public:
 
     virtual void Abort(const char * reason = NULL)
     {
-        MutexGuard grd(mutex);
+        MutexGuard grd(_mutex);
         if (!workers.empty()) { //abort all active workers
             if (reason && reason[0])
                 smsc_log_error(logger, "%s: aborting, reason: %s", _logId, reason);
@@ -146,7 +146,7 @@ public:
         : ConnectManagerAC(cm_id, conn, uselog), _cfg(cfg)
     { }
 
-    inline const _ConfigTArg & getConfig(void) const { return _cfg;}
+    const _ConfigTArg & getConfig(void) const { return _cfg;}
 };
 
 } //tcpsrv

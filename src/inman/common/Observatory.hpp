@@ -1,9 +1,9 @@
-#ident "$Id$"
 /* ************************************************************************** *
  * Guarded mutable list of Listeners. Allows safe list modification from
  * Listeners methods.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_GRDOBSERVATORY_HPP
+#ident "@(#)$Id$"
 #define __SMSC_UTIL_GRDOBSERVATORY_HPP
 
 #include <list>
@@ -48,21 +48,21 @@ public:
         _GuardedTArg * val;
 
         GRDNode(_GuardedTArg * ref_lstr = NULL)
-            : val(ref_lstr), freed(false), marked(0)
+            : freed(false), marked(0), val(ref_lstr)
         { }
         ~GRDNode()
         { }
 
-        inline void mark(void)   { if (!(++marked)) --marked; } //check for integer overflow
-        inline void unmark(void) { if (marked) --marked; }
-        inline void release(void) { freed = true; }
-        inline bool isMarked(void) { return marked ? true : false; }
-        inline bool isFreed(void) { return freed; }
+        void mark(void)   { if (!(++marked)) --marked; } //check for integer overflow
+        void unmark(void) { if (marked) --marked; }
+        void release(void) { freed = true; }
+        bool isMarked(void) { return marked ? true : false; }
+        bool isFreed(void) { return freed; }
     };
 
 protected:
     //provides Guard access for GRDObservatoryOfT<> successors
-    inline _GuardArg & Sync(void) { return *(_GuardArg*)this; }
+    _GuardArg & Sync(void) { return *(_GuardArg*)this; }
 
     class GRDNodeList : public std::list<GRDNode> {
     public:
@@ -143,13 +143,13 @@ public:
         }
     }
 
-    inline bool empty(void)
+    bool empty(void)
     {
         MutexGuard tmp(Sync());
         return listeners.empty();
     }
 
-    inline void clearListeners(void)
+    void clearListeners(void)
     {
         MutexGuard tmp(Sync());
         return listeners.clear();

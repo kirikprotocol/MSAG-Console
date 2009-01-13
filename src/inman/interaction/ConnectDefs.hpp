@@ -1,5 +1,5 @@
-#ident "$Id$"
 #ifndef __SMSC_INMAN_CONNECT_DEFS_HPP
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_CONNECT_DEFS_HPP
 
 #include "core/network/Socket.hpp"
@@ -14,14 +14,24 @@ namespace interaction  {
  * ************************************************************************** */
 class ConnectAC {
 public: 
-    typedef enum {connAlive = 0, connEOF, connException} ConnectState;
+    enum ConnectState {connAlive = 0, connEOF, connException};
 
-    ConnectAC(Socket* use_sock) : _socket(use_sock), _state(connAlive) {}
-    virtual ~ConnectAC() { Close(); delete _socket; }
+protected:
+    ConnectState  _state;
+    Socket *      _socket;
 
-    inline ConnectState State(void) const { return _state; };
-    inline unsigned     getId(void)  const { return (unsigned)(_socket->getSocket()); }
-    inline Socket *     getSocket(void) const { return _socket; }
+public: 
+    ConnectAC(Socket * use_sock)
+        : _state(connAlive), _socket(use_sock)
+    { }
+    virtual ~ConnectAC()
+    {
+        Close(); delete _socket;
+    }
+
+    ConnectState State(void) const { return _state; };
+    unsigned     getId(void)  const { return (unsigned)(_socket->getSocket()); }
+    Socket *     getSocket(void) const { return _socket; }
 
     virtual void Close(bool abort = false)
     {
@@ -41,10 +51,6 @@ public:
     //called if error condition is pending on socket or socket is to be
     //abnormally closed (aborted).
     virtual ConnectState onErrorEvent(bool abort = false) = 0;
-
-protected:
-    ConnectState  _state;
-    Socket *      _socket;
 };
 
 
@@ -54,15 +60,15 @@ protected:
  * ************************************************************************** */
 class SocketAcquirerAC {
 public:
-    typedef enum {
+    enum SAcqStatus {
         acqSockErr = -3, acqDataErr = -2, acqEOF = -1, acqAwaits = 0, acqComplete = 1
-    } SAcqStatus;
+    };
 
 protected:
+    SAcqStatus      status;
     uint8_t *       dbuf;
     unsigned int    numRed;
     unsigned int    num2Read;
-    SAcqStatus      status;
 
 public:
     SocketAcquirerAC(uint8_t * use_buf, unsigned int min_read)

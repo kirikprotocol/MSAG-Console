@@ -1,4 +1,3 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * MTHashFileT<>: Direct addressing disk hash for use in MT environment.
  * NOTE: Rehashing doesn't perfomed automatically but just reported as condition
@@ -8,6 +7,7 @@
  *      HFREHASH_LOG_DBG - turns on full rehashing logging
  * ************************************************************************** */
 #ifndef _MULTITHREADED_HASH_FILE_HPP
+#ident "@(#)$Id$"
 #define _MULTITHREADED_HASH_FILE_HPP
 
 #ifdef  HFREHASH_LOG_DBG
@@ -78,8 +78,8 @@ struct HashFileCFG {
     uint16_t    valSz;
 
     HashFileCFG(uint16_t key_sz = 0, uint16_t val_sz = 0, uint16_t max_coll = 0)
-        : magic(_HF_Magic), ver(_HF_Version), hdrSz(_HF_CFG_SZO)
-        , keySz(key_sz), valSz(val_sz), maxColl(max_coll)
+        : hdrSz(_HF_CFG_SZO), magic(_HF_Magic), ver(_HF_Version)
+        , maxColl(max_coll), keySz(key_sz), valSz(val_sz)
     { }
 
     int operator== (const HashFileCFG & dst) const
@@ -93,6 +93,9 @@ struct HashFileCFG {
         int n = snprintf(buf, sizeof(buf)-1, "{0x%X,0x%x,%u,%u,%u}",
                          magic, (unsigned)ver, (unsigned)maxColl,
                          (unsigned)keySz, (unsigned)valSz);
+        if ((n < 1) || (n >= (int)sizeof(buf))) {
+            buf[0]='?'; buf[1]=0;
+        }
         return buf;
     }
 };
@@ -370,7 +373,6 @@ template <
 > class MTHashFileT {
 public:
     typedef HFRecord_T<HFKeyTA, maxKeySzTA, maxValSzTA> HFRecord;
-    typedef typename HFValueTA  HFValue;
 
     class HFRehashAcquirerITF {
     public:
@@ -634,7 +636,7 @@ public:
     {
         MutexGuard  grd(_fSync);
         HFRecord srcd = searchRcd(&key, SEARCH_USED);
-        if ((srcd.r_num && (srcd.hdr.rType == HFRecordHdrAC::rcdUsed)) {
+        if (srcd.r_num && (srcd.hdr.rType == HFRecordHdrAC::rcdUsed)) {
             SeekRcd(srcd.r_num);
             fHdl.WriteByte(HFRecordHdrAC::rcdErased);
             hfHdr.used--;

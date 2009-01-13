@@ -241,7 +241,7 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
 TimeWatcherITF::SignalResult
-    AbonentDetector::onTimerEvent(TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj)
+    AbonentDetector::onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj)
 {
     MutexTryGuard grd(_mutex);
     if (!grd.tgtLocked()) //detector is busy, request resignalling

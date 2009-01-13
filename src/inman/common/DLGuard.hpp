@@ -1,9 +1,9 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Dynamic Library handle guard (helps in case the DL entry function throws
  * exceptions).
  * ************************************************************************** */
 #ifndef __UTIL_DL_GUARD_HPP__
+#ident "@(#)$Id$"
 #define __UTIL_DL_GUARD_HPP__
 
 #include <dlfcn.h>
@@ -24,8 +24,8 @@ public:
         if (dlHdl) dlclose(dlHdl); 
     }
 
-    inline void * getHdl(void) const { return dlHdl; }
-    inline void release(void)        { dlHdl = NULL; }
+    void * getHdl(void) const { return dlHdl; }
+    void   release(void)      { dlHdl = 0; }
 
 protected:
     void * dlHdl;

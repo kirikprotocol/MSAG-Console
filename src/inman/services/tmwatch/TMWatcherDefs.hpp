@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Signalling Timers facility interfaces and helper classes defs.
  * ************************************************************************** */
 #ifndef _CORE_SYNC_TIMEWATCHER_DEFS_HPP
+#ident "@(#)$Id$"
 #define _CORE_SYNC_TIMEWATCHER_DEFS_HPP
 
 #include <inttypes.h>
@@ -28,7 +28,7 @@ public:
         , evtResignal   //event should be resignaled again
     };
     //
-    virtual const char * IdStr(uint32_t tmr_id) = 0;
+    virtual const char * IdStr(uint32_t tmr_id) const = 0;
     //
     virtual Error StartTimer(uint32_t tmr_id) = 0;
     //
@@ -68,18 +68,18 @@ public:
             watcher->UnRefTimer(timerId);
     }
 
-    inline uint32_t Id(void) const { return timerId; }
-    inline const char * IdStr(void)
+    uint32_t Id(void) const { return timerId; }
+    const char * IdStr(void) const
     {
         return watcher ? watcher->IdStr(timerId) : "unknown";
     }
     //
-    inline TMError Start(void)
+    TMError Start(void) const
     {
         return watcher ? watcher->StartTimer(timerId) : TimeWatcherITF::errBadTimer;
     }
     //releases timer
-    inline void Stop(void)
+    void Stop(void) const
     {
         if (watcher)
             watcher->StopTimer(timerId);
@@ -108,7 +108,7 @@ struct OPAQUE_OBJ {
 class TimerListenerITF {
 public:
     virtual TimeWatcherITF::SignalResult
-        onTimerEvent(TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj = NULL) = 0;
+        onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj = NULL) = 0;
 };
 
 } //timers

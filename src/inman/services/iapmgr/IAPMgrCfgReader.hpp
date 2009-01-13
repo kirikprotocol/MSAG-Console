@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * IAPManager (abonent policies/providers) service config file parsing.
  * ************************************************************************** */
 #ifndef __INMAN_IAPMGR_CFG_PARSING__
+#ident "@(#)$Id$"
 #define __INMAN_IAPMGR_CFG_PARSING__
 
 #include "inman/common/CSVList.hpp"
@@ -204,8 +204,9 @@ private:
         std::auto_ptr<INScfCFG> pin(new INScfCFG(nm_scf));
         pin->scfAdr = scf_adr;
         //Read service keys
-        if (!readSrvKeys(cfg_sec, pin->skAlg))
+        if (!readSrvKeys(cfg_sec, pin->skAlg)) {
             smsc_log_warn(logger, "%s: no service keys is specified", scf_adr.getSignals());
+        }
 
         // -- OPTIONAL parameters --//
 
@@ -289,9 +290,6 @@ protected:
             smsc_log_info(logger, "Already read '%s' configuration ..", nm_cfg);
             return ICSrvCfgReaderAC::cfgComplete;
         }
-        // according to INScfCFG::IDPLocationAddr
-        static const char * const _IDPLIAddr[] = { "MSC", "SMSC", "SSF" };
-        static const char * const _IDPReqMode[] = { "MT", "SEQ" };
 
         smsc_log_info(logger, "reading '%s' configuration ..", nm_cfg);
 
