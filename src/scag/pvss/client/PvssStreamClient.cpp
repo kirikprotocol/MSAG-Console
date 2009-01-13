@@ -231,8 +231,8 @@ void PvssStreamClient::waitForCalls( int msec )
 PersCall* PvssStreamClient::getCall()
 {
     if ( isStopping ) return 0;
-    MutexGuard mg(queueMonitor_);
     if ( ! connected_.Count() ) return 0;
+    MutexGuard mg(queueMonitor_);
     if ( ! headContext_ ) return 0;
     PersCall* ctx = headContext_;
     headContext_ = headContext_->next();
@@ -261,8 +261,7 @@ PersCall* PvssStreamClient::createAuthCall()
 
 void PvssStreamClient::connected( PvssConnection& conn )
 {
-    MutexGuard mg(queueMonitor_);
-    // we increment it twice
+    MutexGuard mg(connMonitor_);
     for ( int i = 0; i < connected_.Count(); ++i ) {
         if ( connected_[i] == &conn ) return;
     }
@@ -287,7 +286,7 @@ void PvssStreamClient::connected( PvssConnection& conn )
 
 void PvssStreamClient::disconnected( PvssConnection& conn )
 {
-    MutexGuard mg(queueMonitor_);
+    MutexGuard mg(connMonitor_);
     for ( int i = 0; i < connected_.Count(); ++i ) {
         if ( connected_[i] == &conn ) {
             connected_.Delete(i);

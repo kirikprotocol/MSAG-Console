@@ -93,6 +93,8 @@ private:
     smsc::core::buffers::Array< PvssWriter* >     writers_;
     PvssConnector*                                connector_;
     smsc::core::buffers::Array< PvssConnection* > connections_; // owned
+
+    EventMonitor                    connMonitor_;
     smsc::core::buffers::Array< PvssConnection* > connected_;   // not owned
 };
 
