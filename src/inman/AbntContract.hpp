@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Abonent CSI (CAMEL Subscription Information) helper classes definitions
  * ************************************************************************* */
 #ifndef SMSC_INMAN_SUBSCR_CONTRACT_HPP
+#ident "@(#)$Id$"
 #define SMSC_INMAN_SUBSCR_CONTRACT_HPP
 
 #include "inman/InScf.hpp"  //using TDPScfMap
@@ -110,7 +110,7 @@ struct AbonentRecord : public AbonentContractInfo {
 
     //NOTE: tm_queried = zero, means record ALWAYS expired!
     inline bool isExpired(uint32_t interval) const
-    { return (bool)(time(NULL) >= (tm_queried + interval)); }
+    { return (bool)(time(NULL) >= (tm_queried + (time_t)interval)); }
 };
 
 } //inman

@@ -1,8 +1,8 @@
-#ident "$Id$"
 /* ************************************************************************** *
  * Types and classes describing IN-point configuration parameters.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_INSCF_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INSCF_HPP__
 
 #include <map>
@@ -130,7 +130,7 @@ public:
     inline std::string toString(void) const
     {
         char buf[sizeof("val: %u") + sizeof(uint32_t)*3];
-        int n = snprintf(buf, sizeof(buf)-1, "val: %u", skVal);
+        snprintf(buf, sizeof(buf)-1, "val: %u", skVal);
         return buf;
     }
 };
