@@ -183,7 +183,7 @@ int AbonentCacheMTR::RAMCache::Update(const AbonentId & ab_number,
 
     if (!pabRec) {  //insert
         makeSpace();
-        status = XHash::Insert(hkey, ramRec);
+        status = this->Insert(hkey, ramRec);
         pabRec = GetPtr(hkey);
         accList.push_back(ab_number);
     } else {        //update
