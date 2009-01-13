@@ -12,6 +12,11 @@ using smsc::inman::SVCHost;
 using smsc::inman::SVCHostProducer;
 using smsc::inman::ICSrvCfgReaderAC;
 
+using smsc::util::config::XCFManager;
+using smsc::util::config::Config;
+using smsc::util::config::ConfigException;
+
+
 namespace smsc {
   namespace inman {
     Logger* inmanLogger;
