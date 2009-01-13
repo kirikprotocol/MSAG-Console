@@ -1,6 +1,5 @@
-#pragma ident "$Id$"
-
 #ifndef __SMSC_INMAN_VERSION__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_VERSION__
 
 const unsigned INMAN_VER_HIGH    = 0;    //major verison
