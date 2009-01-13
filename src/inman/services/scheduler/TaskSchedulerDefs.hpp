@@ -1,10 +1,12 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * 
  * 
  * ************************************************************************* */
 #ifndef __SMSC_TASK_SCHEDULER_DEFS_HPP
+#ident "@(#)$Id$"
 #define __SMSC_TASK_SCHEDULER_DEFS_HPP
+
+#include "inman/common/UtlPtr.hpp"
 
 namespace smsc {
 namespace util {
@@ -15,6 +17,7 @@ typedef std::string     ScheduleCriterion;
 class ScheduledTaskAC;
 class TaskRefereeITF;
 
+
 class TaskSchedulerITF {
 public:
     enum SchedulerType {
@@ -22,29 +25,51 @@ public:
         schedSEQ     //sequential mode: tasks with same criterion are executed sequentially
     };
     enum PGSignal {  //task scheduling commands
-        sigNone    = 0, //do not reschedule task
-        sigSuspend,     //move to suspended tasks queue for awaiting further task signal
-        sigProc,        //execute task (call ScheduledTaskAC::Process())
-        sigRelease,     //release task
-        sigAbort        //abort task (call ScheduledTaskAC::Process() with abort flag set)
+        sigNone    = 0  //do not reschedule task
+        // .. pure scheduling signals
+        , sigRelease    //release task
+        , sigSuspend    //move to suspended tasks queue for awaiting further signal
+        // .. signals, which give control to task,
+        //    accepts UtilizableObjITF as an argument for target task
+        , sigProc       //execute task (call ScheduledTaskAC::Process())
+        , sigReport     //report task to referee (call ScheduledTaskAC::Report())
+        , sigAbort      //abort task (call ScheduledTaskAC::Abort()), it's a
                         //highest priority signal, cancels all other signals for task
     };
+    enum SchedulerRC {
+        rcOk = 0
+        , rcUnknownTask
+        , rcSchedNotRunning
+        , rcBadArg
+    };
 
+    //Registers and schedules task. TaskId == 0 means failure.
     virtual TaskId StartTask(ScheduledTaskAC * use_task, TaskRefereeITF * use_ref = NULL) = 0;
-    //Enqueue signal for task scheduling
-    virtual void   SignalTask(TaskId task_id, PGSignal cmd = sigProc) = 0;
-    //Cancels referee for task, returns true if given referee is already targeted by task
+    //Enqueues signal for task scheduling, returns false if signal cann't be
+    //scheduled for task (unknown id, scheduler is stopp[ed/ing], etc).
+    //Note:
+    // 1) not all signals accepts cmd_dat argument, rcBadArg is returned in that case
+    // 2) in case of failure it's a caller responsibility to utilize cmd_dat
+    virtual SchedulerRC  SignalTask(TaskId task_id, PGSignal cmd = sigProc, UtilizableObjITF * cmd_dat = 0) = 0;
+    //Attempts to immediately abort given task
+    virtual SchedulerRC  AbortTask(TaskId task_id) = 0;
+
+    //Sets referee for task, returns rcBadArg if other referee is already set
+    virtual SchedulerRC  RefTask(TaskId task_id, TaskRefereeITF * use_ref) = 0;
+    //Cancels referee for task, returns false if given referee is already
+    //targeted by task for reporting.
     virtual bool   UnrefTask(TaskId task_id, TaskRefereeITF * use_ref) = 0;
-    //Report task to referee if it's active
-    virtual void   ReportTask(TaskId task_id) = 0;
+
 
     static const char * nmPGSignal(PGSignal cmd)
     {
         switch (cmd) {
+        case sigRelease:    return "sigRelease";
         case sigSuspend:    return "sigSuspend";
         case sigProc:       return "sigProc";
-        case sigRelease:    return "sigRelease";
+        case sigReport:     return "sigReport";
         case sigAbort:      return "sigAbort";
+        default:;
         }
         return "sigNone";
     }
@@ -52,7 +77,7 @@ public:
 
 class TaskRefereeITF {
 public:
-    virtual void onTaskReport(TaskSchedulerITF * sched, ScheduledTaskAC * task) = 0;
+    virtual void onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * task) = 0;
 };
 
 class TaskSchedulerFactoryITF {
@@ -76,59 +101,68 @@ public:
           |                          |
            - - - < - - - - - < - - --
 */
-class ScheduledTaskAC {
+class ScheduledTaskAC : public UtilizableObjITF {
 public:
     enum PGState {  //task processing graph states
         pgIdle = 0,
-        pgCont,     //task continues its processing (further task signal possible)
-        pgSuspend,  //task suspends its processing (further task signal possible)
-        pgDone      //task is completed
+        pgCont,     //task continues its processing (further task signals possible)
+        pgSuspend,  //task suspends its processing (further task signals possible)
+        pgDone      //task is completed, only sigRelease is expected
     };
 
-private:
-    bool _doDel;
-
 protected:
-    TaskId  _Id;
-    PGState _fsmState;
-    TaskSchedulerITF * _Owner;
-    ScheduleCriterion _Criterion;
+    TaskId              _Id;
+    PGState             _fsmState;
+    TaskSchedulerITF *  _Owner;
+    ScheduleCriterion   _Criterion;
+
+    void Signal(TaskSchedulerITF::PGSignal req_signal) const
+        { _Owner->SignalTask(_Id, req_signal); }
 
 public:
-    ScheduledTaskAC(bool del_on_completion = true)
-        : _doDel(del_on_completion), _Id(0), _fsmState(pgIdle), _Owner(0)
+    ScheduledTaskAC()
+        : _Id(0), _fsmState(pgIdle), _Owner(0)
     { }
     virtual ~ScheduledTaskAC()
     { }
-    
+
     static const char * nmPGState(enum PGState state)
     {
         switch (state) {
         case pgDone:    return "pgDone";
         case pgSuspend: return "pgSuspend";
         case pgCont:    return "pgCont";
+        default:;
         }
         return "pgIdle";
     }
-
-    inline TaskId Id(void) const                { return _Id; }
-    inline bool DelOnCompletion(void) const     { return _doDel; }
+    //
+    const char * nmPGState(void) const   { return nmPGState(_fsmState); }
+    //
+    TaskId Id(void) const                { return _Id; }
     //Criterion for assigning task to one of scheduling queues
-    inline const ScheduleCriterion & Criterion(void) const { return _Criterion; }
+    const ScheduleCriterion & Criterion(void) const { return _Criterion; }
 
-    inline void Signal(TaskSchedulerITF::PGSignal req_signal)
-                                                    { _Owner->SignalTask(_Id, req_signal); }
-    inline void UnrefBy(TaskRefereeITF * use_ref)   { _Owner->UnrefTask(_Id, use_ref); }
-    inline void Report(void)                        { _Owner->ReportTask(_Id); }
-
-
+    //-- ----------------------------------- --//
     //-- ScheduledTaskAC interface methods
-    virtual const char * TaskName(void) const = 0;
+    //-- ----------------------------------- --//
     //NOTE: if succesor overwrites this method it MUST call this one.
     virtual void Init(TaskId use_id, TaskSchedulerITF * owner)
-                                                { _Id = use_id; _Owner = owner; }
-    //if do_abort is set, the only PGState the task is expected to switch to is pgDone
-    virtual PGState Process(bool do_abort = false) = 0;
+        { _Id = use_id; _Owner = owner; }
+    virtual const char * TaskName(void) const = 0;
+    //Called on sigProc, switches task to next state.
+    virtual PGState Process(auto_ptr_utl<UtilizableObjITF> & use_dat) = 0;
+    //Called on sigAbort, aborts task, the only PGState, the task is expected
+    //to switch to is pgDone
+    virtual PGState Abort(auto_ptr_utl<UtilizableObjITF> & use_dat) = 0;
+    //Called on sigReport, requests task to report to the referee (use_ref != 0)
+    //or perform some other reporting actions.
+    virtual PGState Report(auto_ptr_utl<UtilizableObjITF> & use_dat, TaskRefereeITF * use_ref = 0) = 0;
+
+    //-- ----------------------------------- --//
+    // -- UtilizableObjITF interface methods
+    //-- ----------------------------------- --//
+//    virtual void    Destroy(void) = 0;
 };
 
 } //util

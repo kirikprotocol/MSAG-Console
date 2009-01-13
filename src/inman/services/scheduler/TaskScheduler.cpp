@@ -11,46 +11,57 @@ namespace util {
  * ************************************************************************* */
 //Processes the first signal from signals queue (schedules associated task)
 //NOTE: _sync is locked upon entry and must be locked upon return
-void TaskSchedulerMT::processSignal(bool doAbort/* = false*/)
+void TaskSchedulerMT::processSignal(void)
 {
     TaskDataAC * pTask = NULL;
     TaskSignal  tSig = qSignaled.front();
+    auto_ptr_utl<UtilizableObjITF>  sDat(tSig.sObj);
+
     qSignaled.pop_front();
-    TaskMap::iterator qIt = qPool.find(tSig.first);
+    TaskMap::iterator qIt = qPool.find(tSig.tId);
     if (qIt == qPool.end()) {
-        smsc_log_warn(logger, "%s: task[%lu] is not in pool or was aborted, signal %s",
-            _logId, tSig.first, TaskSchedulerITF::nmPGSignal(tSig.second));
+        smsc_log_warn(logger, "%s: task[%lu] is unknown or was aborted, signal %s",
+                    _logId, tSig.tId, TaskSchedulerITF::nmPGSignal(tSig.sId));
         return;
     }
     pTask = qIt->second;
-    _sync.Unlock();
+    TaskRefereeITF * pRef = NULL;
+    //check if task should be activated or reported
+    TaskAction tAction = signal2TAction(tSig.sId);
+    if (tAction == taskReporting)
+        pRef = pTask->markReferee();
 
-    //check if task should be activated
-    bool reqAbort = (doAbort || (bool)(tSig.second == sigAbort));
-    if ((tSig.second == sigProc) || (tSig.second == sigAbort)) {
-        std::string nmTask(pTask->ptr->TaskName());
-        smsc_log_debug(logger, "%s: %s %s", _logId, reqAbort ?
-                    "aborting" : "activating", nmTask.c_str());
+    if (tAction != taskIgnore) {
+        _sync.Unlock();
+        //perform actions on task
+        smsc_log_debug(logger, "%s: %s %s", _logId, nmTAction(tAction), pTask->ptr->TaskName());
         try {
-            if (pTask->ptr->Process(reqAbort) == ScheduledTaskAC::pgDone)
-                tSig.second = sigRelease;
-        } catch (std::exception& exc) {
-            smsc_log_error(logger, "%s: %s[%lu] exception: %s", _logId,
-                        nmTask.c_str(), tSig.first, exc.what());
+            ScheduledTaskAC::PGState nState = 
+                (tAction == taskReporting) ? pTask->ptr->Report(sDat, pRef)
+                : ((tAction == taskAborting) ? pTask->ptr->Abort(sDat)
+                                            : pTask->ptr->Process(sDat));
+            //select further scheduling action depending on task FSM state
+            if (nState == ScheduledTaskAC::pgDone)
+                tSig.sId = sigRelease;
+        } catch (const std::exception & exc) {
+            smsc_log_error(logger, "%s: %s exception: %s", _logId,
+                        pTask->ptr->TaskName(), exc.what());
             //keep task in suspended state for easier core file analyzis :)
-            tSig.second = sigSuspend;
+            tSig.sId = sigSuspend;
         } catch (...) {
-            smsc_log_error(logger, "%s: %s[%lu] exception: %s", _logId,
-                        nmTask.c_str(), tSig.first, "<unknown>");
+            smsc_log_error(logger, "%s: %s exception: %s", _logId,
+                        pTask->ptr->TaskName(), "<unknown>");
             //keep task in suspended state for easier core file analyzis :)
-            tSig.second = sigSuspend;
+            tSig.sId = sigSuspend;
         }
+        _sync.Lock();
     }
-    //reschedule according to last indicated signal
-    _sync.Lock();
-    if (tSig.second == sigRelease) {
+    if (pRef)   //task reported -> unmark referee
+        pTask->unmarkReferee();
+    //reschedule according to selected scheduling action
+    if (tSig.sId == sigRelease) {
         if (!releaseTask(qIt)) //postponed release
-            qReleased.push_back(tSig.first);
+            qReleased.push_back(tSig.tId);
     }
     return;
 }
@@ -60,73 +71,103 @@ void TaskSchedulerMT::processSignal(bool doAbort/* = false*/)
  * ************************************************************************* */
 //Processes the first signal from signals queue (schedules associated task)
 //NOTE: _sync is locked upon entry and must be locked upon return
-void TaskSchedulerSEQ::processSignal(bool doAbort/* = false*/)
+void TaskSchedulerSEQ::processSignal(void)
 {
     TaskDataSEQ * pTask = NULL;
     TaskSignal tSig = qSignaled.front();
+    auto_ptr_utl<UtilizableObjITF>  sDat(tSig.sObj);
+
     qSignaled.pop_front();
-    TaskMap::iterator qIt = qPool.find(tSig.first);
+    TaskMap::iterator qIt = qPool.find(tSig.tId);
     if (qIt == qPool.end()) {
-        smsc_log_warn(logger, "%s: task[%lu] is not in pool or was aborted, signal %s",
-            _logId, tSig.first, TaskSchedulerITF::nmPGSignal(tSig.second));
+        smsc_log_warn(logger, "%s: task[%lu] is unknown or was aborted, signal %s",
+            _logId, tSig.tId, TaskSchedulerITF::nmPGSignal(tSig.sId));
         return;
     }
     pTask = static_cast<TaskDataSEQ *>(qIt->second);
-    if ((tSig.second == sigProc) && !pTask->pQueue) {
-        //assign processing queue (task was just started)
-        TaskSchedule::iterator sit = schdMap.find(pTask->ptr->Criterion());
-        if (sit == schdMap.end()) {
-            std::pair<TaskSchedule::iterator, bool> res = schdMap.insert(
-                TaskSchedule::value_type(pTask->ptr->Criterion(), TaskQueue()));
-            sit = res.first;
-//            smsc_log_debug(logger, "%s: %s is assigned to queue %s", _logId,
-//                pTask->ptr->TaskName(), pTask->ptr->Criterion().c_str());
-        }
-        sit->second.push_back(tSig.first);
-        pTask->pQueue = &(sit->second);
-    }
-    _sync.Unlock();
+    TaskRefereeITF * pRef = NULL;
+    //check if task should be activated or reported
+    TaskAction tAction = signal2TAction(tSig.sId);
+    if (tAction == taskReporting)
+        pRef = pTask->markReferee();
 
-    //check if task should be activated
-    std::string nmTask(pTask->ptr->TaskName());
-    bool reqAbort = (doAbort || (bool)(tSig.second == sigAbort));
-    if ( ((tSig.second == sigProc)
-           && (tSig.first == pTask->pQueue->front()))
-        || (tSig.second == sigAbort) ) {
-        smsc_log_debug(logger, "%s: %s %s", _logId, reqAbort ?
-                        "aborting" : "activating", nmTask.c_str());
-        try {
-            switch (pTask->ptr->Process(reqAbort)) {
-            case ScheduledTaskAC::pgDone:
-                tSig.second = sigRelease; break;
-            case ScheduledTaskAC::pgSuspend:
-                tSig.second = sigSuspend; break;
-            default:
-                tSig.second = sigNone;
+    if (tSig.sId == sigProc) {
+        if (!pTask->pQueue) {
+            //assign processing queue (task was just started)
+            TaskSchedule::iterator sit = schdMap.find(pTask->ptr->Criterion());
+            if (sit == schdMap.end()) {
+                //create new scheduling queue
+                std::pair<TaskSchedule::iterator, bool> res = schdMap.insert(
+                    TaskSchedule::value_type(pTask->ptr->Criterion(), TaskQueue()));
+                sit = res.first;
+    //            smsc_log_debug(logger, "%s: %s is assigned to queue %s", _logId,
+    //                pTask->ptr->TaskName(), pTask->ptr->Criterion().c_str());
             }
-        } catch (std::exception& exc) {
-            smsc_log_error(logger, "%s: %s exception: %s", _logId,
-                        nmTask.c_str(), exc.what());
-            //keep task in suspended state for easier core file analyzis :)
-            tSig.second = sigSuspend;
-        } catch (...) {
-            smsc_log_error(logger, "%s: %s[%lu] exception: %s", _logId,
-                        nmTask.c_str(), "<unknown>");
-            //keep task in suspended state for easier core file analyzis :)
-            tSig.second = sigSuspend;
+            sit->second.push_back(tSig.tId);
+            pTask->pQueue = &(sit->second);
+        }
+        //Note: postpone the sigProc for task that is not at front of queue, it will
+        //be automatically activated as moves to front.
+        if (tSig.tId != pTask->pQueue->front()) {
+            tAction = taskIgnore;
+            //stores signal argument in task housekeeping data
+            pTask->addProcData(tSig.sObj);
+            sDat.release();
         }
     }
-    _sync.Lock();
-    //reschedule according to last indicated signal
-    if (tSig.second == sigRelease) {
+
+    if (tAction != taskIgnore) {
+        _sync.Unlock();
+        //perform actions on task
+        smsc_log_debug(logger, "%s: %s %s", _logId, nmTAction(tAction), pTask->ptr->TaskName());
+        try {
+            ScheduledTaskAC::PGState nState =
+                (tAction == taskReporting) ? pTask->ptr->Report(sDat, pRef)
+                : ((tAction == taskAborting) ? pTask->ptr->Abort(sDat)
+                                            : pTask->ptr->Process(sDat));
+            //select further scheduling action depending on task FSM state
+            switch (nState) {
+            case ScheduledTaskAC::pgDone:
+                tSig.sId = sigRelease; break;
+            case ScheduledTaskAC::pgSuspend:
+                tSig.sId = sigSuspend; break;
+            case ScheduledTaskAC::pgCont:
+                tSig.sId = sigProc; break;
+            default: 
+                tSig.sId = sigNone;
+            }
+        } catch (const std::exception & exc) {
+            smsc_log_error(logger, "%s: %s exception: %s", _logId,
+                        pTask->ptr->TaskName(), exc.what());
+            //keep task in suspended state for easier core file analyzis :)
+            tSig.sId = sigSuspend;
+        } catch (...) {
+            smsc_log_error(logger, "%s: %s exception: %s", _logId,
+                        pTask->ptr->TaskName(), "<unknown>");
+            //keep task in suspended state for easier core file analyzis :)
+            tSig.sId = sigSuspend;
+        }
+        _sync.Lock();
+    }
+
+    if (pRef)   //task reported -> unmark referee
+        pTask->unmarkReferee();
+    //reschedule according to selected scheduling action
+    if (tSig.sId == sigProc) {
+        if (pTask->hasProcData()) {
+            tSig.sObj = pTask->popProcData();
+            qSignaled.push_back(tSig);
+        }
+    } else if (tSig.sId == sigRelease) {
         Unqueue(qIt);
         if (!releaseTask(qIt)) //postponed release
-            qReleased.push_back(tSig.first);
-    } else if (tSig.second == sigSuspend) {
-        if (!Unqueue(qIt))
+            qReleased.push_back(tSig.tId);
+    } else if (tSig.sId == sigSuspend) {
+        if (!Unqueue(qIt)) {
             smsc_log_warn(logger, "%s: %s is not in queue, signal %s",
-                _logId, nmTask.c_str(), TaskSchedulerITF::nmPGSignal(tSig.second));
-        smsc_log_debug(logger, "%s: %s is suspended", _logId, nmTask.c_str());
+                _logId, pTask->ptr->TaskName(), TaskSchedulerITF::nmPGSignal(tSig.sId));
+        }
+        smsc_log_debug(logger, "%s: %s is suspended", _logId, pTask->ptr->TaskName());
     }
     return;
 }
@@ -134,7 +175,7 @@ void TaskSchedulerSEQ::processSignal(bool doAbort/* = false*/)
 //Removes task from associated scheduling queue, if given task is the top one,
 //prepares next task for activation.
 //Returns false if task was not found in any of processing queues
-bool TaskSchedulerSEQ::Unqueue(TaskMap::iterator qIt)
+bool TaskSchedulerSEQ::Unqueue(TaskMap::iterator & qIt)
 {
     TaskDataSEQ * pTask = static_cast<TaskDataSEQ *>(qIt->second);
     TaskSchedule::iterator schdIt = schdMap.find(pTask->ptr->Criterion());
@@ -147,7 +188,10 @@ bool TaskSchedulerSEQ::Unqueue(TaskMap::iterator qIt)
                 schdIt->second.erase(it);
                 //prepare next task in queue for activation
                 if (!schdIt->second.empty())
-                    qSignaled.push_back(TaskSignal(schdIt->second.front(), TaskSchedulerITF::sigProc));
+                    qSignaled.push_back(TaskSignal(schdIt->second.front(),
+                                        TaskSchedulerITF::sigProc, pTask->popProcData()));
+                else //destroy empty queue
+                    schdMap.erase(schdIt);
                 return true;
             }
             //search rest of queue
