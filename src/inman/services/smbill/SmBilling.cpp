@@ -12,7 +12,11 @@ using smsc::inman::interaction::ChargeSmsResult;
 using smsc::inman::interaction::DeliverySmsResult;
 using smsc::inman::interaction::CsBillingHdr_dlg;
 using smsc::core::synchronization::MutexTryGuard;
+//using smsc::core::synchronization::TimeSlice;
 using smsc::util::URCRegistry;
+
+using smsc::inman::smbill::_SMSubmitOK;
+using smsc::inman::smbill::_SMSubmitNO;
 
 #include "inman/comp/cap_sms/MOSM_RPCauses.hpp"
 using smsc::inman::comp::_RCS_MOSM_RPCause;
@@ -308,9 +312,8 @@ void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/
     smsc_log_error(logger, "%s: Aborting at state %u%s%s",
                    _logId, state, reason ? ", reason: " : "", reason ? reason : "");
     if (capTask) {
-        capTask->Signal(TaskSchedulerITF::sigAbort);
-        capTask->UnrefBy(this);
-        capTask = NULL;
+        unrefCAPSmTask();
+        abortCAPSmTask();
     }
     state = Billing::bilAborted;
     doFinalize(doReport);
@@ -319,8 +322,7 @@ void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/
 
 RCHash Billing::startCAPSmTask(void)
 {
-    TaskSchedulerITF * capSched =
-        _cfg.schedMgr->getScheduler((abScf->idpReqMode == INScfCFG::idpReqMT) ? 
+    capSched = _cfg.schedMgr->getScheduler((abScf->idpReqMode == INScfCFG::idpReqMT) ? 
                         TaskSchedulerITF::schedMT : TaskSchedulerITF::schedSEQ);
     if (!capSched) {
         smsc_log_error(logger, "%s: TaskScheduler is not srarted", _logId);
@@ -381,19 +383,19 @@ RCHash Billing::startCAPSmTask(void)
         rval = _RCS_TC_Dialog->mkhash(INManErrorId::protocolInvalidData);
     }
     if (!rval) {
-        if (!capSched->StartTask(smTask.get(), this)) {
+        if (!(capTask = capSched->StartTask(smTask.get(), this))) {
             smsc_log_error(logger, "%s: Failed to start %s", _logId, smTask->TaskName());
             rval = _RCS_TC_Dialog->mkhash(INManErrorId::logicTimedOut);
         } else {
             state = Billing::bilInited;
-            smsc_log_debug(logger, "%s: Initiated %s", _logId, smTask->TaskName());
-            capTask = smTask.release();
+            capName = smTask->TaskName();
+            smsc_log_debug(logger, "%s: Initiated %s", _logId, capName.c_str());
+            smTask.release();
+            //execution will continue in onTaskReport() or in onTimerEvent() by another thread.
             StartTimer(_cfg.maxTimeout);
-            //execution will continue in onCapSMSResult() by another thread.
-            //rval == 0 means Billing::pgCont;
         }
     }
-    return rval;
+    return rval; //!rval means Billing::pgCont;
 }
 
 //NOTE: _sync should be locked upon entry!
@@ -613,12 +615,12 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(void)
         if (!errmsg && abCsi.vlrNum.empty())   //check for charged abonent location
             errmsg = "failed to determine abonent location MSC";
         if (errmsg) {
-            err = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
+            err = billErr ? 0 : _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
             if ((billMode = billPrio->second) == ChargeParm::billOFF) {
                 smsc_log_error(logger, "%s: %s", _logId, errmsg);
                 return chargeResult(false, err);
             }
-            smsc_log_error(logger, "%s: %s, switching to CDR mode", _logId, errmsg);
+            smsc_log_error(logger, "%s: switching to CDR mode: %s", _logId, errmsg);
         }
     }
 
@@ -633,42 +635,41 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(void)
             smsc_log_error(logger, "%s: %s", _logId, errStr.c_str());
             return chargeResult(false, err);
         }
-        smsc_log_error(logger, "%s: %s, switching to CDR mode", _logId, errStr.c_str());
+        smsc_log_error(logger, "%s: switching to CDR mode: %s", _logId, errStr.c_str());
     }
     //billMode == ChargeParm::bill2CDR
     return chargeResult(true, err);
 }
 
 //NOTE: _sync should be locked upon entry
+//FSM switching:
+//  entry:  billContinued
+//  return: [ bilAborted, bilSubmitted, bilReported ]
 Billing::PGraphState Billing::onDeliverySmsResult(void)
 {
-    bool submitted = cdr._dlvrRes ? false : true;
+    RCHash rval = 0;
     smsc_log_info(logger, "%s: --> DELIVERY_%s (code: %u)", _logId,
-                    (submitted) ? "SUCCEEDED" : "FAILED", cdr._dlvrRes);
-
+                    (!cdr._dlvrRes) ? "SUCCEEDED" : "FAILED", cdr._dlvrRes);
+    
     if (capTask) { //report message submission to SCF
-        RCHash rval = capTask->reportSMSubmission(submitted);
-        if (rval) {
-            billErr = rval;
-            //if message has been already delivered, then just create CDR
-            smsc_log_error(logger, "%s: %ssubmission report to %s failed: %s ", _logId,
-                submitted ? "switching to CDR mode, " : "",
-                abScf->Ident(), URCRegistry::explainHash(rval).c_str());
-            if (submitted)
-                billMode = ChargeParm::bill2CDR;
-        } else
-            cdr._inBilled = true;
-        capTask->UnrefBy(this);
-        capTask = NULL;
+        if (TaskSchedulerITF::rcOk == capSched->SignalTask(capTask,
+                TaskSchedulerITF::sigProc, !cdr._dlvrRes ? &_SMSubmitOK : &_SMSubmitNO)) {
+            state = bilSubmitted;
+            //execution will continue either in onTaskReport() or in onTimerEvent()
+            StartTimer(_cfg.maxTimeout);
+            return Billing::pgCont;
+        } //else task cann't be interacted!
+        smsc_log_error(logger, "%s: failed to send signal to %s", _logId, capName.c_str());
+        unrefCAPSmTask(false);
+        rval = _RCS_INManErrors->mkhash(INManErrorId::internalError);
     }
-    if ((cdr._chargePolicy == CDRRecord::ON_SUBMIT) && cdr._dlvrRes)
-        state = bilAborted; //SMSC aborts charge request
-    else
-        state = bilReported;
-    return Billing::pgEnd;
+    return onSubmitReport(rval);
 }
 
 //NOTE: _sync should be locked upon entry
+//FSM switching:
+//  entry:  [ bilStarted, bilQueried, bilInited ]
+//  return: [ bilReleased, bilContinued ]
 Billing::PGraphState Billing::chargeResult(bool do_charge, RCHash last_err /* = 0*/)
 {
     if (last_err)
@@ -716,6 +717,53 @@ Billing::PGraphState Billing::chargeResult(bool do_charge, RCHash last_err /* = 
     return Billing::pgAbort;
 }
 
+//NOTE: _sync should be locked upon entry
+//FSM switching:
+//  entry:  billSubmitted
+//  return: [ bilAborted, bilReported ]
+Billing::PGraphState Billing::onSubmitReport(RCHash scf_err, bool in_billed/* = false*/)
+{
+    bool submitted = cdr._dlvrRes ? false : true;
+    bool smscAborted = ((cdr._chargePolicy == CDRRecord::ON_SUBMIT) && cdr._dlvrRes);
+
+    if (scf_err) {
+        billErr = scf_err;
+        //if message has been already delivered, then create CDR
+        //even if secondary billing mode is OFF
+        if (submitted) 
+            billMode = ChargeParm::bill2CDR;
+        smsc_log_error(logger, "%s: %s%s interaction failure: %s",
+                _logId, submitted ? "switching to CDR mode: " : "", abScf->Ident(),
+                URCRegistry::explainHash(scf_err).c_str());
+    } else
+        cdr._inBilled = in_billed;
+
+    state = smscAborted ? bilAborted : bilReported;
+    return Billing::pgEnd;
+}
+
+
+bool Billing::unrefCAPSmTask(bool wait_report/* = true */)
+{
+    bool rval = capSched->UnrefTask(capTask, this);
+    if (!rval && wait_report) {
+        //task currently awaits for Billing::_sync to call onTaskReport()
+        int res = capEvent.WaitOn(_sync, _cfg.maxTimeout);
+        if (!res)
+            rval = true;
+        else
+            smsc_log_error(logger, "%s: %s unbind failed, code %u",
+                           _logId, capName.c_str(), res);
+    }
+    return rval;
+}
+
+void Billing::abortCAPSmTask(void)
+{
+    capSched->AbortTask(capTask);
+    capTask = 0;
+}
+
 /* -------------------------------------------------------------------------- *
  * TimerListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
@@ -740,33 +788,37 @@ TimeWatcherITF::SignalResult
             //abonent provider query is expired
             _cfg.iaPol->getIAProvider()->cancelQuery(abNumber, this);
             providerQueried = false;
-            if (ConfigureSCFandCharge() == Billing::pgEnd)
+            if (Billing::pgEnd == ConfigureSCFandCharge())
                 doFinalize();
             return TimeWatcherITF::evtOk;
         }
         if (state == Billing::bilInited) { //CapSMTask lasts too long
-            RCHash err = _RCS_INManErrors->mkhash(INManErrorId::logicTimedOut);
-            std::string errStr(capTask->TaskName());
-            errStr += " lasts too long";
-            
-            capTask->Signal(TaskSchedulerITF::sigAbort);
-            capTask->UnrefBy(this);
-            capTask = NULL;
-            
-            bool doCharge = false;
-            if ((billMode = billPrio->second) == ChargeParm::billOFF) {
-                smsc_log_error(logger, "%s: %s", _logId, errStr.c_str());
-            } else {
-                smsc_log_error(logger, "%s: %s, switching to CDR mode", _logId, errStr.c_str());
-                doCharge = true;
-            }
-            if (chargeResult(doCharge, err) == Billing::pgEnd)
+            //CapSMTask suspends while awaiting Continue/Release from SCF
+            bool doCharge = ((billMode = billPrio->second) 
+                                    == ChargeParm::billOFF) ? false : true;
+            smsc_log_error(logger, "%s: %s%s is timed out (ERSM)", _logId, 
+                           doCharge ? "switching to CDR mode: " : "", capName.c_str());
+
+            unrefCAPSmTask();
+            abortCAPSmTask();
+            if (Billing::pgEnd == chargeResult(doCharge,
+                        _RCS_INManErrors->mkhash(INManErrorId::logicTimedOut)))
                 doFinalize();
             return TimeWatcherITF::evtOk;
         }
         if (state == Billing::bilContinued) {
             //SMSC doesn't respond with DeliveryResult
             abortThis("SMSC DeliverySmsResult is timed out");
+            return TimeWatcherITF::evtOk;
+        }
+        if ((state == Billing::bilSubmitted) && capTask) {
+            //CapSMTask suspends while reporting submission to SCF
+            smsc_log_error(logger, "%s: %s is timed out (ERSM)", _logId, capName.c_str());
+            unrefCAPSmTask();
+            abortCAPSmTask();
+            if (Billing::pgEnd == onSubmitReport(
+                        _RCS_INManErrors->mkhash(INManErrorId::logicTimedOut)))
+                doFinalize();
             return TimeWatcherITF::evtOk;
         }
     } //else: operation already finished
@@ -808,37 +860,78 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
 /* -------------------------------------------------------------------------- *
  * TaskRefereeITF interface implementation:
  * -------------------------------------------------------------------------- */
-void Billing::onTaskReport(TaskSchedulerITF * sched, ScheduledTaskAC * task)
+//NOTE: whithin this method capSched->UnrefTask() always returns false
+//      because of Billing is already targeted by task for reporting.
+void Billing::onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * task)
 {
     MutexGuard grd(_sync);
-    CAPSmTaskAC * sm_res = static_cast<CAPSmTaskAC *>(task);
+    const CAPSmTaskAC * sm_res = static_cast<const CAPSmTaskAC *>(task);
+    RCHash capErr = sm_res->scfErr;
+
     if (state == bilInited) {
         StopTimer(state);
-        if (!sm_res->doCharge) {
-            task->UnrefBy(this);
-            capTask = NULL;
-        }
         bool doCharge = sm_res->doCharge;
-        if (!sm_res->doCharge && !sm_res->rejectRPC 
-            && (billPrio->second == ChargeParm::bill2CDR)) {
-            smsc_log_error(logger, "%s: %s interaction failure, switching to CDR mode",
+        bool scfCharge = sm_res->doCharge;
+
+        if (sm_res->curPMode() != CAPSmTaskAC::pmInstructing) {
+            smsc_log_error(logger, "%s: %s dissynchonization: %s <- %s", _logId,
+                           capName.c_str(), nmBState(), sm_res->nmPMode());
+            scfCharge = false;
+            capErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
+            if (billPrio->second == ChargeParm::bill2CDR) {
+                smsc_log_error(logger, "%s: switching to CDR mode: %s interaction failure",
+                               _logId, abScf->Ident());
+                billMode = ChargeParm::bill2CDR;
+                doCharge = true;
+            } else
+                doCharge = false;
+        } else if (!sm_res->doCharge && !sm_res->rejectRPC
+                && (billPrio->second == ChargeParm::bill2CDR)) {
+            smsc_log_error(logger, "%s: switching to CDR mode: %s interaction failure",
                         _logId, abScf->Ident());
             billMode = ChargeParm::bill2CDR;
             doCharge = true;
         }
-        if (chargeResult(doCharge, sm_res->scfErr) == Billing::pgEnd)
+        if (!scfCharge)
+            unrefCAPSmTask(false);
+        if (Billing::pgEnd == chargeResult(doCharge, capErr))
+            doFinalize();
+    } else if (state == bilSubmitted) {
+        //submission status was reported to SCF
+        StopTimer(state);
+        if (sm_res->curPMode() != CAPSmTaskAC::pmAcknowledging) {
+            smsc_log_error(logger, "%s: %s dissynchonization: %s <- %s", _logId,
+                           capName.c_str(), nmBState(), sm_res->nmPMode());
+            capErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
+        }
+        if (capErr) {
+            //Note1: it's unknown whether the SCF finalized transaction or 
+            //      not, so unconditionally create CDR and rise in_billed flag
+            smsc_log_error(logger, "%s: switching to CDR mode: %s interaction failure",
+                           _logId, abScf->Ident());
+            billMode = ChargeParm::bill2CDR;
+        }
+        unrefCAPSmTask(false);
+        //Note2: considering Note1 rise in_billed flag despite of capErr value
+        if (Billing::pgEnd == onSubmitReport(capErr, true))
             doFinalize();
     } else if (state == bilContinued) {
-        //abnormal CapSMTask termination, charging was allowed so create CDR
+        //abnormal CAPSmTask termination, charging was allowed so create CDR
         //despite of secondary billmode setting
-        task->UnrefBy(this);
-        capTask = NULL;
-        smsc_log_error(logger, "%s: %s interaction failure, switching to CDR mode",
-                    _logId, abScf->Ident());
+        unrefCAPSmTask(false);
+        smsc_log_error(logger, "%s: switching to CDR mode: %s interaction failure: %s",
+                    _logId, abScf->Ident(), URCRegistry::explainHash(capErr).c_str());
         billMode = ChargeParm::bill2CDR;
-    } else
-        smsc_log_warn(logger, "%s: %s reported at state: %u", _logId,
-                        task->TaskName(), state);
+        billErr = sm_res->scfErr;
+    } else {
+        smsc_log_warn(logger, "%s: %s reported: %s <- %s", _logId,
+                      capName.c_str(), nmBState(), sm_res->nmPMode());
+        if ((sm_res->curPMode() == CAPSmTaskAC::pmInstructing) && sm_res->doCharge) {
+            //dissynchonization -> abort CAPSmTask
+            unrefCAPSmTask(false);
+            abortCAPSmTask();
+        }
+    }
     return;
 }
 

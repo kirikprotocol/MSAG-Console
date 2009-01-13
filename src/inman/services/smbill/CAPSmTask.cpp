@@ -23,6 +23,10 @@ using smsc::inman::inap::TCSessionAC;
 namespace smsc {
 namespace inman {
 namespace smbill {
+
+CAPSmSubmit  _SMSubmitOK(true);
+CAPSmSubmit  _SMSubmitNO(false);
+
 /* ************************************************************************* *
  * class CAPSmTaskAC partial implementation
  * ************************************************************************* */
@@ -96,8 +100,11 @@ void CAPSmTaskAC::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
                 }
             }
             res->smsArg = sms_params.release();
-            if (onContinueRes())
+            if (scheduleNextRequired()) {
+                _fsmState = ScheduledTaskAC::pgCont;
+                Reschedule(TaskSchedulerITF::sigProc);
                 return;
+            }
         } else {            //ReleaseSMS
             res->doCharge = false;
             //check first for RPCause that forces interaction retrying
@@ -108,18 +115,17 @@ void CAPSmTaskAC::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
                 res->resetRes();
                 //reschedule task
                 _fsmState = ScheduledTaskAC::pgCont;
-                smsc_log_debug(logger, "%s: signalling %s", _logId,
-                                TaskSchedulerITF::nmPGSignal(TaskSchedulerITF::sigProc));
-                Signal(TaskSchedulerITF::sigProc);
+                Reschedule(TaskSchedulerITF::sigProc);
                 return;
             }
             res->scfErr = _RCS_MOSM_RPCause->mkhash(rp_cause);
             abortDialogs(&res); //abort all other dialogs and mark them as completed
         }
         if (Adjust()) {
-            _pMode = doCharge ? pmMonitoring : pmIdle;
-            smsc_log_debug(logger, "%s: reporting ..", _logId);
-            _Owner->ReportTask(_Id);
+            _pMode = pmInstructing;
+            //reschedule task
+            _fsmState = ScheduledTaskAC::pgCont;
+            Reschedule(TaskSchedulerITF::sigReport);
         }
     }
     return;
@@ -139,111 +145,180 @@ void CAPSmTaskAC::onEndCapDlg(unsigned dlg_id, RCHash errcode)
         res->scfErr = errcode;
 
     //select further actions depending on processing mode
-    bool doReport = false;
-    if (_pMode == pmWaitingInstr) {
+    switch (_pMode) {
+    //initiating dialog(s) with SCF (IN-platform)
+//    case pmIdle:
+    case pmInit:
+    case pmWaitingInstr: {
         //abnormal termination: task still hasn't reported result to referee
         abortDialogs(&res); //abort all other dialogs and mark them as completed
-        res->doCharge = false;
         Adjust();
-        doReport = true;
-    } else if (_pMode == pmMonitoring) {
+        //reschedule task
+        _pMode = pmInstructing;
+        _fsmState = ScheduledTaskAC::pgCont;
+        Reschedule(TaskSchedulerITF::sigReport);
+        return;
+    } //break;
+
+    //giving instructions to SSF (Billing)
+    case pmInstructing: {
+        if (!Completed()) { //abnormal termination: task is reporting positive result to referee
+            abortDialogs(&res); //abort all other dialogs and mark them as completed
+            Adjust();
+        } // else //normal termination: task is reporting negative result to referee
+        return; //rescheduling will be done in CAPSmTaskAC::Report()
+    } //break;
+
+    //monitoring for submission report from SSF (Billing)
+    case pmMonitoring: {
         //abnormal termination: task already has reported successfful result to referee
         abortDialogs(&res); //abort all other dialogs and mark them as completed
-        doReport = true;
-    } //else if (_pMode == pmIdle) //normal end
+        //reschedule task
+        _pMode = pmAcknowledging;
+        _fsmState = ScheduledTaskAC::pgCont;
+        Reschedule(TaskSchedulerITF::sigReport);
+        return;
+    } //break;
 
-    if (doReport) {
-        smsc_log_debug(logger, "%s: reporting ..", _logId);
-        _Owner->ReportTask(_Id);
-    }
+    case pmReportingEvent: {
+        if (Completed()) {
+            //reschedule task
+            _pMode = pmAcknowledging;
+            _fsmState = ScheduledTaskAC::pgCont;
+            Reschedule(TaskSchedulerITF::sigReport);
+            return;
+        }
+    } break;
+
+    case pmAcknowledging:
+        return; //rescheduling will be done in CAPSmTaskAC::Report()
+
+    default:; //normal end
+    } //eosw
+
     if (Completed()) {
+        //reschedule task
         _pMode = pmIdle;
         _fsmState = ScheduledTaskAC::pgDone;
-        smsc_log_debug(logger, "%s: signalling %s", _logId,
-                        TaskSchedulerITF::nmPGSignal(TaskSchedulerITF::sigRelease));
-        Signal(TaskSchedulerITF::sigRelease);
+        Reschedule(TaskSchedulerITF::sigRelease);
     }
     return;
 }
 
+// -- --------------------------------------
+// -- ScheduledTaskAC interface methods
+// -- --------------------------------------
 
-/* ************************************************************************* *
- * class CAPSmTaskMT implementation
- * ************************************************************************* */
-ScheduledTaskAC::PGState CAPSmTaskMT::processTask(void)
+//Called on sigProc, switches task to next state.
+ScheduledTaskAC::PGState CAPSmTaskAC::Process(auto_ptr_utl<UtilizableObjITF> & use_dat)
 {
-    {
-        MutexGuard tmp(_sync);
-        corpses.cleanUp();
-    
-        switch (_fsmState) {
-        case ScheduledTaskAC::pgIdle:
-        case ScheduledTaskAC::pgCont: { //start all required CapSMS dialogs
-            if (daList.empty()) {
-                smsc_log_error(logger, "%s: no dest.addresses set!!!", _logId);
-                return (_fsmState = ScheduledTaskAC::pgSuspend);
+    MutexGuard tmp(_sync);
+//    log_debug("Process", use_dat.get());
+
+    corpses.cleanUp();
+    switch (_pMode) {
+    //initiating dialog(s) with SCF (IN-platform)
+    case pmIdle:
+    case pmInit:
+    case pmWaitingInstr: {
+        if (daList.empty()) { //inconsistency of signal and internal state
+            log_error("Process", use_dat.get(), ", no DA set!");
+            //keep task in suspended state for easier core file analyzis :)
+            _fsmState = ScheduledTaskAC::pgSuspend;
+        } else {
+            if (!doNextInit()) {
+                //abnormal initialization -> report CHARGE_NOT_POSSIBLE to Billing
+                abortDialogs();
+                _pMode = pmInstructing;
+                _fsmState = ScheduledTaskAC::pgSuspend;
+                Reschedule(TaskSchedulerITF::sigReport);
             }
-            //start all enqueued dialogs
-            do {
-                if (startDialog(daList.front()))
-                    break;
-                daList.pop_front();
-            } while (!daList.empty());
-            if (daList.empty()) { //all dialogs are succesfully started
-                _pMode = pmWaitingInstr;
-                return _fsmState = ScheduledTaskAC::pgCont;
-            }
-            
-            abortDialogs();
-            _pMode = pmIdle;
-            _fsmState = ScheduledTaskAC::pgDone;
-            smsc_log_debug(logger, "%s: reporting ..", _logId);
-            _Owner->ReportTask(_Id);
-        } break;
-    
-        default: 
-            smsc_log_warn(logger, "%s: activated at state %s", _logId,
-                            ScheduledTaskAC::nmPGState(_fsmState));
         }
-    }
+    } break;
+
+//        case pmInstructing:
+    //monitoring for submission report from SSF (Billing)
+    case pmMonitoring: {
+        CAPSmSubmit * res = static_cast<CAPSmSubmit*>(use_dat.get());
+        if (!res) { //inconsistency of signal and internal state
+            log_error("Process", use_dat.get(), ", arg missed!");
+            //keep task in suspended state for easier core file analyzis :)
+            _fsmState = ScheduledTaskAC::pgSuspend;
+        } else {
+            _pMode = pmReportingEvent;
+            _fsmState = ScheduledTaskAC::pgCont;
+            if (reportSMSubmission(res->isSubmitted())) {
+                //submission report to SCF failed -> abort dialog(s) and report to Billing
+                abortDialogs();
+                _pMode = pmAcknowledging;
+                _fsmState = ScheduledTaskAC::pgSuspend;
+                Reschedule(TaskSchedulerITF::sigReport);
+            } //else execution continues in onEndCapDlg()
+        }
+    } break;
+//        case pmReportingEvent:
+//        case pmAcknowledging:
+
+    default:
+        log_error("Process", use_dat.get(), ", inconsistent state");
+    } //eosw
     return _fsmState;
 }
 
-/* ************************************************************************* *
- * class CAPSmTaskSQ implementation
- * ************************************************************************* */
-ScheduledTaskAC::PGState CAPSmTaskSQ::processTask(void)
+//Called on sigAbort, aborts task, switches task to pgDone state.
+ScheduledTaskAC::PGState CAPSmTaskAC::Abort(auto_ptr_utl<UtilizableObjITF> & use_dat)
 {
-    {
-        MutexGuard tmp(_sync);
-        corpses.cleanUp();
-    
-        switch (_fsmState) {
-        case ScheduledTaskAC::pgIdle:
-        case ScheduledTaskAC::pgCont: { //start all required CapSMS dialogs
-            if (daList.empty()) {
-                smsc_log_error(logger, "%s: no dest.addresses set!!!", _logId);
-                return (_fsmState = ScheduledTaskAC::pgSuspend);
-            }
-            //start first enqueued dialog
-            if (!startDialog(daList.front())) {
-                daList.pop_front();
-                _pMode = pmWaitingInstr;
-                return _fsmState = ScheduledTaskAC::pgCont;
-            }
-            abortDialogs();
+    MutexGuard tmp(_sync);
+    log_error("Abort", use_dat.get());
+
+    corpses.cleanUp();
+    abortDialogs();
+    _pMode = pmIdle;
+    return _fsmState = ScheduledTaskAC::pgDone;
+}
+//Called on sigReport, requests task to report to the referee (use_ref != 0)
+//or perform some other reporting actions.
+ScheduledTaskAC::PGState CAPSmTaskAC::Report(auto_ptr_utl<UtilizableObjITF> & use_dat,
+                                                        TaskRefereeITF * use_ref/* = 0*/)
+{
+    MutexGuard tmp(_sync);
+    log_debug("Report", use_dat.get(), use_ref ? ", referee(ON)" : ", referee(OFF)");
+
+    corpses.cleanUp();
+    Adjust();
+
+    switch (_pMode) {
+//    case pmIdle:
+//    case pmInit:
+//    case pmWaitingInstr:
+    case pmInstructing: {
+        if (use_ref) {
+            use_ref->onTaskReport(_Owner, this);
+            _pMode = pmMonitoring;
+            _fsmState = ScheduledTaskAC::pgCont; //monitoringFSM();
+        } else {
+            //Billing is died or no longer interested in charging -> abort task
+            if (doCharge) {
+                log_error("Report", use_ref, ", no referee set, aborting ..");
+                abortDialogs();
+            } else //CHARGING_NOT_POSSIBLE -> normal completion
+                log_warn("Report", use_ref, ", no referee set ..");
             _pMode = pmIdle;
             _fsmState = ScheduledTaskAC::pgDone;
-            smsc_log_debug(logger, "%s: reporting ..", _logId);
-            _Owner->ReportTask(_Id);
-
-        } break;
-    
-        default: 
-            smsc_log_warn(logger, "%s: activated at state %s", _logId,
-                            ScheduledTaskAC::nmPGState(_fsmState));
         }
-    }
+    } break;
+//    case pmMonitoring:
+//    case pmReportingEvent:
+    case pmAcknowledging: { //do a final report, completing ..
+        if (use_ref)
+            use_ref->onTaskReport(_Owner, this);
+        _pMode = pmIdle;
+        _fsmState = ScheduledTaskAC::pgDone;
+    } break;
+    //
+    default:
+        log_warn("Report", use_dat.get(), use_ref ? ", referee(ON)" : ", referee(OFF)");
+    } //eosw
     return _fsmState;
 }
 

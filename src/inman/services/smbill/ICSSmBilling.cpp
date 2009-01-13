@@ -115,8 +115,10 @@ void  ICSSmBilling::_icsStop(bool do_wait/* = false*/)
 ConnectManagerAC * ICSSmBilling::getConnManager(uint32_t sess_id, Connect * use_conn)
 {
     MutexGuard  grd(_sync);
-    if (_icsState != ICServiceAC::icsStStarted)
+    if (_icsState != ICServiceAC::icsStStarted) {
+        smsc_log_error(logger, "%s: still not started", _logId);
         return NULL;
+    }
 
     SmBillManager * pMgr = sesMgrs.find(sess_id);
     if (!pMgr) { //create new connect manager
@@ -133,10 +135,11 @@ ConnectManagerAC * ICSSmBilling::getConnManager(uint32_t sess_id, Connect * use_
 void ICSSmBilling::rlseConnManager(uint32_t sess_id)
 {
     MutexGuard  grd(_sync);
-    if (!sesMgrs.erase(sess_id))
+    if (!sesMgrs.erase(sess_id)) {
         smsc_log_error(logger, "%s: SmBillManager[%u] is "
-                               "unknown/already released",
+                                "unknown/already released",
                                 _logId, sess_id);
+    }
 }
 
 } //smbill

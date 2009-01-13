@@ -1,4 +1,3 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * CAPSmTask: maintains a bunch of CAP3Sms dialogs (one per each destination
  * address) for given abonent. The overall result (permission for message(s)
@@ -6,6 +5,7 @@
  * response (ReleaseSMS or some error).
  * ************************************************************************* */
 #ifndef __INMAN_CAPSM_TASK_HPP
+#ident "@(#)$Id$"
 #define __INMAN_CAPSM_TASK_HPP
 
 #include "inman/InScf.hpp"
@@ -54,7 +54,7 @@ public:
         if (pDlg) delete pDlg;
     }
 
-    inline CapSMSDlg * releaseDlg(void)
+    CapSMSDlg * releaseDlg(void)
     {
         CapSMSDlg * tmp = pDlg;
         pDlg = NULL;
@@ -79,12 +79,12 @@ public:
         if (dlgRes) delete dlgRes;
     }
 
-    inline CapSMSDlg * releaseDlg(void)
+    CapSMSDlg * releaseDlg(void)
     {
         if (dlgRes) return dlgRes->releaseDlg();
         return NULL;
     }
-    inline void resetRes(CAPSmDlgResult * use_dres = NULL)
+    void resetRes(CAPSmDlgResult * use_dres = NULL)
     {
         if (dlgRes) delete dlgRes;
         dlgRes = use_dres;
@@ -138,9 +138,9 @@ public:
     }
 
     //Returns true if all enqueued dialogs completed
-    bool Completed(void)
+    bool Completed(void) const
     {
-        for (CAPSmDPList::iterator it = dpRes.begin(); it != dpRes.end(); ++it) {
+        for (CAPSmDPList::const_iterator it = dpRes.begin(); it != dpRes.end(); ++it) {
             if (!it->dlgRes || !it->dlgRes->completed)
                 return false;
         }
@@ -151,12 +151,20 @@ public:
 
 class CAPSmTaskAC : public CAPSmResult, public ScheduledTaskAC,
                     CapSMS_SSFhandlerITF {
-protected:
-    enum ProcMode { pmIdle = 0,
-        pmWaitingInstr, //waiting instructions from IN-platform
-        pmMonitoring    //monitoring for submission report from SMSC
+public:
+    enum CAPSmMode { idpMO = 0, idpMT};
+
+    enum ProcMode {
+        pmIdle = 0
+        , pmInit            //initiating dialog(s) with SCF (IN-platform)
+        , pmWaitingInstr    //waiting instructions from SCF (IN-platform)
+        , pmInstructing     //giving instructions to SSF (Billing)
+        , pmMonitoring      //monitoring for submission report from SSF (Billing)
+        , pmReportingEvent  //reporting submission status to SCF ((IN-platform))
+        , pmAcknowledging   //reporting dialog(s) completion status to Billing
     };
 
+protected:
     typedef std::list<CAPSmDPList::iterator> DAList;
 
     class DLGList : public std::list<CapSMSDlg*> {
@@ -174,87 +182,38 @@ protected:
     const CAPSmTaskCFG  cfgSS7;
     const TonNpiAddress abNumber;
 
-    mutable Mutex   _sync;
-    ProcMode        _pMode;
+    mutable Mutex       _sync;
+    volatile ProcMode   _pMode;
     std::auto_ptr<InitialDPSMSArg> _arg;
     DAList          daList;
-    volatile bool   reporting; //task is or awaits reporting to referee
+
     DLGList         corpses;
     TCSessionSR *   capSess;
     Logger *        logger;
     char            _logId[sizeof("CAPSmTask[%lu]") + sizeof(unsigned long)*3 + 1];
 
-    // ----------------------------------
-    // -- CAPSmTaskAC interface methods
-    // ----------------------------------
-    virtual PGState processTask(void) = 0;
-    //returns true if rescheduling was requested
-    virtual bool    onContinueRes(void) = 0;
 
-public:
-    enum CAPSmMode { idpMO = 0, idpMT};
-
-    CAPSmTaskAC(const TonNpiAddress & use_abn, const CAPSmTaskCFG & cfg_ss7,
-                uint32_t serv_key, CAPSmMode idp_mode = idpMO,
-                const char * log_pfx = "CAPSm", Logger * use_log = NULL)
-        : ScheduledTaskAC(true), CAPSmResult(cfg_ss7.abScf), cfgSS7(cfg_ss7)
-        , abNumber(use_abn), capSess(0), _pMode(pmIdle)
-        , logPfx(log_pfx), logger(use_log)
+    void Reschedule(TaskSchedulerITF::PGSignal use_sig)
     {
-        _arg.reset(new InitialDPSMSArg(logger));
-        _arg->setIDPParms(!idp_mode ? smsc::inman::comp::DeliveryMode_Originating :
-                        smsc::inman::comp::DeliveryMode_Terminating , serv_key);
-        _arg->setCallingPartyNumber(use_abn);
-        snprintf(_logId, sizeof(_logId)-1, "%s[0x%lX]", logPfx, _Id);
-        if (!logger)
-            logger = Logger::getInstance("smsc.inman.CAPSm");
+        smsc_log_debug(logger, "%s: signalling %s", _logId, TaskSchedulerITF::nmPGSignal(use_sig));
+        _Owner->SignalTask(_Id, use_sig);
     }
-    virtual ~CAPSmTaskAC()
-    { corpses.cleanUp(); }
-
-    inline InitialDPSMSArg & Arg(void) const { return *(_arg.get()); }
-
-    inline void enqueueDA(const TonNpiAddress & use_da)
-    { 
-        daList.push_back(dpRes.insert(dpRes.end(), CAPSmDPResult(use_da)));
-    }
-
-    RCHash reportSMSubmission(bool submitted)
+    void log_error(const char * nm_sig, bool has_arg = false, const char * aux_msg = "")
     {
-        MutexGuard tmp(_sync);
-        RCHash repErr = 0;
-        for (CAPSmDPList::iterator it = dpRes.begin();
-              (it != dpRes.end()) && it->dlgRes && it->dlgRes->pDlg; ++it) {
-            RCHash err = it->dlgRes->pDlg->reportSubmission(submitted);
-            if (err) {
-                if (!it->scfErr)
-                    it->scfErr = err;
-                if (!repErr)
-                    repErr = err;
-            }
-        }
-        _pMode = pmIdle;
-        _fsmState = ScheduledTaskAC::pgSuspend;
-        smsc_log_debug(logger, "%s: signalling %s", _logId,
-                        TaskSchedulerITF::nmPGSignal(TaskSchedulerITF::sigSuspend));
-        Signal(TaskSchedulerITF::sigSuspend);
-        return repErr;
+        smsc_log_error(logger, "%s: {%s, %s} signal %s(%s)%s",
+                       _logId, nmPMode(), nmPGState(), nm_sig, has_arg ? "arg" : "0", aux_msg);
     }
-    //-- --------------------------------- --//
-    //-- ScheduledTaskAC interface methods
-    //-- --------------------------------- --//
-    inline const char * TaskName(void) const { return _logId; }
-    void Init(TaskId use_id, TaskSchedulerITF * owner)
+    void log_warn(const char * nm_sig, bool has_arg = false, const char * aux_msg = "")
     {
-        ScheduledTaskAC::Init(use_id, owner);
-        snprintf(_logId, sizeof(_logId)-1, "%s[0x%lX]", logPfx, _Id);
+        smsc_log_warn(logger, "%s: {%s, %s} signal %s(%s)%s",
+                       _logId, nmPMode(), nmPGState(), nm_sig, has_arg ? "arg" : "0", aux_msg);
     }
-    PGState Process(bool do_abort = false)
+    void log_debug(const char * nm_sig, bool has_arg = false, const char * aux_msg = "")
     {
-        return do_abort ? abortTask() : processTask();
+        smsc_log_debug(logger, "%s: {%s, %s} signal %s(%s)%s",
+                       _logId, nmPMode(), nmPGState(), nm_sig, has_arg ? "arg" : "0", aux_msg);
     }
 
-protected:
     //requires the _CAPSmsArg to be inited
     RCHash startDialog(CAPSmDPList::iterator & use_da);
 
@@ -272,16 +231,6 @@ protected:
             }
         }
     }
-
-    PGState abortTask(void)
-    {
-        MutexGuard tmp(_sync);
-        smsc_log_warn(logger, "%s: aborting at state %s", _logId,
-                        ScheduledTaskAC::nmPGState(_fsmState));
-        abortDialogs();
-        return (_fsmState = ScheduledTaskAC::pgDone);
-    }
-
     CAPSmDPList::iterator lookUp(unsigned dlg_id)
     {
         CAPSmDPList::iterator it = dpRes.begin();
@@ -292,6 +241,24 @@ protected:
         }
         return it;
     }
+
+    RCHash reportSMSubmission(bool submitted)
+    {
+        RCHash repErr = 0;
+        for (CAPSmDPList::iterator it = dpRes.begin();
+              (it != dpRes.end()) && it->dlgRes && it->dlgRes->pDlg; ++it) {
+            RCHash err = it->dlgRes->pDlg->reportSubmission(submitted);
+            if (err) {
+                if (!it->scfErr)
+                    it->scfErr = err;
+                if (!repErr)
+                    repErr = err;
+            }
+        }
+        return repErr;
+    }
+
+
     // -- --------------------------------------
     // -- CapSMS_SSFhandlerITF interface methods
     // -- --------------------------------------
@@ -299,6 +266,87 @@ protected:
     void onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
                         std::auto_ptr<ConnectSMSArg> & sms_params);
     void onEndCapDlg(unsigned dlg_id, RCHash errcode);
+
+    // ----------------------------------
+    // -- CAPSmTaskAC interface methods
+    // ----------------------------------
+    //Returns ScheduledTaskAC::PGState for pmMonitoring mode
+//    virtual ProcMode monitoringFSM(void) const = 0;
+    //Checks if task should be rescheduled in order to start next enqueued
+    //dialog on receiving response from SCF
+    virtual bool    scheduleNextRequired(void) const = 0;
+    //Perfoms next step of task initialization.
+    //Returns true on success, false otherwise.
+    virtual bool    doNextInit(void) = 0;
+
+public:
+    CAPSmTaskAC(const TonNpiAddress & use_abn, const CAPSmTaskCFG & cfg_ss7,
+                uint32_t serv_key, CAPSmMode idp_mode = idpMO,
+                const char * log_pfx = "CAPSm", Logger * use_log = NULL)
+        : CAPSmResult(cfg_ss7.abScf), cfgSS7(cfg_ss7)
+        , abNumber(use_abn), capSess(0), _pMode(pmIdle)
+        , logPfx(log_pfx), logger(use_log)
+    {
+        _arg.reset(new InitialDPSMSArg(logger));
+        _arg->setIDPParms(!idp_mode ? smsc::inman::comp::DeliveryMode_Originating :
+                        smsc::inman::comp::DeliveryMode_Terminating , serv_key);
+        _arg->setCallingPartyNumber(use_abn);
+        snprintf(_logId, sizeof(_logId)-1, "%s[0x%lX]", logPfx, _Id);
+        if (!logger)
+            logger = Logger::getInstance("smsc.inman.CAPSm");
+    }
+    virtual ~CAPSmTaskAC()
+    {
+        MutexGuard tmp(_sync);
+        corpses.cleanUp();
+    }
+
+    static const char * nmPMode(ProcMode p_mode)
+    {
+        switch (p_mode) {
+        case pmInit:            return "pmInit";
+        case pmWaitingInstr:    return "pmWaitingInstr";
+        case pmInstructing:     return "pmInstructing";
+        case pmMonitoring:      return "pmMonitoring";
+        case pmReportingEvent:  return "pmReportingEvent";
+        case pmAcknowledging:   return "pmAcknowledging";
+        }
+        return "pmIdle";
+    }
+    //
+    const char * nmPMode(void) const { return nmPMode(_pMode); }
+    //
+    ProcMode curPMode(void) const { return _pMode; }
+    //
+    InitialDPSMSArg & Arg(void) const { return *(_arg.get()); }
+    //
+    void enqueueDA(const TonNpiAddress & use_da)
+    { 
+        daList.push_back(dpRes.insert(dpRes.end(), CAPSmDPResult(use_da)));
+    }
+
+    //-- --------------------------------- --//
+    //-- ScheduledTaskAC interface methods
+    //-- --------------------------------- --//
+    void Init(TaskId use_id, TaskSchedulerITF * owner)
+    {
+        ScheduledTaskAC::Init(use_id, owner);
+        snprintf(_logId, sizeof(_logId)-1, "%s[0x%lX]", logPfx, _Id);
+        _pMode = pmInit;
+    }
+    const char * TaskName(void) const { return _logId; }
+    //Called on sigProc, switches task to next state.
+    PGState Process(auto_ptr_utl<UtilizableObjITF> & use_dat);
+    //Called on sigAbort, aborts task, switches task to pgDone state.
+    PGState Abort(auto_ptr_utl<UtilizableObjITF> & use_dat);
+    //Called on sigReport, requests task to report to the referee (use_ref != 0)
+    //or perform some other reporting actions.
+    PGState Report(auto_ptr_utl<UtilizableObjITF> & use_dat, TaskRefereeITF * use_ref = 0);
+
+    //-- ----------------------------------- --//
+    // -- UtilizableObjITF interface methods
+    //-- ----------------------------------- --//
+    void    Utilize(void) { delete this; }
 };
 
 //MT (parallel mode) implementation of CAPSmTaskAC:
@@ -314,12 +362,31 @@ public:
     { /* doesn't care about _Criterion */ }
     ~CAPSmTaskMT()
     { }
-    
+
 protected:
-    //-- ScheduledTaskAC interface methods
-    PGState processTask(void);
-    //returns true if rescheduling was requested
-    inline bool onContinueRes(void) { return false; }
+    //Returns ScheduledTaskAC::PGState for pmMonitoring mode
+//     ProcMode monitoringFSM(void) const { return ScheduledTaskAC::pgSuspend; }
+    //Checks if task should be rescheduled in order to start next enqueued
+    //dialog on receiving response from SCF
+    bool scheduleNextRequired(void) const { return false; }
+    //Perfoms next step of task initialization.
+    //Returns true on success, false otherwise.
+    bool    doNextInit(void)
+    { //Start all required CapSMS dialogs at once
+        do {
+            if (startDialog(daList.front()))
+                break;
+            daList.pop_front();
+        } while (!daList.empty());
+
+        if (daList.empty()) {
+            //all dialogs are succesfully started, waiting for SCF response
+            _pMode = pmWaitingInstr;
+            _fsmState = ScheduledTaskAC::pgCont;
+            return true;
+        }
+        return false;
+    }
 };
 
 //SQ (sequential mode) implementation of CAPSmTaskAC:
@@ -339,23 +406,55 @@ public:
     }
     ~CAPSmTaskSQ()
     { }
-    
+
 protected:
-    //-- ScheduledTaskAC interface methods
-    PGState processTask(void);
-    //returns true if rescheduling was requested
-    bool onContinueRes(void)
-    {
-        if (!daList.empty()) { //reschedule task: start next dialog
+    //Returns ScheduledTaskAC::PGState for pmMonitoring mode
+//    ProcMode monitoringFSM(void) const { return ScheduledTaskAC::pgCont; }
+    //Checks if task should be rescheduled in order to start next enqueued
+    //dialog on receiving response from SCF
+    bool scheduleNextRequired(void) const { return !daList.empty(); }
+    //Perfoms next step of task initialization.
+    //Returns true on success, false otherwise.
+    bool    doNextInit(void)
+    { //Starts first one of enqueued dialog(s)
+        if (!startDialog(daList.front())) {
+            //dialog succesfully started, wait for SCF response
+            //before starting next one.
+            daList.pop_front();
+            _pMode = pmWaitingInstr;
+             //preserve task at top of scheduling queue
             _fsmState = ScheduledTaskAC::pgCont;
-            smsc_log_debug(logger, "%s: signalling %s", _logId,
-                            TaskSchedulerITF::nmPGSignal(TaskSchedulerITF::sigProc));
-            Signal(TaskSchedulerITF::sigProc);
             return true;
         }
-        return false; 
+        return false;
     }
 };
+
+
+class CAPSmSubmit : public UtilizableObjITF {
+private:
+    bool doDel;
+
+protected:
+    bool smSubmit;
+
+public:
+    CAPSmSubmit(bool sm_submmit = false, bool do_del = false)
+        : smSubmit(sm_submmit), doDel(do_del)
+    { }
+    ~CAPSmSubmit()
+    { }
+
+    bool isSubmitted(void) const { return smSubmit; }
+
+    //-- ----------------------------------- --//
+    // -- UtilizableObjITF interface methods
+    //-- ----------------------------------- --//
+    void    Utilize(void) { if (doDel) delete this; }
+};
+
+extern CAPSmSubmit  _SMSubmitOK;
+extern CAPSmSubmit  _SMSubmitNO;
 
 } //smbill
 } //inman

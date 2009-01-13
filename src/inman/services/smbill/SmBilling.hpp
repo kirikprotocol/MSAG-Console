@@ -1,4 +1,3 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Billing: implements SM/USSD billing process logic:
  * 1) determination of abonent contract type by quering abonent provider
@@ -7,6 +6,7 @@
  * 4) writing CDRs
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_INAP_BILLING__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_BILLING__
 
 /* SMBilling interoperation scheme:
@@ -25,9 +25,15 @@ ChargeSmsResult     <-   | bilProcessed ]
 */
 
 #include "inman/interaction/msgbill/MsgBilling.hpp"
-using smsc::inman::interaction::SMCAPSpecificInfo;
-
 #include "inman/services/smbill/SmBillManager.hpp"
+#include "inman/services/smbill/CAPSmTask.hpp"
+
+
+namespace smsc {
+namespace inman {
+namespace smbill {
+
+using smsc::core::synchronization::Condition;
 using smsc::core::timers::TimeWatcherITF;
 using smsc::core::timers::TimerListenerITF;
 using smsc::core::timers::TimerHdl;
@@ -37,12 +43,8 @@ using smsc::util::ScheduledTaskAC;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
 using smsc::inman::iaprvd::AbonentSubscription;
 using smsc::inman::tcpsrv::WorkerAC;
+using smsc::inman::interaction::SMCAPSpecificInfo;
 
-#include "inman/services/smbill/CAPSmTask.hpp"
-
-namespace smsc {
-namespace inman {
-namespace smbill {
 
 class Billing : public WorkerAC, TaskRefereeITF,
                 IAPQueryListenerITF, TimerListenerITF {
@@ -50,15 +52,17 @@ public:
     typedef enum {
         bilIdle,
         bilStarted,     // SSF <- SMSC : CHARGE_SMS_TAG
+                        //   [Timer] SSF -> IAProvider
         bilQueried,     // SSF <- IAProvider: query result
-        bilInited,      // SSF -> SCF : InitialDPSMS
+        bilInited,      // [Timer] SSF -> SCF : InitialDPSMS
         bilReleased,    // SSF <- SCF : ReleaseSMS
-                        // SSF -> SMSC : CHARGE_SMS_RESULT_TAG(No)
+                        //   SSF -> SMSC : CHARGE_SMS_RESULT_TAG(No)
         bilContinued,   // SSF <- SCF : ContinueSMS
-                        // SSF -> SMSC : CHARGE_SMS_RESULT_TAG(Ok)
-        bilAborted,     // SSF <- SMSC : Abort
-        bilReported,    // SSF <- SMSC : DELIVERY_SMS_RESULT_TAG
-                        // SSF -> SCF : EventReportSMS
+                        //   [Timer] SSF -> SMSC : CHARGE_SMS_RESULT_TAG(Ok)
+        bilAborted,     // SSF <- SMSC/Billing : Abort
+        bilSubmitted,   // SSF <- SMSC : DELIVERY_SMS_RESULT_TAG
+                        //   [Timer] SSF -> SCF : EventReportSMS
+        bilReported,    // SSF <- SCF: T_END{OK|NO}
         bilComplete     // 
     } BillingState;
 
@@ -68,6 +72,22 @@ public:
                         //client or external module is expected)
         pgEnd = 1       //processing has been finished (worker may be released)
     };
+
+    static const char * nmBState(BillingState bil_state)
+    {
+        switch (bil_state) {
+        case bilStarted:        return "bilStarted";
+        case bilQueried:        return "bilQueried";
+        case bilInited:         return "bilInited";
+        case bilReleased:       return "bilReleased";
+        case bilContinued:      return "bilContinued";
+        case bilAborted:        return "bilAborted";
+        case bilSubmitted:      return "bilSubmitted";
+        case bilReported:       return "bilReported";
+        case bilComplete:       return "bilComplete";
+        }
+        return "bilIdle";
+    }
 
 private:
     typedef std::map<unsigned, TimerHdl> TimersMAP;
@@ -85,31 +105,37 @@ private:
     ChargeParm::BILL_MODE billMode; //current billing mode
 
     TimersMAP           timers;     //active timers
-    AbonentSubscription abCsi;  //CAMEL subscription info of abonent is to charge
+    AbonentSubscription abCsi;      //CAMEL subscription info of abonent is to charge
     TonNpiAddress       abNumber;   //ISDN number of abonent is to charge
     volatile bool       providerQueried;
     // ...
     const INScfCFG *    abScf;      //corresponding IN-point configuration
-    CAPSmTaskAC *       capTask;
     XSmsService *       xsmsSrv;    //optional SMS Extra service config.
     RCHash              billErr;    //global error code made by URCRegistry
+    // ...
+    TaskId              capTask;    //id of started CapSMS task
+    TaskSchedulerITF *  capSched;   //CapSMS task scheduler
+    std::string         capName;    //CapSMS task name for logging
+    Condition           capEvent;
 
     //Returns false if PDU contains invalid data preventing request processing
     bool verifyChargeSms(void);
-
     void doCleanUp(void);
     unsigned writeCDR(void);
     void doFinalize(bool doReport = true);
     void abortThis(const char * reason = NULL, bool doReport = true);
     RCHash startCAPSmTask(void);
+    bool unrefCAPSmTask(bool wait_report = true);
+    void abortCAPSmTask(void);
     bool StartTimer(const TimeoutHDL & tmo_hdl);
     void StopTimer(BillingState bilState);
     PGraphState chargeResult(bool do_charge, RCHash last_err = 0);
     PGraphState ConfigureSCFandCharge(void);
+    PGraphState onSubmitReport(RCHash scf_err, bool in_billed = false);
 
 protected:
     //-- TaskRefereeITF interface methods: --//
-    void onTaskReport(TaskSchedulerITF * sched, ScheduledTaskAC * task);
+    void onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * task);
 
     //-- IAPQueryListenerITF interface methods: --//
     void onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
@@ -125,7 +151,7 @@ protected:
 public:
     Billing(unsigned b_id, SmBillManager * owner, Logger * uselog = NULL)
         : WorkerAC(b_id, owner, uselog), state(bilIdle), abScf(0)
-        , providerQueried(false), billErr(0), capTask(0), xsmsSrv(0)
+        , providerQueried(false), billErr(0), capTask(0), capSched(0), xsmsSrv(0)
         , msgType(ChargeParm::msgUnknown), billMode(ChargeParm::billOFF)
         , _cfg(owner->getConfig())
     {
@@ -135,22 +161,23 @@ public:
 
     virtual ~Billing();
 
+    const char * nmBState(void) const
+    {
+        return nmBState(state);
+    }
     BillingState getState(void) const
     {
         MutexGuard grd(_sync);
         return state;
     }
-
-    //-- WorkerAC interface methods
-    void     handleCommand(INPPacketAC* cmd);
-    void     Abort(const char * reason = NULL); //aborts billing due to fatal error
-
-//    BillingState getState(void) const { return state; }
-
     //returns true if required CDR data fullfilled
     bool     CDRComplete(void) const;
     //returns true if all billing stages are completed
     bool     BillComplete(void) const;
+
+    //-- WorkerAC interface methods
+    void     handleCommand(INPPacketAC* cmd);
+    void     Abort(const char * reason = NULL); //aborts billing due to fatal error
 };
 
 } //smbill
