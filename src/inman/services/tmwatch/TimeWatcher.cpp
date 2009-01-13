@@ -264,7 +264,7 @@ int TimeWatcherAC::Execute(void)
 // -- -------------------------------- --
 // -- TimeWatcherITF interface methods
 // -- -------------------------------- --
-const char * TimeWatcherAC::IdStr(uint32_t tmr_id)
+const char * TimeWatcherAC::IdStr(uint32_t tmr_id) const
 {
     TimeWatcherAC::StopWatch * pSw = getTimer(tmr_id);
     return pSw ? pSw->IdStr() : "unknown";

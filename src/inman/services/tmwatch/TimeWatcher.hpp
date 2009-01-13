@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Signalling Timers Watcher implementation.
  * ************************************************************************** */
 #ifndef _CORE_SYNC_TIMEWATCHER_HPP
+#ident "@(#)$Id$"
 #define _CORE_SYNC_TIMEWATCHER_HPP
 
 #include <list>
@@ -482,7 +482,7 @@ private:
         return TimeWatcherITF::errTimerState;
     }
 
-    StopWatch * getTimer(uint32_t tm_id)
+    StopWatch * getTimer(uint32_t tm_id) const
     {
         MutexGuard tmp(_sync);
         return (tm_id && (tm_id <= swReg.size())) ? swReg[tm_id-1] : NULL;
@@ -500,7 +500,7 @@ protected:
     // -- -------------------------
     // -- TimeWatcherITF methods
     // -- -------------------------
-    const char * IdStr(uint32_t tmr_id);
+    const char * IdStr(uint32_t tmr_id) const;
     //
     TMError StartTimer(uint32_t tmr_id);
     //

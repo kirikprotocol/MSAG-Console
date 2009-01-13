@@ -721,7 +721,7 @@ Billing::PGraphState Billing::chargeResult(bool do_charge, RCHash last_err /* = 
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks _sync !!!
 TimeWatcherITF::SignalResult
-    Billing::onTimerEvent(TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj)
+    Billing::onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj)
 {
     MutexTryGuard grd(_sync);
     if (!grd.tgtLocked()) //billing is busy, request resignalling
