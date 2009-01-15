@@ -142,6 +142,7 @@ void ConnectionContext::sendResponse(const char* data, uint32_t dataSize, const 
     //TODO: error, response must be processed
     MutexGuard mg(mutex_);
     --tasksCount_;
+    flushLogs();
   }
 }
 
@@ -239,7 +240,7 @@ void ConnectionContext::flushLogs() {
   dbLogs_.clear();
 }
 
-bool ConnectionContext::processWriteSocket() {
+bool ConnectionContext::processWriteSocket(const time_t& now) {
   RelockMutexGuard mg(mutex_);
   if (!async_ && action_ != SEND_RESPONSE) {
     return true;
@@ -253,6 +254,7 @@ bool ConnectionContext::processWriteSocket() {
                   len, socket_, sb.GetCurPtr(), sb.GetPos(), sb.toString().c_str());
 
   int n = socket_->Write(sb.GetCurPtr(), len - sb.getPos());
+  SocketData::updateTimestamp(socket_, now);
   flushLogs();
   if (n > 0) {
     sb.SetPos(sb.GetPos() + n);

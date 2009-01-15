@@ -115,6 +115,7 @@ time_t IOTask::checkConnectionTimeout(Multiplexer::SockArray& error) {
       error.Push(s);
     }
   }
+  lastCheckTime_ = now;
   return now;
 }
 
@@ -137,16 +138,6 @@ void IOTask::removeSocket(Multiplexer::SockArray &error) {
     }
   }
   iomanager_.removeContext(this, contextsCount);
-}
-
-void IOTask::disconnectSocket(Socket *s) {
-  ConnectionContext* cx = SocketData::getContext(s);
-  multiplexer_.remove(s);
-  smsc_log_debug(logger, "%p: context %p socket %p removed  from multiplexer", this, cx, s);
-  if (cx->canFinalize()) {
-    smsc_log_debug(logger, "%p: context %p socket %p deleted", this, cx, s);
-    delete cx;
-  }
 }
 
 void IOTask::removeSocket(Socket *s) {
@@ -239,7 +230,7 @@ void MTPersWriter::processSockets(Multiplexer::SockArray &ready, Multiplexer::So
   for (int i = 0; i < ready.Count(); ++i) {
     Socket* s = ready[i];
     ConnectionContext* cx = SocketData::getContext(s);
-    if (!cx->processWriteSocket()) {
+    if (!cx->processWriteSocket(now)) {
       error.Push(s);
     }
   }
@@ -251,9 +242,17 @@ void MTPersWriter::addSocket(Socket* s) {
   socketMonitor_.notify();
 }
 
-time_t MTPersWriter::checkConnectionTimeout(Multiplexer::SockArray& error) {
-  return 0;
+void MTPersWriter::disconnectSocket(Socket *s) {
+  ConnectionContext* cx = SocketData::getContext(s);
+  multiplexer_.remove(s);
+  cx->flushLogs();
+  smsc_log_debug(logger, "%p: context %p socket %p removed  from multiplexer", this, cx, s);
+  if (cx->canFinalize()) {
+    smsc_log_debug(logger, "%p: context %p socket %p deleted", this, cx, s);
+    delete cx;
+  }
 }
+
 
 }//pvss
 }//scag2

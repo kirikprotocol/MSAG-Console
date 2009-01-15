@@ -77,11 +77,12 @@ public:
   ~ConnectionContext();
   void sendResponse(const char* data, uint32_t dataSize, const std::vector<DbLog>* dbLogs);
   bool processReadSocket(const time_t& now);
-  bool processWriteSocket();
+  bool processWriteSocket(const time_t& now);
   bool canFinalize();
   bool canDelete();
   Socket* getSocket();
   PerfCounter& getPerfCounter() { return perfCounter_; }
+  void flushLogs();
 
 private:
   bool notSupport(PersCmd cmd);
@@ -89,7 +90,6 @@ private:
   void createFakeResponse(PersServerResponseType response);
   PersPacket* parsePacket(const time_t& now);
   void sendFakeResponse();
-  void flushLogs();
   void getPeerIp();
 
 private:

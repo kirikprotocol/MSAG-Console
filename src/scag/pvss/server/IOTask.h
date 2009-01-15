@@ -52,13 +52,13 @@ public:
 protected:
   virtual void processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now) = 0;
   virtual void addSocketToMultiplexer(Socket* s) = 0;
-  virtual time_t checkConnectionTimeout(Multiplexer::SockArray& error);
+  virtual void disconnectSocket(Socket *s) = 0;
   virtual void addSocket(Socket* s);
   inline bool isTimedOut(Socket* s, time_t now);
+  time_t checkConnectionTimeout(Multiplexer::SockArray& error);
   void removeSocket(Multiplexer::SockArray &error);
   void removeSocket(Socket *s);
   void removeSocketFromMultiplexer(Socket* s);
-  virtual void disconnectSocket(Socket *s);
   bool idle() const;
 
 protected:
@@ -92,7 +92,7 @@ public:
 protected:
   void addSocketToMultiplexer(Socket* s);
   void processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now);
-  time_t checkConnectionTimeout(Multiplexer::SockArray& error); 
+  void disconnectSocket(Socket *s);
   void addSocket(Socket* s);
 };
 
