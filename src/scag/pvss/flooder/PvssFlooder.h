@@ -18,13 +18,20 @@ namespace flooder {
 
 using smsc::logger::Logger;
 using std::string;
+/*
+struct FlooderContext {
+};
+*/
+
+static const uint32_t MAX_PROC_TIME = 10000;
 
 class PvssFlooder : public pvss::PersCallInitiator
 {
 public:
     PvssFlooder(pvss::PersClient& pc, int speed):persClient_(pc), isStopped_(false), callsCount_(0), logger_(Logger::getInstance("flooder")),
                                           speed_(speed > 0 ? speed : 1), delay_(1000000/speed_), overdelay_(0), startTime_(0),
-                                          busyRejects_(0), maxRejects_(1000), sentCalls_(0), successCalls_(0), errorCalls_(0) {};
+                                          busyRejects_(0), maxRejects_(1000), sentCalls_(0), successCalls_(0), errorCalls_(0), procTime_(0),
+                                          maxprocTime_(0), minprocTime_(MAX_PROC_TIME)  {};
   void execute(int addrsCount, int getsetCount);
     virtual void continuePersCall( pvss::PersCall* context, bool dropped );
   void shutdown();
@@ -34,6 +41,7 @@ public:
   int getError();
   int getSent();
   int getBusy();
+  uint32_t getProcTime();
 
 private:
     void doCall( pvss::PersCall* context );
@@ -63,11 +71,14 @@ private:
   int successCalls_;
   int errorCalls_;
   int sentCalls_;
+  uint64_t procTime_;
+  uint32_t maxprocTime_;
+  uint32_t minprocTime_;
 };
 
 class CallsCounter : public smsc::core::threads::Thread {
 public:
-  CallsCounter(PvssFlooder* client, int period):client_(client), period_(period), stopped_(false), success_(0), error_(0),
+  CallsCounter(PvssFlooder* client, int period):client_(client), period_(period), stopped_(false), success_(0), error_(0), procTime_(0),
                                                  sent_(0), logger_(Logger::getInstance("counter")) {
     Start();
   };
@@ -93,6 +104,7 @@ public:
   }
 private:
   void perfCount() {
+    int procTime = client_->getProcTime();
     int sent = client_->getSent() / period_;
     int ok = client_->getSuccess() / period_;
     int errtotal = client_->getError();
@@ -101,6 +113,7 @@ private:
       success_ += ok;
       sent_ += sent;
       error_ += err;
+      procTime_ += procTime;
       ++count_;
       smsc_log_info(logger_, "%d/%d/%d sent/ok/error per second", sent, ok, err);
     }
@@ -114,7 +127,8 @@ private:
   }
 
   void averageCount() {
-    smsc_log_info(logger_, "average %d/%d/%d sent/ok/error per second", sent_/count_, success_/count_, error_/count_);
+    smsc_log_info(logger_, "average %d/%d/%d sent/ok/error per second, process time %d ms",
+                   sent_/count_, success_/count_, error_/count_, procTime_/count_);
   }
 
 private:
@@ -126,6 +140,7 @@ private:
   int error_;
   int sent_;
   int count_;
+  int procTime_;
 };
 
 

@@ -30,6 +30,8 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
     smsc_log_warn(logger_, "waiting while pers client connecting to server...");
     sleep(1);
   }
+  
+  smsc_log_info(logger_, "pers client connected to server");
   //int addrsCount = 1000000;
   char addr[20];
 
@@ -71,19 +73,30 @@ void PvssFlooder::doCall( PersCall* context ) {
   delay();
 }
 
-void PvssFlooder::continuePersCall( PersCall* context, bool dropped ) {
+void PvssFlooder::continuePersCall( PersCall* call, bool dropped ) {
   --callsCount_;
-  smsc_log_debug(logger_, "continue execution cx:%p, calls count %d", context, callsCount_);
+  smsc_log_debug(logger_, "continue execution cx:%p, calls count %d", call, callsCount_);
   //if (callParams->status() != 0 ) {
     //smsc_log_debug(logger_, "error long call result: %s", strs[callParams->status()]);
   //}
-  if (context->status() == PERSCLIENTOK || context->status() == PROPERTY_NOT_FOUND) {
+  hrtime_t* startTime = (hrtime_t *)call->context();
+  uint64_t procTime = 0;
+  if (startTime) {
+    procTime = gethrtime() - *startTime;
+    uint32_t msprocTime = static_cast<uint32_t>(procTime / 1000000);
+    minprocTime_ = msprocTime < minprocTime_ ? msprocTime : minprocTime_; 
+    maxprocTime_ = msprocTime > maxprocTime_ ? msprocTime : maxprocTime_; 
+    smsc_log_debug(logger_, "continue execution cx:%p, process time: %d ms", call, msprocTime);
+    delete startTime;
+  }
+  if (call->status() == PERSCLIENTOK || call->status() == PROPERTY_NOT_FOUND) {
     ++successCalls_;
+    procTime_ += procTime;
   } else {
-    smsc_log_warn(logger_, "request result: %s", exceptionReasons[context->status()]);
+    smsc_log_warn(logger_, "request result: %s", exceptionReasons[call->status()]);
     ++errorCalls_;
   }
-  delete context;
+  delete call;
 }
 
 /*
@@ -101,7 +114,10 @@ PersCall* PvssFlooder::createPersCall( ProfileType pfType,
                                         std::auto_ptr<PersCommand> cmd )
 {
     startTime_ = gethrtime();
-    PersCall* call = new PersCall( pfType, cmd.release(), 0 );
+    hrtime_t* st = new hrtime_t;
+    *st = startTime_;
+    PersCall* call = new PersCall( pfType, cmd.release(), st );
+    //PersCall* call = new PersCall( pfType, cmd.release(), 0 );
     if (pfType == PT_ABONENT) {
         call->setKey(addr);
     } else {
@@ -128,8 +144,8 @@ void PvssFlooder::delay() {
 }
 
 void PvssFlooder::commandsSetConfigured(const string& addr, int intKey, const string& propName, ProfileType pfType, int cmdsCount) {
-  string setStrName = propName + "_set_str_";
-  string setVal("test_string_value_");
+  //string setStrName = propName + "_set_str_";
+  //string setVal("test_string_value_");
   char suffix[5];
   for (int i = 0; i < cmdsCount; ++i) {
     sprintf(suffix,"%04d", i + 1);
@@ -178,10 +194,10 @@ void PvssFlooder::commandsSet(const string& addr, int intKey, const string& prop
 
   std::auto_ptr<PersCommand> cmd9( getCmd(incModName) );
   doCall( createPersCall(pfType,addr,intKey,cmd9) );  
-
+/*
   std::auto_ptr<PersCommand> cmd10( batchCmd(propName, true) );
   doCall( createPersCall(pfType,addr,intKey,cmd10) );  
-
+*/
 }
 
 PersCommandSingle* PvssFlooder::getCmd(const string& propName, PersCommandSingle* cmd ) {
@@ -267,6 +283,15 @@ int PvssFlooder::getSent() {
 int PvssFlooder::getBusy() {
     int ret = busyRejects_;
     busyRejects_ = 0;
+    return ret;
+}
+uint32_t PvssFlooder::getProcTime() {
+    smsc_log_info(logger_, "%d/%d ms min/max process time", minprocTime_, maxprocTime_);
+    minprocTime_ = MAX_PROC_TIME;
+    maxprocTime_ = 0;
+    uint32_t ret = successCalls_ > 0 ? (procTime_ / successCalls_) / 1000000 : 0;
+    smsc_log_info(logger_, "%d ms average process time", ret);
+    procTime_ = 0;
     return ret;
 }
 
