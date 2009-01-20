@@ -80,7 +80,7 @@ public class QuizesList extends SmsQuizBean {
         filter.setState(state);
       }
     } catch (Exception e) {
-      logger.error(e);
+      logger.error(e,e);
       e.printStackTrace();
       return RESULT_ERROR;
     }
@@ -134,7 +134,7 @@ public class QuizesList extends SmsQuizBean {
       }
     }
     catch (Exception e) {
-      logger.error(e);
+      logger.error(e,e);
       e.printStackTrace();
     }
 
@@ -235,7 +235,7 @@ public class QuizesList extends SmsQuizBean {
       converted = formatter.parse(date);
     } catch (ParseException e) {
       e.printStackTrace();
-      logger.error(e);
+      logger.error(e,e);
     }
     return converted;
   }

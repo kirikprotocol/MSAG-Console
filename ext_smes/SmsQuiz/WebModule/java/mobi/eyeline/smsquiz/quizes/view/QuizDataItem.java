@@ -23,6 +23,7 @@ public class QuizDataItem extends AbstractDataItem {
       setMaxRepeat(d.getMaxRepeat());
       setName(d.getName());
       setQuestion(d.getQuestion());
+      setRepeatQuestion(d.getRepeatQuestion());
       setQuizId(quizId);
       setSourceAddress(d.getSourceAddress());
       setState(state);
@@ -57,6 +58,10 @@ public class QuizDataItem extends AbstractDataItem {
 
   public void setQuestion(String question) {
     values.put(QuizesDataSource.QUESTION, question);
+  }
+
+  public void setRepeatQuestion(String repeatQuestion) {
+    values.put(QuizesDataSource.REPEAT_QUESTION, repeatQuestion);
   }
 
   public void setActiveDays(List activeDays) {

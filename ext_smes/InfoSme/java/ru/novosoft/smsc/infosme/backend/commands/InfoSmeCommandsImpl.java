@@ -15,6 +15,8 @@ import ru.novosoft.smsc.util.config.Config;
 
 import java.io.File;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.Collection;
 
 /**
  * User: artem
@@ -45,8 +47,6 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
         return;
       }
 
-
-
       new TaskBuilder(file, context).start();
       ctx.setMessage("File " + file + " was added to process queue");
       ctx.setStatus(CommandContext.CMD_OK);
@@ -57,7 +57,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
     }
   }
 
-  public void resendMessage(CommandContext ctx, String msisdn, String taskId) {
+  public void resendMessage(CommandContext ctx, String msisdn, String taskId, String text) {
     try {
       final SMSCAppContext appContext = ctx.getOwner().getContext();
       final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
@@ -75,9 +75,18 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       if(id == -1) {
         throw new Exception("Message not found for taskId="+taskId+" msisdn="+msisdn);
       }
+      final Message message = new Message();
+      message.setAbonent(msisdn);
+      message.setMessage(text);
+      message.setSendDate(new Date());
+      message.setState(Message.State.NEW);
+      message.setTaskId(taskId);
 
-      context.getInfoSme().resendMessages(taskId, Long.toString(id), Message.State.NEW, new Date());
-      System.out.println("Line "+id+" found in Store for msisdn="+msisdn);
+      Collection mesList = new LinkedList();
+      mesList.add(message);
+
+      context.getInfoSme().addDeliveryMessages(taskId, mesList);
+//      context.getInfoSme().changeDeliveryTextMessage(taskId, Long.toString(id), Message.State.NEW, new Date(), null, text); //resendMessages(taskId, Long.toString(id), Message.State.NEW, new Date());
 
       ctx.setMessage("OK");
       ctx.setStatus(CommandContext.CMD_OK);
@@ -113,7 +122,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
     }
   }
 
-  public void createDistribution(CommandContext ctx, Distribution d) {
+  public void createTask(CommandContext ctx, Distribution d) {
     try {
       try{
         validateDistribution(d);
@@ -153,7 +162,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
     }
   }
 
-  public void alterDistribution(CommandContext ctx, Distribution d, String taskId) {
+  public void alterTask(CommandContext ctx, Distribution d, String taskId) {
     try{
       validateDistribution(d);
       validateNull(taskId, "TaskId");
@@ -168,26 +177,26 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       if (!context.getInfoSme().getInfo().isOnline()) {
         ctx.setMessage("InfoSme is not started");
         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-        return;
+      } else{
+        final Config config = context.getConfig();
+        Task task = new Task(taskId);
+        if(!task.isContainsInConfig(config)) {
+          ctx.setMessage("Task doesn't exist in InfoSme with id: " + taskId);
+          ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+          return;
+        }
+        task.resetTask(false);
+        task.importFromDistribution(d);
+        task.removeFromConfig(config);
+        task.storeToConfig(config);
+        config.save();
+        context.getInfoSme().changeTask(taskId);
       }
-      final Config config = context.getConfig();
-      Task task = new Task(taskId);
-      if(!task.isContainsInConfig(config)) {
-        ctx.setMessage("Task doesn't exist in InfoSme with id: " + taskId);
-        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-        return;
-      }
-      TaskBuilder.resetTask(task, false);
-      TaskBuilder.copyDistrToTask(task, d);
-      task.removeFromConfig(config);
-      task.storeToConfig(config);
-      config.save();
     } catch (Exception e) {
       e.printStackTrace();
       log.error(e,e);
       ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
     }
-
   }
 
   public void getStatus(CommandContext ctx, String taskId) {

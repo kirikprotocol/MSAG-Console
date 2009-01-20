@@ -75,7 +75,7 @@ public class Options extends SmsQuizBean {
         initSmppProperties(smppFileName);
 
       } catch (Exception e) {
-        logger.error(e);
+        logger.error(e,e);
         e.printStackTrace();
         return error("smsquiz.error.config_param", e.getMessage());
       }
@@ -147,7 +147,7 @@ public class Options extends SmsQuizBean {
       config.save();
 
     } catch (Exception e) {
-      logger.error(e);
+      logger.error(e,e);
       e.printStackTrace();
       return error("smsquiz.error.config_param", e.getMessage());
     }
@@ -177,7 +177,7 @@ public class Options extends SmsQuizBean {
       outputStream = new FileOutputStream(fileName);
       prop.store(outputStream, "");
     } catch (Exception e) {
-      logger.error(e);
+      logger.error(e,e);
       e.printStackTrace();
       throw e;
     } finally {

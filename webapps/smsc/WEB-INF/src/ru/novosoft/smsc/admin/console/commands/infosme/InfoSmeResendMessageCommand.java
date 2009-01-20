@@ -13,10 +13,12 @@ public class InfoSmeResendMessageCommand extends CommandClass {
 
   private String taskId;
 
+  private String text;
+
   public void process(CommandContext ctx) {
     try{
       final InfoSmeCommands cmd = (InfoSmeCommands)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeCommandsImpl").newInstance();
-      cmd.resendMessage(ctx, msisdn, taskId);
+      cmd.resendMessage(ctx, msisdn, taskId, text);
     } catch (Throwable e) {
       e.printStackTrace();
       ctx.setMessage(e.getMessage());
@@ -28,19 +30,15 @@ public class InfoSmeResendMessageCommand extends CommandClass {
     return "INFOSME_RESEND_MESSAGE";
   }
 
-  public String getMsisdn() {
-    return msisdn;
-  }
-
   public void setMsisdn(String msisdn) {
     this.msisdn = msisdn;
   }
 
-  public String getTaskId() {
-    return taskId;
-  }
-
   public void setTaskId(String taskId) {
     this.taskId = taskId;
+  }
+
+  public void setText(String text) {
+    this.text = text;
   }
 }

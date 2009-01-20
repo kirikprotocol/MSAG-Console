@@ -187,6 +187,13 @@ public class QuizBuilder {
     }
     if ((elem = repliesElem.getChild("max-repeat")) != null) {
       data.setMaxRepeat(elem.getTextTrim());
+      if ((elem = repliesElem.getChild("repeatQuestion")) != null) {
+        data.setRepeatQuestion(elem.getTextTrim());
+      }
+      else {
+        errorNotFound("repeatQuestion");
+      }
+
     } else {
       data.setMaxRepeat("0");
     }
@@ -249,7 +256,7 @@ public class QuizBuilder {
       outputter.output(doc, outputStream);
 
     } catch (IOException e) {
-      logger.error(e);
+      logger.error(e,e);
       e.printStackTrace();
     } finally {
       if (outputStream != null) {
@@ -339,6 +346,9 @@ public class QuizBuilder {
       element = new Element("max-repeat");
       element.setText(maxRepeat);
       replies.addContent(element);
+      Element repeatQuestion = new Element("repeatQuestion");
+      repeatQuestion.setText(data.getRepeatQuestion());
+      replies.addContent(repeatQuestion);
     }
 
     String def = data.getDefaultCategory();

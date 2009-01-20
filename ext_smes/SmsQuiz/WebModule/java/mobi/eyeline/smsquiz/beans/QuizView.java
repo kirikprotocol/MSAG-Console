@@ -32,8 +32,6 @@ public class QuizView extends SmsQuizBean {
   private SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
   private SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
 
-  private static String datePattern = "dd.MM.yyyy HH:mm";
-
   private String quizId;
 
   private String quizDir;
@@ -46,9 +44,13 @@ public class QuizView extends SmsQuizBean {
 
   private String maxRepeat;
 
+  private String repeatQuestion;
+
+  private String dateEnd;
+
   private String defaultCategory;
 
-  private String status;
+  private QuizDataItem.State status;
 
   private String reasonId;
 
@@ -74,7 +76,7 @@ public class QuizView extends SmsQuizBean {
         return result;
       }
     } catch (Exception e) {
-      logger.error(e);
+      logger.error(e,e);
       e.printStackTrace();
       result = error(e.getMessage());
     }
@@ -86,14 +88,15 @@ public class QuizView extends SmsQuizBean {
     if(!initialized) {
       defaultCategory = quizData.getDefaultCategory();
       maxRepeat = quizData.getMaxRepeat();
+      repeatQuestion = quizData.getRepeatQuestion();
+      dateEnd = dateFormat.format(quizData.getDateEnd());
+      tableHelper.fillCategories(quizData.getCategories());
       if(!isActive()) {
         destAddress = quizData.getDestAddress();
-        tableHelper.fillCategories(quizData.getCategories());
       }
       String[] activeWeekDays = new String[quizData.getActiveDays().size()];
       for(int i=0;i<activeWeekDays.length;i++) {
         activeWeekDays[i] =((String)quizData.getActiveDays().get(i)).substring(0);
-        System.out.println("Write "+activeWeekDays[i]);
       }
       distributionHelper.setActiveWeekDays(activeWeekDays);
       distributionHelper.setTimeBegin(quizData.getTimeBegin());
@@ -112,6 +115,9 @@ public class QuizView extends SmsQuizBean {
     }
     if(initialized) {
       distributionHelper.processRequest(request);
+      if(isFinished()) {
+        distributionHelper.setReadOnly(true);
+      }
     }
     if(mbDone != null) {
       mbDone = null;
@@ -133,8 +139,7 @@ public class QuizView extends SmsQuizBean {
 
   public boolean isFinished() {
     if(status!=null) {
-      return status.equals(QuizDataItem.State.FINISHED.getName())||status.equals(QuizDataItem.State.FINISHED_ERROR.getName());
-
+      return status.equals(QuizDataItem.State.FINISHED)||status.equals(QuizDataItem.State.FINISHED_ERROR);
     }
     return false;
   }
@@ -150,10 +155,17 @@ public class QuizView extends SmsQuizBean {
     if(!isChanged()) {
       return RESULT_DONE;
     }
+    try{
+      quizData.setDateEnd(dateFormat.parse(dateEnd));
+    }catch(ParseException e) {
+      logger.error(e,e);
+      return error(e.toString());
+    }
     quizData.setMaxRepeat(maxRepeat);
+    quizData.setRepeatQuestion(repeatQuestion);
     quizData.setDefaultCategory(defaultCategory);
+    quizData.setCategory(tableHelper.getCategories());
     if(!isActive()) {
-      quizData.setCategory(tableHelper.getCategories());
       quizData.setDestAddress(destAddress);
     }
     try {
@@ -191,11 +203,15 @@ public class QuizView extends SmsQuizBean {
         ||((defaultCategory!=null)&&(quizData.getDefaultCategory()==null))
         ||((defaultCategory==null)&&(quizData.getDefaultCategory()!=null))
         ||((defaultCategory!=null)&&(quizData.getDefaultCategory()!=null)
-            &&(!defaultCategory.equals(quizData.getDefaultCategory())))
+            &&(defaultCategory!=null&&!defaultCategory.equals(quizData.getDefaultCategory())))
         ||(!distrDateEnd.equals(quizData.getDistrDateEndStr()))||(!sa.equals(quizData.getSourceAddress()))
         ||(!timeBegin.equals(quizData.getTimeBegin()))||(!timeEnd.equals(quizData.getTimeEnd()))
         ||(txmode != Boolean.valueOf(quizData.getTxmode()).booleanValue())
-        ||(activeWeekDays.length != quizData.getActiveDays().size())) {
+        ||(activeWeekDays.length != quizData.getActiveDays().size())
+        ||(repeatQuestion==null&&quizData.getRepeatQuestion()!=null)
+        ||(repeatQuestion!=null&&quizData.getRepeatQuestion()==null)
+        ||(repeatQuestion!=null&&!repeatQuestion.equals(quizData.getRepeatQuestion()))
+        ||(!quizData.getDateEndStr().equals(dateEnd))) {
       return true;
     }
     Iterator iter = quizData.getActiveDays().iterator();
@@ -248,17 +264,11 @@ public class QuizView extends SmsQuizBean {
 
 
   private int validation() {
-    if ((!isActive())&&((tableHelper.getCategories() == null) || (tableHelper.getCategories().size() == 0))) {
-      System.out.println("Please select one or more answer's categories");
+    if ((tableHelper.getCategories() == null) || (tableHelper.getCategories().size() == 0)) {
       return warning("Please select one or more answer's categories");
     }
     if((defaultCategory!=null)&&(!"".equals(defaultCategory))) {
-      Collection categories = null;
-      if(!isActive()) {
-        categories = tableHelper.getCategories();
-      } else {
-        categories = quizData.getCategories();
-      }
+      Collection categories = tableHelper.getCategories();
       Iterator iter = categories.iterator();
       int flag=0;
       while(iter.hasNext()) {
@@ -272,12 +282,15 @@ public class QuizView extends SmsQuizBean {
         return warning("Default category must be included in answer's categories");
       }
     }
-
     try {
+      Date endDate = dateFormat.parse(dateEnd);
+      if(quizData.getDateBegin().after(endDate)) {
+        return warning("Incorrect end date");
+      }
       String distrDateEnd = distributionHelper.getDistrDateEnd();
       if ((distrDateEnd != null) && (!distrDateEnd.trim().equals(""))) {
         Date distrDate =  dateFormat.parse(distrDateEnd);
-        if(distrDate.before(new Date())||distrDate.after(quizData.getDateEnd())||distrDate.before(quizData.getDateBegin())) {
+        if(distrDate.after(endDate)||distrDate.before(quizData.getDateBegin())) {
           return warning("Incorrect distribution end date");
         }
       }
@@ -290,6 +303,20 @@ public class QuizView extends SmsQuizBean {
     }
     if(distributionHelper.getActiveWeekDays().length == 0) {
       return warning("Select one or more active days");
+    }
+
+    if(maxRepeat!=null) {
+      try{
+        int mxrp = Integer.parseInt(maxRepeat);
+        if(mxrp!=0) {
+          if((repeatQuestion==null)||repeatQuestion.trim().equals("")) {
+            return warning("Select the repeat question");
+          }
+        }
+      }catch(NumberFormatException e) {
+        logger.error(e,e);
+        return warning("Unknown format for 'maxrepeat' field");
+      }
     }
 
     return RESULT_OK;
@@ -308,7 +335,7 @@ public class QuizView extends SmsQuizBean {
     try {
       quizData = QuizBuilder.parseAll(file.getAbsolutePath());
     } catch (Exception e) {
-      logger.error(e);
+      logger.error(e,e);
       e.printStackTrace();
       return false;
     }
@@ -320,13 +347,18 @@ public class QuizView extends SmsQuizBean {
       is = new FileInputStream(dirWork + File.separator + quizId + ".status");
       Properties prop = new Properties();
       prop.load(is);
-      status = prop.getProperty("quiz.status");
+      String status = prop.getProperty("quiz.status");
+      if(status != null) {
+        this.status = QuizDataItem.State.getStateByName(status);
+      } else {
+        this.status = QuizDataItem.State.NEW;
+      }
       reason = prop.getProperty("quiz.error.reason");
       reasonId = prop.getProperty("quiz.error.id");
       return RESULT_OK;
     } catch (FileNotFoundException e) {
       logger.warn(e,e);
-      status = "NEW";
+      status = QuizDataItem.State.getStateByName("NEW");
       return RESULT_OK;
     } catch (IOException e) {
       logger.error(e,e);
@@ -392,11 +424,7 @@ public class QuizView extends SmsQuizBean {
   }
 
   public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
+    return status==null ? QuizDataItem.State.NEW.getName() : status.getName();
   }
 
   public String getReasonId() {
@@ -429,5 +457,21 @@ public class QuizView extends SmsQuizBean {
 
   public DistributionHelper getDistributionHelper() {
     return distributionHelper;
+  }
+
+  public String getRepeatQuestion() {
+    return repeatQuestion;
+  }
+
+  public void setRepeatQuestion(String repeatQuestion) {
+    this.repeatQuestion = repeatQuestion;
+  }
+
+  public String getDateEnd() {
+    return (dateEnd == null) ? "" : dateEnd;
+  }
+
+  public void setDateEnd(String dateEnd) {
+    this.dateEnd = dateEnd;
   }
 }

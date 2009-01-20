@@ -89,7 +89,14 @@
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.maxrepeat")%></th>
   <td><input validation="nonEmpty" class=txt name=maxRepeat value="<%=StringEncoderDecoder.encode(bean.getMaxRepeat())%>"></td>
-</tr><tr class=row<%=rowN++&1%>>
+</tr>
+
+<tr class=row<%=rowN++&1%>>
+  <th><%=getLocString("smsquiz.label.repeat.question")%></th>
+  <td><textarea name=repeatQuestion><%=StringEncoderDecoder.encode(bean.getRepeatQuestion())%></textarea></td>
+</tr>
+
+<tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.defcat")%></th>
   <td><input class=txt name=defaultCategory value="<%=StringEncoderDecoder.encode(bean.getDefaultCategory())%>"></td>
 </tr>

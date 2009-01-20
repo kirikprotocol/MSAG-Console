@@ -51,6 +51,8 @@ public class QuizAdd extends SmsQuizBean {
 
   private String question;
 
+  private String repeatQuestion;
+
   private String destAddress;
 
   private String maxRepeat;
@@ -76,7 +78,7 @@ public class QuizAdd extends SmsQuizBean {
       workDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
     }
     catch (Exception e) {
-      logger.error(e);
+      logger.error(e,e);
       e.printStackTrace();
       return RESULT_ERROR;
     }
@@ -155,6 +157,7 @@ public class QuizAdd extends SmsQuizBean {
       data.setDestAddress(destAddress);
       data.setMaxRepeat(maxRepeat);
       data.setQuestion(question);
+      data.setRepeatQuestion(repeatQuestion);
       data.setName(quizName);
       data.setSourceAddress(distributionHelper.getSourceAddress());
       data.setTimeBegin(distributionHelper.getTimeBegin());
@@ -163,7 +166,7 @@ public class QuizAdd extends SmsQuizBean {
       data.setAbFile(file.getAbsolutePath());
       QuizBuilder.saveQuiz(data, quizDir + File.separator + quizId + ".xml");
     } catch (Exception e) {
-      logger.error(e);
+      logger.error(e,e);
       e.printStackTrace();
       return error(e.getMessage());
     } finally {
@@ -242,8 +245,21 @@ public class QuizAdd extends SmsQuizBean {
         return warning("Please select abonents file");
       }
     } catch (IOException e) {
-      logger.error(e);
+      logger.error(e,e);
       return warning("Error during upload abonents file: "+e);
+    }
+    if(maxRepeat!=null) {
+      try{
+        int mxrp = Integer.parseInt(maxRepeat);
+        if(mxrp!=0) {
+          if((repeatQuestion==null)||(repeatQuestion.trim().equals(""))) {
+            return warning("Select the repeat question");
+          }
+        }
+      }catch(NumberFormatException e) {
+        logger.error(e,e);
+        return warning("Unknown format for 'maxrepeat' field");
+      }
     }
     int result = validateQuiz();
     if (result!=RESULT_OK) {
@@ -337,6 +353,14 @@ public class QuizAdd extends SmsQuizBean {
 
   public void setQuestion(String question) {
     this.question = question;
+  }
+
+  public String getRepeatQuestion() {
+    return repeatQuestion;
+  }
+
+  public void setRepeatQuestion(String repeatQuestion) {
+    this.repeatQuestion = repeatQuestion;
   }
 
   public String getDestAddress() {

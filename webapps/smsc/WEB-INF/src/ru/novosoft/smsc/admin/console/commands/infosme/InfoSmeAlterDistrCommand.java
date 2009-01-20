@@ -51,7 +51,7 @@ public class InfoSmeAlterDistrCommand extends CommandClass {
 
       final InfoSmeCommands cmd = (InfoSmeCommands)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeCommandsImpl").newInstance();
 
-      cmd.alterDistribution(ctx, distribution, taskId);
+      cmd.alterTask(ctx, distribution, taskId);
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
       ctx.setMessage("Can't find module InfoSme");

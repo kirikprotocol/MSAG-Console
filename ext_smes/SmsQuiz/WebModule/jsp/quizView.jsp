@@ -40,7 +40,7 @@
       <%=getLocString("smsquiz.label.quiz.id")%>
       </th>
       <td>
-      <input class=txt readonly="true" name=quizId value="<%=StringEncoderDecoder.encode(bean.getQuizId())%>">
+      <input class=txt readonly name=quizId value="<%=StringEncoderDecoder.encode(bean.getQuizId())%>">
       </td>
     </tr>
 
@@ -97,11 +97,12 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.endDate")%></th>
-  <td><%=StringEncoderDecoder.encode(quizData.getDateEndStr())%></td>
+  <td><input  <%= bean.isFinished() ? "readonly" : "" %> validation="nonEmpty" class=calendarField id=tillDate name=dateEnd value="<%=StringEncoderDecoder.encode(bean.getDateEnd())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
+
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.question")%></th>
-  <td><textarea readonly="true"><%=StringEncoderDecoder.encode(quizData.getQuestion())%></textarea></td>
+  <td><textarea readonly><%=StringEncoderDecoder.encode(quizData.getQuestion())%></textarea></td>
 </tr>
 <tr>
   <th align="center" colspan="2"><div class=page_subtitle>Distribution</div></th>
@@ -130,7 +131,12 @@
   <%} else { %>
   <td><input validation="nonEmpty" class=txt name=maxRepeat value="<%=StringEncoderDecoder.encode(bean.getMaxRepeat())%>"></td>
   <%} %>
-</tr><tr class=row<%=rowN++&1%>>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th><%=getLocString("smsquiz.label.repeat.question")%></th>
+  <td><textarea <%= bean.isFinished() ? "readonly" : "" %> name=repeatQuestion><%=StringEncoderDecoder.encode(bean.getRepeatQuestion())%></textarea></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.defcat")%></th>
   <%if(bean.isFinished()) { %>
     <td><%=StringEncoderDecoder.encode(quizData.getDefaultCategory())%></td>
@@ -138,7 +144,7 @@
   <td><input class=txt name=defaultCategory value="<%=StringEncoderDecoder.encode(bean.getDefaultCategory())%>"></td>
   <%} %>
 </tr>
-    <%if((bean.isFinished())||(bean.isActive())) {%>
+    <%if(bean.isFinished()) {%>
       <tr>
         <th colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.category")%></div></th>
       </tr>

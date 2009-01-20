@@ -190,7 +190,7 @@ public class Replies extends SmsQuizBean {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      logger.error(e);
+      logger.error(e,e);
     }
   }
 
@@ -296,7 +296,7 @@ public class Replies extends SmsQuizBean {
       converted = formatter.parse(date);
     } catch (ParseException e) {
       e.printStackTrace();
-      logger.error(e);
+      logger.error(e,e);
     }
     return converted;
   }

@@ -8,6 +8,8 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class DistributionHelper {
 
+  private boolean readOnly = false;
+
   private String uid;
 
   private String timeBegin;
@@ -110,4 +112,11 @@ public class DistributionHelper {
     this.activeWeekDays = activeWeekDays;
   }
 
+  public boolean isReadOnly() {
+    return readOnly;
+  }
+
+  public void setReadOnly(boolean readOnly) {
+    this.readOnly = readOnly;
+  }
 }

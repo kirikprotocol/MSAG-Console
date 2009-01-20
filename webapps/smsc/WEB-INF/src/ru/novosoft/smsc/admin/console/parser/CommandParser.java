@@ -6161,6 +6161,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		cmd.setTaskId(getnameid("task id"));
 		cmd.setMsisdn(getnameid("msisdn"));
+		cmd.setText(getnameid("text"));
 		
 		return cmd;
 	}

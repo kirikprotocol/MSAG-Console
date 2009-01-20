@@ -54,7 +54,7 @@ public class InfoSmeCreateDistrCommand extends CommandClass {
 
       final InfoSmeCommands cmd = (InfoSmeCommands)Class.forName("ru.novosoft.smsc.infosme.backend.commands.InfoSmeCommandsImpl").newInstance();
 
-      cmd.createDistribution(ctx, distribution);
+      cmd.createTask(ctx, distribution);
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
       ctx.setMessage("Can't find module InfoSme");

@@ -105,12 +105,12 @@ public class TaskBuilder extends Thread {
 
     try {
       System.out.println("Create task...");
-      resetTask(task, false);
+      task.resetTask(false);
       checkAndPrepareTask(task, smeContext, getFileCount(), false, false);
 
       task.setMessagesHaveLoaded(false);
       if(distr !=null) {
-       copyDistrToTask(task, distr);
+       task.importFromDistribution(distr);
       } else {
         task.setName(fileName);
         task.setStartDate(new Date());
@@ -233,56 +233,6 @@ public class TaskBuilder extends Thread {
     } catch (EOFException e) {
     }
     return list;
-  }
-
-  public static void copyDistrToTask(Task task, Distribution distr){
-    if(task == null || distr == null) {
-      throw new IllegalArgumentException("Some arguments are null");
-    }
-    task.setName(distr.getTaskName());
-    Set days = distr.getDays();
-    List activeDays = new LinkedList();
-    if((days!=null)||(days.size()>0)) {
-      Iterator iter = days.iterator();
-      while(iter.hasNext()) {
-        activeDays.add(Task.WEEK_DAYS[((Integer)iter.next()).intValue()]);
-      }
-    } else {
-      throw new IllegalArgumentException("List of weeks days is empty");
-    }
-    task.setActiveWeekDays(activeDays);
-    task.setActiveWeekDaysSet(activeDays);
-
-    task.setStartDate(distr.getDateBegin());
-    task.setEndDate(distr.getDateEnd());
-    task.setActivePeriodStart(distr.getTimeBegin().getTime());
-    task.setActivePeriodEnd(distr.getTimeEnd().getTime());
-    task.setAddress(distr.getAddress());
-    task.setTransactionMode(distr.isTxmode().booleanValue());
-  }
-
-  public static void resetTask(Task task, boolean admin) {
-    if(task == null) {
-      throw new IllegalArgumentException("Some arguments are null");
-    }
-    task.setDelivery(true);
-    task.setProvider(Task.INFOSME_EXT_PROVIDER);
-    task.setPriority(10);
-    task.setMessagesCacheSize(2000);
-    task.setMessagesCacheSleep(10);
-    task.setUncommitedInGeneration(100);
-    task.setUncommitedInProcess(100);
-    task.setEnabled(true);
-    task.setTrackIntegrity(true);
-    task.setKeepHistory(true);
-    task.setReplaceMessage(false);
-    task.setRetryOnFail(false);
-    task.setRetryTime("03:00:00");
-    task.setSvcType("dlvr");
-    task.setActivePeriodStart("10:00:00");
-    task.setActivePeriodEnd("21:00:00");
-    task.setTransactionMode(false);
-    task.setValidityPeriod(admin ? "01:00:00" : "00:45:00");
   }
 
   public Collection checkAndPrepareTask(Task task, InfoSmeContext smeContext, long contentCount, boolean transliterate, boolean admin) throws AdminException {

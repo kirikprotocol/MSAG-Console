@@ -1142,6 +1142,7 @@ infosmeresendmess returns [InfoSmeResendMessageCommand cmd] {
 } : {
       cmd.setTaskId(getnameid("task id"));
       cmd.setMsisdn(getnameid("msisdn"));
+      cmd.setText(getnameid("text"));
       }
   ;
 infosmeremovetask returns [InfoSmeRemoveTaskCommand cmd] {

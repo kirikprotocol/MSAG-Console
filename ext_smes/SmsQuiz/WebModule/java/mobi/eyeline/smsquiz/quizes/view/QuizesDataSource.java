@@ -43,6 +43,8 @@ public class QuizesDataSource extends AbstractDataSource {
 
   public static final String QUESTION = "question";
 
+  public static final String REPEAT_QUESTION = "repeatQuestion";
+
   public static final String TIME_BEGIN = "timeBegin";
 
   public static final String TIME_END = "timeEnd";
@@ -95,7 +97,7 @@ public class QuizesDataSource extends AbstractDataSource {
         add(new QuizDataItem(quizData, quizId, QuizDataItem.State.getStateByName(state)));
       }
     } catch (Exception e) {
-      logger.error(e);
+      logger.error(e,e);
       e.printStackTrace();
     }
     return getResults();

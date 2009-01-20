@@ -23,6 +23,8 @@ public class QuizData {
 
   private String question;
 
+  private String repeatQuestion;
+
   private String timeBegin;
 
   private String timeEnd;
@@ -202,5 +204,13 @@ public class QuizData {
 
   public void setDistrDateEnd(Date distrDateEnd) {
     this.distrDateEnd = distrDateEnd;
+  }
+
+  public String getRepeatQuestion() {
+    return repeatQuestion;
+  }
+
+  public void setRepeatQuestion(String repeatQuestion) {
+    this.repeatQuestion = repeatQuestion;
   }
 }

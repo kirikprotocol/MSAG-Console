@@ -135,7 +135,7 @@ public class Distribution extends SmsQuizBean {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      logger.error(e);
+      logger.error(e,e);
     }
   }
 
@@ -214,7 +214,7 @@ public class Distribution extends SmsQuizBean {
       tableHelper.fillTable();
     } catch (TableHelperException e) {
       e.printStackTrace();
-      logger.error(e);
+      logger.error(e,e);
       throw new AdminException(e.getMessage());
     }
     return RESULT_OK;

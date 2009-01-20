@@ -4,6 +4,7 @@ import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.admin.console.commands.infosme.Distribution;
 
 import java.util.*;
 import java.text.SimpleDateFormat;
@@ -567,5 +568,52 @@ public class Task
 
   public void setSecretMessage(String secretMessage) {
     this.secretMessage = secretMessage;
+  }
+
+  public void importFromDistribution(Distribution distr) {
+    if(distr == null) {
+      throw new IllegalArgumentException("Some arguments are null");
+    }
+    setName(distr.getTaskName());
+    Set days = distr.getDays();
+    List activeDays = new LinkedList();
+    if((days!=null)&&(days.size()>0)) {
+      Iterator iter = days.iterator();
+      while(iter.hasNext()) {
+        activeDays.add(Task.WEEK_DAYS[((Integer)iter.next()).intValue()]);
+      }
+    } else {
+      throw new IllegalArgumentException("List of weeks days is empty");
+    }
+    setActiveWeekDays(activeDays);
+    setActiveWeekDaysSet(activeDays);
+
+    setStartDate(distr.getDateBegin());
+    setEndDate(distr.getDateEnd());
+    setActivePeriodStart(distr.getTimeBegin().getTime());
+    setActivePeriodEnd(distr.getTimeEnd().getTime());
+    setAddress(distr.getAddress());
+    setTransactionMode(distr.isTxmode().booleanValue());
+  }
+
+  public void resetTask(boolean admin) {
+    setDelivery(true);
+    setProvider(Task.INFOSME_EXT_PROVIDER);
+    setPriority(10);
+    setMessagesCacheSize(2000);
+    setMessagesCacheSleep(10);
+    setUncommitedInGeneration(100);
+    setUncommitedInProcess(100);
+    setEnabled(true);
+    setTrackIntegrity(true);
+    setKeepHistory(true);
+    setReplaceMessage(false);
+    setRetryOnFail(false);
+    setRetryTime("03:00:00");
+    setSvcType("dlvr");
+    setActivePeriodStart("10:00:00");
+    setActivePeriodEnd("21:00:00");
+    setTransactionMode(false);
+    setValidityPeriod(admin ? "01:00:00" : "00:45:00");
   }
 }
