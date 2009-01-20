@@ -248,6 +248,14 @@ public class QuizManager implements Observer {
         return;
       }
       QuizData data = quizBuilder.buildQuiz(quiz.getFileName());
+      validateDates(data);
+      Quiz conflictQuiz;
+      if ((conflictQuiz = isConflict(data, quiz)) != null) {
+        logger.error("Error during creating quiz: quizes conflict");
+        conflictQuiz.writeQuizesConflict(fileName);
+        quiz.setQuizStatus(QuizError.QUIZES_CONFLICT, "Quiz for one or more of this addresses already exists");
+        return;
+      }
       quiz.updateQuiz(data);
     } catch (Exception e) {
       if (quiz != null) {
@@ -259,6 +267,25 @@ public class QuizManager implements Observer {
     if (logger.isInfoEnabled()) {
       logger.info("Quiz modified: " + fileName);
     }
+  }
+
+  private Quiz isConflict(QuizData data, Quiz except) throws QuizException {
+    if (!new Date().after(data.getDateEnd())) {
+      ConflictVisitor visitor = new ConflictVisitor(data.getDestAddress());
+      quizes.visit(visitor);
+      for (Quiz prev : visitor.getConflicts()) {
+        if (prev != null) {
+          if ((prev.getDateBegin().compareTo(data.getDateEnd()) <= 0)
+              && (data.getDateBegin().compareTo(prev.getDateEnd()) <= 0)) {
+            if ((except != null) && (prev == except)) {
+              continue;
+            }
+            return prev;
+          }
+        }
+      }
+    }
+    return null;
   }
 
   private void createQuiz(final Notification notification) throws QuizException {
@@ -277,23 +304,12 @@ public class QuizManager implements Observer {
 
       validateDates(data);
 
-      if (!new Date().after(data.getDateEnd())) {
-        ConflictVisitor visitor = new ConflictVisitor(data.getDestAddress());
-        quizes.visit(visitor);
-        for (Quiz prev : visitor.getConflicts()) {
-          if (prev != null) {
-            if ((prev.getDateBegin().compareTo(data.getDateEnd()) <= 0)
-                && (data.getDateBegin().compareTo(prev.getDateEnd()) <= 0)) {
-              logger.error("Error during creating quiz: quizes conflict");
-              quiz.writeQuizesConflict(fileName, prev);
-              try {
-                quiz.setQuizStatus(QuizError.QUIZES_CONFLICT, "Quiz for one or more of this addresses already exists");
-              } catch (QuizException e) {
-              }
-              return;
-            }
-          }
-        }
+      Quiz conflictQuiz;
+      if ((conflictQuiz = isConflict(data, null)) != null) {
+        logger.error("Error during creating quiz: quizes conflict");
+        conflictQuiz.writeQuizesConflict(fileName);
+        quiz.setQuizStatus(QuizError.QUIZES_CONFLICT, "Quiz for one or more of this addresses already exists");
+        return;
       }
 
       quizes.add(quiz);

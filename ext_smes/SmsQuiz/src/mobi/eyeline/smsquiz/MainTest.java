@@ -109,26 +109,18 @@ public class MainTest {
     adapter.start();
   }
 
-  //todo remove all
 
   private static class QuizCreator extends Thread {
 
     public void run() {
-      try {
-        if (quizIndex < 16) {
-          createAbFile("quizes", quizIndex, Long.parseLong("70001700001"), Long.parseLong("70001700100"), 1, SubscriptionManager.getInstance());
-          createQuizFile("quizes", quizIndex, 15, "170", "170", "Short\n question");
-          quizIndex++;
+      if (quizIndex < 16) {
+        createAbFile("quizes", quizIndex, Long.parseLong("70001700001"), Long.parseLong("70001700100"), 1);
+        createQuizFile("quizes", quizIndex, 15, "170", "170", "Short\n question");
+        quizIndex++;
 
-        } else {
-          scheduledQuizCreator.shutdown();
-        }
+      } else {
+        scheduledQuizCreator.shutdown();
       }
-      catch (SubManagerException e) {
-        logger.error("Error creating quiz files", e);
-        e.printStackTrace();
-      }
-
     }
   }
 
@@ -269,10 +261,10 @@ public class MainTest {
   }
 
   public static void tmain(String[] args) throws Exception {
-    createAbFile("test/", 1111, Long.parseLong("79135000001"), Long.parseLong("79135100000"), 1, SubscriptionManager.getInstance());
+    createAbFile("test/", 1111, Long.parseLong("79135000001"), Long.parseLong("79135100000"), 1);
   }
 
-  private static void createAbFile(String dir, int name, long from, long till, int divider, SubscriptionManager subscriptionManager) {
+  private static void createAbFile(String dir, int name, long from, long till, int divider) {
     String fileName = dir + File.separator + (100 + name) + ".xml.csv";
 
     PrintWriter writer = null;

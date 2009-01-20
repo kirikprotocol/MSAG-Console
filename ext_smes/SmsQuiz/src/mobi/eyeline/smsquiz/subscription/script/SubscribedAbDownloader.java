@@ -29,6 +29,7 @@ public class SubscribedAbDownloader {
     }
   }
 
+  @SuppressWarnings({"ResultOfMethodCallIgnored"})
   public static void main(String[] args) {
     init();
     ResultSet result = null;

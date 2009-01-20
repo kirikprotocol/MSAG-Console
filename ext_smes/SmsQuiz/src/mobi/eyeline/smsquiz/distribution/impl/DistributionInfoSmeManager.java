@@ -168,7 +168,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
           String id = tokens[2];
           if (!id.equals("")) {
             if (logger.isInfoEnabled()) {
-              logger.info("Distribution task sent in InfoSme, id: " + id);
+              logger.info("Sent distribution task in InfoSme, id: " + id);
             }
             return id;
           }
@@ -180,12 +180,12 @@ public class DistributionInfoSmeManager implements DistributionManager {
       logger.error("Unable to create distribution", e);
       throw new DistributionException("Unable to create distribution", e);
     } finally {
-      if(conn!=null)
+      if (conn != null)
         conn.close();
     }
   }
 
-  public void alterDistribution(final Distribution distr, final String taskId) throws DistributionException{
+  public void alterDistribution(final Distribution distr, final String taskId) throws DistributionException {
     logger.info("Alter distribution...");
     if ((distr == null) || (distr.getDateBegin() == null)
         || (distr.getQuestion() == null) || (distr.getDateEnd() == null) || (distr.getDays() == null)
@@ -221,7 +221,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
       logger.error("Unable to create distribution", e);
       throw new DistributionException("Unable to create distribution", e);
     } finally {
-      if(conn!=null)
+      if (conn != null)
         conn.close();
     }
   }
@@ -231,13 +231,13 @@ public class DistributionInfoSmeManager implements DistributionManager {
     logger.info("DistributionManager shutdowned");
   }
 
-  public void resend(String msisdn, String taskId) throws DistributionException {
+  public void resend(String msisdn, String repeatQuestion, String taskId) throws DistributionException {
     if ((msisdn == null) || (taskId == null)) {
       logger.error("Some arguments are null");
       throw new DistributionException("Some arguments are null", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
     }
     StringBuilder builder = new StringBuilder();
-    builder.append(RESEND_COMMAND).append(getFormatProp(taskId)).append(getFormatProp(msisdn));
+    builder.append(RESEND_COMMAND).append(getFormatProp(taskId)).append(getFormatProp(msisdn)).append(getFormatProp(repeatQuestion));
     String command = builder.toString();
     if (logger.isInfoEnabled()) {
       logger.info("Sending console command: " + command);
@@ -255,7 +255,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
       logger.error("Can't send command", e);
       throw new DistributionException("Can't send command", e);
     } finally {
-      if(conn!=null) {
+      if (conn != null) {
         conn.close();
       }
     }
@@ -285,7 +285,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
       logger.error("Can't send command", e);
       throw new DistributionException("Can't send command", e);
     } finally {
-      if(conn!=null) {
+      if (conn != null) {
         conn.close();
       }
     }
@@ -336,7 +336,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
       logger.error("Error during repair status", e);
       throw new DistributionException("Error during repair status", e);
     } finally {
-      if(conn!=null) {
+      if (conn != null) {
         conn.close();
       }
     }
@@ -347,8 +347,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
   }
 
   public ResultSet getStatistics(final String id, final Date startDate, final Date endDate) throws DistributionException {
-    if (logger.isInfoEnabled()) {
-      logger.info("Getting stats for id: " + id + " from=" + startDate + " till=" + endDate);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Getting stats for id: " + id + " from=" + startDate + " till=" + endDate);
     }
     if ((id == null) || (startDate == null) || (endDate == null)) {
       throw new DistributionException();
@@ -361,26 +361,26 @@ public class DistributionInfoSmeManager implements DistributionManager {
     String path = statsDir + File.separator + id;
     Date date;
     List<File> files = new LinkedList<File>();
-    if (logger.isInfoEnabled()) {
-      logger.info("Comparable date:" + calendar.getTime());
+    if (logger.isDebugEnabled()) {
+      logger.debug("Comparable date:" + calendar.getTime());
     }
     while (calendar.getTime().compareTo(endDate) <= 0) {
       date = calendar.getTime();
       File file = new File(path + File.separator + dirFormat.format(date) + File.separator + fileFormat.format(date) + ".csv");
-      if (logger.isInfoEnabled()) {
-        logger.info("Search file:" + file.getAbsolutePath());
+      if (logger.isDebugEnabled()) {
+        logger.debug("Search file:" + file.getAbsolutePath());
       }
       if (file.exists()) {
         files.add(file);
-        if (logger.isInfoEnabled()) {
-          logger.info("File added for analysis: " + file.getAbsolutePath());
+        if (logger.isDebugEnabled()) {
+          logger.debug("File added for analysis: " + file.getAbsolutePath());
         }
       } else {
         file = new File(path + File.separator + dirFormat.format(date) + File.separator + fileFormat.format(date) + "processed.csv");
         if (file.exists()) {
           files.add(file);
-          if (logger.isInfoEnabled()) {
-            logger.info("File added for analysis: " + file.getAbsolutePath());
+          if (logger.isDebugEnabled()) {
+            logger.debug("File added for analysis: " + file.getAbsolutePath());
           }
         }
       }
@@ -388,15 +388,15 @@ public class DistributionInfoSmeManager implements DistributionManager {
     }
 
     ResultSet result = new DistributionResultSet(files, startDate, endDate, succDeliveryStatus, dateInFilePattern);
-    if (logger.isInfoEnabled()) {
-      logger.info("Getting stats finished for id: " + id);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Getting stats finished for id: " + id);
     }
     return result;
   }
 
   private String getFormatProp(String prop) {
     StringBuilder builder = new StringBuilder();
-    builder.append(" \"").append(prop.replace("\"", "\\\"")).append("\"");
+    builder.append(" \"").append(prop.replace("\"", "\\\"").replace(System.getProperty("line.separator"), "\\n")).append("\"");
     return builder.toString();
   }
 

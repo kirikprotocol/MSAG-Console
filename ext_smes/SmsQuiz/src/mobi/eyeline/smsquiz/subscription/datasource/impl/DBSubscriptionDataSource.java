@@ -79,8 +79,8 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
       }
       prepStatement.executeUpdate();
 
-      if (logger.isInfoEnabled()) {
-        logger.info("Succesful DB insertion of subscription " + subscription);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Succesful DB insertion of subscription " + subscription);
       }
     } catch (SQLException exc) {
 
@@ -117,8 +117,8 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
         }
       }
 
-      if (logger.isInfoEnabled() && (subscription != null)) {
-        logger.info("Succesful get subscription " + subscription);
+      if (logger.isDebugEnabled() && (subscription != null)) {
+        logger.debug("Succesful get subscription " + subscription);
       }
     } catch (SQLException exc) {
       logger.error("Unable to get subscription from the dataBase with address: " + address, exc);
@@ -149,8 +149,8 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
 
       sqlResult = prepStatement.executeQuery();
 
-      if (logger.isInfoEnabled()) {
-        logger.info("Succesful get list of subscription");
+      if (logger.isDebugEnabled()) {
+        logger.debug("Succesful get list of subscription");
       }
     } catch (SQLException exc) {
       logger.error("Unable to get list of subscriptions from the dataBase", exc);
@@ -179,8 +179,8 @@ public class DBSubscriptionDataSource implements SubscriptionDataSource {
       prepStatement = connection.prepareStatement(getSql("smsquiz.subscription.remove.by.address"));
       prepStatement.setString(1, address);
       prepStatement.execute();
-      if (logger.isInfoEnabled()) {
-        logger.info("Succesful remove address: " + address);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Succesful remove address: " + address);
       }
 
     } catch (SQLException exc) {

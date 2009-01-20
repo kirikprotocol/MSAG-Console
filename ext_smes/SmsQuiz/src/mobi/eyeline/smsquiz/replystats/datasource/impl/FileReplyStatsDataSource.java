@@ -54,8 +54,8 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
 
 
   public Reply getLastReply(final String oa, final String da, final Date from, final Date till) throws ReplyDataSourceException {
-    if (logger.isInfoEnabled()) {
-      logger.info("Getting last reply for oa=" + oa + " da=" + da + " from=" + from + " till=" + till);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Getting last reply for oa=" + oa + " da=" + da + " from=" + from + " till=" + till);
     }
     Reply reply = null;
     if ((oa == null) || (da == null) || (from == null) || (till == null)) {
@@ -73,8 +73,8 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
     for (StatsFile file : files) {
       try {
         file.open();
-        if (logger.isInfoEnabled()) {
-          logger.info("Analysis file: " + file.getName());
+        if (logger.isDebugEnabled()) {
+          logger.debug("Analysis file: " + file.getName());
         }
         replies = file.getReplies(oa, from, till);
         if (replies == null) {
@@ -95,11 +95,11 @@ public class FileReplyStatsDataSource implements ReplyStatsDataSource {
         }
       }
     }
-    if (logger.isInfoEnabled()) {
+    if (logger.isDebugEnabled()) {
       if (reply != null) {
-        logger.info("last reply: " + reply);
+        logger.debug("last reply: " + reply);
       } else {
-        logger.info("Last reply is null");
+        logger.debug("Last reply is null");
       }
     }
     return reply;

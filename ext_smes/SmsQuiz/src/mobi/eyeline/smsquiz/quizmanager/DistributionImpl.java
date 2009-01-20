@@ -83,7 +83,7 @@ public class DistributionImpl extends Distribution {
     private boolean subscribed(String line) throws SubManagerException {
       String msisdn1 = line.trim();
       String msisdn2 = (msisdn1.startsWith("+7")) ? "8" + msisdn1.substring(2) : "+7" + msisdn1.substring(1);
-      if (subscriptionManager.subscribed(msisdn1) ||  subscriptionManager.subscribed(msisdn2)) {
+      if (subscriptionManager.subscribed(msisdn1) || subscriptionManager.subscribed(msisdn2)) {
         currentAbonent = msisdn1;
         return true;
       }

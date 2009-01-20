@@ -13,6 +13,7 @@ public class QuizData {
   private String destAddress;
   private String sourceAddress;
   private String question;
+  private String repeatQuestion;
   private Date dateBegin;
   private Date dateEnd;
   private Calendar timeBegin;
@@ -168,5 +169,13 @@ public class QuizData {
       throw new IllegalArgumentException("Some arguments are null");
     }
     this.replyPatterns = replyPatterns;
+  }
+
+  public String getRepeatQuestion() {
+    return repeatQuestion;
+  }
+
+  public void setRepeatQuestion(String repeatQuestion) {
+    this.repeatQuestion = repeatQuestion;
   }
 }

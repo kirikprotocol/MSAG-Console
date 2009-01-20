@@ -8,8 +8,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * author: alkhal
@@ -108,7 +108,8 @@ public class StatusFile {
       if (outputStream != null) {
         try {
           outputStream.close();
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
       }
       writeLock.unlock();
     }

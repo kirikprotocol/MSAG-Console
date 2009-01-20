@@ -18,10 +18,7 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -113,11 +110,6 @@ public class Quiz {
       }
       return null;
     }
-    if (logger.isInfoEnabled()) {
-      logger.info("maxrepeat: " + maxRepeat);
-      logger.info("count: " + count);
-      logger.info("oa: " + oa);
-    }
     if (count > maxRepeat) {
       return null;
     }
@@ -129,7 +121,7 @@ public class Quiz {
       count++;
       jstore.put(oaNumber, count);
       if (count <= maxRepeat) {
-        result = new Result(quizData.getQuestion(), Result.ReplyRull.REPEAT, quizData.getSourceAddress());
+        result = new Result(quizData.getRepeatQuestion(), Result.ReplyRull.REPEAT, quizData.getSourceAddress());
       }
     }
     try {
@@ -143,7 +135,7 @@ public class Quiz {
     }
     if ((result != null) && (result.getReplyRull().equals(Result.ReplyRull.REPEAT))) {
       try {
-        dm.resend(oa, statusFile.getDistrId());
+        dm.resend(oa, getRepeatQuestion(), statusFile.getDistrId());
       } catch (DistributionException e) {
         e.printStackTrace();
         logger.error("Can't resend the message", e);
@@ -179,24 +171,24 @@ public class Quiz {
       String da = quizData.getDestAddress();
       Date realStartDate = statusFile.getActualStartDate();
       SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmss");
-      String fileName = dirResult + File.separator + quizId + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
+      String results = dirResult + File.separator + quizId + "." + dateFormat.format(dateBegin) + "-" + dateFormat.format(dateEnd) + ".res";
       dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
 
-      File resultFile = new File(fileName);
+      File resultFile = new File(results);
       if (resultFile.exists()) {
         logger.info("Results already exist for quiz: " + quizId);
         return;
       }
-      File fileTmp = new File(resultFile.getAbsolutePath() + "." + dateFormat.format(new Date()));
+      File resultsTmp = new File(resultFile.getAbsolutePath() + "." + dateFormat.format(new Date()));
+      String fileTmp = resultsTmp + ".tmp";
       File parentFile = resultFile.getParentFile();
       if ((parentFile != null) && (!parentFile.exists())) {
         parentFile.mkdirs();
       }
-
-      PrintWriter printWriter = null;
+      PrintWriter tmpWriter = null;
       String encoding = System.getProperty("file.encoding");
       try {
-        printWriter = new PrintWriter(fileTmp, encoding);
+        tmpWriter = new PrintWriter(fileTmp, encoding);
         ResultSet resultSet = dm.getStatistics(distrId, realStartDate, dateEnd);
         String comma = ",";
         while (resultSet.next()) {
@@ -204,8 +196,8 @@ public class Quiz {
           StatsDelivery delivery = (StatsDelivery) resultSet.get();
           String oa = delivery.getMsisdn();
           Date dateDelivery = delivery.getDate();
-          if (logger.isInfoEnabled()) {
-            logger.info("Analysis delivery: " + delivery);
+          if (logger.isDebugEnabled()) {
+            logger.debug("Analysis delivery: " + delivery);
           }
           if ((reply = rds.getLastReply(oa, da, realStartDate, dateEnd)) != null) {
             String text = reply.getText();
@@ -221,40 +213,115 @@ public class Quiz {
                 continue;
               }
             }
-            printWriter.print(oa);
-            printWriter.print(comma);
-            printWriter.print(dateFormat.format(dateDelivery));
-            printWriter.print(comma);
-            printWriter.print(dateFormat.format(reply.getDate()));
-            printWriter.print(comma);
-            printWriter.print(category);
-            printWriter.print(comma);
-            printWriter.println(reply.getText().replace(System.getProperty("line.separator"), "\\n"));
-            if (logger.isInfoEnabled()) {
-              logger.info("Last reply for oa=" + oa + " is " + reply + " stored");
+            tmpWriter.print(oa);
+            StringBuilder answer = new StringBuilder();
+            answer.append(comma).append(dateFormat.format(dateDelivery))
+                .append(comma).append(dateFormat.format(reply.getDate()))
+                .append(comma).append(category).append(comma)
+                .append(text.replace(System.getProperty("line.separator"), "\\n"));
+            tmpWriter.println(answer);
+            if (logger.isDebugEnabled()) {
+              logger.debug("Last reply for oa=" + oa + " is " + reply + " stored");
             }
           } else {
-            if (logger.isInfoEnabled()) {
-              logger.info("Last reply for oa=" + oa + " is empty");
+            if (logger.isDebugEnabled()) {
+              logger.debug("Last reply for oa=" + oa + " is empty");
             }
           }
         }
-        printWriter.flush();
+        tmpWriter.close();
+        writeUniq(fileTmp, resultsTmp);
+        new File(fileTmp).delete();
       } catch (Exception e) {
         logger.error(e, e);
         throw new QuizException(e);
       } finally {
-        if (printWriter != null) {
-          printWriter.close();
+        if (tmpWriter != null) {
+          tmpWriter.close();
         }
       }
-      if (!fileTmp.renameTo(resultFile)) {
-        logger.error("Can't rename file: " + fileTmp.getAbsolutePath() + " to " + resultFile.getAbsolutePath());
-        throw new QuizException("Can't rename file: " + fileTmp.getAbsolutePath() + " to " + resultFile.getAbsolutePath());
+      if (!resultsTmp.renameTo(resultFile)) {
+        logger.error("Can't rename file: " + resultsTmp.getAbsolutePath() + " to " + resultFile.getAbsolutePath());
+        throw new QuizException("Can't rename file: " + resultsTmp.getAbsolutePath() + " to " + resultFile.getAbsolutePath());
       }
       logger.info("Export statistics finished");
     } finally {
       lock.unlock();
+    }
+  }
+
+  @SuppressWarnings({"EmptyCatchBlock"})
+  private void writeUniq(String src, File dest) throws QuizException {
+    if (logger.isInfoEnabled()) {
+      logger.info("Create uniq records...");
+    }
+    String encoding = System.getProperty("file.encoding");
+    BufferedReader reader = null;
+    PrintWriter tmpWriter = null;
+    PrintWriter resultsWriter = null;
+    String tmpFileName = src + ".tmp";
+    File tmpFile = new File(tmpFileName);
+    int initialCapacity = 50000; //todo
+    try {
+      boolean repeat;
+      HashMap<String, String> answers = new HashMap<String, String>(initialCapacity);
+      resultsWriter = new PrintWriter(dest, encoding);
+      int i = 0;
+      do {
+        repeat = false;
+        if (logger.isInfoEnabled()) {
+          i++;
+        }
+        answers.clear();
+        reader = new BufferedReader(new FileReader(src));
+        tmpWriter = new PrintWriter(tmpFileName, encoding);
+        String line;
+        while ((line = reader.readLine()) != null) {
+          int commaIndex = line.indexOf(",");
+          String oa = line.substring(0, commaIndex);
+          String answer = line.substring(commaIndex);
+          if (answers.size() <= initialCapacity) {
+            answers.put(oa, answer);
+          } else {
+            if (!answers.containsKey(oa)) {
+              repeat = true;
+              tmpWriter.print(oa);
+              tmpWriter.println(answer);
+            }
+          }
+        }
+        for (Map.Entry<String, String> e : answers.entrySet()) {
+          resultsWriter.print(e.getKey());
+          resultsWriter.println(e.getValue());
+        }
+        resultsWriter.flush();
+        tmpWriter.close();
+        reader.close();
+        String tmpStr = src;
+        src = tmpFileName;
+        tmpFileName = tmpStr;
+      } while (repeat);
+      tmpFile.delete();
+      if (logger.isInfoEnabled()) {
+        logger.info("Creating done");
+      }
+    } catch (Exception e) {
+      logger.error(e, e);
+      throw new QuizException(e);
+    } finally {
+      if (reader != null) {
+        try {
+          reader.close();
+        }
+        catch (Exception e) {
+        }
+      }
+      if (tmpWriter != null) {
+        tmpWriter.close();
+      }
+      if (resultsWriter != null) {
+        resultsWriter.close();
+      }
     }
   }
 
@@ -285,8 +352,16 @@ public class Quiz {
     return quizData.getQuestion();
   }
 
+  public String getRepeatQuestion() {
+    return quizData.getRepeatQuestion();
+  }
+
   public void setQuestion(String question) {
     quizData.setQuestion(question);
+  }
+
+  public void setRepeatQuestion(String repeatQuestion) {
+    quizData.setRepeatQuestion(repeatQuestion);
   }
 
   public String getFileName() {
@@ -523,7 +598,7 @@ public class Quiz {
     try {
       file.delete();
     } catch (Exception e) {
-      logger.error(e);
+      logger.error(e, e);
     }
   }
 
@@ -546,7 +621,7 @@ public class Quiz {
     }
   }
 
-  public synchronized void writeQuizesConflict(String newQuizFileName, Quiz prevQuiz) {
+  public synchronized void writeQuizesConflict(String newQuizFileName) {
     if (newQuizFileName == null) {
       logger.error("Some arguments are null");
       throw new IllegalArgumentException("Some arguments are null");
@@ -561,7 +636,7 @@ public class Quiz {
       writer.println(" Quizes conflict:");
       writer.println();
       writer.println("Previous quiz");
-      writer.println(prevQuiz.toString());
+      writer.println(toString());
       writer.println();
       writer.flush();
     } catch (IOException e) {
@@ -585,7 +660,7 @@ public class Quiz {
   }
 
   public void updateQuiz(QuizData data) throws QuizException {
-    try{
+    try {
       lock.lock();
       if (data == null) {
         logger.error("Some arguments are null");
@@ -603,48 +678,57 @@ public class Quiz {
           }
         case GENERATION:
         case AWAIT:
-          setReplyPatterns(data.getPatterns());
           setDestAddress(data.getDestAddress());
         case ACTIVE:
+          setReplyPatterns(data.getPatterns());
           setMaxRepeat(data.getMaxRepeat());
           setDefaultCategory(data.getDefaultCategory());
 
-          if(!data.getQuestion().equals(getQuestion())) {        //distribution properties
+          if (!data.getDateEnd().equals(getDateEnd())) {
+            setDateEnd(data.getDateEnd());
+            alertDistribution = true;
+          }
+          if (!data.getQuestion().equals(getQuestion())) {        //distribution properties
             setQuestion(data.getQuestion());
             alertDistribution = true;
           }
-          if(!data.getDistrDateEnd().equals(getDistrDateEnd())) {
+          if (!data.getRepeatQuestion().equals(getRepeatQuestion())) {        //distribution properties
+            setRepeatQuestion(data.getRepeatQuestion());
+            alertDistribution = true;
+          }
+          if (!data.getDistrDateEnd().equals(getDistrDateEnd())) {
             setDistrDateEnd(data.getDistrDateEnd());
             alertDistribution = true;
           }
-          if(!data.getSourceAddress().equals(getSourceAddress())) {
+          if (!data.getSourceAddress().equals(getSourceAddress())) {
             setSourceAddress(data.getSourceAddress());
             alertDistribution = true;
           }
-          if(data.getTimeBegin().getTimeInMillis() != getTimeBegin().getTimeInMillis()) {
+          if (data.getTimeBegin().getTimeInMillis() != getTimeBegin().getTimeInMillis()) {
             setTimeBegin(data.getTimeBegin());
             alertDistribution = true;
           }
-          if(data.getTimeEnd().getTimeInMillis() != getTimeEnd().getTimeInMillis()) {
+          if (data.getTimeEnd().getTimeInMillis() != getTimeEnd().getTimeInMillis()) {
             setTimeEnd(data.getTimeEnd());
             alertDistribution = true;
           }
-          if(data.isTxmode() != isTxmode()) {
+          if (data.isTxmode() != isTxmode()) {
             setTxmode(data.isTxmode());
             alertDistribution = true;
           }
-          if(data.getDays().size()!=getDays().size()) {
+          if (data.getDays().size() != getDays().size()) {
             quizData.setDays(data.getDays());
             alertDistribution = true;
           } else {
-            for(Distribution.WeekDays day1: data.getDays()) {
+            for (Distribution.WeekDays day1 : data.getDays()) {
               boolean flag = false;
-              for(Distribution.WeekDays day2: getDays()) {
-                if(day1 == day2) {
-                  flag = true; break;
+              for (Distribution.WeekDays day2 : getDays()) {
+                if (day1 == day2) {
+                  flag = true;
+                  break;
                 }
               }
-              if(!flag) {
+              if (!flag) {
                 alertDistribution = true;
                 quizData.setDays(data.getDays());
                 break;
@@ -653,26 +737,26 @@ public class Quiz {
           }
       }
       quizCollector.alert();
-      if(alertDistribution) {
-        if(getDistrId() == null) {
-          logger.error("Distribution doesn't exist for quiz: "+this+ "\n It can't be alerted");
-          throw new QuizException("Distribution doesn't exist for quiz: "+this+ "\n It can't be alerted");
+      if (alertDistribution) {
+        if (getDistrId() == null) {
+          logger.error("Distribution doesn't exist for quiz: " + this + "\n It can't be alerted");
+          throw new QuizException("Distribution doesn't exist for quiz: " + this + "\n It can't be alerted");
         }
-        try{
+        try {
           dm.alterDistribution(buildDistribution(), getDistrId());
         } catch (DistributionException e) {
           throw new QuizException(e);
         }
       }
-    }catch (Exception e) {
-      logger.error(e,e);
+    } catch (Exception e) {
+      logger.error(e, e);
       throw new QuizException(e);
     } finally {
       lock.unlock();
     }
   }
 
-  public QuizData getQuizData() throws QuizException {
+  public QuizData getQuizData() {
     return quizData;
   }
 

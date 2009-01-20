@@ -4,12 +4,11 @@ package mobi.eyeline.smsquiz.distribution.smscconsole;
 import org.apache.log4j.Logger;
 
 import java.util.LinkedList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
 
 /**
  * author: alkhal
@@ -50,9 +49,9 @@ public class ConsoleConnPool {
     this.host = host;
     this.port = port;
     this.connTimeout = connTimeout;
-    closerExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory(){
+    closerExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
       public Thread newThread(Runnable r) {
-        return new Thread(r,"ConnectionCloser");
+        return new Thread(r, "ConnectionCloser");
       }
     });
     closerExecutor.scheduleAtFixedRate(new ConnectionCloser(), connTimeout,
@@ -60,39 +59,40 @@ public class ConsoleConnPool {
   }
 
   public ConsoleConnection getConnection() throws ConsoleException {
-    try{
+    try {
       lock.lock();
-      if(shutdowned) {
+      if (shutdowned) {
         logger.error("ConnectionPool was shutdowned");
         throw new ConsoleException("ConnectionPool was shutdowned");
       }
       ConsoleConnection conn = null;
-      for(ConsoleConnection c : connections) {
-        if(!c.isAssigned()) {
-          conn = c; break;
+      for (ConsoleConnection c : connections) {
+        if (!c.isAssigned()) {
+          conn = c;
+          break;
         }
       }
 
-      if(conn == null) {                      // if all connections are busy try to make one more
-        if(connections.size() == size) {
+      if (conn == null) {                      // if all connections are busy try to make one more
+        if (connections.size() == size) {
           logger.error("All connections are busy");
           throw new ConsoleException("All connections are busy");
         }
         count++;
-        conn =  new ConsoleConnection(Integer.toString(count),login, password, host, port);
+        conn = new ConsoleConnection(Integer.toString(count), login, password, host, port);
         connections.add(conn);
       }
       conn.setAssigned(true);
 
-      if(logger.isInfoEnabled()) {
-        logger.info("Getting connection: "+conn);
+      if (logger.isInfoEnabled()) {
+        logger.info("Getting connection: " + conn);
       }
       return conn;
 
     } catch (Exception e) {
-      logger.error(e,e);
+      logger.error(e, e);
       throw new ConsoleException(e);
-    }finally {
+    } finally {
       lock.unlock();
     }
   }
@@ -111,18 +111,18 @@ public class ConsoleConnPool {
   }
 
   private void closeAllConnections(boolean checkAssigned, boolean checkTimeout) {
-    try{
+    try {
       lock.lock();
-      for(ConsoleConnection c : connections) {
-        if(checkAssigned && c.isAssigned()) {           // if connection is assigned don't close it
-         continue;
+      for (ConsoleConnection c : connections) {
+        if (checkAssigned && c.isAssigned()) {           // if connection is assigned don't close it
+          continue;
         }
-        if(checkTimeout && (System.currentTimeMillis()<c.getLastUsage() + connTimeout)) {  //timeout
-         continue;
+        if (checkTimeout && (System.currentTimeMillis() < c.getLastUsage() + connTimeout)) {  //timeout
+          continue;
         }
-        if(c.isConnected()) {                           //  close connection if connected
+        if (c.isConnected()) {                           //  close connection if connected
           c.disconnect();
-          if(logger.isInfoEnabled()) {
+          if (logger.isInfoEnabled()) {
             logger.info("ConsoleCloser closed connection...");
           }
         }
@@ -139,7 +139,7 @@ public class ConsoleConnPool {
       try {
         closeAllConnections(true, true);
       } catch (Exception e) {
-        logger.error(e,e);
+        logger.error(e, e);
         e.printStackTrace();
       }
       logger.info("ConnectionCloser finished");

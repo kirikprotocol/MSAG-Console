@@ -1,6 +1,7 @@
 package mobi.eyeline.smsquiz.quizmanager;
 
 
+import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import org.apache.log4j.Logger;
 
@@ -8,11 +9,8 @@ import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
-
 /**
  * autor: alkhal
- *
  */
 
 public class Quizes {
@@ -27,7 +25,7 @@ public class Quizes {
 
   public Quizes() {
     qInternal = new LinkedList<Quiz>();
-    lock  = new ReentrantLock();
+    lock = new ReentrantLock();
     monitor = new QuizesMBean(this);
   }
 
@@ -120,6 +118,6 @@ public class Quizes {
 
   public AbstractDynamicMBean getMonitor() {
     return monitor;
-  }  
+  }
 
 }

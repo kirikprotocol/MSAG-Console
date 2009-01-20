@@ -272,7 +272,6 @@ class StatsFileImpl implements StatsFile {
   }
 
   private String getMsisdn(long position) throws FileStatsException {
-    long prevPosition = 0;
     try {
       randomAccessFile.seek(position);
       String line = randomAccessFile.readLine();
@@ -299,8 +298,8 @@ class StatsFileImpl implements StatsFile {
   }
 
   private void put(String key, long value) throws FileStatsException {
-    if (logger.isInfoEnabled()) {
-      logger.info("Put into tree entry: " + key + " " + value);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Put into tree entry: " + key + " " + value);
     }
     if (key == null) {
       logger.error("Some arguments are null");

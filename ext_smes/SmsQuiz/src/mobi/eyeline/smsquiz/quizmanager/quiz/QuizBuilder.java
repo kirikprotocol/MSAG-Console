@@ -226,6 +226,11 @@ public class QuizBuilder {
         logger.error("Unsupported format for integer: " + elem.getTextTrim());
         throw new QuizException("Unsupported format for integer: " + elem.getTextTrim());
       }
+      if ((elem = repliesElem.getChild("repeatQuestion")) != null) {
+        quiz.setRepeatQuestion(elem.getTextTrim());
+      } else {
+        errorNotFound("repeatQuestion");
+      }
     } else {
       quiz.setMaxRepeat(0);
     }

@@ -27,8 +27,8 @@ public class ConsoleConnection {
   public ConsoleResponse sendCommand(String command) throws ConsoleException {
     lastUsage = System.currentTimeMillis();
     consoleSender.connect();
-    if(logger.isInfoEnabled()) {
-      logger.info("Sending command: "+command + " via: "+ this);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Sending command: " + command + " via: " + this);
     }
     return consoleSender.sendCommand(command);
   }
@@ -43,16 +43,16 @@ public class ConsoleConnection {
   }
 
   public void close() {
-    if(logger.isInfoEnabled()) {
-      logger.info("Close conn: "+ this);
+    if (logger.isInfoEnabled()) {
+      logger.info("Close conn: " + this);
     }
     lastUsage = System.currentTimeMillis();
     assigned = false;
   }
 
   void disconnect() {
-    if(logger.isInfoEnabled()) {
-      logger.info("Disconnect conn: "+ this);
+    if (logger.isInfoEnabled()) {
+      logger.info("Disconnect conn: " + this);
     }
     consoleSender.disconnect();
     close();

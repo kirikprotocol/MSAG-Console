@@ -20,6 +20,7 @@ public class QuizesMBean extends AbstractDynamicMBean {
         "java.lang.String", "Quizes", true, false, false));
 
   }
+
   public Object getAttribute(String attribute) throws AttributeNotFoundException, MBeanException, ReflectionException {
     if (attribute.equals("CountQuizes")) {
       return quizes.countQuizes();

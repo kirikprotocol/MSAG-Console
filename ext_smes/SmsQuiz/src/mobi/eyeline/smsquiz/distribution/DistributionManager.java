@@ -19,7 +19,7 @@ public interface DistributionManager {
 
   public State getState(String distrId) throws DistributionException;
 
-  public void resend(String msisdn, String distrId) throws DistributionException;
+  public void resend(String msisdn, String repeatQuestion, String distrId) throws DistributionException;
 
   public void alterDistribution(final Distribution distr, final String taskId) throws DistributionException;
 

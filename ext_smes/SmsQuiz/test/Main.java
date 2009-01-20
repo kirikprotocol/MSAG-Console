@@ -40,7 +40,6 @@ public class Main {
   final static String conf = "conf/config.xml";
 
   public static void main(String[] args) {
-    //todo remove
     init();
 
     MessageHandler mh = null;
@@ -76,7 +75,6 @@ public class Main {
         registerAdapter(mbs, jmxPort, user, password);
       }
 
-      //todo remove
       ScheduledExecutorService scheduledQuizCreator = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
         public Thread newThread(Runnable r) {
           return new Thread(r, "QuizCreator");
@@ -85,7 +83,6 @@ public class Main {
       //scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 6000, TimeUnit.SECONDS);
      // scheduledQuizCreator.scheduleAtFixedRate(new QuizCreator(), 10, 900, TimeUnit.SECONDS);
       new QuizCreator().run();
-      //todo remove
 
     } catch (Exception e) {
       logger.error("", e);
@@ -110,7 +107,6 @@ public class Main {
     adapter.start();
   }
 
-  //todo remove all
 
   private static class QuizCreator extends Thread {
 

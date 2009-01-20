@@ -35,6 +35,7 @@ public class StatsFilesCache {
   private SimpleDateFormat dirNameFormat;
   private ScheduledExecutorService fileCollectorScheduler;
 
+  @SuppressWarnings({"ResultOfMethodCallIgnored"})
   public StatsFilesCache(final String configFile) throws FileStatsException {
     long delayFirst;
     long iterationPeriod;
@@ -96,8 +97,8 @@ public class StatsFilesCache {
 
 
   public Collection<StatsFile> getFiles(final String da, final Date from, final Date till) throws FileStatsException {
-    if (logger.isInfoEnabled()) {
-      logger.info("Getting files for da=" + da + " from=" + from + " till=" + till);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Getting files for da=" + da + " from=" + from + " till=" + till);
     }
     if ((da == null) || (from == null) || (till == null)) {
       throw new FileStatsException("Some arguments are null", FileStatsException.ErrorCode.ERROR_WRONG_REQUEST);
@@ -151,8 +152,8 @@ public class StatsFilesCache {
           if ((tillFile == null || fileDate.compareTo(tillFile) <= 0) && (fromFile == null || fileDate.compareTo(fromFile) >= 0))
             if ((statsFile = lockupFile(da, fileDate, true)) != null) {
               files.add(statsFile);
-              if (logger.isInfoEnabled()) {
-                logger.info("File added for analysis: " + statsFile.getName());
+              if (logger.isDebugEnabled()) {
+                logger.debug("File added for analysis: " + statsFile.getName());
               }
             }
         }
@@ -189,8 +190,8 @@ public class StatsFilesCache {
 
     if ((file = filesMap.get(key)) == null) {
       String filePath = replyStatsDir + File.separator + key + ".csv";
-      if (logger.isInfoEnabled()) {
-        logger.info("Search file: " + filePath);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Search file: " + filePath);
       }
       if (checkExist) {
         File f = new File(filePath);
@@ -305,7 +306,7 @@ public class StatsFilesCache {
         }
       }
       if (logger.isInfoEnabled()) {
-        logger.info("FileCollector finishes.");
+        logger.info("FileCollector finished");
       }
     }
   }

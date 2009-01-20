@@ -86,7 +86,7 @@ public class QuizCollector {
     if (quiz.getDateBegin() != null && quiz.getDateEnd() != null) {
       switch (quiz.getQuizStatus()) {
         case NEW:
-          if(!quiz.isDistrGenerated()) return quiz.getDateBegin().getTime();
+          if (!quiz.isDistrGenerated()) return quiz.getDateBegin().getTime();
           break;
         case GENERATION:
           return quiz.getLastDistrStatusCheck() + checkTimeot;
@@ -131,7 +131,7 @@ public class QuizCollector {
         Quizes.Visitor visitor = new VisitorForTask();
         quizes.visit(visitor);       //already synchronized
       } catch (Throwable e) {
-        logger.error(e);
+        logger.error(e, e);
         e.printStackTrace();
       } finally {
         try {
@@ -157,7 +157,7 @@ public class QuizCollector {
         }
 
       } else if (quiz.getQuizStatus() == Quiz.Status.FINISHED) { // Export stats if needed
-        if(!quiz.isExported()) {
+        if (!quiz.isExported()) {
           if (logger.isInfoEnabled())
             logger.info("Finished quiz was found, execute task to export it's results: " + quiz);
           exportStats(quiz);
@@ -185,12 +185,12 @@ public class QuizCollector {
             checkState(quiz);
 
           } else if (quiz.getQuizStatus() == Quiz.Status.NEW) {   // Create distribution
-            if(!quiz.isDistrGenerated()) {
+            if (!quiz.isDistrGenerated()) {
               if (logger.isInfoEnabled())
                 logger.info("New quiz was found, create distr for it: " + quiz);
               createDistribution(quiz);
             } else {
-              quiz.setQuizStatus(Quiz.Status.AWAIT);              //todo before: deleting from map, then: add to map and...
+              quiz.setQuizStatus(Quiz.Status.AWAIT);
             }
           }
         } else {
@@ -217,7 +217,7 @@ public class QuizCollector {
         executor.execute(new Runnable() {
           public void run() {
             try {
-              if(!quiz.isDistrGenerated()) {
+              if (!quiz.isDistrGenerated()) {
                 quiz.createDistribution();      //already synchronized
                 quiz.setLastDistrStatusCheck(System.currentTimeMillis());
                 quiz.setQuizStatus(Quiz.Status.GENERATION);
