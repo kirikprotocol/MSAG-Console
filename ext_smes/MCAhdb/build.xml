@@ -35,7 +35,7 @@
   </target>
 
   <target name="compile" depends="prepare">
-    <javac srcdir="${JAVA_SRC}" destdir="${java_out}">
+    <javac srcdir="${JAVA_SRC}" destdir="${java_out}" debug="off">
       <classpath>
         <fileset dir="${JAVA_LIB}" includes="*.jar"/>
       </classpath>

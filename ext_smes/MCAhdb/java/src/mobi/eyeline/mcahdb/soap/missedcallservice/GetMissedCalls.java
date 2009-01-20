@@ -439,8 +439,12 @@ public  class GetMissedCalls
                 
                                     
         while (!reader.isStartElement() && !reader.isEndElement()) reader.next();
-                                
-        if (reader.isStartElement() && new javax.xml.namespace.QName("http://tempuri.org/","phoneNumber").equals(reader.getName())){
+
+        if ("param0".equals(reader.getLocalName())){
+          reader.nextTag();
+        }
+
+        if (reader.isStartElement() && "phoneNumber".equals(reader.getLocalName())){
                                 
           java.lang.String content = reader.getElementText();
                                     
@@ -449,10 +453,6 @@ public  class GetMissedCalls
                                               
           reader.next();
                                     
-        }  // End of if for expected property start element
-                                
-        else {
-                                        
         }
                                   
         while (!reader.isStartElement() && !reader.isEndElement())

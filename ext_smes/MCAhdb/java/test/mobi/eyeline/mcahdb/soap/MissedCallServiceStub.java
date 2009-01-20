@@ -1,6 +1,5 @@
 package mobi.eyeline.mcahdb.soap;
 
-import org.apache.axis2.client.Options;
 import org.apache.axis2.transport.http.HTTPConstants;
 
 public class MissedCallServiceStub extends org.apache.axis2.client.Stub
@@ -88,7 +87,7 @@ public class MissedCallServiceStub extends org.apache.axis2.client.Stub
     _serviceClient.getOptions().setSoapVersionURI(org.apache.axiom.soap.SOAP12Constants.SOAP_ENVELOPE_NAMESPACE_URI);
   }
 
-  /**
+  /**     
    * Default Constructor
    */
   public MissedCallServiceStub(org.apache.axis2.context.ConfigurationContext configurationContext) throws org.apache.axis2.AxisFault {

@@ -17,7 +17,7 @@ public class MissedCallServiceClient {
 
 
       long start = System.currentTimeMillis();
-      for (int i=1000; i<1000 + 1000; i++) {
+      for (int i=1000; i<1000 + 1; i++) {
         MissedCallServiceStub.GetMissedCalls req = new MissedCallServiceStub.GetMissedCalls();
         req.setPhoneNumber("+7913903" + i);
         

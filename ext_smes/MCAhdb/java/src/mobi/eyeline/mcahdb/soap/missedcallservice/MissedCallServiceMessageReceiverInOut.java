@@ -5,6 +5,7 @@ import org.apache.axis2.AxisFault;
 import org.apache.axis2.util.JavaUtils;
 import org.apache.axis2.description.AxisOperation;
 import org.apache.axiom.soap.SOAPEnvelope;
+import org.apache.axiom.om.OMElement;
 
 /**
  *  MissedCallServiceMessageReceiverInOut message receiver
@@ -33,7 +34,7 @@ public class MissedCallServiceMessageReceiverInOut extends org.apache.axis2.rece
       if ((op.getName() != null) && ((methodName = JavaUtils.xmlNameToJava(op.getName().getLocalPart())) != null)) {
 
         if("GetMissedCalls".equals(methodName)) {
-                
+
           GetMissedCalls wrappedParam = (GetMissedCalls)fromOM(msgContext.getEnvelope().getBody().getFirstElement(),
                                                                GetMissedCalls.class,
                                                                getEnvelopeNamespaces(msgContext.getEnvelope()));
