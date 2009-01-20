@@ -115,9 +115,10 @@ public class QuizView extends SmsQuizBean {
     }
     if(initialized) {
       distributionHelper.processRequest(request);
-      if(isFinished()) {
-        distributionHelper.setReadOnly(true);
-      }
+    }
+
+    if(isFinished()) {
+      distributionHelper.setReadOnly(true);
     }
     if(mbDone != null) {
       mbDone = null;
