@@ -189,8 +189,6 @@ public class QuizCollector {
               if (logger.isInfoEnabled())
                 logger.info("New quiz was found, create distr for it: " + quiz);
               createDistribution(quiz);
-            } else {
-              quiz.setQuizStatus(Quiz.Status.AWAIT);
             }
           }
         } else {
