@@ -710,12 +710,13 @@ public class SmeEngine implements MessageListener, ResponseListener {
           return Encode.decodeUTF16(res.getBannerBody());
       }
     } else {
-      if (logger.isDebugEnabled())
-        try {
+      if (res != null) {
+        if (logger.isDebugEnabled())
           logger.debug("BE COME NULL! tranzact= " + res.getTransactionID());
-        } catch (Exception e) {
-          ;
-        }
+      } else {
+        if (logger.isDebugEnabled())
+          logger.debug("BE COME NULL!");
+      }
       return null;
     }
   }
