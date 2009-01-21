@@ -1,18 +1,15 @@
 package mobi.eyeline.mcahdb.engine.scheduler.ds.impl.file.page;
 
+import com.eyeline.utils.FileUtils;
 import mobi.eyeline.mcahdb.engine.DataSourceException;
-import mobi.eyeline.mcahdb.engine.scheduler.ds.impl.file.page.SchedulePage;
 import mobi.eyeline.mcahdb.engine.scheduler.ds.Task;
+import org.apache.log4j.Category;
 
+import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.StringTokenizer;
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-
-import org.apache.log4j.Category;
-import com.eyeline.utils.FileUtils;
 
 /**
  * User: artem
@@ -75,8 +72,8 @@ class SchedulePageImpl implements SchedulePage {
 
   private Task readTask(String str, long pointer) throws ParseException {
     int i, k;
-    i = str.indexOf(',', 1);
-    Date time = df.parse(str.substring(1, i));
+    i = str.indexOf(',', 2);    
+    Date time = df.parse(str.substring(2, i));
 
     k = i + 1;
     i = str.indexOf(',', k);
@@ -88,12 +85,6 @@ class SchedulePageImpl implements SchedulePage {
 
     k = i + 1;
     int type = Integer.parseInt(str.substring(k));
-
-//    StringTokenizer st = new StringTokenizer(str.substring(1), ",");
-//    Date time = df.parse(st.nextToken());
-//    String caller = st.nextToken().trim();
-//    String called = st.nextToken().trim();
-//    int type = Integer.parseInt(st.nextToken());
 
     Task t = new Task(caller, called);
     t.setTime(time);
@@ -125,13 +116,19 @@ class SchedulePageImpl implements SchedulePage {
 
       String line;
       long pointer = 0;
+      int lineNumber = 0;
       while((line = r.readLine()) != null) {
         if (line.charAt(0) == '0') {
-          Task t = readTask(line, pointer);
-          if (!t.getTime().before(from) && !t.getTime().after(till))
-            result.add(t);
+          try {
+            Task t = readTask(line, pointer);
+            if (!t.getTime().before(from) && !t.getTime().after(till))
+              result.add(t);
+          } catch (Throwable e) {
+            throw new DataSourceException("Error reading line: no=" + lineNumber + ": '" + line + "' in file: " + file.getPath(), e);
+          }
         }
         pointer += line.length() + 1;
+        lineNumber++;
       }
     } catch (Exception e) {
       throw new DataSourceException(e);
