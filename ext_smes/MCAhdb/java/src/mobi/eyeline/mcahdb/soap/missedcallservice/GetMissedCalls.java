@@ -440,7 +440,7 @@ public  class GetMissedCalls
                                     
         while (!reader.isStartElement() && !reader.isEndElement()) reader.next();
 
-        if ("param0".equals(reader.getLocalName())){
+        if ("req".equals(reader.getLocalName())){
           reader.nextTag();
         }
 
