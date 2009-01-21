@@ -165,6 +165,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
 
     bannerEngineClientEnabled = Boolean.valueOf(config.getProperty("banner.engine.client.enabled", Boolean.toString(bannerEngineClientEnabled))).booleanValue();
+    logger.info("banner.engine.client.enabled on init: " + bannerEngineClientEnabled);
     if (bannerEngineClientEnabled) {
 
       bannerEngineServiceName = config.getProperty("banner.engine.service.name", bannerEngineServiceName);
@@ -214,9 +215,9 @@ public class SmeEngine implements MessageListener, ResponseListener {
       bannerEngineClientConfig.put("advclient.watchDogSleep", bannerEngineClientReconnectTimeout);
       bannerEngineClientConfig.put("advclient.maxRequestInMemory", maxRequestInMemory);
 
-
       bannerEngineClient = new SyncClientImpl();
       bannerEngineClient.init(bannerEngineClientConfig);
+      bannerEngineClient.connect();
     }
 
     boolean productivityControllerEnabled = Boolean.valueOf(config.getProperty("productivity.controller.enabled", "true")).booleanValue();
@@ -687,6 +688,11 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
     RequestContext rc = RequestContext.buildBannerRequest(abonent, bannerEngineServiceName, bannerEngineBannerLength, bannerEngineCharSet);
     bannerEngineClient.getBanner(rc);
+    if (logger.isDebugEnabled())
+      logger.debug("BE rc.getState(): " + rc.getState());
+    if (logger.isDebugEnabled())
+      logger.debug("BE rc.getException(): " + rc.getException());
+    
     BannerResp res = (BannerResp) rc.getResponse();
     if (res != null && res.getBannerBody() != null) {
       if (logger.isDebugEnabled())
