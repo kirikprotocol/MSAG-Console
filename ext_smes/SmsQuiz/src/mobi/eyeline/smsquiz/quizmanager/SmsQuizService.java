@@ -57,7 +57,15 @@ public class SmsQuizService implements Service {
         if (command.getMethodName().equalsIgnoreCase(METHOD_QUIZCHANGED)) {
 
           Parameter param = command.getParameter("id");
-          return new Response(Type.STRING, manager.refreshQuiz((String) param.getValue()));
+          try{
+            manager.refreshQuiz((String) param.getValue());
+            response = new Response(Type.STRING, "");
+          }catch (Throwable e) {
+            logger.error(e,e);
+            response = new Response(Type.STRING, e.getMessage());
+            response.setStatus(Response.Status.ERROR);
+          }
+          return response;
 
         } else if (command.getMethodName().equalsIgnoreCase(METHOD_GETSTATUS)) {
 

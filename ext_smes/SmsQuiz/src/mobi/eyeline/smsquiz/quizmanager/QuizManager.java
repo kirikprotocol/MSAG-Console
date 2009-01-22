@@ -418,18 +418,8 @@ public class QuizManager implements Observer {
 
   private String delim = "|";
 
-  public String refreshQuiz(String id) {
-    StringBuilder result = new StringBuilder();
-    dirListener.refreshFile(id);
-    Quiz quiz = quizes.getQuizByFile(new File(quizDir + File.separator + id + ".xml").getAbsolutePath());
-    if (quiz != null) {
-      if (quiz.getErrorCode() != null) {
-        result.append(quiz.getErrorCode()).append(delim)
-            .append((quiz.getErrorReason() != null) ? quiz.getErrorReason() : "");
-      }
-    }
-    result.append(QuizError.OK.getCode()).append(delim);
-    return result.toString();
+  public void refreshQuiz(String id){
+      dirListener.refreshFile(id);
   }
 
   public String getStatus(String id) {

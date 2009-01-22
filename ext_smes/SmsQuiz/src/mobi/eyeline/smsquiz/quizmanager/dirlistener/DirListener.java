@@ -40,7 +40,7 @@ public class DirListener extends Observable implements Runnable {
     monitor = new DirListenerMBean(this);
   }
 
-  public void refreshFile(String id) {
+  public void refreshFile(String id){
     try {
       lock.lock();
       if (logger.isInfoEnabled()) {
@@ -57,7 +57,7 @@ public class DirListener extends Observable implements Runnable {
           ns.add(new Notification(f.getAbsolutePath(), Notification.FileStatus.DELETED));
         }
       }
-      if (!ns.isEmpty()) {
+      if(!ns.isEmpty()) {
         setChanged();
         notifyObservers(ns);
       }
