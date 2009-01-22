@@ -261,6 +261,7 @@ void MapIoTask::disconnect()
 //    return;
   }
   MapDialogContainer::getInstance()->DropAllDialogs();
+  sleep(1);
 }
 
 void MapIoTask::deinit( bool connected )
@@ -391,10 +392,14 @@ void MapIoTask::dispatcher()
         {
   //        MAP_aborting = true;
   //        abort();
+          MAP_disconnectDetected=true;
           MutexGuard mapMutexGuard(mapMutex);
-          disconnect();
-          connect();
-          MAP_disconnectDetected = false;
+          if(MAP_disconnectDetected)
+          {
+            disconnect();
+            connect();
+            MAP_disconnectDetected = false;
+          }
         }
         continue;
       }
