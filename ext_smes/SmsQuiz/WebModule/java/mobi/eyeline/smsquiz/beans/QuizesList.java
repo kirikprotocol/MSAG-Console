@@ -31,7 +31,7 @@ public class QuizesList extends SmsQuizBean {
 
   private QuizesStaticTableHelper tableHelper = new QuizesStaticTableHelper("quizesTable");
 
-  private QuizFilter filter = new QuizFilter();
+  private QuizFilter filter;
 
   private String selectedQuizId;
 
@@ -59,14 +59,15 @@ public class QuizesList extends SmsQuizBean {
       return result;
 
     try {
+      filter = new QuizFilter(smsQuizContext.getSmsQuiz());
       stateStringList = QuizDataItem.State.getStateStringList();
       int pageSize = getSmsQuizContext().getQuizesPageSize();
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
-      String dirWork = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
       arcDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_archive");
       tableHelper.setPageSize(pageSize);
-      tableHelper.setDataSource(new QuizesDataSource(quizDir, dirWork));
+      tableHelper.setDataSource(new QuizesDataSource(quizDir));
       tableHelper.setFilter(filter);
+      tableHelper.setSmsQuiz(smsQuizContext.getSmsQuiz());
       if(prefix!=null&&!prefix.trim().equals("")) {
         filter.setPrefix(prefix);
       }
@@ -121,16 +122,15 @@ public class QuizesList extends SmsQuizBean {
       return warning("Service SmsQuiz is offline");
     }
     String warnings = "";
-    System.out.println("Deleting quizes...");
     try {
       for (Iterator iter = tableHelper.getSelectedQuizesList(request).iterator(); iter.hasNext();) {
         final String quizId = (String) iter.next();
-        System.out.println("Selected checkbox: " + quizId);
         String quizPath = quizDir + File.separator + quizId + ".xml";
         if (!new File(quizPath).exists()) {
           warnings += "Quiz's  file not found for id:" + quizId + System.getProperty("line.separator");
         }
         delete(quizPath);
+        smsQuizContext.getSmsQuiz().quizChanged(quizId);
       }
     }
     catch (Exception e) {
@@ -138,7 +138,6 @@ public class QuizesList extends SmsQuizBean {
       e.printStackTrace();
     }
 
-    System.out.println("Deleting completed");
     tableHelper.setStartPosition(0);
     if (!warnings.equals("")) {
       return warning(warnings);
@@ -156,7 +155,6 @@ public class QuizesList extends SmsQuizBean {
 
   private void renameFile(File file) {
     try{
-      System.out.println("try to rename file: " + file.getAbsolutePath());
       String name = file.getName();
       file.renameTo(new File(arcDir+File.separator+name+"."+df.format(new Date())));
     }catch(Exception e) {

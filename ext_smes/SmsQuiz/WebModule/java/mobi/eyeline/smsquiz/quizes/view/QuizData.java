@@ -50,7 +50,7 @@ public class QuizData {
   }
 
   public String getDateBeginStr() {
-    return DF.format(dateBegin);
+    return (dateBegin==null) ? "" : DF.format(dateBegin);
   }
 
   public void setDateBegin(Date dateBegin) {
@@ -58,7 +58,7 @@ public class QuizData {
   }
 
   public String getDateEndStr() {
-    return DF.format(dateEnd);
+    return (dateEnd==null) ? "" : DF.format(dateEnd);
   }
 
   public Date getDateEnd() {
@@ -199,7 +199,7 @@ public class QuizData {
   }
 
   public String getDistrDateEndStr() {
-    return DF.format(distrDateEnd);
+    return (distrDateEnd==null) ? "" : DF.format(distrDateEnd);
   }
 
   public void setDistrDateEnd(Date distrDateEnd) {

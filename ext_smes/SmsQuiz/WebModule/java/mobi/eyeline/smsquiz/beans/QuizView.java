@@ -6,6 +6,7 @@ import mobi.eyeline.smsquiz.quizes.CategoriesTableHelper;
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
 import mobi.eyeline.smsquiz.QuizBuilder;
 import mobi.eyeline.smsquiz.DistributionHelper;
+import mobi.eyeline.smsquiz.beans.util.Tokenizer;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -70,8 +71,7 @@ public class QuizView extends SmsQuizBean {
     }
     try {
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
-      String workDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
-      result = readStatus(workDir);
+      result = readStatus();
       if (result != RESULT_OK) {
         return result;
       }
@@ -82,7 +82,6 @@ public class QuizView extends SmsQuizBean {
     }
     if (!buildData()) {
       logger.error("Can't read quiz: quizId doesn't exist with id=" + quizId);
-      System.out.println("Can't read quiz: quizId doesn't exist with id=" + quizId);
       return error("Can't read quiz: quizId doesn't exist with id=" + quizId);
     }
     if(!initialized) {
@@ -187,6 +186,8 @@ public class QuizView extends SmsQuizBean {
       quizData.setTxmode(Boolean.toString(distributionHelper.isTxmode()));
 
       QuizBuilder.saveQuiz(quizData,quizDir+File.separator+quizId +".xml");
+
+      smsQuizContext.getSmsQuiz().quizChanged(quizId);
     }catch(Exception e) {
       e.printStackTrace();
     }
@@ -342,36 +343,26 @@ public class QuizView extends SmsQuizBean {
     }
     return true;
   }
-  private int readStatus(String dirWork) {
-    InputStream is = null;
+  private int readStatus() {
     try {
-      is = new FileInputStream(dirWork + File.separator + quizId + ".status");
-      Properties prop = new Properties();
-      prop.load(is);
-      String status = prop.getProperty("quiz.status");
-      if(status != null) {
-        this.status = QuizDataItem.State.getStateByName(status);
+      String info = smsQuizContext.getSmsQuiz().getStatus(quizId);
+
+      Tokenizer tokenizer = new Tokenizer(info,"|");
+      if(info.equals("")) {
+        this.status = QuizDataItem.State.UNKNOWN;
       } else {
-        this.status = QuizDataItem.State.NEW;
+        this.status = QuizDataItem.State.getStateByName(reasonId = tokenizer.next());
+        this.reasonId = tokenizer.next();
+        this.reason = tokenizer.next();
       }
-      reason = prop.getProperty("quiz.error.reason");
-      reasonId = prop.getProperty("quiz.error.id");
       return RESULT_OK;
-    } catch (FileNotFoundException e) {
-      logger.warn(e,e);
-      status = QuizDataItem.State.getStateByName("NEW");
-      return RESULT_OK;
-    } catch (IOException e) {
+
+    } catch (Exception e) {
       logger.error(e,e);
       return error(e.toString());
-    } finally{
-      if(is!=null) {
-        try {
-          is.close();
-        } catch (IOException e) {}
-      }
     }
   }
+
   public QuizData getQuizData() {
     return quizData;
   }

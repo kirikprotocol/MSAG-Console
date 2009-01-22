@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import org.xml.sax.SAXException;
+import org.apache.log4j.Logger;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -24,6 +25,8 @@ public class SmsQuizContext implements SMEAppContext {
 
   private SMSCAppContext appContext;
   private String smeId = "InfoSme";
+  private static final String COMMAND_SERVER_PORT_PARAM = "commandserver.port";
+
   private final static Map instances = new HashMap();
 
   private int messagesPageSize = 20;
@@ -34,7 +37,11 @@ public class SmsQuizContext implements SMEAppContext {
   private int quizesPageSize = 20;
   private int maxQuizTotalSize = 1000;
 
-  public static SmsQuizContext getInstance(SMSCAppContext appContext, String smeId) throws AdminException, SAXException, ParserConfigurationException, IOException {
+  private static final Logger logger = Logger.getLogger(SmsQuizContext.class);
+
+  private SmsQuiz smsQuiz;
+
+  public static SmsQuizContext getInstance(SMSCAppContext appContext, String smeId) throws AdminException{
     SmsQuizContext instance = (SmsQuizContext) instances.get(smeId);
     if (instance == null) {
       instance = new SmsQuizContext(appContext, smeId);
@@ -43,20 +50,25 @@ public class SmsQuizContext implements SMEAppContext {
     return instance;
   }
 
-  private SmsQuizContext(SMSCAppContext appContext, String smeId) throws AdminException, SAXException, ParserConfigurationException, IOException {
-    this.appContext = appContext;
-    this.smeId = smeId;
-    appContext.registerSMEContext(this);
-    resetConfig();
+  private SmsQuizContext(SMSCAppContext appContext, String smeId) throws AdminException{
+    try{
+      this.appContext = appContext;
+      this.smeId = smeId;
+      appContext.registerSMEContext(this);
+      resetConfig();
+      int port = config.getInt(COMMAND_SERVER_PORT_PARAM);
+      this.smsQuiz = new SmsQuiz(appContext.getHostsManager().getServiceInfo(this.smeId),"localhost",port);      //todo
+    } catch(Exception e) {
+      logger.error(e,e);
+      throw new AdminException(e.getMessage());
+    }
   }
 
   public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException {
     config = loadCurrentConfig();
   }
 
-  public Config loadCurrentConfig()
-      throws AdminException, IOException, SAXException, ParserConfigurationException {
-    System.out.println("Config parent: " + appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder().getAbsolutePath());
+  public Config loadCurrentConfig() throws AdminException, IOException, SAXException, ParserConfigurationException {
     return new Config(new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(),
         "conf" + File.separatorChar + "config.xml"));
   }
@@ -116,4 +128,9 @@ public class SmsQuizContext implements SMEAppContext {
   public void setMaxResultsTotalSize(int maxResultsTotalSize) {
     this.maxResultsTotalSize = maxResultsTotalSize;
   }
+
+  public SmsQuiz getSmsQuiz() {
+    return smsQuiz;
+  }
+
 }

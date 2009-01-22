@@ -68,13 +68,13 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
         return;
       }
 
-      String storeDir = context.getConfig().getString("InfoSme.storeLocation");
-
-      MessageDataSource ds = new MessageDataSource(context.getConfig(), storeDir);
-      long id = ds.getMessageId(msisdn, taskId);
-      if(id == -1) {
-        throw new Exception("Message not found for taskId="+taskId+" msisdn="+msisdn);
-      }
+//      String storeDir = context.getConfig().getString("InfoSme.storeLocation");
+//
+//      MessageDataSource ds = new MessageDataSource(context.getConfig(), storeDir);
+//      long id = ds.getMessageId(msisdn, taskId);
+//      if(id == -1) {
+//        throw new Exception("Message not found for taskId="+taskId+" msisdn="+msisdn);
+//      }
       final Message message = new Message();
       message.setAbonent(msisdn);
       message.setMessage(text);

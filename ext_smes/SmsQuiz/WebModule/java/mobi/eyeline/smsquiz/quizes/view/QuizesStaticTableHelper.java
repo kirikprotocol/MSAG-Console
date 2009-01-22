@@ -11,13 +11,14 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.DataSource;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.admin.AdminException;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.*;
 import java.text.SimpleDateFormat;
+
+import org.apache.log4j.Logger;
+import mobi.eyeline.smsquiz.SmsQuiz;
 
 
 /**
@@ -25,6 +26,8 @@ import java.text.SimpleDateFormat;
  * Date: 07.11.2008
  */
 public class QuizesStaticTableHelper extends PagedStaticTableHelper {
+
+  private static final Logger logger = Logger.getLogger(QuizesStaticTableHelper.class);
 
   private final TextColumn checkColumn = new TextColumn("checkColumn", "", false);
   private final TextColumn quizidColumn = new TextColumn(QuizesDataSource.QUIZ_ID, "smsquiz.quiz.quizId", true, 25);
@@ -42,6 +45,8 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
 
   private Filter filter;
 
+  private SmsQuiz smsQuiz;
+
 
   public QuizesStaticTableHelper(String uid) {
     super(uid, false);
@@ -51,6 +56,10 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
     addColumn(dateBeginColumn);
     addColumn(dateEndColumn);
     addColumn(stateColumn);
+  }
+
+  public void setSmsQuiz(SmsQuiz smsQuiz) {
+    this.smsQuiz = smsQuiz;
   }
 
   private void buildSortOrder() {
@@ -81,6 +90,7 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
         final Row row = createNewRow();
 
         final String quizId = (String) item.getValue(QuizesDataSource.QUIZ_ID);
+        final String status = getStatus(quizId);
         final String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);
         row.addCell(checkColumn, new CheckBoxCell("chb" + quizId, false));
         row.addCell(quizidColumn, new StringCell(quizId, quizName, true));
@@ -88,13 +98,28 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
             convertDateToString((Date) item.getValue(QuizesDataSource.DATE_BEGIN)), false));
         row.addCell(dateEndColumn, new StringCell(quizId,
             convertDateToString((Date) item.getValue(QuizesDataSource.DATE_END)), false));
-        row.addCell(stateColumn, new StringCell(quizId,
-            ((QuizDataItem.State)item.getValue(QuizesDataSource.STATE)).getName(), false));
+        row.addCell(stateColumn, new StringCell(quizId, status, false));
       }
       totalSize = quizesList.getTotalSize();
 
     } catch (Exception e) {
       throw new TableHelperException(e);
+    }
+  }
+
+  private String getStatus(String quizId) {
+    String info;
+    try {
+      info = smsQuiz.getStatus(quizId);
+    } catch (AdminException e) {
+      logger.error(e,e);
+      return QuizDataItem.State.UNKNOWN.getName();
+    }
+    if(info.equals("")) {
+      return QuizDataItem.State.UNKNOWN.getName();
+    }
+    else {
+      return new StringTokenizer(info,"|").nextToken();
     }
   }
 

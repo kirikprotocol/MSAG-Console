@@ -59,8 +59,6 @@ public class QuizAdd extends SmsQuizBean {
 
   private String quizDir;
 
-  private String workDir;
-
   private String defaultCategory;
 
   private String file;
@@ -75,7 +73,6 @@ public class QuizAdd extends SmsQuizBean {
     }
     try {
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
-      workDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
     }
     catch (Exception e) {
       logger.error(e,e);
@@ -165,6 +162,7 @@ public class QuizAdd extends SmsQuizBean {
       data.setTxmode(Boolean.toString(distributionHelper.isTxmode()));
       data.setAbFile(file.getAbsolutePath());
       QuizBuilder.saveQuiz(data, quizDir + File.separator + quizId + ".xml");
+      smsQuizContext.getSmsQuiz().quizChanged(quizId);
     } catch (Exception e) {
       logger.error(e,e);
       e.printStackTrace();
@@ -192,7 +190,6 @@ public class QuizAdd extends SmsQuizBean {
 
 
   private int validation(MultipartServletRequest request) {
-    System.out.println("Validation...");
     try {
       Date startDate = dateFormat.parse(dateBegin);
       Date endDate = dateFormat.parse(dateEnd);
@@ -218,11 +215,9 @@ public class QuizAdd extends SmsQuizBean {
     }
     String[] activeWeekDays = distributionHelper.getActiveWeekDays();
     if ((activeWeekDays == null) || (activeWeekDays.length == 0)) {
-      System.out.println("Please select one or more active days");
       return warning("Please select one or more active days");
     }
     if ((tableHelper.getCategories() == null) || (tableHelper.getCategories().size() == 0)) {
-      System.out.println("Please select one or more answer's categories");
       return warning("Please select one or more answer's categories");
     }
     if((defaultCategory!=null)&&(!"".equals(defaultCategory))) {
@@ -269,7 +264,7 @@ public class QuizAdd extends SmsQuizBean {
   }
 
   private int validateQuiz() {
-    QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
+    QuizesDataSource ds = new QuizesDataSource(quizDir);
     QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
     for (int i = 0; i < quizesList.size(); i++) {
       DataItem item = quizesList.get(i);

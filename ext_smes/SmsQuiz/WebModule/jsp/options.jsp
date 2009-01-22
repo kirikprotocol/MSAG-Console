@@ -115,6 +115,14 @@
   <td><input class=txt name=smppSystemType value="<%=StringEncoderDecoder.encode(bean.getSmppSystemType())%>"></td>
 </tr>
 
+<tr>
+  <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.commandserver")%></div></th>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th><%=getLocString("smsquiz.label.commandserver.port")%></th>
+  <td><input class=txt name=commandPort value="<%=StringEncoderDecoder.encode(bean.getCommandPort())%>"></td>
+</tr>
+
 </table>
 
 </div><%

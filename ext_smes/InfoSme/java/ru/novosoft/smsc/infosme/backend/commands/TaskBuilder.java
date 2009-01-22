@@ -44,15 +44,36 @@ public class TaskBuilder extends Thread {
   }
 
   public TaskBuilder(InfoSmeContext smeContext, Distribution d) {
-    this(d.getFile(), smeContext);
-    this.distr = d;
+    this.smeContext = smeContext;
+    this.file = d.getFile();
+    this.distr = d;     
+    initTask();
   }
 
   private void initTask() {
     try {
       task = smeContext.getTaskManager().createTask();
       taskId = task.getId();
-    } catch (AdminException e) {
+
+      oldConfig = (Config)smeContext.getConfig().clone();
+      System.out.println("Copy file: " + file);
+
+      final String fileName = new File(file).getName();
+      new File(file).renameTo(new File(file + ".processed"));
+      processedFile = file + ".processed";
+      System.out.println("Create task...");
+      task.resetTask(false);
+      checkAndPrepareTask(task, smeContext, getFileCount(), false, false);
+
+      task.setMessagesHaveLoaded(false);
+      if(distr !=null) {
+        task.importFromDistribution(distr);
+      } else {
+        task.setName(fileName);
+        task.setStartDate(new Date());
+      }
+      storeTaskToConfig();
+    } catch (Exception e) {
       e.printStackTrace();
     }
   }
@@ -82,43 +103,19 @@ public class TaskBuilder extends Thread {
       return;
     }
     System.out.println("Task builder started");
-    final String fileName = new File(file).getName();
+
+    InputStreamReader is = null;
 
 //    String taskName = (distr==null) ? fileName : distr.getTaskName();
 //    System.out.println("Task name=" + taskName);
 //    task.setId(taskName);
 //    task.setName(taskName);
 
-    System.out.println("Copy file: " + file);
 
     try {
-      oldConfig = (Config)smeContext.getConfig().clone();
-    } catch (CloneNotSupportedException e) {
-      e.printStackTrace();
-      return;
-    }
 
-    new File(file).renameTo(new File(file + ".processed"));
-    processedFile = file + ".processed";
-
-    InputStreamReader is = null;
-
-    try {
-      System.out.println("Create task...");
-      task.resetTask(false);
-      checkAndPrepareTask(task, smeContext, getFileCount(), false, false);
-
-      task.setMessagesHaveLoaded(false);
-      if(distr !=null) {
-       task.importFromDistribution(distr);
-      } else {
-        task.setName(fileName);
-        task.setStartDate(new Date());
-      }
       is = new InputStreamReader(new FileInputStream(processedFile), Functions.getLocaleEncoding());
 
-
-      storeTaskToConfig();
       System.out.println("Task generation....");
       smeContext.getInfoSme().addTask(task.getId());
 

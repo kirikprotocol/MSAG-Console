@@ -5,6 +5,7 @@ import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.admin.AdminException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,9 +17,11 @@ import java.text.ParseException;
 
 import mobi.eyeline.smsquiz.replystats.*;
 import mobi.eyeline.smsquiz.QuizBuilder;
+import mobi.eyeline.smsquiz.beans.util.Tokenizer;
 import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 import mobi.eyeline.smsquiz.quizes.view.QuizData;
+import mobi.eyeline.smsquiz.quizes.view.QuizDataItem;
 
 /**
  * author: alkhal
@@ -47,8 +50,6 @@ public class Replies extends SmsQuizBean {
 
   private String quizDir;
 
-  private String workDir;
-
   protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
@@ -59,7 +60,6 @@ public class Replies extends SmsQuizBean {
     try {
       String replyDir = getSmsQuizContext().getConfig().getString("replystats.statsFile_dir");
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
-      workDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
       initQuizes();
       ds = new ReplyDataSource(replyDir);
       if (pageSize == 0) {
@@ -72,7 +72,7 @@ public class Replies extends SmsQuizBean {
           replyFilter.setQuizPath(file.getAbsolutePath());
           QuizData data = QuizBuilder.parseAll(replyFilter.getQuizPath());
           replyFilter.setQuizNumber(data.getDestAddress());
-          Date date = QuizesDataSource.getActualStartDate(workDir, quizId);
+          Date date = getActualStartDate(quizId);
           if(date!=null) {
             replyFilter.setQuizDateBegin(date);
           } else {
@@ -180,7 +180,7 @@ public class Replies extends SmsQuizBean {
   private void initQuizes() {
     try {
       quizMap.clear();
-      QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
+      QuizesDataSource ds = new QuizesDataSource(quizDir);
       QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
       for (int i = 0; i < quizesList.size(); i++) {
         DataItem item = quizesList.get(i);

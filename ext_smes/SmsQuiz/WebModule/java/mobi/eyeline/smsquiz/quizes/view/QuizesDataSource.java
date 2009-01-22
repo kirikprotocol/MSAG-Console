@@ -5,14 +5,17 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.Properties;
 import java.util.Date;
+import java.util.StringTokenizer;
 import java.io.*;
 import java.text.SimpleDateFormat;
 
 import org.apache.log4j.Category;
 import mobi.eyeline.smsquiz.QuizBuilder;
+import mobi.eyeline.smsquiz.SmsQuiz;
 import mobi.eyeline.smsquiz.quizes.view.QuizDataItem;
 
 /**
@@ -24,8 +27,6 @@ public class QuizesDataSource extends AbstractDataSource {
   private static final Category logger = Category.getInstance(QuizesDataSource.class);
 
   private String quizDir;
-
-  private String workDir;
 
   public static final String QUIZ_ID = "quiz_id";
 
@@ -63,10 +64,9 @@ public class QuizesDataSource extends AbstractDataSource {
 
   public static final String DISTR_DATE_END = "distrDateEnd";
 
-  public QuizesDataSource(String quizDir, String workDir) {
+  public QuizesDataSource(String quizDir) {
     super(new String[]{QUIZ_ID, DATE_BEGIN, DATE_END, STATE});
     this.quizDir = quizDir;
-    this.workDir = workDir;
   }
 
   public QueryResultSet query(Query query_to_run) {
@@ -89,12 +89,10 @@ public class QuizesDataSource extends AbstractDataSource {
 
     try {
       for (int j = 0; j < files.length; j++) {
-        String state;
         File file = files[j];
         String quizId = file.getName().substring(0, file.getName().indexOf("."));
         QuizData quizData = QuizBuilder.parseAll(file.getAbsolutePath());
-        state =  getStatus(quizId);
-        add(new QuizDataItem(quizData, quizId, QuizDataItem.State.getStateByName(state)));
+        add(new QuizDataItem(quizData, quizId));
       }
     } catch (Exception e) {
       logger.error(e,e);
@@ -103,103 +101,8 @@ public class QuizesDataSource extends AbstractDataSource {
     return getResults();
   }
 
-
-  public String getStatus(String quizId) {
-    File file = new File(workDir+File.separator+quizId+".status");
-    if(!file.exists()) {
-      return "NEW";
-    }
-    InputStream is = null;
-    try{
-      is = new FileInputStream(file);
-      Properties prop = new Properties();
-      prop.load(is);
-      String status = prop.getProperty("quiz.status");
-      return ((status!=null)&&(!status.equals(""))) ? status : "NEW";
-    } catch (IOException e) {
-      logger.error(e,e);
-      return "NEW";
-    } finally{
-      if(is!=null) {
-        try {
-          is.close();
-        } catch (IOException e) {}
-      }
-    }
-  }
-
   public String getQuizDir() {
     return quizDir;
-  }
-
-  public static String getTaskId(String workDir, String quizId) {
-    String res = null;
-    String path = workDir + File.separator + quizId + ".status";
-    File file = new File(path);
-    if (!file.exists()) {
-      logger.warn("Status file doen't exist for quiz: " + quizId);
-      System.err.println("WARNING: Status file doen't exist for quiz: " + quizId);
-      return null;
-    }
-    InputStream stream = null;
-    try {
-      stream = new FileInputStream(file);
-      Properties prop = new Properties();
-      prop.load(stream);
-      String id = prop.getProperty("distribution.id");
-      if ((id != null) && (!id.trim().equals(""))) {
-        res = id;
-      } else {
-        logger.warn("Property id doesn't exist in " + path);
-        System.err.println("WARNING: Property id doesn't exist in " + path);
-      }
-    } catch (IOException e) {
-      logger.error(e,e);
-      e.printStackTrace();
-    } finally {
-      if (stream != null) {
-        try {
-          stream.close();
-        } catch (IOException e) {
-        }
-      }
-    }
-    return res;
-  }
-
-  public static Date getActualStartDate(String workDir, String quizId) {
-    SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
-    Date date = null;
-    String path = workDir + File.separator + quizId + ".status";
-    File file = new File(path);
-    if (!file.exists()) {
-      logger.warn("Status file doen't exist for quiz: " + quizId);
-      System.err.println("WARNING: Status file doen't exist for quiz: " + quizId);
-      return null;
-    }
-    InputStream stream = null;
-    try {
-      stream = new FileInputStream(file);
-      Properties prop = new Properties();
-      prop.load(stream);
-      String id = prop.getProperty("quiz.start");
-      if ((id != null) && (!id.trim().equals(""))) {
-        date = df.parse(id);
-      } else {
-        logger.warn("Property id doesn't exist in " + path);
-        System.err.println("WARNING: Property id doesn't exist in " + path);
-      }
-    } catch (Exception e) {
-      logger.error(e,e);
-      e.printStackTrace();
-    } finally {
-      if (stream != null) {
-        try {
-          stream.close();
-        } catch (IOException e) {}
-      }
-    }
-    return date;
   }
 
 }

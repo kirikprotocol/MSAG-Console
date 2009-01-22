@@ -2,10 +2,15 @@ package mobi.eyeline.smsquiz.beans;
 
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.List;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 import mobi.eyeline.smsquiz.SmsQuizContext;
+import mobi.eyeline.smsquiz.beans.util.Tokenizer;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -83,6 +88,44 @@ public class SmsQuizBean extends PageBean {
 
   public void setMbMenu(String mbMenu) {
     this.mbMenu = mbMenu;
+  }
+
+  protected Date getActualStartDate(String quizId) {
+    Date date = null;
+    String info;
+    SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
+    try {
+      info = smsQuizContext.getSmsQuiz().getStatus(quizId);
+    } catch (AdminException e) {
+      logger.warn(e,e);
+      return null;
+    }
+    if(info.equals("")) {
+      return null;
+    }
+    Tokenizer tokenizer = new Tokenizer(info,"|");
+    tokenizer.next();tokenizer.next();tokenizer.next();
+    String dateStr = tokenizer.next();
+    try {
+      date = df.parse(dateStr);
+    } catch (ParseException e) {
+      logger.error(e,e);
+    }
+
+    return date;
+  }
+
+  protected String getTaskId(String quizId) {
+    String id = null;
+    try {
+      String distrId = smsQuizContext.getSmsQuiz().getDistrId(quizId);
+      if(!distrId.equals("")) {
+        id = distrId;
+      }
+    } catch (AdminException e) {
+      logger.warn(e,e);
+    }
+    return id;
   }
 
 }

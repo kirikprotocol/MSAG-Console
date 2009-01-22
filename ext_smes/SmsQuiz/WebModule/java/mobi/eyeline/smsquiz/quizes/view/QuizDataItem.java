@@ -10,8 +10,8 @@ import java.util.*;
  */
 public class QuizDataItem extends AbstractDataItem {
 
-  public QuizDataItem(QuizData d, String quizId, State state) {
-    if((d!=null)&&(quizId!=null)&&(state!=null)) {
+  public QuizDataItem(QuizData d, String quizId) {
+    if((d!=null)&&(quizId!=null)) {
       setAbFile(d.getAbFile());
       setActiveDays(d.getActiveDays());
       setCategories(d.getCategories());
@@ -26,7 +26,6 @@ public class QuizDataItem extends AbstractDataItem {
       setRepeatQuestion(d.getRepeatQuestion());
       setQuizId(quizId);
       setSourceAddress(d.getSourceAddress());
-      setState(state);
       setTimeBegin(d.getTimeBegin());
       setTimeEnd(d.getTimeEnd());
       setTxmode(d.getTxmode());
@@ -42,10 +41,6 @@ public class QuizDataItem extends AbstractDataItem {
 
   public void setDateBegin(Date dateBegin) {
     values.put(QuizesDataSource.DATE_BEGIN, dateBegin);
-  }
-
-  public void setState(State state) {
-    values.put(QuizesDataSource.STATE, state);
   }
 
   public void setDateEnd(Date dateEnd) {
@@ -121,6 +116,7 @@ public class QuizDataItem extends AbstractDataItem {
     public static final State FINISHED = new State("FINISHED");
     public static final State FINISHED_ERROR = new State("FINISHED_ERROR");
     public static final State EXPORTING = new State("EXPORTING");
+    public static final State UNKNOWN = new State("UNKNOWN");
 
     private State(String name) {
       this.name = name;
@@ -151,6 +147,9 @@ public class QuizDataItem extends AbstractDataItem {
       }
       if(name.equalsIgnoreCase(EXPORTING.getName())) {
         return FINISHED;
+      }
+      if(name.equalsIgnoreCase(UNKNOWN.getName())) {
+        return UNKNOWN;
       }
       return null;
     }

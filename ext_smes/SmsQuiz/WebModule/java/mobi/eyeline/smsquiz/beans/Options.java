@@ -38,6 +38,8 @@ public class Options extends SmsQuizBean {
   private String smppConnPassword;
   private String smppSystemType;
 
+  private int commandPort;
+
   private String mbDone;
   private String mbCancel;
 
@@ -70,6 +72,8 @@ public class Options extends SmsQuizBean {
         dirResults = getConfig().getString("quizmanager.dir_result");
         dirWork = getConfig().getString("quizmanager.dir_work");
         archiveDir = getConfig().getString("quizmanager.dir_archive");
+
+        commandPort = getConfig().getInt("commandserver.port");
 
         String smppFileName = getConfig().getString("smppConfig");
         initSmppProperties(smppFileName);
@@ -142,6 +146,8 @@ public class Options extends SmsQuizBean {
       getConfig().setString("quizmanager.dir_result", dirResults);
       getConfig().setString("quizmanager.dir_work", dirWork);
       getConfig().setString("quizmanager.dir_archive", archiveDir);
+
+      getConfig().setInt("commandserver.port", commandPort);
 
       storeSmppProperties(getConfig().getString("smppConfig"));
       config.save();
@@ -390,4 +396,18 @@ public class Options extends SmsQuizBean {
   public void setArchiveDir(String archiveDir) {
     this.archiveDir = archiveDir;
   }
+
+  public String getCommandPort() {
+    return Integer.toString(commandPort);
+  }
+
+  public void setCommandPort(String commandPort) {
+    try{
+      this.commandPort = Integer.parseInt(commandPort);
+    }catch(NumberFormatException e) {
+      logger.error(e,e);
+      e.printStackTrace();
+    }
+  }
+
 }

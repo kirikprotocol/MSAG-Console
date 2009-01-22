@@ -42,8 +42,6 @@ public class Distribution extends SmsQuizBean {
 
   private String quizDir;
 
-  private String workDir;
-
   private boolean initialized = false;
 
   private HashMap quizMap = new HashMap();
@@ -65,7 +63,6 @@ public class Distribution extends SmsQuizBean {
     try {
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
       msgStoreDir = getConfig().getString("distribution.infosme_stats_dir");
-      workDir = getConfig().getString("quizmanager.dir_work");
       ds = new MessageDataSource(getSmsQuizContext().getConfig(),msgStoreDir);
       maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
       if (pageSize == 0) {
@@ -74,7 +71,7 @@ public class Distribution extends SmsQuizBean {
       initQuizes();
       if(quizId!=null) {
         if(new File(quizDir+File.separator+quizId+".xml").exists()) {
-          String id = QuizesDataSource.getTaskId(workDir, quizId);
+          String id = getTaskId(quizId);
           msgFilter.setTaskId(id);
         } else {
           quizId = null;
@@ -100,7 +97,6 @@ public class Distribution extends SmsQuizBean {
     msgFilter.setFromDateEnabled(false);
   }
 
-
   public int process(HttpServletRequest request) {
     int result = super.process(request);
     if (result != RESULT_OK) return result;
@@ -124,7 +120,7 @@ public class Distribution extends SmsQuizBean {
 
   private void initQuizes() {
     try {
-      QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
+      QuizesDataSource ds = new QuizesDataSource(quizDir);
       QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
       quizMap.clear();
       for (int i = 0; i < quizesList.size(); i++) {

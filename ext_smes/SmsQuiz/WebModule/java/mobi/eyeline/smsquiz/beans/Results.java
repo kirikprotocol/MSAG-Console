@@ -59,10 +59,8 @@ public class Results extends SmsQuizBean {
     try {
       String resultDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_result");
       String quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
-      String workDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_work");
       int maxResults = getSmsQuizContext().getMaxResultsTotalSize();
-      makeQuizMap(quizDir, workDir);
-      System.out.println(quizId);
+      makeQuizMap(quizDir);
       if(quizId!=null) {
         if(new File(quizDir+File.separator+quizId+".xml").exists()) {
           resultFilter.setQuizId(quizId);
@@ -84,8 +82,8 @@ public class Results extends SmsQuizBean {
     return result;
   }
 
-  private void makeQuizMap(String quizDir, String workDir) {
-    QuizesDataSource ds = new QuizesDataSource(quizDir, workDir);
+  private void makeQuizMap(String quizDir) {
+    QuizesDataSource ds = new QuizesDataSource(quizDir);
     QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
     quizesMap.clear();
     for (int i = 0; i < quizesList.size(); i++) {
