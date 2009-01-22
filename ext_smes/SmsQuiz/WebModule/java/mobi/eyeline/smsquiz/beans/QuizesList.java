@@ -145,8 +145,16 @@ public class QuizesList extends SmsQuizBean {
           warnings += "Quiz's  file not found for id:" + quizId + System.getProperty("line.separator");
         }
         delete(quizPath);
-        QuizesDataSource.getInstance().refreshQuiz(quizId);
-        smsQuizContext.getSmsQuiz().quizChanged(quizId);
+        try{
+          QuizesDataSource.getInstance().refreshQuiz(quizId);
+        }catch(Exception e) {
+          logger.error(e,e);
+        }
+        try{
+          smsQuizContext.getSmsQuiz().quizChanged(quizId);
+        }catch(Exception e) {
+          logger.error(e,e);
+        }
       }
     }
     catch (Exception e) {
