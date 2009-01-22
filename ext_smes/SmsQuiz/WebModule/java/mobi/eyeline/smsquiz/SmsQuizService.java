@@ -13,7 +13,7 @@ import java.util.List;
  * author: alkhal
  * Date: 21.01.2009
  */
-public class SmsQuiz extends Service {
+public class SmsQuizService extends Service {
 
   private static final String METHOD_QUIZCHANGED = "quizchanged";
 
@@ -24,7 +24,7 @@ public class SmsQuiz extends Service {
   private static final String COMPONENT = "smsquiz";
 
 
-  public SmsQuiz(ServiceInfo info, String host, int port) {
+  public SmsQuizService(ServiceInfo info, String host, int port) {
     super(info, port);
     this.host = host;
   }

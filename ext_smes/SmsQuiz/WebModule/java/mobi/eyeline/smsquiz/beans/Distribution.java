@@ -7,7 +7,6 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.infosme.backend.tables.messages.*;
 import ru.novosoft.smsc.infosme.backend.Message;
 
@@ -20,7 +19,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
-import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
+import mobi.eyeline.smsquiz.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 
 /**
@@ -40,8 +39,6 @@ public class Distribution extends SmsQuizBean {
 
   private String mbExportAll = null;
 
-  private String quizDir;
-
   private boolean initialized = false;
 
   private HashMap quizMap = new HashMap();
@@ -50,10 +47,6 @@ public class Distribution extends SmsQuizBean {
 
   private String quizId;
 
-  private String msgStoreDir;
-
-  private int maxTotalSize;
-
   private MessagesTableHelper tableHelper = new MessagesTableHelper("message_table_helper", false);
 
   protected int init(List errors) {
@@ -61,30 +54,39 @@ public class Distribution extends SmsQuizBean {
     if (result != RESULT_OK) return result;
 
     try {
-      quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
-      msgStoreDir = getConfig().getString("distribution.infosme_stats_dir");
+      String quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
+      String msgStoreDir = getConfig().getString("distribution.infosme_stats_dir");
       ds = new MessageDataSource(getSmsQuizContext().getConfig(),msgStoreDir);
-      maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
+      int maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
       if (pageSize == 0) {
         pageSize = getSmsQuizContext().getMessagesPageSize();
       }
-      initQuizes();
       if(quizId!=null) {
-        if(new File(quizDir+File.separator+quizId+".xml").exists()) {
+        if(new File(quizDir +File.separator+quizId+".xml").exists()) {
           String id = getTaskId(quizId);
           msgFilter.setTaskId(id);
         } else {
-          quizId = null;
           initialized = false;
           tableHelper.reset();
+          if(logger.isDebugEnabled()) {
+            logger.debug("Trying to refresh quiz with id: "+quizId);
+          }
+          try{
+            QuizesDataSource.getInstance().refreshQuiz(quizId);
+          } catch(Exception e) {
+            logger.error(e,e);
+          }
+          result = message("Quiz doesn't exist with id: "+quizId);
+          quizId = null;
         }
       }
+      initQuizes();
       tableHelper.setFilter(msgFilter);
       tableHelper.setDs(ds);
       tableHelper.setPageSize(pageSize);
       tableHelper.setMaxRows(maxTotalSize);
     } catch (Exception e) {
-      return error("Can't init dataa source", e);
+      return error("Can't init data source", e);
     }
     return result;
   }
@@ -120,7 +122,7 @@ public class Distribution extends SmsQuizBean {
 
   private void initQuizes() {
     try {
-      QuizesDataSource ds = new QuizesDataSource(quizDir);
+      QuizesDataSource ds = QuizesDataSource.getInstance();
       QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
       quizMap.clear();
       for (int i = 0; i < quizesList.size(); i++) {

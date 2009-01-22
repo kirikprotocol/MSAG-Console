@@ -1,11 +1,12 @@
 package mobi.eyeline.smsquiz.beans;
 
 import mobi.eyeline.smsquiz.quizes.view.QuizData;
-import mobi.eyeline.smsquiz.quizes.view.QuizDataItem;
 import mobi.eyeline.smsquiz.quizes.CategoriesTableHelper;
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
+import mobi.eyeline.smsquiz.quizes.QuizState;
 import mobi.eyeline.smsquiz.QuizBuilder;
 import mobi.eyeline.smsquiz.DistributionHelper;
+import mobi.eyeline.smsquiz.QuizesDataSource;
 import mobi.eyeline.smsquiz.beans.util.Tokenizer;
 
 import javax.servlet.http.HttpServletRequest;
@@ -15,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 import ru.novosoft.smsc.jsp.util.helper.Validation;
+import ru.novosoft.smsc.admin.AdminException;
 
 /**
  * author: alkhal
@@ -47,7 +49,7 @@ public class QuizView extends SmsQuizBean {
 
   private String defaultCategory;
 
-  private QuizDataItem.State status;
+  private QuizState status;
 
   private String reasonId;
 
@@ -62,11 +64,11 @@ public class QuizView extends SmsQuizBean {
     if (result != RESULT_OK) {
       return result;
     }
-    if((quizId ==null)||("".equals(quizId))) {
-      return RESULT_DONE;
-    }
     try {
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
+      if((quizId ==null)||("".equals(quizId)||(!new File(quizDir+File.separator+quizId+".xml").exists()))) {
+        return RESULT_DONE;
+      }
       result = readStatus();
       if (result != RESULT_OK) {
         return result;
@@ -128,14 +130,14 @@ public class QuizView extends SmsQuizBean {
 
   public boolean isActive(){
     if(status!=null) {
-        return status.equals(QuizDataItem.State.ACTIVE);
+        return status.equals(QuizState.ACTIVE);
     }
     return false;
   }
 
   public boolean isFinished() {
     if(status!=null) {
-      return status.equals(QuizDataItem.State.FINISHED)||status.equals(QuizDataItem.State.FINISHED_ERROR);
+      return status.equals(QuizState.FINISHED)||status.equals(QuizState.FINISHED_ERROR);
     }
     return false;
   }
@@ -183,8 +185,17 @@ public class QuizView extends SmsQuizBean {
 
       QuizBuilder.saveQuiz(quizData,quizDir+File.separator+quizId +".xml");
 
-      smsQuizContext.getSmsQuiz().quizChanged(quizId);
+      QuizesDataSource.getInstance().refreshQuiz(quizId);
+
+      try{
+        smsQuizContext.getSmsQuiz().quizChanged(quizId);
+      }catch(AdminException e) {
+        logger.error(e,e);
+        e.printStackTrace();
+      }
+
     }catch(Exception e) {
+      logger.error(e,e);
       e.printStackTrace();
     }
     return RESULT_DONE;
@@ -325,13 +336,11 @@ public class QuizView extends SmsQuizBean {
     if (quizId == null) {
       return false;
     }
-    String path = quizDir + File.separator + quizId + ".xml";
-    File file = new File(path);
-    if (!file.exists()) {
-      return false;
-    }
     try {
-      quizData = QuizBuilder.parseAll(file.getAbsolutePath());
+      quizData = QuizesDataSource.getInstance().refreshQuiz(quizId);
+      if(quizData == null) {
+        return false;
+      }
     } catch (Exception e) {
       logger.error(e,e);
       e.printStackTrace();
@@ -345,9 +354,9 @@ public class QuizView extends SmsQuizBean {
 
       Tokenizer tokenizer = new Tokenizer(info,"|");
       if(info.equals("")) {
-        this.status = QuizDataItem.State.UNKNOWN;
+        this.status = QuizState.UNKNOWN;
       } else {
-        this.status = QuizDataItem.State.getStateByName(reasonId = tokenizer.next());
+        this.status = QuizState.getQuizStateByName(reasonId = tokenizer.next());
         this.reasonId = tokenizer.next();
         this.reason = tokenizer.next();
       }
@@ -412,7 +421,7 @@ public class QuizView extends SmsQuizBean {
   }
 
   public String getStatus() {
-    return status==null ? QuizDataItem.State.NEW.getName() : status.getName();
+    return status==null ? QuizState.NEW.getName() : status.getName();
   }
 
   public String getReasonId() {

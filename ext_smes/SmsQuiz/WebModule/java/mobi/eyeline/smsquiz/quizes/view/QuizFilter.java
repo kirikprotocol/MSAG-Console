@@ -7,8 +7,10 @@ import ru.novosoft.smsc.admin.AdminException;
 import java.util.Date;
 import java.util.StringTokenizer;
 
-import mobi.eyeline.smsquiz.SmsQuiz;
-import org.apache.log4j.Logger;
+import mobi.eyeline.smsquiz.SmsQuizService;
+import mobi.eyeline.smsquiz.quizes.QuizState;
+import mobi.eyeline.smsquiz.QuizesDataSource;
+import org.apache.log4j.Category;
 
 /**
  * author: alkhal
@@ -24,20 +26,20 @@ public class QuizFilter implements Filter {
 
   private String state;
 
-  private SmsQuiz smsQuiz;
+  private SmsQuizService smsQuizService;
 
-  private static final Logger logger = Logger.getLogger(QuizFilter.class);
+  private static final Category logger = Category.getInstance(QuizFilter.class);
 
   public boolean isEmpty() {
     return false;
   }
 
-  public QuizFilter(SmsQuiz smsQuiz) {
-    if(smsQuiz==null) {
+  public QuizFilter(SmsQuizService smsQuizService) {
+    if(smsQuizService ==null) {
       logger.error("Some argument are null");
       throw new IllegalArgumentException("Some argument are null");
     }
-    this.smsQuiz = smsQuiz;
+    this.smsQuizService = smsQuizService;
   }
 
   public boolean isItemAllowed(DataItem item) {
@@ -64,13 +66,13 @@ public class QuizFilter implements Filter {
   private String getStatus(String quizId) {
     String info;
     try {
-      info = smsQuiz.getStatus(quizId);
+      info = smsQuizService.getStatus(quizId);
     } catch (AdminException e) {
       logger.error(e,e);
-      return QuizDataItem.State.UNKNOWN.getName();
+      return QuizState.UNKNOWN.getName();
     }
     if(info.equals("")) {
-      return QuizDataItem.State.UNKNOWN.getName();
+      return QuizState.UNKNOWN.getName();
     }
     else {
       return new StringTokenizer(info,"|").nextToken();

@@ -5,7 +5,6 @@ import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.admin.AdminException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -17,11 +16,9 @@ import java.text.ParseException;
 
 import mobi.eyeline.smsquiz.replystats.*;
 import mobi.eyeline.smsquiz.QuizBuilder;
-import mobi.eyeline.smsquiz.beans.util.Tokenizer;
-import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
+import mobi.eyeline.smsquiz.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 import mobi.eyeline.smsquiz.quizes.view.QuizData;
-import mobi.eyeline.smsquiz.quizes.view.QuizDataItem;
 
 /**
  * author: alkhal
@@ -60,7 +57,6 @@ public class Replies extends SmsQuizBean {
     try {
       String replyDir = getSmsQuizContext().getConfig().getString("replystats.statsFile_dir");
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
-      initQuizes();
       ds = new ReplyDataSource(replyDir);
       if (pageSize == 0) {
         pageSize = getSmsQuizContext().getMessagesPageSize();
@@ -80,11 +76,22 @@ public class Replies extends SmsQuizBean {
           }
           replyFilter.setQuizDateEnd(data.getDateEnd());
         } else {
-          quizId = null;
           initialized = false;
           tableHelper.reset();
+          if(logger.isDebugEnabled()) {
+            logger.debug("Trying to refresh quiz with id: "+quizId);
+          }
+          try{
+            QuizesDataSource.getInstance().refreshQuiz(quizId);
+          } catch(Exception e) {
+            logger.error(e,e);
+          }
+          result = message("Quiz doesn't exist with id: "+quizId);
+          quizId = null;
         }
       }
+
+      initQuizes();
       tableHelper.setFilter(replyFilter);
       tableHelper.setDs(ds);
       tableHelper.setPageSize(pageSize);
@@ -180,7 +187,7 @@ public class Replies extends SmsQuizBean {
   private void initQuizes() {
     try {
       quizMap.clear();
-      QuizesDataSource ds = new QuizesDataSource(quizDir);
+      QuizesDataSource ds = QuizesDataSource.getInstance();
       QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
       for (int i = 0; i < quizesList.size(); i++) {
         DataItem item = quizesList.get(i);

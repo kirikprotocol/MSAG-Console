@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 import mobi.eyeline.smsquiz.SmsQuizContext;
+import mobi.eyeline.smsquiz.QuizesDataSource;
 import mobi.eyeline.smsquiz.beans.util.Tokenizer;
 
 import javax.servlet.http.HttpServletRequest;
@@ -98,6 +99,15 @@ public class SmsQuizBean extends PageBean {
       info = smsQuizContext.getSmsQuiz().getStatus(quizId);
     } catch (AdminException e) {
       logger.warn(e,e);
+      try{
+        if(logger.isInfoEnabled()){
+          logger.error("Trying to refresh quiz with id: "+quizId);
+        }
+        QuizesDataSource.getInstance().refreshQuiz(quizId);
+      } catch(Exception ex) {
+        logger.error(e,e);
+        e.printStackTrace();
+      }
       return null;
     }
     if(info.equals("")) {
@@ -124,6 +134,15 @@ public class SmsQuizBean extends PageBean {
       }
     } catch (AdminException e) {
       logger.warn(e,e);
+      try{
+        if(logger.isInfoEnabled()){
+          logger.error("Trying to refresh quiz with id: "+quizId);
+        }
+        QuizesDataSource.getInstance().refreshQuiz(quizId);
+      } catch(Exception ex) {
+        logger.error(e,e);
+        e.printStackTrace();
+      }
     }
     return id;
   }

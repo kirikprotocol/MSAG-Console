@@ -11,9 +11,10 @@ import java.util.Map;
 import java.util.HashMap;
 
 import org.xml.sax.SAXException;
-import org.apache.log4j.Logger;
+import org.apache.log4j.Category;
 
 import javax.xml.parsers.ParserConfigurationException;
+
 
 /**
  * author: alkhal
@@ -37,9 +38,9 @@ public class SmsQuizContext implements SMEAppContext {
   private int quizesPageSize = 20;
   private int maxQuizTotalSize = 1000;
 
-  private static final Logger logger = Logger.getLogger(SmsQuizContext.class);
+  private static final Category logger = Category.getInstance(SmsQuizContext.class);
 
-  private SmsQuiz smsQuiz;
+  private SmsQuizService smsQuizService;
 
   public static SmsQuizContext getInstance(SMSCAppContext appContext, String smeId) throws AdminException{
     SmsQuizContext instance = (SmsQuizContext) instances.get(smeId);
@@ -57,7 +58,8 @@ public class SmsQuizContext implements SMEAppContext {
       appContext.registerSMEContext(this);
       resetConfig();
       int port = config.getInt(COMMAND_SERVER_PORT_PARAM);
-      this.smsQuiz = new SmsQuiz(appContext.getHostsManager().getServiceInfo(this.smeId),"localhost",port);      //todo
+      this.smsQuizService = new SmsQuizService(appContext.getHostsManager().getServiceInfo(this.smeId),"localhost",port); /*todo*/
+      QuizesDataSource.initDs(config);
     } catch(Exception e) {
       logger.error(e,e);
       throw new AdminException(e.getMessage());
@@ -129,8 +131,8 @@ public class SmsQuizContext implements SMEAppContext {
     this.maxResultsTotalSize = maxResultsTotalSize;
   }
 
-  public SmsQuiz getSmsQuiz() {
-    return smsQuiz;
+  public SmsQuizService getSmsQuiz() {
+    return smsQuizService;
   }
 
 }

@@ -1,6 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="java.util.*, ru.novosoft.smsc.util.Functions,
-                 java.text.SimpleDateFormat"%>
+<%@ page import="ru.novosoft.smsc.util.Functions"%>
 <%@ page import="mobi.eyeline.smsquiz.beans.QuizView"%>
 <%@ page import="mobi.eyeline.smsquiz.quizes.AnswerCategory"%>
 <%@ page import="mobi.eyeline.smsquiz.quizes.view.QuizData"%>
@@ -12,7 +11,7 @@
   TITLE = getLocString("smsquiz.title")+": "+getLocString("smsquiz.label.quizes");
   bean.getTableHelper().processRequest(request);
   int beanResult = bean.process(request);
-  if(beanResult == QuizView.RESULT_DONE) {
+  if(beanResult == SmsQuizBean.RESULT_DONE) {
     response.sendRedirect("quizes.jsp");
   }
 %>

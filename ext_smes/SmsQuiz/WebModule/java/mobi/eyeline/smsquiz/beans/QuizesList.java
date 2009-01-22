@@ -11,10 +11,10 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
-import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
+import mobi.eyeline.smsquiz.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizesStaticTableHelper;
 import mobi.eyeline.smsquiz.quizes.view.QuizFilter;
-import mobi.eyeline.smsquiz.quizes.view.QuizDataItem;
+import mobi.eyeline.smsquiz.quizes.QuizState;
 
 /**
  * author: alkhal
@@ -27,6 +27,8 @@ public class QuizesList extends SmsQuizBean {
 
   private String mbAdd = null;
   private String mbDelete = null;
+
+  private String mbRefresh = null;
 
 
   private QuizesStaticTableHelper tableHelper = new QuizesStaticTableHelper("quizesTable");
@@ -60,12 +62,12 @@ public class QuizesList extends SmsQuizBean {
 
     try {
       filter = new QuizFilter(smsQuizContext.getSmsQuiz());
-      stateStringList = QuizDataItem.State.getStateStringList();
+      stateStringList = QuizState.getQuizStateStringList();
       int pageSize = getSmsQuizContext().getQuizesPageSize();
       quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
       arcDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_archive");
       tableHelper.setPageSize(pageSize);
-      tableHelper.setDataSource(new QuizesDataSource(quizDir));
+      tableHelper.setDataSource(QuizesDataSource.getInstance());
       tableHelper.setFilter(filter);
       tableHelper.setSmsQuiz(smsQuizContext.getSmsQuiz());
       if(prefix!=null&&!prefix.trim().equals("")) {
@@ -105,6 +107,9 @@ public class QuizesList extends SmsQuizBean {
       } else if (mbDelete != null) {
         mbDelete = null;
         result = processDelete(request);
+      } else if(mbRefresh != null) {
+        mbRefresh = null;
+        result = processRefresh();
       }
 
       this.tableHelper.fillTable();
@@ -115,6 +120,16 @@ public class QuizesList extends SmsQuizBean {
     }
 
     return result;
+  }
+
+  private int processRefresh() {
+    try{
+      QuizesDataSource.getInstance().refreshQuizes();
+      return RESULT_OK;
+    }catch(Exception e) {
+      logger.error(e,e);
+      return error(e.getMessage());
+    }
   }
 
   private int processDelete(HttpServletRequest request) {
@@ -130,6 +145,7 @@ public class QuizesList extends SmsQuizBean {
           warnings += "Quiz's  file not found for id:" + quizId + System.getProperty("line.separator");
         }
         delete(quizPath);
+        QuizesDataSource.getInstance().refreshQuiz(quizId);
         smsQuizContext.getSmsQuiz().quizChanged(quizId);
       }
     }
@@ -255,5 +271,13 @@ public class QuizesList extends SmsQuizBean {
   }
   public boolean isState(String state) {
     return (this.state != null) && state.equals(this.state);
+  }
+
+  public String getMbRefresh() {
+    return mbRefresh;
+  }
+
+  public void setMbRefresh(String mbRefresh) {
+    this.mbRefresh = mbRefresh;
   }
 }

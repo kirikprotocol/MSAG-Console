@@ -5,6 +5,7 @@ import ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.util.jsp.MultipartServletRequest;
 import ru.novosoft.util.jsp.MultipartDataSource;
 
@@ -21,7 +22,7 @@ import mobi.eyeline.smsquiz.quizes.CategoriesTableHelper;
 import mobi.eyeline.smsquiz.quizes.AnswerCategory;
 import mobi.eyeline.smsquiz.quizes.QuizFileIndex;
 import mobi.eyeline.smsquiz.quizes.view.QuizData;
-import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
+import mobi.eyeline.smsquiz.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 import mobi.eyeline.smsquiz.QuizBuilder;
 import mobi.eyeline.smsquiz.DistributionHelper;
@@ -162,7 +163,13 @@ public class QuizAdd extends SmsQuizBean {
       data.setTxmode(Boolean.toString(distributionHelper.isTxmode()));
       data.setAbFile(file.getAbsolutePath());
       QuizBuilder.saveQuiz(data, quizDir + File.separator + quizId + ".xml");
-      smsQuizContext.getSmsQuiz().quizChanged(quizId);
+      QuizesDataSource.getInstance().refreshQuiz(quizId);
+      try{
+        smsQuizContext.getSmsQuiz().quizChanged(quizId);
+      } catch(AdminException e) {
+        logger.error(e,e);
+        e.printStackTrace();
+      }
     } catch (Exception e) {
       logger.error(e,e);
       e.printStackTrace();
@@ -264,7 +271,13 @@ public class QuizAdd extends SmsQuizBean {
   }
 
   private int validateQuiz() {
-    QuizesDataSource ds = new QuizesDataSource(quizDir);
+    QuizesDataSource ds = null;
+    try {
+      ds = QuizesDataSource.getInstance();
+    } catch (IllegalAccessException e) {
+      logger.error(e,e);
+      return error(e.getMessage());
+    }
     QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
     for (int i = 0; i < quizesList.size(); i++) {
       DataItem item = quizesList.get(i);

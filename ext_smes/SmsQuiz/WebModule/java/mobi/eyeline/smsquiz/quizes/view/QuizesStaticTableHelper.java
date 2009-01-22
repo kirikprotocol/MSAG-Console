@@ -17,8 +17,10 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.text.SimpleDateFormat;
 
-import org.apache.log4j.Logger;
-import mobi.eyeline.smsquiz.SmsQuiz;
+import org.apache.log4j.Category;
+import mobi.eyeline.smsquiz.SmsQuizService;
+import mobi.eyeline.smsquiz.quizes.QuizState;
+import mobi.eyeline.smsquiz.QuizesDataSource;
 
 
 /**
@@ -27,7 +29,7 @@ import mobi.eyeline.smsquiz.SmsQuiz;
  */
 public class QuizesStaticTableHelper extends PagedStaticTableHelper {
 
-  private static final Logger logger = Logger.getLogger(QuizesStaticTableHelper.class);
+  private static final Category logger = Category.getInstance(QuizesStaticTableHelper.class);
 
   private final TextColumn checkColumn = new TextColumn("checkColumn", "", false);
   private final TextColumn quizidColumn = new TextColumn(QuizesDataSource.QUIZ_ID, "smsquiz.quiz.quizId", true, 25);
@@ -45,7 +47,7 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
 
   private Filter filter;
 
-  private SmsQuiz smsQuiz;
+  private SmsQuizService smsQuizService;
 
 
   public QuizesStaticTableHelper(String uid) {
@@ -58,8 +60,8 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
     addColumn(stateColumn);
   }
 
-  public void setSmsQuiz(SmsQuiz smsQuiz) {
-    this.smsQuiz = smsQuiz;
+  public void setSmsQuiz(SmsQuizService smsQuizService) {
+    this.smsQuizService = smsQuizService;
   }
 
   private void buildSortOrder() {
@@ -110,13 +112,21 @@ public class QuizesStaticTableHelper extends PagedStaticTableHelper {
   private String getStatus(String quizId) {
     String info;
     try {
-      info = smsQuiz.getStatus(quizId);
+      info = smsQuizService.getStatus(quizId);
     } catch (AdminException e) {
       logger.error(e,e);
-      return QuizDataItem.State.UNKNOWN.getName();
+      if(logger.isDebugEnabled()) {
+        logger.debug("Trying to refresh quiz");
+      }
+      try{
+        QuizesDataSource.getInstance().refreshQuiz(quizId);
+      } catch(Exception ex) {
+        logger.error(ex,ex);
+      }
+      return QuizState.UNKNOWN.getName();
     }
     if(info.equals("")) {
-      return QuizDataItem.State.UNKNOWN.getName();
+      return QuizState.UNKNOWN.getName();
     }
     else {
       return new StringTokenizer(info,"|").nextToken();

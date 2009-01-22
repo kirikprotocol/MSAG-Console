@@ -85,6 +85,8 @@ page_menu_end(out);
     page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "smsquiz.quiz.delete", getLocString("smsquiz.confirm.quiz.delete"));
   }
   page_menu_space(out);
+  page_menu_button(session, out, "mbRefresh",    "common.buttons.refresh",    "smsquiz.quiz.refresh");
+
   page_menu_end(out);
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

@@ -2,7 +2,7 @@ package mobi.eyeline.smsquiz.beans;
 
 
 import mobi.eyeline.smsquiz.results.*;
-import mobi.eyeline.smsquiz.quizes.view.QuizesDataSource;
+import mobi.eyeline.smsquiz.QuizesDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,10 +11,8 @@ import javax.servlet.jsp.JspWriter;
 import java.util.*;
 import java.io.IOException;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 
-import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
@@ -60,16 +58,25 @@ public class Results extends SmsQuizBean {
       String resultDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_result");
       String quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
       int maxResults = getSmsQuizContext().getMaxResultsTotalSize();
-      makeQuizMap(quizDir);
       if(quizId!=null) {
         if(new File(quizDir+File.separator+quizId+".xml").exists()) {
           resultFilter.setQuizId(quizId);
         } else {
-          quizId = null;
           initialized = false;
           tableHelper.reset();
+          if(logger.isDebugEnabled()) {
+            logger.debug("Trying to refresh quiz with id: "+quizId);
+          }
+          try{
+            QuizesDataSource.getInstance().refreshQuiz(quizId);
+          } catch(Exception e) {
+            logger.error(e,e);
+          }
+          result = message("Quiz doesn't exist with id: "+quizId);
+          quizId = null;
         }
       }
+      makeQuizMap(quizDir);
       ds = new ResultDataSource(resultDir);
       tableHelper.setPageSize(pageSize);
       tableHelper.setFilter(resultFilter);
@@ -83,14 +90,19 @@ public class Results extends SmsQuizBean {
   }
 
   private void makeQuizMap(String quizDir) {
-    QuizesDataSource ds = new QuizesDataSource(quizDir);
-    QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
-    quizesMap.clear();
-    for (int i = 0; i < quizesList.size(); i++) {
-      DataItem item = quizesList.get(i);
-      String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);
-      String quizId = (String)item.getValue(QuizesDataSource.QUIZ_ID);
-      quizesMap.put(quizId,quizName);
+    try{
+      QuizesDataSource ds = QuizesDataSource.getInstance();
+      QueryResultSet quizesList = ds.query(new QuizQuery(1000, new EmptyFilter(), QuizesDataSource.QUIZ_NAME, 0));
+      quizesMap.clear();
+      for (int i = 0; i < quizesList.size(); i++) {
+        DataItem item = quizesList.get(i);
+        String quizName = (String) item.getValue(QuizesDataSource.QUIZ_NAME);
+        String quizId = (String)item.getValue(QuizesDataSource.QUIZ_ID);
+        quizesMap.put(quizId,quizName);
+      }
+    }catch(Exception e) {
+      logger.error(e,e);
+      e.printStackTrace();
     }
   }
 
