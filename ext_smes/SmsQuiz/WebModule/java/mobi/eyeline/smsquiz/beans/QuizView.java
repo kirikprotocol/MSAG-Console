@@ -24,10 +24,6 @@ public class QuizView extends SmsQuizBean {
 
   private QuizData quizData = new QuizData();
 
-  public static final int RESULT_DONE = SmsQuizBean.PRIVATE_RESULT + 1;
-
-  public static final int RESULT_EDIT = SmsQuizBean.PRIVATE_RESULT + 2;
-
   private final CategoriesTableHelper tableHelper = new CategoriesTableHelper("smsquiz.label.category", "categories", 70, Validation.NON_EMPTY, true);
 
   private SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
