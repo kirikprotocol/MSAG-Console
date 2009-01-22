@@ -196,7 +196,7 @@ public class QuizCollector {
             logger.warn("Found quiz in state " + quiz.getQuizStatus() + " and expired end date was found:" + quiz);
           try {
             if (logger.isInfoEnabled()) {
-              logger.warn("Trying to export stats for it: ");
+              logger.info("Trying to export stats for it: ");
               exportStats(quiz);
             }
           } catch (Exception e) {
@@ -300,7 +300,7 @@ public class QuizCollector {
             } catch (QuizException e) {
               quiz.writeError(e);
               try {
-                quiz.setQuizStatus(QuizError.UNKNOWN, "Error during export stats");
+                quiz.setQuizStatus(QuizError.INTERNAL_ERROR, "Error during export stats");
               } catch (QuizException ex) {
               }
               logger.error("Error creating result statistics for quiz:" + quiz, e);

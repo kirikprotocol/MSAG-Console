@@ -40,6 +40,10 @@
     <param name="listener_period" type="int">30</param>
   </section>
 
+  <section name="commandserver">
+      <param name="port" type="int">3333</param>
+  </section>
+
   <section name="replystats">
     <param name="fileCollector_limit" type="int">60</param>
     <param name="fileCollector_period" type="int">60</param>

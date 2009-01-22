@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz.quizmanager.filehandler;
+package mobi.eyeline.smsquiz.quizmanager.dirlistener;
 
 /**
  * author: alkhal

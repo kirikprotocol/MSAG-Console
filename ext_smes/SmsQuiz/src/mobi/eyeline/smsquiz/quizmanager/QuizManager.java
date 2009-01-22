@@ -5,8 +5,8 @@ import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.jmx.log4j.LoggingMBean;
 import mobi.eyeline.smsquiz.distribution.DistributionManager;
-import mobi.eyeline.smsquiz.quizmanager.filehandler.DirListener;
-import mobi.eyeline.smsquiz.quizmanager.filehandler.Notification;
+import mobi.eyeline.smsquiz.quizmanager.dirlistener.DirListener;
+import mobi.eyeline.smsquiz.quizmanager.dirlistener.Notification;
 import mobi.eyeline.smsquiz.quizmanager.quiz.Quiz;
 import mobi.eyeline.smsquiz.quizmanager.quiz.QuizBuilder;
 import mobi.eyeline.smsquiz.quizmanager.quiz.QuizData;
@@ -86,7 +86,7 @@ public class QuizManager implements Observer {
       final XmlConfig c = new XmlConfig();
       c.load(new File(configFile));
       PropertiesConfig config = new PropertiesConfig(c.getSection("quizmanager").toProperties("."));
-      listenerDelayFirst = config.getLong("listener_delay", 30);
+      listenerDelayFirst = config.getLong("listener_delay", 0);
       listenerPeriod = config.getLong("listener_period", 30);
       collectorDelayFirst = config.getLong("collector_delay", 30);
       collectorPeriod = config.getLong("collector_period", 30);
@@ -162,38 +162,32 @@ public class QuizManager implements Observer {
 
   @SuppressWarnings({"unchecked"})
   public void update(Observable o, Object arg) {
-    try {
-      logger.info("Updating quizfiles list...");
-      Collection<Notification> ns = (Collection<Notification>) arg;
-      for (Notification notification : ns) {
-        if (notification.getStatus().equals(Notification.FileStatus.MODIFIED)) {
-          try {
-            modifyQuiz(notification);
-          } catch (Exception e) {
-            logger.error("Unable to modify quiz: " + notification.getFileName(), e);
-          }
+    logger.info("Updating quizfiles list...");
+    Collection<Notification> ns = (Collection<Notification>) arg;
+    for (Notification notification : ns) {
+      if (notification.getStatus().equals(Notification.FileStatus.MODIFIED)) {
+        try {
+          modifyQuiz(notification);
+        } catch (Exception e) {
+          logger.error("Unable to modify quiz: " + notification.getFileName(), e);
+        }
 
-        } else if (notification.getStatus().equals(Notification.FileStatus.CREATED)) {
-          try {
-            createQuiz(notification);
-          } catch (Exception e) {
-            logger.error("Unable to update quize: " + notification.getFileName(), e);
-          }
-        } else if (notification.getStatus().equals(Notification.FileStatus.DELETED)) {
-          try {
-            deleteQuiz(notification);
-          }
-          catch (Exception e) {
-            logger.error("Unable to delete quize: " + notification.getFileName(), e);
-          }
+      } else if (notification.getStatus().equals(Notification.FileStatus.CREATED)) {
+        try {
+          createQuiz(notification);
+        } catch (Exception e) {
+          logger.error("Unable to update quize: " + notification.getFileName(), e);
+        }
+      } else if (notification.getStatus().equals(Notification.FileStatus.DELETED)) {
+        try {
+          deleteQuiz(notification);
+        }
+        catch (Exception e) {
+          logger.error("Unable to delete quize: " + notification.getFileName(), e);
         }
       }
     }
-    catch (Throwable e) {
-      logger.error(e, e);
-    } finally {
-      logger.info("Updating completed.");
-    }
+    logger.info("Updating completed.");
   }
 
   @SuppressWarnings({"ThrowableInstanceNeverThrown"})
@@ -420,6 +414,49 @@ public class QuizManager implements Observer {
     public Collection<Quiz> getConflicts() {
       return conflicts;
     }
+  }
+
+  private String delim = "|";
+
+  public String refreshQuiz(String id) {
+    StringBuilder result = new StringBuilder();
+    dirListener.refreshFile(id);
+    Quiz quiz = quizes.getQuizByFile(new File(quizDir + File.separator + id + ".xml").getAbsolutePath());
+    if (quiz != null) {
+      if (quiz.getErrorCode() != null) {
+        result.append(quiz.getErrorCode()).append(delim)
+            .append((quiz.getErrorReason() != null) ? quiz.getErrorReason() : "");
+      }
+    }
+    result.append(QuizError.OK.getCode()).append(delim);
+    return result.toString();
+  }
+
+  public String getStatus(String id) {
+    Quiz quiz = quizes.getQuizByFile(new File(quizDir + File.separator + id + ".xml").getAbsolutePath());
+    return (quiz == null) ? null : quiz.getStatusToString(delim);
+  }
+
+  public Collection getStatuses() {
+    final Collection<String> statuses = new LinkedList<String>();
+    try {
+      Quizes.Visitor visitor = new Quizes.Visitor() {
+        public void visit(Quiz quiz) {
+          String fileName = quiz.getFileName();
+          String id = fileName.substring(fileName.lastIndexOf(File.separator) + 1, fileName.lastIndexOf(".xml"));
+          statuses.add(id + delim + quiz.getStatusToString(delim));
+        }
+      };
+      quizes.visit(visitor);
+    } catch (Exception e) {
+      logger.error(e, e);
+    }
+    return statuses;
+  }
+
+  public String getDistrId(String quizId) {
+    Quiz quiz = quizes.getQuizByFile(new File(quizDir + File.separator + quizId + ".xml").getAbsolutePath());
+    return (quiz == null) ? null : quiz.getDistrId();
   }
 
 }

@@ -825,4 +825,26 @@ public class Quiz {
   public boolean isDistrGenerated() {
     return distrGenerated;
   }
+
+  public String getStatusToString(String delim) {
+    if (delim == null) {
+      logger.error("Some arguments are null");
+      throw new IllegalArgumentException("Some arguments are null");
+    }
+    StringBuilder sb = new StringBuilder();
+    sb.append(statusFile.getQuizStatus().toString()).append(delim)
+        .append((getErrorCode() != null) ? getErrorCode() : "").append(delim)
+        .append((getErrorReason() != null) ? getErrorReason() : "").append(delim)
+        .append((statusFile.getActualStartDateStr() != null) ? statusFile.getActualStartDateStr() : "").append(delim)
+        .append((getDistrId() != null) ? getDistrId() : "");
+    return sb.toString();
+  }
+
+  public String getErrorCode() {
+    return statusFile.getErrorCode();
+  }
+
+  public String getErrorReason() {
+    return statusFile.getErrorReason();
+  }
 }

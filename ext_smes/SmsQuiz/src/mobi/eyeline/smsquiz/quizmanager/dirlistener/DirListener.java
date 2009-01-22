@@ -1,4 +1,4 @@
-package mobi.eyeline.smsquiz.quizmanager.filehandler;
+package mobi.eyeline.smsquiz.quizmanager.dirlistener;
 
 import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 import mobi.eyeline.smsquiz.quizmanager.QuizException;
@@ -7,6 +7,8 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,6 +22,8 @@ public class DirListener extends Observable implements Runnable {
   private String quizDir;
   private FilenameFilter fileFilter;
   private static final Pattern PATTERN = Pattern.compile("(.*\\.xml)");
+
+  private Lock lock = new ReentrantLock();
 
   public DirListener(final String quizDir) throws QuizException {
     if (quizDir == null) {
@@ -36,32 +40,40 @@ public class DirListener extends Observable implements Runnable {
     monitor = new DirListenerMBean(this);
   }
 
-  public void run() {
-    logger.info("Running DirListener...");
-    File dirQuiz = new File(quizDir);
+  public void refreshFile(String id) {
     try {
+      lock.lock();
+      if (logger.isInfoEnabled()) {
+        logger.info("Refresh single file with id: " + id);
+      }
+      Collection<Notification> ns = new LinkedList<Notification>();
+      String fileName = quizDir + File.separator + id + ".xml";
+      File f = new File(fileName);
+
+      if (f.exists()) {
+        _refreshFile(f, ns);
+      } else {
+        if (filesMap.remove(f.getAbsolutePath()) != null) {
+          ns.add(new Notification(f.getAbsolutePath(), Notification.FileStatus.DELETED));
+        }
+      }
+      if (!ns.isEmpty()) {
+        setChanged();
+        notifyObservers(ns);
+      }
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  public void refreshFileList() {
+    try {
+      lock.lock();
+      File dirQuiz = new File(quizDir);
       Collection<Notification> notifications = new LinkedList<Notification>();
       final File[] files = dirQuiz.listFiles(fileFilter);
       for (File f : files) {
-        String fileName = f.getAbsolutePath();
-        long lastModified = f.lastModified();
-        QuizFile existFile;
-
-        if ((existFile = filesMap.get(fileName)) != null) {
-          if (existFile.getLastModified() < lastModified) {
-            notifications.add(new Notification(fileName, Notification.FileStatus.MODIFIED));
-            existFile.modifyDate(lastModified);
-            if (logger.isInfoEnabled()) {
-              logger.info("Quiz file modified: " + fileName);
-            }
-          }
-        } else {
-          filesMap.put(fileName, new QuizFile(fileName, lastModified));
-          notifications.add(new Notification(fileName, Notification.FileStatus.CREATED));
-          if (logger.isInfoEnabled()) {
-            logger.info("Quiz file created: " + fileName);
-          }
-        }
+        _refreshFile(f, notifications);
       }
       LinkedList<String> toRemove = new LinkedList<String>();
       for (String fileN : filesMap.keySet()) {
@@ -79,8 +91,37 @@ public class DirListener extends Observable implements Runnable {
       }
     } catch (Throwable e) {
       logger.error("Error construct quiz file or notification", e);
+    } finally {
+      lock.unlock();
     }
+  }
+
+  public void run() {
+    logger.info("Running DirListener...");
+    refreshFileList();
     logger.info("DirListener finished...");
+  }
+
+
+  private void _refreshFile(File f, Collection<Notification> notifications) {
+    String fileName = f.getAbsolutePath();
+    long lastModified = f.lastModified();
+    QuizFile existFile;
+    if ((existFile = filesMap.get(fileName)) != null) {
+      if (existFile.getLastModified() < lastModified) {
+        notifications.add(new Notification(fileName, Notification.FileStatus.MODIFIED));
+        existFile.modifyDate(lastModified);
+        if (logger.isInfoEnabled()) {
+          logger.info("Quiz file modified: " + fileName);
+        }
+      }
+    } else {
+      filesMap.put(fileName, new QuizFile(fileName, lastModified));
+      notifications.add(new Notification(fileName, Notification.FileStatus.CREATED));
+      if (logger.isInfoEnabled()) {
+        logger.info("Quiz file created: " + fileName);
+      }
+    }
   }
 
   public int countFiles() {

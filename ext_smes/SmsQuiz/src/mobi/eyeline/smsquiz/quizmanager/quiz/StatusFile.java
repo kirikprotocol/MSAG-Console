@@ -69,33 +69,33 @@ public class StatusFile {
     }
   }
 
-  String getDistrId() {
+  synchronized String getDistrId() {
     return prop.getProperty(DISTR_ID);
   }
 
-  void setDistrId(String ident) throws QuizException {
+  synchronized void setDistrId(String ident) throws QuizException {
     prop.setProperty(DISTR_ID, ident);
     storeProps();
   }
 
-  void setQuizStatus(Quiz.Status quizStatus) throws QuizException {
+  synchronized void setQuizStatus(Quiz.Status quizStatus) throws QuizException {
     prop.setProperty(QUIZ_ST, quizStatus.toString());
     storeProps();
   }
 
-  void setQuizErrorStatus(QuizError error, String reason) throws QuizException {
+  synchronized void setQuizErrorStatus(QuizError error, String reason) throws QuizException {
     prop.setProperty(QUIZ_ST, Quiz.Status.FINISHED_ERROR.toString());
     prop.setProperty(ERROR_CODE, error.getCode());
     prop.setProperty(ERROR_REASON, reason);
     storeProps();
   }
 
-  Quiz.Status getQuizStatus() {
+  synchronized Quiz.Status getQuizStatus() {
     return (prop.getProperty(QUIZ_ST) == null) ? null : Quiz.Status.valueOf(prop.getProperty(QUIZ_ST));
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})
-  private void storeProps() throws QuizException {
+  synchronized private void storeProps() throws QuizException {
     OutputStream outputStream = null;
     try {
       writeLock.lock();
@@ -115,11 +115,11 @@ public class StatusFile {
     }
   }
 
-  String getStatusFileName() {
+  synchronized String getStatusFileName() {
     return statusFileName;
   }
 
-  void setActualStartDate(Date date) throws QuizException {
+  synchronized void setActualStartDate(Date date) throws QuizException {
     if (date == null) {
       logger.error("Some arguments are null");
       throw new IllegalArgumentException("Some arguments are null");
@@ -128,7 +128,7 @@ public class StatusFile {
     storeProps();
   }
 
-  Date getActualStartDate() throws QuizException {
+  synchronized Date getActualStartDate() throws QuizException {
     try {
       if (prop.getProperty(ACTUAL_START_DATE) == null) {
         return null;
@@ -138,6 +138,18 @@ public class StatusFile {
       logger.error(e, e);
       throw new QuizException(e);
     }
+  }
+
+  synchronized String getActualStartDateStr() {
+    return prop.getProperty(ACTUAL_START_DATE);
+  }
+
+  synchronized String getErrorCode() {
+    return prop.getProperty(ERROR_CODE);
+  }
+
+  synchronized String getErrorReason() {
+    return prop.getProperty(ERROR_REASON);
   }
 
 }

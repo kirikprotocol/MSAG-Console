@@ -5,8 +5,9 @@ package mobi.eyeline.smsquiz.quizmanager.quiz;
  */
 public class QuizError {
 
+  public static final QuizError UNKNOWN = new QuizError("-1");
 
-  public static final QuizError UNKNOWN = new QuizError("0");
+  public static final QuizError OK = new QuizError("0");
 
   public static final QuizError INTERNAL_ERROR = new QuizError("1");
 
