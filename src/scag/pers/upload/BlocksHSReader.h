@@ -161,15 +161,15 @@ public:
             }
             total_count += profiles_count;
             total_status_profiles += status_profiles;
-            smsc_log_info(logger, "profiles count = %d/%d in file %d", profiles_count, total_count, i + 1);
-            smsc_log_info(logger, "uploaded profiles count = %d/%d in file %d", status_profiles, total_status_profiles, i + 1);
+            smsc_log_info(logger, "read profiles count = %d/%d in file %d/total", profiles_count, total_count, i + 1);
+            smsc_log_info(logger, "uploaded profiles count = %d/%d in file %d/total", status_profiles, total_status_profiles, i + 1);
             dataFile.Close();
           } catch (const FileException& ex) {
             smsc_log_error(logger, "Cannot open data file: %s", ex.what());
             return CANNOT_OPEN_DATA_FILE;
           }
       }
-      smsc_log_info(logger, "total profiles count = %d in %d files", total_count, files_count);
+      smsc_log_info(logger, "total read profiles count = %d in %d files", total_count, files_count);
       smsc_log_info(logger, "total uploaded profiles = %d", total_status_profiles);
       return 0;
     }
