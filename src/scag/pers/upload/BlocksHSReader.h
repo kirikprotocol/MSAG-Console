@@ -47,6 +47,16 @@ namespace scag { namespace pers { namespace util {
   };
   const int RESTORE_PROPERTIES_COUNT = 24;
 
+  static const char* minsk_properties[] = {
+    "sr_BE.exclude",
+    "sr_BE.sr_UniBalance.exclude",
+    "sr_BE.sr_callback.exclude",
+    "sr_BE.sr_MCA.exclude",
+    "sr_BE.sr_10.exclude",
+    "sr_BE.sr_test.exclude"
+  };
+  const int MINSK_PROPERTIES_COUNT = 6;
+
   const char* INC_PROPERTY_NAME = "maze.abonent.money.portal";
   const char* STATUS_PROPERTY   = "maze.game.status";
 
@@ -146,7 +156,8 @@ public:
               //dataFile.Read((void*)data_buff, effectiveBlockSize);
               dataFile.Read((void*)data_buff, hdr.data_size);
               //status_profiles += restoreProfile(hdr.key, data, sendToPers);
-              status_profiles += restoreProfileCompletely(hdr.key, data, sendToPers);
+              //status_profiles += restoreProfileCompletely(hdr.key, data, sendToPers);
+              status_profiles += restoreProfileMinsk(hdr.key, data, sendToPers);
             }
             total_count += profiles_count;
             total_status_profiles += status_profiles;
@@ -202,6 +213,41 @@ private:
     return 0;
   }
 
+  int restoreProfileMinsk(const Key& key, SerialBuffer& data, bool sendToPers) {
+    try {
+      Profile pf(key.toString());   
+      pf.Deserialize(data, true);
+      int prop_count = 0;
+      SerialBuffer batch;
+      if (sendToPers) {
+        pc.PrepareBatch(batch);
+      }
+      Property* prop = 0;
+      for (int i = 0; i < MINSK_PROPERTIES_COUNT; ++i) {
+        if (prop = pf.GetProperty(minsk_properties[i])) {
+          smsc_log_debug(logger, "property '%s' found in profile %s", minsk_properties[i], pf.getKey().c_str());
+          if (sendToPers) {
+            pc.SetPropertyPrepare(PT_ABONENT, key.toString().c_str(), *prop, batch);
+          }
+          ++prop_count;
+        } else {
+          smsc_log_debug(logger, "property '%s' not found in profile %s", minsk_properties[i], pf.getKey().c_str());
+        }
+      }
+      if (sendToPers && prop_count > 0) {
+        pc.FinishPrepareBatch(prop_count, batch);
+        pc.RunBatch(batch);
+        smsc_log_debug(logger, "send %d properties to pers for profile %s", prop_count, pf.getKey().c_str());
+        return 1;
+      }
+     } catch(const SerialBufferOutOfBounds &e) {
+       smsc_log_warn(logger, "Error reading profile key=%s. SerialBufferOutOfBounds Bad data in buffer read", key.toString().c_str());
+     } catch (const PersClientException& ex) {
+       smsc_log_warn(logger, "Error uploading profile key=%s. PersClientException: %s", key.toString().c_str(), ex.what());
+     }
+     return 0;
+  }
+
   int restoreProfile(const Key& key, SerialBuffer& data, bool sendToPers) {
     try {
       Profile pf(key.toString());   
@@ -225,24 +271,27 @@ private:
       }*/
       for (int i = 0; i < RESTORE_PROPERTIES_COUNT; ++i) {
         if (prop = pf.GetProperty(restore_properties[i])) {
+          smsc_log_debug(logger, "property '%s' found in profile %s", restore_properties[i], pf.getKey().c_str());
           if (sendToPers) {
             pc.SetPropertyPrepare(PT_ABONENT, key.toString().c_str(), *prop, batch);
           }
           ++prop_count;
         } else {
-          smsc_log_debug(logger, "property %s not found in profile %s", restore_properties[i], pf.getKey().c_str());
+          smsc_log_debug(logger, "property '%s' not found in profile %s", restore_properties[i], pf.getKey().c_str());
         }
       }
       if (sendToPers) {
         pc.FinishPrepareBatch(prop_count, batch);
         pc.RunBatch(batch);
         smsc_log_debug(logger, "send %d properties to pers for profile %s", prop_count, pf.getKey().c_str());
+        return 1;
       }
-      return 1;
      } catch(const SerialBufferOutOfBounds &e) {
-       smsc_log_warn(logger, "SerialBufferOutOfBounds Bad data in buffer read");
-       return 0;
+       smsc_log_warn(logger, "Error reading profile key=%s. SerialBufferOutOfBounds Bad data in buffer read", key.toString().c_str());
+     } catch (const PersClientException& ex) {
+       smsc_log_warn(logger, "Error uploading profile key=%s. PersClientException: %s", key.toString().c_str(), ex.what());
      }
+     return 0;
   }
 
 private:
