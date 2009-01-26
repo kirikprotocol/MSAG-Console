@@ -3,7 +3,6 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/util.hpp"
 #include "logger/Logger.h"
 #include "mtsmsme/sua/SuaProcessor.hpp"
-#include "mtsmsme/processor/util.hpp"
 #include "sms/sms.h"
 #include <sua/libsua/SuaApiFactory.hpp>
 #include <sua/libsua/MessageProperties.hpp>
