@@ -1,0 +1,142 @@
+include types.def
+
+// NOTE: it is not necessary to have unique tags for fields of distinguished messages
+// but I consider this highly comfortable.
+
+message PC_DEL      // 0x0001
+    version 2.0
+    byte   profileType 2
+    string abonentKey  3 opt // checkVar="profileType" checkEq=0x01
+    uint32 profileKey  4 opt // checkVar="profileType" checkGt=0x01 checkLt=0x05
+    string varName     5
+end
+
+message PC_DEL_RESP // 0x8001
+    version 2.0
+    byte    status     1
+end
+
+message PC_SET      // 0x0002
+    version 2.0
+    byte   profileType 2
+    string abonentKey  3 opt // checkVar="profileType" checkEq=0x01
+    uint32 profileKey  4 opt // checkVar="profileType" checkGt=0x01 checkLt=0x05
+    string varName     5
+    byte   valueType   6
+    byte   timePolicy  7
+    uint32 finalDate   8
+    uint32 lifeTime    9
+    uint32 intValue    10 opt // checkVar="valueType" checkEq=0x01
+    string stringValue 11 opt // checkVar="valueType" checkEq=0x02
+    byte   boolValue   12 opt // checkVar="valueType" checkEq=0x03
+    uint32 dateValue   13 opt // checkVar="valueType" checkEq=0x04
+end
+
+message PC_SET_RESP // 0x8002
+    version 2.0
+    byte   status      1
+end
+
+message PC_GET      // 0x0003
+    version 2.0
+    byte   profileType 2
+    string abonentKey  3 opt // checkVar="profileType" checkEq=0x01
+    uint32 profileKey  4 opt // checkVar="profileType" checkGt=0x01 checkLt=0x05
+    string varName     5
+end
+
+message PC_GET_RESP // 0x8003
+    version 2.0
+    byte   status      1
+    byte   valueType   6
+    byte   timePolicy  7
+    uint32 finalDate   8
+    uint32 lifeTime    9
+    string varName     5
+    uint32 intValue    10 opt // checkVar="valueType" checkEq=0x01
+    string stringValue 11 opt // checkVar="valueType" checkEq=0x02
+    byte   boolValue   12 opt // checkVar="valueType" checkEq=0x03
+    uint32 dateValue   13 opt // checkVar="valueType" checkEq=0x04
+end
+
+message PC_INC     // 0x0004
+    version 2.0
+    byte   profileType 2
+    string abonentKey  3 opt // checkVar="profileType" checkEq=0x01
+    uint32 profileKey  4 opt // checkVar="profileType" checkGt=0x01 checkLt=0x05
+    string varName     5
+    byte   valueType   6
+    byte   timePolicy  7
+    uint32 finalDate   8
+    uint32 lifeTime    9
+    uint32 intValue    10
+end
+
+message PC_INC_RESP // 0x8004
+    version 2.0
+    byte   status      1
+    uint32 intValue    10  // result
+end
+
+message PC_INC_MOD  // 0x0005
+    version 2.0
+    byte   profileType 2
+    string abonentKey  3 opt // checkVar="profileType" checkEq=0x01
+    uint32 profileKey  4 opt // checkVar="profileType" checkGt=0x01 checkLt=0x05
+    string varName     5
+    byte   valueType   6
+    byte   timePolicy  7
+    uint32 finalDate   8
+    uint32 lifeTime    9
+    uint32 intValue    10
+    uint32 modValue    14
+end
+
+message PC_INC_MOD_RESP // 0x8005
+    version 2.0
+    byte   status      1
+    uint32 intValue    10  // result, FIXME: ask VO if this field is filled if failed
+end
+
+message PC_PING       // 0x0006
+    version 2.0
+end
+
+message PC_PING_RESP  // 0x8006
+    version 2.0
+    byte   status      1
+end
+
+message PC_AUTH       // 0x000a
+    version 2.0
+    byte   protocolVersion 15
+    string login           16
+    string password        17
+    string name            18
+end
+
+message PC_AUTH_RESP  // 0x800a
+    version 2.0
+    byte   status      1
+    byte   clientType  19 opt // checkVar="status" checkEq=0
+    byte   sid         20 opt // checkVar="status" checkEq=0
+end
+
+message PC_BATCH      // 0x0007
+    version 2.0
+    byte       profileType  2
+    string     abonentKey   3 opt // checkVar="profileType" checkEq=0x01
+    uint32     profileKey   4 opt // checkVar="profileType" checkGt=0x01 checkLt=0x05
+    byte       batchMode    21
+    uint16     count        22
+// FIXME: enable it
+//    BatchCmdArray batchContent 23 serializer="PVAPBC"
+end
+
+message PC_BATCH_RESP // 0x8007
+    version 2.0
+    byte       status       1
+    uint16     count        22
+// FIXME: enable it
+//    BatchCmdArray batchContent 23 serializer="PVAPBC"
+end

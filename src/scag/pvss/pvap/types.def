@@ -1,0 +1,37 @@
+// basic type definitions
+type uint64
+type uint32
+type uint16
+type byte    // uint8
+type bool
+type string
+type BatchCmdArray  // special
+
+// type int
+
+property opt _bool
+    optional true
+    mandatory false
+end
+
+property mnd _bool
+    default
+    optional false
+    mandatory true
+end
+
+// checking variable name
+property checkVar _string
+end
+
+property checkEq _int
+end
+
+property checkGt _int
+end
+
+property checkLt _int
+end
+
+property serializer _string
+end

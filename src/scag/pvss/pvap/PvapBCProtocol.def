@@ -1,0 +1,14 @@
+include PvapBCMessages.def
+
+protocol PVAPBC
+    BC_DEL          0x0001
+    BC_DEL_RESP     0x8001
+    BC_SET          0x0002
+    BC_SET_RESP     0x8002
+    BC_GET          0x0003
+    BC_GET_RESP     0x8003
+    BC_INC          0x0004
+    BC_INC_RESP     0x8004
+    BC_INC_MOD      0x0005
+    BC_INC_MOD_RESP 0x8005
+end

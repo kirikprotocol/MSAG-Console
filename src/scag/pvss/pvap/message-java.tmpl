@@ -1,0 +1,166 @@
+package $var package$;
+
+import protogen.framework.BufferWriter;
+import protogen.framework.BufferReader;
+
+import java.io.IOException;
+
+import org.apache.log4j.Logger;
+
+$macro type$$pack$
+$select %1$
+$case byte$byte
+$case uint16$short
+$case uint32$int
+$case uint64$long
+$case string$String
+$case bool$boolean
+$default$$var %1$
+$-select$
+$-pack$$-macro$
+
+public class $var message.name$ {
+  static Logger logger = Logger.getLogger($var message.name$.class);
+
+  int seqNum;
+$foreach field$
+  $expand type field.type$ $var field.name$;
+  boolean $var field.name$Flag=false;
+$-foreach$
+
+  public $var message.name$() {
+  }
+
+  public $var message.name$(int seqNum,$pack$
+$foreach field$
+  $expand type field.type$ $var field.name$$if !field.last$,$-if$
+$-foreach$
+$-pack$)
+  {
+    this.seqNum = seqNum;
+$foreach field$
+    this.$var field.name$ = $var field.name$;
+    this.$var field.name$Flag = true;
+$-foreach$
+  }
+  
+  public void clear()
+  {
+$foreach field$
+    $var field.name$Flag=false;
+$-foreach$
+  }
+  
+  public String toString()
+  {
+    StringBuilder sb=new StringBuilder();
+    sb.append("$var message.name$:");
+    sb.append("seqNum=");
+    sb.append(seqNum);
+$foreach field$
+    if($var field.name$Flag)
+    {
+      sb.append(";$var field.name$=");
+      $pack$$select field.type$
+      $case uint32$sb.append($var field.name$);
+      $case bool$sb.append($var field.name$);
+      $default$sb.append($var field.name$.toString());
+      $-select$$-pack$
+    }
+$-foreach$
+    return sb.toString();
+  }
+
+  public int getSeqNum()
+  {
+    return seqNum;
+  }
+
+  public void setSeqNum(int seqNum)
+  {
+    this.seqNum = seqNum;
+  }
+
+$foreach field$
+  public $expand type field.type$ get$var field.name:ucf$()
+  {
+    if(!$var field.name$Flag)
+    {
+      //!!TODO!!
+    }
+    return $var field.name$;
+  }
+
+  public void set$var field.name:ucf$($expand type field.type$ $var field.name$)
+  {
+    this.$var field.name$ = $var field.name$;
+    this.$var field.name$Flag = true;
+  }
+  
+  public boolean has$var field.name:ucf$()
+  {
+    return $var field.name$Flag;
+  }
+$-foreach$
+
+  public void encode(BufferWriter writer)
+  {
+$foreach field$
+$if field.mandatory$
+    if(!$var field.name$Flag)
+    {
+      //!!TODO!!
+    }
+$-if$
+$-foreach$
+    writer.writeInt( seqNum );
+$foreach field$
+$if field.optional$
+    if($var field.name$Flag)
+    {$-if$    
+    $if field.optional$  $-if$writer.writeShort((short)$var field.tag$); // tag id
+    $if field.optional$  $-if$$pack$$select field.type$
+        $case string$writer.writeStringLV($var field.name$);
+        $case byte$writer.writeByteLV($var field.name$);
+        $case uint16$writer.writeShortLV($var field.name$);
+        $case uint32$writer.writeIntLV($var field.name$);
+        $case uint64$writer.writeLongLV($var field.name$);
+        $case bool$writer.writeBoolLV($var field.name$);
+        $default$??? not impl ???;
+      $-select$$-pack$
+
+$if field.optional$
+    }
+$-if$
+$-foreach$
+    writer.writeShort((short)0xFFFF); // end message tag
+  }
+
+  public void decode(BufferReader reader) throws IOException
+  {
+    seqNum = reader.readInt();
+    while( true ) {
+      int tag = reader.readShort();
+      if( tag == (short)0xFFFF ) break;
+      switch( tag ) {
+$foreach field$
+        case $var field.tag$:{
+          $pack$$var field.name$ = $select field.type$
+          $case string$reader.readStringLV();
+          $case byte$reader.readByteLV();
+          $case uint16$reader.readShortLV();
+          $case uint32$reader.readIntLV();
+          $case uint64$reader.readLongLV();
+          $case bool$reader.readBoolLV();
+          $default$??? not impl ???;
+          $-select$$-pack$
+          $var field.name$Flag=true;
+          }break;
+$-foreach$
+        default:
+          logger.warn("unknown tagId: "+tag+" seqnum: "+seqNum+" msg: "+$var message.name$.class.getName());
+      }
+
+    }
+  }
+}
