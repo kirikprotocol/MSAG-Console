@@ -1,6 +1,6 @@
 static char const ident[] = "$Id$";
 #include "UpdateLocation.hpp"
-#include "util.hpp"
+#include "mtsmsme/processor/util.hpp"
 //#include "mtsmsme/processor/ACRepo.hpp"
 using std::vector;
 using smsc::mtsmsme::comp::UpdateLocationMessage;
