@@ -41,6 +41,17 @@ void SccpProcessor::configure(int user_id, int ssn, Address& msc, Address& vlr, 
   registrator->configure(msc,vlr);
 }
 
+SccpProcessor::SccpProcessor(TCO* tco)
+{
+  MtSmsProcessorLogger = Logger::getInstance("mt.sme.sccp");
+  //smsc_log_debug(MtSmsProcessorLogger,"\n**********************\n* SIBINCO MT SMS SME *\n**********************");
+  sender = 0;
+  coordinator = tco;
+  coordinator->setSccpSender(this);
+  registrator = new SubscriberRegistrator(coordinator);
+  coordinator->setHLROAM(registrator);
+  processor = this;
+}
 SccpProcessor::SccpProcessor()
 {
   MtSmsProcessorLogger = Logger::getInstance("mt.sme.sccp");
@@ -345,8 +356,6 @@ using smsc::mtsmsme::processor::conftimer;
 using smsc::mtsmsme::processor::stacktimer;
 using smsc::mtsmsme::processor::waitstacktimer;
 using namespace smsc::mtsmsme::processor::util;
-//using namespace smsc::mtsmsme::processor::decode;
-using smsc::mtsmsme::processor::util::modifyssn;
 using smsc::mtsmsme::processor::processor;
 
 USHORT_T EINSS7_I96SccpIndError(USHORT_T errorCode,MSG_T *message)
