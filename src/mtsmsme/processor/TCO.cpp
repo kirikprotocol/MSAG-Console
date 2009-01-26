@@ -89,7 +89,7 @@ void TCO::NUNITDATA(uint8_t cdlen,
   }
   fixCalledAddress(cdlen, cd);
   Message msg(logger);
-  decoder.decode(udp, ulen, msg);
+  msg.decode(udp, ulen);
   if (msg.isBegin())
   {
     TrId rtrid;
@@ -132,7 +132,7 @@ void TCO::NUNITDATA(uint8_t cdlen,
     {
       tridpool.pop_front();
       tsms.Insert(ltrid, tsm);
-      tsm->BEGIN_received(cdlen, cd, cllen, cl, rtrid, msg);
+      tsm->BEGIN(cdlen, cd, cllen, cl, rtrid, msg);
     } else
     {
       smsc_log_debug(logger,"tco can't create transaction for app context, send ABORT(resourceLimitation)");

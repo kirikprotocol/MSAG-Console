@@ -7,7 +7,6 @@
 #include "mtsmsme/processor/SccpSender.hpp"
 #include <list>
 #include "Processor.h"
-#include "decode.hpp"
 #include "encode.hpp"
 //#include "mtsmsme/processor/Message.hpp"
 #include "TSM.hpp"
@@ -16,7 +15,6 @@ namespace smsc{namespace mtsmsme{namespace processor{
 /*
  * Transaction sublayer facade
  */
-using namespace smsc::mtsmsme::processor::decode;
 using namespace smsc::mtsmsme::processor::encode;
 using smsc::mtsmsme::processor::SccpSender;
 using std::list;
@@ -63,7 +61,6 @@ class TCO: public SccpUser
     void setAdresses(Address& msc, Address& vlr, Address& hlr);
     void setHLROAM(HLROAM* hlr);
     HLROAM* getHLROAM();
-    Decoder decoder;
     Encoder encoder;
     RequestSender *sender;
     AddressValue hlrnumber;
