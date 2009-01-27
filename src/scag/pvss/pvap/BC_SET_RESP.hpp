@@ -13,159 +13,141 @@ namespace scag{
 namespace pvss{
 namespace pvap{
 
-class BC_SET_RESP : public BC_CMD {
+class BC_SET_RESP : public BC_CMD 
+{
 public:
-  BC_SET_RESP()
-  {
-    Clear();
-  }
-  void Clear()
-  {
-    statusFlag=false;
-  }
-
-  std::string toString()const
-  {
-    std::string rv;
-    char buf[32];
-		sprintf(buf,"seqNum=%d",seqNum);
-		rv+=buf;
-    if(statusFlag)
+    BC_SET_RESP()
     {
-      rv+=";status=";
-      sprintf(buf,"%u",(unsigned int)status);
-      rv+=buf;
+        clear();
     }
-    return rv;
-  }
-
-  template <class DataStream>
-  uint32_t length()const
-  {
-    uint32_t rv=0;
-    if(statusFlag)
+    void clear()
     {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(status);
+        statusFlag=false;
     }
 
-    return rv;
-  }
-  uint8_t getStatus()const
-  {
-    if(!statusFlag)
+    std::string toString() const
     {
-      throw FieldIsNullException("status");
+        std::string rv("BC_SET_RESP:");
+        char buf[32];
+        sprintf(buf,"seqNum=%d",seqNum);
+        rv+=buf;
+        if(statusFlag) {
+            rv+=";status=";
+            sprintf(buf,"%u",(unsigned int)status);
+            rv+=buf;
+        }
+        return rv;
     }
-    return status;
-  }
-  void setStatus(uint8_t value)
-  {
-    status=value;
-    statusFlag=true;
-  }
-  bool hasStatus()const
-  {
-    return statusFlag;
-  }
 
-  template <class DataStream>
-  void serialize(DataStream& ds)const
-  {
-    if(!statusFlag)
+    template <class DataStream> uint32_t length()const
     {
-      throw MandatoryFieldMissingException("status");
+        uint32_t rv=0;
+        if (statusFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(status);
+        }
+        return rv;
     }
-    // checking profile type
-    if (!statusFlag &&
-       (valueType==4) &&
-       true )
+
+  uint8_t getStatus() const
     {
-      throw MandatoryFieldMissingException("status");
+        if (!statusFlag) {
+            throw FieldIsNullException("status");
+        }
+        return status;
     }
-    //ds.writeByte(versionMajor);
-    //ds.writeByte(versionMinor);
-    //ds.writeInt32(seqNum);
-    ds.writeTag(statusTag);
+
+    void setStatus(uint8_t value)
+    {
+        status=value;
+        statusFlag=true;
+    }
+    bool hasStatus()const
+    {
+        return statusFlag;
+    }
+
+    template <class DataStream> void serialize(DataStream& ds) const
+    {
+        checkFields();
+        // mandatory fields
+        ds.writeTag(statusTag);
     ds.writeByteLV(status);
-    //ds.writeTag(DataStream::endOfMessage_tag);
-  }
+        // optional fields
+        //ds.writeTag(DataStream::endOfMessage_tag);
+    }
 
-  template <class DataStream>
-  void deserialize(DataStream& ds)
-  {
-    Clear();
-    bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
-    //if(rdVersionMajor!=versionMajor)
-    //{
-    //  throw IncompatibleVersionException("BC_SET_RESP");
-    //}
-    //seqNum=ds.readInt32();
-    while(!endOfMessage)
+    template <class DataStream> void deserialize(DataStream& ds)
     {
-      uint32_t tag=ds.readTag();
-      switch(tag)
-      {
-        case statusTag:
-        {
-          if(statusFlag)
-          {
-            throw DuplicateFieldException("status");
-          }
+        clear();
+        bool endOfMessage=false;
+        //uint8_t rdVersionMajor=ds.readByte();
+        //uint8_t rdVersionMinor=ds.readByte();
+        //if(rdVersionMajor!=versionMajor)
+        //{
+        //  throw IncompatibleVersionException("BC_SET_RESP");
+        //}
+        //seqNum=ds.readInt32();
+        while (!endOfMessage) {
+            uint32_t tag=ds.readTag();
+            switch(tag) {
+            case statusTag: {
+                if (statusFlag) {
+                    throw DuplicateFieldException("status");
+                }
           status=ds.readByteLV();
-          statusFlag=true;
-        }break;
-        case DataStream::endOfMessage_tag:
-          endOfMessage=true;
-          break;
-        default:
-          //if(rdVersionMinor==versionMinor)
-          //{
-          //  throw UnexpectedTag("BC_SET_RESP",tag);
-          //}
-          ds.skip(ds.readLength());
-      }
+                statusFlag=true;
+                break;
+            }
+            case DataStream::endOfMessage_tag:
+                endOfMessage=true;
+                break;
+            default:
+                //if(rdVersionMinor==versionMinor)
+                //{
+                //  throw UnexpectedTag("BC_SET_RESP",tag);
+                //}
+                ds.skip(ds.readLength());
+            }
+        }
+        checkFields();
     }
-    if(!statusFlag)
-    {
-      throw MandatoryFieldMissingException("status");
-    }
-    // checking profile type
-    if (!statusFlag &&
-       (valueType==4) &&
-       true )
-    {
-      throw MandatoryFieldMissingException("status");
-    }
-  }
 
-  uint32_t getSeqNum()const
-  {
-    return seqNum;
-  }
+    uint32_t getSeqNum() const
+    {
+        return seqNum;
+    }
  
-  void setSeqNum(uint32_t value)
-  {
-    seqNum=value;
-  }
+    void setSeqNum(uint32_t value)
+    {
+        seqNum=value;
+    }
 
 protected:
-  //static const uint8_t versionMajor=2;
-  //static const uint8_t versionMinor=0;
+    void checkFields() const throw (MandatoryFieldMissingException)
+    {
+        // checking mandatory fields
+        if (!statusFlag) {
+            throw MandatoryFieldMissingException("status");
+        }
+        // checking optional fields
+    }
 
-  static const uint32_t statusTag=1;
+protected:
+    //static const uint8_t versionMajor=2;
+    //static const uint8_t versionMinor=0;
 
-  uint32_t seqNum;
+    static const uint16_t statusTag=1;
 
-  uint8_t status;
+    uint32_t seqNum;
 
-  bool statusFlag;
+    uint8_t status;
+
+    bool statusFlag;
 };
 
-}
-}
-}
+} // namespace scag
+} // namespace pvss
+} // namespace pvap
 #endif

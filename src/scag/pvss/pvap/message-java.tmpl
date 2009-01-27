@@ -1,11 +1,10 @@
 package $var package$;
 
-import protogen.framework.BufferWriter;
-import protogen.framework.BufferReader;
+// import protogen.framework.BufferWriter;
+// import protogen.framework.BufferReader;
+// import java.io.IOException;
 
-import java.io.IOException;
-
-import org.apache.log4j.Logger;
+// import org.apache.log4j.Logger;
 
 $macro type$$pack$
 $select %1$
@@ -19,148 +18,211 @@ $default$$var %1$
 $-select$
 $-pack$$-macro$
 
-public class $var message.name$ {
-  static Logger logger = Logger.getLogger($var message.name$.class);
+public class $var message.name$ $if options.inheritsFromBatchCmd$ extends BC_CMD$-if$ 
+{
+    // static Logger logger = Logger.getLogger($var message.name$.class);
 
-  int seqNum;
 $foreach field$
-  $expand type field.type$ $var field.name$;
-  boolean $var field.name$Flag=false;
+    static final short $var field.name$Tag = $var field.tag$;
 $-foreach$
 
-  public $var message.name$() {
-  }
-
-  public $var message.name$(int seqNum,$pack$
+    int seqNum;
 $foreach field$
-  $expand type field.type$ $var field.name$$if !field.last$,$-if$
+    $expand type field.type$ $var field.name$;
+    boolean $var field.name$Flag=false;
+$-foreach$
+
+    public $var message.name$() {
+    }
+
+    public $var message.name$(int seqNum$pack$
+$foreach field$
+, $expand type field.type$ $var field.name$
 $-foreach$
 $-pack$)
-  {
-    this.seqNum = seqNum;
-$foreach field$
-    this.$var field.name$ = $var field.name$;
-    this.$var field.name$Flag = true;
-$-foreach$
-  }
-  
-  public void clear()
-  {
-$foreach field$
-    $var field.name$Flag=false;
-$-foreach$
-  }
-  
-  public String toString()
-  {
-    StringBuilder sb=new StringBuilder();
-    sb.append("$var message.name$:");
-    sb.append("seqNum=");
-    sb.append(seqNum);
-$foreach field$
-    if($var field.name$Flag)
     {
-      sb.append(";$var field.name$=");
-      $pack$$select field.type$
-      $case uint32$sb.append($var field.name$);
-      $case bool$sb.append($var field.name$);
-      $default$sb.append($var field.name$.toString());
-      $-select$$-pack$
+        this.seqNum = seqNum;
+$foreach field$
+        this.$var field.name$ = $var field.name$;
+        this.$var field.name$Flag = true;
+$-foreach$
+    }
+  
+    public void clear()
+    {
+$foreach field$
+        $var field.name$Flag=false;
+$-foreach$
+    }
+  
+    public String toString()
+    {
+        StringBuilder sb=new StringBuilder();
+        sb.append("$var message.name$:");
+        sb.append("seqNum=");
+        sb.append(seqNum);
+$foreach field$
+        if ($var field.name$Flag) {
+            sb.append(";$var field.name$=");
+            $pack$$select field.type$
+            $case bool$sb.append($var field.name$);
+            $case byte$sb.append($var field.name$);
+            $case uint16$sb.append($var field.name$);
+            $case uint32$sb.append($var field.name$);
+            $case uint64$sb.append($var field.name$);
+            $case string$sb.append($var field.name$);
+            $default$sb.append($var field.name$.toString());
+            $-select$$-pack$
+
+        }
+$-foreach$
+        return sb.toString();
+    }
+$foreach field$
+
+    public $expand type field.type$ get$var field.name:ucf$() throws FieldIsNullException
+    {
+$if options.throwOnUnsetGet$
+        if(!$var field.name$Flag)
+        {
+            throw new FieldIsNullException("$var field.name$");
+        }
+$-if$
+        return $var field.name$;
+    }
+
+    public void set$var field.name:ucf$($expand type field.type$ $var field.name$)
+    {
+        this.$var field.name$ = $var field.name$;
+        this.$var field.name$Flag = true;
+    }
+
+    public boolean has$var field.name:ucf$()
+    {
+        return $var field.name$Flag;
     }
 $-foreach$
-    return sb.toString();
-  }
 
-  public int getSeqNum()
-  {
-    return seqNum;
-  }
-
-  public void setSeqNum(int seqNum)
-  {
-    this.seqNum = seqNum;
-  }
-
-$foreach field$
-  public $expand type field.type$ get$var field.name:ucf$()
-  {
-    if(!$var field.name$Flag)
+    public void encode( IBufferWriter writer ) throws java.io.IOException
     {
-      //!!TODO!!
-    }
-    return $var field.name$;
-  }
-
-  public void set$var field.name:ucf$($expand type field.type$ $var field.name$)
-  {
-    this.$var field.name$ = $var field.name$;
-    this.$var field.name$Flag = true;
-  }
-  
-  public boolean has$var field.name:ucf$()
-  {
-    return $var field.name$Flag;
-  }
-$-foreach$
-
-  public void encode(BufferWriter writer)
-  {
+        checkFields();
+        // mandatory fields
 $foreach field$
 $if field.mandatory$
-    if(!$var field.name$Flag)
+        writer.writeTag($var field.name$Tag);
+        $select field.type$
+$case string$writer.writeStringLV($var field.name$);
+$case byte$writer.writeByteLV($var field.name$);
+$case uint16$writer.writeShortLV($var field.name$);
+$case uint32$writer.writeIntLV($var field.name$);
+$case uint64$writer.writeLongLV($var field.name$);
+$case bool$writer.writeBoolLV($var field.name$);
+$case nested$throw new NotImplementedException("$var field.name$");
+$default$
+$ifdef field.serializer$
+        writer.get$var field.serializer$().serialize(writer,$var field.name$);
+$-ifdef$
+$-select$
+$-if$
+$-foreach$
+        // optional fields
+$foreach field$
+$if field.optional$
+        if ($var field.name$Flag) {
+            writer.writeTag($var field.name$Tag);
+            $select field.type$
+$case string$writer.writeStringLV($var field.name$);
+$case byte$writer.writeByteLV($var field.name$);
+$case uint16$writer.writeShortLV($var field.name$);
+$case uint32$writer.writeIntLV($var field.name$);
+$case uint64$writer.writeLongLV($var field.name$);
+$case bool$writer.writeBoolLV($var field.name$);
+$case nested$throw new NotImplementedException("$var field.name$");
+$default$
+$ifdef field.serializer$
+            writer.get$var field.serializer$().serialize(writer,$var field.name$);
+$-ifdef$
+$-select$
+        }
+$-if$
+$-foreach$
+    }
+
+    public void decode( IBufferReader reader ) throws java.io.IOException
     {
-      //!!TODO!!
+        clear();
+        // seqNum = reader.readInt();
+        while( true ) {
+            short tag = reader.readTag();
+            // System.out.println("tag got:" + tag);
+            if ( tag == (short)0xFFFF ) break;
+            switch( tag ) {
+$foreach field$
+            case $var field.name$Tag: {
+                $select field.type$
+$case string$$var field.name$=reader.readStringLV();
+$case byte$$var field.name$=reader.readByteLV();
+$case uint16$$var field.name$=reader.readShortLV();
+$case uint32$$var field.name$=reader.readIntLV();
+$case uint64$$var field.name$=reader.readLongLV();
+$case bool$$var field.name$=reader.readBoolLV();
+$case nested$throw new NotImplementedException("$var field.name$");
+$default$
+$ifdef field.serializer$
+reader.get$var field.serializer$().deserialize(reader,$var field.name$)
+$-ifdef$
+$-select$
+                $var field.name$Flag=true;
+                break;
+            }
+$-foreach$
+            default:
+                System.err.println("unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + getClass().getName());
+                // logger.warn( "unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + $var message.name$.class.getName() );
+            }
+        }
+        checkFields();
     }
+
+    public int getSeqNum()
+    {
+        return seqNum;
+    }
+
+    public void setSeqNum(int seqNum)
+    {
+        this.seqNum = seqNum;
+    }
+
+    protected void checkFields() throws MandatoryFieldMissingException
+    {
+        // checking mandatory fields
+$foreach field$
+$if field.mandatory$
+        if (!$var field.name$Flag) {
+            throw new MandatoryFieldMissingException("$var field.name$");
+        }
 $-if$
 $-foreach$
-    writer.writeInt( seqNum );
+        // checking optional fields
 $foreach field$
 $if field.optional$
-    if($var field.name$Flag)
-    {$-if$    
-    $if field.optional$  $-if$writer.writeShort((short)$var field.tag$); // tag id
-    $if field.optional$  $-if$$pack$$select field.type$
-        $case string$writer.writeStringLV($var field.name$);
-        $case byte$writer.writeByteLV($var field.name$);
-        $case uint16$writer.writeShortLV($var field.name$);
-        $case uint32$writer.writeIntLV($var field.name$);
-        $case uint64$writer.writeLongLV($var field.name$);
-        $case bool$writer.writeBoolLV($var field.name$);
-        $default$??? not impl ???;
-      $-select$$-pack$
-
-$if field.optional$
-    }
+$ifdef field.checkVar$
+        if (!$var field.name$Flag
+$ifdef field.checkEq$
+            && ($var field.checkVar$==$var field.checkEq$)
+$-ifdef$
+$ifdef field.checkGt$
+            && ($var field.checkVar$>$var field.checkGt$)
+$-ifdef$
+$ifdef field.checkLt$
+            && ($var field.checkVar$<$var field.checkLt$)
+$-ifdef$
+            ) {
+            throw new MandatoryFieldMissingException("$var field.name$");
+        }
+$-ifdef$
 $-if$
 $-foreach$
-    writer.writeShort((short)0xFFFF); // end message tag
-  }
-
-  public void decode(BufferReader reader) throws IOException
-  {
-    seqNum = reader.readInt();
-    while( true ) {
-      int tag = reader.readShort();
-      if( tag == (short)0xFFFF ) break;
-      switch( tag ) {
-$foreach field$
-        case $var field.tag$:{
-          $pack$$var field.name$ = $select field.type$
-          $case string$reader.readStringLV();
-          $case byte$reader.readByteLV();
-          $case uint16$reader.readShortLV();
-          $case uint32$reader.readIntLV();
-          $case uint64$reader.readLongLV();
-          $case bool$reader.readBoolLV();
-          $default$??? not impl ???;
-          $-select$$-pack$
-          $var field.name$Flag=true;
-          }break;
-$-foreach$
-        default:
-          logger.warn("unknown tagId: "+tag+" seqnum: "+seqNum+" msg: "+$var message.name$.class.getName());
-      }
-
     }
-  }
 }

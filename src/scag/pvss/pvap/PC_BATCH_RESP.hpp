@@ -13,199 +13,185 @@ namespace scag{
 namespace pvss{
 namespace pvap{
 
-class PC_BATCH_RESP  {
+class PC_BATCH_RESP  
+{
 public:
-  PC_BATCH_RESP()
-  {
-    Clear();
-  }
-  void Clear()
-  {
-    statusFlag=false;
-    countFlag=false;
-  }
-
-  std::string toString()const
-  {
-    std::string rv;
-    char buf[32];
-		sprintf(buf,"seqNum=%d",seqNum);
-		rv+=buf;
-    if(statusFlag)
+    PC_BATCH_RESP()
     {
-      rv+=";status=";
-      sprintf(buf,"%u",(unsigned int)status);
-      rv+=buf;
+        clear();
     }
-    if(countFlag)
+    void clear()
     {
-      rv+=";count=";
-      sprintf(buf,"%u",(unsigned int)count);
-      rv+=buf;
-    }
-    return rv;
-  }
-
-  template <class DataStream>
-  uint32_t length()const
-  {
-    uint32_t rv=0;
-    if(statusFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(status);
-    }
-    if(countFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(count);
+        statusFlag=false;
+        countFlag=false;
     }
 
-    return rv;
-  }
-  uint8_t getStatus()const
-  {
-    if(!statusFlag)
+    std::string toString() const
     {
-      throw FieldIsNullException("status");
+        std::string rv("PC_BATCH_RESP:");
+        char buf[32];
+        sprintf(buf,"seqNum=%d",seqNum);
+        rv+=buf;
+        if(statusFlag) {
+            rv+=";status=";
+            sprintf(buf,"%u",(unsigned int)status);
+            rv+=buf;
+        }
+        if(countFlag) {
+            rv+=";count=";
+            sprintf(buf,"%u",(unsigned int)count);
+            rv+=buf;
+        }
+        return rv;
     }
-    return status;
-  }
-  void setStatus(uint8_t value)
-  {
-    status=value;
-    statusFlag=true;
-  }
-  bool hasStatus()const
-  {
-    return statusFlag;
-  }
-  uint16_t getCount()const
-  {
-    if(!countFlag)
-    {
-      throw FieldIsNullException("count");
-    }
-    return count;
-  }
-  void setCount(uint16_t value)
-  {
-    count=value;
-    countFlag=true;
-  }
-  bool hasCount()const
-  {
-    return countFlag;
-  }
 
-  template <class DataStream>
-  void serialize(DataStream& ds)const
-  {
-    if(!statusFlag)
+    template <class DataStream> uint32_t length()const
     {
-      throw MandatoryFieldMissingException("status");
+        uint32_t rv=0;
+        if (statusFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(status);
+        }
+        if (countFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(count);
+        }
+        return rv;
     }
-    if(!countFlag)
+
+  uint8_t getStatus() const
     {
-      throw MandatoryFieldMissingException("count");
+        if (!statusFlag) {
+            throw FieldIsNullException("status");
+        }
+        return status;
     }
-    // checking profile type
-    //ds.writeByte(versionMajor);
-    //ds.writeByte(versionMinor);
-    //ds.writeInt32(seqNum);
-    ds.writeTag(statusTag);
+
+    void setStatus(uint8_t value)
+    {
+        status=value;
+        statusFlag=true;
+    }
+    bool hasStatus()const
+    {
+        return statusFlag;
+    }
+  uint16_t getCount() const
+    {
+        if (!countFlag) {
+            throw FieldIsNullException("count");
+        }
+        return count;
+    }
+
+    void setCount(uint16_t value)
+    {
+        count=value;
+        countFlag=true;
+    }
+    bool hasCount()const
+    {
+        return countFlag;
+    }
+
+    template <class DataStream> void serialize(DataStream& ds) const
+    {
+        checkFields();
+        // mandatory fields
+        ds.writeTag(statusTag);
     ds.writeByteLV(status);
-    ds.writeTag(countTag);
+        ds.writeTag(countTag);
     ds.writeInt16LV(count);
-    //ds.writeTag(DataStream::endOfMessage_tag);
-  }
+        // optional fields
+        //ds.writeTag(DataStream::endOfMessage_tag);
+    }
 
-  template <class DataStream>
-  void deserialize(DataStream& ds)
-  {
-    Clear();
-    bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
-    //if(rdVersionMajor!=versionMajor)
-    //{
-    //  throw IncompatibleVersionException("PC_BATCH_RESP");
-    //}
-    //seqNum=ds.readInt32();
-    while(!endOfMessage)
+    template <class DataStream> void deserialize(DataStream& ds)
     {
-      uint32_t tag=ds.readTag();
-      switch(tag)
-      {
-        case statusTag:
-        {
-          if(statusFlag)
-          {
-            throw DuplicateFieldException("status");
-          }
+        clear();
+        bool endOfMessage=false;
+        //uint8_t rdVersionMajor=ds.readByte();
+        //uint8_t rdVersionMinor=ds.readByte();
+        //if(rdVersionMajor!=versionMajor)
+        //{
+        //  throw IncompatibleVersionException("PC_BATCH_RESP");
+        //}
+        //seqNum=ds.readInt32();
+        while (!endOfMessage) {
+            uint32_t tag=ds.readTag();
+            switch(tag) {
+            case statusTag: {
+                if (statusFlag) {
+                    throw DuplicateFieldException("status");
+                }
           status=ds.readByteLV();
-          statusFlag=true;
-        }break;
-        case countTag:
-        {
-          if(countFlag)
-          {
-            throw DuplicateFieldException("count");
-          }
+                statusFlag=true;
+                break;
+            }
+            case countTag: {
+                if (countFlag) {
+                    throw DuplicateFieldException("count");
+                }
           count=ds.readInt16LV();
-          countFlag=true;
-        }break;
-        case DataStream::endOfMessage_tag:
-          endOfMessage=true;
-          break;
-        default:
-          //if(rdVersionMinor==versionMinor)
-          //{
-          //  throw UnexpectedTag("PC_BATCH_RESP",tag);
-          //}
-          ds.skip(ds.readLength());
-      }
+                countFlag=true;
+                break;
+            }
+            case DataStream::endOfMessage_tag:
+                endOfMessage=true;
+                break;
+            default:
+                //if(rdVersionMinor==versionMinor)
+                //{
+                //  throw UnexpectedTag("PC_BATCH_RESP",tag);
+                //}
+                ds.skip(ds.readLength());
+            }
+        }
+        checkFields();
     }
-    if(!statusFlag)
-    {
-      throw MandatoryFieldMissingException("status");
-    }
-    if(!countFlag)
-    {
-      throw MandatoryFieldMissingException("count");
-    }
-    // checking profile type
-  }
 
-  uint32_t getSeqNum()const
-  {
-    return seqNum;
-  }
+    uint32_t getSeqNum() const
+    {
+        return seqNum;
+    }
  
-  void setSeqNum(uint32_t value)
-  {
-    seqNum=value;
-  }
+    void setSeqNum(uint32_t value)
+    {
+        seqNum=value;
+    }
 
 protected:
-  //static const uint8_t versionMajor=2;
-  //static const uint8_t versionMinor=0;
+    void checkFields() const throw (MandatoryFieldMissingException)
+    {
+        // checking mandatory fields
+        if (!statusFlag) {
+            throw MandatoryFieldMissingException("status");
+        }
+        if (!countFlag) {
+            throw MandatoryFieldMissingException("count");
+        }
+        // checking optional fields
+    }
 
-  static const uint32_t statusTag=1;
-  static const uint32_t countTag=22;
+protected:
+    //static const uint8_t versionMajor=2;
+    //static const uint8_t versionMinor=0;
 
-  uint32_t seqNum;
+    static const uint16_t statusTag=1;
+    static const uint16_t countTag=22;
 
-  uint8_t status;
-  uint16_t count;
+    uint32_t seqNum;
 
-  bool statusFlag;
-  bool countFlag;
+    uint8_t status;
+    uint16_t count;
+
+    bool statusFlag;
+    bool countFlag;
 };
 
-}
-}
-}
+} // namespace scag
+} // namespace pvss
+} // namespace pvap
 #endif

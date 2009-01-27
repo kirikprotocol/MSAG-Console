@@ -13,686 +13,647 @@ namespace scag{
 namespace pvss{
 namespace pvap{
 
-class PC_SET  {
+class PC_SET  
+{
 public:
-  PC_SET()
-  {
-    Clear();
-  }
-  void Clear()
-  {
-    profileTypeFlag=false;
-    abonentKeyFlag=false;
-    profileKeyFlag=false;
-    varNameFlag=false;
-    valueTypeFlag=false;
-    timePolicyFlag=false;
-    finalDateFlag=false;
-    lifeTimeFlag=false;
-    intValueFlag=false;
-    stringValueFlag=false;
-    boolValueFlag=false;
-    dateValueFlag=false;
-  }
-
-  std::string toString()const
-  {
-    std::string rv;
-    char buf[32];
-		sprintf(buf,"seqNum=%d",seqNum);
-		rv+=buf;
-    if(profileTypeFlag)
+    PC_SET()
     {
-      rv+=";profileType=";
-      sprintf(buf,"%u",(unsigned int)profileType);
-      rv+=buf;
+        clear();
     }
-    if(abonentKeyFlag)
+    void clear()
     {
-      rv+=";abonentKey=";
-      rv+=abonentKey;
-    }
-    if(profileKeyFlag)
-    {
-      rv+=";profileKey=";
-      sprintf(buf,"%u",(unsigned int)profileKey);
-      rv+=buf;
-    }
-    if(varNameFlag)
-    {
-      rv+=";varName=";
-      rv+=varName;
-    }
-    if(valueTypeFlag)
-    {
-      rv+=";valueType=";
-      sprintf(buf,"%u",(unsigned int)valueType);
-      rv+=buf;
-    }
-    if(timePolicyFlag)
-    {
-      rv+=";timePolicy=";
-      sprintf(buf,"%u",(unsigned int)timePolicy);
-      rv+=buf;
-    }
-    if(finalDateFlag)
-    {
-      rv+=";finalDate=";
-      sprintf(buf,"%u",(unsigned int)finalDate);
-      rv+=buf;
-    }
-    if(lifeTimeFlag)
-    {
-      rv+=";lifeTime=";
-      sprintf(buf,"%u",(unsigned int)lifeTime);
-      rv+=buf;
-    }
-    if(intValueFlag)
-    {
-      rv+=";intValue=";
-      sprintf(buf,"%u",(unsigned int)intValue);
-      rv+=buf;
-    }
-    if(stringValueFlag)
-    {
-      rv+=";stringValue=";
-      rv+=stringValue;
-    }
-    if(boolValueFlag)
-    {
-      rv+=";boolValue=";
-      sprintf(buf,"%u",(unsigned int)boolValue);
-      rv+=buf;
-    }
-    if(dateValueFlag)
-    {
-      rv+=";dateValue=";
-      sprintf(buf,"%u",(unsigned int)dateValue);
-      rv+=buf;
-    }
-    return rv;
-  }
-
-  template <class DataStream>
-  uint32_t length()const
-  {
-    uint32_t rv=0;
-    if(profileTypeFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(profileType);
-    }
-    if(abonentKeyFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(abonentKey);
-    }
-    if(profileKeyFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(profileKey);
-    }
-    if(varNameFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(varName);
-    }
-    if(valueTypeFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(valueType);
-    }
-    if(timePolicyFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(timePolicy);
-    }
-    if(finalDateFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(finalDate);
-    }
-    if(lifeTimeFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(lifeTime);
-    }
-    if(intValueFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(intValue);
-    }
-    if(stringValueFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(stringValue);
-    }
-    if(boolValueFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(boolValue);
-    }
-    if(dateValueFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(dateValue);
+        profileTypeFlag=false;
+        abonentKeyFlag=false;
+        profileKeyFlag=false;
+        varNameFlag=false;
+        valueTypeFlag=false;
+        timePolicyFlag=false;
+        finalDateFlag=false;
+        lifeTimeFlag=false;
+        intValueFlag=false;
+        stringValueFlag=false;
+        boolValueFlag=false;
+        dateValueFlag=false;
     }
 
-    return rv;
-  }
-  uint8_t getProfileType()const
-  {
-    if(!profileTypeFlag)
+    std::string toString() const
     {
-      throw FieldIsNullException("profileType");
+        std::string rv("PC_SET:");
+        char buf[32];
+        sprintf(buf,"seqNum=%d",seqNum);
+        rv+=buf;
+        if(profileTypeFlag) {
+            rv+=";profileType=";
+            sprintf(buf,"%u",(unsigned int)profileType);
+            rv+=buf;
+        }
+        if(abonentKeyFlag) {
+            rv+=";abonentKey=";
+            rv+=abonentKey;
+        }
+        if(profileKeyFlag) {
+            rv+=";profileKey=";
+            sprintf(buf,"%u",(unsigned int)profileKey);
+            rv+=buf;
+        }
+        if(varNameFlag) {
+            rv+=";varName=";
+            rv+=varName;
+        }
+        if(valueTypeFlag) {
+            rv+=";valueType=";
+            sprintf(buf,"%u",(unsigned int)valueType);
+            rv+=buf;
+        }
+        if(timePolicyFlag) {
+            rv+=";timePolicy=";
+            sprintf(buf,"%u",(unsigned int)timePolicy);
+            rv+=buf;
+        }
+        if(finalDateFlag) {
+            rv+=";finalDate=";
+            sprintf(buf,"%u",(unsigned int)finalDate);
+            rv+=buf;
+        }
+        if(lifeTimeFlag) {
+            rv+=";lifeTime=";
+            sprintf(buf,"%u",(unsigned int)lifeTime);
+            rv+=buf;
+        }
+        if(intValueFlag) {
+            rv+=";intValue=";
+            sprintf(buf,"%u",(unsigned int)intValue);
+            rv+=buf;
+        }
+        if(stringValueFlag) {
+            rv+=";stringValue=";
+            rv+=stringValue;
+        }
+        if(boolValueFlag) {
+            rv+=";boolValue=";
+            sprintf(buf,"%u",(unsigned int)boolValue);
+            rv+=buf;
+        }
+        if(dateValueFlag) {
+            rv+=";dateValue=";
+            sprintf(buf,"%u",(unsigned int)dateValue);
+            rv+=buf;
+        }
+        return rv;
     }
-    return profileType;
-  }
-  void setProfileType(uint8_t value)
-  {
-    profileType=value;
-    profileTypeFlag=true;
-  }
-  bool hasProfileType()const
-  {
-    return profileTypeFlag;
-  }
-  const std::string& getAbonentKey()const
-  {
-    if(!abonentKeyFlag)
-    {
-      throw FieldIsNullException("abonentKey");
-    }
-    return abonentKey;
-  }
-  void setAbonentKey(const std::string& value)
-  {
-    abonentKey=value;
-    abonentKeyFlag=true;
-  }
-  bool hasAbonentKey()const
-  {
-    return abonentKeyFlag;
-  }
-  uint32_t getProfileKey()const
-  {
-    if(!profileKeyFlag)
-    {
-      throw FieldIsNullException("profileKey");
-    }
-    return profileKey;
-  }
-  void setProfileKey(uint32_t value)
-  {
-    profileKey=value;
-    profileKeyFlag=true;
-  }
-  bool hasProfileKey()const
-  {
-    return profileKeyFlag;
-  }
-  const std::string& getVarName()const
-  {
-    if(!varNameFlag)
-    {
-      throw FieldIsNullException("varName");
-    }
-    return varName;
-  }
-  void setVarName(const std::string& value)
-  {
-    varName=value;
-    varNameFlag=true;
-  }
-  bool hasVarName()const
-  {
-    return varNameFlag;
-  }
-  uint8_t getValueType()const
-  {
-    if(!valueTypeFlag)
-    {
-      throw FieldIsNullException("valueType");
-    }
-    return valueType;
-  }
-  void setValueType(uint8_t value)
-  {
-    valueType=value;
-    valueTypeFlag=true;
-  }
-  bool hasValueType()const
-  {
-    return valueTypeFlag;
-  }
-  uint8_t getTimePolicy()const
-  {
-    if(!timePolicyFlag)
-    {
-      throw FieldIsNullException("timePolicy");
-    }
-    return timePolicy;
-  }
-  void setTimePolicy(uint8_t value)
-  {
-    timePolicy=value;
-    timePolicyFlag=true;
-  }
-  bool hasTimePolicy()const
-  {
-    return timePolicyFlag;
-  }
-  uint32_t getFinalDate()const
-  {
-    if(!finalDateFlag)
-    {
-      throw FieldIsNullException("finalDate");
-    }
-    return finalDate;
-  }
-  void setFinalDate(uint32_t value)
-  {
-    finalDate=value;
-    finalDateFlag=true;
-  }
-  bool hasFinalDate()const
-  {
-    return finalDateFlag;
-  }
-  uint32_t getLifeTime()const
-  {
-    if(!lifeTimeFlag)
-    {
-      throw FieldIsNullException("lifeTime");
-    }
-    return lifeTime;
-  }
-  void setLifeTime(uint32_t value)
-  {
-    lifeTime=value;
-    lifeTimeFlag=true;
-  }
-  bool hasLifeTime()const
-  {
-    return lifeTimeFlag;
-  }
-  uint32_t getIntValue()const
-  {
-    if(!intValueFlag)
-    {
-      throw FieldIsNullException("intValue");
-    }
-    return intValue;
-  }
-  void setIntValue(uint32_t value)
-  {
-    intValue=value;
-    intValueFlag=true;
-  }
-  bool hasIntValue()const
-  {
-    return intValueFlag;
-  }
-  const std::string& getStringValue()const
-  {
-    if(!stringValueFlag)
-    {
-      throw FieldIsNullException("stringValue");
-    }
-    return stringValue;
-  }
-  void setStringValue(const std::string& value)
-  {
-    stringValue=value;
-    stringValueFlag=true;
-  }
-  bool hasStringValue()const
-  {
-    return stringValueFlag;
-  }
-  uint8_t getBoolValue()const
-  {
-    if(!boolValueFlag)
-    {
-      throw FieldIsNullException("boolValue");
-    }
-    return boolValue;
-  }
-  void setBoolValue(uint8_t value)
-  {
-    boolValue=value;
-    boolValueFlag=true;
-  }
-  bool hasBoolValue()const
-  {
-    return boolValueFlag;
-  }
-  uint32_t getDateValue()const
-  {
-    if(!dateValueFlag)
-    {
-      throw FieldIsNullException("dateValue");
-    }
-    return dateValue;
-  }
-  void setDateValue(uint32_t value)
-  {
-    dateValue=value;
-    dateValueFlag=true;
-  }
-  bool hasDateValue()const
-  {
-    return dateValueFlag;
-  }
 
-  template <class DataStream>
-  void serialize(DataStream& ds)const
-  {
-    if(!profileTypeFlag)
+    template <class DataStream> uint32_t length()const
     {
-      throw MandatoryFieldMissingException("profileType");
+        uint32_t rv=0;
+        if (profileTypeFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(profileType);
+        }
+        if (abonentKeyFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(abonentKey);
+        }
+        if (profileKeyFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(profileKey);
+        }
+        if (varNameFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(varName);
+        }
+        if (valueTypeFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(valueType);
+        }
+        if (timePolicyFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(timePolicy);
+        }
+        if (finalDateFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(finalDate);
+        }
+        if (lifeTimeFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(lifeTime);
+        }
+        if (intValueFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(intValue);
+        }
+        if (stringValueFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(stringValue);
+        }
+        if (boolValueFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(boolValue);
+        }
+        if (dateValueFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(dateValue);
+        }
+        return rv;
     }
-    if(!varNameFlag)
+
+  uint8_t getProfileType() const
     {
-      throw MandatoryFieldMissingException("varName");
+        if (!profileTypeFlag) {
+            throw FieldIsNullException("profileType");
+        }
+        return profileType;
     }
-    if(!valueTypeFlag)
+
+    void setProfileType(uint8_t value)
     {
-      throw MandatoryFieldMissingException("valueType");
+        profileType=value;
+        profileTypeFlag=true;
     }
-    if(!timePolicyFlag)
+    bool hasProfileType()const
     {
-      throw MandatoryFieldMissingException("timePolicy");
+        return profileTypeFlag;
     }
-    if(!finalDateFlag)
+  const std::string& getAbonentKey() const
     {
-      throw MandatoryFieldMissingException("finalDate");
+        if (!abonentKeyFlag) {
+            throw FieldIsNullException("abonentKey");
+        }
+        return abonentKey;
     }
-    if(!lifeTimeFlag)
+
+    void setAbonentKey(const std::string& value)
     {
-      throw MandatoryFieldMissingException("lifeTime");
+        abonentKey=value;
+        abonentKeyFlag=true;
     }
-    // checking profile type
-    //ds.writeByte(versionMajor);
-    //ds.writeByte(versionMinor);
-    //ds.writeInt32(seqNum);
-    ds.writeTag(profileTypeTag);
+    bool hasAbonentKey()const
+    {
+        return abonentKeyFlag;
+    }
+  uint32_t getProfileKey() const
+    {
+        if (!profileKeyFlag) {
+            throw FieldIsNullException("profileKey");
+        }
+        return profileKey;
+    }
+
+    void setProfileKey(uint32_t value)
+    {
+        profileKey=value;
+        profileKeyFlag=true;
+    }
+    bool hasProfileKey()const
+    {
+        return profileKeyFlag;
+    }
+  const std::string& getVarName() const
+    {
+        if (!varNameFlag) {
+            throw FieldIsNullException("varName");
+        }
+        return varName;
+    }
+
+    void setVarName(const std::string& value)
+    {
+        varName=value;
+        varNameFlag=true;
+    }
+    bool hasVarName()const
+    {
+        return varNameFlag;
+    }
+  uint8_t getValueType() const
+    {
+        if (!valueTypeFlag) {
+            throw FieldIsNullException("valueType");
+        }
+        return valueType;
+    }
+
+    void setValueType(uint8_t value)
+    {
+        valueType=value;
+        valueTypeFlag=true;
+    }
+    bool hasValueType()const
+    {
+        return valueTypeFlag;
+    }
+  uint8_t getTimePolicy() const
+    {
+        if (!timePolicyFlag) {
+            throw FieldIsNullException("timePolicy");
+        }
+        return timePolicy;
+    }
+
+    void setTimePolicy(uint8_t value)
+    {
+        timePolicy=value;
+        timePolicyFlag=true;
+    }
+    bool hasTimePolicy()const
+    {
+        return timePolicyFlag;
+    }
+  uint32_t getFinalDate() const
+    {
+        if (!finalDateFlag) {
+            throw FieldIsNullException("finalDate");
+        }
+        return finalDate;
+    }
+
+    void setFinalDate(uint32_t value)
+    {
+        finalDate=value;
+        finalDateFlag=true;
+    }
+    bool hasFinalDate()const
+    {
+        return finalDateFlag;
+    }
+  uint32_t getLifeTime() const
+    {
+        if (!lifeTimeFlag) {
+            throw FieldIsNullException("lifeTime");
+        }
+        return lifeTime;
+    }
+
+    void setLifeTime(uint32_t value)
+    {
+        lifeTime=value;
+        lifeTimeFlag=true;
+    }
+    bool hasLifeTime()const
+    {
+        return lifeTimeFlag;
+    }
+  uint32_t getIntValue() const
+    {
+        if (!intValueFlag) {
+            throw FieldIsNullException("intValue");
+        }
+        return intValue;
+    }
+
+    void setIntValue(uint32_t value)
+    {
+        intValue=value;
+        intValueFlag=true;
+    }
+    bool hasIntValue()const
+    {
+        return intValueFlag;
+    }
+  const std::string& getStringValue() const
+    {
+        if (!stringValueFlag) {
+            throw FieldIsNullException("stringValue");
+        }
+        return stringValue;
+    }
+
+    void setStringValue(const std::string& value)
+    {
+        stringValue=value;
+        stringValueFlag=true;
+    }
+    bool hasStringValue()const
+    {
+        return stringValueFlag;
+    }
+  uint8_t getBoolValue() const
+    {
+        if (!boolValueFlag) {
+            throw FieldIsNullException("boolValue");
+        }
+        return boolValue;
+    }
+
+    void setBoolValue(uint8_t value)
+    {
+        boolValue=value;
+        boolValueFlag=true;
+    }
+    bool hasBoolValue()const
+    {
+        return boolValueFlag;
+    }
+  uint32_t getDateValue() const
+    {
+        if (!dateValueFlag) {
+            throw FieldIsNullException("dateValue");
+        }
+        return dateValue;
+    }
+
+    void setDateValue(uint32_t value)
+    {
+        dateValue=value;
+        dateValueFlag=true;
+    }
+    bool hasDateValue()const
+    {
+        return dateValueFlag;
+    }
+
+    template <class DataStream> void serialize(DataStream& ds) const
+    {
+        checkFields();
+        // mandatory fields
+        ds.writeTag(profileTypeTag);
     ds.writeByteLV(profileType);
-    ds.writeTag(varNameTag);
+        ds.writeTag(varNameTag);
     ds.writeStrLV(varName);
-    ds.writeTag(valueTypeTag);
+        ds.writeTag(valueTypeTag);
     ds.writeByteLV(valueType);
-    ds.writeTag(timePolicyTag);
+        ds.writeTag(timePolicyTag);
     ds.writeByteLV(timePolicy);
-    ds.writeTag(finalDateTag);
+        ds.writeTag(finalDateTag);
     ds.writeInt32LV(finalDate);
-    ds.writeTag(lifeTimeTag);
+        ds.writeTag(lifeTimeTag);
     ds.writeInt32LV(lifeTime);
-    if(abonentKeyFlag)
-    {
-      ds.writeTag(abonentKeyTag);
+        // optional fields
+        if (abonentKeyFlag) {
+            ds.writeTag(abonentKeyTag);
       ds.writeStrLV(abonentKey);
-    }
-    if(profileKeyFlag)
-    {
-      ds.writeTag(profileKeyTag);
+        }
+        if (profileKeyFlag) {
+            ds.writeTag(profileKeyTag);
       ds.writeInt32LV(profileKey);
-    }
-    if(intValueFlag)
-    {
-      ds.writeTag(intValueTag);
+        }
+        if (intValueFlag) {
+            ds.writeTag(intValueTag);
       ds.writeInt32LV(intValue);
-    }
-    if(stringValueFlag)
-    {
-      ds.writeTag(stringValueTag);
+        }
+        if (stringValueFlag) {
+            ds.writeTag(stringValueTag);
       ds.writeStrLV(stringValue);
-    }
-    if(boolValueFlag)
-    {
-      ds.writeTag(boolValueTag);
+        }
+        if (boolValueFlag) {
+            ds.writeTag(boolValueTag);
       ds.writeByteLV(boolValue);
-    }
-    if(dateValueFlag)
-    {
-      ds.writeTag(dateValueTag);
+        }
+        if (dateValueFlag) {
+            ds.writeTag(dateValueTag);
       ds.writeInt32LV(dateValue);
+        }
+        //ds.writeTag(DataStream::endOfMessage_tag);
     }
-    //ds.writeTag(DataStream::endOfMessage_tag);
-  }
 
-  template <class DataStream>
-  void deserialize(DataStream& ds)
-  {
-    Clear();
-    bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
-    //if(rdVersionMajor!=versionMajor)
-    //{
-    //  throw IncompatibleVersionException("PC_SET");
-    //}
-    //seqNum=ds.readInt32();
-    while(!endOfMessage)
+    template <class DataStream> void deserialize(DataStream& ds)
     {
-      uint32_t tag=ds.readTag();
-      switch(tag)
-      {
-        case profileTypeTag:
-        {
-          if(profileTypeFlag)
-          {
-            throw DuplicateFieldException("profileType");
-          }
+        clear();
+        bool endOfMessage=false;
+        //uint8_t rdVersionMajor=ds.readByte();
+        //uint8_t rdVersionMinor=ds.readByte();
+        //if(rdVersionMajor!=versionMajor)
+        //{
+        //  throw IncompatibleVersionException("PC_SET");
+        //}
+        //seqNum=ds.readInt32();
+        while (!endOfMessage) {
+            uint32_t tag=ds.readTag();
+            switch(tag) {
+            case profileTypeTag: {
+                if (profileTypeFlag) {
+                    throw DuplicateFieldException("profileType");
+                }
           profileType=ds.readByteLV();
-          profileTypeFlag=true;
-        }break;
-        case abonentKeyTag:
-        {
-          if(abonentKeyFlag)
-          {
-            throw DuplicateFieldException("abonentKey");
-          }
+                profileTypeFlag=true;
+                break;
+            }
+            case abonentKeyTag: {
+                if (abonentKeyFlag) {
+                    throw DuplicateFieldException("abonentKey");
+                }
           abonentKey=ds.readStrLV();
-          abonentKeyFlag=true;
-        }break;
-        case profileKeyTag:
-        {
-          if(profileKeyFlag)
-          {
-            throw DuplicateFieldException("profileKey");
-          }
+                abonentKeyFlag=true;
+                break;
+            }
+            case profileKeyTag: {
+                if (profileKeyFlag) {
+                    throw DuplicateFieldException("profileKey");
+                }
           profileKey=ds.readInt32LV();
-          profileKeyFlag=true;
-        }break;
-        case varNameTag:
-        {
-          if(varNameFlag)
-          {
-            throw DuplicateFieldException("varName");
-          }
+                profileKeyFlag=true;
+                break;
+            }
+            case varNameTag: {
+                if (varNameFlag) {
+                    throw DuplicateFieldException("varName");
+                }
           varName=ds.readStrLV();
-          varNameFlag=true;
-        }break;
-        case valueTypeTag:
-        {
-          if(valueTypeFlag)
-          {
-            throw DuplicateFieldException("valueType");
-          }
+                varNameFlag=true;
+                break;
+            }
+            case valueTypeTag: {
+                if (valueTypeFlag) {
+                    throw DuplicateFieldException("valueType");
+                }
           valueType=ds.readByteLV();
-          valueTypeFlag=true;
-        }break;
-        case timePolicyTag:
-        {
-          if(timePolicyFlag)
-          {
-            throw DuplicateFieldException("timePolicy");
-          }
+                valueTypeFlag=true;
+                break;
+            }
+            case timePolicyTag: {
+                if (timePolicyFlag) {
+                    throw DuplicateFieldException("timePolicy");
+                }
           timePolicy=ds.readByteLV();
-          timePolicyFlag=true;
-        }break;
-        case finalDateTag:
-        {
-          if(finalDateFlag)
-          {
-            throw DuplicateFieldException("finalDate");
-          }
+                timePolicyFlag=true;
+                break;
+            }
+            case finalDateTag: {
+                if (finalDateFlag) {
+                    throw DuplicateFieldException("finalDate");
+                }
           finalDate=ds.readInt32LV();
-          finalDateFlag=true;
-        }break;
-        case lifeTimeTag:
-        {
-          if(lifeTimeFlag)
-          {
-            throw DuplicateFieldException("lifeTime");
-          }
+                finalDateFlag=true;
+                break;
+            }
+            case lifeTimeTag: {
+                if (lifeTimeFlag) {
+                    throw DuplicateFieldException("lifeTime");
+                }
           lifeTime=ds.readInt32LV();
-          lifeTimeFlag=true;
-        }break;
-        case intValueTag:
-        {
-          if(intValueFlag)
-          {
-            throw DuplicateFieldException("intValue");
-          }
+                lifeTimeFlag=true;
+                break;
+            }
+            case intValueTag: {
+                if (intValueFlag) {
+                    throw DuplicateFieldException("intValue");
+                }
           intValue=ds.readInt32LV();
-          intValueFlag=true;
-        }break;
-        case stringValueTag:
-        {
-          if(stringValueFlag)
-          {
-            throw DuplicateFieldException("stringValue");
-          }
+                intValueFlag=true;
+                break;
+            }
+            case stringValueTag: {
+                if (stringValueFlag) {
+                    throw DuplicateFieldException("stringValue");
+                }
           stringValue=ds.readStrLV();
-          stringValueFlag=true;
-        }break;
-        case boolValueTag:
-        {
-          if(boolValueFlag)
-          {
-            throw DuplicateFieldException("boolValue");
-          }
+                stringValueFlag=true;
+                break;
+            }
+            case boolValueTag: {
+                if (boolValueFlag) {
+                    throw DuplicateFieldException("boolValue");
+                }
           boolValue=ds.readByteLV();
-          boolValueFlag=true;
-        }break;
-        case dateValueTag:
-        {
-          if(dateValueFlag)
-          {
-            throw DuplicateFieldException("dateValue");
-          }
+                boolValueFlag=true;
+                break;
+            }
+            case dateValueTag: {
+                if (dateValueFlag) {
+                    throw DuplicateFieldException("dateValue");
+                }
           dateValue=ds.readInt32LV();
-          dateValueFlag=true;
-        }break;
-        case DataStream::endOfMessage_tag:
-          endOfMessage=true;
-          break;
-        default:
-          //if(rdVersionMinor==versionMinor)
-          //{
-          //  throw UnexpectedTag("PC_SET",tag);
-          //}
-          ds.skip(ds.readLength());
-      }
+                dateValueFlag=true;
+                break;
+            }
+            case DataStream::endOfMessage_tag:
+                endOfMessage=true;
+                break;
+            default:
+                //if(rdVersionMinor==versionMinor)
+                //{
+                //  throw UnexpectedTag("PC_SET",tag);
+                //}
+                ds.skip(ds.readLength());
+            }
+        }
+        checkFields();
     }
-    if(!profileTypeFlag)
-    {
-      throw MandatoryFieldMissingException("profileType");
-    }
-    if(!varNameFlag)
-    {
-      throw MandatoryFieldMissingException("varName");
-    }
-    if(!valueTypeFlag)
-    {
-      throw MandatoryFieldMissingException("valueType");
-    }
-    if(!timePolicyFlag)
-    {
-      throw MandatoryFieldMissingException("timePolicy");
-    }
-    if(!finalDateFlag)
-    {
-      throw MandatoryFieldMissingException("finalDate");
-    }
-    if(!lifeTimeFlag)
-    {
-      throw MandatoryFieldMissingException("lifeTime");
-    }
-    // checking profile type
-  }
 
-  uint32_t getSeqNum()const
-  {
-    return seqNum;
-  }
+    uint32_t getSeqNum() const
+    {
+        return seqNum;
+    }
  
-  void setSeqNum(uint32_t value)
-  {
-    seqNum=value;
-  }
+    void setSeqNum(uint32_t value)
+    {
+        seqNum=value;
+    }
 
 protected:
-  //static const uint8_t versionMajor=2;
-  //static const uint8_t versionMinor=0;
+    void checkFields() const throw (MandatoryFieldMissingException)
+    {
+        // checking mandatory fields
+        if (!profileTypeFlag) {
+            throw MandatoryFieldMissingException("profileType");
+        }
+        if (!varNameFlag) {
+            throw MandatoryFieldMissingException("varName");
+        }
+        if (!valueTypeFlag) {
+            throw MandatoryFieldMissingException("valueType");
+        }
+        if (!timePolicyFlag) {
+            throw MandatoryFieldMissingException("timePolicy");
+        }
+        if (!finalDateFlag) {
+            throw MandatoryFieldMissingException("finalDate");
+        }
+        if (!lifeTimeFlag) {
+            throw MandatoryFieldMissingException("lifeTime");
+        }
+        // checking optional fields
+        if (!abonentKeyFlag
+            && (profileType==1)
+            ) {
+            throw MandatoryFieldMissingException("abonentKey");
+        }
+        if (!profileKeyFlag
+            && (profileType>1)
+            && (profileType<5)
+            ) {
+            throw MandatoryFieldMissingException("profileKey");
+        }
+        if (!intValueFlag
+            && (valueType==1)
+            ) {
+            throw MandatoryFieldMissingException("intValue");
+        }
+        if (!stringValueFlag
+            && (valueType==2)
+            ) {
+            throw MandatoryFieldMissingException("stringValue");
+        }
+        if (!boolValueFlag
+            && (valueType==3)
+            ) {
+            throw MandatoryFieldMissingException("boolValue");
+        }
+        if (!dateValueFlag
+            && (valueType==4)
+            ) {
+            throw MandatoryFieldMissingException("dateValue");
+        }
+    }
 
-  static const uint32_t profileTypeTag=2;
-  static const uint32_t abonentKeyTag=3;
-  static const uint32_t profileKeyTag=4;
-  static const uint32_t varNameTag=5;
-  static const uint32_t valueTypeTag=6;
-  static const uint32_t timePolicyTag=7;
-  static const uint32_t finalDateTag=8;
-  static const uint32_t lifeTimeTag=9;
-  static const uint32_t intValueTag=10;
-  static const uint32_t stringValueTag=11;
-  static const uint32_t boolValueTag=12;
-  static const uint32_t dateValueTag=13;
+protected:
+    //static const uint8_t versionMajor=2;
+    //static const uint8_t versionMinor=0;
 
-  uint32_t seqNum;
+    static const uint16_t profileTypeTag=2;
+    static const uint16_t abonentKeyTag=3;
+    static const uint16_t profileKeyTag=4;
+    static const uint16_t varNameTag=5;
+    static const uint16_t valueTypeTag=6;
+    static const uint16_t timePolicyTag=7;
+    static const uint16_t finalDateTag=8;
+    static const uint16_t lifeTimeTag=9;
+    static const uint16_t intValueTag=10;
+    static const uint16_t stringValueTag=11;
+    static const uint16_t boolValueTag=12;
+    static const uint16_t dateValueTag=13;
 
-  uint8_t profileType;
-  std::string abonentKey;
-  uint32_t profileKey;
-  std::string varName;
-  uint8_t valueType;
-  uint8_t timePolicy;
-  uint32_t finalDate;
-  uint32_t lifeTime;
-  uint32_t intValue;
-  std::string stringValue;
-  uint8_t boolValue;
-  uint32_t dateValue;
+    uint32_t seqNum;
 
-  bool profileTypeFlag;
-  bool abonentKeyFlag;
-  bool profileKeyFlag;
-  bool varNameFlag;
-  bool valueTypeFlag;
-  bool timePolicyFlag;
-  bool finalDateFlag;
-  bool lifeTimeFlag;
-  bool intValueFlag;
-  bool stringValueFlag;
-  bool boolValueFlag;
-  bool dateValueFlag;
+    uint8_t profileType;
+    std::string abonentKey;
+    uint32_t profileKey;
+    std::string varName;
+    uint8_t valueType;
+    uint8_t timePolicy;
+    uint32_t finalDate;
+    uint32_t lifeTime;
+    uint32_t intValue;
+    std::string stringValue;
+    uint8_t boolValue;
+    uint32_t dateValue;
+
+    bool profileTypeFlag;
+    bool abonentKeyFlag;
+    bool profileKeyFlag;
+    bool varNameFlag;
+    bool valueTypeFlag;
+    bool timePolicyFlag;
+    bool finalDateFlag;
+    bool lifeTimeFlag;
+    bool intValueFlag;
+    bool stringValueFlag;
+    bool boolValueFlag;
+    bool dateValueFlag;
 };
 
-}
-}
-}
+} // namespace scag
+} // namespace pvss
+} // namespace pvap
 #endif

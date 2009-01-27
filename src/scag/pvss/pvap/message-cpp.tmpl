@@ -37,152 +37,121 @@ $foreach namespace$
 namespace $var namespace${
 $-foreach$
 
-class $var message.name$ $if options.inheritsFromBatchCmd$: public BC_CMD$-if$ {
+class $var message.name$ $if options.inheritsFromBatchCmd$: public BC_CMD$-if$ 
+{
 public:
-  $var message.name$()
-  {
-    Clear();
-  }
-  void Clear()
-  {
-$foreach field$
-    $var field.name$Flag=false;
-$-foreach$
-  }
-
-  std::string toString()const
-  {
-    std::string rv;
-    char buf[32];
-		sprintf(buf,"seqNum=%d",seqNum);
-		rv+=buf;
-$foreach field$
-    if($var field.name$Flag)
+    $var message.name$()
     {
-      rv+=";$var field.name$=";
+        clear();
+    }
+    void clear()
+    {
+$foreach field$
+        $var field.name$Flag=false;
+$-foreach$
+    }
+
+    std::string toString() const
+    {
+        std::string rv("$var message.name$:");
+        char buf[32];
+        sprintf(buf,"seqNum=%d",seqNum);
+        rv+=buf;
+$foreach field$
+        if($var field.name$Flag) {
+            rv+=";$var field.name$=";
 $select field.type$
 $case byte$
-      sprintf(buf,"%u",(unsigned int)$var field.name$);
-      rv+=buf;
+            sprintf(buf,"%u",(unsigned int)$var field.name$);
+            rv+=buf;
 $case uint16$
-      sprintf(buf,"%u",(unsigned int)$var field.name$);
-      rv+=buf;
+            sprintf(buf,"%u",(unsigned int)$var field.name$);
+            rv+=buf;
 $case uint32$
-      sprintf(buf,"%u",(unsigned int)$var field.name$);
-      rv+=buf;
+            sprintf(buf,"%u",(unsigned int)$var field.name$);
+            rv+=buf;
 $case uint64$
-      sprintf(buf,"%llu",$var field.name$);
-      rv+=buf;
+            sprintf(buf,"%llu",$var field.name$);
+            rv+=buf;
 $case string$
-      rv+=$var field.name$;
+            rv+=$var field.name$;
 $case bool$
-      rv+=$var field.name$?"true":"false";
+            rv+=$var field.name$?"true":"false";
 $case nested$
-      rv+='(';
-      rv+=$var field.name$.toString();
-      rv+=')';
+            rv+='(';
+            rv+=$var field.name$.toString();
+            rv+=')';
 $default$
-      rv+=$var field.name$.toString();
+            rv+=$var field.name$.toString();
 $-select$
-    }
+        }
 $-foreach$
-    return rv;
-  }
+        return rv;
+    }
 
-  template <class DataStream>
-  uint32_t length()const
-  {
-    uint32_t rv=0;
-$foreach field$
-    if($var field.name$Flag)
+    template <class DataStream> uint32_t length()const
     {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize($var field.name$);
-    }
-$-foreach$
-
-    return rv;
-  }
+        uint32_t rv=0;
 $foreach field$
-  $expand type field.type$ get$var field.name:ucf$()const
-  {
+        if ($var field.name$Flag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize($var field.name$);
+        }
+$-foreach$
+        return rv;
+    }
+
+$foreach field$
+  $expand type field.type$ get$var field.name:ucf$() const
+    {
 $if options.throwOnUnsetGet$
-    if(!$var field.name$Flag)
-    {
-      throw FieldIsNullException("$var field.name$");
-    }
+        if (!$var field.name$Flag) {
+            throw FieldIsNullException("$var field.name$");
+        }
 $-if$
-    return $var field.name$;
-  }
-  void set$var field.name:ucf$($expand type field.type$ value)
-  {
-    $var field.name$=value;
-    $var field.name$Flag=true;
-  }
-  bool has$var field.name:ucf$()const
-  {
-    return $var field.name$Flag;
-  }
+        return $var field.name$;
+    }
+
+    void set$var field.name:ucf$($expand type field.type$ value)
+    {
+        $var field.name$=value;
+        $var field.name$Flag=true;
+    }
+    bool has$var field.name:ucf$()const
+    {
+        return $var field.name$Flag;
+    }
 $-foreach$
 
-  template <class DataStream>
-  void serialize(DataStream& ds)const
-  {
+    template <class DataStream> void serialize(DataStream& ds) const
+    {
+        checkFields();
+        // mandatory fields
 $foreach field$
 $if field.mandatory$
-    if(!$var field.name$Flag)
-    {
-      throw MandatoryFieldMissingException("$var field.name$");
-    }
-$-if$
-$-foreach$
-    // checking profile type
-$foreach field$
-$ifdef field.checkVar$
-    if (!$var field.name$Flag &&
-$ifdef field.checkEq$
-       ($var field.checkVar$==$var field.checkEq$) &&
-$-ifdef$
-$ifdef field.checkGt$
-       ($var field.checkVar$>$var field.checkGt$) &&
-$-ifdef$
-$ifdef field.checkLt$
-       ($var field.checkVar$<$var field.checkLt$) &&
-$-ifdef$
-       true )
-    {
-      throw MandatoryFieldMissingException("$var field.name$");
-    }
-$-ifdef$
-$-foreach$
-    //ds.writeByte(versionMajor);
-    //ds.writeByte(versionMinor);
-    //ds.writeInt32(seqNum);
-$foreach field$
-$if field.mandatory$
-    ds.writeTag($var field.name$Tag);
+        ds.writeTag($var field.name$Tag);
     $select field.type$
+$case string$ds.writeStrLV($var field.name$);
 $case byte$ds.writeByteLV($var field.name$);
 $case uint16$ds.writeInt16LV($var field.name$);
 $case uint32$ds.writeInt32LV($var field.name$);
 $case uint64$ds.writeInt64LV($var field.name$);
-$case string$ds.writeStrLV($var field.name$);
 $case bool$ds.writeBoolLV($var field.name$);
 $case nested$ds.writeLength($var field.name$.length<DataStream>());
-    $var field.name$.serialize(ds);
+        $var field.name$.serialize(ds);
 $default$
-$ifdef field.serialize$
-    ds.get$var field.serializer$().serialize(ds,$var field.name$);
+$ifdef field.serializer$
+        ds.get$var field.serializer$().serialize(ds,$var field.name$);
 $-ifdef$
 $-select$
 $-if$
 $-foreach$
+        // optional fields
 $foreach field$
 $if field.optional$
-    if($var field.name$Flag)
-    {
-      ds.writeTag($var field.name$Tag);
+        if ($var field.name$Flag) {
+            ds.writeTag($var field.name$Tag);
       $select field.type$
 $case byte$ds.writeByteLV($var field.name$);
 $case uint16$ds.writeInt16LV($var field.name$);
@@ -191,42 +160,37 @@ $case uint64$ds.writeInt64LV($var field.name$);
 $case string$ds.writeStrLV($var field.name$);
 $case bool$ds.writeBoolLV($var field.name$);
 $case nested$ds.writeLength($var field.name$.length<DataStream>());
-      $var field.name$.serialize(ds);
+            $var field.name$.serialize(ds);
 $default$
 $ifdef field.serialize$
-    ds.get$var field.serializer$().serialize(ds,$var field.name$);
+            ds.get$var field.serializer$().serialize(ds,$var field.name$);
 $-ifdef$
 $-select$
-    }
+        }
 $-if$
 $-foreach$
-    //ds.writeTag(DataStream::endOfMessage_tag);
-  }
+        //ds.writeTag(DataStream::endOfMessage_tag);
+    }
 
-  template <class DataStream>
-  void deserialize(DataStream& ds)
-  {
-    Clear();
-    bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
-    //if(rdVersionMajor!=versionMajor)
-    //{
-    //  throw IncompatibleVersionException("$var message.name$");
-    //}
-    //seqNum=ds.readInt32();
-    while(!endOfMessage)
+    template <class DataStream> void deserialize(DataStream& ds)
     {
-      uint32_t tag=ds.readTag();
-      switch(tag)
-      {
+        clear();
+        bool endOfMessage=false;
+        //uint8_t rdVersionMajor=ds.readByte();
+        //uint8_t rdVersionMinor=ds.readByte();
+        //if(rdVersionMajor!=versionMajor)
+        //{
+        //  throw IncompatibleVersionException("$var message.name$");
+        //}
+        //seqNum=ds.readInt32();
+        while (!endOfMessage) {
+            uint32_t tag=ds.readTag();
+            switch(tag) {
 $foreach field$
-        case $var field.name$Tag:
-        {
-          if($var field.name$Flag)
-          {
-            throw DuplicateFieldException("$var field.name$");
-          }
+            case $var field.name$Tag: {
+                if ($var field.name$Flag) {
+                    throw DuplicateFieldException("$var field.name$");
+                }
           $select field.type$
 $case byte$$var field.name$=ds.readByteLV();
 $case uint16$$var field.name$=ds.readInt16LV();
@@ -235,78 +199,86 @@ $case uint64$$var field.name$=ds.readInt64LV();
 $case string$$var field.name$=ds.readStrLV();
 $case bool$$var field.name$=ds.readBoolLV();
 $case nested$ds.readLength();
-          $var field.name$.deserialize(ds);
+                $var field.name$.deserialize(ds);
 $default$
 $ifdef field.serializer$
-       ds.get$var field.serializer$().deserialize(ds,$var field.name$);
+                ds.get$var field.serializer$().deserialize(ds,$var field.name$);
 $-ifdef$
 $-select$
-          $var field.name$Flag=true;
-        }break;
+                $var field.name$Flag=true;
+                break;
+            }
 $-foreach$
-        case DataStream::endOfMessage_tag:
-          endOfMessage=true;
-          break;
-        default:
-          //if(rdVersionMinor==versionMinor)
-          //{
-          //  throw UnexpectedTag("$var message.name$",tag);
-          //}
-          ds.skip(ds.readLength());
-      }
+            case DataStream::endOfMessage_tag:
+                endOfMessage=true;
+                break;
+            default:
+                //if(rdVersionMinor==versionMinor)
+                //{
+                //  throw UnexpectedTag("$var message.name$",tag);
+                //}
+                ds.skip(ds.readLength());
+            }
+        }
+        checkFields();
     }
-$foreach field$
-$if field.mandatory$
-    if(!$var field.name$Flag)
-    {
-      throw MandatoryFieldMissingException("$var field.name$");
-    }
-$-if$
-$-foreach$
-    // checking profile type
-$foreach field$
-$ifdef field.checkVar$
-    if (!$var field.name$Flag &&
-$ifdef field.checkEq$
-       ($var field.checkVar$==$var field.checkEq$) &&
-$-ifdef$
-$ifdef field.checkGt$
-       ($var field.checkVar$>$var field.checkGt$) &&
-$-ifdef$
-$ifdef field.checkLt$
-       ($var field.checkVar$<$var field.checkLt$) &&
-$-ifdef$
-       true )
-    {
-      throw MandatoryFieldMissingException("$var field.name$");
-    }
-$-ifdef$
-$-foreach$
-  }
 
-  uint32_t getSeqNum()const
-  {
-    return seqNum;
-  }
+    uint32_t getSeqNum() const
+    {
+        return seqNum;
+    }
   
-  void setSeqNum(uint32_t value)
-  {
-    seqNum=value;
-  }
+    void setSeqNum(uint32_t value)
+    {
+        seqNum=value;
+    }
 
 protected:
-  //static const uint8_t versionMajor=$var message.versionMajor$;
-  //static const uint8_t versionMinor=$var message.versionMinor$;
+    void checkFields() const throw (MandatoryFieldMissingException)
+    {
+        // checking mandatory fields
+$foreach field$
+$if field.mandatory$
+        if (!$var field.name$Flag) {
+            throw MandatoryFieldMissingException("$var field.name$");
+        }
+$-if$
+$-foreach$
+        // checking optional fields
+$foreach field$
+$if field.optional$
+$ifdef field.checkVar$
+        if (!$var field.name$Flag
+$ifdef field.checkEq$
+            && ($var field.checkVar$==$var field.checkEq$)
+$-ifdef$
+$ifdef field.checkGt$
+            && ($var field.checkVar$>$var field.checkGt$)
+$-ifdef$
+$ifdef field.checkLt$
+            && ($var field.checkVar$<$var field.checkLt$)
+$-ifdef$
+            ) {
+            throw MandatoryFieldMissingException("$var field.name$");
+        }
+$-ifdef$
+$-if$
+$-foreach$
+    }
+
+protected:
+    //static const uint8_t versionMajor=$var message.versionMajor$;
+    //static const uint8_t versionMinor=$var message.versionMinor$;
 
 $foreach field$
-  static const uint32_t $var field.name$Tag=$var field.tag$;
+    static const uint16_t $var field.name$Tag=$var field.tag$;
 $-foreach$
 
-  uint32_t seqNum;
+    uint32_t seqNum;
 
 $foreach field$
-$ifdef field.comment$  //$var field.comment$
-$-ifdef$  $pack$
+$ifdef field.comment$    //$var field.comment$
+$-ifdef$    $pack$
   $select field.type$
   $case byte$uint8_t
   $case uint16$uint16_t
@@ -321,11 +293,11 @@ $-ifdef$  $pack$
 $-foreach$
 
 $foreach field$
-  bool $var field.name$Flag;
+    bool $var field.name$Flag;
 $-foreach$
 };
 
 $foreach namespace$
-}
+} // namespace $var namespace$
 $-foreach$
 #endif

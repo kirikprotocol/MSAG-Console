@@ -13,146 +13,140 @@ namespace scag{
 namespace pvss{
 namespace pvap{
 
-class BC_GET : public BC_CMD {
+class BC_GET : public BC_CMD 
+{
 public:
-  BC_GET()
-  {
-    Clear();
-  }
-  void Clear()
-  {
-    varNameFlag=false;
-  }
-
-  std::string toString()const
-  {
-    std::string rv;
-    char buf[32];
-		sprintf(buf,"seqNum=%d",seqNum);
-		rv+=buf;
-    if(varNameFlag)
+    BC_GET()
     {
-      rv+=";varName=";
-      rv+=varName;
+        clear();
     }
-    return rv;
-  }
-
-  template <class DataStream>
-  uint32_t length()const
-  {
-    uint32_t rv=0;
-    if(varNameFlag)
+    void clear()
     {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(varName);
+        varNameFlag=false;
     }
 
-    return rv;
-  }
-  const std::string& getVarName()const
-  {
-    if(!varNameFlag)
+    std::string toString() const
     {
-      throw FieldIsNullException("varName");
+        std::string rv("BC_GET:");
+        char buf[32];
+        sprintf(buf,"seqNum=%d",seqNum);
+        rv+=buf;
+        if(varNameFlag) {
+            rv+=";varName=";
+            rv+=varName;
+        }
+        return rv;
     }
-    return varName;
-  }
-  void setVarName(const std::string& value)
-  {
-    varName=value;
-    varNameFlag=true;
-  }
-  bool hasVarName()const
-  {
-    return varNameFlag;
-  }
 
-  template <class DataStream>
-  void serialize(DataStream& ds)const
-  {
-    if(!varNameFlag)
+    template <class DataStream> uint32_t length()const
     {
-      throw MandatoryFieldMissingException("varName");
+        uint32_t rv=0;
+        if (varNameFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(varName);
+        }
+        return rv;
     }
-    // checking profile type
-    //ds.writeByte(versionMajor);
-    //ds.writeByte(versionMinor);
-    //ds.writeInt32(seqNum);
-    ds.writeTag(varNameTag);
+
+  const std::string& getVarName() const
+    {
+        if (!varNameFlag) {
+            throw FieldIsNullException("varName");
+        }
+        return varName;
+    }
+
+    void setVarName(const std::string& value)
+    {
+        varName=value;
+        varNameFlag=true;
+    }
+    bool hasVarName()const
+    {
+        return varNameFlag;
+    }
+
+    template <class DataStream> void serialize(DataStream& ds) const
+    {
+        checkFields();
+        // mandatory fields
+        ds.writeTag(varNameTag);
     ds.writeStrLV(varName);
-    //ds.writeTag(DataStream::endOfMessage_tag);
-  }
+        // optional fields
+        //ds.writeTag(DataStream::endOfMessage_tag);
+    }
 
-  template <class DataStream>
-  void deserialize(DataStream& ds)
-  {
-    Clear();
-    bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
-    //if(rdVersionMajor!=versionMajor)
-    //{
-    //  throw IncompatibleVersionException("BC_GET");
-    //}
-    //seqNum=ds.readInt32();
-    while(!endOfMessage)
+    template <class DataStream> void deserialize(DataStream& ds)
     {
-      uint32_t tag=ds.readTag();
-      switch(tag)
-      {
-        case varNameTag:
-        {
-          if(varNameFlag)
-          {
-            throw DuplicateFieldException("varName");
-          }
+        clear();
+        bool endOfMessage=false;
+        //uint8_t rdVersionMajor=ds.readByte();
+        //uint8_t rdVersionMinor=ds.readByte();
+        //if(rdVersionMajor!=versionMajor)
+        //{
+        //  throw IncompatibleVersionException("BC_GET");
+        //}
+        //seqNum=ds.readInt32();
+        while (!endOfMessage) {
+            uint32_t tag=ds.readTag();
+            switch(tag) {
+            case varNameTag: {
+                if (varNameFlag) {
+                    throw DuplicateFieldException("varName");
+                }
           varName=ds.readStrLV();
-          varNameFlag=true;
-        }break;
-        case DataStream::endOfMessage_tag:
-          endOfMessage=true;
-          break;
-        default:
-          //if(rdVersionMinor==versionMinor)
-          //{
-          //  throw UnexpectedTag("BC_GET",tag);
-          //}
-          ds.skip(ds.readLength());
-      }
+                varNameFlag=true;
+                break;
+            }
+            case DataStream::endOfMessage_tag:
+                endOfMessage=true;
+                break;
+            default:
+                //if(rdVersionMinor==versionMinor)
+                //{
+                //  throw UnexpectedTag("BC_GET",tag);
+                //}
+                ds.skip(ds.readLength());
+            }
+        }
+        checkFields();
     }
-    if(!varNameFlag)
-    {
-      throw MandatoryFieldMissingException("varName");
-    }
-    // checking profile type
-  }
 
-  uint32_t getSeqNum()const
-  {
-    return seqNum;
-  }
+    uint32_t getSeqNum() const
+    {
+        return seqNum;
+    }
  
-  void setSeqNum(uint32_t value)
-  {
-    seqNum=value;
-  }
+    void setSeqNum(uint32_t value)
+    {
+        seqNum=value;
+    }
 
 protected:
-  //static const uint8_t versionMajor=2;
-  //static const uint8_t versionMinor=0;
+    void checkFields() const throw (MandatoryFieldMissingException)
+    {
+        // checking mandatory fields
+        if (!varNameFlag) {
+            throw MandatoryFieldMissingException("varName");
+        }
+        // checking optional fields
+    }
 
-  static const uint32_t varNameTag=5;
+protected:
+    //static const uint8_t versionMajor=2;
+    //static const uint8_t versionMinor=0;
 
-  uint32_t seqNum;
+    static const uint16_t varNameTag=5;
 
-  std::string varName;
+    uint32_t seqNum;
 
-  bool varNameFlag;
+    std::string varName;
+
+    bool varNameFlag;
 };
 
-}
-}
-}
+} // namespace scag
+} // namespace pvss
+} // namespace pvap
 #endif

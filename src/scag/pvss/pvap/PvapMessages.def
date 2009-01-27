@@ -6,8 +6,8 @@ include types.def
 message PC_DEL      // 0x0001
     version 2.0
     byte   profileType 2
-    string abonentKey  3 opt // checkVar="profileType" checkEq=0x01
-    uint32 profileKey  4 opt // checkVar="profileType" checkGt=0x01 checkLt=0x05
+    string abonentKey  3 opt checkVar="profileType" checkEq=0x01
+    uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
     string varName     5
 end
 
@@ -19,17 +19,17 @@ end
 message PC_SET      // 0x0002
     version 2.0
     byte   profileType 2
-    string abonentKey  3 opt // checkVar="profileType" checkEq=0x01
-    uint32 profileKey  4 opt // checkVar="profileType" checkGt=0x01 checkLt=0x05
+    string abonentKey  3 opt checkVar="profileType" checkEq=0x01
+    uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
     string varName     5
     byte   valueType   6
     byte   timePolicy  7
     uint32 finalDate   8
     uint32 lifeTime    9
-    uint32 intValue    10 opt // checkVar="valueType" checkEq=0x01
-    string stringValue 11 opt // checkVar="valueType" checkEq=0x02
-    byte   boolValue   12 opt // checkVar="valueType" checkEq=0x03
-    uint32 dateValue   13 opt // checkVar="valueType" checkEq=0x04
+    uint32 intValue    10 opt checkVar="valueType" checkEq=0x01
+    string stringValue 11 opt checkVar="valueType" checkEq=0x02
+    byte   boolValue   12 opt checkVar="valueType" checkEq=0x03
+    uint32 dateValue   13 opt checkVar="valueType" checkEq=0x04
 end
 
 message PC_SET_RESP // 0x8002
@@ -40,8 +40,8 @@ end
 message PC_GET      // 0x0003
     version 2.0
     byte   profileType 2
-    string abonentKey  3 opt // checkVar="profileType" checkEq=0x01
-    uint32 profileKey  4 opt // checkVar="profileType" checkGt=0x01 checkLt=0x05
+    string abonentKey  3 opt checkVar="profileType" checkEq=0x01
+    uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
     string varName     5
 end
 
@@ -53,17 +53,17 @@ message PC_GET_RESP // 0x8003
     uint32 finalDate   8
     uint32 lifeTime    9
     string varName     5
-    uint32 intValue    10 opt // checkVar="valueType" checkEq=0x01
-    string stringValue 11 opt // checkVar="valueType" checkEq=0x02
-    byte   boolValue   12 opt // checkVar="valueType" checkEq=0x03
-    uint32 dateValue   13 opt // checkVar="valueType" checkEq=0x04
+    uint32 intValue    10 opt checkVar="valueType" checkEq=0x01
+    string stringValue 11 opt checkVar="valueType" checkEq=0x02
+    byte   boolValue   12 opt checkVar="valueType" checkEq=0x03
+    uint32 dateValue   13 opt checkVar="valueType" checkEq=0x04
 end
 
 message PC_INC     // 0x0004
     version 2.0
     byte   profileType 2
-    string abonentKey  3 opt // checkVar="profileType" checkEq=0x01
-    uint32 profileKey  4 opt // checkVar="profileType" checkGt=0x01 checkLt=0x05
+    string abonentKey  3 opt checkVar="profileType" checkEq=0x01
+    uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
     string varName     5
     byte   valueType   6
     byte   timePolicy  7
@@ -81,8 +81,8 @@ end
 message PC_INC_MOD  // 0x0005
     version 2.0
     byte   profileType 2
-    string abonentKey  3 opt // checkVar="profileType" checkEq=0x01
-    uint32 profileKey  4 opt // checkVar="profileType" checkGt=0x01 checkLt=0x05
+    string abonentKey  3 opt checkVar="profileType" checkEq=0x01
+    uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
     string varName     5
     byte   valueType   6
     byte   timePolicy  7
@@ -118,15 +118,15 @@ end
 message PC_AUTH_RESP  // 0x800a
     version 2.0
     byte   status      1
-    byte   clientType  19 opt // checkVar="status" checkEq=0
-    byte   sid         20 opt // checkVar="status" checkEq=0
+    byte   clientType  19 opt checkVar="status" checkEq=0
+    byte   sid         20 opt checkVar="status" checkEq=0
 end
 
 message PC_BATCH      // 0x0007
     version 2.0
     byte       profileType  2
-    string     abonentKey   3 opt // checkVar="profileType" checkEq=0x01
-    uint32     profileKey   4 opt // checkVar="profileType" checkGt=0x01 checkLt=0x05
+    string     abonentKey   3 opt checkVar="profileType" checkEq=0x01
+    uint32     profileKey   4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
     byte       batchMode    21
     uint16     count        22
 // FIXME: enable it

@@ -22,13 +22,21 @@ public:
     enum{endOfMessage_tag=0xffff};
 
 public:
-    Serializer() {
-        bufSize=256;
-        buf=new char[bufSize];
-        pos=0;
-        dataSize=0;
+    Serializer( size_t size = 256 ) :
+    owned(true), buf(0), pos(0), dataSize(0), bufSize(size) {
+        if (bufSize) buf = new char[bufSize];
     }
   
+    void clear()
+    {
+        pos = 0;
+        dataSize = 0;
+        if (owned) delete[] buf;
+        buf = 0;
+        bufSize = 0;
+        owned = true;
+    }
+
     PVAPBC& getPVAPBC();
 
     void writeTag(uint16_t tag)
@@ -40,13 +48,14 @@ public:
     }
     void writeLength(uint16_t length)
     {
-        resize(2);
+        resize(2+length); // optimization (as the next action is writing contents)
         uint16_t netvalue=htons(length);
         memcpy(buf+pos,&netvalue,2);
         pos+=2;
     }
     void writeByte(uint8_t value)
     {
+        resize(1);
         memcpy(buf+pos,&value,1);
         pos+=1;
     }
@@ -270,37 +279,68 @@ public:
         pos=0;
     }
 
-    void setData(const char* data,size_t size)
+    void setData( const char* data,size_t size, bool doCopy = true )
     {
         pos=0;
-        resize(size);
-        memcpy(buf,data,size);
+        if ( doCopy ) {
+            resize(size);
+            memcpy(buf,data,size);
+        } else {
+            // using external buffer
+            clear();
+            owned = false;
+            buf = const_cast<char*>(data);
+        }
         dataSize=size;
     }
+
+    /// these two methods are useful after writing to buffer
+    const char* getData() const
+    {
+        return buf;
+    }
+    size_t getPos() const
+    {
+        return pos;
+    }
+
+    /// this method is useful before reading from socket
     char* prepareBuffer(uint32_t size)
     {
         pos=0;
-        resize(size);
+        if ( owned ) {
+            resize(size);
+        } else {
+            clear();
+            owned = true;
+            bufSize = size;
+            buf = new char[bufSize];
+        }
         dataSize=size;
         return buf;
     }
 
 protected:
+    bool owned;
     char* buf;
     size_t pos;
-    size_t dataSize;
+    size_t dataSize; // is for reading only: end of data pointer
     size_t bufSize;
     void resize(size_t grow)
     {
+        if (!owned) throw std::runtime_error("cannot write to unowned buffer");
         if(pos+grow>bufSize)
         {
-            bufSize=bufSize*2+grow;
-            char* newbuf=new char[bufSize];
-            memcpy(newbuf,buf,pos);
-            delete [] buf;
+            bufSize = bufSize*2+grow;
+            char* newbuf = new char[bufSize];
+            if (buf) {
+                if (pos) memcpy(newbuf,buf,pos);
+                delete [] buf;
+            }
             buf=newbuf;
         }
     }
+
 };
 
 }

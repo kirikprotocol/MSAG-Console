@@ -1,105 +1,117 @@
-package pvss.pvap;
+package com.eyelinecom.whoisd.pvss.pvap;
 
-import protogen.framework.BufferWriter;
-import protogen.framework.BufferReader;
+// import protogen.framework.BufferWriter;
+// import protogen.framework.BufferReader;
+// import java.io.IOException;
 
-import java.io.IOException;
-
-import org.apache.log4j.Logger;
+// import org.apache.log4j.Logger;
 
 
-public class PC_SET_RESP {
-  static Logger logger = Logger.getLogger(PC_SET_RESP.class);
+public class PC_SET_RESP  
+{
+    // static Logger logger = Logger.getLogger(PC_SET_RESP.class);
 
-  int seqNum;
-  byte status;
-  boolean statusFlag=false;
+    static final short statusTag = 1;
 
-  public PC_SET_RESP() {
-  }
+    int seqNum;
+    byte status;
+    boolean statusFlag=false;
 
-  public PC_SET_RESP(int seqNum,byte status)
-  {
-    this.seqNum = seqNum;
-    this.status = status;
-    this.statusFlag = true;
-  }
- 
-  public void clear()
-  {
-    statusFlag=false;
-  }
- 
-  public String toString()
-  {
-    StringBuilder sb=new StringBuilder();
-    sb.append("PC_SET_RESP:");
-    sb.append("seqNum=");
-    sb.append(seqNum);
-    if(statusFlag)
-    {
-      sb.append(";status=");
-      sb.append(status.toString());    }
-    return sb.toString();
-  }
-
-  public int getSeqNum()
-  {
-    return seqNum;
-  }
-
-  public void setSeqNum(int seqNum)
-  {
-    this.seqNum = seqNum;
-  }
-
-  public byte getStatus()
-  {
-    if(!statusFlag)
-    {
-      //!!TODO!!
+    public PC_SET_RESP() {
     }
-    return status;
-  }
 
-  public void setStatus(byte status)
-  {
-    this.status = status;
-    this.statusFlag = true;
-  }
- 
-  public boolean hasStatus()
-  {
-    return statusFlag;
-  }
-
-  public void encode(BufferWriter writer)
-  {
-    if(!statusFlag)
+    public PC_SET_RESP(int seqNum, byte status)
     {
-      //!!TODO!!
+        this.seqNum = seqNum;
+        this.status = status;
+        this.statusFlag = true;
     }
-    writer.writeInt( seqNum );
  
-    writer.writeShort((short)1); // tag id
-    writer.writeByteLV(status);
-    writer.writeShort((short)0xFFFF); // end message tag
-  }
-
-  public void decode(BufferReader reader) throws IOException
-  {
-    seqNum = reader.readInt();
-    while( true ) {
-      int tag = reader.readShort();
-      if( tag == (short)0xFFFF ) break;
-      switch( tag ) {
-        case 1:{
-          status = reader.readByteLV();          statusFlag=true;
-          }break;
-        default:
-          logger.warn("unknown tagId: "+tag+" seqnum: "+seqNum+" msg: "+PC_SET_RESP.class.getName());
-      }
-
+    public void clear()
+    {
+        statusFlag=false;
     }
-  }
+ 
+    public String toString()
+    {
+        StringBuilder sb=new StringBuilder();
+        sb.append("PC_SET_RESP:");
+        sb.append("seqNum=");
+        sb.append(seqNum);
+        if (statusFlag) {
+            sb.append(";status=");
+            sb.append(status);
+        }
+        return sb.toString();
+    }
+
+    public byte getStatus() throws FieldIsNullException
+    {
+        if(!statusFlag)
+        {
+            throw new FieldIsNullException("status");
+        }
+        return status;
+    }
+
+    public void setStatus(byte status)
+    {
+        this.status = status;
+        this.statusFlag = true;
+    }
+
+    public boolean hasStatus()
+    {
+        return statusFlag;
+    }
+
+    public void encode( IBufferWriter writer ) throws java.io.IOException
+    {
+        checkFields();
+        // mandatory fields
+        writer.writeTag(statusTag);
+        writer.writeByteLV(status);
+        // optional fields
+    }
+
+    public void decode( IBufferReader reader ) throws java.io.IOException
+    {
+        clear();
+        // seqNum = reader.readInt();
+        while( true ) {
+            short tag = reader.readTag();
+            // System.out.println("tag got:" + tag);
+            if ( tag == (short)0xFFFF ) break;
+            switch( tag ) {
+            case statusTag: {
+                status=reader.readByteLV();
+                statusFlag=true;
+                break;
+            }
+            default:
+                System.err.println("unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + getClass().getName());
+                // logger.warn( "unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + PC_SET_RESP.class.getName() );
+            }
+        }
+        checkFields();
+    }
+
+    public int getSeqNum()
+    {
+        return seqNum;
+    }
+
+    public void setSeqNum(int seqNum)
+    {
+        this.seqNum = seqNum;
+    }
+
+    protected void checkFields() throws MandatoryFieldMissingException
+    {
+        // checking mandatory fields
+        if (!statusFlag) {
+            throw new MandatoryFieldMissingException("status");
+        }
+        // checking optional fields
+    }
 }

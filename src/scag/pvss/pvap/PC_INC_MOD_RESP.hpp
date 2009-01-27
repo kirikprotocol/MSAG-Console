@@ -13,199 +13,185 @@ namespace scag{
 namespace pvss{
 namespace pvap{
 
-class PC_INC_MOD_RESP  {
+class PC_INC_MOD_RESP  
+{
 public:
-  PC_INC_MOD_RESP()
-  {
-    Clear();
-  }
-  void Clear()
-  {
-    statusFlag=false;
-    intValueFlag=false;
-  }
-
-  std::string toString()const
-  {
-    std::string rv;
-    char buf[32];
-		sprintf(buf,"seqNum=%d",seqNum);
-		rv+=buf;
-    if(statusFlag)
+    PC_INC_MOD_RESP()
     {
-      rv+=";status=";
-      sprintf(buf,"%u",(unsigned int)status);
-      rv+=buf;
+        clear();
     }
-    if(intValueFlag)
+    void clear()
     {
-      rv+=";intValue=";
-      sprintf(buf,"%u",(unsigned int)intValue);
-      rv+=buf;
-    }
-    return rv;
-  }
-
-  template <class DataStream>
-  uint32_t length()const
-  {
-    uint32_t rv=0;
-    if(statusFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(status);
-    }
-    if(intValueFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(intValue);
+        statusFlag=false;
+        intValueFlag=false;
     }
 
-    return rv;
-  }
-  uint8_t getStatus()const
-  {
-    if(!statusFlag)
+    std::string toString() const
     {
-      throw FieldIsNullException("status");
+        std::string rv("PC_INC_MOD_RESP:");
+        char buf[32];
+        sprintf(buf,"seqNum=%d",seqNum);
+        rv+=buf;
+        if(statusFlag) {
+            rv+=";status=";
+            sprintf(buf,"%u",(unsigned int)status);
+            rv+=buf;
+        }
+        if(intValueFlag) {
+            rv+=";intValue=";
+            sprintf(buf,"%u",(unsigned int)intValue);
+            rv+=buf;
+        }
+        return rv;
     }
-    return status;
-  }
-  void setStatus(uint8_t value)
-  {
-    status=value;
-    statusFlag=true;
-  }
-  bool hasStatus()const
-  {
-    return statusFlag;
-  }
-  uint32_t getIntValue()const
-  {
-    if(!intValueFlag)
-    {
-      throw FieldIsNullException("intValue");
-    }
-    return intValue;
-  }
-  void setIntValue(uint32_t value)
-  {
-    intValue=value;
-    intValueFlag=true;
-  }
-  bool hasIntValue()const
-  {
-    return intValueFlag;
-  }
 
-  template <class DataStream>
-  void serialize(DataStream& ds)const
-  {
-    if(!statusFlag)
+    template <class DataStream> uint32_t length()const
     {
-      throw MandatoryFieldMissingException("status");
+        uint32_t rv=0;
+        if (statusFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(status);
+        }
+        if (intValueFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(intValue);
+        }
+        return rv;
     }
-    if(!intValueFlag)
+
+  uint8_t getStatus() const
     {
-      throw MandatoryFieldMissingException("intValue");
+        if (!statusFlag) {
+            throw FieldIsNullException("status");
+        }
+        return status;
     }
-    // checking profile type
-    //ds.writeByte(versionMajor);
-    //ds.writeByte(versionMinor);
-    //ds.writeInt32(seqNum);
-    ds.writeTag(statusTag);
+
+    void setStatus(uint8_t value)
+    {
+        status=value;
+        statusFlag=true;
+    }
+    bool hasStatus()const
+    {
+        return statusFlag;
+    }
+  uint32_t getIntValue() const
+    {
+        if (!intValueFlag) {
+            throw FieldIsNullException("intValue");
+        }
+        return intValue;
+    }
+
+    void setIntValue(uint32_t value)
+    {
+        intValue=value;
+        intValueFlag=true;
+    }
+    bool hasIntValue()const
+    {
+        return intValueFlag;
+    }
+
+    template <class DataStream> void serialize(DataStream& ds) const
+    {
+        checkFields();
+        // mandatory fields
+        ds.writeTag(statusTag);
     ds.writeByteLV(status);
-    ds.writeTag(intValueTag);
+        ds.writeTag(intValueTag);
     ds.writeInt32LV(intValue);
-    //ds.writeTag(DataStream::endOfMessage_tag);
-  }
+        // optional fields
+        //ds.writeTag(DataStream::endOfMessage_tag);
+    }
 
-  template <class DataStream>
-  void deserialize(DataStream& ds)
-  {
-    Clear();
-    bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
-    //if(rdVersionMajor!=versionMajor)
-    //{
-    //  throw IncompatibleVersionException("PC_INC_MOD_RESP");
-    //}
-    //seqNum=ds.readInt32();
-    while(!endOfMessage)
+    template <class DataStream> void deserialize(DataStream& ds)
     {
-      uint32_t tag=ds.readTag();
-      switch(tag)
-      {
-        case statusTag:
-        {
-          if(statusFlag)
-          {
-            throw DuplicateFieldException("status");
-          }
+        clear();
+        bool endOfMessage=false;
+        //uint8_t rdVersionMajor=ds.readByte();
+        //uint8_t rdVersionMinor=ds.readByte();
+        //if(rdVersionMajor!=versionMajor)
+        //{
+        //  throw IncompatibleVersionException("PC_INC_MOD_RESP");
+        //}
+        //seqNum=ds.readInt32();
+        while (!endOfMessage) {
+            uint32_t tag=ds.readTag();
+            switch(tag) {
+            case statusTag: {
+                if (statusFlag) {
+                    throw DuplicateFieldException("status");
+                }
           status=ds.readByteLV();
-          statusFlag=true;
-        }break;
-        case intValueTag:
-        {
-          if(intValueFlag)
-          {
-            throw DuplicateFieldException("intValue");
-          }
+                statusFlag=true;
+                break;
+            }
+            case intValueTag: {
+                if (intValueFlag) {
+                    throw DuplicateFieldException("intValue");
+                }
           intValue=ds.readInt32LV();
-          intValueFlag=true;
-        }break;
-        case DataStream::endOfMessage_tag:
-          endOfMessage=true;
-          break;
-        default:
-          //if(rdVersionMinor==versionMinor)
-          //{
-          //  throw UnexpectedTag("PC_INC_MOD_RESP",tag);
-          //}
-          ds.skip(ds.readLength());
-      }
+                intValueFlag=true;
+                break;
+            }
+            case DataStream::endOfMessage_tag:
+                endOfMessage=true;
+                break;
+            default:
+                //if(rdVersionMinor==versionMinor)
+                //{
+                //  throw UnexpectedTag("PC_INC_MOD_RESP",tag);
+                //}
+                ds.skip(ds.readLength());
+            }
+        }
+        checkFields();
     }
-    if(!statusFlag)
-    {
-      throw MandatoryFieldMissingException("status");
-    }
-    if(!intValueFlag)
-    {
-      throw MandatoryFieldMissingException("intValue");
-    }
-    // checking profile type
-  }
 
-  uint32_t getSeqNum()const
-  {
-    return seqNum;
-  }
+    uint32_t getSeqNum() const
+    {
+        return seqNum;
+    }
  
-  void setSeqNum(uint32_t value)
-  {
-    seqNum=value;
-  }
+    void setSeqNum(uint32_t value)
+    {
+        seqNum=value;
+    }
 
 protected:
-  //static const uint8_t versionMajor=2;
-  //static const uint8_t versionMinor=0;
+    void checkFields() const throw (MandatoryFieldMissingException)
+    {
+        // checking mandatory fields
+        if (!statusFlag) {
+            throw MandatoryFieldMissingException("status");
+        }
+        if (!intValueFlag) {
+            throw MandatoryFieldMissingException("intValue");
+        }
+        // checking optional fields
+    }
 
-  static const uint32_t statusTag=1;
-  static const uint32_t intValueTag=10;
+protected:
+    //static const uint8_t versionMajor=2;
+    //static const uint8_t versionMinor=0;
 
-  uint32_t seqNum;
+    static const uint16_t statusTag=1;
+    static const uint16_t intValueTag=10;
 
-  uint8_t status;
-  uint32_t intValue;
+    uint32_t seqNum;
 
-  bool statusFlag;
-  bool intValueFlag;
+    uint8_t status;
+    uint32_t intValue;
+
+    bool statusFlag;
+    bool intValueFlag;
 };
 
-}
-}
-}
+} // namespace scag
+} // namespace pvss
+} // namespace pvap
 #endif

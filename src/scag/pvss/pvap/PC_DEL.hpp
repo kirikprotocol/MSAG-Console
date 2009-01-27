@@ -13,291 +13,280 @@ namespace scag{
 namespace pvss{
 namespace pvap{
 
-class PC_DEL  {
+class PC_DEL  
+{
 public:
-  PC_DEL()
-  {
-    Clear();
-  }
-  void Clear()
-  {
-    profileTypeFlag=false;
-    abonentKeyFlag=false;
-    profileKeyFlag=false;
-    varNameFlag=false;
-  }
-
-  std::string toString()const
-  {
-    std::string rv;
-    char buf[32];
-		sprintf(buf,"seqNum=%d",seqNum);
-		rv+=buf;
-    if(profileTypeFlag)
+    PC_DEL()
     {
-      rv+=";profileType=";
-      sprintf(buf,"%u",(unsigned int)profileType);
-      rv+=buf;
+        clear();
     }
-    if(abonentKeyFlag)
+    void clear()
     {
-      rv+=";abonentKey=";
-      rv+=abonentKey;
-    }
-    if(profileKeyFlag)
-    {
-      rv+=";profileKey=";
-      sprintf(buf,"%u",(unsigned int)profileKey);
-      rv+=buf;
-    }
-    if(varNameFlag)
-    {
-      rv+=";varName=";
-      rv+=varName;
-    }
-    return rv;
-  }
-
-  template <class DataStream>
-  uint32_t length()const
-  {
-    uint32_t rv=0;
-    if(profileTypeFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(profileType);
-    }
-    if(abonentKeyFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(abonentKey);
-    }
-    if(profileKeyFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(profileKey);
-    }
-    if(varNameFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(varName);
+        profileTypeFlag=false;
+        abonentKeyFlag=false;
+        profileKeyFlag=false;
+        varNameFlag=false;
     }
 
-    return rv;
-  }
-  uint8_t getProfileType()const
-  {
-    if(!profileTypeFlag)
+    std::string toString() const
     {
-      throw FieldIsNullException("profileType");
+        std::string rv("PC_DEL:");
+        char buf[32];
+        sprintf(buf,"seqNum=%d",seqNum);
+        rv+=buf;
+        if(profileTypeFlag) {
+            rv+=";profileType=";
+            sprintf(buf,"%u",(unsigned int)profileType);
+            rv+=buf;
+        }
+        if(abonentKeyFlag) {
+            rv+=";abonentKey=";
+            rv+=abonentKey;
+        }
+        if(profileKeyFlag) {
+            rv+=";profileKey=";
+            sprintf(buf,"%u",(unsigned int)profileKey);
+            rv+=buf;
+        }
+        if(varNameFlag) {
+            rv+=";varName=";
+            rv+=varName;
+        }
+        return rv;
     }
-    return profileType;
-  }
-  void setProfileType(uint8_t value)
-  {
-    profileType=value;
-    profileTypeFlag=true;
-  }
-  bool hasProfileType()const
-  {
-    return profileTypeFlag;
-  }
-  const std::string& getAbonentKey()const
-  {
-    if(!abonentKeyFlag)
-    {
-      throw FieldIsNullException("abonentKey");
-    }
-    return abonentKey;
-  }
-  void setAbonentKey(const std::string& value)
-  {
-    abonentKey=value;
-    abonentKeyFlag=true;
-  }
-  bool hasAbonentKey()const
-  {
-    return abonentKeyFlag;
-  }
-  uint32_t getProfileKey()const
-  {
-    if(!profileKeyFlag)
-    {
-      throw FieldIsNullException("profileKey");
-    }
-    return profileKey;
-  }
-  void setProfileKey(uint32_t value)
-  {
-    profileKey=value;
-    profileKeyFlag=true;
-  }
-  bool hasProfileKey()const
-  {
-    return profileKeyFlag;
-  }
-  const std::string& getVarName()const
-  {
-    if(!varNameFlag)
-    {
-      throw FieldIsNullException("varName");
-    }
-    return varName;
-  }
-  void setVarName(const std::string& value)
-  {
-    varName=value;
-    varNameFlag=true;
-  }
-  bool hasVarName()const
-  {
-    return varNameFlag;
-  }
 
-  template <class DataStream>
-  void serialize(DataStream& ds)const
-  {
-    if(!profileTypeFlag)
+    template <class DataStream> uint32_t length()const
     {
-      throw MandatoryFieldMissingException("profileType");
+        uint32_t rv=0;
+        if (profileTypeFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(profileType);
+        }
+        if (abonentKeyFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(abonentKey);
+        }
+        if (profileKeyFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(profileKey);
+        }
+        if (varNameFlag) {
+            rv+=DataStream::tagTypeSize;
+            rv+=DataStream::lengthTypeSize;
+            rv+=DataStream::fieldSize(varName);
+        }
+        return rv;
     }
-    if(!varNameFlag)
+
+  uint8_t getProfileType() const
     {
-      throw MandatoryFieldMissingException("varName");
+        if (!profileTypeFlag) {
+            throw FieldIsNullException("profileType");
+        }
+        return profileType;
     }
-    // checking profile type
-    //ds.writeByte(versionMajor);
-    //ds.writeByte(versionMinor);
-    //ds.writeInt32(seqNum);
-    ds.writeTag(profileTypeTag);
+
+    void setProfileType(uint8_t value)
+    {
+        profileType=value;
+        profileTypeFlag=true;
+    }
+    bool hasProfileType()const
+    {
+        return profileTypeFlag;
+    }
+  const std::string& getAbonentKey() const
+    {
+        if (!abonentKeyFlag) {
+            throw FieldIsNullException("abonentKey");
+        }
+        return abonentKey;
+    }
+
+    void setAbonentKey(const std::string& value)
+    {
+        abonentKey=value;
+        abonentKeyFlag=true;
+    }
+    bool hasAbonentKey()const
+    {
+        return abonentKeyFlag;
+    }
+  uint32_t getProfileKey() const
+    {
+        if (!profileKeyFlag) {
+            throw FieldIsNullException("profileKey");
+        }
+        return profileKey;
+    }
+
+    void setProfileKey(uint32_t value)
+    {
+        profileKey=value;
+        profileKeyFlag=true;
+    }
+    bool hasProfileKey()const
+    {
+        return profileKeyFlag;
+    }
+  const std::string& getVarName() const
+    {
+        if (!varNameFlag) {
+            throw FieldIsNullException("varName");
+        }
+        return varName;
+    }
+
+    void setVarName(const std::string& value)
+    {
+        varName=value;
+        varNameFlag=true;
+    }
+    bool hasVarName()const
+    {
+        return varNameFlag;
+    }
+
+    template <class DataStream> void serialize(DataStream& ds) const
+    {
+        checkFields();
+        // mandatory fields
+        ds.writeTag(profileTypeTag);
     ds.writeByteLV(profileType);
-    ds.writeTag(varNameTag);
+        ds.writeTag(varNameTag);
     ds.writeStrLV(varName);
-    if(abonentKeyFlag)
-    {
-      ds.writeTag(abonentKeyTag);
+        // optional fields
+        if (abonentKeyFlag) {
+            ds.writeTag(abonentKeyTag);
       ds.writeStrLV(abonentKey);
-    }
-    if(profileKeyFlag)
-    {
-      ds.writeTag(profileKeyTag);
+        }
+        if (profileKeyFlag) {
+            ds.writeTag(profileKeyTag);
       ds.writeInt32LV(profileKey);
+        }
+        //ds.writeTag(DataStream::endOfMessage_tag);
     }
-    //ds.writeTag(DataStream::endOfMessage_tag);
-  }
 
-  template <class DataStream>
-  void deserialize(DataStream& ds)
-  {
-    Clear();
-    bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
-    //if(rdVersionMajor!=versionMajor)
-    //{
-    //  throw IncompatibleVersionException("PC_DEL");
-    //}
-    //seqNum=ds.readInt32();
-    while(!endOfMessage)
+    template <class DataStream> void deserialize(DataStream& ds)
     {
-      uint32_t tag=ds.readTag();
-      switch(tag)
-      {
-        case profileTypeTag:
-        {
-          if(profileTypeFlag)
-          {
-            throw DuplicateFieldException("profileType");
-          }
+        clear();
+        bool endOfMessage=false;
+        //uint8_t rdVersionMajor=ds.readByte();
+        //uint8_t rdVersionMinor=ds.readByte();
+        //if(rdVersionMajor!=versionMajor)
+        //{
+        //  throw IncompatibleVersionException("PC_DEL");
+        //}
+        //seqNum=ds.readInt32();
+        while (!endOfMessage) {
+            uint32_t tag=ds.readTag();
+            switch(tag) {
+            case profileTypeTag: {
+                if (profileTypeFlag) {
+                    throw DuplicateFieldException("profileType");
+                }
           profileType=ds.readByteLV();
-          profileTypeFlag=true;
-        }break;
-        case abonentKeyTag:
-        {
-          if(abonentKeyFlag)
-          {
-            throw DuplicateFieldException("abonentKey");
-          }
+                profileTypeFlag=true;
+                break;
+            }
+            case abonentKeyTag: {
+                if (abonentKeyFlag) {
+                    throw DuplicateFieldException("abonentKey");
+                }
           abonentKey=ds.readStrLV();
-          abonentKeyFlag=true;
-        }break;
-        case profileKeyTag:
-        {
-          if(profileKeyFlag)
-          {
-            throw DuplicateFieldException("profileKey");
-          }
+                abonentKeyFlag=true;
+                break;
+            }
+            case profileKeyTag: {
+                if (profileKeyFlag) {
+                    throw DuplicateFieldException("profileKey");
+                }
           profileKey=ds.readInt32LV();
-          profileKeyFlag=true;
-        }break;
-        case varNameTag:
-        {
-          if(varNameFlag)
-          {
-            throw DuplicateFieldException("varName");
-          }
+                profileKeyFlag=true;
+                break;
+            }
+            case varNameTag: {
+                if (varNameFlag) {
+                    throw DuplicateFieldException("varName");
+                }
           varName=ds.readStrLV();
-          varNameFlag=true;
-        }break;
-        case DataStream::endOfMessage_tag:
-          endOfMessage=true;
-          break;
-        default:
-          //if(rdVersionMinor==versionMinor)
-          //{
-          //  throw UnexpectedTag("PC_DEL",tag);
-          //}
-          ds.skip(ds.readLength());
-      }
+                varNameFlag=true;
+                break;
+            }
+            case DataStream::endOfMessage_tag:
+                endOfMessage=true;
+                break;
+            default:
+                //if(rdVersionMinor==versionMinor)
+                //{
+                //  throw UnexpectedTag("PC_DEL",tag);
+                //}
+                ds.skip(ds.readLength());
+            }
+        }
+        checkFields();
     }
-    if(!profileTypeFlag)
-    {
-      throw MandatoryFieldMissingException("profileType");
-    }
-    if(!varNameFlag)
-    {
-      throw MandatoryFieldMissingException("varName");
-    }
-    // checking profile type
-  }
 
-  uint32_t getSeqNum()const
-  {
-    return seqNum;
-  }
+    uint32_t getSeqNum() const
+    {
+        return seqNum;
+    }
  
-  void setSeqNum(uint32_t value)
-  {
-    seqNum=value;
-  }
+    void setSeqNum(uint32_t value)
+    {
+        seqNum=value;
+    }
 
 protected:
-  //static const uint8_t versionMajor=2;
-  //static const uint8_t versionMinor=0;
+    void checkFields() const throw (MandatoryFieldMissingException)
+    {
+        // checking mandatory fields
+        if (!profileTypeFlag) {
+            throw MandatoryFieldMissingException("profileType");
+        }
+        if (!varNameFlag) {
+            throw MandatoryFieldMissingException("varName");
+        }
+        // checking optional fields
+        if (!abonentKeyFlag
+            && (profileType==1)
+            ) {
+            throw MandatoryFieldMissingException("abonentKey");
+        }
+        if (!profileKeyFlag
+            && (profileType>1)
+            && (profileType<5)
+            ) {
+            throw MandatoryFieldMissingException("profileKey");
+        }
+    }
 
-  static const uint32_t profileTypeTag=2;
-  static const uint32_t abonentKeyTag=3;
-  static const uint32_t profileKeyTag=4;
-  static const uint32_t varNameTag=5;
+protected:
+    //static const uint8_t versionMajor=2;
+    //static const uint8_t versionMinor=0;
 
-  uint32_t seqNum;
+    static const uint16_t profileTypeTag=2;
+    static const uint16_t abonentKeyTag=3;
+    static const uint16_t profileKeyTag=4;
+    static const uint16_t varNameTag=5;
 
-  uint8_t profileType;
-  std::string abonentKey;
-  uint32_t profileKey;
-  std::string varName;
+    uint32_t seqNum;
 
-  bool profileTypeFlag;
-  bool abonentKeyFlag;
-  bool profileKeyFlag;
-  bool varNameFlag;
+    uint8_t profileType;
+    std::string abonentKey;
+    uint32_t profileKey;
+    std::string varName;
+
+    bool profileTypeFlag;
+    bool abonentKeyFlag;
+    bool profileKeyFlag;
+    bool varNameFlag;
 };
 
-}
-}
-}
+} // namespace scag
+} // namespace pvss
+} // namespace pvap
 #endif

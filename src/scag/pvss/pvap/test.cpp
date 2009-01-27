@@ -32,7 +32,7 @@ public:
 private:
     template <class CMD> void dump( const char* msgType, CMD* msg )
     {
-        std::cout << "got " << msgType << ":" << msg->toString() << std::endl;
+        std::cout << "got: " << msg->toString() << std::endl;
     }
 };
 

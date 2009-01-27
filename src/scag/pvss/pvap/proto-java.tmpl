@@ -1,53 +1,60 @@
-package protogen;
+package $var package$;
 
-import protogen.framework.BufferReader;
-import protogen.framework.InvalidMessageTypeException;
-import protogen.framework.BufferWriter;
-
-import java.io.IOException;
-
+// import protogen.framework.BufferReader;
+// import protogen.framework.InvalidMessageTypeException;
+// import protogen.framework.BufferWriter;
+// import java.io.IOException;
 
 /**
- * This protocol has header: len (4 oct), tag (4 oct), seq (4 oct), message body
- *
- *
+ * This protocol has header: len (4 oct), seq (4 oct), tag ( 2 oct.), message body
  */
-public class $var protocol.name$ {
-
-  public static interface Handler {
+public class $var protocol.name$ 
+{
 $foreach message$
-    public void handle( $var message.name$ object );
+    static final short tag_$var message.name:ucf$=(short)$var message.tag$;
 $-foreach$
-  }
 
-
-  Handler handler;
-  public $var protocol.name$(Handler handler) {
-    this.handler = handler;
-  }
-
-  public void decodeMessage( BufferReader reader ) throws IOException {
-    int tag = reader.readInt();
-    switch( tag ) {
+    public static interface Handler {
 $foreach message$
-      case $var message.tag$:
-      {
-        $var message.name$ object = new $var message.name$();
-        object.decode(reader);
-        handler.handle(object);
-      }break;
+        public void handle( $var message.name$ object );
 $-foreach$
-      default: throw new InvalidMessageTypeException();
     }
 
-  }
-$foreach message$
-  public byte[] encodeMessage( $var message.name$ object) {
-    BufferWriter writer = new BufferWriter();
-    writer.writeInt($var message.tag$);
-    object.encode(writer);
-    return writer.getData();
-  }
-$-foreach$
+    Handler handler;
+    public $var protocol.name$(Handler handler) {
+        this.handler = handler;
+    }
 
+    public void assignHandler(Handler newHandler) {
+        this.handler = newHandler;
+    }
+
+    public void decodeMessage( IBufferReader reader ) throws java.io.IOException
+    {
+        int seqNum = reader.readInt();
+        short tag = reader.readTag();
+        switch( tag ) {
+$foreach message$
+        case tag_$var message.name:ucf$: {
+            $var message.name$ object = new $var message.name$();
+            object.setSeqNum(seqNum);
+            object.decode(reader);
+            handler.handle(object);
+            break;
+        }
+$-foreach$
+        default: throw new InvalidMessageTypeException();
+        }
+    }
+
+$foreach message$
+    public byte[] encodeMessage( $var message.name$ object, IBufferWriter writer ) throws java.io.IOException
+    {
+        // BufferWriter writer = new BufferWriter();
+        writer.writeInt(object.getSeqNum());
+        writer.writeTag(tag_$var message.name$);
+        object.encode(writer);
+        return writer.getData();
+    }
+$-foreach$
 }

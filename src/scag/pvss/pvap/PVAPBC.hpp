@@ -46,7 +46,7 @@ public:
   void decodeMessage(Serializer& ss)
   {
     uint32_t seqNum=ss.readInt32();
-    uint32_t tag=ss.readInt16();
+    uint16_t tag=ss.readInt16();
     switch(tag)
     {
       case tag_BC_DEL:
