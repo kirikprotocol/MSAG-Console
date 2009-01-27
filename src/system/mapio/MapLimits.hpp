@@ -47,6 +47,11 @@ public:
   bool isNoSRIUssd(const std::string& ussd)
   {
     sync::MutexGuard mg(mtx);
+    std::string::size_type pos=ussd.find(':');
+    if(pos!=std::string::npos)
+    {
+      return noSriUssd.find(ussd.substr(pos+1))!=noSriUssd.end();
+    }
     return noSriUssd.find(ussd)!=noSriUssd.end();
   }
 

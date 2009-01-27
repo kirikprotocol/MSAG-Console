@@ -229,6 +229,7 @@ struct MapDialog{
   bool isDropping:1;
   bool needReportMsc:1;
   bool ussdProcessing:1;
+  bool noSri:1;
   MapState state;
   int dlgType;
   ET96MAP_DIALOGUE_ID_T dialogid_map;
@@ -291,6 +292,7 @@ struct MapDialog{
     dropChain=false;
     id_opened=false;
     ussdProcessing=false;
+    noSri=false;
     state=MAPST_START;
     dialogid_map=dialogid;
     dialogid_smsc=0;
@@ -474,6 +476,7 @@ struct MapDialog{
     version = 0;
     mms = false;
     isUSSD = false;
+    noSri=false;
     //isAllocated=false;
   }
 

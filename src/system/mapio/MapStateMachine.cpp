@@ -1193,7 +1193,7 @@ static void SendSubmitCommand(MapDialog* dialog)
   __map_trace2__("%s: dlg 0x%x Submit %s to SMSC: IMSI = %s, MSC = %s, %s",__func__,dialog->dialogid_map,dialog->isUSSD?"USSD":"SMS",dialog->s_imsi.c_str(),dialog->s_msc.c_str(),RouteToString(dialog).c_str());
 
   try{
-    if(dialog->s_msc.length())
+    if(!dialog->noSri)
     {
       MscManager::getMscStatus().report(dialog->s_msc.c_str(),true);
     }
@@ -1307,7 +1307,7 @@ static bool SendSms(MapDialog* dialog)
 {
   dialog->wasDelivered = false;
 
-  MscState mscSt=MscManager::getMscStatus().check(dialog->s_msc.c_str());
+  MscState mscSt=dialog->noSri?mscUnlocked:MscManager::getMscStatus().check(dialog->s_msc.c_str());
   if ( mscSt == mscLocked)
     throw MAPDIALOG_TEMP_ERROR("MSC BLOCKED",Status::BLOCKEDMSC);
 
@@ -3019,13 +3019,20 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
     __map_trace2__("%s: dialogid 0x%x  (state %d) DELIVERY_SM %s",__func__,dialog->dialogid_map,dialog->state, RouteToString(dialog.get()).c_str());
     try {
 
-      if ( provErrCode_p && *provErrCode_p == ET96MAP_NO_RESPONSE_FROM_PEER ) {
-        MscManager::getMscStatus().report(dialog->s_msc.c_str(),false);
+      if ( provErrCode_p && *provErrCode_p == ET96MAP_NO_RESPONSE_FROM_PEER )
+      {
+        if(!dialog->noSri)
+        {
+          MscManager::getMscStatus().report(dialog->s_msc.c_str(),false);
+        }
       }else
       {
         if(dialog->needReportMsc)
         {
-          MscManager::getMscStatus().report(dialog->s_msc.c_str(),true);
+          if(!dialog->noSri)
+          {
+            MscManager::getMscStatus().report(dialog->s_msc.c_str(),true);
+          }
           dialog->needReportMsc=false;
         }
       }
@@ -3140,10 +3147,12 @@ USHORT_T Et96MapDelimiterInd(
       case MAPST_WaitUssdDelimiter:
         reason = ET96MAP_NO_REASON;
         checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+        __map_trace2__("subsystem=%s",dialog->subsystem.c_str());
         if(smsc::system::mapio::MapLimits::getInstance().isNoSRIUssd(dialog->subsystem))
         {
+          dialog->noSri=true;
           dialog->state = MAPST_WaitSubmitCmdConf;
-          SendSms(dialog.get());
+          SendSubmitCommand(dialog.get());
         }else
         {
           dialog->state = MAPST_WaitUssdImsiReq;
