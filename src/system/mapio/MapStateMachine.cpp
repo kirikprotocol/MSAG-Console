@@ -11,6 +11,7 @@
 #include <iomanip>
 #include "FraudControl.hpp"
 #include "core/synchronization/EventMonitor.hpp"
+#include "MapLimits.hpp"
 
 using namespace std;
 
@@ -1192,7 +1193,10 @@ static void SendSubmitCommand(MapDialog* dialog)
   __map_trace2__("%s: dlg 0x%x Submit %s to SMSC: IMSI = %s, MSC = %s, %s",__func__,dialog->dialogid_map,dialog->isUSSD?"USSD":"SMS",dialog->s_imsi.c_str(),dialog->s_msc.c_str(),RouteToString(dialog).c_str());
 
   try{
-    MscManager::getMscStatus().report(dialog->s_msc.c_str(),true);
+    if(dialog->s_msc.length())
+    {
+      MscManager::getMscStatus().report(dialog->s_msc.c_str(),true);
+    }
   }
   catch(exception& e)
   {
@@ -3118,92 +3122,100 @@ USHORT_T Et96MapDelimiterInd(
     }
     __require__(dialog->ssn==localSsn);
     __map_trace2__("%s: dialogid 0x%x (state %d) %s",__func__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
-    switch( dialog->state ){
+    switch( dialog->state )
+    {
       case MAPST_WaitSms:
         dialog->state = MAPST_WaitSmsMOInd;
         reason = ET96MAP_NO_REASON;
         checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
-      checkMapReq( Et96MapDelimiterReq(dialog->ssn,dialogueId,0,0), __func__);
-      open_confirmed = true;
-      break;
-    case MAPST_WaitSmsMODelimiter2:
-      reason = ET96MAP_NO_REASON;
-      checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
-      dialog->state = MAPST_WaitImsiReq;
-      PauseOnImsiReq(dialog.get());
-      break;
-    case MAPST_WaitUssdDelimiter:
-      reason = ET96MAP_NO_REASON;
-      checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
-      dialog->state = MAPST_WaitUssdImsiReq;
-      PauseOnImsiReq(dialog.get());
-      break;
-    case MAPST_WaitUssdV1Delimiter:
-      reason = ET96MAP_NO_REASON;
-      checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
-      if( MapDialogContainer::getUssdV1UseOrigEntityNumber() ) {
-        dialog->state = MAPST_WaitUssdImsiReq;
+        checkMapReq( Et96MapDelimiterReq(dialog->ssn,dialogueId,0,0), __func__);
+        open_confirmed = true;
+        break;
+      case MAPST_WaitSmsMODelimiter2:
+        reason = ET96MAP_NO_REASON;
+        checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+        dialog->state = MAPST_WaitImsiReq;
         PauseOnImsiReq(dialog.get());
-      } else {
-        dialog->state = MAPST_WaitSubmitCmdConf;
+        break;
+      case MAPST_WaitUssdDelimiter:
+        reason = ET96MAP_NO_REASON;
+        checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+        if(smsc::system::mapio::MapLimits::getInstance().isNoSRIUssd(dialog->subsystem))
+        {
+          dialog->state = MAPST_WaitSubmitCmdConf;
+          SendSms(dialog.get());
+        }else
+        {
+          dialog->state = MAPST_WaitUssdImsiReq;
+          PauseOnImsiReq(dialog.get());
+        }
+        break;
+      case MAPST_WaitUssdV1Delimiter:
+        reason = ET96MAP_NO_REASON;
+        checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+        if( MapDialogContainer::getUssdV1UseOrigEntityNumber() ) {
+          dialog->state = MAPST_WaitUssdImsiReq;
+          PauseOnImsiReq(dialog.get());
+        } else {
+          dialog->state = MAPST_WaitSubmitCmdConf;
+          SendSubmitCommand(dialog.get());
+        }
+        break;
+      case MAPST_WaitSmsMODelimiter:
+        open_confirmed = true;
+        dialog->state = MAPST_WaitImsiReq;
+        PauseOnImsiReq(dialog.get());
+        break;
+      case MAPST_WaitSpecDelimeter:
+        dialog->state = MAPST_WaitSmsConf;
+        SendSegmentedSms(dialog.get());
+        break;
+      case MAPST_WaitSmsClose:
+        SendOkToSmsc(dialog.get());
+        //dialog->state = MAPST_WaitSmsConf;
+        SendNextMMS(dialog.get());
+        break;
+      case MAPST_WaitAlertDelimiter:
+        ResponseAlertSC(dialog.get());
+        CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+        DropMapDialog(dialog.get());
+        break;
+      case MAPST_WaitUSSDReqDelim:
+        dialog->state = MAPST_WaitSubmitUSSDRequestConf;
         SendSubmitCommand(dialog.get());
-      }
-      break;
-    case MAPST_WaitSmsMODelimiter:
-      open_confirmed = true;
-      dialog->state = MAPST_WaitImsiReq;
-      PauseOnImsiReq(dialog.get());
-      break;
-    case MAPST_WaitSpecDelimeter:
-      dialog->state = MAPST_WaitSmsConf;
-      SendSegmentedSms(dialog.get());
-      break;
-    case MAPST_WaitSmsClose:
-      SendOkToSmsc(dialog.get());
-      //dialog->state = MAPST_WaitSmsConf;
-      SendNextMMS(dialog.get());
-      break;
-    case MAPST_WaitAlertDelimiter:
-      ResponseAlertSC(dialog.get());
-      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-      DropMapDialog(dialog.get());
-      break;
-    case MAPST_WaitUSSDReqDelim:
-      dialog->state = MAPST_WaitSubmitUSSDRequestConf;
-      SendSubmitCommand(dialog.get());
-      break;
-    case MAPST_WaitUSSDReqClose:
-      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-      eraseUssdLock(dialog.get(), __func__);
-      DropMapDialog(dialog.get());
-      break;
-    case MAPST_WaitUSSDNotifyClose:
-      dialog->state = MAPST_WaitSubmitUSSDNotifyConf;
-      SendSubmitCommand(dialog.get());
-      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-      eraseUssdLock(dialog.get(), __func__);
-      DropMapDialog(dialog.get());
-      break;
-    case MAPST_WaitUSSDNotifyCloseErr:
-      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-      eraseUssdLock(dialog.get(), __func__);
-      DropMapDialog(dialog.get());
-      break;
-    case MAPST_MapNoticed:
-      reason = ET96MAP_NO_REASON;
-      checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
-      checkMapReq( Et96MapCloseReq (dialog->ssn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
-      dialog->state = MAPST_END;
-      DropMapDialog(dialog.get());
-      break;
-    case MAPST_ABORTED:
-      checkMapReq( Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
-      dialog->state = MAPST_END;
-      DropMapDialog(dialog.get());
-      break;
-    default:
-      throw MAPDIALOG_BAD_STATE(
-        FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__func__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
+        break;
+      case MAPST_WaitUSSDReqClose:
+        CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+        eraseUssdLock(dialog.get(), __func__);
+        DropMapDialog(dialog.get());
+        break;
+      case MAPST_WaitUSSDNotifyClose:
+        dialog->state = MAPST_WaitSubmitUSSDNotifyConf;
+        SendSubmitCommand(dialog.get());
+        CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+        eraseUssdLock(dialog.get(), __func__);
+        DropMapDialog(dialog.get());
+        break;
+      case MAPST_WaitUSSDNotifyCloseErr:
+        CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+        eraseUssdLock(dialog.get(), __func__);
+        DropMapDialog(dialog.get());
+        break;
+      case MAPST_MapNoticed:
+        reason = ET96MAP_NO_REASON;
+        checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+        checkMapReq( Et96MapCloseReq (dialog->ssn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
+        dialog->state = MAPST_END;
+        DropMapDialog(dialog.get());
+        break;
+      case MAPST_ABORTED:
+        checkMapReq( Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
+        dialog->state = MAPST_END;
+        DropMapDialog(dialog.get());
+        break;
+      default:
+        throw MAPDIALOG_BAD_STATE(
+                                  FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__func__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
     }
   }
   catch(exception& e)
@@ -3418,6 +3430,7 @@ static string GetUSSDRequestString(
   const char* text,
   unsigned length)
 {
+  if(*text=='#')return string(text,length);
   const char* p = text;
   const char* pEnd = text+length-1;
   for ( ; p < pEnd; --pEnd ) if ( (*pEnd == '#') || (*pEnd == '*') ) break;

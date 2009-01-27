@@ -2,10 +2,14 @@
 #define __SMSC_SYSTEM_MAPIO_MAPLIMITS__
 
 #include <string>
+#include <set>
+#include "core/synchronization/Mutex.hpp"
 
 namespace smsc{
 namespace system{
 namespace mapio{
+  
+namespace sync=smsc::core::synchronization;
 
 class MapLimits{
 public:
@@ -39,6 +43,12 @@ public:
   {
     return limitNIUSSD;
   }
+  
+  bool isNoSRIUssd(const std::string& ussd)
+  {
+    sync::MutexGuard mg(mtx);
+    return noSriUssd.find(ussd)!=noSriUssd.end();
+  }
 
   static void Init(const char* fn);
   static void Shutdown()
@@ -56,6 +66,9 @@ protected:
   static MapLimits* instance;
 
   std::string configFilename;
+  
+  std::set<std::string> noSriUssd;
+  sync::Mutex mtx;
 
   int limitIn;
   int limitInSRI;

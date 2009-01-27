@@ -22,6 +22,7 @@ void MapLimits::Init(const char* fn)
 
 void MapLimits::Reinit()
 {
+  static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("map.lim");
   using namespace xercesc;
   smsc::util::xml::DOMTreeReader reader;
   DOMDocument *document = reader.read(configFilename.c_str());
@@ -36,7 +37,21 @@ void MapLimits::Reinit()
     limitUSSD=config.getInt("dlglimit.ussd");
     limitOut=config.getInt("dlglimit.out");
     limitNIUSSD=config.getInt("dlglimit.niussd");
-    static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("map.lim");
+    
+    try{
+      sync::MutexGuard mg(mtx);
+      noSriUssd.clear();
+      std::string noSriUssdStr=config.getString("ussd.no_sri_codes");
+      std::string::size_type lastPos=0,nextPos;
+      do{
+        nextPos=noSriUssdStr.find(',',lastPos);
+        noSriUssd.insert(noSriUssdStr.substr(lastPos,nextPos==std::string::npos?nextPos:nextPos-lastPos));
+        lastPos=nextPos+1;
+      }while(nextPos!=std::string::npos);
+    }catch(...)
+    {
+      smsc_log_info(log,"ussd.no_sri_codes not found and disabled");
+    }
     smsc_log_info(log,"New limits loaded: in=%d, insri=%d, ussd=%d, out=%d, niussd=%d",
                   limitIn,limitInSRI,limitUSSD,limitOut,limitNIUSSD);
   }else
