@@ -7,11 +7,15 @@
 #include "util/int.h"
 #include <string>
 #include "Exceptions.h"
+#include "TypeId.h"
+#include "BatchCmdArray.h"
 
 
 namespace scag{
 namespace pvss{
 namespace pvap{
+
+// class PVAP;
 
 class PC_BATCH_RESP  
 {
@@ -23,7 +27,7 @@ public:
     void clear()
     {
         statusFlag=false;
-        countFlag=false;
+        batchContentFlag=false;
     }
 
     std::string toString() const
@@ -37,14 +41,14 @@ public:
             sprintf(buf,"%u",(unsigned int)status);
             rv+=buf;
         }
-        if(countFlag) {
-            rv+=";count=";
-            sprintf(buf,"%u",(unsigned int)count);
-            rv+=buf;
+        if(batchContentFlag) {
+            rv+=";batchContent=";
+            rv+=batchContent.toString();
         }
         return rv;
     }
 
+    /*
     template <class DataStream> uint32_t length()const
     {
         uint32_t rv=0;
@@ -53,22 +57,23 @@ public:
             rv+=DataStream::lengthTypeSize;
             rv+=DataStream::fieldSize(status);
         }
-        if (countFlag) {
+        if (batchContentFlag) {
             rv+=DataStream::tagTypeSize;
             rv+=DataStream::lengthTypeSize;
-            rv+=DataStream::fieldSize(count);
+            rv+=DataStream::fieldSize(batchContent);
         }
         return rv;
     }
+     */
 
-  uint8_t getStatus() const
+    uint8_t getStatus() const
+        throw (FieldIsNullException)
     {
         if (!statusFlag) {
             throw FieldIsNullException("status");
         }
         return status;
     }
-
     void setStatus(uint8_t value)
     {
         status=value;
@@ -78,75 +83,66 @@ public:
     {
         return statusFlag;
     }
-  uint16_t getCount() const
+    const BatchCmdArray& getBatchContent() const
+        throw (FieldIsNullException)
     {
-        if (!countFlag) {
-            throw FieldIsNullException("count");
+        if (!batchContentFlag) {
+            throw FieldIsNullException("batchContent");
         }
-        return count;
+        return batchContent;
+    }
+    void setBatchContent(const BatchCmdArray& value)
+    {
+        batchContent=value;
+        batchContentFlag=true;
+    }
+    bool hasBatchContent()const
+    {
+        return batchContentFlag;
     }
 
-    void setCount(uint16_t value)
-    {
-        count=value;
-        countFlag=true;
-    }
-    bool hasCount()const
-    {
-        return countFlag;
-    }
-
-    template <class DataStream> void serialize(DataStream& ds) const
+    template <class Proto, class DataStream>
+        void serialize( const Proto& proto, DataStream& ds ) const throw (PvapException)
     {
         checkFields();
         // mandatory fields
+        printf( "write pos=%d field=%d\n", ds.getPos(), statusTag );
         ds.writeTag(statusTag);
-    ds.writeByteLV(status);
-        ds.writeTag(countTag);
-    ds.writeInt16LV(count);
+        ds.writeByteLV(status);
+        printf( "write pos=%d field=%d\n", ds.getPos(), batchContentTag );
+        ds.writeTag(batchContentTag);
+        batchContent.serialize(proto,ds);
         // optional fields
-        //ds.writeTag(DataStream::endOfMessage_tag);
     }
 
-    template <class DataStream> void deserialize(DataStream& ds)
+    template <class Proto, class DataStream> void deserialize(const Proto& proto, DataStream& ds)
+        throw (PvapException)
     {
         clear();
-        bool endOfMessage=false;
-        //uint8_t rdVersionMajor=ds.readByte();
-        //uint8_t rdVersionMinor=ds.readByte();
-        //if(rdVersionMajor!=versionMajor)
-        //{
-        //  throw IncompatibleVersionException("PC_BATCH_RESP");
-        //}
-        //seqNum=ds.readInt32();
-        while (!endOfMessage) {
-            uint32_t tag=ds.readTag();
+        while (true) {
+            int pos = int(ds.getPos());
+            int tag = ds.readTag();
+            printf( "read pos=%d field=%d\n", pos, tag );
+            if ( tag == -1 ) break;
             switch(tag) {
             case statusTag: {
                 if (statusFlag) {
                     throw DuplicateFieldException("status");
                 }
-          status=ds.readByteLV();
+                status=ds.readByteLV();
                 statusFlag=true;
                 break;
             }
-            case countTag: {
-                if (countFlag) {
-                    throw DuplicateFieldException("count");
+            case batchContentTag: {
+                if (batchContentFlag) {
+                    throw DuplicateFieldException("batchContent");
                 }
-          count=ds.readInt16LV();
-                countFlag=true;
+                batchContent.deserialize(proto,ds);
+                batchContentFlag=true;
                 break;
             }
-            case DataStream::endOfMessage_tag:
-                endOfMessage=true;
-                break;
             default:
-                //if(rdVersionMinor==versionMinor)
-                //{
-                //  throw UnexpectedTag("PC_BATCH_RESP",tag);
-                //}
-                ds.skip(ds.readLength());
+                throw NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();
@@ -167,10 +163,14 @@ protected:
     {
         // checking mandatory fields
         if (!statusFlag) {
-            throw MandatoryFieldMissingException("status");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "status", "PC_BATCH_RESP");
+            throw MandatoryFieldMissingException(buf);
         }
-        if (!countFlag) {
-            throw MandatoryFieldMissingException("count");
+        if (!batchContentFlag) {
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "batchContent", "PC_BATCH_RESP");
+            throw MandatoryFieldMissingException(buf);
         }
         // checking optional fields
     }
@@ -179,16 +179,16 @@ protected:
     //static const uint8_t versionMajor=2;
     //static const uint8_t versionMinor=0;
 
-    static const uint16_t statusTag=1;
-    static const uint16_t countTag=22;
+    static const int statusTag=1;
+    static const int batchContentTag=23;
 
     uint32_t seqNum;
 
     uint8_t status;
-    uint16_t count;
+    BatchCmdArray batchContent;
 
     bool statusFlag;
-    bool countFlag;
+    bool batchContentFlag;
 };
 
 } // namespace scag

@@ -5,7 +5,7 @@ include types.def
 
 message BC_DEL        // 0x0001
     version 2.0
-    string  varName   5
+    ascii   varName   5
 end
 
 message BC_DEL_RESP   // 0x8001
@@ -15,13 +15,13 @@ end
 
 message BC_SET
     version 2.0
-    string varName     5
+    ascii  varName     5
     byte   valueType   6
     byte   timePolicy  7
     uint32 finalDate   8
     uint32 lifeTime    9
     uint32 intValue    10 opt checkVar="valueType" checkEq=0x01
-    string stringValue 11 opt checkVar="valueType" checkEq=0x02
+    utf8   stringValue 11 opt checkVar="valueType" checkEq=0x02
     byte   boolValue   12 opt checkVar="valueType" checkEq=0x03
     uint32 dateValue   13 opt checkVar="valueType" checkEq=0x04
 end
@@ -33,7 +33,7 @@ end
 
 message BC_GET      // 0x0003
     version 2.0
-    string varName     5
+    ascii  varName     5
 end
 
 message BC_GET_RESP
@@ -43,16 +43,16 @@ message BC_GET_RESP
     byte   timePolicy  7
     uint32 finalDate   8
     uint32 lifeTime    9
-    string varName     5
+    ascii  varName     5
     uint32 intValue    10 opt checkVar="valueType" checkEq=0x01
-    string stringValue 11 opt checkVar="valueType" checkEq=0x02
+    utf8   stringValue 11 opt checkVar="valueType" checkEq=0x02
     byte   boolValue   12 opt checkVar="valueType" checkEq=0x03
     uint32 dateValue   13 opt checkVar="valueType" checkEq=0x04
 end
 
 message BC_INC     // 0x0004
     version 2.0
-    string varName     5
+    ascii  varName     5
     byte   valueType   6
     byte   timePolicy  7
     uint32 finalDate   8
@@ -68,7 +68,7 @@ end
 
 message BC_INC_MOD  // 0x0005
     version 2.0
-    string varName     5
+    ascii  varName     5
     byte   valueType   6
     byte   timePolicy  7
     uint32 finalDate   8

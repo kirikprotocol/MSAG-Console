@@ -7,15 +7,20 @@
 #include "util/int.h"
 #include <string>
 #include "Exceptions.h"
-
+#include "TypeId.h"
+#include "BC_CMD.h"
 
 namespace scag{
 namespace pvss{
 namespace pvap{
 
+// class PVAPBC;
+
 class BC_INC : public BC_CMD 
 {
 public:
+    inline int getId() const throw () { return TypeId<BC_INC>::getId(); }
+
     BC_INC()
     {
         clear();
@@ -68,6 +73,7 @@ public:
         return rv;
     }
 
+    /*
     template <class DataStream> uint32_t length()const
     {
         uint32_t rv=0;
@@ -103,15 +109,16 @@ public:
         }
         return rv;
     }
+     */
 
-  const std::string& getVarName() const
+    const std::string& getVarName() const
+        throw (FieldIsNullException)
     {
         if (!varNameFlag) {
             throw FieldIsNullException("varName");
         }
         return varName;
     }
-
     void setVarName(const std::string& value)
     {
         varName=value;
@@ -121,14 +128,14 @@ public:
     {
         return varNameFlag;
     }
-  uint8_t getValueType() const
+    uint8_t getValueType() const
+        throw (FieldIsNullException)
     {
         if (!valueTypeFlag) {
             throw FieldIsNullException("valueType");
         }
         return valueType;
     }
-
     void setValueType(uint8_t value)
     {
         valueType=value;
@@ -138,14 +145,14 @@ public:
     {
         return valueTypeFlag;
     }
-  uint8_t getTimePolicy() const
+    uint8_t getTimePolicy() const
+        throw (FieldIsNullException)
     {
         if (!timePolicyFlag) {
             throw FieldIsNullException("timePolicy");
         }
         return timePolicy;
     }
-
     void setTimePolicy(uint8_t value)
     {
         timePolicy=value;
@@ -155,14 +162,14 @@ public:
     {
         return timePolicyFlag;
     }
-  uint32_t getFinalDate() const
+    uint32_t getFinalDate() const
+        throw (FieldIsNullException)
     {
         if (!finalDateFlag) {
             throw FieldIsNullException("finalDate");
         }
         return finalDate;
     }
-
     void setFinalDate(uint32_t value)
     {
         finalDate=value;
@@ -172,14 +179,14 @@ public:
     {
         return finalDateFlag;
     }
-  uint32_t getLifeTime() const
+    uint32_t getLifeTime() const
+        throw (FieldIsNullException)
     {
         if (!lifeTimeFlag) {
             throw FieldIsNullException("lifeTime");
         }
         return lifeTime;
     }
-
     void setLifeTime(uint32_t value)
     {
         lifeTime=value;
@@ -189,14 +196,14 @@ public:
     {
         return lifeTimeFlag;
     }
-  uint32_t getIntValue() const
+    uint32_t getIntValue() const
+        throw (FieldIsNullException)
     {
         if (!intValueFlag) {
             throw FieldIsNullException("intValue");
         }
         return intValue;
     }
-
     void setIntValue(uint32_t value)
     {
         intValue=value;
@@ -207,45 +214,47 @@ public:
         return intValueFlag;
     }
 
-    template <class DataStream> void serialize(DataStream& ds) const
+    template <class Proto, class DataStream>
+        void serialize( const Proto& proto, DataStream& ds ) const throw (PvapException)
     {
         checkFields();
         // mandatory fields
+        printf( "write pos=%d field=%d\n", ds.getPos(), varNameTag );
         ds.writeTag(varNameTag);
-    ds.writeStrLV(varName);
+        ds.writeByteStringLV(varName);
+        printf( "write pos=%d field=%d\n", ds.getPos(), valueTypeTag );
         ds.writeTag(valueTypeTag);
-    ds.writeByteLV(valueType);
+        ds.writeByteLV(valueType);
+        printf( "write pos=%d field=%d\n", ds.getPos(), timePolicyTag );
         ds.writeTag(timePolicyTag);
-    ds.writeByteLV(timePolicy);
+        ds.writeByteLV(timePolicy);
+        printf( "write pos=%d field=%d\n", ds.getPos(), finalDateTag );
         ds.writeTag(finalDateTag);
-    ds.writeInt32LV(finalDate);
+        ds.writeInt32LV(finalDate);
+        printf( "write pos=%d field=%d\n", ds.getPos(), lifeTimeTag );
         ds.writeTag(lifeTimeTag);
-    ds.writeInt32LV(lifeTime);
+        ds.writeInt32LV(lifeTime);
+        printf( "write pos=%d field=%d\n", ds.getPos(), intValueTag );
         ds.writeTag(intValueTag);
-    ds.writeInt32LV(intValue);
+        ds.writeInt32LV(intValue);
         // optional fields
-        //ds.writeTag(DataStream::endOfMessage_tag);
     }
 
-    template <class DataStream> void deserialize(DataStream& ds)
+    template <class Proto, class DataStream> void deserialize(const Proto& proto, DataStream& ds)
+        throw (PvapException)
     {
         clear();
-        bool endOfMessage=false;
-        //uint8_t rdVersionMajor=ds.readByte();
-        //uint8_t rdVersionMinor=ds.readByte();
-        //if(rdVersionMajor!=versionMajor)
-        //{
-        //  throw IncompatibleVersionException("BC_INC");
-        //}
-        //seqNum=ds.readInt32();
-        while (!endOfMessage) {
-            uint32_t tag=ds.readTag();
+        while (true) {
+            int pos = int(ds.getPos());
+            int tag = ds.readTag();
+            printf( "read pos=%d field=%d\n", pos, tag );
+            if ( tag == -1 ) break;
             switch(tag) {
             case varNameTag: {
                 if (varNameFlag) {
                     throw DuplicateFieldException("varName");
                 }
-          varName=ds.readStrLV();
+                varName=ds.readByteStringLV();
                 varNameFlag=true;
                 break;
             }
@@ -253,7 +262,7 @@ public:
                 if (valueTypeFlag) {
                     throw DuplicateFieldException("valueType");
                 }
-          valueType=ds.readByteLV();
+                valueType=ds.readByteLV();
                 valueTypeFlag=true;
                 break;
             }
@@ -261,7 +270,7 @@ public:
                 if (timePolicyFlag) {
                     throw DuplicateFieldException("timePolicy");
                 }
-          timePolicy=ds.readByteLV();
+                timePolicy=ds.readByteLV();
                 timePolicyFlag=true;
                 break;
             }
@@ -269,7 +278,7 @@ public:
                 if (finalDateFlag) {
                     throw DuplicateFieldException("finalDate");
                 }
-          finalDate=ds.readInt32LV();
+                finalDate=ds.readInt32LV();
                 finalDateFlag=true;
                 break;
             }
@@ -277,7 +286,7 @@ public:
                 if (lifeTimeFlag) {
                     throw DuplicateFieldException("lifeTime");
                 }
-          lifeTime=ds.readInt32LV();
+                lifeTime=ds.readInt32LV();
                 lifeTimeFlag=true;
                 break;
             }
@@ -285,19 +294,12 @@ public:
                 if (intValueFlag) {
                     throw DuplicateFieldException("intValue");
                 }
-          intValue=ds.readInt32LV();
+                intValue=ds.readInt32LV();
                 intValueFlag=true;
                 break;
             }
-            case DataStream::endOfMessage_tag:
-                endOfMessage=true;
-                break;
             default:
-                //if(rdVersionMinor==versionMinor)
-                //{
-                //  throw UnexpectedTag("BC_INC",tag);
-                //}
-                ds.skip(ds.readLength());
+                throw NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();
@@ -318,22 +320,34 @@ protected:
     {
         // checking mandatory fields
         if (!varNameFlag) {
-            throw MandatoryFieldMissingException("varName");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "varName", "BC_INC");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!valueTypeFlag) {
-            throw MandatoryFieldMissingException("valueType");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "valueType", "BC_INC");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!timePolicyFlag) {
-            throw MandatoryFieldMissingException("timePolicy");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "timePolicy", "BC_INC");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!finalDateFlag) {
-            throw MandatoryFieldMissingException("finalDate");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "finalDate", "BC_INC");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!lifeTimeFlag) {
-            throw MandatoryFieldMissingException("lifeTime");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "lifeTime", "BC_INC");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!intValueFlag) {
-            throw MandatoryFieldMissingException("intValue");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "intValue", "BC_INC");
+            throw MandatoryFieldMissingException(buf);
         }
         // checking optional fields
     }
@@ -342,12 +356,12 @@ protected:
     //static const uint8_t versionMajor=2;
     //static const uint8_t versionMinor=0;
 
-    static const uint16_t varNameTag=5;
-    static const uint16_t valueTypeTag=6;
-    static const uint16_t timePolicyTag=7;
-    static const uint16_t finalDateTag=8;
-    static const uint16_t lifeTimeTag=9;
-    static const uint16_t intValueTag=10;
+    static const int varNameTag=5;
+    static const int valueTypeTag=6;
+    static const int timePolicyTag=7;
+    static const int finalDateTag=8;
+    static const int lifeTimeTag=9;
+    static const int intValueTag=10;
 
     uint32_t seqNum;
 

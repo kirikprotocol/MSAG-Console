@@ -1,4 +1,4 @@
-package pvss.pvap;
+package com.eyelinecom.whoisd.pvss.pvap;
 
 // import protogen.framework.BufferWriter;
 // import protogen.framework.BufferReader;
@@ -11,15 +11,15 @@ public class BC_SET  extends BC_CMD
 {
     // static Logger logger = Logger.getLogger(BC_SET.class);
 
-    static final short varNameTag = 5;
-    static final short valueTypeTag = 6;
-    static final short timePolicyTag = 7;
-    static final short finalDateTag = 8;
-    static final short lifeTimeTag = 9;
-    static final short intValueTag = 10;
-    static final short stringValueTag = 11;
-    static final short boolValueTag = 12;
-    static final short dateValueTag = 13;
+    static final int varNameTag = 5;
+    static final int valueTypeTag = 6;
+    static final int timePolicyTag = 7;
+    static final int finalDateTag = 8;
+    static final int lifeTimeTag = 9;
+    static final int intValueTag = 10;
+    static final int stringValueTag = 11;
+    static final int boolValueTag = 12;
+    static final int dateValueTag = 13;
 
     int seqNum;
     String varName;
@@ -125,7 +125,8 @@ public class BC_SET  extends BC_CMD
         return sb.toString();
     }
 
-    public String getVarName() throws FieldIsNullException
+    public String getVarName()
+           throws FieldIsNullException
     {
         if(!varNameFlag)
         {
@@ -145,7 +146,8 @@ public class BC_SET  extends BC_CMD
         return varNameFlag;
     }
 
-    public byte getValueType() throws FieldIsNullException
+    public byte getValueType()
+           throws FieldIsNullException
     {
         if(!valueTypeFlag)
         {
@@ -165,7 +167,8 @@ public class BC_SET  extends BC_CMD
         return valueTypeFlag;
     }
 
-    public byte getTimePolicy() throws FieldIsNullException
+    public byte getTimePolicy()
+           throws FieldIsNullException
     {
         if(!timePolicyFlag)
         {
@@ -185,7 +188,8 @@ public class BC_SET  extends BC_CMD
         return timePolicyFlag;
     }
 
-    public int getFinalDate() throws FieldIsNullException
+    public int getFinalDate()
+           throws FieldIsNullException
     {
         if(!finalDateFlag)
         {
@@ -205,7 +209,8 @@ public class BC_SET  extends BC_CMD
         return finalDateFlag;
     }
 
-    public int getLifeTime() throws FieldIsNullException
+    public int getLifeTime()
+           throws FieldIsNullException
     {
         if(!lifeTimeFlag)
         {
@@ -225,7 +230,8 @@ public class BC_SET  extends BC_CMD
         return lifeTimeFlag;
     }
 
-    public int getIntValue() throws FieldIsNullException
+    public int getIntValue()
+           throws FieldIsNullException
     {
         if(!intValueFlag)
         {
@@ -245,7 +251,8 @@ public class BC_SET  extends BC_CMD
         return intValueFlag;
     }
 
-    public String getStringValue() throws FieldIsNullException
+    public String getStringValue()
+           throws FieldIsNullException
     {
         if(!stringValueFlag)
         {
@@ -265,7 +272,8 @@ public class BC_SET  extends BC_CMD
         return stringValueFlag;
     }
 
-    public byte getBoolValue() throws FieldIsNullException
+    public byte getBoolValue()
+           throws FieldIsNullException
     {
         if(!boolValueFlag)
         {
@@ -285,7 +293,8 @@ public class BC_SET  extends BC_CMD
         return boolValueFlag;
     }
 
-    public int getDateValue() throws FieldIsNullException
+    public int getDateValue()
+           throws FieldIsNullException
     {
         if(!dateValueFlag)
         {
@@ -305,96 +314,131 @@ public class BC_SET  extends BC_CMD
         return dateValueFlag;
     }
 
-    public void encode( IBufferWriter writer ) throws java.io.IOException
+    public void encode( PVAPBC proto, IBufferWriter writer ) throws java.io.IOException
     {
         checkFields();
         // mandatory fields
+        System.out.println("write pos=" + writer.getPos() + " field=" + varNameTag);
         writer.writeTag(varNameTag);
-        writer.writeStringLV(varName);
+        writer.writeUTFLV(varName);
+        System.out.println("write pos=" + writer.getPos() + " field=" + valueTypeTag);
         writer.writeTag(valueTypeTag);
         writer.writeByteLV(valueType);
+        System.out.println("write pos=" + writer.getPos() + " field=" + timePolicyTag);
         writer.writeTag(timePolicyTag);
         writer.writeByteLV(timePolicy);
+        System.out.println("write pos=" + writer.getPos() + " field=" + finalDateTag);
         writer.writeTag(finalDateTag);
         writer.writeIntLV(finalDate);
+        System.out.println("write pos=" + writer.getPos() + " field=" + lifeTimeTag);
         writer.writeTag(lifeTimeTag);
         writer.writeIntLV(lifeTime);
         // optional fields
         if (intValueFlag) {
+            System.out.println("write pos=" + writer.getPos() + " field=" + intValueTag);
             writer.writeTag(intValueTag);
             writer.writeIntLV(intValue);
         }
         if (stringValueFlag) {
+            System.out.println("write pos=" + writer.getPos() + " field=" + stringValueTag);
             writer.writeTag(stringValueTag);
-            writer.writeStringLV(stringValue);
+            writer.writeUTFLV(stringValue);
         }
         if (boolValueFlag) {
+            System.out.println("write pos=" + writer.getPos() + " field=" + boolValueTag);
             writer.writeTag(boolValueTag);
             writer.writeByteLV(boolValue);
         }
         if (dateValueFlag) {
+            System.out.println("write pos=" + writer.getPos() + " field=" + dateValueTag);
             writer.writeTag(dateValueTag);
             writer.writeIntLV(dateValue);
         }
     }
 
-    public void decode( IBufferReader reader ) throws java.io.IOException
+    public void decode( PVAPBC proto, IBufferReader reader ) throws java.io.IOException
     {
         clear();
-        // seqNum = reader.readInt();
         while( true ) {
-            short tag = reader.readTag();
-            // System.out.println("tag got:" + tag);
-            if ( tag == (short)0xFFFF ) break;
+            int pos = reader.getPos();
+            int tag = reader.readTag();
+            System.out.println("read pos=" + pos + " field=" + tag);
+            if ( tag == -1 ) break;
             switch( tag ) {
             case varNameTag: {
-                varName=reader.readStringLV();
+                if (varNameFlag) {
+                    throw new DuplicateFieldException("varName");
+                }
+                varName=reader.readUTFLV();
                 varNameFlag=true;
                 break;
             }
             case valueTypeTag: {
+                if (valueTypeFlag) {
+                    throw new DuplicateFieldException("valueType");
+                }
                 valueType=reader.readByteLV();
                 valueTypeFlag=true;
                 break;
             }
             case timePolicyTag: {
+                if (timePolicyFlag) {
+                    throw new DuplicateFieldException("timePolicy");
+                }
                 timePolicy=reader.readByteLV();
                 timePolicyFlag=true;
                 break;
             }
             case finalDateTag: {
+                if (finalDateFlag) {
+                    throw new DuplicateFieldException("finalDate");
+                }
                 finalDate=reader.readIntLV();
                 finalDateFlag=true;
                 break;
             }
             case lifeTimeTag: {
+                if (lifeTimeFlag) {
+                    throw new DuplicateFieldException("lifeTime");
+                }
                 lifeTime=reader.readIntLV();
                 lifeTimeFlag=true;
                 break;
             }
             case intValueTag: {
+                if (intValueFlag) {
+                    throw new DuplicateFieldException("intValue");
+                }
                 intValue=reader.readIntLV();
                 intValueFlag=true;
                 break;
             }
             case stringValueTag: {
-                stringValue=reader.readStringLV();
+                if (stringValueFlag) {
+                    throw new DuplicateFieldException("stringValue");
+                }
+                stringValue=reader.readUTFLV();
                 stringValueFlag=true;
                 break;
             }
             case boolValueTag: {
+                if (boolValueFlag) {
+                    throw new DuplicateFieldException("boolValue");
+                }
                 boolValue=reader.readByteLV();
                 boolValueFlag=true;
                 break;
             }
             case dateValueTag: {
+                if (dateValueFlag) {
+                    throw new DuplicateFieldException("dateValue");
+                }
                 dateValue=reader.readIntLV();
                 dateValueFlag=true;
                 break;
             }
             default:
-                System.err.println("unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + getClass().getName());
-                // logger.warn( "unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + BC_SET.class.getName() );
+                throw new NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();

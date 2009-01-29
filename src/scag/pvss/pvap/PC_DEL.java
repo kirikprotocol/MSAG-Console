@@ -11,10 +11,10 @@ public class PC_DEL
 {
     // static Logger logger = Logger.getLogger(PC_DEL.class);
 
-    static final short profileTypeTag = 2;
-    static final short abonentKeyTag = 3;
-    static final short profileKeyTag = 4;
-    static final short varNameTag = 5;
+    static final int profileTypeTag = 2;
+    static final int abonentKeyTag = 3;
+    static final int profileKeyTag = 4;
+    static final int varNameTag = 5;
 
     int seqNum;
     byte profileType;
@@ -75,7 +75,8 @@ public class PC_DEL
         return sb.toString();
     }
 
-    public byte getProfileType() throws FieldIsNullException
+    public byte getProfileType()
+           throws FieldIsNullException
     {
         if(!profileTypeFlag)
         {
@@ -95,7 +96,8 @@ public class PC_DEL
         return profileTypeFlag;
     }
 
-    public String getAbonentKey() throws FieldIsNullException
+    public String getAbonentKey()
+           throws FieldIsNullException
     {
         if(!abonentKeyFlag)
         {
@@ -115,7 +117,8 @@ public class PC_DEL
         return abonentKeyFlag;
     }
 
-    public int getProfileKey() throws FieldIsNullException
+    public int getProfileKey()
+           throws FieldIsNullException
     {
         if(!profileKeyFlag)
         {
@@ -135,7 +138,8 @@ public class PC_DEL
         return profileKeyFlag;
     }
 
-    public String getVarName() throws FieldIsNullException
+    public String getVarName()
+           throws FieldIsNullException
     {
         if(!varNameFlag)
         {
@@ -155,57 +159,72 @@ public class PC_DEL
         return varNameFlag;
     }
 
-    public void encode( IBufferWriter writer ) throws java.io.IOException
+    public void encode( PVAP proto, IBufferWriter writer ) throws java.io.IOException
     {
         checkFields();
         // mandatory fields
+        System.out.println("write pos=" + writer.getPos() + " field=" + profileTypeTag);
         writer.writeTag(profileTypeTag);
         writer.writeByteLV(profileType);
+        System.out.println("write pos=" + writer.getPos() + " field=" + varNameTag);
         writer.writeTag(varNameTag);
-        writer.writeStringLV(varName);
+        writer.writeUTFLV(varName);
         // optional fields
         if (abonentKeyFlag) {
+            System.out.println("write pos=" + writer.getPos() + " field=" + abonentKeyTag);
             writer.writeTag(abonentKeyTag);
-            writer.writeStringLV(abonentKey);
+            writer.writeUTFLV(abonentKey);
         }
         if (profileKeyFlag) {
+            System.out.println("write pos=" + writer.getPos() + " field=" + profileKeyTag);
             writer.writeTag(profileKeyTag);
             writer.writeIntLV(profileKey);
         }
     }
 
-    public void decode( IBufferReader reader ) throws java.io.IOException
+    public void decode( PVAP proto, IBufferReader reader ) throws java.io.IOException
     {
         clear();
-        // seqNum = reader.readInt();
         while( true ) {
-            short tag = reader.readTag();
-            // System.out.println("tag got:" + tag);
-            if ( tag == (short)0xFFFF ) break;
+            int pos = reader.getPos();
+            int tag = reader.readTag();
+            System.out.println("read pos=" + pos + " field=" + tag);
+            if ( tag == -1 ) break;
             switch( tag ) {
             case profileTypeTag: {
+                if (profileTypeFlag) {
+                    throw new DuplicateFieldException("profileType");
+                }
                 profileType=reader.readByteLV();
                 profileTypeFlag=true;
                 break;
             }
             case abonentKeyTag: {
-                abonentKey=reader.readStringLV();
+                if (abonentKeyFlag) {
+                    throw new DuplicateFieldException("abonentKey");
+                }
+                abonentKey=reader.readUTFLV();
                 abonentKeyFlag=true;
                 break;
             }
             case profileKeyTag: {
+                if (profileKeyFlag) {
+                    throw new DuplicateFieldException("profileKey");
+                }
                 profileKey=reader.readIntLV();
                 profileKeyFlag=true;
                 break;
             }
             case varNameTag: {
-                varName=reader.readStringLV();
+                if (varNameFlag) {
+                    throw new DuplicateFieldException("varName");
+                }
+                varName=reader.readUTFLV();
                 varNameFlag=true;
                 break;
             }
             default:
-                System.err.println("unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + getClass().getName());
-                // logger.warn( "unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + PC_DEL.class.getName() );
+                throw new NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();

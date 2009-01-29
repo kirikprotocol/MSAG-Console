@@ -1,4 +1,4 @@
-package pvss.pvap;
+package com.eyelinecom.whoisd.pvss.pvap;
 
 // import protogen.framework.BufferWriter;
 // import protogen.framework.BufferReader;
@@ -11,7 +11,7 @@ public class BC_DEL  extends BC_CMD
 {
     // static Logger logger = Logger.getLogger(BC_DEL.class);
 
-    static final short varNameTag = 5;
+    static final int varNameTag = 5;
 
     int seqNum;
     String varName;
@@ -45,7 +45,8 @@ public class BC_DEL  extends BC_CMD
         return sb.toString();
     }
 
-    public String getVarName() throws FieldIsNullException
+    public String getVarName()
+           throws FieldIsNullException
     {
         if(!varNameFlag)
         {
@@ -65,32 +66,35 @@ public class BC_DEL  extends BC_CMD
         return varNameFlag;
     }
 
-    public void encode( IBufferWriter writer ) throws java.io.IOException
+    public void encode( PVAPBC proto, IBufferWriter writer ) throws java.io.IOException
     {
         checkFields();
         // mandatory fields
+        System.out.println("write pos=" + writer.getPos() + " field=" + varNameTag);
         writer.writeTag(varNameTag);
-        writer.writeStringLV(varName);
+        writer.writeUTFLV(varName);
         // optional fields
     }
 
-    public void decode( IBufferReader reader ) throws java.io.IOException
+    public void decode( PVAPBC proto, IBufferReader reader ) throws java.io.IOException
     {
         clear();
-        // seqNum = reader.readInt();
         while( true ) {
-            short tag = reader.readTag();
-            // System.out.println("tag got:" + tag);
-            if ( tag == (short)0xFFFF ) break;
+            int pos = reader.getPos();
+            int tag = reader.readTag();
+            System.out.println("read pos=" + pos + " field=" + tag);
+            if ( tag == -1 ) break;
             switch( tag ) {
             case varNameTag: {
-                varName=reader.readStringLV();
+                if (varNameFlag) {
+                    throw new DuplicateFieldException("varName");
+                }
+                varName=reader.readUTFLV();
                 varNameFlag=true;
                 break;
             }
             default:
-                System.err.println("unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + getClass().getName());
-                // logger.warn( "unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + BC_DEL.class.getName() );
+                throw new NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();

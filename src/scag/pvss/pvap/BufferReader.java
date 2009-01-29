@@ -11,27 +11,34 @@ public class BufferReader implements IBufferReader
     int    pos;
     int    size;
 
+    public BufferReader() {
+        buf = null;
+        pos = 0;
+        size = 0;
+    }
+
     public BufferReader( byte[] data )
     {
-        buf = data;
-        pos = 0;
-        size = data.length;
+        reset(data,0,data.length);
     }
 
-    public void reset( byte[] data, int offset )
+    public void reset( byte[] data, int offset, int size )
     {
-        buf = data;
-        this.pos = offset;
-        size = data.length;
+        buf = new byte[size];
+        System.arraycopy( data, offset, buf, 0, size );
+        this.pos = 0;
+        this.size = size;
     }
 
-    
-    public short  readTag() throws java.io.IOException 
+    public int getPos() {
+        return pos;
+    }
+    public int readTag() throws java.io.IOException 
     {
-        if ( pos == size ) {
-            return (short)0xffff;
-        }
-        return readShort();
+        if ( pos == size ) { return -1; }
+        int rv = ((int)readShort()) & 0xffff;
+        if ( rv == 0xffff ) return -1;
+        return rv;
     }
     
     public byte   readByte() throws java.io.IOException
@@ -66,6 +73,11 @@ public class BufferReader implements IBufferReader
     }
      */
 
+    public boolean readBoolLV() throws java.io.IOException
+    {
+        byte b = readByteLV();
+        return ( b != (byte)0 );
+    }
     public byte   readByteLV() throws java.io.IOException
     {
         int sz = readShort();
@@ -107,8 +119,32 @@ public class BufferReader implements IBufferReader
             }
             return new String(data);
         } else {
-            return new String();
+            return "";
         }
+    }
+
+    public String readUTFLV() throws java.io.IOException
+    {
+        int sz = ((int)readShort()) & 0xffff;
+        if ( sz > 0 ) {
+            if ( pos+sz > size ) {
+                System.err.println("Buffer: Requested string len " + sz + " at " + pos + " out of buffer size" + size);
+                throw new java.io.EOFException();
+            }
+            String rv = new String( buf, pos, sz, "UTF-8" );
+            pos += sz;
+            return rv;
+        } else {
+            return "";
+        }
+    }
+
+    public IBufferReader createNew() throws java.io.IOException {
+        BufferReader rv = new BufferReader();
+        int sz = readInt();
+        rv.reset( buf, pos, sz );
+        pos += sz;
+        return rv;
     }
 
     // ---

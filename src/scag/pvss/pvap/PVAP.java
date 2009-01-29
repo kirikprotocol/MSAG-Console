@@ -1,14 +1,9 @@
 package com.eyelinecom.whoisd.pvss.pvap;
 
-// import protogen.framework.BufferReader;
-// import protogen.framework.InvalidMessageTypeException;
-// import protogen.framework.BufferWriter;
-// import java.io.IOException;
-
 /**
  * This protocol has header: len (4 oct), seq (4 oct), tag ( 2 oct.), message body
  */
-public class PVAP 
+public class PVAP
 {
     static final short tag_PC_DEL=(short)1;
     static final short tag_PC_DEL_RESP=(short)32769;
@@ -28,6 +23,7 @@ public class PVAP
     static final short tag_PC_BATCH_RESP=(short)32775;
 
     public static interface Handler {
+        public boolean hasSeqNum( int seqNum );
         public void handle( PC_DEL object );
         public void handle( PC_DEL_RESP object );
         public void handle( PC_SET object );
@@ -47,6 +43,9 @@ public class PVAP
     }
 
     Handler handler;
+    public PVAP() {
+    }
+
     public PVAP(Handler handler) {
         this.handler = handler;
     }
@@ -58,121 +57,122 @@ public class PVAP
     public void decodeMessage( IBufferReader reader ) throws java.io.IOException
     {
         int seqNum = reader.readInt();
-        short tag = reader.readTag();
+        if ( ! handler.hasSeqNum(seqNum) ) throw new UnexpectedSeqNumException("seqnum="+seqNum);
+        int tag = reader.readTag();
         switch( tag ) {
         case tag_PC_DEL: {
             PC_DEL object = new PC_DEL();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_DEL_RESP: {
             PC_DEL_RESP object = new PC_DEL_RESP();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_SET: {
             PC_SET object = new PC_SET();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_SET_RESP: {
             PC_SET_RESP object = new PC_SET_RESP();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_GET: {
             PC_GET object = new PC_GET();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_GET_RESP: {
             PC_GET_RESP object = new PC_GET_RESP();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_INC: {
             PC_INC object = new PC_INC();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_INC_RESP: {
             PC_INC_RESP object = new PC_INC_RESP();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_INC_MOD: {
             PC_INC_MOD object = new PC_INC_MOD();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_INC_MOD_RESP: {
             PC_INC_MOD_RESP object = new PC_INC_MOD_RESP();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_PING: {
             PC_PING object = new PC_PING();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_PING_RESP: {
             PC_PING_RESP object = new PC_PING_RESP();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_AUTH: {
             PC_AUTH object = new PC_AUTH();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_AUTH_RESP: {
             PC_AUTH_RESP object = new PC_AUTH_RESP();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_BATCH: {
             PC_BATCH object = new PC_BATCH();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
         case tag_PC_BATCH_RESP: {
             PC_BATCH_RESP object = new PC_BATCH_RESP();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
-        default: throw new InvalidMessageTypeException();
+        default: throw new InvalidMessageTypeException("tag="+tag);
         }
     }
 
@@ -181,127 +181,142 @@ public class PVAP
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_DEL);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_DEL_RESP object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_DEL_RESP);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_SET object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_SET);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_SET_RESP object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_SET_RESP);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_GET object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_GET);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_GET_RESP object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_GET_RESP);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_INC object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_INC);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_INC_RESP object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_INC_RESP);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_INC_MOD object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_INC_MOD);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_INC_MOD_RESP object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_INC_MOD_RESP);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_PING object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_PING);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_PING_RESP object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_PING_RESP);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_AUTH object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_AUTH);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_AUTH_RESP object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_AUTH_RESP);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_BATCH object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_BATCH);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
+
     public byte[] encodeMessage( PC_BATCH_RESP object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_PC_BATCH_RESP);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
 }

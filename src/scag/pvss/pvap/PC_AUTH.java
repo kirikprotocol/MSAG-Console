@@ -11,10 +11,10 @@ public class PC_AUTH
 {
     // static Logger logger = Logger.getLogger(PC_AUTH.class);
 
-    static final short protocolVersionTag = 15;
-    static final short loginTag = 16;
-    static final short passwordTag = 17;
-    static final short nameTag = 18;
+    static final int protocolVersionTag = 15;
+    static final int loginTag = 16;
+    static final int passwordTag = 17;
+    static final int nameTag = 18;
 
     int seqNum;
     byte protocolVersion;
@@ -75,7 +75,8 @@ public class PC_AUTH
         return sb.toString();
     }
 
-    public byte getProtocolVersion() throws FieldIsNullException
+    public byte getProtocolVersion()
+           throws FieldIsNullException
     {
         if(!protocolVersionFlag)
         {
@@ -95,7 +96,8 @@ public class PC_AUTH
         return protocolVersionFlag;
     }
 
-    public String getLogin() throws FieldIsNullException
+    public String getLogin()
+           throws FieldIsNullException
     {
         if(!loginFlag)
         {
@@ -115,7 +117,8 @@ public class PC_AUTH
         return loginFlag;
     }
 
-    public String getPassword() throws FieldIsNullException
+    public String getPassword()
+           throws FieldIsNullException
     {
         if(!passwordFlag)
         {
@@ -135,7 +138,8 @@ public class PC_AUTH
         return passwordFlag;
     }
 
-    public String getName() throws FieldIsNullException
+    public String getName()
+           throws FieldIsNullException
     {
         if(!nameFlag)
         {
@@ -155,53 +159,68 @@ public class PC_AUTH
         return nameFlag;
     }
 
-    public void encode( IBufferWriter writer ) throws java.io.IOException
+    public void encode( PVAP proto, IBufferWriter writer ) throws java.io.IOException
     {
         checkFields();
         // mandatory fields
+        System.out.println("write pos=" + writer.getPos() + " field=" + protocolVersionTag);
         writer.writeTag(protocolVersionTag);
         writer.writeByteLV(protocolVersion);
+        System.out.println("write pos=" + writer.getPos() + " field=" + loginTag);
         writer.writeTag(loginTag);
-        writer.writeStringLV(login);
+        writer.writeUTFLV(login);
+        System.out.println("write pos=" + writer.getPos() + " field=" + passwordTag);
         writer.writeTag(passwordTag);
-        writer.writeStringLV(password);
+        writer.writeUTFLV(password);
+        System.out.println("write pos=" + writer.getPos() + " field=" + nameTag);
         writer.writeTag(nameTag);
-        writer.writeStringLV(name);
+        writer.writeUTFLV(name);
         // optional fields
     }
 
-    public void decode( IBufferReader reader ) throws java.io.IOException
+    public void decode( PVAP proto, IBufferReader reader ) throws java.io.IOException
     {
         clear();
-        // seqNum = reader.readInt();
         while( true ) {
-            short tag = reader.readTag();
-            // System.out.println("tag got:" + tag);
-            if ( tag == (short)0xFFFF ) break;
+            int pos = reader.getPos();
+            int tag = reader.readTag();
+            System.out.println("read pos=" + pos + " field=" + tag);
+            if ( tag == -1 ) break;
             switch( tag ) {
             case protocolVersionTag: {
+                if (protocolVersionFlag) {
+                    throw new DuplicateFieldException("protocolVersion");
+                }
                 protocolVersion=reader.readByteLV();
                 protocolVersionFlag=true;
                 break;
             }
             case loginTag: {
-                login=reader.readStringLV();
+                if (loginFlag) {
+                    throw new DuplicateFieldException("login");
+                }
+                login=reader.readUTFLV();
                 loginFlag=true;
                 break;
             }
             case passwordTag: {
-                password=reader.readStringLV();
+                if (passwordFlag) {
+                    throw new DuplicateFieldException("password");
+                }
+                password=reader.readUTFLV();
                 passwordFlag=true;
                 break;
             }
             case nameTag: {
-                name=reader.readStringLV();
+                if (nameFlag) {
+                    throw new DuplicateFieldException("name");
+                }
+                name=reader.readUTFLV();
                 nameFlag=true;
                 break;
             }
             default:
-                System.err.println("unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + getClass().getName());
-                // logger.warn( "unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + PC_AUTH.class.getName() );
+                throw new NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();

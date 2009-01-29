@@ -22,7 +22,7 @@ data:namespace:1=scag
 data:namespace:2=pvss
 data:namespace:3=pvap
 
-data:package=pvss.pvap
+data:package=com.eyelinecom.whoisd.pvss.pvap
 
-data:handler.include=PvapBCHandler.h
-data:handler.class=PvapBCHandler
+# data:handler.include=PvapBCHandler.h
+# data:handler.class=PvapBCHandler

@@ -11,11 +11,11 @@ public class PC_BATCH
 {
     // static Logger logger = Logger.getLogger(PC_BATCH.class);
 
-    static final short profileTypeTag = 2;
-    static final short abonentKeyTag = 3;
-    static final short profileKeyTag = 4;
-    static final short batchModeTag = 21;
-    static final short countTag = 22;
+    static final int profileTypeTag = 2;
+    static final int abonentKeyTag = 3;
+    static final int profileKeyTag = 4;
+    static final int batchModeTag = 21;
+    static final int batchContentTag = 23;
 
     int seqNum;
     byte profileType;
@@ -24,15 +24,15 @@ public class PC_BATCH
     boolean abonentKeyFlag=false;
     int profileKey;
     boolean profileKeyFlag=false;
-    byte batchMode;
+    boolean batchMode;
     boolean batchModeFlag=false;
-    short count;
-    boolean countFlag=false;
+    BatchCmdArray batchContent;
+    boolean batchContentFlag=false;
 
     public PC_BATCH() {
     }
 
-    public PC_BATCH(int seqNum, byte profileType , String abonentKey , int profileKey , byte batchMode , short count)
+    public PC_BATCH(int seqNum, byte profileType , String abonentKey , int profileKey , boolean batchMode , BatchCmdArray batchContent)
     {
         this.seqNum = seqNum;
         this.profileType = profileType;
@@ -43,8 +43,8 @@ public class PC_BATCH
         this.profileKeyFlag = true;
         this.batchMode = batchMode;
         this.batchModeFlag = true;
-        this.count = count;
-        this.countFlag = true;
+        this.batchContent = batchContent;
+        this.batchContentFlag = true;
     }
  
     public void clear()
@@ -53,7 +53,7 @@ public class PC_BATCH
         abonentKeyFlag=false;
         profileKeyFlag=false;
         batchModeFlag=false;
-        countFlag=false;
+        batchContentFlag=false;
     }
  
     public String toString()
@@ -78,14 +78,15 @@ public class PC_BATCH
             sb.append(";batchMode=");
             sb.append(batchMode);
         }
-        if (countFlag) {
-            sb.append(";count=");
-            sb.append(count);
+        if (batchContentFlag) {
+            sb.append(";batchContent=");
+            sb.append(batchContent.toString());
         }
         return sb.toString();
     }
 
-    public byte getProfileType() throws FieldIsNullException
+    public byte getProfileType()
+           throws FieldIsNullException
     {
         if(!profileTypeFlag)
         {
@@ -105,7 +106,8 @@ public class PC_BATCH
         return profileTypeFlag;
     }
 
-    public String getAbonentKey() throws FieldIsNullException
+    public String getAbonentKey()
+           throws FieldIsNullException
     {
         if(!abonentKeyFlag)
         {
@@ -125,7 +127,8 @@ public class PC_BATCH
         return abonentKeyFlag;
     }
 
-    public int getProfileKey() throws FieldIsNullException
+    public int getProfileKey()
+           throws FieldIsNullException
     {
         if(!profileKeyFlag)
         {
@@ -145,7 +148,8 @@ public class PC_BATCH
         return profileKeyFlag;
     }
 
-    public byte getBatchMode() throws FieldIsNullException
+    public boolean getBatchMode()
+           throws FieldIsNullException
     {
         if(!batchModeFlag)
         {
@@ -154,7 +158,7 @@ public class PC_BATCH
         return batchMode;
     }
 
-    public void setBatchMode(byte batchMode)
+    public void setBatchMode(boolean batchMode)
     {
         this.batchMode = batchMode;
         this.batchModeFlag = true;
@@ -165,84 +169,105 @@ public class PC_BATCH
         return batchModeFlag;
     }
 
-    public short getCount() throws FieldIsNullException
+    public BatchCmdArray getBatchContent()
+           throws FieldIsNullException
     {
-        if(!countFlag)
+        if(!batchContentFlag)
         {
-            throw new FieldIsNullException("count");
+            throw new FieldIsNullException("batchContent");
         }
-        return count;
+        return batchContent;
     }
 
-    public void setCount(short count)
+    public void setBatchContent(BatchCmdArray batchContent)
     {
-        this.count = count;
-        this.countFlag = true;
+        this.batchContent = batchContent;
+        this.batchContentFlag = true;
     }
 
-    public boolean hasCount()
+    public boolean hasBatchContent()
     {
-        return countFlag;
+        return batchContentFlag;
     }
 
-    public void encode( IBufferWriter writer ) throws java.io.IOException
+    public void encode( PVAP proto, IBufferWriter writer ) throws java.io.IOException
     {
         checkFields();
         // mandatory fields
+        System.out.println("write pos=" + writer.getPos() + " field=" + profileTypeTag);
         writer.writeTag(profileTypeTag);
         writer.writeByteLV(profileType);
+        System.out.println("write pos=" + writer.getPos() + " field=" + batchModeTag);
         writer.writeTag(batchModeTag);
-        writer.writeByteLV(batchMode);
-        writer.writeTag(countTag);
-        writer.writeShortLV(count);
+        writer.writeBoolLV(batchMode);
+        System.out.println("write pos=" + writer.getPos() + " field=" + batchContentTag);
+        writer.writeTag(batchContentTag);
+        batchContent.encode(proto,writer);
         // optional fields
         if (abonentKeyFlag) {
+            System.out.println("write pos=" + writer.getPos() + " field=" + abonentKeyTag);
             writer.writeTag(abonentKeyTag);
-            writer.writeStringLV(abonentKey);
+            writer.writeUTFLV(abonentKey);
         }
         if (profileKeyFlag) {
+            System.out.println("write pos=" + writer.getPos() + " field=" + profileKeyTag);
             writer.writeTag(profileKeyTag);
             writer.writeIntLV(profileKey);
         }
     }
 
-    public void decode( IBufferReader reader ) throws java.io.IOException
+    public void decode( PVAP proto, IBufferReader reader ) throws java.io.IOException
     {
         clear();
-        // seqNum = reader.readInt();
         while( true ) {
-            short tag = reader.readTag();
-            // System.out.println("tag got:" + tag);
-            if ( tag == (short)0xFFFF ) break;
+            int pos = reader.getPos();
+            int tag = reader.readTag();
+            System.out.println("read pos=" + pos + " field=" + tag);
+            if ( tag == -1 ) break;
             switch( tag ) {
             case profileTypeTag: {
+                if (profileTypeFlag) {
+                    throw new DuplicateFieldException("profileType");
+                }
                 profileType=reader.readByteLV();
                 profileTypeFlag=true;
                 break;
             }
             case abonentKeyTag: {
-                abonentKey=reader.readStringLV();
+                if (abonentKeyFlag) {
+                    throw new DuplicateFieldException("abonentKey");
+                }
+                abonentKey=reader.readUTFLV();
                 abonentKeyFlag=true;
                 break;
             }
             case profileKeyTag: {
+                if (profileKeyFlag) {
+                    throw new DuplicateFieldException("profileKey");
+                }
                 profileKey=reader.readIntLV();
                 profileKeyFlag=true;
                 break;
             }
             case batchModeTag: {
-                batchMode=reader.readByteLV();
+                if (batchModeFlag) {
+                    throw new DuplicateFieldException("batchMode");
+                }
+                batchMode=reader.readBoolLV();
                 batchModeFlag=true;
                 break;
             }
-            case countTag: {
-                count=reader.readShortLV();
-                countFlag=true;
+            case batchContentTag: {
+                if (batchContentFlag) {
+                    throw new DuplicateFieldException("batchContent");
+                }
+                batchContent = new BatchCmdArray();
+                batchContent.decode(proto,reader);
+                batchContentFlag=true;
                 break;
             }
             default:
-                System.err.println("unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + getClass().getName());
-                // logger.warn( "unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + PC_BATCH.class.getName() );
+                throw new NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();
@@ -267,8 +292,8 @@ public class PC_BATCH
         if (!batchModeFlag) {
             throw new MandatoryFieldMissingException("batchMode");
         }
-        if (!countFlag) {
-            throw new MandatoryFieldMissingException("count");
+        if (!batchContentFlag) {
+            throw new MandatoryFieldMissingException("batchContent");
         }
         // checking optional fields
         if (!abonentKeyFlag

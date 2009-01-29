@@ -7,15 +7,20 @@
 #include "util/int.h"
 #include <string>
 #include "Exceptions.h"
-
+#include "TypeId.h"
+#include "BC_CMD.h"
 
 namespace scag{
 namespace pvss{
 namespace pvap{
 
+// class PVAPBC;
+
 class BC_GET : public BC_CMD 
 {
 public:
+    inline int getId() const throw () { return TypeId<BC_GET>::getId(); }
+
     BC_GET()
     {
         clear();
@@ -38,6 +43,7 @@ public:
         return rv;
     }
 
+    /*
     template <class DataStream> uint32_t length()const
     {
         uint32_t rv=0;
@@ -48,15 +54,16 @@ public:
         }
         return rv;
     }
+     */
 
-  const std::string& getVarName() const
+    const std::string& getVarName() const
+        throw (FieldIsNullException)
     {
         if (!varNameFlag) {
             throw FieldIsNullException("varName");
         }
         return varName;
     }
-
     void setVarName(const std::string& value)
     {
         varName=value;
@@ -67,47 +74,37 @@ public:
         return varNameFlag;
     }
 
-    template <class DataStream> void serialize(DataStream& ds) const
+    template <class Proto, class DataStream>
+        void serialize( const Proto& proto, DataStream& ds ) const throw (PvapException)
     {
         checkFields();
         // mandatory fields
+        printf( "write pos=%d field=%d\n", ds.getPos(), varNameTag );
         ds.writeTag(varNameTag);
-    ds.writeStrLV(varName);
+        ds.writeByteStringLV(varName);
         // optional fields
-        //ds.writeTag(DataStream::endOfMessage_tag);
     }
 
-    template <class DataStream> void deserialize(DataStream& ds)
+    template <class Proto, class DataStream> void deserialize(const Proto& proto, DataStream& ds)
+        throw (PvapException)
     {
         clear();
-        bool endOfMessage=false;
-        //uint8_t rdVersionMajor=ds.readByte();
-        //uint8_t rdVersionMinor=ds.readByte();
-        //if(rdVersionMajor!=versionMajor)
-        //{
-        //  throw IncompatibleVersionException("BC_GET");
-        //}
-        //seqNum=ds.readInt32();
-        while (!endOfMessage) {
-            uint32_t tag=ds.readTag();
+        while (true) {
+            int pos = int(ds.getPos());
+            int tag = ds.readTag();
+            printf( "read pos=%d field=%d\n", pos, tag );
+            if ( tag == -1 ) break;
             switch(tag) {
             case varNameTag: {
                 if (varNameFlag) {
                     throw DuplicateFieldException("varName");
                 }
-          varName=ds.readStrLV();
+                varName=ds.readByteStringLV();
                 varNameFlag=true;
                 break;
             }
-            case DataStream::endOfMessage_tag:
-                endOfMessage=true;
-                break;
             default:
-                //if(rdVersionMinor==versionMinor)
-                //{
-                //  throw UnexpectedTag("BC_GET",tag);
-                //}
-                ds.skip(ds.readLength());
+                throw NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();
@@ -128,7 +125,9 @@ protected:
     {
         // checking mandatory fields
         if (!varNameFlag) {
-            throw MandatoryFieldMissingException("varName");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "varName", "BC_GET");
+            throw MandatoryFieldMissingException(buf);
         }
         // checking optional fields
     }
@@ -137,7 +136,7 @@ protected:
     //static const uint8_t versionMajor=2;
     //static const uint8_t versionMinor=0;
 
-    static const uint16_t varNameTag=5;
+    static const int varNameTag=5;
 
     uint32_t seqNum;
 

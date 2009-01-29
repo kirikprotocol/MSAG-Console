@@ -4,9 +4,10 @@
 #ifndef __SCAG_PVSS_PVAP_$var protocol.name:uc$_HPP__
 #define __SCAG_PVSS_PVAP_$var protocol.name:uc$_HPP__
 
+#include <memory>
 #include "Serializer.h"
-#include "$var handler.include$"
 #include "Exceptions.h"
+#include "TypeId.h"
 $foreach message$
 #include "$var message.name$.hpp"
 $-foreach$
@@ -15,49 +16,83 @@ $foreach namespace$
 namespace $var namespace$ {
 $-foreach$
 
-class $var protocol.name:ucf${
+class $var protocol.name:ucf$ 
+{
 public:
-  enum{
+    enum {
 $foreach message$
-    tag_$var message.name:ucf$=$var message.tag$,
+        tag_$var message.name:ucf$=$var message.tag$,
 $-foreach$
-    tag_NO_TAG=0xffff
-  };
+        tag_NO_TAG = 0xffff
+    };
 
-  void assignHandler($var handler.class$* newHandler)
-  {
-    handler=newHandler;
-  }
-
-  void decodeMessage(Serializer& ss)
-  {
-    uint32_t seqNum=ss.readInt32();
-    uint16_t tag=ss.readInt16();
-    switch(tag)
+    class Handler 
     {
+    public:
+        virtual bool hasSeqNum( uint32_t seqNum ) const = 0;
 $foreach message$
-      case tag_$var message.name:ucf$:
-      {
-        std::auto_ptr<$var message.name$> msg(new $var message.name$);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
+        virtual void handle( std::auto_ptr<$var message.name$> obj ) = 0;
 $-foreach$
-      default:
-        throw UnhandledMessage(tag);
+    };
+
+    $var protocol.name:ucf$() : handler(0) {}
+
+    $var protocol.name:ucf$( Handler* newHandler ) : handler(newHandler) {}
+
+    void assignHandler( Handler* newHandler)
+    {
+        handler=newHandler;
     }
-  }
+
+    void decodeMessage( Serializer& ss ) const throw (PvapException)
+    {
+        const uint32_t seqNum = ss.readInt32();
+        if ( ! handler->hasSeqNum(seqNum) ) throw UnexpectedSeqNumException(seqNum);
+        int tag = ss.readTag();
+        switch(tag)
+        {
 $foreach message$
-  void encodeMessage(const $var message.name$& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_$var message.name:ucf$);
-    msg.serialize(ss);
-  }
+        case tag_$var message.name:ucf$: {
+            // printf( "tag %d (%s)\n", tag, "$var message.name:ucf$" );
+            std::auto_ptr<$var message.name$> msg(new $var message.name$);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
 $-foreach$
+        default:
+            throw InvalidMessageTypeException(tag);
+        }
+    }
+$foreach message$
+
+    void encodeMessage( const $var message.name$& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_$var message.name:ucf$);
+        msg.serialize(*this,ss);
+    }
+$-foreach$
+$if options.inheritsFromBatchCmd$
+
+    void encodeCastMessage( const BC_CMD& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        const int msgId = msg.getId();
+$foreach message$
+        if ( msgId == TypeId<$var message.name:ucf$>::getId() ) {
+            encodeMessage(static_cast<const $var message.name$&>(msg), ss);
+        } else
+$-foreach$
+        {
+            throw InvalidMessageTypeException(msgId);
+        }
+    }
+$-if$
 protected:
-  $var handler.class$* handler;
+    Handler* handler; // unowned
 };
 
 $foreach namespace$

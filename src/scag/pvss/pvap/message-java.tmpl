@@ -13,6 +13,8 @@ $case uint16$short
 $case uint32$int
 $case uint64$long
 $case string$String
+$case ascii$String
+$case utf8$String
 $case bool$boolean
 $default$$var %1$
 $-select$
@@ -23,7 +25,7 @@ public class $var message.name$ $if options.inheritsFromBatchCmd$ extends BC_CMD
     // static Logger logger = Logger.getLogger($var message.name$.class);
 
 $foreach field$
-    static final short $var field.name$Tag = $var field.tag$;
+    static final int $var field.name$Tag = $var field.tag$;
 $-foreach$
 
     int seqNum;
@@ -71,6 +73,8 @@ $foreach field$
             $case uint32$sb.append($var field.name$);
             $case uint64$sb.append($var field.name$);
             $case string$sb.append($var field.name$);
+            $case ascii$sb.append($var field.name$);
+            $case utf8$sb.append($var field.name$);
             $default$sb.append($var field.name$.toString());
             $-select$$-pack$
 
@@ -80,7 +84,10 @@ $-foreach$
     }
 $foreach field$
 
-    public $expand type field.type$ get$var field.name:ucf$() throws FieldIsNullException
+    public $expand type field.type$ get$var field.name:ucf$()
+$if options.throwOnUnsetGet$
+           throws FieldIsNullException
+$-if$
     {
 $if options.throwOnUnsetGet$
         if(!$var field.name$Flag)
@@ -103,25 +110,25 @@ $-if$
     }
 $-foreach$
 
-    public void encode( IBufferWriter writer ) throws java.io.IOException
+    public void encode( $var protocol.name:ucf$ proto, IBufferWriter writer ) throws java.io.IOException
     {
         checkFields();
         // mandatory fields
 $foreach field$
 $if field.mandatory$
+        System.out.println("write pos=" + writer.getPos() + " field=" + $var field.name$Tag);
         writer.writeTag($var field.name$Tag);
         $select field.type$
 $case string$writer.writeStringLV($var field.name$);
+$case ascii$writer.writeUTFLV($var field.name$);
+$case utf8$writer.writeUTFLV($var field.name$);
 $case byte$writer.writeByteLV($var field.name$);
 $case uint16$writer.writeShortLV($var field.name$);
 $case uint32$writer.writeIntLV($var field.name$);
 $case uint64$writer.writeLongLV($var field.name$);
 $case bool$writer.writeBoolLV($var field.name$);
 $case nested$throw new NotImplementedException("$var field.name$");
-$default$
-$ifdef field.serializer$
-        writer.get$var field.serializer$().serialize(writer,$var field.name$);
-$-ifdef$
+$default$$var field.name$.encode(proto,writer);
 $-select$
 $-if$
 $-foreach$
@@ -129,56 +136,58 @@ $-foreach$
 $foreach field$
 $if field.optional$
         if ($var field.name$Flag) {
+            System.out.println("write pos=" + writer.getPos() + " field=" + $var field.name$Tag);
             writer.writeTag($var field.name$Tag);
             $select field.type$
 $case string$writer.writeStringLV($var field.name$);
+$case ascii$writer.writeUTFLV($var field.name$);
+$case utf8$writer.writeUTFLV($var field.name$);
 $case byte$writer.writeByteLV($var field.name$);
 $case uint16$writer.writeShortLV($var field.name$);
 $case uint32$writer.writeIntLV($var field.name$);
 $case uint64$writer.writeLongLV($var field.name$);
 $case bool$writer.writeBoolLV($var field.name$);
 $case nested$throw new NotImplementedException("$var field.name$");
-$default$
-$ifdef field.serializer$
-            writer.get$var field.serializer$().serialize(writer,$var field.name$);
-$-ifdef$
+$default$$var field.name$.encode(proto,writer);
 $-select$
         }
 $-if$
 $-foreach$
     }
 
-    public void decode( IBufferReader reader ) throws java.io.IOException
+    public void decode( $var protocol.name:ucf$ proto, IBufferReader reader ) throws java.io.IOException
     {
         clear();
-        // seqNum = reader.readInt();
         while( true ) {
-            short tag = reader.readTag();
-            // System.out.println("tag got:" + tag);
-            if ( tag == (short)0xFFFF ) break;
+            int pos = reader.getPos();
+            int tag = reader.readTag();
+            System.out.println("read pos=" + pos + " field=" + tag);
+            if ( tag == -1 ) break;
             switch( tag ) {
 $foreach field$
             case $var field.name$Tag: {
+                if ($var field.name$Flag) {
+                    throw new DuplicateFieldException("$var field.name$");
+                }
                 $select field.type$
 $case string$$var field.name$=reader.readStringLV();
+$case ascii$$var field.name$=reader.readUTFLV();
+$case utf8$$var field.name$=reader.readUTFLV();
 $case byte$$var field.name$=reader.readByteLV();
 $case uint16$$var field.name$=reader.readShortLV();
 $case uint32$$var field.name$=reader.readIntLV();
 $case uint64$$var field.name$=reader.readLongLV();
 $case bool$$var field.name$=reader.readBoolLV();
 $case nested$throw new NotImplementedException("$var field.name$");
-$default$
-$ifdef field.serializer$
-reader.get$var field.serializer$().deserialize(reader,$var field.name$)
-$-ifdef$
+$default$$var field.name$ = new $var field.type$();
+                $var field.name$.decode(proto,reader);
 $-select$
                 $var field.name$Flag=true;
                 break;
             }
 $-foreach$
             default:
-                System.err.println("unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + getClass().getName());
-                // logger.warn( "unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + $var message.name$.class.getName() );
+                throw new NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();

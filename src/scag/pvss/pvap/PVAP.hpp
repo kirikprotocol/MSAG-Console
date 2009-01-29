@@ -4,9 +4,10 @@
 #ifndef __SCAG_PVSS_PVAP_PVAP_HPP__
 #define __SCAG_PVSS_PVAP_PVAP_HPP__
 
+#include <memory>
 #include "Serializer.h"
-#include "PvapHandler.h"
 #include "Exceptions.h"
+#include "TypeId.h"
 #include "PC_DEL.hpp"
 #include "PC_DEL_RESP.hpp"
 #include "PC_SET.hpp"
@@ -28,253 +29,329 @@ namespace scag {
 namespace pvss {
 namespace pvap {
 
-class PVAP{
+class PVAP 
+{
 public:
-  enum{
-    tag_PC_DEL=1,
-    tag_PC_DEL_RESP=32769,
-    tag_PC_SET=2,
-    tag_PC_SET_RESP=32770,
-    tag_PC_GET=3,
-    tag_PC_GET_RESP=32771,
-    tag_PC_INC=4,
-    tag_PC_INC_RESP=32772,
-    tag_PC_INC_MOD=5,
-    tag_PC_INC_MOD_RESP=32773,
-    tag_PC_PING=6,
-    tag_PC_PING_RESP=32774,
-    tag_PC_AUTH=10,
-    tag_PC_AUTH_RESP=32778,
-    tag_PC_BATCH=7,
-    tag_PC_BATCH_RESP=32775,
-    tag_NO_TAG=0xffff
-  };
+    enum {
+        tag_PC_DEL=1,
+        tag_PC_DEL_RESP=32769,
+        tag_PC_SET=2,
+        tag_PC_SET_RESP=32770,
+        tag_PC_GET=3,
+        tag_PC_GET_RESP=32771,
+        tag_PC_INC=4,
+        tag_PC_INC_RESP=32772,
+        tag_PC_INC_MOD=5,
+        tag_PC_INC_MOD_RESP=32773,
+        tag_PC_PING=6,
+        tag_PC_PING_RESP=32774,
+        tag_PC_AUTH=10,
+        tag_PC_AUTH_RESP=32778,
+        tag_PC_BATCH=7,
+        tag_PC_BATCH_RESP=32775,
+        tag_NO_TAG = 0xffff
+    };
 
-  void assignHandler(PvapHandler* newHandler)
-  {
-    handler=newHandler;
-  }
-
-  void decodeMessage(Serializer& ss)
-  {
-    uint32_t seqNum=ss.readInt32();
-    uint16_t tag=ss.readInt16();
-    switch(tag)
+    class Handler
     {
-      case tag_PC_DEL:
-      {
-        std::auto_ptr<PC_DEL> msg(new PC_DEL);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_DEL_RESP:
-      {
-        std::auto_ptr<PC_DEL_RESP> msg(new PC_DEL_RESP);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_SET:
-      {
-        std::auto_ptr<PC_SET> msg(new PC_SET);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_SET_RESP:
-      {
-        std::auto_ptr<PC_SET_RESP> msg(new PC_SET_RESP);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_GET:
-      {
-        std::auto_ptr<PC_GET> msg(new PC_GET);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_GET_RESP:
-      {
-        std::auto_ptr<PC_GET_RESP> msg(new PC_GET_RESP);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_INC:
-      {
-        std::auto_ptr<PC_INC> msg(new PC_INC);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_INC_RESP:
-      {
-        std::auto_ptr<PC_INC_RESP> msg(new PC_INC_RESP);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_INC_MOD:
-      {
-        std::auto_ptr<PC_INC_MOD> msg(new PC_INC_MOD);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_INC_MOD_RESP:
-      {
-        std::auto_ptr<PC_INC_MOD_RESP> msg(new PC_INC_MOD_RESP);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_PING:
-      {
-        std::auto_ptr<PC_PING> msg(new PC_PING);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_PING_RESP:
-      {
-        std::auto_ptr<PC_PING_RESP> msg(new PC_PING_RESP);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_AUTH:
-      {
-        std::auto_ptr<PC_AUTH> msg(new PC_AUTH);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_AUTH_RESP:
-      {
-        std::auto_ptr<PC_AUTH_RESP> msg(new PC_AUTH_RESP);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_BATCH:
-      {
-        std::auto_ptr<PC_BATCH> msg(new PC_BATCH);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      case tag_PC_BATCH_RESP:
-      {
-        std::auto_ptr<PC_BATCH_RESP> msg(new PC_BATCH_RESP);
-        msg->setSeqNum(seqNum);
-        msg->deserialize(ss);
-        handler->handle(msg);
-      }break;
-      default:
-        throw UnhandledMessage(tag);
+    public:
+        virtual bool hasSeqNum( uint32_t seqNum ) const = 0;
+        virtual void handle( std::auto_ptr<PC_DEL> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_DEL_RESP> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_SET> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_SET_RESP> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_GET> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_GET_RESP> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_INC> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_INC_RESP> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_INC_MOD> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_INC_MOD_RESP> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_PING> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_PING_RESP> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_AUTH> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_AUTH_RESP> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_BATCH> obj ) = 0;
+        virtual void handle( std::auto_ptr<PC_BATCH_RESP> obj ) = 0;
+    };
+
+    PVAP() : handler(0) {}
+
+    PVAP( Handler* newHandler ) : handler(newHandler) {}
+
+    void assignHandler( Handler* newHandler)
+    {
+        handler=newHandler;
     }
-  }
-  void encodeMessage(const PC_DEL& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_DEL);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_DEL_RESP& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_DEL_RESP);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_SET& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_SET);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_SET_RESP& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_SET_RESP);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_GET& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_GET);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_GET_RESP& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_GET_RESP);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_INC& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_INC);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_INC_RESP& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_INC_RESP);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_INC_MOD& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_INC_MOD);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_INC_MOD_RESP& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_INC_MOD_RESP);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_PING& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_PING);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_PING_RESP& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_PING_RESP);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_AUTH& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_AUTH);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_AUTH_RESP& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_AUTH_RESP);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_BATCH& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_BATCH);
-    msg.serialize(ss);
-  }
-  void encodeMessage(const PC_BATCH_RESP& msg,Serializer& ss)
-  {
-    ss.writeInt32(msg.getSeqNum());
-    ss.writeInt16(tag_PC_BATCH_RESP);
-    msg.serialize(ss);
-  }
+
+    void decodeMessage( Serializer& ss ) const throw (PvapException)
+    {
+        const uint32_t seqNum = ss.readInt32();
+        if ( ! handler->hasSeqNum(seqNum) ) throw UnexpectedSeqNumException(seqNum);
+        int tag = ss.readTag();
+        switch(tag)
+        {
+        case tag_PC_DEL: {
+            // printf( "tag %d (%s)\n", tag, "PC_DEL" );
+            std::auto_ptr<PC_DEL> msg(new PC_DEL);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_DEL_RESP: {
+            // printf( "tag %d (%s)\n", tag, "PC_DEL_RESP" );
+            std::auto_ptr<PC_DEL_RESP> msg(new PC_DEL_RESP);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_SET: {
+            // printf( "tag %d (%s)\n", tag, "PC_SET" );
+            std::auto_ptr<PC_SET> msg(new PC_SET);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_SET_RESP: {
+            // printf( "tag %d (%s)\n", tag, "PC_SET_RESP" );
+            std::auto_ptr<PC_SET_RESP> msg(new PC_SET_RESP);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_GET: {
+            // printf( "tag %d (%s)\n", tag, "PC_GET" );
+            std::auto_ptr<PC_GET> msg(new PC_GET);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_GET_RESP: {
+            // printf( "tag %d (%s)\n", tag, "PC_GET_RESP" );
+            std::auto_ptr<PC_GET_RESP> msg(new PC_GET_RESP);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_INC: {
+            // printf( "tag %d (%s)\n", tag, "PC_INC" );
+            std::auto_ptr<PC_INC> msg(new PC_INC);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_INC_RESP: {
+            // printf( "tag %d (%s)\n", tag, "PC_INC_RESP" );
+            std::auto_ptr<PC_INC_RESP> msg(new PC_INC_RESP);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_INC_MOD: {
+            // printf( "tag %d (%s)\n", tag, "PC_INC_MOD" );
+            std::auto_ptr<PC_INC_MOD> msg(new PC_INC_MOD);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_INC_MOD_RESP: {
+            // printf( "tag %d (%s)\n", tag, "PC_INC_MOD_RESP" );
+            std::auto_ptr<PC_INC_MOD_RESP> msg(new PC_INC_MOD_RESP);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_PING: {
+            // printf( "tag %d (%s)\n", tag, "PC_PING" );
+            std::auto_ptr<PC_PING> msg(new PC_PING);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_PING_RESP: {
+            // printf( "tag %d (%s)\n", tag, "PC_PING_RESP" );
+            std::auto_ptr<PC_PING_RESP> msg(new PC_PING_RESP);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_AUTH: {
+            // printf( "tag %d (%s)\n", tag, "PC_AUTH" );
+            std::auto_ptr<PC_AUTH> msg(new PC_AUTH);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_AUTH_RESP: {
+            // printf( "tag %d (%s)\n", tag, "PC_AUTH_RESP" );
+            std::auto_ptr<PC_AUTH_RESP> msg(new PC_AUTH_RESP);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_BATCH: {
+            // printf( "tag %d (%s)\n", tag, "PC_BATCH" );
+            std::auto_ptr<PC_BATCH> msg(new PC_BATCH);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_PC_BATCH_RESP: {
+            // printf( "tag %d (%s)\n", tag, "PC_BATCH_RESP" );
+            std::auto_ptr<PC_BATCH_RESP> msg(new PC_BATCH_RESP);
+            msg->setSeqNum(seqNum);
+            msg->deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        default:
+            throw InvalidMessageTypeException(tag);
+        }
+    }
+
+    void encodeMessage( const PC_DEL& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_DEL);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_DEL_RESP& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_DEL_RESP);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_SET& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_SET);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_SET_RESP& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_SET_RESP);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_GET& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_GET);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_GET_RESP& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_GET_RESP);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_INC& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_INC);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_INC_RESP& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_INC_RESP);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_INC_MOD& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_INC_MOD);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_INC_MOD_RESP& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_INC_MOD_RESP);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_PING& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_PING);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_PING_RESP& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_PING_RESP);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_AUTH& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_AUTH);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_AUTH_RESP& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_AUTH_RESP);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_BATCH& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_BATCH);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const PC_BATCH_RESP& msg, Serializer& ss ) const
+        throw (PvapException)
+    {
+        ss.writeInt32(msg.getSeqNum());
+        ss.writeTag(tag_PC_BATCH_RESP);
+        msg.serialize(*this,ss);
+    }
 protected:
-  PvapHandler* handler;
+    Handler* handler; // unowned
 };
 
 }

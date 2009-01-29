@@ -1,26 +1,25 @@
 package $var package$;
 
-// import protogen.framework.BufferReader;
-// import protogen.framework.InvalidMessageTypeException;
-// import protogen.framework.BufferWriter;
-// import java.io.IOException;
-
 /**
  * This protocol has header: len (4 oct), seq (4 oct), tag ( 2 oct.), message body
  */
-public class $var protocol.name$ 
+public class $var protocol.name:ucf$
 {
 $foreach message$
     static final short tag_$var message.name:ucf$=(short)$var message.tag$;
 $-foreach$
 
     public static interface Handler {
+        public boolean hasSeqNum( int seqNum );
 $foreach message$
         public void handle( $var message.name$ object );
 $-foreach$
     }
 
     Handler handler;
+    public $var protocol.name$() {
+    }
+
     public $var protocol.name$(Handler handler) {
         this.handler = handler;
     }
@@ -32,29 +31,46 @@ $-foreach$
     public void decodeMessage( IBufferReader reader ) throws java.io.IOException
     {
         int seqNum = reader.readInt();
-        short tag = reader.readTag();
+        if ( ! handler.hasSeqNum(seqNum) ) throw new UnexpectedSeqNumException("seqnum="+seqNum);
+        int tag = reader.readTag();
         switch( tag ) {
 $foreach message$
         case tag_$var message.name:ucf$: {
             $var message.name$ object = new $var message.name$();
             object.setSeqNum(seqNum);
-            object.decode(reader);
+            object.decode(this,reader);
             handler.handle(object);
             break;
         }
 $-foreach$
-        default: throw new InvalidMessageTypeException();
+        default: throw new InvalidMessageTypeException("tag="+tag);
         }
     }
-
 $foreach message$
+
     public byte[] encodeMessage( $var message.name$ object, IBufferWriter writer ) throws java.io.IOException
     {
         // BufferWriter writer = new BufferWriter();
         writer.writeInt(object.getSeqNum());
         writer.writeTag(tag_$var message.name$);
-        object.encode(writer);
+        object.encode(this,writer);
         return writer.getData();
     }
 $-foreach$
+$if options.inheritsFromBatchCmd$
+
+    public byte[] encodeCastMessage( BC_CMD msg, IBufferWriter writer ) throws java.io.IOException
+    {
+        Class<? extends BC_CMD> c = msg.getClass();
+$foreach message$
+        if ( c == $var message.name:ucf$.class ) {
+            encodeMessage(($var message.name:ucf$)msg, writer);
+        } else
+$-foreach$
+        {
+            throw new InvalidMessageTypeException(c.toString());
+        }
+        return writer.getData();
+    }
+$-if$
 }

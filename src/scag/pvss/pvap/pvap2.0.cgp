@@ -24,5 +24,5 @@ data:namespace:3=pvap
 
 data:package=com.eyelinecom.whoisd.pvss.pvap
 
-data:handler.include=PvapHandler.h
-data:handler.class=PvapHandler
+# data:handler.include=PvapHandler.h
+# data:handler.class=PvapHandler

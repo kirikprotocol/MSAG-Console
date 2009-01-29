@@ -11,9 +11,9 @@ public class PC_AUTH_RESP
 {
     // static Logger logger = Logger.getLogger(PC_AUTH_RESP.class);
 
-    static final short statusTag = 1;
-    static final short clientTypeTag = 19;
-    static final short sidTag = 20;
+    static final int statusTag = 1;
+    static final int clientTypeTag = 19;
+    static final int sidTag = 20;
 
     int seqNum;
     byte status;
@@ -65,7 +65,8 @@ public class PC_AUTH_RESP
         return sb.toString();
     }
 
-    public byte getStatus() throws FieldIsNullException
+    public byte getStatus()
+           throws FieldIsNullException
     {
         if(!statusFlag)
         {
@@ -85,7 +86,8 @@ public class PC_AUTH_RESP
         return statusFlag;
     }
 
-    public byte getClientType() throws FieldIsNullException
+    public byte getClientType()
+           throws FieldIsNullException
     {
         if(!clientTypeFlag)
         {
@@ -105,7 +107,8 @@ public class PC_AUTH_RESP
         return clientTypeFlag;
     }
 
-    public byte getSid() throws FieldIsNullException
+    public byte getSid()
+           throws FieldIsNullException
     {
         if(!sidFlag)
         {
@@ -125,50 +128,61 @@ public class PC_AUTH_RESP
         return sidFlag;
     }
 
-    public void encode( IBufferWriter writer ) throws java.io.IOException
+    public void encode( PVAP proto, IBufferWriter writer ) throws java.io.IOException
     {
         checkFields();
         // mandatory fields
+        System.out.println("write pos=" + writer.getPos() + " field=" + statusTag);
         writer.writeTag(statusTag);
         writer.writeByteLV(status);
         // optional fields
         if (clientTypeFlag) {
+            System.out.println("write pos=" + writer.getPos() + " field=" + clientTypeTag);
             writer.writeTag(clientTypeTag);
             writer.writeByteLV(clientType);
         }
         if (sidFlag) {
+            System.out.println("write pos=" + writer.getPos() + " field=" + sidTag);
             writer.writeTag(sidTag);
             writer.writeByteLV(sid);
         }
     }
 
-    public void decode( IBufferReader reader ) throws java.io.IOException
+    public void decode( PVAP proto, IBufferReader reader ) throws java.io.IOException
     {
         clear();
-        // seqNum = reader.readInt();
         while( true ) {
-            short tag = reader.readTag();
-            // System.out.println("tag got:" + tag);
-            if ( tag == (short)0xFFFF ) break;
+            int pos = reader.getPos();
+            int tag = reader.readTag();
+            System.out.println("read pos=" + pos + " field=" + tag);
+            if ( tag == -1 ) break;
             switch( tag ) {
             case statusTag: {
+                if (statusFlag) {
+                    throw new DuplicateFieldException("status");
+                }
                 status=reader.readByteLV();
                 statusFlag=true;
                 break;
             }
             case clientTypeTag: {
+                if (clientTypeFlag) {
+                    throw new DuplicateFieldException("clientType");
+                }
                 clientType=reader.readByteLV();
                 clientTypeFlag=true;
                 break;
             }
             case sidTag: {
+                if (sidFlag) {
+                    throw new DuplicateFieldException("sid");
+                }
                 sid=reader.readByteLV();
                 sidFlag=true;
                 break;
             }
             default:
-                System.err.println("unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + getClass().getName());
-                // logger.warn( "unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + PC_AUTH_RESP.class.getName() );
+                throw new NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();

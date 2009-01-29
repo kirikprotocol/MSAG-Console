@@ -7,11 +7,14 @@
 #include "util/int.h"
 #include <string>
 #include "Exceptions.h"
+#include "TypeId.h"
 
 
 namespace scag{
 namespace pvss{
 namespace pvap{
+
+// class PVAP;
 
 class PC_GET  
 {
@@ -55,6 +58,7 @@ public:
         return rv;
     }
 
+    /*
     template <class DataStream> uint32_t length()const
     {
         uint32_t rv=0;
@@ -80,15 +84,16 @@ public:
         }
         return rv;
     }
+     */
 
-  uint8_t getProfileType() const
+    uint8_t getProfileType() const
+        throw (FieldIsNullException)
     {
         if (!profileTypeFlag) {
             throw FieldIsNullException("profileType");
         }
         return profileType;
     }
-
     void setProfileType(uint8_t value)
     {
         profileType=value;
@@ -98,14 +103,14 @@ public:
     {
         return profileTypeFlag;
     }
-  const std::string& getAbonentKey() const
+    const std::string& getAbonentKey() const
+        throw (FieldIsNullException)
     {
         if (!abonentKeyFlag) {
             throw FieldIsNullException("abonentKey");
         }
         return abonentKey;
     }
-
     void setAbonentKey(const std::string& value)
     {
         abonentKey=value;
@@ -115,14 +120,14 @@ public:
     {
         return abonentKeyFlag;
     }
-  uint32_t getProfileKey() const
+    uint32_t getProfileKey() const
+        throw (FieldIsNullException)
     {
         if (!profileKeyFlag) {
             throw FieldIsNullException("profileKey");
         }
         return profileKey;
     }
-
     void setProfileKey(uint32_t value)
     {
         profileKey=value;
@@ -132,14 +137,14 @@ public:
     {
         return profileKeyFlag;
     }
-  const std::string& getVarName() const
+    const std::string& getVarName() const
+        throw (FieldIsNullException)
     {
         if (!varNameFlag) {
             throw FieldIsNullException("varName");
         }
         return varName;
     }
-
     void setVarName(const std::string& value)
     {
         varName=value;
@@ -150,45 +155,45 @@ public:
         return varNameFlag;
     }
 
-    template <class DataStream> void serialize(DataStream& ds) const
+    template <class Proto, class DataStream>
+        void serialize( const Proto& proto, DataStream& ds ) const throw (PvapException)
     {
         checkFields();
         // mandatory fields
+        printf( "write pos=%d field=%d\n", ds.getPos(), profileTypeTag );
         ds.writeTag(profileTypeTag);
-    ds.writeByteLV(profileType);
+        ds.writeByteLV(profileType);
+        printf( "write pos=%d field=%d\n", ds.getPos(), varNameTag );
         ds.writeTag(varNameTag);
-    ds.writeStrLV(varName);
+        ds.writeByteStringLV(varName);
         // optional fields
         if (abonentKeyFlag) {
+            printf( "write pos=%d field=%d\n", ds.getPos(), abonentKeyTag );
             ds.writeTag(abonentKeyTag);
-      ds.writeStrLV(abonentKey);
+            ds.writeByteStringLV(abonentKey);
         }
         if (profileKeyFlag) {
+            printf( "write pos=%d field=%d\n", ds.getPos(), profileKeyTag );
             ds.writeTag(profileKeyTag);
-      ds.writeInt32LV(profileKey);
+            ds.writeInt32LV(profileKey);
         }
-        //ds.writeTag(DataStream::endOfMessage_tag);
     }
 
-    template <class DataStream> void deserialize(DataStream& ds)
+    template <class Proto, class DataStream> void deserialize(const Proto& proto, DataStream& ds)
+        throw (PvapException)
     {
         clear();
-        bool endOfMessage=false;
-        //uint8_t rdVersionMajor=ds.readByte();
-        //uint8_t rdVersionMinor=ds.readByte();
-        //if(rdVersionMajor!=versionMajor)
-        //{
-        //  throw IncompatibleVersionException("PC_GET");
-        //}
-        //seqNum=ds.readInt32();
-        while (!endOfMessage) {
-            uint32_t tag=ds.readTag();
+        while (true) {
+            int pos = int(ds.getPos());
+            int tag = ds.readTag();
+            printf( "read pos=%d field=%d\n", pos, tag );
+            if ( tag == -1 ) break;
             switch(tag) {
             case profileTypeTag: {
                 if (profileTypeFlag) {
                     throw DuplicateFieldException("profileType");
                 }
-          profileType=ds.readByteLV();
+                profileType=ds.readByteLV();
                 profileTypeFlag=true;
                 break;
             }
@@ -196,7 +201,7 @@ public:
                 if (abonentKeyFlag) {
                     throw DuplicateFieldException("abonentKey");
                 }
-          abonentKey=ds.readStrLV();
+                abonentKey=ds.readByteStringLV();
                 abonentKeyFlag=true;
                 break;
             }
@@ -204,7 +209,7 @@ public:
                 if (profileKeyFlag) {
                     throw DuplicateFieldException("profileKey");
                 }
-          profileKey=ds.readInt32LV();
+                profileKey=ds.readInt32LV();
                 profileKeyFlag=true;
                 break;
             }
@@ -212,19 +217,12 @@ public:
                 if (varNameFlag) {
                     throw DuplicateFieldException("varName");
                 }
-          varName=ds.readStrLV();
+                varName=ds.readByteStringLV();
                 varNameFlag=true;
                 break;
             }
-            case DataStream::endOfMessage_tag:
-                endOfMessage=true;
-                break;
             default:
-                //if(rdVersionMinor==versionMinor)
-                //{
-                //  throw UnexpectedTag("PC_GET",tag);
-                //}
-                ds.skip(ds.readLength());
+                throw NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();
@@ -245,22 +243,30 @@ protected:
     {
         // checking mandatory fields
         if (!profileTypeFlag) {
-            throw MandatoryFieldMissingException("profileType");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "profileType", "PC_GET");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!varNameFlag) {
-            throw MandatoryFieldMissingException("varName");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "varName", "PC_GET");
+            throw MandatoryFieldMissingException(buf);
         }
         // checking optional fields
         if (!abonentKeyFlag
             && (profileType==1)
             ) {
-            throw MandatoryFieldMissingException("abonentKey");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "abonentKey", "PC_GET");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!profileKeyFlag
             && (profileType>1)
             && (profileType<5)
             ) {
-            throw MandatoryFieldMissingException("profileKey");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "profileKey", "PC_GET");
+            throw MandatoryFieldMissingException(buf);
         }
     }
 
@@ -268,10 +274,10 @@ protected:
     //static const uint8_t versionMajor=2;
     //static const uint8_t versionMinor=0;
 
-    static const uint16_t profileTypeTag=2;
-    static const uint16_t abonentKeyTag=3;
-    static const uint16_t profileKeyTag=4;
-    static const uint16_t varNameTag=5;
+    static const int profileTypeTag=2;
+    static const int abonentKeyTag=3;
+    static const int profileKeyTag=4;
+    static const int varNameTag=5;
 
     uint32_t seqNum;
 

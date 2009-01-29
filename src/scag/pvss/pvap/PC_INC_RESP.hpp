@@ -7,11 +7,14 @@
 #include "util/int.h"
 #include <string>
 #include "Exceptions.h"
+#include "TypeId.h"
 
 
 namespace scag{
 namespace pvss{
 namespace pvap{
+
+// class PVAP;
 
 class PC_INC_RESP  
 {
@@ -45,6 +48,7 @@ public:
         return rv;
     }
 
+    /*
     template <class DataStream> uint32_t length()const
     {
         uint32_t rv=0;
@@ -60,15 +64,16 @@ public:
         }
         return rv;
     }
+     */
 
-  uint8_t getStatus() const
+    uint8_t getStatus() const
+        throw (FieldIsNullException)
     {
         if (!statusFlag) {
             throw FieldIsNullException("status");
         }
         return status;
     }
-
     void setStatus(uint8_t value)
     {
         status=value;
@@ -78,14 +83,14 @@ public:
     {
         return statusFlag;
     }
-  uint32_t getIntValue() const
+    uint32_t getIntValue() const
+        throw (FieldIsNullException)
     {
         if (!intValueFlag) {
             throw FieldIsNullException("intValue");
         }
         return intValue;
     }
-
     void setIntValue(uint32_t value)
     {
         intValue=value;
@@ -96,37 +101,35 @@ public:
         return intValueFlag;
     }
 
-    template <class DataStream> void serialize(DataStream& ds) const
+    template <class Proto, class DataStream>
+        void serialize( const Proto& proto, DataStream& ds ) const throw (PvapException)
     {
         checkFields();
         // mandatory fields
+        printf( "write pos=%d field=%d\n", ds.getPos(), statusTag );
         ds.writeTag(statusTag);
-    ds.writeByteLV(status);
+        ds.writeByteLV(status);
+        printf( "write pos=%d field=%d\n", ds.getPos(), intValueTag );
         ds.writeTag(intValueTag);
-    ds.writeInt32LV(intValue);
+        ds.writeInt32LV(intValue);
         // optional fields
-        //ds.writeTag(DataStream::endOfMessage_tag);
     }
 
-    template <class DataStream> void deserialize(DataStream& ds)
+    template <class Proto, class DataStream> void deserialize(const Proto& proto, DataStream& ds)
+        throw (PvapException)
     {
         clear();
-        bool endOfMessage=false;
-        //uint8_t rdVersionMajor=ds.readByte();
-        //uint8_t rdVersionMinor=ds.readByte();
-        //if(rdVersionMajor!=versionMajor)
-        //{
-        //  throw IncompatibleVersionException("PC_INC_RESP");
-        //}
-        //seqNum=ds.readInt32();
-        while (!endOfMessage) {
-            uint32_t tag=ds.readTag();
+        while (true) {
+            int pos = int(ds.getPos());
+            int tag = ds.readTag();
+            printf( "read pos=%d field=%d\n", pos, tag );
+            if ( tag == -1 ) break;
             switch(tag) {
             case statusTag: {
                 if (statusFlag) {
                     throw DuplicateFieldException("status");
                 }
-          status=ds.readByteLV();
+                status=ds.readByteLV();
                 statusFlag=true;
                 break;
             }
@@ -134,19 +137,12 @@ public:
                 if (intValueFlag) {
                     throw DuplicateFieldException("intValue");
                 }
-          intValue=ds.readInt32LV();
+                intValue=ds.readInt32LV();
                 intValueFlag=true;
                 break;
             }
-            case DataStream::endOfMessage_tag:
-                endOfMessage=true;
-                break;
             default:
-                //if(rdVersionMinor==versionMinor)
-                //{
-                //  throw UnexpectedTag("PC_INC_RESP",tag);
-                //}
-                ds.skip(ds.readLength());
+                throw NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();
@@ -167,10 +163,14 @@ protected:
     {
         // checking mandatory fields
         if (!statusFlag) {
-            throw MandatoryFieldMissingException("status");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "status", "PC_INC_RESP");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!intValueFlag) {
-            throw MandatoryFieldMissingException("intValue");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "intValue", "PC_INC_RESP");
+            throw MandatoryFieldMissingException(buf);
         }
         // checking optional fields
     }
@@ -179,8 +179,8 @@ protected:
     //static const uint8_t versionMajor=2;
     //static const uint8_t versionMinor=0;
 
-    static const uint16_t statusTag=1;
-    static const uint16_t intValueTag=10;
+    static const int statusTag=1;
+    static const int intValueTag=10;
 
     uint32_t seqNum;
 

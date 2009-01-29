@@ -4,10 +4,10 @@ type uint32
 type uint16
 type byte    // uint8
 type bool
-type string
+type ascii
+type utf8
+type ucs2
 type BatchCmdArray  // special
-
-// type int
 
 property opt _bool
     optional true
@@ -31,7 +31,4 @@ property checkGt _int
 end
 
 property checkLt _int
-end
-
-property serializer _string
 end

@@ -7,11 +7,14 @@
 #include "util/int.h"
 #include <string>
 #include "Exceptions.h"
+#include "TypeId.h"
 
 
 namespace scag{
 namespace pvss{
 namespace pvap{
+
+// class PVAP;
 
 class PC_AUTH  
 {
@@ -54,6 +57,7 @@ public:
         return rv;
     }
 
+    /*
     template <class DataStream> uint32_t length()const
     {
         uint32_t rv=0;
@@ -79,15 +83,16 @@ public:
         }
         return rv;
     }
+     */
 
-  uint8_t getProtocolVersion() const
+    uint8_t getProtocolVersion() const
+        throw (FieldIsNullException)
     {
         if (!protocolVersionFlag) {
             throw FieldIsNullException("protocolVersion");
         }
         return protocolVersion;
     }
-
     void setProtocolVersion(uint8_t value)
     {
         protocolVersion=value;
@@ -97,14 +102,14 @@ public:
     {
         return protocolVersionFlag;
     }
-  const std::string& getLogin() const
+    const std::string& getLogin() const
+        throw (FieldIsNullException)
     {
         if (!loginFlag) {
             throw FieldIsNullException("login");
         }
         return login;
     }
-
     void setLogin(const std::string& value)
     {
         login=value;
@@ -114,14 +119,14 @@ public:
     {
         return loginFlag;
     }
-  const std::string& getPassword() const
+    const std::string& getPassword() const
+        throw (FieldIsNullException)
     {
         if (!passwordFlag) {
             throw FieldIsNullException("password");
         }
         return password;
     }
-
     void setPassword(const std::string& value)
     {
         password=value;
@@ -131,14 +136,14 @@ public:
     {
         return passwordFlag;
     }
-  const std::string& getName() const
+    const std::string& getName() const
+        throw (FieldIsNullException)
     {
         if (!nameFlag) {
             throw FieldIsNullException("name");
         }
         return name;
     }
-
     void setName(const std::string& value)
     {
         name=value;
@@ -149,41 +154,41 @@ public:
         return nameFlag;
     }
 
-    template <class DataStream> void serialize(DataStream& ds) const
+    template <class Proto, class DataStream>
+        void serialize( const Proto& proto, DataStream& ds ) const throw (PvapException)
     {
         checkFields();
         // mandatory fields
+        printf( "write pos=%d field=%d\n", ds.getPos(), protocolVersionTag );
         ds.writeTag(protocolVersionTag);
-    ds.writeByteLV(protocolVersion);
+        ds.writeByteLV(protocolVersion);
+        printf( "write pos=%d field=%d\n", ds.getPos(), loginTag );
         ds.writeTag(loginTag);
-    ds.writeStrLV(login);
+        ds.writeByteStringLV(login);
+        printf( "write pos=%d field=%d\n", ds.getPos(), passwordTag );
         ds.writeTag(passwordTag);
-    ds.writeStrLV(password);
+        ds.writeByteStringLV(password);
+        printf( "write pos=%d field=%d\n", ds.getPos(), nameTag );
         ds.writeTag(nameTag);
-    ds.writeStrLV(name);
+        ds.writeByteStringLV(name);
         // optional fields
-        //ds.writeTag(DataStream::endOfMessage_tag);
     }
 
-    template <class DataStream> void deserialize(DataStream& ds)
+    template <class Proto, class DataStream> void deserialize(const Proto& proto, DataStream& ds)
+        throw (PvapException)
     {
         clear();
-        bool endOfMessage=false;
-        //uint8_t rdVersionMajor=ds.readByte();
-        //uint8_t rdVersionMinor=ds.readByte();
-        //if(rdVersionMajor!=versionMajor)
-        //{
-        //  throw IncompatibleVersionException("PC_AUTH");
-        //}
-        //seqNum=ds.readInt32();
-        while (!endOfMessage) {
-            uint32_t tag=ds.readTag();
+        while (true) {
+            int pos = int(ds.getPos());
+            int tag = ds.readTag();
+            printf( "read pos=%d field=%d\n", pos, tag );
+            if ( tag == -1 ) break;
             switch(tag) {
             case protocolVersionTag: {
                 if (protocolVersionFlag) {
                     throw DuplicateFieldException("protocolVersion");
                 }
-          protocolVersion=ds.readByteLV();
+                protocolVersion=ds.readByteLV();
                 protocolVersionFlag=true;
                 break;
             }
@@ -191,7 +196,7 @@ public:
                 if (loginFlag) {
                     throw DuplicateFieldException("login");
                 }
-          login=ds.readStrLV();
+                login=ds.readByteStringLV();
                 loginFlag=true;
                 break;
             }
@@ -199,7 +204,7 @@ public:
                 if (passwordFlag) {
                     throw DuplicateFieldException("password");
                 }
-          password=ds.readStrLV();
+                password=ds.readByteStringLV();
                 passwordFlag=true;
                 break;
             }
@@ -207,19 +212,12 @@ public:
                 if (nameFlag) {
                     throw DuplicateFieldException("name");
                 }
-          name=ds.readStrLV();
+                name=ds.readByteStringLV();
                 nameFlag=true;
                 break;
             }
-            case DataStream::endOfMessage_tag:
-                endOfMessage=true;
-                break;
             default:
-                //if(rdVersionMinor==versionMinor)
-                //{
-                //  throw UnexpectedTag("PC_AUTH",tag);
-                //}
-                ds.skip(ds.readLength());
+                throw NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();
@@ -240,16 +238,24 @@ protected:
     {
         // checking mandatory fields
         if (!protocolVersionFlag) {
-            throw MandatoryFieldMissingException("protocolVersion");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "protocolVersion", "PC_AUTH");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!loginFlag) {
-            throw MandatoryFieldMissingException("login");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "login", "PC_AUTH");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!passwordFlag) {
-            throw MandatoryFieldMissingException("password");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "password", "PC_AUTH");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!nameFlag) {
-            throw MandatoryFieldMissingException("name");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "name", "PC_AUTH");
+            throw MandatoryFieldMissingException(buf);
         }
         // checking optional fields
     }
@@ -258,10 +264,10 @@ protected:
     //static const uint8_t versionMajor=2;
     //static const uint8_t versionMinor=0;
 
-    static const uint16_t protocolVersionTag=15;
-    static const uint16_t loginTag=16;
-    static const uint16_t passwordTag=17;
-    static const uint16_t nameTag=18;
+    static const int protocolVersionTag=15;
+    static const int loginTag=16;
+    static const int passwordTag=17;
+    static const int nameTag=18;
 
     uint32_t seqNum;
 

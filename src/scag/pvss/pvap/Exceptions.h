@@ -27,6 +27,18 @@ public:
     virtual ~FieldIsNullException() throw() {}
 };
 
+class NotImplementedException : public PvapException
+{
+public:
+    NotImplementedException(const char* field)
+    {
+        message = "Processing of ";
+        message += field;
+        message += " field is not implemented yet";
+    }
+    virtual ~NotImplementedException() throw() {}
+};
+
 class MandatoryFieldMissingException : public PvapException {
 public:
     MandatoryFieldMissingException(const char* field)
@@ -59,17 +71,32 @@ public:
   }
 };
 
-class UnexpectedTag:public PvapException{
+class InvalidMessageTypeException : public PvapException 
+{
 public:
-  UnexpectedTag(const char* messageName,uint32_t tag)
-  {
-    char buf[32];
-    sprintf(buf,"%u",tag);
-    message="Unexpected tag in message '";
-    message+=messageName;
-    message+="':";
-    message+=buf;
-  }
+    InvalidMessageTypeException( int tag, const char* messageName = "")
+    {
+        char buf[32];
+        sprintf(buf,"%u",tag);
+        message="Unexpected tag in message '";
+        message+=messageName;
+        message+="':";
+        message+=buf;
+    }
+};
+
+class UnexpectedSeqNumException : public PvapException
+{
+public:
+    UnexpectedSeqNumException( int tag, const char* messageName = "")
+    {
+        char buf[32];
+        sprintf(buf,"%u",tag);
+        message="Unexpected seqNum in message '";
+        message+=messageName;
+        message+="':";
+        message+=buf;
+    }
 };
 
 class NetworkErrorException:public PvapException{

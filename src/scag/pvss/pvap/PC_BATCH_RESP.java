@@ -11,31 +11,31 @@ public class PC_BATCH_RESP
 {
     // static Logger logger = Logger.getLogger(PC_BATCH_RESP.class);
 
-    static final short statusTag = 1;
-    static final short countTag = 22;
+    static final int statusTag = 1;
+    static final int batchContentTag = 23;
 
     int seqNum;
     byte status;
     boolean statusFlag=false;
-    short count;
-    boolean countFlag=false;
+    BatchCmdArray batchContent;
+    boolean batchContentFlag=false;
 
     public PC_BATCH_RESP() {
     }
 
-    public PC_BATCH_RESP(int seqNum, byte status , short count)
+    public PC_BATCH_RESP(int seqNum, byte status , BatchCmdArray batchContent)
     {
         this.seqNum = seqNum;
         this.status = status;
         this.statusFlag = true;
-        this.count = count;
-        this.countFlag = true;
+        this.batchContent = batchContent;
+        this.batchContentFlag = true;
     }
  
     public void clear()
     {
         statusFlag=false;
-        countFlag=false;
+        batchContentFlag=false;
     }
  
     public String toString()
@@ -48,14 +48,15 @@ public class PC_BATCH_RESP
             sb.append(";status=");
             sb.append(status);
         }
-        if (countFlag) {
-            sb.append(";count=");
-            sb.append(count);
+        if (batchContentFlag) {
+            sb.append(";batchContent=");
+            sb.append(batchContent.toString());
         }
         return sb.toString();
     }
 
-    public byte getStatus() throws FieldIsNullException
+    public byte getStatus()
+           throws FieldIsNullException
     {
         if(!statusFlag)
         {
@@ -75,59 +76,68 @@ public class PC_BATCH_RESP
         return statusFlag;
     }
 
-    public short getCount() throws FieldIsNullException
+    public BatchCmdArray getBatchContent()
+           throws FieldIsNullException
     {
-        if(!countFlag)
+        if(!batchContentFlag)
         {
-            throw new FieldIsNullException("count");
+            throw new FieldIsNullException("batchContent");
         }
-        return count;
+        return batchContent;
     }
 
-    public void setCount(short count)
+    public void setBatchContent(BatchCmdArray batchContent)
     {
-        this.count = count;
-        this.countFlag = true;
+        this.batchContent = batchContent;
+        this.batchContentFlag = true;
     }
 
-    public boolean hasCount()
+    public boolean hasBatchContent()
     {
-        return countFlag;
+        return batchContentFlag;
     }
 
-    public void encode( IBufferWriter writer ) throws java.io.IOException
+    public void encode( PVAP proto, IBufferWriter writer ) throws java.io.IOException
     {
         checkFields();
         // mandatory fields
+        System.out.println("write pos=" + writer.getPos() + " field=" + statusTag);
         writer.writeTag(statusTag);
         writer.writeByteLV(status);
-        writer.writeTag(countTag);
-        writer.writeShortLV(count);
+        System.out.println("write pos=" + writer.getPos() + " field=" + batchContentTag);
+        writer.writeTag(batchContentTag);
+        batchContent.encode(proto,writer);
         // optional fields
     }
 
-    public void decode( IBufferReader reader ) throws java.io.IOException
+    public void decode( PVAP proto, IBufferReader reader ) throws java.io.IOException
     {
         clear();
-        // seqNum = reader.readInt();
         while( true ) {
-            short tag = reader.readTag();
-            // System.out.println("tag got:" + tag);
-            if ( tag == (short)0xFFFF ) break;
+            int pos = reader.getPos();
+            int tag = reader.readTag();
+            System.out.println("read pos=" + pos + " field=" + tag);
+            if ( tag == -1 ) break;
             switch( tag ) {
             case statusTag: {
+                if (statusFlag) {
+                    throw new DuplicateFieldException("status");
+                }
                 status=reader.readByteLV();
                 statusFlag=true;
                 break;
             }
-            case countTag: {
-                count=reader.readShortLV();
-                countFlag=true;
+            case batchContentTag: {
+                if (batchContentFlag) {
+                    throw new DuplicateFieldException("batchContent");
+                }
+                batchContent = new BatchCmdArray();
+                batchContent.decode(proto,reader);
+                batchContentFlag=true;
                 break;
             }
             default:
-                System.err.println("unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + getClass().getName());
-                // logger.warn( "unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + PC_BATCH_RESP.class.getName() );
+                throw new NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();
@@ -149,8 +159,8 @@ public class PC_BATCH_RESP
         if (!statusFlag) {
             throw new MandatoryFieldMissingException("status");
         }
-        if (!countFlag) {
-            throw new MandatoryFieldMissingException("count");
+        if (!batchContentFlag) {
+            throw new MandatoryFieldMissingException("batchContent");
         }
         // checking optional fields
     }

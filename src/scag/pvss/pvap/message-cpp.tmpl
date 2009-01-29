@@ -7,6 +7,7 @@
 #include "util/int.h"
 #include <string>
 #include "Exceptions.h"
+#include "TypeId.h"
 $foreach field$
 $select field.type$
 $case byte$
@@ -14,32 +15,42 @@ $case uint16$
 $case uint32$
 $case uint64$
 $case string$
+$case ascii$
+$case utf8$
 $case bool$
 $case nested$#include "$var field.typename$.hpp"
 $default$#include "$var field.type$.h"
 $-select$
 $-foreach$
+$if options.inheritsFromBatchCmd$#include "BC_CMD.h"$-if$
 
 $macro type$$pack$
-  $select %1$
-  $case byte$uint8_t
-  $case uint16$uint16_t
-  $case uint32$uint32_t
-  $case uint64$uint64_r
-  $case string$const std::string&
-  $case bool$bool
-  $case nested$const $var field.typename$&
-  $default$const $var field.type$&
-  $-select$
-$-pack$$-macro$
+$select %1$
+ $case byte$uint8_t
+ $case uint16$uint16_t
+ $case uint32$uint32_t
+ $case uint64$uint64_r
+ $case string$const std::string&
+ $case ascii$const std::string&
+ $case utf8$const std::string&
+ $case bool$bool
+ $case nested$const $var field.typename$&
+ $default$const $var field.type$&
+$-select$$-pack$$-macro$
 
 $foreach namespace$
 namespace $var namespace${
 $-foreach$
 
+// class $var protocol.name:ucf$;
+
 class $var message.name$ $if options.inheritsFromBatchCmd$: public BC_CMD$-if$ 
 {
 public:
+$if options.inheritsFromBatchCmd$
+    inline int getId() const throw () { return TypeId<$var message.name$>::getId(); }
+
+$-if$
     $var message.name$()
     {
         clear();
@@ -75,6 +86,10 @@ $case uint64$
             rv+=buf;
 $case string$
             rv+=$var field.name$;
+$case ascii$
+            rv+=$var field.name$;
+$case utf8$
+            rv+=$var field.name$;
 $case bool$
             rv+=$var field.name$?"true":"false";
 $case nested$
@@ -89,6 +104,7 @@ $-foreach$
         return rv;
     }
 
+    /*
     template <class DataStream> uint32_t length()const
     {
         uint32_t rv=0;
@@ -101,9 +117,13 @@ $foreach field$
 $-foreach$
         return rv;
     }
+     */
 
 $foreach field$
-  $expand type field.type$ get$var field.name:ucf$() const
+    $expand type field.type$ get$var field.name:ucf$() const
+$if options.throwOnUnsetGet$
+        throw (FieldIsNullException)
+$-if$
     {
 $if options.throwOnUnsetGet$
         if (!$var field.name$Flag) {
@@ -112,7 +132,6 @@ $if options.throwOnUnsetGet$
 $-if$
         return $var field.name$;
     }
-
     void set$var field.name:ucf$($expand type field.type$ value)
     {
         $var field.name$=value;
@@ -124,26 +143,26 @@ $-if$
     }
 $-foreach$
 
-    template <class DataStream> void serialize(DataStream& ds) const
+    template <class Proto, class DataStream> 
+        void serialize( const Proto& proto, DataStream& ds ) const throw (PvapException)
     {
         checkFields();
         // mandatory fields
 $foreach field$
 $if field.mandatory$
+        printf( "write pos=%d field=%d\n", ds.getPos(), $var field.name$Tag );
         ds.writeTag($var field.name$Tag);
-    $select field.type$
+        $select field.type$
 $case string$ds.writeStrLV($var field.name$);
+$case ascii$ds.writeByteStringLV($var field.name$);
+$case utf8$ds.writeByteStringLV($var field.name$);
 $case byte$ds.writeByteLV($var field.name$);
 $case uint16$ds.writeInt16LV($var field.name$);
 $case uint32$ds.writeInt32LV($var field.name$);
 $case uint64$ds.writeInt64LV($var field.name$);
 $case bool$ds.writeBoolLV($var field.name$);
-$case nested$ds.writeLength($var field.name$.length<DataStream>());
-        $var field.name$.serialize(ds);
-$default$
-$ifdef field.serializer$
-        ds.get$var field.serializer$().serialize(ds,$var field.name$);
-$-ifdef$
+$case nested$throw NotImplementedException("$var field.name$");
+$default$$var field.name$.serialize(proto,ds);
 $-select$
 $-if$
 $-foreach$
@@ -151,73 +170,58 @@ $-foreach$
 $foreach field$
 $if field.optional$
         if ($var field.name$Flag) {
+            printf( "write pos=%d field=%d\n", ds.getPos(), $var field.name$Tag );
             ds.writeTag($var field.name$Tag);
-      $select field.type$
+            $select field.type$
 $case byte$ds.writeByteLV($var field.name$);
 $case uint16$ds.writeInt16LV($var field.name$);
 $case uint32$ds.writeInt32LV($var field.name$);
 $case uint64$ds.writeInt64LV($var field.name$);
 $case string$ds.writeStrLV($var field.name$);
+$case ascii$ds.writeByteStringLV($var field.name$);
+$case utf8$ds.writeByteStringLV($var field.name$);
 $case bool$ds.writeBoolLV($var field.name$);
-$case nested$ds.writeLength($var field.name$.length<DataStream>());
-            $var field.name$.serialize(ds);
-$default$
-$ifdef field.serialize$
-            ds.get$var field.serializer$().serialize(ds,$var field.name$);
-$-ifdef$
+$case nested$throw NotImplementedException("$var field.name$");
+$default$$var field.name$.serialize(proto,ds);
 $-select$
         }
 $-if$
 $-foreach$
-        //ds.writeTag(DataStream::endOfMessage_tag);
     }
 
-    template <class DataStream> void deserialize(DataStream& ds)
+    template <class Proto, class DataStream> void deserialize(const Proto& proto, DataStream& ds)
+        throw (PvapException)
     {
         clear();
-        bool endOfMessage=false;
-        //uint8_t rdVersionMajor=ds.readByte();
-        //uint8_t rdVersionMinor=ds.readByte();
-        //if(rdVersionMajor!=versionMajor)
-        //{
-        //  throw IncompatibleVersionException("$var message.name$");
-        //}
-        //seqNum=ds.readInt32();
-        while (!endOfMessage) {
-            uint32_t tag=ds.readTag();
+        while (true) {
+            int pos = int(ds.getPos());
+            int tag = ds.readTag();
+            printf( "read pos=%d field=%d\n", pos, tag );
+            if ( tag == -1 ) break;
             switch(tag) {
 $foreach field$
             case $var field.name$Tag: {
                 if ($var field.name$Flag) {
                     throw DuplicateFieldException("$var field.name$");
                 }
-          $select field.type$
+                $select field.type$
 $case byte$$var field.name$=ds.readByteLV();
 $case uint16$$var field.name$=ds.readInt16LV();
 $case uint32$$var field.name$=ds.readInt32LV();
 $case uint64$$var field.name$=ds.readInt64LV();
 $case string$$var field.name$=ds.readStrLV();
+$case ascii$$var field.name$=ds.readByteStringLV();
+$case utf8$$var field.name$=ds.readByteStringLV();
 $case bool$$var field.name$=ds.readBoolLV();
-$case nested$ds.readLength();
-                $var field.name$.deserialize(ds);
-$default$
-$ifdef field.serializer$
-                ds.get$var field.serializer$().deserialize(ds,$var field.name$);
-$-ifdef$
+$case nested$throw NotImplementedException("$var field.name$");
+$default$$var field.name$.deserialize(proto,ds);
 $-select$
                 $var field.name$Flag=true;
                 break;
             }
 $-foreach$
-            case DataStream::endOfMessage_tag:
-                endOfMessage=true;
-                break;
             default:
-                //if(rdVersionMinor==versionMinor)
-                //{
-                //  throw UnexpectedTag("$var message.name$",tag);
-                //}
-                ds.skip(ds.readLength());
+                throw NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();
@@ -240,7 +244,9 @@ protected:
 $foreach field$
 $if field.mandatory$
         if (!$var field.name$Flag) {
-            throw MandatoryFieldMissingException("$var field.name$");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "$var field.name$", "$var message.name$");
+            throw MandatoryFieldMissingException(buf);
         }
 $-if$
 $-foreach$
@@ -259,7 +265,9 @@ $ifdef field.checkLt$
             && ($var field.checkVar$<$var field.checkLt$)
 $-ifdef$
             ) {
-            throw MandatoryFieldMissingException("$var field.name$");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "$var field.name$", "$var message.name$");
+            throw MandatoryFieldMissingException(buf);
         }
 $-ifdef$
 $-if$
@@ -271,7 +279,7 @@ protected:
     //static const uint8_t versionMinor=$var message.versionMinor$;
 
 $foreach field$
-    static const uint16_t $var field.name$Tag=$var field.tag$;
+    static const int $var field.name$Tag=$var field.tag$;
 $-foreach$
 
     uint32_t seqNum;
@@ -285,6 +293,8 @@ $-ifdef$    $pack$
   $case uint32$uint32_t
   $case uint64$uint64_t
   $case string$std::string
+  $case ascii$std::string
+  $case utf8$std::string
   $case bool$bool
   $case nested$$var field.typename$
   $default$$var field.type$

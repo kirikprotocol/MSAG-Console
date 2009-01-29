@@ -12,8 +12,6 @@ namespace scag {
 namespace pvss {
 namespace pvap {
 
-class PVAPBC;
-
 class Serializer
 {
 public:
@@ -22,27 +20,48 @@ public:
     enum{endOfMessage_tag=0xffff};
 
 public:
-    Serializer( size_t size = 256 ) :
+    Serializer( size_t size = 0 ) :
     owned(true), buf(0), pos(0), dataSize(0), bufSize(size) {
-        if (bufSize) buf = new char[bufSize];
+        if ( bufSize ) buf = new char[bufSize];
     }
-  
+
+    ~Serializer() {
+        clear();
+        if ( buf ) delete[] buf;
+    }
+
+    /// reading my contents from another serializer
+    /// NOTE: the contents actually is not copied, so s should exists until the death of this.
+    void read( Serializer& s ) throw (PvapException)
+    {
+        clear();
+        size_t sz = s.readInt32();
+        setData( s.buf+s.pos, sz, false );
+        s.pos += sz;
+    }
+
+    void write( Serializer& s ) const throw (PvapException)
+    {
+        s.resize(4+pos);
+        s.writeInt32(uint32_t(pos));
+        memcpy(s.buf+s.pos, buf, pos );
+        s.pos += pos;
+    }
+
     void clear()
     {
         pos = 0;
         dataSize = 0;
-        if (owned) delete[] buf;
-        buf = 0;
-        bufSize = 0;
-        owned = true;
+        if (!owned) {
+            buf = 0;
+            owned = true;
+        }
     }
 
-    PVAPBC& getPVAPBC();
-
-    void writeTag(uint16_t tag)
+    void writeTag( int tag )
     {
         resize(2);
-        uint16_t netvalue=htons(tag);
+        uint16_t netvalue = htons( uint16_t(tag & 0xffff) );
         memcpy(buf+pos,&netvalue,2);
         pos+=2;
     }
@@ -119,6 +138,14 @@ public:
         writeLength(unsigned(value.length())*2);
         writeStr(value);
     }
+
+    void writeByteStringLV( const std::string& value )
+    {
+        const uint16_t sz = uint16_t(value.size());
+        writeLength(sz);
+        memcpy(buf+pos, value.c_str(), sz);
+        pos += sz;
+    }
 	
     bool hasMoreData()
     {
@@ -127,19 +154,22 @@ public:
   
     uint16_t readLength()
     {
-        if(pos+2>dataSize)
-        {
+        if (pos+2>dataSize) {
             throw ReadBeyondEof();
         }
         uint16_t rv;
         memcpy(&rv,buf+pos,2);
         pos+=2;
-        return htons(rv);
+        rv = htons(rv);
+        if (pos+rv>dataSize) {
+            throw ReadBeyondEof();
+        }
+        return rv;
     }
-    uint16_t readTag()
+    int readTag()
     {
         if (pos == dataSize) {
-            return endOfMessage_tag;
+            return -1;
         }
         if(pos+2>dataSize)
         {
@@ -148,7 +178,9 @@ public:
         uint16_t rv;
         memcpy(&rv,buf+pos,2);
         pos+=2;
-        return htons(rv);
+        rv = htons(rv);
+        if ( rv == 0xffff ) return -1;
+        return int(uint32_t(rv));
     }
     uint8_t readByte()
     {
@@ -198,10 +230,6 @@ public:
     std::string readStrLV()
     {
         uint16_t length=readLength();
-        if(pos+length>dataSize)
-        {
-            throw ReadBeyondEof();
-        }
         std::string rv;
         for(int i=0;i<length/2;i++)
         {
@@ -212,6 +240,14 @@ public:
         return rv;
     }
 	
+    std::string readByteStringLV()
+    {
+        uint16_t sz = readLength();
+        std::string rv(buf+pos,sz);
+        pos += sz;
+        return rv;
+    }
+
     bool readBoolLV()
     {
         uint16_t len=readLength();
@@ -222,7 +258,7 @@ public:
         return readBool();
     }
 	
-    bool readByteLV()
+    uint8_t readByteLV()
     {
         uint16_t len=readLength();
         if(len!=1)
@@ -232,7 +268,7 @@ public:
         return readByte();
     }
 	
-    bool readInt16LV()
+    uint16_t readInt16LV()
     {
         uint16_t len=readLength();
         if(len!=2)
@@ -242,7 +278,7 @@ public:
         return readInt16();
     }
 	
-    bool readInt32LV()
+    uint32_t readInt32LV()
     {
         uint16_t len=readLength();
         if(len!=4)
@@ -279,7 +315,7 @@ public:
         pos=0;
     }
 
-    void setData( const char* data,size_t size, bool doCopy = true )
+    void setData( const char* data, size_t size, bool doCopy = true )
     {
         pos=0;
         if ( doCopy ) {
@@ -288,6 +324,7 @@ public:
         } else {
             // using external buffer
             clear();
+            if ( buf ) delete [] buf;
             owned = false;
             buf = const_cast<char*>(data);
         }
@@ -308,14 +345,8 @@ public:
     char* prepareBuffer(uint32_t size)
     {
         pos=0;
-        if ( owned ) {
-            resize(size);
-        } else {
-            clear();
-            owned = true;
-            bufSize = size;
-            buf = new char[bufSize];
-        }
+        if ( ! owned ) clear();
+        resize(size);
         dataSize=size;
         return buf;
     }

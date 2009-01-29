@@ -7,11 +7,15 @@
 #include "util/int.h"
 #include <string>
 #include "Exceptions.h"
+#include "TypeId.h"
+#include "BatchCmdArray.h"
 
 
 namespace scag{
 namespace pvss{
 namespace pvap{
+
+// class PVAP;
 
 class PC_BATCH  
 {
@@ -26,7 +30,7 @@ public:
         abonentKeyFlag=false;
         profileKeyFlag=false;
         batchModeFlag=false;
-        countFlag=false;
+        batchContentFlag=false;
     }
 
     std::string toString() const
@@ -51,17 +55,16 @@ public:
         }
         if(batchModeFlag) {
             rv+=";batchMode=";
-            sprintf(buf,"%u",(unsigned int)batchMode);
-            rv+=buf;
+            rv+=batchMode?"true":"false";
         }
-        if(countFlag) {
-            rv+=";count=";
-            sprintf(buf,"%u",(unsigned int)count);
-            rv+=buf;
+        if(batchContentFlag) {
+            rv+=";batchContent=";
+            rv+=batchContent.toString();
         }
         return rv;
     }
 
+    /*
     template <class DataStream> uint32_t length()const
     {
         uint32_t rv=0;
@@ -85,22 +88,23 @@ public:
             rv+=DataStream::lengthTypeSize;
             rv+=DataStream::fieldSize(batchMode);
         }
-        if (countFlag) {
+        if (batchContentFlag) {
             rv+=DataStream::tagTypeSize;
             rv+=DataStream::lengthTypeSize;
-            rv+=DataStream::fieldSize(count);
+            rv+=DataStream::fieldSize(batchContent);
         }
         return rv;
     }
+     */
 
-  uint8_t getProfileType() const
+    uint8_t getProfileType() const
+        throw (FieldIsNullException)
     {
         if (!profileTypeFlag) {
             throw FieldIsNullException("profileType");
         }
         return profileType;
     }
-
     void setProfileType(uint8_t value)
     {
         profileType=value;
@@ -110,14 +114,14 @@ public:
     {
         return profileTypeFlag;
     }
-  const std::string& getAbonentKey() const
+    const std::string& getAbonentKey() const
+        throw (FieldIsNullException)
     {
         if (!abonentKeyFlag) {
             throw FieldIsNullException("abonentKey");
         }
         return abonentKey;
     }
-
     void setAbonentKey(const std::string& value)
     {
         abonentKey=value;
@@ -127,14 +131,14 @@ public:
     {
         return abonentKeyFlag;
     }
-  uint32_t getProfileKey() const
+    uint32_t getProfileKey() const
+        throw (FieldIsNullException)
     {
         if (!profileKeyFlag) {
             throw FieldIsNullException("profileKey");
         }
         return profileKey;
     }
-
     void setProfileKey(uint32_t value)
     {
         profileKey=value;
@@ -144,15 +148,15 @@ public:
     {
         return profileKeyFlag;
     }
-  uint8_t getBatchMode() const
+    bool getBatchMode() const
+        throw (FieldIsNullException)
     {
         if (!batchModeFlag) {
             throw FieldIsNullException("batchMode");
         }
         return batchMode;
     }
-
-    void setBatchMode(uint8_t value)
+    void setBatchMode(bool value)
     {
         batchMode=value;
         batchModeFlag=true;
@@ -161,65 +165,66 @@ public:
     {
         return batchModeFlag;
     }
-  uint16_t getCount() const
+    const BatchCmdArray& getBatchContent() const
+        throw (FieldIsNullException)
     {
-        if (!countFlag) {
-            throw FieldIsNullException("count");
+        if (!batchContentFlag) {
+            throw FieldIsNullException("batchContent");
         }
-        return count;
+        return batchContent;
+    }
+    void setBatchContent(const BatchCmdArray& value)
+    {
+        batchContent=value;
+        batchContentFlag=true;
+    }
+    bool hasBatchContent()const
+    {
+        return batchContentFlag;
     }
 
-    void setCount(uint16_t value)
-    {
-        count=value;
-        countFlag=true;
-    }
-    bool hasCount()const
-    {
-        return countFlag;
-    }
-
-    template <class DataStream> void serialize(DataStream& ds) const
+    template <class Proto, class DataStream>
+        void serialize( const Proto& proto, DataStream& ds ) const throw (PvapException)
     {
         checkFields();
         // mandatory fields
+        printf( "write pos=%d field=%d\n", ds.getPos(), profileTypeTag );
         ds.writeTag(profileTypeTag);
-    ds.writeByteLV(profileType);
+        ds.writeByteLV(profileType);
+        printf( "write pos=%d field=%d\n", ds.getPos(), batchModeTag );
         ds.writeTag(batchModeTag);
-    ds.writeByteLV(batchMode);
-        ds.writeTag(countTag);
-    ds.writeInt16LV(count);
+        ds.writeBoolLV(batchMode);
+        printf( "write pos=%d field=%d\n", ds.getPos(), batchContentTag );
+        ds.writeTag(batchContentTag);
+        batchContent.serialize(proto,ds);
         // optional fields
         if (abonentKeyFlag) {
+            printf( "write pos=%d field=%d\n", ds.getPos(), abonentKeyTag );
             ds.writeTag(abonentKeyTag);
-      ds.writeStrLV(abonentKey);
+            ds.writeByteStringLV(abonentKey);
         }
         if (profileKeyFlag) {
+            printf( "write pos=%d field=%d\n", ds.getPos(), profileKeyTag );
             ds.writeTag(profileKeyTag);
-      ds.writeInt32LV(profileKey);
+            ds.writeInt32LV(profileKey);
         }
-        //ds.writeTag(DataStream::endOfMessage_tag);
     }
 
-    template <class DataStream> void deserialize(DataStream& ds)
+    template <class Proto, class DataStream> void deserialize(const Proto& proto, DataStream& ds)
+        throw (PvapException)
     {
         clear();
-        bool endOfMessage=false;
-        //uint8_t rdVersionMajor=ds.readByte();
-        //uint8_t rdVersionMinor=ds.readByte();
-        //if(rdVersionMajor!=versionMajor)
-        //{
-        //  throw IncompatibleVersionException("PC_BATCH");
-        //}
-        //seqNum=ds.readInt32();
-        while (!endOfMessage) {
-            uint32_t tag=ds.readTag();
+        while (true) {
+            int pos = int(ds.getPos());
+            int tag = ds.readTag();
+            printf( "read pos=%d field=%d\n", pos, tag );
+            if ( tag == -1 ) break;
             switch(tag) {
             case profileTypeTag: {
                 if (profileTypeFlag) {
                     throw DuplicateFieldException("profileType");
                 }
-          profileType=ds.readByteLV();
+                profileType=ds.readByteLV();
                 profileTypeFlag=true;
                 break;
             }
@@ -227,7 +232,7 @@ public:
                 if (abonentKeyFlag) {
                     throw DuplicateFieldException("abonentKey");
                 }
-          abonentKey=ds.readStrLV();
+                abonentKey=ds.readByteStringLV();
                 abonentKeyFlag=true;
                 break;
             }
@@ -235,7 +240,7 @@ public:
                 if (profileKeyFlag) {
                     throw DuplicateFieldException("profileKey");
                 }
-          profileKey=ds.readInt32LV();
+                profileKey=ds.readInt32LV();
                 profileKeyFlag=true;
                 break;
             }
@@ -243,27 +248,20 @@ public:
                 if (batchModeFlag) {
                     throw DuplicateFieldException("batchMode");
                 }
-          batchMode=ds.readByteLV();
+                batchMode=ds.readBoolLV();
                 batchModeFlag=true;
                 break;
             }
-            case countTag: {
-                if (countFlag) {
-                    throw DuplicateFieldException("count");
+            case batchContentTag: {
+                if (batchContentFlag) {
+                    throw DuplicateFieldException("batchContent");
                 }
-          count=ds.readInt16LV();
-                countFlag=true;
+                batchContent.deserialize(proto,ds);
+                batchContentFlag=true;
                 break;
             }
-            case DataStream::endOfMessage_tag:
-                endOfMessage=true;
-                break;
             default:
-                //if(rdVersionMinor==versionMinor)
-                //{
-                //  throw UnexpectedTag("PC_BATCH",tag);
-                //}
-                ds.skip(ds.readLength());
+                throw NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();
@@ -284,25 +282,35 @@ protected:
     {
         // checking mandatory fields
         if (!profileTypeFlag) {
-            throw MandatoryFieldMissingException("profileType");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "profileType", "PC_BATCH");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!batchModeFlag) {
-            throw MandatoryFieldMissingException("batchMode");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "batchMode", "PC_BATCH");
+            throw MandatoryFieldMissingException(buf);
         }
-        if (!countFlag) {
-            throw MandatoryFieldMissingException("count");
+        if (!batchContentFlag) {
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "batchContent", "PC_BATCH");
+            throw MandatoryFieldMissingException(buf);
         }
         // checking optional fields
         if (!abonentKeyFlag
             && (profileType==1)
             ) {
-            throw MandatoryFieldMissingException("abonentKey");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "abonentKey", "PC_BATCH");
+            throw MandatoryFieldMissingException(buf);
         }
         if (!profileKeyFlag
             && (profileType>1)
             && (profileType<5)
             ) {
-            throw MandatoryFieldMissingException("profileKey");
+            char buf[256];
+            snprintf( buf, sizeof(buf), "field=%s msg=%s", "profileKey", "PC_BATCH");
+            throw MandatoryFieldMissingException(buf);
         }
     }
 
@@ -310,25 +318,25 @@ protected:
     //static const uint8_t versionMajor=2;
     //static const uint8_t versionMinor=0;
 
-    static const uint16_t profileTypeTag=2;
-    static const uint16_t abonentKeyTag=3;
-    static const uint16_t profileKeyTag=4;
-    static const uint16_t batchModeTag=21;
-    static const uint16_t countTag=22;
+    static const int profileTypeTag=2;
+    static const int abonentKeyTag=3;
+    static const int profileKeyTag=4;
+    static const int batchModeTag=21;
+    static const int batchContentTag=23;
 
     uint32_t seqNum;
 
     uint8_t profileType;
     std::string abonentKey;
     uint32_t profileKey;
-    uint8_t batchMode;
-    uint16_t count;
+    bool batchMode;
+    BatchCmdArray batchContent;
 
     bool profileTypeFlag;
     bool abonentKeyFlag;
     bool profileKeyFlag;
     bool batchModeFlag;
-    bool countFlag;
+    bool batchContentFlag;
 };
 
 } // namespace scag

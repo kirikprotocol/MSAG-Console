@@ -11,7 +11,7 @@ public class PC_DEL_RESP
 {
     // static Logger logger = Logger.getLogger(PC_DEL_RESP.class);
 
-    static final short statusTag = 1;
+    static final int statusTag = 1;
 
     int seqNum;
     byte status;
@@ -45,7 +45,8 @@ public class PC_DEL_RESP
         return sb.toString();
     }
 
-    public byte getStatus() throws FieldIsNullException
+    public byte getStatus()
+           throws FieldIsNullException
     {
         if(!statusFlag)
         {
@@ -65,32 +66,35 @@ public class PC_DEL_RESP
         return statusFlag;
     }
 
-    public void encode( IBufferWriter writer ) throws java.io.IOException
+    public void encode( PVAP proto, IBufferWriter writer ) throws java.io.IOException
     {
         checkFields();
         // mandatory fields
+        System.out.println("write pos=" + writer.getPos() + " field=" + statusTag);
         writer.writeTag(statusTag);
         writer.writeByteLV(status);
         // optional fields
     }
 
-    public void decode( IBufferReader reader ) throws java.io.IOException
+    public void decode( PVAP proto, IBufferReader reader ) throws java.io.IOException
     {
         clear();
-        // seqNum = reader.readInt();
         while( true ) {
-            short tag = reader.readTag();
-            // System.out.println("tag got:" + tag);
-            if ( tag == (short)0xFFFF ) break;
+            int pos = reader.getPos();
+            int tag = reader.readTag();
+            System.out.println("read pos=" + pos + " field=" + tag);
+            if ( tag == -1 ) break;
             switch( tag ) {
             case statusTag: {
+                if (statusFlag) {
+                    throw new DuplicateFieldException("status");
+                }
                 status=reader.readByteLV();
                 statusFlag=true;
                 break;
             }
             default:
-                System.err.println("unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + getClass().getName());
-                // logger.warn( "unknown tagId: " + tag + " seqnum: " + seqNum + " msg: " + PC_DEL_RESP.class.getName() );
+                throw new NotImplementedException("reaction of reading unknown");
             }
         }
         checkFields();
