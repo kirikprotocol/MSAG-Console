@@ -24,8 +24,8 @@ my @OUT_FIELDS;
 {field=>'ACTION_CODE',width=>3},                # pos=243 action code
 {value=>'0',width=>10},                         # pos=246
 {field=>'MSG_ID',width=>10,maxwidth=>10},       # pos=256
-{field=>'IN_BILL',value=>'0',width=>1},         # pos=266
-{value=>'0',width=>1},                          # pos=267
+{value=>'0',width=>1},                          # pos=266
+{field=>'IN_BILL',value=>'0',width=>1},         # pos=267
 {value=>'0',width=>1},                          # pos=268
 {value=>'0',width=>1},                          # pos=269
 {value=>'0',width=>10},                         # pos=270
