@@ -6,8 +6,8 @@
 
 #include "util/int.h"
 #include <string>
-#include "Exceptions.h"
-#include "TypeId.h"
+#include "scag/pvss/pvap/Exceptions.h"
+#include "scag/pvss/pvap/TypeId.h"
 $foreach field$
 $select field.type$
 $case byte$
@@ -19,10 +19,10 @@ $case ascii$
 $case utf8$
 $case bool$
 $case nested$#include "$var field.typename$.hpp"
-$default$#include "$var field.type$.h"
+$default$#include "scag/pvss/pvap/$var field.type$.h"
 $-select$
 $-foreach$
-$if options.inheritsFromBatchCmd$#include "BC_CMD.h"$-if$
+$if options.inheritsFromBatchCmd$#include "scag/pvss/pvap/BatchCmd.h"$-if$
 
 $macro type$$pack$
 $select %1$
@@ -44,7 +44,7 @@ $-foreach$
 
 // class $var protocol.name:ucf$;
 
-class $var message.name$ $if options.inheritsFromBatchCmd$: public BC_CMD$-if$ 
+class $var message.name$ $if options.inheritsFromBatchCmd$: public BatchCmd$-if$ 
 {
 public:
 $if options.inheritsFromBatchCmd$
@@ -55,6 +55,11 @@ $-if$
     {
         clear();
     }
+
+    bool isRequest() const {
+        return $if message.request$true$-if$$if !message.request$false$-if$;
+    }
+
     void clear()
     {
 $foreach field$

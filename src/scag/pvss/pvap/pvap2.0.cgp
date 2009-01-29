@@ -6,7 +6,8 @@
 source=PvapProtocol.def
 
 search.path=./
-out.dir=./
+out.dir=generated-cpp/
+out.dir=generated-java/
 
 message.template=message-cpp.tmpl
 message.template=message-java.tmpl

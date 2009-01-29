@@ -1,5 +1,5 @@
 #include <iostream>
-#include "PVAP.hpp"
+#include "generated-cpp/PVAP.hpp"
 #include "Serializer.h"
 
 using namespace scag2::pvss::pvap;

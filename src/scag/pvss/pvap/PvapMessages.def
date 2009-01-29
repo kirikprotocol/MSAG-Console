@@ -5,6 +5,7 @@ include types.def
 
 message PC_DEL      // 0x0001
     version 2.0
+    property request=true
     byte   profileType 2
     ascii  abonentKey  3 opt checkVar="profileType" checkEq=0x01
     uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
@@ -13,11 +14,13 @@ end
 
 message PC_DEL_RESP // 0x8001
     version 2.0
+    property request=false
     byte    status     1
 end
 
 message PC_SET      // 0x0002
     version 2.0
+    property request=true
     byte   profileType 2
     ascii  abonentKey  3 opt checkVar="profileType" checkEq=0x01
     uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
@@ -34,11 +37,13 @@ end
 
 message PC_SET_RESP // 0x8002
     version 2.0
+    property request=false
     byte   status      1
 end
 
 message PC_GET      // 0x0003
     version 2.0
+    property request=true
     byte   profileType 2
     ascii  abonentKey  3 opt checkVar="profileType" checkEq=0x01
     uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
@@ -47,6 +52,7 @@ end
 
 message PC_GET_RESP // 0x8003
     version 2.0
+    property request=false
     byte   status      1
     byte   valueType   6
     byte   timePolicy  7
@@ -61,6 +67,7 @@ end
 
 message PC_INC     // 0x0004
     version 2.0
+    property request=true
     byte   profileType 2
     ascii  abonentKey  3 opt checkVar="profileType" checkEq=0x01
     uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
@@ -74,12 +81,14 @@ end
 
 message PC_INC_RESP // 0x8004
     version 2.0
+    property request=false
     byte   status      1
     uint32 intValue    10  // result
 end
 
 message PC_INC_MOD  // 0x0005
     version 2.0
+    property request=true
     byte   profileType 2
     ascii  abonentKey  3 opt checkVar="profileType" checkEq=0x01
     uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
@@ -94,21 +103,25 @@ end
 
 message PC_INC_MOD_RESP // 0x8005
     version 2.0
+    property request=false
     byte   status      1
     uint32 intValue    10  // result, FIXME: ask VO if this field is filled if failed
 end
 
 message PC_PING       // 0x0006
     version 2.0
+    property request=true
 end
 
 message PC_PING_RESP  // 0x8006
     version 2.0
+    property request=false
     byte   status      1
 end
 
 message PC_AUTH       // 0x000a
     version 2.0
+    property request=true
     byte   protocolVersion 15
     ascii  login           16
     ascii  password        17
@@ -117,6 +130,7 @@ end
 
 message PC_AUTH_RESP  // 0x800a
     version 2.0
+    property request=false
     byte   status      1
     byte   clientType  19 opt checkVar="status" checkEq=0
     byte   sid         20 opt checkVar="status" checkEq=0
@@ -124,6 +138,7 @@ end
 
 message PC_BATCH      // 0x0007
     version 2.0
+    property request=true
     byte       profileType     2
     ascii      abonentKey      3 opt checkVar="profileType" checkEq=0x01
     uint32     profileKey      4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
@@ -133,6 +148,7 @@ end
 
 message PC_BATCH_RESP // 0x8007
     version 2.0
+    property request=false
     byte       status       1
     BatchCmdArray batchContent 23
 end

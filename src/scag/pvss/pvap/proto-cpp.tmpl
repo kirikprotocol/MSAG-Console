@@ -5,9 +5,9 @@
 #define __SCAG_PVSS_PVAP_$var protocol.name:uc$_HPP__
 
 #include <memory>
-#include "Serializer.h"
-#include "Exceptions.h"
-#include "TypeId.h"
+#include "scag/pvss/pvap/Serializer.h"
+#include "scag/pvss/pvap/Exceptions.h"
+#include "scag/pvss/pvap/TypeId.h"
 $foreach message$
 #include "$var message.name$.hpp"
 $-foreach$
@@ -77,7 +77,7 @@ $foreach message$
 $-foreach$
 $if options.inheritsFromBatchCmd$
 
-    void encodeCastMessage( const BC_CMD& msg, Serializer& ss ) const
+    void encodeCastMessage( const BatchCmd& msg, Serializer& ss ) const
         throw (PvapException)
     {
         const int msgId = msg.getId();

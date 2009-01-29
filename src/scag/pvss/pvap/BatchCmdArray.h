@@ -3,14 +3,14 @@
 
 #include <vector>
 #include "Exceptions.h"
-#include "BC_CMD.h"
-#include "PVAPBC.hpp"
+#include "BatchCmd.h"
+#include "generated-cpp/PVAPBC.hpp"
 
 namespace scag {
 namespace pvss {
 namespace pvap {
 
-class BC_CMD;
+class BatchCmd;
 class PVAP;
 
 class BatchCmdArray
@@ -32,7 +32,7 @@ private:
         virtual void handle( std::auto_ptr<BC_INC_MOD> obj ) { push(obj.release()); }
         virtual void handle( std::auto_ptr<BC_INC_MOD_RESP> obj ) { push(obj.release()); }
     private:
-        void push( BC_CMD* obj ) {
+        void push( BatchCmd* obj ) {
             array_->push(obj);
         }
     private:
@@ -65,7 +65,7 @@ public:
     }
 
     void clear() {
-        for ( std::vector<BC_CMD*>::iterator i = commands_.begin();
+        for ( std::vector<BatchCmd*>::iterator i = commands_.begin();
               i != commands_.end(); ++i ) {
             delete *i;
         }
@@ -73,14 +73,14 @@ public:
     }
 
     /// gets owned
-    void push( BC_CMD* cmd ) {
+    void push( BatchCmd* cmd ) {
         commands_.push_back( cmd );
     }
 
     std::string toString() const {
         std::string rv = "[";
         bool comma = false;
-        for ( std::vector<BC_CMD*>::const_iterator i = commands_.begin();
+        for ( std::vector<BatchCmd*>::const_iterator i = commands_.begin();
               i != commands_.end();
               ++i ) {
             if (comma) rv += ", ";
@@ -97,7 +97,7 @@ public:
         const uint16_t sz = size();
         writer.writeInt16( sz );
         DataStream subwriter;
-        for ( std::vector< BC_CMD* >::const_iterator i = commands_.begin();
+        for ( std::vector< BatchCmd* >::const_iterator i = commands_.begin();
               i != commands_.end();
               ++i ) {
             subwriter.clear();
@@ -123,15 +123,15 @@ public:
         return uint16_t(commands_.size());
     }
 
-    BC_CMD* getCommand( uint16_t i ) {
+    BatchCmd* getCommand( uint16_t i ) {
         return ( i < size() ? commands_[i] : 0 );
     }
-    const BC_CMD* getCommand( uint16_t i ) const {
+    const BatchCmd* getCommand( uint16_t i ) const {
         return const_cast<BatchCmdArray*>(this)->getCommand(i);
     }
 
 private:
-    std::vector< BC_CMD* > commands_; // owned
+    std::vector< BatchCmd* > commands_; // owned
 };
 
 } // namespace pvap

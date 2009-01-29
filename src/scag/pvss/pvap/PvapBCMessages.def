@@ -5,16 +5,19 @@ include types.def
 
 message BC_DEL        // 0x0001
     version 2.0
+    property request=true
     ascii   varName   5
 end
 
 message BC_DEL_RESP   // 0x8001
     version 2.0
+    property request=false
     byte    status    1
 end
 
 message BC_SET
     version 2.0
+    property request=true
     ascii  varName     5
     byte   valueType   6
     byte   timePolicy  7
@@ -28,16 +31,19 @@ end
 
 message BC_SET_RESP
     version 2.0
+    property request=false
     byte    status    1
 end
 
 message BC_GET      // 0x0003
     version 2.0
+    property request=true
     ascii  varName     5
 end
 
 message BC_GET_RESP
     version 2.0
+    property request=false
     byte   status      1
     byte   valueType   6
     byte   timePolicy  7
@@ -52,6 +58,7 @@ end
 
 message BC_INC     // 0x0004
     version 2.0
+    property request=true
     ascii  varName     5
     byte   valueType   6
     byte   timePolicy  7
@@ -62,12 +69,14 @@ end
 
 message BC_INC_RESP // 0x8004
     version 2.0
+    property request=false
     byte   status      1
     uint32 intValue    10  // result
 end
 
 message BC_INC_MOD  // 0x0005
     version 2.0
+    property request=true
     ascii  varName     5
     byte   valueType   6
     byte   timePolicy  7
@@ -79,6 +88,7 @@ end
 
 message BC_INC_MOD_RESP // 0x8005
     version 2.0
+    property request=false
     byte   status      1
     uint32 intValue    10  // result, FIXME: ask VO if this field is filled if failed
 end
