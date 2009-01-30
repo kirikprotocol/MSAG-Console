@@ -81,6 +81,7 @@ public class MissedCallServiceSkeleton {
       resp.setGetMissedCallsResult(missedCalls);
 
     } catch (Throwable e) {
+      log.error("Can't get missed calls", e);
       resp.setGetMissedCallsResult(new ArrayOfMissedCall());
     }
 
