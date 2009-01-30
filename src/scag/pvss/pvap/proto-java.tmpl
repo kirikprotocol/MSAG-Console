@@ -1,6 +1,8 @@
-package $var package$.generated;
+package $var package$.pvap.protocol.pdu;
 
-import $var package$.*;
+import $var package$.pvap.*;
+import $var package$.pvap.protocol.*;
+import $var package$.common.PvapException;
 
 /**
  * This protocol has header: len (4 oct), seq (4 oct), tag ( 2 oct.), message body
@@ -14,7 +16,7 @@ $-foreach$
     public static interface Handler {
         public boolean hasSeqNum( int seqNum );
 $foreach message$
-        public void handle( $var message.name$ object );
+        public void handle( $var message.name$ object ) throws PvapException;
 $-foreach$
     }
 

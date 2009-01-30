@@ -1,6 +1,8 @@
-package $var package$.generated;
+package $var package$.pvap.protocol.pdu;
 
-import $var package$.*;
+import $var package$.pvap.*;
+import $var package$.pvap.protocol.*;
+import $var package$.common.PvapException;
 
 $macro type$$pack$
 $select %1$
@@ -33,6 +35,11 @@ $-foreach$
     public $var message.name$() {
     }
 
+    public $var message.name$( int seqNum ) {
+        this.seqNum = seqNum;
+    }
+
+    /*
     public $var message.name$(int seqNum$pack$
 $foreach field$
 , $expand type field.type$ $var field.name$
@@ -45,6 +52,7 @@ $foreach field$
         this.$var field.name$Flag = true;
 $-foreach$
     }
+     */
   
     public boolean isRequest() {
         return $if message.request$true$-if$$if !message.request$false$-if$;
@@ -64,7 +72,7 @@ $-foreach$
         sb.append("seqNum=");
         sb.append(seqNum);
 $foreach field$
-        if ($var field.name$Flag) {
+        if ( has$var field.name:ucf$() ) {
             sb.append(";$var field.name$=");
             $pack$$select field.type$
             $case bool$sb.append($var field.name$);
@@ -77,7 +85,6 @@ $foreach field$
             $case utf8$sb.append($var field.name$);
             $default$sb.append($var field.name$.toString());
             $-select$$-pack$
-
         }
 $-foreach$
         return sb.toString();
@@ -90,8 +97,7 @@ $if options.throwOnUnsetGet$
 $-if$
     {
 $if options.throwOnUnsetGet$
-        if(!$var field.name$Flag)
-        {
+        if( ! has$var field.name:ucf$() ) {
             throw new FieldIsNullException(isRequest(), "field $var field.name$ of $var message.name$ is not set", seqNum);
         }
 $-if$
@@ -102,20 +108,54 @@ $-if$
     {
         this.$var field.name$ = $var field.name$;
         this.$var field.name$Flag = true;
+$if field.optional$
+$ifdef field.checkVar$
+        $var field.checkVar$ = $var field.checkVal$;
+        $var field.checkVar$Flag = true;
+$-ifdef$
+$-if$
     }
 
     public boolean has$var field.name:ucf$()
     {
-        return $var field.name$Flag;
+        return $var field.name$Flag$if field.optional$$ifdef field.checkVar$ && ( $var field.checkVar$ == $var field.checkVal$ )$-ifdef$$-if$;
     }
 $-foreach$
 
     public void encode( $var protocol.name:ucf$ proto, IBufferWriter writer ) throws PvapException
     {
         checkFields();
-            // mandatory fields
+        // mandatory fields
 $foreach field$
 $if field.mandatory$
+        // System.out.println("write pos=" + writer.getPos() + " field=" + $var field.name$Tag);
+        writer.writeTag($var field.name$Tag);
+        $select field.type$
+$case string$writer.writeStringLV($var field.name$);
+$case ascii$try {
+            writer.writeUTFLV($var field.name$);
+        } catch ( java.io.IOException e ) {
+            throw new PvapSerializationException( isRequest(), "writing ascii field $var field.name$ in $var message.name$:" + e.getMessage(), seqNum );
+        }
+$case utf8$try {
+            writer.writeUTFLV($var field.name$);
+        } catch ( java.io.IOException e ) {
+            throw new PvapSerializationException( isRequest(), "writing utf8 field $var field.name$ in $var message.name$:" + e.getMessage(), seqNum );
+        }
+$case byte$writer.writeByteLV($var field.name$);
+$case uint16$writer.writeShortLV($var field.name$);
+$case uint32$writer.writeIntLV($var field.name$);
+$case uint64$writer.writeLongLV($var field.name$);
+$case bool$writer.writeBoolLV($var field.name$);
+$case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet", seqNum);
+$default$$var field.name$.encode(proto,writer);
+$-select$
+$-if$
+$-foreach$
+        // optional fields
+$foreach field$
+$if field.optional$
+        if ( has$var field.name:ucf$() ) {
             // System.out.println("write pos=" + writer.getPos() + " field=" + $var field.name$Tag);
             writer.writeTag($var field.name$Tag);
             $select field.type$
@@ -135,38 +175,10 @@ $case uint16$writer.writeShortLV($var field.name$);
 $case uint32$writer.writeIntLV($var field.name$);
 $case uint64$writer.writeLongLV($var field.name$);
 $case bool$writer.writeBoolLV($var field.name$);
-$case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet", seqNum);
-$default$$var field.name$.encode(proto,writer);
-$-select$
-$-if$
-$-foreach$
-            // optional fields
-$foreach field$
-$if field.optional$
-            if ($var field.name$Flag) {
-                // System.out.println("write pos=" + writer.getPos() + " field=" + $var field.name$Tag);
-                writer.writeTag($var field.name$Tag);
-                $select field.type$
-$case string$writer.writeStringLV($var field.name$);
-$case ascii$try {
-                    writer.writeUTFLV($var field.name$);
-                } catch ( java.io.IOException e ) {
-                    throw new PvapSerializationException( isRequest(), "writing ascii field $var field.name$ in $var message.name$:" + e.getMessage(), seqNum );
-                }
-$case utf8$try {
-                    writer.writeUTFLV($var field.name$);
-                } catch ( java.io.IOException e ) {
-                    throw new PvapSerializationException( isRequest(), "writing utf8 field $var field.name$ in $var message.name$:" + e.getMessage(), seqNum );
-                }
-$case byte$writer.writeByteLV($var field.name$);
-$case uint16$writer.writeShortLV($var field.name$);
-$case uint32$writer.writeIntLV($var field.name$);
-$case uint64$writer.writeLongLV($var field.name$);
-$case bool$writer.writeBoolLV($var field.name$);
 $case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet",seqNum);
 $default$$var field.name$.encode(proto,writer);
 $-select$
-            }
+        }
 $-if$
 $-foreach$
     }
@@ -211,6 +223,7 @@ $-foreach$
         } catch ( java.io.IOException e ) {
             throw new PvapSerializationException( isRequest(), "reading field tag=" + tag + " of $var message.name$:" + e.getMessage(), seqNum );
         }
+        // checking integrity
         checkFields();
     }
 
@@ -238,17 +251,7 @@ $-foreach$
 $foreach field$
 $if field.optional$
 $ifdef field.checkVar$
-        if (!$var field.name$Flag
-$ifdef field.checkEq$
-            && ($var field.checkVar$==$var field.checkEq$)
-$-ifdef$
-$ifdef field.checkGt$
-            && ($var field.checkVar$>$var field.checkGt$)
-$-ifdef$
-$ifdef field.checkLt$
-            && ($var field.checkVar$<$var field.checkLt$)
-$-ifdef$
-            ) {
+        if ( ($var field.checkVar$==$var field.checkVal$) && ! $var field.name$Flag ) {
             throw new MandatoryFieldMissingException(isRequest(),"field is missing $var field.name$ in $var message.name$",seqNum);
         }
 $-ifdef$

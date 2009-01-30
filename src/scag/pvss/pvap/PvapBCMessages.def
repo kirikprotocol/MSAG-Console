@@ -6,7 +6,7 @@ include types.def
 message BC_DEL        // 0x0001
     version 2.0
     property request=true
-    ascii   varName   5
+    ascii   varName   20
 end
 
 message BC_DEL_RESP   // 0x8001
@@ -18,15 +18,15 @@ end
 message BC_SET
     version 2.0
     property request=true
-    ascii  varName     5
-    byte   valueType   6
-    byte   timePolicy  7
-    uint32 finalDate   8
-    uint32 lifeTime    9
-    uint32 intValue    10 opt checkVar="valueType" checkEq=0x01
-    utf8   stringValue 11 opt checkVar="valueType" checkEq=0x02
-    byte   boolValue   12 opt checkVar="valueType" checkEq=0x03
-    uint32 dateValue   13 opt checkVar="valueType" checkEq=0x04
+    ascii  varName     20
+    byte   timePolicy  21
+    uint32 finalDate   22
+    uint32 lifeTime    23
+    byte   valueType   24
+    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01
+    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02
+    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03
+    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04
 end
 
 message BC_SET_RESP
@@ -38,57 +38,57 @@ end
 message BC_GET      // 0x0003
     version 2.0
     property request=true
-    ascii  varName     5
+    ascii  varName     20
 end
 
 message BC_GET_RESP
     version 2.0
     property request=false
     byte   status      1
-    byte   valueType   6
-    byte   timePolicy  7
-    uint32 finalDate   8
-    uint32 lifeTime    9
-    ascii  varName     5
-    uint32 intValue    10 opt checkVar="valueType" checkEq=0x01
-    utf8   stringValue 11 opt checkVar="valueType" checkEq=0x02
-    byte   boolValue   12 opt checkVar="valueType" checkEq=0x03
-    uint32 dateValue   13 opt checkVar="valueType" checkEq=0x04
+    ascii  varName     20
+    byte   timePolicy  21
+    uint32 finalDate   22
+    uint32 lifeTime    23
+    byte   valueType   24
+    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01
+    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02
+    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03
+    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04
 end
 
 message BC_INC     // 0x0004
     version 2.0
     property request=true
-    ascii  varName     5
-    byte   valueType   6
-    byte   timePolicy  7
-    uint32 finalDate   8
-    uint32 lifeTime    9
-    uint32 intValue    10
+    ascii  varName     20
+    byte   timePolicy  21
+    uint32 finalDate   22
+    uint32 lifeTime    23
+    // byte   valueType   24
+    uint32 intValue    25
 end
 
 message BC_INC_RESP // 0x8004
     version 2.0
     property request=false
     byte   status      1
-    uint32 intValue    10  // result
+    uint32 intValue    25
 end
 
 message BC_INC_MOD  // 0x0005
     version 2.0
     property request=true
-    ascii  varName     5
-    byte   valueType   6
-    byte   timePolicy  7
-    uint32 finalDate   8
-    uint32 lifeTime    9
-    uint32 intValue    10
-    uint32 modValue    14
+    ascii  varName     20
+    byte   timePolicy  21
+    uint32 finalDate   22
+    uint32 lifeTime    23
+    // byte   valueType   24
+    uint32 intValue    25
+    uint32 modValue    30
 end
 
 message BC_INC_MOD_RESP // 0x8005
     version 2.0
     property request=false
     byte   status      1
-    uint32 intValue    10  // result, FIXME: ask VO if this field is filled if failed
+    uint32 intValue    25  // result, FIXME: ask VO if this field is filled if failed
 end

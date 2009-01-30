@@ -56,6 +56,10 @@ $-if$
         clear();
     }
 
+    $var message.name$( int seqNum ) {
+        this->seqNum = seqNum;
+    }
+
     bool isRequest() const {
         return $if message.request$true$-if$$if !message.request$false$-if$;
     }
@@ -74,7 +78,7 @@ $-foreach$
         sprintf(buf,"seqNum=%d",seqNum);
         rv+=buf;
 $foreach field$
-        if($var field.name$Flag) {
+        if ( has$var field.name:ucf$() ) {
             rv+=";$var field.name$=";
 $select field.type$
 $case byte$
@@ -131,8 +135,8 @@ $if options.throwOnUnsetGet$
 $-if$
     {
 $if options.throwOnUnsetGet$
-        if (!$var field.name$Flag) {
-            throw FieldIsNullException("$var field.name$");
+        if ( ! has$var field.name:ucf$() ) {
+            throw FieldIsNullException("field $var field.name$ of $var message.name$ is not set", seqNum);
         }
 $-if$
         return $var field.name$;
@@ -141,10 +145,17 @@ $-if$
     {
         $var field.name$=value;
         $var field.name$Flag=true;
+$if field.optional$
+$ifdef field.checkVar$
+        $var field.checkVar$ = $var field.checkVal$;
+        $var field.checkVar$Flag = true;
+$-ifdef$
+$-if$
     }
+
     bool has$var field.name:ucf$()const
     {
-        return $var field.name$Flag;
+        return $var field.name$Flag$if field.optional$$ifdef field.checkVar$ && ( $var field.checkVar$ == $var field.checkVal$ )$-ifdef$$-if$;
     }
 $-foreach$
 
@@ -155,7 +166,7 @@ $-foreach$
         // mandatory fields
 $foreach field$
 $if field.mandatory$
-        printf( "write pos=%d field=%d\n", ds.getPos(), $var field.name$Tag );
+        // printf( "write pos=%d field=%d\n", ds.getPos(), $var field.name$Tag );
         ds.writeTag($var field.name$Tag);
         $select field.type$
 $case string$ds.writeStrLV($var field.name$);
@@ -174,8 +185,8 @@ $-foreach$
         // optional fields
 $foreach field$
 $if field.optional$
-        if ($var field.name$Flag) {
-            printf( "write pos=%d field=%d\n", ds.getPos(), $var field.name$Tag );
+        if ( has$var field.name:ucf$() ) {
+            // printf( "write pos=%d field=%d\n", ds.getPos(), $var field.name$Tag );
             ds.writeTag($var field.name$Tag);
             $select field.type$
 $case byte$ds.writeByteLV($var field.name$);
@@ -198,16 +209,17 @@ $-foreach$
         throw (PvapException)
     {
         clear();
+        int tag = -1;
         while (true) {
-            int pos = int(ds.getPos());
-            int tag = ds.readTag();
-            printf( "read pos=%d field=%d\n", pos, tag );
+            // int pos = int(ds.getPos());
+            tag = ds.readTag();
+            // printf( "read pos=%d field=%d\n", pos, tag );
             if ( tag == -1 ) break;
             switch(tag) {
 $foreach field$
             case $var field.name$Tag: {
                 if ($var field.name$Flag) {
-                    throw DuplicateFieldException("$var field.name$");
+                    throw DuplicateFieldException(isRequest(),"duplicate field $var field.name$ of $var message.name$",seqNum);
                 }
                 $select field.type$
 $case byte$$var field.name$=ds.readByteLV();
@@ -218,7 +230,7 @@ $case string$$var field.name$=ds.readStrLV();
 $case ascii$$var field.name$=ds.readByteStringLV();
 $case utf8$$var field.name$=ds.readByteStringLV();
 $case bool$$var field.name$=ds.readBoolLV();
-$case nested$throw NotImplementedException("$var field.name$");
+$case nested$throw NotImplementedException("reading field $var field.name$ of $var message.name$ is not impl yet",seqNum);
 $default$$var field.name$.deserialize(proto,ds);
 $-select$
                 $var field.name$Flag=true;
@@ -226,7 +238,7 @@ $-select$
             }
 $-foreach$
             default:
-                throw NotImplementedException("reaction of reading unknown");
+                throw InvalidFieldTypeException(isRequest(),"invalid field in $var message.name$",seqNum,tag);
             }
         }
         checkFields();
@@ -249,9 +261,7 @@ protected:
 $foreach field$
 $if field.mandatory$
         if (!$var field.name$Flag) {
-            char buf[256];
-            snprintf( buf, sizeof(buf), "field=%s msg=%s", "$var field.name$", "$var message.name$");
-            throw MandatoryFieldMissingException(buf);
+            throw MandatoryFieldMissingException(isRequest(),"field is missing $var field.name$ in $var message.name$",seqNum);
         }
 $-if$
 $-foreach$
@@ -259,20 +269,8 @@ $-foreach$
 $foreach field$
 $if field.optional$
 $ifdef field.checkVar$
-        if (!$var field.name$Flag
-$ifdef field.checkEq$
-            && ($var field.checkVar$==$var field.checkEq$)
-$-ifdef$
-$ifdef field.checkGt$
-            && ($var field.checkVar$>$var field.checkGt$)
-$-ifdef$
-$ifdef field.checkLt$
-            && ($var field.checkVar$<$var field.checkLt$)
-$-ifdef$
-            ) {
-            char buf[256];
-            snprintf( buf, sizeof(buf), "field=%s msg=%s", "$var field.name$", "$var message.name$");
-            throw MandatoryFieldMissingException(buf);
+        if ( ($var field.checkVar$==$var field.checkVal$) && ! $var field.name$Flag ) {
+            throw new MandatoryFieldMissingException(isRequest(),"field is missing $var field.name$ in $var message.name$",seqNum);
         }
 $-ifdef$
 $-if$

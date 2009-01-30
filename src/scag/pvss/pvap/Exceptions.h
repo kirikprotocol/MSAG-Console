@@ -3,6 +3,7 @@
 
 #include <string>
 #include <stdio.h>
+#include "util/int.h"
 #include "scag/exc/SCAGExceptions.h"
 
 namespace scag {
@@ -11,14 +12,28 @@ namespace pvap {
 
 class PvapException : public scag::exceptions::SCAGException
 {
+protected:
+    PvapException( uint32_t seqNum = (uint32_t)-1 ) : seqNum_(seqNum), isRequest_(true) {}
+    PvapException( bool isRequest, uint32_t seqNum, int tag = 0 ) : seqNum_(seqNum), isRequest_(isRequest), tag_(tag) {}
+
 public:
     virtual ~PvapException() throw () {}
+
+    uint32_t getSeqNum() const { return seqNum_; }
+    bool isRequest() const { return isRequest_; }
+    int getTag() const { return tag_; }
+
+private:
+    uint32_t seqNum_;
+    bool     isRequest_;
+    int      tag_;
 };
 
 class FieldIsNullException: public PvapException
 {
 public:
-    FieldIsNullException(const char* field)
+    FieldIsNullException(const char* field, uint32_t seqNum) :
+    PvapException(seqNum)
     {
         message = "Attempt to get field ";
         message += field;
@@ -41,7 +56,8 @@ public:
 
 class MandatoryFieldMissingException : public PvapException {
 public:
-    MandatoryFieldMissingException(const char* field)
+    MandatoryFieldMissingException(bool isRequest, const char* field, uint32_t seqNum ) :
+    PvapException(isRequest, seqNum)
     {
         message = "Mandatory field ";
         message += field;
@@ -53,13 +69,14 @@ public:
 class DuplicateFieldException : public PvapException
 {
 public:
-  DuplicateFieldException(const char* field)
-  {
-    message="Duplicate field ";
-    message+=field;
-    message+" found.";
-  }
-  ~DuplicateFieldException()throw(){}
+    DuplicateFieldException( bool isRequest, const char* field, int seqNum ) :
+    PvapException(isRequest,seqNum)
+    {
+        message="Duplicate field ";
+        message+=field;
+        message+" found.";
+    }
+    ~DuplicateFieldException()throw(){}
 };
 
 class IncompatibleVersionException:public PvapException{
@@ -75,6 +92,21 @@ class InvalidMessageTypeException : public PvapException
 {
 public:
     InvalidMessageTypeException( int tag, const char* messageName = "")
+    {
+        char buf[32];
+        sprintf(buf,"%u",tag);
+        message="Unexpected tag in message '";
+        message+=messageName;
+        message+="':";
+        message+=buf;
+    }
+};
+
+class InvalidFieldTypeException : public PvapException 
+{
+public:
+    InvalidFieldTypeException(bool isRequest, const char* messageName, uint32_t seqNum, int tag ) :
+    PvapException(isRequest,seqNum,tag)
     {
         char buf[32];
         sprintf(buf,"%u",tag);

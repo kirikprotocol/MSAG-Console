@@ -7,9 +7,11 @@ message PC_DEL      // 0x0001
     version 2.0
     property request=true
     byte   profileType 2
-    ascii  abonentKey  3 opt checkVar="profileType" checkEq=0x01
-    uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
-    ascii  varName     5
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04
+    ascii  varName     20
 end
 
 message PC_DEL_RESP // 0x8001
@@ -22,17 +24,19 @@ message PC_SET      // 0x0002
     version 2.0
     property request=true
     byte   profileType 2
-    ascii  abonentKey  3 opt checkVar="profileType" checkEq=0x01
-    uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
-    ascii  varName     5
-    byte   valueType   6
-    byte   timePolicy  7
-    uint32 finalDate   8
-    uint32 lifeTime    9
-    uint32 intValue    10 opt checkVar="valueType" checkEq=0x01
-    utf8   stringValue 11 opt checkVar="valueType" checkEq=0x02
-    byte   boolValue   12 opt checkVar="valueType" checkEq=0x03
-    uint32 dateValue   13 opt checkVar="valueType" checkEq=0x04
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04
+    ascii  varName     20
+    byte   timePolicy  21
+    uint32 finalDate   22
+    uint32 lifeTime    23
+    byte   valueType   24
+    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01
+    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02
+    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03
+    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04
 end
 
 message PC_SET_RESP // 0x8002
@@ -45,67 +49,73 @@ message PC_GET      // 0x0003
     version 2.0
     property request=true
     byte   profileType 2
-    ascii  abonentKey  3 opt checkVar="profileType" checkEq=0x01
-    uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
-    ascii  varName     5
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04
+    ascii  varName     20
 end
 
 message PC_GET_RESP // 0x8003
     version 2.0
     property request=false
     byte   status      1
-    byte   valueType   6
-    byte   timePolicy  7
-    uint32 finalDate   8
-    uint32 lifeTime    9
-    ascii  varName     5
-    uint32 intValue    10 opt checkVar="valueType" checkEq=0x01
-    utf8   stringValue 11 opt checkVar="valueType" checkEq=0x02
-    byte   boolValue   12 opt checkVar="valueType" checkEq=0x03
-    uint32 dateValue   13 opt checkVar="valueType" checkEq=0x04
+    ascii  varName     20
+    byte   timePolicy  21
+    uint32 finalDate   22
+    uint32 lifeTime    23
+    byte   valueType   24
+    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01
+    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02
+    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03
+    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04
 end
 
 message PC_INC     // 0x0004
     version 2.0
     property request=true
     byte   profileType 2
-    ascii  abonentKey  3 opt checkVar="profileType" checkEq=0x01
-    uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
-    ascii  varName     5
-    byte   valueType   6
-    byte   timePolicy  7
-    uint32 finalDate   8
-    uint32 lifeTime    9
-    uint32 intValue    10
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04
+    ascii  varName     20
+    byte   timePolicy  21
+    uint32 finalDate   22
+    uint32 lifeTime    23
+    // byte   valueType   24
+    uint32 intValue    25
 end
 
 message PC_INC_RESP // 0x8004
     version 2.0
     property request=false
     byte   status      1
-    uint32 intValue    10  // result
+    uint32 intValue    25
 end
 
 message PC_INC_MOD  // 0x0005
     version 2.0
     property request=true
     byte   profileType 2
-    ascii  abonentKey  3 opt checkVar="profileType" checkEq=0x01
-    uint32 profileKey  4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
-    ascii  varName     5
-    byte   valueType   6
-    byte   timePolicy  7
-    uint32 finalDate   8
-    uint32 lifeTime    9
-    uint32 intValue    10
-    uint32 modValue    14
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04
+    ascii  varName     20
+    byte   timePolicy  21
+    uint32 finalDate   22
+    uint32 lifeTime    23
+    // byte   valueType   24
+    uint32 intValue    25
+    uint32 modValue    30
 end
 
 message PC_INC_MOD_RESP // 0x8005
     version 2.0
     property request=false
     byte   status      1
-    uint32 intValue    10  // result, FIXME: ask VO if this field is filled if failed
+    uint32 intValue    25  // result, FIXME: ask VO if this field is filled if failed
 end
 
 message PC_PING       // 0x0006
@@ -122,33 +132,35 @@ end
 message PC_AUTH       // 0x000a
     version 2.0
     property request=true
-    byte   protocolVersion 15
-    ascii  login           16
-    ascii  password        17
-    ascii  name            18
+    byte   protocolVersion 31
+    ascii  login           32
+    ascii  password        33
+    ascii  name            34
 end
 
 message PC_AUTH_RESP  // 0x800a
     version 2.0
     property request=false
     byte   status      1
-    byte   clientType  19 opt checkVar="status" checkEq=0
-    byte   sid         20 opt checkVar="status" checkEq=0
+    byte   clientType  35 opt // checkVar="status" checkEq=0
+    byte   sid         36 opt // checkVar="status" checkEq=0
 end
 
 message PC_BATCH      // 0x0007
     version 2.0
     property request=true
-    byte       profileType     2
-    ascii      abonentKey      3 opt checkVar="profileType" checkEq=0x01
-    uint32     profileKey      4 opt checkVar="profileType" checkGt=0x01 checkLt=0x05
-    bool       batchMode       21
-    BatchCmdArray batchContent 23
+    byte   profileType 2
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04
+    bool       batchMode       37
+    BatchCmdArray batchContent 38
 end
 
 message PC_BATCH_RESP // 0x8007
     version 2.0
     property request=false
     byte       status       1
-    BatchCmdArray batchContent 23
+    BatchCmdArray batchContent 38
 end

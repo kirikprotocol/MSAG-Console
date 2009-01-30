@@ -24,11 +24,5 @@ end
 property checkVar _string
 end
 
-property checkEq _int
-end
-
-property checkGt _int
-end
-
-property checkLt _int
+property checkVal _int
 end

@@ -2,6 +2,7 @@
 #define __SCAG_PVSS_PVAP_SERIALIZER_H__
 
 #include "util/int.h"
+#include <stdexcept>
 #include <memory.h>
 #include <arpa/inet.h>
 #include <string>
