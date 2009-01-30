@@ -29,7 +29,7 @@ class RandomAccessFileReader {
   }
 
   public void seek(long pos) throws IOException {
-    if (pos > bufferStartPos && pos < bufferStartPos + bufferSize)
+    if (pos >= bufferStartPos && pos < bufferStartPos + bufferSize)
       bufferPos = (int)(pos - bufferStartPos);
     else {
       bufferSize = 0;

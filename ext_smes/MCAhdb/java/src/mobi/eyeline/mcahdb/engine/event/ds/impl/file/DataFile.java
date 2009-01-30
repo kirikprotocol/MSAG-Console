@@ -1,14 +1,15 @@
 package mobi.eyeline.mcahdb.engine.event.ds.impl.file;
 
-import mobi.eyeline.mcahdb.engine.event.ds.Event;
-import mobi.eyeline.mcahdb.engine.DataSourceException;
-
-import java.io.*;
-import java.util.*;
-import java.nio.channels.FileChannel;
-
 import com.eyeline.utils.IOUtils;
-import com.eyeline.utils.FileUtils;
+import mobi.eyeline.mcahdb.engine.DataSourceException;
+import mobi.eyeline.mcahdb.engine.event.ds.Event;
+
+import java.io.EOFException;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.util.*;
 
 /**
  * User: artem
@@ -144,8 +145,8 @@ class DataFile {
     }
   }
 
-  public Map<String, Long> getEventsListsPositions() throws IOException {
-    Map<String, Long> result = new HashMap<String, Long>(100);
+  public Collection<Position> getEventsListsPositions() throws IOException {
+    Collection<Position> result = new ArrayList<Position>(100);
     byte[] bytes = new byte[MSISDN_LEN + 2];
 
     try {
@@ -153,10 +154,14 @@ class DataFile {
       while(true) {
         reader.seek(pos);
         reader.readFully(bytes);
-        String msisdn = IOUtils.readString(bytes, 0, MSISDN_LEN);
-        int eventsSize = IOUtils.readShort(bytes, MSISDN_LEN);
-        result.put(msisdn, pos);
-        pos += MSISDN_LEN + 2 + eventsSize * EVENT_LEN;
+        if (bytes[0] == EOR)
+          pos++;
+        else {
+          String msisdn = IOUtils.readString(bytes, 0, MSISDN_LEN);
+          int eventsSize = IOUtils.readShort(bytes, MSISDN_LEN);
+          result.add(new Position(msisdn, pos));
+          pos += MSISDN_LEN + 2 + eventsSize * EVENT_LEN;
+        }
       }
     } catch (EOFException e) {
     }

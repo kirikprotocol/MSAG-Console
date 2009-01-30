@@ -38,8 +38,8 @@ public class StoreImpl implements Store {
 
   private static StringsRTree createIndex(DataFile dataFile) throws IOException {
     StringsRTree<Collection<Long>> index = new StringsRTree<Collection<Long>>();
-    for (Map.Entry<String, Long> e :  dataFile.getEventsListsPositions().entrySet())
-      put(index, e.getKey(), e.getValue());
+    for (Position e :  dataFile.getEventsListsPositions())
+      put(index, e.msisdn, e.pos);
     return index;
   }
 
@@ -71,7 +71,7 @@ public class StoreImpl implements Store {
       }
     }
 
-    // Index does not exists, data file cruched or index file cruched    
+    // Index does not exists, data file crushed or index file cruched
     roIndex = FileBasedStringsRTree.createRTree(createIndex(this.dataFile), indexFile.getAbsolutePath(), LongsCollectionSerializer.getInstance(), INDEX_READ_BUFFER_SIZE);
   }
 
@@ -155,7 +155,7 @@ public class StoreImpl implements Store {
 
     Collection<Event> list = eventsBuffer.get(event.getCalled());
     if (list == null) {
-      list = new LinkedList<Event>();
+      list = new ArrayList<Event>(10);
       eventsBuffer.put(event.getCalled(), list);
     }
     list.add(event);
@@ -164,7 +164,7 @@ public class StoreImpl implements Store {
   private static void put(RTree<Collection<Long>> ind, String address, long value) {
     Collection<Long> val = ind.get(address);
     if (val == null) {
-      val = new LinkedList<Long>();
+      val = new ArrayList<Long>(10);
       ind.put(address, val);
     }
     val.add(value);
