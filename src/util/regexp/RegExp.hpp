@@ -1,6 +1,6 @@
 /*
   $Id$
-  Copyright (c) Konstantin Stupnik (aka Xecutor) 2000-2001 <skv@novosoft.ru>
+  Copyright (c) Konstantin Stupnik (aka Xecutor) 2000-2001 <skv@eyeline.mobi>
   You can use, modify, distribute this code or any other part
   only with permissions of author or Novosoft Inc!
 
