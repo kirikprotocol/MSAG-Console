@@ -101,6 +101,8 @@ void Smsc::mainLoop(int idx)
 
   time_t lastTimeStatCheck=last_tm;
 
+  int licenseExpTrapDay=-1;
+
   int licenseFileCheckHour;
   time_t lastLicenseCheckTime=0;
   {
@@ -210,7 +212,30 @@ void Smsc::mainLoop(int idx)
       localtime_r(&now,&t);
       if(t.tm_hour!=licenseFileCheckHour)
       {
+        time_t oldLicenseExp=license.expdate;
+        bool licenseExpireSoon=license.expdate-now<20*24*60*60;
         InitLicense();
+        licenseFileCheckHour=t.tm_hour;
+        if(oldLicenseExp!=license.expdate && licenseExpireSoon && license.expdate-now>20*24*60*60)
+        {
+          char msg[256];
+          struct tm lexp;
+          localtime_r(&oldLicenseExp,&lexp);
+          sprintf(msg,"CLEARED SYSTEM LICENSE will expire on %02d.%02d.%04d (AlarmID=LICENSE; severity=1)",lexp.tm_mday,lexp.tm_mon+1,lexp.tm_year+1900);
+          smsc::snmp::SnmpAgent::trap("LICENSE","SYSTEM",smsc::snmp::SnmpAgent::NORMAL,msg);
+        }
+      }
+      if(t.tm_mday!=licenseExpTrapDay)
+      {
+        if(license.expdate-now<20*24*60*60)
+        {
+          char msg[256];
+          struct tm lexp;
+          localtime_r(&license.expdate,&lexp);
+          sprintf(msg,"ACTIVE SYSTEM LICENSE will expire on %02d.%02d.%04d (AlarmID=LICENSE; severity=5)",lexp.tm_mday,lexp.tm_mon+1,lexp.tm_year+1900);
+          smsc::snmp::SnmpAgent::trap("LICENSE","SYSTEM",smsc::snmp::SnmpAgent::CRITICAL,msg);
+        }
+        licenseExpTrapDay=t.tm_mday;
       }
       lastLicenseCheckTime=now;
     }
