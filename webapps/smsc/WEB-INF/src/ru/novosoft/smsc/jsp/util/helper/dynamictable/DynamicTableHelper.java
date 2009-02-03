@@ -19,6 +19,7 @@ public abstract class DynamicTableHelper {
   private final String name;
   private final String uid;
   private boolean showColumnsTitle = true;
+  private boolean showTableTitle = true;
   private boolean allowAddValues = true;
   private Row lastRow = new Row();
 
@@ -96,8 +97,15 @@ public abstract class DynamicTableHelper {
     this.allowAddValues = allowAddValues;
   }
 
+  public boolean isShowTableTitle() {
+    return showTableTitle;
+  }
 
-//  Table creation =====================================================================================================
+  public void setShowTableTitle(boolean showTableTitle) {
+    this.showTableTitle = showTableTitle;
+  }
+
+  //  Table creation =====================================================================================================
 
 
   protected Row createNewRow() {

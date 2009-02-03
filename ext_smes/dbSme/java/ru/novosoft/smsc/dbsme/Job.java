@@ -1,11 +1,15 @@
 package ru.novosoft.smsc.dbsme;
 
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.jsp.util.helper.dynamictable.ListPropertiesHelper;
+import ru.novosoft.smsc.jsp.util.helper.dynamictable.IncorrectValueException;
+import ru.novosoft.smsc.jsp.util.helper.Validation;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.StringTokenizer;
 
 /**
  * Created by igork
@@ -21,7 +25,6 @@ public class Job extends DbsmeBean
   private String jobName = null;
   private String jobId = null;
   private String type = null;
-  private String address = null;
   private String alias = null;
   private int timeout = 0;
   private boolean query = false;		//SQL
@@ -45,12 +48,14 @@ public class Job extends DbsmeBean
   private boolean creating = false;
   private boolean initialized = false;
 
+  ListPropertiesHelper addressesHelper;
+
   protected int init(List errors)
   {
     int result = super.init(errors);
     if (result != RESULT_OK) {
       timeout = 0;
-      type = address = alias = sql = input = output = "";
+      type =  alias = sql = input = output = "";
       query = commit = function = false;
       return result;
     }
@@ -58,11 +63,12 @@ public class Job extends DbsmeBean
     if (jobName == null)
       jobName = "";
 
+    String address = "";
+
     if (!initialized) {
       if (creating) {
         jobId = "";
         type = "";
-        address = "";
         alias = "";
         timeout = 0;
         sql = "";
@@ -118,6 +124,17 @@ public class Job extends DbsmeBean
     if (output_format == null) output_format = "";
     if (invalid_config == null) invalid_config = "";
 
+    StringTokenizer st = new StringTokenizer(address, ",");
+    String[] addressesList = new String[st.countTokens()];
+    int i=0;
+    while (st.hasMoreTokens()) {
+      addressesList[i] = st.nextToken();
+      i++;
+    }
+    addressesHelper = new ListPropertiesHelper("addresses", "addresses", 30, Validation.ADDRESS, true, addressesList);
+    addressesHelper.setShowColumnsTitle(false);
+    addressesHelper.setShowTableTitle(false);
+
     providerWatchdog = getOptionalBool("DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName) + ".DataSource.watchdog");
     providerNeedPing = getOptionalBool("DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName) + ".DataSource.needPing");
     return result;
@@ -133,6 +150,13 @@ public class Job extends DbsmeBean
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
+    try {
+      addressesHelper.processRequest(request);
+    } catch (IncorrectValueException e) {
+      logger.error(e,e);
+      return error(e.getMessage(), e);
+    }
+
     logger.debug("JobBean super.ok: "+mbDone);
     if (mbCancel != null)
       return RESULT_DONE;
@@ -170,6 +194,17 @@ public class Job extends DbsmeBean
     config.setString(jobPrefix + ".sql", sql);
     config.setString(jobPrefix + ".input", input);
     config.setString(jobPrefix + ".output", output);
+
+    String[] props = addressesHelper.getPropsAsArray();
+    String address="";
+    for (int i=0; i < props.length; i++) {
+      String s = props[i].trim();
+      if (s.length() == 0)
+        continue;
+      if (address.length() > 0)
+        address+=',';
+      address+= s;
+    }
 
     if (address != null && address.length() > 0) config.setString(jobPrefix + ".address", address);
     if (alias != null && alias.length() > 0) config.setString(jobPrefix + ".alias", alias);
@@ -231,16 +266,6 @@ public class Job extends DbsmeBean
   public void setType(String type)
   {
     this.type = type;
-  }
-
-  public String getAddress()
-  {
-    return address;
-  }
-
-  public void setAddress(String address)
-  {
-    this.address = address;
   }
 
   public String getAlias()
@@ -476,5 +501,9 @@ public class Job extends DbsmeBean
   public void setJobId(String jobId)
   {
     this.jobId = jobId;
+  }
+
+  public ListPropertiesHelper getAddressesHelper() {
+    return addressesHelper;
   }
 }

@@ -1,6 +1,8 @@
 <%@ page import="ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
     	  	     ru.novosoft.smsc.util.StringEncoderDecoder, ru.novosoft.smsc.dbsme.Job,
    		         java.util.List, java.util.LinkedList, ru.novosoft.smsc.jsp.PageBean"%>
+<%@ page import="ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper" %>
+<%@ page import="ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableRenderer" %>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.dbsme.Job" />
 <jsp:setProperty name="bean" property="*"/>
@@ -72,7 +74,14 @@ function setType()
 		startParams(out);
 			param(out, "name", "jobName", bean.getJobName());
 			paramSelect(out, "type", "type", types, bean.getType(), "setType();");
-			param(out, "address", "address", bean.getAddress(), null, null, false, "mask");
+      DynamicTableHelper tableHelper = bean.getAddressesHelper();
+%>  
+  <tr class=row0>
+    <th nowrap>addresses</th>
+    <td nowrap><%@ include file="/WEB-INF/inc/dynamic_table.jsp"%></td>
+  </tr>
+<%
+//    startParams(out);
 			param(out, "alias", "alias", bean.getAlias(), null, null, false, "mask");
 			if (bean.isProviderWatchdog())
 				param(out, "timeout", "timeout", bean.getTimeout(), null, null, false, "positive");
