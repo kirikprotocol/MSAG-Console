@@ -111,9 +111,9 @@ void Task::init(ConfigView* config, uint32_t taskId)
   info.activePeriodStart = parseTime(config->getString("activePeriodStart"));
   info.activePeriodEnd = parseTime(config->getString("activePeriodEnd"));
   if ((info.activePeriodStart < 0 && info.activePeriodEnd >= 0) ||
-      (info.activePeriodStart >= 0 && info.activePeriodEnd < 0) ||
-      (info.activePeriodStart >= 0 && info.activePeriodEnd >= 0 && 
-       info.activePeriodStart >= info.activePeriodEnd))
+      (info.activePeriodStart >= 0 && info.activePeriodEnd < 0)/* ||
+      (info.activePeriodStart >= 0 && info.activePeriodEnd >= 0 && //remove by request
+       info.activePeriodStart >= info.activePeriodEnd)*/)
       throw ConfigException("Task active period specified incorrectly."); 
   
   const char* awd = 0;
@@ -233,9 +233,9 @@ void Task::update(ConfigView *config)
   newinfo.activePeriodStart = parseTime(config->getString("activePeriodStart"));
   newinfo.activePeriodEnd = parseTime(config->getString("activePeriodEnd"));
   if ((newinfo.activePeriodStart < 0 && newinfo.activePeriodEnd >= 0) ||
-      (newinfo.activePeriodStart >= 0 && newinfo.activePeriodEnd < 0) ||
+      (newinfo.activePeriodStart >= 0 && newinfo.activePeriodEnd < 0)/* ||
       (newinfo.activePeriodStart >= 0 && newinfo.activePeriodEnd >= 0 && 
-       newinfo.activePeriodStart >= newinfo.activePeriodEnd))
+       newinfo.activePeriodStart >= newinfo.activePeriodEnd)*/)
       throw ConfigException("Task active period specified incorrectly."); 
 
   const char* awd = 0;
@@ -823,7 +823,7 @@ bool Task::isReady(time_t time, bool checkActivePeriod)
 
       if (info.activePeriodStart > 0 && info.activePeriodEnd > 0)
       {
-          if (info.activePeriodStart > info.activePeriodEnd) return false;
+          //if (info.activePeriodStart > info.activePeriodEnd) return false;
 
           dt.tm_isdst = -1;
           dt.tm_hour = (int)info.activePeriodStart/3600;
@@ -837,7 +837,8 @@ bool Task::isReady(time_t time, bool checkActivePeriod)
           dt.tm_sec  = (int)(info.activePeriodEnd%3600)%60;
           time_t apet = mktime(&dt);
 
-          if (time < apst || time > apet) return false;
+          if (info.activePeriodStart<info.activePeriodEnd && (time < apst || time > apet)) return false;
+          if (info.activePeriodStart>info.activePeriodEnd && (time < apst && time > apet)) return false;
       }
   }
   return true;
