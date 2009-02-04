@@ -2,6 +2,7 @@
 
 #include <util/config/Manager.h>
 #include "CommandProcessor.h"
+#include "core/buffers/TmpBuf.hpp"
 
 namespace smsc { namespace dbsme
 {
@@ -281,15 +282,27 @@ void DataProvider::registerJob(Job* job, const char* _id, const char* address,
                               "parameters specified.");
     if (address)
     {
-        Address addr(address); FullAddressValue fav;
+      smsc::core::buffers::TmpBuf<char,128> tmpbuf(strlen(address));
+      char* buf=tmpbuf.get();
+      strcpy(buf,address);
+      char* nxt;
+      do{
+        nxt=strchr(buf,',');
+        if(nxt)
+        {
+          *nxt=0;
+        }
+        Address addr(buf); FullAddressValue fav;
         addr.toString(fav, MAX_FULL_ADDRESS_VALUE_LENGTH);
         if (jobsByAddress.Exists(fav))
-            throw ConfigException("Job registration failed! Job with address: "
-                                  "'%s' already registered.", fav);
+          throw ConfigException("Job registration failed! Job with address: "
+                                "'%s' already registered.", fav);
         if (!owner->addProviderIndex(addr, this))
-            throw ConfigException("Job registration failed! Address: "
-                                  "'%s' already in use.", fav);
+          throw ConfigException("Job registration failed! Address: "
+                                "'%s' already in use.", fav);
         jobsByAddress.Insert(fav, job);
+        buf=nxt+1;
+      }while(nxt);
     }
     if (name)
     {
