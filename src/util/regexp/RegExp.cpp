@@ -1,8 +1,8 @@
 /*
   $Id$
-  Copyright (c) Konstantin Stupnik (aka Xecutor) 2001 <skv@novosoft.ru>
+  Copyright (c) Konstantin Stupnik (aka Xecutor) 2001 <skv@eyeline.mobi>
   You can use, modify, distribute this code or any other part
-  only with permissions of author or Novosoft Inc!
+  only with permissions of author or Eyeline Communications!
 
   Regular expressions support library.
   Syntax and semantics of regexps very close to
