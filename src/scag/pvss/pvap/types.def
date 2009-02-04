@@ -2,12 +2,13 @@
 type uint64
 type uint32
 type uint16
-type byte    // uint8
+type byte           // uint8
 type bool
 type ascii
 type utf8
 type ucs2
 type BatchCmdArray  // special
+type TimePolicy     // special
 
 property opt _bool
     optional true
@@ -20,9 +21,31 @@ property mnd _bool
     mandatory true
 end
 
-// checking variable name
 property checkVar _string
 end
 
 property checkVal _int
+end
+
+property useParent _bool
+end
+property useParentDefault _bool
+    default
+    useParent false
+end
+
+property isTransient _bool
+end
+property isTransientDefault _bool
+    default
+    isTransient false
+end
+
+property useGetter _string
+end
+
+property useSetter _string
+end
+
+property helperClass _string
 end

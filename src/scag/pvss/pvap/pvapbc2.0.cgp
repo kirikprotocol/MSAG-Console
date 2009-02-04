@@ -17,7 +17,7 @@ out.extension=hpp
 out.extension=java
 
 option:options.throwOnUnsetGet=true
-option:options.inheritsFromBatchCmd=true
+# option:options.inheritsFromBatchCmd=true
 
 data:namespace:1=scag
 data:namespace:2=pvss

@@ -5,162 +5,154 @@ include types.def
 
 message PC_DEL      // 0x0001
     version 2.0
-    property request=true
-    byte   profileType 2
-    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01
-    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02
-    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03
-    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04
-    ascii  varName     20
+    property inheritsFrom="DelRequest"
+    byte   profileType 2 isTransient=true
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=1 useParent=true
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=2 useParent=true
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=3 useParent=true
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=4 useParent=true
+    ascii  varName     20 useParent=true
 end
 
 message PC_DEL_RESP // 0x8001
     version 2.0
-    property request=false
-    byte    status     1
+    property inheritsFrom="DelResponse"
+    byte statusValue 1 useParent=true
 end
 
 message PC_SET      // 0x0002
     version 2.0
-    property request=true
-    byte   profileType 2
-    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01
-    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02
-    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03
-    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04
-    ascii  varName     20
-    byte   timePolicy  21
-    uint32 finalDate   22
-    uint32 lifeTime    23
-    byte   valueType   24
-    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01
-    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02
-    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03
-    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04
+    property inheritsFrom="SetRequest"
+    byte   profileType 2 isTransient=true
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01 useParent=true
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02 useParent=true
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03 useParent=true
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04 useParent=true
+    ascii  varName     20 useParent=true
+    TimePolicy timePolicy 21 useParent=true helperClass="TimePolicyFiller"
+    byte   valueType   24 isTransient=true
+    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01 useParent=true
+    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02 useParent=true
+    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03 useParent=true
+    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04 useParent=true
 end
 
 message PC_SET_RESP // 0x8002
     version 2.0
-    property request=false
-    byte   status      1
+    property inheritsFrom="SetResponse"
+    byte statusValue 1 useParent=true
 end
 
 message PC_GET      // 0x0003
     version 2.0
-    property request=true
-    byte   profileType 2
-    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01
-    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02
-    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03
-    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04
-    ascii  varName     20
+    property inheritsFrom="GetRequest"
+    byte   profileType 2 isTransient=true
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01 useParent=true
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02 useParent=true
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03 useParent=true
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04 useParent=true
+    ascii  varName     20 useParent=true
 end
 
 message PC_GET_RESP // 0x8003
     version 2.0
-    property request=false
-    byte   status      1
-    ascii  varName     20
-    byte   timePolicy  21
-    uint32 finalDate   22
-    uint32 lifeTime    23
-    byte   valueType   24
-    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01
-    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02
-    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03
-    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04
+    property inheritsFrom="GetResponse"
+    byte statusValue 1 useParent=true
+    ascii  varName     20 useParent=true
+    TimePolicy timePolicy 21 useParent=true helperClass="TimePolicyFiller"
+    byte   valueType   24 isTransient=true
+    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01 useParent=true
+    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02 useParent=true
+    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03 useParent=true
+    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04 useParent=true
 end
 
 message PC_INC     // 0x0004
     version 2.0
-    property request=true
-    byte   profileType 2
-    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01
-    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02
-    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03
-    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04
-    ascii  varName     20
-    byte   timePolicy  21
-    uint32 finalDate   22
-    uint32 lifeTime    23
-    // byte   valueType   24
-    uint32 intValue    25
+    property inheritsFrom="IncRequest"
+    byte   profileType 2 isTransient=true
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01 useParent=true
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02 useParent=true
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03 useParent=true
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04 useParent=true
+    ascii  varName     20 useParent=true
+    TimePolicy timePolicy 21 useParent=true helperClass="TimePolicyFiller"
+    // byte   valueType   24 isTransient=true
+    uint32 intValue    25 useParent=true
 end
 
 message PC_INC_RESP // 0x8004
     version 2.0
-    property request=false
-    byte   status      1
-    uint32 intValue    25
+    property inheritsFrom="IncResponse"
+    byte statusValue 1 useParent=true
+    uint32 result    25 useParent=true
 end
 
 message PC_INC_MOD  // 0x0005
     version 2.0
-    property request=true
-    byte   profileType 2
-    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01
-    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02
-    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03
-    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04
-    ascii  varName     20
-    byte   timePolicy  21
-    uint32 finalDate   22
-    uint32 lifeTime    23
-    // byte   valueType   24
-    uint32 intValue    25
-    uint32 modValue    30
+    property inheritsFrom="IncModRequest"
+    byte   profileType 2 isTransient=true
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01 useParent=true
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02 useParent=true
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03 useParent=true
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04 useParent=true
+    ascii  varName     20 useParent=true
+    TimePolicy timePolicy 21 useParent=true helperClass="TimePolicyFiller"
+    // byte   valueType   24 isTransient=true
+    uint32 intValue    25 useParent=true
+    uint32 modulus     30 useParent=true
 end
 
 message PC_INC_MOD_RESP // 0x8005
     version 2.0
-    property request=false
-    byte   status      1
-    uint32 intValue    25  // result, FIXME: ask VO if this field is filled if failed
+    property inheritsFrom="IncResponse"
+    byte statusValue 1 useParent=true
+    uint32 result    25 useParent=true
 end
 
 message PC_PING       // 0x0006
     version 2.0
-    property request=true
+    property inheritsFrom="PingRequest"
 end
 
 message PC_PING_RESP  // 0x8006
     version 2.0
-    property request=false
-    byte   status      1
+    property inheritsFrom="PingResponse"
+    byte statusValue 1 useParent=true
 end
 
 message PC_AUTH       // 0x000a
     version 2.0
-    property request=true
-    byte   protocolVersion 31
-    ascii  login           32
-    ascii  password        33
-    ascii  name            34
+    property inheritsFrom="AuthRequest"
+    byte   protocolVersion 31 useParent=true
+    ascii  login           32 useParent=true
+    ascii  password        33 useParent=true
+    ascii  name            34 useParent=true
 end
 
 message PC_AUTH_RESP  // 0x800a
     version 2.0
-    property request=false
-    byte   status      1
-    byte   clientType  35 opt // checkVar="status" checkEq=0
-    byte   sid         36 opt // checkVar="status" checkEq=0
+    property inheritsFrom="AuthResponse"
+    byte statusValue 1 useParent=true
+    byte   clientType  35 opt useParent=true
+    byte   sid         36 opt useParent=true
 end
 
 message PC_BATCH      // 0x0007
     version 2.0
-    property request=true
-    byte   profileType 2
-    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01
-    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02
-    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03
-    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04
-    bool       batchMode       37
-    BatchCmdArray batchContent 38
+    property inheritsFrom="BatchRequest"
+    byte   profileType 2 isTransient=true
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01 useParent=true
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02 useParent=true
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03 useParent=true
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04 useParent=true
+    bool   transactional  37 useParent=true useGetter="isTransactional"
+    BatchCmdArray batchContent 38 useParent=true helperClass="BatchRequestFiller"
 end
 
 message PC_BATCH_RESP // 0x8007
     version 2.0
-    property request=false
-    byte       status       1
-    BatchCmdArray batchContent 38
+    property inheritsFrom="BatchResponse"
+    byte statusValue 1 useParent=true
+    BatchCmdArray batchContent 38 useParent=true helperClass="BatchResponseFiller"
 end

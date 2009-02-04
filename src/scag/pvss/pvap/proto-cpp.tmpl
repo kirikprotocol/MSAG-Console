@@ -75,8 +75,7 @@ $foreach message$
         msg.serialize(*this,ss);
     }
 $-foreach$
-$if options.inheritsFromBatchCmd$
-
+/*
     void encodeCastMessage( const BatchCmd& msg, Serializer& ss ) const
         throw (PvapException)
     {
@@ -90,7 +89,7 @@ $-foreach$
             throw InvalidMessageTypeException(msgId);
         }
     }
-$-if$
+*/
 protected:
     Handler* handler; // unowned
 };

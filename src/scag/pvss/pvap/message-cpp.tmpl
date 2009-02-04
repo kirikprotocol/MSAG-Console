@@ -22,7 +22,7 @@ $case nested$#include "$var field.typename$.hpp"
 $default$#include "scag/pvss/pvap/$var field.type$.h"
 $-select$
 $-foreach$
-$if options.inheritsFromBatchCmd$#include "scag/pvss/pvap/BatchCmd.h"$-if$
+// $ifdef message.inheritsFrom$#include "scag/pvss/pvap/$var message.inheritsFrom$.h"$-ifdef$
 
 $macro type$$pack$
 $select %1$
@@ -44,13 +44,9 @@ $-foreach$
 
 // class $var protocol.name:ucf$;
 
-class $var message.name$ $if options.inheritsFromBatchCmd$: public BatchCmd$-if$ 
+class $var message.name$ $ifdef message.inheritsFrom$: public $var message.inheritsFrom$$-ifdef$
 {
 public:
-$if options.inheritsFromBatchCmd$
-    inline int getId() const throw () { return TypeId<$var message.name$>::getId(); }
-
-$-if$
     $var message.name$()
     {
         clear();
@@ -58,10 +54,6 @@ $-if$
 
     $var message.name$( int seqNum ) {
         this->seqNum = seqNum;
-    }
-
-    bool isRequest() const {
-        return $if message.request$true$-if$$if !message.request$false$-if$;
     }
 
     void clear()

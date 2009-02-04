@@ -71,25 +71,4 @@ $foreach message$
         return writer.getData();
     }
 $-foreach$
-$if options.inheritsFromBatchCmd$
-
-    public byte[] encodeCastMessage( BatchCmd msg, IBufferWriter writer ) throws PvapException
-    {
-        try {
-            Class<? extends BatchCmd> c = msg.getClass();
-$foreach message$
-            if ( c == $var message.name:ucf$.class ) {
-                encodeMessage(($var message.name:ucf$)msg, writer);
-            } else
-$-foreach$
-            {
-                throw new InvalidMessageTypeException("unhandled batch cmd class:" + c.toString(),msg.getSeqNum());
-            }
-        } catch ( PvapException e ) {
-            e.setSeqNum( msg.getSeqNum() );
-            throw e;
-        }
-        return writer.getData();
-    }
-$-if$
 }

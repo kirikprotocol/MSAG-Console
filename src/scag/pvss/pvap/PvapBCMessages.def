@@ -5,90 +5,82 @@ include types.def
 
 message BC_DEL        // 0x0001
     version 2.0
-    property request=true
-    ascii   varName   20
+    property inheritsFrom="BatchDelRequest"
+    ascii   varName   20 useParent=true
 end
 
 message BC_DEL_RESP   // 0x8001
     version 2.0
-    property request=false
-    byte    status    1
+    property inheritsFrom="DelResponse"
+    byte statusValue 1 useParent=true
 end
 
 message BC_SET
     version 2.0
-    property request=true
-    ascii  varName     20
-    byte   timePolicy  21
-    uint32 finalDate   22
-    uint32 lifeTime    23
-    byte   valueType   24
-    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01
-    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02
-    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03
-    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04
+    property inheritsFrom="BatchSetRequest"
+    ascii  varName     20 useParent=true
+    TimePolicy timePolicy 21 useParent=true helperClass="TimePolicyFiller"
+    byte   valueType   24 isTransient=true
+    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01 useParent=true
+    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02 useParent=true
+    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03 useParent=true
+    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04 useParent=true
 end
 
 message BC_SET_RESP
     version 2.0
-    property request=false
-    byte    status    1
+    property inheritsFrom="SetResponse"
+    byte statusValue 1 useParent=true
 end
 
 message BC_GET      // 0x0003
     version 2.0
-    property request=true
-    ascii  varName     20
+    property inheritsFrom="BatchGetRequest"
+    ascii  varName     20 useParent=true
 end
 
 message BC_GET_RESP
     version 2.0
-    property request=false
-    byte   status      1
-    ascii  varName     20
-    byte   timePolicy  21
-    uint32 finalDate   22
-    uint32 lifeTime    23
-    byte   valueType   24
-    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01
-    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02
-    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03
-    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04
+    property inheritsFrom="GetResponse"
+    byte statusValue 1 useParent=true
+    ascii  varName     20 useParent=true
+    TimePolicy timePolicy 21 useParent=true helperClass="TimePolicyFiller"
+    byte   valueType   24 isTransient=true
+    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01 useParent=true
+    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02 useParent=true
+    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03 useParent=true
+    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04 useParent=true
 end
 
 message BC_INC     // 0x0004
     version 2.0
-    property request=true
-    ascii  varName     20
-    byte   timePolicy  21
-    uint32 finalDate   22
-    uint32 lifeTime    23
-    // byte   valueType   24
-    uint32 intValue    25
+    property inheritsFrom="BatchIncRequest"
+    ascii  varName     20 useParent=true
+    TimePolicy timePolicy 21 useParent=true helperClass="TimePolicyFiller"
+    // byte   valueType   24 isTransient=true
+    uint32 intValue    25 useParent=true
 end
 
 message BC_INC_RESP // 0x8004
     version 2.0
-    property request=false
-    byte   status      1
-    uint32 intValue    25
+    property inheritsFrom="IncResponse"
+    byte statusValue 1 useParent=true
+    uint32 result    25 useParent=true
 end
 
 message BC_INC_MOD  // 0x0005
     version 2.0
-    property request=true
-    ascii  varName     20
-    byte   timePolicy  21
-    uint32 finalDate   22
-    uint32 lifeTime    23
-    // byte   valueType   24
-    uint32 intValue    25
-    uint32 modValue    30
+    property inheritsFrom="BatchIncModRequest"
+    ascii  varName     20 useParent=true
+    TimePolicy timePolicy 21 useParent=true helperClass="TimePolicyFiller"
+    // byte   valueType   24 isTransient=true
+    uint32 intValue    25 useParent=true
+    uint32 modulus     30 useParent=true
 end
 
 message BC_INC_MOD_RESP // 0x8005
     version 2.0
-    property request=false
-    byte   status      1
-    uint32 intValue    25  // result, FIXME: ask VO if this field is filled if failed
+    property inheritsFrom="IncResponse"
+    byte statusValue 1 useParent=true
+    uint32 result    25 useParent=true  // result, FIXME: ask VO if this field is filled if failed
 end
