@@ -48,8 +48,41 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
 {
 
   using namespace std;
-
-  maxStoreSize=cfgman->getInt("MessageStore.LocalStore.maxStoreSize");
+  bool haveSz=false;
+  try{
+    const char* szstr=cfgman->getString("MessageStore.LocalStore.maxStoreSize");
+    haveSz=true;
+    int sz;
+    char c;
+    if(sscanf(szstr,"%d%c",&sz,&c)!=2)
+    {
+      haveSz=false;
+      __warning2__("Invalid maxStoreSize:%s",szstr);
+      throw Exception("invalid maxStoreSize");
+    }
+    maxStoreSize=sz;
+    switch(c)
+    {
+      case 'k':
+      case 'K':maxStoreSize*=1024;break;
+      case 'm':
+      case 'M':maxStoreSize*=1024*1024;break;
+      case 'g':
+      case 'G':maxStoreSize*=1024*1024*1024;break;
+      default:
+      {
+        __warning2__("Invalid maxStoreSize:%s",szstr);
+        throw Exception("invalid maxStoreSize");
+      }break;
+    }
+    __warning2__("maxStoreSize=%lld",maxStoreSize);
+  }catch(...)
+  {
+  }
+  if(!haveSz)
+  {
+    maxStoreSize=cfgman->getInt("MessageStore.LocalStore.maxStoreSize");
+  }
   minRollTime=cfgman->getInt("MessageStore.LocalStore.minRollTime");
 
   string mainFileName=cfgman->getString("MessageStore.LocalStore.filename");

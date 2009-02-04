@@ -88,7 +88,7 @@ protected:
   bool running;
   bool loadup;
   bool rolling;
-  int maxStoreSize;
+  uint64_t maxStoreSize;
   time_t minRollTime,lastRollTime;
   IdSeqPairList snap;
   std::string rolFile;
