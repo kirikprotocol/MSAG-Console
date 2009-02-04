@@ -76,6 +76,25 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
 
 
     <!-- ======================================================== -->
+    <!--                    CHEKING TARGETS                       -->
+    <!-- ======================================================== -->
+    <target name="-check.protogen" unless="PROTOGEN">
+        <available property="PROTOGEN"
+                   value="protogen"
+                   file="protogen"
+                   filepath="${PATH}"/>
+        <condition property="PROTOGEN" value="${BUILD_DIR}/bin/protogen">
+            <and>
+                <not><isset property="PROTOGEN"/></not>
+                <available file="${BUILD_DIR}/bin/protogen"/>
+            </and>
+        </condition>
+        <fail unless="PROTOGEN"
+              message="Protogen is not found.  If you have it somewhere, you may specify it on command line via -DPROTOGEN=full-path-to-protogen"/>
+    </target>
+
+
+    <!-- ======================================================== -->
     <!--                    SETUP TARGETS                         -->
     <!-- ======================================================== -->
     <target name="src"
@@ -133,6 +152,13 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
         <property name="SETUP_MAKE_CXX" value="true"/>
     </target>
 
+    <target name="pvap"
+            description="-&gt; generation of personalization protocol via protogen"
+            depends="-check.protogen">
+        <fail if="SETUP_DONE" message="You should specify 'pvap' before any actions"/>
+        <property name="SETUP_MAKE_PVAP" value="true"/>
+    </target>
+
     <target name="pvss.flooder"
             description="-&gt; flooder for personalization server ">
         <fail if="SETUP_DONE" message="You should specify 'pvss.flooder' before any actions"/>
@@ -181,6 +207,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
                 <isset property="SETUP_MAKE_SCAG"/>
                 <isset property="SETUP_MAKE_PERS"/>
                 <isset property="SETUP_MAKE_PERS_UPLOAD"/>
+                <isset property="SETUP_MAKE_PVAP"/>
                 <isset property="SETUP_MAKE_PVSS"/>
                 <isset property="SETUP_MAKE_PVSS_FLOODER"/>
                 <isset property="SETUP_MAKE_PVGW"/>
@@ -212,10 +239,10 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
             You should specify at least one selection before any action, see 'ant -p' for usage
         </fail>
         <echo>Setup finished</echo>
-        <echo>SETUP_MAKE_SCAG = ${SETUP_MAKE_SCAG}</echo>
+        <!-- echo>SETUP_MAKE_SCAG = ${SETUP_MAKE_SCAG}</echo>
         <echo>SETUP_MAKE_MSAG = ${SETUP_MAKE_MSAG}</echo>
         <echo>SETUP_MAKE_PVSS = ${SETUP_MAKE_PVSS}</echo>
-        <echo>SETUP_MAKE_ADMIN = ${SETUP_MAKE_ADMIN}</echo>
+        <echo>SETUP_MAKE_ADMIN = ${SETUP_MAKE_ADMIN}</echo -->
         <!-- ugly hack against Ant's stupidity -->
         <condition property="UPDATE_TREE">
             <not>
@@ -373,6 +400,39 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
         </ant>
     </target>
 
+    <target name="-make.pvap" if="SETUP_MAKE_PVAP">
+        <echo>Generating PVAP protocol</echo>
+        <delete dir="${SRC_DIR}/scag/pvss/pvap/generated-cpp"
+                failonerror="false"/>
+        <delete file="${SRC_DIR}/scag/pvss/pvap/generated-java"
+                failonerror="false"/>
+        <symlink action="delete"
+                 link="${SRC_DIR}/scag/pvss/pvap/generated-java"
+                 failonerror="false"/>
+        <delete dir="${SMSC_DIR}/../whoisd/pvss/src/com/eyelinecom/whoisd/pvss/pvap/protocol/pdu"
+                failonerror="false"/>
+
+        <mkdir dir="${SMSC_DIR}/../whoisd/pvss/src/com/eyelinecom/whoisd/pvss/pvap/protocol/pdu"/>
+        <mkdir dir="${SRC_DIR}/scag/pvss/pvap/generated-cpp"/>
+        <exec executable="ln" dir="${SRC_DIR}/scag/pvss/pvap">
+            <arg value="-s"/>
+            <arg value="${SMSC_DIR}/../whoisd/pvss/src/com/eyelinecom/whoisd/pvss/pvap/protocol/pdu"/>
+            <arg value="generated-java"/>
+        </exec>
+        <echo>Running protogen on PVAP definition files...</echo>
+        <exec executable="${PROTOGEN}" dir="${SRC_DIR}/scag/pvss/pvap" failonerror="true">
+            <arg value="pvap2.0.cgp"/>
+        </exec>
+        <exec executable="${PROTOGEN}" dir="${SRC_DIR}/scag/pvss/pvap" failonerror="true">
+            <arg value="pvapbc2.0.cgp"/>
+        </exec>
+        <!-- mkdir dir="${SRC_DIR}/scag/pvss/pvap/generated-cpp"/>
+        <delete file="${SRC_DIR}/scag/pvss/pvap/generated-java"/>
+        <mkdir dir="${SMSC_DIR}/../whoisd/pvss/src/com/eyelinecom/whoisd/pvss/pvap/protocol/pdu"/>
+        <symlink resource="${SMSC_DIR}/../whoisd/pvss/src/com/eyelinecom/whoisd/pvss/pvap/protocol/pdu" 
+                 link="${SRC_DIR}/scag/pvss/pvap/generated-java"/ -->
+    </target>
+
     <target name="-make.pvgw" depends="makedeps" if="SETUP_MAKE_PVGW">
         <echo>Building pvgw</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
@@ -495,7 +555,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
     </target>
 
     <target name="make" 
-            depends="-setupdone, -make.scag, -make.msag, -make.pers, -make.pers.upload, -make.pvss, -make.pvss.flooder,-make.pvgw, -make.pvcp, -make.admin, -make.webapp, -make.jedit, -make.src"
+            depends="-setupdone, -make.scag, -make.msag, -make.pers, -make.pers.upload, -make.pvss, -make.pvss.flooder, -make.pvap, -make.pvgw, -make.pvcp, -make.admin, -make.webapp, -make.jedit, -make.src"
             unless="MAKE_DONE">
         <!-- description="Action: Compile previously selected targets" -->
         <!-- antcall target="makedeps"/ -->
