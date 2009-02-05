@@ -156,8 +156,8 @@ public:
               //dataFile.Read((void*)data_buff, effectiveBlockSize);
               dataFile.Read((void*)data_buff, hdr.data_size);
               //status_profiles += restoreProfile(hdr.key, data, sendToPers);
-              //status_profiles += restoreProfileCompletely(hdr.key, data, sendToPers);
-              status_profiles += restoreProfileMinsk(hdr.key, data, sendToPers);
+              status_profiles += restoreProfileCompletely(hdr.key, data, sendToPers);
+              //status_profiles += restoreProfileMinsk(hdr.key, data, sendToPers);
             }
             total_count += profiles_count;
             total_status_profiles += status_profiles;
@@ -181,7 +181,7 @@ private:
       SerialBuffer batch;
       
       if (sendToPers) {
-        pc.PrepareMTBatch(batch, PT_ABONENT, key.toString().c_str(), pf.GetCount(), true);
+        pc.PrepareBatch(batch);
       }
 
       PropertyHash::Iterator it = pf.getProperties().getIterator();
@@ -190,12 +190,13 @@ private:
       int prop_count = 0;
       while(it.Next(key, prop)) {
         if (sendToPers) {
-          pc.SetPropertyPrepare(*prop, batch);
+          pc.SetPropertyPrepare(PT_ABONENT, key, *prop, batch);
         }
         smsc_log_debug(logger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
         ++prop_count;
       }
       if (sendToPers) {
+        pc.FinishPrepareBatch(prop_count, batch);
         pc.RunBatch(batch);
         smsc_log_debug(logger, "send %d properties to pers for profile key=%s", prop_count, pf.getKey().c_str());
       }
@@ -206,7 +207,7 @@ private:
         return 1;
       }
     } catch (const SerialBufferOutOfBounds &e) {
-      smsc_log_warn(logger, "SerialBufferOutOfBounds: bad data in buffer read. profile key=%s", key.toString().c_str());
+      smsc_log_warn(logger, "Error reading profile key=%s. SerialBufferOutOfBounds: bad data in buffer read ", key.toString().c_str());
     } catch (const PersClientException& ex) {
       smsc_log_warn(logger, "Error uploading profile key=%s. PersClientException: %s", key.toString().c_str(), ex.what());
     }
