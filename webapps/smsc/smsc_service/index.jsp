@@ -138,7 +138,11 @@
     startSection(out, "MessageStore.LocalStore", "smsc.mesStor.localStore", false);
     startParams(out);
     param(out, "smsc.mesStor.localStore.filename", "MessageStore.LocalStore.filename", bean.getStringParam("MessageStore.LocalStore.filename"));
-    param(out, "smsc.mesStor.localStore.maxStoreSize", "MessageStore.LocalStore.maxStoreSize", bean.getIntParam("MessageStore.LocalStore.maxStoreSize"));
+    if( bean.getStringParam(MessageStore.LocalStore.maxStoreSize) == null ) { // it means old style of this param as int
+      param(out, "smsc.mesStor.localStore.maxStoreSize", "MessageStore.LocalStore.maxStoreSize", bean.getIntParam("MessageStore.LocalStore.maxStoreSize"));
+    } else {
+      param(out, "smsc.mesStor.localStore.maxStoreSize", "MessageStore.LocalStore.maxStoreSize", bean.getStringParam("MessageStore.LocalStore.maxStoreSize"));
+    }
     param(out, "smsc.mesStor.localStore.minRollTime", "MessageStore.LocalStore.minRollTime", bean.getIntParam("MessageStore.LocalStore.minRollTime"));
     param(out, "smsc.mesStor.localStore.msgidfile", "MessageStore.LocalStore.msgidfile", bean.getStringParam("MessageStore.LocalStore.msgidfile"));
     finishParams(out);
