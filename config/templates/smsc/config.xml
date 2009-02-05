@@ -76,6 +76,7 @@
     <section name="LocalStore">
       <param name="filename" type="string">@localstore.dir@/store.bin</param>
       <param name="maxStoreSize" type="int">@localstore.maxstoresize@</param>
+      <!--param name="maxStoreSize" type="string">3Gb</param-->
       <param name="minRollTime" type="int">@localstore.minrolltime@</param>
       <param name="msgidfile" type="string">@localstore.dir@/msgid.bin</param>
     </section>
