@@ -1,9 +1,8 @@
-#include "BindRequest_Subscriber.hpp"
-#include "Publisher.hpp"
-#include "SMPP_BindRequest.hpp"
-#include "SMPP_Constants.hpp"
 #include <utility>
 
+#include "SequenceNumberGenerator.hpp"
+#include "BindRequest_Subscriber.hpp"
+#include "SMPP_BindRequest.hpp"
 #include "SMPPSession.hpp"
 #include "SessionCache.hpp"
 #include "SMPPSessionSwitch.hpp"
@@ -13,126 +12,158 @@
 #include "CacheOfPendingBindReqFromSME.hpp"
 #include "SessionHelper.hpp"
 
-#include <logger/Logger.h>
-extern smsc::logger::Logger* dmplxlog;
+namespace smpp_dmplx {
 
-static int toRegisterSubscriber() {
-  smpp_dmplx::Publisher::getInstance().addSubscriber(new smpp_dmplx::BindRequest_Subscriber());
+BindRequest_Subscriber::BindRequest_Subscriber()
+  : _log(smsc::logger::Logger::getInstance("msg_hndlr"))
+{}
 
-  return 0;
-}
+BindRequest_Subscriber::~BindRequest_Subscriber() {}
 
-static int subscriberIsRegistered = toRegisterSubscriber();
-
-smpp_dmplx::BindRequest_Subscriber::~BindRequest_Subscriber() {}
-
-smpp_dmplx::SMPP_Subscriber::handle_result_t
-smpp_dmplx::BindRequest_Subscriber::handle(std::auto_ptr<smpp_dmplx::SMPP_message>& smpp, smsc::core_ax::network::Socket& socket)
+SMPP_Subscriber::handle_result_t
+BindRequest_Subscriber::handle(std::auto_ptr<smpp_dmplx::SMPP_message>& smpp, smsc::core_ax::network::Socket& socket)
 {
   if ( smpp->getCommandId() == SMPP_message::BIND_RECEIVER ||
        smpp->getCommandId() == SMPP_message::BIND_TRANSMITTER ||
        smpp->getCommandId() == SMPP_message::BIND_TRANSCEIVER ) {
-    
-    SMPP_BindRequest* bindRequest = dynamic_cast<SMPP_BindRequest*>(smpp.get());
+
+    SMPP_BindRequest* bindRequest = static_cast<SMPP_BindRequest*>(smpp.get());
     try {
-      smsc_log_info(dmplxlog,"BindRequest_Subscriber::handle::: got BIND_REQUEST message for processing from socket=[%s]. Message dump=[%s]", socket.toString().c_str(), bindRequest->toString().c_str());
+      smsc_log_info(_log,"BindRequest_Subscriber::handle::: got BIND_REQUEST message for processing from socket=[%s]. Message dump=[%s]", socket.toString().c_str(), bindRequest->toString().c_str());
       SMPPSession smppSessionToSME(bindRequest->getSystemId(), socket);
-      //  Сохраняем в кеше связку socket_для_работы_с_SME -- сессия_с_SME
-      SessionCache::getInstance().makeSocketSessionEntry(socket,
-                                                         smppSessionToSME);
-      smsc_log_info(dmplxlog,"BindRequest_Subscriber::handle::: make SME authentication");
+      //  уПИТБОСЕН Ч ЛЕЫЕ УЧСЪЛХ socket_ДМС_ТБВПФЩ_У_SME -- УЕУУЙС_У_SME
+      SessionCache::getInstance().makeSocketSessionEntry(socket, smppSessionToSME);
+
+      smsc_log_info(_log,"BindRequest_Subscriber::handle::: make SME authentication");
       if ( smppSessionToSME.authenticate(bindRequest->getPassword()) == SMPPSession::AUTH_SUCCESS ) {
-        // Если аутентификация успешна,
-        // то изменяем состояние сессия с SME на GOT_BIND_REQ
+        // еУМЙ БХФЕОФЙЖЙЛБГЙС ХУРЕЫОБ,
+        // ФП ЙЪНЕОСЕН УПУФПСОЙЕ УЕУУЙС У SME ОБ GOT_BIND_REQ
         smppSessionToSME.updateSessionState(SMPPSession::GOT_BIND_REQ);
 
-        // получаем из кеша разделяемую сессию с SMSC, соответствующую
-        // полученному в smpp-запросе значению systemId
+        // РПМХЮБЕН ЙЪ ЛЕЫБ ТБЪДЕМСЕНХА УЕУУЙА У SMSC, УППФЧЕФУФЧХАЭХА
+        // РПМХЮЕООПНХ Ч smpp-ЪБРТПУЕ ЪОБЮЕОЙА systemId
         SMPPSessionSwitch::search_result_t smscSessFromCache =
           SMPPSessionSwitch::getInstance().getSharedSessionToSMSC(bindRequest->getSystemId());
 
-        if ( smscSessFromCache.first == false ) {
-          // Если разделяемой сессии с smsc еще не существует, то создаем ее.
-          smsc_log_info(dmplxlog,"BindRequest_Subscriber::handle::: Try establish smpp session with SMSC");
-          SMPPSession newSmscSession(bindRequest->getSystemId());
-          newSmscSession.connectSession();
-          smsc_log_info(dmplxlog,"BindRequest_Subscriber::handle::: connect to SMSC was established");
-          // Помещаем в пул сокет, соответствующий установленному соединению с SMSC
-          SocketPool_Singleton::getInstance().push_socket(newSmscSession.getSocketToPeer());
-          // Подменяем значение sequenceNumber, полученное от SME, на монотонно
-          // возрастрающее значение для данного systemId и сохраняем в кэше 
-          // сессию, от которой получен запрос BindRequest
-          uint32_t seqNumToSmsc = 
-            CacheOfSMPP_message_traces::getInstance().putMessageTraceToCache(smpp->getSequenceNumber(), smppSessionToSME);
-          smpp->setSequenceNumber(seqNumToSmsc);
-          smsc_log_info(dmplxlog,"BindRequest_Subscriber::handle::: send BIND_REQUEST message to SMSC. Message dump=[%s]", smpp->toString().c_str());
-          std::auto_ptr<BufferedOutputStream> outBuf = smpp->marshal();
-
-          // посылаем запрос BindRequest в SMSC
-          PendingOutDataQueue::scheduleDataForSending(*outBuf, newSmscSession.getSocketToPeer());
-
-          newSmscSession.updateSessionState(SMPPSession::GOT_BIND_REQ);
-          // Устанавливаем соответствие systemId -- сессия_с_SMSC
-          SMPPSessionSwitch::getInstance().setSharedSessionToSMSC(newSmscSession, bindRequest->getSystemId());
-
-          //  Сохраняем в кеше связку сокет_с_SMSC -- сессия_с_SMSC
-          SessionCache::getInstance().makeSocketSessionEntry(newSmscSession.getSocketToPeer(),
-                                                             newSmscSession);
-          // и добавляем сессию_от_SME в список активных сессий с указанным
-          // значением systemId
-          SMPPSessionSwitch::getInstance().addActiveSmeSession(smppSessionToSME);
-        } else {
-          if ( !smscSessFromCache.second.bindInProgress() ) {
-            // Сессия с SMSC для данного значение systemId уже установлена.
-            // Отправляем офигенно положительный ответ на полученный запрос
-            // BindRequest
-            std::auto_ptr<SMPP_BindResponse> bindResponse(bindRequest->prepareResponse(ESME_ROK));
-            smsc_log_info(dmplxlog,"BindRequest_Subscriber::handle::: send positive BIND_RESPONSE message to SME. Message dump=[%s]", bindResponse->toString().c_str());
-            std::auto_ptr<BufferedOutputStream> outBuf = bindResponse->marshal();
-            PendingOutDataQueue::scheduleDataForSending(*outBuf, socket);
-            // изменяем состояние сессии с SME
-            smppSessionToSME.updateSessionState(SMPPSession::GOT_BIND_RESP);
-            // и добавляем сессию_от_SME в список активных сессий с указанным
-            // значением systemId
-            SMPPSessionSwitch::getInstance().addActiveSmeSession(smppSessionToSME);
-
-          } else {
-            // Для данного systemId в SMSC уже послан запрос BindRequest,
-            // поэтому очередной запрос BindRequest в SMSC не посылаем. 
-            // Вместо этого сохраняем запрос для данного SME в кэше. 
-            // При получении ответа от SMSC на первичный запрос BindRequest
-            // для данного systemId, для всех кэшированных на данный момент
-            // запросов формируем ответы со статусом, соответствующий статусу
-            // полученного ответа от SMSC и рассылаем подготовленные ответы
-            // по соответствующим SME.
-            CacheOfPendingBindReqFromSME::getInstance().putPendingReqToCache(smppSessionToSME, dynamic_cast<SMPP_BindRequest*>(smpp.release()));
-            // и добавляем сессию_от_SME в список активных сессий с указанным
-            // значением systemId
-            SMPPSessionSwitch::getInstance().addActiveSmeSession(smppSessionToSME);
+        if ( smscSessFromCache.first == false )
+          initiateNewSessionToSmsc(bindRequest, smppSessionToSME);
+        else {
+          if ( !smscSessFromCache.second.bindInProgress() )
+            confirmIncomingSessionRequest(bindRequest, smppSessionToSME);
+          else {
+            pendIncomingSessionRequest(bindRequest, smppSessionToSME);
+            smpp.release();
           }
         }
+
       } else {
-        // подготовить BindResponse со статусом ESME_RINVPASWD
-        std::auto_ptr<SMPP_BindResponse> bindResponse(bindRequest->prepareResponse(ESME_RINVPASWD));
-        std::auto_ptr<BufferedOutputStream> outBuf = bindResponse->marshal();
-        smsc_log_info(dmplxlog,"BindRequest_Subscriber::handle::: send negative BIND_RESPONSE message to SME. Message dump=[%s]", bindResponse->toString().c_str());
-        PendingOutDataQueue::scheduleDataForSending(*outBuf, socket);
-        // Удаляем сессию с SME.
+        prepareBindResponseMessage(socket, bindRequest, ESME_RINVPASWD);
+
+        // хДБМСЕН УЕУУЙА У SME.
         SessionHelper::terminateSessionToSme(socket);
       }
       return RequestWasProcessed;
     } catch (std::exception& ex) {
-      smsc_log_error(dmplxlog,"BindRequest_Subscriber::handle::: catch unexpected exception [%s]", ex.what());
+      smsc_log_error(_log,"BindRequest_Subscriber::handle::: catch unexpected exception [%s]", ex.what());
     }
-    smsc_log_info(dmplxlog,"BindRequest_Subscriber::handle::: Send negative bind_response and close session");
-    try {
-      SessionHelper::terminateSessionToSme(socket);
-      std::auto_ptr<SMPP_BindResponse> bindResponse(bindRequest->prepareResponse(ESME_RBINDFAIL));
-      std::auto_ptr<BufferedOutputStream> outBuf = bindResponse->marshal();
-      smsc_log_info(dmplxlog,"BindRequest_Subscriber::handle::: send negative BIND_RESPONSE message to SME. Message dump=[%s]", bindResponse->toString().c_str());
-      PendingOutDataQueue::scheduleDataForSending(*outBuf,socket);
-    } catch (...) {}
+
+    teminateSession(socket, bindRequest);
+
     return RequestWasProcessed;
   } else
     return RequestIsNotForMe;
+}
+
+void
+BindRequest_Subscriber::initiateNewSessionToSmsc(SMPP_BindRequest* bindRequest,
+                                                 SMPPSession& smppSessionToSME)
+{
+  smsc_log_info(_log,"BindRequest_Subscriber::initiateNewSessionToSmsc::: Try establish smpp session with SMSC");
+  SMPPSession newSmscSession(bindRequest->getSystemId());
+  newSmscSession.connectSession();
+  smsc_log_info(_log,"BindRequest_Subscriber::initiateNewSessionToSmsc::: connect to SMSC has been established");
+  // рПНЕЭБЕН Ч РХМ УПЛЕФ, УППФЧЕФУФЧХАЭЙК ХУФБОПЧМЕООПНХ УПЕДЙОЕОЙА У SMSC
+  SocketPool_Singleton::getInstance().push_socket(newSmscSession.getSocketToPeer());
+  // рПДНЕОСЕН ЪОБЮЕОЙЕ sequenceNumber, РПМХЮЕООПЕ ПФ SME, ОБ НПОПФПООП
+  // ЧПЪТБУФТБАЭЕЕ ЪОБЮЕОЙЕ ДМС ДБООПЗП systemId Й УПИТБОСЕН Ч ЛЬЫЕ 
+  // УЕУУЙА, ПФ ЛПФПТПК РПМХЮЕО ЪБРТПУ BindRequest
+
+  uint32_t seqNumToSmsc = SequenceNumberGenerator::getInstance(bindRequest->getSystemId())->getNextValue();
+  CacheOfSMPP_message_traces::getInstance().putMessageTraceToCache(bindRequest->getSequenceNumber(), smppSessionToSME, seqNumToSmsc);
+  bindRequest->setSequenceNumber(seqNumToSmsc);
+  smsc_log_info(_log,"BindRequest_Subscriber::initiateNewSessionToSmsc::: send BIND_REQUEST message to SMSC. Message dump=[%s]", bindRequest->toString().c_str());
+  std::auto_ptr<BufferedOutputStream> outBuf = bindRequest->marshal();
+
+  // РПУЩМБЕН ЪБРТПУ BindRequest Ч SMSC
+  PendingOutDataQueue::getInstance().scheduleDataForSending(*outBuf, newSmscSession.getSocketToPeer());
+
+  newSmscSession.updateSessionState(SMPPSession::GOT_BIND_REQ);
+  // хУФБОБЧМЙЧБЕН УППФЧЕФУФЧЙЕ systemId -- УЕУУЙС_У_SMSC
+  SMPPSessionSwitch::getInstance().setSharedSessionToSMSC(newSmscSession, bindRequest->getSystemId());
+
+  //  уПИТБОСЕН Ч ЛЕЫЕ УЧСЪЛХ УПЛЕФ_У_SMSC -- УЕУУЙС_У_SMSC
+  SessionCache::getInstance().makeSocketSessionEntry(newSmscSession.getSocketToPeer(),
+                                                     newSmscSession);
+  // Й ДПВБЧМСЕН УЕУУЙА_ПФ_SME Ч УРЙУПЛ БЛФЙЧОЩИ УЕУУЙК У ХЛБЪБООЩН
+  // ЪОБЮЕОЙЕН systemId
+  SMPPSessionSwitch::getInstance().addActiveSmeSession(smppSessionToSME);
+}
+
+void
+BindRequest_Subscriber::confirmIncomingSessionRequest(SMPP_BindRequest* bindRequest,
+                                                      SMPPSession& smppSessionToSME)
+{
+  // уЕУУЙС У SMSC ДМС ДБООПЗП ЪОБЮЕОЙЕ systemId ХЦЕ ХУФБОПЧМЕОБ.
+  // пФРТБЧМСЕН ПЖЙЗЕООП РПМПЦЙФЕМШОЩК ПФЧЕФ ОБ РПМХЮЕООЩК ЪБРТПУ
+  // BindRequest
+  prepareBindResponseMessage(smppSessionToSME.getSocketToPeer(), bindRequest, ESME_ROK);
+  // ЙЪНЕОСЕН УПУФПСОЙЕ УЕУУЙЙ У SME
+  smppSessionToSME.updateSessionState(SMPPSession::GOT_BIND_RESP);
+  // Й ДПВБЧМСЕН УЕУУЙА_ПФ_SME Ч УРЙУПЛ БЛФЙЧОЩИ УЕУУЙК У ХЛБЪБООЩН
+  // ЪОБЮЕОЙЕН systemId
+  SMPPSessionSwitch::getInstance().addActiveSmeSession(smppSessionToSME);
+}
+
+void
+BindRequest_Subscriber::pendIncomingSessionRequest(SMPP_BindRequest* bindRequest,
+                                                   SMPPSession& smppSessionToSME)
+{
+  // дМС ДБООПЗП systemId Ч SMSC ХЦЕ РПУМБО ЪБРТПУ BindRequest,
+  // РПЬФПНХ ПЮЕТЕДОПК ЪБРТПУ BindRequest Ч SMSC ОЕ РПУЩМБЕН. 
+  // чНЕУФП ЬФПЗП УПИТБОСЕН ЪБРТПУ ДМС ДБООПЗП SME Ч ЛЬЫЕ. 
+  // рТЙ РПМХЮЕОЙЙ ПФЧЕФБ ПФ SMSC ОБ РЕТЧЙЮОЩК ЪБРТПУ BindRequest
+  // ДМС ДБООПЗП systemId, ДМС ЧУЕИ ЛЬЫЙТПЧБООЩИ ОБ ДБООЩК НПНЕОФ
+  // ЪБРТПУПЧ ЖПТНЙТХЕН ПФЧЕФЩ УП УФБФХУПН, УППФЧЕФУФЧХАЭЙК УФБФХУХ
+  // РПМХЮЕООПЗП ПФЧЕФБ ПФ SMSC Й ТБУУЩМБЕН РПДЗПФПЧМЕООЩЕ ПФЧЕФЩ
+  // РП УППФЧЕФУФЧХАЭЙН SME.
+  CacheOfPendingBindReqFromSME::getInstance().putPendingReqToCache(smppSessionToSME, bindRequest);
+  // Й ДПВБЧМСЕН УЕУУЙА_ПФ_SME Ч УРЙУПЛ БЛФЙЧОЩИ УЕУУЙК У ХЛБЪБООЩН
+  // ЪОБЮЕОЙЕН systemId
+  SMPPSessionSwitch::getInstance().addActiveSmeSession(smppSessionToSME);
+}
+
+void
+BindRequest_Subscriber::teminateSession(smsc::core_ax::network::Socket& socket,
+                                        SMPP_BindRequest* bindRequest)
+{
+  smsc_log_info(_log,"BindRequest_Subscriber::teminateSession::: Send negative bind_response and close session");
+  try {
+    prepareBindResponseMessage(socket, bindRequest, ESME_RBINDFAIL);
+    SessionHelper::terminateSessionToSme(socket);
+  } catch (...) {
+    smsc_log_info(_log,"BindRequest_Subscriber::teminateSession::: catched unexpected exception");
+  }
+}
+
+void
+BindRequest_Subscriber::prepareBindResponseMessage(smsc::core_ax::network::Socket& socket,
+                                                   SMPP_BindRequest* bindRequest,
+                                                   smpp_status_t statusInResponse)
+{
+  std::auto_ptr<SMPP_BindResponse> bindResponse(bindRequest->prepareResponse(statusInResponse));
+  std::auto_ptr<BufferedOutputStream> outBuf = bindResponse->marshal();
+  smsc_log_info(_log,"BindRequest_Subscriber::prepareBindResponseMessage::: send BIND_RESPONSE message to SME with status=%d. Message dump=[%s]", statusInResponse, bindResponse->toString().c_str());
+  PendingOutDataQueue::getInstance().scheduleDataForSending(*outBuf, socket);
+}
+
 }

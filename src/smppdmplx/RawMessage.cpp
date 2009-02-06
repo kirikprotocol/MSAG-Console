@@ -5,23 +5,25 @@
 #include "NetworkException.hpp"
 #include "SMPP_Constants.hpp"
 
-#include <logger/Logger.h>
-extern smsc::logger::Logger* dmplxlog;
+namespace smpp_dmplx {
 
-smpp_dmplx::RawMessage::RawMessage() : _haveReadlength(false), _haveReadRawData(false), _bufForRawMessage(0), _bytesWasRead(0) {}
+RawMessage::RawMessage()
+  :  _log(smsc::logger::Logger::getInstance("rawmsg")), _haveReadlength(false), _haveReadRawData(false), _bufForRawMessage(0), _bytesWasRead(0) {}
 
-smpp_dmplx::RawMessage::~RawMessage()
+RawMessage::~RawMessage()
 {
   if ( _bufForRawMessage )
     delete [] _bufForRawMessage;
 }
 
-bool smpp_dmplx::RawMessage::haveReadLenght() const
+bool
+RawMessage::haveReadLength() const
 {
   return _haveReadlength;
 }
 
-void smpp_dmplx::RawMessage::readDataLength(int fd)
+void
+RawMessage::readDataLength(int fd)
 {
   if ( !_haveReadRawData ) {
     int sz;
@@ -29,14 +31,14 @@ void smpp_dmplx::RawMessage::readDataLength(int fd)
     if ( !sz )
       throw EOFException("RawMessage::readDataLength::: got EOF");
     else if ( sz < 0 )
-      throw smsc::util::Exception("RawMessage::readDataLength::: call to read failed");
+      throw NetworkException("RawMessage::readDataLength::: call to read failed");
 
     _bytesWasRead += sz;
     if ( sizeof(_rawMessageLen._bufForLength) == _bytesWasRead ) {
       _haveReadlength = true;
       _rawMessageLen._messageLength = ntohl(_rawMessageLen._messageLength);
 
-      smsc_log_debug(dmplxlog,"RawMessage::readDataLength::: _rawMessageLen._messageLength=%d",_rawMessageLen._messageLength);
+      smsc_log_debug(_log,"RawMessage::readDataLength::: message length=%d",_rawMessageLen._messageLength);
       if ( _rawMessageLen._messageLength < SMPP_message::SMPP_HEADER_SZ )
         throw smsc::util::Exception("RawMessage::readDataLength::: wrong message length");
       if ( _rawMessageLen._messageLength > SMPP_message::MAX_SMPP_MESSAGE_SIZE )
@@ -47,12 +49,14 @@ void smpp_dmplx::RawMessage::readDataLength(int fd)
   }
 }
 
-bool smpp_dmplx::RawMessage::haveReadRawData() const
+bool
+RawMessage::haveReadRawData() const
 {
   return _haveReadRawData;
 }
 
-void smpp_dmplx::RawMessage::readRawData(int fd)
+void
+RawMessage::readRawData(int fd)
 {
   if ( !_haveReadRawData ) {
     int sz;
@@ -66,7 +70,7 @@ void smpp_dmplx::RawMessage::readRawData(int fd)
     if ( !sz )
       throw EOFException("RawMessage::readRawData::: got EOF");
     else if ( sz < 0 )
-      throw smsc::util::Exception("RawMessage::readRawData::: call to read failed");
+      throw NetworkException("RawMessage::readRawData::: call to read failed");
 
     _bytesWasRead += sz;
     if ( _rawMessageLen._messageLength == _bytesWasRead )
@@ -74,9 +78,11 @@ void smpp_dmplx::RawMessage::readRawData(int fd)
   }
 }
 
-smpp_dmplx::BufferedInputStream
-smpp_dmplx::RawMessage::getRawData() const
+BufferedInputStream
+RawMessage::getRawData() const
 {
-  smsc_log_debug(dmplxlog,"RawMessage::getRawData::: _rawMessageLen._messageLength=%d",_rawMessageLen._messageLength);
-  return smpp_dmplx::BufferedInputStream(std::vector<uint8_t>(_bufForRawMessage, _bufForRawMessage+_rawMessageLen._messageLength));
+  smsc_log_debug(_log,"RawMessage::getRawData::: _rawMessageLen._messageLength=%d",_rawMessageLen._messageLength);
+  return BufferedInputStream(std::vector<uint8_t>(_bufForRawMessage, _bufForRawMessage+_rawMessageLen._messageLength));
+}
+
 }

@@ -1,54 +1,81 @@
+#include <logger/Logger.h>
 #include "SessionHelper.hpp"
 #include "SessionCache.hpp"
 #include "SMPPSessionSwitch.hpp"
 #include "SocketPool_Singleton.hpp"
 #include "IdleSocketsPool.hpp"
+#include "PendingOutDataQueue.hpp"
+#include "CacheOfSMPP_message_traces.hpp"
+
+namespace smpp_dmplx {
 
 void
-smpp_dmplx::SessionHelper::terminateSessionToSme(smsc::core_ax::network::Socket& socketToSme)
+SessionHelper::terminateSessionToSme(smsc::core_ax::network::Socket& socketToSme)
 {
+  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("sesshlpr");
+
+  smsc_log_info(logger, "SessionHelper::terminateSessionToSme::: try terminate session to sme for socket [%s]", socketToSme.toString().c_str());
   SessionCache::search_result_t searchRes = SessionCache::getInstance().getSession(socketToSme);
   if ( searchRes.first ) {
     SMPPSessionSwitch::getInstance().removeSmeSession(searchRes.second);
-    // сДЮКЪЕЛ ЯЕЯЯХЧ ДКЪ ЯНЙЕРЮ Я SME.
+    // Удаляем сессию для сокета с SME.
     SessionCache::getInstance().removeSession(socketToSme);
   }
-  // сДЮКЪЕЛ ЯНЙЕР Я SME ХГ ОСКЮ ЯНЙЕРНБ ДКЪ ОПНЯКСЬХБЮМХЪ ГЮОПНЯНБ.
+  // Удаляем сокет с SME из пула сокетов для прослушивания запросов.
   SocketPool_Singleton::getInstance().remove_socket(socketToSme);
   IdleSocketsPool::getInstance().removeActiveSocket(socketToSme);
+  PendingOutDataQueue::getInstance().cancelScheduledData(socketToSme);
+  CacheOfSMPP_message_traces::getInstance().removeMessageTracesFromCache(socketToSme);
+  smsc_log_info(logger, "SessionHelper::terminateSessionToSme::: session to sme for socket [%s] has been terminated", socketToSme.toString().c_str());
 }
 
 void
-smpp_dmplx::SessionHelper::terminateSessionToSmsc(smsc::core_ax::network::Socket& socketToSmsc, const std::string& systemId)
+SessionHelper::terminateSessionToSmsc(smsc::core_ax::network::Socket& socketToSmsc, const std::string& systemId)
 {
-  // сДЮКЪЕЛ ЯЕЯЯХЧ ДКЪ ЯНЙЕРЮ Я SMSC.
+  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("sesshlpr");
+
+  smsc_log_info(logger, "SessionHelper::terminateSessionToSmsc::: try terminate session to smsc for socket [%s]", socketToSmsc.toString().c_str());
+  // Удаляем сессию для сокета с SMSC.
   SessionCache::getInstance().removeSession(socketToSmsc);
-  // сДЮКЪЕЛ ХГ РЮАКХЖШ ДХЯОЕРВЕПЮ ХМТНПЛЮЖХЧ Н ЯЕЯЯХХ Я SMSC.
+  // Удаляем из таблицы диспетчера информацию о сессии с SMSC.
   SMPPSessionSwitch::getInstance().dropSharedSessionToSMSC(systemId);
-  // сДЮКЪЕЛ ЯНЙЕР Я SMSC ХГ ОСКЮ ЯНЙЕРНБ ДКЪ ОПНЯКСЬХБЮМХЪ ГЮОПНЯНБ.
+  // Удаляем сокет с SMSC из пула сокетов для прослушивания запросов.
   SocketPool_Singleton::getInstance().remove_socket(socketToSmsc);
   IdleSocketsPool::getInstance().removeActiveSocket(socketToSmsc);
+  PendingOutDataQueue::getInstance().cancelScheduledData(socketToSmsc);
+  smsc_log_info(logger, "SessionHelper::terminateSessionToSmsc::: session to smsc for socket [%s] has been terminated", socketToSmsc.toString().c_str());
 }
 
 void
-smpp_dmplx::SessionHelper::dropActiveSession(smsc::core_ax::network::Socket& socket)
+SessionHelper::dropActiveSession(smsc::core_ax::network::Socket& socket)
 {
+  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("sesshlpr");
+  smsc_log_info(logger, "SessionHelper::dropActiveSession::: try terminate session for socket [%s]", socket.toString().c_str());
+
   SessionCache::search_result_t searchRes = SessionCache::getInstance().getSession(socket);
 
   if ( searchRes.first ) {
     SMPPSession& smppSession = searchRes.second;
-    std::string systemId = smppSession.getSystemId();
+    //    std::string systemId = smppSession.getSystemId();
 
-    // оН ГМЮВЕМХЧ ЯЕЯЯХХ ОШРЮЕЛЯЪ МЮИРХ ЯЕЯЯХЧ Я SMSC. еЯКХ МЮЬКХ,
-    // РН МЮЬЮ ЯЕЯЯХЪ - ЩРН ЯЕЯЯХЪ Я SME, ХМЮВЕ ЩРН ЯЕЯЯХЪ Я SMSC.
+    // По значению сессии пытаемся найти сессию с SMSC. Если нашли,
+    // то наша сессия - это сессия с SME, иначе это сессия с SMSC.
     std::pair<bool,SMPPSession> sessonToSMSC_searchResult =
       SMPPSessionSwitch::getInstance().getCrossedSession(smppSession);
-    if ( sessonToSMSC_searchResult.first == true )
-      SMPPSessionSwitch::getInstance().removeSmeSession(smppSession);
-    else
-      SMPPSessionSwitch::getInstance().dropSharedSessionToSMSC(systemId);
-    SessionCache::getInstance().removeSession(socket);
+    if ( sessonToSMSC_searchResult.first == true ) {
+      terminateSessionToSme(socket);
+      //      SMPPSessionSwitch::getInstance().removeSmeSession(smppSession);
+      //      CacheOfSMPP_message_traces::getInstance().removeMessageTracesFromCache(socket);
+    } else {
+      terminateSessionToSmsc(sessonToSMSC_searchResult.second.getSocketToPeer(), sessonToSMSC_searchResult.second.getSystemId());
+      //SMPPSessionSwitch::getInstance().dropSharedSessionToSMSC(systemId);
+    }
+    //SessionCache::getInstance().removeSession(socket);
   }
-  SocketPool_Singleton::getInstance().remove_socket(socket);
-  IdleSocketsPool::getInstance().removeActiveSocket(socket);
+  //  SocketPool_Singleton::getInstance().remove_socket(socket);
+  //  IdleSocketsPool::getInstance().removeActiveSocket(socket);
+  //  PendingOutDataQueue::getInstance().cancelScheduledData(socket);
+  smsc_log_info(logger, "SessionHelper::dropActiveSession::: session for socket [%s] has been terminated", socket.toString().c_str());
+}
+
 }

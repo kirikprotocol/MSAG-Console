@@ -1,15 +1,15 @@
 #ifndef __SMPPDMPLX_DUMMYSMPPMESSAGE_HPP__
-# define __SMPPDMPLX_DUMMYSMPPMESSAGE_HPP__ 1
+# define __SMPPDMPLX_DUMMYSMPPMESSAGE_HPP__ 
 
 # include "SMPP_message.hpp"
-#include <util/Exception.hpp>
+# include <util/Exception.hpp>
 
 namespace smpp_dmplx {
 
 class DummySMPPMessage : public  SMPP_message {
 public:
   DummySMPPMessage() : SMPP_message(0) {}
-  virtual bool checkMessageCodeEquality(uint32_t msgCode) const { return false; }
+  //virtual bool checkMessageCodeEquality(uint32_t msgCode) const { return false; }
   virtual std::auto_ptr<SMPP_message> clone(uint32_t msgCode, BufferedInputStream& buf) const { return std::auto_ptr<SMPP_message>(new DummySMPPMessage()); }
 
   virtual uint32_t getCommandLength() const { throw smsc::util::Exception("DummySMPPMessage::getCommandLength::: message is invalid"); }

@@ -1,9 +1,31 @@
 #include <logger/Logger.h>
 #include <util/config/Manager.h>
+#include <util/config/ConfigView.h>
 #include "Configuration.hpp"
 #include <exception>
 #include <string.h>
 #include <signal.h>
+
+#include "Publisher.hpp"
+#include "UnbindRequest_Subscriber.hpp"
+#include "EnquireLinkRequest_Subscriber.hpp"
+#include "EnquireLinkResponse_Subscriber.hpp"
+#include "BindRequest_Subscriber.hpp"
+#include "BindResponse_Subscriber.hpp"
+#include "GenericRequest_Subscriber.hpp"
+#include "GenericResponse_Subscriber.hpp"
+#include "SMPP_MessageFactory.hpp"
+
+#include "SMPP_BindReceiver.hpp"
+#include "SMPP_BindReceiver_Resp.hpp"
+#include "SMPP_BindTransceiver.hpp"
+#include "SMPP_BindTransceiver_Resp.hpp"
+#include "SMPP_BindTransmitter.hpp"
+#include "SMPP_BindTransmitter_Resp.hpp"
+#include "SMPP_EnquireLink.hpp"
+#include "SMPP_EnquireLink_Resp.hpp"
+#include "SMPP_Unbind.hpp"
+#include "SMPP_Unbind_Resp.hpp"
 
 static smsc::logger::Logger*
 initLogger(const char* moduleName)
@@ -13,10 +35,6 @@ initLogger(const char* moduleName)
 }
 
 smsc::logger::Logger* dmplxlog=initLogger("dmplx");
-
-#ifdef __cplusplus
-int main(int argc, char* argv[]);
-#endif
 
 void multiplexer();
 
@@ -30,6 +48,37 @@ printUsage(const char* moduleName)
   printf("Usage: %s [-h]|[-c config_file]|[-v]\n", moduleName);
 }
 
+static void
+registerMessageSubscribers()
+{
+  smpp_dmplx::Publisher::getInstance().addSubscriber(new smpp_dmplx::GenericRequest_Subscriber());
+  smpp_dmplx::Publisher::getInstance().addSubscriber(new smpp_dmplx::GenericResponse_Subscriber());
+
+  smpp_dmplx::Publisher::getInstance().addSubscriber(new smpp_dmplx::EnquireLinkRequest_Subscriber());
+  smpp_dmplx::Publisher::getInstance().addSubscriber(new smpp_dmplx::EnquireLinkResponse_Subscriber());
+
+  smpp_dmplx::Publisher::getInstance().addSubscriber(new smpp_dmplx::BindRequest_Subscriber());
+  smpp_dmplx::Publisher::getInstance().addSubscriber(new smpp_dmplx::BindResponse_Subscriber());
+  
+  smpp_dmplx::Publisher::getInstance().addSubscriber(new smpp_dmplx::UnbindRequest_Subscriber());
+}
+
+static void
+registerMessagePrototypes()
+{
+  smpp_dmplx::SMPP_MessageFactory::getInstance().registryCreatableMessage(new smpp_dmplx::SMPP_BindReceiver());
+  smpp_dmplx::SMPP_MessageFactory::getInstance().registryCreatableMessage(new smpp_dmplx::SMPP_BindReceiver_Resp());
+  smpp_dmplx::SMPP_MessageFactory::getInstance().registryCreatableMessage(new smpp_dmplx::SMPP_BindTransceiver());
+  smpp_dmplx::SMPP_MessageFactory::getInstance().registryCreatableMessage(new smpp_dmplx::SMPP_BindTransceiver_Resp());
+  smpp_dmplx::SMPP_MessageFactory::getInstance().registryCreatableMessage(new smpp_dmplx::SMPP_BindTransmitter());
+  smpp_dmplx::SMPP_MessageFactory::getInstance().registryCreatableMessage(new smpp_dmplx::SMPP_BindTransmitter_Resp());
+  smpp_dmplx::SMPP_MessageFactory::getInstance().registryCreatableMessage(new smpp_dmplx::SMPP_EnquireLink());
+  smpp_dmplx::SMPP_MessageFactory::getInstance().registryCreatableMessage(new smpp_dmplx::SMPP_EnquireLink_Resp());
+  smpp_dmplx::SMPP_MessageFactory::getInstance().registryCreatableMessage(new smpp_dmplx::SMPP_Unbind());
+  smpp_dmplx::SMPP_MessageFactory::getInstance().registryCreatableMessage(new smpp_dmplx::SMPP_Unbind_Resp());
+}
+
+extern "C"
 int main(int argc, char* argv[])
 {
   try {
@@ -60,27 +109,35 @@ int main(int argc, char* argv[])
     }
     smsc::util::config::Manager::init(configFile);
     smsc::util::config::Manager& configMgr=smsc::util::config::Manager::getInstance();
+    
+    smsc::util::config::ConfigView smppdmplxCfg(configMgr, "smppdmplx");
 
-    configuration.listenPort=configMgr.getInt("InConnect.incomingPort");
-    configuration.smscHost=configMgr.getString("OutConnect.smscHost");
-    configuration.smscPort=configMgr.getInt("OutConnect.smscPort");
+    configuration.listenPort=smppdmplxCfg.getInt("InConnect.incomingPort");
+    configuration.smscHost=smppdmplxCfg.getString("OutConnect.smscHost");
+    configuration.smscPort=smppdmplxCfg.getInt("OutConnect.smscPort");
 
-    configuration.enqLinkPeriod=configMgr.getInt("LinkControl.EnqLinkPeriod");
-    configuration.selectTimeOut=configMgr.getInt("LinkControl.SelectTimeOut");
+    configuration.inactivityPeriod=smppdmplxCfg.getInt("LinkControl.inactivityPeriod");
+    configuration.selectTimeOut=smppdmplxCfg.getInt("LinkControl.selectTimeOut");
 
-    smsc::util::config::CStrSet *sectionList
-      = configMgr.getChildSectionNames("Authentication");
-    if ( sectionList ) {
-      for (smsc::util::config::CStrSet::iterator iter=sectionList->begin();
-           iter != sectionList->end(); ++iter) {
-        const std::string systemIdParam = *iter + std::string(".systemId");
-        const std::string passwdParam = *iter + std::string(".password");
-        configuration.sysid_Passwd_map.insert(std::make_pair(configMgr.getString(systemIdParam.c_str()),configMgr.getString(passwdParam.c_str())));
-      }
-    } else {
+    if (!smppdmplxCfg.findSubSection("Authentication")) {
       fprintf(stderr, "<Authentication> section is absent in configuration file");
       return 1;
     }
+
+    std::auto_ptr<smsc::util::config::ConfigView> authenticationSections(smppdmplxCfg.getSubConfig("Authentication"));
+    std::auto_ptr< std::set<std::string> > setGuard(authenticationSections->getShortSectionNames());
+    for (std::set<std::string>::iterator i=setGuard->begin(); i!=setGuard->end(); i++) {
+      std::auto_ptr<smsc::util::config::ConfigView> userSection(authenticationSections->getSubConfig((*i).c_str()));
+      std::string systemId = userSection->getString("systemId");
+      std::string passwd = userSection->getString("password");
+
+      smsc_log_debug(dmplxlog, "DEBUG: systemId=%s,passwd=%s", systemId.c_str(), passwd.c_str());
+      configuration.sysid_Passwd_map.insert(std::make_pair(systemId, passwd));
+    }
+
+    registerMessageSubscribers();
+
+    registerMessagePrototypes();
 
     if ( sigset(SIGPIPE, SIG_IGN) == SIG_ERR ) {
       perror ("sigset failed");
@@ -88,6 +145,7 @@ int main(int argc, char* argv[])
     }
 
     smsc_log_info(dmplxlog,"SME multiplexer was started. Version=[%s]", module_version);
+
     multiplexer();
   } catch (std::exception& ex) {
     fprintf(stderr, "Catch exception [%s]\n", ex.what());

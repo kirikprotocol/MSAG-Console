@@ -1,5 +1,5 @@
 #ifndef __SMPPDMPLX_BUFFEREDINPUTSTREAM_HPP__
-# define __SMPPDMPLX_BUFFEREDINPUTSTREAM_HPP__ 1
+# define __SMPPDMPLX_BUFFEREDINPUTSTREAM_HPP__
 
 # include <sys/types.h>
 # include <netinet/in.h>

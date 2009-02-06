@@ -1,103 +1,108 @@
 #ifndef __SMPPDMPLX_SMPPSESSIONSWITCH_HPP__
-# define __SMPPDMPLX_SMPPSESSIONSWITCH_HPP__ 1
+# define __SMPPDMPLX_SMPPSESSIONSWITCH_HPP__
 
 /*
-** Ответственность класса-
-** 1. хранение связки systemId -- сессия_с_SMSC
-** 2. возврат сессии_с_SMSC по запросу на основании значения systemId
-** 3. хранение связки smpp_сессия_c_SME -- smpp_сессия_с_SMC
-** 4. возврат по запросу разделяемой сессии с SMSC. В запросе
-**    указывается сессия, обслуживающия запросы от SME.
-** 5. удаление связки smpp_сессия_c_SME -- smpp_сессия_с_SMC.
-**    При удаленнии последней связки smpp_сессия_c_SME -- smpp_сессия_с_SMC 
-**    для данной сессии_с_SMC, транспортное соединение с SMC 
-**    должно закрываться.
-** 6. возврат сессии для работы с SME (сокет_SME) по данной в запросе
-**    сессии с SMSC. Сессии с SME могут возвращаться
-**    в соответствии со стратегией round-robin, или как-то еще.
+** пФЧЕФУФЧЕООПУФШ ЛМБУУБ-
+** 1. ИТБОЕОЙЕ УЧСЪЛЙ systemId -- УЕУУЙС_У_SMSC
+** 2. ЧПЪЧТБФ УЕУУЙЙ_У_SMSC РП ЪБРТПУХ ОБ ПУОПЧБОЙЙ ЪОБЮЕОЙС systemId
+** 3. ИТБОЕОЙЕ УЧСЪЛЙ smpp_УЕУУЙС_c_SME -- smpp_УЕУУЙС_У_SMC
+** 4. ЧПЪЧТБФ РП ЪБРТПУХ ТБЪДЕМСЕНПК УЕУУЙЙ У SMSC. ч ЪБРТПУЕ
+**    ХЛБЪЩЧБЕФУС УЕУУЙС, ПВУМХЦЙЧБАЭЙС ЪБРТПУЩ ПФ SME.
+** 5. ХДБМЕОЙЕ УЧСЪЛЙ smpp_УЕУУЙС_c_SME -- smpp_УЕУУЙС_У_SMC.
+**    рТЙ ХДБМЕООЙЙ РПУМЕДОЕК УЧСЪЛЙ smpp_УЕУУЙС_c_SME -- smpp_УЕУУЙС_У_SMC 
+**    ДМС ДБООПК УЕУУЙЙ_У_SMC, ФТБОУРПТФОПЕ УПЕДЙОЕОЙЕ У SMC 
+**    ДПМЦОП ЪБЛТЩЧБФШУС.
+** 6. ЧПЪЧТБФ УЕУУЙЙ ДМС ТБВПФЩ У SME (УПЛЕФ_SME) РП ДБООПК Ч ЪБРТПУЕ
+**    УЕУУЙЙ У SMSC. уЕУУЙЙ У SME НПЗХФ ЧПЪЧТБЭБФШУС
+**    Ч УППФЧЕФУФЧЙЙ УП УФТБФЕЗЙЕК round-robin, ЙМЙ ЛБЛ-ФП ЕЭЕ.
 */
 
 # include <map>
-
-# include <core_ax/network/Socket.hpp>
-# include <util/Singleton.hpp>
-# include "SMPPSession.hpp"
+# include <list>
 # include <utility>
+
+# include <logger/Logger.h>
+# include <util/Singleton.hpp>
+# include <smppdmplx/SMPPSession.hpp>
+# include <smppdmplx/SMPP_message.hpp>
+# include <smppdmplx/core_ax/network/Socket.hpp>
 
 namespace smpp_dmplx {
 
 class SMPPSessionSwitch : public smsc::util::Singleton<SMPPSessionSwitch> {
 public:
+  SMPPSessionSwitch();
+
   typedef std::pair<bool,SMPPSession> search_result_t;
 
   /*
-  **  Получить разделяемую сессию с SMSC для для заданного значения 
-  **  systemId. Если такая сессия существует, то атрибут first класса
-  **  std::pair<bool,SMPPSession> принимает значение true.
+  **  рПМХЮЙФШ ТБЪДЕМСЕНХА УЕУУЙА У SMSC ДМС ДМС ЪБДБООПЗП ЪОБЮЕОЙС 
+  **  systemId. еУМЙ ФБЛБС УЕУУЙС УХЭЕУФЧХЕФ, ФП БФТЙВХФ first ЛМБУУБ
+  **  std::pair<bool,SMPPSession> РТЙОЙНБЕФ ЪОБЮЕОЙЕ true.
   */
   search_result_t getSharedSessionToSMSC(const std::string& systemId);
 
   /*
-  **  Создать разделяемую сессию с SMSC для заданного значения 
+  **  уПЪДБФШ ТБЪДЕМСЕНХА УЕУУЙА У SMSC ДМС ЪБДБООПЗП ЪОБЮЕОЙС 
   **  systemId.
   */
   void setSharedSessionToSMSC(SMPPSession& sessionToSMSC, const std::string& systemId);
 
   /*
-  **  Удалить разделяемую сессия из пула для заданного значения systemId.
+  **  хДБМЙФШ ТБЪДЕМСЕНХА УЕУУЙС ЙЪ РХМБ ДМС ЪБДБООПЗП ЪОБЮЕОЙС systemId.
   */
   void dropSharedSessionToSMSC(const std::string& systemId);
 
   /*
-  ** Добавить в пул сессию_с_SME
+  ** дПВБЧЙФШ Ч РХМ УЕУУЙА_У_SME
   */
   void addActiveSmeSession(SMPPSession& sessionFromSme);
 
   /*
-  ** Удалить сессию с SME из пула
+  ** хДБМЙФШ УЕУУЙА У SME ЙЪ РХМБ
   */
   void removeSmeSession(SMPPSession& sessionFromSme);
 
   /*
-  ** Получить разделяемую сессию с SMSC. В запросе передается сессия с SME.
-  ** Если в возвращаемой паре first == true, то в second хранится сессия, иначе
-  ** связки сессия_с_SME -- сессия_с_SMSC не существует.
+  ** рПМХЮЙФШ ТБЪДЕМСЕНХА УЕУУЙА У SMSC. ч ЪБРТПУЕ РЕТЕДБЕФУС УЕУУЙС У SME.
+  ** еУМЙ Ч ЧПЪЧТБЭБЕНПК РБТЕ first == true, ФП Ч second ИТБОЙФУС УЕУУЙС, ЙОБЮЕ
+  ** УЧСЪЛЙ УЕУУЙС_У_SME -- УЕУУЙС_У_SMSC ОЕ УХЭЕУФЧХЕФ.
   */
   search_result_t
   getCrossedSession(SMPPSession& sessionFromSme);
 
   /*
-  ** По значению systemId получить сессию для работы с SME. Для данного
-  ** значение systemId может существовать несколько активных сессий с SME.
-  ** Какая конкретно сессия выбирается определается стратегией. На текущий 
-  ** момент гвоздями прибита стратегия round-robin.
+  ** рП ЪОБЮЕОЙА systemId РПМХЮЙФШ УЕУУЙА ДМС ТБВПФЩ У SME. дМС ДБООПЗП
+  ** ЪОБЮЕОЙЕ systemId НПЦЕФ УХЭЕУФЧПЧБФШ ОЕУЛПМШЛП БЛФЙЧОЩИ УЕУУЙК У SME.
+  ** лБЛБС ЛПОЛТЕФОП УЕУУЙС ЧЩВЙТБЕФУС ПРТЕДЕМБЕФУС УФТБФЕЗЙЕК. оБ ФЕЛХЭЙК 
+  ** НПНЕОФ ЗЧПЪДСНЙ РТЙВЙФБ УФТБФЕЗЙС round-robin.
   */
   search_result_t
   getCrossedSession(const std::string& systemId);
-private:
 
+  void broadcastMessageToAllSme(const std::string& systemId, const SMPP_message& messageToSend);
+private:
+  smsc::logger::Logger* _log;
   /*
-  ** Тип для хранения частоты использования сессии с SME.
-  ** В качестве ключа указывается частота использования, 
-  ** в качестве значения - сессия, используемая для связи с SME.
+  ** фЙР ДМС ИТБОЕОЙС УЕУУЙК У SME.
   */
-  typedef std::multimap<int,SMPPSession> smeSessionUsageHistogram_t;
+  typedef std::list<SMPPSession> smeSessions_t;
 
   /* 
-  ** Тип для получения статистики использования сессий с SME по
-  ** значению идентификатора systemId.
+  ** фЙР ДМС РПМХЮЕОЙС УФБФЙУФЙЛЙ ЙУРПМШЪПЧБОЙС УЕУУЙК У SME РП
+  ** ЪОБЮЕОЙА ЙДЕОФЙЖЙЛБФПТБ systemId.
   */
-  typedef std::map<std::string, smeSessionUsageHistogram_t*> sysIdToSmeUsageHist_t;
-  sysIdToSmeUsageHist_t _sysIdToSmeUsageHist;
+  typedef std::map<std::string, smeSessions_t*> sysIdToSmeList_t;
+  sysIdToSmeList_t _sysIdToSmeList;
 
   /*
-  ** Тип для хранения связки systemId -> сессия_с_SMSC
+  ** фЙР ДМС ИТБОЕОЙС УЧСЪЛЙ systemId -> УЕУУЙС_У_SMSC
   */
   typedef std::map<std::string, SMPPSession> mapRegistredSysIdToSmscSession_t;
   mapRegistredSysIdToSmscSession_t _mapRegistredSysIdToSmscSession;
 
   //for debug only
-  void dumpRegistredSmeSession(const char* where, smeSessionUsageHistogram_t* sessionUsageHist);
+  //void dumpRegistredSmeSession(const char* where, smeSessionUsageHistogram_t* sessionUsageHist);
 };
 
 }

@@ -1,29 +1,37 @@
 #ifndef  __SMPPDMPLX_PENDINGOUTDATAQUEUE_HPP__
-# define __SMPPDMPLX_PENDINGOUTDATAQUEUE_HPP__ 1
+# define __SMPPDMPLX_PENDINGOUTDATAQUEUE_HPP__
 
-# include <core_ax/network/Socket.hpp>
+# include <string.h>
 # include <deque>
 # include <map>
-# include "BufferedOutputStream.hpp"
-# include <string.h>
+
+# include <logger/Logger.h>
+# include <util/Singleton.hpp>
+# include <smppdmplx/BufferedOutputStream.hpp>
+# include <smppdmplx/core_ax/network/Socket.hpp>
 
 namespace smpp_dmplx {
 
 /*
-** йКЮЯЯ ОПЕДНЯРЮБКЪЕР ХМРЕПТЕИЯ ДКЪ НРКНФЕММНИ ОЕПЕДЮВХ ДЮММШУ ЮДПЕЯЮРС.
-** дЮММШЕ ОКЮМХПСЧРЯЪ ДКЪ ОЕПЕДЮВХ ВЕПЕГ БШГНБНБ scheduleDataForSending.
-** мЕОНЯПЕДЯРБЕММН ОЕПЕДЮВЮ ДЮММШУ БШОНКМЪЕРЯЪ Б БШГНБЕ sendScheduledData - 
-** ОЕПЕДЮЧРЯЪ ДЮММШЕ, ГЮОКЮМХПНБЮММШЕ Й ОЕПЕДЮВЕ ДКЪ ЯНЙЕРЮ, СЙЮГЮММНЦН 
-** Б ЮПЦСЛЕМРЕ. гЮ НДХМ БШГНБ sendScheduledData НРОКЮБКЪЕРЯЪ ПНБМН ЯРНКЭЙН
-** ДЮММШУ, ЯЙНКЭЙН ЛНФЕР АШРЭ НРОПЮБКЕМН АЕГ АКНЙХПНБЮМХЪ ЯНЙЕРЮ. р.Н. ДКЪ
-** ОЕПЕДЮВХ БЯЕЦН НАЗЕЛЮ ДЮММШУ, ГЮОКЮМХПНБЮММНЦН ДКЪ ДЮММНЦН ЯНЙЕРЮ,
-** ЛНФЕР ОНРПЕАНБЮРЭЯЪ МЕЯЙНКЭЙН БШГНБНБ ЛЕРНДЮ sendScheduledData
+** Класс предоставляет интерфейс для отложенной передачи данных адресату.
+** Данные планируются для передачи через вызовов scheduleDataForSending.
+** Непосредственно передача данных выполняется в вызове sendScheduledData - 
+** передаются данные, запланированные к передаче для сокета, указанного 
+** в аргументе. За один вызов sendScheduledData отплавляется ровно столько
+** данных, сколько может быть отправлено без блокирования сокета. Т.о. для
+** передачи всего объема данных, запланированного для данного сокета,
+** может потребоваться несколько вызовов метода sendScheduledData
 */
-class PendingOutDataQueue {
+class PendingOutDataQueue : public smsc::util::Singleton<PendingOutDataQueue> {
 public:
-  static void scheduleDataForSending(BufferedOutputStream& outBuf, smsc::core_ax::network::Socket& socket);
-  static void sendScheduledData(smsc::core_ax::network::Socket& socket);
+  PendingOutDataQueue();
+
+  void scheduleDataForSending(BufferedOutputStream& outBuf, smsc::core_ax::network::Socket& socket);
+  void sendScheduledData(smsc::core_ax::network::Socket& socket);
+  void cancelScheduledData(const smsc::core_ax::network::Socket& socket);
 private:
+  smsc::logger::Logger* _log;
+
   struct data_t {
     data_t(void* aBuffer, size_t aFullBufferSize) :
       fullBufferSize(aFullBufferSize), pos(0) {
@@ -36,10 +44,10 @@ private:
     size_t pos;
   };
 
-  typedef std::deque<data_t> scheduled_data_t ;
+  typedef std::deque<data_t> scheduled_data_t;
   typedef std::map<smsc::core_ax::network::Socket, scheduled_data_t> sched_table_t;
 
-  static sched_table_t sched_table;
+  sched_table_t _sched_table;
 };
 
 }

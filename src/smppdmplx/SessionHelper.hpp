@@ -1,8 +1,8 @@
 #ifndef __SMPPDMPLX_SESSIONHELPER__HPP__
-# define __SMPPDMPLX_SESSIONHELPER__HPP__ 1
+# define __SMPPDMPLX_SESSIONHELPER__HPP__
 
 # include <string>
-# include <core_ax/network/Socket.hpp>
+# include <smppdmplx/core_ax/network/Socket.hpp>
 
 namespace smpp_dmplx {
 

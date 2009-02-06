@@ -1,12 +1,12 @@
 #ifndef __SMSC_CORE_AX_NETWORK_SOCKETPOOL_HPP__
-# define __SMSC_CORE_AX_NETWORK_SOCKETPOOL_HPP__ 1
+# define __SMSC_CORE_AX_NETWORK_SOCKETPOOL_HPP__
 
 # include <sys/types.h>
 # include <sys/time.h>
 # include <list>
 # include <utility>
 
-# include <core_ax/network/Socket.hpp>
+# include <smppdmplx/core_ax/network/Socket.hpp>
 
 namespace smsc {
 namespace core_ax {
@@ -25,8 +25,8 @@ public:
   typedef enum { TIMEOUT=0, HAVE_READY_SOCKET=1 } listen_status_t;
   virtual void push_socket(Socket& sock, wait_socket_type_t wait_type = WAIT_READABLE);
   virtual void push_socket(ServerSocket& sock);
-  virtual void remove_socket(Socket& sock);
-  virtual void remove_socket(ServerSocket& sock);
+  virtual void remove_socket(const Socket& sock, wait_socket_type_t wait_type=smsc::core_ax::network::SocketPool::WAIT_READABLE);
+  virtual void remove_socket(const ServerSocket& sock);
 
   typedef std::list<Socket> SocketList_t;
 

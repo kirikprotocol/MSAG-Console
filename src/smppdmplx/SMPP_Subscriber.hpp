@@ -1,9 +1,9 @@
 #ifndef __SMPPDMPLX_SMPP_SUBSCRIBER_HPP__
-# define __SMPPDMPLX_SMPP_SUBSCRIBER_HPP__ 1
+# define __SMPPDMPLX_SMPP_SUBSCRIBER_HPP__
 
 # include <memory>
-# include <core_ax/network/Socket.hpp>
-# include "SMPP_message.hpp"
+# include <smppdmplx/core_ax/network/Socket.hpp>
+# include <smppdmplx/SMPP_message.hpp>
 
 namespace smpp_dmplx {
 

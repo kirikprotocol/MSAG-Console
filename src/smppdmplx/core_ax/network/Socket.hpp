@@ -1,11 +1,11 @@
 #ifndef __SMSC_CORE_AX_NETWORK_SOCKET_HPP__
-# define __SMSC_CORE_AX_NETWORK_SOCKET_HPP__ 1
+# define __SMSC_CORE_AX_NETWORK_SOCKET_HPP__
 
 # include <string>
 # include <sys/types.h>
 # include <netinet/in.h>
 
-# include <core_ax/network/SocketPool.hpp>
+# include <smppdmplx/core_ax/network/SocketPool.hpp>
 
 namespace smsc {
 namespace core_ax {
@@ -35,7 +35,7 @@ public:
   virtual void setNonBlocking();
   virtual void setBlocking();
 
-  int getSocketDescriptor();
+  int getSocketDescriptor() const;
 
   virtual bool isReadable() const;
   virtual bool isWriteable() const;
@@ -84,7 +84,7 @@ public:
   virtual void setNonBlocking();
   virtual void setBlocking();
 
-  int getSocketDescriptor();
+  int getSocketDescriptor() const;
 
   virtual bool operator==(const ServerSocket& rhs) const;
   virtual bool operator==(const Socket& rhs) const;

@@ -1,9 +1,9 @@
 #ifndef __SMPPDMPLX_SMPP_BINDRESPONSE_HPP__
-# define __SMPPDMPLX_SMPP_BINDRESPONSE_HPP__ 1
+# define __SMPPDMPLX_SMPP_BINDRESPONSE_HPP__
 
-# include "SMPP_message.hpp"
 # include <string>
 # include <vector>
+# include <smppdmplx/SMPP_message.hpp>
 
 namespace smpp_dmplx {
 
@@ -23,7 +23,7 @@ public:
   virtual std::auto_ptr<SMPP_BindResponse> makeCopy() const = 0;
 private:
   std::string _systemId;
-  std::vector<uint8_t> unimportantDataBuf;
+  std::vector<uint8_t> _unimportantDataBuf;
 };
 
 }

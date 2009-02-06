@@ -1,12 +1,14 @@
 #include "SequenceNumberGenerator.hpp"
 
-smpp_dmplx::SequenceNumberGenerator::SeqGeneratorsMap_t
-smpp_dmplx::SequenceNumberGenerator::_seqGeneratorsMap;
+namespace smpp_dmplx {
 
-smpp_dmplx::SequenceNumberGenerator::SequenceNumberGenerator() : _nextSeq(0) {}
+SequenceNumberGenerator::SeqGeneratorsMap_t
+SequenceNumberGenerator::_seqGeneratorsMap;
 
-smpp_dmplx::SequenceNumberGenerator*
-smpp_dmplx::SequenceNumberGenerator::getInstance(const std::string& systemId)
+SequenceNumberGenerator::SequenceNumberGenerator() : _nextSeq(0) {}
+
+SequenceNumberGenerator*
+SequenceNumberGenerator::getInstance(const std::string& systemId)
 {
   SequenceNumberGenerator* instance;
 
@@ -19,7 +21,10 @@ smpp_dmplx::SequenceNumberGenerator::getInstance(const std::string& systemId)
   return instance;
 }
 
-uint32_t smpp_dmplx::SequenceNumberGenerator::getNextValue()
+uint32_t
+SequenceNumberGenerator::getNextValue()
 {
   return ++_nextSeq;
+}
+
 }

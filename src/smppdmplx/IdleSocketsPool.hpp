@@ -1,41 +1,45 @@
 #ifndef __SMPPDMPLX_IDLESOCKETSPOOL_HPP__
-# define __SMPPDMPLX_IDLESOCKETSPOOL_HPP__ 1
+# define __SMPPDMPLX_IDLESOCKETSPOOL_HPP__
 
 # include <sys/types.h>
-# include <core_ax/network/Socket.hpp>
-# include <util/Singleton.hpp>
-
 # include <list>
 # include <memory>
+
+# include <logger/Logger.h>
+# include <util/Singleton.hpp>
+# include <smppdmplx/core_ax/network/Socket.hpp>
 
 namespace smpp_dmplx {
 
 /*
-** нРБЕРЯРБЕММНЯРЭ ЙКЮЯЯЮ - ОПЕДНЯРЮБХРЭ ХМРЕПТЕИЯ ДКЪ СОПЮБКЕМХЪ РЮИЛЮСРНЛ
-** НФХДЮМХЪ НОЕПЮЖХИ ББНДЮ/БШБНДЮ МЮ ЯНЙЕРЕ.
+** Ответственность класса - предоставить интерфейс для управления таймаутом
+** ожидания операций ввода/вывода на сокете.
 */
 class IdleSocketsPool : public smsc::util::Singleton<IdleSocketsPool> {
 public:
+  IdleSocketsPool();
+
   typedef std::pair<smsc::core_ax::network::Socket, time_t> Socket_Timeout_pair_t;
   typedef std::list<Socket_Timeout_pair_t> IdleSocketList_t;
 
   /*
-  ** бНГБПЮЫЮЕР true - ЕЯКХ ЕЯРЭ ЯНЙЕРШ, ДКЪ ЙНРНПШУ ХЯРЕЙ РЮИЛЮСР НФХДЮМХЪ
-  ** ЮЙРХБМНЯРХ, ХМЮВЕ БНГБПЮЫЮЕР false.
+  ** Возвращает true - если есть сокеты, для которых истек таймаут ожидания
+  ** активности, иначе возвращает false.
   */
-  bool getTimedOutSocketsList(IdleSocketList_t& timedOutSocketlist);
+  bool getTimedOutSocketsList(IdleSocketList_t* timedOutSocketlist);
 
   /*
-  ** оНЛЕЫЮЕР ЯНЙЕР Б ОСК ЯНЙЕРНБ, НФХДЮЧЫХУ БШОНКМЕМХЪ НОЕПЮЖХХ ББНДЮ/БШБНДЮ.
+  ** Помещает сокет в пул сокетов, ожидающих выполнения операции ввода/вывода.
   */
   void insertWaitingSocket(const smsc::core_ax::network::Socket& socket, time_t socketTimeoutValue);
 
   /*
-  ** сДЮКЪЕР ЯНЙЕР, МЮ ЙНРНПНЛ БШОНКМЪКЮЯЭ НОЕПЮЖХЪ ББНДЮ/БШБНДЮ, ХГ ОСКЮ
+  ** Удаляет сокет, на котором выполнялась операция ввода/вывода, из пула
   */
   void removeActiveSocket(const smsc::core_ax::network::Socket& socket);
 
 private:
+  smsc::logger::Logger* _log;
   IdleSocketList_t _idle_socket_list;
 };
 

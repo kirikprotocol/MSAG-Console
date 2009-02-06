@@ -1,46 +1,57 @@
 #ifndef __SMPPDMPLX_CACHEOFSMPP_MESSAGE_TRACES_HPP__
-# define __SMPPDMPLX_CACHEOFSMPP_MESSAGE_TRACES_HPP__ 1
+# define __SMPPDMPLX_CACHEOFSMPP_MESSAGE_TRACES_HPP__
 
 # include <sys/types.h>
 # include <string>
 # include <map>
 # include <utility>
 
+# include <logger/Logger.h>
 # include <util/Singleton.hpp>
-# include "SMPPSession.hpp"
+# include <smppdmplx/SMPPSession.hpp>
+# include <smppdmplx/core_ax/network/Socket.hpp>
 
 namespace smpp_dmplx {
 
 class CacheOfSMPP_message_traces : public smsc::util::Singleton<CacheOfSMPP_message_traces> {
 public:
+  CacheOfSMPP_message_traces();
   /*
-  ** лЕРНД ОН ГМЮВЕМХЧ sequenceNumber, ОНКСВЕММНЛС НР SME Х ГМЮВЕМХЧ systemId
-  ** ДКЪ БУНДЪЫЕИ ЯЕЯЯХХ НР SME, ОНКСВЮЕР  МНБШИ sequenceNumber ДКЪ ГЮОПНЯНБ,
-  ** ОЕПЕДЮБЮЕЛШУ Б SMSC. яЕЯЯХЪ, ОЕПЕДЮММЮЪ Б ЮПЦСЛЕМРЕ, ЯНУПЮМЪЕРЯЪ Б ЙЕЬЕ.
-  ** мНБШИ sequenceNumber БНГБПЮЫЮЕРЯЪ Б БХДЕ ПЕГСКЭРЮРЮ ЛЕРНДЮ.
+  ** Метод по значению sequenceNumber, полученному от SME и значению systemId
+  ** для входящей сессии от SME, получает  новый sequenceNumber для запросов,
+  ** передаваемых в SMSC. Сессия, переданная в аргументе, сохраняется в кеше.
+  ** Новый sequenceNumber возвращается в виде результата метода.
   */
-  uint32_t
-  putMessageTraceToCache(uint32_t origSeqNum, const SMPPSession& sessionFromSME);
+  void putMessageTraceToCache(uint32_t origSeqNum, const SMPPSession& sessionFromSME, uint32_t substSeqNum);
 
   /*
-  ** оЕПБШИ ЩКЕЛЕМР ОЮПШ - seqNum НР SME, БРНПНИ ЩКЕЛЕМР ОЮПШ - ЯЕЯЯХЪ
-  ** НР ЙНРНПНИ АШК ОНКСВЕМ НПХЦХМЮКЭМШИ ГЮОПНЯ.
+  ** Первый элемент пары - seqNum от SME, второй элемент пары - сессия
+  ** от которой был получен оригинальный запрос.
   */
   typedef std::pair<uint32_t, SMPPSession> MessageTrace_t;
 
   /*
-  ** лЕРНД ОН ГМЮВЕМХЧ sequenceNumber, ОНКСВЕММНЛС НР SMSC Х ГМЮВЕМХЧ systemId
-  ** ДКЪ ЯЕЯЯХХ Я SMSC, БНГБПЮЫЮЕР ХГ ЙЕЬЮ ОЮПС
-  ** <ХЯУНДМНЕ_ГМЮВЕМХЕ_sequenceNumber,ЯЕЯЯХЪ_Я_SME>
+  ** Метод по значению sequenceNumber, полученному от SMSC и значению systemId
+  ** для сессии с SMSC, возвращает из кеша пару
+  ** <исходное_значение_sequenceNumber,сессия_с_SME>
   */
   MessageTrace_t
   getMessageTraceFromCache(uint32_t substSeqNum, const std::string& systemId);
+
+  void removeMessageTracesFromCache(const smsc::core_ax::network::Socket& socketToSme);
+
 private:
   typedef std::pair<uint32_t, std::string> SeqNumSessId_pair_t;
 
   typedef std::map<SeqNumSessId_pair_t,
                    MessageTrace_t> CacheType;
-  CacheType mapper;
+  CacheType _mapper;
+  smsc::logger::Logger* _log;
+};
+
+class MessageTraceNotFound : public smsc::util::Exception {
+public:
+  explicit MessageTraceNotFound(const char* what) : Exception(what) {}
 };
 
 }

@@ -1,10 +1,11 @@
 #ifndef __SMPPDMPLX_SMPP_BINDREQUEST_HPP__
-# define __SMPPDMPLX_SMPP_BINDREQUEST_HPP__ 1
+# define __SMPPDMPLX_SMPP_BINDREQUEST_HPP__
 
-# include "SMPP_message.hpp"
-# include "SMPP_BindResponse.hpp"
 # include <string>
 # include <vector>
+
+# include <smppdmplx/SMPP_message.hpp>
+# include <smppdmplx/SMPP_BindResponse.hpp>
 
 namespace smpp_dmplx {
 
@@ -27,7 +28,7 @@ public:
   virtual std::string toString() const;
 private:
   std::string _systemId, _password;
-  std::vector<uint8_t> unimportantDataBuf;
+  std::vector<uint8_t> _unimportantDataBuf;
 };
 
 }

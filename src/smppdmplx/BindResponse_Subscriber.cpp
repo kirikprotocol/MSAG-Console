@@ -3,7 +3,6 @@
 #include <utility>
 
 #include "BindResponse_Subscriber.hpp"
-#include "Publisher.hpp"
 #include "SMPP_BindResponse.hpp"
 #include "CacheOfSMPP_message_traces.hpp"
 #include "SMPPSession.hpp"
@@ -16,96 +15,121 @@
 #include "CacheOfPendingBindReqFromSME.hpp"
 #include "SocketPool_Singleton.hpp"
 
-#include <logger/Logger.h>
-extern smsc::logger::Logger* dmplxlog;
+namespace smpp_dmplx {
 
-static int toRegisterSubscriber() {
-  smpp_dmplx::Publisher::getInstance().addSubscriber(new smpp_dmplx::BindResponse_Subscriber());
+BindResponse_Subscriber::BindResponse_Subscriber()
+  : _log(smsc::logger::Logger::getInstance("msg_hndlr"))
+{}
 
-  return 0;
-}
+BindResponse_Subscriber::~BindResponse_Subscriber() {}
 
-static int subscriberIsRegistered = toRegisterSubscriber();
-
-smpp_dmplx::BindResponse_Subscriber::~BindResponse_Subscriber() {}
-
-smpp_dmplx::SMPP_Subscriber::handle_result_t
-smpp_dmplx::BindResponse_Subscriber::handle(std::auto_ptr<SMPP_message>& smpp, smsc::core_ax::network::Socket& socket)
+SMPP_Subscriber::handle_result_t
+BindResponse_Subscriber::handle(std::auto_ptr<SMPP_message>& smpp, smsc::core_ax::network::Socket& socket)
 {
   if ( smpp->getCommandId() == SMPP_message::BIND_RECEIVER_RESP ||
        smpp->getCommandId() == SMPP_message::BIND_TRANSMITTER_RESP ||
        smpp->getCommandId() == SMPP_message::BIND_TRANSCEIVER_RESP ) {
-    SMPP_BindResponse* bindResponse = dynamic_cast<SMPP_BindResponse*>(smpp.get());
+    SMPP_BindResponse* bindResponse = static_cast<SMPP_BindResponse*>(smpp.get());
 
-    smsc_log_info(dmplxlog,"BindResponse_Subscriber::handle::: got BIND_RESPONSE message for processing from socket=[%s]. Message dump=[%s]", socket.toString().c_str(), bindResponse->toString().c_str());
+    smsc_log_info(_log,"BindResponse_Subscriber::handle::: got BIND_RESPONSE message for processing from socket=[%s]. Message dump=[%s]", socket.toString().c_str(), bindResponse->toString().c_str());
 
-    // По сокету, на котором получено сообщение, получаю сессию с SMSC.
+    // рП УПЛЕФХ, ОБ ЛПФПТПН РПМХЮЕОП УППВЭЕОЙЕ, РПМХЮБА УЕУУЙА У SMSC.
     SessionCache::search_result_t sessionSearchResult = 
       SessionCache::getInstance().getSession(socket);
     if ( sessionSearchResult.first == false ) {
-      // Сообщение BindResponse получено не от SMSC
-      smsc_log_error(dmplxlog,"smpp_dmplx::BindResponse_Subscriber::handle::: It was got BindResponse from socket not for smsc communication");
-      // Убирает сокет на котором получено сообщение из пула сокетов.
+      // уППВЭЕОЙЕ BindResponse РПМХЮЕОП ОЕ ПФ SMSC
+      smsc_log_error(_log,"smpp_dmplx::BindResponse_Subscriber::handle::: It was got BindResponse from socket not for smsc communication");
+      // хВЙТБЕФ УПЛЕФ ОБ ЛПФПТПН РПМХЮЕОП УППВЭЕОЙЕ ЙЪ РХМБ УПЛЕФПЧ.
       SocketPool_Singleton::getInstance().remove_socket(socket);
-    } else {
-      std::string systemId = sessionSearchResult.second.getSystemId();
+    } else
+      completeSessionActivation(sessionSearchResult.second, bindResponse);
 
-      try {
-        SMPPSessionSwitch::search_result_t smscSessFromCache_searchRes =
-          SMPPSessionSwitch::getInstance().getSharedSessionToSMSC(systemId);
-        if ( smscSessFromCache_searchRes.first == false )
-          throw smsc::util::Exception("smpp_dmplx::BindResponse_Subscriber::handle:::  It was got BindResponse for unknown BindRequest");
-
-        // Ищем запрос BIND_REQUEST от SME на основании которого был
-        // сформирован запрос BIND_REQUEST в SMSC
-        CacheOfSMPP_message_traces::MessageTrace_t messageTrace = 
-          CacheOfSMPP_message_traces::getInstance().getMessageTraceFromCache(bindResponse->getSequenceNumber(), systemId);
-
-        // По факту получения ответа BIND_RESPONSE
-        // Изменяем состояние разделяемой сессии с SMSC
-        if ( smscSessFromCache_searchRes.second.updateSessionState(SMPPSession::GOT_BIND_RESP) != SMPPSession::OPERATION_SUCCESS ) {
-          // Завершаем сессию с SMSC.
-          SessionHelper::terminateSessionToSmsc(socket, systemId);
-          // Завершаем сессию с SME.
-          SessionHelper::terminateSessionToSme(messageTrace.second.getSocketToPeer());
-        } else {
-          // заменяем значение sequenceNumber значением, сохраненнным в кэше
-          bindResponse->setSequenceNumber(messageTrace.first);
-
-          smsc_log_info(dmplxlog,"BindResponse_Subscriber::handle::: send BIND_RESPONSE message to SME. Message dump=[%s]", bindResponse->toString().c_str());
-          // преобразовали в буфер для записи в сокет
-          std::auto_ptr<BufferedOutputStream>
-            bufToWriteForSme = bindResponse->marshal();
-
-          // послали ответ в SME от которого был получен первый запрос
-          // BindRequest
-          PendingOutDataQueue::scheduleDataForSending(*bufToWriteForSme,messageTrace.second.getSocketToPeer());
-
-          // Пошукали в кэше запросы BindRequest от других SME с тем же 
-          // systemId. Для каждого найденного запроса сформировали ответ со 
-          // статусом равным bindResponse->getCommandStatus()
-          CacheOfPendingBindReqFromSME::getInstance().commitPendingReqInCache(systemId, *bindResponse);
-          // Проверяем статус ответа
-          if ( bindResponse->getCommandStatus() != ESME_ROK )
-            // Если в ответе BIND_RESPONSE получена ошибка, то сессию 
-            // установить не удалось и необходимо удалить разделяемую сессию
-            // с SMSC из пула сессий для заданного значения systemId.
-            // Завершаем сессию с SMSC.
-            SessionHelper::terminateSessionToSmsc(socket, systemId);
-          else
-            messageTrace.second.updateSessionState(SMPPSession::GOT_BIND_RESP);
-        }
-      } catch (std::exception& ex) {
-        try {
-          smsc_log_error(dmplxlog,"BindResponse_Subscriber::handle::: Catch exception [%s]", ex.what());
-
-          // Завершаем сессию с SMSC.
-          SessionHelper::terminateSessionToSmsc(socket, systemId);
-        } catch (...) {}
-        throw;
-      }
-    }
     return RequestWasProcessed;
   } else
     return RequestIsNotForMe;
+}
+
+void
+BindResponse_Subscriber::completeSessionActivation(SMPPSession& sessionToSmsc,
+                                                   SMPP_BindResponse* bindResponse)
+{
+  const std::string& systemId = sessionToSmsc.getSystemId();
+
+  SMPPSessionSwitch::search_result_t smscSessFromCache_searchRes;
+  try {
+    smscSessFromCache_searchRes = SMPPSessionSwitch::getInstance().getSharedSessionToSMSC(systemId);
+  } catch (...) {
+    smscSessFromCache_searchRes.first = false;
+  }
+
+  if ( smscSessFromCache_searchRes.first == false ) {
+    smsc_log_error(_log, "BindResponse_Subscriber::completeSessionActivation:::  It was got BindResponse for unknown BindRequest");
+    SessionHelper::terminateSessionToSmsc(sessionToSmsc.getSocketToPeer(), systemId);
+    return;
+  }
+
+  try {
+    // йЭЕН ЪБРТПУ BIND_REQUEST ПФ SME ОБ ПУОПЧБОЙЙ ЛПФПТПЗП ВЩМ
+    // УЖПТНЙТПЧБО ЪБРТПУ BIND_REQUEST Ч SMSC
+    CacheOfSMPP_message_traces::MessageTrace_t messageTrace = 
+      CacheOfSMPP_message_traces::getInstance().getMessageTraceFromCache(bindResponse->getSequenceNumber(), systemId);
+
+    // рП ЖБЛФХ РПМХЮЕОЙС ПФЧЕФБ BIND_RESPONSE
+    // йЪНЕОСЕН УПУФПСОЙЕ ТБЪДЕМСЕНПК УЕУУЙЙ У SMSC
+    if ( sessionToSmsc.updateSessionState(SMPPSession::GOT_BIND_RESP) != SMPPSession::OPERATION_SUCCESS )
+      terminateConnectionsPair(messageTrace.second, sessionToSmsc.getSocketToPeer(), systemId);
+    else
+      forwardBindResponseMessageToSme(messageTrace.first, messageTrace.second, bindResponse, sessionToSmsc.getSocketToPeer(), systemId);
+  } catch (std::exception& ex) {
+    try {
+      smsc_log_error(_log,"BindResponse_Subscriber::completeSessionActivation::: Catched exception [%s]", ex.what());
+      SessionHelper::terminateSessionToSmsc(sessionToSmsc.getSocketToPeer(), systemId);
+    } catch (...) {}
+    throw;
+  }
+}
+
+void
+BindResponse_Subscriber::terminateConnectionsPair(SMPPSession& smppSession,
+                                                  smsc::core_ax::network::Socket& socketToSmsc,
+                                                  const std::string& systemId)
+{
+  // ъБЧЕТЫБЕН УЕУУЙА У SMSC.
+  SessionHelper::terminateSessionToSmsc(socketToSmsc, systemId);
+  // ъБЧЕТЫБЕН УЕУУЙА У SME.
+  SessionHelper::terminateSessionToSme(smppSession.getSocketToPeer());
+}
+
+void
+BindResponse_Subscriber::forwardBindResponseMessageToSme(uint32_t originalSeqNum,
+                                                         SMPPSession& smppSessionToSme,
+                                                         SMPP_BindResponse* bindResponse,
+                                                         smsc::core_ax::network::Socket& socketToSmsc,
+                                                         const std::string& systemId)
+{
+  // ЪБНЕОСЕН ЪОБЮЕОЙЕ sequenceNumber ЪОБЮЕОЙЕН, УПИТБОЕОООЩН Ч ЛЬЫЕ
+  bindResponse->setSequenceNumber(originalSeqNum);
+
+  smsc_log_info(_log,"BindResponse_Subscriber::forwardBindResponseMessageToSme::: send BIND_RESPONSE message to SME. Message dump=[%s]", bindResponse->toString().c_str());
+  // РТЕПВТБЪПЧБМЙ Ч ВХЖЕТ ДМС ЪБРЙУЙ Ч УПЛЕФ
+  std::auto_ptr<BufferedOutputStream> bufToWriteForSme = bindResponse->marshal();
+
+  // РПУМБМЙ ПФЧЕФ Ч SME ПФ ЛПФПТПЗП ВЩМ РПМХЮЕО РЕТЧЩК ЪБРТПУ
+  // BindRequest
+  PendingOutDataQueue::getInstance().scheduleDataForSending(*bufToWriteForSme, smppSessionToSme.getSocketToPeer());
+
+  // рПЫХЛБМЙ Ч ЛЬЫЕ ЪБРТПУЩ BindRequest ПФ ДТХЗЙИ SME У ФЕН ЦЕ 
+  // systemId. дМС ЛБЦДПЗП ОБКДЕООПЗП ЪБРТПУБ УЖПТНЙТПЧБМЙ ПФЧЕФ УП 
+  // УФБФХУПН ТБЧОЩН bindResponse->getCommandStatus()
+  CacheOfPendingBindReqFromSME::getInstance().commitPendingReqInCache(systemId, *bindResponse);
+  // рТПЧЕТСЕН УФБФХУ ПФЧЕФБ
+  if ( bindResponse->getCommandStatus() != ESME_ROK )
+    // еУМЙ Ч ПФЧЕФЕ BIND_RESPONSE РПМХЮЕОБ ПЫЙВЛБ, ФП УЕУУЙА 
+    // ХУФБОПЧЙФШ ОЕ ХДБМПУШ Й ОЕПВИПДЙНП ХДБМЙФШ ТБЪДЕМСЕНХА УЕУУЙА
+    // У SMSC ЙЪ РХМБ УЕУУЙК ДМС ЪБДБООПЗП ЪОБЮЕОЙС systemId.
+    SessionHelper::terminateSessionToSmsc(socketToSmsc, systemId);
+  else
+    smppSessionToSme.updateSessionState(SMPPSession::GOT_BIND_RESP);
+}
+
 }

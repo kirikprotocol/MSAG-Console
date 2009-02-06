@@ -1,24 +1,23 @@
 #ifndef  __SMPPDMPLX_SMPPSESSION_HPP__
-# define __SMPPDMPLX_SMPPSESSION_HPP__ 1
+# define __SMPPDMPLX_SMPPSESSION_HPP__
 
-# include <core_ax/network/Socket.hpp>
+# include <smppdmplx/core_ax/network/Socket.hpp>
 # include <string>
 # include <logger/Logger.h>
-extern smsc::logger::Logger* dmplxlog;
 
 namespace smpp_dmplx {
 
 /*
-** йНМЙПЕРМШИ, Б РЕПЛХМНКНЦХХ яРПЮСЯРПСОЮ, ЙКЮЯЯ.
-** нРБЕРЯРБЕММНЯРЭ ЙКЮЯЯЮ - ОПЕДНЯРЮБХРЭ ХМРЕПТЕИЯ ДКЪ ЮАЯРПЮЙЖХХ
-** SMPP-ЯЕЯЯХЪ. нАЗЕЙР ЙКЮЯЯЮ SMPPSession УПЮМХР ХМТНПЛЮЖХЧ Н ЯНЯРНЪМХХ
-** ЯЕЯЯХХ - INVALID (МЕ ХМХЖХЮКХГХПНБЮМЮ), CLOSED (ГЮЙПШРЮ), OPENED (НРЙПШРЮ),
-** BOUND (ЦНРНБЮ Й НАПЮАНРЙЕ ОПХЙКЮДМШУ ГЮОПНЯНБ).
-** яЕЯЯХЧ ЛНФМН ЯНГДЮБЮРЭ, СМХВРНФЮРЭ, ОЕПЕБНДХРЭ Б МНБНЕ ЯНЯРНЪМХЕ.
-** яЕЯЯХЪ УПЮМХР ЯНЙЕР, ЯННРБЕРЯРБСЧЫХИ РПЮМЯОНПРМНЛС
-** ЯНЕДХМЕМХЧ (БУНДЪЫЕЛС - ДКЪ ЯЕЯЯХХ НР SME, ХЯУНДЪЫЕЛС - ДКЪ ЯЕЯЯХХ Я SMSC)
-** йКЮЯЯ ДНКФЕМ ХЯОНКЭГНБЮРЭЯЪ ДКЪ ПЮАНРШ ЙЮЙ Я ХЯУНДЪЫЕИ
-** ЯЕЯЯХЕИ Й SMSC, РЮЙ Х ЯН БУНДЪЫЕИ ЯЕЯЯХЕИ НР SME.
+** Конкретный, в терминологии Страуструпа, класс.
+** Ответственность класса - предоставить интерфейс для абстракции
+** SMPP-сессия. Объект класса SMPPSession хранит информацию о состоянии
+** сессии - INVALID (не инициализирована), CLOSED (закрыта), OPENED (открыта),
+** BOUND (готова к обработке прикладных запросов).
+** Сессию можно создавать, уничтожать, переводить в новое состояние.
+** Сессия хранит сокет, соответствующий транспортному
+** соединению (входящему - для сессии от SME, исходящему - для сессии с SMSC)
+** Класс должен использоваться для работы как с исходящей
+** сессией к SMSC, так и со входящей сессией от SME.
 */
 class SMPPSession
 {
@@ -26,10 +25,10 @@ public:
   typedef enum {INVALID=0, CLOSED = 1, OPENED = 2, BIND_IN_PROGRESS = 3, BOUND = 4, UNINITIALIZED = 5} session_state_t;
   typedef enum {OPERATION_SUCCESS = 0, OPERATION_FAILED = -1} operation_result_t;
   typedef enum {GOT_BIND_REQ = 0, GOT_BIND_RESP = 1, GOT_APP_MESSAGE = 2, GOT_UNBIND = 3, GOT_NEGATIVE_BIND_RESP = 4} event_t;
-  // йНМЯРПСЙРНП ЯНГДЮЕР ЯЕЯЯХЧ Б ЯНЯРНЪМХХ UNINITIALIZED
+  // Конструктор создает сессию в состоянии UNINITIALIZED
   explicit SMPPSession(const std::string& systemId="");
 
-  // йНМЯРПСЙРНП ЯНГДЮЕР ЯЕЯЯХЧ Б ЯНЯРНЪМХХ OPENED
+  // Конструктор создает сессию в состоянии OPENED
   explicit SMPPSession(const std::string& systemId, smsc::core_ax::network::Socket& connectedSocket);
 
   SMPPSession(const SMPPSession& rhs);
@@ -37,7 +36,7 @@ public:
 
   ~SMPPSession();
 
-  // сЯРЮМНБХРЭ РПЮМЯОНПРМНЕ ЯНЕДХМЕМХЕ ДКЪ ЯЕЯЯХХ.
+  // Установить транспортное соединение для сессии.
   void connectSession();
 
   void closeSession();
@@ -58,21 +57,20 @@ public:
   bool operator!=(const SMPPSession&) const;
   const std::string toString() const;
 private:
-  // _transition_table[_state][event]
+  const char* stateToString(session_state_t state) const;
+  const char* eventToString(event_t event) const;
+  // _transition_table[state][event]
   static session_state_t _transition_table[6][5];
 
   struct shared_session_info {
-    // ЙНМЯРПСЙРНП ДКЪ ЯНГДЮМХЪ ЯЕЯЯХЪ НР SME
-    shared_session_info(session_state_t state, smsc::core_ax::network::Socket& socketToPeer, const std::string& systemId) : _state(state), _ref_count(1), _socketToPeer(socketToPeer), _systemId(systemId) {
-      smsc_log_info(dmplxlog,"shared_session_info::shared_session_info::: object [this=%p] is created", this);
-    }
-    // ЙНМЯРПСЙРНП ДКЪ ЯНГДЮМХЪ ЯЕЯЯХХ Й SMSC
-    shared_session_info(session_state_t state, const std::string& systemId) : _state(state), _ref_count(1), _systemId(systemId) {
-      smsc_log_info(dmplxlog,"shared_session_info::shared_session_info::: object [this=%p] is created", this);
-    }
-    ~shared_session_info() {
-      smsc_log_info(dmplxlog,"shared_session_info::~shared_session_info::: object [this=%p] is destroyed", this);
-      /*decrementRefCount();*/
+    // конструктор для создания сессии от SME
+    shared_session_info(session_state_t state, smsc::core_ax::network::Socket& socketToPeer, const std::string& systemId) : _state(state), _ref_count(1), _socketToPeer(socketToPeer), _systemId(systemId) {}
+    // конструктор для создания сессии к SMSC
+    shared_session_info(session_state_t state, const std::string& systemId) : _state(state), _ref_count(1), _systemId(systemId) {}
+    ~shared_session_info()
+    {
+      smsc::logger::Logger* log = smsc::logger::Logger::getInstance("smppsess");
+      smsc_log_debug(log, "SMPPSession::shared_session_info::~shared_session_info::: destroy it");
     }
 
     void decrementRefCount() { --_ref_count; }
@@ -85,6 +83,8 @@ private:
     std::string _systemId;
   };
   shared_session_info* _shared_session_info;
+
+  smsc::logger::Logger* _log;
 };
 
 }

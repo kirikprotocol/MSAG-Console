@@ -1,13 +1,13 @@
 #ifndef __SMPPDMPLX_PUBLISHER_HPP__
-# define __SMPPDMPLX_PUBLISHER_HPP__ 1
+# define __SMPPDMPLX_PUBLISHER_HPP__
 
-# include <core_ax/network/Socket.hpp>
-# include "SMPP_message.hpp"
-# include "SMPP_Subscriber.hpp"
-
-# include <util/Singleton.hpp>
 # include <list>
 # include <memory>
+# include <util/Singleton.hpp>
+
+# include <smppdmplx/core_ax/network/Socket.hpp>
+# include <smppdmplx/SMPP_message.hpp>
+# include <smppdmplx/SMPP_Subscriber.hpp>
 
 namespace smpp_dmplx {
 

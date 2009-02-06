@@ -1,1 +1,1 @@
-smppdmplx/smppdmplx smppDmplx -L$(SMSC_BUILDDIR)/bin -lnsl -lutil-config -lutil-xml -llogger $(XERCES_LIB) -lsmppdmplx -lsmppdmplx-core_ax-network $(SOCKETLIB) -lnsl
+smppdmplx/smppdmplx smppDmplx -L$(SMSC_BUILDDIR)/bin -lnsl -lutil-config -lutil-xml -llogger $(XERCES_LIB) -lsmppdmplx -lsmppdmplx-core_ax-network $(SOCKETLIB) -lnsl -lrt

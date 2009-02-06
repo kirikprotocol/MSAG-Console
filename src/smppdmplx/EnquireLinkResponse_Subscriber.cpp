@@ -1,55 +1,48 @@
 #include <memory>
 
 #include "EnquireLinkResponse_Subscriber.hpp"
-#include "Publisher.hpp"
 #include "SMPP_EnquireLink_Resp.hpp"
-
 #include "SMPP_Constants.hpp"
 #include "SMPPSession.hpp"
 #include "SessionCache.hpp"
 #include "SocketPool_Singleton.hpp"
 
-#include <logger/Logger.h>
-extern smsc::logger::Logger* dmplxlog;
+namespace smpp_dmplx {
 
-static int toRegisterSubscriber() {
-  smpp_dmplx::Publisher::getInstance().addSubscriber(new smpp_dmplx::EnquireLinkResponse_Subscriber());
+EnquireLinkResponse_Subscriber::EnquireLinkResponse_Subscriber()
+  : _log(smsc::logger::Logger::getInstance("msg_hndlr")) {}
 
-  return 0;
-}
+EnquireLinkResponse_Subscriber::~EnquireLinkResponse_Subscriber() {}
 
-static int subscriberIsRegistered = toRegisterSubscriber();
-
-smpp_dmplx::EnquireLinkResponse_Subscriber::~EnquireLinkResponse_Subscriber() {}
-
-smpp_dmplx::SMPP_Subscriber::handle_result_t
-smpp_dmplx::EnquireLinkResponse_Subscriber::handle(std::auto_ptr<smpp_dmplx::SMPP_message>& smpp, smsc::core_ax::network::Socket& socket)
+SMPP_Subscriber::handle_result_t
+EnquireLinkResponse_Subscriber::handle(std::auto_ptr<SMPP_message>& smpp, smsc::core_ax::network::Socket& socket)
 {
   if ( smpp->getCommandId() == SMPP_message::ENQUIRE_LINK_RESP ) {
     SMPP_EnquireLink_Resp* enquireResponse = dynamic_cast<SMPP_EnquireLink_Resp*>(smpp.get());
 
-    smsc_log_info(dmplxlog,"EnquireLinkResponse_Subscriber::handle::: got ENQUIRE_LINK_RESPONSE message for processing from socket=[%s]. Message dump=[%s]", socket.toString().c_str(), enquireResponse->toString().c_str());
+    smsc_log_info(_log,"EnquireLinkResponse_Subscriber::handle::: got ENQUIRE_LINK_RESPONSE message for processing from socket=[%s]. Message dump=[%s]", socket.toString().c_str(), enquireResponse->toString().c_str());
 
     SessionCache::search_result_t searchResult =
       SessionCache::getInstance().getSession(socket);
 
     if ( searchResult.first == false ) {
-      // Для сокета, на котором получен запрос, нет зарегистрированной сессии.
-      // Херем транспортное соединение  и  удаляем сокет из пула.
+      // дМС УПЛЕФБ, ОБ ЛПФПТПН РПМХЮЕО ЪБРТПУ, ОЕФ ЪБТЕЗЙУФТЙТПЧБООПК УЕУУЙЙ.
+      // иЕТЕН ФТБОУРПТФОПЕ УПЕДЙОЕОЙЕ  Й  ХДБМСЕН УПЛЕФ ЙЪ РХМБ.
       SocketPool_Singleton::getInstance().remove_socket(socket);
     }
     SMPPSession& smppSession = searchResult.second;
-    // Проверяем, что сессия с SME/SMSC находится в допустимом состоянии - к примеру, не закрыта
+    // рТПЧЕТСЕН, ЮФП УЕУУЙС У SME/SMSC ОБИПДЙФУС Ч ДПРХУФЙНПН УПУФПСОЙЙ - Л РТЙНЕТХ, ОЕ ЪБЛТЩФБ
     if ( smppSession.updateSessionState(SMPPSession::GOT_APP_MESSAGE) != SMPPSession::OPERATION_SUCCESS ) {
-      // SME/SMSC прислал запрос EnquireLink_Resp, но сессия находится в состоянии,
-      // не позволяющем принимать прикладные запросы. Удаляем сессию
-      // из кэша, херем транспортное соединение для этого SME/SMSC и 
-      // удаляем сокет из пула.
+      // SME/SMSC РТЙУМБМ ЪБРТПУ EnquireLink_Resp, ОП УЕУУЙС ОБИПДЙФУС Ч УПУФПСОЙЙ,
+      // ОЕ РПЪЧПМСАЭЕН РТЙОЙНБФШ РТЙЛМБДОЩЕ ЪБРТПУЩ. хДБМСЕН УЕУУЙА
+      // ЙЪ ЛЬЫБ, ИЕТЕН ФТБОУРПТФОПЕ УПЕДЙОЕОЙЕ ДМС ЬФПЗП SME/SMSC Й 
+      // ХДБМСЕН УПЛЕФ ЙЪ РХМБ.
       SessionCache::getInstance().removeSession(socket);
       SocketPool_Singleton::getInstance().remove_socket(socket);
-    } else {
     }
     return RequestWasProcessed;
   } else
     return RequestIsNotForMe;
+}
+
 }

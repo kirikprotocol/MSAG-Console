@@ -1,29 +1,33 @@
 #include "CacheOfIncompleteReadMessages.hpp"
 
-#include <logger/Logger.h>
-extern smsc::logger::Logger* dmplxlog;
+namespace smpp_dmplx {
 
-smpp_dmplx::RawMessage&
-smpp_dmplx::CacheOfIncompleteReadMessages::getIncompleteMessageForSocket(const smsc::core_ax::network::Socket& socket)
+CacheOfIncompleteReadMessages::CacheOfIncompleteReadMessages()
+  : _log(smsc::logger::Logger::getInstance("incomplcache"))
+{}
+
+RawMessage&
+CacheOfIncompleteReadMessages::getIncompleteMessageForSocket(const smsc::core_ax::network::Socket& socket)
 {
-  smsc_log_debug(dmplxlog, "SessionCache::getIncompleteMessageForSocket::: get incomplete message from cache for socket=[%s]", socket.toString().c_str());
+  smsc_log_debug(_log, "CacheOfIncompleteReadMessages::getIncompleteMessageForSocket::: get incomplete message from cache for socket=[%s]", socket.toString().c_str());
   SocketMessageCache_t::iterator iter=_socketMessageCache.find(socket);
   if ( iter == _socketMessageCache.end() ) {
-    smsc_log_debug(dmplxlog, "SessionCache::getIncompleteMessageForSocket::: message was not found");
-    _socketMessageCache[socket] = RawMessage();
+    smsc_log_debug(_log, "CacheOfIncompleteReadMessages::getIncompleteMessageForSocket::: message was not found, insert empty message");
     std::pair<SocketMessageCache_t::iterator, bool> ins_res = _socketMessageCache.insert(std::make_pair(socket, RawMessage()));
     iter = ins_res.first;
   } else
-    smsc_log_debug(dmplxlog, "SessionCache::getIncompleteMessageForSocket::: message was found");
+    smsc_log_debug(_log, "CacheOfIncompleteReadMessages::getIncompleteMessageForSocket::: message was found");
 
   return iter->second;
 }
 
 void
-smpp_dmplx::CacheOfIncompleteReadMessages::removeCompleteMessageForSocket(const smsc::core_ax::network::Socket& socket)
+CacheOfIncompleteReadMessages::removeCompleteMessageForSocket(const smsc::core_ax::network::Socket& socket)
 {
-  smsc_log_debug(dmplxlog, "SessionCache::removeCompleteMessageForSocket::: remove complete message from cache for socket=[%s]", socket.toString().c_str());
-  SocketMessageCache_t::iterator iter=_socketMessageCache.find(socket);
-  if ( iter != _socketMessageCache.end() )
-    _socketMessageCache.erase(iter);
+  smsc_log_debug(_log, "CacheOfIncompleteReadMessages::removeCompleteMessageForSocket::: remove complete message from cache for socket=[%s]", socket.toString().c_str());
+  unsigned totalErased = _socketMessageCache.erase(socket);
+  if ( totalErased )
+    smsc_log_debug(_log, "CacheOfIncompleteReadMessages::removeCompleteMessageForSocket::: message was removed from cache for socket=[%s]", socket.toString().c_str());
+}
+
 }

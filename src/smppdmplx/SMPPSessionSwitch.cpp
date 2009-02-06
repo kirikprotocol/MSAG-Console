@@ -2,179 +2,208 @@
 #include "SocketPool_Singleton.hpp"
 #include "SessionCache.hpp"
 #include "IdleSocketsPool.hpp"
+#include "PendingOutDataQueue.hpp"
+#include "CacheOfIncompleteReadMessages.hpp"
 
 #include <utility>
 #include <netinet/in.h>
 #include <util/Exception.hpp>
 
-#include <logger/Logger.h>
-extern smsc::logger::Logger* dmplxlog;
+namespace smpp_dmplx {
 
-smpp_dmplx::SMPPSessionSwitch::search_result_t
-smpp_dmplx::SMPPSessionSwitch::getSharedSessionToSMSC(const std::string& systemId)
+SMPPSessionSwitch::SMPPSessionSwitch()
+  : _log(smsc::logger::Logger::getInstance("sessswtch")) {}
+
+SMPPSessionSwitch::search_result_t
+SMPPSessionSwitch::getSharedSessionToSMSC(const std::string& systemId)
 {
-  smsc_log_info(dmplxlog,"SMPPSessionSwitch::getSharedSessionToSMSC::: get shared session to SMSC for systemId=[%s]", systemId.c_str());
+  smsc_log_info(_log,"SMPPSessionSwitch::getSharedSessionToSMSC::: get shared session to SMSC for systemId=[%s]", systemId.c_str());
   mapRegistredSysIdToSmscSession_t::iterator
     sysIdToSmscSess_iter = _mapRegistredSysIdToSmscSession.find(systemId);
   if ( sysIdToSmscSess_iter == _mapRegistredSysIdToSmscSession.end() ) {
-    smsc_log_info(dmplxlog,"SMPPSessionSwitch::getSharedSessionToSMSC::: session to SMSC with systemId=%s was not found", systemId.c_str());
-    // Åñëè äëÿ óêàçàííîãî çíà÷åíèÿ systemId íåò óñòàíîâëåííîé ñåññèè ê SMSC,
-    // òî âåðíóòü ïðèçíàê îòñóòñòâèÿ àêòèâíîé ñåññèè.
+    smsc_log_info(_log,"SMPPSessionSwitch::getSharedSessionToSMSC::: session to SMSC with systemId=%s was not found", systemId.c_str());
+    // åÓÌÉ ÄÌÑ ÕËÁÚÁÎÎÏÇÏ ÚÎÁÞÅÎÉÑ systemId ÎÅÔ ÕÓÔÁÎÏ×ÌÅÎÎÏÊ ÓÅÓÓÉÉ Ë SMSC,
+    // ÔÏ ×ÅÒÎÕÔØ ÐÒÉÚÎÁË ÏÔÓÕÔÓÔ×ÉÑ ÁËÔÉ×ÎÏÊ ÓÅÓÓÉÉ.
     return std::make_pair(false, SMPPSession());
   } else {
-    smsc_log_info(dmplxlog,"SMPPSessionSwitch::getSharedSessionToSMSC::: session to SMSC was found. Session=[%s]", sysIdToSmscSess_iter->second.toString().c_str());
+    smsc_log_info(_log,"SMPPSessionSwitch::getSharedSessionToSMSC::: session to SMSC was found. Session=[%s]", sysIdToSmscSess_iter->second.toString().c_str());
     return std::make_pair(true, sysIdToSmscSess_iter->second);
   }
 }
 
 void
-smpp_dmplx::SMPPSessionSwitch::setSharedSessionToSMSC(SMPPSession& sessionToSMSC, const std::string& systemId)
+SMPPSessionSwitch::setSharedSessionToSMSC(SMPPSession& sessionToSMSC,
+                                          const std::string& systemId)
 {
-  smsc_log_info(dmplxlog,"SMPPSessionSwitch::setSharedSessionToSMSC::: set shared session=[%s] to SMSC for systemId=[%s]", sessionToSMSC.toString().c_str(), systemId.c_str());
+  smsc_log_info(_log,"SMPPSessionSwitch::setSharedSessionToSMSC::: set shared session=[%s] to SMSC for systemId=[%s]", sessionToSMSC.toString().c_str(), systemId.c_str());
   mapRegistredSysIdToSmscSession_t::iterator
     sysIdToSmscSess_iter = _mapRegistredSysIdToSmscSession.find(systemId);
   if ( sysIdToSmscSess_iter == _mapRegistredSysIdToSmscSession.end() ) {
-    // Åñëè äëÿ óêàçàííîãî çíà÷åíèÿ systemId íåò óñòàíîâëåííîé ñåññèè ê SMSC,
-    // òî ñîçäàòü ñâÿçêó systemId -- íîâàÿ_ñåññèÿ_ê_SMSC.
-    smsc_log_info(dmplxlog,"SMPPSessionSwitch::setSharedSessionToSMSC::: shared session to SMSC has set. Session dump=[%s]", sessionToSMSC.toString().c_str());
+    // åÓÌÉ ÄÌÑ ÕËÁÚÁÎÎÏÇÏ ÚÎÁÞÅÎÉÑ systemId ÎÅÔ ÕÓÔÁÎÏ×ÌÅÎÎÏÊ ÓÅÓÓÉÉ Ë SMSC,
+    // ÔÏ ÓÏÚÄÁÔØ Ó×ÑÚËÕ systemId -- ÎÏ×ÁÑ_ÓÅÓÓÉÑ_Ë_SMSC.
+    smsc_log_info(_log,"SMPPSessionSwitch::setSharedSessionToSMSC::: shared session to SMSC has set. Session dump=[%s]", sessionToSMSC.toString().c_str());
     _mapRegistredSysIdToSmscSession.insert(std::make_pair(systemId,sessionToSMSC));
-  } else
-    smsc_log_info(dmplxlog,"SMPPSessionSwitch::setSharedSessionToSMSC::: shared session to SMSC  already exists. Session dump=[%s]", sessionToSMSC.toString().c_str());
+  } else {
+    smsc_log_error(_log,"SMPPSessionSwitch::setSharedSessionToSMSC::: shared session to SMSC  already exists. Session dump=[%s]", sessionToSMSC.toString().c_str());
+    throw smsc::util::Exception("SMPPSessionSwitch::setSharedSessionToSMSC::: failed set shared session to SMSC");
+  }
 }
 
 void
-smpp_dmplx::SMPPSessionSwitch::dropSharedSessionToSMSC(const std::string& systemId)
+SMPPSessionSwitch::dropSharedSessionToSMSC(const std::string& systemId)
 {
-  smsc_log_info(dmplxlog,"SMPPSessionSwitch::dropSharedSessionToSMSC::: drop session to SMSC for systemId=[%s]", systemId.c_str());
+  smsc_log_info(_log,"SMPPSessionSwitch::dropSharedSessionToSMSC::: drop session to SMSC for systemId=[%s]", systemId.c_str());
   mapRegistredSysIdToSmscSession_t::iterator
     sysIdToSmscSess_iter = _mapRegistredSysIdToSmscSession.find(systemId);
   if ( sysIdToSmscSess_iter != _mapRegistredSysIdToSmscSession.end() ) {
-    // Óäàëÿåì ñâÿçêó systemId -- ñåññèÿ_ñ_SMSC
+    // õÄÁÌÑÅÍ Ó×ÑÚËÕ systemId -- ÓÅÓÓÉÑ_Ó_SMSC
     _mapRegistredSysIdToSmscSession.erase(sysIdToSmscSess_iter);
-    // è âûêàøèâàåì èç äèñïåò÷åðà âñå ñåññèè ñ SME äëÿ óêàçàííîãî
-    // çíà÷åíèÿ systemId
-    sysIdToSmeUsageHist_t::iterator sysIdToSmeUsageHist_iter
-      = _sysIdToSmeUsageHist.find(systemId);
-    if ( sysIdToSmeUsageHist_iter != _sysIdToSmeUsageHist.end() ) {
-      // äëÿ êàæäîé ñåññèè ñ SME, ñâÿçàííîé ñ óíè÷òîæàåìîé ñåññèåé ñ SMSC,
-      // óäàëÿåì ñîêåò ñ SME èç ïóëà ñîêåòîâ, íà êîòîðûõ æäåì îòñòóñòâèÿ àêòèâíîñòè 
-      // â òå÷åíèå òàéìàóòà äëÿ ïîñûëêè EnqLink
-      for (smeSessionUsageHistogram_t::iterator smeSessIter = sysIdToSmeUsageHist_iter->second->begin(); smeSessIter != sysIdToSmeUsageHist_iter->second->end(); ++smeSessIter)
-        IdleSocketsPool::getInstance().removeActiveSocket(smeSessIter->second.getSocketToPeer());
+    // É ×ÙËÁÛÉ×ÁÅÍ ÉÚ ÄÉÓÐÅÔÞÅÒÁ ×ÓÅ ÓÅÓÓÉÉ Ó SME ÄÌÑ ÕËÁÚÁÎÎÏÇÏ
+    // ÚÎÁÞÅÎÉÑ systemId
+    sysIdToSmeList_t::iterator sysIdToSmeList_iter
+      = _sysIdToSmeList.find(systemId);
+    if ( sysIdToSmeList_iter != _sysIdToSmeList.end() ) {
+      // ÄÌÑ ËÁÖÄÏÊ ÓÅÓÓÉÉ Ó SME, Ó×ÑÚÁÎÎÏÊ Ó ÕÎÉÞÔÏÖÁÅÍÏÊ ÓÅÓÓÉÅÊ Ó SMSC,
+      // ÕÄÁÌÑÅÍ ÓÏËÅÔ Ó SME ÉÚ ÐÕÌÁ ÓÏËÅÔÏ×, ÎÁ ËÏÔÏÒÙÈ ÖÄÅÍ ÏÔÓÔÕÓÔ×ÉÑ ÁËÔÉ×ÎÏÓÔÉ 
+      // × ÔÅÞÅÎÉÅ ÔÁÊÍÁÕÔÁ ÄÌÑ ÐÏÓÙÌËÉ EnqLink
+      for (smeSessions_t::iterator smeSessIter = sysIdToSmeList_iter->second->begin(); smeSessIter != sysIdToSmeList_iter->second->end(); ++smeSessIter)
+        IdleSocketsPool::getInstance().removeActiveSocket(smeSessIter->getSocketToPeer());
 
-      delete sysIdToSmeUsageHist_iter->second;
-      _sysIdToSmeUsageHist.erase(sysIdToSmeUsageHist_iter);
+      delete sysIdToSmeList_iter->second;
+      _sysIdToSmeList.erase(sysIdToSmeList_iter);
     }
   }
 }
 
 void
-smpp_dmplx::SMPPSessionSwitch::addActiveSmeSession(SMPPSession& sessionFromSme)
+SMPPSessionSwitch::addActiveSmeSession(SMPPSession& sessionFromSme)
 {
   std::string systemId = sessionFromSme.getSystemId();
-  smsc_log_info(dmplxlog,"SMPPSessionSwitch::addActiveSmeSessionForSysId::: add active session to SME into cache for systemId=[%s]. Dump of sesson to SME=[%s]", systemId.c_str(), sessionFromSme.toString().c_str());
+  smsc_log_info(_log,"SMPPSessionSwitch::addActiveSmeSession::: add active session to SME into cache for systemId=[%s]. Dump of sesson to SME=[%s]", systemId.c_str(), sessionFromSme.toString().c_str());
   if ( _mapRegistredSysIdToSmscSession.find(systemId) != _mapRegistredSysIdToSmscSession.end() ) {
-    sysIdToSmeUsageHist_t::iterator 
-      sysIdToSmeUsageHist_iter = _sysIdToSmeUsageHist.find(systemId);
-    if ( sysIdToSmeUsageHist_iter == _sysIdToSmeUsageHist.end() ) {
-      std::pair<sysIdToSmeUsageHist_t::iterator, bool>
-        insertResult = _sysIdToSmeUsageHist.insert(std::make_pair(systemId, new smeSessionUsageHistogram_t()));
-      sysIdToSmeUsageHist_iter = insertResult.first;
+    sysIdToSmeList_t::iterator 
+      iter = _sysIdToSmeList.find(systemId);
+    if ( iter == _sysIdToSmeList.end() ) {
+      std::pair<sysIdToSmeList_t::iterator, bool>
+        insertResult = _sysIdToSmeList.insert(std::make_pair(systemId, new smeSessions_t()));
+      iter = insertResult.first;
     }
-    sysIdToSmeUsageHist_iter->second->insert(std::make_pair(1,sessionFromSme));
-    smsc_log_info(dmplxlog,"SMPPSessionSwitch::addActiveSmeSessionForSysId::: session to SME was added.");
+    {
+      unsigned numOfDuplicatedSession = 0;
+      for(smeSessions_t::iterator smeSessIter = iter->second->begin(), smeSessEndIter = iter->second->end();
+          smeSessIter != smeSessEndIter; ++smeSessIter)
+        if ( *smeSessIter == sessionFromSme )
+          ++numOfDuplicatedSession;
+      if ( numOfDuplicatedSession ) {
+        smsc_log_error(_log,"SMPPSessionSwitch::addActiveSmeSession::: there is duplicate session for [%s]", sessionFromSme.toString().c_str());
+        abort();
+      }
+    }
+    iter->second->push_back(sessionFromSme);
+    smsc_log_info(_log,"SMPPSessionSwitch::addActiveSmeSession::: session to SME was added.");
   } else
-    throw smsc::util::Exception("smpp_dmplx::SMPPSessionSwitch::setSessionsRelation::: sessionToSMSC doesn't exist for given systemId");
+    throw smsc::util::Exception("SMPPSessionSwitch::addActiveSmeSession::: sessionToSMSC doesn't exist for given systemId");
 }
 
 void
-smpp_dmplx::SMPPSessionSwitch::removeSmeSession(SMPPSession& sessionFromSme)
+SMPPSessionSwitch::removeSmeSession(SMPPSession& sessionFromSme)
 {
   std::string systemId = sessionFromSme.getSystemId();
-  smsc_log_info(dmplxlog,"SMPPSessionSwitch::removeSmeSession::: remove session to SME=[%s]", sessionFromSme.toString().c_str());
-  _sysIdToSmeUsageHist.find(systemId);
+  smsc_log_info(_log,"SMPPSessionSwitch::removeSmeSession::: remove session to SME=[%s]", sessionFromSme.toString().c_str());
 
-  sysIdToSmeUsageHist_t::iterator 
-    sysIdToSmeUsageHist_iter = _sysIdToSmeUsageHist.find(systemId);
+  sysIdToSmeList_t::iterator 
+    sysIdToSmeList_iter = _sysIdToSmeList.find(systemId);
 
-  if (  sysIdToSmeUsageHist_iter != _sysIdToSmeUsageHist.end() ) {
-    smeSessionUsageHistogram_t* smeSessionUsageHistogram = sysIdToSmeUsageHist_iter->second;
-    for(smeSessionUsageHistogram_t::iterator iter = smeSessionUsageHistogram->begin(); iter != smeSessionUsageHistogram->end(); ++iter) {
-      if ( iter->second == sessionFromSme ) {
-        smeSessionUsageHistogram->erase(iter);
+  if (  sysIdToSmeList_iter != _sysIdToSmeList.end() ) {
+    smeSessions_t* smeSessions = sysIdToSmeList_iter->second;
+    for(smeSessions_t::iterator iter = smeSessions->begin(); iter != smeSessions->end(); ++iter) {
+      if ( *iter == sessionFromSme ) {
+        smsc_log_info(_log,"SMPPSessionSwitch::removeSmeSession::: session to SME=[%s] has been removed", sessionFromSme.toString().c_str());
+        smeSessions->erase(iter);
         break;
       }
     }
-    // Ïðîâåðÿåì, ÷òî óäàëåííàÿ ñåññèÿ ñ SME áûëà ïîñëåäíåé àêòèâíîé ñåññèåé
-    // äëÿ çàäàííîãî systemId.
-    if ( smeSessionUsageHistogram->empty() ) {
-      // Åñëè ýòî òàê, òî óíè÷òîæàåì ñåññèþ ñ SMSC äëÿ çàäàííîãî systemId.
+    // ðÒÏ×ÅÒÑÅÍ, ÞÔÏ ÕÄÁÌÅÎÎÁÑ ÓÅÓÓÉÑ Ó SME ÂÙÌÁ ÐÏÓÌÅÄÎÅÊ ÁËÔÉ×ÎÏÊ ÓÅÓÓÉÅÊ
+    // ÄÌÑ ÚÁÄÁÎÎÏÇÏ systemId.
+    if ( smeSessions->empty() ) {
+      // åÓÌÉ ÜÔÏ ÔÁË, ÔÏ ÕÎÉÞÔÏÖÁÅÍ ÓÅÓÓÉÀ Ó SMSC ÄÌÑ ÚÁÄÁÎÎÏÇÏ systemId.
       mapRegistredSysIdToSmscSession_t::iterator smsc_searchRes = _mapRegistredSysIdToSmscSession.find(systemId);
       if ( smsc_searchRes != _mapRegistredSysIdToSmscSession.end() ) {
-        // Óäàëÿåì ñîñêåò äëÿ ðàáîòû ñ SMSC èç ïóëà ñîêåòîâ
+        smsc_log_info(_log,"SMPPSessionSwitch::removeSmeSession::: session to SME=[%s] is last session from group with the same systemId value, remove corresponding session to SMSC", sessionFromSme.toString().c_str());
+        // õÄÁÌÑÅÍ ÓÏÓËÅÔ ÄÌÑ ÒÁÂÏÔÙ Ó SMSC ÉÚ ÐÕÌÁ ÓÏËÅÔÏ×
         smsc::core_ax::network::Socket& socketToSmsc = smsc_searchRes->second.getSocketToPeer();
         SocketPool_Singleton::getInstance().remove_socket(socketToSmsc);
-        // Óäàëÿåì ñåññèþ äëÿ ñîêåòà ñ SMSC.
+        // õÄÁÌÑÅÍ ÓÅÓÓÉÀ ÄÌÑ ÓÏËÅÔÁ Ó SMSC.
         SessionCache::getInstance().removeSession(socketToSmsc);
+
         _mapRegistredSysIdToSmscSession.erase(smsc_searchRes);
-        // È óäàëÿåì ñîêåò ñ SMSC èç ñïèñêà ñîêåòîâ, ïî êîòîðûì ïîñûëàåòñÿ EnquireLink
-        smpp_dmplx::IdleSocketsPool::getInstance().removeActiveSocket(socketToSmsc);
+        smsc_log_info(_log,"SMPPSessionSwitch::removeSmeSession::: session to SMSC has been removed");
+        // é ÕÄÁÌÑÅÍ ÓÏËÅÔ Ó SMSC ÉÚ ÓÐÉÓËÁ ÓÏËÅÔÏ×, ÐÏ ËÏÔÏÒÙÍ ÐÏÓÙÌÁÅÔÓÑ EnquireLink
+        IdleSocketsPool::getInstance().removeActiveSocket(socketToSmsc);
+        PendingOutDataQueue::getInstance().cancelScheduledData(socketToSmsc);
+        CacheOfIncompleteReadMessages::getInstance().removeCompleteMessageForSocket(socketToSmsc);
+        //        CacheOfIncompleteReadMessages::
+        smsc_log_info(_log,"SMPPSessionSwitch::removeSmeSession::: session to SMSC for connection [%s] has been removed", socketToSmsc.toString().c_str());
       }
     }
   }
 }
 
-smpp_dmplx::SMPPSessionSwitch::search_result_t
-smpp_dmplx::SMPPSessionSwitch::getCrossedSession(SMPPSession& session)
+SMPPSessionSwitch::search_result_t
+SMPPSessionSwitch::getCrossedSession(SMPPSession& session)
 {
-  smsc_log_info(dmplxlog,"SMPPSessionSwitch::getCrossedSession::: get session to SMSC for session=[%s].",session.toString().c_str());
+  smsc_log_info(_log,"SMPPSessionSwitch::getCrossedSession::: get session to SMSC for session=[%s].",session.toString().c_str());
   mapRegistredSysIdToSmscSession_t::iterator
     sysIdToSmscSess_iter = _mapRegistredSysIdToSmscSession.find(session.getSystemId());
 
   if ( sysIdToSmscSess_iter != _mapRegistredSysIdToSmscSession.end() &&
        sysIdToSmscSess_iter->second != session ) {
-    smsc_log_info(dmplxlog,"SMPPSessionSwitch::getCrossedSession::: session to SMSC was found. Session dump=[%s]", sysIdToSmscSess_iter->second.toString().c_str());
+    smsc_log_info(_log,"SMPPSessionSwitch::getCrossedSession::: session to SMSC was found. Session dump=[%s]", sysIdToSmscSess_iter->second.toString().c_str());
     return std::make_pair(true, sysIdToSmscSess_iter->second);
   } else {
-    smsc_log_info(dmplxlog,"SMPPSessionSwitch::getCrossedSession::: session to SMSC was not found.");
+    smsc_log_info(_log,"SMPPSessionSwitch::getCrossedSession::: session to SMSC was not found.");
     return std::make_pair(false, SMPPSession());
   }
 }
 
-void 
-smpp_dmplx::SMPPSessionSwitch::dumpRegistredSmeSession(const char* where, smeSessionUsageHistogram_t* sessionUsageHist)
+SMPPSessionSwitch::search_result_t
+SMPPSessionSwitch::getCrossedSession(const std::string& systemId)
 {
-  for (smeSessionUsageHistogram_t::iterator iter=sessionUsageHist->begin();
-       iter != sessionUsageHist->end(); ++iter)
-    smsc_log_debug(dmplxlog,"%s exists session=[%s] with usage counter=%d", where, iter->second.toString().c_str(), iter->first);
-}
+  smsc_log_info(_log,"SMPPSessionSwitch::getCrossedSession::: get session to SME for systemId=[%s]", systemId.c_str());
+  sysIdToSmeList_t::iterator
+    sysIdToSmeList_iter = _sysIdToSmeList.find(systemId);
+  if ( sysIdToSmeList_iter != _sysIdToSmeList.end() ) {
+    smeSessions_t* smeSessions = sysIdToSmeList_iter->second;
 
-smpp_dmplx::SMPPSessionSwitch::search_result_t
-smpp_dmplx::SMPPSessionSwitch::getCrossedSession(const std::string& systemId)
-{
-  smsc_log_info(dmplxlog,"SMPPSessionSwitch::getCrossedSession::: get session to SME for systemId=[%s]", systemId.c_str());
-  sysIdToSmeUsageHist_t::iterator
-    sysIdToSmeUsage_iter = _sysIdToSmeUsageHist.find(systemId);
-  if ( sysIdToSmeUsage_iter != _sysIdToSmeUsageHist.end() ) {
-    smeSessionUsageHistogram_t* sessionUsageHist = sysIdToSmeUsage_iter->second;
-    smeSessionUsageHistogram_t::iterator
-      smeSessionUsageHist_iter = sessionUsageHist->begin();
-    // for debug only
-    dumpRegistredSmeSession("SMPPSessionSwitch::getCrossedSession:::",sessionUsageHist);
-    if ( smeSessionUsageHist_iter != sessionUsageHist->end() ) {
-      std::pair<int,SMPPSession> entry = *smeSessionUsageHist_iter;
-      sessionUsageHist->erase(smeSessionUsageHist_iter);
-      ++entry.first;
-      sessionUsageHist->insert(entry);
-      smsc_log_info(dmplxlog, "smpp_dmplx::SMPPSessionSwitch::getCrossedSession::: active session to SME was found. Session dump=[%s]", entry.second.toString().c_str());
-      return std::make_pair(true,entry.second);
+    if ( !smeSessions->empty() ) {
+      smeSessions_t::iterator smeSessions_iter = smeSessions->begin();
+      SMPPSession sessionToSme = *smeSessions_iter;
+      smeSessions->splice(smeSessions->end(), *smeSessions, smeSessions_iter);
+      smsc_log_info(_log, "SMPPSessionSwitch::getCrossedSession::: active session to SME was found. Session dump=[%s]", sessionToSme.toString().c_str());
+      return std::make_pair(true,sessionToSme);
     } else {
-      smsc_log_info(dmplxlog, "smpp_dmplx::SMPPSessionSwitch::getCrossedSession::: Haven't active session to SME for systemId=[%s]", systemId.c_str());
+      smsc_log_info(_log, "SMPPSessionSwitch::getCrossedSession::: Haven't active session to SME for systemId=[%s]", systemId.c_str());
       return std::make_pair(false,SMPPSession());
     }
   } else {
-    smsc_log_info(dmplxlog, "smpp_dmplx::SMPPSessionSwitch::getCrossedSession::: Haven't active session to SME for systemId=[%s]", systemId.c_str());
+    smsc_log_info(_log, "SMPPSessionSwitch::getCrossedSession::: Haven't active session to SME for systemId=[%s]", systemId.c_str());
     return std::make_pair(false,SMPPSession());
   }
 }
 
+void
+SMPPSessionSwitch::broadcastMessageToAllSme(const std::string& systemId,
+                                            const SMPP_message& messageToSend)
+{
+  sysIdToSmeList_t::iterator sysIdToSmeSessions_iter
+    = _sysIdToSmeList.find(systemId);
+  if ( sysIdToSmeSessions_iter != _sysIdToSmeList.end() ) {
+    for (smeSessions_t::iterator smeSessIter = sysIdToSmeSessions_iter->second->begin(); smeSessIter != sysIdToSmeSessions_iter->second->end(); ++smeSessIter) {
+      smsc_log_info(_log,"SMPPSessionSwitch::broadcastMessageToAllSme::: send message to session [%s]", smeSessIter->toString().c_str());
+      std::auto_ptr<BufferedOutputStream> outBuf = messageToSend.marshal();
+      PendingOutDataQueue::getInstance().scheduleDataForSending(*outBuf, smeSessIter->getSocketToPeer());
+    }
+  }
+}
+
+}

@@ -1,5 +1,5 @@
 #ifndef __SMPPDMPLX_SEQUENCENUMBERGENERATOR_HPP__
-# define __SMPPDMPLX_SEQUENCENUMBERGENERATOR_HPP__ 1
+# define __SMPPDMPLX_SEQUENCENUMBERGENERATOR_HPP__
 
 # include <sys/types.h>
 # include <string>

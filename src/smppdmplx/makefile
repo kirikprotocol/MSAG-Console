@@ -6,7 +6,7 @@
 
 PACKAGE := smppdmplx
 
-CXXFLAGS:=-I. $(CXXFLAGS)
+CXXFLAGS := -Ismppdmplx/ -I. $(CXXFLAGS)
 #__LIBRARIES :=-L$(SMSC_BUILDDIR)/bin -lsocket -lnsl -lutil-config -lutil-xml -llogger -lxerces-c
 
 ifndef SMSC_SRCDIR

@@ -1,8 +1,9 @@
 #ifndef __SMPPDMPLX_RAWMESSAGE_HPP__
-# define __SMPPDMPLX_RAWMESSAGE_HPP__ 1
+# define __SMPPDMPLX_RAWMESSAGE_HPP__
 
-# include "BufferedInputStream.hpp"
 # include <sys/types.h>
+# include <logger/Logger.h>
+# include <smppdmplx/BufferedInputStream.hpp>
 
 namespace smpp_dmplx {
 
@@ -14,12 +15,14 @@ class RawMessage {
 public:
   RawMessage();
   ~RawMessage();
-  bool haveReadLenght() const;
+  bool haveReadLength() const;
   void readDataLength(int fd);
   bool haveReadRawData() const;
   void readRawData(int fd);
   BufferedInputStream getRawData() const;
 private:
+  smsc::logger::Logger* _log;
+
   bool _haveReadlength, _haveReadRawData;
 
   typedef union {

@@ -1,14 +1,16 @@
 #include "BufferedOutputStream.hpp"
 
-smpp_dmplx::BufferedOutputStream::BufferedOutputStream(size_t sz) : SerializationBuffer(sz) {}
+namespace smpp_dmplx {
 
-smpp_dmplx::BufferedOutputStream::BufferedOutputStream(const BufferedOutputStream& rhs) : SerializationBuffer(rhs.getBufferSize())
+BufferedOutputStream::BufferedOutputStream(size_t sz) : SerializationBuffer(sz) {}
+
+BufferedOutputStream::BufferedOutputStream(const BufferedOutputStream& rhs) : SerializationBuffer(rhs.getBufferSize())
 {
   Write(rhs.getBuffer(),rhs.getBufferSize());
 }
 
-smpp_dmplx::BufferedOutputStream&
-smpp_dmplx::BufferedOutputStream::operator=(const BufferedOutputStream& rhs)
+BufferedOutputStream&
+BufferedOutputStream::operator=(const BufferedOutputStream& rhs)
 {
   if ( this != &rhs ) {
     Write(rhs.getBuffer(),rhs.getBufferSize());
@@ -16,39 +18,41 @@ smpp_dmplx::BufferedOutputStream::operator=(const BufferedOutputStream& rhs)
   return *this;
 }
 
-smpp_dmplx::BufferedOutputStream::~BufferedOutputStream() {}
+BufferedOutputStream::~BufferedOutputStream() {}
 
 void
-smpp_dmplx::BufferedOutputStream::writeUInt8(uint8_t arg)
+BufferedOutputStream::writeUInt8(uint8_t arg)
 {
   WriteByte(arg);
 }
 
 void
-smpp_dmplx::BufferedOutputStream::writeUInt16(uint16_t arg)
+BufferedOutputStream::writeUInt16(uint16_t arg)
 {
   WriteNetInt16(arg);
 }
 
 void
-smpp_dmplx::BufferedOutputStream::writeUInt32(uint32_t arg)
+BufferedOutputStream::writeUInt32(uint32_t arg)
 {
   WriteNetInt32(arg);
 }
 
 void
-smpp_dmplx::BufferedOutputStream::writeOpaqueData(const std::vector<uint8_t>& inputBuf)
+BufferedOutputStream::writeOpaqueData(const std::vector<uint8_t>& inputBuf)
 {
   Write(&inputBuf[0],inputBuf.size());
 }
 
-smpp_dmplx::BufferedOutputStream::operator void*()
+BufferedOutputStream::operator void*()
 {
   return getBuffer();
 }
 
 uint32_t
-smpp_dmplx::BufferedOutputStream::getSize()
+BufferedOutputStream::getSize()
 {
   return getBufferSize();
+}
+
 }

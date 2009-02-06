@@ -1,6 +1,6 @@
 #include "Socket.hpp"
 #include <util/Exception.hpp>
-
+#include <smppdmplx/NetworkException.hpp>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -11,7 +11,6 @@
 #include <netdb.h>
 
 #include <logger/Logger.h>
-extern smsc::logger::Logger* dmplxlog;
 
 namespace smsc {
 namespace core_ax {
@@ -33,7 +32,7 @@ public:
   void setNonBlocking();
   void setBlocking();
 
-  int getSocketDescriptor();
+  int getSocketDescriptor() const;
 
   bool isReadable() const;
   bool isWriteable() const;
@@ -66,25 +65,20 @@ private:
 smsc::core_ax::network::Socket::Socket(int sockFd, struct sockaddr_in peerAddr)
 {
   if ( !(_impl = new Socket_impl(sockFd, peerAddr)) )
-    throw smsc::util::Exception("core_ax::network::Socket::Socket::: memory allocation was failed");
+    throw smsc::util::SystemError("core_ax::network::Socket::Socket::: memory allocation was failed");
 }
 
 smsc::core_ax::network::Socket::Socket(const std::string peerHost, in_port_t peerPort)
 {
   if ( !(_impl = new Socket_impl(peerHost, peerPort)) )
-    throw smsc::util::Exception("core_ax::network::Socket::Socket::: memory allocation was failed");
+    throw smsc::util::SystemError("core_ax::network::Socket::Socket::: memory allocation was failed");
 }
 
 smsc::core_ax::network::Socket::Socket()
 {
   if ( !(_impl = new Socket_impl()) )
-    throw smsc::util::Exception("core_ax::network::Socket::Socket::: memory allocation was failed");
+    throw smsc::util::SystemError("core_ax::network::Socket::Socket::: memory allocation was failed");
 }
-
-/*smsc::core_ax::network::Socket::operator void*()
-{
-  return _impl;
-  }*/
 
 smsc::core_ax::network::Socket::Socket(const Socket& rhs)
 {
@@ -151,7 +145,7 @@ smsc::core_ax::network::Socket::setBlocking()
 }
 
 int
-smsc::core_ax::network::Socket::getSocketDescriptor()
+smsc::core_ax::network::Socket::getSocketDescriptor() const
 {
   return _impl->getSocketDescriptor();
 }
@@ -202,13 +196,13 @@ smsc::core_ax::network::Socket::toString() const
 
 smsc::core_ax::network::ServerSocket::ServerSocket() {
   if ( !(_impl = new Socket_impl()) )
-    throw smsc::util::Exception("core_ax::network::ServerSocket::ServerSocket::: memory allocation was failed");
+    throw smsc::util::SystemError("core_ax::network::ServerSocket::ServerSocket::: memory allocation was failed");
 }
 
 smsc::core_ax::network::ServerSocket::ServerSocket(in_port_t listeningPort)
 {
   if ( !(_impl = new Socket_impl(listeningPort)) )
-    throw smsc::util::Exception("core_ax::network::ServerSocket::ServerSocket::: memory allocation was failed");
+    throw smsc::util::SystemError("core_ax::network::ServerSocket::ServerSocket::: memory allocation was failed");
 }
 
 smsc::core_ax::network::ServerSocket::ServerSocket(Socket& readySocket)
@@ -217,7 +211,7 @@ smsc::core_ax::network::ServerSocket::ServerSocket(Socket& readySocket)
     _impl = readySocket._impl;
     _impl->incrementRefCount();
   } else 
-    throw smsc::util::Exception("core_ax::network::ServerSocket::ServerSocket(Socket&)::: argument is not listening ServerSocket");
+    throw smsc::util::SystemError("core_ax::network::ServerSocket::ServerSocket(Socket&)::: argument is not listening ServerSocket");
 }
 
 smsc::core_ax::network::ServerSocket::~ServerSocket()
@@ -244,7 +238,7 @@ void smsc::core_ax::network::ServerSocket::setBlocking()
 }
 
 int
-smsc::core_ax::network::ServerSocket::getSocketDescriptor()
+smsc::core_ax::network::ServerSocket::getSocketDescriptor() const
 {
   return _impl->getSocketDescriptor();
 }
@@ -277,14 +271,14 @@ smsc::core_ax::network::ServerSocket::toString() const
 smsc::core_ax::network::Socket_impl::Socket_impl(const std::string peerHost, in_port_t peerPort) : _sockfd(-1), _isReadble(false), _isWriteable(false), _connected(false), _refCount(1), _isListeningSocket(false)
 {
   if ( (_sockfd = ::socket(AF_INET, SOCK_STREAM, 0)) < 0 )
-    throw smsc::util::Exception("core_ax::network::Socket_impl::Socket_impl::: socket failed");
+    throw smsc::util::SystemError("core_ax::network::Socket_impl::Socket_impl::: socket failed");
 
   memset(&_peerAddr, 0, sizeof(_peerAddr));
   _peerAddr.sin_family = AF_INET;
   _peerAddr.sin_port = htons(peerPort);
   int st = inet_pton(AF_INET, peerHost.c_str(), &_peerAddr.sin_addr);
   if ( st < 0 ) 
-    throw smsc::util::Exception("core_ax::network::Socket_impl::Socket_impl::: socket failed");
+    throw smsc::util::SystemError("core_ax::network::Socket_impl::Socket_impl::: socket failed");
 
   if ( !st ) {
     struct hostent* hp;
@@ -292,21 +286,16 @@ smsc::core_ax::network::Socket_impl::Socket_impl(const std::string peerHost, in_
     if ( hp )
       memcpy(&_peerAddr.sin_addr, hp->h_addr, hp->h_length);
     else
-      throw smsc::util::Exception("core_ax::network::Socket_impl::Socket_impl::: can't find host");
+      throw smsc::util::SystemError("core_ax::network::Socket_impl::Socket_impl::: can't find host");
   }
-  smsc_log_debug(dmplxlog,"Socket_impl::Socket_impl::: object created: this=%p,host=%s,port=%d,_sockfd=%d,_refCount=%d", this, peerHost.c_str(), peerPort, _sockfd, _refCount);
 }
 
 smsc::core_ax::network::Socket_impl::Socket_impl() : _sockfd(-1), _isReadble(false), _isWriteable(false), _connected(false), _refCount(1), _isListeningSocket(false) {}
 
-smsc::core_ax::network::Socket_impl::Socket_impl(int sockFd, struct sockaddr_in peerAddr): _sockfd(sockFd), _peerAddr(peerAddr), _isReadble(false), _isWriteable(false), _connected(true), _refCount(1), _isListeningSocket(false) {
-  //  smsc_log_debug(dmplxlog,"Socket_impl::Socket_impl::: object created: this=%p,_sockfd=%d,_refCount=%d", this, _sockfd, _refCount);
-}
+smsc::core_ax::network::Socket_impl::Socket_impl(int sockFd, struct sockaddr_in peerAddr): _sockfd(sockFd), _peerAddr(peerAddr), _isReadble(false), _isWriteable(false), _connected(true), _refCount(1), _isListeningSocket(false) {}
 
 smsc::core_ax::network::Socket_impl::~Socket_impl()
 {
-  /*  if ( _sockfd > -1 )
-      smsc_log_debug(dmplxlog,"Socket_impl::~Socket_impl::: delete object: this=%p", this);*/
   close();
 }
 
@@ -317,7 +306,7 @@ smsc::core_ax::network::Socket_impl::connect()
     if ( _connected == false ) {
       if( ::connect(_sockfd,(sockaddr*)&_peerAddr,sizeof(_peerAddr)) < 0 )
       {
-	throw smsc::util::Exception("core_ax::network::Socket_impl::connect::: connect falied");
+	throw smpp_dmplx::NetworkException("core_ax::network::Socket_impl::connect::: connect falied");
       }
       _connected = true;
     }
@@ -328,15 +317,13 @@ smsc::core_ax::network::Socket_impl::connect()
 smsc::core_ax::network::Socket
 smsc::core_ax::network::Socket_impl::accept() const
 {
-  //  smsc_log_debug(dmplxlog,"Socket_impl::accept::: Enter it");
   if ( _sockfd > -1 ) {
     struct sockaddr_in  peerAddr;
     socklen_t addrLen = sizeof(peerAddr);
     int acceptedSockFd;
 
-    //    smsc_log_debug(dmplxlog,"Socket_impl::accept::: call to ::accept");
     if ( (acceptedSockFd=::accept(_sockfd, (sockaddr*)&peerAddr, &addrLen)) < 0 )
-      throw smsc::util::Exception("core_ax::network::Socket::accept::: accept falied");
+      throw smpp_dmplx::NetworkException("core_ax::network::Socket::accept::: accept falied");
 
     return Socket(acceptedSockFd, peerAddr);
   } else
@@ -345,9 +332,8 @@ smsc::core_ax::network::Socket_impl::accept() const
 
 smsc::core_ax::network::Socket_impl::Socket_impl(in_port_t listeningPort) : _sockfd(-1), _isReadble(false), _isWriteable(false), _connected(false), _refCount(1), _isListeningSocket(true)
 {
-  //  smsc_log_debug(dmplxlog,"Socket_impl::Socket_impl::: Enter it. port=%d", listeningPort);
   if ( (_sockfd = ::socket(AF_INET, SOCK_STREAM, 0)) < 0 )
-    throw smsc::util::Exception("core_ax::network::Socket_impl::Socket_impl::: socket falied");
+    throw smsc::util::SystemError("core_ax::network::Socket_impl::Socket_impl::: socket falied");
 
   setReuseAddr();
 
@@ -357,21 +343,19 @@ smsc::core_ax::network::Socket_impl::Socket_impl(in_port_t listeningPort) : _soc
   _listenAddr.sin_port = htons(listeningPort);
 
   if (::bind(_sockfd, (const struct sockaddr *)&_listenAddr, sizeof(_listenAddr)) < 0 )
-    throw smsc::util::Exception("core_ax::network::Socket_impl::rSocket_impl: bind falied");
+    throw smsc::util::SystemError("core_ax::network::Socket_impl::rSocket_impl: bind falied");
 
   if (::listen(_sockfd,SOMAXCONN) < 0)
-    throw smsc::util::Exception("core_ax::network::Socket_impl::Socket_impl::: listen falied");
+    throw smsc::util::SystemError("core_ax::network::Socket_impl::Socket_impl::: listen falied");
 
   _connected = true;
-  //  smsc_log_debug(dmplxlog,"Socket_impl::Socket_impl::: object created: this=%p,port=%d,_sockfd=%d,_reCount=%d", this, listeningPort, _sockfd,_refCount);
 }
 
 void
 smsc::core_ax::network::Socket_impl::close()
 {
   if ( _sockfd > -1 ) {
-    //    smsc_log_debug(dmplxlog,"Socket_impl::close::: close socket descriptor %d, this=%p", _sockfd, this);
-    ::close (_sockfd);
+    ::close(_sockfd);
     _sockfd = -1;
   }
 }
@@ -382,7 +366,7 @@ smsc::core_ax::network::Socket_impl::setReuseAddr()
   if ( _sockfd > -1 ) {
     int on = 1;
     if ( setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0 )
-      throw smsc::util::Exception("core_ax::network::Socket_impl::setReuseAddr::: setsockopt falied");
+      throw smsc::util::SystemError("core_ax::network::Socket_impl::setReuseAddr::: setsockopt falied");
   } else
     throw smsc::util::Exception("core_ax::network::Socket_impl::setReuseAddr::: _sockfd < 0");
 }
@@ -394,7 +378,7 @@ smsc::core_ax::network::Socket_impl::setNonBlocking()
     int flags;
     if ( (flags = ::fcntl(_sockfd, F_GETFL, 0)) < 0 ||
 	 ::fcntl(_sockfd, F_SETFL, flags | O_NONBLOCK) < 0 )
-      throw smsc::util::Exception("core_ax::network::Socket_impl::setNonBlocking::: fcntl falied");
+      throw smsc::util::SystemError("core_ax::network::Socket_impl::setNonBlocking::: fcntl falied");
   } else
     throw smsc::util::Exception("core_ax::network::Socket_impl::setNonBlocking::: _sockfd < 0");
 }
@@ -406,13 +390,13 @@ smsc::core_ax::network::Socket_impl::setBlocking()
     int flags;
     if ( (flags = ::fcntl(_sockfd, F_GETFL, 0)) ||
 	 ::fcntl(_sockfd, F_SETFL, flags & ~O_NONBLOCK) < 0 )
-      throw smsc::util::Exception("core_ax::network::Socket_impl::setBlocking::: fcntl falied");
+      throw smsc::util::SystemError("core_ax::network::Socket_impl::setBlocking::: fcntl falied");
   } else
     throw smsc::util::Exception("core_ax::network::Socket_impl::setBlocking::: _sockfd < 0");
 }
 
 int
-smsc::core_ax::network::Socket_impl::getSocketDescriptor()
+smsc::core_ax::network::Socket_impl::getSocketDescriptor() const
 {
   if ( _sockfd > -1 ) {
     if ( _connected == true )
@@ -472,15 +456,11 @@ void smsc::core_ax::network::Socket_impl::markAsWriteable()
 void smsc::core_ax::network::Socket_impl::decrementRefCount()
 {
   --_refCount;
-  /*  if ( _sockfd > -1 )
-      smsc_log_debug(dmplxlog,"Socket_impl::decrementRefCount::: this=%p refCount=%d", this, _refCount);*/
 }
 
 void smsc::core_ax::network::Socket_impl::incrementRefCount()
 {
   ++_refCount;
-  /*  if ( _sockfd > -1 )
-      smsc_log_debug(dmplxlog,"Socket_impl::incrementRefCount::: this=%p refCount=%d", this, _refCount);*/
 }
 
 int smsc::core_ax::network::Socket_impl::getRefCount() const
@@ -516,7 +496,7 @@ smsc::core_ax::network::Socket_impl::toString() const
     socketPort = ntohs(_peerAddr.sin_port);
   }
   
-  char socket_dump[24];
+  char socket_dump[48];
   snprintf(socket_dump, sizeof(socket_dump), "%d.%d.%d.%d.%d, fd=%d", socket_inet_addr.inet_addr[0], socket_inet_addr.inet_addr[1], socket_inet_addr.inet_addr[2], socket_inet_addr.inet_addr[3], socketPort, _sockfd);
 
   return std::string(socket_dump);

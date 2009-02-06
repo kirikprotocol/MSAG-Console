@@ -1,7 +1,7 @@
 #ifndef __SMPPDMPLX_SMPP_GENERICREQUEST_HPP__
-# define __SMPPDMPLX_SMPP_GENERICREQUEST_HPP__ 1
+# define __SMPPDMPLX_SMPP_GENERICREQUEST_HPP__
 
-# include "SMPP_message.hpp"
+# include <smppdmplx/SMPP_message.hpp>
 # include <string>
 # include <vector>
 
@@ -9,11 +9,9 @@ namespace smpp_dmplx {
 
 class SMPP_GenericRequest : public SMPP_message {
 public:
-  SMPP_GenericRequest(uint32_t msgCode);
+  explicit SMPP_GenericRequest(uint32_t msgCode=GENERIC_REQUEST);
 
   virtual ~SMPP_GenericRequest();
-
-  virtual bool checkMessageCodeEquality(uint32_t msgCode) const;
 
   virtual std::auto_ptr<SMPP_message> clone(uint32_t msgCode, BufferedInputStream& buf) const;
 
@@ -25,9 +23,9 @@ public:
 
   virtual std::string toString() const;
 
-  static const uint32_t GENERIC_REQUEST;
+  static const uint32_t GENERIC_REQUEST = 0x0FFFFFFF;
 private:
-  std::vector<uint8_t> unimportantDataBuf;
+  std::vector<uint8_t> _unimportantDataBuf;
 };
 
 }
