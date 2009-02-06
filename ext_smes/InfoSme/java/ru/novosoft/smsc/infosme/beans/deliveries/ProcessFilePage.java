@@ -1,16 +1,21 @@
 package ru.novosoft.smsc.infosme.beans.deliveries;
 
-import ru.novosoft.smsc.infosme.backend.Task;
-import ru.novosoft.smsc.infosme.backend.MultiTask;
-import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.admin.region.Region;
+import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
+import ru.novosoft.smsc.infosme.backend.MultiTask;
+import ru.novosoft.smsc.infosme.backend.deliveries.LoadDeliveriesFileThread;
+import ru.novosoft.smsc.infosme.backend.deliveries.DeliveriesFile;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 /**
  * User: artem
@@ -23,7 +28,7 @@ public class ProcessFilePage extends DeliveriesPage {
 
   public ProcessFilePage(DeliveriesPageData pageData) {
     super(pageData);
-    thread = new LoadDeliveriesFileThread(pageData.getDeliveriesFile(), pageData.getInfoSmeContext(), pageData.isSplitDeliveriesFile(), pageData.getAppContext());
+    thread = new LoadDeliveriesFileThread(pageData.getDeliveriesFile(), pageData.getInfoSmeContext(), pageData.isSplitDeliveriesFile(), pageData.getAppContext(), pageData.owner);
     thread.start();
   }
 
@@ -34,41 +39,42 @@ public class ProcessFilePage extends DeliveriesPage {
         HashMap outputFiles = thread.getOutputFiles();
 
         if (outputFiles.isEmpty())
-          return new StartPage(pageData);
+          return new LoadFilePage(pageData);
 
         final HashMap inputFiles = new HashMap(outputFiles.size());
-        final MultiTask task = new MultiTask();
+        final MultiTask multiTask = new MultiTask();
 
         Map.Entry e;
         for (Iterator iter = outputFiles.entrySet().iterator(); iter.hasNext();) {
           e = (Map.Entry)iter.next();
-          String region = (String)e.getKey();
-          LoadDeliveriesFileThread.OutputFile outputFile = (LoadDeliveriesFileThread.OutputFile)e.getValue();
+          int region = ((Integer)e.getKey()).intValue();
+          DeliveriesFile deliveriesFile = (DeliveriesFile)e.getValue();
 
-          final Task t = pageData.getInfoSmeContext().getTaskManager().createTask();
-          resetTask(t, pageData.getInfoSmeContext(), request);
-          t.setSubject(region);
-          t.setActualRecordsSize(outputFile.getTotalSize());
+          final Task t = pageData.getInfoSmeContext().getInfoSmeConfig().createTask();
+          t.setRegionId(region);
+          t.setActualRecordsSize(deliveriesFile.getTotalSize());
+          t.setOwner(pageData.owner.getName());
+          resetTask(t, pageData.getInfoSmeContext(), pageData.getAppContext(), request);
 
-          task.addTask(region, t);
+          multiTask.addTask(region, t);
 
-          inputFiles.put(region, outputFile.getFile());
+          inputFiles.put(new Integer(region), deliveriesFile.getFile());
 
-          if (pageData.activeTaskSubject == null)
-            pageData.activeTaskSubject = region;
+          if (pageData.activeTaskRegionId == -1)
+            pageData.activeTaskRegionId = region;
         }
 
         pageData.setInputFiles(inputFiles);
 
-        pageData.setTask(task);
+        pageData.setTask(multiTask);
 
-        pageData.oldActiveTaskSubject = pageData.activeTaskSubject;
+        pageData.oldActiveTaskRegionId = pageData.activeTaskRegionId;
 
         return new EditTaskPage(pageData);
 
       case LoadDeliveriesFileThread.STATUS_CANCELED:
       case LoadDeliveriesFileThread.STATUS_ERROR:
-        return new StartPage(pageData);
+        return new LoadFilePage(pageData);
       default:
         return this;
     }
@@ -80,7 +86,7 @@ public class ProcessFilePage extends DeliveriesPage {
       return this;
     }
 
-    return new StartPage(pageData);
+    return new LoadFilePage(pageData);
   }
 
   public DeliveriesPage mbUpdate(HttpServletRequest request) throws AdminException {
@@ -88,7 +94,7 @@ public class ProcessFilePage extends DeliveriesPage {
     pageData.recordsProcessed = progress.getRecordsProcessed();
     pageData.unrecognized = progress.getUnrecognized();
     pageData.inblackList = progress.getInblackList();
-    pageData.subjectsFound = progress.getSubjectsFound();
+    pageData.regionsFound = progress.getSubjectsFound();
     pageData.splitDeliveriesFileStatus = thread.getStatus();
     return this;
   }
@@ -97,14 +103,8 @@ public class ProcessFilePage extends DeliveriesPage {
     return request.isUserInRole("infosme-admin");
   }
 
-  private static void resetTask(Task task, InfoSmeContext context, HttpServletRequest request) throws AdminException {
-    try {
-      task.setAddress(context.getConfig().getString("InfoSme.Address"));
-    } catch (Config.ParamNotFoundException e) {
-      throw new AdminException(e.getMessage());
-    } catch (Config.WrongParamTypeException e) {
-      throw new AdminException(e.getMessage());
-    }
+  private static void resetTask(Task task, InfoSmeContext context, SMSCAppContext appContext, HttpServletRequest request) throws AdminException {
+    task.setAddress(context.getInfoSmeConfig().getAddress());
     task.setDelivery(true);
     task.setProvider(Task.INFOSME_EXT_PROVIDER);
     task.setPriority(10);
@@ -117,13 +117,18 @@ public class ProcessFilePage extends DeliveriesPage {
     task.setKeepHistory(true);
     task.setReplaceMessage(false);
     task.setRetryOnFail(false);
-    task.setRetryTime("03:00:00");
     task.setSvcType("dlvr");
-    task.setActivePeriodStart("10:00:00");
-    task.setActivePeriodEnd("21:00:00");
-    task.setTransactionMode(false);
+    try {
+      Region r = appContext.getRegionsManager().getRegionById(task.getRegionId());
+      SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
+      task.setActivePeriodStart(r == null ? tf.parse("10:00:00") : r.getLocalTime(tf.parse("10:00:00")));
+      task.setActivePeriodEnd(r == null ? tf.parse("21:00:00") : r.getLocalTime(tf.parse("21:00:00")));
+      Date validityPeriod = isUserAdmin(request) ? tf.parse("01:00:00") : tf.parse("00:45:00");
+      task.setValidityPeriod(r == null ? validityPeriod : validityPeriod);
+    } catch (ParseException e) {
+      throw new AdminException(e.getMessage());
+    }
     task.setStartDate(new Date());
-    task.setValidityPeriod(isUserAdmin(request) ? "01:00:00" : "00:45:00");
   }
 
   public int getId() {

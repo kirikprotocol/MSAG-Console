@@ -9,18 +9,18 @@
   <div class=secInfo><%= getLocString("infosme.label.status")%>&nbsp;<span id="tdcStatus" style='color:blue;'><%= deliveries_bean.getStatusStr()%></span></div>
 
   <%
-    for (Iterator iter = deliveries_bean.getSubjects().iterator(); iter.hasNext();) {
-      String subject = (String)iter.next();
+    for (Iterator iter = deliveries_bean.getRegionIds().iterator(); iter.hasNext();) {
+      int regionId = ((Integer)iter.next()).intValue();
   %>
   <div>&nbsp;</div>
-  <div class=page_subtitle><%=subject%>:</div>
+  <div class=page_subtitle><%=bean.getRegionName(regionId)%>:</div>
   <div>
-    <div class=secInfo><%= getLocString("infosme.label.messages_generated")%>&nbsp;<span id="tdcMessages<%=subject%>" ><%= deliveries_bean.getMessages(subject)%></span></div>
-    <div class=secInfo><%= getLocString("infosme.label.total_progress")%>&nbsp;<span id="tdcProcents<%=subject%>" ><%= deliveries_bean.getProgress(subject)%></span>%</div>
+    <div class=secInfo><%= getLocString("infosme.label.messages_generated")%>&nbsp;<span id="tdcMessages<%=regionId%>" ><%= deliveries_bean.getMessages(regionId)%></span></div>
+    <div class=secInfo><%= getLocString("infosme.label.total_progress")%>&nbsp;<span id="tdcProcents<%=regionId%>" ><%= deliveries_bean.getProgress(regionId)%></span>%</div>
   </div>
   <script type="text/javascript">
-    statusDataSource.addObserver(new ElementObserver({elementId: 'tdcMessages<%=subject%>', field: 'messages<%=subject%>'}));
-    statusDataSource.addObserver(new ElementObserver({elementId: 'tdcProcents<%=subject%>', field: 'progress<%=subject%>'}));
+    statusDataSource.addObserver(new ElementObserver({elementId: 'tdcMessages<%=regionId%>', field: 'messages<%=regionId%>'}));
+    statusDataSource.addObserver(new ElementObserver({elementId: 'tdcProcents<%=regionId%>', field: 'progress<%=regionId%>'}));
   </script>
   <%}%>
 </div>

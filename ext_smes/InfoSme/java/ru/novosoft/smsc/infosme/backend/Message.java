@@ -76,7 +76,7 @@ public class Message
   }
 
   public static final class State {
-    private final static Map all = new HashMap();
+    private final static Map all = new HashMap(10);
 
     public final static State UNDEFINED  = new State(-1);
     public final static State NEW        = new State(0);

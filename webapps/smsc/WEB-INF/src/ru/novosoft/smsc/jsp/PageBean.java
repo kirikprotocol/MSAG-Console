@@ -8,6 +8,7 @@ package ru.novosoft.smsc.jsp;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.service.HostsManager;
 
@@ -62,6 +63,10 @@ public abstract class PageBean {
         }
 
         return init(errors);
+    }
+
+    protected User getUser(HttpServletRequest request) {
+      return appContext.getUserManager().getUser(request.getRemoteUser());
     }
 
     protected int init(final List errors) {

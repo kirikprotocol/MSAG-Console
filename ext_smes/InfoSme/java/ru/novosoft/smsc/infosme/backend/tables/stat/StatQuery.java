@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.infosme.backend;
+package ru.novosoft.smsc.infosme.backend.tables.stat;
 
 /**
  * Created by IntelliJ IDEA.
@@ -8,14 +8,19 @@ package ru.novosoft.smsc.infosme.backend;
  * To change this template use Options | File Templates.
  */
 
-import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
 
 import java.util.Date;
+import java.util.HashMap;
 
 public class StatQuery implements Filter
 {
   private String taskId = null;
+
+  HashMap tasksCache = new HashMap();
 
   private Date fromDate = null;
   private Date tillDate = null;
@@ -23,7 +28,11 @@ public class StatQuery implements Filter
   private boolean fromDateEnabled = false;
   private boolean tillDateEnabled = false;
 
-  public StatQuery() {
+  private String owner;
+  private InfoSmeConfig config;
+
+  public void setConfig(InfoSmeConfig config) {
+    this.config = config;
   }
 
   public String getTaskId() {
@@ -61,13 +70,37 @@ public class StatQuery implements Filter
     return tillDateEnabled;
   }
 
+  public String getOwner() {
+    return owner;
+  }
+
+  public void setOwner(String owner) {
+    this.owner = owner;
+  }
+
   public boolean isEmpty() {
     return false;
   }
 
   public boolean isItemAllowed(DataItem item) {
-    if (!item.getValue("taskId").equals(taskId))
+    String tId = (String)item.getValue("taskId");
+    if (taskId != null && !taskId.equals(tId))
       return false;
+
+    if (!config.containsTaskWithId(tId))
+      return false;
+
+    if (owner != null) {
+      String o = (String)tasksCache.get(tId);
+      if (o == null) {
+        Task t = config.getTask(tId);
+        o = t.getOwner();
+        tasksCache.put(tId, o);
+      }
+      if (!owner.equals(o))
+        return false;
+    }
+    
     return true;
   }
 }

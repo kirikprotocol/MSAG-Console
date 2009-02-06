@@ -109,6 +109,16 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
                     System.out.println("Installation mirrorpath is not defined in webconfig (installation.mirrorpath missed)");
                     throw new AdminException("Installation mirrorpath is not defined in webconfig");
                 }
+
+                if (webappConfig.containsParameter("installation.mode")) {
+                  String instMode = webappConfig.getString("installation.mode");
+                  if (instMode.equalsIgnoreCase("infosme"))
+                    Constants.instMode = Constants.INST_MODE_INFO_SME;
+                  else if (instMode.equalsIgnoreCase("smsc"))
+                    Constants.instMode = Constants.INST_MODE_SMSC;
+                  else
+                    System.out.println("Unknown installation mode: " + instMode + ". Set mode to 'SMSC'.");
+                }
             }
             catch (Exception e) {
                 System.out.println("Installation type is not defined in webconfig (installation.type missed)");

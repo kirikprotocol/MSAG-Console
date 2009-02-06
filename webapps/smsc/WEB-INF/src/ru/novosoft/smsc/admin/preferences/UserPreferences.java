@@ -87,8 +87,11 @@ public class UserPreferences {
 
     private HashMap topmonPrefs = new HashMap();
     private HashMap perfmonPrefs = new HashMap();
+    private HashSet infosmeRegions = new HashSet();
 
-    public static String[] getDefaultPrefsNames() {
+    private TimeZone timezone = TimeZone.getDefault();
+
+  public static String[] getDefaultPrefsNames() {
         String[] result = new String[11];
         result[0] = "locale";
         result[1] = "topmon.graph.scale";
@@ -438,6 +441,27 @@ public class UserPreferences {
         }
     }
 
+    public boolean isInfoSmeRegionAllowed(String regionId) {
+      return infosmeRegions.contains(regionId);
+    }
+
+    public void setInfoSmeAllowedRegions(Set regions) {
+      infosmeRegions.clear();
+      infosmeRegions.addAll(regions);
+    }
+
+    public Collection getInfoSmeRegions() {
+      return new ArrayList(infosmeRegions);
+    }
+
+    public TimeZone getTimezone() {
+      return timezone;
+    }
+
+    public void setTimezone(TimeZone timezone) {
+      this.timezone = timezone;
+    }
+
     public void setValues(NodeList values) {
         if (values != null) {
             for (int i = 0; i < values.getLength(); i++) {
@@ -446,14 +470,18 @@ public class UserPreferences {
                 String value = elem.getAttribute("value");
                 if (name.equals("locale")) {
                     locale = new Locale(value);
-                }
-                if (name.startsWith("topmon.")) {
+                } else if (name.startsWith("topmon.")) {
                     if (topmonPrefs.containsKey(name)) topmonPrefs.remove(name);
                     topmonPrefs.put(name, value);
-                }
-                if (name.startsWith("perfmon.")) {
+                } else if (name.startsWith("perfmon.")) {
                     if (perfmonPrefs.containsKey(name)) perfmonPrefs.remove(name);
                     perfmonPrefs.put(name, value);
+                } else if (name.startsWith("infosme.region.")) {
+                    infosmeRegions.add(name.substring("infosme.region.".length()));
+                } else if (name.equals("timezone")) {
+                  timezone = TimeZone.getTimeZone(value);
+                  if (timezone == null)
+                    timezone = TimeZone.getDefault();
                 }
             }
         }
@@ -472,7 +500,12 @@ public class UserPreferences {
             String name = (String) i.next();
             result += "\t\t<pref name=\"" + name + "\" value=\"" + perfmonPrefs.get(name) + "\"/>\n";
         }
-
+        t = infosmeRegions;
+        for (Iterator i = t.iterator(); i.hasNext();) {
+            String name = (String) i.next();
+            result += "\t\t<pref name=\"infosme.region." + name + "\" value=\"true\"/>\n";
+        }
+        result += "\t\t<pref name=\"timezone\" value=\"" + timezone.getID() + "\"/>\n";
         return result;
     }
 

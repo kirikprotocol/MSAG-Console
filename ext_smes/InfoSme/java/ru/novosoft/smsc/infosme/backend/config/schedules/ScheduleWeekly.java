@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.infosme.backend.schedules;
+package ru.novosoft.smsc.infosme.backend.config.schedules;
 
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
@@ -31,14 +31,14 @@ public class ScheduleWeekly extends ScheduleEndDateTime
     this.weekDays = weekDays;
   }
 
-  public ScheduleWeekly(String id, Config config) throws Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException
+  ScheduleWeekly(String id, Config config) throws Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException
   {
     super(id, EXECUTE_WEEKLY, config);
     this.everyNWeeks = config.getInt(prefix + ".everyNWeeks");
     Functions.addValuesToCollection(this.weekDays, config.getString(prefix + ".weekDays"), ",", true);
   }
 
-  public void storeToConfig(Config config)
+  void storeToConfig(Config config)
   {
     super.storeToConfig(config);
     config.setInt(prefix + ".everyNWeeks", everyNWeeks);
@@ -62,6 +62,7 @@ public class ScheduleWeekly extends ScheduleEndDateTime
   public void setEveryNWeeks(int everyNWeeks)
   {
     this.everyNWeeks = everyNWeeks;
+    setModified(true);
   }
 
   public Collection getWeekDays()
@@ -72,5 +73,6 @@ public class ScheduleWeekly extends ScheduleEndDateTime
   public void setWeekDays(Collection weekDays)
   {
     this.weekDays = weekDays;
+    setModified(true);
   }
 }

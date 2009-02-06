@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.infosme.backend.schedules;
+package ru.novosoft.smsc.infosme.backend.config.schedules;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.tables.schedules.ScheduleDataSource;
@@ -25,20 +25,20 @@ public abstract class Schedule
   public static final byte EXECUTE_MONTHLY_WEEK = 4;
   public static final byte EXECUTE_INTERVAL = 5;
 
-  public static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
-
   private String id = "";
   private byte execute = EXECUTE_UNKNOWN;
-  private Collection tasks = new ArrayList();
+  private Collection tasks = new ArrayList(100);
   private Date startDateTime = new Date();
+  private boolean modified;
 
   protected final String prefix;
-  protected static final DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+  protected static final DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
   private Schedule(String id)
   {
     this.id = id;
     prefix = createPrefix(id);
+    modified = true;
   }
 
   public Schedule(String id, byte execute, Collection tasks, Date startDateTime)
@@ -47,17 +47,21 @@ public abstract class Schedule
     this.execute = execute;
     this.tasks = tasks;
     this.startDateTime = startDateTime;
+    modified = true;
   }
 
-  public Schedule(String id, byte execute, Config config) throws Config.ParamNotFoundException, Config.WrongParamTypeException, ParseException
+  Schedule(String id, byte execute, Config config) throws Config.ParamNotFoundException, Config.WrongParamTypeException, ParseException
   {
     this(id);
     this.execute = execute;
     Functions.addValuesToCollection(this.tasks, config.getString(prefix + ".tasks"), ",", true);
-    this.startDateTime = dateFormat.parse(config.getString(prefix + ".startDateTime"));
+    synchronized(dateFormat) {
+      this.startDateTime = dateFormat.parse(config.getString(prefix + ".startDateTime"));
+    }
+    modified = false;
   }
 
-  public static Schedule getInstance(String id, Config config) throws Config.ParamNotFoundException, Config.WrongParamTypeException, ParseException, AdminException
+  static Schedule getInstance(String id, Config config) throws Config.ParamNotFoundException, Config.WrongParamTypeException, ParseException, AdminException
   {
     final String prefix = createPrefix(id);
     String executeStr = config.getString(prefix + ".execute");
@@ -91,28 +95,30 @@ public abstract class Schedule
                                      String intervalTime)
       throws AdminException, ParseException
   {
-    if ("once".equalsIgnoreCase(executeStr)) {
-      return new ScheduleOnce(id, tasks, dateFormat.parse(startDateTime));
-    } else if ("daily".equalsIgnoreCase(executeStr)) {
-      return new ScheduleDaily(id, tasks, dateFormat.parse(startDateTime), endDateTime, everyNDays);
-    } else if ("weekly".equalsIgnoreCase(executeStr)) {
-      return new ScheduleWeekly(id, tasks, dateFormat.parse(startDateTime), endDateTime, everyNWeeks, weekDays);
-    } else if ("monthly".equalsIgnoreCase(executeStr)) {
-      if (montlyTypeIsDay) {
-        return new ScheduleMonthlyDay(id, tasks, dateFormat.parse(startDateTime), endDateTime, monthes, dayOfMonth);
+    synchronized(dateFormat) {
+      if ("once".equalsIgnoreCase(executeStr)) {
+        return new ScheduleOnce(id, tasks, dateFormat.parse(startDateTime));
+      } else if ("daily".equalsIgnoreCase(executeStr)) {
+        return new ScheduleDaily(id, tasks, dateFormat.parse(startDateTime), endDateTime, everyNDays);
+      } else if ("weekly".equalsIgnoreCase(executeStr)) {
+        return new ScheduleWeekly(id, tasks, dateFormat.parse(startDateTime), endDateTime, everyNWeeks, weekDays);
+      } else if ("monthly".equalsIgnoreCase(executeStr)) {
+        if (montlyTypeIsDay) {
+          return new ScheduleMonthlyDay(id, tasks, dateFormat.parse(startDateTime), endDateTime, monthes, dayOfMonth);
+        } else {
+          return new ScheduleMonthlyWeek(id, tasks, dateFormat.parse(startDateTime), endDateTime, monthes, weekDayN, weekDay);
+        }
+      } else if ("interval".equalsIgnoreCase(executeStr)) {
+        return new ScheduleInterval(id, tasks, dateFormat.parse(startDateTime), endDateTime, intervalTime);
       } else {
-        return new ScheduleMonthlyWeek(id, tasks, dateFormat.parse(startDateTime), endDateTime, monthes, weekDayN, weekDay);
+        throw new AdminException("Unknown schedule type \"" + executeStr + '"');
       }
-    } else if ("interval".equalsIgnoreCase(executeStr)) {
-      return new ScheduleInterval(id, tasks, dateFormat.parse(startDateTime), endDateTime, intervalTime);
-    } else {
-      throw new AdminException("Unknown schedule type \"" + executeStr + '"');
     }
   }
 
   protected static String createPrefix(String schedId)
   {
-    return ScheduleDataSource.SCHEDULES_PREFIX + '.' + StringEncoderDecoder.encodeDot(schedId);
+    return ScheduleManager.SCHEDULES_PREFIX + '.' + StringEncoderDecoder.encodeDot(schedId);
   }
 
   /**
@@ -121,24 +127,21 @@ public abstract class Schedule
    *
    * @param config
    */
-  public void storeToConfig(Config config)
+  void storeToConfig(Config config)
   {
     config.setString(prefix + ".execute", getExecuteStr(execute));
     config.setString(prefix + ".tasks", Functions.collectionToString(tasks, ","));
-    config.setString(prefix + ".startDateTime", dateFormat.format(startDateTime));
+    synchronized(dateFormat) {
+      config.setString(prefix + ".startDateTime", dateFormat.format(startDateTime));
+    }
   }
 
-  public boolean isContainsInConfig(Config config)
-  {
-    return config.containsSection(prefix);
-  }
-
-  public static void removeScheduleFromConfig(String scheduleId, Config config)
+  static void removeScheduleFromConfig(String scheduleId, Config config)
   {
     config.removeSection(createPrefix(scheduleId));
   }
 
-  public void removeFromConfig(Config config)
+  void removeFromConfig(Config config)
   {
     removeScheduleFromConfig(this.id, config);
   }
@@ -183,6 +186,7 @@ public abstract class Schedule
   public void setId(String id)
   {
     this.id = id;
+    setModified(true);
   }
 
   public byte getExecute()
@@ -190,9 +194,22 @@ public abstract class Schedule
     return execute;
   }
 
+  public String getExecuteStr() {
+    switch (execute) {
+      case EXECUTE_DAILY: return "daily";
+      case EXECUTE_MONTHLY_DAY:
+      case EXECUTE_MONTHLY_WEEK: return "monthly";
+      case EXECUTE_WEEKLY: return "weekly";
+      case EXECUTE_ONCE: return "once";
+      default:
+        return "interval";
+    }
+  }
+
   public void setExecute(byte execute)
   {
     this.execute = execute;
+    setModified(true);
   }
 
   public Collection getTasks()
@@ -203,6 +220,7 @@ public abstract class Schedule
   public void setTasks(Collection tasks)
   {
     this.tasks = tasks;
+    setModified(true);
   }
 
   public Date getStartDateTime()
@@ -212,11 +230,22 @@ public abstract class Schedule
 
   public String getStartDateTimeStr()
   {
-    return dateFormat.format(startDateTime);
+    synchronized(dateFormat) {
+      return dateFormat.format(startDateTime);
+    }
   }
 
   public void setStartDateTime(Date startDateTime)
   {
     this.startDateTime = startDateTime;
+    setModified(true);
+  }
+
+  public boolean isModified() {
+    return modified;
+  }
+
+  public void setModified(boolean modified) {
+    this.modified = modified;
   }
 }

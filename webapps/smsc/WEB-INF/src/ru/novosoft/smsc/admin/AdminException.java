@@ -12,4 +12,9 @@ public class AdminException extends Exception
 	{
 		super(s);
 	}
+
+  public AdminException(String s, Throwable cause)
+	{
+		super(s, cause);
+	}
 }

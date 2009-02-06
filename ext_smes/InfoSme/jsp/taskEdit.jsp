@@ -1,27 +1,22 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.infosme.beans.TaskEdit,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
-                 java.util.Iterator, ru.novosoft.smsc.infosme.backend.Task"%>
+                 java.util.Iterator, ru.novosoft.smsc.infosme.backend.config.tasks.Task"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.TaskEdit" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-	//ServiceIDForShowStatus = ;
 	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
-	//MENU1_SELECTION = "WSME_INDEX";
 
 	int beanResult = bean.process(request);
-	switch(beanResult)
-	{
+	switch(beanResult) {
 		case TaskEdit.RESULT_DONE:
 			response.sendRedirect("tasks.jsp");
 			return;
-		default:
-      {
-        %><%@ include file="inc/menu_switch.jsp"%><%
-      }
+		default:{%><%@ include file="inc/menu_switch.jsp"%><%}
 	}
   int rowN = 0;
+  boolean admin = InfoSmeBean.isUserAdmin(request);
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
@@ -39,6 +34,21 @@
   <th><%= getLocString("infosme.label.task_id")%></th>
   <td><input class=txt id=id name=id readonly value="<%=StringEncoderDecoder.encode(bean.getId())%>"></td>
 </tr>
+<% if (admin) { %>
+<tr class=row<%=rowN++&1%>>
+  <th><%= getLocString("infosme.label.owner")%></th>
+  <td><select id="owner" name="owner">
+    <% Collection users = bean.getUsers();
+       if (!users.contains(bean.getOwner())) {%>
+    <option value="<%=bean.getOwner()%>" SELECTED><%=bean.getOwner()%> (unavailable)</option>
+    <% } %>
+    <%for (Iterator iter = users.iterator(); iter.hasNext();) {
+      String user = (String)iter.next();%>
+    <option value="<%=user%>" <%=bean.getOwner().equals(user) ? "SELECTED" : ""%>><%=user%></option>
+    <% } %>
+  </select>    
+</tr>
+<% } %>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.task_name")%></th>
   <td><%if (bean.isSmeRunning()) {
@@ -57,6 +67,7 @@
   }%>
   </td>
 </tr>
+<% if (admin) { %>
 <tr class=row<%=rowN++&1%>>
   <th>Provider</th>
   <td><%
@@ -74,6 +85,7 @@
     }%>
   </td>
 </tr>
+<% } %>
 <tr class=row<%=rowN++&1%>>
   <th><label for=enabled>Enabled</label></th>
   <td><%if (bean.isSmeRunning()) {
@@ -101,6 +113,7 @@
   }%>
   </td>
 </tr>
+
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.active_period")%></th>
   <td><%if (bean.isSmeRunning()) {
@@ -143,6 +156,7 @@
   }%>
   </td>
 </tr>
+<% if (admin) { %>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.vperiod_date")%></th>
   <td><%if (bean.isSmeRunning()) {
@@ -160,6 +174,7 @@
   }%>
   </td>
 </tr>
+<% } %>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.start_date")%></th>
   <% if (bean.isCreate()) {%>
@@ -202,10 +217,11 @@
   <td><input class=check type=checkbox id=transliterate name=transliterate <%=bean.isTransliterate() ? "checked" : ""%>></td>
 </tr>
 <%}}%>
+<% if (admin) { %>
 <tr class=row<%=rowN++&1%>>
   <th><label for=retryOnFail>Retry policy</label></th>
   <td><%if (bean.isSmeRunning()) {%>
-    <input class=check type=checkbox id=retryOnFail name=retryOnFail <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="document.getElementById('retryPolicy').disabled = !this.checked;">
+    <input class=check type=checkbox id=retryOnFail name=retryOnFail <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="retryOnFailUpdated()">
     <select id="retryPolicy" name="retryPolicy">
           <%for (Iterator iter = bean.getRetryPolicies().iterator(); iter.hasNext();) {
             String policy = (String)iter.next();
@@ -213,7 +229,14 @@
           <option value="<%=policy%>" <%=bean.getRetryPolicy() != null && bean.getRetryPolicy().equals(policy) ? "SELECTED" : ""%>><%=StringEncoderDecoder.encode(policy)%></option>
           <%}%>
         </select>
-    <script>document.getElementById('retryPolicy').disabled = !document.getElementById('retryOnFail').checked;</script><%
+    <script>
+      function retryOnFailUpdated() {
+        document.getElementById('retryPolicy').disabled = !document.getElementById('retryOnFail').checked;
+        if (document.getElementById('retryOnFail').checked)
+          document.getElementById('transactionMode').checked=true;
+      }
+      retryOnFailUpdated();
+    </script><%
   } else {
     if (bean.isRetryOnFail() && bean.getRetryPolicy() != null && bean.getRetryPolicy().trim().length() > 0) {
       %>enabled, retry policy is '<%=StringEncoderDecoder.encode(bean.getRetryPolicy())%>'<%
@@ -305,6 +328,7 @@
   }%>
   </td>
 </tr>
+<% } %>
 <tr class=row<%=rowN++&1%>>
   <th>flash</th>
   <td><%if (bean.isSmeRunning()) {

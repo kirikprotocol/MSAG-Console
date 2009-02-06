@@ -9,6 +9,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.Functions;
 
 import java.security.Principal;
 import java.util.*;
@@ -227,5 +228,25 @@ public class User implements Principal {
 
     public void revokeRole(String roleName) {
         roles.remove(roleName);
+    }
+
+
+  /**
+   * Converts local (server) time to user specific timezone
+   * @param time local (server) time
+   * @return user specific time
+   */
+    public Date getUserTime(Date time) {
+      return time == null ? null : Functions.convertTime(time, TimeZone.getDefault(), getPrefs().getTimezone());
+    }
+
+
+    /**
+     * Converts user specific time to local (server) time
+     * @param time user specific time
+     * @return local (server) time
+     */
+    public Date getLocalTime(Date time) {
+      return time == null ? null : Functions.convertTime(time, getPrefs().getTimezone(), TimeZone.getDefault());
     }
 }

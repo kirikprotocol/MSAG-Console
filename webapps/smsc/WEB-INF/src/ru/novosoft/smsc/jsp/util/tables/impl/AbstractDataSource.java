@@ -33,7 +33,7 @@ public abstract class AbstractDataSource implements DataSource {
   protected void init(Query query) {
     this.query = query;
     String  sort = (String) ((query.getSortOrder() == null || query.getSortOrder().isEmpty()) ? null : query.getSortOrder().get(0));
-    if (sort != null && sort.charAt(0) == '-') {
+    if (sort != null && sort.length() > 0 && sort.charAt(0) == '-') {
       sort = sort.substring(1);
       isNegativeSort = true;
     }

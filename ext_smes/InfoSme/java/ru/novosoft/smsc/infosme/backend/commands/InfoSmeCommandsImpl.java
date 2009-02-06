@@ -4,19 +4,18 @@ import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.infosme.Distribution;
 import ru.novosoft.smsc.admin.console.commands.infosme.InfoSmeCommands;
+import ru.novosoft.smsc.admin.users.User;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.Message;
-import ru.novosoft.smsc.infosme.backend.Task;
-import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
-import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
+import ru.novosoft.smsc.infosme.beans.InfoSmeBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.config.Config;
 
 import java.io.File;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.Collection;
+import java.util.*;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 /**
  * User: artem
@@ -25,11 +24,54 @@ import java.util.Collection;
 
 public class InfoSmeCommandsImpl implements InfoSmeCommands {
 
-
   private static Category log = Category.getInstance(InfoSmeCommandsImpl.class);
+
+  private static boolean checkUserPermissions(CommandContext ctx) {
+    User user = getUser(ctx);
+    if (!isUserAdmin(user) && !isUserMarket(user)) {
+      ctx.setMessage("User is not allowed to perform this action.");
+      ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+      return false;
+    }
+    return true;
+  }
+
+  private static boolean checkInfoSmeOnline(CommandContext ctx, InfoSmeContext context) {
+    if (!context.getInfoSme().getInfo().isOnline()) {
+      ctx.setMessage("InfoSme is not started");
+      ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+      return false;
+    }
+    return true;
+  }
+
+  private static boolean checkTaskOwner(CommandContext ctx, InfoSmeContext context, String taskId) {
+    // Check task exists
+    if(!context.getInfoSmeConfig().containsTaskWithId(taskId)) {
+      ctx.setMessage("Task doesn't exist in InfoSme with id: " + taskId);
+      ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+      return false;
+    }
+
+    // Check owner
+    User user = getUser(ctx);
+    if (!isUserAdmin(user)) {
+      Task t = context.getInfoSmeConfig().getTask(taskId);
+      if (!t.getOwner().equals(user.getName())) {
+        ctx.setMessage("User is not allowed to perform this action.");
+        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   public void importFile(CommandContext ctx, String file) {
     try {
+      // Check user
+      if (!checkUserPermissions(ctx))
+        return;
 
       File f = new File(file);
       if (!f.exists()) {
@@ -41,13 +83,14 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       final SMSCAppContext appContext = ctx.getOwner().getContext();
       final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
 
-      if (!context.getInfoSme().getInfo().isOnline()) {
-        ctx.setMessage("InfoSme is not started");
-        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+      if (!checkInfoSmeOnline(ctx, context))
         return;
-      }
 
-      new TaskBuilder(file, context).start();
+      // Prepare task
+      User user = getUser(ctx);
+      Task task = createTask(context, new File(file).getName(), user);
+
+      new TaskBuilder(appContext, context, task, user, file).start();
       ctx.setMessage("File " + file + " was added to process queue");
       ctx.setStatus(CommandContext.CMD_OK);
     } catch (Exception e) {
@@ -59,14 +102,15 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
 
   public void resendMessage(CommandContext ctx, String msisdn, String taskId, String text) {
     try {
+      // Check user
+      if (!checkUserPermissions(ctx))
+        return;
+
       final SMSCAppContext appContext = ctx.getOwner().getContext();
       final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
 
-      if (!context.getInfoSme().getInfo().isOnline()) {
-        ctx.setMessage("InfoSme is not started");
-        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+      if (!checkInfoSmeOnline(ctx, context))
         return;
-      }
 
 //      String storeDir = context.getConfig().getString("InfoSme.storeLocation");
 //
@@ -100,18 +144,19 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
 
   public void removeTask(CommandContext ctx, String taskId) {
     try {
+      // Check user
+      if (!checkUserPermissions(ctx))
+        return;
+
       final SMSCAppContext appContext = ctx.getOwner().getContext();
       final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
-      if (!context.getInfoSme().getInfo().isOnline()) {
-        ctx.setMessage("InfoSme is not started");
-        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-        return;
-      }
 
-      Task t = new Task(taskId);
-      t.removeFromConfig(context.getConfig());
-      context.getInfoSme().removeTask(t.getId());
-      context.getConfig().save();
+      if (!checkInfoSmeOnline(ctx, context) || !checkTaskOwner(ctx, context, taskId))
+        return;
+
+      // Remove task
+      context.getInfoSmeConfig().removeAndApplyTask(taskId);
+      context.getInfoSme().removeTask(taskId);
 
       ctx.setMessage("OK");
       ctx.setStatus(CommandContext.CMD_OK);
@@ -124,6 +169,10 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
 
   public void createTask(CommandContext ctx, Distribution d) {
     try {
+      // Check user
+      if (!checkUserPermissions(ctx))
+        return;
+
       try{
         validateDistribution(d);
       } catch(Exception e) {
@@ -131,6 +180,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         return;
       }
+
       File f = new File(d.getFile());
       if (!f.exists()) {
         ctx.setMessage("File " + d.getFile() + " does not exist");
@@ -138,23 +188,21 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
         return;
       }
 
-
       final SMSCAppContext appContext = ctx.getOwner().getContext();
       final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
-      if (!context.getInfoSme().getInfo().isOnline()) {
-        ctx.setMessage("InfoSme is not started");
-        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-        return;
-      }
 
-      TaskBuilder taskBuilder = new TaskBuilder(context, d);
-      String taskId;
-      if((taskId = taskBuilder.getTaskId())==null) {
-        throw new Exception("InfoSme Internal error");
-      }
-      taskBuilder.start();
-      ctx.setMessage(taskId);
+      if (!checkInfoSmeOnline(ctx, context))
+        return;
+
+      // Create task
+      User user = getUser(ctx);
+      Task t = createTask(context, d, user);
+
+      new TaskBuilder(appContext, context, t, user, d.getFile()).start();
+
+      ctx.setMessage(t.getId());
       ctx.setStatus(CommandContext.CMD_OK);
+
     } catch (Exception e) {
       e.printStackTrace();
       log.error(e,e);
@@ -163,6 +211,10 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
   }
 
   public void alterTask(CommandContext ctx, Distribution d, String taskId) {
+    // Check user
+    if (!checkUserPermissions(ctx))
+      return;
+
     try{
       validateDistribution(d);
       validateNull(taskId, "TaskId");
@@ -171,27 +223,22 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
       return;
     }
+
     try{
       final SMSCAppContext appContext = ctx.getOwner().getContext();
       final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
-      if (!context.getInfoSme().getInfo().isOnline()) {
-        ctx.setMessage("InfoSme is not started");
-        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-      } else{
-        final Config config = context.getConfig();
-        Task task = new Task(taskId);
-        if(!task.isContainsInConfig(config)) {
-          ctx.setMessage("Task doesn't exist in InfoSme with id: " + taskId);
-          ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-          return;
-        }
-        task.resetTask(false);
-        task.importFromDistribution(d);
-        task.removeFromConfig(config);
-        task.storeToConfig(config);
-        config.save();
-        context.getInfoSme().changeTask(taskId);
-      }
+
+      if (!checkInfoSmeOnline(ctx, context) || !checkTaskOwner(ctx, context, taskId))
+        return;
+
+      // Alter task
+      Task t = context.getInfoSmeConfig().getTask(taskId);
+      alterTask(t, d);
+
+      // Save task
+      context.getInfoSmeConfig().addAndApplyTask(t);
+      context.getInfoSme().changeTask(taskId);
+
     } catch (Exception e) {
       e.printStackTrace();
       log.error(e,e);
@@ -201,23 +248,19 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
 
   public void getStatus(CommandContext ctx, String taskId) {
     try{
+      // Check user
+      if (!checkUserPermissions(ctx))
+        return;
+
       final SMSCAppContext appContext = ctx.getOwner().getContext();
       final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
-      if (!context.getInfoSme().getInfo().isOnline()) {
-        ctx.setMessage("InfoSme is not started");
-        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-        return;
-      }
 
-      final InfoSmeContext smeContext = InfoSmeContext.getInstance(appContext, "InfoSme");
-      final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId);
-      String status;
-      try{
-        boolean loaded = smeContext.getConfig().getBool(prefix + ".messagesHaveLoaded");
-        status = Boolean.toString(loaded);
-      } catch(Exception e) {
-        status="error";
-      }
+      if (!checkInfoSmeOnline(ctx, context) && !checkTaskOwner(ctx, context, taskId))
+        return;
+
+      Task t = context.getInfoSmeConfig().getTask(taskId);
+      String status = Boolean.toString(t.isMessagesHaveLoaded());
+
       ctx.setMessage(status);
       ctx.setStatus(CommandContext.CMD_OK);
 
@@ -227,7 +270,20 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
     }
   }
 
-  private void validateDistribution(Distribution d) {
+  private static User getUser(CommandContext ctx) {
+    SMSCAppContext appContext = ctx.getOwner().getContext();
+    return appContext.getUserManager().getUser(ctx.getSession().getUserName());
+  }
+
+  private static boolean isUserAdmin(User user) {
+    return user.getRoles().contains(InfoSmeBean.INFOSME_ADMIN_ROLE);
+  }
+
+  private static boolean isUserMarket(User user) {
+    return user.getRoles().contains(InfoSmeBean.INFOSME_MARKET_ROLE);
+  }
+
+  private static void validateDistribution(Distribution d) {
     validateNull(d,"Distribution");
     validateNull(d.getDateBegin(),"dateBegin");
     validateNull(d.getDateEnd(),"dateEnd");
@@ -239,10 +295,69 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
     validateNull(d.getTaskName(),"taskName");
   }
 
-  private void validateNull(Object obj, String name){
+  private static void validateNull(Object obj, String name){
     if(obj==null) {
       throw new IllegalArgumentException("Param empty: "+name);
     }
+  }
+
+  private static Task createTask(InfoSmeContext ctx, String name, User owner) throws AdminException {
+    Task task = ctx.getInfoSmeConfig().createTask();
+    task.setName(name);
+    task.setOwner(owner.getName());
+    task.setDelivery(true);
+    task.setProvider(Task.INFOSME_EXT_PROVIDER);
+    task.setPriority(10);
+    task.setMessagesCacheSize(2000);
+    task.setMessagesCacheSleep(10);
+    task.setUncommitedInGeneration(100);
+    task.setUncommitedInProcess(100);
+    task.setEnabled(true);
+    task.setTrackIntegrity(true);
+    task.setKeepHistory(true);
+    task.setReplaceMessage(false);
+    task.setRetryOnFail(false);
+    task.setSvcType("dlvr");
+    try {
+      SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
+      task.setActivePeriodStart(tf.parse("10:00:00"));
+      task.setActivePeriodEnd(tf.parse("21:00:00"));
+      task.setTransactionMode(false);
+      task.setValidityPeriod(tf.parse("01:00:00"));
+    } catch (ParseException e) {
+      throw new AdminException(e.getMessage());
+    }
+    task.setStartDate(new Date());
+    return task;
+  }
+
+  private static Task createTask(InfoSmeContext ctx, Distribution distr, User owner) throws AdminException {
+    Task task = createTask(ctx, distr.getTaskName(), owner);
+    return alterTask(task, distr);
+  }
+
+  private static Task alterTask(Task task, Distribution distr) {
+    task.setName(distr.getTaskName());
+    Set days = distr.getDays();
+    List activeDays = new LinkedList();
+
+    if(days != null && !days.isEmpty()) {
+      Iterator iter = days.iterator();
+      while(iter.hasNext()) {
+        activeDays.add(Task.WEEK_DAYS[((Integer)iter.next()).intValue()]);
+      }
+    }
+    task.setName(distr.getTaskName());
+    task.setActiveWeekDays(activeDays);
+    task.setActiveWeekDaysSet(activeDays);
+
+    task.setStartDate(distr.getDateBegin());
+    task.setEndDate(distr.getDateEnd());
+    task.setActivePeriodStart(distr.getTimeBegin().getTime());
+    task.setActivePeriodEnd(distr.getTimeEnd().getTime());
+    task.setAddress(distr.getAddress());
+    task.setTransactionMode(distr.isTxmode().booleanValue());
+    return task;
   }
 
 }

@@ -1,12 +1,12 @@
 package ru.novosoft.smsc.infosme.backend.tables.stat;
 
-import ru.novosoft.smsc.infosme.backend.StatQuery;
+import ru.novosoft.smsc.infosme.backend.tables.stat.StatQuery;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
-import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.io.*;
 import java.text.ParseException;
@@ -18,7 +18,7 @@ import java.util.*;
  * Date: 02.06.2008
  */
 
-public class StatisticsDataSource extends AbstractDataSourceImpl {
+public class StatisticsDataSource extends AbstractDataSource {
 
   private static String DIR_DATE_FORMAT = "yyyyMMdd";
   private static String FILE_DATE_FORMAT = "HH";
@@ -31,6 +31,7 @@ public class StatisticsDataSource extends AbstractDataSourceImpl {
   }
 
   public QueryResultSet query(Query query_to_run) {
+    init(query_to_run);
     final StatQuery filter = (StatQuery)query_to_run.getFilter();
 
     Date fromDate = filter.getFromDate();
@@ -40,8 +41,6 @@ public class StatisticsDataSource extends AbstractDataSourceImpl {
       List files = getFiles(fromDate, endDate);
       if (files.isEmpty())
         return new EmptyResultSet();
-
-      final QueryResultSetImpl rs = new QueryResultSetImpl(columnNames, "");
 
       final SimpleDateFormat fileDateFormat = new SimpleDateFormat(DIR_DATE_FORMAT + '/' + FILE_DATE_FORMAT);
 
@@ -70,12 +69,13 @@ public class StatisticsDataSource extends AbstractDataSourceImpl {
             final DataItem item = new StatisticDataItem(fileDate, taskId, taskName, Integer.valueOf(generated),
                 Integer.valueOf(delivered), Integer.valueOf(retried), Integer.valueOf(failed));
 
-            if (filter.isItemAllowed(item))
-              rs.add(item);
+            add(item);
           }
 
         } catch (EOFException e) {
         } catch (IOException e) {
+          e.printStackTrace();
+        } catch (AdminException e) {
           e.printStackTrace();
         } finally {
           if (is != null)
@@ -86,7 +86,7 @@ public class StatisticsDataSource extends AbstractDataSourceImpl {
         }
       }
 
-      return rs;
+      return getResults();
 
     } catch (ParseException e) {
       e.printStackTrace();

@@ -11,20 +11,23 @@ import java.util.Date;
  */
 public class TaskDataItem extends AbstractDataItem
 {
-  public TaskDataItem(String id, String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage, String svcType, boolean generating, boolean processing, boolean trackIntegrity, Date endDate)
+  public TaskDataItem(String id, String name, String provider, boolean enabled, int priority, String retryPolicy, boolean replaceMessage, String svcType, boolean generating, boolean processing, boolean trackIntegrity, Date startDate, Date endDate, String owner, boolean delivery)
   {
     values.put("id", id);
     values.put("name", name);
     values.put("provider", provider);
-    values.put("enabled", new Boolean(enabled));
+    values.put("enabled", Boolean.valueOf(enabled));
     values.put("priority", new Integer(priority));
-    values.put("retryOnFail", new Boolean(retryOnFail));
-    values.put("replaceMessage", new Boolean(replaceMessage));
+    values.put("retryPolicy", retryPolicy);
+    values.put("replaceMessage", Boolean.valueOf(replaceMessage));
     values.put("svcType", svcType);
-    values.put("generating", new Boolean(generating));
-    values.put("processing", new Boolean(processing));
-    values.put("trackIntegrity", new Boolean(trackIntegrity));
+    values.put("generating", Boolean.valueOf(generating));
+    values.put("processing", Boolean.valueOf(processing));
+    values.put("trackIntegrity", Boolean.valueOf(trackIntegrity));
+    values.put("startDate", startDate);
     values.put("endDate", endDate);
+    values.put("owner", owner);
+    values.put("delivery", Boolean.valueOf(delivery));
   }
 
   public void setRetryPolicy(String policy) {
@@ -93,5 +96,18 @@ public class TaskDataItem extends AbstractDataItem
   public Date getEndDate()
   {
     return (Date)values.get("endDate");
+  }
+
+  public Date getStartDate()
+  {
+    return (Date)values.get("startDate");
+  }
+
+  public String getOwner() {
+    return (String)values.get("owner");
+  }
+
+  public boolean isDelivery() {
+    return ((Boolean)values.get("delivery")).booleanValue();
   }
 }

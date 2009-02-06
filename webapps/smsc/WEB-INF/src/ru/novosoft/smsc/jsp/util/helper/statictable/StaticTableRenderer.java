@@ -27,8 +27,8 @@ public class StaticTableRenderer extends HTMLRenderer {
 
   private static String renderDataCell(StaticTableHelper helper, Column column, DataCell dataCell) {
     final StringBuffer buffer = new StringBuffer();
-    if (dataCell instanceof StringCell)
-      buffer.append(tdStart("name", null));
+//    if (dataCell instanceof StringCell)
+    buffer.append(tdStart("name", null));
 
     if (dataCell.isSelectable())
       buffer.append(aStart("#", "return selectCell('" + helper.getSelectedColumnIdPrefix() +  "','" + column.getId() + "','" + helper.getSelectedCellIdPrefix() + "','" + dataCell.getId() + "');"));

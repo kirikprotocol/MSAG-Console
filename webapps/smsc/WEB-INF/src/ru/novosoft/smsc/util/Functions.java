@@ -256,4 +256,15 @@ public class Functions {
             read += result;
         }
     }
+
+    public static Date convertTime(final Date time, TimeZone fromTimezone, TimeZone toTimezone) {
+      // Find time difference
+      final long d1 = fromTimezone.getOffset(time.getTime());
+      final long d2 = toTimezone.getOffset(time.getTime());
+
+      // Calculate SME time by abonent time
+      Calendar calend = Calendar.getInstance();
+      calend.setTimeInMillis(time.getTime() + d2 - d1);
+      return calend.getTime();
+  }
 }

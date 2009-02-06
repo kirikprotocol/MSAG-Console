@@ -15,6 +15,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
 public class UsersEdit extends UsersEditBean {
     protected int init(List errors) {
@@ -42,6 +43,7 @@ public class UsersEdit extends UsersEditBean {
                     setRoles((String[]) user.getRoles().toArray(new String[0]));
                     prefsNames = UserPreferences.getDefaultPrefsNames();
                     prefsValues = user.getPrefs().getPrefsValues();
+                    timezone = user.getPrefs().getTimezone().getID();
                     firstName = user.getFirstName();
                     lastName = user.getLastName();
                     dept = user.getDept();
@@ -80,6 +82,8 @@ public class UsersEdit extends UsersEditBean {
             user.setCellPhone(cellPhone);
             user.setEmail(email);
             user.getPrefs().setValues(prefsNames, prefsValues);
+            user.getPrefs().setInfoSmeAllowedRegions(getInfoSmeRegions(request));
+            user.getPrefs().setTimezone(TimeZone.getTimeZone(timezone));
             journalAppend(SubjectTypes.TYPE_user, login, Actions.ACTION_MODIFY);
             appContext.getStatuses().setUsersChanged(true);
             request.getSession().setAttribute("USER_LOGIN_ADD_EDIT", login);

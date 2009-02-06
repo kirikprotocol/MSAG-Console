@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.infosme.backend.schedules;
+package ru.novosoft.smsc.infosme.backend.config.schedules;
 
 import ru.novosoft.smsc.util.config.Config;
 
@@ -34,7 +34,7 @@ public class ScheduleDaily extends ScheduleEndDateTime
     this.everyNDays = config.getInt(prefix + ".everyNDays");
   }
 
-  public void storeToConfig(Config config)
+  void storeToConfig(Config config)
   {
     super.storeToConfig(config);
     config.setInt(prefix + ".everyNDays", everyNDays);
@@ -61,5 +61,6 @@ public class ScheduleDaily extends ScheduleEndDateTime
   public void setEveryNDays(int everyNDays)
   {
     this.everyNDays = everyNDays;
+    setModified(true);
   }
 }

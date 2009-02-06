@@ -2,6 +2,7 @@ package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.infosme.backend.config.provider.Provider;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -62,19 +63,22 @@ public class Providers extends InfoSmeBean
   private int delete()
   {
     for (int i = 0; i < checkedProviders.length; i++) {
-      getConfig().removeSection("InfoSme.DataProvider." + StringEncoderDecoder.encodeDot(checkedProviders[i]));
-      checkedProvidersSet.remove(checkedProviders[i]);
-      getInfoSmeContext().setChangedProviders(true);
+      getInfoSmeConfig().removeProvider(checkedProviders[i]);
+      checkedProvidersSet.remove(checkedProviders[i]);      
     }
     return RESULT_REFRESH;
   }
 
   public Collection getProviderNames()
   {
+    List providerNames = new ArrayList();
+    for (Iterator iter = getInfoSmeConfig().getProviders().iterator(); iter.hasNext();)
+      providerNames.add(((Provider)iter.next()).getName());
+
     if (sort.charAt(0) != '-')
-      return new SortedList(getConfig().getSectionChildShortSectionNames("InfoSme.DataProvider"));
+      return new SortedList(providerNames);
     else
-      return new SortedList(getConfig().getSectionChildShortSectionNames("InfoSme.DataProvider"), new Comparator()
+      return new SortedList(providerNames, new Comparator()
       {
         public int compare(Object o1, Object o2)
         {

@@ -131,7 +131,7 @@ public class HTMLRenderer {
 
   protected static String tdStart(String className, String width) {
     final StringBuffer buffer = new StringBuffer();
-    buffer.append("<td");
+    buffer.append("<td align=center");
 
     if (className != null)
       buffer.append(" class=\"").append(className).append("\"");

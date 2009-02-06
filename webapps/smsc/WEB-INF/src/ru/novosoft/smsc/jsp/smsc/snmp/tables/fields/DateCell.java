@@ -13,10 +13,15 @@ import java.util.Date;
 public class DateCell implements StatsTableCell {
 
   private final Date value;
-  private final SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+  private final SimpleDateFormat dateFormatter;
+
+  public DateCell(Date value, SimpleDateFormat df) {
+    this.value = value;
+    this.dateFormatter = df;
+  }
 
   public DateCell(final Date value) {
-    this.value = value;
+    this(value, new SimpleDateFormat("dd.MM.yyyy HH:mm:ss"));
   }
 
   public String getValueAsString() {

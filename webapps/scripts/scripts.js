@@ -564,8 +564,16 @@ function clickSubmit(name, value)
     return opFormSubmit();
 }
 
+function isMSIE() {
+  return navigator.appName == "Microsoft Internet Explorer";
+}
+
 function clickConfirmSubmit( name, value, conf) {
-  if (confirm(conf)) return clickSubmit(name, value);
-  return false;
+  if (isMSIE()) {
+    if (confirm(conf)) return clickSubmit(name, value);
+    return false;
+  } else {
+    if (confirm(conf)) clickSubmit(name, value);
+  }
 }
 

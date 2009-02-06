@@ -2,8 +2,18 @@ package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.infosme.backend.InfoSme;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
+import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskQuery;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem;
 import ru.novosoft.smsc.jsp.PageBean;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.admin.users.User;
+import ru.novosoft.smsc.admin.region.Region;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -36,7 +46,7 @@ public class InfoSmeBean extends PageBean
   public static final String INFOSME_MARKET_ROLE = "infosme-market";
 
   private String smeId = "InfoSme";
-  private Config config = null;
+  private InfoSmeConfig config = null;
   private InfoSmeContext infoSmeContext = null;
   private InfoSme infoSme = null;
   private boolean smeRunning = false;
@@ -51,7 +61,7 @@ public class InfoSmeBean extends PageBean
       infoSmeContext = InfoSmeContext.getInstance(appContext, smeId);
       infoSme = infoSmeContext.getInfoSme();
       smeRunning = infoSme.getInfo().isOnline();
-      config = infoSmeContext.getConfig();
+      config = infoSmeContext.getInfoSmeConfig();
     } catch (Throwable e) {
       logger.error("Couldn't get InfoSME config", e);
       return error("infosme.error.config_load", e);
@@ -90,6 +100,53 @@ public class InfoSmeBean extends PageBean
       return result;
   }
 
+  public static boolean isUserAdmin(HttpServletRequest req) {
+    return req.isUserInRole(INFOSME_ADMIN_ROLE);
+  }
+
+  public static boolean isUserAdmin(User user) {
+    return user.getRoles().contains(INFOSME_ADMIN_ROLE);
+  }
+
+  public Collection getAllowedRegions(HttpServletRequest request) {
+    if (isUserAdmin(request)) {
+      Collection regions = appContext.getRegionsManager().getRegions();
+      Collection result = new ArrayList(regions.size());
+      for (Iterator iter = regions.iterator(); iter.hasNext();)
+        result.add(((Region)iter.next()).getName());
+      return result;
+    } else {
+      User user = appContext.getUserManager().getUser(request.getRemoteUser());
+      return user == null ? Collections.EMPTY_LIST : user.getPrefs().getInfoSmeRegions();
+    }
+  }
+
+  public Collection getAllTasks(HttpServletRequest request) {
+    final boolean admin = isUserAdmin(request);
+    final String userName = request.getRemoteUser();
+
+    Filter f;
+
+    if (admin)
+      f = new EmptyFilter();
+    else
+      f =  new Filter() {
+        public boolean isEmpty() {
+          return false;
+        }
+        public boolean isItemAllowed(DataItem item) {
+          return item.getValue("owner").equals(userName);
+        }
+      };
+
+    QueryResultSet tasks = new TaskDataSource(getInfoSmeContext().getInfoSme(), getInfoSmeConfig()).query(new TaskQuery(f, 1000, "name", 0));
+    ArrayList taskIds = new ArrayList(tasks.size());
+    for (int i=0; i<tasks.size(); i++)
+      taskIds.add(((TaskDataItem)tasks.get(i)).getId());
+
+    return taskIds;
+  }
+
   public String getMbMenu()
   {
     return mbMenu;
@@ -100,9 +157,13 @@ public class InfoSmeBean extends PageBean
     this.mbMenu = mbMenu;
   }
 
-  protected Config getConfig()
+  protected InfoSmeConfig getConfig()
   {
     return config;
+  }
+
+  protected InfoSmeConfig getInfoSmeConfig() {
+    return infoSmeContext.getInfoSmeConfig();
   }
 
   public InfoSmeContext getInfoSmeContext()

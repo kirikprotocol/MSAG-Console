@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.infosme.backend.schedules;
+package ru.novosoft.smsc.infosme.backend.config.schedules;
 
 import ru.novosoft.smsc.util.config.Config;
 
@@ -19,12 +19,12 @@ public class ScheduleOnce extends Schedule
     super(id, EXECUTE_ONCE, tasks, startDateTime);
   }
 
-  public ScheduleOnce(String id, Config config) throws Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException
+  ScheduleOnce(String id, Config config) throws Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException
   {
     super(id, EXECUTE_ONCE, config);
   }
 
-  public void storeToConfig(Config config)
+  void storeToConfig(Config config)
   {
     super.storeToConfig(config);
   }

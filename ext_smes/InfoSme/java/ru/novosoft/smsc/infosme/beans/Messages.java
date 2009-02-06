@@ -3,11 +3,9 @@ package ru.novosoft.smsc.infosme.beans;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.tables.messages.*;
-import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
-import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
+import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import javax.servlet.http.HttpServletRequest;
@@ -59,34 +57,22 @@ public class Messages extends InfoSmeBean
 
   private MessageDataSource ds;
 
-  private MessagesTableHelper tableHelper = new MessagesTableHelper("message_table_helper", true);
+  private MessagesTableHelper tableHelper;
 
   protected int init(List errors)
   {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
 
-
-//    if (!initialized) {
-//      msgFilter.setFromDate(Functions.truncateTime(new Date()));
-//      msgFilter.setFromDateEnabled(true);
-//    }
-
     try {
       String serviceFolder = appContext.getHostsManager().getServiceInfo("InfoSme").getServiceFolder().getAbsolutePath();
-      String msgStoreDir = getInfoSmeContext().getConfig().getString("InfoSme.storeLocation");
+      String msgStoreDir = getInfoSmeConfig().getStoreLocation();
       if( msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/' )
         msgStoreDir = serviceFolder + '/' + msgStoreDir;
-      ds = new MessageDataSource(getConfig(), msgStoreDir);
+      ds = new MessageDataSource(msgStoreDir);
       if(pageSize==0) {
         pageSize = getInfoSmeContext().getMessagesPageSize();
       }
-
-      int maxTotalSize = getInfoSmeContext().getMaxMessagesTotalSize();
-      tableHelper.setFilter(msgFilter);
-      tableHelper.setDs(ds);
-      tableHelper.setPageSize(pageSize);
-      tableHelper.setMaxRows(maxTotalSize);
 
     } catch (Exception e) {
       return error("Can't init data source", e);
@@ -109,7 +95,14 @@ public class Messages extends InfoSmeBean
     int result = super.process(request);
     if (result != RESULT_OK) return result;
 
-    Collection allTasks = getAllTasks();
+    tableHelper = new MessagesTableHelper("message_table_helper", true, getUser(request));
+    int maxTotalSize = getInfoSmeContext().getMaxMessagesTotalSize();
+    tableHelper.setFilter(msgFilter);
+    tableHelper.setDs(ds);
+    tableHelper.setPageSize(pageSize);
+    tableHelper.setMaxRows(maxTotalSize);
+
+    Collection allTasks = getAllTasks(request);
     if (allTasks == null || allTasks.size() <= 0)
       return warning("infosme.warn.no_task_for_msg");
 
@@ -435,17 +428,7 @@ public class Messages extends InfoSmeBean
   }
   public String getTaskName(String taskId)
   {
-    try {
-      return getConfig().getString(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId) + ".name");
-    } catch (Throwable e) {
-      logger.error("Could not get name for task \"" + taskId + "\"", e);
-      error("infosme.error.task_name_undefined", taskId, e);
-      return "";
-    }
-  }
-
-  public Collection getAllTasks() {
-    return new SortedList(getConfig().getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX));
+    return getInfoSmeConfig().getTask(taskId).getName();
   }
 
   public String getAddress() {

@@ -10,6 +10,6 @@ import ru.novosoft.smsc.jsp.util.tables.Filter;
 
 public class StatisticsQuery extends AbstractQueryImpl {
   public StatisticsQuery(Filter filter) {
-    super(0, filter, "", 0);
+    super(1000, filter, "", 0);
   }
 }

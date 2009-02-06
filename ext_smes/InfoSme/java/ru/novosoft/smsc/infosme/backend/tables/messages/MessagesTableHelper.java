@@ -13,13 +13,12 @@ import ru.novosoft.smsc.jsp.util.tables.DataSource;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
+import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.admin.users.User;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * author: alkhal
@@ -43,16 +42,19 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
 
   private String sortOrder, prevSortOrder;
 
-  private Filter filter;
+  private MessageFilter filter;
 
   private boolean addCheck = true;
 
   private QueryResultSet messages;
 
+  private User user;
 
-  public MessagesTableHelper(String uid, boolean addCheck) {
+
+  public MessagesTableHelper(String uid, boolean addCheck, User user) {
     super(uid, false);
     this.addCheck = addCheck;
+    this.user = user;
     if(addCheck){
       addColumn(checkColumn);
     }
@@ -70,7 +72,7 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
         sortOrder=element.getColumnId();
         if(sortOrder!=null) {
           if(element.getOrderType()!= OrderType.ASC) {
-            sortOrder="-"+sortOrder;
+            sortOrder= '-' +sortOrder;
           }
           return;
         }
@@ -88,9 +90,18 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
         prevSortOrder = sortOrder;
       }
 
-      if (messages == null) {
+      if (filter.getFromDate() != null)
+        filter.setFromDate(user.getLocalTime(filter.getFromDate()));
+      if (filter.getTillDate() != null)
+        filter.setTillDate(user.getLocalTime(filter.getTillDate()));
+
+      if (messages == null)
         messages = ds.query(new MessageQuery(getMaxRows(), filter, sortOrder, 0));
-      }
+
+      if (filter.getFromDate() != null)
+        filter.setFromDate(user.getUserTime(filter.getFromDate()));
+      if (filter.getTillDate() != null)
+        filter.setTillDate(user.getUserTime(filter.getTillDate()));
 
       clear();
       for (int i = start; i < start + size && i < messages.size(); i++) {
@@ -129,7 +140,7 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
     this.ds = ds;
   }
 
-  private String getStateName(Message.State state) {
+  private static String getStateName(Message.State state) {
     if (state == Message.State.UNDEFINED)
       return "ALL";
     else if (state == Message.State.NEW)
@@ -156,14 +167,14 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
   }
 
   private String convertDateToString(Date date) {
-    return DATE_FORMAT.format(date);
+    return DATE_FORMAT.format(user.getUserTime(date));
   }
 
   public Filter getFilter() {
     return filter;
   }
 
-  public void setFilter(Filter filter) {
+  public void setFilter(MessageFilter filter) {
     this.filter = filter;
   }
 

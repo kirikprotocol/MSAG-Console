@@ -24,10 +24,10 @@ function clickAddDriver()
 	newRow.className = "row" + (drivers_table_id.rows.length & 1);
 	newRow.id = "dsdriver_row_" + typeElem.value;
 	var newCell = document.createElement("td");
-	newCell.innerHTML = "<input class=txt name=\"<%=Drivers.DRIVERS_SECTION_NAME%>." + typeElem.value + ".type\" value=\"" + typeElem.value + "\">";
+	newCell.innerHTML = "<input class=txt name=\"" + typeElem.value + ".type\" value=\"" + typeElem.value + "\">";
 	newRow.appendChild(newCell);
 	newCell = document.createElement("td");
-	newCell.innerHTML = "<input class=txtW name=\"<%=Drivers.DRIVERS_SECTION_NAME%>." + typeElem.value + ".loadup\" value=\"" + loadupElem.value + "\">";
+	newCell.innerHTML = "<input class=txtW name=\"" + typeElem.value + ".loadup\" value=\"" + loadupElem.value + "\">";
 	newRow.appendChild(newCell);
 	newCell = document.createElement("td");
 	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"<%= getLocString("infosme.button.remove_ds_driver")%>\" title=\"<%= getLocString("infosme.hint.remove_ds_driver")%>\" jbuttonOnclick=\"return clickRemoveDriver('" + newRow.id + "');\">";
@@ -56,11 +56,11 @@ function clickRemoveDriver(id_to_remove)
 </tr>
 <%
 	int rowN = 0;
-	Collection driverSectionNames = bean.getDriverSectionNames();
+	Collection driverSectionNames = bean.getDriverTypes();
 	for (Iterator i = driverSectionNames.iterator(); i.hasNext();) {
 		String driverSectionName = (String) i.next();
-		final String type = bean.getString(driverSectionName + ".type");
-		final String loadup = bean.getString(driverSectionName + ".loadup");
+		final String type = driverSectionName;
+		final String loadup = bean.getDriverLoadup(driverSectionName);
 		%><tr class=row<%=(rowN++)&1%> id=dsdriver_row_<%=StringEncoderDecoder.encode(type)%>>
 			<td><input class=txt name="<%=driverSectionName%>.type"    value="<%=type%>"></td>
 			<td><input class=txtW name="<%=driverSectionName%>.loadup" value="<%=loadup%>"></td>

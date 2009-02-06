@@ -5,6 +5,7 @@
                  ru.novosoft.smsc.infosme.backend.HourCountersSet,
                  java.text.SimpleDateFormat, ru.novosoft.smsc.infosme.beans.InfoSmeBean,
                  ru.novosoft.smsc.jsp.PageBean"%>
+<%@ page import="ru.novosoft.smsc.infosme.beans.TasksStatistics" %>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.TasksStatistics" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -12,14 +13,14 @@
 	MENU0_SELECTION = "MENU0_SERVICES";
     int rowN = 0;
 	int beanResult = bean.process(request);
+  if (beanResult == TasksStatistics.RESULT_EXPORT) {
+    response.sendRedirect(CPATH+"/esme_InfoSme/csv_download.jsp?taskId=" + StringEncoderDecoder.encode(bean.getTaskId()) + "&fromDate=" + StringEncoderDecoder.encode(bean.getFromDate()) + "&tillDate=" + StringEncoderDecoder.encode(bean.getTillDate()));
+    return;
+  }
 %>
 <%@ include file="inc/menu_switch.jsp"%>
-<%if ((request.getParameter("csv") != null) && (beanResult == PageBean.RESULT_OK))
-    FORM_URI=CPATH+"/esme_InfoSme/csv_download.jsp";%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%if (request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {%>
 <%@ include file="inc/header.jsp"%>
-<%}%>
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <div class=content>
 <div class=page_subtitle><%= getLocString("infosme.subtitle.stat_params")%></div>
@@ -33,7 +34,8 @@
   <th style="text-align:left"><%= getLocString("infosme.label.task")%></th>
   <td colspan=3>
   <select name=taskId>
-  <%for (Iterator i = bean.getAllTasks().iterator(); i.hasNext();) {
+    <option value="<%=TasksStatistics.ALL_TASKS_MARKER%>" <%=bean.getTaskId().length()==0 ? "selected" : ""%>><%=TasksStatistics.ALL_TASKS_MARKER%></option>
+  <%for (Iterator i = bean.getAllTasks(request).iterator(); i.hasNext();) {
       String taskId = (String) i.next();
       String taskIdEnc = StringEncoderDecoder.encode(taskId);
       %><option value="<%=taskIdEnc%>" <%= (taskId != null && taskId.equals(bean.getTaskId()) ? "selected":"")%>><%=
@@ -52,9 +54,6 @@
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "infosme.hint.query_stat");
-if (!request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {
-page_menu_button(session, out, "mbCancel",  "infosme.button.main_page", "infosme.hint.main_page", "clickCancel()");
-}
 page_menu_space(out);
 page_menu_end(out);
 
@@ -124,6 +123,11 @@ if (exportFile != null) {
 %><br/><a class=font href="<%= exportFile%>">Download as CSV file</a><%
 }--%>
     </div>
+<%
+page_menu_begin(out);
+page_menu_space(out);
+page_menu_button(session, out, "mbExport",  "common.buttons.export",  "infosme.hint.download_statistics");
+page_menu_end(out);%>
 <%}%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

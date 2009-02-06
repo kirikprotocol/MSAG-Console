@@ -30,6 +30,7 @@ public class RegionEditBean extends SmscBean {
   private String id = "";
   private String sendSpeed = null;
   private String email;
+  private String timezone;
   private RegionsManager rm;
   protected RouteSubjectManager routeSubjectManager = null;
 
@@ -57,6 +58,7 @@ public class RegionEditBean extends SmscBean {
         name = region.getName();
         sendSpeed = String.valueOf(region.getBandWidth());
         email = region.getEmail();
+        timezone = region.getTimezone().getID();
         checkedSources = new String[region.getSubjects().size()];
         int i = 0;
         for (Iterator iter = region.getSubjects().iterator(); iter.hasNext(); i++) {
@@ -103,6 +105,7 @@ public class RegionEditBean extends SmscBean {
         region.setName(name);
         region.setBandWidth(Integer.parseInt(sendSpeed));
         region.setEmail(email);
+        region.setTimezone(TimeZone.getTimeZone(timezone));
       } catch (Throwable e) {
         return error("Invalid send speed: " + sendSpeed);
       }
@@ -135,6 +138,7 @@ public class RegionEditBean extends SmscBean {
   public String getMbApply() {
     return mbApply;
   }
+
 
   public void setMbApply(String mbApply) {
     this.mbApply = mbApply;
@@ -188,4 +192,17 @@ public class RegionEditBean extends SmscBean {
     this.id = id;
   }
 
+  public String getTimezone() {
+    return timezone;
+  }
+
+  public void setTimezone(String timezone) {
+    this.timezone = timezone;
+  }
+
+  public Collection getTimezones() {
+    List c = Arrays.asList(TimeZone.getAvailableIDs());
+    Collections.sort(c);
+    return c;
+  }
 }

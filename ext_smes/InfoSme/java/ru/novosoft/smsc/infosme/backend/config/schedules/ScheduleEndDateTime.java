@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.infosme.backend.schedules;
+package ru.novosoft.smsc.infosme.backend.config.schedules;
 
 import ru.novosoft.smsc.util.config.Config;
 
@@ -36,6 +36,7 @@ public abstract class ScheduleEndDateTime extends Schedule
       setEndDateTime(config.getString(parameterName));
     else
       this.endDateTime = null;
+    setModified(false);
   }
 
   /**
@@ -44,11 +45,13 @@ public abstract class ScheduleEndDateTime extends Schedule
    *
    * @param config
    */
-  public void storeToConfig(Config config)
+  void storeToConfig(Config config)
   {
     super.storeToConfig(config);
     if (endDateTime != null && endDateTime.getTime() != 0)
-      config.setString(prefix + ".endDateTime", dateFormat.format(endDateTime));
+      synchronized (dateFormat) {
+        config.setString(prefix + ".endDateTime", dateFormat.format(endDateTime));
+      }
   }
 
   public boolean equals(Object obj)
@@ -69,16 +72,22 @@ public abstract class ScheduleEndDateTime extends Schedule
 
   public String getEndDateTimeStr()
   {
-    return endDateTime == null || endDateTime.getTime() == 0 ? "" : dateFormat.format(endDateTime);
+    synchronized(dateFormat) {
+      return endDateTime == null || endDateTime.getTime() == 0 ? "" : dateFormat.format(endDateTime);
+    }
   }
 
   public void setEndDateTime(Date endDateTime)
   {
     this.endDateTime = endDateTime;
+    setModified(true);
   }
 
   public void setEndDateTime(String endDateTime) throws ParseException
   {
-    this.endDateTime = endDateTime == null || endDateTime.trim().length() == 0 ? null : dateFormat.parse(endDateTime);
+    synchronized(dateFormat) {
+      this.endDateTime = endDateTime == null || endDateTime.trim().length() == 0 ? null : dateFormat.parse(endDateTime);
+    }
+    setModified(true);
   }
 }

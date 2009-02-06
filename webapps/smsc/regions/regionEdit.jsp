@@ -85,6 +85,17 @@ function addSourceSubj() {
       <td>&nbsp;</td>
     </tr>
     <tr class=row<%=rowN++&1%>>
+      <th><%= getLocString("regions.timezone")%></th>
+      <td>
+        <select name="timezone" id="timezone">
+        <% for (Iterator iter = bean.getTimezones().iterator(); iter.hasNext();) { String tzid = (String)iter.next();%>
+          <option id="<%=tzid%>" <%=bean.getTimezone().equals(tzid) ? "SELECTED" : ""%>><%=tzid%></option>
+        <% } %>
+        </select>
+      </td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr class=row<%=rowN++&1%>>
       <td valign=top colspan=2><%rowN = 0;%>
         <div class=page_subtitle><%=getLocString("common.titles.subjects")%></div>
         <table cellspacing=0 cellpadding=0>

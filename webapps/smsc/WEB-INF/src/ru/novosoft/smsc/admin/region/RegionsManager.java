@@ -10,10 +10,7 @@ import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.xml.Utils;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Collection;
+import java.util.*;
 
 /**
  * User: artem
@@ -83,6 +80,14 @@ public class RegionsManager {
         region.setBandWidth(Integer.parseInt(el.getAttribute("bandwidth")));
         region.setEmail(el.getAttribute("email"));
 
+        TimeZone tz = null;
+        String tzId = el.getAttribute("timezone");
+        if (tzId != null)
+          tz = TimeZone.getTimeZone(tzId);
+        if (tz == null)
+          tz = TimeZone.getDefault();
+        region.setTimezone(tz);
+
         NodeList subjects = el.getElementsByTagName("subject");
         for (int j=0; j < subjects.getLength(); j++) {
           region.addSubject((((Element)subjects.item(j)).getAttribute("id")));
@@ -135,7 +140,8 @@ public class RegionsManager {
         Region region = (Region)entry.getValue();
         out.println("  <region id=\"" + region.getId() + "\" name=\"" + region.getName() +
                                                          "\" bandwidth=\"" + region.getBandWidth() + "\"" +
-                                                        (region.getEmail()==null || region.getEmail().length() == 0 ? "" : " email=\"" + region.getEmail() + "\" ") + ">");
+                                                        (region.getEmail()==null || region.getEmail().length() == 0 ? "" : " email=\"" + region.getEmail() + "\" ") +
+                                                        (region.getTimezone() == null ? "" : " timezone=\"" + region.getTimezone().getID() + "\" ")+ ">");
         out.println("    <subjects>");
         for (Iterator subjects = region.getSubjects().iterator(); subjects.hasNext();)
           out.println("      <subject id=\"" + subjects.next() + "\"/>");

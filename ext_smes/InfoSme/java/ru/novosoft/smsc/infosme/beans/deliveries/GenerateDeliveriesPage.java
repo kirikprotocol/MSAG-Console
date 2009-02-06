@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.infosme.beans.deliveries;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.infosme.backend.deliveries.DeliveriesGenerationThread;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,8 +24,9 @@ public class GenerateDeliveriesPage extends DeliveriesPage {
     switch (thread.getStatus()) {
       case DeliveriesGenerationThread.STATUS_CANCELED:
       case DeliveriesGenerationThread.STATUS_ERR:
-        return new StartPage(pageData);
+        return new LoadFilePage(pageData);
       case DeliveriesGenerationThread.STATUS_DONE:
+        pageData.deliveriesGenStatus = DeliveriesGenerationThread.STATUS_DONE;
         return new FinishPage(pageData);
       default:
         return this;
@@ -37,7 +39,7 @@ public class GenerateDeliveriesPage extends DeliveriesPage {
   }
 
   public DeliveriesPage mbUpdate(HttpServletRequest request) throws AdminException {
-    pageData.deliveriesGenProgr = thread.getGenerationProgress();
+    pageData.deliveriesGenProgr = thread.getProgress();
     pageData.deliveriesGenStatus = thread.getStatus();
     pageData.errorStr = thread.getErrorText();
     return this;

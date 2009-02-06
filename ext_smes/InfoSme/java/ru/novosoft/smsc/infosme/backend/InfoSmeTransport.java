@@ -54,48 +54,51 @@ public class InfoSmeTransport extends Service
   private static final String ADD_STATISTIC_RECORD_METHOD_ID = "addStatisticRecord";
 
 
+  private static final SimpleDateFormat mdf = new SimpleDateFormat("ddMMyyyyHHmmss");
+  private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHH");
+
   public InfoSmeTransport(ServiceInfo info, String host, int port)
   {
     super(info, port);
     this.host = host;
   }
 
-  public synchronized void startTaskProcessor() throws AdminException
+  public void startTaskProcessor() throws AdminException
   {
-    callMethod(method_startTaskProcessor_ID, Type.Types[Type.StringType], new HashMap());
+    callMethod(method_startTaskProcessor_ID, Type.Types[Type.StringType], Collections.EMPTY_MAP);
   }
 
-  public synchronized void stopTaskProcessor() throws AdminException
+  public void stopTaskProcessor() throws AdminException
   {
-    callMethod(method_stopTaskProcessor_ID, Type.Types[Type.StringType], new HashMap());
+    callMethod(method_stopTaskProcessor_ID, Type.Types[Type.StringType], Collections.EMPTY_MAP);
   }
 
-  public synchronized boolean isTaskProcessorRuning() throws AdminException
+  public boolean isTaskProcessorRuning() throws AdminException
   {
-    Object result = callMethod(method_isTaskProcessorRuning_ID, Type.Types[Type.BooleanType], new HashMap());
+    Object result = callMethod(method_isTaskProcessorRuning_ID, Type.Types[Type.BooleanType], Collections.EMPTY_MAP);
     if (result instanceof Boolean)
       return ((Boolean) result).booleanValue();
     else
-      throw new AdminException("isTaskProcessorRuning: Incorrect return type \"" + result.getClass().getName() + "\"");
+      throw new AdminException("isTaskProcessorRuning: Incorrect return type \"" + result.getClass().getName() + '\"');
   }
 
-  public synchronized void startTaskScheduler() throws AdminException
+  public void startTaskScheduler() throws AdminException
   {
-    callMethod(method_startTaskScheduler_ID, Type.Types[Type.StringType], new HashMap());
+    callMethod(method_startTaskScheduler_ID, Type.Types[Type.StringType], Collections.EMPTY_MAP);
   }
 
-  public synchronized void stopTaskScheduler() throws AdminException
+  public void stopTaskScheduler() throws AdminException
   {
-    callMethod(method_stopTaskScheduler_ID, Type.Types[Type.StringType], new HashMap());
+    callMethod(method_stopTaskScheduler_ID, Type.Types[Type.StringType], Collections.EMPTY_MAP);
   }
 
-  public synchronized boolean isTaskSchedulerRuning() throws AdminException
+  public boolean isTaskSchedulerRuning() throws AdminException
   {
-    Object result = callMethod(method_isTaskSchedulerRuning_ID, Type.Types[Type.BooleanType], new HashMap());
+    Object result = callMethod(method_isTaskSchedulerRuning_ID, Type.Types[Type.BooleanType], Collections.EMPTY_MAP);
     if (result instanceof Boolean)
       return ((Boolean) result).booleanValue();
     else
-      throw new AdminException("isTaskSchedulerRuning: Incorrect return type \"" + result.getClass().getName() + "\"");
+      throw new AdminException("isTaskSchedulerRuning: Incorrect return type \"" + result.getClass().getName() + '\"');
   }
 
   /**
@@ -104,9 +107,9 @@ public class InfoSmeTransport extends Service
    * @param taskId - �����, ������� ���� �������� (��� ��� ������ ���� ��������� � �������)
    * @throws AdminException - ���� ���-�� �� ����������
    */
-  public synchronized void addTask(String taskId) throws AdminException
+  public void addTask(String taskId) throws AdminException
   {
-    Map params = new HashMap();
+    Map params = new HashMap(1);
     params.put("id", taskId);
     callMethod(method_addTask_ID, Type.Types[Type.StringType], params);
   }
@@ -117,87 +120,87 @@ public class InfoSmeTransport extends Service
    * @param taskId - �����, ������� ���� �������
    * @throws AdminException - ���� ���-�� �� ����������
    */
-  public synchronized void removeTask(String taskId) throws AdminException
+  public void removeTask(String taskId) throws AdminException
   {
-    Map params = new HashMap();
+    Map params = new HashMap(1);
     params.put("id", taskId);
     callMethod(method_removeTask_ID, Type.Types[Type.StringType], params);
   }
 
-  public synchronized void changeTask(String taskId) throws AdminException
+  public void changeTask(String taskId) throws AdminException
   {
-    Map params = new HashMap();
+    Map params = new HashMap(1);
     params.put("id", taskId);
     callMethod(method_changeTask_ID, Type.Types[Type.StringType], params);
   }
 
-  public synchronized boolean isTaskEnabled(String taskId) throws AdminException
+  public boolean isTaskEnabled(String taskId) throws AdminException
   {
-    Map params = new HashMap();
+    Map params = new HashMap(1);
     params.put("id", taskId);
     Object result = callMethod(method_isTaskEnabled_ID, Type.Types[Type.BooleanType], params);
     if (result instanceof Boolean)
       return ((Boolean) result).booleanValue();
     else
-      throw new AdminException("isTaskProcessorRuning: Incorrect return type \"" + result.getClass().getName() + "\"");
+      throw new AdminException("isTaskProcessorRuning: Incorrect return type \"" + result.getClass().getName() + '\"');
   }
 
-  public synchronized void setTaskEnabled(String taskId, boolean enabled) throws AdminException
+  public void setTaskEnabled(String taskId, boolean enabled) throws AdminException
   {
-    Map params = new HashMap();
+    Map params = new HashMap(2);
     params.put("id", taskId);
-    params.put("enabled", new Boolean(enabled));
+    params.put("enabled", Boolean.valueOf(enabled));
     callMethod(method_setTaskEnabled_ID, Type.Types[Type.StringType], params);
   }
 
-  public synchronized void startTasks(Collection taskIds) throws AdminException
+  public void startTasks(Collection taskIds) throws AdminException
   {
-    Map params = new HashMap();
+    Map params = new HashMap(1);
     params.put("ids", taskIds);
     callMethod(method_startTasks_ID, Type.Types[Type.StringType], params);
   }
 
-  public synchronized void stopTasks(Collection taskIds) throws AdminException
+  public void stopTasks(Collection taskIds) throws AdminException
   {
-    Map params = new HashMap();
+    Map params = new HashMap(1);
     params.put("ids", taskIds);
     callMethod(method_stopTasks_ID, Type.Types[Type.StringType], params);
   }
 
-  public synchronized void addSchedule(String scheduleId) throws AdminException
+  public void addSchedule(String scheduleId) throws AdminException
   {
-    Map params = new HashMap();
+    Map params = new HashMap(1);
     params.put("id", scheduleId);
     callMethod(method_addSchedule_ID, Type.Types[Type.StringType], params);
   }
 
-  public synchronized void removeSchedule(String scheduleId) throws AdminException
+  public void removeSchedule(String scheduleId) throws AdminException
   {
-    Map params = new HashMap();
+    Map params = new HashMap(1);
     params.put("id", scheduleId);
     callMethod(method_removeSchedule_ID, Type.Types[Type.StringType], params);
   }
 
-  public synchronized void changeSchedule(String scheduleId) throws AdminException
+  public void changeSchedule(String scheduleId) throws AdminException
   {
-    Map params = new HashMap();
+    Map params = new HashMap(1);
     params.put("id", scheduleId);
     callMethod(method_changeSchedule_ID, Type.Types[Type.StringType], params);
   }
 
-  public synchronized void flushStatistics() throws AdminException
+  public void flushStatistics() throws AdminException
   {
-    callMethod(method_flushStatistics_ID, Type.Types[Type.StringType], new HashMap());
+    callMethod(method_flushStatistics_ID, Type.Types[Type.StringType], Collections.EMPTY_MAP);
   }
 
-  public synchronized List getGeneratingTasks() throws AdminException
+  public List getGeneratingTasks() throws AdminException
   {
-    return (List) callMethod(method_getGeneratingTasksMethod_ID, Type.Types[Type.StringListType], new HashMap());
+    return (List) callMethod(method_getGeneratingTasksMethod_ID, Type.Types[Type.StringListType], Collections.EMPTY_MAP);
   }
 
-  public synchronized List getProcessingTasks() throws AdminException
+  public List getProcessingTasks() throws AdminException
   {
-    return (List) callMethod(method_getProcessingTasksMethod_ID, Type.Types[Type.StringListType], new HashMap());
+    return (List) callMethod(method_getProcessingTasksMethod_ID, Type.Types[Type.StringListType], Collections.EMPTY_MAP);
   }
 
 
@@ -206,7 +209,7 @@ public class InfoSmeTransport extends Service
     if (taskId == null)
       throw new AdminException("Task id is null");
 
-    final Map args = new HashMap();
+    final Map args = new HashMap(8);
     args.put("id", taskId);
     args.put("state", (state == null || state == Message.State.UNDEFINED) ? "" : String.valueOf(state.getId()));
     args.put("from_date", (fromSendDate == null) ? "" : dateToString(fromSendDate));
@@ -219,7 +222,7 @@ public class InfoSmeTransport extends Service
     return translateGetMessagesResult((List)callMethod(SELECT_TASK_MESSAGES_METHOD_ID, Type.Types[Type.StringListType], args));
   }
 
-  private GetMessagesResult translateGetMessagesResult(List messages) throws AdminException {
+  private static GetMessagesResult translateGetMessagesResult(List messages) throws AdminException {
     final List result = new LinkedList();
     int total = 0;
 
@@ -279,7 +282,7 @@ public class InfoSmeTransport extends Service
     if (newDate == null)
       throw new AdminException("Send date is null");
 
-    final Map args = new HashMap();
+    final Map args = new HashMap(8);
     args.put("id", taskId);
     args.put("date", dateToString(newDate));
     args.put("state", new Integer(newState.getId()));
@@ -311,7 +314,7 @@ public class InfoSmeTransport extends Service
     if (taskId == null)
       throw new AdminException("Task id is null");
 
-    final Map args = new HashMap();
+    final Map args = new HashMap(6);
     args.put("id", taskId);
     args.put("from_date", (fromDate == null) ? "" : dateToString(fromDate));
     args.put("record_id", (id == null) ? "" : id);
@@ -332,7 +335,7 @@ public class InfoSmeTransport extends Service
     if (newTextMessage == null)
       throw new AdminException("New text message is null");
 
-    final Map args = new HashMap();
+    final Map args = new HashMap(7);
     args.put("id", taskId);
     args.put("from_date", (fromDate == null) ? "" : dateToString(fromDate));
     args.put("record_id", (id == null) ? "" : id);
@@ -346,7 +349,7 @@ public class InfoSmeTransport extends Service
 
   public List getTaskStatistics(String taskId, Date fromDate, Date toDate) throws AdminException {
 
-    final Map args = new HashMap();
+    final Map args = new HashMap(3);
     args.put("id", (taskId == null) ? "" : taskId);
     args.put("start_period", (fromDate == null) ? "" : calculatePeriod(fromDate));
     args.put("end_period", (toDate == null) ? "" : calculatePeriod(toDate));
@@ -354,8 +357,8 @@ public class InfoSmeTransport extends Service
     return translateGetTaskStatisticsResult((List)callMethod(SELECT_TASKS_STATISTIC_METHOD_ID, Type.Types[Type.StringListType], args));
   }
 
-  private List translateGetTaskStatisticsResult(List result) throws AdminException {
-    final List res = new ArrayList();
+  private static List translateGetTaskStatisticsResult(List result) throws AdminException {
+    final List res = new ArrayList(100);
 
     try {
       for (Iterator iter = result.iterator(); iter.hasNext();) {
@@ -382,18 +385,21 @@ public class InfoSmeTransport extends Service
     return res;
   }
 
-  private String calculatePeriod(Date date) {
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHH");
-    return formatter.format(date);
+  private static String calculatePeriod(Date date) {
+    synchronized(sdf) {
+      return sdf.format(date);
+    }
   }
 
-  private Date calculatePeriod(String period) {
-    Date converted = new Date();
+  private static Date calculatePeriod(String period) {
+    Date converted;
     try {
-      SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHH");
-      converted = formatter.parse(period);
+      synchronized (sdf) {
+        converted = sdf.parse(period);
+      }
     } catch (ParseException e) {
       e.printStackTrace();
+      converted = new Date();
     }
     return converted;
   }
@@ -404,13 +410,13 @@ public class InfoSmeTransport extends Service
     if (messages == null)
       throw new AdminException("Message s list is null");
 
-    final List list = new ArrayList();
+    final List list = new ArrayList(messages.size());
     for (Iterator iter = messages.iterator(); iter.hasNext();) {
       Message m = (Message)iter.next();
       list.add(messageToString(m));
     }
 
-    final Map args = new HashMap();
+    final Map args = new HashMap(2);
     args.put("id", taskId);
     args.put("messages", list);
 
@@ -418,7 +424,7 @@ public class InfoSmeTransport extends Service
   }
 
   public void applyRetryPolicies() throws AdminException {
-    callMethod(method_applyRetryPolicies_ID, Type.Types[Type.StringType], new HashMap());
+    callMethod(method_applyRetryPolicies_ID, Type.Types[Type.StringType], Collections.EMPTY_MAP);
   }
 
   public void addStatisticRecord(String taskId, Date period, int generated, int delivered, int retried, int failed) throws AdminException {
@@ -427,7 +433,7 @@ public class InfoSmeTransport extends Service
     if (period == null)
       throw new AdminException("Period is null");
 
-    final Map args = new HashMap();
+    final Map args = new HashMap(6);
     args.put("id", taskId);
     args.put("period", Integer.valueOf(calculatePeriod(period)));
     args.put("generated", new Integer(generated));
@@ -438,24 +444,30 @@ public class InfoSmeTransport extends Service
     callMethod(ADD_STATISTIC_RECORD_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-  private String messageToString(Message m) {
-    return m.getState().getId() + "|" + m.getAbonent() + "|" + dateToString(m.getSendDate()) + "|" + m.getMessage();
+  private static String messageToString(Message m) {
+    StringBuffer b = new StringBuffer(100);
+    b.append(m.getState().getId()).append('|').append(m.getAbonent()).append('|').append(dateToString(m.getSendDate())).append('|').append(m.getMessage());
+    return b.toString();
   }
 
-  private Object callMethod(String methodId, Type resultType, Map arguments) throws AdminException {
+  private synchronized Object callMethod(String methodId, Type resultType, Map arguments) throws AdminException {
     return call(SME_COMPONENT_ID, methodId, resultType, arguments);
   }
 
-  private String dateToString(final Date date) {
-    return new SimpleDateFormat("ddMMyyyyHHmmss").format(date);
+  private static String dateToString(final Date date) {
+    synchronized(mdf) {
+      return mdf.format(date);
+    }
   }
 
-  private Date stringToDate(final String str) throws ParseException {
-    return new SimpleDateFormat("ddMMyyyyHHmmss").parse(str);
+  private static Date stringToDate(final String str) throws ParseException {
+    synchronized(mdf) {
+      return mdf.parse(str);
+    }
   }
 
-  public synchronized void endDeliveryMessageGeneration(String taskId) throws AdminException {
-    Map params = new HashMap();
+  public void endDeliveryMessageGeneration(String taskId) throws AdminException {
+    Map params = new HashMap(1);
     params.put("id", taskId);
     callMethod(END_DELIVERY_MESSAGE_GENERATION_ID, Type.Types[Type.StringType], params);
   }

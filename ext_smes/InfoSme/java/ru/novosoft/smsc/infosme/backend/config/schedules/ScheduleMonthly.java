@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.infosme.backend.schedules;
+package ru.novosoft.smsc.infosme.backend.config.schedules;
 
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
@@ -40,7 +40,7 @@ public abstract class ScheduleMonthly extends ScheduleEndDateTime
    *
    * @param config
    */
-  public void storeToConfig(Config config)
+  void storeToConfig(Config config)
   {
     super.storeToConfig(config);
     config.setString(prefix + ".monthes", Functions.collectionToString(monthes, ","));
@@ -63,5 +63,6 @@ public abstract class ScheduleMonthly extends ScheduleEndDateTime
   public void setMonthes(Collection monthes)
   {
     this.monthes = monthes;
+    setModified(true);
   }
 }

@@ -1,9 +1,12 @@
 package ru.novosoft.smsc.infosme.beans;
 
-import ru.novosoft.smsc.infosme.backend.schedules.*;
+import ru.novosoft.smsc.infosme.backend.config.schedules.*;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
-import ru.novosoft.smsc.util.SortedList;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskQuery;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -53,7 +56,7 @@ public class ScheduleEdit extends InfoSmeBean
           return error("infosme.error.no_schedule");
 
         try {
-          Schedule schedule = Schedule.getInstance(name, getConfig());
+          Schedule schedule = getInfoSmeConfig().getSchedule(name);
           execute = Schedule.getExecuteStr(schedule.getExecute());
           checkedTasksSet = schedule.getTasks();
           startDateTime = schedule.getStartDateTimeStr();
@@ -130,18 +133,17 @@ public class ScheduleEdit extends InfoSmeBean
                                                dayOfMonth, weekDayN, weekDay, intervalTime);
 
       if (create) {
-        if (schedule.isContainsInConfig(getConfig()))
+        if (getInfoSmeConfig().containsSchedule(schedule.getId()))
           return error("infosme.error.exist_schedule", name);
       } else {
         if (!oldSchedule.equals(name)) {
-          if (schedule.isContainsInConfig(getConfig()))
+          if (getInfoSmeConfig().containsSchedule(schedule.getId()))
             return error("infosme.error.exist_schedule", name);
         }
-        Schedule.removeScheduleFromConfig(oldSchedule, getConfig());
+        getInfoSmeConfig().removeSchedule(oldSchedule);
       }
 
-      schedule.storeToConfig(getConfig());
-      getInfoSmeContext().setChangedSchedules(true);
+      getInfoSmeConfig().addSchedule(schedule);
     } catch (Throwable e) {
       logger.error("Could not store schedule", e);
       error("infosme.error.store_schedule", e);
@@ -398,17 +400,25 @@ public class ScheduleEdit extends InfoSmeBean
 
   public Collection getAllTasks()
   {
-    return new SortedList(getConfig().getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX));
+    TaskDataSource ds = new TaskDataSource(getInfoSme(), getInfoSmeConfig());
+    QueryResultSet rs = ds.query(new TaskQuery(new Filter() {
+      public boolean isEmpty() {
+        return false;
+      }
+      public boolean isItemAllowed(DataItem item) {
+        return !((TaskDataItem)item).isDelivery();
+      }
+    }, 100, "name", 0));
+    
+    List result = new ArrayList(rs.size());
+    for (int i=0; i<rs.size(); i++)
+      result.add(((TaskDataItem)rs.get(i)).getId());
+
+    return result;
   }
 
   public String getTaskName(String taskId)
   {
-    try {
-      return getConfig().getString(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId) + ".name");
-    } catch (Throwable e) {
-      logger.error("Could not get name for task \"" + taskId + "\"", e);
-      error("infosme.error.task_name_undefined", taskId, e);
-      return "";
-    }
+    return getInfoSmeConfig().getTask(taskId).getName();
   }
 }

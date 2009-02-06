@@ -8,6 +8,7 @@ import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataItem
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.users.User;
 
 import java.io.File;
 import java.util.*;
@@ -33,17 +34,19 @@ public class DeliveriesPageData {
   private final static String STATUS_STR_CANCELED   = "Canceled";
   private final static String STATUS_STR_ERR        = "Error - ";
 
+  static String PAGE_DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
+  static String PAGE_TIME_FORMAT = "HH:mm:ss";
+
   private final SMSCAppContext appContext;
   private final InfoSmeContext infoSmeContext;
 
   // task attributes
-  public String activeTaskSubject;
-  public String oldActiveTaskSubject;
+  public int activeTaskRegionId;
+  public int oldActiveTaskRegionId;
   public String name;
   public boolean transliterate;
   public boolean transactionMode;
   public boolean retryOnFail;
-  public String retryTime;
   public String endDate;
   public String startDate;
   public String validityPeriod;
@@ -60,12 +63,13 @@ public class DeliveriesPageData {
   public String sourceAddress;
   public String errorStr;
   public String retryPolicy;
+  public User owner;
 
   public boolean splitDeliveriesFile = true;
 
   // process file progress attributes
   public int recordsProcessed;
-  public int subjectsFound;
+  public int regionsFound;
   public int unrecognized;
   public int inblackList;
   public int splitDeliveriesFileStatus;
@@ -86,14 +90,13 @@ public class DeliveriesPageData {
   }
 
   public final void clear() {
-    activeTaskSubject = null;
-    oldActiveTaskSubject = null;
+    activeTaskRegionId = -1;
+    oldActiveTaskRegionId = -1;
     name = null;
     splitDeliveriesFile=false;
     transliterate = false;
     transactionMode = false;
     retryOnFail = false;
-    retryTime = null;
     endDate = null;
     startDate = null;
     validityPeriod = null;
@@ -114,7 +117,7 @@ public class DeliveriesPageData {
     deliveriesGenStatus = STATUS_INITIALIZATION;
 
     recordsProcessed = 0;
-    subjectsFound = 0;
+    regionsFound = 0;
     unrecognized = 0;
     inblackList = 0;
     splitDeliveriesFileStatus = STATUS_INITIALIZATION;
@@ -194,7 +197,7 @@ public class DeliveriesPageData {
   } 
 
   public List getRetryPolicies() throws AdminException {
-    QueryResultSet rs = new RetryPolicyDataSource().query(infoSmeContext.getConfig(), new RetryPolicyQuery(1000, "name", 0));
+    QueryResultSet rs = new RetryPolicyDataSource().query(infoSmeContext.getInfoSmeConfig(), new RetryPolicyQuery(1000, "name", 0));
     List result = new ArrayList(rs.size() + 1);
     for (int i=0; i<rs.size(); i++) {
       RetryPolicyDataItem item = (RetryPolicyDataItem)rs.get(i);

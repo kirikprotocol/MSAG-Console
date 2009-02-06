@@ -1,9 +1,7 @@
 package ru.novosoft.smsc.infosme.beans;
 
-import ru.novosoft.smsc.util.SortedList;
-
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
 
 /**
  * Created by igork
@@ -55,34 +53,34 @@ public class Options extends InfoSmeBean
 
     if (!initialized) {
       try {
-        address = getConfig().getString("InfoSme.Address");
-        svcType = getConfig().getString("InfoSme.SvcType");
-        protocolId = getConfig().getInt("InfoSme.ProtocolId");
-        maxMessagesPerSecond = getConfig().getInt("InfoSme.maxMessagesPerSecond");
-        unrespondedMessagesMax = getConfig().getInt("InfoSme.unrespondedMessagesMax");
-        unrespondedMessagesSleep = getConfig().getInt("InfoSme.unrespondedMessagesSleep");
-        responceWaitTime = getConfig().getString("InfoSme.responceWaitTime");
-        receiptWaitTime = getConfig().getString("InfoSme.receiptWaitTime");
+        address = getConfig().getAddress();
+        svcType = getConfig().getSvcType();
+        protocolId = getConfig().getProtocolId();
+        maxMessagesPerSecond = getConfig().getMaxMessagesPerSecond();
+        unrespondedMessagesMax = getConfig().getUnrespondedMessagesMax();
+        unrespondedMessagesSleep = getConfig().getUnrespondedMessagesSleep();
+        responceWaitTime = getConfig().getResponceWaitTime();
+        receiptWaitTime = getConfig().getReceiptWaitTime();
 
-        tasksThreadPoolMax = getConfig().getInt("InfoSme.TasksThreadPool.max");
-        tasksThreadPoolInit = getConfig().getInt("InfoSme.TasksThreadPool.init");
+        tasksThreadPoolMax = getConfig().getTasksThreadPoolMax();
+        tasksThreadPoolInit = getConfig().getTasksThreadPoolInit();
 
-        eventsThreadPoolMax = getConfig().getInt("InfoSme.EventsThreadPool.max");
-        eventsThreadPoolInit = getConfig().getInt("InfoSme.EventsThreadPool.init");
+        eventsThreadPoolMax = getConfig().getEventsThreadPoolMax();
+        eventsThreadPoolInit = getConfig().getEventsThreadPoolInit();
 
-        adminHost = getConfig().getString("InfoSme.Admin.host");
-        adminPort = getConfig().getInt("InfoSme.Admin.port");
+        adminHost = getConfig().getAdminHost();
+        adminPort = getConfig().getAdminPort();
 
-        smscHost = getConfig().getString("InfoSme.SMSC.host");
-        smscPort = getConfig().getInt("InfoSme.SMSC.port");
-        smscSid = getConfig().getString("InfoSme.SMSC.sid");
-        smscTimeout = getConfig().getInt("InfoSme.SMSC.timeout");
-        smscPassword = getConfig().getString("InfoSme.SMSC.password");
-        tasksSwitchTimeout = getConfig().getInt("InfoSme.tasksSwitchTimeout");
-        tasksTaskTablesPrefix = getConfig().getString("InfoSme.tasksTablesPrefix");
+        smscHost = getConfig().getSmscHost();
+        smscPort = getConfig().getSmscPort();
+        smscSid = getConfig().getSmscSid();
+        smscTimeout = getConfig().getSmscTimeout();
+        smscPassword = getConfig().getSmscPassword();
+        tasksSwitchTimeout = getConfig().getTasksSwitchTimeout();
+        tasksTaskTablesPrefix = getConfig().getTasksTaskTablesPrefix();
 
-        storeLocation = getConfig().getString("InfoSme.storeLocation");
-        statStoreLocation = getConfig().getString("InfoSme.statStoreLocation");
+        storeLocation = getConfig().getStoreLocation();
+        statStoreLocation = getConfig().getStatStoreLocation();
 
       } catch (Exception e) {
         checkForNulls();
@@ -131,35 +129,35 @@ public class Options extends InfoSmeBean
 
   private int save()
   {
-    getConfig().setString("InfoSme.Address", address);
-    getConfig().setString("InfoSme.SvcType", svcType);
-    getConfig().setInt("InfoSme.ProtocolId", protocolId);
-    getConfig().setInt("InfoSme.maxMessagesPerSecond", maxMessagesPerSecond);
-    getConfig().setInt("InfoSme.unrespondedMessagesMax", unrespondedMessagesMax);
-    getConfig().setInt("InfoSme.unrespondedMessagesSleep", unrespondedMessagesSleep);
-    getConfig().setString("InfoSme.responceWaitTime", responceWaitTime);
-    getConfig().setString("InfoSme.receiptWaitTime", receiptWaitTime);
+    getConfig().setAddress(address);
+    getConfig().setSvcType(svcType);
+    getConfig().setProtocolId(protocolId);
+    getConfig().setMaxMessagesPerSecond(maxMessagesPerSecond);
+    getConfig().setUnrespondedMessagesMax(unrespondedMessagesMax);
+    getConfig().setUnrespondedMessagesSleep(unrespondedMessagesSleep);
+    getConfig().setResponceWaitTime(responceWaitTime);
+    getConfig().setReceiptWaitTime(receiptWaitTime);
 
-    getConfig().setInt("InfoSme.TasksThreadPool.max", tasksThreadPoolMax);
-    getConfig().setInt("InfoSme.TasksThreadPool.init", tasksThreadPoolInit);
+    getConfig().setTasksThreadPoolMax(tasksThreadPoolMax);
+    getConfig().setTasksThreadPoolInit(tasksThreadPoolInit);
 
-    getConfig().setInt("InfoSme.EventsThreadPool.max", eventsThreadPoolMax);
-    getConfig().setInt("InfoSme.EventsThreadPool.init", eventsThreadPoolInit);
+    getConfig().setEventsThreadPoolMax(eventsThreadPoolMax);
+    getConfig().setEventsThreadPoolInit(eventsThreadPoolInit);
 
-    getConfig().setString("InfoSme.Admin.host", adminHost);
-    getConfig().setInt("InfoSme.Admin.port", adminPort);
+    getConfig().setAdminHost(adminHost);
+    getConfig().setAdminPort(adminPort);
 
-    getConfig().setString("InfoSme.SMSC.host", smscHost);
-    getConfig().setInt("InfoSme.SMSC.port", smscPort);
-    getConfig().setString("InfoSme.SMSC.sid", smscSid);
-    getConfig().setInt("InfoSme.SMSC.timeout", smscTimeout);
-    getConfig().setString("InfoSme.SMSC.password", smscPassword);
-    getConfig().setInt("InfoSme.tasksSwitchTimeout", tasksSwitchTimeout);
-    getConfig().setString("InfoSme.tasksTablesPrefix", tasksTaskTablesPrefix);
+    getConfig().setSmscHost(smscHost);
+    getConfig().setSmscPort(smscPort);
+    getConfig().setSmscSid(smscSid);
+    getConfig().setSmscTimeout(smscTimeout);
+    getConfig().setSmscPassword(smscPassword);
+    getConfig().setTasksSwitchTimeout(tasksSwitchTimeout);
+    getConfig().setTasksTaskTablesPrefix(tasksTaskTablesPrefix);
 
-    getConfig().setString("InfoSme.storeLocation", storeLocation);
-    getConfig().setString("InfoSme.statStoreLocation", statStoreLocation);
-    getInfoSmeContext().setChangedOptions(true);
+    getConfig().setStoreLocation(storeLocation);
+    getConfig().setStatStoreLocation(statStoreLocation);
+
     return RESULT_DONE;
   }
 
@@ -284,10 +282,6 @@ public class Options extends InfoSmeBean
   }
   public void setTasksTaskTablesPrefix(String tasksTaskTablesPrefix) {
     this.tasksTaskTablesPrefix = tasksTaskTablesPrefix;
-  }
-
-  public Collection getAllDataProviders() {
-    return new SortedList(getConfig().getSectionChildShortSectionNames("InfoSme.DataProvider"));
   }
 
   public String getAddress() {

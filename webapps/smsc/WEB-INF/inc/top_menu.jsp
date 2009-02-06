@@ -36,10 +36,12 @@
         int i = 0;
         for (Iterator it = menu.iterator(); it.hasNext(); i++) {
             MenuItem menuItem = (MenuItem) it.next();
-            String menuItemName = "menu_" + i;
-            if (menuItem.getSubMenu() != null) {
-                createMenu(request, out, menuItemName, "" + menuItem.getSubMenuWidth(), menuItem.getSubMenu());
-                out.println("menuBar.addMenuBarItem(new menuBarItem(\"" + menuItem.getCaption() + "\", " + menuItemName + "));");
+            if (isNeedToBeDrawn(menuItem)) {
+              String menuItemName = "menu_" + i;
+              if (menuItem.getSubMenu() != null) {
+                  createMenu(request, out, menuItemName, "" + menuItem.getSubMenuWidth(), menuItem.getSubMenu());
+                  out.println("menuBar.addMenuBarItem(new menuBarItem(\"" + menuItem.getCaption() + "\", " + menuItemName + "));");
+              }
             }
         }
         out.println("}");
@@ -92,14 +94,17 @@
     }
 
     boolean isNeedToBeDrawn(MenuItem menuItem) {
-        if (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_ALL) return true;
-        if ((Constants.instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE) &&
-                (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_SINGLE)) return true;
-        if ((Constants.instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_HA) &&
-                (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_HA)) return true;
-        if ((Constants.instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_HS) &&
-                (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_HA)) return true;
-        return false;
+        boolean result = false;
+        if (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_ALL) result = true;
+        else if ((Constants.instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE) &&
+                (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_SINGLE)) result = true;
+        else if ((Constants.instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_HA) &&
+                (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_HA)) result = true;
+        else if ((Constants.instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_HS) &&
+                (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_HA)) result = true;
+
+      return result && ((Constants.instMode & menuItem.getModeMask()) == Constants.instMode);
+
     }
 
 %>

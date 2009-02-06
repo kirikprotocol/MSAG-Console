@@ -1,10 +1,13 @@
 package ru.novosoft.smsc.infosme.beans;
 
+import ru.novosoft.smsc.infosme.backend.config.driver.Driver;
 import ru.novosoft.smsc.util.SortedList;
-import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by igork
@@ -13,7 +16,6 @@ import java.util.*;
  */
 public class Drivers extends InfoSmeBean
 {
-  public static final String DRIVERS_SECTION_NAME = "StartupLoader.DataSourceDrivers";
 
   private String dsdriver_new_type = null;
   private String dsdriver_new_loadup = null;
@@ -37,26 +39,33 @@ public class Drivers extends InfoSmeBean
 
   private int done(Map requestParams)
   {
-    final String PREFIX = DRIVERS_SECTION_NAME + '.';
-    getConfig().removeSection(DRIVERS_SECTION_NAME);
+    getInfoSmeConfig().clearDrivers();
+
     for (Iterator i = requestParams.keySet().iterator(); i.hasNext();) {
       String paramName = (String) i.next();
-      if (paramName.startsWith(PREFIX)) {
-        final String paramValue = getParamValue(requestParams.get(paramName));
-        if (paramValue != null)
-          getConfig().setString(paramName, paramValue);
+      if (paramName.indexOf(".loadup") > 0) {
+        String driverName = paramName.substring(0, paramName.indexOf(".loadup"));
+        Driver d = getInfoSmeConfig().getDriver(driverName);
+        if (d == null) {
+          d = new Driver();
+          d.setType(driverName);
+          d.setLoadup(getParamValue(requestParams.get(paramName)));
+          getInfoSmeConfig().addDriver(d);
+        }
       }
     }
+
     if (dsdriver_new_type != null && dsdriver_new_type.length() > 0
             && dsdriver_new_loadup != null && dsdriver_new_loadup.length() > 0) {
-      getConfig().setString(PREFIX + dsdriver_new_type + ".type", dsdriver_new_type);
-      getConfig().setString(PREFIX + dsdriver_new_type + ".loadup", dsdriver_new_loadup);
+      Driver d = new Driver();
+      d.setType(dsdriver_new_type);
+      d.setLoadup(dsdriver_new_loadup);
+      getInfoSmeConfig().addDriver(d);
     }
-    getInfoSmeContext().setChangedDrivers(true);
     return RESULT_DONE;
   }
 
-  private String getParamValue(Object paramObjectValue)
+  private static String getParamValue(Object paramObjectValue)
   {
     if (paramObjectValue instanceof String)
       return (String) paramObjectValue;
@@ -71,24 +80,17 @@ public class Drivers extends InfoSmeBean
       return null;
   }
 
-  public List getDriverSectionNames()
+  public List getDriverTypes()
   {
-    return new SortedList(getConfig().getSectionChildSectionNames(DRIVERS_SECTION_NAME));
+    List drivers = getInfoSmeConfig().getDrivers();
+    List names = new ArrayList(drivers.size());
+    for (Iterator iter = drivers.iterator(); iter.hasNext();)
+      names.add(((Driver)iter.next()).getType());    
+    return new SortedList(names);
   }
 
-  public int getInt(String paramName) throws Config.ParamNotFoundException, Config.WrongParamTypeException
-  {
-    return getConfig().getInt(paramName);
-  }
-
-  public String getString(String paramName) throws Config.ParamNotFoundException, Config.WrongParamTypeException
-  {
-    return getConfig().getString(paramName);
-  }
-
-  public boolean getBool(String paramName) throws Config.ParamNotFoundException, Config.WrongParamTypeException
-  {
-    return getConfig().getBool(paramName);
+  public String getDriverLoadup(String driver) {
+    return getInfoSmeConfig().getDriver(driver).getLoadup();
   }
 
   public String getMbDone()

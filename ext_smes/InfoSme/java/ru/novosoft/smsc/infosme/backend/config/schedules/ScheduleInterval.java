@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.infosme.backend.schedules;
+package ru.novosoft.smsc.infosme.backend.config.schedules;
 
 import ru.novosoft.smsc.util.config.Config;
 
@@ -34,7 +34,7 @@ public class ScheduleInterval extends ScheduleEndDateTime
     this.intervalTime = config.getString(prefix + ".intervalTime");
   }
 
-  public void storeToConfig(Config config)
+  void storeToConfig(Config config)
   {
     super.storeToConfig(config);
     config.setString(prefix + ".intervalTime", intervalTime);
@@ -57,5 +57,6 @@ public class ScheduleInterval extends ScheduleEndDateTime
   public void setIntervalTime(String intervalTime)
   {
     this.intervalTime = intervalTime;
+    setModified(true);
   }
 }

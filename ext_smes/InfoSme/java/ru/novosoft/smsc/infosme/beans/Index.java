@@ -1,20 +1,14 @@
 package ru.novosoft.smsc.infosme.beans;
 
-import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.infosme.backend.Task;
-import ru.novosoft.smsc.infosme.backend.schedules.Schedule;
-import ru.novosoft.smsc.infosme.backend.tables.schedules.ScheduleDataSource;
+import ru.novosoft.smsc.infosme.backend.config.ConfigChanges;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem;
-import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
-import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataSource;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskFilter;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.*;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Iterator;
+import java.util.List;
 
 
 /**
@@ -24,416 +18,96 @@ import java.util.*;
  */
 public class Index extends IndexProperties
 {
-  protected int reset()
+  public Index() {
+    super(new TaskFilter(true));
+  }
+
+  protected int reset(HttpServletRequest req)
   {
     int result = RESULT_DONE;
+    boolean options, tasks, schedules, providers, drivers, retries;
+    options = tasks = schedules = providers = drivers = retries = false;
+
     if (isApply("all")) {
-      result = resetAll();
+      options = tasks = schedules = providers = drivers = retries = true;
     }
+
     if (isApply("tasks")) {
-      try {
-        result = resetTasks();
-      } catch (Throwable e) {
-        logger.error("Could not reload tasks", e);
-        result = error("infosme.error.reload_tasks", e);
-      }
+        tasks = true;
     }
+
     if (isApply("scheds")) {
-      try {
-        result = resetScheds();
-      } catch (Throwable e) {
-        logger.error("Could not reload schedules", e);
-        result = error("infosme.error.reload_schedules", e);
-      }
+        schedules = true;
     }
+
+    if (isApply("retries")) {
+        retries = true;
+    }
+
+    try {
+      String user = isUserAdmin(req) ? null : req.getRemoteUser();
+      getInfoSmeConfig().reset(user, options, tasks, schedules, retries, providers, drivers);
+    } catch (Throwable e) {
+      logger.error("Could not reload schedules", e);
+      result = error("infosme.error.reload_schedules", e);
+    }
+
     return result;
   }
 
-  private int resetTasks() throws IOException, SAXException, ParserConfigurationException, AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
-  {
-    for (Iterator i = getConfig().getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX).iterator(); i.hasNext();) {
-      String taskId = (String) i.next();
-      Task.removeTaskFromConfig(getConfig(), taskId);
-    }
-    Config oldConfig = getInfoSmeContext().loadCurrentConfig();
-    for (Iterator i = oldConfig.getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX).iterator(); i.hasNext();) {
-      String taskId = (String) i.next();
-      Task task = new Task(oldConfig, taskId);
-      task.storeToConfig(getConfig());
-    }
-    getInfoSmeContext().setChangedTasks(false);
-    return RESULT_DONE;
-  }
-
-  private int resetScheds() throws IOException, SAXException, ParserConfigurationException, AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException, ParseException
-  {
-    for (Iterator i = getConfig().getSectionChildShortSectionNames(ScheduleDataSource.SCHEDULES_PREFIX).iterator(); i.hasNext();) {
-      String schedId = (String) i.next();
-      Schedule.removeScheduleFromConfig(schedId, getConfig());
-    }
-    Config oldConfig = getInfoSmeContext().loadCurrentConfig();
-    for (Iterator i = oldConfig.getSectionChildShortSectionNames(ScheduleDataSource.SCHEDULES_PREFIX).iterator(); i.hasNext();) {
-      String schedId = (String) i.next();
-      Schedule schedule = Schedule.getInstance(schedId, oldConfig);
-      schedule.storeToConfig(getConfig());
-    }
-    return RESULT_DONE;
-  }
-
-  private int resetAll()
-  {
-    try {
-      getInfoSmeContext().resetConfig();
-    } catch (Throwable e) {
-      logger.debug("Couldn't reload InfoSME config", e);
-      return error("infosme.error.config_reload", e);
-    }
-    return RESULT_DONE;
-  }
-
-  protected int apply()
+  protected int apply(HttpServletRequest req)
   {
     try {
       logger.debug("Apply ...");
-      final Config oldConfig = getInfoSmeContext().loadCurrentConfig();
+      boolean options, tasks, schedules, providers, drivers, retries;
+      options = tasks = schedules = providers = drivers = retries = false;
       if (isApply("all")) {
-        return applyGlobalParams(oldConfig);
-      } else if (isApply("tasks")) {
-        if (getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedProviders())
-          return error("infosme.error.apply_tasks_wo_global");
-        return applyTasks(oldConfig, getConfig());
-      } else if (isApply("scheds")) {
-        if (getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedProviders())
-          return error("infosme.error.apply_schedules_wo_global");
-        if (getInfoSmeContext().isChangedTasks())
-          return error("infosme.error.apply_schedules_wo_tasks");
-        return applyScheds(oldConfig, getConfig());
-      } else if (isApply("retries")) {
-        if (getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedProviders())
-          return error("infosme.error.apply_schedules_wo_global");
-        applyRetryPolicies(oldConfig, getConfig());
+        options = tasks = schedules = providers = drivers = retries = true;
       }
+      if (isApply("tasks")) {
+        tasks = true;
+      }
+      if (isApply("scheds")) {
+        schedules = true;
+      }
+      if (isApply("retries")) {
+        retries = true;
+      }
+      String user = isUserAdmin(req) ? null : req.getRemoteUser();
+
+      ConfigChanges changes = getInfoSmeConfig().apply(user, options, tasks, schedules, retries, providers, drivers);
+      if (tasks) {
+        // Notify InfoSme about new tasks
+        for (Iterator iter = changes.getTasksChanges().getAdded().iterator(); iter.hasNext();)
+          getInfoSme().addTask((String)iter.next());
+        // Notify InfoSme about deleted tasks
+        for (Iterator iter = changes.getTasksChanges().getDeleted().iterator(); iter.hasNext();)
+          getInfoSme().removeTask((String)iter.next());
+        // Notify InfoSme about changed tasks
+        for (Iterator iter = changes.getTasksChanges().getModified().iterator(); iter.hasNext();)
+          getInfoSme().changeTask((String)iter.next());
+      }
+
+      if (schedules) {
+        // Notify InfoSme about new schedules
+        for (Iterator iter = changes.getSchedulesChanges().getAdded().iterator(); iter.hasNext();)
+          getInfoSme().addSchedule((String)iter.next());
+        // Notify InfoSme about deleted schedules
+        for (Iterator iter = changes.getSchedulesChanges().getDeleted().iterator(); iter.hasNext();)
+          getInfoSme().removeSchedule((String)iter.next());
+        // Notify InfoSme about changed schedules
+        for (Iterator iter = changes.getSchedulesChanges().getModified().iterator(); iter.hasNext();)
+          getInfoSme().changeSchedule((String)iter.next());
+      }
+
+      if (retries)
+        getInfoSme().applyRetryPolicies();
+
     } catch (Throwable e) {
       logger.error("Couldn't save InfoSME config", e);
       return error("infosme.error.config_save", e);
     }
     return RESULT_DONE;
-  }
-
-  private static final Set notGlobalSectionNames = new HashSet();
-  static {
-    notGlobalSectionNames.add("InfoSme.Schedules");
-    notGlobalSectionNames.add("InfoSme.Tasks");
-  }
-
-  private int applyGlobalParams(final Config oldConfig) throws Config.WrongParamTypeException, IOException, NullPointerException, CloneNotSupportedException
-  {
-    Config backup = (Config) oldConfig.clone();
-    final Config config = getConfig();
-
-    //InfoSme - root
-    backup.removeParamsFromSection("InfoSme");
-    backup.copySectionParamsFromConfig(config, "InfoSme");
-
-    //StartupLoader
-    backup.removeSection("StartupLoader");
-    backup.copySectionFromConfig(config, "StartupLoader");
-
-    //others
-    for (Iterator i = backup.getSectionChildSectionNames("InfoSme").iterator(); i.hasNext();) {
-      String sectionName = (String) i.next();
-      if (!notGlobalSectionNames.contains(sectionName)) {
-        backup.removeSection(sectionName);
-      }
-    }
-
-    for (Iterator i = config.getSectionChildSectionNames("InfoSme").iterator(); i.hasNext();) {
-      String sectionName = (String) i.next();
-      if (!notGlobalSectionNames.contains(sectionName)) {
-        backup.copySectionFromConfig(config, sectionName);
-      }
-    }
-
-    backup.save();
-    getInfoSmeContext().setChangedOptions(false);
-    getInfoSmeContext().setChangedDrivers(false);
-    getInfoSmeContext().setChangedProviders(false);
-    return message("infosme.prompt.restart");
-  }
-
-  private int applyScheds(Config oldConfig, Config newConfig)
-  {
-    int result = RESULT_DONE;
-    try {
-      logger.debug("applyScheds");
-      Set oldSchedules = oldConfig.getSectionChildShortSectionNames(ScheduleDataSource.SCHEDULES_PREFIX);
-      Set newSchedules = newConfig.getSectionChildShortSectionNames(ScheduleDataSource.SCHEDULES_PREFIX);
-      Set toDelete = new HashSet(oldSchedules);
-      toDelete.removeAll(newSchedules);
-      Set toAdd = new HashSet(newSchedules);
-      toAdd.removeAll(oldSchedules);
-      Set toChange = new HashSet(oldSchedules);
-      toChange.retainAll(newSchedules);
-
-      for (Iterator i = new ArrayList(toChange).iterator(); i.hasNext();) {
-        String schedId = (String) i.next();
-        if (!scheduleChanged(schedId, oldConfig, newConfig))
-          toChange.remove(schedId);
-      }
-      int r = RESULT_DONE;
-      if (toAdd.size() > 0) r = addScheds(oldConfig, newConfig, toAdd);
-      result = result == RESULT_DONE ? r : result;
-      if (toDelete.size() > 0) r = deleteScheds(oldConfig, toDelete);
-      result = result == RESULT_DONE ? r : result;
-      if (toChange.size() > 0) r = changeScheds(oldConfig, newConfig, toChange);
-      result = result == RESULT_DONE ? r : result;
-
-      getInfoSmeContext().setChangedSchedules(false);
-      return result;
-    } catch (Throwable e) {
-      logger.error("Could not apply schedules", e);
-      return error("infosme.error.apply_schedules", e);
-    }
-  }
-
-  private int changeScheds(Config oldConfig, Config newConfig, Set toChange) throws AdminException, Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException, IOException
-  {
-    int result = RESULT_DONE;
-    for (Iterator i = toChange.iterator(); i.hasNext();) {
-      String schedId = (String) i.next();
-      Schedule schedule = Schedule.getInstance(schedId, newConfig);
-      try {
-        Config backup = (Config) oldConfig.clone();
-        schedule.storeToConfig(oldConfig);
-        oldConfig.save();
-        if (getInfoSme().getInfo().isOnline()) {
-          try {
-            getInfoSmeContext().getInfoSme().changeSchedule(schedId);
-          } catch (AdminException e) {
-            logger.error("Could not change schedule \"" + schedId + '"', e);
-            result = error("infosme.error.change_schedule", schedId, e);
-            backup.save();
-          }
-        }
-      } catch (CloneNotSupportedException e) {
-        logger.fatal("Internal error", e);
-        result = error("infosme.error.internal", e);
-      }
-    }
-    return result;
-  }
-
-  private int deleteScheds(Config oldConfig, Set toDelete) throws IOException, Config.WrongParamTypeException
-  {
-    int result = RESULT_DONE;
-    for (Iterator i = toDelete.iterator(); i.hasNext();) {
-      String schedId = (String) i.next();
-      try {
-        Config backup = (Config) oldConfig.clone();
-        Schedule.removeScheduleFromConfig(schedId, oldConfig);
-        oldConfig.save();
-        if (getInfoSme().getInfo().isOnline()) {
-          try {
-            getInfoSmeContext().getInfoSme().removeSchedule(schedId);
-          } catch (AdminException e) {
-            logger.error("Could not delete schedule \"" + schedId + '"', e);
-            result = error("infosme.error.delete_schedule", schedId, e);
-            backup.save();
-          }
-        }
-      } catch (CloneNotSupportedException e) {
-        logger.fatal("Internal error", e);
-        result = error("infosme.error.internal", e);
-      }
-    }
-    return result;
-  }
-
-  private int addScheds(Config oldConfig, Config newConfig, Collection toAdd) throws AdminException, Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException, IOException
-  {
-    int result = RESULT_DONE;
-    for (Iterator i = toAdd.iterator(); i.hasNext();) {
-      String schedId = (String) i.next();
-      Schedule schedule = Schedule.getInstance(schedId, newConfig);
-      try {
-        Config backup = (Config) oldConfig.clone();
-        schedule.storeToConfig(oldConfig);
-        oldConfig.save();
-        if (getInfoSme().getInfo().isOnline()) {
-          try {
-            getInfoSmeContext().getInfoSme().addSchedule(schedId);
-          } catch (AdminException e) {
-            logger.error("Could not add schedule \"" + schedId + '"', e);
-            result = error("infosme.error.add_schedule", schedId, e);
-            backup.save();
-          }
-        }
-      } catch (CloneNotSupportedException e) {
-        logger.fatal("Internal error", e);
-        result = error("infosme.error.internal", e);
-      }
-    }
-    return result;
-  }
-
-  private boolean scheduleChanged(String schedId, Config oldConfig, Config newConfig) throws AdminException, Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException
-  {
-    Schedule oldSchedule = Schedule.getInstance(schedId, oldConfig);
-    Schedule newSchedule = Schedule.getInstance(schedId, newConfig);
-    return !oldSchedule.equals(newSchedule);
-  }
-
-  private int applyRetryPolicies(Config oldConfig, Config newConfig) {
-    int result = RESULT_DONE;
-    try {
-      logger.debug("applyRetryPolicies");
-      oldConfig.removeSection(RetryPolicyDataSource.RETRY_POLICIES_SECTION);
-      oldConfig.copySectionFromConfig(newConfig, RetryPolicyDataSource.RETRY_POLICIES_SECTION);
-      oldConfig.save();
-
-      if (getInfoSme().getInfo().isOnline()) {
-        try {
-          getInfoSmeContext().getInfoSme().applyRetryPolicies();
-        } catch (AdminException e) {
-          logger.error("Could not apply retry policies", e);
-          result = error("infosme.error.apply_retries", e);
-        }
-      }
-
-      getInfoSmeContext().setChangedRetryPolicies(false);
-
-    } catch (Throwable e) {
-      logger.error("Could not apply tasks", e);
-      return error("infosme.error.apply_tasks", e);
-    }
-    return result;
-  }
-
-  private int applyTasks(Config oldConfig, Config newConfig)
-  {
-    int result = RESULT_DONE;
-    try {
-      logger.debug("applyTasks");
-      Set oldTasks = oldConfig.getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX);
-      Set newTasks = newConfig.getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX);
-      Set toDelete = new HashSet(oldTasks);
-      toDelete.removeAll(newTasks);
-      Set toAdd = new HashSet(newTasks);
-      toAdd.removeAll(oldTasks);
-      Set toChange = new HashSet(oldTasks);
-      toChange.retainAll(newTasks);
-
-      for (Iterator i = new ArrayList(toChange).iterator(); i.hasNext();) {
-        String taskId = (String) i.next();
-        if (!taskChanged(taskId, oldConfig, newConfig))
-          toChange.remove(taskId);
-      }
-
-      int r = RESULT_DONE;
-      if (toAdd.size() > 0) r = addTasks(oldConfig, newConfig, toAdd);
-      result = result == RESULT_DONE ? r : result;
-      if (toDelete.size() > 0) r = deleteTasks(oldConfig, toDelete);
-      result = result == RESULT_DONE ? r : result;
-      if (toChange.size() > 0) r = changeTasks(oldConfig, newConfig, toChange);
-      result = result == RESULT_DONE ? r : result;
-
-      getInfoSmeContext().setChangedTasks(false);
-      if (result == RESULT_DONE)
-        return applyScheds(oldConfig, newConfig);
-      else
-        return warning("infosme.warn.apply_schedules_wo_tasks ");
-    } catch (Throwable e) {
-      logger.error("Could not apply tasks", e);
-      return error("infosme.error.apply_tasks", e);
-    }
-  }
-
-  private int changeTasks(Config oldConfig, Config newConfig, Collection toChange) throws Config.WrongParamTypeException, Config.ParamNotFoundException, IOException
-  {
-    int result = RESULT_DONE;
-    for (Iterator i = toChange.iterator(); i.hasNext();) {
-      String taskId = (String) i.next();
-      Task task = new Task(newConfig, taskId);
-      try {
-        Config backup = (Config) oldConfig.clone();
-        task.storeToConfig(oldConfig);
-        oldConfig.save();
-        if (getInfoSme().getInfo().isOnline()) {
-          try {
-            getInfoSme().changeTask(taskId);
-          } catch (AdminException e) {
-            logger.error("Could not change task \"" + taskId + '"', e);
-            result = error("infosme.error.change_task", taskId, e);
-            backup.save();
-          }
-        }
-      } catch (CloneNotSupportedException e) {
-        logger.fatal("Internal error", e);
-        result = error("infosme.error.internal", e);
-      }
-    }
-    return result;
-  }
-
-  private int deleteTasks(Config config, Collection toDelete) throws Config.WrongParamTypeException, IOException
-  {
-    int result = RESULT_DONE;
-    for (Iterator i = toDelete.iterator(); i.hasNext();) {
-      String taskId = (String) i.next();
-      try {
-        Config backup = (Config) config.clone();
-        Task.removeTaskFromConfig(config, taskId);
-        config.save();
-        if (getInfoSme().getInfo().isOnline()) {
-          try {
-            getInfoSmeContext().getInfoSme().removeTask(taskId);
-          } catch (AdminException e) {
-            logger.error("Could not delete task \"" + taskId + '"', e);
-            result = error("infosme.error.delete_task", taskId, e);
-            backup.save();
-          }
-        }
-      } catch (CloneNotSupportedException e) {
-        logger.fatal("Internal error", e);
-        result = error("infosme.error.internal", e);
-      }
-    }
-    return result;
-  }
-
-  private int addTasks(Config oldConfig, Config newConfig, Collection toAdd) throws AdminException, Config.WrongParamTypeException, IOException, Config.ParamNotFoundException
-  {
-    int result = RESULT_DONE;
-    for (Iterator i = toAdd.iterator(); i.hasNext();) {
-      String taskId = (String) i.next();
-      Task task = new Task(newConfig, taskId);
-      try {
-        Config backup = (Config) oldConfig.clone();
-        task.storeToConfig(oldConfig);
-        oldConfig.save();
-        if (getInfoSme().getInfo().isOnline()) {
-          try {
-            getInfoSmeContext().getInfoSme().addTask(taskId);
-          } catch (AdminException e) {
-            logger.error("Could not add task \"" + taskId + '"', e);
-            result = error("infosme.error.add_task", taskId, e);
-            backup.save();
-            throw e;
-          }
-        }
-      } catch (CloneNotSupportedException e) {
-        logger.fatal("Internal error", e);
-        result = error("infosme.error.internal", e);
-      }
-    }
-    return result;
-  }
-
-  private boolean taskChanged(String taskId, Config oldConfig, Config newConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException
-  {
-    Task oldTask = new Task(oldConfig, taskId);
-    Task newTask = new Task(newConfig, taskId);
-    return !oldTask.equals(newTask);
   }
 
   protected int start()
@@ -451,7 +125,6 @@ public class Index extends IndexProperties
         logger.error("Could not start Info SME", e);
         result = error("infosme.error.start", e);
       }
-      return RESULT_DONE;
     } else {
       if (isToStart("processor")) {
         try {
@@ -483,7 +156,6 @@ public class Index extends IndexProperties
         logger.error("Could not stop Info SME", e);
         result = error("infosme.error.stop", e);
       }
-      return RESULT_DONE;
     } else {
       if (isToStart("processor")) {
         try {
@@ -508,30 +180,19 @@ public class Index extends IndexProperties
   private int setTasksEnabled(boolean enabled)
   {
     int result = RESULT_DONE;
-    Config currentConfig = null;
-    try {
-      currentConfig = getInfoSmeContext().loadCurrentConfig();
-    } catch (Throwable e) {
-      logger.error("Could not load current config", e);
-      return error("infosme.error.config_load", e);
-    }
-    for (int i = 0; i < getChecked().length; i++) {
-      String taskId = getChecked()[i];
-      final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId);
+    List checked = getChecked();
+    for (int i = 0; i < checked.size(); i++) {
+      String taskId = (String)checked.get(i);
       try {
+        Task t = getInfoSmeConfig().getTask(taskId);
+        t.setEnabled(enabled);
+        getInfoSmeConfig().addAndApplyTask(t);
         getInfoSme().setTaskEnabled(taskId, enabled);
-        if (currentConfig != null) currentConfig.setBool(prefix + ".enabled", enabled);
-        if (getConfig().containsSection(prefix)) getConfig().setBool(prefix + ".enabled", enabled);
+
       } catch (AdminException e) {
         logger.error("Could not enable task \"" + taskId + "\"", e);
         result = error("infosme.error.enable_task", taskId, e);
       }
-    }
-    try {
-      if (currentConfig != null) currentConfig.save();
-    } catch (Throwable e) {
-      logger.error("Could not save current config", e);
-      result = error("infosme.error.config_save", e);
     }
     return result;
   }
@@ -550,7 +211,7 @@ public class Index extends IndexProperties
   {
     int result = RESULT_DONE;
     try {
-      getInfoSme().startTasks(getCheckedSet());
+      getInfoSme().startTasks(getChecked());
     } catch (AdminException e) {
       logger.error("Could not start tasks", e);
       result = error("infosme.error.start_tasks", e);
@@ -562,7 +223,7 @@ public class Index extends IndexProperties
   {
     int result = RESULT_DONE;
     try {
-      getInfoSme().stopTasks(getCheckedSet());
+      getInfoSme().stopTasks(getChecked());
     } catch (AdminException e) {
       logger.error("Could not stop tasks", e);
       result = error("infosme.error.stop_tasks", e);

@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.infosme.backend;
 
-import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 
 import java.util.*;
 
@@ -12,12 +12,12 @@ import java.util.*;
 public class MultiTask {
   private final Map tasks = new HashMap(20);
 
-  public void addTask(String subject, Task task) {
-    tasks.put(subject, task);
+  public void addTask(int regionId, Task task) {
+    tasks.put(new Integer(regionId), task);
   }
 
-  public Task getTask(String subject) {
-    return (Task)tasks.get(subject);
+  public Task getTask(int regionId) {
+    return (Task)tasks.get(new Integer(regionId));
   }
 
   public Collection tasks() {
@@ -28,13 +28,8 @@ public class MultiTask {
     return tasks.containsKey(subject);
   }
 
-  public Collection getSubjects() {
+  public Collection getRegionIds() {
     return new ArrayList(tasks.keySet());
-  }
-
-  public void storeToConfig(Config config) {
-    for (Iterator iter = tasks().iterator(); iter.hasNext();)
-      ((Task)iter.next()).storeToConfig(config);
   }
 
   public void setName(String name) {
@@ -77,37 +72,37 @@ public class MultiTask {
       ((Task)iter.next()).setSvcType(svcType);
   }
 
-  public void setEndDate(String endDate) {
+  public void setEndDate(Date endDate) {
     for (Iterator iter = tasks().iterator(); iter.hasNext();)
       ((Task)iter.next()).setEndDate(endDate);
   }
 
-  public void setStartDate(String startDate) {
+  public void setStartDate(Date startDate) {
     for (Iterator iter = tasks().iterator(); iter.hasNext();)
       ((Task)iter.next()).setStartDate(startDate);
   }
 
-  public void setRetryTime(String retryTime) {
-    for (Iterator iter = tasks().iterator(); iter.hasNext();)
-      ((Task)iter.next()).setRetryTime(retryTime);
-  }
+//  public void setRetryTime(String retryTime) {
+//    for (Iterator iter = tasks().iterator(); iter.hasNext();)
+//      ((Task)iter.next()).setRetryTime(retryTime);
+//  }
 
-  public void setValidityPeriod(String validityPeriod) {
+  public void setValidityPeriod(Date validityPeriod) {
     for (Iterator iter = tasks().iterator(); iter.hasNext();)
       ((Task)iter.next()).setValidityPeriod(validityPeriod);
   }
 
-  public void setValidityDate(String validityDate) {
+  public void setValidityDate(Date validityDate) {
     for (Iterator iter = tasks().iterator(); iter.hasNext();)
       ((Task)iter.next()).setValidityDate(validityDate);
   }
 
-  public void setActivePeriodStart(String activePeriodStart) {
+  public void setActivePeriodStart(Date activePeriodStart) {
     for (Iterator iter = tasks().iterator(); iter.hasNext();)
       ((Task)iter.next()).setActivePeriodStart(activePeriodStart);
   }
 
-  public void setActivePeriodEnd(String activePeriodEnd) {
+  public void setActivePeriodEnd(Date activePeriodEnd) {
     for (Iterator iter = tasks().iterator(); iter.hasNext();)
       ((Task)iter.next()).setActivePeriodEnd(activePeriodEnd);
   }

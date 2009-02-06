@@ -68,7 +68,7 @@ public class Shedules extends InfoSmeBean
     if (mbDelete != null)
       return delete();
 
-    schedules = new ScheduleDataSource().query(getConfig(), new ScheduleQuery(pageSize, sort, startPosition));
+    schedules = new ScheduleDataSource().query(getInfoSmeConfig(), new ScheduleQuery(pageSize, sort, startPosition));
     totalSize = schedules.getTotalSize();
 
     return result;
@@ -77,9 +77,8 @@ public class Shedules extends InfoSmeBean
   private int delete()
   {
     for (int i = 0; i < checked.length; i++) {
-      getConfig().removeSection(ScheduleDataSource.SCHEDULES_PREFIX + '.' + StringEncoderDecoder.encodeDot(checked[i]));
+      getInfoSmeConfig().removeSchedule(checked[i]);
       checkedSet.remove(checked[i]);
-      getInfoSmeContext().setChangedSchedules(true);
     }
 
     return RESULT_DONE;

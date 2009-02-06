@@ -1,4 +1,5 @@
 <%@ page import="ru.novosoft.smsc.admin.profiler.SupportExtProfile"%>
+<%@ page import="ru.novosoft.smsc.admin.region.Region" %>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp" %>
 <div class=content>
 <div class=page_subtitle><%=getLocString("users.subTitle")%></div>
@@ -27,44 +28,55 @@
             startSectionPre(out, "roles", "", false);
             startParams(out);
             paramCheck(out, "users.roles.apply", "roles", "role01", "apply", bean.isUserInRole("apply"), null);
-            paramCheck(out, "users.roles.smscServ", "roles", "role02", "smsc_service", bean.isUserInRole("smsc_service"), null);
-            paramCheck(out, "users.roles.locales", "roles", "role03", "locale_resources", bean.isUserInRole("locale_resources"), null);
-            paramCheck(out, "users.roles.dl", "roles", "role04", "dl", bean.isUserInRole("dl"), null);
-            paramCheck(out, "users.roles.perfmon", "roles", "role05", "perfmon", bean.isUserInRole("perfmon"), null);
-            paramCheck(out, "users.roles.topmon", "roles", "role06", "topmon", bean.isUserInRole("topmon"), null);
-            paramCheck(out, "users.roles.smsView", "roles", "role07", "smsView", bean.isUserInRole("smsView"), null);
-            paramCheck(out, "users.roles.smsViewArch", "roles", "role08", "smsView_archive", bean.isUserInRole("smsView_archive"), null);
-            paramCheck(out, "users.roles.smsViewOper", "roles", "role09", "smsView_operative", bean.isUserInRole("smsView_operative"), null);
-            paramCheck(out, "users.roles.smsViewSmsText", "roles", "role35", "smsView_smstext", bean.isUserInRole("smsView_smstext"), null);
-            paramCheck(out, "users.roles.smsStat", "roles", "role10", "smsstat", bean.isUserInRole("smsstat"), null);
-            paramCheck(out, "users.roles.mscman", "roles", "role11", "mscman", bean.isUserInRole("mscman"), null);
+            if (Constants.instMode == Constants.INST_MODE_SMSC) {
+              paramCheck(out, "users.roles.smscServ", "roles", "role02", "smsc_service", bean.isUserInRole("smsc_service"), null);
+              paramCheck(out, "users.roles.locales", "roles", "role03", "locale_resources", bean.isUserInRole("locale_resources"), null);
+              paramCheck(out, "users.roles.dl", "roles", "role04", "dl", bean.isUserInRole("dl"), null);
+              paramCheck(out, "users.roles.perfmon", "roles", "role05", "perfmon", bean.isUserInRole("perfmon"), null);
+              paramCheck(out, "users.roles.topmon", "roles", "role06", "topmon", bean.isUserInRole("topmon"), null);
+              paramCheck(out, "users.roles.smsView", "roles", "role07", "smsView", bean.isUserInRole("smsView"), null);
+              paramCheck(out, "users.roles.smsViewArch", "roles", "role08", "smsView_archive", bean.isUserInRole("smsView_archive"), null);
+              paramCheck(out, "users.roles.smsViewOper", "roles", "role09", "smsView_operative", bean.isUserInRole("smsView_operative"), null);
+              paramCheck(out, "users.roles.smsViewSmsText", "roles", "role35", "smsView_smstext", bean.isUserInRole("smsView_smstext"), null);
+              paramCheck(out, "users.roles.smsStat", "roles", "role10", "smsstat", bean.isUserInRole("smsstat"), null);
+              paramCheck(out, "users.roles.mscman", "roles", "role11", "mscman", bean.isUserInRole("mscman"), null);
+            }
             paramCheck(out, "users.roles.users", "roles", "role12", "users", bean.isUserInRole("users"), null);
-            paramCheck(out, "users.roles.acls", "roles", "role13", "acls", bean.isUserInRole("acls"), null);
-            paramCheck(out, "users.roles.routes", "roles", "role14", "routes", bean.isUserInRole("routes"), null);
+            if (Constants.instMode == Constants.INST_MODE_SMSC) {
+              paramCheck(out, "users.roles.acls", "roles", "role13", "acls", bean.isUserInRole("acls"), null);
+              paramCheck(out, "users.roles.routes", "roles", "role14", "routes", bean.isUserInRole("routes"), null);
+            }
             paramCheck(out, "users.roles.subjects", "roles", "role15", "subjects", bean.isUserInRole("subjects"), null);
-            paramCheck(out, "users.roles.aliases", "roles", "role16", "aliases", bean.isUserInRole("aliases"), null);
-            paramCheck(out, "users.roles.profiles", "roles", "role17", "profiles", bean.isUserInRole("profiles"), null);
+            if (Constants.instMode == Constants.INST_MODE_SMSC) {
+              paramCheck(out, "users.roles.aliases", "roles", "role16", "aliases", bean.isUserInRole("aliases"), null);
+              paramCheck(out, "users.roles.profiles", "roles", "role17", "profiles", bean.isUserInRole("profiles"), null);
+            }
             paramCheck(out, "users.roles.hosts", "roles", "role18", "hosts", bean.isUserInRole("hosts"), null);
             paramCheck(out, "users.roles.servOperator", "roles", "role19", "service_operator", bean.isUserInRole("service_operator"), null);
             paramCheck(out, "users.roles.services", "roles", "role20", "services", bean.isUserInRole("services"), null);
-            paramCheck(out, "users.roles.providers", "roles", "role21", "providers", bean.isUserInRole("providers"), null);
-            paramCheck(out, "users.roles.categories", "roles", "role22", "categories", bean.isUserInRole("categories"), null);
+            if (Constants.instMode == Constants.INST_MODE_SMSC) {
+              paramCheck(out, "users.roles.providers", "roles", "role21", "providers", bean.isUserInRole("providers"), null);
+              paramCheck(out, "users.roles.categories", "roles", "role22", "categories", bean.isUserInRole("categories"), null);
+            }
             paramCheck(out, "users.roles.infosme-admin", "roles", "role23", "infosme-admin", bean.isUserInRole("infosme-admin"), null);
             paramCheck(out, "users.roles.infosme-market", "roles", "role24", "infosme-market", bean.isUserInRole("infosme-market"), null);
-            paramCheck(out, "users.roles.dbsme-admin", "roles", "role25", "dbsme-admin", bean.isUserInRole("dbsme-admin"), null);
-            paramCheck(out, "users.roles.mcisme-admin", "roles", "role26", "mcisme-admin", bean.isUserInRole("mcisme-admin"), null);
-            paramCheck(out, "users.roles.mtsmsme-admin", "roles", "role27", "mtsmsme-admin", bean.isUserInRole("mtsmsme-admin"), null);
-            paramCheck(out, "users.roles.journal", "roles", "role28", "journal", bean.isUserInRole("journal"), null);
-            paramCheck(out, "users.roles.closed_groups", "roles", "role29", "closed_groups", bean.isUserInRole("closed_groups"), null);
-            paramCheck(out, "users.roles.timezones", "roles", "role30", "timezones", bean.isUserInRole("timezones"), null);
+            if (Constants.instMode == Constants.INST_MODE_SMSC) {
+              paramCheck(out, "users.roles.dbsme-admin", "roles", "role25", "dbsme-admin", bean.isUserInRole("dbsme-admin"), null);
+              paramCheck(out, "users.roles.mcisme-admin", "roles", "role26", "mcisme-admin", bean.isUserInRole("mcisme-admin"), null);
+              paramCheck(out, "users.roles.mtsmsme-admin", "roles", "role27", "mtsmsme-admin", bean.isUserInRole("mtsmsme-admin"), null);
+              paramCheck(out, "users.roles.journal", "roles", "role28", "journal", bean.isUserInRole("journal"), null);
+              paramCheck(out, "users.roles.closed_groups", "roles", "role29", "closed_groups", bean.isUserInRole("closed_groups"), null);
+              paramCheck(out, "users.roles.timezones", "roles", "role30", "timezones", bean.isUserInRole("timezones"), null);
+            }
             paramCheck(out, "users.roles.regions", "roles", "role31", "regions", bean.isUserInRole("regions"), null);
-            paramCheck(out, "users.roles.emailsme", "roles", "role32", "emailsme", bean.isUserInRole("emailsme"), null);
-            paramCheck(out, "users.roles.snmp", "roles", "role33", "snmp", bean.isUserInRole("snmp"), null);
-          if (SupportExtProfile.enabled)
-            paramCheck(out, "users.roles.smscenters", "roles", "role34", "smscenters", bean.isUserInRole("smscenters"), null);
-            paramCheck(out, "users.roles.fraud", "roles", "role35", "fraud", bean.isUserInRole("fraud"), null);
-            paramCheck(out, "users.roles.smsquiz-admin", "roles", "role36", "smsquiz-admin", bean.isUserInRole("smsquiz-admin"), null);
-
+            if (Constants.instMode == Constants.INST_MODE_SMSC) {
+              paramCheck(out, "users.roles.emailsme", "roles", "role32", "emailsme", bean.isUserInRole("emailsme"), null);
+              paramCheck(out, "users.roles.snmp", "roles", "role33", "snmp", bean.isUserInRole("snmp"), null);
+              if (SupportExtProfile.enabled)
+                paramCheck(out, "users.roles.smscenters", "roles", "role34", "smscenters", bean.isUserInRole("smscenters"), null);
+              paramCheck(out, "users.roles.fraud", "roles", "role35", "fraud", bean.isUserInRole("fraud"), null);
+              paramCheck(out, "users.roles.smsquiz-admin", "roles", "role36", "smsquiz-admin", bean.isUserInRole("smsquiz-admin"), null);
+            }
             if (bean.getServiceRoles().size() > 0)
                 for (Iterator i = bean.getServiceRoles().iterator(); i.hasNext();) {
                     String roleName = (String) i.next();
@@ -87,35 +99,50 @@
             paramHidden(out, "prefsNames", "locale");
             param(out, "users.prefs.locale", "prefsValues", bean.getPref("locale"), null, null, false, "language");
             finishParams(out);
-            startSection(out, "prefs.topmon", "users.prefs.topmon", false);
-            startParams(out);
-            paramHidden(out, "prefsNames", "topmon.graph.scale");
-            param(out, "users.prefs.topmon.graphScale", "prefsValues", bean.getPref("topmon.graph.scale"), null, null, false, "positive");
-            paramHidden(out, "prefsNames", "topmon.graph.grid");
-            param(out, "users.prefs.topmon.graphGrid", "prefsValues", bean.getPref("topmon.graph.grid"), null, null, false, "positive");
-            paramHidden(out, "prefsNames", "topmon.graph.higrid");
-            param(out, "users.prefs.topmon.graphHiGrid", "prefsValues", bean.getPref("topmon.graph.higrid"), null, null, false, "positive");
-            paramHidden(out, "prefsNames", "topmon.graph.head");
-            param(out, "users.prefs.topmon.graphHead", "prefsValues", bean.getPref("topmon.graph.head"), null, null, false, "positive");
-            paramHidden(out, "prefsNames", "topmon.max.speed");
-            param(out, "users.prefs.topmon.maxSpeed", "prefsValues", bean.getPref("topmon.max.speed"), null, null, false, "positive");
-            finishParams(out);
-            finishSection(out);
+            if (Constants.instMode == Constants.INST_MODE_SMSC) {
+              startSection(out, "prefs.topmon", "users.prefs.topmon", false);
+              startParams(out);
+              paramHidden(out, "prefsNames", "topmon.graph.scale");
+              param(out, "users.prefs.topmon.graphScale", "prefsValues", bean.getPref("topmon.graph.scale"), null, null, false, "positive");
+              paramHidden(out, "prefsNames", "topmon.graph.grid");
+              param(out, "users.prefs.topmon.graphGrid", "prefsValues", bean.getPref("topmon.graph.grid"), null, null, false, "positive");
+              paramHidden(out, "prefsNames", "topmon.graph.higrid");
+              param(out, "users.prefs.topmon.graphHiGrid", "prefsValues", bean.getPref("topmon.graph.higrid"), null, null, false, "positive");
+              paramHidden(out, "prefsNames", "topmon.graph.head");
+              param(out, "users.prefs.topmon.graphHead", "prefsValues", bean.getPref("topmon.graph.head"), null, null, false, "positive");
+              paramHidden(out, "prefsNames", "topmon.max.speed");
+              param(out, "users.prefs.topmon.maxSpeed", "prefsValues", bean.getPref("topmon.max.speed"), null, null, false, "positive");
+              finishParams(out);
+              finishSection(out);
 
-            startSection(out, "prefs.perfmon", "users.prefs.perfmon", false);
-            startParams(out);
-            paramHidden(out, "prefsNames", "perfmon.pixPerSecond");
-            param(out, "users.prefs.perfmon.pixPerSecond", "prefsValues", bean.getPref("perfmon.pixPerSecond"), null, null, false, "positive");
-            paramHidden(out, "prefsNames", "perfmon.scale");
-            param(out, "users.prefs.perfmon.scale", "prefsValues", bean.getPref("perfmon.scale"), null, null, false, "positive");
-            paramHidden(out, "prefsNames", "perfmon.block");
-            param(out, "users.prefs.perfmon.block", "prefsValues", bean.getPref("perfmon.block"), null, null, false, "positive");
-            paramHidden(out, "prefsNames", "perfmon.vLightGrid");
-            param(out, "users.prefs.perfmon.vLightGrid", "prefsValues", bean.getPref("perfmon.vLightGrid"), null, null, false, "positive");
-            paramHidden(out, "prefsNames", "perfmon.vMinuteGrid");
-            param(out, "users.prefs.perfmon.vMinuteGrid", "prefsValues", bean.getPref("perfmon.vMinuteGrid"), null, null, false, "positive");
-            finishParams(out);
-            finishSection(out);
+              startSection(out, "prefs.perfmon", "users.prefs.perfmon", false);
+              startParams(out);
+              paramHidden(out, "prefsNames", "perfmon.pixPerSecond");
+              param(out, "users.prefs.perfmon.pixPerSecond", "prefsValues", bean.getPref("perfmon.pixPerSecond"), null, null, false, "positive");
+              paramHidden(out, "prefsNames", "perfmon.scale");
+              param(out, "users.prefs.perfmon.scale", "prefsValues", bean.getPref("perfmon.scale"), null, null, false, "positive");
+              paramHidden(out, "prefsNames", "perfmon.block");
+              param(out, "users.prefs.perfmon.block", "prefsValues", bean.getPref("perfmon.block"), null, null, false, "positive");
+              paramHidden(out, "prefsNames", "perfmon.vLightGrid");
+              param(out, "users.prefs.perfmon.vLightGrid", "prefsValues", bean.getPref("perfmon.vLightGrid"), null, null, false, "positive");
+              paramHidden(out, "prefsNames", "perfmon.vMinuteGrid");
+              param(out, "users.prefs.perfmon.vMinuteGrid", "prefsValues", bean.getPref("perfmon.vMinuteGrid"), null, null, false, "positive");
+              finishParams(out);
+              finishSection(out);
+            }
+            if (Constants.instMode == Constants.INST_MODE_INFO_SME) {
+              startParams(out);
+              paramSelect(out, "users.prefs.timezone", "timezone", bean.getTimezones(), bean.getTimezone(), null, null, null);
+              finishParams(out);              
+              startSection(out, "prefs.infosme.regions", "users.prefs.infosme.regions", false);
+              startParams(out);
+              for (Iterator iter = bean.getRegions().iterator(); iter.hasNext();) {
+                Region r = (Region)iter.next();
+                param(out, r.getName(), "infosme.region." + r.getId(), bean.isInfoSmeRegionAllowed(String.valueOf(r.getId())), null);
+              }
+              finishParams(out);
+              finishSection(out);
+            }
             finishSection(out);
         %>
     </td>

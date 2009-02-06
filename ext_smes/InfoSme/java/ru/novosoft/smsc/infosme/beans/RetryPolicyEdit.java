@@ -1,21 +1,18 @@
 package ru.novosoft.smsc.infosme.beans;
 
-import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.infosme.backend.config.retrypolicies.RetryPolicy;
 import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.ErrorRetryPolicy;
-import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataItem;
 import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataSource;
 import ru.novosoft.smsc.jsp.util.helper.Validation;
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.Column;
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper;
-import ru.novosoft.smsc.jsp.util.helper.dynamictable.Row;
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.IncorrectValueException;
+import ru.novosoft.smsc.jsp.util.helper.dynamictable.Row;
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.column.RowControlButtonColumn;
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.column.TextColumn;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * User: artem
@@ -36,14 +33,12 @@ public class RetryPolicyEdit extends InfoSmeBean {
   private List policies;
 
   private ErrorPoliciesTableHelper helper;
-  private RetryPolicyDataSource ds;
 
   protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK)
       return result;
 
-    ds = new RetryPolicyDataSource();
     helper = new ErrorPoliciesTableHelper("errorPolicies", "errorPolicies");
     return RESULT_OK;
   }
@@ -67,15 +62,15 @@ public class RetryPolicyEdit extends InfoSmeBean {
       return RESULT_CANCEL;
     }
 
-    try {
-      if (name != null) {
-        RetryPolicyDataItem item = new RetryPolicyDataSource().get(getConfig(), name);
-        defaultPolicy = item.getDefaultPolicy();
-        policies = item.getErrorsPolicies();
-        helper.fillTable();
+    if (name != null) {
+      RetryPolicy p = getInfoSmeConfig().getRetryPolicy(name);
+      defaultPolicy = p.getDefaultPolicy();
+      policies = new ArrayList();
+      for (Iterator iterator = p.getPolicies().entrySet().iterator(); iterator.hasNext();) {
+        Map.Entry e = (Map.Entry)iterator.next();
+        policies.add(new ErrorRetryPolicy((String)e.getKey(), ((Integer)e.getValue()).intValue()));
       }
-    } catch (AdminException e) {
-      error(e.getMessage());
+      helper.fillTable();
     }
 
     return result;
@@ -83,11 +78,19 @@ public class RetryPolicyEdit extends InfoSmeBean {
 
   private int save() {
     try {
-      if (create && ds.get(getConfig(), name) != null) {
-        System.out.println("Already exists");
+      if (create && getInfoSmeConfig().containsRetryPolicy(name)) {
         return error("Retry policy with this name already exists");
       }
-      ds.save(getInfoSmeContext(), new RetryPolicyDataItem(name, defaultPolicy, helper.getPolicies()));
+      RetryPolicy p = new RetryPolicy();
+      p.setId(name);
+      p.setDefaultPolicy(defaultPolicy);
+      Map policies = new HashMap();
+      for (Iterator iter = helper.getPolicies().iterator(); iter.hasNext();) {
+        ErrorRetryPolicy erp = (ErrorRetryPolicy)iter.next();
+        policies.put(erp.getErrorCode(), new Integer(erp.getPolicy()));
+      }
+      p.setPolicies(policies);
+      getInfoSmeConfig().addRetryPolicy(p);
     } catch(Throwable e) {
       return error(e.getMessage());
     }

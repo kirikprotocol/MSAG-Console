@@ -52,6 +52,7 @@ public class UsersAdd
 
             UserPreferences prefs = new UserPreferences();
             prefs.setValues(prefsNames, prefsValues);
+            prefs.setInfoSmeAllowedRegions(getInfoSmeRegions(request));
             if (userManager.addUser(new User(login, password.trim(), roles, firstName, lastName, dept, workPhone, homePhone, cellPhone, email, prefs))) {
                 request.getSession().setAttribute("USER_LOGIN_ADD_EDIT", login);
                 journalAppend(SubjectTypes.TYPE_user, login, Actions.ACTION_ADD);

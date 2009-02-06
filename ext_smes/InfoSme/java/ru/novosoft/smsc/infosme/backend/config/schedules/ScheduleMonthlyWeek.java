@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.infosme.backend.schedules;
+package ru.novosoft.smsc.infosme.backend.config.schedules;
 
 import ru.novosoft.smsc.util.config.Config;
 
@@ -31,14 +31,14 @@ public class ScheduleMonthlyWeek extends ScheduleMonthly
     this.weekDay = weekDay;
   }
 
-  public ScheduleMonthlyWeek(String id, Config config) throws Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException
+  ScheduleMonthlyWeek(String id, Config config) throws Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException
   {
     super(id, EXECUTE_MONTHLY_WEEK, config);
     this.weekDayN = config.getString(prefix + ".weekDayN");
     this.weekDay = config.getString(prefix + ".weekDay");
   }
 
-  public void storeToConfig(Config config)
+  void storeToConfig(Config config)
   {
     super.storeToConfig(config);
     config.setString(prefix + ".weekDayN", weekDayN);
@@ -62,6 +62,7 @@ public class ScheduleMonthlyWeek extends ScheduleMonthly
   public void setWeekDayN(String weekDayN)
   {
     this.weekDayN = weekDayN;
+    setModified(true);
   }
 
   public String getWeekDay()
@@ -72,5 +73,6 @@ public class ScheduleMonthlyWeek extends ScheduleMonthly
   public void setWeekDay(String weekDay)
   {
     this.weekDay = weekDay;
+    setModified(true);
   }
 }

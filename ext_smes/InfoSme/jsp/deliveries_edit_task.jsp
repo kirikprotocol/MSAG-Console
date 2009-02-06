@@ -1,9 +1,7 @@
-<%@ page import="ru.novosoft.smsc.admin.route.Subject"%>
-
 <% int rowN = 0;%>
 <div class=content>
   <div class=page_subtitle><%= getLocString("infosme.subtitle.stage3")%></div><br/>
-  <input type=hidden id="oldActiveTaskSubject" name="oldActiveTaskSubject" value="<%=deliveries_bean.getActiveTaskSubject()%>"/>
+  <input type=hidden id="oldActiveTaskRegionId" name="oldActiveTaskRegionId" value="<%=deliveries_bean.getActiveTaskRegionId()%>"/>
 
   <table class=properties_list>
     <col width="10%">
@@ -16,15 +14,15 @@
       <td><input class=txt name=sourceAddress value="<%=StringEncoderDecoder.encode(deliveries_bean.getSourceAddress())%>"></td>
     </tr>
     <tr class=row<%=rowN++&1%>>
-      <th><%= getLocString("infosme.label.subject")%></th>
+      <th><%= getLocString("infosme.label.region")%></th>
       <td>
-        <select id="activeTaskSubject" name="activeTaskSubject" onchange="return opFormSubmit();">
+        <select id="activeTaskRegionId" name="activeTaskRegionId" onchange="return opFormSubmit();">
           <%
-            for (Iterator iter = deliveries_bean.getSubjects().iterator(); iter.hasNext();) {
-              String subject = (String)iter.next();
-              boolean selected = subject.equalsIgnoreCase(deliveries_bean.getActiveTaskSubject());
+            for (Iterator iter = deliveries_bean.getRegionIds().iterator(); iter.hasNext();) {
+              int regionId = ((Integer)iter.next()).intValue();
+              boolean selected = regionId == deliveries_bean.getActiveTaskRegionId();
           %>
-          <option value="<%=subject%>" <%=selected ? "selected" : ""%>><%=subject%></option>
+          <option value="<%=regionId%>" <%=selected ? "selected" : ""%>><%=bean.getRegionName(regionId)%></option>
           <%
             }
           %>

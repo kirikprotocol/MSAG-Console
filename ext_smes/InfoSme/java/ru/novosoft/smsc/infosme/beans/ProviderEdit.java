@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.infosme.backend.config.provider.Provider;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -38,13 +39,13 @@ public class ProviderEdit extends InfoSmeBean
           return error("infosme.error.no_provider");
 
         try {
-          final String prefix = "InfoSme.DataProvider." + StringEncoderDecoder.encodeDot(provider);
-          type = getConfig().getString(prefix + ".type");
-          connections = getConfig().getInt(prefix + ".connections");
-          dbInstance = getConfig().getString(prefix + ".dbInstance");
-          dbUserName = getConfig().getString(prefix + ".dbUserName");
-          dbUserPassword = getConfig().getString(prefix + ".dbUserPassword");
-          watchdog = getConfig().getBool(prefix + ".watchdog");
+          Provider p = getInfoSmeConfig().getProvider(provider);
+          type = p.getType();
+          connections = p.getConnections();
+          dbInstance = p.getDbInstance();
+          dbUserName = p.getDbUserName();
+          dbUserPassword = p.getDbUserPassword();
+          watchdog = p.isWatchdog();
           oldProvider = provider;
         } catch (Exception e) {
           logger.error(e);
@@ -79,21 +80,21 @@ public class ProviderEdit extends InfoSmeBean
   {
     if (provider == null || provider.length() == 0)
       return error("infosme.error.no_provider");
-    final String prefix = "InfoSme.DataProvider." + StringEncoderDecoder.encodeDot(provider);
     if (!create) {
       if (!oldProvider.equals(provider)) {
-        if (getConfig().containsSection(prefix))
+        if (getInfoSmeConfig().containsProvider(provider))
           return error("infosme.error.exist_provider", provider);
-        getConfig().removeSection("InfoSme.DataProvider." + StringEncoderDecoder.encodeDot(oldProvider));
       }
     }
-    getConfig().setString(prefix + ".type", type);
-    getConfig().setInt(prefix + ".connections", connections);
-    getConfig().setString(prefix + ".dbInstance", dbInstance);
-    getConfig().setString(prefix + ".dbUserName", dbUserName);
-    getConfig().setString(prefix + ".dbUserPassword", dbUserPassword);
-    getConfig().setBool(prefix + ".watchdog", watchdog);
-    getInfoSmeContext().setChangedProviders(true);
+
+    Provider p = new Provider();
+    p.setName(provider);
+    p.setType(type);
+    p.setDbInstance(dbInstance);
+    p.setDbUserName(dbUserName);
+    p.setDbUserPassword(dbUserPassword);
+    p.setWatchdog(watchdog);
+    getInfoSmeConfig().addProvider(p);
     return RESULT_DONE;
 
   }

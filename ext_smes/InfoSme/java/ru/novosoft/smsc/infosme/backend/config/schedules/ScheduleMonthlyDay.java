@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.infosme.backend.schedules;
+package ru.novosoft.smsc.infosme.backend.config.schedules;
 
 import ru.novosoft.smsc.util.config.Config;
 
@@ -34,7 +34,7 @@ public class ScheduleMonthlyDay extends ScheduleMonthly
     this.dayOfMonth = config.getInt(prefix + ".dayOfMonth");
   }
 
-  public void storeToConfig(Config config)
+  void storeToConfig(Config config)
   {
     super.storeToConfig(config);
     config.setInt(prefix + ".dayOfMonth", dayOfMonth);
@@ -57,5 +57,6 @@ public class ScheduleMonthlyDay extends ScheduleMonthly
   public void setDayOfMonth(int dayOfMonth)
   {
     this.dayOfMonth = dayOfMonth;
+    setModified(true);
   }
 }

@@ -1,11 +1,10 @@
-package ru.novosoft.smsc.infosme.beans;
+package ru.novosoft.smsc.infosme.beans.deliveries;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.region.Region;
 import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
-import ru.novosoft.smsc.infosme.beans.deliveries.DeliveriesGenerationProgress;
-import ru.novosoft.smsc.infosme.beans.deliveries.DeliveriesPage;
-import ru.novosoft.smsc.infosme.beans.deliveries.DeliveriesPageData;
-import ru.novosoft.smsc.infosme.beans.deliveries.StartPage;
+import ru.novosoft.smsc.infosme.backend.deliveries.DeliveriesGenerationThread;
+import ru.novosoft.smsc.infosme.beans.InfoSmeBean;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
@@ -17,7 +16,7 @@ import java.util.Map;
  * Date: 13.05.2008
  */
 
-public class DeliveriesNew extends InfoSmeBean {
+public class Deliveries extends InfoSmeBean {
 
   private DeliveriesPage activePage;
   private DeliveriesPageData pageData;
@@ -25,8 +24,6 @@ public class DeliveriesNew extends InfoSmeBean {
   // Page data
   private String mbNext;
   private String mbCancel;
-  private String mbDlstat = null;
-  private String mbStat   = null;
 
   protected int init(List errors) {
     int result = super.init(errors);
@@ -35,7 +32,7 @@ public class DeliveriesNew extends InfoSmeBean {
 
     if (this.activePage == null) {
       pageData = new DeliveriesPageData(appContext, getInfoSmeContext());
-      this.activePage = new StartPage(pageData);
+      this.activePage = new LoadFilePage(pageData);
     }
     
     return result;
@@ -46,6 +43,8 @@ public class DeliveriesNew extends InfoSmeBean {
     if (result != RESULT_OK)
       return result;
 
+    pageData.owner = pageData.getAppContext().getUserManager().getUser(request.getRemoteUser());
+
     try {
       if (mbNext != null) {
         mbNext = null;
@@ -53,12 +52,6 @@ public class DeliveriesNew extends InfoSmeBean {
       } else if (mbCancel != null) {
         mbCancel = null;
         activePage = activePage.mbCancel(request);
-      } else if (mbStat != null) {
-        mbStat = null;
-        return InfoSmeBean.RESULT_STAT;
-      } else if (mbDlstat != null) {
-        mbDlstat = null;
-        return InfoSmeBean.RESULT_DLSTAT;
       } else
         activePage = activePage.mbUpdate(request);
     } catch (AdminException e) {
@@ -69,20 +62,26 @@ public class DeliveriesNew extends InfoSmeBean {
     return result;
   }
 
-  public static boolean isUserAdmin(HttpServletRequest request) {
-    return request.isUserInRole("infosme-admin");
+  public int getActiveTaskRegionId() {
+    return pageData.activeTaskRegionId;
   }
 
-  public String getActiveTaskSubject() {
-    return pageData.activeTaskSubject;
+  public void setActiveTaskRegionId(int id) {
+    this.pageData.activeTaskRegionId = id;
   }
 
-  public void setActiveTaskSubject(String activeTaskSubject) {
-    this.pageData.activeTaskSubject = activeTaskSubject;
+  public Collection getRegionIds() {
+    return pageData.getTask().getRegionIds();
   }
 
-  public Collection getSubjects() {
-    return pageData.getTask().getSubjects();
+  public String getRegionName(int id) {
+    try {
+      Region r = pageData.getAppContext().getRegionsManager().getRegionById(id);
+      return r.getName();
+    } catch (Exception e) {
+      logger.error(e,e);
+      return null;
+    }
   }
 
   public String getName() {
@@ -105,7 +104,6 @@ public class DeliveriesNew extends InfoSmeBean {
   }
 
   public void setTransactionMode(boolean val) {
-    System.out.println("Set TX = " + val);
     this.pageData.transactionMode = val;
   }
 
@@ -114,16 +112,7 @@ public class DeliveriesNew extends InfoSmeBean {
   }
 
   public void setRetryOnFail(boolean retryOnFail) {
-    System.out.println("Set Retry = " + retryOnFail);
     this.pageData.retryOnFail = retryOnFail;
-  }
-
-  public String getRetryTime() {
-    return pageData.retryTime;
-  }
-
-  public void setRetryTime(String retryTime) {
-    this.pageData.retryTime = retryTime;
   }
 
   public String getEndDate() {
@@ -177,9 +166,7 @@ public class DeliveriesNew extends InfoSmeBean {
 
   public void setActiveWeekDays(String[] activeWeekDays) {
     this.pageData.activeWeekDays = new String[activeWeekDays.length];
-    for (int i=0; i<activeWeekDays.length; i++)
-      this.pageData.activeWeekDays[i] = new String(activeWeekDays[i]);
-
+    System.arraycopy(activeWeekDays, 0, this.pageData.activeWeekDays, 0, activeWeekDays.length);
   }
 
   public boolean isWeekDayActive(String weekday) {
@@ -250,23 +237,7 @@ public class DeliveriesNew extends InfoSmeBean {
 
   public void setMbCancel(String mbCancel) {
     this.mbCancel = mbCancel;
-  }
-
-  public String getMbDlstat() {
-    return mbDlstat;
-  }
-
-  public void setMbDlstat(String mbDlstat) {
-    this.mbDlstat = mbDlstat;
-  }
-
-  public String getMbStat() {
-    return mbStat;
-  }
-
-  public void setMbStat(String mbStat) {
-    this.mbStat = mbStat;
-  }
+  }  
 
   public String getStatusStr() {
     return pageData.getDeliveriesGenStatus();
@@ -313,28 +284,28 @@ public class DeliveriesNew extends InfoSmeBean {
     this.pageData.sourceAddress = sourceAddress;
   }
 
-  public String getOldActiveTaskSubject() {
-    return pageData.oldActiveTaskSubject;
+  public int getOldActiveTaskRegionId() {
+    return pageData.oldActiveTaskRegionId;
   }
 
-  public void setOldActiveTaskSubject(String oldActiveTaskSubject) {
-    this.pageData.oldActiveTaskSubject = oldActiveTaskSubject;
+  public void setOldActiveTaskRegionId(int oldActiveTaskRegionId) {
+    this.pageData.oldActiveTaskRegionId = oldActiveTaskRegionId;
   }
 
-  public int getMessages(String subject) {
-    if (pageData.deliveriesGenProgr == null || pageData.deliveriesGenProgr.get(subject) == null)
+  public int getMessages(int regionId) {
+    if (pageData.deliveriesGenProgr == null || pageData.deliveriesGenProgr.get(new Integer(regionId)) == null)
       return 0;
-    return ((DeliveriesGenerationProgress)pageData.deliveriesGenProgr.get(subject)).getMsgCount();
+    return ((DeliveriesGenerationThread.Progress)pageData.deliveriesGenProgr.get(new Integer(regionId))).getMsgCount();
   }
 
   public String getRecordsNumber() {
     return pageData.recondsNumber;
   }
 
-  public double getProgress(String subject) {
-    if (pageData.deliveriesGenProgr == null || pageData.deliveriesGenProgr.get(subject) == null)
+  public double getProgress(int regionId) {
+    if (pageData.deliveriesGenProgr == null || pageData.deliveriesGenProgr.get(new Integer(regionId)) == null)
       return 0;
-    return ((DeliveriesGenerationProgress)pageData.deliveriesGenProgr.get(subject)).getProgressPercent();
+    return ((DeliveriesGenerationThread.Progress)pageData.deliveriesGenProgr.get(new Integer(regionId))).getProgressPercent();
   }
 
   public int getGenerationStatus() {
@@ -353,8 +324,8 @@ public class DeliveriesNew extends InfoSmeBean {
     return pageData.inblackList;
   }
 
-  public int getSubjectsFound() {
-    return pageData.subjectsFound;
+  public int getRegionsFound() {
+    return pageData.regionsFound;
   }
 
   public boolean isSplitDeliveriesFile() {

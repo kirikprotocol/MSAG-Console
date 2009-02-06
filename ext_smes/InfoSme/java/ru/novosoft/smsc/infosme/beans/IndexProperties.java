@@ -2,6 +2,8 @@ package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.InfoSme;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskFilter;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -31,6 +33,14 @@ public abstract class IndexProperties extends TasksListBean
   private Set applySet = new HashSet();
   private String[] toStart = new String[0];
   private Set toStartSet = new HashSet();
+
+  protected IndexProperties(TaskFilter tasksFilter) {
+    super(tasksFilter);
+  }
+
+  protected IndexProperties() {
+    super();
+  }
 
   public int process(HttpServletRequest request)
   {
@@ -65,9 +75,9 @@ public abstract class IndexProperties extends TasksListBean
     toStartSet.addAll(Arrays.asList(toStart));
 
     if (mbApply != null)
-      return apply();
+      return apply(request);
     if (mbReset != null)
-      return reset();
+      return reset(request);
     if (mbStart != null)
       return start();
     if (mbStop != null)
@@ -84,9 +94,9 @@ public abstract class IndexProperties extends TasksListBean
     return result;
   }
 
-  protected abstract int apply();
+  protected abstract int apply(HttpServletRequest req);
 
-  protected abstract int reset();
+  protected abstract int reset(HttpServletRequest req);
 
   protected abstract int start();
 
@@ -122,21 +132,26 @@ public abstract class IndexProperties extends TasksListBean
 
   public boolean isChangedAll()
   {
-    return getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedProviders();
+    return getInfoSmeConfig().isOptionsModified() || getInfoSmeConfig().isDriversChanged() || getInfoSmeConfig().isProvidersChanged();
+//    return getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedProviders();
   }
 
   public boolean isChangedRetryPolicies() {
-    return getInfoSmeContext().isChangedRetryPolicies();
+//    return getInfoSmeContext().isChangedRetryPolicies();
+    return getInfoSmeConfig().isRetryPoliciesChanged();
   }
 
-  public boolean isChangedTasks()
+  public boolean isChangedTasks(HttpServletRequest req)
   {
-    return getInfoSmeContext().isChangedTasks();
+//    return getInfoSmeContext().isChangedTasks();
+    String user = isUserAdmin(req) ? null : req.getRemoteUser();
+    return getInfoSmeConfig().isTasksChanged(user);
   }
 
   public boolean isChangedShedules()
   {
-    return getInfoSmeContext().isChangedSchedules();
+//    return getInfoSmeContext().isChangedSchedules();
+    return getInfoSmeConfig().isSchedulesChanged();
   }
 
 

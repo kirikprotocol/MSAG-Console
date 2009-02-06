@@ -213,7 +213,7 @@ public abstract class Session extends Thread {
       String input = readTelnetLine(true);
       if (input == null || input.length() == 0) continue;
       logConsole.info(user.getName() + "@" + socket.getInetAddress().getHostAddress() + " in: " + input);
-      CommandContext ctx = new CommandContext(owner);
+      CommandContext ctx = new CommandContext(owner, this);
 
       if (input.equalsIgnoreCase(COMMAND_QUIT)) {
         farewell(null);

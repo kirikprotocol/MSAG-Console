@@ -55,7 +55,7 @@ public class RetryPolicyListBean extends InfoSmeBean {
       delete();
 
     try {
-      policies = ds.query(getConfig(), new RetryPolicyQuery(1000, sort, 0));
+      policies = ds.query(getInfoSmeConfig(), new RetryPolicyQuery(1000, sort, 0));
     } catch (AdminException e) {
       e.printStackTrace();
       return error(e.getMessage());
@@ -66,8 +66,9 @@ public class RetryPolicyListBean extends InfoSmeBean {
 
   private int delete() {
     try {
-      for (int i = 0; i < getChecked().length; i++)
-        ds.remove(getInfoSmeContext(), getChecked()[i]);
+      for (int i = 0; i < getChecked().length; i++) 
+        getInfoSmeConfig().removeRetryPolicy(getChecked()[i]);
+
     } catch (Throwable e) {
       logger.error(e,e);
       return error(e.getMessage());

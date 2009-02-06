@@ -47,7 +47,7 @@ public class Distribution extends SmsQuizBean {
 
   private String quizId;
 
-  private MessagesTableHelper tableHelper = new MessagesTableHelper("message_table_helper", false);
+  private MessagesTableHelper tableHelper;
 
   protected int init(List errors) {
     int result = super.init(errors);
@@ -56,7 +56,7 @@ public class Distribution extends SmsQuizBean {
     try {
       String quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
       String msgStoreDir = getConfig().getString("distribution.infosme_stats_dir");
-      ds = new MessageDataSource(getSmsQuizContext().getConfig(),msgStoreDir);
+      ds = new MessageDataSource(msgStoreDir);
       int maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
       if (pageSize == 0) {
         pageSize = getSmsQuizContext().getMessagesPageSize();
@@ -103,6 +103,7 @@ public class Distribution extends SmsQuizBean {
     int result = super.process(request);
     if (result != RESULT_OK) return result;
     try{
+      tableHelper = new MessagesTableHelper("message_table_helper", false, getUser(request).getPrefs().getTimezone());
       tableHelper.processRequest(request);
       if (mbExportAll != null)
         result = processExportAll();

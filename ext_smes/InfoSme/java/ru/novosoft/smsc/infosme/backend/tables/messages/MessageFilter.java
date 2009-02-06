@@ -85,11 +85,11 @@ public class MessageFilter implements Filter
   }
 
   public boolean isItemAllowed(DataItem item) {
-    if (!item.getValue("taskId").equals(taskId))
+    if (!item.getValue(MessageDataSource.TASK_ID).equals(taskId))
       return false;
-    if (address != null && !item.getValue("msisdn").equals(address))
+    if (address != null && !item.getValue(MessageDataSource.MSISDN).equals(address))
       return false;
-    if (status != Message.State.UNDEFINED && !item.getValue("state").equals(status))
+    if (status != Message.State.UNDEFINED && !item.getValue(MessageDataSource.STATE).equals(status))
       return false;
     return true;
   }

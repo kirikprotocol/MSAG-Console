@@ -41,7 +41,7 @@
 
 <div class=content>
 <%--<input type=hidden name=initialized id=initialized value=<%=bean.isInitialized()%>>--%>
-<%Collection allTasks = bean.getAllTasks();
+<%Collection allTasks = bean.getAllTasks(request);
   if (allTasks.size() > 0) {%>
 <table class=properties_list>
 <col width="10%">

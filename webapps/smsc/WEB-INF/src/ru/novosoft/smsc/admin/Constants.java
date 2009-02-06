@@ -11,6 +11,10 @@ import java.io.File;
 import java.io.IOException;
 
 public class Constants {
+    // Note: bitmasks 1,2,4,8,...
+    public static final int INST_MODE_SMSC=1;
+    public static final int INST_MODE_INFO_SME=2;
+
     public static final int ROUTE_ID_MAXLENGTH = 32;
     public static final int CLOSED_GROUP_NAME_MAXLENGTH = 64;
 
@@ -30,6 +34,8 @@ public class Constants {
 
     public static int instType = ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE;
     public static String HSMODE_MIRRORFILES_PATH = null;
+
+    public static int instMode = INST_MODE_SMSC;
 
     private static boolean mirrorSaveErrorAppeared = false;
 

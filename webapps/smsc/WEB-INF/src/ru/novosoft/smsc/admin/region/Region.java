@@ -1,7 +1,11 @@
 package ru.novosoft.smsc.admin.region;
 
+import ru.novosoft.smsc.util.Functions;
+
 import java.util.Set;
 import java.util.HashSet;
+import java.util.TimeZone;
+import java.util.Date;
 
 /**
  * User: artem
@@ -13,6 +17,7 @@ public class Region {
   private int bandWidth;
   private int id = -1;
   private String email;
+  private TimeZone timezone;
   private final Set subjects = new HashSet();
 
   public Region(String name) {
@@ -53,6 +58,33 @@ public class Region {
 
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public TimeZone getTimezone() {
+    return timezone;
+  }
+
+  public void setTimezone(TimeZone timezone) {
+    this.timezone = timezone;
+  }
+
+  /**
+   * Converts local (server) time to region specific timezone
+   * @param time local (server) time
+   * @return region specific time
+   */
+  public Date getRegionTime(Date time) {
+    return time == null ? null : Functions.convertTime(time, TimeZone.getDefault(), timezone);
+  }
+
+
+  /**
+   * Converts region specific time to local (server) time
+   * @param time region specific time
+   * @return local (server) time
+   */
+  public Date getLocalTime(Date time) {
+    return time == null ? null : Functions.convertTime(time, timezone, TimeZone.getDefault());
   }
 
   public int getId() {

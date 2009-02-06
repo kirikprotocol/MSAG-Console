@@ -1,20 +1,21 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.infosme.backend.Task;
+import ru.novosoft.smsc.admin.users.User;
+import ru.novosoft.smsc.infosme.backend.config.provider.Provider;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataItem;
 import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataSource;
 import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyQuery;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.impl.user.UserDataItem;
+import ru.novosoft.smsc.jsp.util.tables.impl.user.UserQuery;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.Transliterator;
-import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Created by igork
@@ -23,6 +24,10 @@ import java.util.List;
  */
 public class TaskEdit extends InfoSmeBean
 {
+
+  private final static SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+  private static final SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
+
   private String mbDone = null;
   private String mbCancel = null;
 
@@ -64,6 +69,7 @@ public class TaskEdit extends InfoSmeBean
   private boolean secret;
   private boolean secretFlash;
   private String secretMessage;
+  private String owner;
 
   protected int init(List errors)
   {
@@ -71,30 +77,16 @@ public class TaskEdit extends InfoSmeBean
     if (result != RESULT_OK)
       return result;
 
-    if (!initialized) {
-
-      try {
-        Task task = getTask();
-        oldTaskName = task.getName();
-        oldTask = task.getId();
-        taskToPage(task);
-      } catch (Exception e) {
-        logger.error(e);
-        return error("infosme.error.config_param", e.getMessage());
-      }
-    }
-    if (oldTask == null) oldTask = "";
-    if (oldTaskName == null) oldTaskName = "";
-
     return result;
   }
 
-  private Task getTask() throws Config.WrongParamTypeException, Config.ParamNotFoundException, AdminException {
+  private Task getTask(User user) throws  AdminException {
     if (!create)
-      return new Task(getConfig(), getId());
+      return getInfoSmeContext().getInfoSmeConfig().getTask(getId());
     else {
-      Task task = getInfoSmeContext().getTaskManager().createTask();
+      Task task = getInfoSmeContext().getInfoSmeConfig().createTask();
       task.setPriority(1);
+      task.setOwner(user.getName());
       task.setMessagesCacheSize(100);
       task.setMessagesCacheSleep(1);
       task.setUncommitedInGeneration(1);
@@ -108,13 +100,32 @@ public class TaskEdit extends InfoSmeBean
     int result = super.process(request);
     if (result != RESULT_OK) return result;
 
-    if (mbDone != null) result = done();
+    User user = getUser(request);
+    if (!initialized) {
+      try {
+        Task task = getTask(getUser(request));
+        oldTaskName = task.getName();
+        oldTask = task.getId();
+        taskToPage(task, user);
+      } catch (Exception e) {
+        logger.error(e);
+        return error("infosme.error.config_param", e.getMessage());
+      }
+    }
+    if (oldTask == null) oldTask = "";
+    if (oldTaskName == null) oldTaskName = "";
+
+    if (mbDone != null) try {
+      result = done(user);
+    } catch (AdminException e) {
+      return error(e.getMessage(),e);
+    }
     else if (mbCancel != null) result = RESULT_DONE;
 
     return result;
   }
 
-  private void taskToPage(Task task) {
+  private void taskToPage(Task task, User user) {
     taskId = task.getId();
     name = task.getName();
     address = task.getAddress();
@@ -125,12 +136,19 @@ public class TaskEdit extends InfoSmeBean
     retryOnFail = task.isRetryOnFail();
     replaceMessage = task.isReplaceMessage();
     svcType = task.getSvcType();
-    endDate = task.getEndDate();
-    startDate = task.getStartDate();
-    validityPeriod = task.getValidityPeriod();
-    validityDate = task.getValidityDate();
-    activePeriodStart = task.getActivePeriodStart();
-    activePeriodEnd = task.getActivePeriodEnd();
+    endDate = task.getEndDate() == null ? "" : df.format(user.getUserTime(task.getEndDate()));
+    startDate = task.getStartDate() == null ? "" : df.format(user.getUserTime(task.getStartDate()));
+    validityPeriod = task.getValidityPeriod() == null ? "" : tf.format(task.getValidityPeriod());
+//    pageData.validityPeriod = task.getValidityPeriod() == null ? "" : tf.format(user.getUserTime(task.getValidityPeriod()));
+    validityDate = task.getValidityDate() == null ? "" : df.format(user.getUserTime(task.getValidityDate()));
+    activePeriodStart = task.getActivePeriodStart() == null ? "" : tf.format(user.getUserTime(task.getActivePeriodStart()));
+    activePeriodEnd = task.getActivePeriodEnd() == null ? "" : tf.format(user.getUserTime(task.getActivePeriodEnd()));
+//    endDate = task.getEndDate();
+//    startDate = task.getStartDate();
+//    validityPeriod = task.getValidityPeriod();
+//    validityDate = task.getValidityDate();
+//    activePeriodStart = task.getActivePeriodStart();
+//    activePeriodEnd = task.getActivePeriodEnd();
     activeWeekDays = new String[task.getActiveWeekDays().size()];
     int i=0;
     for (Iterator iter = task.getActiveWeekDays().iterator(); iter.hasNext();) {
@@ -152,70 +170,96 @@ public class TaskEdit extends InfoSmeBean
     secret = task.isSecret();
     secretFlash = task.isSecretFlash();
     secretMessage = task.getSecretMessage();
+    owner = task.getOwner();
   }
 
-  private void pageToTask(Task task) {
+  private void pageToTask(Task task, User user) throws AdminException {
     task.setName(name);
     task.setAddress(address);
-    task.setProvider(provider);
     task.setEnabled(enabled);
-    task.setDelivery(delivery);
-    task.setPriority(priority);
-    task.setRetryOnFail(retryOnFail);
-    task.setReplaceMessage(replaceMessage);
-    task.setSvcType(svcType);
-    task.setEndDate(endDate);
-    task.setStartDate(startDate);
-    task.setValidityPeriod(validityPeriod);
-    task.setValidityDate(validityDate);
-    task.setActivePeriodStart(activePeriodStart);
-    task.setActivePeriodEnd(activePeriodEnd);
-    Collection awd = new ArrayList();
-    for(int i=0; i<activeWeekDays.length; i++) awd.add(activeWeekDays[i]);
-    task.setActiveWeekDays(awd);
-    task.setQuery(query);
-    task.setTemplate(template);
-    task.setDsTimeout(dsTimeout);
-    task.setMessagesCacheSize(messagesCacheSize);
-    task.setMessagesCacheSleep(messagesCacheSleep);
     task.setTransactionMode(transactionMode);
+    task.setPriority(priority);
+    try {
+      task.setEndDate(endDate.trim().length() == 0 ? null : user.getLocalTime(df.parse(endDate)));
+      task.setStartDate(startDate.trim().length() == 0 ? null : user.getLocalTime(df.parse(startDate)));
+      task.setActivePeriodStart(activePeriodStart.trim().length() == 0 ? null : user.getLocalTime(tf.parse(activePeriodStart)));
+      task.setActivePeriodEnd(activePeriodEnd.trim().length() == 0 ? null : user.getLocalTime(tf.parse(activePeriodEnd)));
+    } catch (Throwable e) {
+      e.printStackTrace();
+      throw new AdminException("Invalid field format", e);
+    }
+//    task.setActivePeriodStart(activePeriodStart);
+//    task.setActivePeriodEnd(activePeriodEnd);
+    task.setActiveWeekDays(Arrays.asList(activeWeekDays));
+//    task.setEndDate(endDate);
+//    task.setStartDate(startDate);
 
-    task.setUncommitedInGeneration(uncommitedInGeneration);
-    task.setUncommitedInProcess(uncommitedInProcess);
-    task.setTrackIntegrity(trackIntegrity);
-    task.setKeepHistory(keepHistory);
+    task.setDelivery(delivery);
+    task.setQuery(query);
+    task.setTemplate(template);    
     task.setFlash(flash);
-    task.setRetryPolicy(retryPolicy);
+
+    if (isUserAdmin(user)) {
+      task.setProvider(provider);
+      task.setRetryOnFail(retryOnFail);
+      task.setReplaceMessage(replaceMessage);
+      task.setSvcType(svcType);
+      task.setTrackIntegrity(trackIntegrity);
+      task.setKeepHistory(keepHistory);
+      task.setDsTimeout(dsTimeout);
+      task.setMessagesCacheSize(messagesCacheSize);
+      task.setMessagesCacheSleep(messagesCacheSleep);
+      task.setUncommitedInGeneration(uncommitedInGeneration);
+      task.setUncommitedInProcess(uncommitedInProcess);
+      try {
+        task.setValidityPeriod(validityPeriod.trim().length() == 0? null : tf.parse(validityPeriod));
+        task.setValidityDate(validityDate.trim().length() == 0 ? null : user.getLocalTime(df.parse(validityDate)));
+      } catch (Throwable e) {
+        throw new AdminException("Invalid field format");
+      }
+//      task.setValidityPeriod(validityPeriod);
+//      task.setValidityDate(validityDate);
+      task.setRetryPolicy(retryPolicy);
+      task.setOwner(owner);
+    }
   }
 
-  protected int done()
-  {
+  protected int done(User user) throws AdminException {
     if (getId() == null || getId().length() == 0)
       return error("infosme.error.task_id_undefined");
-    final Task task = new Task(getId());
-    pageToTask(task);
+    final Task task = getTask(user);
+    pageToTask(task, user);
     if (!create) { // Edit task
-        if (!oldTaskName.equals(getName()) && task.isContainsInConfigByName(getConfig()))
+        if (!oldTaskName.equals(getName()) && getInfoSmeContext().getInfoSmeConfig().containsTaskWithName(task.getName()))
           return error("Task with name='"+getName()+"' already exists. Please specify another name");
-        if (!oldTask.equals(getId())) {
-          if (task.isContainsInConfig(getConfig()))
-            return error("Task with id='"+getId()+"' already exists. Please specify another id");
-          Task.removeTaskFromConfig(getConfig(), oldTask);
-        }
     } else { // Create new task
-        if (task.isContainsInConfig(getConfig()))
+        if (getInfoSmeContext().getInfoSmeConfig().containsTaskWithId(task.getId()))
           return error("Task with id='"+getId()+"' already exists. Please specify another id");
-        if (task.isContainsInConfigByName(getConfig()))
+        if (getInfoSmeContext().getInfoSmeConfig().containsTaskWithName(task.getName()))
           return error("Task with name='"+getName()+"' already exists. Please specify another name");
     }
     if (transliterate) task.setTemplate(Transliterator.translit(task.getTemplate()));
-    task.storeToConfig(getConfig());
-    getInfoSmeContext().setChangedTasks(true);
+    getInfoSmeContext().getInfoSmeConfig().addTask(task);
     return RESULT_DONE;
   }
 
+  public Collection getUsers() {
+    QueryResultSet users = appContext.getUserManager().query(new UserQuery(100, preferences.getUserFilter(), preferences.getUsersSortOrder(), 0));
+    ArrayList result = new ArrayList(10);
+    for (int i=0; i<users.size(); i++) {
+      UserDataItem uitem = (UserDataItem)users.get(i);
+      User user = appContext.getUserManager().getUser(uitem.getLogin());
+      if (user.getRoles().contains(INFOSME_ADMIN_ROLE) || user.getRoles().contains(INFOSME_MARKET_ROLE))
+        result.add(user.getLogin());      
+    }
+    return result;
+  }
+
   public Collection getAllProviders() {
-    return new SortedList(getConfig().getSectionChildShortSectionNames("InfoSme.DataProvider"));
+    List names = new ArrayList();
+    for (Iterator iter = getInfoSmeConfig().getProviders().iterator(); iter.hasNext();)
+      names.add(((Provider)iter.next()).getName());
+    return new SortedList(names);
   }
 
   public boolean isInitialized() {
@@ -593,5 +637,13 @@ public class TaskEdit extends InfoSmeBean
 
   public String getSecretMessage() {
     return secretMessage;
+  }
+
+  public String getOwner() {
+    return owner;
+  }
+
+  public void setOwner(String owner) {
+    this.owner = owner;
   }
 }

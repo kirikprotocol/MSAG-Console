@@ -7,6 +7,8 @@ package ru.novosoft.smsc.jsp.smsc.users;
  */
 
 import ru.novosoft.smsc.admin.users.UserManager;
+import ru.novosoft.smsc.admin.users.User;
+import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.util.xml.WebXml;
 
@@ -32,8 +34,10 @@ public abstract class UsersEditBean extends SmscBean {
     protected List serviceRoles = new LinkedList();
     protected String[] prefsNames = null;
     protected String[] prefsValues = null;
+    protected String timezone;
+    protected UserPreferences userPrefs;
 
-    protected int init(List errors) {
+  protected int init(List errors) {
         int result = super.init(errors);
         if (result != RESULT_OK)
             return result;
@@ -48,12 +52,29 @@ public abstract class UsersEditBean extends SmscBean {
         if (result != RESULT_OK)
             return result;
 
+        User user = userManager.getUser(login);
+        if (user != null)
+          userPrefs = user.getPrefs();
+
+
+
         if (mbCancel != null)
             return RESULT_DONE;
         else if (mbSave != null)
             return save(request);
 
         return RESULT_OK;
+    }
+
+    protected Set getInfoSmeRegions(HttpServletRequest request) {
+      Set infosmeRegions = new HashSet(100);
+      for (Iterator iter = request.getParameterMap().entrySet().iterator(); iter.hasNext();) {
+        Map.Entry e = (Map.Entry)iter.next();
+        String key = (String)e.getKey();
+        if (key.startsWith("infosme.region."))
+          infosmeRegions.add(key.substring("infosme.region.".length()));
+      }
+      return infosmeRegions;
     }
 
     protected abstract int save(final HttpServletRequest request);
@@ -180,7 +201,9 @@ public abstract class UsersEditBean extends SmscBean {
     }
 
     public void setPrefsNames(String[] names) {
-        this.prefsNames = names;
+      for (int i = 0; i<names.length; i++)
+        System.out.println("Pref = " + names[i]);
+      this.prefsNames = names;
     }
 
     public String[] getPrefsValues() {
@@ -188,6 +211,8 @@ public abstract class UsersEditBean extends SmscBean {
     }
 
     public void setPrefsValues(String[] values) {
+      for (int i = 0; i<values.length; i++)
+        System.out.println("Pref Value = " + values[i]);
         this.prefsValues = values;
     }
 
@@ -200,5 +225,27 @@ public abstract class UsersEditBean extends SmscBean {
             }
         }
         return result;
+    }
+
+    public Collection getRegions() {
+      return appContext.getRegionsManager().getRegions();
+    }
+
+    public boolean isInfoSmeRegionAllowed(String regionId) {
+      return userPrefs != null && userPrefs.isInfoSmeRegionAllowed(regionId);
+    }
+
+    public String getTimezone() {
+      return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+      this.timezone = timezone;
+    }
+
+    public Collection getTimezones() {
+      List c = Arrays.asList(TimeZone.getAvailableIDs());
+      Collections.sort(c);
+      return c;
     }
 }

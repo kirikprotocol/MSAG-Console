@@ -2,6 +2,7 @@ package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.InfoSme;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.util.SortedList;
 
@@ -25,7 +26,10 @@ public class TaskStatuses extends InfoSmeBean
     if (result != RESULT_OK)
       return result;
 
-    taskIds = new SortedList(getConfig().getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX));
+    taskIds = new ArrayList();
+    for (Iterator iter = getInfoSmeConfig().getTasks(null).iterator(); iter.hasNext();)
+      taskIds.add(((Task)iter.next()).getId());
+    
     try {
       final InfoSme infoSme = getInfoSmeContext().getInfoSme();
       generatingTasks = infoSme.getInfo().isOnline() ? new HashSet(infoSme.getGeneratingTasks()) : new HashSet();

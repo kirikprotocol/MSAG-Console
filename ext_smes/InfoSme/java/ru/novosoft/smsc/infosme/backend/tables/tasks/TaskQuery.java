@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.infosme.backend.tables.tasks;
 
 import ru.novosoft.smsc.jsp.util.tables.EmptyFilter;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
 
 /**
@@ -13,5 +14,10 @@ public class TaskQuery extends AbstractQueryImpl
   public TaskQuery(int expectedResultsQuantity, String sortOrder, int startPosition)
   {
     super(expectedResultsQuantity, new EmptyFilter(), sortOrder, startPosition);
+  }
+
+  public TaskQuery(Filter filter, int expectedResultsQuantity, String sortOrder, int startPosition)
+  {
+    super(expectedResultsQuantity, filter, sortOrder, startPosition);
   }
 }

@@ -43,8 +43,9 @@ public class CommandContext {
     protected String message = "No message";
     protected ArrayList results = new ArrayList();
     protected Console owner = null;
+    protected Session session;
 
-    public CommandContext(Console owner) {
+    public CommandContext(Console owner, Session session) {
         this.smsc = owner.getSmsc();
         this.smeManager = owner.getSmeManager();
         this.routeSubjectManager = owner.getRouteSubjectManager();
@@ -55,6 +56,7 @@ public class CommandContext {
         this.journal = owner.getJournal();
         this.statuses = owner.getStatuses();
         this.owner = owner;
+        this.session = session;
     }
 
     public Smsc getSmsc() {
@@ -131,5 +133,9 @@ public class CommandContext {
 
     public Console getOwner() {
         return owner;
+    }
+
+    public Session getSession() {
+        return session;
     }
 }

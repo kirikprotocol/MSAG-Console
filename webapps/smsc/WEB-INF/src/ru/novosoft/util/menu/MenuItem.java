@@ -23,6 +23,7 @@ public class MenuItem implements Serializable {
     private String onclick;
 
 	private byte visibleMask = VISIBLE_IN_ALL;
+  private int modeMask;
 	// 1 - visible in all installation types
 	// 2 - visible in single
 	// 3 - visible in ha
@@ -30,29 +31,33 @@ public class MenuItem implements Serializable {
 	private Collection subMenu;
     int subMenuWidth;
 
-    public MenuItem(String key, String uri, byte mask) {
+    public MenuItem(String key, String uri, byte mask, int modeMask) {
         this.key = key;
         this.uri = uri;
-		this.visibleMask = mask;
+		    this.visibleMask = mask;
+        this.modeMask = modeMask;
 	}
 
-    public MenuItem(String key, String uri, String target) {
+    public MenuItem(String key, String uri, String target, int modeMask) {
         this.key = key;
         this.uri = uri;
         this.target = target;
+        this.modeMask = modeMask;
     }
 
-    public MenuItem(String key, String uri, Collection subMenu) {
+    public MenuItem(String key, String uri, Collection subMenu, int modeMask) {
         this.key = key;
         this.uri = uri;
         this.subMenu = subMenu;
+        this.modeMask = modeMask;
     }
 
-    public MenuItem(int id, int parentId, String caption, String uri) {
+    public MenuItem(int id, int parentId, String caption, String uri, int modeMask) {
         this.id = id;
         this.parentId = parentId;
         this.caption = caption;
         this.uri = uri;
+        this.modeMask = modeMask;
     }
 
     public MenuItem() {
@@ -154,4 +159,8 @@ public class MenuItem implements Serializable {
 	public byte getVisibleMask() {
 		return visibleMask;
 	}
+
+  public int getModeMask() {
+    return modeMask;
+  }
 }

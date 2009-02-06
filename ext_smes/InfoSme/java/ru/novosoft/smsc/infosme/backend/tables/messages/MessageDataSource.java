@@ -30,7 +30,6 @@ public class MessageDataSource extends AbstractDataSource {
   private static String FILE_DATE_FORMAT = "HH";
 
   protected final String storeDir;
-  protected final Config config;
 
   public static final String STATE = "state";
   public static final String DATE = "date";
@@ -40,10 +39,9 @@ public class MessageDataSource extends AbstractDataSource {
   public static final String ID = "id";
   public static final String TASK_ID = "taskId";
 
-  public MessageDataSource(Config config, String storeDir) {
+  public MessageDataSource(String storeDir) {
     super(new String[]{STATE, DATE, MSISDN, REGION, MESSAGE});
     this.storeDir = storeDir;
-    this.config = config;
   }
 
   public QueryResultSet query(Query query_to_run) {

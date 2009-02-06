@@ -1,15 +1,13 @@
 package ru.novosoft.smsc.infosme.beans.deliveries;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.infosme.backend.Task;
-import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.util.smsxsender.SmsXSender;
 import ru.novosoft.smsc.util.smsxsender.SmsXSenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Iterator;
 import java.io.File;
+import java.util.Iterator;
 
 /**
  * User: artem
@@ -23,15 +21,12 @@ public class FinishPage extends DeliveriesPage {
   }
 
   private void removeTask() throws Exception {
-    pageData.getInfoSmeContext().resetConfig();
     for (Iterator iter = pageData.getTask().tasks().iterator(); iter.hasNext();) {
       Task t = (Task)iter.next();
       if (t != null) {
         if (log.isDebugEnabled())
           log.debug("Remove " + t.getName() + " from config: " + t.getId());
-
-        t.removeFromConfig(pageData.getInfoSmeContext().getConfig());
-        pageData.getInfoSmeContext().getConfig().save();
+        pageData.getInfoSmeContext().getInfoSmeConfig().removeAndApplyTask(t.getId());
         try {
           pageData.getInfoSmeContext().getInfoSme().removeTask(t.getId());
         } catch (Throwable e) {
@@ -61,15 +56,15 @@ public class FinishPage extends DeliveriesPage {
 
       for (Iterator iter = pageData.getTask().tasks().iterator(); iter.hasNext();) {
         Task t = (Task)iter.next();
+        t.setMessagesHaveLoaded(true);
+        pageData.getInfoSmeContext().getInfoSmeConfig().addAndApplyTask(t);
         pageData.getInfoSmeContext().getInfoSme().endDeliveryMessageGeneration(t.getId());
-        pageData.getInfoSmeContext().getConfig().setBool(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(t.getId()) + ".messagesHaveLoaded", true);
       }
-      pageData.getInfoSmeContext().getConfig().save();
 
       if (pageData.getDeliveriesFile() != null && pageData.getDeliveriesFile().isFile() && pageData.getDeliveriesFile().exists())
         pageData.getDeliveriesFile().delete();
 
-      return new StartPage(pageData);
+      return new LoadFilePage(pageData);
     } catch (Exception e) {
       log.error(e,e);
       throw new AdminException(e.getMessage());
@@ -82,7 +77,7 @@ public class FinishPage extends DeliveriesPage {
     } catch (Exception e) {
       log.error(e,e);
     }
-    return new StartPage(pageData);
+    return new LoadFilePage(pageData);
   }
 
   public DeliveriesPage mbUpdate(HttpServletRequest request) throws AdminException {

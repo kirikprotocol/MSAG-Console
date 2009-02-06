@@ -1,21 +1,17 @@
 package ru.novosoft.smsc.infosme.backend;
 
-import org.apache.log4j.Category;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
 import ru.novosoft.smsc.jsp.SMEAppContext;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
-import ru.sibinco.util.conpool.ConnectionPool;
 
-import javax.sql.DataSource;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
-import java.sql.SQLException;
-
-import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by igork
@@ -24,8 +20,7 @@ import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
  */
 public class InfoSmeContext implements SMEAppContext
 {
-  private final static Map instances = new HashMap();
-  private Category logger = Category.getInstance(this.getClass());
+  private final static Map instances = new HashMap(10);
 
   public static synchronized InfoSmeContext getInstance(SMSCAppContext appContext, String smeId)
       throws AdminException, ParserConfigurationException, IOException, SAXException, Config.WrongParamTypeException, Config.ParamNotFoundException
@@ -39,8 +34,7 @@ public class InfoSmeContext implements SMEAppContext
   }
 
   private final SMSCAppContext appContext;
-  private final TaskManager taskManager;
-  private Config config = null;
+  private final InfoSmeConfig infoSmeConfig;
   private InfoSme infoSme = null;
   private String providersSort = "provider";
   private int providersPageSize = 20;
@@ -52,15 +46,8 @@ public class InfoSmeContext implements SMEAppContext
   private int messagesPageSize = 20;
   private int maxMessagesTotalSize = 1000;
 
-  private boolean changedOptions = false;
-  private boolean changedDrivers = false;
-  private boolean changedProviders = false;
-  private boolean changedTasks = false;
-  private boolean changedSchedules = false;
-  private boolean changedRetryPolicies = false;
   private BlackListManager blackListManager;
   private String smeId = "InfoSme";
-  //private Long appContextId = null;
 
   private InfoSmeContext(SMSCAppContext appContext, String smeId)
       throws AdminException, ParserConfigurationException, SAXException, IOException,
@@ -68,13 +55,12 @@ public class InfoSmeContext implements SMEAppContext
   {
     this.smeId = smeId;
     this.appContext = appContext;
-    //this.appContextId = appContext.registerSMEContext(this);
     appContext.registerSMEContext(this);
-    resetConfig();
+    this.infoSmeConfig = new InfoSmeConfig(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder().getAbsolutePath(), this);
     this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(this.smeId),
-        config.getString("InfoSme.Admin.host"),
-        config.getInt("InfoSme.Admin.port"));
-    this.taskManager = new TaskManager(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder().getAbsolutePath());
+        infoSmeConfig.getAdminHost(),
+        infoSmeConfig.getAdminPort());
+
     this.blackListManager = new BlackListManager(appContext.getPersonalizationClientPool());
   }
 
@@ -90,11 +76,6 @@ public class InfoSmeContext implements SMEAppContext
   {
     return new Config(new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(),
         "conf" + File.separatorChar + "config.xml"));
-  }
-
-  public Config getConfig()
-  {
-    return config;
   }
 
   public String getProvidersSort()
@@ -137,12 +118,6 @@ public class InfoSmeContext implements SMEAppContext
     this.tasksPageSize = tasksPageSize;
   }
 
-  public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException
-  {
-    Config newConfig = loadCurrentConfig();
-    config = newConfig;
-  }
-
 
   public String getSchedulesSort()
   {
@@ -169,55 +144,7 @@ public class InfoSmeContext implements SMEAppContext
     return infoSme;
   }
 
-  public boolean isChangedOptions()
-  {
-    return changedOptions;
-  }
 
-  public void setChangedOptions(boolean changedOptions)
-  {
-    this.changedOptions = changedOptions;
-  }
-
-  public boolean isChangedDrivers()
-  {
-    return changedDrivers;
-  }
-
-  public void setChangedDrivers(boolean changedDrivers)
-  {
-    this.changedDrivers = changedDrivers;
-  }
-
-  public boolean isChangedProviders()
-  {
-    return changedProviders;
-  }
-
-  public void setChangedProviders(boolean changedProviders)
-  {
-    this.changedProviders = changedProviders;
-  }
-
-  public boolean isChangedTasks()
-  {
-    return changedTasks;
-  }
-
-  public void setChangedTasks(boolean changedTasks)
-  {
-    this.changedTasks = changedTasks;
-  }
-
-  public boolean isChangedSchedules()
-  {
-    return changedSchedules;
-  }
-
-  public void setChangedSchedules(boolean changedSchedules)
-  {
-    this.changedSchedules = changedSchedules;
-  }
 
   public String getMessagesSort()
   {
@@ -243,19 +170,12 @@ public class InfoSmeContext implements SMEAppContext
     return maxMessagesTotalSize;
   }
 
-  public TaskManager getTaskManager() {
-    return taskManager;
+  public InfoSmeConfig getInfoSmeConfig() {
+    return infoSmeConfig;
   }
 
   public BlackListManager getBlackListManager() {
     return blackListManager;
   }
 
-  public boolean isChangedRetryPolicies() {
-    return changedRetryPolicies;
-  }
-
-  public void setChangedRetryPolicies(boolean changedRetryPolicies) {
-    this.changedRetryPolicies = changedRetryPolicies;
-  }
 }
