@@ -10,6 +10,7 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.cell.CheckBoxCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.ImageCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
+import ru.novosoft.smsc.jsp.util.helper.statictable.column.ImageColumn;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,7 +29,7 @@ public class TasksTableHelper extends PagedStaticTableHelper {
   public static final int MODE_ADMIN_ACTIVE = 1;
   public static final int MODE_MARKET = 2;
 
-  private final TextColumn checkColumn = new TextColumn("checkColumn", "", false, 1);
+  private final ImageColumn checkColumn = new ImageColumn("checkColumn", "/images/ico16_checked_sa.gif", "", false, 1);
   private final TextColumn enabledColumn = new TextColumn("enabled", "On", true, 1);
   private final TextColumn nameColumn = new TextColumn("name", "Task", true, 20);
   private final TextColumn providerColumn = new TextColumn("provider", "Provider", true);

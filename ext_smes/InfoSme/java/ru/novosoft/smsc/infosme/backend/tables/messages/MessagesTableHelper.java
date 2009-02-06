@@ -8,6 +8,7 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.CheckBoxCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
+import ru.novosoft.smsc.jsp.util.helper.statictable.column.ImageColumn;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.DataSource;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
@@ -26,7 +27,7 @@ import java.util.*;
  */
 public class MessagesTableHelper extends PagedStaticTableHelper  {
 
-  private final TextColumn checkColumn = new TextColumn("checkColumn", "", false);
+  private final ImageColumn checkColumn = new ImageColumn("checkColumn", "/images/ico16_checked_sa.gif", "", false, 1);
   private final TextColumn msisdnColumn = new TextColumn(MessageDataSource.MSISDN, "infosme.label.abonent", true, 20);
   private final TextColumn stateColumn = new TextColumn(MessageDataSource.STATE, "infosme.label.msg_status", true, 20);
   private final TextColumn dateColumn = new TextColumn(MessageDataSource.DATE, "infosme.label.date", true, 20);
