@@ -1,9 +1,18 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.Subject;
+import ru.novosoft.smsc.admin.route.SubjectList;
+import ru.novosoft.smsc.admin.route.MaskList;
+import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.region.Region;
+import ru.novosoft.smsc.admin.users.User;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Iterator;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * User: artem
@@ -28,16 +37,16 @@ public class BlackList extends InfoSmeBean {
     try {
 
       if (msisdn != null) {
+        if (!isUserAdmin(request) && !isMsisdnAllowed(msisdn, getUser(request)))
+          return error("infosme.error.blacklist.abonent_region_not_allowed", msisdn);
         found = getInfoSmeContext().getBlackListManager().contains(msisdn);
         if (mbLookup != null) {
           initiated = true;
         } else if (mbAdd != null && initiated && !found) {
-          System.out.println("ADD MSISDN");
           getInfoSmeContext().getBlackListManager().add(msisdn);
           found = true;
           mbAdd = null;
         } else if (mbDelete != null && initiated && found) {
-          System.out.println("DELETE MSISDN");
           getInfoSmeContext().getBlackListManager().remove(msisdn);
           found = false;
           mbDelete = null;
@@ -51,6 +60,26 @@ public class BlackList extends InfoSmeBean {
     } catch (AdminException e) {
       return error("Error: ", e);
     }
+  }
+
+  private boolean isMsisdnAllowed(String msisdn, User user) throws AdminException {
+    Collection regions = appContext.getRegionsManager().getRegions();
+    SubjectList subjectsList =  appContext.getRouteSubjectManager().getSubjects();
+    for (Iterator iter = regions.iterator(); iter.hasNext();) {
+      Region r = (Region)iter.next();
+      Collection subjects = r.getSubjects();
+      for (Iterator subiter = subjects.iterator(); subiter.hasNext();) {
+        Subject s = subjectsList.get((String)subiter.next());
+        MaskList masks = s.getMasks();
+
+        for (Iterator maskiter = masks.getNames().iterator(); maskiter.hasNext();) {
+          Mask m = masks.get((String)maskiter.next());
+          if (m.addressConfirm(msisdn))
+            return user.getPrefs().isInfoSmeRegionAllowed(String.valueOf(r.getId()));
+        }
+      }
+    }
+    return false;
   }
 
   public String getMsisdn() {
