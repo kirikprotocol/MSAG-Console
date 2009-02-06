@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+
+<config>
+  <section name="smppdmplx">
+
+    <section name="InConnect">
+      <param name="incomingPort" type="int">5790</param>
+    </section>
+
+    <section name="OutConnect">
+      <param name="smscHost" type="string">phoenix</param>
+      <param name="smscPort" type="int">9001</param>
+    </section>
+
+    <section name="LinkControl">
+      <param name="inactivityPeriod" type="int">60</param>
+      <param name="selectTimeOut" type="int">10</param>
+    </section>
+    <section name="Authentication">
+      <section name="user_1">
+        <param name="systemId" type="string">1</param>
+        <param name="password" type="string">1</param>
+      </section>
+      <section name="user_2">
+        <param name="systemId" type="string">2</param>
+        <param name="password" type="string">2</param>
+      </section>
+      <section name="user_3">
+        <param name="systemId" type="string">3</param>
+        <param name="password" type="string">3</param>
+      </section>
+      <section name="user_4">
+        <param name="systemId" type="string">4</param>
+        <param name="password" type="string">4</param>
+      </section>
+    </section>
+  </section>
+</config>
