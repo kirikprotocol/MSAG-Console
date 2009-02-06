@@ -103,7 +103,7 @@ public class Distribution extends SmsQuizBean {
     int result = super.process(request);
     if (result != RESULT_OK) return result;
     try{
-      tableHelper = new MessagesTableHelper("message_table_helper", false, getUser(request).getPrefs().getTimezone());
+      tableHelper = new MessagesTableHelper("message_table_helper", false, getUser(request));
       tableHelper.processRequest(request);
       if (mbExportAll != null)
         result = processExportAll();
