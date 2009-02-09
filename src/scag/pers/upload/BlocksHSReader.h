@@ -150,7 +150,6 @@ public:
               }
               ++profiles_count;
               smsc_log_debug(logger, "profile key=%s", hdr.key.toString().c_str());
-              //smsc_log_debug(logger, "header data size=%d", hdr.data_size);
 
               SerialBuffer data;
               data.setBuffLength(hdr.data_size);
@@ -162,7 +161,8 @@ public:
               dataFile.Read((void*)data_buff, hdr.data_size);
               //status_profiles += restoreProfile(hdr.key, data, sendToPers);
               
-              int restoreResult = restoreProfileCompletely(hdr.key, data, sendToPers);
+              //int restoreResult = restoreProfileCompletely(hdr.key, data, sendToPers);
+              int restoreResult = restoreProfileMinsk(hdr.key, data, sendToPers);
               if (sendToPers && restoreResult == -1) {
                 int resendCount = 0;
                 while (restoreResult == -1 && resendCount < MAX_RESEND_COUNT) {
@@ -180,7 +180,6 @@ public:
                 }              
               }
               status_profiles += restoreResult;
-              //status_profiles += restoreProfileMinsk(hdr.key, data, sendToPers);
             }
             total_count += profiles_count;
             total_status_profiles += status_profiles;
@@ -228,10 +227,6 @@ private:
         smsc_log_debug(logger, "send %d properties to pers for profile key=%s", prop_count, pf.getKey().c_str());
       }
       if (sendToPers) {
-              smsc_log_debug(logger, "sleep 8 msec");
-              MutexGuard mg(monitor);
-              monitor.wait(8);
-              smsc_log_debug(logger, "continue");
         for (int i = 0; i < prop_count; ++i) {
           pc.SetPropertyResult(batch);
         }
@@ -283,6 +278,7 @@ private:
        smsc_log_warn(logger, "Error reading profile key=%s. SerialBufferOutOfBounds Bad data in buffer read", key.toString().c_str());
      } catch (const PersClientException& ex) {
        smsc_log_warn(logger, "Error uploading profile key=%s. PersClientException: %s", key.toString().c_str(), ex.what());
+       return -1;
      }
      return 0;
   }

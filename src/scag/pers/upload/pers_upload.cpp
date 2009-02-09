@@ -129,6 +129,13 @@ int main(int argc, char* argv[])
           smsc_log_warn(logger, "Parameter <PersUpload.port> missed. Defaul value is %d", port);
         }
 
+        int speed = 100;
+        try { 
+          speed = persConfig.getInt("speed");
+        } catch (...) {
+          smsc_log_warn(logger, "Parameter <PersUpload.speed> missed. Defaul value is %d", speed);
+        }
+
 
         smsc_log_debug(logger, "Client connect to %s:%d", host.c_str(), port);  
         //int timeOut = 1000;
@@ -145,7 +152,7 @@ int main(int argc, char* argv[])
         }
 
         if (sendToPers) {
-          PersClient::Init(host.c_str(), port, timeOut, pingTimeOut, reconnectTimeout, maxWaitRequestsCount);
+          PersClient::Init(host.c_str(), port, timeOut, pingTimeOut, reconnectTimeout, maxWaitRequestsCount, speed);
           PersClient& pc = PersClient::Instance();
           BlocksHSReader<AbntAddr> reader(pc, storageName, storagePath, dataBlockSize, blocksInFile);
           smsc_log_debug(logger, "will be read %d files", filesCount);

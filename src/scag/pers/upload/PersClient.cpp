@@ -7,6 +7,10 @@
 #include "scag/util/singleton/Singleton.h"
 #include "scag/pvss/base/PersServerResponse.h"
 
+#include "util/timeslotcounter.hpp"
+#include "util/sleep.h"
+#include "util/debug.h"
+
 #include "PersClient.h"
 
 namespace scag { namespace pers { namespace util {
@@ -58,7 +62,7 @@ public:
 
     bool call(LongCallContextBase* context);
 
-    void init_internal(const char *_host, int _port, int timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount);
+    void init_internal(const char *_host, int _port, int timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount, int speed);
     
     virtual int Execute();
     void Stop();
@@ -89,6 +93,7 @@ protected:
     void ExecutePersCall(LongCallContextBase* ctx);
 
     void CheckServerResponse(SerialBuffer& bsb);
+    void delay();
 
 
     std::string host;
@@ -106,6 +111,12 @@ protected:
     EventMonitor connectMonitor;
     SerialBuffer sb;
     LongCallContextBase* headContext, *tailContext;
+
+    int speed_; //req/sec
+    int delay_;
+    int overdelay_;
+    hrtime_t startTime_;
+    hrtime_t procTime_;
 };
 
 inline unsigned GetLongevity(PersClient*) { return 251; }
@@ -122,20 +133,20 @@ PersClient& PersClient::Instance()
     return SinglePC::Instance();
 }
 
-void PersClient::Init(const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount) //throw(PersClientException)
+void PersClient::Init(const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount, int speed) //throw(PersClientException)
 {
     if (!PersClient::inited)
     {
         MutexGuard guard(PersClient::initLock);
         if(!inited) {
             PersClientImpl& pc = SinglePC::Instance();
-            pc.init_internal(_host, _port, _timeout, _pingTimeout, _reconnectTimeout, _maxCallsCount);
+            pc.init_internal(_host, _port, _timeout, _pingTimeout, _reconnectTimeout, _maxCallsCount, speed);
             PersClient::inited = true;
         }
     }
 }
 
-void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount) //throw(PersClientException)
+void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, int _pingTimeout, int _reconnectTimeout, int _maxCallsCount, int speed) //throw(PersClientException)
 {
     log = Logger::getInstance("persclient");
     smsc_log_info(log, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d reconnectTimeout=%d maxWaitingRequestsCount=%d",
@@ -149,6 +160,13 @@ void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, i
     reconnectTimeout = _reconnectTimeout;
     maxCallsCount = _maxCallsCount;
     actTS = time(NULL);
+
+    speed_ = speed;
+    delay_ = 1000 / speed_;
+    overdelay_ = 0;
+    startTime_ = 0;
+    procTime_ = 0;
+
     try{
         init();
     }
@@ -392,10 +410,30 @@ void PersClientImpl::FinishPrepareBatch(uint32_t cnt, SerialBuffer& bsb)
 void PersClientImpl::RunBatch(SerialBuffer& bsb)
 {
     MutexGuard mt(mtx);
+    startTime_ = gethrtime();
     SendPacket(bsb);
     ReadPacket(bsb);
+    delay();
     actTS = time(NULL);
 }
+
+void PersClientImpl::delay() {
+  hrtime_t procTime = gethrtime() - startTime_;
+  //procTime += procTime / 10;
+  procTime /= 1000000;
+  if (delay_ > procTime + overdelay_) {
+    startTime_ = gethrtime();
+    unsigned sleepTime = delay_ - procTime - overdelay_;
+    __trace2__("try to sleep:%d ms", sleepTime);
+    millisleep(sleepTime);
+    overdelay_ = (gethrtime() - startTime_) / 1000000 - sleepTime;
+  } else {
+    __trace2__("overdelay:%d", overdelay_);
+    overdelay_ -= delay_;
+    if (overdelay_ < 0) overdelay_ = 0;
+  }
+}
+
 
 void PersClientImpl::Stop()
 {

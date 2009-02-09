@@ -41,7 +41,7 @@ protected:
 
 public:
     static PersClient& Instance();
-    static void Init(const char *_host, int _port, int timeout, int pingTimeout, int _reconnectTimeout, int _maxCallsCount);// throw(PersClientException);
+    static void Init(const char *_host, int _port, int timeout, int pingTimeout, int _reconnectTimeout, int _maxCallsCount, int speed);// throw(PersClientException);
 
     virtual void SetProperty(ProfileType pt, const PersKey& key, Property& prop) = 0;
     virtual void GetProperty(ProfileType pt, const PersKey& key, const char *property_name, Property& prop) = 0;
