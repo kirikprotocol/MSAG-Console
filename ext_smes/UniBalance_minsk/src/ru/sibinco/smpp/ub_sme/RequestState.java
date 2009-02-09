@@ -6,7 +6,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.lorissoft.advertising.client.RequestContext;
+import com.lorissoft.advertising.protocol.BannerResp;
 
 public class RequestState {
 
@@ -19,7 +19,7 @@ public class RequestState {
   private String banner;
   private long bannerRequestTime;
   private long bannerResponseTime;
-  private RequestContext bannerRequestContext;
+  private BannerResp bannerResponce;
 
   private long startCloseRequestTime;
   private long sendingResponseTime;
@@ -65,12 +65,12 @@ public class RequestState {
     this.bannerResponseTime = bannerResponseTime;
   }
 
-  public RequestContext getBannerRequestContext() {
-    return bannerRequestContext;
+  public BannerResp getBannerResponce() {
+    return bannerResponce;
   }
 
-  public void setBannerRequestContext(RequestContext bannerRequestContext) {
-    this.bannerRequestContext = bannerRequestContext;
+  public void setBannerResponse(BannerResp res) {
+    this.bannerResponce = res;
   }
 
   public long getBannerRequestTime() {

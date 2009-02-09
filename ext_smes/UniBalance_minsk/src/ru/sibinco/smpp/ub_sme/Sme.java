@@ -53,14 +53,6 @@ public class Sme {
       throw new InitializationException("Exception occured during loading global configuration.", e);
     }
 
-    // init DB connection manager
-    try {
-      DBConnectionManager.getInstance();
-    } catch (InitializationException e) {
-      Logger.error("Could not get DB connection manager.", e);
-      throw new InitializationException("Could not get DB connection manager.", e);
-    }
-
     boolean outqueueEnabled = Utils.getBooleanProperty(config, "outqueue.enabled", true);
 
     OutgoingQueue outQueue = null;

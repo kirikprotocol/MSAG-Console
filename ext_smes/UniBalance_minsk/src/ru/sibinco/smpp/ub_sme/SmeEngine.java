@@ -2,15 +2,19 @@ package ru.sibinco.smpp.ub_sme;
 
 import com.logica.smpp.Data;
 import com.lorissoft.advertising.client.AdvClientConst;
+import com.lorissoft.advertising.client.AdvertisingClientException;
 import com.lorissoft.advertising.client.IAdvertisingClient;
 import com.lorissoft.advertising.client.RequestContext;
+import com.lorissoft.advertising.protocol.BannerReq;
 import com.lorissoft.advertising.protocol.BannerResp;
+import com.lorissoft.advertising.protocol.RollBackReq;
+import com.lorissoft.advertising.protocol.ProtocolConsts;
 import com.lorissoft.advertising.syncclient.SyncClientImpl;
 import com.lorissoft.advertising.util.Encode;
 import ru.aurorisoft.smpp.*;
+import ru.sibinco.smpp.ub_sme.snmp.Agent;
 import ru.sibinco.smpp.ub_sme.util.DBConnectionManager;
 import ru.sibinco.smpp.ub_sme.util.Utils;
-import ru.sibinco.smpp.ub_sme.snmp.Agent;
 import ru.sibinco.util.threads.ThreadsPool;
 
 import java.io.File;
@@ -93,9 +97,9 @@ public class SmeEngine implements MessageListener, ResponseListener {
   private Multiplexor multiplexor = null;
   private OutgoingQueue outgoingQueue;
 
-  private DBConnectionManager connectionManager = DBConnectionManager.getInstance();
+  private DBConnectionManager connectionManager;
   private final Map states = new HashMap();
-  private final Map bannerRequests = new HashMap();
+  private final Map bannerResponses = new HashMap();
   private final List statesExpire = new LinkedList();
 
   private Map cbossStatements = new HashMap();
@@ -103,6 +107,8 @@ public class SmeEngine implements MessageListener, ResponseListener {
   private ProductivityControlObject requests;
   private ProductivityControlObject responses;
   private ProductivityControlObject waitForSmsResponses;
+
+  private boolean testMode = false;
 
   public void init(Properties config) throws InitializationException {
     if (logger.isDebugEnabled()) logger.debug("UniBalance SME init started");
@@ -216,8 +222,12 @@ public class SmeEngine implements MessageListener, ResponseListener {
       bannerEngineClientConfig.put("advclient.maxRequestInMemory", maxRequestInMemory);
 
       bannerEngineClient = new SyncClientImpl();
-      bannerEngineClient.init(bannerEngineClientConfig);
-      bannerEngineClient.connect();
+      try {
+        bannerEngineClient.init(bannerEngineClientConfig);
+        bannerEngineClient.connect();
+      } catch (AdvertisingClientException e) {
+        throw new InitializationException("BE error on init: "+e, e);
+      }
     }
 
     boolean productivityControllerEnabled = Boolean.valueOf(config.getProperty("productivity.controller.enabled", "true")).booleanValue();
@@ -302,14 +312,14 @@ public class SmeEngine implements MessageListener, ResponseListener {
         }
         bannerCounter = new AvgCounter(responseTimeControllerPoolingInterval);
 
-        boolean snmpAgentEnabled=Boolean.valueOf(config.getProperty("snmp.agent.enabled", "false")).booleanValue();
-        if(snmpAgentEnabled){
-          snmpAgent=new Agent();
+        boolean snmpAgentEnabled = Boolean.valueOf(config.getProperty("snmp.agent.enabled", "false")).booleanValue();
+        if (snmpAgentEnabled) {
+          snmpAgent = new Agent();
           try {
             snmpAgent.init(config);
           } catch (InitializationException e) {
-            logger.error("Error while init SNMP Agent: "+e, e);
-            snmpAgent=null;
+            logger.error("Error while init SNMP Agent: " + e, e);
+            snmpAgent = null;
           }
         }
       }
@@ -318,8 +328,18 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
     }
 
-
     new RequestStatesController(requestStatesControllerPollingInterval).startService();
+
+    testMode = (new Boolean(config.getProperty("test.mode", Boolean.toString(testMode)))).booleanValue();
+
+    if (!testMode) {
+      try {
+        connectionManager = DBConnectionManager.getInstance();
+      } catch (InitializationException e) {
+        logger.error("Could not get DB connection manager.", e);
+        throw new InitializationException("Could not get DB connection manager.", e);
+      }
+    }
 
     if (logger.isDebugEnabled()) logger.debug("UniBalance SME init fineshed");
   }
@@ -429,8 +449,8 @@ public class SmeEngine implements MessageListener, ResponseListener {
             break;
           case PDU.STATUS_CLASS_NO_ERROR:
             outgoingQueue.removeOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatusClass());
-            synchronized (bannerRequests) {
-              bannerRequests.remove(new Long((((long) pdu.getConnectionId()) << 8) | (long) pdu.getSequenceNumber()));
+            synchronized (bannerResponses) {
+              bannerResponses.remove(new Long((((long) pdu.getConnectionId()) << 8) | (long) pdu.getSequenceNumber()));
             }
             break;
         }
@@ -440,14 +460,14 @@ public class SmeEngine implements MessageListener, ResponseListener {
   }
 
   private void rollbackSentBannerByResponse(PDU response) {
-    RequestContext rc;
-    synchronized (bannerRequests) {
-      rc = (RequestContext) bannerRequests.get(new Long((((long) response.getConnectionId()) << 8) | (long) response.getSequenceNumber()));
+    BannerResp resp;
+    synchronized (bannerResponses) {
+      resp = (BannerResp) bannerResponses.get(new Long((((long) response.getConnectionId()) << 8) | (long) response.getSequenceNumber()));
     }
-    if (rc != null) {
+    if (resp != null) {
       if (logger.isDebugEnabled())
         logger.debug("Rollback banner by resp sn=" + response.getSequenceNumber() + "; status=" + response.getStatus());
-      bannerThreadsPool.execute(new BannerRollbackThread(rc));
+      bannerThreadsPool.execute(new BannerRollbackThread(resp));
     }
   }
 
@@ -591,8 +611,8 @@ public class SmeEngine implements MessageListener, ResponseListener {
       } else {
         if (logger.isDebugEnabled())
           logger.debug("Rollback banner by balance error for abonent " + state.getAbonentRequest().getSourceAddress());
-        bannerThreadsPool.execute(new BannerRollbackThread(state.getBannerRequestContext()));
-        state.setBannerRequestContext(null);
+        bannerThreadsPool.execute(new BannerRollbackThread(state.getBannerResponce()));
+        state.setBannerResponse(null);
       }
     }
     if (((msg.getMessageString().length() > ussdMaxLength) || smsResponseMode) && !state.isUssdSessionClosed()) {
@@ -605,10 +625,10 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
     state.setAbonentResponseTime(System.currentTimeMillis());
     int sn = sendMessage(msg, state.getAbonentRequest().getConnectionName());
-    if (sn != -1 && state.getBannerRequestContext() != null && bannerEngineClientEnabled) {
+    if (sn != -1 && state.getBannerResponce() != null && bannerEngineClientEnabled) {
       long snKey = (((long) msg.getConnectionId()) << 8) | ((long) sn);
-      synchronized (bannerRequests) {
-        bannerRequests.put(new Long(snKey), state.getBannerRequestContext());
+      synchronized (bannerResponses) {
+        bannerResponses.put(new Long(snKey), state.getBannerResponce());
       }
     }
     if (responses != null) {
@@ -660,7 +680,11 @@ public class SmeEngine implements MessageListener, ResponseListener {
     state = new RequestState(message, abonentRequestTime);
     addRequestState(state);
     try {
-      threadsPool.execute(new BalanceProcessor(this, state));
+      if (testMode) {
+        threadsPool.execute(new DummyBalanceProcessor(this, state));
+      } else {
+        threadsPool.execute(new BalanceProcessor(this, state));
+      }
     } catch (RuntimeException e) {
       logger.error("Exception occured during creating balance processor: " + e, e);
       state.setError(true);
@@ -686,13 +710,23 @@ public class SmeEngine implements MessageListener, ResponseListener {
     } else if (!abonent.startsWith(".")) {
       abonent = ".1.1." + abonent;
     }
-    RequestContext rc = RequestContext.buildBannerRequest(abonent, bannerEngineServiceName, bannerEngineBannerLength, bannerEngineCharSet);
-    bannerEngineClient.getBanner(rc);
+
+    // Send bannerRequest
+    BannerReq req = new BannerReq(0, abonent, bannerEngineServiceName, AdvClientConst.SMS_TRANSPORT, bannerEngineBannerLength, bannerEngineCharSet);
+    RequestContext rc = RequestContext.buildContext(req);
+
+    try {
+      bannerEngineClient.sendRequest(rc);
+    } catch (AdvertisingClientException e) {
+      logger.error("Error while sending BE request: "+e, e);
+      return null;
+    }
+
     if (logger.isDebugEnabled())
       logger.debug("BE rc.getState(): " + rc.getState());
     if (logger.isDebugEnabled())
       logger.debug("BE rc.getException(): " + rc.getException());
-    
+
     BannerResp res = (BannerResp) rc.getResponse();
     if (res != null && res.getBannerBody() != null) {
       if (logger.isDebugEnabled())
@@ -701,7 +735,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
                 " tranzact=" + res.getTransactionID() +
                 " banner=" + Encode.decodeUTF16(res.getBannerBody()));
 
-      state.setBannerRequestContext(rc);
+      state.setBannerResponse(res);
 
       switch (bannerEngineCharSet) {
         case(AdvClientConst.UTF16BE):
@@ -727,9 +761,15 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
   }
 
-  private void rollbackBanner(RequestContext rc) {
-    if (rc != null) {
-      bannerEngineClient.rollBackBanner(rc);
+  private void rollbackBanner(BannerResp res) {
+    RollBackReq rbr = new RollBackReq(res,
+        ProtocolConsts.ERROR_CODE_ROLL_BACK);
+    RequestContext rc = RequestContext.buildContext(rbr);
+
+    try {
+      bannerEngineClient.sendRequest(rc);
+    } catch (AdvertisingClientException e) {
+      logger.error("Error while sending BE rollback: "+e, e);
     }
   }
 
@@ -869,18 +909,18 @@ public class SmeEngine implements MessageListener, ResponseListener {
   }
 
   class BannerRollbackThread implements Runnable {
-    private RequestContext rc;
+    private BannerResp resp;
 
-    public BannerRollbackThread(RequestContext rc) {
-      this.rc = rc;
+    public BannerRollbackThread(BannerResp resp) {
+      this.resp = resp;
     }
 
     public void run() {
       try {
-        rollbackBanner(rc);
+        rollbackBanner(resp);
       } catch (Throwable t) {
         if (logger.isInfoEnabled())
-          logger.info("Can not rollback banner " + rc);
+          logger.info("Can not rollback banner " + resp);
         logger.error("Unexpected exception occured during processing request.", t);
       }
     }
@@ -1015,7 +1055,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
           if (logger.isDebugEnabled())
             logger.debug("Generated trap: " + Agent.SNMP_STATUS[status] + " UNIBALANCE BillingSystem Threshold crossed (AlarmID=BillingSystem; severity=" + currentBalanceSeverity + ")");
 
-          if(snmpAgent!=null){
+          if (snmpAgent != null) {
             snmpAgent.sendTrap(status, "BillingSystem", currentBalanceSeverity);
           }
         } else {
@@ -1054,7 +1094,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
               if (logger.isDebugEnabled())
                 logger.debug("Generate trap: " + Agent.SNMP_STATUS[status] + " UNIBALANCE BannerRotator Threshold crossed (AlarmID=BannerRotator; severity=" + currentBannerSeverity + ")");
 
-              if(snmpAgent!=null){
+              if (snmpAgent != null) {
                 snmpAgent.sendTrap(status, "BannerRotator", currentBannerSeverity);
               }
 
