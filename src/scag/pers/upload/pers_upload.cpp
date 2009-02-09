@@ -105,6 +105,13 @@ int main(int argc, char* argv[])
         catch (...) { 
             smsc_log_warn(logger, "Parameter <PersUpload.sendToPers> missed. Defaul value is false");
         }
+        
+        int timeOut = 1000;
+
+        try { timeOut = persConfig.getInt("timeout"); } 
+        catch (...) { 
+            smsc_log_warn(logger, "Parameter <PersUpload.timeout> missed. Defaul value is %d", timeOut);
+        }
 
         smsc_log_warn(logger, "Parameter <PersUpload.AbntProfStorage.storagePath> = '%s'", storagePath.c_str());
         std::string host = "phoenix";
@@ -124,7 +131,7 @@ int main(int argc, char* argv[])
 
 
         smsc_log_debug(logger, "Client connect to %s:%d", host.c_str(), port);  
-        int timeOut = 1000;
+        //int timeOut = 1000;
         int pingTimeOut = 1000;
         int reconnectTimeout = 100;
         int maxWaitRequestsCount = 100;

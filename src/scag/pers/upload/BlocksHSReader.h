@@ -5,6 +5,7 @@
 #include "scag/util/storage/SerialBuffer.h"
 #include "scag/pers/Profile.h"
 #include "scag/pers/upload/PersClient.h"
+#include "core/synchronization/EventMonitor.hpp"
 
 namespace scag { namespace pers { namespace util {
 
@@ -13,8 +14,12 @@ namespace scag { namespace pers { namespace util {
   using namespace scag::pers;
   using scag::pers::util::PersClient;
   using scag::pers::util::PersClientException;
+  using smsc::core::synchronization::EventMonitor;
+  using smsc::core::synchronization::MutexGuard;
   //using scag::pers::client::PersClient;
   //using scag::pers::client::PersClientException;
+  
+  static const int MAX_RESEND_COUNT = 10;
 
   static const char* restore_properties[] = {
     "maze.abonent.age",
@@ -156,7 +161,25 @@ public:
               //dataFile.Read((void*)data_buff, effectiveBlockSize);
               dataFile.Read((void*)data_buff, hdr.data_size);
               //status_profiles += restoreProfile(hdr.key, data, sendToPers);
-              status_profiles += restoreProfileCompletely(hdr.key, data, sendToPers);
+              
+              int restoreResult = restoreProfileCompletely(hdr.key, data, sendToPers);
+              if (sendToPers && restoreResult == -1) {
+                int resendCount = 0;
+                while (restoreResult == -1 && resendCount < MAX_RESEND_COUNT) {
+                  smsc_log_warn(logger, "resending profile key='%s', try number %d",
+                                        hdr.key.toString().c_str(), resendCount + 1);
+                  restoreResult = restoreProfileCompletely(hdr.key, data, sendToPers);
+                  ++resendCount;
+                }
+                if (restoreResult == -1) {
+                  smsc_log_warn(logger, "Can't upload profile key='%s'", hdr.key.toString().c_str());
+                  continue;
+                }              
+                if (restoreResult == 1) {
+                  smsc_log_info(logger, "profile key='%s' uploaded", hdr.key.toString().c_str());
+                }              
+              }
+              status_profiles += restoreResult;
               //status_profiles += restoreProfileMinsk(hdr.key, data, sendToPers);
             }
             total_count += profiles_count;
@@ -180,17 +203,21 @@ private:
       pf.Deserialize(data, true);
       SerialBuffer batch;
       
+      if (!pf.GetProperty("srv_BE.advTags")) {
+        return 0;
+      }
+      
       if (sendToPers) {
         pc.PrepareBatch(batch);
       }
 
       PropertyHash::Iterator it = pf.getProperties().getIterator();
       Property* prop;
-      char *key = 0;
+      char *propkey = 0;
       int prop_count = 0;
-      while(it.Next(key, prop)) {
+      while(it.Next(propkey, prop)) {
         if (sendToPers) {
-          pc.SetPropertyPrepare(PT_ABONENT, key, *prop, batch);
+          pc.SetPropertyPrepare(PT_ABONENT, key.toString().c_str(), *prop, batch);
         }
         smsc_log_debug(logger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
         ++prop_count;
@@ -201,6 +228,10 @@ private:
         smsc_log_debug(logger, "send %d properties to pers for profile key=%s", prop_count, pf.getKey().c_str());
       }
       if (sendToPers) {
+              smsc_log_debug(logger, "sleep 8 msec");
+              MutexGuard mg(monitor);
+              monitor.wait(8);
+              smsc_log_debug(logger, "continue");
         for (int i = 0; i < prop_count; ++i) {
           pc.SetPropertyResult(batch);
         }
@@ -210,6 +241,7 @@ private:
       smsc_log_warn(logger, "Error reading profile key=%s. SerialBufferOutOfBounds: bad data in buffer read ", key.toString().c_str());
     } catch (const PersClientException& ex) {
       smsc_log_warn(logger, "Error uploading profile key=%s. PersClientException: %s", key.toString().c_str(), ex.what());
+      return -1;
     }
     return 0;
   }
@@ -239,6 +271,12 @@ private:
         pc.FinishPrepareBatch(prop_count, batch);
         pc.RunBatch(batch);
         smsc_log_debug(logger, "send %d properties to pers for profile %s", prop_count, pf.getKey().c_str());
+        //return 1;
+      }
+      if (sendToPers && prop_count > 0) {
+        for (int i = 0; i < prop_count; ++i) {
+          pc.SetPropertyResult(batch);
+        }
         return 1;
       }
      } catch(const SerialBufferOutOfBounds &e) {
@@ -306,6 +344,8 @@ private:
   // bukind: IT SEEMS THAT THIS CODE IS NEVER USED.
   // it did not have the following declaration!
   std::vector<File*>                    dataFile_f;
+  
+  EventMonitor monitor;
 
 };
 
