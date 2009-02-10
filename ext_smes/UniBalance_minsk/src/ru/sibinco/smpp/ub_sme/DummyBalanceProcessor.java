@@ -62,7 +62,13 @@ public class DummyBalanceProcessor implements Runnable {
   }
 
   private GetBalanceResult getCbossBalance(String abonent) {
-    String balance = "Balans="+(new Random()).nextInt(1000) +"r";
+    Random rand=new Random();
+    String balance = "Balans="+rand.nextInt(1000) +"r";
+    try {
+      Thread.sleep(rand.nextInt(10));
+    } catch (InterruptedException e) {
+      logger.error(e);
+    }
     return new GetBalanceResult(balance);
   }
 

@@ -144,7 +144,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
     } catch (NumberFormatException e) {
       throw new InitializationException("Invalid value for config parameter \"response.pattern.config.check.interval\": " + config.getProperty("response.pattern.config.check.interval"));
     }
-    (new ResponcePatternConfigController(responsePatternConfigFileCheckInterval)).startService();
+    (new ResponsePatternConfigController(responsePatternConfigFileCheckInterval)).startService();
 
     smsResponseMode = Boolean.valueOf(config.getProperty("sms.response.mode", "false")).booleanValue();
 
@@ -926,7 +926,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
   }
 
-  class ResponcePatternConfigController extends Thread {
+  class ResponsePatternConfigController extends Thread {
     private boolean started = false;
     private final Object monitor = new Object();
     private final Object shutmonitor = new Object();
@@ -934,8 +934,8 @@ public class SmeEngine implements MessageListener, ResponseListener {
     private long pollingInterval = 60000L;
     private long fileLastModified;
 
-    public ResponcePatternConfigController(long pollingInterval) {
-      super("ResponcePatternConfigController");
+    public ResponsePatternConfigController(long pollingInterval) {
+      super("ResponsePatternConfigController");
       this.pollingInterval = pollingInterval;
       this.fileLastModified = responsePatternConfigFile.lastModified();
     }
