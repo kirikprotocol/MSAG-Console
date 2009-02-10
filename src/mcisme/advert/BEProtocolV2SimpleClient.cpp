@@ -146,6 +146,7 @@ BEProtocolV2SimpleClient::readAdvert(advertising_item* advItem,
 {
   smsc_log_debug(_logger, "BEProtocolV2SimpleClient::readAdvert");
 
+  BannerResponseTrace emptyBannerResponseTrace;
   try {
     while (true) {
       char incomingPacketBuf[MAX_PACKET_LEN];
@@ -153,22 +154,29 @@ BEProtocolV2SimpleClient::readAdvert(advertising_item* advItem,
       uint32_t totalPacketLen = readPacket(incomingPacketBuf, sizeof(incomingPacketBuf));
 
       smsc_log_debug(_logger, "BEProtocolV2SimpleClient::readAdvert::: got packet from BE: [%s]", hexdmp((uint8_t*)incomingPacketBuf, totalPacketLen).c_str());
-      parseBannerResponse(incomingPacketBuf, totalPacketLen, &bannerRespTrace->transactionId,
-                          &advItem->banReq->banner, &bannerRespTrace->bannerId, &bannerRespTrace->ownerId,
-                          &bannerRespTrace->rotatorId);
-      smsc_log_debug(_logger, "BEProtocolV2SimpleClient::readAdvert::: got BannerResponse message: transactionId=%d, bannerId=%d, ownerId=%d, rotatorId=%d", bannerRespTrace->transactionId, bannerRespTrace->bannerId, bannerRespTrace->ownerId, bannerRespTrace->rotatorId);
-      if ( bannerRespTrace->transactionId == advItem->TransactID )
-        break;
-      else
-        smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: wrong transactionId value=[%d], expected value=[%d]", bannerRespTrace->transactionId, advItem->TransactID);
-    }
+      BannerResponseTrace gotBannerRespTrace;
+      std::string gotBannerString;
+      parseBannerResponse(incomingPacketBuf, totalPacketLen, &gotBannerRespTrace.transactionId,
+                          &gotBannerString, &gotBannerRespTrace.bannerId, &gotBannerRespTrace.ownerId,
+                          &gotBannerRespTrace.rotatorId);
 
+      smsc_log_debug(_logger, "BEProtocolV2SimpleClient::readAdvert::: got BannerResponse message: transactionId=%d, bannerId=%d, ownerId=%d, rotatorId=%d", gotBannerRespTrace.transactionId, gotBannerRespTrace.bannerId, gotBannerRespTrace.ownerId, gotBannerRespTrace.rotatorId);
+      if ( gotBannerRespTrace.transactionId == advItem->TransactID ) {
+        *bannerRespTrace = gotBannerRespTrace;
+        advItem->banReq->banner = gotBannerString;
+        break;
+      } else {
+        smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: wrong transactionId value=[%d], expected value=[%d], send rollback message for this response", gotBannerRespTrace.transactionId, advItem->TransactID);
+
+        sendErrorInfo(BannerRequest(gotBannerRespTrace.transactionId, gotBannerRespTrace.bannerId, gotBannerRespTrace.ownerId, gotBannerRespTrace.rotatorId), ERR_ADV_TIMEOUT, "BEProtocolV2SimpleClient::readAdvert");
+      }
+    }
   } catch (TimeoutException& ex) {
     smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: catched TimeoutException [%s]", ex.what());
-    return ERR_ADV_TIMEOUT;
+    *bannerRespTrace = emptyBannerResponseTrace;
   } catch (ProtocolError& ex) {
     smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: catched ProtocolError exception");
-    return 0;
+    *bannerRespTrace = emptyBannerResponseTrace;
   }
 
   return 0;
