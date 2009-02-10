@@ -618,7 +618,7 @@ int TaskProcessor::Execute()
 
         store_A_Event_in_logstore(from, to, profile, callerProfile);
         statistics->incMissed();
-        smsc_log_debug(logger, "Abonent %s (couse = 0x%02X) was added to Scheduled Delivery Queue", to.toString().c_str(), event.cause);
+        smsc_log_debug(logger, "Abonent %s (cause = 0x%02X) was added to Scheduled Delivery Queue", to.toString().c_str(), event.cause);
       }
       else
         smsc_log_debug(logger, "Event: for abonent %s skipped (userMask=%02X, eventCause=%02X)", to.getText().c_str(), profile.eventMask, event.cause);
