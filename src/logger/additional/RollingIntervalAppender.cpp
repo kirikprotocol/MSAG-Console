@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+#include "util/debug.h"
+
 namespace smsc {
 namespace logger {
 
@@ -51,6 +53,7 @@ bool RollingIntervalAppender::findLastFile(time_t dat, std::string& lastFileName
   while(dp = readdir(dirp))
   {
     tm rtm;
+    memset(&rtm, 0, sizeof(rtm));
     if(sscanf(dp->d_name, fname_.c_str(), &rtm.tm_year, &rtm.tm_mon, &rtm.tm_mday, &rtm.tm_hour, &rtm.tm_min, &rtm.tm_sec) == numFieldsInSuffix)
     {
         rtm.tm_year -= 1900;
@@ -77,6 +80,7 @@ void RollingIntervalAppender::clearLogDir(time_t curTime)
   if(!dirp) return;
   std::vector<std::string> fnames;
   struct tm rtm;
+  memset(&rtm, 0, sizeof(rtm));
   rtm.tm_isdst = -1;
 
   std::string fname_ = fileName + suffixFormat;
@@ -93,6 +97,8 @@ void RollingIntervalAppender::clearLogDir(time_t curTime)
 
   for(std::vector<std::string>::iterator it = fnames.begin(); it != fnames.end(); it++)
     remove((*it).c_str());
+
+  closedir(dirp);
 }
 
 RollingIntervalAppender::RollingIntervalAppender(const char * const _name, const Properties & properties, const char* suffix)
@@ -134,6 +140,7 @@ void RollingIntervalAppender::rollover(time_t dat, bool useLast) throw()
   file.Close();
 
   struct ::tm rtm;
+  memset(&rtm, 0, sizeof(rtm));
   lastIntervalStart = roundTime(dat, &rtm);
 
   if(maxBackupIndex > 0)
