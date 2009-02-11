@@ -168,7 +168,8 @@ public:
                 while (restoreResult == -1 && resendCount < MAX_RESEND_COUNT) {
                   smsc_log_warn(logger, "resending profile key='%s', try number %d",
                                         hdr.key.toString().c_str(), resendCount + 1);
-                  restoreResult = restoreProfileCompletely(hdr.key, data, sendToPers);
+                  //restoreResult = restoreProfileCompletely(hdr.key, data, sendToPers);
+                  restoreResult = restoreProfileMinsk(hdr.key, data, sendToPers);
                   ++resendCount;
                 }
                 if (restoreResult == -1) {
