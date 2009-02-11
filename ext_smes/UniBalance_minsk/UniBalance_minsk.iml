@@ -60,7 +60,9 @@
           <root url="jar://$MODULE_DIR$/lib/adv-client.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/advclient/src" />
+        </SOURCES>
       </library>
     </orderEntry>
     <orderEntry type="module-library">

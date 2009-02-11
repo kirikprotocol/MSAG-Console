@@ -110,8 +110,8 @@ public class Agent {
   public void sendTrap(int status, String alarmId, int severity){
     String message=MessageFormat.format(alertMessagePattern, new Object[]{alarmId, new Integer(severity)});
 
-    if(logger.isDebugEnabled())
-      logger.debug("Send trap: " + Agent.SNMP_STATUS[status] + " UNIBALANCE BannerRotator "+message);
+    if(logger.isInfoEnabled())
+      logger.info("Send trap: " + Agent.SNMP_STATUS[status] + " UNIBALANCE BannerRotator "+message);
 
     SnmpAdaptorServer snmpAdaptor = getSnmpAdaptor();
     SnmpVarBindList varBindList = new SnmpVarBindList();
