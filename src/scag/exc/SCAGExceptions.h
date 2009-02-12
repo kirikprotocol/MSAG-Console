@@ -16,7 +16,7 @@ public:
     SCAGException() : Exception() {};
     SCAGException(const char* fmt,...);
     virtual ~SCAGException() throw() {};
-
+    inline const std::string& getMessage() const { return message; }
 };
 
 class RuleEngineException : public SCAGException
