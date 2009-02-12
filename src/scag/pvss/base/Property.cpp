@@ -8,6 +8,40 @@
 namespace scag2 {
 namespace pvss {
 
+namespace perstypes {
+
+const char* timePolicyToString( TimePolicy tp )
+{
+#define TIMEPOLTOSTR(x) case (x) : return " TIME_POLICY: " #x
+    switch (tp) {
+        TIMEPOLTOSTR(UNKNOWN);
+        TIMEPOLTOSTR(INFINIT);
+        TIMEPOLTOSTR(FIXED);
+        TIMEPOLTOSTR(ACCESS);
+        TIMEPOLTOSTR(R_ACCESS);
+        TIMEPOLTOSTR(W_ACCESS);
+#undef TIMEPOLTOSTR
+    default: return " TIME_POLICY: ???";
+    }
+}
+
+
+const char* propertyTypeToString( PropertyType pt )
+{
+#define PROPTYPETOSTR(x) case (x) : return #x
+    switch (pt) {
+        PROPTYPETOSTR(INT);
+        PROPTYPETOSTR(STRING);
+        PROPTYPETOSTR(BOOL);
+        PROPTYPETOSTR(DATE);
+#undef PROPTYPETOSTR
+    default : return "???";
+    }
+}
+
+} // namespace perstypes
+
+
 static const char* BOOL_TRUE = " BOOL: true";
 static const char* BOOL_FALSE = " BOOL: false";
 static const char* STRING_PREF = " STRING: \"";
@@ -101,7 +135,7 @@ const std::string& Property::toString() const
             break;
     }
 
-    propertyStr.append(TimePolicyStr[time_policy]);
+    propertyStr.append(timePolicyToString(time_policy));
 
     if(time_policy != INFINIT)
     {

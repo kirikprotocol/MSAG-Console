@@ -15,7 +15,7 @@ namespace pvss {
 namespace perstypes {
 
 enum TimePolicy{
-    UNKNOWN,
+    UNKNOWN = 1,
     INFINIT,
     FIXED,
     ACCESS,
@@ -23,6 +23,9 @@ enum TimePolicy{
     W_ACCESS
 };
 
+const char* timePolicyToString( TimePolicy tp );
+
+/*
 static const char* TimePolicyStr[] = {
   " TIME_POLICY: UNKNOWN",
   " TIME_POLICY: INFINIT",
@@ -31,15 +34,31 @@ static const char* TimePolicyStr[] = {
   " TIME_POLICY: R_ACCESS",
   " TIME_POLICY: W_ACCESS"
 };
+ */
 
-enum PropertyType{
+enum PropertyType {
     INT = 1,
     STRING,
     BOOL,
     DATE
 };
 
+const char* propertyTypeToString( PropertyType pt );
+/*
+{
+#define PROPTYPETOSTR(x) case (x) : return #x
+    switch (pt) {
+        PROPTYPETOSTR(INT);
+        PROPTYPETOSTR(STRING);
+        PROPTYPETOSTR(BOOL);
+        PROPTYPETOSTR(DATE);
+#undef PROPTYPETOSTR
+    default : return "???";
+    }
 }
+ */
+
+} // namespace perstypes
     
 using namespace perstypes;
 
@@ -69,7 +88,7 @@ protected:
 
 public:
 
-    Property() : type(INT), i_val(0), time_policy(INFINIT){};
+    Property() : type(PropertyType(0)), i_val(0), time_policy(INFINIT){};
     Property(const Property& cp);
     Property& operator=(const Property& cp);
 
@@ -87,7 +106,7 @@ public:
     void WriteAccess();
 
     const char* getName() const { return name.c_str(); };
-    void setName(const std::string& nm) { name = nm; };
+    void setName(const std::string& nm) { setPropertyName(nm.c_str()); };
     int64_t getIntValue() const { return i_val; };
     bool getBoolValue() const { return b_val; };
     time_t getDateValue() const { return d_val; };
@@ -98,9 +117,12 @@ public:
     void setBoolValue(bool b) { b_val = b; type = BOOL; };
     void setDateValue(time_t d) { d_val = d; type = DATE; };
     void setStringValue(const char* s) { s_val = s; type = STRING; };
-    uint8_t getType() const { return type; };
+    inline uint8_t getType() const { return type; };
     void setTimePolicy(TimePolicy policy, time_t fd, uint32_t lt);
     TimePolicy getTimePolicy() const { return time_policy; };
+    time_t getFinalDate() const { return final_date; }
+    uint32_t getLifeTime() const { return life_time; }
+
     bool isExpired() const;
     bool isExpired(time_t cur_time) const;
     const std::string& toString() const;
@@ -116,6 +138,10 @@ public:
     void Deserialize(util::storage::SerialBuffer& buf, bool toFSDB = false, util::storage::GlossaryBase* glossary = NULL);
 
     bool convertToInt();
+
+    bool isValid() const {
+        return getType() != 0;
+    }
 };
 
 }//pvss
