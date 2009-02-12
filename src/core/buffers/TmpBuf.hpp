@@ -11,6 +11,9 @@ namespace buffers{
 template <typename T,size_t SZ>
 class TmpBuf{
 public:
+    TmpBuf() : heapBuf(0), realBuf(stackBuf), heapSize(0), pos(0) {
+    }
+
   explicit TmpBuf(size_t size)
   {
     if(size>SZ)
@@ -38,6 +41,16 @@ public:
     pos=0;
   }
 
+    void setExtBuf( T* extbuf, int extbufsize ) {
+        if ( heapBuf ) delete [] heapBuf;
+        realBuf = extbuf;
+        heapBuf = 0;
+        heapSize = extbufsize;
+        pos = 0;
+    }
+
+
+    /// NOTE: buffer content is not preserved!
   T* setSize(size_t size)
   {
     if(size>SZ)
@@ -52,6 +65,21 @@ public:
     }
     return realBuf;
   }
+
+    /// NOTE: buffer content is preserved
+    void reserve( size_t sz )
+    {
+        if ( sz > SZ ) {
+            if ( sz > heapSize ) {
+                T* newbuf = new T[sz];
+                memcpy( newbuf, realBuf, pos );
+                if (heapBuf) delete [] heapBuf;
+                heapBuf = newbuf;
+                heapSize = sz;
+                realBuf = heapBuf;
+            }
+        }
+    }
 
   size_t  getSize(void) const
   {
