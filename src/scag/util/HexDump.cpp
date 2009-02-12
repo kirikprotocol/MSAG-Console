@@ -52,6 +52,20 @@ char* HexDump::strdump( char* outbuf,
     return outbuf;
 }
 
+void HexDump::hexdump( std::string& out, const char* inbuf, unsigned insize )
+{
+    const size_t pos = out.size();
+    out.resize( out.size() + hexdumpsize(insize) );
+    hexdump( const_cast<char*>(out.c_str()) + pos, inbuf, insize );
+}
+
+void HexDump::strdump( std::string& out, const char* inbuf, unsigned insize )
+{
+    const size_t pos = out.size();
+    out.resize( out.size() + strdumpsize(insize) );
+    strdump( const_cast<char*>(out.c_str()) + pos, inbuf, insize );
+}
+
 char* HexDump::addstr( char* outbuf, const char* cstring )
 {
     const unsigned i = ::strlen( cstring );

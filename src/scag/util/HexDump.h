@@ -2,6 +2,7 @@
 #define _SCAG_UTIL_HEXDUMP_H
 
 #include <memory>
+#include <string>
 
 namespace scag2 {
 namespace util {
@@ -17,6 +18,9 @@ public:
 
     // NOTE: w/o termination null-byte
     char* addstr( char* outbuf, const char* cstring );
+
+    void hexdump( std::string& out, const char* inbuf, unsigned insize );
+    void strdump( std::string& out, const char* inbuf, unsigned insize );
 
 private:
     static std::auto_ptr<char> digits_;
