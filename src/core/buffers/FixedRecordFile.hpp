@@ -74,8 +74,8 @@ public:
         storeFile.SeekCur(RecordType::Size());
       }
       filePos+=1+RecordType::Size();
-    }while(!used && filePos+RecordType::Size()<fileSize);
-    if(filePos+RecordType::Size()>fileSize)
+    }while(!used && filePos+RecordType::Size()<=fileSize);
+    if(!used && filePos!=fileSize)
     {
       holes.push_back(filePos);
     }
