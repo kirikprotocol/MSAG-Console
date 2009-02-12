@@ -929,7 +929,10 @@ protected:
   {
     if(node->dataType==dtSingleValue)
     {
-      values.push_back(*node->data);
+      if(node->data)
+      {
+        values.push_back(*node->data);
+      }
     }else if(node->dataType==dtLinkedList)
     {
       DataListNode* ptr=node->dataList;
