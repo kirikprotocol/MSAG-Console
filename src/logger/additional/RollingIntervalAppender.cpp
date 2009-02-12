@@ -42,17 +42,23 @@ time_t RollingIntervalAppender::roundTime(time_t dat, struct ::tm* rtm)
   return mktime(&t);
 }
 
-bool RollingIntervalAppender::findLastFile(time_t dat, std::string& lastFileName)
+bool RollingIntervalAppender::findLastFile(time_t dat, size_t suffixSize, std::string& lastFileName)
 {
   dirent *dp;
   DIR *dirp = opendir(path.c_str());
   if(!dirp) return false;
   std::string fname_ = fileName + suffixFormat;
+  size_t lastFileNameSize = fileName.size() + suffixSize;
   long curInterval = interval;
   lastFileName.clear();
+  bool result = false;
+  tm rtm;
   while(dp = readdir(dirp))
   {
-    tm rtm;
+    if (strlen(dp->d_name) != lastFileNameSize) {
+      continue;
+    }
+
     memset(&rtm, 0, sizeof(rtm));
     if(sscanf(dp->d_name, fname_.c_str(), &rtm.tm_year, &rtm.tm_mon, &rtm.tm_mday, &rtm.tm_hour, &rtm.tm_min, &rtm.tm_sec) == numFieldsInSuffix)
     {
@@ -61,16 +67,21 @@ bool RollingIntervalAppender::findLastFile(time_t dat, std::string& lastFileName
         rtm.tm_isdst = -1;
         time_t fdate = mktime(&rtm);
 
+        lastFileName = dp->d_name;
         if(dat - fdate < curInterval)
         {
-            lastFileName = dp->d_name;
             curInterval = dat - fdate;
+            result = true;
+        } 
+        else
+        {
+            result = false;
         }
 
     }
   }
   closedir(dirp);
-  return lastFileName.length()!=0;
+  return result;
 }
 
 void RollingIntervalAppender::clearLogDir(time_t curTime)
@@ -126,6 +137,7 @@ RollingIntervalAppender::RollingIntervalAppender(const char * const _name, const
   }
 
   fullFileName = properties.Exists("name") ? properties["name"] : "smsc.log";
+  postfix_ = properties.Exists("postfix") ? properties["postfix"] : ".log";
 
   const char *c = fullFileName.c_str();
   p = strrchr(c, '/');
@@ -137,11 +149,16 @@ RollingIntervalAppender::RollingIntervalAppender(const char * const _name, const
 
 void RollingIntervalAppender::rollover(time_t dat, bool useLast) throw()
 {
+  std::string currentName = file.getFileName();
   file.Close();
 
   struct ::tm rtm;
   memset(&rtm, 0, sizeof(rtm));
   lastIntervalStart = roundTime(dat, &rtm);
+
+  char name_[128];
+  memset(name_, 0, 128);
+  int suffixSize = sprintf(name_, suffixFormat.c_str(), rtm.tm_year, rtm.tm_mon, rtm.tm_mday, rtm.tm_hour, rtm.tm_min, rtm.tm_sec);
 
   if(maxBackupIndex > 0)
     clearLogDir(lastIntervalStart);
@@ -149,15 +166,20 @@ void RollingIntervalAppender::rollover(time_t dat, bool useLast) throw()
   if(useLast)
   {
     std::string lastFile;
-    if(findLastFile(dat, lastFile))
+    if(findLastFile(dat, suffixSize, lastFile))
     {
       file.Append((path+'/'+lastFile).c_str());
       return;
+    } else {
+      if (!lastFile.empty()) {
+        currentName = path+'/'+lastFile;
+      }
     }
   }
 
-  char name_[128];
-  sprintf(name_, suffixFormat.c_str(), rtm.tm_year, rtm.tm_mon, rtm.tm_mday, rtm.tm_hour, rtm.tm_min, rtm.tm_sec);
+  if (!currentName.empty() && File::Exists(currentName.c_str())) {
+    File::Rename(currentName.c_str(), (currentName + postfix_).c_str());
+  }
   std::string p = fullFileName + name_;
   file.WOpen(p.c_str());
 }

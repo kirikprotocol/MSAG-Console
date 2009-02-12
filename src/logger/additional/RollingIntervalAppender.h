@@ -27,14 +27,14 @@ private:
   smsc::core::synchronization::Mutex mutex;
   unsigned int maxBackupIndex, numFieldsInSuffix;
   long interval;
-  std::string fullFileName, suffixFormat, path, fileName;
+  std::string fullFileName, suffixFormat, path, fileName, postfix_;
   smsc::core::buffers::File file;
   long currentFilePos;
   time_t lastIntervalStart;
 
   void rollover(time_t dat, bool useLast = false) throw();
   time_t roundTime(time_t dat, struct ::tm* rtm = NULL);
-  bool findLastFile(time_t dat, std::string& lastFileName);
+  bool findLastFile(time_t dat, size_t suffixSize, std::string& lastFileName);
 };
 
 }}

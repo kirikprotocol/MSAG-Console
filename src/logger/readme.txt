@@ -30,3 +30,11 @@ maxindex - количество интервалов за которые хранить логи. если значения равно ну
 maxindex=0
 пример:
 appender.aFile1.intervalfile.maxindex=10
+
+postfix - это параметр позволяет задать постфикс для прокрученных файлов с логами, т.е. файлов в которые больше не пишутся логи
+по-умолчанию:
+postfix=.log
+пример:
+appender.aFile1.intervalfile.postfix=.old (smsc.log.2007-10-15.old)
+
+
