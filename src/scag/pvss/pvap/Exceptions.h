@@ -5,35 +5,45 @@
 #include <stdio.h>
 #include "util/int.h"
 #include "scag/exc/SCAGExceptions.h"
+#include "scag/pvss/common/PvapException.h"
 
-namespace scag {
+namespace scag2 {
 namespace pvss {
 namespace pvap {
 
-class PvapException : public scag::exceptions::SCAGException
+/// exception used in Serializer
+class IOException : public scag::exceptions::SCAGException
 {
 protected:
-    PvapException( uint32_t seqNum = (uint32_t)-1 ) : seqNum_(seqNum), isRequest_(true) {}
-    PvapException( bool isRequest, uint32_t seqNum, int tag = 0 ) : seqNum_(seqNum), isRequest_(isRequest), tag_(tag) {}
-
+    IOException() {}
 public:
-    virtual ~PvapException() throw () {}
-
-    uint32_t getSeqNum() const { return seqNum_; }
-    bool isRequest() const { return isRequest_; }
-    int getTag() const { return tag_; }
-
-private:
-    uint32_t seqNum_;
-    bool     isRequest_;
-    int      tag_;
+    IOException( const char* fmt, ... ) : SCAGException() {
+        SMSC_UTIL_EX_FILL(fmt);
+    }
 };
+
+class ReadBeyondEof : public IOException
+{
+public:
+    ReadBeyondEof() : IOException( "Attempt to read data beyond end of buffer" ) {}
+};
+
+
+class InvalidValueLength : public IOException
+{
+public:
+    InvalidValueLength( const char* valueType, int len ) :
+    IOException( "Invalid value length for type %s: len=%d", valueType, len ) {}
+};
+
+
+// ============================
 
 class FieldIsNullException: public PvapException
 {
 public:
-    FieldIsNullException(const char* field, uint32_t seqNum) :
-    PvapException(seqNum)
+    FieldIsNullException(bool isRequest, const char* field, uint32_t seqNum) :
+    PvapException(isRequest, seqNum)
     {
         message = "Attempt to get field ";
         message += field;
@@ -79,6 +89,30 @@ public:
     ~DuplicateFieldException()throw(){}
 };
 
+
+class PvapSerializationException : public PvapException
+{
+public:
+    PvapSerializationException( uint32_t seqNum, const char* msg, ... ) : PvapException(seqNum) {
+        SMSC_UTIL_EX_FILL(msg);
+    }
+    PvapSerializationException( bool isreq, uint32_t seqNum, const char* msg, ... ) :
+    PvapException(isreq,seqNum) {
+        SMSC_UTIL_EX_FILL(msg);
+    }
+};
+
+
+class MessageIsBrokenException : public PvapException
+{
+public:
+    MessageIsBrokenException( bool isreq, const std::string& msg, uint32_t seqNum ) :
+    PvapException(isreq,seqNum) {
+        message = msg;
+    }
+};
+
+
 class IncompatibleVersionException:public PvapException{
 public:
   IncompatibleVersionException(const char* messageName)
@@ -91,7 +125,8 @@ public:
 class InvalidMessageTypeException : public PvapException 
 {
 public:
-    InvalidMessageTypeException( int tag, const char* messageName = "")
+    InvalidMessageTypeException(uint32_t seqNum, int tag, const char* messageName = "") :
+    PvapException(true,seqNum,tag)
     {
         char buf[32];
         sprintf(buf,"%u",tag);
@@ -165,36 +200,15 @@ public:
   }
 };
 
-class ReadBeyondEof:public PvapException
-{
-public:
-    ReadBeyondEof()
-    {
-        message = "Attempt to read data beyond end.";
-    }
-};
-
-class InvalidValueLength : public PvapException 
-{
-public:
-    InvalidValueLength(const char* valueType,int len)
-    {
-        message = "Invalid value length for type ";
-        message += valueType;
-        message += ":";
-        char buf[32];
-        sprintf(buf,"%d",len);
-        message += buf;
-    }
-};
-
 }
 }
 }
 
-namespace scag2 {
+namespace scag {
 namespace pvss {
-namespace pvap = scag::pvss::pvap;
+namespace pvap {
+using namespace scag2::pvss::pvap;
+} // namespace pvap
 } // namespace pvss
 } // namespace scag2
 

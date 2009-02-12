@@ -10,7 +10,7 @@ import $var package$.common.PvapException;
 public class $var protocol.name:ucf$
 {
 $foreach message$
-    static final short tag_$var message.name:ucf$=(short)$var message.tag$;
+    static final int tag_$var message.name:ucf$ = $var message.tag$;
 $-foreach$
 
     public static interface Handler {
@@ -28,9 +28,9 @@ $-foreach$
         this.handler = handler;
     }
 
-    public void assignHandler(Handler newHandler) {
-        this.handler = newHandler;
-    }
+    // public void assignHandler(Handler newHandler) {
+    // this.handler = newHandler;
+    // }
 
     public void decodeMessage( IBufferReader reader ) throws PvapException
     {
@@ -42,8 +42,7 @@ $-foreach$
             switch( tag ) {
 $foreach message$
             case tag_$var message.name:ucf$: {
-                $var message.name$ object = new $var message.name$();
-                object.setSeqNum(seqNum);
+                $var message.name$ object = new $var message.name$(seqNum);
                 object.decode(this,reader);
                 handler.handle(object);
                 break;

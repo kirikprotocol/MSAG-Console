@@ -5,9 +5,9 @@
 #define __SCAG_PVSS_PVAP_$var protocol.name:uc$_HPP__
 
 #include <memory>
-#include "scag/pvss/pvap/Serializer.h"
+#include "scag/pvss/pvap/BufferReader.h"
+#include "scag/pvss/pvap/BufferWriter.h"
 #include "scag/pvss/pvap/Exceptions.h"
-#include "scag/pvss/pvap/TypeId.h"
 $foreach message$
 #include "$var message.name$.hpp"
 $-foreach$
@@ -16,7 +16,7 @@ $foreach namespace$
 namespace $var namespace$ {
 $-foreach$
 
-class $var protocol.name:ucf$ 
+class $var protocol.name:ucf$
 {
 public:
     enum {
@@ -31,7 +31,7 @@ $-foreach$
     public:
         virtual bool hasSeqNum( uint32_t seqNum ) const = 0;
 $foreach message$
-        virtual void handle( std::auto_ptr<$var message.name$> obj ) = 0;
+        virtual void handle( $var message.name$& obj ) = 0;
 $-foreach$
     };
 
@@ -39,57 +39,45 @@ $-foreach$
 
     $var protocol.name:ucf$( Handler* newHandler ) : handler(newHandler) {}
 
+    /*
     void assignHandler( Handler* newHandler)
     {
         handler=newHandler;
     }
+     */
 
-    void decodeMessage( Serializer& ss ) const throw (PvapException)
+    void decodeMessage( BufferReader& ss ) throw (PvapException)
     {
-        const uint32_t seqNum = ss.readInt32();
+        uint32_t seqNum = -1;
+        seqNum = ss.readInt();
         if ( ! handler->hasSeqNum(seqNum) ) throw UnexpectedSeqNumException(seqNum);
         int tag = ss.readTag();
-        switch(tag)
-        {
+        switch(tag) {
 $foreach message$
         case tag_$var message.name:ucf$: {
             // printf( "tag %d (%s)\n", tag, "$var message.name:ucf$" );
-            std::auto_ptr<$var message.name$> msg(new $var message.name$);
-            msg->setSeqNum(seqNum);
-            msg->deserialize(*this,ss);
+            $var message.name$ msg(seqNum);
+            // msg->setSeqNum(seqNum);
+            msg.deserialize(*this,ss);
             handler->handle(msg);
             break;
         }
 $-foreach$
         default:
-            throw InvalidMessageTypeException(tag);
+            throw InvalidMessageTypeException(seqNum,tag);
         }
     }
 $foreach message$
 
-    void encodeMessage( const $var message.name$& msg, Serializer& ss ) const
+    void encodeMessage( const $var message.name$& msg, BufferWriter& ss ) const
         throw (PvapException)
     {
-        ss.writeInt32(msg.getSeqNum());
+        ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_$var message.name:ucf$);
         msg.serialize(*this,ss);
     }
 $-foreach$
-/*
-    void encodeCastMessage( const BatchCmd& msg, Serializer& ss ) const
-        throw (PvapException)
-    {
-        const int msgId = msg.getId();
-$foreach message$
-        if ( msgId == TypeId<$var message.name:ucf$>::getId() ) {
-            encodeMessage(static_cast<const $var message.name$&>(msg), ss);
-        } else
-$-foreach$
-        {
-            throw InvalidMessageTypeException(msgId);
-        }
-    }
-*/
+
 protected:
     Handler* handler; // unowned
 };

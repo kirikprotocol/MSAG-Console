@@ -19,7 +19,7 @@ out.extension=java
 option:options.throwOnUnsetGet=true
 # option:options.inheritsFromBatchCmd=true
 
-data:namespace:1=scag
+data:namespace:1=scag2
 data:namespace:2=pvss
 data:namespace:3=pvap
 

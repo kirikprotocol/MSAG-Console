@@ -23,28 +23,36 @@ end
 
 property checkVar _string
 end
-
 property checkVal _int
 end
 
-property useParent _bool
+property transient _bool
+    isTransient true
 end
-property useParentDefault _bool
-    default
-    useParent false
-end
-
-property isTransient _bool
-end
-property isTransientDefault _bool
+property transientDefault _bool
     default
     isTransient false
 end
 
 property useGetter _string
 end
-
 property useSetter _string
+end
+
+property command _bool
+    useCommand true
+end
+property commandDefault _bool
+    default
+    useCommand false
+end
+
+property profile _bool
+    useProfile true
+end
+property profileDefault _bool
+    default
+    useProfile false
 end
 
 property helperClass _string

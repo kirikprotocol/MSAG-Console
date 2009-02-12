@@ -1,6 +1,7 @@
 include PvapMessages.def
 
 protocol PVAP
+    PC_ERR_RESP     0x8000
     PC_DEL          0x0001
     PC_DEL_RESP     0x8001
     PC_SET          0x0002

@@ -7,7 +7,6 @@
 #include "util/int.h"
 #include <string>
 #include "scag/pvss/pvap/Exceptions.h"
-#include "scag/pvss/pvap/TypeId.h"
 $foreach field$
 $select field.type$
 $case byte$
@@ -19,10 +18,12 @@ $case ascii$
 $case utf8$
 $case bool$
 $case nested$#include "$var field.typename$.hpp"
-$default$#include "scag/pvss/pvap/$var field.type$.h"
+$default$// #include "scag/pvss/pvap/$var field.type$.h"
 $-select$
+$ifdef field.helperClass$#include "scag/pvss/pvap/$var field.helperClass$.h"$-ifdef$
 $-foreach$
-// $ifdef message.inheritsFrom$#include "scag/pvss/pvap/$var message.inheritsFrom$.h"$-ifdef$
+#include "scag/pvss/packets/$var message.inheritsFrom$.h"
+$ifdef message.command$#include "scag/pvss/packets/$var message.command$.h"$-ifdef$
 
 $macro type$$pack$
 $select %1$
@@ -36,252 +37,249 @@ $select %1$
  $case bool$bool
  $case nested$const $var field.typename$&
  $default$const $var field.type$&
-$-select$$-pack$$-macro$
+$-select$
+$-pack$$-macro$
+
+$macro checker$$pack$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$->$if field.useProfile$getProfileKey().$-if$$if field.useCommand$getCommand()->$-if$$ifdef field.useChecker$$var field.useChecker$$-ifdef$$ifndef field.useChecker$has$var field.name:ucf$$-ifndef$
+$-pack$$-macro$
+$macro getter$$pack$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$->$if field.useProfile$getProfileKey().$-if$$if field.useCommand$getCommand()->$-if$$ifdef field.useGetter$$var field.useGetter$$-ifdef$$ifndef field.useGetter$get$var field.name:ucf$$-ifndef$
+$-pack$$-macro$
+$macro setter$$pack$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$->$if field.useProfile$getProfileKey().$-if$$if field.useCommand$getCommand()->$-if$$ifdef field.useSetter$$var field.useSetter$$-ifdef$$ifndef field.useSetter$set$var field.name:ucf$$-ifndef$
+$-pack$$-macro$
+$macro baseclass$$var message.inheritsFrom$$ifdef message.command$< $var message.command$ >$-ifdef$$-macro$
 
 $foreach namespace$
 namespace $var namespace${
 $-foreach$
 
-// class $var protocol.name:ucf$;
+class $var protocol.name:ucf$;
 
-class $var message.name$ $ifdef message.inheritsFrom$: public $var message.inheritsFrom$$-ifdef$
+class $var message.name$
 {
+protected:
+$foreach field$
+$if !field.isTransient$
+    static const int $var field.name$Tag = $var field.tag$;
+$-if$
+$-foreach$
+
 public:
-    $var message.name$()
+    $var message.name$( int seqNum ) :
+    owned_(true),
+    data_(new $expand baseclass$($ifdef message.command$new $var message.command$($-ifdef$seqNum$ifdef message.command$)$-ifdef$))
     {
-        clear();
+$foreach field$
+$if field.isTransient$
+        $var field.name$Flag = false;
+$-if$
+$-foreach$
     }
 
-    $var message.name$( int seqNum ) {
-        this->seqNum = seqNum;
+    $var message.name$( $expand baseclass$* other ) :
+    owned_(false),
+    data_(other)
+    {
+$foreach field$
+$if field.isTransient$
+        $var field.name$Flag = false;
+$-if$
+$-foreach$
+    }
+
+    ~$var message.name$() {
+        if ( data_ && owned_ ) delete data_;
     }
 
     void clear()
     {
+        if ( ! data_ ) return;
+        data_->clear();
 $foreach field$
+$if field.isTransient$
         $var field.name$Flag=false;
+$-if$
 $-foreach$
+    }
+
+    $expand baseclass$* pop() {
+        $expand baseclass$* rv = data_;
+        data_ = 0;
+        return rv;
     }
 
     std::string toString() const
     {
-        std::string rv("$var message.name$:");
-        char buf[32];
-        sprintf(buf,"seqNum=%d",seqNum);
-        rv+=buf;
-$foreach field$
-        if ( has$var field.name:ucf$() ) {
-            rv+=";$var field.name$=";
-$select field.type$
-$case byte$
-            sprintf(buf,"%u",(unsigned int)$var field.name$);
-            rv+=buf;
-$case uint16$
-            sprintf(buf,"%u",(unsigned int)$var field.name$);
-            rv+=buf;
-$case uint32$
-            sprintf(buf,"%u",(unsigned int)$var field.name$);
-            rv+=buf;
-$case uint64$
-            sprintf(buf,"%llu",$var field.name$);
-            rv+=buf;
-$case string$
-            rv+=$var field.name$;
-$case ascii$
-            rv+=$var field.name$;
-$case utf8$
-            rv+=$var field.name$;
-$case bool$
-            rv+=$var field.name$?"true":"false";
-$case nested$
-            rv+='(';
-            rv+=$var field.name$.toString();
-            rv+=')';
-$default$
-            rv+=$var field.name$.toString();
-$-select$
-        }
-$-foreach$
-        return rv;
+        return data_ ? data_->toString() : "";
     }
 
-    /*
-    template <class DataStream> uint32_t length()const
+    template < class DataStream >
+        void serialize( const $var protocol.name:ucf$& proto, DataStream& writer ) const throw (PvapException)
     {
-        uint32_t rv=0;
-$foreach field$
-        if ($var field.name$Flag) {
-            rv+=DataStream::tagTypeSize;
-            rv+=DataStream::lengthTypeSize;
-            rv+=DataStream::fieldSize($var field.name$);
-        }
-$-foreach$
-        return rv;
-    }
-     */
-
-$foreach field$
-    $expand type field.type$ get$var field.name:ucf$() const
-$if options.throwOnUnsetGet$
-        throw (FieldIsNullException)
-$-if$
-    {
-$if options.throwOnUnsetGet$
-        if ( ! has$var field.name:ucf$() ) {
-            throw FieldIsNullException("field $var field.name$ of $var message.name$ is not set", seqNum);
-        }
-$-if$
-        return $var field.name$;
-    }
-    void set$var field.name:ucf$($expand type field.type$ value)
-    {
-        $var field.name$=value;
-        $var field.name$Flag=true;
-$if field.optional$
-$ifdef field.checkVar$
-        $var field.checkVar$ = $var field.checkVal$;
-        $var field.checkVar$Flag = true;
-$-ifdef$
-$-if$
-    }
-
-    bool has$var field.name:ucf$()const
-    {
-        return $var field.name$Flag$if field.optional$$ifdef field.checkVar$ && ( $var field.checkVar$ == $var field.checkVal$ )$-ifdef$$-if$;
-    }
-$-foreach$
-
-    template <class Proto, class DataStream> 
-        void serialize( const Proto& proto, DataStream& ds ) const throw (PvapException)
-    {
+        if ( ! data_ ) return;
         checkFields();
         // mandatory fields
 $foreach field$
+$if !field.isTransient$
 $if field.mandatory$
-        // printf( "write pos=%d field=%d\n", ds.getPos(), $var field.name$Tag );
-        ds.writeTag($var field.name$Tag);
-        $select field.type$
-$case string$ds.writeStrLV($var field.name$);
-$case ascii$ds.writeByteStringLV($var field.name$);
-$case utf8$ds.writeByteStringLV($var field.name$);
-$case byte$ds.writeByteLV($var field.name$);
-$case uint16$ds.writeInt16LV($var field.name$);
-$case uint32$ds.writeInt32LV($var field.name$);
-$case uint64$ds.writeInt64LV($var field.name$);
-$case bool$ds.writeBoolLV($var field.name$);
+        try {
+            // printf( "write pos=%d field=%d\n", ds.getPos(), $var field.name$Tag );
+            writer.writeTag($var field.name$Tag);
+            $select field.type$
+$case string$writer.writeStrLV($expand getter$());
+$case ascii$writer.writeAsciiLV($expand getter$());
+$case utf8$writer.writeUTFLV($expand getter$());
+$case byte$writer.writeByteLV($expand getter$());
+$case uint16$writer.writeShortLV($expand getter$());
+$case uint32$writer.writeIntLV($expand getter$());
+$case uint64$writer.writeLongLV($expand getter$());
+$case bool$writer.writeBoolLV($expand getter$());
 $case nested$throw NotImplementedException("$var field.name$");
-$default$$var field.name$.serialize(proto,ds);
+$default${
+$ifdef field.helperClass$
+                $var field.helperClass$ helper( data_$if field.useCommand$->getCommand()$-if$ );
+                helper.serialize( proto, writer );
+$-ifdef$
+$ifndef field.helperClass$
+                $expand getter$().serialize(proto,writer);
+$-ifndef$                
+            }
 $-select$
+        } catch ( IOException e ) {
+            throw PvapSerializationException( data_->isRequest(),
+                                              data_->getSeqNum(),
+                                              "writing field $var field.name$ in $var message.name$: %s",
+                                              e.what() );
+        }
+$-if$
 $-if$
 $-foreach$
         // optional fields
 $foreach field$
+$if !field.isTransient$
 $if field.optional$
-        if ( has$var field.name:ucf$() ) {
-            // printf( "write pos=%d field=%d\n", ds.getPos(), $var field.name$Tag );
-            ds.writeTag($var field.name$Tag);
-            $select field.type$
-$case byte$ds.writeByteLV($var field.name$);
-$case uint16$ds.writeInt16LV($var field.name$);
-$case uint32$ds.writeInt32LV($var field.name$);
-$case uint64$ds.writeInt64LV($var field.name$);
-$case string$ds.writeStrLV($var field.name$);
-$case ascii$ds.writeByteStringLV($var field.name$);
-$case utf8$ds.writeByteStringLV($var field.name$);
-$case bool$ds.writeBoolLV($var field.name$);
+        if ( $expand checker$() ) {
+            // printf( "write pos=%d field=%d\n", writer.getPos(), $var field.name$Tag );
+            try {
+                writer.writeTag($var field.name$Tag);
+                $select field.type$
+$case byte$writer.writeByteLV($expand getter$());
+$case uint16$writer.writeShortLV($expand getter$());
+$case uint32$writer.writeIntLV($expand getter$());
+$case uint64$writer.writeLongLV($expand getter$());
+$case string$writer.writeStrLV($expand getter$());
+$case ascii$writer.writeAsciiLV($expand getter$());
+$case utf8$writer.writeUTFLV($expand getter$());
+$case bool$writer.writeBoolLV($expand getter$());
 $case nested$throw NotImplementedException("$var field.name$");
-$default$$var field.name$.serialize(proto,ds);
+$default${
+$ifdef field.helperClass$
+                    $var field.helperClass$ helper( data_$if field.useCommand$->getCommand()$-if$ );
+                    helper.serialize(proto,writer);
+$-ifdef$
+$ifndef field.helperClass$
+                    $expand getter$().serialize(proto,writer);
+$-ifndef$                
+                }
 $-select$
+            } catch ( IOException e ) {
+                throw PvapSerializationException( data_->isRequest(),
+                                                  data_->getSeqNum(),
+                                                  "writing field $var field.name$ in $var message.name$:",
+                                                  e.what() );
+            }
         }
+$-if$
 $-if$
 $-foreach$
     }
 
-    template <class Proto, class DataStream> void deserialize(const Proto& proto, DataStream& ds)
+    template <class DataStream> void deserialize( $var protocol.name:ucf$& proto, DataStream& reader )
         throw (PvapException)
     {
+        if ( ! data_ ) return;
         clear();
         int tag = -1;
-        while (true) {
-            // int pos = int(ds.getPos());
-            tag = ds.readTag();
-            // printf( "read pos=%d field=%d\n", pos, tag );
-            if ( tag == -1 ) break;
-            switch(tag) {
+        try {
+            do {
+                // int pos = int(reader.getPos());
+                tag = reader.readTag();
+                // printf( "read pos=%d field=%d\n", pos, tag );
+                if ( tag == -1 ) break;
+                switch(tag) {
 $foreach field$
-            case $var field.name$Tag: {
-                if ($var field.name$Flag) {
-                    throw DuplicateFieldException(isRequest(),"duplicate field $var field.name$ of $var message.name$",seqNum);
-                }
-                $select field.type$
-$case byte$$var field.name$=ds.readByteLV();
-$case uint16$$var field.name$=ds.readInt16LV();
-$case uint32$$var field.name$=ds.readInt32LV();
-$case uint64$$var field.name$=ds.readInt64LV();
-$case string$$var field.name$=ds.readStrLV();
-$case ascii$$var field.name$=ds.readByteStringLV();
-$case utf8$$var field.name$=ds.readByteStringLV();
-$case bool$$var field.name$=ds.readBoolLV();
-$case nested$throw NotImplementedException("reading field $var field.name$ of $var message.name$ is not impl yet",seqNum);
-$default$$var field.name$.deserialize(proto,ds);
+$if !field.isTransient$
+                case $var field.name$Tag: {
+$ifdef field.checkVar$
+                    if ($var field.checkVar$Flag) {
+                        throw DuplicateFieldException(data_->isRequest(),
+                                                      "duplicate field $var field.name$ of $var message.name$", data_->getSeqNum());
+                    }
+                    $var field.checkVar$Flag = true;
+$-ifdef$
+                    $select field.type$
+$case byte$$expand setter$(reader.readByteLV());
+$case uint16$$expand setter$(reader.readShortLV());
+$case uint32$$expand setter$(reader.readIntLV());
+$case uint64$$expand setter$(reader.readLongLV());
+$case string$$expand setter$(reader.readStrLV());
+$case ascii$$expand setter$(reader.readAsciiLV());
+$case utf8$$expand setter$(reader.readUTFLV());
+$case bool$$expand setter$(reader.readBoolLV());
+$case nested$throw NotImplementedException("reading field $var field.name$ of $var message.name$ is not impl yet", data_->getSeqNum());
+$default$$ifndef field.helperClass$$var field.type$ temp;
+                    temp.deserialize(proto,reader);
+                    $expand setter$(temp);
+$-ifndef$
+$ifdef field.helperClass$$var field.helperClass$ helper(data_$if field.useCommand$->getCommand()$-if$);
+                    helper.deserialize(proto,reader);
+$-ifdef$
 $-select$
-                $var field.name$Flag=true;
-                break;
-            }
+                    break;
+                }
+$-if$
 $-foreach$
-            default:
-                throw InvalidFieldTypeException(isRequest(),"invalid field in $var message.name$",seqNum,tag);
-            }
+                default:
+                    throw InvalidFieldTypeException(data_->isRequest(),"invalid field in $var message.name$", data_->getSeqNum(),tag);
+                }
+            } while ( true );
+        } catch ( IOException e ) {
+            throw PvapSerializationException( data_->isRequest(),
+                                              data_->getSeqNum(),
+                                              "reading field tag=%d of $var message.name$: %s",
+                                              tag, e.what() );
         }
         checkFields();
     }
 
-    uint32_t getSeqNum() const
-    {
-        return seqNum;
-    }
-  
-    void setSeqNum(uint32_t value)
-    {
-        seqNum=value;
+    uint32_t getSeqNum() const {
+        return data_ ? data_->getSeqNum() : uint32_t(-1);
     }
 
 protected:
-    void checkFields() const throw (MandatoryFieldMissingException)
+    void checkFields() const throw (PvapException)
     {
-        // checking mandatory fields
-$foreach field$
-$if field.mandatory$
-        if (!$var field.name$Flag) {
-            throw MandatoryFieldMissingException(isRequest(),"field is missing $var field.name$ in $var message.name$",seqNum);
+        // using parent check
+        if ( !data_->isValid() ) {
+            throw MessageIsBrokenException(data_->isRequest(), "message $var message.name$ is broken: " + toString(), data_->getSeqNum() );
         }
-$-if$
-$-foreach$
-        // checking optional fields
-$foreach field$
-$if field.optional$
-$ifdef field.checkVar$
-        if ( ($var field.checkVar$==$var field.checkVal$) && ! $var field.name$Flag ) {
-            throw new MandatoryFieldMissingException(isRequest(),"field is missing $var field.name$ in $var message.name$",seqNum);
-        }
-$-ifdef$
-$-if$
-$-foreach$
     }
+
+private:
+    $var message.name$( const $var message.name$& );
+    $var message.name$& operator = ( const $var message.name$& );
 
 protected:
     //static const uint8_t versionMajor=$var message.versionMajor$;
     //static const uint8_t versionMinor=$var message.versionMinor$;
 
+    bool                owned_;
+    $expand baseclass$* data_;
 $foreach field$
-    static const int $var field.name$Tag=$var field.tag$;
-$-foreach$
-
-    uint32_t seqNum;
-
-$foreach field$
-$ifdef field.comment$    //$var field.comment$
-$-ifdef$    $pack$
+$if field.isTransient$
+    $pack$
   $select field.type$
   $case byte$uint8_t
   $case uint16$uint16_t
@@ -295,10 +293,13 @@ $-ifdef$    $pack$
   $default$$var field.type$
   $-select$
   $var field.name$$-pack$;
+$-if$
 $-foreach$
 
 $foreach field$
+$if field.isTransient$
     bool $var field.name$Flag;
+$-if$
 $-foreach$
 };
 

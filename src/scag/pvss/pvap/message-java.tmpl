@@ -5,6 +5,7 @@ import $var package$.pvap.protocol.*;
 import $var package$.common.PvapException;
 $ifdef message.inheritsFrom$
 import $var package$.packets.*;
+import $var package$.data.*;
 $-ifdef$
 
 $macro type$$pack$
@@ -21,48 +22,62 @@ $default$$var %1$
 $-select$
 $-pack$$-macro$
 
+$macro checker$$pack$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$if field.useCommand$getCommand().$-if$$ifdef field.useChecker$$var field.useChecker$$-ifdef$$ifndef field.useChecker$has$var field.name:ucf$$-ifndef$
+$-pack$$-macro$
 $macro getter$$pack$
-$ifdef field.useGetter$$var field.useGetter$$-ifdef$
-$ifndef field.useGetter$get$var field.name:ucf$$-ifndef$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$if field.useCommand$getCommand().$-if$$ifdef field.useGetter$$var field.useGetter$$-ifdef$$ifndef field.useGetter$get$var field.name:ucf$$-ifndef$
 $-pack$$-macro$
-
 $macro setter$$pack$
-$ifdef field.useSetter$$var field.useSetter$$-ifdef$
-$ifndef field.useSetter$set$var field.name:ucf$$-ifndef$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$if field.useCommand$getCommand().$-if$$ifdef field.useSetter$$var field.useSetter$$-ifdef$$ifndef field.useSetter$set$var field.name:ucf$$-ifndef$
 $-pack$$-macro$
+$macro baseclass$$var message.inheritsFrom$$ifdef message.command$< $var message.command$ >$-ifdef$$-macro$
 
-public class $var message.name$ $ifdef message.inheritsFrom$ extends $var message.inheritsFrom$$-ifdef$
+public class $var message.name$
 {
     // static Logger logger = Logger.getLogger($var message.name$.class);
-
 $foreach field$
 $if !field.isTransient$
-    static final int $var field.name$Tag = $var field.tag$;
+    protected static final int $var field.name$Tag = $var field.tag$;
 $-if$
 $-foreach$
 
-$ifndef message.inheritsFrom$
-    int seqNum;
-$-ifndef$
 $foreach field$
-$if !field.useParent$
+$if field.isTransient$
     $expand type field.type$ $var field.name$;
     boolean $var field.name$Flag=false;
 $-if$
 $-foreach$
-
-    public $var message.name$() {
-    }
+    $expand baseclass$ data_;
 
     public $var message.name$( int seqNum ) {
-        setSeqNum(seqNum);
+$ifdef message.command$
+        data_ = new $expand baseclass$( new $var message.command$( seqNum ) );
+$-ifdef$
+$ifndef message.command$
+        data_ = new $expand baseclass$( seqNum );
+$-ifndef$
+$foreach field$
+$if field.isTransient$
+        $var field.name$Flag = false;
+$-if$
+$-foreach$
     }
 
-$ifdef message.inheritsFrom$
-    public $var message.name$( $var message.inheritsFrom$ other ) {
-        super(other);
+    public $var message.name$( $expand baseclass$ other ) {
+        data_ = other;
 $foreach field$
-$if !field.useParent$
+$if field.isTransient$
+        $var field.name$Flag = false;
+$-if$
+$-foreach$
+    }
+
+$ifdef message.command$
+    public $var message.name$( $var message.command$ cmd, IProfileKey key ) {
+        data_ = new $expand baseclass$(cmd,key);
+$foreach field$
+$if field.isTransient$
         $var field.name$Flag = false;
 $-if$
 $-foreach$
@@ -71,11 +86,9 @@ $-ifdef$
 
     public void clear()
     {
-$ifdef message.inheritsFrom$
-        super.clear();
-$-ifdef$
+        data_.clear();
 $foreach field$
-$if !field.useParent$
+$if field.isTransient$
         $var field.name$Flag=false;
 $-if$
 $-foreach$
@@ -83,73 +96,8 @@ $-foreach$
   
     public String toString()
     {
-        StringBuilder sb=new StringBuilder();
-$ifdef message.inheritsFrom$
-        sb.append(super.toString());
-$-ifdef$
-$ifndef message.inheritsFrom$
-        sb.append("$var message.name$:");
-        sb.append("seqNum=");
-        sb.append(getSeqNum());
-$-ifndef$
-$foreach field$
-$if !field.useParent$
-$if !field.isTransient$
-        if ( has$var field.name:ucf$() ) {
-            sb.append(";$var field.name$=");
-            $pack$$select field.type$
-            $case bool$sb.append($var field.name$);
-            $case byte$sb.append($var field.name$);
-            $case uint16$sb.append($var field.name$);
-            $case uint32$sb.append($var field.name$);
-            $case uint64$sb.append($var field.name$);
-            $case string$sb.append($var field.name$);
-            $case ascii$sb.append($var field.name$);
-            $case utf8$sb.append($var field.name$);
-            $default$sb.append($var field.name$.toString());
-            $-select$$-pack$
-        }
-$-if$
-$-if$
-$-foreach$
-        return sb.toString();
+        return data_.toString();
     }
-$foreach field$
-
-$if !field.useParent$
-    public $expand type field.type$ get$var field.name:ucf$()
-$if options.throwOnUnsetGet$
-           throws FieldIsNullException
-$-if$
-    {
-$if options.throwOnUnsetGet$
-        if( ! has$var field.name:ucf$() ) {
-            throw new FieldIsNullException(isRequest(), "field $var field.name$ of $var message.name$ is not set", seqNum);
-        }
-$-if$
-        return $var field.name$;
-    }
-
-    public void set$var field.name:ucf$($expand type field.type$ $var field.name$)
-    {
-        this.$var field.name$ = $var field.name$;
-        this.$var field.name$Flag = true;
-        /*
-$if field.optional$
-$ifdef field.checkVar$
-        $var field.checkVar$ = $var field.checkVal$;
-        $var field.checkVar$Flag = true;
-$-ifdef$
-$-if$
-         */
-    }
-
-    public boolean has$var field.name:ucf$()
-    {
-        return $var field.name$Flag$if field.optional$$ifdef field.checkVar$ && ( $var field.checkVar$ == $var field.checkVal$ )$-ifdef$$-if$;
-    }
-$-if$
-$-foreach$
 
     public void encode( $var protocol.name:ucf$ proto, IBufferWriter writer ) throws PvapException
     {
@@ -165,22 +113,22 @@ $case string$writer.writeStringLV($expand getter$());
 $case ascii$try {
             writer.writeUTFLV($expand getter$());
         } catch ( java.io.IOException e ) {
-            throw new PvapSerializationException( isRequest(), "writing ascii field $var field.name$ in $var message.name$:" + e.getMessage(), getSeqNum() );
+            throw new PvapSerializationException( data_.isRequest(), "writing ascii field $var field.name$ in $var message.name$:" + e.getMessage(), data_.getSeqNum() );
         }
 $case utf8$try {
             writer.writeUTFLV($expand getter$());
         } catch ( java.io.IOException e ) {
-            throw new PvapSerializationException( isRequest(), "writing utf8 field $var field.name$ in $var message.name$:" + e.getMessage(), getSeqNum() );
+            throw new PvapSerializationException( data_.isRequest(), "writing utf8 field $var field.name$ in $var message.name$:" + e.getMessage(), data_.getSeqNum() );
         }
 $case byte$writer.writeByteLV($expand getter$());
 $case uint16$writer.writeShortLV($expand getter$());
 $case uint32$writer.writeIntLV($expand getter$());
 $case uint64$writer.writeLongLV($expand getter$());
 $case bool$writer.writeBoolLV($expand getter$());
-$case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet", getSeqNum());
+$case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet", data_.getSeqNum());
 $default${
 $ifdef field.helperClass$
-            $var field.helperClass$ helper = new $var field.helperClass$(this);
+            $var field.helperClass$ helper = new $var field.helperClass$( data_$if field.useCommand$.getCommand()$-if$ );
             helper.encode(proto,writer);
 $-ifdef$
 $ifndef field.helperClass$
@@ -195,7 +143,7 @@ $-foreach$
 $foreach field$
 $if !field.isTransient$
 $if field.optional$
-        if ( has$var field.name:ucf$() ) {
+        if ( $expand checker$() ) {
             // System.out.println("write pos=" + writer.getPos() + " field=" + $var field.name$Tag);
             writer.writeTag($var field.name$Tag);
             $select field.type$
@@ -203,22 +151,22 @@ $case string$writer.writeStringLV($expand getter$());
 $case ascii$try {
                 writer.writeUTFLV($expand getter$());
             } catch ( java.io.IOException e ) {
-                throw new PvapSerializationException( isRequest(), "writing ascii field $var field.name$ in $var message.name$:" + e.getMessage(), getSeqNum() );
+                throw new PvapSerializationException( data_.isRequest(), "writing ascii field $var field.name$ in $var message.name$:" + e.getMessage(), data_.getSeqNum() );
             }
 $case utf8$try {
                 writer.writeUTFLV($expand getter$());
             } catch ( java.io.IOException e ) {
-                throw new PvapSerializationException( isRequest(), "writing utf8 field $var field.name$ in $var message.name$:" + e.getMessage(), getSeqNum() );
+                throw new PvapSerializationException( data_.isRequest(), "writing utf8 field $var field.name$ in $var message.name$:" + e.getMessage(), data_.getSeqNum() );
             }
 $case byte$writer.writeByteLV($expand getter$());
 $case uint16$writer.writeShortLV($expand getter$());
 $case uint32$writer.writeIntLV($expand getter$());
 $case uint64$writer.writeLongLV($expand getter$());
 $case bool$writer.writeBoolLV($expand getter$());
-$case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet",getSeqNum());
+$case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet",data_.getSeqNum());
 $default${
 $ifdef field.helperClass$
-                $var field.helperClass$ helper = new $var field.helperClass$(this);
+                $var field.helperClass$ helper = new $var field.helperClass$(data_$if field.useCommand$.getCommand()$-if$);
                 helper.encode(proto,writer);
 $-ifdef$
 $ifndef field.helperClass$
@@ -246,14 +194,9 @@ $-foreach$
 $foreach field$
 $if !field.isTransient$
                 case $var field.name$Tag: {
-                    /*
-                    if (has$var field.name:ucf$()) {
-                        throw new DuplicateFieldException(isRequest(),"duplicate field $var field.name$ of $var message.name$",getSeqNum());
-                    }
-                     */
 $ifdef field.checkVar$
                     if ( $var field.checkVar$Flag ) {
-                        throw new DuplicateFieldException(isRequest(),"duplicate field $var field.name$ of $var message.name$", getSeqNum());
+                        throw new DuplicateFieldException(data_.isRequest(),"duplicate field $var field.name$ of $var message.name$", data_.getSeqNum());
                     }
                     $var field.checkVar$Flag = true;
 $-ifdef$
@@ -266,76 +209,41 @@ $case uint16$$expand setter$(reader.readShortLV());
 $case uint32$$expand setter$(reader.readIntLV());
 $case uint64$$expand setter$(reader.readLongLV());
 $case bool$$expand setter$(reader.readBoolLV());
-$case nested$throw new NotImplementedException("reading field $var field.name$ of $var message.name$ is not impl yet",getSeqNum());
+$case nested$throw new NotImplementedException("reading field $var field.name$ of $var message.name$ is not impl yet",data_.getSeqNum());
 $default$$ifndef field.helperClass$$var field.type$ temp = new $var field.type$();
                     temp.decode(proto,reader);
                     $expand setter$(temp);
 $-ifndef$
-$ifdef field.helperClass$$var field.helperClass$ helper = new $var field.helperClass$(this);
+$ifdef field.helperClass$$var field.helperClass$ helper = new $var field.helperClass$(data_$if field.useCommand$.getCommand()$-if$);
                     helper.decode(proto,reader);
 $-ifdef$
 $-select$
-$if !field.useParent$
-                    $var field.name$Flag=true;
-$-if$
                     break;
                 }
 $-if$
 $-foreach$
                 default:
-                    throw new InvalidFieldTypeException(isRequest(),"invalid field in $var message.name$",getSeqNum(),tag);
+                    throw new InvalidFieldTypeException(data_.isRequest(),"invalid field in $var message.name$",data_.getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( java.io.IOException e ) {
-            throw new PvapSerializationException( isRequest(), "reading field tag=" + tag + " of $var message.name$:" + e.getMessage(), getSeqNum() );
+            throw new PvapSerializationException( data_.isRequest(), "reading field tag=" + tag + " of $var message.name$:" + e.getMessage(), data_.getSeqNum() );
         }
         // checking integrity
         checkFields();
     }
-$ifdef message.inheritsFrom$
 
-    public int getSeqNum()
-    {
-        return seqNum;
+    public int getSeqNum() {
+        return data_.getSeqNum();
     }
 
-    public void setSeqNum(int seqNum)
-    {
-        this.seqNum = seqNum;
-    }
-$-ifdef$
+    public $expand baseclass$ getData() { return data_; }
 
     protected void checkFields() throws PvapException
     {
-        // checking owned mandatory fields
-$foreach field$
-$if field.mandatory$
-$if !field.isTransient$
-$if !field.useParent$
-        if (!has$var field.name:ucf$()) {
-            throw new MandatoryFieldMissingException(isRequest(),"field is missing $var field.name$ in $var message.name$",seqNum);
-        }
-$-if$
-$-if$
-$-if$
-$-foreach$
-        // checking owned optional fields
-        /*
-$foreach field$
-$if field.optional$
-$ifdef field.checkVar$
-        if ( ($var field.checkVar$==$var field.checkVal$) && ! $var field.name$Flag ) {
-            throw new MandatoryFieldMissingException(isRequest(),"field is missing $var field.name$ in $var message.name$",seqNum);
-        }
-$-ifdef$
-$-if$
-$-foreach$
-         */
-$ifdef message.inheritsFrom$
         // using parent check
-        if ( !isValid() ) {
-            throw new MessageIsBrokenException(isRequest(), "message $var message.name$ is broken: " + toString(), getSeqNum() );
+        if ( !data_.isValid() ) {
+            throw new MessageIsBrokenException(data_.isRequest(), "message $var message.name$ is broken: " + toString(), data_.getSeqNum() );
         }
-$-ifdef$
     }
 }
