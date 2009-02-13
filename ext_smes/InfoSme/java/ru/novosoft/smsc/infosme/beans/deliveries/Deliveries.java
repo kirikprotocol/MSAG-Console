@@ -76,6 +76,8 @@ public class Deliveries extends InfoSmeBean {
 
   public String getRegionName(int id) {
     try {
+      if (id == -1)
+        return "All regions";
       Region r = pageData.getAppContext().getRegionsManager().getRegionById(id);
       return r.getName();
     } catch (Exception e) {

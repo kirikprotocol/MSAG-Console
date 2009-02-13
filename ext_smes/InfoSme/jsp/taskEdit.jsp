@@ -44,7 +44,7 @@
     <% } %>
     <%for (Iterator iter = users.iterator(); iter.hasNext();) {
       String user = (String)iter.next();%>
-    <option value="<%=user%>" <%=bean.getOwner().equals(user) ? "SELECTED" : ""%>><%=user%></option>
+    <option value="<%=user%>" <%=bean.getOwner() != null && bean.getOwner().equals(user) ? "SELECTED" : ""%>><%=user%></option>
     <% } %>
   </select>    
 </tr>
@@ -52,7 +52,7 @@
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.task_name")%></th>
   <td><%if (bean.isSmeRunning()) {
-    %><input class=txt id=name name=name value="<%=StringEncoderDecoder.encode(bean.getName())%>"><%
+    %><input class=txt id=name name=name value="<%=StringEncoderDecoder.encode(bean.getName())%>" validation="nonEmpty"><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getName())%><%
     }%>

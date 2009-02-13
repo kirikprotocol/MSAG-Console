@@ -153,7 +153,7 @@ public class TaskBuilder extends Thread {
 
       int index = line.indexOf('|');
       if (index > 0) {
-        String msisdn = line.substring(0, i);
+        String msisdn = line.substring(0, index);
         if (msisdn.charAt(0) != '+')
           msisdn = '+' + msisdn;        
         if (blm.contains(msisdn))
@@ -161,7 +161,7 @@ public class TaskBuilder extends Thread {
         if (rtree.getValue(msisdn) == null)
           continue;
 
-        String text = line.substring(i+1);
+        String text = line.substring(index+1);
         text = text.replaceAll("(\\\\n)",System.getProperty("line.separator"));
 
         final Message msg = new Message();

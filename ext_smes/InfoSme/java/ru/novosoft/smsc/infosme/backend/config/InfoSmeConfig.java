@@ -127,6 +127,19 @@ public class InfoSmeConfig {
 
       cfg.save();
 
+      if (options)
+        optionsModified = false;
+      if (tasks)
+        taskManager.setModified(false, user);
+      if (schedules)
+        scheduleManager.setModified(false);
+      if (retries)
+        retryPolicyManager.setModified(false);
+      if (providers)
+        providerManager.setModified(false);
+      if (drivers)
+        driverManager.setModified(false);
+
       return new ConfigChanges(schedulesChanges, tasksChanges);
     } catch (Throwable e) {
       e.printStackTrace();
@@ -388,7 +401,6 @@ public class InfoSmeConfig {
       cfg.setString("InfoSme.storeLocation", storeLocation);
       cfg.setString("InfoSme.statStoreLocation", statStoreLocation);
 
-      optionsModified = false;
     } catch (Exception e) {
       e.printStackTrace();
       throw new AdminException(e.getMessage());

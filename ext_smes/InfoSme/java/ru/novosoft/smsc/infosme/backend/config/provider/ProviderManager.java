@@ -61,15 +61,20 @@ public class ProviderManager {
       for (Iterator iter = providers.values().iterator(); iter.hasNext();) {
         Provider t = (Provider)iter.next();
         t.storeToConfig(cfg);
-        t.setModified(false);
       }
-
-      modified = false;
 
     } catch (Exception e) {
       e.printStackTrace();
       throw new AdminException(e.getMessage());
     }
+  }
+
+  public void setModified(boolean modified) {
+    this.modified = modified;
+    for (Iterator iter = providers.values().iterator(); iter.hasNext();) {
+        Provider t = (Provider)iter.next();
+        t.setModified(false);
+      }
   }
 
   public synchronized void resetProviders(Config cfg) throws AdminException {

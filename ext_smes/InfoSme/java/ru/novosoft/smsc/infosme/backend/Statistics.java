@@ -2,6 +2,7 @@ package ru.novosoft.smsc.infosme.backend;
 
 import java.util.Collection;
 import java.util.Vector;
+import java.util.TreeSet;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,7 +15,7 @@ import java.util.Vector;
 public class Statistics
 {
   private CountersSet counters = new CountersSet();
-  private Vector countersByDates = new Vector(); // contains DateCountersSet
+  private TreeSet countersByDates = new TreeSet(); // contains DateCountersSet
 
   public CountersSet getCounters()
   {
@@ -23,7 +24,7 @@ public class Statistics
 
   public void addDateStat(DateCountersSet set)
   {
-    countersByDates.addElement(set);
+    countersByDates.add(set);
     counters.increment(set);
   }
 

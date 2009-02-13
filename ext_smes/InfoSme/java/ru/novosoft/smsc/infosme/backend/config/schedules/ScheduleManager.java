@@ -115,16 +115,21 @@ public class ScheduleManager {
       for (Iterator iter = schedules.values().iterator(); iter.hasNext();) {
         Schedule s = (Schedule)iter.next();
         s.storeToConfig(cfg);
-        s.setModified(false);
       }
-
-      modified = false;
 
       return changes;
     } catch (Exception e) {
       e.printStackTrace();
       throw new AdminException(e.getMessage());
     }
+  }
+
+  public void setModified(boolean modified) {
+    this.modified = modified;
+    for (Iterator iter = schedules.values().iterator(); iter.hasNext();) {
+        Schedule s = (Schedule)iter.next();
+        s.setModified(false);
+      }
   }
 
   public synchronized void resetSchedules(Config cfg) throws AdminException {

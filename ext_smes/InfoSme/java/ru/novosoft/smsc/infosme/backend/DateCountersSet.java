@@ -10,11 +10,11 @@ import java.util.*;
  * To change this template use Options | File Templates.
  */
 
-public class DateCountersSet extends CountersSet
+public class DateCountersSet extends CountersSet implements Comparable
 {
   private Date date;
 
-  private Vector byHours = new Vector(); // contains HourCountersSet
+  private TreeSet byHours = new TreeSet(); // contains HourCountersSet
 
   public DateCountersSet(Date date)
   {
@@ -23,7 +23,7 @@ public class DateCountersSet extends CountersSet
 
   public void addHourStat(HourCountersSet set)
   {
-    byHours.addElement(set);
+    byHours.add(set);
     super.increment(set);
   }
 
@@ -35,6 +35,10 @@ public class DateCountersSet extends CountersSet
   public Date getDate()
   {
     return date;
+  }
+
+  public int compareTo(Object o) {
+    return date.compareTo(((DateCountersSet)o).date);
   }
 }
 

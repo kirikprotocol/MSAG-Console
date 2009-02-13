@@ -8,7 +8,7 @@ package ru.novosoft.smsc.infosme.backend;
  * To change this template use Options | File Templates.
  */
 
-public class HourCountersSet extends CountersSet
+public class HourCountersSet extends CountersSet implements Comparable
 {
   private int hour = 0;
 
@@ -32,5 +32,12 @@ public class HourCountersSet extends CountersSet
   public int getHour()
   {
     return hour;
+  }
+
+  public int compareTo(Object o) {
+    int h = ((HourCountersSet)o).hour;
+    if ( h > hour)
+        return -1;
+    return h == hour ? 0 : 1;
   }
 }

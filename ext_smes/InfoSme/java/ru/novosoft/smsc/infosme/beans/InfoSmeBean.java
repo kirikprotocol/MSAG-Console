@@ -135,7 +135,7 @@ public class InfoSmeBean extends PageBean
           return false;
         }
         public boolean isItemAllowed(DataItem item) {
-          return item.getValue("owner").equals(userName);
+          return item.getValue("owner") != null && item.getValue("owner").equals(userName);
         }
       };
 

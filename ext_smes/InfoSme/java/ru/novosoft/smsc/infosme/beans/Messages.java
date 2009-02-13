@@ -112,8 +112,8 @@ public class Messages extends InfoSmeBean
       else if (mbResend != null || mbResendAll != null) result =  processResend(request);
       else if (mbUpdateAll != null) return processUpdateAll();
       else if (mbExportAll != null) result =  processExportAll();
-      else if (mbUpdate != null) return processUpdate();
-      else if (mbCancelUpdate != null) return processCancelUpdate();
+      else if (mbUpdate != null) result = processUpdate();
+      else if (mbCancelUpdate != null) result = processCancelUpdate();
       else if (mbQuery != null) processQuery();
     } catch (AdminException e) {
       logger.error("Process error", e);

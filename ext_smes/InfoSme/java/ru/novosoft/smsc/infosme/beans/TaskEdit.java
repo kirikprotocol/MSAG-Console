@@ -139,16 +139,9 @@ public class TaskEdit extends InfoSmeBean
     endDate = task.getEndDate() == null ? "" : df.format(user.getUserTime(task.getEndDate()));
     startDate = task.getStartDate() == null ? "" : df.format(user.getUserTime(task.getStartDate()));
     validityPeriod = task.getValidityPeriod() == null ? "" : tf.format(task.getValidityPeriod());
-//    pageData.validityPeriod = task.getValidityPeriod() == null ? "" : tf.format(user.getUserTime(task.getValidityPeriod()));
     validityDate = task.getValidityDate() == null ? "" : df.format(user.getUserTime(task.getValidityDate()));
     activePeriodStart = task.getActivePeriodStart() == null ? "" : tf.format(user.getUserTime(task.getActivePeriodStart()));
     activePeriodEnd = task.getActivePeriodEnd() == null ? "" : tf.format(user.getUserTime(task.getActivePeriodEnd()));
-//    endDate = task.getEndDate();
-//    startDate = task.getStartDate();
-//    validityPeriod = task.getValidityPeriod();
-//    validityDate = task.getValidityDate();
-//    activePeriodStart = task.getActivePeriodStart();
-//    activePeriodEnd = task.getActivePeriodEnd();
     activeWeekDays = new String[task.getActiveWeekDays().size()];
     int i=0;
     for (Iterator iter = task.getActiveWeekDays().iterator(); iter.hasNext();) {
@@ -188,11 +181,7 @@ public class TaskEdit extends InfoSmeBean
       e.printStackTrace();
       throw new AdminException("Invalid field format", e);
     }
-//    task.setActivePeriodStart(activePeriodStart);
-//    task.setActivePeriodEnd(activePeriodEnd);
     task.setActiveWeekDays(Arrays.asList(activeWeekDays));
-//    task.setEndDate(endDate);
-//    task.setStartDate(startDate);
 
     task.setDelivery(delivery);
     task.setQuery(query);
@@ -217,8 +206,6 @@ public class TaskEdit extends InfoSmeBean
       } catch (Throwable e) {
         throw new AdminException("Invalid field format");
       }
-//      task.setValidityPeriod(validityPeriod);
-//      task.setValidityDate(validityDate);
       task.setRetryPolicy(retryPolicy);
       task.setOwner(owner);
     }

@@ -62,15 +62,20 @@ public class DriverManager {
       for (Iterator iter = drivers.values().iterator(); iter.hasNext();) {
         Driver d = (Driver)iter.next();
         d.storeToConfig(cfg);
-        d.setModified(false);
       }
-
-      modified = false;
 
     } catch (Exception e) {
       e.printStackTrace();
       throw new AdminException(e.getMessage());
     }
+  }
+
+  public void setModified(boolean modified) {
+    this.modified = modified;
+    for (Iterator iter = drivers.values().iterator(); iter.hasNext();) {
+        Driver d = (Driver)iter.next();
+        d.setModified(false);
+      }
   }
 
   public synchronized void resetDrivers(Config cfg) throws AdminException {

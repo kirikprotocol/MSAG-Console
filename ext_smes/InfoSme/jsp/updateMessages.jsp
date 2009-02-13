@@ -11,6 +11,7 @@
   int beanResult = bean.process(request);
 
   if (beanResult == Messages.RESULT_UPDATE || beanResult == Messages.RESULT_CANCEL_UPDATE) {
+    beanResult = PageBean.RESULT_OK;
     request.getRequestDispatcher("messages.jsp").forward(request, response);
     return;
   } else {

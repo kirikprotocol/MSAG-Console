@@ -31,6 +31,8 @@
     session.setAttribute("Export mess done",null);    
     request.getRequestDispatcher("updateMessages.jsp").forward(request, response);
     return;
+  } if (beanResult == Messages.RESULT_UPDATE || beanResult == Messages.RESULT_CANCEL_UPDATE) {
+    beanResult = Messages.RESULT_OK;
   } else {
     session.setAttribute("Export mess done",null);
   }

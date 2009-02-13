@@ -26,17 +26,17 @@
   </table>
   <br>
   <div class=query_result>
-    <%if (bean.isInitiated()) {%>
-      <%=bean.getMsisdn()%><%=bean.isFound() ? " is in black list" : " is not in black list"%>
+    <%if (bean.isInitiated() && bean.isFound() != null) {%>
+      <%=bean.getMsisdn()%><%=bean.isFound().booleanValue() ? " is in black list" : " is not in black list"%>
     <%}%>
   </div>
 </div>
 <%
   page_menu_begin(out);
   page_menu_button(session, out, "mbLookup", "common.buttons.lookup", "infosme.hint.lookup");
-  if (bean.isInitiated() && bean.isFound())
+  if (bean.isInitiated() && bean.isFound() != null && bean.isFound().booleanValue())
     page_menu_button(session, out, "mbDelete",   "common.buttons.delete",  "infosme.hint.delete");
-  else if (bean.isInitiated() && !bean.isFound())
+  else if (bean.isInitiated() && bean.isFound() != null && !bean.isFound().booleanValue())
     page_menu_button(session, out, "mbAdd", "common.buttons.add", "infosme.hint.add");
   page_menu_space(out);
   page_menu_end(out);

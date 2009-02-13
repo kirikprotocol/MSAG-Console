@@ -61,10 +61,7 @@ public class RetryPolicyManager {
       for (Iterator iter = policies.values().iterator(); iter.hasNext();) {
         RetryPolicy p = (RetryPolicy)iter.next();
         p.storeToConfig(cfg);
-        p.setModified(false);
       }
-
-      modified = false;
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -84,6 +81,14 @@ public class RetryPolicyManager {
       e.printStackTrace();
       throw new AdminException(e.getMessage());
     }
+  }
+
+  public void setModified(boolean modified) {
+    this.modified = modified;
+    for (Iterator iter = policies.values().iterator(); iter.hasNext();) {
+        RetryPolicy p = (RetryPolicy)iter.next();
+        p.setModified(false);
+      }
   }
 
   private List loadPolicies(Config cfg) throws AdminException {

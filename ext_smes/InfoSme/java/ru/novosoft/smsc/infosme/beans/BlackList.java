@@ -22,7 +22,7 @@ import java.util.Map;
 public class BlackList extends InfoSmeBean {
 
   private String msisdn;
-  private boolean found;
+  private Boolean found;
   private boolean initiated;
 
   private String mbLookup;
@@ -37,18 +37,21 @@ public class BlackList extends InfoSmeBean {
     try {
 
       if (msisdn != null) {
-        if (!isUserAdmin(request) && !isMsisdnAllowed(msisdn, getUser(request)))
+        found = null;
+        if (!isUserAdmin(request) && !isMsisdnAllowed(msisdn, getUser(request))) {
+          found = null;
           return error("infosme.error.blacklist.abonent_region_not_allowed", msisdn);
-        found = getInfoSmeContext().getBlackListManager().contains(msisdn);
+        }
+        found = Boolean.valueOf(getInfoSmeContext().getBlackListManager().contains(msisdn));
         if (mbLookup != null) {
           initiated = true;
-        } else if (mbAdd != null && initiated && !found) {
+        } else if (mbAdd != null && initiated && !found.booleanValue()) {
           getInfoSmeContext().getBlackListManager().add(msisdn);
-          found = true;
+          found = Boolean.TRUE;
           mbAdd = null;
-        } else if (mbDelete != null && initiated && found) {
+        } else if (mbDelete != null && initiated && found.booleanValue()) {
           getInfoSmeContext().getBlackListManager().remove(msisdn);
-          found = false;
+          found = Boolean.FALSE;
           mbDelete = null;
         }
       } else {
@@ -90,11 +93,11 @@ public class BlackList extends InfoSmeBean {
     this.msisdn = msisdn;
   }
 
-  public boolean isFound() {
+  public Boolean isFound() {
     return found;
   }
 
-  public void setFound(boolean found) {
+  public void setFound(Boolean found) {
     this.found = found;
   }
 

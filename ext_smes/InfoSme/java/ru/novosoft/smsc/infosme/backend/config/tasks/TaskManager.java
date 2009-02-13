@@ -195,20 +195,16 @@ public class TaskManager {
       // Remove all tasks by owner
       for (Iterator iter = oldTasks.iterator(); iter.hasNext();) {
         Task t = (Task)iter.next();
-        if (owner == null || t.getOwner().equals(owner))
+        if (owner == null || (t.getOwner() != null && t.getOwner().equals(owner)))
           cfg.removeSection(TASKS_PREFIX + '.' + t.getId());
       }
 
       // Add new tasks
       for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
         Task t = (Task)iter.next();
-        if (owner == null || t.getOwner().equals(owner)) {
+        if (owner == null || t.getOwner().equals(owner))
           t.storeToConfig(cfg);
-          t.setModified(false);
-        }
       }
-
-      modified = false;
 
       return changes;
 
@@ -216,6 +212,15 @@ public class TaskManager {
       e.printStackTrace();
       throw new AdminException(e.getMessage());
     }
+  }
+
+  public void setModified(boolean modified, String owner) {
+    this.modified = modified;
+    for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
+        Task t = (Task)iter.next();
+        if (owner == null || t.getOwner().equals(owner))
+          t.setModified(false);
+      }
   }
 
   public synchronized void resetTasks(String owner, Config cfg) throws AdminException {
