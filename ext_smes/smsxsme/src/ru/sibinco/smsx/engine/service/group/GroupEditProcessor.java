@@ -293,7 +293,7 @@ class GroupEditProcessor implements GroupAddCmd.Receiver,
       if (!dl.removeMember(member))
         throw new CommandExecutionException("Member " + member + " does not exists in group " + name, GroupEditCommand.ERR_MEMBER_NOT_EXISTS);
 
-      if (operators.getOperatorByAddress(member) != null)
+      if (!member.equals(owner) && operators.getOperatorByAddress(member) != null)
         dl.removeSubmitter(member);
 
     } catch (DataSourceException e) {

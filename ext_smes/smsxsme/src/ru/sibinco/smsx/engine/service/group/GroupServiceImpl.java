@@ -31,10 +31,8 @@ public class GroupServiceImpl implements Service, GroupService {
   private final RepliesMap replies;
   private final GroupProfileProcessor profileProcessor;
 
-  public GroupServiceImpl(XmlConfig config, OutgoingQueue outQueue) throws ServiceInitializationException {
+  public GroupServiceImpl(XmlConfigSection g, OutgoingQueue outQueue) throws ServiceInitializationException {
     try {
-      XmlConfigSection g = config.getSection("group");
-
       String storeDir = g.getString("store.dir");
       this.listsDS = new FileDistrListDataSource(new File(storeDir, "members.bin"), new File(storeDir, "submitters.bin"), new File(storeDir, "lists.bin"));
       this.principalDS = new FilePrincipalDataSource(new File(storeDir, "principals.bin"));

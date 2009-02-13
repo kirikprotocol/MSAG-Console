@@ -162,6 +162,12 @@ public class GroupEditSMPPService extends AbstractSMPPService {
     }
   }
 
+  private static String prepareMsisdn(String msisdn) {
+    if (msisdn.charAt(0) == '8' && msisdn.length() == 11)
+      msisdn = "+7" + msisdn.substring(1);
+    return msisdn;
+  }
+
   private boolean list(SMPPRequest req) {
     try {
       GroupListCmd c = new GroupListCmd();
@@ -223,7 +229,7 @@ public class GroupEditSMPPService extends AbstractSMPPService {
     try {
       GroupAddMemberCmd c = new GroupAddMemberCmd();
       c.setGroupName(req.getParameter("group"));
-      c.setMember(req.getParameter("member"));
+      c.setMember(prepareMsisdn(req.getParameter("member")));
       c.setOwner(req.getInObj().getMessage().getSourceAddress());
 
       Services.getInstance().getGroupService().execute(c);
@@ -240,7 +246,7 @@ public class GroupEditSMPPService extends AbstractSMPPService {
     try {
       GroupRemoveMemberCmd c = new GroupRemoveMemberCmd();
       c.setGroupName(req.getParameter("group"));
-      c.setMember(req.getParameter("member"));
+      c.setMember(prepareMsisdn(req.getParameter("member")));
       c.setOwner(req.getInObj().getMessage().getSourceAddress());
 
       Services.getInstance().getGroupService().execute(c);
@@ -257,7 +263,7 @@ public class GroupEditSMPPService extends AbstractSMPPService {
     try {
       GroupAddSubmitterCmd c = new GroupAddSubmitterCmd();
       c.setGroupName(req.getParameter("group"));
-      c.setSubmitter(req.getParameter("submitter"));
+      c.setSubmitter(prepareMsisdn(req.getParameter("submitter")));
       c.setOwner(req.getInObj().getMessage().getSourceAddress());
 
       Services.getInstance().getGroupService().execute(c);
@@ -274,7 +280,7 @@ public class GroupEditSMPPService extends AbstractSMPPService {
     try {
       GroupRemoveSubmitterCmd c = new GroupRemoveSubmitterCmd();
       c.setGroupName(req.getParameter("group"));
-      c.setSubmitter(req.getParameter("submitter"));
+      c.setSubmitter(prepareMsisdn(req.getParameter("submitter")));
       c.setOwner(req.getInObj().getMessage().getSourceAddress());
 
       Services.getInstance().getGroupService().execute(c);

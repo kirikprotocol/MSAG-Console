@@ -7,6 +7,7 @@ package ru.sibinco.smsx.engine.service;
 
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.config.ConfigException;
 import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.blacklist.BlackListService;
 import ru.sibinco.smsx.engine.service.blacklist.BlackListServiceImpl;
@@ -22,6 +23,7 @@ import ru.sibinco.smsx.engine.service.sender.SenderService;
 import ru.sibinco.smsx.engine.service.sender.SenderServiceImpl;
 import ru.sibinco.smsx.engine.service.subscription.SubscriptionService;
 import ru.sibinco.smsx.engine.service.subscription.SubscriptionServiceImpl;
+import ru.sibinco.smsx.InitializationException;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -47,12 +49,12 @@ public class Services {
     initLatch.countDown();
   }
 
-  private final CalendarService calendarService;
-  private final SecretService secretService;
+  private CalendarService calendarService;
+  private SecretService secretService;
   private final SenderService senderService;
   private final BlackListService blackListService;
   private final NickService nickService;
-  private final GroupService groupService;
+  private GroupService groupService;
   private final SubscriptionService subscriptionService;
 
   private ServiceManagerMBean mbean = null;
@@ -60,20 +62,36 @@ public class Services {
 
 
   private Services(XmlConfig config, OutgoingQueue outQueue) {
-    System.out.println("  Init Sender...");
-    senderService = new SenderServiceImpl(config, outQueue);
-    System.out.println("  Init Calendar...");
-    calendarService = new CalendarServiceImpl(config, outQueue);
-    System.out.println("  Init Secret...");
-    secretService = new SecretServiceImpl(config, outQueue);
-    System.out.println("  Init Black List...");
-    blackListService = new BlackListServiceImpl(config);
-    System.out.println("  Init Nick...");
-    nickService = new NickServiceImpl(config, outQueue);
-    System.out.println("  Init Group...");
-    groupService = new GroupServiceImpl(config, outQueue);
-    System.out.println("  Init Subscription...");
-    subscriptionService = new SubscriptionServiceImpl(config);
+    try {
+      System.out.println("  Init Sender...");
+      senderService = new SenderServiceImpl(config, outQueue);
+
+      if (config.containsSection("calendar")) {
+        System.out.println("  Init Calendar...");
+        calendarService = new CalendarServiceImpl(config.getSection("calendar"), outQueue);
+      }
+
+      if (config.containsSection("secret")) {
+        System.out.println("  Init Secret...");
+        secretService = new SecretServiceImpl(config.getSection("secret"), outQueue);
+      }
+
+      System.out.println("  Init Black List...");
+      blackListService = new BlackListServiceImpl(config);
+
+      System.out.println("  Init Nick...");
+      nickService = new NickServiceImpl(config, outQueue);
+
+      if (config.containsSection("group")) {
+        System.out.println("  Init Group...");
+        groupService = new GroupServiceImpl(config.getSection("group"), outQueue);
+      }
+
+      System.out.println("  Init Subscription...");
+      subscriptionService = new SubscriptionServiceImpl(config);
+    } catch (ConfigException e) {
+      throw new InitializationException(e.getMessage(),e);
+    }
   }
 
   public ServiceManagerMBean getMBean(String domain) {
@@ -115,13 +133,17 @@ public class Services {
     senderService.startService();
     log.info("Started: sender.");
 
-    log.info("Starting: calendar...");
-    calendarService.startService();
-    log.info("Started: calendar.");
+    if (calendarService != null) {
+      log.info("Starting: calendar...");
+      calendarService.startService();
+      log.info("Started: calendar.");
+    }
 
-    log.info("Starting: secret...");
-    secretService.startService();
-    log.info("Started: secret.");
+    if (secretService != null) {
+      log.info("Starting: secret...");
+      secretService.startService();
+      log.info("Started: secret.");
+    }
 
     log.info("Starting: black list...");
     blackListService.startService();
@@ -131,9 +153,11 @@ public class Services {
     nickService.startService();
     log.info("Started: nick.");
 
-    log.info("Starting: group...");
-    groupService.startService();
-    log.info("Started: group.");
+    if (groupService != null) {
+      log.info("Starting: group...");
+      groupService.startService();
+      log.info("Started: group.");
+    }
 
     log.info("Starting: subscription...");
     subscriptionService.startService();
@@ -145,13 +169,17 @@ public class Services {
     senderService.stopService();
     log.info("Stopped: sender.");
 
-    log.info("Stopping: calendar...");
-    calendarService.stopService();
-    log.info("Stopped: calendar.");
+    if (calendarService != null) {
+      log.info("Stopping: calendar...");
+      calendarService.stopService();
+      log.info("Stopped: calendar.");
+    }
 
-    log.info("Stopping: secret...");
-    secretService.stopService();
-    log.info("Stopped: secret.");
+    if (secretService != null) {
+      log.info("Stopping: secret...");
+      secretService.stopService();
+      log.info("Stopped: secret.");
+    }
 
     log.info("Stopping: black list...");
     blackListService.stopService();
@@ -161,9 +189,11 @@ public class Services {
     nickService.stopService();
     log.info("Stopped: nick.");
 
-    log.info("Stopping: group...");
-    groupService.stopService();
-    log.info("Stopped: group.");
+    if (groupService != null) {
+      log.info("Stopping: group...");
+      groupService.stopService();
+      log.info("Stopped: group.");
+    }
 
     log.info("Stopping: subscription...");
     subscriptionService.stopService();

@@ -29,7 +29,7 @@ public class CalendarServiceImpl implements CalendarService {
   private final CalendarDataSource dataSource;
   private final AdvertisingClient advClient;
 
-  public CalendarServiceImpl(XmlConfig config, final OutgoingQueue outQueue) {
+  public CalendarServiceImpl(XmlConfigSection cal, final OutgoingQueue outQueue) {
     try {
 
       dataSource = new DBCalendarDataSource();
@@ -37,8 +37,6 @@ public class CalendarServiceImpl implements CalendarService {
       advClient = AdvertisingClientFactory.createAdvertisingClient();
 
       MessagesQueue messagesQueue = new MessagesQueue();
-
-      XmlConfigSection cal = config.getSection("calendar");
 
       engine = new CalendarEngine(outQueue, messagesQueue, dataSource, advClient, cal.getLong("engine.working.interval", 60000));
       engine.setAdvDelim(cal.getString("advertising.delimiter"));

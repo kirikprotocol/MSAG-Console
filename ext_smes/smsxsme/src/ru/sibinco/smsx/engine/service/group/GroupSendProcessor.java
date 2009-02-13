@@ -2,13 +2,15 @@ package ru.sibinco.smsx.engine.service.group;
 
 import com.eyeline.sme.smpp.OutgoingObject;
 import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.ShutdownedException;
 import com.eyeline.utils.FixedArrayCache;
 import com.eyeline.utils.ThreadFactoryWithCounter;
-import com.eyeline.utils.config.xml.XmlConfigSection;
 import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.config.xml.XmlConfigSection;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
+import ru.sibinco.smsx.engine.service.AsyncCommand;
 import ru.sibinco.smsx.engine.service.Command;
 import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.group.commands.*;
@@ -17,10 +19,10 @@ import ru.sibinco.smsx.engine.service.group.datasource.DistrListDataSource;
 import ru.sibinco.smsx.engine.service.group.datasource.RepliesMap;
 import ru.sibinco.smsx.utils.OperatorsList;
 
+import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.Collection;
 
 /**
  * User: artem
@@ -64,19 +66,19 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
       if (!dl.containsSubmitter(cmd.getSubmitter()))
         throw new CommandExecutionException("Unknown submitter: " + cmd.getSubmitter(), GroupSendCmd.ERR_UNKNOWN_SUBMITTER);
 
-      DeliveryStatus s = new DeliveryStatus(dl.members());
+      ArrayList<String> members = new ArrayList<String>(dl.members());
+      members.remove(cmd.getSubmitter());
+
+      DeliveryStatus s = new DeliveryStatus(members);
       int umr = -1;
       if (cmd.isStorable())
         umr = statuses.add(s);
 
-      final Collection<String> members = dl.members();
       if (!members.isEmpty()) {
         String replyInvintationText = repliesInvintation.replace("{size}", String.valueOf(members.size()));
 
         for (String member : members) {
-          if (member.equals(cmd.getSubmitter()))
-            continue;
-        
+
           Message m = new Message();
           m.setSourceAddress(cmd.getSubmitter());
           m.setDestinationAddress(member);
@@ -85,36 +87,36 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
           m.setMessageString(cmd.getMessage());
           m.setDestAddrSubunit(cmd.getDestAddrSubunit());
           if (cmd.getSourceId() == Command.SOURCE_SMPP)
-            m.setConnectionName("smsgroup");
+            m.setConnectionName("smsx");
           else
             m.setConnectionName("webgroup");
 
-          OutgoingObject o = new GroupOutgoingObject(cmd, s);
+          GroupOutgoingObject o = new GroupOutgoingObject(cmd, s);
           if (cmd.isStorable()) {
             m.setUserMessageReference(umr);
             m.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
           }
           o.setMessage(m);
 
-          OutgoingObject o1 = null;
+
           String operator = operators.getOperatorByAddress(member);
           if (dl.containsSubmitter(member) && operator != null) {
             replies.put(member, dl.getId());
 
-            if (!member.equals(cmd.getSubmitter())) {
-              Message invintation = new Message();
-              invintation.setSourceAddress(sourceAddress);
-              invintation.setDestinationAddress(member);
-              invintation.setMessageString(replyInvintationText);
-              o1 = new OutgoingObject();
-              o1.setMessage(invintation);
-            }
+            Message invintation = new Message();
+            invintation.setSourceAddress(sourceAddress);
+            invintation.setDestinationAddress(member);
+            invintation.setMessageString(replyInvintationText);
+            OutgoingObject o1 = new OutgoingObject();
+            o1.setMessage(invintation);
+            o.setReplyInvintation(o1);
           }
 
           outQueue.offer(o);
-          if (o1 != null)
-            outQueue.offer(o1);
         }
+      } else {
+        cmd.setDeliveryStatus(s);
+        cmd.update(AsyncCommand.STATUS_SUCCESS);
       }
 
       return umr;
@@ -205,10 +207,15 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
 
     private final DeliveryStatus s;
     private final GroupSendCommand cmd;
+    private OutgoingObject replyInvintation;
 
     private GroupOutgoingObject(GroupSendCommand cmd, DeliveryStatus s) {
       this.cmd = cmd;
       this.s = s;
+    }
+
+    public void setReplyInvintation(OutgoingObject replyInvintation) {
+      this.replyInvintation = replyInvintation;
     }
 
     @Override
@@ -222,6 +229,15 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
         s.setStatus(getMessage().getDestinationAddress(), DeliveryStatus.NOT_DELIVERED);
       else {
         s.setStatus(getMessage().getDestinationAddress(), DeliveryStatus.SENT);
+
+        if (repliesInvintation != null) {
+          try {
+            outQueue.offer(replyInvintation);
+          } catch (ShutdownedException e) {
+            log.error(e,e);
+          }
+        }
+
         if (s.isAllMessagesSent()) {
           try {
             executor.execute(new Runnable() {

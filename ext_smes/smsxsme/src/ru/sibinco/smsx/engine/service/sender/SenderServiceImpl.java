@@ -12,6 +12,7 @@ import java.io.File;
 
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.config.xml.XmlConfigSection;
 
 /**
  * User: artem
@@ -24,7 +25,7 @@ public class SenderServiceImpl implements SenderService{
   private final MessageSender senderMessage;
   private final SenderProcessor processor;
 
-  public SenderServiceImpl(XmlConfig config, OutgoingQueue outQueue) {
+  public SenderServiceImpl(XmlConfigSection config, OutgoingQueue outQueue) {
     try {
       dataSource = new DBSenderDataSource();
 

@@ -27,13 +27,11 @@ public class SecretServiceImpl implements SecretService {
   private final AdvertisingClient advClient;
   private final BatchEngine batchEngine;
 
-  public SecretServiceImpl(XmlConfig config, OutgoingQueue outQueue) {
+  public SecretServiceImpl(XmlConfigSection sec, OutgoingQueue outQueue) {
 
     try {
       dataSource = new DBSecretDataSource();
       advClient = AdvertisingClientFactory.createAdvertisingClient();
-
-      XmlConfigSection sec = config.getSection("secret");
 
       messageSender = new MessageSender(dataSource, outQueue, advClient);
       messageSender.setServiceAddress(sec.getString("service.address"));
