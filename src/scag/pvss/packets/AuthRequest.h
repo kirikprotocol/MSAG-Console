@@ -36,7 +36,6 @@ public:
     void setName( const std::string& name ) { name_ = name; }
 
     virtual std::string toString() const;
-    virtual const char* typeToString() const { return "auth"; }
     virtual void clear() {
         login_.clear();
         password_.clear();
@@ -49,6 +48,7 @@ public:
     }
 
 protected:
+    virtual const char* typeToString() const { return "auth"; }
     virtual ResponseTypeMatch& getResponseTypeMatch() const;
 
 private:

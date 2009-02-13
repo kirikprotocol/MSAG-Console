@@ -25,6 +25,22 @@ public:
 
     const std::vector< BatchResponseComponent* >& getBatchContent() const { return batchContent_; }
 
+    std::string toString() const {
+        std::string rv(BatchResponse::toString());
+        rv.reserve(200);
+        rv += " [";
+        bool comma = false;
+        for ( std::vector< BatchResponseComponent* >::const_iterator i = batchContent_.begin();
+              i != batchContent_.end();
+              ++i ) {
+            if ( comma ) rv += ", ";
+            else comma = true;
+            rv += (*i)->toString();
+        }
+        rv += "]";
+        return rv;
+    }
+
     void clear() {
         for ( std::vector< BatchResponseComponent* >::iterator i = batchContent_.begin();
               i != batchContent_.end();

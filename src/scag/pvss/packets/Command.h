@@ -20,10 +20,12 @@ public:
     /// dump command content.
     /// NOTE: this method should work even if isValid() == false
     virtual std::string toString() const = 0;
-    virtual const char* typeToString() const = 0;
 
     /// clear all fields except seqnum
     virtual void clear() = 0;
+
+protected:
+    virtual const char* typeToString() const = 0;
 };
 
 } // namespace pvss

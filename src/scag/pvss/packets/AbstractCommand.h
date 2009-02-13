@@ -26,8 +26,6 @@ public:
         sprintf( buf, "seqNum=%u %s", seqNum_, typeToString() );
         return buf;
     }
-    virtual const char* typeToString() const = 0;
-
     bool isRequest() const { return true; }
 
     virtual bool visit( const ProfileKey& key, ProfileCommandVisitor& visitor ) throw (PvapException) = 0;

@@ -78,7 +78,7 @@ public:
     void setStatus( StatusType status ) { status_ = status; }
     virtual std::string toString() const {
         char buf[64];
-        snprintf( buf, sizeof(buf), "seqNum=%d %s stat=%s",
+        snprintf( buf, sizeof(buf), "seqNum=%d %s status=%s",
                   seqNum_, typeToString(), statusToString(status_) );
         return buf;
     }

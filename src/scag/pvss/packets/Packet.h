@@ -19,7 +19,6 @@ public:
     virtual bool isValid() const = 0;
     virtual uint32_t  getSeqNum() const = 0;
     virtual std::string toString() const = 0;
-
     virtual void setSeqNum( uint32_t seqNum ) = 0;
 };
 

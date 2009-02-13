@@ -12,6 +12,10 @@ public:
     IncCommand() : AbstractPropertyCommand() {}
     IncCommand( uint32_t seqNum ) : AbstractPropertyCommand(seqNum) {}
     
+    virtual bool isValid() const {
+        return AbstractPropertyCommand::isValid() && hasIntValue();
+    }
+
     virtual bool visit( const ProfileKey& key, ProfileCommandVisitor& visitor ) throw ( PvapException )
     {
         return visitor.visitIncCommand( key, *this );

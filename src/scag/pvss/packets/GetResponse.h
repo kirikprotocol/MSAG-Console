@@ -30,9 +30,6 @@ public:
         return visitor.visitGetResponse(*this);
     }
 
-    virtual bool isRequest() const { return Response::isRequest(); }
-    virtual uint32_t getSeqNum() const { return Response::getSeqNum(); }
-
     void clear() {
         Response::clear();
         if ( property_ ) {
@@ -40,6 +37,10 @@ public:
             property_ = 0;
         }
     }
+
+    /// disambiguation
+    virtual bool isRequest() const { return Response::isRequest(); }
+    virtual uint32_t getSeqNum() const { return Response::getSeqNum(); }
 
     // --- for serialization
     

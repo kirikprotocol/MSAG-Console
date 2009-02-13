@@ -88,6 +88,7 @@ public:
         createProperty().setBoolValue(val);
     }
 
+    /// disambiguate inherited methods isRequest() and getSeqNum().
     virtual bool isRequest() const {
         return BatchRequestComponent::isRequest();
     }

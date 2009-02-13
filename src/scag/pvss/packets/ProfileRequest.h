@@ -10,8 +10,7 @@ namespace pvss {
 ///
 /// Abstract profile request class
 ///
-template < class T >
-    class ProfileRequest : public AbstractProfileRequest
+template < class T > class ProfileRequest : public AbstractProfileRequest
 {
 public:
     ProfileRequest( T* cmd ) : AbstractProfileRequest(), command_(cmd) {}
