@@ -320,7 +320,7 @@ int TaskProcessor::Execute()
         }
 
         int processed = 0;
-        while (taskGuards.Count()>0 && !bNeedExit)
+        while (taskGuards.Count()>0)
         {
             TaskGuard* taskGuard = 0;
             taskGuards.Shift(taskGuard);
