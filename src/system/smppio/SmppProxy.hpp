@@ -143,12 +143,7 @@ public:
         SMS& sms=*cmd->get_sms();
         if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
         {
-          if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
-             !(
-               sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
-               !sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
-              )
-            )
+          if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND )
           {
             ussdSession=true;
           }
@@ -163,9 +158,9 @@ public:
       {
         throw ProxyQueueLimitException(shapeCounterOut.Get(),shapeLimit);
       }
-      if(!ussdSession && cmd->get_commandId()==DELIVERY)
+      if(cmd->get_commandId()==DELIVERY)
       {
-        checkProcessLimit(cmd);//can throw ProxyQueueLimitException
+        checkProcessLimit(cmd, ussdSession);//can throw ProxyQueueLimitException
       }
       if(shapeLimit>0)
       {
@@ -716,7 +711,7 @@ protected:
   int processLimit;
   int processTimeout;
 
-  void checkProcessLimit(const SmscCommand& cmd)
+  void checkProcessLimit(const SmscCommand& cmd, bool ussdSession )
   {
     if(processLimit==0)return;
     MutexGuard g(mutex);
@@ -731,7 +726,7 @@ protected:
       limitQueue.erase(limitQueue.begin());
       limitQueueSize--;
     }
-    if(limitQueueSize==processLimit)throw ProxyQueueLimitException(processLimit,limitQueueSize);
+    if(!ussdSession && limitQueueSize>=processLimit)throw ProxyQueueLimitException(processLimit,limitQueueSize);
     ControlItem ci(now,cmd->get_dialogId());
     bool ussd=false;
     if(cmd->get_commandId()==DELIVERY && cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
