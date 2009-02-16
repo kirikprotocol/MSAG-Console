@@ -158,7 +158,8 @@ public class Results extends SmsQuizBean {
             .append(StringEncoderDecoder.encode(convertDateToString((Date) res.getValue(ResultDataSource.DELIVERY_DATE)))).append(",")
             .append(StringEncoderDecoder.encode(convertDateToString((Date) res.getValue(ResultDataSource.REPLY_DATE)))).append(",")
             .append(StringEncoderDecoder.encode((String) res.getValue(ResultDataSource.CATEGORY))).append(",")
-            .append(StringEncoderDecoder.encode((String) res.getValue(ResultDataSource.MESSAGE))).append(System.getProperty("line.separator"));
+            .append(StringEncoderDecoder.encode(((String) res.getValue(ResultDataSource.MESSAGE))
+              .replaceAll(System.getProperty("line.separator"),"\\n"))).append(System.getProperty("line.separator"));
         out.print(buffer);
         buffer.setLength(0);
       }

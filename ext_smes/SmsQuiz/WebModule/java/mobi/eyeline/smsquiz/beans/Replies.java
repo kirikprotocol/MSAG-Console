@@ -167,7 +167,8 @@ public class Replies extends SmsQuizBean {
             .append(",")
             .append(StringEncoderDecoder.encode((String) res.getValue(ReplyDataSource.MSISDN)))
             .append(",")
-            .append(StringEncoderDecoder.encode((String) res.getValue(ReplyDataSource.MESSAGE))).append(System.getProperty("line.separator"));
+            .append(StringEncoderDecoder.encode(((String) res.getValue(ReplyDataSource.MESSAGE))
+                .replaceAll(System.getProperty("line.separator"),"\\n"))).append(System.getProperty("line.separator"));
         out.print(buffer);
         buffer.setLength(0);
       }

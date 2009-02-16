@@ -106,6 +106,7 @@ public class ReplyDataSource extends AbstractDataSource {
             while (st.hasMoreTokens()) {
               text += "," + st.nextToken();
             }
+            text = text.replaceAll("\\n", System.getProperty("line.separator"));
 
             final ReplyDataItem di = new ReplyDataItem(replyDate, msisdn, text);
             add(di);

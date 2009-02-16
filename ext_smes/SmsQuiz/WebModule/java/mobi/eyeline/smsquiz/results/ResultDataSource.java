@@ -84,6 +84,8 @@ public class ResultDataSource extends AbstractDataSource {
             message += "," + st.nextToken();
           }
 
+          message = message.replaceAll("\\n", System.getProperty("line.separator"));
+
           final ResultDataItem di = new ResultDataItem(filter.getQuizId(), replyDate, deliveryDate, msisdn, category, message);
           add(di);
         }
