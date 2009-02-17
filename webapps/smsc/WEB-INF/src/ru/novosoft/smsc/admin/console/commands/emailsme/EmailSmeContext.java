@@ -27,7 +27,7 @@ public class EmailSmeContext extends Proxy {
   private static final byte COMMAND_DELETE = 2;
   private static final byte COMMAND_LOOKUP_BY_ADDR = 3;
   private static final byte COMMAND_LOOKUP_BY_USERID = 4;
-  protected static Object instanceLock = new Object();
+  protected static final Object instanceLock = new Object();
   protected static EmailSmeContext instance = null;
 
   public static EmailSmeContext getInstance(SMSCAppContext appContext) throws AdminException {
@@ -51,7 +51,7 @@ public class EmailSmeContext extends Proxy {
     setTimeMode(false);
   }
 
-  public void add(byte ton, byte npi, String address, String userName, String forwardEmail,
+  public synchronized void add(byte ton, byte npi, String address, String userName, String forwardEmail,
                   String realName, byte limitType, byte numberMapping, int lastLimitUpdateDate, int limitValue,
                   int limitCountGsm2Eml, int limitCountEml2Gsm) throws AdminException {
     checkConnect();
@@ -90,7 +90,7 @@ public class EmailSmeContext extends Proxy {
     }
   }
 
-  public void delete(byte ton, byte npi, String address) throws AdminException {
+  public synchronized void delete(byte ton, byte npi, String address) throws AdminException {
     checkConnect();
     try {
       int packetLength = 4/*commandId*/ + 1/*ton*/ + 1/*npi*/ + 21/*address*/;
@@ -114,7 +114,7 @@ public class EmailSmeContext extends Proxy {
     }
   }
 
-  public LookupResult lookupByAddress(byte ton, byte npi, String address) throws AdminException {
+  public synchronized LookupResult lookupByAddress(byte ton, byte npi, String address) throws AdminException {
     checkConnect();
     try {
       int packetLength = 4/*commandId*/ + 1/*ton*/ + 1/*npi*/ + 21/*address*/;
@@ -138,7 +138,7 @@ public class EmailSmeContext extends Proxy {
     }
   }
 
-  public LookupResult lookupByUserId(String userId) throws AdminException {
+  public synchronized LookupResult lookupByUserId(String userId) throws AdminException {
     checkConnect();
     try {
       int packetLength = 4/*commandId*/ + 2 + userId.length() ;
@@ -154,7 +154,7 @@ public class EmailSmeContext extends Proxy {
     }
   }
 
-  private LookupResult readResult(InputStream in) throws IOException {
+  private static LookupResult readResult(InputStream in) throws IOException {
     final long resultLength = Message.readUInt32(in);
     if (resultLength == 0)
       return null;
@@ -177,7 +177,7 @@ public class EmailSmeContext extends Proxy {
     return result;
   }
 
-  private byte readByte(InputStream in) throws IOException {
+  private static byte readByte(InputStream in) throws IOException {
     final byte[] res = new byte[1];
     if (in.read(res) != -1)
       return res[0];
