@@ -220,10 +220,13 @@ void PersClientImpl::SetProperty(ProfileType pt, const PersKey& key, Property& p
     MutexGuard mt(mtx);
 
 	emptyPacket(sb);
+    
+    startTime_ = gethrtime(); //speed limitation
 	SetPropertyPrepare(pt, key, prop, sb);
     SendPacket(sb);
    	ReadPacket(sb);
 	SetPropertyResult(sb);
+    delay(); //speed limitation
 }
 
 void PersClientImpl::GetPropertyPrepare(ProfileType pt, const PersKey& key, const char *property_name, SerialBuffer& bsb)

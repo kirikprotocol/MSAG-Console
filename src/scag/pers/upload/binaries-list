@@ -24,3 +24,28 @@ scag/pers_upload                         pers_upload     \
   $(__LIBRARIES) \
   $(SSL_LIB) \
   -lrt -ldl
+
+scag/pers_flooder                         pers_flooder     \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -llogger-additional \
+  -lscag-pers-upload \
+  -lscag-pers \
+  -lscag-pvss-base \
+  -lscag-util-encodings -lscag-exc -lscag-util-storage \
+  -lscag-util-properties -lscag-util-singleton \
+  \
+  -lcore-buffers \
+  -lcore-network $(SOCKETLIB) -lnsl \
+  -lcore-threads \
+  -lutil-mirrorfile \
+  -lutil-config \
+  -lutil-xml \
+  -lutil-regexp \
+  $(XERCES_LIB) \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil-URCdb -lutil \
+  $(__LIBRARIES) \
+  $(SSL_LIB) \
+  -lrt -ldl
+
+scag/logger_test                         logger_test     \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -llogger-additional
