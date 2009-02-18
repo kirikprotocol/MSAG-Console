@@ -15,7 +15,7 @@ namespace pvss {
 namespace perstypes {
 
 enum TimePolicy{
-    UNKNOWN = 1,
+    UNKNOWN = 0,
     INFINIT,
     FIXED,
     ACCESS,
