@@ -120,7 +120,7 @@ public class DataFile {
         pointer = f.getFilePointer();
 
         int flag = f.read();
-        if (flag == 0) {
+        if (flag == 1) {
           try {
             f.readFully(bytes);
           } catch (EOFException e) {
@@ -144,7 +144,7 @@ public class DataFile {
       lock.lock();
       long offset = f.length();
       f.seek(offset);
-      f.write(0);
+      f.write(1);
       f.write(bytes);
       recordsNumber++;
       return offset;
@@ -168,7 +168,7 @@ public class DataFile {
     try {
       lock.lock();
       f.seek(offset);
-      f.write(1);
+      f.write(0);
       recordsNumber--;
     } finally {
       lock.unlock();

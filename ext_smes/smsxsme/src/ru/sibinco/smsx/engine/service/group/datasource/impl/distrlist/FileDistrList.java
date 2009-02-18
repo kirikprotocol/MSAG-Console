@@ -83,7 +83,7 @@ class FileDistrList implements DistrList {
   }
 
   public void addMember(String member) throws DataSourceException {
-    if (members == null || !members.contains(member)) {
+    if (member != null && (members == null || !members.contains(member))) {
       long offset = ds.addMember(name, owner, member);
       addMember(member, offset);
     }
@@ -123,7 +123,7 @@ class FileDistrList implements DistrList {
   }
 
   public void addSubmitter(String submitter) throws DataSourceException {
-    if (submitters == null || !submitters.contains(submitter)) {
+    if (submitter != null && (submitters == null || !submitters.contains(submitter))) {
       long offset = ds.addSubmitter(name, owner, submitter);
       addSubmitter(submitter,  offset);
     }

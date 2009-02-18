@@ -87,7 +87,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
           m.setMessageString(cmd.getMessage());
           m.setDestAddrSubunit(cmd.getDestAddrSubunit());
           if (cmd.getSourceId() == Command.SOURCE_SMPP)
-            m.setConnectionName("smsx");
+            m.setConnectionName("smsgroup");
           else
             m.setConnectionName("webgroup");
 

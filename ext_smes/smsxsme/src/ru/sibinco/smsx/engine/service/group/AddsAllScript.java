@@ -16,8 +16,13 @@ import java.io.File;
 public class AddsAllScript {
 
   private static String prepareMsisdn(String msisdn) {
-    if (msisdn.charAt(0) == '8' && msisdn.length() == 11)
-      msisdn = "+7" + msisdn.substring(1);
+    if (msisdn != null && msisdn.length() > 0) {
+      if (msisdn.charAt(0) == '8' && msisdn.length() == 11)
+        msisdn = "+7" + msisdn.substring(1);
+      if (msisdn.charAt(0) == '7')
+        msisdn = '+' + msisdn;
+    }
+
     return msisdn;
   }
 
@@ -37,6 +42,7 @@ public class AddsAllScript {
     for (DistrList dl : listsDS.getDistrLists(null)) {
       DistrList dlnew = listsDS1.createDistrList(dl.getName(), dl.getOwner(), dl.getMaxElements());
       dlnew.addSubmitter(dl.getOwner());
+      dlnew.addMember(dl.getOwner());
 
       for (String member : dl.members()) {
         System.out.println("Add " + member + " to " + dl.getName() + " submitters and members");

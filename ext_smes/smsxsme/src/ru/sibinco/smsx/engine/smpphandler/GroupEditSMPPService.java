@@ -163,8 +163,12 @@ public class GroupEditSMPPService extends AbstractSMPPService {
   }
 
   private static String prepareMsisdn(String msisdn) {
-    if (msisdn.charAt(0) == '8' && msisdn.length() == 11)
-      msisdn = "+7" + msisdn.substring(1);
+    if (msisdn != null && msisdn.length() > 0) {
+      if (msisdn.charAt(0) == '8' && msisdn.length() == 11)
+        msisdn = "+7" + msisdn.substring(1);
+      if (msisdn.charAt(0) == '7')
+        msisdn = '+' + msisdn;
+    }
     return msisdn;
   }
 

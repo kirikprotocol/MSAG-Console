@@ -191,7 +191,7 @@ class GroupEditSoapHandler implements GroupEdit {
       GroupAddMemberCmd c = new GroupAddMemberCmd();
       c.setGroupName(groupName);
       c.setOwner(owner);
-      c.setMember(member);
+      c.setMember(prepareMsisdn(member));
       Services.getInstance().getGroupService().execute(c);
 
       if (profile.sendNotification)
@@ -219,7 +219,7 @@ class GroupEditSoapHandler implements GroupEdit {
       GroupRemoveMemberCmd c = new GroupRemoveMemberCmd();
       c.setGroupName(groupName);
       c.setOwner(owner);
-      c.setMember(member);
+      c.setMember(prepareMsisdn(member));
       Services.getInstance().getGroupService().execute(c);
 
       if (profile.sendNotification)
@@ -289,6 +289,16 @@ class GroupEditSoapHandler implements GroupEdit {
       log.error(e, e);
       return RESULT_SYSTEM_ERROR;
     }
+  }
+
+  private static String prepareMsisdn(String msisdn) {
+    if (msisdn == null || msisdn.length() == 0)
+      return msisdn;
+
+    if (msisdn.charAt(0) == '7')
+      msisdn = '+' + msisdn;
+
+    return msisdn;
   }
 
   private void sendMessage(String da, String text) {

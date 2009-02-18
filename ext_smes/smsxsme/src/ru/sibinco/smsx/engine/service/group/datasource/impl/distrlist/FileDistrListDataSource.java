@@ -70,7 +70,6 @@ public class FileDistrListDataSource implements DistrListDataSource {
     // Load lists
     listsFile.list(new ListsFile.Visitor() {
       public void list(String storeListName, String owner, int maxElements, long offset) {
-
         String name = getNameFromStoreListName(storeListName);
         FileDistrList dl = new FileDistrList(FileDistrListDataSource.this, offset, name, owner, maxElements);
 

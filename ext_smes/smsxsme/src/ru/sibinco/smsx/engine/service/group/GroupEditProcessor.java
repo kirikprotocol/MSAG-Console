@@ -113,8 +113,10 @@ class GroupEditProcessor implements GroupAddCmd.Receiver,
         maxElements = p == null ? Integer.MAX_VALUE : p.getMaxMembersPerList();
 
       DistrList dl = listsDS.createDistrList(name, owner, maxElements);
-      if (owner != null)
-        dl.addSubmitter(cmd.getOwner());
+      if (owner != null) {
+        dl.addSubmitter(owner);
+        dl.addMember(owner);
+      }
 
     } catch (DataSourceException e) {
       log.error(e,e);
