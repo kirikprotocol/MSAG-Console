@@ -7,10 +7,7 @@ import mobi.eyeline.smsquiz.subscription.SubManagerException;
 import mobi.eyeline.smsquiz.subscription.SubscriptionManager;
 import org.apache.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
 public class DistributionImpl extends Distribution {
 
@@ -54,16 +51,36 @@ public class DistributionImpl extends Distribution {
       }
       this.file = file;
     }
+ 
 
     public boolean next() throws StorageException {
       try {
         if (reader == null) {
           reader = new BufferedReader(new FileReader(file));
+          if(logger.isDebugEnabled()) {
+            logger.debug("New reader: "+file.getAbsolutePath());
+          }
         }
         String line;
+        if(logger.isDebugEnabled()) {
+          logger.debug("Starting read pre-file: "+file.getAbsolutePath());
+        }
+
         while ((line = reader.readLine()) != null) {
-          if (subscribed(line))
+          if(logger.isDebugEnabled()) {
+            logger.debug("Read line: " + line);
+          }
+          if (subscribed(line)) {
+            if(logger.isDebugEnabled()) {
+              logger.debug("Abonent "+line+" is subscribed");
+            }
             return true;
+          }
+          else {
+            if(logger.isDebugEnabled()) {
+              logger.debug("Abonent "+line+" isn't subscribed");
+            }
+          }
         }
         reader.close();
         return false;

@@ -30,6 +30,8 @@ public class Distribution extends SmsQuizBean {
   private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
   public static final int RESULT_EXPORT_ALL = PRIVATE_RESULT + 4;
 
+  private static final String LINE_SEPARATOR = "\r\n";
+
   private int startPosition = 0;
   private int pageSize = 0;
 
@@ -49,6 +51,8 @@ public class Distribution extends SmsQuizBean {
 
   private MessagesTableHelper tableHelper;
 
+  private int maxTotalSize;
+
   protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
@@ -57,7 +61,7 @@ public class Distribution extends SmsQuizBean {
       String quizDir = getSmsQuizContext().getConfig().getString("quizmanager.dir_quiz");
       String msgStoreDir = getConfig().getString("distribution.infosme_stats_dir");
       ds = new MessageDataSource(msgStoreDir);
-      int maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
+      maxTotalSize = getSmsQuizContext().getMaxMessTotalSize();
       if (pageSize == 0) {
         pageSize = getSmsQuizContext().getMessagesPageSize();
       }
@@ -81,11 +85,8 @@ public class Distribution extends SmsQuizBean {
         }
       }
       initQuizes();
-      tableHelper.setFilter(msgFilter);
-      tableHelper.setDs(ds);
-      tableHelper.setPageSize(pageSize);
-      tableHelper.setMaxRows(maxTotalSize);
     } catch (Exception e) {
+      e.printStackTrace();
       return error("Can't init data source", e);
     }
     return result;
@@ -104,6 +105,10 @@ public class Distribution extends SmsQuizBean {
     if (result != RESULT_OK) return result;
     try{
       tableHelper = new MessagesTableHelper("message_table_helper", false, getUser(request));
+      tableHelper.setFilter(msgFilter);
+      tableHelper.setDs(ds);
+      tableHelper.setPageSize(pageSize);
+      tableHelper.setMaxRows(maxTotalSize);
       tableHelper.processRequest(request);
       if (mbExportAll != null)
         result = processExportAll();
@@ -172,7 +177,8 @@ public class Distribution extends SmsQuizBean {
         buffer.append(StringEncoderDecoder.encode((String) msg.getValue(MessageDataSource.MSISDN))).append(",")
             .append(StringEncoderDecoder.encode(getStateName((Message.State) msg.getValue(MessageDataSource.STATE)))).append(",")
             .append(StringEncoderDecoder.encode(convertDateToString((Date) msg.getValue(MessageDataSource.DATE)))).append(",")
-            .append(StringEncoderDecoder.encode((String) msg.getValue(MessageDataSource.MESSAGE))).append('\n');
+            .append(StringEncoderDecoder.encode((String) msg.getValue(MessageDataSource.MESSAGE)).replaceAll("\t","").replaceAll("\n","  "))
+            .append(LINE_SEPARATOR);
         out.print(buffer);
         buffer.setLength(0);
       }

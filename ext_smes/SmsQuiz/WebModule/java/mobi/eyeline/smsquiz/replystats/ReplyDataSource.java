@@ -106,7 +106,7 @@ public class ReplyDataSource extends AbstractDataSource {
             while (st.hasMoreTokens()) {
               text += "," + st.nextToken();
             }
-            text = text.replaceAll("\\n", System.getProperty("line.separator"));
+            text = prepareText(text);
 
             final ReplyDataItem di = new ReplyDataItem(replyDate, msisdn, text);
             add(di);
@@ -192,6 +192,15 @@ public class ReplyDataSource extends AbstractDataSource {
 
   public String getReplyDir() {
     return replyDir;
+  }
+
+  private static String prepareText(String m) {
+    String text = m;
+    text = text.trim();
+    text = text.replaceAll("\\\\n", "\n").replaceAll("\\\\r", "\r");
+    text = text.replaceAll("\\\\\"", "\"");
+
+    return text;
   }
 
 }

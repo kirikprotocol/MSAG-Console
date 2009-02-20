@@ -120,7 +120,11 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.commandserver.port")%></th>
-  <td><input class=txt name=commandPort value="<%=StringEncoderDecoder.encode(bean.getCommandPort())%>"></td>
+  <td><input class=txt validation="port" name=commandPort value="<%=StringEncoderDecoder.encode(bean.getCommandPort())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th><%=getLocString("smsquiz.label.commandserver.host")%></th>
+  <td><input class=txt validation="nonEmpty" name=commandHost value="<%=StringEncoderDecoder.encode(bean.getCommandHost())%>"></td>
 </tr>
 
 </table>

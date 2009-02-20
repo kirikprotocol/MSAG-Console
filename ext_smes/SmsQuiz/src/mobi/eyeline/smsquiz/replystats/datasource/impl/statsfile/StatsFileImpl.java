@@ -142,7 +142,7 @@ class StatsFileImpl implements StatsFile {
       randomAccessFile.write(comma);
       randomAccessFile.write(reply.getOa().getBytes(encoding));
       randomAccessFile.write(comma);
-      randomAccessFile.write(reply.getText().replaceAll(System.getProperty("line.separator"), "\\n")
+      randomAccessFile.write(reply.getText().replace("\t","\\t").replace("\n", "\\n")
           .getBytes(encoding));
       randomAccessFile.write(System.getProperty("line.separator").getBytes(encoding));
       put(reply.getOa(), filePointer);
@@ -254,7 +254,7 @@ class StatsFileImpl implements StatsFile {
       while (tokenizer.hasMoreTokens()) {
         text += "," + tokenizer.nextToken();
       }
-      reply.setText(text.replaceAll("\\n", System.getProperty("line.separator")));
+      reply.setText(text.replace("\\\\n", "\n").replace("\\\\t","\t"));
 
       return reply;
 

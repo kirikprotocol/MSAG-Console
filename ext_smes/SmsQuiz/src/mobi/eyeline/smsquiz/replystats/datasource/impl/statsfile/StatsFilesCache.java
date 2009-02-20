@@ -78,22 +78,22 @@ public class StatsFilesCache {
     monitor = new StatsFilesCacheMBean(this);
   }
 
-  public static void main(String[] args) throws ParseException {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("HH");
-    System.out.println(new Date(0));
-    System.out.println(dateFormat.parse("23"));
-    System.out.println(dateFormat.parse("23").getTime());
-    Calendar cal = Calendar.getInstance();
-    cal.set(Calendar.HOUR_OF_DAY, 0);
-    cal.set(Calendar.MINUTE, 0);
-    cal.set(Calendar.SECOND, 0);
-    cal.set(Calendar.MILLISECOND, 0);
-    System.out.println("Gmt: " + cal.get(Calendar.ZONE_OFFSET));
-    cal.setTimeInMillis(cal.getTime().getTime() + dateFormat.parse("23").getTime() + cal.get(Calendar.ZONE_OFFSET));
-    System.out.println(cal.getTime());
-    System.out.println(cal.getTime().getTime());
-
-  }
+//  public static void main(String[] args) throws ParseException {
+//    SimpleDateFormat dateFormat = new SimpleDateFormat("HH");
+//    System.out.println(new Date(0));
+//    System.out.println(dateFormat.parse("23"));
+//    System.out.println(dateFormat.parse("23").getTime());
+//    Calendar cal = Calendar.getInstance();
+//    cal.set(Calendar.HOUR_OF_DAY, 0);
+//    cal.set(Calendar.MINUTE, 0);
+//    cal.set(Calendar.SECOND, 0);
+//    cal.set(Calendar.MILLISECOND, 0);
+//    System.out.println("Gmt: " + cal.get(Calendar.ZONE_OFFSET));
+//    cal.setTimeInMillis(cal.getTime().getTime() + dateFormat.parse("23").getTime() + cal.get(Calendar.ZONE_OFFSET));
+//    System.out.println(cal.getTime());
+//    System.out.println(cal.getTime().getTime());
+//
+//  }
 
 
   public Collection<StatsFile> getFiles(final String da, final Date from, final Date till) throws FileStatsException {

@@ -218,7 +218,7 @@ public class Quiz {
             answer.append(comma).append(dateFormat.format(dateDelivery))
                 .append(comma).append(dateFormat.format(reply.getDate()))
                 .append(comma).append(category).append(comma)
-                .append(text.replace(System.getProperty("line.separator"), "\\n"));
+                .append(text.replace("\r","\\r").replace("\n", "\\n"));
             tmpWriter.println(answer);
             if (logger.isDebugEnabled()) {
               logger.debug("Last reply for oa=" + oa + " is " + reply + " stored");

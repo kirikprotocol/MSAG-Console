@@ -77,14 +77,14 @@ public class ResultDataSource extends AbstractDataSource {
 
           String msisdn = st.nextToken().trim();
           Date deliveryDate = DATE_IN_FILE_FORMAT.parse(st.nextToken().trim());
-          Date replyDate = DATE_IN_FILE_FORMAT.parse(st.nextToken().trim());
+          Date replyDate = DATE_IN_FILE_FORMAT.parse( st.nextToken().trim());
           String category = st.nextToken();
           String message = st.nextToken();
           while (st.hasMoreTokens()) {
             message += "," + st.nextToken();
           }
 
-          message = message.replaceAll("\\n", System.getProperty("line.separator"));
+          message = prepareText(message);
 
           final ResultDataItem di = new ResultDataItem(filter.getQuizId(), replyDate, deliveryDate, msisdn, category, message);
           add(di);
@@ -107,6 +107,15 @@ public class ResultDataSource extends AbstractDataSource {
 
   public String getResultDir() {
     return resultDir;
+  }
+
+  private static String prepareText(String m) {
+    String text = m;
+    text = text.trim();
+    text = text.replaceAll("\\\\n", "\n").replaceAll("\\\\r", "\r");;
+    text = text.replaceAll("\\\\\"", "\"");
+
+    return text;
   }
 
 }

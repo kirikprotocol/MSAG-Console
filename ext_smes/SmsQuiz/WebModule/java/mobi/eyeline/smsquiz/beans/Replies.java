@@ -17,6 +17,7 @@ import java.text.ParseException;
 import mobi.eyeline.smsquiz.replystats.*;
 import mobi.eyeline.smsquiz.QuizBuilder;
 import mobi.eyeline.smsquiz.QuizesDataSource;
+import mobi.eyeline.smsquiz.results.ResultDataSource;
 import mobi.eyeline.smsquiz.quizes.view.QuizQuery;
 import mobi.eyeline.smsquiz.quizes.view.QuizData;
 
@@ -27,6 +28,8 @@ import mobi.eyeline.smsquiz.quizes.view.QuizData;
 public class Replies extends SmsQuizBean {
 
   public static final int RESULT_EXPORT_ALL = PRIVATE_RESULT + 1;
+
+  private static final String LINE_SEPARATOR = "\r\n";
 
   private int pageSize = 0;
   private String mbExportAll = null;
@@ -167,8 +170,11 @@ public class Replies extends SmsQuizBean {
             .append(",")
             .append(StringEncoderDecoder.encode((String) res.getValue(ReplyDataSource.MSISDN)))
             .append(",")
-            .append(StringEncoderDecoder.encode(((String) res.getValue(ReplyDataSource.MESSAGE))
-                .replaceAll(System.getProperty("line.separator"),"\\n"))).append(System.getProperty("line.separator"));
+            .append(
+                    StringEncoderDecoder.encode((String) res.getValue(ResultDataSource.MESSAGE))
+                        .replaceAll("\t","").replaceAll("\n"," ")
+                )
+            .append(LINE_SEPARATOR);
         out.print(buffer);
         buffer.setLength(0);
       }

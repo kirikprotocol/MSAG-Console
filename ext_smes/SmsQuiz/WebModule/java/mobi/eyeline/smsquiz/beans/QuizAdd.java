@@ -110,12 +110,12 @@ public class QuizAdd extends SmsQuizBean {
     InputStream is = null;
     BufferedOutputStream outputStream = null;
     File file;
+    String quizId = Integer.toString(QuizFileIndex.getUniqIndex(quizDir));
+    file = new File(quizDir + File.separator + quizId + ".csv");
+
     try {
       ds = request.getMultipartDataSource("file");
       is = ds.getInputStream();
-
-      String quizId = Integer.toString(QuizFileIndex.getUniqIndex(quizDir));
-      file = new File(quizDir + File.separator + quizId + ".csv");
       outputStream = new BufferedOutputStream(new FileOutputStream(file));
       byte buffer[] = new byte[2048];
       int countBytes = 0;
@@ -131,7 +131,29 @@ public class QuizAdd extends SmsQuizBean {
         file.delete();
         return warning("Invalid abonents file");
       }
+    }catch(IOException e){
+      logger.error(e,e);
+      e.printStackTrace();
+      return error(e.getMessage());
+    } finally{
+      if(outputStream!= null) {
+        try {
+          outputStream.close();
+        } catch (IOException e) {
+        }
+      }
+      if (ds != null) {
+        ds.close();
+      }
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException e) {
+        }
+      }
+    }
 
+    try{
       String[] days = distributionHelper.getActiveWeekDays();
       for (int j = 0; j < days.length; j++) {
         if (days[j] != null) {
@@ -174,22 +196,6 @@ public class QuizAdd extends SmsQuizBean {
       logger.error(e,e);
       e.printStackTrace();
       return error(e.getMessage());
-    } finally {
-      if (ds != null) {
-        ds.close();
-      }
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException e) {
-        }
-      }
-      if (outputStream != null) {
-        try {
-          outputStream.close();
-        } catch (IOException e) {
-        }
-      }
     }
 
     return RESULT_DONE;

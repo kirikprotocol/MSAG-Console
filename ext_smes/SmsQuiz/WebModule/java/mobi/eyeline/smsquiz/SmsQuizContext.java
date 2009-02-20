@@ -27,6 +27,7 @@ public class SmsQuizContext implements SMEAppContext {
   private SMSCAppContext appContext;
   private String smeId = "InfoSme";
   private static final String COMMAND_SERVER_PORT_PARAM = "commandserver.port";
+  private static final String COMMAND_SERVER_HOST_PARAM = "commandserver.host";
 
   private final static Map instances = new HashMap();
 
@@ -58,7 +59,8 @@ public class SmsQuizContext implements SMEAppContext {
       appContext.registerSMEContext(this);
       resetConfig();
       int port = config.getInt(COMMAND_SERVER_PORT_PARAM);
-      this.smsQuizService = new SmsQuizService(appContext.getHostsManager().getServiceInfo(this.smeId),"localhost",port); /*todo*/
+      String host = config.getString(COMMAND_SERVER_HOST_PARAM);
+      this.smsQuizService = new SmsQuizService(appContext.getHostsManager().getServiceInfo(this.smeId),host,port);
       QuizesDataSource.initDs(config);
     } catch(Exception e) {
       logger.error(e,e);

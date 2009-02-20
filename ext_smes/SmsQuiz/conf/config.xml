@@ -42,6 +42,7 @@
 
   <section name="commandserver">
       <param name="port" type="int">3333</param>
+      <param name="host" type="int">localhost</param>
   </section>
 
   <section name="replystats">

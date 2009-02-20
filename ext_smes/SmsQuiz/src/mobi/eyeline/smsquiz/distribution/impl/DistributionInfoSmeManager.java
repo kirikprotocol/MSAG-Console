@@ -98,6 +98,9 @@ public class DistributionInfoSmeManager implements DistributionManager {
   }
 
   private String createAbFile(Distribution distr) throws DistributionException {
+    if(logger.isDebugEnabled()) {
+      logger.debug("Create abonents file");
+    }
     File file = new File(workDir);
     if (!file.exists()) {
       file.mkdirs();
@@ -107,7 +110,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
       file = new File(workDir + File.separator + distr.getTaskName().hashCode() + ".csv");
       writer = new PrintWriter(new BufferedWriter(new FileWriter(file)));
       ResultSet rs = distr.abonents();
-      String question = distr.getQuestion().replace(System.getProperty("line.separator"), "\\n");
+      String question =distr.getQuestion().replace("\r","\\r").replace("\n", "\\n");
       while (rs.next()) {
         String msisdn = (String) rs.get();
         writer.print(msisdn);
@@ -237,7 +240,8 @@ public class DistributionInfoSmeManager implements DistributionManager {
       throw new DistributionException("Some arguments are null", DistributionException.ErrorCode.ERROR_WRONG_REQUEST);
     }
     StringBuilder builder = new StringBuilder();
-    builder.append(RESEND_COMMAND).append(getFormatProp(taskId)).append(getFormatProp(msisdn)).append(getFormatProp(repeatQuestion));
+    builder.append(RESEND_COMMAND).append(getFormatProp(taskId)).append(getFormatProp(msisdn)).append(getFormatProp(repeatQuestion.
+        replace("\r","\\r").replace("\n", "\\n")));
     String command = builder.toString();
     if (logger.isInfoEnabled()) {
       logger.info("Sending console command: " + command);
@@ -396,7 +400,7 @@ public class DistributionInfoSmeManager implements DistributionManager {
 
   private String getFormatProp(String prop) {
     StringBuilder builder = new StringBuilder();
-    builder.append(" \"").append(prop.replace("\"", "\\\"").replace(System.getProperty("line.separator"), "\\n")).append("\"");
+    builder.append(" \"").append(prop.replace("\"", "\\\"").replace("\r","\\r").replace("\n", "\\n")).append("\"");
     return builder.toString();
   }
 

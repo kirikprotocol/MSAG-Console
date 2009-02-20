@@ -27,6 +27,8 @@ public class Results extends SmsQuizBean {
 
   public static final int RESULT_EXPORT_ALL = PRIVATE_RESULT + 1;
 
+  private static final String LINE_SEPARATOR = "\r\n";
+
   private int pageSize = 0;
   private String mbExportAll = null;
   private String mbQuery = null;
@@ -158,8 +160,11 @@ public class Results extends SmsQuizBean {
             .append(StringEncoderDecoder.encode(convertDateToString((Date) res.getValue(ResultDataSource.DELIVERY_DATE)))).append(",")
             .append(StringEncoderDecoder.encode(convertDateToString((Date) res.getValue(ResultDataSource.REPLY_DATE)))).append(",")
             .append(StringEncoderDecoder.encode((String) res.getValue(ResultDataSource.CATEGORY))).append(",")
-            .append(StringEncoderDecoder.encode(((String) res.getValue(ResultDataSource.MESSAGE))
-              .replaceAll(System.getProperty("line.separator"),"\\n"))).append(System.getProperty("line.separator"));
+            .append(
+                    StringEncoderDecoder.encode((String) res.getValue(ResultDataSource.MESSAGE))
+                        .replaceAll("\t","").replaceAll("\n"," ")
+                )
+            .append(LINE_SEPARATOR);
         out.print(buffer);
         buffer.setLength(0);
       }
