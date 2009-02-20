@@ -62,6 +62,12 @@ namespace scag { namespace pers { namespace util {
   };
   const int MINSK_PROPERTIES_COUNT = 6;
 
+  static const char* cmbpmb_properties[] = {
+    "cmb.subscription",
+    "pmb.subscription"
+  };
+  const int CMBPMB_PROPERTIES_COUNT = 2;
+
   const char* INC_PROPERTY_NAME = "maze.abonent.money.portal";
   const char* STATUS_PROPERTY   = "maze.game.status";
 
@@ -252,15 +258,19 @@ private:
         pc.PrepareBatch(batch);
       }
       Property* prop = 0;
-      for (int i = 0; i < MINSK_PROPERTIES_COUNT; ++i) {
-        if (prop = pf.GetProperty(minsk_properties[i])) {
-          smsc_log_debug(logger, "property '%s' found in profile %s", minsk_properties[i], pf.getKey().c_str());
+      for (int i = 0; i < CMBPMB_PROPERTIES_COUNT; ++i) {
+        //for (int i = 0; i < MINSK_PROPERTIES_COUNT; ++i) {
+        //if (prop = pf.GetProperty(minsk_properties[i])) {
+        if (prop = pf.GetProperty(cmbpmb_properties[i])) {
+          smsc_log_debug(logger, "property '%s' found in profile %s", cmbpmb_properties[i], pf.getKey().c_str());
+          //smsc_log_debug(logger, "property '%s' found in profile %s", minsk_properties[i], pf.getKey().c_str());
           if (sendToPers) {
             pc.SetPropertyPrepare(PT_ABONENT, key.toString().c_str(), *prop, batch);
           }
           ++prop_count;
         } else {
-          smsc_log_debug(logger, "property '%s' not found in profile %s", minsk_properties[i], pf.getKey().c_str());
+          smsc_log_debug(logger, "property '%s' not found in profile %s", cmbpmb_properties[i], pf.getKey().c_str());
+          //smsc_log_debug(logger, "property '%s' not found in profile %s", minsk_properties[i], pf.getKey().c_str());
         }
       }
       if (sendToPers && prop_count > 0) {
