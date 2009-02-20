@@ -155,14 +155,17 @@ public class TaskBuilder extends Thread {
       if (index > 0) {
         String msisdn = line.substring(0, index);
         if (msisdn.charAt(0) != '+')
-          msisdn = '+' + msisdn;        
-        if (blm.contains(msisdn))
+          msisdn = '+' + msisdn;
+        if (blm.contains(msisdn)) {
           continue;
-        if (rtree.getValue(msisdn) == null)
-          continue;
+        }
+//          if (rtree.getValue(msisdn) == null) {
+//            System.out.println("WARN: rtree doesn't contains: "+msisdn);
+//            continue;
+//          }
 
         String text = line.substring(index+1);
-        text = text.replaceAll("(\\\\n)",System.getProperty("line.separator"));
+        text = text.replaceAll("\\\\r","").replaceAll("\\\\n",System.getProperty("line.separator"));
 
         final Message msg = new Message();
         msg.setAbonent(msisdn);

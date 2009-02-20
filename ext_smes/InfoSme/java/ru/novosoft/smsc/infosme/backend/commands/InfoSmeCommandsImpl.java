@@ -121,7 +121,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
 //      }
       final Message message = new Message();
       message.setAbonent(msisdn);
-      message.setMessage(text);
+      message.setMessage(text.replaceAll("\\\\r","").replaceAll("\\\\n",System.getProperty("line.separator")));
       message.setSendDate(new Date());
       message.setState(Message.State.NEW);
       message.setTaskId(taskId);
