@@ -65,7 +65,9 @@ public:
 }}
 
 namespace scag2 {
-namespace exceptions = scag::exceptions;
+namespace exceptions {
+using namespace scag::exceptions;
+}
 }
 
 #endif 
