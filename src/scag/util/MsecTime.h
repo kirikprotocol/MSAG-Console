@@ -1,7 +1,7 @@
 #ifndef _SCAG_UTIL_MSECTIME_H
 #define _SCAG_UTIL_MSECTIME_H
 
-#include <time.h>
+#include <sys/time.h>
 
 namespace scag2 {
 namespace util {
@@ -9,16 +9,27 @@ namespace util {
 class MsecTime
 {
 public:
-    typedef int time_type;
+    typedef long time_type;
     MsecTime() {
         ::gettimeofday(&t0_,0);
     }
     inline time_type msectime() const {
         struct timeval tv;
-        ::gettimeofday( &tv, 0 );
+        ::gettimeofday(&tv,0);
         time_type t = time_type((tv.tv_sec - t0_.tv_sec)*1000 +
                                 (int(tv.tv_usec) - int(t0_.tv_usec)) / 1000);
         return t;
+    }
+
+    static time_type currentTimeMillis() {
+        static MsecTime epoch(time_type(0)); // from epoch
+        return epoch.msectime();
+    }
+
+protected:
+    MsecTime( time_type t0 ) {
+        t0_.tv_sec = time_t(t0/1000);
+        t0_.tv_usec = suseconds_t((t0%1000)*1000);
     }
 private:
     struct timeval t0_;
