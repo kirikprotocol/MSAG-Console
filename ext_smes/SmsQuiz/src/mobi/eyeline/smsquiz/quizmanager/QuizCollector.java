@@ -90,8 +90,6 @@ public class QuizCollector {
           break;
         case GENERATION:
           return quiz.getLastDistrStatusCheck() + checkTimeot;
-        case AWAIT:
-          return quiz.getDateBegin().getTime();
         case ACTIVE:
           return quiz.getDateEnd().getTime();
         case FINISHED:
@@ -173,19 +171,13 @@ public class QuizCollector {
       } else {
 
         if (quiz.getDateEnd().getTime() > now) {
-
-          if (quiz.getQuizStatus() == Quiz.Status.AWAIT && quiz.getDateBegin().getTime() <= now) { // Quiz have to start
-            if (logger.isInfoEnabled())
-              logger.info("Await quiz with expired start date was found and will be activated: " + quiz);
-            setActive(quiz);
-
-          } else if (quiz.getQuizStatus() == Quiz.Status.GENERATION) { // Check distribution status
+          if (quiz.getQuizStatus() == Quiz.Status.GENERATION) { // Check distribution status
             if (logger.isInfoEnabled())
               logger.info("Generated quiz was found, it generation state will be checked: " + quiz);
             checkState(quiz);
 
           } else if (quiz.getQuizStatus() == Quiz.Status.NEW) {   // Create distribution
-            if (!quiz.isDistrGenerated()) {
+            if  ( (!quiz.isDistrGenerated()) && (quiz.getDateBegin().getTime() <= System.currentTimeMillis())) {
               if (logger.isInfoEnabled())
                 logger.info("New quiz was found, create distr for it: " + quiz);
               createDistribution(quiz);
@@ -233,17 +225,6 @@ public class QuizCollector {
   }
 
 
-  private void setActive(Quiz quiz) throws QuizException {
-    quizesMap.put(quiz.getDestAddress(), quiz);
-    try {
-      quiz.setQuizStatus(Quiz.Status.ACTIVE);
-    } catch (Exception e) {
-      logger.error(e, e);
-      throw new QuizException(e);
-    }
-    if (logger.isInfoEnabled())
-      logger.info("QuizCollector added quiz into map: " + quiz);
-  }
 
   private void setFinished(Quiz quiz) throws QuizException {
     deleteFromMap(quiz);
@@ -269,7 +250,8 @@ public class QuizCollector {
     try {
       DistributionManager.State state = dm.getState(id);
       if (state.equals(DistributionManager.State.GENERATED)) {
-        quiz.setQuizStatus(Quiz.Status.AWAIT);
+        quizesMap.put(quiz.getDestAddress(), quiz);
+        quiz.setQuizStatus(Quiz.Status.ACTIVE);
       } else if (state.equals(DistributionManager.State.ERROR)) {
         logger.error("Quiz's distribution generation failed: " + quiz);
         try {

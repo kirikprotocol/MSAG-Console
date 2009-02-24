@@ -13,7 +13,6 @@ public class QuizState {
 
   public static final QuizState NEW = new QuizState("NEW");
   public static final QuizState GENERATION = new QuizState("GENERATION");
-  public static final QuizState AWAIT = new QuizState("AWAIT");
   public static final QuizState ACTIVE = new QuizState("ACTIVE");
   public static final QuizState FINISHED = new QuizState("FINISHED");
   public static final QuizState FINISHED_ERROR = new QuizState("FINISHED_ERROR");
@@ -34,9 +33,6 @@ public class QuizState {
     }
     if(name.equalsIgnoreCase(GENERATION.getName())) {
       return GENERATION;
-    }
-    if(name.equalsIgnoreCase(AWAIT.getName())) {
-      return AWAIT;
     }
     if(name.equalsIgnoreCase(ACTIVE.getName())) {
       return ACTIVE;
@@ -59,7 +55,6 @@ public class QuizState {
     LinkedList list = new LinkedList();
     list.add(NEW.getName());
     list.add(GENERATION.getName());
-    list.add(AWAIT.getName());
     list.add(ACTIVE.getName());
     list.add(FINISHED.getName());
     list.add(FINISHED_ERROR.getName());

@@ -32,7 +32,7 @@ public class Quiz {
   private static final Logger logger = Logger.getLogger(Quiz.class);
 
   public static enum Status {
-    NEW, GENERATION, AWAIT, ACTIVE, EXPORTING, FINISHED, FINISHED_ERROR
+    NEW, GENERATION, ACTIVE, EXPORTING, FINISHED, FINISHED_ERROR
   }
 
   private JStore jstore;
@@ -677,7 +677,6 @@ public class Quiz {
             break;
           }
         case GENERATION:
-        case AWAIT:
           setDestAddress(data.getDestAddress());
         case ACTIVE:
           setReplyPatterns(data.getPatterns());
