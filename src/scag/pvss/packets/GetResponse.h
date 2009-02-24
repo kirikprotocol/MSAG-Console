@@ -30,6 +30,8 @@ public:
         return visitor.visitGetResponse(*this);
     }
 
+    virtual GetResponse* clone() const { return new GetResponse(*this); }
+
     void clear() {
         Response::clear();
         if ( property_ ) {
@@ -96,7 +98,9 @@ private:
         return *property_;
     }
 
-    GetResponse( const GetResponse& other );
+    GetResponse( const GetResponse& other ) : BatchResponseComponent(other), property_(0) {
+        if ( other.property_ ) property_ = new Property(*other.property_);
+    }
     GetResponse& operator = ( const GetResponse& other );
 
 private:

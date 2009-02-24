@@ -22,10 +22,12 @@ public:
     uint32_t getModulus() const { return modulus_; }
     void setModulus( uint32_t mod ) { modulus_ = mod; }
 
-    virtual bool visit( const ProfileKey& key, ProfileCommandVisitor& visitor ) throw ( PvapException )
+    virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
     {
-        return visitor.visitIncModCommand( key, *this );
+        return visitor.visitIncModCommand( *this );
     }
+
+    virtual IncModCommand* clone() const { return new IncModCommand(*this); }
 
 protected:
     virtual const char* typeToString() const { return "incmod"; }

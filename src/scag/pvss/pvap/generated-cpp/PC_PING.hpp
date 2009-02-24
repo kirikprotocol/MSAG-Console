@@ -83,7 +83,7 @@ public:
                     throw InvalidFieldTypeException(data_->isRequest(),"invalid field in PC_PING", data_->getSeqNum(),tag);
                 }
             } while ( true );
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "reading field tag=%d of PC_PING: %s",

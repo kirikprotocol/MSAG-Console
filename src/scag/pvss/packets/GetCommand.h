@@ -22,10 +22,12 @@ public:
     const std::string& getVarName() const { return varName_; }
     void setVarName( const std::string& varName ) { varName_ = varName; }
 
-    virtual bool visit( const ProfileKey& key, ProfileCommandVisitor& visitor ) throw ( PvapException )
+    virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
     {
-        return visitor.visitGetCommand(key,*this);
+        return visitor.visitGetCommand(*this);
     }
+
+    virtual GetCommand* clone() const { return new GetCommand(*this); }
 
 protected:
     virtual const char* typeToString() const { return "get"; }

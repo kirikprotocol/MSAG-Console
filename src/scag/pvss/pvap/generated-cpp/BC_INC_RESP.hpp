@@ -71,7 +71,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), statusValueTag );
             writer.writeTag(statusValueTag);
             writer.writeByteLV(data_->getStatusValue());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field statusValue in BC_INC_RESP: %s",
@@ -81,7 +81,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), resultTag );
             writer.writeTag(resultTag);
             writer.writeIntLV(data_->getResult());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field result in BC_INC_RESP: %s",
@@ -115,7 +115,7 @@ public:
                     throw InvalidFieldTypeException(data_->isRequest(),"invalid field in BC_INC_RESP", data_->getSeqNum(),tag);
                 }
             } while ( true );
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "reading field tag=%d of BC_INC_RESP: %s",

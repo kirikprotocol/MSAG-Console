@@ -43,7 +43,7 @@ public:
             int lt = int(reader.readInt());
             if ( owner.getProperty() == 0 ) owner.setProperty( new Property() );
             owner.getProperty()->setTimePolicy( TimePolicy(policyValue), fd, lt );
-        } catch ( IOException& e ) {
+        } catch ( exceptions::IOException& e ) {
             throw PvapSerializationException( owner.isRequest(),
                                               owner.getSeqNum(),
                                               "decoding time policy: %s",

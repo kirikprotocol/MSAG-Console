@@ -107,7 +107,7 @@ public:
                 reader.read( subreader );
                 subproto.decodeMessage( subreader );
             }
-        } catch ( IOException& e ) {
+        } catch ( exceptions::IOException& e ) {
             throw PvapSerializationException( owner.isRequest(),
                                               owner.getSeqNum(),
                                               "decoding batch_resp component #%d: %s",

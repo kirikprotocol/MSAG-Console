@@ -16,11 +16,13 @@ public:
         return visitor.visitDelResponse(*this);
     }
 
+    virtual DelResponse* clone() const { return new DelResponse(*this); }
+
 protected:
     virtual const char* typeToString() const { return "del_resp"; }
 
 private:
-    DelResponse( const DelResponse& other );
+    DelResponse( const DelResponse& other ) : BatchResponseComponent(other) {}
     DelResponse& operator = ( const DelResponse& other );
 };
 

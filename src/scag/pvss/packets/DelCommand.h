@@ -23,10 +23,12 @@ public:
     const std::string& getVarName() const { return varName_; }
     void setVarName( const std::string& varName ) { varName_ = varName; }
 
-    virtual bool visit( const ProfileKey& key, ProfileCommandVisitor& visitor ) throw ( PvapException )
+    virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
     {
-        return visitor.visitDelCommand(key,*this);
+        return visitor.visitDelCommand(*this);
     }
+
+    virtual DelCommand* clone() const { return new DelCommand(*this); }
 
 protected:
     virtual ResponseTypeMatch& getResponseTypeMatch() const;

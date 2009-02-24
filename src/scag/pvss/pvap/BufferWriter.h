@@ -53,14 +53,14 @@ public:
         writeLength(sz);
         buf_->Append( val.c_str(), sz );
     }
-    void writeAsciiLV( const std::string& val ) throw (IOException) {
+    void writeAsciiLV( const std::string& val ) throw (exceptions::IOException) {
         int sz = val.size();
         const unsigned char* p = reinterpret_cast<const unsigned char*>(val.c_str());
         for ( ; sz > 0; --sz ) {
             if ( *p > 126 || *p < 32 ) {
                 // disallowed char
-                throw IOException( "disallowed char %u at pos=%d in '%s'",
-                                   unsigned(*p) & 0xff, val.size() - sz, val.c_str() );
+                throw exceptions::IOException( "disallowed char %u at pos=%d in '%s'",
+                                               unsigned(*p) & 0xff, val.size() - sz, val.c_str() );
             }
         }
         writeUTFLV( val );

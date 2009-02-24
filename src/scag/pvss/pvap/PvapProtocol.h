@@ -33,34 +33,34 @@ private:
         virtual bool visitProfileRequest( AbstractProfileRequest& req ) throw(PvapException) {
             packet = &req;
             AbstractCommand* cmd = req.getCommand();
-            return cmd->visit( req.getProfileKey(), *this );
+            return cmd->visit(*this);
         }
-        virtual bool visitDelCommand( const ProfileKey& key, DelCommand& cmd ) throw(PvapException) {
+        virtual bool visitDelCommand( DelCommand& cmd ) throw(PvapException) {
             PC_DEL msg( static_cast< ProfileRequest<DelCommand>* >( packet ) );
             pvap.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitSetCommand( const ProfileKey& key, SetCommand& cmd ) throw(PvapException) {
+        virtual bool visitSetCommand( SetCommand& cmd ) throw(PvapException) {
             PC_SET msg( static_cast< ProfileRequest<SetCommand>* >( packet ) );
             pvap.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitGetCommand( const ProfileKey& key, GetCommand& cmd ) throw(PvapException) {
+        virtual bool visitGetCommand( GetCommand& cmd ) throw(PvapException) {
             PC_GET msg( static_cast< ProfileRequest<GetCommand>* >( packet ) );
             pvap.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitIncCommand( const ProfileKey& key, IncCommand& cmd ) throw(PvapException) {
+        virtual bool visitIncCommand( IncCommand& cmd ) throw(PvapException) {
             PC_INC msg( static_cast< ProfileRequest<IncCommand>* >( packet ) );
             pvap.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitIncModCommand( const ProfileKey& key, IncModCommand& cmd ) throw(PvapException) {
+        virtual bool visitIncModCommand( IncModCommand& cmd ) throw(PvapException) {
             PC_INC_MOD msg( static_cast< ProfileRequest<IncModCommand>* >( packet ) );
             pvap.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitBatchCommand( const ProfileKey& key, BatchCommand& cmd ) throw(PvapException) {
+        virtual bool visitBatchCommand( BatchCommand& cmd ) throw(PvapException) {
             PC_BATCH msg( static_cast< ProfileRequest< BatchCommand >* >( packet ) );
             pvap.encodeMessage(msg,writer);
             return true;

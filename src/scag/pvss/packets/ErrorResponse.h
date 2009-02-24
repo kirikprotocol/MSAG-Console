@@ -18,11 +18,13 @@ public:
         return visitor.visitErrResponse(*this);
     }
 
+    virtual ErrorResponse* clone() const { return new ErrorResponse(*this); }
+
 protected:
     virtual const char* typeToString() const { return "err_resp"; }
 
 private:
-    ErrorResponse( const ErrorResponse& other );
+    ErrorResponse( const ErrorResponse& other ) : Response(other) {}
     ErrorResponse& operator = ( const ErrorResponse& other );
 };
 

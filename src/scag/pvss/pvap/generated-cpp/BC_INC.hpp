@@ -74,7 +74,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), varNameTag );
             writer.writeTag(varNameTag);
             writer.writeAsciiLV(data_->getVarName());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field varName in BC_INC: %s",
@@ -88,7 +88,7 @@ public:
                 helper.serialize( proto, writer );
  
             }
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field timePolicy in BC_INC: %s",
@@ -98,7 +98,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), intValueTag );
             writer.writeTag(intValueTag);
             writer.writeIntLV(data_->getIntValue());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field intValue in BC_INC: %s",
@@ -137,7 +137,7 @@ public:
                     throw InvalidFieldTypeException(data_->isRequest(),"invalid field in BC_INC", data_->getSeqNum(),tag);
                 }
             } while ( true );
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "reading field tag=%d of BC_INC: %s",

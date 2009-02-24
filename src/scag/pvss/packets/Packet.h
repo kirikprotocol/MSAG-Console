@@ -20,6 +20,7 @@ public:
     virtual uint32_t  getSeqNum() const = 0;
     virtual std::string toString() const = 0;
     virtual void setSeqNum( uint32_t seqNum ) = 0;
+    virtual Packet* clone() const = 0;
 };
 
 } // namespace pvss

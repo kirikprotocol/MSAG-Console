@@ -76,7 +76,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), varNameTag );
             writer.writeTag(varNameTag);
             writer.writeAsciiLV(data_->getVarName());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field varName in BC_INC_MOD: %s",
@@ -90,7 +90,7 @@ public:
                 helper.serialize( proto, writer );
  
             }
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field timePolicy in BC_INC_MOD: %s",
@@ -100,7 +100,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), intValueTag );
             writer.writeTag(intValueTag);
             writer.writeIntLV(data_->getIntValue());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field intValue in BC_INC_MOD: %s",
@@ -110,7 +110,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), modulusTag );
             writer.writeTag(modulusTag);
             writer.writeIntLV(data_->getModulus());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field modulus in BC_INC_MOD: %s",
@@ -153,7 +153,7 @@ public:
                     throw InvalidFieldTypeException(data_->isRequest(),"invalid field in BC_INC_MOD", data_->getSeqNum(),tag);
                 }
             } while ( true );
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "reading field tag=%d of BC_INC_MOD: %s",

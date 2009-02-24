@@ -16,12 +16,13 @@ public:
     virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) {
         return visitor.visitPingResponse(*this);
     }
+    virtual PingResponse* clone() const { return new PingResponse(*this); }
 
 protected:
     virtual const char* typeToString() const { return "ping_resp"; }
 
 private:
-    PingResponse( const PingResponse& other );
+    PingResponse( const PingResponse& other ) : Response(other) {}
     PingResponse& operator = ( const PingResponse& other );
 };
 

@@ -58,5 +58,16 @@ ResponseTypeMatch& BatchCommand::getResponseTypeMatch() const {
     return responseMatch_;
 }
 
+BatchCommand::BatchCommand( const BatchCommand& cmd ) :
+AbstractCommand(cmd),
+transactional_(cmd.transactional_)
+{
+    for ( std::vector< BatchRequestComponent* >::const_iterator i = cmd.batchContent_.begin();
+          i != cmd.batchContent_.end();
+          ++i ) {
+        batchContent_.push_back( (*i)->clone() );
+    }
+}
+
 } // namespace pvss
 } // namespace scag2

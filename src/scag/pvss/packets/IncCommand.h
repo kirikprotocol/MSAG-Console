@@ -16,10 +16,12 @@ public:
         return AbstractPropertyCommand::isValid() && hasIntValue();
     }
 
-    virtual bool visit( const ProfileKey& key, ProfileCommandVisitor& visitor ) throw ( PvapException )
+    virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
     {
-        return visitor.visitIncCommand( key, *this );
+        return visitor.visitIncCommand( *this );
     }
+
+    virtual IncCommand* clone() const { return new IncCommand(*this); }
 
 protected:
     virtual const char* typeToString() const { return "inc"; }

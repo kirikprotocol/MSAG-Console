@@ -13,6 +13,10 @@ class AbstractPropertyCommand : public BatchRequestComponent, public HavingPrope
 protected:
     AbstractPropertyCommand() : BatchRequestComponent(), property_(0) {}
     AbstractPropertyCommand( uint32_t seqNum ) : BatchRequestComponent(seqNum), property_(0) {}
+    AbstractPropertyCommand( const AbstractPropertyCommand& cmd ) :
+    BatchRequestComponent(*this), property_(0) {
+        if ( cmd.property_ ) property_ = new Property(*cmd.property_);
+    }
 
 public:
     virtual ~AbstractPropertyCommand() {

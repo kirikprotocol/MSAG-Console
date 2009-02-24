@@ -28,11 +28,15 @@ public:
     virtual bool visit( RequestVisitor& visitor ) throw (PvapException) = 0;
     bool matchResponseType( const Response& resp ) const;
 
+    virtual bool isPing() const { return false; }
+
 protected:
     virtual ResponseTypeMatch& getResponseTypeMatch() const;
 
+protected:
+    Request( const Request& other ) : Packet(other) {}
+
 private:
-    Request( const Request& );
     Request& operator = ( const Request& );
 };
 

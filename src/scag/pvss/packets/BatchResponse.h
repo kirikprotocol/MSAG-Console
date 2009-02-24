@@ -19,6 +19,8 @@ public:
         return visitor.visitBatchResponse(*this);
     }
 
+    virtual BatchResponse* clone() const { return new BatchResponse(*this); }
+
     void addComponent( BatchResponseComponent* resp ) {
         batchContent_.push_back( resp );
     }
@@ -54,7 +56,13 @@ protected:
     virtual const char* typeToString() const { return "batch_resp"; }
 
 private:
-    BatchResponse( const BatchResponse& );
+    BatchResponse( const BatchResponse& other ) : Response(other) {
+        for ( std::vector< BatchResponseComponent* >::const_iterator i = other.batchContent_.begin();
+              i != other.batchContent_.end();
+              ++i ) {
+            batchContent_.push_back( (*i)->clone() );
+        }
+    }
     BatchResponse& operator = ( const BatchResponse& );
 
 private:

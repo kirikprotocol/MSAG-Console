@@ -19,6 +19,12 @@ public:
     virtual const T* getCommand() const { return command_; }
     virtual T* getCommand() { return command_; }
 
+    virtual ProfileRequest< T >* clone() const { return new ProfileRequest< T >(*this); }
+
+private:
+    ProfileRequest( const ProfileRequest< T >& other ) :
+    AbstractProfileRequest(other), command_(other.command_->clone()) {}
+
 private:
     T* command_;
 };

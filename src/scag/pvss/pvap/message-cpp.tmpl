@@ -147,7 +147,7 @@ $ifndef field.helperClass$
 $-ifndef$                
             }
 $-select$
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field $var field.name$ in $var message.name$: %s",
@@ -184,7 +184,7 @@ $ifndef field.helperClass$
 $-ifndef$                
                 }
 $-select$
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field $var field.name$ in $var message.name$:",
@@ -245,7 +245,7 @@ $-foreach$
                     throw InvalidFieldTypeException(data_->isRequest(),"invalid field in $var message.name$", data_->getSeqNum(),tag);
                 }
             } while ( true );
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "reading field tag=%d of $var message.name$: %s",

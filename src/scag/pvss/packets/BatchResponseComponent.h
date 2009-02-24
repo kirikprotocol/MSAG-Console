@@ -11,6 +11,8 @@ class BatchResponseComponent : public Response
 public:
     BatchResponseComponent() : Response() {}
     BatchResponseComponent( uint32_t seqNum ) : Response(seqNum) {}
+
+    virtual BatchResponseComponent* clone() const = 0;
 };
 
 } // namespace pvss

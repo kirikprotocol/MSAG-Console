@@ -29,6 +29,13 @@ public:
         return buf;
     }
 
+protected:
+    AbstractNonProfileRequest( const AbstractNonProfileRequest& other ) :
+    Request(other), Command(other), seqNum_(other.seqNum_) {}
+
+private:
+    AbstractNonProfileRequest& operator = ( const AbstractNonProfileRequest& );
+
 private:
     uint32_t seqNum_;
 };

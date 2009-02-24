@@ -69,7 +69,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), varNameTag );
             writer.writeTag(varNameTag);
             writer.writeAsciiLV(data_->getVarName());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field varName in BC_DEL: %s",
@@ -99,7 +99,7 @@ public:
                     throw InvalidFieldTypeException(data_->isRequest(),"invalid field in BC_DEL", data_->getSeqNum(),tag);
                 }
             } while ( true );
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "reading field tag=%d of BC_DEL: %s",

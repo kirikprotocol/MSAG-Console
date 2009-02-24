@@ -1,5 +1,6 @@
 base
 ?common
+?core
 ?client
 ?data
 ?profile

@@ -72,7 +72,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), statusValueTag );
             writer.writeTag(statusValueTag);
             writer.writeByteLV(data_->getStatusValue());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field statusValue in PC_BATCH_RESP: %s",
@@ -86,7 +86,7 @@ public:
                 helper.serialize( proto, writer );
  
             }
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field batchContent in PC_BATCH_RESP: %s",
@@ -121,7 +121,7 @@ public:
                     throw InvalidFieldTypeException(data_->isRequest(),"invalid field in PC_BATCH_RESP", data_->getSeqNum(),tag);
                 }
             } while ( true );
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "reading field tag=%d of PC_BATCH_RESP: %s",

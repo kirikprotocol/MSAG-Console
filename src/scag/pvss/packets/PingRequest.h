@@ -27,6 +27,10 @@ public:
         return visitor.visitPingRequest(*this);
     }
 
+    virtual PingRequest* clone() const { return new PingRequest(*this); }
+
+    virtual bool isPing() const { return true; }
+
 protected:
     virtual ResponseTypeMatch& getResponseTypeMatch() const;
 

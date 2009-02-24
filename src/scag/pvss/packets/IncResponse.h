@@ -16,6 +16,8 @@ public:
         return visitor.visitIncResponse(*this);
     }
 
+    virtual IncResponse* clone() const { return new IncResponse(*this); }
+
     uint32_t getResult() const { return result_; }
     void setResult( uint32_t result ) { result_ = result; }
 
@@ -23,7 +25,7 @@ protected:
     virtual const char* typeToString() const { return "inc_resp"; }
 
 private:
-    IncResponse( const IncResponse& other );
+    IncResponse( const IncResponse& other ) : BatchResponseComponent(other), result_(other.result_) {}
     IncResponse& operator = ( const IncResponse& other );
 
 private:

@@ -16,6 +16,8 @@ public:
         return visitor.visitAuthResponse(*this);
     }
 
+    virtual AuthResponse* clone() const { return new AuthResponse(*this); }
+
     uint8_t getClientType() const { return clientType_; }
     void setClientType( uint8_t ct ) { clientType_ = ct; }
     bool hasClientType() const { return clientType_ != 0; }
@@ -28,7 +30,8 @@ protected:
     virtual const char* typeToString() const { return "auth_resp"; }
 
 private:
-    AuthResponse( const AuthResponse& other );
+    AuthResponse( const AuthResponse& other ) :
+    Response(other), clientType_(other.clientType_), sid_(other.sid_) {}
     AuthResponse& operator = ( const AuthResponse& other );
 
 private:

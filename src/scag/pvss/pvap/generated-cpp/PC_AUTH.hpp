@@ -75,7 +75,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), protocolVersionTag );
             writer.writeTag(protocolVersionTag);
             writer.writeByteLV(data_->getProtocolVersion());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field protocolVersion in PC_AUTH: %s",
@@ -85,7 +85,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), loginTag );
             writer.writeTag(loginTag);
             writer.writeAsciiLV(data_->getLogin());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field login in PC_AUTH: %s",
@@ -95,7 +95,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), passwordTag );
             writer.writeTag(passwordTag);
             writer.writeAsciiLV(data_->getPassword());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field password in PC_AUTH: %s",
@@ -105,7 +105,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), nameTag );
             writer.writeTag(nameTag);
             writer.writeAsciiLV(data_->getName());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field name in PC_AUTH: %s",
@@ -147,7 +147,7 @@ public:
                     throw InvalidFieldTypeException(data_->isRequest(),"invalid field in PC_AUTH", data_->getSeqNum(),tag);
                 }
             } while ( true );
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "reading field tag=%d of PC_AUTH: %s",

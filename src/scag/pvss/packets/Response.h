@@ -67,7 +67,7 @@ public:
 protected:
     Response() : seqNum_(uint32_t(-1)), status_(UNKNOWN) {}
     Response( uint32_t seqNum ) : seqNum_(seqNum), status_(UNKNOWN) {}
-    // Response( const Response other ) : seqNum_(other.seqNum_), status_(other.status_) {}
+    Response( const Response& other ) : seqNum_(other.seqNum_), status_(other.status_) {}
 
 public:
     virtual bool isRequest() const { return false; }
@@ -99,7 +99,7 @@ protected:
     virtual const char* typeToString() const = 0;
 
 private:
-    Response( const Response& );
+    // Response( const Response& );
     Response& operator = ( const Response& );
 
 protected:

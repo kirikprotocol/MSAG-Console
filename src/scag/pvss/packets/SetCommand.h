@@ -12,10 +12,12 @@ public:
     SetCommand() : AbstractPropertyCommand() {}
     SetCommand( uint32_t seqNum ) : AbstractPropertyCommand(seqNum) {}
     
-    virtual bool visit( const ProfileKey& key, ProfileCommandVisitor& visitor ) throw ( PvapException )
+    virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
     {
-        return visitor.visitSetCommand(key,*this);
+        return visitor.visitSetCommand(*this);
     }
+
+    virtual SetCommand* clone() const { return new SetCommand(*this); }
 
 protected:
     virtual const char* typeToString() const { return "set"; }

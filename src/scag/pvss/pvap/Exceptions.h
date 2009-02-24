@@ -5,35 +5,25 @@
 #include <stdio.h>
 #include "util/int.h"
 #include "scag/exc/SCAGExceptions.h"
+#include "scag/exc/IOException.h"
 #include "scag/pvss/common/PvapException.h"
 
 namespace scag2 {
 namespace pvss {
 namespace pvap {
 
-/// exception used in Serializer
-class IOException : public scag::exceptions::SCAGException
-{
-protected:
-    IOException() {}
-public:
-    IOException( const char* fmt, ... ) : SCAGException() {
-        SMSC_UTIL_EX_FILL(fmt);
-    }
-};
-
-class ReadBeyondEof : public IOException
+class ReadBeyondEof : public exceptions::IOException
 {
 public:
-    ReadBeyondEof() : IOException( "Attempt to read data beyond end of buffer" ) {}
+    ReadBeyondEof() : exceptions::IOException( "Attempt to read data beyond end of buffer" ) {}
 };
 
 
-class InvalidValueLength : public IOException
+class InvalidValueLength : public exceptions::IOException
 {
 public:
     InvalidValueLength( const char* valueType, int len ) :
-    IOException( "Invalid value length for type %s: len=%d", valueType, len ) {}
+    exceptions::IOException( "Invalid value length for type %s: len=%d", valueType, len ) {}
 };
 
 
@@ -55,7 +45,8 @@ public:
 class NotImplementedException : public PvapException
 {
 public:
-    NotImplementedException(const char* field)
+    NotImplementedException(const char* field) :
+    PvapException( PvssException::UNKNOWN )
     {
         message = "Processing of ";
         message += field;
@@ -64,7 +55,8 @@ public:
     virtual ~NotImplementedException() throw() {}
 };
 
-class MandatoryFieldMissingException : public PvapException {
+class MandatoryFieldMissingException : public PvapException 
+{
 public:
     MandatoryFieldMissingException(bool isRequest, const char* field, uint32_t seqNum ) :
     PvapException(isRequest, seqNum)
@@ -93,7 +85,8 @@ public:
 class PvapSerializationException : public PvapException
 {
 public:
-    PvapSerializationException( uint32_t seqNum, const char* msg, ... ) : PvapException(seqNum) {
+    PvapSerializationException( uint32_t seqNum, const char* msg, ... ) :
+    PvapException(PvssException::UNKNOWN,seqNum) {
         SMSC_UTIL_EX_FILL(msg);
     }
     PvapSerializationException( bool isreq, uint32_t seqNum, const char* msg, ... ) :
@@ -113,7 +106,9 @@ public:
 };
 
 
-class IncompatibleVersionException:public PvapException{
+/*
+class IncompatibleVersionException:public PvapException
+{
 public:
   IncompatibleVersionException(const char* messageName)
   {
@@ -121,6 +116,7 @@ public:
     message+=messageName;
   }
 };
+ */
 
 class InvalidMessageTypeException : public PvapException 
 {
@@ -155,7 +151,8 @@ public:
 class UnexpectedSeqNumException : public PvapException
 {
 public:
-    UnexpectedSeqNumException( int tag, const char* messageName = "")
+    UnexpectedSeqNumException( int tag, const char* messageName = "") :
+    PvapException(PvssException::UNKNOWN)
     {
         char buf[32];
         sprintf(buf,"%u",tag);
@@ -166,6 +163,7 @@ public:
     }
 };
 
+/*
 class NetworkErrorException:public PvapException{
 public:
   NetworkErrorException()
@@ -199,6 +197,7 @@ public:
     message+=" not handled.";
   }
 };
+ */
 
 }
 }

@@ -36,16 +36,21 @@ public:
         batchContent_.push_back( req );
     }
 
-    virtual bool visit( const ProfileKey& key, ProfileCommandVisitor& visitor ) throw ( PvapException )
+    virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
     {
-        return visitor.visitBatchCommand(key,*this);
+        return visitor.visitBatchCommand(*this);
     }
 
     const std::vector< BatchRequestComponent* >&  getBatchContent() const { return batchContent_; }
 
+    virtual BatchCommand* clone() const { return new BatchCommand(*this); }
+
 protected:
     virtual const char* typeToString() const { return "batch"; }
     virtual ResponseTypeMatch& getResponseTypeMatch() const;
+
+private:
+    BatchCommand( const BatchCommand& cmd );
 
 private:
     std::vector< BatchRequestComponent* >  batchContent_;

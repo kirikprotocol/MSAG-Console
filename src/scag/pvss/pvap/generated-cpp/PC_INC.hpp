@@ -86,7 +86,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), varNameTag );
             writer.writeTag(varNameTag);
             writer.writeAsciiLV(data_->getCommand()->getVarName());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field varName in PC_INC: %s",
@@ -100,7 +100,7 @@ public:
                 helper.serialize( proto, writer );
  
             }
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field timePolicy in PC_INC: %s",
@@ -110,7 +110,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), intValueTag );
             writer.writeTag(intValueTag);
             writer.writeIntLV(data_->getCommand()->getIntValue());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field intValue in PC_INC: %s",
@@ -122,7 +122,7 @@ public:
             try {
                 writer.writeTag(abonentKeyTag);
                 writer.writeAsciiLV(data_->getProfileKey().getAbonentKey());
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field abonentKey in PC_INC:",
@@ -134,7 +134,7 @@ public:
             try {
                 writer.writeTag(operatorKeyTag);
                 writer.writeIntLV(data_->getProfileKey().getOperatorKey());
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field operatorKey in PC_INC:",
@@ -146,7 +146,7 @@ public:
             try {
                 writer.writeTag(providerKeyTag);
                 writer.writeIntLV(data_->getProfileKey().getProviderKey());
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field providerKey in PC_INC:",
@@ -158,7 +158,7 @@ public:
             try {
                 writer.writeTag(serviceKeyTag);
                 writer.writeIntLV(data_->getProfileKey().getServiceKey());
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field serviceKey in PC_INC:",
@@ -233,7 +233,7 @@ public:
                     throw InvalidFieldTypeException(data_->isRequest(),"invalid field in PC_INC", data_->getSeqNum(),tag);
                 }
             } while ( true );
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "reading field tag=%d of PC_INC: %s",

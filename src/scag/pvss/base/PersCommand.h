@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "scag/util/storage/SerialBuffer.h"
-#include "Types.h"
+// #include "Types.h"
 #include "Property.h"
 
 namespace scag2 {

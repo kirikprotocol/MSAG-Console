@@ -4,7 +4,7 @@
 namespace scag2 {
 namespace pvss {
 
-class ProfileKey;
+// class ProfileKey;
 class DelCommand;
 class SetCommand;
 class GetCommand;
@@ -17,12 +17,12 @@ class ProfileCommandVisitor
 {
 public:
     virtual ~ProfileCommandVisitor() {}
-    virtual bool visitDelCommand( const ProfileKey& key, DelCommand& cmd ) throw(PvapException) = 0;
-    virtual bool visitSetCommand( const ProfileKey& key, SetCommand& cmd ) throw(PvapException) = 0;
-    virtual bool visitGetCommand( const ProfileKey& key, GetCommand& cmd ) throw(PvapException) = 0;
-    virtual bool visitIncCommand( const ProfileKey& key, IncCommand& cmd ) throw(PvapException) = 0;
-    virtual bool visitIncModCommand( const ProfileKey& key, IncModCommand& cmd ) throw(PvapException) = 0;
-    virtual bool visitBatchCommand( const ProfileKey& key, BatchCommand& cmd ) throw(PvapException) = 0;
+    virtual bool visitDelCommand( DelCommand& cmd ) throw(PvapException) = 0;
+    virtual bool visitSetCommand( SetCommand& cmd ) throw(PvapException) = 0;
+    virtual bool visitGetCommand( GetCommand& cmd ) throw(PvapException) = 0;
+    virtual bool visitIncCommand( IncCommand& cmd ) throw(PvapException) = 0;
+    virtual bool visitIncModCommand( IncModCommand& cmd ) throw(PvapException) = 0;
+    virtual bool visitBatchCommand( BatchCommand& cmd ) throw(PvapException) = 0;
 };
 
 } // namespace pvss

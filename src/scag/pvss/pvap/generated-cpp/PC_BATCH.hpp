@@ -84,7 +84,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), transactionalTag );
             writer.writeTag(transactionalTag);
             writer.writeBoolLV(data_->getCommand()->isTransactional());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field transactional in PC_BATCH: %s",
@@ -98,7 +98,7 @@ public:
                 helper.serialize( proto, writer );
  
             }
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field batchContent in PC_BATCH: %s",
@@ -110,7 +110,7 @@ public:
             try {
                 writer.writeTag(abonentKeyTag);
                 writer.writeAsciiLV(data_->getProfileKey().getAbonentKey());
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field abonentKey in PC_BATCH:",
@@ -122,7 +122,7 @@ public:
             try {
                 writer.writeTag(operatorKeyTag);
                 writer.writeIntLV(data_->getProfileKey().getOperatorKey());
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field operatorKey in PC_BATCH:",
@@ -134,7 +134,7 @@ public:
             try {
                 writer.writeTag(providerKeyTag);
                 writer.writeIntLV(data_->getProfileKey().getProviderKey());
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field providerKey in PC_BATCH:",
@@ -146,7 +146,7 @@ public:
             try {
                 writer.writeTag(serviceKeyTag);
                 writer.writeIntLV(data_->getProfileKey().getServiceKey());
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field serviceKey in PC_BATCH:",
@@ -217,7 +217,7 @@ public:
                     throw InvalidFieldTypeException(data_->isRequest(),"invalid field in PC_BATCH", data_->getSeqNum(),tag);
                 }
             } while ( true );
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "reading field tag=%d of PC_BATCH: %s",

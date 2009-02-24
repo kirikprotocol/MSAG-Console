@@ -21,32 +21,32 @@ public:
         buf_.SetPos(sz);
     }
 
-    int readTag() throw (IOException) {
+    int readTag() throw (exceptions::IOException) {
         if ( pos_ == size() ) { return -1; }
         int rv = int(readShort()) & 0xffff;
         if ( rv == 0xffff ) return -1;
         return rv;
     }
-    bool readBoolLV() throw (IOException) {
+    bool readBoolLV() throw (exceptions::IOException) {
         uint8_t b = readByteLV();
         return ( b != 0 );
     }
-    uint8_t readByteLV() throw (IOException) {
+    uint8_t readByteLV() throw (exceptions::IOException) {
         int sz = readShort();
         if ( sz != 1 ) throw InvalidValueLength("byte", sz);
         return readByte();
     }
-    uint16_t readShortLV() throw (IOException) {
+    uint16_t readShortLV() throw (exceptions::IOException) {
         int sz = readShort();
         if ( sz != 2 ) throw InvalidValueLength("short", sz);
         return readShort();
     }
-    uint32_t readIntLV() throw (IOException) {
+    uint32_t readIntLV() throw (exceptions::IOException) {
         int sz = readShort();
         if ( sz != 4 ) throw InvalidValueLength("int", sz);
         return readInt();
     }
-    uint64_t readLongLV() throw (IOException) {
+    uint64_t readLongLV() throw (exceptions::IOException) {
         int sz = readShort();
         if ( sz != 8 ) throw InvalidValueLength("long", sz);
         uint32_t i1 = readInt();
@@ -54,31 +54,31 @@ public:
         return (uint64_t(i1) << 32) | i0;
     }
     /*
-    std::string readUCSLV() throw (IOException) {
+    std::string readUCSLV() throw (exceptions::IOException) {
         // FIXME
     }
      */
-    std::string readUTFLV() throw (IOException) {
+    std::string readUTFLV() throw (exceptions::IOException) {
         int sz = readLength();
         int oldpos = pos_;
         pos_ += sz;
         return std::string( buf_.get() + oldpos, sz );
     }
-    std::string readAsciiLV() throw (IOException) {
+    std::string readAsciiLV() throw (exceptions::IOException) {
         std::string val = readUTFLV();
         int sz = val.size();
         const unsigned char* p = reinterpret_cast<const unsigned char*>(val.c_str());
         for ( ; sz > 0; --sz ) {
             if ( *p > 126 || *p < 32 ) {
                 // disallowed char
-                throw IOException( "disallowed char %u at pos=%d in '%s'",
+                throw exceptions::IOException( "disallowed char %u at pos=%d in '%s'",
                                    unsigned(*p) & 0xff, val.size() - sz, val.c_str() );
             }
         }
         return val;
     }
     
-    void read( BufferReader& other ) throw(IOException) {
+    void read( BufferReader& other ) throw(exceptions::IOException) {
         int sz = readInt();
         rcheck(sz);
         other.buf_.setExtBuf( buf_.get() + pos_, sz );
@@ -86,26 +86,26 @@ public:
         pos_ += sz;
     }
 
-    int readLength() throw (IOException) {
+    int readLength() throw (exceptions::IOException) {
         int rv = readShort();
         rcheck(rv);
         return rv;
     }
 
-    uint8_t readByte() throw (IOException) {
+    uint8_t readByte() throw (exceptions::IOException) {
         rcheck(1);
         uint8_t rv = *reinterpret_cast<const uint8_t*>(buf_.get() + pos_);
         ++pos_;
         return rv;
     }
-    uint16_t readShort() throw (IOException) {
+    uint16_t readShort() throw (exceptions::IOException) {
         rcheck(2);
         uint16_t rv;
         memcpy(&rv, buf_.get()+pos_, 2);
         pos_ += 2;
         return ntohs(rv);
     }
-    uint32_t readInt() throw (IOException) {
+    uint32_t readInt() throw (exceptions::IOException) {
         rcheck(4);
         uint32_t rv;
         memcpy(&rv, buf_.get()+pos_, 4);
@@ -123,7 +123,7 @@ public:
     int getPos() const { return pos_; }
 
 protected:
-    inline void rcheck( int sz ) const throw (IOException) {
+    inline void rcheck( int sz ) const throw (exceptions::IOException) {
         if ( pos_+sz > size() ) throw ReadBeyondEof();
     }
 

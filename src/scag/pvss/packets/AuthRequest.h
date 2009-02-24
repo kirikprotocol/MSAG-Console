@@ -47,9 +47,19 @@ public:
         return visitor.visitAuthRequest(*this);
     }
 
+    virtual AuthRequest* clone() const { return new AuthRequest(*this); }
+
 protected:
     virtual const char* typeToString() const { return "auth"; }
     virtual ResponseTypeMatch& getResponseTypeMatch() const;
+
+private:
+    AuthRequest( const AuthRequest& other ) :
+    AbstractNonProfileRequest(other),
+    protocolVersion_(other.protocolVersion_),
+    login_(other.login_),
+    password_(other.password_),
+    name_(other.name_) {}
 
 private:
     uint8_t     protocolVersion_;

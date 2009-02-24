@@ -86,7 +86,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), statusValueTag );
             writer.writeTag(statusValueTag);
             writer.writeByteLV(data_->getStatusValue());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field statusValue in BC_GET_RESP: %s",
@@ -96,7 +96,7 @@ public:
             // printf( "write pos=%d field=%d\n", ds.getPos(), varNameTag );
             writer.writeTag(varNameTag);
             writer.writeAsciiLV(data_->getVarName());
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field varName in BC_GET_RESP: %s",
@@ -110,7 +110,7 @@ public:
                 helper.serialize( proto, writer );
  
             }
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "writing field timePolicy in BC_GET_RESP: %s",
@@ -122,7 +122,7 @@ public:
             try {
                 writer.writeTag(intValueTag);
                 writer.writeIntLV(data_->getIntValue());
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field intValue in BC_GET_RESP:",
@@ -134,7 +134,7 @@ public:
             try {
                 writer.writeTag(stringValueTag);
                 writer.writeUTFLV(data_->getStringValue());
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field stringValue in BC_GET_RESP:",
@@ -146,7 +146,7 @@ public:
             try {
                 writer.writeTag(boolValueTag);
                 writer.writeBoolLV(data_->getBoolValue());
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field boolValue in BC_GET_RESP:",
@@ -158,7 +158,7 @@ public:
             try {
                 writer.writeTag(dateValueTag);
                 writer.writeIntLV(data_->getDateValue());
-            } catch ( IOException e ) {
+            } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
                                                   data_->getSeqNum(),
                                                   "writing field dateValue in BC_GET_RESP:",
@@ -233,7 +233,7 @@ public:
                     throw InvalidFieldTypeException(data_->isRequest(),"invalid field in BC_GET_RESP", data_->getSeqNum(),tag);
                 }
             } while ( true );
-        } catch ( IOException e ) {
+        } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               data_->getSeqNum(),
                                               "reading field tag=%d of BC_GET_RESP: %s",

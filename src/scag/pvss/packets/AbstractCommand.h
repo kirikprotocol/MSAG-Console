@@ -28,9 +28,17 @@ public:
     }
     bool isRequest() const { return true; }
 
-    virtual bool visit( const ProfileKey& key, ProfileCommandVisitor& visitor ) throw (PvapException) = 0;
+    virtual bool visit( ProfileCommandVisitor& visitor ) throw (PvapException) = 0;
 
     virtual ResponseTypeMatch& getResponseTypeMatch() const = 0;
+
+    virtual AbstractCommand* clone() const = 0;
+
+protected:
+    AbstractCommand( const AbstractCommand& cmd ) : seqNum_(cmd.seqNum_) {}
+
+private:
+    AbstractCommand& operator = ( const AbstractCommand& );
 
 private:
     uint32_t seqNum_;

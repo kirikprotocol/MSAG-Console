@@ -12,7 +12,7 @@ class Packet;
 class Protocol
 {
 public:
-    typedef smsc::core::buffers::TmpBuf< char, 64 > Buffer;
+    typedef smsc::core::buffers::TmpBuf< char, 32 > Buffer;
 
     virtual ~Protocol() {}
 

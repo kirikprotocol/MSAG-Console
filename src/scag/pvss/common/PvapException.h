@@ -2,17 +2,25 @@
 #define _SCAG_PVSS_COMMON_PVAPEXCEPTION_H
 
 #include "util/int.h"
-#include "scag/exc/SCAGExceptions.h"
+#include "PvssException.h"
 
 namespace scag2 {
 namespace pvss {
 
-class PvapException : public scag::exceptions::SCAGException
+class PvapException : public PvssException
 {
 protected:
-    PvapException( uint32_t seqNum = uint32_t(-1) ) :seqNum_(seqNum), isRequest_(true), tag_(0) {}
+    static Type getExcType( bool isreq ) {
+        return isreq ? BAD_REQUEST : BAD_RESPONSE;
+    }
+
+protected:
+    PvapException( Type type, uint32_t seqNum = uint32_t(-1) ) :
+    PvssException(type), seqNum_(seqNum) {}
+
     PvapException( bool isreq, uint32_t seqNum, int tag = 0 ) :
-    SCAGException(), seqNum_(seqNum), isRequest_(isreq), tag_(tag) {}
+    PvssException(getExcType(isreq)), seqNum_(seqNum), tag_(tag) {}
+
 
 public:
     virtual ~PvapException() throw () {}
@@ -20,7 +28,6 @@ public:
 
 private:
     uint32_t seqNum_;
-    bool     isRequest_;
     int      tag_;
 };
 

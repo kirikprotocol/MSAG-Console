@@ -16,11 +16,13 @@ public:
         return visitor.visitSetResponse(*this);
     }
 
+    virtual SetResponse* clone() const { return new SetResponse(*this); }
+
 protected:
     virtual const char* typeToString() const { return "set_resp"; }
 
 private:
-    SetResponse( const SetResponse& other );
+    SetResponse( const SetResponse& other ) : BatchResponseComponent(other) {}
     SetResponse& operator = ( const SetResponse& other );
 };
 
