@@ -11,7 +11,7 @@ class IOException : public SCAGException
 public:
     IOException(const std::exception& exc) : SCAGException(exc.what()) {}
     IOException() : SCAGException() {}
-    IOException( const std::string& exc ) : SCAGException(exc) {}
+    IOException( const std::string& exc ) : SCAGException(exc.c_str()) {}
     IOException( const char* fmt,... ) : SCAGException() {
         SMSC_UTIL_EX_FILL(fmt);
     }
