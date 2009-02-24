@@ -119,13 +119,14 @@
   <th align="center" colspan="2"><div class=page_subtitle><%=getLocString("smsquiz.label.commandserver")%></div></th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><%=getLocString("smsquiz.label.commandserver.port")%></th>
-  <td><input class=txt validation="port" name=commandPort value="<%=StringEncoderDecoder.encode(bean.getCommandPort())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
   <th><%=getLocString("smsquiz.label.commandserver.host")%></th>
   <td><input class=txt validation="nonEmpty" name=commandHost value="<%=StringEncoderDecoder.encode(bean.getCommandHost())%>"></td>
 </tr>
+<tr class=row<%=rowN++&1%>>
+  <th><%=getLocString("smsquiz.label.commandserver.port")%></th>
+  <td><input class=txt validation="port" name=commandPort value="<%=StringEncoderDecoder.encode(bean.getCommandPort())%>"></td>
+</tr>
+
 
 </table>
 
