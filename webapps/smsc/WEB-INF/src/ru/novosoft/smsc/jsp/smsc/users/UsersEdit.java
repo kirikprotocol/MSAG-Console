@@ -83,7 +83,8 @@ public class UsersEdit extends UsersEditBean {
             user.setEmail(email);
             user.getPrefs().setValues(prefsNames, prefsValues);
             user.getPrefs().setInfoSmeAllowedRegions(getInfoSmeRegions(request));
-            user.getPrefs().setTimezone(TimeZone.getTimeZone(timezone));
+            if (timezone != null)
+              user.getPrefs().setTimezone(TimeZone.getTimeZone(timezone));
             journalAppend(SubjectTypes.TYPE_user, login, Actions.ACTION_MODIFY);
             appContext.getStatuses().setUsersChanged(true);
             request.getSession().setAttribute("USER_LOGIN_ADD_EDIT", login);

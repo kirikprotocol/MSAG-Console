@@ -132,6 +132,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
             regionsManager = RegionsManager.getInstance();
             fraudConfigManager = FraudConfigManager.getInstance();
+
             switch (Constants.instType) {
                 case ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE:
                     DaemonManagerImpl daemonManagerImpl = new DaemonManagerImpl(smeManager, webappConfig);

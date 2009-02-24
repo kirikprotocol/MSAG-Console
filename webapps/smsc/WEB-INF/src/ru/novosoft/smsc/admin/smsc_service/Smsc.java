@@ -133,10 +133,12 @@ public class Smsc extends Service {
     try {
       this.configFolder = new File(smscConfFolderString);
       //final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
-      aliases = new AliasSet();
-      aliases.init(getSmscConfig(),this);
-      profileDataFile = new ProfileDataFile();
-      profileDataFile.init(getSmscConfig(), getConfigFolder().getAbsolutePath());
+      if (Constants.instMode == Constants.INST_MODE_SMSC) {
+        aliases = new AliasSet();
+        aliases.init(getSmscConfig(),this);
+        profileDataFile = new ProfileDataFile();
+        profileDataFile.init(getSmscConfig(), getConfigFolder().getAbsolutePath());
+      }
 
       if (SupportExtProfile.enabled) {
         blackNickDataFile = new BlackNickDataFile();
@@ -480,7 +482,7 @@ public class Smsc extends Service {
     }
 
     public synchronized DistributionListAdmin getDistributionListAdmin() {
-        distributionListAdmin.setInfo(getInfo());
+//        distributionListAdmin.setInfo(getInfo());
         return distributionListAdmin;
     }
 

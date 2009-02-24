@@ -378,8 +378,9 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
   }
 
   public synchronized void checkSmscIsRunning() throws AdminException {
-    if (!getInfo().isOnline())
-      throw new AdminException("SMSC is not running.");
+//    if (!getInfo().isOnline())
+//      throw new AdminException("SMSC is not running.");
+    
   }
 
   private Object _call(String componentId, String methodId, Type returnType, Map arguments) throws AdminException {

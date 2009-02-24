@@ -4,6 +4,7 @@ import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.route.SmeStatus;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
@@ -94,6 +95,18 @@ public class ResGroups extends PageBean
   public boolean isServiceAdministrable(final String smeId)
   {
     return hostsManager.isServiceAdministrable(smeId);
+  }
+
+  public boolean isUserAlllowedToSeeService(HttpServletRequest request, String serviceId) {
+    if (request.isUserInRole("services") || request.isUserInRole("service_operator"))
+      return true;
+    User user = getUser(request);
+    for (Iterator iter = user.getRoles().iterator(); iter.hasNext();) {
+      String role = ((String)iter.next()).toLowerCase();
+      if (role.startsWith(serviceId.toLowerCase()))
+        return true;
+    }
+    return false;
   }
 
   /**

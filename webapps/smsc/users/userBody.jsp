@@ -64,10 +64,10 @@
               paramCheck(out, "users.roles.dbsme-admin", "roles", "role25", "dbsme-admin", bean.isUserInRole("dbsme-admin"), null);
               paramCheck(out, "users.roles.mcisme-admin", "roles", "role26", "mcisme-admin", bean.isUserInRole("mcisme-admin"), null);
               paramCheck(out, "users.roles.mtsmsme-admin", "roles", "role27", "mtsmsme-admin", bean.isUserInRole("mtsmsme-admin"), null);
-              paramCheck(out, "users.roles.journal", "roles", "role28", "journal", bean.isUserInRole("journal"), null);
               paramCheck(out, "users.roles.closed_groups", "roles", "role29", "closed_groups", bean.isUserInRole("closed_groups"), null);
               paramCheck(out, "users.roles.timezones", "roles", "role30", "timezones", bean.isUserInRole("timezones"), null);
             }
+            paramCheck(out, "users.roles.journal", "roles", "role28", "journal", bean.isUserInRole("journal"), null);
             paramCheck(out, "users.roles.regions", "roles", "role31", "regions", bean.isUserInRole("regions"), null);
             if (Constants.instMode == Constants.INST_MODE_SMSC) {
               paramCheck(out, "users.roles.emailsme", "roles", "role32", "emailsme", bean.isUserInRole("emailsme"), null);
@@ -75,8 +75,8 @@
               if (SupportExtProfile.enabled)
                 paramCheck(out, "users.roles.smscenters", "roles", "role34", "smscenters", bean.isUserInRole("smscenters"), null);
               paramCheck(out, "users.roles.fraud", "roles", "role35", "fraud", bean.isUserInRole("fraud"), null);
-              paramCheck(out, "users.roles.smsquiz-admin", "roles", "role36", "smsquiz-admin", bean.isUserInRole("smsquiz-admin"), null);
             }
+            paramCheck(out, "users.roles.smsquiz-admin", "roles", "role36", "smsquiz-admin", bean.isUserInRole("smsquiz-admin"), null);
             if (bean.getServiceRoles().size() > 0)
                 for (Iterator i = bean.getServiceRoles().iterator(); i.hasNext();) {
                     String roleName = (String) i.next();

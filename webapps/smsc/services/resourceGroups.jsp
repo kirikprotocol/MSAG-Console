@@ -39,16 +39,19 @@
     MENU0_SELECTION = "MENU0_SERVICES";
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp" %>
-<%
-    page_menu_begin(out);
+<%  if (request.isUserInRole("services") || request.isUserInRole("service_operator")) {
+  page_menu_begin(out);
+  if (request.isUserInRole("services")) {
     page_menu_button(session, out, "mbAddService", "common.buttons.add", "services.add");
     page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "services.deleteHint", getLocString("services.deleteConfirm"));
-    page_menu_space(out);
-    page_menu_confirm_button(session, out, "mbDisconnectServices", "common.buttons.disconnect", "services.disconnectHint", getLocString("services.disconnectConfirm"), null, bean.isSmscAlive());
-    page_menu_button(session, out, "mbStartService", "common.buttons.online", "common.hints.online");
-    page_menu_button(session, out, "mbStopService", "common.buttons.offline", "common.hints.offline");
-    page_menu_button(session, out, "mbSwitchOver", "common.buttons.switchOver", "common.hints.switchOver");
-    page_menu_end(out);
+  }
+  page_menu_space(out);
+  page_menu_confirm_button(session, out, "mbDisconnectServices", "common.buttons.disconnect", "services.disconnectHint", getLocString("services.disconnectConfirm"), null, bean.isSmscAlive());
+  page_menu_button(session, out, "mbStartService", "common.buttons.online", "common.hints.online");
+  page_menu_button(session, out, "mbStopService", "common.buttons.offline", "common.hints.offline");
+  page_menu_button(session, out, "mbSwitchOver", "common.buttons.switchOver", "common.hints.switchOver");
+  page_menu_end(out);
+}
 %><div class=content>
     <input type=hidden name=serviceId>
     <input type=hidden name=hostId>
@@ -102,7 +105,8 @@
                 for (Iterator i = bean.getSmeIds().iterator(); i.hasNext(); row++) {
                     String serviceId = (String) i.next();
                     String encodedServiceId = StringEncoderDecoder.encode(serviceId);
-
+                    if (!bean.isUserAlllowedToSeeService(request, serviceId))
+                      continue;
                     List serviceIds = Arrays.asList(bean.getServiceIds());
             %>
             <tr class=row<%=row & 1%>>
@@ -115,7 +119,7 @@
             </td><%
                 }
             %><td class=name><%
-                if (bean.isServiceAdministrable(serviceId) && request.isUserInRole("services")) {
+                if (bean.isServiceAdministrable(serviceId)) {
             %><a href="javascript:viewService('<%=encodedServiceId%>')"
                  title="<%=getLocString("host.viewServInfo")%>"><%=encodedServiceId%></a><%
             } else {
@@ -142,16 +146,19 @@
         </tbody>
     </table>
 </div>
-<%
-    page_menu_begin(out);
+<%  if (request.isUserInRole("services") || request.isUserInRole("service_operator")) {
+  page_menu_begin(out);
+  if (request.isUserInRole("services")) {
     page_menu_button(session, out, "mbAddService", "common.buttons.add", "services.add");
     page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "services.deleteHint", getLocString("services.deleteConfirm"));
-    page_menu_space(out);
-    page_menu_confirm_button(session, out, "mbDisconnectServices", "common.buttons.disconnect", "services.disconnectHint", getLocString("services.disconnectConfirm"), null, bean.isSmscAlive());
-    page_menu_button(session, out, "mbStartService", "common.buttons.online", "common.hints.online");
-    page_menu_button(session, out, "mbStopService", "common.buttons.offline", "common.hints.offline");
-    page_menu_button(session, out, "mbSwitchOver", "common.buttons.switchOver", "common.hints.switchOver");
-    page_menu_end(out);
+  }
+  page_menu_space(out);
+  page_menu_confirm_button(session, out, "mbDisconnectServices", "common.buttons.disconnect", "services.disconnectHint", getLocString("services.disconnectConfirm"), null, bean.isSmscAlive());
+  page_menu_button(session, out, "mbStartService", "common.buttons.online", "common.hints.online");
+  page_menu_button(session, out, "mbStopService", "common.buttons.offline", "common.hints.offline");
+  page_menu_button(session, out, "mbSwitchOver", "common.buttons.switchOver", "common.hints.switchOver");
+  page_menu_end(out);
+}
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp" %>
 <%@ include file="/WEB-INF/inc/code_footer.jsp" %>

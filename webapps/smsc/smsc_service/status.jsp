@@ -209,7 +209,8 @@
                 }
 
                 //todo security-constraint ��� reschedule  if (request.isUserInRole("reschedule"))
-                printOptionsString(out, request, bean.getJournalReschedule(), rowN++, "reschedule", bean.isRescheduleChanged(),
+                if (Constants.instMode == Constants.INST_MODE_SMSC)
+                  printOptionsString(out, request, bean.getJournalReschedule(), rowN++, "reschedule", bean.isRescheduleChanged(),
                         "users.roles.reschedule");
             %>
         </tbody>
