@@ -12,7 +12,7 @@ enum ScopeType
         SERVICE = 0x04
 };
 
-const char* scopeTypeToString( ScopeType t ) {
+inline const char* scopeTypeToString( ScopeType t ) {
     switch ( t ) {
 #define CASETOSTRING(x) case x: return #x
     CASETOSTRING(ABONENT);
