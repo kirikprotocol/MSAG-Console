@@ -84,7 +84,7 @@ public class SubscriptionService extends BasicService {
 
         String forwardIfNotSubscribed = request.getParameter("forward_if_not_subscribed");
 
-        if (!SubscriptionProcessor.getInstance().isSubscribed(reqMsg.getSourceAddress(), distributionName) && forwardIfNotSubscribed != null) {
+        if (forwardIfNotSubscribed != null) {
 
           try {
             forward(request.getInObj(), forwardIfNotSubscribed);

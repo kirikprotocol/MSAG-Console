@@ -3,3 +3,5 @@
  2008-11-10 | 1.02      | artem         | Initial
 ------------------------------------------------------------------------------------------------------------------------
  2008-12-05 | 1.03      | artem         | Add messages validity period param into config. Default value is 12.
+------------------------------------------------------------------------------------------------------------------------
+ 2009-02-26 | 1.04      | artem         | Remove subscription check before request forwarding in SubscriptionService

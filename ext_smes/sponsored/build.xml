@@ -3,6 +3,7 @@
   <property name="esme_bin_path" value="sponsored"/>
   <property name="esme_bin_name" value="sponsored"/>
   <property name="SMSC_DIR" value="../.." />
+  <property file="build.properties"/>
   <property file="${SMSC_DIR}/webapps/build.properties"/>
   <property name="java_src" location="src"/>
   <property name="config" location="conf"/>
