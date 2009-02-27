@@ -16,6 +16,7 @@ import ru.sibinco.smpp.ub_sme.snmp.Agent;
 import ru.sibinco.smpp.ub_sme.util.DBConnectionManager;
 import ru.sibinco.smpp.ub_sme.util.Utils;
 import ru.sibinco.util.threads.ThreadsPool;
+import ru.sibinco.util.threads.PThreadCloseHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +28,7 @@ import java.sql.Statement;
 import java.text.MessageFormat;
 import java.util.*;
 
-public class SmeEngine implements MessageListener, ResponseListener {
+public class SmeEngine implements MessageListener, ResponseListener, PThreadCloseHandler {
 
   private final static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(SmeEngine.class);
 
@@ -792,6 +793,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
       synchronized (cbossStatements) {
         cbossStatements.put(Thread.currentThread().getName(), result);
       }
+      threadsPool.addThreadCloseHandler(Thread.currentThread(), this);
     }
     return result;
   }
@@ -828,6 +830,35 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
   protected Connection getCbossConnection() throws SQLException {
     return connectionManager.getConnection(cbossPoolName);
+  }
+
+  public void threadClosed(Thread thread) {
+    synchronized (cbossStatements) {
+      CallableStatement stmt = (CallableStatement) cbossStatements.get(thread.getName());
+      if(stmt!=null){
+        Connection con=null;
+        try {
+          con=stmt.getConnection();
+        } catch (SQLException e) {
+          logger.error("Can't get connection from statement for thread "+thread.getName()+": "+e, e);
+        }
+        try {
+          stmt.close();
+        } catch (SQLException e) {
+          logger.error("Can't close statement for thread "+thread.getName()+": "+e, e);
+        }
+        if(con!=null){
+          try {
+            con.close();
+          } catch (SQLException e) {
+            logger.error("Can't close connection for thread "+thread.getName()+": "+e, e);
+          }
+        }
+        cbossStatements.remove(thread.getName());
+      }
+    }
+
+    //To change body of implemented methods use File | Settings | File Templates.
   }
 
   class RequestStatesController extends Thread {

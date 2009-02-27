@@ -12,15 +12,6 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/tpool.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/jcharset.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -87,6 +78,15 @@
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/jdmkrt.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/tpool.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
