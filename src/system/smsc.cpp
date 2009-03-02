@@ -108,6 +108,7 @@ public:
   }
   int Execute()
   {
+    smsc::logger::Logger* log=smsc::logger::Logger::getInstance("speedmon");
     uint64_t cnt,last=0;
     timespec now={0,0},lasttime={0,0};
     double ut,tm,rate,avg;
@@ -218,9 +219,11 @@ public:
         uint32_t smePerfDataSize = 0;
         std::auto_ptr<uint8_t> smePerfData(smsc->getSmePerfData(smePerfDataSize));
         perfSmeListener->reportSmePerformance(smePerfData.get(), smePerfDataSize);
+        info2(log,"ut=%.3lf;avg=%.3lf;last=%.3lf;cnt=%llu;eq=%d;equnl=%d;sched=%d;dpf=%d;sbm=%d;rej=%d;dlv=%d;fwd=%d;tmp=%d;prm=%d",ut,avg,rate,cnt,eqhash,equnl,d.inScheduler,d.dpfCount,
+              d.counters[0].lastSecond,d.counters[1].lastSecond,d.counters[2].lastSecond,d.counters[3].lastSecond,d.counters[4].lastSecond,d.counters[5].lastSecond);
       }catch(std::exception& e)
       {
-        warn2(smsc::logger::Logger::getInstance("speedmon"),"Exception in speed monitor:%s",e.what());
+        warn2(log,"Exception in speed monitor:%s",e.what());
       }
     }
     return 0;
