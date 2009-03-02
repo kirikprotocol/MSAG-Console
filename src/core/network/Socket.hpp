@@ -69,6 +69,8 @@ public:
     Close();
   }
 
+    bool isConnected() const { return connected; }
+
   void setConnectTimeout(int to)
   {
     connectTimeout=to;
