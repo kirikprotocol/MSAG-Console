@@ -248,4 +248,43 @@ B3014:
     mcahdb	Fix empty caller in Scheduler
     emailsme	admin.autoCreateGsm2EmlProfile parameter
     emailsme	multithreaded version,  mail.threadsCount param added
+
+B3015: Feb 05, 2009
+    SMSC	support 64-bit maxStoreSize with suffix Kb,Mb,Gb
+    SMSC	add license expiration snmp traps
+    SMSC	support to skip SRIforSM request for some USSD codes, add options to maplimits.xml
+    SMSC	map proxy reconnect fix 1 sec delay after disconnect
+    DBSme	support to add several addresses inside one job
+    MCISme	invokeProcessDataSmTimeout was rewritten - deadlock on smsInfoMutex has been resolved
+    MCIProf	DivertManager support disabled
+    InfoSme	task activity check support activePeriodStart>activePeriodEnd
+    Webapp	add support of maxStoreSize as string
+    Webapp	Charging policy option names fix
+    core	regexp bug fix
+    core	DiskXTree byteorder fix, now xtree files same on x64 and sparc
+    mcahdb	Fix index load error, Add error logging
+    mcahdb	Add separate wsdl file support
+    mcahdb	Fix incorrect task read function
+    mcahdb	Add .NET Support
+    Inman	IN interaction logic is enhanced (new synchro and scheduling)
+    Inman	A bunch of minor stability fixes
+    Inman	Error reporting is slightly enhanced
+    Inman	handling of T_END carrying Invoke is fixed
+    Emailsme	mixed case content type fix
     
+B3016: Mar 02, 2009
+    SMSC	ussd sessions tracking fix for submit_resp not ok, ussd proclimit fix
+    SMSC	cleanup dialog data after dispose to avoid potential reuse old data
+    SMSC	logging of speed monitor data, same counters as in web topmon
+    SMSC	unlock store mutex when writing archive records
+    SMSC	distr list expired submit bug fix
+    InfoSme	task priorities fix
+    InfoSme	Synchronize access to EmailSmeContext, refactoring, add new web interface for "InfoSme Deliveries" role
+    InfoSme	fix line separators bug, add command host in config
+    InfoSme	shutdown deadlock fix
+    InfoSme	Check  msisdn region before edit black list
+    core	fix for: last record of FixedRecordFile goes to holes and later can be owerwritten
+    core	DiskXTree lookup fix
+    MCISme	small logging improvements
+    MCISme	fix for banner api V2: send RollbackBannerRequest when got BannerResponse with unexpected transaction id value
+    SMPPdmplx	demultiplexor first version
