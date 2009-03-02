@@ -26,6 +26,7 @@ public:
     virtual const Command* getCommand() const = 0;
 
     virtual bool visit( RequestVisitor& visitor ) throw (PvapException) = 0;
+    virtual Request* clone() const = 0;
     bool matchResponseType( const Response& resp ) const;
 
     virtual bool isPing() const { return false; }

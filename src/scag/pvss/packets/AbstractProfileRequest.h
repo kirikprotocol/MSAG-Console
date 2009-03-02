@@ -49,6 +49,7 @@ public:
     {
         return visitor.visitProfileRequest(*this);
     }
+    virtual AbstractProfileRequest* clone() const = 0;
 
 protected:
     virtual ResponseTypeMatch& getResponseTypeMatch() const {
