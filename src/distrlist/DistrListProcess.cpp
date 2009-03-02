@@ -809,7 +809,7 @@ void DistrListProcess::SubmitResp(SmscCommand& cmd)
       ListTask* task = taskpair.first;
       task->list[taskpair.second].responsed = true;//cmd->get_resp()->get_status() == 0;
       task->list[taskpair.second].errcode = cmd->get_resp()->get_status();
-      task_map.erase(task->list[taskpair.second].dialogId);
+      task_map.erase(it);
       task->submited_count++;
       __trace2__(":DPL: task %d of (0x%x:%d:%d) has been submited",cmd->get_dialogId(),task,task->count,task->submited_count);
       if ( task->submited_count == task->count )
@@ -906,6 +906,8 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
     __trace2__(":DPL: unsoccess %d",uno);
     cmd->get_MultiResp()->set_unsuccessCount(uno);
   //}
+  SmeProxy* srcproxy =  task->cmd.getProxy();
+  srcproxy->putCommand(cmd);
   LISTTYPE::iterator it = find(task_sheduler.begin(),task_sheduler.end(),task);
   if ( it != task_sheduler.end() )
   {
@@ -913,8 +915,6 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
     task_sheduler.erase(it);
   }
   //putIncomingCommand(cmd);
-  SmeProxy* srcproxy =  task->cmd.getProxy();
-  srcproxy->putCommand(cmd);
 }
 
 void DistrListProcess::CheckTimeouts()
@@ -924,12 +924,21 @@ void DistrListProcess::CheckTimeouts()
   {
     //__trace2__(":DPL: T:%s task 0x%x(T:%s) was time out",
     //  ctime(&curTime),task_sheduler.front(),ctime(&task_sheduler.front()->startTime));
-    if(task_sheduler.front()->taskType==ttMulti)
+    ListTask* task=task_sheduler.front();
+    for(int i=0;i<task->count;i++)
     {
-      SendSubmitResp(task_sheduler.front()); // удаляет из списка и мапы
+      MAPTYPE::iterator it=task_map.find(task->list[i].dialogId);
+      if(it!=task_map.end())
+      {
+        task_map.erase(it);
+      }
+    }
+    if(task->taskType==ttMulti)
+    {
+      SendSubmitResp(task); // удаляет из списка и мапы
     }else
     {
-      SendDLAnswer(task_sheduler.front());
+      SendDLAnswer(task);
     }
   }
 }
