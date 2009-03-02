@@ -758,19 +758,23 @@ protected:
         return false;
       }else
       {
-        if(!(*ptr)->noDelay)
-        {
-          (*ptr)->cmd=cmd;
-          return true;
-        }else
+        debug2(log,"ussd session found for dlgId=%d, nd=%c, status=%d",cmd->get_dialogId(),(*ptr)->noDelay?'Y':'N',cmd->get_resp()->get_status());
+        if((*ptr)->noDelay || cmd->get_resp()->get_status()!=0)
         {
           ussdSessionMap.erase((*ptr)->key);
           limitQueue.erase(*ptr);
           limitQueueSize--;
           limitHash.Delete(cmd->get_dialogId());
           return false;
+        }else
+        {
+          (*ptr)->cmd=cmd;
+          return true;
         }
       }
+    }else
+    {
+      debug2(log,"record not found for dlgId=%d",cmd->get_dialogId());
     }
     return false;
   }
