@@ -7,12 +7,10 @@ import com.eyeline.utils.ThreadFactoryWithCounter;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
-import ru.aurorisoft.smpp.SubmitResponse;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretDataSource;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretMessage;
 import ru.sibinco.smsx.network.advertising.AdvertisingClient;
 import ru.sibinco.smsx.network.advertising.AdvertisingClientException;
-import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.sql.Timestamp;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -32,6 +30,7 @@ class MessageSender {
   private final OutgoingQueue outQueue;
   private final AdvertisingClient advClient;
   private final ThreadPoolExecutor executor;
+  private final int serviceId;
 
   private String serviceAddress;
   private String msgDestinationAbonentInform;
@@ -46,8 +45,9 @@ class MessageSender {
   private volatile int rejectedTasks;
 
 
-  MessageSender(SecretDataSource ds, OutgoingQueue outQueue, AdvertisingClient advClient) {
+  MessageSender(SecretDataSource ds, OutgoingQueue outQueue, AdvertisingClient advClient, int serviceId) {
     this.ds = ds;
+    this.serviceId = serviceId;
     this.outQueue = outQueue;
     this.advClient = advClient;
     this.executor = new ThreadPoolExecutor(3, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1000), new ThreadFactoryWithCounter("SecMsgSender-Executor-"));
@@ -114,11 +114,7 @@ class MessageSender {
   }
 
   public void sendInformMessage(SecretMessage secretMessage) {
-    try {
-      sendMessage(serviceAddress, secretMessage.getDestinationAddress(), prepareInformMessage(secretMessage.getDestinationAddress(), secretMessage.getSourceAddress()), "smsx");
-    } catch (DataSourceException e) {
-      log.error("Can't send inform message", e);
-    }
+    sendMessage(serviceAddress, secretMessage.getDestinationAddress(), msgDestinationAbonentInform, "smsx");
   }
 
   public void sendInvitationMessage(String destinationAddress) {
@@ -133,8 +129,6 @@ class MessageSender {
     outMsg.setDestAddrSubunit(message.getDestAddressSubunit());
     outMsg.setConnectionName(message.getConnectionName());
     outMsg.setMscAddress(message.getMscAddress());
-    if (message.isSaveDeliveryStatus())
-      outMsg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
 
     String messageString = message.getMessage();
     if (message.isAppendAdvertising()) {
@@ -146,25 +140,22 @@ class MessageSender {
     }
     outMsg.setMessageString(messageString);
 
-    final SecretTransportObject outObj = new SecretTransportObject(message);
+    OutgoingObject origNotif = null;
+    if (message.isNotifyOriginator())
+      origNotif = prepareMessage(serviceAddress, message.getSourceAddress(), prepareDeliveryReport(message.getDestinationAddress(), message.getSendDate()), message.getConnectionName());
+
+    OutgoingObject outObj = new SecretOutgoingObject(message, origNotif);
+    if (message.isSaveDeliveryStatus()) {
+      outMsg.setUserMessageReference(message.getId() * 10 + serviceId);
+      outMsg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
+    }
+
     outObj.setMessage(outMsg);
     try {
       outQueue.offer(outObj);
     } catch (ShutdownedException e) {
       log.error(e,e);
-      return;
     }
-
-    message.setStatus(SecretMessage.STATUS_PROCESSED);
-    try {
-      ds.updateMessageStatus(message);
-    } catch (DataSourceException e) {
-      log.error("Can't save secret message", e);
-    }
-
-    // Send notification to originator
-    if (message.isNotifyOriginator())
-      sendMessage(serviceAddress, message.getSourceAddress(), prepareDeliveryReport(message.getDestinationAddress(), message.getSendDate()), message.getConnectionName());
   }
 
   private String getBannerForAbonent(final String abonentAddress) {
@@ -185,16 +176,20 @@ class MessageSender {
     }
   }
 
-  private void sendMessage(String sourceAddress, String destinationAddress, String msg, String connectionName) {
+  private static OutgoingObject prepareMessage(String sourceAddress, String destinationAddress, String msg, String connectionName) {
     final Message notificationMessage = new Message();
     notificationMessage.setSourceAddress(sourceAddress);
     notificationMessage.setDestinationAddress(destinationAddress);
     notificationMessage.setMessageString(msg);
     notificationMessage.setConnectionName(connectionName);
-    final OutgoingObject outObj1 = new OutgoingObject();
-    outObj1.setMessage(notificationMessage);
+    final OutgoingObject outObj = new OutgoingObject();
+    outObj.setMessage(notificationMessage);
+    return outObj;
+  }
+
+  private void sendMessage(String sourceAddress, String destinationAddress, String msg, String connectionName) {
     try {
-      outQueue.offer(outObj1);
+      outQueue.offer(prepareMessage(sourceAddress, destinationAddress, msg, connectionName));
     } catch (ShutdownedException e) {
       log.error(e,e);
     }
@@ -204,79 +199,63 @@ class MessageSender {
     return msgDeliveryReport.replaceAll("\\{to_abonent}", toAbonent).replaceAll("\\{send_date}", sendDate.toString());
   }
 
-  private String prepareInformMessage(final String toAbonent, final String fromAbonent) throws DataSourceException {
-    return msgDestinationAbonentInform;
-  }
-
   public void shutdown() {
     executor.shutdownNow();
   }
 
-
-  private class SecretTransportObject extends OutgoingObject {
+  private class SecretOutgoingObject extends OutgoingObject {
     private final SecretMessage msg;
+    private final OutgoingObject originatorNotification;
 
-    SecretTransportObject(SecretMessage msg) {
+    private SecretOutgoingObject(SecretMessage msg, OutgoingObject originatorNotification) {
       this.msg = msg;
+      this.originatorNotification = originatorNotification;
     }
 
-    @Override
     public void handleResponse(PDU pdu) {
-      if (msg.isSaveDeliveryStatus()) {
-        if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR) {
+      if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR) {
+        updateStatus(SecretMessage.STATUS_DELIVERY_FAILED);
+
+      } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
+        // Update status
+        updateStatus(SecretMessage.STATUS_PROCESSED);
+        // Send notification to originator
+        if (originatorNotification != null) {
           try {
-            executor.execute(new UpdateMessageStatusTask());
-          } catch (Throwable e) {
-            log.error("Can't execute UpdateMessageStatusTask", e);
-            rejectedTasks++;
-          }
-        } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
-          try {
-            executor.execute(new UpdateSMPPIdTask(Long.parseLong(((SubmitResponse)pdu).getMessageId())));
-          } catch (Throwable e) {
-            log.error("Can't execute UpdateSMPPIdTask", e);
-            rejectedTasks++;
+            outQueue.offer(originatorNotification);
+          } catch (ShutdownedException e) {
+            log.error(e,e);
           }
         }
       }
     }
 
-    @Override
     public void handleSendError() {
-      if (msg.isSaveDeliveryStatus()) {
-        try {
-          executor.execute(new UpdateMessageStatusTask());
-        } catch (Throwable e) {
-          log.error("Can't execute UpdateMessageStatusTask", e);
-          rejectedTasks++;
-        }
+      updateStatus(SecretMessage.STATUS_DELIVERY_FAILED);
+    }
+
+    private void updateStatus(int status) {
+      try {
+        executor.execute(new UpdateMessageStatusTask(status));
+      } catch (Throwable e) {
+        log.error("Can't execute UpdateMessageStatusTask", e);
+        rejectedTasks++;
       }
     }
 
     private class UpdateMessageStatusTask implements Runnable {
+      private final int status;
+
+      private UpdateMessageStatusTask(int status) {
+        this.status = status;
+      }
+
       public void run() {
         try {
-          msg.setStatus(SecretMessage.STATUS_DELIVERY_FAILED);
+          msg.setStatus(status);
           ds.updateMessageStatus(msg);
         } catch (Throwable e) {
           log.error("Update msg status err:",e);
-        }
-      }
-    }
-
-    private class UpdateSMPPIdTask implements Runnable {
-      private final long messageId;
-
-      private UpdateSMPPIdTask(long messageId) {
-        this.messageId = messageId;
-      }
-
-      public void run() {
-        msg.setSmppId(messageId);
-        try {
-          ds.updateMessageSmppId(msg);
-        } catch (Throwable e) {
-          log.error("Can't update smpp id: ", e);
         }
       }
     }

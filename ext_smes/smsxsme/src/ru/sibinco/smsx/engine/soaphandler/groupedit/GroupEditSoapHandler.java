@@ -61,6 +61,7 @@ class GroupEditSoapHandler implements GroupEdit {
     if (log.isDebugEnabled())
       log.debug("GroupList req: owner=" + owner);
 
+    long start  = System.currentTimeMillis();
     GroupListResp response = new GroupListResp();
 
     try {
@@ -81,6 +82,9 @@ class GroupEditSoapHandler implements GroupEdit {
     } catch (Throwable e) {
       log.error(e, e);
       response.setStatus(RESULT_SYSTEM_ERROR);
+    } finally {
+      if (log.isDebugEnabled())
+        log.debug("Time=" + (System.currentTimeMillis() - start));
     }
 
     return response;
@@ -96,6 +100,7 @@ class GroupEditSoapHandler implements GroupEdit {
     if (log.isDebugEnabled())
       log.debug("Group add req: group=" + groupName + "; owner=" + owner);
 
+    long start = System.currentTimeMillis();
     try {
       GroupEditGetProfileCmd.Result profile = getProfile(owner);
       if (profile.lockEdit)
@@ -116,13 +121,16 @@ class GroupEditSoapHandler implements GroupEdit {
     } catch (Throwable e) {
       log.error(e, e);
       return RESULT_SYSTEM_ERROR;
+    } finally {
+      if (log.isDebugEnabled())
+        log.debug("Time=" + (System.currentTimeMillis() - start));
     }
   }
 
   public int removeGroup(String groupName, String owner) throws RemoteException {
     if (log.isDebugEnabled())
       log.debug("Group remove req: group=" + groupName + "; owner=" + owner);
-
+    long start = System.currentTimeMillis();
     try {
       GroupEditGetProfileCmd.Result profile = getProfile(owner);
       if (profile.lockEdit)
@@ -143,13 +151,16 @@ class GroupEditSoapHandler implements GroupEdit {
     } catch (Throwable e) {
       log.error(e, e);
       return RESULT_SYSTEM_ERROR;
+    } finally {
+      if (log.isDebugEnabled())
+        log.debug("Time=" + (System.currentTimeMillis() - start));
     }
   }
 
   public GroupInfoResp groupInfo(String groupName, String owner) throws RemoteException {
     if (log.isDebugEnabled())
       log.debug("Group info req: group=" + groupName + "; owner=" + owner);
-
+    long start = System.currentTimeMillis();
     GroupInfoResp resp = new GroupInfoResp();
     resp.setName(groupName);
     resp.setOwner(owner);
@@ -174,6 +185,9 @@ class GroupEditSoapHandler implements GroupEdit {
     } catch (Throwable e) {
       log.error(e, e);
       resp.setStatus(RESULT_SYSTEM_ERROR);
+    } finally {
+      if (log.isDebugEnabled())
+        log.debug("Time=" + (System.currentTimeMillis() - start));
     }
 
     return resp;
@@ -182,7 +196,7 @@ class GroupEditSoapHandler implements GroupEdit {
   public int addMember(String groupName, String owner, String member) throws RemoteException {
     if (log.isDebugEnabled())
       log.debug("Group add member req: groupName=" + groupName + "; owner=" + owner + "; member=" + member);
-
+    long start = System.currentTimeMillis();
     try {
       GroupEditGetProfileCmd.Result profile = getProfile(owner);
       if (profile.lockEdit)
@@ -204,13 +218,16 @@ class GroupEditSoapHandler implements GroupEdit {
     } catch (Throwable e) {
       log.error(e, e);
       return RESULT_SYSTEM_ERROR;
+    } finally {
+      if (log.isDebugEnabled())
+        log.debug("Time=" + (System.currentTimeMillis() - start));
     }
   }
 
   public int removeMember(String groupName, String owner, String member) throws RemoteException {
     if (log.isDebugEnabled())
       log.debug("Group remove member req: group=" + groupName + "; owner=" + owner + "; member=" + member);
-
+    long start = System.currentTimeMillis();
     try {
       GroupEditGetProfileCmd.Result profile = getProfile(owner);
       if (profile.lockEdit)
@@ -232,13 +249,16 @@ class GroupEditSoapHandler implements GroupEdit {
     } catch (Throwable e) {
       log.error(e, e);
       return RESULT_SYSTEM_ERROR;
+    } finally {
+      if (log.isDebugEnabled())
+        log.debug("Time=" + (System.currentTimeMillis() - start));
     }
   }
 
   public int renameGroup(String groupName, String owner, String newName) throws RemoteException {
     if (log.isDebugEnabled())
       log.debug("Group rename req: group=" + groupName + "; owner=" + owner + "; newName=" + newName);
-
+    long start = System.currentTimeMillis();
     try {
       GroupEditGetProfileCmd.Result profile = getProfile(owner);
       if (profile.lockEdit)
@@ -260,13 +280,16 @@ class GroupEditSoapHandler implements GroupEdit {
     } catch (Throwable e) {
       log.error(e, e);
       return RESULT_SYSTEM_ERROR;
+    } finally {
+      if (log.isDebugEnabled())
+        log.debug("Time=" + (System.currentTimeMillis() - start));
     }
   }
 
   public int copyGroup(String groupName, String owner, String newName) throws RemoteException {
     if (log.isDebugEnabled())
       log.debug("Group copy req: group=" + groupName + "; owner=" + owner + "; newName=" + newName);
-
+    long start = System.currentTimeMillis();
     try {
       GroupEditGetProfileCmd.Result profile = getProfile(owner);
       if (profile.lockEdit)
@@ -288,6 +311,9 @@ class GroupEditSoapHandler implements GroupEdit {
     } catch (Throwable e) {
       log.error(e, e);
       return RESULT_SYSTEM_ERROR;
+    } finally {
+      if (log.isDebugEnabled())
+        log.debug("Time=" + (System.currentTimeMillis() - start));
     }
   }
 

@@ -10,6 +10,10 @@
     <param name="advertising.service">SMSX</param>
   </section>
 
+  <section name="sender">
+    <param name="cache.size">10000</param>
+  </section>
+
   <section name="secret">
     <param name="service.address">147</param>
     <param name="destination.abonent.inform">У Вас 1 SMS-Секрет. Получить? Отправьте Get&lt;пробел&gt;пароль на номер 147.</param>
@@ -53,9 +57,9 @@
   <section name="dbpool">
     <section name="jdbc">
       <param name="driver">com.mysql.jdbc.Driver</param>
-      <param name="source">jdbc:mysql://192.168.1.194/smsx?useUnicode=true&amp;characterEncoding=KOI8R&amp;autoReconnect=true</param>
+      <param name="source">jdbc:mysql://localhost/smsx?useUnicode=true&amp;characterEncoding=KOI8R&amp;autoReconnect=true</param>
       <param name="user">root</param>
-      <param name="password">laefeeza1</param>
+      <param name="password"></param>
     </section>
   </section>
 
@@ -88,6 +92,6 @@
   </section>
 
   <section name="operators">
-    <param name="MTS">+791????????</param>
+    <param name="MTS">+791????????,+333</param>
   </section>
 </config>

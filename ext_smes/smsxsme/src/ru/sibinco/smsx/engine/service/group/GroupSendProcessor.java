@@ -30,31 +30,36 @@ import java.util.concurrent.TimeUnit;
  */
 
 class GroupSendProcessor implements GroupSendCmd.Receiver,
-                                GroupSendStatusCmd.Receiver,
-                                GroupDeliveryReportCmd.Receiver,
-                                GroupReplyCmd.Receiver {
+    GroupSendStatusCmd.Receiver,
+    GroupDeliveryReportCmd.Receiver,
+    GroupReplyCmd.Receiver {
 
   private static final Category log = Category.getInstance("GROUP");
 
   private final OutgoingQueue outQueue;
   private final ThreadPoolExecutor executor;
 
-  private final FixedArrayCache<DeliveryStatus> statuses;
+  private final FixedArrayCache<DeliveryStatus[]> statuses;
+  private final FixedArrayCache<DeliveryStatus> umrs;
   private final DistrListDataSource listsDS;
   private final RepliesMap replies;
   private final OperatorsList operators;
 
   private final String repliesInvintation;
   private final String sourceAddress;
+  private final int serviceId;
 
-  public GroupSendProcessor(XmlConfigSection sec, OutgoingQueue outQueue, DistrListDataSource listsDS, RepliesMap repliesMap, OperatorsList operators) throws ConfigException {
+  public GroupSendProcessor(XmlConfigSection sec, OutgoingQueue outQueue, DistrListDataSource listsDS, RepliesMap repliesMap, OperatorsList operators, int serviceId) throws ConfigException {
     this.outQueue = outQueue;
     this.repliesInvintation = sec.getString("reply.invitation");
     this.sourceAddress = sec.getString("source.address");
     this.listsDS = listsDS;
     this.replies = repliesMap;
     this.operators = operators;
-    this.statuses = new FixedArrayCache<DeliveryStatus>(sec.getInt("statuses.cache.size"));
+    int statusesCacheSize = sec.getInt("statuses.cache.size", 10000);
+    this.statuses = new FixedArrayCache<DeliveryStatus[]>(statusesCacheSize);
+    this.umrs = new FixedArrayCache<DeliveryStatus>(statusesCacheSize);
+    this.serviceId = serviceId;
     this.executor = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(100), new ThreadFactoryWithCounter("Group-Executor-"));
   }
 
@@ -69,14 +74,15 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
       ArrayList<String> members = new ArrayList<String>(dl.members());
       members.remove(cmd.getSubmitter());
 
-      DeliveryStatus s = new DeliveryStatus(members);
-      int umr = -1;
+      DeliveryStatus[] deliveryStatuses = new DeliveryStatus[members.size()];
+      int statusId = -1;
       if (cmd.isStorable())
-        umr = statuses.add(s);
+        statusId = statuses.add(deliveryStatuses);
 
       if (!members.isEmpty()) {
         String replyInvintationText = repliesInvintation.replace("{size}", String.valueOf(members.size()));
 
+        int i=0;
         for (String member : members) {
 
           Message m = new Message();
@@ -86,18 +92,20 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
           m.setMscAddress(cmd.getMscAddress());
           m.setMessageString(cmd.getMessage());
           m.setDestAddrSubunit(cmd.getDestAddrSubunit());
-          if (cmd.getSourceId() == Command.SOURCE_SMPP)
-            m.setConnectionName("smsgroup");
-          else
-            m.setConnectionName("webgroup");
+          m.setConnectionName(cmd.getSourceId() == Command.SOURCE_SMPP ? "smsgroup" : "webgroup");
 
-          GroupOutgoingObject o = new GroupOutgoingObject(cmd, s);
+          DeliveryStatus dsm = new DeliveryStatus(member);
+          deliveryStatuses[i] = dsm;
+          GroupOutgoingObject o = new GroupOutgoingObject(cmd, deliveryStatuses, i);
+          i++;
+
           if (cmd.isStorable()) {
-            m.setUserMessageReference(umr);
+            int umr = umrs.add(dsm);
+            m.setUserMessageReference(umr * 10 + serviceId);
             m.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
           }
-          o.setMessage(m);
 
+          o.setMessage(m);
 
           String operator = operators.getOperatorByAddress(member);
           if (dl.containsSubmitter(member) && operator != null) {
@@ -115,15 +123,15 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
           outQueue.offer(o);
         }
       } else {
-        cmd.setDeliveryStatus(s);
+        cmd.setDeliveryStatuses(deliveryStatuses);
         cmd.update(AsyncCommand.STATUS_SUCCESS);
       }
 
-      return umr;
+      return statusId;
     } catch (CommandExecutionException e) {
       throw e;
     } catch (Throwable e) {
-      log.error("GroupSendErr: owner=" + dl.getOwner() + "; name=" + dl.getName() , e);
+      log.error("GroupSendErr: owner=" + dl.getOwner() + "; name=" + dl.getName(), e);
       throw new CommandExecutionException("Error: " + e.getMessage(), GroupSendCmd.ERR_SYS_ERROR);
     }
   }
@@ -152,7 +160,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
   public long execute(GroupReplyCmd cmd) throws CommandExecutionException {
     if (log.isDebugEnabled())
       log.debug("GroupReplyReq: submitter=" + cmd.getSubmitter());
-    
+
     try {
       int listId = replies.get(cmd.getSubmitter());
       if (listId == -1)
@@ -168,7 +176,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
     }
   }
 
-  public DeliveryStatus execute(GroupSendStatusCmd cmd) throws CommandExecutionException {
+  public DeliveryStatus[] execute(GroupSendStatusCmd cmd) throws CommandExecutionException {
     try {
       if (log.isDebugEnabled())
         log.debug("CheckStatusReq: msgId=" + cmd.getMsgId());
@@ -181,16 +189,21 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
     }
   }
 
-  public void execute(GroupDeliveryReportCmd cmd) throws CommandExecutionException {
+  public boolean execute(GroupDeliveryReportCmd cmd) throws CommandExecutionException {
     try {
       if (log.isDebugEnabled())
-        log.debug("DeliveryReportReq: da=" + cmd.getAddress() + "; umr=" + cmd.getUmr() + "; dlvrd=" + cmd.isDelivered());
+        log.debug("DeliveryReportReq: umr=" + cmd.getUmr() + "; dlvrd=" + cmd.isDelivered());
 
-      DeliveryStatus s = statuses.get(cmd.getUmr());
-      if (s != null) {
-        s.setStatus(cmd.getAddress(), cmd.isDelivered() ? DeliveryStatus.DELIVERED : DeliveryStatus.NOT_DELIVERED);
-      } else
-        log.warn("No delivery found for umr=" + cmd.getUmr());
+      if (cmd.getUmr() % 10 == serviceId) {
+        DeliveryStatus member = umrs.get(cmd.getUmr() / 10);
+        if (member != null)
+          member.status = cmd.isDelivered() ? DeliveryStatus.DELIVERED : DeliveryStatus.NOT_DELIVERED;
+        else
+          log.warn("No delivery found for umr=" + cmd.getUmr());
+        return true;
+      }
+
+      return false;
 
     } catch (Throwable e) {
       log.error("DeliveryReportErr: ", e);
@@ -205,13 +218,15 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
 
   private class GroupOutgoingObject extends OutgoingObject {
 
-    private final DeliveryStatus s;
+    private final int index;
+    private final DeliveryStatus[] statuses;
     private final GroupSendCommand cmd;
     private OutgoingObject replyInvintation;
 
-    private GroupOutgoingObject(GroupSendCommand cmd, DeliveryStatus s) {
+    private GroupOutgoingObject(GroupSendCommand cmd, DeliveryStatus[] statuses, int index) {
       this.cmd = cmd;
-      this.s = s;
+      this.statuses = statuses;
+      this.index = index;
     }
 
     public void setReplyInvintation(OutgoingObject replyInvintation) {
@@ -220,36 +235,41 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
 
     @Override
     protected void handleSendError() {
-      s.setStatus(getMessage().getDestinationAddress(), DeliveryStatus.NOT_DELIVERED);
+      statuses[index].status = DeliveryStatus.SYSTEM_ERROR;
     }
 
     @Override
     protected void handleResponse(final PDU pdu) {
-      if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR)
-        s.setStatus(getMessage().getDestinationAddress(), DeliveryStatus.NOT_DELIVERED);
-      else {
-        s.setStatus(getMessage().getDestinationAddress(), DeliveryStatus.SENT);
+      if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR) {
+        statuses[index].status = DeliveryStatus.NOT_DELIVERED;
+      } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
+        statuses[index].status = DeliveryStatus.SENT;
 
-        if (repliesInvintation != null) {
+        if (replyInvintation != null) {
           try {
             outQueue.offer(replyInvintation);
           } catch (ShutdownedException e) {
-            log.error(e,e);
+            log.error(e, e);
           }
         }
+      }
 
-        if (s.isAllMessagesSent()) {
-          try {
-            executor.execute(new Runnable() {
-              public void run() {
-                cmd.setDeliveryStatus(s);
-                cmd.update(GroupSendCmd.STATUS_SUCCESS);
-              }
-            });
-          } catch (Throwable e) {
-            log.error(e,e);
+      // Check all messages have been sent
+      for (DeliveryStatus m : statuses) {
+        if (m.status == DeliveryStatus.ACCEPTED)
+          return;
+      }
+
+      // If all messages have been sent, update status
+      try {
+        executor.execute(new Runnable() {
+          public void run() {
+            cmd.setDeliveryStatuses(statuses);
+            cmd.update(GroupSendCmd.STATUS_SUCCESS);
           }
-        }
+        });
+      } catch (Throwable e) {
+        log.error(e, e);
       }
     }
   }

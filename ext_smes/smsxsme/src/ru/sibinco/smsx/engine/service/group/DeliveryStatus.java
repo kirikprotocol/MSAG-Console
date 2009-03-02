@@ -1,51 +1,29 @@
 package ru.sibinco.smsx.engine.service.group;
 
-import java.util.Collection;
-
 /**
  * User: artem
- * Date: 28.11.2008
+ * Date: 24.02.2009
  */
 public class DeliveryStatus {
 
   public static final byte ACCEPTED = 0;
   public static final byte SENT = 1;
   public static final byte DELIVERED = 2;
-  public static final byte NOT_DELIVERED = -1;
+  public static final byte SYSTEM_ERROR = -1;
+  public static final byte NOT_DELIVERED = -2;
 
-  private String[] members;
-  private byte[] statuses;
+  int status = ACCEPTED;
+  final String address;
 
-  public DeliveryStatus(Collection<String> members) {
-    this.members = new String[members.size()];
-    this.statuses = new byte[members.size()];
-    int i = 0;
-    for (String m : members)
-      this.members[i++] = m;
+  public DeliveryStatus(String address) {
+    this.address = address;
   }
 
-  void setStatus(String member, int s) {
-    for (int i=0; i < members.length; i++) {
-      if (members[i].equals(member)) {
-        statuses[i] = (byte)s;
-        break;
-      }
-    }
+  public String getAddress() {
+    return address;
   }
 
-  public String[] members() {
-    return members;
-  }
-
-  public byte[] statuses() {
-    return statuses;
-  }
-
-  boolean isAllMessagesSent() {
-    for (int i=0; i < members.length; i++) {
-      if (statuses[i] == ACCEPTED)
-        return false;
-    }
-    return true;
+  public int getStatus() {
+    return status;
   }
 }

@@ -1,7 +1,6 @@
 package ru.sibinco.smsx.engine.service.group.commands;
 
 import ru.sibinco.smsx.engine.service.CommandExecutionException;
-import ru.sibinco.smsx.engine.service.group.DeliveryStatus;
 
 /**
  * User: artem

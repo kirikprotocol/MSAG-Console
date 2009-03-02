@@ -19,7 +19,7 @@ class SmsXSubscriptionSoapHandler implements SmsXSubscription{
   public CheckSubscriptionResp checkSubscription(String msisdn) throws java.rmi.RemoteException {
     if (log.isDebugEnabled())
       log.debug("Subscr check req: msisdn=" + msisdn);
-
+    long start = System.currentTimeMillis();
     CheckSubscriptionResp resp = new CheckSubscriptionResp();
 
     try {
@@ -35,6 +35,12 @@ class SmsXSubscriptionSoapHandler implements SmsXSubscription{
         resp.setStatus(STATUS_INVALID_MSISDN);
       else
         resp.setStatus(STATUS_SYS_ERROR);
+    } catch (Throwable e) {
+      log.error(e,e);
+      resp.setStatus(STATUS_SYS_ERROR);
+    } finally {
+      if (log.isDebugEnabled())
+        log.debug("Time=" + (System.currentTimeMillis() - start));
     }
     return resp;
   }

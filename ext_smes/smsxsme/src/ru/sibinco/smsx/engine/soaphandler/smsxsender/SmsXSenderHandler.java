@@ -115,6 +115,7 @@ class SmsXSenderHandler  {
         return sendSenderMessage(serviceAddress, msisdn, message, express, null, advertising);
       
     } catch (Throwable e) {
+      log.error(e,e);
       return new SmsXSenderResponse(null, -1, STATUS_SYSTEM_ERROR);
 
     } finally {
@@ -137,6 +138,7 @@ class SmsXSenderHandler  {
         return sendSenderMessage(oa, da, message, express, mscAddress, false);
 
     } catch (Throwable e) {
+      log.error(e,e);
       return new SmsXSenderResponse(null, -1, STATUS_SYSTEM_ERROR);
 
     } finally {

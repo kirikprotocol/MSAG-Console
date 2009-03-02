@@ -43,7 +43,7 @@ public class FileDistrListDataSource implements DistrListDataSource {
   }
 
   private static String getListName(String name, String owner) {
-    return (owner != null) ? owner + '/' + name : name;
+    return (owner != null) ? owner + '/' + name.toLowerCase() : name.toLowerCase();
   }
 
   private static String getStoreListName(String name, String owner) {

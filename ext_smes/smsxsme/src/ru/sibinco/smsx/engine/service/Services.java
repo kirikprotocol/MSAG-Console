@@ -31,6 +31,12 @@ public class Services {
 
   private static final Category log = Category.getInstance("SERVICES");
 
+  // NOTE: SERVICE ID LEN = 1 !!!
+  private static final int SERVICE_ID_SENDER = 0;
+  private static final int SERVICE_ID_CALENDAR = 1;
+  private static final int SERVICE_ID_SECRET = 2;
+  private static final int SERVICE_ID_GROUP = 3;
+
   private static Services ourInstance;
 
   private static final CountDownLatch initLatch = new CountDownLatch(1);
@@ -51,7 +57,7 @@ public class Services {
 
   private CalendarService calendarService;
   private SecretService secretService;
-  private final SenderService senderService;
+  private SenderService senderService;
   private final BlackListService blackListService;
   private final NickService nickService;
   private GroupService groupService;
@@ -60,20 +66,21 @@ public class Services {
   private ServiceManagerMBean mbean = null;
 
 
-
   private Services(XmlConfig config, OutgoingQueue outQueue) {
     try {
-      System.out.println("  Init Sender...");
-      senderService = new SenderServiceImpl(config, outQueue);
+      if (config.containsSection("sender")) {
+        System.out.println("  Init Sender...");
+        senderService = new SenderServiceImpl(config.getSection("sender"), outQueue, SERVICE_ID_SENDER);
+      }
 
       if (config.containsSection("calendar")) {
         System.out.println("  Init Calendar...");
-        calendarService = new CalendarServiceImpl(config.getSection("calendar"), outQueue);
+        calendarService = new CalendarServiceImpl(config.getSection("calendar"), outQueue, SERVICE_ID_CALENDAR);
       }
 
       if (config.containsSection("secret")) {
         System.out.println("  Init Secret...");
-        secretService = new SecretServiceImpl(config.getSection("secret"), outQueue);
+        secretService = new SecretServiceImpl(config.getSection("secret"), outQueue, SERVICE_ID_SECRET);
       }
 
       System.out.println("  Init Black List...");
@@ -84,13 +91,13 @@ public class Services {
 
       if (config.containsSection("group")) {
         System.out.println("  Init Group...");
-        groupService = new GroupServiceImpl(config.getSection("group"), outQueue);
+        groupService = new GroupServiceImpl(config.getSection("group"), outQueue, SERVICE_ID_GROUP);
       }
 
       System.out.println("  Init Subscription...");
       subscriptionService = new SubscriptionServiceImpl(config);
     } catch (ConfigException e) {
-      throw new InitializationException(e.getMessage(),e);
+      throw new InitializationException(e.getMessage(), e);
     }
   }
 
@@ -129,9 +136,11 @@ public class Services {
   }
 
   public void startServices() {
-    log.info("Starting: sender...");
-    senderService.startService();
-    log.info("Started: sender.");
+    if (senderService != null) {
+      log.info("Starting: sender...");
+      senderService.startService();
+      log.info("Started: sender.");
+    }
 
     if (calendarService != null) {
       log.info("Starting: calendar...");
@@ -165,9 +174,11 @@ public class Services {
   }
 
   public void stopServices() {
-    log.info("Stopping: sender...");
-    senderService.stopService();
-    log.info("Stopped: sender.");
+    if (senderService != null) {
+      log.info("Stopping: sender...");
+      senderService.stopService();
+      log.info("Stopped: sender.");
+    }
 
     if (calendarService != null) {
       log.info("Stopping: calendar...");

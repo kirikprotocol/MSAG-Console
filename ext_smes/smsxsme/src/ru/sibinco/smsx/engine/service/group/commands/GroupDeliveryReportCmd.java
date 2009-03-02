@@ -10,17 +10,8 @@ import ru.sibinco.smsx.engine.service.Command;
 
 public class GroupDeliveryReportCmd extends Command {
 
-  private String address;
   private boolean delivered;
   private int umr;
-
-  public String getAddress() {
-    return address;
-  }
-
-  public void setAddress(String address) {
-    this.address = address;
-  }
 
   public boolean isDelivered() {
     return delivered;
@@ -39,6 +30,6 @@ public class GroupDeliveryReportCmd extends Command {
   }  
 
   public interface Receiver {
-    public void execute(GroupDeliveryReportCmd cmd) throws CommandExecutionException;
+    public boolean execute(GroupDeliveryReportCmd cmd) throws CommandExecutionException;
   }
 }

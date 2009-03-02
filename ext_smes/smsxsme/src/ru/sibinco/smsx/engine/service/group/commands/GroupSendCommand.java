@@ -22,17 +22,17 @@ public class GroupSendCommand extends AsyncCommand {
   private boolean storable;
 
   // Results
-  private DeliveryStatus deliveryStatus;
+  private DeliveryStatus[] deliveryStatuses;
 
-  public DeliveryStatus getDeliveryStatus() {
-    return deliveryStatus;
+  public DeliveryStatus[] getDeliveryStatuses() {
+    return deliveryStatuses;
   }
 
-  public void setDeliveryStatus(DeliveryStatus deliveryStatus) {
-    this.deliveryStatus = deliveryStatus;
+  public void setDeliveryStatuses(DeliveryStatus[] deliveryStatuses) {
+    this.deliveryStatuses = deliveryStatuses;
   }
 
-public String getMessage() {
+  public String getMessage() {
     return message;
   }
 

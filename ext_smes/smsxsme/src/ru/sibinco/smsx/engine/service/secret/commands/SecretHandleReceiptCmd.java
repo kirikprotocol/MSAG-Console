@@ -12,14 +12,14 @@ import ru.sibinco.smsx.engine.service.CommandExecutionException;
 public class SecretHandleReceiptCmd extends Command {
   
   private boolean delivered;
-  private long smppMessageId;
+  private int umr;
 
-  public long getSmppMessageId() {
-    return smppMessageId;
+  public int getUmr() {
+    return umr;
   }
 
-  public void setSmppMessageId(long smppMessageId) {
-    this.smppMessageId = smppMessageId;
+  public void setUmr(int umr) {
+    this.umr = umr;
   }
 
   public boolean isDelivered() {

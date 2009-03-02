@@ -28,7 +28,7 @@ public interface SecretDataSource {
 
   public void removeSecretMessage(final SecretMessage secretMessage) throws DataSourceException;
   public void updateMessageStatus(SecretMessage secretMessage) throws DataSourceException;
-  public int updateMessageStatus(long smppId, int status) throws DataSourceException;
+  public int updateMessageStatus(long id, int status) throws DataSourceException;
   public void updateMessageSmppId(SecretMessage secretMessage) throws DataSourceException;
 
   public SecretUserWithMessages loadSecretUserWithMessages(final String address) throws DataSourceException;

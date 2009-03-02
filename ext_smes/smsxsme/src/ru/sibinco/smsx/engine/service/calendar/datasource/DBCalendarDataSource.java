@@ -206,15 +206,15 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     }
   }
 
-  public int updateMessageStatus(long smppId, int newStatus) throws DataSourceException {
+  public int updateMessageStatus(long id, int newStatus) throws DataSourceException {
     Connection conn = null;
     PreparedStatement ps = null;
     try {
       conn = pool.getConnection();
-      ps = conn.prepareStatement(getSql("calendar.message.update.status.by.smpp.id"));
+      ps = conn.prepareStatement(getSql("calendar.message.update.status.by.id"));
 
       ps.setInt(1, newStatus);
-      ps.setLong(2, smppId);
+      ps.setLong(2, id);
 
       return ps.executeUpdate();
     } catch (SQLException e) {

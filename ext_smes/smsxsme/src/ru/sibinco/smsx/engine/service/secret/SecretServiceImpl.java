@@ -1,16 +1,14 @@
 package ru.sibinco.smsx.engine.service.secret;
 
-import ru.sibinco.smsx.engine.service.ServiceInitializationException;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.utils.config.xml.XmlConfigSection;
 import ru.sibinco.smsx.engine.service.CommandExecutionException;
+import ru.sibinco.smsx.engine.service.ServiceInitializationException;
 import ru.sibinco.smsx.engine.service.secret.commands.*;
 import ru.sibinco.smsx.engine.service.secret.datasource.DBSecretDataSource;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretDataSource;
 import ru.sibinco.smsx.network.advertising.AdvertisingClient;
 import ru.sibinco.smsx.network.advertising.AdvertisingClientFactory;
-
-import com.eyeline.sme.smpp.OutgoingQueue;
-import com.eyeline.utils.config.xml.XmlConfig;
-import com.eyeline.utils.config.xml.XmlConfigSection;
 
 import java.io.File;
 
@@ -27,13 +25,13 @@ public class SecretServiceImpl implements SecretService {
   private final AdvertisingClient advClient;
   private final BatchEngine batchEngine;
 
-  public SecretServiceImpl(XmlConfigSection sec, OutgoingQueue outQueue) {
+  public SecretServiceImpl(XmlConfigSection sec, OutgoingQueue outQueue, int serviceId) {
 
     try {
       dataSource = new DBSecretDataSource();
       advClient = AdvertisingClientFactory.createAdvertisingClient();
 
-      messageSender = new MessageSender(dataSource, outQueue, advClient);
+      messageSender = new MessageSender(dataSource, outQueue, advClient, serviceId);
       messageSender.setServiceAddress(sec.getString("service.address"));
       messageSender.setMsgDeliveryReport(sec.getString("delivery.report"));
       messageSender.setMsgDestinationAbonentInform(sec.getString("destination.abonent.inform"));
@@ -51,7 +49,7 @@ public class SecretServiceImpl implements SecretService {
         throw new ServiceInitializationException("Can't create archives dir: " + archivesDir.getAbsolutePath());
 
       batchEngine = new BatchEngine(dataSource, storeDir, archivesDir);
-      processor = new SecretProcessor(dataSource, messageSender);
+      processor = new SecretProcessor(dataSource, messageSender, serviceId);
 
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);

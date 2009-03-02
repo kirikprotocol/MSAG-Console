@@ -20,7 +20,7 @@ public class ConnectionPoolFactory {
   private static String url;
   private static String login;
   private static String password;
-  private static CountDownLatch initLatch = new CountDownLatch(1);
+  private static final CountDownLatch initLatch = new CountDownLatch(1);
 
   public static void init(XmlConfig c) {
     try {

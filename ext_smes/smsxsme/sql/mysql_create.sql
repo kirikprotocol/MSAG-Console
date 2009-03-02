@@ -1,4 +1,4 @@
--- TABLES FOR CALENDAR
+## TABLES FOR CALENDAR
 CREATE TABLE calendar_messages (
   id INT NOT NULL,
   source_address VARCHAR(30) NOT NULL,
@@ -10,16 +10,15 @@ CREATE TABLE calendar_messages (
   message TEXT NOT NULL,
   smpp_status INT,
   conn CHAR(10),
-  smpp_id BIGINT,
   msc_address VARCHAR(20),
+  adv int,
 
   PRIMARY KEY(id),
-  INDEX(send_time),
-  INDEX(smpp_id)
+  INDEX(send_time)
 ) CHARACTER SET koi8r, ENGINE InnoDB;
 
 
--- TABLES FOR SECRET
+## TABLES FOR SECRET
 CREATE TABLE sec_users (
   address VARCHAR(30) NOT NULL,
   password TEXT NOT NULL,
@@ -38,13 +37,12 @@ CREATE TABLE sec_messages (
   save_delivery_status INT NOT NULL,
   notify_originator INT NOT NULL,
   conn CHAR(10),
-  smpp_id BIGINT,
   smpp_status INT,
   msc_address VARCHAR(20),
+  adv int,
 
   PRIMARY KEY(id),
-  INDEX(destination_address, status),
-  INDEX(smpp_id)
+  INDEX(destination_address, status)
 ) CHARACTER SET koi8r, ENGINE InnoDB;
 
 
@@ -52,15 +50,13 @@ CREATE TABLE sec_messages (
 CREATE TABLE smpp_messages (
   id INT NOT NULL,
   smpp_status INT,
-  smpp_id BIGINT,
   status INT NOT NULL,
 
-  PRIMARY KEY(id),
-  INDEX(smpp_id)
+  PRIMARY KEY(id)
 ) CHARACTER SET koi8r, ENGINE InnoDB;
 
 
---TABLES FOR NICKS
+##TABLES FOR NICKS
 CREATE TABLE nicks (
   address CHAR(20) NOT NULL,
   nick CHAR(20) NOT NULL,
@@ -69,14 +65,14 @@ CREATE TABLE nicks (
 ) ENGINE InnoDB;
 
 
---TABLES FOR GROUP
+##TABLES FOR GROUP
 CREATE TABLE group_edit_profiles (
   address CHAR(20) NOT NULL PRIMARY KEY,
   send_notifications SMALLINT NOT NULL,
   lock_group_edit SMALLINT NOT NULL
 ) ENGINE InnoDB;
 
---TABLES FOR BLACK LIST
+##TABLES FOR BLACK LIST
 CREATE TABLE black_list (
   msisdn CHAR(20) NOT NULL PRIMARY KEY
 ) ENGINE InnoDB;

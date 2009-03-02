@@ -33,10 +33,8 @@ public class SOAPFilter implements Filter {
 
     public String getHeader(String name) {
       String header = super.getHeader(name);
-      if (header == null && name.equalsIgnoreCase("SOAPAction")) {
-        System.out.println("SOAPAction is null! Add empty SOAPAction");
+      if (header == null && name.equalsIgnoreCase("SOAPAction"))
         header = "";
-      }
       return header;
     }
   }

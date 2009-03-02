@@ -7,7 +7,6 @@ import com.eyeline.utils.ThreadFactoryWithCounter;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
-import ru.aurorisoft.smpp.SubmitResponse;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarDataSource;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarMessage;
 import ru.sibinco.smsx.network.advertising.AdvertisingClient;
@@ -38,10 +37,11 @@ class CalendarEngine extends IterativeWorker {
   private String advDelim;
   private int advSize;
   private String advService;
+  private final int serviceId;
 
-  private volatile int rejectedTasks;  
+  private volatile int rejectedTasks;
 
-  CalendarEngine(OutgoingQueue outQueue, MessagesQueue messagesQueue, CalendarDataSource ds, AdvertisingClient advClient, long workingInterval) {
+  CalendarEngine(OutgoingQueue outQueue, MessagesQueue messagesQueue, CalendarDataSource ds, AdvertisingClient advClient, long workingInterval, int serviceId) {
     super(log);
 
     this.outQueue = outQueue;
@@ -49,7 +49,8 @@ class CalendarEngine extends IterativeWorker {
     this.ds = ds;
     this.advClient = advClient;
     this.messagesQueue = messagesQueue;
-    this.executor = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue(100), new ThreadFactoryWithCounter("CalEngine-Executor-"));
+    this.serviceId = serviceId;
+    this.executor = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(100), new ThreadFactoryWithCounter("CalEngine-Executor-"));
   }
 
   protected void stopCurrentWork() {
@@ -69,15 +70,6 @@ class CalendarEngine extends IterativeWorker {
         continue;
 
       sendMessage(msg);
-
-      // Change message status
-      msg.setStatus(CalendarMessage.STATUS_PROCESSED);
-      try {
-        ds.updateMessageStatus(msg);
-      } catch (Throwable e) {
-        log.error(e, e);
-        log.error("Can't remove msg: ", e);
-      }
     }
   }
 
@@ -144,8 +136,6 @@ class CalendarEngine extends IterativeWorker {
       msg.setDestAddrSubunit(message.getDestAddressSubunit());
       msg.setConnectionName(message.getConnectionName());
       msg.setMscAddress(message.getMscAddress());
-      if (message.isSaveDeliveryStatus())
-        msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
 
       String messageString = message.getMessage();
       if (message.isAppendAdvertising()) {
@@ -157,7 +147,12 @@ class CalendarEngine extends IterativeWorker {
       }
       msg.setMessageString(messageString);
 
-      final CalendarTransportObject outObj = new CalendarTransportObject(message);
+      OutgoingObject outObj = new CalendarOutgoingObject(message);
+      if (message.isSaveDeliveryStatus()) {
+        msg.setUserMessageReference(message.getId() * 10 + serviceId);
+        msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
+      }
+
       outObj.setMessage(msg);
       outQueue.offer(outObj);
 
@@ -194,73 +189,50 @@ class CalendarEngine extends IterativeWorker {
     }
   }
 
-
-  private class CalendarTransportObject extends OutgoingObject {
+  private class CalendarOutgoingObject extends OutgoingObject {
     private final CalendarMessage msg;
 
-    CalendarTransportObject(CalendarMessage msg) {
+    private CalendarOutgoingObject(CalendarMessage msg) {
       this.msg = msg;
     }
 
-    @Override
-    public void handleResponse(final PDU pdu) {
-      if (msg.isSaveDeliveryStatus()) {
-        if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR) {
-          try {
-            executor.execute(new UpdateMessageStatusTask());
-          } catch (Throwable e) {
-            log.error("Can't execute UpdateMessageStatusTask", e);
-            rejectedTasks++;
-          }
-        } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
-          try {
-            executor.execute(new UpdateSMPPIdTask(Long.parseLong(((SubmitResponse)pdu).getMessageId())));
-          } catch (Throwable e) {
-            log.error("Can't execute UpdateSMPPIdTask", e);
-            rejectedTasks++;
-          }
-        }
+    public void handleResponse(PDU pdu) {
+      if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR) {
+        updateStatus(CalendarMessage.STATUS_DELIVERY_FAILED);
+      } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
+        updateStatus(CalendarMessage.STATUS_PROCESSED);
       }
     }
 
-    @Override
     public void handleSendError() {
-      if (msg.isSaveDeliveryStatus()) {
-        try {
-          executor.execute(new UpdateMessageStatusTask());
-        } catch (Throwable e) {
-          log.error("Can't execute UpdateMessageStatusTask", e);
-          rejectedTasks++;
-        }
+      updateStatus(CalendarMessage.STATUS_DELIVERY_FAILED);
+    }
+
+    private void updateStatus(int status) {
+      try {
+        executor.execute(new UpdateMessageStatusTask(status));
+      } catch (Throwable e) {
+        log.error("Can't execute UpdateMessageStatusTask", e);
+        rejectedTasks++;
       }
     }
 
     private class UpdateMessageStatusTask implements Runnable {
+      private final int status;
+
+      private UpdateMessageStatusTask(int status) {
+        this.status = status;
+      }
+
       public void run() {
         try {
-          msg.setStatus(CalendarMessage.STATUS_DELIVERY_FAILED);
+          msg.setStatus(status);
           ds.updateMessageStatus(msg);
         } catch (Throwable e) {
           log.error("Update msg status err:",e);
         }
       }
     }
-
-    private class UpdateSMPPIdTask implements Runnable {
-      private final long messageId;
-
-      private UpdateSMPPIdTask(long messageId) {
-        this.messageId = messageId;
-      }
-
-      public void run() {
-        msg.setSmppId(messageId);
-        try {
-          ds.updateMessageSmppId(msg);
-        } catch (Throwable e) {
-          log.error("Can't update smpp id: ", e);
-        }
-      }
-    }
   }
+
 }

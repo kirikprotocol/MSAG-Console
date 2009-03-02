@@ -1,7 +1,9 @@
 package ru.sibinco.smsx.engine.soaphandler.groupsend;
 
-public class GroupSendResp  implements java.io.Serializable {
-  private String msgId;
+public class GroupSendResp implements java.io.Serializable {
+  private DeliveryStatus[] deliveryStatuses;
+
+  private java.lang.String msgId;
 
   private int status;
 
@@ -9,10 +11,32 @@ public class GroupSendResp  implements java.io.Serializable {
   }
 
   public GroupSendResp(
-    java.lang.String msgId,
-    int status) {
+      DeliveryStatus[] deliveryStatuses,
+      java.lang.String msgId,
+      int status) {
+    this.deliveryStatuses = deliveryStatuses;
     this.msgId = msgId;
     this.status = status;
+  }
+
+
+  /**
+   * Gets the deliveryStatuses value for this GroupSendResp.
+   *
+   * @return deliveryStatuses
+   */
+  public DeliveryStatus[] getDeliveryStatuses() {
+    return deliveryStatuses;
+  }
+
+
+  /**
+   * Sets the deliveryStatuses value for this GroupSendResp.
+   *
+   * @param deliveryStatuses
+   */
+  public void setDeliveryStatuses(DeliveryStatus[] deliveryStatuses) {
+    this.deliveryStatuses = deliveryStatuses;
   }
 
 
@@ -56,6 +80,7 @@ public class GroupSendResp  implements java.io.Serializable {
   }
 
   private java.lang.Object __equalsCalc = null;
+
   public synchronized boolean equals(java.lang.Object obj) {
     if (!(obj instanceof GroupSendResp)) return false;
     GroupSendResp other = (GroupSendResp) obj;
@@ -67,21 +92,36 @@ public class GroupSendResp  implements java.io.Serializable {
     __equalsCalc = obj;
     boolean _equals;
     _equals = true &&
-      ((this.msgId==null && other.getMsgId()==null) ||
-        (this.msgId!=null &&
-          this.msgId.equals(other.getMsgId()))) &&
-      this.status == other.getStatus();
+        ((this.deliveryStatuses == null && other.getDeliveryStatuses() == null) ||
+            (this.deliveryStatuses != null &&
+                java.util.Arrays.equals(this.deliveryStatuses, other.getDeliveryStatuses()))) &&
+        ((this.msgId == null && other.getMsgId() == null) ||
+            (this.msgId != null &&
+                this.msgId.equals(other.getMsgId()))) &&
+        this.status == other.getStatus();
     __equalsCalc = null;
     return _equals;
   }
 
   private boolean __hashCodeCalc = false;
+
   public synchronized int hashCode() {
     if (__hashCodeCalc) {
       return 0;
     }
     __hashCodeCalc = true;
     int _hashCode = 1;
+    if (getDeliveryStatuses() != null) {
+      for (int i = 0;
+           i < java.lang.reflect.Array.getLength(getDeliveryStatuses());
+           i++) {
+        java.lang.Object obj = java.lang.reflect.Array.get(getDeliveryStatuses(), i);
+        if (obj != null &&
+            !obj.getClass().isArray()) {
+          _hashCode += obj.hashCode();
+        }
+      }
+    }
     if (getMsgId() != null) {
       _hashCode += getMsgId().hashCode();
     }
@@ -92,11 +132,18 @@ public class GroupSendResp  implements java.io.Serializable {
 
   // Type metadata
   private static org.apache.axis.description.TypeDesc typeDesc =
-    new org.apache.axis.description.TypeDesc(GroupSendResp.class, true);
+      new org.apache.axis.description.TypeDesc(GroupSendResp.class, true);
 
   static {
     typeDesc.setXmlType(new javax.xml.namespace.QName("http://sibinco.ru/groupsend", "GroupSendResp"));
     org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
+    elemField.setFieldName("deliveryStatuses");
+    elemField.setXmlName(new javax.xml.namespace.QName("http://sibinco.ru/groupsend", "deliveryStatuses"));
+    elemField.setXmlType(new javax.xml.namespace.QName("http://sibinco.ru/groupsend", "DeliveryStatus"));
+    elemField.setNillable(true);
+    elemField.setItemQName(new javax.xml.namespace.QName("http://sibinco.ru/groupsend", "item"));
+    typeDesc.addFieldDesc(elemField);
+    elemField = new org.apache.axis.description.ElementDesc();
     elemField.setFieldName("msgId");
     elemField.setXmlName(new javax.xml.namespace.QName("http://sibinco.ru/groupsend", "msgId"));
     elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
@@ -121,24 +168,24 @@ public class GroupSendResp  implements java.io.Serializable {
    * Get Custom Serializer
    */
   public static org.apache.axis.encoding.Serializer getSerializer(
-    java.lang.String mechType,
-    java.lang.Class _javaType,
-    javax.xml.namespace.QName _xmlType) {
+      java.lang.String mechType,
+      java.lang.Class _javaType,
+      javax.xml.namespace.QName _xmlType) {
     return
-      new  org.apache.axis.encoding.ser.BeanSerializer(
-        _javaType, _xmlType, typeDesc);
+        new org.apache.axis.encoding.ser.BeanSerializer(
+            _javaType, _xmlType, typeDesc);
   }
 
   /**
    * Get Custom Deserializer
    */
   public static org.apache.axis.encoding.Deserializer getDeserializer(
-    java.lang.String mechType,
-    java.lang.Class _javaType,
-    javax.xml.namespace.QName _xmlType) {
+      java.lang.String mechType,
+      java.lang.Class _javaType,
+      javax.xml.namespace.QName _xmlType) {
     return
-      new  org.apache.axis.encoding.ser.BeanDeserializer(
-        _javaType, _xmlType, typeDesc);
+        new org.apache.axis.encoding.ser.BeanDeserializer(
+            _javaType, _xmlType, typeDesc);
   }
 
 }

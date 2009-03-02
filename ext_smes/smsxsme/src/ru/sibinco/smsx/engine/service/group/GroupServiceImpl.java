@@ -1,7 +1,6 @@
 package ru.sibinco.smsx.engine.service.group;
 
 import com.eyeline.sme.smpp.OutgoingQueue;
-import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.xml.XmlConfigSection;
 import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.Service;
@@ -31,15 +30,15 @@ public class GroupServiceImpl implements Service, GroupService {
   private final RepliesMap replies;
   private final GroupProfileProcessor profileProcessor;
 
-  public GroupServiceImpl(XmlConfigSection g, OutgoingQueue outQueue) throws ServiceInitializationException {
+  public GroupServiceImpl(XmlConfigSection g, OutgoingQueue outQueue, int serviceId) throws ServiceInitializationException {
     try {
       String storeDir = g.getString("store.dir");
       this.listsDS = new FileDistrListDataSource(new File(storeDir, "members.bin"), new File(storeDir, "submitters.bin"), new File(storeDir, "lists.bin"));
       this.principalDS = new FilePrincipalDataSource(new File(storeDir, "principals.bin"));
       this.groupEditDSProfile = new DBGroupEditProfileDataSource();
 
-      this.replies = new RepliesMap(new File(storeDir, "groupreplies.bin"), g.getInt("replies.cache.size"));
-      this.sendProcessor = new GroupSendProcessor(g, outQueue, listsDS, replies, Context.getInstance().getOperators());
+      this.replies = new RepliesMap(new File(storeDir, "groupreplies.bin"), g.getInt("replies.cache.size", 10000));
+      this.sendProcessor = new GroupSendProcessor(g, outQueue, listsDS, replies, Context.getInstance().getOperators(), serviceId);
       this.editProcessor = new GroupEditProcessor(g, listsDS, principalDS, Context.getInstance().getOperators());
       this.profileProcessor = new GroupProfileProcessor(groupEditDSProfile);
     } catch (Exception e) {
@@ -70,11 +69,11 @@ public class GroupServiceImpl implements Service, GroupService {
     return sendProcessor.execute(cmd);
   }
 
-  public void execute(GroupDeliveryReportCmd cmd) throws CommandExecutionException {
-    sendProcessor.execute(cmd);
+  public boolean execute(GroupDeliveryReportCmd cmd) throws CommandExecutionException {
+    return sendProcessor.execute(cmd);
   }
 
-  public DeliveryStatus execute(GroupSendStatusCmd cmd) throws CommandExecutionException {
+  public DeliveryStatus[] execute(GroupSendStatusCmd cmd) throws CommandExecutionException {
     return sendProcessor.execute(cmd);
   }
 

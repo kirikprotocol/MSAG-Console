@@ -51,6 +51,7 @@
   </target>
 
   <target name="compile" description="compile sources">
+    <delete dir="${java_out}"/>
     <mkdir dir="${java_out}"/>
 
     <fileset id="sources" dir="${java_src}" includes="**/*.properties"/>

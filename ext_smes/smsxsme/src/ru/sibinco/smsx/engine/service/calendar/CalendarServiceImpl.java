@@ -29,7 +29,7 @@ public class CalendarServiceImpl implements CalendarService {
   private final CalendarDataSource dataSource;
   private final AdvertisingClient advClient;
 
-  public CalendarServiceImpl(XmlConfigSection cal, final OutgoingQueue outQueue) {
+  public CalendarServiceImpl(XmlConfigSection cal, final OutgoingQueue outQueue, int serviceId) {
     try {
 
       dataSource = new DBCalendarDataSource();
@@ -38,12 +38,12 @@ public class CalendarServiceImpl implements CalendarService {
 
       MessagesQueue messagesQueue = new MessagesQueue();
 
-      engine = new CalendarEngine(outQueue, messagesQueue, dataSource, advClient, cal.getLong("engine.working.interval", 60000));
+      engine = new CalendarEngine(outQueue, messagesQueue, dataSource, advClient, cal.getLong("engine.working.interval", 60000), serviceId);
       engine.setAdvDelim(cal.getString("advertising.delimiter"));
       engine.setAdvSize(cal.getInt("advertising.size"));
       engine.setAdvService(cal.getString("advertising.service"));
 
-      processor = new CalendarProcessor(messagesQueue, dataSource, cal.getInt("send.date.max.year", getCurrentYear() + 1));
+      processor = new CalendarProcessor(messagesQueue, dataSource, cal.getInt("send.date.max.year", getCurrentYear() + 1), serviceId);
 
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);

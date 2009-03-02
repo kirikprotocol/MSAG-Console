@@ -23,6 +23,6 @@ public class GroupSendStatusCmd extends Command {
   }  
 
   public interface Receiver {
-    public DeliveryStatus execute(GroupSendStatusCmd cmd) throws CommandExecutionException;
+    public DeliveryStatus[] execute(GroupSendStatusCmd cmd) throws CommandExecutionException;
   }
 }

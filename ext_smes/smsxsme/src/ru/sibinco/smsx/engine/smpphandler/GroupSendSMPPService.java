@@ -71,11 +71,10 @@ public class GroupSendSMPPService extends AbstractSMPPService {
     cmd.addExecutionObserver(new CommandObserver() {
       public void update(AsyncCommand command) {
         if (command.getStatus() == AsyncCommand.STATUS_SUCCESS) {
-          DeliveryStatus s = ((GroupSendCommand)command).getDeliveryStatus();
-          byte[] statuses = s.statuses();
+          DeliveryStatus[] statuses = ((GroupSendCommand)command).getDeliveryStatuses();
           int sent = 0;
-          for (byte status : statuses)
-            if (status > 0) sent++;
+          for (DeliveryStatus status : statuses)
+            if (status.getStatus() > 0) sent++;
           sendMessage(m.getDestinationAddress(), m.getSourceAddress(), sendReport.replace("{actual}", String.valueOf(sent)).replace("{total}", String.valueOf(statuses.length)));
         }
       }
@@ -132,11 +131,10 @@ public class GroupSendSMPPService extends AbstractSMPPService {
     cmd.addExecutionObserver(new CommandObserver() {
       public void update(AsyncCommand command) {
         if (command.getStatus() == AsyncCommand.STATUS_SUCCESS) {
-          DeliveryStatus s = ((GroupSendCommand)command).getDeliveryStatus();
-          byte[] statuses = s.statuses();
+          DeliveryStatus[] statuses = ((GroupSendCommand)command).getDeliveryStatuses();
           int sent = 0;
-          for (byte status : statuses)
-            if (status > 0) sent++;
+          for (DeliveryStatus status : statuses)
+            if (status.getStatus() > 0) sent++;
           sendMessage(m.getDestinationAddress(), m.getSourceAddress(), sendReport.replace("{actual}", String.valueOf(sent)).replace("{total}", String.valueOf(statuses.length)));
         }
       }
@@ -170,14 +168,13 @@ public class GroupSendSMPPService extends AbstractSMPPService {
   private boolean receipt(SMPPRequest smppRequest) {
     final Message m = smppRequest.getInObj().getMessage();
     GroupDeliveryReportCmd cmd = new GroupDeliveryReportCmd();
-    cmd.setAddress(m.getSourceAddress());
     cmd.setUmr(m.getUserMessageReference());
     cmd.setDelivered(m.getMessageState() == Message.MSG_STATE_DELIVERED);
 
     try {
       Services.getInstance().getGroupService().execute(cmd);
     } catch (CommandExecutionException e) {
-
+      log.error(e,e);
     }
     return true;
   }

@@ -373,16 +373,16 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     }
   }
 
-  public int updateMessageStatus(long smppId, int status) throws DataSourceException {
+  public int updateMessageStatus(long id, int status) throws DataSourceException {
 
     Connection conn = null;
     PreparedStatement ps = null;
     try {
       conn = pool.getConnection();
-      ps = conn.prepareStatement(getSql("secret.message.update.status.by.smpp.id"));
+      ps = conn.prepareStatement(getSql("secret.message.update.status.by.id"));
 
       ps.setInt(1, status);
-      ps.setLong(2, smppId);
+      ps.setLong(2, id);
 
       return ps.executeUpdate();
 
