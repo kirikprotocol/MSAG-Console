@@ -76,6 +76,8 @@ public:
   virtual void stop(){isStopping=true;}
   virtual void onRelease(void) { isReleased = true; }
 
+    bool stopping() const { return isStopping; }
+
 protected:
   //smsc::core::buffers::MemoryHeap *heap;
   volatile bool isStopping;
