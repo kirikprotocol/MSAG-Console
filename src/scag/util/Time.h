@@ -8,7 +8,7 @@ namespace util {
 
 typedef MsecTime::time_type msectime_type;
 
-msectime_type currentTimeMillis()
+inline msectime_type currentTimeMillis()
 {
     return MsecTime::currentTimeMillis();
 }
