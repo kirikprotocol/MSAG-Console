@@ -1085,6 +1085,7 @@ public:
         {
           __map_warn2__("unexpected dlgType=%d for in dlg",dlg->dlgType);
         }
+        dlg->dlgType=-1;
       }
 
       MAPSTATS_Update(MAPSTATS_NEWDIALOG_OUT);
@@ -1131,6 +1132,10 @@ public:
 
   void dropDialogUnlocked(MapDialog* item)
   {
+    if(item->dlgType==-1)
+    {
+      return;
+    }
     if ( item->abonent.length() != 0 && !item->isUSSD)
     {
       MapDialog** dlgptr=lock_map.GetPtr(item->abonent);
@@ -1171,6 +1176,7 @@ public:
       }
     }
     __mapdlg_trace2__("drop dialog(%d) 0x%x",item->dlgType,item->dialogid_map);
+    item->dlgType=-1;
   }
 
   void registerSelf(SmeManager* smeman);
