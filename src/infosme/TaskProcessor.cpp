@@ -329,7 +329,7 @@ int TaskProcessor::Execute()
             if (!bNeedExit)
             {
                 Task* task = taskGuard->get();
-                if (task && !task->isFinalizing() && task->isEnabled() &&
+                while (task && !task->isFinalizing() && task->isEnabled() &&
                     task->currentPriorityFrameCounter < task->getPriority())
                 {
                     task->currentPriorityFrameCounter++;
