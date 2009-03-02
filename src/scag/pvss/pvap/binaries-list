@@ -1,1 +1,0 @@
-scag/tests/pvap-test-protocol testProtocol -lscag-pvss-packets -lscag-pvss-base -lscag-util-storage -lscag-util -lutil

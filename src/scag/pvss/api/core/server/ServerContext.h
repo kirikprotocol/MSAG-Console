@@ -19,7 +19,10 @@ protected:
             FAILED
     };
 
-protected:
+public:
+    ServerContext( Request* req, PvssSocket& channel, ServerCore& core ) :
+    Context(req), core_(core), state_(NEW), socket_(channel) {}
+
     State getState() const {
         return state_;
     }
@@ -29,16 +32,28 @@ protected:
 
     virtual void setResponse(Response* response) throw (PvssException)
     {
-        if ( state == NEW && response != 0 ) {
-            state = PROCESSED;
+        if ( state_ == NEW && response != 0 ) {
+            state_ = PROCESSED;
             response->setSeqNum(getSeqNum());
             Context::setResponse(response);
-            core->contextProcessed(*this);
+            core_.contextProcessed(*this);
         } else {
             throw PvssException(PvssException::BAD_RESPONSE,"Response is null or was already processed");
         }
     }
 
+
+    virtual void setError(const std::string& msg) throw(PvssException);
+    /*
+    {
+        setResponse(new ErrorResponse(getSeqNum(),Response::ERROR, message));
+    }
+     */
+
+private:
+    ServerCore& core_;
+    State       state_;
+    PvssSocket& socket_;
 };
 
 } // namespace server

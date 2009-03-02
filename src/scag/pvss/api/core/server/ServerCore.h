@@ -1,10 +1,18 @@
 #ifndef _SCAG_PVSS_CORE_SERVER_SERVERCORE_H
 #define _SCAG_PVSS_CORE_SERVER_SERVERCORE_H
 
+#include "scag/pvss/api/core/Core.h"
+#include "Server.h"
+
 namespace scag2 {
 namespace pvss {
+
+class Protocol;
+
 namespace core {
 namespace server {
+
+class ServerConfig;
 
 /// interface
 class ServerCore : public Core, public Server
@@ -141,14 +149,15 @@ public:
      * @param context           ServerContext instance containing processed request with response or error set.
      * @throws PvssException    Thrown if provided context is invalid or server failes to sent it.
      */
+    void contextProcessed(ServerContext& context) throw(PvssException);
     /*
-    protected void contextProcessed(ServerContext context) throws PvssException
     {
-        final SocketChannel channel = context.getChannel();
+        PvssSocket& channel = context.getChannel();
         checkProcessingContext(channel, context.getSeqNum()); // check registration only, don't remove!
         sendResponse(context.getResponse(), channel);
     }
      */
+
 
     /*
     private void registerProcessingContext(ServerContext context)

@@ -11,6 +11,8 @@ namespace pvss {
 namespace core {
 namespace server {
 
+class ServerContext;
+
 /// interface
 class Server
 {
