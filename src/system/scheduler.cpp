@@ -431,7 +431,14 @@ bool LocalFileStore::Save(smsc::sms::SMSId id,uint32_t seq,const char* smsBufPtr
   //smsbuf.SetPos(sz+sizeof(sz));
   smsbuf<<sz;
   MutexGuard mg(mtx);
+  hrtime_t writeStart=gethrtime();
   primaryFile.Write(smsbuf.get(),smsbuf.GetPos());
+  hrtime_t writeEnd=gethrtime();
+  int writeTime=(int)((writeEnd-writeStart)/1000000);
+  if(writeTime>50)
+  {
+    warn2(Scheduler::log,"disk write takes %d msec!",writeTime);
+  }
   fileSize+=smsbuf.GetPos();
   return !loadup && fileSize>maxStoreSize && time(NULL)-lastRollTime>minRollTime;
 }
@@ -784,12 +791,14 @@ void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,con
   LocalFileStoreSave(id,sd,true);
   if (sms.needArchivate)
   {
+    storeMtx.Unlock();
     try{
       archiveStorage.createRecord(id, sms);
     }catch(std::exception& e)
     {
       warn2(log,"archiveStorage.createRecord failed:%s",e.what());
     }
+    storeMtx.Lock();
   }
   //if (sd->sms.billingRecord) billingStorage.createRecord(id, sd->sms);
   delStoreData(sd);
