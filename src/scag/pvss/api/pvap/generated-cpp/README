@@ -1,0 +1,9 @@
+NOTE:
+Do not edit source files in this directory.
+They will be destroyed after next protogen run.
+
+To regenerate PDUs sources issue the command:
+
+   ant pvap make
+
+... from distrib/scag directory.

@@ -1,0 +1,21 @@
+include PvapMessages.def
+
+protocol PVAP
+    PC_ERR_RESP     0x8000
+    PC_DEL          0x0001
+    PC_DEL_RESP     0x8001
+    PC_SET          0x0002
+    PC_SET_RESP     0x8002
+    PC_GET          0x0003
+    PC_GET_RESP     0x8003
+    PC_INC          0x0004
+    PC_INC_RESP     0x8004
+    PC_INC_MOD      0x0005
+    PC_INC_MOD_RESP 0x8005
+    PC_PING         0x0006
+    PC_PING_RESP    0x8006
+    PC_AUTH         0x000a
+    PC_AUTH_RESP    0x800a
+    PC_BATCH        0x0007
+    PC_BATCH_RESP   0x8007
+end

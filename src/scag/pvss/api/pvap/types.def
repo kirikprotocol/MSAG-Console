@@ -1,0 +1,59 @@
+// basic type definitions
+type uint64
+type uint32
+type uint16
+type byte           // uint8
+type bool
+type ascii
+type utf8
+type ucs2
+type BatchCmdArray  // special
+type TimePolicy     // special
+
+property opt _bool
+    optional true
+    mandatory false
+end
+
+property mnd _bool
+    default
+    optional false
+    mandatory true
+end
+
+property checkVar _string
+end
+property checkVal _int
+end
+
+property transient _bool
+    isTransient true
+end
+property transientDefault _bool
+    default
+    isTransient false
+end
+
+property useGetter _string
+end
+property useSetter _string
+end
+
+property command _bool
+    useCommand true
+end
+property commandDefault _bool
+    default
+    useCommand false
+end
+
+property profile _bool
+    useProfile true
+end
+property profileDefault _bool
+    default
+    useProfile false
+end
+
+property helperClass _string
+end

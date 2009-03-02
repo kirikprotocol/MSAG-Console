@@ -2,7 +2,7 @@
 #include <vector>
 #include <stdlib.h>
 #include "PvssFlooder.h"
-#include "scag/pvss/base/Property.h"
+#include "scag/pvss/data/Property.h"
 #include "scag/pvss/base/PersClientException.h"
 #include "util/debug.h"
 

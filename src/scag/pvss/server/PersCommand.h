@@ -7,7 +7,7 @@
 #include "util/Exception.hpp"
 #include "scag/util/storage/SerialBuffer.h"
 #include "scag/pvss/base/Types.h"
-#include "scag/pvss/base/Property.h"
+#include "scag/pvss/data/Property.h"
 #include "scag/pvss/base/PersServerResponse.h"
 #include "scag/pvss/profile/Profile.h"
 #include "scag/pvss/profile/AbntAddr.hpp"

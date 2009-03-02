@@ -1,0 +1,16 @@
+scag/pvss-clienttest clienttest \
+  -lscag-pvss-api-core-client \
+  -lscag-pvss-api-core \
+  -lscag-pvss-api-packets \
+  -lscag-pvss-data \
+  -lscag-util-storage \
+  -lscag-util \
+  -lcore-network \
+  -lcore-buffers \
+  -lcore-threads \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  $(__LIBRARIES) \
+  $(SNMP_LIBS_CORE) \
+  $(SSL_LIB) \
+  -lrt -ldl \
+  $(LIBMALLOC)  

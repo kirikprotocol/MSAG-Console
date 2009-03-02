@@ -1,0 +1,34 @@
+#ifndef _SCAG_PVSS_BASE_INCCOMMAND_H
+#define _SCAG_PVSS_BASE_INCCOMMAND_H
+
+#include "AbstractPropertyCommand.h"
+
+namespace scag2 {
+namespace pvss {
+
+class IncCommand : public AbstractPropertyCommand
+{
+public:
+    IncCommand() : AbstractPropertyCommand() {}
+    IncCommand( uint32_t seqNum ) : AbstractPropertyCommand(seqNum) {}
+    
+    virtual bool isValid() const {
+        return AbstractPropertyCommand::isValid() && hasIntValue();
+    }
+
+    virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
+    {
+        return visitor.visitIncCommand( *this );
+    }
+
+    virtual IncCommand* clone() const { return new IncCommand(*this); }
+
+protected:
+    virtual const char* typeToString() const { return "inc"; }
+    virtual ResponseTypeMatch& getResponseTypeMatch() const;
+};
+
+} // namespace pvss
+} // namespace scag2
+
+#endif /* !_SCAG_PVSS_BASE_INCCOMMAND_H */

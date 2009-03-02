@@ -14,7 +14,7 @@
 #include "scag/util/storage/Serializer.h"
 #include "scag/util/storage/GlossaryBase.h"
 
-#include "scag/pvss/base/Property.h"
+#include "scag/pvss/data/Property.h"
 #include "AbntAddr.hpp"
 
 

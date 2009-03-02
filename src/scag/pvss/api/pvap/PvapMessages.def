@@ -1,0 +1,170 @@
+include types.def
+
+// NOTE: it is not necessary to have unique tags for fields of distinguished messages
+// but I consider this highly comfortable.
+
+message PC_ERR_RESP // 0x8000
+    version 2.0
+    property inheritsFrom="ErrorResponse"
+    byte statusValue 1
+end
+
+message PC_DEL      // 0x0001
+    version 2.0
+    property inheritsFrom="ProfileRequest"
+    property command="DelCommand"
+    byte   profileType 2 transient
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=1 profile
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=2 profile
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=3 profile
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=4 profile
+    ascii  varName     20 command
+end
+
+message PC_DEL_RESP // 0x8001
+    version 2.0
+    property inheritsFrom="DelResponse"
+    byte statusValue 1
+end
+
+message PC_SET      // 0x0002
+    version 2.0
+    property inheritsFrom="ProfileRequest"
+    property command="SetCommand"
+    byte   profileType 2 transient
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01 profile
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02 profile
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03 profile
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04 profile
+    ascii  varName     20 command
+    TimePolicy timePolicy 21 command helperClass="TimePolicyFiller"
+    byte   valueType   24 transient
+    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01 command
+    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02 command
+    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03 command
+    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04 command
+end
+
+message PC_SET_RESP // 0x8002
+    version 2.0
+    property inheritsFrom="SetResponse"
+    byte statusValue 1
+end
+
+message PC_GET      // 0x0003
+    version 2.0
+    property inheritsFrom="ProfileRequest"
+    property command="GetCommand"
+    byte   profileType 2 transient
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01 profile
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02 profile
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03 profile
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04 profile
+    ascii  varName     20 command
+end
+
+message PC_GET_RESP // 0x8003
+    version 2.0
+    property inheritsFrom="GetResponse"
+    byte statusValue 1
+    ascii  varName     20
+    TimePolicy timePolicy 21 helperClass="TimePolicyFiller"
+    byte   valueType   24 transient
+    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01
+    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02
+    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03
+    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04
+end
+
+message PC_INC     // 0x0004
+    version 2.0
+    property inheritsFrom="ProfileRequest"
+    property command="IncCommand"
+    byte   profileType 2 transient
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01 profile
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02 profile
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03 profile
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04 profile
+    ascii  varName     20 command
+    TimePolicy timePolicy 21 command helperClass="TimePolicyFiller"
+    // byte   valueType   24 transient
+    uint32 intValue    25 command
+end
+
+message PC_INC_RESP // 0x8004
+    version 2.0
+    property inheritsFrom="IncResponse"
+    byte statusValue 1
+    uint32 result    25
+end
+
+message PC_INC_MOD  // 0x0005
+    version 2.0
+    property inheritsFrom="ProfileRequest"
+    property command="IncModCommand"
+    byte   profileType 2 transient
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01 profile
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02 profile
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03 profile
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04 profile
+    ascii  varName     20 command
+    TimePolicy timePolicy 21 command helperClass="TimePolicyFiller"
+    // byte   valueType   24 transient
+    uint32 intValue    25 command
+    uint32 modulus     30 command
+end
+
+message PC_INC_MOD_RESP // 0x8005
+    version 2.0
+    property inheritsFrom="IncResponse"
+    byte statusValue 1
+    uint32 result    25
+end
+
+message PC_PING       // 0x0006
+    version 2.0
+    property inheritsFrom="PingRequest"
+end
+
+message PC_PING_RESP  // 0x8006
+    version 2.0
+    property inheritsFrom="PingResponse"
+    byte statusValue 1
+end
+
+message PC_AUTH       // 0x000a
+    version 2.0
+    property inheritsFrom="AuthRequest"
+    byte   protocolVersion 31
+    ascii  login           32
+    ascii  password        33
+    ascii  name            34
+end
+
+message PC_AUTH_RESP  // 0x800a
+    version 2.0
+    property inheritsFrom="AuthResponse"
+    byte statusValue 1
+    byte   clientType  35 opt
+    byte   sid         36 opt
+end
+
+message PC_BATCH      // 0x0007
+    version 2.0
+    property inheritsFrom="ProfileRequest"
+    property command="BatchCommand"
+    byte   profileType 2 transient
+    ascii  abonentKey  3 opt checkVar="profileType" checkVal=0x01 profile
+    uint32 operatorKey 4 opt checkVar="profileType" checkVal=0x02 profile
+    uint32 providerKey 5 opt checkVar="profileType" checkVal=0x03 profile
+    uint32 serviceKey  6 opt checkVar="profileType" checkVal=0x04 profile
+    bool   transactional  37 command useGetter="isTransactional"
+    BatchCmdArray batchContent 38 command helperClass="BatchCommandFiller"
+end
+
+message PC_BATCH_RESP // 0x8007
+    version 2.0
+    property inheritsFrom="BatchResponse"
+    byte statusValue 1
+    BatchCmdArray batchContent 38 helperClass="BatchResponseFiller"
+end

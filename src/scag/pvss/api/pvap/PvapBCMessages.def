@@ -1,0 +1,86 @@
+include types.def
+
+// NOTE: it is not necessary to have unique tags for fields of distinguished messages
+// but I consider this highly comfortable.
+
+message BC_DEL        // 0x0001
+    version 2.0
+    property inheritsFrom="DelCommand"
+    ascii   varName   20
+end
+
+message BC_DEL_RESP   // 0x8001
+    version 2.0
+    property inheritsFrom="DelResponse"
+    byte statusValue 1
+end
+
+message BC_SET
+    version 2.0
+    property inheritsFrom="SetCommand"
+    ascii  varName     20
+    TimePolicy timePolicy 21 helperClass="TimePolicyFiller"
+    byte   valueType   24 transient
+    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01
+    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02
+    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03
+    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04
+end
+
+message BC_SET_RESP
+    version 2.0
+    property inheritsFrom="SetResponse"
+    byte statusValue 1
+end
+
+message BC_GET      // 0x0003
+    version 2.0
+    property inheritsFrom="GetCommand"
+    ascii  varName     20
+end
+
+message BC_GET_RESP
+    version 2.0
+    property inheritsFrom="GetResponse"
+    byte statusValue 1
+    ascii  varName     20
+    TimePolicy timePolicy 21 helperClass="TimePolicyFiller"
+    byte   valueType   24 transient
+    uint32 intValue    25 opt checkVar="valueType" checkVal=0x01
+    utf8   stringValue 26 opt checkVar="valueType" checkVal=0x02
+    bool   boolValue   27 opt checkVar="valueType" checkVal=0x03
+    uint32 dateValue   28 opt checkVar="valueType" checkVal=0x04
+end
+
+message BC_INC     // 0x0004
+    version 2.0
+    property inheritsFrom="IncCommand"
+    ascii  varName     20
+    TimePolicy timePolicy 21 helperClass="TimePolicyFiller"
+    // byte   valueType   24 transient
+    uint32 intValue    25
+end
+
+message BC_INC_RESP // 0x8004
+    version 2.0
+    property inheritsFrom="IncResponse"
+    byte statusValue 1
+    uint32 result    25
+end
+
+message BC_INC_MOD  // 0x0005
+    version 2.0
+    property inheritsFrom="IncModCommand"
+    ascii  varName     20
+    TimePolicy timePolicy 21 helperClass="TimePolicyFiller"
+    // byte   valueType   24 transient
+    uint32 intValue    25
+    uint32 modulus     30
+end
+
+message BC_INC_MOD_RESP // 0x8005
+    version 2.0
+    property inheritsFrom="IncResponse"
+    byte statusValue 1
+    uint32 result    25
+end

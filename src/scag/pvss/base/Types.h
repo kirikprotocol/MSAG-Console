@@ -3,7 +3,6 @@
 #ifndef SCAG_PVSS_TYPES
 #define SCAG_PVSS_TYPES
 
-/*
 namespace scag2 {
 namespace pvss {
 
@@ -49,8 +48,6 @@ namespace pvss {
 using namespace scag2::pvss::perstypes;
 }
 }
-
-*/
 
 #endif
 
