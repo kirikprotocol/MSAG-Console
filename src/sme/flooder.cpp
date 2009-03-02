@@ -319,9 +319,6 @@ int main(int argc,char* argv[])
         fprintf(stderr,"Warning: Options minLength, maxLength, minSegments, maxSegments are only used in 'words' message mode");
       }
       LoadFile(messagesFile,msgs);
-    }else if(message.length())
-    {
-      msgs.push_back(message);
     }else if(wordsFile.length())
     {
       if(!maxLength)
@@ -335,6 +332,9 @@ int main(int argc,char* argv[])
       LoadFile(wordsFile,words);
       if(words.size()==0)throw Exception("Words file is empty");
       messageMode=1;//words
+    }else
+    {
+      msgs.push_back(message);
     }
 
     if(probDefault+probDatagram+probForward+probStoreAndForward==0)
@@ -371,6 +371,7 @@ int main(int argc,char* argv[])
       int srcidx=0;
       int dstidx=0;
       int msgidx=0;
+      int mr=0;
       string wordsTemp;
 
       int overdelay=0;
@@ -411,7 +412,7 @@ int main(int argc,char* argv[])
           }
         }
 
-        if(hasHighBit(msgptr->c_str(),msgptr->length()))
+        if(msgptr->length() && hasHighBit(msgptr->c_str(),msgptr->length()))
         {
           std::vector<short> tmp(msgptr->length());
           ConvertMultibyteToUCS2(msgptr->c_str(), msgptr->length(),
@@ -441,6 +442,15 @@ int main(int argc,char* argv[])
           }else
           {
             s.setIntProperty(Tag::SMPP_ESM_CLASS,(s.getIntProperty(Tag::SMPP_ESM_CLASS)&(~3))|3);
+          }
+        }
+        
+        {
+          int ussd=rand()%100;
+          if(ussd<probUssdMessage)
+          {
+            s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,1); // process ussd req ind
+            s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mr++);
           }
         }
 
