@@ -4,7 +4,8 @@
 
 #include <util/Exception.hpp>
 
-namespace scag { namespace exceptions {
+namespace scag {
+namespace exceptions {
 
 using smsc::util::Exception;
 
@@ -12,9 +13,12 @@ class SCAGException : public Exception
 {
 public:
 
-    SCAGException(const Exception& exc) : Exception(exc.what()) {};
+    SCAGException(const Exception& exc) : Exception(exc) {}
     SCAGException() : Exception() {};
     SCAGException(const char* fmt,...);
+    SCAGException(const std::string& exc) : Exception() {
+        message = exc;
+    }
     virtual ~SCAGException() throw() {};
     inline const std::string& getMessage() const { return message; }
 };
