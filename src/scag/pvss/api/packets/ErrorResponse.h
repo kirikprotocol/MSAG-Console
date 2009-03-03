@@ -13,6 +13,7 @@ class ErrorResponse : public Response
 public:
     ErrorResponse() : Response() {}
     ErrorResponse( uint32_t seqNum ) : Response( seqNum ) {}
+    ErrorResponse( uint32_t seqNum, StatusType status, const char* msg = 0) : Response(seqNum,status) {}
 
     virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) {
         return visitor.visitErrResponse(*this);

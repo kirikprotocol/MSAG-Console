@@ -17,15 +17,15 @@ class Response : public Packet
 public:
     enum StatusType {
             UNKNOWN = 0,
-            OK,
-            ERROR,
-            PROPERTY_NOT_FOUND,
-            BAD_REQUEST,
-            TYPE_INCONSISTENCE,
-            NOT_SUPPORTED,
-            SERVER_SHUTDOWN,
-            SERVER_BUSY,
-            REQUEST_TIMEOUT
+            OK = 1,
+            ERROR = 2,
+            PROPERTY_NOT_FOUND = 3,
+            BAD_REQUEST = 4,
+            TYPE_INCONSISTENCE = 5,
+            NOT_SUPPORTED = 6,
+            SERVER_SHUTDOWN = 7,
+            SERVER_BUSY = 8,
+            REQUEST_TIMEOUT = 9
     };
 
     static const char* statusToString( StatusType stat )
@@ -68,6 +68,7 @@ protected:
     Response() : seqNum_(uint32_t(-1)), status_(UNKNOWN) {}
     Response( uint32_t seqNum ) : seqNum_(seqNum), status_(UNKNOWN) {}
     Response( const Response& other ) : seqNum_(other.seqNum_), status_(other.status_) {}
+    Response( uint32_t seqNum, StatusType status ) : seqNum_(seqNum), status_(status) {}
 
 public:
     virtual bool isRequest() const { return false; }

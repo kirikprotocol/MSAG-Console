@@ -1,8 +1,12 @@
 #ifndef _SCAG_PVSS_CORE_SERVER_SERVERCORE_H
 #define _SCAG_PVSS_CORE_SERVER_SERVERCORE_H
 
+#include <memory>
 #include "scag/pvss/api/core/Core.h"
 #include "Server.h"
+#include "core/buffers/Array.hpp"
+#include "ServerConfig.h"
+#include "Acceptor.h"
 
 namespace scag2 {
 namespace pvss {
@@ -12,7 +16,8 @@ class Protocol;
 namespace core {
 namespace server {
 
-class ServerConfig;
+class Dispatcher;
+class ContextQueue;
 
 /// interface
 class ServerCore : public Core, public Server
@@ -79,7 +84,7 @@ public:
     }
      */
 
-    /**
+    /*
      * Implementation of Server interface method.</p>
      * Blocks until next request will be received or state will be changed for processing request.
      * Dequeues next context from states or requests queue.
@@ -87,7 +92,7 @@ public:
      *
      * @param logic     Async server logic interface
      */
-    virtual void waitEvents(AsyncLogic& logic);
+    // virtual void waitEvents(AsyncLogic& logic);
     /*
     virtual void waitEvents(AsyncLogic& logic)
     {
@@ -149,7 +154,7 @@ public:
      * @param context           ServerContext instance containing processed request with response or error set.
      * @throws PvssException    Thrown if provided context is invalid or server failes to sent it.
      */
-    void contextProcessed(ServerContext& context) throw(PvssException);
+    void contextProcessed(std::auto_ptr<ServerContext>& context) throw(PvssException);
     /*
     {
         PvssSocket& channel = context.getChannel();
@@ -314,10 +319,6 @@ public:
         }
     }
 
-    private void sendResponse(Response response, SocketChannel channel) throws PvssException
-    {
-        getWriter(channel).send(response, channel, true); // don't check queue limits
-    }
      */
 
     /**
@@ -469,6 +470,22 @@ public:
     }
      */
 
+protected:
+    virtual ServerConfig& getConfig() { return *static_cast<ServerConfig*>(config);}
+
+
+private:
+    void sendResponse(Response* response, PvssSocket& channel) throw(PvssException)
+    {
+        channel.send(response,false,true);  // don't check queue limit
+    }
+
+private:
+    bool        started_;
+    Dispatcher*                                 dispatcher_; // not owned
+
+    smsc::core::buffers::Array< ContextQueue* > queues_;
+    std::auto_ptr<Acceptor>                     acceptor_;
 };
 
 } // namespace server

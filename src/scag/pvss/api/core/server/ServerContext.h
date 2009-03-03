@@ -8,6 +8,9 @@ namespace pvss {
 namespace core {
 namespace server {
 
+class ServerCore;
+class Worker;
+
 /// interface
 class ServerContext : public Context
 {
@@ -20,8 +23,8 @@ protected:
     };
 
 public:
-    ServerContext( Request* req, PvssSocket& channel, ServerCore& core ) :
-    Context(req), core_(core), state_(NEW), socket_(channel) {}
+    ServerContext( Request* req, PvssSocket& channel ) :
+    Context(req), worker_(0), state_(NEW), socket_(channel) {}
 
     State getState() const {
         return state_;
@@ -30,28 +33,16 @@ public:
         state_ = state;
     }
 
-    virtual void setResponse(Response* response) throw (PvssException)
-    {
-        if ( state_ == NEW && response != 0 ) {
-            state_ = PROCESSED;
-            response->setSeqNum(getSeqNum());
-            Context::setResponse(response);
-            core_.contextProcessed(*this);
-        } else {
-            throw PvssException(PvssException::BAD_RESPONSE,"Response is null or was already processed");
-        }
-    }
-
+    virtual void setResponse(Response* response) throw (PvssException);
 
     virtual void setError(const std::string& msg) throw(PvssException);
-    /*
-    {
-        setResponse(new ErrorResponse(getSeqNum(),Response::ERROR, message));
+
+    virtual void setWorker( Worker& worker ) {
+        worker_ = &worker;
     }
-     */
 
 private:
-    ServerCore& core_;
+    Worker*     worker_;
     State       state_;
     PvssSocket& socket_;
 };
