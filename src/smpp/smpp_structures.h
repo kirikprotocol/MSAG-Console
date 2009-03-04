@@ -691,6 +691,8 @@ struct SmppOptional //: public MemoryManagerUnit
   _o_cstr_property__(msc_address)
   _o_int_property__(uint16_t,supported_codeset)
   _o_int_property__(uint8_t,protocol_id)
+  _o_cstr_property__(sccp_oa)
+  _o_cstr_property__(sccp_da)
 
   + (uint32_t)( has_unknownFields()  ?  unknownFields.size()  : 0 )
 
