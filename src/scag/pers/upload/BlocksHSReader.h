@@ -126,6 +126,7 @@ public:
       char* data_buff;
       int total_count = 0;
       int total_status_profiles = 0;
+      int matched_total = 0;
       smsc_log_debug(logger, "start read %d files", files_count);
 
       for(long i = 0; i < files_count; i++)
@@ -135,6 +136,7 @@ public:
           try {
             int profiles_count = 0;
             int status_profiles = 0;
+            int matched_infile = 0;
             smsc_log_debug(logger, "Open data file %d: %s", i + 1, name.c_str());
             File dataFile;
             dataFile.ROpen(name.c_str());
@@ -168,14 +170,16 @@ public:
               //status_profiles += restoreProfile(hdr.key, data, sendToPers);
               
               //int restoreResult = restoreProfileCompletely(hdr.key, data, sendToPers);
-              int restoreResult = restoreProfileMinsk(hdr.key, data, sendToPers);
+              int matched = 0;
+              int restoreResult = restoreProfileMinsk(hdr.key, data, sendToPers, matched);
               if (sendToPers && restoreResult == -1) {
                 int resendCount = 0;
                 while (restoreResult == -1 && resendCount < MAX_RESEND_COUNT) {
                   smsc_log_warn(logger, "resending profile key='%s', try number %d",
                                         hdr.key.toString().c_str(), resendCount + 1);
                   //restoreResult = restoreProfileCompletely(hdr.key, data, sendToPers);
-                  restoreResult = restoreProfileMinsk(hdr.key, data, sendToPers);
+                  int rematched = 0;
+                  restoreResult = restoreProfileMinsk(hdr.key, data, sendToPers, rematched);
                   ++resendCount;
                 }
                 if (restoreResult == -1) {
@@ -187,10 +191,13 @@ public:
                 }              
               }
               status_profiles += restoreResult;
+              matched_infile += matched;
             }
+            matched_total += matched_infile;
             total_count += profiles_count;
             total_status_profiles += status_profiles;
             smsc_log_info(logger, "read profiles count = %d/%d in file %d/total", profiles_count, total_count, i + 1);
+            smsc_log_info(logger, "matched profiles count = %d/%d in file %d/total", matched_infile, matched_total, i + 1);
             smsc_log_info(logger, "uploaded profiles count = %d/%d in file %d/total", status_profiles, total_status_profiles, i + 1);
             dataFile.Close();
           } catch (const FileException& ex) {
@@ -199,6 +206,7 @@ public:
           }
       }
       smsc_log_info(logger, "total read profiles count = %d in %d files", total_count, files_count);
+      smsc_log_info(logger, "total matched profiles = %d", matched_total);
       smsc_log_info(logger, "total uploaded profiles = %d", total_status_profiles);
       return 0;
     }
@@ -248,7 +256,7 @@ private:
     return 0;
   }
 
-  int restoreProfileMinsk(const Key& key, SerialBuffer& data, bool sendToPers) {
+  int restoreProfileMinsk(const Key& key, SerialBuffer& data, bool sendToPers, int& matched) {
     try {
       Profile pf(key.toString());   
       pf.Deserialize(data, true);
@@ -274,6 +282,7 @@ private:
           //smsc_log_debug(logger, "property '%s' not found in profile %s", minsk_properties[i], pf.getKey().c_str());
         }
       }
+      matched = prop_count > 0 ? 1 : 0;
       if (sendToPers && prop_count > 0) {
         pc.FinishPrepareBatch(prop_count, batch);
         pc.RunBatch(batch);
