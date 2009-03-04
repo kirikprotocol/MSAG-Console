@@ -239,6 +239,7 @@ struct MapDialog{
   string abonent;
   string subsystem;
   string origAddress;
+  string destAddress;
   auto_ptr<SMS> sms;
   auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
   ET96MAP_ADDRESS_T m_msAddr;

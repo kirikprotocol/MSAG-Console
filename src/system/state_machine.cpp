@@ -1642,6 +1642,16 @@ StateType StateMachine::submit(Tuple& t)
     sms->setIntProperty(Tag::SMSC_SUPPORTED_CODESET,orgprofile.codepage);
     sms->setStrProperty(Tag::SMSC_IMSI_ADDRESS,sms->getOriginatingDescriptor().imsi);
     sms->setStrProperty(Tag::SMSC_MSC_ADDRESS,sms->getOriginatingDescriptor().msc);
+  }else
+  {
+    if(sms->hasStrProperty(Tag::SMSC_SCCP_OA))
+    {
+      sms->dropProperty(Tag::SMSC_SCCP_OA);
+    }
+    if(sms->hasStrProperty(Tag::SMSC_SCCP_DA))
+    {
+      sms->dropProperty(Tag::SMSC_SCCP_DA);
+    }
   }
 
 #ifdef SMSEXTRA

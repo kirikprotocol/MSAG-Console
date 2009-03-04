@@ -1172,6 +1172,7 @@ none_validity:;
   sms.setOriginatingAddress(src_addr);
   ConvAddrMap2Smc(msa,&dest_addr);
   sms.setDestinationAddress(dest_addr);
+  
   dialog->AssignSms(_sms.release());
 }
 
@@ -2834,6 +2835,7 @@ USHORT_T Et96MapOpenInd (
       }
     }
     dialog->origAddress=SS7AddressToString(ss7OrigAddr_sp);
+    dialog->destAddress=SS7AddressToString(ss7DestAddr_sp);
     dialog->state = MAPST_WaitSms;
   }
   catch(exception& e)
@@ -3491,6 +3493,9 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
     sms.setOriginatingAddress(src_addr);
 
+    sms.setStrProperty(Tag::SMSC_SCCP_OA,dialog->origAddress.c_str());
+    sms.setStrProperty(Tag::SMSC_SCCP_DA,dialog->destAddress.c_str());
+    
     sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, ussdDataCodingScheme );
     unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
@@ -3576,6 +3581,8 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     Address src_addr;
     ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
     sms.setOriginatingAddress(src_addr);
+    sms.setStrProperty(Tag::SMSC_SCCP_OA,dialog->origAddress.c_str());
+    sms.setStrProperty(Tag::SMSC_SCCP_DA,dialog->destAddress.c_str());
 
     UCHAR_T udhPresent, msgClassMean, msgClass;
     if( ussdDataCodingScheme_p && ussdString_sp ) {
@@ -3650,6 +3657,8 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
     Address src_addr;
     ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
     sms.setOriginatingAddress(src_addr);
+    sms.setStrProperty(Tag::SMSC_SCCP_OA,dialog->origAddress.c_str());
+    sms.setStrProperty(Tag::SMSC_SCCP_DA,dialog->destAddress.c_str());
     unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);

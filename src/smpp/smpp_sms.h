@@ -134,7 +134,8 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
   if ( sms->hasStrProperty(Tag::SMSC_SUPPORTED_LOCALE) )
     optional.set_supported_locale(sms->getStrProperty(Tag::SMSC_SUPPORTED_LOCALE).c_str());
-
+  
+  
   if ( sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS) )
     optional.set_imsi_address(sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str());
 
@@ -143,6 +144,16 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
   if ( sms->hasIntProperty(Tag::SMSC_SUPPORTED_CODESET) )
     optional.set_supported_codeset( sms->getIntProperty(Tag::SMSC_SUPPORTED_CODESET) );
+  
+  if( sms->hasStrProperty(Tag::SMSC_SCCP_OA))
+  {
+    optional.set_sccp_oa(sms->getStrProperty(Tag::SMSC_SCCP_OA).c_str());
+  }
+  if( sms->hasStrProperty(Tag::SMSC_SCCP_DA))
+  {
+    optional.set_sccp_da(sms->getStrProperty(Tag::SMSC_SCCP_DA).c_str());
+  }
+  
 
   if(sms->hasIntProperty(Tag::SMPP_ITS_SESSION_INFO))
   {
@@ -379,7 +390,16 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
   if ( optional.has_supported_codeset() )
     sms->setIntProperty( Tag::SMSC_SUPPORTED_CODESET, optional.get_supported_codeset() );
-
+  
+  if( optional.has_sccp_oa())
+  {
+    sms->setStrProperty(Tag::SMSC_SCCP_OA,optional.get_sccp_oa());
+  }
+  if( optional.has_sccp_da())
+  {
+    sms->setStrProperty(Tag::SMSC_SCCP_DA,optional.get_sccp_da());
+  }
+  
   if(optional.has_itsSessionInfo())
   {
     const uint8_t* arr=optional.get_itsSessionInfo();

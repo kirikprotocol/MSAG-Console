@@ -70,6 +70,8 @@ namespace SmppOptionalTags{
   static const uint16_t imsi_address        = 0x4102;
   static const uint16_t msc_address         = 0x4103;
   static const uint16_t protocol_id         = 0x4104;
+  static const uint16_t sccp_oa             = 0x4105;
+  static const uint16_t sccp_da             = 0x4106;
 }
 
 namespace SmppOptionalLength{
@@ -123,6 +125,8 @@ namespace SmppOptionalLength{
   static const uint16_t imsi_address        = 31;
   static const uint16_t msc_address         = 31;
   static const uint16_t protocol_id         = 1;
+  static const uint16_t sccp_oa             =21;
+  static const uint16_t sccp_da             =21;
 }
 
 namespace SmppOptionalFields{
@@ -179,6 +183,9 @@ namespace SmppOptionalFields{
 
   static const uint64_t unknownFields       = BIT(48);
   static const uint64_t protocol_id         = BIT(49);
+
+  static const uint64_t sccp_oa         = BIT(50);
+  static const uint64_t sccp_da         = BIT(51);
 
 
 #undef BIT
@@ -616,6 +623,9 @@ struct SmppOptional //: public MemoryManagerUnit
 
   _o_ostr_property__(unknownFields)
   _o_int_property__(uint8_t,protocol_id)
+  
+  _o_cstr_property__(sccp_oa)
+  _o_cstr_property__(sccp_da)
 
 #undef _o_int_property__
 #undef _o_intarr_property__

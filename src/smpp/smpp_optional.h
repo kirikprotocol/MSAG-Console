@@ -124,6 +124,8 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
   macroFillCOctetStr( imsi_address, -1 );
   macroFillCOctetStr( msc_address, -1 );
   macroFillField( supported_codeset );
+  macroFillCOctetStr( sccp_oa, -1 );
+  macroFillCOctetStr( sccp_da, -1 );
 
   if(opt->has_unknownFields())
   {
@@ -272,6 +274,8 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       macroFetchCOctetStr( msc_address, length );
       macroFetchField( supported_codeset );
       /*protocol_id*/        macroFetchField(protocol_id);
+      macroFetchCOctetStr( sccp_oa, length );
+      macroFetchCOctetStr( sccp_da, length );
       default:
         {
           opt->field_present |= SmppOptionalFields::unknownFields;
