@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
         vector<int> notsendnumbers;
         int needProfilesCount = 1000000;
         int i = 0;
-        for (vector<int>::iterator n = numbers.begin(); i < needProfilesCount || n != numbers.end(); ++n, ++i) {
+        for (vector<int>::iterator n = numbers.begin(); i < needProfilesCount && n != numbers.end(); ++n, ++i) {
           if (stopped) {
             smsc_log_warn(logger, "Abort. Not all profiles created: %d", sendCount);  
             exit(0);
