@@ -532,6 +532,13 @@ sub process{
     $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?22:$infields->{SERVICE_ID};
     $outfields->{SERVICE_TYPE}='0';
     $outfields->{ACTION_CODE}='';
+    if($infields->{SERVICE_TYPE} eq 'MCA')
+    {
+      $outfields->{ACTION_CODE}=0;
+    }elsif($infields->{SERVICE_TYPE} eq 'MCAON')
+    {
+      $outfields->{ACTION_CODE}=1;
+    }
     if( $infields->{BEARER_TYPE} == 1 )
     {
       $outfields->{INV_SERVICE_ID}='ff';
