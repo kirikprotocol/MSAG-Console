@@ -544,6 +544,8 @@ sub process{
       $infields->{DST_ADDR}=$infields->{SRC_ADDR};
       $infields->{SRC_ADDR}='.1.1.79134548051';
     }
+    
+    
     my $outfields={};
     %$outfields=%$infields;
     $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?22:$infields->{SERVICE_ID};
@@ -596,6 +598,14 @@ sub process{
     {
       $outfields->{DD_TYPE}='';
     }
+    
+    #arrived ok support 29.01.09
+    if($infields->{SRC_ADDR} eq '.0.1.2765' && $infields->{DST_SME_ID} eq 'MAP_PROXY')
+    {
+      $outfields->{INCOMING_ROUTE}='SMSCSib';
+      $outfields->{OUTGOING_ROUTE}='cp_2765';
+    }
+    
 
     $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
     
