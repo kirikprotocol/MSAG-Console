@@ -54,6 +54,8 @@ extern "C" void atExitHandler(void)
 
 int sendProperty(PersClient& pc, PersKey& key, scag2::pvss::Property& prop, smsc::logger::Logger* logger) {
   try {
+    int propVal = rand() % 2;
+    prop.setBoolValue(static_cast<bool>(propVal));
     pc.SetProperty(PT_ABONENT, key, prop);
     return 1;
   } catch (const PersClientException& ex) {
@@ -65,23 +67,37 @@ int sendProperty(PersClient& pc, PersKey& key, scag2::pvss::Property& prop, smsc
   }
 }
 
-int sendProperties(int number, PersClient& pc, scag2::pvss::Property& intprop, scag2::pvss::Property& strprop, smsc::logger::Logger* logger) {
+int sendProperties(int number, PersClient& pc, scag2::pvss::Property& cmbprop, scag2::pvss::Property& pmbprop, smsc::logger::Logger* logger) {
   char addr[20];
   memset(addr, 0, 20);
   sprintf(addr, "7911%07d", number);			
   PersKey key(addr);
   int sendCount = 0;
-  if (!sendProperty(pc,key,intprop, logger)) {
-    smsc_log_warn(logger, "resending int property to abonent '%s'", key.skey);
-    sendCount += sendProperty(pc,key,intprop, logger);
-  } else {
-    ++sendCount;
+  bool sendcmb = static_cast<bool>(rand() % 2);
+  bool sendpmb = static_cast<bool>(rand() % 2);
+  if (!sendpmb && !sendcmb) {
+    bool sendpmbcmb = static_cast<bool>(rand() % 2);
+    if (sendpmbcmb) {
+      sendpmb = true;
+    } else {
+      sendcmb = true;
+    }
   }
-  if (!sendProperty(pc,key,strprop, logger)) {
-    smsc_log_warn(logger, "resending str property to abonent '%s'", key.skey);
-    sendCount += sendProperty(pc,key,strprop, logger);
-  } else {
-    ++sendCount;
+  if (sendcmb) {
+    if (!sendProperty(pc, key, cmbprop, logger)) {
+      smsc_log_warn(logger, "resending cmb property to abonent '%s'", key.skey);
+      sendCount += sendProperty(pc, key, cmbprop, logger);
+    } else {
+      ++sendCount;
+    }
+  }
+  if (sendpmb) {
+    if (!sendProperty(pc, key, pmbprop, logger)) {
+      smsc_log_warn(logger, "resending pmb property to abonent '%s'", key.skey);
+      sendCount += sendProperty(pc, key, pmbprop, logger);
+    } else {
+      ++sendCount;
+    }
   }
   return sendCount > 0 ? 1 : 0;
 }
@@ -180,6 +196,8 @@ int main(int argc, char* argv[])
         string strPropName  = "some.string.var";
         string strPropValue = "some text";
         string intPropName  = "other.int.var";
+        string cmb = "cmb.subscription";
+        string pmb = "pmb.subscription";
         int intPropValue    = 354;
 
         unsigned number = 0;
@@ -188,19 +206,26 @@ int main(int argc, char* argv[])
         memset(addr, 0, 20);
         Property intProp(intPropName.c_str(), intPropValue, scag2::pvss::INFINIT, 0, 0);
         Property strProp(strPropName.c_str(), strPropName.c_str(), scag2::pvss::INFINIT, 0, 0);
+        Property cmbProp;
+        Property pmbProp;
+        cmbProp.setName(cmb.c_str());
+        pmbProp.setName(pmb.c_str());
         vector<int> notsendnumbers;
-        for (vector<int>::iterator n = numbers.begin(); n != numbers.end(); ++n) {
+        int needProfilesCount = 1000000;
+        int i = 0;
+        for (vector<int>::iterator n = numbers.begin(); i < needProfilesCount || n != numbers.end(); ++n, ++i) {
           if (stopped) {
-            smsc_log_warn(logger, "Not all profiles created: %d", sendCount);  
+            smsc_log_warn(logger, "Abort. Not all profiles created: %d", sendCount);  
             exit(0);
           }
-          if (!sendProperties(*n, pc, intProp, strProp, logger)) {
+          if (!sendProperties(*n, pc, cmbProp, pmbProp, logger)) {
             notsendnumbers.push_back(*n);  
           } else {
             ++sendCount;
           }
         }
-        if (sendCount < addressesCount) {
+        //if (sendCount < addressesCount) {
+        if (sendCount < needProfilesCount) {
           smsc_log_warn(logger, "Not all profiles created: %d", sendCount);  
           for (vector<int>::iterator n = notsendnumbers.begin(); n != notsendnumbers.end(); ++n) {
             smsc_log_warn(logger, "profile number %d not created", *n);  
