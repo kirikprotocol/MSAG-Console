@@ -54,6 +54,17 @@ public:
     return rd->Pop(item);
   }
 
+    /// useful to wait for items (or notification) to arrive, prior to call to Pop.
+    /// This method is better than: Pop+Wait as Wait only waits for monitor notification
+    /// but it may come when mutex is unlocked.
+    void waitForItem()
+    {
+        if (rd->Count() > 0) return;
+        MutexGuard mg(mtx);
+        if (wr->Count() == 0) mtx.wait();
+        std::swap(rd,wr);
+    }
+
   void Wait()const
   {
     MutexGuard g(mtx);
@@ -72,6 +83,13 @@ public:
     return wr->Count();
   }
 
+    /// items count evaluation w/o locking.
+    /// NOTE: it is not accurate!
+    int evaluateCount() const
+    {
+        return wr->Count() + rd->Count();
+    }
+    
 protected:
   Q *wr,*rd;
   mutable EventMonitor mtx;
