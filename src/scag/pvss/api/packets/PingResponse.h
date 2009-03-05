@@ -17,6 +17,7 @@ public:
         return visitor.visitPingResponse(*this);
     }
     virtual PingResponse* clone() const { return new PingResponse(*this); }
+    virtual bool isPing() const { return true; }
 
 protected:
     virtual const char* typeToString() const { return "ping_resp"; }

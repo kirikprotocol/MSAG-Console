@@ -7,6 +7,7 @@
 #include "ClientConfig.h"
 #include "ClientContext.h"
 #include "scag/pvss/api/core/Core.h"
+#include "scag/pvss/api/core/ContextRegistry.h"
 #include "core/buffers/IntHash.hpp"
 #include "core/buffers/XHash.hpp"
 
@@ -77,8 +78,8 @@ public:
 
     virtual bool registerChannel( PvssSocket& channel, util::msectime_type utime ) {
         {
-            MutexGuard mg(channelMutex);
-            activeChannels.push_back(&channel);
+            MutexGuard mg(channelMutex_);
+            activeChannels_.push_back(&channel);
         }
         return Core::registerChannel(channel,utime);
     }
@@ -148,8 +149,8 @@ private:
     }
 
     int getNextSeqNum() {
-        MutexGuard mg(seqNumMutex);
-        return (++lastUsedSeqNum > 0) ? lastUsedSeqNum : (lastUsedSeqNum = 1);
+        MutexGuard mg(seqNumMutex_);
+        return (++lastUsedSeqNum_ > 0) ? lastUsedSeqNum_ : (lastUsedSeqNum_ = 1);
     }
 
     /**
@@ -205,28 +206,23 @@ private:
     void cleanup();
 
 private:
-
     typedef std::list< PvssSocket* >          ChannelList;
 
-    typedef std::list< ClientContext* >   ProcessingRequestList;
-    typedef smsc::core::buffers::IntHash< ProcessingRequestList::iterator > ProcessingRequestMap;
+private:
+    smsc::core::synchronization::EventMonitor channelMutex_;
+    ChannelList                        channels_;        // channels for connector/r/w
+    ChannelList                        activeChannels_;  // channels for r/w
+    ChannelList                        deadChannels_;    // closed channels (pending for destruction)
 
-    smsc::core::synchronization::EventMonitor channelMutex;
-    ChannelList                        channels;        // channels for connector/r/w
-    ChannelList                        activeChannels;  // channels for r/w
-    ChannelList                        deadChannels;    // closed channels (pending for destruction)
-
-    smsc::core::synchronization::EventMonitor processingRequestMon;
     // Requests waiting for responses (ordered by time)
-    smsc::core::buffers::XHash<PvssSocket*,ProcessingRequestList*> processingRequestLists;
-    smsc::core::buffers::XHash<PvssSocket*,ProcessingRequestMap*>  processingRequestMaps;
-    Connector* connector;
+    ContextRegistrySet                 regset_;
+    std::auto_ptr<Connector>           connector_;
 
-    smsc::core::synchronization::Mutex seqNumMutex;
-    int lastUsedSeqNum; // PVSS client uses incrementable seqNums for all channels
+    smsc::core::synchronization::Mutex seqNumMutex_;
+    int lastUsedSeqNum_; // PVSS client uses incrementable seqNums for all channels
 
-    smsc::core::synchronization::Mutex startMutex;
-    bool                               started;
+    smsc::core::synchronization::Mutex startMutex_;
+    bool                               started_;
 
 };
 

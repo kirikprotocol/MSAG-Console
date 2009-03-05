@@ -3,10 +3,12 @@
 
 #include <memory>
 #include "scag/pvss/api/core/Core.h"
+#include "scag/pvss/api/core/ContextRegistry.h"
 #include "Server.h"
 #include "core/buffers/Array.hpp"
 #include "ServerConfig.h"
 #include "Acceptor.h"
+#include "Dispatcher.h"
 
 namespace scag2 {
 namespace pvss {
@@ -16,15 +18,11 @@ class Protocol;
 namespace core {
 namespace server {
 
-class Dispatcher;
-class ContextQueue;
+class Worker;
 
 /// interface
 class ServerCore : public Core, public Server
 {
-protected:
-    smsc::logger::Logger* logger;
-
 public:
     /**
      * Constructor creates new ServerCore instance with provided configuration.
@@ -44,9 +42,14 @@ public:
      * Method implementation initiates channel closing.
      */
     virtual void inactivityTimeoutExpired(PvssSocket& channel) {
-        smsc_log_warn(logger,"Inactivity timeout expired for channel %p", &channel);
+        smsc_log_warn(log_,"Inactivity timeout expired for channel %p", &channel);
         closeChannel(channel);
     }
+
+
+    /// try to accept a channel for IO. Ownership is passed.
+    virtual bool acceptChannel( PvssSocket* channel );
+
 
     /**
      * Implementation of Server interface method.</p>
@@ -77,7 +80,7 @@ public:
             case SENT:   logic.responseSent(context.getResponse()); break;
             case FAILED: logic.responseFail(context.getResponse()); break;
             default:
-                logger.error("Unknown sync context state=" + context.getState());
+                log_.error("Unknown sync context state=" + context.getState());
                 break;
             }
         }
@@ -105,7 +108,7 @@ public:
             case SENT:   logic.responseSent(context); break;
             case FAILED: logic.responseFail(context); break;
             default:
-                logger.error("Unknown async context state=" + context.getState());
+                log_.error("Unknown async context state=" + context.getState());
                 break;
             }
         }
@@ -140,7 +143,7 @@ public:
                 }
 
                 try { contextsMonitor.wait(started ? config.getProcessTimeout() : 10); }
-                catch (InterruptedException e) { logger.warn("Wait on contexts monitor interrupted", e); }
+                catch (InterruptedException e) { log_.warn("Wait on contexts monitor interrupted", e); }
             }
         }
         return null; // break only when no one context rest
@@ -149,12 +152,14 @@ public:
 
     /*
      * Used to send response or error for processed request.
+     * Invoked from worker thread.
      * Puts response to Writer queue for channel on wich original request was received.
      *
      * @param context           ServerContext instance containing processed request with response or error set.
      * @throws PvssException    Thrown if provided context is invalid or server failes to sent it.
      */
-    void contextProcessed(std::auto_ptr<ServerContext>& context) throw(PvssException);
+    void contextProcessed(std::auto_ptr<ServerContext> context); // throw(PvssException);
+
     /*
     {
         PvssSocket& channel = context.getChannel();
@@ -246,7 +251,7 @@ public:
             }
         }
         catch (PvssException exc) {
-            logger.error(exc.getMessage(), exc); // Do not close channel
+            log_.error(exc.getMessage(), exc); // Do not close channel
         }
     }
      */
@@ -291,7 +296,7 @@ public:
                 } else needErrorResponse = true;
             }
             if (needErrorResponse) {
-                logger.warn("Pending requests queue overflow, queue size=" + pendingContextSize);
+                log_.warn("Pending requests queue overflow, queue size=" + pendingContextSize);
                 sendResponse(new ErrorResponse(request.getSeqNum(),
                                                Response.StatusType.SERVER_BUSY, "Try later"), channel);
             }
@@ -302,11 +307,11 @@ public:
     /*
     private void reportResponse(Response response, SocketChannel channel, PacketState state)
     {
-        if (response instanceof PingResponse) logger.warn("PING response state=" + state);
-        else if (response instanceof ErrorResponse) logger.warn("ERROR response state=" + state);
+        if (response instanceof PingResponse) log_.warn("PING response state=" + state);
+        else if (response instanceof ErrorResponse) log_.warn("ERROR response state=" + state);
         else
         {
-            if (logger.isDebugEnabled()) logger.debug("Response '" + response + "' state=" + state);
+            if (log_.isDebugEnabled()) log_.debug("Response '" + response + "' state=" + state);
             ServerContext context = removeProcessingContext(channel, response.getSeqNum(), false);
             if (context != null) {
                 synchronized (contextsMonitor) {
@@ -328,7 +333,7 @@ public:
      * @throws PvssException    Thrown if server fails to start
      */
     /*public synchronized */
-    virtual void startup() throw(PvssException);
+    virtual void startup( SyncDispatcher& dispatcher ) throw(PvssException);
     /*
     {
         if (started) return;
@@ -337,7 +342,7 @@ public:
         try {
             acceptor = new Acceptor(new InetSocketAddress(config.getHost(), config.getPort()));
         } catch (PvssException exc) {
-            logger.error("Acceptor start error: " + exc.getMessage());
+            log_.error("Acceptor start error: " + exc.getMessage());
             shutdownIO();
             throw exc;
         }
@@ -381,7 +386,7 @@ public:
             sendResponse(new ErrorResponse(seqNum, Response.StatusType.REQUEST_TIMEOUT,
                                            contextType + " request timeout"), channel);
         } catch (PvssException send_error_exc) {
-            logger.warn(contextType + " request timeout send failed. Details: " + send_error_exc.getMessage());
+            log_.warn(contextType + " request timeout send failed. Details: " + send_error_exc.getMessage());
         }
     }
 
@@ -394,7 +399,7 @@ public:
             sendResponse(new ErrorResponse(seqNum, Response.StatusType.SERVER_SHUTDOWN,
                                            contextType + " request cancelled"), channel);
         } catch (PvssException send_error_exc) {
-            logger.warn(contextType + " request cancelled send failed. Details: " + send_error_exc.getMessage());
+            log_.warn(contextType + " request cancelled send failed. Details: " + send_error_exc.getMessage());
         }
     }
      */
@@ -470,22 +475,46 @@ public:
     }
      */
 
-protected:
     virtual ServerConfig& getConfig() { return *static_cast<ServerConfig*>(config);}
 
-
 private:
-    void sendResponse(Response* response, PvssSocket& channel) throw(PvssException)
+    void sendResponse(std::auto_ptr<ServerContext>& ctx) throw(PvssException);
+
+    /// report context
+    void reportContext( std::auto_ptr<ServerContext> ctx );
+
+    /// close channel if managed locally or leave it.
+    void closeChannel( smsc::core::network::Socket* socket );
+
+    virtual void closeChannel( PvssSocket& channel )
     {
-        channel.send(response,false,true);  // don't check queue limit
+        Core::closeChannel(channel);
     }
 
-private:
-    bool        started_;
-    Dispatcher*                                 dispatcher_; // not owned
+    void destroyDeadChannels();
 
-    smsc::core::buffers::Array< ContextQueue* > queues_;
-    std::auto_ptr<Acceptor>                     acceptor_;
+private:
+    typedef std::list< smsc::core::network::Socket* > ChannelList;
+
+protected:
+    smsc::logger::Logger*                       log_;
+
+private:
+    smsc::core::synchronization::Mutex          startMutex_;
+    bool                                        started_;
+    SyncDispatcher*                             syncDispatcher_; // not owned
+    AsyncDispatcher*                            asyncDispatcher_; // not owned
+
+    std::auto_ptr<Acceptor>                     acceptor_;   // owned
+    std::auto_ptr<Dispatcher>                   dispatcher_; // owned (created only if asyncdispatcher)
+    smsc::core::buffers::Array<Worker*>         workers_;    // owned (created only if syncdispatcher)
+
+    smsc::core::synchronization::EventMonitor   channelMutex_;
+    ChannelList                                 channels_;        // channels for r/w
+    ChannelList                                 managedChannels_; // channels managed locally
+    ChannelList                                 deadChannels_;
+
+    ContextRegistrySet                          regset_;
 };
 
 } // namespace server

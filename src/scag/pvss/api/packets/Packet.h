@@ -13,6 +13,12 @@ namespace pvss {
 class Packet
 {
 public:
+    enum {
+            CONNECT_RESPONSE_OK = 0x4f4b,         // "OK"
+            CONNECT_RESPONSE_SERVER_BUSY = 0x5342 // "SB"
+    };
+
+public:
     virtual ~Packet() {}
 
     virtual bool isRequest() const = 0;

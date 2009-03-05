@@ -7,9 +7,8 @@ namespace pvss {
 namespace core {
 namespace client {
 
-Connector::Connector( Config& theconfig, Core& thecore ) :
-SockTask(theconfig,thecore,"pvss.ctask"),
-wakeupTime_(0)
+Connector::Connector( ClientConfig& theconfig, ClientCore& thecore ) :
+SockTask(theconfig,thecore,"pvss.cnctr")
 {
 }
 
@@ -70,7 +69,7 @@ void Connector::processEvents()
             continue;
         } catch ( exceptions::IOException& e ) {
             // cannot connect
-            core->handleError(PvssException(PvssException::CONNECT_FAILED,"cannot connect: %s",e.what()),channel);
+            core_->handleError(PvssException(PvssException::CONNECT_FAILED,"cannot connect: %s",e.what()),channel);
         }
     }
 
@@ -86,25 +85,25 @@ void Connector::processEvents()
     mul.canRead(ready,error,200);
     for ( int i = 0; i < error.Count(); ++i ) {
         PvssSocket& channel = *PvssSocket::fromSocket(error[i]);
-        core->handleError(PvssException(PvssException::IO_ERROR,"cannot read server status"),channel);
+        core_->handleError(PvssException(PvssException::IO_ERROR,"cannot read server status"),channel);
     }
-    std::string serverStatus;
-    serverStatus.resize(2);
+    short serverStatus;
     for ( int i = 0; i < ready.Count(); ++i ) {
         PvssSocket& channel = *PvssSocket::fromSocket(ready[i]);
-        int res = channel.socket()->Read(const_cast<char*>(serverStatus.c_str()),2);
+        int res = channel.socket()->Read(reinterpret_cast<char*>(&serverStatus),2);
         // FIXME: may it be so that less than 2 bytes is read in an attempt ?
         if ( res != 2 ) {
-            core->handleError(PvssException(PvssException::IO_ERROR,"cannot read server status data, res=%d",res),channel);
+            core_->handleError(PvssException(PvssException::IO_ERROR,"cannot read server status data, res=%d",res),channel);
             continue;
         }
-        if ( serverStatus == "SB" ) {
-            core->handleError(PvssException(PvssException::SERVER_BUSY,"server busy on connect"),channel);
-        } else if ( serverStatus == "OK" ) {
-            core->registerChannel(channel,util::currentTimeMillis());
+        serverStatus = ntohs(serverStatus);
+        if ( serverStatus == Packet::CONNECT_RESPONSE_SERVER_BUSY ) {
+            core_->handleError(PvssException(PvssException::SERVER_BUSY,"server busy on connect"),channel);
+        } else if ( serverStatus == Packet::CONNECT_RESPONSE_OK ) {
+            core_->registerChannel(channel,util::currentTimeMillis());
             unregisterChannel(channel);
         } else {
-            core->handleError(PvssException(PvssException::CONNECT_FAILED,"unknown server status '%s'",serverStatus.c_str()),channel);
+            core_->handleError(PvssException(PvssException::CONNECT_FAILED,"unknown server status: %x",serverStatus),channel);
         }
     }
 }

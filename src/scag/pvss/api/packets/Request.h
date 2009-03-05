@@ -3,6 +3,7 @@
 
 #include "Packet.h"
 #include "scag/pvss/common/PvapException.h"
+#include "logger/Logger.h"
 
 namespace scag2 {
 namespace pvss {
@@ -18,9 +19,11 @@ class ResponseTypeMatch;
 class Request : public Packet
 {
 protected:
+    static smsc::logger::Logger* log_;
+protected:
     Request();
-
 public:
+    virtual ~Request();
     virtual bool isRequest() const { return true; }
     virtual Command* getCommand() = 0;
     virtual const Command* getCommand() const = 0;

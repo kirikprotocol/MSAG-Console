@@ -23,7 +23,7 @@ protected:
     SockTask( Config& theconfig,
               Core& thecore,
               const char* logname = 0 ) :
-    config(&theconfig), core(&thecore), taskname_(logname ? logname : "pvss.task"), log_(0), wakeupTime_(0) {
+    config_(&theconfig), core_(&thecore), taskname_(logname ? logname : "pvss.task"), log_(0), wakeupTime_(0) {
         log_ = smsc::logger::Logger::getInstance(taskname_.c_str());
     }
 
@@ -59,7 +59,7 @@ public:
         mon_.notify();
     }
 
-    virtual const Config& getConfig() const { return *config; }
+    virtual const Config& getConfig() const { return *config_; }
 
 protected:
     virtual void attachToSocket( PvssSocket& ) {}
@@ -81,8 +81,8 @@ protected:
     virtual void postProcess() {}
 
 protected:
-    Config*                                       config;
-    Core*                                         core;
+    Config*                                       config_;
+    Core*                                         core_;
     std::string                                   taskname_;
 
     smsc::core::synchronization::EventMonitor     mon_;

@@ -40,9 +40,13 @@ public:
     };
 
 public:
+    /// ctor for client-side
     PvssSocket( const std::string& host,
                 short port,
                 int   connectionTimeout );
+
+    /// ctor for server-side
+    PvssSocket( smsc::core::network::Socket* socket );
 
     ~PvssSocket();
 
@@ -85,6 +89,8 @@ public:
     bool isInUse() const;
 
 private:
+    void init(); // called from ctor
+
     PvssSocket( const PvssSocket& );
     PvssSocket& operator = ( const PvssSocket& );
 

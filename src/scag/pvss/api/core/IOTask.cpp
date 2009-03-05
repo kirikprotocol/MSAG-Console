@@ -34,7 +34,7 @@ void IOTask::processEvents()
     // smsc_log_debug( log_, "process sockets: error=%d ready=%d", error_.Count(), ready_.Count() );
     for ( int i = 0; i < error_.Count(); ++i ) {
         // smsc_log_warn( log_, "error on socket %p", error_[i] );
-        core->closeChannel( *PvssSocket::fromSocket(error_[i]) );
+        core_->closeChannel( *PvssSocket::fromSocket(error_[i]) );
     }
     for ( int i = 0; i < ready_.Count(); ++i ) {
         process( *PvssSocket::fromSocket(ready_[i]) );

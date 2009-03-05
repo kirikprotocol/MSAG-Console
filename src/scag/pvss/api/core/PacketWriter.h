@@ -38,7 +38,7 @@ protected:
         return true;
     }
     virtual bool hasEvents() { return mul_.canWrite(ready_, error_, 200); }
-    virtual void process( PvssSocket& con ) { con.sendData(*core); }
+    virtual void process( PvssSocket& con ) { con.sendData(*core_); }
 
 };
 

@@ -63,9 +63,9 @@ smsc::logger::Logger* ClientCore::logger = 0;
 
 ClientCore::ClientCore( ClientConfig& config, Protocol& proto ) :
 Core(config,proto),
-connector(0),
-lastUsedSeqNum(0),
-started(false)
+connector_(0),
+lastUsedSeqNum_(0),
+started_(false)
 {
     if ( ! logger ) {
         static Mutex logMutex;
@@ -78,30 +78,29 @@ started(false)
 ClientCore::~ClientCore()
 {
     shutdown();
-    destroyDeadChannels();
 }
 
 
 void ClientCore::startup() throw(PvssException)
 {
-    if (started) return;
-    MutexGuard mg(startMutex);
-    if (started) return;
+    if (started_) return;
+    MutexGuard mg(startMutex_);
+    if (started_) return;
 
     smsc_log_info(logger,"Client starting...");
 
     startupIO();
     try {
         // connector = new Connector( new InetSocketAddress(config.getHost(), config.getPort()) );
-        connector = new Connector( getConfig(), *this );
-        threadPool_.startTask(connector,false);
+        connector_.reset(new Connector( getConfig(), *this ));
+        threadPool_.startTask(connector_.get(),false);
     } catch (PvssException& exc) {
         smsc_log_error( logger, "Connector start error: %s", exc.what());
         shutdownIO();
         throw exc;
     }
 
-    started = true;
+    started_ = true;
 
     try
     {
@@ -112,8 +111,8 @@ void ClientCore::startup() throw(PvssException)
             createChannel(currentTime);
     }
     catch (PvssException& exc) {
-        started = false;
-        connector->shutdown();
+        started_ = false;
+        connector_->shutdown();
         clearChannels();
         shutdownIO();
         throw exc;
@@ -126,45 +125,46 @@ void ClientCore::startup() throw(PvssException)
 
 void ClientCore::shutdown()
 {
-    if (!started) return;
-    MutexGuard mg(startMutex);
-    if (!started) return;
+    if (!started_) return;
+    MutexGuard mg(startMutex_);
+    if (!started_) return;
 
     smsc_log_info( logger, "Client is shutting down...");
 
-    started = false;
-    connector->shutdown();
+    started_ = false;
+    connector_->shutdown();
     clearChannels();
     shutdownIO();
     stop();
     {
-        MutexGuard mgr(channelMutex);
-        channelMutex.notify();
+        MutexGuard mgr(channelMutex_);
+        channelMutex_.notify();
     }
     waitUntilReleased();
+    destroyDeadChannels();
 }
 
 
 void ClientCore::closeChannel( PvssSocket& channel )
 {
     Core::closeChannel( channel );
-    connector->unregisterChannel(channel);
+    connector_->unregisterChannel(channel);
     {
         // move the channel to a dead channel queue
-        MutexGuard mgc(channelMutex);
-        ChannelList::iterator i = std::find(activeChannels.begin(),
-                                            activeChannels.end(),
+        MutexGuard mgc(channelMutex_);
+        ChannelList::iterator i = std::find(activeChannels_.begin(),
+                                            activeChannels_.end(),
                                             &channel);
-        if (i != activeChannels.end()) activeChannels.erase(i);
-        i = std::find(channels.begin(), channels.end(), &channel);
-        if (i != channels.end()) {
-            deadChannels.push_back(*i);
-            channels.erase(i);
+        if (i != activeChannels_.end()) activeChannels_.erase(i);
+        i = std::find(channels_.begin(), channels_.end(), &channel);
+        if (i != channels_.end()) {
+            deadChannels_.push_back(*i);
+            channels_.erase(i);
         }
     }
     destroyDeadChannels();
 
-    if (started) {
+    if (started_) {
         smsc_log_debug(logger,"Recreating channel...");
         try {
             createChannel( util::currentTimeMillis() + getConfig().getConnectTimeout());
@@ -227,15 +227,24 @@ void ClientCore::reportPacket( uint32_t seqNum, PvssSocket& channel, PacketState
     std::auto_ptr<ClientContext> ctx;
     Request* request = 0;
     {
+        ContextRegistry::Ptr ptr(regset_.get(channel.socket()));
+        if ( !ptr ) {
+            smsc_log_warn(logger,"packet seqNum=%d on channel %p reported, but registry is not found",
+                          seqNum, &channel);
+            return;
+        }
+        /*
         MutexGuard mgr(processingRequestMon);
         ProcessingRequestMap* map = processingRequestMaps.Get(&channel);
         ProcessingRequestList::iterator* i = map->GetPtr(seqNum);
+         */
+        ContextRegistry::Ctx i(ptr->get(seqNum));
         if ( !i ) {
             smsc_log_warn(logger, "packet seqNum=%d on channel %p reported as %s, but not found",
                           seqNum, &channel, state == SENT ? "SENT" : (state == FAILED ? "FAILED" : "EXPIRED"));
             return;
         }
-        request = (**i)->getRequest().get();
+        request = i.getContext()->getRequest().get();
         if ( state == SENT ) {
             if (request->isPing())
                 smsc_log_debug(logger,"PING request sent");
@@ -244,9 +253,7 @@ void ClientCore::reportPacket( uint32_t seqNum, PvssSocket& channel, PacketState
             // do nothing, waiting for response
             return;
         } else {
-            ctx.reset(**i);
-            map->Delete(seqNum);
-            processingRequestLists.Get(&channel)->erase(*i);
+            ctx.reset(static_cast<ClientContext*>(ptr->pop(i)));
         }
     }
     try {
@@ -274,39 +281,49 @@ int ClientCore::Execute()
     util::msectime_type nextWakeupTime = currentTime + timeToSleep;
 
     smsc_log_info(logger,"Client started");
-    while (started)
+    while (started_)
     {
         // smsc_log_debug(logger,"cycling clientCore");
-        MutexGuard mgr(processingRequestMon);
         currentTime = util::currentTimeMillis();
         int timeToWait = int(nextWakeupTime-currentTime);
         if ( timeToWait > 0 ) {
             if ( timeToWait < minTimeToSleep ) timeToWait = minTimeToSleep;
-            processingRequestMon.wait(timeToWait);
+            regset_.wait(timeToWait);
         }
         nextWakeupTime = currentTime + timeToSleep;
-        MutexGuard mgc(channelMutex);
-        for ( ChannelList::const_iterator j = activeChannels.begin();
-              j != activeChannels.end(); ++j ) {
-            ProcessingRequestList* list = processingRequestLists.Get(*j);
-            ProcessingRequestMap* map = processingRequestMaps.Get(*j);
-            ProcessingRequestList::iterator i = list->begin();
-            for ( ;
-                  i != list->end();
-                  ) {
-                util::msectime_type expireTime = (*i)->getCreationTime() + timeToSleep;
-                if ( currentTime >= expireTime ) {
-                    int seqNum = (*i)->getSeqNum();
-                    map->Delete(seqNum);
-                    i = list->erase(i);
-                    // FIXME: report expiration
+
+        ChannelList currentChannels;
+        {
+            MutexGuard mgc(channelMutex_);
+            std::copy(activeChannels_.begin(), activeChannels_.end(),
+                      std::back_inserter(currentChannels));
+        }
+        for ( ChannelList::const_iterator j = currentChannels.begin();
+              j != currentChannels.end(); ++j ) {
+            
+            PvssSocket* channel = *j;
+            ContextRegistry::ProcessingList list;
+            {
+                ContextRegistry::Ptr ptr = regset_.get(channel->socket());
+                if (!ptr) continue;
+                util::msectime_type t = ptr->popExpired(list,currentTime,timeToSleep);
+                if ( t < nextWakeupTime ) nextWakeupTime = t;
+            }
+            // fixme: process those items in list
+            for ( ContextRegistry::ProcessingList::iterator i = list.begin();
+                  i != list.end();
+                  ++i ) {
+                // expired
+                ClientContext* ctx = static_cast<ClientContext*>(*i);
+                if (ctx->getRequest()->isPing()) {
+                    smsc_log_warn(logger,"PING failed, timeout");
+                    closeChannel(*channel);
                 } else {
-                    if ( expireTime < nextWakeupTime ) nextWakeupTime = expireTime;
-                    break;
+                    ctx->setError(PvssException(PvssException::REQUEST_TIMEOUT,"timeout"));
                 }
+                delete ctx;
             }
         }
-        if (!started) break;
     }
     smsc_log_info( logger, "Client shutdowned" );
     return 0;
@@ -316,15 +333,15 @@ int ClientCore::Execute()
 void ClientCore::clearChannels()
 {
     // NOTE: connector must be stopped already!
-    assert(connector->released());
-    MutexGuard mg(channelMutex);
-    for ( ChannelList::iterator i = channels.begin(); i != channels.end(); ++i ) {
+    assert(connector_->released());
+    MutexGuard mg(channelMutex_);
+    for ( ChannelList::iterator i = channels_.begin(); i != channels_.end(); ++i ) {
         PvssSocket& channel = **i;
         Core::closeChannel(channel);
-        deadChannels.push_back(*i);
+        deadChannels_.push_back(*i);
     }
-    channels.clear();
-    activeChannels.clear();
+    channels_.clear();
+    activeChannels_.clear();
 }
 
 
@@ -332,13 +349,13 @@ void ClientCore::destroyDeadChannels()
 {
     ChannelList trulyDead;
     {
-        MutexGuard mg(channelMutex);
-        for ( ChannelList::iterator i = deadChannels.begin();
-              i != deadChannels.end();
+        MutexGuard mg(channelMutex_);
+        for ( ChannelList::iterator i = deadChannels_.begin();
+              i != deadChannels_.end();
               ) {
             if ( ! (*i)->isInUse() ) {
                 trulyDead.push_back(*i);
-                i = deadChannels.erase(i);
+                i = deadChannels_.erase(i);
             } else {
                 ++i;
             }
@@ -348,21 +365,9 @@ void ClientCore::destroyDeadChannels()
           i != trulyDead.end();
           ++i ) {
         PvssSocket* channel = *i;
-        ProcessingRequestList** plist = 0;
-        {
-            MutexGuard mg(processingRequestMon);
-            ProcessingRequestMap** map = processingRequestMaps.GetPtr(channel);
-            if (map) {
-                processingRequestMaps.Delete(channel);
-                delete *map;
-            }
-            plist = processingRequestLists.GetPtr(channel);
-            if (plist) processingRequestLists.Delete(channel);
-        }
-        if (!plist) {
-            smsc_log_warn(logger,"request list for channel %p is not found",channel);
-            continue;
-        }
+        regset_.destroy(channel->socket());
+        /*
+         * FIXME: think on how to convey requests on closed channel
         for ( ProcessingRequestList::iterator j = (*plist)->begin();
               j != (*plist)->end();
               ++j ) {
@@ -376,41 +381,36 @@ void ClientCore::destroyDeadChannels()
             delete ctx;
         }
         delete *plist;
+         */
     }
 }
 
 
 void ClientCore::createChannel( util::msectime_type startConnectTime )
 {
-    if (!started) return;
+    if (!started_) return;
     PvssSocket* channel(new PvssSocket(getConfig().getHost(),
                                        getConfig().getPort(),
                                        getConfig().getConnectTimeout()/1000));
     smsc_log_info(logger,"creating a channel %p on %s:%d tmo=%d",channel,
                   getConfig().getHost().c_str(), getConfig().getPort(),getConfig().getConnectTimeout()/1000);
+    regset_.create(channel->socket());
     {
-        MutexGuard mg(processingRequestMon);
-        if ( ! processingRequestMaps.Exists(channel) ) {
-            processingRequestMaps.Insert(channel,new ProcessingRequestMap);
-            processingRequestLists.Insert(channel,new ProcessingRequestList);
-        }
+        MutexGuard mg(channelMutex_);
+        channels_.push_back(channel);
     }
-    {
-        MutexGuard mg(channelMutex);
-        channels.push_back(channel);
-    }
-    connector->connectChannel(*channel,startConnectTime);
+    connector_->connectChannel(*channel,startConnectTime);
 }
 
 
 PvssSocket& ClientCore::getNextChannel() throw (PvssException)
 {
-    MutexGuard mg(channelMutex);
-    if ( activeChannels.empty() )
+    MutexGuard mg(channelMutex_);
+    if ( activeChannels_.empty() )
         throw PvssException(PvssException::NOT_CONNECTED,"No one channel is connected");
-    PvssSocket* channel = activeChannels.front();
-    activeChannels.pop_front();
-    activeChannels.push_back(channel);
+    PvssSocket* channel = activeChannels_.front();
+    activeChannels_.pop_front();
+    activeChannels_.push_back(channel);
     return *channel;
 }
 
@@ -425,33 +425,24 @@ void ClientCore::sendRequest(std::auto_ptr<ClientContext>& context) throw(PvssEx
     PvssSocket& channel = getNextChannel();
     const Packet* packet = context->getRequest().get();
     {
-        MutexGuard mgr(processingRequestMon);
-        ProcessingRequestMap* map = processingRequestMaps.Get(&channel);
-        if ( map->Exist(seqNum) )
+        ContextRegistry::Ptr ptr = regset_.get(channel.socket());
+        if (!ptr) {
+            throw PvssException(PvssException::UNKNOWN,
+                                "context registry is not found");
+        }
+        if ( ptr->exists(seqNum) )
             throw PvssException(PvssException::CLIENT_BUSY,
                                 "Possible seqNum overrrun! seqNum=%d is still in use", seqNum);
-        ProcessingRequestList* list = processingRequestLists.Get(&channel);
         if ( ! packet->isValid() )
             throw PvssException(PvssException::BAD_REQUEST, "Request is bad formed");
-        bool wasEmpty = list->empty();
-        list->push_back(context.release());
-        ProcessingRequestList::iterator i = list->end();
-        --i;
-        map->Insert(seqNum,i);
-        if (wasEmpty) processingRequestMon.notify();
+        ptr->push( context.release() );
     }
     try {
         channel.send(packet,true,false);
     } catch (...) {
         // restore context
-        MutexGuard mgr(processingRequestMon);
-        ProcessingRequestMap* map = processingRequestMaps.Get(&channel);
-        ProcessingRequestList::iterator* i = map->GetPtr(seqNum);
-        assert(i);
-        ProcessingRequestList* list = processingRequestLists.Get(&channel);
-        context.reset(**i);
-        list->erase(*i);
-        map->Delete(seqNum);
+        ContextRegistry::Ptr ptr = regset_.get(channel.socket());
+        context.reset( static_cast<ClientContext*>(ptr->pop(ptr->get(seqNum))));
         throw;
     }
 }
@@ -477,15 +468,10 @@ void ClientCore::handleResponse(Response* response,PvssSocket& channel) throw(Pv
     std::auto_ptr<ClientContext> context;
     int seqNum = response->getSeqNum();
     {
-        MutexGuard mgr(processingRequestMon);
-        ProcessingRequestMap* map = processingRequestMaps.Get(&channel);
-        ProcessingRequestList::iterator* i = map->GetPtr(seqNum);
-        if ( i ) {
-            ProcessingRequestList* list = processingRequestLists.Get(&channel);
-            context.reset(**i);
-            list->erase(*i);
-            map->Delete(seqNum);
-        }
+        ContextRegistry::Ptr ptr = regset_.get(channel.socket());
+        if ( !ptr )
+            throw PvssException(PvssException::UNEXPECTED_RESPONSE,"No context registry found");
+        context.reset(static_cast<ClientContext*>(ptr->pop(ptr->get(seqNum))));
     }
     if (! context.get())
         throw PvssException( PvssException::UNEXPECTED_RESPONSE, "No context for seqNum=%d", seqNum);

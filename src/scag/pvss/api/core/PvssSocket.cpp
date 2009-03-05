@@ -25,12 +25,20 @@ reader_(0),
 connectTime_(0),
 lastActivity_(0)
 {
-    if ( ! log_ ) {
-        MutexGuard mg(logMtx);
-        if ( ! log_ ) log_ = smsc::logger::Logger::getInstance("pvss.sock");
-    }
-    sock_->setData(0,this);
-    smsc_log_debug(log_,"ctor: socket %p",this);
+    init();
+}
+
+
+PvssSocket::PvssSocket(smsc::core::network::Socket* socket) :
+sock_(socket),
+host_(), port_(0), connectionTmo_(0),
+rdBuflen_(0),
+writer_(0),
+reader_(0),
+connectTime_(0),
+lastActivity_(util::currentTimeMillis())
+{    
+    init();
 }
 
 
@@ -220,6 +228,25 @@ void PvssSocket::registerReader( PacketReader* reader )
 bool PvssSocket::isInUse() const
 {
     return writer_ || reader_;
+}
+
+void PvssSocket::init()
+{
+    if ( ! log_ ) {
+        MutexGuard mg(logMtx);
+        if ( ! log_ ) log_ = smsc::logger::Logger::getInstance("pvss.sock");
+    }
+    sock_->setData(0,this);
+    if ( host_.empty() && sock_->isConnected() ) {
+        char buf[50];
+        sock_->GetPeer(buf);
+        char* colon = strchr(buf,':');
+        if ( colon ) {
+            host_ = std::string(buf,colon-buf);
+            port_ = atoi(colon+1);
+        }
+    }
+    smsc_log_debug(log_,"ctor: socket %p (%s:%d)",this,host_.c_str(),port_);
 }
 
 } // namespace core

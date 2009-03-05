@@ -9,7 +9,7 @@ namespace core {
 
 void PacketWriter::serialize( const Packet& packet, Protocol::Buffer& buffer ) throw (PvssException)
 {
-    Protocol& proto = *core->getProtocol();
+    Protocol& proto = *core_->getProtocol();
     buffer.SetPos(4);
     proto.serialize(packet,buffer);
     uint32_t buflen = buffer.GetPos()-4;

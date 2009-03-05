@@ -3,6 +3,7 @@
 
 #include "Packet.h"
 #include "Request.h"
+#include "logger/Logger.h"
 
 namespace scag2 {
 namespace pvss {
@@ -65,12 +66,17 @@ public:
     }
 
 protected:
-    Response() : seqNum_(uint32_t(-1)), status_(UNKNOWN) {}
-    Response( uint32_t seqNum ) : seqNum_(seqNum), status_(UNKNOWN) {}
-    Response( const Response& other ) : seqNum_(other.seqNum_), status_(other.status_) {}
-    Response( uint32_t seqNum, StatusType status ) : seqNum_(seqNum), status_(status) {}
+    static smsc::logger::Logger* log_;
+
+protected:
+    Response() : seqNum_(uint32_t(-1)), status_(UNKNOWN) { initLogger(); }
+    Response( uint32_t seqNum ) : seqNum_(seqNum), status_(UNKNOWN) { initLogger(); }
+    Response( const Response& other ) : seqNum_(other.seqNum_), status_(other.status_) { initLogger(); }
+    Response( uint32_t seqNum, StatusType status ) : seqNum_(seqNum), status_(status) { initLogger(); }
+    void initLogger();
 
 public:
+    virtual ~Response();
     virtual bool isRequest() const { return false; }
     virtual uint32_t getSeqNum() const { return seqNum_; }
     virtual void setSeqNum( uint32_t seqNum ) { seqNum_ = seqNum; }
@@ -85,6 +91,8 @@ public:
     }
     virtual void clear() { status_ = UNKNOWN; }
     virtual bool isValid() const { return true; }
+    virtual bool isPing() const { return false; }
+    virtual bool isError() const { return false; }
 
     virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) = 0;
 

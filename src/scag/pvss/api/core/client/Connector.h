@@ -10,17 +10,19 @@ namespace pvss {
 namespace core {
 namespace client {
 
+class ClientCore;
+
 class Connector : public SockTask
 {
 public:
-    Connector( Config& theconfig, Core& thecore );
+    Connector( ClientConfig& theconfig, ClientCore& thecore );
     
     virtual void shutdown();
 
     /// register channel for connection
     void connectChannel( PvssSocket& socket, util::msectime_type startConnectTime );
 
-    virtual const ClientConfig& getConfig() const { return * static_cast<const ClientConfig*>(config); }
+    virtual const ClientConfig& getConfig() const { return * static_cast<const ClientConfig*>(config_); }
 
 protected:
     virtual bool setupSockets(util::msectime_type currentTime);
@@ -31,8 +33,6 @@ protected:
 
 private:
     smsc::core::buffers::Array< PvssSocket* >     pendingSockets_;
-    util::msectime_type                           wakeupTime_;
-
     smsc::core::synchronization::Mutex            finishingMutex_;
     smsc::core::buffers::Array< PvssSocket* >     finishingSockets_;
 };

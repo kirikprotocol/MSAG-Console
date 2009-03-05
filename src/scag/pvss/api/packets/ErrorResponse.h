@@ -21,6 +21,8 @@ public:
 
     virtual ErrorResponse* clone() const { return new ErrorResponse(*this); }
 
+    virtual bool isError() const { return true; }
+
 protected:
     virtual const char* typeToString() const { return "err_resp"; }
 

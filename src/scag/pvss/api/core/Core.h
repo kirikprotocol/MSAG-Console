@@ -136,6 +136,7 @@ protected:
             MutexGuard mg(readersMutex);
             stopReaders();
         }
+        stopCoreLogic();
         {
             MutexGuard mg(writersMutex);
             stopWriters();
@@ -144,6 +145,8 @@ protected:
         // waiting until all tasks are stopped
         destroyDeadTasks();
     }
+
+    virtual void stopCoreLogic() {}
 
 private:
     void updateChannelActivity( PvssSocket& channel, long utime ) {
@@ -210,7 +213,7 @@ protected:
 
     smsc::core::synchronization::Mutex deadMutex;
     std::vector< SockTask* >           deadTasks;
-    smsc::core::threads::ThreadPool threadPool_;
+    smsc::core::threads::ThreadPool    threadPool_;
 };
 
 } // namespace core

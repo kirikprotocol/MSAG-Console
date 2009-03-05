@@ -12,6 +12,8 @@ namespace core {
 namespace server {
 
 class ServerContext;
+class SyncDispatcher;
+class AsyncDispatcher;
 
 /// interface
 class Server
@@ -25,7 +27,7 @@ public:
      *
      * @throws PvssException    Thrown if PVSS Server failed to start
      */
-    virtual void startup() throw(PvssException) = 0;
+    virtual void startup( SyncDispatcher& dispatcher ) throw(PvssException) = 0;
 
     /**
      * Method shuts PVSS Server down.
@@ -37,22 +39,9 @@ public:
     virtual void shutdown() = 0;
 
 
-#if 0
-    class AsyncLogic
+    class Logic
     {
     public:
-        /**
-         * Notifies server logic that new PVAP request was received and needs to be processed.
-         * Request remains unprocessed until setResponse() or setError() method will be called.
-         * These methods causes server to start response sending.<p/>
-         * When processing timeout expires and request remains unprocessed than server generates fail-response,
-         * attempt to call setResponse() or setError() method will cause exception.</p>
-         * Server logic may choose to send response in any time later (e.g. from another thread).
-         *
-         * @param context   Contains unprocessed (new) PVAP request.
-         */
-        virtual void requestReceived(std::auto_ptr<ServerContext>& context ) throw (PvssException) = 0;
-
         /**
          * Notifies server logic that PVAP response was successfuly sent.
          * Server logic may safely commit transaction.
@@ -69,13 +58,30 @@ public:
          */
         virtual void responseFail(std::auto_ptr<ServerContext> context) = 0;
     };
-#endif
+
+
+    class AsyncLogic : public Logic
+    {
+    public:
+        /**
+         * Notifies server logic that new PVAP request was received and needs to be processed.
+         * Request remains unprocessed until setResponse() or setError() method will be called.
+         * These methods causes server to start response sending.<p/>
+         * When processing timeout expires and request remains unprocessed than server generates fail-response,
+         * attempt to call setResponse() or setError() method will cause exception.</p>
+         * Server logic may choose to send response in any time later (e.g. from another thread).
+         *
+         * @param context   Contains unprocessed (new) PVAP request.
+         */
+        virtual void requestReceived(std::auto_ptr<ServerContext>& context ) throw (PvssException) = 0;
+
+    };
 
 
     /**
      * Interface used to interact with server logic in sync mode.
      */
-    class SyncLogic
+    class SyncLogic : public Logic
     {
     public:
         /**
@@ -88,20 +94,6 @@ public:
          */
         virtual Response* process(Request& request) throw(PvssException) = 0;
 
-        /**
-         * Notifies server logic that PVAP response was successfuly sent.
-         * Server logic may safely commit transaction.
-         *
-         * @param response      Sent PVAP response.
-         */
-        virtual void responseSent(std::auto_ptr<ServerContext> response) = 0;
-
-        /**
-         * Notifies server logic that server failed to send PVAP response or response is invalid.
-         *
-         * @param response      Failed PVAP response.
-         */
-        virtual void responseFail(std::auto_ptr<ServerContext> response) = 0;
     };
 
 
@@ -112,7 +104,7 @@ public:
      *
      * @param logic     Sync server logic mode.
      */
-    // virtual void waitEvents(SyncLogic& logic) = 0;
+    // virtual void waitEvents(Dispatcher& logic) = 0;
 
     /*
      * Method use calling thread for async server logic processing.

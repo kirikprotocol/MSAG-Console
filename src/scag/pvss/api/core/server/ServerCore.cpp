@@ -1,7 +1,7 @@
 #include "ServerCore.h"
 #include "ContextQueue.h"
-#include "ServerContext.h"
-#include "Dispatcher.h"
+#include "ServerNewContext.h"
+#include "Worker.h"
 #include "scag/pvss/api/packets/PingResponse.h"
 #include "scag/pvss/api/packets/ErrorResponse.h"
 
@@ -13,74 +13,164 @@ namespace server {
 
 ServerCore::ServerCore( ServerConfig& config, Protocol& protocol ) :
 Core(config,protocol), Server(),
-started_(false)
+log_(smsc::logger::Logger::getInstance(taskName())),
+started_(false),
+syncDispatcher_(0),
+asyncDispatcher_(0)
 {
+}
+
+
+ServerCore::~ServerCore()
+{
+    shutdown();
+}
+
+
+bool ServerCore::acceptChannel( PvssSocket* channel )
+{
+    regset_.create(channel->socket());
+    bool accepted = Core::registerChannel(*channel,util::currentTimeMillis());
+    if ( accepted ) {
+        MutexGuard mg(channelMutex_);
+        channels_.push_back(channel->socket());
+        managedChannels_.push_back(channel->socket());
+    } else {
+        regset_.destroy(channel->socket());
+    }
+    return accepted;
+}
+
+
+void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // throw (PvssException)
+{
+    try {
+        sendResponse(context);
+    } catch (PvssException& e) {
+        context->setState(ServerContext::FAILED);
+        reportContext(context);
+    }
 }
 
 
 void ServerCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channel )
 {
-    uint32_t seqNum = uint32_t(-1);
-    Response::StatusType status = Response::OK;
     try {
-
         if ( !packet.get() || !packet->isRequest() || !packet->isValid() )
             throw PvssException(PvssException::BAD_REQUEST,"Received packet isnt valid PVAP request");
+    } catch ( PvssException& e ) {
+        smsc_log_error(log_,"exception: %s",e.what());
+        return;
+    }
 
-        seqNum = packet->getSeqNum();
-        updateChannelActivity(channel);
+    uint32_t seqNum = packet->getSeqNum();
+    updateChannelActivity(channel);
+    Response::StatusType status = Response::OK;
+    Request* req = static_cast<Request*>(packet.release());
+    std::auto_ptr<ServerContext> ctx(new ServerNewContext(req,channel));
+    try {
         if (!started_) {
             status = Response::SERVER_SHUTDOWN;
             throw PvssException(PvssException::SERVER_BUSY,"Server is down");
         }
 
-        Request* req = static_cast<Request*>(packet.get());
         if ( req->isPing() ) {
             seqNum = uint32_t(-1);
-            sendResponse( new PingResponse(packet->getSeqNum()),channel );
+            ctx->setResponse(new PingResponse(packet->getSeqNum()));
+            sendResponse(ctx);
             return;
         }
 
-        const int idx = dispatcher_->getIndex(*req,channel);
-        if ( idx > queues_.Count() ) {
+        ContextQueue* queue = 0;
+        if ( syncDispatcher_ ) {
+            const int idx = syncDispatcher_->getIndex(*req);
+            if ( idx > workers_.Count() ) {
+                status = Response::ERROR;
+                throw PvssException(PvssException::UNKNOWN,"cannot dispatch");
+            }
+            Worker* worker = workers_[idx];
+            queue = & worker->getQueue();
+        } else if ( asyncDispatcher_ ) {
+            queue = & dispatcher_->getQueue();
+        } else {
             status = Response::ERROR;
-            throw PvssException(PvssException::UNKNOWN,"cannot dispatch");
-        }
-        ContextQueue* queue = queues_[idx];
-        if (queue->getSize() >= getConfig().getQueueSizeLimit()) {
-            status = Response::SERVER_BUSY;
-            throw PvssException(PvssException::SERVER_BUSY,"try later");
+            throw PvssException(PvssException::UNKNOWN,"dispatcher is not found");
         }
 
         status = Response::SERVER_BUSY;
-        std::auto_ptr<ServerContext> ctx(new ServerContext(static_cast<Request*>(packet.release()),channel));
-        queue->requestReceived(ctx);
+        // ctx->setRespQueue( *respQueue );
+        queue->requestReceived(ctx); // may throw server_busy
         // seqNum = uint32_t(-1);
 
     } catch (PvssException& e) {
-        smsc_log_error(logger, "exception: %s",e.what());
-        if ( seqNum != uint32_t(-1) ) {
-            try {
-                sendResponse(new ErrorResponse(seqNum,status,e.what()),channel);
-            } catch (PvssException& e) {
-                smsc_log_error(logger,"exception: %s", e.what());
-            }
+        smsc_log_error(log_, "exception: %s",e.what());
+        try {
+            ctx->setResponse(new ErrorResponse(seqNum,status,e.what()));
+            sendResponse(ctx);
+        } catch (PvssException& e) {
+            smsc_log_error(log_,"exception: %s", e.what());
         }
     }
 }
 
 
-void ServerCore::startup() throw (PvssException)
+void ServerCore::reportPacket(uint32_t seqNum, PvssSocket& channel, PacketState state)
+{
+    std::auto_ptr<ServerContext> ctx;
+    Response* response = 0;
+    {
+        ContextRegistry::Ptr ptr(regset_.get(channel.socket()));
+        if (!ptr) {
+            smsc_log_warn(log_,"packet seqNum=%d on channel %p reported, but registry is not found",
+                          seqNum, &channel);
+            return;
+        }
+        ContextRegistry::Ctx i(ptr->get(seqNum));
+        if ( !i ) {
+            smsc_log_warn(log_, "packet seqNum=%d on channel %p reported as %s, but not found",
+                          seqNum, &channel, state == SENT ? "SENT" : (state == FAILED ? "FAILED" : "EXPIRED"));
+            return;
+        }
+        response = i.getContext()->getResponse().get();
+        assert(response);
+        ctx.reset(static_cast<ServerContext*>(ptr->pop(i)));
+        switch (state) {
+        case SENT : ctx->setState( ServerContext::SENT ); break;
+        case EXPIRED : ctx->setState( ServerContext::FAILED ); break;
+        case FAILED : ctx->setState( ServerContext::FAILED ); break;
+        default: ctx->setState( ServerContext::FAILED ); break;
+        }
+    }
+    reportContext(ctx);
+}
+
+
+void ServerCore::startup( SyncDispatcher& dispatcher ) throw (PvssException)
 {
     if (started_) return;
+    MutexGuard mg(startMutex_);
+    if (started_) return;
+
+    syncDispatcher_ = &dispatcher;
 
     startupIO();
     try {
-        acceptor_.reset(new Acceptor(getConfig().getHost(), getConfig().getPort()));
+        // create workers
+        for (unsigned i = 0; ; ++i) {
+            SyncLogic* logic = dispatcher.getSyncLogic(i);
+            if (!logic) break;
+            Worker* worker = new Worker(*logic,*this);
+            workers_.Push(worker);
+            threadPool_.startTask(worker,false);
+        }
+        acceptor_.reset(new Acceptor(getConfig(),*this));
+        acceptor_->init();
         threadPool_.startTask(acceptor_.get(),false);
     } catch (PvssException& exc) {
-        smsc_log_error(logger,"Acceptor start error: %s",exc.what());
+        smsc_log_error(log_,"Acceptor start error: %s",exc.what());
+        if (acceptor_.get()) acceptor_->shutdown();
         shutdownIO();
+        // FIXME: stop workers
         throw exc;
     }
 
@@ -89,8 +179,209 @@ void ServerCore::startup() throw (PvssException)
 }
 
 
+void ServerCore::shutdown()
+{
+    if (!started_) return;
+    MutexGuard mg(startMutex_);
+    if (!started_) return;
+
+    smsc_log_info(log_, "Server is shutting down...");
+
+    started_ = false;
+    acceptor_->shutdown();
+    shutdownIO();
+    stop();
+    {
+        MutexGuard mg(channelMutex_);
+        channelMutex_.notify();
+    }
+    waitUntilReleased();
+}
 
 
+int ServerCore::Execute()
+{
+    const int minTimeToSleep = 10; // 10 msec
+    util::msectime_type timeToSleep = getConfig().getProcessTimeout();
+    util::msectime_type currentTime = util::currentTimeMillis();
+    util::msectime_type nextWakeupTime = currentTime + timeToSleep;
+
+    smsc_log_info(log_,"Server started");
+    while (started_)
+    {
+        // smsc_log_debug(log_,"cycling clientCore");
+        currentTime = util::currentTimeMillis();
+        int timeToWait = int(nextWakeupTime-currentTime);
+        if ( timeToWait > 0 ) {
+            if ( timeToWait < minTimeToSleep ) timeToWait = minTimeToSleep;
+            regset_.wait(timeToWait);
+        }
+        nextWakeupTime = currentTime + timeToSleep;
+
+        ChannelList currentChannels;
+        {
+            MutexGuard mgc(channelMutex_);
+            std::copy(channels_.begin(), channels_.end(),
+                      std::back_inserter(currentChannels));
+        }
+        for ( ChannelList::const_iterator j = currentChannels.begin();
+              j != currentChannels.end(); ++j ) {
+            
+            smsc::core::network::Socket* channel = *j;
+            ContextRegistry::ProcessingList list;
+            {
+                ContextRegistry::Ptr ptr = regset_.get(channel);
+                if (!ptr) continue;
+                util::msectime_type t = ptr->popExpired(list,currentTime,timeToSleep);
+                if ( t < nextWakeupTime ) nextWakeupTime = t;
+            }
+            // fixme: process those items in list
+            std::auto_ptr< ServerContext > context;
+            for ( ContextRegistry::ProcessingList::iterator i = list.begin();
+                  i != list.end();
+                  ++i ) {
+                // expired
+                ServerContext* ctx = static_cast<ServerContext*>(*i);
+                if (ctx->getRequest()->isPing()) {
+                    smsc_log_warn(log_,"PING failed, timeout");
+                    closeChannel(channel);
+                    delete ctx;
+                } else {
+                    ctx->setError("timeout");
+                    context.reset(ctx);
+                    reportContext(context);
+                }
+            }
+        }
+        if (!started_) break;
+    }
+    smsc_log_info( log_, "Client shutdowned" );
+    return 0;
+}
+
+
+void ServerCore::sendResponse( std::auto_ptr<ServerContext>& context ) throw (PvssException)
+{
+    int seqNum = context->getSeqNum();
+    smsc::core::network::Socket* socket = context->getSocket();
+    const Packet* packet = context->getResponse().get();
+    ServerContext* ctx = 0;
+    if (!packet) throw PvssException(PvssException::BAD_RESPONSE,"response is null");
+    {
+        ContextRegistry::Ptr ptr = regset_.get(socket);
+        if (!ptr)
+            throw PvssException(PvssException::UNKNOWN,
+                                "context registry is not found");
+        if ( ptr->exists(seqNum) )
+            throw PvssException(PvssException::SERVER_BUSY,
+                                "seqnum=%d is already in registry", seqNum );
+        if ( !packet->isValid() )
+            throw PvssException(PvssException::BAD_RESPONSE,"response '%s' is not valid",packet->toString().c_str());
+        ctx = context.release();
+        ptr->push(ctx);
+    }
+    try {
+        ctx->sendResponse();
+    } catch (...) {
+        ContextRegistry::Ptr ptr = regset_.get(socket);
+        context.reset( static_cast<ServerContext*>(ptr->pop(ptr->get(seqNum))));
+        // logic should be notified externally as it may take ctx ownership
+        throw;
+    }
+}
+
+
+void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
+{
+    if ( !ctx.get() ) {
+        smsc_log_warn(log_,"null context reported");
+        return;
+    }
+
+    Response* response = ctx->getResponse().get();
+    if ( !response ) {
+        smsc_log_warn(log_,"context with null response reported");
+        return;
+    }
+
+    uint32_t seqNum = ctx->getSeqNum();
+
+    if ( ctx->getState() == ServerContext::SENT ) {
+        if ( response->isPing() ) {
+            smsc_log_debug(log_,"PING response sent");
+            return;
+        } else {
+            smsc_log_debug(log_,"Response '%s' sent",response->toString().c_str());
+            if ( response->isError() ) return;
+        }
+    } else {
+        // failure
+        if ( response->isPing() ) {
+            smsc_log_debug(log_,"PING response was not sent" );
+            return;
+        } else {
+            smsc_log_debug(log_,"Response '%s' was not sent",response->toString().c_str());
+            if ( response->isError() ) return;
+        }
+    }
+
+    ContextQueue* queue = ctx->getRespQueue();
+    if ( !queue ) {
+        smsc_log_warn(log_,"packet seqNum=%d has no resp queue set",seqNum);
+    } else {
+        queue->reportResponse(ctx);
+    }
+}
+
+
+void ServerCore::closeChannel( smsc::core::network::Socket* socket )
+{
+    ChannelList::iterator i;
+    {
+        MutexGuard mg(channelMutex_);
+        i = std::find( managedChannels_.begin(),
+                       managedChannels_.end(),
+                       socket );
+        if ( i == managedChannels_.end() ) {
+            // should we close it?
+            return;
+        }
+        managedChannels_.erase(i);
+        i = std::find(channels_.begin(),channels_.end(),socket);
+        assert(i != channels_.end());
+        deadChannels_.push_back(*i);
+        channels_.erase(i);
+    }
+    PvssSocket* channel = PvssSocket::fromSocket(socket);
+    Core::closeChannel(*channel);
+    // should we destroy dead channels?
+    destroyDeadChannels();
+}
+
+
+void ServerCore::destroyDeadChannels()
+{
+    ChannelList trulyDead;
+    {
+        MutexGuard mg(channelMutex_);
+        for ( ChannelList::iterator i = deadChannels_.begin();
+              i != deadChannels_.end();
+              ) {
+            PvssSocket* socket = PvssSocket::fromSocket(*i);
+            if ( ! socket->isInUse() ) {
+                trulyDead.push_back(*i);
+                i = deadChannels_.erase(i);
+            } else {
+                ++i;
+            }
+        }
+    }
+    for ( ChannelList::iterator i = trulyDead.begin();
+          i != trulyDead.end();
+          ++i ) {
+        regset_.destroy(*i);
+    }
+}
 
 } // namespace server
 } // namespace core
