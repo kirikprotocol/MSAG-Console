@@ -19,7 +19,7 @@ class ChannelInactivityTracker : public util::WatchedThreadedTask
 private:
     struct SocketToInt {
         static unsigned int CalcHash(PvssSocket* addr) {
-            return reinterpret_cast<unsigned int>(addr);
+            return unsigned(reinterpret_cast<unsigned long long>(static_cast<void*>(addr)));
         }
     };
 
