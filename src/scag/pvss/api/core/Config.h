@@ -35,136 +35,136 @@ public:
 
 public:
     int getChannelQueueSizeLimit() const {
-        return channelQueueSizeLimit;
+        return channelQueueSizeLimit_;
     }
     void setChannelQueueSizeLimit(int channelQueueSizeLimit) throw(ConfigException) {
         if (channelQueueSizeLimit < MIN_CHANNEL_QUEUE_SIZE || channelQueueSizeLimit > MAX_CHANNEL_QUEUE_SIZE)
             throw ConfigException( "Channel queue size limit can't be less than %d and more than %d",
                                    MIN_CHANNEL_QUEUE_SIZE, MAX_CHANNEL_QUEUE_SIZE );
-        this->channelQueueSizeLimit = channelQueueSizeLimit;
+        this->channelQueueSizeLimit_ = channelQueueSizeLimit;
     }
 
     int getPacketSizeLimit() const {
-        return packetSizeLimit;
+        return packetSizeLimit_;
     }
     void setPacketSizeLimit(int packetSizeLimit) throw(ConfigException) {
         if (packetSizeLimit < MIN_PACKET_SIZE || packetSizeLimit > MAX_PACKET_SIZE)
             throw ConfigException("PVAP packet size limit can't be less than %d and more than %d",
                                   MIN_PACKET_SIZE, MAX_PACKET_SIZE);
-        this->packetSizeLimit = packetSizeLimit;
+        this->packetSizeLimit_ = packetSizeLimit;
     }
 
     const std::string& getHost() const {
-        return host;
+        return host_;
     }
     void setHost( const std::string& host) throw(ConfigException) {
         if ( host.empty() ) throw ConfigException("Host name should be provided");
-        this->host = host;
+        this->host_ = host;
     }
 
     short getPort() const {
-        return port;
+        return port_;
     }
     void setPort(short port) {
-        this->port = port;
+        this->port_ = port;
     }
 
     int getIOTimeout() const {
-        return ioTimeout;
+        return ioTimeout_;
     }
     void setIOTimeout(int ioTimeout) throw(ConfigException) {
         if (ioTimeout < MIN_IO_TIMEOUT || ioTimeout > MAX_IO_TIMEOUT)
             throw ConfigException("IO Timeout can't be less than %d and more than %d",
                                   MIN_IO_TIMEOUT, MAX_IO_TIMEOUT);
-        this->ioTimeout = ioTimeout;
+        this->ioTimeout_ = ioTimeout;
     }
 
     long getInactivityTime() const {
-        return inactivityTime;
+        return inactivityTime_;
     }
     void setInactivityTime(long inactivityTime) throw(ConfigException) {
         if (inactivityTime < MIN_INACTIVITY_TIME || inactivityTime > MAX_INACTIVITY_TIME)
             throw ConfigException("Inactivity time can't be less than %ld and more than %ld msecs",
                                   MIN_INACTIVITY_TIME, MAX_INACTIVITY_TIME );
-        this->inactivityTime = inactivityTime;
+        this->inactivityTime_ = inactivityTime;
     }
     long getConnectTimeout() const {
-        return connectTimeout;
+        return connectTimeout_;
     }
     void setConnectTimeout(long connectTimeout) throw(ConfigException) {
         if (connectTimeout < MIN_CONNECT_TIMEOUT || connectTimeout > MAX_CONNECT_TIMEOUT)
             throw ConfigException("Connect timeout count can't be less than %ld and more than %ld",
                                   MIN_CONNECT_TIMEOUT, MAX_CONNECT_TIMEOUT);
-        this->connectTimeout = connectTimeout;
+        this->connectTimeout_ = connectTimeout;
     }
     long getProcessTimeout() const {
-        return processTimeout;
+        return processTimeout_;
     }
     void setProcessTimeout(long processTimeout) throw(ConfigException) {
         if (processTimeout < MIN_PROCESS_TIMEOUT || processTimeout > MAX_PROCESS_TIMEOUT)
             throw ConfigException("Process timeout count can't be less than %ld and more than %ld",
                                   MIN_PROCESS_TIMEOUT, MAX_PROCESS_TIMEOUT);
-        this->processTimeout = processTimeout;
+        this->processTimeout_ = processTimeout;
     }
 
     // TODO: check limits !!!
     int getMaxReaderChannelsCount() const {
-        return maxReaderChannelsCount;
+        return maxReaderChannelsCount_;
     }
     void setMaxReaderChannelsCount(int maxReaderChannelsCount) {
-        this->maxReaderChannelsCount = maxReaderChannelsCount;
+        this->maxReaderChannelsCount_ = maxReaderChannelsCount;
     }
 
     int getMaxWriterChannelsCount() const {
-        return maxWriterChannelsCount;
+        return maxWriterChannelsCount_;
     }
     void setMaxWriterChannelsCount(int maxWriterChannelsCount) {
-        this->maxWriterChannelsCount = maxWriterChannelsCount;
+        this->maxWriterChannelsCount_ = maxWriterChannelsCount;
     }
 
     int getReadersCount() const {
-        return readersCount;
+        return readersCount_;
     }
     void setReadersCount(int readersCount) {
-        this->readersCount = readersCount;
+        this->readersCount_ = readersCount;
     }
 
     int getWritersCount() const {
-        return writersCount;
+        return writersCount_;
     }
     void setWritersCount(int writersCount) {
-        this->writersCount = writersCount;
+        this->writersCount_ = writersCount;
     }
 
     Config() :
-    channelQueueSizeLimit(DEF_CHANNEL_QUEUE_SIZE),
-    packetSizeLimit(MAX_PACKET_SIZE),
-    readersCount(0),
-    writersCount(0),
-    maxReaderChannelsCount(0),
-    maxWriterChannelsCount(0),
-    port(0),
-    ioTimeout(DEF_IO_TIMEOUT),
-    inactivityTime(DEFAULT_INACTIVITY_TIME),
-    connectTimeout(DEF_CONNECT_TIMEOUT),
-    processTimeout(DEF_PROCESS_TIMEOUT)
+    channelQueueSizeLimit_(DEF_CHANNEL_QUEUE_SIZE),
+    packetSizeLimit_(MAX_PACKET_SIZE),
+    readersCount_(0),
+    writersCount_(0),
+    maxReaderChannelsCount_(0),
+    maxWriterChannelsCount_(0),
+    port_(0),
+    ioTimeout_(DEF_IO_TIMEOUT),
+    inactivityTime_(DEFAULT_INACTIVITY_TIME),
+    connectTimeout_(DEF_CONNECT_TIMEOUT),
+    processTimeout_(DEF_PROCESS_TIMEOUT)
     {}
 
 private:
-    int channelQueueSizeLimit;
-    int packetSizeLimit;
+    int channelQueueSizeLimit_;
+    int packetSizeLimit_;
 
-    int readersCount;
-    int writersCount;
-    int maxReaderChannelsCount;
-    int maxWriterChannelsCount;
+    int readersCount_;
+    int writersCount_;
+    int maxReaderChannelsCount_;
+    int maxWriterChannelsCount_;
 
-    std::string host;
-    short  port;
-    int    ioTimeout; // timeout in msecs
-    long   inactivityTime; // ping time in msecs
-    long   connectTimeout;
-    long   processTimeout;
+    std::string host_;
+    short  port_;
+    int    ioTimeout_; // timeout in msecs
+    long   inactivityTime_; // ping time in msecs
+    long   connectTimeout_;
+    long   processTimeout_;
 };
 
 } // namespace core
