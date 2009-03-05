@@ -17,7 +17,13 @@ class PvssSocket;
 class ChannelInactivityTracker : public util::WatchedThreadedTask
 {
 private:
-    typedef smsc::core::buffers::XHash<PvssSocket*,long>  TimeHash;
+    struct SocketToInt {
+        static unsigned int CalcHash(PvssSocket* addr) {
+            return reinterpret_cast<unsigned int>(addr);
+        }
+    };
+
+    typedef smsc::core::buffers::XHash<PvssSocket*,long,SocketToInt>  TimeHash;
 
 public:
     ~ChannelInactivityTracker() {
