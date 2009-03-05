@@ -536,6 +536,18 @@ public:
       smsBuf=new char[smsBufSize];
       memcpy(smsBuf,buf.get(),smsBufSize);
     }
+    
+    void CopyBuf(BufOps::SmsBuffer& buf)
+    {
+      if(smsBuf)
+      {
+        delete [] smsBuf;
+        smsBuf=0;
+      }
+      smsBufSize=(int)buf.GetPos();
+      smsBuf=new char[smsBufSize];
+      memcpy(smsBuf,buf.get(),smsBufSize);
+    }
 
     void LoadSms(SMS& sms)
     {
@@ -548,6 +560,13 @@ public:
       smsBuf=argBuf;
       smsBufSize=argBufSize;
 
+    }
+    
+    StoreData(BufOps::SmsBuffer& buf,int argSeq=0):seq(argSeq)
+    {
+      smsBufSize=(int)buf.GetPos();
+      smsBuf=new char[smsBufSize];
+      memcpy(smsBuf,buf.get(),smsBufSize);
     }
 
     StoreData(const SMS& argSms,int argSeq=0):seq(argSeq)
@@ -581,16 +600,16 @@ public:
     return store.Count();
   }
 
-  StoreData* newStoreData(const SMS& argSms,int argSeq=0)
+  StoreData* newStoreData(BufOps::SmsBuffer& argBuf,int argSeq=0)
   {
     if(storeDataPool.empty())
     {
-      return new StoreData(argSms,argSeq);
+      return new StoreData(argBuf,argSeq);
     }else
     {
       StoreData* sd=storeDataPool.back();
       storeDataPool.pop_back();
-      sd->SaveSms(argSms);
+      sd->CopyBuf(argBuf);
       sd->seq=argSeq;
       return sd;
     }

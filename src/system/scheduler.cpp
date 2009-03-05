@@ -657,6 +657,17 @@ SMSId Scheduler::getNextId()
 SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag )
         throw(StorageException, DuplicateMessageException)
 {
+  BufOps::SmsBuffer buf;
+
+  if(flag!=smsc::store::CREATE_NEW_NO_CLEAR)
+  {
+    sms.lastTime = 0;
+    sms.lastResult = 0;
+    sms.attempts = 0;
+  }
+
+  Serialize(sms,buf);
+  
   MutexGuard mg(storeMtx);
 
   SMSId rv=id;
@@ -675,13 +686,7 @@ SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag
       delStoreData(ptr);
     }
   }
-  if(flag!=smsc::store::CREATE_NEW_NO_CLEAR)
-  {
-    sms.lastTime = 0;
-    sms.lastResult = 0;
-    sms.attempts = 0;
-  }
-  StoreData* sd=newStoreData(sms);
+  StoreData* sd=newStoreData(buf);
   store.Insert(id,sd);
   sd->rit=replMap.insert(ReplaceIfPresentMap::value_type(sms,id));
   sd->it=currentSnap.insert(currentSnap.end(),LocalFileStore::IdSeqPair(id,0));
@@ -693,10 +698,17 @@ SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag
 void Scheduler::retriveSms(SMSId id, SMS &sms)
         throw(StorageException, NoSuchMessageException)
 {
-  MutexGuard mg(storeMtx);
-  StoreData** ptr=store.GetPtr(id);
-  if(!ptr)throw NoSuchMessageException(id);
-  (*ptr)->LoadSms(sms);
+  BufOps::SmsBuffer buf;
+  {
+    MutexGuard mg(storeMtx);
+    StoreData** ptr=store.GetPtr(id);
+    if(!ptr)throw NoSuchMessageException(id);
+    buf.setSize((*ptr)->smsBufSize);
+    buf.Append((*ptr)->smsBuf,(*ptr)->smsBufSize);
+  }
+  buf.SetPos(0);
+  Deserialize(buf,sms,LocalFileStore::storeVer);
+  //(*ptr)->LoadSms(sms);
 }
 
 void Scheduler::changeSmsStateToEnroute(SMSId id,
