@@ -58,17 +58,67 @@ class EventQueue
     Locker* next_hash;
     MsgIdType msgId;
     StateType state;
-    typedef std::list<CommandType> CmdList;
-    CmdList cmds;
+    //typedef std::list<CommandType> CmdList;
+    //CmdList cmds;
+    struct CmdItem{
+      CmdItem():allocated(false),next(0)
+      {
+      }
+      CommandType cmd;
+      bool allocated;
+      CmdItem* next;
+    };
+    CmdItem pool[8];
+    CmdItem* head;
+    CmdItem* tail;
+    
+    void clear()
+    {
+      locked=false;
+      enqueued=false;
+      head=0;
+      tail=0;
+      for(int i=0;i<8;i++)
+      {
+        pool[i].cmd=CommandType();
+        pool[i].allocated=false;
+      }
+    }
+    
 
-    Locker() : locked(false),enqueued(false){}
+    Locker() : locked(false),enqueued(false),head(0),tail(0){}
     ~Locker()
     {
     }
 
     void push_back(const CommandType& c)
     {
-      cmds.push_back(c);
+      //cmds.push_back(c);
+      CmdItem* item=0;
+      for(int i=0;i<8;i++)
+      {
+        if(!pool[i].allocated)
+        {
+          item=pool+i;
+          break;
+        }
+      }
+      if(!item)
+      {
+        __warning2__("LOCKER POOL OUT OF ITEMS! msgId=%lld",msgId);
+        return;
+      }
+      item->allocated=true;
+      item->cmd=c;
+      if(tail!=0)
+      {
+        tail->next=item;
+      }
+      tail=item;
+      if(head==0)
+      {
+        head=item;
+      }
     }
 
     // выберает следующую допустимую команду
@@ -76,6 +126,33 @@ class EventQueue
     // удаляет все команды для которых возможен таймаут и он истек
     bool getNextCommand(CommandType& c,bool remove=true)
     {
+      CmdItem* pptr=0;
+      for(CmdItem* ptr=head;ptr;pptr=ptr,ptr=ptr->next)
+      {
+        if(StateChecker::commandIsValid(state,ptr->cmd))
+        {
+          c=ptr->cmd;
+          if(remove)
+          {
+            if(pptr)
+            {
+              pptr->next=ptr->next;
+            }else
+            {
+              head=head->next;
+            }
+            if(!ptr->next)
+            {
+              tail=pptr;
+            }
+            ptr->allocated=false;
+            ptr->next=0;
+          }
+          return true;
+        }
+      }
+      
+      /*
       for(CmdList::iterator i=cmds.begin();i!=cmds.end();i++)
       {
         if(StateChecker::commandIsValid(state,*i))
@@ -85,7 +162,9 @@ class EventQueue
           return true;
         }
       }
+       */
       return false;
+       
     }
   };
 
@@ -111,7 +190,7 @@ class EventQueue
         {
           tmp=l->next_hash;
           __trace2__("deleting in hash destructor:msgid=%lld",l->msgId);
-          delete l;
+          //delete l;
           l=tmp;
         }
       }
@@ -162,19 +241,70 @@ class EventQueue
 
   typedef PriorityQueue<Locker*,CyclicQueue<Locker*>,0,31> LockerQueue;
   LockerQueue queue;
+  
+  enum{
+    LockersPageSize=4096
+  };
+  struct LockersPoolPage{
+    Locker pool[LockersPageSize];
+    int count;
+    LockersPoolPage* next;
+    LockersPoolPage():count(0),next(0)
+    {
+    }
+  };
+  
+  LockersPoolPage firstPage;
+  LockersPoolPage* curPage;
+  Locker* firstFreeLocker;
+  
+  Locker* newLocker()
+  {
+    if(firstFreeLocker)
+    {
+      Locker* rv=firstFreeLocker;
+      firstFreeLocker=firstFreeLocker->next_hash;
+      return rv;
+    }
+    if(curPage->count<LockersPageSize)
+    {
+      return curPage->pool+curPage->count++;
+    }
+    curPage->next=new LockersPoolPage;
+    curPage=curPage->next;
+    return curPage->pool+curPage->count++;
+  }
+  
+  void deleteLocker(Locker* locker)
+  {
+    locker->clear();
+    locker->next_hash=firstFreeLocker;
+    firstFreeLocker=locker;
+  }
 
 public:
 #define __synchronized__ MutexGuard mguard(mutex);
 
   EventQueue() : counter(0)
   {
+    curPage=&firstPage;
+    firstFreeLocker=0;
   }
 
-  ~EventQueue() {}
+  ~EventQueue() 
+  {
+    LockersPoolPage* ptr=firstPage.next;
+    while(ptr)
+    {
+      LockersPoolPage* nxt=ptr->next;
+      delete ptr;
+      ptr=nxt;
+    }
+  }
 
   uint64_t getCounter()
   {
-  __synchronized__
+  //__synchronized__
     return counter;
   }
 
@@ -205,7 +335,7 @@ public:
 
     if ( !locker )
     {
-      locker = new Locker;
+      locker = newLocker();
       locker->state = StateTypeValue::UNKNOWN_STATE;
       locker->msgId = msgId;
 
@@ -237,7 +367,7 @@ public:
 
       if ( !locker )
       {
-        locker = new Locker;
+        locker = newLocker();
         locker->state = StateTypeValue::UNKNOWN_STATE;
         locker->msgId = msgId;
 
@@ -301,10 +431,10 @@ public:
     if ( StateChecker::stateIsFinal(state) )
     {
       ++counter;
-      if(locker->cmds.empty())
+      if(!locker->head)
       {
         hash.remove(locker->msgId);
-        delete locker;
+        deleteLocker(locker);
         return;
       }
     }
@@ -312,7 +442,7 @@ public:
     if(StateChecker::stateIsSuperFinal(state))
     {
       hash.remove(locker->msgId);
-      delete locker;
+      deleteLocker(locker);
       return;
     }
 
