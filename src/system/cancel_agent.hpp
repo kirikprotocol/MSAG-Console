@@ -80,7 +80,7 @@ public:
               )
             );
           }
-          for(int i=0;i<ids.Count();i++)
+          for(int i=0;!isStopping && i<ids.Count();i++)
           {
             __trace2__("CANCELAGENT: sending command for %lld",ids[i]);
             while
