@@ -7,6 +7,7 @@
 #include "ChannelInactivityListener.h"
 #include "scag/util/WatchedThreadedTask.h"
 #include "scag/util/Time.h"
+#include "scag/util/XHashPtrFunc.h"
 
 namespace scag2 {
 namespace pvss {
@@ -17,13 +18,7 @@ class PvssSocket;
 class ChannelInactivityTracker : public util::WatchedThreadedTask
 {
 private:
-    struct SocketToInt {
-        static unsigned int CalcHash(PvssSocket* addr) {
-            return unsigned(reinterpret_cast<unsigned long long>(static_cast<void*>(addr)));
-        }
-    };
-
-    typedef smsc::core::buffers::XHash<PvssSocket*,long,SocketToInt>  TimeHash;
+    typedef smsc::core::buffers::XHash<PvssSocket*,long,util::XHashPtrFunc>  TimeHash;
 
 public:
     ~ChannelInactivityTracker() {

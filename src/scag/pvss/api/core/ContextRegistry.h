@@ -4,6 +4,7 @@
 #include <list>
 #include "core/buffers/IntHash.hpp"
 #include "core/buffers/XHash.hpp"
+#include "scag/util/XHashPtrFunc.h"
 #include "core/synchronization/EventMonitor.hpp"
 #include "Context.h"
 
@@ -203,9 +204,12 @@ public:
     }
 
 private:
-    smsc::logger::Logger*                                 log_;
-    smsc::core::synchronization::EventMonitor             createMon_;
-    smsc::core::buffers::XHash<key_type,ContextRegistry*> set_;
+    typedef smsc::core::buffers::XHash<key_type,ContextRegistry*,util::XHashPtrFunc> HashType;
+
+private:
+    smsc::logger::Logger*                      log_;
+    smsc::core::synchronization::EventMonitor  createMon_;
+    HashType                                   set_;
 };
 
 

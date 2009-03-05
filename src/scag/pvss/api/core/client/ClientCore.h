@@ -9,7 +9,6 @@
 #include "scag/pvss/api/core/Core.h"
 #include "scag/pvss/api/core/ContextRegistry.h"
 #include "core/buffers/IntHash.hpp"
-#include "core/buffers/XHash.hpp"
 
 namespace scag2 {
 namespace pvss {
