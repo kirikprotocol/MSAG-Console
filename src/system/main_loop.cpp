@@ -345,6 +345,7 @@ void Smsc::mainLoop(int idx)
       SmscCommand* i=&frame[shuffle[j]];
       cntInstant=getTotalCounter();
       eventqueue.getStats(eqsize,equnsize);
+      /*
       while(equnsize+1>eventQueueLimit)
       {
         hrtime_t nslStart=gethrtime();
@@ -365,6 +366,7 @@ void Smsc::mainLoop(int idx)
         hrtime_t nslEnd=gethrtime();
         debug2(log,"eqlimit(%d/%d) nanosleep block time:%lld",equnsize+1,eventQueueLimit,nslEnd-nslStart);
       }
+       */
       if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
       {
         incStatCounter();
@@ -372,7 +374,7 @@ void Smsc::mainLoop(int idx)
           if((*i)->get_commandId()==FORWARD || !isUSSDSessionSms((*i)->get_sms()))
           {
             int totalCnt=getTotalCounter();
-            if(totalCnt>maxScaled)
+            if(totalCnt>maxScaled || equnsize+1>eventQueueLimit)
             {
               if((*i)->get_commandId()==SUBMIT)
               {
