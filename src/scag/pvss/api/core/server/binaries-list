@@ -5,7 +5,7 @@ scag/pvss-simpleserver simpleserver \
   -lscag-pvss-data \
   -lscag-util-storage \
   -lscag-util \
-  -lcore-network \
+  -lcore-network $(SOCKETLIB) -lnsl \
   -lcore-buffers \
   -lcore-threads \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
