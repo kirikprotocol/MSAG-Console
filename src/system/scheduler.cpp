@@ -667,32 +667,35 @@ SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag
   }
 
   Serialize(sms,buf);
-  
-  MutexGuard mg(storeMtx);
 
-  SMSId rv=id;
-
-  if(flag==smsc::store::SMPP_OVERWRITE_IF_PRESENT)
+  SDLockGuard lg(storeMtx);
+  StoreData* sd;
   {
-    ReplaceIfPresentMap::iterator it=replMap.find(sms);
-    if(it!=replMap.end())
+    MutexGuard mg(storeMtx);
+    
+    if(flag==smsc::store::SMPP_OVERWRITE_IF_PRESENT)
     {
-      StoreData *ptr=store.Get(it->second);
-      ptr->it->second=++(ptr->seq);
-      LocalFileStoreSave(it->second,ptr,true);
-      currentSnap.erase(ptr->it);
-      replMap.erase(it);
-      store.Delete(it->second);
-      delStoreData(ptr);
+      ReplaceIfPresentMap::iterator it=replMap.find(sms);
+      if(it!=replMap.end())
+      {
+        StoreData *ptr=store.Get(it->second);
+        ptr->it->second=++(ptr->seq);
+        LocalFileStoreSave(it->second,ptr,true);
+        currentSnap.erase(ptr->it);
+        replMap.erase(it);
+        store.Delete(it->second);
+        delStoreData(ptr);
+      }
     }
+    sd=newStoreData(buf);
+    store.Insert(id,sd);
+    lg.Lock(sd);
+    sd->rit=replMap.insert(ReplaceIfPresentMap::value_type(sms,id));
+    sd->it=currentSnap.insert(currentSnap.end(),LocalFileStore::IdSeqPair(id,0));
   }
-  StoreData* sd=newStoreData(buf);
-  store.Insert(id,sd);
-  sd->rit=replMap.insert(ReplaceIfPresentMap::value_type(sms,id));
-  sd->it=currentSnap.insert(currentSnap.end(),LocalFileStore::IdSeqPair(id,0));
 
   LocalFileStoreSave(id,sd);
-  return rv;
+  return id;
 }
 
 void Scheduler::retriveSms(SMSId id, SMS &sms)
@@ -717,21 +720,27 @@ void Scheduler::changeSmsStateToEnroute(SMSId id,
         throw(StorageException, NoSuchMessageException)
 {
   debug2(log,"changeSmsStateToEnroute: msgId=%lld",id);
-  MutexGuard mg(storeMtx);
-  StoreData** ptr=store.GetPtr(id);
-  if(!ptr)throw NoSuchMessageException(id);
+  SDLockGuard lg(storeMtx);
+  StoreData* sd;
+  {
+    MutexGuard mg(storeMtx);
+    StoreData** ptr=store.GetPtr(id);
+    if(!ptr)throw NoSuchMessageException(id);
+    sd=*ptr;
+    lg.Lock(sd);
+  }
   //SMS& sms=(*ptr)->sms;
   SMS sms;
-  (*ptr)->LoadSms(sms);
+  sd->LoadSms(sms);
   sms.state = ENROUTE;
   sms.destinationDescriptor=dst;
   sms.lastTime=time(NULL);
   sms.setLastResult(failureCause);
   sms.setNextTime(nextTryTime);
   sms.setAttemptsCount(attempts);
-  (*ptr)->it->second=++(*ptr)->seq;
-  (*ptr)->SaveSms(sms);
-  LocalFileStoreSave(id,*ptr);
+  sd->it->second=++sd->seq;
+  sd->SaveSms(sms);
+  LocalFileStoreSave(id,sd);
 }
 
 void Scheduler::changeSmsStateToDelivered(SMSId id,
@@ -739,7 +748,6 @@ void Scheduler::changeSmsStateToDelivered(SMSId id,
         throw(StorageException, NoSuchMessageException)
 {
   debug2(log,"changeSmsStateToDelivered: msgId=%lld",id);
-  MutexGuard mg(storeMtx);
   doFinalizeSms(id,smsc::sms::DELIVERED,smsc::system::Status::OK,dst);
 }
 
@@ -748,7 +756,6 @@ void Scheduler::changeSmsStateToUndeliverable(SMSId id,
         throw(StorageException, NoSuchMessageException)
 {
   debug2(log,"changeSmsStateToUndeliverable: msgId=%lld",id);
-  MutexGuard mg(storeMtx);
   doFinalizeSms(id,smsc::sms::UNDELIVERABLE,failureCause);
 }
 
@@ -756,7 +763,6 @@ void Scheduler::changeSmsStateToExpired(SMSId id)
         throw(StorageException, NoSuchMessageException)
 {
   debug2(log,"changeSmsStateToExpired: msgId=%lld",id);
-  MutexGuard mg(storeMtx);
   doFinalizeSms(id,smsc::sms::EXPIRED,smsc::system::Status::EXPIRED);
 }
 
@@ -764,33 +770,41 @@ void Scheduler::changeSmsStateToDeleted(SMSId id)
         throw(StorageException, NoSuchMessageException)
 {
   debug2(log,"changeSmsStateToDeleted: msgId=%lld",id);
-  MutexGuard mg(storeMtx);
   doFinalizeSms(id,smsc::sms::DELETED,smsc::system::Status::DELETED);
 }
 
 void Scheduler::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
         throw(StorageException, NoSuchMessageException)
 {
-  MutexGuard mg(storeMtx);
-  StoreData** ptr=store.GetPtr(id);
-  if(!ptr)throw NoSuchMessageException(id);
-  //SMS& sms=(*ptr)->sms;
+  SDLockGuard lg(storeMtx);
+  StoreData* sd;
+  {
+    MutexGuard mg(storeMtx);
+    StoreData** ptr=store.GetPtr(id);
+    if(!ptr)throw NoSuchMessageException(id);
+    sd=*ptr;
+    lg.Lock(sd);
+  }
   SMS sms;
-  (*ptr)->LoadSms(sms);
+  sd->LoadSms(sms);
   sms.setConcatSeqNum(sms.getConcatSeqNum()+inc);
-  (*ptr)->it->second=++(*ptr)->seq;
-  (*ptr)->SaveSms(sms);
-  LocalFileStoreSave(id,*ptr);
+  sd->it->second=++sd->seq;
+  sd->SaveSms(sms);
+  LocalFileStoreSave(id,sd);
 }
 
 void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,const Descriptor& dstDsc)
 {
-  StoreData** ptr=store.GetPtr(id);
-  if(!ptr)throw NoSuchMessageException(id);
-  currentSnap.erase((*ptr)->it);
-  StoreData* sd=*ptr;
-  store.Delete(id);
-  replMap.erase(sd->rit);
+  StoreData* sd;
+  {
+    MutexGuard mg(storeMtx);
+    StoreData** ptr=store.GetPtr(id);
+    if(!ptr)throw NoSuchMessageException(id);
+    currentSnap.erase((*ptr)->it);
+    sd=*ptr;
+    store.Delete(id);
+    replMap.erase(sd->rit);
+  }
   SMS sms;
   sd->LoadSms(sms);
   sms.state=state;
@@ -803,29 +817,36 @@ void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,con
   LocalFileStoreSave(id,sd,true);
   if (sms.needArchivate)
   {
-    storeMtx.Unlock();
     try{
       archiveStorage.createRecord(id, sms);
     }catch(std::exception& e)
     {
       warn2(log,"archiveStorage.createRecord failed:%s",e.what());
     }
-    storeMtx.Lock();
   }
   //if (sd->sms.billingRecord) billingStorage.createRecord(id, sd->sms);
-  delStoreData(sd);
+  {
+    MutexGuard mg(storeMtx);
+    delStoreData(sd);
+  }
 }
 
 
 void Scheduler::replaceSms(SMSId id, SMS& sms)
                 throw(StorageException, NoSuchMessageException)
 {
-  MutexGuard mg(storeMtx);
-  StoreData** ptr=store.GetPtr(id);
-  if(!ptr)throw NoSuchMessageException(id);
-  (*ptr)->SaveSms(sms);
-  (*ptr)->it->second=++(*ptr)->seq;
-  LocalFileStoreSave(id,*ptr);
+  SDLockGuard lg(storeMtx);
+  StoreData* sd;
+  {
+    MutexGuard mg(storeMtx);
+    StoreData** ptr=store.GetPtr(id);
+    if(!ptr)throw NoSuchMessageException(id);
+    sd=*ptr;
+    lg.Lock(sd);
+  }
+  sd->SaveSms(sms);
+  sd->it->second=++sd->seq;
+  LocalFileStoreSave(id,sd);
 }
 
 /*

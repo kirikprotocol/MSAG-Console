@@ -522,6 +522,8 @@ public:
     int seq;
     ReplaceIfPresentMap::iterator rit;
     LocalFileStore::IdSeqPairList::iterator it;
+    smsc::core::synchronization::Condition cnd;
+    bool locked;
 
     void SaveSms(const SMS& argSms)
     {
@@ -559,7 +561,7 @@ public:
     {
       smsBuf=argBuf;
       smsBufSize=argBufSize;
-
+      locked=false;
     }
     
     StoreData(BufOps::SmsBuffer& buf,int argSeq=0):seq(argSeq)
@@ -567,6 +569,7 @@ public:
       smsBufSize=(int)buf.GetPos();
       smsBuf=new char[smsBufSize];
       memcpy(smsBuf,buf.get(),smsBufSize);
+      locked=false;
     }
 
     StoreData(const SMS& argSms,int argSeq=0):seq(argSeq)
@@ -574,6 +577,7 @@ public:
       smsBuf=0;
       smsBufSize=0;
       SaveSms(argSms);
+      locked=false;
     }
     ~StoreData()
     {
@@ -584,6 +588,34 @@ public:
     }
     protected:
       StoreData(const StoreData&){}
+  };
+  
+  struct SDLockGuard{
+    Mutex& mtx;
+    StoreData* sd;
+    SDLockGuard(Mutex& argMtx):mtx(argMtx),sd(0)
+    {
+      
+    }
+    void Lock(StoreData* argSd)
+    {
+      sd=argSd;
+      while(sd->locked)
+      {
+        sd->cnd.WaitOn(mtx);
+      }
+      sd->locked=true;
+    }
+    ~SDLockGuard()
+    {
+      if(sd)
+      {
+        mtx.Lock();
+        sd->locked=false;
+        sd->cnd.Signal();
+        mtx.Unlock();
+      }
+    }
   };
   struct SMSIdHashFunc{
     static inline unsigned int CalcHash(SMSId key)
@@ -644,17 +676,25 @@ public:
     }
     if(localFileStore.Save(id,sd->seq,sd->smsBuf,sd->smsBufSize,final))
     {
+      MutexGuard mg(storeMtx);
       localFileStore.StartRoll(currentSnap);
     }
   }
 
   void StoreSms(smsc::sms::SMSId id,uint32_t seq)
   {
-    MutexGuard mg(storeMtx);
-    StoreData** sd=store.GetPtr(id);
-    if(!sd)return;
-    if((*sd)->seq!=seq)return;
-    localFileStore.Save(id,(*sd)->seq,(*sd)->smsBuf,(*sd)->smsBufSize);
+    SDLockGuard lg(storeMtx);
+    StoreData* sd;
+    {
+      MutexGuard mg(storeMtx);
+      StoreData** ptr=store.GetPtr(id);
+      if(!ptr)return;
+      if((*ptr)->seq!=seq)return;
+      sd=*ptr;
+      lg.Lock(sd);
+    }
+    
+    localFileStore.Save(id,(sd)->seq,(sd)->smsBuf,(sd)->smsBufSize);
   }
 
 
