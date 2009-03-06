@@ -36,6 +36,7 @@ bool Connector::setupSockets(util::msectime_type currentTime)
     for ( int i = 0; i < sockets_.Count(); ++i ) {
         PvssSocket& channel = *sockets_[i];
         if ( channel.isConnected() ) {
+            smsc_log_debug(log_,"channel %p is connected, waiting for server answer ...",&channel);
             finishingSockets_.Push( &channel );
             wakeupTime_ = currentTime;
             rv = true;
@@ -49,6 +50,9 @@ bool Connector::setupSockets(util::msectime_type currentTime)
             }
         }
     }
+    if ( !rv ) {
+        smsc_log_debug(log_,"no channel is connecting, wakeuptime=%d",int(wakeupTime_-currentTime));
+    }
     return rv;
 }
 
@@ -60,7 +64,7 @@ void Connector::processEvents()
     // connect those sockets that are waiting for connect
     while ( pendingSockets_.Count() > 0 ) {
         PvssSocket& channel = *pendingSockets_[0];
-        smsc_log_debug( log_, "Connecting channel %p ...", &channel );
+        smsc_log_debug( log_, "connecting channel %p ...", &channel );
         pendingSockets_.Delete(0);
         try {
             channel.connect();
