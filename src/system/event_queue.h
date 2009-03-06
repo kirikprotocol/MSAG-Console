@@ -82,6 +82,7 @@ class EventQueue
       {
         pool[i].cmd=CommandType();
         pool[i].allocated=false;
+        pool[i].next=0;
       }
     }
     
