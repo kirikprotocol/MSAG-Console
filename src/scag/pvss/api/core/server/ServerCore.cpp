@@ -200,8 +200,22 @@ void ServerCore::shutdown()
     for ( int i = 0; i < workers_.Count(); ++i ) {
         workers_[i]->shutdown();
     }
-    if ( dispatcher_.get() ) dispatcher_->shutdown();
     waitUntilReleased();
+        for ( int i = 0; i < workers_.Count(); ++i ) {
+        delete workers_[i];
+    }
+    workers_.Empty();
+    if ( dispatcher_.get() ) {
+        dispatcher_->shutdown();
+        dispatcher_.reset(0);
+    }
+    {
+        // move all channels to dead
+        MutexGuard mg(channelMutex_);
+        std::copy( channels_.begin(), channels_.end(), std::back_inserter(deadChannels_) );
+        channels_.clear();
+    }
+    destroyDeadChannels();
 }
 
 
@@ -344,21 +358,21 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
 
 void ServerCore::closeChannel( smsc::core::network::Socket* socket )
 {
-    ChannelList::iterator i;
     {
         MutexGuard mg(channelMutex_);
-        i = std::find( managedChannels_.begin(),
-                       managedChannels_.end(),
-                       socket );
+        ChannelList::iterator i = std::find( channels_.begin(),
+                                             channels_.end(),
+                                             socket );
+        if ( i == channels_.end() ) return;
+        deadChannels_.push_back(socket);
+        channels_.erase(i);
+
+        i = std::find(managedChannels_.begin(),managedChannels_.end(),socket);
         if ( i == managedChannels_.end() ) {
-            // should we close it?
+            // this one is an external channel, should not be worried about...
+            socket->Close();
             return;
         }
-        managedChannels_.erase(i);
-        i = std::find(channels_.begin(),channels_.end(),socket);
-        assert(i != channels_.end());
-        deadChannels_.push_back(*i);
-        channels_.erase(i);
     }
     PvssSocket* channel = PvssSocket::fromSocket(socket);
     Core::closeChannel(*channel);
@@ -409,6 +423,12 @@ void ServerCore::destroyDeadChannels()
             PvssSocket* socket = PvssSocket::fromSocket(*i);
             if ( ! socket->isInUse() ) {
                 trulyDead.push_back(*i);
+                // remove from managedChannels_
+                ChannelList::iterator j = std::find(managedChannels_.begin(),
+                                                    managedChannels_.end(),
+                                                    *i );
+                assert(j != managedChannels_.end());
+                managedChannels_.erase(j);
                 i = deadChannels_.erase(i);
             } else {
                 ++i;
@@ -418,7 +438,10 @@ void ServerCore::destroyDeadChannels()
     for ( ChannelList::iterator i = trulyDead.begin();
           i != trulyDead.end();
           ++i ) {
-        regset_.destroy(*i);
+        // should we destroy regset entry for this socket?
+        // regset_.destroy(*i);
+        PvssSocket* socket = PvssSocket::fromSocket(*i);
+        if ( socket ) delete socket;
     }
 }
 

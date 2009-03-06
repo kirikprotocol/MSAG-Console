@@ -118,11 +118,17 @@ private:
     public:
         Handler() : packet(0), pvap(this) {}
         
+        ~Handler() {
+            if (packet) delete packet;
+        }
+
         Packet* decode( Buffer& buf ) throw(PvapException)
         {
             BufferReader reader(buf);
             pvap.decodeMessage(reader);
-            return packet;
+            Packet* p = packet;
+            packet = 0;
+            return p;
         }
 
         virtual bool hasSeqNum( uint32_t ) const { return true; }

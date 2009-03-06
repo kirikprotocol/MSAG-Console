@@ -15,6 +15,7 @@ template < class T > class ProfileRequest : public AbstractProfileRequest
 public:
     ProfileRequest( T* cmd ) : AbstractProfileRequest(), command_(cmd) {}
     ProfileRequest( T* cmd, const ProfileKey& profileKey ) : AbstractProfileRequest(profileKey), command_(cmd) {}
+    ~ProfileRequest() { if (command_) delete command_; }
     
     virtual const T* getCommand() const { return command_; }
     virtual T* getCommand() { return command_; }
