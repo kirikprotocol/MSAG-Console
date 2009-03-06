@@ -12,6 +12,6 @@ scag/pvss-simpleserver simpleserver \
   $(__LIBRARIES) \
   $(SNMP_LIBS_CORE) \
   $(SSL_LIB) \
-  -lrt -ldl \
+  -lpthread -lrt -ldl \
   $(LIBMALLOC)  
 

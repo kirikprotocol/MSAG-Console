@@ -5,12 +5,12 @@ scag/pvss-clienttest clienttest \
   -lscag-pvss-data \
   -lscag-util-storage \
   -lscag-util \
-  -lcore-network $(SOCKETLIB) -lnsl \
   -lcore-buffers \
+  -lcore-network $(SOCKETLIB) -lnsl \
   -lcore-threads \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil \
   $(__LIBRARIES) \
-  $(SNMP_LIBS_CORE) \
   $(SSL_LIB) \
-  -lrt -ldl \
+  -lpthread -lrt -ldl \
   $(LIBMALLOC)  
