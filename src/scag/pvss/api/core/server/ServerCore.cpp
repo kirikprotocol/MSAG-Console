@@ -67,6 +67,7 @@ void ServerCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channe
     updateChannelActivity(channel);
     Response::StatusType status = Response::OK;
     Request* req = static_cast<Request*>(packet.release());
+    smsc_log_debug(log_,"packet received %p: %s", req, req->toString().c_str());
     std::auto_ptr<ServerContext> ctx(new ServerNewContext(req,channel));
     try {
         if (!started_) {
@@ -76,7 +77,7 @@ void ServerCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channe
 
         if ( req->isPing() ) {
             seqNum = uint32_t(-1);
-            ctx->setResponse(new PingResponse(packet->getSeqNum()));
+            ctx->setResponse(new PingResponse(ctx->getSeqNum(),Response::OK));
             sendResponse(ctx);
             return;
         }
@@ -170,7 +171,6 @@ void ServerCore::startup( SyncDispatcher& dispatcher ) throw (PvssException)
         smsc_log_error(log_,"Acceptor start error: %s",exc.what());
         if (acceptor_.get()) acceptor_->shutdown();
         shutdownIO();
-        // FIXME: stop workers
         throw exc;
     }
 
@@ -188,13 +188,19 @@ void ServerCore::shutdown()
     smsc_log_info(log_, "Server is shutting down...");
 
     started_ = false;
-    acceptor_->shutdown();
+    if (acceptor_.get()) acceptor_->shutdown();
     shutdownIO();
     stop();
     {
+        smsc_log_info(log_,"sending notify to channel mutex");
         MutexGuard mg(channelMutex_);
         channelMutex_.notify();
     }
+    // stop all workers
+    for ( int i = 0; i < workers_.Count(); ++i ) {
+        workers_[i]->shutdown();
+    }
+    if ( dispatcher_.get() ) dispatcher_->shutdown();
     waitUntilReleased();
 }
 
@@ -207,23 +213,26 @@ int ServerCore::Execute()
     util::msectime_type nextWakeupTime = currentTime + timeToSleep;
 
     smsc_log_info(log_,"Server started");
-    while (started_)
+    while (!isStopping)
     {
         // smsc_log_debug(log_,"cycling clientCore");
         currentTime = util::currentTimeMillis();
         int timeToWait = int(nextWakeupTime-currentTime);
-        if ( timeToWait > 0 ) {
-            if ( timeToWait < minTimeToSleep ) timeToWait = minTimeToSleep;
-            regset_.wait(timeToWait);
-        }
-        nextWakeupTime = currentTime + timeToSleep;
 
         ChannelList currentChannels;
         {
-            MutexGuard mgc(channelMutex_);
+            MutexGuard mg(channelMutex_);
+            if ( timeToWait < minTimeToSleep ) timeToWait = minTimeToSleep;
+            // smsc_log_debug(log_,"timetowait: %d", int(timeToWait));
+            channelMutex_.wait(int(timeToWait));
+            if (isStopping) break;
             std::copy(channels_.begin(), channels_.end(),
                       std::back_inserter(currentChannels));
         }
+        currentTime = util::currentTimeMillis();
+        nextWakeupTime = currentTime + timeToSleep;
+
+        smsc_log_debug(log_,"processing expired contexts for %d channels",unsigned(currentChannels.size()));
         for ( ChannelList::const_iterator j = currentChannels.begin();
               j != currentChannels.end(); ++j ) {
             
@@ -253,9 +262,8 @@ int ServerCore::Execute()
                 }
             }
         }
-        if (!started_) break;
     }
-    smsc_log_info( log_, "Client shutdowned" );
+    smsc_log_info( log_, "Server shutdowned" );
     return 0;
 }
 
@@ -356,6 +364,37 @@ void ServerCore::closeChannel( smsc::core::network::Socket* socket )
     Core::closeChannel(*channel);
     // should we destroy dead channels?
     destroyDeadChannels();
+}
+
+
+void ServerCore::stopCoreLogic()
+{
+    // FIXME: send signals to all queue, wait until all workers are finished.
+    smsc_log_info(log_,"signalling worker thread queues");
+    for ( int i = 0; i < workers_.Count(); ++i ) {
+        workers_[i]->getQueue().stop();
+    }
+    if ( dispatcher_.get() ) {
+        dispatcher_->getQueue().stop();
+    }
+    smsc_log_info(log_,"waiting until all workers threads begin stopping");
+    while (true) {
+        MutexGuard mg(logicMon_);
+        int workingCount = 0;
+        for ( int i = 0; i < workers_.Count(); ++i ) {
+            if ( ! workers_[i]->stopping() ) ++workingCount;
+        }
+        if ( dispatcher_.get() && !dispatcher_->stopping() ) ++workingCount;
+        if ( workingCount == 0 ) break;
+        logicMon_.wait(200);
+    }
+
+    // all workers and async logic dispatcher are stopping,
+    // i.e. they have no pending processing requests and async logic is also stopped.
+    // Now we have to wait until all pending outgoing contexts are written to their sockets.
+    smsc_log_info(log_,"waiting until registries are empty");
+    regset_.waitUntilEmpty();
+    smsc_log_info(log_,"registries are empty");
 }
 
 

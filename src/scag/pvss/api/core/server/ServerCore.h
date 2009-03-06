@@ -8,6 +8,7 @@
 #include "core/buffers/Array.hpp"
 #include "ServerConfig.h"
 #include "Acceptor.h"
+#include "AsyncDispatcherThread.h"
 #include "Dispatcher.h"
 
 namespace scag2 {
@@ -477,6 +478,12 @@ public:
 
     virtual ServerConfig& getConfig() { return *static_cast<ServerConfig*>(config);}
 
+
+    void workerThreadIsStopped() {
+        MutexGuard mg(logicMon_);
+        logicMon_.notify();
+    }
+
 private:
     void sendResponse(std::auto_ptr<ServerContext>& ctx) throw(PvssException);
 
@@ -490,6 +497,8 @@ private:
     {
         Core::closeChannel(channel);
     }
+
+    virtual void stopCoreLogic();
 
     void destroyDeadChannels();
 
@@ -506,7 +515,9 @@ private:
     AsyncDispatcher*                            asyncDispatcher_; // not owned
 
     std::auto_ptr<Acceptor>                     acceptor_;   // owned
-    std::auto_ptr<Dispatcher>                   dispatcher_; // owned (created only if asyncdispatcher)
+
+    smsc::core::synchronization::EventMonitor   logicMon_;   // monitor on working threads
+    std::auto_ptr<AsyncDispatcherThread>        dispatcher_; // owned (created only if asyncdispatcher)
     smsc::core::buffers::Array<Worker*>         workers_;    // owned (created only if syncdispatcher)
 
     smsc::core::synchronization::EventMonitor   channelMutex_;
@@ -514,6 +525,7 @@ private:
     ChannelList                                 managedChannels_; // channels managed locally
     ChannelList                                 deadChannels_;
 
+    smsc::core::synchronization::EventMonitor   waiter_;
     ContextRegistrySet                          regset_;
 };
 

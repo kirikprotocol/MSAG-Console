@@ -281,23 +281,26 @@ int ClientCore::Execute()
     util::msectime_type nextWakeupTime = currentTime + timeToSleep;
 
     smsc_log_info(logger,"Client started");
-    while (started_)
+    while (!isStopping)
     {
         // smsc_log_debug(logger,"cycling clientCore");
         currentTime = util::currentTimeMillis();
         int timeToWait = int(nextWakeupTime-currentTime);
-        if ( timeToWait > 0 ) {
-            if ( timeToWait < minTimeToSleep ) timeToWait = minTimeToSleep;
-            regset_.wait(timeToWait);
-        }
-        nextWakeupTime = currentTime + timeToSleep;
 
         ChannelList currentChannels;
         {
             MutexGuard mgc(channelMutex_);
+            if ( timeToWait > 0 ) {
+                if ( timeToWait < minTimeToSleep ) timeToWait = minTimeToSleep;
+                channelMutex_.wait(timeToWait);
+                if (isStopping) break;
+            }
             std::copy(activeChannels_.begin(), activeChannels_.end(),
                       std::back_inserter(currentChannels));
         }
+        currentTime = util::currentTimeMillis();
+        nextWakeupTime = currentTime + timeToSleep;
+
         for ( ChannelList::const_iterator j = currentChannels.begin();
               j != currentChannels.end(); ++j ) {
             

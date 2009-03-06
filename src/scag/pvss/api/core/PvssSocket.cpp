@@ -246,7 +246,7 @@ void PvssSocket::init()
             port_ = atoi(colon+1);
         }
     }
-    smsc_log_debug(log_,"ctor: socket %p (%s:%d)",this,host_.c_str(),port_);
+    smsc_log_debug(log_,"ctor: socket %p (%s:%d)",this,host_.c_str(),int(port_)&0xffff);
 }
 
 } // namespace core

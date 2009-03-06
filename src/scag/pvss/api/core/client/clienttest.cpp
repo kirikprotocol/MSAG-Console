@@ -42,7 +42,7 @@ int main()
         clientConfig.setMaxWriterChannelsCount(2);
         clientConfig.setChannelQueueSizeLimit(100);
         clientConfig.setConnectTimeout(1000);
-        clientConfig.setInactivityTime(30000);
+        clientConfig.setInactivityTime(15000);
         clientConfig.setProcessTimeout(1000);
         clientConfig.setIOTimeout(500);
     } catch ( ConfigException& e ) {
@@ -103,7 +103,7 @@ int main()
 
     {
         MutexGuard mg(waitObj);
-        waitObj.wait(50000);
+        waitObj.wait(30000);
     }
     
     smsc_log_info(logger,"going to shutdown");

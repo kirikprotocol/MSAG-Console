@@ -10,11 +10,8 @@ namespace core {
 namespace server {
 
 Worker::Worker( Server::SyncLogic& logic, ServerCore& core ) :
-logic_(logic),
-queue_(core.getConfig().getQueueSizeLimit()),
-respQueue_(0),
-core_(core),
-log_(smsc::logger::Logger::getInstance(taskName()))
+WorkerThread(core,taskName()),
+logic_(logic)
 {}
 
 
@@ -26,7 +23,7 @@ Worker::~Worker()
 
 void Worker::shutdown()
 {
-    queue_.stop();     // notify the queue that no more request should be allowed
+    queue_.shutdown();
     waitUntilReleased();
 }
 
@@ -37,6 +34,7 @@ int Worker::Execute()
     while ( true ) {
         context.reset( queue_.getContext() );
         if ( ! context.get() ) {
+            if ( ! queue_.couldHaveRequests() ) stop();
             if ( ! queue_.isStarted() ) break;
             continue;
         }

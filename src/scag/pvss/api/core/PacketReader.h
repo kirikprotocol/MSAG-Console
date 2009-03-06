@@ -18,6 +18,11 @@ public:
                   const char* taskname = "pvss.rtask" ) :
     IOTask(theconfig,thecore,taskname) {}
 
+    virtual void shutdown() {
+        IOTask::shutdown();
+        waitUntilReleased();
+    }
+
 protected:
     virtual void attachToSocket( PvssSocket& socket ) {
         socket.registerReader(this);

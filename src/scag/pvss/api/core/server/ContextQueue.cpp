@@ -49,6 +49,11 @@ ServerContext* ContextQueue::getContext()
         if ( queues_[0].Pop(res) ) break;
         if ( queues_[1].Pop(res) ) break;
         if ( ! started_ ) break;
+        if ( ! acceptRequests_ ) {
+            queueMon_.wait(100);
+            queues_[0].Pop(res);
+            break;
+        }
         queueMon_.wait();
     }
     return res;

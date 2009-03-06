@@ -126,6 +126,7 @@ public:
         ~Ptr() {
             if (registry_) registry_->mon_.Unlock();
         }
+        Ptr() : registry_(0) {}
         Ptr( const Ptr& o ) : registry_(o.registry_) {
             o.registry_ = 0;
         }
@@ -145,9 +146,11 @@ public:
         ContextRegistry* operator ->() {
             return registry_;
         }
+        
+        ContextRegistry* getRegistry() { return registry_; }
 
         void wait() {
-            if ( registry_ ) registry_->mon_.wait();
+            if ( registry_ ) registry_->mon_.wait(200);
         }
 
     private:
@@ -163,15 +166,78 @@ public:
     typedef ContextRegistry::Ptr         Ptr;
 
 public:
+    ContextRegistrySet() : log_(smsc::logger::Logger::getInstance("pvss.reg")) {}
+
+    ~ContextRegistrySet() {
+        MutexGuard mg(createMon_);
+        HashType::Iterator i( set_.getIterator() );
+        key_type         key;
+        ContextRegistry* value;
+        while ( i.Next(key,value) ) {
+            {
+                Ptr ptr(value);
+                if (!ptr->empty()) {
+                    smsc_log_error(log_,"logic error: non-empty context registry found");
+                    abort();
+                }
+            }
+            delete value;
+        }
+        set_.Empty();
+    }
+
     /// create a context registry for key
     void create( key_type key ) {
         MutexGuard mg(createMon_);
         if ( ! set_.Exists(key) ) {
-            set_.Insert(key,new ContextRegistry);
+            ContextRegistry* reg = new ContextRegistry;
+            set_.Insert(key,reg);
+            smsc_log_debug(log_,"regptr %p created", reg);
         }
     }
 
-    /// destroy a context registry for given key
+
+    /// get context registry (locked)
+    Ptr get( key_type key ) {
+        MutexGuard mg(createMon_);
+        ContextRegistry** regptr = set_.GetPtr(key);
+        if (!regptr) {
+            smsc_log_warn(log_,"logic error: no context registry found");
+        } else {
+            smsc_log_debug(log_,"got regptr: %p", *regptr);
+        }
+        return Ptr(*regptr);
+    }
+
+
+    /// NOTE: method waits until the whole registry is empty.
+    /// It is used when sources are shutdowned.
+    void waitUntilEmpty()
+    {
+        key_type key;
+        ContextRegistry* value;
+        while ( true ) {
+            Ptr ptr;
+            {
+                MutexGuard mg(createMon_);
+                for ( HashType::Iterator i(set_.getIterator()); !ptr; ) {
+                    if ( ! i.Next(key,value) ) break;
+                    Ptr test(value);
+                    if ( ! test->empty() ) ptr = test;
+                }
+            }
+            smsc_log_debug(log_,"regptr %p found", ptr.getRegistry());
+            if ( !ptr ) break; // no more items
+            // wait until registry is empty
+            while ( !ptr->empty() ) {
+                smsc_log_debug(log_,"regptr %p is not empty yet", ptr.getRegistry());
+                ptr.wait();
+            }
+        }
+        smsc_log_debug(log_,"all registries are empty");
+    }
+
+    // destroy a context registry for given key
     void destroy( key_type key ) {
         MutexGuard mg(createMon_);
         ContextRegistry** regptr = set_.GetPtr(key);
@@ -183,24 +249,10 @@ public:
                     abort();
                 }
             }
+            smsc_log_debug(log_,"destroying regptr %p",*regptr);
+            delete *regptr;
             set_.Delete(key);
         }
-    }
-
-    /// get context registry (locked)
-    Ptr get( key_type key ) {
-        MutexGuard mg(createMon_);
-        ContextRegistry** regptr = set_.GetPtr(key);
-        if (!regptr) {
-            smsc_log_warn(log_,"logic error: no context registry found");
-        }
-        return Ptr(*regptr);
-    }
-
-
-    void wait(int msec) {
-        MutexGuard mg(createMon_);
-        createMon_.wait(msec);
     }
 
 private:

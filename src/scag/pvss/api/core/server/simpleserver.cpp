@@ -83,7 +83,7 @@ int main()
     EventMonitor waitObj;
     {
         MutexGuard mg(waitObj);
-        waitObj.wait(100000);
+        waitObj.wait(30000);
     }
 
     smsc_log_info(logger,"going to shutdown");

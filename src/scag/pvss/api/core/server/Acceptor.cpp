@@ -52,7 +52,7 @@ bool Acceptor::setupSockets( util::msectime_type currentTime )
         return false;
     }
     if ( finishingSockets_.Count() > 0 ) wakeupTime_ = currentTime; // don't block on accept
-    int tmo = wakeupTime_ - currentTime;
+    int tmo = (wakeupTime_ - currentTime)/1000; // NOTE: in seconds
     if ( tmo <= 0 ) tmo = 1;
     // check incoming sockets
     smsc::core::network::Socket* socket = socket_.Accept(tmo);
