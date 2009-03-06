@@ -2,6 +2,7 @@
 #define _SCAG_PVSS_DATA_PROFILEKEY_H
 
 #include "scag/pvss/common/ScopeType.h"
+#include "scag/pvss/profile/AbntAddr.hpp"
 
 namespace scag2 {
 namespace pvss {
@@ -21,11 +22,12 @@ public:
     bool hasServiceKey() const { return scopeType_ == SERVICE; }
 
     const std::string& getAbonentKey() const { return abonentKey_; }
+    const AbntAddr&    getAddress() const { return address_; }
     int32_t            getOperatorKey() const { return intKey_; }
     int32_t            getProviderKey() const { return intKey_; }
     int32_t            getServiceKey() const { return intKey_; }
     
-    void setAbonentKey( const std::string& key ) { scopeType_ = ABONENT; abonentKey_ = key; }
+    void setAbonentKey( const std::string& key ) { scopeType_ = ABONENT; abonentKey_ = key; address_.setAddress(abonentKey_.c_str()); }
     void setOperatorKey( int32_t key ) { scopeType_ = OPERATOR; intKey_ = key; }
     void setProviderKey( int32_t key ) { scopeType_ = PROVIDER; intKey_ = key; }
     void setServiceKey( int32_t key ) { scopeType_ = SERVICE; intKey_ = key; }
@@ -53,6 +55,7 @@ public:
 private:
     ScopeType   scopeType_;
     std::string abonentKey_;
+    AbntAddr    address_; 
     int32_t     intKey_;
 };
 
