@@ -15,26 +15,28 @@ using smsc::logger::Logger;
  * Constructor
  */
 Message::Message(Logger* _logger){structure = 0; logger = _logger; }
-void Message::setStructure(void *_structure)
+void Message::decode(void *buf, int buflen)
 {
-  if(structure)
-  {
+  if (structure)
     def->free_struct(def, structure, 0);
-  }
-  structure = _structure;
-}
+  structure = 0;
+  asn_codec_ctx_t s_codec_ctx;
+  asn_codec_ctx_t *opt_codec_ctx = 0;
+  opt_codec_ctx = &s_codec_ctx;
+  asn_dec_rval_t rval;
 
-/*
+  rval = ber_decode(0/*opt_codec_ctx*/, &asn_DEF_TCMessage,
+      (void **) &structure, buf, buflen);
+  if (rval.code != RC_OK)
+    smsc_log_error(logger,
+        "Message::decode consumes %d/%d and returns code %d", rval.consumed,
+        buflen, rval.code);
+  }
+  /*
  * Destructor
  * free structure allocated by ber decoder
  */
-Message::~Message()
-{
-  if(structure)
-  {
-    def->free_struct(def, structure, 0);
-  }
-}
+Message::~Message() { if(structure) def->free_struct(def, structure, 0); }
 /*
  * return transaction id
  */

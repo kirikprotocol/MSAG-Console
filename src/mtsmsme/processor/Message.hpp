@@ -93,7 +93,7 @@ class Message {
     string toString();
     vector<unsigned char> getComponent();
     Message(Logger *logger);
-    void setStructure(void *structure);
+    void decode(void *buf, int buflen);
     ~Message();
   private:
     void *structure;
