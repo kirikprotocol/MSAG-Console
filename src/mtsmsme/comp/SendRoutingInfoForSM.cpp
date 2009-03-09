@@ -124,11 +124,11 @@ void SendRoutingInfoForSMInd::decode(const vector<unsigned char>& buf)
   asn_TYPE_descriptor_t *def = &asn_DEF_RoutingInfoForSM_Arg;
 
   rval = ber_decode(0/*opt_codec_ctx*/, &asn_DEF_RoutingInfoForSM_Arg,
-      (void **) &structure, (void *)&buf[0], buf.size());
-
-  smsc_log_debug(logger,
-      "SendRoutingInfoForSMInd::decode consumes %d/%d and returns code %d", rval.consumed,
-      buf.size(), rval.code);
+      (void **) &structure, (void *) &buf[0], buf.size());
+  if (rval.code != RC_OK)
+    smsc_log_error(logger,
+        "SendRoutingInfoForSMInd::decode consumes %d/%d and returns code %d",
+        rval.consumed,buf.size(), rval.code);
   if (structure)
   {
     /* Invoke type-specific printer */
