@@ -1,12 +1,12 @@
 static char const ident[] = "$Id$";
 #include "mtsmsme/processor/ACRepo.hpp"
-#include "MTFTSM.hpp"
-#include "ULTSM.hpp"
-#include "SRI4SMTSM.hpp"
-#include "CLTSM.hpp"
-#include "PRNTSM.hpp"
-#include "ISD.hpp"
-
+#include "mtsmsme/processor/MTFTSM.hpp"
+#include "mtsmsme/processor/ULTSM.hpp"
+#include "mtsmsme/processor/SRI4SMTSM.hpp"
+#include "mtsmsme/processor/CLTSM.hpp"
+#include "mtsmsme/processor/PRNTSM.hpp"
+#include "mtsmsme/processor/ISD.hpp"
+#include "mtsmsme/processor/MOFTSM.hpp"
 namespace smsc{namespace mtsmsme{namespace processor{
 
 bool TrId::operator==(const TrId& obj)const
@@ -107,6 +107,9 @@ AC subscriberDataMngtContext_v1 = AC(subscriberDataMngtContext_v1_buf,sizeof(sub
 AC subscriberDataMngtContext_v2 = AC(subscriberDataMngtContext_v2_buf,sizeof(subscriberDataMngtContext_v2_buf)/sizeof(unsigned long));
 AC subscriberDataMngtContext_v3 = AC(subscriberDataMngtContext_v3_buf,sizeof(subscriberDataMngtContext_v3_buf)/sizeof(unsigned long));
 
+static unsigned long shortMsgMoRelayContext_v2_buf[] = {0,4,0,0,1,0,21,2};
+AC shortMsgMoRelayContext_v2 = AC(shortMsgMoRelayContext_v2_buf,sizeof(shortMsgMoRelayContext_v2_buf)/sizeof(unsigned long));
+
 bool isMapV1ContextSupported(AC& appcntx)
 {
   return (
@@ -127,7 +130,8 @@ bool isIncomingContextSupported(AC& appcntx)
           appcntx == subscriberDataMngtContext_v2 ||
           appcntx == subscriberDataMngtContext_v3 ||
           appcntx == shortMsgGatewayContext_v2 ||
-          appcntx == shortMsgGatewayContext_v3
+          appcntx == shortMsgGatewayContext_v3 ||
+          appcntx == shortMsgMoRelayContext_v2
          );
 }
 TSM* createIncomingTSM(TrId ltrid,AC& appcntx,TCO* tco)
@@ -153,6 +157,10 @@ TSM* createIncomingTSM(TrId ltrid,AC& appcntx,TCO* tco)
   {
 	  tsm = new ISD(ltrid,appcntx,tco);
   }
+  if (appcntx == shortMsgMoRelayContext_v2)
+  {
+    tsm = new MOFTSM(ltrid,appcntx,tco);
+  }
   return tsm;
 }
 TSM* createOutgoingTSM(TrId ltrid,AC& appcntx,TCO* tco)
@@ -164,6 +172,8 @@ TSM* createOutgoingTSM(TrId ltrid,AC& appcntx,TCO* tco)
     tsm = new SRI4SMTSM(ltrid,appcntx,tco);
   if ( appcntx == net_loc_upd_v3 || appcntx == net_loc_upd_v2 )
     tsm = new ULTSM(ltrid,appcntx,tco);
+  if ( appcntx == shortMsgMoRelayContext_v2)
+    tsm = new MOFTSM(ltrid,appcntx,tco);
   return tsm;
 }
 static uint8_t magic0780[] = {0x80};

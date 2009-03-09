@@ -41,6 +41,7 @@ extern AC net_loc_cancel_v3;
 extern AC shortMsgGatewayContext_v1;
 extern AC shortMsgGatewayContext_v2;
 extern AC shortMsgGatewayContext_v3;
+extern AC shortMsgMoRelayContext_v2;
 extern AC roamingNumberEnquiryContext_v1;
 extern AC roamingNumberEnquiryContext_v2;
 extern AC roamingNumberEnquiryContext_v3;
