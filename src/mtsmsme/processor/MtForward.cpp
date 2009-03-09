@@ -12,8 +12,7 @@ using std::vector;
 
 void* MtForward::potroha(){ return structure;}
 
-MtForward::MtForward(void *_structure){structure = _structure;}
-MtForward::MtForward(){structure = 0;}
+MtForward::MtForward(Logger* _logger){structure = 0; logger = _logger; }
 MtForward::~MtForward()
 {
   if(structure)
@@ -21,15 +20,26 @@ MtForward::~MtForward()
     def->free_struct(def, structure, 0);
   }
 }
-void MtForward::setStructure(void *_structure)
-{
-  if(structure)
-  {
-    def->free_struct(def, structure, 0);
-  }
-  structure = _structure;
-}
 
+void MtForward::decode(void *buf, int buflen)
+{
+  if (structure)
+    def->free_struct(def, structure, 0);
+  structure = 0;
+  asn_codec_ctx_t s_codec_ctx;
+  asn_codec_ctx_t *opt_codec_ctx = 0;
+  opt_codec_ctx = &s_codec_ctx;
+  asn_dec_rval_t rval;
+
+  rval = ber_decode(0/*opt_codec_ctx*/, &asn_DEF_MT_ForwardSM_Arg,
+      (void **) &structure, buf, buflen);
+  if (rval.code != RC_OK)
+    smsc_log_error(logger,
+        "MtForward::decode consumes %d/%d and returns code %d",
+        rval.consumed,buflen,rval.code
+    );
+  if(structure) smsc_log_debug(logger,"mt-forward message: %s",this->toString().c_str());
+}
 bool MtForward::isMMS()
 {
   bool res = false;
