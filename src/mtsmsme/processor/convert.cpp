@@ -77,7 +77,57 @@ inline char GetChar(const unsigned char*& ptr,unsigned& shift){
   //__map_trace2__("7bit : %x",val);
   return val;
 }
-
+inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit,unsigned char* ptr_end){
+  if ( ptr >= ptr_end || (shift > 1 && (ptr+1) >= ptr_end)) throw runtime_error("PutChar VeryLongText");
+  unsigned char val = val8bit;
+  *ptr = *ptr | (val << shift);
+  if ( shift > 1 )
+    *(ptr+1) = *(ptr+1) | (val >> (8-shift));
+  shift += 7;
+  if ( shift >= 8 )
+  {
+    shift&=0x7;
+    ++ptr;
+  }
+}
+extern unsigned char lll_8bit_2_7bit[256];
+unsigned ConvertText27bit(
+  const unsigned char* text, unsigned chars, unsigned char* bit7buf,unsigned* elen,
+  unsigned offset,unsigned buflen)
+{
+  /*
+  if ( chars > 160 ){
+    __map_warn2__("ConvertText27bit: text length(%d) > 160",chars);
+    throw runtime_error("text length > 160");
+  }
+  */
+  unsigned char* base = bit7buf;
+  unsigned char* bit7buf_end = base+buflen;
+  unsigned shift = offset;
+  (*elen) = 0;
+  for ( unsigned i=0; i< chars; ++i ){
+#define __pchar(x) PutChar(bit7buf,shift,x,bit7buf_end)
+#define __escape(x) __pchar(0x1b); __pchar(x); (*elen) += 2;
+    switch(text[i]){
+    case '^': __escape(0x14); break;
+    case '\f':__escape(0x0a); break;
+    case '|': __escape(0x40); break;
+    case '{': __escape(0x28); break;
+    case '}': __escape(0x29); break;
+    case '[': __escape(0x3c); break;
+    case ']': __escape(0x3e); break;
+    case '~': __escape(0x3d); break;
+    case '\\':__escape(0x2f); break;
+    default:
+      PutChar(bit7buf,shift,lll_8bit_2_7bit[text[i]],bit7buf_end);
+      (*elen) += 1;
+    }
+#undef __pchar
+#undef __escape
+  }
+  unsigned _7bit_len = (unsigned)(bit7buf-base+(shift?1:0));
+  return _7bit_len;
+}
 inline void Convert7BitToSMSC7Bit(
   const unsigned char* bit7buf, unsigned chars,
   MicroString* text,unsigned offset=0)
@@ -143,11 +193,11 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
 inline void ConvAddrMSISDN2Smc( MT_ForwardSM_Arg_t *msg, Address* sa){
   if (msg->sm_RP_DA.present != SM_RP_DA_PR_imsi)
     throw runtime_error("MAP::ConvAddrMSISDN2Smc  sm_RP_DA is not IMSI");
-  
+
   OCTET_STRING_t *imsi = &(msg->sm_RP_DA.choice.imsi);
   sa->setTypeOfNumber(0);
   sa->setNumberingPlan(1);
-  
+
   uint8_t sign;int len = (imsi->size)*2;
   int idx = 0;
   char sa_val[21] = {0,};
@@ -171,7 +221,7 @@ void makeSmsToRequest(MtForward* mtf,MTR* req)
   SMS_DELIVERY_FORMAT_HEADER* ssfh = (SMS_DELIVERY_FORMAT_HEADER*)msg->sm_RP_UI.buf;
   MAP_SMS_ADDRESS* msa = (MAP_SMS_ADDRESS*)(msg->sm_RP_UI.buf+1);
   if( msa->len > 20 ) throw runtime_error( "Address length is invalid in received PDU" );
-  
+
   unsigned msa_len = msa->len/2+msa->len%2+2;
   unsigned char protocol_id = *(unsigned char*)(msg->sm_RP_UI.buf+1+msa_len);
   unsigned char user_data_coding = *(unsigned char*)(msg->sm_RP_UI.buf+1+msa_len+1);
@@ -223,9 +273,9 @@ void makeSmsToRequest(MtForward* mtf,MTR* req)
   }
   else{
     throw runtime_error("unknown coding scheme");
-  }  
+  }
   /* end of parse datacoding */
-  
+
   /* validating data length */
   if ( encoding == MAP_OCTET7BIT_ENCODING )
   {
@@ -248,12 +298,12 @@ void makeSmsToRequest(MtForward* mtf,MTR* req)
         throw runtime_error(FormatText("user_data_len %d, but udhi_len %d",user_data_len,udh_len));
     }
   }/* end of validating data length */
-  
-  
+
+
   {/* write message body */
     if (  encoding == MAP_OCTET7BIT_ENCODING ){
       if ( ssfh->u.head.udhi){
-        /* UDH present */ 
+        /* UDH present */
         MicroString ms;
         auto_ptr<unsigned char> b(new unsigned char[255*2]);
         unsigned udh_len = ((unsigned)*user_data)&0x0ff;
@@ -266,7 +316,7 @@ void makeSmsToRequest(MtForward* mtf,MTR* req)
         sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(char*)b.get(),udh_len+1+symbols);
         sms.setIntProperty(Tag::SMPP_SM_LENGTH,udh_len+1+symbols);
       }
-      else 
+      else
       /* no UDH present */
       {
         MicroString ms;
@@ -283,7 +333,7 @@ void makeSmsToRequest(MtForward* mtf,MTR* req)
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)encoding);
     }
   }/* end of write message body */
-  
+
   {/* analyzing concat info */
     unsigned INVALID = (unsigned)-1;
     if ( ssfh->u.head.udhi )
@@ -339,7 +389,7 @@ void makeSmsToRequest(MtForward* mtf,MTR* req)
   Address to;
   ConvAddrMSISDN2Smc(msg,&to);
   sms.setDestinationAddress(to);
-  Address from;  
+  Address from;
   ConvAddrMap2Smc(msa,&from);
   sms.setOriginatingAddress(from);
   //dialog->sms = _sms;
@@ -361,5 +411,39 @@ unsigned char  lll_7bit_2_8bit[128] = {
 0x68,0x69,0x6a,0x6b,0x6c,0x6d,0x6e,0x6f, // 104
 0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77, // 112
 0x78,0x79,0x7a,0xe4,0xf6,0xf1,0xfc,0xe0}; // 120
+
+unsigned char  lll_8bit_2_7bit[256] = {
+0x1b,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x0a,0x54,0x54,0x0d,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x20,0x21,0x22,0x23,0x02,0x25,0x26,0x27,
+0x28,0x29,0x2a,0x2b,0x2c,0x2d,0x2e,0x2f,
+0x30,0x31,0x32,0x33,0x34,0x35,0x36,0x37,
+0x38,0x39,0x3a,0x3b,0x3c,0x3d,0x3e,0x3f,
+0x00,0x41,0x42,0x43,0x44,0x45,0x46,0x47,
+0x48,0x49,0x4a,0x4b,0x4c,0x4d,0x4e,0x4f,
+0x50,0x51,0x52,0x53,0x54,0x55,0x56,0x57,
+0x58,0x59,0x5a,0x54,0x54,0x54,0x54,0x11,
+0x54,0x61,0x62,0x63,0x64,0x65,0x66,0x67,
+0x68,0x69,0x6a,0x6b,0x6c,0x6d,0x6e,0x6f,
+0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,
+0x78,0x79,0x7a,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x40,0x54,0x01,0x24,0x03,0x54,0x5f,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x60,
+0x54,0x54,0x54,0x54,0x5b,0x0e,0x1c,0x09,
+0x54,0x1f,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x5d,0x54,0x54,0x54,0x54,0x5c,0x54,
+0x0b,0x54,0x54,0x54,0x5e,0x54,0x54,0x1e,
+0x7f,0x54,0x54,0x54,0x7b,0x0f,0x1d,0x54,
+0x04,0x05,0x54,0x54,0x07,0x54,0x54,0x54,
+0x54,0x7d,0x08,0x54,0x54,0x54,0x7c,0x54,
+0x0c,0x06,0x54,0x54,0x7e,0x54,0x54,0x54};
 
 }}}
