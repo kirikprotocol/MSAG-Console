@@ -71,7 +71,7 @@ namespace smsc { namespace mtsmsme { namespace processor
        // find or create subscriber record in internal database then update it
        // return operation status
        virtual int update(Address& imsi, Address& msisdn, Address& mgt) = 0;
-       virtual bool lookup(Address& msisdn, Address& imsi) = 0;
+       virtual bool lookup(Address& msisdn, Address& imsi,Address& msc) = 0;
    };
    class RequestProcessor;
    /*

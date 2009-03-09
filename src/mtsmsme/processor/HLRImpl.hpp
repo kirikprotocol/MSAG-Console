@@ -25,7 +25,7 @@ class SubscriberRegistrator: public HLROAM {
     // find or create subscriber record in internal database then update it
     // return operation status
     virtual int update(Address& imsi, Address& msisdn, Address& mgt);
-    bool lookup(Address& msisdn, Address& imsi);
+    bool lookup(Address& msisdn, Address& imsi,Address& msc);
     void process();
   private:
     map<string,string> hlr;
