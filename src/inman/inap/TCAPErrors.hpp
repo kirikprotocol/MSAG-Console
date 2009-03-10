@@ -90,7 +90,8 @@ struct TC_BindResult {
         noResources = EINSS7_I97TCAP_BIND_NO_RESOURCES,
         invalidSSN = EINSS7_I97TCAP_BIND_INVALID_SSN,
         sccpNotReady = EINSS7_I97TCAP_BIND_SCCP_NOT_READY,
-        tcUserIdErr = EINSS7_I97TCAP_BIND_USER_ID_ERR
+        tcUserIdErr = EINSS7_I97TCAP_BIND_USER_ID_ERR,
+        unknownErr
     };
 };
 extern const char * rc2Txt_TC_BindResult(uint32_t rc_code);
@@ -107,12 +108,12 @@ const char * rc2Txt_TC_BindResult(uint32_t rc_code) { \
     case TC_BindResult::sccpNotReady: return "SCCP not ready"; \
     case TC_BindResult::tcUserIdErr: return "The userId is invalid or the TC-user is already bound"; \
     default:; } \
-    return "unknown PAbort cause"; \
+    return "unknown Bind() failure cause"; \
 }
 
 #define ODECL_RCS_TC_Bind() FDECL_rc2Txt_TC_BindResult() \
 URCSpacePTR  _RCS_TC_Bind("errTCBind", TC_BindResult::bindOk, \
-                    TC_BindResult::tcUserIdErr, rc2Txt_TC_BindResult)
+                    TC_BindResult::unknownErr, rc2Txt_TC_BindResult)
 
 /* ------------------------------------------------------------------------- *
  * TC Report Cause: indicates the reason why a message was returned

@@ -6,6 +6,7 @@ static char const ident[] = "$Id$";
 #include "inman/inap/ACRegistry.hpp"
 #include "inman/inap/TCAPErrors.hpp"
 using smsc::inman::inap::rc2Txt_TC_BindResult;
+using smsc::inman::inap::TC_BindResult;
 
 #include "inman/inap/TCCallbacks.hpp"
 
@@ -383,8 +384,8 @@ bool TCAPDispatcher::confirmSSN(UCHAR_T ssn, UCHAR_T bindResult)
         return false;
     }
 
-    if ((bindResult == EINSS7_I97TCAP_BIND_OK)
-        || (bindResult == EINSS7_I97TCAP_BIND_SSN_IN_USE)) {
+    if ((bindResult == TC_BindResult::bindOk)
+        || (bindResult == TC_BindResult::ssnInUse)) {
         pSession->setState(smsc::inman::inap::ssnBound);
         rval = true;
     } else {
