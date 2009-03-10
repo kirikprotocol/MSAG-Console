@@ -1,5 +1,5 @@
 static char const ident[] = "$Id$";
-#include "clbks.hpp"
+#include "mtsmsme/sccp/clbks.hpp"
 #include "logger/Logger.h"
 
 
