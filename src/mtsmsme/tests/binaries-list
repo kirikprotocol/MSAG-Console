@@ -1,0 +1,7 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name source name libraries         
+
+mtsmsme/mschlr mschlr  -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lutil $(XERCES_LIB) -lcore-threads -lcore-network  -lnsl $(SOCKETLIB) -lmtsmsme-processor -lmtsmsme-sccp -lmtsmsme-processor -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapextensiondatatypes -lmtsmsme-codec-mapchdatatypes -lmtsmsme-processor-asn1rt -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccp -lmtsmsme-processor -lmtsmsme-comp -lsms -lthread -ldl -lrt
+mtsmsme/mosmgen mosmgen  -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lutil $(XERCES_LIB) -lcore-threads -lcore-network  -lnsl $(SOCKETLIB) -lmtsmsme-processor -lmtsmsme-sccp -lmtsmsme-processor -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapextensiondatatypes -lmtsmsme-codec-mapchdatatypes -lmtsmsme-processor-asn1rt -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccp -lmtsmsme-processor -lmtsmsme-comp -lsms -lthread -ldl -lrt
