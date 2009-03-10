@@ -1,7 +1,8 @@
 static char const ident[] = "$Id$";
 #include "mtsmsme/processor/Processor.h"
-#include "clbks.hpp"
+#include "mtsmsme/sccp/clbks.hpp"
 #include "mtsmsme/processor/util.hpp"
+#include "mtsmsme/sccp/sigutil.hpp"
 #include "logger/Logger.h"
 #include "mtsmsme/sccp/SccpProcessor.hpp"
 #include "sms/sms.h"
@@ -41,14 +42,13 @@ void SccpProcessor::configure(int user_id, int ssn, Address& msc, Address& vlr, 
   registrator->configure(msc,vlr);
 }
 
-SccpProcessor::SccpProcessor(TCO* tco)
+SccpProcessor::SccpProcessor(TCO* _coordinator, SubscriberRegistrator* _registrator)
 {
   MtSmsProcessorLogger = Logger::getInstance("mt.sme.sccp");
-  //smsc_log_debug(MtSmsProcessorLogger,"\n**********************\n* SIBINCO MT SMS SME *\n**********************");
-  sender = 0;
-  coordinator = tco;
+  smsc_log_debug(MtSmsProcessorLogger,"SccpProcessor::SccpProcessor(TCO* _coordinator, SubscriberRegistrator* _registrator)");
+  coordinator = _coordinator;
+  registrator = _registrator;
   coordinator->setSccpSender(this);
-  registrator = new SubscriberRegistrator(coordinator);
   coordinator->setHLROAM(registrator);
   processor = this;
 }
@@ -58,8 +58,8 @@ SccpProcessor::SccpProcessor()
   //smsc_log_debug(MtSmsProcessorLogger,"\n**********************\n* SIBINCO MT SMS SME *\n**********************");
   sender = 0;
   coordinator = new TCO(100);
-  coordinator->setSccpSender(this);
   registrator = new SubscriberRegistrator(coordinator);
+  coordinator->setSccpSender(this);
   coordinator->setHLROAM(registrator);
   processor = this;
 }
@@ -116,7 +116,7 @@ static std::string getStateDescription(State state)
 static void changeState(State nstate)
 {
   state = nstate;
-  smsc_log_debug(MtSmsProcessorLogger,
+  smsc_log_info(MtSmsProcessorLogger,
                  "RequestProcessor:%s",
                  getStateDescription(state).c_str());
 }
@@ -231,7 +231,7 @@ int SccpProcessor::Run()
         goto unbind_sccp;
         break;
       case WORKING:
-        registrator->process();
+        if (registrator) registrator->process();
         break;
     } /* end of switch ( state ) */
 

@@ -22,7 +22,7 @@ class SccpProcessor : public RequestProcessor,SccpSender {
     virtual void Stop();
     TCO* getCoordinator();
     SccpProcessor();
-    SccpProcessor(TCO* _tco);
+    SccpProcessor(TCO* _coordinator, SubscriberRegistrator* _registrator);
     ~SccpProcessor();
   private:
     RequestSender* sender;
