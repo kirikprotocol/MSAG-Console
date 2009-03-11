@@ -526,7 +526,7 @@ void CapSMSDlg::endTCap(bool u_abort/* = false*/)
     _timer = 0;
 
     if (dialog) {
-        if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
+        if (!dialog->checkState(TCDlgState::dlgClosed)) {
             //see 3GPP 29.078 14.1.2 smsSSF-to-gsmSCF SMS related messages
             try {
                 if (u_abort) {

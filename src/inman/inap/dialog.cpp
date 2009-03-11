@@ -26,7 +26,6 @@ Dialog::Dialog(const std::string & sess_uid, USHORT_T dlg_id, USHORT_T msg_user_
     , _timeout(_DFLT_INVOKE_TIMER), _lastInvId(0), acFab(use_fact)
     , ac(use_fact->acOID()), msgUserId(msg_user_id)
 {
-    _state.value = 0;
     dSSN = sender_ssn ? sender_ssn : ownAddr.addr[1];
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap.Dialog");
@@ -49,7 +48,7 @@ void Dialog::clearInvokes(void)
 {
     for (InvokeMap::const_iterator it = invMap.begin(); it != invMap.end(); ++it) {
         smsc_log_debug(logger, "%s: releasing %s", _logId, it->second->strStatus().c_str());
-        if (!(_state.value & TC_DLG_CLOSED_MASK))
+        if (!_state.isClosed())
             EINSS7_I97TUCancelReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, it->second->getId());
     }
     invMap.clear();
@@ -70,7 +69,7 @@ void Dialog::reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr/* = NULL*/)
     _lastInvId = 0;
     _dId = new_id;
     snprintf(_logId, sizeof(_logId)-1, "Dialog[0x%X]", _dId);
-    _state.value = 0;
+    _state.value.mask = 0;
     if (rmt_addr)
         rmtAddr = *rmt_addr;
 }
@@ -119,7 +118,7 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (
                         ac.length(), (unsigned char*)ac.octets(),
                         uilen, ui);
     checkSS7res("TBeginReq failed", result);
-    _state.s.dlgLInited = 1;
+    _state.value.s.dlgLInited = 1;
 }
 
 void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui/* = NULL*/,
@@ -151,14 +150,14 @@ void Dialog::continueDialog(void) throw (CustomException)
                                ac.length(), (unsigned char*)ac.octets(), 0, NULL);
 
     checkSS7res("TContinueReq failed", result);
-    _state.s.dlgLContinued = 1;
+    _state.value.s.dlgLContinued = 1;
 }
 
 //bool basicEnd/* = true*/
 void Dialog::endDialog(Dialog::Ending type/* = endBasic*/) throw (CustomException)
 {
     MutexGuard  tmp(dlgGrd);
-    if (!(_state.value & TC_DLG_CLOSED_MASK)) {
+    if (!_state.isClosed()) {
         if (type == Dialog::endUAbort) {
             //NOTE: do not set abortInfo, so the EINSS7 selects appropriate
             //variant of TCAP PDU: either ABRT-apdu or AARE-apdu with 
@@ -178,7 +177,7 @@ void Dialog::endDialog(Dialog::Ending type/* = endBasic*/) throw (CustomExceptio
                                 priority, qSrvc, 0, NULL, 0, NULL, 0, NULL);
 
             checkSS7res("TUAbortReq failed", result); //throws
-            _state.s.dlgLUAborted = 1;
+            _state.value.s.dlgLUAborted = 1;
         } else {
             USHORT_T termination = (type == Dialog::endBasic) ?
                 EINSS7_I97TCAP_TERM_BASIC_END : EINSS7_I97TCAP_TERM_PRE_ARR_END;
@@ -200,12 +199,12 @@ void Dialog::endDialog(Dialog::Ending type/* = endBasic*/) throw (CustomExceptio
                                   ac.length(), (unsigned char*)ac.octets(), 0, NULL);
     
             checkSS7res("TEndReq failed", result); //throws
-            _state.s.dlgLEnded = 1;
+            _state.value.s.dlgLEnded = 1;
         }
     }
     clearInvokes();
-    smsc_log_debug(logger, "%s: %s (state = 0x%x)", _logId,
-        (_state.value & TC_DLG_ABORTED_MASK) ? "aborted" : "ended", _state.value);
+    smsc_log_debug(logger, "%s: %s (state {%s})", _logId,
+        _state.isAborted() ? "aborted" : "ended", _state.Print().c_str());
 }
 
 
@@ -367,7 +366,7 @@ void Dialog::releaseInvoke(UCHAR_T invId)
 USHORT_T Dialog::handleBeginDialog(bool compPresent)
 {
     MutexGuard tmp(dlgGrd);
-    _state.s.dlgRInited = compPresent ?
+    _state.value.s.dlgRInited = compPresent ?
             TCAP_DLG_COMP_WAIT : TCAP_DLG_COMP_LAST;
     //...
     return MSG_OK;
@@ -377,7 +376,7 @@ USHORT_T Dialog::handleContinueDialog(bool compPresent)
 {
     {
         MutexGuard tmp(dlgGrd);
-        _state.s.dlgRContinued = compPresent ? TCAP_DLG_COMP_WAIT : TCAP_DLG_COMP_LAST;
+        _state.value.s.dlgRContinued = compPresent ? TCAP_DLG_COMP_WAIT : TCAP_DLG_COMP_LAST;
         if (!pUser.get())
             return MSG_OK;
         pUser.Lock();
@@ -392,10 +391,10 @@ USHORT_T Dialog::handleEndDialog(bool compPresent)
     {
         MutexGuard tmp(dlgGrd);
         if (!compPresent) {
-            _state.s.dlgREnded = TCAP_DLG_COMP_LAST;
+            _state.value.s.dlgREnded = TCAP_DLG_COMP_LAST;
             clearInvokes();
         } else //wait for ongoing invoke/result/error
-            _state.s.dlgREnded = TCAP_DLG_COMP_WAIT;
+            _state.value.s.dlgREnded = TCAP_DLG_COMP_WAIT;
         if (!pUser.get())
             return MSG_OK;
         pUser.Lock();
@@ -410,7 +409,7 @@ USHORT_T Dialog::handlePAbortDialog(UCHAR_T abortCause)
 {
     {
         MutexGuard dtmp(dlgGrd);
-        _state.s.dlgPAborted = 1;
+        _state.value.s.dlgPAborted = 1;
         clearInvokes();
         if (!pUser.get())
             return MSG_OK;
@@ -426,7 +425,7 @@ USHORT_T Dialog::handleUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
 {
         {
         MutexGuard  dtmp(dlgGrd);
-        _state.s.dlgRUAborted = 1;
+        _state.value.s.dlgRUAborted = 1;
         clearInvokes();
         if (!pUser.get())
             return MSG_OK;

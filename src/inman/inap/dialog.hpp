@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * TCAP dialog implementation (initiated by local point).
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_DIALOG__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_DIALOG__
 
 #include <map>
@@ -15,6 +15,7 @@ using smsc::core::synchronization::MutexGuard;
 #include "logger/Logger.h"
 using smsc::logger::Logger;
 
+#include "inman/inap/TCDlgDefs.hpp"
 #include "inman/inap/ACRegistry.hpp"
 #include "inman/inap/invoke.hpp"
 #include "inman/inap/TCDlgErrors.hpp"
@@ -26,33 +27,6 @@ using smsc::logger::Logger;
 namespace smsc {
 namespace inman {
 namespace inap {
-
-typedef union {
-    unsigned short value;
-    struct {
-#define TCAP_DLG_COMP_LAST  2
-#define TCAP_DLG_COMP_WAIT  1
-        unsigned int dlgLInited : 1;    //1: T_BEGIN_REQ [+ INVOKE_REQ]
-        unsigned int dlgRInited : 2;    //1: T_CONT_IND, 2: + INVOKE_IND
-        unsigned int dlgLContinued : 1; //1: T_CONT_REQ [+ INVOKE_REQ]
-        /* ... */
-        unsigned int dlgRContinued : 2; //1: T_CONT_IND, 2: + INVOKE_IND
-        unsigned int dlgREnded : 2;     //1: T_END_IND, 2: + INVOKE_IND
-        /* ... */
-        unsigned int dlgLEnded : 1;     //1: T_END_REQ
-        unsigned int dlgLUAborted : 1;  //1: T_U_ABORT_REQ
-        unsigned int dlgRUAborted : 1;  //1: T_U_ABORT_IND
-        unsigned int dlgPAborted : 1;   //1: T_P_ABORT_IND
-        /* ... */
-        unsigned int reserved : 4;
-//NOTE: These masks are for BIG_ENDIAN platforms
-#define TC_DLG_CONTINUED_MASK   0x1C00
-#define TC_DLG_ENDED_MASK       0x0380
-#define TC_DLG_ABORTED_MASK     0x0070
-#define TC_DLG_CLOSED_MASK      (TC_DLG_ENDED_MASK|TC_DLG_ABORTED_MASK) //0x03F0
-    } s;
-} TC_DlgState;
-
 
 typedef smsc::core::synchronization::URefPtr_T<Invoke> InvokeRFP;
 
@@ -92,7 +66,7 @@ private:
     InvokeMap       invMap;     //locally initiated Invokes
     mutable Mutex   dlgGrd;     //state, listeners guard
     DlgUserRef      pUser;    //
-    TC_DlgState     _state;
+    TCDlgState      _state;
 
     SCCP_ADDRESS_T  ownAddr;
     SCCP_ADDRESS_T  rmtAddr;
@@ -124,10 +98,10 @@ private:
     //Returns true if dialog is ended and no more components expected
     void updateState(bool doClear = false)
     {
-        if (_state.s.dlgRContinued == TCAP_DLG_COMP_WAIT)
-            _state.s.dlgRContinued = TCAP_DLG_COMP_LAST;
-        else if (_state.s.dlgREnded == TCAP_DLG_COMP_WAIT) {
-            _state.s.dlgREnded = TCAP_DLG_COMP_LAST;
+        if (_state.value.s.dlgRContinued == TCAP_DLG_COMP_WAIT)
+            _state.value.s.dlgRContinued = TCAP_DLG_COMP_LAST;
+        else if (_state.value.s.dlgREnded == TCAP_DLG_COMP_WAIT) {
+            _state.value.s.dlgREnded = TCAP_DLG_COMP_LAST;
             //if Dialog is remotedly ended, no LCancel or Result/Error
             //indications will arise for invokes
             if (doClear)
@@ -137,9 +111,9 @@ private:
 
     //if Dialog is remotedly ended, no LCancel or Result/Error
     //indications will arise for invokes
-    inline void cleanUpInvokes(void)
+    void cleanUpInvokes(void)
     {
-        if (_state.s.dlgREnded == TCAP_DLG_COMP_LAST)
+        if (_state.value.s.dlgREnded == TCAP_DLG_COMP_LAST)
             clearInvokes();
     }
 
@@ -185,14 +159,20 @@ public:
         MutexGuard  tmp(dlgGrd);
         return pUser.Unref();
     }
+
+    bool checkState(TCDlgState::Stage_e tgt_state) const
+    {
+        MutexGuard  tmp(dlgGrd);
+        return _state.Is(tgt_state);
+    }
     //
-    TC_DlgState getState(void) const
+    TCDlgState getState(void) const
     { 
         MutexGuard  tmp(dlgGrd);
-        return _state; 
+        return _state;
     }
-    inline uint16_t     getId(void)     const  { return _dId; }
-    inline const std::string & getSUId(void)  const { return _tcSUId;  }
+    uint16_t     getId(void)     const  { return _dId; }
+    const std::string & getSUId(void)  const { return _tcSUId;  }
 
     //Returns false if there are invokes pending or dialog has
     //unfinished calls to user.
@@ -201,8 +181,7 @@ public:
         MutexGuard  tmp(dlgGrd);
         if (p_invNum) 
             *p_invNum = (unsigned)invMap.size();
-        return ((_state.value & TC_DLG_CLOSED_MASK)
-                && invMap.empty() && !pUser.get()) ? true : false;
+        return (_state.isClosed() && invMap.empty() && !pUser.get());
     }
     //Returns true is dialog has some Invokes pending (awaiting Result or LCancel)
     unsigned  pendingInvokes(void) const
@@ -212,9 +191,9 @@ public:
     }
 
     //Returns the default timeout for Invokes
-    inline uint16_t     getTimeout(void) const { return _timeout; }
+    uint16_t     getTimeout(void) const { return _timeout; }
     //Sets the default timeout for Invoke result waiting
-    void                setInvokeTimeout(uint16_t timeout);
+    void         setInvokeTimeout(uint16_t timeout);
 
     void    releaseInvoke(uint8_t invId);
     void    releaseAllInvokes(void);

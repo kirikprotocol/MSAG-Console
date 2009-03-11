@@ -20,6 +20,9 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
+//compute masks for TCDlgState in order to avoid care on endianness.
+TCDlgStateMASK   _TCDlgStateMasks;
+
 /* ************************************************************************** *
  * class TCSessionAC implementation:
  * ************************************************************************** */
@@ -189,8 +192,8 @@ SSNSession::~SSNSession()
             unsigned invNum = 0;
             if (!pDlg->isFinished(&invNum))
                 smsc_log_warn(logger,
-                    "SSN[%u]: Dialog[0x%X](0x%x) is active, %u invokes pending",
-                    (unsigned)_SSN, dId, pDlg->getState().value, invNum);
+                    "SSN[%u]: Dialog[0x%X] is active, %u invokes pending, state {%s}",
+                    (unsigned)_SSN, dId, invNum, pDlg->getState().Print().c_str());
             delete it->second;
         }
         dialogs.clear();
@@ -199,8 +202,9 @@ SSNSession::~SSNSession()
         for (DlgTimesMAP::iterator it = pending.begin(); it != pending.end(); ++it) {
             uint16_t dId = it->first;
             DlgTime dtm  = it->second;
-            smsc_log_warn(logger, "SSN[%u]: Dialog[0x%X](0x%x) is active, %u invokes pending",
-                           (unsigned)_SSN, dId, dtm.dlg->getState().value, dtm.dlg->pendingInvokes());
+            smsc_log_warn(logger, "SSN[%u]: Dialog[0x%X] is active, %u invokes pending, state {%s}",
+                          (unsigned)_SSN, dId, dtm.dlg->pendingInvokes(), 
+                          dtm.dlg->getState().Print().c_str());
             delete dtm.dlg;
         }
         pending.clear();
@@ -333,11 +337,11 @@ void SSNSession::releaseDialog(uint16_t dId)
             pending.insert(DlgTimesMAP::value_type(dId, dtm));
             if (invNum)
                 smsc_log_warn(logger,
-                    "SSN[%u]: Put aside Dialog[0x%X](0x%x), %u invokes pending",
-                    (unsigned)_SSN, dId, pDlg->getState().value, invNum);
+                    "SSN[%u]: Put aside Dialog[0x%X], %u invokes pending, state {%s}",
+                    (unsigned)_SSN, dId, invNum, pDlg->getState().Print().c_str());
             else
-                smsc_log_debug(logger, "SSN[%u]: Put aside Dialog[0x%X](0x%x)",
-                    (unsigned)_SSN, dId, pDlg->getState().value);
+                smsc_log_debug(logger, "SSN[%u]: Put aside Dialog[0x%X], state {%s}",
+                    (unsigned)_SSN, dId, pDlg->getState().Print().c_str());
         } else
             dischargeDlg(pDlg);
     }
@@ -365,11 +369,11 @@ void SSNSession::releaseDialog(Dialog* pDlg, const TCSessionSUID * tc_suid/* = 0
         pending.insert(DlgTimesMAP::value_type(dId, dtm));
         if (invNum)
             smsc_log_warn(logger,
-                "SSN[%u]: Put aside Dialog[0x%X](0x%x), %u invokes pending",
-                (unsigned)_SSN, dId, pDlg->getState().value, invNum);
+                "SSN[%u]: Put aside Dialog[0x%X], %u invokes pending, state {%s}",
+                (unsigned)_SSN, dId, invNum, pDlg->getState().Print().c_str());
         else
-            smsc_log_debug(logger, "SSN[%u]: Put aside Dialog[0x%X](0x%x)",
-                (unsigned)_SSN, dId, pDlg->getState().value);
+            smsc_log_debug(logger, "SSN[%u]: Put aside Dialog[0x%X], state {%s}",
+                (unsigned)_SSN, dId, pDlg->getState().Print().c_str());
     } else {
         dischargeDlg(pDlg, tc_suid);
     }
@@ -397,11 +401,11 @@ void SSNSession::releaseDialogs(const TCSessionSUID * tc_suid/* = 0*/)
             pending.insert(DlgTimesMAP::value_type(dId, dtm));
             if (invNum)
                 smsc_log_warn(logger,
-                    "SSN[%u]: Put aside Dialog[0x%X](0x%x), %u invokes pending",
-                    (unsigned)_SSN, dId, pDlg->getState().value, invNum);
+                    "SSN[%u]: Put aside Dialog[0x%X], %u invokes pending, state {%s}",
+                    (unsigned)_SSN, dId, invNum, pDlg->getState().Print().c_str());
             else
-                smsc_log_debug(logger, "SSN[%u]: Put aside Dialog[0x%X](0x%x)",
-                    (unsigned)_SSN, dId, pDlg->getState().value);
+                smsc_log_debug(logger, "SSN[%u]: Put aside Dialog[0x%X], state {%s}",
+                    (unsigned)_SSN, dId, pDlg->getState().Print().c_str());
         } else {
             dischargeDlg(pDlg, tc_suid);
         }
@@ -533,14 +537,14 @@ void SSNSession::dumpDialogs(void)
         for (DlgTimesMAP::const_iterator it = pending.begin(); it != pending.end(); ++it) {
             DlgTime dtm = it->second;
             long tdif = ctm - dtm.tms;
-            format(dump, "%u(0x%x):%lus ", (*it).first, dtm.dlg->getState().value, tdif);
+            format(dump, "%u(0x%x):%lus ", (*it).first, dtm.dlg->getState().value.mask, tdif);
         }
     }
     format(dump, "active(%u): ", dialogs.size());
     for (DialogsMAP::const_iterator it = dialogs.begin();
                                 (it != dialogs.end()) && it->second; ++it) {
         Dialog* pDlg = it->second;
-        format(dump, "%u(0x%x) ", it->first, pDlg->getState().value);
+        format(dump, "%u(0x%x) ", it->first, pDlg->getState().value.mask);
     }
     smsc_log_debug(logger, dump.c_str());
 }

@@ -295,7 +295,7 @@ void MapCHSRIDlg::endTCap(void)
         _sync.wait();
 
     if (dialog) {
-        if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
+        if (!dialog->checkState(TCDlgState::dlgClosed)) {
             try {  // do TC_PREARRANGED if still active
                 dialog->endDialog((_sriState.s.ctrInited < MapCHSRIDlg::operDone) ?
                                     Dialog::endPrearranged : Dialog::endBasic);
