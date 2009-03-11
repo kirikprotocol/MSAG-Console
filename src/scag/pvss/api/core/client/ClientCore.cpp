@@ -222,12 +222,12 @@ void ClientCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channe
 }
 
 
-void ClientCore::reportPacket( uint32_t seqNum, PvssSocket& channel, PacketState state )
+void ClientCore::reportPacket( uint32_t seqNum, smsc::core::network::Socket& channel, PacketState state )
 {
     std::auto_ptr<ClientContext> ctx;
     Request* request = 0;
     {
-        ContextRegistry::Ptr ptr(regset_.get(channel.socket()));
+        ContextRegistry::Ptr ptr(regset_.get(&channel));
         if ( !ptr ) {
             smsc_log_warn(logger,"packet seqNum=%d on channel %p reported, but registry is not found",
                           seqNum, &channel);
@@ -264,7 +264,9 @@ void ClientCore::reportPacket( uint32_t seqNum, PvssSocket& channel, PacketState
     } catch (PvssException& exc) {
         if (request->isPing()) {
             smsc_log_warn(logger,"PING failed, details: %s", exc.what());
-            closeChannel(channel);
+            // NOTE: we must guarantee that this socket is PvssSocket one
+            PvssSocket* socket = PvssSocket::fromSocket(&channel);
+            if (socket) closeChannel(*socket);
         } else {
             ctx->setError(exc);
         }

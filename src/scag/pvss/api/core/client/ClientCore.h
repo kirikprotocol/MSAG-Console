@@ -128,7 +128,7 @@ public:
      * @param state     Packet state in IO processing { EXPIRED, SENT, FAIL }
      * 
      */
-    virtual void reportPacket(uint32_t seqnum, PvssSocket& channel, PacketState state);
+    virtual void reportPacket(uint32_t seqnum, smsc::core::network::Socket& channel, PacketState state);
 
 
     /**

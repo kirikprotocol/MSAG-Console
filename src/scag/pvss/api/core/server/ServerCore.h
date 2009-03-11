@@ -268,12 +268,13 @@ public:
 
     /**
      * Implementation of Core abstraction method.
+     * Invoked from writer to notify core api of a packet state change (sent,failed,expired).
      *
      * @param seqnum    seqnum of processed packetProcessing packet (request or response)
      * @param channel   Channel on which packet is processing
      * @param state     Packet state in IO processing
      */
-    virtual void reportPacket(uint32_t seqnum, PvssSocket& channel, PacketState state);
+    virtual void reportPacket(uint32_t seqnum, smsc::core::network::Socket& channel, PacketState state);
 
 
 

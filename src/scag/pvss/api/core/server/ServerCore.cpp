@@ -76,12 +76,12 @@ void ServerCore::receiveOldPacket( std::auto_ptr< ServerContext > ctx )
 }
 
 
-void ServerCore::reportPacket(uint32_t seqNum, PvssSocket& channel, PacketState state)
+void ServerCore::reportPacket(uint32_t seqNum, smsc::core::network::Socket& channel, PacketState state)
 {
     std::auto_ptr<ServerContext> ctx;
     Response* response = 0;
     {
-        ContextRegistry::Ptr ptr(regset_.get(channel.socket()));
+        ContextRegistry::Ptr ptr(regset_.get(&channel));
         if (!ptr) {
             smsc_log_warn(log_,"packet seqNum=%d on channel %p reported, but registry is not found",
                           seqNum, &channel);

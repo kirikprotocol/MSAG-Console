@@ -77,7 +77,7 @@ public:
      * @param state     Packet state in IO processing { EXPIRED, SENT, FAIL }
      * 
      */
-    virtual void reportPacket( uint32_t seqNum, PvssSocket& channel, PacketState state ) = 0;
+    virtual void reportPacket( uint32_t seqNum, smsc::core::network::Socket& channel, PacketState state ) = 0;
 
     /**
      * Method reports that error was occured when operating with channel.
