@@ -232,6 +232,13 @@ public:
      */
     virtual void receivePacket(std::auto_ptr<Packet> packet, PvssSocket& channel);
 
+
+    /**
+     * Implementation of Core abstraction method.
+     */
+    virtual void receiveOldPacket( std::auto_ptr< ServerContext > context );
+
+
     /*
     {
         try
@@ -335,6 +342,8 @@ public:
      */
     /*public synchronized */
     virtual void startup( SyncDispatcher& dispatcher ) throw(PvssException);
+    virtual void startup( AsyncDispatcher& dispatcher ) throw (PvssException);
+
     /*
     {
         if (started) return;
@@ -485,6 +494,9 @@ public:
     }
 
 private:
+    /// invoked when a new packet is received either from new or old transport.
+    void receiveContext( std::auto_ptr< ServerContext > context );
+
     void sendResponse(std::auto_ptr<ServerContext>& ctx) throw(PvssException);
 
     /// report context
@@ -512,7 +524,6 @@ private:
     smsc::core::synchronization::Mutex          startMutex_;
     bool                                        started_;
     SyncDispatcher*                             syncDispatcher_; // not owned
-    AsyncDispatcher*                            asyncDispatcher_; // not owned
 
     std::auto_ptr<Acceptor>                     acceptor_;   // owned
 

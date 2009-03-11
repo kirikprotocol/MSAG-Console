@@ -51,6 +51,9 @@ public:
     }
     virtual AbstractProfileRequest* clone() const = 0;
 
+    /// virtual ctor from AbstractCommand
+    static AbstractProfileRequest* create(AbstractCommand* cmd);
+
 protected:
     virtual ResponseTypeMatch& getResponseTypeMatch() const {
         return getCommand()->getResponseTypeMatch();

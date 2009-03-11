@@ -9,19 +9,28 @@ namespace core {
 namespace server {
 
 class AsyncDispatcher;
+class ContextQueue;
 
 class AsyncDispatcherThread : public WorkerThread
 {
 public:
-    AsyncDispatcherThread( AsyncDispatcher& dispatcher );
+    AsyncDispatcherThread( ServerCore& core, AsyncDispatcher& dispatcher );
 
-    ~AsyncDispatcherThread();
+    virtual ~AsyncDispatcherThread();
 
     virtual int Execute();
 
     virtual const char* taskName() { return "pvss.dspch"; }
 
+    /// initialization, startup of async dispatcher.
+    void init() throw (PvssException);
+
+    /// The method shutdowns the dispatcher thread and the underlying async logics.
+    /// It waits until everything is shutdowned.
     virtual void shutdown();
+
+private:
+    AsyncDispatcher* dispatcher_;
 };
 
 } // namespace server

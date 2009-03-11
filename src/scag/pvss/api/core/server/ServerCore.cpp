@@ -15,8 +15,7 @@ ServerCore::ServerCore( ServerConfig& config, Protocol& protocol ) :
 Core(config,protocol), Server(),
 log_(smsc::logger::Logger::getInstance(taskName())),
 started_(false),
-syncDispatcher_(0),
-asyncDispatcher_(0)
+syncDispatcher_(0)
 {
 }
 
@@ -63,55 +62,17 @@ void ServerCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channe
         return;
     }
 
-    uint32_t seqNum = packet->getSeqNum();
     updateChannelActivity(channel);
-    Response::StatusType status = Response::OK;
     Request* req = static_cast<Request*>(packet.release());
-    smsc_log_debug(log_,"packet received %p: %s", req, req->toString().c_str());
     std::auto_ptr<ServerContext> ctx(new ServerNewContext(req,channel));
-    try {
-        if (!started_) {
-            status = Response::SERVER_SHUTDOWN;
-            throw PvssException(PvssException::SERVER_BUSY,"Server is down");
-        }
+    receiveContext( ctx );
+}
 
-        if ( req->isPing() ) {
-            seqNum = uint32_t(-1);
-            ctx->setResponse(new PingResponse(ctx->getSeqNum(),Response::OK));
-            sendResponse(ctx);
-            return;
-        }
 
-        ContextQueue* queue = 0;
-        if ( syncDispatcher_ ) {
-            const int idx = syncDispatcher_->getIndex(*req);
-            if ( idx > workers_.Count() ) {
-                status = Response::ERROR;
-                throw PvssException(PvssException::UNKNOWN,"cannot dispatch");
-            }
-            Worker* worker = workers_[idx];
-            queue = & worker->getQueue();
-        } else if ( asyncDispatcher_ ) {
-            queue = & dispatcher_->getQueue();
-        } else {
-            status = Response::ERROR;
-            throw PvssException(PvssException::UNKNOWN,"dispatcher is not found");
-        }
-
-        status = Response::SERVER_BUSY;
-        // ctx->setRespQueue( *respQueue );
-        queue->requestReceived(ctx); // may throw server_busy
-        // seqNum = uint32_t(-1);
-
-    } catch (PvssException& e) {
-        smsc_log_error(log_, "exception: %s",e.what());
-        try {
-            ctx->setResponse(new ErrorResponse(seqNum,status,e.what()));
-            sendResponse(ctx);
-        } catch (PvssException& e) {
-            smsc_log_error(log_,"exception: %s", e.what());
-        }
-    }
+void ServerCore::receiveOldPacket( std::auto_ptr< ServerContext > ctx )
+{
+    // FIXME: do we need some checks on this context?
+    receiveContext(ctx);
 }
 
 
@@ -170,6 +131,33 @@ void ServerCore::startup( SyncDispatcher& dispatcher ) throw (PvssException)
     } catch (PvssException& exc) {
         smsc_log_error(log_,"Acceptor start error: %s",exc.what());
         if (acceptor_.get()) acceptor_->shutdown();
+        shutdownIO();
+        throw exc;
+    }
+
+    started_ = true;
+    threadPool_.startTask(this,false);
+}
+
+
+void ServerCore::startup( AsyncDispatcher& dispatcher ) throw (PvssException)
+{
+    if (started_) return;
+    MutexGuard mg(startMutex_);
+    if (started_) return;
+
+    startupIO();
+    try {
+        // create a dispatcher thread
+        dispatcher_.reset( new AsyncDispatcherThread(*this,dispatcher) );
+        dispatcher_->init();
+        threadPool_.startTask(dispatcher_.get(),false);
+    } catch (PvssException& exc) {
+        smsc_log_error(log_,"Async dispatcher start error: %s",exc.what());
+        if (dispatcher_.get()) {
+            dispatcher_->shutdown();
+            dispatcher_.reset(0);
+        }
         shutdownIO();
         throw exc;
     }
@@ -279,6 +267,66 @@ int ServerCore::Execute()
     }
     smsc_log_info( log_, "Server shutdowned" );
     return 0;
+}
+
+
+void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
+{
+    // FIXME: update channel activity should be here
+    Response::StatusType status = Response::OK;
+    Request* req = ctx->getRequest().get();
+    if ( !req ) {
+        smsc_log_error( log_, "context does not contain request");
+        return;
+    } else if ( !req->isValid() ) {
+        smsc_log_error( log_, "request is not valid");
+        return;
+    }
+    uint32_t seqNum = req->getSeqNum();
+    smsc_log_debug(log_,"packet received %p: %s", req, req->toString().c_str());
+    try {
+        if (!started_) {
+            status = Response::SERVER_SHUTDOWN;
+            throw PvssException(PvssException::SERVER_BUSY,"Server is down");
+        }
+
+        if ( req->isPing() ) {
+            seqNum = uint32_t(-1);
+            ctx->setResponse(new PingResponse(ctx->getSeqNum(),Response::OK));
+            sendResponse(ctx);
+            return;
+        }
+
+        ContextQueue* queue = 0;
+        if ( syncDispatcher_ ) {
+            const int idx = syncDispatcher_->getIndex(*req);
+            if ( idx > workers_.Count() ) {
+                status = Response::ERROR;
+                throw PvssException(PvssException::UNKNOWN,"cannot dispatch");
+            }
+            Worker* worker = workers_[idx];
+            queue = & worker->getQueue();
+        } else if ( dispatcher_.get() ) {
+            queue = & dispatcher_->getQueue();
+        } else {
+            status = Response::ERROR;
+            throw PvssException(PvssException::UNKNOWN,"dispatcher is not found");
+        }
+
+        status = Response::SERVER_BUSY;
+        // ctx->setRespQueue( *respQueue );
+        queue->requestReceived(ctx); // may throw server_busy
+        // seqNum = uint32_t(-1);
+
+    } catch (PvssException& e) {
+        smsc_log_error(log_, "exception: %s",e.what());
+        try {
+            ctx->setResponse(new ErrorResponse(seqNum,status,e.what()));
+            sendResponse(ctx);
+        } catch (PvssException& e) {
+            smsc_log_error(log_,"exception: %s", e.what());
+        }
+    }
 }
 
 
