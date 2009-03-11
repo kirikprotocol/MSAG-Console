@@ -28,7 +28,7 @@ public:
   virtual unsigned getIndex(Request& request);
   virtual Server::SyncLogic* getSyncLogic(unsigned idx);
 
-  void init(uint16_t maxWaitingCount, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg);
+  void init(const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg);
   unsigned getInfrastructNodeNumber() const { return 0; }
 
 private:

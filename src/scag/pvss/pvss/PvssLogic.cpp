@@ -14,12 +14,6 @@ const char* DEF_GLOSSARY_NAME   = "/glossary";
 using smsc::core::buffers::File;
 using smsc::core::buffers::FileException;
 
-PvssLogic::PvssLogic(unsigned maxWaitingCount): maxWaitingCount_(maxWaitingCount)
-{
-  logger_ = Logger::getInstance("storeproc");
-  //debuglogger_ = Logger::getInstance("ctx");
-}
-
 void PvssLogic::initGlossary(const string& path, Glossary* glossary) {
   if (!File::Exists(path.c_str())) {
     smsc_log_debug(logger_, "create storage dir '%s'", path.c_str());
@@ -71,7 +65,7 @@ Response* AbonentLogic::processProfileRequest(AbstractProfileRequest& request) {
   if (pf->isChanged()) {
     smsc_log_debug(logger_, "%p: %p flush profile %s", this, &request, pf->getKey().c_str());
     elstorage->storage->flush(profileKey.getAddress());
-    //packet->flushLogs(abntlog_);
+    commandProcessor_.flushLogs(abntlog_);
   } else if (commandProcessor_.rollback()) {
     smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &request, pf->getKey().c_str());
     elstorage->storage->backup2Profile(profileKey.getAddress(), elstorage->glossary);
@@ -110,8 +104,7 @@ Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& reques
   if (pf->isChanged()) {
     smsc_log_debug(logger_, "%p: %p flush profile %s", this, &request, pf->getKey().c_str());
     storage->flush(intKey);
-    //TODO: commandProcessor_.flushLogs(dblog);
-    //packet->flushLogs(dblog);
+    commandProcessor_.flushLogs(dblog);
   } else if (commandProcessor_.rollback()){
     smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &request, pf->getKey().c_str());
     storage->backup2Profile(intKey, &glossary_);
@@ -119,12 +112,8 @@ Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& reques
   return commandProcessor_.getResponse();
 }
 
-AbonentLogic::AbonentLogic(unsigned maxWaitingCount, unsigned locationNumber, unsigned storagesCount):
-                         PvssLogic(maxWaitingCount), locationNumber_(locationNumber), storagesCount_(storagesCount) {
-  abntlog_ = Logger::getInstance("pvss.abnt");
-}
-
 void AbonentLogic::initElementStorage(const AbonentStorageConfig& cfg, unsigned index) {
+  abntlog_ = Logger::getInstance("pvss.abnt");
   char pathSuffix[4];
   sprintf(pathSuffix, "%03d", index);			
   string path = string(cfg.locationPath[locationNumber_] + "/") + pathSuffix;

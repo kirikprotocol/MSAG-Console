@@ -44,7 +44,7 @@ class AbstractProfileRequest;
 
 class PvssLogic: public Server::SyncLogic {
 public:
-  PvssLogic(unsigned maxWaitingCount);
+  PvssLogic():logger_(Logger::getInstance("storeproc")) {};
   virtual ~PvssLogic() {};
   Response* process(Request& request) throw(PvssException);
   void responseSent(std::auto_ptr<core::server::ServerContext> response) { /*TODO: implement this method*/ };
@@ -57,7 +57,7 @@ protected:
   virtual Response* processProfileRequest(AbstractProfileRequest& request) = 0;
 
 protected:
-  unsigned maxWaitingCount_;
+  //unsigned maxWaitingCount_;
   Logger* logger_;
   ProfileCommandProcessor commandProcessor_;
 };
@@ -66,7 +66,7 @@ struct AbonentStorageConfig;
 
 class AbonentLogic: public PvssLogic {
 public:
-  AbonentLogic(unsigned maxWaitingCount, unsigned locationNumber, unsigned storagesCount);
+  AbonentLogic(unsigned locationNumber, unsigned storagesCount):locationNumber_(locationNumber), storagesCount_(storagesCount) {};
   ~AbonentLogic();
   void initElementStorage(const AbonentStorageConfig& cfg, unsigned index);
   //virtual Response* process(Request& request) throw(PvssException);
@@ -102,7 +102,7 @@ struct InfrastructStorageConfig;
 
 class InfrastructLogic: public PvssLogic {
 public:
-  InfrastructLogic(unsigned maxWaitingCount):PvssLogic(maxWaitingCount), provider_(NULL), service_(NULL), operator_(NULL) {};
+  InfrastructLogic():provider_(NULL), service_(NULL), operator_(NULL) {};
   ~InfrastructLogic();
   void init(const InfrastructStorageConfig& cfg);
   //virtual Response* process(Request& request) throw(PvssException);

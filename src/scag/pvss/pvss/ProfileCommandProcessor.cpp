@@ -22,14 +22,17 @@ bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) throw(PvapExc
   ProfileCommandProcessor proc;
   response_.reset( new BatchResponse(cmd.getSeqNum()) );
   std::vector<BatchRequestComponent*> content = cmd.getBatchContent();
+  batchLogs_.reserve(content.size());
   typedef std::vector<BatchRequestComponent*>::iterator BatchIterator;
   BatchResponse* resp = static_cast<BatchResponse*>(response_.get());
   if (cmd.isTransactional()) {
     for (BatchIterator i = content.begin(); i != content.end(); ++i) {
       bool result = (*i)->visit(proc);
       resp->addComponent(proc.getBatchResponseComponent());
+      addBatchComponentDBLog(proc.getDBLog());
       if (!result) {
         rollback_ = true;
+        batchLogs_.clear();
         return false;
       }
     }
@@ -37,6 +40,7 @@ bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) throw(PvapExc
     for (BatchIterator i = content.begin(); i != content.end(); ++i) {
       (*i)->visit(proc);
       resp->addComponent(proc.getBatchResponseComponent());
+      addBatchComponentDBLog(proc.getDBLog());
     }
   }
   return true;
@@ -48,7 +52,7 @@ bool ProfileCommandProcessor::visitDelCommand(DelCommand &cmd) throw(PvapExcepti
     response_->setStatus(Response::PROPERTY_NOT_FOUND);
     return false;
   }
-  //createDelLogMsg(profile_->getKey(), cmd.getVarName());
+  dblog_.createDelLogMsg(profile_->getKey(), cmd.getVarName());
   response_->setStatus(Response::OK);
   profile_->setChanged(true);
   return true;
@@ -99,7 +103,7 @@ bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) throw(PvapExcepti
   Property *prop = cmd.getProperty();
   response_.reset( new SetResponse() );
   if (prop->isExpired()) {
-    //createExpireLogMsg(pf->getKey(), property_.toString());
+    dblog_.createExpireLogMsg(profile_->getKey(), prop->toString());
     response_->setStatus(Response::PROPERTY_NOT_FOUND);
     return false;
   }
@@ -107,13 +111,13 @@ bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) throw(PvapExcepti
   if (p != NULL) {
     p->setValue(*prop);
     p->WriteAccess();
-    //createUpdateLogMsg(profile_->getKey(), prop.toString());
+    dblog_.createUpdateLogMsg(profile_->getKey(), prop->toString());
   } else {
     if (!profile_->AddProperty(*prop)) {
       response_->setStatus(Response::ERROR);
       return false;
     }
-    //createAddLogMsg(profile_->getKey(), prop.toString());
+    dblog_.createAddLogMsg(profile_->getKey(), prop->toString());
   }
   profile_->setChanged(true);
   response_->setStatus(Response::OK);
@@ -129,7 +133,7 @@ Response::StatusType ProfileCommandProcessor::incModProperty(Property* property,
     if (!profile_->AddProperty(*property)) {
       return Response::ERROR;
     }
-    //createAddLogMsg(profile_->getKey(), property->toString());
+    dblog_.createAddLogMsg(profile_->getKey(), property->toString());
     profile_->setChanged(true);
     return Response::OK;
   }
@@ -139,7 +143,7 @@ Response::StatusType ProfileCommandProcessor::incModProperty(Property* property,
     result = mod > 0 ? result % mod : result;
     p->setIntValue(result);
     p->WriteAccess();
-    //createUpdateLogMsg(profile_->getKey(), p->toString());
+    dblog_.createUpdateLogMsg(profile_->getKey(), p->toString());
     profile_->setChanged(true);
     return Response::OK;
   }
@@ -149,8 +153,8 @@ Response::StatusType ProfileCommandProcessor::incModProperty(Property* property,
     result = mod > 0 ? result % mod : result;
     p->setIntValue(result);
     p->WriteAccess();
-    //createDelLogMsg(profile_->getKey(), p->getName());
-    //createAddLogMsg(profile_->getKey(), p->toString());
+    dblog_.createDelLogMsg(profile_->getKey(), p->getName());
+    dblog_.createAddLogMsg(profile_->getKey(), p->toString());
     profile_->setChanged(true);
     return Response::OK;
   }
@@ -167,6 +171,30 @@ BatchResponseComponent* ProfileCommandProcessor::getBatchResponseComponent() {
 
 Response* ProfileCommandProcessor::getResponse() {
   return response_.release();
+}
+
+const string& ProfileCommandProcessor::getDBLog() const {
+  return dblog_.getLogMsg();
+}
+
+void ProfileCommandProcessor::addBatchComponentDBLog(const string& logmsg) {
+  if (!logmsg.empty()) {
+    batchLogs_.push_back(logmsg);
+  }
+}
+
+
+void ProfileCommandProcessor::flushLogs(Logger* logger) {
+  if (!batchLogs_.empty()) {
+    for (std::vector<string>::iterator i = batchLogs_.begin(); i != batchLogs_.end(); ++i) {
+      smsc_log_info(logger, (*i).c_str());
+    }
+    batchLogs_.clear();
+    return;
+  }
+  if (!dblog_.getLogMsg().empty()) {
+    smsc_log_info(logger, dblog_.getLogMsg().c_str());
+  }
 }
 
 }

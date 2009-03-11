@@ -45,14 +45,14 @@ Server::SyncLogic* PvssDispatcher::getSyncLogic(unsigned idx) {
   return abonentLogics_[idx];
 }
 
-void PvssDispatcher::init(uint16_t maxWaitingCount, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg) {
+void PvssDispatcher::init(const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg) {
 
   for (unsigned locationNumber = 0; locationNumber < locationsCount_; ++locationNumber) {
     if (!File::Exists(abntcfg.locationPath[locationNumber].c_str())) {
       smsc_log_debug(logger_, "create storage dir '%s'", abntcfg.locationPath[locationNumber].c_str());
       File::MkDir(abntcfg.locationPath[locationNumber].c_str());
     }
-    AbonentLogic* logic = new AbonentLogic(maxWaitingCount, locationNumber, storagesCount_);
+    AbonentLogic* logic = new AbonentLogic(locationNumber, storagesCount_);
     abonentLogics_.Push(logic);
     ++createdLocations_;
   }
@@ -65,7 +65,7 @@ void PvssDispatcher::init(uint16_t maxWaitingCount, const AbonentStorageConfig& 
     if (!infcfg) {
       throw Exception("Erorr init infrastruct storage, config in NULL");
     }
-    infrastructLogic_.reset( new InfrastructLogic(maxWaitingCount) );
+    infrastructLogic_.reset( new InfrastructLogic );
     infrastructLogic_->init(*infcfg);
   }
 }

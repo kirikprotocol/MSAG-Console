@@ -1,11 +1,13 @@
-#ifndef _SCAG_PVSS_SERVER_PROFILECOMMANDPROCESSOR_H_
-#define _SCAG_PVSS_SERVER_PROFILECOMMANDPROCESSOR_H_
+#ifndef _SCAG_PVSS_PVSS_PROFILECOMMANDPROCESSOR_H_
+#define _SCAG_PVSS_PVSS_PROFILECOMMANDPROCESSOR_H_
 
 #include <memory>
 
 #include "scag/pvss/profile/Profile.h"
 #include "scag/pvss/api/packets/Response.h"
 #include "scag/pvss/api/packets/ProfileCommandVisitor.h"
+
+#include "DBLog.h"
 
 namespace scag2 {
 namespace pvss {
@@ -25,12 +27,17 @@ public:
   BatchResponseComponent* getBatchResponseComponent();
   Response* getResponse();
   bool rollback() const { return rollback_; };
+  void flushLogs(Logger* logger);
+  const string& getDBLog() const;
 
 private:
   Response::StatusType incModProperty(Property* property, uint32_t mod, uint32_t &result);
+  void addBatchComponentDBLog(const string& logmsg);
 
 private:
   bool rollback_;
+  DBLog dblog_;
+  std::vector<std::string> batchLogs_;
   Profile* profile_;
   std::auto_ptr<Response> response_;
 };
