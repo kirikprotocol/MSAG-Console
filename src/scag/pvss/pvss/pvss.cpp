@@ -15,6 +15,8 @@
 #include "scag/pvss/api/core/server/ServerConfig.h"
 #include "scag/pvss/api/core/server/Worker.h"
 
+#include "scag/pvss/pvss/old/PersServer.h"
+
 #include "version.inc"
 #include "PvssDispatcher.h"
 
@@ -26,6 +28,7 @@ using smsc::logger::Logger;
 
 
 EventMonitor waitObj;
+PersServer *persServer = NULL;
 
 extern "C" void appSignalHandler(int sig)
 {
@@ -33,11 +36,11 @@ extern "C" void appSignalHandler(int sig)
     smsc_log_debug(logger, "Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT)
     {
-        //if (pvssServer) pvssServer->shutdown();
-      {
-          MutexGuard mg(waitObj);
-          waitObj.notify();
-      }
+       if (persServer) persServer->stop();
+      //{
+        //  MutexGuard mg(waitObj);
+         // waitObj.notify();
+      //}
       smsc_log_info(logger, "Stopping ...");
     }
     else if(sig == SIGHUP)
@@ -183,9 +186,9 @@ int main(int argc, char* argv[]) {
     if (nodeCfg.nodeNumber == pvssDispatcher.getInfrastructNodeNumber()) {
       ConfigView infStorageConfig(manager, "PVSS.InfrastructStorage");
       std::auto_ptr<InfrastructStorageConfig> infCfg(new InfrastructStorageConfig(infStorageConfig, "InfrastructStorage", logger));
-      pvssDispatcher.init(maxWaitingCount, abntCfg, infCfg.get());
+      pvssDispatcher.init(abntCfg, infCfg.get());
     } else {
-      pvssDispatcher.init(maxWaitingCount, abntCfg, NULL);
+      pvssDispatcher.init(abntCfg, NULL);
     }
 
 
@@ -218,16 +221,26 @@ int main(int argc, char* argv[]) {
         smsc_log_error( logger, "exception: %s", e.what() );
     }
 
+    PersProtocol persProtocol;
+    ReaderTaskManager readers(ioTasksCount, maxClientCount, timeout, perfCounterOn);
+    WriterTaskManager writers(ioTasksCount, maxClientCount, timeout);
+
+    persServer = new PersServer(static_cast<ServerCore&>(*server.get()), readers, writers, persProtocol, perfCounterOn, perfCounterPeriod);
+    persServer->init(host.c_str(), port);
+    persServer->Execute();
+
+    readers.shutdown();
+    writers.shutdown();
+
     //EventMonitor waitObj;
-    {
-        MutexGuard mg(waitObj);
+    //{
+      //  MutexGuard mg(waitObj);
         //waitObj.wait(100000);
-        waitObj.wait();
-    }
+      //  waitObj.wait();
+    //}
 
     smsc_log_info(logger,"going to shutdown");
     server->shutdown();
-
 
     smsc_log_error(logger, "PersServer stopped");
   } catch (const smsc::util::config::ConfigException& exc) {

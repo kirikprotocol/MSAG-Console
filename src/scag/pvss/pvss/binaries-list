@@ -5,6 +5,7 @@
 
 scag/pvss_new                            pvss          \
         -lscag-pvss-pvss \
+        -lscag-pvss-pvss-old \
         -lscag-pvss-api-core-server \
         -lscag-pvss-api-core \
         -lscag-pvss-api-packets \
