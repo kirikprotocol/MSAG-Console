@@ -277,6 +277,7 @@ void ArchiveProcessor::process()
                 FileStorage::findFiles(*location, SMSC_PREV_ARCHIVE_FILE_EXTENSION, files);
                 skipProcessedFiles(*location, files); // filter out already processed files
                 if (files.Count() > 0) {
+                  std::sort(&files[0],&files[-1]+1);
                     startTransaction();
                     bProcessSuccess = process(*location, files);
                     if (!bProcessSuccess) rollbackTransaction();
