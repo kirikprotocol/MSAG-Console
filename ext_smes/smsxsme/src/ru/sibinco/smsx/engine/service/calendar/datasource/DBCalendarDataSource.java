@@ -211,7 +211,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     PreparedStatement ps = null;
     try {
       conn = pool.getConnection();
-      ps = conn.prepareStatement(getSql("calendar.message.update.status.by.id"));
+      ps = conn.prepareStatement(getSql("calendar.message.update.status.by.smpp.id"));
 
       ps.setInt(1, newStatus);
       ps.setLong(2, id);

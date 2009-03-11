@@ -38,12 +38,12 @@ public class CalendarServiceImpl implements CalendarService {
 
       MessagesQueue messagesQueue = new MessagesQueue();
 
-      engine = new CalendarEngine(outQueue, messagesQueue, dataSource, advClient, cal.getLong("engine.working.interval", 60000), serviceId);
+      engine = new CalendarEngine(outQueue, messagesQueue, dataSource, advClient, cal.getLong("engine.working.interval", 60000));
       engine.setAdvDelim(cal.getString("advertising.delimiter"));
       engine.setAdvSize(cal.getInt("advertising.size"));
       engine.setAdvService(cal.getString("advertising.service"));
 
-      processor = new CalendarProcessor(messagesQueue, dataSource, cal.getInt("send.date.max.year", getCurrentYear() + 1), serviceId);
+      processor = new CalendarProcessor(messagesQueue, dataSource, cal.getInt("send.date.max.year", getCurrentYear() + 1));
 
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);

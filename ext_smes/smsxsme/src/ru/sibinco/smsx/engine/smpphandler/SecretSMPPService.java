@@ -67,10 +67,11 @@ public class SecretSMPPService extends AbstractSMPPService {
 
       if (type.equalsIgnoreCase("receipt")) { // Handle receipt
 
+        final long msgId = Long.parseLong(inObj.getMessage().getReceiptedMessageId());
         final boolean delivered = inObj.getMessage().getMessageState() == Message.MSG_STATE_DELIVERED;
 
         final SecretHandleReceiptCmd cmd = new SecretHandleReceiptCmd();
-        cmd.setUmr(inObj.getMessage().getUserMessageReference());
+        cmd.setSmppMessageId(msgId);
         cmd.setDelivered(delivered);
 
         if (Services.getInstance().getSecretService().execute(cmd)) {

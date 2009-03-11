@@ -32,10 +32,10 @@ public class Services {
   private static final Category log = Category.getInstance("SERVICES");
 
   // NOTE: SERVICE ID LEN = 1 !!!
-  private static final int SERVICE_ID_SENDER = 0;
-  private static final int SERVICE_ID_CALENDAR = 1;
-  private static final int SERVICE_ID_SECRET = 2;
-  private static final int SERVICE_ID_GROUP = 3;
+  private static final int SERVICE_ID_SENDER = 1;
+  private static final int SERVICE_ID_CALENDAR = 2;
+  private static final int SERVICE_ID_SECRET = 3;
+  private static final int SERVICE_ID_GROUP = 4;
 
   private static Services ourInstance;
 

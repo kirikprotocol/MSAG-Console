@@ -20,7 +20,7 @@ public class SenderServiceImpl implements SenderService{
 
   public SenderServiceImpl(XmlConfigSection config, OutgoingQueue outQueue, int umrSyffix) {
     try {
-      processor = new SenderProcessor(outQueue, config.getInt("cache.size", 10000), umrSyffix);
+      processor = new SenderProcessor(outQueue, umrSyffix);
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);
     }

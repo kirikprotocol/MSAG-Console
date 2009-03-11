@@ -29,12 +29,10 @@ class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarChec
 
   private final MessagesQueue messagesQueue;
   private final CalendarDataSource ds;
-  private final int serviceId;
 
-  CalendarProcessor(MessagesQueue messagesQueue, CalendarDataSource ds, int maxYear, int serviceId) {
+  CalendarProcessor(MessagesQueue messagesQueue, CalendarDataSource ds, int maxYear) {
     this.messagesQueue = messagesQueue;
     this.ds = ds;
-    this.serviceId = serviceId;
 
     final Calendar cal = Calendar.getInstance();
     cal.setTimeInMillis(0);
@@ -115,14 +113,10 @@ class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarChec
   public boolean execute(CalendarHandleReceiptCmd cmd) throws CommandExecutionException {
     try {
       if (log.isInfoEnabled())
-        log.info("Handle rcpt: umr=" + cmd.getUmr() + "; dlvr=" + cmd.isDelivered());
+        log.info("Handle rcpt: id=" + cmd.getSmppMessageId() + "; dlvr=" + cmd.isDelivered());
 
-      if (cmd.getUmr() % 10 == serviceId) {
-        ds.updateMessageStatus(cmd.getUmr() / 10, cmd.isDelivered() ? CalendarMessage.STATUS_DELIVERED : CalendarMessage.STATUS_DELIVERY_FAILED);
-        return true;
-      }
-
-      return false;
+      int result = ds.updateMessageStatus(cmd.getSmppMessageId(), cmd.isDelivered() ? CalendarMessage.STATUS_DELIVERED : CalendarMessage.STATUS_DELIVERY_FAILED);
+      return result > 0;
 
     } catch (DataSourceException e) {
       log.error(e,e);

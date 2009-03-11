@@ -77,10 +77,11 @@ public class CalendarSMPPService extends AbstractSMPPService {
 
       if (type.equalsIgnoreCase("receipt")) { // Handle receipt
 
+        final long msgId = Long.parseLong(inObj.getMessage().getReceiptedMessageId());
         final boolean delivered = inObj.getMessage().getMessageState() == Message.MSG_STATE_DELIVERED;
 
         final CalendarHandleReceiptCmd cmd = new CalendarHandleReceiptCmd();
-        cmd.setUmr(inObj.getMessage().getUserMessageReference());
+        cmd.setSmppMessageId(msgId);
         cmd.setDelivered(delivered);
 
         if (Services.getInstance().getCalendarService().execute(cmd)) {

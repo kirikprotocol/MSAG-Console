@@ -31,7 +31,7 @@ public class SecretServiceImpl implements SecretService {
       dataSource = new DBSecretDataSource();
       advClient = AdvertisingClientFactory.createAdvertisingClient();
 
-      messageSender = new MessageSender(dataSource, outQueue, advClient, serviceId);
+      messageSender = new MessageSender(dataSource, outQueue, advClient);
       messageSender.setServiceAddress(sec.getString("service.address"));
       messageSender.setMsgDeliveryReport(sec.getString("delivery.report"));
       messageSender.setMsgDestinationAbonentInform(sec.getString("destination.abonent.inform"));
@@ -49,7 +49,7 @@ public class SecretServiceImpl implements SecretService {
         throw new ServiceInitializationException("Can't create archives dir: " + archivesDir.getAbsolutePath());
 
       batchEngine = new BatchEngine(dataSource, storeDir, archivesDir);
-      processor = new SecretProcessor(dataSource, messageSender, serviceId);
+      processor = new SecretProcessor(dataSource, messageSender);
 
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);

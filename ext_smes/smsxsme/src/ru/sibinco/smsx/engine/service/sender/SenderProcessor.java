@@ -26,10 +26,10 @@ class SenderProcessor implements SenderGetMessageStatusCmd.Receiver, SenderSendM
   private final FixedArrayCache<Integer> deliveryCache;
   private final int serviceId;
 
-  SenderProcessor(OutgoingQueue outQueue, int cacheSize, int serviceId) {
+  SenderProcessor(OutgoingQueue outQueue, int serviceId) {
     this.outQueue = outQueue;
     this.serviceId = serviceId;
-    this.deliveryCache = new FixedArrayCache<Integer>(cacheSize, 1);
+    this.deliveryCache = new FixedArrayCache<Integer>(6000, 1, 6001);
   }
 
   public void execute(SenderSendMessageCmd cmd) {

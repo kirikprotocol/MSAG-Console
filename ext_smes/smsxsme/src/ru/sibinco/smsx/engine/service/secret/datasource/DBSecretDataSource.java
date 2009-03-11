@@ -379,7 +379,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     PreparedStatement ps = null;
     try {
       conn = pool.getConnection();
-      ps = conn.prepareStatement(getSql("secret.message.update.status.by.id"));
+      ps = conn.prepareStatement(getSql("secret.message.update.status.by.smpp.id"));
 
       ps.setInt(1, status);
       ps.setLong(2, id);

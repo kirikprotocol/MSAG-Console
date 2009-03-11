@@ -56,9 +56,8 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
     this.listsDS = listsDS;
     this.replies = repliesMap;
     this.operators = operators;
-    int statusesCacheSize = sec.getInt("statuses.cache.size", 10000);
-    this.statuses = new FixedArrayCache<DeliveryStatus[]>(statusesCacheSize);
-    this.umrs = new FixedArrayCache<DeliveryStatus>(statusesCacheSize);
+    this.statuses = new FixedArrayCache<DeliveryStatus[]>(5000, 0, 5000);
+    this.umrs = new FixedArrayCache<DeliveryStatus>(5000, 0, 5000);
     this.serviceId = serviceId;
     this.executor = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(100), new ThreadFactoryWithCounter("Group-Executor-"));
   }

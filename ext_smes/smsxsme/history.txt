@@ -16,3 +16,6 @@
 ------------------------------------------------------------------------------------------------------------------------
  2009-03-02 | 2.10      | artem         | 1. Change Sender, Calendar and Secret delivery status method to umr.
             |           |               | 2. Made group name in Group case insensitive.
+------------------------------------------------------------------------------------------------------------------------
+ 2009-03-07 | 2.11      | artem         | 1. Revert Calendar and Secret delivery status method to mysql
+            |           |               | 2. Fix Sender delivery status method according 2 bytes umr
