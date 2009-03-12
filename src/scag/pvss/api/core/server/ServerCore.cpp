@@ -41,6 +41,16 @@ bool ServerCore::acceptChannel( PvssSocket* channel )
 }
 
 
+void ServerCore::acceptOldChannel( smsc::core::network::Socket* socket )
+{
+    regset_.create(socket);
+    {
+        MutexGuard mg(channelMutex_);
+        channels_.push_back(socket);
+    }
+}
+
+
 void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // throw (PvssException)
 {
     try {
@@ -189,7 +199,7 @@ void ServerCore::shutdown()
         workers_[i]->shutdown();
     }
     waitUntilReleased();
-        for ( int i = 0; i < workers_.Count(); ++i ) {
+    for ( int i = 0; i < workers_.Count(); ++i ) {
         delete workers_[i];
     }
     workers_.Empty();
@@ -462,32 +472,56 @@ void ServerCore::stopCoreLogic()
 
 void ServerCore::destroyDeadChannels()
 {
-    ChannelList trulyDead;
+    ChannelList allDead;
+    ChannelList ourDead;
     {
         MutexGuard mg(channelMutex_);
         for ( ChannelList::iterator i = deadChannels_.begin();
               i != deadChannels_.end();
               ) {
-            PvssSocket* socket = PvssSocket::fromSocket(*i);
-            if ( ! socket->isInUse() ) {
-                trulyDead.push_back(*i);
-                // remove from managedChannels_
-                ChannelList::iterator j = std::find(managedChannels_.begin(),
-                                                    managedChannels_.end(),
-                                                    *i );
-                assert(j != managedChannels_.end());
+
+            // if this one is managed channels
+            ChannelList::iterator j = std::find(managedChannels_.begin(),
+                                                managedChannels_.end(), *i );
+            if ( j != managedChannels_.end() ) {
+                // our channel
+                PvssSocket* socket = PvssSocket::fromSocket(*i);
+                if ( socket->isInUse() ) {
+                    ++i;
+                    continue;
+                }
+                ourDead.push_back(*i);
                 managedChannels_.erase(j);
-                i = deadChannels_.erase(i);
-            } else {
-                ++i;
             }
+            allDead.push_back(*i);
+            i = deadChannels_.erase(i);
         }
     }
-    for ( ChannelList::iterator i = trulyDead.begin();
-          i != trulyDead.end();
+
+    for ( ChannelList::iterator i = allDead.begin();
+          i != allDead.end();
           ++i ) {
-        // should we destroy regset entry for this socket?
-        // regset_.destroy(*i);
+
+        ContextRegistry::ProcessingList pl;
+        {
+            ContextRegistry::Ptr ptr = regset_.get(*i);
+            if ( !ptr ) continue;
+            ptr->popAll(pl);
+        }
+        // destroy regset entries
+        std::auto_ptr<ServerContext> ctx;
+        while ( ! pl.empty() ) {
+            ctx.reset(static_cast<ServerContext*>(pl.front()));
+            pl.pop_front();
+            ctx->setState( ServerContext::FAILED );
+            reportContext(ctx);
+        }
+        regset_.destroy(*i);
+    }
+
+    for ( ChannelList::iterator i = ourDead.begin();
+          i != ourDead.end();
+          ++i ) {
         PvssSocket* socket = PvssSocket::fromSocket(*i);
         if ( socket ) delete socket;
     }

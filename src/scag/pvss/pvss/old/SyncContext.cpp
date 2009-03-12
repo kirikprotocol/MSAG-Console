@@ -35,7 +35,7 @@ void SyncContext::createErrorResponse(Response::StatusType status) {
 
 bool SyncContext::sendResponse(const Response& resp) {
   try {
-    smsc_log_debug(logger_, "%p: Serialize response %s", this, resp.toString());
+    smsc_log_debug(logger_, "%p: Serialize response %s", this, resp.toString().c_str());
     fakeResp_.Empty();
     protocol_.serialize(resp, fakeResp_);
     return sendResponseData(fakeResp_.c_ptr(), fakeResp_.GetSize());

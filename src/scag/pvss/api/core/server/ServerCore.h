@@ -52,6 +52,9 @@ public:
     virtual bool acceptChannel( PvssSocket* channel );
 
 
+    /// accept an old transport channel
+    void acceptOldChannel( smsc::core::network::Socket* socket );
+
     /**
      * Implementation of Server interface method.</p>
      * Blocks until next request will be received & processed or state will be changed for processing request.
