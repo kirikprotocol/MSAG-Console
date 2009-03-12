@@ -22,13 +22,16 @@ public:
     virtual BatchResponse* clone() const { return new BatchResponse(*this); }
 
     void addComponent( BatchResponseComponent* resp ) {
+        if ( batchContent_.empty() || getStatus() == OK ) {
+            setStatus( resp->getStatus() );
+        }
         batchContent_.push_back( resp );
     }
 
     const std::vector< BatchResponseComponent* >& getBatchContent() const { return batchContent_; }
 
     std::string toString() const {
-        std::string rv(BatchResponse::toString());
+        std::string rv(Response::toString());
         rv.reserve(200);
         rv += " [";
         bool comma = false;

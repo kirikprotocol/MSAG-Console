@@ -4,11 +4,10 @@
 #include <vector>
 #include "AbstractCommand.h"
 #include "ProfileCommandVisitor.h"
+#include "BatchRequestComponent.h"
 
 namespace scag2 {
 namespace pvss {
-
-class BatchRequestComponent;
 
 class BatchCommand : public AbstractCommand
 {
@@ -34,6 +33,7 @@ public:
 
     void addComponent( BatchRequestComponent* req ) {
         batchContent_.push_back( req );
+        req->setSeqNum(batchContent_.size());
     }
 
     virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
