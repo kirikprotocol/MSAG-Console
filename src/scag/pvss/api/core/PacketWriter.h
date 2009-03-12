@@ -21,6 +21,14 @@ public:
     /// serialize the packet
     void serialize(const Packet& packet,Protocol::Buffer& buffer) throw (PvssException);
 
+    void notify() {
+        if ( waiting_ ) {
+            MutexGuard mg(mon_);
+            waiting_ = false;
+            mon_.notify();
+        }
+    }
+
 protected:
     virtual void attachToSocket( PvssSocket& socket ) {
         socket.registerWriter(this);

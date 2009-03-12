@@ -19,10 +19,16 @@ public:
 
     void setResponse( std::auto_ptr<Response> resp ) {
         Context::setResponse(resp.release());
-        if ( handler != 0 ) handler->handleResponse(getRequest(),getResponse());
+        if ( handler != 0 ) {
+            smsc_log_debug(log_,"notifying handler of response");
+            handler->handleResponse(getRequest(),getResponse());
+        }
     }
     void setError( const PvssException& exc ) {
-        if ( handler != 0 ) handler->handleError(exc,getRequest());
+        if ( handler != 0 ) {
+            smsc_log_debug(log_,"notifying handler of error");
+            handler->handleError(exc,getRequest());
+        }
     }
 
 private:

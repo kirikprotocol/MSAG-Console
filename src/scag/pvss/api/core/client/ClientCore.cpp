@@ -40,7 +40,9 @@ public:
 
     void wait() {
         MutexGuard mg(mon_);
-        mon_.wait();
+        if ( !response_.get() && !error_.get() ) {
+            mon_.wait();
+        }
     }
 
 private:
@@ -141,7 +143,12 @@ void ClientCore::shutdown()
         channelMutex_.notify();
     }
     waitUntilReleased();
+    smsc_log_info( logger, "Client thread is stopped, going to destroy all dead channels");
     destroyDeadChannels();
+    {
+        MutexGuard mg(channelMutex_);
+        smsc_log_debug( logger, "number of dead channels after shutdown: %d", unsigned(deadChannels_.size()) );
+    }
 }
 
 
@@ -158,6 +165,7 @@ void ClientCore::closeChannel( PvssSocket& channel )
         if (i != activeChannels_.end()) activeChannels_.erase(i);
         i = std::find(channels_.begin(), channels_.end(), &channel);
         if (i != channels_.end()) {
+            smsc_log_debug(logger,"pushing channel %p to dead", &channel);
             deadChannels_.push_back(*i);
             channels_.erase(i);
         }
@@ -343,6 +351,7 @@ void ClientCore::clearChannels()
     for ( ChannelList::iterator i = channels_.begin(); i != channels_.end(); ++i ) {
         PvssSocket& channel = **i;
         Core::closeChannel(channel);
+        smsc_log_debug(logger,"pushing channel %p to dead", &channel);
         deadChannels_.push_back(*i);
     }
     channels_.clear();
@@ -370,7 +379,25 @@ void ClientCore::destroyDeadChannels()
           i != trulyDead.end();
           ++i ) {
         PvssSocket* channel = *i;
+
+        // destroying all contexts on closed channel
+        ContextRegistry::ProcessingList pl;
+        do {
+            ContextRegistry::Ptr ptr = regset_.get(channel->socket());
+            if (!ptr) break;
+            ptr->popAll(pl);
+        } while ( false );
+
+        PvssException exc = PvssException(PvssException::IO_ERROR,"channel is closed");
+        while ( !pl.empty() ) {
+            ClientContext* ctx = static_cast<ClientContext*>(pl.front());
+            pl.pop_front();
+            ctx->setError(exc);
+            delete ctx;
+        }
+
         regset_.destroy(channel->socket());
+        delete channel;
         /*
          * FIXME: think on how to convey requests on closed channel
         for ( ProcessingRequestList::iterator j = (*plist)->begin();

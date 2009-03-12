@@ -204,7 +204,7 @@ public:
         if (!regptr) {
             smsc_log_warn(log_,"logic error: no context registry found");
         } else {
-            smsc_log_debug(log_,"got regptr: %p", *regptr);
+            // smsc_log_debug(log_,"got regptr: %p", *regptr);
         }
         return Ptr(*regptr);
     }
@@ -239,19 +239,27 @@ public:
 
     // destroy a context registry for given key
     void destroy( key_type key ) {
-        MutexGuard mg(createMon_);
-        ContextRegistry** regptr = set_.GetPtr(key);
-        if ( regptr ) {
-            {
-                Ptr ptr(*regptr);
-                if (!ptr->empty()) {
-                    smsc_log_error(log_,"logic error: non-empty context registry is destroyed");
-                    abort();
+        ContextRegistry::ProcessingList pl;
+        {
+            MutexGuard mg(createMon_);
+            ContextRegistry** regptr = set_.GetPtr(key);
+            if ( regptr ) {
+                {
+                    Ptr ptr(*regptr);
+                    if (!ptr->empty()) ptr->popAll(pl);
                 }
+                smsc_log_debug(log_,"destroying regptr %p",*regptr);
+                delete *regptr;
+                set_.Delete(key);
             }
-            smsc_log_debug(log_,"destroying regptr %p",*regptr);
-            delete *regptr;
-            set_.Delete(key);
+        }
+        if ( !pl.empty() ) {
+            smsc_log_warn(log_,"destroying all %d contexts from non-empty context registry", pl.size());
+            while ( ! pl.empty() ) {
+                Context* c = pl.front();
+                delete c;
+                pl.pop_front();
+            }
         }
     }
 

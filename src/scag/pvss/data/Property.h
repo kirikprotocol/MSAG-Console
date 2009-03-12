@@ -8,6 +8,7 @@
 
 #include "scag/util/storage/SerialBuffer.h"
 #include "scag/util/storage/GlossaryBase.h"
+#include "scag/exc/IOException.h"
 
 namespace scag2 {
 namespace pvss {
@@ -126,6 +127,7 @@ public:
     bool isExpired() const;
     bool isExpired(time_t cur_time) const;
     const std::string& toString() const;
+    void fromString( const std::string& ) throw (exceptions::IOException);
 
     void setInt(const char *nm, int32_t i, TimePolicy policy, time_t fd, uint32_t lt);
     void setBool(const char *nm, bool b, TimePolicy policy, time_t fd, uint32_t lt);

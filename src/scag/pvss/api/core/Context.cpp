@@ -3,7 +3,6 @@
 #include "core/synchronization/Mutex.hpp"
 
 namespace {
-smsc::logger::Logger* logger = 0;
 smsc::core::synchronization::Mutex mtx;
 }
 
@@ -11,21 +10,30 @@ namespace scag2 {
 namespace pvss {
 namespace core {
 
+smsc::logger::Logger* Context::log_ = 0;
+
 Context::Context(Request* req) :
 creationTime( util::currentTimeMillis() ),
 request( req ) {
-    if ( ! logger ) {
+    if ( ! log_ ) {
         MutexGuard mg(mtx);
-        if ( ! logger ) logger = smsc::logger::Logger::getInstance("pvss.ctx");
+        if ( ! log_ ) log_ = smsc::logger::Logger::getInstance("pvss.ctx");
     }
     assert(req != 0);
-    smsc_log_debug(logger,"ctor: context %p: seqnum=%d",this,req->getSeqNum());
+    smsc_log_debug(log_,"ctor: context %p: seqnum=%d",this,req->getSeqNum());
 }
 
 
 Context::~Context()
 {
-    smsc_log_debug(logger,"dtor: context %p: seqnum=%d",this,request.get() ? request->getSeqNum() : 0);
+    smsc_log_debug(log_,"dtor: context %p: seqnum=%d",this,request.get() ? request->getSeqNum() : 0);
+}
+
+
+void Context::setResponse( Response* resp ) throw (PvssException)
+{
+    smsc_log_debug(log_,"setting resp %p",resp);
+    response.reset(resp);
 }
 
 } // namespace core

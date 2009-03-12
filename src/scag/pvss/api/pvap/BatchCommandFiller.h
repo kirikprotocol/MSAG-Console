@@ -91,9 +91,9 @@ public:
                                                   idx,
                                                   comp->toString().c_str() );
             }
-            printf( "batch component #%d :%s\n", idx, filler.getWriter().dump().c_str() );
+            // printf( "batch component #%d :%s\n", idx, filler.getWriter().dump().c_str() );
             writer.write( filler.getWriter() );
-            printf( "full writer dump: %s\n", writer.dump().c_str() );
+            // printf( "full writer dump: %s\n", writer.dump().c_str() );
             ++idx;
         }
     }
@@ -104,12 +104,12 @@ public:
         try {
             int cnt = reader.readShort();
             BufferReader subreader;
-            printf( "full reader (pos=%d) dump:%s\n", reader.getPos(), reader.dump().c_str() );
+            // printf( "full reader (pos=%d) dump:%s\n", reader.getPos(), reader.dump().c_str() );
             PVAPBC subproto(this);
             for ( idx = 0; idx < cnt; ++idx ) {
                 reader.read( subreader );
-                printf( "batch component #%d (pos=%d) dump: %s\n",
-                        idx, subreader.getPos(), subreader.dump().c_str() );
+                // printf( "batch component #%d (pos=%d) dump: %s\n",
+                // idx, subreader.getPos(), subreader.dump().c_str() );
                 subproto.decodeMessage( subreader );
             }
         } catch ( exceptions::IOException& e ) {

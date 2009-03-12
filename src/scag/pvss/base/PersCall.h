@@ -22,12 +22,13 @@ class PersCall
 public:
     friend class PersClient;
 
-    PersCall( Request*    cmd,
-              void*       ctx ) :
-    cmd_(cmd), next_(0), context_(ctx), initiator_(0) {}
+    PersCall( ProfileType  pt,
+              PersCommand* cmd,
+              void*        ctx ) :
+    type_(pt), cmd_(cmd), ikey_(0), next_(0), context_(ctx), initiator_(0) {}
 
-    // inline void setKey( const std::string& key ) { skey_ = key; ikey_ = 0; }
-    // inline void setKey( int32_t key ) { ikey_ = key; skey_.clear(); }
+    inline void setKey( const std::string& key ) { skey_ = key; ikey_ = 0; }
+    inline void setKey( int32_t key ) { ikey_ = key; skey_.clear(); }
 
     inline PersCmd cmdType() const { return cmd_->cmdType(); }
     inline ProfileType getType() const { return type_; }

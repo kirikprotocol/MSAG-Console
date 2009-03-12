@@ -83,6 +83,7 @@ public:
         rcheck(sz);
         other.buf_.setExtBuf( buf_.get() + pos_, sz );
         other.buf_.SetPos(sz);
+        other.pos_ = 0;
         pos_ += sz;
     }
 

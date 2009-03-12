@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <memory>
+#include "logger/Logger.h"
 #include "scag/util/Time.h"
 #include "scag/pvss/api/packets/Request.h"
 #include "scag/pvss/api/packets/Response.h"
@@ -16,6 +17,9 @@ class PvssSocket;
 /// abstract class
 class Context
 {
+protected:
+    static smsc::logger::Logger* log_;
+
 protected:
     Context( Request* req );
 
@@ -46,9 +50,7 @@ public:
         return response;
     }
 
-    virtual void setResponse( Response* resp ) throw (PvssException) {
-        response.reset(resp);
-    }
+    virtual void setResponse( Response* resp ) throw (PvssException);
 
 private:
     Context();

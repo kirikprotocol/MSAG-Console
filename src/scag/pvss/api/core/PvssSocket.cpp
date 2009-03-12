@@ -85,6 +85,9 @@ void PvssSocket::send( const Packet* packet, bool isRequest, bool force ) throw 
         pendingContexts_.Push(writeContext.release());
         pendingContextMon_.notify();
     }
+
+    // notify the writer
+    writer_->notify();
 }
 
 
@@ -114,7 +117,7 @@ void PvssSocket::sendData( Core& core )
         res = sock_->Write( wrBuffer_.get()+wrBuffer_.GetPos(), res );
         if (res<=0) {
             smsc_log_warn(log_,"sendData: write failed: %d", res);
-            core.reportPacket(wrContext_->seqNum, *this, Core::FAILED);
+            core.reportPacket(wrContext_->seqNum, *socket(), Core::FAILED);
             wrContext_.reset(0);
             core.handleError(PvssException(PvssException::IO_ERROR,"error writing context"),*this);
             return;
@@ -125,7 +128,7 @@ void PvssSocket::sendData( Core& core )
 
         if ( wrBuffer_.GetPos() < wrBuffer_.getSize() ) return;
     }
-    core.reportPacket(wrContext_->seqNum, *this, Core::SENT);
+    core.reportPacket(wrContext_->seqNum, *socket(), Core::SENT);
     wrContext_.reset(0);
 }
 

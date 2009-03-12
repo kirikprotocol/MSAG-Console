@@ -5,6 +5,43 @@
 #include <stdlib.h>
 #include "Property.h"
 
+
+namespace {
+
+using namespace scag2::pvss;
+using namespace scag2::pvss::perstypes;
+using namespace scag2::exceptions;
+
+const char* BOOL_TRUE = "BOOL: true";
+const char* BOOL_FALSE = "BOOL: false";
+const char* INT_PREF = "INT: ";
+const char* STRING_PREF = "STRING: \"";
+const char* DATE_PREF = "DATE: ";
+const char* TIMEFORMAT = "%Y/%m/%d %H:%M:%S";
+const char* FINALDATE = " FINAL_DATE: %Y/%m/%d %H:%M:%S";
+const char* LIFETIME = " LIFE_TIME: ";
+#define TIMEPOLPREF "TIME_POLICY: "
+
+size_t timePolicyFromString( const std::string& from, TimePolicy& tp )
+{
+    size_t tpos = from.find(TIMEPOLPREF);
+    if ( tpos == std::string::npos ) return tpos;
+    tpos += strlen(TIMEPOLPREF);
+#define TIMEPOLCMP(x) ( from.substr(tpos,strlen(#x)) == #x ) { tp = x; return tpos + strlen(#x); }
+    if TIMEPOLCMP(INFINIT)
+        else if TIMEPOLCMP(FIXED)
+            else if TIMEPOLCMP(ACCESS)
+                else if TIMEPOLCMP(R_ACCESS)
+                    else if TIMEPOLCMP(W_ACCESS)
+                        else { tp = UNKNOWN; return std::string::npos; }
+#undef TIMEPOLCMP
+}
+
+
+} // namespace
+
+
+
 namespace scag2 {
 namespace pvss {
 
@@ -12,7 +49,7 @@ namespace perstypes {
 
 const char* timePolicyToString( TimePolicy tp )
 {
-#define TIMEPOLTOSTR(x) case (x) : return " TIME_POLICY: " #x
+#define TIMEPOLTOSTR(x) case (x) : return TIMEPOLPREF #x
     switch (tp) {
         TIMEPOLTOSTR(UNKNOWN);
         TIMEPOLTOSTR(INFINIT);
@@ -21,10 +58,11 @@ const char* timePolicyToString( TimePolicy tp )
         TIMEPOLTOSTR(R_ACCESS);
         TIMEPOLTOSTR(W_ACCESS);
 #undef TIMEPOLTOSTR
-    default: return " TIME_POLICY: ???";
+    default: return TIMEPOLPREF "???";
     }
 }
 
+#undef TIMEPOLPREF
 
 const char* propertyTypeToString( PropertyType pt )
 {
@@ -41,10 +79,6 @@ const char* propertyTypeToString( PropertyType pt )
 
 } // namespace perstypes
 
-
-static const char* BOOL_TRUE = " BOOL: true";
-static const char* BOOL_FALSE = " BOOL: false";
-static const char* STRING_PREF = " STRING: \"";
 
 void Property::setPropertyName(const char* nm) {
   name.clear();
@@ -115,10 +149,11 @@ const std::string& Property::toString() const
     memset(strBuf, 0, STRBUF_SIZE);
 
     propertyStr.erase(name.size() + 2);
+    propertyStr.append(" ");
     switch(type)
     {
         case INT:
-            sprintf(strBuf, " INT: %lld", static_cast<long long int>(i_val));
+            snprintf(strBuf, STRBUF_SIZE, "%s%lld", INT_PREF, static_cast<long long int>(i_val));
             propertyStr.append(strBuf);
             break;
         case STRING:
@@ -130,22 +165,124 @@ const std::string& Property::toString() const
             propertyStr.append(b_val ? BOOL_TRUE : BOOL_FALSE);
             break;
         case DATE:
-            strftime(strBuf, STRBUF_SIZE, " DATE: %Y/%m/%d %H:%M:%S", gmtime(&d_val));
+            propertyStr.append(DATE_PREF);
+            struct tm res;
+            if ( 0 == strftime(strBuf, STRBUF_SIZE, TIMEFORMAT, gmtime_r(&d_val,&res)) ) {
+                // failure
+                snprintf(strBuf,STRBUF_SIZE,"not fit");
+            }
             propertyStr.append(strBuf);
             break;
     }
 
+    propertyStr.append(" ");
     propertyStr.append(timePolicyToString(time_policy));
 
     if(time_policy != INFINIT)
     {
-        strftime(strBuf, STRBUF_SIZE, " FINAL_DATE: %Y/%m/%d %H:%M:%S", gmtime(&final_date));
+        struct tm res;
+        strftime(strBuf, STRBUF_SIZE, FINALDATE, gmtime_r(&final_date,&res));
         propertyStr.append(strBuf);
-        sprintf(strBuf, " LIFE_TIME: %d", life_time);
+        snprintf(strBuf, STRBUF_SIZE, "%s%d", LIFETIME, life_time);
         propertyStr.append(strBuf);
     }
     return propertyStr;
 }
+
+
+void Property::fromString( const std::string& input ) throw (exceptions::IOException)
+{
+    if ( input.empty() ) throw exceptions::IOException("property string is empty");
+    if ( input[0] != '"' ) throw exceptions::IOException("property string does not have a name");
+
+    std::string from;
+    // parsing name
+    std::string newName;
+    {
+        size_t quote = input.find("\"",1);
+        if ( quote == std::string::npos ) throw exceptions::IOException("closing quote is not found");
+        newName = input.substr(1,quote-1);
+        size_t notblank = input.find_first_not_of(" ",quote+1);
+        if ( notblank == std::string::npos ) throw exceptions::IOException("property tail not found");
+        from = input.substr(notblank);
+        setPropertyName(newName.c_str());
+    }
+        
+    // parsing type and value
+    if ( from.substr(0,strlen(INT_PREF)) == INT_PREF ) {
+        // int
+        from.erase(0,strlen(INT_PREF));
+        char* endptr;
+        type = INT;
+        i_val = strtoll(from.c_str(),&endptr,10);
+        from.erase(0,endptr-from.c_str());
+    } else if ( from.substr(0,strlen(STRING_PREF)) == STRING_PREF ) {
+        // string
+        from.erase(0,strlen(STRING_PREF));
+        size_t quote = from.find("\"");
+        if ( quote == std::string::npos ) throw exceptions::IOException("closing quote on string value is not found");
+        type = STRING;
+        s_val = from.substr(0,quote);
+        from.erase(0,quote+1);
+    } else if ( from.substr(0,strlen(BOOL_TRUE)) == BOOL_TRUE ) {
+        // bool: true
+        type = BOOL;
+        b_val = true;
+        from.erase(0,strlen(BOOL_TRUE));
+    } else if ( from.substr(0,strlen(BOOL_FALSE)) == BOOL_FALSE ) {
+        // bool: false
+        type = BOOL;
+        b_val = false;
+        from.erase(0,strlen(BOOL_FALSE));
+    } else if ( from.substr(0,strlen(DATE_PREF)) == DATE_PREF ) {
+        // date
+        from.erase(0,strlen(DATE_PREF));
+        struct tm indate;
+        char* p = strptime(from.c_str(),TIMEFORMAT,&indate);
+        if ( !p ) throw exceptions::IOException("cannot convert time value");
+        time_t ourdate = mktime(&indate) - timezone;
+        if ( ourdate == time_t(-1) ) throw exceptions::IOException("cannot convert to time_t");
+        type = DATE;
+        d_val = ourdate;
+        from.erase(0,p - from.c_str());
+    } else {
+        throw exceptions::IOException("unknown property type/value: %s", from.c_str() );
+    }
+
+    // parse time policy
+    {
+        TimePolicy tp;
+        size_t next = timePolicyFromString( from, tp );
+        if ( next == std::string::npos ) throw exceptions::IOException("cannot read time policy type: %s", from.c_str());
+        time_policy = tp;
+        from.erase(0,next);
+    }
+
+    // read final date and life time
+    if ( time_policy != INFINIT ) {
+        {
+            // final date
+            struct tm indate;
+            char* pdate = strptime(from.c_str(),FINALDATE,&indate);
+            if ( !pdate ) throw exceptions::IOException("cannot convert final date");
+            time_t ourdate = mktime(&indate) - timezone;
+            if ( ourdate == time_t(-1)) throw exceptions::IOException("wrong final date");
+            from.erase(0,pdate-from.c_str());
+            final_date = ourdate;
+        }
+        {
+            // life time
+            if ( from.substr(0,strlen(LIFETIME)) != LIFETIME )
+                throw exceptions::IOException("cannot convert life time");
+            from.erase(0,strlen(LIFETIME));
+            char* endptr;
+            uint32_t lt = strtoul(from.c_str(),&endptr,10);
+            from.erase(0,endptr-from.c_str());
+            life_time = lt;
+        }
+    }
+}
+
 
 Property::Property(const Property& cp)
 {

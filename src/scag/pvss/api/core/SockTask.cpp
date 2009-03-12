@@ -81,7 +81,11 @@ void SockTask::unregisterChannel( PvssSocket& sock )
 
 void SockTask::setupFailed(util::msectime_type currentTime)
 {
-    if ( wakeupTime_ > currentTime ) mon_.wait( wakeupTime_ - currentTime );
+    if ( wakeupTime_ > currentTime ) {
+        waiting_ = true;
+        mon_.wait( wakeupTime_ - currentTime );
+        waiting_ = false;
+    }
 }
 
 
