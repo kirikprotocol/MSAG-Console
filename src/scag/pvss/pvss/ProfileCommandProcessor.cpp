@@ -20,6 +20,7 @@ namespace pvss  {
 
 bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) throw(PvapException) {
   ProfileCommandProcessor proc;
+  proc.setProfile(profile_);
   response_.reset( new BatchResponse(cmd.getSeqNum()) );
   std::vector<BatchRequestComponent*> content = cmd.getBatchContent();
   batchLogs_.reserve(content.size());
