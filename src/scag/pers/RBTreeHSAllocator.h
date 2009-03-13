@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <assert.h>
 #include "sys/mman.h"
 #include "logger/Logger.h"
 #include "RBTreeAllocator.h"
@@ -142,11 +143,11 @@ public:
 //        smsc_log_debug(logger, "allocatingNode rbtree_body = %p, header_.first_free_cell = %d", rbtree_body, header_.first_free_cell);
         if(!header_.cells_free && ReallocRBTreeFile() != SUCCESS)
             abort();
-            nodeptr_type newNode = header_.first_free_cell;
+            nodeptr_type newNode = (nodeptr_type)header_.first_free_cell;
             RBTreeNode* node = addr2node(newNode);
         smsc_log_debug(logger, "allocateNode node=%ld/%p", (long)newNode, node);
 		header_.first_free_cell = ((free_cell_list*)node)->next_free_cell;
-		node->parent = node->left = node->right = header_.nil_cell;
+		node->parent = node->left = node->right = (nodeptr_type)header_.nil_cell;
 		header_.cells_used++;
 		header_.cells_free--;
 		return newNode;
@@ -156,20 +157,20 @@ public:
 		if(!running) return;
                 RBTreeNode* theNode = addr2node(node);
 		((free_cell_list*)theNode)->next_free_cell = header_.first_free_cell;
-		header_.first_free_cell = node;
+                header_.first_free_cell = (long)node;
 		header_.cells_used--;
 		header_.cells_free++;
 	}
 	virtual nodeptr_type getRootNode(void)
 	{
-		if(!running) return header_.nil_cell;
-		if(-1 == header_.root_cell) return header_.nil_cell;
-		return header_.root_cell;
+                if(!running) return (nodeptr_type)header_.nil_cell;
+		if(-1 == header_.root_cell) return (nodeptr_type)header_.nil_cell;
+		return (nodeptr_type)header_.root_cell;
 	}
 	virtual void setRootNode(nodeptr_type node)
 	{
 		if(!running) return;
-		header_.root_cell = node;
+		header_.root_cell = (long)node;
 		
 	    smsc_log_debug(logger, "SetRoot node = %ld", (long)node);
 		//printf("SetRoot (long)node = %X", (long)node);
@@ -179,7 +180,7 @@ public:
 	}
 	virtual nodeptr_type getNilNode(void)
 	{
-            return header_.nil_cell;
+            return (nodeptr_type)header_.nil_cell;
 	}
 	virtual long getSize(void) const
 	{
@@ -220,12 +221,13 @@ public:
 private:
     inline RBTreeNode* addr2node( nodeptr_type offset ) const
     {
-        register unsigned chunkidx = offset / growth;
+        register long idx = ((long)offset)/cellsize();
+        register unsigned chunkidx = idx/growth;
         assert( chunkidx < chunks_.size() );
-        return reinterpret_cast< RBTreeNode* >(int64_t(chunks_[chunkidx]) + cellsize()*int64_t(offset%growth) );
+        return reinterpret_cast< RBTreeNode* >(int64_t(chunks_[chunkidx]) + cellsize()*int64_t(idx%growth) );
     }
 
-    inline nodeptr_type idx2addr(long idx) const { return idx*cellsize(); }
+    inline nodeptr_type idx2addr(long idx) const { return (nodeptr_type)(idx*cellsize()); }
 
     inline int32_t cellsize() const { return sizeof(RBTreeNode); }
     
@@ -244,6 +246,8 @@ private:
             // we have to make sure that no pending nodes are on the list
             completeChanges();
         }
+
+        smsc_log_info(logger,"RBtree realloc started");
 
         int32_t realgrowth = growth - header_.cells_count % growth;
         if ( realgrowth == growth ) {
@@ -269,20 +273,20 @@ private:
         nodeptr_type freecell = idx2addr(header_.cells_count);
         if ( header_.cells_free > 0 ) {
             // we have to find the last free cell
-            nodeptr_type lastfreecell = header_.first_free_cell;
+            nodeptr_type lastfreecell = (nodeptr_type)header_.first_free_cell;
             for ( unsigned i = header_.cells_free; i > 1; --i ) {
-                lastfreecell = ((free_cell_list*)addr2node(lastfreecell))->next_free_cell;
+                lastfreecell = (nodeptr_type)((free_cell_list*)addr2node(lastfreecell))->next_free_cell;
             }
-            ((free_cell_list*)addr2node(lastfreecell))->next_free_cell = freecell;
+            ((free_cell_list*)addr2node(lastfreecell))->next_free_cell = (long)freecell;
             nodeChanged(lastfreecell);
         } else {
-            header_.first_free_cell = freecell;
+            header_.first_free_cell = (long)freecell;
         }
 
         // filling free cells links
         for ( long i = 0; i < realgrowth-1; ++i ) {
             RBTreeNode* cell = addr2node(freecell);
-            ((free_cell_list*)cell)->next_free_cell = ++freecell;
+            ((free_cell_list*)cell)->next_free_cell = (long)++freecell;
         }
 
         long startcell = header_.cells_count;
@@ -319,10 +323,10 @@ private:
             completeChanges();
         }
 
-        smsc_log_debug( logger, "ReallocRBTree: cells_used %ld, cells_free %ld, cells_count %ld, first_free_cell %ld, root_cell %ld, nil_cell %ld, perscellsize %d",
+        smsc_log_info( logger, "ReallocRBTree: cells_used %ld, cells_free %ld, cells_count %ld, first_free_cell %ld, root_cell %ld, nil_cell %ld, perscellsize %d",
                         long(header_.cells_used), long(header_.cells_free),
                         long(header_.cells_count), long(header_.first_free_cell),
-                        long(header_.root_cell), long(header_.nil_cell) );
+                        long(header_.root_cell), long(header_.nil_cell), cellsize() );
         return SUCCESS;
     }
     
@@ -489,7 +493,7 @@ private:
 
             // reading the header
             rbtree_f.Read(&header_,headerLen);
-            const off_t expectedLen = off_t(headerLen + idx2addr(header_.cells_count));
+            const off_t expectedLen = off_t(headerLen + header_.cells_count*cellsize());
 
             long maxcells = header_.cells_count;
             if ( len < expectedLen ) {
@@ -618,9 +622,9 @@ private:
         for ( typename std::vector< nodeptr_type >::const_iterator i = transactionNodes_.begin();
               i != transactionNodes_.end();
               ++i ) {
-            long nodeAddr = *i;
+            long nodeAddr = (long)*i;
             trans_f.Write(&nodeAddr, sizeof(long));
-            trans_f.Write(addr2node(nodeAddr), sizeof(RBTreeNode));
+            trans_f.Write(addr2node(*i), sizeof(RBTreeNode));
         }
 	
 	return 0;
@@ -638,7 +642,7 @@ private:
                   i != transactionNodes_.end();
                   ++i ) {
                 nodeptr_type addr = *i;
-                rbtree_f.Seek(sizeof(rbtFileHeader)+addr, SEEK_SET);
+                rbtree_f.Seek(sizeof(rbtFileHeader)+(long)addr, SEEK_SET);
                 rbtree_f.Write(addr2node(addr), sizeof(RBTreeNode));
 	    }
 	    //smsc_log_debug(logger, "Write Changes: finish");        

@@ -16,7 +16,8 @@ template<class Key, class Value>
 struct templRBTreeNode
 {
     // FIXME: nodeptr_type should be tempRBTreeNode* to be backward compatible!
-    typedef long nodeptr_type;
+    // typedef long nodeptr_type;
+    typedef templRBTreeNode<Key,Value>* nodeptr_type;
 
     /*
     templRBTreeNode<Key, Value>*	parent;
@@ -33,7 +34,6 @@ struct templRBTreeNode
     Value	value;
 
 };
-
 
 template<class Key=long, class Value=long>
 class RBTreeAllocator

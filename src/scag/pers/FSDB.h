@@ -62,6 +62,7 @@ class FSDBProfiles: public FSDB<Key, Profile>
     typedef RBTreeHSAllocator<Key, long>    IndexAllocator;
     typedef RBTree<Key, long>               IndexStorage;
     typedef templRBTreeNode<Key, long>      IndexNode;
+    typedef IndexStorage::nodeptr_type      nodeptr_type;
 
 public:
 	FSDBProfiles():logger(smsc::logger::Logger::getInstance("FSDB")), indexAllocator(0) {}
@@ -150,9 +151,10 @@ public:
     virtual bool Set(const Key& key, Profile& profile)
     {
         smsc_log_debug(logger, "Set: %s", key.toString().c_str());
-        IndexNode* node = indexStorage.Get(key);
+        nodeptr_type node = indexStorage.Get(key);
         if (node) {
-          long nodeValue = node->value;
+            IndexNode* n = indexStorage.realAddr(node);
+          long nodeValue = n->value;
           bool res = dataStorage.Change(profile, key, nodeValue);
           if (res) {
             indexStorage.setNodeValue(node, nodeValue);
