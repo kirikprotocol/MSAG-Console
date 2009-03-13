@@ -15,4 +15,9 @@
   -lscag-util-memory -lscag-util-singleton -lscag-util -lcore-threads \
   -lpthread -lrt -ldl $(LIBMALLOC)
 -scag/tests/test11     test11         -lcore-threads -lpthread -lrt -ldl $(LIBMALLOC)
-scag/tests/test12     test12         -lutil -lrt -ldl
+-scag/tests/test12     test12         -lutil -lrt -ldl
+-scag/tests/test14     test14
+scag/tests/test15     test15	      -lcore-threads \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  $(__LIBRARIES) \
+  -lrt -ldl $(LIBMALLOC)
