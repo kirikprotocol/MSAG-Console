@@ -84,6 +84,7 @@ public:
                     int _blocksInFile = BLOCKS_IN_FILE): pc(_pc), dbName(_dbName), dbPath(_dbPath),
                      blockSize(_blockSize), blocksInFile(_blocksInFile) { 
       logger = smsc::logger::Logger::getInstance("pers.up");
+      cmbpmbLogger = smsc::logger::Logger::getInstance("cmbpmb");
       smsc_log_debug(logger, "dbName='%s' dbPath='%s' blockSize=%d blocksInFile=%d",
                      dbName.c_str(), dbPath.c_str(), blockSize, blocksInFile);
     }
@@ -271,7 +272,7 @@ private:
         //if (prop = pf.GetProperty(minsk_properties[i])) {
         if (prop = pf.GetProperty(cmbpmb_properties[i])) {
           smsc_log_debug(logger, "property '%s' found in profile %s", cmbpmb_properties[i], pf.getKey().c_str());
-          smsc_log_info(logger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
+          smsc_log_debug(cmbpmbLogger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
           //smsc_log_debug(logger, "property '%s' found in profile %s", minsk_properties[i], pf.getKey().c_str());
           if (sendToPers) {
             pc.SetPropertyPrepare(PT_ABONENT, key.toString().c_str(), *prop, batch);
@@ -354,6 +355,7 @@ private:
   int blockSize;
   int blocksInFile;
   smsc::logger::Logger* logger;
+  smsc::logger::Logger* cmbpmbLogger;
   string		dbName;
   string		dbPath;
   PersClient& pc;
