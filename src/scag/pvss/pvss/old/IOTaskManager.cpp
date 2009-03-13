@@ -63,7 +63,7 @@ void TasksSorter::assignTask(uint16_t index, SortedTask *task) {
 }
 
 IOTaskManager::IOTaskManager(uint16_t maxThreads, uint32_t maxSockets, uint16_t timeout, const char *logName):isStopped_(true),
-                            maxThreads_(maxThreads), maxSockets_(maxSockets), connectionTimeout_(timeout), logger_(Logger::getInstance(logName))
+                            maxSockets_(maxSockets), connectionTimeout_(timeout), logger_(Logger::getInstance(logName)), maxThreads_(maxThreads)
 {
   int mod = maxSockets % maxThreads;
   maxSockets_ = mod > 0 ? (maxSockets / maxThreads_) + 1 : maxSockets / maxThreads_;

@@ -40,11 +40,11 @@ private:
   unsigned getErrorIndex() const { return static_cast<unsigned>(-1); }
 
 private:
+  unsigned nodeNumber_;
   unsigned locationsCount_;
   unsigned storagesCount_;
-  unsigned nodeNumber_;
-  unsigned infrastructIndex_;
   uint16_t createdLocations_;
+  unsigned infrastructIndex_;
   std::auto_ptr<InfrastructLogic> infrastructLogic_;
   Logger *logger_;
   Array<AbonentLogic*> abonentLogics_;

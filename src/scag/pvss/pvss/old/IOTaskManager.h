@@ -49,12 +49,12 @@ private:
   virtual IOTask* newTask() = 0;
 
 protected:
-  TasksSorter taskSorter_;
-  Mutex tasksMutex_;
+  bool isStopped_;
   uint32_t maxSockets_;    
   uint16_t connectionTimeout_;
   Logger *logger_;
-  bool isStopped_;
+  TasksSorter taskSorter_;
+  Mutex tasksMutex_;
 
 private:
   ThreadPool pool_;
