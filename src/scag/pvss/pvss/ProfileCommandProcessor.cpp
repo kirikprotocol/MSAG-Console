@@ -195,6 +195,7 @@ void ProfileCommandProcessor::flushLogs(Logger* logger) {
   }
   if (!dblog_.getLogMsg().empty()) {
     smsc_log_info(logger, dblog_.getLogMsg().c_str());
+    dblog_.clear();
   }
 }
 
