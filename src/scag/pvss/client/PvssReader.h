@@ -22,6 +22,7 @@ protected:
     // { mul_.add(conn.socket()); return true; }
     virtual bool hasEvents() { return mul_.canRead(ready_, error_, 200); }
     virtual void process( PvssConnection& con ) {
+        if ( ! con.isReading() ) return;
         con.processInput( pers_->async );
         if ( ! pers_->async && ! con.isReading() ) writer_->notify();
     }
