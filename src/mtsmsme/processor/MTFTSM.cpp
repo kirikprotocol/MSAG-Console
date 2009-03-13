@@ -1,11 +1,12 @@
 static char const ident[] = "$Id$";
-#include "util.hpp"
+#include "mtsmsme/processor/util.hpp"
 #include "MTFTSM.hpp"
 #include "TCO.hpp"
 //#include "mtsmsme/processor/Message.hpp"
 #include "MtForward.hpp"
 #include "MTRequest.hpp"
 #include "logger/Logger.h"
+#include "sms/sms.h"
 #include <stdexcept>
 
 namespace smsc{namespace mtsmsme{namespace processor{
@@ -24,7 +25,16 @@ MTFTSM::~MTFTSM()
 {
   smsc_log_debug(logger,"tsm otid=%s delete",ltrid.toString().c_str());
 }
-
+static void DumpSentSms(SMS& sms,Logger* logger)
+{
+  using namespace smsc::sms;
+  const char* prop = 0;
+  unsigned int len = 0;
+  prop = sms.getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&len);
+  char buf[20] = {0};
+  memcpy(buf,prop,len); buf[len] = 0;
+  smsc_log_info(logger,"sent resp %s",buf);
+}
 /*
  * Если на входе BEGIN без компонента то CONTINUE
  * Если на входе BEGIN с компонентом но без MMS то END
@@ -45,6 +55,7 @@ void MTFTSM::sendResponse(int result,int iid)
         std::vector<unsigned char> rsp;
         tco->encoder.encode_mt_resp(msg,rsp);
         tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+        DumpSentSms(req.sms,logger);
       }
       else
       {
@@ -54,6 +65,7 @@ void MTFTSM::sendResponse(int result,int iid)
         std::vector<unsigned char> rsp;
         tco->encoder.encode_mt_resp(msg,rsp);
         tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+        DumpSentSms(req.sms,logger);
         tco->TSMStopped(ltrid);
       }
     }
@@ -66,6 +78,7 @@ void MTFTSM::sendResponse(int result,int iid)
       tco->encoder.encode_mt_resp(msg,rsp);
       tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
       smsc_log_debug(logger,"tsm otid=%s receive RESULT, END sent",ltrid.toString().c_str());
+      DumpSentSms(req.sms,logger);
       tco->TSMStopped(ltrid);
     }
   }
@@ -79,11 +92,12 @@ void MTFTSM::sendResponse(int result,int iid)
     tco->encoder.encode_mt_resp(msg,rsp);
     tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
     smsc_log_debug(logger,"tsm otid=%s receive RESULT, END sent",ltrid.toString().c_str());
+    DumpSentSms(req.sms,logger);
     tco->TSMStopped(ltrid);
   }
 }
 
-void MTFTSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr, uint8_t _raddrlen, uint8_t *_raddr, TrId _rtrid,Message& msg)
+void MTFTSM::BEGIN(Message& msg)
 {
   // канал TCO->TSM, TCO вызвано из SCCP
   // Должны быть в состоянии IDLE
@@ -91,17 +105,12 @@ void MTFTSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr, uint8_t _raddrle
   // создать DHA
   // вызвать DHA с примитивом TR-BEGIN
   // перейти в состояние IR
-  laddrlen = _laddrlen;
-  memcpy(&laddr[0],_laddr,_laddrlen);
-  raddrlen = _raddrlen;
-  memcpy(&raddr[0],_raddr,_raddrlen);
-  rtrid = _rtrid;
   if(msg.isComponentPresent())
   {
     std::vector<unsigned char> mtbuf;
     mtbuf = msg.getComponent();
-    MtForward mtf;
-    tco->decoder.decodemt((void *)&mtbuf[0],mtbuf.size(),mtf);
+    MtForward mtf(logger);
+    mtf.decode((void *)&mtbuf[0],mtbuf.size());
 
 
     //req =  new MTR(this);
@@ -153,8 +162,8 @@ void MTFTSM::CONTINUE_received(uint8_t cdlen,
   {
     std::vector<unsigned char> mtbuf;
     mtbuf = msg.getComponent();
-    MtForward mtf;
-    tco->decoder.decodemt((void *)&mtbuf[0],mtbuf.size(),mtf);
+    MtForward mtf(logger);
+    mtf.decode((void *)&mtbuf[0],mtbuf.size());
 
 
     //req =  new MTR(this);
@@ -184,6 +193,4 @@ void MTFTSM::CONTINUE_received(uint8_t cdlen,
     }
   }
 }
-void MTFTSM::END_received(Message& msg) { /* there is no action */ }
-
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

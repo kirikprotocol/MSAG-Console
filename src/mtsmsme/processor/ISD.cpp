@@ -1,7 +1,7 @@
 static char const ident[] = "$Id$";
 #include "mtsmsme/processor/TCO.hpp"
 #include "ISD.hpp"
-#include "util.hpp"
+#include "mtsmsme/processor/util.hpp"
 #include <string>
 
 namespace smsc{namespace mtsmsme{namespace processor{
@@ -18,14 +18,8 @@ ISD::~ISD()
   smsc_log_debug(logger,"tsm otid=%s delete InsertSubscriberData",ltrid.toString().c_str());
 }
 
-void ISD::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr, uint8_t _raddrlen, uint8_t *_raddr, TrId _rtrid,Message& msg)
+void ISD::BEGIN(Message& msg)
 {
-  laddrlen = _laddrlen;
-  memcpy(&laddr[0],_laddr,_laddrlen);
-  raddrlen = _raddrlen;
-  memcpy(&raddr[0],_raddr,_raddrlen);
-  rtrid = _rtrid;
-
   int iid;
   if(msg.isComponentPresent()) iid = msg.getInvokeId();
 
@@ -46,10 +40,5 @@ void ISD::CONTINUE_received(uint8_t cdlen,
                               Message& msg)
 {
   smsc_log_debug(logger,"tsm otid=%s receive CONTINUE, no actions",ltrid.toString().c_str());
-}
-
-void ISD::END_received(Message& msg)
-{
-  smsc_log_debug(logger,"tsm otid=%s receive END, no action",ltrid.toString().c_str());
 }
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

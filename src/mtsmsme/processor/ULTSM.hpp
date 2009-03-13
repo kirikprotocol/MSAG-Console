@@ -12,15 +12,8 @@ class ULTSM : public TSM
   public:
     ULTSM(TrId _ltrid,AC& ac,TCO* _tco);
     ULTSM(TrId _ltrid,AC& ac,TCO* _tco, const char* _imsi, const char* _msc,const char* _vlr, const char* _mgt);
-    ~ULTSM();
-    virtual void BEGIN_received(
-                        uint8_t laddrlen,
-                        uint8_t *laddr,
-                        uint8_t raddrlen,
-                        uint8_t *raddr,
-                        TrId rtrid,
-                        Message& msg
-                       );
+    virtual ~ULTSM();
+    virtual void BEGIN(Message& msg);
     virtual void CONTINUE_received(uint8_t cdlen,
                                    uint8_t *cd, /* called party address */
                                    uint8_t cllen,

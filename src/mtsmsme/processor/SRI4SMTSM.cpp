@@ -44,22 +44,14 @@ SRI4SMTSM::~SRI4SMTSM()
   smsc_log_debug(logger,"tsm otid=%s delete SendRoutingInfoForSM",ltrid.toString().c_str());
 }
 static int SRI4SMCOUNT = 0;
-void SRI4SMTSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr,
-                               uint8_t _raddrlen, uint8_t *_raddr,
-                               TrId _rtrid,Message& msg)
+void SRI4SMTSM::BEGIN(Message& msg)
 {
   smsc_log_debug(logger,
                  "tsm otid=%s receive BEGIN with component, send END with SendRoutingInfoForSM",ltrid.toString().c_str());
   laddrlen = packSCCPAddress(laddr, 1 /* E.164 */, tco->hlrnumber /* HLR E.164 */, 6 /* HLR SSN */);
-  //laddrlen = _laddrlen;
-  //memcpy(&laddr[0],_laddr,_laddrlen);
   smsc_log_debug(logger,
                       "SRI4SMTSM's modified Cd(%s)",
                       getAddressDescription(laddrlen,laddr).c_str());
-  raddrlen = _raddrlen;
-  memcpy(&raddr[0],_raddr,_raddrlen);
-  rtrid = _rtrid;
-
   int iid = 1;
   if( msg.isComponentPresent() )
   {
@@ -73,8 +65,10 @@ void SRI4SMTSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr,
     {
       Address msisdn;
       Address _imsi;
+      Address _msc;
       msisdn.setValue(strlen(sri4sm.getMSISDN()),sri4sm.getMSISDN());
-      if ( hlr->lookup(msisdn,_imsi) )
+      //if ( hlr->lookup(msisdn,_imsi) )
+      if ( hlr->lookup(msisdn,_imsi,_msc) )
       {
         //if ( appcntx == shortMsgGatewayContext_v1)
         //{
@@ -87,7 +81,8 @@ void SRI4SMTSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr,
         //}
         //else
         //{
-          SendRoutingInfoForSMResp resp(_imsi.value, tco->mscnumber);
+        //  SendRoutingInfoForSMResp resp(_imsi.value, tco->mscnumber);
+          SendRoutingInfoForSMResp resp(_imsi.value, _msc.value);
           TResultLReq( iid /* invokeId */, 45 /* sendRoutingInfoForSM operation */, resp);
         //}
       }
@@ -130,12 +125,6 @@ void SRI4SMTSM::CONTINUE_received(uint8_t cdlen,
 }
 
 
-void SRI4SMTSM::END_received(Message& msg)
-{
-  smsc_log_debug(logger,"tsm otid=%s receive END, close dialogue",ltrid.toString().c_str());
-  if(listener) listener->complete(1);
-  tco->TSMStopped(ltrid);
-}
 void SRI4SMTSM::TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg)
 {
   arg.encode(temp_arg);
@@ -172,20 +161,17 @@ void SRI4SMTSM::TEndReq()
    }
    vector<unsigned char> data;
    end.encode(data);
+   tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,data.size(),&data[0]);
 
    smsc_log_debug(logger,
-                    "tsm.prn otid=%s receive BEGIN, END sent",
-                    ltrid.toString().c_str());
-   smsc_log_error(logger,
-                    "CALLED[%d]={%s}",
-                    raddrlen,dump(raddrlen,raddr).c_str());
-   smsc_log_error(logger,
-                    "CALLING[%d]={%s}",
-                    laddrlen,dump(laddrlen,laddr).c_str());
-   smsc_log_error(logger,
-                  "PRN[%d]={%s}",
+                  "tsm.sri4sm otid=%s receive BEGIN, END sent "
+                  "CALLED[%d]={%s} "
+                  "CALLING[%d]={%s} "
+                  "SRI4SM[%d]={%s}",
+                  ltrid.toString().c_str(),
+                  raddrlen,dump(raddrlen,raddr).c_str(),
+                  laddrlen,dump(laddrlen,laddr).c_str(),
                   data.size(),dump(data.size(),&data[0]).c_str());
-   tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,data.size(),&data[0]);
 }
 void SRI4SMTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* cl)
 {

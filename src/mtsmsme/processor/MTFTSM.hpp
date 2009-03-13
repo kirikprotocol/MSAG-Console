@@ -12,22 +12,14 @@ class MTFTSM: public TSM
 {
   public:
     MTFTSM(TrId _ltrid,AC& ac,TCO* _tco);
-    ~MTFTSM();
-    void BEGIN_received(
-                        uint8_t laddrlen,
-                        uint8_t *laddr,
-                        uint8_t raddrlen,
-                        uint8_t *raddr,
-                        TrId rtrid,
-                        Message& msg
-                       );
+    virtual ~MTFTSM();
+    virtual void BEGIN(Message& msg);
     virtual void CONTINUE_received(uint8_t cdlen,
                                    uint8_t *cd, /* called party address */
                                    uint8_t cllen,
                                    uint8_t *cl, /* calling party address */
                                    Message& msg);
 
-    virtual void END_received(Message& msg);
     void CONTINUE_Transaction()
     {
     }

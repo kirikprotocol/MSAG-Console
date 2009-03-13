@@ -3,19 +3,20 @@
 #define __SMSC_MTSMSME_PROCESSOR_TCO_HPP_
 
 #include <sys/types.h>
-#include "core/buffers/XHash.hpp"
-#include "mtsmsme/processor/SccpSender.hpp"
 #include <list>
-#include "Processor.h"
-#include "encode.hpp"
-//#include "mtsmsme/processor/Message.hpp"
-#include "TSM.hpp"
+#include "core/buffers/XHash.hpp"
+#include "core/synchronization/Mutex.hpp"
+#include "mtsmsme/processor/SccpSender.hpp"
+#include "mtsmsme/processor/Processor.h"
+#include "mtsmsme/processor/encode.hpp"
+#include "mtsmsme/processor/TSM.hpp"
 
 namespace smsc{namespace mtsmsme{namespace processor{
 /*
  * Transaction sublayer facade
  */
 using namespace smsc::mtsmsme::processor::encode;
+using smsc::core::synchronization::Mutex;
 using smsc::mtsmsme::processor::SccpSender;
 using std::list;
 
@@ -39,24 +40,15 @@ class TCO: public SccpUser
     TCO(int TrLimit);
     ~TCO();
     TSM* TC_BEGIN(AC& appcntx);
-    TSM* TC_BEGIN(const char* imsi,
-                  const char* mcs,
-                  const char* vlr,
-                  const char* mgt
-                 );
-    virtual void NUNITDATA(
-        uint8_t cdlen, uint8_t *cd, /* called party address */
+    void NUNITDATA(
+        uint8_t cdlen, uint8_t *cd, /* called party address  */
         uint8_t cllen, uint8_t *cl, /* calling party address */
-        uint16_t ulen, uint8_t *udp /* user data */);
-    void TR_CONTINUE(TrId trid);
+        uint16_t ulen, uint8_t *udp /* user data             */);
     void setRequestSender(RequestSender* sender);
     void setSccpSender(SccpSender* sender);
-    void SCCPsend(uint8_t cdlen,
-                  uint8_t *cd,
-                  uint8_t cllen,
-                  uint8_t *cl,
-                  uint16_t ulen,
-                  uint8_t *udp);
+    void SCCPsend(uint8_t cdlen, uint8_t *cd,
+                  uint8_t cllen, uint8_t *cl,
+                  uint16_t ulen, uint8_t *udp);
     void TSMStopped(TrId);
     void setAdresses(Address& msc, Address& vlr, Address& hlr);
     void setHLROAM(HLROAM* hlr);
@@ -69,8 +61,8 @@ class TCO: public SccpUser
     AddressValue vlrnumber;
     void fixCalledAddress(uint8_t cdlen, uint8_t *cd);
     XHash<TrId,TSM*,TrIdHash> tsms;
+    Mutex tridpool_mutex;
     list<TrId> tridpool;
-    uint8_t ssn;
     HLROAM* hlr;
 };
 

@@ -1,12 +1,13 @@
 static char const ident[] = "$Id$";
-#include "TCO.hpp"
-#include "util.hpp"
+#include "mtsmsme/processor/TCO.hpp"
+#include "mtsmsme/processor/util.hpp"
 #include "mtsmsme/processor/ACRepo.hpp"
 #include "logger/Logger.h"
 
 namespace smsc{namespace mtsmsme{namespace processor{
 
 using namespace smsc::mtsmsme::processor::util;
+using smsc::core::synchronization::MutexGuard;
 
 static int reqnum = 0;
 using smsc::logger::Logger;
@@ -29,6 +30,7 @@ TCO::~TCO()
 }
 TSM* TCO::TC_BEGIN(AC& appcntx)
 {
+  MutexGuard g(tridpool_mutex);
   if ( tridpool.empty() )
   {
     smsc_log_debug(logger,
@@ -72,12 +74,9 @@ void TCO::fixCalledAddress(uint8_t cdlen, uint8_t* cd)
                   getAddressDescription(cdlen,cd).c_str());
   }
 }
-void TCO::NUNITDATA(uint8_t cdlen,
-                    uint8_t *cd, /* called party address */
-                    uint8_t cllen,
-                    uint8_t *cl, /* calling party address */
-                    uint16_t ulen,
-                    uint8_t *udp /* user data */
+void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
+                    uint8_t cllen, uint8_t *cl, /* calling party address */
+                    uint16_t ulen, uint8_t *udp /* user data             */
                    )
 {
   {
@@ -100,7 +99,7 @@ void TCO::NUNITDATA(uint8_t cdlen,
     //      if (!msg.isDialoguePortionExist() && appcntx != sm_mt_relay_v1)
     if (!msg.isDialoguePortionExist() && !isMapV1ContextSupported(appcntx))
     {
-      smsc_log_debug(logger,"tco receive BEGIN with no dialogue portion, send ABORT(badlyFormattedTransactionPortion)");
+      smsc_log_error(logger,"tco receive BEGIN with no dialogue portion, send ABORT(badlyFormattedTransactionPortion)");
       std::vector<unsigned char> rsp;
       encoder.encodeBadTrPortion(rtrid, rsp);
       SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
@@ -109,38 +108,46 @@ void TCO::NUNITDATA(uint8_t cdlen,
 
     if (msg.isDialoguePortionExist() && !isIncomingContextSupported(appcntx))
     {
-      smsc_log_debug(logger,"tco receive BEGIN with unsupported app context, send ABORT(application-context-name-not-supported)");
+      smsc_log_error(logger,"tco receive BEGIN with unsupported app context, send ABORT(application-context-name-not-supported)");
       std::vector<unsigned char> rsp;
       encoder.encodeACNotSupported(rtrid, appcntx, rsp);
       SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
       return;
     }
-
-    if (tridpool.empty() )
-    {
-      smsc_log_debug(logger,"tco BEGIN and transaction pool is empty, send ABORT(resourceLimitation)");
-      std::vector<unsigned char> rsp;
-      encoder.encodeResourceLimitation(rtrid, rsp);
-      SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
-      return;
-    }
-
-    // выделить id, создать TSM, подать на вход BEGIN
-    TrId ltrid = tridpool.front();
     TSM* tsm = 0;
-    if (tsm = createIncomingTSM(ltrid, appcntx, this))
     {
-      tridpool.pop_front();
-      tsms.Insert(ltrid, tsm);
+      MutexGuard g(tridpool_mutex);
+      if (! tridpool.empty() )
+      {
+        // выделить id, создать TSM, подать на вход BEGIN
+        TrId ltrid = tridpool.front();
+        if (tsm = createIncomingTSM(ltrid, appcntx, this))
+        {
+          tridpool.pop_front();
+          tsms.Insert(ltrid, tsm);
+        }
+      }
+    }
+    if (tsm)
+    {
       tsm->BEGIN(cdlen, cd, cllen, cl, rtrid, msg);
-    } else
+    }
+    else
     {
-      smsc_log_debug(logger,"tco can't create transaction for app context, send ABORT(resourceLimitation)");
+//      if (tridpool.empty() )
+//      {
+//        smsc_log_error(logger,"tco BEGIN and transaction pool is empty, send ABORT(resourceLimitation)");
+//        std::vector<unsigned char> rsp;
+//        encoder.encodeResourceLimitation(rtrid, rsp);
+//        SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
+//        return;
+//      }
+      smsc_log_debug(logger,"tco BEGIN and can't create transaction for app context or tridpool is empty, send ABORT(resourceLimitation)");
       std::vector<unsigned char> rsp;
       encoder.encodeResourceLimitation(rtrid, rsp);
       SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
-      return;
     }
+    return;
   } /* end of BEGIN handling section */
   if (msg.isContinue())
   {
@@ -155,7 +162,7 @@ void TCO::NUNITDATA(uint8_t cdlen,
       tsm->CONTINUE_received(cdlen, cd, cllen, cl, msg);
     } else
     {
-      smsc_log_debug(logger,"TCO receive CONTINUE but TSM not found, DISCARD, but need to send ABORT for quick transaction release");
+      smsc_log_error(logger,"TCO receive CONTINUE but TSM not found, DISCARD, but need to send ABORT for quick transaction release");
       std::vector<unsigned char> rsp;
       encoder.encodeResourceLimitation(rtrid, rsp);
       SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
@@ -180,6 +187,7 @@ void TCO::NUNITDATA(uint8_t cdlen,
 }
 void TCO::TSMStopped(TrId ltrid)
 {
+  MutexGuard g(tridpool_mutex);
   tridpool.push_back(ltrid);
   TSM** ptr = tsms.GetPtr(ltrid);
   if (ptr)
@@ -198,7 +206,11 @@ void TCO::SCCPsend(uint8_t cdlen,uint8_t *cd,
                    uint8_t cllen,uint8_t *cl,
                    uint16_t ulen,uint8_t *udp)
 {
-  if (sccpsender) sccpsender->send(cdlen,cd,cllen,cl,ulen,udp);
+  if (sccpsender)
+  {
+    smsc_log_debug(logger,"void TCO::SCCPsend");
+    sccpsender->send(cdlen,cd,cllen,cl,ulen,udp);
+  }
 }
 
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

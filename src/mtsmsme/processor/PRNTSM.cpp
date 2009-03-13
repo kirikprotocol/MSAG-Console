@@ -1,7 +1,7 @@
 static char const ident[] = "$Id$";
 #include "TCO.hpp"
 #include "PRNTSM.hpp"
-#include "util.hpp"
+#include "mtsmsme/processor/util.hpp"
 #include "mtsmsme/comp/ProvideRoamingNumber.hpp"
 #include <string>
 #include <asn_application.h>
@@ -25,16 +25,9 @@ PRNTSM::~PRNTSM()
 {
   smsc_log_debug(logger,"tsm otid=%s delete Provide Roaming Number",ltrid.toString().c_str());
 }
-void PRNTSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr, uint8_t _raddrlen, uint8_t *_raddr, TrId _rtrid,Message& msg)
+void PRNTSM::BEGIN(Message& msg)
 {
   smsc_log_debug(logger,"tsm otid=%s receive BEGIN with component, send END with Missed Calls number as Roaming Number",ltrid.toString().c_str());
-  laddrlen = _laddrlen;
-  memcpy(&laddr[0],_laddr,_laddrlen);
-  raddrlen = _raddrlen;
-  memcpy(&raddr[0],_raddr,_raddrlen);
-  rtrid = _rtrid;
-
-
   int iid = 1;
   if(msg.isComponentPresent()) iid = msg.getInvokeId();
 
@@ -86,12 +79,6 @@ void PRNTSM::CONTINUE_received(uint8_t cdlen,
                    "tsm.PRNTSM otid=%s receive CONTINUE with component, INVOKE_RES sent",
                    ltrid.toString().c_str());
   }
-}
-void PRNTSM::END_received(Message& msg)
-{
-  smsc_log_debug(logger,"tsm otid=%s receive END, close dialogue",ltrid.toString().c_str());
-  if(listener) listener->complete(1);
-  tco->TSMStopped(ltrid);
 }
 void PRNTSM::TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg)
 {

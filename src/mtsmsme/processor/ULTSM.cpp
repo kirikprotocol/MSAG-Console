@@ -1,7 +1,7 @@
 static char const ident[] = "$Id$";
 #include "TCO.hpp"
 #include "ULTSM.hpp"
-#include "util.hpp"
+#include "mtsmsme/processor/util.hpp"
 #include "mtsmsme/comp/UpdateLocation.hpp"
 #include <string>
 
@@ -23,7 +23,7 @@ ULTSM::~ULTSM()
   smsc_log_debug(logger,"tsm otid=%s delete UpdateLocation",ltrid.toString().c_str());
 }
 
-void ULTSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr, uint8_t _raddrlen, uint8_t *_raddr, TrId _rtrid,Message& msg)
+void ULTSM::BEGIN(Message& msg)
 {
 }
 void ULTSM::CONTINUE_received(uint8_t cdlen,
@@ -56,9 +56,8 @@ void ULTSM::CONTINUE_received(uint8_t cdlen,
 
 void ULTSM::END_received(Message& msg)
 {
-  smsc_log_debug(logger,"tsm otid=%s receive END, close dialogue",ltrid.toString().c_str());
   if(listener) listener->complete(1);
-  tco->TSMStopped(ltrid);
+  TSM::END_received(msg);
 }
 void ULTSM::TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg)
 {
@@ -66,23 +65,6 @@ void ULTSM::TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg)
   temp_opcode = opcode;
   temp_invokeId = invokeId;
 }
-//void ULTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* cl)
-//{
-//  // set SCCP adresses
-//
-//  raddrlen = cdlen;
-//  memcpy(raddr,cd,cdlen);
-//  laddrlen = cllen;
-//  memcpy(laddr,cl,cllen);
-//
-//  smsc_log_error(logger,
-//                 "CALLED[%d]={%s}",raddrlen,dump(raddrlen,raddr).c_str());
-//  smsc_log_error(logger,
-//                 "CALLING[%d]={%s}",laddrlen,dump(laddrlen,laddr).c_str());
-//  smsc_log_error(logger,
-//                 "UpdateLocation[%d]={%s}",ulmsg.size(),dump(ulmsg.size(),&ulmsg[0]).c_str());
-//  tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,ulmsg.size(),&ulmsg[0]);
-//}
 void ULTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* cl)
 {
 	// set SCCP adresses
