@@ -7,6 +7,7 @@ scag/pers_upload                         pers_upload     \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -llogger-additional \
   -lscag-pers-upload \
   -lscag-pers \
+  -lscag-pvss-data \
   -lscag-pvss-base \
   -lscag-util-encodings -lscag-exc -lscag-util-storage \
   -lscag-util-properties -lscag-util-singleton \
@@ -29,6 +30,7 @@ scag/pers_flooder                         pers_flooder     \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -llogger-additional \
   -lscag-pers-upload \
   -lscag-pers \
+  -lscag-pvss-data \
   -lscag-pvss-base \
   -lscag-util-encodings -lscag-exc -lscag-util-storage \
   -lscag-util-properties -lscag-util-singleton \
