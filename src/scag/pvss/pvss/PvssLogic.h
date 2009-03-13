@@ -86,8 +86,8 @@ private:
   struct ElementStorage {
     ElementStorage(unsigned idx):glossary(0), storage(0), index(idx) {};
     ElementStorage():glossary(0), storage(0), index(0) {};
-    AbonentStorage* storage;
     Glossary* glossary;
+    AbonentStorage* storage;
     unsigned index;
   };
 
