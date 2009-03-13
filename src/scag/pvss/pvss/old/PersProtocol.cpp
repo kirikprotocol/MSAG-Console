@@ -94,16 +94,19 @@ Request* PersProtocol::deserialize(SerialBuffer& sb) const {
 }
 
 void PersProtocol::deserializeProfileKey(ProfileKey& key, SerialBuffer& sb) const {
+  smsc_log_debug(logger_, "deserialize profile key");
   ScopeType scopeType = static_cast<ScopeType>(sb.ReadInt8());
   switch (scopeType) {
   case ABONENT: {
     std::string strKey;
     sb.ReadString(strKey);
     key.setAbonentKey(strKey);    
+    smsc_log_debug(logger_, "abonent key='%s'", strKey.c_str());
+    break;
   }
-  case OPERATOR: key.setOperatorKey(sb.ReadInt32());
-  case PROVIDER: key.setProviderKey(sb.ReadInt32());
-  case SERVICE:  key.setServiceKey(sb.ReadInt32());
+  case OPERATOR: key.setOperatorKey(sb.ReadInt32()); break;
+  case PROVIDER: key.setProviderKey(sb.ReadInt32()); break;;
+  case SERVICE:  key.setServiceKey(sb.ReadInt32()); break;
   }
 }
 
@@ -127,6 +130,7 @@ BatchCommand* PersProtocol::deserializeBatchCommand(SerialBuffer& sb) const {
 BatchRequestComponent* PersProtocol::deserializeCommand(PersCmd cmdType, SerialBuffer& sb) const {
   switch(cmdType) {
   case PC_DEL: {
+    smsc_log_debug(logger_, "deserialize DEL");
     std::string varName;
     sb.ReadString(varName);
     DelCommand *cmd = new DelCommand();
@@ -134,13 +138,16 @@ BatchRequestComponent* PersProtocol::deserializeCommand(PersCmd cmdType, SerialB
     return cmd;
   }
   case PC_SET: {
+    smsc_log_debug(logger_, "deserialize SET");
     std::auto_ptr<Property> prop(new Property);
     prop->Deserialize(sb);
+    smsc_log_debug(logger_, "property name=%s", prop->getName());
     SetCommand *cmd = new SetCommand();
     cmd->setProperty(prop.release());
     return cmd;
   }
   case PC_GET: {
+    smsc_log_debug(logger_, "deserialize GET");
     std::string varName;
     sb.ReadString(varName);
     GetCommand *cmd = new GetCommand();
@@ -149,6 +156,7 @@ BatchRequestComponent* PersProtocol::deserializeCommand(PersCmd cmdType, SerialB
   }
   case PC_INC:
   case PC_INC_RESULT: {
+    smsc_log_debug(logger_, "deserialize INC");
     std::auto_ptr<Property> prop(new Property);
     prop->Deserialize(sb);
     IncCommand *cmd = new IncCommand();
@@ -156,6 +164,7 @@ BatchRequestComponent* PersProtocol::deserializeCommand(PersCmd cmdType, SerialB
     return cmd;
   }
   case PC_INC_MOD: {
+    smsc_log_debug(logger_, "deserialize INC_MOD");
     uint32_t mod = sb.ReadInt32();
     std::auto_ptr<Property> prop(new Property);
     prop->Deserialize(sb);

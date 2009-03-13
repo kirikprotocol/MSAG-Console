@@ -19,12 +19,16 @@ ConnectionContext::ConnectionContext(Socket* sock, WriterTaskManager& writerMana
   //if (socket_) {
     //SocketData::setContext(socket_, this);
   //}
+
+  //TODO register socket
+  pvssServer_.acceptOldChannel(socket_);
   debuglogger_ = Logger::getInstance("ctx");
   getPeerIp();
 } 
 
 ConnectionContext::~ConnectionContext() {
   if (socket_) {
+    //TODO unregister socket
     delete socket_;
   }
 }
