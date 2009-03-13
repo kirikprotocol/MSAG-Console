@@ -31,9 +31,9 @@ struct PerfCounter {
     }
   }
 private:
+  bool counterOn_;
   smsc::util::TimeSlotCounter<> accepted;
   smsc::util::TimeSlotCounter<> processed;
-  bool counterOn_;
 };
 
 struct Performance {

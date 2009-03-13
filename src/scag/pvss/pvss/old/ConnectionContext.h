@@ -26,7 +26,7 @@ using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
 using smsc::core::synchronization::Mutex;
 
-const uint32_t READ_BUF_SIZE = 1024;
+const int32_t READ_BUF_SIZE = 1024;
 const uint32_t RESP_BUF_SIZE = 5;
 const uint32_t PACKET_LENGTH_SIZE = 4;
 
@@ -96,26 +96,24 @@ private:
   void getPeerIp();
 
 protected:
-  Socket* socket_;
-  SerialBuffer inbuf_;
-  Logger* logger_;
-  Logger* debuglogger_;
-  uint32_t packetLen_;
-  //uint32_t sequenceNumber_;
-  bool async_;
   Action action_;
+  uint32_t packetLen_;
+  bool async_;
+  core::server::ServerCore& pvssServer_;
   Mutex mutex_;
   string peerIp_;
-  core::server::ServerCore& pvssServer_;
-  //ReaderTaskManager& readerManager_;
+  SerialBuffer inbuf_;
+  Socket* socket_;
+  Logger* logger_;
+  Logger* debuglogger_;
 
 private:
-  SerialBuffer outbuf_;
   WriterTaskManager& writerManager_;
-  uint8_t tasksCount_;
   PerfCounter perfCounter_;
+  uint8_t tasksCount_;
   uint32_t packetsCount_;
   //vector<DbLog> dbLogs_;
+  SerialBuffer outbuf_;
   char readBuf_[READ_BUF_SIZE];
 };
 

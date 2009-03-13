@@ -27,15 +27,15 @@ public:
   virtual const char* taskName();
 
 private:
-  ReaderTaskManager& readers_;
   core::server::ServerCore& pvssServer_;
+  ReaderTaskManager& readers_;
   WriterTaskManager& writers_;
   PersProtocol& protocol_;
   Socket masterSocket_;
   Logger *logger;
-  bool isStopping_;  
   bool perfCounterOn_;
   int perfCounterPeriod_;
+  bool isStopping_;  
   Mutex mutex_;
 };
 

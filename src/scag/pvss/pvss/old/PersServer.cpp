@@ -7,7 +7,8 @@ using smsc::util::Exception;
 using smsc::core::synchronization::MutexGuard;
 
 PersServer::PersServer(core::server::ServerCore& server, ReaderTaskManager& readers, WriterTaskManager& writers, PersProtocol& protocol, bool perfCounterOn, int perfCounterPeriod)
-                       :pvssServer_(server), readers_(readers), writers_(writers), protocol_(protocol), perfCounterOn_(perfCounterOn), isStopping_(true) 
+                       :pvssServer_(server), readers_(readers), writers_(writers), protocol_(protocol), perfCounterOn_(perfCounterOn),
+                        perfCounterPeriod_(perfCounterPeriod), isStopping_(true) 
 {
   perfCounterPeriod_ = perfCounterOn_ ? perfCounterPeriod : 0;
   readers_.init();

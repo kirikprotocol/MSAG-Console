@@ -13,8 +13,8 @@ using scag::util::RelockMutexGuard;
 const size_t MAX_PACKET_SIZE = 102400;
 
 ConnectionContext::ConnectionContext(Socket* sock, WriterTaskManager& writerManager, core::server::ServerCore& server, bool perfCounterOn)
-                   :socket_(sock), action_(READ_REQUEST), packetLen_(0), writerManager_(writerManager), 
-                    pvssServer_(server), tasksCount_(1), async_(false), packetsCount_(0), perfCounter_(perfCounterOn)
+                   : action_(READ_REQUEST), packetLen_(0), async_(false), pvssServer_(server), socket_(sock),  
+                    writerManager_(writerManager), perfCounter_(perfCounterOn), tasksCount_(1), packetsCount_(0)
 {
   //if (socket_) {
     //SocketData::setContext(socket_, this);

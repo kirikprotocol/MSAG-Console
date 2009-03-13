@@ -62,13 +62,13 @@ protected:
   bool idle() const;
 
 protected:
+  IOTaskManager& iomanager_;
   uint16_t connectionTimeout_;
   uint16_t checkTimeoutPeriod_;
   time_t lastCheckTime_;
   Performance performance_;
   RWMultiplexer multiplexer_;
   EventMonitor socketMonitor_;
-  IOTaskManager& iomanager_;
   Logger* logger;
   Array<Socket*> waitingAdd_;
 };
