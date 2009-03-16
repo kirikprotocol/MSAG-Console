@@ -59,6 +59,7 @@ Response* AbonentLogic::processProfileRequest(AbstractProfileRequest& request) {
   }
   bool createProfile = true; //TODO: set false for GET and DEL requests
   Profile *pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
+  pf->setChanged(false);
   commandProcessor_.setProfile(pf);
   profileRequest.getCommand()->visit(commandProcessor_);
 
@@ -98,6 +99,7 @@ Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& reques
   IntProfileKey intKey(key);
   bool createProfile = true; //TODO set false for GET and DEL requests
   Profile *pf = storage->get(intKey, createProfile);
+  pf->setChanged(false);
   commandProcessor_.setProfile(pf);
   profileRequest.getCommand()->visit(commandProcessor_);
 
