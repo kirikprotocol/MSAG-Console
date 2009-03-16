@@ -36,12 +36,16 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
   char addr[20];
 
   unsigned number = 0;
+  int iterCount = 0;
   while (!isStopped_) {
+  //while (iterCount == 0) {
     number = (rand() * RAND_MAX + 1) | (rand() + 1);
     number = number % addrsCount;
     sprintf(addr, "791%08d", number);			
+    //commandsSetConfigured(addr);
     //commandsSetConfigured(addr, number, "test_abnt_prop", PT_ABONENT, getsetCount);
     commandsSet(addr, number, "test_serv_prop", PT_ABONENT);
+    ++iterCount;
     //number = number > addrsCount ? 0 : number + 1;
   }
 
@@ -56,7 +60,7 @@ void PvssFlooder::doCall( PersCall* context ) {
     smsc_log_warn(logger_, "can't send request: pers client busy!");
     delete context;
     if (busyRejects_ > maxRejects_) {
-      //throw PersClientException(CLIENT_BUSY);
+      throw PersClientException(CLIENT_BUSY);
     }
     ++busyRejects_;
     return;
@@ -66,10 +70,29 @@ void PvssFlooder::doCall( PersCall* context ) {
     throw PersClientException(NOT_CONNECTED);
   }
   busyRejects_ = busyRejects_ > 0 ? busyRejects_ - 1 : 0;
-  persClient_.callAsync( context, *this );
-  ++callsCount_;
-  ++sentCalls_;
-  smsc_log_debug(logger_, "call cx:%p calls count %d", context, callsCount_);
+  //persClient_.callAsync( context, *this );
+  //++callsCount_;
+  //++sentCalls_;
+  //smsc_log_debug(logger_, "call cx:%p calls count %d", context, callsCount_);
+  callSync( context );
+}
+
+void PvssFlooder::callSync( PersCall* call ) {
+  startTime_ = gethrtime();
+  bool result = persClient_.callSync(call);
+  if (result) {
+    ++callsCount_;
+    ++sentCalls_;
+  } else {
+    smsc_log_warn(logger_, "can't send call cx:%p ", call);
+  }
+  if (call->status() == PERSCLIENTOK || call->status() == PROPERTY_NOT_FOUND) {
+    ++successCalls_;
+  } else {
+    smsc_log_warn(logger_, "request result: %s", exceptionReasons[call->status()]);
+    ++errorCalls_;
+  }
+  delete call;
   delay();
 }
 
@@ -83,10 +106,11 @@ void PvssFlooder::continuePersCall( PersCall* call, bool dropped ) {
   uint64_t procTime = 0;
   if (startTime) {
     procTime = gethrtime() - *startTime;
+    procTime_ = procTime;
     uint32_t msprocTime = static_cast<uint32_t>(procTime / 1000000);
     minprocTime_ = msprocTime < minprocTime_ ? msprocTime : minprocTime_; 
     maxprocTime_ = msprocTime > maxprocTime_ ? msprocTime : maxprocTime_; 
-    smsc_log_debug(logger_, "continue execution cx:%p, process time: %d ms", call, msprocTime);
+    smsc_log_info(logger_, "continue execution cx:%p, process time: %d ms", call, msprocTime);
     delete startTime;
   }
   if (call->status() == PERSCLIENTOK || call->status() == PROPERTY_NOT_FOUND) {
@@ -128,6 +152,7 @@ PersCall* PvssFlooder::createPersCall( ProfileType pfType,
 
 void PvssFlooder::delay() {
   hrtime_t procTime = gethrtime() - startTime_;
+  //hrtime_t procTime = procTime_;
   //procTime += procTime / 10;
   procTime /= 1000;
   if (delay_ > procTime + overdelay_) {
@@ -141,6 +166,17 @@ void PvssFlooder::delay() {
     overdelay_ -= delay_;
     if (overdelay_ < 0) overdelay_ = 0;
   }
+}
+
+void PvssFlooder::commandsSetConfigured(const string& addr) {
+  string strPropName = "some.string.var";
+  string strPropValue = "some text";
+  string intPropName = "other.int.var";
+  int intPropValue = 354;
+  std::auto_ptr<PersCommand> strcmd( setCmd(strPropName, strPropValue) );
+  doCall( createPersCall(PT_ABONENT, addr, 0, strcmd) );
+  std::auto_ptr<PersCommand> intcmd( setCmd(intPropName, intPropValue) );
+  doCall( createPersCall(PT_ABONENT, addr, 0, intcmd) );
 }
 
 void PvssFlooder::commandsSetConfigured(const string& addr, int intKey, const string& propName, ProfileType pfType, int cmdsCount) {
@@ -194,10 +230,10 @@ void PvssFlooder::commandsSet(const string& addr, int intKey, const string& prop
 
   std::auto_ptr<PersCommand> cmd9( getCmd(incModName) );
   doCall( createPersCall(pfType,addr,intKey,cmd9) );  
-/*
+
   std::auto_ptr<PersCommand> cmd10( batchCmd(propName, true) );
   doCall( createPersCall(pfType,addr,intKey,cmd10) );  
-*/
+
 }
 
 PersCommandSingle* PvssFlooder::getCmd(const string& propName, PersCommandSingle* cmd ) {

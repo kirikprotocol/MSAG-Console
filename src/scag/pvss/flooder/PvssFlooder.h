@@ -53,7 +53,10 @@ private:
     pvss::PersCommandBatch* batchCmd(const string& propName, bool trans);
     void commandsSet(const string& addr, int intKey, const string& propName, pvss::ProfileType pfType);
     void commandsSetConfigured(const string& addr, int intKey, const string& propName, pvss::ProfileType pfType, int cmdsCount);
+    void commandsSetConfigured(const string& addr);
     pvss::PersCall* createPersCall( pvss::ProfileType pfType, const string& addr, int intKey, std::auto_ptr<pvss::PersCommand> cmd );
+    void callSync( PersCall* call );
+
   void delay();
 
 private:
@@ -104,7 +107,7 @@ public:
   }
 private:
   void perfCount() {
-    int procTime = client_->getProcTime();
+    //int procTime = client_->getProcTime();
     int sent = client_->getSent() / period_;
     int ok = client_->getSuccess() / period_;
     int errtotal = client_->getError();
@@ -113,7 +116,7 @@ private:
       success_ += ok;
       sent_ += sent;
       error_ += err;
-      procTime_ += procTime;
+      //procTime_ += procTime;
       ++count_;
       smsc_log_info(logger_, "%d/%d/%d sent/ok/error per second", sent, ok, err);
     }

@@ -6,6 +6,7 @@
 scag/pvss_flooder   flooder  \
     -lscag-pvss-client \
     -lscag-pvss-flooder \
+    -lscag-pvss-data \
     -lscag-pvss-base \
     -lscag-pvss-data \
     \
