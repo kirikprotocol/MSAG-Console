@@ -183,6 +183,22 @@ public class MapLimits extends SmscBean {
     params.put(paramName, new Integer(paramValue));
   }
 
+  public String getStringParam(String paramName)
+  {
+    Object param = params.get(paramName);
+    if (param == null)
+      return "";
+    if (param instanceof String)
+      return (String) param;
+    else
+      return null;
+  }
+
+  public void setStringParam(String paramName, String paramValue)
+  {
+    params.put(paramName, paramValue);
+  }
+
 
   public String getMbSave()
   {
