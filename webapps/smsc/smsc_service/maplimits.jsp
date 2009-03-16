@@ -34,6 +34,15 @@
 
     finishParams(out);
     finishSection(out);
+
+    //################################## ussd #############################
+    startSection(out, "ussd", "maplimits.ussd", true);
+    startParams(out);
+
+    param(out, "no SRI codes", "ussd.no_sri_codes", bean.getStringParam("ussd.no_sri_codes"));
+
+    finishParams(out);
+    finishSection(out);
 %>
 </div>
 <%
