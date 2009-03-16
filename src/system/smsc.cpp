@@ -19,6 +19,7 @@
 #ifdef USE_MAP
 #include "system/mapio/MapIoTask.h"
 #endif
+#include "util/smstext.h"
 #include "system/abonentinfo/AbonentInfo.hpp"
 #include "mscman/MscManager.h"
 #include "resourcemanager/ResourceManager.hpp"
