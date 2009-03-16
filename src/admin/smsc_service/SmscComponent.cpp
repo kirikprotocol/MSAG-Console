@@ -20,6 +20,7 @@
 #endif
 #include "system/mapio/FraudControl.hpp"
 #include "system/mapio/MapLimits.hpp"
+#include "system/mapio/MapProxy.h"
 
 namespace smsc {
 namespace admin {
