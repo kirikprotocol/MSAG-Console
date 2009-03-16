@@ -19,7 +19,7 @@ Strategy_SendPositiveTransliteratedMessage::handle()
                                    (unsigned)strlen(transliteratedSuccessfulResultStr));
   } else if ( rnd >= 25 && rnd < 50 ) {
     char transliteratedSuccessfulResultStr[128];
-    snprintf(transliteratedSuccessfulResultStr, sizeof(transliteratedSuccessfulResultStr), "Vash dolg %d rub.", rnd);
+    snprintf(transliteratedSuccessfulResultStr, sizeof(transliteratedSuccessfulResultStr), "Vash balans -%d rub.", rnd);
     resultPacket->Cmd().setUSSData(transliteratedSuccessfulResultStr,
                                    (unsigned)strlen(transliteratedSuccessfulResultStr));
   } else if ( rnd >= 50 && rnd < 75 ) {
@@ -29,7 +29,7 @@ Strategy_SendPositiveTransliteratedMessage::handle()
     resultPacket->Cmd().setUCS2USSData(prepareStringInUCS(vash_balans_str));
   } else {
     char vash_dolg_str[128];
-    snprintf(vash_dolg_str, sizeof(vash_dolg_str), "Ваш долг %d руб.", rnd);
+    snprintf(vash_dolg_str, sizeof(vash_dolg_str), "Ваш баланс -%d руб.", rnd);
  
     resultPacket->Cmd().setUCS2USSData(prepareStringInUCS(vash_dolg_str));
   }
