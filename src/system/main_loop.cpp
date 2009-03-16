@@ -218,22 +218,26 @@ void Smsc::mainLoop(int idx)
         licenseFileCheckHour=t.tm_hour;
         if(oldLicenseExp!=license.expdate && licenseExpireSoon && license.expdate-now>20*24*60*60)
         {
+#ifdef SNMP
           char msg[256];
           struct tm lexp;
           localtime_r(&oldLicenseExp,&lexp);
           sprintf(msg,"CLEARED SYSTEM LICENSE will expire on %02d.%02d.%04d (AlarmID=LICENSE; severity=1)",lexp.tm_mday,lexp.tm_mon+1,lexp.tm_year+1900);
           smsc::snmp::SnmpAgent::trap("LICENSE","SYSTEM",smsc::snmp::SnmpAgent::NORMAL,msg);
+#endif
         }
       }
       if(t.tm_mday!=licenseExpTrapDay)
       {
         if(license.expdate-now<20*24*60*60)
         {
+#ifdef SNMP
           char msg[256];
           struct tm lexp;
           localtime_r(&license.expdate,&lexp);
           sprintf(msg,"ACTIVE SYSTEM LICENSE will expire on %02d.%02d.%04d (AlarmID=LICENSE; severity=5)",lexp.tm_mday,lexp.tm_mon+1,lexp.tm_year+1900);
           smsc::snmp::SnmpAgent::trap("LICENSE","SYSTEM",smsc::snmp::SnmpAgent::CRITICAL,msg);
+#endif
         }
         licenseExpTrapDay=t.tm_mday;
       }
