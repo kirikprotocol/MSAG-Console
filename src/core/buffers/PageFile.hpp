@@ -346,9 +346,9 @@ public:
       }
       file.Seek(pageIdx);
       int status=file.ReadByte();
+      unsigned dataSize=file.ReadNetInt32();
       nextIdx=file.ReadNetInt64();
 #ifdef PAGEFILEDEBUG
-      unsigned dataSize=file.ReadNetInt32();
       if ( log_->isDebugEnabled() ) showpage("upd read", pageIdx, status, dataSize, nextIdx );
 #endif
       if(wasNewPage || status==pageUsedFinal)nextIdx=0;
