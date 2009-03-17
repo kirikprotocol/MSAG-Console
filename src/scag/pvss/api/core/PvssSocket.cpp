@@ -50,6 +50,7 @@ PvssSocket::~PvssSocket()
 
 void PvssSocket::send( const Packet* packet, bool isRequest, bool force ) throw (PvssException)
 {
+    MutexGuard mg(writerMutex_);
     if ( ! writer_ )
         throw PvssException(PvssException::NOT_CONNECTED, "writer is not connected");
     if ( writer_->stopping() )
@@ -198,9 +199,11 @@ void PvssSocket::connect() throw (exceptions::IOException)
     smsc_log_info(log_,"Connecting channel %p to host=%s:%d tmo=%d", this,
                   host_.c_str(), port_, connectionTmo_ );
     if ( sock_->Init(host_.c_str(),port_,connectionTmo_) == -1 ) {
+        smsc_log_info(log_,"cannot init socket");
         throw exceptions::IOException("cannot init socket on channel %p", this);
     }
     if ( sock_->Connect() == -1 ) {
+        smsc_log_info(log_,"connect failed");
         throw exceptions::IOException("cannot connect socket on channel %p", this);
     }
 }
@@ -217,6 +220,7 @@ void PvssSocket::disconnect()
 
 void PvssSocket::registerWriter( PacketWriter* writer )
 {
+    MutexGuard mg(writerMutex_);
     smsc_log_debug(log_,"attaching writer %p to channel %p",writer,this);
     assert( bool(writer) != bool(writer_) );
     writer_ = writer;

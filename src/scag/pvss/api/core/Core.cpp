@@ -21,7 +21,7 @@ smsc::logger::Logger* Core::logger = 0;
 
 Core::~Core()
 {
-    shutdownIO();
+    // shutdownIO();
     waitUntilReleased();
     smsc_log_info(logger,"dtor: core");
 }
@@ -94,7 +94,7 @@ void Core::startupIO() throw(PvssException)
 
     {
         MutexGuard mg(writersMutex);
-        stopWriters();
+        stopWriters(false);
         for (int i=0; i<config->getWritersCount(); i++) {
             try {
                 PacketWriter* writer = new PacketWriter(*config,*this);
@@ -105,7 +105,7 @@ void Core::startupIO() throw(PvssException)
                     MutexGuard mgr(readersMutex);
                     stopReaders();
                 }
-                stopWriters();
+                stopWriters(false);
                 throw PvssException(PvssException::IO_ERROR, "Failed to start writers: %s", init_exc.what());
             }
         }

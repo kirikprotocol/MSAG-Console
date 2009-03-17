@@ -112,6 +112,7 @@ private:
     Protocol::Buffer                          rdBuffer_;
 
     // writer/reader
+    smsc::core::synchronization::Mutex        writerMutex_;
     PacketWriter*                             writer_;
     PacketReader*                             reader_;
 

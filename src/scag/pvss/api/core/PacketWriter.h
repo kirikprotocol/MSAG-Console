@@ -16,7 +16,7 @@ public:
     PacketWriter( Config& theconfig,
                   Core& thecore,
                   const char* taskname = "pvss.wtask" ) :
-    IOTask(theconfig,thecore,taskname) {}
+    IOTask(theconfig,thecore,taskname), writePending_(false) {}
 
     /// serialize the packet
     void serialize(const Packet& packet,Protocol::Buffer& buffer) throw (PvssException);
@@ -28,6 +28,10 @@ public:
             mon_.notify();
         }
     }
+
+    /// notify writer that it should write all pending contexts,
+    /// wait until all contexts are written.  Typically it should be invoked before shutdown.
+    void writePending();
 
 protected:
     virtual void attachToSocket( PvssSocket& socket ) {
@@ -48,6 +52,10 @@ protected:
     virtual bool hasEvents() { return mul_.canWrite(ready_, error_, 200); }
     virtual void process( PvssSocket& con ) { con.sendData(*core_); }
 
+    virtual void setupFailed( util::msectime_type currentTime );
+
+private:
+    bool  writePending_;
 };
 
 } // namespace core

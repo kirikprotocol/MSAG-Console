@@ -9,7 +9,7 @@ FlooderStat::FlooderStat( const FlooderConfig& config,
                           core::client::Client& client ) :
 log_(0),
 requestsPerSecond_(config.getSpeed()),
-requested_(config.getGetSetCount()),
+requested_(config.getRequested()),
 doneTime_(0),
 timeout_(100),
 stopped_(false),
@@ -123,13 +123,20 @@ void FlooderStat::waitUntilProcessed()
 
 void FlooderStat::startup() throw (exceptions::IOException)
 {
-    stopped_ = false;
+    const std::vector< std::string >& patterns = config_.getPropertyPatterns();
+    if ( patterns.size() <= 0 ) throw exceptions::IOException("too few property patterns configured");
 
     // FIXME: take params from config
-    generator_.randomizeProfileKeys( ".1.1.791%08d", config_.getAddressesCount());
-    generator_.addPropertyPattern(0,new Property("test0",101,FIXED,time(0)+1234,123));
-    generator_.addPropertyPattern(1,new Property("test1","хелло",R_ACCESS,time(0)+3456,17));
-    generator_.parseCommandPatterns("s0s1b2g0g1b2d0d1");
+    generator_.randomizeProfileKeys( config_.getProfileKeyFormat().c_str(), config_.getAddressesCount());
+    for ( std::vector< std::string >::const_iterator i = patterns.begin();
+          i != patterns.end(); ++i ) {
+        std::auto_ptr<Property> p( new Property );
+        p->fromString( *i );
+        generator_.addPropertyPattern( i - patterns.begin(), p.release() );
+    }
+    generator_.parseCommandPatterns( config_.getCommands() );
+
+    stopped_ = false;
 
     for ( int i = 0; i < config_.getFlooderThreadCount(); ++i ) {
         util::WatchedThreadedTask* task;

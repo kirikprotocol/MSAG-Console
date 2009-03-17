@@ -107,6 +107,8 @@ void RequestGenerator::parseCommandPatterns( const std::string& patterns ) throw
             batchCount = cmdnumber;
             if ( batchCount <= 0 ) throw IOException("batch count cannot be less than or equal to 0");
             batchCmd->setTransactional( cmdtype == 'b' );
+        } else if ( cmdtype == 'm' ) {
+            modulus = cmdnumber;
         } else {
             // non-batch
             const Property* prop = getProperty(cmdnumber);
@@ -147,10 +149,6 @@ void RequestGenerator::parseCommandPatterns( const std::string& patterns ) throw
                 if ( modulus <= 0 ) throw IOException("modulus is not set for incmod");
                 kmd->setProperty(new Property(*prop));
                 kmd->setModulus(modulus);
-                break;
-            }
-            case 'm' : {
-                modulus = cmdnumber;
                 break;
             }
             } // switch

@@ -169,22 +169,17 @@ public:
     ContextRegistrySet() : log_(smsc::logger::Logger::getInstance("pvss.reg")) {}
 
     ~ContextRegistrySet() {
-        MutexGuard mg(createMon_);
-        HashType::Iterator i( set_.getIterator() );
-        key_type         key;
-        ContextRegistry* value;
-        while ( i.Next(key,value) ) {
-            {
-                Ptr ptr(value);
-                if (!ptr->empty()) {
-                    smsc_log_error(log_,"logic error: non-empty context registry found");
-                    abort();
-                }
+        ContextRegistry::ProcessingList pl;
+        while ( popAny(pl) ) {
+            Context* c;
+            while ( ! pl.empty() ) {
+                c = pl.front();
+                pl.pop_front();
+                delete c;
             }
-            delete value;
         }
-        set_.Empty();
     }
+
 
     /// create a context registry for key
     void create( key_type key ) {
@@ -199,19 +194,38 @@ public:
 
     /// get context registry (locked)
     Ptr get( key_type key ) {
-        MutexGuard mg(createMon_);
-        ContextRegistry** regptr = set_.GetPtr(key);
-        if (!regptr) {
-            smsc_log_warn(log_,"logic error: no context registry found");
-        } else {
-            // smsc_log_debug(log_,"got regptr: %p", *regptr);
+        {
+            MutexGuard mg(createMon_);
+            ContextRegistry** regptr = set_.GetPtr(key);
+            if (regptr) return Ptr(*regptr);
         }
-        return Ptr(*regptr);
+        smsc_log_warn(log_,"context registry for key=%p is not found", key);
+        return Ptr();
     }
 
 
-    /// NOTE: method waits until the whole registry is empty.
-    /// It is used when sources are shutdowned.
+    bool popAny( ContextRegistry::ProcessingList& pl )
+    {
+        ContextRegistry* value;
+        {
+            MutexGuard mg(createMon_);
+            HashType::Iterator i( set_.getIterator() );
+            key_type         key;
+            if ( ! i.Next(key,value) ) return false;
+            pl.clear();
+            Ptr ptr(value);
+            if (!ptr->empty()) ptr->popAll(pl);
+            set_.Delete(key);
+        }
+        smsc_log_debug(log_,"destroying regptr %p, popping all %d entries",value,pl.size());
+        delete value;
+        return true;
+    }
+
+
+    // NOTE: method waits until the whole registry is empty.
+    // It is used when sources are shutdowned.
+    /*
     void waitUntilEmpty()
     {
         key_type key;
@@ -236,6 +250,7 @@ public:
         }
         smsc_log_debug(log_,"all registries are empty");
     }
+     */
 
     // destroy a context registry for given key
     void destroy( key_type key ) {

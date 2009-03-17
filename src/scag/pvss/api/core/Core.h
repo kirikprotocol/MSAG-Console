@@ -130,7 +130,7 @@ protected:
 
     void startupIO() throw(PvssException);
 
-    void shutdownIO()
+    void shutdownIO( bool writePending )
     {
         {
             MutexGuard mg(readersMutex);
@@ -139,7 +139,7 @@ protected:
         stopCoreLogic();
         {
             MutexGuard mg(writersMutex);
-            stopWriters();
+            stopWriters( writePending );
         }
         inactivityTracker->shutdown();
         // waiting until all tasks are stopped
@@ -169,11 +169,12 @@ private:
         readers.clear();
     }
 
-    void stopWriters()
+    void stopWriters( bool writePending )
     {
         for ( std::vector<PacketWriter*>::iterator i = writers.begin();
               i != writers.end();
               ++i ) {
+            if (writePending) (*i)->writePending();
             (*i)->shutdown();
         }
         MutexGuard mg(deadMutex);

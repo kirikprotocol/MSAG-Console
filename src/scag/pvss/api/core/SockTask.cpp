@@ -10,7 +10,7 @@ int SockTask::Execute()
     smsc_log_info(log_,"Starting %s", taskName());
 
     while ( ! isStopping ) {
-        // smsc_log_debug(log_,"cycling %s",taskName());
+        smsc_log_debug(log_,"cycling %s",taskName());
         try {
             util::msectime_type currentTime = util::currentTimeMillis();
             wakeupTime_ = currentTime + 200;
@@ -31,6 +31,7 @@ int SockTask::Execute()
             smsc_log_warn( log_, "caught exception in %s: %s", taskName(), e.what() );
         }
     }
+    smsc_log_info(log_, "%s left the main loop", taskName() );
     {
         MutexGuard mg(mon_);
         while ( sockets_.Count() > 0 ) {
@@ -39,7 +40,7 @@ int SockTask::Execute()
             detachFromSocket(channel);
         }
     }
-    smsc_log_info(log_, "%s finished", taskName() );
+    smsc_log_info(log_, "%s::Execute finished", taskName() );
     return 0;
 }
 
@@ -87,7 +88,6 @@ void SockTask::setupFailed(util::msectime_type currentTime)
         waiting_ = false;
     }
 }
-
 
 } // namespace core
 } // namespace pvss

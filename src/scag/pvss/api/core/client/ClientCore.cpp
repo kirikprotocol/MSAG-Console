@@ -98,7 +98,7 @@ void ClientCore::startup() throw(PvssException)
         threadPool_.startTask(connector_.get(),false);
     } catch (PvssException& exc) {
         smsc_log_error( logger, "Connector start error: %s", exc.what());
-        shutdownIO();
+        shutdownIO(false);
         throw exc;
     }
 
@@ -116,7 +116,7 @@ void ClientCore::startup() throw(PvssException)
         started_ = false;
         connector_->shutdown();
         clearChannels();
-        shutdownIO();
+        shutdownIO(false);
         throw exc;
     }
     
@@ -136,7 +136,7 @@ void ClientCore::shutdown()
     started_ = false;
     connector_->shutdown();
     clearChannels();
-    shutdownIO();
+    shutdownIO(false);
     stop();
     {
         MutexGuard mgr(channelMutex_);
@@ -338,7 +338,7 @@ int ClientCore::Execute()
             }
         }
     }
-    smsc_log_info( logger, "Client shutdowned" );
+    smsc_log_info( logger, "ClientCore::Execute finished" );
     return 0;
 }
 

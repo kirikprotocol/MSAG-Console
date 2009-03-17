@@ -141,7 +141,7 @@ void ServerCore::startup( SyncDispatcher& dispatcher ) throw (PvssException)
     } catch (PvssException& exc) {
         smsc_log_error(log_,"Acceptor start error: %s",exc.what());
         if (acceptor_.get()) acceptor_->shutdown();
-        shutdownIO();
+        shutdownIO(false);
         throw exc;
     }
 
@@ -168,7 +168,7 @@ void ServerCore::startup( AsyncDispatcher& dispatcher ) throw (PvssException)
             dispatcher_->shutdown();
             dispatcher_.reset(0);
         }
-        shutdownIO();
+        shutdownIO(false);
         throw exc;
     }
 
@@ -187,7 +187,23 @@ void ServerCore::shutdown()
 
     started_ = false;
     if (acceptor_.get()) acceptor_->shutdown();
-    shutdownIO();
+    shutdownIO(true); // write pending
+    smsc_log_info(log_,"All readers/writers are stopped");
+
+    // FIXME: destroy contexts in regset
+    {
+        ContextRegistry::ProcessingList pl;
+        while ( regset_.popAny(pl) ) {
+            std::auto_ptr<ServerContext> ctx;
+            while (!pl.empty()) {
+                ctx.reset(static_cast<ServerContext*>(pl.front()));
+                pl.pop_front();
+                ctx->setState( ServerContext::FAILED );
+                reportContext(ctx);
+            }
+        }
+    }
+
     stop();
     {
         smsc_log_info(log_,"sending notify to channel mutex");
@@ -449,7 +465,7 @@ void ServerCore::stopCoreLogic()
     if ( dispatcher_.get() ) {
         dispatcher_->getQueue().stop();
     }
-    smsc_log_info(log_,"waiting until all workers threads begin stopping");
+    smsc_log_info(log_,"waiting until all workers threads process their requests" );
     while (true) {
         MutexGuard mg(logicMon_);
         int workingCount = 0;
@@ -464,9 +480,10 @@ void ServerCore::stopCoreLogic()
     // all workers and async logic dispatcher are stopping,
     // i.e. they have no pending processing requests and async logic is also stopped.
     // Now we have to wait until all pending outgoing contexts are written to their sockets.
-    smsc_log_info(log_,"waiting until registries are empty");
-    regset_.waitUntilEmpty();
-    smsc_log_info(log_,"registries are empty");
+
+    // smsc_log_info(log_,"waiting a little to allow writers to finish");
+    // regset_.waitUntilEmpty();
+    // smsc_log_info(log_,"registries are empty");
 }
 
 

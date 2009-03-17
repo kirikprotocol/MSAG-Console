@@ -306,11 +306,10 @@ private:
         
         {
             // writing new cells to disk
-            std::vector< unsigned char > buf;
+            // NOTE: those cells must be all in one chunk!
+            assert(startcell/growth == (startcell+realgrowth-1)/growth);
             rbtree_f.Seek( sizeof(rbtFileHeader) + cellsize()*startcell, SEEK_SET );
-            for ( int i = 0; i < realgrowth; ++i ) {
-                rbtree_f.Write(addr2node(idx2addr(startcell++)),cellsize());
-            }
+            rbtree_f.Write(addr2node(idx2addr(startcell)),cellsize()*realgrowth);
         }
         
         if ( creation ) {
@@ -511,8 +510,9 @@ private:
 
             // reading cells
             rbtree_f.Seek( headerLen );
-            for ( long i = 0; i < maxcells; ++i ) {
-                rbtree_f.Read(addr2node(idx2addr(i)),cellsize());
+            for ( unsigned i = 0; i < needchunks; ++i ) {
+                long chunksize = std::min(growth,maxcells-i*growth) * cellsize();
+                rbtree_f.Read(addr2node(idx2addr(i*growth)),chunksize);
             }
             
             if ( len < expectedLen ) {

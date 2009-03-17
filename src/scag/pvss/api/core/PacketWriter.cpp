@@ -19,6 +19,31 @@ void PacketWriter::serialize( const Packet& packet, Protocol::Buffer& buffer ) t
     memcpy(buffer.get(),reinterpret_cast<char*>(&buflen),4);
 }
 
+
+void PacketWriter::writePending()
+{
+    if ( writePending_ ) return;
+    MutexGuard mg(mon_);
+    if ( writePending_ ) return;
+    writePending_ = true;
+    mon_.notify();
+    while ( sockets_.Count() > 0 && writePending_ ) {
+        mon_.wait(200);
+    }
+    return;
+}
+
+
+void PacketWriter::setupFailed(util::msectime_type currentTime)
+{
+    if ( writePending_ ) {
+        writePending_ = false;
+        mon_.notify();
+    } else {
+        IOTask::setupFailed(currentTime);
+    }
+}
+
 } // namespace core
 } // namespace pvss
 } // namespace scag2

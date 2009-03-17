@@ -5,6 +5,7 @@
 
 scag/pvss                                pvss          \
         -lscag-pvss-server \
+        -lscag-pvss-data \
         -lscag-pvss-base \
 	-lscag-pvss-profile \
         -lscag-util-storage \

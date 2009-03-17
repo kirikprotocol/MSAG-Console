@@ -1,4 +1,5 @@
 #include "ContextQueue.h"
+#include "ServerContext.h"
 
 namespace scag2 {
 namespace pvss {
@@ -23,6 +24,7 @@ void ContextQueue::requestReceived( std::auto_ptr<ServerContext>& context ) thro
     if ( queueLimit_ > 0 && getSize() > queueLimit_ ) {
         throw PvssException(PvssException::SERVER_BUSY,"too many requests, try later");
     }
+    context->setRespQueue(*this);
     MutexGuard mg(queueMon_);
     queues_[1].Push(context.release());
     queueMon_.notify();

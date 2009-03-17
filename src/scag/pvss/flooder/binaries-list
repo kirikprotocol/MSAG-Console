@@ -33,6 +33,8 @@ scag/pvss-flooder2  flooder2 \
     -lscag-pvss-data \
     -lscag-util-storage \
     -lscag-util \
+    -lutil-config \
+    -lutil-xml $(XERCES_LIB) \
     -lcore-network $(SOCKETLIB) -lnsl \
     -lcore-threads \
     @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \

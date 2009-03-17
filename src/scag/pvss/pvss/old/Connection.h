@@ -5,11 +5,18 @@
 #include <string>
 #include "logger/Logger.h"
 
+namespace smsc {
+namespace core {
+namespace network {
+class Socket;
+}
+}
+}
+
 namespace scag2 {
 namespace pvss  {
 
 class Response;
-class smsc::core::network::Socket;
 
 class Connection {
 public:
