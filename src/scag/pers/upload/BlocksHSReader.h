@@ -65,7 +65,7 @@ namespace scag { namespace pers { namespace util {
   static const char* cmbpmb_properties[] = {
     "cmb.subscription",
     "cmb.usages",
-    "pmb.subscription"
+    "pmb.subscription",
     "pmb.usages"
   };
 
@@ -250,6 +250,7 @@ private:
         ++prop_count;
       }
       matched = prop_count > 0 ? 1 : 0;
+      smsc_log_debug(logger, "profile key=%s matched prop_count=%d", pf.getKey().c_str(), prop_count);
       if (sendToPers && prop_count > 0) {
         pc.FinishPrepareBatch(prop_count, batch);
         pc.RunBatch(batch);
