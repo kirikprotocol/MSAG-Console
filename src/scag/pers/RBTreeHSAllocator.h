@@ -501,20 +501,19 @@ private:
 
             // create the necessary number of chunks
             unsigned needchunks = (maxcells-1) / growth + 1;
+            smsc_log_warn(logger,"OpenRBTree is going to read cells=%ld, chunks=%ld", long(maxcells), long(needchunks));
             chunks_.reserve( needchunks );
+            // allocating chunks/reading cells
+            rbtree_f.Seek( headerLen );
             for ( unsigned i = 0; i < needchunks; ++i ) {
                 std::auto_ptr<char> mem( new char[growth*cellsize()] );
                 if ( ! mem.get() ) return BTREE_FILE_MAP_FAILED;
                 chunks_.push_back( mem.release() );
-            }
-
-            // reading cells
-            rbtree_f.Seek( headerLen );
-            for ( unsigned i = 0; i < needchunks; ++i ) {
                 long chunksize = std::min(growth,maxcells-i*growth) * cellsize();
                 rbtree_f.Read(addr2node(idx2addr(i*growth)),chunksize);
+                smsc_log_info(logger,"OpenRBTree: cells/total = %010ld/%010ld", long(i*growth+chunksize), long(maxcells));
             }
-            
+
             if ( len < expectedLen ) {
                 // FIXME: we should fix it oneday
                 smsc_log_warn( logger, "OpenRBTree: file size is smaller than what expected: headersize=%d expected_cells_count=%lld actual_cells_count=%lld cellsize=%d expectedlen=%lld len=%lld, I'll try to recover...",
