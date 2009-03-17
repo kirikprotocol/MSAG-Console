@@ -205,7 +205,15 @@ int SccpHDProcessor::Run()
     goto msg_open_error;
   }
 
-  result = MsgConn(USER,SCCP_ID);
+  //result = MsgConn(USER,SCCP_ID);
+  result = EINSS7CpMsgConnInst(USER,SCCP_ID,1);
+  if (result != 0) {
+    smsc_log_error(MtSmsProcessorLogger,
+                   "MsgConn to SCCP failed with code %d(%s)",
+                   result,getReturnCodeDescription(result));
+    goto msg_conn_sccp_error;
+  }
+  result = EINSS7CpMsgConnInst(USER,SCCP_ID,2);
   if (result != 0) {
     smsc_log_error(MtSmsProcessorLogger,
                    "MsgConn to SCCP failed with code %d(%s)",
@@ -221,7 +229,9 @@ int SccpHDProcessor::Run()
     {
       case INIT:
         result = EINSS7_SccpBindReq(SSN, NODEID, SCCP_INSTANCE, USER, MAXSEGM);
-        if( result != EINSS7_SCCP_REQUEST_OK )
+	USHORT_T result2;
+	result2 = EINSS7_SccpBindReq(SSN, NODEID, 2, USER, MAXSEGM);
+        if( result != EINSS7_SCCP_REQUEST_OK || result2 != EINSS7_SCCP_REQUEST_OK)
         {
           smsc_log_error(MtSmsProcessorLogger,
                          "EINSS7_I96SccpBindReq() failed with code %d(%s)",
@@ -402,8 +412,8 @@ USHORT_T EINSS7_SccpBindConf(UCHAR_T ssn,
                              USHORT_T maxSegmSize,UCHAR_T standard)
 {
   smsc_log_debug(MtSmsProcessorLogger,
-                 "SccpBindConf SSN=%d MAXSEGMSZ=%d STATUS=%s",
-                 ssn,
+                 "SccpBindConf SSN=%d NodeID=%d InstanceID=%d MAXSEGMSZ=%d STATUS=%s",
+                 ssn,nodeId,sccpInstanceId,
                  maxSegmSize,
                  getSccpBindStatusDescription(result));
   if ( state == SCCPBINDING )
