@@ -23,7 +23,7 @@ scag/pvss_flooder   flooder  \
     -lutil \
     $(__LIBRARIES) \
     $(SSL_LIB) \
-    -lrt -ldl
+    -lpthread -lrt -ldl
 
 scag/pvss-flooder2  flooder2 \
     -lscag-pvss-flooder \

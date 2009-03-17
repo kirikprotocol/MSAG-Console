@@ -24,4 +24,4 @@ scag/pvss_new                            pvss          \
         @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \
         $(__LIBRARIES) \
-        -lrt -ldl
+        -lpthread -lrt -ldl
