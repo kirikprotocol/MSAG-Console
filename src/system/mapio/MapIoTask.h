@@ -51,7 +51,6 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::core::threads::ThreadedTask;
 using smsc::core::synchronization::Event;
 
-#ifdef USE_MAP
 
 extern "C" {
 #include <ss7cp.h>
@@ -71,7 +70,6 @@ extern "C" {
 #define HLR_SSN 6
 #define MAX_MT_LOCK_TIME 600
 
-#endif
 
 extern bool MAP_disconnectDetected;
 extern Mutex mapMutex;
