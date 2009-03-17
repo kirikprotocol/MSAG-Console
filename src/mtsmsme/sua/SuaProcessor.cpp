@@ -35,12 +35,12 @@ int going;
 Logger* logger = 0;
 static Mutex lock;
 
-static UCHAR_T USER = USER04_ID;
-static UCHAR_T SSN = 191;
+//static UCHAR_T USER = USER04_ID;
+//static UCHAR_T SSN = 191;
 
 void SuaProcessor::configure(int user_id, int ssn, Address& msc, Address& vlr, Address& hlr)
 {
-  USER = user_id; SSN = ssn;
+  //USER = user_id; SSN = ssn;
   coordinator->setAdresses(msc,vlr,hlr);
   registrator->configure(msc,vlr);
 }
