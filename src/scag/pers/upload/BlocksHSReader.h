@@ -64,9 +64,12 @@ namespace scag { namespace pers { namespace util {
 
   static const char* cmbpmb_properties[] = {
     "cmb.subscription",
+    "cmb.usages",
     "pmb.subscription"
+    "pmb.usages"
   };
-  const int CMBPMB_PROPERTIES_COUNT = 2;
+
+  const int CMBPMB_PROPERTIES_COUNT = 4;
 
   const char* INC_PROPERTY_NAME = "maze.abonent.money.portal";
   const char* STATUS_PROPERTY   = "maze.game.status";
@@ -129,6 +132,10 @@ public:
       int total_status_profiles = 0;
       int matched_total = 0;
       smsc_log_debug(logger, "start read %d files", files_count);
+      std::vector<string> cmbpmbNames;
+      for (int i = 0; i < CMBPMB_PROPERTIES_COUNT; ++i) {
+        cmbpmbNames.push_back(cmbpmb_properties[i]);
+      }
 
       for(long i = 0; i < files_count; i++)
       {
@@ -170,17 +177,17 @@ public:
               dataFile.Read((void*)data_buff, hdr.data_size);
               //status_profiles += restoreProfile(hdr.key, data, sendToPers);
               
-              //int restoreResult = restoreProfileCompletely(hdr.key, data, sendToPers);
               int matched = 0;
-              int restoreResult = restoreProfileMinsk(hdr.key, data, sendToPers, matched);
+              int restoreResult = restoreProfileCompletely(hdr.key, data, sendToPers, cmbpmbNames, matched);
+              //int restoreResult = restoreProfileMinsk(hdr.key, data, sendToPers, matched);
               if (sendToPers && restoreResult == -1) {
                 int resendCount = 0;
                 while (restoreResult == -1 && resendCount < MAX_RESEND_COUNT) {
                   smsc_log_warn(logger, "resending profile key='%s', try number %d",
                                         hdr.key.toString().c_str(), resendCount + 1);
-                  //restoreResult = restoreProfileCompletely(hdr.key, data, sendToPers);
                   int rematched = 0;
-                  restoreResult = restoreProfileMinsk(hdr.key, data, sendToPers, rematched);
+                  restoreResult = restoreProfileCompletely(hdr.key, data, sendToPers, cmbpmbNames, matched);
+                  //restoreResult = restoreProfileMinsk(hdr.key, data, sendToPers, rematched);
                   ++resendCount;
                 }
                 if (restoreResult == -1) {
@@ -212,15 +219,15 @@ public:
       return 0;
     }
 private:
-  int restoreProfileCompletely(const Key& key, SerialBuffer& data, bool sendToPers) {
+  int restoreProfileCompletely(const Key& key, SerialBuffer& data, bool sendToPers, const std::vector<std::string>& matchNames, int& matched) {
     try {
       Profile pf(key.toString());   
       pf.Deserialize(data, true);
       SerialBuffer batch;
       
-      if (!pf.GetProperty("srv_BE.advTags")) {
-        return 0;
-      }
+      //if (!pf.GetProperty("srv_BE.advTags")) {
+        //return 0;
+      //}
       
       if (sendToPers) {
         pc.PrepareBatch(batch);
@@ -231,13 +238,19 @@ private:
       char *propkey = 0;
       int prop_count = 0;
       while(it.Next(propkey, prop)) {
+        std::vector<string>::const_iterator it = std::find(matchNames.begin(), matchNames.end(), string(prop->getName()));
+        if (it != matchNames.end()) {
+          smsc_log_debug(cmbpmbLogger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
+          continue;
+        }
         if (sendToPers) {
           pc.SetPropertyPrepare(PT_ABONENT, key.toString().c_str(), *prop, batch);
         }
         smsc_log_debug(logger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
         ++prop_count;
       }
-      if (sendToPers) {
+      matched = prop_count > 0 ? 1 : 0;
+      if (sendToPers && prop_count > 0) {
         pc.FinishPrepareBatch(prop_count, batch);
         pc.RunBatch(batch);
         smsc_log_debug(logger, "send %d properties to pers for profile key=%s", prop_count, pf.getKey().c_str());
