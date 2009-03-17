@@ -509,9 +509,10 @@ private:
                 std::auto_ptr<char> mem( new char[growth*cellsize()] );
                 if ( ! mem.get() ) return BTREE_FILE_MAP_FAILED;
                 chunks_.push_back( mem.release() );
-                long chunksize = std::min(growth,maxcells-i*growth) * cellsize();
+                long cellsInChunk = std::min(growth,maxcells-i*growth);
+                long chunksize = cellsInChunk * cellsize();
                 rbtree_f.Read(addr2node(idx2addr(i*growth)),chunksize);
-                smsc_log_info(logger,"OpenRBTree: cells/total = %010ld/%010ld", long(i*growth+chunksize), long(maxcells));
+                smsc_log_info(logger,"OpenRBTree: cells/total = %010ld/%010ld", long(i*growth+cellsInChunk), long(maxcells));
             }
 
             if ( len < expectedLen ) {
