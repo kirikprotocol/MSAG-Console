@@ -4,7 +4,17 @@
 # binary name                            source name     libraries         
 
 #pers_server/pers_test                   pers_test       -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl -llogger -llicense-check
-scag/pers                                pers            @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -llicense-check -lscag-util-storage
+scag/pers                                pers            \
+    -lscag-pers \
+    -lscag-util-storage \
+    -lutil-mirrorfile \
+    -lutil-config -lutil-xml $(XERCES_LIB) \
+    -lcore-network \
+    -llicense-check \
+    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+    -lutil \
+    $(SOCKETLIB) -lnsl \
+    -lpthread -lrt -ldl
 
 scag/client_test/pers_client_test        client_test     @liblogger.so \
    -L$(SMSC_BUILDDIR)/bin -lscag-pers -lscag-config -lscag-config-smpp \

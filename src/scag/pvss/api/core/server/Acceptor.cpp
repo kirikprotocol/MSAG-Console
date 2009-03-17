@@ -7,7 +7,7 @@ namespace core {
 namespace server {
 
 Acceptor::Acceptor(ServerConfig& config, ServerCore& core) :
-SockTask(config,core),
+SockTask(config,core,taskName()),
 serverCore_(&core)
 {
 }
@@ -42,6 +42,7 @@ void Acceptor::init() throw (PvssException)
     if ( -1 == socket_.StartServer() ) {
         throw PvssException(PvssException::NOT_CONNECTED,"cannot init acceptor");
     }
+    smsc_log_info(log_,"will accept connections on %s:%d", getConfig().getHost().c_str(), int(getConfig().getPort())&0xffff );
 }
 
 
