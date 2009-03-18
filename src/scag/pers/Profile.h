@@ -73,6 +73,10 @@ class IntProfileKey
       return &key;
     }
 
+    void reset() {
+      key = 0;
+    }
+
     static uint32_t CalcHash(IntProfileKey pk) {
       return  crc32(0, pk.getKey(), IntProfileKey::Size());
     }
@@ -116,8 +120,8 @@ public:
     const smsc::logger::Logger* getLog() const { return log; }
     void setLog(Logger* dblog) { log = dblog; }
 
-    void Serialize(SerialBuffer& buf, bool toFSDB = false, GlossaryBase* glossary = NULL) const;
-    void Deserialize(SerialBuffer& buf, bool fromFSDB = false, GlossaryBase* glossary = NULL);
+    void Serialize(SerialBuffer& buf, bool toFSDB = false) const;
+    void Deserialize(SerialBuffer& buf, bool fromFSDB = false);
     ProfileState getState() const { return state; };
     void setLocked() { state = LOCKED; };
     void setDeleted() { Empty(); state = DELETED; };
