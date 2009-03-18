@@ -18,6 +18,7 @@
 //#include <stdint.h>
 #include <string.h>
 #include <list>
+#include <memory.h>
 #include "logger/Logger.h"
 
 #define DISABLE_LIST_DUMP
@@ -60,34 +61,20 @@ class EventQueue
     StateType state;
     //typedef std::list<CommandType> CmdList;
     //CmdList cmds;
-    struct CmdItem{
-      CmdItem():allocated(false),next(0)
-      {
-      }
-      CommandType cmd;
-      bool allocated;
-      CmdItem* next;
-    };
-    CmdItem pool[8];
-    CmdItem* head;
-    CmdItem* tail;
+    CommandType pool[8];
     
     void clear()
     {
       locked=false;
       enqueued=false;
-      head=0;
-      tail=0;
       for(int i=0;i<8;i++)
       {
-        pool[i].cmd=CommandType();
-        pool[i].allocated=false;
-        pool[i].next=0;
+        pool[i]=CommandType();
       }
     }
     
 
-    Locker() : locked(false),enqueued(false),head(0),tail(0){}
+    Locker() : locked(false),enqueued(false){}
     ~Locker()
     {
     }
@@ -95,31 +82,15 @@ class EventQueue
     void push_back(const CommandType& c)
     {
       //cmds.push_back(c);
-      CmdItem* item=0;
       for(int i=0;i<8;i++)
       {
-        if(!pool[i].allocated)
+        if(!pool[i].IsOk())
         {
-          item=pool+i;
-          break;
+          pool[i]=c;
+          return;
         }
       }
-      if(!item)
-      {
-        __warning2__("LOCKER POOL OUT OF ITEMS! msgId=%lld",msgId);
-        return;
-      }
-      item->allocated=true;
-      item->cmd=c;
-      if(tail!=0)
-      {
-        tail->next=item;
-      }
-      tail=item;
-      if(head==0)
-      {
-        head=item;
-      }
+      __warning2__("LOCKER POOL OUT OF ITEMS! msgId=%lld",msgId);
     }
 
     // выберает следующую допустимую команду
@@ -127,43 +98,19 @@ class EventQueue
     // удаляет все команды для которых возможен таймаут и он истек
     bool getNextCommand(CommandType& c,bool remove=true)
     {
-      CmdItem* pptr=0;
-      for(CmdItem* ptr=head;ptr;pptr=ptr,ptr=ptr->next)
+      for(int i=0;i<8;i++)
       {
-        if(StateChecker::commandIsValid(state,ptr->cmd))
+        if(pool[i].IsOk() && StateChecker::commandIsValid(state,pool[i]))
         {
-          c=ptr->cmd;
+          c=pool[i];
           if(remove)
           {
-            if(pptr)
-            {
-              pptr->next=ptr->next;
-            }else
-            {
-              head=head->next;
-            }
-            if(!ptr->next)
-            {
-              tail=pptr;
-            }
-            ptr->allocated=false;
-            ptr->next=0;
+            pool[i]=CommandType();
+            memmove(pool+i,pool+i+1,(8-i-1)*sizeof(CommandType));
           }
           return true;
         }
       }
-      
-      /*
-      for(CmdList::iterator i=cmds.begin();i!=cmds.end();i++)
-      {
-        if(StateChecker::commandIsValid(state,*i))
-        {
-          c = *i;
-          if(remove)cmds.erase(i);
-          return true;
-        }
-      }
-       */
       return false;
        
     }
@@ -237,7 +184,7 @@ class EventQueue
   HashTable hash;
 
   Event event;
-  Mutex mutex;
+  Mutex mtx;
 
 
   typedef PriorityQueue<Locker*,CyclicQueue<Locker*>,0,31> LockerQueue;
@@ -269,11 +216,14 @@ class EventQueue
     }
     if(curPage->count<LockersPageSize)
     {
-      return curPage->pool+curPage->count++;
+      Locker* rv=curPage->pool+curPage->count;
+      curPage->count++;
+      return rv;
     }
     curPage->next=new LockersPoolPage;
     curPage=curPage->next;
-    return curPage->pool+curPage->count++;
+    curPage->count++;
+    return curPage->pool;
   }
   
   void deleteLocker(Locker* locker)
@@ -284,7 +234,7 @@ class EventQueue
   }
 
 public:
-#define __synchronized__ MutexGuard mguard(mutex);
+#define __synchronized__ MutexGuard mguard(mtx);
 
   EventQueue() : counter(0)
   {
@@ -432,7 +382,7 @@ public:
     if ( StateChecker::stateIsFinal(state) )
     {
       ++counter;
-      if(!locker->head)
+      if(!locker->pool[0].IsOk())
       {
         hash.remove(locker->msgId);
         deleteLocker(locker);
