@@ -24,7 +24,7 @@ public:
     }
 
     virtual bool isValid() const {
-        return (getStatus() != OK) || (property_ != 0 && property_->isValid());
+        return (property_ != 0 && property_->isValid());
     }
     virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) {
         return visitor.visitGetResponse(*this);
