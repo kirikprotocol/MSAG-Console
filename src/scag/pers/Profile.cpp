@@ -35,6 +35,7 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB, GlossaryBase* glossa
     uint16_t cnt = state_cnt & MAX_PROPERTIES_COUNT;
     state_cnt >>= PROPERTIES_COUNT_SIZE;
     state = static_cast<ProfileState>(state_cnt);
+    if (log) smsc_log_debug(log,"property count: %d, state: %d", unsigned(cnt), state);
 
     Empty();
     Property* prop;

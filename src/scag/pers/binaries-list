@@ -34,3 +34,13 @@ scag/client_test/pers_client_test        client_test     @liblogger.so \
 #scag/pers/heirarchic_test/hpers         hpers_test      -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -lscag-exc -llicense-check -lcore-threads
 scag/pvcp                                cpers           @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -lscag-exc -llicense-check -lscag-util-storage
 #scag/persconv                           conv            -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -llicense-check
+
+scag/pers-repairIntStorage     repairIntStorage \
+  -lscag-pers \
+  -lscag-util-storage \
+  -lscag-util \
+  -lcore-buffers \
+  -lutil \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  $(__LIBRARIES) \
+  -lpthread -lrt -ldl $(LIBMALLOC)

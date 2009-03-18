@@ -96,7 +96,7 @@ class Profile : public Serializable
     vector<long> backup;
     SerialBuffer dataCopy;
 public:
-    Profile():log(NULL), state(OK), changed(false) {};
+    Profile( smsc::logger::Logger* logger = NULL ):log(logger), state(OK), changed(false) {};
     Profile(const std::string& _pkey, smsc::logger::Logger* _log = NULL) : state(OK), pkey(_pkey), log(_log) {};
     Profile(const AbntAddr& address, smsc::logger::Logger* _log = NULL) : state(OK), pkey(address.toString()), log(_log) {};
     Profile(const IntProfileKey& intKey, smsc::logger::Logger* _log = NULL) : state(OK), pkey(intKey.toString()), log(_log) {};
