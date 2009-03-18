@@ -1,8 +1,11 @@
-#ifndef __SUA_COMMUNICATION_SUAMESSAGES_CLDTMESSAGE_HPP__
-# define __SUA_COMMUNICATION_SUAMESSAGES_CLDTMESSAGE_HPP__ 1
+#ifndef __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_CLDTMESSAGE_HPP__
+# define __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_CLDTMESSAGE_HPP__
 
-# include <sua/communication/sua_messages/SUAMessage.hpp>
+# include <eyeline/sua/communication/sua_messages/SUAMessage.hpp>
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 class CLDTMessage : public SUAMessage {
@@ -63,6 +66,6 @@ private:
   static const uint32_t _MSG_CODE = 0x0701;
 };
 
-}
+}}}}
 
 #endif

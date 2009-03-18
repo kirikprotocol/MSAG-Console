@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <util/Exception.hpp>
-#include <sua/utilx/Exception.hpp>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "DAUDMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const uint32_t DAUDMessage::_MSG_CODE;
@@ -154,4 +156,4 @@ DAUDMessage::getInfoString() const
   else throw utilx::FieldNotSetException("DAUDMessage::getInfoString::: infoString wasn't set");
 }
 
-}
+}}}}

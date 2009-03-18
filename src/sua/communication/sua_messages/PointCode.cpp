@@ -1,6 +1,9 @@
 #include <string.h>
 #include "PointCode.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 PointCode::PointCode(const uint8_t pcValue[])
@@ -77,4 +80,4 @@ ITU_PC::getSP() const
   return value[3] & 0x07;
 }
 
-}
+}}}}

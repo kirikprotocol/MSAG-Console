@@ -1,9 +1,11 @@
 #include <stdio.h>
-#include <util/Exception.hpp>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "ActiveAckMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const uint32_t ActiveAckMessage::_MSG_CODE;
@@ -108,4 +110,4 @@ ActiveAckMessage::getInfoString() const
   else throw utilx::FieldNotSetException("ActiveAckMessage::getInfoString::: infoString wasn't set");
 }
 
-}
+}}}}

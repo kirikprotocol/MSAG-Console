@@ -20,6 +20,9 @@
 #include "UPAckMessage.hpp"
 #include "UPMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 bool
@@ -101,4 +104,4 @@ initialize ()
   return true;
 }
 
-}
+}}}}

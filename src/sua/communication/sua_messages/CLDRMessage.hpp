@@ -1,10 +1,13 @@
-#ifndef __SUA_COMMUNICATION_SUAMESSAGES_CLDRMESSAGE_HPP__
-# define __SUA_COMMUNICATION_SUAMESSAGES_CLDRMESSAGE_HPP__ 1
+#ifndef __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_CLDRMESSAGE_HPP__
+# define __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_CLDRMESSAGE_HPP__
 
-# include <sua/communication/sua_messages/SUAMessage.hpp>
-# include <sua/communication/sua_messages/CLDTMessage.hpp>
-# include <sua/communication/types.hpp>
+# include <eyeline/sua/communication/sua_messages/SUAMessage.hpp>
+# include <eyeline/sua/communication/sua_messages/CLDTMessage.hpp>
+# include <eyeline/sua/communication/types.hpp>
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 class CLDRMessage : public SUAMessage {
@@ -62,6 +65,6 @@ private:
   static const uint32_t _MSG_CODE = 0x0702;
 };
 
-}
+}}}}
 
 #endif

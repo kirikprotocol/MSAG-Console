@@ -1,10 +1,11 @@
 #include <stdio.h>
-#include <util/Exception.hpp>
-#include <sua/utilx/Exception.hpp>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "DRSTMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const uint32_t DRSTMessage::_MSG_CODE;
@@ -154,4 +155,4 @@ DRSTMessage::getInfoString() const
   else throw utilx::FieldNotSetException("DRSTMessage::getInfoString::: infoString wasn't set");
 }
 
-}
+}}}}

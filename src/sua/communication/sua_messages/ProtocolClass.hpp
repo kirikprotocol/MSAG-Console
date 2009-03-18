@@ -1,9 +1,12 @@
-#ifndef __SUA_COMMUNICATION_SUAMESSAGES_PROTOCOLCLASS_HPP__
-# define __SUA_COMMUNICATION_SUAMESSAGES_PROTOCOLCLASS_HPP__ 1
+#ifndef __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_PROTOCOLCLASS_HPP__
+# define __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_PROTOCOLCLASS_HPP__
 
 # include <sys/types.h>
 # include <string>
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 typedef enum { CLASS0_CONNECIONLESS=0, CLASS1_CONNECIONLESS=1,
@@ -23,6 +26,6 @@ private:
   ret_on_err_ind_t _retOnErr;
 };
 
-}
+}}}}
 
 #endif

@@ -1,9 +1,11 @@
-#include <stdio.h>
 #include <util/Exception.hpp>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "SCONMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const uint32_t SCONMessage::_MSG_CODE;
@@ -180,4 +182,4 @@ SCONMessage::getInfoString() const
   else throw utilx::FieldNotSetException("SCONMessage::getInfoString::: infoString wasn't set");
 }
 
-}
+}}}}

@@ -1,10 +1,13 @@
-#ifndef __SUA_COMMUNICATION_SUAMESSAGES_INITIALIZER_HPP__
-# define __SUA_COMMUNICATION_SUAMESSAGES_INITIALIZER_HPP__ 1
+#ifndef __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_INITIALIZER_HPP__
+# define __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_INITIALIZER_HPP__
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 bool initialize ();
 
-}
+}}}}
 
 #endif

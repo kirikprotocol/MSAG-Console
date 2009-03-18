@@ -1,14 +1,16 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <inttypes.h>
-#include <sua/sua_layer/io_dispatcher/Exceptions.hpp>
+#include <eyeline/utilx/hexdmp.hpp>
+#include <eyeline/utilx/Exception.hpp>
+#include <eyeline/sua/sua_layer/io_dispatcher/Exceptions.hpp>
 
 #include <stdio.h>
 #include "SuaTLV.hpp"
 
-extern std::string
-hexdmp(const uchar_t* buf, uint32_t bufSz);
-
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 SuaTLVFactory::SuaTLVFactory()
@@ -34,7 +36,7 @@ SuaTLVFactory::registerExpectedMandatoryTlv(SuaTLV* expectedTlv)
 void
 SuaTLVFactory::setPositionTo4BytesBoundary(size_t* offset)
 {
-  int paddingTo4bytes = *offset & 0x03;
+  size_t paddingTo4bytes = static_cast<int>(*offset & 0x03);
   if ( paddingTo4bytes ) // if tag length is not a multiple of 4 bytes
     *offset += 0x04 - paddingTo4bytes;
 }
@@ -53,7 +55,7 @@ SuaTLVFactory::generateProtocolException()
     }
   }
   bufForTagsList[strlen(bufForTagsList)-1]=0;
-  throw io_dispatcher::ProtocolException("SuaTLVFactory::generateProtocolException::: missing mandatory tlv(s) with next tag values [%s] when parsing input buffer", bufForTagsList);
+  throw sua_layer::io_dispatcher::ProtocolException("SuaTLVFactory::generateProtocolException::: missing mandatory tlv(s) with next tag values [%s] when parsing input buffer", bufForTagsList);
 }
 
 size_t
@@ -69,7 +71,7 @@ SuaTLVFactory::parseInputBuffer(const communication::TP& packetBuf, size_t offse
     offset = communication::extractField(packetBuf, offset, &tag);
     offset = communication::extractField(packetBuf, offset, &valLen);
 
-    valLen -= sizeof(tag) + sizeof(valLen);
+    valLen -= static_cast<uint16_t>(sizeof(tag) + sizeof(valLen));
 
     SuaTLV* suaTLVObject = NULL;
     if ( _numsOfMandatoryTlvObjects ) {
@@ -84,7 +86,7 @@ SuaTLVFactory::parseInputBuffer(const communication::TP& packetBuf, size_t offse
     if ( suaTLVObject ) {
       offset = suaTLVObject->deserialize(packetBuf, offset, valLen);
       _optionalTlvTypeToTLVObject[getTagIdx(tag)] = NULL;
-    } else throw io_dispatcher::ProtocolException("parseInputBuffer::: unexpected or duplicate tlv with tag value [=0x%04X]", tag);
+    } else throw sua_layer::io_dispatcher::ProtocolException("parseInputBuffer::: unexpected or duplicate tlv with tag value [=0x%04X]", tag);
     
   }
 
@@ -150,189 +152,7 @@ TLV_IntegerPrimitive::deserialize(const communication::TP& packetBuf,
 uint16_t
 TLV_IntegerPrimitive::getLength() const
 {
-  return HEADER_SZ + sizeof(_value);
-}
-
-template <size_t SZ>
-size_t
-TLV_StringPrimitive<SZ>::serialize(communication::TP* packetBuf,
-                                   size_t offset /*position inside buffer where TLV object will be stored*/) const
-{
-  if ( !_isValueSet )
-    throw utilx::FieldNotSetException("TLV_StringPrimitive::serialize::: value isn't set");
-
-  offset = SuaTLV::serialize(packetBuf, offset);
-  return communication::addField(packetBuf, offset, reinterpret_cast<const uint8_t*>(_value), _valLen);
-}
-
-template <size_t SZ>
-size_t
-TLV_StringPrimitive<SZ>::deserialize(const communication::TP& packetBuf,
-                                     size_t offset /*position inside buffer where tag's data started*/,
-                                     uint16_t valLen)
-{
-  if ( valLen > sizeof(_value) )
-    throw smsc::util::Exception("TLV_StringPrimitive::deserialize::: value length [=%d] exceeded max. allowable value [=%d]", valLen, SZ);
-
-  offset = communication::extractField(packetBuf, offset, reinterpret_cast<uint8_t*>(_value), valLen);
-  _valLen = valLen; _isValueSet = true;
-  return offset;
-}
-
-template <size_t SZ>
-int
-TLV_StringPrimitive<SZ>::getUtf8Len(uint8_t firstUtf8Octet) const
-{
-  if ( firstUtf8Octet & 0x7f == firstUtf8Octet ) return 1;
-  uint8_t mask = 0x80;
-  int i = 0;
-  while ( (mask & firstUtf8Octet) && i++ < 5) mask >>= 1;
-  return i;
-}
-
-template <size_t SZ>
-std::string
-TLV_StringPrimitive<SZ>::getPrintableValue() const
-{
-  if ( !_isValueSet )
-    throw utilx::FieldNotSetException("TLV_StringPrimitive::getValue::: value isn't set");
-
-  std::string result;
-
-  for (int i=0; i<_valLen;) {
-    int nextSymbolLen = getUtf8Len(_value[i]);
-    if ( nextSymbolLen == 1 ) {
-      result += _value[i++];
-    } else {
-      char hexBuf[4];
-      while ( nextSymbolLen-- > 0 ) {
-        sprintf(hexBuf, "=%02X", uint8_t(_value[i++]));
-        result.append(hexBuf);
-      }
-    }
-  }
-  
-  return result;
-}
-
-template <size_t SZ>
-bool
-TLV_StringPrimitive<SZ>::isSetValue() const { return _isValueSet; }
-
-template <size_t SZ>
-uint16_t
-TLV_StringPrimitive<SZ>::getLength() const
-{
-  return HEADER_SZ + _valLen;
-}
-
-template <size_t SZ>
-TLV_OctetArrayPrimitive<SZ>::TLV_OctetArrayPrimitive(uint16_t tag)
-  : SuaTLV(tag), _valLen(0), _isValueSet(false), _paddingLen(0)
-{
-  memset(_valueBuffer._value, 0, sizeof(_valueBuffer));
-}
-
-template <size_t SZ>
-TLV_OctetArrayPrimitive<SZ>::TLV_OctetArrayPrimitive(uint16_t tag, const uint8_t* val, uint16_t valLen)
-  : SuaTLV(tag), _valLen(valLen), _isValueSet(true), _paddingLen(0)
-{
-  if ( _valLen > sizeof(_valueBuffer) )
-    throw smsc::util::Exception("TLV_OctetArrayPrimitive::TLV_OctetArrayPrimitive::: argument size [%d] is too large [max size=%d]", _valLen, sizeof(_valueBuffer));
-
-  memcpy(_valueBuffer._value, val, _valLen);
-  int paddingTo4bytes = _valLen & 0x03;
-  if ( paddingTo4bytes )
-    _paddingLen = 0x04 - paddingTo4bytes;
-}
-
-template <size_t SZ>
-TLV_OctetArrayPrimitive<SZ>::TLV_OctetArrayPrimitive(uint16_t tag, size_t reservedOctetsOffset, const uint8_t* val, uint16_t valLen)
-  : SuaTLV(tag), _valLen(reservedOctetsOffset+valLen), _isValueSet(true), _paddingLen(0)
-{
-  if ( _valLen > sizeof(_valueBuffer) )
-    throw smsc::util::Exception("TLV_OctetArrayPrimitive::TLV_OctetArrayPrimitive::: argument size [%d] is too large [max size=%d]", _valLen, sizeof(_valueBuffer));
-  else {
-    memset(_valueBuffer._value, 0, reservedOctetsOffset);
-    memcpy(_valueBuffer._value + reservedOctetsOffset, val, valLen);
-
-    int paddingTo4bytes = _valLen & 0x03;
-    if ( paddingTo4bytes )
-      _paddingLen = 0x04 - paddingTo4bytes;
-  }
-}
-
-template <size_t SZ>
-size_t
-TLV_OctetArrayPrimitive<SZ>::serialize(communication::TP* packetBuf,
-                                       size_t offset /*position inside buffer where TLV object will be stored*/) const
-{
-  if ( !_isValueSet )
-    throw utilx::FieldNotSetException("TLV_StringPrimitive::serialize::: value isn't set");
-
-  offset = SuaTLV::serialize(packetBuf, offset);
-  offset = communication::addField(packetBuf, offset, _valueBuffer._value, _valLen);
-
-  if ( _paddingLen ) {
-    uint8_t padding[4]={0};
-    offset = communication::addField(packetBuf, offset, padding, _paddingLen);
-  }
-  return offset;
-}
-
-template <size_t SZ>
-size_t
-TLV_OctetArrayPrimitive<SZ>::deserialize(const communication::TP& packetBuf,
-                                         size_t offset /*position inside buffer where tag's data started*/,
-                                         uint16_t valLen)
-{
-  if ( valLen > sizeof(_valueBuffer) )
-    throw smsc::util::Exception("TLV_OctetArrayPrimitive::deserialize::: value length [=%d] exceeded max. allowable value [=%d]", valLen, sizeof(_valueBuffer));
-
-  offset = communication::extractField(packetBuf, offset, _valueBuffer._value, valLen);
-
-  int paddingTo4bytes = offset & 0x03;
-  if ( paddingTo4bytes ) {
-    _paddingLen = 0x04 - paddingTo4bytes;
-    offset += _paddingLen;
-  }
-  _valLen = valLen; _isValueSet = true;
-
-  return offset;
-}
-
-template <size_t SZ>
-const uint8_t*
-TLV_OctetArrayPrimitive<SZ>::getValue() const {
-  if ( !_isValueSet )
-    throw utilx::FieldNotSetException("TLV_OctetArrayPrimitive::getValue::: value isn't set");
-
-  return _valueBuffer._value;
-}
-
-template <size_t SZ>
-bool
-TLV_OctetArrayPrimitive<SZ>::isSetValue() const { return _isValueSet; }
-
-template <size_t SZ>
-uint16_t
-TLV_OctetArrayPrimitive<SZ>::getLength() const
-{
-  return HEADER_SZ + _valLen + _paddingLen;
-}
-
-template <size_t SZ>
-uint16_t
-TLV_OctetArrayPrimitive<SZ>::getValueLength() const
-{
-  return _valLen;
-}
-
-template <size_t SZ>
-uint16_t
-TLV_OctetArrayPrimitive<SZ>::getActualLength() const
-{
-  return HEADER_SZ + _valLen;
+  return uint16_t(HEADER_SZ + sizeof(_value));
 }
 
 TLV_ApplicationStatus::TLV_ApplicationStatus()
@@ -347,7 +167,7 @@ TLV_ApplicationStatus::toString() const
   if ( isSetValue() ) {
     char strBuf[128];
     snprintf(strBuf, sizeof(strBuf), "applicationStatus=[statusType=[%d],statusId=[%d]]", getStatusType(), getStatusId());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_ApplicationStatus::toString::: value wasn't set");
 }
@@ -384,17 +204,17 @@ TLV_AspIdentifier::toString() const
   if ( isSetValue() ) {
     char strBuf[128];
     snprintf(strBuf, sizeof(strBuf), "aspIdentifier=[%d]", getValue());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_AspIdentifier::toString::: value wasn't set");
 }
 
 TLV_InfoString::TLV_InfoString()
-  : TLV_StringPrimitive(TAG)
+  : TLV_StringPrimitive<255>(TAG)
 {}
 
 TLV_InfoString::TLV_InfoString(const std::string& str)
-  : TLV_StringPrimitive(TAG, str.c_str(), str.size())
+  : TLV_StringPrimitive<255>(TAG, str.c_str(), static_cast<uint16_t>(str.size()))
 {}
 
 std::string
@@ -403,17 +223,17 @@ TLV_InfoString::toString() const
   if ( isSetValue() ) {
     char strBuf[300];
     snprintf(strBuf, sizeof(strBuf), "infoString=[%s]", getPrintableValue().c_str());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_InfoString::toString::: value wasn't set");
 }
 
 TLV_DiagnosticInformation::TLV_DiagnosticInformation()
-  : TLV_OctetArrayPrimitive(TAG)
+  : TLV_OctetArrayPrimitive<MAX_OCTET_ARRAY_SIZE>(TAG)
 {}
 
 TLV_DiagnosticInformation::TLV_DiagnosticInformation(const std::string& str)
-  : TLV_OctetArrayPrimitive(TAG, reinterpret_cast<const uint8_t*>(str.c_str()), str.size())
+  : TLV_OctetArrayPrimitive<MAX_OCTET_ARRAY_SIZE>(TAG, reinterpret_cast<const uint8_t*>(str.c_str()), static_cast<uint16_t>(str.size()))
 {}
 
 std::string
@@ -421,8 +241,8 @@ TLV_DiagnosticInformation::toString() const
 {
   if ( isSetValue() ) {
     char strBuf[MAX_OCTET_ARRAY_SIZE*2];
-    snprintf(strBuf, sizeof(strBuf), "diagnosticInformation=[%s]",hexdmp(getValue(), getValueLength()).c_str());
-    return std::string(strBuf);
+    snprintf(strBuf, sizeof(strBuf), "diagnosticInformation=[%s]", utilx::hexdmp(getValue(), getValueLength()).c_str());
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_DiagnosticInformation::toString::: value wasn't set");
 }
@@ -456,7 +276,7 @@ TLV_ErrorCode::toString() const
   if ( isSetValue() ) {
     char strBuf[256];
     snprintf(strBuf, sizeof(strBuf), "errCode=[%d] '%s'", getValue(), getErrorCodeDescription());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_ErrorCode::toString::: value wasn't set");
 }
@@ -512,6 +332,7 @@ TLV_ErrorCode::getErrorCodeDescription() const
     return "Susbsystem Status Unknown";
   if ( value == 0x1c )
     return "Invalid Loadsharing Label";
+  return "Unknown error code";
 }
 
 TLV_TrafficModeType::TLV_TrafficModeType()
@@ -543,21 +364,23 @@ TLV_TrafficModeType::toString() const
   if ( isSetValue() ) {
     uint32_t value = getValue();
     if ( value == 1 )
-      return std::string("trafficMode=[OVERRIDE]");
+      return "trafficMode=[OVERRIDE]";
     if ( value == 2 )
-      return std::string("trafficMode=[LOADSHARE]");
+      return "trafficMode=[LOADSHARE]";
     if ( value == 3 )
-      return std::string("trafficMode=[BROADCAST]");
+      return "trafficMode=[BROADCAST]";
+
+    return "trafficMode=[UNKNOWN]";
   } else
     throw smsc::util::Exception("TLV_TrafficModeType::toString::: value wasn't set");
 }
 
 TLV_DRNLabel::TLV_DRNLabel()
-  : TLV_OctetArrayPrimitive(TAG)
+  : TLV_OctetArrayPrimitive<sizeof(uint32_t)>(TAG)
 {}
 
 TLV_DRNLabel::TLV_DRNLabel(uint8_t startLabelPosition, uint8_t endLabelPosition, uint16_t labelValue)
-  : TLV_OctetArrayPrimitive(TAG, temporary_buf(startLabelPosition, endLabelPosition, labelValue).array, sizeof(uint32_t))
+  : TLV_OctetArrayPrimitive<sizeof(uint32_t)>(TAG, temporary_buf(startLabelPosition, endLabelPosition, labelValue).array, static_cast<uint16_t>(sizeof(uint32_t)))
 {}
 
 TLV_DRNLabel::temporary_buf::temporary_buf(uint8_t startLabelPosition, uint8_t endLabelPosition, uint16_t labelValue)
@@ -576,7 +399,7 @@ TLV_DRNLabel::deserialize(const communication::TP& packetBuf,
                           size_t offset /*position inside buffer where tag's data started*/,
                           uint16_t valLen)
 {
-  offset = TLV_OctetArrayPrimitive::deserialize(packetBuf, offset, valLen);
+  offset = TLV_OctetArrayPrimitive<sizeof(uint32_t)>::deserialize(packetBuf, offset, valLen);
   const uint8_t* value = getValue();
 
   if ( value[0] > 23 )
@@ -593,7 +416,7 @@ TLV_DRNLabel::toString() const
   if ( isSetValue() ) {
     char strBuf[256];
     snprintf(strBuf, sizeof(strBuf), "DRNLabel=[startLabelPosition=[%d],endLabelPosition=[%d],labelValue=[%d]]", getStartLabelPosition(), getEndLabelPosition(), getLabelValue());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_DRNLabel::toString::: value wasn't set");
 }
@@ -623,11 +446,11 @@ TLV_DRNLabel::getLabelValue() const
 }
 
 TLV_TIDLabel::TLV_TIDLabel()
-  : TLV_OctetArrayPrimitive(TAG)
+  : TLV_OctetArrayPrimitive<sizeof(uint32_t)>(TAG)
 {}
 
 TLV_TIDLabel::TLV_TIDLabel(uint8_t startLabelPosition, uint8_t endLabelPosition, uint16_t labelValue)
-  : TLV_OctetArrayPrimitive(TAG, temporary_buf(startLabelPosition, endLabelPosition, labelValue).array, sizeof(uint32_t))
+  : TLV_OctetArrayPrimitive<sizeof(uint32_t)>(TAG, temporary_buf(startLabelPosition, endLabelPosition, labelValue).array, static_cast<uint16_t>(sizeof(uint32_t)))
 {}
 
 TLV_TIDLabel::temporary_buf::temporary_buf(uint8_t startLabelPosition, uint8_t endLabelPosition, uint16_t labelValue)
@@ -646,7 +469,7 @@ TLV_TIDLabel::deserialize(const communication::TP& packetBuf,
                           size_t offset /*position inside buffer where tag's data started*/,
                           uint16_t valLen)
 {
-  offset = TLV_OctetArrayPrimitive::deserialize(packetBuf, offset, valLen);
+  offset = TLV_OctetArrayPrimitive<sizeof(uint32_t)>::deserialize(packetBuf, offset, valLen);
   const uint8_t* value = getValue();
 
   if ( value[0] > 31 )
@@ -663,7 +486,7 @@ TLV_TIDLabel::toString() const
   if ( isSetValue() ) {
     char strBuf[256];
     snprintf(strBuf, sizeof(strBuf), "TIDLabel=[startLabelPosition=[%d],endLabelPosition=[%d],labelValue=[%d]]", getStartLabelPosition(), getEndLabelPosition(), getLabelValue());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_TIDLabel::toString::: value wasn't set");
 }
@@ -691,18 +514,18 @@ TLV_TIDLabel::getLabelValue() const
 }
 
 TLV_RoutingContext::TLV_RoutingContext()
-  : TLV_OctetArrayPrimitive(TAG), _numOfIndexes(0)
+  : TLV_OctetArrayPrimitive<MAX_OCTET_ARRAY_SIZE>(TAG), _numOfIndexes(0)
 {}
 
 TLV_RoutingContext::TLV_RoutingContext(uint32_t indexes[] , size_t numOfIndexes)
-  : TLV_OctetArrayPrimitive(TAG, temporary_buf(indexes, numOfIndexes).valBuf.array, numOfIndexes*sizeof(uint32_t)), _numOfIndexes(numOfIndexes)
+  : TLV_OctetArrayPrimitive<MAX_OCTET_ARRAY_SIZE>(TAG, temporary_buf(indexes, numOfIndexes).valBuf.array, static_cast<uint16_t>(numOfIndexes*sizeof(uint32_t))), _numOfIndexes(numOfIndexes)
 {}
 
 TLV_RoutingContext::temporary_buf::temporary_buf(uint32_t indexes[] , size_t numOfIndexes) {
   size_t maxNumOfIndexes = MAX_OCTET_ARRAY_SIZE / sizeof(uint32_t);
   if ( numOfIndexes > maxNumOfIndexes )
     throw smsc::util::Exception("TLV_RoutingContext::TLV_RoutingContext::: num. of indexes in array=[%d] exceeded max. permitted value=[%d]", numOfIndexes, maxNumOfIndexes);
-  for(int i=0; i<numOfIndexes; ++i)
+  for(size_t i=0; i<numOfIndexes; ++i)
     valBuf.arrayUint32[i] = htonl(indexes[i]);
 }
 
@@ -711,7 +534,7 @@ TLV_RoutingContext::deserialize(const communication::TP& packetBuf,
                                 size_t offset /*position inside buffer where tag's data started*/,
                                 uint16_t valLen)
 {
-  offset = TLV_OctetArrayPrimitive::deserialize(packetBuf, offset, valLen);
+  offset = TLV_OctetArrayPrimitive<MAX_OCTET_ARRAY_SIZE>::deserialize(packetBuf, offset, valLen);
   _numOfIndexes = getValueLength() / sizeof(uint32_t);
 
   return offset;
@@ -723,7 +546,7 @@ TLV_RoutingContext::toString() const
   if ( isSetValue() ) {
     char strBuf[256];
 
-    int pos = snprintf(strBuf, sizeof(strBuf), "routingContext=[");
+    size_t pos = snprintf(strBuf, sizeof(strBuf), "routingContext=[");
     for(size_t i=0, maxNum=getMaxIndexNum(); i<maxNum; ++i) {
       int ret = snprintf(strBuf+pos, sizeof(strBuf)-pos, "idx_%d=%d,", i, getIndexValue(i));
       if ( ret < 0 ) break;
@@ -732,7 +555,7 @@ TLV_RoutingContext::toString() const
     pos = strlen(strBuf);
     strBuf[pos-1] = ']'; strBuf[pos] = 0;
 
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_RoutingContext::toString::: value wasn't set");
 }
@@ -766,17 +589,17 @@ TLV_NetworkAppearance::toString() const
   if ( isSetValue() ) {
     char strBuf[256];
     snprintf(strBuf, sizeof(strBuf), "networkAppearance=[%d]", getValue());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_NetworkAppearance::toString::: value wasn't set");
 }
 
 TLV_AffectedPointCode::TLV_AffectedPointCode()
-  : TLV_OctetArrayPrimitive(TAG), _nextPCOffset(0)
+  : TLV_OctetArrayPrimitive<MAX_OCTET_ARRAY_SIZE>(TAG), _nextPCOffset(0)
  {}
 
 TLV_AffectedPointCode::TLV_AffectedPointCode(const PointCode& pc)
-  : TLV_OctetArrayPrimitive(TAG, pc.getValue(), PointCode::SIZE), 
+  : TLV_OctetArrayPrimitive<MAX_OCTET_ARRAY_SIZE>(TAG, pc.getValue(), static_cast<uint16_t>(PointCode::SIZE)), 
     _nextPCOffset(0)
 {}
 
@@ -787,17 +610,17 @@ TLV_AffectedPointCode::toString() const
     const uint8_t* value = getValue();
     
     char strBuf[256];
-    int pos = snprintf(strBuf, sizeof(strBuf), "affectedPointCodes=[");
+    size_t pos = snprintf(strBuf, sizeof(strBuf), "affectedPointCodes=[");
 
     size_t nextPcOffset = 0, i=0, pcBufLen = getValueLength();
     while ( pcBufLen > nextPcOffset + sizeof(uint32_t) ) {
-      int ret = snprintf(strBuf+pos, sizeof(strBuf)-pos, "PC_%d=%s,", i++, hexdmp(value + nextPcOffset, sizeof(uint32_t)).c_str());
+      int ret = snprintf(strBuf+pos, sizeof(strBuf)-pos, "PC_%d=%s,", i++, utilx::hexdmp(value + nextPcOffset, sizeof(uint32_t)).c_str());
       if ( ret < 0 ) break;
       pos += ret; nextPcOffset += sizeof(uint32_t);
     }
     strBuf[pos-1] = ']'; strBuf[pos] = 0;
 
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_AffectedPointCode::toString::: value wasn't set");
 }
@@ -845,7 +668,7 @@ TLV_SSN::toString() const
     char strBuf[64];
     ssn_t ssn = static_cast<ssn_t>(getValue() & 0xFF);
     snprintf(strBuf, sizeof(strBuf), "SSN=[%d]", ssn);
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_NetworkAppearance::toString::: value wasn't set");
 }
@@ -881,15 +704,17 @@ TLV_SMI::toString() const
   if ( isSetValue() ) {
     uint8_t value = 0xFF & getValue();
     if ( value == 0x00 )
-      return std::string("SMI=[Reserved/Unknown]");
+      return "SMI=[Reserved/Unknown]";
     if ( value == 0x01 )
-      return std::string("SMI=[Solitary]");
+      return "SMI=[Solitary]";
     if ( value == 0x02 )
-      return std::string("SMI=[Duplicated]");
+      return "SMI=[Duplicated]";
     if ( value == 0x03 )
-      return std::string("SMI=[Triplicated]");
+      return "SMI=[Triplicated]";
     if ( value == 0xff )
-      return std::string("SMI=[Unspecified]");
+      return "SMI=[Unspecified]";
+
+    return "SMI=[Unknown]";
   } else
     throw smsc::util::Exception("TLV_SMI::toString::: value wasn't set");
 }
@@ -920,7 +745,7 @@ TLV_UserCause::toString() const
   if ( isSetValue() ) {
     char strBuf[128];
     snprintf(strBuf, sizeof(strBuf), "user_cause=[cause=[%d],user=[%d]]", getCause(), getUser());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_UserCause::toString::: value wasn't set");
 }
@@ -958,7 +783,7 @@ TLV_CongestionLevel::toString() const
   if ( isSetValue() ) {
     char strBuf[128];
     snprintf(strBuf, sizeof(strBuf), "congestionLevel=[%d]", getValue());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_CongestionLevel::toString::: value wasn't set");
 }
@@ -977,7 +802,7 @@ TLV_ProtocolClass::toString() const
   if ( isSetValue() ) {
     char strBuf[128];
     snprintf(strBuf, sizeof(strBuf), "protocolClass=[%d:%s]", getValue(), ProtocolClass(getValue()).toString().c_str());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_ProtocolClass::toString::: value wasn't set");
 }
@@ -1002,17 +827,17 @@ TLV_SequenceControl::toString() const
   if ( isSetValue() ) {
     char strBuf[256];
     snprintf(strBuf, sizeof(strBuf), "sequenceControl=[%d]", getValue());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_SequenceControl::toString::: value wasn't set");
 }
 
 TLV_Segmentation::TLV_Segmentation()
-  : TLV_OctetArrayPrimitive(TAG)
+  : TLV_OctetArrayPrimitive<sizeof(uint32_t)>(TAG)
 {}
 
 TLV_Segmentation::TLV_Segmentation(bool isFirstSegment, uint8_t numOfRemainingSegments, uint32_t reference)
-  : TLV_OctetArrayPrimitive(TAG, temporary_buf(isFirstSegment, numOfRemainingSegments, reference).array, sizeof(uint32_t))
+  : TLV_OctetArrayPrimitive<sizeof(uint32_t)>(TAG, temporary_buf(isFirstSegment, numOfRemainingSegments, reference).array, static_cast<uint16_t>(sizeof(uint32_t)))
 {}
 
 TLV_Segmentation::temporary_buf::temporary_buf(bool isFirstSegment, uint8_t numOfRemainingSegments, uint32_t reference)
@@ -1029,7 +854,7 @@ TLV_Segmentation::toString() const
   if ( isSetValue() ) {
     char strBuf[256];
     snprintf(strBuf, sizeof(strBuf), "firstSegmentIndication=[%d],numOfRemainingSegments=[%d],refValue=[%d]", isFirstSegment(), getNumOfRemainingSegments(), getReferenceValue());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_Segmentation::toString::: value wasn't set");
 }
@@ -1072,7 +897,7 @@ TLV_SS7HopCount::toString() const
   if ( isSetValue() ) {
     char strBuf[128];
     snprintf(strBuf, sizeof(strBuf), "ss7HopCount=[%d]", getHopCountValue());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_SS7HopCount::toString::: value wasn't set");
 }
@@ -1109,7 +934,7 @@ TLV_Importance::toString() const
   if ( isSetValue() ) {
     char strBuf[128];
     snprintf(strBuf, sizeof(strBuf), "importance=[%d]", getImportanceValue());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_Importance::toString::: value wasn't set");
 }
@@ -1149,7 +974,7 @@ TLV_MessagePriority::toString() const
   if ( isSetValue() ) {
     char strBuf[128];
     snprintf(strBuf, sizeof(strBuf), "priority=[%d]", getMessagePriorityValue());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_MessagePriority::toString::: value wasn't set");
 }
@@ -1174,17 +999,17 @@ TLV_CorrelationId::toString() const
   if ( isSetValue() ) {
     char strBuf[128];
     snprintf(strBuf, sizeof(strBuf), "correlationId=[%d]", getValue());
-    return std::string(strBuf);
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_CorrelationId::toString::: value wasn't set");
 }
 
 TLV_Data::TLV_Data()
-  : TLV_OctetArrayPrimitive(TAG)
+  : TLV_OctetArrayPrimitive<MAX_OCTET_ARRAY_SIZE>(TAG)
 {}
 
 TLV_Data::TLV_Data(const uint8_t* val, uint16_t len)
-  : TLV_OctetArrayPrimitive(TAG, val, len)
+  : TLV_OctetArrayPrimitive<MAX_OCTET_ARRAY_SIZE>(TAG, val, len)
 {}
 
 std::string
@@ -1192,30 +1017,30 @@ TLV_Data::toString() const
 {
   if ( isSetValue() ) {
     char strBuf[MAX_OCTET_ARRAY_SIZE*2];
-    snprintf(strBuf, sizeof(strBuf), "data=[%s]",hexdmp(getValue(), getValueLength()).c_str());
-    return std::string(strBuf);
+    snprintf(strBuf, sizeof(strBuf), "data=[%s]", utilx::hexdmp(getValue(), getValueLength()).c_str());
+    return strBuf;
   } else
     throw smsc::util::Exception("TLV_Data::toString::: value wasn't set");
 }
 
 TLV_PointCode::TLV_PointCode()
-  : TLV_OctetArrayPrimitive(TAG)
+  : TLV_OctetArrayPrimitive<sizeof(uint32_t)>(TAG)
 {}
 
 TLV_PointCode::TLV_PointCode(const ANSI_PC& pc)
-  : TLV_OctetArrayPrimitive(TAG, pc.getValue(), PointCode::SIZE)
+  : TLV_OctetArrayPrimitive<sizeof(uint32_t)>(TAG, pc.getValue(), static_cast<uint16_t>(PointCode::SIZE))
 {}
 
 TLV_PointCode::TLV_PointCode(const ITU_PC& pc)
-  : TLV_OctetArrayPrimitive(TAG, pc.getValue(), PointCode::SIZE)
+  : TLV_OctetArrayPrimitive<sizeof(uint32_t)>(TAG, pc.getValue(), static_cast<uint16_t>(PointCode::SIZE))
 {}
 
 std::string
 TLV_PointCode::toString() const
 {
   char strBuf[256];
-  snprintf(strBuf, sizeof(strBuf), "PC=%s", hexdmp(getValue(), getValueLength()).c_str());
-  return std::string(strBuf);
+  snprintf(strBuf, sizeof(strBuf), "PC=%s", utilx::hexdmp(getValue(), getValueLength()).c_str());
+  return strBuf;
 }
 
 ANSI_PC
@@ -1231,11 +1056,11 @@ TLV_PointCode::get_ITU_PC() const
 }
 
 TLV_GlobalTitle::TLV_GlobalTitle()
-  : TLV_OctetArrayPrimitive(TAG)
+  : TLV_OctetArrayPrimitive<GT_TOTAL_MAX_SZ>(TAG)
 {}
 
 TLV_GlobalTitle::TLV_GlobalTitle(const GlobalTitle& gt)
-  : TLV_OctetArrayPrimitive(TAG, RESERVED_OCTETS, gt.getValue(), gt.getValueSz()), _globalTitle(gt)
+  : TLV_OctetArrayPrimitive<GT_TOTAL_MAX_SZ>(TAG, RESERVED_OCTETS, gt.getValue(), static_cast<uint16_t>(gt.getValueSz())), _globalTitle(gt)
 {}
 
 size_t
@@ -1243,7 +1068,7 @@ TLV_GlobalTitle::deserialize(const communication::TP& packetBuf,
                              size_t offset /*position inside buffer where tag's data started*/,
                              uint16_t valLen)
 {
-  offset = TLV_OctetArrayPrimitive::deserialize(packetBuf, offset, valLen);
+  offset = TLV_OctetArrayPrimitive<GT_TOTAL_MAX_SZ>::deserialize(packetBuf, offset, valLen);
 
   _globalTitle = GlobalTitle(getValue() + RESERVED_OCTETS, getValueLength() - RESERVED_OCTETS);
   uint8_t gti = _globalTitle.getGTI();
@@ -1275,7 +1100,7 @@ TLV_Address::TLV_Address(uint16_t tag, const TLV_PointCode& pointCode, const TLV
 
 TLV_Address::TLV_Address(uint16_t tag, const TLV_GlobalTitle& gt, const TLV_SSN& ssn)
   : SuaTLV(tag), _routingIndicator(ROUTE_ON_GT),
-    _addressIndicator(GT_INCLUDE_INDICATION|SSN_INCLUDE_INDICATION), _gt(gt), _ssn(ssn), _isValueSet(true)
+    _addressIndicator(GT_INCLUDE_INDICATION|SSN_INCLUDE_INDICATION),  _ssn(ssn), _gt(gt), _isValueSet(true)
 {}
 
 TLV_Address::TLV_Address(uint16_t tag, const TLV_GlobalTitle& gt)
@@ -1301,7 +1126,7 @@ TLV_Address::serialize(communication::TP* packetBuf,
   if ( _gt.isSetValue() )
     offset = _gt.serialize(packetBuf, offset);
 
-  int paddingTo4bytes = offset & 0x03;
+  size_t paddingTo4bytes = offset & 0x03;
   if ( paddingTo4bytes ) { // if tag length is not a multiple of 4 bytes
     uint8_t padding[4]={0};
     offset = communication::addField(packetBuf, offset, padding, 0x04 - paddingTo4bytes);
@@ -1334,7 +1159,7 @@ TLV_Address::deserialize(const communication::TP& packetBuf,
 uint16_t
 TLV_Address::getLength() const
 {
-  uint16_t sz = HEADER_SZ + INDICATORS_FIELDS_SZ;
+  uint16_t sz = static_cast<uint16_t>(HEADER_SZ) + static_cast<uint16_t>(INDICATORS_FIELDS_SZ);
   if ( _pointCode.isSetValue() )
     sz += _pointCode.getLength();
   if ( _ssn.isSetValue() )
@@ -1342,7 +1167,7 @@ TLV_Address::getLength() const
   if ( _gt.isSetValue() )
     sz += _gt.getLength();
 
-  int paddingTo4bytesSz = sz & 0x03;
+  uint16_t paddingTo4bytesSz = sz & 0x03;
   if ( paddingTo4bytesSz )
     sz += 0x04 - paddingTo4bytesSz;
 
@@ -1454,11 +1279,11 @@ TLV_DestinationAddress::toString() const
 }
 
 TLV_SCCP_Cause::TLV_SCCP_Cause()
-  : TLV_OctetArrayPrimitive(TAG)
+  : TLV_OctetArrayPrimitive<sizeof(uint32_t)>(TAG)
 {}
 
 TLV_SCCP_Cause::TLV_SCCP_Cause(communication::return_cause_type_t causeType, uint8_t causeValue)
-  : TLV_OctetArrayPrimitive(TAG, temporary_buf(uint8_t(causeType), causeValue).array, sizeof(uint32_t))
+  : TLV_OctetArrayPrimitive<sizeof(uint32_t)>(TAG, temporary_buf(uint8_t(causeType), causeValue).array, static_cast<uint16_t>(sizeof(uint32_t)))
 {}
 
 size_t
@@ -1466,7 +1291,7 @@ TLV_SCCP_Cause::deserialize(const communication::TP& packetBuf,
                             size_t offset /*position inside buffer where tag's data started*/,
                             uint16_t valLen)
 {
-  offset = TLV_OctetArrayPrimitive::deserialize(packetBuf, offset, valLen);
+  offset = TLV_OctetArrayPrimitive<sizeof(uint32_t)>::deserialize(packetBuf, offset, valLen);
   const uint8_t* value = getValue();
   if ( value[2] == 0 || 
        value[2] > communication::ERROR_CAUSE )
@@ -1480,7 +1305,7 @@ TLV_SCCP_Cause::toString() const
   if ( isSetValue() ) {
     char strBuf[128];
     snprintf(strBuf, sizeof(strBuf), "SCCP_Cause=[causeType=[%d],causeValue=[%d]]", getCauseType(), getCauseValue());
-    return std::string(strBuf);
+    return strBuf;
   } else
     return "";
 }
@@ -1509,4 +1334,4 @@ TLV_SCCP_Cause::temporary_buf::temporary_buf(uint8_t causeType, uint8_t causeVal
   array[2] = causeType; array[3] = causeValue;
 }
 
-}
+}}}}

@@ -1,10 +1,11 @@
-#include <stdio.h>
 #include <util/Exception.hpp>
-#include <sua/utilx/Exception.hpp>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "DUPUMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const uint32_t DUPUMessage::_MSG_CODE;
@@ -135,4 +136,4 @@ DUPUMessage::getInfoString() const
   else throw utilx::FieldNotSetException("DUPUMessage::getInfoString::: infoString wasn't set");
 }
 
-}
+}}}}

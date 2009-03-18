@@ -1,8 +1,9 @@
-#ifndef __SUA_COMMUNICATION_SUAMESSAGES_SSN_HPP__
-# define __SUA_COMMUNICATION_SUAMESSAGES_SSN_HPP__ 1
+#ifndef __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_SSN_HPP__
+# define __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_SSN_HPP__
 
-# include <sys/types.h>
-
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 typedef enum { SSN_NOT_KNOWN = 0x00, SSN_SCCP_MANAGEMENT = 0x01, SSN_ISDN_USER_PART = 0x03,
@@ -15,6 +16,6 @@ public:
   static const char* getDescription(ssn_t ssn);
 };
 
-}
+}}}}
 
 #endif

@@ -1,8 +1,11 @@
-#ifndef __SUA_COMMUNICATION_SUAMESSAGES_POINTCODE_HPP__
-# define __SUA_COMMUNICATION_SUAMESSAGES_POINTCODE_HPP__ 1
+#ifndef __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_POINTCODE_HPP__
+# define __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_POINTCODE_HPP__
 
 # include <sys/types.h>
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 class PointCode {
@@ -63,6 +66,6 @@ private:
   };
 };
 
-}
+}}}}
 
 #endif

@@ -1,10 +1,11 @@
 #include <stdio.h>
-#include <util/Exception.hpp>
-#include <sua/utilx/Exception.hpp>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "UPMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const uint32_t UPMessage::_MSG_CODE;
@@ -91,4 +92,4 @@ UPMessage::getInfoString() const
   else throw utilx::FieldNotSetException("UPMessage::getInfoString::: infoString wasn't set");
 }
 
-}
+}}}}

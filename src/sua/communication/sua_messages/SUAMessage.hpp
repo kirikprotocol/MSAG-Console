@@ -1,9 +1,12 @@
-#ifndef __SUA_COMMUNICATION_SUAMESSAGES_HPP__
-# define __SUA_COMMUNICATION_SUAMESSAGES_HPP__
+#ifndef __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_HPP__
+# define __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_HPP__
 
-# include <sua/communication/Message.hpp>
-# include <sua/communication/sua_messages/SuaTLV.hpp>
+# include <eyeline/sua/communication/Message.hpp>
+# include <eyeline/sua/communication/sua_messages/SuaTLV.hpp>
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 class SUAMessage : public communication::Message {
@@ -73,8 +76,6 @@ private:
   uint16_t _streamNo;
 };
 
-} // namespace sua_stack
+}}}}
 
-
-
-#endif /* SUAMESSAGE_HPP_HEADER_INCLUDED_B87B46E4 */
+#endif

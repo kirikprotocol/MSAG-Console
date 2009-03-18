@@ -1,9 +1,12 @@
-#ifndef __SUA_COMMUNICATION_SUAMESSAGES_GLOBALTITLE_HPP__
-# define __SUA_COMMUNICATION_SUAMESSAGES_GLOBALTITLE_HPP__ 1
+#ifndef __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_GLOBALTITLE_HPP__
+# define __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_GLOBALTITLE_HPP__
 
 # include <sys/types.h>
 # include <string>
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 class GlobalTitle {
@@ -70,6 +73,6 @@ private:
   size_t packGTDigits(const std::string& gtDigits);
 };
 
-}
+}}}}
 
 #endif

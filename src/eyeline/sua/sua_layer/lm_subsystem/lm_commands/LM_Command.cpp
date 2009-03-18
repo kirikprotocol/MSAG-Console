@@ -1,0 +1,13 @@
+#include "LM_Command.hpp"
+
+namespace eyeline {
+namespace sua {
+namespace sua_layer {
+namespace lm_subsystem {
+namespace lm_commands {
+
+LM_Command::LM_Command()
+  : _logger(smsc::logger::Logger::getInstance("lmsubsys"))
+{}
+
+}}}}}

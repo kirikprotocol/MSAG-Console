@@ -1,9 +1,10 @@
-#include <stdio.h>
-#include <util/Exception.hpp>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "DUNAMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const uint32_t DUNAMessage::_MSG_CODE;
@@ -153,4 +154,4 @@ DUNAMessage::getInfoString() const
   else throw utilx::FieldNotSetException("DUNAMessage::getInfoString::: infoString wasn't set");
 }
 
-}
+}}}}

@@ -1,5 +1,8 @@
 #include "ProtocolClass.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 ProtocolClass::ProtocolClass(uint32_t value)
@@ -49,4 +52,4 @@ ProtocolClass::operator uint32_t() const
   return  _protocolClass | (_retOnErr << 7);
 }
 
-}
+}}}}

@@ -1,15 +1,18 @@
-#ifndef __SUA_COMMUNICATION_SUAMESSAGES_SUATLV_HPP__
-# define __SUA_COMMUNICATION_SUAMESSAGES_SUATLV_HPP__ 1
+#ifndef __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_SUATLV_HPP__
+# define __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_SUATLV_HPP__
 
-# include <sua/communication/TP.hpp>
-# include <sua/utilx/Exception.hpp>
 # include <sys/types.h>
-# include <sua/communication/sua_messages/PointCode.hpp>
-# include <sua/communication/sua_messages/SSN.hpp>
-# include <sua/communication/sua_messages/ProtocolClass.hpp>
-# include <sua/communication/sua_messages/GlobalTitle.hpp>
-# include <sua/communication/types.hpp>
+# include <eyeline/utilx/Exception.hpp>
+# include <eyeline/sua/communication/TP.hpp>
+# include <eyeline/sua/communication/sua_messages/PointCode.hpp>
+# include <eyeline/sua/communication/sua_messages/SSN.hpp>
+# include <eyeline/sua/communication/sua_messages/ProtocolClass.hpp>
+# include <eyeline/sua/communication/sua_messages/GlobalTitle.hpp>
+# include <eyeline/sua/communication/types.hpp>
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 class SuaTLV {
@@ -61,7 +64,6 @@ private:
   uint32_t _value; // value stored in host bytes order
   bool _isValueSet;
 };
-
 
 template <size_t SZ>
 class TLV_StringPrimitive : public SuaTLV {
@@ -134,6 +136,8 @@ private:
   bool _isValueSet;
   uint16_t _paddingLen;
 };
+
+# include <eyeline/sua/communication/sua_messages/SuaTLV_impl.hpp>
 
 class TLV_ApplicationStatus : public TLV_IntegerPrimitive {
 public:
@@ -579,6 +583,6 @@ private:
   void generateProtocolException();
 };
 
-}
+}}}}
 
 #endif

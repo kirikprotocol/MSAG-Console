@@ -1,9 +1,11 @@
 #include <stdio.h>
-#include <util/Exception.hpp>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "DAVAMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const uint32_t DAVAMessage::_MSG_CODE;
@@ -153,4 +155,4 @@ DAVAMessage::getInfoString() const
   else throw utilx::FieldNotSetException("DAVAMessage::getInfoString::: infoString wasn't set");
 }
 
-}
+}}}}

@@ -1,9 +1,12 @@
-#ifndef __SUA_COMMUNICATION_SUAMESSAGES_DRSTMESSAGE_HPP__
-# define __SUA_COMMUNICATION_SUAMESSAGES_DRSTMESSAGE_HPP__ 1
+#ifndef __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_DRSTMESSAGE_HPP__
+# define __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_DRSTMESSAGE_HPP__
 
-# include <sua/communication/sua_messages/SUAMessage.hpp>
-# include <sua/communication/sua_messages/SuaTLV.hpp>
+# include <eyeline/sua/communication/sua_messages/SUAMessage.hpp>
+# include <eyeline/sua/communication/sua_messages/SuaTLV.hpp>
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 class DRSTMessage : public SUAMessage {
@@ -42,6 +45,6 @@ private:
   TLV_InfoString _infoString;
 };
 
-}
+}}}}
 
 #endif

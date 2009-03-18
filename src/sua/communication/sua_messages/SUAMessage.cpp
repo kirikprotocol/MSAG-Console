@@ -3,9 +3,13 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <inttypes.h>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "SUAMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 unsigned int SUAMessage::_msgClassTypeToMessageIdx[MAX_MSG_CLASS_VALUE+1][MAX_MSG_TYPE_VALUE+1];
@@ -156,5 +160,4 @@ SUAMessage::updateRoutingContext(const TLV_RoutingContext& routingContext) const
   _routingContext = routingContext;
 }
 
-}
-
+}}}}

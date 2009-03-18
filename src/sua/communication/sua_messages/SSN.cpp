@@ -1,7 +1,8 @@
-#include <util/Exception.hpp>
-
 #include "SSN.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const char*
@@ -37,4 +38,4 @@ SSN::getDescription(ssn_t ssn)
     return "Reserved";
 }
 
-}
+}}}}

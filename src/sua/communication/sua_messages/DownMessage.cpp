@@ -1,9 +1,10 @@
-#include <stdio.h>
-#include <util/Exception.hpp>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "DownMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const uint32_t DownMessage::_MSG_CODE;
@@ -70,4 +71,4 @@ DownMessage::getInfoString() const
   else throw utilx::FieldNotSetException("DownMessage::getInfoString::: infoString wasn't set");
 }
 
-}
+}}}}

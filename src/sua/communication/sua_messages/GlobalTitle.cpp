@@ -1,7 +1,11 @@
 #include "GlobalTitle.hpp"
+#include <stdio.h>
 #include <string.h>
 #include <util/Exception.hpp>
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 GlobalTitle::GlobalTitle()
@@ -99,7 +103,7 @@ GlobalTitle::GlobalTitle(uint8_t translationType, uint8_t numPlan, uint8_t encSc
   _gt_buffer.buf[NATURE_OF_ADDR_IDX] = natureOfAddress;
   memcpy(&_gt_buffer.buf[NATURE_OF_ADDR_IDX+1], packedGtDigits, packedGtDigitsSz);
   _gt_buffer.packedDataSz = packedGtDigitsSz + GT_HEADER_SZ;
-  _gt_buffer.buf[DIGIT_NUM_IDX] = packedGtDigitsSz << 1;
+  _gt_buffer.buf[DIGIT_NUM_IDX] = static_cast<uint8_t>(packedGtDigitsSz << 1);
   if ( encScheme == ENCODING_BCD_ODD_NUMBER_DIGITS ) --_gt_buffer.buf[DIGIT_NUM_IDX];
 }
 
@@ -107,7 +111,10 @@ size_t
 GlobalTitle::packGTDigits(const std::string& gtDigits)
 {
   size_t digitsNum = gtDigits.size();
-  _gt_buffer.buf[DIGIT_NUM_IDX] = digitsNum;
+  if ( digitsNum > 255 )
+    throw smsc::util::Exception("too long address string - max expected size is 255 symbols");
+
+  _gt_buffer.buf[DIGIT_NUM_IDX] = static_cast<uint8_t>(digitsNum);
 
   uint8_t* nextOctetToPack = &_gt_buffer.buf[NATURE_OF_ADDR_IDX+1];
   size_t evenNumOfDigits = digitsNum & 0xFE;
@@ -217,4 +224,4 @@ GlobalTitle::toString() const
   return std::string(tmpStr) + getGlobalTitleDigits();
 }
 
-}
+}}}}

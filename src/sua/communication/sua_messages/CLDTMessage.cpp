@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <util/Exception.hpp>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "CLDTMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const uint32_t CLDTMessage::_MSG_CODE;
@@ -322,4 +325,4 @@ CLDTMessage::getData() const
   else throw utilx::FieldNotSetException("CLDTMessage::getData::: data wasn't set");
 }
 
-}
+}}}}

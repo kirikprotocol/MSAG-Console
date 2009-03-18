@@ -1,6 +1,9 @@
 #include <util/Exception.hpp>
 #include "SCCPAddress.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 void
@@ -148,35 +151,4 @@ SCCPAddress::makeGlobalTitle(uint8_t gti, const uint8_t* gtValue)
     throw smsc::util::Exception("SCCPAddress::makeGlobalTitle::: invalid gti value=[%d]", gti);
 }
 
-// TLV_Address
-// SCCPAddress::make_TLV_Address(uint16_t tag) const
-// {
-//   const uint8_t* addressValue = _address.get();
-//   uint8_t addressIndicator = addressValue[0];
-
-//   if ( addressIndicator & 0x01 &&
-//        addressIndicator & 0x02 ) {
-//     uint8_t pcBuf[4] = {0};
-//     memcpy(pcBuf+2, &addressValue[1], 2);
-
-//     return TLV_Address(tag, TLV_PointCode(ITU_PC(pcBuf)), TLV_SSN(addressValue[3]));
-//   } else {
-//     uint8_t gti = (addressIndicator >> 2) & 0x0F;
-
-//     if ( gti != NO_GT_INCLUDED_INDICATOR ) { // if global title indicator value is not 0
-//       unsigned int whereSSNStart = 1;
-//       if ( addressIndicator & 0x01 )
-//         whereSSNStart = 3;
-
-//       uint8_t* gtValue = &addressValue[whereSSNStart+1];
-//       if ( addressIndicator & 0x02 )
-//         return TLV_Address(tag, TLV_GlobalTitle(makeGlobalTitle(gti, gtValue)),
-//                            TLV_SSN(addressValue[whereSSNStart]));
-//       else
-//         return TLV_Address(tag, TLV_GlobalTitle(makeGlobalTitle(gti, gtValue)));
-//     } else
-//       throw smsc::util::Exception("SCCPAddress::make_TLV_Address::: invalid addressIndicator value=[%02X]", addressIndicator);
-//   }
-// }
-
-}
+}}}}

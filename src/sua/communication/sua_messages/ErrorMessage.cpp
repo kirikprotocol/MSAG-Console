@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <util/Exception.hpp>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "ErrorMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const uint32_t ErrorMessage::_MSG_CODE;
@@ -157,4 +160,4 @@ ErrorMessage::getDiagnosticInformation() const
   else throw utilx::FieldNotSetException("ErrorMessage::getDiagnosticInformation::: diagnosticInformation wasn't set");
 }
 
-}
+}}}}

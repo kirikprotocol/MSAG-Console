@@ -5,7 +5,7 @@
 #
 
 CXXFLAGS := $(CXXFLAGS) -I.
-PACKAGE := sua.communication.sua_messages
+PACKAGE := eyeline.sua.communication.sua_messages
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

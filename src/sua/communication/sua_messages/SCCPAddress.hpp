@@ -1,10 +1,13 @@
-#ifndef __SUA_COMMUNICATION_SUAMESSAGES_SCCPADDRESS_HPP__
-# define __SUA_COMMUNICATION_SUAMESSAGES_SCCPADDRESS_HPP__
+#ifndef __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_SCCPADDRESS_HPP__
+# define __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_SCCPADDRESS_HPP__
 
 # include <sys/types.h>
-# include <sua/communication/sua_messages/SuaTLV.hpp>
+# include <eyeline/sua/communication/sua_messages/SuaTLV.hpp>
 # include <core/buffers/TmpBuf.hpp>
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 class SCCPAddress {
@@ -75,6 +78,6 @@ SCCPAddress::make_TLV_Address()
   }
 }
 
-}
+}}}}
 
 #endif

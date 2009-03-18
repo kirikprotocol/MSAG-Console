@@ -1,9 +1,12 @@
-#ifndef __SUA_COMMUNICATION_SUAMESSAGES_ACTIVEACKMESSAGE_HPP__
-# define __SUA_COMMUNICATION_SUAMESSAGES_ACTIVEACKMESSAGE_HPP__ 1
+#ifndef __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_ACTIVEACKMESSAGE_HPP__
+# define __EYELINE_SUA_COMMUNICATION_SUAMESSAGES_ACTIVEACKMESSAGE_HPP__
 
-# include <sua/communication/sua_messages/SUAMessage.hpp>
-# include <sua/communication/sua_messages/SuaTLV.hpp>
+# include <eyeline/sua/communication/sua_messages/SUAMessage.hpp>
+# include <eyeline/sua/communication/sua_messages/SuaTLV.hpp>
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 class ActiveAckMessage : public SUAMessage {
@@ -37,6 +40,6 @@ private:
   static const uint32_t _MSG_CODE = 0x0403;
 };
 
-}
+}}}}
 
 #endif

@@ -1,10 +1,10 @@
-#include <stdio.h>
-#include <util/Exception.hpp>
-#include <sua/utilx/Exception.hpp>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
+#include <eyeline/utilx/Exception.hpp>
 
 #include "InactiveMessage.hpp"
 
+namespace eyeline {
+namespace sua {
+namespace communication {
 namespace sua_messages {
 
 const uint32_t InactiveMessage::_MSG_CODE;
@@ -78,4 +78,4 @@ InactiveMessage::getInfoString() const
   else throw utilx::FieldNotSetException("InactiveMessage::getInfoString::: infoString wasn't set");
 }
 
-}
+}}}}
