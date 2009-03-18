@@ -10,22 +10,24 @@ namespace pvss {
 class GetResponse : public BatchResponseComponent, public HavingProperty
 {
 public:
-    GetResponse() : BatchResponseComponent(), property_(0) {}
-    GetResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum), property_(0) {}
+    GetResponse() : BatchResponseComponent() {}
+    GetResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum) {}
 
     virtual ~GetResponse() {
-        delete property_;
+        // delete property_;
     }
-    virtual const Property* getProperty() const { return property_; }
-    virtual Property* getProperty() { return property_; }
+    virtual const Property* getProperty() const { return &property_; }
+    virtual Property* getProperty() { return &property_; }
     void setProperty( Property* prop ) {
-        if ( property_ ) delete property_;
-        property_ = prop;
+        // if ( property_ ) delete property_;
+        if ( prop ) property_ = *prop;
     }
 
+    /*
     virtual bool isValid() const {
-        return (property_ != 0 && property_->isValid());
+        return property_->isValid());
     }
+     */
     virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) {
         return visitor.visitGetResponse(*this);
     }
@@ -34,10 +36,13 @@ public:
 
     void clear() {
         Response::clear();
+        property_ = Property();
+        /*
         if ( property_ ) {
             delete property_;
             property_ = 0;
         }
+         */
     }
 
     /// disambiguation
@@ -47,64 +52,65 @@ public:
     // --- for serialization
     
     const char* getVarName() const {
-        return property_->getName();
+        return property_.getName();
     }
     void setVarName( const std::string& varName ) {
-        createProperty().setName( varName );
+        property_.setName( varName );
     }
     bool hasIntValue() const {
-        return property_ != 0 && property_->getType() == INT;
+        return property_.getType() == INT;
     }
     bool hasStringValue() const {
-        return property_ != 0 && property_->getType() == STRING;
+        return property_.getType() == STRING;
     }
     bool hasDateValue() const {
-        return property_ != 0 && property_->getType() == DATE;
+        return property_.getType() == DATE;
     }
     bool hasBoolValue() const {
-        return property_ != 0 && property_->getType() == BOOL;
+        return property_.getType() == BOOL;
     }
     int getIntValue() const {
-        return property_->getIntValue();
+        return property_.getIntValue();
     }
     const std::string& getStringValue() const {
-        return property_->getStringValue();
+        return property_.getStringValue();
     }
     bool getBoolValue() const {
-        return property_->getBoolValue();
+        return property_.getBoolValue();
     }
     int getDateValue() const {
-        return int(property_->getDateValue());
+        return int(property_.getDateValue());
     }
     void setIntValue( int val ) {
-        createProperty().setIntValue(val);
+        property_.setIntValue(val);
     }
     void setStringValue( const std::string& val ) {
-        createProperty().setStringValue(val.c_str());
+        property_.setStringValue(val.c_str());
     }
     void setDateValue( int val ) {
-        createProperty().setDateValue(time_t(val));
+        property_.setDateValue(time_t(val));
     }
     void setBoolValue( bool val ) {
-        createProperty().setBoolValue(val);
+        property_.setBoolValue(val);
     }
 
 protected:
     virtual const char* typeToString() const { return "get_resp"; }
 
 private:
+    /*
     Property& createProperty() {
         if ( property_ == 0 ) property_ = new Property();
         return *property_;
     }
+     */
 
-    GetResponse( const GetResponse& other ) : BatchResponseComponent(other), property_(0) {
-        if ( other.property_ ) property_ = new Property(*other.property_);
+    GetResponse( const GetResponse& other ) : BatchResponseComponent(other), property_(other.property_) {
     }
     GetResponse& operator = ( const GetResponse& other );
 
 private:
-    Property* property_;
+    Property property_;
 };
 
 } // namespace pvss

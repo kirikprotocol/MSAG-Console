@@ -21,17 +21,17 @@ public:
     }
 
     int getConnectionsCount() const {
-        return connectionsCount;
+        return connectionsCount_;
     }
     void setConnectionsCount( int connectionsCount ) throw(ConfigException) {
         if (connectionsCount < MIN_CONNECTIONS_COUNT || connectionsCount > MAX_CONNECTIONS_COUNT)
             throw ConfigException( "Connections count can't be less than %d and more than %d",
                                    MIN_CONNECTIONS_COUNT, MAX_CONNECTIONS_COUNT );
-        this->connectionsCount = connectionsCount;
+        this->connectionsCount_ = connectionsCount;
     }
 
 protected:
-    int connectionsCount;
+    int connectionsCount_;
 };
 
 } // namespace client
