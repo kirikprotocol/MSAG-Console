@@ -548,6 +548,7 @@ private:
             }
 
             // reading cells
+            // FIXME: TODO: make reading by chunks
             rbtree_f.Seek( rbtFileHeaderDump_.size() );
             std::auto_ptr<unsigned char> pbuf(new unsigned char[header_.persistentCellSize]);
             Deserializer dds(pbuf.get(),header_.persistentCellSize);

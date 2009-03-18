@@ -15,7 +15,9 @@ namespace storage {
 
 //using namespace smsc::core::buffers;
 
-class SerialBufferOutOfBounds{};
+class SerialBufferOutOfBounds : public std::exception {
+    virtual const char* what() const throw () { return "serial buffer out of bounds"; }
+};
 
 class SerialBuffer : public DataBlock
 {
