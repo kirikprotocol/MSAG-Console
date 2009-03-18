@@ -285,9 +285,9 @@ protected:
         for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it)
         {
             //if (it->host.size() == 0)
-            //    sprintf(buff, "SystemId, %s, Host, %s %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), "Unknown", (it->connected) ? "yes" : "no");
+            //    snprintf(buff, sizeof(buff), "SystemId, %s, Host, %s %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), "Unknown", (it->connected) ? "yes" : "no");
             //else
-            sprintf(buff, "SystemId, %s, Host, %s %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), it->host.c_str(), (it->connected) ? "yes" : "no");
+            snprintf(buff, sizeof(buff), "SystemId, %s, Host, %s %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), it->host.c_str(), (it->connected) ? "yes" : "no");
 
             result.appendValueToStringList(buff);
             smsc_log_debug(logger, "Command %s returns: %s", getCommandName(), buff);
@@ -319,9 +319,9 @@ protected:
         for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it)
         {
             //if (it->host.size() == 0)
-            //    sprintf(buff, "SystemId, %s, Host, %s %s, Port, %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), "Unknown", "Unknown", (it->connected) ? "yes" : "no");
+            //    snprintf(buff, sizeof(buff), "SystemId, %s, Host, %s %s, Port, %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), "Unknown", "Unknown", (it->connected) ? "yes" : "no");
             //else
-            sprintf(buff, "SystemId, %s, Host, %s %s, Port, %d, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), it->host.c_str(), it->port, (it->connected) ? "yes" : "no");
+            snprintf(buff, sizeof(buff), "SystemId, %s, Host, %s %s, Port, %d, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), it->host.c_str(), it->port, (it->connected) ? "yes" : "no");
 
 
             result.appendValueToStringList(buff);

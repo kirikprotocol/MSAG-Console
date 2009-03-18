@@ -89,7 +89,7 @@ std::string Property::toString() const
             str += (b_val ? "true" : "false");
             break;
         case DATE:
-            strftime(buf, 32, "%Y/%m/%d %H:%M:%S", gmtime(&d_val));
+            strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M:%S", gmtime(&d_val));
             str += " DATE: ";
             str += buf;
             break;
@@ -116,7 +116,7 @@ std::string Property::toString() const
     }
     if(time_policy != INFINIT)
     {
-        strftime(buf, 32, "%Y/%m/%d %H:%M:%S", gmtime(&final_date));
+        strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M:%S", gmtime(&final_date));
         str += " FINAL_DATE: ";
         str += buf;
         sprintf(buf, "%d", life_time);

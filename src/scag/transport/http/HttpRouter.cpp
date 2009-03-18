@@ -97,7 +97,7 @@ void HttpTraceRouter::routeInfo(HttpRouteInt* r, std::vector<std::string>& trace
     
     trace.push_back("Route info:");
 
-    sprintf(buf, "RouteName:%s;RouteId:%d;ServiceId:%d;Enabled:%s;Default:%s;Transit:%s", r->name.c_str(), r->id, r->service_id, r->enabled ? "true" : "false", r->def ? "true" : "false", r->transit ? "true" : "false");
+    snprintf(buf, sizeof(buf), "RouteName:%s;RouteId:%d;ServiceId:%d;Enabled:%s;Default:%s;Transit:%s", r->name.c_str(), r->id, r->service_id, r->enabled ? "true" : "false", r->def ? "true" : "false", r->transit ? "true" : "false");
     trace[0] = buf;
 
     trace.push_back("Masks:");

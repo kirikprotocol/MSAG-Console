@@ -438,7 +438,7 @@ env_toString(JSContext *cx, JSObject *obj, int argc, jsval *argv, jsval* rval){
         currEnvName[equal-*currEnvString] = 0;      /* append null char at the end */
         equal++;
         strncpy(currEnvValue, equal, *currEnvString+strlen(*currEnvString)-equal+1);
-        sprintf(line, "%25s = %s\n", currEnvName, currEnvValue);
+        snprintf(line, sizeof(line), "%25s = %s\n", currEnvName, currEnvValue);
         len+=strlen(line)+1;
         p = (char*)JS_realloc(cx, result, len*sizeof(char));
         if(!p) {

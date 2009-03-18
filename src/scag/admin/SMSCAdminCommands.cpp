@@ -49,7 +49,7 @@ Response * CommandDeleteSmsc::CreateResponse(scag::Scag * ScagApp)
     }
     catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to delete smsc. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Failed to delete smsc. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -82,7 +82,7 @@ Response * CommandAddSmsc::CreateResponse(scag::Scag * ScagApp)
     }
     catch(std::exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to add smsc. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Failed to add smsc. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -116,7 +116,7 @@ Response * CommandUpdateSmsc::CreateResponse(scag::Scag * ScagApp)
     }
     catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to update smsc. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Failed to update smsc. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {

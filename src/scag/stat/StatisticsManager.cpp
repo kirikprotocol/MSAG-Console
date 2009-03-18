@@ -744,7 +744,7 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
 
     if (fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
     {
-        sprintf(dirName, dirNameFmt, flushTM.tm_year+1900, flushTM.tm_mon+1);
+        snprintf(dirName, sizeof(dirName), dirNameFmt, flushTM.tm_year+1900, flushTM.tm_mon+1);
         createDir(location + "/" + dirName); hasDir = true;
         smsc_log_info(logger, "New dir '%s' created", dirName);
     }
@@ -754,8 +754,8 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
         char fileName[128]; 
         std::string fullPath = location;
         if (!hasDir)
-            sprintf(dirName, dirNameFmt, flushTM.tm_year+1900, flushTM.tm_mon+1);
-        sprintf(fileName, SCAG_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
+            snprintf(dirName, sizeof(dirName), dirNameFmt, flushTM.tm_year+1900, flushTM.tm_mon+1);
+        snprintf(fileName, sizeof(fileName), SCAG_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
         fullPath += '/'; fullPath += (const char*)dirName; 
         fullPath += '/'; fullPath += (const char*)fileName; 
         const char* fullPathStr = fullPath.c_str();

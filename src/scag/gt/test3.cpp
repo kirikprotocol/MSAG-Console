@@ -249,7 +249,7 @@ int ruleRun(   std::string cmd_name,
 
        RuleStatus rs = engine->process(cmd,*session.Get());
        char buff[128];
-       sprintf(buff,"cmd:%s %s%d",cmd_name.c_str(),"result = ",rs.result);
+       snprintf(buff,sizeof(buff),"cmd:%s %s%d",cmd_name.c_str(),"result = ",rs.result);
        smsc_log_debug(logger,buff);
 
 	

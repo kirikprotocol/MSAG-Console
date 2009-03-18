@@ -34,19 +34,19 @@
 #define CATCH_ADMINEXC(msg_)                                    \
       }catch(AdminException& e){                                \
         char msg[1024];                                         \
-        sprintf(msg, msg_ " Details: %s", e.what());            \
+        snprintf(msg, sizeof(msg), msg_ " Details: %s", e.what());            \
         smsc_log_error(logger, msg);                            \
         return new Response(Response::Error, msg);
 #define CATCH_CFGEXC(msg_)                                      \
       }catch(smsc::util::config::ConfigException& e){                               \
         char msg[1024];                                         \
-        sprintf(msg, msg_ " Details: %s", e.what());            \
+        snprintf(msg, sizeof(msg), msg_ " Details: %s", e.what());            \
         smsc_log_error(logger, msg);                            \
         return new Response(Response::Error, msg);
 #define CATCH_STDEXC(msg_)                                      \
       }catch(std::exception& e){                                \
         char msg[1024];                                         \
-        sprintf(msg, msg_ " Details: %s", e.what());            \
+        snprintf(msg, sizeof(msg), msg_ " Details: %s", e.what());            \
         smsc_log_error(logger, msg);                            \
         return new Response(Response::Error, msg);
 
@@ -100,7 +100,7 @@ Response * CommandAddSme::CreateResponse(Scag * ScagApp)
         smppMan->addSmppEntity(info);
     } catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to add new SME. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Failed to add new SME. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -150,7 +150,7 @@ Response * CommandDeleteSme::CreateResponse(Scag * ScagApp)
             ScagApp->getSmppManagerAdmin()->deleteSmppEntity(systemId.c_str());
     } catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to %s SME. Details: %s", n, e.what());
+        snprintf(msg, sizeof(msg), "Failed to %s SME. Details: %s", n, e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -197,7 +197,7 @@ Response * CommandUpdateSmeInfo::CreateResponse(Scag * ScagApp)
         smppMan->updateSmppEntity(info);
     } catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to update SME. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Failed to update SME. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -385,7 +385,8 @@ Response * CommandTraceSmppRoute::CreateResponse(Scag * ScagApp)
         std::auto_ptr<char> encSmeSystemId(getEncodedString(info.smeSystemId.c_str()));
         std::auto_ptr<char> encSrcSmeSystemId(getEncodedString(info.srcSmeSystemId.c_str()));
 
-        sprintf(routeText, "route id:%s;source address:%s;destination address:%s;"
+        snprintf(routeText, sizeof(routeText), 
+                           "route id:%s;source address:%s;destination address:%s;"
                            "sme system id:%s;source sme system id:%s;archiving:%s;"
                            "enabling:%s",
                 encRouteId.get(), encSrcAddressText.get(), encDstAddressText.get(),
@@ -448,7 +449,7 @@ Response * CommandApplySmppRoutes::CreateResponse(Scag * ScagApp)
         smppMan->ReloadRoutes();
     } catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to reload routes. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Failed to reload routes. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -471,7 +472,7 @@ Response * CommandApplyHttpRoutes::CreateResponse(Scag * SmscApp)
         transport::http::HttpProcessor::Instance().ReloadRoutes();
     } catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to apply HttpRoutes. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Failed to apply HttpRoutes. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -496,7 +497,7 @@ Response * CommandReloadOperators::CreateResponse(Scag * ScagApp)
         bill_mgr.getInfrastructure().ReloadOperatorMap();
     } catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to reload operators. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Failed to reload operators. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -519,7 +520,7 @@ Response * CommandReloadServices::CreateResponse(Scag * ScagApp)
         bill_mgr.getInfrastructure().ReloadProviderMap();
     } catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to reload services. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Failed to reload services. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -542,7 +543,7 @@ Response * CommandReloadTariffMatrix::CreateResponse(Scag * ScagApp)
         bill_mgr.getInfrastructure().ReloadTariffMatrix();
     } catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to reload TariffMatrix. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Failed to reload TariffMatrix. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -563,7 +564,7 @@ Response * CommandLoadHttpTraceRoutes::CreateResponse(Scag * ScagApp)
         transport::http::HttpTraceRouter::Instance().ReloadRoutes();
     } catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to reload HttpTraceRoutes. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Failed to reload HttpTraceRoutes. Details: %s", e.what());
         smsc_log_error(logger, msg);
         result.appendValueToStringList(msg);
         return new Response(Response::Error, result);
@@ -588,7 +589,7 @@ Response * CommandLoadHttpTraceRoutes::CreateResponse(Scag * ScagApp)
         transport::http::HttpTraceRouter::Instance().ReloadRoutes();
     } catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Failed to reload HttpTraceRoutes. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Failed to reload HttpTraceRoutes. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -652,7 +653,7 @@ Response * CommandTraceHttpRoute::CreateResponse(Scag * ScagApp)
 
     } catch(Exception& e) {
         char msg[1024];
-        sprintf(msg, "Trace Http route failed. Details: %s", e.what());
+        snprintf(msg, sizeof(msg), "Trace Http route failed. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -675,8 +676,7 @@ Response * CommandStoreLogConfig::CreateResponse(Scag * ScagApp)
         Logger::Store();
     } catch(Exception& e) {
         char msg[1024];
-        snprintf(msg, 1023, "CommandStoreLogConfig failed. Details: %s", e.what());
-        msg[1023] = 0;
+        snprintf(msg, sizeof(msg), "CommandStoreLogConfig failed. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -708,8 +708,7 @@ Response * CommandGetLogCategories::CreateResponse(Scag * ScagApp)
         }
     } catch(Exception& e) {
         char msg[1024];
-        snprintf(msg, 1023, "CommandGetLogCategories failed. Details: %s", e.what());
-        msg[1023] = 0;
+        snprintf(msg, sizeof(msg), "CommandGetLogCategories failed. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
@@ -773,8 +772,7 @@ Response * CommandSetLogCategories::CreateResponse(Scag * ScagApp)
 
     } catch(Exception& e) {
         char msg[1024];
-        snprintf(msg, 1023, "CommandSetLogCategories failed. Details: %s", e.what());
-        msg[1023] = 0;
+        snprintf(msg, sizeof(msg), "CommandSetLogCategories failed. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {

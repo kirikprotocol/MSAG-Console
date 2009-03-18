@@ -81,7 +81,7 @@ Response * CommandRuleBase::CreateResponse(Scag * SmscApp)
         processRuleCommand();
     } catch (RuleEngineException& e){                             
         char desc[512];                                         
-        sprintf(desc, "Failed to %s rule (%s transport). RuleEngineException exception: %s. Error in rule_%d.xml in line %d.", m_ProcessName.c_str(), strTransport.c_str(), e.what(), key.serviceId, e.getLineNumber());
+        snprintf(desc, sizeof(desc), "Failed to %s rule (%s transport). RuleEngineException exception: %s. Error in rule_%d.xml in line %d.", m_ProcessName.c_str(), strTransport.c_str(), e.what(), key.serviceId, e.getLineNumber());
         Variant res(smsc::admin::service::StringListType); 
         res.appendValueToStringList(desc);
         smsc_log_info(logger, desc);                            
@@ -91,7 +91,7 @@ Response * CommandRuleBase::CreateResponse(Scag * SmscApp)
         return new Response(Response::Ok, res);
     } catch(std::exception& e) {                                     
         char msg[1024];                                         
-        sprintf(msg, "Failed to %s rule. Details: %s", m_ProcessName.c_str(), e.what());
+        snprintf(msg, sizeof(msg), "Failed to %s rule. Details: %s", m_ProcessName.c_str(), e.what());
         smsc_log_error(logger, msg);                            
         return new Response(Response::Error, msg);
     } catch (...) {

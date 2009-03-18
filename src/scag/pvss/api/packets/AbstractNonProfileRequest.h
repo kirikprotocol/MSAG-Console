@@ -24,8 +24,8 @@ public:
         seqNum_ = seqNum;
     }
     virtual std::string toString() const {
-        char buf[32];
-        sprintf( buf, "seqNum=%d %s", seqNum_, typeToString() );
+        char buf[48];
+        snprintf( buf, sizeof(buf), "seqNum=%d %s", seqNum_, typeToString() );
         return buf;
     }
 

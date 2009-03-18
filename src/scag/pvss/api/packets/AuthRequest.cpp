@@ -21,8 +21,8 @@ std::string AuthRequest::toString() const
 {
     std::string rv;
     rv.reserve(200);
-    char buf[30];
-    sprintf( buf," version=%u login=", unsigned(protocolVersion_) );
+    char buf[48];
+    snprintf( buf, sizeof(buf), " version=%u login=", unsigned(protocolVersion_) );
     rv = AbstractNonProfileRequest::toString() + buf + login_ +
         " password=" + password_ +
         " name=" + name_;
