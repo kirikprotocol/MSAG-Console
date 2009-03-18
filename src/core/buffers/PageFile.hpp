@@ -143,7 +143,7 @@ public:
                   nextPage = file.ReadNetInt64();
                   if ( nextPage == startPage ) {
 #ifdef PAGEFILEDEBUG
-                      smsc_log_warng( log_, "looping at page=%llx, last free page forced",
+                      smsc_log_warn( log_, "looping at page=%llx, last free page forced",
                                       static_cast<long long>(lastFreePage) );
 #endif
                       fprintf( stderr, "looping at page=%llx, last free page forced\n",
@@ -435,6 +435,8 @@ public:
       } while(status!=pageUsedFinal);
     }
   }
+
+    const int getPageSize() const { return pageSize; }
 
 protected:
   File::offset_type NewPage()
