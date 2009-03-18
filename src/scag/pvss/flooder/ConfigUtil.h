@@ -1,0 +1,109 @@
+// utility to load config from xml files
+
+#include <vector>
+#include <string>
+#include "util/config/ConfigView.h"
+#include "util/config/Config.h"
+#include "scag/pvss/api/core/client/ClientConfig.h"
+#include "FlooderConfig.h"
+
+namespace {
+
+void readClientConfig( smsc::logger::Logger*                    logger,
+                       scag2::pvss::core::client::ClientConfig& clientConfig,
+                       smsc::util::config::Manager&             manager )
+{
+    smsc::util::config::ConfigView cview(manager,"PvssClient");
+    try {
+        clientConfig.setHost( cview.getString("host") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <PvssClient.host> missed. Defaul value is %s", clientConfig.getHost().c_str());
+    }
+    try { 
+        clientConfig.setPort( cview.getInt("port"));
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <PvssClient.port> missed. Defaul value is %d", int(clientConfig.getPort())&0xffff );
+    }
+    try { 
+        clientConfig.setIOTimeout( cview.getInt("ioTimeout") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <PvssClient.ioTimeout> missed. Defaul value is %d", clientConfig.getIOTimeout());
+    }
+    try { 
+        clientConfig.setInactivityTime( cview.getInt("pingTimeout")*1000 );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <PvssClient.pingTimeout> missed. Defaul value is %d / 1000", clientConfig.getInactivityTime() );
+    }
+    try { 
+        clientConfig.setConnectTimeout( cview.getInt("reconnectTimeout")*1000 );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <PvssClient.reconnectTimeout> missed. Defaul value is %d / 1000", clientConfig.getConnectTimeout() );
+    }
+    try { 
+        clientConfig.setChannelQueueSizeLimit( cview.getInt("maxWaitingRequestsCount") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <PvssClient.maxWaitingRequestsCount> missed. Defaul value is %d", clientConfig.getChannelQueueSizeLimit() );
+    }
+    try { 
+        clientConfig.setConnectionsCount( cview.getInt("connections") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <PvssClient.connections> missed. Defaul value is %d", clientConfig.getConnectionsCount());
+    }
+    try { 
+        unsigned connPerThread = cview.getInt("connPerThread");
+        clientConfig.setMaxReaderChannelsCount( connPerThread );
+        clientConfig.setMaxWriterChannelsCount( connPerThread );
+        clientConfig.setReadersCount( (clientConfig.getConnectionsCount()-1) / connPerThread + 1 );
+        clientConfig.setWritersCount( (clientConfig.getConnectionsCount()-1) / connPerThread + 1 );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <PvssClient.connPerThread> missed. Defaul value is %d/%d", clientConfig.getMaxReaderChannelsCount(), clientConfig.getMaxWriterChannelsCount());
+    }
+}
+
+
+void readFlooderConfig( smsc::logger::Logger* logger,
+                        scag2::pvss::flooder::FlooderConfig& flooderConfig,
+                        smsc::util::config::Manager& manager )
+{
+    smsc::util::config::ConfigView fview(manager,"Flooder");
+    try {
+        flooderConfig.setAsyncMode( fview.getBool("async") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <Flooder.async> missed. Defaul value is %d", flooderConfig.getAsyncMode() );
+    }
+    try { 
+        flooderConfig.setSpeed( fview.getInt("speed") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <Flooder.speed> missed. Defaul value is %d", flooderConfig.getSpeed());
+    }
+    try { 
+        flooderConfig.setAddressesCount( fview.getInt("addressesCount") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <Flooder.addressesCount> missed. Defaul value is %d", flooderConfig.getAddressesCount());
+    }
+    try { 
+        const unsigned propertiesCount = fview.getInt("properties");
+        std::vector< std::string > properties;
+        for ( unsigned i = 0; i < propertiesCount; ++i ) {
+            char pbuf[50];
+            snprintf(pbuf,sizeof(pbuf),"property.%d",i);
+            properties.push_back( fview.getString(pbuf) );
+        }
+        flooderConfig.setPropertyPatterns(properties);
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <Flooder.properties> missed or broken. Default number of properties is %d", flooderConfig.getPropertyPatterns().size());
+    }
+
+    if ( flooderConfig.getPropertyPatterns().size() <= 0 ) {
+        smsc_log_error(logger, "cannot proceed: no property patterns specified");
+        abort();
+    }
+
+    try {
+        flooderConfig.setCommands( fview.getString("commands") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <Flooder.commands> missed. Default value is %s", flooderConfig.getCommands().c_str());
+    }
+}
+
+}
