@@ -24,7 +24,6 @@ protected:
               Core& thecore,
               const char* logname = 0 ) :
     config_(&theconfig), core_(&thecore), taskname_(logname ? logname : "pvss.task"),
-    waiting_(false),
     log_(0), wakeupTime_(0) {
         log_ = smsc::logger::Logger::getInstance(taskname_.c_str());
     }
@@ -88,9 +87,6 @@ protected:
     std::string                                   taskname_;
 
     smsc::core::synchronization::EventMonitor     mon_;
-
-    // if waiting in setupFailed.  may be used for fast check if notification is needed.
-    bool                                          waiting_;
 
     smsc::core::buffers::Array< PvssSocket* >     sockets_;
     smsc::logger::Logger*                         log_;

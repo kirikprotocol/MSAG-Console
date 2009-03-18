@@ -31,7 +31,9 @@ bool BatchCommand::isValid() const
 
 std::string BatchCommand::toString() const 
 {
-    std::string rv(AbstractCommand::toString() + " [");
+    char buf[12];
+    snprintf(buf,sizeof(buf)," trans=%d [",transactional_ ? 1 : 0);
+    std::string rv(AbstractCommand::toString() + buf);
     bool comma = false;
     for ( std::vector< BatchRequestComponent* >::const_iterator i = batchContent_.begin();
           i != batchContent_.end();

@@ -61,7 +61,7 @@ bool Acceptor::setupSockets( util::msectime_type currentTime )
         if ( log_->isDebugEnabled() ) {
             char buf[50];
             socket->GetPeer(buf);
-            smsc_log_debug(log_,"incoming connection from: %s", buf);
+            smsc_log_info(log_,"incoming connection from: %s", buf);
         }
         finishingSockets_.Push(socket);
     }

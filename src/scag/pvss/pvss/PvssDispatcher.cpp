@@ -56,6 +56,7 @@ void PvssDispatcher::init(const AbonentStorageConfig& abntcfg, const Infrastruct
     abonentLogics_.Push(logic);
     ++createdLocations_;
   }
+    // FIXME: TODO: make initialization in parallel
   for (unsigned i = 0; i < storagesCount_; ++i) {
     if (StorageNumbering::instance().node(i) == nodeNumber_) {
       getLocation(i)->initElementStorage(abntcfg, i);

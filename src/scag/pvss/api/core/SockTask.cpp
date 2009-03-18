@@ -10,7 +10,7 @@ int SockTask::Execute()
     smsc_log_info(log_,"Starting %s", taskName());
 
     while ( ! isStopping ) {
-        smsc_log_debug(log_,"cycling %s",taskName());
+        // smsc_log_debug(log_,"cycling %s",taskName());
         try {
             util::msectime_type currentTime = util::currentTimeMillis();
             wakeupTime_ = currentTime + 200;
@@ -83,9 +83,7 @@ void SockTask::unregisterChannel( PvssSocket& sock )
 void SockTask::setupFailed(util::msectime_type currentTime)
 {
     if ( wakeupTime_ > currentTime ) {
-        waiting_ = true;
         mon_.wait( wakeupTime_ - currentTime );
-        waiting_ = false;
     }
 }
 

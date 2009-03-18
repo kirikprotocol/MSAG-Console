@@ -55,7 +55,8 @@ void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // throw
 {
     try {
         sendResponse(context);
-    } catch (PvssException& e) {
+    } catch (std::exception& e) {
+        smsc_log_debug(log_,"exception: %s",e.what());
         context->setState(ServerContext::FAILED);
         reportContext(context);
     }
@@ -344,12 +345,12 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         queue->requestReceived(ctx); // may throw server_busy
         // seqNum = uint32_t(-1);
 
-    } catch (PvssException& e) {
+    } catch (std::exception& e) {
         smsc_log_error(log_, "exception: %s",e.what());
         try {
             ctx->setResponse(new ErrorResponse(seqNum,status,e.what()));
             sendResponse(ctx);
-        } catch (PvssException& e) {
+        } catch (std::exception& e) {
             smsc_log_error(log_,"exception: %s", e.what());
         }
     }
@@ -377,6 +378,7 @@ void ServerCore::sendResponse( std::auto_ptr<ServerContext>& context ) throw (Pv
         ptr->push(ctx);
     }
     try {
+        smsc_log_debug(log_,"sending response %p to socket %p", packet, ctx->getSocket());
         ctx->sendResponse();
     } catch (...) {
         ContextRegistry::Ptr ptr = regset_.get(socket);
@@ -413,10 +415,12 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
     } else {
         // failure
         if ( response->isPing() ) {
-            smsc_log_debug(log_,"PING response was not sent" );
+            smsc_log_debug(log_,"PING response was not sent, state: %s",
+                           ctx->getState() == ServerContext::FAILED ? "FAILED" : "EXPIRED" );
             return;
         } else {
-            smsc_log_debug(log_,"Response '%s' was not sent",response->toString().c_str());
+            smsc_log_debug(log_,"Response '%s' was not sent, state: %s",response->toString().c_str(),
+                           ctx->getState() == ServerContext::FAILED ? "FAILED" : "EXPIRED" );
             if ( response->isError() ) return;
         }
     }

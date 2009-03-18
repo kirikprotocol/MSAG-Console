@@ -21,14 +21,6 @@ public:
     /// serialize the packet
     void serialize(const Packet& packet,Protocol::Buffer& buffer) throw (PvssException);
 
-    void notify() {
-        if ( waiting_ ) {
-            MutexGuard mg(mon_);
-            waiting_ = false;
-            mon_.notify();
-        }
-    }
-
     /// notify writer that it should write all pending contexts,
     /// wait until all contexts are written.  Typically it should be invoked before shutdown.
     void writePending();

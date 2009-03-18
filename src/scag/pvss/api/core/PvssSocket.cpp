@@ -88,7 +88,7 @@ void PvssSocket::send( const Packet* packet, bool isRequest, bool force ) throw 
     }
 
     // notify the writer
-    writer_->notify();
+    writer_->wakeup();
 }
 
 
