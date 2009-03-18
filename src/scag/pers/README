@@ -1,0 +1,26 @@
+
+         pers-repairIntStorage
+         ---------------------
+
+pers-repairIntStorage tool is intended for repairing 
+personalization storages indexed via integer profile keys, i.e.
+service, operator, provider storages.
+
+The storage typically should have the following structure:
+DIR/glossary                    # common glossary
+DIR/service.idx                 # index file (DiskHash)
+DIR/service.bin                 # data file (PageFile)
+
+Here DIR -- a directory where the storage resides.
+
+The tool should be run like this:
+pers-repairIntStorage [--create] DIR/service
+
+It opens and scan both index and data storage files and
+print out their contents into logger.
+
+If --create option is specified, the tool will create
+a new storage in the current directory, with file names prefixed with "new",
+for example:
+./newservice.idx
+./newservice.bin
