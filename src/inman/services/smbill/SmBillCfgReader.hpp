@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * SMS/USSD Billing service config file parsing.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_CONFIG_PARSING__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_CONFIG_PARSING__
 
 #include "inman/common/CSVList.hpp"
@@ -33,8 +33,15 @@ protected:
                         const std::string & nm_sec, void * opaque_arg = NULL)
         throw(ConfigException)
     {
-        smsc_log_info(logger, "SMS Extra service '%s' config ..", nm_sec.c_str());
-        XSmsService xSrv(nm_sec.c_str());
+        const char * nm_cfg = nm_sec.c_str();
+        CfgParsingResult state(sectionState(nm_sec));
+        if (state.cfgState == ICSrvCfgReaderAC::cfgComplete) {
+            smsc_log_info(logger, "Already read '%s' configuration ..", nm_cfg);
+            return ICSrvCfgReaderAC::cfgComplete;
+        }
+
+        smsc_log_info(logger, "SMS Extra service '%s' config ..", nm_cfg);
+        XSmsService xSrv(nm_cfg);
 
         try { xSrv.mask = (uint32_t)cfg_sec->getInt("serviceMask");
         } catch (const ConfigException & exc) { }
@@ -44,7 +51,7 @@ protected:
         SmsXServiceMap::iterator xit = icsCfg->find(xSrv.mask);
         if (xit != icsCfg->end())
             throw ConfigException("'serviceMask' %u is shared by %s and %s",
-                                  xSrv.mask, (xit->second).name.c_str(), nm_sec.c_str());
+                                  xSrv.mask, (xit->second).name.c_str(), nm_cfg);
 
         try { xSrv.svcCode = (uint32_t)cfg_sec->getInt("serviceCode");
         } catch (const ConfigException & exc) { }
@@ -67,7 +74,8 @@ protected:
                       xSrv.adr.toString().c_str(), xSrv.chargeBearer ? ", chargeBearer" : "");
 
         //mark section as completely parsed
-        return ICSrvCfgReaderAC::cfgComplete;
+        state.cfgState = ICSrvCfgReaderAC::cfgComplete;
+        return registerSection(nm_sec, state);
     }
 
 public:

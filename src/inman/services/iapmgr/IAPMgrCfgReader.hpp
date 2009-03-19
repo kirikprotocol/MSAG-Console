@@ -36,12 +36,13 @@ protected:
     // -- ----------------------------------------------
     // -- ICSMultiSectionCfgReaderAC_T interface methods
     // -- ----------------------------------------------
-    CfgState parseSection(XConfigView * cfg_sec, const std::string & nm_sec,
+    ICSrvCfgReaderAC::CfgState parseSection(XConfigView * cfg_sec, const std::string & nm_sec,
                           void * opaque_arg = NULL)
         throw(ConfigException)
     {
         const char * nm_cfg = nm_sec.c_str();
-        if (sectionState(nm_sec) == ICSrvCfgReaderAC::cfgComplete) {
+        CfgParsingResult    state(sectionState(nm_sec));
+        if (state.cfgState == ICSrvCfgReaderAC::cfgComplete) {
             smsc_log_info(logger, "Loaded AbonentProvider '%s'", nm_cfg);
             return ICSrvCfgReaderAC::cfgComplete;
         }
@@ -62,7 +63,8 @@ protected:
         std::string nmSec(nm_cfg);
         icsCfg->registry->insert(nmSec, allc.release());
         //mark section as completely parsed
-        return ICSrvCfgReaderAC::cfgComplete;
+        state.cfgState = ICSrvCfgReaderAC::cfgComplete;
+        return registerSection(nm_sec, state);
     }
 
 public:
@@ -286,7 +288,8 @@ protected:
         throw(ConfigException)
     {
         const char * nm_cfg = nm_sec.c_str();
-        if (sectionState(nm_sec) == ICSrvCfgReaderAC::cfgComplete) {
+        CfgParsingResult state(sectionState(nm_sec));
+        if (state.cfgState == ICSrvCfgReaderAC::cfgComplete) {
             smsc_log_info(logger, "Already read '%s' configuration ..", nm_cfg);
             return ICSrvCfgReaderAC::cfgComplete;
         }
@@ -311,29 +314,39 @@ protected:
         }
         smsc_log_info(logger, "IN-platform '%s' config ..", nm_cfg);
         smsc_log_info(logger, "  ISDN: %s", scfAdr.toString().c_str());
+
         //read configuration
+        INScfCFG *  pInCfg = NULL;
+
         cstr = NULL;
         try { cstr = cfg_sec->getString("aliasFor");
         } catch (const ConfigException & exc) { }
         if (cstr && cstr[0]) {
+            //read configuration of targeted IN-platform
             smsc_log_info(logger, "  aliasFor: %s", cstr);
             std::string refNm(cstr);
             std::auto_ptr<XConfigView> refCfg(_cfgXCV->getSubConfig(cstr));
-            parseSection(refCfg.get(), refNm, opaque_arg); //throws
-            secReg.insert(SectionRegistry::value_type(refNm, ICSrvCfgReaderAC::cfgComplete));
-            return ICSrvCfgReaderAC::cfgComplete;
+            parseSection(refCfg.get(), refNm, opaque_arg); //throws if not a cfgComplete
+            const CfgParsingResult * refState = sectionState(refNm);
+            pInCfg = (INScfCFG *)(refState->opaqueRes);
+        } else {
+            //insert configuration into registry
+            state.opaqueRes = pInCfg = readSCFCfg(*cfg_sec, scfAdr, nm_cfg);
+            icsCfg->insert(scfAdr.toString(), pInCfg);
         }
-        //insert configuration into registry
-        INScfCFG * pInCfg = readSCFCfg(*cfg_sec, scfAdr, nm_cfg);
-        icsCfg->insert(scfAdr.toString(), pInCfg);
 
         //export configuration pointer if required
         INScfsMAP * pCRefMap = (INScfsMAP *)opaque_arg;
-        if (pCRefMap)
+        if (pCRefMap) {
+            smsc_log_debug(logger, "INScfsMAP: linking '%s'-> {%s, %s}",
+                           scfAdr.toString().c_str(), pInCfg->_ident.c_str(),
+                           pInCfg->scfAdr.toString().c_str());
             pCRefMap->insert(INScfsMAP::value_type(scfAdr.toString(), (const INScfCFG *)pInCfg));
+        }
 
         //mark section as completely parsed
-        return ICSrvCfgReaderAC::cfgComplete;
+        state.cfgState = ICSrvCfgReaderAC::cfgComplete;
+        return registerSection(nm_sec, state);
     }
 
 public:
@@ -347,6 +360,7 @@ public:
     ~SCFsCfgReader()
     { }
     //NOTE: opaque_arg type is: INScfsMAP *
+    //NOTE: CfgParsingResult.opaqueRes type is: INScfCFG *
 };
 
 
@@ -412,7 +426,8 @@ protected:
         throw(ConfigException)
     {
         const char * nm_cfg = nm_sec.c_str();
-        if (sectionState(nm_sec) == ICSrvCfgReaderAC::cfgComplete) {
+        CfgParsingResult state(sectionState(nm_sec));
+        if (state.cfgState == ICSrvCfgReaderAC::cfgComplete) {
             smsc_log_info(logger, "Already read '%s' configuration ..", nm_cfg);
             return ICSrvCfgReaderAC::cfgComplete;
         }
@@ -443,7 +458,8 @@ protected:
         }
         icsCfg->polReg.insert(polDat->ident, polDat.release());
         //mark section as completely parsed
-        return ICSrvCfgReaderAC::cfgComplete;
+        state.cfgState = ICSrvCfgReaderAC::cfgComplete;
+        return registerSection(nm_sec, state);
     }
 
 public:

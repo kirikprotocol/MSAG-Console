@@ -181,20 +181,45 @@ public:
 template <class _CfgTArg>
 class ICSMultiSectionCfgReaderAC_T : public ICSrvCfgReaderAC_T<_CfgTArg> {
 protected:
-    typedef std::map<std::string, ICSrvCfgReaderAC::CfgState> SectionRegistry;
+    struct CfgParsingResult {
+        ICSrvCfgReaderAC::CfgState  cfgState;
+        void *                      opaqueRes; //some public result of section parsing
+
+        CfgParsingResult(ICSrvCfgReaderAC::CfgState parsing_state = cfgNone)
+            : cfgState(parse_state), opaqueRes(0)
+        { }
+        CfgParsingResult(const CfgParsingResult * use_res)
+        {
+            if (use_res) {
+                cfgState = use_res->cfgState;
+                opaqueRes = use_res->opaqueRes;
+            } else {
+                cfgState = ICSrvCfgReaderAC::cfgNone;
+                opaqueRes = 0;
+            }
+        }
+    };
+    typedef std::map<std::string, CfgParsingResult> SectionRegistry;
 
     SectionRegistry     secReg;
     std::auto_ptr<XConfigView> _cfgXCV;
 
-    ICSrvCfgReaderAC::CfgState sectionState(const std::string & nm_sec) const
+    const CfgParsingResult * sectionState(const std::string & nm_sec) const
     {
         SectionRegistry::const_iterator it = secReg.find(nm_sec);
-        return (it == secReg.end()) ? ICSrvCfgReaderAC::cfgNone : it->second;
+        return (it == secReg.end()) ? NULL : &(it->second);
+    }
+    ICSrvCfgReaderAC::CfgState registerSection(const std::string & nm_sec,
+                                               const CfgParsingResult & parsing_res)
+    {
+        secReg.insert(SectionRegistry::value_type(nm_sec, parsing_res));
+        return parsing_res.cfgState;
     }
 
     //Parses section settings. if parsing may yeld various results
-    // depending on arguments, section state should be set to
+    //depending on arguments, section state should be set to
     //ICSrvCfgReaderAC::cfgPartial instead of ICSrvCfgReaderAC::cfgComplete.
+    //NOTE: function MUST register parsing result in SectionRegistry upon return!
     virtual ICSrvCfgReaderAC::CfgState
         parseSection(XConfigView * cfg_sec, const std::string & nm_sec, void * opaque_arg = NULL)
             throw(ConfigException) = 0;
@@ -226,15 +251,14 @@ protected:
         //parse requested sections
         for (CStrSet::const_iterator cit = nm_lst->begin(); cit != nm_lst->end(); ++cit) {
             std::auto_ptr<XConfigView> subsCfg(_cfgXCV->getSubConfig(cit->c_str()));
-            ICSrvCfgReaderAC::CfgState subsRes = 
-                parseSection(subsCfg.get(), *cit, opaque_arg);
-            secReg.insert(SectionRegistry::value_type(*cit, subsRes));
+            parseSection(subsCfg.get(), *cit, opaque_arg);
         }
 
         //check overall state
         ICSrvCfgReaderAC::CfgState nextState = ICSrvCfgReaderAC::cfgComplete;
         for (CStrSet::const_iterator cit = subs->begin(); cit != subs->end(); ++cit) {
-            if (sectionState(*cit) != ICSrvCfgReaderAC::cfgComplete) {
+            const CfgParsingResult * state = sectionState(*cit);
+            if (!state || (state->cfgState != ICSrvCfgReaderAC::cfgComplete)) {
                 nextState = ICSrvCfgReaderAC::cfgPartial;
                 break;
             }
