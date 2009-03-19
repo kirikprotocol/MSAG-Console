@@ -8,10 +8,10 @@
 # include <util/config/ConfigView.h>
 # include <core/synchronization/Mutex.hpp>
 
+# include <eyeline/corex/io/network/TCPSocket.hpp>
+# include <eyeline/corex/io/IOObjectsPool.hpp>
+# include <eyeline/utilx/RingBuffer.hpp>
 # include <eyeline/sua/libsua/SuaApi.hpp>
-# include <eyeline/sua/corex/io/network/TCPSocket.hpp>
-# include <eyeline/sua/corex/io/IOObjectsPool.hpp>
-# include <eyeline/sua/utilx/RingBuffer.hpp>
 # include <eyeline/sua/communication/TP.hpp>
 
 namespace eyeline {
@@ -45,7 +45,7 @@ public:
 
   virtual int msgRecv(MessageInfo* msgInfo, uint32_t timeout=0);
 
-  virtual int sua_getConnectsCount() const;
+  virtual size_t sua_getConnectsCount() const;
 protected:
   virtual int getConnNumByPolicy();
 private:
@@ -81,7 +81,7 @@ private:
       : expectedMessageSize(0), suaConnectNum(0) {}
 
     utilx::RingBuffer<communication::TP::MAX_PACKET_SIZE> ringBuf;
-    size_t expectedMessageSize;
+    uint32_t expectedMessageSize;
     unsigned int suaConnectNum;
   };
 

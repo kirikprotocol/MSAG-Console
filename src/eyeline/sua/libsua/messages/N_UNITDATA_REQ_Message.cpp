@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <util/Exception.hpp>
-#include <eyeline/sua/utilx/Exception.hpp>
+#include <eyeline/utilx/hexdmp.hpp>
+#include <eyeline/utilx/Exception.hpp>
 #include <eyeline/sua/communication/TP.hpp>
 #include "N_UNITDATA_REQ_Message.hpp"
 
@@ -274,13 +275,14 @@ uint32_t
 N_UNITDATA_REQ_Message::getLength() const
 {
   return
-    LibsuaMessage::getLength() + sizeof(_fieldsMask) + 
-    ( (_fieldsMask & SET_SEQUENCE_CONTROL) ? sizeof(_sequenceControl) : 0 ) +
-    sizeof(_returnOption) +
-    ( (_fieldsMask & SET_IMPORTANCE ) ? sizeof(_importance) : 0 ) + 
-    ( (_fieldsMask & SET_HOP_COUNTER ) ? sizeof(_hopCounter) : 0 ) + 
-    sizeof(_calledAddrLen) + _calledAddrLen + sizeof(_callingAddrLen) + _callingAddrLen + 
-    sizeof(_userDataLen) + _userDataLen;
+    LibsuaMessage::getLength() +
+    static_cast<uint32_t>(sizeof(_fieldsMask) + 
+                          ( (_fieldsMask & SET_SEQUENCE_CONTROL) ? sizeof(_sequenceControl) : 0 ) +
+                          sizeof(_returnOption) +
+                          ( (_fieldsMask & SET_IMPORTANCE ) ? sizeof(_importance) : 0 ) + 
+                          ( (_fieldsMask & SET_HOP_COUNTER ) ? sizeof(_hopCounter) : 0 ) + 
+                          sizeof(_calledAddrLen) + _calledAddrLen + sizeof(_callingAddrLen) + _callingAddrLen + 
+                          sizeof(_userDataLen) + _userDataLen);
 }
 
 }}}

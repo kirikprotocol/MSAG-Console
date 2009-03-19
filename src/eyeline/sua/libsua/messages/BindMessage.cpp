@@ -24,7 +24,7 @@ BindMessage::serialize(uint8_t* resultBuf, size_t resultBufMaxSz) const
   communication::TP tp(0, 0, resultBuf, resultBufMaxSz);
 
   offset = communication::addField(&tp, offset, uint8_t(PROTOCOL_VERSION));
-  uint16_t strLen = strlen(_appId);
+  uint16_t strLen = static_cast<uint16_t>(strlen(_appId));
   offset = communication::addField(&tp, offset, strLen);
   return communication::addField(&tp, offset, (uint8_t*)_appId, strlen(_appId));
 }
@@ -86,7 +86,8 @@ BindMessage::getProtocolVersion() const
 uint32_t
 BindMessage::getLength() const
 {
-  return LibsuaMessage::getLength() + VERSION_FIELD_SZ + sizeof(uint16_t) /*sizeof of string len prefix*/ + strlen(_appId);
+  return LibsuaMessage::getLength() +
+    static_cast<uint32_t>(VERSION_FIELD_SZ + sizeof(uint16_t) /*sizeof of string len prefix*/ + strlen(_appId));
 }
 
 }}}

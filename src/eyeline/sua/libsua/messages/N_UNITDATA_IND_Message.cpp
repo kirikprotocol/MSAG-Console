@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include <eyeline/sua/utilx/hexdmp.hpp>
-#include <eyeline/sua/utilx/Exception.hpp>
+#include <eyeline/utilx/hexdmp.hpp>
+#include <eyeline/utilx/Exception.hpp>
 #include <eyeline/sua/communication/TP.hpp>
 #include "N_UNITDATA_IND_Message.hpp"
 
@@ -177,11 +177,11 @@ N_UNITDATA_IND_Message::getUserData() const
 uint32_t
 N_UNITDATA_IND_Message::getLength() const
 {
-  return
-    LibsuaMessage::getLength() + sizeof(_fieldsMask) + 
-    ( (_fieldsMask & SET_SEQUENCE_CONTROL) ? sizeof(_sequenceControl) : 0 ) +
-    sizeof(_calledAddrLen) + _calledAddrLen + sizeof(_callingAddrLen) + _callingAddrLen + 
-    sizeof(_userDataLen) + _userDataLen;
+  return LibsuaMessage::getLength() +
+    static_cast<uint32_t>(sizeof(_fieldsMask) + 
+                          ( (_fieldsMask & SET_SEQUENCE_CONTROL) ? sizeof(_sequenceControl) : 0 ) +
+                          sizeof(_calledAddrLen) + _calledAddrLen + sizeof(_callingAddrLen) + _callingAddrLen + 
+                          sizeof(_userDataLen) + _userDataLen);
 }
 
 }}}

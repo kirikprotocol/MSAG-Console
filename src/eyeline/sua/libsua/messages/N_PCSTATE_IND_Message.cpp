@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <eyeline/sua/utilx/Exception.hpp>
+#include <eyeline/utilx/Exception.hpp>
 #include <eyeline/sua/communication/TP.hpp>
 #include "N_PCSTATE_IND_Message.hpp"
 
@@ -123,10 +123,10 @@ N_PCSTATE_IND_Message::getRemoteSCCPStatus() const
 uint32_t
 N_PCSTATE_IND_Message::getLength() const
 {
-  return
-    LibsuaMessage::getLength() + sizeof(_fieldsMask) + sizeof(_affectedSignalingPoint) +
-    sizeof(_signalingPointStatus) + 
-    ( (_fieldsMask & SET_REMOTE_SCCP_STATUS) ? sizeof(_remoteSCCPStatus) : 0 );
+  return LibsuaMessage::getLength() +
+    static_cast<uint32_t>(sizeof(_fieldsMask) + sizeof(_affectedSignalingPoint) +
+                          sizeof(_signalingPointStatus) + 
+                          ( (_fieldsMask & SET_REMOTE_SCCP_STATUS) ? sizeof(_remoteSCCPStatus) : 0));
 }
 
 }}}

@@ -1,7 +1,7 @@
 #include <utility>
 #include <core/synchronization/MutexGuard.hpp>
-#include <eyeline/sua/utilx/hexdmp.hpp>
-#include <eyeline/sua/utilx/toLowerCaseString.hpp>
+#include <eyeline/utilx/hexdmp.hpp>
+#include <eyeline/utilx/toLowerCaseString.hpp>
 #include <eyeline/sua/communication/TP.hpp>
 #include <eyeline/sua/communication/libsua_messages/BindMessage.hpp>
 #include <eyeline/sua/communication/libsua_messages/BindConfirmMessage.hpp>
@@ -173,7 +173,7 @@ SuaUser::bind(unsigned int suaConnectNum)
   try {
     if ( linkInfo.connectionState == CONNECTED ) {
       communication::TP tp;
-      libsua_messages::BindMessage bindMessage;
+      communication::libsua_messages::BindMessage bindMessage;
       bindMessage.setAppId(_appId);
       bindMessage.serialize(&tp);
 
@@ -182,7 +182,7 @@ SuaUser::bind(unsigned int suaConnectNum)
 
       corex::io::InputStream* iStream = linkInfo.socket->getInputStream();
       tp.packetLen = sizeof(uint32_t);
-      uint32_t offset=0;
+      size_t offset=0;
       do {
         offset += iStream->read(tp.packetBody + offset, tp.packetLen);
         tp.packetLen -= offset;
@@ -194,16 +194,16 @@ SuaUser::bind(unsigned int suaConnectNum)
         smsc_log_error(_logger, "SuaUser::bind::: value of packetLen=[%d] excedeed max permited value=[%d]", tp.packetLen, communication::TP::MAX_PACKET_SIZE);
         return GOT_TOO_LONG_MESSAGE;
       }
-      uint32_t numBytesToRead = tp.packetLen, bytesWasRead = 0;
+      size_t numBytesToRead = tp.packetLen, bytesWasRead = 0;
       tp.packetLen += sizeof(uint32_t);
       do {
         bytesWasRead = iStream->read(tp.packetBody + offset, numBytesToRead);
         numBytesToRead -= bytesWasRead;
       } while ( numBytesToRead > 0 );
 
-      libsua_messages::BindConfirmMessage bindConfirmMessage;
+      communication::libsua_messages::BindConfirmMessage bindConfirmMessage;
       bindConfirmMessage.deserialize(tp);
-      if ( bindConfirmMessage.getStatus() == libsua_messages::BindConfirmMessage::BIND_OK ) {
+      if ( bindConfirmMessage.getStatus() == communication::libsua_messages::BindConfirmMessage::BIND_OK ) {
         linkInfo.connectionState = BINDED;
         _socketPool.insert(linkInfo.inputStream);
       }
@@ -239,7 +239,7 @@ SuaUser::unbind(unsigned int suaConnectNum)
   try {
     if ( linkInfo.connectionState == BINDED ) {
       communication::TP tp;
-      libsua_messages::UnbindMessage unbindMessage;
+      communication::libsua_messages::UnbindMessage unbindMessage;
       unbindMessage.serialize(&tp);
 
       smsc_log_info(_logger, "send Unbind message to link=[%s], linkId=%d", linkInfo.toString().c_str(), suaConnectNum);
@@ -272,7 +272,7 @@ SuaUser::unitdata_req(const uint8_t* message,
   if ( !_wasInitialized )
     return SUA_NOT_INITIALIZED;
 
-  libsua_messages::N_UNITDATA_REQ_Message unitdataReqMessage;
+  communication::libsua_messages::N_UNITDATA_REQ_Message unitdataReqMessage;
 
   if ( msgProperties.fieldsMask & MessageProperties::SET_SEQUENCE_CONTROL )
     unitdataReqMessage.setSequenceControl(msgProperties.sequenceControlValue);
@@ -387,7 +387,7 @@ SuaUser::msgRecv(MessageInfo* msgInfo, uint32_t timeout)
 }
 
 
-int
+size_t
 SuaUser::sua_getConnectsCount() const
 {
   smsc::core::synchronization::MutexGuard synchronize(_lock);
@@ -403,7 +403,8 @@ SuaUser::getConnNumByPolicy()
     smsc::core::synchronization::MutexGuard synchronize(_lastUsedConnIdxLock);
     _lastUsedConnIdx = (_lastUsedConnIdx + 1) % _knownLinks.size();
     return _lastUsedConnIdx;
-  }
+  } else
+    throw SuaLibException("SuaUser::getConnNumByPolicy::: invalid traffic mode=[%d]", _trafficMode);
 }
 
 SuaUser::LinkInfo::LinkInfo()

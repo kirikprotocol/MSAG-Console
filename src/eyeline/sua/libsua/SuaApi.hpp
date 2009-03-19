@@ -36,17 +36,17 @@ public:
   virtual int unbind(unsigned int suaConnectNum) = 0;
 
   virtual int unitdata_req(const uint8_t* message,
-                                    uint16_t messageSize,
-                                    const uint8_t* calledAddr,
-                                    uint8_t calledAddrLen,
-                                    const uint8_t* callingAddr,
-                                    uint8_t callingAddrLen,
-                                    const MessageProperties& msgProperties,
-                                    unsigned int suaConnectNum) = 0;
+                           uint16_t messageSize,
+                           const uint8_t* calledAddr,
+                           uint8_t calledAddrLen,
+                           const uint8_t* callingAddr,
+                           uint8_t callingAddrLen,
+                           const MessageProperties& msgProperties,
+                           unsigned int suaConnectNum) = 0;
 
   virtual int msgRecv(MessageInfo* msgInfo, uint32_t timeout=0) = 0;
 
-  virtual int sua_getConnectsCount() const = 0;
+  virtual size_t sua_getConnectsCount() const = 0;
 };
 
 }}}

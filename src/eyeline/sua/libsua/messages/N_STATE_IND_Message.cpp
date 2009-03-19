@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <eyeline/sua/utilx/Exception.hpp>
+#include <eyeline/utilx/Exception.hpp>
 #include <eyeline/sua/communication/TP.hpp>
 #include "N_STATE_IND_Message.hpp"
 
@@ -142,10 +142,10 @@ N_STATE_IND_Message::getSubsystemMultiplicityInd() const
 uint32_t
 N_STATE_IND_Message::getLength() const
 {
-  return
-    LibsuaMessage::getLength() + sizeof(_fieldsMask) + sizeof(_pointCode) +
-    sizeof(_ssn) + sizeof(_userStatus) + 
-    ( (_fieldsMask & SET_SUBSYSTEM_MULTIPLICITY_IND) ? sizeof(_subsystemMultiplicityIndicator) : 0 );
+  return LibsuaMessage::getLength()+
+    static_cast<uint32_t>(sizeof(_fieldsMask) + sizeof(_pointCode) +
+                          sizeof(_ssn) + sizeof(_userStatus) + 
+                          ( (_fieldsMask & SET_SUBSYSTEM_MULTIPLICITY_IND) ? sizeof(_subsystemMultiplicityIndicator) : 0 ));
 }
 
 }}}

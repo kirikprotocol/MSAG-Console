@@ -7,7 +7,7 @@ namespace sua {
 namespace libsua {
 
 LibsuaMessage::LibsuaMessage(uint32_t msgCode)
-  : _msgLen(0), _msgCode(msgCode) { setLength(_MSGCODE_SZ); }
+  : _msgLen(0), _msgCode(msgCode) { setLength(static_cast<uint32_t>(_MSGCODE_SZ)); }
 
 size_t
 LibsuaMessage::serialize(uint8_t* resultBuf, size_t resultBufMaxSz) const

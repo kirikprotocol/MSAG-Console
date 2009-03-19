@@ -65,7 +65,7 @@ BindConfirmMessage::setStatus(status_t status)
 uint32_t
 BindConfirmMessage::getLength() const
 {
-  return LibsuaMessage::getLength() + sizeof(_status);
+  return LibsuaMessage::getLength() + static_cast<uint32_t>(sizeof(_status));
 }
 
 }}}
