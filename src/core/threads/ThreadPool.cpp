@@ -40,7 +40,7 @@ int PooledThread::Execute()
   {
     trace2("Thread %p waiting for task",this);
     taskEvent.Wait();
-    trace2("Thread %p got a task",this);
+    trace2("Thread %p got a task %s",this,task ? task->taskName() : "NOTASK" );
     if(task==NULL)return 0;
     /*
     task->getMemoryInfo(rawheapsize,blocksheapquantum);
@@ -57,8 +57,9 @@ int PooledThread::Execute()
     */
     try{
       task->Execute();
-      if (!task->delOnCompletion())
-          task->onRelease();
+      // moved to releaseThread
+      //if (!task->delOnCompletion())
+      //    task->onRelease();
     }
     catch(std::exception& e)
     {
@@ -68,7 +69,7 @@ int PooledThread::Execute()
     {
       smsc_log_warn(log,"Unknown exception in task:%s",task->taskName());
     }
-    smsc_log_info(log,"Execution of task %s finished",task->taskName());
+    smsc_log_info(log,"Execution of task %s on thread %u finished",task->taskName(),unsigned(::pthread_self()));
     //task->releaseHeap();
     owner->releaseThread(this);
   }
@@ -95,7 +96,7 @@ ThreadPool::~ThreadPool()
 void ThreadPool::stopNotify()
 {
   Lock();
-  __trace__("stopping notify tasks");
+  __trace2__("stopping notify tasks, pending:%d, used:%d, free:%d", pendingTasks.Count(), usedThreads.Count(), freeThreads.Count());
   for (int i=0; i<usedThreads.Count(); i++) {
       if (!usedThreads[i].destructing)
           usedThreads[i].ptr->stopTask();
@@ -114,7 +115,7 @@ void ThreadPool::shutdown(uint32_t timeout)
     Unlock();
     return;
   }
-  __trace__("stopping tasks");
+  __trace2__("stopping tasks, pending:%d, used:%d, free:%d", pendingTasks.Count(), usedThreads.Count(), freeThreads.Count());
   for(int i=0;i<pendingTasks.Count();i++)
   {
     if (pendingTasks[i]->delOnCompletion())
@@ -245,12 +246,13 @@ void ThreadPool::releaseThread(PooledThread* thread)
       usedThreads[i].destructing = true;
       Unlock();
       delete pTask; //may lasts rather long time
+      pTask = 0;
       Lock();
       findUsed(thread, i);
       usedThreads[i].destructing = false;
   }
   //assign next task from queue of pending ones
-  trace2("Pending tasks:%d",pendingTasks.Count());
+  trace2("Pending tasks:%d, used:%d, free:%d",pendingTasks.Count(),usedThreads.Count(),freeThreads.Count());
   if (pendingTasks.Count() > 0) {
       ThreadedTask * t;
       pendingTasks.Shift(t);
@@ -261,6 +263,16 @@ void ThreadPool::releaseThread(PooledThread* thread)
       freeThreads.Push(thread);
   }
   Unlock();
+
+  if ( pTask && !pTask->delOnCompletion() ) {
+      try {
+          pTask->onRelease();
+      } catch ( std::exception& e ) {
+          __trace2__("exception on pTask::onRelease: %s", e.what());
+      } catch (...) {
+          __trace__("unknown exception on task::onRelease()");
+      }
+  }
 }
 
 
