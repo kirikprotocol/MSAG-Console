@@ -9,6 +9,11 @@ namespace util {
 
 class WatchedThreadedTask : public smsc::core::threads::ThreadedTask
 {
+protected:
+    WatchedThreadedTask() {
+        isReleased = true;
+    }
+
 public:
     virtual void onRelease() {
         MutexGuard mg(releaseMon_);
@@ -21,6 +26,14 @@ public:
         MutexGuard mg(releaseMon_);
         while ( !isReleased ) {
             releaseMon_.wait(500);
+        }
+    }
+
+    void waitUntilStarted() {
+        if (!isReleased) return;
+        MutexGuard mg(releaseMon_);
+        while ( isReleased ) {
+            releaseMon_.wait(100);
         }
     }
 

@@ -24,14 +24,14 @@ std::auto_ptr< char > HexDump::digits_;
 
 char* HexDump::hexdump( char* outbuf,
                         const char* inbuf,
-                        unsigned insize )
+                        size_t insize )
 {
     if ( ! digits_.get() ) {
         smsc::core::synchronization::MutexGuard mg(::mtx);
         digits_ = ::getDigits();
     }
     char* digits = digits_.get();
-    for ( unsigned i = insize; i > 0; --i ) {
+    for ( size_t i = insize; i > 0; --i ) {
         unsigned char c = static_cast<unsigned char>(*(inbuf++));
         memcpy( outbuf, digits + unsigned(c)*3, 3 );
         outbuf += 3;
@@ -42,9 +42,9 @@ char* HexDump::hexdump( char* outbuf,
 
 char* HexDump::strdump( char* outbuf,
                         const char* inbuf,
-                        unsigned insize )
+                        size_t insize )
 {
-    for ( unsigned i = insize; i > 0; --i ) {
+    for ( size_t i = insize; i > 0; --i ) {
         unsigned char c = static_cast<unsigned char>(*(inbuf++));
         if ( c < 32 || c >= 127 ) c = '.';
         *(outbuf++) = c;
@@ -52,14 +52,14 @@ char* HexDump::strdump( char* outbuf,
     return outbuf;
 }
 
-void HexDump::hexdump( std::string& out, const char* inbuf, unsigned insize )
+void HexDump::hexdump( std::string& out, const char* inbuf, size_t insize )
 {
     const size_t pos = out.size();
     out.resize( out.size() + hexdumpsize(insize) );
     hexdump( const_cast<char*>(out.c_str()) + pos, inbuf, insize );
 }
 
-void HexDump::strdump( std::string& out, const char* inbuf, unsigned insize )
+void HexDump::strdump( std::string& out, const char* inbuf, size_t insize )
 {
     const size_t pos = out.size();
     out.resize( out.size() + strdumpsize(insize) );
@@ -68,7 +68,7 @@ void HexDump::strdump( std::string& out, const char* inbuf, unsigned insize )
 
 char* HexDump::addstr( char* outbuf, const char* cstring )
 {
-    const unsigned i = ::strlen( cstring );
+    const size_t i = ::strlen( cstring );
     ::memcpy( outbuf, cstring, i );
     return outbuf + i;
 }
