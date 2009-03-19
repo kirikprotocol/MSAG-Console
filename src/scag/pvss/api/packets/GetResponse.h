@@ -20,7 +20,10 @@ public:
     virtual Property* getProperty() { return &property_; }
     void setProperty( Property* prop ) {
         // if ( property_ ) delete property_;
-        if ( prop ) property_ = *prop;
+        if ( prop ) {
+            property_ = *prop;
+            delete prop;
+        }
     }
 
     /*
@@ -105,9 +108,10 @@ private:
     }
      */
 
-    GetResponse( const GetResponse& other ) : BatchResponseComponent(other), property_(other.property_) {
-    }
-    GetResponse& operator = ( const GetResponse& other );
+    // default is ok
+    // GetResponse( const GetResponse& other ) : BatchResponseComponent(other), property_(other.property_) {
+    // }
+    // GetResponse& operator = ( const GetResponse& other );
 
 private:
     Property property_;

@@ -17,16 +17,20 @@ class Response : public Packet
 {
 public:
     enum StatusType {
-            UNKNOWN = 0,
-            OK = 1,
-            ERROR = 2,
-            PROPERTY_NOT_FOUND = 3,
-            BAD_REQUEST = 4,
-            TYPE_INCONSISTENCE = 5,
-            NOT_SUPPORTED = 6,
-            SERVER_SHUTDOWN = 7,
-            SERVER_BUSY = 8,
-            REQUEST_TIMEOUT = 9
+    // business logics messages (infos?): range [0..15]
+            OK = 0,
+            PROPERTY_NOT_FOUND = 1,
+            TYPE_INCONSISTENCE = 2,
+    // protocol messages (warnings): range [16..31]
+            BAD_REQUEST = 16,
+    // generic severe failures (errors?): range [32..47]
+            ERROR = 32,
+            NOT_SUPPORTED = 33,
+            SERVER_SHUTDOWN = 34,
+            SERVER_BUSY = 35,
+            REQUEST_TIMEOUT = 36,
+    // unknown
+            UNKNOWN = 255
     };
 
     static const char* statusToString( StatusType stat )
@@ -65,6 +69,17 @@ public:
         }
     }
 
+
+    static inline bool statusIsInfo( StatusType stat ) {
+        return (uint8_t(stat) & 0xf0) == 0x00;
+    }
+    static inline bool statusIsWarn( StatusType stat ) {
+        return (uint8_t(stat) & 0xf0) == 0x10;
+    }
+    static inline bool statusIsError( StatusType stat ) {
+        return (uint8_t(stat) & 0xf0) == 0x20;
+    }
+
 protected:
     static smsc::logger::Logger* log_;
 
@@ -92,7 +107,6 @@ public:
     virtual void clear() { status_ = UNKNOWN; }
     virtual bool isValid() const { return true; }
     virtual bool isPing() const { return false; }
-    virtual bool isError() const { return false; }
 
     virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) = 0;
 
@@ -109,7 +123,7 @@ protected:
 
 private:
     // Response( const Response& );
-    Response& operator = ( const Response& );
+    // Response& operator = ( const Response& );
 
 protected:
     uint32_t   seqNum_;

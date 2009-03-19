@@ -19,17 +19,13 @@ profileKey_(stat_.getGenerator().getProfileKey())
 
 std::auto_ptr<Request> FlooderThread::generate()
 {
-    const std::vector< AbstractCommand* >& cmds = stat_.getGenerator().getPatterns();
     while ( true ) {
-        if ( pattern_ < cmds.size() ) {
-            AbstractProfileRequest* req = AbstractProfileRequest::create(cmds[pattern_]->clone());
-            req->setProfileKey(profileKey_);
-            ++pattern_;
+        AbstractProfileRequest* req = stat_.getGenerator().generate(pattern_,&profileKey_);
+        if ( req ) {
             smsc_log_debug(log_,"request %s created", req->toString().c_str());
             return std::auto_ptr<Request>(req);
         }
         profileKey_ = stat_.getGenerator().getProfileKey();
-        pattern_ = 0;
     }
 }
 

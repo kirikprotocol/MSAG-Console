@@ -12,6 +12,9 @@
 
 namespace scag2 {
 namespace pvss {
+
+class AbstractProfileRequest;
+
 namespace flooder {
 
 class RequestGenerator
@@ -31,13 +34,16 @@ public:
     /// parse command patterns
     void parseCommandPatterns( const std::string& patterns ) throw (exceptions::IOException);
 
+    void clearCommandPatterns();
+
     /// get command patterns
     const std::vector< AbstractCommand* >& getPatterns() { return patterns_; }
 
     /// get the next profile key
     ProfileKey getProfileKey();
 
-private:
+    AbstractProfileRequest* generate( unsigned& index, const ProfileKey* key = 0 );
+
     Property* getProperty( unsigned idx );
     
 private:

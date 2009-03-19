@@ -5,6 +5,22 @@
 #include "scag/pvss/api/packets/PingResponse.h"
 #include "scag/pvss/api/packets/ErrorResponse.h"
 
+namespace {
+struct ErrorResponseVisitor : public ResponseVisitor
+{
+    virtual bool visitErrResponse( ErrorResponse& resp ) throw (PvapException) { return true; }
+    virtual bool visitDelResponse( DelResponse& resp ) throw (PvapException) { return false; }
+    virtual bool visitSetResponse( SetResponse& resp ) throw (PvapException) { return false; }
+    virtual bool visitGetResponse( GetResponse& resp ) throw (PvapException) { return false; }
+    virtual bool visitIncResponse( IncResponse& resp ) throw (PvapException) { return false; }
+    virtual bool visitPingResponse( PingResponse& resp ) throw (PvapException) { return false; }
+    virtual bool visitAuthResponse( AuthResponse& resp ) throw (PvapException) { return false; }
+    virtual bool visitBatchResponse( BatchResponse& resp ) throw (PvapException) { return false; }
+};
+
+}
+
+
 namespace scag2 {
 namespace pvss {
 namespace core {
@@ -410,7 +426,8 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
             return;
         } else {
             smsc_log_debug(log_,"Response '%s' sent",response->toString().c_str());
-            if ( response->isError() ) return;
+            ErrorResponseVisitor erv;
+            if ( response->visit(erv) ) return;
         }
     } else {
         // failure
@@ -421,7 +438,8 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
         } else {
             smsc_log_debug(log_,"Response '%s' was not sent, state: %s",response->toString().c_str(),
                            ctx->getState() == ServerContext::FAILED ? "FAILED" : "EXPIRED" );
-            if ( response->isError() ) return;
+            ErrorResponseVisitor erv;
+            if ( response->visit(erv) ) return;
         }
     }
 

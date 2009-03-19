@@ -103,6 +103,29 @@ public:
         setString(nm, str, policy, fd, lt);
     };
 
+    bool operator == ( const Property& prop ) const {
+        if ( type != prop.type ||
+             name != prop.name || 
+             time_policy != prop.time_policy ||
+             final_date != prop.final_date ||
+             life_time != prop.life_time ) return false;
+
+        bool valueEqual = 
+            ( type == STRING ? 
+              ( s_val == prop.s_val ) :
+              ( type == INT ?
+                ( i_val == prop.i_val ) :
+                ( type == BOOL ?
+                  ( b_val == prop.b_val ) :
+                  ( d_val == prop.d_val ) ) ) );
+        return valueEqual;
+    }
+    
+    inline bool operator != ( const Property& prop ) const {
+        return ! (*this == prop );
+    }
+
+    
     void ReadAccess();
     void WriteAccess();
 

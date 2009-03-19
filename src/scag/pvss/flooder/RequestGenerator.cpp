@@ -11,6 +11,7 @@
 #include "scag/pvss/api/packets/IncCommand.h"
 #include "scag/pvss/api/packets/IncModCommand.h"
 #include "scag/pvss/api/packets/BatchCommand.h"
+#include "scag/pvss/api/packets/AbstractProfileRequest.h"
 
 using namespace smsc::core::synchronization;
 
@@ -45,10 +46,7 @@ abonentIdx_(0)
 
 
 RequestGenerator::~RequestGenerator() {
-    for ( std::vector< AbstractCommand* >::const_iterator i = patterns_.begin();
-          i != patterns_.end(); ++i ) {
-        delete *i;
-    }
+    clearCommandPatterns();
     for ( std::list<Property*>::const_iterator i = proplist_.begin();
           i != proplist_.end();
           ++i ) {
@@ -173,6 +171,16 @@ void RequestGenerator::parseCommandPatterns( const std::string& patterns ) throw
 }
 
 
+void RequestGenerator::clearCommandPatterns()
+{
+    for ( std::vector< AbstractCommand* >::const_iterator i = patterns_.begin();
+          i != patterns_.end(); ++i ) {
+        delete *i;
+    }
+    patterns_.clear();
+}
+
+
 ProfileKey RequestGenerator::getProfileKey()
 {
     unsigned key;
@@ -199,6 +207,21 @@ Property* RequestGenerator::getProperty( unsigned idx )
     if ( ! ptr ) return 0;
     return *ptr;
 }
+
+
+AbstractProfileRequest* RequestGenerator::generate( unsigned& patternIndex, const ProfileKey* key )
+{
+    assert( patterns_.size() > 0 );
+    AbstractProfileRequest* res = 0;
+    if ( patternIndex < patterns_.size() ) {
+        res = AbstractProfileRequest::create(patterns_[patternIndex++]->clone());
+        if ( key && res ) res->setProfileKey(*key);
+    } else {
+        patternIndex = 0;
+    }
+    return res;
+}
+
 
 } // namespace flooder
 } // namespace pvss
