@@ -24,8 +24,8 @@ public:
         // we don't check as it was checked before
         Property* p = owner.getProperty();
         writer.writeByte( uint8_t(p->getTimePolicy()) );
-        writer.writeInt( p->getFinalDate() );
-        writer.writeInt( p->getLifeTime() );
+        writer.writeInt( int(p->getFinalDate()) );
+        writer.writeInt( int(p->getLifeTime()) );
     }
 
     template < class Proto >

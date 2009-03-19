@@ -48,13 +48,14 @@ public:
         }
     }
      */
-    void writeUTFLV( const std::string& val ) {
-        int sz = val.size();
-        writeLength(sz);
+    void writeUTFLV( const std::string& val ) throw (exceptions::IOException) {
+        size_t sz = val.size();
+        if ( sz > 0xffff ) throw exceptions::IOException( "too long string in writeUTFLV: %llu", static_cast<unsigned long long>(sz) );
+        writeLength(int(sz));
         buf_->Append( val.c_str(), sz );
     }
     void writeAsciiLV( const std::string& val ) throw (exceptions::IOException) {
-        int sz = val.size();
+        size_t sz = val.size();
         const unsigned char* p = reinterpret_cast<const unsigned char*>(val.c_str());
         for ( ; sz > 0; --sz ) {
             if ( *p > 126 || *p < 32 ) {
@@ -66,9 +67,11 @@ public:
         writeUTFLV( val );
     }
     
-    void write( const BufferWriter& other ) {
+    void write( const BufferWriter& other ) throw (exceptions::IOException) {
+        if ( other.buf_->GetPos() > 0xffffffffU ) 
+            throw exceptions::IOException("too large buffer is written: size=%lld", static_cast<unsigned long long>(other.buf_->GetPos()));
         buf_->reserve( buf_->GetPos() + other.buf_->GetPos() + 4 );
-        writeInt( other.buf_->GetPos() );
+        writeInt( int(other.buf_->GetPos()) );
         buf_->Append( other.buf_->get(), other.buf_->GetPos() );
     }
 

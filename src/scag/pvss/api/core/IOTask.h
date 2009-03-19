@@ -27,11 +27,13 @@ protected:
 
     virtual bool setupSocket( PvssSocket& sock ) = 0;
     virtual void process( PvssSocket& sock ) = 0;
+    virtual void postProcess();
 
 protected:
     smsc::core::network::Multiplexer              mul_;
     smsc::core::network::Multiplexer::SockArray   ready_;
     smsc::core::network::Multiplexer::SockArray   error_;
+    smsc::core::network::Multiplexer::SockArray   closed_;
 };
 
 } // namespace core

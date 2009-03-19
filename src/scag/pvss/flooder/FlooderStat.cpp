@@ -13,6 +13,8 @@ requested_(config.getRequested()),
 doneTime_(0),
 timeout_(100),
 stopped_(false),
+total_(0),
+last_(accumulationTime),
 config_(config),
 generator_(),
 client_(client),
@@ -76,19 +78,20 @@ void FlooderStat::adjustSpeed()
     }
      */
 
-    if ( total_.requests % 4 == 0 && total_.requests > 50 && total_.elapsedTime > 100 ) {
+    if ( total_.requests % 4 == 0 && total_.requests > 5 && total_.elapsedTime > 10 ) {
         // try to adjust speed
-        unsigned expected = (total_.elapsedTime * requestsPerSecond_ / 1000);
+        unsigned expected = unsigned(total_.elapsedTime * requestsPerSecond_ / 1000);
         smsc_log_debug(log_,"adjustSpeed: requests=%d time=%d expected=%d",
                        total_.requests, unsigned(total_.elapsedTime), expected );
         if ( total_.requests > expected ) {
             MutexGuard mg(mon_);
             // recheck
-            expected = total_.elapsedTime * requestsPerSecond_ / 1000;
+            expected = unsigned(total_.elapsedTime * requestsPerSecond_ / 1000);
             if ( total_.requests > expected ) {
                 // waiting time
-                util::msectime_type waitTime = (total_.requests - expected) * 1000 / requestsPerSecond_;
+                int waitTime = int((total_.requests - expected) * 1000 / requestsPerSecond_);
                 if ( waitTime > 10 ) {
+                    smsc_log_debug(log_,"adjustSpeed waiting %u msec", waitTime );
                     mon_.wait(waitTime);
                 }
             }
@@ -115,7 +118,7 @@ void FlooderStat::waitUntilProcessed()
             if ( doneTime_+timeout_ < currentTime ) {
                 break;
             }
-            mon_.wait( doneTime_ + timeout_ - currentTime );
+            mon_.wait( int(doneTime_ + timeout_ - currentTime) );
         }
     }
 }
@@ -132,7 +135,7 @@ void FlooderStat::startup() throw (exceptions::IOException)
           i != patterns.end(); ++i ) {
         std::auto_ptr<Property> p( new Property );
         p->fromString( *i );
-        generator_.addPropertyPattern( i - patterns.begin(), p.release() );
+        generator_.addPropertyPattern( unsigned(i - patterns.begin()), p.release() );
     }
     generator_.parseCommandPatterns( config_.getCommands() );
 
@@ -184,16 +187,11 @@ void FlooderStat::checkTime()
         // a new statistics chunk is filled
         previous_ = last_;
         last_.reset();
-        smsc_log_info(log_,"total: req=%u resp=%u err=%u speed=%f req/s",
-                      total_.requests, total_.responses, total_.errors,
-                      total_.requests/(double(total_.elapsedTime)/1000));
-        smsc_log_info(log_,"last %d sec: req=%u resp=%u err=%u speed=%f req/s",
-                      unsigned(previous_.elapsedTime/1000),
-                      previous_.requests, previous_.responses, previous_.errors,
-                      previous_.requests/(double(previous_.elapsedTime)/1000));
+        smsc_log_info(log_,"total: %s", total_.toString().c_str());
+        smsc_log_info(log_,"last %u msec: %s", unsigned(previous_.accumulationTime), previous_.toString().c_str());
         if ( previous_.requests == 0 ) {
             smsc_log_warn(log_,"there were no requests during last %u msec, stopping",
-                          unsigned(previous_.elapsedTime/1000));
+                          unsigned(previous_.elapsedTime));
             stopped_ = true;
             mon_.notifyAll();
         }

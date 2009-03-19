@@ -17,6 +17,7 @@ public:
     ClientContext( Request* req, Client::ResponseHandler* handle ) :
     Context(req), handler(handle) {}
 
+    /*
     void setResponse( std::auto_ptr<Response> resp ) {
         Context::setResponse(resp.release());
         if ( handler != 0 ) {
@@ -24,6 +25,7 @@ public:
             handler->handleResponse(getRequest(),getResponse());
         }
     }
+     */
     void setError( const PvssException& exc ) {
         if ( handler != 0 ) {
             smsc_log_debug(log_,"notifying handler of error");

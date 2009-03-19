@@ -1,6 +1,7 @@
 #ifndef _SCAG_PVSS_CORE_CHANNELINACTIVITYTRACKER_H
 #define _SCAG_PVSS_CORE_CHANNELINACTIVITYTRACKER_H
 
+#include <list>
 #include "core/threads/ThreadedTask.hpp"
 #include "core/buffers/XHash.hpp"
 #include "core/synchronization/EventMonitor.hpp"
@@ -18,36 +19,31 @@ class PvssSocket;
 class ChannelInactivityTracker : public util::WatchedThreadedTask
 {
 private:
-    typedef smsc::core::buffers::XHash<PvssSocket*,long,util::XHashPtrFunc>  TimeHash;
+    typedef smsc::core::buffers::XHash<PvssSocket*,util::msectime_type,util::XHashPtrFunc>  TimeHash;
 
 public:
     ~ChannelInactivityTracker() {
         shutdown();
     }
 
-    ChannelInactivityTracker( ChannelInactivityListener& theListener, long theInactivityTime ) :
+    ChannelInactivityTracker( ChannelInactivityListener& theListener, util::msectime_type theInactivityTime ) :
     inactivityTime(theInactivityTime),
     listener(theListener),
-    started(false)
+    started(false),
+    log_(smsc::logger::Logger::getInstance(taskName()))
     {}
 
     virtual const char* taskName() /*const*/ { return "CITracker"; }
-
-    virtual int Execute()
-    {
-        run();
-        return 0;
-    }
 
     bool removeChannel( PvssSocket& channel )
     {
         MutexGuard mg(activityTimesMutex);
         return activityTimes.Delete(&channel);
     }
-    void registerChannel( PvssSocket& channel, long tmo )
+    void registerChannel( PvssSocket& channel, util::msectime_type tmo )
     {
         MutexGuard mg(activityTimesMutex);
-        long* ptr = activityTimes.GetPtr(&channel);
+        util::msectime_type* ptr = activityTimes.GetPtr(&channel);
         if ( ptr ) *ptr = tmo;
         else activityTimes.Insert( &channel, tmo );
     }
@@ -64,57 +60,79 @@ public:
 
     void run()
     {
-        long minTimeToSleep = 100; // 100 ms
+        util::msectime_type minTimeToSleep = 100; // 100 ms
 
-        long timeToSleep = inactivityTime;
-        long nextWakeupTime = util::currentTimeMillis() + timeToSleep;
+        util::msectime_type timeToSleep = inactivityTime;
+        util::msectime_type nextWakeupTime = util::currentTimeMillis() + timeToSleep;
 
         started = true;
         while (started)
         {
-            MutexGuard mg(activityTimesMutex);
-            // try {
-            activityTimesMutex.wait( (timeToSleep < minTimeToSleep) ? minTimeToSleep : timeToSleep ); 
-            // }
-            // catch (InterruptedException e) {
-            //     e.printStackTrace(); 
-            // }
 
-            if (!started) break;
+            std::list< PvssSocket* > expiredList;
+            {
+                MutexGuard mg(activityTimesMutex);
+                // try {
+                activityTimesMutex.wait( int((timeToSleep < minTimeToSleep) ? minTimeToSleep : timeToSleep) );
+                // }
+                // catch (InterruptedException e) {
+                //     e.printStackTrace(); 
+                // }
 
-            const long currentTime = util::currentTimeMillis();
-            if (nextWakeupTime > currentTime) {
-                timeToSleep = nextWakeupTime - currentTime;
-                continue;
-            }
+                if (!started) break;
 
-            timeToSleep = inactivityTime;
-            PvssSocket* sock;
-            long*   entry;
-            for ( TimeHash::Iterator i(&activityTimes); i.Next(sock,entry); ) {
-                long nextPingTime = *entry + inactivityTime;
-                if (currentTime >= nextPingTime) {
-                    *entry = util::currentTimeMillis();
-                    listener.inactivityTimeoutExpired(*sock);
+                const util::msectime_type currentTime = util::currentTimeMillis();
+                if (nextWakeupTime > currentTime) {
+                    timeToSleep = nextWakeupTime - currentTime;
+                    continue;
                 }
-                else {
-                    long sleepTime = nextPingTime - currentTime;
-                    if (timeToSleep > sleepTime) {
-                        nextWakeupTime = nextPingTime;
-                        timeToSleep = sleepTime;
+
+                timeToSleep = inactivityTime;
+                PvssSocket* sock;
+                util::msectime_type*   entry; // pointer to the inactivity time
+                for ( TimeHash::Iterator i(&activityTimes); i.Next(sock,entry); ) {
+                    const util::msectime_type nextPingTime = *entry + inactivityTime;
+                    if (currentTime >= nextPingTime) {
+                        // expired
+                        *entry = currentTime;
+                        expiredList.push_back( sock );
+                        // listener.inactivityTimeoutExpired(*sock);
+                    } else {
+                        const util::msectime_type sleepTime = nextPingTime - currentTime;
+                        if (timeToSleep > sleepTime) {
+                            nextWakeupTime = nextPingTime;
+                            timeToSleep = sleepTime;
+                        }
                     }
                 }
+
+            } // guard clause
+
+            while ( ! expiredList.empty() ) {
+                PvssSocket* sock = expiredList.front();
+                expiredList.pop_front();
+                listener.inactivityTimeoutExpired(*sock);
             }
+
         }
         started = false;
     }
 
+    virtual int Execute()
+    {
+        smsc_log_info(log_,"executing %s...", taskName() );
+        run();
+        smsc_log_info(log_,"%s::Execute() finished()", taskName() );
+        return 0;
+    }
+
 private:
-    long                                      inactivityTime;
+    util::msectime_type                       inactivityTime;
     ChannelInactivityListener&                listener;
     smsc::core::synchronization::EventMonitor activityTimesMutex;
     TimeHash                                  activityTimes;
     bool                                      started;
+    smsc::logger::Logger*                     log_;
 
 };
 

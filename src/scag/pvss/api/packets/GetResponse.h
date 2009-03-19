@@ -73,7 +73,7 @@ public:
         return property_.getType() == BOOL;
     }
     int getIntValue() const {
-        return property_.getIntValue();
+        return int(property_.getIntValue());
     }
     const std::string& getStringValue() const {
         return property_.getStringValue();

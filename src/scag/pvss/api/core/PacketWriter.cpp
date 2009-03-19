@@ -12,7 +12,7 @@ void PacketWriter::serialize( const Packet& packet, Protocol::Buffer& buffer ) t
     Protocol& proto = *core_->getProtocol();
     buffer.SetPos(4);
     proto.serialize(packet,buffer);
-    uint32_t buflen = buffer.GetPos()-4;
+    uint32_t buflen = uint32_t(buffer.GetPos()-4);
     if ( buflen > getConfig().getPacketSizeLimit() )
         throw PvssException( PvssException::IO_ERROR, "Illegal serialized packet size=%d",buflen);
     buflen = htonl(buflen);

@@ -53,7 +53,7 @@ bool Acceptor::setupSockets( util::msectime_type currentTime )
         return false;
     }
     if ( finishingSockets_.Count() > 0 ) wakeupTime_ = currentTime; // don't block on accept
-    int tmo = (wakeupTime_ - currentTime)/1000; // NOTE: in seconds
+    int tmo = int((wakeupTime_ - currentTime)/1000); // NOTE: in seconds
     if ( tmo <= 0 ) tmo = 1;
     // check incoming sockets
     smsc::core::network::Socket* socket = socket_.Accept(tmo);
@@ -61,7 +61,7 @@ bool Acceptor::setupSockets( util::msectime_type currentTime )
         if ( log_->isDebugEnabled() ) {
             char buf[50];
             socket->GetPeer(buf);
-            smsc_log_info(log_,"incoming connection from: %s", buf);
+            smsc_log_info(log_,"incoming connection %p from: %s", socket, buf);
         }
         finishingSockets_.Push(socket);
     }
@@ -91,9 +91,12 @@ void Acceptor::processEvents()
         PvssSocket* channel = new PvssSocket(socket);
         // FIXME: check accept time
         bool accepted = serverCore_->acceptChannel(channel);
-        short buf = accepted ? Packet::CONNECT_RESPONSE_OK : Packet::CONNECT_RESPONSE_SERVER_BUSY;
-        buf = htons(buf);
-        socket->Write( reinterpret_cast<const char*>(&buf), 2 );
+        char buf[3];
+        buf[2] = 0;
+        short* pbuf = reinterpret_cast<short*>(buf);
+        *pbuf = htons(accepted ? Packet::CONNECT_RESPONSE_OK : Packet::CONNECT_RESPONSE_SERVER_BUSY);
+        smsc_log_debug(log_,"channel %p accepted=%d, sending %s", socket, accepted ? 1 : 0, buf );
+        socket->Write( buf, 2 );
         if (! accepted ) {
             socket->Close();
             delete channel;

@@ -17,10 +17,10 @@ public:
     const static int MAX_QUEUE_SIZE_LIMIT = 10000;
 public:
 
-    ServerConfig() : Config(), queueSizeLimit(DEF_QUEUE_SIZE_LIMIT) {}
+    ServerConfig() : Config(), queueSizeLimit_(DEF_QUEUE_SIZE_LIMIT) {}
 
     int getQueueSizeLimit() const {
-        return queueSizeLimit;
+        return queueSizeLimit_;
     }
 
     void setQueueSizeLimit( int queueSizeLimit ) throw(ConfigException)
@@ -28,11 +28,13 @@ public:
         if (queueSizeLimit <= MIN_QUEUE_SIZE_LIMIT || queueSizeLimit > MAX_QUEUE_SIZE_LIMIT)
             throw ConfigException("Pending requests queue size limit can't be less than %d and more then %d",
                                   MIN_QUEUE_SIZE_LIMIT, MAX_QUEUE_SIZE_LIMIT);
-        this->queueSizeLimit = queueSizeLimit;
+        this->queueSizeLimit_ = queueSizeLimit;
     }
 
+    util::msectime_type getStatisticsInterval() const { return 5000; }
+
 private:
-    int queueSizeLimit;
+    int queueSizeLimit_;
 
 };
 

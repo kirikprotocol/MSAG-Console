@@ -9,6 +9,7 @@ namespace core {
 bool IOTask::setupSockets(util::msectime_type currenTime)
 {
     int ready = 0;
+    closed_.Empty();
     do {
         if ( sockets_.Count() == 0 ) break;
 
@@ -19,7 +20,7 @@ bool IOTask::setupSockets(util::msectime_type currenTime)
                 ++i;
             } else {
                 // PvssSocket* con = sockets_[i];
-                detachFromSocket(*sockets_[i]);
+                closed_.Push(sockets_[i]->socket());
                 sockets_.Delete(i);
                 // pers_->disconnected( *con );
             }
@@ -38,6 +39,14 @@ void IOTask::processEvents()
     }
     for ( int i = 0; i < ready_.Count(); ++i ) {
         process( *PvssSocket::fromSocket(ready_[i]) );
+    }
+}
+
+void IOTask::postProcess()
+{
+    for ( int i = 0; i < closed_.Count(); ++i ) {
+        PvssSocket* sock = PvssSocket::fromSocket(closed_[i]);
+        detachFromSocket(*sock);
     }
 }
 

@@ -45,7 +45,7 @@ extern "C" void atExitHandler(void)
 }
 
 
-void getConfig( smsc::logger::Logger* logger,
+void getConfig( smsc::logger::Logger* thelog,
                 ClientConfig& clientConfig,
                 FlooderConfig& flooderConfig )
 {
@@ -67,11 +67,11 @@ void getConfig( smsc::logger::Logger* logger,
         clientConfig.setWritersCount(1);
         clientConfig.setProcessTimeout(1000);
     } catch ( ConfigException& e ) {
-        smsc_log_error(logger, "cannot set default value: %s", e.what() );
+        smsc_log_error(thelog, "cannot set default value: %s", e.what() );
         abort();
     }
 
-    ::readClientConfig( logger, clientConfig, manager );
+    ::readClientConfig( thelog, clientConfig, manager );
     
     try {
         flooderConfig.setAsyncMode(true);
@@ -81,11 +81,11 @@ void getConfig( smsc::logger::Logger* logger,
         flooderConfig.setFlooderThreadCount(clientConfig.getConnectionsCount());
         flooderConfig.setCommands("s0g0");
     } catch ( ConfigException& e ) {
-        smsc_log_error(logger, "cannot set default value: %s", e.what() );
+        smsc_log_error(thelog, "cannot set default value: %s", e.what() );
         abort();
     }
 
-    ::readFlooderConfig( logger, flooderConfig, manager );
+    ::readFlooderConfig( thelog, flooderConfig, manager );
 }
 
 

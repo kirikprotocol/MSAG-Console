@@ -33,7 +33,7 @@ public:
 
     void addComponent( BatchRequestComponent* req ) {
         batchContent_.push_back( req );
-        req->setSeqNum(batchContent_.size());
+        req->setSeqNum(int(batchContent_.size()));
     }
 
     virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )

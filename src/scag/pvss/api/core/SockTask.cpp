@@ -14,15 +14,13 @@ int SockTask::Execute()
         try {
             util::msectime_type currentTime = util::currentTimeMillis();
             wakeupTime_ = currentTime + 200;
+            bool ok = false;
             {
                 MutexGuard mg(mon_);
-                if ( ! setupSockets(currentTime) ) {
-                    setupFailed(currentTime);
-                    continue;
-                }
+                ok = setupSockets(currentTime);
+                if ( ! ok ) setupFailed(currentTime);
             }
-
-            if ( hasEvents() ) {
+            if ( ok && hasEvents() ) {
                 processEvents();
             }
             postProcess();

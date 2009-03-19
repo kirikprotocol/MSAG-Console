@@ -4,8 +4,12 @@
 #include "Worker.h"
 #include "scag/pvss/api/packets/PingResponse.h"
 #include "scag/pvss/api/packets/ErrorResponse.h"
+#include "scag/pvss/api/packets/ResponseVisitor.h"
 
 namespace {
+
+using namespace scag2::pvss;
+
 struct ErrorResponseVisitor : public ResponseVisitor
 {
     virtual bool visitErrResponse( ErrorResponse& resp ) throw (PvapException) { return true; }
@@ -31,7 +35,8 @@ ServerCore::ServerCore( ServerConfig& config, Protocol& protocol ) :
 Core(config,protocol), Server(),
 log_(smsc::logger::Logger::getInstance(taskName())),
 started_(false),
-syncDispatcher_(0)
+syncDispatcher_(0),
+last_(config.getStatisticsInterval())
 {
 }
 
@@ -224,7 +229,7 @@ void ServerCore::shutdown()
     stop();
     {
         smsc_log_info(log_,"sending notify to channel mutex");
-        MutexGuard mg(channelMutex_);
+        MutexGuard mgc(channelMutex_);
         channelMutex_.notify();
     }
     // stop all workers
@@ -232,6 +237,13 @@ void ServerCore::shutdown()
         workers_[i]->shutdown();
     }
     waitUntilReleased();
+
+    {
+        MutexGuard mgs(statMutex_);
+        smsc_log_info(log_,"server active parts are shutdowned, statistics follows:");
+        smsc_log_info(log_,"total: %s", total_.toString().c_str());
+    }
+
     for ( int i = 0; i < workers_.Count(); ++i ) {
         delete workers_[i];
     }
@@ -242,7 +254,7 @@ void ServerCore::shutdown()
     }
     {
         // move all channels to dead
-        MutexGuard mg(channelMutex_);
+        MutexGuard mgc(channelMutex_);
         std::copy( channels_.begin(), channels_.end(), std::back_inserter(deadChannels_) );
         channels_.clear();
     }
@@ -325,6 +337,15 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         smsc_log_error( log_, "request is not valid");
         return;
     }
+
+    {
+        // a new request has come
+        MutexGuard mg(statMutex_);
+        ++total_.requests;
+        ++last_.requests;
+        checkStatistics();
+    }
+
     uint32_t seqNum = req->getSeqNum();
     smsc_log_debug(log_,"packet received %p: %s", req, req->toString().c_str());
     try {
@@ -377,9 +398,9 @@ void ServerCore::sendResponse( std::auto_ptr<ServerContext>& context ) throw (Pv
 {
     int seqNum = context->getSeqNum();
     smsc::core::network::Socket* socket = context->getSocket();
-    const Packet* packet = context->getResponse().get();
+    const Response* response = context->getResponse().get();
     ServerContext* ctx = 0;
-    if (!packet) throw PvssException(PvssException::BAD_RESPONSE,"response is null");
+    if (!response) throw PvssException(PvssException::BAD_RESPONSE,"response is null");
     {
         ContextRegistry::Ptr ptr = regset_.get(socket);
         if (!ptr)
@@ -388,13 +409,28 @@ void ServerCore::sendResponse( std::auto_ptr<ServerContext>& context ) throw (Pv
         if ( ptr->exists(seqNum) )
             throw PvssException(PvssException::SERVER_BUSY,
                                 "seqnum=%d is already in registry", seqNum );
-        if ( !packet->isValid() )
-            throw PvssException(PvssException::BAD_RESPONSE,"response '%s' is not valid",packet->toString().c_str());
+        if ( !response->isValid() )
+            throw PvssException(PvssException::BAD_RESPONSE,"response '%s' is not valid",response->toString().c_str());
         ctx = context.release();
         ptr->push(ctx);
     }
+
+    {
+        ErrorResponseVisitor erv;
+        const bool isError = const_cast<Response*>(response)->visit(erv);
+        MutexGuard mg(statMutex_);
+        if ( isError ) {
+            ++total_.errors;
+            ++last_.errors;
+        } else {
+            ++total_.responses;
+            ++last_.responses;
+        }
+        checkStatistics();
+    }
+
     try {
-        smsc_log_debug(log_,"sending response %p to socket %p", packet, ctx->getSocket());
+        smsc_log_debug(log_,"sending response %p to socket %p", response, ctx->getSocket());
         ctx->sendResponse();
     } catch (...) {
         ContextRegistry::Ptr ptr = regset_.get(socket);
@@ -421,6 +457,12 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
     uint32_t seqNum = ctx->getSeqNum();
 
     if ( ctx->getState() == ServerContext::SENT ) {
+        {
+            MutexGuard mg(statMutex_);
+            ++total_.sent;
+            ++last_.sent;
+            checkStatistics();
+        }
         if ( response->isPing() ) {
             smsc_log_debug(log_,"PING response sent");
             return;
@@ -431,6 +473,12 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
         }
     } else {
         // failure
+        {
+            MutexGuard mg(statMutex_);
+            ++total_.failed;
+            ++last_.failed;
+            checkStatistics();
+        }
         if ( response->isPing() ) {
             smsc_log_debug(log_,"PING response was not sent, state: %s",
                            ctx->getState() == ServerContext::FAILED ? "FAILED" : "EXPIRED" );
@@ -565,6 +613,20 @@ void ServerCore::destroyDeadChannels()
         if ( socket ) delete socket;
     }
 }
+
+
+void ServerCore::checkStatistics()
+{
+    const util::msectime_type currentTime = util::currentTimeMillis();
+    total_.checkTime(currentTime);
+    if ( last_.checkTime(currentTime) ) {
+        smsc_log_info(log_, "total: %s", total_.toString().c_str() );
+        smsc_log_info(log_, "last %u msec: %s", unsigned(last_.accumulationTime), last_.toString().c_str() );
+        last_.reset();
+    }
+
+}
+
 
 } // namespace server
 } // namespace core

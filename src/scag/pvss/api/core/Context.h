@@ -28,26 +28,26 @@ public:
         
 public:
     util::msectime_type getCreationTime() const {
-        return creationTime;
+        return creationTime_;
     }
 
     /* public synchronized */
     uint32_t getSeqNum() const {
-        return const_cast<Context*>(this)->request->getSeqNum();
+        return request_->getSeqNum();
     }
 
     void setSeqNum( uint32_t seqNum ) {
-        request->setSeqNum(seqNum);
+        request_->setSeqNum(seqNum);
     }
 
     /* public synchronized */
     std::auto_ptr<Request>& getRequest() {
-        return request;
+        return request_;
     }
 
     /* public synchronized */
     std::auto_ptr<Response>& getResponse() {
-        return response;
+        return response_;
     }
 
     virtual void setResponse( Response* resp ) throw (PvssException);
@@ -58,9 +58,9 @@ private:
     Context& operator = ( const Context& );
 
 private:
-    util::msectime_type creationTime;
-    std::auto_ptr<Request>  request;
-    std::auto_ptr<Response> response;
+    util::msectime_type creationTime_;
+    std::auto_ptr<Request>  request_;
+    std::auto_ptr<Response> response_;
 };
 
 } // namespace core

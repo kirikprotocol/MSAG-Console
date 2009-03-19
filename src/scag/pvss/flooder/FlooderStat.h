@@ -5,11 +5,11 @@
 #include <string>
 #include "core/synchronization/EventMonitor.hpp"
 #include "scag/pvss/api/core/client/Client.h"
-#include "scag/util/Time.h"
 #include "RequestGenerator.h"
 #include "FlooderConfig.h"
 #include "core/threads/ThreadPool.hpp"
 #include "scag/util/WatchedThreadedTask.h"
+#include "scag/pvss/api/core/Statistics.h"
 
 namespace scag2 {
 namespace pvss {
@@ -17,35 +17,6 @@ namespace flooder {
 
 class FlooderStat : public core::client::Client::ResponseHandler
 {
-public:
-    static const util::msectime_type accumulationTime = 5000; // in milliseconds
-
-    struct Statistics 
-    {
-        Statistics() { reset(); }
-        void reset() {
-            // unless it is not virtual
-            memset(this,0,sizeof(Statistics));
-        }
-
-        util::msectime_type startTime;
-        util::msectime_type elapsedTime;
-        unsigned            requests;     // requests generated
-        unsigned            responses;
-        unsigned            errors;
-
-        bool checkTime( util::msectime_type currentTime ) {
-            if ( requests == 0 ) return false;
-            if ( startTime == 0 ) {
-                startTime = currentTime;
-                return false;
-            } else {
-                elapsedTime = currentTime - startTime;
-                return elapsedTime >= accumulationTime;
-            }
-        }
-    };
-
 public:
     FlooderStat( const FlooderConfig& config,
                  core::client::Client& client );
@@ -69,9 +40,9 @@ public:
     void adjustSpeed();
 
     /// get accounting information (total)
-    Statistics getTotals();
+    core::Statistics getTotals();
     /// get accounting info (last full filled chunk)
-    Statistics getCurrent();
+    core::Statistics getCurrent();
 
     /// wait until requested number of requests are produced and responses obtained (or timeouted)
     void waitUntilProcessed();
@@ -87,6 +58,8 @@ private:
     /// check time and reset statistics if needed
     void checkTime();
 
+private:    
+    static const util::msectime_type accumulationTime = 5000; // 5 seconds accumulation time
 
 private:
     smsc::core::synchronization::EventMonitor              mon_;
@@ -96,9 +69,9 @@ private:
     util::msectime_type                                    doneTime_;
     util::msectime_type                                    timeout_;
     bool                                                   stopped_;
-    Statistics                                             total_;
-    Statistics                                             previous_;
-    Statistics                                             last_;
+    core::Statistics                                       total_;
+    core::Statistics                                       previous_;
+    core::Statistics                                       last_;
     const FlooderConfig&                                   config_;
     RequestGenerator                                       generator_;
     core::client::Client&                                  client_;

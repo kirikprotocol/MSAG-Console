@@ -66,7 +66,7 @@ public:
     }
     std::string readAsciiLV() throw (exceptions::IOException) {
         std::string val = readUTFLV();
-        int sz = val.size();
+        size_t sz = val.size();
         const unsigned char* p = reinterpret_cast<const unsigned char*>(val.c_str());
         for ( ; sz > 0; --sz ) {
             if ( *p > 126 || *p < 32 ) {
@@ -128,7 +128,7 @@ protected:
         if ( pos_+sz > size() ) throw ReadBeyondEof();
     }
 
-    inline int size() const { return buf_.GetPos(); }
+    inline size_t size() const { return buf_.GetPos(); }
 
 private:
     Protocol::Buffer buf_;

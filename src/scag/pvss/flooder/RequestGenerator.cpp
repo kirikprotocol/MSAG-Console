@@ -102,15 +102,15 @@ void RequestGenerator::parseCommandPatterns( const std::string& patterns ) throw
             // batch
             if ( batchCount != 0 ) throw IOException("batch command appeared while previous batch is active");
             batchCmd.reset( new BatchCommand );
-            batchCount = cmdnumber;
+            batchCount = unsigned(cmdnumber);
             if ( batchCount <= 0 ) throw IOException("batch count cannot be less than or equal to 0");
             batchCmd->setTransactional( cmdtype == 'b' );
         } else if ( cmdtype == 'm' ) {
-            modulus = cmdnumber;
+            modulus = unsigned(cmdnumber);
         } else {
             // non-batch
-            const Property* prop = getProperty(cmdnumber);
-            if ( ! prop ) throw IOException("property #%d is not found", cmdnumber);
+            const Property* prop = getProperty(unsigned(cmdnumber));
+            if ( ! prop ) throw IOException("property #%d is not found", unsigned(cmdnumber));
 
             switch ( cmdtype ) {
             case 'g' : { // get

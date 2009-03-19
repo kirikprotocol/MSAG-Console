@@ -4,6 +4,7 @@
 #include <memory>
 #include "scag/pvss/api/core/Core.h"
 #include "scag/pvss/api/core/ContextRegistry.h"
+#include "scag/pvss/api/core/Statistics.h"
 #include "Server.h"
 #include "core/buffers/Array.hpp"
 #include "ServerConfig.h"
@@ -489,7 +490,7 @@ public:
     }
      */
 
-    virtual ServerConfig& getConfig() { return *static_cast<ServerConfig*>(config);}
+    virtual ServerConfig& getConfig() const { return *static_cast<ServerConfig*>(config);}
 
 
     void workerThreadIsStopped() {
@@ -518,6 +519,9 @@ private:
 
     void destroyDeadChannels();
 
+    /// NOTE: statMutex_ must be locked
+    void checkStatistics();
+
 private:
     typedef std::list< smsc::core::network::Socket* > ChannelList;
 
@@ -542,6 +546,10 @@ private:
 
     smsc::core::synchronization::EventMonitor   waiter_;
     ContextRegistrySet                          regset_;
+
+    smsc::core::synchronization::Mutex          statMutex_;
+    Statistics                                  total_;
+    Statistics                                  last_;
 };
 
 } // namespace server

@@ -69,14 +69,14 @@ public:
     void serialize( const PVAP&, BufferWriter& writer ) const throw (PvapException)
     {
         const std::vector< BatchRequestComponent* >& components = owner.getBatchContent();
-        int cnt = components.size();
+        const size_t cnt = components.size();
         if ( cnt > 0xffff ) {
             throw PvapSerializationException( true,
                                               owner.getSeqNum(),
                                               "cannot write more than %d components",
                                               0xffff );
         }
-        writer.writeShort( (short) cnt );
+        writer.writeShort( short(cnt) );
         int idx = 0;
         BufferFiller filler;
         for ( std::vector< BatchRequestComponent* >::const_iterator i = components.begin();

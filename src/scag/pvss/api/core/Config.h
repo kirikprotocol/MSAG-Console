@@ -2,6 +2,7 @@
 #define _SCAG_PVSS_CORE_CONFIG_H
 
 #include "ConfigException.h"
+#include "scag/util/Time.h"
 
 namespace scag2 {
 namespace pvss {
@@ -21,9 +22,9 @@ public:
     static const int DEF_IO_TIMEOUT = 100;   // 100 msec
     static const int MAX_IO_TIMEOUT = 60000; // 1 min
 
-    static const long MIN_INACTIVITY_TIME     = 1000;                      // 1 sec
-    static const long MAX_INACTIVITY_TIME     = MIN_INACTIVITY_TIME *3600; // 1 hour
-    static const long DEFAULT_INACTIVITY_TIME = MIN_INACTIVITY_TIME *60;   // 1 min
+    static const util::msectime_type MIN_INACTIVITY_TIME     = 1000;                      // 1 sec
+    static const util::msectime_type MAX_INACTIVITY_TIME     = MIN_INACTIVITY_TIME *3600; // 1 hour
+    static const util::msectime_type DEFAULT_INACTIVITY_TIME = MIN_INACTIVITY_TIME *60;   // 1 min
 
     static const int MIN_CONNECT_TIMEOUT = 100;      // 100 ms
     static const int DEF_CONNECT_TIMEOUT = 60000;    // 1 min
@@ -79,28 +80,28 @@ public:
         this->ioTimeout_ = ioTimeout;
     }
 
-    long getInactivityTime() const {
+    util::msectime_type getInactivityTime() const {
         return inactivityTime_;
     }
-    void setInactivityTime(long inactivityTime) throw(ConfigException) {
+    void setInactivityTime(util::msectime_type inactivityTime) throw(ConfigException) {
         if (inactivityTime < MIN_INACTIVITY_TIME || inactivityTime > MAX_INACTIVITY_TIME)
             throw ConfigException("Inactivity time can't be less than %ld and more than %ld msecs",
                                   MIN_INACTIVITY_TIME, MAX_INACTIVITY_TIME );
         this->inactivityTime_ = inactivityTime;
     }
-    long getConnectTimeout() const {
+    util::msectime_type getConnectTimeout() const {
         return connectTimeout_;
     }
-    void setConnectTimeout(long connectTimeout) throw(ConfigException) {
+    void setConnectTimeout(util::msectime_type connectTimeout) throw(ConfigException) {
         if (connectTimeout < MIN_CONNECT_TIMEOUT || connectTimeout > MAX_CONNECT_TIMEOUT)
             throw ConfigException("Connect timeout count can't be less than %ld and more than %ld",
                                   MIN_CONNECT_TIMEOUT, MAX_CONNECT_TIMEOUT);
         this->connectTimeout_ = connectTimeout;
     }
-    long getProcessTimeout() const {
+    util::msectime_type getProcessTimeout() const {
         return processTimeout_;
     }
-    void setProcessTimeout(long processTimeout) throw(ConfigException) {
+    void setProcessTimeout(util::msectime_type processTimeout) throw(ConfigException) {
         if (processTimeout < MIN_PROCESS_TIMEOUT || processTimeout > MAX_PROCESS_TIMEOUT)
             throw ConfigException("Process timeout count can't be less than %ld and more than %ld",
                                   MIN_PROCESS_TIMEOUT, MAX_PROCESS_TIMEOUT);
@@ -162,9 +163,9 @@ private:
     std::string host_;
     short  port_;
     int    ioTimeout_; // timeout in msecs
-    long   inactivityTime_; // ping time in msecs
-    long   connectTimeout_;
-    long   processTimeout_;
+    util::msectime_type   inactivityTime_; // ping time in msecs
+    util::msectime_type   connectTimeout_;
+    util::msectime_type   processTimeout_;
 };
 
 } // namespace core

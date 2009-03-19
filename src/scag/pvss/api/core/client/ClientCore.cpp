@@ -146,7 +146,7 @@ void ClientCore::shutdown()
     smsc_log_info( logger, "Client thread is stopped, going to destroy all dead channels");
     destroyDeadChannels();
     {
-        MutexGuard mg(channelMutex_);
+        MutexGuard mgc(channelMutex_);
         smsc_log_debug( logger, "number of dead channels after shutdown: %d", unsigned(deadChannels_.size()) );
     }
 }
@@ -423,7 +423,7 @@ void ClientCore::createChannel( util::msectime_type startConnectTime )
     if (!started_) return;
     PvssSocket* channel(new PvssSocket(getConfig().getHost(),
                                        getConfig().getPort(),
-                                       getConfig().getConnectTimeout()/1000));
+                                       int(getConfig().getConnectTimeout()/1000)));
     smsc_log_info(logger,"creating a channel %p on %s:%d tmo=%d",channel,
                   getConfig().getHost().c_str(), getConfig().getPort(),getConfig().getConnectTimeout()/1000);
     regset_.create(channel->socket());
@@ -530,7 +530,7 @@ void ClientCore::handleResponse(Response* response,PvssSocket& channel) throw(Pv
             smsc_log_debug( logger, "PING Ok");
         }
     }
-    else context->setResponse(resp); // set response for client
+    else context->setResponse(resp.release()); // set response for client
 }
 
 

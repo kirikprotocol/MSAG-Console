@@ -27,7 +27,7 @@ public:
     virtual void setSeqNum( uint32_t seqNum ) { return getCommand()->setSeqNum(seqNum); }
 
     virtual bool isValid() const {
-        return profileKey_.isValid() && getCommand()->isValid();
+        return profileKey_.isValid() && getCommand() && getCommand()->isValid();
     }
     virtual std::string toString() const {
         std::string rv;
