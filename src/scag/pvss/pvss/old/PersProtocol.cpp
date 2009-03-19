@@ -1,5 +1,6 @@
 #include "PersProtocol.h"
 #include "scag/pvss/common/ScopeType.h"
+#include "scag/pvss/base/PersServerResponse.h"
 #include "scag/pvss/api/pvap/Exceptions.h"
 #include "scag/pvss/api/packets/Request.h"
 #include "scag/pvss/api/packets/ProfileRequest.h"
@@ -10,7 +11,6 @@
 #include "scag/pvss/api/packets/GetCommand.h"
 #include "scag/pvss/api/packets/IncCommand.h"
 #include "scag/pvss/api/packets/IncModCommand.h"
-#include "scag/pvss/api/packets/Response.h"
 #include "scag/pvss/api/packets/SetResponse.h"
 #include "scag/pvss/api/packets/DelResponse.h"
 #include "scag/pvss/api/packets/GetResponse.h"
@@ -200,35 +200,49 @@ bool PersProtocol::SerialBufferResponseVisitor::visitBatchResponse(BatchResponse
   return true;
 }
 
-bool PersProtocol::SerialBufferResponseVisitor::visitDelResponse(DelResponse &resp) throw(PvapException) {
-  buff_.WriteInt8(resp.getStatus());
+uint8_t PersProtocol::SerialBufferResponseVisitor::getResponseStatus(Response::StatusType status) const {
+  switch (status) {
+  case Response::OK                 : return perstypes::RESPONSE_OK;
+  case Response::ERROR              : return perstypes::RESPONSE_ERROR;
+  case Response::PROPERTY_NOT_FOUND : return perstypes::RESPONSE_PROPERTY_NOT_FOUND;
+  case Response::BAD_REQUEST        : return perstypes::RESPONSE_BAD_REQUEST;
+  case Response::TYPE_INCONSISTENCE : return perstypes::RESPONSE_TYPE_INCONSISTENCE;
+  case Response::NOT_SUPPORTED      : return perstypes::RESPONSE_NOTSUPPORT;
+  case Response::UNKNOWN            : return 0;
+    default: return 0;
+  }
+}
+
+
+bool PersProtocol::SerialBufferResponseVisitor::SerialBufferResponseVisitor::visitDelResponse(DelResponse &resp) throw(PvapException) {
+  buff_.WriteInt8(getResponseStatus(resp.getStatus()));
   return true;
 }
 
 bool PersProtocol::SerialBufferResponseVisitor::visitErrResponse(ErrorResponse &resp) throw(PvapException) {
-  buff_.WriteInt8(resp.getStatus());
+  buff_.WriteInt8(getResponseStatus(resp.getStatus()));
   return true;
 }
 
 bool PersProtocol::SerialBufferResponseVisitor::visitGetResponse(GetResponse &resp) throw(PvapException) {
-  buff_.WriteInt8(resp.getStatus());
+  buff_.WriteInt8(getResponseStatus(resp.getStatus()));
   resp.getProperty()->Serialize(buff_);
   return true;
 }
 
 bool PersProtocol::SerialBufferResponseVisitor::visitIncResponse(IncResponse &resp) throw(PvapException) {
-  buff_.WriteInt8(resp.getStatus());
+  buff_.WriteInt8(getResponseStatus(resp.getStatus()));
   buff_.WriteInt32(resp.getResult());
   return true;
 }
 
 bool PersProtocol::SerialBufferResponseVisitor::visitPingResponse(PingResponse &resp) throw(PvapException) {
-  buff_.WriteInt8(resp.getStatus());
+  buff_.WriteInt8(getResponseStatus(resp.getStatus()));
   return true;
 }
 
 bool PersProtocol::SerialBufferResponseVisitor::visitSetResponse(SetResponse &resp) throw(PvapException) {
-  buff_.WriteInt8(resp.getStatus());
+  buff_.WriteInt8(getResponseStatus(resp.getStatus()));
   return true;
 }
 

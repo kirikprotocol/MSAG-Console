@@ -5,6 +5,7 @@
 #include "scag/util/storage/SerialBuffer.h"
 #include "scag/pvss/common/PvapException.h"
 #include "scag/pvss/api/packets/Packet.h"
+#include "scag/pvss/api/packets/Response.h"
 #include "scag/pvss/api/packets/ProfileCommandVisitor.h"
 #include "scag/pvss/api/packets/ResponseVisitor.h"
 #include "scag/pvss/api/packets/BatchRequestComponent.h"
@@ -38,6 +39,8 @@ private:
     virtual bool visitIncResponse(IncResponse &resp) throw(PvapException);
     virtual bool visitPingResponse(PingResponse &resp) throw(PvapException);
     virtual bool visitSetResponse(SetResponse &resp) throw(PvapException);
+  private:
+    uint8_t getResponseStatus(Response::StatusType status) const;
   private:
     SerialBuffer& buff_;
   };
