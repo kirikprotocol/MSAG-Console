@@ -1,8 +1,10 @@
 #ifndef _SCAG_PVSS_CORE_SERVER_DISPATCHER_H
 #define _SCAG_PVSS_CORE_SERVER_DISPATCHER_H
 
+#include "ContextQueue.h"
+#include "scag/util/WatchedThreadedTask.h"
 #include "scag/pvss/api/packets/Request.h"
-#include "Server.h"
+#include "scag/pvss/api/core/server/Server.h"
 
 namespace scag2 {
 namespace pvss {
