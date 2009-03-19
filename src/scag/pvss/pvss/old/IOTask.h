@@ -41,7 +41,7 @@ protected:
 class IOTask: public SortedTask {
 
 public:
-  IOTask(IOTaskManager& iomanager, uint16_t connectionTimeout, const char* logName);
+  IOTask(IOTaskManager& iomanager, uint32_t connectionTimeout, uint16_t ioTimeout, const char* logName);
   virtual ~IOTask() {}
   virtual int Execute();
   virtual void stop();
@@ -63,7 +63,8 @@ protected:
 
 protected:
   IOTaskManager& iomanager_;
-  uint16_t connectionTimeout_;
+  uint32_t connectionTimeout_;
+  uint16_t ioTimeout_;
   uint16_t checkTimeoutPeriod_;
   time_t lastCheckTime_;
   Performance performance_;
@@ -76,7 +77,7 @@ protected:
 
 class MTPersReader: public IOTask {
 public:
-  MTPersReader(IOTaskManager& iomanager, uint16_t connectionTimeout):IOTask(iomanager, connectionTimeout, "reader") {};
+  MTPersReader(IOTaskManager& iomanager, uint32_t connectionTimeout, uint16_t ioTimeout):IOTask(iomanager, connectionTimeout, ioTimeout, "reader") {};
   virtual const char * taskName();
   Performance getPerformance();
 protected:
@@ -87,7 +88,7 @@ protected:
 
 class MTPersWriter: public IOTask {
 public:
-  MTPersWriter(IOTaskManager& iomanager, uint16_t connectionTimeout):IOTask(iomanager, connectionTimeout, "writer") {};
+  MTPersWriter(IOTaskManager& iomanager, uint32_t connectionTimeout, uint16_t ioTimeout):IOTask(iomanager, connectionTimeout, ioTimeout, "writer") {};
   virtual const char * taskName();
 protected:
   void addSocketToMultiplexer(Socket* s);

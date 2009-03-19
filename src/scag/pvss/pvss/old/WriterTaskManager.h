@@ -12,11 +12,10 @@ using scag::util::RelockMutexGuard;
 
 class WriterTaskManager : public IOTaskManager {
 public:
-  WriterTaskManager(uint16_t maxThreads, uint32_t maxSock, uint16_t timeout) 
-                   : IOTaskManager(maxThreads, maxSock, timeout, "writerman") {} 
+  WriterTaskManager(const SyncConfig& cfg) : IOTaskManager(cfg, "writerman") {} 
 
   IOTask* newTask() {
-    return new MTPersWriter(*this, connectionTimeout_);
+    return new MTPersWriter(*this, connectionTimeout_, ioTimeout_);
   }
 
   bool process(ConnectionContext* cx) {

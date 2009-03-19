@@ -5,6 +5,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "logger/Logger.h"
 
+#include "SyncConfig.h"
 #include "ConnectionContext.h"
 #include "IOTask.h"
 
@@ -36,7 +37,7 @@ private:
 
 class IOTaskManager {
 public:
-  IOTaskManager(uint16_t maxThreads, uint32_t maxSock, uint16_t timeout, const char *logName);
+  IOTaskManager(const SyncConfig& cfg, const char *logName);
   virtual ~IOTaskManager();
 
   virtual bool process(ConnectionContext* cx) = 0;
@@ -52,6 +53,7 @@ protected:
   bool isStopped_;
   uint32_t maxSockets_;    
   uint16_t connectionTimeout_;
+  uint16_t ioTimeout_;
   Logger *logger_;
   TasksSorter taskSorter_;
   Mutex tasksMutex_;

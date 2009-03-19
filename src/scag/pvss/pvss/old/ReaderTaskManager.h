@@ -12,11 +12,10 @@ using scag::util::RelockMutexGuard;
 
 class ReaderTaskManager : public IOTaskManager {
 public:
-  ReaderTaskManager(uint16_t maxThreads, uint32_t maxSock, uint16_t timeout, bool perfCounterOn = false) 
-                   : IOTaskManager(maxThreads, maxSock, timeout, "readerman"), perfCounterOn_(perfCounterOn) {}
+  ReaderTaskManager(const SyncConfig& cfg) : IOTaskManager(cfg, "readerman"), perfCounterOn_(cfg.getPerfCounterOn()) {}
 
   IOTask* newTask() {
-    MTPersReader* reader = new MTPersReader(*this, connectionTimeout_);
+    MTPersReader* reader = new MTPersReader(*this, connectionTimeout_, ioTimeout_);
     if (perfCounterOn_) {
       readers_.push_back(reader);
     }

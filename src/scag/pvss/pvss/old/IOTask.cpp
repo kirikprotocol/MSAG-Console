@@ -6,8 +6,8 @@ namespace pvss  {
 
 using smsc::core::synchronization::MutexGuard;
 
-IOTask::IOTask(IOTaskManager& iomanager, uint16_t connectionTimeout, const char* logName):iomanager_(iomanager),
-               connectionTimeout_(connectionTimeout), lastCheckTime_(0)
+IOTask::IOTask(IOTaskManager& iomanager, uint32_t connectionTimeout, uint16_t ioTimeout, const char* logName):iomanager_(iomanager),
+               connectionTimeout_(connectionTimeout), ioTimeout_(ioTimeout), lastCheckTime_(0)
 {
   logger = Logger::getInstance(logName);
   smsc_log_debug(logger, "%p %s task created", this, logName);
@@ -170,7 +170,7 @@ void MTPersReader::addSocketToMultiplexer(Socket* s) {
 }
 
 void MTPersReader::processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now) {
-  if (!multiplexer_.canRead(ready, error, connectionTimeout_)) {
+  if (!multiplexer_.canRead(ready, error, ioTimeout_)) {
     return;
   }
   for (int i = 0; i < ready.Count(); ++i) {
@@ -224,7 +224,7 @@ void MTPersWriter::addSocketToMultiplexer(Socket* s) {
 }
 
 void MTPersWriter::processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now) {
-  if (!multiplexer_.canWrite(ready, error, connectionTimeout_)) {
+  if (!multiplexer_.canWrite(ready, error, ioTimeout_)) {
     return;
   }
   for (int i = 0; i < ready.Count(); ++i) {
