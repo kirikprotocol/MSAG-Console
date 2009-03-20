@@ -9,7 +9,9 @@ namespace util {
 class MsecTime
 {
 public:
-    typedef uint64_t time_type;
+    // NOTE: time is signed to allow arithmetics
+    typedef int64_t time_type;
+
     MsecTime() {
         ::gettimeofday(&t0_,0);
     }

@@ -41,6 +41,14 @@ public:
         return isReleased;
     }
 
+    virtual int Execute() {
+        isReleased = false;
+        return doExecute();
+    }
+
+protected:
+    virtual int doExecute() = 0;
+
 protected:
     smsc::core::synchronization::EventMonitor releaseMon_;
 };
