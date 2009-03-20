@@ -58,7 +58,7 @@ bool Acceptor::setupSockets( util::msectime_type currentTime )
     // check incoming sockets
     smsc::core::network::Socket* socket = socket_.Accept(tmo);
     if ( socket ) {
-        if ( log_->isDebugEnabled() ) {
+        if ( log_->isInfoEnabled() ) {
             char buf[50];
             socket->GetPeer(buf);
             smsc_log_info(log_,"incoming connection %p from: %s", socket, buf);

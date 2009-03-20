@@ -625,7 +625,7 @@ void ServerCore::checkStatistics()
     total_.checkTime(currentTime);
     if ( last_.checkTime(currentTime) ) {
         smsc_log_info(log_, "total: %s", total_.toString().c_str() );
-        smsc_log_info(log_, "last %u msec: %s", unsigned(last_.accumulationTime), last_.toString().c_str() );
+        smsc_log_info(log_, "last %u sec: %s", unsigned(last_.accumulationTime/1000), last_.toString().c_str() );
         last_.reset();
     }
 

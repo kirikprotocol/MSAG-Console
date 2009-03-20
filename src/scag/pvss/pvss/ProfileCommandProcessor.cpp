@@ -14,7 +14,6 @@
 #include "scag/pvss/api/packets/IncModCommand.h"
 #include "scag/pvss/api/packets/SetCommand.h"
 #include "scag/pvss/api/packets/SetResponse.h"
-#include "scag/pvss/api/packets/ErrorResponse.h"
 
 namespace scag2 {
 namespace pvss  {
@@ -61,20 +60,18 @@ bool ProfileCommandProcessor::visitDelCommand(DelCommand &cmd) throw(PvapExcepti
 }
 
 bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) throw(PvapException) {
+  response_.reset( new GetResponse(cmd.getSeqNum()) ); 
   Property* p = profile_->GetProperty(cmd.getVarName().c_str());
   if (!p) {
-    response_.reset( new ErrorResponse(cmd.getSeqNum()) );
     response_->setStatus(Response::PROPERTY_NOT_FOUND);
     return false;
   }
-  response_.reset( new GetResponse(cmd.getSeqNum()) ); 
   if(p->getTimePolicy() == R_ACCESS) {
     p->ReadAccess();
     profile_->setChanged(true);
   }
   response_->setStatus(Response::OK);
-  Property *resultProp = new Property(*p);
-  static_cast<GetResponse*>(response_.get())->setProperty(resultProp);
+  static_cast<GetResponse*>(response_.get())->setProperty(new Property(*p));
   return true;
 }
 
