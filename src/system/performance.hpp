@@ -286,8 +286,8 @@ public:
       ptr[7]=(unsigned char)(tmp&0xFF);
     }
 
-    ld.uptime=htonl(ld.uptime);
-    ld.now=htonl(ld.now);
+    ld.uptime=htonl((uint32_t)ld.uptime);
+    ld.now=htonl((uint32_t)ld.now);
     ld.eventQueueSize=htonl(ld.eventQueueSize);
     ld.inProcessingCount=htonl(ld.inProcessingCount);
     ld.inScheduler=htonl(ld.inScheduler);
