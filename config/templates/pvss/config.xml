@@ -17,7 +17,7 @@
 	<param name="ioTimeout" type="int">@pvss.sync.io_timeout@</param>
 	<param name="inactivityTime" type="int">@pvss.sync.inactivity_time@</param>
 	<param name="ioTasksCount" type="int">@pvss.sync.io_tasks_count@</param>
-,	<param name="perfCounterPeriod" type="int">@pvss.sync.perf_counter_period@</param> <!--in seconds-->
+	<param name="statisticsInterval" type="int">@pvss.sync.statistics_interval@</param> <!--in seconds-->
     </section>
 
     <section name="AsyncTransport">
@@ -31,7 +31,7 @@
         <param name="ioTimeout" type="int">@pvss.async.io_timeout@</param>
         <param name="inactivityTime" type="int">@pvss.async.inactivity_time@</param>
         <param name="processTimeout" type="int">@pvss.async.process_timeout@</param>
-        <param name="perfCounterPeriod" type="int">@pvss.async.perf_counter_period@</param>
+        <param name="statisticsInterval" type="int">@pvss.async.statistics_interval@</param> <!--in seconds-->
     </section>
     
     <section name="AbonentStorage">
