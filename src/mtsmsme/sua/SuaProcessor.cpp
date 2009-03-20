@@ -55,6 +55,15 @@ SuaProcessor::SuaProcessor()
   registrator = new SubscriberRegistrator(coordinator);
   coordinator->setHLROAM(registrator);
 }
+SuaProcessor::SuaProcessor(TCO* _coordinator, SubscriberRegistrator* _registrator)
+{
+  logger = Logger::getInstance("mt.sme.sccp");
+  smsc_log_debug(logger,"SuaProcessor::SuaProcessor(TCO* _coordinator, SubscriberRegistrator* _registrator)");
+  coordinator = _coordinator;
+  registrator = _registrator;
+  coordinator->setSccpSender(this);
+  coordinator->setHLROAM(registrator);
+}
 HLROAM* SuaProcessor::getHLROAM() { return registrator; }
 SuaProcessor::~SuaProcessor()
 {
@@ -201,8 +210,8 @@ void SuaProcessor::send(uint8_t cdlen, uint8_t *cd,
 {
   libsua::MessageProperties msgProperties;
   msgProperties.returnOnError = true;
-  msgProperties.hopCount = 2;
-  msgProperties.fieldsMask = libsua::MessageProperties::SET_HOP_COUNT;
+  //msgProperties.hopCount = 2;
+  //msgProperties.fieldsMask = libsua::MessageProperties::SET_HOP_COUNT;
   libsua::SuaApi& suaApi = libsua::SuaApiFactory::getSuaApiIface();
   suaApi.unitdata_req(udp, ulen,
                       cd, cdlen,

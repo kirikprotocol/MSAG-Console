@@ -22,6 +22,7 @@ class SuaProcessor : public RequestProcessor,SccpSender {
     virtual void Stop();
     TCO* getCoordinator();
     SuaProcessor();
+    SuaProcessor(TCO* _coordinator, SubscriberRegistrator* _registrator);
     ~SuaProcessor();
   private:
     RequestSender* sender;
