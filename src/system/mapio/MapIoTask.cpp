@@ -26,6 +26,12 @@ Mutex mapMutex;
 #endif
 
 
+#ifdef EIN_HD
+#define CONNINSTARG(arg) ,arg
+#else
+#define CONNINSTARG
+#endif
+
 //#define SMSC_FORWARD_RESPONSE 0x001
 
 //unsigned __global_bind_counter = 0;
@@ -51,7 +57,7 @@ bool MAP_disconnectDetected = false;
 
 extern "C" {
 
-  USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
+  USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn INSTANCEIDARGDEF(rinst), ET96MAP_BIND_STAT_T status)
   {
     __map_warn2__("%s: confirmation received ssn=%d status=%d",__func__,lssn,status);
     if( status == 0  )
@@ -102,21 +108,26 @@ extern "C" {
   }
 
   USHORT_T Et96MapStateInd (
-                           ET96MAP_LOCAL_SSN_T lssn,
+                           ET96MAP_LOCAL_SSN_T lssn  INSTANCEIDARGDEF(rinst),
                            UCHAR_T userState,
                            UCHAR_T affectedSSN,
                            ULONG_T affectedSPC,
                            ULONG_T localSPC)
   {
     __map_warn2__("%s: received ssn=%d user state=%d affected SSN=%d affected SPC=%d local SPC=%d",__func__,lssn,userState,affectedSSN,affectedSPC,localSPC);
-    if( affectedSPC == localSPC ) {
-      if( userState == 1 ) {
-        for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ ) {
-          if( MapDialogContainer::localSSNs[i] == affectedSSN ) {
-            if( MapDialogContainer::boundLocalSSNs[i] ) {
+    if( affectedSPC == localSPC )
+    {
+      if( userState == 1 )
+      {
+        for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
+        {
+          if( MapDialogContainer::localSSNs[i] == affectedSSN )
+          {
+            if( MapDialogContainer::boundLocalSSNs[i] )
+            {
               MapDialogContainer::boundLocalSSNs[i] = 0;
               __map_warn2__("%s: SSN %d is unavailable trying to rebind",__func__,affectedSSN);
-              USHORT_T result = Et96MapBindReq(MY_USER_ID, SSN);
+              USHORT_T result = Et96MapBindReq(MY_USER_ID, SSN INSTARG(rinst));
               if (result!=ET96MAP_E_OK) {
                 __map_warn2__("%s: SSN %d Bind error 0x%hx",__func__,affectedSSN,result);
               }
@@ -136,7 +147,7 @@ extern "C" {
     return ET96MAP_E_OK;
   }
 
-  void Et96MapIndicationError(USHORT_T error,UCHAR_T* errString)
+  void Et96MapIndicationError(USHORT_T error,UCHAR_T* errString INSTANCEIDARGDEF(rinst))
   {
     if ( errString ) {
       __map_warn2__("Et96MapIndicationError: error 0x%hx text %s",error,errString);
@@ -152,27 +163,34 @@ void MapIoTask::connect(unsigned timeout) {
   __map_warn__("Connecting to MAP stack");
 //  result = MsgOpen(MY_USER_ID);
   result = EINSS7CpMsgPortOpen( MY_USER_ID, TRUE);
-  if ( result != MSG_OK ) {
+  if ( result != RETURN_OK )
+  {
     __map_warn2__("Error at MsgOpen, code 0x%hx",result);
     kill(getpid(),17);
   }
   int tries = 0;
-  while( !isStopping && tries < 60 ) {
-    result = MsgConn(MY_USER_ID,ETSIMAP_ID);
-//    result = EINSS7CpMsgConnInst(MY_USER_ID, ETSIMAP_ID, 0);
-    if ( result != MSG_OK ) {
-      __map_warn2__("Error at MsgConn, code 0x%hx, sleep 1 sec and retry connect",result);
-      sleep(1);
-      tries++;
-    } else {
-      break;
+  for(int n=0;n<MapDialogContainer::remInstCount;n++)
+  {
+    while( !isStopping && tries < 60 )
+    {
+//    result = MsgConn(MY_USER_ID,ETSIMAP_ID);
+      result = EINSS7CpMsgConnInst(MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[n]);
+      if ( result != RETURN_OK )
+      {
+        __map_warn2__("Error at MsgConn, code 0x%hx, sleep 1 sec and retry connect",result);
+        sleep(1);
+        tries++;
+      } else {
+        break;
+      }
     }
   }
   if(isStopping)
   {
     return;
   }
-  if( tries >= 60 ) {
+  if( tries >= 60 )
+  {
     __map_warn2__("MsgConn error, %d attempts failed, aborting", tries);
     kill(getpid(),17);
   }
@@ -183,10 +201,13 @@ void MapIoTask::connect(unsigned timeout) {
 
   __map_warn2__("Binding %d subsystems", MapDialogContainer::numLocalSSNs);
   bindTimer = 0;
-  for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ ) {
-    result = Et96MapBindReq(MY_USER_ID, MapDialogContainer::localSSNs[i]);
-    if (result!=ET96MAP_E_OK) {
-      __map_warn2__("SSN %d Bind error 0x%hx",MapDialogContainer::localSSNs[i],result);
+  for(int n=0;n<MapDialogContainer::remInstCount;n++)
+  for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
+  {
+    result = Et96MapBindReq(MY_USER_ID, MapDialogContainer::localSSNs[i] CONNINSTARG(MapDialogContainer::remInst[n]));
+    if (result!=ET96MAP_E_OK)
+    {
+      __map_warn2__("SSN %d Inst %d Bind error 0x%hx",MapDialogContainer::localSSNs[i],MapDialogContainer::remInst[n],result);
       throw runtime_error("bind error");
     }
   }
@@ -204,15 +225,33 @@ void MapIoTask::init(unsigned timeout)
     MapDialogContainer::patternBoundLocalSSNs[i] = 1;
     MapDialogContainer::getInstance()->InitLSSN(MapDialogContainer::localSSNs[i]);
   }
+#ifdef EIN_HD
+  EINSS7CpMain_CpInit(); 
+  err=EINSS7CpRegisterMPOwner(MY_USER_ID);
+  if ( err != RETURN_OK)
+  { 
+    __map_warn2__("Error at EINSS7CpRegisterMPOwner, code 0x%hx",err); 
+    throw runtime_error("MsgInit error");
+  } 
+  err=EINSS7CpRegisterRemoteCPMgmt(CP_MANAGER_ID, 0, (char*)MapDialogContainer::remoteMgmtAddress.c_str());
+  if ( err != RETURN_OK)
+  { 
+    __map_warn2__("Error at EINSS7CpRegisterRemoteCPMgmt, host='%s', code 0x%hx",MapDialogContainer::remoteMgmtAddress.c_str(),err); 
+    throw runtime_error("MsgInit error");
+  } 
+#endif  
 //  __pingPongWaitCounter = 0;
+  err = EINSS7CpMsgInitiate( MAXENTRIES INSTARG(MapDialogContainer::localInst[0]), FALSE );
+  /*
   if( MapDialogContainer::GetNodesCount() > 1 ) {
-    err = EINSS7CpMsgInitiate( MAXENTRIES, 0, FALSE );
     if( MapDialogContainer::GetNodeNumber() == 2 ) MY_USER_ID = USER06_ID;
   } else {
-    err = EINSS7CpMsgInitiate( MAXENTRIES, 0, FALSE );
-  }
-  if ( err != MSG_OK ) {
-    __map_warn2__("Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error");
+    err = EINSS7CpMsgInitiate( MAXENTRIES INSTARG(MapDialogContainer::localInst[0]), FALSE );
+  }*/
+  if ( err != RETURN_OK )
+  {
+    __map_warn2__("Error at MsgInit, code 0x%hx",err);
+    throw runtime_error("MsgInit error");
   }
   {
     MutexGuard mapMutexGuard(mapMutex);
@@ -236,9 +275,10 @@ void MapIoTask::disconnect()
   USHORT_T result;
   __map_warn__("disconnect from MAP stack");
 
+  for(int n=0;n<MapDialogContainer::remInstCount;n++)
   for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
   {
-    result = Et96MapUnbindReq(MapDialogContainer::localSSNs[i]);
+    result = Et96MapUnbindReq(MapDialogContainer::localSSNs[i] INSTARG(MapDialogContainer::remInst[n]));
     if ( result != ET96MAP_E_OK)
     {
       __map_warn2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",MapDialogContainer::localSSNs[i],result);
@@ -311,6 +351,7 @@ void MapIoTask::dispatcher()
 {
   MSG_T message;
   USHORT_T result;
+  EINSS7INSTANCE_T rinst=0;
 
   //struct timeval utime, curtime;
 
@@ -443,25 +484,28 @@ void MapIoTask::dispatcher()
         ET96MAP_DIALOGUE_ID_T dlgId=((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8);
           //(message.msg_p[2]<<8)| message.msg_p[3];
         ET96MAP_LOCAL_SSN_T lssn=message.msg_p[1];
+#ifdef EIN_HD
+        rinst=message.remoteInstance;
+#endif
         if(message.primitive==MAP_OPEN_IND)
         {
           try{
             bool isUSSD=message.msg_p[4]==0x13 || message.msg_p[4]==0x14;
-            dlg.assign(MapDialogContainer::getInstance()->createLockedDialog(dlgId,lssn,message.msg_p[5],isUSSD));
+            dlg.assign(MapDialogContainer::getInstance()->createLockedDialog(dlgId,lssn,rinst,message.msg_p[5],isUSSD));
           }
           catch(std::exception& e)
           {
             __map_warn2__("%s: dialogid 0x%x %s",__func__,dlgId,e.what());
             ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-            warnMapReq( Et96MapOpenResp(lssn,dlgId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
-            warnMapReq( Et96MapCloseReq(lssn,dlgId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
+            warnMapReq( Et96MapOpenResp(lssn INSTARG(rinst),dlgId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
+            warnMapReq( Et96MapCloseReq(lssn INSTARG(rinst),dlgId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
             // dailog limit reached - have to drop message
             EINSS7CpReleaseMsgBuffer(&message);
             continue;
           }
         }else
         {
-          dlg.assign(MapDialogContainer::getInstance()->getLockedDialogOrEnqueue(dlgId,lssn,message));
+          dlg.assign(MapDialogContainer::getInstance()->getLockedDialogOrEnqueue(dlgId,lssn,rinst,message));
           if(dlg.isnull())
           {
             continue;
@@ -543,7 +587,7 @@ void MapIoTask::handleMessage(MSG_T& message)
       ctx.acType=(ET96MAP_APP_CONTEXT_T)message.msg_p[4];
       reinterpret_cast<int&>(ctx.version)=message.msg_p[5];
       map_result = Et96MapOpenInd(
-                                  (ET96MAP_LOCAL_SSN_T)message.msg_p[1], // SSN
+                                  (ET96MAP_LOCAL_SSN_T)message.msg_p[1] INSTARG(message.remoteInstance), // SSN
                                   ((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8), // Dialogue ID
                                   &ctx, // AC version
                                   (message.msg_p[destAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+destAddrPos):0, // dest ss7 addr
@@ -665,6 +709,14 @@ ET96MAP_LOCAL_SSN_T *MapDialogContainer::localSSNs = 0;
 int                  MapDialogContainer::numLocalSSNs = 0;
 int                 *MapDialogContainer::boundLocalSSNs = 0;
 int                 *MapDialogContainer::patternBoundLocalSSNs = 0;
+
+EINSS7INSTANCE_T MapDialogContainer::allInst[10];
+int MapDialogContainer::allInstCount=0;
+EINSS7INSTANCE_T MapDialogContainer::localInst[10];
+int MapDialogContainer::localInstCount=0;
+EINSS7INSTANCE_T MapDialogContainer::remInst[10];
+int MapDialogContainer::remInstCount=0;
+std::string MapDialogContainer::remoteMgmtAddress;
 
 MapProxy* MapDialogContainer::proxy = 0;
 
