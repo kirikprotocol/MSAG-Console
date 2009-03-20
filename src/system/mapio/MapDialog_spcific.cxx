@@ -208,14 +208,14 @@ struct SMS_SUMBMIT_FORMAT_HEADER{
 
 struct MAP_SMS_ADDRESS{
   unsigned char len;
-  union{
+//  union{
     struct{
       unsigned char reserved_1:1;
       unsigned char ton:3;
       unsigned char npi:4;
     }st;
-    unsigned char tonpi;
-  };
+//    unsigned char tonpi;
+//  };
   unsigned char val[10];
 };
 
