@@ -113,7 +113,7 @@ pvss.sync.io_tasks_count=10
 pvss.sync.max_clients_count=100
 pvss.sync.io_timeout=300
 pvss.sync.inactivity_time=1000
-pvss.sync.perf_counter_period=10
+pvss.sync.statistics_interval=10
 
 pvss.async.port=23881
 pvss.async.readers_count=10
@@ -125,7 +125,7 @@ pvss.async.io_timeout=300
 pvss.async.connect_timeout=300
 pvss.async.process_timeout=300
 pvss.async.inactivity_time=1000
-pvss.async.perf_counter_period=10
+pvss.async.statistics_interval=10
 
 
 rule_editor.ping_port=23987
