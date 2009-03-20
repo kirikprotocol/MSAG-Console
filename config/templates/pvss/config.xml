@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+
+  <section name="PVSS">
+    
+    <param name="host" type="string">@pvss.listen_host@</param>
+    <param name="storages" type="int">@pvss.storages@</param>
+    <param name="nodes" type="int">@pvss.nodes@</param>
+    <param name="node" type="int">@pvss.node@</param>
+    <param name="storageQueueSize" type="int">@pvss.storage_queue_size@</param>
+    
+    <section name="SyncTransport">
+        <param name="port" type="int">@pvss.sync.port@</param>
+        <param name="maxClientsCount" type="int">@pvss.sync.max_clients_count@</param>
+	<param name="ioTimeout" type="int">@pvss.sync.io_timeout@</param>
+	<param name="inactivityTime" type="int">@pvss.sync.inactivity_time@</param>
+	<param name="ioTasksCount" type="int">@pvss.sync.io_tasks_count@</param>
+,	<param name="perfCounterPeriod" type="int">@pvss.sync.perf_counter_period@</param> <!--in seconds-->
+    </section>
+
+    <section name="AsyncTransport">
+	<param name="port" type="int">@pvss.async.port@</param>
+        <param name="readersCount" type="int">@pvss.async.readers_count@</param>
+        <param name="writersCount" type="int">@pvss.async.writers_count@</param>
+        <param name="channelsPerReader" type="int">@pvss.async.channels_per_reader@</param>
+        <param name="channelsPerWriter" type="int">@pvss.async.channels_per_writer@</param>
+        <param name="channelQueueSizeLimit" type="int">@pvss.async.channel_queue_size_limit@</param>
+        <param name="connectTimeout" type="int">@pvss.async.connect_timeout@</param>
+        <param name="ioTimeout" type="int">@pvss.async.io_timeout@</param>
+        <param name="inactivityTime" type="int">@pvss.async.inactivity_time@</param>
+        <param name="processTimeout" type="int">@pvss.async.process_timeout@</param>
+        <param name="perfCounterPeriod" type="int">@pvss.async.perf_counter_period@</param>
+    </section>
+    
+    <section name="AbonentStorage">
+        <section name="Locations">
+	    <param name="1" type="string">@pvss.location1_path@</param>
+	    <!--param name="2" type="string">@pvss.location2_path@</param-->
+	</section>
+        <param name="storageName" type="string">@pvss.abonent_storage_name@</param>
+        <param name="indexGrowth" type="int">10000</param>
+        <param name="dataBlockSize" type="int">2048</param>
+        <param name="blocksInFile" type="int">500</param>
+        <param name="cacheSize" type="int">1000</param>
+    </section>
+
+    <section name="InfrastructStorage">
+        <param name="storagePath" type="string">@pvss.infrastruct_storage_dir@</param>
+        <param name="initRecordCount" type="int">10000</param>
+        <param name="cacheSize" type="int">10000</param>
+    </section>
+
+  </section>
+
+</config>
