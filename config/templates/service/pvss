@@ -1,0 +1,25 @@
+#!/bin/bash
+ulimit -n 16384 || ulimit -n 1024
+if [ -f logs/pvss.err ]; then
+  mv logs/pvss.err logs/pvss.err.old
+fi
+while true;
+do
+bin/pvss 1>/dev/null 2>>logs/pvss.err&
+PID=$!
+export PID
+trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
+wait $PID
+if [ -f core ]; then
+  DATE=`perl -e '($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);printf("%04d%02d%02d%02d%02d%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec)'`
+
+  mkdir "$DATE"
+  mv core "$DATE"
+  mv logs/pvss.err "$DATE"
+  if [ -f logs/pvss.err.old ]; then
+    mv logs/pvss.err.old "$DATE"
+  fi
+  mv logs/pvss.log* "$DATE"
+  cp -p bin/pvss "$DATE"
+fi
+done
