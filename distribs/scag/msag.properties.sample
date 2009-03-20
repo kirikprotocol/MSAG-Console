@@ -95,24 +95,38 @@ cpers.regions_config_name=/opt/home/msag_stbl/msag_distr/services/cpers/conf/reg
 cpers.service.args=Central Personalization
 cpers.service.autostart=false
 
-mtpers.port=23880
-mtpers.listen_host=0.0.0.0
-mtpers.connect_host=127.0.0.1
-mtpers.timeout=300
-mtpers.io_pool_size=10
-mtpers.connections=100
-mtpers.perf_counter_on=false
-mtpers.perf_counter_period=10
-mtpers.storage_dir=/home/odarchenko/new_msag_64/distr/storage/mtpers
-mtpers.location1_path=/home/odarchenko/new_msag_64/distr/storage/mtpers/1
-mtpers.storages=100
-mtpers.nodes=1
-mtpers.node=0
-mtpers.storage_queue_size=20
-mtpers.abonent_storage_name=abonent
-mtpers.infrastruct_storage_dir=/home/odarchenko/new_msag_64/distr/storage/mtpers/infrastruct
-mtpers.service.args=MultiThred Personalization
-mtpers.service.autostart=true
+pvss.listen_host=0.0.0.0
+pvss.connect_host=127.0.0.1
+pvss.storages=100
+pvss.nodes=1
+pvss.node=0
+pvss.storage_queue_size=20
+pvss.storage_dir=/home/odarchenko/msag/distr/storage/pvss
+pvss.location1_path=/home/odarchenko/msag/distr/storage/pvss/1
+pvss.abonent_storage_name=abonent
+pvss.infrastruct_storage_dir=/home/odarchenko/msag/distr/storage/pvss/infrastruct
+pvss.service.args=PVSS
+pvss.service.autostart=true
+
+pvss.sync.port=23880
+pvss.sync.io_tasks_count=10
+pvss.sync.max_clients_count=100
+pvss.sync.io_timeout=300
+pvss.sync.inactivity_time=1000
+pvss.sync.perf_counter_period=10
+
+pvss.async.port=23881
+pvss.async.readers_count=10
+pvss.async.writers_count=10
+pvss.async.channels_per_reader=10
+pvss.async.channels_per_writer=10
+pvss.async.channel_queue_size_limit=100
+pvss.async.io_timeout=300
+pvss.async.connect_timeout=300
+pvss.async.process_timeout=300
+pvss.async.inactivity_time=1000
+pvss.async.perf_counter_period=10
+
 
 rule_editor.ping_port=23987
 rule_editor.ping_timeout=10000
