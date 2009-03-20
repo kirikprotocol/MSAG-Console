@@ -87,37 +87,11 @@ SyncConfig getSyncConfig(ConfigView& cfg, Logger* logger) {
     smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.ioTimeout> missed. Default value is %d", syncConfig.getIoTimeout());
   }
   try { 
-    syncConfig.setPerfCounterOn(cfg.getBool("perfCounterOn"));
+    syncConfig.setPerfCounterPeriod(cfg.getInt("statisticsInterval"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.perfCounterOn> missed. Default value is %d", (int)syncConfig.getPerfCounterOn());
-  }
-  try { 
-    syncConfig.setPerfCounterPeriod(cfg.getInt("perfCounterPeriod"));
-  } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.perfCounterPeriod> missed. Default value is %d", syncConfig.getPerfCounterPeriod());
+    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.statisticsInterval> missed. Default value is %d", syncConfig.getPerfCounterPeriod());
   }
   return syncConfig;
-}
-
-void printConfig(const SyncConfig& cfg, Logger* logger) {
-  smsc_log_info(logger, "sync port              : %d", cfg.getPort());
-  smsc_log_info(logger, "sync IoTasksCount      : %d", cfg.getIoTasksCount() );
-  smsc_log_info(logger, "sync connectionTimeout : %d", cfg.getConnectTimeout() );
-  smsc_log_info(logger, "sync ioTimeout         : %d", cfg.getIoTimeout());
-  smsc_log_info(logger, "sync MaxClientsCount   : %d", cfg.getMaxClientsCount());
-}
-
-void printConfig(const ServerConfig& cfg, Logger* logger) {
-  smsc_log_info(logger, "Async port                  %d", cfg.getPort());
-  smsc_log_info(logger, "Async writersCount          %d", cfg.getWritersCount());
-  smsc_log_info(logger, "Async readersCount          %d", cfg.getReadersCount());
-  smsc_log_info(logger, "Async chanelsPerWriter      %d", cfg.getMaxWriterChannelsCount());
-  smsc_log_info(logger, "Async channelsPerReader     %d", cfg.getMaxReaderChannelsCount());
-  smsc_log_info(logger, "Async channelQueueSizeLimit %d", cfg.getChannelQueueSizeLimit());
-  smsc_log_info(logger, "Async connectTimeout        %d", cfg.getConnectTimeout());
-  smsc_log_info(logger, "Async inactivityTime        %d", cfg.getInactivityTime());
-  smsc_log_info(logger, "Async processTimeout        %d", cfg.getProcessTimeout());
-  smsc_log_info(logger, "Async ioTimeout             %d", cfg.getIOTimeout());
 }
 
 ServerConfig getAsyncConfig(ConfigView& cfg, Logger* logger) {
@@ -185,9 +159,9 @@ ServerConfig getAsyncConfig(ConfigView& cfg, Logger* logger) {
     smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.ioTimeout> missed. Default value is %d", serverConfig.getIOTimeout());
   }
   try { 
-    serverConfig.setStatisticsInterval(cfg.getInt("perfCounterPeriod")*1000ULL);
+    serverConfig.setStatisticsInterval(cfg.getInt("statisticsInterval")*1000ULL);
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.perfCounterPeriod> missed. Default value is %d", int(serverConfig.getStatisticsInterval()/1000));
+    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.statisticsInterval> missed. Default value is %d", int(serverConfig.getStatisticsInterval()/1000));
   }
 
   return serverConfig;
@@ -250,7 +224,7 @@ int main(int argc, char* argv[]) {
   sigset(SIGINT, appSignalHandler);
   sigset(SIGHUP, appSignalHandler);   
   int resultCode = 0;
-  Logger* logger = Logger::getInstance("pvss");
+  Logger* logger = Logger::getInstance("pvss.main");
 
   try{
     smsc_log_info(logger,  "Starting up %s", getStrVersion());
@@ -279,11 +253,12 @@ int main(int argc, char* argv[]) {
     ServerConfig serverConfig = getAsyncConfig(asyncCfg, logger);
     serverConfig.setHost(host);
     serverConfig.setQueueSizeLimit(maxWaitingCount);
-    printConfig(serverConfig, logger);
+    smsc_log_info(logger, "async config: %s", serverConfig.toString().c_str());
 
     ConfigView syncTransportCfg(manager, "PVSS.SyncTransport");
     SyncConfig syncConfig = getSyncConfig(syncTransportCfg, logger);
-    printConfig(syncConfig, logger);
+    syncConfig.setHost(host);
+    smsc_log_info(logger, "sync config: %s", syncConfig.toString().c_str());
 
     ConfigView abntStorageConfig(manager, "PVSS.AbonentStorage");
 
@@ -316,6 +291,8 @@ int main(int argc, char* argv[]) {
                                 syncConfig.getPerfCounterOn(), syncConfig.getPerfCounterPeriod());
     persServer->init(host.c_str(), syncConfig.getPort());
     persServer->Execute();
+
+    server->shutdown();
 
     readers.shutdown();
     writers.shutdown();
