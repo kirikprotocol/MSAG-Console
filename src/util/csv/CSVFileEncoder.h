@@ -90,7 +90,7 @@ namespace smsc { namespace util { namespace csv
         }
         inline static void addUint32(std::string& out, uint32_t val, bool last=false)
         {
-            char buf[32]; sprintf(buf, "%lu", val); out += buf;
+            char buf[32]; sprintf(buf, "%u", val); out += buf;
             if (last) addTerminator(out);
             else addSeparator(out);
         }
