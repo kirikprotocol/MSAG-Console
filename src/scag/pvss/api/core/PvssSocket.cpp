@@ -120,7 +120,7 @@ void PvssSocket::sendData( Core& core )
             smsc_log_warn(log_,"sendData: write failed: %d", res);
             core.reportPacket(wrContext_->seqNum, *socket(), Core::FAILED);
             wrContext_.reset(0);
-            core.handleError(PvssException(PvssException::IO_ERROR,"error writing context"),*this);
+            core.handleError(PvssException(PvssException::IO_ERROR,"io error (write failed:%d)",res),*this);
             return;
         }
 

@@ -21,7 +21,8 @@ public:
 
     void shutdown();
 
-    virtual int Execute();
+private:
+    virtual int doExecute();
 
 private:
     Server::SyncLogic& logic_;

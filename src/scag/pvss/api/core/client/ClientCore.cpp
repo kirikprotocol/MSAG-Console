@@ -89,7 +89,7 @@ void ClientCore::startup() throw(PvssException)
     MutexGuard mg(startMutex_);
     if (started_) return;
 
-    smsc_log_info(logger,"Client starting...");
+    smsc_log_info(logger,"Starting PVSS Client %s", getConfig().toString().c_str() );
 
     startupIO();
     try {
@@ -282,7 +282,7 @@ void ClientCore::reportPacket( uint32_t seqNum, smsc::core::network::Socket& cha
 }
 
 
-int ClientCore::Execute()
+int ClientCore::doExecute()
 {
     const int minTimeToSleep = 10; // 10 msec
 

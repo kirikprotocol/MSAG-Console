@@ -57,14 +57,14 @@ void getConfig( smsc::logger::Logger* thelog,
         clientConfig.setHost("phoenix");
         clientConfig.setPort(27880);
         clientConfig.setIOTimeout(300);
-        clientConfig.setInactivityTime(300000); // in msec
+        clientConfig.setInactivityTime(30000); // in msec
         clientConfig.setConnectTimeout(10000);  // in msec
         clientConfig.setChannelQueueSizeLimit(1000); // the queue length
-        clientConfig.setConnectionsCount(1);
+        clientConfig.setConnectionsCount(10);
         clientConfig.setMaxReaderChannelsCount(5);
         clientConfig.setMaxWriterChannelsCount(5);
-        clientConfig.setReadersCount(1);
-        clientConfig.setWritersCount(1);
+        clientConfig.setReadersCount(2);
+        clientConfig.setWritersCount(2);
         clientConfig.setProcessTimeout(1000);
     } catch ( ConfigException& e ) {
         smsc_log_error(thelog, "cannot set default value: %s", e.what() );

@@ -150,7 +150,7 @@ public:
                     break;
                 }
                 default:
-                    throw InvalidFieldTypeException(data_->isRequest(),"invalid field in BC_INC_MOD", data_->getSeqNum(),tag);
+                    throw InvalidFieldTypeException(data_->isRequest(),"BC_INC_MOD", data_->getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( exceptions::IOException e ) {
@@ -171,7 +171,7 @@ protected:
     {
         // using parent check
         if ( !data_->isValid() ) {
-            throw MessageIsBrokenException(data_->isRequest(), "message BC_INC_MOD is broken: " + toString(), data_->getSeqNum() );
+            throw MessageIsBrokenException(data_->isRequest(), data_->getSeqNum(), "message BC_INC_MOD is broken: %s",data_->toString().c_str());
         }
     }
 

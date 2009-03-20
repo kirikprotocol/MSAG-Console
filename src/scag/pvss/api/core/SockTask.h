@@ -35,8 +35,6 @@ public:
         smsc_log_info(log_,"dtor: socktask %s",taskName());
     }
 
-    virtual int Execute();
-
     virtual void shutdown() {
         if ( isStopping ) return;
         smsc_log_info(log_,"shutting down...");
@@ -63,6 +61,7 @@ public:
     virtual const Config& getConfig() const { return *config_; }
 
 protected:
+    virtual int doExecute();
     virtual void attachToSocket( PvssSocket& ) {}
     virtual void detachFromSocket( PvssSocket& ) {}
 

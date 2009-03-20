@@ -64,37 +64,37 @@ SyncConfig getSyncConfig(ConfigView& cfg, Logger* logger) {
   try { 
     syncConfig.setPort(cfg.getInt("port"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.port> missed. Defaul value is %d", syncConfig.getPort());
+    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.port> missed. Default value is %d", syncConfig.getPort());
   }
   try { 
     syncConfig.setIoTasksCount(cfg.getInt("ioTasksCount"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.ioTasksCount> missed. Defaul value is %d", syncConfig.getIoTasksCount());
+    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.ioTasksCount> missed. Default value is %d", syncConfig.getIoTasksCount());
   }
   try { 
     syncConfig.setMaxClientsCount(cfg.getInt("maxClientsCount"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.maxClientsCount> missed. Defaul value is %d", syncConfig.getMaxClientsCount());
+    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.maxClientsCount> missed. Default value is %d", syncConfig.getMaxClientsCount());
   }
   try { 
     syncConfig.setConnectTimeout(cfg.getInt("inactivityTime"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.inactivityTime> missed. Defaul value is %d", syncConfig.getConnectTimeout());
+    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.inactivityTime> missed. Default value is %d", syncConfig.getConnectTimeout());
   }
   try { 
     syncConfig.setIoTimeout(cfg.getInt("ioTimeout"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.ioTimeout> missed. Defaul value is %d", syncConfig.getIoTimeout());
+    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.ioTimeout> missed. Default value is %d", syncConfig.getIoTimeout());
   }
   try { 
     syncConfig.setPerfCounterOn(cfg.getBool("perfCounterOn"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.perfCounterOn> missed. Defaul value is %d", (int)syncConfig.getPerfCounterOn());
+    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.perfCounterOn> missed. Default value is %d", (int)syncConfig.getPerfCounterOn());
   }
   try { 
     syncConfig.setPerfCounterPeriod(cfg.getInt("perfCounterPeriod"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.perfCounterPeriod> missed. Defaul value is %d", syncConfig.getPerfCounterPeriod());
+    smsc_log_warn(logger, "Parameter <PVSS.SyncTransport.perfCounterPeriod> missed. Default value is %d", syncConfig.getPerfCounterPeriod());
   }
   return syncConfig;
 }
@@ -125,32 +125,32 @@ ServerConfig getAsyncConfig(ConfigView& cfg, Logger* logger) {
   try { 
     serverConfig.setPort(cfg.getInt("port"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.port> missed. Defaul value is %d", serverConfig.getPort());
+    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.port> missed. Default value is %d", serverConfig.getPort());
   }
   try { 
     serverConfig.setWritersCount(cfg.getInt("writersCount"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.writersCount> missed. Defaul value is %d", serverConfig.getWritersCount());
+    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.writersCount> missed. Default value is %d", serverConfig.getWritersCount());
   }
   try { 
     serverConfig.setReadersCount(cfg.getInt("readersCount"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.readersCount> missed. Defaul value is %d", serverConfig.getReadersCount());
+    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.readersCount> missed. Default value is %d", serverConfig.getReadersCount());
   }
   try { 
     serverConfig.setMaxWriterChannelsCount(cfg.getInt("channelsPerWriter"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.chanelsPerWriter> missed. Defaul value is %d", serverConfig.getMaxWriterChannelsCount());
+    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.chanelsPerWriter> missed. Default value is %d", serverConfig.getMaxWriterChannelsCount());
   }
   try { 
     serverConfig.setMaxReaderChannelsCount(cfg.getInt("channelsPerReader"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.channelsPerReader> missed. Defaul value is %d", serverConfig.getMaxReaderChannelsCount());
+    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.channelsPerReader> missed. Default value is %d", serverConfig.getMaxReaderChannelsCount());
   }
   try { 
     serverConfig.setChannelQueueSizeLimit(cfg.getInt("channelQueueSizeLimit"));
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.channelQueueSizeLimit> missed. Defaul value is %d", serverConfig.getChannelQueueSizeLimit());
+    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.channelQueueSizeLimit> missed. Default value is %d", serverConfig.getChannelQueueSizeLimit());
   }
   try { 
     serverConfig.setConnectTimeout(cfg.getInt("connectTimeout"));
@@ -158,7 +158,7 @@ ServerConfig getAsyncConfig(ConfigView& cfg, Logger* logger) {
     smsc_log_error( logger, "exception: %s", e.what() );
     ::abort();
   }  catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.connectTimeout> missed. Defaul value is %d", serverConfig.getConnectTimeout());
+    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.connectTimeout> missed. Default value is %d", serverConfig.getConnectTimeout());
   }
   try { 
     serverConfig.setInactivityTime(cfg.getInt("inactivityTime"));
@@ -166,7 +166,7 @@ ServerConfig getAsyncConfig(ConfigView& cfg, Logger* logger) {
     smsc_log_error( logger, "exception: %s", e.what() );
     ::abort();
   }  catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.inactivityTime> missed. Defaul value is %d", serverConfig.getInactivityTime());
+    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.inactivityTime> missed. Default value is %d", serverConfig.getInactivityTime());
   }
   try { 
     serverConfig.setProcessTimeout(cfg.getInt("processTimeout"));
@@ -174,7 +174,7 @@ ServerConfig getAsyncConfig(ConfigView& cfg, Logger* logger) {
     smsc_log_error( logger, "exception: %s", e.what() );
     ::abort();
   }  catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.processTimeout> missed. Defaul value is %d", serverConfig.getProcessTimeout());
+    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.processTimeout> missed. Default value is %d", serverConfig.getProcessTimeout());
   }
   try { 
     serverConfig.setIOTimeout(cfg.getInt("ioTimeout"));
@@ -182,7 +182,12 @@ ServerConfig getAsyncConfig(ConfigView& cfg, Logger* logger) {
     smsc_log_error( logger, "exception: %s", e.what() );
     ::abort();
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.ioTimeout> missed. Defaul value is %d", serverConfig.getIOTimeout());
+    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.ioTimeout> missed. Default value is %d", serverConfig.getIOTimeout());
+  }
+  try { 
+    serverConfig.setStatisticsInterval(cfg.getInt("perfCounterPeriod")*1000ULL);
+  } catch (const Exception& ex) {
+    smsc_log_warn(logger, "Parameter <PVSS.AsyncTransport.perfCounterPeriod> missed. Default value is %d", int(serverConfig.getStatisticsInterval()/1000));
   }
 
   return serverConfig;
@@ -193,17 +198,17 @@ NodeConfig getNodeConfig(ConfigView& cfg, Logger* logger) {
   try { 
     nodeCfg.nodesCount = cfg.getInt("nodes");
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.nodes> missed. Defaul value is %d", nodeCfg.nodesCount);
+    smsc_log_warn(logger, "Parameter <PVSS.nodes> missed. Default value is %d", nodeCfg.nodesCount);
   }
   try { 
     nodeCfg.nodeNumber = cfg.getInt("node");
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.node> missed. Defaul value is %d", nodeCfg.nodeNumber);
+    smsc_log_warn(logger, "Parameter <PVSS.node> missed. Default value is %d", nodeCfg.nodeNumber);
   }
   try { 
     nodeCfg.storagesCount = cfg.getInt("storages");
   } catch (const Exception& ex) {
-    smsc_log_warn(logger, "Parameter <PVSS.storages> missed. Defaul value is %d", nodeCfg.storagesCount);
+    smsc_log_warn(logger, "Parameter <PVSS.storages> missed. Default value is %d", nodeCfg.storagesCount);
   }
   return nodeCfg;
 }
@@ -259,13 +264,13 @@ int main(int argc, char* argv[]) {
     try { 
       host = persConfig.getString("host");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <PVSS.host> missed. Defaul value is '%s'", host.c_str());
+      smsc_log_warn(logger, "Parameter <PVSS.host> missed. Default value is '%s'", host.c_str());
     }
     uint16_t maxWaitingCount = 20;
     try { 
       maxWaitingCount = persConfig.getInt("storageQueueSize");
     } catch (...) {
-      smsc_log_warn(logger, "Parameter <PVSS.storageQueueSize> missed. Defaul value is %d", maxWaitingCount);
+      smsc_log_warn(logger, "Parameter <PVSS.storageQueueSize> missed. Default value is %d", maxWaitingCount);
     }
 
     NodeConfig nodeCfg = getNodeConfig(persConfig, logger);
@@ -294,14 +299,13 @@ int main(int argc, char* argv[]) {
       pvssDispatcher.init(abntCfg, NULL);
     }
 
-
     std::auto_ptr< Protocol > protocol( new scag2::pvss::pvap::PvapProtocol );
     std::auto_ptr< Server > server( new ServerCore( serverConfig, *protocol.get() ) );
 
     try {
         server->startup(pvssDispatcher);
     } catch ( PvssException& e ) {
-        smsc_log_error( logger, "exception: %s", e.what() );
+        smsc_log_error( logger, "exception(%u):", __LINE__, e.what() );
     }
 
     PersProtocol persProtocol;

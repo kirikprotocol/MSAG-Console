@@ -18,7 +18,7 @@ public:
 
     virtual ~AsyncDispatcherThread();
 
-    virtual int Execute();
+    virtual int doExecute();
 
     virtual const char* taskName() { return "pvss.dspch"; }
 

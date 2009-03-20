@@ -31,7 +31,12 @@ public:
         this->queueSizeLimit_ = queueSizeLimit;
     }
 
-    util::msectime_type getStatisticsInterval() const { return 5000; }
+    std::string toString() const {
+        std::string s(Config::toString());
+        char buf[128];
+        snprintf(buf,sizeof(buf)," queueSize=%d", queueSizeLimit_ );
+        return s + buf;
+    }
 
 private:
     int queueSizeLimit_;

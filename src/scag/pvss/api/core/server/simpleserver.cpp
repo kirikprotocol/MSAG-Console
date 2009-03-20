@@ -166,18 +166,18 @@ int main()
         serverConfig.setHost("0.0.0.0");
         serverConfig.setPort((short)27881);
         // serverConfig.setConnectionsCount(1);
-        serverConfig.setReadersCount(1);
-        serverConfig.setWritersCount(1);
-        serverConfig.setMaxReaderChannelsCount(2);
-        serverConfig.setMaxWriterChannelsCount(2);
+        serverConfig.setReadersCount(2);
+        serverConfig.setWritersCount(2);
+        serverConfig.setMaxReaderChannelsCount(5);
+        serverConfig.setMaxWriterChannelsCount(5);
         serverConfig.setChannelQueueSizeLimit(100);
-        serverConfig.setConnectTimeout(1000);
-        serverConfig.setInactivityTime(30000);
+        serverConfig.setConnectTimeout(500);
+        serverConfig.setInactivityTime(60000);
         serverConfig.setProcessTimeout(1000);
-        serverConfig.setIOTimeout(500);
+        serverConfig.setIOTimeout(300);
         serverConfig.setQueueSizeLimit(1000);
     } catch ( ConfigException& e ) {
-        smsc_log_error( logger, "exception: %s", e.what() );
+        smsc_log_error( logger, "exception(%u): %s", __LINE__, e.what() );
         ::abort();
     }
 
@@ -189,7 +189,7 @@ int main()
     try {
         server->startup(*dispatcher.get());
     } catch ( PvssException& e ) {
-        smsc_log_error( logger, "exception: %s", e.what() );
+        smsc_log_error( logger, "exception(%u): %s", __LINE__, e.what() );
         stopping = true;
     }
     

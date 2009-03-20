@@ -419,11 +419,6 @@ public:
     }
      */
 
-    /**
-     * Implementation of Runable interface method (Thread class).
-     * Controls pending & processing queues (request processing timeouts checking).
-     */
-    virtual int Execute();
     /*
     {
         final long minTimeout = 10; // min sleep time = 10msec
@@ -499,6 +494,13 @@ public:
     }
 
 private:
+    /**
+     * Implementation of Runable interface method (Thread class).
+     * Controls pending & processing queues (request processing timeouts checking).
+     */
+    virtual int doExecute();
+
+
     /// invoked when a new packet is received either from new or old transport.
     void receiveContext( std::auto_ptr< ServerContext > context );
 

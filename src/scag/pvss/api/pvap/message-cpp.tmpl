@@ -242,7 +242,7 @@ $-select$
 $-if$
 $-foreach$
                 default:
-                    throw InvalidFieldTypeException(data_->isRequest(),"invalid field in $var message.name$", data_->getSeqNum(),tag);
+                    throw InvalidFieldTypeException(data_->isRequest(),"$var message.name$", data_->getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( exceptions::IOException e ) {
@@ -263,7 +263,7 @@ protected:
     {
         // using parent check
         if ( !data_->isValid() ) {
-            throw MessageIsBrokenException(data_->isRequest(), "message $var message.name$ is broken: " + toString(), data_->getSeqNum() );
+            throw MessageIsBrokenException(data_->isRequest(), data_->getSeqNum(), "message $var message.name$ is broken: %s",data_->toString().c_str());
         }
     }
 

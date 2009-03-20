@@ -87,7 +87,7 @@ public:
      * @param channel   Channel on wich problem was occurred
      */
     void handleError( const PvssException& exc, PvssSocket& channel ) {
-        smsc_log_error( logger, "exception on channel %p: %s", &channel, exc.what() );
+        smsc_log_error( logger, "exception %s on channel %p: %s", PvssException::typeToString(exc.getType()), &channel, exc.what() );
         closeChannel( channel );
     }
         

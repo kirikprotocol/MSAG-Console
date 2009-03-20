@@ -30,6 +30,13 @@ public:
         this->connectionsCount_ = connectionsCount;
     }
 
+    std::string toString() const {
+        std::string s( Config::toString() );
+        char buf[128];
+        snprintf(buf,sizeof(buf)," connections=%d", connectionsCount_ );
+        return s + buf;
+    }
+
 protected:
     int connectionsCount_;
 };

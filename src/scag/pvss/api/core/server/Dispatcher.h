@@ -2,7 +2,6 @@
 #define _SCAG_PVSS_CORE_SERVER_DISPATCHER_H
 
 #include "ContextQueue.h"
-#include "scag/util/WatchedThreadedTask.h"
 #include "scag/pvss/api/packets/Request.h"
 #include "scag/pvss/api/core/server/Server.h"
 

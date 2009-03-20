@@ -18,7 +18,7 @@ AsyncDispatcherThread::~AsyncDispatcherThread()
 }
 
 
-int AsyncDispatcherThread::Execute()
+int AsyncDispatcherThread::doExecute()
 {
     // FIXME
     return 0;

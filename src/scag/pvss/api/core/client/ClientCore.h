@@ -131,11 +131,12 @@ public:
     virtual void reportPacket(uint32_t seqnum, smsc::core::network::Socket& channel, PacketState state);
 
 
+protected:
     /**
      * Implementation of Runable interface method (Thread class).
      * Controls processing requests queue for processing timeouts.
      */
-    virtual int Execute();
+    virtual int doExecute();
 
 private:
 

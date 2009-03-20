@@ -29,6 +29,7 @@ public:
 
 // ============================
 
+/*
 class FieldIsNullException: public PvapException
 {
 public:
@@ -41,20 +42,17 @@ public:
     }
     virtual ~FieldIsNullException() throw() {}
 };
+ */
 
 class NotImplementedException : public PvapException
 {
 public:
     NotImplementedException(const char* field) :
-    PvapException( PvssException::UNKNOWN )
-    {
-        message = "Processing of ";
-        message += field;
-        message += " field is not implemented yet";
-    }
+    PvapException(PvssException::UNKNOWN, uint32_t(-1), "Processing of field '%s' is not impl yet", field) {}
     virtual ~NotImplementedException() throw() {}
 };
 
+/*
 class MandatoryFieldMissingException : public PvapException 
 {
 public:
@@ -67,17 +65,13 @@ public:
     }
     virtual ~MandatoryFieldMissingException() throw(){}
 };
+ */
 
 class DuplicateFieldException : public PvapException
 {
 public:
-    DuplicateFieldException( bool isRequest, const char* field, int seqNum ) :
-    PvapException(isRequest,seqNum)
-    {
-        message="Duplicate field ";
-        message+=field;
-        message+" found.";
-    }
+    DuplicateFieldException( bool isRequest, const char* field, uint32_t seqNum ) :
+    PvapException(getExcType(isRequest),seqNum,"Duplicate field '%s' found", field) {}
     ~DuplicateFieldException()throw(){}
 };
 
@@ -88,10 +82,12 @@ public:
     PvapSerializationException( uint32_t seqNum, const char* msg, ... ) :
     PvapException(PvssException::UNKNOWN,seqNum) {
         SMSC_UTIL_EX_FILL(msg);
+        showSeqNum();
     }
     PvapSerializationException( bool isreq, uint32_t seqNum, const char* msg, ... ) :
-    PvapException(isreq,seqNum) {
+    PvapException(getExcType(isreq),seqNum) {
         SMSC_UTIL_EX_FILL(msg);
+        showSeqNum();
     }
 };
 
@@ -99,9 +95,10 @@ public:
 class MessageIsBrokenException : public PvapException
 {
 public:
-    MessageIsBrokenException( bool isreq, const std::string& msg, uint32_t seqNum ) :
-    PvapException(isreq,seqNum) {
-        message = msg;
+    MessageIsBrokenException( bool isreq, uint32_t seqNum, const char* fmt, ... ) :
+    PvapException(getExcType(isreq),seqNum) {
+        SMSC_UTIL_EX_FILL(fmt);
+        showSeqNum();
     }
 };
 
@@ -121,46 +118,22 @@ public:
 class InvalidMessageTypeException : public PvapException 
 {
 public:
-    InvalidMessageTypeException(uint32_t seqNum, int tag, const char* messageName = "") :
-    PvapException(true,seqNum,tag)
-    {
-        char buf[32];
-        sprintf(buf,"%u",tag);
-        message="Unexpected tag in message '";
-        message+=messageName;
-        message+="':";
-        message+=buf;
-    }
+    InvalidMessageTypeException(uint32_t seqNum, int tag) :
+    PvapException(UNKNOWN,seqNum,"Unexpected message type: %d",tag) {}
 };
 
 class InvalidFieldTypeException : public PvapException 
 {
 public:
     InvalidFieldTypeException(bool isRequest, const char* messageName, uint32_t seqNum, int tag ) :
-    PvapException(isRequest,seqNum,tag)
-    {
-        char buf[32];
-        sprintf(buf,"%u",tag);
-        message="Unexpected tag in message '";
-        message+=messageName;
-        message+="':";
-        message+=buf;
-    }
+    PvapException(getExcType(isRequest),seqNum,"Invalid tag (%d) in message %s", tag, messageName) {}
 };
 
 class UnexpectedSeqNumException : public PvapException
 {
 public:
-    UnexpectedSeqNumException( int tag, const char* messageName = "") :
-    PvapException(PvssException::UNKNOWN)
-    {
-        char buf[32];
-        sprintf(buf,"%u",tag);
-        message="Unexpected seqNum in message '";
-        message+=messageName;
-        message+="':";
-        message+=buf;
-    }
+    UnexpectedSeqNumException(uint32_t seqNum) :
+    PvapException(PvssException::UNKNOWN,seqNum,"Unexpected seqNum in message") {}
 };
 
 /*

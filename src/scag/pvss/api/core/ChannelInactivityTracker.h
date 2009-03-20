@@ -118,7 +118,8 @@ public:
         started = false;
     }
 
-    virtual int Execute()
+protected:
+    virtual int doExecute()
     {
         smsc_log_info(log_,"executing %s...", taskName() );
         run();

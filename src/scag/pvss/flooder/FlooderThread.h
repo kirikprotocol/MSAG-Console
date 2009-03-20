@@ -55,7 +55,7 @@ class AsyncFlooderThread : public FlooderThread
 public:
     AsyncFlooderThread( FlooderStat&      flooderStat ) :
     FlooderThread(flooderStat) {}
-    virtual int Execute();
+    virtual int doExecute();
 };
 
 class SyncFlooderThread : public FlooderThread
@@ -63,7 +63,7 @@ class SyncFlooderThread : public FlooderThread
 public:
     SyncFlooderThread( FlooderStat&          flooderStat) :
     FlooderThread(flooderStat) {}
-    virtual int Execute();
+    virtual int doExecute();
 };
 
 } // namespace flooder

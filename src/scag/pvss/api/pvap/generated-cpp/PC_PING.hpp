@@ -80,7 +80,7 @@ public:
                 if ( tag == -1 ) break;
                 switch(tag) {
                 default:
-                    throw InvalidFieldTypeException(data_->isRequest(),"invalid field in PC_PING", data_->getSeqNum(),tag);
+                    throw InvalidFieldTypeException(data_->isRequest(),"PC_PING", data_->getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( exceptions::IOException e ) {
@@ -101,7 +101,7 @@ protected:
     {
         // using parent check
         if ( !data_->isValid() ) {
-            throw MessageIsBrokenException(data_->isRequest(), "message PC_PING is broken: " + toString(), data_->getSeqNum() );
+            throw MessageIsBrokenException(data_->isRequest(), data_->getSeqNum(), "message PC_PING is broken: %s",data_->toString().c_str());
         }
     }
 

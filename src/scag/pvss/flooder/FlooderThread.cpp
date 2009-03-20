@@ -30,7 +30,7 @@ std::auto_ptr<Request> FlooderThread::generate()
 }
 
 
-int AsyncFlooderThread::Execute()
+int AsyncFlooderThread::doExecute()
 {
     smsc::core::synchronization::EventMonitor em;
     MutexGuard mg(em);
@@ -50,7 +50,7 @@ int AsyncFlooderThread::Execute()
 }
 
 
-int SyncFlooderThread::Execute()
+int SyncFlooderThread::doExecute()
 {
     while ( ! isStopping ) {
         if ( stat_.isStopped() ) break;

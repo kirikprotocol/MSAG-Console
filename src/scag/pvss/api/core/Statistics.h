@@ -36,8 +36,8 @@ struct Statistics
         util::msectime_type e10ms = elapsedTime/10;
         if ( e10ms <= 0 ) e10ms = 1;
         snprintf(buf,sizeof(buf),
-                 "elapsed=%ldms req/resp/err=%u/%u/%u sent/fail=%u/%u, speed(1/s): req/resp/err=%u/%u/%u sent/fail=%u/%u",
-                 long(elapsedTime), requests, responses, errors, sent, failed,
+                 "elapsed=%lds req/resp/err=%u/%u/%u sent/fail=%u/%u, speed(1/s): req/resp/err=%u/%u/%u sent/fail=%u/%u",
+                 long(elapsedTime/1000), requests, responses, errors, sent, failed,
                  unsigned(requests*100/e10ms), unsigned(responses*100/e10ms), unsigned(errors*100/e10ms),
                  unsigned(sent*100/e10ms), unsigned(failed*100/e10ms)
                  );

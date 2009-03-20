@@ -192,7 +192,7 @@ public:
                     break;
                 }
                 default:
-                    throw InvalidFieldTypeException(data_->isRequest(),"invalid field in PC_GET", data_->getSeqNum(),tag);
+                    throw InvalidFieldTypeException(data_->isRequest(),"PC_GET", data_->getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( exceptions::IOException e ) {
@@ -213,7 +213,7 @@ protected:
     {
         // using parent check
         if ( !data_->isValid() ) {
-            throw MessageIsBrokenException(data_->isRequest(), "message PC_GET is broken: " + toString(), data_->getSeqNum() );
+            throw MessageIsBrokenException(data_->isRequest(), data_->getSeqNum(), "message PC_GET is broken: %s",data_->toString().c_str());
         }
     }
 

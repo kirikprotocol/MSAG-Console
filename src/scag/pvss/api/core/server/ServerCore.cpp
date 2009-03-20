@@ -77,7 +77,7 @@ void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // throw
     try {
         sendResponse(context);
     } catch (std::exception& e) {
-        smsc_log_debug(log_,"exception: %s",e.what());
+        smsc_log_debug(log_,"exception(%u): %s", __LINE__, e.what());
         context->setState(ServerContext::FAILED);
         reportContext(context);
     }
@@ -90,7 +90,7 @@ void ServerCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channe
         if ( !packet.get() || !packet->isRequest() || !packet->isValid() )
             throw PvssException(PvssException::BAD_REQUEST,"Received packet isnt valid PVAP request");
     } catch ( PvssException& e ) {
-        smsc_log_error(log_,"exception: %s",e.what());
+        smsc_log_error(log_,"exception(%u): %s",__LINE__,e.what());
         return;
     }
 
@@ -145,6 +145,8 @@ void ServerCore::startup( SyncDispatcher& dispatcher ) throw (PvssException)
     MutexGuard mg(startMutex_);
     if (started_) return;
 
+    smsc_log_info(log_,"Starting PVSS sync server %s", getConfig().toString().c_str() );
+
     syncDispatcher_ = &dispatcher;
 
     startupIO();
@@ -177,6 +179,8 @@ void ServerCore::startup( AsyncDispatcher& dispatcher ) throw (PvssException)
     if (started_) return;
     MutexGuard mg(startMutex_);
     if (started_) return;
+
+    smsc_log_info(log_,"Starting PVSS async server %s", getConfig().toString().c_str() );
 
     startupIO();
     try {
@@ -262,7 +266,7 @@ void ServerCore::shutdown()
 }
 
 
-int ServerCore::Execute()
+int ServerCore::doExecute()
 {
     const int minTimeToSleep = 10; // 10 msec
     util::msectime_type timeToSleep = getConfig().getProcessTimeout();
@@ -383,12 +387,12 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         // seqNum = uint32_t(-1);
 
     } catch (std::exception& e) {
-        smsc_log_error(log_, "exception: %s",e.what());
+        smsc_log_debug(log_, "exception(%u): %s",__LINE__,e.what());
         try {
             ctx->setResponse(new ErrorResponse(seqNum,status,e.what()));
             sendResponse(ctx);
         } catch (std::exception& e) {
-            smsc_log_error(log_,"exception: %s", e.what());
+            smsc_log_error(log_,"exception(%u): %s", __LINE__, e.what());
         }
     }
 }

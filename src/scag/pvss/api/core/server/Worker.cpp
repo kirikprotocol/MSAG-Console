@@ -28,7 +28,7 @@ void Worker::shutdown()
 }
 
 
-int Worker::Execute()
+int Worker::doExecute()
 {
     std::auto_ptr<ServerContext> context;
     while ( true ) {

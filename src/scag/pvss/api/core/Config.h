@@ -34,6 +34,9 @@ public:
     static const int DEF_PROCESS_TIMEOUT = 10;       // 10 msec
     static const int MAX_PROCESS_TIMEOUT = 1000;     // 1 sec
 
+    static const util::msectime_type MIN_STATISTICS_INTERVAL = 1000;
+    static const util::msectime_type DEF_STATISTICS_INTERVAL = 10000;
+
 public:
     int getChannelQueueSizeLimit() const {
         return channelQueueSizeLimit_;
@@ -137,6 +140,18 @@ public:
         this->writersCount_ = writersCount;
     }
 
+    /// NOTE: if <= 0 then it is disabled
+    util::msectime_type getStatisticsInterval() const {
+        return statisticsInterval_;
+    }
+    void setStatisticsInterval( util::msectime_type stat ) {
+        if ( stat < 0 ) stat = 0;
+        if ( stat > 0 && stat < MIN_STATISTICS_INTERVAL )
+            throw ConfigException("Statistics collection interval can't be less than %lld",
+                                  MIN_STATISTICS_INTERVAL);
+        this->statisticsInterval_ = stat;
+    }
+
     Config() :
     channelQueueSizeLimit_(DEF_CHANNEL_QUEUE_SIZE),
     packetSizeLimit_(MAX_PACKET_SIZE),
@@ -148,8 +163,22 @@ public:
     ioTimeout_(DEF_IO_TIMEOUT),
     inactivityTime_(DEFAULT_INACTIVITY_TIME),
     connectTimeout_(DEF_CONNECT_TIMEOUT),
-    processTimeout_(DEF_PROCESS_TIMEOUT)
+    processTimeout_(DEF_PROCESS_TIMEOUT),
+    statisticsInterval_(DEF_STATISTICS_INTERVAL)
     {}
+
+    std::string toString() const {
+        char buf[512];
+        snprintf(buf,sizeof(buf),"host=%s port=%d packetSize=%d channelQueueSize=%d readers/writers=%d/%d channelsPerR/W=%d/%d tmo(io/inact/conn/proc)=%ld/%ld/%ld/%ld statPeriod=%ld",
+                 host_.c_str(),int(port_)&0xffff, 
+                 packetSizeLimit_, channelQueueSizeLimit_,
+                 readersCount_, writersCount_,
+                 maxReaderChannelsCount_,
+                 maxWriterChannelsCount_,
+                 long(ioTimeout_), long(inactivityTime_), long(connectTimeout_), long(processTimeout_),
+                 long(statisticsInterval_));
+        return buf;
+    }
 
 private:
     int channelQueueSizeLimit_;
@@ -166,6 +195,7 @@ private:
     util::msectime_type   inactivityTime_; // ping time in msecs
     util::msectime_type   connectTimeout_;
     util::msectime_type   processTimeout_;
+    util::msectime_type   statisticsInterval_;
 };
 
 } // namespace core

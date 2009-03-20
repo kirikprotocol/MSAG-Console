@@ -12,6 +12,7 @@ scag/pvss_new                            pvss          \
         -lscag-pvss-base \
         -lscag-pvss-data \
 	-lscag-pvss-profile \
+        -lscag-pvss-common \
         -lscag-util-storage \
 	-lscag-util-multiplexer \
 	-lscag-util \

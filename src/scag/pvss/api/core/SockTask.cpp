@@ -5,7 +5,7 @@ namespace scag2 {
 namespace pvss {
 namespace core {
 
-int SockTask::Execute()
+int SockTask::doExecute()
 {
     smsc_log_info(log_,"Starting %s", taskName());
 
