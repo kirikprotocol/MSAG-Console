@@ -18,19 +18,19 @@ class Response : public Packet
 public:
     enum StatusType {
     // business logics messages (infos?): range [0..15]
-            OK = 0,
-            PROPERTY_NOT_FOUND = 1,
-            TYPE_INCONSISTENCE = 2,
+            OK                 = 0x00,
+            PROPERTY_NOT_FOUND = 0x01,
+            TYPE_INCONSISTENCE = 0x02,
     // protocol messages (warnings): range [16..31]
-            BAD_REQUEST = 16,
+            BAD_REQUEST        = 0x10,
     // generic severe failures (errors?): range [32..47]
-            ERROR = 32,
-            NOT_SUPPORTED = 33,
-            SERVER_SHUTDOWN = 34,
-            SERVER_BUSY = 35,
-            REQUEST_TIMEOUT = 36,
+            ERROR              = 0x20,
+            NOT_SUPPORTED      = 0x21,
+            SERVER_SHUTDOWN    = 0x22,
+            SERVER_BUSY        = 0x23,
+            REQUEST_TIMEOUT    = 0x24,
     // unknown
-            UNKNOWN = 255
+            UNKNOWN            = 0xff
     };
 
     static const char* statusToString( StatusType stat )
