@@ -3,7 +3,7 @@
 
 # binary name                            source name     libraries         
 
-scag/pvss_new                            pvss          \
+scag/pvss                            pvss          \
         -lscag-pvss-pvss \
         -lscag-pvss-pvss-old \
         -lscag-pvss-api-core-server \
