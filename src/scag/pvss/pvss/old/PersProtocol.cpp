@@ -208,8 +208,10 @@ uint8_t PersProtocol::SerialBufferResponseVisitor::getResponseStatus(Response::S
   case Response::BAD_REQUEST        : return perstypes::RESPONSE_BAD_REQUEST;
   case Response::TYPE_INCONSISTENCE : return perstypes::RESPONSE_TYPE_INCONSISTENCE;
   case Response::NOT_SUPPORTED      : return perstypes::RESPONSE_NOTSUPPORT;
+  case Response::SERVER_SHUTDOWN    : return perstypes::RESPONSE_ERROR;
+  case Response::REQUEST_TIMEOUT    : return perstypes::RESPONSE_ERROR;
   case Response::UNKNOWN            : return 0;
-    default: return 0;
+    default: return status > Response::ERROR ? perstypes::RESPONSE_ERROR : 0;
   }
 }
 
