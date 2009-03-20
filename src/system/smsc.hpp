@@ -641,6 +641,9 @@ protected:
   bool   ussdV1Enabled;
   bool   ussdV1UseOrigEntityNumber;
   time_t startTime;
+  std::string localInst;
+  std::string remoteInst;
+  std::string CPMgmtAddress;
 
   int schedulerSoftLimit;
   int schedulerHardLimit;

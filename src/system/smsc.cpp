@@ -963,7 +963,11 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   {
     __warning2__("mapIOTasksCount set to default %d",mapIOTasksCount);
   }
-
+#ifdef EIN_HD
+    localInst=cfg.cfgman->getString("map.localInstancies");
+    remoteInst=cfg.cfgman->getString("map.remoteInstancies");
+    CPMgmtAddress=cfg.cfgman->getString("map.cpMgmtAddress");
+#endif
     smsc_log_info(log, "MR cache loaded" );
 
   {
@@ -1401,6 +1405,10 @@ void Smsc::run()
                                      allowCallBarred,ussdV1Enabled,ussdV1UseOrigEntityNumber,nodeIndex,nodesCount);
     mapioptr=mapio;
     //tp.startTask(mapio);
+#ifdef EIN_HD
+    mapio->initInstances(localInst,remoteInst);
+    mapio->setCPMgmtAddress(CPMgmtAddress);
+#endif
     mapio->setMapIoTaskCount(mapIOTasksCount);
     mapio->Start();
     mapiostarted.Wait();
