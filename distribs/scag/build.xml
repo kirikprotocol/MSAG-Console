@@ -393,7 +393,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
     <target name="-make.pvss" depends="makedeps" if="SETUP_MAKE_PVSS">
         <echo>Building pvss</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
-            <property name="targets" value="scag.pvss.server"/>
+            <property name="targets" value="scag.pvss.pvss"/>
         </ant>
     </target>
 
@@ -906,16 +906,16 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <symlink resource=".base/logs" link="${DISTR_DIR}/services/pvss"/>
         <symlink resource=".base/lib" link="${DISTR_DIR}/services/pvss"/>
         <symlink resource="../.base/conf/configuration.dtd"    link="${DISTR_DIR}/services/pvss/conf"/>
-        <copy tofile="${DISTR_DIR}/services/pvss/logger.properties" file="${TEMPL_DIR}/logger/msag_mtpers.logger">
+        <copy tofile="${DISTR_DIR}/services/pvss/logger.properties" file="${TEMPL_DIR}/logger/pvss.logger">
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
-        <copy tofile="${DISTR_DIR}/services/pvss/bin/service" file="${TEMPL_DIR}/service/msag_mtpers">
+        <copy tofile="${DISTR_DIR}/services/pvss/bin/service" file="${TEMPL_DIR}/service/pvss">
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
         <chmod file="${DISTR_DIR}/services/pvss/bin/service" perm="755"/>
         <copy todir="${DISTR_DIR}/services/pvss/conf"
               flatten="yes">
-            <fileset dir="${TEMPL_DIR}/scag/mtpers" includes="config.xml"/>
+            <fileset dir="${TEMPL_DIR}/pvss" includes="config.xml"/>
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
         <mkdir dir="${pvss.storage_dir}" description="create pvss storage dir"/>
