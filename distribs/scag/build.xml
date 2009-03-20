@@ -82,15 +82,19 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
         <available property="PROTOGEN"
                    value="protogen"
                    file="protogen"
-                   filepath="${PATH}"/>
+                   filepath="${env.PATH}"/>
         <condition property="PROTOGEN" value="${BUILD_DIR}/bin/protogen">
             <and>
                 <not><isset property="PROTOGEN"/></not>
                 <available file="${BUILD_DIR}/bin/protogen"/>
             </and>
         </condition>
-        <fail unless="PROTOGEN"
-              message="Protogen is not found.  If you have it somewhere, you may specify it on command line via -DPROTOGEN=full-path-to-protogen"/>
+        <fail unless="PROTOGEN">.
+*** Protogen is not found! ***
+PATH=${env.PATH}.
+It was also looked for in ${BUILD_DIR}/bin.
+If you have it somewhere, you may specify it on command line via -DPROTOGEN=full-path-to-protogen.
+        </fail>
     </target>
 
 
@@ -153,7 +157,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
     </target>
 
     <target name="pvap"
-            description="-&gt; generation of personalization protocol via protogen"
+            description="-&gt; generation of personalization PDUs via protogen"
             depends="-check.protogen">
         <fail if="SETUP_DONE" message="You should specify 'pvap' before any actions"/>
         <property name="SETUP_MAKE_PVAP" value="true"/>
@@ -402,35 +406,31 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
 
     <target name="-make.pvap" if="SETUP_MAKE_PVAP">
         <echo>Generating PVAP protocol</echo>
-        <delete dir="${SRC_DIR}/scag/pvss/pvap/generated-cpp"
-                failonerror="false"/>
-        <delete file="${SRC_DIR}/scag/pvss/pvap/generated-java"
-                failonerror="false"/>
+        <delete failonerror="false">
+            <fileset dir="${SRC_DIR}/scag/pvss/api/pvap/generated-cpp" includes="*.hpp"/>
+            <fileset dir="${SRC_DIR}/scag/pvss/api/pvap/generated-cpp" includes="*.cpp"/>
+        </delete>
         <symlink action="delete"
-                 link="${SRC_DIR}/scag/pvss/pvap/generated-java"
+                 link="${SRC_DIR}/scag/pvss/api/pvap/generated-java"
                  failonerror="false"/>
-        <delete dir="${SMSC_DIR}/../whoisd/pvss/src/com/eyelinecom/whoisd/pvss/pvap/protocol/pdu"
-                failonerror="false"/>
-
+        <delete failonerror="false">
+            <fileset dir="${SMSC_DIR}/../whoisd/pvss/src/com/eyelinecom/whoisd/pvss/pvap/protocol/pdu" includes="*.java"/>
+        </delete>
         <mkdir dir="${SMSC_DIR}/../whoisd/pvss/src/com/eyelinecom/whoisd/pvss/pvap/protocol/pdu"/>
-        <mkdir dir="${SRC_DIR}/scag/pvss/pvap/generated-cpp"/>
-        <exec executable="ln" dir="${SRC_DIR}/scag/pvss/pvap">
+        <mkdir dir="${SRC_DIR}/scag/pvss/api/pvap/generated-cpp"/>
+        <exec executable="ln" dir="${SRC_DIR}/scag/pvss/api/pvap">
             <arg value="-s"/>
             <arg value="${SMSC_DIR}/../whoisd/pvss/src/com/eyelinecom/whoisd/pvss/pvap/protocol/pdu"/>
             <arg value="generated-java"/>
         </exec>
+
         <echo>Running protogen on PVAP definition files...</echo>
-        <exec executable="${PROTOGEN}" dir="${SRC_DIR}/scag/pvss/pvap" failonerror="true">
+        <exec executable="${PROTOGEN}" dir="${SRC_DIR}/scag/pvss/api/pvap" failonerror="true">
             <arg value="pvap2.0.cgp"/>
         </exec>
-        <exec executable="${PROTOGEN}" dir="${SRC_DIR}/scag/pvss/pvap" failonerror="true">
+        <exec executable="${PROTOGEN}" dir="${SRC_DIR}/scag/pvss/api/pvap" failonerror="true">
             <arg value="pvapbc2.0.cgp"/>
         </exec>
-        <!-- mkdir dir="${SRC_DIR}/scag/pvss/pvap/generated-cpp"/>
-        <delete file="${SRC_DIR}/scag/pvss/pvap/generated-java"/>
-        <mkdir dir="${SMSC_DIR}/../whoisd/pvss/src/com/eyelinecom/whoisd/pvss/pvap/protocol/pdu"/>
-        <symlink resource="${SMSC_DIR}/../whoisd/pvss/src/com/eyelinecom/whoisd/pvss/pvap/protocol/pdu" 
-                 link="${SRC_DIR}/scag/pvss/pvap/generated-java"/ -->
     </target>
 
     <target name="-make.pvgw" depends="makedeps" if="SETUP_MAKE_PVGW">
@@ -555,7 +555,7 @@ Os is: ${os.name}, ${os.arch}, ${os.version}
     </target>
 
     <target name="make" 
-            depends="-setupdone, -make.scag, -make.msag, -make.pers, -make.pers.upload, -make.pvss, -make.pvss.flooder, -make.pvap, -make.pvgw, -make.pvcp, -make.admin, -make.webapp, -make.jedit, -make.src"
+            depends="-setupdone, -make.pvap, -make.scag, -make.msag, -make.pers, -make.pers.upload, -make.pvss, -make.pvss.flooder, -make.pvgw, -make.pvcp, -make.admin, -make.webapp, -make.jedit, -make.src"
             unless="MAKE_DONE">
         <!-- description="Action: Compile previously selected targets" -->
         <!-- antcall target="makedeps"/ -->
