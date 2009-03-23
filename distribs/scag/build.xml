@@ -347,7 +347,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <copy todir="${BUILD_DIR}/config/templates" preservelastmodified="true">
             <fileset dir="${SMSC_DIR}/config/templates"
                      defaultexcludes="no"
-                     includes="*.sh logger/** scag/** scag2/** service/**"
+                     includes="*.sh logger/** pvss/** scag/** scag2/** service/**"
                      excludes="*~"/>
         </copy>
         <chmod perm="755">
