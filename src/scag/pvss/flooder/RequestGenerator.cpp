@@ -39,7 +39,7 @@ using namespace exceptions;
 
 RequestGenerator::RequestGenerator() :
 abonents_(1),
-addressFormat_("791%08d"),
+addressFormat_(".1.1.791%08u"),
 profileKeys_(0),
 abonentIdx_(0)
 {}

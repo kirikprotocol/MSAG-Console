@@ -130,7 +130,7 @@ void FlooderStat::startup() throw (exceptions::IOException)
     if ( patterns.size() <= 0 ) throw exceptions::IOException("too few property patterns configured");
 
     // FIXME: take params from config
-    generator_.randomizeProfileKeys( config_.getProfileKeyFormat().c_str(), config_.getAddressesCount());
+    generator_.randomizeProfileKeys( config_.getAddressFormat().c_str(), config_.getAddressesCount());
     for ( std::vector< std::string >::const_iterator i = patterns.begin();
           i != patterns.end(); ++i ) {
         std::auto_ptr<Property> p( new Property );

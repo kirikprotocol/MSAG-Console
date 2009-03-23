@@ -27,13 +27,14 @@ public:
     int getFlooderThreadCount() const { return flooderThreads_; }
     void setFlooderThreadCount( int ftc ) { flooderThreads_ = ftc; }
 
-    const std::string& getProfileKeyFormat() const { static const std::string s(".1.1.791%08d"); return s; }
-
     const std::vector< std::string >& getPropertyPatterns() const { return patterns_; }
     void setPropertyPatterns( const std::vector< std::string >& pat ) { patterns_ = pat; }
 
     const std::string& getCommands() const { return commands_; }
     void setCommands( const std::string& cmds ) { commands_ = cmds; }
+
+    const std::string& getAddressFormat() const { return addressFormat_; }
+    void setAddressFormat( const std::string& af ) { addressFormat_ = af; }
 
     int getRequested() const { return 0; /* unlimited */ }
 
@@ -45,6 +46,7 @@ private:
     int     flooderThreads_;
     std::vector< std::string > patterns_;
     std::string                commands_;
+    std::string                addressFormat_;
 };
 
 } // namespace flooder

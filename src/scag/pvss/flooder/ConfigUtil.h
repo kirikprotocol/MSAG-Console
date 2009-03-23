@@ -104,6 +104,13 @@ void readFlooderConfig( smsc::logger::Logger* logger,
     } catch (...) {
         smsc_log_warn(logger, "Parameter <Flooder.commands> missed. Default value is %s", flooderConfig.getCommands().c_str());
     }
+
+    try {
+        flooderConfig.setAddressFormat( fview.getString("addressFormat") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <Flooder.addressFormat> missed. Default value is %s", flooderConfig.getAddressFormat().c_str());
+    }
+
 }
 
 }
