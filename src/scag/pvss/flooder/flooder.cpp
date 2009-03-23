@@ -46,7 +46,7 @@ extern "C" void atExitHandler(void)
 
 int main(int argc, char* argv[]) {
 
-  int speed = 1000; //req/sec
+  int speed = 0; //req/sec
   Logger* logger;
   Logger::Init();
 
@@ -155,8 +155,11 @@ int main(int argc, char* argv[]) {
     smsc::util::config::ConfigView flooderConfig(manager, "Flooder");
     
     try { 
-      speed = flooderConfig.getInt("speed");
+      if (speed <= 0) {
+        speed = flooderConfig.getInt("speed");
+      }
     } catch (...) {
+      speed = 100;
       smsc_log_warn(logger, "Parameter <Flooder.speed> missed. Defaul value is %d", speed);
     };
     int getsetCount = 1;
@@ -172,7 +175,24 @@ int main(int argc, char* argv[]) {
       smsc_log_warn(logger, "Parameter <Flooder.addressesCount> missed. Defaul value is %d", addressesCount);
     };
 
-    lcClient = new PvssFlooder(PersClient::Instance(), speed);
+    std::string addressFormat = "791%08u";
+    try {
+        std::string format = flooderConfig.getString("addressPrefix");
+        // checking that address prefix is numeric
+        char* endptr;
+        unsigned pfx = unsigned(strtoul(format.c_str(),&endptr,10));
+        if ( *endptr != '\0' ) throw std::runtime_error("wrong address prefix");
+        char buf[40];
+        snprintf(buf,sizeof(buf),"%u",pfx);
+        if ( strlen(buf) > 10 ) throw std::runtime_error("too long prefix");
+        format = buf;
+        snprintf(buf,sizeof(buf),"%s%%0%uu",format.c_str(),11-format.size());
+        addressFormat = buf;
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <Flooder.addressPrefix> missed or wrong. Default value is %s", addressFormat.c_str());
+    }
+
+    lcClient = new PvssFlooder(PersClient::Instance(), speed, addressFormat);
     CallsCounter counter(lcClient, 5);
 
     lcClient->execute(addressesCount, getsetCount);

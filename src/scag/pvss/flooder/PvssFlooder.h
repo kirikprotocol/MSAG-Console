@@ -28,8 +28,8 @@ static const uint32_t MAX_PROC_TIME = 10000;
 class PvssFlooder : public pvss::PersCallInitiator
 {
 public:
-    PvssFlooder(pvss::PersClient& pc, int speed):persClient_(pc), isStopped_(false), callsCount_(0), logger_(Logger::getInstance("flooder")),
-                                          speed_(speed > 0 ? speed : 1), delay_(1000000/speed_), overdelay_(0), startTime_(0),
+    PvssFlooder(pvss::PersClient& pc, int speed, const string& addressFormat):persClient_(pc), isStopped_(false), callsCount_(0), logger_(Logger::getInstance("flooder")),
+                                          addressFormat_(addressFormat), speed_(speed > 0 ? speed : 1), delay_(1000000/speed_), overdelay_(0), startTime_(0),
                                           busyRejects_(0), maxRejects_(1000), sentCalls_(0), successCalls_(0), errorCalls_(0), procTime_(0),
                                           maxprocTime_(0), minprocTime_(MAX_PROC_TIME)  {};
   void execute(int addrsCount, int getsetCount);
@@ -64,6 +64,7 @@ private:
   bool isStopped_;
   uint32_t callsCount_;
   Logger* logger_;
+  string addressFormat_;
   int speed_; //req/sec
   int delay_;
   int overdelay_;

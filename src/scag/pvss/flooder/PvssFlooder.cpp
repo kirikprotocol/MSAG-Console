@@ -22,6 +22,8 @@ namespace scag2 {
 namespace pvss { 
 namespace flooder {
 
+static const size_t MASK_SIZE = 3;
+
 void PvssFlooder::execute(int addrsCount, int getsetCount) {
 
   smsc_log_info(logger_, "execution...");
@@ -37,14 +39,15 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
 
   unsigned number = 0;
   int iterCount = 0;
+  srand(time(NULL));
   while (!isStopped_) {
   //while (iterCount == 0) {
     number = (rand() * RAND_MAX + 1) | (rand() + 1);
     number = number % addrsCount;
-    sprintf(addr, "791%08d", number);			
+    snprintf(addr, sizeof(addr), addressFormat_.c_str(), number);			
     //commandsSetConfigured(addr);
-    //commandsSetConfigured(addr, number, "test_abnt_prop", PT_ABONENT, getsetCount);
-    commandsSet(addr, number, "test_serv_prop", PT_ABONENT);
+    commandsSetConfigured(addr, number, "test_abnt_prop", PT_ABONENT, getsetCount);
+    //commandsSet(addr, number, "test_serv_prop", PT_ABONENT);
     ++iterCount;
     //number = number > addrsCount ? 0 : number + 1;
   }
@@ -137,10 +140,10 @@ PersCall* PvssFlooder::createPersCall( ProfileType pfType,
                                         int intKey,
                                         std::auto_ptr<PersCommand> cmd )
 {
-    startTime_ = gethrtime();
-    hrtime_t* st = new hrtime_t;
-    *st = startTime_;
-    PersCall* call = new PersCall( pfType, cmd.release(), st );
+    //startTime_ = gethrtime();
+    //hrtime_t* st = new hrtime_t;
+    //*st = startTime_;
+    PersCall* call = new PersCall( pfType, cmd.release(), 0 );
     //PersCall* call = new PersCall( pfType, cmd.release(), 0 );
     if (pfType == PT_ABONENT) {
         call->setKey(addr);
@@ -154,13 +157,17 @@ void PvssFlooder::delay() {
   hrtime_t procTime = gethrtime() - startTime_;
   //hrtime_t procTime = procTime_;
   //procTime += procTime / 10;
+
   procTime /= 1000;
+  smsc_log_debug(logger_, "delay=%d procTime=%d", delay_, procTime);
+
   if (delay_ > procTime + overdelay_) {
     startTime_ = gethrtime();
     unsigned sleepTime = delay_ - procTime - overdelay_;
-    __trace2__("try to sleep:%d ms", sleepTime);
+    __trace2__("try to sleep:%d ms, delay=%d ns", sleepTime, delay_);
     millisleep(sleepTime);
     overdelay_ = (gethrtime() - startTime_) / 1000 - sleepTime;
+    //overdelay_ = (gethrtime() - startTime_) / 1000 - sleepTime;
   } else {
     __trace2__("overdelay:%d", overdelay_);
     overdelay_ -= delay_;
