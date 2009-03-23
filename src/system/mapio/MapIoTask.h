@@ -284,14 +284,14 @@ struct MapDialog{
 
   MapDialog()
   {
-    InitDialog(0,0,0);
+    InitDialog(0,0,0,2);
   }
-  MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,uint8_t argInstanceId=0,unsigned argVersion=2)
+  MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,uint8_t argInstanceId,unsigned argVersion)
   {
-    InitDialog(dialogid,lssn,argVersion);
+    InitDialog(dialogid,lssn,argInstanceId,argVersion);
   }
 
-  void InitDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,uint8_t argInstanceId=0,unsigned argVersion=2)
+  void InitDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,uint8_t argInstanceId,unsigned argVersion)
   {
     dlgType=MAPSTAT_DLGOUT;
     isUSSD=false;
@@ -617,6 +617,7 @@ public:
   {
     for(int n=0;n<allInstCount;n++)
     {
+      __mapproxy_trace2__("Init instance/ssn %d/%d",allInst[n],lssn);
       if(dlgPool[lssn][allInst[n]])return;
       dlgPool[lssn][allInst[n]]=new MapDialog*[65536];
       for(int i=0;i<65536;i++)
@@ -761,38 +762,36 @@ public:
     return lock_map.Count();
   }
 
-  MapDialog* newDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn, unsigned version=2)
+  MapDialog* newDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn, EINSS7INSTANCE_T inst, unsigned version)
   {
-    if(!dlgPool[lssn])
+    if(!dlgPool[lssn][inst])
     {
-      throw Exception("DialogContainer: unsupported lssn:%d",lssn);
+      throw Exception("DialogContainer: unsupported lssn/inst:%d,%d",lssn,inst);
     }
-    int inst=0;//!!TODO!!
     MapDialog* dlg=dlgPool[lssn][inst][dialogueid];
     MutexGuard mg(dlg->mutex);
     if(dlg->isAllocated)
     {
       throw Exception("DialogContainer: attempt to allocate already allocated dialog:%d/%d",dialogueid,lssn);
     }
-    dlg->InitDialog(dialogueid,lssn,version);
+    dlg->InitDialog(dialogueid,lssn,inst,version);
     dlg->isAllocated=true;
     return dlg->AddRefUnlocked();
   }
 
-  MapDialog* newLockedDialogAndRef(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn,unsigned version,int dlgType)
+  MapDialog* newLockedDialogAndRef(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn,EINSS7INSTANCE_T inst,unsigned version,int dlgType)
   {
-    if(!dlgPool[lssn])
+    if(!dlgPool[lssn][inst])
     {
-      throw Exception("DialogContainer: unsupported lssn:%d",lssn);
+      throw Exception("DialogContainer: unsupported lssn/inst:%d,%d",lssn,inst);
     }
-    int inst=0;//!!TODO!!
     MapDialog* dlg=dlgPool[lssn][inst][dialogueid];
     MutexGuard mg(dlg->mutex);
     if(dlg->isAllocated)
     {
       throw Exception("DialogContainer: attempt to allocate already allocated dialog:%d/%d",dialogueid,lssn);
     }
-    dlg->InitDialog(dialogueid,lssn,version);
+    dlg->InitDialog(dialogueid,lssn,inst,version);
     dlg->isAllocated=true;
     dlg->isLocked=true;
     dlg->dlgType=dlgType;
@@ -801,9 +800,9 @@ public:
 
   MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn,EINSS7INSTANCE_T inst)
   {
-    if(dlgPool[lssn]==0)
+    if(dlgPool[lssn][inst]==0)
     {
-      throw Exception("Unsupported ssn:%d",lssn);
+      throw Exception("getDialog: unsupported ssn/inst:%d,%d",lssn,inst);
     }
     return dlgPool[lssn][inst][dialogueid]->AddRefIfAllocated();
   }
@@ -814,10 +813,10 @@ public:
       MutexGuard g(sync);
       MAPSTATS_Update(MAPSTATS_GSMRECV);
     }
-    if(dlgPool[lssn]==0)
+    if(dlgPool[lssn][inst]==0)
     {
       EINSS7CpReleaseMsgBuffer(&msg);
-      throw Exception("Unsupported ssn:%d",lssn);
+      throw Exception("getLockedDialogOrEnqueue: unsupported ssn/inst:%d,%d",lssn,inst);
     }
     MapDialog* dlg=dlgPool[lssn][inst][dialogueid];
     MutexGuard mg(dlg->mutex);
@@ -874,7 +873,7 @@ public:
     __mapdlg_trace2__("created new dialog for dialogid 0x%x",dialogueid);
     try
     {
-      return newLockedDialogAndRef(dialogueid,lssn,version,isUSSD?MAPSTAT_DLGUSSD:MAPSTAT_DLGIN);
+      return newLockedDialogAndRef(dialogueid,lssn,rinst,version,isUSSD?MAPSTAT_DLGUSSD:MAPSTAT_DLGIN);
     } catch(std::exception& e)
     {
       MutexGuard g(sync);
@@ -901,7 +900,7 @@ public:
     try{
       ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool[lssn][rinst].front();
       MAPSTATS_Update(MAPSTATS_NEWDIALOG_INSRI);
-      MapDialog* dlg=newDialog(map_dialog,lssn,2);
+      MapDialog* dlg=newDialog(map_dialog,lssn,rinst,2);
       dlg->dlgType=MAPSTAT_DLGINSRI;
       dialogId_pool[lssn][rinst].pop_front();
       __mapdlg_trace2__("create new 'IMSI' dialog 0x%p for dialogid 0x%x",dlg,map_dialog);
@@ -919,7 +918,7 @@ public:
   MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd)
   {
     MapDialog* item=0;
-    int rinst=0;//!!TODO!!
+    int rinst=remInst[0];//!!TODO!!
     MutexGuard g(sync);
     {
       if ( dialogId_pool[lssn][rinst].empty() )
@@ -940,6 +939,7 @@ public:
     }
     if(item)
     {
+      rinst=item->instanceId;
       // check if dialog is opened too long
       time_t curtime = time(NULL);
       if( curtime - item->lockedAt >= MAX_MT_LOCK_TIME )
@@ -1003,7 +1003,7 @@ public:
     try{
       ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool[lssn][rinst].front();
       MAPSTATS_Update(MAPSTATS_NEWDIALOG_OUT);
-      MapDialog* dlg=newDialog(map_dialog,lssn);
+      MapDialog* dlg=newDialog(map_dialog,lssn,rinst,2);
       dlg->dlgType=MAPSTAT_DLGOUT;
       dialogId_pool[lssn][rinst].pop_front();
       dlg->dialogid_smsc = smsc_did;
@@ -1026,7 +1026,7 @@ public:
   MapDialog* createOrAttachSMSCUSSDDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd)
   {
     ET96MAP_DIALOGUE_ID_T map_dialog;
-    int rinst=0;
+    int rinst=remInst[0];
     {
       MutexGuard g(sync);
       if ( dialogId_pool[lssn][rinst].empty() )
@@ -1047,7 +1047,7 @@ public:
     }
     MapDialog* dlg;
     try{
-      dlg = newDialog(map_dialog,lssn);
+      dlg = newDialog(map_dialog,lssn,rinst,2);
       dlg->dlgType=MAPSTAT_DLGNIUSSD;
       dlg->dialogid_smsc = smsc_did;
       dlg->abonent = abonent;

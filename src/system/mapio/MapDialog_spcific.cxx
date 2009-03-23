@@ -208,13 +208,14 @@ struct SMS_SUMBMIT_FORMAT_HEADER{
 
 struct MAP_SMS_ADDRESS{
   unsigned char len;
+  
 //  union{
-    struct{
-      unsigned char reserved_1:1;
-      unsigned char ton:3;
-      unsigned char npi:4;
-    }st;
-//    unsigned char tonpi;
+//    struct{
+//      unsigned char reserved_1:1;
+//      unsigned char ton:3;
+//      unsigned char npi:4;
+//    }st;
+    unsigned char tonnpi;
 //  };
   unsigned char val[10];
 };
@@ -457,9 +458,13 @@ extern void CloseAndRemoveDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T 
 extern void AbortAndRemoveDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
 
 inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
-  sa->setTypeOfNumber(ma->st.ton);
-  sa->setNumberingPlan(ma->st.npi);
-  if ( ma->st.ton == 5 )
+  //sa->setTypeOfNumber(ma->st.ton);                                                                                              
+  int ton=(ma->tonnpi&0x70)>>4;
+  sa->setTypeOfNumber(ton);
+  int npi=ma->tonnpi&0x0f;
+  //sa->setNumberingPlan(ma->st.npi);
+  sa->setNumberingPlan(npi);
+  if ( ton == 5 )
   {
     MicroString text;
     Convert7BitToText(ma->val,(ma->len*4)/7,&text,0); // len originally specified in usefull semioctets

@@ -67,11 +67,11 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
     oa = (MAP_SMS_ADDRESS*)(pdu->signalInfo+1);
     addr=sms->getOriginatingAddress();
   }
-  oa->st.ton = addr.getTypeOfNumber();
-  oa->st.npi = addr.getNumberingPlan();
-  oa->st.reserved_1 = 1;
+  int ton=addr.getTypeOfNumber()&0x07;
+  int npi=addr.getNumberingPlan();
+  oa->tonnpi = 0x80|(ton<<4)|(npi&0x0f);
   unsigned oa_length = (oa->len+1)/2;
-  if ( oa->st.ton == 5 )
+  if ( ton == 5 )
   {
     if (addr.getLength()>11) throw runtime_error(":MAP: invalid address length");
     unsigned tmpX = 0;
