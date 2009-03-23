@@ -10,7 +10,6 @@
 
 # include <eyeline/sua/sua_layer/io_dispatcher/Connection.hpp>
 # include <eyeline/sua/sua_layer/io_dispatcher/Link.hpp>
-# include <eyeline/utilx/Iterator.hpp>
 # include <logger/Logger.h>
 
 namespace eyeline {
@@ -57,13 +56,14 @@ private:
   smsc::logger::Logger* _logger;
 
 public:
-  class ConnectionIterator : public utilx::Iterator<Connection*> {
+  class ConnectionIterator {
   public:
-    virtual bool hasElement() const;
-    virtual void next();
-    virtual const_ref getCurrentElement() const;
-    virtual ref getCurrentElement();
-    virtual void deleteCurrentElement();
+    ~ConnectionIterator();
+    bool hasElement() const;
+    void next();
+    const Connection* getCurrentElement() const;
+    Connection* getCurrentElement();
+    void deleteCurrentElement();
   private:
     ConnectionIterator(connections_lst_t& container, smsc::core::synchronization::RWLock& lock);
     friend class LinkSet;
