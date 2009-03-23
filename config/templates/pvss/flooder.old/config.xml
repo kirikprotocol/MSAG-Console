@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+
+    <section name="PvssClient">
+        <param name="host" type="string">@pers.connect_host@</param>
+        <param name="port" type="int">@pers.port@</param>
+
+        <param name="ioTimeout" type="int">@pers.io_timeout@</param> <!--in miliseconds-->
+        <param name="pingTimeout" type="int">@pvss_flooder.ping_timeout@</param> <!--in seconds-->
+        <param name="reconnectTimeout" type="int">@pvss_flooder.connect_timeout@</param> <!--in seconds-->
+        <param name="maxWaitingRequestsCount" type="int">@pvss_flooder.queue_size@</param>
+        <param name="connections" type="int">@pvss_flooder.connections@</param>
+        <param name="async" type="bool">@pvss_flooder.async@</param>
+    </section>
+    
+    <section name="Flooder">
+	<param name="speed" type="int">@pvss_flooder.speed@</param> <!-- requests pers second -->
+	<param name="getsetCount" type="int">1</param>
+	<param name="addressesCount" type="int">@pvss_flooder.addresses_count@</param>
+    </section>
+
+</config>

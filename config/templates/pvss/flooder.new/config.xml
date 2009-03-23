@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+
+    <section name="PvssClient">
+        <param name="host" type="string">@pvss.connect_host@</param>
+        <param name="port" type="int">@pvss.async.port@</param>
+
+        <param name="ioTimeout" type="int">@pvss.async.io_timeout@</param> <!--in miliseconds-->
+        <param name="pingTimeout" type="int">@pvss_flooder.ping_timeout@</param> <!--in seconds-->
+        <param name="reconnectTimeout" type="int">@pvss_flooder.connect_timeout@</param> <!--in seconds-->
+        <param name="maxWaitingRequestsCount" type="int">@pvss_flooder.queue_size@</param>
+        <param name="connections" type="int">@pvss_flooder.connections@</param>
+        <param name="connPerThread" type="int">@pvss_flooder.conn_per_thread@</param>
+        <param name="async" type="bool">true</param> <!-- do we need this? -->
+    </section>
+    
+    <section name="Flooder">
+        <param name="speed" type="int">@pvss_flooder.speed@</param> <!-- requests pers second -->
+	<param name="addressesCount" type="int">@pvss_flooder.addresses_count@</param>
+        <param name="properties" type="int">2</param>
+        <param name="property.0" type="string">"test0" INT: 101 TIME_POLICY: INFINIT</param>
+        <param name="property.1" type="string">"test1" STRING: "hello, world" TIME_POLICY: INFINIT</param>
+        <param name="commands" type="string">s0s1i0m100I0B2g0g1b4g0g1d0d1</param>
+    </section>
+
+</config>
