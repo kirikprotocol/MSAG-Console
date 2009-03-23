@@ -317,7 +317,9 @@ int ServerCore::doExecute()
                     closeChannel(channel);
                     delete ctx;
                 } else {
-                    ctx->setError("timeout");
+                    try {
+                        ctx->setError("timeout");
+                    } catch (...) {}
                     context.reset(ctx);
                     reportContext(context);
                 }

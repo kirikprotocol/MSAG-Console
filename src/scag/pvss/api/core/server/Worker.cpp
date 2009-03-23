@@ -51,7 +51,9 @@ int Worker::doExecute()
                 Response* resp = logic_.process(*context->getRequest().get());
                 context->setResponse(resp);
             } catch (PvssException& e){
-                context->setError(e.getMessage());
+                try {
+                    context->setError(e.getMessage());
+                } catch (...) {}
             }
             core_.contextProcessed(context); // it will come back to the queue after sending response
             if ( !queue_.couldHaveRequests() ) {

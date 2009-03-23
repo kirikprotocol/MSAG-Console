@@ -1,6 +1,7 @@
 #ifndef _SCAG_PVSS_CORE_SERVER_SERVERCONTEXT_H
 #define _SCAG_PVSS_CORE_SERVER_SERVERCONTEXT_H
 
+#include "core/synchronization/Mutex.hpp"
 #include "scag/pvss/api/core/Context.h"
 #include "core/network/Socket.hpp"
 
@@ -55,8 +56,9 @@ public:
     virtual void sendResponse() throw (PvssException) = 0;
 
 private:
-    State         state_;
-    ContextQueue* respQueue_;
+    smsc::core::synchronization::Mutex setRespMutex_;
+    State                              state_;
+    ContextQueue*                      respQueue_;
     // PvssSocket& socket_;
 };
 
