@@ -114,8 +114,8 @@ int main( int argc, const char** argv )
 
     // --- reading speed from cmd line
     if ( argc > 1 ) {
-        unsigned newspeed = unsigned(atoi(argv[1]));
-        if ( newspeed == 0 ) {
+        unsigned newSpeed = unsigned(atoi(argv[1]));
+        if ( newSpeed == 0 ) {
             fprintf(stderr, "wrong speed specified on Command line: %s\n", argv[1]);
             exit(-1);
         } else {
