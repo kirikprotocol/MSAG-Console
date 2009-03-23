@@ -11,7 +11,6 @@
 # include <logger/Logger.h>
 
 # include <eyeline/utilx/Singleton.hpp>
-# include <eyeline/utilx/Iterator.hpp>
 # include <eyeline/utilx/ShutdownInProgressNotification.hpp>
 
 # include <eyeline/sua/communication/LinkId.hpp>

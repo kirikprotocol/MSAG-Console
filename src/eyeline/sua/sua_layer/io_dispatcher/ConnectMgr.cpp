@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <core/synchronization/MutexGuard.hpp>
 #include <eyeline/corex/io/network/Socket.hpp>
-#include <eyeline/utilx/Iterator.hpp>
 #include <eyeline/utilx/PreallocatedMemoryManager.hpp>
 #include <eyeline/sua/communication/TP.hpp>
 #include <eyeline/sua/sua_layer/io_dispatcher/ConnectMgr.hpp>
