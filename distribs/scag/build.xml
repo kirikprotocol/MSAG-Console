@@ -702,13 +702,13 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <mkdir dir="${DISTR_DIR}/pvss.flooder.old"/>
         <mkdir dir="${DISTR_DIR}/pvss.flooder.old/bin"/>
         <mkdir dir="${DISTR_DIR}/pvss.flooder.old/conf"/>
-        <copy file="${BUILD_DIR}/bin/scag/pvss_flooder" todir="${DISTR_DIR}/pvss.flooder.old/bin"/>
-        <chmod file="${DISTR_DIR}/pvss.flooder.old/bin/pvss_flooder" perm="755"/>
+        <copy file="${BUILD_DIR}/bin/scag/pvss_flooder" tofile="${DISTR_DIR}/pvss.flooder.old/bin/flooder"/>
+        <chmod file="${DISTR_DIR}/pvss.flooder.old/bin/flooder" perm="755"/>
         <mkdir dir="${DISTR_DIR}/pvss.flooder.new"/>
         <mkdir dir="${DISTR_DIR}/pvss.flooder.new/bin"/>
         <mkdir dir="${DISTR_DIR}/pvss.flooder.new/conf"/>
-        <copy file="${BUILD_DIR}/bin/scag/pvss-flooder2" todir="${DISTR_DIR}/pvss.flooder.new/bin"/>
-        <chmod file="${DISTR_DIR}/pvss.flooder.new/bin/pvss-flooder2" perm="755"/>
+        <copy file="${BUILD_DIR}/bin/scag/pvss-flooder2" todir="${DISTR_DIR}/pvss.flooder.new/bin/flooder"/>
+        <chmod file="${DISTR_DIR}/pvss.flooder.new/bin/flooder" perm="755"/>
     </target>
 
     <target name="-update.pvgw" depends="-update.libs" if="SETUP_MAKE_PVGW">
