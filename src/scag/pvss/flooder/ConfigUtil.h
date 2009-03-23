@@ -114,7 +114,7 @@ void readFlooderConfig( smsc::logger::Logger* logger,
         char buf[40];
         snprintf(buf,sizeof(buf),"%u",pfx);
         if ( strlen(buf) > 10 ) throw std::runtime_error("too long prefix");
-        std::string format(buf);
+        format = buf;
         snprintf(buf,sizeof(buf),"%s%%0%uu",format.c_str(),11-format.size());
         flooderConfig.setAddressFormat(buf);
     } catch (...) {
