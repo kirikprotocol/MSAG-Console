@@ -112,40 +112,43 @@ LinkSet::getIterator()
 }
 
 LinkSet::ConnectionIterator::ConnectionIterator(LinkSet::connections_lst_t& container, smsc::core::synchronization::RWLock& lock)
-  : _container(container), _iter(container.begin()), _endIter(container.end()), _lock(lock) {}
+  : _container(container), _iter(container.begin()), _endIter(container.end()), _lock(lock)
+{
+  _lock.wlock();
+}
+
+LinkSet::ConnectionIterator::~ConnectionIterator()
+{
+  _lock.unlock();
+}
 
 bool
 LinkSet::ConnectionIterator::hasElement() const
 {
-  smsc::core::synchronization::ReadLockGuard lock(_lock);
   return _iter != _endIter;
 }
 
 void
 LinkSet::ConnectionIterator::next()
 {
-  smsc::core::synchronization::ReadLockGuard lock(_lock);
   ++_iter;
 }
 
-LinkSet::ConnectionIterator::const_ref
+const Connection*
 LinkSet::ConnectionIterator::getCurrentElement() const
 {
-  smsc::core::synchronization::ReadLockGuard lock(_lock);
   return *_iter;
 }
 
-LinkSet::ConnectionIterator::ref
+Connection*
 LinkSet::ConnectionIterator::getCurrentElement()
 {
-  smsc::core::synchronization::WriteLockGuard lock(_lock);
   return *_iter;
 }
 
 void
 LinkSet::ConnectionIterator::deleteCurrentElement()
 {
-  smsc::core::synchronization::WriteLockGuard lock(_lock);
   _iter = _container.erase(_iter);
 }
 
