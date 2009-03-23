@@ -698,6 +698,19 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <chmod file="${DISTR_DIR}/services/pvss/bin/pvss" perm="755"/>
     </target>
 
+    <target name="-update.pvss.flooder" depends="-update.libs" if="SETUP_MAKE_PVSS_FLOODER">
+        <mkdir dir="${DISTR_DIR}/pvss.flooder.old"/>
+        <mkdir dir="${DISTR_DIR}/pvss.flooder.old/bin"/>
+        <mkdir dir="${DISTR_DIR}/pvss.flooder.old/conf"/>
+        <copy file="${BUILD_DIR}/bin/scag/pvss_flooder" todir="${DISTR_DIR}/pvss.flooder.old/bin"/>
+        <chmod file="${DISTR_DIR}/pvss.flooder.old/bin/pvss_flooder" perm="755"/>
+        <mkdir dir="${DISTR_DIR}/pvss.flooder.new"/>
+        <mkdir dir="${DISTR_DIR}/pvss.flooder.new/bin"/>
+        <mkdir dir="${DISTR_DIR}/pvss.flooder.new/conf"/>
+        <copy file="${BUILD_DIR}/bin/scag/pvss-flooder2" todir="${DISTR_DIR}/pvss.flooder.new/bin"/>
+        <chmod file="${DISTR_DIR}/pvss.flooder.new/bin/pvss-flooder2" perm="755"/>
+    </target>
+
     <target name="-update.pvgw" depends="-update.libs" if="SETUP_MAKE_PVGW">
         <mkdir dir="${DISTR_DIR}/services/pvgw"/>
         <mkdir dir="${DISTR_DIR}/services/pvgw/bin"/>
@@ -734,7 +747,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
     </target>
 
     <target name="update"
-            depends="-setup.update, make, -update.scag, -update.msag, -update.pers, -update.pvss, -update.pvgw, -update.pvcp, -update.admin, -update.webapp, -update.jedit">
+            depends="-setup.update, make, -update.scag, -update.msag, -update.pers, -update.pvss, -update.pvss.flooder, -update.pvgw, -update.pvcp, -update.admin, -update.webapp, -update.jedit">
         <!-- description="Action: update previously selected targets" -->
     </target>
 
@@ -921,6 +934,33 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <mkdir dir="${pvss.storage_dir}" description="create pvss storage dir"/>
     </target>
 
+    <target name="-install.pvss.flooder" depends="-update.pvss.flooder" if="SETUP_MAKE_PVSS_FLOODER">
+        <!-- old flooder -->
+        <symlink resource="${DAEMON22HOME}" link="${DISTR_DIR}/pvss.flooder.old/.base"/>
+        <symlink resource=".base/logs" link="${DISTR_DIR}/pvss.flooder.old"/>
+        <symlink resource=".base/lib" link="${DISTR_DIR}/pvss.flooder.old"/>
+        <symlink resource="../.base/conf/configuration.dtd"    link="${DISTR_DIR}/pvss.flooder.old/conf"/>
+        <copy tofile="${DISTR_DIR}/pvss.flooder.old/logger.properties" file="${TEMPL_DIR}/logger/pvss-flooder.old.logger">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <copy todir="${DISTR_DIR}/pvss.flooder.old/conf" flatten="yes">
+            <fileset dir="${TEMPL_DIR}/pvss/flooder.old" includes="config.xml"/>
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <!-- new flooder -->
+        <symlink resource="${DAEMON22HOME}" link="${DISTR_DIR}/pvss.flooder.new/.base"/>
+        <symlink resource=".base/logs" link="${DISTR_DIR}/pvss.flooder.new"/>
+        <symlink resource=".base/lib" link="${DISTR_DIR}/pvss.flooder.new"/>
+        <symlink resource="../.base/conf/configuration.dtd"    link="${DISTR_DIR}/pvss.flooder.new/conf"/>
+        <copy tofile="${DISTR_DIR}/pvss.flooder.new/logger.properties" file="${TEMPL_DIR}/logger/pvss-flooder.new.logger">
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+        <copy todir="${DISTR_DIR}/pvss.flooder.new/conf" flatten="yes">
+            <fileset dir="${TEMPL_DIR}/pvss/flooder.new" includes="config.xml"/>
+            <filterset filtersfile="${TEMPLATE_PROPS}"/>
+        </copy>
+    </target>
+
     <target name="-install.pvgw" depends="-update.pvgw" if="SETUP_MAKE_PVGW">
         <symlink resource="${SERVICE2HOME}" link="${DISTR_DIR}/services/pvgw/.base"/>
         <symlink resource=".base/logs" link="${DISTR_DIR}/services/pvgw"/>
@@ -1004,7 +1044,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
     </target>
 
     <target name="install"
-            depends="-setup.update, -install.clean, make, -install.tree, -install.extralibs, -install.scag, -install.msag, -install.pers, -install.pvss, -install.admin, -install.webapp">
+            depends="-setup.update, -install.clean, make, -install.tree, -install.extralibs, -install.scag, -install.msag, -install.pers, -install.pvss, -install.pvss.flooder, -install.admin, -install.webapp">
         <!-- description="Action: install previously selected targets" -->
     </target>
 
