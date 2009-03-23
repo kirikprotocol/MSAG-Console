@@ -135,6 +135,7 @@ pvss_flooder.conn_per_thread=5
 pvss_flooder.async=true
 pvss_flooder.speed=100
 pvss_flooder.addresses_count=1000000
+pvss_flooder.address_prefix=791
 pvss_flooder.commands=s0s1i0m100I0B2g0g1b4g0g1d0d1
 
 rule_editor.ping_port=23987

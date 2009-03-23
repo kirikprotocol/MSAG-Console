@@ -19,6 +19,7 @@
     <section name="Flooder">
         <param name="speed" type="int">@pvss_flooder.speed@</param> <!-- requests pers second -->
 	<param name="addressesCount" type="int">@pvss_flooder.addresses_count@</param>
+        <param name="addressPrefix" type="string">@pvss_flooder.address_prefix@</param>
         <param name="properties" type="int">2</param>
         <param name="property.0" type="string">"test0" INT: 101 TIME_POLICY: INFINIT</param>
         <param name="property.1" type="string">"test1" STRING: "hello, world" TIME_POLICY: INFINIT</param>
