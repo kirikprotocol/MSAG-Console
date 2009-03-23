@@ -936,7 +936,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
 
     <target name="-install.pvss.flooder" depends="-update.pvss.flooder" if="SETUP_MAKE_PVSS_FLOODER">
         <!-- old flooder -->
-        <symlink resource="${DAEMON22HOME}" link="${DISTR_DIR}/pvss.flooder.old/.base"/>
+        <symlink resource="${DAEMON2HOME}" link="${DISTR_DIR}/pvss.flooder.old/.base"/>
         <symlink resource=".base/logs" link="${DISTR_DIR}/pvss.flooder.old"/>
         <symlink resource=".base/lib" link="${DISTR_DIR}/pvss.flooder.old"/>
         <symlink resource="../.base/conf/configuration.dtd"    link="${DISTR_DIR}/pvss.flooder.old/conf"/>
@@ -948,7 +948,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
         <!-- new flooder -->
-        <symlink resource="${DAEMON22HOME}" link="${DISTR_DIR}/pvss.flooder.new/.base"/>
+        <symlink resource="${DAEMON2HOME}" link="${DISTR_DIR}/pvss.flooder.new/.base"/>
         <symlink resource=".base/logs" link="${DISTR_DIR}/pvss.flooder.new"/>
         <symlink resource=".base/lib" link="${DISTR_DIR}/pvss.flooder.new"/>
         <symlink resource="../.base/conf/configuration.dtd"    link="${DISTR_DIR}/pvss.flooder.new/conf"/>
