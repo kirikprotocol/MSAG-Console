@@ -90,7 +90,7 @@ void getConfig( smsc::logger::Logger* thelog,
 }
 
 
-int main()
+int main( int argc, const char** argv )
 {
     smsc::logger::Logger::Init();
     logger = smsc::logger::Logger::getInstance("main");
@@ -111,6 +111,18 @@ int main()
     ClientConfig clientConfig;
     FlooderConfig flooderConfig;
     getConfig( logger, clientConfig, flooderConfig );
+
+    // --- reading speed from cmd line
+    if ( argc > 1 ) {
+        unsigned newspeed = unsigned(atoi(argv[1]));
+        if ( newspeed == 0 ) {
+            fprintf(stderr, "wrong speed specified on Command line: %s\n", argv[1]);
+            exit(-1);
+        } else {
+            printf("overriding flooder speed %u -> %u\n", flooderConfig.getSpeed(), newSpeed );
+            flooderConfig.setSpeed( newSpeed );
+        }
+    }
 
     // --- making a client
     std::auto_ptr< Protocol > protocol( new scag2::pvss::pvap::PvapProtocol );
