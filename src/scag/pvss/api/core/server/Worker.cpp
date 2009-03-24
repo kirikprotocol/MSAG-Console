@@ -46,8 +46,11 @@ int Worker::doExecute()
             logic_.responseFail( context );
             break;
         case (ServerContext::NEW) :
+            util::msectime_type currentTime = util::currentTimeMillis();
             try {
-                // FIXME: check request expiration
+                if ( currentTime  > context->getCreationTime() + core.getConfig().getProcessTimeout() ) {
+                    throw PvssException(PvssException::REQUEST_TIMEOUT,"processing timeout");
+                }
                 Response* resp = logic_.process(*context->getRequest().get());
                 context->setResponse(resp);
             } catch (PvssException& e){
