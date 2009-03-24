@@ -45,7 +45,7 @@ int Worker::doExecute()
         case (ServerContext::FAILED) :
             logic_.responseFail( context );
             break;
-        case (ServerContext::NEW) :
+        case (ServerContext::NEW) : {
             util::msectime_type currentTime = util::currentTimeMillis();
             try {
                 if ( currentTime  > context->getCreationTime() + core_.getConfig().getProcessTimeout() ) {
@@ -64,6 +64,7 @@ int Worker::doExecute()
                 stop();
             }
             break;
+        }
         case (ServerContext::PROCESSED) :
         default :
             smsc_log_warn(log_,"unexpected context state (processed)", context->getState());
