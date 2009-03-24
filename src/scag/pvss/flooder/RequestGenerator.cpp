@@ -67,7 +67,7 @@ void RequestGenerator::randomizeProfileKeys( const std::string& addressFormat,
 
     delete profileKeys_;
     profileKeys_ = 0;
-    if ( abonents > 1000000 ) {
+    if ( abonents > 100000000 ) {
         // too many abonents, using randomization on-the-fly
         return;
     }
