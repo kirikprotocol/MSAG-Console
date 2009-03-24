@@ -127,6 +127,14 @@ int main( int argc, const char** argv )
     // --- making a client
     std::auto_ptr< Protocol > protocol( new scag2::pvss::pvap::PvapProtocol );
     std::auto_ptr< Client > client( new ClientCore( clientConfig, *protocol.get() ) );
+    flooderStat.reset(new FlooderStat(flooderConfig,*client.get()));
+
+    try {
+        flooderStat->init();
+    } catch ( IOException& e ) {
+        smsc_log_error( logger, "cannot init flooder patterns: %s", e.what() );
+        ::abort();
+    }
 
     try {
         client->startup();
@@ -135,14 +143,7 @@ int main( int argc, const char** argv )
         ::abort();
     }
 
-    flooderStat.reset(new FlooderStat(flooderConfig,*client.get()));
-
-    try {
-        flooderStat->startup();
-    } catch ( IOException& e ) {
-        smsc_log_error( logger, "cannot parse flooder patterns: %s", e.what() );
-        ::abort();
-    }
+    flooderStat->startup();
 
     /*
     for ( int i = 0; i < flooderConfig.getFlooderThreadCount(); ++i ) {

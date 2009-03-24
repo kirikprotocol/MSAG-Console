@@ -124,7 +124,7 @@ void FlooderStat::waitUntilProcessed()
 }
 
 
-void FlooderStat::startup() throw (exceptions::IOException)
+void FlooderStat::init() throw (exceptions::IOException)
 {
     const std::vector< std::string >& patterns = config_.getPropertyPatterns();
     if ( patterns.size() <= 0 ) throw exceptions::IOException("too few property patterns configured");
@@ -138,9 +138,12 @@ void FlooderStat::startup() throw (exceptions::IOException)
         generator_.addPropertyPattern( unsigned(i - patterns.begin()), p.release() );
     }
     generator_.parseCommandPatterns( config_.getCommands() );
+}
 
+
+void FlooderStat::startup()
+{
     stopped_ = false;
-
     for ( int i = 0; i < config_.getFlooderThreadCount(); ++i ) {
         util::WatchedThreadedTask* task;
         if ( config_.getAsyncMode() ) {

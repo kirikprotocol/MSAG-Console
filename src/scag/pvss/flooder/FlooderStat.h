@@ -47,7 +47,11 @@ public:
     /// wait until requested number of requests are produced and responses obtained (or timeouted)
     void waitUntilProcessed();
 
-    void startup() throw (exceptions::IOException);
+    /// initialize all fields
+    void init() throw (exceptions::IOException);
+
+    /// startup threads
+    void startup();
 
     /// shutdown
     void shutdown();
