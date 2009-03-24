@@ -37,7 +37,7 @@ PersServer *persServer = NULL;
 extern "C" void appSignalHandler(int sig)
 {
     Logger* logger = Logger::getInstance("pvss");
-    smsc_log_debug(logger, "Signal %d handled !", sig);
+    smsc_log_warn(logger, "Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT)
     {
        if (persServer) persServer->stop();
