@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "PvssFlooder.h"
 #include "scag/pvss/data/Property.h"
+#include "scag/pvss/data/ProfileKey.h"
 #include "scag/pvss/base/PersClientException.h"
 #include "util/debug.h"
 
@@ -39,6 +40,12 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
 
   unsigned number = 0;
   int iterCount = 0;
+  generator_.randomizeProfileKeys(addressFormat_, addrsCount);
+  for (int i = 0; i < addrsCount; ++i) {
+    ProfileKey key = generator_.getProfileKey();
+    commandsSetConfigured(key.getAbonentKey(), i, "test_abnt_prop", PT_ABONENT, getsetCount);
+  }
+  /*
   srand(time(NULL));
   while (!isStopped_) {
   //while (iterCount == 0) {
@@ -50,7 +57,7 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
     //commandsSet(addr, number, "test_serv_prop", PT_ABONENT);
     ++iterCount;
     //number = number > addrsCount ? 0 : number + 1;
-  }
+  }*/
 
   smsc_log_info(logger_, "test case stopped");
   smsc_log_info(logger_, "stopping pers client...");

@@ -11,6 +11,7 @@
 #include "core/threads/Thread.hpp"
 #include "util/timeslotcounter.hpp"
 #include "util/sleep.h"
+#include "RequestGenerator.h"
 
 namespace scag2 {
 namespace pvss {
@@ -78,6 +79,7 @@ private:
   uint64_t procTime_;
   uint32_t maxprocTime_;
   uint32_t minprocTime_;
+  RequestGenerator generator_;
 };
 
 class CallsCounter : public smsc::core::threads::Thread {
