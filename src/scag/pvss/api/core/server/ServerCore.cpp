@@ -34,6 +34,7 @@ namespace server {
 ServerCore::ServerCore( ServerConfig& config, Protocol& protocol ) :
 Core(config,protocol), Server(),
 log_(smsc::logger::Logger::getInstance(taskName())),
+loge_(smsc::logger::Logger::getInstance("pvssEsrv")),
 started_(false),
 syncDispatcher_(0),
 last_(config.getStatisticsInterval())
@@ -77,7 +78,7 @@ void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // throw
     try {
         sendResponse(context);
     } catch (std::exception& e) {
-        smsc_log_debug(log_,"exception(%u): %s", __LINE__, e.what());
+        smsc_log_warn(loge_,"exception(%u): %s", __LINE__, e.what());
         context->setState(ServerContext::FAILED);
         reportContext(context);
     }
@@ -90,7 +91,7 @@ void ServerCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channe
         if ( !packet.get() || !packet->isRequest() || !packet->isValid() )
             throw PvssException(PvssException::BAD_REQUEST,"Received packet isnt valid PVAP request");
     } catch ( PvssException& e ) {
-        smsc_log_error(log_,"exception(%u): %s",__LINE__,e.what());
+        smsc_log_warn(loge_,"exception(%u): %s",__LINE__,e.what());
         return;
     }
 
@@ -115,13 +116,13 @@ void ServerCore::reportPacket(uint32_t seqNum, smsc::core::network::Socket& chan
     {
         ContextRegistry::Ptr ptr(regset_.get(&channel));
         if (!ptr) {
-            smsc_log_warn(log_,"packet seqNum=%d on channel %p reported, but registry is not found",
+            smsc_log_warn(loge_,"packet seqNum=%d on channel %p reported, but registry is not found",
                           seqNum, &channel);
             return;
         }
         ContextRegistry::Ctx i(ptr->get(seqNum));
         if ( !i ) {
-            smsc_log_warn(log_, "packet seqNum=%d on channel %p reported as %s, but not found",
+            smsc_log_warn(loge_, "packet seqNum=%d on channel %p reported as %s, but not found",
                           seqNum, &channel, state == SENT ? "SENT" : (state == FAILED ? "FAILED" : "EXPIRED"));
             return;
         }
@@ -389,12 +390,12 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         // seqNum = uint32_t(-1);
 
     } catch (std::exception& e) {
-        smsc_log_debug(log_, "exception(%u): %s",__LINE__,e.what());
+        smsc_log_warn(loge_, "exception(%u): %s",__LINE__,e.what());
         try {
             ctx->setResponse(new ErrorResponse(seqNum,status,e.what()));
             sendResponse(ctx);
         } catch (std::exception& e) {
-            smsc_log_error(log_,"exception(%u): %s", __LINE__, e.what());
+            smsc_log_error(loge_,"exception(%u): %s", __LINE__, e.what());
         }
     }
 }

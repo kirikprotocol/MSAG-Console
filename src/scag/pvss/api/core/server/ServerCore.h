@@ -36,7 +36,7 @@ public:
 
     virtual ~ServerCore();
 
-    virtual const char* taskName() { return "pvss.score"; }
+    virtual const char* taskName() { return "pvss.srv"; }
 
     /**
      * Implementation of InactivityTracker.Listener method.<p/>
@@ -529,6 +529,7 @@ private:
 
 protected:
     smsc::logger::Logger*                       log_;
+    smsc::logger::Logger*                       loge_;
 
 private:
     smsc::core::synchronization::Mutex          startMutex_;
