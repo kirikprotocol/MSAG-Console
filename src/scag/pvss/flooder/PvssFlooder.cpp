@@ -29,6 +29,10 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
 
   smsc_log_info(logger_, "execution...");
 
+  smsc_log_info(logger_, "generate addresses");
+
+  generator_.randomizeProfileKeys(addressFormat_, addrsCount);
+
   while (persClient_.getClientStatus() != 0 && !isStopped_ ) {
     smsc_log_warn(logger_, "waiting while pers client connecting to server...");
     sleep(1);
@@ -40,7 +44,6 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
 
   unsigned number = 0;
   int iterCount = 0;
-  generator_.randomizeProfileKeys(addressFormat_, addrsCount);
   for (int i = 0; i < addrsCount; ++i) {
     ProfileKey key = generator_.getProfileKey();
     commandsSetConfigured(key.getAbonentKey(), i, "test_abnt_prop", PT_ABONENT, getsetCount);
