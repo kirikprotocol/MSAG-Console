@@ -48,7 +48,7 @@ int Worker::doExecute()
         case (ServerContext::NEW) :
             util::msectime_type currentTime = util::currentTimeMillis();
             try {
-                if ( currentTime  > context->getCreationTime() + core.getConfig().getProcessTimeout() ) {
+                if ( currentTime  > context->getCreationTime() + core_.getConfig().getProcessTimeout() ) {
                     throw PvssException(PvssException::REQUEST_TIMEOUT,"processing timeout");
                 }
                 Response* resp = logic_.process(*context->getRequest().get());
