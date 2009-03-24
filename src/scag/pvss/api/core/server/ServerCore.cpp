@@ -79,8 +79,10 @@ void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // throw
         sendResponse(context);
     } catch (std::exception& e) {
         smsc_log_warn(loge_,"exception(%u): %s", __LINE__, e.what());
-        context->setState(ServerContext::FAILED);
-        reportContext(context);
+        if (context.get()) {
+            context->setState(ServerContext::FAILED);
+            reportContext(context);
+        }
     }
 }
 

@@ -63,7 +63,7 @@ int Worker::doExecute()
             break;
         case (ServerContext::PROCESSED) :
         default :
-            smsc_log_warn(log_,"unexpected context state: %d", context->getState());
+            smsc_log_warn(log_,"unexpected context state (processed)", context->getState());
         } // switch
     }
     return 0;
