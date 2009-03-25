@@ -268,35 +268,42 @@ template< class Key, typename Value=long >
     typedef typename RBTreeNode::nodeptr_type               nodeptr_type;
 
 public:
-    SimpleAllocator() : count(0)
+    SimpleAllocator() : count(0), nilNode(0), rootNode(0), freeNode_(0), buffer_(0), bufferCount_(0)
     {
-        //create nil cell
-        RBTreeNode* nn = new RBTreeNode();
-        nilNode = (nodeptr_type) nn;
-        nn->parent = nilNode;
-        nn->left = nilNode;
-        nn->right = nilNode;
-        nn->color = BLACK;
+        nilNode = allocateNode();
+        --count; // fix count
+        addr2node(nilNode)->color = BLACK;
         rootNode = nilNode;
     }
 
     virtual ~SimpleAllocator()
     {
-        delete (RBTreeNode*) nilNode;
+        nilNode = 0;
+        rootNode = 0;
+        delete [] buffer_;
+        buffer_ = 0;
+        freeNode_ = 0;
     }
 
     virtual nodeptr_type allocateNode(void)
     {
-        RBTreeNode* newNode = new RBTreeNode();
+        if ( freeNode_ == 0 ) {
+            reallocBuffer();
+        }
+        nodeptr_type result = freeNode_;
+        RBTreeNode* newNode = addr2node(result);
+        freeNode_ = newNode->parent;
         newNode->parent = newNode->left = newNode->right = nilNode;
         count++;
-        return (nodeptr_type) newNode;
+        return result;
     }
 
-    virtual void releaseNode( nodeptr_type node)
+    virtual void releaseNode(nodeptr_type node)
     {
         count--;
-        delete (RBTreeNode*) node;
+        RBTreeNode* old = addr2node(node);
+        old->parent = freeNode_;
+        freeNode_ = node;
     }
 
     virtual nodeptr_type getNilNode(void) {return nilNode;}
@@ -304,17 +311,57 @@ public:
     virtual void setRootNode( nodeptr_type node ) {rootNode = node;}
     virtual long getSize(void) const {return count;}
     virtual RBTreeNode* realAddr( nodeptr_type addr ) const {
-        return (RBTreeNode*)addr;
+        return addr2node(addr);
     }
+
 
     virtual std::vector< nodeptr_type > freenodes() {
-        return std::vector< nodeptr_type >();
+        std::vector< nodeptr_type > result;
+        nodeptr_type current = freeNode_;
+        while ( current != 0 ) {
+            RBTreeNode* node = addr2node(current);
+            result.push_back( current );
+            current = node->parent;
+        }
+        return result;
     }
 
+private:
+    inline RBTreeNode* addr2node( nodeptr_type a ) const {
+        return &(buffer_[a]);
+    }
+
+    void reallocBuffer()
+    {
+        assert(freeNode_ == 0);
+        const unsigned growth = 1000;
+        RBTreeNode* newbuf = new RBTreeNode[bufferCount_+growth];
+        if (buffer_) {
+            memcpy(newbuf,buffer_,bufferCount_*sizeof(RBTreeNode));
+            delete [] buffer_;
+        }
+        buffer_ = newbuf;
+        // fill out free node chain
+        nodeptr_type position = bufferCount_;
+        bufferCount_ += growth;
+        freeNode_ = position;
+        nodeptr_type lastNode = bufferCount_ - 1;
+        while ( position < lastNode ) {
+            RBTreeNode* node = addr2node(position++);
+            node->parent = position;
+        }
+        // mark the last free node as the last one
+        addr2node(lastNode)->parent = 0;
+    }
+
+    
 private:
     long count;
     nodeptr_type nilNode;
     nodeptr_type rootNode;
+    nodeptr_type freeNode_;
+    RBTreeNode* buffer_;
+    unsigned    bufferCount_;
 };
 
 template< class Key, typename Value=long>
