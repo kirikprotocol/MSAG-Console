@@ -5,6 +5,7 @@
 #include "scag/pvss/api/packets/Request.h"
 #include "scag/pvss/api/packets/AbstractProfileRequest.h"
 #include "scag/pvss/api/packets/Response.h"
+#include "scag/util/storage/StorageNumbering.h"
 
 namespace scag2 {
 namespace pvss  {
@@ -114,7 +115,7 @@ Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& reques
   return commandProcessor_.getResponse();
 }
 
-void AbonentLogic::initElementStorage(unsigned index) {
+void AbonentLogic::initElementStorage(unsigned index) throw (smsc::util::Exception) {
   char pathSuffix[4];
   sprintf(pathSuffix, "%03d", index);			
   string path = string(config_.locationPath[locationNumber_] + "/") + pathSuffix;
@@ -188,7 +189,7 @@ void AbonentLogic::init() throw (smsc::util::Exception)
 {
     smsc_log_debug(logger_," init abonent location #%u", locationNumber_ );
     for ( unsigned i = 0; i < storagesCount_; ++i ) {
-        if ( StorageNumbering::instance().node(i) == nodeNumber_ ) {
+        if ( util::storage::StorageNumbering::instance().node(i) == nodeNumber_ ) {
             initElementStorage(i);
         }
     }

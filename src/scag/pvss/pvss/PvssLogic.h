@@ -129,7 +129,7 @@ public:
   ~InfrastructLogic();
 
     virtual void init() throw (smsc::util::Exception);
-    virtual std::strint toString() const { return "infrastruct logic"; }
+    virtual std::string toString() const { return "infrastruct logic"; }
 
   //virtual Response* process(Request& request) throw(PvssException);
   void shutdownStorages();

@@ -3,6 +3,8 @@
 #include "scag/pvss/data/ProfileKey.h"
 #include "scag/pvss/api/packets/Request.h"
 #include "scag/pvss/api/packets/AbstractProfileRequest.h"
+#include "scag/util/WatchedThreadedTask.h"
+#include "core/threads/ThreadPool.hpp"
 
 namespace {
 
@@ -10,6 +12,8 @@ class LogicInitTask : public scag2::util::WatchedThreadedTask
 {
 public:
     LogicInitTask( scag2::pvss::PvssLogic* logic ) : logic_(logic) {}
+
+    virtual const char* taskName() { return "pvss.init"; }
 
     virtual int doExecute() {
         try {
@@ -19,6 +23,7 @@ public:
         } catch (...) {
             setFailure( "unknown exception" );
         }
+        return 0;
     }
 
     const std::string& getFailure() const { return failure_; }
@@ -88,7 +93,8 @@ void PvssDispatcher::init( const AbonentStorageConfig& abntcfg, const Infrastruc
     }
     AbonentLogic* logic = new AbonentLogic( nodeNumber_,
                                             locationNumber,
-                                            storagesCount_ );
+                                            storagesCount_,
+                                            abntcfg );
     abonentLogics_.Push(logic);
     ++createdLocations_;
   }
@@ -98,7 +104,7 @@ void PvssDispatcher::init( const AbonentStorageConfig& abntcfg, const Infrastruc
         if (!infcfg) {
             throw Exception("Error init infrastruct storage, config in NULL");
         }
-        infrastructLogic_.reset( new InfrastructLogic );
+        infrastructLogic_.reset( new InfrastructLogic(*infcfg) );
     }
 
     // we have to init all logics in parallel
@@ -119,7 +125,7 @@ void PvssDispatcher::init( const AbonentStorageConfig& abntcfg, const Infrastruc
 
     // make sure all the tasks are started and finished
     for ( unsigned i = 0; i < initTasks.Count(); ++i ) {
-        LogicInitTask* task = initTask[i];
+        LogicInitTask* task = initTasks[i];
         task->waitUntilStarted();
         task->waitUntilReleased();
     }
@@ -127,13 +133,13 @@ void PvssDispatcher::init( const AbonentStorageConfig& abntcfg, const Infrastruc
     // checking for results, cleanup
     std::string failure;
     for ( unsigned i = 0; i < initTasks.Count(); ++i ) {
-        LogicInitTask* task = initTask[i];
+        LogicInitTask* task = initTasks[i];
         std::string fail = task->getFailure();
         if ( !fail.empty() ) failure = fail;
         delete task;
     }
 
-    if ( !failure.empty() ) throw smsc::util::Exception(failure);
+    if ( !failure.empty() ) throw smsc::util::Exception(failure.c_str());
 
     // FIXME: TODO: make initialization in parallel
     /*
