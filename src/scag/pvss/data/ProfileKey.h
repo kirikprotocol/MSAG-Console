@@ -38,7 +38,7 @@ public:
         case OPERATOR : return "operator=" + intKey_;
         case PROVIDER : return "provider=" + intKey_;
         case SERVICE : return "service=" + intKey_;
-        default: return "unknownProfile";
+        default: return "key=NULL";
         }
     }
 
