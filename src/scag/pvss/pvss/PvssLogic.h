@@ -52,6 +52,11 @@ public:
 
   virtual void shutdownStorages() = 0;
 
+    /// initialize logic
+    virtual void init() throw (smsc::util::Exception) = 0;
+    /// return the name of the logic
+    virtual std::string toString() const = 0;
+
 protected:
   void initGlossary(const string& path, Glossary* glossary);
   virtual Response* processProfileRequest(AbstractProfileRequest& request) = 0;
@@ -66,13 +71,24 @@ struct AbonentStorageConfig;
 
 class AbonentLogic: public PvssLogic {
 public:
-  AbonentLogic(unsigned locationNumber, unsigned storagesCount):locationNumber_(locationNumber), storagesCount_(storagesCount) {};
+    AbonentLogic( unsigned nodeNumber, unsigned locationNumber, unsigned storagesCount, const AbonentStorageConfig& cfg ) :
+    nodeNumber_(nodeNumber), locationNumber_(locationNumber), storagesCount_(storagesCount),
+    abntlog_(smsc::logger::Logger::getInstance("pvss.abnt")), config_(cfg) {}
   ~AbonentLogic();
-  void initElementStorage(const AbonentStorageConfig& cfg, unsigned index);
+
+    virtual void init() throw (smsc::util::Exception);
+    virtual std::string toString() const {
+        char buf[64];
+        snprintf(buf,sizeof(buf),"abonent logic #%u", locationNumber_);
+        return buf;
+    }
+
   //virtual Response* process(Request& request) throw(PvssException);
   void shutdownStorages();
 
 protected:
+    void initElementStorage(unsigned index) throw (smsc::util::Exception);
+
   virtual Response* processProfileRequest(AbstractProfileRequest& request);
 
 private:
@@ -93,18 +109,28 @@ private:
 
 private:
   IntHash<ElementStorage> elementStorages_;
+    unsigned nodeNumber_;
   unsigned locationNumber_;
   unsigned storagesCount_;
   Logger* abntlog_;
+    const AbonentStorageConfig& config_;
 };
 
 struct InfrastructStorageConfig;
 
 class InfrastructLogic: public PvssLogic {
 public:
-  InfrastructLogic():provider_(NULL), service_(NULL), operator_(NULL) {};
+    InfrastructLogic( const InfrastructStorageConfig& cfg ) : 
+    provider_(NULL), service_(NULL), operator_(NULL), config_(cfg),
+    plog_(smsc::logger::Logger::getInstance("pvss.prov")),
+    slog_(smsc::logger::Logger::getInstance("pvss.serv")),
+    olog_(smsc::logger::Logger::getInstance("pvss.oper"))
+    {}
   ~InfrastructLogic();
-  void init(const InfrastructStorageConfig& cfg);
+
+    virtual void init() throw (smsc::util::Exception);
+    virtual std::strint toString() const { return "infrastruct logic"; }
+
   //virtual Response* process(Request& request) throw(PvssException);
   void shutdownStorages();
 
@@ -128,6 +154,7 @@ private:
   InfrastructStorage* provider_;
   InfrastructStorage* service_;
   InfrastructStorage* operator_;
+    const InfrastructStorageConfig& config_;
   Glossary glossary_;
   Logger* plog_;
   Logger* slog_;

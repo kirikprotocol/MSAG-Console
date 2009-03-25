@@ -4,6 +4,39 @@
 #include "scag/pvss/api/packets/Request.h"
 #include "scag/pvss/api/packets/AbstractProfileRequest.h"
 
+namespace {
+
+class LogicInitTask : public scag2::util::WatchedThreadedTask
+{
+public:
+    LogicInitTask( scag2::pvss::PvssLogic* logic ) : logic_(logic) {}
+
+    virtual int doExecute() {
+        try {
+            logic_->init();
+        } catch ( std::exception& e ) {
+            setFailure( e.what() );
+        } catch (...) {
+            setFailure( "unknown exception" );
+        }
+    }
+
+    const std::string& getFailure() const { return failure_; }
+    
+private:
+    void setFailure( const char* what ) {
+        failure_ = std::string(what) + " in " + logic_->toString();
+    }
+
+private:
+    scag2::pvss::PvssLogic* logic_;
+    std::string             failure_;
+};
+
+
+}
+
+
 namespace scag2 {
 namespace pvss  {
 
@@ -45,30 +78,71 @@ Server::SyncLogic* PvssDispatcher::getSyncLogic(unsigned idx) {
   return abonentLogics_[idx];
 }
 
-void PvssDispatcher::init(const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg) {
+void PvssDispatcher::init( const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg ) throw (smsc::util::Exception)
+{
 
   for (unsigned locationNumber = 0; locationNumber < locationsCount_; ++locationNumber) {
     if (!File::Exists(abntcfg.locationPath[locationNumber].c_str())) {
       smsc_log_debug(logger_, "create storage dir '%s'", abntcfg.locationPath[locationNumber].c_str());
       File::MkDir(abntcfg.locationPath[locationNumber].c_str());
     }
-    AbonentLogic* logic = new AbonentLogic(locationNumber, storagesCount_);
+    AbonentLogic* logic = new AbonentLogic( nodeNumber_,
+                                            locationNumber,
+                                            storagesCount_ );
     abonentLogics_.Push(logic);
     ++createdLocations_;
   }
+
+    // infrastruct logic
+    if (nodeNumber_ == getInfrastructNodeNumber()) {
+        if (!infcfg) {
+            throw Exception("Error init infrastruct storage, config in NULL");
+        }
+        infrastructLogic_.reset( new InfrastructLogic );
+    }
+
+    // we have to init all logics in parallel
+    smsc::core::threads::ThreadPool tp;
+    smsc::core::buffers::Array< LogicInitTask* > initTasks;
+    for ( unsigned i = 0; i < abonentLogics_.Count(); ++i ) {
+        LogicInitTask* task = new LogicInitTask(abonentLogics_[i]);
+        initTasks.Push(task);
+        tp.startTask(task,false);
+    }
+
+    if ( infrastructLogic_.get() ) {
+        LogicInitTask* task = new LogicInitTask(infrastructLogic_.get());
+        initTasks.Push(task);
+        tp.startTask(task,false);
+        // infrastructLogic_->init(*infcfg);
+    }
+
+    // make sure all the tasks are started and finished
+    for ( unsigned i = 0; i < initTasks.Count(); ++i ) {
+        LogicInitTask* task = initTask[i];
+        task->waitUntilStarted();
+        task->waitUntilReleased();
+    }
+
+    // checking for results, cleanup
+    std::string failure;
+    for ( unsigned i = 0; i < initTasks.Count(); ++i ) {
+        LogicInitTask* task = initTask[i];
+        std::string fail = task->getFailure();
+        if ( !fail.empty() ) failure = fail;
+        delete task;
+    }
+
+    if ( !failure.empty() ) throw smsc::util::Exception(failure);
+
     // FIXME: TODO: make initialization in parallel
+    /*
   for (unsigned i = 0; i < storagesCount_; ++i) {
     if (StorageNumbering::instance().node(i) == nodeNumber_) {
       getLocation(i)->initElementStorage(abntcfg, i);
     }
   }
-  if (nodeNumber_ == getInfrastructNodeNumber()) {
-    if (!infcfg) {
-      throw Exception("Erorr init infrastruct storage, config in NULL");
-    }
-    infrastructLogic_.reset( new InfrastructLogic );
-    infrastructLogic_->init(*infcfg);
-  }
+     */
 }
 
 unsigned PvssDispatcher::getLocationNumber(unsigned elementStorageNumber) {

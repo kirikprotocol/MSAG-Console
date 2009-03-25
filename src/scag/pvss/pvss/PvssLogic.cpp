@@ -114,28 +114,27 @@ Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& reques
   return commandProcessor_.getResponse();
 }
 
-void AbonentLogic::initElementStorage(const AbonentStorageConfig& cfg, unsigned index) {
-  abntlog_ = Logger::getInstance("pvss.abnt");
+void AbonentLogic::initElementStorage(unsigned index) {
   char pathSuffix[4];
   sprintf(pathSuffix, "%03d", index);			
-  string path = string(cfg.locationPath[locationNumber_] + "/") + pathSuffix;
+  string path = string(config_.locationPath[locationNumber_] + "/") + pathSuffix;
   ElementStorage elStorage(index);
   elStorage.glossary = new Glossary();
   initGlossary(path, elStorage.glossary);
 
-  std::auto_ptr< DiskIndexStorage > dis(new DiskIndexStorage( cfg.dbName, path, cfg.indexGrowth,
+  std::auto_ptr< DiskIndexStorage > dis(new DiskIndexStorage( config_.dbName, path, config_.indexGrowth,
                                                               false, smsc::logger::Logger::getInstance("pvss.idx")));
   smsc_log_debug(logger_, "data index storage %d is created", index);
   std::auto_ptr< DiskDataStorage::storage_type > bs
         (new DiskDataStorage::storage_type(elStorage.glossary,
                                            smsc::logger::Logger::getInstance("pvss.bhdisk")));
   int ret = -1;
-  const string fn(cfg.dbName + "-data");
+  const string fn(config_.dbName + "-data");
 
   ret = bs->Open(fn, path);
 
   if (ret == BlocksHSStorage< AbntAddr, Profile >::DESCR_FILE_OPEN_FAILED) {
-    if (bs->Create(fn, path, cfg.fileSize, cfg.blockSize) < 0) {
+    if (bs->Create(fn, path, config_.fileSize, config_.blockSize) < 0) {
       throw Exception("can't create data disk storage: %s", path.c_str());
     }
     ret = 0;
@@ -151,7 +150,7 @@ void AbonentLogic::initElementStorage(const AbonentStorageConfig& cfg, unsigned 
   std::auto_ptr< DiskStorage > ds(new DiskStorage(dis.release(), dds.release()));
   smsc_log_debug(logger_, "disk storage is assembled");
 
-  std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance("cache"), cfg.cacheSize));
+  std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance("cache"), config_.cacheSize));
   smsc_log_debug(logger_, "memory storage is created");
 
   elStorage.storage = new AbonentStorage(ms.release(), ds.release());
@@ -184,8 +183,20 @@ AbonentLogic::~AbonentLogic() {
   smsc_log_debug(logger_, "storage processor %d deleted", locationNumber_);
 }
 
-void InfrastructLogic::init(const InfrastructStorageConfig& cfg) {
-  InfrastructStorageConfig locCfg(cfg);
+
+void AbonentLogic::init() throw (smsc::util::Exception)
+{
+    smsc_log_debug(logger_," init abonent location #%u", locationNumber_ );
+    for ( unsigned i = 0; i < storagesCount_; ++i ) {
+        if ( StorageNumbering::instance().node(i) == nodeNumber_ ) {
+            initElementStorage(i);
+        }
+    }
+}
+
+
+void InfrastructLogic::init() throw (smsc::util::Exception) {
+  InfrastructStorageConfig locCfg(config_);
   initGlossary(locCfg.dbPath, &glossary_);
   locCfg.dbName = "provider";
   provider_ = initStorage(locCfg);
@@ -196,9 +207,6 @@ void InfrastructLogic::init(const InfrastructStorageConfig& cfg) {
   locCfg.dbName = "operator";
   operator_ = initStorage(locCfg);
   smsc_log_debug(logger_, "operator storage is created");
-  plog_ = Logger::getInstance("pvss.prov");
-  slog_ = Logger::getInstance("pvss.serv");
-  olog_ = Logger::getInstance("pvss.oper");
 }
 
 InfrastructLogic::InfrastructStorage* InfrastructLogic::initStorage(const InfrastructStorageConfig& cfg) {
