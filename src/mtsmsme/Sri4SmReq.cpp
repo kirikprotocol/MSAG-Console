@@ -1,7 +1,7 @@
-#include <sua/libsua/SuaApiFactory.hpp>
-#include <sua/libsua/MessageProperties.hpp>
-#include <sua/libsua/MessageInfo.hpp>
-#include <sua/libsua/messages/N_UNITDATA_IND_Message.hpp>
+#include <eyeline/sua/libsua/SuaApiFactory.hpp>
+#include <eyeline/sua/libsua/MessageProperties.hpp>
+#include <eyeline/sua/libsua/MessageInfo.hpp>
+#include <eyeline/sua/libsua/messages/N_UNITDATA_IND_Message.hpp>
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
 #include "mtsmsme/processor/TCO.hpp"
@@ -28,6 +28,7 @@ using smsc::mtsmsme::comp::SendRoutingInfoForSMReq;
 using smsc::mtsmsme::processor::util::packSCCPAddress;
 using smsc::mtsmsme::processor::util::dump;
 using std::string;
+using namespace eyeline::sua;
 
 
 static Logger *logger = 0;
