@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Helpers: Character Separated Values List.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_CSVLIST__
+#ident "@(#)$Id$"
 #define __SMSC_UTIL_CSVLIST__
 
 #include <vector>
@@ -39,7 +39,7 @@ public:
         return use_str;
     }
 
-    inline STDString & cutBlanks(const char * pattern = " \t\r\n")
+    STDString & cutBlanks(const char * pattern = " \t\r\n")
     {
         return (STDString &)cutBlanks(*this, pattern);
     }
@@ -86,16 +86,23 @@ public:
         return size();
     }
 
-    int print(std::string & ostr)
+    int print(std::string & ostr) const
     {
         int i = 0;
         char dlmStr[3];
 
         dlmStr[0] = _dlm; dlmStr[1] = ' '; dlmStr[2] = 0;
-        CSVList::iterator it = CSVList::begin();
-        for (; it != CSVList::end(); it++, i++)
-            format(ostr, "%s%u", i ? dlmStr : "", it->c_str());
+        CSVList::const_iterator it = CSVList::begin();
+        for (; it != CSVList::end(); ++it, ++i)
+            format(ostr, "%s%s", i ? dlmStr : "", it->c_str());
         return i;
+    }
+
+    std::string print(void) const
+    {
+        std::string elems;
+        print(elems);
+        return elems;
     }
 };
 
