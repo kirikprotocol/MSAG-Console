@@ -266,6 +266,23 @@ JobGuard DataProvider::getJob(const char* name)
     return JobGuard(jobsByName.Exists(name) ? jobsByName.Get(name):0);
 }
 
+static void splitAddrList(const char* addrList,std::vector<Address>& addrs)
+{
+  smsc::core::buffers::TmpBuf<char,128> tmpbuf(strlen(addrList));
+  char* buf=tmpbuf.get();
+  strcpy(buf,addrList);
+  char* nxt;
+  do{
+    nxt=strchr(buf,',');
+    if(nxt)
+    {
+      *nxt=0;
+    }
+    addrs.push_back(buf);
+    buf=nxt+1;
+  }while(nxt);
+}
+
 void DataProvider::registerJob(Job* job, const char* _id, const char* address,
                                const char* alias, const char* name)
     throw(ConfigException)
@@ -282,17 +299,12 @@ void DataProvider::registerJob(Job* job, const char* _id, const char* address,
                               "parameters specified.");
     if (address)
     {
-      smsc::core::buffers::TmpBuf<char,128> tmpbuf(strlen(address));
-      char* buf=tmpbuf.get();
-      strcpy(buf,address);
-      char* nxt;
-      do{
-        nxt=strchr(buf,',');
-        if(nxt)
-        {
-          *nxt=0;
-        }
-        Address addr(buf); FullAddressValue fav;
+      std::vector<Address> addrs;
+      splitAddrList(address,addrs);
+      for(int i=0;i<addrs.size();i++)
+      {
+        Address& addr=addrs[i];
+        FullAddressValue fav;
         addr.toString(fav, MAX_FULL_ADDRESS_VALUE_LENGTH);
         if (jobsByAddress.Exists(fav))
           throw ConfigException("Job registration failed! Job with address: "
@@ -301,8 +313,7 @@ void DataProvider::registerJob(Job* job, const char* _id, const char* address,
           throw ConfigException("Job registration failed! Address: "
                                 "'%s' already in use.", fav);
         jobsByAddress.Insert(fav, job);
-        buf=nxt+1;
-      }while(nxt);
+      };
     }
     if (name)
     {
@@ -416,11 +427,17 @@ void DataProvider::changeJob(const char* jobId, ConfigView* jobConfig)
 
     if (address) 
     {
-        Address addr(address); FullAddressValue fav;
-        addr.toString(fav, MAX_FULL_ADDRESS_VALUE_LENGTH);
-        ptrJob = jobsByAddress.GetPtr(fav);
-        if (ptrJob && (oldJob != *ptrJob))
-            throw ConfigException("Job registration failed! Job with address: '%s' already registered.", fav);
+        std::vector<Address> addrs;
+        splitAddrList(address,addrs);
+        for(int i=0;i<addrs.size();i++)
+        {
+          Address addr(addrs[i]); 
+          FullAddressValue fav;
+          addr.toString(fav, MAX_FULL_ADDRESS_VALUE_LENGTH);
+          ptrJob = jobsByAddress.GetPtr(fav);
+          if (ptrJob && (oldJob != *ptrJob))
+              throw ConfigException("Job registration failed! Job with address: '%s' already registered.", fav);
+        }
     }
     if (name)   {
         ptrJob = jobsByName.GetPtr(upname.get());
@@ -471,10 +488,16 @@ void DataProvider::changeJob(const char* jobId, ConfigView* jobConfig)
         {
             if (address) 
             {
-                Address addr(address); FullAddressValue fav;
-                addr.toString(fav, MAX_FULL_ADDRESS_VALUE_LENGTH);
-                owner->addProviderIndex(addr, this);
-                jobsByAddress.Insert(fav, newJob);
+                std::vector<Address> addrs;
+                splitAddrList(address,addrs);
+                for(int i=0;i<addrs.size();i++)
+                {
+                  Address addr(addrs[i]); 
+                  FullAddressValue fav;
+                  addr.toString(fav, MAX_FULL_ADDRESS_VALUE_LENGTH);
+                  owner->addProviderIndex(addr, this);
+                  jobsByAddress.Insert(fav, newJob);
+                }
             }
             if (name) jobsByName.Insert(upname.get(), newJob);
             if (alias) jobsByName.Insert(upalias.get(), newJob);
