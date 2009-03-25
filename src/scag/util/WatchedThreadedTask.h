@@ -30,9 +30,9 @@ public:
     }
 
     void waitUntilStarted() {
-        if (!isReleased) return;
+        if (isStarted_) return;
         MutexGuard mg(releaseMon_);
-        while ( isReleased ) {
+        while ( !isStarted_ ) {
             releaseMon_.wait(100);
         }
     }
@@ -41,8 +41,17 @@ public:
         return isReleased;
     }
 
+    bool isStarted() const {
+        return isStarted_;
+    }
+
     virtual int Execute() {
-        isReleased = false;
+        {
+            MutexGuard mg(releaseMon_);
+            isReleased = false;
+            isStarted_ = true;
+            releaseMon_.notify();
+        }
         return doExecute();
     }
 
@@ -50,6 +59,7 @@ protected:
     virtual int doExecute() = 0;
 
 protected:
+    bool isStarted_;
     smsc::core::synchronization::EventMonitor releaseMon_;
 };
 
