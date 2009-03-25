@@ -78,9 +78,9 @@ private:
     public:
         // char preamble[20];                   // 20
         int32_t version;                     // 4
-        int32_t cells_count;                 // 4
-        int32_t cells_used;                  // 4
-        int32_t cells_free;                  // 4
+        uint32_t cells_count;                // 4
+        uint32_t cells_used;                 // 4
+        uint32_t cells_free;                 // 4
         nodeptr_type root_cell;              // they are an indices
         nodeptr_type first_free_cell;        // ...
         nodeptr_type nil_cell;               // ...
@@ -398,14 +398,15 @@ private:
         {
             // writing new cells to disk
             std::vector< unsigned char > buf;
+            buf.reserve(header_.persistentCellSize*realgrowth);
             Serializer ss(buf);
             ss.setVersion(header_.version);
-            rbtree_f.Seek( rbtFileHeaderDump_.size() + header_.persistentCellSize * startcell, SEEK_SET );
+            rbtree_f.Seek( rbtFileHeaderDump_.size() + header_.persistentCellSize*startcell, SEEK_SET );
             for ( nodeptr_type i = 0; i < realgrowth; ++i ) {
-                ss.reset();
+                // ss.reset();
                 serializeCell(ss, addr2node(startcell++) );
-                rbtree_f.Write(ss.data(), ss.size() );
             }
+            rbtree_f.Write(ss.data(), ss.size() );
         }
 
         if ( creation ) {
@@ -540,23 +541,31 @@ private:
 
             // create the necessary number of chunks
             unsigned needchunks = (maxcells-1) / growth + 1;
+            if (logger) smsc_log_warn(logger,"OpenRBTree is going to read cells=%ld, chunks=%ld", long(maxcells), long(needchunks));
             chunks_.reserve( needchunks );
-            for ( unsigned i = 0; i < needchunks; ++i ) {
-                std::auto_ptr<char> mem( new char[growth*cellsize()] );
-                if ( ! mem.get() ) return BTREE_FILE_MAP_FAILED;
-                chunks_.push_back( mem.release() );
-            }
 
-            // reading cells
-            // FIXME: TODO: make reading by chunks
-            rbtree_f.Seek( rbtFileHeaderDump_.size() );
-            std::auto_ptr<unsigned char> pbuf(new unsigned char[header_.persistentCellSize]);
-            Deserializer dds(pbuf.get(),header_.persistentCellSize);
-            dds.setVersion( header_.version );
-            for ( int32_t i = 0; i < maxcells; ++i ) {
-                rbtree_f.Read(pbuf.get(),header_.persistentCellSize);
-                dds.setrpos(0);
-                deserializeCell(dds,addr2node(i) );
+            {
+                // setting file position, prepare the buffer to read a chunk in one sweep
+                rbtree_f.Seek( rbtFileHeaderDump_.size() );
+                std::auto_ptr<unsigned char> chunkBuf(new unsigned char[growth*header_.persistentCellSize]);
+                Deserializer dds(chunkBuf.get(),growth*header_.persistentCellSize);
+                dds.setVersion( header_.version );
+
+                // allocating chunks/reading cells
+                for ( unsigned i = 0; i < needchunks; ++i ) {
+                    std::auto_ptr<char> mem( new char[growth*cellsize()] );
+                    if ( ! mem.get() ) return BTREE_FILE_MAP_FAILED;
+                    chunks_.push_back( mem.release() );
+                    unsigned cellsInChunk = std::min(unsigned(growth),unsigned(maxcells-i*growth));
+                    unsigned chunksize = cellsInChunk * header_.persistentCellSize;
+                    rbtree_f.Read(chunkBuf.get(),chunksize);
+                    dds.setrpos(0);
+                    // loop over cells
+                    for ( unsigned j = 0; j < cellsInChunk; ++j ) {
+                        deserializeCell(dds,addr2node(i*growth+j));
+                    }
+                    if (logger) smsc_log_info(logger,"OpenRBTree: cells/total = %010ld/%010ld", long(i*growth+cellsInChunk), long(maxcells));
+                }
             }
             
             if ( len < expectedLen ) {
@@ -766,48 +775,42 @@ private:
             throw smsc::util::Exception( "version %d is not implemented in rbtree", s.version() );
         }
         s << 
-            int64_t(node->parent)*header_.persistentCellSize <<
-            int64_t(node->left)*header_.persistentCellSize <<
-            int64_t(node->right)*header_.persistentCellSize <<
-            int32_t(node->color);
+            uint32_t(node->parent) <<
+            uint32_t(node->left) <<
+            uint32_t(node->right) <<
+            uint8_t(node->color);
         KS ks; ks.serialize(s,node->key);
-        int32_t align = 0;
-        s << align;
         VS vs; vs.serialize(s,node->value);
     }
+
     void deserializeCell( Deserializer& d, RBTreeNode* node ) const {
         if ( d.version() != 1 && d.version() != 2 ) {
             if (logger) smsc_log_warn( logger, "version %d is not implemented in rbtree", d.version() );
             throw smsc::util::Exception( "version %d is not implemented in rbtree", d.version() );
         }
         const char* fail = 0;
-        uint32_t shift = 0;
-        uint64_t i;
+        uint32_t i;
         do {
             d >> i;
-            shift = uint32_t(i % header_.persistentCellSize);
-            if ( shift ) { fail = "parent"; break; }
-            node->parent = i/header_.persistentCellSize;
+            if ( i >= header_.cells_count ) { fail = "parent"; break; }
+            node->parent = i;
             d >> i;
-            shift = uint32_t(i % header_.persistentCellSize);
-            if ( shift ) { fail = "left"; break; }
-            node->left = i/header_.persistentCellSize;
+            if ( i >= header_.cells_count ) { fail = "left"; break; }
+            node->left = i;
             d >> i;
-            shift = uint32_t(i % header_.persistentCellSize);
-            if ( shift ) { fail = "right"; break; }
-            node->right = i/header_.persistentCellSize;
+            if ( i >= header_.cells_count ) { fail = "right"; break; }
+            node->right = i;
         } while ( false );
         if ( fail ) {
-            if (logger) smsc_log_warn( logger, "rbtree: reading node @ %p: %s field (%lld) is shifted via %d bytes",
-                                       node, fail, i, shift );
-            throw smsc::util::Exception( "rbtree: reading node @ %p: %s field (%lld) is shifted via %d bytes",
-                                         node, fail, i, shift );
+            if (logger) smsc_log_warn( logger, "rbtree: reading node @ %p: %s field (%u) is greater than total number of cells (%u)",
+                                       node, fail, unsigned(i), unsigned(header_.cells_count) );
+            throw smsc::util::Exception( "rbtree: reading node @ %p: %s field (%u) is greater than total number of cells (%u)",
+                                         node, fail, unsigned(i), unsigned(header_.cells_count) );
         }
-        uint32_t j;
+        uint8_t j;
         d >> j;
         node->color = j;
         KS ks; ks.deserialize(d,node->key);
-        d >> j; // alignment
         VS vs; vs.deserialize(d,node->value);
     }
 
@@ -815,13 +818,11 @@ private:
         const bool first = ( s.size() == 0 );
         if ( first ) s.writeAsIs( 20, "RBTREE_FILE_STORAGE!" );
         else s.setwpos(20);
-        int32_t alignment = 0;
         s << hdr.version << hdr.cells_count << hdr.cells_used << hdr.cells_free <<
-            alignment <<
-            int64_t(hdr.root_cell * hdr.persistentCellSize) <<
-            int64_t(hdr.first_free_cell * hdr.persistentCellSize) <<
-            int64_t(hdr.nil_cell * hdr.persistentCellSize) <<
-            int64_t(hdr.growth);
+            uint32_t(hdr.root_cell) <<
+            uint32_t(hdr.first_free_cell) <<
+            uint32_t(hdr.nil_cell) <<
+            uint32_t(hdr.growth);
         if ( first ) 
             s.writeAsIs( 160,
                          "Written by db. This is a dummy message which serves as a placeholder "
@@ -830,6 +831,7 @@ private:
                          "ABCDEFGHIKLMNOPQRSTUVWXYZ"
                          "abcdefghiklmnopqrstuvwxyz" );
     }
+
     void deserializeRbtHeader( Deserializer& d, RbtFileHeader& hdr ) {
         const char* p = d.readAsIs(20);
         if ( strncmp(p, "RBTREE_FILE_STORAGE!", 20) ) {
@@ -838,33 +840,23 @@ private:
             throw DeserializerException::stringMismatch();
         }
         d >> hdr.version >> hdr.cells_count >> hdr.cells_used >> hdr.cells_free;
-        int32_t align;
-        d >> align; // alignment
-        int64_t i;
-        d >> i; hdr.root_cell = i;
-        d >> i; hdr.first_free_cell = i;
-        d >> i; hdr.nil_cell = i;
-        d >> i; hdr.growth = i;
-        persistentCellSize( hdr );
-        // post processing
+        uint32_t i;
         const char* fail = 0;
-        int32_t shift;
         do {
-            shift = int32_t( hdr.root_cell % hdr.persistentCellSize );
-            if ( shift ) { fail = "root_cell"; break; }
-            hdr.root_cell = hdr.root_cell / hdr.persistentCellSize;
-            shift = int32_t( hdr.first_free_cell % hdr.persistentCellSize );
-            if ( shift ) { fail = "first_free_cell"; break; }
-            hdr.first_free_cell = hdr.first_free_cell / hdr.persistentCellSize;
-            shift = int32_t( hdr.nil_cell % hdr.persistentCellSize );
-            if ( shift ) { fail = "nil_cell"; break; }
-            hdr.nil_cell = hdr.nil_cell / hdr.persistentCellSize;
-        } while ( false );
+            d >> i; hdr.root_cell = i;
+            if ( i >= hdr.cells_count ) { fail = "root_cell"; break; }
+            d >> i; hdr.first_free_cell = i;
+            if ( i >= hdr.cells_count ) { fail = "first_free_cell"; break; }
+            d >> i; hdr.nil_cell = i;
+            if ( i >= hdr.cells_count ) { fail = "nil_cell"; break; }
+            d >> i; hdr.growth = i;
+            persistentCellSize( hdr );
+        } while (false);
         if ( fail ) {
-            if ( logger ) smsc_log_error( logger, "rbtree header field %s is shifted %d bytes, values are: root_cell=%lld, first_free_cell=%lld, nil_cell=%lld, cellsize=%d",
-                                          fail, shift, hdr.root_cell, hdr.first_free_cell, hdr.nil_cell, int32_t(hdr.persistentCellSize) );
-            throw smsc::util::Exception( "rbtree header field %s is shifted %d bytes, values are: root_cell=%lld, first_free_cell=%lld, nil_cell=%lld, cellsize=%d",
-                                         fail, shift, hdr.root_cell, hdr.first_free_cell, hdr.nil_cell, int32_t(hdr.persistentCellSize) );
+            if ( logger ) smsc_log_error( logger, "rbtree header field %s (%u) is greater than total number of cells (%u)",
+                                          fail, i, unsigned(hdr.cells_count) );
+            throw smsc::util::Exception( "rbtree header field %s (%u) is greater than total number of cells (%u)",
+                                         fail, i, unsigned(hdr.cells_count) );
         }
         d.readAsIs(160); // skip 160 bytes
     }
@@ -884,7 +876,7 @@ private:
     {
         assert( header.version );
         RBTreeNode n;
-        memset( (void*)&n, 0, cellsize() );
+        memset( (void*)&n, 0, sizeof(RBTreeNode) );
         std::vector< unsigned char > buf;
         buf.reserve(cellsize()*2);
         Serializer s(buf);

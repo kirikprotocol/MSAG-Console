@@ -22,11 +22,11 @@ const char BLACK = 0;
 // transient representation of the node
 template < class Key, typename Value > struct templRBTreeNode
 {
-    typedef long nodeptr_type;
+    typedef unsigned nodeptr_type;
     nodeptr_type parent;         // also is used as a next_free_cell
     nodeptr_type left;
     nodeptr_type right;
-    int32_t      color;
+    int8_t       color;
     Key		 key;
     Value	 value;
 };
