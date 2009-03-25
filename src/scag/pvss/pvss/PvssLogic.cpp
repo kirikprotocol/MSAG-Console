@@ -1,4 +1,5 @@
 #include "PvssLogic.h"
+#include "PvssDispatcher.h"
 
 #include <exception>
 #include "core/buffers/File.hpp"
@@ -49,7 +50,7 @@ Response* AbonentLogic::processProfileRequest(AbstractProfileRequest& request) {
 
   AbstractProfileRequest &profileRequest = static_cast< AbstractProfileRequest& >(request);
   const ProfileKey &profileKey = profileRequest.getProfileKey();
-  unsigned elstorageIndex = static_cast<unsigned>(profileKey.getAddress().getNumber() % storagesCount_);
+  unsigned elstorageIndex = static_cast<unsigned>(profileKey.getAddress().getNumber() % dispatcher_.getStoragesCount());
   smsc_log_debug(logger_, "%p: %p process profile key='%s' in location: %d, storage: %d",
                   this, &request, profileKey.getAddress().toString().c_str(), locationNumber_, elstorageIndex);
 
@@ -188,9 +189,11 @@ AbonentLogic::~AbonentLogic() {
 void AbonentLogic::init() throw (smsc::util::Exception)
 {
     smsc_log_debug(logger_," init abonent location #%u", locationNumber_ );
-    for ( unsigned i = 0; i < storagesCount_; ++i ) {
-        if ( util::storage::StorageNumbering::instance().node(i) == nodeNumber_ ) {
-            initElementStorage(i);
+    for ( unsigned i = 0; i < dispatcher_.getStoragesCount(); ++i ) {
+        if ( util::storage::StorageNumbering::instance().node(i) == dispatcher_.getNodeNumber() ) {
+            if ( dispatcher_.getLocationNumber(i) == locationNumber_ ) {
+                initElementStorage(i);
+            }
         }
     }
 }

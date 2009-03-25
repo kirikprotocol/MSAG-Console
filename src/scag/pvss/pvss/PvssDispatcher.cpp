@@ -91,9 +91,8 @@ void PvssDispatcher::init( const AbonentStorageConfig& abntcfg, const Infrastruc
       smsc_log_debug(logger_, "create storage dir '%s'", abntcfg.locationPath[locationNumber].c_str());
       File::MkDir(abntcfg.locationPath[locationNumber].c_str());
     }
-    AbonentLogic* logic = new AbonentLogic( nodeNumber_,
+    AbonentLogic* logic = new AbonentLogic( *this,
                                             locationNumber,
-                                            storagesCount_,
                                             abntcfg );
     abonentLogics_.Push(logic);
     ++createdLocations_;
@@ -104,7 +103,7 @@ void PvssDispatcher::init( const AbonentStorageConfig& abntcfg, const Infrastruc
         if (!infcfg) {
             throw Exception("Error init infrastruct storage, config in NULL");
         }
-        infrastructLogic_.reset( new InfrastructLogic(*infcfg) );
+        infrastructLogic_.reset( new InfrastructLogic(*this,*infcfg) );
     }
 
     // we have to init all logics in parallel
@@ -151,7 +150,7 @@ void PvssDispatcher::init( const AbonentStorageConfig& abntcfg, const Infrastruc
      */
 }
 
-unsigned PvssDispatcher::getLocationNumber(unsigned elementStorageNumber) {
+unsigned PvssDispatcher::getLocationNumber(unsigned elementStorageNumber) const {
   return (elementStorageNumber / StorageNumbering::instance().nodes()) % locationsCount_;
 }
 

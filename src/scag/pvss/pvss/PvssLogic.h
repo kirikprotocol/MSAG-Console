@@ -41,10 +41,11 @@ using core::server::Server;
 class Request;
 class Response;
 class AbstractProfileRequest;
+class PvssDispatcher;
 
 class PvssLogic: public Server::SyncLogic {
 public:
-  PvssLogic():logger_(Logger::getInstance("storeproc")) {};
+  PvssLogic( PvssDispatcher& dispatcher ) : dispatcher_(dispatcher), logger_(Logger::getInstance("storeproc")) {}
   virtual ~PvssLogic() {};
   Response* process(Request& request) throw(PvssException);
   void responseSent(std::auto_ptr<core::server::ServerContext> response) { /*TODO: implement this method*/ };
@@ -63,7 +64,8 @@ protected:
 
 protected:
   //unsigned maxWaitingCount_;
-  Logger* logger_;
+    PvssDispatcher& dispatcher_;
+    Logger* logger_;
   ProfileCommandProcessor commandProcessor_;
 };
 
@@ -71,8 +73,9 @@ struct AbonentStorageConfig;
 
 class AbonentLogic: public PvssLogic {
 public:
-    AbonentLogic( unsigned nodeNumber, unsigned locationNumber, unsigned storagesCount, const AbonentStorageConfig& cfg ) :
-    nodeNumber_(nodeNumber), locationNumber_(locationNumber), storagesCount_(storagesCount),
+    AbonentLogic( PvssDispatcher& dispatcher, unsigned locationNumber, const AbonentStorageConfig& cfg ) :
+    PvssLogic(dispatcher),
+    locationNumber_(locationNumber),
     abntlog_(smsc::logger::Logger::getInstance("pvss.abnt")), config_(cfg) {}
   ~AbonentLogic();
 
@@ -109,18 +112,17 @@ private:
 
 private:
   IntHash<ElementStorage> elementStorages_;
-    unsigned nodeNumber_;
   unsigned locationNumber_;
-  unsigned storagesCount_;
   Logger* abntlog_;
-    const AbonentStorageConfig& config_;
+  const AbonentStorageConfig& config_;
 };
 
 struct InfrastructStorageConfig;
 
 class InfrastructLogic: public PvssLogic {
 public:
-    InfrastructLogic( const InfrastructStorageConfig& cfg ) : 
+    InfrastructLogic( PvssDispatcher& dispatcher, const InfrastructStorageConfig& cfg ) :
+    PvssLogic(dispatcher),
     provider_(NULL), service_(NULL), operator_(NULL), config_(cfg),
     plog_(smsc::logger::Logger::getInstance("pvss.prov")),
     slog_(smsc::logger::Logger::getInstance("pvss.serv")),

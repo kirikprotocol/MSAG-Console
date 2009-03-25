@@ -31,8 +31,12 @@ public:
   void init(const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg) throw (smsc::util::Exception);
   unsigned getInfrastructNodeNumber() const { return 0; }
 
+    inline unsigned getNodeNumber() const { return nodeNumber_; }
+    inline unsigned getStoragesCount() const { return storagesCount_; }
+
+  unsigned getLocationNumber(unsigned elementStorageNumber) const;
+
 private:
-  unsigned getLocationNumber(unsigned elementStorageNumber);
   AbonentLogic* getLocation(unsigned elementStorageNumber);
   void shutdown();
 
