@@ -25,7 +25,13 @@ using smsc::logger::Logger;
 
 class DataFileCreator : Thread {
 public:
-  DataFileCreator():file_(0), fileSize_(0), blockSize_(0), filesCount_(0), fileCreated_(false), logger_(0) {};
+  enum State {
+    OK,
+    CREATING,
+    ERROR
+  };
+public:
+  DataFileCreator():file_(0), fileSize_(0), blockSize_(0), filesCount_(0), fileCreated_(false), logger_(0), state_(OK) {};
 
   void init(int32_t fileSize, int32_t blockSize, int32_t filesCount, const string& dbPath, const string& dbName, Logger* logger) {
     dbPath_ = dbPath;
@@ -44,11 +50,13 @@ public:
     if (getThreshold(ffb) >= ffbThreshold_) {
       if (File::Exists(name_.c_str())) {
         std::auto_ptr<File> f(new File);
-        if (logger_) smsc_log_info(logger_, "open preallocated file: %s", name_.c_str());
+        if (logger_) smsc_log_debug(logger_, "open preallocated file: %s", name_.c_str());
         f->RWOpen(name_.c_str());
         f->SetUnbuffered();
+        setState(OK);
         file_ = f.release();
       } else {
+        setState(CREATING);
         Start();      
       }
       return;
@@ -62,12 +70,15 @@ public:
   void create(int64_t ffb, int32_t filesCount) {
     filesCount_ = filesCount;
     if (ffb == 0 && filesCount_ == 0) {
-      if (logger_) smsc_log_info(logger_, "allocate first data file");
+      name_ = makeDataFileName(filesCount_);
+      if (logger_) smsc_log_debug(logger_, "allocate first data file");
+      setState(CREATING);
       Start();
       return;
     }
     if (getThreshold(ffb) == ffbThreshold_) {
       if (logger_) smsc_log_debug(logger_, "ffb:%d == ffbThreshold_:%d", ffb - ((filesCount_ - 1) * fileSize_), ffbThreshold_);
+      setState(CREATING);
       Start();
       return;
     }
@@ -83,10 +94,10 @@ public:
   }
 
   File* getFile() {
-    if (!file_) {
-      if (logger_) smsc_log_warn(logger_, "wait while '%s' allocated", name_.c_str());
+    while (getState() == CREATING) {
+      if (logger_) smsc_log_debug(logger_, "wait while '%s' allocated", name_.c_str());
       MutexGuard mg(monitor_);
-      monitor_.wait(1000);
+      monitor_.wait();
     }
     return file_;
   }
@@ -97,9 +108,10 @@ private:
   }
   void createDataFile() {
     name_ = makeDataFileName(filesCount_);
-    if (logger_) smsc_log_info(logger_, "preallocate new data file: '%s'", name_.c_str());
+    if (logger_) smsc_log_debug(logger_, "preallocate new data file: '%s'", name_.c_str());
     file_ = 0;
     fileCreated_ = false;
+    //setState(CREATING);
     char *emptyBlock = 0;
     checkExistedFile();
     try {
@@ -123,18 +135,20 @@ private:
       f->Write(emptyBlock, blockSize_);
       file_ = f.release();
       fileCreated_ = true;
-      if (logger_) smsc_log_info(logger_, "new data file: '%s' allocated, notify", name_.c_str());
+      setState(OK);
+      if (logger_) smsc_log_debug(logger_, "new data file: '%s' allocated, notify", name_.c_str());
 
       if (emptyBlock) delete[] emptyBlock;
       MutexGuard mg(monitor_);
       monitor_.notify();
     } catch (const std::exception& ex) {
-      if (logger_) smsc_log_error(logger_, "Error create data file, notify, rethrow. std::exception: '%s'", ex.what());
+      if (logger_) smsc_log_error(logger_, "Error create data file. std::exception: '%s'", ex.what());
       file_ = 0;
+      setState(ERROR);
       if (emptyBlock) delete[] emptyBlock;
       MutexGuard mg(monitor_);
       monitor_.notify();
-      throw;
+      //throw;
     }
   };
 
@@ -166,6 +180,16 @@ private:
       return dbPath_ + '/' + dbName_ + buff;
   }
 
+  void setState(State state) {
+    MutexGuard mg(monitor_);
+    state_ = state;
+  }
+
+  State getState() {
+    MutexGuard mg(monitor_);
+    return state_;
+  }
+
 private:
   File *file_;
   int32_t fileSize_; 
@@ -178,6 +202,7 @@ private:
   int64_t ffbThreshold_;
   Logger* logger_;
   EventMonitor monitor_;
+  State state_;
 };
 
 
