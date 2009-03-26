@@ -118,18 +118,21 @@ Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& reques
 
 void AbonentLogic::initElementStorage(unsigned index) throw (smsc::util::Exception) {
   char pathSuffix[4];
-  sprintf(pathSuffix, "%03d", index);			
+  snprintf(pathSuffix, sizeof(pathSuffix), "%03u", index);
   string path = string(config_.locationPath[locationNumber_] + "/") + pathSuffix;
   ElementStorage elStorage(index);
   elStorage.glossary = new Glossary();
   initGlossary(path, elStorage.glossary);
 
-  std::auto_ptr< DiskIndexStorage > dis(new DiskIndexStorage( config_.dbName, path, config_.indexGrowth,
-                                                              false, smsc::logger::Logger::getInstance("pvss.idx")));
+    const std::string pathSuffixString(pathSuffix);
+  std::auto_ptr< DiskIndexStorage > dis
+        (new DiskIndexStorage( config_.dbName, path, config_.indexGrowth, false,
+                               smsc::logger::Logger::getInstance(("pvssix."+pathSuffixString).c_str())));
   smsc_log_debug(logger_, "data index storage %d is created", index);
   std::auto_ptr< DiskDataStorage::storage_type > bs
-        (new DiskDataStorage::storage_type(elStorage.glossary,
-                                           smsc::logger::Logger::getInstance("pvss.bhdisk")));
+        (new DiskDataStorage::storage_type
+         (elStorage.glossary,
+          smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
   int ret = -1;
   const string fn(config_.dbName + "-data");
 
@@ -146,13 +149,13 @@ void AbonentLogic::initElementStorage(unsigned index) throw (smsc::util::Excepti
   }
   std::auto_ptr< DiskDataStorage > dds
         (new DiskDataStorage(bs.release(),
-                             smsc::logger::Logger::getInstance("pvss.disk.d")));
+                             smsc::logger::Logger::getInstance(("pvssdd."+pathSuffixString).c_str())));
   smsc_log_debug(logger_, "data disk storage %d is created", index);
 
   std::auto_ptr< DiskStorage > ds(new DiskStorage(dis.release(), dds.release()));
   smsc_log_debug(logger_, "disk storage is assembled");
 
-  std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance("cache"), config_.cacheSize));
+  std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc."+pathSuffixString).c_str()), config_.cacheSize));
   smsc_log_debug(logger_, "memory storage is created");
 
   elStorage.storage = new AbonentStorage(ms.release(), ds.release());
