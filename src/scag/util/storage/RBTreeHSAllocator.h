@@ -168,7 +168,10 @@ public:
     virtual nodeptr_type allocateNode(void)
     {
         if (!running) return 0;
-        if (!header_.cells_free && ReallocRBTreeFile() != SUCCESS) abort();
+        if (!header_.cells_free && ReallocRBTreeFile() != SUCCESS) {
+            if (logger) smsc_log_fatal(logger,"ReallocRBTree is not successful, will ABORT!");
+            ::abort();
+        }
         nodeptr_type newNode = header_.first_free_cell;
         if (logger) smsc_log_debug( logger, "allocateNode node=%ld", (long)newNode );
         RBTreeNode* node = addr2node(newNode);
@@ -418,13 +421,16 @@ private:
             completeChanges();
         }
 
-        if (logger) smsc_log_debug( logger, "ReallocRBTree: cells_used %ld, cells_free %ld, cells_count %ld, first_free_cell %ld, root_cell %ld, nil_cell %ld, perscellsize %d",
-                                    long(header_.cells_used), long(header_.cells_free),
-                                    long(header_.cells_count), long(header_.first_free_cell),
-                                    long(header_.root_cell), long(header_.nil_cell),
-                                    int(header_.persistentCellSize));
+        if (logger) smsc_log_info( logger, "ReallocRBTree: cells_count=%u cells_used=%u cells_free=%u root_cell=%u first_free_cell=%u pers_cell_size=%u trans_cell_size=%u",
+                                   header_.cells_count,
+                                   header_.cells_used,
+                                   header_.cells_free,
+                                   unsigned(header_.root_cell),
+                                   unsigned(header_.first_free_cell),
+                                   unsigned(header_.persistentCellSize),
+                                   unsigned(sizeof(RBTreeNode)));
         // check nodes
-        freenodes();
+        // freenodes();
         return SUCCESS;
     }
 
@@ -457,6 +463,8 @@ private:
         trans_f.WriteNetInt32(STAT_OK);
         int ret = ReallocRBTreeFile();
         if ( ret != SUCCESS ) return ret;
+        // check integrity
+        freenodes();
         return SUCCESS;
     }
     
@@ -541,7 +549,7 @@ private:
 
             // create the necessary number of chunks
             unsigned needchunks = (maxcells-1) / growth + 1;
-            if (logger) smsc_log_warn(logger,"OpenRBTree is going to read cells=%ld, chunks=%ld", long(maxcells), long(needchunks));
+            if (logger) smsc_log_info(logger,"OpenRBTree is going to read %ld cells, %ld chunks", long(maxcells), long(needchunks));
             chunks_.reserve( needchunks );
 
             {
@@ -604,7 +612,7 @@ private:
             } else if ( logger ) {
 
                 if ( len != expectedLen && logger->isDebugEnabled() ) {
-                    smsc_log_warn( logger, "RBTree file size differ: expectedlen=%lld len=%lld",
+                    smsc_log_warn( logger, "RBTree file size differs: expectedlen=%lld len=%lld",
                                    int64_t(expectedLen), int64_t(len) );
 
                     RBTreeChecker< Key, Value > checker( *this,
@@ -632,14 +640,17 @@ private:
             return CANNOT_OPEN_RBTREE_FILE;
         }
 
-        if (logger) smsc_log_info( logger, "OpenRBTree: version=%d cells_count=%d cells_used=%d cells_free=%d root_cell=%d first_free_cell=%d pers_cell_size=%d",
+        if (logger) smsc_log_info( logger, "OpenRBTree: version=%u cells_count=%u cells_used=%u cells_free=%u root_cell=%u first_free_cell=%u pers_cell_size=%u trans_cell_size=%u",
                                    header_.version,
                                    header_.cells_count,
                                    header_.cells_used,
                                    header_.cells_free,
-                                   int32_t(header_.root_cell),
-                                   int32_t(header_.first_free_cell),
-                                   int(header_.persistentCellSize) );
+                                   unsigned(header_.root_cell),
+                                   unsigned(header_.first_free_cell),
+                                   unsigned(header_.persistentCellSize),
+                                   unsigned(sizeof(RBTreeNode)));
+        // check integrity
+        freenodes();
         return ret;
     }
     
