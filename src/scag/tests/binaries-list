@@ -22,3 +22,10 @@ scag/tests/test15     test15	      -lcore-threads \
   $(__LIBRARIES) \
   -lrt -ldl $(LIBMALLOC)
 scag/tests/test16     test16
+scag/tests/test17     test17 \
+  -lscag-util \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  $(__LIBRARIES) \
+  -lrt -ldl $(LIBMALLOC)
+
+scag/tests/test18     test18

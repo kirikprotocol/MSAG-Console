@@ -22,7 +22,7 @@ public:
     Inc( volatile int& value ) : value_(value) {}
     
     virtual const char* taskName() { return "inc"; }
-    virtual int Execute() {
+    virtual int doExecute() {
         while ( ! isStopping ) {
             ++value_;
             // smsc_log_debug(log_,"inc %d", value_);
