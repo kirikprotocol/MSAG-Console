@@ -23,6 +23,7 @@
 #include "DataBlockBackup.h"
 #include "util/Exception.hpp"
 #include "util/Uint64Converter.h"
+#include "DataFileCreator.h"
 
 namespace scag {
 namespace util {
@@ -345,6 +346,7 @@ public:
         if(0 != (ret = CreateDescriptionFile(_blockSize, _fileSize)))
             return ret;
         try {
+            dataFileCreator_.create(descrFile.first_free_block, descrFile.files_count);
             CreateDataFile();
         } catch (const std::exception& e) {
             return CANNOT_CREATE_DATA_FILE;
@@ -369,6 +371,9 @@ public:
             return ret;
         if(0 != (ret = OpenBackupFile()))
             return ret;
+
+        dataFileCreator_.init(descrFile.file_size, descrFile.block_size, descrFile.files_count, dbPath, dbName, logger);
+        dataFileCreator_.openPreallocatedFile(descrFile.first_free_block);
 
         running = true;
         return 0;
@@ -661,6 +666,7 @@ private:
   std::vector< unsigned char > serHdrBuf_;
     unsigned char* deserBuf_;
     unsigned deserBufSize_;
+    DataFileCreator dataFileCreator_;
 
 private:
 
@@ -749,6 +755,7 @@ private:
         File* f = dataFile_f[fileNumber];
         f->Seek(offset, SEEK_SET);
         index_type ffb = f->ReadNetInt64();
+        dataFileCreator_.create(ffb, descrFile.files_count);
         if (ffb == -1) {
             ffb = descrFile.files_count * descrFile.file_size;
             CreateDataFile();
@@ -818,6 +825,7 @@ private:
         descrFile.file_size = _fileSize;
         effectiveBlockSize = descrFile.block_size - hdrSize;
         changeDescriptionFile();
+        dataFileCreator_.init(descrFile.file_size, descrFile.block_size, 0, dbPath, dbName, logger); 
         return 0;
     }
 
@@ -837,61 +845,18 @@ private:
     {
         const std::string name = makeDataFileName(descrFile.files_count);
         if (logger) smsc_log_info(logger, "Create data file: '%s'", name.c_str());
-        if (File::Exists(name.c_str())) {
-            // we move the old file and create a new one
-            for ( int backnum = 0;; ++backnum ) {
-                const std::string backname = 
-                    makeDataFileName( descrFile.files_count, backnum );
-                if ( File::Exists(backname.c_str()) ) {
-                    if ( backnum < 10 ) continue;
-                    if (logger) smsc_log_error(logger, "FSStorage: error create data file: file '%s' already exists",
-                                   name.c_str());
-                    throw FileException(FileException::errOpenFailed, name.c_str());
-                }
-
-                if (logger) smsc_log_debug( logger, "Renaming unregistered data file %s into %s", name.c_str(), backname.c_str() );
-                File::Rename( name.c_str(), backname.c_str() );
-                if (logger) smsc_log_info( logger, "unregisterd data file %s is renamed into %s",
-                               name.c_str(), backname.c_str() );
-                break;
-            }
-        }
-	
-        dataFile_f.push_back(new File());
-        if (logger) smsc_log_debug(logger, "Alloc: %p, %d", dataFile_f[descrFile.files_count], descrFile.files_count);
-        char* emptyBlock = 0;
         index_type startBlock = descrFile.files_count * descrFile.file_size;
         try
         {
-            dataFile_f[descrFile.files_count]->RWCreate(name.c_str());
-            dataFile_f[descrFile.files_count]->SetUnbuffered();
-            File *data_f = dataFile_f[descrFile.files_count];
-
-            //	create list of free blocks
-            emptyBlock = new char[descrFile.block_size];
-            //index_type* next_block = (index_type*)emptyBlock;
-            index_type endBlock = (descrFile.files_count + 1) * descrFile.file_size;
-
-            memset(emptyBlock, 0x00, descrFile.block_size);
-            for(index_type i = startBlock + 1; i < endBlock; i++)
-            {
-                //*next_block = i;
-                uint64_t ni = Uint64Converter::toNetworkOrder(i);
-                memcpy(emptyBlock, &ni, sizeof(ni));
-                data_f->Write(emptyBlock, descrFile.block_size);
-            }
-            //*next_block = -1;
-            uint64_t ni = Uint64Converter::toNetworkOrder(-1);
-            memcpy(emptyBlock, &ni, sizeof(ni));
-            data_f->Write(emptyBlock, descrFile.block_size);
-            delete[] emptyBlock;
+          File *f = dataFileCreator_.getFile();
+          if (!f) {
+            throw FileException(FileException::errOpenFailed, dataFileCreator_.getFileName());
+          }
+          dataFile_f.push_back(f);
         }
         catch (const std::exception& ex)
         {
-            if (logger) smsc_log_debug(logger, "Error create data file. std::exception: '%s'", ex.what());
-            if (emptyBlock) {
-                delete[] emptyBlock;
-            }
+            if (logger) smsc_log_error(logger, "Error create data file. std::exception: '%s'", ex.what());
             throw;
         }
         descrFile.files_count++;
@@ -1057,7 +1022,7 @@ private:
 
     
     void restoreDataBlocks(const DescriptionFile& _descrFile, const char* data) {
-        if (dataBlockBackup.size() <= 1) {
+        if (dataBlockBackup.size() <= 0) {
             if (logger) smsc_log_warn(logger, "data blocks backup is empty");
             return;
         }
