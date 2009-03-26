@@ -292,6 +292,7 @@ int main(int argc, char* argv[]) {
     persServer->init(host.c_str(), syncConfig.getPort());
     persServer->Execute();
 
+    smsc_log_info(logger,"going to shutdown");
     server->shutdown();
 
     readers.shutdown();
@@ -303,9 +304,8 @@ int main(int argc, char* argv[]) {
         //waitObj.wait(100000);
       //  waitObj.wait();
     //}
-
-    smsc_log_info(logger,"going to shutdown");
-    server->shutdown();
+    //smsc_log_info(logger,"going to shutdown");
+    //server->shutdown();
 
     smsc_log_error(logger, "PersServer stopped");
   } catch (const smsc::util::config::ConfigException& exc) {
