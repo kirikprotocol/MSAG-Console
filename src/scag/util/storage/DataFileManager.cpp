@@ -6,7 +6,7 @@ namespace util    {
 namespace storage {
 
 int DataFileTask::Execute() {
-  creator_.createDataFile();
+  creator_.createDataFile(10);
   return 0;
 }
 

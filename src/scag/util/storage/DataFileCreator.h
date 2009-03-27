@@ -63,7 +63,7 @@ public:
         file_ = f.release();
       } else {
         setState(CREATING);
-        createDataFile();
+        createDataFile(0);
       }
       return;
     }
@@ -83,7 +83,7 @@ public:
       name_ = makeDataFileName(filesCount_);
       if (logger_) smsc_log_debug(logger_, "allocate first data file");
       setState(CREATING);
-      createDataFile();
+      createDataFile(0);
       return;
     }
     if (getThreshold(ffb) == ffbThreshold_) {
@@ -103,10 +103,10 @@ public:
     return name_.c_str();
   }
 
-  int Execute() {
-    createDataFile();
-    return 0;
-  }
+  //int Execute() {
+    //createDataFile();
+    //return 0;
+  //}
 
   File* getFile() {
     while (getState() == CREATING) {
@@ -122,7 +122,20 @@ public:
     }
   }
 
-  void createDataFile() {
+  int64_t prepareBlock(char* writeBlock, int blocksCount, int64_t startIndex, int lastBlock) {
+    lastBlock = lastBlock > 0 ? 1 : 0;
+    for (int i = 0; i < blocksCount - lastBlock; ++i) {
+      uint64_t ni = Uint64Converter::toNetworkOrder(startIndex++);
+      memcpy(writeBlock + (i * blockSize_), &ni, sizeof(ni));
+    }
+    if (lastBlock > 0) {
+      uint64_t ni = Uint64Converter::toNetworkOrder(-1);
+      memcpy(writeBlock + ((blocksCount - 1) * blockSize_), &ni, sizeof(ni));
+    }
+    return startIndex;
+  }
+
+  void createDataFile(int sleepTime) {
     name_ = makeDataFileName(filesCount_);
     if (logger_) smsc_log_info(logger_, "preallocate new data file: '%s'", name_.c_str());
     file_ = 0;
@@ -137,9 +150,21 @@ public:
   
       int64_t startBlock = filesCount_ * fileSize_;
       int64_t endBlock = (filesCount_ + 1) * fileSize_;
-  
-      emptyBlock = new char[blockSize_];
-      memset(emptyBlock, 0x00, blockSize_);
+      int blocksCount = 100;
+      int writeCount = fileSize_ / blocksCount;
+      emptyBlock = new char[blockSize_ * blocksCount];
+      memset(emptyBlock, 0x00, blockSize_ * blocksCount);
+      int64_t index = startBlock + 1;
+      for (int i = 0; i < writeCount - 1; ++i) {
+        index = prepareBlock(emptyBlock, blocksCount, index, 0);
+        f->Write(emptyBlock, blockSize_ * blocksCount);
+        if (sleepTime > 0) {
+          sleepMonitor_.wait(sleepTime);
+        }
+      }
+      index = prepareBlock(emptyBlock, blocksCount, index, 1);
+      f->Write(emptyBlock, blockSize_ * blocksCount);
+/*
       for(int64_t i = startBlock + 1; i < endBlock; i++)
       {
           uint64_t ni = Uint64Converter::toNetworkOrder(i);
@@ -149,6 +174,8 @@ public:
       uint64_t ni = Uint64Converter::toNetworkOrder(-1);
       memcpy(emptyBlock, &ni, sizeof(ni));
       f->Write(emptyBlock, blockSize_);
+*/
+
       file_ = f.release();
       fileCreated_ = true;
       setState(CREATED);
@@ -224,6 +251,7 @@ private:
   int64_t ffbThreshold_;
   Logger* logger_;
   EventMonitor monitor_;
+  EventMonitor sleepMonitor_;
   State state_;
 };
 
