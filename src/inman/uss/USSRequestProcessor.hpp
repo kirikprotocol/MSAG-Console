@@ -9,7 +9,7 @@
 //# include "util/TonNpiAddress.hpp"
 //# include "core/synchronization/Mutex.hpp" 
 # include "inman/interaction/connect.hpp"
-# include "inman/inap/session.hpp"
+# include "inman/inap/HDSSnSession.hpp"
 # include "inman/inap/map_uss/DlgMapUSS.hpp"
 # include "inman/comp/map_uss/MapUSSComps.hpp"
 

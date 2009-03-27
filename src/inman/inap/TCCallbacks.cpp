@@ -59,6 +59,7 @@ TCCbkLink::TCCbkLink()
 } //smsc
 
 using smsc::inman::inap::TCCbkLink;
+using smsc::inman::inap::TCDialogID;
 
 #define tcapLogger TCCbkLink::get().tcapLogger()
 
@@ -77,26 +78,41 @@ static SSNSession* findSSNsession(UCHAR_T ssn)
     return pSession;
 }
 
-static Dialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
+static Dialog* findDialog(UCHAR_T ssn, EINSS7INSTANCE_T tcapInstanceId,
+                          USHORT_T dialogueId)
 {
     Dialog* pDlg = NULL;
     SSNSession* pSession = findSSNsession(ssn);
-    if (pSession && !(pDlg = pSession->findDialog(dialogueId)))
-        tccb_log_warn("SS7TC: Invalid(closed) Dialog[0x%X]", (unsigned)dialogueId);
+    if (pSession && !(pDlg = pSession->findDialog(TCDialogID(tcapInstanceId, dialogueId))))
+        tccb_log_warn("SS7TC: Invalid(closed) Dialog[%U:%Xh]", 
+                      (unsigned)tcapInstanceId, (unsigned)dialogueId);
     return pDlg;
 }
 
 //-------------------------------- Callbacks implementation -----------------------
 USHORT_T EINSS7_I97TBindConf(UCHAR_T ssn, USHORT_T userId,
-                            EINSS7INSTANCE_T tcapInstanceId, UCHAR_T bindResult)
+                            EINSS7INSTANCE_T tcapInstanceId, UCHAR_T bindResult
+#ifdef EIN_HD
+#if EIN_HD >= 101
+                            , UCHAR_T sccpStandard
+#endif /* EIN_HD >= 101 */
+#endif /* EIN_HD */
+                            )
 {
+#ifndef EIN_HD
     tccb_log_debug("SS7_I97TBindConf(SSN=%u, UserId=%u, TcapInstanceId=%u, bindResult=%u(%s))",
                    (unsigned)ssn, (unsigned)userId, (unsigned)tcapInstanceId,
                    (unsigned)bindResult, rc2Txt_TC_BindResult(bindResult));
+#elif EIN_HD >= 101
+    tccb_log_debug("SS7_I97TBindConf(SSN=%u, UserId=%u, TcapInstanceId=%u, bindResult=%u(%s), sccpStd=%u)",
+                   (unsigned)ssn, (unsigned)userId, (unsigned)tcapInstanceId,
+                   (unsigned)bindResult, rc2Txt_TC_BindResult(bindResult), (unsigned)sccpStandard);
+#endif /* EIN_HD */
+
 
     TCAPDispatcher * dsp = TCCbkLink::get().tcapDisp();
     if (dsp)
-        dsp->confirmSSN(ssn, bindResult);
+        dsp->confirmSSN(ssn, tcapInstanceId, bindResult);
     return MSG_OK;
 }
 
@@ -125,15 +141,21 @@ USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
                                 USHORT_T         dialogueId,
                                 UCHAR_T          priOrder,
                                 UCHAR_T          qualityOfService,
+#ifdef EIN_HD
+#if EIN_HD >= 101
+                                UCHAR_T         orgAdrLength,
+                                UCHAR_T         *orgAdr_p,
+#endif /* EIN_HD >= 101 */
+#endif /* EIN_HD */
                                 UCHAR_T          compPresent,
                                 UCHAR_T          appContextLength,
                                 UCHAR_T          *appContext_p,
                                 USHORT_T         userInfoLength,
                                 UCHAR_T          *userInfo_p)
 {
+#ifndef EIN_HD
     tccb_log_debug("CONTINUE_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X]\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Comp. present: %s\n"
                     "  App. context: %s\n"
@@ -144,7 +166,23 @@ USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
                    DumpHex(appContextLength, appContext_p, _HexDump_CVSD).c_str(),
                    DumpHex(userInfoLength, userInfo_p, _HexDump_CVSD).c_str()
                    );
-    Dialog* dlg = findDialog(ssn, dialogueId);
+#elif EIN_HD >= 101
+    tccb_log_debug("CONTINUE_IND {"
+                    "  SSN: %u, UserID: %u,  Dialog[%u:%Xh]\n"
+                    "  PriOrder: 0x%X, QoS: 0x%X\n"
+                    "  Comp. present: %s\n"
+                    "  App. context: %s\n"
+                    "  User info: %s\n"
+                    "  Org. adr: %s\n"
+                    "}",
+                   ssn, userId, tcapInstanceId, dialogueId, priOrder,
+                   qualityOfService, compPresent ? "TRUE":"FALSE",
+                   DumpHex(appContextLength, appContext_p, _HexDump_CVSD).c_str(),
+                   DumpHex(userInfoLength, userInfo_p, _HexDump_CVSD).c_str(),
+                   DumpHex(orgAdrLength, orgAdr_p, _HexDump_CVSD).c_str()
+                   );
+#endif /* EIN_HD */
+    Dialog* dlg = findDialog(ssn, tcapInstanceId, dialogueId);
     if (dlg)
         dlg->handleContinueDialog(compPresent ? true : false);
     return MSG_OK;
@@ -160,8 +198,7 @@ USHORT_T EINSS7_I97TAddressInd(UCHAR_T ssn,
 				UCHAR_T *orgAdr_p)
 {
     tccb_log_debug("ADDRESS_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X]\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
                     "  Bitmask: 0x%X\n"
                     "  Org. address: %s\n"
                     "}",
@@ -185,8 +222,7 @@ USHORT_T EINSS7_I97TEndInd(UCHAR_T          ssn,
                            UCHAR_T          *userInfo_p)
 {
     tccb_log_debug("END_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X]\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Comp. present: %s\n"
                     "  App. context: %s\n"
@@ -197,7 +233,7 @@ USHORT_T EINSS7_I97TEndInd(UCHAR_T          ssn,
                    DumpHex(appContextLength, appContext_p, _HexDump_CVSD).c_str(),
                    DumpHex(userInfoLength, userInfo_p, _HexDump_CVSD).c_str()
                    );
-    Dialog* dlg = findDialog(ssn, dialogueId);
+    Dialog* dlg = findDialog(ssn, tcapInstanceId, dialogueId);
     if (dlg)
         dlg->handleEndDialog(compPresent ? true : false);
     return MSG_OK;
@@ -218,14 +254,13 @@ USHORT_T EINSS7_I97TInvokeInd(UCHAR_T          ssn,
                               UCHAR_T          *pm)
 {
     tccb_log_debug("INVOKE_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X], LastComponent: %s\n"
-                    "  InvokeID: 0x%X, LinkedId: %s\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
+                    "  InvokeID: 0x%X, LastComponent: %s, LinkedId: %s\n"
                     "  Operation: %s, Tag: %s\n"
                     "  Params[%u]: 0x%s\n"
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId,
-                    (lastComponent ? "TRUE" : "FALSE"), invokeId, 
+                    invokeId, (lastComponent ? "TRUE" : "FALSE"),
                     (linkedIdUsed ? format("0x%X", linkedId).c_str() : "NOT USED"),
                     DumpHex(opLength, op, _HexDump_CVSD).c_str(),
                     (tag == 0x02 ? "LOCAL" : "GLOBAL"), 
@@ -233,19 +268,20 @@ USHORT_T EINSS7_I97TInvokeInd(UCHAR_T          ssn,
                    );
     SSNSession* pSession = findSSNsession(ssn);
     if (pSession) {
-        Dialog* dlg = pSession->findDialog(dialogueId);
+        TCDialogID    dlgId(tcapInstanceId, dialogueId);
+        Dialog* dlg = pSession->findDialog(dlgId);
         if (dlg)
             dlg->handleInvoke(invokeId, tag, opLength, op, paramLength, pm, (bool)lastComponent);
         else { //look in noticed dialogs
             TNoticeParms    parms;
-            if (pSession->noticeParms(dialogueId, parms)) {
+            if (pSession->noticeParms(dlgId, parms)) {
                 if ((dlg = pSession->findDialog(parms.relId))) {
                     dlg->handleNoticeInd(parms.reportCause, TcapEntity::tceInvoke,
                                          invokeId, opLength, op);
                 }
                 EINSS7_I97TEndReq(ssn, userId, tcapInstanceId, dialogueId,
                                   0, 0, EINSS7_I97TCAP_TERM_PRE_ARR_END, 0, 0, 0, NULL);
-                pSession->releaseDialog(dialogueId);
+                pSession->releaseDialog(dlgId);
             }
         }
     }
@@ -265,33 +301,33 @@ USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
                                 UCHAR_T          *pm)
 {
     tccb_log_debug("RESULT_NL_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X], LastComponent: %s\n"
-                    "  InvokeID: 0x%X\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
+                    "  InvokeID: 0x%X, LastComponent: %s\n"
                     "  Operation: %s, Tag: %s\n"
                     "  Params[%u]: 0x%s\n"
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId,
-                    (lastComponent ? "TRUE" : "FALSE"), invokeId, 
+                    invokeId, (lastComponent ? "TRUE" : "FALSE"),
                     DumpHex(opLength, op, _HexDump_CVSD).c_str(),
                     (tag == 0x02 ? "LOCAL" : "GLOBAL"), 
                     paramLength, DumpHex(paramLength, pm).c_str()
                    );
     SSNSession* pSession = findSSNsession(ssn);
     if (pSession) {
+        TCDialogID    dlgId(tcapInstanceId, dialogueId);
         Dialog* dlg = pSession->findDialog(dialogueId);
         if (dlg)
             dlg->handleResultNotLast(invokeId, tag, opLength, op, paramLength, pm);
         else { //look in noticed dialogs
             TNoticeParms    parms;
-            if (pSession->noticeParms(dialogueId, parms)) {
+            if (pSession->noticeParms(dlgId, parms)) {
                 if ((dlg = pSession->findDialog(parms.relId))) {
                     dlg->handleNoticeInd(parms.reportCause, TcapEntity::tceResultNL,
                                          invokeId, opLength, op);
                 }
                 EINSS7_I97TEndReq(ssn, userId, tcapInstanceId, dialogueId,
                                   0, 0, EINSS7_I97TCAP_TERM_PRE_ARR_END, 0, 0, 0, NULL);
-                pSession->releaseDialog(dialogueId);
+                pSession->releaseDialog(dlgId);
             }
         }
     }
@@ -311,21 +347,21 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
                                 UCHAR_T          *pm)
 {
     tccb_log_debug("RESULT_L_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X], LastComponent: %s\n"
-                    "  InvokeID: 0x%X\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
+                    "  InvokeID: 0x%X, LastComponent: %s\n"
                     "  Operation: %s, Tag: %s\n"
                     "  Params[%u]: 0x%s\n"
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId,
-                    (lastComponent ? "TRUE" : "FALSE"), invokeId, 
+                    invokeId, (lastComponent ? "TRUE" : "FALSE"),
                     DumpHex(opLength, op, _HexDump_CVSD).c_str(),
                     (tag == 0x02 ? "LOCAL" : "GLOBAL"), 
                     paramLength, DumpHex(paramLength, pm).c_str()
                    );
     SSNSession* pSession = findSSNsession(ssn);
     if (pSession) {
-        Dialog* dlg = pSession->findDialog(dialogueId);
+        TCDialogID    dlgId(tcapInstanceId, dialogueId);
+        Dialog* dlg = pSession->findDialog(dlgId);
         if (dlg)
             dlg->handleResultLast(invokeId, tag, opLength, op, paramLength, pm);
         else { //look in noticed dialogs
@@ -337,7 +373,7 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
                 }
                 EINSS7_I97TEndReq(ssn, userId, tcapInstanceId, dialogueId,
                                   0, 0, EINSS7_I97TCAP_TERM_PRE_ARR_END, 0, 0, 0, NULL);
-                pSession->releaseDialog(dialogueId);
+                pSession->releaseDialog(dlgId);
             }
         }
     }
@@ -357,21 +393,21 @@ USHORT_T EINSS7_I97TUErrorInd(UCHAR_T          ssn,
                               UCHAR_T          *pm)
 {
     tccb_log_debug("U_ERROR_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X], LastComponent: %s\n"
-                    "  InvokeID: 0x%X\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
+                    "  InvokeID: 0x%X, LastComponent: %s\n"
                     "  Error: %s, Tag: %s\n"
                     "  Params[%u]: %s\n"
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId,
-                    (lastComponent ? "TRUE" : "FALSE"), invokeId, 
+                    invokeId, (lastComponent ? "TRUE" : "FALSE"),
                     DumpHex(opLength, op, _HexDump_CVSD).c_str(),
                     (tag == 0x02 ? "LOCAL" : "GLOBAL"), 
                     paramLength, DumpHex(paramLength, pm).c_str()
                    );
     SSNSession* pSession = findSSNsession(ssn);
     if (pSession) {
-        Dialog* dlg = pSession->findDialog(dialogueId);
+        TCDialogID    dlgId(tcapInstanceId, dialogueId);
+        Dialog* dlg = pSession->findDialog(dlgId);
         if (dlg)
             dlg->handleResultError(invokeId, tag, opLength, op, paramLength, pm);
         else { //look in noticed dialogs
@@ -383,7 +419,7 @@ USHORT_T EINSS7_I97TUErrorInd(UCHAR_T          ssn,
                 }
                 EINSS7_I97TEndReq(ssn, userId, tcapInstanceId, dialogueId,
                                   0, 0, EINSS7_I97TCAP_TERM_PRE_ARR_END, 0, 0, 0, NULL);
-                pSession->releaseDialog(dialogueId);
+                pSession->releaseDialog(dlgId);
             }
         }
     }
@@ -399,15 +435,14 @@ USHORT_T EINSS7_I97TPAbortInd(UCHAR_T          ssn,
                               UCHAR_T          abortCause)
 {
     tccb_log_error("P_ABORT_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X]\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Abort cause: 0x%X\n"
                     "}",
                    ssn, userId, tcapInstanceId, dialogueId,
                    priOrder, qualityOfService, abortCause
                    );
-    Dialog* dlg = findDialog( ssn, dialogueId );
+    Dialog* dlg = findDialog(ssn, tcapInstanceId, dialogueId);
     if (dlg)
         dlg->handlePAbortDialog(abortCause);
     return MSG_OK;
@@ -427,8 +462,7 @@ USHORT_T EINSS7_I97TUAbortInd(UCHAR_T          ssn,
                               UCHAR_T          *userInfo_p)
 {
     tccb_log_error("U_ABORT_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X]\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Abort info: %s\n"
                     "  App. context: %s\n"
@@ -441,7 +475,7 @@ USHORT_T EINSS7_I97TUAbortInd(UCHAR_T          ssn,
                    DumpHex(userInfoLength, userInfo_p, _HexDump_CVSD).c_str()
                    );
 
-    Dialog* dlg = findDialog(ssn, dialogueId);
+    Dialog* dlg = findDialog(ssn, tcapInstanceId, dialogueId);
     return !dlg ? MSG_OK :
         dlg->handleUAbort(abortInfoLength, abortInfo_p, userInfoLength, userInfo_p);
 }
@@ -453,12 +487,12 @@ USHORT_T EINSS7_I97TLCancelInd( UCHAR_T          ssn,
                                 UCHAR_T          invokeId)
 {
     tccb_log_debug("L_CANCEL_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X], InvokeId: 0x%X\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
+                    "  InvokeId: 0x%X\n"
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId, invokeId
                    );
-    Dialog* dlg = findDialog(ssn, dialogueId);
+    Dialog* dlg = findDialog(ssn, tcapInstanceId, dialogueId);
     if (dlg)
         dlg->handleLCancelInvoke(invokeId);
     return MSG_OK;
@@ -478,14 +512,15 @@ USHORT_T EINSS7_I97TNoticeInd(UCHAR_T          ssn,
                               UCHAR_T          *orgAddr_p)
 {
     tccb_log_error("NOTICE_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X], RelDialog[0x%X]\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
+                    "  RelDialog[%u:%Xh]\n"
                     "  ReportCause: 0x%X, ReturnIndicator: 0x%X\n"
                     "  SegmentationIndicator: 0x%X\n"
                     "  Dest. address: %s\n"
                     "  Org. address: %s\n"
                     "}",
-                    ssn, userId, tcapInstanceId, dialogueId, relDialogueId,
+                    ssn, userId, tcapInstanceId, dialogueId,
+                    tcapInstanceId, relDialogueId,
                     reportCause, returnIndicator, segmentationIndicator,
                     DumpHex(destAddrLength, destAddr_p, _HexDump_CVSD).c_str(),
                     DumpHex(orgAddrLength, orgAddr_p, _HexDump_CVSD).c_str()
@@ -493,11 +528,12 @@ USHORT_T EINSS7_I97TNoticeInd(UCHAR_T          ssn,
     //Notify related dialog if it's present
     if (returnIndicator & EINSS7_I97TCAP_IND_NOCOMP_DIALOG) {
         SSNSession* pSession = findSSNsession(ssn);
-        if (pSession) { 
-            Dialog* dlg = pSession->findDialog(relDialogueId);
+        if (pSession) {
+            TCDialogID    relId(tcapInstanceId, relDialogueId);
+            Dialog* dlg = pSession->findDialog(relId);
             if (dlg) { //check for incoming component
                 if (returnIndicator & EINSS7_I97TCAP_IND_COMP_NODIALOG) {
-                    pSession->noticeInd(dialogueId, relDialogueId, reportCause);
+                    pSession->noticeInd(TCDialogID(tcapInstanceId, dialogueId), relId, reportCause);
                     return MSG_OK; //handle in TInvokeInd()
                 }
                 dlg->handleNoticeInd(reportCause);
@@ -526,8 +562,7 @@ USHORT_T EINSS7_I97TBeginInd(UCHAR_T          ssn,
                              UCHAR_T          *userInfo_p)
 {
     tccb_log_debug("BEGIN_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X]\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Comp. present: %s\n"
                     "  Dest. address: %s\n"
@@ -613,14 +648,13 @@ USHORT_T EINSS7_I97TURejectInd( UCHAR_T          ssn,
                                 UCHAR_T          problemCode)
 {
     tccb_log_debug("U_REJECT_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X], LastComponent: %s\n"
-                    "  InvokeId: %s\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
+                    "  InvokeId: %s, LastComponent: %s\n"
                     "  ProblemCode: 0x%X, ProblemCodeTag: 0x%X\n"
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId,
-                    lastComponent ? "TRUE" : "FALSE",
                     invokeIdUsed ? format("0x%X", invokeId).c_str() : "NOT USED",
+                    lastComponent ? "TRUE" : "FALSE",
                     problemCode, problemCodeTag
                    );
     // TODO: Implement
@@ -637,8 +671,7 @@ USHORT_T EINSS7_I97TLRejectInd(UCHAR_T          ssn,
                                UCHAR_T          problemCode)
 {
     tccb_log_debug("L_REJECT_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X]\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
                     "  InvokeId: %s\n"
                     "  ProblemCode: 0x%X, ProblemCodeTag: 0x%X\n"
                     "}",
@@ -661,14 +694,13 @@ USHORT_T EINSS7_I97TRRejectInd(UCHAR_T          ssn,
                                UCHAR_T          problemCode)
 {
     tccb_log_debug("R_REJECT_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X], LastComponent: %s\n"
-                    "  InvokeId: %s\n"
+                    "  SSN: %u, UserID: %u, Dialog[%u:%Xh]\n"
+                    "  InvokeId: %s, LastComponent: %s\n"
                     "  ProblemCode: 0x%X, ProblemCodeTag: 0x%X\n"
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId,
-                    lastComponent ? "TRUE" : "FALSE",
                     invokeIdUsed ? format("0x%X", invokeId).c_str() : "NOT USED",
+                    lastComponent ? "TRUE" : "FALSE",
                     problemCode, problemCodeTag
                    );
     // TODO: Implement

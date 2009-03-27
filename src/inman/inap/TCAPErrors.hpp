@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Various TC provider return/error codes.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_TCAP_ERRORS__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_TCAP_ERRORS__
 
 #include "i97tcapapi.h"
@@ -85,12 +85,24 @@ URCSpacePTR  _RCS_TC_UAbort("errTCUAbort", TC_UAbortCause::null, \
 struct TC_BindResult {
     enum {
         bindOk = EINSS7_I97TCAP_BIND_OK,
+#ifndef EIN_HD
         ssnInUse = EINSS7_I97TCAP_BIND_SSN_IN_USE,
+#elif EIN_HD >= 101
+        ssnInUse = EINSS7_I97TCAP_BIND_VALUE_IN_USE,
+#else
+        ssnInUse = 1,
+#endif /* EIN_HD >= 101 */
         protocolError = EINSS7_I97TCAP_BIND_PROTOCOL_ERR,
         noResources = EINSS7_I97TCAP_BIND_NO_RESOURCES,
         invalidSSN = EINSS7_I97TCAP_BIND_INVALID_SSN,
         sccpNotReady = EINSS7_I97TCAP_BIND_SCCP_NOT_READY,
+#ifndef EIN_HD
         tcUserIdErr = EINSS7_I97TCAP_BIND_USER_ID_ERR,
+        bindIfaceErr = 7,
+#elif EIN_HD >= 101
+        tcUserIdErr = EINSS7_I97TCAP_BIND_INVALID_USER_ID,
+        bindIfaceErr = EINSS7_I97TCAP_BIND_INTERFACE_ERR,
+#endif /* EIN_HD >= 101 */
         unknownErr
     };
 };
@@ -107,8 +119,9 @@ const char * rc2Txt_TC_BindResult(uint32_t rc_code) { \
     case TC_BindResult::invalidSSN: return "Invalid subsystem number"; \
     case TC_BindResult::sccpNotReady: return "SCCP not ready"; \
     case TC_BindResult::tcUserIdErr: return "The userId is invalid or the TC-user is already bound"; \
+    case TC_BindResult::bindIfaceErr: return "invalid TCBind() usage"; \
     default:; } \
-    return "unknown Bind() failure cause"; \
+    return "unknown TCBind() failure cause"; \
 }
 
 #define ODECL_RCS_TC_Bind() FDECL_rc2Txt_TC_BindResult() \

@@ -11,6 +11,32 @@ namespace smsc {
 namespace inman {
 namespace inap {
 
+
+//Ident of TCAP dialogue controlled by HD variant of TCAP BE
+struct TCDialogID {
+    uint8_t     tcInstId;   //instanceId of TCAP unit controlling this dialog
+    uint16_t    dlgId;      //
+
+    TCDialogID(uint8_t tc_inst_id = 0, uint16_t dlg_id = 0)
+        : tcInstId(tc_inst_id), dlgId(dlg_id)
+    { }
+
+    bool operator< (const TCDialogID & obj2) const
+    {
+        if (tcInstId < obj2.tcInstId)
+            return true;
+        if (tcInstId > obj2.tcInstId)
+            return false;
+        return (dlgId < obj2.dlgId);
+    }
+    bool operator== (const TCDialogID & obj2) const
+    {
+        if (tcInstId != obj2.tcInstId)
+            return false;
+        return (dlgId == obj2.dlgId);
+    }
+};
+
 struct TCDlgStateS {
 #define TCAP_DLG_COMP_LAST  2
 #define TCAP_DLG_COMP_WAIT  1

@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * TCAP Dispatcher service.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_TCAP_DISPATCHER__
+#ident "@(#)$Id$"
 #define __INMAN_ICS_TCAP_DISPATCHER__
 
 #include "inman/inap/dispatcher.hpp"
@@ -22,20 +22,20 @@ protected:
     // ---------------------------------
     // -- ICServiceAC interface methods
     // --------------------------------- 
-    inline Mutex & _icsSync(void) const { return _sync; }
+    Mutex & _icsSync(void) const { return _sync; }
     //Initializes service verifying that all dependent services are inited
-    inline RCode _icsInit(void)
+    RCode _icsInit(void)
     {
         return _disp->Init(*_cfg.get(), logger) ?
                 ICServiceAC::icsRcOk : ICServiceAC::icsRcError;
     }
     //Starts service verifying that all dependent services are started
-    inline RCode _icsStart(void)
+    RCode _icsStart(void)
     {
         return _disp->Start() ? ICServiceAC::icsRcOk : ICServiceAC::icsRcError;
     }
     //Stops service
-    inline void  _icsStop(bool do_wait = false)
+    void  _icsStop(bool do_wait = false)
     {
         _disp->Stop(do_wait);
     }
@@ -55,7 +55,7 @@ public:
     }
 
     //Returns TCAPDispatcherITF
-    inline void * Interface(void) const
+    void * Interface(void) const
     {
         return (TCAPDispatcherITF*)_disp.get();
     }
@@ -65,23 +65,23 @@ public:
     // TCAPDispatcherITF interface methods:
     // -------------------------------------
     //Returns state of TCAP unit connection
-    inline SS7State_T  ss7State(void) const
+    SS7State_T  ss7State(void) const
     {
         return _disp->ss7State();
     }
     //Binds SSN and initializes SSNSession (TCAP dialogs factory)
-    inline SSNSession * openSSN(uint8_t ssn_id, uint16_t max_dlg_id = 2000,
-                                uint16_t min_dlg_id = 1, Logger * uselog = NULL)
+    SSNSession * openSSN(uint8_t ssn_id, uint16_t max_dlg_id = 2000,
+                                Logger * uselog = NULL)
     {
-        return _disp->openSSN(ssn_id, max_dlg_id, min_dlg_id, uselog);
+        return _disp->openSSN(ssn_id, max_dlg_id, uselog);
     }
     //
-    inline SSNSession* findSession(uint8_t ssn) const
+    SSNSession* findSession(uint8_t ssn) const
     {
         return _disp->findSession(ssn);
     }
     //
-    inline ApplicationContextRegistryITF * acRegistry(void) const
+    ApplicationContextRegistryITF * acRegistry(void) const
     {
         return _disp->acRegistry();
     }

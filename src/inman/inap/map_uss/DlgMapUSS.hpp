@@ -1,15 +1,15 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * MAP-PROCESS-UNSTRUCTURED-SS-REQUEST service:
  * dialog implementation (over TCAP dialog)
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_MAP_USS__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_MAP_USS__
 
 #include "core/synchronization/EventMonitor.hpp"
 using smsc::core::synchronization::EventMonitor;
 
-#include "inman/inap/session.hpp"
+#include "inman/inap/HDSSnSession.hpp"
 #include "inman/inap/dialog.hpp"
 using smsc::inman::inap::TCSessionSR;
 using smsc::inman::inap::Dialog;
@@ -82,16 +82,19 @@ protected:
     void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res);
     void onInvokeLCancel(InvokeRFP pInv);
     //
-    inline void Awake(void) { _sync.notify(); }
+    void Awake(void) { _sync.notify(); }
 
 private:
-    EventMonitor  _sync;
-    unsigned    dlgId;
-    Dialog*     dialog;     //TCAP dialog
-    TCSessionSR* session;   //TCAP dialogs factory
-    Logger*     logger;
-    USSDhandlerITF * resHdl;   //request result handler
-    USSDState   dlgState;   //current state of dialog
+    EventMonitor    _sync;
+    TCDialogID      dlgId;
+    //prefix for logging info
+    const char *    _logPfx; //"MapUSS"
+    char            _logId[sizeof("MapUSS[%u:%Xh]") + 2*sizeof(unsigned)*3 + 1];
+    Dialog *        dialog;     //TCAP dialog
+    TCSessionSR *   session;    //TCAP dialogs factory
+    Logger *        logger;
+    USSDhandlerITF * resHdl;    //request result handler
+    USSDState       dlgState;   //current state of dialog
     std::auto_ptr<MAPUSS2CompAC> reqRes;
 
 

@@ -10,8 +10,11 @@ using smsc::inman::inap::TCAPDispatcherITF;
 
 #include "inman/inap/TCXCfgParser.hpp"
 using smsc::inman::inap::TCAPUsrCfgParser;
+using smsc::util::config::Config;
+using smsc::util::config::XConfigView;
+using smsc::util::config::ConfigException;
 
-#include "inman/inap/session.hpp"
+#include "inman/inap/HDSSnSession.hpp"
 using smsc::inman::inap::SSNSession;
 
 #include "inman/comp/map_chsri/MapCHSRIFactory.hpp"
@@ -20,6 +23,7 @@ using smsc::inman::comp::chsri::initMAPCHSRI3Components;
 
 
 using smsc::util::URCRegistry;
+
 
 namespace smsc {
 namespace inman {
@@ -91,7 +95,7 @@ IAProviderITF * IAProviderCreatorSRI::startProvider(const ICServicesHostITF * us
                             _ac_map_locInfoRetrieval_v3.nick());
             return NULL;
         }
-        SSNSession * session = disp->openSSN(cfg.sriCfg.ownSsn, cfg.sriCfg.maxDlgId, 1, logger);
+        SSNSession * session = disp->openSSN(cfg.sriCfg.ownSsn, cfg.sriCfg.maxDlgId, logger);
         if (!session) {
             smsc_log_error(logger, "iapSRI: SSN[%u] is unavailable!", (unsigned)cfg.sriCfg.ownSsn);
             return NULL;

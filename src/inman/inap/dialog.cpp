@@ -18,9 +18,10 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-Dialog::Dialog(const std::string & sess_uid, USHORT_T dlg_id, USHORT_T msg_user_id,
-               const ROSComponentsFactory * use_fact, const SCCP_ADDRESS_T & loc_addr,
-               UCHAR_T sender_ssn/* = 0*/, Logger * uselog/* = NULL*/)
+Dialog::Dialog(const std::string & sess_uid, const TCDialogID & dlg_id, USHORT_T msg_user_id,
+               const ROSComponentsFactory * use_fact,
+               const SCCP_ADDRESS_T & loc_addr, UCHAR_T sender_ssn/* = 0*/,
+               Logger * uselog/* = NULL*/)
     : logger(uselog), _tcSUId(sess_uid), _dId(dlg_id), ownAddr(loc_addr)
     , qSrvc(EINSS7_I97TCAP_QLT_BOTH), priority(EINSS7_I97TCAP_PRI_HIGH_0)
     , _timeout(_DFLT_INVOKE_TIMER), _lastInvId(0), acFab(use_fact)
@@ -29,7 +30,8 @@ Dialog::Dialog(const std::string & sess_uid, USHORT_T dlg_id, USHORT_T msg_user_
     dSSN = sender_ssn ? sender_ssn : ownAddr.addr[1];
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap.Dialog");
-    snprintf(_logId, sizeof(_logId)-1, "Dialog[0x%X]", _dId);
+    snprintf(_logId, sizeof(_logId)-1, "Dialog[%u:%Xh]",
+             (unsigned)_dId.tcInstId, (unsigned)_dId.dlgId);
 }
 
 Dialog::~Dialog()
@@ -49,26 +51,29 @@ void Dialog::clearInvokes(void)
     for (InvokeMap::const_iterator it = invMap.begin(); it != invMap.end(); ++it) {
         smsc_log_debug(logger, "%s: releasing %s", _logId, it->second->strStatus().c_str());
         if (!_state.isClosed())
-            EINSS7_I97TUCancelReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, it->second->getId());
+            EINSS7_I97TUCancelReq(dSSN, msgUserId, _dId.tcInstId, _dId.dlgId, it->second->getId());
     }
     invMap.clear();
 }
 
-void Dialog::reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr/* = NULL*/)
+void Dialog::reset(const TCDialogID & new_id, const SCCP_ADDRESS_T * rmt_addr/* = NULL*/)
 {
     MutexGuard dtmp(dlgGrd);
     unsigned cnt = (unsigned)invMap.size();
     if (cnt || pUser.get()) {
-        smsc_log_error(logger, "%s: resetting to 0x%X, %u invokes pending",
-                      _logId, (unsigned)new_id, cnt, pUser.get() ? ", user refs exist":"");
+        smsc_log_error(logger, "%s: resetting to [%u:%Xh], %u invokes pending",
+                       _logId, (unsigned)new_id.tcInstId, (unsigned)new_id.dlgId,
+                       cnt, pUser.get() ? ", user refs exist":"");
         clearInvokes();
-    } else if (_dId != new_id) //otherwise dialog was just created
-        smsc_log_debug(logger, "%s: resetting to 0x%X", _logId, (unsigned)new_id);
+    } else if (!(_dId == new_id)) //otherwise dialog was just created
+        smsc_log_debug(logger, "%s: resetting to [%u:%Xh]", _logId,
+                       (unsigned)new_id.tcInstId, (unsigned)new_id.dlgId);
 
     pUser.Reset(NULL);
     _lastInvId = 0;
     _dId = new_id;
-    snprintf(_logId, sizeof(_logId)-1, "Dialog[0x%X]", _dId);
+    snprintf(_logId, sizeof(_logId)-1, "Dialog[%u:%Xh]",
+             (unsigned)_dId.tcInstId, (unsigned)_dId.dlgId);
     _state.value.mask = 0;
     if (rmt_addr)
         rmtAddr = *rmt_addr;
@@ -94,16 +99,15 @@ void Dialog::checkSS7res(const char * descr, USHORT_T result) throw(CustomExcept
 
 void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (CustomException)
 {
-    smsc_log_debug(logger, "BEGIN_REQ -> {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X]\n"
+    smsc_log_debug(logger, "T_BEGIN_REQ -> {"
+                    "  SSN: %u, UserID: %u, %s\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Dest. address: %s\n"
                     "  Org. address: %s\n"
                     "  App. context: %s\n"
                     "  User info[%u]: %s\n"
                     "}",
-                   dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
+                   dSSN, msgUserId, idStr(), priority, qSrvc, 
                    DumpHex(rmtAddr.addrLen, rmtAddr.addr, _HexDump_CVSD).c_str(),
                    DumpHex(ownAddr.addrLen, ownAddr.addr, _HexDump_CVSD).c_str(),
                    DumpHex(ac.length(), ac.octets(), _HexDump_CVSD).c_str(),
@@ -111,8 +115,8 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (
                    );
     MutexGuard  tmp(dlgGrd);
     USHORT_T result = EINSS7_I97TBeginReq(
-                        dSSN, msgUserId, TCAP_INSTANCE_ID,
-                        _dId, priority, qSrvc,
+                        dSSN, msgUserId, _dId.tcInstId,
+                        _dId.dlgId, priority, qSrvc,
                         rmtAddr.addrLen, rmtAddr.addr,
                         ownAddr.addrLen, ownAddr.addr,
                         ac.length(), (unsigned char*)ac.octets(),
@@ -131,21 +135,20 @@ void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui/* = NULL
 
 void Dialog::continueDialog(void) throw (CustomException)
 {
-    smsc_log_debug(logger, "CONTINUE_REQ -> {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X]\n"
+    smsc_log_debug(logger, "T_CONTINUE_REQ -> {"
+                    "  SSN: %u, UserID: %u, %s\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Org. address: %s\n"
                     "  App. context[%u]: %s\n"
                     "}",
-                    dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
+                    dSSN, msgUserId, idStr(), priority, qSrvc, 
                     "", // DumpHex(ownAddr.addrLen, ownAddr.addr, _HexDump_CVSD).c_str(),
                     ac.length(), DumpHex(ac.length(), ac.octets(), _HexDump_CVSD).c_str()
                    );
 
     MutexGuard  tmp(dlgGrd);
     USHORT_T result =
-        EINSS7_I97TContinueReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
+        EINSS7_I97TContinueReq(dSSN, msgUserId, _dId.tcInstId, _dId.dlgId,
                                priority, qSrvc, 0, NULL, //ownAddr.addrLen, ownAddr.addr,
                                ac.length(), (unsigned char*)ac.octets(), 0, NULL);
 
@@ -162,18 +165,16 @@ void Dialog::endDialog(Dialog::Ending type/* = endBasic*/) throw (CustomExceptio
             //NOTE: do not set abortInfo, so the EINSS7 selects appropriate
             //variant of TCAP PDU: either ABRT-apdu or AARE-apdu with 
             //Associate-source-diagnostic set to  dialogue-service-user : null(0)
-            smsc_log_debug(logger, "U_ABORT_REQ {"
-                            "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                            "  Dialog[0x%X]\n"
+            smsc_log_debug(logger, "T_U_ABORT_REQ {"
+                            "  SSN: %u, UserID: %u, %s\n"
                             "  PriOrder: 0x%X, QoS: 0x%X\n"
                             "  Abort info: \n"
                             "  App. context: \n"
                             "  User info: \n"
                             "}",
-                           dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
-                           priority, qSrvc);
+                           dSSN, msgUserId, idStr(), priority, qSrvc);
             USHORT_T result =
-                EINSS7_I97TUAbortReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
+                EINSS7_I97TUAbortReq(dSSN, msgUserId, _dId.tcInstId, _dId.dlgId,
                                 priority, qSrvc, 0, NULL, 0, NULL, 0, NULL);
 
             checkSS7res("TUAbortReq failed", result); //throws
@@ -182,19 +183,18 @@ void Dialog::endDialog(Dialog::Ending type/* = endBasic*/) throw (CustomExceptio
             USHORT_T termination = (type == Dialog::endBasic) ?
                 EINSS7_I97TCAP_TERM_BASIC_END : EINSS7_I97TCAP_TERM_PRE_ARR_END;
     
-            smsc_log_debug(logger, "END_REQ -> {"
-                            "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                            "  Dialog[0x%X]\n"
+            smsc_log_debug(logger, "T_END_REQ -> {"
+                            "  SSN: %u, UserID: %u, %s\n"
                             "  PriOrder: 0x%X, QoS: 0x%X\n"
                             "  Termination: %s\n"
                             "  App. context[%u]: %s\n"
                             "}",
-                           dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
+                           dSSN, msgUserId, idStr(), priority, qSrvc,
                            (type == Dialog::endBasic) ? "BASIC" : "PREARRANGED", ac.length(), 
                            DumpHex(ac.length(), ac.octets(), _HexDump_CVSD).c_str());
     
             USHORT_T result =
-                EINSS7_I97TEndReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
+                EINSS7_I97TEndReq(dSSN, msgUserId, _dId.tcInstId, _dId.dlgId,
                                   priority, qSrvc, termination,
                                   ac.length(), (unsigned char*)ac.octets(), 0, NULL);
     
@@ -232,19 +232,21 @@ UCHAR_T /*inv_id*/ Dialog::sendInvoke(UCHAR_T opcode, const Component *p_arg,
     inv->setTimeout(timeout ? timeout : _timeout);
    
     const Invoke * linked = inv->getLinkedTo();
-    smsc_log_debug(logger, "EINSS7_I97TInvokeReq("
-                "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
-                "invokeId=%d, lunkedused=\"%s\", linkedid=%d, timeout=%u,"
-                "tag=\"LOCAL\", opcode[%d]={%s}, parameters[%d]={%s})",
-                dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv->getId(),
-                linked ? "YES" : "NO", linked ? linked->getId() : 0, inv->getTimeout(),
-                op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
-                params.size(), DumpHex(params.size(), &params[0]).c_str());
+    smsc_log_debug(logger, "T_INVOKE_REQ -> {"
+                    "  SSN: %u, UserID: %u, %s\n"
+                    "  invId: %u, opcode[%u]: %s, timeout: %u\n"
+                    "  lunked: \"%s\", linkedId: %u\n"
+                    "  parameters[%u]: %s\n"
+                    "}",
+                   dSSN, msgUserId, idStr(), inv->getId(),
+                   op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
+                   inv->getTimeout(), linked ? "YES" : "NO", linked ? linked->getId() : 0,
+                   params.size(), DumpHex(params.size(), &params[0]).c_str());
 
     USHORT_T result = 0;
     {
         MutexGuard  tmp(dlgGrd);
-        result = EINSS7_I97TInvokeReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv->getId(),
+        result = EINSS7_I97TInvokeReq(dSSN, msgUserId, _dId.tcInstId, _dId.dlgId, inv->getId(),
                 linked ? EINSS7_I97TCAP_LINKED_ID_USED : EINSS7_I97TCAP_LINKED_ID_NOT_USED,
                 linked ? linked->getId() : 0,
                 EINSS7_I97TCAP_OP_CLASS_1, inv->getTimeout(), EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
@@ -267,15 +269,18 @@ void Dialog::sendResultLast(TcapEntity* res) throw (CustomException)
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::resCompEnc),
                             _RCS_TC_Dialog->explainCode(TC_DlgError::resCompEnc).c_str(), exc.what());
     }
-    smsc_log_debug(logger, "EINSS7_I97TResultLReq("
-                "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
-                "invokeId=%d, tag=\"LOCAL\", opcode[%d]={%s}, parameters[%d]={%s})",
-                dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, res->getId(),
-                op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
-                params.size(), DumpHex(params.size(), &params[0]).c_str());
+
+    smsc_log_debug(logger, "T_RESULT_REQ -> {"
+                    "  SSN: %u, UserID: %u, %s\n"
+                    "  invId: %u, opcode[%u]: %s\n"
+                    "  parameters[%u]: %s\n"
+                    "}",
+                   dSSN, msgUserId, idStr(), res->getId(),
+                   op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
+                   params.size(), DumpHex(params.size(), &params[0]).c_str());
 
     USHORT_T result =
-        EINSS7_I97TResultLReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
+        EINSS7_I97TResultLReq(dSSN, msgUserId, _dId.tcInstId, _dId.dlgId,
         res->getId(), EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
         (USHORT_T)op.size(), &op[0], (USHORT_T)params.size(), &params[0]);
 
@@ -290,15 +295,18 @@ void Dialog::sendResultNotLast(TcapEntity* res) throw (CustomException)
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::resCompEnc),
                             _RCS_TC_Dialog->explainCode(TC_DlgError::resCompEnc).c_str(), exc.what());
     }
-    smsc_log_debug(logger, "EINSS7_I97TResultNLReq("
-                "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
-                "invokeId=%d, tag=\"LOCAL\", opcode[%d]={%s}, parameters[%d]={%s})",
-                dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, res->getId(), 
-                op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
-                params.size(), DumpHex(params.size(), &params[0]).c_str());
+
+    smsc_log_debug(logger, "T_RESULT_NL_REQ -> {"
+                    "  SSN: %u, UserID: %u, %s\n"
+                    "  invId: %u, opcode[%u]: %s\n"
+                    "  parameters[%u]: %s\n"
+                    "}",
+                   dSSN, msgUserId, idStr(), res->getId(),
+                   op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
+                   params.size(), DumpHex(params.size(), &params[0]).c_str());
 
     USHORT_T result =
-        EINSS7_I97TResultNLReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
+        EINSS7_I97TResultNLReq(dSSN, msgUserId, _dId.tcInstId, _dId.dlgId,
         res->getId(), EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
         (USHORT_T)op.size(), &op[0], (USHORT_T)params.size(), &params[0]);
 
@@ -314,15 +322,18 @@ void Dialog::sendResultError(TcapEntity* res) throw (CustomException)
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::resCompEnc),
                             _RCS_TC_Dialog->explainCode(TC_DlgError::resCompEnc).c_str(), exc.what());
     }
-    smsc_log_debug(logger, "EINSS7_I97TUErrorReq("
-                "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
-                "invokeId=%d, tag=\"LOCAL\", opcode[%d]={%s}, parameters[%d]={%s})",
-                dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, res->getId(),
-                op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
-                params.size(), DumpHex(params.size(), &params[0]).c_str());
+
+    smsc_log_debug(logger, "T_U_ERROR_REQ -> {"
+                    "  SSN: %u, UserID: %u, %s\n"
+                    "  invId: %u, opcode[%u]: %s\n"
+                    "  parameters[%u]: %s\n"
+                    "}",
+                   dSSN, msgUserId, idStr(), res->getId(),
+                   op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
+                   params.size(), DumpHex(params.size(), &params[0]).c_str());
 
     USHORT_T result =
-        EINSS7_I97TUErrorReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
+        EINSS7_I97TUErrorReq(dSSN, msgUserId, _dId.tcInstId, _dId.dlgId,
         res->getId(), EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
         (USHORT_T)op.size(), &op[0], (USHORT_T)params.size(), &params[0]);
 
@@ -335,10 +346,11 @@ USHORT_T Dialog::resetInvokeTimer(UCHAR_T inv_id)
     MutexGuard  tmp(dlgGrd);
     InvokeMap::iterator it = invMap.find(inv_id);
     if (it != invMap.end()) {
-        smsc_log_debug(logger,"EINSS7_I97TTimerResetReq("
-                       "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, invokeId=%d",
-                       dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv_id);
-        return EINSS7_I97TTimerResetReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv_id);
+        smsc_log_debug(logger, "T_TIMER_RESET_REQ -> {"
+                        "  SSN: %u, UserID: %u, %s, invId: %u\n"
+                        "}",
+                       dSSN, msgUserId, idStr(), inv_id);
+        return EINSS7_I97TTimerResetReq(dSSN, msgUserId, _dId.tcInstId, _dId.dlgId, inv_id);
     }
     return EINSS7_I97TCAP_INV_INVOKE_ID_USED;
 }
@@ -350,7 +362,7 @@ void Dialog::releaseInvoke(UCHAR_T invId)
     if (it != invMap.end()) {
         Invoke* inv = it->second.get();
         smsc_log_debug(logger, "%s: releasing %s", _logId, inv->strStatus().c_str());
-        EINSS7_I97TUCancelReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, invId);
+        EINSS7_I97TUCancelReq(dSSN, msgUserId, _dId.tcInstId, _dId.dlgId, invId);
         invMap.erase(it);
     } else {
         smsc_log_error(logger, "%s: releasing unregistered Invoke[%u]", _logId, (unsigned)invId);

@@ -1,14 +1,14 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * MAP_SEND_ROUTING_INFO service: dialog implementation (over TCAP dialog)
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_MAP_CHSRI__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_MAP_CHSRI__
 
 #include "core/synchronization/EventMonitor.hpp"
 using smsc::core::synchronization::EventMonitor;
 
-#include "inman/inap/session.hpp"
+#include "inman/inap/HDSSnSession.hpp"
 #include "inman/inap/dialog.hpp"
 using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::Dialog;
@@ -82,7 +82,7 @@ protected:
     void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res);
     void onInvokeLCancel(InvokeRFP pInv);
     //
-    inline void Awake(void) { _sync.notify(); }
+    void Awake(void) { _sync.notify(); }
 
 private:
     typedef smsc::core::synchronization::MTRefWrapper_T<CHSRIhandlerITF>    SRIUserRef;
@@ -91,7 +91,10 @@ private:
     void unRefHdl(void);
 
     EventMonitor    _sync;
-    unsigned        sriId;
+    TCDialogID      sriId;
+    //prefix for logging info
+    const char *    _logPfx; //"MapSRI"
+    char            _logId[sizeof("MapSRI[%u:%Xh]") + 2*sizeof(unsigned)*3 + 1];
     Dialog *        dialog;     //TCAP dialog
     TCSessionMA *   session;    //TCAP dialogs factory
     Logger*         logger;

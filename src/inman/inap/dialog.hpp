@@ -1,9 +1,9 @@
 /* ************************************************************************* *
  * TCAP dialog implementation (initiated by local point).
  * ************************************************************************* */
-#ifndef __SMSC_INMAN_INAP_DIALOG__
+#ifndef __SMSC_INMAN_TCAP_DIALOG__
 #ident "@(#)$Id$"
-#define __SMSC_INMAN_INAP_DIALOG__
+#define __SMSC_INMAN_TCAP_DIALOG__
 
 #include <map>
 #include <list>
@@ -74,9 +74,9 @@ private:
     uint16_t        msgUserId;  //EINSS7 Common part message port user id
     const EncodedOID & ac;
     const ROSComponentsFactory * acFab; //applicatiojn context Components factory
-    uint16_t        _dId;
+    TCDialogID       _dId;
                     //prefix for logging info
-    char            _logId[sizeof("Dialog[0x%X]") + sizeof(unsigned int)*3 + 1];
+    char            _logId[sizeof("Dialog[%u:%Xh]") + 2*sizeof(unsigned int)*3 + 1];
     uint16_t        _timeout;
     uint8_t         qSrvc;
     uint8_t         priority;
@@ -128,11 +128,12 @@ private:
 
 protected:
     friend class TCSessionAC;
-    Dialog(const std::string & sess_uid, uint16_t dlg_id, uint16_t msg_user_id,
-           const ROSComponentsFactory * use_fact, const SCCP_ADDRESS_T & loc_addr,
-           uint8_t sender_ssn = 0, Logger * uselog = NULL);
+    Dialog(const std::string & sess_uid, const TCDialogID & dlg_id,
+           uint16_t msg_user_id, const ROSComponentsFactory * use_fact,
+           const SCCP_ADDRESS_T & loc_addr, uint8_t sender_ssn = 0,
+           Logger * uselog = NULL);
     //reinitializes Dialog to be reused with other id and remote address
-    void reset(uint16_t new_id, const SCCP_ADDRESS_T * rmt_addr);
+    void reset(const TCDialogID & new_id, const SCCP_ADDRESS_T * rmt_addr);
 
 protected:
     friend class SSNSession;
@@ -171,8 +172,10 @@ public:
         MutexGuard  tmp(dlgGrd);
         return _state;
     }
-    uint16_t     getId(void)     const  { return _dId; }
+    const char * idStr(void)    const { return _logId; }
+    const TCDialogID &  getId(void)    const  { return _dId; }
     const std::string & getSUId(void)  const { return _tcSUId;  }
+
 
     //Returns false if there are invokes pending or dialog has
     //unfinished calls to user.
@@ -246,5 +249,5 @@ public:
 } //inman
 } //smsc
 
-#endif /* __SMSC_INMAN_INAP_DIALOG__ */
+#endif /* __SMSC_INMAN_TCAP_DIALOG__ */
 

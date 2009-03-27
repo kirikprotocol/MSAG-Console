@@ -1,8 +1,14 @@
+#ifndef MOD_IDENT_OFF
+static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
+
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 
-#include <inman/common/XCFManager.hpp>
-using smsc::util::config::XCFManager;
+//#include <inman/common/XCFManager.hpp>
+//using smsc::util::config::XCFManager;
+using smsc::util::config::Config;
+using smsc::util::config::ConfigException;
 
 #include <inman/uss/UssSrvCfgReader.hpp>
 using smsc::inman::uss::UssService_CFG;

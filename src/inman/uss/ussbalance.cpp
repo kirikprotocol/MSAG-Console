@@ -13,6 +13,10 @@ using smsc::util::config::XCFManager;
 using smsc::inman::uss::UssService_CFG;
 using smsc::inman::uss::USSSrvCfgReader;
 
+using smsc::util::config::Config;
+using smsc::util::config::ConfigException;
+
+
 #include "USSManService.hpp"
 #include "UssURCRegInit.hpp"
 #include "USSManConnect.hpp"

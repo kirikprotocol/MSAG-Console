@@ -22,6 +22,8 @@ using smsc::inman::AbonentInfo;
 
 #include "inman/common/XCFManager.hpp"
 using smsc::util::config::XCFManager;
+using smsc::util::config::Config;
+using smsc::util::config::ConfigException;
 
 static char         _runService = 0;
 static ServiceATIH* g_pService = 0;
@@ -187,7 +189,7 @@ int main(int argc, char** argv)
         MAPUsrCfgReader parser(_nmTst, rootLogger);
         parser.readConfig(*config.get()); //throws
         tstCfg.mapCfg = *parser.getConfig();
-    } catch (ConfigException& exc) {
+    } catch (const ConfigException & exc) {
         smsc_log_error(rootLogger, "%s: %s", _nmTst, exc.what());
         smsc_log_error(rootLogger, "%s: Exiting!", _nmTst);
         exit(-1);

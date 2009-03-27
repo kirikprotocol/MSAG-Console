@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
- * 
+ * Structure(s) for linking TCAP API Callbacks with EINSS7 library
  * ************************************************************************** */
 #ifndef __EINSS7_TCAPI_LINK_HPP
+#ident "@(#)$Id$"
 #define __EINSS7_TCAPI_LINK_HPP
 
 #ifndef EINSS7_FUNC_POINTER
@@ -11,7 +11,13 @@ extern "C" {
 typedef USHORT_T (*EINSS7_I97TBINDCONF_T)(   UCHAR_T ssn,
 					     USHORT_T userId,
 				             EINSS7INSTANCE_T tcapInstanceId,
-					     UCHAR_T bindResult);
+                                             UCHAR_T bindResult
+#ifdef EIN_HD
+#if EIN_HD >= 101
+                                             , UCHAR_T sccpStandard
+#endif /* EIN_HD >= 101 */
+#endif /* EIN_HD */
+                                        );
 
 typedef USHORT_T (*EINSS7_I97TUNIIND_T)(     UCHAR_T ssn,
 					     USHORT_T userId,
@@ -50,6 +56,12 @@ typedef USHORT_T (*EINSS7_I97TCONTINUEIND_T)(UCHAR_T ssn,
 					     USHORT_T dialogueId,
 					     UCHAR_T priOrder,
 					     UCHAR_T qualityOfService,
+#ifdef EIN_HD
+#if EIN_HD >= 101
+                                             UCHAR_T orgAdrLength,
+                                             UCHAR_T *orgAdr_p,
+#endif /* EIN_HD >= 101 */
+#endif /* EIN_HD */
 					     UCHAR_T compPresent,
 					     UCHAR_T appContextLength,
 					     UCHAR_T *appContext_p,

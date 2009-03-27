@@ -1,30 +1,38 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * TCAP Dispatcher types, interfaces and helpers definitions
  * ************************************************************************* */
 #ifndef __INMAN_TCAP_DISPATCHER_DEFS_HPP
+#ident "@(#)$Id$"
 #define __INMAN_TCAP_DISPATCHER_DEFS_HPP
 
 #include "util/TonNpiAddress.hpp"
 using smsc::util::TonNpiAddress;
 
 #include "inman/inap/ACRegDefs.hpp"
+#include "inman/inap/SS7HDCfgDefs.hpp"
 
-namespace smsc    {
-namespace inman   {
-namespace inap   {
+namespace smsc  {
+namespace inman {
+namespace inap  {
 
+
+#ifdef EIN_HD
+typedef SS7HD_CFG TCDsp_CFG; //SS7 TCAP dispatcher
+#else  /* EIN_HD */
 struct TCDsp_CFG {  //SS7 TCAP unit configuration
     static const uint8_t  _MAX_USER_ID = 20;
     static const uint16_t _DFLT_MSG_ENTRIES = 512;
     static const uint16_t _MAX_MSG_ENTRIES = 65535;
 
-    uint8_t   userId;         //PortSS7 user id [1..20]
-    uint16_t  maxMsgNum;      //maximum size of input SS7 message buffer
+    uint8_t   appInstId;    //local application instanceId, default = 0
+    uint8_t   mpUserId;     //CP userId of local message port owner, [1..20]
+    uint16_t  maxMsgNum;    //maximum size of input SS7 message buffer
+    SS7UnitsCFG ss7Units;
 
-    TCDsp_CFG() : userId(0), maxMsgNum(0)
+    TCDsp_CFG() : appInstId(0), mpUserId(0), maxMsgNum(0)
     { }
 };
+#endif /* EIN_HD */
 
 struct TCAPUsr_CFG { //TCAP User configuration
     static const unsigned  _strSZ =
@@ -58,7 +66,7 @@ struct TCAPUsr_CFG { //TCAP User configuration
         return n;
     }
 
-    inline std::string toString(void) const
+    std::string toString(void) const
     {
         char buf[TCAPUsr_CFG::_strSZ];
         toString(buf, (unsigned)sizeof(buf));
@@ -72,17 +80,18 @@ class SSNSession;
 class TCAPDispatcherITF {
 public:
     enum SS7State_T { ss7None = 0
-        , ss7INITED     //SS7 communication facility is initialized
-        , ss7OPENED     //user input message queue is opened
-        , ss7CONNECTED  //user is connected to TCAP unit
+        , ss7REGISTERED = 1 //remote CP manager and message port owner are registered
+        , ss7INITED     = 2 //SS7 communication facility is initialized
+        , ss7OPENED     = 3 //user input message queue is opened
+        , ss7CONNECTED  = 4 //user is connected to TCAP unit
     };
 
     //Returns state of TCAP unit connection
     virtual SS7State_T  ss7State(void) const  = 0;
-    //Binds SSN and initializes SSNSession (TCAP dialogs factory)
+    //Binds SSN and initializes SSNSession (TCAP dialogs registry/factory)
     virtual SSNSession *
         openSSN(uint8_t ssn_id, uint16_t max_dlg_id = 2000,
-                uint16_t min_dlg_id = 1, Logger * uselog = NULL);
+                                        Logger * uselog = NULL);
     //
     virtual SSNSession* findSession(uint8_t ssn) const = 0;
     //

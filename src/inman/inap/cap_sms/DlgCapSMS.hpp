@@ -1,14 +1,14 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * cap3SMS CONTRACT implementation (over TCAP dialog)
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_CAP3SMS__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_CAP3SMS__
 
 #include "core/synchronization/EventMonitor.hpp"
 using smsc::core::synchronization::EventMonitor;
 
-#include "inman/inap/session.hpp"
+#include "inman/inap/HDSSnSession.hpp"
 #include "inman/inap/dialog.hpp"
 using smsc::inman::inap::TCSessionSR;
 
@@ -49,13 +49,13 @@ class CapSMS_SSFhandlerITF { //SSF <- CapSMSDlg <- SCF
 public:
     //Stands for following signals to MSC/SGSN:
     //  Int_ReleaseSMS, Int_ConnectSMS, Int_ContinueSMS
-    virtual void onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
+    virtual void onDPSMSResult(TCDialogID dlg_id, unsigned char rp_cause,
                                     std::auto_ptr<ConnectSMSArg> & sms_params) = 0;
 
     //if ercode != 0, CAP dialog is abnormally ended
     //NOTE: CAP dialog may be deleted only from this callback !!!
     //Stands for following signals to MSC/SGSN:  Int_Continue, Int_Error
-    virtual void onEndCapDlg(unsigned dlg_id, RCHash errcode = 0) = 0;
+    virtual void onEndCapDlg(TCDialogID dlg_id, RCHash errcode = 0) = 0;
 };
 
 class CapSMS_SCFContractorITF { //SSF -> CapSMSDlg --> SCF
@@ -86,8 +86,8 @@ public:
     //Allocates and initializes TCAP dialog
     RCHash Init(void) _THROWS_NONE;
 
-    inline unsigned getId(void) const { return capId; }
-    inline const char * Ident(void) const { return _logId; }
+    const TCDialogID & getId(void) const { return capId; }
+    const char * Ident(void) const { return _logId; }
     CAPSmsStateT CAPState(void) { MutexGuard tmp(_sync); return _capState; }
 
 
@@ -118,7 +118,7 @@ protected:
     void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res) { }
     void onInvokeLCancel(InvokeRFP pInv);
     //
-    inline void Awake(void) { _sync.notify(); }
+    void Awake(void) { _sync.notify(); }
 
 private:
     //Forcedly ends CapSMS dialog: sends to SCF 
@@ -128,19 +128,19 @@ private:
     void endTCap(bool u_abort = false);
     // reports delivery status (continues capSMS dialog)
     RCHash eventReportSMS(bool submitted) _THROWS_NONE;
-    inline void setTimer(uint8_t new_op)
+    void setTimer(uint8_t new_op)
     {
         if (_timer)
             dialog->releaseInvoke(_timer);
         _timer = new_op;
     }
-    inline void stopTimer(void) { setTimer(0); }
-    inline void resetTimer(void)
+    void stopTimer(void) { setTimer(0); }
+    void resetTimer(void)
     {
         if (_timer)
             dialog->resetInvokeTimer(_timer);
     }
-    inline void logBadInvoke(uint8_t op_code)
+    void logBadInvoke(uint8_t op_code)
     {
         smsc_log_error(logger, "%s: inconsistent %s, state %s(%s), {%s}", _logId,
                         CapSMSOp::code2Name(op_code), nmFSMState(), nmRelations(),
@@ -148,10 +148,10 @@ private:
     }
 
     EventMonitor    _sync;
-    unsigned        capId;
+    TCDialogID      capId;
     //prefix for logging info
     const char *    _logPfx; //"CapSMS"
-    char            _logId[sizeof("CapSMS[0x%X]") + sizeof(unsigned)*3 + 1];
+    char            _logId[sizeof("CapSMS[%u:%Xh]") + 2*sizeof(unsigned)*3 + 1];
 
     Dialog*         dialog;     //TCAP dialog
     TCSessionSR*    session;    //TCAP dialogs factory

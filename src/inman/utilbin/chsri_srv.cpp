@@ -10,6 +10,7 @@ using smsc::inman::comp::_ac_map_locInfoRetrieval_v3;
 using smsc::inman::comp::MAPServiceRC;
 using smsc::inman::comp::_RCS_MAPService;
 using smsc::inman::inap::TCAPDispatcherITF;
+using smsc::inman::inap::SSNBinding;
 
 namespace smsc  {
 namespace inman {
@@ -117,7 +118,7 @@ bool ServiceCHSRI::requestCSI(const std::string &subcr_addr)
     MutexGuard  grd(_sync);
     IntrgtrMAP::iterator it = workers.find(subcr_addr);
     if (it == workers.end()) {
-        if (mapSess && (mapSess->getState() == smsc::inman::inap::ssnBound)) {
+        if (mapSess && (mapSess->getState() >= SSNBinding::ssnPartiallyBound)) {
             SRIInterrogator * worker = newWorker();
             if (worker->interrogate(subcr_addr)) {
                 workers.insert(IntrgtrMAP::value_type(subcr_addr, worker));

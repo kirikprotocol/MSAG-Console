@@ -1,6 +1,11 @@
+#
 # $Id$
-# this file contains binaries definitions
+#
+# TCAPDispatcher shared library loader
 
-# binary name source name libraries
-#-linman-services-tcapdsp
+switch EIN_SS7_LINKAGE
+static: #no need for .so loader, EIN SS7 stack is statically linked into libinman
+default: \
 inman/ldlib/libinman_ics_tcapdsp.so TCAPDspLoader $(SHARED_OPT) -linman-inap -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) $(__LIBRARIES)  -linman-comp -linman-common -ldl -lrt
+end switch
+

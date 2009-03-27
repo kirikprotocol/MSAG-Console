@@ -18,6 +18,7 @@ using smsc::inman::comp::_RCS_MOSM_RPCause;
 #include "inman/inap/dispatcher.hpp"
 using smsc::inman::inap::TCAPDispatcher;
 using smsc::inman::inap::SSNSession;
+using smsc::inman::inap::SSNBinding;
 using smsc::inman::inap::TCSessionAC;
 
 namespace smsc {
@@ -41,7 +42,7 @@ RCHash CAPSmTaskAC::startDialog(CAPSmDPList::iterator & use_da)
     if (!capSess) {
         SSNSession * ssnSess = cfgSS7.disp->findSession(cfgSS7.ownSsn);
         if (!ssnSess) //attempt to open SSN
-            ssnSess = cfgSS7.disp->openSSN(cfgSS7.ownSsn, cfgSS7.maxDlgId, 1, logger);
+            ssnSess = cfgSS7.disp->openSSN(cfgSS7.ownSsn, cfgSS7.maxDlgId, logger);
 
         if (!(capSess = ssnSess->newSRsession(cfgSS7.ownAddr,
                                 _ac_cap3_sms, 146, abScf->scfAdr, cfgSS7.fakeSsn))) {
@@ -53,7 +54,7 @@ RCHash CAPSmTaskAC::startDialog(CAPSmDPList::iterator & use_da)
         smsc_log_debug(logger, "%s: using TCSR[%u]: %s", _logId,
                        capSess->getUID(), capSess->Signature().c_str());
     }
-    if (!capSess || (capSess->getState() != smsc::inman::inap::ssnBound)) {
+    if (!capSess || (capSess->getState() < SSNBinding::ssnPartiallyBound)) {
         smsc_log_error(logger, "%s: SSN[%u] session is not available/bound", _logId,
                         cfgSS7.ownSsn);
         return (use_da->scfErr = _RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit));
@@ -71,14 +72,15 @@ RCHash CAPSmTaskAC::startDialog(CAPSmDPList::iterator & use_da)
 // -- --------------------------------------
 // -- CapSMS_SSFhandlerITF interface methods
 // -- --------------------------------------
-void CAPSmTaskAC::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
+void CAPSmTaskAC::onDPSMSResult(TCDialogID dlg_id, unsigned char rp_cause,
                         std::auto_ptr<ConnectSMSArg> & sms_params)
 {
     {
         MutexGuard tmp(_sync);
         CAPSmDPList::iterator res = lookUp(dlg_id);
         if (res == dpRes.end()) {
-            smsc_log_warn(logger, "%s: RES_IND for unhandled Dialog[0x%x]", _logId, dlg_id);
+            smsc_log_warn(logger, "%s: RES_IND for unhandled Dialog[%u:%Xh]",
+                          _logId, (unsigned)dlg_id.tcInstId, dlg_id.dlgId);
             return;
         }
     
@@ -131,7 +133,7 @@ void CAPSmTaskAC::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
     return;
 }
 
-void CAPSmTaskAC::onEndCapDlg(unsigned dlg_id, RCHash errcode)
+void CAPSmTaskAC::onEndCapDlg(TCDialogID dlg_id, RCHash errcode)
 {
     MutexGuard tmp(_sync);
     //smsc_log_debug(logger, "%s: END_IND { Dialog[0x%x] }", _logId, dlg_id);

@@ -11,6 +11,7 @@ static char const ident[] = "$Id$";
 #include "inman/common/cvtutil.hpp"
 #include "inman/comp/map_uss/MapUSSFactory.hpp"
 using smsc::inman::comp::_ac_map_networkUnstructuredSs_v2;
+using smsc::inman::inap::SSNBinding;
 
 #include "USSRequestProcessor.hpp"
 
@@ -160,8 +161,8 @@ TCSessionSR * USSRequestProcessor::getMAPSession(uint8_t rmt_ssn, const TonNpiAd
         smsc_log_error(_logger, "%s: TCAPDispatcher is not connected!", _logId);
         return NULL;
     }
-    SSNSession * ssnSess = _cfg.tcDisp->openSSN(_cfg.tcUsr.ownSsn, _cfg.tcUsr.maxDlgId, 1, _logger);
-    if (!ssnSess || (ssnSess->getState() != smsc::inman::inap::ssnBound)) {
+    SSNSession * ssnSess = _cfg.tcDisp->openSSN(_cfg.tcUsr.ownSsn, _cfg.tcUsr.maxDlgId, _logger);
+    if (!ssnSess || (ssnSess->getState() < SSNBinding::ssnPartiallyBound)) {
         smsc_log_error(_logger, "%s: SSN[%u] is not available/bound!", _logId,
                        (unsigned)_cfg.tcUsr.ownSsn);
         return NULL;

@@ -40,7 +40,7 @@ CapSMSDlg::CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
     : SMS_SSF_Fsm(EventTypeSMS_sms_CollectedInfo), _logPfx("CapSMS")
     , session(pSession), ssfHdl(ssfHandler), nmScf(scf_ident), logger(uselog)
     , rPCause(0), _timer(0), reportType(MessageType_request), dialog(0)
-    , capId(0), invTimeout(inv_timeout)
+    , invTimeout(inv_timeout)
 {
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap.CapSMS");
@@ -77,8 +77,10 @@ RCHash CapSMSDlg::Init(void) _THROWS_NONE
     //Initialize TCAP dialog
     if (!session || !(dialog = session->openDialog(logger)))
         return _RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit);
-    capId = (unsigned)dialog->getId();
-    snprintf(_logId, sizeof(_logId)-1, "%s[0x%X]", _logPfx, capId);
+
+    capId = dialog->getId();
+    snprintf(_logId, sizeof(_logId)-1, "%s[%u:%Xh]", _logPfx,
+             (unsigned)capId.tcInstId, (unsigned)capId.dlgId);
 
     dialog->setInvokeTimeout(invTimeout);
     dialog->bindUser(this);

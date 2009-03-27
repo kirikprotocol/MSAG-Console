@@ -22,6 +22,8 @@ using smsc::inman::AbonentInfo;
 
 #include "inman/common/XCFManager.hpp"
 using smsc::util::config::XCFManager;
+using smsc::util::config::Config;
+using smsc::util::config::ConfigException;
 
 
 static char         _runService = 0;

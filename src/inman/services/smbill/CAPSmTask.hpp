@@ -17,11 +17,10 @@ using smsc::util::ScheduledTaskAC;
 #include "inman/inap/cap_sms/DlgCapSMS.hpp"
 using smsc::inman::inap::CapSMSDlg;
 using smsc::inman::inap::CapSMS_SSFhandlerITF;
+using smsc::inman::inap::TCDialogID;
 
 #include "inman/inap/TCDspDefs.hpp"
 using smsc::inman::inap::TCAPDispatcherITF;
-
-#include "inman/inap/TCDspDefs.hpp"
 using smsc::inman::inap::TCAPUsr_CFG;
 
 namespace smsc {
@@ -231,7 +230,7 @@ protected:
             }
         }
     }
-    CAPSmDPList::iterator lookUp(unsigned dlg_id)
+    CAPSmDPList::iterator lookUp(const TCDialogID & dlg_id)
     {
         CAPSmDPList::iterator it = dpRes.begin();
         for (; it != dpRes.end(); ++it) {
@@ -263,9 +262,9 @@ protected:
     // -- CapSMS_SSFhandlerITF interface methods
     // -- --------------------------------------
     friend class smsc::inman::inap::CapSMSDlg;
-    void onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
+    void onDPSMSResult(TCDialogID dlg_id, unsigned char rp_cause,
                         std::auto_ptr<ConnectSMSArg> & sms_params);
-    void onEndCapDlg(unsigned dlg_id, RCHash errcode);
+    void onEndCapDlg(TCDialogID dlg_id, RCHash errcode);
 
     // ----------------------------------
     // -- CAPSmTaskAC interface methods

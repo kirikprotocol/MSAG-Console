@@ -24,12 +24,13 @@ namespace atih {
  * ************************************************************************** */
 MapATSIDlg::MapATSIDlg(TCSessionMA* pSession, ATSIhandlerITF * atsi_handler,
                         Logger * uselog/* = NULL*/)
-    : atsiHdl(atsi_handler), session(pSession), atsiId(0), dialog(NULL)
+    : atsiHdl(atsi_handler), session(pSession), _logPfx("MapATSI"), dialog(NULL)
     , logger(uselog)
 {
     _atsiState.value = 0;
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Inap.MapATSIDlg");
+    strcpy(_logId, _logPfx);
 }
 
 MapATSIDlg::~MapATSIDlg()
@@ -69,7 +70,10 @@ void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
     if (timeout)
         dialog->setInvokeTimeout(timeout);
     dialog->bindUser(this);
-    atsiId = (unsigned)dialog->getId();
+    atsiId = dialog->getId();
+    snprintf(_logId, sizeof(_logId)-1, "%s[%u:%Xh]", _logPfx,
+             (unsigned)atsiId.tcInstId, (unsigned)atsiId.dlgId);
+
 
     ATSIArg     arg;
     arg.setSCFaddress(session->getOwnAdr());
@@ -92,8 +96,8 @@ void MapATSIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity* res)
     unsigned do_end = 0;
     {
         MutexGuard  grd(_sync);
-        smsc_log_debug(logger, "MapATSI[%u]: Invoke[%u:%u] got a returnResult: %u",
-            atsiId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
+        smsc_log_debug(logger, "%s: Invoke[%u:%u] got a returnResult: %u",
+            _logId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)res->getOpcode());
 
         _atsiState.s.ctrResulted = 1;
@@ -112,8 +116,8 @@ void MapATSIDlg::onInvokeError(InvokeRFP pInv, TcapEntity * resE)
 {
     {
         MutexGuard  grd(_sync);
-        smsc_log_error(logger, "MapATSI[%u]: Invoke[%u:%u] got a returnError: %u",
-            atsiId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
+        smsc_log_error(logger, "%s: Invoke[%u:%u] got a returnError: %u",
+            _logId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)resE->getOpcode());
 
         _atsiState.s.ctrInited = MapATSIDlg::operDone;
@@ -127,8 +131,8 @@ void MapATSIDlg::onInvokeLCancel(InvokeRFP pInv)
 {
     {
         MutexGuard  grd(_sync);
-        smsc_log_error(logger, "MapATSI[%u]: Invoke[%u:%u] got a LCancel",
-            atsiId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode());
+        smsc_log_error(logger, "%s: Invoke[%u:%u] got a LCancel",
+            _logId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode());
         _atsiState.s.ctrInited = MapATSIDlg::operFailed;
         endTCap();
     }
@@ -143,7 +147,7 @@ void MapATSIDlg::onDialogContinue(bool compPresent)
 {
     MutexGuard  grd(_sync);
     if (!compPresent)
-        smsc_log_error(logger, "MapATSI[%u]: missing component in TC_CONT_IND", atsiId);
+        smsc_log_error(logger, "%s: missing component in TC_CONT_IND", _logId);
      //else wait for ongoing Invoke result/error
     return;
 }
@@ -155,7 +159,7 @@ void MapATSIDlg::onDialogPAbort(uint8_t abortCause)
     {
         MutexGuard  grd(_sync);
         _atsiState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapATSI[%u]: state 0x%x, P_ABORT: '%s'", atsiId,
+        smsc_log_error(logger, "%s: state 0x%x, P_ABORT: '%s'", _logId,
                         _atsiState.value, _RCS_TC_PAbort->code2Txt(abortCause));
         endTCap();
     }
@@ -171,7 +175,7 @@ void MapATSIDlg::onDialogUAbort(uint16_t abortInfo_len, uint8_t *pAbortInfo,
     {
         MutexGuard  grd(_sync);
         _atsiState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapSRI[%u]: state 0x%x, U_ABORT: '%s'", atsiId,
+        smsc_log_error(logger, "%s: state 0x%x, U_ABORT: '%s'", _logId,
                         _atsiState.value, _RCS_TC_UAbort->code2Txt(abortCause));
         endTCap();
     }
@@ -197,7 +201,7 @@ void MapATSIDlg::onDialogNotice(uint8_t reportCause,
             }
             dstr += " not delivered.";
         }
-        smsc_log_error(logger, "MapATSI[%u]: state 0x%x, NOTICE_IND: '%s', %s", atsiId,
+        smsc_log_error(logger, "%s: state 0x%x, NOTICE_IND: '%s', %s", _logId,
                        _atsiState.value, _RCS_TC_Report->code2Txt(reportCause),
                        dstr.c_str());
         endTCap();
@@ -217,7 +221,7 @@ void MapATSIDlg::onDialogREnd(bool compPresent)
         if (!compPresent) {
             endTCap();
             if (!_atsiState.s.ctrResulted) {
-                smsc_log_error(logger, "MapATSI[%u]: T_END_IND, state 0x%x", atsiId, _atsiState.value);
+                smsc_log_error(logger, "%s: T_END_IND, state 0x%x", _logId, _atsiState.value);
                 errcode = _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse);
             }
         }
@@ -241,10 +245,10 @@ void MapATSIDlg::endTCap(void)
             try {    // do TC_PREARRANGED if still active
                 dialog->endDialog((_atsiState.s.ctrInited < MapATSIDlg::operDone) ?
                                     Dialog::endPrearranged : Dialog::endBasic);
-                smsc_log_debug(logger, "MapATSI[%u]: T_END_REQ, state: 0x%x", atsiId,
+                smsc_log_debug(logger, "%s: T_END_REQ, state: 0x%x", _logId,
                                 _atsiState.value);
             } catch (std::exception & exc) {
-                smsc_log_error(logger, "MapATSI[%u]: T_END_REQ: %s", atsiId, exc.what());
+                smsc_log_error(logger, "%s: T_END_REQ: %s", _logId, exc.what());
                 dialog->releaseAllInvokes();
             }
         }

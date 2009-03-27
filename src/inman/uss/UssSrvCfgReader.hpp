@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * 
  * ************************************************************************** */
 #ifndef __SMSC_USSMAN_CFG_READER_HPP__
+#ident "@(#)$Id$"
 # define __SMSC_USSMAN_CFG_READER_HPP__
 
 #include "UssServiceCfg.hpp"
@@ -13,6 +13,10 @@ using smsc::inman::inap::TCAPUsrCfgParser;
 namespace smsc  {
 namespace inman {
 namespace uss  {
+
+using smsc::util::config::Config;
+using smsc::util::config::XConfigView;
+using smsc::util::config::ConfigException;
 
 class USSSrvCfgReader {
 private:
@@ -73,8 +77,8 @@ public:
         dspParser.readConfig(root_sec, stCfg->ss7); //throws
     }
 
-    inline UssService_CFG * rlseConfig(void) { return stCfg.release(); }
-    inline UssService_CFG * getConfig(void) const { return stCfg.get(); }
+    UssService_CFG * rlseConfig(void) { return stCfg.release(); }
+    UssService_CFG * getConfig(void) const { return stCfg.get(); }
 };
 
 } //uss

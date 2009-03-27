@@ -1,20 +1,29 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * TCAP Dispatcher & User XML configurations parsers.
  * ************************************************************************** */
 #ifndef __INMAN_TCAP_CFGS_PARSERS_HPP__
+#ident "@(#)$Id$"
 #define __INMAN_TCAP_CFGS_PARSERS_HPP__
 
 #include "inman/inap/TCDspDefs.hpp"
 #include "inman/common/XCFView.hpp"
-using smsc::util::config::Config;
-using smsc::util::config::XConfigView;
-using smsc::util::config::ConfigException;
+
+#ifdef EIN_HD
+#include "inman/inap/SS7HDCfgParser.hpp"
+#endif /* EIN_HD */
 
 namespace smsc  {
 namespace inman {
 namespace inap {
 
+using smsc::util::config::Config;
+using smsc::util::config::XConfigView;
+using smsc::util::config::ConfigException;
+
+
+#ifdef EIN_HD
+typedef SS7HDCfgParser TCDspCfgParser;
+#else /* EIN_HD */
 class TCDspCfgParser {
 private:
     Logger *        logger;
@@ -27,7 +36,7 @@ public:
     ~TCDspCfgParser()
     { }
 
-    inline const char * nmCfgSection(void) const { return nmSec; }
+    const char * nmCfgSection(void) const { return nmSec; }
 
     void readConfig(Config & root_sec, TCDsp_CFG & st_cfg) throw(ConfigException)
     {
@@ -39,8 +48,8 @@ public:
         if (!tmo || (tmo >= TCDsp_CFG::_MAX_USER_ID))
             throw ConfigException("'ss7UserId' is missing or invalid,"
                                   " allowed range [1..%u]", (unsigned)TCDsp_CFG::_MAX_USER_ID);
-        st_cfg.userId = (uint8_t)tmo;
-        smsc_log_info(logger, "  ss7UserId: %u", st_cfg.userId);
+        st_cfg.mpUserId = (uint8_t)tmo;
+        smsc_log_info(logger, "  ss7UserId: %u", st_cfg.mpUserId);
 
         tmo = 0;    //maxMsgNum, optional
         try { tmo = (uint32_t)cfgSec.getInt("maxMsgNum");
@@ -54,6 +63,7 @@ public:
         return;
     }
 };
+#endif /* EIN_HD */
 
 class TCAPUsrCfgParser {
 private:
@@ -67,7 +77,7 @@ public:
     ~TCAPUsrCfgParser()
     { }
 
-    inline const char * nmCfgSection(void) const { return nmSec; }
+    const char * nmCfgSection(void) const { return nmSec; }
 
     void readConfig(Config & root_sec, TCAPUsr_CFG & st_cfg) throw(ConfigException)
     {

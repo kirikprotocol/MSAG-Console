@@ -21,7 +21,7 @@ namespace inman {
 #define _ICS_ABNTDTCR_CFG_NM    "AbonentDetector"
 #define _ICS_ABNTCACHE_CFG_NM   "AbonentsCache"
 #define _ICS_IAPMGR_CFG_NM      "AbonentPolicies"
-#define _ICS_TCAPDSP_CFG_NM     "SS7"
+#define _ICS_TCAPDSP_CFG_NM     NM_SS7_CFG_SECTION
 
 /* ************************************************************************** *
  * class ICSLoadupsReg implementation:
@@ -35,8 +35,13 @@ ICSLoadupsReg::ICSLoadupsReg() : POBJRegistry_T<ICSUId, ICSLoadupCFG>()
         new smsc::inman::ICSProdTMWatcher(), NULL));
     insLoadUp(new ICSLoadupCFG(ICSIdent::icsIdAbntCache,
                 "libinman_ics_abcache.so", _ICS_ABNTCACHE_CFG_NM));
+#if defined(EIN_HD) || defined(EIN_SS7_LINKAGE_static)
+    insLoadUp(new ICSLoadupCFG(ICSIdent::icsIdTCAPDisp,
+                new smsc::inman::inap::ICSProdTCAPDispatcher(), _ICS_TCAPDSP_CFG_NM));
+#else  /* EIN_HD || EIN_SS7_LINKAGE_static */
     insLoadUp(new ICSLoadupCFG(ICSIdent::icsIdTCAPDisp,
                 "libinman_ics_tcapdsp.so", _ICS_TCAPDSP_CFG_NM));
+#endif /* EIN_HD || EIN_SS7_LINKAGE_static */
     insLoadUp(new ICSLoadupCFG(ICSIdent::icsIdIAPManager,
                 "libinman_ics_iapmgr.so", _ICS_IAPMGR_CFG_NM));
     insLoadUp(new ICSLoadupCFG(ICSIdent::icsIdScheduler,
@@ -49,6 +54,9 @@ ICSLoadupsReg::ICSLoadupsReg() : POBJRegistry_T<ICSUId, ICSLoadupCFG>()
     //Ids of services, which are loaded by default
     dfltIds.insert(ICSIdent::icsIdTCPServer);
     dfltIds.insert(ICSIdent::icsIdTimeWatcher);
+#if defined(EIN_HD) || defined(EIN_SS7_LINKAGE_static)
+    dfltIds.insert(ICSIdent::icsIdTCAPDisp);
+#endif /* EIN_HD || EIN_SS7_LINKAGE_static */
 }
 
 } // namespace inman

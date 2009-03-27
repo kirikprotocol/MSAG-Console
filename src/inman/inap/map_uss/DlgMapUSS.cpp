@@ -120,8 +120,8 @@ static void makeUI(std::vector<unsigned char> & ui, const TonNpiAddress & own_ad
  * ************************************************************************** */
 MapUSSDlg::MapUSSDlg(TCSessionSR* pSession, USSDhandlerITF * res_handler,
                         Logger * uselog/* = NULL*/)
-    : resHdl(res_handler), session(pSession), dlgId(0), dialog(NULL)
-    , logger(uselog)
+    : resHdl(res_handler), session(pSession), _logPfx("MapUSS")
+    , dialog(NULL), logger(uselog)
 {
     dlgState.value = 0;
     if (!logger)
@@ -134,6 +134,9 @@ MapUSSDlg::MapUSSDlg(TCSessionSR* pSession, USSDhandlerITF * res_handler,
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                             "MapUSS", "unable to create TC dialog");
     dlgId = dialog->getId();
+    snprintf(_logId, sizeof(_logId)-1, "%s[%u:%Xh]", _logPfx,
+             (unsigned)dlgId.tcInstId, (unsigned)dlgId.dlgId);
+
     dialog->bindUser(this);
 }
 
@@ -160,7 +163,7 @@ void MapUSSDlg::requestSS(const char * txt_data,
     //create Component for TCAP invoke
     ProcessUSSRequestArg    arg(logger);
     arg.setUSSData((const unsigned char*)txt_data);
-    smsc_log_debug(logger, "MapUSS[%u]: USS request: '%s'", dlgId, txt_data);
+    smsc_log_debug(logger, "%s: USS request: '%s'", _logId, txt_data);
     initSSDialog(arg, subsc_adr, subscr_imsi);
 }
 
@@ -171,7 +174,7 @@ void MapUSSDlg::requestSS(const std::vector<unsigned char> & rq_data, unsigned c
     //create Component for TCAP invoke
     ProcessUSSRequestArg    arg(logger);
     arg.setRAWUSSData(dcs, &rq_data[0], (unsigned)rq_data.size());
-    smsc_log_debug(logger, "MapUSS[%u]: USS request: 0x%s", dlgId,
+    smsc_log_debug(logger, "%s: USS request: 0x%s", _logId,
                     DumpHex(rq_data.size(), &rq_data[0]).c_str());
 
     initSSDialog(arg, subsc_adr, subscr_imsi);
@@ -183,8 +186,8 @@ void MapUSSDlg::requestSS(const std::vector<unsigned char> & rq_data, unsigned c
 void MapUSSDlg::onInvokeResultNL(InvokeRFP pInv, TcapEntity* res)
 {
     MutexGuard  grd(_sync);
-    smsc_log_warn(logger, "MapUSS[%u]: Invoke[%u:%u] got a ResultNL: %u",
-        dlgId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
+    smsc_log_warn(logger, "%s: Invoke[%u:%u] got a ResultNL: %u",
+        _logId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
         (unsigned)res->getOpcode());
 
     dlgState.s.ctrResulted = MapUSSDlg::operInited;
@@ -197,8 +200,8 @@ void MapUSSDlg::onInvokeResult(InvokeRFP pInv, TcapEntity* res)
     unsigned do_end = 0;
     {
         MutexGuard  grd(_sync);
-        smsc_log_debug(logger, "MapUSS[%u]: Invoke[%u:%u] got a Result: %u",
-            dlgId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
+        smsc_log_debug(logger, "%s: Invoke[%u:%u] got a Result: %u",
+            _logId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)res->getOpcode());
 
         dlgState.s.ctrInited = dlgState.s.ctrResulted = MapUSSDlg::operDone;
@@ -217,8 +220,8 @@ void MapUSSDlg::onInvokeError(InvokeRFP pInv, TcapEntity * resE)
 {
     {
         MutexGuard  grd(_sync);
-        smsc_log_error(logger, "MapUSS[%u]: Invoke[%u:%u] got a Error: %u",
-            dlgId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
+        smsc_log_error(logger, "%s: Invoke[%u:%u] got a Error: %u",
+            _logId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)resE->getOpcode());
 
         dlgState.s.ctrInited = MapUSSDlg::operDone;
@@ -232,8 +235,8 @@ void MapUSSDlg::onInvokeLCancel(InvokeRFP pInv)
 {
     {
         MutexGuard  grd(_sync);
-        smsc_log_error(logger, "MapUSS[%u]: Invoke[%u:%u] got a LCancel",
-            dlgId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode());
+        smsc_log_error(logger, "%s: Invoke[%u:%u] got a LCancel",
+            _logId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode());
         dlgState.s.ctrInited = MapUSSDlg::operFailed;
         endTCap();
     }
@@ -248,7 +251,7 @@ void MapUSSDlg::onDialogContinue(bool compPresent)
 {
     MutexGuard  grd(_sync);
     if (!compPresent)
-        smsc_log_error(logger, "MapUSS[%u]: missing component in TC_CONT_IND", dlgId);
+        smsc_log_error(logger, "%s: missing component in TC_CONT_IND", _logId);
      //else wait for ongoing Invoke result/error
     return;
 }
@@ -261,7 +264,7 @@ void MapUSSDlg::onDialogPAbort(UCHAR_T abortCause)
     {
         MutexGuard  grd(_sync);
         dlgState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapUSS[%u]: state 0x%x, P_ABORT: '%s'", dlgId,
+        smsc_log_error(logger, "%s: state 0x%x, P_ABORT: '%s'", _logId,
                         dlgState.value, _RCS_TC_PAbort->code2Txt(abortCause));
         endTCap();
     }
@@ -277,7 +280,7 @@ void MapUSSDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
     {
         MutexGuard  grd(_sync);
         dlgState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapUSS[%u]: state 0x%x, U_ABORT: '%s'", dlgId,
+        smsc_log_error(logger, "%s: state 0x%x, U_ABORT: '%s'", _logId,
                         dlgState.value, _RCS_TC_UAbort->code2Txt(abortCause));
         endTCap();
     }
@@ -303,7 +306,7 @@ void MapUSSDlg::onDialogNotice(UCHAR_T reportCause,
             }
             dstr += " not delivered.";
         }
-        smsc_log_error(logger, "MapUSS[%u]: state 0x%x, NOTICE_IND: '%s', %s", dlgId,
+        smsc_log_error(logger, "%s: state 0x%x, NOTICE_IND: '%s', %s", _logId,
                        dlgState.value, _RCS_TC_Report->code2Txt(reportCause),
                        dstr.c_str());
         endTCap();
@@ -322,7 +325,7 @@ void MapUSSDlg::onDialogREnd(bool compPresent)
         if (!compPresent) {
             endTCap();
             if (!dlgState.s.ctrResulted) {
-                smsc_log_error(logger, "MapUSS[%u]: T_END_IND, state 0x%x", dlgId, dlgState.value);
+                smsc_log_error(logger, "%s: T_END_IND, state 0x%x", _logId, dlgState.value);
                 errcode = _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse);
             }
         }
@@ -375,10 +378,10 @@ void MapUSSDlg::endTCap(void)
             try {   // do TC_PREARRANGED if still active
                 dialog->endDialog((dlgState.s.ctrInited < MapUSSDlg::operDone) ?
                                     Dialog::endPrearranged : Dialog::endBasic);
-                smsc_log_debug(logger, "MapUSS[%u]: T_END_REQ, state: 0x%x", dlgId,
+                smsc_log_debug(logger, "%s: T_END_REQ, state: 0x%x", _logId,
                                 dlgState.value);
             } catch (std::exception & exc) {
-                smsc_log_error(logger, "MapUSS[%u]: T_END_REQ: %s", dlgId, exc.what());
+                smsc_log_error(logger, "%s: T_END_REQ: %s", _logId, exc.what());
                 dialog->releaseAllInvokes();
             }
         }

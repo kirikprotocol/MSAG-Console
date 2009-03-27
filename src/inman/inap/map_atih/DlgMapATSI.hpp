@@ -1,14 +1,14 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * mapATIH service: ATSI dialog implementation (over TCAP dialog)
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_MAP_ATSI__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_MAP_ATSI__
 
 #include "core/synchronization/EventMonitor.hpp"
 using smsc::core::synchronization::EventMonitor;
 
-#include "inman/inap/session.hpp"
+#include "inman/inap/HDSSnSession.hpp"
 #include "inman/inap/dialog.hpp"
 using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::Dialog;
@@ -79,7 +79,10 @@ protected:
 
 private:
     EventMonitor    _sync;
-    unsigned        atsiId;
+    TCDialogID      atsiId;
+    //prefix for logging info
+    const char *    _logPfx; //"MapATSI"
+    char            _logId[sizeof("MapATSI[%u:%Xh]") + 2*sizeof(unsigned)*3 + 1];
     Dialog *        dialog;     //TCAP dialog
     TCSessionMA *   session;    //TCAP dialogs factory
     Logger *        logger;
