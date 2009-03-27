@@ -42,7 +42,7 @@ public:
     fileSize_ = fileSize;
     blockSize_ = blockSize;
     filesCount_ = filesCount;
-    ffbThreshold_ = (fileSize_ / 4) * 3;
+    ffbThreshold_ = (fileSize_ / 2);
     if (logger_) smsc_log_info(logger_, "init creator: fileSize=%d, blockSize=%d, filesCount=%d create new data file when ffb=%d",
                                           fileSize_, blockSize_, filesCount_, ffbThreshold_);
   }
