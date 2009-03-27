@@ -128,7 +128,7 @@ protected:
         updateChannelActivity(channel, util::currentTimeMillis());
     }
 
-    void startupIO() throw(PvssException);
+    void startupIO() /* throw(PvssException) */ ;
 
     void shutdownIO( bool writePending )
     {
@@ -153,9 +153,9 @@ private:
         inactivityTracker->registerChannel(channel, utime);
     }
 
-    void registerForWrite( PvssSocket& channel ) throw(PvssException);
+    void registerForWrite( PvssSocket& channel ) /* throw(PvssException) */ ;
 
-    void registerForRead( PvssSocket& channel ) throw(PvssException);
+    void registerForRead( PvssSocket& channel ) /* throw(PvssException) */ ;
 
     void stopReaders()
     {

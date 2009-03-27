@@ -48,7 +48,7 @@ PvssSocket::~PvssSocket()
 }
 
 
-void PvssSocket::send( const Packet* packet, bool isRequest, bool force ) throw (PvssException)
+void PvssSocket::send( const Packet* packet, bool isRequest, bool force ) /* throw (PvssException) */ 
 {
     MutexGuard mg(writerMutex_);
     if ( ! writer_ )

@@ -6,7 +6,7 @@ using namespace scag2::pvss;
 class GetResponseTypeMatch : public ResponseTypeMatch
 {
 public:
-    virtual bool visitGetResponse( GetResponse& ) throw (PvapException) {
+    virtual bool visitGetResponse( GetResponse& ) /* throw (PvapException) */  {
         return true;
     }
 };

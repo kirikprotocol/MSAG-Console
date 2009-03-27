@@ -23,7 +23,7 @@ public:
     virtual const char* typeToString() const { return "ping"; }
     virtual void clear() {}
 
-    virtual bool visit( RequestVisitor& visitor ) throw (PvapException) {
+    virtual bool visit( RequestVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitPingRequest(*this);
     }
 

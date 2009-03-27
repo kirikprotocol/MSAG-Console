@@ -60,7 +60,7 @@ void PvssLogic::initGlossary(const string& path, Glossary* glossary) {
   }
 }
 
-Response* PvssLogic::process(Request& request) throw(PvssException) {
+Response* PvssLogic::process(Request& request) /* throw(PvssException) */  {
   try {
     return processProfileRequest(static_cast<AbstractProfileRequest&>(request));
   } catch (const PvapException& e) {

@@ -83,7 +83,7 @@ ClientCore::~ClientCore()
 }
 
 
-void ClientCore::startup() throw(PvssException)
+void ClientCore::startup() /* throw(PvssException) */ 
 {
     if (started_) return;
     MutexGuard mg(startMutex_);
@@ -184,7 +184,7 @@ void ClientCore::closeChannel( PvssSocket& channel )
 }
 
 
-std::auto_ptr<Response> ClientCore::processRequestSync( std::auto_ptr<Request>& request ) throw(PvssException)
+std::auto_ptr<Response> ClientCore::processRequestSync( std::auto_ptr<Request>& request ) /* throw(PvssException) */ 
 {
     Handler handler(request);
     std::auto_ptr<ClientContext> context( new ClientContext(request.release(),&handler) );
@@ -202,7 +202,7 @@ std::auto_ptr<Response> ClientCore::processRequestSync( std::auto_ptr<Request>& 
 }
 
 
-void ClientCore::processRequestAsync( std::auto_ptr<Request>& request, Client::ResponseHandler& handler) throw(PvssException)
+void ClientCore::processRequestAsync( std::auto_ptr<Request>& request, Client::ResponseHandler& handler) /* throw(PvssException) */ 
 {
     std::auto_ptr<ClientContext> context( new ClientContext(request.release(),&handler) );
     try {
@@ -435,7 +435,7 @@ void ClientCore::createChannel( util::msectime_type startConnectTime )
 }
 
 
-PvssSocket& ClientCore::getNextChannel() throw (PvssException)
+PvssSocket& ClientCore::getNextChannel() /* throw (PvssException) */ 
 {
     MutexGuard mg(channelMutex_);
     if ( activeChannels_.empty() )
@@ -447,7 +447,7 @@ PvssSocket& ClientCore::getNextChannel() throw (PvssException)
 }
 
 
-void ClientCore::sendRequest(std::auto_ptr<ClientContext>& context) throw(PvssException)
+void ClientCore::sendRequest(std::auto_ptr<ClientContext>& context) /* throw(PvssException) */ 
 {
     if (isStopping)
         throw PvssException(PvssException::NOT_CONNECTED, "Client deactivated");
@@ -492,7 +492,7 @@ void ClientCore::sendPingRequest( PvssSocket& channel )
 }
 
 
-void ClientCore::handleResponse(Response* response,PvssSocket& channel) throw(PvssException)
+void ClientCore::handleResponse(Response* response,PvssSocket& channel) /* throw(PvssException) */ 
 {
     std::auto_ptr<Response> resp(response);
     updateChannelActivity(channel); // Update last activity time on channel (for PINGs generation)

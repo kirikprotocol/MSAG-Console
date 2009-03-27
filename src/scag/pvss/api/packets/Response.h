@@ -108,7 +108,7 @@ public:
     virtual bool isValid() const { return true; }
     virtual bool isPing() const { return false; }
 
-    virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) = 0;
+    virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  = 0;
 
     bool correspondsRequest( const Request& request ) const {
         return ( request.getSeqNum() == getSeqNum() && request.matchResponseType(*this) );

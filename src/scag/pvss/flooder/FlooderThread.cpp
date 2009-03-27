@@ -53,13 +53,13 @@ int FlooderThread::doExecute()
 }
 
 
-void AsyncFlooderThread::doProcessRequest( std::auto_ptr< Request >& request ) throw (PvssException)
+void AsyncFlooderThread::doProcessRequest( std::auto_ptr< Request >& request ) /* throw (PvssException) */ 
 {
     stat_.getClient().processRequestAsync(request,stat_);
 }
 
 
-void SyncFlooderThread::doProcessRequest( std::auto_ptr< Request >& request ) throw (PvssException)
+void SyncFlooderThread::doProcessRequest( std::auto_ptr< Request >& request ) /* throw (PvssException) */ 
 {
     std::auto_ptr<Response> response = stat_.getClient().processRequestSync(request);
     stat_.handleResponse(request,response);

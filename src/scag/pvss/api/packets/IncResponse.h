@@ -12,7 +12,7 @@ public:
     IncResponse() : BatchResponseComponent(), result_(0) {}
     IncResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum), result_(0) {}
 
-    virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) {
+    virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitIncResponse(*this);
     }
 

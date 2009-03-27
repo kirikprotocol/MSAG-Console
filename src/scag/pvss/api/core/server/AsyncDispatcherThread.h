@@ -23,7 +23,7 @@ public:
     virtual const char* taskName() { return "pvss.dspch"; }
 
     /// initialization, startup of async dispatcher.
-    void init() throw (PvssException);
+    void init() /* throw (PvssException) */ ;
 
     /// The method shutdowns the dispatcher thread and the underlying async logics.
     /// It waits until everything is shutdowned.

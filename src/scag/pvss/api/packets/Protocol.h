@@ -19,12 +19,12 @@ public:
     /**
      * Serialize packet into a buffer and return 
      */
-    virtual void serialize( const Packet& packet, Buffer& buf ) throw(PvapException) = 0;
+    virtual void serialize( const Packet& packet, Buffer& buf ) /* throw(PvapException) */  = 0;
 
     /**
      * NOTE: buf will be used only for reading, so it is safe to pass an extBuf.
      */
-    virtual Packet* deserialize( Buffer& buf ) throw(PvapException) = 0;
+    virtual Packet* deserialize( Buffer& buf ) /* throw(PvapException) */  = 0;
 
 };
 

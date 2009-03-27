@@ -47,7 +47,7 @@ class PvssLogic: public Server::SyncLogic {
 public:
   PvssLogic( PvssDispatcher& dispatcher ) : dispatcher_(dispatcher), logger_(Logger::getInstance("storeproc")) {}
   virtual ~PvssLogic() {};
-  Response* process(Request& request) throw(PvssException);
+  Response* process(Request& request) /* throw(PvssException) */ ;
   void responseSent(std::auto_ptr<core::server::ServerContext> response) { /*TODO: implement this method*/ };
   void responseFail(std::auto_ptr<core::server::ServerContext> response) { /*TODO: implement this method*/ };
 
@@ -87,7 +87,7 @@ public:
         return buf;
     }
 
-  //virtual Response* process(Request& request) throw(PvssException);
+  //virtual Response* process(Request& request) /* throw(PvssException) */ ;
   void shutdownStorages();
 
 protected:
@@ -135,7 +135,7 @@ public:
     virtual void init() throw (smsc::util::Exception);
     virtual std::string toString() const { return "infrastruct logic"; }
 
-  //virtual Response* process(Request& request) throw(PvssException);
+  //virtual Response* process(Request& request) /* throw(PvssException) */ ;
   void shutdownStorages();
 
 protected:

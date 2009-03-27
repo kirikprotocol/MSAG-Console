@@ -19,7 +19,7 @@ public:
     IOTask(theconfig,thecore,taskname), writePending_(false) {}
 
     /// serialize the packet
-    void serialize(const Packet& packet,Protocol::Buffer& buffer) throw (PvssException);
+    void serialize(const Packet& packet,Protocol::Buffer& buffer) /* throw (PvssException) */ ;
 
     /// notify writer that it should write all pending contexts,
     /// wait until all contexts are written.  Typically it should be invoked before shutdown.

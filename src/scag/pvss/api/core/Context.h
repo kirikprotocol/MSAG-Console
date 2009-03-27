@@ -50,7 +50,7 @@ public:
         return response_;
     }
 
-    virtual void setResponse( Response* resp ) throw (PvssException);
+    virtual void setResponse( Response* resp ) /* throw (PvssException) */ ;
 
 private:
     Context();

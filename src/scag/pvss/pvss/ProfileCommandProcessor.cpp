@@ -18,7 +18,7 @@
 namespace scag2 {
 namespace pvss  {
 
-bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) throw(PvapException) {
+bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */  {
   ProfileCommandProcessor proc;
   proc.setProfile(profile_);
   response_.reset( new BatchResponse(cmd.getSeqNum()) );
@@ -47,7 +47,7 @@ bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) throw(PvapExc
   return true;
 }
 
-bool ProfileCommandProcessor::visitDelCommand(DelCommand &cmd) throw(PvapException) {
+bool ProfileCommandProcessor::visitDelCommand(DelCommand &cmd) /* throw(PvapException) */  {
   response_.reset( new DelResponse(cmd.getSeqNum()) ); 
   if (!profile_ || !profile_->DeleteProperty(cmd.getVarName().c_str())) {
     response_->setStatus(Response::PROPERTY_NOT_FOUND);
@@ -59,7 +59,7 @@ bool ProfileCommandProcessor::visitDelCommand(DelCommand &cmd) throw(PvapExcepti
   return true;
 }
 
-bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) throw(PvapException) {
+bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) /* throw(PvapException) */  {
   response_.reset( new GetResponse(cmd.getSeqNum()) ); 
   if (!profile_) {
     response_->setStatus(Response::PROPERTY_NOT_FOUND);
@@ -79,7 +79,7 @@ bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) throw(PvapExcepti
   return true;
 }
 
-bool ProfileCommandProcessor::visitIncCommand(IncCommand &cmd) throw(PvapException) {
+bool ProfileCommandProcessor::visitIncCommand(IncCommand &cmd) /* throw(PvapException) */  {
   uint32_t result = 0;
   Response::StatusType status = incModProperty(cmd.getProperty(), 0, result);
   response_.reset( new IncResponse(cmd.getSeqNum()) );
@@ -91,7 +91,7 @@ bool ProfileCommandProcessor::visitIncCommand(IncCommand &cmd) throw(PvapExcepti
   return true;
 }
 
-bool ProfileCommandProcessor::visitIncModCommand(IncModCommand &cmd) throw(PvapException) {
+bool ProfileCommandProcessor::visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */  {
   uint32_t result = 0;
   response_.reset( new IncResponse(cmd.getSeqNum()) );
   if (!profile_) {
@@ -107,7 +107,7 @@ bool ProfileCommandProcessor::visitIncModCommand(IncModCommand &cmd) throw(PvapE
   return true;
 }
 
-bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) throw(PvapException) {
+bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapException) */  {
   Property *prop = cmd.getProperty();
   response_.reset( new SetResponse() );
   if (!profile_) {

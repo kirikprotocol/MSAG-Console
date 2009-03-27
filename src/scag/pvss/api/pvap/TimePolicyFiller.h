@@ -19,7 +19,7 @@ public:
     }
 
     template < class Proto >
-        void serialize( const Proto&, BufferWriter& writer ) const throw (PvapException)
+        void serialize( const Proto&, BufferWriter& writer ) const /* throw (PvapException) */ 
     {
         // we don't check as it was checked before
         Property* p = owner.getProperty();
@@ -29,7 +29,7 @@ public:
     }
 
     template < class Proto >
-        void deserialize( Proto&, BufferReader& reader ) throw (PvapException)
+        void deserialize( Proto&, BufferReader& reader ) /* throw (PvapException) */ 
     {
         try {
             uint8_t policyValue = reader.readByte();

@@ -163,7 +163,7 @@ public:
      * @param context           ServerContext instance containing processed request with response or error set.
      * @throws PvssException    Thrown if provided context is invalid or server failes to sent it.
      */
-    void contextProcessed(std::auto_ptr<ServerContext> context); // throw(PvssException);
+    void contextProcessed(std::auto_ptr<ServerContext> context); // /* throw(PvssException) */ ;
 
     /*
     {
@@ -346,8 +346,8 @@ public:
      * @throws PvssException    Thrown if server fails to start
      */
     /*public synchronized */
-    virtual void startup( SyncDispatcher& dispatcher ) throw(PvssException);
-    virtual void startup( AsyncDispatcher& dispatcher ) throw (PvssException);
+    virtual void startup( SyncDispatcher& dispatcher ) /* throw(PvssException) */ ;
+    virtual void startup( AsyncDispatcher& dispatcher ) /* throw (PvssException) */ ;
 
     /*
     {
@@ -504,7 +504,7 @@ private:
     /// invoked when a new packet is received either from new or old transport.
     void receiveContext( std::auto_ptr< ServerContext > context );
 
-    void sendResponse(std::auto_ptr<ServerContext>& ctx) throw(PvssException);
+    void sendResponse(std::auto_ptr<ServerContext>& ctx) /* throw(PvssException) */ ;
 
     /// report context
     void reportContext( std::auto_ptr<ServerContext> ctx );

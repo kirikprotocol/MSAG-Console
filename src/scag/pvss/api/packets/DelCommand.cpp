@@ -6,7 +6,7 @@ using namespace scag2::pvss;
 class DelResponseTypeMatch : public ResponseTypeMatch
 {
 public:
-    virtual bool visitDelResponse( DelResponse& ) throw (PvapException) {
+    virtual bool visitDelResponse( DelResponse& ) /* throw (PvapException) */  {
         return true;
     }
 };

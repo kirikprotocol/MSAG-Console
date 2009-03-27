@@ -53,7 +53,7 @@ public:
     /// Accept packet (request/response) to a sending queue
     /// and notify attached writer (in case queue was empty).
     /// NOTE: if exception is thrown ctx is not released.
-    void send( const Packet* ctx, bool isRequest, bool force ) throw (PvssException);
+    void send( const Packet* ctx, bool isRequest, bool force ) /* throw (PvssException) */ ;
 
     /// checks if this socket want to send data
     /// NOTE: not a thread-safe

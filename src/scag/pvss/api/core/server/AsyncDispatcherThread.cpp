@@ -25,7 +25,7 @@ int AsyncDispatcherThread::doExecute()
 }
 
 
-void AsyncDispatcherThread::init() throw (PvssException)
+void AsyncDispatcherThread::init() /* throw (PvssException) */ 
 {
     // FIXME
 }

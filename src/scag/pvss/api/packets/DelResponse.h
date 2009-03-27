@@ -12,7 +12,7 @@ public:
     DelResponse() : BatchResponseComponent() {}
     DelResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum) {}
 
-    virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) {
+    virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitDelResponse(*this);
     }
 

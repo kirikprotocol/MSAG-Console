@@ -7,7 +7,7 @@ namespace pvss {
 namespace core {
 namespace server {
 
-void ServerContext::setResponse(Response* response) throw (PvssException)
+void ServerContext::setResponse(Response* response) /* throw (PvssException) */ 
 {
     MutexGuard mg(setRespMutex_);
     if ( state_ == NEW && response != 0 ) {
@@ -21,7 +21,7 @@ void ServerContext::setResponse(Response* response) throw (PvssException)
 }
 
 
-void ServerContext::setError(const std::string& msg) throw(PvssException)
+void ServerContext::setError(const std::string& msg) /* throw(PvssException) */ 
 {
     setResponse(new ErrorResponse(getSeqNum(),Response::ERROR, msg.empty() ? 0 : msg.c_str()));
 }

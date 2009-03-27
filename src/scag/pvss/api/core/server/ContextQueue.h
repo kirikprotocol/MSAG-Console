@@ -25,7 +25,7 @@ public:
     ContextQueue( int queueLimit );
     
     /// notify queue that a new request is received.
-    void requestReceived(std::auto_ptr<ServerContext>& context) throw (PvssException);
+    void requestReceived(std::auto_ptr<ServerContext>& context) /* throw (PvssException) */ ;
 
     /// notify queue that response is send/failed
     void reportResponse(std::auto_ptr<ServerContext>& context);

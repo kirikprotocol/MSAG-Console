@@ -51,7 +51,7 @@ public:
         getCommand()->clear();
     }
 
-    virtual bool visit( RequestVisitor& visitor ) throw (PvapException)
+    virtual bool visit( RequestVisitor& visitor ) /* throw (PvapException) */ 
     {
         return visitor.visitProfileRequest(*this);
     }

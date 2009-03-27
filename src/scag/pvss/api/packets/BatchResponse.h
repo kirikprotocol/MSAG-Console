@@ -15,7 +15,7 @@ public:
     virtual ~BatchResponse() { clear(); }
 
     virtual bool isValid() const { return Response::isValid() && !batchContent_.empty(); }
-    virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) {
+    virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitBatchResponse(*this);
     }
 

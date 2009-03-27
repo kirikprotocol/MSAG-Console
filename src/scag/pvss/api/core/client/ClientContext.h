@@ -17,7 +17,7 @@ public:
     ClientContext( Request* req, Client::ResponseHandler* handle ) :
     Context(req), handler(handle) {}
 
-    virtual void setResponse( Response* resp ) throw (PvssException)
+    virtual void setResponse( Response* resp ) /* throw (PvssException) */ 
     {
         Context::setResponse(resp);
         if ( handler != 0 ) {

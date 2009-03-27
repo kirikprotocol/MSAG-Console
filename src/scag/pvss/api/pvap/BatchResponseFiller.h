@@ -20,37 +20,37 @@ private:
     public:
         BufferFiller() : writer(buffer) {}
 
-        virtual bool visitErrResponse( ErrorResponse& resp ) throw (PvapException) {
+        virtual bool visitErrResponse( ErrorResponse& resp ) /* throw (PvapException) */  {
             return false;
         }
 
-        virtual bool visitDelResponse( DelResponse& resp ) throw (PvapException) {
+        virtual bool visitDelResponse( DelResponse& resp ) /* throw (PvapException) */  {
             BC_DEL_RESP msg(&resp);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitSetResponse( SetResponse& resp ) throw (PvapException) {
+        virtual bool visitSetResponse( SetResponse& resp ) /* throw (PvapException) */  {
             BC_SET_RESP msg(&resp);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitGetResponse( GetResponse& resp ) throw (PvapException) {
+        virtual bool visitGetResponse( GetResponse& resp ) /* throw (PvapException) */  {
             BC_GET_RESP msg(&resp);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitIncResponse( IncResponse& resp ) throw (PvapException) {
+        virtual bool visitIncResponse( IncResponse& resp ) /* throw (PvapException) */  {
             BC_INC_RESP msg(&resp);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitPingResponse( PingResponse& resp ) throw (PvapException) {
+        virtual bool visitPingResponse( PingResponse& resp ) /* throw (PvapException) */  {
             return false;
         }
-        virtual bool visitAuthResponse( AuthResponse& resp ) throw (PvapException) {
+        virtual bool visitAuthResponse( AuthResponse& resp ) /* throw (PvapException) */  {
             return false;
         }
-        virtual bool visitBatchResponse( BatchResponse& resp ) throw (PvapException) {
+        virtual bool visitBatchResponse( BatchResponse& resp ) /* throw (PvapException) */  {
             return false;
         }
         void clear() {
@@ -70,7 +70,7 @@ public:
         assert(theOwner);
     }
 
-    void serialize( const PVAP&, BufferWriter& writer ) const throw (PvapException)
+    void serialize( const PVAP&, BufferWriter& writer ) const /* throw (PvapException) */ 
     {
         const std::vector< BatchResponseComponent* >& components = owner.getBatchContent();
         const size_t cnt = components.size();
@@ -96,7 +96,7 @@ public:
         }
     }
 
-    void deserialize( PVAP&, BufferReader& reader ) throw (PvapException)
+    void deserialize( PVAP&, BufferReader& reader ) /* throw (PvapException) */ 
     {
         int idx = -1;
         try {
@@ -131,7 +131,7 @@ protected:
     void push( BatchResponseComponent* comp ) {
         owner.addComponent( comp );
     }
-    void fail() throw(PvapException)
+    void fail() /* throw(PvapException) */ 
     {
         throw new PvapSerializationException( false,
                                               owner.getSeqNum(),

@@ -16,7 +16,7 @@ queueLimit_(queueLimit)
 {}
 
 
-void ContextQueue::requestReceived( std::auto_ptr<ServerContext>& context ) throw (PvssException)
+void ContextQueue::requestReceived( std::auto_ptr<ServerContext>& context ) /* throw (PvssException) */ 
 {
     if ( !acceptRequests_ ) {
         throw PvssException(PvssException::SERVER_BUSY,"queue is shutdown");

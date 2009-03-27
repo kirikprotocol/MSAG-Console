@@ -22,14 +22,14 @@ class ResponseVisitor
 {
 public:
     virtual ~ResponseVisitor() {}
-    virtual bool visitErrResponse( ErrorResponse& resp )   throw (PvapException) = 0;
-    virtual bool visitDelResponse( DelResponse& resp )     throw (PvapException) = 0;
-    virtual bool visitSetResponse( SetResponse& resp )     throw (PvapException) = 0;
-    virtual bool visitGetResponse( GetResponse& resp )     throw (PvapException) = 0;
-    virtual bool visitIncResponse( IncResponse& resp )     throw (PvapException) = 0;
-    virtual bool visitPingResponse( PingResponse& resp )   throw (PvapException) = 0;
-    virtual bool visitAuthResponse( AuthResponse& resp )   throw (PvapException) = 0;
-    virtual bool visitBatchResponse( BatchResponse& resp ) throw (PvapException) = 0;
+    virtual bool visitErrResponse( ErrorResponse& resp )   /* throw (PvapException) */  = 0;
+    virtual bool visitDelResponse( DelResponse& resp )     /* throw (PvapException) */  = 0;
+    virtual bool visitSetResponse( SetResponse& resp )     /* throw (PvapException) */  = 0;
+    virtual bool visitGetResponse( GetResponse& resp )     /* throw (PvapException) */  = 0;
+    virtual bool visitIncResponse( IncResponse& resp )     /* throw (PvapException) */  = 0;
+    virtual bool visitPingResponse( PingResponse& resp )   /* throw (PvapException) */  = 0;
+    virtual bool visitAuthResponse( AuthResponse& resp )   /* throw (PvapException) */  = 0;
+    virtual bool visitBatchResponse( BatchResponse& resp ) /* throw (PvapException) */  = 0;
 };
 
 } // namespace pvss

@@ -28,7 +28,7 @@ public:
     }
     bool isRequest() const { return true; }
 
-    virtual bool visit( ProfileCommandVisitor& visitor ) throw (PvapException) = 0;
+    virtual bool visit( ProfileCommandVisitor& visitor ) /* throw (PvapException) */  = 0;
 
     virtual ResponseTypeMatch& getResponseTypeMatch() const = 0;
 

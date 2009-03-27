@@ -12,7 +12,7 @@ public:
     AuthResponse() : Response(), clientType_(0), sid_(0) {}
     AuthResponse( uint32_t seqNum ) : Response(seqNum), clientType_(0), sid_(0) {}
 
-    virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) {
+    virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitAuthResponse(*this);
     }
 

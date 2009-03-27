@@ -46,7 +46,7 @@ $-foreach$
     }
      */
 
-    void decodeMessage( BufferReader& ss ) throw (PvapException)
+    void decodeMessage( BufferReader& ss ) /* throw (PvapException) */ 
     {
         uint32_t seqNum = -1;
         seqNum = ss.readInt();
@@ -70,7 +70,7 @@ $-foreach$
 $foreach message$
 
     void encodeMessage( const $var message.name$& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_$var message.name:ucf$);

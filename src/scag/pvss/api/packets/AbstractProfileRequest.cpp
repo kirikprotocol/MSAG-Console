@@ -14,27 +14,27 @@ using namespace scag2::pvss;
 
 struct PRMaker : public ProfileCommandVisitor
 {
-    virtual bool visitDelCommand( DelCommand& cmd ) throw(PvapException) {
+    virtual bool visitDelCommand( DelCommand& cmd ) /* throw(PvapException) */  {
         req = createProfileRequest(&cmd);
         return true;
     }
-    virtual bool visitSetCommand( SetCommand& cmd ) throw(PvapException) {
+    virtual bool visitSetCommand( SetCommand& cmd ) /* throw(PvapException) */  {
         req = createProfileRequest(&cmd);
         return true;
     }
-    virtual bool visitGetCommand( GetCommand& cmd ) throw(PvapException) {
+    virtual bool visitGetCommand( GetCommand& cmd ) /* throw(PvapException) */  {
         req = createProfileRequest(&cmd);
         return true;
     }
-    virtual bool visitIncCommand( IncCommand& cmd ) throw(PvapException) {
+    virtual bool visitIncCommand( IncCommand& cmd ) /* throw(PvapException) */  {
         req = createProfileRequest(&cmd);
         return true;
     }
-    virtual bool visitIncModCommand( IncModCommand& cmd ) throw(PvapException) {
+    virtual bool visitIncModCommand( IncModCommand& cmd ) /* throw(PvapException) */  {
         req = createProfileRequest(&cmd);
         return true;
     }
-    virtual bool visitBatchCommand( BatchCommand& cmd ) throw(PvapException) {
+    virtual bool visitBatchCommand( BatchCommand& cmd ) /* throw(PvapException) */  {
         req = createProfileRequest(&cmd);
         return true;
     }

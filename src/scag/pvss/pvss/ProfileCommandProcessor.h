@@ -17,12 +17,12 @@ class BatchResponseComponent;
 class ProfileCommandProcessor : public ProfileCommandVisitor {
 public:
   ProfileCommandProcessor():rollback_(false), profile_(0), response_(0) {};
-  bool visitBatchCommand(BatchCommand &cmd) throw(PvapException);
-  bool visitDelCommand(DelCommand &cmd) throw(PvapException);
-  bool visitGetCommand(GetCommand &cmd) throw(PvapException);
-  bool visitIncCommand(IncCommand &cmd) throw(PvapException);
-  bool visitIncModCommand(IncModCommand &cmd) throw(PvapException);
-  bool visitSetCommand(SetCommand &cmd) throw(PvapException);
+  bool visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */ ;
+  bool visitDelCommand(DelCommand &cmd) /* throw(PvapException) */ ;
+  bool visitGetCommand(GetCommand &cmd) /* throw(PvapException) */ ;
+  bool visitIncCommand(IncCommand &cmd) /* throw(PvapException) */ ;
+  bool visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */ ;
+  bool visitSetCommand(SetCommand &cmd) /* throw(PvapException) */ ;
   void setProfile(Profile *pf);
   BatchResponseComponent* getBatchResponseComponent();
   Response* getResponse();

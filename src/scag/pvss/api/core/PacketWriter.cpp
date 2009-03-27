@@ -7,7 +7,7 @@ namespace scag2 {
 namespace pvss {
 namespace core {
 
-void PacketWriter::serialize( const Packet& packet, Protocol::Buffer& buffer ) throw (PvssException)
+void PacketWriter::serialize( const Packet& packet, Protocol::Buffer& buffer ) /* throw (PvssException) */ 
 {
     Protocol& proto = *core_->getProtocol();
     buffer.SetPos(4);

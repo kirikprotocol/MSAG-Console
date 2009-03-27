@@ -20,32 +20,32 @@ private:
     public:
         BufferFiller() : writer(buffer) {}
 
-        virtual bool visitDelCommand( DelCommand& cmd ) throw(PvapException) {
+        virtual bool visitDelCommand( DelCommand& cmd ) /* throw(PvapException) */  {
             BC_DEL msg(&cmd);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitSetCommand( SetCommand& cmd ) throw(PvapException) {
+        virtual bool visitSetCommand( SetCommand& cmd ) /* throw(PvapException) */  {
             BC_SET msg(&cmd);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitGetCommand( GetCommand& cmd ) throw(PvapException) {
+        virtual bool visitGetCommand( GetCommand& cmd ) /* throw(PvapException) */  {
             BC_GET msg(&cmd);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitIncCommand( IncCommand& cmd ) throw(PvapException) {
+        virtual bool visitIncCommand( IncCommand& cmd ) /* throw(PvapException) */  {
             BC_INC msg(&cmd);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitIncModCommand( IncModCommand& cmd ) throw(PvapException) {
+        virtual bool visitIncModCommand( IncModCommand& cmd ) /* throw(PvapException) */  {
             BC_INC_MOD msg(&cmd);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitBatchCommand( BatchCommand& cmd ) throw(PvapException) {
+        virtual bool visitBatchCommand( BatchCommand& cmd ) /* throw(PvapException) */  {
             return false;
         }
 
@@ -66,7 +66,7 @@ public:
         assert(theOwner);
     }
 
-    void serialize( const PVAP&, BufferWriter& writer ) const throw (PvapException)
+    void serialize( const PVAP&, BufferWriter& writer ) const /* throw (PvapException) */ 
     {
         const std::vector< BatchRequestComponent* >& components = owner.getBatchContent();
         const size_t cnt = components.size();
@@ -98,7 +98,7 @@ public:
         }
     }
 
-    void deserialize( PVAP&, BufferReader& reader ) throw (PvapException)
+    void deserialize( PVAP&, BufferReader& reader ) /* throw (PvapException) */ 
     {
         int idx = -1;
         try {
@@ -136,7 +136,7 @@ protected:
     void push( BatchRequestComponent* comp ) {
         owner.addComponent( comp );
     }
-    void fail() throw(PvapException)
+    void fail() /* throw(PvapException) */ 
     {
         throw PvapSerializationException( true,
                                           owner.getSeqNum(),

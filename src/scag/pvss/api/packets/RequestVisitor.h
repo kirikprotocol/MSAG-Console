@@ -14,9 +14,9 @@ class RequestVisitor
 {
 public:
     virtual ~RequestVisitor() {}
-    virtual bool visitPingRequest( PingRequest& req ) throw(PvapException) = 0;
-    virtual bool visitAuthRequest( AuthRequest& req ) throw(PvapException) = 0;
-    virtual bool visitProfileRequest( AbstractProfileRequest& req ) throw(PvapException) = 0;
+    virtual bool visitPingRequest( PingRequest& req ) /* throw(PvapException) */  = 0;
+    virtual bool visitAuthRequest( AuthRequest& req ) /* throw(PvapException) */  = 0;
+    virtual bool visitProfileRequest( AbstractProfileRequest& req ) /* throw(PvapException) */  = 0;
 };
 
 } // namespace pvss

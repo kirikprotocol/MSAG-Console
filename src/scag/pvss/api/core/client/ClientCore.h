@@ -54,7 +54,7 @@ public:
      *
      * @throws PvssException    Thrown if client fails to start
      */
-    virtual void startup() throw(PvssException);
+    virtual void startup() /* throw(PvssException) */ ;
 
 
     /**
@@ -94,7 +94,7 @@ public:
      * @return          PVAP Response packet on success
      * @throws PvssException Thrown when client failed to accept or process request
      */
-    std::auto_ptr<Response> processRequestSync(std::auto_ptr<Request>& request) throw(PvssException);
+    std::auto_ptr<Response> processRequestSync(std::auto_ptr<Request>& request) /* throw(PvssException) */ ;
 
 
     /**
@@ -107,7 +107,7 @@ public:
      * @param handler   Callback handler to notify on response or error for this request
      * @throws PvssException Thrown when client rejects request processing (e.g. not inited/connected, writers queue is full)
      */
-    void processRequestAsync( std::auto_ptr<Request>& request, Client::ResponseHandler& handler) throw(PvssException);
+    void processRequestAsync( std::auto_ptr<Request>& request, Client::ResponseHandler& handler) /* throw(PvssException) */ ;
 
 
     /**
@@ -159,7 +159,7 @@ private:
      * @param startConnectTime  time to start connect attempt
      * @throws PvssException    thrown when channel creation failed
      */
-    void createChannel( util::msectime_type startConnectTime ); // throw(PvssException)
+    void createChannel( util::msectime_type startConnectTime ); // /* throw(PvssException) */ 
 
     /**
      * Internal method used to obtain next channel for request sending.
@@ -168,7 +168,7 @@ private:
      * @return  next channel to send request to
      * @throws PvssException thrown only if no one channel is registered and connected to PVSS server.
      */
-    PvssSocket& getNextChannel() throw(PvssException);
+    PvssSocket& getNextChannel() /* throw(PvssException) */ ;
 
     /**
      * Internal method for async request processing.
@@ -178,7 +178,7 @@ private:
      * @throws PvssException  Thrown when client failed to accept request
      * 
      */
-    void sendRequest( std::auto_ptr<ClientContext>& context ) throw(PvssException);
+    void sendRequest( std::auto_ptr<ClientContext>& context ) /* throw(PvssException) */ ;
 
     /**
      * Internal method sends PING request into provided channel.
@@ -196,7 +196,7 @@ private:
      * 
      * NOTE: Ownership is taken!
      */
-    void handleResponse(Response* response,PvssSocket& channel) throw(PvssException);
+    void handleResponse(Response* response,PvssSocket& channel) /* throw(PvssException) */ ;
 
 
     /**

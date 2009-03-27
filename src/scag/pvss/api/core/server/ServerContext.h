@@ -36,9 +36,9 @@ public:
         state_ = state;
     }
 
-    virtual void setResponse(Response* response) throw (PvssException);
+    virtual void setResponse(Response* response) /* throw (PvssException) */ ;
 
-    virtual void setError(const std::string& msg) throw(PvssException);
+    virtual void setError(const std::string& msg) /* throw(PvssException) */ ;
 
     /// where to return notification on response delivery
     virtual void setRespQueue( ContextQueue& respQueue ) {
@@ -53,7 +53,7 @@ public:
     virtual smsc::core::network::Socket* getSocket() const = 0;
 
     /// send response
-    virtual void sendResponse() throw (PvssException) = 0;
+    virtual void sendResponse() /* throw (PvssException) */  = 0;
 
 private:
     smsc::core::synchronization::Mutex setRespMutex_;

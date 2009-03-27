@@ -73,7 +73,7 @@ void ServerCore::acceptOldChannel( smsc::core::network::Socket* socket )
 }
 
 
-void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // throw (PvssException)
+void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // /* throw (PvssException) */ 
 {
     try {
         sendResponse(context);
@@ -142,7 +142,7 @@ void ServerCore::reportPacket(uint32_t seqNum, smsc::core::network::Socket& chan
 }
 
 
-void ServerCore::startup( SyncDispatcher& dispatcher ) throw (PvssException)
+void ServerCore::startup( SyncDispatcher& dispatcher ) /* throw (PvssException) */ 
 {
     if (started_) return;
     MutexGuard mg(startMutex_);
@@ -177,7 +177,7 @@ void ServerCore::startup( SyncDispatcher& dispatcher ) throw (PvssException)
 }
 
 
-void ServerCore::startup( AsyncDispatcher& dispatcher ) throw (PvssException)
+void ServerCore::startup( AsyncDispatcher& dispatcher ) /* throw (PvssException) */ 
 {
     if (started_) return;
     MutexGuard mg(startMutex_);
@@ -403,7 +403,7 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
 }
 
 
-void ServerCore::sendResponse( std::auto_ptr<ServerContext>& context ) throw (PvssException)
+void ServerCore::sendResponse( std::auto_ptr<ServerContext>& context ) /* throw (PvssException) */ 
 {
     int seqNum = context->getSeqNum();
     smsc::core::network::Socket* socket = context->getSocket();

@@ -31,7 +31,7 @@ public:
         return property_->isValid());
     }
      */
-    virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) {
+    virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitGetResponse(*this);
     }
 

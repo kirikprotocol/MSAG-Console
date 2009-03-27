@@ -43,7 +43,7 @@ public:
         protocolVersion_ = 0;
     }
 
-    virtual bool visit( RequestVisitor& visitor ) throw (PvapException) {
+    virtual bool visit( RequestVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitAuthRequest(*this);
     }
 

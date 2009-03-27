@@ -14,7 +14,7 @@ public:
     PingResponse( uint32_t seqNum ) : Response(seqNum) {}
     PingResponse( uint32_t seqNum, StatusType status ) : Response(seqNum,status) {}
 
-    virtual bool visit( ResponseVisitor& visitor ) throw (PvapException) {
+    virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitPingResponse(*this);
     }
     virtual PingResponse* clone() const { return new PingResponse(*this); }

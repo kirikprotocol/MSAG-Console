@@ -25,7 +25,7 @@ public:
 
     virtual void shutdown();
 
-    virtual void init() throw (PvssException);
+    virtual void init() /* throw (PvssException) */ ;
 
 protected:
     virtual bool setupSockets( util::msectime_type currentTime );

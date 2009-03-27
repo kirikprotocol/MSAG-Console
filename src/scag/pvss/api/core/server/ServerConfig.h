@@ -23,7 +23,7 @@ public:
         return queueSizeLimit_;
     }
 
-    void setQueueSizeLimit( int queueSizeLimit ) throw(ConfigException)
+    void setQueueSizeLimit( int queueSizeLimit ) /* throw(ConfigException) */ 
     {
         if (queueSizeLimit <= MIN_QUEUE_SIZE_LIMIT || queueSizeLimit > MAX_QUEUE_SIZE_LIMIT)
             throw ConfigException("Pending requests queue size limit can't be less than %d and more then %d",

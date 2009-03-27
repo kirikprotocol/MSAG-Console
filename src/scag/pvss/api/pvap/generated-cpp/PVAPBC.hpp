@@ -67,7 +67,7 @@ public:
     }
      */
 
-    void decodeMessage( BufferReader& ss ) throw (PvapException)
+    void decodeMessage( BufferReader& ss ) /* throw (PvapException) */ 
     {
         uint32_t seqNum = -1;
         seqNum = ss.readInt();
@@ -160,7 +160,7 @@ public:
     }
 
     void encodeMessage( const BC_DEL& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_BC_DEL);
@@ -168,7 +168,7 @@ public:
     }
 
     void encodeMessage( const BC_DEL_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_BC_DEL_RESP);
@@ -176,7 +176,7 @@ public:
     }
 
     void encodeMessage( const BC_SET& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_BC_SET);
@@ -184,7 +184,7 @@ public:
     }
 
     void encodeMessage( const BC_SET_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_BC_SET_RESP);
@@ -192,7 +192,7 @@ public:
     }
 
     void encodeMessage( const BC_GET& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_BC_GET);
@@ -200,7 +200,7 @@ public:
     }
 
     void encodeMessage( const BC_GET_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_BC_GET_RESP);
@@ -208,7 +208,7 @@ public:
     }
 
     void encodeMessage( const BC_INC& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_BC_INC);
@@ -216,7 +216,7 @@ public:
     }
 
     void encodeMessage( const BC_INC_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_BC_INC_RESP);
@@ -224,7 +224,7 @@ public:
     }
 
     void encodeMessage( const BC_INC_MOD& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_BC_INC_MOD);
@@ -232,7 +232,7 @@ public:
     }
 
     void encodeMessage( const BC_INC_MOD_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_BC_INC_MOD_RESP);

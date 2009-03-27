@@ -31,7 +31,7 @@ void Acceptor::shutdown()
 }
 
 
-void Acceptor::init() throw (PvssException)
+void Acceptor::init() /* throw (PvssException) */ 
 {
     if ( socket_.isConnected() ) return;
     if ( -1 == socket_.InitServer( getConfig().getHost().c_str(),

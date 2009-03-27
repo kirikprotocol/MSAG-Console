@@ -35,7 +35,7 @@ void Core::closeChannel( PvssSocket& channel )
 }
 
 
-void Core::registerForWrite( PvssSocket& channel ) throw (PvssException)
+void Core::registerForWrite( PvssSocket& channel ) /* throw (PvssException) */ 
 {
     PacketWriter* writer = 0;
     {
@@ -55,7 +55,7 @@ void Core::registerForWrite( PvssSocket& channel ) throw (PvssException)
 }
 
 
-void Core::registerForRead( PvssSocket& channel ) throw(PvssException)
+void Core::registerForRead( PvssSocket& channel ) /* throw(PvssException) */ 
 {
     PacketReader* reader = 0;
     {
@@ -74,7 +74,7 @@ void Core::registerForRead( PvssSocket& channel ) throw(PvssException)
 }
 
 
-void Core::startupIO() throw(PvssException)
+void Core::startupIO() /* throw(PvssException) */ 
 {
     smsc_log_info( logger, "Starting up IO tasks...");
     {

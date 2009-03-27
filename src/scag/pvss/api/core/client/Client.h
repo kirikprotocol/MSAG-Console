@@ -23,7 +23,7 @@ public:
      *
      * @throws PvssException    Thrown if PVSS Client failed to start
      */
-    virtual void startup() throw(PvssException) = 0;
+    virtual void startup() /* throw(PvssException) */  = 0;
 
     /**
      * Method shuts PVSS Client down.
@@ -71,7 +71,7 @@ public:
      * @return                  PVAP response command on success
      * @throws PvssException    Thrown when client failed to accept or process request
      */
-    virtual std::auto_ptr<Response> processRequestSync(std::auto_ptr<Request>& request) throw(PvssException) = 0;
+    virtual std::auto_ptr<Response> processRequestSync(std::auto_ptr<Request>& request) /* throw(PvssException) */  = 0;
 
     /**
      * Send PVAP request and register callback handler to wait PVAP response (async mode).
@@ -83,7 +83,7 @@ public:
      * @throws PvssException    Thrown when client rejects request processing (e.g. not inited/connected, queue is full)
      */
     virtual void processRequestAsync( std::auto_ptr<Request>& request,
-                                      ResponseHandler& handler ) throw(PvssException) = 0;
+                                      ResponseHandler& handler ) /* throw(PvssException) */  = 0;
 };
 
 } // namespace client

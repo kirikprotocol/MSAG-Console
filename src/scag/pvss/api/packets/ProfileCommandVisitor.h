@@ -17,12 +17,12 @@ class ProfileCommandVisitor
 {
 public:
     virtual ~ProfileCommandVisitor() {}
-    virtual bool visitDelCommand( DelCommand& cmd ) throw(PvapException) = 0;
-    virtual bool visitSetCommand( SetCommand& cmd ) throw(PvapException) = 0;
-    virtual bool visitGetCommand( GetCommand& cmd ) throw(PvapException) = 0;
-    virtual bool visitIncCommand( IncCommand& cmd ) throw(PvapException) = 0;
-    virtual bool visitIncModCommand( IncModCommand& cmd ) throw(PvapException) = 0;
-    virtual bool visitBatchCommand( BatchCommand& cmd ) throw(PvapException) = 0;
+    virtual bool visitDelCommand( DelCommand& cmd ) /* throw(PvapException) */  = 0;
+    virtual bool visitSetCommand( SetCommand& cmd ) /* throw(PvapException) */  = 0;
+    virtual bool visitGetCommand( GetCommand& cmd ) /* throw(PvapException) */  = 0;
+    virtual bool visitIncCommand( IncCommand& cmd ) /* throw(PvapException) */  = 0;
+    virtual bool visitIncModCommand( IncModCommand& cmd ) /* throw(PvapException) */  = 0;
+    virtual bool visitBatchCommand( BatchCommand& cmd ) /* throw(PvapException) */  = 0;
 };
 
 } // namespace pvss

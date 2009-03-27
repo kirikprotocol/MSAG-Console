@@ -62,7 +62,7 @@ public:
     }
 
     template < class DataStream >
-        void serialize( const PVAP& proto, DataStream& writer ) const throw (PvapException)
+        void serialize( const PVAP& proto, DataStream& writer ) const /* throw (PvapException) */ 
     {
         if ( ! data_ ) return;
         checkFields();
@@ -91,7 +91,7 @@ public:
     }
 
     template <class DataStream> void deserialize( PVAP& proto, DataStream& reader )
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         if ( ! data_ ) return;
         clear();
@@ -129,7 +129,7 @@ public:
     }
 
 protected:
-    void checkFields() const throw (PvapException)
+    void checkFields() const /* throw (PvapException) */ 
     {
         // using parent check
         if ( !data_->isValid() ) {

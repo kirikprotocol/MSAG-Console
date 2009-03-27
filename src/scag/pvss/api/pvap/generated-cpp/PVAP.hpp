@@ -88,7 +88,7 @@ public:
     }
      */
 
-    void decodeMessage( BufferReader& ss ) throw (PvapException)
+    void decodeMessage( BufferReader& ss ) /* throw (PvapException) */ 
     {
         uint32_t seqNum = -1;
         seqNum = ss.readInt();
@@ -237,7 +237,7 @@ public:
     }
 
     void encodeMessage( const PC_ERR_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_ERR_RESP);
@@ -245,7 +245,7 @@ public:
     }
 
     void encodeMessage( const PC_DEL& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_DEL);
@@ -253,7 +253,7 @@ public:
     }
 
     void encodeMessage( const PC_DEL_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_DEL_RESP);
@@ -261,7 +261,7 @@ public:
     }
 
     void encodeMessage( const PC_SET& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_SET);
@@ -269,7 +269,7 @@ public:
     }
 
     void encodeMessage( const PC_SET_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_SET_RESP);
@@ -277,7 +277,7 @@ public:
     }
 
     void encodeMessage( const PC_GET& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_GET);
@@ -285,7 +285,7 @@ public:
     }
 
     void encodeMessage( const PC_GET_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_GET_RESP);
@@ -293,7 +293,7 @@ public:
     }
 
     void encodeMessage( const PC_INC& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_INC);
@@ -301,7 +301,7 @@ public:
     }
 
     void encodeMessage( const PC_INC_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_INC_RESP);
@@ -309,7 +309,7 @@ public:
     }
 
     void encodeMessage( const PC_INC_MOD& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_INC_MOD);
@@ -317,7 +317,7 @@ public:
     }
 
     void encodeMessage( const PC_INC_MOD_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_INC_MOD_RESP);
@@ -325,7 +325,7 @@ public:
     }
 
     void encodeMessage( const PC_PING& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_PING);
@@ -333,7 +333,7 @@ public:
     }
 
     void encodeMessage( const PC_PING_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_PING_RESP);
@@ -341,7 +341,7 @@ public:
     }
 
     void encodeMessage( const PC_AUTH& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_AUTH);
@@ -349,7 +349,7 @@ public:
     }
 
     void encodeMessage( const PC_AUTH_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_AUTH_RESP);
@@ -357,7 +357,7 @@ public:
     }
 
     void encodeMessage( const PC_BATCH& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_BATCH);
@@ -365,7 +365,7 @@ public:
     }
 
     void encodeMessage( const PC_BATCH_RESP& msg, BufferWriter& ss ) const
-        throw (PvapException)
+        /* throw (PvapException) */ 
     {
         ss.writeInt(msg.getSeqNum());
         ss.writeTag(tag_PC_BATCH_RESP);

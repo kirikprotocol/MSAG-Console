@@ -41,7 +41,7 @@ public:
     int getChannelQueueSizeLimit() const {
         return channelQueueSizeLimit_;
     }
-    void setChannelQueueSizeLimit(int channelQueueSizeLimit) throw(ConfigException) {
+    void setChannelQueueSizeLimit(int channelQueueSizeLimit) /* throw(ConfigException) */  {
         if (channelQueueSizeLimit < MIN_CHANNEL_QUEUE_SIZE || channelQueueSizeLimit > MAX_CHANNEL_QUEUE_SIZE)
             throw ConfigException( "Channel queue size limit can't be less than %d and more than %d",
                                    MIN_CHANNEL_QUEUE_SIZE, MAX_CHANNEL_QUEUE_SIZE );
@@ -51,7 +51,7 @@ public:
     int getPacketSizeLimit() const {
         return packetSizeLimit_;
     }
-    void setPacketSizeLimit(int packetSizeLimit) throw(ConfigException) {
+    void setPacketSizeLimit(int packetSizeLimit) /* throw(ConfigException) */  {
         if (packetSizeLimit < MIN_PACKET_SIZE || packetSizeLimit > MAX_PACKET_SIZE)
             throw ConfigException("PVAP packet size limit can't be less than %d and more than %d",
                                   MIN_PACKET_SIZE, MAX_PACKET_SIZE);
@@ -61,7 +61,7 @@ public:
     const std::string& getHost() const {
         return host_;
     }
-    void setHost( const std::string& host) throw(ConfigException) {
+    void setHost( const std::string& host) /* throw(ConfigException) */  {
         if ( host.empty() ) throw ConfigException("Host name should be provided");
         this->host_ = host;
     }
@@ -76,7 +76,7 @@ public:
     int getIOTimeout() const {
         return ioTimeout_;
     }
-    void setIOTimeout(int ioTimeout) throw(ConfigException) {
+    void setIOTimeout(int ioTimeout) /* throw(ConfigException) */  {
         if (ioTimeout < MIN_IO_TIMEOUT || ioTimeout > MAX_IO_TIMEOUT)
             throw ConfigException("IO Timeout can't be less than %d and more than %d",
                                   MIN_IO_TIMEOUT, MAX_IO_TIMEOUT);
@@ -86,7 +86,7 @@ public:
     util::msectime_type getInactivityTime() const {
         return inactivityTime_;
     }
-    void setInactivityTime(util::msectime_type inactivityTime) throw(ConfigException) {
+    void setInactivityTime(util::msectime_type inactivityTime) /* throw(ConfigException) */  {
         if (inactivityTime < MIN_INACTIVITY_TIME || inactivityTime > MAX_INACTIVITY_TIME)
             throw ConfigException("Inactivity time can't be less than %ld and more than %ld msecs",
                                   MIN_INACTIVITY_TIME, MAX_INACTIVITY_TIME );
@@ -95,7 +95,7 @@ public:
     util::msectime_type getConnectTimeout() const {
         return connectTimeout_;
     }
-    void setConnectTimeout(util::msectime_type connectTimeout) throw(ConfigException) {
+    void setConnectTimeout(util::msectime_type connectTimeout) /* throw(ConfigException) */  {
         if (connectTimeout < MIN_CONNECT_TIMEOUT || connectTimeout > MAX_CONNECT_TIMEOUT)
             throw ConfigException("Connect timeout count can't be less than %ld and more than %ld",
                                   MIN_CONNECT_TIMEOUT, MAX_CONNECT_TIMEOUT);
@@ -104,7 +104,7 @@ public:
     util::msectime_type getProcessTimeout() const {
         return processTimeout_;
     }
-    void setProcessTimeout(util::msectime_type processTimeout) throw(ConfigException) {
+    void setProcessTimeout(util::msectime_type processTimeout) /* throw(ConfigException) */  {
         if (processTimeout < MIN_PROCESS_TIMEOUT || processTimeout > MAX_PROCESS_TIMEOUT)
             throw ConfigException("Process timeout count can't be less than %ld and more than %ld",
                                   MIN_PROCESS_TIMEOUT, MAX_PROCESS_TIMEOUT);

@@ -7,7 +7,7 @@ using namespace scag2::pvss;
 class BatchResponseTypeMatch : public ResponseTypeMatch
 {
 public:
-    virtual bool visitBatchResponse( BatchResponse& ) throw (PvapException) {
+    virtual bool visitBatchResponse( BatchResponse& ) /* throw (PvapException) */  {
         return true;
     }
 };

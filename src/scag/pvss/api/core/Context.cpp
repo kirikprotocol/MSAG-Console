@@ -30,7 +30,7 @@ Context::~Context()
 }
 
 
-void Context::setResponse( Response* resp ) throw (PvssException)
+void Context::setResponse( Response* resp ) /* throw (PvssException) */ 
 {
     smsc_log_debug(log_,"context %p setting resp %p: %s",this,resp, resp ? resp->toString().c_str() : "");
     response_.reset(resp);
