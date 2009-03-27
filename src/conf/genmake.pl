@@ -126,6 +126,10 @@ sub generate{
             next;
           }
         }
+        if ( $line =~ /^\s*#/ ) {
+            $line = "";
+            next;
+        }
         
         my ($binname,$srcname,$libs) = split(/\s+/,$line,3);
         $line = "";
