@@ -27,7 +27,10 @@ private:
 
 class DataFileManager {
 public:
-  DataFileManager(uint16_t maxThreads):maxThreads_(maxThreads) { };
+  DataFileManager(uint16_t maxThreads):maxThreads_(maxThreads) {
+    pool_.setMaxThreads(maxThreads_);
+    pool_.preCreateThreads(maxThreads_);
+  };
   void createDataFile(DataFileCreator& creator);
 private:
   uint16_t maxThreads_;
