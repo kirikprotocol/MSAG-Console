@@ -133,6 +133,7 @@ sub generate{
             $line = "";
             next;
         }
+        $line=~s/^\s+//;
         
         my ($binname,$srcname,$libs) = split(/\s+/,$line,3);
         $line = "";
