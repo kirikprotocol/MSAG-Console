@@ -54,5 +54,20 @@ AbstractProfileRequest* AbstractProfileRequest::create(AbstractCommand* cmd)
     return maker.req;
 }
 
+
+AbstractProfileRequest::~AbstractProfileRequest()
+{
+    if ( context_ ) smsc_log_warn( log_, "request %p has extra context %p at dtor", this, context_ );
+}
+
+
+void AbstractProfileRequest::setExtraContext( void* context )
+{
+    if ( context && context_ ) {
+        smsc_log_warn( log_, "request %p has replaced ctx %p with %p", this, context_, context );
+    }
+    context_ = context;
+}
+    
 } // namespace pvss
 } // namespace scag2

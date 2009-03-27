@@ -42,7 +42,8 @@ public:
     /// get the next profile key
     ProfileKey getProfileKey();
 
-    AbstractProfileRequest* generate( unsigned& index, const ProfileKey* key = 0 );
+    /// NOTE: patternIndex is passed by ref to be able to wrap it when end-of-patterns reached.
+    AbstractCommand* generateCommand( unsigned& patternIndex ); // , const ProfileKey* key = 0 );
 
     Property* getProperty( unsigned idx );
     

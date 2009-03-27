@@ -12,6 +12,7 @@ using namespace scag2::pvss;
 using namespace scag2::pvss::perstypes;
 using namespace scag2::exceptions;
 
+const size_t STRBUF_SIZE = 64;
 const char* BOOL_TRUE = "BOOL: true";
 const char* BOOL_FALSE = "BOOL: false";
 const char* INT_PREF = "INT: ";
@@ -83,17 +84,16 @@ const char* propertyTypeToString( PropertyType pt )
 void Property::setPropertyName(const char* nm) {
   name.clear();
   name.append(nm);
-  propertyStr.clear();
-  propertyStr.append(1, '"');
-  propertyStr.append(name);
-  propertyStr.append(1, '"');
+    if ( propertyStr_.empty() ) return;
+    propertyStr_.erase(0,name.size()+2);
+    propertyStr_.insert(0, std::string("\"") + name + "\"");
 }
 
 void Property::assign(const char *nm, const char *str, TimePolicy policy, time_t fd, uint32_t lt)
 {
-    setPropertyName(nm);
+    setValue(str); // will invalidate cache
     setTimePolicy(policy, fd, lt);
-    setValue(str);
+    setPropertyName(nm);
 }
 
 void Property::setValue(const char* str) {
@@ -116,8 +116,9 @@ void Property::setValue(const char* str) {
 
 void Property::setValue(const Property &cp)
 {
+    if ( &cp == this ) return;
+    invalidateCache();
     type = cp.type;
-
     switch(type) {
         case INT:
             i_val = cp.i_val;
@@ -136,63 +137,75 @@ void Property::setValue(const Property &cp)
 
 void Property::copy(const Property& cp)
 {
+    if ( &cp == this ) return;
+    setValue(cp);
     setPropertyName(cp.name.c_str());
     time_policy = cp.time_policy;
     final_date = cp.final_date;
     life_time = cp.life_time;
-
-    setValue(cp);
 }
 
 const std::string& Property::toString() const
 {
-    memset(strBuf, 0, STRBUF_SIZE);
-
-    propertyStr.erase(name.size() + 2);
-    propertyStr.append(" ");
+    if ( ! propertyStr_.empty() ) return propertyStr_;
+    static const std::string empty("empty");
+    if ( name.empty() ) return empty;
+    propertyStr_.reserve( name.size() + 40 );
+    char strBuf[STRBUF_SIZE];
+    propertyStr_.push_back('"');
+    propertyStr_.append(name);
+    propertyStr_.append("\" ");
     switch(type)
     {
         case INT:
             snprintf(strBuf, STRBUF_SIZE, "%s%lld", INT_PREF, static_cast<long long int>(i_val));
-            propertyStr.append(strBuf);
+            propertyStr_.append(strBuf);
             break;
         case STRING:
-            propertyStr.append(STRING_PREF);
-            propertyStr.append(s_val);
-            propertyStr += '"';
+            propertyStr_.append(STRING_PREF);
+            propertyStr_.append(s_val);
+            propertyStr_.push_back('"');
             break;
         case BOOL:
-            propertyStr.append(b_val ? BOOL_TRUE : BOOL_FALSE);
+            propertyStr_.append(b_val ? BOOL_TRUE : BOOL_FALSE);
             break;
         case DATE:
-            propertyStr.append(DATE_PREF);
+            propertyStr_.append(DATE_PREF);
             struct tm res;
             if ( 0 == strftime(strBuf, STRBUF_SIZE, TIMEFORMAT, gmtime_r(&d_val,&res)) ) {
                 // failure
                 snprintf(strBuf,STRBUF_SIZE,"not fit");
             }
-            propertyStr.append(strBuf);
+            propertyStr_.append(strBuf);
             break;
     }
 
-    propertyStr.append(" ");
-    propertyStr.append(timePolicyToString(time_policy));
+    propertyStr_.append(" ");
+    propertyStr_.append(timePolicyToString(time_policy));
 
     if(time_policy != INFINIT)
     {
         struct tm res;
         strftime(strBuf, STRBUF_SIZE, FINALDATE, gmtime_r(&final_date,&res));
-        propertyStr.append(strBuf);
+        propertyStr_.append(strBuf);
         snprintf(strBuf, STRBUF_SIZE, "%s%d", LIFETIME, life_time);
-        propertyStr.append(strBuf);
+        propertyStr_.append(strBuf);
     }
-    return propertyStr;
+    return propertyStr_;
 }
 
 
 void Property::fromString( const std::string& input ) throw (exceptions::IOException)
 {
+    // cleanup
+    invalidateCache();
+    type = PropertyType(0);
+    i_val = 0;
+    s_val.clear();
+    time_policy = INFINIT;
+
     if ( input.empty() ) throw exceptions::IOException("property string is empty");
+    if ( input == "empty" ) return;
     if ( input[0] != '"' ) throw exceptions::IOException("property string does not have a name");
 
     std::string from;
@@ -297,6 +310,7 @@ Property& Property::operator=(const Property& cp)
 
 void Property::setTimePolicy(TimePolicy policy, time_t fd, uint32_t lt)
 {
+    invalidateCache();
     time_policy = policy;
     life_time = lt;
     final_date = (policy == FIXED && fd != -1) ? fd : final_date = time(NULL) + lt;
@@ -304,14 +318,18 @@ void Property::setTimePolicy(TimePolicy policy, time_t fd, uint32_t lt)
 
 void Property::ReadAccess()
 {
-    if(time_policy == R_ACCESS || time_policy == ACCESS)
+    if (time_policy == R_ACCESS || time_policy == ACCESS) {
+        invalidateCache();
         final_date = time(NULL) + life_time;
+    }
 }
 
 void Property::WriteAccess()
 {
-    if(time_policy == W_ACCESS || time_policy == ACCESS)
+    if (time_policy == W_ACCESS || time_policy == ACCESS) {
+        invalidateCache();
         final_date = time(NULL) + life_time;
+    }
 }
 
 bool Property::isExpired() const
@@ -324,29 +342,29 @@ bool Property::isExpired(time_t cur_time) const
 }
 void Property::setInt(const char *nm, int32_t i, TimePolicy policy, time_t fd, uint32_t lt)
 {
-    setPropertyName(nm);
     setIntValue(i);
+    setPropertyName(nm);
     setTimePolicy(policy, fd, lt);
 }
 
 void Property::setBool(const char *nm, bool b, TimePolicy policy, time_t fd, uint32_t lt)
 {
-    setPropertyName(nm);
     setBoolValue(b);
+    setPropertyName(nm);
     setTimePolicy(policy, fd, lt);
 }
 
 void Property::setString(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt)
 {
-    setPropertyName(nm);
     setStringValue(str);
+    setPropertyName(nm);
     setTimePolicy(policy, fd, lt);
 }
 
 void Property::setDate(const char *nm, time_t t, TimePolicy policy, time_t fd, uint32_t lt)
 {
-    setPropertyName(nm);
     setDateValue(t);
+    setPropertyName(nm);
     setTimePolicy(policy, fd, lt);
 }
 
@@ -376,6 +394,7 @@ void Property::Serialize( util::storage::SerialBuffer& buf, bool toFSDB, util::s
 
 void Property::Deserialize(util::storage::SerialBuffer& buf, bool fromFSDB, util::storage::GlossaryBase* glossary)
 {
+    invalidateCache();
     type = (PropertyType)buf.ReadInt8();
     time_policy = (TimePolicy)buf.ReadInt8();
     final_date = (time_t)buf.ReadInt32();
@@ -391,10 +410,6 @@ void Property::Deserialize(util::storage::SerialBuffer& buf, bool fromFSDB, util
         buf.ReadString(name);
     }
 
-    propertyStr.clear();
-    propertyStr.append(1, '"');
-    propertyStr.append(name);
-    propertyStr.append(1, '"');
     switch(type) {
         case INT:   i_val = buf.ReadInt32();        break;
         case STRING:buf.ReadString(s_val);          break;

@@ -10,6 +10,7 @@
 #include "core/threads/ThreadPool.hpp"
 #include "scag/util/WatchedThreadedTask.h"
 #include "scag/pvss/api/core/Statistics.h"
+#include "scag/util/histo/Histo.h"
 
 namespace scag2 {
 namespace pvss {
@@ -34,7 +35,7 @@ public:
     virtual void handleError(const PvssException& exc, std::auto_ptr<Request> request);
 
     /// notify that request is sent
-    void requestCreated();
+    void requestCreated( Request* req );
 
     /// adjust speed (wait until the speed is less or equal the one requested)
     void adjustSpeed();
@@ -64,6 +65,9 @@ private:
 
 private:    
     static const util::msectime_type accumulationTime = 5000; // 5 seconds accumulation time
+    static const unsigned histoBins = 21;
+    static const unsigned minTime = 20;
+    static const double binScale = 1.5;
 
 private:
     smsc::core::synchronization::EventMonitor              mon_;
@@ -81,6 +85,9 @@ private:
     core::client::Client&                                  client_;
     std::auto_ptr<smsc::core::threads::ThreadPool>         tp_;
     smsc::core::buffers::Array<util::WatchedThreadedTask*> tasks_;
+    util::histo::Histo1d< unsigned >                       totalHisto_;
+    util::histo::Histo1d< unsigned >                       lastHisto_;
+    util::msectime_type                                    lastHistoCreateTime_;
 };
 
 } // namespace flooder

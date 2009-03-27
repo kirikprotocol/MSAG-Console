@@ -14,11 +14,17 @@ namespace pvss {
 ///
 class AbstractProfileRequest : public Request
 {
+public:
+    /// virtual ctor from AbstractCommand
+    static AbstractProfileRequest* create(AbstractCommand* cmd);
+
 protected:
-    AbstractProfileRequest() : Request() {}
-    AbstractProfileRequest( const ProfileKey& key ) : profileKey_(key) {}
+    AbstractProfileRequest() : Request(), context_(0) {}
+    AbstractProfileRequest( const ProfileKey& key ) : profileKey_(key), context_(0) {}
     
 public:
+    virtual ~AbstractProfileRequest();
+
     const ProfileKey& getProfileKey() const { return profileKey_; }
     ProfileKey& getProfileKey() { return profileKey_; }
     void setProfileKey( const ProfileKey& key ) { profileKey_ = key; }
@@ -51,16 +57,18 @@ public:
     }
     virtual AbstractProfileRequest* clone() const = 0;
 
-    /// virtual ctor from AbstractCommand
-    static AbstractProfileRequest* create(AbstractCommand* cmd);
+    inline void* getExtraContext() { return context_; }
+    void setExtraContext( void* context );
 
 protected:
     virtual ResponseTypeMatch& getResponseTypeMatch() const {
         return getCommand()->getResponseTypeMatch();
     }
+    AbstractProfileRequest( const AbstractProfileRequest& r ) : profileKey_(r.profileKey_), context_(0) {}
 
 private:
     ProfileKey profileKey_;
+    void*      context_;    // not owned
 };
 
 } // namespace pvss

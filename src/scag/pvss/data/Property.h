@@ -63,7 +63,7 @@ const char* propertyTypeToString( PropertyType pt );
     
 using namespace perstypes;
 
-static const size_t STRBUF_SIZE = 64;
+// static const size_t STRBUF_SIZE = 64;
 
 class Property 
 {
@@ -84,8 +84,8 @@ protected:
 
     void setPropertyName(const char* nm);
 
-    mutable std::string propertyStr;
-    mutable char strBuf[STRBUF_SIZE];
+    mutable std::string propertyStr_;  // a cache of property toString() method, empty when not filled.
+    // mutable char strBuf[STRBUF_SIZE];
 
 public:
 
@@ -137,10 +137,10 @@ public:
     const std::string& getStringValue() const { return s_val; };
     void setValue(const Property& cp);
     void setValue(const char* str);
-    void setIntValue(int64_t i) { i_val = i; type = INT; };
-    void setBoolValue(bool b) { b_val = b; type = BOOL; };
-    void setDateValue(time_t d) { d_val = d; type = DATE; };
-    void setStringValue(const char* s) { s_val = s; type = STRING; };
+    void setIntValue(int64_t i) { invalidateCache(); i_val = i; type = INT; };
+    void setBoolValue(bool b) { invalidateCache(); b_val = b; type = BOOL; };
+    void setDateValue(time_t d) { invalidateCache(); d_val = d; type = DATE; };
+    void setStringValue(const char* s) { invalidateCache(); s_val = s; type = STRING; };
     inline uint8_t getType() const { return type; };
     void setTimePolicy(TimePolicy policy, time_t fd, uint32_t lt);
     TimePolicy getTimePolicy() const { return time_policy; };
@@ -167,6 +167,10 @@ public:
     bool isValid() const {
         return getType() != 0;
     }
+
+protected:
+    inline void invalidateCache() { propertyStr_.clear(); }
+
 };
 
 }//pvss

@@ -41,6 +41,8 @@ public:
 protected:
     /// generate the next request
     std::auto_ptr<Request> generate();
+    virtual int doExecute();
+    virtual void doProcessRequest( std::auto_ptr< Request >& req ) throw (PvssException) = 0;
 
 protected:
     smsc::logger::Logger*                           log_;
@@ -55,7 +57,8 @@ class AsyncFlooderThread : public FlooderThread
 public:
     AsyncFlooderThread( FlooderStat&      flooderStat ) :
     FlooderThread(flooderStat) {}
-    virtual int doExecute();
+protected:
+    virtual void doProcessRequest( std::auto_ptr< Request >& req ) throw (PvssException);
 };
 
 class SyncFlooderThread : public FlooderThread
@@ -63,7 +66,8 @@ class SyncFlooderThread : public FlooderThread
 public:
     SyncFlooderThread( FlooderStat&          flooderStat) :
     FlooderThread(flooderStat) {}
-    virtual int doExecute();
+protected:
+    virtual void doProcessRequest( std::auto_ptr< Request >& req ) throw (PvssException);
 };
 
 } // namespace flooder

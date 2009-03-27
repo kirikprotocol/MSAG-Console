@@ -20,27 +20,30 @@ profileKey_(stat_.getGenerator().getProfileKey())
 std::auto_ptr<Request> FlooderThread::generate()
 {
     while ( true ) {
-        AbstractProfileRequest* req = stat_.getGenerator().generate(pattern_,&profileKey_);
-        if ( req ) {
-            smsc_log_debug(log_,"request %s created", req->toString().c_str());
-            return std::auto_ptr<Request>(req);
+        AbstractCommand* cmd = stat_.getGenerator().generateCommand(pattern_);
+        if ( ! cmd ) {
+            // end of command patterns reached, we have to switch to a new profile key
+            profileKey_ = stat_.getGenerator().getProfileKey();
+            continue;
         }
-        profileKey_ = stat_.getGenerator().getProfileKey();
+        AbstractProfileRequest* req = AbstractProfileRequest::create(cmd);
+        req->setProfileKey( profileKey_ );
+        // smsc_log_debug(log_,"request %s created", req->toString().c_str());
+        return std::auto_ptr<Request>(req);
     }
 }
 
 
-int AsyncFlooderThread::doExecute()
+int FlooderThread::doExecute()
 {
-    smsc::core::synchronization::EventMonitor em;
-    MutexGuard mg(em);
     while ( ! isStopping ) {
         if ( stat_.isStopped() ) break;
         std::auto_ptr< Request > request = generate();
         if ( ! request.get() ) continue;
-        stat_.requestCreated();
+        stat_.requestCreated( request.get() );
         try {
-            stat_.getClient().processRequestAsync(request,stat_);
+            // stat_.getClient().processRequestAsync(request,stat_);
+            doProcessRequest(request);
         } catch ( PvssException& e ) {
             stat_.handleError(e,request);
         }
@@ -50,24 +53,16 @@ int AsyncFlooderThread::doExecute()
 }
 
 
-int SyncFlooderThread::doExecute()
+void AsyncFlooderThread::doProcessRequest( std::auto_ptr< Request >& request ) throw (PvssException)
 {
-    while ( ! isStopping ) {
-        if ( stat_.isStopped() ) break;
-        std::auto_ptr< Request > request = generate();
-        if ( ! request.get() ) continue;
-        stat_.requestCreated();
-        try {
-            std::auto_ptr<Response> response = stat_.getClient().processRequestSync(request);
-            smsc_log_debug(log_,"response %s got", response->toString().c_str());
-            stat_.handleResponse(request,response);
-        } catch ( PvssException& e ) {
-            stat_.handleError(e,request);
-        }
-        smsc_log_debug(log_,"adjusting speed");
-        stat_.adjustSpeed();
-    }
-    return 0;
+    stat_.getClient().processRequestAsync(request,stat_);
+}
+
+
+void SyncFlooderThread::doProcessRequest( std::auto_ptr< Request >& request ) throw (PvssException)
+{
+    std::auto_ptr<Response> response = stat_.getClient().processRequestSync(request);
+    stat_.handleResponse(request,response);
 }
 
 

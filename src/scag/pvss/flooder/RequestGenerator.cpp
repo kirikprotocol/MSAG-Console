@@ -212,17 +212,15 @@ Property* RequestGenerator::getProperty( unsigned idx )
 }
 
 
-AbstractProfileRequest* RequestGenerator::generate( unsigned& patternIndex, const ProfileKey* key )
+AbstractCommand* RequestGenerator::generateCommand( unsigned& patternIndex )
 {
     assert( patterns_.size() > 0 );
-    AbstractProfileRequest* res = 0;
     if ( patternIndex < patterns_.size() ) {
-        res = AbstractProfileRequest::create(patterns_[patternIndex++]->clone());
-        if ( key && res ) res->setProfileKey(*key);
+        return patterns_[patternIndex++]->clone();
     } else {
         patternIndex = 0;
+        return 0;
     }
-    return res;
 }
 
 
