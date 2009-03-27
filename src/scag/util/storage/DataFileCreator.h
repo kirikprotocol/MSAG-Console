@@ -124,7 +124,7 @@ public:
 
   void createDataFile() {
     name_ = makeDataFileName(filesCount_);
-    if (logger_) smsc_log_debug(logger_, "preallocate new data file: '%s'", name_.c_str());
+    if (logger_) smsc_log_info(logger_, "preallocate new data file: '%s'", name_.c_str());
     file_ = 0;
     fileCreated_ = false;
     //setState(CREATING);
@@ -152,7 +152,7 @@ public:
       file_ = f.release();
       fileCreated_ = true;
       setState(CREATED);
-      if (logger_) smsc_log_debug(logger_, "new data file: '%s' allocated, notify", name_.c_str());
+      if (logger_) smsc_log_info(logger_, "new data file: '%s' allocated", name_.c_str());
 
       if (emptyBlock) delete[] emptyBlock;
       MutexGuard mg(monitor_);
