@@ -78,7 +78,9 @@ void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // /* th
     try {
         sendResponse(context);
     } catch (std::exception& e) {
-        smsc_log_warn(loge_,"exception(%u): %s", __LINE__, e.what());
+        static unsigned counter = 0;
+        if ( counter++ % 100 == 0 )
+            smsc_log_warn(loge_,"exception(%u/%u): %s", __LINE__, counter, e.what());
         if (context.get()) {
             context->setState(ServerContext::FAILED);
             reportContext(context);
@@ -93,7 +95,9 @@ void ServerCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channe
         if ( !packet.get() || !packet->isRequest() || !packet->isValid() )
             throw PvssException(PvssException::BAD_REQUEST,"Received packet isnt valid PVAP request");
     } catch ( PvssException& e ) {
-        smsc_log_warn(loge_,"exception(%u): %s",__LINE__,e.what());
+        static unsigned counter = 0;
+        if ( counter++ % 100 == 0 )
+            smsc_log_warn(loge_,"exception(%u/%u): %s", __LINE__, counter, e.what());
         return;
     }
 
@@ -397,12 +401,16 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         // seqNum = uint32_t(-1);
 
     } catch (std::exception& e) {
-        smsc_log_warn(loge_, "exception(%u): %s",__LINE__,e.what());
+        static unsigned counter = 0;
+        if ( counter++ % 100 == 0 )
+            smsc_log_warn(loge_, "exception(%u/%u): %s",__LINE__, counter, e.what());
         try {
             ctx->setResponse(new ErrorResponse(seqNum,status,e.what()));
             sendResponse(ctx);
         } catch (std::exception& e) {
-            smsc_log_error(loge_,"exception(%u): %s", __LINE__, e.what());
+            static unsigned counter2 = 0;
+            if ( counter2++ % 100 == 0 )
+                smsc_log_error(loge_,"exception(%u/%u): %s", __LINE__, counter2, e.what());
         }
     }
 }

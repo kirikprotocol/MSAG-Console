@@ -54,6 +54,9 @@ int Worker::doExecute()
                 Response* resp = logic_.process(*context->getRequest().get());
                 context->setResponse(resp);
             } catch (PvssException& e){
+                static unsigned counter = 0;
+                if ( counter++ % 100 == 0 )
+                    smsc_log_warn(log_, "exception(%u/%u): %s", __LINE__, counter, e.what() );
                 try {
                     context->setError(e.getMessage());
                 } catch (...) {}
