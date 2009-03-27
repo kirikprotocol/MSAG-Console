@@ -49,7 +49,7 @@ bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) throw(PvapExc
 
 bool ProfileCommandProcessor::visitDelCommand(DelCommand &cmd) throw(PvapException) {
   response_.reset( new DelResponse(cmd.getSeqNum()) ); 
-  if (!profile_->DeleteProperty(cmd.getVarName().c_str())) {
+  if (!profile_ || !profile_->DeleteProperty(cmd.getVarName().c_str())) {
     response_->setStatus(Response::PROPERTY_NOT_FOUND);
     return false;
   }
@@ -61,6 +61,10 @@ bool ProfileCommandProcessor::visitDelCommand(DelCommand &cmd) throw(PvapExcepti
 
 bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) throw(PvapException) {
   response_.reset( new GetResponse(cmd.getSeqNum()) ); 
+  if (!profile_) {
+    response_->setStatus(Response::PROPERTY_NOT_FOUND);
+    return false;
+  }
   Property* p = profile_->GetProperty(cmd.getVarName().c_str());
   if (!p) {
     response_->setStatus(Response::PROPERTY_NOT_FOUND);
@@ -89,8 +93,12 @@ bool ProfileCommandProcessor::visitIncCommand(IncCommand &cmd) throw(PvapExcepti
 
 bool ProfileCommandProcessor::visitIncModCommand(IncModCommand &cmd) throw(PvapException) {
   uint32_t result = 0;
-  Response::StatusType status = incModProperty(cmd.getProperty(), cmd.getModulus(), result);
   response_.reset( new IncResponse(cmd.getSeqNum()) );
+  if (!profile_) {
+    response_->setStatus(Response::ERROR);
+    return false;
+  }
+  Response::StatusType status = incModProperty(cmd.getProperty(), cmd.getModulus(), result);
   response_->setStatus(status);
   if (status != Response::OK) {
     return false;
@@ -102,6 +110,10 @@ bool ProfileCommandProcessor::visitIncModCommand(IncModCommand &cmd) throw(PvapE
 bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) throw(PvapException) {
   Property *prop = cmd.getProperty();
   response_.reset( new SetResponse() );
+  if (!profile_) {
+    response_->setStatus(Response::ERROR);
+    return false;
+  }
   if (prop->isExpired()) {
     dblog_.createExpireLogMsg(profile_->getKey(), prop->toString());
     response_->setStatus(Response::PROPERTY_NOT_FOUND);
@@ -162,6 +174,9 @@ Response::StatusType ProfileCommandProcessor::incModProperty(Property* property,
 }
 
 void ProfileCommandProcessor::setProfile(Profile *pf) {
+  if (pf) {
+    pf->setChanged(false);
+  }
   profile_ = pf;
 }
 
