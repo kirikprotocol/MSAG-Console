@@ -7,6 +7,39 @@
 #include "scag/pvss/api/packets/AbstractProfileRequest.h"
 #include "scag/pvss/api/packets/Response.h"
 #include "scag/util/storage/StorageNumbering.h"
+#include "scag/pvss/api/packets/BatchCommand.h"
+#include "scag/pvss/api/packets/DelCommand.h"
+#include "scag/pvss/api/packets/GetCommand.h"
+#include "scag/pvss/api/packets/IncCommand.h"
+#include "scag/pvss/api/packets/IncModCommand.h"
+#include "scag/pvss/api/packets/SetCommand.h"
+
+
+namespace {
+  class CreateProfileVisitor : public scag2::pvss::ProfileCommandVisitor {
+public:
+    virtual bool visitBatchCommand(scag2::pvss::BatchCommand &cmd) throw(scag2::pvss::PvapException) {
+      //TODO: return batch flag
+      return true;
+    }
+    virtual bool visitDelCommand(scag2::pvss::DelCommand &cmd) throw(scag2::pvss::PvapException) {
+      return false;
+    }
+    virtual bool visitGetCommand(scag2::pvss::GetCommand &cmd) throw(scag2::pvss::PvapException) {
+      return false;
+    }
+    virtual bool visitIncCommand(scag2::pvss::IncCommand &cmd) throw(scag2::pvss::PvapException) {
+      return true;
+    }
+    virtual bool visitIncModCommand(scag2::pvss::IncModCommand &cmd) throw(scag2::pvss::PvapException) {
+      return true;
+    }
+    virtual bool visitSetCommand(scag2::pvss::SetCommand &cmd) throw(scag2::pvss::PvapException) {
+      return true;
+    }
+  };
+  CreateProfileVisitor createProfileVisitor;
+}
 
 namespace scag2 {
 namespace pvss  {
@@ -59,11 +92,14 @@ Response* AbonentLogic::processProfileRequest(AbstractProfileRequest& request) {
     smsc_log_warn(logger_, "%p: %p element storage %d not found in location %d", this, &request, elstorageIndex, locationNumber_);
     return 0;
   }
-  bool createProfile = true; //TODO: set false for GET and DEL requests
+  bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor); 
   Profile *pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
-  pf->setChanged(false);
   commandProcessor_.setProfile(pf);
   profileRequest.getCommand()->visit(commandProcessor_);
+  if (!pf) {
+    if (createProfile) smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &request, pf->getKey().c_str());
+    return commandProcessor_.getResponse();
+  }
 
   if (pf->isChanged()) {
     smsc_log_debug(logger_, "%p: %p flush profile %s", this, &request, pf->getKey().c_str());
@@ -99,11 +135,14 @@ Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& reques
   }
 
   IntProfileKey intKey(key);
-  bool createProfile = true; //TODO set false for GET and DEL requests
+  bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor); 
   Profile *pf = storage->get(intKey, createProfile);
-  pf->setChanged(false);
   commandProcessor_.setProfile(pf);
   profileRequest.getCommand()->visit(commandProcessor_);
+  if (!pf) {
+    if (createProfile) smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &request, pf->getKey().c_str());
+    return commandProcessor_.getResponse();
+  }
 
   if (pf->isChanged()) {
     smsc_log_debug(logger_, "%p: %p flush profile %s", this, &request, pf->getKey().c_str());
@@ -131,7 +170,7 @@ void AbonentLogic::initElementStorage(unsigned index) throw (smsc::util::Excepti
   smsc_log_debug(logger_, "data index storage %d is created", index);
   std::auto_ptr< DiskDataStorage::storage_type > bs
         (new DiskDataStorage::storage_type
-         (elStorage.glossary,
+         (dataFileManager_, elStorage.glossary,
           smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
   int ret = -1;
   const string fn(config_.dbName + "-data");
