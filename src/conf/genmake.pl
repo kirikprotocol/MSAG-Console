@@ -89,12 +89,14 @@ sub generate{
         s/[\x0d\x0a]//g;
         next if /^\s*$/;
         my $ln = $_;
-        if ( '\\' eq substr($ln,-1) ) {
+        if ( '\\' eq substr($ln,-1) )
+        {
             $line .= substr($ln,0,length($ln)-1);
             next;
         }
         $line .= $ln;
-        if ( $line =~ /^\s*#/ ) {
+        if ( $line =~ /^\s*#/ )
+        {
             $line = "";
             next;
         }
@@ -126,7 +128,8 @@ sub generate{
             next;
           }
         }
-        if ( $line =~ /^\s*#/ ) {
+        if ( $line =~ /^\s*#/ || $line eq '')
+        {
             $line = "";
             next;
         }
