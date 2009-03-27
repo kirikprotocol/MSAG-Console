@@ -8,6 +8,8 @@ namespace scag2 {
 namespace pvss {
 namespace flooder {
 
+const double FlooderStat::binScale = 1.5;
+
 FlooderStat::FlooderStat( const FlooderConfig& config,
                           core::client::Client& client ) :
 log_(0),

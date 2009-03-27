@@ -67,7 +67,7 @@ private:
     static const util::msectime_type accumulationTime = 5000; // 5 seconds accumulation time
     static const unsigned histoBins = 21;
     static const unsigned minTime = 20;
-    static const double binScale = 1.5;
+    static const double binScale;
 
 private:
     smsc::core::synchronization::EventMonitor              mon_;
