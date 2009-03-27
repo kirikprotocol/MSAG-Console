@@ -82,6 +82,8 @@ sub generate{
     {
       open(my $f,$dirname.'/binaries-list');
       my $line = "";
+      my $switchMode;
+      my $switchValue;
       while(<$f>)
       {
         s/[\x0d\x0a]//g;
@@ -96,6 +98,35 @@ sub generate{
             $line = "";
             next;
         }
+        if($line=~/^switch\s+(.*)$/)
+        {
+          $switchMode=1;
+          $switchValue=$ENV{$1};
+          $line='';
+          next;
+        }
+        if($line=~/^end switch$/)
+        {
+          $switchMode=0;
+          $line='';
+          next;
+        }
+        if($switchMode && $line=~/(.*?):(.*)/)
+        {
+          if($1 eq $switchValue)
+          {
+            $line=$2;
+            $switchMode=2;
+          }elsif($1 eq 'default' && $switchMode==1)
+          {
+            $line=$2;
+          }else
+          {
+            $line='';
+            next;
+          }
+        }
+        
         my ($binname,$srcname,$libs) = split(/\s+/,$line,3);
         $line = "";
         $binsrc{$srcname.'.cpp'}=1;
