@@ -173,7 +173,7 @@ void ServerCore::startup( SyncDispatcher& dispatcher ) /* throw (PvssException) 
     }
 
     started_ = true;
-    threadPool_.startTask(this,false);
+    // threadPool_.startTask(this,false);
 }
 
 
@@ -202,7 +202,7 @@ void ServerCore::startup( AsyncDispatcher& dispatcher ) /* throw (PvssException)
     }
 
     started_ = true;
-    threadPool_.startTask(this,false);
+    // threadPool_.startTask(this,false);
 }
 
 
@@ -233,7 +233,7 @@ void ServerCore::shutdown()
         }
     }
 
-    stop();
+    // stop();
     {
         smsc_log_info(log_,"sending notify to channel mutex");
         MutexGuard mgc(channelMutex_);
@@ -243,7 +243,7 @@ void ServerCore::shutdown()
     for ( int i = 0; i < workers_.Count(); ++i ) {
         workers_[i]->shutdown();
     }
-    waitUntilReleased();
+    // waitUntilReleased();
 
     {
         MutexGuard mgs(statMutex_);
@@ -271,18 +271,22 @@ void ServerCore::shutdown()
 
 int ServerCore::doExecute()
 {
-    const int minTimeToSleep = 10; // 10 msec
-    util::msectime_type timeToSleep = getConfig().getProcessTimeout();
-    util::msectime_type currentTime = util::currentTimeMillis();
-    util::msectime_type nextWakeupTime = currentTime + timeToSleep;
+    const int minTimeToSleep = 100; // 10 msec
+    // util::msectime_type timeToSleep = getConfig().getProcessTimeout();
+    // util::msectime_type currentTime = util::currentTimeMillis();
+    // util::msectime_type nextWakeupTime = currentTime + timeToSleep;
 
     smsc_log_info(log_,"Server started");
+    MutexGuard mg(channelMutex_);
     while (!isStopping)
     {
         // smsc_log_debug(log_,"cycling clientCore");
-        currentTime = util::currentTimeMillis();
-        int timeToWait = int(nextWakeupTime-currentTime);
+        // currentTime = util::currentTimeMillis();
+        // int timeToWait = int(nextWakeupTime-currentTime);
+        int timeToWait = minTimeToSleep;
+        channelMutex_.wait(timeToWait);
 
+        /*
         ChannelList currentChannels;
         {
             MutexGuard mg(channelMutex_);
@@ -327,7 +331,8 @@ int ServerCore::doExecute()
                     reportContext(context);
                 }
             }
-        }
+         }
+         */
     }
     smsc_log_info( log_, "Server shutdowned" );
     return 0;
