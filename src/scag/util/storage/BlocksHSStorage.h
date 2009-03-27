@@ -25,6 +25,7 @@
 #include "util/Uint64Converter.h"
 #include "DataFileCreator.h"
 
+
 namespace scag {
 namespace util {
 namespace storage {
@@ -306,8 +307,8 @@ public:
     static const int defaultFileSize = 100; // in blocks 
     static const int64_t BLOCK_USED	= int64_t(1) << 63;
 
-    BlocksHSStorage(GlossaryBase* g = NULL,
-                    smsc::logger::Logger* thelog = 0): glossary_(g), running(false), iterBlockIndex(0), deserBuf_(0)
+    BlocksHSStorage(DataFileManager& manager, GlossaryBase* g = NULL,
+                   smsc::logger::Logger* thelog = 0): glossary_(g), running(false), iterBlockIndex(0), deserBuf_(0), dataFileCreator_(manager, thelog)
     {
         /*
         if (!glossary_) {
@@ -372,7 +373,7 @@ public:
         if(0 != (ret = OpenBackupFile()))
             return ret;
 
-        dataFileCreator_.init(descrFile.file_size, descrFile.block_size, descrFile.files_count, dbPath, dbName, logger);
+        dataFileCreator_.init(descrFile.file_size, descrFile.block_size, descrFile.files_count, dbPath, dbName);
         dataFileCreator_.openPreallocatedFile(descrFile.first_free_block);
 
         running = true;
@@ -825,7 +826,7 @@ private:
         descrFile.file_size = _fileSize;
         effectiveBlockSize = descrFile.block_size - hdrSize;
         changeDescriptionFile();
-        dataFileCreator_.init(descrFile.file_size, descrFile.block_size, 0, dbPath, dbName, logger); 
+        dataFileCreator_.init(descrFile.file_size, descrFile.block_size, 0, dbPath, dbName); 
         return 0;
     }
 
@@ -1226,7 +1227,7 @@ private:
 
     /// check file number
     inline bool checkfn( int fn ) const {
-        if ( fn < descrFile.files_count ) return true;
+        if ( fn >= 0 && fn < descrFile.files_count ) return true;
         if (logger) smsc_log_error(logger, "Invalid file number %d, max file number %d", fn, descrFile.files_count-1 );
         return false;
     }
