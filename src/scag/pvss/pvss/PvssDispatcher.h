@@ -19,6 +19,7 @@ using std::vector;
 
 struct NodeConfig;
 class Request;
+class scag::util::storage::DataFileManager;
 
 class PvssDispatcher : public core::server::SyncDispatcher {
 public:
@@ -52,6 +53,7 @@ private:
   std::auto_ptr<InfrastructLogic> infrastructLogic_;
   Logger *logger_;
   Array<AbonentLogic*> abonentLogics_;
+  scag::util::storage::DataFileManager dataFileManager_;
 };
 
 struct NodeConfig {

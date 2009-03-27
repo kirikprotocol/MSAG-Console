@@ -70,13 +70,14 @@ protected:
 };
 
 struct AbonentStorageConfig;
+class scag::util::storage::DataFileManager;
 
 class AbonentLogic: public PvssLogic {
 public:
-    AbonentLogic( PvssDispatcher& dispatcher, unsigned locationNumber, const AbonentStorageConfig& cfg ) :
+    AbonentLogic( PvssDispatcher& dispatcher, unsigned locationNumber, const AbonentStorageConfig& cfg, scag::util::storage::DataFileManager& manager ) :
     PvssLogic(dispatcher),
     locationNumber_(locationNumber),
-    abntlog_(smsc::logger::Logger::getInstance("pvss.abnt")), config_(cfg) {}
+    abntlog_(smsc::logger::Logger::getInstance("pvss.abnt")), config_(cfg), dataFileManager_(manager) {}
   ~AbonentLogic();
 
     virtual void init() throw (smsc::util::Exception);
@@ -115,6 +116,7 @@ private:
   unsigned locationNumber_;
   Logger* abntlog_;
   const AbonentStorageConfig& config_;
+  scag::util::storage::DataFileManager& dataFileManager_;
 };
 
 struct InfrastructStorageConfig;
