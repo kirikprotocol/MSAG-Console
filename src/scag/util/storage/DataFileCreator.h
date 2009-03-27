@@ -9,6 +9,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/buffers/File.hpp"
 #include "util/Uint64Converter.h"
+#include "DataFileManager.h"
 
 namespace scag    {
 namespace util    {
@@ -23,41 +24,46 @@ using smsc::core::synchronization::EventMonitor;
 using smsc::core::synchronization::MutexGuard;
 using smsc::logger::Logger;
 
-class DataFileCreator : Thread {
+class DataFileCreator {
 public:
   enum State {
     OK,
     CREATING,
+    CREATED,
     ERROR
   };
 public:
-  DataFileCreator():file_(0), fileSize_(0), blockSize_(0), filesCount_(0), fileCreated_(false), logger_(0), state_(OK) {};
+  DataFileCreator(DataFileManager& manager, Logger* log):manager_(manager), file_(0), fileSize_(0), blockSize_(0), filesCount_(0),
+                                            fileCreated_(false), logger_(log), state_(OK) {};
 
-  void init(int32_t fileSize, int32_t blockSize, int32_t filesCount, const string& dbPath, const string& dbName, Logger* logger) {
+  void init(int32_t fileSize, int32_t blockSize, int32_t filesCount, const string& dbPath, const string& dbName) {
     dbPath_ = dbPath;
     dbName_ = dbName;
     fileSize_ = fileSize;
     blockSize_ = blockSize;
     filesCount_ = filesCount;
     ffbThreshold_ = (fileSize_ / 4) * 3;
-    logger_ = logger;
     if (logger_) smsc_log_info(logger_, "init creator: fileSize=%d, blockSize=%d, filesCount=%d create new data file when ffb=%d",
                                           fileSize_, blockSize_, filesCount_, ffbThreshold_);
   }
 
   void openPreallocatedFile(int64_t ffb) {
     name_ = makeDataFileName(filesCount_);
+    State state = getState();
+    if (state == CREATED || state == CREATING) {
+      return;
+    }
     if (getThreshold(ffb) >= ffbThreshold_) {
       if (File::Exists(name_.c_str())) {
         std::auto_ptr<File> f(new File);
         if (logger_) smsc_log_debug(logger_, "open preallocated file: %s", name_.c_str());
         f->RWOpen(name_.c_str());
         f->SetUnbuffered();
-        setState(OK);
+        setState(CREATED);
         file_ = f.release();
       } else {
         setState(CREATING);
-        Start();      
+        createDataFile();
       }
       return;
     }
@@ -70,16 +76,25 @@ public:
   void create(int64_t ffb, int32_t filesCount) {
     filesCount_ = filesCount;
     if (ffb == 0 && filesCount_ == 0) {
+      State state = getState();
+      if (state == CREATED || state == CREATING) {
+        return;
+      }
       name_ = makeDataFileName(filesCount_);
       if (logger_) smsc_log_debug(logger_, "allocate first data file");
       setState(CREATING);
-      Start();
+      createDataFile();
       return;
     }
     if (getThreshold(ffb) == ffbThreshold_) {
+      State state = getState();
+      if (state == CREATED || state == CREATING) {
+        return;
+      }
+      name_ = makeDataFileName(filesCount_);
       if (logger_) smsc_log_debug(logger_, "ffb:%d == ffbThreshold_:%d", ffb - ((filesCount_ - 1) * fileSize_), ffbThreshold_);
       setState(CREATING);
-      Start();
+      manager_.createDataFile(*this);
       return;
     }
   }
@@ -99,13 +114,14 @@ public:
       MutexGuard mg(monitor_);
       monitor_.wait();
     }
-    return file_;
+    if (getState() == CREATED) {
+      setState(OK);
+      return file_;
+    } else {
+      return 0;
+    }
   }
 
-private:
-  int64_t getThreshold(int64_t ffb) {
-    return ffb - ((filesCount_ - 1) * fileSize_);
-  }
   void createDataFile() {
     name_ = makeDataFileName(filesCount_);
     if (logger_) smsc_log_debug(logger_, "preallocate new data file: '%s'", name_.c_str());
@@ -135,7 +151,7 @@ private:
       f->Write(emptyBlock, blockSize_);
       file_ = f.release();
       fileCreated_ = true;
-      setState(OK);
+      setState(CREATED);
       if (logger_) smsc_log_debug(logger_, "new data file: '%s' allocated, notify", name_.c_str());
 
       if (emptyBlock) delete[] emptyBlock;
@@ -151,6 +167,11 @@ private:
       //throw;
     }
   };
+
+private:
+  int64_t getThreshold(int64_t ffb) {
+    return ffb - ((filesCount_ - 1) * fileSize_);
+  }
 
   void checkExistedFile() {
     if (!File::Exists(name_.c_str())) {
@@ -191,6 +212,7 @@ private:
   }
 
 private:
+  DataFileManager& manager_;
   File *file_;
   int32_t fileSize_; 
   int32_t blockSize_;
