@@ -3197,8 +3197,9 @@ int main(int argc,char* argv[])
         if(cfg::stopSme)break;
         try{
           ss.connect();
-        }catch(...)
+        }catch(std::exception& e)
         {
+          __warning2__("exception in session::connect:'%s'",e.what());
           sleep(cfg::retryTime);
           continue;
         }
