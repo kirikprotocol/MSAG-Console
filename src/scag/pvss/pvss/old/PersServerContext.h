@@ -16,7 +16,7 @@ public:
     return connection_.getSocket();
   }
 
-  virtual void sendResponse() throw(PvssException) {
+  virtual void sendResponse() /* throw(PvssException) */  {
     connection_.sendResponse(getResponse().get());
   }
 

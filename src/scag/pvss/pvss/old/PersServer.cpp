@@ -40,7 +40,9 @@ int PersServer::Execute()
       }
       Performance perf = readers_.getPerformance();
       averPerf.inc(perf);
-      smsc_log_info(logger, "current performance %d:%d req/sec", perf.accepted, perf.processed);
+      if ( perf.accepted != 0 || perf.processed != 0 ) {
+          smsc_log_info(logger, "current performance %d:%d req/sec", perf.accepted, perf.processed);
+      }
       lastTime = now;
       continue;
     }
@@ -50,7 +52,9 @@ int PersServer::Execute()
       if (now - lastTime >= perfCounterPeriod_) {
         Performance perf = readers_.getPerformance();
         averPerf.inc(perf);
-        smsc_log_info(logger, "current performance %d:%d req/sec", perf.accepted, perf.processed);
+        if ( perf.accepted != 0 || perf.processed != 0 ) {
+            smsc_log_info(logger, "current performance %d:%d req/sec", perf.accepted, perf.processed);
+        }
         lastTime = now;
       }
     }

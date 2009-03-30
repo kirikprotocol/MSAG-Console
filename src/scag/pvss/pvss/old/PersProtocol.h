@@ -31,14 +31,14 @@ private:
   class SerialBufferResponseVisitor : public ResponseVisitor {
   public:
     SerialBufferResponseVisitor(SerialBuffer& buff):buff_(buff) {};
-    virtual bool visitAuthResponse(AuthResponse &resp) throw(PvapException);
-    virtual bool visitBatchResponse(BatchResponse &resp) throw(PvapException);
-    virtual bool visitDelResponse(DelResponse &resp) throw(PvapException);
-    virtual bool visitErrResponse(ErrorResponse &resp) throw(PvapException);
-    virtual bool visitGetResponse(GetResponse &resp) throw(PvapException);
-    virtual bool visitIncResponse(IncResponse &resp) throw(PvapException);
-    virtual bool visitPingResponse(PingResponse &resp) throw(PvapException);
-    virtual bool visitSetResponse(SetResponse &resp) throw(PvapException);
+    virtual bool visitAuthResponse(AuthResponse &resp) /* throw(PvapException) */ ;
+    virtual bool visitBatchResponse(BatchResponse &resp) /* throw(PvapException) */ ;
+    virtual bool visitDelResponse(DelResponse &resp) /* throw(PvapException) */ ;
+    virtual bool visitErrResponse(ErrorResponse &resp) /* throw(PvapException) */ ;
+    virtual bool visitGetResponse(GetResponse &resp) /* throw(PvapException) */ ;
+    virtual bool visitIncResponse(IncResponse &resp) /* throw(PvapException) */ ;
+    virtual bool visitPingResponse(PingResponse &resp) /* throw(PvapException) */ ;
+    virtual bool visitSetResponse(SetResponse &resp) /* throw(PvapException) */ ;
   private:
     uint8_t getResponseStatus(Response::StatusType status) const;
   private:

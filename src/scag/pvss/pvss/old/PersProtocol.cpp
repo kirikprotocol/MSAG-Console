@@ -26,27 +26,27 @@ namespace pvss  {
   class ProfileRequestCreator: public ProfileCommandVisitor {
   public:
     ProfileRequestCreator(ProfileKey* key):key_(key) {};
-    virtual bool visitBatchCommand(BatchCommand &cmd) throw(PvapException) {
+    virtual bool visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */  {
       request_.reset( new ProfileRequest<BatchCommand>(&cmd, *key_) );
       return true;
     }
-    virtual bool visitDelCommand(DelCommand &cmd) throw(PvapException) {
+    virtual bool visitDelCommand(DelCommand &cmd) /* throw(PvapException) */  {
       request_.reset( new ProfileRequest<DelCommand>(&cmd, *key_) );
       return true;
     }
-    virtual bool visitGetCommand(GetCommand &cmd) throw(PvapException) {
+    virtual bool visitGetCommand(GetCommand &cmd) /* throw(PvapException) */  {
       request_.reset( new ProfileRequest<GetCommand>(&cmd, *key_) );
       return true;
     }
-    virtual bool visitIncCommand(IncCommand &cmd) throw(PvapException) {
+    virtual bool visitIncCommand(IncCommand &cmd) /* throw(PvapException) */  {
       request_.reset( new ProfileRequest<IncCommand>(&cmd, *key_) );
       return true;
     }
-    virtual bool visitIncModCommand(IncModCommand &cmd) throw(PvapException) {
+    virtual bool visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */  {
       request_.reset( new ProfileRequest<IncModCommand>(&cmd, *key_) );
       return true;
     }
-    virtual bool visitSetCommand(SetCommand &cmd) throw(PvapException) {
+    virtual bool visitSetCommand(SetCommand &cmd) /* throw(PvapException) */  {
       request_.reset( new ProfileRequest<SetCommand>(&cmd, *key_) );
       return true;
     }
@@ -186,11 +186,11 @@ void PersProtocol::serialize(const Packet& pack, SerialBuffer& sb) const {
   static_cast< Response& >(packet).visit( visitor );
 }
 
-bool PersProtocol::SerialBufferResponseVisitor::visitAuthResponse(AuthResponse &resp) throw(PvapException) {
+bool PersProtocol::SerialBufferResponseVisitor::visitAuthResponse(AuthResponse &resp) /* throw(PvapException) */  {
   return false;
 }
 
-bool PersProtocol::SerialBufferResponseVisitor::visitBatchResponse(BatchResponse &resp) throw(PvapException) {
+bool PersProtocol::SerialBufferResponseVisitor::visitBatchResponse(BatchResponse &resp) /* throw(PvapException) */  {
   SerialBufferResponseVisitor visitor(buff_);
   std::vector<BatchResponseComponent*> content = resp.getBatchContent();
   std::vector<BatchResponseComponent*>::iterator i = content.begin();
@@ -216,34 +216,34 @@ uint8_t PersProtocol::SerialBufferResponseVisitor::getResponseStatus(Response::S
 }
 
 
-bool PersProtocol::SerialBufferResponseVisitor::SerialBufferResponseVisitor::visitDelResponse(DelResponse &resp) throw(PvapException) {
+bool PersProtocol::SerialBufferResponseVisitor::SerialBufferResponseVisitor::visitDelResponse(DelResponse &resp) /* throw(PvapException) */  {
   buff_.WriteInt8(getResponseStatus(resp.getStatus()));
   return true;
 }
 
-bool PersProtocol::SerialBufferResponseVisitor::visitErrResponse(ErrorResponse &resp) throw(PvapException) {
+bool PersProtocol::SerialBufferResponseVisitor::visitErrResponse(ErrorResponse &resp) /* throw(PvapException) */  {
   buff_.WriteInt8(getResponseStatus(resp.getStatus()));
   return true;
 }
 
-bool PersProtocol::SerialBufferResponseVisitor::visitGetResponse(GetResponse &resp) throw(PvapException) {
+bool PersProtocol::SerialBufferResponseVisitor::visitGetResponse(GetResponse &resp) /* throw(PvapException) */  {
   buff_.WriteInt8(getResponseStatus(resp.getStatus()));
   resp.getProperty()->Serialize(buff_);
   return true;
 }
 
-bool PersProtocol::SerialBufferResponseVisitor::visitIncResponse(IncResponse &resp) throw(PvapException) {
+bool PersProtocol::SerialBufferResponseVisitor::visitIncResponse(IncResponse &resp) /* throw(PvapException) */  {
   buff_.WriteInt8(getResponseStatus(resp.getStatus()));
   buff_.WriteInt32(resp.getResult());
   return true;
 }
 
-bool PersProtocol::SerialBufferResponseVisitor::visitPingResponse(PingResponse &resp) throw(PvapException) {
+bool PersProtocol::SerialBufferResponseVisitor::visitPingResponse(PingResponse &resp) /* throw(PvapException) */  {
   buff_.WriteInt8(getResponseStatus(resp.getStatus()));
   return true;
 }
 
-bool PersProtocol::SerialBufferResponseVisitor::visitSetResponse(SetResponse &resp) throw(PvapException) {
+bool PersProtocol::SerialBufferResponseVisitor::visitSetResponse(SetResponse &resp) /* throw(PvapException) */  {
   buff_.WriteInt8(getResponseStatus(resp.getStatus()));
   return true;
 }
