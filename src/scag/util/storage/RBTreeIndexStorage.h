@@ -34,7 +34,8 @@ public:
     index_(0,0,thelog),
     cacheaddr_(0),
     cache_(0),
-    invalid_(0)
+    invalid_(0),
+    goodNodesCount_(0)
     {
         allocator_.reset( new IndexAllocator(thelog) );
         if ( allocator_->Init( dbpath + '/' + dbname + "-index",
@@ -57,11 +58,21 @@ public:
         return allocator_->getSize() - 1; // for nilnode
     }
 
+    /// number of good items (filled with non-invalid value)
+    unsigned long filledSize() const {
+        return goodNodesCount_;
+    }
+
 
     /// set invalid index
     void setInvalidIndex( index_type i ) {
         invalid_ = i;
         invalidateCache();
+        // recalculate the number of good nodes count
+        goodNodesCount_ = 0;
+        for ( Iterator iter(begin()); iter.next(); ) {
+            if ( iter.idx() != invalid_ ) ++goodNodesCount_;
+        }
     }
 
 
@@ -81,10 +92,12 @@ public:
         IndexNode* node = getNode( k );
         if ( node ) {
             index_.setNodeValue( cacheaddr_, i );
+            if ( i == invalid_ ) --goodNodesCount_;
         } else {
             // the tree may be changed by reallocation
             invalidateCache();
             index_.Insert( k, i );
+            if ( i != invalid_ ) ++goodNodesCount_;
         }
         return true;
     }
@@ -96,6 +109,7 @@ public:
         if ( node ) {
             index_type i = node->value;
             index_.setNodeValue( cacheaddr_, invalid_ );
+            --goodNodesCount_;
             return i;
         }
         return invalid_;
@@ -191,6 +205,7 @@ private:
     mutable IndexNode*              cache_;       // for successive get/set
     mutable key_type                negativekey_; // for absent key
     index_type                      invalid_;
+    size_t                          goodNodesCount_; // those with non-invalid index
 };
 
 } // namespace storage

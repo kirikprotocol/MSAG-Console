@@ -49,6 +49,11 @@ public:
     }
 
 
+    void startSubTask( smsc::core::threads::ThreadedTask* task, bool delOnCompletion ) {
+        threadPool_.startTask(task,delOnCompletion);
+    }
+
+
     /// try to accept a channel for IO. Ownership is passed.
     virtual bool acceptChannel( PvssSocket* channel );
 
@@ -550,9 +555,10 @@ private:
     smsc::core::synchronization::EventMonitor   waiter_;
     ContextRegistrySet                          regset_;
 
-    smsc::core::synchronization::Mutex          statMutex_;
+    smsc::core::synchronization::EventMonitor   statMutex_;
     Statistics                                  total_;
     Statistics                                  last_;
+    bool                                        hasNewStats_;
 };
 
 } // namespace server

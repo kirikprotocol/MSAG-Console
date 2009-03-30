@@ -286,6 +286,12 @@ public:
     }
 
 
+    unsigned long filledSize() const {
+        mutexguard_type mg(lock_);
+        return index_->filledSize();
+    }
+
+
     // return true if successful
     bool set( const key_type& k, const value_type& v ) {
         mutexguard_type mg(lock_);
@@ -584,6 +590,12 @@ public:
     /// return the number of items on disk
     unsigned long dataSize() const {
         return disk_->size();
+    }
+
+
+    /// return the number of filled items on disk
+    unsigned long filledDataSize() const {
+        return disk_->filledSize();
     }
 
 

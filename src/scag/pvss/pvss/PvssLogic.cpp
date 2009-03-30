@@ -19,8 +19,12 @@ namespace {
   class CreateProfileVisitor : public scag2::pvss::ProfileCommandVisitor {
 public:
     virtual bool visitBatchCommand(scag2::pvss::BatchCommand &cmd) throw(scag2::pvss::PvapException) {
-      //TODO: return batch flag
-      return true;
+        const std::vector< scag2::pvss::BatchRequestComponent* >& content = cmd.getBatchContent();
+        for ( std::vector< scag2::pvss::BatchRequestComponent* >::const_iterator i = content.begin();
+              i != content.end(); ++i ) {
+            if ( (*i)->visit(*this) ) return true;
+        }
+        return false;
     }
     virtual bool visitDelCommand(scag2::pvss::DelCommand &cmd) throw(scag2::pvss::PvapException) {
       return false;
@@ -79,6 +83,116 @@ Response* PvssLogic::process(Request& request) /* throw(PvssException) */  {
   return 0;
 }
 
+
+// === abonent logic
+AbonentLogic::~AbonentLogic() {
+    shutdownStorages();
+    smsc_log_debug(logger_, "storage processor %d deleted", locationNumber_);
+}
+
+void AbonentLogic::init() /* throw (smsc::util::Exception) */
+{
+    smsc_log_debug(logger_," init abonent location #%u", locationNumber_ );
+    unsigned long total = 0;
+    for ( unsigned i = 0; i < dispatcher_.getStoragesCount(); ++i ) {
+        if ( util::storage::StorageNumbering::instance().node(i) == dispatcher_.getNodeNumber() ) {
+            if ( dispatcher_.getLocationNumber(i) == locationNumber_ ) {
+                total += initElementStorage(i);
+            }
+        }
+    }
+    smsc_log_info(logger_,"abonent logic on location #%u inited, total nodes: %lu", locationNumber_, total );
+}
+
+
+void AbonentLogic::shutdownStorages() {
+  if (elementStorages_.Count() <= 0) {
+    return;
+  }
+  IntHash<ElementStorage*>::Iterator it(elementStorages_);
+  ElementStorage* elstorage;
+  int key = 0;
+  while (it.Next(key, elstorage)) {
+    smsc_log_debug(logger_, "delete %d element storage index=%d", key, elstorage->index);
+    if (elstorage->storage) {
+      delete elstorage->storage;
+    }
+    if (elstorage->glossary) {
+      delete elstorage->glossary;
+    }
+    delete elstorage;
+  }
+  elementStorages_.Empty();
+}
+
+
+unsigned long AbonentLogic::reportStatistics() const
+{
+    IntHash<ElementStorage*>::Iterator it(elementStorages_);
+    ElementStorage* elstorage;
+    int key = 0;
+    unsigned long total = 0;
+    while (it.Next(key, elstorage)) {
+        if (elstorage->storage) {
+            MutexGuard mg(elstorage->mutex);
+            total += elstorage->storage->filledDataSize();
+        }
+    }
+    return total;
+}
+
+
+unsigned long AbonentLogic::initElementStorage(unsigned index) /* throw (smsc::util::Exception) */ {
+  char pathSuffix[4];
+  snprintf(pathSuffix, sizeof(pathSuffix), "%03u", index);
+  string path = string(config_.locationPath[locationNumber_] + "/") + pathSuffix;
+  std::auto_ptr<ElementStorage> elStorage(new ElementStorage(index));
+  elStorage->glossary = new Glossary();
+  initGlossary(path, elStorage->glossary);
+
+    const std::string pathSuffixString(pathSuffix);
+  std::auto_ptr< DiskIndexStorage > dis
+        (new DiskIndexStorage( config_.dbName, path, config_.indexGrowth, false,
+                               smsc::logger::Logger::getInstance(("pvssix."+pathSuffixString).c_str())));
+  smsc_log_debug(logger_, "data index storage %d is created", index);
+  std::auto_ptr< DiskDataStorage::storage_type > bs
+        (new DiskDataStorage::storage_type
+         (dataFileManager_, elStorage->glossary,
+          smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
+  int ret = -1;
+  const string fn(config_.dbName + "-data");
+
+  ret = bs->Open(fn, path);
+
+  if (ret == BlocksHSStorage< AbntAddr, Profile >::DESCR_FILE_OPEN_FAILED) {
+    if (bs->Create(fn, path, config_.fileSize, config_.blockSize) < 0) {
+      throw Exception("can't create data disk storage: %s", path.c_str());
+    }
+    ret = 0;
+  }
+  if (ret < 0) {
+    throw Exception("can't open data disk storage: %s", path.c_str());
+  }
+  std::auto_ptr< DiskDataStorage > dds
+        (new DiskDataStorage(bs.release(),
+                             smsc::logger::Logger::getInstance(("pvssdd."+pathSuffixString).c_str())));
+  smsc_log_debug(logger_, "data disk storage %d is created", index);
+
+  std::auto_ptr< DiskStorage > ds(new DiskStorage(dis.release(), dds.release()));
+  smsc_log_debug(logger_, "disk storage is assembled");
+
+  std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc."+pathSuffixString).c_str()), config_.cacheSize));
+  smsc_log_debug(logger_, "memory storage is created");
+
+  elStorage->storage = new AbonentStorage(ms.release(), ds.release());
+  unsigned long filledNodes = elStorage->storage->filledDataSize();
+  elementStorages_.Insert(index, elStorage.release());
+  smsc_log_debug(logger_, "abonent storage is assembled");
+  smsc_log_info( logger_, "storage #%u is inited, total number of good nodes: %lu", index, filledNodes );
+  return filledNodes;
+}
+
+
 Response* AbonentLogic::processProfileRequest(AbstractProfileRequest& request) {
 
   AbstractProfileRequest &profileRequest = static_cast< AbstractProfileRequest& >(request);
@@ -87,12 +201,14 @@ Response* AbonentLogic::processProfileRequest(AbstractProfileRequest& request) {
   smsc_log_debug(logger_, "%p: %p process profile key='%s' in location: %d, storage: %d",
                   this, &request, profileKey.getAddress().toString().c_str(), locationNumber_, elstorageIndex);
 
-  ElementStorage *elstorage = elementStorages_.GetPtr(elstorageIndex);
-  if (!elstorage) {
+  ElementStorage **elstoragePtr = elementStorages_.GetPtr(elstorageIndex);
+  if (!elstoragePtr) {
     smsc_log_warn(logger_, "%p: %p element storage %d not found in location %d", this, &request, elstorageIndex, locationNumber_);
     return 0;
   }
-  bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor); 
+  ElementStorage* elstorage = *elstoragePtr;
+
+  bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor);
   Profile *pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
   commandProcessor_.setProfile(pf);
   profileRequest.getCommand()->visit(commandProcessor_);
@@ -103,7 +219,10 @@ Response* AbonentLogic::processProfileRequest(AbstractProfileRequest& request) {
 
   if (pf->isChanged()) {
     smsc_log_debug(logger_, "%p: %p flush profile %s", this, &request, pf->getKey().c_str());
-    elstorage->storage->flush(profileKey.getAddress());
+      {
+          MutexGuard mg(elstorage->mutex);
+          elstorage->storage->flush(profileKey.getAddress());
+      }
     commandProcessor_.flushLogs(abntlog_);
   } else if (commandProcessor_.rollback()) {
     smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &request, pf->getKey().c_str());
@@ -111,6 +230,10 @@ Response* AbonentLogic::processProfileRequest(AbstractProfileRequest& request) {
   }
   return commandProcessor_.getResponse();
 }
+
+
+// ==== infrastruct
+
 
 Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& request) {
   Logger *dblog = 0;
@@ -146,7 +269,10 @@ Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& reques
 
   if (pf->isChanged()) {
     smsc_log_debug(logger_, "%p: %p flush profile %s", this, &request, pf->getKey().c_str());
-    storage->flush(intKey);
+      {
+          MutexGuard mg(statMutex_);
+          storage->flush(intKey);
+      }
     commandProcessor_.flushLogs(dblog);
   } else if (commandProcessor_.rollback()){
     smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &request, pf->getKey().c_str());
@@ -155,93 +281,22 @@ Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& reques
   return commandProcessor_.getResponse();
 }
 
-void AbonentLogic::initElementStorage(unsigned index) throw (smsc::util::Exception) {
-  char pathSuffix[4];
-  snprintf(pathSuffix, sizeof(pathSuffix), "%03u", index);
-  string path = string(config_.locationPath[locationNumber_] + "/") + pathSuffix;
-  ElementStorage elStorage(index);
-  elStorage.glossary = new Glossary();
-  initGlossary(path, elStorage.glossary);
-
-    const std::string pathSuffixString(pathSuffix);
-  std::auto_ptr< DiskIndexStorage > dis
-        (new DiskIndexStorage( config_.dbName, path, config_.indexGrowth, false,
-                               smsc::logger::Logger::getInstance(("pvssix."+pathSuffixString).c_str())));
-  smsc_log_debug(logger_, "data index storage %d is created", index);
-  std::auto_ptr< DiskDataStorage::storage_type > bs
-        (new DiskDataStorage::storage_type
-         (dataFileManager_, elStorage.glossary,
-          smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
-  int ret = -1;
-  const string fn(config_.dbName + "-data");
-
-  ret = bs->Open(fn, path);
-
-  if (ret == BlocksHSStorage< AbntAddr, Profile >::DESCR_FILE_OPEN_FAILED) {
-    if (bs->Create(fn, path, config_.fileSize, config_.blockSize) < 0) {
-      throw Exception("can't create data disk storage: %s", path.c_str());
-    }
-    ret = 0;
-  }
-  if (ret < 0) {
-    throw Exception("can't open data disk storage: %s", path.c_str());
-  }
-  std::auto_ptr< DiskDataStorage > dds
-        (new DiskDataStorage(bs.release(),
-                             smsc::logger::Logger::getInstance(("pvssdd."+pathSuffixString).c_str())));
-  smsc_log_debug(logger_, "data disk storage %d is created", index);
-
-  std::auto_ptr< DiskStorage > ds(new DiskStorage(dis.release(), dds.release()));
-  smsc_log_debug(logger_, "disk storage is assembled");
-
-  std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc."+pathSuffixString).c_str()), config_.cacheSize));
-  smsc_log_debug(logger_, "memory storage is created");
-
-  elStorage.storage = new AbonentStorage(ms.release(), ds.release());
-
-  elementStorages_.Insert(elStorage.index, elStorage);
-  smsc_log_debug(logger_, "abonent storage is assembled");
-}
-
-void AbonentLogic::shutdownStorages() {
-  if (elementStorages_.Count() <= 0) {
-    return;
-  }
-  IntHash<ElementStorage>::Iterator it(elementStorages_);
-  ElementStorage elstorage;
-  int key = 0;
-  while (it.Next(key, elstorage)) {
-    smsc_log_debug(logger_, "delete %d element storage index=%d", key, elstorage.index);
-    if (elstorage.storage) {
-      delete elstorage.storage;
-    }
-    if (elstorage.glossary) {
-      delete elstorage.glossary;
-    }
-  }
-  elementStorages_.Empty();
-}
-
-AbonentLogic::~AbonentLogic() {
-  shutdownStorages();
-  smsc_log_debug(logger_, "storage processor %d deleted", locationNumber_);
-}
-
-
-void AbonentLogic::init() throw (smsc::util::Exception)
+unsigned long InfrastructLogic::reportStatistics() const
 {
-    smsc_log_debug(logger_," init abonent location #%u", locationNumber_ );
-    for ( unsigned i = 0; i < dispatcher_.getStoragesCount(); ++i ) {
-        if ( util::storage::StorageNumbering::instance().node(i) == dispatcher_.getNodeNumber() ) {
-            if ( dispatcher_.getLocationNumber(i) == locationNumber_ ) {
-                initElementStorage(i);
-            }
-        }
+    unsigned long providerStat, operatorStat, serviceStat;
+    {
+        MutexGuard mg(statMutex_);
+        providerStat = provider_->filledDataSize();
+        operatorStat = operator_->filledDataSize();
+        serviceStat = service_->filledDataSize();
     }
+    smsc_log_info(slog_,"total infrastruct profiles: provider=%lu, service=%lu, operator=%lu",
+                  providerStat, serviceStat, operatorStat );
+    return 0;
 }
 
 
-void InfrastructLogic::init() throw (smsc::util::Exception) {
+void InfrastructLogic::init() /* throw (smsc::util::Exception) */ {
   InfrastructStorageConfig locCfg(config_);
   initGlossary(locCfg.dbPath, &glossary_);
   locCfg.dbName = "provider";
@@ -253,7 +308,12 @@ void InfrastructLogic::init() throw (smsc::util::Exception) {
   locCfg.dbName = "operator";
   operator_ = initStorage(locCfg);
   smsc_log_debug(logger_, "operator storage is created");
+    smsc_log_info(logger_,"infrastructure storages are inited, good nodes: provider=%lu, service=%lu, operator=%lu", 
+                  static_cast<unsigned long>(provider_->filledDataSize()),
+                  static_cast<unsigned long>(service_->filledDataSize()),
+                  static_cast<unsigned long>(operator_->filledDataSize()));
 }
+
 
 InfrastructLogic::InfrastructStorage* InfrastructLogic::initStorage(const InfrastructStorageConfig& cfg) {
   const string fn(cfg.dbPath + "/" + cfg.dbName + ".bin");

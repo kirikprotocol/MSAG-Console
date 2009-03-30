@@ -53,8 +53,8 @@ public:
 
   virtual void shutdownStorages() = 0;
 
-    /// initialize logic
-    virtual void init() throw (smsc::util::Exception) = 0;
+    /// initialize logic and return the total number of nodes in it
+    virtual void init() /* throw (smsc::util::Exception) */ = 0;
     /// return the name of the logic
     virtual std::string toString() const = 0;
 
@@ -72,52 +72,67 @@ protected:
 struct AbonentStorageConfig;
 class scag::util::storage::DataFileManager;
 
-class AbonentLogic: public PvssLogic {
+
+
+class AbonentLogic: public PvssLogic 
+{
 public:
     AbonentLogic( PvssDispatcher& dispatcher, unsigned locationNumber, const AbonentStorageConfig& cfg, scag::util::storage::DataFileManager& manager ) :
     PvssLogic(dispatcher),
     locationNumber_(locationNumber),
     abntlog_(smsc::logger::Logger::getInstance("pvss.abnt")), config_(cfg), dataFileManager_(manager) {}
-  ~AbonentLogic();
 
-    virtual void init() throw (smsc::util::Exception);
+    virtual ~AbonentLogic();
+
+    virtual void init() /* throw (smsc::util::Exception) */;
+
     virtual std::string toString() const {
         char buf[64];
         snprintf(buf,sizeof(buf),"abonent logic #%u", locationNumber_);
         return buf;
     }
 
-  //virtual Response* process(Request& request) /* throw(PvssException) */ ;
-  void shutdownStorages();
+    //virtual Response* process(Request& request) /* throw(PvssException) */ ;
+    void shutdownStorages();
+
+    virtual unsigned long reportStatistics() const;
 
 protected:
-    void initElementStorage(unsigned index) throw (smsc::util::Exception);
+    /// init an element storage and return the total number of good nodes in it
+    unsigned long initElementStorage(unsigned index) /* throw (smsc::util::Exception) */;
 
-  virtual Response* processProfileRequest(AbstractProfileRequest& request);
-
-private:
-  //typedef HashedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
-  typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
-  typedef BHDiskStorage< AbntAddr, Profile > DiskDataStorage;
-  typedef RBTreeIndexStorage< AbntAddr, DiskDataStorage::index_type > DiskIndexStorage;
-  typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
-  typedef CachedDiskStorage< MemStorage, DiskStorage > AbonentStorage;
-
-  struct ElementStorage {
-    ElementStorage(unsigned idx):glossary(0), storage(0), index(idx) {};
-    ElementStorage():glossary(0), storage(0), index(0) {};
-    Glossary* glossary;
-    AbonentStorage* storage;
-    unsigned index;
-  };
+    virtual Response* processProfileRequest(AbstractProfileRequest& request);
 
 private:
-  IntHash<ElementStorage> elementStorages_;
-  unsigned locationNumber_;
-  Logger* abntlog_;
-  const AbonentStorageConfig& config_;
-  scag::util::storage::DataFileManager& dataFileManager_;
+    //typedef HashedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
+    typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
+    typedef BHDiskStorage< AbntAddr, Profile > DiskDataStorage;
+    typedef RBTreeIndexStorage< AbntAddr, DiskDataStorage::index_type > DiskIndexStorage;
+    typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
+    typedef CachedDiskStorage< MemStorage, DiskStorage > AbonentStorage;
+
+    struct ElementStorage {
+        ElementStorage(unsigned idx):glossary(0), storage(0), index(idx) {}
+        ElementStorage(): glossary(0), storage(0), index(0) {}
+        smsc::core::synchronization::Mutex mutex;
+        Glossary* glossary;
+        AbonentStorage* storage;
+        unsigned index;
+    };
+
+private:
+    IntHash<ElementStorage*> elementStorages_;
+    unsigned locationNumber_;
+    Logger* abntlog_;
+    const AbonentStorageConfig& config_;
+    scag::util::storage::DataFileManager& dataFileManager_;
 };
+
+
+
+
+
+
 
 struct InfrastructStorageConfig;
 
@@ -132,11 +147,13 @@ public:
     {}
   ~InfrastructLogic();
 
-    virtual void init() throw (smsc::util::Exception);
+    virtual void init() /* throw (smsc::util::Exception) */;
     virtual std::string toString() const { return "infrastruct logic"; }
 
   //virtual Response* process(Request& request) /* throw(PvssException) */ ;
   void shutdownStorages();
+
+    virtual unsigned long reportStatistics() const;
 
 protected:
   virtual Response* processProfileRequest(AbstractProfileRequest& request);
@@ -163,6 +180,8 @@ private:
   Logger* plog_;
   Logger* slog_;
   Logger* olog_;
+    // used to access statistics of disk storages
+    mutable smsc::core::synchronization::Mutex statMutex_;
 };
 
 struct AbonentStorageConfig {

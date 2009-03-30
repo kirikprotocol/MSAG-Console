@@ -275,20 +275,33 @@ void ServerCore::shutdown()
 
 int ServerCore::doExecute()
 {
-    const int minTimeToSleep = 100; // 10 msec
+    const int minTimeToSleep = 400; // 10 msec
     // util::msectime_type timeToSleep = getConfig().getProcessTimeout();
     // util::msectime_type currentTime = util::currentTimeMillis();
     // util::msectime_type nextWakeupTime = currentTime + timeToSleep;
 
     smsc_log_info(log_,"Server started");
-    MutexGuard mg(channelMutex_);
+    Statistics totalStat;
+    Statistics lastStat;
     while (!isStopping)
     {
         // smsc_log_debug(log_,"cycling clientCore");
         // currentTime = util::currentTimeMillis();
         // int timeToWait = int(nextWakeupTime-currentTime);
         int timeToWait = minTimeToSleep;
-        channelMutex_.wait(timeToWait);
+        {
+            MutexGuard mg(statMutex_);
+            statMutex_.wait(timeToWait);
+            if ( !hasNewStats_ ) continue;
+            totalStat = total_;
+            lastStat = last_;
+            hasNewStats_ = false;
+            last_.reset();
+        }
+
+        smsc_log_info(log_, "total: %s", totalStat.toString().c_str() );
+        smsc_log_info(log_, "last %u sec: %s", unsigned(lastStat.accumulationTime/1000), lastStat.toString().c_str() );
+        if ( syncDispatcher_ ) syncDispatcher_->reportStatistics();
 
         /*
         ChannelList currentChannels;
@@ -642,9 +655,13 @@ void ServerCore::checkStatistics()
     const util::msectime_type currentTime = util::currentTimeMillis();
     total_.checkTime(currentTime);
     if ( last_.checkTime(currentTime) ) {
+        hasNewStats_ = true;
+        statMutex_.notify();
+        /*
         smsc_log_info(log_, "total: %s", total_.toString().c_str() );
         smsc_log_info(log_, "last %u sec: %s", unsigned(last_.accumulationTime/1000), last_.toString().c_str() );
         last_.reset();
+         */
     }
 
 }

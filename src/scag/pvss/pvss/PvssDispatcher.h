@@ -13,6 +13,12 @@
 namespace scag2 {
 namespace pvss  {
 
+namespace core {
+namespace server {
+class ServerCore;
+}
+}
+
 using smsc::logger::Logger;
 using smsc::core::buffers::Array;
 using std::vector;
@@ -26,10 +32,11 @@ public:
   PvssDispatcher(const NodeConfig& nodeCfg);
   virtual ~PvssDispatcher();
 
-  virtual unsigned getIndex(Request& request);
+  virtual unsigned getIndex(Request& request) const;
   virtual Server::SyncLogic* getSyncLogic(unsigned idx);
+  virtual void reportStatistics() const;
 
-  void init(const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg) throw (smsc::util::Exception);
+  void init( core::server::ServerCore* serverCore, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg) throw (smsc::util::Exception);
   unsigned getInfrastructNodeNumber() const { return 0; }
 
     inline unsigned getNodeNumber() const { return nodeNumber_; }

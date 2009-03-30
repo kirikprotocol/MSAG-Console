@@ -15,8 +15,9 @@ class SyncDispatcher
 {
 public:
     virtual ~SyncDispatcher() {}
-    virtual unsigned getIndex(Request& request) = 0;
+    virtual unsigned getIndex(Request& request) const = 0;
     virtual Server::SyncLogic* getSyncLogic(unsigned index) = 0;
+    virtual void reportStatistics() const = 0;
 };
 
 class AsyncDispatcher

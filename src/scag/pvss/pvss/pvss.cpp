@@ -264,18 +264,17 @@ int main(int argc, char* argv[]) {
 
     AbonentStorageConfig abntCfg = getAbntStorageConfig(abntStorageConfig, manager, nodeCfg, logger);
 
+    std::auto_ptr< Protocol > protocol( new scag2::pvss::pvap::PvapProtocol );
+    std::auto_ptr< ServerCore > server( new ServerCore( serverConfig, *protocol.get() ) );
+
     PvssDispatcher pvssDispatcher(nodeCfg);
 
+    std::auto_ptr<InfrastructStorageConfig> infCfg;
     if (nodeCfg.nodeNumber == pvssDispatcher.getInfrastructNodeNumber()) {
       ConfigView infStorageConfig(manager, "PVSS.InfrastructStorage");
-      std::auto_ptr<InfrastructStorageConfig> infCfg(new InfrastructStorageConfig(infStorageConfig, "InfrastructStorage", logger));
-      pvssDispatcher.init(abntCfg, infCfg.get());
-    } else {
-      pvssDispatcher.init(abntCfg, NULL);
+      infCfg.reset(new InfrastructStorageConfig(infStorageConfig, "InfrastructStorage", logger));
     }
-
-    std::auto_ptr< Protocol > protocol( new scag2::pvss::pvap::PvapProtocol );
-    std::auto_ptr< Server > server( new ServerCore( serverConfig, *protocol.get() ) );
+    pvssDispatcher.init( server.get(), abntCfg, infCfg.get() );
 
     try {
         server->startup(pvssDispatcher);

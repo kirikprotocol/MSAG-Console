@@ -21,56 +21,7 @@ public:
   typedef Key key_type;
   typedef Idx index_type;
 
-public:
-  DiskHashIndexStorage(const string& dbName, const string& dbPath, uint32_t initRecCnt) {
-    logger_ = Logger::getInstance("dhindex");
-    string fn = dbPath + "/" + dbName + ".idx";
-    if (!File::Exists(fn.c_str())) {
-      index_.Create(fn.c_str(), initRecCnt, false);
-    } else {
-      index_.Open(fn.c_str());
-    }
-  }
-
-  ~DiskHashIndexStorage() {
-  }
-
-  //TODO: init iterator_type
-  //iterator_type begin() const {
-  //}
-
-  unsigned long size() const {
-    return index_.Count();
-  }
-
-  index_type getIndex(const key_type& key) const {
-      OffsetValue off;
-      return index_.LookUp(key, off) ? off.value : invalid_;
-  }
-
-  index_type removeIndex(const key_type& key) {
-      OffsetValue off;
-    if (!index_.LookUp(key, off)) {
-      smsc_log_info(logger_, "Attempt to delete record that doesn't exists:%s", key.toString().c_str());
-      return invalid_;
-    }
-    index_.Delete(key);
-    smsc_log_debug(logger_, "delRecord:%s:%08llx", key.toString().c_str(), off.value);
-    return off.value;
-  }
-
-  bool setIndex(const key_type& key, index_type index) {
-    OffsetValue off(index);
-    index_.Insert(key, off, true);
-    return true;
-  } 
-
-  void setInvalidIndex(index_type i) {
-    invalid_ = i;
-  }
-
 private:
-
     // NOTE: we dont need another template Idx here
     struct OffsetValue {
 
@@ -94,8 +45,122 @@ private:
         index_type value;
     };
 
-private:
     typedef DiskHash < Key, OffsetValue > IndexStorage;
+
+public:
+  DiskHashIndexStorage(const string& dbName, const string& dbPath, uint32_t initRecCnt) {
+    logger_ = Logger::getInstance("dhindex");
+    string fn = dbPath + "/" + dbName + ".idx";
+    if (!File::Exists(fn.c_str())) {
+      index_.Create(fn.c_str(), initRecCnt, false);
+    } else {
+      index_.Open(fn.c_str());
+    }
+  }
+
+  ~DiskHashIndexStorage() {
+  }
+
+  unsigned long size() const {
+    return index_.Count();
+  }
+
+    unsigned long filledSize() const {
+        return 0; // FIXME: the counting is not accurate and is very time/disk-consuming
+    }
+
+
+  void setInvalidIndex(index_type i) {
+    invalid_ = i;
+      /*
+      // recalculate good nodes
+      goodNodesCount_ = 0;
+      for ( Iterator iter(begin()); iter.next(); ) {
+          if ( iter.idx() != invalid_ ) ++goodNodesCount_;
+      }
+       */
+  }
+
+
+    index_type invalidIndex() const { return invalid_; }
+
+
+  index_type getIndex(const key_type& key) const {
+      OffsetValue off;
+      return index_.LookUp(key, off) ? off.value : invalid_;
+  }
+
+  bool setIndex(const key_type& key, index_type index) {
+    OffsetValue off(index);
+    index_.Insert(key, off, true);
+    return true;
+  } 
+
+  index_type removeIndex(const key_type& key) {
+      OffsetValue off;
+    if (!index_.LookUp(key, off)) {
+      smsc_log_info(logger_, "Attempt to delete record that doesn't exists:%s", key.toString().c_str());
+      return invalid_;
+    }
+    index_.Delete(key);
+    smsc_log_debug(logger_, "delRecord:%s:%08llx", key.toString().c_str(), off.value);
+    return off.value;
+  }
+
+    class Iterator
+    {
+    public:
+        void reset() {
+            if (s_) {
+                iter_ = typename IndexStorage::Iterator(s_->index_);
+                key_ = Key();
+                idx_ = OffsetValue(s_->invalid_);
+            }
+        }
+        bool next() {
+            return (s_ ? iter_.Next(key_,idx_) : false);
+        }
+        Iterator() : s_(NULL) {}
+        Iterator( const Iterator& s ) : s_(s.s_), iter_(s.iter_) {
+            const_cast<Iterator&>(s).s_ = NULL;
+        }
+        Iterator& operator = ( const Iterator& s ) {
+            if ( &s != this ) {
+                Iterator& ss = const_cast< Iterator& >( s );
+                s_ = ss.s_;
+                iter_ = ss.iter_;
+                ss.s_ = NULL;
+            }
+            return *this;
+        }
+
+        const Key& key() const {
+            return key_;
+        }
+
+        const index_type idx() const {
+            return idx_.value;
+        }
+
+    private:
+        friend class DiskHashIndexStorage<Key,Idx>;
+
+        Iterator( DiskHashIndexStorage<Key,Idx>* s ) :
+        s_(s) { reset(); }
+
+    private:
+        DiskHashIndexStorage<Key,Idx>*  s_;
+        typename IndexStorage::Iterator iter_;
+        Key                             key_;
+        OffsetValue                     idx_;
+    };
+
+    typedef Iterator iterator_type;
+    friend struct Iterator;
+    Iterator begin() {
+        return Iterator(this);
+    }
+
 
 private:
   mutable IndexStorage index_;

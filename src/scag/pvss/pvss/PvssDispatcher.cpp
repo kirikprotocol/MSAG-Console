@@ -5,6 +5,7 @@
 #include "scag/pvss/api/packets/AbstractProfileRequest.h"
 #include "scag/util/WatchedThreadedTask.h"
 #include "core/threads/ThreadPool.hpp"
+#include "scag/pvss/api/core/server/ServerCore.h"
 
 namespace {
 
@@ -53,8 +54,8 @@ PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg): nodeNumber_(nodeCfg.n
   StorageNumbering::setInstance(nodeCfg.nodesCount);
 }
 
-unsigned PvssDispatcher::getIndex(Request& request) {
-
+unsigned PvssDispatcher::getIndex(Request& request) const 
+{
   AbstractProfileRequest& profileRequest = static_cast<AbstractProfileRequest&>(request);
   const ProfileKey& profileKey = profileRequest.getProfileKey();
 
@@ -83,7 +84,20 @@ Server::SyncLogic* PvssDispatcher::getSyncLogic(unsigned idx) {
   return abonentLogics_[idx];
 }
 
-void PvssDispatcher::init( const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg ) throw (smsc::util::Exception)
+
+void PvssDispatcher::reportStatistics() const
+{
+    unsigned long total = 0;
+    Server::SyncLogic* logic = 0;
+    PvssDispatcher* that = const_cast<PvssDispatcher*>(this);
+    for ( unsigned idx = 0; (logic = that->getSyncLogic(idx)) != 0; ++idx ) {
+        total += logic->reportStatistics();
+    }
+    smsc_log_info(logger_,"abonent logics have %lu profiles", total );
+}
+
+
+void PvssDispatcher::init( core::server::ServerCore* serverCore, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg ) throw (smsc::util::Exception)
 {
 
   for (unsigned locationNumber = 0; locationNumber < locationsCount_; ++locationNumber) {
@@ -107,18 +121,18 @@ void PvssDispatcher::init( const AbonentStorageConfig& abntcfg, const Infrastruc
     }
 
     // we have to init all logics in parallel
-    smsc::core::threads::ThreadPool tp;
+    // smsc::core::threads::ThreadPool tp;
     smsc::core::buffers::Array< LogicInitTask* > initTasks;
     for ( unsigned i = 0; i < abonentLogics_.Count(); ++i ) {
         LogicInitTask* task = new LogicInitTask(abonentLogics_[i]);
         initTasks.Push(task);
-        tp.startTask(task,false);
+        serverCore->startSubTask(task, false);
     }
 
     if ( infrastructLogic_.get() ) {
         LogicInitTask* task = new LogicInitTask(infrastructLogic_.get());
         initTasks.Push(task);
-        tp.startTask(task,false);
+        serverCore->startSubTask(task, false);
         // infrastructLogic_->init(*infcfg);
     }
 
@@ -139,15 +153,6 @@ void PvssDispatcher::init( const AbonentStorageConfig& abntcfg, const Infrastruc
     }
 
     if ( !failure.empty() ) throw smsc::util::Exception(failure.c_str());
-
-    // FIXME: TODO: make initialization in parallel
-    /*
-  for (unsigned i = 0; i < storagesCount_; ++i) {
-    if (StorageNumbering::instance().node(i) == nodeNumber_) {
-      getLocation(i)->initElementStorage(abntcfg, i);
-    }
-  }
-     */
 }
 
 unsigned PvssDispatcher::getLocationNumber(unsigned elementStorageNumber) const {
