@@ -445,17 +445,18 @@ public:
 
     class Iterator {
     public:
-        Iterator( DiskHash& dh ) : dh_(dh), hc_(0) {}
+        Iterator() : dh_(0), hc_(0) {}
+        Iterator( DiskHash& dh ) : dh_(&dh), hc_(0) {}
 
         bool Next( K& key, V& value ) {
-            while ( hc_ < dh_.size ) {
-                uint32_t idx = hc_++ * dh_.recsize;
-                dh_.f.Seek(DiskHashHeader::Size()+idx);
-                uint16_t fl = dh_.f.ReadNetInt16();
+            while ( hc_ < dh_->size ) {
+                uint32_t idx = hc_++ * dh_->recsize;
+                dh_->f.Seek(DiskHashHeader::Size()+idx);
+                uint16_t fl = dh_->f.ReadNetInt16();
                 if ( fl == flagUsed ) {
-                    dh_.f.ReadNetInt32(); // hash code
-                    key.Read(dh_.f);
-                    value.Read(dh_.f);
+                    dh_->f.ReadNetInt32(); // hash code
+                    key.Read(dh_->f);
+                    value.Read(dh_->f);
                     return true;
                 }
             }
@@ -463,8 +464,8 @@ public:
         }
 
     private:
-        DiskHash dh_;
-        uint32_t hc_;
+        DiskHash* dh_;
+        uint32_t  hc_;
     };
 
 };
