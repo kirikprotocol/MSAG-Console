@@ -177,7 +177,7 @@ void ServerCore::startup( SyncDispatcher& dispatcher ) /* throw (PvssException) 
     }
 
     started_ = true;
-    // threadPool_.startTask(this,false);
+    threadPool_.startTask(this,false);
 }
 
 
@@ -237,7 +237,7 @@ void ServerCore::shutdown()
         }
     }
 
-    // stop();
+    stop();
     {
         smsc_log_info(log_,"sending notify to channel mutex");
         MutexGuard mgc(channelMutex_);
@@ -247,7 +247,7 @@ void ServerCore::shutdown()
     for ( int i = 0; i < workers_.Count(); ++i ) {
         workers_[i]->shutdown();
     }
-    // waitUntilReleased();
+    waitUntilReleased();
 
     {
         MutexGuard mgs(statMutex_);
