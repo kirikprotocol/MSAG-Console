@@ -572,7 +572,7 @@ private:
                     for ( unsigned j = 0; j < cellsInChunk; ++j ) {
                         deserializeCell(dds,addr2node(i*growth+j));
                     }
-                    if (logger) smsc_log_info(logger,"OpenRBTree: cells/total = %010ld/%010ld", long(i*growth+cellsInChunk), long(maxcells));
+                    // if (logger) smsc_log_info(logger,"OpenRBTree: cells/total = %010ld/%010ld", long(i*growth+cellsInChunk), long(maxcells));
                 }
             }
             
