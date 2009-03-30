@@ -2,7 +2,10 @@ BUILD_DIR=/home/serge/build
 SMSC_DIR=/home/serge/smsc
 ; for 64 bit build set B64 property to yes and put B64=YES to makeargs
 ; also specify apporpriate xtarget values in makeargs like:
-; XTARGET="-xtarget=ultra3 -xarch=v9 -xmemalign=8i -xcode=pic32"
+; sparc: XTARGET="-DEIN_HD=101 -DEIN_SS7_LINKAGE_static -m64 -xtarget=ultraT1 -xmemalign=8i -xcode=pic32"
+; x64:   XTARGET="-DEIN_HD=101 -DEIN_SS7_LINKAGE_static -m64 -KPIC -xmodel=medium"
+; TE stack includes and libs path: SS7_STACK_HOME=/opt/ss7repo/binver/dcs1001025v101  
+; TE stack linking scheme: EIN_SS7_LINKAGE=static
 B64=NO
 SMSX=YES
 MAKE_ARGS=CXX=CC DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES SMSX=YES

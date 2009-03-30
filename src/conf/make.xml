@@ -5,6 +5,7 @@
   <property name="BUILD_DIR" value="" />
   <property name="ORACLE_HOME" value="" />
   <property name="ORALIB_SUBDIR" value="" />
+  <property name="EIN_SS7_LINKAGE" value="dynamic" />
   <property name="targets" value="" />
   <!-- end callers properties -->
 
@@ -14,6 +15,7 @@
       <env key="SMSC_SRCDIR" value="${SRC_DIR}"/>
       <env key="SMSC_BUILDDIR" value="${BUILD_DIR}"/>
       <env key="ORACLE_LIB" value="${env.ORACLE_HOME}/${ORALIB_SUBDIR}"/>
+      <env key="EIN_SS7_LINKAGE" value="${EIN_SS7_LINKAGE}"/>
     </exec>
   </target>
 </project>  
