@@ -336,6 +336,7 @@ public:
     shutdown=false;
     log=smsc::logger::Logger::getInstance("smppdump");
     logwr=smsc::logger::Logger::getInstance("smpp.wr");
+    stopped=false;
   }
   int Execute()
   {
@@ -344,7 +345,6 @@ public:
     mon.Lock();
     running=true;
     shutdown=false;
-    stopped=false;
     while(!stopped)
     {
       while(queue.Count()==0 && !stopped)
@@ -375,6 +375,7 @@ public:
     smsc_log_info(logwr,"Exiting smppwriter");
     mon.Unlock();
     running=false;
+    stopped=false;
     return 0;
   }
   void Stop()
