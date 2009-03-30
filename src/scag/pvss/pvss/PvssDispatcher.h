@@ -10,6 +10,14 @@
 //#include "scag/pvss/api/core/PvssSocket.h"
 #include "scag/pvss/pvss/PvssLogic.h"
 
+namespace scag {
+namespace util {
+namespace storage {
+class DataFileManager;
+}
+}
+}
+
 namespace scag2 {
 namespace pvss  {
 
@@ -25,7 +33,6 @@ using std::vector;
 
 struct NodeConfig;
 class Request;
-class scag::util::storage::DataFileManager;
 
 class PvssDispatcher : public core::server::SyncDispatcher {
 public:
@@ -36,7 +43,9 @@ public:
   virtual Server::SyncLogic* getSyncLogic(unsigned idx);
   virtual void reportStatistics() const;
 
-  void init( core::server::ServerCore* serverCore, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg) throw (smsc::util::Exception);
+    void init( core::server::ServerCore* serverCore,
+               const AbonentStorageConfig& abntcfg,
+               const InfrastructStorageConfig* infcfg) /* throw (smsc::util::Exception) */;
   unsigned getInfrastructNodeNumber() const { return 0; }
 
     inline unsigned getNodeNumber() const { return nodeNumber_; }

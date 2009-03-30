@@ -18,7 +18,7 @@
 namespace {
   class CreateProfileVisitor : public scag2::pvss::ProfileCommandVisitor {
 public:
-    virtual bool visitBatchCommand(scag2::pvss::BatchCommand &cmd) throw(scag2::pvss::PvapException) {
+    virtual bool visitBatchCommand(scag2::pvss::BatchCommand &cmd) /* throw(scag2::pvss::PvapException) */ {
         const std::vector< scag2::pvss::BatchRequestComponent* >& content = cmd.getBatchContent();
         for ( std::vector< scag2::pvss::BatchRequestComponent* >::const_iterator i = content.begin();
               i != content.end(); ++i ) {
@@ -26,19 +26,19 @@ public:
         }
         return false;
     }
-    virtual bool visitDelCommand(scag2::pvss::DelCommand &cmd) throw(scag2::pvss::PvapException) {
+    virtual bool visitDelCommand(scag2::pvss::DelCommand &cmd) /* throw(scag2::pvss::PvapException) */  {
       return false;
     }
-    virtual bool visitGetCommand(scag2::pvss::GetCommand &cmd) throw(scag2::pvss::PvapException) {
+    virtual bool visitGetCommand(scag2::pvss::GetCommand &cmd) /* throw(scag2::pvss::PvapException) */  {
       return false;
     }
-    virtual bool visitIncCommand(scag2::pvss::IncCommand &cmd) throw(scag2::pvss::PvapException) {
+    virtual bool visitIncCommand(scag2::pvss::IncCommand &cmd) /* throw(scag2::pvss::PvapException) */  {
       return true;
     }
-    virtual bool visitIncModCommand(scag2::pvss::IncModCommand &cmd) throw(scag2::pvss::PvapException) {
+    virtual bool visitIncModCommand(scag2::pvss::IncModCommand &cmd) /* throw(scag2::pvss::PvapException) */  {
       return true;
     }
-    virtual bool visitSetCommand(scag2::pvss::SetCommand &cmd) throw(scag2::pvss::PvapException) {
+    virtual bool visitSetCommand(scag2::pvss::SetCommand &cmd) /* throw(scag2::pvss::PvapException) */  {
       return true;
     }
   };
@@ -280,6 +280,7 @@ Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& reques
   }
   return commandProcessor_.getResponse();
 }
+
 
 unsigned long InfrastructLogic::reportStatistics() const
 {

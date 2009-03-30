@@ -97,7 +97,7 @@ void PvssDispatcher::reportStatistics() const
 }
 
 
-void PvssDispatcher::init( core::server::ServerCore* serverCore, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg ) throw (smsc::util::Exception)
+void PvssDispatcher::init( core::server::ServerCore* serverCore, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg )
 {
 
   for (unsigned locationNumber = 0; locationNumber < locationsCount_; ++locationNumber) {
@@ -153,6 +153,7 @@ void PvssDispatcher::init( core::server::ServerCore* serverCore, const AbonentSt
     }
 
     if ( !failure.empty() ) throw smsc::util::Exception(failure.c_str());
+    reportStatistics();
 }
 
 unsigned PvssDispatcher::getLocationNumber(unsigned elementStorageNumber) const {

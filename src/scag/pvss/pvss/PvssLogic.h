@@ -26,6 +26,14 @@
 #include "scag/pvss/api/core/server/Server.h"
 #include "ProfileCommandProcessor.h"
 
+namespace scag {
+namespace util {
+namespace storage {
+class DataFileManager;
+}
+}
+}
+
 namespace scag2 {
 namespace pvss {
 
@@ -53,8 +61,9 @@ public:
 
   virtual void shutdownStorages() = 0;
 
-    /// initialize logic and return the total number of nodes in it
+    /// initialize logic
     virtual void init() /* throw (smsc::util::Exception) */ = 0;
+
     /// return the name of the logic
     virtual std::string toString() const = 0;
 
@@ -70,7 +79,6 @@ protected:
 };
 
 struct AbonentStorageConfig;
-class scag::util::storage::DataFileManager;
 
 
 
@@ -148,6 +156,7 @@ public:
   ~InfrastructLogic();
 
     virtual void init() /* throw (smsc::util::Exception) */;
+
     virtual std::string toString() const { return "infrastruct logic"; }
 
   //virtual Response* process(Request& request) /* throw(PvssException) */ ;
