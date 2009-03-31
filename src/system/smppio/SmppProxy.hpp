@@ -45,8 +45,9 @@ public:
     proxyType=proxyTransceiver;
     opened=true;
     if(timeout==0)timeout=8;
-    totalLimit=procLimit*5;
+    totalLimit=procLimit?procLimit:timeout*100;
     if(totalLimit<200)totalLimit=200;
+    //if(totalLimit>1000)totalLimit=1000;
     //limit*timeout/2;
     submitLimit=totalLimit/2;
     submitCount=0;
