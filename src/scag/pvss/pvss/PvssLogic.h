@@ -103,7 +103,8 @@ public:
     //virtual Response* process(Request& request) /* throw(PvssException) */ ;
     void shutdownStorages();
 
-    virtual unsigned long reportStatistics() const;
+    /// return the number of abonents in this logic's storages
+    unsigned long reportStatistics() const;
 
 protected:
     /// init an element storage and return the total number of good nodes in it
@@ -162,7 +163,7 @@ public:
   //virtual Response* process(Request& request) /* throw(PvssException) */ ;
   void shutdownStorages();
 
-    virtual unsigned long reportStatistics() const;
+    std::string reportStatistics() const;
 
 protected:
   virtual Response* processProfileRequest(AbstractProfileRequest& request);

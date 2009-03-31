@@ -88,7 +88,7 @@ public:
      */
     void handleError( const PvssException& exc, PvssSocket& channel ) {
         smsc_log_error( logger, "exception %s on channel %p: %s", PvssException::typeToString(exc.getType()), &channel, exc.what() );
-        closeChannel( channel );
+        closeChannel( * channel.socket() );
     }
         
     /**
@@ -97,7 +97,7 @@ public:
      *
      * @param channel   Channel to close
      */
-    virtual void closeChannel( PvssSocket& channel );
+    virtual void closeChannel( smsc::core::network::Socket& channel );
 
     /**
      * Method registers a channel for regular IO operations.
@@ -112,17 +112,17 @@ public:
         }
         catch (PvssException& register_exc) {
             smsc_log_error( logger, "Failed to register new channel. Details: %s", register_exc.what() );
-            closeChannel(channel);
+            closeChannel( *channel.socket() );
             return false;
         }
         return true;
     }
 
-protected:
-
     virtual Config& getConfig() const {
         return *config;
     }
+
+protected:
 
     void updateChannelActivity( PvssSocket& channel ) {
         updateChannelActivity(channel, util::currentTimeMillis());

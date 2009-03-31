@@ -6,7 +6,7 @@ namespace scag2 {
 namespace pvss {
 namespace core {
 
-bool IOTask::setupSockets(util::msectime_type currenTime)
+bool IOTask::setupSockets(util::msectime_type currentTime)
 {
     int ready = 0;
     closed_.Empty();
@@ -16,7 +16,7 @@ bool IOTask::setupSockets(util::msectime_type currenTime)
         mul_.clear();
         for ( int i = 0; i < sockets_.Count(); ) {
             if ( sockets_[i]->isConnected() ) {
-                if ( setupSocket( * sockets_[i] ) ) ++ready;
+                if ( setupSocket(*sockets_[i], currentTime) ) ++ready;
                 ++i;
             } else {
                 // PvssSocket* con = sockets_[i];
@@ -35,7 +35,7 @@ void IOTask::processEvents()
     // smsc_log_debug( log_, "process sockets: error=%d ready=%d", error_.Count(), ready_.Count() );
     for ( int i = 0; i < error_.Count(); ++i ) {
         // smsc_log_warn( log_, "error on socket %p", error_[i] );
-        core_->closeChannel( *PvssSocket::fromSocket(error_[i]) );
+        core_->closeChannel( *error_[i] );
     }
     for ( int i = 0; i < ready_.Count(); ++i ) {
         process( *PvssSocket::fromSocket(ready_[i]) );

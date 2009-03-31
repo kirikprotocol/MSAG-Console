@@ -41,12 +41,11 @@ public:
 
 public:
     /// ctor for client-side
-    PvssSocket( const std::string& host,
-                short port,
-                int   connectionTimeout );
+    PvssSocket( Core& core );
 
     /// ctor for server-side
-    PvssSocket( smsc::core::network::Socket* socket );
+    PvssSocket( Core& core,
+                smsc::core::network::Socket* socket );
 
     ~PvssSocket();
 
@@ -57,11 +56,11 @@ public:
 
     /// checks if this socket want to send data
     /// NOTE: not a thread-safe
-    bool wantToSend();
+    bool wantToSend( util::msectime_type currentTime );
 
     /// send data and report to core when context has been sent/expired/failed.
     /// NOTE: call wantToSend before.
-    void sendData( Core& core );
+    void sendData();
 
     /// checks if socket is connected
     bool isConnected() const { return sock_->isConnected(); }
@@ -79,9 +78,9 @@ public:
     /// return underlying socket (for multiplexing)
     inline smsc::core::network::Socket* socket() { return sock_.get(); }
 
-    void processInput( Core& core );
+    void processInput();
 
-    void connect() throw (exceptions::IOException);
+    void connect() /* throw (exceptions::IOException) */;
     void disconnect();
 
     void registerWriter( PacketWriter* writer );
@@ -95,6 +94,7 @@ private:
     PvssSocket& operator = ( const PvssSocket& );
 
 private:
+    Core&                                      core_;
     std::auto_ptr<smsc::core::network::Socket> sock_;
     std::string host_;
     short       port_;

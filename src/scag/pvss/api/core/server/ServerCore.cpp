@@ -146,6 +146,13 @@ void ServerCore::reportPacket(uint32_t seqNum, smsc::core::network::Socket& chan
 }
 
 
+void ServerCore::init()
+{
+    if (!acceptor_.get()) acceptor_.reset(new Acceptor(getConfig(),*this));
+    acceptor_->init();
+}
+
+
 void ServerCore::startup( SyncDispatcher& dispatcher ) /* throw (PvssException) */ 
 {
     if (started_) return;
@@ -153,6 +160,7 @@ void ServerCore::startup( SyncDispatcher& dispatcher ) /* throw (PvssException) 
     if (started_) return;
 
     smsc_log_info(log_,"Starting PVSS sync server %s", getConfig().toString().c_str() );
+    if ( !acceptor_.get() ) throw PvssException(PvssException::UNKNOWN, "no acceptor found");
 
     syncDispatcher_ = &dispatcher;
 
@@ -166,11 +174,10 @@ void ServerCore::startup( SyncDispatcher& dispatcher ) /* throw (PvssException) 
             workers_.Push(worker);
             threadPool_.startTask(worker,false);
         }
-        acceptor_.reset(new Acceptor(getConfig(),*this));
-        acceptor_->init();
+        // acceptor_.reset(new Acceptor(getConfig(),*this));
+        // acceptor_->init();
         threadPool_.startTask(acceptor_.get(),false);
     } catch (PvssException& exc) {
-        smsc_log_error(log_,"Acceptor start error: %s",exc.what());
         if (acceptor_.get()) acceptor_->shutdown();
         shutdownIO(false);
         throw exc;
@@ -188,6 +195,7 @@ void ServerCore::startup( AsyncDispatcher& dispatcher ) /* throw (PvssException)
     if (started_) return;
 
     smsc_log_info(log_,"Starting PVSS async server %s", getConfig().toString().c_str() );
+    if ( !acceptor_.get() ) throw PvssException(PvssException::UNKNOWN, "no acceptor found");
 
     startupIO();
     try {
@@ -195,8 +203,10 @@ void ServerCore::startup( AsyncDispatcher& dispatcher ) /* throw (PvssException)
         dispatcher_.reset( new AsyncDispatcherThread(*this,dispatcher) );
         dispatcher_->init();
         threadPool_.startTask(dispatcher_.get(),false);
+        threadPool_.startTask(acceptor_.get(),false);
     } catch (PvssException& exc) {
         smsc_log_error(log_,"Async dispatcher start error: %s",exc.what());
+        if (acceptor_.get()) acceptor_->shutdown();
         if (dispatcher_.get()) {
             dispatcher_->shutdown();
             dispatcher_.reset(0);
@@ -554,7 +564,7 @@ void ServerCore::closeChannel( smsc::core::network::Socket* socket )
         }
     }
     PvssSocket* channel = PvssSocket::fromSocket(socket);
-    Core::closeChannel(*channel);
+    Core::closeChannel(*socket);
     // should we destroy dead channels?
     destroyDeadChannels();
 }

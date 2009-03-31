@@ -85,15 +85,24 @@ Server::SyncLogic* PvssDispatcher::getSyncLogic(unsigned idx) {
 }
 
 
-void PvssDispatcher::reportStatistics() const
+std::string PvssDispatcher::reportStatistics() const
 {
     unsigned long total = 0;
-    Server::SyncLogic* logic = 0;
     PvssDispatcher* that = const_cast<PvssDispatcher*>(this);
-    for ( unsigned idx = 0; (logic = that->getSyncLogic(idx)) != 0; ++idx ) {
-        total += logic->reportStatistics();
+    std::string rv;
+    for ( unsigned idx = 0; ; ++idx ) {
+        Server::SyncLogic* logic = that->getSyncLogic(idx);
+        if ( ! logic ) break;
+        if ( logic == infrastructLogic_.get() ) {
+            rv += infrastructLogic_.get()->reportStatistics();
+        } else {
+            total += static_cast<AbonentLogic*>(logic)->reportStatistics();
+        }
     }
-    smsc_log_info(logger_,"abonent logics have %lu profiles", total );
+    char buf[50];
+    snprintf(buf,sizeof(buf)," abonents=%lu",total);
+    rv += buf;
+    return rv;
 }
 
 

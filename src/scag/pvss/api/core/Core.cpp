@@ -27,10 +27,11 @@ Core::~Core()
 }
 
 
-void Core::closeChannel( PvssSocket& channel )
+void Core::closeChannel( smsc::core::network::Socket& channel )
 {
     inactivityTracker->removeChannel(channel);
-    channel.disconnect();
+    // channel.disconnect();
+    channel.Close();
     smsc_log_debug(logger,"Channel closed: %p",&channel);
 }
 

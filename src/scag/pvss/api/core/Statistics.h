@@ -33,13 +33,22 @@ struct Statistics
 
     std::string toString() const {
         char buf[128];
-        util::msectime_type e10ms = elapsedTime/10;
+        util::msectime_type e10ms;
+        unsigned scale;
+        if ( elapsedTime > 20000 ) {
+            // more than 10 s
+            e10ms = elapsedTime/1000;
+            scale = 1;
+        } else {
+            e10ms = elapsedTime/10;
+            scale = 100;
+        }
         if ( e10ms <= 0 ) e10ms = 1;
         snprintf(buf,sizeof(buf),
                  "elapsed=%lds req/resp/err=%u/%u/%u sent/fail=%u/%u, speed(1/s): req/resp/err=%u/%u/%u sent/fail=%u/%u",
                  long(elapsedTime/1000), requests, responses, errors, sent, failed,
-                 unsigned(requests*100/e10ms), unsigned(responses*100/e10ms), unsigned(errors*100/e10ms),
-                 unsigned(sent*100/e10ms), unsigned(failed*100/e10ms)
+                 unsigned(requests*scale/e10ms), unsigned(responses*scale/e10ms), unsigned(errors*scale/e10ms),
+                 unsigned(sent*scale/e10ms), unsigned(failed*scale/e10ms)
                  );
         return buf;
     }

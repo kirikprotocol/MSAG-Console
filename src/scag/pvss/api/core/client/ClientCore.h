@@ -42,8 +42,9 @@ public:
      * Will be called by InactivityTracker when channel remains inactive during specified timeout.
      * Initiates PING request sending.
      */
-    virtual void inactivityTimeoutExpired( PvssSocket& channel ) {
-        sendPingRequest( channel );
+    virtual void inactivityTimeoutExpired( smsc::core::network::Socket& channel ) {
+        PvssSocket* sock = PvssSocket::fromSocket(&channel);
+        sendPingRequest( *sock );
     }
 
     
@@ -72,7 +73,7 @@ public:
      *
      * @param channel   Channel to close
      */
-    virtual void closeChannel( PvssSocket& channel );
+    virtual void closeChannel( smsc::core::network::Socket& channel );
 
 
     virtual bool registerChannel( PvssSocket& channel, util::msectime_type utime ) {
@@ -199,6 +200,11 @@ private:
     void handleResponse(Response* response,PvssSocket& channel) /* throw(PvssException) */ ;
 
 
+    void handleResponseWithContext( std::auto_ptr< ClientContext >& context,
+                                    Response* response,
+                                    smsc::core::network::Socket& channel ) /* throw(PvssException) */ ;
+
+
     /**
      * Internal method used to shutdown registered channels
      * and finalize unprocessed requests.
@@ -213,6 +219,9 @@ private:
     ChannelList                        channels_;        // channels for connector/r/w
     ChannelList                        activeChannels_;  // channels for r/w
     ChannelList                        deadChannels_;    // closed channels (pending for destruction)
+
+    // Requests which has been passed to writers
+    ContextRegistrySet                 writingRegset_;
 
     // Requests waiting for responses (ordered by time)
     ContextRegistrySet                 regset_;

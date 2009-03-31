@@ -88,7 +88,7 @@ void Acceptor::processEvents()
     for ( int i = 0; i < ready.Count(); ++i ) {
         smsc::core::network::Socket* socket = ready[i];
         removeFinishingSocket(socket);
-        PvssSocket* channel = new PvssSocket(socket);
+        PvssSocket* channel = new PvssSocket(*serverCore_,socket);
         // FIXME: check accept time
         bool accepted = serverCore_->acceptChannel(channel);
         char buf[3];

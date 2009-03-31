@@ -195,7 +195,7 @@ const std::string& Property::toString() const
 }
 
 
-void Property::fromString( const std::string& input ) throw (exceptions::IOException)
+void Property::fromString( const std::string& input ) /* throw (exceptions::IOException) */ 
 {
     // cleanup
     invalidateCache();

@@ -33,11 +33,13 @@ public:
 
     /* public synchronized */
     uint32_t getSeqNum() const {
-        return request_->getSeqNum();
+        return seqNum_;
     }
 
     void setSeqNum( uint32_t seqNum ) {
-        request_->setSeqNum(seqNum);
+        seqNum_ = seqNum;
+        if ( request_.get() ) request_->setSeqNum(seqNum);
+        if ( response_.get() ) response_->setSeqNum(seqNum);
     }
 
     /* public synchronized */
@@ -59,6 +61,7 @@ private:
 
 private:
     util::msectime_type creationTime_;
+    uint32_t                seqNum_;
     std::auto_ptr<Request>  request_;
     std::auto_ptr<Response> response_;
 };

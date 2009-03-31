@@ -49,7 +49,7 @@ public:
     void waitUntilProcessed();
 
     /// initialize all fields
-    void init() throw (exceptions::IOException);
+    void init() /* throw (exceptions::IOException) */ ;
 
     /// startup threads
     void startup();

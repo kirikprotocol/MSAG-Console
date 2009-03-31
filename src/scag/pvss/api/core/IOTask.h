@@ -25,7 +25,7 @@ protected:
     /// process events
     virtual void processEvents();
 
-    virtual bool setupSocket( PvssSocket& sock ) = 0;
+    virtual bool setupSocket(PvssSocket& sock, util::msectime_type currentTime) = 0;
     virtual void process( PvssSocket& sock ) = 0;
     virtual void postProcess();
 

@@ -1,17 +1,24 @@
 #ifndef _SCAG_PVSS_CORE_CHANNELINACTIVITYLISTENER_H
 #define _SCAG_PVSS_CORE_CHANNELINACTIVITYLISTENER_H
 
+namespace smsc {
+namespace core {
+namespace network {
+class Socket;
+}
+}
+}
+
+
 namespace scag2 {
 namespace pvss {
 namespace core {
-
-class PvssSocket;
 
 class ChannelInactivityListener
 {
 public:
     virtual ~ChannelInactivityListener() {}
-    virtual void inactivityTimeoutExpired( PvssSocket& channel ) = 0;
+    virtual void inactivityTimeoutExpired( smsc::core::network::Socket& channel ) = 0;
 };
 
 } // namespace core

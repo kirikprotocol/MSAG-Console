@@ -14,11 +14,11 @@ using namespace smsc::core::synchronization;
 
 smsc::logger::Logger* PvssSocket::log_ = 0;
 
-PvssSocket::PvssSocket( const std::string& host,
-                        short port,
-                        int connectionTmo ) :
+PvssSocket::PvssSocket( Core& core ) :
+core_(core),
 sock_( new smsc::core::network::Socket ),
-host_(host), port_(port), connectionTmo_(connectionTmo),
+host_( core.getConfig().getHost() ),
+port_( core.getConfig().getPort() ),
 rdBuflen_(0),
 writer_(0),
 reader_(0),
@@ -29,9 +29,9 @@ lastActivity_(0)
 }
 
 
-PvssSocket::PvssSocket(smsc::core::network::Socket* socket) :
+PvssSocket::PvssSocket( Core& core, smsc::core::network::Socket* socket ) :
+core_(core),
 sock_(socket),
-host_(), port_(0), connectionTmo_(0),
 rdBuflen_(0),
 writer_(0),
 reader_(0),
@@ -64,7 +64,8 @@ void PvssSocket::send( const Packet* packet, bool isRequest, bool force ) /* thr
     if ( !force && pendingContexts_.Count() > writer_->getConfig().getChannelQueueSizeLimit() )
         throw PvssException(PvssException::CLIENT_BUSY, "Queue size limit exceeded for channel: %p",this);
 
-    std::auto_ptr<WriteContext> writeContext(new WriteContext(packet->getSeqNum(),util::currentTimeMillis()));
+    std::auto_ptr<WriteContext> writeContext( new WriteContext(packet->getSeqNum(),
+                                                               force ? 0 : util::currentTimeMillis()) );
 
     // packet serialization
     writer_->serialize(*packet,writeContext->buffer);
@@ -92,24 +93,42 @@ void PvssSocket::send( const Packet* packet, bool isRequest, bool force ) /* thr
 }
 
 
-bool PvssSocket::wantToSend()
+bool PvssSocket::wantToSend( util::msectime_type currentTime )
 {
     if ( !isConnected() ) return false;
     if ( wrContext_.get() && wrBuffer_.GetPos() < wrBuffer_.getSize() ) { return true; }
+    bool result = false;
     WriteContext* ctx;
+    std::list< WriteContext* > expired;
     {
         MutexGuard mg(pendingContextMon_);
-        // extract the first item from the queue (checking for expiration?)
-        if ( ! pendingContexts_.Pop(ctx) ) return false;
-        wrContext_.reset(ctx);
-        // FIXME: we have to check expiration time here
+        // extract the first item from the queue
+        while ( true ) {
+            if ( ! pendingContexts_.Pop(ctx) ) break;
+            if ( ! ctx ) continue;
+            if ( ctx->creationTime == 0 || ctx->creationTime + core_.getConfig().getIOTimeout() >= currentTime ) {
+                result = true;
+                wrContext_.reset(ctx);
+                break;
+            }
+            expired.push_back(ctx);
+        }
     }
-    wrBuffer_.setExtBuf( const_cast<char*>(ctx->buffer.get()), ctx->buffer.GetPos() );
-    return true;
+    if ( result ) {
+        wrBuffer_.setExtBuf( const_cast<char*>(ctx->buffer.get()), ctx->buffer.GetPos() );
+    }
+
+    // report expired requests
+    while ( ! expired.empty() ) {
+        ctx = expired.front();
+        expired.pop_front();
+        core_.reportPacket(ctx->seqNum,*socket(),Core::EXPIRED);
+    }
+    return result;
 }
 
 
-void PvssSocket::sendData( Core& core )
+void PvssSocket::sendData()
 {
     assert(wrContext_.get());
     if ( wrBuffer_.GetPos() < wrBuffer_.getSize() ) {
@@ -118,9 +137,9 @@ void PvssSocket::sendData( Core& core )
         res = sock_->Write( wrBuffer_.get()+wrBuffer_.GetPos(), res );
         if (res<=0) {
             smsc_log_warn(log_,"sendData: write failed: %d", res);
-            core.reportPacket(wrContext_->seqNum, *socket(), Core::FAILED);
+            core_.reportPacket(wrContext_->seqNum, *socket(), Core::FAILED);
             wrContext_.reset(0);
-            core.handleError(PvssException(PvssException::IO_ERROR,"io error (write failed:%d)",res),*this);
+            core_.handleError(PvssException(PvssException::IO_ERROR,"io error (write failed:%d)",res),*this);
             return;
         }
 
@@ -129,20 +148,20 @@ void PvssSocket::sendData( Core& core )
 
         if ( wrBuffer_.GetPos() < wrBuffer_.getSize() ) return;
     }
-    core.reportPacket(wrContext_->seqNum, *socket(), Core::SENT);
+    core_.reportPacket(wrContext_->seqNum, *socket(), Core::SENT);
     wrContext_.reset(0);
 }
 
 
 /// ???
-void PvssSocket::processInput( Core& core )
+void PvssSocket::processInput()
 {
     if ( rdBuffer_.GetPos() < 4 ) {
         // reading length
         int res;
         res = sock_->Read(rdBuffer_.get()+rdBuffer_.GetPos(),4-rdBuffer_.GetPos());
         if (res <= 0) {
-            core.handleError(PvssException(PvssException::IO_ERROR,"error reading packet length"), *this);
+            core_.handleError(PvssException(PvssException::IO_ERROR,"error reading packet length"), *this);
             return;
         }
         lastActivity_ = util::currentTimeMillis();
@@ -150,7 +169,7 @@ void PvssSocket::processInput( Core& core )
         if ( rdBuffer_.GetPos() >= 4 ) {
             rdBuflen_ = ntohl(*reinterpret_cast<const uint32_t*>(rdBuffer_.get()))+4;
             if ( rdBuflen_ > 70000 ) {
-                core.handleError(PvssException(PvssException::IO_ERROR, "too large packet: %d",rdBuflen_), *this);
+                core_.handleError(PvssException(PvssException::IO_ERROR, "too large packet: %d",rdBuflen_), *this);
                 return;
             }
             smsc_log_debug(log_,"read packet size:%d",rdBuflen_-4);
@@ -162,7 +181,7 @@ void PvssSocket::processInput( Core& core )
     int res;
     res = sock_->Read(rdBuffer_.get()+rdBuffer_.GetPos(),rdBuflen_-rdBuffer_.GetPos());
     if ( res <= 0 ) {
-        core.handleError(PvssException(PvssException::IO_ERROR,"error reading packet data"), *this);
+        core_.handleError(PvssException(PvssException::IO_ERROR,"error reading packet data"), *this);
         return;
     }
     lastActivity_ = util::currentTimeMillis();
@@ -178,18 +197,18 @@ void PvssSocket::processInput( Core& core )
     }
     std::auto_ptr<Packet> packet;
     try {
-        packet.reset(core.getProtocol()->deserialize(readbuf));
+        packet.reset( core_.getProtocol()->deserialize(readbuf) );
     } catch (PvssException& e) {
-        core.handleError(e,*this);
+        core_.handleError(e,*this);
         return;
     }
     rdBuffer_.SetPos(0);
     rdBuflen_ = 0;
-    core.receivePacket(packet,*this);
+    core_.receivePacket(packet,*this);
 }
 
 
-void PvssSocket::connect() throw (exceptions::IOException)
+void PvssSocket::connect() /* throw (exceptions::IOException) */ 
 {
     if ( isConnected() ) return;
     {
@@ -213,9 +232,11 @@ void PvssSocket::disconnect()
 {
     // FIXME: what to do to pendingContexts queue ?
     sock_->Close();
+    /*
     rdBuflen_ = 0;
     rdBuffer_.SetPos(0);
     wrBuffer_.SetPos(wrBuffer_.getSize());
+     */
 }
 
 void PvssSocket::registerWriter( PacketWriter* writer )
@@ -245,7 +266,7 @@ void PvssSocket::init()
     }
     sock_->setData(0,this);
     if ( host_.empty() && sock_->isConnected() ) {
-        char buf[50];
+        char buf[60];
         sock_->GetPeer(buf);
         char* colon = strchr(buf,':');
         if ( colon ) {

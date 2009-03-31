@@ -17,6 +17,14 @@ public:
     ClientContext( Request* req, Client::ResponseHandler* handle ) :
     Context(req), handler(handle) {}
 
+    ClientContext( Response* resp ) :
+    Context(0), handler(0) {
+        if ( resp ) {
+            Context::setSeqNum(resp->getSeqNum());
+            Context::setResponse(resp);
+        }
+    }
+
     virtual void setResponse( Response* resp ) /* throw (PvssException) */ 
     {
         Context::setResponse(resp);

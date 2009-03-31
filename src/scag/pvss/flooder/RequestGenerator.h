@@ -29,10 +29,10 @@ public:
                                unsigned abonents );
 
     /// add a variable pattern
-    void addPropertyPattern( unsigned idx, Property* prop ) throw (exceptions::IOException);
+    void addPropertyPattern( unsigned idx, Property* prop ) /* throw (exceptions::IOException) */ ;
 
     /// parse command patterns
-    void parseCommandPatterns( const std::string& patterns ) throw (exceptions::IOException);
+    void parseCommandPatterns( const std::string& patterns ) /* throw (exceptions::IOException) */ ;
 
     void clearCommandPatterns();
 

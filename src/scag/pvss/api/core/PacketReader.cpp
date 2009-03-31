@@ -4,7 +4,7 @@ namespace scag2 {
 namespace pvss {
 namespace core {
 
-bool PacketReader::setupSocket( PvssSocket& con )
+bool PacketReader::setupSocket( PvssSocket& con, util::msectime_type )
 {
     mul_.add( con.socket() );
     return true;

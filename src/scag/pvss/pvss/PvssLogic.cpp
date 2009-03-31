@@ -282,7 +282,7 @@ Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& reques
 }
 
 
-unsigned long InfrastructLogic::reportStatistics() const
+std::string InfrastructLogic::reportStatistics() const
 {
     unsigned long providerStat, operatorStat, serviceStat;
     {
@@ -291,9 +291,10 @@ unsigned long InfrastructLogic::reportStatistics() const
         operatorStat = operator_->filledDataSize();
         serviceStat = service_->filledDataSize();
     }
-    smsc_log_info(slog_,"total infrastruct profiles: provider=%lu, service=%lu, operator=%lu",
-                  providerStat, serviceStat, operatorStat );
-    return 0;
+    char buf[100];
+    snprintf(buf,sizeof(buf),"providers=%lu services=%lu operators=%lu",
+             providerStat, serviceStat, operatorStat);
+    return buf;
 }
 
 

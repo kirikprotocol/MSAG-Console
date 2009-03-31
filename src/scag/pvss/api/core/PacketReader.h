@@ -31,12 +31,10 @@ protected:
         socket.registerReader(0);
     }
 
-    virtual bool setupSocket( PvssSocket& conn );
+    virtual bool setupSocket( PvssSocket& conn, util::msectime_type currentTime );
     virtual bool hasEvents() { return mul_.canRead(ready_, error_, 200 /* FIXME: timeout from config */); }
     virtual void process( PvssSocket& con ) {
-        con.processInput(*core_);
-        // FIXME: why we need this?
-        // if ( ! pers_->async && ! con.isReading() ) writer_->notify();
+        con.processInput();
     }
     virtual void postProcess() {}
 };

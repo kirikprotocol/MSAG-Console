@@ -79,7 +79,7 @@ void RequestGenerator::randomizeProfileKeys( const std::string& addressFormat,
 }
 
 
-void RequestGenerator::addPropertyPattern( unsigned idx, Property* prop ) throw (exceptions::IOException)
+void RequestGenerator::addPropertyPattern( unsigned idx, Property* prop ) /* throw (exceptions::IOException) */ 
 {
     std::auto_ptr< Property > p( prop );
     if ( prophash_.Exist(idx) ) throw exceptions::IOException("index %d is already occupied", idx);
@@ -88,7 +88,7 @@ void RequestGenerator::addPropertyPattern( unsigned idx, Property* prop ) throw 
 }
 
 
-void RequestGenerator::parseCommandPatterns( const std::string& patterns ) throw (exceptions::IOException)
+void RequestGenerator::parseCommandPatterns( const std::string& patterns ) /* throw (exceptions::IOException) */ 
 {
     std::auto_ptr<BatchRequestComponent> cmd;
     std::auto_ptr<BatchCommand> batchCmd;

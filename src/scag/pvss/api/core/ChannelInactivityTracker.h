@@ -5,21 +5,21 @@
 #include "core/threads/ThreadedTask.hpp"
 #include "core/buffers/XHash.hpp"
 #include "core/synchronization/EventMonitor.hpp"
+#include "core/network/Socket.hpp"
 #include "ChannelInactivityListener.h"
 #include "scag/util/WatchedThreadedTask.h"
 #include "scag/util/Time.h"
 #include "scag/util/XHashPtrFunc.h"
+#include "PvssSocket.h"
 
 namespace scag2 {
 namespace pvss {
 namespace core {
 
-class PvssSocket;
-
 class ChannelInactivityTracker : public util::WatchedThreadedTask
 {
 private:
-    typedef smsc::core::buffers::XHash<PvssSocket*,util::msectime_type,util::XHashPtrFunc>  TimeHash;
+    typedef smsc::core::buffers::XHash<smsc::core::network::Socket*,util::msectime_type,util::XHashPtrFunc>  TimeHash;
 
 public:
     ~ChannelInactivityTracker() {
@@ -35,7 +35,7 @@ public:
 
     virtual const char* taskName() /*const*/ { return "CITracker"; }
 
-    bool removeChannel( PvssSocket& channel )
+    bool removeChannel( smsc::core::network::Socket& channel )
     {
         MutexGuard mg(activityTimesMutex);
         return activityTimes.Delete(&channel);
@@ -43,9 +43,9 @@ public:
     void registerChannel( PvssSocket& channel, util::msectime_type tmo )
     {
         MutexGuard mg(activityTimesMutex);
-        util::msectime_type* ptr = activityTimes.GetPtr(&channel);
+        util::msectime_type* ptr = activityTimes.GetPtr(channel.socket());
         if ( ptr ) *ptr = tmo;
-        else activityTimes.Insert( &channel, tmo );
+        else activityTimes.Insert( channel.socket(), tmo );
     }
     void shutdown()
     {
@@ -69,7 +69,7 @@ public:
         while (started)
         {
 
-            std::list< PvssSocket* > expiredList;
+            std::list< smsc::core::network::Socket* > expiredList;
             {
                 MutexGuard mg(activityTimesMutex);
                 // try {
@@ -88,7 +88,7 @@ public:
                 }
 
                 timeToSleep = inactivityTime;
-                PvssSocket* sock;
+                smsc::core::network::Socket* sock;
                 util::msectime_type*   entry; // pointer to the inactivity time
                 for ( TimeHash::Iterator i(&activityTimes); i.Next(sock,entry); ) {
                     const util::msectime_type nextPingTime = *entry + inactivityTime;
@@ -109,7 +109,7 @@ public:
             } // guard clause
 
             while ( ! expiredList.empty() ) {
-                PvssSocket* sock = expiredList.front();
+                smsc::core::network::Socket* sock = expiredList.front();
                 expiredList.pop_front();
                 listener.inactivityTimeoutExpired(*sock);
             }

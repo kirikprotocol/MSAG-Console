@@ -107,9 +107,6 @@ public:
          */
         virtual Response* process(Request& request) /* throw(PvssException) */  = 0;
 
-        /// report statistics and return the number of subtotal (to be reported externally).
-        virtual unsigned long reportStatistics() const = 0;
-
     };
 
 

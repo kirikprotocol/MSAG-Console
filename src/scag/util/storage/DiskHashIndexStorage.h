@@ -66,7 +66,7 @@ public:
   }
 
     unsigned long filledSize() const {
-        return 0; // FIXME: the counting is not accurate and is very time/disk-consuming
+        return index_.Count();
     }
 
 

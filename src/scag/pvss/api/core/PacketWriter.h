@@ -33,16 +33,13 @@ protected:
         socket.registerWriter(0);
     }
 
-    virtual bool setupSocket( PvssSocket& conn ) {
-        // FIXME: was used for sync protocol
-        // if ( ! pers_->async && conn.isReading() ) return false;
-        // hasAvailable_ = true;
-        if ( ! conn.wantToSend() ) return false;
+    virtual bool setupSocket( PvssSocket& conn, util::msectime_type currentTime ) {
+        if ( ! conn.wantToSend(currentTime) ) return false;
         mul_.add( conn.socket() );
         return true;
     }
     virtual bool hasEvents() { return mul_.canWrite(ready_, error_, 200); }
-    virtual void process( PvssSocket& con ) { con.sendData(*core_); }
+    virtual void process( PvssSocket& con ) { con.sendData(); }
 
     virtual void setupFailed( util::msectime_type currentTime );
 

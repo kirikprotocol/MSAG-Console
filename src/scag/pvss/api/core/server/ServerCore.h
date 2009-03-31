@@ -43,7 +43,7 @@ public:
      * Will be called by InactivityTracker when channel remains inactive during specified timeout.<p/>
      * Method implementation initiates channel closing.
      */
-    virtual void inactivityTimeoutExpired(PvssSocket& channel) {
+    virtual void inactivityTimeoutExpired(smsc::core::network::Socket& channel) {
         smsc_log_warn(log_,"Inactivity timeout expired for channel %p", &channel);
         closeChannel(channel);
     }
@@ -344,6 +344,10 @@ public:
 
      */
 
+
+    void init() /* throw PvssException */;
+
+
     /**
      * Implementation of Server interface method.
      * Starts up PVSS server (acceptor & control thread, readers & writers).
@@ -517,7 +521,7 @@ private:
     /// close channel if managed locally or leave it.
     void closeChannel( smsc::core::network::Socket* socket );
 
-    virtual void closeChannel( PvssSocket& channel )
+    virtual void closeChannel( smsc::core::network::Socket& channel )
     {
         Core::closeChannel(channel);
     }

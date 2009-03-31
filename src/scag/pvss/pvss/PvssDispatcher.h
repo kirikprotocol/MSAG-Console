@@ -41,7 +41,7 @@ public:
 
   virtual unsigned getIndex(Request& request) const;
   virtual Server::SyncLogic* getSyncLogic(unsigned idx);
-  virtual void reportStatistics() const;
+    virtual std::string reportStatistics() const;
 
     void init( core::server::ServerCore* serverCore,
                const AbonentStorageConfig& abntcfg,

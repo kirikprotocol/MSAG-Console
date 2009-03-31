@@ -168,7 +168,7 @@ void FlooderStat::waitUntilProcessed()
 }
 
 
-void FlooderStat::init() throw (exceptions::IOException)
+void FlooderStat::init() /* throw (exceptions::IOException) */ 
 {
     const std::vector< std::string >& patterns = config_.getPropertyPatterns();
     if ( patterns.size() <= 0 ) throw exceptions::IOException("too few property patterns configured");

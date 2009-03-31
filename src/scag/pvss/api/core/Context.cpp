@@ -14,19 +14,19 @@ smsc::logger::Logger* Context::log_ = 0;
 
 Context::Context(Request* req) :
 creationTime_( util::currentTimeMillis() ),
+seqNum_( req ? req->getSeqNum() : uint32_t(-1) ),
 request_( req ) {
     if ( ! log_ ) {
         MutexGuard mg(mtx);
         if ( ! log_ ) log_ = smsc::logger::Logger::getInstance("pvss.ctx");
     }
-    assert(req != 0);
-    smsc_log_debug(log_,"ctor: context %p: seqnum=%d",this,req->getSeqNum());
+    smsc_log_debug(log_,"ctor: context %p: seqnum=%d",this,getSeqNum());
 }
 
 
 Context::~Context()
 {
-    smsc_log_debug(log_,"dtor: context %p: seqnum=%d",this,request_.get() ? request_->getSeqNum() : 0);
+    smsc_log_debug(log_,"dtor: context %p: seqnum=%d",this,getSeqNum());
 }
 
 
