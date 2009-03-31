@@ -5,7 +5,7 @@
 #ident "@(#)$Id$"
 #define __CPP_MAXSIZEOF_DEFS__
 
-namespace eyelinecom {
+namespace eyeline {
 namespace util {
 
 template <int a, int b>
@@ -25,8 +25,8 @@ struct MaxSizeOf3_T {
     enum { VALUE = MaxInt_T<MAX12, sizeof(T3)>::VALUE };
 };
 
-}; //util
-}; //eyelinecom
+} //util
+} //eyeline
 
 #endif /* __CPP_MAXSIZEOF_DEFS__ */
 
