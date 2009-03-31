@@ -17,6 +17,11 @@ struct FixedLengthString{
   }
   FixedLengthString(const char* argStr)
   {
+    if(argStr==0)
+    {
+      str[0]=0;
+      return;
+    }
     *this=argStr;
   }
   template <int M>
