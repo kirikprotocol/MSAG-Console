@@ -9,7 +9,7 @@
 #include <vector>
 #include <string>
 
-namespace eyelinecom {
+namespace eyeline {
 namespace asn1 {
 //
 class EncodedOID {
@@ -64,10 +64,10 @@ public:
             asnValue(_nick);
     }
 
-    inline uint8_t  length(void) const { return (uint8_t)_octs.size(); }
-    inline const uint8_t * octets(void) const { return &_octs[0]; }
-    inline uint16_t  numSubIds(void) const { return _numIds; }
-    inline const char * nick(void) const { return _nick.c_str(); }
+    uint8_t  length(void) const { return (uint8_t)_octs.size(); }
+    const uint8_t * octets(void) const { return &_octs[0]; }
+    uint16_t  numSubIds(void) const { return _numIds; }
+    const char * nick(void) const { return _nick.c_str(); }
 
     uint32_t  subId(uint16_t idx) const
     {
@@ -96,11 +96,11 @@ public:
         return val;
     }
 
-    inline bool operator< (const EncodedOID & obj2) const
+    bool operator< (const EncodedOID & obj2) const
     {
         return _octs < obj2._octs;
     }
-    inline bool operator== (const EncodedOID & obj2) const
+    bool operator== (const EncodedOID & obj2) const
     {
         return _octs == obj2._octs;
     }
@@ -108,7 +108,7 @@ public:
 };
 
 }; //asn1
-}; //eyelinecom
+}; //eyeline
 
 #endif /* __ABSTRACT_SYNTAX_OID_DEFS__ */
 

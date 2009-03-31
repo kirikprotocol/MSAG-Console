@@ -8,7 +8,7 @@
 #include <stdarg.h>
 #include "eyeline/asn1/EncodedOID.hpp"
 
-namespace eyelinecom {
+namespace eyeline {
 namespace asn1 {
 
 struct OCTBuffer {
@@ -45,22 +45,45 @@ struct ASTag {
     ASTag(TagClass tag_class = tagUniversal, uint16_t tag_val = 0)
         : tagClass(tag_class), tagValue(tag_val)
     { }
+
+    bool operator== (const ASTag & cmp_tag) const
+    {
+        return (tagClass == cmp_tag.TagClass) && (tagValue == cmp_tag.tagValue);
+    }
+
+    //Compares tags in accordance with ASN.1 canonical tags order as stated
+    //in X.680 cl.8.6:
+    //  The canonical order for tags is based on the outermost tag of each type
+    //  and is defined as follows:
+    //  a) those elements or alternatives with universal class tags shall appear
+    //    first, followed by those with application class tags, followed by those
+    //    with context-specific tags, followed by those with private class tags;
+    //  b) within each class of tags, the elements or alternatives shall appear
+    //    in ascending order of their tag numbers.
+    bool operator< (const ASTag & cmp_tag) const
+    {
+        if (tagClass == cmp_tag.TagClass)
+            return (tagValue < cmp_tag.tagValue);
+        return (tagClass < cmp_tag.TagClass);
+    }
 };
 
-//basic abstract type tagging
-class ASTypeTags : std::vector<ASTag> {
+//Abstract type complete tagging (all tags goes to encoding in case of
+//EXPLICIT tagging environment).
+class ASTagging : std::vector<ASTag> {
 public:
-    ASTypeTags()
+    ASTagging()    //just a [UNIVERSAL 0]
+        : std::vector<ASTag>(1)
     { }
-    ASTypeTags(const ASTypeTags & use_tags)
-        : std::vector<ASTag>(use_tags)
-    { }
-    ASTypeTags(const ASTag & use_tag) //just one tag
+    ASTagging(const ASTag & use_tag) //just one tag
         : std::vector<ASTag>(1)
     {
         at(0) = use_tag;
     }
-    ASTypeTags(uint16_t num_tags, ASTag use_tag1, ...
+    ASTagging(const ASTagging & use_tags)
+        : std::vector<ASTag>(use_tags)
+    { }
+    ASTagging(uint16_t num_tags, ASTag use_tag1, ...
                                 /* , const ASTag use_tagN*/)
         : std::vector<ASTag>(num_tags)
     {
@@ -71,64 +94,91 @@ public:
             at(i) = va_arg(useTags, ASTag);
         va_end(useTags);
     }
-    ~ASTypeTags()
+    ~ASTagging()
     { }
 
 
-    inline uint16_t numTags(void) const
+    uint16_t numTags(void) const
     {
         return (uint16_t)(size());
     }
      //tag_idx = 0 - outermost tag, in most cases this is just a type tag
-    inline const ASTag & Tag(uint16_t tag_idx = 0) const
+    const ASTag & Tag(uint16_t tag_idx = 0) const
     {
         return tag_idx < numTags() ? at(tag_idx) : 0;
     }
 
+    //Compares taggings in accordance with ASN.1 canonical tags order.
+    bool operator< (const ASTagging & cmp_tags) const
+    {
+        return at(0) < cmp_tags.Tag(0);
+    }
 };
 
-//complex abstract type (CHOICE) tagging
-class ASTypeTagging : std::vector<ASTypeTags> {
+//This class helps to cope with untagged CHOICE types, which potentially may have
+//several tagging options, but only one at a time depending on CHOICE value type
+//assigned.
+//NOTE: tagging options are sorted in accordance with ASN.1 canonical tags order.
+class ASTagOptions : std::set<ASTagging> {
+protected:
+    std::set<ASTagging>::const_iterator current;
+
 public:
-    ASTypeTagging()
-    { }
-    ASTypeTagging(const ASTypeTagging & use_tagging)
-        : std::vector<ASTypeTags>(use_tagging)
-    { }
-    ASTypeTagging(const ASTag & use_tag) //type is tagged by single tag
-        : std::vector<ASTypeTags>(1)
+    typedef std::set<ASTagging>::const_iterator  const_iterator;
+
+    ASTagOptions()
     {
-        at(0) = ASTypeTags(use_tag);
+        current = end();
     }
-    ASTypeTagging(const ASTypeTags & use_tags)
-        : std::vector<ASTypeTags>(1)
+    ASTagOptions(const ASTagOptions & use_opt)
+        : std::set<ASTagging>(use_opt)
     {
-        at(0) = use_tags;
+        current = use_opt.Selected() ? find(use_opt.Selected()->Tag(0)) : end();
     }
-    ASTypeTagging(uint16_t num_tags, ASTypeTags use_tags1, ...
-                                    /* , ASTypeTags use_tagsN*/)
-        : std::vector<ASTypeTags>(num_tags)
+    //NOTE: sets selected option!
+    ASTagOptions(const ASTagging & use_tags)
     {
-        at(0) = use_tags1;
-        va_list  useTags;
-        va_start(useTags, use_tags1);
-        for (uint16_t i = 1; i < num_tags; ++i) {
-            at(i) = va_arg(useTags, ASTypeTags);
-        }
-        va_end(useTags);
+        addOption(use_tags, true);
     }
-    ~ASTypeTagging()
+    ~ASTagOptions()
     { }
 
-    inline uint16_t numOptions(void) const { return (uint16_t)size(); }
-    inline uint16_t numTags(uint16_t option_idx = 0) const
+    uint16_t numOptions(void) const { return (uint16_t)size(); }
+
+    const_iterator first(void) const { return begin(); }
+    const_iterator last(void) const  { return end(); }
+
+    //Searches for tagging option with iutermost tag equal to given one
+    const ASTagging * getOption(const ASTag & out_tag) const
     {
-        return option_idx < numOptions() ? at(option_idx).numTags(option_idx) : 0;
+        const_iterator it = find(ASTagging(out_tag));
+        return (it == end()) ? 0 : &*it;
+        
     }
-    //0:0 - outermost tag of first tagging option, in most cases this is just a type tag
-    inline const ASTag & Tag(uint16_t tag_idx = 0, uint16_t option_idx = 0) const
+    //Returns selected tagging option, if latter is set
+    const ASTagging * Selected(void) const
     {
-        return option_idx < numOptions() ? at(option_idx).Tag(tag_idx) : ASTag();
+        return (current == end()) ? 0 : &(*current);
+    }
+    //Returns outermost tag of selected tagging option, if latter is set
+    const ASTag * Tag(void) const
+    {
+        return Selected() ? Selected()->Tag(0) : 0;
+    }
+
+    //Adds tagging option, optionally setting it as selected one.
+    bool addOption(const ASTagging & use_tags, bool do_select = false)
+    {
+        std::pair<std::set<ASTagging>::iterator, bool> res = insert(use_tags);
+        if (res->second && do_select)
+            current = res->first;
+        return res->second;
+    }
+    //Sets option with outermost tag equal to given one as selected.
+    bool selectOption(const ASTag & out_tag)
+    {
+        current = find(ASTagging(out_tag));
+        return  current != end();
     }
 };
 
@@ -155,7 +205,7 @@ public:
     };
 
     enum ENCStatus {
-        encBadVal = -2, encError = -1, encOk = 0
+        encBadVal = -2, encError = -1, encOk = 0, encMoreMem = 1
     };
     enum DECStatus {
         decBadVal = -2, decError = -1, decOk = 0, decMoreInput = 1
@@ -163,13 +213,13 @@ public:
 
     struct ENCResult {
         ENCStatus   rval;   //encoding status
-        uint16_t    nbytes; //number of bytes encoded
+        uint32_t    nbytes; //number of bytes encoded
 
         EnCResult() : rval(encOk), nbytes(0)
     };
     struct DECResult {
         DECStatus   rval;   //decoding status
-        uint16_t    nbytes; //number of bytes succsefully decoded
+        uint32_t    nbytes; //number of bytes succsefully decoded
 
         DECResult() : rval(decOk), nbytes(0)
     };
@@ -178,49 +228,50 @@ protected:
     Presentation        valType;
     const BITBuffer *   valEnc;
     EncodingRule        valRule;
-    ASTypeTagging       tags;
+    ASTagOptions        tags;
 
 public:
     ASTypeAC()
         : valType(valNone), valEnc(0), valRule(undefinedER)
     { }
-    ASTypeAC(const ASTypeTagging & use_tags)
-        : valType(valNone), valEnc(0), valRule(undefinedER)
-        , tags(use_tags)
-    { }
     ASTypeAC(ASTag::TagClass tag_class,  uint16_t tag_val)
         : valType(valNone), valEnc(0), valRule(undefinedER)
-        , tags(ASTypeTagging(ASTag(tag_class, tag_val)))
+        , tags(ASTagging(ASTag(tag_class, tag_val)))
+    { }
+    ASTypeAC(const ASTagging & use_tags)
+        : valType(valNone), valEnc(0), valRule(undefinedER)
+        , tags(use_tags)
     { }
     virtual ~ASTypeAC()
     { }
 
+    ASTagOptions & asTags(void) { return tags; }
+
     //type is tagged by single tag
-    inline void setTagging(ASTag::TagClass tag_class,  uint16_t tag_val)
+    void setTagging(ASTag::TagClass tag_class,  uint16_t tag_val)
     {
-        tags = ASTypeTagging(ASTag(tag_class, tag_val));
+        tags.selectOption(ASTag(tag_class, tag_val));
     }
-    inline void setTagging(const ASTypeTagging & use_tags)
+    void setTagging(const ASTagOptions & use_tags)
     {
-        tags = use_tags;
+        tags.selectOption(use_tags);
     }
-    inline void setEncoding(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+
+    void setEncoding(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
     {
         valType = valEncoded; valBuf = &use_buf; valRule = use_rule;
     }
 
-    //0:0 - outermost tag of first tagging option, in most cases this is just a type tag
-    inline const ASTag & Tag(uint16_t tag_idx = 0, uint16_t option_idx = 0) const
-    {
-        return tags.Tag(tag_idx, option_idx);
-    }
-    inline const ASTypeTagging & Tagging(void) const { return tags; }
-
-    inline Presentation getPresentation(void) const { return valType; }
-
-    inline const BITBuffer * getEncoding(void) const { return valBuf; }
-
-    inline EncodingRule getRule(void) const { return valRule; }
+    //Returns type tag (outermost tag  of selected tagging option)
+    const ASTag * Tag(void) const { return tags.Tag(); }
+    //Returns type tagging (selected tagging option)
+    const ASTagOptions * Tagging(void) const { return tags.Selected(); }
+    //
+    Presentation getPresentation(void) const { return valType; }
+    //
+    const BITBuffer * getEncoding(void) const { return valBuf; }
+    //
+    EncodingRule getRule(void) const { return valRule; }
 
     // ---------------------------------
     // ASTypeAC interface methods
@@ -235,10 +286,9 @@ public:
     //REQ: presentation == valEncoded  (setEncoding was called)
     //OUT: type presentation = valMixed | valDecoded, 
     //     deferred components presentation = valEncoded
-    //NOTE: if num_tags == 0, all components decoding is deferred 
+    //NOTE: all components decoding is deferred 
     //in case of decMoreInput, stores decoding context 
-    virtual DECResult Demux(uint16_t num_tags = 0,
-                            const ASTypeTagging (* defer_tag)[] = NULL) /*throw ASN1CodecError*/ = 0;
+    virtual DECResult Demux(void) /*throw ASN1CodecError*/ = 0;
 
 
     // ---------------------------------
@@ -246,25 +296,24 @@ public:
     // ---------------------------------
     //REQ: presentation == valNone, if decMoreInput stores decoding context,
     //type presentation = valDecoded, components (if exist) presentation = valDecoded
-    inline DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
         /*throw ASN1CodecError*/
     {
         setEncoding(use_buf, use_rule);
-        return Decode(use_flags);
+        return Decode(/*use_flags*/);
     }
     //REQ: presentation == valNone, if decMoreInput stores decoding context
     //type presentation = valDecoded, deferred components presentation = valEncoded
     //NOTE: if num_tags == 0 all components are deferred 
-    inline DECResult Demux(const BITBuffer & buf, EncodingRule use_rule = ruleDER,
-                    uint16_t num_tags = 0, const ASTypeTagging (* defer_tag)[] = NULL)
+    DECResult Demux(const BITBuffer & buf, EncodingRule use_rule = ruleDER)
         /*throw ASN1CodecError*/
     {
         setEncoding(use_buf, use_rule);
-        return Decode(use_flags, num_tags, defer_tag);
+        return Decode(/*use_flags, num_tags, defer_tag*/);
     }
 };
 
-
+//Abstract Type wirh unique OID assigned
 class AbstractSyntax : public ASTypeAC {
 public
     const EncodedOID &  _asId; //associated ABSTRACT-SYNTAX.&id
@@ -275,14 +324,14 @@ public
     AbstractSyntax(const EncodedOID & use_Id, ASTag::TagClass tag_class,  uint16_t tag_val)
         : _asId(use_asId), ASTypeAC(tag_class, tag_val)
     { }
-    AbstractSyntax(const EncodedOID & use_Id, const ASTypeTagging & use_tags)
+    AbstractSyntax(const EncodedOID & use_Id, const ASTagOptions & use_tags)
         : _asId(use_asId), ASTypeAC(use_tags)
     { }
 
 };
 
 }; //asn1
-}; //eyelinecom
+}; //eyeline
 
 #endif /* __ABSTRACT_SYNTAX_TYPE_DEFS__ */
 
