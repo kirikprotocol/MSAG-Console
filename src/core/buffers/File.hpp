@@ -515,8 +515,13 @@ public:
     Check();
     if(flags&FLG_WRBUF)Flush();
     if((flags&FLG_BUFFERED) && (flags&FLG_RDBUF)!=FLG_RDBUF && sz<(size_t)bufferSize)
-    {
-      bufferUsed=read(fd,buffer,bufferSize);
+    { 
+      ssize_t rd=read(fd,buffer,bufferSize);
+      if(rd==-1)
+      {
+        throw FileException(FileException::errReadFailed,filename.c_str());
+      }
+      bufferUsed=rd;
       if(eventHandler)eventHandler->onRead(buffer,bufferSize);
       bufferPosition=0;
       flags|=FLG_RDBUF;
@@ -538,7 +543,12 @@ public:
       buf=tmp;
       if(sz<bufferSize)
       {
-        bufferUsed=read(fd,buffer,bufferSize);
+        ssize_t rd=read(fd,buffer,bufferSize);
+        if(rd==-1)
+        {
+          throw FileException(FileException::errReadFailed,filename.c_str());
+        }
+        bufferUsed=rd;
         if(bufferUsed<sz)
           throw FileException(FileException::errEndOfFile,filename.c_str());
         if(eventHandler)eventHandler->onRead(buffer,bufferUsed);
