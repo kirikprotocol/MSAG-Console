@@ -60,6 +60,9 @@
     <param name="allowCallBarred" type="bool">false</param>
     <param name="ussdV1Enabled" type="bool">false</param>
     <param name="ussdV1UseOrigEntityNumber" type="bool">false</param>
+    <param name="localInstancies" type="string">1</param>                                                                         
+    <param name="remoteInstancies" type="string">1,2</param>                                                                      
+    <param name="cpMgmtAddress" type="string">localhost:6669</param>
   </section>
   
   <section name="trafficControl">
