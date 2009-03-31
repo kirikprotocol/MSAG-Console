@@ -66,7 +66,7 @@ public:
         return intParams.Get(paramName);
       }
       else
-        throw HashInvalidKeyException();
+        throw HashInvalidKeyException(paramName);
     }
 
     /**
@@ -86,7 +86,7 @@ public:
         return strParams.Get(paramName);
       }
       else
-        throw HashInvalidKeyException();
+        throw HashInvalidKeyException(paramName);
     }
 
     /**
@@ -106,7 +106,7 @@ public:
         return boolParams.Get(paramName);
       }
       else
-        throw HashInvalidKeyException();
+        throw HashInvalidKeyException(paramName);
     }
 
     void setInt(const char * const paramName, int32_t value)
