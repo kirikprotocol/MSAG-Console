@@ -157,7 +157,7 @@
         <!-- CSV list of names of SS7 Unit(s) configuration sections  -->
       </section>
 
-    </section> <!-- SS7_HD.ApplicationInstances -->
+    </section> <!-- SS7_HD.Layouts -->
 
     <section name="SS7Units"> <!-- configuration of known SS7 Units  -->
       <section name="TCAP_BE_1"> <!-- single instance TCAP unit  -->
@@ -165,8 +165,7 @@
         <!-- id of interacted communication unit, see portss7.h -->
         <param name="instancesList" type="string">1</param>
         <!-- optional: CSV list of instanceIds of interacted communication
-        unit, [1..255], default: "1" -->
-        </section>
+        unit, [1..255], default: "1" --> 
       </section>
 
       <section name="TCAP_BE_2"> <!-- single instance TCAP unit -->
@@ -175,7 +174,6 @@
         <param name="instancesList" type="string">2</param>
         <!-- optional: CSV list of instanceIds of interacted communication
         unit, [1..255], default: "1" -->
-        </section>
       </section>
 
       <section name="TCAP_BE_HD2"> <!-- HD variant of TCAP unit
@@ -185,7 +183,6 @@
         <param name="instancesList" type="string">1, 2</param>
         <!-- optional: CSV list of instanceIds of interacted communication
         unit, [1..255], default: "1" -->
-        </section>
       </section>
 
       <section name="SCCP_BE_1"> <!-- single instance SCCP unit  -->
