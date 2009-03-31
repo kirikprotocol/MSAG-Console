@@ -305,6 +305,7 @@ public:
     //REQ: presentation == valNone, if decMoreInput stores decoding context
     //type presentation = valDecoded, deferred components presentation = valEncoded
     //NOTE: if num_tags == 0 all components are deferred 
+    // TODO: rename Demux to deferredDecode!!!
     DECResult Demux(const BITBuffer & buf, EncodingRule use_rule = ruleDER)
         /*throw ASN1CodecError*/
     {

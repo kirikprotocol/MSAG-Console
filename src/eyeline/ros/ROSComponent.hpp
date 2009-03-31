@@ -19,6 +19,7 @@ using eyeline::asn1::ASTypeAC;
 using eyeline::asn1::BITBuffer;
 
 //Base class for component of ROS OPERATION
+// TODO: rename ROSComponentAC to ROSComponentPrimitive
 class ROSComponentAC : public ASTypeAC {
 private:
     uint8_t     _invId;  //related Invocation id
