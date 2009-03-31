@@ -29,7 +29,7 @@ Mutex mapMutex;
 #ifdef EIN_HD
 #define CONNINSTARG(arg) ,arg
 #else
-#define CONNINSTARG
+#define CONNINSTARG(arg)
 #endif
 
 //#define SMSC_FORWARD_RESPONSE 0x001
@@ -241,7 +241,7 @@ void MapIoTask::init(unsigned timeout)
   } 
 #endif  
 //  __pingPongWaitCounter = 0;
-  err = EINSS7CpMsgInitiate( MAXENTRIES INSTARG(MapDialogContainer::localInst[0]), FALSE );
+  err = EINSS7CpMsgInitiate( MAXENTRIES, MapDialogContainer::localInst[0], FALSE );
   /*
   if( MapDialogContainer::GetNodesCount() > 1 ) {
     if( MapDialogContainer::GetNodeNumber() == 2 ) MY_USER_ID = USER06_ID;
@@ -813,14 +813,16 @@ int MAPSTATS_recv[3] = {0,};
 int MAPSTATS_dialogs[MAPSTATS_COUNT]={0,};
 char *MAPSTATS_types[] = {
   "GSMRECV",
-  "NEWDIALOG_IN",
-  "DISPOSEDIALOG_IN",
   "NEWDIALOG_INSRI",
   "DISPOSEDIALOG_INSRI",
-  "NEWDIALOG_USSD",
-  "DISPOSEDIALOG_USSD",
+  "NEWDIALOG_IN",
+  "DISPOSEDIALOG_IN",
+  "NEWDIALOG_OUTSRI",
+  "DISPOSEDIALOG_OUTSRI",
   "NEWDIALOG_OUT",
   "DISPOSEDIALOG_OUT",
+  "NEWDIALOG_USSD",
+  "DISPOSEDIALOG_USSD",
   "NEWDIALOG_NIUSSD",
   "DISPOSEDIALOG_NIUSSD"
 };
@@ -851,23 +853,28 @@ void MAPSTATS_DumpDialogLC(MapDialog* dialog)
 static void MAPSTATS_Flush2(int idx)
 {
   smsc::logger::Logger* log = MAPSTATS_GetLoggerSec();
-  smsc_log_info(log, "open %d/%d/%d/%d/%d, closed %d/%d/%d/%d/%d, dlg %d/%d/%d/%d/%d, rcv %d",
+  smsc_log_info(log, "open %d/%d:%d/%d:%d:%d, closed %d/%d:%d/%d:%d:%d, dlg %d/%d:%d/%d:%d:%d, rcv %d",
             MAPSTATS_open[0][idx],
             MAPSTATS_open[1][idx],
             MAPSTATS_open[2][idx],
             MAPSTATS_open[3][idx],
             MAPSTATS_open[4][idx],
+            MAPSTATS_open[5][idx],
 
             MAPSTATS_close[0][idx],
             MAPSTATS_close[1][idx],
             MAPSTATS_close[2][idx],
             MAPSTATS_close[3][idx],
             MAPSTATS_close[4][idx],
+            MAPSTATS_close[5][idx],
+                
             MAPSTATS_dialogs[0],
             MAPSTATS_dialogs[1],
             MAPSTATS_dialogs[2],
             MAPSTATS_dialogs[3],
             MAPSTATS_dialogs[4],
+            MAPSTATS_dialogs[5],
+                
             MAPSTATS_recv[idx]
            );
 }
@@ -940,13 +947,14 @@ void MAPSTATS_Update_(MAPSTATS stats)
   if( stats != MAPSTATS_GSMRECV )
   {
     smsc_log_debug(MAPSTATS_GetLoggerUpdate(),
-                  "updated %s dlg %d/%d/%d/%d/%d",
+                  "updated %s dlg %d/%d:%d/%d:%d:%d",
                    MAPSTATS_types[stats],
                    MAPSTATS_dialogs[0],
                    MAPSTATS_dialogs[1],
                    MAPSTATS_dialogs[2],
                    MAPSTATS_dialogs[3],
-                   MAPSTATS_dialogs[4]
+                   MAPSTATS_dialogs[4],
+                   MAPSTATS_dialogs[5]
                   );
   }
 //  if( MAPSTATS_dialogs_in + MAPSTATS_dialogs_out - MapDialogContainer::getInstance()->getDialogCount() > 1 ) {

@@ -188,7 +188,7 @@ void warnMapReq(USHORT_T result, const char* func) {
   }
 }
 
-void AbortMapDialog(unsigned dialogid,unsigned ssn INSTANCEIDARGDEF(rinst))
+void AbortMapDialog(unsigned dialogid,unsigned ssn, EINSS7INSTANCE_T rinst)
 {
   if ( dialogid == 0 ) return;
   __map_trace2__("%s: dlg 0x%x",__func__,dialogid);
@@ -394,7 +394,7 @@ void SetVersion(ET96MAP_APP_CNTX_T& ac,unsigned version)
   }
 }
 
-static void CloseMapDialog(unsigned dialogid,unsigned dialog_ssn INSTANCEIDARGDEF(rinst))
+static void CloseMapDialog(unsigned dialogid,unsigned dialog_ssn,int rinst)
 {
   if ( dialogid == 0 ) return;
   warnMapReq( Et96MapCloseReq (dialog_ssn INSTARG(rinst),dialogid,ET96MAP_NORMAL_RELEASE,0,0,0), __func__ );
@@ -607,10 +607,10 @@ static void DropMapDialog(MapDialog* dlg)
 }
 
 
-static unsigned RemapDialog(MapDialog* dialog,unsigned ssn){
+static unsigned RemapDialog(MapDialog* dialog,unsigned ssn,ReAssignDialogType dlgType){
   dialog->id_opened = false;
   dialog->invokeId = 0;
-  return MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,dialog->ssn,ssn,dialog->instanceId);
+  return MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialog->dialogid_map,dialog->ssn,ssn,dlgType);
 }
 
 /*static void SendRescheduleToSmsc(unsigned dialogid)
@@ -730,16 +730,20 @@ static void SendRInfo(MapDialog* dialog)
 
   if ( dialog->version != 2 && dialog->version != 1 ) dialog->version = 2;
 
-  if ( dialog->version == 2 ) {
+  if ( dialog->version == 2 )
+  {
     checkMapReq( Et96MapV2SendRInfoForSmReq(dialog->ssn INSTDLGARG(dialog), dialog_id, 0, &dialog->m_msAddr,
       hiPrior ? ET96MAP_ATTEMPT_DELIVERY : ET96MAP_DO_NOT_ATTEMPT_DELIVERY,
       &dialog->m_scAddr ), __func__);
-  }else if ( dialog->version == 1 ) {
+  }else if ( dialog->version == 1 )
+  {
     checkMapReq( Et96MapV1SendRInfoForSmReq(dialog->ssn INSTDLGARG(dialog), dialog_id, 0, &dialog->m_msAddr,
       hiPrior ? ET96MAP_ATTEMPT_DELIVERY : ET96MAP_DO_NOT_ATTEMPT_DELIVERY,
       &dialog->m_scAddr, 0, 0), __func__);
-  }else throw runtime_error(
-    FormatText("SendRInfo: incorrect dialog version %d",dialog->version));
+  }else
+  {
+    throw runtime_error(FormatText("SendRInfo: incorrect dialog version %d",dialog->version));
+  }
   checkMapReq( Et96MapDelimiterReq(dialog->ssn INSTDLGARG(dialog), dialog_id, 0, 0 ), __func__);
 }
 
@@ -1208,6 +1212,7 @@ static void SendSubmitCommand(MapDialog* dialog)
   }
   __map_trace2__("%s: dlg 0x%x Submit %s to SMSC: IMSI = %s, MSC = %s, %s",__func__,dialog->dialogid_map,dialog->isUSSD?"USSD":"SMS",dialog->s_imsi.c_str(),dialog->s_msc.c_str(),RouteToString(dialog).c_str());
 
+  /*
   try{
     if(!dialog->noSri)
     {
@@ -1218,6 +1223,7 @@ static void SendSubmitCommand(MapDialog* dialog)
   {
     __map_warn2__("<exception>: %s",e.what());
   }
+   */
 
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
   uint32_t dialogid_smsc=(dialog->instanceId<<24)|(((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
@@ -1328,10 +1334,11 @@ static bool SendSms(MapDialog* dialog)
   if ( mscSt == mscLocked)
     throw MAPDIALOG_TEMP_ERROR("MSC BLOCKED",Status::BLOCKEDMSC);
 
-  if(mscSt==mscUnlockedOnce)
+  /*if(mscSt==mscUnlockedOnce)
   {
     dialog->needReportMsc=true;
   }
+   */
 
   bool mms = FALSE;
   if( dialog->version > 1 )
@@ -2079,7 +2086,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           dialog_ssn = SSN;
           dialog.assign(dialog2->AddRef());
           dialogid_map = dialog->dialogid_map;
-          dialogid_map = MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialog->dialogid_map,dialog->ssn,SSN);
+          dialogid_map = MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialog->dialogid_map,dialog->ssn,SSN,radtOut);
           __require__(dialog->ssn == dialog_ssn);
           dialog->id_opened = false;
           dialog->dialogid_smsc = dialogid_smsc;
@@ -2368,7 +2375,7 @@ USHORT_T Et96MapOpenConf (
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn,rinst));
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn,INSTARG0(rinst)));
     if ( dialog.isnull() ) {
       throw MAPDIALOG_HEREISNO_ID( FormatText("MAP::dialog 0x%x is not present",dialogid_map));
     }
@@ -2417,7 +2424,7 @@ USHORT_T Et96MapOpenConf (
           __map_trace2__("%s: context unsupported , version %d",__func__,dialog->version);
           if ( dialog->version != 1 ){
             --dialog->version;
-            dialogid_map = RemapDialog(dialog.get(),localSsn);
+            dialogid_map = RemapDialog(dialog.get(),localSsn,dialog->state==MAPST_RInfoFallBack || dialog->state==MAPST_ImsiWaitOpenConf?radtOutSRI:radtOut);
             switch ( dialog->state ) {
             case MAPST_RInfoFallBack:
             case MAPST_ImsiWaitOpenConf:
@@ -2703,17 +2710,20 @@ USHORT_T Et96MapCloseInd(
         dialog->state = MAPST_CLOSED;
         DropMapDialog(dialog.get());
       }else{
-        if ( !dialog->routeErr ) {
-          if( dialog->sms.get()->hasIntProperty( Tag::SMPP_USSD_SERVICE_OP ) ) {
-            MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialogueId,dialog->ssn,USSD_SSN); // This is for network initiated sessions
+        if ( !dialog->routeErr )
+        {
+          if( dialog->sms.get()->hasIntProperty( Tag::SMPP_USSD_SERVICE_OP ) )
+          {
+            MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialogueId,dialog->ssn,USSD_SSN,radtNIUSSD); // This is for network initiated sessions
             int serviceOp = dialog->sms.get()->getIntProperty( Tag::SMPP_USSD_SERVICE_OP );
             if( serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ ) {
               DoUSSDRequestOrNotifyReq(dialog.get());
             } else {
               throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::USSD_SERVICE_OP=%d not allowed to create dialog",serviceOp),Status::INVOPTPARAMVAL);
             }
-          } else {
-            MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialogueId,dialog->ssn,localSsn);
+          } else
+          {
+            MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialogueId,dialog->ssn,localSsn,radtOut);
             dialog->id_opened = false;
             dialogueId = dialog->dialogid_map;
             dialogid_map = dialog->dialogid_map;
@@ -2778,7 +2788,7 @@ USHORT_T Et96MapUAbortInd (
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn,(rinst)));
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn,INSTARG0(rinst)));
     if ( dialog.isnull() )
       throw runtime_error(
         FormatText("MAP::%s MAP.did:{0x%x} is not present",__func__,dialogueId));
@@ -3053,20 +3063,21 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
 
       if ( provErrCode_p && *provErrCode_p == ET96MAP_NO_RESPONSE_FROM_PEER )
       {
-        if(!dialog->noSri)
+        dialog->noRespFromPeer=true;
+        /*if(!dialog->noSri)
         {
           MscManager::getMscStatus().report(dialog->s_msc.c_str(),false);
-        }
+        }*/
       }else
       {
-        if(dialog->needReportMsc)
+        /*if(dialog->needReportMsc)
         {
           if(!dialog->noSri)
           {
             MscManager::getMscStatus().report(dialog->s_msc.c_str(),true);
           }
           dialog->needReportMsc=false;
-        }
+        }*/
       }
       if ( errorForwardSMmt_sp )
       {
@@ -3745,7 +3756,8 @@ static void ResponseAlertSC(MapDialog* dialog)
 CALLBACK_DECL
 USHORT_T Et96MapVxAlertSCInd_Impl(
   ET96MAP_LOCAL_SSN_T localSsn,
-  ET96MAP_DIALOGUE_ID_T dialogueId INSTANCEIDARGDEF(rinst),
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  EINSS7INSTANCE_T rinst,
   ET96MAP_INVOKE_ID_T invokeId,
   ET96MAP_ADDRESS_T *msisdnAlert_sp,
   ET96MAP_ADDRESS_T *sCA_sp,
@@ -3754,7 +3766,7 @@ USHORT_T Et96MapVxAlertSCInd_Impl(
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn,INSTARG0(rinst)));
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn,rinst));
     if ( dialog.isnull() ) {
       unsigned _di = dialogid_map;
       dialogid_map = 0;
@@ -3776,7 +3788,7 @@ USHORT_T Et96MapVxAlertSCInd_Impl(
       throw MAPDIALOG_BAD_STATE(
         FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__func__,dialog->state,dialogid_map,dialogid_smsc));
     }
-  }MAP_CATCH(dialogid_map,dialogid_smsc,localSsn,INSTARG0(rinst));
+  }MAP_CATCH(dialogid_map,dialogid_smsc,localSsn,rinst);
   return ET96MAP_E_OK;
 }
 
@@ -3890,7 +3902,7 @@ static bool NeedNotifyHLR(MapDialog* dialog)
 }
 static void NotifyHLR(MapDialog* dialog)
 {
-  MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialog->dialogid_map,dialog->ssn,SSN);
+  MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialog->dialogid_map,dialog->ssn,SSN,radtOutSRI);
   dialog->id_opened = false;
   dialog->hlrWasNotified = true;
   ET96MAP_APP_CNTX_T appContext;
