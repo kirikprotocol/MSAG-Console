@@ -440,17 +440,8 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout,boo
             if((*p)->proxy)
             {
               cnt=(*p)->proxy->getCommandEx(frames,prio,*p);
-            }else
-            {
-              prio=0;
             }
           }
-          /*
-          if(prio>0)
-          {
-            info2(log,"taken from %s:%d, inqueue:%d",(*p)->info.systemId.c_str(),prio,cnt);
-          }
-          */
           count+=cnt;
         }catch(exception& e)
         {
