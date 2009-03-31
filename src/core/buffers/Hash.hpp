@@ -17,7 +17,8 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <exception>
+#include <string>
+#include <stdexcept>
 
 namespace smsc{
 namespace core{
@@ -27,12 +28,16 @@ typedef char hashchar;
 typedef hashchar *phashstr;
 typedef const hashchar* pchashstr;
 
-class HashInvalidKeyException: public std::exception
+class HashInvalidKeyException: public std::runtime_error
 {
 public:
-  const char* what()const throw()
+  HashInvalidKeyException():runtime_error("HashInvalidKeyException")
   {
-    return "HashInvalidKeyException";
+    
+  }
+  HashInvalidKeyException(const char* key):runtime_error(std::string("HashInvalidKeyException:")+key)
+  {
+    
   }
 };
 
@@ -370,14 +375,14 @@ public:
   const T& Get(pchashstr key)const
   {
     Link* link=FindLink(key);
-    if(!link)throw HashInvalidKeyException();
+    if(!link)throw HashInvalidKeyException(key);
     return link->_keyval._value;
   }
 
   T& Get(pchashstr key)
   {
     Link* link=FindLink(key);
-    if(!link)throw HashInvalidKeyException();
+    if(!link)throw HashInvalidKeyException(key);
     return link->_keyval._value;
   }
 
@@ -416,7 +421,7 @@ public:
       return link->_keyval._value;
     }else
     {
-      throw HashInvalidKeyException();
+      throw HashInvalidKeyException(key);
     }
   }
   int Insert(pchashstr key,const T& value)
