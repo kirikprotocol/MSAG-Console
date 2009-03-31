@@ -132,7 +132,7 @@ void Smsc::mainLoop(int idx)
     debug2(log,"freeBandwidth=%d, schedCounter=%d",freeBandwidthScaled,schedCnt);
 
     int perSlot=smsWeight*maxSmsPerSecond/(1000/getTotalCounterRes());
-    int fperSlot=(smsWeight*maxSmsPerSecond-freeBandwidthScaled)/(2*1000/getTotalCounterRes());
+    int fperSlot=freeBandwidthScaled/(2*1000/getTotalCounterRes());
 
     //perSlot+=perSlot/4;
 
