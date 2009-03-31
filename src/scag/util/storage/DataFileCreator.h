@@ -150,18 +150,22 @@ public:
   
       int64_t startBlock = filesCount_ * fileSize_;
       int64_t endBlock = (filesCount_ + 1) * fileSize_;
-      int blocksCount = 100;
-      int writeCount = fileSize_ / blocksCount;
+      int blocksCount = 10;
+      int lastWriteSize = fileSize_ % blocksCount;
+      int writeCount = lastWriteSize > 0 ? fileSize_ / blocksCount : fileSize_ / blocksCount - 1;
+
       emptyBlock = new char[blockSize_ * blocksCount];
       memset(emptyBlock, 0x00, blockSize_ * blocksCount);
       int64_t index = startBlock + 1;
-      for (int i = 0; i < writeCount - 1; ++i) {
+      for (int i = 0; i < writeCount; ++i) {
         index = prepareBlock(emptyBlock, blocksCount, index, 0);
         f->Write(emptyBlock, blockSize_ * blocksCount);
         if (sleepTime > 0) {
+          MutexGuard mg(sleepMonitor_);
           sleepMonitor_.wait(sleepTime);
         }
       }
+      blocksCount = lastWriteSize > 0 ? lastWriteSize : blocksCount;
       index = prepareBlock(emptyBlock, blocksCount, index, 1);
       f->Write(emptyBlock, blockSize_ * blocksCount);
 /*
