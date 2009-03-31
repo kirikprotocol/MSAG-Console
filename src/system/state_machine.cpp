@@ -2392,6 +2392,10 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       src_proxy->getSystemId(),
       sms->getDestinationSmeId()
     );
+    if(!isTransaction && !isDatagram)
+    {
+      smsc->registerStatisticalEvent(StatEvents::etDeliverErr,sms);
+    }
     sendNotifyReport(*sms,t.msgId,"destination unavailable");
     return ENROUTE_STATE;
   }
@@ -2403,38 +2407,42 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   tg.uniqueId=uniqueId;
 
   try{
-  Task task(uniqueId,dialogId2,isDatagram || isTransaction?new SMS(*sms):0);
-  __trace2__("SUBMIT: task.sms=%p",task.sms);
-  task.messageId=t.msgId;
-  task.diverted=diverted;
-  task.inDlgId=resp->cntx.inDlgId;
-  if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
-  {
-    sms->setLastResult(Status::SYSERR);
-    try{
-      //time_t now=time(NULL);
-      Descriptor d;
-      __trace__("SUBMIT_SM: change state to enroute");
-      changeSmsStateToEnroute(*sms,t.msgId,d,Status::SYSERR,rescheduleSms(*sms));
-
-    }catch(...)
+    Task task(uniqueId,dialogId2,isDatagram || isTransaction?new SMS(*sms):0);
+    __trace2__("SUBMIT: task.sms=%p",task.sms);
+    task.messageId=t.msgId;
+    task.diverted=diverted;
+    task.inDlgId=resp->cntx.inDlgId;
+    if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
     {
-      __warning__("SUBMIT_SM: failed to change state to enroute");
+      sms->setLastResult(Status::SYSERR);
+      try{
+        //time_t now=time(NULL);
+        Descriptor d;
+        __trace__("SUBMIT_SM: change state to enroute");
+        changeSmsStateToEnroute(*sms,t.msgId,d,Status::SYSERR,rescheduleSms(*sms));
+        
+      }catch(...)
+      {
+        __warning__("SUBMIT_SM: failed to change state to enroute");
+      }
+      
+      warn2(smsLog, "SBMDLV: failed to create task, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+            dialogId2,
+            t.msgId,dialogId,
+            sms->getOriginatingAddress().toString().c_str(),
+            sms->getDestinationAddress().toString().c_str(),
+            src_proxy->getSystemId(),
+            sms->getDestinationSmeId()
+            );
+      
+      if(!isTransaction && !isDatagram)
+      {
+        smsc->registerStatisticalEvent(StatEvents::etDeliverErr,sms);
+      }
+      sendNotifyReport(*sms,t.msgId,"system failure");
+      
+      return ENROUTE_STATE;
     }
-
-    warn2(smsLog, "SBMDLV: failed to create task, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
-      dialogId2,
-      t.msgId,dialogId,
-      sms->getOriginatingAddress().toString().c_str(),
-      sms->getDestinationAddress().toString().c_str(),
-      src_proxy->getSystemId(),
-      sms->getDestinationSmeId()
-    );
-
-    sendNotifyReport(*sms,t.msgId,"system failure");
-
-    return ENROUTE_STATE;
-  }
   }catch(...)
   {
     sms->setLastResult(Status::SYSERR);
@@ -2456,6 +2464,10 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       src_proxy->getSystemId(),
       sms->getDestinationSmeId()
     );
+    if(!isTransaction && !isDatagram)
+    {
+      smsc->registerStatisticalEvent(StatEvents::etDeliverErr,sms);
+    }
     sendNotifyReport(*sms,t.msgId,"system failure");
     return ENROUTE_STATE;
   }
@@ -2612,6 +2624,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   }
   if(!deliveryOk)
   {
+    tg.active=true;
     warn2(smsLog, "SBMDLV: failed to put delivery command, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s - %s",
       dialogId2,
       t.msgId,dialogId,
@@ -2640,6 +2653,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
 
     if(!isDatagram && !isTransaction)
     {
+      smsc->registerStatisticalEvent(StatEvents::etDeliverErr,sms);
       try{
         Descriptor d;
         if(Status::isErrorPermanent(err))
@@ -2782,6 +2796,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     smsc_log_warn(smsLog, "Attempt to forward incomplete concatenated message %lld",t.msgId);
     try{
       Descriptor d;
+      sms.setLastResult(Status::SYSERR);
       smsc->getScheduler()->InvalidSms(t.msgId);
       store->changeSmsStateToUndeliverable
       (
@@ -2806,6 +2821,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
   {
     smsc_log_warn(smsLog, "FWD: sms msgId=%lld is not in enroute (%d)",t.msgId,sms.getState());
     smsc->getScheduler()->InvalidSms(t.msgId);
+    sms.setLastResult(Status::SYSERR);
     try{
       smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
     }catch(std::exception& e)
