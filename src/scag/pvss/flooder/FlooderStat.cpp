@@ -168,14 +168,14 @@ void FlooderStat::waitUntilProcessed()
 }
 
 
-void FlooderStat::init() /* throw (exceptions::IOException) */ 
+void FlooderStat::init( unsigned skip ) /* throw (exceptions::IOException) */ 
 {
     const std::vector< std::string >& patterns = config_.getPropertyPatterns();
     if ( patterns.size() <= 0 ) throw exceptions::IOException("too few property patterns configured");
 
     smsc_log_info(log_,"shuffling %u addresses", unsigned(config_.getAddressesCount()));
     // FIXME: take params from config
-    generator_.randomizeProfileKeys( config_.getAddressFormat().c_str(), config_.getAddressesCount());
+    generator_.randomizeProfileKeys( config_.getAddressFormat().c_str(), config_.getAddressesCount(), skip );
     for ( std::vector< std::string >::const_iterator i = patterns.begin();
           i != patterns.end(); ++i ) {
         std::auto_ptr<Property> p( new Property );

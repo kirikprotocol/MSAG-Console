@@ -57,13 +57,11 @@ RequestGenerator::~RequestGenerator() {
 
 
 void RequestGenerator::randomizeProfileKeys( const std::string& addressFormat,
-                                             unsigned abonents )
+                                             unsigned abonents,
+                                             unsigned skip )
 {
     abonents_ = abonents;
     addressFormat_ = addressFormat;
-
-    // randomizing the seed
-    Drndm::getRnd().setSeed(uint64_t(time(0)));
 
     delete profileKeys_;
     profileKeys_ = 0;
@@ -76,6 +74,11 @@ void RequestGenerator::randomizeProfileKeys( const std::string& addressFormat,
         profileKeys_[i] = i;
     }
     std::random_shuffle( profileKeys_, profileKeys_+abonents, ::myrand );
+    if ( skip >= abonents_ ) {
+        // strange skip, dont use it
+        return;
+    }
+    abonentIdx_ = skip;
 }
 
 

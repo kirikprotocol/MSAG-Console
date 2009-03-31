@@ -11,6 +11,7 @@
 #include "util/config/ConfigView.h"
 #include "util/config/Manager.h"
 #include "ConfigUtil.h"
+#include "scag/util/Drndm.h"
 
 using namespace scag2::pvss::core::client;
 using namespace scag2::pvss::core;
@@ -113,6 +114,7 @@ int main( int argc, const char** argv )
     getConfig( logger, clientConfig, flooderConfig );
 
     // --- reading speed from cmd line
+    unsigned skip = unsigned(-1);
     if ( argc > 1 ) {
         unsigned newSpeed = unsigned(atoi(argv[1]));
         if ( newSpeed == 0 ) {
@@ -122,6 +124,10 @@ int main( int argc, const char** argv )
             printf("overriding flooder speed %u -> %u\n", flooderConfig.getSpeed(), newSpeed );
             flooderConfig.setSpeed( newSpeed );
         }
+        
+        if ( argc > 2 ) {
+            skip = unsigned(atoi(argv[2]));
+        }
     }
 
     // --- making a client
@@ -129,8 +135,14 @@ int main( int argc, const char** argv )
     std::auto_ptr< Client > client( new ClientCore( clientConfig, *protocol.get() ) );
     flooderStat.reset(new FlooderStat(flooderConfig,*client.get()));
 
+    // randomizing the seed
+    if ( skip == unsigned(-1) ) {
+        // skip is not specified
+        scag2::util::Drndm::getRnd().setSeed(uint64_t(time(0)));
+    }
+
     try {
-        flooderStat->init();
+        flooderStat->init( skip );
     } catch ( IOException& e ) {
         smsc_log_error( logger, "cannot init flooder patterns: %s", e.what() );
         ::abort();

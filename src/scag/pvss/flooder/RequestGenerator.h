@@ -26,7 +26,8 @@ public:
 
     /// randomize profile keys
     void randomizeProfileKeys( const std::string& addressFormat,
-                               unsigned abonents );
+                               unsigned abonents,
+                               unsigned skip = unsigned(-1) );
 
     /// add a variable pattern
     void addPropertyPattern( unsigned idx, Property* prop ) /* throw (exceptions::IOException) */ ;
