@@ -15,7 +15,7 @@
 namespace smsc{
 namespace system{
 
-#define WAIT_DATA_TIMEOUT 100 /* ms */
+#define WAIT_DATA_TIMEOUT 20 /* ms */
 using smsc::smeman::CommandId;
 using smsc::smeman::SmscCommand;
 using std::exception;
@@ -125,8 +125,14 @@ void Smsc::mainLoop(int idx)
 
     int maxScaled=smsWeight*maxSmsPerSecond*shapeTimeFrame;
     //maxScaled+=maxScaled/4;
+    int totalCnt=getTotalCounter();
+    int schedCnt=getSchedCounter();
+    int freeBandwidthScaled=maxScaled-(totalCnt-schedCnt);
+    
+    debug2(log,"freeBandwidth=%d, schedCounter=%d",freeBandwidthScaled,schedCnt);
 
     int perSlot=smsWeight*maxSmsPerSecond/(1000/getTotalCounterRes());
+    int fperSlot=(smsWeight*maxSmsPerSecond-freeBandwidthScaled)/(2*1000/getTotalCounterRes());
 
     //perSlot+=perSlot/4;
 
@@ -135,7 +141,7 @@ void Smsc::mainLoop(int idx)
     do
     {
       hrtime_t gfStart=gethrtime();
-      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getTotalCounter()>maxScaled);
+      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getSchedCounter()>=freeBandwidthScaled/2);
       hrtime_t gfEnd=gethrtime();
       if(frame.size()>0)debug2(log,"getFrame time:%lld",gfEnd-gfStart);
       now = time(NULL);
@@ -342,12 +348,11 @@ void Smsc::mainLoop(int idx)
 
     // main "delay/reject" cycle
 
-    int eqsize,equnsize,cntInstant;
+    int eqsize,equnsize;
     //for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
     for(int j=0;j<frame.size();j++)
     {
       SmscCommand* i=&frame[shuffle[j]];
-      cntInstant=getTotalCounter();
       eventqueue.getStats(eqsize,equnsize);
       /*
       while(equnsize+1>eventQueueLimit)
@@ -377,20 +382,20 @@ void Smsc::mainLoop(int idx)
         try{
           if((*i)->get_commandId()==FORWARD || !isUSSDSessionSms((*i)->get_sms()))
           {
-            int totalCnt=getTotalCounter();
+            totalCnt=getTotalCounter();
             if(totalCnt>maxScaled || equnsize+1>eventQueueLimit)
             {
               if((*i)->get_commandId()==SUBMIT)
               {
-                info2(log,"Sms %s->%s sbm rejected by license limit: %d/%d (%d)",
+                info2(log,"Sms %s->%s sbm rejected by license/eq limit: %d/%d (%d), %d/%d",
                   (*i)->get_sms()->getOriginatingAddress().toString().c_str(),
                   (*i)->get_sms()->getDestinationAddress().toString().c_str(),
-                  totalCnt,maxScaled,perSlot);
+                  totalCnt,maxScaled,perSlot,equnsize,eventQueueLimit);
                 RejectSms(*i);
               }else
               {
-                info2(log,"Sms id=%lld fwd rejected by license limit: %d/%d (%d)",(*i)->get_forwardMsgId(),
-                  totalCnt,maxScaled,perSlot);
+                info2(log,"Sms id=%lld fwd rejected by license/eq limit: %d/%d (%d), %d/%d",(*i)->get_forwardMsgId(),
+                  totalCnt,maxScaled,perSlot,equnsize,eventQueueLimit);
                 scheduler->RejectForward((*i)->get_forwardMsgId());
               }
               continue;
@@ -398,7 +403,7 @@ void Smsc::mainLoop(int idx)
           }
           hrtime_t cmdStart=gethrtime();
           processCommand((*i),enqueueVector,findTaskVector);
-          incTotalCounter(perSlot);
+          incTotalCounter(perSlot,(*i)->get_commandId()==FORWARD,fperSlot);
           sbmcnt++;
           hrtime_t cmdEnd=gethrtime();
           debug2(log,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);

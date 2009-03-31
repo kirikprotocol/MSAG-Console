@@ -439,7 +439,7 @@ public:
       }
     }
     mx=cnt;
-    return 0;
+    return cnt;
   }
 
 

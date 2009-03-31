@@ -93,6 +93,7 @@ Smsc::~Smsc()
   SaveStats();
   delete totalCounter;
   delete statCounter;
+  delete schedCounter;
   instance=0;
 }
 
@@ -1095,6 +1096,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     statTimeFrame=cfg.cfgman->getInt("trafficControl.statTimeFrame");
     totalCounter=new IntTimeSlotCounter(shapeTimeFrame,10);
     statCounter=new IntTimeSlotCounter(statTimeFrame,10);
+    schedCounter=new IntTimeSlotCounter(shapeTimeFrame,10);
     time_t t=time(NULL);
     tm now;
     localtime_r(&t,&now);

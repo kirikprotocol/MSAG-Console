@@ -151,6 +151,7 @@ public:
     //tcontrol=0;
     totalCounter=0;
     statCounter=0;
+    schedCounter=0;
     maxTotalCounter=0;
     maxStatCounter=0;
     mapProxy=0;
@@ -455,18 +456,28 @@ public:
     MutexGuard mg(countersMtx);
     return totalCounter->Get();
   }
+  int getSchedCounter()
+  {
+    MutexGuard mg(countersMtx);
+    return schedCounter->Get();
+  }
   int getStatCounter()
   {
     MutexGuard mg(countersMtx);
     return statCounter->Get();
   }
 
-  void incTotalCounter(int perslot)
+  void incTotalCounter(int perslot,bool isForward,int fperslot)
   {
     MutexGuard mg(countersMtx);
     totalCounter->IncDistr(smsWeight,perslot);
-    int cntVal=(totalCounter->Get()+smsWeight*shapeTimeFrame/2)/(smsWeight*shapeTimeFrame);
+    int tcnt=totalCounter->Get();
+    int cntVal=(tcnt+smsWeight*shapeTimeFrame/2)/(smsWeight*shapeTimeFrame);
     if(cntVal>maxTotalCounter)maxTotalCounter=cntVal;
+    if(isForward)
+    {
+      schedCounter->IncDistr(smsWeight,fperslot);
+    }
   }
 
   void incStatCounter()
@@ -476,7 +487,7 @@ public:
     int cntVal=statCounter->Get()/statTimeFrame;
     if(cntVal>maxStatCounter)maxStatCounter=cntVal;
   }
-
+  
   enum{
     chargeOnSubmit,chargeOnDelivery,chargeAlways
   };
@@ -578,6 +589,7 @@ protected:
 
   IntTimeSlotCounter* totalCounter;
   IntTimeSlotCounter* statCounter;
+  IntTimeSlotCounter* schedCounter;
   Mutex countersMtx;
 
   int shapeTimeFrame;
