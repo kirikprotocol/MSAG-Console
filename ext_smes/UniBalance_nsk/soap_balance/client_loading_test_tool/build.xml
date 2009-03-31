@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="soap_balance" default="package" basedir=".">
+
+  <!-- ====================================================================== -->
+  <!-- Build environment properties                                           -->
+  <!-- ====================================================================== -->
+
+  <property file="build.properties"/>
+  <property file="${user.home}/build.properties"/>
+<!--
+  <property name="service.home" location="${basedir}/../service"/>
+  <property name="service.build.dir" location="${service.home}/target"/>
+  <property name="service.lib.home" location="${service.home}/lib"/>
+-->
+  <property name="client.home" location="${basedir}/../client"/>
+  <property name="client.build.dir" location="${client.home}/target"/>
+  <property name="client.lib.home" location="${client.home}/lib"/>
+  <property name="artifact.id" value="soap_balance"/>
+  <property name="build.name" value="${artifact.id}-${version}"/>
+  <property name="build.dir" location="${basedir}/target"/>
+  <property name="build.output" location="${build.dir}/classes"/>
+  <property name="src.home" location="${basedir}/src/main/java"/>
+  <property name="resource.home" location="${basedir}/src/main/resources"/>
+  <property name="lib.home" location="${basedir}/lib"/>
+  <property name="build.test.output" location="${build.dir}/test-classes"/>
+  <property name="src.test.home" location="${basedir}/src/test/java"/>
+  <property name="resource.test.home" location="${basedir}/src/test/resources"/>
+  <property name="test.reports" location="${build.dir}/test-reports"/>
+  <property name="docs.home" location="${build.dir}/site"/>
+
+  <!-- ====================================================================== -->
+  <!-- Defining classpaths                                                    -->
+  <!-- ====================================================================== -->
+
+  <path id="compile.classpath">
+    <fileset dir="${lib.home}">
+      <include name="*.jar"/>
+    </fileset>
+    <!--
+    <fileset dir="${service.build.dir}"> 
+      <include name="*.jar"/> 
+    </fileset> 
+    <fileset dir="${service.lib.home}"> 
+      <include name="*.jar"/> 
+    </fileset> 
+    -->
+    <fileset dir="${client.build.dir}"> 
+      <include name="*.jar"/> 
+    </fileset> 
+    <fileset dir="${client.lib.home}"> 
+      <include name="*.jar"/> 
+    </fileset> 
+  </path>
+
+  <!-- ====================================================================== -->
+  <!-- Cleaning up target                                                     -->
+  <!-- ====================================================================== -->
+
+  <target name="clean" description="Clean the output directory">
+    <delete dir="${build.dir}"/>
+  </target>
+
+  <!-- ====================================================================== -->
+  <!-- Compilation target                                                     -->
+  <!-- ====================================================================== -->
+
+  <target name="compile"
+          depends="-client" description="Compile the code">
+    <mkdir dir="${build.output}"/>
+    <javac srcDir="${src.home}" 
+          destdir="${build.output}" 
+            debug="${compile.debug}" 
+      deprecation="${compile.deprecation}" 
+         optimize="${compile.optimize}" 
+           target="${compile.target}" 
+           source="${compile.target}">
+        <classpath refid="compile.classpath"/>
+    </javac>
+  </target>
+
+  <!-- ====================================================================== -->
+  <!-- Test-compilation target                                                -->
+  <!-- ====================================================================== -->
+
+  <target name="compile-tests" 
+          depends="compile" 
+          description="Compile the test code" 
+          unless="maven.test.skip">
+    <mkdir dir="${build.test.output}"/>
+    <javac srcDir="${src.test.home}" 
+          destdir="${build.test.output}" 
+            debug="${compile.debug}" 
+      deprecation="${compile.deprecation}" 
+         optimize="${compile.optimize}" 
+           target="${compile.target}" 
+           source="${compile.target}">
+        <classpath refid="compile.classpath"/>
+    </javac>
+  </target>
+
+  <!-- ====================================================================== -->
+  <!-- Run all tests                                                          -->
+  <!-- ====================================================================== -->
+
+  <target name="test" 
+          depends="compile-tests, junit-missing" 
+          unless="junit.skipped" 
+          description="Run the test cases">
+    <mkdir dir="${test.reports}"/>
+    <junit printSummary="yes" haltonerror="true" haltonfailure="true" fork="true" dir=".">
+      <sysproperty key="basedir" value="."/>
+      <formatter type="xml"/>
+      <formatter type="plain" usefile="false"/>
+      <classpath>
+        <path refid="compile.test.classpath"/>
+        <pathelement location="${build.output}"/>
+        <pathelement location="${build.test.output}"/>
+      </classpath>
+      <batchtest todir="${test.reports}" unless="test">
+        <fileset dir="${src.test.home}">
+          <include name="**/Test*.java"/>
+          <include name="**/*Test.java"/>
+          <include name="**/*TestCase.java"/>
+          <exclude name="**/*Abstract*Test.java"/>
+        </fileset>
+      </batchtest>
+      <batchtest todir="${test.reports}" if="test">
+        <fileset dir="${src.test.home}">
+          <include name="**/${test}.java"/>
+          <exclude name="**/*Abstract*Test.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="test-junit-present">
+    <available classname="junit.framework.Test" property="junit.present"/>
+  </target>
+
+  <target name="test-junit-status" 
+          depends="test-junit-present">
+    <condition property="junit.missing">
+      <and>
+        <isfalse value="${junit.present}"/>
+        <isfalse value="${maven.test.skip}"/>
+      </and>
+    </condition>
+    <condition property="junit.skipped">
+      <or>
+        <isfalse value="${junit.present}"/>
+        <istrue value="${maven.test.skip}"/>
+      </or>
+    </condition>
+  </target>
+
+  <target name="junit-missing" 
+          depends="test-junit-status" 
+          if="junit.missing">
+    <echo>=================================== WARNING ===================================</echo>
+    <echo> JUnit is not present in your $ANT_HOME/lib directory. Tests not executed.</echo>
+    <echo>===============================================================================</echo>
+  </target>
+
+  <!-- ====================================================================== -->
+  <!-- Javadoc target                                                         -->
+  <!-- ====================================================================== -->
+
+  <target name="javadoc" description="Generates the Javadoc of the application">
+    <javadoc sourcepath="${src.home}" 
+             packagenames="*" 
+             destdir="${docs.home}/apidocs"/>
+  </target>
+
+  <!-- ====================================================================== -->
+  <!-- Package target                                                         -->
+  <!-- ====================================================================== -->
+
+  <target name="package" depends="compile,test" description="Package the application">
+    <jar jarfile="${build.dir}/${build.name}.jar" basedir="${build.output}" excludes="**/package.html"/>
+  </target>
+
+  <!-- ====================================================================== -->
+  <!-- A dummy target for the package named after the type it creates         -->
+  <!-- ====================================================================== -->
+
+  <target name="-client">
+      <ant antfile="${client.home}/build.xml" target="package" inheritAll="false"/>
+  </target>
+
+  <target name="-service">
+      <ant antfile="${service.home}/build.xml" target="package" inheritAll="false"/>
+  </target>
+
+</project>
