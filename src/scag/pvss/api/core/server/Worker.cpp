@@ -54,9 +54,8 @@ int Worker::doExecute()
                 Response* resp = logic_.process(*context->getRequest().get());
                 context->setResponse(resp);
             } catch (PvssException& e){
-                static unsigned counter = 0;
-                if ( counter++ % 100 == 0 )
-                    smsc_log_warn(log_, "exception(%u/%u): %s", __LINE__, counter, e.what() );
+                smsc_log_debug(log_,"processing timeout of context: %s", context->getRequest()->toString().c_str() );
+                core_.countExceptions(e.getType(),"workProcTmo");
                 try {
                     context->setError(e.getMessage());
                 } catch (...) {}
@@ -70,7 +69,8 @@ int Worker::doExecute()
         }
         case (ServerContext::PROCESSED) :
         default :
-            smsc_log_warn(log_,"unexpected context state (processed)", context->getState());
+            smsc_log_debug(log_,"unexpected context state (processed)", context->getState());
+            core_.countExceptions(PvssException::UNKNOWN,"workBadState");
         } // switch
     }
     return 0;

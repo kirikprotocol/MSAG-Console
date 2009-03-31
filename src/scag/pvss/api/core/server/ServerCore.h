@@ -497,10 +497,14 @@ public:
     virtual ServerConfig& getConfig() const { return *static_cast<ServerConfig*>(config);}
 
 
+    /// notification sent when worker thread is stopped
     void workerThreadIsStopped() {
         MutexGuard mg(logicMon_);
         logicMon_.notify();
     }
+
+    /// count caught exceptions
+    void countExceptions( PvssException::Type et, const char* where );
 
 private:
     /**
@@ -536,6 +540,17 @@ private:
 private:
     typedef std::list< smsc::core::network::Socket* > ChannelList;
 
+    class ExceptionCount
+    {
+        typedef smsc::core::buffers::IntHash< smsc::core::buffers::Hash< unsigned > > Count;
+    public:
+        std::string toString() const;
+        void add( const ExceptionCount& c );
+        void count( PvssException::Type et, const char* where );
+    private:
+        Count  count_;
+    };
+
 protected:
     smsc::logger::Logger*                       log_;
     smsc::logger::Logger*                       loge_;
@@ -563,6 +578,8 @@ private:
     Statistics                                  total_;
     Statistics                                  last_;
     bool                                        hasNewStats_;
+    std::auto_ptr<ExceptionCount>               exceptions_;
+    ExceptionCount                              totalExceptions_;  // counted in main thread
 };
 
 } // namespace server

@@ -355,11 +355,18 @@ int ClientCore::doExecute()
                   ++i ) {
                 // expired
                 ClientContext* ctx = static_cast<ClientContext*>(*i);
-                if (ctx->getRequest()->isPing()) {
-                    smsc_log_warn(logger,"PING failed, timeout");
-                    closeChannel(*channel->socket());
+                if ( ! ctx->getRequest().get() ) {
+                    assert(ctx->getResponse().get());
+                    smsc_log_warn( logger,"Context w/o request found, resp:%s, created: %d ms ago",
+                                   ctx->getResponse()->toString().c_str(),
+                                   int(currentTime - ctx->getCreationTime()) );
                 } else {
-                    ctx->setError(PvssException(PvssException::REQUEST_TIMEOUT,"timeout"));
+                    if (ctx->getRequest()->isPing()) {
+                        smsc_log_warn(logger,"PING failed, timeout");
+                        closeChannel(*channel->socket());
+                    } else {
+                        ctx->setError(PvssException(PvssException::REQUEST_TIMEOUT,"timeout"));
+                    }
                 }
                 delete ctx;
             }

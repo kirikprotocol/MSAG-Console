@@ -44,9 +44,12 @@ struct Statistics
             scale = 100;
         }
         if ( e10ms <= 0 ) e10ms = 1;
+        unsigned seconds = unsigned(elapsedTime/1000);
         snprintf(buf,sizeof(buf),
-                 "elapsed=%lds req/resp/err=%u/%u/%u sent/fail=%u/%u, speed(1/s): req/resp/err=%u/%u/%u sent/fail=%u/%u",
-                 long(elapsedTime/1000), requests, responses, errors, sent, failed,
+                 "%02u:%02u:%02u  req/resp/err=%u/%u/%u sent/fail=%u/%u\n"
+                 "        speed(1/s): req/resp/err=%u/%u/%u sent/fail=%u/%u",
+                 seconds/3600, (seconds/60) % 60, seconds % 60,
+                 requests, responses, errors, sent, failed,
                  unsigned(requests*scale/e10ms), unsigned(responses*scale/e10ms), unsigned(errors*scale/e10ms),
                  unsigned(sent*scale/e10ms), unsigned(failed*scale/e10ms)
                  );

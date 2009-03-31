@@ -99,8 +99,8 @@ std::string PvssDispatcher::reportStatistics() const
             total += static_cast<AbonentLogic*>(logic)->reportStatistics();
         }
     }
-    char buf[50];
-    snprintf(buf,sizeof(buf)," abonents=%lu",total);
+    char buf[100];
+    snprintf(buf,sizeof(buf)," abonents=%lu locations=%u storages=%u",total,locationsCount_,storagesCount_);
     rv += buf;
     return rv;
 }

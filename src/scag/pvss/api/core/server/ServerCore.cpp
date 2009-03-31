@@ -37,7 +37,9 @@ log_(smsc::logger::Logger::getInstance(taskName())),
 loge_(smsc::logger::Logger::getInstance("pvssEsrv")),
 started_(false),
 syncDispatcher_(0),
-last_(config.getStatisticsInterval())
+last_(config.getStatisticsInterval()),
+hasNewStats_(false),
+exceptions_(new ExceptionCount)
 {
 }
 
@@ -77,14 +79,21 @@ void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // /* th
 {
     try {
         sendResponse(context);
+        // writer will notify of sending success/failure
+        return;
+    } catch ( PvssException& e ) {
+        smsc_log_debug( loge_, "exception(%u): %s", __LINE__, e.what());
+        countExceptions( e.getType(), "sendResponse" );
     } catch (std::exception& e) {
-        static unsigned counter = 0;
-        if ( counter++ % 100 == 0 )
-            smsc_log_warn(loge_,"exception(%u/%u): %s", __LINE__, counter, e.what());
-        if (context.get()) {
-            context->setState(ServerContext::FAILED);
-            reportContext(context);
-        }
+        // static unsigned counter = 0;
+        // if ( counter++ % 100 == 0 )
+        smsc_log_debug( loge_, "exception(%u): %s", __LINE__, e.what());
+        countExceptions( PvssException::UNKNOWN, "sendResponse" );
+    }
+    if (context.get()) {
+        // writing failure is notified immediately
+        context->setState(ServerContext::FAILED);
+        reportContext(context);
     }
 }
 
@@ -95,9 +104,10 @@ void ServerCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channe
         if ( !packet.get() || !packet->isRequest() || !packet->isValid() )
             throw PvssException(PvssException::BAD_REQUEST,"Received packet isnt valid PVAP request");
     } catch ( PvssException& e ) {
-        static unsigned counter = 0;
-        if ( counter++ % 100 == 0 )
-            smsc_log_warn(loge_,"exception(%u/%u): %s", __LINE__, counter, e.what());
+        // static unsigned counter = 0;
+        // if ( counter++ % 100 == 0 )
+        smsc_log_debug(loge_,"exception(%u): %s", __LINE__, e.what());
+        countExceptions( e.getType(), "receivePacket" );
         return;
     }
 
@@ -122,14 +132,16 @@ void ServerCore::reportPacket(uint32_t seqNum, smsc::core::network::Socket& chan
     {
         ContextRegistry::Ptr ptr(regset_.get(&channel));
         if (!ptr) {
-            smsc_log_warn(loge_,"packet seqNum=%d on channel %p reported, but registry is not found",
-                          seqNum, &channel);
+            smsc_log_debug( loge_,"packet seqNum=%d on channel %p reported, but registry is not found",
+                            seqNum, &channel);
+            countExceptions( PvssException::UNKNOWN, "reportMissReg");
             return;
         }
         ContextRegistry::Ctx i(ptr->get(seqNum));
         if ( !i ) {
-            smsc_log_warn(loge_, "packet seqNum=%d on channel %p reported as %s, but not found",
-                          seqNum, &channel, state == SENT ? "SENT" : (state == FAILED ? "FAILED" : "EXPIRED"));
+            smsc_log_debug(loge_, "packet seqNum=%d on channel %p reported as %s, but not found",
+                           seqNum, &channel, state == SENT ? "SENT" : (state == FAILED ? "FAILED" : "EXPIRED"));
+            countExceptions( PvssException::UNKNOWN, "reportMissSeqnum" );
             return;
         }
         response = i.getContext()->getResponse().get();
@@ -142,7 +154,7 @@ void ServerCore::reportPacket(uint32_t seqNum, smsc::core::network::Socket& chan
         default: ctx->setState( ServerContext::FAILED ); break;
         }
     }
-    reportContext(ctx);
+    if (ctx.get()) reportContext(ctx);
 }
 
 
@@ -159,7 +171,7 @@ void ServerCore::startup( SyncDispatcher& dispatcher ) /* throw (PvssException) 
     MutexGuard mg(startMutex_);
     if (started_) return;
 
-    smsc_log_info(log_,"Starting PVSS sync server %s", getConfig().toString().c_str() );
+    smsc_log_info(log_,"Starting PVSS (sync_disp) server %s", getConfig().toString().c_str() );
     if ( !acceptor_.get() ) throw PvssException(PvssException::UNKNOWN, "no acceptor found");
 
     syncDispatcher_ = &dispatcher;
@@ -178,6 +190,7 @@ void ServerCore::startup( SyncDispatcher& dispatcher ) /* throw (PvssException) 
         // acceptor_->init();
         threadPool_.startTask(acceptor_.get(),false);
     } catch (PvssException& exc) {
+        smsc_log_error(log_,"Sync dispatcher start error: %s",exc.what());
         if (acceptor_.get()) acceptor_->shutdown();
         shutdownIO(false);
         throw exc;
@@ -194,7 +207,7 @@ void ServerCore::startup( AsyncDispatcher& dispatcher ) /* throw (PvssException)
     MutexGuard mg(startMutex_);
     if (started_) return;
 
-    smsc_log_info(log_,"Starting PVSS async server %s", getConfig().toString().c_str() );
+    smsc_log_info(log_,"Starting PVSS (async_disp) server %s", getConfig().toString().c_str() );
     if ( !acceptor_.get() ) throw PvssException(PvssException::UNKNOWN, "no acceptor found");
 
     startupIO();
@@ -299,6 +312,7 @@ int ServerCore::doExecute()
         // currentTime = util::currentTimeMillis();
         // int timeToWait = int(nextWakeupTime-currentTime);
         int timeToWait = minTimeToSleep;
+        std::auto_ptr<ExceptionCount> exceptions;
         {
             MutexGuard mg(statMutex_);
             statMutex_.wait(timeToWait);
@@ -307,11 +321,41 @@ int ServerCore::doExecute()
             lastStat = last_;
             hasNewStats_ = false;
             last_.reset();
+            exceptions = exceptions_;
+            exceptions_.reset(new ExceptionCount);
+        }
+        unsigned conns;
+        {
+            MutexGuard mg(channelMutex_);
+            conns = unsigned(managedChannels_.size());
         }
 
-        smsc_log_info(log_, "total: %s", totalStat.toString().c_str() );
-        smsc_log_info(log_, "last %u sec: %s", unsigned(lastStat.accumulationTime/1000), lastStat.toString().c_str() );
-        if ( syncDispatcher_ ) syncDispatcher_->reportStatistics();
+        totalExceptions_.add( *exceptions.get() );
+
+        char buf[80];
+        std::string fullstat;
+        fullstat.reserve(512);
+        snprintf(buf,sizeof(buf),"Statistics follows: connections=%u", conns );
+        fullstat.append(buf);
+        fullstat.append("\n== Total: ");
+        fullstat.append(totalStat.toString());
+        std::string caught = totalExceptions_.toString();
+        if ( ! caught.empty() ) {
+            fullstat.append("\n  caught: ");
+            fullstat.append(caught);
+        }
+        fullstat.append("\n    Last: ");
+        fullstat.append(lastStat.toString());
+        caught = exceptions->toString();
+        if ( ! caught.empty() ) {
+            fullstat.append("\n  caught: ");
+            fullstat.append(caught);
+        }
+        if ( syncDispatcher_ ) {
+            fullstat.append("\n    Data: ");
+            fullstat.append(syncDispatcher_->reportStatistics());
+        }
+        smsc_log_info(log_,"%s",fullstat.c_str());
 
         /*
         ChannelList currentChannels;
@@ -372,10 +416,12 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
     Response::StatusType status = Response::OK;
     Request* req = ctx->getRequest().get();
     if ( !req ) {
-        smsc_log_error( log_, "context does not contain request");
+        // smsc_log_error( log_, "context does not contain request");
+        countExceptions( PvssException::BAD_REQUEST, "recvNoReq" );
         return;
     } else if ( !req->isValid() ) {
-        smsc_log_error( log_, "request is not valid");
+        // smsc_log_error( log_, "request is not valid");
+        countExceptions( PvssException::BAD_REQUEST, "recvBadReq" );
         return;
     }
 
@@ -389,9 +435,12 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
 
     uint32_t seqNum = req->getSeqNum();
     smsc_log_debug(log_,"packet received %p: %s", req, req->toString().c_str());
+    const char* what = "recvGeneric";
+    std::string ewhat;
     try {
         if (!started_) {
             status = Response::SERVER_SHUTDOWN;
+            what = "recvAfterStop";
             throw PvssException(PvssException::SERVER_BUSY,"Server is down");
         }
 
@@ -407,6 +456,7 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
             const int idx = syncDispatcher_->getIndex(*req);
             if ( idx > workers_.Count() ) {
                 status = Response::ERROR;
+                what = "recvNoWorker";
                 throw PvssException(PvssException::UNKNOWN,"cannot dispatch");
             }
             Worker* worker = workers_[idx];
@@ -415,6 +465,7 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
             queue = & dispatcher_->getQueue();
         } else {
             status = Response::ERROR;
+            what = "recvNoDisptch";
             throw PvssException(PvssException::UNKNOWN,"dispatcher is not found");
         }
 
@@ -422,19 +473,27 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         // ctx->setRespQueue( *respQueue );
         queue->requestReceived(ctx); // may throw server_busy
         // seqNum = uint32_t(-1);
+        return;
 
+    } catch ( PvssException& e ) {
+        smsc_log_debug(loge_, "exception(%u): %s",__LINE__, e.what());
+        countExceptions( e.getType(), what );
+        ewhat = e.what();
     } catch (std::exception& e) {
-        static unsigned counter = 0;
-        if ( counter++ % 100 == 0 )
-            smsc_log_warn(loge_, "exception(%u/%u): %s",__LINE__, counter, e.what());
-        try {
-            ctx->setResponse(new ErrorResponse(seqNum,status,e.what()));
-            sendResponse(ctx);
-        } catch (std::exception& e) {
-            static unsigned counter2 = 0;
-            if ( counter2++ % 100 == 0 )
-                smsc_log_error(loge_,"exception(%u/%u): %s", __LINE__, counter2, e.what());
-        }
+        smsc_log_debug(loge_, "exception(%u): %s",__LINE__, e.what());
+        countExceptions( PvssException::UNKNOWN, what );
+        ewhat = e.what();
+    }
+
+    try {
+        ctx->setResponse(new ErrorResponse(seqNum,status,ewhat.c_str()));
+        sendResponse(ctx);
+    } catch ( PvssException& e ) {
+        smsc_log_debug(loge_,"exception(%u): %s", __LINE__, e.what());
+        countExceptions( e.getType(), "recvSendErr" );
+    } catch ( std::exception& e ) {
+        smsc_log_debug(loge_,"exception(%u): %s", __LINE__, e.what());
+        countExceptions( PvssException::UNKNOWN, "recvSendErr" );
     }
 }
 
@@ -489,13 +548,15 @@ void ServerCore::sendResponse( std::auto_ptr<ServerContext>& context ) /* throw 
 void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
 {
     if ( !ctx.get() ) {
-        smsc_log_warn(log_,"null context reported");
+        // smsc_log_warn(log_,"null context reported");
+        countExceptions(PvssException::UNKNOWN, "reportNull");
         return;
     }
 
     Response* response = ctx->getResponse().get();
     if ( !response ) {
-        smsc_log_warn(log_,"context with null response reported");
+        // smsc_log_warn(log_,"context with null response reported");
+        countExceptions(PvssException::UNKNOWN, "reportNull" );
         return;
     }
 
@@ -538,7 +599,8 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
 
     ContextQueue* queue = ctx->getRespQueue();
     if ( !queue ) {
-        smsc_log_warn(log_,"packet seqNum=%d has no resp queue set",seqNum);
+        smsc_log_debug(loge_,"packet seqNum=%d has no resp queue set",seqNum);
+        countExceptions( PvssException::UNKNOWN, "reportNoQueue");
     } else {
         queue->reportResponse(ctx);
     }
@@ -676,6 +738,75 @@ void ServerCore::checkStatistics()
 
 }
 
+
+void ServerCore::countExceptions( PvssException::Type et, const char* where )
+{
+    MutexGuard mg(statMutex_);
+    exceptions_->count( et, where );
+}
+
+
+std::string ServerCore::ExceptionCount::toString() const
+{
+    std::string result;
+    result.reserve(200);
+    int k;
+    bool first = true;
+    Hash< unsigned >* hash;
+    char buf[60];
+    unsigned curlen = 0;
+    for ( Count::Iterator i(count_); i.Next(k,hash); ) {
+        char* where;
+        unsigned value;
+        for ( Hash< unsigned >::Iterator j(hash); j.Next(where,value); ) {
+            snprintf(buf,sizeof(buf),"%u/%s:%u", k, where, value);
+            unsigned buflen = unsigned(strlen(buf));
+            if ( curlen + buflen > 70 ) {
+                //                 caught:
+                result.append("\n          ");
+                curlen = 10;
+            } else if ( first ) {
+                first = false;
+            } else {
+                result.append("  ");
+                curlen += 2;
+            }
+            result.append(buf);
+            curlen += buflen;
+        }
+    }
+    return result;
+}
+
+
+void ServerCore::ExceptionCount::add( const ExceptionCount& o )
+{
+    int k;
+    Hash< unsigned >* ohash;
+    for ( Count::Iterator i(o.count_); i.Next(k,ohash); ) {
+        if ( ohash && ohash->GetCount() ) {
+            Hash< unsigned >* ptr = count_.GetPtr(k);
+            if ( !ptr ) ptr = & count_.Insert(k,Hash<unsigned>());
+            char* where;
+            unsigned value;
+            for ( Hash< unsigned >::Iterator j(ohash); j.Next(where,value); ) {
+                unsigned* count = ptr->GetPtr(where);
+                if ( !count ) count = ptr->SetItem(where,0);
+                (*count) += value;
+            }
+        }
+    }
+}
+
+
+void ServerCore::ExceptionCount::count( PvssException::Type et, const char* where )
+{
+    Hash< unsigned >* ptr = count_.GetPtr(et);
+    if ( !ptr ) ptr = & count_.Insert(et,Hash<unsigned>());
+    unsigned* count = ptr->GetPtr(where);
+    if ( !count ) count = ptr->SetItem(where,0);
+    ++(*count);
+}
 
 } // namespace server
 } // namespace core
