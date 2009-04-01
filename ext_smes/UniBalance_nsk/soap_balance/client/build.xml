@@ -10,7 +10,9 @@
 
   <property name="service.home" location="${basedir}/../service"/>
   <property name="service.build.dir" location="${service.home}/target"/>
+<!--
   <property name="service.lib.home" location="${service.home}/lib"/>
+-->
   <property name="artifact.id" value="soap_balance-client"/>
   <property name="build.name" value="${artifact.id}-${version}"/>
   <property name="build.dir" location="${basedir}/target"/>
@@ -56,7 +58,6 @@
 
   <target name="compile"
           depends="-service" description="Compile the code">
-    <echo>WARN!!!!!!! Client: ${basedir}</echo>
     <mkdir dir="${build.output}"/>
     <javac srcDir="${src.home}" 
           destdir="${build.output}" 

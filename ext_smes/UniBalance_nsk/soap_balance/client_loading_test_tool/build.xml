@@ -68,7 +68,6 @@
 
   <target name="compile"
           depends="-client" description="Compile the code">
-    <echo>WARN!!!!!!! ${basedir}, ${client.build.dir}</echo>
     <mkdir dir="${build.output}"/>
     <javac srcDir="${src.home}" 
           destdir="${build.output}" 

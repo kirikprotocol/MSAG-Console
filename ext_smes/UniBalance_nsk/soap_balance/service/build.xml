@@ -14,7 +14,9 @@
   <property name="build.output" location="${build.dir}/classes"/>
   <property name="src.home" location="${basedir}/src/main/java"/>
   <property name="resource.home" location="${basedir}/src/main/resources"/>
+  <!--
   <property name="lib.home" location="${basedir}/lib"/>
+  -->
   <property name="build.test.output" location="${build.dir}/test-classes"/>
   <property name="src.test.home" location="${basedir}/src/test/java"/>
   <property name="resource.test.home" location="${basedir}/src/test/resources"/>
@@ -27,9 +29,11 @@
   <!-- ====================================================================== -->
 
   <path id="compile.classpath">
+  <!--
     <fileset dir="${lib.home}">
       <include name="*.jar"/>
     </fileset>
+  -->
   </path>
 
   <!-- ====================================================================== -->
@@ -45,7 +49,6 @@
   <!-- ====================================================================== -->
 
   <target name="compile" description="Compile the code">
-  <echo>WARN!!!!!!! Service ${basedir}</echo>
     <mkdir dir="${build.output}"/>
     <javac srcDir="${src.home}" 
           destdir="${build.output}" 

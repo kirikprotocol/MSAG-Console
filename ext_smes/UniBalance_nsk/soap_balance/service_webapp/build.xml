@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="service_webapp" default="package" basedir=".">
+<project name="soap_balance-service_webapp" default="package" basedir=".">
 
   <!-- ====================================================================== -->
   <!-- Build environment properties                                           -->
@@ -11,8 +11,7 @@
   <property name="service.home" location="${basedir}/../service"/>
   <property name="service.build.dir" location="${service.home}/target"/>
   <property name="service.lib.home" location="${service.home}/lib"/>
-
-  <property name="artifact.id" value="service_webapp"/>
+  <property name="artifact.id" value="soap_balance-service_webapp"/>
   <property name="build.name" value="${artifact.id}-${version}"/>
   <property name="build.dir" location="${basedir}/target"/>
   <property name="build.output" location="${build.dir}/classes"/>
@@ -30,15 +29,14 @@
   <!-- ====================================================================== -->
 
   <path id="compile.classpath">
-    <fileset dir="${lib.home}">
-      <include name="*.jar"/>
+    <fileset dir="${service.build.dir}">
+      <include name="*.jar"/> 
     </fileset>
-    <fileset dir="${service.build.dir}"> 
+    <!--
+    <fileset dir="${service.lib.home}">
       <include name="*.jar"/> 
-    </fileset> 
-    <fileset dir="${service.lib.home}"> 
-      <include name="*.jar"/> 
-    </fileset> 
+    </fileset>
+    -->
   </path>
 
   <!-- ====================================================================== -->
@@ -193,19 +191,19 @@
     <copy todir="${build.dir}/${build.name}">
       <fileset dir="${basedir}/src/main/webapp"/>
     </copy>
-    <mkdir dir="${build.dir}/${build.name}/WEB-INF/classes"/>
-    <copy todir="${build.dir}/${build.name}/WEB-INF/classes">
-      <fileset dir="${build.output}"/>
-    </copy>
     <war destfile="${build.dir}/${build.name}.war" webxml="${basedir}/src/main/webapp/WEB-INF/web.xml">
       <lib dir="${build.dir}/${build.name}/WEB-INF/lib"/>
+<!--
       <classes dir="${build.output}"/>
+-->
       <webinf dir="${basedir}/src/main/webapp/WEB-INF" excludes="web.xml"/>
       <fileset dir="${basedir}/src/main/webapp"/>
     </war>
   </target>
 
   <target name="-service">
+      <!-- dir attribute in ant task is workaround that ant ignores inheritAll="false" property and inherits basedir -->
+      <!-- That clashing with expected behavior. Documentation: http://ant.apache.org/manual/CoreTasks/ant.html. ilyagp  -->
       <ant inheritAll="false" dir="${service.home}" antfile="${service.home}/build.xml" target="package"/>
   </target>
 
