@@ -62,9 +62,9 @@
   <!-- ====================================================================== -->
 
   <target name="compile-tests" 
-          depends="compile" 
+          depends="compile,test-compile-tests" 
           description="Compile the test code" 
-          unless="maven.test.skip">
+          if="compile.tests">
     <mkdir dir="${build.test.output}"/>
     <javac srcDir="${src.test.home}" 
           destdir="${build.test.output}" 
@@ -116,8 +116,21 @@
     <available classname="junit.framework.Test" property="junit.present"/>
   </target>
 
+  <target name="test-tests-present">
+    <available file="${src.test.home}" type="dir" property="tests.present"/>
+  </target>
+
+  <target name="test-compile-tests" depends="test-tests-present">
+    <condition property="compile.tests">
+      <and>
+        <isfalse value="${maven.test.skip}"/>
+        <istrue value="${tests.present}"/>
+      </and>
+    </condition>
+  </target>
+
   <target name="test-junit-status" 
-          depends="test-junit-present">
+          depends="test-junit-present,test-tests-present">
     <condition property="junit.missing">
       <and>
         <isfalse value="${junit.present}"/>
@@ -128,6 +141,7 @@
       <or>
         <isfalse value="${junit.present}"/>
         <istrue value="${maven.test.skip}"/>
+        <isfalse value="${tests.present}"/>
       </or>
     </condition>
   </target>

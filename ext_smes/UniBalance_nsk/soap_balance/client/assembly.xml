@@ -8,7 +8,7 @@
       <scope>runtime</scope>
     </dependencySet>
   </dependencySets>
-  <files>  
+  <files>
     <file>
       <source>src/main/assembly/client.properties</source>
     </file>

@@ -28,6 +28,12 @@
         <jdkName>1.4</jdkName>
       </configuration>
     </plugin>
+
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-ant-plugin</artifactId>
+      <version>2.1</version>
+    </plugin>
     </plugins>
   </pluginManagement>
   </build>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="web-layer-from-maven" default="package" basedir=".">
+<project name="service_webapp" default="package" basedir=".">
 
   <!-- ====================================================================== -->
   <!-- Build environment properties                                           -->
@@ -11,7 +11,8 @@
   <property name="service.home" location="${basedir}/../service"/>
   <property name="service.build.dir" location="${service.home}/target"/>
   <property name="service.lib.home" location="${service.home}/lib"/>
-  <property name="artifact.id" value="web-layer"/>
+
+  <property name="artifact.id" value="service_webapp"/>
   <property name="build.name" value="${artifact.id}-${version}"/>
   <property name="build.dir" location="${basedir}/target"/>
   <property name="build.output" location="${build.dir}/classes"/>
@@ -53,7 +54,7 @@
   <!-- ====================================================================== -->
 
   <target name="compile"
-          depends="-service" description="Compile the code">
+          depends="-service, test-compile" if="test-compile" description="Compile the code">
     <mkdir dir="${build.output}"/>
     <javac srcDir="${src.home}" 
           destdir="${build.output}" 
@@ -69,14 +70,18 @@
     </copy>
   </target>
 
+  <target name="test-compile">
+    <available file="${src.home}" type="dir" property="test-compile"/>
+  </target>
+
   <!-- ====================================================================== -->
   <!-- Test-compilation target                                                -->
   <!-- ====================================================================== -->
 
   <target name="compile-tests" 
-          depends="compile" 
+          depends="compile, test-compile-tests" 
           description="Compile the test code" 
-          unless="maven.test.skip">
+          if="compile.tests">
     <mkdir dir="${build.test.output}"/>
     <javac srcDir="${src.test.home}" 
           destdir="${build.test.output}" 
@@ -128,8 +133,21 @@
     <available classname="junit.framework.Test" property="junit.present"/>
   </target>
 
+  <target name="test-tests-present">
+    <available file="${src.test.home}" type="dir" property="tests.present"/>
+  </target>
+
+  <target name="test-compile-tests" depends="test-tests-present">
+    <condition property="compile.tests">
+      <and>
+        <isfalse value="${maven.test.skip}"/>
+        <istrue value="${tests.present}"/>
+      </and>
+    </condition>
+  </target>
+
   <target name="test-junit-status" 
-          depends="test-junit-present">
+          depends="test-junit-present,test-tests-present">
     <condition property="junit.missing">
       <and>
         <isfalse value="${junit.present}"/>
@@ -140,6 +158,7 @@
       <or>
         <isfalse value="${junit.present}"/>
         <istrue value="${maven.test.skip}"/>
+        <isfalse value="${tests.present}"/>
       </or>
     </condition>
   </target>
@@ -187,7 +206,7 @@
   </target>
 
   <target name="-service">
-      <ant antfile="${service.home}/build.xml" target="package" inheritAll="false"/>
+      <ant inheritAll="false" dir="${service.home}" antfile="${service.home}/build.xml" target="package"/>
   </target>
 
 </project>
