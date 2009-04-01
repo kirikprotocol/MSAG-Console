@@ -146,6 +146,8 @@ ConnectMgr::readPacketAndMakeEvent(LinkPtr& curConnect, bool fillUpInputBuffer /
 IOEvent*
 ConnectMgr::cleanupLinkInfo(const communication::LinkId& linkId)
 {
+  io_dispatcher::ConnectMgr::getInstance().removeLinkFromLinkSets(getLinkSetIds(linkId), linkId);
+
   LinkPtr curConnect = removeLink(linkId);
   if ( curConnect.Get() ) {
     utilx::alloc_mem_desc_t *ptr_desc = utilx::PreallocatedMemoryManager::getInstance().getMemory<utilx::PreallocatedMemoryManager::MEM_FOR_EVENT>();
