@@ -8,6 +8,7 @@
 // #include <sms/sms_const.h>
 #include <cstring>
 #include <util/crc32.h>
+#include "util/byteorder.h"
 #include "scag/exc/IOException.h"
 #include "scag/util/storage/Serializer.h"
 
@@ -192,7 +193,7 @@ public:
                 itype = 1;
             }
         }
-        setValue(strlen(buf),itype,iplan,buf);
+        setValue(unsigned(strlen(buf)),itype,iplan,buf);
     }
 
 
@@ -244,13 +245,13 @@ private:
         uint64_t number;
         struct {
             // NOTE: value has highest precedence
-#if	__BYTE_ORDER == __BIG_ENDIAN
+#if	BYTE_ORDER == BIG_ENDIAN
             uint64_t value:52;    // address
             unsigned len:4;       // length
             unsigned ton:4;
             unsigned npi:4;
 #endif
-#if	__BYTE_ORDER == __LITTLE_ENDIAN
+#if	BYTE_ORDER == LITTLE_ENDIAN
             unsigned npi:4;
             unsigned ton:4;
             unsigned len:4;       // length
@@ -571,10 +572,7 @@ inline scag::util::storage::Deserializer& operator >> ( scag::util::storage::Des
     const char* buf = deser.readAsIs(8);
     char val[30];
     scag2::pvss::AbntAddr::unpack(val,buf);
-    if ( len != strlen(val) ) {
-        fprintf(stderr,"mismatch len=%u val=%s vallen=%u\n",len,val,unsigned(strlen(val)));
-        exit(-1);
-    }
+    assert( len == strlen(val) );
     addr.setValue( len, plan, type, val );
     return deser;
 };
