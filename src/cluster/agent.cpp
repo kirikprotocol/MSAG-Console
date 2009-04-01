@@ -62,7 +62,7 @@ void SendCommand(Socket &socket, uint16_t val)
     // Command
     uint16_t value = htons(val);
 
-    memcpy((void*)(buffer + 4), (const void*)&val, 4);
+    memcpy((void*)(buffer + 4), (const void*)&value, 2);
 
     int toWrite = size;
     const char* writeBuffer = (const char *)buffer;
