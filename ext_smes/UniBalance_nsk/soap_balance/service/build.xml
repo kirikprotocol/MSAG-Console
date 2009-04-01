@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="service" default="package" basedir=".">
+<project name="soap_balance-service" default="package" basedir=".">
 
   <!-- ====================================================================== -->
   <!-- Build environment properties                                           -->
@@ -8,7 +8,7 @@
   <property file="build.properties"/>
   <property file="${user.home}/build.properties"/>
 
-  <property name="artifact.id" value="service"/>
+  <property name="artifact.id" value="soap_balance-service"/>
   <property name="build.name" value="${artifact.id}-${version}"/>
   <property name="build.dir" location="${basedir}/target"/>
   <property name="build.output" location="${build.dir}/classes"/>
@@ -45,6 +45,7 @@
   <!-- ====================================================================== -->
 
   <target name="compile" description="Compile the code">
+  <echo>WARN!!!!!!! Service ${basedir}</echo>
     <mkdir dir="${build.output}"/>
     <javac srcDir="${src.home}" 
           destdir="${build.output}" 
