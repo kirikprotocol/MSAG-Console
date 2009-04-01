@@ -183,6 +183,13 @@
 
   <target name="package" depends="compile,test" description="Package the application">
     <jar jarfile="${build.dir}/${build.name}.jar" basedir="${build.output}" excludes="**/package.html"/>
+    <jar jarfile="${build.dir}/${build.name}.jar" basedir="${build.output}" excludes="**/package.html">
+      <manifest>
+        <attribute name="Main-Class"
+                   value="com.sibinco.soap_balance.client.Server"/>
+      </manifest>
+    </jar>
+
   </target>
 
   <!-- ====================================================================== -->
