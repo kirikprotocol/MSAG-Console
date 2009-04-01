@@ -45,6 +45,10 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
   unsigned number = 0;
   int iterCount = 0;
   for (int i = 0; i < addrsCount; ++i) {
+    if (isStopped_) {
+      smsc_log_warn(logger_, "pers client stopped");
+      break;
+    }
     ProfileKey key = generator_.getProfileKey();
     commandsSetConfigured(key.getAbonentKey(), i, "test_abnt_prop", PT_ABONENT, getsetCount);
   }
@@ -162,7 +166,29 @@ PersCall* PvssFlooder::createPersCall( ProfileType pfType,
     }
     return call;
 }
+void PvssFlooder::delay() {
+  hrtime_t endTime = gethrtime();
+  hrtime_t procTime = endTime - startTime_;
+  smsc_log_debug(logger_, "delay=%d ns procTime=%d ns", delay_, procTime);
+  unsigned sleepTime = delay_ - procTime - overdelay_;
+  if (delay_ > procTime + overdelay_ && sleepTime > 1000000) {
+    __trace2__("try to sleep:%d ns, delay=%d ns", sleepTime, delay_);
+    timespec ts,rm={0,0};
+    ts.tv_sec = 0;
+    ts.tv_nsec= sleepTime;
+    nanosleep(&ts,&rm);
+    overdelay_ = gethrtime() - endTime - sleepTime;
+    __trace2__("wake, overdelay=%d ns", overdelay_);
+    if (overdelay_ < 0) {
+      overdelay_ = 0;
+    }
+  } else {
+    overdelay_ -= delay_;
+    if (overdelay_ < 0) overdelay_ = 0;
+  }
+}
 
+/*
 void PvssFlooder::delay() {
   hrtime_t procTime = gethrtime() - startTime_;
   //hrtime_t procTime = procTime_;
@@ -174,8 +200,14 @@ void PvssFlooder::delay() {
   if (delay_ > procTime + overdelay_) {
     startTime_ = gethrtime();
     unsigned sleepTime = delay_ - procTime - overdelay_;
-    __trace2__("try to sleep:%d ms, delay=%d ns", sleepTime, delay_);
-    millisleep(sleepTime);
+    __trace2__("try to sleep:%d, delay=%d", sleepTime, delay_);
+
+    millisleep(sleepTime / 1000);
+
+    timespec ts,rm={0,0};
+    ts.tv_sec = 0;
+    ts.tv_nsec= sleepTime * 1000;
+    nanosleep(&ts,&rm);
     overdelay_ = (gethrtime() - startTime_) / 1000 - sleepTime;
     //overdelay_ = (gethrtime() - startTime_) / 1000 - sleepTime;
   } else {
@@ -184,6 +216,7 @@ void PvssFlooder::delay() {
     if (overdelay_ < 0) overdelay_ = 0;
   }
 }
+*/
 
 void PvssFlooder::commandsSetConfigured(const string& addr) {
   string strPropName = "some.string.var";
