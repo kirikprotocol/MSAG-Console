@@ -27,7 +27,7 @@ public:
     int32_t            getProviderKey() const { return intKey_; }
     int32_t            getServiceKey() const { return intKey_; }
     
-    void setAbonentKey( const std::string& key ) { scopeType_ = ABONENT; abonentKey_ = key; address_.setAddress(abonentKey_.c_str()); }
+    void setAbonentKey( const std::string& key ) { scopeType_ = ABONENT; abonentKey_ = key; address_.fromString(abonentKey_.c_str()); }
     void setOperatorKey( int32_t key ) { scopeType_ = OPERATOR; intKey_ = key; }
     void setProviderKey( int32_t key ) { scopeType_ = PROVIDER; intKey_ = key; }
     void setServiceKey( int32_t key ) { scopeType_ = SERVICE; intKey_ = key; }

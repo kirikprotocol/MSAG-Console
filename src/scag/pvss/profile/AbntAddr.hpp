@@ -2,16 +2,265 @@
 #define _SCAG_PVSS_PROFILE_ABNTADDR_HPP_
 
 #include <string>
-#include <vector>
-
-#include <sms/sms.h>
-#include <sms/sms_const.h>
+#include <cstdlib>
+// #include <vector>
+// #include <sms/sms.h>
+// #include <sms/sms_const.h>
+#include <cstring>
 #include <util/crc32.h>
-
+#include "scag/exc/IOException.h"
 #include "scag/util/storage/Serializer.h"
 
-namespace scag2 { namespace pvss {
+namespace scag2 {
+namespace pvss {
 
+class AbntAddr
+{
+public:
+    static bool getAllowNewPacking() { return allowNewPacking_; }
+    static void setAllowNewPacking( bool yes ) { allowNewPacking_ = yes; }
+
+private:
+    static const unsigned PACKED_SIZE = 8;
+    static bool allowNewPacking_;
+
+public:
+    // default ctor
+    AbntAddr() { number_.number = 0; }
+    
+    AbntAddr( uint8_t len, uint8_t type, uint8_t plan, const char* val )
+    {
+        setValue( len, type, plan, val );
+    }
+
+    /*
+    AbntAddr( const char* text ) 
+    {
+        fromString( text );
+    }
+     */
+
+    // default impl is fine.
+    // AbntAddr( const AbntAddr& );
+    // AbntAddr& operator = ( const AbntAddr& );
+    // ~AbntAddr() {}
+
+    /*
+    AbntAddr( const smsc::sms::Address& addr )
+    {
+        tp_.data.type = addr.type;
+        tp_.data.plan = addr.plan;
+        setValue( addr.length, addr.value );
+    }
+     */
+
+
+    // === operators
+    inline bool operator == ( const AbntAddr& addr ) const
+    {
+        return number_.number == addr.number_.number;
+    }
+
+
+    inline bool operator != ( const AbntAddr& addr ) const
+    {
+        return !(*this == addr);
+    }
+
+
+    inline bool operator < ( const AbntAddr& addr ) const
+    {
+        return number_.number < addr.number_.number;
+    }
+
+
+    inline void setTypeOfNumber( uint8_t type ) {
+        number_.data.ton = type;
+    }
+
+
+    inline uint8_t getTypeOfNumber() const {
+        return number_.data.ton;
+    }
+
+
+    inline void setNumberingPlan( uint8_t plan ) {
+        number_.data.npi = plan;
+    }
+
+
+    inline uint8_t getNumberingPlan() const {
+        return number_.data.npi;
+    }
+
+
+    inline uint8_t getLength() const {
+        return number_.data.len;
+    }
+
+
+    inline uint64_t getNumber() const {
+        return number_.data.value;
+    }
+
+
+    // NOTE: buf must be large enough
+    // @return the length of the address
+    static unsigned unpack( char* buf, const char* from )
+    {
+        const bool oldformat = (from[7] == char(0xff));
+        unsigned pos = 0;
+        unsigned char h, l, c;
+        for ( unsigned idx = 0; idx < PACKED_SIZE-1; ++idx ) {
+            c = static_cast<unsigned char>(*from++);
+            if ( oldformat ) {
+                l = c >> 4;
+                h = c & 0xf;
+            } else {
+                h = c >> 4;
+                l = c & 0xf;
+            }
+            if ( h > 0x9 ) break;
+            buf[pos++] = char(h+0x30);
+            if ( l > 0x9 ) break;
+            buf[pos++] = char(l+0x30);
+        }
+        buf[pos] = '\0';
+        return pos;
+    }
+    
+
+    /// pack into buffer, buffer must be large enough
+    void pack( char* buf ) const
+    {
+        memset(buf,0xff,PACKED_SIZE);
+
+        bool oldformat = !getAllowNewPacking();
+        unsigned len = number_.data.len;
+        if ( len > (PACKED_SIZE-1)*2 ) {
+            // we cannot distinguish in that case
+            oldformat = true;
+        }
+
+        if ( len > PACKED_SIZE*2 ) {
+            len = PACKED_SIZE*2;
+        }
+
+        if ( !oldformat ) buf[7] = 0xfe;
+        char tmp[20];
+        snprintf(tmp,sizeof(tmp),"%0*llu",len,number_.data.value);
+        unsigned char h, l, c;
+        unsigned pos = 0;
+        for ( unsigned idx = 0; idx < len; ) {
+            h = tmp[idx++]-0x30;
+            l = tmp[idx++];
+            if ( l == '\0') l = 0xf;
+            else l -= 0x30;
+            if ( oldformat ) std::swap(h,l);
+            c = (h << 4) | l;
+            buf[pos++] = char(c);
+        }
+    }
+
+
+    inline std::string toString() const
+    {
+        unsigned len = number_.data.len;
+        if ( len == 0 || getTypeOfNumber() > 0x9 ) return "";
+        char ret[35];
+        sprintf(ret,".%u.%u.%0*llu",getTypeOfNumber(),getNumberingPlan(),len,number_.data.value);
+        return ret;
+    }
+
+
+    void fromString( const char* address )
+    {
+        static const char* where = "AbntAddr::fromString";
+        if ( !address ) throw exceptions::IOException("%s: bad address null", where);
+        int iplan, itype;
+        char buf[20];
+        int scaned = sscanf( address, ".%u.%u.%15s", &itype, &iplan, buf);
+        if ( scaned != 3 ) {
+            scaned = sscanf( address, "+%15[0123456789]s", buf);
+            if (scaned) {
+                iplan = 1;
+                itype = 1;
+            } else {
+                scaned = sscanf(address, "%15[0123456789]s", buf);
+                if (!scaned) throw exceptions::IOException("%s: bad address %s", where, address);
+                iplan = 1;
+                itype = 1;
+            }
+        }
+        setValue(strlen(buf),itype,iplan,buf);
+    }
+
+
+    // hashing.
+    // NOTE: it may differ for little/big endian systems
+    inline uint32_t HashCode( uint32_t attempt = 0 ) const
+    {
+        uint32_t res = smsc::util::crc32(0, &number_.number, sizeof(number_.number) );
+        for ( ; attempt > 0; --attempt ) res = smsc::util::crc32(res,&number_.number,sizeof(number_.number));
+        return res;
+    }
+
+
+    // hashing #2, see notes to HashCode
+    static uint32_t CalcHash( const AbntAddr& key )
+    {
+        return key.HashCode(0);
+    }
+
+
+    void setValue( unsigned len, uint8_t type, uint8_t plan, const char* value )
+    {
+        static const char* where = "AbntAddr::setValue";
+        // if ( !len || !value || !*value ) {
+        // throw exceptions::IOException("%s: bad address NULL", where);
+        // }
+        if ( len > PACKED_SIZE*2 ) {
+            throw exceptions::IOException("%s: too large value, len=%u val=%s", where, len, value);
+        }
+        const unsigned vallen = unsigned(strlen(value));
+        if ( vallen < len ) {
+            throw exceptions::IOException("%s: length mismatch: len=%u val=%s", where, len, value);
+        }
+        number_.data.ton = type;
+        number_.data.npi = plan;
+        uint64_t newval = 0;
+        number_.data.len = len;
+        const char* p = value;
+        for ( unsigned idx = len; idx > 0; --idx ) {
+            if ( !isdigit(*p) ) throw exceptions::IOException("%s: not a digit (0x%x) in val=%s", where, unsigned(*p) & 0xff, value );
+            newval *= 10;
+            newval += unsigned((*p++) - 0x30);
+        }
+        number_.data.value = newval;
+    }
+
+private:
+    union {
+        uint64_t number;
+        struct {
+            // NOTE: value has highest precedence
+#if	__BYTE_ORDER == __BIG_ENDIAN
+            uint64_t value:52;    // address
+            unsigned len:4;       // length
+            unsigned ton:4;
+            unsigned npi:4;
+#endif
+#if	__BYTE_ORDER == __LITTLE_ENDIAN
+            unsigned npi:4;
+            unsigned ton:4;
+            unsigned len:4;       // length
+            uint64_t value:52;    // address
+#endif
+        } data;
+    } number_;
+};
+
+/*
 using std::string;
 using smsc::util::crc32;
 using std::runtime_error;
@@ -283,26 +532,29 @@ private:
   AbntAddrValue value;
   uint64_t number;
 };
+ */
 
 } //pvss
 } //scag2
 
-inline scag::util::storage::Serializer& operator << (scag::util::storage::Serializer& ser, 
-                                                     const scag2::pvss::AbntAddr& addr) { 
+
+inline scag::util::storage::Serializer& operator << ( scag::util::storage::Serializer& ser, 
+                                                      const scag2::pvss::AbntAddr& addr) { 
   //uint8_t len = addr.getLength() & 0x1F;
   //uint8_t plan = (addr.getNumberingPlan() & 0x07) << 5;
   //uint8_t res = len | plan;
   //ser << res;
-
-  ser << addr.getLength();
-  ser << addr.getNumberingPlan();
-  ser << addr.getTypeOfNumber();
-  ser.writeAsIs(addr.getValueSize(), (const char*)(addr.getContentSignals()));
-  return ser; 
+    ser << addr.getLength();
+    ser << addr.getNumberingPlan();
+    ser << addr.getTypeOfNumber();
+    char buf[10];
+    addr.pack(buf);
+    ser.writeAsIs(8,buf);
+    return ser; 
 };
 
-inline scag::util::storage::Deserializer& operator >> (scag::util::storage::Deserializer& deser,
-                                                 scag2::pvss::AbntAddr& addr) { 
+inline scag::util::storage::Deserializer& operator >> ( scag::util::storage::Deserializer& deser,
+                                                        scag2::pvss::AbntAddr& addr) { 
   //uint8_t lenplan = 0;
   //deser >> lenplan;
   //uint8_t type = 0;
@@ -310,15 +562,21 @@ inline scag::util::storage::Deserializer& operator >> (scag::util::storage::Dese
   //uint8_t len = lenplan & 0x1F;
   //uint8_t plan = (lenplan >> 5) & 0x07;
 
-  uint8_t len = 0;
-  deser >> len;
-  uint8_t plan = 0;
-  deser >> plan;
-  uint8_t type = 0;
-  deser >> type;
-  const char* buf = deser.readAsIs(addr.getValueSize());
-  addr.setAllValues(len, plan, type, buf);
-  return deser;
+    uint8_t len = 0;
+    deser >> len;
+    uint8_t plan = 0;
+    deser >> plan;
+    uint8_t type = 0;
+    deser >> type;
+    const char* buf = deser.readAsIs(8);
+    char val[30];
+    scag2::pvss::AbntAddr::unpack(val,buf);
+    if ( len != strlen(val) ) {
+        fprintf(stderr,"mismatch len=%u val=%s vallen=%u\n",len,val,unsigned(strlen(val)));
+        exit(-1);
+    }
+    addr.setValue( len, plan, type, val );
+    return deser;
 };
 
 

@@ -23,9 +23,10 @@ namespace util {
 std::auto_ptr< char > HexDump::digits_;
 
 char* HexDump::hexdump( char* outbuf,
-                        const char* inbuf,
+                        const void* inBuf,
                         size_t insize )
 {
+    const char* inbuf = reinterpret_cast<const char*>(inBuf);
     if ( ! digits_.get() ) {
         smsc::core::synchronization::MutexGuard mg(::mtx);
         digits_ = ::getDigits();
@@ -41,9 +42,10 @@ char* HexDump::hexdump( char* outbuf,
 
 
 char* HexDump::strdump( char* outbuf,
-                        const char* inbuf,
+                        const void* inBuf,
                         size_t insize )
 {
+    const char* inbuf = reinterpret_cast<const char*>(inBuf);
     for ( size_t i = insize; i > 0; --i ) {
         unsigned char c = static_cast<unsigned char>(*(inbuf++));
         if ( c < 32 || c >= 127 ) c = '.';
@@ -52,15 +54,17 @@ char* HexDump::strdump( char* outbuf,
     return outbuf;
 }
 
-void HexDump::hexdump( std::string& out, const char* inbuf, size_t insize )
+void HexDump::hexdump( std::string& out, const void* inBuf, size_t insize )
 {
+    const char* inbuf = reinterpret_cast< const char* >(inBuf);
     const size_t pos = out.size();
     out.resize( out.size() + hexdumpsize(insize) );
     hexdump( const_cast<char*>(out.c_str()) + pos, inbuf, insize );
 }
 
-void HexDump::strdump( std::string& out, const char* inbuf, size_t insize )
+void HexDump::strdump( std::string& out, const void* inBuf, size_t insize )
 {
+    const char* inbuf = reinterpret_cast< const char* >(inBuf);
     const size_t pos = out.size();
     out.resize( out.size() + strdumpsize(insize) );
     strdump( const_cast<char*>(out.c_str()) + pos, inbuf, insize );
