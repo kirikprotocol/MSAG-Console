@@ -135,7 +135,7 @@ public:
   enum InvokeProblem {    //invocation problems
       rji_duplicateInvocation = 0, rji_unrecognizedOperation = 1
     , rji_mistypedArgument = 2, rji_resourceLimitation = 3
-    , rji_releaseInProgress = 4, rji_unrecognizedLinkedId = 5,
+    , rji_releaseInProgress = 4, rji_unrecognizedLinkedId = 5
     , rji_linkedResponseUnexpected = 6, rji_unexpectedLinkedOperation = 7
   };
   enum RResultProblem {   //returnResult(NL) problems
@@ -195,23 +195,23 @@ protected:
 public:
   ROSReject()
     : ROSComponentPrimitive(ROSComponentPrimitive::rosReject, (uint8_t)RejectProblem::rejGeneral, 0)
-    , problem(RejectProblem::rjg_unrecognizedPDU)
+    , _problem(RejectProblem::rjg_unrecognizedPDU)
   { }
-  ROSReject(GeneralProblem rjg_code)
+  ROSReject(RejectProblem::GeneralProblem rjg_code)
     : ROSComponentPrimitive(ROSComponentPrimitive::rosReject, (uint8_t)RejectProblem::rejGeneral, 0)
-    , problem(rjg_code)
+    , _problem(rjg_code)
   { }
-  ROSReject(InvokeProblem rji_code)
+  ROSReject(RejectProblem::RejectProblem::InvokeProblem rji_code)
     : ROSComponentPrimitive(ROSComponentPrimitive::rosReject, (uint8_t)RejectProblem::rejInvoke, 0)
-    , problem(rji_code)
+    , _problem(rji_code)
   { }
-  ROSReject(RResultProblem rjr_code)
+  ROSReject(RejectProblem::RResultProblem rjr_code)
     : ROSComponentPrimitive(ROSComponentPrimitive::rosReject, (uint8_t)RejectProblem::rejResult, 0)
-    , problem(rjr_code)
+    , _problem(rjr_code)
   { }
-  ROSReject(RErrorProblem rje_code)
+  ROSReject(RejectProblem::RErrorProblem rje_code)
     : ROSComponentPrimitive(ROSComponentPrimitive::rosReject, (uint8_t)RejectProblem::rejError, 0)
-    , problem(rje_code)
+    , _problem(rje_code)
   { }
 
   const RejectProblem & Problem(void) const { return _problem; }
