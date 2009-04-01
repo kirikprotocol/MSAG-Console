@@ -291,13 +291,13 @@ string SS7AddressToString(const ET96MAP_SS7_ADDR_T* addr)
     case 3:
     {
       ptr++;//trans type
-      isOdd=(ptr[1]&0x0f)==1;
+      isOdd=(ptr[1]&0x03)==1;
       ptr++;
     }break;
     case 4:
     {
       ptr++;//trans type
-      isOdd=(ptr[1]&0x0f)==1;
+      isOdd=(ptr[1]&0x03)==1;
       ptr+=2;//(num plan, enc scheme), nature of addr
     }break;
     default:return "";
