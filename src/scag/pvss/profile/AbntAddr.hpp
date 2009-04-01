@@ -2,7 +2,7 @@
 #define _SCAG_PVSS_PROFILE_ABNTADDR_HPP_
 
 #include <string>
-#include <cstdlib>
+#include <stdlib.h>
 // #include <vector>
 // #include <sms/sms.h>
 // #include <sms/sms_const.h>
@@ -572,9 +572,9 @@ inline scag::util::storage::Deserializer& operator >> ( scag::util::storage::Des
     const char* buf = deser.readAsIs(8);
     char val[30];
     scag2::pvss::AbntAddr::unpack(val,buf);
-    if ( len <= strlen(val) ) {
+    if ( len > strlen(val) ) {
         fprintf( stderr, "something wrong in abntaddr: len=%u, val=%s", unsigned(len), val);
-        ::abort();
+        abort();
     }
     addr.setValue( len, plan, type, val );
     return deser;
