@@ -55,11 +55,9 @@
     <mkdir dir="${java_out}"/>
 
     <fileset id="sources" dir="${java_src}" includes="**/*.properties"/>
-    <fileset id="common_libs" dir="${libs_path}" includes="log4j.jar"/>
     <fileset id="project_libs" dir="lib" includes="*.jar"/>
 
     <path id="classpath">
-      <fileset refid="common_libs"/>
       <fileset refid="project_libs"/>
     </path>
 
