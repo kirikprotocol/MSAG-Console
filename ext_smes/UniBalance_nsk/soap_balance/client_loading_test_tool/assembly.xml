@@ -6,11 +6,25 @@
     <dependencySet>
       <unpack>false</unpack>
       <scope>runtime</scope>
+      <useProjectArtifact>false</useProjectArtifact>
+      <outputDirectory>lib</outputDirectory>
     </dependencySet>
   </dependencySets>
+  <fileSets>
+    <fileSet>
+      <directory>src/main/assembly</directory>
+      <includes>
+        <include>run.sh</include>
+      </includes>
+      <outputDirectory>.</outputDirectory>
+      <filtered>true</filtered>
+      <fileMode>755</fileMode>
+    </fileSet>
+  </fileSets>
   <files>
     <file>
       <source>target/${artifactId}-${version}.jar</source>
+      <outputDirectory>lib</outputDirectory>
     </file>
   </files>
 </assembly>
