@@ -73,11 +73,15 @@
   </target>
 
   <target name="build" depends="compile, prepare" description="build jar">
-    <jar jarfile="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF/lib/${esme_name}.jar" manifest="MANIFEST.MF">
+    <manifest file="manifest.mf">
+      <attribute name="Implementation-Version" value="${release.version}"/>
+    </manifest>
+    <jar jarfile="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF/lib/${esme_name}.jar" manifest="manifest.mf">
 	    <fileset dir="${java_out}"/>
       <fileset dir="${java_src}" includes="**/*.properties"/>
       <fileset file="history.txt"/>
     </jar>
+    <delete file="manifest.mf"/>
   </target>
   
   <target name="distr" depends="prepare, build, copy_config" description="create new distribution"/>

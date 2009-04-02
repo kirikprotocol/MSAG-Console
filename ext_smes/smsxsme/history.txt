@@ -19,3 +19,6 @@
 ------------------------------------------------------------------------------------------------------------------------
  2009-03-07 | 2.11      | artem         | 1. Revert Calendar and Secret delivery status method to mysql
             |           |               | 2. Fix Sender delivery status method according 2 bytes umr
+------------------------------------------------------------------------------------------------------------------------
+ 2009-03-07 | 2.20      | artem         | 1. Revert Sender delivery status method to mysql
+            |           |               | 2. Add posibility to check abonent delivery status in group send
