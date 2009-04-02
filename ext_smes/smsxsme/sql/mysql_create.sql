@@ -45,7 +45,7 @@ CREATE TABLE sec_messages (
 
   PRIMARY KEY(id),
   INDEX(destination_address, status)
-) CHARACTER SET koi8r, ENGINE InnoDB;
+) CHARACTER SET koi8r ENGINE InnoDB;
 
 
 -- TABLES FOR SENDER
@@ -53,6 +53,7 @@ CREATE TABLE smpp_messages (
   id INT NOT NULL,
   smpp_status INT,
   status INT NOT NULL,
+  smpp_id BIGINT,
 
   PRIMARY KEY(id)
 ) CHARACTER SET koi8r, ENGINE InnoDB;
@@ -72,6 +73,16 @@ CREATE TABLE group_edit_profiles (
   address CHAR(20) NOT NULL PRIMARY KEY,
   send_notifications SMALLINT NOT NULL,
   lock_group_edit SMALLINT NOT NULL
+) ENGINE InnoDB;
+
+CREATE TABLE group_send (
+  id INT NOT NULL,
+  address VARCHAR(20) NOT NULL,
+  smpp_id BIGINT,
+  status TINYINT NOT NULL DEFAULT 0,
+
+  INDEX(id),
+  INDEX (smpp_id)
 ) ENGINE InnoDB;
 
 ##TABLES FOR BLACK LIST

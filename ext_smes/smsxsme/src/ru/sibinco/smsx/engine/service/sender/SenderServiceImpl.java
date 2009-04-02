@@ -1,13 +1,14 @@
 package ru.sibinco.smsx.engine.service.sender;
 
-import ru.sibinco.smsx.engine.service.ServiceInitializationException;
-import ru.sibinco.smsx.engine.service.CommandExecutionException;
-import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
-import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
-import ru.sibinco.smsx.engine.service.sender.commands.SenderHandleReceiptCmd;
-
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.utils.config.xml.XmlConfigSection;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
+import ru.sibinco.smsx.engine.service.ServiceInitializationException;
+import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
+import ru.sibinco.smsx.engine.service.sender.commands.SenderHandleReceiptCmd;
+import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
+import ru.sibinco.smsx.engine.service.sender.datasource.DBSenderDataSource;
+import ru.sibinco.smsx.engine.service.sender.datasource.SenderDataSource;
 
 /**
  * User: artem
@@ -16,11 +17,18 @@ import com.eyeline.utils.config.xml.XmlConfigSection;
 
 public class SenderServiceImpl implements SenderService{
 
+  private final SenderDataSource dataSource;
+  private final MessageSender senderMessage;
   private final SenderProcessor processor;
 
-  public SenderServiceImpl(XmlConfigSection config, OutgoingQueue outQueue, int umrSyffix) {
+  public SenderServiceImpl(XmlConfigSection config, OutgoingQueue outQueue, int serviceId) {
     try {
-      processor = new SenderProcessor(outQueue, umrSyffix);
+      dataSource = new DBSenderDataSource();
+
+      senderMessage = new MessageSender(outQueue, dataSource, serviceId);
+
+      processor = new SenderProcessor(dataSource, senderMessage, serviceId);
+
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);
     }
@@ -42,9 +50,10 @@ public class SenderServiceImpl implements SenderService{
   }
 
   public void stopService() {
+    dataSource.release();
   }
 
   public Object getMBean(String domain) {
-    return null;
+    return new SenderMBean(senderMessage);
   }
 }

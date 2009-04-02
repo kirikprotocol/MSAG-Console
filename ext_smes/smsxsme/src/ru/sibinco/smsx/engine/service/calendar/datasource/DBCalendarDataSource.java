@@ -4,6 +4,7 @@ import java.sql.*;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import snaq.db.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
@@ -17,9 +18,8 @@ import ru.sibinco.smsx.utils.DataSourceException;
 
 public class DBCalendarDataSource extends DBDataSource implements CalendarDataSource {
 
-  private static final Object idLock = new Object();
   private final ConnectionPool pool;
-  private int id;
+  private AtomicInteger id;
 
   public DBCalendarDataSource() throws DataSourceException {
     super(DBCalendarDataSource.class.getResourceAsStream("calendar.properties"), "");
@@ -27,9 +27,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     pool = ConnectionPoolFactory.createConnectionPool("calendar", Integer.MAX_VALUE, 60000);
     pool.init(1);
 
-    synchronized (idLock) {
-      this.id = loadId();
-    }
+    this.id = new AtomicInteger(loadId());
   }
 
   private int loadId() throws DataSourceException {
@@ -170,12 +168,8 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
       ps.setString(10, calendarMessage.getMscAddress());
       ps.setInt(11, calendarMessage.isAppendAdvertising() ? 1 : 0);
 
-      if (!calendarMessage.isExists()) {
-        synchronized (idLock) {
-          id++;
-          calendarMessage.setId(id);
-        }
-      }
+      if (!calendarMessage.isExists())
+        calendarMessage.setId(id.incrementAndGet());
 
       ps.setInt(12, calendarMessage.getId());
 

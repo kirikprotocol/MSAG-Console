@@ -10,6 +10,7 @@ import ru.sibinco.smsx.engine.service.group.datasource.*;
 import ru.sibinco.smsx.engine.service.group.datasource.impl.distrlist.FileDistrListDataSource;
 import ru.sibinco.smsx.engine.service.group.datasource.impl.principal.FilePrincipalDataSource;
 import ru.sibinco.smsx.engine.service.group.datasource.impl.profile.DBGroupEditProfileDataSource;
+import ru.sibinco.smsx.engine.service.group.datasource.impl.send.DBGroupSendDataSource;
 import ru.sibinco.smsx.Context;
 
 import java.io.File;
@@ -29,6 +30,7 @@ public class GroupServiceImpl implements Service, GroupService {
   private final PrincipalDataSource principalDS;
   private final RepliesMap replies;
   private final GroupProfileProcessor profileProcessor;
+  private final GroupSendDataSource sendDS;
 
   public GroupServiceImpl(XmlConfigSection g, OutgoingQueue outQueue, int serviceId) throws ServiceInitializationException {
     try {
@@ -36,9 +38,10 @@ public class GroupServiceImpl implements Service, GroupService {
       this.listsDS = new FileDistrListDataSource(new File(storeDir, "members.bin"), new File(storeDir, "submitters.bin"), new File(storeDir, "lists.bin"));
       this.principalDS = new FilePrincipalDataSource(new File(storeDir, "principals.bin"));
       this.groupEditDSProfile = new DBGroupEditProfileDataSource();
+      this.sendDS = new DBGroupSendDataSource();
 
       this.replies = new RepliesMap(new File(storeDir, "groupreplies.bin"), g.getInt("replies.cache.size", 10000));
-      this.sendProcessor = new GroupSendProcessor(g, outQueue, listsDS, replies, Context.getInstance().getOperators(), serviceId);
+      this.sendProcessor = new GroupSendProcessor(g, outQueue, listsDS, replies, Context.getInstance().getOperators(), sendDS, serviceId);
       this.editProcessor = new GroupEditProcessor(g, listsDS, principalDS, Context.getInstance().getOperators());
       this.profileProcessor = new GroupProfileProcessor(groupEditDSProfile);
     } catch (Exception e) {
@@ -55,6 +58,7 @@ public class GroupServiceImpl implements Service, GroupService {
     listsDS.close();
     principalDS.close();
     replies.shutdown();
+    sendDS.release();
   }
 
   public Object getMBean(String domain) {

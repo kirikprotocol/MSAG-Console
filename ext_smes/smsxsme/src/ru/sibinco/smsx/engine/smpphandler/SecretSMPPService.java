@@ -73,6 +73,7 @@ public class SecretSMPPService extends AbstractSMPPService {
         final SecretHandleReceiptCmd cmd = new SecretHandleReceiptCmd();
         cmd.setSmppMessageId(msgId);
         cmd.setDelivered(delivered);
+        cmd.setUmr(inObj.getMessage().getUserMessageReference());
 
         if (Services.getInstance().getSecretService().execute(cmd)) {
           inObj.respond(Data.ESME_ROK);

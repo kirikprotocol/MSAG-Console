@@ -2,18 +2,18 @@ package ru.sibinco.smsx.engine.smpphandler;
 
 import com.eyeline.sme.handler.SMPPRequest;
 import com.eyeline.sme.handler.SMPPServiceException;
-import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.logica.smpp.Data;
-import ru.sibinco.smsx.engine.service.group.commands.GroupDeliveryReportCmd;
-import ru.sibinco.smsx.engine.service.group.commands.GroupSendCmd;
-import ru.sibinco.smsx.engine.service.group.commands.GroupReplyCmd;
-import ru.sibinco.smsx.engine.service.group.commands.GroupSendCommand;
-import ru.sibinco.smsx.engine.service.group.DeliveryStatus;
-import ru.sibinco.smsx.engine.service.*;
-import ru.aurorisoft.smpp.SMPPException;
-import ru.aurorisoft.smpp.Message;
 import org.apache.log4j.Category;
+import ru.aurorisoft.smpp.Message;
+import ru.aurorisoft.smpp.SMPPException;
+import ru.sibinco.smsx.engine.service.*;
+import ru.sibinco.smsx.engine.service.group.DeliveryStatus;
+import ru.sibinco.smsx.engine.service.group.commands.GroupDeliveryReportCmd;
+import ru.sibinco.smsx.engine.service.group.commands.GroupReplyCmd;
+import ru.sibinco.smsx.engine.service.group.commands.GroupSendCmd;
+import ru.sibinco.smsx.engine.service.group.commands.GroupSendCommand;
 
 /**
  * User: artem
@@ -170,6 +170,7 @@ public class GroupSendSMPPService extends AbstractSMPPService {
     GroupDeliveryReportCmd cmd = new GroupDeliveryReportCmd();
     cmd.setUmr(m.getUserMessageReference());
     cmd.setDelivered(m.getMessageState() == Message.MSG_STATE_DELIVERED);
+    cmd.setMsgId(Long.parseLong(m.getReceiptedMessageId()));
 
     try {
       Services.getInstance().getGroupService().execute(cmd);

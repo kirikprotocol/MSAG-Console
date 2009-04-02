@@ -2,6 +2,7 @@ package ru.sibinco.smsx.engine.service.secret.datasource;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -17,8 +18,7 @@ import ru.sibinco.smsx.utils.DataSourceException;
 
 public class DBSecretDataSource extends DBDataSource implements SecretDataSource {
 
-  private static final Object idLock = new Object();
-  private int id;
+  private AtomicInteger id;
   private final ConnectionPool pool;
   private final Matcher loadUserByAddresses;
 
@@ -28,9 +28,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     pool = ConnectionPoolFactory.createConnectionPool("secret", Integer.MAX_VALUE, 60000);
     pool.init(1);
 
-    synchronized (idLock) {
-      id = loadId();
-    }
+    id = new AtomicInteger(loadId());
 
     loadUserByAddresses = Pattern.compile("0").matcher(getSql("secret.user.load.by.addresses"));
   }
@@ -312,12 +310,8 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       ps.setString(10, secretMessage.getMscAddress());
       ps.setInt(11, secretMessage.isAppendAdvertising() ? 1 : 0);
 
-      if (!secretMessage.isExists()) {
-        synchronized (idLock) {
-          id++;
-          secretMessage.setId(id);
-        }
-      }
+      if (!secretMessage.isExists())
+        secretMessage.setId(id.incrementAndGet());
 
       ps.setInt(12, secretMessage.getId());
 

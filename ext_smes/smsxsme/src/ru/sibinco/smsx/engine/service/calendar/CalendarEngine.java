@@ -35,18 +35,20 @@ class CalendarEngine extends IterativeWorker {
   private final CalendarDataSource ds;
   private final ThreadPoolExecutor executor;
   private final AdvertisingClient advClient;
+  private final int serviceId;
   private String advDelim;
   private int advSize;
   private String advService;
 
   private volatile int rejectedTasks;  
 
-  CalendarEngine(OutgoingQueue outQueue, MessagesQueue messagesQueue, CalendarDataSource ds, AdvertisingClient advClient, long workingInterval) {
+  CalendarEngine(OutgoingQueue outQueue, MessagesQueue messagesQueue, CalendarDataSource ds, AdvertisingClient advClient, long workingInterval, int serviceId) {
     super(log);
 
     this.outQueue = outQueue;
     this.workingInterval = workingInterval;
     this.ds = ds;
+    this.serviceId = serviceId;
     this.advClient = advClient;
     this.messagesQueue = messagesQueue;
     this.executor = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue(100), new ThreadFactoryWithCounter("CalEngine-Executor-"));
@@ -144,8 +146,10 @@ class CalendarEngine extends IterativeWorker {
       msg.setDestAddrSubunit(message.getDestAddressSubunit());
       msg.setConnectionName(message.getConnectionName());
       msg.setMscAddress(message.getMscAddress());
-      if (message.isSaveDeliveryStatus())
+      if (message.isSaveDeliveryStatus()) {
+        msg.setUserMessageReference(serviceId);
         msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
+      }
 
       String messageString = message.getMessage();
       if (message.isAppendAdvertising()) {

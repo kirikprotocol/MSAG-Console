@@ -32,6 +32,7 @@ class MessageSender {
   private final OutgoingQueue outQueue;
   private final AdvertisingClient advClient;
   private final ThreadPoolExecutor executor;
+  private final int serviceId;
 
   private String serviceAddress;
   private String msgDestinationAbonentInform;
@@ -46,11 +47,12 @@ class MessageSender {
   private volatile int rejectedTasks;
 
 
-  MessageSender(SecretDataSource ds, OutgoingQueue outQueue, AdvertisingClient advClient) {
+  MessageSender(SecretDataSource ds, OutgoingQueue outQueue, AdvertisingClient advClient, int serviceId) {
     this.ds = ds;
     this.outQueue = outQueue;
     this.advClient = advClient;
-    this.executor = new ThreadPoolExecutor(3, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1000), new ThreadFactoryWithCounter("SecMsgSender-Executor-"));
+    this.serviceId = serviceId;
+    this.executor = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1000), new ThreadFactoryWithCounter("SecMsgSender-Executor-"));
   }
 
   public String getAdvDelim() {
@@ -133,8 +135,10 @@ class MessageSender {
     outMsg.setDestAddrSubunit(message.getDestAddressSubunit());
     outMsg.setConnectionName(message.getConnectionName());
     outMsg.setMscAddress(message.getMscAddress());
-    if (message.isSaveDeliveryStatus())
+    if (message.isSaveDeliveryStatus()) {
+      outMsg.setUserMessageReference(serviceId);
       outMsg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
+    }
 
     String messageString = message.getMessage();
     if (message.isAppendAdvertising()) {

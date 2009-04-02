@@ -13,6 +13,7 @@ public class SecretHandleReceiptCmd extends Command {
   
   private boolean delivered;
   private long smppMessageId;
+  private int umr;
 
   public long getSmppMessageId() {
     return smppMessageId;
@@ -28,6 +29,14 @@ public class SecretHandleReceiptCmd extends Command {
 
   public void setDelivered(boolean delivered) {
     this.delivered = delivered;
+  }
+
+  public int getUmr() {
+    return umr;
+  }
+
+  public void setUmr(int umr) {
+    this.umr = umr;
   }
 
   public interface Receiver {

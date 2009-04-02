@@ -11,11 +11,8 @@ import ru.sibinco.smsx.engine.service.secret.datasource.SecretUser;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretUserWithMessages;
 import ru.sibinco.smsx.utils.DataSourceException;
 
-import java.io.*;
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 /**
@@ -34,10 +31,12 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
 
   private final SecretDataSource ds;
   private final MessageSender messageSender;
+  private final int serviceId;
 
-  SecretProcessor(SecretDataSource ds, MessageSender messageSender) {
+  SecretProcessor(SecretDataSource ds, MessageSender messageSender, int serviceId) {
     this.ds = ds;
     this.messageSender = messageSender;
+    this.serviceId = serviceId;
   }
 
 
@@ -254,8 +253,11 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
       if (log.isInfoEnabled())
         log.info("Handle rcpt: id=" + cmd.getSmppMessageId()    + "; dlvr=" + cmd.isDelivered());
 
-      int result = ds.updateMessageStatus(cmd.getSmppMessageId(), cmd.isDelivered() ? SecretMessage.STATUS_DELIVERED : SecretMessage.STATUS_DELIVERY_FAILED);
-      return result > 0;
+      if (cmd.getUmr() == serviceId) {
+        ds.updateMessageStatus(cmd.getSmppMessageId(), cmd.isDelivered() ? SecretMessage.STATUS_DELIVERED : SecretMessage.STATUS_DELIVERY_FAILED);
+        return true;
+      }
+      return false;
 
     } catch (DataSourceException e) {
       log.error(e,e);

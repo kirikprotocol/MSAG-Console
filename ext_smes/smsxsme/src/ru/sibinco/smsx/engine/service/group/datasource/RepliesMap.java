@@ -5,6 +5,8 @@ import com.eyeline.utils.FixedArrayCache;
 import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.io.File;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * User: artem
@@ -14,6 +16,7 @@ public class RepliesMap {
 
   private final JStore store;
   private final FixedArrayCache<Long> cache;
+  private final Lock lock = new ReentrantLock();
 
   public RepliesMap(File file, int cacheSize) {
     store = new JStore(-1);
@@ -21,7 +24,7 @@ public class RepliesMap {
     cache = new FixedArrayCache<Long>(cacheSize);
 
     // load cache
-    int i=0;
+    int i = 0;
     for (long msisdn : store.keySet()) {
       if (i < cacheSize)
         cache.add(msisdn);
@@ -33,18 +36,23 @@ public class RepliesMap {
 
   public void put(String msisdn, int listId) throws DataSourceException {
     long msisdnLong = getKey(msisdn);
-    int key;
-    if ((key = cache.contains(msisdnLong)) >= 0) {
-      cache.update(key);
-    } else {
-      if (cache.isFull()) {
-        long lastMsisdn = cache.getLast();
-        store.remove(lastMsisdn);
+    try {
+      lock.lock();
+      int key;
+      if ((key = cache.contains(msisdnLong)) >= 0) {
+        cache.update(key);
+      } else {
+        if (cache.isFull()) {
+          long lastMsisdn = cache.getLast();
+          store.remove(lastMsisdn);
+        }
+        cache.add(msisdnLong);
       }
-      cache.add(msisdnLong);
-    }
 
-    store.put(msisdnLong, listId);
+      store.put(msisdnLong, listId);
+    } finally {
+      lock.unlock();
+    }
   }
 
   private static long getKey(String msisdn) {
@@ -54,15 +62,30 @@ public class RepliesMap {
   }
 
   public int get(String msisdn) {
-    return store.get(getKey(msisdn));
+    try {
+      lock.lock();
+      return store.get(getKey(msisdn));
+    } finally {
+      lock.unlock();
+    }
   }
 
   public int size() {
-    return store.size();
+    try {
+      lock.lock();
+      return store.size();
+    } finally {
+      lock.unlock();
+    }
   }
 
   public void shutdown() {
-    store.shutdown();
+    try {
+      lock.lock();
+      store.shutdown();
+    } finally {
+      lock.unlock();
+    }
   }
 
 

@@ -176,6 +176,10 @@ public class Sme {
 
   private static class Multiplexor extends TestMultiplexor {
 
+    private Multiplexor() {
+      setReceiptTimeout(1000);
+    }
+
     public void sendResponse(PDU pdu) {
     }
 

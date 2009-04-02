@@ -83,6 +83,7 @@ public class CalendarSMPPService extends AbstractSMPPService {
         final CalendarHandleReceiptCmd cmd = new CalendarHandleReceiptCmd();
         cmd.setSmppMessageId(msgId);
         cmd.setDelivered(delivered);
+        cmd.setUmr(inObj.getMessage().getUserMessageReference());
 
         if (Services.getInstance().getCalendarService().execute(cmd)) {
           inObj.respond(Data.ESME_ROK);

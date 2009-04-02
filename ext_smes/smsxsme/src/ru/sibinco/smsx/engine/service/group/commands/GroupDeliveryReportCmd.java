@@ -12,6 +12,7 @@ public class GroupDeliveryReportCmd extends Command {
 
   private boolean delivered;
   private int umr;
+  private long msgId;
 
   public boolean isDelivered() {
     return delivered;
@@ -27,7 +28,15 @@ public class GroupDeliveryReportCmd extends Command {
 
   public void setUmr(int umr) {
     this.umr = umr;
-  }  
+  }
+
+  public long getMsgId() {
+    return msgId;
+  }
+
+  public void setMsgId(long msgId) {
+    this.msgId = msgId;
+  }
 
   public interface Receiver {
     public boolean execute(GroupDeliveryReportCmd cmd) throws CommandExecutionException;

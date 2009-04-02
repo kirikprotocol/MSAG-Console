@@ -1,20 +1,17 @@
 package ru.sibinco.smsx.engine.service.calendar;
 
 import com.eyeline.sme.smpp.OutgoingQueue;
-import com.eyeline.utils.config.properties.PropertiesConfig;
-import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.xml.XmlConfigSection;
-import ru.sibinco.smsx.engine.service.ServiceInitializationException;
 import ru.sibinco.smsx.engine.service.CommandExecutionException;
+import ru.sibinco.smsx.engine.service.ServiceInitializationException;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStatusCmd;
-import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarHandleReceiptCmd;
+import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarDataSource;
 import ru.sibinco.smsx.engine.service.calendar.datasource.DBCalendarDataSource;
 import ru.sibinco.smsx.network.advertising.AdvertisingClient;
 import ru.sibinco.smsx.network.advertising.AdvertisingClientFactory;
 
-import java.io.File;
 import java.util.Calendar;
 
 /**
@@ -38,12 +35,12 @@ public class CalendarServiceImpl implements CalendarService {
 
       MessagesQueue messagesQueue = new MessagesQueue();
 
-      engine = new CalendarEngine(outQueue, messagesQueue, dataSource, advClient, cal.getLong("engine.working.interval", 60000));
+      engine = new CalendarEngine(outQueue, messagesQueue, dataSource, advClient, cal.getLong("engine.working.interval", 60000), serviceId);
       engine.setAdvDelim(cal.getString("advertising.delimiter"));
       engine.setAdvSize(cal.getInt("advertising.size"));
       engine.setAdvService(cal.getString("advertising.service"));
 
-      processor = new CalendarProcessor(messagesQueue, dataSource, cal.getInt("send.date.max.year", getCurrentYear() + 1));
+      processor = new CalendarProcessor(messagesQueue, dataSource, cal.getInt("send.date.max.year", getCurrentYear() + 1), serviceId);
 
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);

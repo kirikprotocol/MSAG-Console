@@ -29,11 +29,13 @@ public class SenderSMPPService extends AbstractSMPPService {
     try {
       if (type.equalsIgnoreCase("receipt")) { // Handle receipt
 
+        final long msgId = Long.parseLong(inObj.getMessage().getReceiptedMessageId());
         final boolean delivered = inObj.getMessage().getMessageState() == Message.MSG_STATE_DELIVERED;
 
         final SenderHandleReceiptCmd cmd = new SenderHandleReceiptCmd();
-        cmd.setUmr(inObj.getMessage().getUserMessageReference());
+        cmd.setSmppMessageId(msgId);
         cmd.setDelivered(delivered);
+        cmd.setUmr(inObj.getMessage().getUserMessageReference());
 
         if (Services.getInstance().getSenderService().execute(cmd)) {
           inObj.respond(Data.ESME_ROK);

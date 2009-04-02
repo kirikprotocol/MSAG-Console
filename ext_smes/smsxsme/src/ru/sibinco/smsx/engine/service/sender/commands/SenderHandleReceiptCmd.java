@@ -12,14 +12,15 @@ import ru.sibinco.smsx.engine.service.CommandExecutionException;
 public class SenderHandleReceiptCmd extends Command {
 
   private boolean delivered;
+  private long smppMessageId;
   private int umr;
 
-  public int getUmr() {
-    return umr;
+  public long getSmppMessageId() {
+    return smppMessageId;
   }
 
-  public void setUmr(int umr) {
-    this.umr = umr;
+  public void setSmppMessageId(long smppMessageId) {
+    this.smppMessageId = smppMessageId;
   }
 
   public boolean isDelivered() {
@@ -28,6 +29,14 @@ public class SenderHandleReceiptCmd extends Command {
 
   public void setDelivered(boolean delivered) {
     this.delivered = delivered;
+  }
+
+  public int getUmr() {
+    return umr;
+  }
+
+  public void setUmr(int umr) {
+    this.umr = umr;
   }
 
   public interface Receiver {
