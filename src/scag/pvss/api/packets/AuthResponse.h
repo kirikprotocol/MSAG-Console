@@ -1,16 +1,20 @@
 #ifndef _SCAG_PVSS_BASE_AUTHRESPONSE_H
 #define _SCAG_PVSS_BASE_AUTHRESPONSE_H
 
-#include "Response.h"
+#include "AbstractNonProfileResponse.h"
 
 namespace scag2 {
 namespace pvss {
 
-class AuthResponse : public Response
+class AuthResponse : public AbstractNonProfileResponse
 {
 public:
-    AuthResponse() : Response(), clientType_(0), sid_(0) {}
-    AuthResponse( uint32_t seqNum ) : Response(seqNum), clientType_(0), sid_(0) {}
+    AuthResponse() : AbstractNonProfileResponse(), clientType_(0), sid_(0) { initLog(); }
+    AuthResponse( uint32_t seqNum, uint8_t status = UNKNOWN ) :
+    AbstractNonProfileResponse(seqNum,status), clientType_(0), sid_(0) {
+        initLog();
+    }
+    virtual ~AuthResponse() { logDtor(); }
 
     virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitAuthResponse(*this);
@@ -31,7 +35,9 @@ protected:
 
 private:
     AuthResponse( const AuthResponse& other ) :
-    Response(other), clientType_(other.clientType_), sid_(other.sid_) {}
+    AbstractNonProfileResponse(other), clientType_(other.clientType_), sid_(other.sid_) {
+        initLog();
+    }
     AuthResponse& operator = ( const AuthResponse& other );
 
 private:

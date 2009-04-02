@@ -1,7 +1,7 @@
 #include "FlooderThread.h"
 #include "FlooderStat.h"
 #include "RequestGenerator.h"
-#include "scag/pvss/api/packets/AbstractProfileRequest.h"
+#include "scag/pvss/api/packets/ProfileRequest.h"
 
 namespace scag2 {
 namespace pvss {
@@ -20,16 +20,13 @@ profileKey_(stat_.getGenerator().getProfileKey())
 std::auto_ptr<Request> FlooderThread::generate()
 {
     while ( true ) {
-        AbstractCommand* cmd = stat_.getGenerator().generateCommand(pattern_);
+        ProfileCommand* cmd = stat_.getGenerator().generateCommand(pattern_);
         if ( ! cmd ) {
             // end of command patterns reached, we have to switch to a new profile key
             profileKey_ = stat_.getGenerator().getProfileKey();
             continue;
         }
-        AbstractProfileRequest* req = AbstractProfileRequest::create(cmd);
-        req->setProfileKey( profileKey_ );
-        // smsc_log_debug(log_,"request %s created", req->toString().c_str());
-        return std::auto_ptr<Request>(req);
+        return std::auto_ptr<Request>(new ProfileRequest(profileKey_,cmd));
     }
 }
 

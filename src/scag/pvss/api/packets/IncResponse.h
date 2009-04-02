@@ -9,10 +9,11 @@ namespace pvss {
 class IncResponse : public BatchResponseComponent
 {
 public:
-    IncResponse() : BatchResponseComponent(), result_(0) {}
-    IncResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum), result_(0) {}
+    IncResponse() : BatchResponseComponent(), result_(0) { initLog(); }
+    IncResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum), result_(0) { initLog(); }
+    virtual ~IncResponse() { logDtor(); }
 
-    virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
+    virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitIncResponse(*this);
     }
 
@@ -25,7 +26,9 @@ protected:
     virtual const char* typeToString() const { return "inc_resp"; }
 
 private:
-    IncResponse( const IncResponse& other ) : BatchResponseComponent(other), result_(other.result_) {}
+    IncResponse( const IncResponse& other ) : BatchResponseComponent(other), result_(other.result_) {
+        initLog();
+    }
     IncResponse& operator = ( const IncResponse& other );
 
 private:

@@ -1,4 +1,5 @@
 scag/pvss-clienttest clienttest \
+  -lscag-pvss-api-pvap \
   -lscag-pvss-api-core-client \
   -lscag-pvss-api-core \
   -lscag-pvss-api-packets \

@@ -3,9 +3,8 @@
 
 #include <exception>
 #include "core/buffers/File.hpp"
-#include "scag/pvss/api/packets/Request.h"
-#include "scag/pvss/api/packets/AbstractProfileRequest.h"
-#include "scag/pvss/api/packets/Response.h"
+#include "scag/pvss/api/packets/ProfileRequest.h"
+#include "scag/pvss/api/packets/ProfileResponse.h"
 #include "scag/util/storage/StorageNumbering.h"
 #include "scag/pvss/api/packets/BatchCommand.h"
 #include "scag/pvss/api/packets/DelCommand.h"
@@ -66,7 +65,7 @@ void PvssLogic::initGlossary(const string& path, Glossary* glossary) {
 
 Response* PvssLogic::process(Request& request) /* throw(PvssException) */  {
   try {
-    return processProfileRequest(static_cast<AbstractProfileRequest&>(request));
+    return processProfileRequest(static_cast<ProfileRequest&>(request));
   } catch (const PvapException& e) {
     smsc_log_warn(logger_, "%p: %p processing error: PvapException", this, &request);
     //TODO: some rollback actions
@@ -193,17 +192,16 @@ unsigned long AbonentLogic::initElementStorage(unsigned index) /* throw (smsc::u
 }
 
 
-Response* AbonentLogic::processProfileRequest(AbstractProfileRequest& request) {
+Response* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest) {
 
-  AbstractProfileRequest &profileRequest = static_cast< AbstractProfileRequest& >(request);
   const ProfileKey &profileKey = profileRequest.getProfileKey();
   unsigned elstorageIndex = static_cast<unsigned>(profileKey.getAddress().getNumber() % dispatcher_.getStoragesCount());
-  smsc_log_debug(logger_, "%p: %p process profile key='%s' in location: %d, storage: %d",
-                  this, &request, profileKey.getAddress().toString().c_str(), locationNumber_, elstorageIndex);
+  smsc_log_debug( logger_, "%p: %p process profile key='%s' in location: %d, storage: %d",
+                  this, &profileRequest, profileKey.getAddress().toString().c_str(), locationNumber_, elstorageIndex);
 
   ElementStorage **elstoragePtr = elementStorages_.GetPtr(elstorageIndex);
   if (!elstoragePtr) {
-    smsc_log_warn(logger_, "%p: %p element storage %d not found in location %d", this, &request, elstorageIndex, locationNumber_);
+    smsc_log_warn(logger_, "%p: %p element storage %d not found in location %d", this, &profileRequest, elstorageIndex, locationNumber_);
     return 0;
   }
   ElementStorage* elstorage = *elstoragePtr;
@@ -213,33 +211,34 @@ Response* AbonentLogic::processProfileRequest(AbstractProfileRequest& request) {
   commandProcessor_.setProfile(pf);
   profileRequest.getCommand()->visit(commandProcessor_);
   if (!pf) {
-    if (createProfile) smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &request, pf->getKey().c_str());
-    return commandProcessor_.getResponse();
+    if (createProfile) smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &profileRequest, pf->getKey().c_str());
+    CommandResponse* r = commandProcessor_.getResponse();
+    return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
   }
 
   if (pf->isChanged()) {
-    smsc_log_debug(logger_, "%p: %p flush profile %s", this, &request, pf->getKey().c_str());
+    smsc_log_debug(logger_, "%p: %p flush profile %s", this, &profileRequest, pf->getKey().c_str());
       {
           MutexGuard mg(elstorage->mutex);
           elstorage->storage->flush(profileKey.getAddress());
       }
     commandProcessor_.flushLogs(abntlog_);
   } else if (commandProcessor_.rollback()) {
-    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &request, pf->getKey().c_str());
+    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, pf->getKey().c_str());
     elstorage->storage->backup2Profile(profileKey.getAddress(), elstorage->glossary);
   }
-  return commandProcessor_.getResponse();
+  CommandResponse* r = commandProcessor_.getResponse();
+  return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
 }
 
 
 // ==== infrastruct
 
 
-Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& request) {
+Response* InfrastructLogic::processProfileRequest(ProfileRequest& profileRequest) {
   Logger *dblog = 0;
   InfrastructStorage* storage = 0;
   uint32_t key = 0;
-  AbstractProfileRequest &profileRequest = static_cast<AbstractProfileRequest &>(request);
   const ProfileKey& profileKey = profileRequest.getProfileKey();
   if (profileKey.hasOperatorKey()) {
     dblog = olog_;
@@ -263,22 +262,24 @@ Response* InfrastructLogic::processProfileRequest(AbstractProfileRequest& reques
   commandProcessor_.setProfile(pf);
   profileRequest.getCommand()->visit(commandProcessor_);
   if (!pf) {
-    if (createProfile) smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &request, pf->getKey().c_str());
-    return commandProcessor_.getResponse();
+    if (createProfile) smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &profileRequest, pf->getKey().c_str());
+    CommandResponse* r = commandProcessor_.getResponse();
+    return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
   }
 
   if (pf->isChanged()) {
-    smsc_log_debug(logger_, "%p: %p flush profile %s", this, &request, pf->getKey().c_str());
+    smsc_log_debug(logger_, "%p: %p flush profile %s", this, &profileRequest, pf->getKey().c_str());
       {
           MutexGuard mg(statMutex_);
           storage->flush(intKey);
       }
     commandProcessor_.flushLogs(dblog);
   } else if (commandProcessor_.rollback()){
-    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &request, pf->getKey().c_str());
+    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, pf->getKey().c_str());
     storage->backup2Profile(intKey, &glossary_);
   }
-  return commandProcessor_.getResponse();
+  CommandResponse* r = commandProcessor_.getResponse();
+  return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
 }
 
 

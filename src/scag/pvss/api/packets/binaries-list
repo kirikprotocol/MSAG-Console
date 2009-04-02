@@ -1,1 +1,9 @@
-scag/tests/pvss-packets-test1  test1 -lscag-pvss-packets -lscag-pvss-base -lscag-util-storage -lscag-util
+-none	AbstractProfileRequest
+scag/tests/pvss-packets-test1  test1 \
+  -lscag-pvss-api-packets \
+  -lscag-pvss-data \
+  -lscag-util-storage -lscag-util \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  $(__LIBRARIES) \
+  -lpthread -lrt -ldl \
+  $(LIBMALLOC)

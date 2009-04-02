@@ -12,7 +12,7 @@ end
 message BC_DEL_RESP   // 0x8001
     version 2.0
     property inheritsFrom="DelResponse"
-    byte statusValue 1
+    byte status 1
 end
 
 message BC_SET
@@ -30,7 +30,7 @@ end
 message BC_SET_RESP
     version 2.0
     property inheritsFrom="SetResponse"
-    byte statusValue 1
+    byte status 1
 end
 
 message BC_GET      // 0x0003
@@ -42,7 +42,7 @@ end
 message BC_GET_RESP
     version 2.0
     property inheritsFrom="GetResponse"
-    byte statusValue 1
+    byte status 1
     ascii  varName     20
     TimePolicy timePolicy 21 helperClass="TimePolicyFiller"
     byte   valueType   24 transient
@@ -64,7 +64,7 @@ end
 message BC_INC_RESP // 0x8004
     version 2.0
     property inheritsFrom="IncResponse"
-    byte statusValue 1
+    byte status 1
     uint32 result    25
 end
 
@@ -78,9 +78,23 @@ message BC_INC_MOD  // 0x0005
     uint32 modulus     30
 end
 
-message BC_INC_MOD_RESP // 0x8005
+// message BC_INC_MOD_RESP // 0x8005
+//    version 2.0
+//    property inheritsFrom="IncResponse"
+//    byte status 1
+//    uint32 result    25
+// end
+
+message BC_BATCH // 0x0007
     version 2.0
-    property inheritsFrom="IncResponse"
-    byte statusValue 1
-    uint32 result    25
+    property inheritsFrom="BatchCommand"
+    bool   transactional  37 useGetter="isTransactional"
+    BatchCmdArray batchContent 38 helperClass="BatchCommandFiller"
+end
+
+message BC_BATCH_RESP // 0x8007
+    version 2.0
+    property inheritsFrom="BatchResponse"
+    byte status 1
+    BatchCmdArray batchContent 38 helperClass="BatchResponseFiller"
 end

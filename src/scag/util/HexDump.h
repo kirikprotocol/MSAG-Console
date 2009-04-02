@@ -15,12 +15,15 @@ public:
     char* hexdump( char* outbuf, const void* inbuf, size_t insize );
     size_t strdumpsize( size_t insize ) const { return insize; }
     char* strdump( char* outbuf, const void* inbuf, size_t insize );
+    size_t utfdumpsize( size_t insize ) const { return insize; }
+    char* utfdump( char* outbuf, const void* inbuf, size_t insize );
 
     // NOTE: w/o termination null-byte
     char* addstr( char* outbuf, const char* cstring );
 
     void hexdump( std::string& out, const void* inbuf, size_t insize );
     void strdump( std::string& out, const void* inbuf, size_t insize );
+    void utfdump( std::string& out, const void* inbuf, size_t insize );
 
 private:
     static std::auto_ptr<char> digits_;

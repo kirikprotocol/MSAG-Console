@@ -9,6 +9,8 @@
   
 namespace {
 
+using namespace scag2::pvss;
+
 const char* OPTIONAL_KEY = "key";
 
 static uint32_t cmdToLongCallCmd(uint32_t c)
@@ -23,6 +25,35 @@ static uint32_t cmdToLongCallCmd(uint32_t c)
     }
     return 0;
 }
+
+
+enum {
+        CMDDEL = 1,
+        CMDSET = 2,
+        CMDGET = 3,
+        CMDINC = 4,
+        CMDINCMOD = 5,
+        CMDBATCH = 6
+};
+
+struct CmdTypeGetter : public ProfileCommandVisitor
+{
+    virtual bool visitDelCommand( DelCommand& ) { type = CMDDEL; return true; }
+    virtual bool visitGetCommand( GetCommand& ) { type = CMDGET; return true; }
+    virtual bool visitSetCommand( SetCommand& ) { type = CMDSET; return true; }
+    virtual bool visitIncCommand( IncCommand& ) { type = CMDINC; return true; }
+    virtual bool visitIncModCommand( IncModCommand& ) { type = CMDINCMOD; return true; }
+    virtual bool visitBatchCommand( BatchCommand& ) { type = CMDBATCH; return true; }
+    unsigned type;
+};
+
+unsigned getCommandType( const AbstractCommand* cmd )
+{
+    CmdTypeGetter ctg;
+    const_cast< AbstractCommand* >(cmd)->visit(ctg);
+    return ctg.type;
+}
+
 }
 
 
@@ -34,6 +65,7 @@ typedef reprop::Property REProperty;
 using namespace pvss;
 
 
+/*
 bool PersActionResultRetriever::canProcessRequest( ActionContext& ctx )
 {
     int status = pvss::PersClient::Instance().getClientStatus();
@@ -75,6 +107,7 @@ void PersActionResultRetriever::storeResults( const PersCommand& cmd, ActionCont
 {
     setStatus( ctx, cmd.status(), cmd.failIndex() );
 }
+*/
 
 
 // =================================================================================
@@ -95,14 +128,16 @@ void PersActionCommand::init( const SectionParams& params, PropertyObject proper
     CheckParameter(params, propertyObject, name(), "msg", false, false,
                    msg, msgExist);
 
+    const unsigned cmdType = getCommandType( cmdType_.get() );
+
     //////////////////////////////////////////////
-    if (cmdType() == PC_DEL)
+    if (cmdType == CMDDEL)
     {
-        smsc_log_debug(logger, "PersAction: params: cmd = %s, var=%s", pvss::persCmdName(cmdType()), var.c_str());
+        smsc_log_debug(logger, "PersAction: params: cmd = %s, var=%s", cmdType_->typeToString(), var.c_str());
         return;
     }
 
-    if (cmdType() == PC_INC_MOD || cmdType() == PC_INC_RESULT) {
+    if (cmdType == CMDINCMOD || cmdType == CMDINC) {
         sValue = params.Exists("inc") ? params["inc"] : "1";
         bool resultExist = false;
         CheckParameter(params, propertyObject, name(), "result", false, false, sResult, resultExist);
@@ -110,29 +145,29 @@ void PersActionCommand::init( const SectionParams& params, PropertyObject proper
     else
     {
         if(!params.Exists("value"))
-            throw SCAGException("PersAction 'value' : missing '%s' parameter", pvss::persCmdName(cmdType()));
+            throw SCAGException("PersAction 'value' : missing '%s' parameter", cmdType_->typeToString());
         sValue = params["value"];
     }
 
     const char* nm = 0;
     ftValue = ActionContext::Separate(sValue, nm);
-    if(cmdType() == PC_GET && (ftValue == ftUnknown || ftValue == ftConst))
-        throw InvalidPropertyException("PersAction '%s': 'value' parameter should be an lvalue. Got %s", pvss::persCmdName(cmdType()), sValue.c_str());
+    if( cmdType == CMDGET && (ftValue == ftUnknown || ftValue == ftConst))
+        throw InvalidPropertyException("PersAction '%s': 'value' parameter should be an lvalue. Got %s", cmdType_->typeToString(), sValue.c_str());
 
     if (ftValue == ftField) 
     {
         AccessType at = CommandAdapter::CheckAccess(propertyObject.HandlerId, nm, propertyObject.transport);
-        if (!(at & atRead) || (cmdType() == PC_GET && !(at & atWrite))) 
+        if (!(at & atRead) || (cmdType == CMDGET && !(at & atWrite)))
             throw InvalidPropertyException("PersAction '%s': cannot read/modify property '%s' - no access", sValue.c_str());
     }
 
-    if (cmdType() == PC_GET)
+    if (cmdType == CMDGET)
     {
-        smsc_log_debug(logger, "PersAction: params: cmd = %s, var=%s", pvss::persCmdName(cmdType()), var.c_str());
+        smsc_log_debug(logger, "PersAction: params: cmd = %s, var=%s", cmdType_->typeToString(), var.c_str());
         return;
     }
 
-    if (cmdType() == PC_INC_MOD)
+    if (cmdType == CMDINCMOD)
     {
         mod = 0;
         sMod = params.Exists("mod") ? params["mod"] : "0";
@@ -142,19 +177,19 @@ void PersActionCommand::init( const SectionParams& params, PropertyObject proper
         {
             AccessType at = CommandAdapter::CheckAccess(propertyObject.HandlerId, nm, propertyObject.transport);
             if(!(at & atRead)) 
-                throw InvalidPropertyException("PersAction '%s': cannot read property '%s' - no access", sMod.c_str());
+                throw InvalidPropertyException("PersAction '%s': cannot read property '%s' - no access", cmdType_->typeToString(), sMod.c_str());
         }
 
         if(ftModValue == ftUnknown && strcmp(sMod.c_str(), "0") && !(mod = atoi(sMod.c_str())))
-            throw SCAGException("PersAction '%s' : 'mod' parameter not a number. mod=%s", pvss::persCmdName(cmdType()), sMod.c_str());
+            throw SCAGException("PersAction '%s' : 'mod' parameter not a number. mod=%s", cmdType_->typeToString(), sMod.c_str());
     }
 
     if(!params.Exists("policy") || (policy = getPolicyFromStr(params["policy"])) == scag::pvss::UNKNOWN)
-        throw SCAGException("PersAction '%s' : missing or unknown 'policy' parameter", pvss::persCmdName(cmdType()));
+        throw SCAGException("PersAction '%s' : missing or unknown 'policy' parameter", cmdType_->typeToString());
 
     if(policy == INFINIT)
     {
-        smsc_log_debug(logger, "PersAction: params: cmd = %s, var=%s, policy=%d, mod=%d", pvss::persCmdName(cmdType()), var.c_str(), policy, mod);
+        smsc_log_debug(logger, "PersAction: params: cmd = %s, var=%s, policy=%d, mod=%d", cmdType_->typeToString(), var.c_str(), policy, mod);
         return;
     }
 
@@ -166,10 +201,10 @@ void PersActionCommand::init( const SectionParams& params, PropertyObject proper
         {
             finalDate = parseFinalDate(sFinalDate.c_str());
             if(!finalDate)
-                throw SCAGException("PersAction '%s' : invalid 'finaldate' parameter", pvss::persCmdName(cmdType()));
+                throw SCAGException("PersAction '%s' : invalid 'finaldate' parameter", cmdType_->typeToString());
         }
         
-        smsc_log_debug(logger, "PersAction: params: cmd = %s, var=%s, policy=%d, final_date=%d", pvss::persCmdName(cmdType()), var.c_str(), policy, finalDate);
+        smsc_log_debug(logger, "PersAction: params: cmd = %s, var=%s, policy=%d, final_date=%d", cmdType_->typeToString(), var.c_str(), policy, finalDate);
         return;
     }
 
@@ -183,15 +218,18 @@ void PersActionCommand::init( const SectionParams& params, PropertyObject proper
      }
      */
     smsc_log_debug(logger, "PersAction: params: cmd = %s, var=%s, policy=%d, mod=%d",
-                   pvss::persCmdName(cmdType()), var.c_str(), policy, mod);
+                   cmdType_->typeToString(), var.c_str(), policy, mod);
 }
 
     
-int PersActionCommand::fillCommand( ActionContext& context, pvss::PersCommandSingle& command )
+AbstractCommand* PersActionCommand::makeCommand( ActionContext& context, int& stat )
 {
     // --- get property name
-    int stat = 0;
+    stat = 0;
+    std::auto_ptr<AbstractCommand> retval;
     do {
+
+        const unsigned cmdType = getCommandType( cmdType_.get() );
 
         REProperty *p;
         if (ftVar != ftUnknown && !(p = context.getProperty(var.c_str()))) {
@@ -202,15 +240,28 @@ int PersActionCommand::fillCommand( ActionContext& context, pvss::PersCommandSin
         }
 
         const REProperty::string_type& svar = ( ftVar == ftUnknown ? var : p->getStr() );
-        pvss::Property& prop = command.property();
-        prop.setName( svar.c_str() );
-        if ( cmdType() == PC_DEL || cmdType() == PC_GET ) {
+        if ( cmdType == CMDDEL ) {
+            DelCommand* ret = static_cast<DelCommand*>(cmdType_->clone());
+            retval.reset(ret);
+            ret->setVarName(svar.c_str());
             break;
-        } else if ( cmdType() != PC_SET && cmdType() != PC_INC_RESULT && cmdType() != PC_INC_MOD ) {
-            smsc_log_error(logger, "Invalid command %d", int(cmdType()) );
+        } else if ( cmdType == CMDGET ) {
+            GetCommand* ret = static_cast<GetCommand*>(cmdType_->clone());
+            retval.reset(ret);
+            ret->setVarName(svar.c_str());
+            break;
+        }
+
+        if ( cmdType != CMDSET && cmdType != CMDINC && cmdType != CMDINCMOD ) {
+            smsc_log_error(logger, "Invalid command %s", cmdType_->typeToString() );
             stat = pvss::COMMAND_NOTSUPPORT;
             break;
         }
+
+        AbstractPropertyCommand* ret = static_cast<AbstractPropertyCommand*>(cmdType_->clone());
+        retval.reset(ret);
+        pvss::Property* prop = command->getProperty();
+        prop->setName( svar.c_str() );
 
         // --- time policy
         time_t fd = finalDate;
@@ -234,13 +285,13 @@ int PersActionCommand::fillCommand( ActionContext& context, pvss::PersCommandSin
 
             switch ( rp->getType() ) {
             case (reprop::pt_int) :
-                prop.setIntValue(rp->getInt()); break;
+                prop->setIntValue(rp->getInt()); break;
             case (reprop::pt_bool) :
-                prop.setBoolValue(rp->getBool()); break;
+                prop->setBoolValue(rp->getBool()); break;
             case (reprop::pt_date) :
-                prop.setDateValue(rp->getDate()); break;
+                prop->setDateValue(rp->getDate()); break;
             case (reprop::pt_str) :
-                prop.setStringValue(rp->getStr().c_str()); break;
+                prop->setStringValue(rp->getStr().c_str()); break;
             default :
                 smsc_log_error( logger, "Wrong property type %d", int(rp->getType()) );
                 stat = pvss::INVALID_PROPERTY_TYPE;
@@ -248,12 +299,12 @@ int PersActionCommand::fillCommand( ActionContext& context, pvss::PersCommandSin
             if ( stat ) break;
 
         } else {
-            prop.setStringValue( sValue.c_str() );
+            prop->setStringValue( sValue.c_str() );
         }
-        prop.setTimePolicy( policy, fd, lt );
+        prop->setTimePolicy( policy, fd, lt );
 
         // modulus
-        if ( cmdType() == PC_INC_MOD ) {
+        if ( cmdType == CMDINCMOD ) {
             uint32_t realmod = mod;
             if (ftModValue != ftUnknown) {
                 REProperty *rp = context.getProperty(sMod);

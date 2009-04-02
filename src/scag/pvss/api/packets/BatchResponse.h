@@ -1,21 +1,23 @@
 #ifndef _SCAG_PVSS_BASE_BATCHRESPONSE_H
 #define _SCAG_PVSS_BASE_BATCHRESPONSE_H
 
-#include "Response.h"
+#include <vector>
+#include "CommandResponse.h"
 #include "BatchResponseComponent.h"
 
 namespace scag2 {
 namespace pvss {
 
-class BatchResponse : public Response
+class BatchResponse : public CommandResponse
 {
 public:
-    BatchResponse() : Response() {}
-    BatchResponse( uint32_t seqNum ) : Response(seqNum) {}
-    virtual ~BatchResponse() { clear(); }
+    BatchResponse() : CommandResponse() { initLog(); }
+    BatchResponse( uint8_t status ) : CommandResponse(status) { initLog(); }
+    virtual ~BatchResponse() { logDtor(); clear(); }
 
-    virtual bool isValid() const { return Response::isValid() && !batchContent_.empty(); }
-    virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
+    virtual bool isValid() const { return CommandResponse::isValid() && !batchContent_.empty(); }
+
+    virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitBatchResponse(*this);
     }
 
@@ -31,7 +33,7 @@ public:
     const std::vector< BatchResponseComponent* >& getBatchContent() const { return batchContent_; }
 
     std::string toString() const {
-        std::string rv(Response::toString());
+        std::string rv(CommandResponse::toString());
         rv.reserve(200);
         rv += " [";
         bool comma = false;
@@ -47,6 +49,7 @@ public:
     }
 
     void clear() {
+        CommandResponse::clear();
         for ( std::vector< BatchResponseComponent* >::iterator i = batchContent_.begin();
               i != batchContent_.end();
               ++i ) {
@@ -59,7 +62,7 @@ protected:
     virtual const char* typeToString() const { return "batch_resp"; }
 
 private:
-    BatchResponse( const BatchResponse& other ) : Response(other) {
+    BatchResponse( const BatchResponse& other ) : CommandResponse(other) {
         for ( std::vector< BatchResponseComponent* >::const_iterator i = other.batchContent_.begin();
               i != other.batchContent_.end();
               ++i ) {

@@ -2,55 +2,49 @@
 #define _SCAG_PVSS_PVAP_BATCHRESPONSEFILLER_H
 
 #include <cassert>
-#include <vector>
-#include "scag/pvss/api/pvap/generated-cpp/PVAPBC.hpp"
+// #include <vector>
+// #include "scag/pvss/api/pvap/generated-cpp/PVAPPROF.hpp"
+#include "Exceptions.h"
 #include "scag/pvss/api/packets/BatchResponse.h"
 
 namespace scag2 {
 namespace pvss {
 namespace pvap {
 
-class PVAP;
+class PVAPPROF;
+class BufferWriter;
+class BufferReader;
 
-class BatchResponseFiller : public PVAPBC::Handler
+class BatchResponseFiller
 {
 private:
+    /*
     class BufferFiller : public ResponseVisitor
     {
     public:
         BufferFiller() : writer(buffer) {}
 
-        virtual bool visitErrResponse( ErrorResponse& resp ) /* throw (PvapException) */  {
-            return false;
-        }
-
-        virtual bool visitDelResponse( DelResponse& resp ) /* throw (PvapException) */  {
+        virtual bool visitDelResponse( DelResponse& resp ) throw (PvapException) {
             BC_DEL_RESP msg(&resp);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitSetResponse( SetResponse& resp ) /* throw (PvapException) */  {
+        virtual bool visitSetResponse( SetResponse& resp ) throw (PvapException) {
             BC_SET_RESP msg(&resp);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitGetResponse( GetResponse& resp ) /* throw (PvapException) */  {
+        virtual bool visitGetResponse( GetResponse& resp ) throw (PvapException) {
             BC_GET_RESP msg(&resp);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitIncResponse( IncResponse& resp ) /* throw (PvapException) */  {
+        virtual bool visitIncResponse( IncResponse& resp ) throw (PvapException) {
             BC_INC_RESP msg(&resp);
             pvapbc.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitPingResponse( PingResponse& resp ) /* throw (PvapException) */  {
-            return false;
-        }
-        virtual bool visitAuthResponse( AuthResponse& resp ) /* throw (PvapException) */  {
-            return false;
-        }
-        virtual bool visitBatchResponse( BatchResponse& resp ) /* throw (PvapException) */  {
+        virtual bool visitBatchResponse( BatchResponse& resp ) throw (PvapException) {
             return false;
         }
         void clear() {
@@ -61,21 +55,23 @@ private:
     private:
         Protocol::Buffer buffer;
         BufferWriter     writer;
-        PVAPBC           pvapbc;
+        PVAPPROF         pvapbc;
     };
+     */
 
 public:
-    BatchResponseFiller( BatchResponse& theOwner ) : owner(theOwner) {}
-    BatchResponseFiller( BatchResponse* theOwner ) : owner(*theOwner) {
+    // BatchResponseFiller( BatchResponse& theOwner ) : owner(theOwner) {}
+    BatchResponseFiller( BatchResponse* theOwner ) : owner_(theOwner) {
         assert(theOwner);
     }
 
-    void serialize( const PVAP&, BufferWriter& writer ) const /* throw (PvapException) */ 
+    void serialize( const PVAPPROF&, BufferWriter& writer ) const throw (PvapException);
+    /*
     {
-        const std::vector< BatchResponseComponent* >& components = owner.getBatchContent();
+        const std::vector< BatchResponseComponent* >& components = owner->getBatchContent();
         const size_t cnt = components.size();
         if ( cnt > 0xffff ) {
-            throw PvapSerializationException( true, "cannot write more than 65536 components", owner.getSeqNum() );
+            throw PvapSerializationException( true, "cannot write more than 65536 components", owner->getSeqNum() );
         }
         writer.writeShort( short(cnt) );
         int idx = 0;
@@ -86,8 +82,8 @@ public:
             filler.clear();
             BatchResponseComponent* comp = const_cast<BatchResponseComponent*>(*i);
             if ( ! comp->visit(filler) ) {
-                throw PvapSerializationException( owner.isRequest(),
-                                                  owner.getSeqNum(),
+                throw PvapSerializationException( owner->isRequest(),
+                                                  owner->getSeqNum(),
                                                   "unknown batch response component #%d: %s",
                                                   idx, comp->toString().c_str() );
             }
@@ -95,8 +91,10 @@ public:
             ++idx;
         }
     }
+     */
 
-    void deserialize( PVAP&, BufferReader& reader ) /* throw (PvapException) */ 
+    void deserialize( PVAPPROF&, BufferReader& reader ) throw (PvapException);
+    /*
     {
         int idx = -1;
         try {
@@ -108,14 +106,26 @@ public:
                 subproto.decodeMessage( subreader );
             }
         } catch ( exceptions::IOException& e ) {
-            throw PvapSerializationException( owner.isRequest(),
-                                              owner.getSeqNum(),
+            throw PvapSerializationException( owner->isRequest(),
+                                              owner->getSeqNum(),
                                               "decoding batch_resp component #%d: %s",
                                               idx, e.what() );
         }
     }
+     */
+
+    inline void push( BatchResponseComponent* comp ) {
+        owner_->addComponent( comp );
+    }
+    inline void fail() throw(PvapException)
+    {
+        throw PvapSerializationException( false,
+                                          uint32_t(-1),
+                                          "cannot decode request as batch_resp content" );
+    }
 
 protected:
+    /*
     bool hasSeqNum( uint32_t ) const { return true; }
     void handle( BC_DEL& object )          { fail(); }                
     void handle( BC_DEL_RESP& object )     { push(object.pop()); }
@@ -127,19 +137,12 @@ protected:
     void handle( BC_INC_RESP& object )     { push(object.pop()); }
     void handle( BC_INC_MOD& object )      { fail(); }                
     void handle( BC_INC_MOD_RESP& object ) { push(object.pop()); }
-
-    void push( BatchResponseComponent* comp ) {
-        owner.addComponent( comp );
-    }
-    void fail() /* throw(PvapException) */ 
-    {
-        throw new PvapSerializationException( false,
-                                              owner.getSeqNum(),
-                                              "cannot decode request as batch_resp content" );
-    }
+    void handle( BC_BATCH& object )        { fail(); }
+    void handle( BC_BATCH_RESP& object )   { fail(); }
+     */
 
 private:
-    BatchResponse& owner;
+    BatchResponse* owner_;
 };
 
 } // namespace pvap

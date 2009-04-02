@@ -2,19 +2,21 @@
 #define _SCAG_PVSS_BASE_BATCHCOMMAND_H
 
 #include <vector>
-#include "AbstractCommand.h"
+#include "ProfileCommand.h"
 #include "ProfileCommandVisitor.h"
 #include "BatchRequestComponent.h"
 
 namespace scag2 {
 namespace pvss {
 
-class BatchCommand : public AbstractCommand
+class BatchCommand : public ProfileCommand
 {
 public:
-    BatchCommand() : AbstractCommand() {}
-    BatchCommand( uint32_t seqNum ) : AbstractCommand(seqNum) {}
+    BatchCommand() : ProfileCommand() { initLog(); }
+    // BatchCommand( uint32_t seqNum ) : ProfileCommand(seqNum) {}
+
     virtual ~BatchCommand() {
+        logDtor();
         clear();
     }
     
@@ -33,7 +35,7 @@ public:
 
     void addComponent( BatchRequestComponent* req ) {
         batchContent_.push_back( req );
-        req->setSeqNum(int(batchContent_.size()));
+        // req->setSeqNum(int(batchContent_.size()));
     }
 
     virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
@@ -47,7 +49,7 @@ public:
 
 protected:
     virtual const char* typeToString() const { return "batch"; }
-    virtual ResponseTypeMatch& getResponseTypeMatch() const;
+    // virtual ResponseTypeMatch& getResponseTypeMatch() const;
 
 private:
     BatchCommand( const BatchCommand& cmd );

@@ -9,10 +9,11 @@ namespace pvss {
 class SetResponse : public BatchResponseComponent
 {
 public:
-    SetResponse() : BatchResponseComponent() {}
-    SetResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum) {}
+    SetResponse() : BatchResponseComponent() { initLog(); }
+    SetResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum) { initLog(); }
+    virtual ~SetResponse() { logDtor(); }
 
-    virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
+    virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitSetResponse(*this);
     }
 
@@ -22,7 +23,7 @@ protected:
     virtual const char* typeToString() const { return "set_resp"; }
 
 private:
-    SetResponse( const SetResponse& other ) : BatchResponseComponent(other) {}
+    SetResponse( const SetResponse& other ) : BatchResponseComponent(other) { initLog(); }
     SetResponse& operator = ( const SetResponse& other );
 };
 

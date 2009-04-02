@@ -18,7 +18,7 @@ namespace scag2{
 namespace pvss{
 namespace pvap{
 
-class PVAPBC;
+class PVAPPROF;
 
 class BC_DEL
 {
@@ -26,9 +26,9 @@ protected:
     static const int varNameTag = 20;
 
 public:
-    BC_DEL( int seqNum ) :
+    BC_DEL() :
     owned_(true),
-    data_(new DelCommand(seqNum))
+    data_(new DelCommand)
     {
     }
 
@@ -60,7 +60,7 @@ public:
     }
 
     template < class DataStream >
-        void serialize( const PVAPBC& proto, DataStream& writer ) const /* throw (PvapException) */ 
+        void serialize( const PVAPPROF& proto, DataStream& writer ) const throw (PvapException)
     {
         if ( ! data_ ) return;
         checkFields();
@@ -71,15 +71,15 @@ public:
             writer.writeAsciiLV(data_->getVarName());
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "writing field varName in BC_DEL: %s",
                                               e.what() );
         }
         // optional fields
     }
 
-    template <class DataStream> void deserialize( PVAPBC& proto, DataStream& reader )
-        /* throw (PvapException) */ 
+    template <class DataStream> void deserialize( PVAPPROF& proto, DataStream& reader )
+        throw (PvapException)
     {
         if ( ! data_ ) return;
         clear();
@@ -96,12 +96,12 @@ public:
                     break;
                 }
                 default:
-                    throw InvalidFieldTypeException(data_->isRequest(),"BC_DEL", data_->getSeqNum(),tag);
+                    throw InvalidFieldTypeException(data_->isRequest(),"BC_DEL", getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "reading field tag=%d of BC_DEL: %s",
                                               tag, e.what() );
         }
@@ -109,15 +109,17 @@ public:
     }
 
     uint32_t getSeqNum() const {
-        return data_ ? data_->getSeqNum() : uint32_t(-1);
+        return
+        uint32_t(-1);
     }
 
+
 protected:
-    void checkFields() const /* throw (PvapException) */ 
+    void checkFields() const throw (PvapException)
     {
         // using parent check
         if ( !data_->isValid() ) {
-            throw MessageIsBrokenException(data_->isRequest(), data_->getSeqNum(), "message BC_DEL is broken: %s",data_->toString().c_str());
+            throw MessageIsBrokenException(data_->isRequest(), getSeqNum(), "message BC_DEL is broken: %s",data_->toString().c_str());
         }
     }
 

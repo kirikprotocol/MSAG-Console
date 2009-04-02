@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 
+#include "logger/Logger.h"
 #include "PvapProtocol.h"
 #include "scag/util/HexDump.h"
 #include "scag/pvss/api/packets/BatchCommand.h"
@@ -13,14 +14,17 @@ using namespace scag2::util;
 
 int main()
 {
-    ProfileRequest< BatchCommand > batch( new BatchCommand(1) );
+    smsc::logger::Logger::Init();
+
+    BatchCommand* batchCmd = new BatchCommand;
+    ProfileRequest batch( 1, batchCmd );
     batch.getProfileKey().setAbonentKey( ".0.1.79137654079" );
-    batch.getCommand()->setTransactional( true );
+    batchCmd->setTransactional( true );
     {
-        std::auto_ptr< SetCommand > cmd(new SetCommand(2));
+        std::auto_ptr< SetCommand > cmd(new SetCommand);
         cmd->setVarName("hello");
         cmd->setStringValue("хелло, ворлд");
-        batch.getCommand()->addComponent( cmd.release() );
+        batchCmd->addComponent( cmd.release() );
     }
 
     std::cout << batch.toString() << std::endl;
@@ -31,10 +35,11 @@ int main()
 
     {
         HexDump hd;
-        unsigned sz = hd.hexdumpsize(buf.GetPos())+1;
-        std::auto_ptr<char> dump(new char[sz]);
-        *(hd.hexdump( dump.get(), buf.get(), buf.GetPos() )) = '\0';
-        printf( "dump: %s\n", dump.get() );
+        std::string dump;
+        dump.reserve( buf.GetPos()*5 );
+        hd.hexdump(dump, buf.get(), buf.GetPos());
+        hd.utfdump(dump, buf.get(), buf.GetPos());
+        printf( "dump: %s\n", dump.c_str() );
     }
 
     std::auto_ptr< Packet > pack(protocol.deserialize(buf));

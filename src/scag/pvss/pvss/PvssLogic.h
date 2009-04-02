@@ -48,7 +48,7 @@ using core::server::Server;
 
 class Request;
 class Response;
-class AbstractProfileRequest;
+class ProfileRequest;
 class PvssDispatcher;
 
 class PvssLogic: public Server::SyncLogic {
@@ -69,7 +69,7 @@ public:
 
 protected:
   void initGlossary(const string& path, Glossary* glossary);
-  virtual Response* processProfileRequest(AbstractProfileRequest& request) = 0;
+  virtual Response* processProfileRequest(ProfileRequest& request) = 0;
 
 protected:
   //unsigned maxWaitingCount_;
@@ -110,7 +110,7 @@ protected:
     /// init an element storage and return the total number of good nodes in it
     unsigned long initElementStorage(unsigned index) /* throw (smsc::util::Exception) */;
 
-    virtual Response* processProfileRequest(AbstractProfileRequest& request);
+    virtual Response* processProfileRequest(ProfileRequest& request);
 
 private:
     //typedef HashedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
@@ -166,7 +166,7 @@ public:
     std::string reportStatistics() const;
 
 protected:
-  virtual Response* processProfileRequest(AbstractProfileRequest& request);
+  virtual Response* processProfileRequest(ProfileRequest& request);
 
 private:
   //typedef HashedMemoryCache< IntProfileKey, Profile > MemStorage;

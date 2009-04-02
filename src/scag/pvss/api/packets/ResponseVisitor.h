@@ -7,13 +7,9 @@ namespace scag2 {
 namespace pvss {
 
 class ErrorResponse;
-class DelResponse;
-class GetResponse;
-class SetResponse;
-class IncResponse;
 class PingResponse;
 class AuthResponse;
-class BatchResponse;
+class ProfileResponse;
 
 ///
 /// interface ResponseVisitor
@@ -22,14 +18,10 @@ class ResponseVisitor
 {
 public:
     virtual ~ResponseVisitor() {}
-    virtual bool visitErrResponse( ErrorResponse& resp )   /* throw (PvapException) */  = 0;
-    virtual bool visitDelResponse( DelResponse& resp )     /* throw (PvapException) */  = 0;
-    virtual bool visitSetResponse( SetResponse& resp )     /* throw (PvapException) */  = 0;
-    virtual bool visitGetResponse( GetResponse& resp )     /* throw (PvapException) */  = 0;
-    virtual bool visitIncResponse( IncResponse& resp )     /* throw (PvapException) */  = 0;
-    virtual bool visitPingResponse( PingResponse& resp )   /* throw (PvapException) */  = 0;
-    virtual bool visitAuthResponse( AuthResponse& resp )   /* throw (PvapException) */  = 0;
-    virtual bool visitBatchResponse( BatchResponse& resp ) /* throw (PvapException) */  = 0;
+    virtual bool visitErrResponse( ErrorResponse& resp )       /* throw (PvapException) */  = 0;
+    virtual bool visitPingResponse( PingResponse& resp )       /* throw (PvapException) */  = 0;
+    virtual bool visitAuthResponse( AuthResponse& resp )       /* throw (PvapException) */  = 0;
+    virtual bool visitProfileResponse( ProfileResponse& resp ) /* throw (PvapException) */  = 0;
 };
 
 } // namespace pvss

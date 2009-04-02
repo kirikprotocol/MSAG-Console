@@ -29,7 +29,7 @@ $-foreach$
     class Handler 
     {
     public:
-        virtual bool hasSeqNum( uint32_t seqNum ) const = 0;
+        // virtual bool hasSeqNum( uint32_t seqNum ) const = 0;
 $foreach message$
         virtual void handle( $var message.name$& obj ) = 0;
 $-foreach$
@@ -46,18 +46,22 @@ $-foreach$
     }
      */
 
-    void decodeMessage( BufferReader& ss ) /* throw (PvapException) */ 
+    void decodeMessage( BufferReader& ss ) throw (PvapException)
     {
         uint32_t seqNum = -1;
+$if options.hasSeqNum$
         seqNum = ss.readInt();
-        if ( ! handler->hasSeqNum(seqNum) ) throw UnexpectedSeqNumException(seqNum);
+$-if$
+        // if ( ! handler->hasSeqNum(seqNum) ) throw UnexpectedSeqNumException(seqNum);
         int tag = ss.readTag();
         switch(tag) {
 $foreach message$
         case tag_$var message.name:ucf$: {
             // printf( "tag %d (%s)\n", tag, "$var message.name:ucf$" );
-            $var message.name$ msg(seqNum);
-            // msg->setSeqNum(seqNum);
+            $var message.name$ msg;
+$if options.hasSeqNum$
+            msg.setSeqNum(seqNum);
+$-if$
             msg.deserialize(*this,ss);
             handler->handle(msg);
             break;
@@ -70,9 +74,11 @@ $-foreach$
 $foreach message$
 
     void encodeMessage( const $var message.name$& msg, BufferWriter& ss ) const
-        /* throw (PvapException) */ 
+        throw (PvapException)
     {
+$if options.hasSeqNum$
         ss.writeInt(msg.getSeqNum());
+$-if$
         ss.writeTag(tag_$var message.name:ucf$);
         msg.serialize(*this,ss);
     }

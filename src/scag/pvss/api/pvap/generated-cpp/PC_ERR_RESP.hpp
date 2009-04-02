@@ -8,6 +8,7 @@
 #include <string>
 #include "scag/pvss/api/pvap/Exceptions.h"
 
+
 #include "scag/pvss/api/packets/ErrorResponse.h"
 
 
@@ -23,12 +24,13 @@ class PVAP;
 class PC_ERR_RESP
 {
 protected:
-    static const int statusValueTag = 1;
+    static const int statusMessageTag = 41;
+    static const int statusTag = 1;
 
 public:
-    PC_ERR_RESP( int seqNum ) :
+    PC_ERR_RESP() :
     owned_(true),
-    data_(new ErrorResponse(seqNum))
+    data_(new ErrorResponse)
     {
     }
 
@@ -60,26 +62,36 @@ public:
     }
 
     template < class DataStream >
-        void serialize( const PVAP& proto, DataStream& writer ) const /* throw (PvapException) */ 
+        void serialize( const PVAP& proto, DataStream& writer ) const throw (PvapException)
     {
         if ( ! data_ ) return;
         checkFields();
         // mandatory fields
         try {
-            // printf( "write pos=%d field=%d\n", ds.getPos(), statusValueTag );
-            writer.writeTag(statusValueTag);
-            writer.writeByteLV(data_->getStatusValue());
+            // printf( "write pos=%d field=%d\n", ds.getPos(), statusMessageTag );
+            writer.writeTag(statusMessageTag);
+            writer.writeUTFLV(data_->getStatusMessage());
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
-                                              "writing field statusValue in PC_ERR_RESP: %s",
+                                              getSeqNum(),
+                                              "writing field statusMessage in PC_ERR_RESP: %s",
+                                              e.what() );
+        }
+        try {
+            // printf( "write pos=%d field=%d\n", ds.getPos(), statusTag );
+            writer.writeTag(statusTag);
+            writer.writeByteLV(data_->getStatus());
+        } catch ( exceptions::IOException e ) {
+            throw PvapSerializationException( data_->isRequest(),
+                                              getSeqNum(),
+                                              "writing field status in PC_ERR_RESP: %s",
                                               e.what() );
         }
         // optional fields
     }
 
     template <class DataStream> void deserialize( PVAP& proto, DataStream& reader )
-        /* throw (PvapException) */ 
+        throw (PvapException)
     {
         if ( ! data_ ) return;
         clear();
@@ -91,17 +103,21 @@ public:
                 // printf( "read pos=%d field=%d\n", pos, tag );
                 if ( tag == -1 ) break;
                 switch(tag) {
-                case statusValueTag: {
-                    data_->setStatusValue(reader.readByteLV());
+                case statusMessageTag: {
+                    data_->setStatusMessage(reader.readUTFLV());
+                    break;
+                }
+                case statusTag: {
+                    data_->setStatus(reader.readByteLV());
                     break;
                 }
                 default:
-                    throw InvalidFieldTypeException(data_->isRequest(),"PC_ERR_RESP", data_->getSeqNum(),tag);
+                    throw InvalidFieldTypeException(data_->isRequest(),"PC_ERR_RESP", getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "reading field tag=%d of PC_ERR_RESP: %s",
                                               tag, e.what() );
         }
@@ -109,15 +125,21 @@ public:
     }
 
     uint32_t getSeqNum() const {
-        return data_ ? data_->getSeqNum() : uint32_t(-1);
+        return
+            data_ ? data_->getSeqNum() :
+        uint32_t(-1);
+    }
+
+    void setSeqNum( uint32_t seqNum ) {
+        if (data_) data_->setSeqNum(seqNum);
     }
 
 protected:
-    void checkFields() const /* throw (PvapException) */ 
+    void checkFields() const throw (PvapException)
     {
         // using parent check
         if ( !data_->isValid() ) {
-            throw MessageIsBrokenException(data_->isRequest(), data_->getSeqNum(), "message PC_ERR_RESP is broken: %s",data_->toString().c_str());
+            throw MessageIsBrokenException(data_->isRequest(), getSeqNum(), "message PC_ERR_RESP is broken: %s",data_->toString().c_str());
         }
     }
 

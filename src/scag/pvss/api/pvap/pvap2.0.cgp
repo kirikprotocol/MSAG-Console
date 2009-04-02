@@ -17,6 +17,7 @@ out.extension=hpp
 out.extension=java
 
 option:options.throwOnUnsetGet=true
+option:options.hasSeqNum=true
 # option:options.inheritsFromBatchCmd=false
 
 data:namespace:1=scag2
@@ -24,6 +25,3 @@ data:namespace:2=pvss
 data:namespace:3=pvap
 
 data:package=com.eyelinecom.whoisd.pvss
-
-# data:handler.include=PvapHandler.h
-# data:handler.class=PvapHandler

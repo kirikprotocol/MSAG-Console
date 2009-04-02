@@ -13,46 +13,45 @@ namespace pvap {
 class TimePolicyFiller
 {
 public:
-    TimePolicyFiller( HavingProperty& theOwner ) : owner(theOwner) {}
-    TimePolicyFiller( HavingProperty* theOwner ) : owner(*theOwner) {
+    TimePolicyFiller( HavingProperty* theOwner ) : owner_(theOwner) {
         assert(theOwner);
     }
 
     template < class Proto >
-        void serialize( const Proto&, BufferWriter& writer ) const /* throw (PvapException) */ 
+        void serialize( const Proto&, BufferWriter& writer ) const throw (PvapException)
     {
         // we don't check as it was checked before
-        Property* p = owner.getProperty();
-        writer.writeByte( uint8_t(p->getTimePolicy()) );
-        writer.writeInt( int(p->getFinalDate()) );
-        writer.writeInt( int(p->getLifeTime()) );
+        const Property& p = owner_->getProperty();
+        writer.writeByte( uint8_t(p.getTimePolicy()) );
+        writer.writeInt( int(p.getFinalDate()) );
+        writer.writeInt( int(p.getLifeTime()) );
     }
 
     template < class Proto >
-        void deserialize( Proto&, BufferReader& reader ) /* throw (PvapException) */ 
+        void deserialize( Proto&, BufferReader& reader ) throw (PvapException)
     {
         try {
             uint8_t policyValue = reader.readByte();
             if ( policyValue == 0 ) {
-                throw PvapSerializationException( owner.isRequest(),
-                                                  owner.getSeqNum(),
+                throw PvapSerializationException( owner_->isRequest(),
+                                                  uint32_t(-1),
                                                   "unknown time policy=%d",
                                                   ((int)policyValue & 0xff) );
             }
             int fd = int(reader.readInt());
             int lt = int(reader.readInt());
-            if ( owner.getProperty() == 0 ) owner.setProperty( new Property() );
-            owner.getProperty()->setTimePolicy( TimePolicy(policyValue), fd, lt );
+            // if ( owner_->getProperty() == 0 ) owner_->setProperty( new Property() );
+            owner_->getProperty().setTimePolicy( TimePolicy(policyValue), fd, lt );
         } catch ( exceptions::IOException& e ) {
-            throw PvapSerializationException( owner.isRequest(),
-                                              owner.getSeqNum(),
+            throw PvapSerializationException( owner_->isRequest(),
+                                              uint32_t(-1),
                                               "decoding time policy: %s",
                                               e.what() );
         }
     }
 
 private:
-    HavingProperty& owner;
+    HavingProperty* owner_;
 };
 
 } // namespace pvap

@@ -1,6 +1,7 @@
 #include <memory>
 #include "ClientCore.h"
 #include "scag/pvss/api/pvap/PvapProtocol.h"
+#include "scag/pvss/api/packets/DelCommand.h"
 
 using namespace scag2::pvss;
 using namespace scag2::pvss::core;
@@ -73,7 +74,7 @@ int main()
         {
             DelCommand* cmd = new DelCommand;
             cmd->setVarName("aaa");
-            AbstractProfileRequest* r = new ProfileRequest< DelCommand >( cmd );
+            ProfileRequest* r = new ProfileRequest( cmd );
             req.reset(r);
             r->getProfileKey().setAbonentKey(".0.1.79137654079");
         }

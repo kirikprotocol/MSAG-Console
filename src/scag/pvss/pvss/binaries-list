@@ -4,6 +4,7 @@
 # binary name                            source name     libraries         
 
 scag/pvss                            pvss          \
+        -lscag-pvss-api-pvap \
         -lscag-pvss-pvss \
         -lscag-pvss-pvss-old \
         -lscag-pvss-api-core-server \

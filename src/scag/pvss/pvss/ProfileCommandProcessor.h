@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "scag/pvss/profile/Profile.h"
-#include "scag/pvss/api/packets/Response.h"
+#include "scag/pvss/api/packets/CommandResponse.h"
 #include "scag/pvss/api/packets/ProfileCommandVisitor.h"
 
 #include "DBLog.h"
@@ -25,13 +25,13 @@ public:
   bool visitSetCommand(SetCommand &cmd) /* throw(PvapException) */ ;
   void setProfile(Profile *pf);
   BatchResponseComponent* getBatchResponseComponent();
-  Response* getResponse();
+  CommandResponse* getResponse();
   bool rollback() const { return rollback_; };
   void flushLogs(Logger* logger);
   const string& getDBLog() const;
 
 private:
-  Response::StatusType incModProperty(Property* property, uint32_t mod, uint32_t &result);
+  uint8_t incModProperty(Property& property, uint32_t mod, uint32_t &result);
   void addBatchComponentDBLog(const string& logmsg);
 
 private:
@@ -39,7 +39,7 @@ private:
   DBLog dblog_;
   std::vector<std::string> batchLogs_;
   Profile* profile_;
-  std::auto_ptr<Response> response_;
+  std::auto_ptr<CommandResponse> response_;
 };
 
 }//pvss

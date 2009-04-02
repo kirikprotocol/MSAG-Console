@@ -10,50 +10,33 @@ namespace pvss {
 class GetResponse : public BatchResponseComponent, public HavingProperty
 {
 public:
-    GetResponse() : BatchResponseComponent() {}
-    GetResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum) {}
+    GetResponse() : BatchResponseComponent() { initLog(); }
+    GetResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum) { initLog(); }
+    virtual ~GetResponse() { logDtor(); }
 
-    virtual ~GetResponse() {
-        // delete property_;
-    }
-    virtual const Property* getProperty() const { return &property_; }
-    virtual Property* getProperty() { return &property_; }
-    void setProperty( Property* prop ) {
-        // if ( property_ ) delete property_;
-        if ( prop ) {
-            property_ = *prop;
-            delete prop;
-        }
+    virtual const Property& getProperty() const { return property_; }
+    virtual Property& getProperty() { return property_; }
+    void setProperty( const Property& prop ) {
+        property_ = prop;
     }
 
-    /*
-    virtual bool isValid() const {
-        return property_->isValid());
-    }
-     */
-    virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
+    virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitGetResponse(*this);
     }
 
     virtual GetResponse* clone() const { return new GetResponse(*this); }
 
     void clear() {
-        Response::clear();
+        BatchResponseComponent::clear();
         property_ = Property();
-        /*
-        if ( property_ ) {
-            delete property_;
-            property_ = 0;
-        }
-         */
     }
 
     /// disambiguation
-    virtual bool isRequest() const { return Response::isRequest(); }
-    virtual uint32_t getSeqNum() const { return Response::getSeqNum(); }
+    virtual bool isRequest() const { return BatchResponseComponent::isRequest(); }
 
     // --- for serialization
     
+    /*
     const char* getVarName() const {
         return property_.getName();
     }
@@ -96,6 +79,7 @@ public:
     void setBoolValue( bool val ) {
         property_.setBoolValue(val);
     }
+     */
 
 protected:
     virtual const char* typeToString() const { return "get_resp"; }

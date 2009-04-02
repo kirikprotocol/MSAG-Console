@@ -9,10 +9,11 @@ namespace pvss {
 class DelResponse : public BatchResponseComponent
 {
 public:
-    DelResponse() : BatchResponseComponent() {}
-    DelResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum) {}
+    DelResponse() : BatchResponseComponent() { initLog(); }
+    DelResponse( uint8_t status ) : BatchResponseComponent(status) { initLog(); }
+    virtual ~DelResponse() { logDtor(); }
 
-    virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
+    virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitDelResponse(*this);
     }
 
@@ -22,7 +23,9 @@ protected:
     virtual const char* typeToString() const { return "del_resp"; }
 
 private:
-    DelResponse( const DelResponse& other ) : BatchResponseComponent(other) {}
+    DelResponse( const DelResponse& other ) : BatchResponseComponent(other) {
+        initLog();
+    }
     DelResponse& operator = ( const DelResponse& other );
 };
 

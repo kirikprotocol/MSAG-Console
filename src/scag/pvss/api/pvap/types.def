@@ -9,6 +9,7 @@ type utf8
 type ucs2
 type BatchCmdArray  // special
 type TimePolicy     // special
+type ProfileCommand // special
 
 property opt _bool
     optional true
@@ -37,14 +38,6 @@ end
 property useGetter _string
 end
 property useSetter _string
-end
-
-property command _bool
-    useCommand true
-end
-property commandDefault _bool
-    default
-    useCommand false
 end
 
 property profile _bool

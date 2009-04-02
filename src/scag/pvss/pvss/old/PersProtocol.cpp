@@ -2,9 +2,8 @@
 #include "scag/pvss/common/ScopeType.h"
 #include "scag/pvss/base/PersServerResponse.h"
 #include "scag/pvss/api/pvap/Exceptions.h"
-#include "scag/pvss/api/packets/Request.h"
 #include "scag/pvss/api/packets/ProfileRequest.h"
-#include "scag/pvss/api/packets/AbstractProfileRequest.h"
+#include "scag/pvss/api/packets/ProfileResponse.h"
 #include "scag/pvss/api/packets/PingRequest.h"
 #include "scag/pvss/api/packets/SetCommand.h"
 #include "scag/pvss/api/packets/DelCommand.h"
@@ -22,42 +21,6 @@
 
 namespace scag2 {
 namespace pvss  {
-
-  class ProfileRequestCreator: public ProfileCommandVisitor {
-  public:
-    ProfileRequestCreator(ProfileKey* key):key_(key) {};
-    virtual bool visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */  {
-      request_.reset( new ProfileRequest<BatchCommand>(&cmd, *key_) );
-      return true;
-    }
-    virtual bool visitDelCommand(DelCommand &cmd) /* throw(PvapException) */  {
-      request_.reset( new ProfileRequest<DelCommand>(&cmd, *key_) );
-      return true;
-    }
-    virtual bool visitGetCommand(GetCommand &cmd) /* throw(PvapException) */  {
-      request_.reset( new ProfileRequest<GetCommand>(&cmd, *key_) );
-      return true;
-    }
-    virtual bool visitIncCommand(IncCommand &cmd) /* throw(PvapException) */  {
-      request_.reset( new ProfileRequest<IncCommand>(&cmd, *key_) );
-      return true;
-    }
-    virtual bool visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */  {
-      request_.reset( new ProfileRequest<IncModCommand>(&cmd, *key_) );
-      return true;
-    }
-    virtual bool visitSetCommand(SetCommand &cmd) /* throw(PvapException) */  {
-      request_.reset( new ProfileRequest<SetCommand>(&cmd, *key_) );
-      return true;
-    }
-    AbstractProfileRequest * getRequest() {
-      return request_.release();
-    }
-  private:
-    std::auto_ptr<AbstractProfileRequest> request_;
-    ProfileKey *key_;
-  };
-
 
 bool PersProtocol::notSupport(PersCmd cmd) const {
   return (cmd > PC_MTBATCH || cmd == PC_BATCH
@@ -81,16 +44,15 @@ Request* PersProtocol::deserialize(SerialBuffer& sb) const {
   ProfileKey key;
   deserializeProfileKey(key, sb);
 
-  ProfileRequestCreator requestCreator(&key);
-  AbstractCommand* request = 0;
+  // ProfileRequestCreator requestCreator(&key);
+  ProfileCommand* request = 0;
   if (cmd == PC_MTBATCH) {
     smsc_log_debug(logger_, "Batch received");
     request = deserializeBatchCommand(sb);
   } else {
     request = deserializeCommand(cmd, sb);
   }
-  request->visit(requestCreator);
-  return requestCreator.getRequest();
+  return request ? new ProfileRequest(key,request) : 0;
 }
 
 void PersProtocol::deserializeProfileKey(ProfileKey& key, SerialBuffer& sb) const {
@@ -139,11 +101,11 @@ BatchRequestComponent* PersProtocol::deserializeCommand(PersCmd cmdType, SerialB
   }
   case PC_SET: {
     smsc_log_debug(logger_, "deserialize SET");
-    std::auto_ptr<Property> prop(new Property);
-    prop->Deserialize(sb);
-    smsc_log_debug(logger_, "property name=%s", prop->getName());
+    Property prop;
+    prop.Deserialize(sb);
+    smsc_log_debug(logger_, "property name=%s", prop.getName());
     SetCommand *cmd = new SetCommand();
-    cmd->setProperty(prop.release());
+    cmd->setProperty(prop);
     return cmd;
   }
   case PC_GET: {
@@ -157,20 +119,20 @@ BatchRequestComponent* PersProtocol::deserializeCommand(PersCmd cmdType, SerialB
   case PC_INC:
   case PC_INC_RESULT: {
     smsc_log_debug(logger_, "deserialize INC");
-    std::auto_ptr<Property> prop(new Property);
-    prop->Deserialize(sb);
+    Property prop;
+    prop.Deserialize(sb);
     IncCommand *cmd = new IncCommand();
-    cmd->setProperty(prop.release());
+    cmd->setProperty(prop);
     return cmd;
   }
   case PC_INC_MOD: {
     smsc_log_debug(logger_, "deserialize INC_MOD");
     uint32_t mod = sb.ReadInt32();
-    std::auto_ptr<Property> prop(new Property);
-    prop->Deserialize(sb);
+    Property prop;
+    prop.Deserialize(sb);
     IncModCommand *cmd = new IncModCommand();
     cmd->setModulus(mod);
-    cmd->setProperty(prop.release());
+    cmd->setProperty(prop);
     return cmd;
   }
   default: throw pvap::InvalidMessageTypeException(-1, cmdType);
@@ -190,6 +152,13 @@ bool PersProtocol::SerialBufferResponseVisitor::visitAuthResponse(AuthResponse &
   return false;
 }
 
+
+bool PersProtocol::SerialBufferResponseVisitor::visitProfileResponse(ProfileResponse& resp)
+{
+    return resp.getResponse() ? resp.getResponse()->visit(*this) : false;
+}
+
+
 bool PersProtocol::SerialBufferResponseVisitor::visitBatchResponse(BatchResponse &resp) /* throw(PvapException) */  {
   SerialBufferResponseVisitor visitor(buff_);
   std::vector<BatchResponseComponent*> content = resp.getBatchContent();
@@ -200,7 +169,7 @@ bool PersProtocol::SerialBufferResponseVisitor::visitBatchResponse(BatchResponse
   return true;
 }
 
-uint8_t PersProtocol::SerialBufferResponseVisitor::getResponseStatus(Response::StatusType status) const {
+uint8_t PersProtocol::SerialBufferResponseVisitor::getResponseStatus(uint8_t status) const {
   switch (status) {
   case Response::OK                 : return perstypes::RESPONSE_OK;
   case Response::ERROR              : return perstypes::RESPONSE_ERROR;
@@ -228,7 +197,7 @@ bool PersProtocol::SerialBufferResponseVisitor::visitErrResponse(ErrorResponse &
 
 bool PersProtocol::SerialBufferResponseVisitor::visitGetResponse(GetResponse &resp) /* throw(PvapException) */  {
   buff_.WriteInt8(getResponseStatus(resp.getStatus()));
-  resp.getProperty()->Serialize(buff_);
+  resp.getProperty().Serialize(buff_);
   return true;
 }
 
@@ -319,5 +288,3 @@ void PersProtocol::serialize(const IncResponse* packet, SerialBuffer& sb) const 
 */
 }
 }
-
-

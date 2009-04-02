@@ -277,7 +277,7 @@ int main(int argc, char* argv[]) {
     pvssDispatcher.init( server.get(), abntCfg, infCfg.get() );
 
     try {
-        server->init();
+        // server->init();
         server->startup(pvssDispatcher);
     } catch ( PvssException& e ) {
         smsc_log_error( logger, "exception(%u): %s", __LINE__, e.what() );

@@ -3,7 +3,7 @@
 # Usage: protogen pvapbc2.0.cgp
 # NOTE: BC_*.*, PVAPBC.* will be overwritten
 
-source=PvapBCProtocol.def
+source=PvapProfProtocol.def
 
 search.path=./
 out.dir=./generated-cpp/
@@ -17,13 +17,10 @@ out.extension=hpp
 out.extension=java
 
 option:options.throwOnUnsetGet=true
-# option:options.inheritsFromBatchCmd=true
+option:options.hasSeqNum=false
 
 data:namespace:1=scag2
 data:namespace:2=pvss
 data:namespace:3=pvap
 
 data:package=com.eyelinecom.whoisd.pvss
-
-# data:handler.include=PvapBCHandler.h
-# data:handler.class=PvapBCHandler

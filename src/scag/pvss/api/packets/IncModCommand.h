@@ -9,8 +9,9 @@ namespace pvss {
 class IncModCommand : public IncCommand
 {
 public:
-    IncModCommand() : IncCommand(), modulus_(0) {}
-    IncModCommand( uint32_t seqNum ) : IncCommand(seqNum), modulus_(0) {}
+    IncModCommand() : IncCommand(inherited()), modulus_(0) { initLog(); }
+    // IncModCommand( uint32_t seqNum ) : IncCommand(seqNum), modulus_(0) {}
+    virtual ~IncModCommand() { logDtor(); }
     
     virtual bool isValid() const { return IncCommand::isValid() && modulus_ != 0; }
     virtual std::string toString() const {

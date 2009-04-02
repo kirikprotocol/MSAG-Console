@@ -6,15 +6,13 @@
 #include <list>
 #include "core/buffers/IntHash.hpp"
 #include "core/synchronization/Mutex.hpp"
-#include "scag/pvss/api/packets/AbstractCommand.h"
+#include "scag/pvss/api/packets/ProfileCommand.h"
 #include "scag/pvss/data/Property.h"
 #include "scag/exc/IOException.h"
+#include "scag/pvss/data/ProfileKey.h"
 
 namespace scag2 {
 namespace pvss {
-
-class AbstractProfileRequest;
-
 namespace flooder {
 
 class RequestGenerator
@@ -38,18 +36,18 @@ public:
     void clearCommandPatterns();
 
     /// get command patterns
-    const std::vector< AbstractCommand* >& getPatterns() { return patterns_; }
+    const std::vector< ProfileCommand* >& getPatterns() { return patterns_; }
 
     /// get the next profile key
     ProfileKey getProfileKey();
 
     /// NOTE: patternIndex is passed by ref to be able to wrap it when end-of-patterns reached.
-    AbstractCommand* generateCommand( unsigned& patternIndex ); // , const ProfileKey* key = 0 );
+    ProfileCommand* generateCommand( unsigned& patternIndex ); // , const ProfileKey* key = 0 );
 
     Property* getProperty( unsigned idx );
     
 private:
-    std::vector< AbstractCommand* >           patterns_; // owned
+    std::vector< ProfileCommand* >           patterns_; // owned
     smsc::core::buffers::IntHash< Property* > prophash_;
     std::list< Property* >                    proplist_;
     unsigned                                  abonents_;

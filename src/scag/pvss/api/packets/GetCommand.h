@@ -10,9 +10,10 @@ namespace pvss {
 class GetCommand : public BatchRequestComponent
 {
 public:
-    GetCommand() : BatchRequestComponent() {}
-    GetCommand( uint32_t seqNum ) : BatchRequestComponent(seqNum) {}
-    
+    GetCommand() : BatchRequestComponent() { initLog(); }
+    // GetCommand( uint32_t seqNum ) : BatchRequestComponent(seqNum) {}
+    virtual ~GetCommand() { logDtor(); }
+
     virtual bool isValid() const { return !varName_.empty(); }
     virtual std::string toString() const {
         return BatchRequestComponent::toString() + " var=\"" + varName_ + "\"";
@@ -31,7 +32,7 @@ public:
 
 protected:
     virtual const char* typeToString() const { return "get"; }
-    virtual ResponseTypeMatch& getResponseTypeMatch() const;
+    // virtual ResponseTypeMatch& getResponseTypeMatch() const;
 
 private:
     std::string varName_;

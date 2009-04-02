@@ -1,7 +1,7 @@
 #include "FlooderStat.h"
 #include "FlooderThread.h"
 #include "scag/util/HRTimer.h"
-#include "scag/pvss/api/packets/AbstractProfileRequest.h"
+#include "scag/pvss/api/packets/ProfileRequest.h"
 #include "scag/util/histo/HistoLogger.h"
 
 namespace scag2 {
@@ -43,7 +43,7 @@ void FlooderStat::handleResponse( std::auto_ptr< Request > request, std::auto_pt
     // checking timer
     unsigned processTime; // in usec
     if ( request.get() ) {
-        AbstractProfileRequest* req = static_cast<AbstractProfileRequest*>(request.get());
+        ProfileRequest* req = static_cast<ProfileRequest*>(request.get());
         if ( req->getExtraContext() ) {
             // timer has been setup
             util::HRTimer* timer = static_cast<util::HRTimer*>(req->getExtraContext());
@@ -73,7 +73,7 @@ void FlooderStat::handleError( const PvssException& e, std::auto_ptr<Request> re
 {
     smsc_log_debug(log_,"error got: req=%s except=%s", request->toString().c_str(), e.what() );
     if ( request.get() ) {
-        AbstractProfileRequest* req = static_cast<AbstractProfileRequest*>(request.get());
+        ProfileRequest* req = static_cast<ProfileRequest*>(request.get());
         if ( req->getExtraContext() ) {
             // simply delete extra context
             util::HRTimer* timer = static_cast<util::HRTimer*>(req->getExtraContext());
@@ -106,7 +106,7 @@ void FlooderStat::requestCreated( Request* req )
     if ( requestsPerSecond_ <= 100 || ++counter % 10 == 0 ) {
         util::HRTimer* timer = new util::HRTimer();
         timer->mark();
-        static_cast< AbstractProfileRequest* >(req)->setExtraContext(timer);
+        static_cast< ProfileRequest* >(req)->setExtraContext(timer);
     }
 }
 
@@ -183,6 +183,13 @@ void FlooderStat::init( unsigned skip ) /* throw (exceptions::IOException) */
         generator_.addPropertyPattern( unsigned(i - patterns.begin()), p.release() );
     }
     generator_.parseCommandPatterns( config_.getCommands() );
+    if ( log_->isInfoEnabled() ) {
+        for ( std::vector< ProfileCommand* >::const_iterator i = generator_.getPatterns().begin();
+              i != generator_.getPatterns().end();
+              ++i ) {
+            smsc_log_info(log_,"pattern #%u: %s", i - generator_.getPatterns().begin(), (*i)->toString().c_str());
+        }
+    }
 }
 
 

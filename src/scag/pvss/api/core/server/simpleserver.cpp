@@ -4,7 +4,12 @@
 #include "Worker.h"
 #include "Dispatcher.h"
 #include "scag/pvss/api/pvap/PvapProtocol.h"
-#include "scag/pvss/api/packets/AbstractProfileRequest.h"
+#include "scag/pvss/api/packets/ProfileRequest.h"
+#include "scag/pvss/api/packets/GetCommand.h"
+#include "scag/pvss/api/packets/DelCommand.h"
+#include "scag/pvss/api/packets/SetCommand.h"
+#include "scag/pvss/api/packets/IncCommand.h"
+#include "scag/pvss/api/packets/IncModCommand.h"
 #include "scag/pvss/api/packets/BatchCommand.h"
 #include "scag/pvss/api/packets/BatchResponse.h"
 #include "scag/pvss/api/packets/IncResponse.h"
@@ -47,49 +52,44 @@ class SyncLogicProcessor : public RequestVisitor, public ProfileCommandVisitor
 public:
     virtual bool visitPingRequest( PingRequest& req ) throw(PvapException) { return false; }
     virtual bool visitAuthRequest( AuthRequest& req ) throw(PvapException) { return false; }
-    virtual bool visitProfileRequest( AbstractProfileRequest& req ) /* throw(PvapException) */  {
+    virtual bool visitProfileRequest( ProfileRequest& req ) /* throw(PvapException) */  {
         if ( ! req.isValid() ) return false;
-        AbstractCommand* cmd = req.getCommand();
-        bool ok = cmd->visit(*this);
-        if (resp_.get()) resp_->setStatus(Response::OK);
-        return ok;
+        ProfileCommand* cmd = req.getCommand();
+        return cmd->visit(*this);
+        // if (resp_.get()) resp_->setStatus(Response::OK);
+        // return ok;
     }
 
     virtual bool visitDelCommand( DelCommand& cmd ) /* throw(PvapException) */  {
-        resp_.reset( new DelResponse(cmd.getSeqNum()) );
-        resp_->setStatus(Response::OK);
+        resp_.reset( new DelResponse( Response::OK ) );
         return true;
     }
     virtual bool visitSetCommand( SetCommand& cmd ) /* throw(PvapException) */  {
-        resp_.reset( new SetResponse(cmd.getSeqNum()) );
-        resp_->setStatus(Response::OK);
+        resp_.reset( new SetResponse(Response::OK) );
         return true;
     }
     virtual bool visitGetCommand( GetCommand& cmd ) /* throw(PvapException) */  {
-        std::auto_ptr< GetResponse > r(new GetResponse(cmd.getSeqNum()) );
+        std::auto_ptr< GetResponse > r(new GetResponse(Response::OK) );
         r->setVarName(cmd.getVarName());
         r->setStringValue("hello, world");
-        r->getProperty()->setTimePolicy( INFINIT, time_t(-1), uint32_t(-1) );
-        r->setStatus(Response::OK);
+        r->getProperty().setTimePolicy( INFINIT, time_t(-1), uint32_t(-1) );
         resp_.reset(r.release());
         return true;
     }
     virtual bool visitIncCommand( IncCommand& cmd ) /* throw(PvapException) */  {
-        std::auto_ptr< IncResponse > r( new IncResponse(cmd.getSeqNum()) );
+        std::auto_ptr< IncResponse > r( new IncResponse(Response::OK) );
         r->setResult(100);
-        r->setStatus(Response::OK);
         resp_.reset(r.release());
         return true;
     }
     virtual bool visitIncModCommand( IncModCommand& cmd ) /* throw(PvapException) */  {
-        std::auto_ptr< IncResponse > r( new IncResponse(cmd.getSeqNum()) );
+        std::auto_ptr< IncResponse > r( new IncResponse(Response::OK) );
         r->setResult(100);
-        r->setStatus(Response::OK);
         resp_.reset(r.release());
         return true;
     }
     virtual bool visitBatchCommand( BatchCommand& cmd ) /* throw(PvapException) */  {
-        std::auto_ptr<BatchResponse> r( new BatchResponse(cmd.getSeqNum()) );
+        std::auto_ptr<BatchResponse> r( new BatchResponse(Response::OK) );
         for ( std::vector< BatchRequestComponent* >::const_iterator i = cmd.getBatchContent().begin();
               i != cmd.getBatchContent().end();
               ++i ) {
@@ -100,10 +100,10 @@ public:
         return true;
     }
 
-    Response* getResponse() { return resp_.release(); }
+    CommandResponse* getResponse() { return resp_.release(); }
 
 private:
-    std::auto_ptr<Response> resp_;
+    std::auto_ptr<CommandResponse> resp_;
 };
 
 
@@ -114,10 +114,10 @@ public:
     log_(smsc::logger::Logger::getInstance("synclogic"))
     {}
     virtual Response* process( Request& req ) /* throw (PvssException) */  {
-        Response* result = ( req.visit(proc_) ? proc_.getResponse() : 0 );
+        CommandResponse* result = ( req.visit(proc_) ? proc_.getResponse() : 0 );
         smsc_log_debug(log_,"request %s processed: %s", req.toString().c_str(),
                        result ? result->toString().c_str() : "" );
-        return result;
+        return new ProfileResponse(req.getSeqNum(),result);
     }
     virtual void responseSent( std::auto_ptr<ServerContext>) {}
     virtual void responseFail( std::auto_ptr<ServerContext>) {}
@@ -129,12 +129,15 @@ private:
 class SyncDispatcherImpl : public SyncDispatcher
 {
 public:
-    virtual unsigned getIndex( Request& req ) {
+    virtual unsigned getIndex( Request& req ) const {
         return 0;
     }
     virtual Server::SyncLogic* getSyncLogic(unsigned idx) {
         if ( idx == 0 ) return &logic_;
         return 0;
+    }
+    std::string reportStatistics() const {
+        return "no stats right now";
     }
 private:
     SyncLogicImpl logic_;
@@ -187,6 +190,7 @@ int main()
 
     // synchronous variant
     try {
+        // server->init();
         server->startup(*dispatcher.get());
     } catch ( PvssException& e ) {
         smsc_log_error( logger, "exception(%u): %s", __LINE__, e.what() );

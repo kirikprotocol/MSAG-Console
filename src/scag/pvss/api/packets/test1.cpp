@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 
+#include "logger/Logger.h"
 #include "PingRequest.h"
 #include "PingResponse.h"
 #include "AuthRequest.h"
@@ -17,7 +18,7 @@ PingRequest* makePing( uint32_t s )
     return new PingRequest(s);
 }
 
-PingResponse* makePingResp( uint32_t s, Response::StatusType stat )
+PingResponse* makePingResp( uint32_t s, uint8_t stat )
 {
     std::auto_ptr<PingResponse> r( new PingResponse(s) );
     r->setStatus(stat);
@@ -37,30 +38,30 @@ AuthRequest* makeAuth( uint32_t seq, uint8_t vers,
     return r.release();
 }
 
-BatchCommand* makeBatch( uint32_t seq, bool trans )
+BatchCommand* makeBatch( bool trans )
 {
-    std::auto_ptr<BatchCommand> r( new BatchCommand(seq) );
+    std::auto_ptr<BatchCommand> r( new BatchCommand );
     r->setTransactional(trans);
     return r.release();
 }
 
-DelCommand* makeDel( uint32_t seq, const std::string& var )
+DelCommand* makeDel( const std::string& var )
 {
-    std::auto_ptr<DelCommand> r(new DelCommand(seq));
+    std::auto_ptr<DelCommand> r(new DelCommand);
     r->setVarName(var);
     return r.release();
 }
 
-GetCommand* makeGet( uint32_t seq, const std::string& var )
+GetCommand* makeGet( const std::string& var )
 {
-    std::auto_ptr<GetCommand> r(new GetCommand(seq));
+    std::auto_ptr<GetCommand> r(new GetCommand);
     r->setVarName(var);
     return r.release();
 }
 
-SetCommand* makeSet( uint32_t seq, const std::string& var, const std::string& val )
+SetCommand* makeSet( const std::string& var, const std::string& val )
 {
-    std::auto_ptr<SetCommand> r(new SetCommand(seq));
+    std::auto_ptr<SetCommand> r(new SetCommand);
     r->setVarName(var);
     r->setStringValue(val);
     return r.release();
@@ -77,18 +78,19 @@ void makePackets( std::vector< Packet* >& packets )
     packets.push_back( makePing(1) );
     packets.push_back( makePingResp(1,Response::BAD_REQUEST) );
     packets.push_back( makeAuth(2,2,"login", "password", "msag") );
-    AbstractProfileRequest* r = 
-        new ProfileRequest<BatchCommand>
-        ( push( push( push( makeBatch(3,true),
-                            makeDel(4, "var1")),
-                      makeGet(5,"var2")),
-                makeSet(6,"var3", "хелло, ворлд")) );
-    r->getProfileKey().setAbonentKey( ".0.1.79137654079" );
+    ProfileRequest* r = new ProfileRequest(10);
+    r->setCommand( push( push( push(makeBatch(true),
+                                    makeDel("var1")),
+                               makeGet("var2")),
+                         makeSet("var3", "хелло, ворлд")) );
+    r->getProfileKey().setAbonentKey( ".1.1.79137654079" );
     packets.push_back(r);
 }
 
 int main()
 {
+    smsc::logger::Logger::Init();
+
     std::vector< Packet* > packets;
     makePackets( packets );
     for ( std::vector< Packet* >::iterator i = packets.begin();

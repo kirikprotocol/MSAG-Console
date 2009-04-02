@@ -94,7 +94,7 @@ public:
 
     Property* GetProperty(const char* name);
     bool PropertyExists(const char* str);
-    bool AddProperty(Property& prop);
+    bool AddProperty(const Property& prop);
     bool DeleteProperty(const char* str);
     void DeleteExpired();
     void Empty();

@@ -32,9 +32,9 @@ protected:
     static const int nameTag = 34;
 
 public:
-    PC_AUTH( int seqNum ) :
+    PC_AUTH() :
     owned_(true),
-    data_(new AuthRequest(seqNum))
+    data_(new AuthRequest)
     {
     }
 
@@ -66,7 +66,7 @@ public:
     }
 
     template < class DataStream >
-        void serialize( const PVAP& proto, DataStream& writer ) const /* throw (PvapException) */ 
+        void serialize( const PVAP& proto, DataStream& writer ) const throw (PvapException)
     {
         if ( ! data_ ) return;
         checkFields();
@@ -77,7 +77,7 @@ public:
             writer.writeByteLV(data_->getProtocolVersion());
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "writing field protocolVersion in PC_AUTH: %s",
                                               e.what() );
         }
@@ -87,7 +87,7 @@ public:
             writer.writeAsciiLV(data_->getLogin());
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "writing field login in PC_AUTH: %s",
                                               e.what() );
         }
@@ -97,7 +97,7 @@ public:
             writer.writeAsciiLV(data_->getPassword());
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "writing field password in PC_AUTH: %s",
                                               e.what() );
         }
@@ -107,7 +107,7 @@ public:
             writer.writeAsciiLV(data_->getName());
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "writing field name in PC_AUTH: %s",
                                               e.what() );
         }
@@ -115,7 +115,7 @@ public:
     }
 
     template <class DataStream> void deserialize( PVAP& proto, DataStream& reader )
-        /* throw (PvapException) */ 
+        throw (PvapException)
     {
         if ( ! data_ ) return;
         clear();
@@ -144,12 +144,12 @@ public:
                     break;
                 }
                 default:
-                    throw InvalidFieldTypeException(data_->isRequest(),"PC_AUTH", data_->getSeqNum(),tag);
+                    throw InvalidFieldTypeException(data_->isRequest(),"PC_AUTH", getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "reading field tag=%d of PC_AUTH: %s",
                                               tag, e.what() );
         }
@@ -157,15 +157,21 @@ public:
     }
 
     uint32_t getSeqNum() const {
-        return data_ ? data_->getSeqNum() : uint32_t(-1);
+        return
+            data_ ? data_->getSeqNum() :
+        uint32_t(-1);
+    }
+
+    void setSeqNum( uint32_t seqNum ) {
+        if (data_) data_->setSeqNum(seqNum);
     }
 
 protected:
-    void checkFields() const /* throw (PvapException) */ 
+    void checkFields() const throw (PvapException)
     {
         // using parent check
         if ( !data_->isValid() ) {
-            throw MessageIsBrokenException(data_->isRequest(), data_->getSeqNum(), "message PC_AUTH is broken: %s",data_->toString().c_str());
+            throw MessageIsBrokenException(data_->isRequest(), getSeqNum(), "message PC_AUTH is broken: %s",data_->toString().c_str());
         }
     }
 

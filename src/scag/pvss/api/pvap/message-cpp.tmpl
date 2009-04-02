@@ -41,13 +41,13 @@ $-select$
 $-pack$$-macro$
 
 $macro checker$$pack$
-$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$->$if field.useProfile$getProfileKey().$-if$$if field.useCommand$getCommand()->$-if$$ifdef field.useChecker$$var field.useChecker$$-ifdef$$ifndef field.useChecker$has$var field.name:ucf$$-ifndef$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$->$if field.useProfile$getProfileKey().$-if$$ifdef field.useChecker$$var field.useChecker$$-ifdef$$ifndef field.useChecker$has$var field.name:ucf$$-ifndef$
 $-pack$$-macro$
 $macro getter$$pack$
-$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$->$if field.useProfile$getProfileKey().$-if$$if field.useCommand$getCommand()->$-if$$ifdef field.useGetter$$var field.useGetter$$-ifdef$$ifndef field.useGetter$get$var field.name:ucf$$-ifndef$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$->$if field.useProfile$getProfileKey().$-if$$ifdef field.useGetter$$var field.useGetter$$-ifdef$$ifndef field.useGetter$get$var field.name:ucf$$-ifndef$
 $-pack$$-macro$
 $macro setter$$pack$
-$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$->$if field.useProfile$getProfileKey().$-if$$if field.useCommand$getCommand()->$-if$$ifdef field.useSetter$$var field.useSetter$$-ifdef$$ifndef field.useSetter$set$var field.name:ucf$$-ifndef$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$->$if field.useProfile$getProfileKey().$-if$$ifdef field.useSetter$$var field.useSetter$$-ifdef$$ifndef field.useSetter$set$var field.name:ucf$$-ifndef$
 $-pack$$-macro$
 $macro baseclass$$var message.inheritsFrom$$ifdef message.command$< $var message.command$ >$-ifdef$$-macro$
 
@@ -67,9 +67,9 @@ $-if$
 $-foreach$
 
 public:
-    $var message.name$( int seqNum ) :
+    $var message.name$() :
     owned_(true),
-    data_(new $expand baseclass$($ifdef message.command$new $var message.command$($-ifdef$seqNum$ifdef message.command$)$-ifdef$))
+    data_(new $expand baseclass$$ifdef message.command$(new $var message.command$)$-ifdef$)
     {
 $foreach field$
 $if field.isTransient$
@@ -116,7 +116,7 @@ $-foreach$
     }
 
     template < class DataStream >
-        void serialize( const $var protocol.name:ucf$& proto, DataStream& writer ) const /* throw (PvapException) */ 
+        void serialize( const $var protocol.name:ucf$& proto, DataStream& writer ) const throw (PvapException)
     {
         if ( ! data_ ) return;
         checkFields();
@@ -139,7 +139,7 @@ $case bool$writer.writeBoolLV($expand getter$());
 $case nested$throw NotImplementedException("$var field.name$");
 $default${
 $ifdef field.helperClass$
-                $var field.helperClass$ helper( data_$if field.useCommand$->getCommand()$-if$ );
+                $var field.helperClass$ helper( data_ );
                 helper.serialize( proto, writer );
 $-ifdef$
 $ifndef field.helperClass$
@@ -149,7 +149,7 @@ $-ifndef$
 $-select$
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "writing field $var field.name$ in $var message.name$: %s",
                                               e.what() );
         }
@@ -176,7 +176,7 @@ $case bool$writer.writeBoolLV($expand getter$());
 $case nested$throw NotImplementedException("$var field.name$");
 $default${
 $ifdef field.helperClass$
-                    $var field.helperClass$ helper( data_$if field.useCommand$->getCommand()$-if$ );
+                    $var field.helperClass$ helper( data_ );
                     helper.serialize(proto,writer);
 $-ifdef$
 $ifndef field.helperClass$
@@ -186,7 +186,7 @@ $-ifndef$
 $-select$
             } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
-                                                  data_->getSeqNum(),
+                                                  getSeqNum(),
                                                   "writing field $var field.name$ in $var message.name$:",
                                                   e.what() );
             }
@@ -197,7 +197,7 @@ $-foreach$
     }
 
     template <class DataStream> void deserialize( $var protocol.name:ucf$& proto, DataStream& reader )
-        /* throw (PvapException) */ 
+        throw (PvapException)
     {
         if ( ! data_ ) return;
         clear();
@@ -215,7 +215,7 @@ $if !field.isTransient$
 $ifdef field.checkVar$
                     if ($var field.checkVar$Flag) {
                         throw DuplicateFieldException(data_->isRequest(),
-                                                      "duplicate field $var field.name$ of $var message.name$", data_->getSeqNum());
+                                                      "duplicate field $var field.name$ of $var message.name$", getSeqNum());
                     }
                     $var field.checkVar$Flag = true;
 $-ifdef$
@@ -228,12 +228,12 @@ $case string$$expand setter$(reader.readStrLV());
 $case ascii$$expand setter$(reader.readAsciiLV());
 $case utf8$$expand setter$(reader.readUTFLV());
 $case bool$$expand setter$(reader.readBoolLV());
-$case nested$throw NotImplementedException("reading field $var field.name$ of $var message.name$ is not impl yet", data_->getSeqNum());
+$case nested$throw NotImplementedException("reading field $var field.name$ of $var message.name$ is not impl yet", getSeqNum());
 $default$$ifndef field.helperClass$$var field.type$ temp;
                     temp.deserialize(proto,reader);
                     $expand setter$(temp);
 $-ifndef$
-$ifdef field.helperClass$$var field.helperClass$ helper(data_$if field.useCommand$->getCommand()$-if$);
+$ifdef field.helperClass$$var field.helperClass$ helper(data_);
                     helper.deserialize(proto,reader);
 $-ifdef$
 $-select$
@@ -242,12 +242,12 @@ $-select$
 $-if$
 $-foreach$
                 default:
-                    throw InvalidFieldTypeException(data_->isRequest(),"$var message.name$", data_->getSeqNum(),tag);
+                    throw InvalidFieldTypeException(data_->isRequest(),"$var message.name$", getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "reading field tag=%d of $var message.name$: %s",
                                               tag, e.what() );
         }
@@ -255,15 +255,25 @@ $-foreach$
     }
 
     uint32_t getSeqNum() const {
-        return data_ ? data_->getSeqNum() : uint32_t(-1);
+        return 
+$if options.hasSeqNum$
+            data_ ? data_->getSeqNum() : 
+$-if$
+        uint32_t(-1);
     }
 
+$if options.hasSeqNum$
+    void setSeqNum( uint32_t seqNum ) {
+        if (data_) data_->setSeqNum(seqNum);
+    }
+$-if$
+
 protected:
-    void checkFields() const /* throw (PvapException) */ 
+    void checkFields() const throw (PvapException)
     {
         // using parent check
         if ( !data_->isValid() ) {
-            throw MessageIsBrokenException(data_->isRequest(), data_->getSeqNum(), "message $var message.name$ is broken: %s",data_->toString().c_str());
+            throw MessageIsBrokenException(data_->isRequest(), getSeqNum(), "message $var message.name$ is broken: %s",data_->toString().c_str());
         }
     }
 

@@ -1,16 +1,16 @@
 #ifndef _SCAG_PVSS_BASE_BATCHREQUESTCOMPONENT_H
 #define _SCAG_PVSS_BASE_BATCHREQUESTCOMPONENT_H
 
-#include "AbstractCommand.h"
+#include "ProfileCommand.h"
 
 namespace scag2 {
 namespace pvss {
 
-class BatchRequestComponent : public AbstractCommand
+class BatchRequestComponent : public ProfileCommand
 {
 public:
-    BatchRequestComponent() : AbstractCommand() {}
-    BatchRequestComponent( uint32_t seqNum ) : AbstractCommand(seqNum) {}
+    BatchRequestComponent() : ProfileCommand() {}
+    // BatchRequestComponent( uint32_t seqNum ) : ProfileCommand(seqNum) {}
 
     // overriding the return type
     virtual BatchRequestComponent* clone() const = 0;

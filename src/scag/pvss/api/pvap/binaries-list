@@ -1,1 +1,9 @@
-scag/tests/pvap-test-protocol testProtocol -lscag-pvss-packets -lscag-pvss-base -lscag-util-storage -lscag-util -lutil
+scag/tests/pvap-test-protocol testProtocol \
+  -lscag-pvss-api-pvap \
+  -lscag-pvss-api-packets \
+  -lscag-pvss-data \
+  -lscag-util-storage -lscag-util \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  $(__LIBRARIES) \
+  -lpthread -lrt -ldl \
+  $(LIBMALLOC)

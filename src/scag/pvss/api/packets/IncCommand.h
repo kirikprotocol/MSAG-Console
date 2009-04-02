@@ -8,9 +8,14 @@ namespace pvss {
 
 class IncCommand : public AbstractPropertyCommand
 {
+protected:
+    struct inherited {};
+    IncCommand( const inherited& ) : inherited_(true) {}
+
 public:
-    IncCommand() : AbstractPropertyCommand() {}
-    IncCommand( uint32_t seqNum ) : AbstractPropertyCommand(seqNum) {}
+    IncCommand() : AbstractPropertyCommand(), inherited_(false) { initLog(); }
+    // IncCommand( uint32_t seqNum ) : AbstractPropertyCommand(seqNum) {}
+    virtual ~IncCommand() { if (!inherited_) logDtor(); }
     
     virtual bool isValid() const {
         return AbstractPropertyCommand::isValid() && hasIntValue();
@@ -25,7 +30,9 @@ public:
 
 protected:
     virtual const char* typeToString() const { return "inc"; }
-    virtual ResponseTypeMatch& getResponseTypeMatch() const;
+    // virtual ResponseTypeMatch& getResponseTypeMatch() const;
+private:
+    bool inherited_;
 };
 
 } // namespace pvss

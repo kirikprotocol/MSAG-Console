@@ -21,7 +21,7 @@ namespace scag2{
 namespace pvss{
 namespace pvap{
 
-class PVAPBC;
+class PVAPPROF;
 
 class BC_INC
 {
@@ -31,9 +31,9 @@ protected:
     static const int intValueTag = 25;
 
 public:
-    BC_INC( int seqNum ) :
+    BC_INC() :
     owned_(true),
-    data_(new IncCommand(seqNum))
+    data_(new IncCommand)
     {
     }
 
@@ -65,7 +65,7 @@ public:
     }
 
     template < class DataStream >
-        void serialize( const PVAPBC& proto, DataStream& writer ) const /* throw (PvapException) */ 
+        void serialize( const PVAPPROF& proto, DataStream& writer ) const throw (PvapException)
     {
         if ( ! data_ ) return;
         checkFields();
@@ -76,7 +76,7 @@ public:
             writer.writeAsciiLV(data_->getVarName());
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "writing field varName in BC_INC: %s",
                                               e.what() );
         }
@@ -90,7 +90,7 @@ public:
             }
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "writing field timePolicy in BC_INC: %s",
                                               e.what() );
         }
@@ -100,15 +100,15 @@ public:
             writer.writeIntLV(data_->getIntValue());
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "writing field intValue in BC_INC: %s",
                                               e.what() );
         }
         // optional fields
     }
 
-    template <class DataStream> void deserialize( PVAPBC& proto, DataStream& reader )
-        /* throw (PvapException) */ 
+    template <class DataStream> void deserialize( PVAPPROF& proto, DataStream& reader )
+        throw (PvapException)
     {
         if ( ! data_ ) return;
         clear();
@@ -134,12 +134,12 @@ public:
                     break;
                 }
                 default:
-                    throw InvalidFieldTypeException(data_->isRequest(),"BC_INC", data_->getSeqNum(),tag);
+                    throw InvalidFieldTypeException(data_->isRequest(),"BC_INC", getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "reading field tag=%d of BC_INC: %s",
                                               tag, e.what() );
         }
@@ -147,15 +147,17 @@ public:
     }
 
     uint32_t getSeqNum() const {
-        return data_ ? data_->getSeqNum() : uint32_t(-1);
+        return
+        uint32_t(-1);
     }
 
+
 protected:
-    void checkFields() const /* throw (PvapException) */ 
+    void checkFields() const throw (PvapException)
     {
         // using parent check
         if ( !data_->isValid() ) {
-            throw MessageIsBrokenException(data_->isRequest(), data_->getSeqNum(), "message BC_INC is broken: %s",data_->toString().c_str());
+            throw MessageIsBrokenException(data_->isRequest(), getSeqNum(), "message BC_INC is broken: %s",data_->toString().c_str());
         }
     }
 

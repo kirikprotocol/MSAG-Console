@@ -26,10 +26,10 @@ SyncContext::SyncContext(Socket* sock, WriterTaskManager& writerManager, core::s
   smsc_log_info(logger_, "Connection accepted from %s", peerIp_.c_str());
 }
 
-void SyncContext::createErrorResponse(Response::StatusType status) {
-  smsc_log_debug(logger_, "%p: Create Error response %d", this, status);
-  ErrorResponse resp;
-  resp.setStatus(status);
+void SyncContext::createErrorResponse(uint8_t status, const char* msg) {
+  smsc_log_debug(logger_, "%p: Create Error response %d msg=%s", this, status, msg?msg:"");
+  ErrorResponse resp(uint32_t(-1),status,msg);
+  // resp.setStatus(status);
   sendResponse(resp);
 }
 
@@ -84,7 +84,7 @@ bool SyncContext::processReadSocket(const time_t& now) {
     if (!req) {
       smsc_log_warn(logger_, "%p:request is NULL. buffer received len=%d curpos=%d data=%s",
                               this, inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
-      createErrorResponse(Response::ERROR);
+      createErrorResponse(Response::ERROR,"request is NULL");
     }
   
     std::auto_ptr<Request> request(req);
@@ -105,32 +105,32 @@ bool SyncContext::processReadSocket(const time_t& now) {
   } catch (const SerialBufferOutOfBounds& e) {
     smsc_log_warn(logger_, "%p:SerialBufferOutOfBounds: bad data in buffer received len=%d curpos=%d data=%s",
                             this, inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
-    createErrorResponse(Response::BAD_REQUEST);
+    createErrorResponse(Response::BAD_REQUEST,e.what());
 
   } catch (const std::runtime_error& e) {
     smsc_log_warn(logger_, "%p:std::runtime_error: Error profile key: %s. buffer received len=%d curpos=%d data=%s",
                             this, e.what(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
-    createErrorResponse(Response::ERROR);
+    createErrorResponse(Response::ERROR,e.what());
 
   } catch (const pvap::InvalidMessageTypeException& e) {
     smsc_log_warn(logger_, "%p:InvalidMessageTypeException: %s. buffer received len=%d curpos=%d data=%s",
                             this, e.getMessage().c_str(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
-    createErrorResponse(Response::NOT_SUPPORTED);
+    createErrorResponse(Response::NOT_SUPPORTED,e.what());
 
   } catch (const PvapException& e) {
     smsc_log_warn(logger_, "%p:PvapException: %s. buffer received len=%d curpos=%d data=%s",
                             this, e.getMessage().c_str(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
-    createErrorResponse(Response::ERROR);
+    createErrorResponse(Response::ERROR,e.what());
 
   } catch (const std::exception& e) {
     smsc_log_warn(logger_, "%p:std::exception: %s. buffer received len=%d curpos=%d data=%s",
                             this, e.what(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
-    createErrorResponse(Response::ERROR);
+    createErrorResponse(Response::ERROR,e.what());
 
   } catch (...) {
     smsc_log_warn(logger_, "%p:Unknown Exception: buffer received len=%d curpos=%d data=%s",
                             this, inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
-    createErrorResponse(Response::ERROR);
+    createErrorResponse(Response::ERROR,"unknown exc");
   }
 
   return true;

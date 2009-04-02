@@ -1,19 +1,21 @@
 #include "BatchCommand.h"
-#include "ResponseTypeMatch.h"
+// #include "ResponseTypeMatch.h"
 #include "BatchRequestComponent.h"
 
+/*
 namespace {
 using namespace scag2::pvss;
 class BatchResponseTypeMatch : public ResponseTypeMatch
 {
 public:
-    virtual bool visitBatchResponse( BatchResponse& ) /* throw (PvapException) */  {
+    virtual bool visitBatchResponse( BatchResponse& ) { // throw (PvapException)
         return true;
     }
 };
 
 BatchResponseTypeMatch responseMatch_;
 }
+ */
 
 namespace scag2 {
 namespace pvss {
@@ -33,7 +35,7 @@ std::string BatchCommand::toString() const
 {
     char buf[12];
     snprintf(buf,sizeof(buf)," trans=%d [",transactional_ ? 1 : 0);
-    std::string rv(AbstractCommand::toString() + buf);
+    std::string rv(ProfileCommand::toString() + buf);
     bool comma = false;
     for ( std::vector< BatchRequestComponent* >::const_iterator i = batchContent_.begin();
           i != batchContent_.end();
@@ -56,12 +58,14 @@ void BatchCommand::clear()
     batchContent_.clear();
 }
     
+/*
 ResponseTypeMatch& BatchCommand::getResponseTypeMatch() const {
     return responseMatch_;
 }
+ */
 
 BatchCommand::BatchCommand( const BatchCommand& cmd ) :
-AbstractCommand(cmd),
+ProfileCommand(cmd),
 transactional_(cmd.transactional_)
 {
     for ( std::vector< BatchRequestComponent* >::const_iterator i = cmd.batchContent_.begin();
@@ -69,6 +73,7 @@ transactional_(cmd.transactional_)
           ++i ) {
         batchContent_.push_back( (*i)->clone() );
     }
+    initLog();
 }
 
 } // namespace pvss

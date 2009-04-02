@@ -4,14 +4,12 @@
 #include <algorithm>
 #include "RequestGenerator.h"
 #include "scag/util/Drndm.h"
-#include "scag/pvss/data/ProfileKey.h"
 #include "scag/pvss/api/packets/GetCommand.h"
 #include "scag/pvss/api/packets/DelCommand.h"
 #include "scag/pvss/api/packets/SetCommand.h"
 #include "scag/pvss/api/packets/IncCommand.h"
 #include "scag/pvss/api/packets/IncModCommand.h"
 #include "scag/pvss/api/packets/BatchCommand.h"
-#include "scag/pvss/api/packets/AbstractProfileRequest.h"
 
 using namespace smsc::core::synchronization;
 
@@ -128,7 +126,7 @@ void RequestGenerator::parseCommandPatterns( const std::string& patterns ) /* th
             case 's' : { // set
                 SetCommand* kmd = new SetCommand;
                 cmd.reset(kmd);
-                kmd->setProperty(new Property(*prop));
+                kmd->setProperty(*prop);
                 break;
             }
             case 'd' : { // del
@@ -142,7 +140,7 @@ void RequestGenerator::parseCommandPatterns( const std::string& patterns ) /* th
                 cmd.reset( kmd );
                 if ( prop->getType() != INT )
                     throw IOException("not an integer type for inc command");
-                kmd->setProperty(new Property(*prop));
+                kmd->setProperty(*prop);
                 break;
             }
             case 'I' : { // incmod
@@ -151,7 +149,7 @@ void RequestGenerator::parseCommandPatterns( const std::string& patterns ) /* th
                 if ( prop->getType() != INT )
                     throw IOException("not an integer type for incmod command");
                 if ( modulus <= 0 ) throw IOException("modulus is not set for incmod");
-                kmd->setProperty(new Property(*prop));
+                kmd->setProperty(*prop);
                 kmd->setModulus(modulus);
                 break;
             }
@@ -179,7 +177,7 @@ void RequestGenerator::parseCommandPatterns( const std::string& patterns ) /* th
 
 void RequestGenerator::clearCommandPatterns()
 {
-    for ( std::vector< AbstractCommand* >::const_iterator i = patterns_.begin();
+    for ( std::vector< ProfileCommand* >::const_iterator i = patterns_.begin();
           i != patterns_.end(); ++i ) {
         delete *i;
     }
@@ -215,7 +213,7 @@ Property* RequestGenerator::getProperty( unsigned idx )
 }
 
 
-AbstractCommand* RequestGenerator::generateCommand( unsigned& patternIndex )
+ProfileCommand* RequestGenerator::generateCommand( unsigned& patternIndex )
 {
     assert( patterns_.size() > 0 );
     if ( patternIndex < patterns_.size() ) {

@@ -12,14 +12,10 @@ using namespace scag2::pvss;
 
 struct ErrorResponseVisitor : public ResponseVisitor
 {
-    virtual bool visitErrResponse( ErrorResponse& resp ) throw (PvapException) { return true; }
-    virtual bool visitDelResponse( DelResponse& resp ) throw (PvapException) { return false; }
-    virtual bool visitSetResponse( SetResponse& resp ) throw (PvapException) { return false; }
-    virtual bool visitGetResponse( GetResponse& resp ) throw (PvapException) { return false; }
-    virtual bool visitIncResponse( IncResponse& resp ) throw (PvapException) { return false; }
-    virtual bool visitPingResponse( PingResponse& resp ) throw (PvapException) { return false; }
-    virtual bool visitAuthResponse( AuthResponse& resp ) throw (PvapException) { return false; }
-    virtual bool visitBatchResponse( BatchResponse& resp ) throw (PvapException) { return false; }
+    virtual bool visitErrResponse( ErrorResponse& resp ) { return true; }
+    virtual bool visitPingResponse( PingResponse& resp ) { return false; }
+    virtual bool visitAuthResponse( AuthResponse& resp ) { return false; }
+    virtual bool visitProfileResponse( ProfileResponse& resp ) { return false; }
 };
 
 }
@@ -160,7 +156,8 @@ void ServerCore::reportPacket(uint32_t seqNum, smsc::core::network::Socket& chan
 
 void ServerCore::init()
 {
-    if (!acceptor_.get()) acceptor_.reset(new Acceptor(getConfig(),*this));
+    if (acceptor_.get()) return;
+    acceptor_.reset(new Acceptor(getConfig(),*this));
     acceptor_->init();
 }
 
@@ -172,6 +169,7 @@ void ServerCore::startup( SyncDispatcher& dispatcher ) /* throw (PvssException) 
     if (started_) return;
 
     smsc_log_info(log_,"Starting PVSS (sync_disp) server %s", getConfig().toString().c_str() );
+    init();
     if ( !acceptor_.get() ) throw PvssException(PvssException::UNKNOWN, "no acceptor found");
 
     syncDispatcher_ = &dispatcher;
@@ -208,6 +206,7 @@ void ServerCore::startup( AsyncDispatcher& dispatcher ) /* throw (PvssException)
     if (started_) return;
 
     smsc_log_info(log_,"Starting PVSS (async_disp) server %s", getConfig().toString().c_str() );
+    init();
     if ( !acceptor_.get() ) throw PvssException(PvssException::UNKNOWN, "no acceptor found");
 
     startupIO();
@@ -413,7 +412,7 @@ int ServerCore::doExecute()
 void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
 {
     // FIXME: update channel activity should be here
-    Response::StatusType status = Response::OK;
+    uint8_t status = Response::OK;
     Request* req = ctx->getRequest().get();
     if ( !req ) {
         // smsc_log_error( log_, "context does not contain request");

@@ -1,7 +1,7 @@
 #ifndef _SCAG_PVSS_BASE_AUTHREQUEST_H
 #define _SCAG_PVSS_BASE_AUTHREQUEST_H
 
-#include "AbstractNonProfileRequest.h"
+#include "Request.h"
 #include "RequestVisitor.h"
 
 namespace scag2 {
@@ -10,18 +10,22 @@ namespace pvss {
 ///
 /// ping request
 ///
-class AuthRequest : public AbstractNonProfileRequest
+class AuthRequest : public Request
 {
 public:
-    AuthRequest() : protocolVersion_(0) {}
-    AuthRequest( uint32_t seqNum ) : AbstractNonProfileRequest(seqNum), protocolVersion_(0) {}
+    AuthRequest() : protocolVersion_(0) { initLog(); }
+    AuthRequest( uint32_t seqNum ) : Request(seqNum), protocolVersion_(0) { initLog(); }
     
 public:
+    virtual ~AuthRequest() { logDtor(); }
+
     virtual bool isValid() const {
         return !login_.empty() && !password_.empty() && !name_.empty() && protocolVersion_ != 0;
     }
+    /*
     virtual AuthRequest* getCommand() { return this; }
     virtual const AuthRequest* getCommand() const { return this; }
+     */
 
     uint8_t getProtocolVersion() const { return protocolVersion_; }
     void setProtocolVersion( uint8_t a ) { protocolVersion_ = a; }
@@ -51,11 +55,11 @@ public:
 
 protected:
     virtual const char* typeToString() const { return "auth"; }
-    virtual ResponseTypeMatch& getResponseTypeMatch() const;
+    // virtual ResponseTypeMatch& getResponseTypeMatch() const;
 
 private:
     AuthRequest( const AuthRequest& other ) :
-    AbstractNonProfileRequest(other),
+    Request(other),
     protocolVersion_(other.protocolVersion_),
     login_(other.login_),
     password_(other.password_),

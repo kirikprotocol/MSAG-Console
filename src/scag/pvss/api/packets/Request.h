@@ -3,15 +3,14 @@
 
 #include "Packet.h"
 #include "scag/pvss/common/PvapException.h"
-#include "logger/Logger.h"
 
 namespace scag2 {
 namespace pvss {
 
 class Command;
-class Response;
+// class Response;
 class RequestVisitor;
-class ResponseTypeMatch;
+// class ResponseTypeMatch;
 
 ///
 /// Abstract class Request
@@ -19,29 +18,44 @@ class ResponseTypeMatch;
 class Request : public Packet
 {
 protected:
-    static smsc::logger::Logger* log_;
-protected:
-    Request();
+    Request() : seqNum_(-1) {}
+    Request( uint32_t seqNum ) : seqNum_(seqNum) {}
+
 public:
-    virtual ~Request();
+    virtual ~Request() {}
+
+    virtual uint32_t getSeqNum() const {
+        return seqNum_;
+    }
+    virtual void setSeqNum( uint32_t seqNum ) {
+        seqNum_ = seqNum;
+    }
+    virtual std::string toString() const {
+        char buf[48];
+        snprintf( buf, sizeof(buf), "seqNum=%d %s", seqNum_, typeToString() );
+        return buf;
+    }
+
     virtual bool isRequest() const { return true; }
-    virtual Command* getCommand() = 0;
-    virtual const Command* getCommand() const = 0;
+    virtual bool isPing() const { return false; }
+
+    // virtual Command* getCommand() = 0;
+    // virtual const Command* getCommand() const = 0;
 
     virtual bool visit( RequestVisitor& visitor ) /* throw (PvapException) */  = 0;
     virtual Request* clone() const = 0;
-    bool matchResponseType( const Response& resp ) const;
 
-    virtual bool isPing() const { return false; }
-
-protected:
-    virtual ResponseTypeMatch& getResponseTypeMatch() const;
+    // bool matchResponseType( const Response& resp ) const;
 
 protected:
-    Request( const Request& other ) : Packet(other) {}
+    virtual const char* typeToString() const = 0;
+    Request( const Request& other ) : Packet(other), seqNum_(other.seqNum_) {}
 
 private:
     Request& operator = ( const Request& );
+
+private:
+    uint32_t seqNum_;
 };
 
 } // namespace pvss

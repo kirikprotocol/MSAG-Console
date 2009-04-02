@@ -11,73 +11,76 @@ namespace pvss {
 class AbstractPropertyCommand : public BatchRequestComponent, public HavingProperty
 {
 protected:
-    AbstractPropertyCommand() : BatchRequestComponent(), property_(0) {}
-    AbstractPropertyCommand( uint32_t seqNum ) : BatchRequestComponent(seqNum), property_(0) {}
+    AbstractPropertyCommand() : BatchRequestComponent() {}
+    // AbstractPropertyCommand( uint32_t seqNum ) : BatchRequestComponent(seqNum) {}
     AbstractPropertyCommand( const AbstractPropertyCommand& cmd ) :
-    BatchRequestComponent(*this), property_(0) {
-        if ( cmd.property_ ) property_ = new Property(*cmd.property_);
+    BatchRequestComponent(cmd), HavingProperty(cmd), property_(cmd.property_) {
+        // if ( cmd.property_ ) property_ = new Property(*cmd.property_);
     }
 
 public:
     virtual ~AbstractPropertyCommand() {
-        delete property_;
+        // delete property_;
     }
 
-    const Property* getProperty() const {
+    const Property& getProperty() const {
         return property_;
     }
-    Property* getProperty() {
+    Property& getProperty() {
         return property_;
     }
-    void setProperty( Property* prop ) {
-        if ( property_ ) delete property_;
+    void setProperty( const Property& prop ) {
+        // if ( property_ ) delete property_;
         property_ = prop;
     }
     bool isValid() const {
-        return property_ != 0 && property_->isValid();
+        return property_.isValid();
     }
     void clear() {
+        property_ = Property();
+        /*
         if ( property_ ) {
             delete property_;
             property_ = 0;
         }
+         */
     }
 
     std::string toString() const {
-        return BatchRequestComponent::toString() + " " + ( property_ ? property_->toString() : "NULL" );
+        return BatchRequestComponent::toString() + " " + property_.toString();
     }
 
     // --- for serialization
     
     const char* getVarName() const {
-        return property_->getName();
+        return property_.getName();
     }
     void setVarName( const std::string& varName ) {
         createProperty().setName( varName );
     }
     bool hasIntValue() const {
-        return property_ != 0 && property_->getType() == INT;
+        return property_.getType() == INT;
     }
     bool hasStringValue() const {
-        return property_ != 0 && property_->getType() == STRING;
+        return property_.getType() == STRING;
     }
     bool hasDateValue() const {
-        return property_ != 0 && property_->getType() == DATE;
+        return property_.getType() == DATE;
     }
     bool hasBoolValue() const {
-        return property_ != 0 && property_->getType() == BOOL;
+        return property_.getType() == BOOL;
     }
     int getIntValue() const {
-        return int(property_->getIntValue());
+        return int(property_.getIntValue());
     }
     const std::string& getStringValue() const {
-        return property_->getStringValue();
+        return property_.getStringValue();
     }
     bool getBoolValue() const {
-        return property_->getBoolValue();
+        return property_.getBoolValue();
     }
     int getDateValue() const {
-        return int(property_->getDateValue());
+        return int(property_.getDateValue());
     }
     void setIntValue( int val ) {
         createProperty().setIntValue(val);
@@ -96,19 +99,18 @@ public:
     virtual bool isRequest() const {
         return BatchRequestComponent::isRequest();
     }
-    virtual uint32_t getSeqNum() const {
-        return BatchRequestComponent::getSeqNum();
-    }
+    // virtual uint32_t getSeqNum() const {
+    // return BatchRequestComponent::getSeqNum();
+    // }
 
 private:
     Property& createProperty() {
-        if ( property_ == 0 ) property_ = new Property();
-        return *property_;
+        // if ( property_ == 0 ) property_ = new Property();
+        return property_;
     }
 
-
 protected:
-    Property*  property_;  // owned
+    Property  property_;
 };
 
 } // namespace pvss

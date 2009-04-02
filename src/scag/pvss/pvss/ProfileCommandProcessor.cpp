@@ -21,11 +21,11 @@ namespace pvss  {
 bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */  {
   ProfileCommandProcessor proc;
   proc.setProfile(profile_);
-  response_.reset( new BatchResponse(cmd.getSeqNum()) );
+  BatchResponse* resp = new BatchResponse(StatusType::OK);
+  response_.reset(resp);
   std::vector<BatchRequestComponent*> content = cmd.getBatchContent();
   batchLogs_.reserve(content.size());
   typedef std::vector<BatchRequestComponent*>::iterator BatchIterator;
-  BatchResponse* resp = static_cast<BatchResponse*>(response_.get());
   if (cmd.isTransactional()) {
     for (BatchIterator i = content.begin(); i != content.end(); ++i) {
       bool result = (*i)->visit(proc);
@@ -48,43 +48,42 @@ bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(Pvap
 }
 
 bool ProfileCommandProcessor::visitDelCommand(DelCommand &cmd) /* throw(PvapException) */  {
-  response_.reset( new DelResponse(cmd.getSeqNum()) ); 
+  response_.reset(new DelResponse());
   if (!profile_ || !profile_->DeleteProperty(cmd.getVarName().c_str())) {
-    response_->setStatus(Response::PROPERTY_NOT_FOUND);
+    response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
     return false;
   }
   dblog_.createDelLogMsg(profile_->getKey(), cmd.getVarName());
-  response_->setStatus(Response::OK);
+  response_->setStatus(StatusType::OK);
   profile_->setChanged(true);
   return true;
 }
 
 bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) /* throw(PvapException) */  {
-  response_.reset( new GetResponse(cmd.getSeqNum()) ); 
+  response_.reset(new GetResponse());
   if (!profile_) {
-    response_->setStatus(Response::PROPERTY_NOT_FOUND);
+    response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
     return false;
   }
   Property* p = profile_->GetProperty(cmd.getVarName().c_str());
   if (!p) {
-    response_->setStatus(Response::PROPERTY_NOT_FOUND);
+    response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
     return false;
   }
   if(p->getTimePolicy() == R_ACCESS) {
     p->ReadAccess();
     profile_->setChanged(true);
   }
-  response_->setStatus(Response::OK);
-  static_cast<GetResponse*>(response_.get())->setProperty(new Property(*p));
+  response_->setStatus(StatusType::OK);
+  static_cast<GetResponse*>(response_.get())->setProperty(*p);
   return true;
 }
 
 bool ProfileCommandProcessor::visitIncCommand(IncCommand &cmd) /* throw(PvapException) */  {
   uint32_t result = 0;
-  Response::StatusType status = incModProperty(cmd.getProperty(), 0, result);
-  response_.reset( new IncResponse(cmd.getSeqNum()) );
-  response_->setStatus(status);
-  if (status != Response::OK) {
+  uint8_t status = incModProperty(cmd.getProperty(), 0, result);
+  response_.reset( new IncResponse(status) );
+  if (status != StatusType::OK) {
     return false;
   }
   static_cast<IncResponse*>(response_.get())->setResult(result);
@@ -93,14 +92,14 @@ bool ProfileCommandProcessor::visitIncCommand(IncCommand &cmd) /* throw(PvapExce
 
 bool ProfileCommandProcessor::visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */  {
   uint32_t result = 0;
-  response_.reset( new IncResponse(cmd.getSeqNum()) );
+  response_.reset( new IncResponse());
   if (!profile_) {
-    response_->setStatus(Response::ERROR);
+    response_->setStatus(StatusType::ERROR);
     return false;
   }
-  Response::StatusType status = incModProperty(cmd.getProperty(), cmd.getModulus(), result);
+  uint8_t status = incModProperty(cmd.getProperty(), cmd.getModulus(), result);
   response_->setStatus(status);
-  if (status != Response::OK) {
+  if (status != StatusType::OK) {
     return false;
   }
   static_cast<IncResponse*>(response_.get())->setResult(result);
@@ -108,69 +107,69 @@ bool ProfileCommandProcessor::visitIncModCommand(IncModCommand &cmd) /* throw(Pv
 }
 
 bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapException) */  {
-  Property *prop = cmd.getProperty();
+  const Property& prop = cmd.getProperty();
   response_.reset( new SetResponse() );
   if (!profile_) {
-    response_->setStatus(Response::ERROR);
+    response_->setStatus(StatusType::ERROR);
     return false;
   }
-  if (prop->isExpired()) {
-    dblog_.createExpireLogMsg(profile_->getKey(), prop->toString());
-    response_->setStatus(Response::PROPERTY_NOT_FOUND);
+  if (prop.isExpired()) {
+    dblog_.createExpireLogMsg(profile_->getKey(), prop.toString());
+    response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
     return false;
   }
-  Property* p = profile_->GetProperty(prop->getName());
+  Property* p = profile_->GetProperty(prop.getName());
   if (p != NULL) {
-    p->setValue(*prop);
+    p->setValue(prop);
     p->WriteAccess();
-    dblog_.createUpdateLogMsg(profile_->getKey(), prop->toString());
+    dblog_.createUpdateLogMsg(profile_->getKey(), prop.toString());
   } else {
-    if (!profile_->AddProperty(*prop)) {
-      response_->setStatus(Response::ERROR);
+    if (!profile_->AddProperty(prop)) {
+      response_->setStatus(StatusType::ERROR);
       return false;
     }
-    dblog_.createAddLogMsg(profile_->getKey(), prop->toString());
+    dblog_.createAddLogMsg(profile_->getKey(), prop.toString());
   }
   profile_->setChanged(true);
-  response_->setStatus(Response::OK);
+  response_->setStatus(StatusType::OK);
   return true;
 }
 
-Response::StatusType ProfileCommandProcessor::incModProperty(Property* property, uint32_t mod, uint32_t& result) {
-  Property* p = profile_->GetProperty(property->getName());
+uint8_t ProfileCommandProcessor::incModProperty(Property& property, uint32_t mod, uint32_t& result) {
+  Property* p = profile_->GetProperty(property.getName());
   if (!p) {
-    result = static_cast<uint32_t>(property->getIntValue());
+    result = static_cast<uint32_t>(property.getIntValue());
     result = mod > 0 ? result % mod : result;
-    property->setIntValue(result);
-    if (!profile_->AddProperty(*property)) {
-      return Response::ERROR;
+    property.setIntValue(result);
+    if (!profile_->AddProperty(property)) {
+      return StatusType::ERROR;
     }
-    dblog_.createAddLogMsg(profile_->getKey(), property->toString());
+    dblog_.createAddLogMsg(profile_->getKey(), property.toString());
     profile_->setChanged(true);
-    return Response::OK;
+    return StatusType::OK;
   }
 
-  if (p->getType() == INT && property->getType() == INT) {
-    result = static_cast<uint32_t>(p->getIntValue() + property->getIntValue());
+  if (p->getType() == INT && property.getType() == INT) {
+    result = static_cast<uint32_t>(p->getIntValue() + property.getIntValue());
     result = mod > 0 ? result % mod : result;
     p->setIntValue(result);
     p->WriteAccess();
     dblog_.createUpdateLogMsg(profile_->getKey(), p->toString());
     profile_->setChanged(true);
-    return Response::OK;
+    return StatusType::OK;
   }
 
-  if (p->convertToInt() && property->convertToInt()) {
-    result = static_cast<uint32_t>(p->getIntValue() + property->getIntValue());
+  if (p->convertToInt() && property.convertToInt()) {
+    result = static_cast<uint32_t>(p->getIntValue() + property.getIntValue());
     result = mod > 0 ? result % mod : result;
     p->setIntValue(result);
     p->WriteAccess();
     dblog_.createDelLogMsg(profile_->getKey(), p->getName());
     dblog_.createAddLogMsg(profile_->getKey(), p->toString());
     profile_->setChanged(true);
-    return Response::OK;
+    return StatusType::OK;
   }
-  return Response::TYPE_INCONSISTENCE;
+  return StatusType::TYPE_INCONSISTENCE;
 }
 
 void ProfileCommandProcessor::setProfile(Profile *pf) {
@@ -184,7 +183,7 @@ BatchResponseComponent* ProfileCommandProcessor::getBatchResponseComponent() {
   return static_cast<BatchResponseComponent*>(response_.release());
 }
 
-Response* ProfileCommandProcessor::getResponse() {
+CommandResponse* ProfileCommandProcessor::getResponse() {
   return response_.release();
 }
 

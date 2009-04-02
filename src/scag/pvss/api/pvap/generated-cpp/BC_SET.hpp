@@ -25,7 +25,7 @@ namespace scag2{
 namespace pvss{
 namespace pvap{
 
-class PVAPBC;
+class PVAPPROF;
 
 class BC_SET
 {
@@ -38,9 +38,9 @@ protected:
     static const int dateValueTag = 28;
 
 public:
-    BC_SET( int seqNum ) :
+    BC_SET() :
     owned_(true),
-    data_(new SetCommand(seqNum))
+    data_(new SetCommand)
     {
         valueTypeFlag = false;
     }
@@ -75,7 +75,7 @@ public:
     }
 
     template < class DataStream >
-        void serialize( const PVAPBC& proto, DataStream& writer ) const /* throw (PvapException) */ 
+        void serialize( const PVAPPROF& proto, DataStream& writer ) const throw (PvapException)
     {
         if ( ! data_ ) return;
         checkFields();
@@ -86,7 +86,7 @@ public:
             writer.writeAsciiLV(data_->getVarName());
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "writing field varName in BC_SET: %s",
                                               e.what() );
         }
@@ -100,7 +100,7 @@ public:
             }
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "writing field timePolicy in BC_SET: %s",
                                               e.what() );
         }
@@ -112,7 +112,7 @@ public:
                 writer.writeIntLV(data_->getIntValue());
             } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
-                                                  data_->getSeqNum(),
+                                                  getSeqNum(),
                                                   "writing field intValue in BC_SET:",
                                                   e.what() );
             }
@@ -124,7 +124,7 @@ public:
                 writer.writeUTFLV(data_->getStringValue());
             } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
-                                                  data_->getSeqNum(),
+                                                  getSeqNum(),
                                                   "writing field stringValue in BC_SET:",
                                                   e.what() );
             }
@@ -136,7 +136,7 @@ public:
                 writer.writeBoolLV(data_->getBoolValue());
             } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
-                                                  data_->getSeqNum(),
+                                                  getSeqNum(),
                                                   "writing field boolValue in BC_SET:",
                                                   e.what() );
             }
@@ -148,15 +148,15 @@ public:
                 writer.writeIntLV(data_->getDateValue());
             } catch ( exceptions::IOException e ) {
                 throw PvapSerializationException( data_->isRequest(),
-                                                  data_->getSeqNum(),
+                                                  getSeqNum(),
                                                   "writing field dateValue in BC_SET:",
                                                   e.what() );
             }
         }
     }
 
-    template <class DataStream> void deserialize( PVAPBC& proto, DataStream& reader )
-        /* throw (PvapException) */ 
+    template <class DataStream> void deserialize( PVAPPROF& proto, DataStream& reader )
+        throw (PvapException)
     {
         if ( ! data_ ) return;
         clear();
@@ -180,7 +180,7 @@ public:
                 case intValueTag: {
                     if (valueTypeFlag) {
                         throw DuplicateFieldException(data_->isRequest(),
-                                                      "duplicate field intValue of BC_SET", data_->getSeqNum());
+                                                      "duplicate field intValue of BC_SET", getSeqNum());
                     }
                     valueTypeFlag = true;
                     data_->setIntValue(reader.readIntLV());
@@ -189,7 +189,7 @@ public:
                 case stringValueTag: {
                     if (valueTypeFlag) {
                         throw DuplicateFieldException(data_->isRequest(),
-                                                      "duplicate field stringValue of BC_SET", data_->getSeqNum());
+                                                      "duplicate field stringValue of BC_SET", getSeqNum());
                     }
                     valueTypeFlag = true;
                     data_->setStringValue(reader.readUTFLV());
@@ -198,7 +198,7 @@ public:
                 case boolValueTag: {
                     if (valueTypeFlag) {
                         throw DuplicateFieldException(data_->isRequest(),
-                                                      "duplicate field boolValue of BC_SET", data_->getSeqNum());
+                                                      "duplicate field boolValue of BC_SET", getSeqNum());
                     }
                     valueTypeFlag = true;
                     data_->setBoolValue(reader.readBoolLV());
@@ -207,19 +207,19 @@ public:
                 case dateValueTag: {
                     if (valueTypeFlag) {
                         throw DuplicateFieldException(data_->isRequest(),
-                                                      "duplicate field dateValue of BC_SET", data_->getSeqNum());
+                                                      "duplicate field dateValue of BC_SET", getSeqNum());
                     }
                     valueTypeFlag = true;
                     data_->setDateValue(reader.readIntLV());
                     break;
                 }
                 default:
-                    throw InvalidFieldTypeException(data_->isRequest(),"BC_SET", data_->getSeqNum(),tag);
+                    throw InvalidFieldTypeException(data_->isRequest(),"BC_SET", getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "reading field tag=%d of BC_SET: %s",
                                               tag, e.what() );
         }
@@ -227,15 +227,17 @@ public:
     }
 
     uint32_t getSeqNum() const {
-        return data_ ? data_->getSeqNum() : uint32_t(-1);
+        return
+        uint32_t(-1);
     }
 
+
 protected:
-    void checkFields() const /* throw (PvapException) */ 
+    void checkFields() const throw (PvapException)
     {
         // using parent check
         if ( !data_->isValid() ) {
-            throw MessageIsBrokenException(data_->isRequest(), data_->getSeqNum(), "message BC_SET is broken: %s",data_->toString().c_str());
+            throw MessageIsBrokenException(data_->isRequest(), getSeqNum(), "message BC_SET is broken: %s",data_->toString().c_str());
         }
     }
 

@@ -23,13 +23,13 @@ $-select$
 $-pack$$-macro$
 
 $macro checker$$pack$
-$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$if field.useCommand$getCommand().$-if$$ifdef field.useChecker$$var field.useChecker$$-ifdef$$ifndef field.useChecker$has$var field.name:ucf$$-ifndef$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$ifdef field.useChecker$$var field.useChecker$$-ifdef$$ifndef field.useChecker$has$var field.name:ucf$$-ifndef$
 $-pack$$-macro$
 $macro getter$$pack$
-$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$if field.useCommand$getCommand().$-if$$ifdef field.useGetter$$var field.useGetter$$-ifdef$$ifndef field.useGetter$get$var field.name:ucf$$-ifndef$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$ifdef field.useGetter$$var field.useGetter$$-ifdef$$ifndef field.useGetter$get$var field.name:ucf$$-ifndef$
 $-pack$$-macro$
 $macro setter$$pack$
-$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$if field.useCommand$getCommand().$-if$$ifdef field.useSetter$$var field.useSetter$$-ifdef$$ifndef field.useSetter$set$var field.name:ucf$$-ifndef$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$ifdef field.useSetter$$var field.useSetter$$-ifdef$$ifndef field.useSetter$set$var field.name:ucf$$-ifndef$
 $-pack$$-macro$
 $macro baseclass$$var message.inheritsFrom$$ifdef message.command$< $var message.command$ >$-ifdef$$-macro$
 
@@ -128,7 +128,7 @@ $case bool$writer.writeBoolLV($expand getter$());
 $case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet", data_.getSeqNum());
 $default${
 $ifdef field.helperClass$
-            $var field.helperClass$ helper = new $var field.helperClass$( data_$if field.useCommand$.getCommand()$-if$ );
+            $var field.helperClass$ helper = new $var field.helperClass$( data_ );
             helper.encode(proto,writer);
 $-ifdef$
 $ifndef field.helperClass$
@@ -166,7 +166,7 @@ $case bool$writer.writeBoolLV($expand getter$());
 $case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet",data_.getSeqNum());
 $default${
 $ifdef field.helperClass$
-                $var field.helperClass$ helper = new $var field.helperClass$(data_$if field.useCommand$.getCommand()$-if$);
+                $var field.helperClass$ helper = new $var field.helperClass$(data_);
                 helper.encode(proto,writer);
 $-ifdef$
 $ifndef field.helperClass$
@@ -214,7 +214,7 @@ $default$$ifndef field.helperClass$$var field.type$ temp = new $var field.type$(
                     temp.decode(proto,reader);
                     $expand setter$(temp);
 $-ifndef$
-$ifdef field.helperClass$$var field.helperClass$ helper = new $var field.helperClass$(data_$if field.useCommand$.getCommand()$-if$);
+$ifdef field.helperClass$$var field.helperClass$ helper = new $var field.helperClass$(data_);
                     helper.decode(proto,reader);
 $-ifdef$
 $-select$

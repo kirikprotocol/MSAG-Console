@@ -28,6 +28,7 @@ scag/pvss_flooder   flooder  \
     -lpthread -lrt -ldl
 
 scag/pvss-flooder2  flooder2 \
+    -lscag-pvss-api-pvap \
     -lscag-pvss-flooder \
     -lscag-pvss-api-core-client \
     -lscag-pvss-api-core \

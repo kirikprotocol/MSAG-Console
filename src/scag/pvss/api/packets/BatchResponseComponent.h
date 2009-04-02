@@ -1,17 +1,16 @@
 #ifndef _SCAG_PVSS_BASE_BATCHRESPONSECOMPONENT_H
 #define _SCAG_PVSS_BASE_BATCHRESPONSECOMPONENT_H
 
-#include "Response.h"
+#include "CommandResponse.h"
 
 namespace scag2 {
 namespace pvss {
 
-class BatchResponseComponent : public Response
+class BatchResponseComponent : public CommandResponse
 {
 public:
-    BatchResponseComponent() : Response() {}
-    BatchResponseComponent( uint32_t seqNum ) : Response(seqNum) {}
-
+    BatchResponseComponent() : CommandResponse() {}
+    BatchResponseComponent( uint8_t status ) : CommandResponse( status ) {}
     virtual BatchResponseComponent* clone() const = 0;
 };
 

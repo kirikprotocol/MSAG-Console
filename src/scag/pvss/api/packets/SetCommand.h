@@ -9,8 +9,9 @@ namespace pvss {
 class SetCommand : public AbstractPropertyCommand
 {
 public:
-    SetCommand() : AbstractPropertyCommand() {}
-    SetCommand( uint32_t seqNum ) : AbstractPropertyCommand(seqNum) {}
+    SetCommand() : AbstractPropertyCommand() { initLog(); }
+    // SetCommand( uint32_t seqNum ) : AbstractPropertyCommand(seqNum) {}
+    virtual ~SetCommand() { logDtor(); }
     
     virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
     {
@@ -21,7 +22,7 @@ public:
 
 protected:
     virtual const char* typeToString() const { return "set"; }
-    virtual ResponseTypeMatch& getResponseTypeMatch() const;
+    // virtual ResponseTypeMatch& getResponseTypeMatch() const;
 };
 
 } // namespace pvss

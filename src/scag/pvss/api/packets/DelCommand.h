@@ -10,8 +10,9 @@ namespace pvss {
 class DelCommand : public BatchRequestComponent
 {
 public:
-    DelCommand() : BatchRequestComponent() {}
-    DelCommand( uint32_t seqNum ) : BatchRequestComponent(seqNum) {}
+    DelCommand() : BatchRequestComponent() { initLog(); }
+    // DelCommand( uint32_t seqNum ) : BatchRequestComponent(seqNum) {}
+    virtual ~DelCommand() { logDtor(); }
     
     virtual bool isValid() const { return !varName_.empty(); }
     virtual const char* typeToString() const { return "del"; }
@@ -31,7 +32,7 @@ public:
     virtual DelCommand* clone() const { return new DelCommand(*this); }
 
 protected:
-    virtual ResponseTypeMatch& getResponseTypeMatch() const;
+    // virtual ResponseTypeMatch& getResponseTypeMatch() const;
 
 private:
     std::string varName_;

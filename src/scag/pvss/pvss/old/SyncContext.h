@@ -18,7 +18,7 @@ public:
   void sendResponse(const Response* resp);
 
 private:
-  void createErrorResponse(Response::StatusType status);
+  void createErrorResponse(uint8_t status, const char* msg = 0);
   bool sendResponse(const Response& resp);
 
 private:

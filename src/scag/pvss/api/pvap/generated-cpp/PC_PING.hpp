@@ -24,9 +24,9 @@ class PC_PING
 protected:
 
 public:
-    PC_PING( int seqNum ) :
+    PC_PING() :
     owned_(true),
-    data_(new PingRequest(seqNum))
+    data_(new PingRequest)
     {
     }
 
@@ -58,7 +58,7 @@ public:
     }
 
     template < class DataStream >
-        void serialize( const PVAP& proto, DataStream& writer ) const /* throw (PvapException) */ 
+        void serialize( const PVAP& proto, DataStream& writer ) const throw (PvapException)
     {
         if ( ! data_ ) return;
         checkFields();
@@ -67,7 +67,7 @@ public:
     }
 
     template <class DataStream> void deserialize( PVAP& proto, DataStream& reader )
-        /* throw (PvapException) */ 
+        throw (PvapException)
     {
         if ( ! data_ ) return;
         clear();
@@ -80,12 +80,12 @@ public:
                 if ( tag == -1 ) break;
                 switch(tag) {
                 default:
-                    throw InvalidFieldTypeException(data_->isRequest(),"PC_PING", data_->getSeqNum(),tag);
+                    throw InvalidFieldTypeException(data_->isRequest(),"PC_PING", getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
-                                              data_->getSeqNum(),
+                                              getSeqNum(),
                                               "reading field tag=%d of PC_PING: %s",
                                               tag, e.what() );
         }
@@ -93,15 +93,21 @@ public:
     }
 
     uint32_t getSeqNum() const {
-        return data_ ? data_->getSeqNum() : uint32_t(-1);
+        return
+            data_ ? data_->getSeqNum() :
+        uint32_t(-1);
+    }
+
+    void setSeqNum( uint32_t seqNum ) {
+        if (data_) data_->setSeqNum(seqNum);
     }
 
 protected:
-    void checkFields() const /* throw (PvapException) */ 
+    void checkFields() const throw (PvapException)
     {
         // using parent check
         if ( !data_->isValid() ) {
-            throw MessageIsBrokenException(data_->isRequest(), data_->getSeqNum(), "message PC_PING is broken: %s",data_->toString().c_str());
+            throw MessageIsBrokenException(data_->isRequest(), getSeqNum(), "message PC_PING is broken: %s",data_->toString().c_str());
         }
     }
 

@@ -1,18 +1,32 @@
 #include "PvssDispatcher.h"
 #include "scag/util/storage/StorageNumbering.h"
 #include "scag/pvss/data/ProfileKey.h"
-#include "scag/pvss/api/packets/Request.h"
-#include "scag/pvss/api/packets/AbstractProfileRequest.h"
+// #include "scag/pvss/api/packets/Request.h"
+#include "scag/pvss/api/packets/ProfileRequest.h"
 #include "scag/util/WatchedThreadedTask.h"
 #include "core/threads/ThreadPool.hpp"
 #include "scag/pvss/api/core/server/ServerCore.h"
 
 namespace {
 
+using namespace scag2::pvss;
+
+class ProfileRequestChecker : public RequestVisitor
+{
+    virtual bool visitPingRequest( PingRequest& ) { return false; }
+    virtual bool visitAuthRequest( AuthRequest& ) { return false; }
+    virtual bool visitProfileRequest( ProfileRequest& ) { return true; }
+};
+ProfileRequestChecker prc;
+inline bool isProfileRequest( Request& r ) {
+    return r.visit(prc);
+}
+
+
 class LogicInitTask : public scag2::util::WatchedThreadedTask
 {
 public:
-    LogicInitTask( scag2::pvss::PvssLogic* logic ) : logic_(logic) {}
+    LogicInitTask( PvssLogic* logic ) : logic_(logic) {}
 
     virtual const char* taskName() { return "pvss.init"; }
 
@@ -35,8 +49,8 @@ private:
     }
 
 private:
-    scag2::pvss::PvssLogic* logic_;
-    std::string             failure_;
+    PvssLogic*   logic_;
+    std::string  failure_;
 };
 
 
@@ -56,7 +70,9 @@ PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg): nodeNumber_(nodeCfg.n
 
 unsigned PvssDispatcher::getIndex(Request& request) const 
 {
-  AbstractProfileRequest& profileRequest = static_cast<AbstractProfileRequest&>(request);
+    if ( ! isProfileRequest(request) ) return getErrorIndex();
+
+  ProfileRequest& profileRequest = static_cast<ProfileRequest&>(request);
   const ProfileKey& profileKey = profileRequest.getProfileKey();
 
   if (profileKey.hasOperatorKey() || profileKey.hasProviderKey() || profileKey.hasServiceKey()) {

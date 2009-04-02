@@ -148,7 +148,7 @@ void Profile::Empty()
     properties.Empty();
 }
 
-bool Profile::AddProperty(Property& prop)
+bool Profile::AddProperty(const Property& prop)
 {
   uint16_t cnt = properties.GetCount();
   if (cnt == MAX_PROPERTIES_COUNT) {
