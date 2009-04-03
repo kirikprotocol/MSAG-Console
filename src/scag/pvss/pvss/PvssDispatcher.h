@@ -7,7 +7,6 @@
 #include "core/buffers/Array.hpp"
 
 #include "scag/pvss/api/core/server/Dispatcher.h"
-//#include "scag/pvss/api/core/PvssSocket.h"
 #include "scag/pvss/pvss/PvssLogic.h"
 
 namespace scag {
@@ -31,7 +30,15 @@ using smsc::logger::Logger;
 using smsc::core::buffers::Array;
 using std::vector;
 
-struct NodeConfig;
+struct NodeConfig {
+  NodeConfig():storagesCount(100), nodesCount(1), nodeNumber(0), locationsCount(0), disksCount(0) {};
+  unsigned storagesCount;
+  unsigned nodesCount;
+  unsigned nodeNumber;
+  unsigned locationsCount;
+  unsigned disksCount;
+};
+
 class Request;
 
 class PvssDispatcher : public core::server::SyncDispatcher {
@@ -48,8 +55,8 @@ public:
                const InfrastructStorageConfig* infcfg) /* throw (smsc::util::Exception) */;
   unsigned getInfrastructNodeNumber() const { return 0; }
 
-    inline unsigned getNodeNumber() const { return nodeNumber_; }
-    inline unsigned getStoragesCount() const { return storagesCount_; }
+    inline unsigned getNodeNumber() const { return nodeCfg_.nodeNumber; }
+    inline unsigned getStoragesCount() const { return nodeCfg_.storagesCount; }
 
   unsigned getLocationNumber(unsigned elementStorageNumber) const;
 
@@ -61,25 +68,14 @@ private:
   unsigned getErrorIndex() const { return static_cast<unsigned>(-1); }
 
 private:
-  unsigned nodeNumber_;
-  unsigned locationsCount_;
-  unsigned storagesCount_;
+  NodeConfig nodeCfg_;
   uint16_t createdLocations_;
   unsigned infrastructIndex_;
   std::auto_ptr<InfrastructLogic> infrastructLogic_;
   Logger *logger_;
   Array<AbonentLogic*> abonentLogics_;
-  scag::util::storage::DataFileManager dataFileManager_;
+  vector<scag::util::storage::DataFileManager*> dataFileManagers_;
 };
-
-struct NodeConfig {
-  NodeConfig():storagesCount(100), nodesCount(1), nodeNumber(0), locationsCount(0) {};
-  unsigned storagesCount;
-  unsigned nodesCount;
-  unsigned nodeNumber;
-  unsigned locationsCount;
-};
-
 
 }//pvss
 }//scag2

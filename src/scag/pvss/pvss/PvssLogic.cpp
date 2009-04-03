@@ -144,7 +144,7 @@ unsigned long AbonentLogic::reportStatistics() const
 unsigned long AbonentLogic::initElementStorage(unsigned index) /* throw (smsc::util::Exception) */ {
   char pathSuffix[4];
   snprintf(pathSuffix, sizeof(pathSuffix), "%03u", index);
-  string path = string(config_.locationPath[locationNumber_] + "/") + pathSuffix;
+  string path = string(config_.locations[locationNumber_].path + "/") + pathSuffix;
   std::auto_ptr<ElementStorage> elStorage(new ElementStorage(index));
   elStorage->glossary = new Glossary();
   initGlossary(path, elStorage->glossary);

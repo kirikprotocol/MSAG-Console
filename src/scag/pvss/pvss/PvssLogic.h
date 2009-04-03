@@ -205,7 +205,12 @@ struct AbonentStorageConfig {
   unsigned fileSize;
   unsigned blockSize;
   unsigned cacheSize;
-  vector<string> locationPath;
+  struct Location {
+    Location(const string& locpath, unsigned locdisk):path(locpath), disk(locdisk) {};
+    string path;
+    unsigned disk;
+  };
+  vector<Location> locations;
 };
 
 struct InfrastructStorageConfig {

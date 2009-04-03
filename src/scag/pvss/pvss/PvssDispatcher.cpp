@@ -62,10 +62,14 @@ namespace pvss  {
 
 using scag::util::storage::StorageNumbering;
 
-PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg): nodeNumber_(nodeCfg.nodeNumber), locationsCount_(nodeCfg.locationsCount),
-                                                           storagesCount_(nodeCfg.storagesCount), createdLocations_(0), infrastructIndex_(storagesCount_),
-                                                           logger_(Logger::getInstance("pvss.disp")), dataFileManager_(4){
+PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg): nodeCfg_(nodeCfg), createdLocations_(0), infrastructIndex_(nodeCfg_.storagesCount),
+                                                           logger_(Logger::getInstance("pvss.disp")){
   StorageNumbering::setInstance(nodeCfg.nodesCount);
+  for (int i = 0; i < nodeCfg_.disksCount; ++i) {
+    dataFileManagers_.push_back(new scag::util::storage::DataFileManager(1));    
+  }
+  smsc_log_info(logger_, "nodeNumber:%d, nodesCount:%d, storagesCount:%d, locationsCount:%d, disksCount:%d",
+                          nodeCfg_.nodeNumber, nodeCfg_.nodesCount, nodeCfg_.storagesCount, nodeCfg_.locationsCount, nodeCfg_.disksCount);
 }
 
 unsigned PvssDispatcher::getIndex(Request& request) const 
@@ -76,21 +80,21 @@ unsigned PvssDispatcher::getIndex(Request& request) const
   const ProfileKey& profileKey = profileRequest.getProfileKey();
 
   if (profileKey.hasOperatorKey() || profileKey.hasProviderKey() || profileKey.hasServiceKey()) {
-    if (nodeNumber_ != getInfrastructNodeNumber()) {
-      smsc_log_warn(logger_, "can't process infrastruct request on node number=%d", nodeNumber_);
+    if (nodeCfg_.nodeNumber != getInfrastructNodeNumber()) {
+      smsc_log_warn(logger_, "can't process infrastruct request on node number=%d", nodeCfg_.nodeNumber);
       return getErrorIndex();
     }
     smsc_log_debug(logger_, "give %p packet to infrastruct storage node %d", &request, getInfrastructNodeNumber());
     return infrastructIndex_;
   }
 
-  unsigned storageNumber = static_cast<unsigned>(profileKey.getAddress().getNumber() % storagesCount_);
-  smsc_log_debug(logger_, "give %p packet to storage %d in node %d", &request, storageNumber, nodeNumber_);
+  unsigned storageNumber = static_cast<unsigned>(profileKey.getAddress().getNumber() % nodeCfg_.storagesCount);
+  smsc_log_debug(logger_, "give %p packet to storage %d in node %d", &request, storageNumber, nodeCfg_.nodeNumber);
   return getLocationNumber( storageNumber );
 }
 
 Server::SyncLogic* PvssDispatcher::getSyncLogic(unsigned idx) {
-  if (getErrorIndex() == idx || idx > locationsCount_) {
+  if (getErrorIndex() == idx || idx > nodeCfg_.locationsCount) {
     return 0;
   }
   if (idx == infrastructIndex_) {
@@ -116,7 +120,7 @@ std::string PvssDispatcher::reportStatistics() const
         }
     }
     char buf[100];
-    snprintf(buf,sizeof(buf)," abonents=%lu locations=%u storages=%u",total,locationsCount_,storagesCount_);
+    snprintf(buf,sizeof(buf)," abonents=%lu locations=%u storages=%u",total,nodeCfg_.locationsCount,nodeCfg_.storagesCount);
     rv += buf;
     return rv;
 }
@@ -125,20 +129,21 @@ std::string PvssDispatcher::reportStatistics() const
 void PvssDispatcher::init( core::server::ServerCore* serverCore, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg )
 {
 
-  for (unsigned locationNumber = 0; locationNumber < locationsCount_; ++locationNumber) {
-    if (!File::Exists(abntcfg.locationPath[locationNumber].c_str())) {
-      smsc_log_debug(logger_, "create storage dir '%s'", abntcfg.locationPath[locationNumber].c_str());
-      File::MkDir(abntcfg.locationPath[locationNumber].c_str());
+  for (unsigned locationNumber = 0; locationNumber < nodeCfg_.locationsCount; ++locationNumber) {
+    if (!File::Exists(abntcfg.locations[locationNumber].path.c_str())) {
+      smsc_log_debug(logger_, "create storage dir '%s' on disk %d", abntcfg.locations[locationNumber].path.c_str(),
+                     abntcfg.locations[locationNumber].disk);
+      File::MkDir(abntcfg.locations[locationNumber].path.c_str());
     }
     AbonentLogic* logic = new AbonentLogic( *this,
                                             locationNumber,
-                                            abntcfg, dataFileManager_ );
+                                            abntcfg, *dataFileManagers_[abntcfg.locations[locationNumber].disk] );
     abonentLogics_.Push(logic);
     ++createdLocations_;
   }
 
     // infrastruct logic
-    if (nodeNumber_ == getInfrastructNodeNumber()) {
+    if (nodeCfg_.nodeNumber == getInfrastructNodeNumber()) {
         if (!infcfg) {
             throw Exception("Error init infrastruct storage, config in NULL");
         }
@@ -182,7 +187,7 @@ void PvssDispatcher::init( core::server::ServerCore* serverCore, const AbonentSt
 }
 
 unsigned PvssDispatcher::getLocationNumber(unsigned elementStorageNumber) const {
-  return (elementStorageNumber / StorageNumbering::instance().nodes()) % locationsCount_;
+  return (elementStorageNumber / StorageNumbering::instance().nodes()) % nodeCfg_.locationsCount;
 }
 
 AbonentLogic* PvssDispatcher::getLocation(unsigned elementStorageNumber) {
@@ -195,6 +200,12 @@ void PvssDispatcher::shutdown() {
     delete abonentLogics_[i];
     --createdLocations_;
   }
+  for (unsigned i = 0; i < dataFileManagers_.size(); ++i) {
+    if (dataFileManagers_[i]) {
+      delete dataFileManagers_[i];
+    }
+  }
+  dataFileManagers_.clear();
 }
 
 PvssDispatcher::~PvssDispatcher() {

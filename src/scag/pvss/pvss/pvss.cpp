@@ -187,23 +187,22 @@ NodeConfig getNodeConfig(ConfigView& cfg, Logger* logger) {
   return nodeCfg;
 }
 
-AbonentStorageConfig getAbntStorageConfig(ConfigView& cfg, Manager& manager, NodeConfig& nodeCfg, Logger* logger) {
-  AbonentStorageConfig abntCfg(cfg, "AbonentStorage", logger);
+void getAbntStorageConfig(AbonentStorageConfig& abntCfg, ConfigView& locationsConfig, NodeConfig& nodeCfg, Logger* logger) {
   try {
-    ConfigView locationsConfig(manager, "PVSS.AbonentStorage.Locations");
     std::auto_ptr<CStrSet> locations(locationsConfig.getStrParamNames());
     for (CStrSet::iterator i = locations.get()->begin(); i != locations.get()->end(); ++i) {
-      string loc = locationsConfig.getString((*i).c_str());
-      abntCfg.locationPath.push_back(loc);
+      string locpath = locationsConfig.getString((*i).c_str());
+      AbonentStorageConfig::Location location(locpath, nodeCfg.disksCount);
+      smsc_log_debug(logger, "init location: '%s' on disk %d", location.path.c_str(), location.disk);
+      abntCfg.locations.push_back(location);
       ++nodeCfg.locationsCount;
     }
   } catch (const Exception& ex) {
     smsc_log_warn(logger, "Section <PVSS.AbonentStorage.Locations> missed.");
   }
-  if (abntCfg.locationPath.empty()) {
+  if (abntCfg.locations.empty()) {
     throw Exception("Locations paths is not specified");
   }
-  return abntCfg;
 }
 
 int main(int argc, char* argv[]) {
@@ -261,8 +260,17 @@ int main(int argc, char* argv[]) {
     smsc_log_info(logger, "sync config: %s", syncConfig.toString().c_str());
 
     ConfigView abntStorageConfig(manager, "PVSS.AbonentStorage");
+    ConfigView disksConfig(manager, "PVSS.AbonentStorage.disks");
 
-    AbonentStorageConfig abntCfg = getAbntStorageConfig(abntStorageConfig, manager, nodeCfg, logger);
+
+    AbonentStorageConfig abntCfg(abntStorageConfig, "AbonentStorage", logger);
+
+    std::auto_ptr<CStrSet> disks(disksConfig.getSectionNames());
+    for (CStrSet::iterator i = disks->begin(); i != disks->end(); ++i) {
+      ConfigView diskConfig(manager, (*i).c_str());
+      getAbntStorageConfig(abntCfg, diskConfig, nodeCfg, logger);
+      ++nodeCfg.disksCount;
+    }
 
     std::auto_ptr< Protocol > protocol( new scag2::pvss::pvap::PvapProtocol );
     std::auto_ptr< ServerCore > server( new ServerCore( serverConfig, *protocol.get() ) );
