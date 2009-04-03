@@ -72,8 +72,8 @@ public:
         // size = allocator->getSize();
         /*
         if ( ! rootNode || ! nilNode ) {
-            fprintf( stderr, "SetAllocator: rootNode=%ld, nilNode=%ld\n", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
-            if (logger) smsc_log_error( logger, "SetAllocator: rootNode=%ld, nilNode=%ld", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
+            fprintf( stderr, "SetAllocator: rootNode=%lx, nilNode=%lx\n", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
+            if (logger) smsc_log_error( logger, "SetAllocator: rootNode=%lx, nilNode=%lx", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
         }
          */
         // All checking has been moved to allocator
@@ -110,7 +110,7 @@ public:
         // offset = allocator->getOffset();
         newNode->key = k;
         newNode->value = v;
-        if (logger) smsc_log_debug(logger, "Insert: %ld k=%s val=%lld", (long)nn, k.toString().c_str(), (long long)v);
+        if (logger) smsc_log_debug(logger, "Insert: %lx k=%s val=%lld", (long)nn, k.toString().c_str(), (long long)v);
         changesObserver->startChanges( nn, RBTreeChangesObserver<Key, Value>::OPER_INSERT );
         bstInsert( nn );
         newNode->color = RED;
@@ -137,7 +137,7 @@ public:
         }
          */
         changesObserver->completeChanges();
-        if (logger) smsc_log_debug(logger, "End Insert: %ld k=%s val=%lld", (long)nn, k.toString().c_str(), (long long)v);
+        if (logger) smsc_log_debug(logger, "End Insert: %lx k=%s val=%lld", (long)nn, k.toString().c_str(), (long long)v);
         return 1;
     }
 
@@ -157,7 +157,7 @@ public:
         if (!node || node->value == val) {
             return;
         }
-        if (logger) smsc_log_debug( logger, "Node %ld k=%s value has changed. old=%lld new=%lld",
+        if (logger) smsc_log_debug( logger, "Node %lx k=%s value has changed. old=%lld new=%lld",
                                     (long)iNode,
                                     node->key.toString().c_str(),
                                     (long long)node->value, (long long)val);
@@ -177,7 +177,7 @@ public:
             return false;
         } 
         val = allocator->realAddr(node)->value;
-        if (logger) smsc_log_debug(logger, "Get: %ld k=%s val=%lld", (long)node, k.toString().c_str(), (long long)val);
+        if (logger) smsc_log_debug(logger, "Get: %lx k=%s val=%lld", (long)node, k.toString().c_str(), (long long)val);
         return true;
     }
 
@@ -188,7 +188,7 @@ public:
             if (logger) smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
             return nilNode;
         }
-        if (logger) smsc_log_debug(logger, "Get: %ld k=%s val=%lld", (long)node, k.toString().c_str(),
+        if (logger) smsc_log_debug(logger, "Get: %lx k=%s val=%lld", (long)node, k.toString().c_str(),
                                    (long long)allocator->realAddr(node)->value );
         return node;
     }
@@ -326,7 +326,7 @@ protected:
 
         if ( fail ) {
             smsc_log_error( logger,
-                            "ERROR: corruption (%s) at depth=%d path=%s node=(%ld:%s) parent=(%ld:%s) node->parent=(%ld:%s) node->left=(%ld:%s) node->right=(%ld:%s)",
+                            "ERROR: corruption (%s) at depth=%d path=%s node=(%lx:%s) parent=(%lx:%s) node->parent=(%lx:%s) node->left=(%lx:%s) node->right=(%lx:%s)",
                             fail,
                             depth,
                             path.c_str(),
@@ -348,7 +348,7 @@ protected:
             smsc_log_debug( logger, "%s: nilnode" );
         } else {
             RBTreeNode* theNode = allocator->realAddr(node);
-            smsc_log_debug( logger, "%s: (%ld:%s) left=(%ld:%s) right=(%ld:%s) parent=(%ld:%s)",
+            smsc_log_debug( logger, "%s: (%lx:%s) left=(%lx:%s) right=(%lx:%s) parent=(%lx:%s)",
                             text,
                             (long)node, nodekey(node).c_str(),
                             (long)theNode->left, nodekey(theNode->left).c_str(),
