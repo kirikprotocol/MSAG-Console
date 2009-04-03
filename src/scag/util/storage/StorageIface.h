@@ -511,6 +511,8 @@ public:
         return false;
     }
 
+    //TODO: flush without cache_->get()
+
 
     /// NOTE: it is your responsibility to delete the return value.
     value_type* release( const key_type& k, bool fromdiskalso = false ) {

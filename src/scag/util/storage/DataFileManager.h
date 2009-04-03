@@ -27,13 +27,17 @@ private:
 
 class DataFileManager {
 public:
-  DataFileManager(uint16_t maxThreads):maxThreads_(maxThreads) {
+  DataFileManager(uint16_t maxThreads, unsigned addSpeed):maxThreads_(maxThreads), addSpeed_(addSpeed) {
     pool_.setMaxThreads(maxThreads_);
     pool_.preCreateThreads(maxThreads_);
   };
   void createDataFile(DataFileCreator& creator);
+  unsigned getExpectedSpeed() const {
+    return addSpeed_;
+  }
 private:
   uint16_t maxThreads_;
+  unsigned addSpeed_;
   ThreadPool pool_;
 };
 

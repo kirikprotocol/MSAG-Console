@@ -9,7 +9,9 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/buffers/File.hpp"
 #include "util/Uint64Converter.h"
+#include "util/timeslotcounter.hpp"
 #include "DataFileManager.h"
+
 
 namespace scag    {
 namespace util    {
@@ -33,7 +35,7 @@ public:
     ERROR
   };
 public:
-  DataFileCreator(DataFileManager& manager, Logger* log):manager_(manager), file_(0), fileSize_(0), blockSize_(0), filesCount_(0),
+  DataFileCreator(DataFileManager& manager, Logger* log):manager_(manager), file_(0), fileSize_(0), blockSize_(0), filesCount_(0), writeBlockSize_(8),
                                             fileCreated_(false), logger_(log), state_(OK) {};
 
   void init(int32_t fileSize, int32_t blockSize, int32_t filesCount, const string& dbPath, const string& dbName) {
@@ -43,8 +45,9 @@ public:
     blockSize_ = blockSize;
     filesCount_ = filesCount;
     ffbThreshold_ = (fileSize_ / 2);
-    if (logger_) smsc_log_info(logger_, "init creator: fileSize=%d, blockSize=%d, filesCount=%d create new data file when ffb=%d",
-                                          fileSize_, blockSize_, filesCount_, ffbThreshold_);
+    sleepTime_ = getSleepTime();
+    if (logger_) smsc_log_info(logger_, "init creator: fileSize:%d blockSize:%d filesCount:%d reserver:%d sleepTime:%d ms",
+                                          fileSize_, blockSize_, filesCount_, fileSize_ - ffbThreshold_, sleepTime_);
   }
 
   void openPreallocatedFile(int64_t ffb) {
@@ -63,7 +66,9 @@ public:
         file_ = f.release();
       } else {
         setState(CREATING);
-        createDataFile(0);
+        sleepTime_ = 0;
+        createDataFile();
+        sleepTime_ = getSleepTime();
       }
       return;
     }
@@ -83,7 +88,9 @@ public:
       name_ = makeDataFileName(filesCount_);
       if (logger_) smsc_log_debug(logger_, "allocate first data file");
       setState(CREATING);
-      createDataFile(0);
+      sleepTime_ = 0;
+      createDataFile();
+      sleepTime_ = getSleepTime();
       return;
     }
     if (getThreshold(ffb) == ffbThreshold_) {
@@ -103,14 +110,9 @@ public:
     return name_.c_str();
   }
 
-  //int Execute() {
-    //createDataFile();
-    //return 0;
-  //}
-
   File* getFile() {
     while (getState() == CREATING) {
-      if (logger_) smsc_log_debug(logger_, "wait while '%s' allocated", name_.c_str());
+      if (logger_) smsc_log_warn(logger_, "wait while data file: '%s' allocated", name_.c_str());
       MutexGuard mg(monitor_);
       monitor_.wait();
     }
@@ -135,9 +137,21 @@ public:
     return startIndex;
   }
 
-  void createDataFile(int sleepTime) {
+  unsigned getSleepTime() {
+    uint32_t reserve = fileSize_ - ffbThreshold_;
+    uint32_t totalTime = reserve / manager_.getExpectedSpeed() * 1000;
+    if (totalTime <= 0) {
+      return 0;
+    }
+    uint32_t writeCount = fileSize_ % writeBlockSize_ > 0 ? fileSize_ / writeBlockSize_ + 1 : fileSize_ / writeBlockSize_;
+    totalTime = (totalTime / 4) * 3;
+    return totalTime / writeCount;
+  }
+
+  void createDataFile() {
     name_ = makeDataFileName(filesCount_);
     if (logger_) smsc_log_info(logger_, "preallocate new data file: '%s'", name_.c_str());
+    time_t startTime = time(NULL);
     file_ = 0;
     fileCreated_ = false;
     //setState(CREATING);
@@ -150,7 +164,7 @@ public:
   
       int64_t startBlock = filesCount_ * fileSize_;
       int64_t endBlock = (filesCount_ + 1) * fileSize_;
-      int blocksCount = 10;
+      int blocksCount = writeBlockSize_;
       int lastWriteSize = fileSize_ % blocksCount;
       int writeCount = lastWriteSize > 0 ? fileSize_ / blocksCount : fileSize_ / blocksCount - 1;
 
@@ -159,7 +173,10 @@ public:
       int64_t index = startBlock + 1;
       for (int i = 0; i < writeCount; ++i) {
         index = prepareBlock(emptyBlock, blocksCount, index, 0);
+        hrtime_t startWrite = gethrtime();
         f->Write(emptyBlock, blockSize_ * blocksCount);
+        int writeTime = static_cast<int>((gethrtime() - startWrite) / 1000000);
+        int sleepTime = sleepTime_ - writeTime;
         if (sleepTime > 0) {
           MutexGuard mg(sleepMonitor_);
           sleepMonitor_.wait(sleepTime);
@@ -168,22 +185,12 @@ public:
       blocksCount = lastWriteSize > 0 ? lastWriteSize : blocksCount;
       index = prepareBlock(emptyBlock, blocksCount, index, 1);
       f->Write(emptyBlock, blockSize_ * blocksCount);
-/*
-      for(int64_t i = startBlock + 1; i < endBlock; i++)
-      {
-          uint64_t ni = Uint64Converter::toNetworkOrder(i);
-          memcpy(emptyBlock, &ni, sizeof(ni));
-          f->Write(emptyBlock, blockSize_);
-      }
-      uint64_t ni = Uint64Converter::toNetworkOrder(-1);
-      memcpy(emptyBlock, &ni, sizeof(ni));
-      f->Write(emptyBlock, blockSize_);
-*/
 
       file_ = f.release();
       fileCreated_ = true;
       setState(CREATED);
-      if (logger_) smsc_log_info(logger_, "new data file: '%s' allocated", name_.c_str());
+      time_t preallTime = time(NULL) - startTime;
+      if (logger_) smsc_log_info(logger_, "new data file: '%s' allocated %d sec", name_.c_str(), preallTime);
 
       if (emptyBlock) delete[] emptyBlock;
       MutexGuard mg(monitor_);
@@ -248,15 +255,17 @@ private:
   int32_t fileSize_; 
   int32_t blockSize_;
   int32_t filesCount_;
+  uint32_t writeBlockSize_;
   string name_;
   string dbPath_;
   string dbName_;
   bool fileCreated_;
-  int64_t ffbThreshold_;
+  int32_t ffbThreshold_;
   Logger* logger_;
   EventMonitor monitor_;
   EventMonitor sleepMonitor_;
   State state_;
+  unsigned sleepTime_;
 };
 
 
