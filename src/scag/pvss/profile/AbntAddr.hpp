@@ -109,17 +109,17 @@ public:
     // @return the length of the address
     static unsigned unpack( char* buf, const char* from )
     {
-        const bool oldformat = (from[7] == char(0xff));
+        const bool newformat = (from[7] == char(0xfe));
         unsigned pos = 0;
         unsigned char h, l, c;
         for ( unsigned idx = 0; idx < PACKED_SIZE-1; ++idx ) {
             c = static_cast<unsigned char>(*from++);
-            if ( oldformat ) {
-                l = c >> 4;
-                h = c & 0xf;
-            } else {
+            if ( newformat ) {
                 h = c >> 4;
                 l = c & 0xf;
+            } else {
+                l = c >> 4;
+                h = c & 0xf;
             }
             if ( h > 0x9 ) break;
             buf[pos++] = char(h+0x30);
