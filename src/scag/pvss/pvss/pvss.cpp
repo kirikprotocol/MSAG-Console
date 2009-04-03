@@ -184,6 +184,11 @@ NodeConfig getNodeConfig(ConfigView& cfg, Logger* logger) {
   } catch (const Exception& ex) {
     smsc_log_warn(logger, "Parameter <PVSS.storages> missed. Default value is %d", nodeCfg.storagesCount);
   }
+  try { 
+    nodeCfg.expectedSpeed = cfg.getInt("expectedSpeed");
+  } catch (const Exception& ex) {
+    smsc_log_warn(logger, "Parameter <PVSS.expectedSpeed> missed. Default value is %d", nodeCfg.expectedSpeed);
+  }
   return nodeCfg;
 }
 
@@ -266,6 +271,9 @@ int main(int argc, char* argv[]) {
     AbonentStorageConfig abntCfg(abntStorageConfig, "AbonentStorage", logger);
 
     std::auto_ptr<CStrSet> disks(disksConfig.getSectionNames());
+    if (disks->empty()) {
+      throw Exception("Subsections not found in <PVSS.AbonentStorage.disks> section");
+    }
     for (CStrSet::iterator i = disks->begin(); i != disks->end(); ++i) {
       ConfigView diskConfig(manager, (*i).c_str());
       getAbntStorageConfig(abntCfg, diskConfig, nodeCfg, logger);

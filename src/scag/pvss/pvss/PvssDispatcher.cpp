@@ -65,8 +65,9 @@ using scag::util::storage::StorageNumbering;
 PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg): nodeCfg_(nodeCfg), createdLocations_(0), infrastructIndex_(nodeCfg_.storagesCount),
                                                            logger_(Logger::getInstance("pvss.disp")){
   StorageNumbering::setInstance(nodeCfg.nodesCount);
+  unsigned addSpeed = nodeCfg_.expectedSpeed / nodeCfg_.disksCount;
   for (int i = 0; i < nodeCfg_.disksCount; ++i) {
-    dataFileManagers_.push_back(new scag::util::storage::DataFileManager(1));    
+    dataFileManagers_.push_back(new scag::util::storage::DataFileManager(1, addSpeed));    
   }
   smsc_log_info(logger_, "nodeNumber:%d, nodesCount:%d, storagesCount:%d, locationsCount:%d, disksCount:%d",
                           nodeCfg_.nodeNumber, nodeCfg_.nodesCount, nodeCfg_.storagesCount, nodeCfg_.locationsCount, nodeCfg_.disksCount);

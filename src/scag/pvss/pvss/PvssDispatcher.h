@@ -31,12 +31,13 @@ using smsc::core::buffers::Array;
 using std::vector;
 
 struct NodeConfig {
-  NodeConfig():storagesCount(100), nodesCount(1), nodeNumber(0), locationsCount(0), disksCount(0) {};
+  NodeConfig():storagesCount(100), nodesCount(1), nodeNumber(0), locationsCount(0), disksCount(0), expectedSpeed(100) {};
   unsigned storagesCount;
   unsigned nodesCount;
   unsigned nodeNumber;
   unsigned locationsCount;
   unsigned disksCount;
+  unsigned expectedSpeed;
 };
 
 class Request;
