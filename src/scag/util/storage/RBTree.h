@@ -77,8 +77,8 @@ public:
         }
          */
         // All checking has been moved to allocator
-        // const std::vector< nodeptr_type > freenodes = allocator->freenodes();
-        // int cnt = dumpcheck( freenodes, rootNode, nilNode, 0, "" );
+        const std::vector< nodeptr_type > freenodes = allocator->freenodes();
+        int cnt = dumpcheck( freenodes, rootNode, nilNode, 0, "" );
         // if (logger) smsc_log_info( logger, "SetAllocator: rbtree nodes=%d", cnt );
     }
 
@@ -267,7 +267,7 @@ protected:
         // shownode( "after moveLeft", iterNode );
     }
 
-    /*
+
     int dumpcheck( const std::vector< nodeptr_type >& freenodes,
                    nodeptr_type node,
                    nodeptr_type parent,
@@ -339,7 +339,7 @@ protected:
         }
         return res+1;
     }
-     */
+
 
     void shownode( const char* text, nodeptr_type node ) const
     {
