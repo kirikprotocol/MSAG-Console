@@ -162,6 +162,8 @@
             <th width="1%" nowrap valign=top><%
                 String keyMsg = getLocString("sms.body.tag." + key);
                 if (keyMsg == null) keyMsg = key;
+                if (!bean.isAllowToShowSmsText(request) && keyMsg.equals("SMSC_RAW_PAYLOAD")) continue;
+                if (!bean.isAllowToShowSmsText(request) && keyMsg.equals("SMSC_RAW_SHORTMESSAGE")) continue;
             %><%= keyMsg%></th>
             <td valign=top><%
                 String valMsg;
