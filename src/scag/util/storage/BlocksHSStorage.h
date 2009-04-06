@@ -506,12 +506,11 @@ public:
     bool Get(index_type blockIndex, DataBlock& data)
     {
         if (logger) smsc_log_debug(logger, "Get data block index=%d ", blockIndex);
-        if(blockIndex == -1) return false;
+        if (blockIndex == invalidIndex()) return false;
         char* buff;
         index_type curBlockIndex = blockIndex;
         int i = 0;
-        do
-        {
+        do {
             DataBlockHeader hdr;
 
             int file_number = curBlockIndex / descrFile.file_size;
@@ -529,15 +528,14 @@ public:
                 buff = data.ptr();
                 data.setLength(hdr.data_size);
             }
-            if(-1 == hdr.next_block)
+            if ( invalidIndex() == hdr.next_block)
                 f->Read((void*)(buff+(i*effectiveBlockSize)), hdr.data_size - effectiveBlockSize*i);
             else
                 f->Read((void*)(buff+(i*effectiveBlockSize)), effectiveBlockSize);
 
             curBlockIndex = hdr.next_block;
             i++;
-        }
-        while(-1 != curBlockIndex);
+        } while ( curBlockIndex != invalidIndex() );
         return true;
     }
 
@@ -547,13 +545,12 @@ public:
         Profile& profile = *prof.value;
         BlocksHSBackupData& bkp = *prof.backup;
         if (logger) smsc_log_debug(logger, "Get data block index=%d ", blockIndex);
-        if(blockIndex == -1) return false;
+        if (blockIndex == invalidIndex()) return false;
         char* buff;
         index_type curBlockIndex = blockIndex;
         int i = 0;
         profileData.Empty();
-        do
-        {
+        do {
             DataBlockHeader hdr;
             int file_number = curBlockIndex / descrFile.file_size;
             if ( !checkfn(file_number) ) return false;
@@ -572,14 +569,13 @@ public:
                 buff = profileData.ptr();
                 profileData.setLength(hdr.data_size);
             }
-            size_t dataSize = hdr.next_block == -1 ? 
+            size_t dataSize = hdr.next_block == invalidIndex() ?
                 hdr.data_size - effectiveBlockSize*i : effectiveBlockSize;
             f->Read((void*)(buff+(i*effectiveBlockSize)), dataSize);
             curBlockIndex = hdr.next_block;
             ++i;
             bkp.addDataToBackup(hdr.next_block);
-        }
-        while(-1 != curBlockIndex);
+        } while( curBlockIndex != invalidIndex() );
         profile.Deserialize(profileData, true, glossary_);
         bkp.setBackupData(profileData.c_ptr(), profileData.length());
         return true;
@@ -643,10 +639,10 @@ public:
             if(hdr.block_used == BLOCK_USED && hdr.head)
             {
                 key = hdr.key;
-                if(!Get(blockIndex, data))
-                    if (logger) smsc_log_error(logger, "Error reading block: %d", blockIndex);
-                else
+                if ( Get(blockIndex,data) ) {
                     return true;
+                }
+                if (logger) smsc_log_error(logger, "Error reading block: %d", blockIndex);
             }
         }
         return false;
