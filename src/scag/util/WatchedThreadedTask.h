@@ -10,7 +10,7 @@ namespace util {
 class WatchedThreadedTask : public smsc::core::threads::ThreadedTask
 {
 protected:
-    WatchedThreadedTask() {
+    WatchedThreadedTask() : isStarted_(false) {
         isReleased = true;
     }
 
