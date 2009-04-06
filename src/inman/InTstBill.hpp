@@ -37,10 +37,13 @@ struct INDialogCfg {
     uint32_t            xsmsIds; //SMS Extra services id
     CDRRecord::ChargingPolicy   chgPolicy;
     CDRRecord::ChargingType     chgType;
+    std::string         locMSC; //abonent's location MSC address:
+                                //  TonNpiAddress or string
 
     //NOTE: PRE_ABONENTS_NUM >= 2
     INDialogCfg() : abId(1), dstId(2), ussdOp(false)
-        , xsmsIds(0), chgPolicy(CDRRecord::ON_DELIVERY), chgType(CDRRecord::MO_Charge)
+      , xsmsIds(0), chgPolicy(CDRRecord::ON_DELIVERY), chgType(CDRRecord::MO_Charge)
+      , locMSC(".1.1.79139860001")
     { }
 };
 
@@ -54,13 +57,15 @@ public:
         , state(dIdle)
     {}
 
-    inline void    setChargePolicy(CDRRecord::ChargingPolicy chg_pol) { cfg.chgPolicy = chg_pol; }
-    inline void    setChargeType(CDRRecord::ChargingType chg_type) { cfg.chgType = chg_type; }
-    inline void    setState(DlgState new_state) { state = new_state; }
-    inline DlgState getState(void) const { return state; }
-    inline uint32_t getDlvrResult(void) const { return dlvrRes; }
-    inline bool    isBatchMode(void) const { return batchMode; }
-    inline const INDialogCfg * getConfig(void) const { return &cfg; }
+    void    setChargePolicy(CDRRecord::ChargingPolicy chg_pol) { cfg.chgPolicy = chg_pol; }
+    void    setChargeType(CDRRecord::ChargingType chg_type) { cfg.chgType = chg_type; }
+    void    setState(DlgState new_state) { state = new_state; }
+    void    setLocMSC(const std::string & use_adr) { cfg.locMSC = use_adr; }
+
+    DlgState getState(void) const { return state; }
+    uint32_t getDlvrResult(void) const { return dlvrRes; }
+    bool    isBatchMode(void) const { return batchMode; }
+    const INDialogCfg * getConfig(void) const { return &cfg; }
 
 protected:
     unsigned int        did;
@@ -110,18 +115,20 @@ public:
     }
 
     // -- INDialog template params -- //
-    inline const INDialogCfg * getDlgConfig(void) const { return &_dlgCfg; }
+    const INDialogCfg * getDlgConfig(void) const { return &_dlgCfg; }
     void  printDlgConfig(void) const
     {
         const AbonentInfo * abi = _abDB->getAbnInfo(_dlgCfg.abId);
         const AbonentInfo * dAdr = _abDB->getAbnInfo(_dlgCfg.dstId);
         fprintf(stdout, "INDialog config:\n"
+                "  LocationMSC: %s\n"
                 "  OrigAdr[%u]: %s (%s)\n"
                 "  bearerType : dp%s\n"
                 "  DestAdr[%u]: %s (%s)\n"
                 "  chargePol  : %s\n"
                 "  chargeType : %s\n"
                 "  SMSExtra: %u\n",
+                _dlgCfg.locMSC.c_str(),
                 _dlgCfg.abId, (abi->msIsdn.toString()).c_str(), abi->type2Str(),
                 _dlgCfg.ussdOp ? "USSD" : "SMS",
                 _dlgCfg.dstId, (dAdr->msIsdn.toString()).c_str(), dAdr->type2Str(),
@@ -130,10 +137,11 @@ public:
                 _dlgCfg.chgType ? "MT" : "MO", _dlgCfg.xsmsIds);
     }
 
-    inline void setUssdOp(bool op) { _dlgCfg.ussdOp = op; }
-    inline void setSmsXIds(uint32_t srv_ids) { _dlgCfg.xsmsIds = srv_ids; }
-    inline void setChargePolicy(CDRRecord::ChargingPolicy chg_pol) { _dlgCfg.chgPolicy = chg_pol; }
-    inline void setChargeType(CDRRecord::ChargingType chg_typ) { _dlgCfg.chgType = chg_typ; }
+    void setUssdOp(bool op) { _dlgCfg.ussdOp = op; }
+    void setSmsXIds(uint32_t srv_ids) { _dlgCfg.xsmsIds = srv_ids; }
+    void setChargePolicy(CDRRecord::ChargingPolicy chg_pol) { _dlgCfg.chgPolicy = chg_pol; }
+    void setChargeType(CDRRecord::ChargingType chg_typ) { _dlgCfg.chgType = chg_typ; }
+    void setLocMSC(const std::string & use_adr) { _dlgCfg.locMSC = use_adr; }
 
     bool setAbonentId(unsigned ab_id, bool orig_abn = true)
     {
@@ -147,7 +155,7 @@ public:
     }
     
     // -- INDialog management methods -- //
-    inline unsigned getNextDialogId(void) { return ++_maxDlgId; }
+    unsigned getNextDialogId(void) { return ++_maxDlgId; }
 
     unsigned int initDialog(unsigned int did = 0, bool batch_mode = false,
                             uint32_t delivery = 1016, INDialogCfg * use_cfg = NULL)
@@ -183,8 +191,11 @@ public:
         const AbonentInfo * abi = _abDB->getAbnInfo(dlg_cfg->abId);
         op.setCallingPartyNumber(abi->msIsdn.toString());
         op.setCallingIMSI(abi->abImsi);
-        op.setLocationInformationMSC(abi->msIsdn.interISDN() ?
-                                     ".1.1.79139860001" : "");
+        op.setLocationInformationMSC(dlg_cfg->locMSC);
+//        op.setLocationInformationMSC(abi->msIsdn.interISDN() ?
+//                                     ".1.1.79139860001" : "");
+//        op.setLocationInformationMSC("GT_SMSXC");
+
         op.setSMSCAddress(".1.1.79029869990");
 
         op.setSubmitTimeTZ(time(NULL));
@@ -217,8 +228,10 @@ public:
         const AbonentInfo * abi = _abDB->getAbnInfo(dlg_cfg->abId);
         op.setCallingPartyNumber(abi->msIsdn.toString());
         op.setCallingIMSI(abi->abImsi);
-        op.setLocationInformationMSC(abi->msIsdn.interISDN() ?
-                                     ".1.1.79139860001" : "");
+        op.setLocationInformationMSC(dlg_cfg->locMSC);
+//        op.setLocationInformationMSC(abi->msIsdn.interISDN() ?
+//                                     ".1.1.79139860001" : "");
+//        op.setLocationInformationMSC("GT_SMSXC"); 
         op.setSMSCAddress(".1.1.79029869990");
 
         op.setSubmitTimeTZ(time(NULL));

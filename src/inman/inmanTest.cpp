@@ -397,6 +397,28 @@ void cmd_charge_type_MT(Console&, const std::vector<std::string> &args)
     _billFacade->printDlgConfig();
 }
 
+//USAGE: chg_mode_abn [?|help | submit | delivery | alldata]
+static const char hlp_org_msc[] = "USAGE: %s [?|help | .Ton.Npi.Adr | string]\n";
+
+void cmd_org_msc(Console&, const std::vector<std::string> &args)
+{
+  if ((args.size() < 2)
+      || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
+      fprintf(stdout, hlp_org_msc, args[0].c_str());
+      return;
+  }
+
+  const char * adrStr = args[1].c_str();
+  TonNpiAddress tadr;
+  if (!tadr.fromText(adrStr)) {
+      fprintf(stdout, "ERR: invalid MSC address: %s!", adrStr);
+      return;
+  }
+
+  _billFacade->setLocMSC(args[1]);
+  _billFacade->printDlgConfig();
+}
+
 
 /* ************************************************************************** *
  * Console commands: sending INMan AbonentDetector commands 
@@ -528,6 +550,7 @@ int main(int argc, char** argv)
         console.addItem("chg_policy",  cmd_charge_policy);
         console.addItem("mo_charge",  cmd_charge_type_MO);
         console.addItem("mt_charge",  cmd_charge_type_MT);
+        console.addItem("org_msc", cmd_org_msc);
 /* ************************************************************************** *
  * Console commands: sending INMan AbonentDetector commands 
  * ************************************************************************** */
