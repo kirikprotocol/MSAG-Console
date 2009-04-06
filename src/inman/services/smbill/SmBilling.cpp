@@ -25,6 +25,10 @@ using smsc::inman::comp::_RCS_MOSM_RPCause;
 using smsc::inman::inap::_RCS_TC_Dialog;
 using smsc::inman::inap::TC_DlgError;
 
+#ifdef SMSEXTRA
+#define SMSX_WEB_GT "GT SMSXC"
+#endif /* SMSEXTRA */
+
 namespace smsc {
 namespace inman {
 namespace smbill {
@@ -499,6 +503,12 @@ Billing::PGraphState Billing::onChargeSms(void)
     else if (cdr._smsXMask & SMSX_INCHARGE_SRV)
         billMode = ChargeParm::bill2IN;
 
+#ifdef SMSEXTRA
+    //TMP_PATCH: Use bill2CDR mode in case of special MSC address reserved for SMSX WEB gateway
+    if (!strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT))
+      billMode = ChargeParm::bill2CDR;
+#endif /* SMSEXTRA */
+
     //check for SMS extra sevice number being set
     if ((xsmsSrv && xsmsSrv->adr.empty())) {
         billMode = ChargeParm::bill2CDR;
@@ -849,6 +859,10 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
         if (_cfg.abCache)
             _cfg.abCache->setAbonentInfo(abNumber, abCsi.abRec);
     }
+#ifdef SMSEXTRA
+    //TMP_PATCH: Keep MSC address in case of special one reserved for SMSX WEB gateway
+    if (strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT))
+#endif /* SMSEXTRA */
     if (!ab_info.vlrNum.empty())
         abCsi.vlrNum = ab_info.vlrNum;
 
