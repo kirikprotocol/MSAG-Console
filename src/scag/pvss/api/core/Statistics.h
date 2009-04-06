@@ -32,7 +32,7 @@ struct Statistics
     }
 
     std::string toString() const {
-        char buf[128];
+        char buf[160];
         util::msectime_type e10ms;
         unsigned scale;
         if ( elapsedTime > 20000 ) {

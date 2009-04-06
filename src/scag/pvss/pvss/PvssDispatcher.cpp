@@ -34,7 +34,7 @@ public:
         try {
             logic_->init();
         } catch ( std::exception& e ) {
-            setFailure( e.what() );
+            setFailure(e.what());
         } catch (...) {
             setFailure( "unknown exception" );
         }
@@ -179,7 +179,10 @@ void PvssDispatcher::init( core::server::ServerCore* serverCore, const AbonentSt
     for ( unsigned i = 0; i < initTasks.Count(); ++i ) {
         LogicInitTask* task = initTasks[i];
         std::string fail = task->getFailure();
-        if ( !fail.empty() ) failure = fail;
+        if ( !fail.empty() ) {
+            if ( ! failure.empty() ) failure.push_back('\n');
+            failure.append(fail);
+        }
         delete task;
     }
 

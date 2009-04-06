@@ -290,7 +290,15 @@ int main(int argc, char* argv[]) {
       ConfigView infStorageConfig(manager, "PVSS.InfrastructStorage");
       infCfg.reset(new InfrastructStorageConfig(infStorageConfig, "InfrastructStorage", logger));
     }
-    pvssDispatcher.init( server.get(), abntCfg, infCfg.get() );
+    try {
+        pvssDispatcher.init( server.get(), abntCfg, infCfg.get() );
+    } catch ( std::exception& e ) {
+        smsc_log_fatal( logger, "Exception in pvss dispatcher initialization:\n%s", e.what() );
+        exit(-1);
+    } catch (...) {
+        smsc_log_fatal( logger, "unknown exception in pvss dispatcher initialization:" );
+        exit(-1);
+    }
 
     try {
         // server->init();
