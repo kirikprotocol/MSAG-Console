@@ -240,11 +240,11 @@ void SRI4SMTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* 
   asn_enc_rval_t er;
   er = der_encode(&asn_DEF_TCMessage, &begin, print2vec, &data);
 
-  smsc_log_error(logger,
+  smsc_log_debug(logger,
                  "CALLED[%d]={%s}",raddrlen,dump(raddrlen,raddr).c_str());
-  smsc_log_error(logger,
+  smsc_log_debug(logger,
                  "CALLING[%d]={%s}",laddrlen,dump(laddrlen,laddr).c_str());
-  smsc_log_error(logger,
+  smsc_log_debug(logger,
                  "SRI4SM[%d]={%s}",data.size(),dump(data.size(),&data[0]).c_str());
 
   tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,data.size(),&data[0]);
