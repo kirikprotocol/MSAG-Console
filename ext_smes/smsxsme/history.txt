@@ -22,3 +22,5 @@
 ------------------------------------------------------------------------------------------------------------------------
  2009-03-07 | 2.20      | artem         | 1. Revert Sender delivery status method to mysql
             |           |               | 2. Add posibility to check abonent delivery status in group send
+            |           |               | 3. Add slicing for messages with not empty mscAddress in Sender, Calendar,
+            |           |               |    Secret and Group services.

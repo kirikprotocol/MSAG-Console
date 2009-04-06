@@ -3,6 +3,8 @@ package ru.sibinco.smsx.engine.service.sender;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.OutgoingObject;
 import com.eyeline.sme.smpp.ShutdownedException;
+import com.eyeline.sme.smpp.slicer.MessageSlicer;
+import com.eyeline.sme.smpp.slicer.MessageSlicerFactory;
 import com.eyeline.utils.ThreadFactoryWithCounter;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
@@ -55,6 +57,9 @@ class MessageSender {
 
     final SenderSMPPTransportObject outObj = new SenderSMPPTransportObject(message);
     outObj.setMessage(msg);
+    if (message.getMscAddress() != null)
+      outObj.setSlicer(MessageSlicerFactory.getMessageSlicer(MessageSlicer.Method.SAR));
+    
     try {
       outQueue.offer(outObj);
     } catch (ShutdownedException e) {
@@ -102,7 +107,7 @@ class MessageSender {
             log.error("Can't execute UpdateMessageStatusTask", e);
             rejectedTasks++;
           }
-        } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
+        } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR && isFinished()) {
           try {
             executor.execute(new UpdateSMPPIdTask(Long.parseLong(((SubmitResponse)pdu).getMessageId())));
           } catch (Throwable e) {

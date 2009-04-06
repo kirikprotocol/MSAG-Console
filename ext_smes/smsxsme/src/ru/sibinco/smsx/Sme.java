@@ -6,7 +6,6 @@ import com.eyeline.sme.smpp.test.TestMultiplexor;
 import com.eyeline.sme.smpp.test.SimpleResponse;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
-import com.eyeline.utils.jmx.log4j.LoggingMBean;
 import com.sun.jdmk.comm.HtmlAdaptorServer;
 import com.sun.jdmk.comm.AuthInfo;
 import org.apache.log4j.Category;
@@ -32,6 +31,8 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.io.File;
 import java.lang.management.ManagementFactory;
+
+import mobi.eyeline.apm.utils.jmx.log4j.LoggingMBean;
 
 /**
  * User: artem

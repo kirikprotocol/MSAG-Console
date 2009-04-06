@@ -3,6 +3,8 @@ package ru.sibinco.smsx.engine.service.group;
 import com.eyeline.sme.smpp.OutgoingObject;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.ShutdownedException;
+import com.eyeline.sme.smpp.slicer.MessageSlicerFactory;
+import com.eyeline.sme.smpp.slicer.MessageSlicer;
 import com.eyeline.utils.ThreadFactoryWithCounter;
 import com.eyeline.utils.config.ConfigException;
 import com.eyeline.utils.config.xml.XmlConfigSection;
@@ -97,6 +99,8 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
           DeliveryStatus dsm = new DeliveryStatus(member);
           deliveryStatuses[i] = dsm;
           GroupOutgoingObject o = new GroupOutgoingObject(cmd, deliveryStatuses, i, msgId);
+          if (cmd.getMscAddress() != null)
+            o.setSlicer(MessageSlicerFactory.getMessageSlicer(MessageSlicer.Method.SAR));
           i++;
 
           if (cmd.isStorable()) {
@@ -268,7 +272,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
     protected void handleResponse(final PDU pdu) {
       if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR) {
         handleSendError();
-      } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
+      } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR && isFinished()) {
         statuses[index].status = DeliveryStatus.SENT;
 
         if (id != -1) {

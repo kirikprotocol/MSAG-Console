@@ -2,6 +2,8 @@ package ru.sibinco.smsx.engine.service.calendar;
 
 import com.eyeline.sme.smpp.OutgoingObject;
 import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.slicer.MessageSlicerFactory;
+import com.eyeline.sme.smpp.slicer.MessageSlicer;
 import com.eyeline.sme.utils.worker.IterativeWorker;
 import com.eyeline.utils.ThreadFactoryWithCounter;
 import org.apache.log4j.Category;
@@ -163,6 +165,8 @@ class CalendarEngine extends IterativeWorker {
 
       final CalendarTransportObject outObj = new CalendarTransportObject(message);
       outObj.setMessage(msg);
+      if (message.getMscAddress() != null)
+        outObj.setSlicer(MessageSlicerFactory.getMessageSlicer(MessageSlicer.Method.SAR));
       outQueue.offer(outObj);
 
     } catch (Throwable e) {
@@ -216,7 +220,7 @@ class CalendarEngine extends IterativeWorker {
             log.error("Can't execute UpdateMessageStatusTask", e);
             rejectedTasks++;
           }
-        } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
+        } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR && isFinished()) {
           try {
             executor.execute(new UpdateSMPPIdTask(Long.parseLong(((SubmitResponse)pdu).getMessageId())));
           } catch (Throwable e) {

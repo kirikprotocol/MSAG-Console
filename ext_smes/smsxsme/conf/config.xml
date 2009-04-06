@@ -59,7 +59,7 @@
       <param name="driver">com.mysql.jdbc.Driver</param>
       <param name="source">jdbc:mysql://localhost/smsx?useUnicode=true&amp;characterEncoding=KOI8R&amp;autoReconnect=true</param>
       <param name="user">root</param>
-      <param name="password"></param>
+      <param name="password">laefeeza1</param>
     </section>
   </section>
 

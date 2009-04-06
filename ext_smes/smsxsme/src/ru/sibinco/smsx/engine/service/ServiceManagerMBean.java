@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service;
 
-import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
+
+import mobi.eyeline.apm.utils.jmx.mbeans.AbstractDynamicMBean;
 
 import javax.management.*;
 import java.util.Map;

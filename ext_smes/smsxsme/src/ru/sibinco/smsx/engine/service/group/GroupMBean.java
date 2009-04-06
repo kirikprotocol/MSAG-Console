@@ -1,11 +1,11 @@
 package ru.sibinco.smsx.engine.service.group;
 
-import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 
 import javax.management.*;
 
 import ru.sibinco.smsx.engine.service.group.datasource.RepliesMap;
 import ru.sibinco.smsx.engine.service.group.datasource.DistrListDataSource;
+import mobi.eyeline.apm.utils.jmx.mbeans.AbstractDynamicMBean;
 
 /**
  * User: artem
