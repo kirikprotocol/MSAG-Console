@@ -421,12 +421,13 @@ private:
             completeChanges();
         }
 
-        if (logger) smsc_log_info( logger, "ReallocRBTree: cells_count=%u cells_used=%u cells_free=%u root_cell=%u first_free_cell=%u pers_cell_size=%u trans_cell_size=%u",
+        if (logger) smsc_log_info( logger, "ReallocRBTree: header_size=%x cells_count=%u cells_used=%u cells_free=%u root_cell=%lx first_free_cell=%lx pers_cell_size=%u trans_cell_size=%u",
+                                   unsigned(rbtFileHeaderDump_.size()),
                                    header_.cells_count,
                                    header_.cells_used,
                                    header_.cells_free,
-                                   unsigned(header_.root_cell),
-                                   unsigned(header_.first_free_cell),
+                                   long(header_.root_cell),
+                                   long(header_.first_free_cell),
                                    unsigned(header_.persistentCellSize),
                                    unsigned(sizeof(RBTreeNode)));
         // check nodes
@@ -640,13 +641,14 @@ private:
             return CANNOT_OPEN_RBTREE_FILE;
         }
 
-        if (logger) smsc_log_info( logger, "OpenRBTree: version=%u cells_count=%u cells_used=%u cells_free=%u root_cell=%u first_free_cell=%u pers_cell_size=%u trans_cell_size=%u",
+        if (logger) smsc_log_info( logger, "OpenRBTree: version=%u header_size=%x cells_count=%u cells_used=%u cells_free=%u root_cell=%lx first_free_cell=%lx pers_cell_size=%u trans_cell_size=%u",
                                    header_.version,
+                                   unsigned(rbtFileHeaderDump_.size()),
                                    header_.cells_count,
                                    header_.cells_used,
                                    header_.cells_free,
-                                   unsigned(header_.root_cell),
-                                   unsigned(header_.first_free_cell),
+                                   long(header_.root_cell),
+                                   long(header_.first_free_cell),
                                    unsigned(header_.persistentCellSize),
                                    unsigned(sizeof(RBTreeNode)));
         // check integrity
@@ -763,7 +765,7 @@ private:
         rbtree_f.Write( ds.curposc(), rbtLen );
         ds.setrpos(rbtPos+rbtLen);
 
-        if (logger) smsc_log_debug(logger, "RepairRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %ld, root_cell %ld, nil_cell %ld",
+        if (logger) smsc_log_debug(logger, "RepairRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %lx, root_cell %lx, nil_cell %lx",
                                    rbtHdr.cells_used, rbtHdr.cells_free, rbtHdr.cells_count, (long)rbtHdr.first_free_cell, (long)rbtHdr.root_cell, (long)rbtHdr.nil_cell);
         if (logger) smsc_log_debug(logger, "repairRBTreeFile transHdr.nodes_count = %d, transHdr.status=%d", transHdr.nodes_count, status);
 		
