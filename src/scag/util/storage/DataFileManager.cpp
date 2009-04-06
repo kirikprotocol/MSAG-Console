@@ -19,6 +19,12 @@ void DataFileManager::createDataFile(DataFileCreator& creator) {
   pool_.startTask(task);
 }
 
+
+void DataFileManager::startTask(ThreadedTask* task, bool delOnCompletion)
+{
+    pool_.startTask(task,delOnCompletion);
+}
+
 }
 }
 }

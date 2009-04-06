@@ -89,18 +89,17 @@ AbonentLogic::~AbonentLogic() {
     smsc_log_debug(logger_, "storage processor %d deleted", locationNumber_);
 }
 
-void AbonentLogic::init() /* throw (smsc::util::Exception) */
+PvssLogic::LogicInitTask* AbonentLogic::startInit()
 {
-    smsc_log_debug(logger_," init abonent location #%u", locationNumber_ );
-    unsigned long total = 0;
-    for ( unsigned i = 0; i < dispatcher_.getStoragesCount(); ++i ) {
-        if ( util::storage::StorageNumbering::instance().node(i) == dispatcher_.getNodeNumber() ) {
-            if ( dispatcher_.getLocationNumber(i) == locationNumber_ ) {
-                total += initElementStorage(i);
-            }
-        }
-    }
-    smsc_log_info(logger_,"abonent logic on location #%u inited, total nodes: %lu", locationNumber_, total );
+    LogicInitTask* task = new LogicInitTask(this);
+    dataFileManager_.startTask(task,false);
+    return task;
+}
+PvssLogic::LogicRebuildIndexTask* AbonentLogic::startRebuildIndex()
+{
+    LogicRebuildIndexTask* task = new LogicRebuildIndexTask(this);
+    dataFileManager_.startTask(task,false);
+    return task;
 }
 
 
@@ -138,6 +137,36 @@ unsigned long AbonentLogic::reportStatistics() const
         }
     }
     return total;
+}
+
+
+void AbonentLogic::init() /* throw (smsc::util::Exception) */
+{
+    smsc_log_debug(logger_," init abonent location #%u", locationNumber_ );
+    unsigned long total = 0;
+    for ( unsigned i = 0; i < dispatcher_.getStoragesCount(); ++i ) {
+        if ( util::storage::StorageNumbering::instance().node(i) == dispatcher_.getNodeNumber() ) {
+            if ( dispatcher_.getLocationNumber(i) == locationNumber_ ) {
+                total += initElementStorage(i);
+            }
+        }
+    }
+    smsc_log_info(logger_,"abonent logic on location #%u inited, total nodes: %lu", locationNumber_, total );
+}
+
+
+void AbonentLogic::rebuildIndex()
+{
+    smsc_log_info(logger_,"rebuilding indices on abonent location #%u", locationNumber_ );
+    unsigned long total = 0;
+    for ( unsigned i = 0; i < dispatcher_.getStoragesCount(); ++i ) {
+        if ( util::storage::StorageNumbering::instance().node(i) == dispatcher_.getNodeNumber() ) {
+            if ( dispatcher_.getLocationNumber(i) == locationNumber_ ) {
+                total += rebuildElementStorage(i);
+            }
+        }
+    }
+    smsc_log_info(logger_,"abonent logic on location #%u indices rebuilt, total nodes: %lu", locationNumber_, total );
 }
 
 
@@ -189,6 +218,13 @@ unsigned long AbonentLogic::initElementStorage(unsigned index) /* throw (smsc::u
   smsc_log_debug(logger_, "abonent storage is assembled");
   smsc_log_info( logger_, "storage #%u is inited, total number of good nodes: %lu", index, filledNodes );
   return filledNodes;
+}
+
+
+unsigned long AbonentLogic::rebuildElementStorage( unsigned index )
+{
+    // FIXME
+    return 0;
 }
 
 
@@ -283,6 +319,22 @@ Response* InfrastructLogic::processProfileRequest(ProfileRequest& profileRequest
 }
 
 
+PvssLogic::LogicInitTask* InfrastructLogic::startInit()
+{
+    // we do in in the main thread
+    std::auto_ptr<LogicInitTask> task(new LogicInitTask(this));
+    task->Execute();
+    return 0;
+}
+PvssLogic::LogicRebuildIndexTask* InfrastructLogic::startRebuildIndex()
+{
+    // we do in in the main thread
+    std::auto_ptr<LogicRebuildIndexTask> task(new LogicRebuildIndexTask(this));
+    task->Execute();
+    return 0;
+}
+
+
 std::string InfrastructLogic::reportStatistics() const
 {
     unsigned long providerStat, operatorStat, serviceStat;
@@ -315,6 +367,12 @@ void InfrastructLogic::init() /* throw (smsc::util::Exception) */ {
                   static_cast<unsigned long>(provider_->filledDataSize()),
                   static_cast<unsigned long>(service_->filledDataSize()),
                   static_cast<unsigned long>(operator_->filledDataSize()));
+}
+
+
+void InfrastructLogic::rebuildIndex()
+{
+    // FIXME
 }
 
 

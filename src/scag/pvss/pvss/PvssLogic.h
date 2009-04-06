@@ -22,6 +22,7 @@
 #include "scag/util/storage/PageFileDiskStorage.h"
 #include "scag/util/storage/BHDiskStorage.h"
 #include "scag/util/storage/Glossary.h"
+#include "scag/util/WatchedThreadedTask.h"
 
 #include "scag/pvss/api/core/server/Server.h"
 #include "ProfileCommandProcessor.h"
@@ -51,7 +52,59 @@ class Response;
 class ProfileRequest;
 class PvssDispatcher;
 
-class PvssLogic: public Server::SyncLogic {
+class PvssLogic;
+
+class LogicTask : public util::WatchedThreadedTask
+{
+public:
+    LogicTask( PvssLogic* logic ) : logic_(logic) {}
+    const std::string& getFailure() const { return failure_; }
+protected:
+    inline void setFailure( const char* what );
+    // failure_ = std::string(what) + " in " + logic_->toString();
+protected:
+    PvssLogic* logic_;
+    std::string failure_;
+};
+
+
+class PvssLogic: public Server::SyncLogic 
+{
+protected:
+    class LogicInitTask : public LogicTask
+    {
+    public:
+        LogicInitTask( PvssLogic* logic ) : LogicTask(logic) {}
+        virtual const char* taskName() { return "pvss.init"; }
+        virtual int doExecute() {
+            try {
+                logic_->init();
+            } catch ( std::exception& e ) {
+                setFailure(e.what());
+            } catch (...) {
+                setFailure( "unknown exception" );
+            }
+            return 0;
+        }
+    };
+
+    class LogicRebuildIndexTask : public LogicTask
+    {
+    public:
+        LogicRebuildIndexTask( PvssLogic* logic ) : LogicTask(logic) {}
+        virtual const char* taskName() { return "pvss.rbld"; }
+        virtual int doExecute() {
+            try {
+                logic_->rebuildIndex();
+            } catch ( std::exception& e ) {
+                setFailure(e.what());
+            } catch (...) {
+                setFailure( "unknown exception" );
+            }
+            return 0;
+        }
+    };
+
 public:
   PvssLogic( PvssDispatcher& dispatcher ) : dispatcher_(dispatcher), logger_(Logger::getInstance("storeproc")) {}
   virtual ~PvssLogic() {};
@@ -61,14 +114,20 @@ public:
 
   virtual void shutdownStorages() = 0;
 
-    /// initialize logic
-    virtual void init() /* throw (smsc::util::Exception) */ = 0;
+    /// start a task that initialize the logic
+    virtual LogicInitTask* startInit() = 0;
+    virtual LogicRebuildIndexTask* startRebuildIndex() = 0;
 
     /// return the name of the logic
     virtual std::string toString() const = 0;
 
 protected:
   void initGlossary(const string& path, Glossary* glossary);
+
+    // initialize logic
+    virtual void init() = 0;
+    virtual void rebuildIndex() = 0;
+
   virtual Response* processProfileRequest(ProfileRequest& request) = 0;
 
 protected:
@@ -78,9 +137,14 @@ protected:
   ProfileCommandProcessor commandProcessor_;
 };
 
+
+inline void LogicTask::setFailure( const char* what )
+{
+    failure_ = std::string(what) + " in " + logic_->toString();
+}
+
+
 struct AbonentStorageConfig;
-
-
 
 class AbonentLogic: public PvssLogic 
 {
@@ -92,7 +156,8 @@ public:
 
     virtual ~AbonentLogic();
 
-    virtual void init() /* throw (smsc::util::Exception) */;
+    virtual LogicInitTask* startInit();
+    virtual LogicRebuildIndexTask* startRebuildIndex();
 
     virtual std::string toString() const {
         char buf[64];
@@ -106,9 +171,15 @@ public:
     /// return the number of abonents in this logic's storages
     unsigned long reportStatistics() const;
 
+    inline unsigned getLocationNumber() const { return locationNumber_; }
+
 protected:
+    virtual void init() /* throw (smsc::util::Exception) */;
+    virtual void rebuildIndex();
+
     /// init an element storage and return the total number of good nodes in it
     unsigned long initElementStorage(unsigned index) /* throw (smsc::util::Exception) */;
+    unsigned long rebuildElementStorage(unsigned index);
 
     virtual Response* processProfileRequest(ProfileRequest& request);
 
@@ -156,8 +227,8 @@ public:
     {}
   ~InfrastructLogic();
 
-    virtual void init() /* throw (smsc::util::Exception) */;
-
+    virtual LogicInitTask* startInit();
+    virtual LogicRebuildIndexTask* startRebuildIndex();
     virtual std::string toString() const { return "infrastruct logic"; }
 
   //virtual Response* process(Request& request) /* throw(PvssException) */ ;
@@ -166,6 +237,9 @@ public:
     std::string reportStatistics() const;
 
 protected:
+    virtual void init() /* throw (smsc::util::Exception) */;
+    virtual void rebuildIndex();
+
   virtual Response* processProfileRequest(ProfileRequest& request);
 
 private:

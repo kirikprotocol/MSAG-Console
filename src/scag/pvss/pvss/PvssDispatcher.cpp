@@ -5,7 +5,6 @@
 #include "scag/pvss/api/packets/ProfileRequest.h"
 #include "scag/util/WatchedThreadedTask.h"
 #include "core/threads/ThreadPool.hpp"
-#include "scag/pvss/api/core/server/ServerCore.h"
 
 namespace {
 
@@ -21,38 +20,6 @@ ProfileRequestChecker prc;
 inline bool isProfileRequest( Request& r ) {
     return r.visit(prc);
 }
-
-
-class LogicInitTask : public scag2::util::WatchedThreadedTask
-{
-public:
-    LogicInitTask( PvssLogic* logic ) : logic_(logic) {}
-
-    virtual const char* taskName() { return "pvss.init"; }
-
-    virtual int doExecute() {
-        try {
-            logic_->init();
-        } catch ( std::exception& e ) {
-            setFailure(e.what());
-        } catch (...) {
-            setFailure( "unknown exception" );
-        }
-        return 0;
-    }
-
-    const std::string& getFailure() const { return failure_; }
-    
-private:
-    void setFailure( const char* what ) {
-        failure_ = std::string(what) + " in " + logic_->toString();
-    }
-
-private:
-    PvssLogic*   logic_;
-    std::string  failure_;
-};
-
 
 }
 
@@ -127,18 +94,26 @@ std::string PvssDispatcher::reportStatistics() const
 }
 
 
-void PvssDispatcher::init( core::server::ServerCore* serverCore, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg )
+void PvssDispatcher::createLogics( bool makedirs, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg )
 {
-
   for (unsigned locationNumber = 0; locationNumber < nodeCfg_.locationsCount; ++locationNumber) {
     if (!File::Exists(abntcfg.locations[locationNumber].path.c_str())) {
-      smsc_log_debug(logger_, "create storage dir '%s' on disk %d", abntcfg.locations[locationNumber].path.c_str(),
-                     abntcfg.locations[locationNumber].disk);
-      File::MkDir(abntcfg.locations[locationNumber].path.c_str());
+        if ( makedirs ) {
+            smsc_log_debug(logger_, "create storage dir '%s' on disk %d",
+                           abntcfg.locations[locationNumber].path.c_str(),
+                           abntcfg.locations[locationNumber].disk);
+            File::MkDir(abntcfg.locations[locationNumber].path.c_str());
+        } else {
+            smsc_log_debug(logger_, "storage dir '%s' creation on disk %d skipped",
+                           abntcfg.locations[locationNumber].path.c_str(),
+                           abntcfg.locations[locationNumber].disk );
+            continue;
+        }
     }
     AbonentLogic* logic = new AbonentLogic( *this,
                                             locationNumber,
-                                            abntcfg, *dataFileManagers_[abntcfg.locations[locationNumber].disk] );
+                                            abntcfg,
+                                            *dataFileManagers_[abntcfg.locations[locationNumber].disk] );
     abonentLogics_.Push(logic);
     ++createdLocations_;
   }
@@ -146,30 +121,38 @@ void PvssDispatcher::init( core::server::ServerCore* serverCore, const AbonentSt
     // infrastruct logic
     if (nodeCfg_.nodeNumber == getInfrastructNodeNumber()) {
         if (!infcfg) {
-            throw Exception("Error init infrastruct storage, config in NULL");
+            throw Exception("Error init infrastruct storage, config is NULL");
         }
         infrastructLogic_.reset( new InfrastructLogic(*this,*infcfg) );
     }
+}
 
+
+void PvssDispatcher::init()
+{
     // we have to init all logics in parallel
     // smsc::core::threads::ThreadPool tp;
-    smsc::core::buffers::Array< LogicInitTask* > initTasks;
+    smsc::core::buffers::Array< LogicTask* > initTasks;
     for ( unsigned i = 0; i < abonentLogics_.Count(); ++i ) {
+        LogicTask* task = abonentLogics_[i]->startInit();
+        if ( task ) initTasks.Push(task);
+        /*
         LogicInitTask* task = new LogicInitTask(abonentLogics_[i]);
-        initTasks.Push(task);
-        serverCore->startSubTask(task, false);
+        dataFileManagers_[abonentLogics_[i]->getLocationNumber()]
+        serverCore->startTask( task, false );
+         */
     }
 
     if ( infrastructLogic_.get() ) {
-        LogicInitTask* task = new LogicInitTask(infrastructLogic_.get());
-        initTasks.Push(task);
-        serverCore->startSubTask(task, false);
+        LogicTask* task = infrastructLogic_->startInit();
+        if ( task ) initTasks.Push(task);
+        // serverCore->startSubTask(task, false);
         // infrastructLogic_->init(*infcfg);
     }
 
     // make sure all the tasks are started and finished
     for ( unsigned i = 0; i < initTasks.Count(); ++i ) {
-        LogicInitTask* task = initTasks[i];
+        LogicTask* task = initTasks[i];
         task->waitUntilStarted();
         task->waitUntilReleased();
     }
@@ -177,7 +160,7 @@ void PvssDispatcher::init( core::server::ServerCore* serverCore, const AbonentSt
     // checking for results, cleanup
     std::string failure;
     for ( unsigned i = 0; i < initTasks.Count(); ++i ) {
-        LogicInitTask* task = initTasks[i];
+        LogicTask* task = initTasks[i];
         std::string fail = task->getFailure();
         if ( !fail.empty() ) {
             if ( ! failure.empty() ) failure.push_back('\n');
@@ -189,6 +172,42 @@ void PvssDispatcher::init( core::server::ServerCore* serverCore, const AbonentSt
     if ( !failure.empty() ) throw smsc::util::Exception(failure.c_str());
     reportStatistics();
 }
+
+
+void PvssDispatcher::rebuildIndex()
+{
+    smsc::core::buffers::Array< LogicTask* > rebuildTasks;
+    for ( unsigned i = 0; i < abonentLogics_.Count(); ++i ) {
+        LogicTask* task = abonentLogics_[i]->startRebuildIndex();
+        if (task) rebuildTasks.Push(task);
+    }
+
+    if ( infrastructLogic_.get() ) {
+        LogicTask* task = infrastructLogic_->startRebuildIndex();
+        if (task) rebuildTasks.Push(task);
+    }
+
+    // make sure all the tasks are started and finished
+    for ( unsigned i = 0; i < rebuildTasks.Count(); ++i ) {
+        LogicTask* task = rebuildTasks[i];
+        task->waitUntilStarted();
+        task->waitUntilReleased();
+    }
+
+    // checking for results, cleanup
+    std::string failure;
+    for ( unsigned i = 0; i < rebuildTasks.Count(); ++i ) {
+        LogicTask* task = rebuildTasks[i];
+        std::string fail = task->getFailure();
+        if ( !fail.empty() ) {
+            if ( ! failure.empty() ) failure.push_back('\n');
+            failure.append(fail);
+        }
+        delete task;
+    }
+    if ( !failure.empty() ) throw smsc::util::Exception(failure.c_str());
+}
+
 
 unsigned PvssDispatcher::getLocationNumber(unsigned elementStorageNumber) const {
   return (elementStorageNumber / StorageNumbering::instance().nodes()) % nodeCfg_.locationsCount;

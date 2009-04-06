@@ -20,12 +20,6 @@ class DataFileManager;
 namespace scag2 {
 namespace pvss  {
 
-namespace core {
-namespace server {
-class ServerCore;
-}
-}
-
 using smsc::logger::Logger;
 using smsc::core::buffers::Array;
 using std::vector;
@@ -51,9 +45,13 @@ public:
   virtual Server::SyncLogic* getSyncLogic(unsigned idx);
     virtual std::string reportStatistics() const;
 
-    void init( core::server::ServerCore* serverCore,
-               const AbonentStorageConfig& abntcfg,
-               const InfrastructStorageConfig* infcfg) /* throw (smsc::util::Exception) */;
+    void createLogics( bool makedirs,
+                       const AbonentStorageConfig& abntcfg,
+                       const InfrastructStorageConfig* infcfg) /* throw (smsc::util::Exception) */;
+
+    void init();
+    void rebuildIndex();
+
   unsigned getInfrastructNodeNumber() const { return 0; }
 
     inline unsigned getNodeNumber() const { return nodeCfg_.nodeNumber; }

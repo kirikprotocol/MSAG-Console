@@ -280,9 +280,6 @@ int main(int argc, char* argv[]) {
       ++nodeCfg.disksCount;
     }
 
-    std::auto_ptr< Protocol > protocol( new scag2::pvss::pvap::PvapProtocol );
-    std::auto_ptr< ServerCore > server( new ServerCore( serverConfig, *protocol.get() ) );
-
     PvssDispatcher pvssDispatcher(nodeCfg);
 
     std::auto_ptr<InfrastructStorageConfig> infCfg;
@@ -290,15 +287,32 @@ int main(int argc, char* argv[]) {
       ConfigView infStorageConfig(manager, "PVSS.InfrastructStorage");
       infCfg.reset(new InfrastructStorageConfig(infStorageConfig, "InfrastructStorage", logger));
     }
-    try {
-        pvssDispatcher.init( server.get(), abntCfg, infCfg.get() );
-    } catch ( std::exception& e ) {
-        smsc_log_fatal( logger, "Exception in pvss dispatcher initialization:\n%s", e.what() );
-        exit(-1);
-    } catch (...) {
-        smsc_log_fatal( logger, "unknown exception in pvss dispatcher initialization:" );
-        exit(-1);
-    }
+
+      // rebuilding index
+      bool rebuildIndex = false;
+      if ( argc > 1 && strcmp(argv[1], "--rebuild-index") == 0 ) {
+          rebuildIndex = true;
+      }
+
+      try {
+          const bool makedirs = !rebuildIndex;
+          pvssDispatcher.createLogics( makedirs, abntCfg, infCfg.get() );
+          if ( rebuildIndex ) {
+              pvssDispatcher.rebuildIndex();
+              return 0;
+          } else {
+              pvssDispatcher.init();
+          }
+      } catch ( std::exception& e ) {
+          smsc_log_fatal( logger, "Exception in pvss dispatcher createLogics:\n%s", e.what() );
+          exit(-1);
+      } catch (...) {
+          smsc_log_fatal( logger, "unknown exception in pvss dispatcher createLogics" );
+          exit(-1);
+      }
+
+    std::auto_ptr< Protocol > protocol( new scag2::pvss::pvap::PvapProtocol );
+    std::auto_ptr< ServerCore > server( new ServerCore( serverConfig, *protocol.get() ) );
 
     try {
         // server->init();

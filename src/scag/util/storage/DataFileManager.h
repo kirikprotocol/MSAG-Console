@@ -35,6 +35,10 @@ public:
   unsigned getExpectedSpeed() const {
     return addSpeed_;
   }
+
+    /// used eg for initialization
+    void startTask( ThreadedTask* task, bool delOnCompletion = true );
+
 private:
   uint16_t maxThreads_;
   unsigned addSpeed_;
