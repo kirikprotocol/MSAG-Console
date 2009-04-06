@@ -330,6 +330,11 @@ public:
     }
 
 
+    static inline index_type invalidIndex() {
+        return -1;
+    }
+
+
     int Create(const string& _dbName, const string& _dbPath, int32_t _fileSize, int32_t _blockSize)
     {
         dbName = _dbName;
@@ -613,7 +618,15 @@ public:
     }
 
     
-    bool Next(index_type& blockIndex, DataBlock& data, Key& key)
+    /// NOTE: this method is used for index rebuilding
+    bool next( index_type& blockIndex, Key& key )
+    {
+        DataBlock db;
+        return Next(blockIndex,db,key);
+    }
+
+
+    bool Next( index_type& blockIndex, DataBlock& data, Key& key )
     {
         uint64_t cnt = descrFile.files_count * descrFile.file_size;
         DataBlockHeader hdr;

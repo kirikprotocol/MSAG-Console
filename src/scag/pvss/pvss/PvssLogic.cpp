@@ -166,7 +166,7 @@ void AbonentLogic::rebuildIndex()
             }
         }
     }
-    smsc_log_info(logger_,"abonent logic on location #%u indices rebuilt, total nodes: %lu", locationNumber_, total );
+    smsc_log_info(logger_,"abonent logic on location #%u indices rebuilt: %lu", locationNumber_, total );
 }
 
 
@@ -223,8 +223,66 @@ unsigned long AbonentLogic::initElementStorage(unsigned index) /* throw (smsc::u
 
 unsigned long AbonentLogic::rebuildElementStorage( unsigned index )
 {
-    // FIXME
-    return 0;
+    char pathSuffix[4];
+    snprintf(pathSuffix, sizeof(pathSuffix), "%03u", index);
+    string path = string(config_.locations[locationNumber_].path + "/") + pathSuffix;
+    // std::auto_ptr<ElementStorage> elStorage(new ElementStorage(index));
+    // elStorage->glossary = new Glossary();
+    // initGlossary(path, elStorage->glossary);
+
+    const std::string pathSuffixString(pathSuffix);
+
+    /// TODO: move the code into a separate class scag/util/storage/IndexRebuilder.
+
+    /// making sure that temporary index file is not here
+    std::string n = path + "/" + config_.dbName + "-index";
+    std::string t = path + "/" + config_.dbName + "-temp-index";
+    std::string o = path + "/" + config_.dbName + "-old-index";
+    try {
+        File::Unlink(t.c_str());
+    } catch (...) {}
+
+    /// create a temporary index file
+    std::auto_ptr< DiskIndexStorage > dis
+        (new DiskIndexStorage( config_.dbName + "-temp", path, config_.indexGrowth, false,
+                               smsc::logger::Logger::getInstance(("pvssix."+pathSuffixString).c_str())));
+    dis->setInvalidIndex( DiskDataStorage::storage_type::invalidIndex() );
+    smsc_log_debug(logger_, "temporary data index storage %u is created", index);
+
+    // FIXME: do we need glossary here ?
+    // I (db) think 'no', as we don't unpack datablocks
+    std::auto_ptr< DiskDataStorage::storage_type > bs
+        (new DiskDataStorage::storage_type
+         (dataFileManager_,
+          0, // elStorage->glossary,
+          smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
+
+    int ret = -1;
+    const string fn(config_.dbName + "-data");
+    ret = bs->Open(fn, path);
+    if (ret < 0) {
+        throw Exception("can't open data disk storage: %s", path.c_str());
+    }
+
+    // rebuilding index
+    DiskIndexStorage::index_type blockIndex = 0;
+    AbntAddr key;
+    unsigned long rebuilt = 0;
+    while ( bs->next(blockIndex,key) ) {
+        smsc_log_debug( logger_, "rebuiling: key=%s, idx=%lx", key.toString().c_str(), long(blockIndex));
+        dis->setIndex(key,blockIndex);
+        ++rebuilt;
+    }
+    smsc_log_info( logger_, "storage %s indices rebuilt: %lu", path.c_str(), rebuilt );
+
+    rename( n.c_str(), o.c_str() );
+    rename( t.c_str(), n.c_str() );
+    t += ".trx";
+    n += ".trx";
+    o += ".trx";
+    rename( n.c_str(), o.c_str() );
+    rename( t.c_str(), n.c_str() );
+    return rebuilt;
 }
 
 
@@ -372,7 +430,7 @@ void InfrastructLogic::init() /* throw (smsc::util::Exception) */ {
 
 void InfrastructLogic::rebuildIndex()
 {
-    // FIXME
+    smsc_log_warn(logger_,"infrastructure index rebuilding is not impl yet");
 }
 
 

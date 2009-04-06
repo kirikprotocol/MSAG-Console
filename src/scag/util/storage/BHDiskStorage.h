@@ -41,7 +41,7 @@ public:
 
 
     inline index_type invalidIndex() const {
-        return -1;
+        return Storage::invalidIndex();
     }
 
 
