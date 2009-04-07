@@ -59,9 +59,9 @@ public:
         virtual void handle( BC_BATCH_RESP& obj ) = 0;
     };
 
-    PVAPPROF() : handler(0) {}
+    PVAPPROF( unsigned options = 0 ) : handler(0), options_(options) {}
 
-    PVAPPROF( Handler* newHandler ) : handler(newHandler) {}
+    PVAPPROF( Handler* newHandler, unsigned options = 0 ) : handler(newHandler), options_(options) {}
 
     /*
     void assignHandler( Handler* newHandler)
@@ -69,6 +69,9 @@ public:
         handler=newHandler;
     }
      */
+
+    inline unsigned getOptions() const { return options_; }
+    inline void setOptions( unsigned opt ) { options_ = opt; }
 
     void decodeMessage( BufferReader& ss ) throw (PvapException)
     {
@@ -237,6 +240,7 @@ public:
 
 protected:
     Handler* handler; // unowned
+    unsigned options_;
 };
 
 }

@@ -23,13 +23,13 @@ $-select$
 $-pack$$-macro$
 
 $macro checker$$pack$
-$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$ifdef field.useChecker$$var field.useChecker$$-ifdef$$ifndef field.useChecker$has$var field.name:ucf$$-ifndef$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$if field.useProfile$getProfileKey().$-if$$ifdef field.useChecker$$var field.useChecker$$-ifdef$$ifndef field.useChecker$has$var field.name:ucf$$-ifndef$
 $-pack$$-macro$
 $macro getter$$pack$
-$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$ifdef field.useGetter$$var field.useGetter$$-ifdef$$ifndef field.useGetter$get$var field.name:ucf$$-ifndef$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$if field.useProfile$getProfileKey().$-if$$ifdef field.useGetter$$var field.useGetter$$-ifdef$$ifndef field.useGetter$get$var field.name:ucf$$-ifndef$
 $-pack$$-macro$
 $macro setter$$pack$
-$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$ifdef field.useSetter$$var field.useSetter$$-ifdef$$ifndef field.useSetter$set$var field.name:ucf$$-ifndef$
+$if !field.isTransient$data_$-if$$if field.isTransient$this$-if$.$if field.useProfile$getProfileKey().$-if$$ifdef field.useSetter$$var field.useSetter$$-ifdef$$ifndef field.useSetter$set$var field.name:ucf$$-ifndef$
 $-pack$$-macro$
 $macro baseclass$$var message.inheritsFrom$$ifdef message.command$< $var message.command$ >$-ifdef$$-macro$
 
@@ -50,12 +50,12 @@ $-if$
 $-foreach$
     $expand baseclass$ data_;
 
-    public $var message.name$( int seqNum ) {
+    public $var message.name$() {
 $ifdef message.command$
-        data_ = new $expand baseclass$( new $var message.command$( seqNum ) );
+        data_ = new $expand baseclass$( new $var message.command$() );
 $-ifdef$
 $ifndef message.command$
-        data_ = new $expand baseclass$( seqNum );
+        data_ = new $expand baseclass$();
 $-ifndef$
 $foreach field$
 $if field.isTransient$
@@ -72,17 +72,6 @@ $if field.isTransient$
 $-if$
 $-foreach$
     }
-
-$ifdef message.command$
-    public $var message.name$( $var message.command$ cmd, IProfileKey key ) {
-        data_ = new $expand baseclass$(cmd,key);
-$foreach field$
-$if field.isTransient$
-        $var field.name$Flag = false;
-$-if$
-$-foreach$
-    }
-$-ifdef$
 
     public void clear()
     {
@@ -113,19 +102,19 @@ $case string$writer.writeStringLV($expand getter$());
 $case ascii$try {
             writer.writeUTFLV($expand getter$());
         } catch ( java.io.IOException e ) {
-            throw new PvapSerializationException( data_.isRequest(), "writing ascii field $var field.name$ in $var message.name$:" + e.getMessage(), data_.getSeqNum() );
+            throw new PvapSerializationException( data_.isRequest(), "writing ascii field $var field.name$ in $var message.name$:" + e.getMessage(), getSeqNum() );
         }
 $case utf8$try {
             writer.writeUTFLV($expand getter$());
         } catch ( java.io.IOException e ) {
-            throw new PvapSerializationException( data_.isRequest(), "writing utf8 field $var field.name$ in $var message.name$:" + e.getMessage(), data_.getSeqNum() );
+            throw new PvapSerializationException( data_.isRequest(), "writing utf8 field $var field.name$ in $var message.name$:" + e.getMessage(), getSeqNum() );
         }
 $case byte$writer.writeByteLV($expand getter$());
 $case uint16$writer.writeShortLV($expand getter$());
 $case uint32$writer.writeIntLV($expand getter$());
 $case uint64$writer.writeLongLV($expand getter$());
 $case bool$writer.writeBoolLV($expand getter$());
-$case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet", data_.getSeqNum());
+$case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet", getSeqNum());
 $default${
 $ifdef field.helperClass$
             $var field.helperClass$ helper = new $var field.helperClass$( data_ );
@@ -151,19 +140,19 @@ $case string$writer.writeStringLV($expand getter$());
 $case ascii$try {
                 writer.writeUTFLV($expand getter$());
             } catch ( java.io.IOException e ) {
-                throw new PvapSerializationException( data_.isRequest(), "writing ascii field $var field.name$ in $var message.name$:" + e.getMessage(), data_.getSeqNum() );
+                throw new PvapSerializationException( data_.isRequest(), "writing ascii field $var field.name$ in $var message.name$:" + e.getMessage(), getSeqNum() );
             }
 $case utf8$try {
                 writer.writeUTFLV($expand getter$());
             } catch ( java.io.IOException e ) {
-                throw new PvapSerializationException( data_.isRequest(), "writing utf8 field $var field.name$ in $var message.name$:" + e.getMessage(), data_.getSeqNum() );
+                throw new PvapSerializationException( data_.isRequest(), "writing utf8 field $var field.name$ in $var message.name$:" + e.getMessage(), getSeqNum() );
             }
 $case byte$writer.writeByteLV($expand getter$());
 $case uint16$writer.writeShortLV($expand getter$());
 $case uint32$writer.writeIntLV($expand getter$());
 $case uint64$writer.writeLongLV($expand getter$());
 $case bool$writer.writeBoolLV($expand getter$());
-$case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet",data_.getSeqNum());
+$case nested$throw new NotImplementedException("writing field $var field.name$ of $var message.name$ is not impl yet",getSeqNum());
 $default${
 $ifdef field.helperClass$
                 $var field.helperClass$ helper = new $var field.helperClass$(data_);
@@ -196,7 +185,7 @@ $if !field.isTransient$
                 case $var field.name$Tag: {
 $ifdef field.checkVar$
                     if ( $var field.checkVar$Flag ) {
-                        throw new DuplicateFieldException(data_.isRequest(),"duplicate field $var field.name$ of $var message.name$", data_.getSeqNum());
+                        throw new DuplicateFieldException(data_.isRequest(),"duplicate field $var field.name$ of $var message.name$", getSeqNum());
                     }
                     $var field.checkVar$Flag = true;
 $-ifdef$
@@ -209,7 +198,7 @@ $case uint16$$expand setter$(reader.readShortLV());
 $case uint32$$expand setter$(reader.readIntLV());
 $case uint64$$expand setter$(reader.readLongLV());
 $case bool$$expand setter$(reader.readBoolLV());
-$case nested$throw new NotImplementedException("reading field $var field.name$ of $var message.name$ is not impl yet",data_.getSeqNum());
+$case nested$throw new NotImplementedException("reading field $var field.name$ of $var message.name$ is not impl yet",getSeqNum());
 $default$$ifndef field.helperClass$$var field.type$ temp = new $var field.type$();
                     temp.decode(proto,reader);
                     $expand setter$(temp);
@@ -223,19 +212,29 @@ $-select$
 $-if$
 $-foreach$
                 default:
-                    throw new InvalidFieldTypeException(data_.isRequest(),"invalid field in $var message.name$",data_.getSeqNum(),tag);
+                    throw new InvalidFieldTypeException(data_.isRequest(),"invalid field in $var message.name$",getSeqNum(),tag);
                 }
             } while ( true );
         } catch ( java.io.IOException e ) {
-            throw new PvapSerializationException( data_.isRequest(), "reading field tag=" + tag + " of $var message.name$:" + e.getMessage(), data_.getSeqNum() );
+            throw new PvapSerializationException( data_.isRequest(), "reading field tag=" + tag + " of $var message.name$:" + e.getMessage(), getSeqNum() );
         }
         // checking integrity
         checkFields();
     }
 
     public int getSeqNum() {
-        return data_.getSeqNum();
+        return
+$if options.hasSeqNum$
+            data_ != null ? data_.getSeqNum() :
+$-if$
+            -1;
     }
+
+$if options.hasSeqNum$
+    public void setSeqNum( int seqNum ) {
+        data_.setSeqNum(seqNum);
+    }
+$-if$
 
     public $expand baseclass$ getData() { return data_; }
 
@@ -243,7 +242,7 @@ $-foreach$
     {
         // using parent check
         if ( !data_.isValid() ) {
-            throw new MessageIsBrokenException(data_.isRequest(), "message $var message.name$ is broken: " + toString(), data_.getSeqNum() );
+            throw new MessageIsBrokenException(data_.isRequest(), "message $var message.name$ is broken: " + toString(), getSeqNum() );
         }
     }
 }

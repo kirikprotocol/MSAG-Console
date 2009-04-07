@@ -59,7 +59,7 @@ class Handler : public PVAPPROF::Handler
 {
 public:
     Handler( BatchCommandFiller& filler ) : filler_(filler) {}
-    bool hasSeqNum( uint32_t ) const { return true; }
+    // bool hasSeqNum( uint32_t ) const { return true; }
     void handle( BC_DEL& object )          { filler_.push(object.pop()); }
     void handle( BC_DEL_RESP& object )     { filler_.fail(); }
     void handle( BC_SET& object )          { filler_.push(object.pop()); }

@@ -47,10 +47,11 @@ public:
     /// clear all fields except seqnum
     virtual void clear() = 0;
 
+    virtual const char* typeToString() const = 0;
+
 protected:
     ProfileCommand( const ProfileCommand& cmd ) {}
 
-    virtual const char* typeToString() const = 0;
     void initLog();
     void logDtor();
 

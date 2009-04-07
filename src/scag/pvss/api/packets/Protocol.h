@@ -14,6 +14,11 @@ class Protocol
 public:
     typedef smsc::core::buffers::TmpBuf< char, 32 > Buffer;
 
+    /// options, joined via bitwise OR
+    enum {
+        PASSBUFFER = 1
+    };
+
     virtual ~Protocol() {}
 
     /**
@@ -25,6 +30,9 @@ public:
      * NOTE: buf will be used only for reading, so it is safe to pass an extBuf.
      */
     virtual Packet* deserialize( Buffer& buf ) /* throw(PvapException) */  = 0;
+
+    virtual unsigned getOptions() const = 0;
+    // virtual void setOptions( unsigned opt ) = 0;
 
 };
 

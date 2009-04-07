@@ -14,7 +14,7 @@ $foreach message$
 $-foreach$
 
     public static interface Handler {
-        public boolean hasSeqNum( int seqNum );
+        // public boolean hasSeqNum( int seqNum );
 $foreach message$
         public void handle( $var message.name$ object ) throws PvapException;
 $-foreach$
@@ -36,13 +36,18 @@ $-foreach$
     {
         int seqNum = -1;
         try {
+$if options.hasSeqNum$
             seqNum = reader.readInt();
-            if ( ! handler.hasSeqNum(seqNum) ) throw new UnexpectedSeqNumException(seqNum);
+$-if$
+            // if ( ! handler.hasSeqNum(seqNum) ) throw new UnexpectedSeqNumException(seqNum);
             int tag = reader.readTag();
             switch( tag ) {
 $foreach message$
             case tag_$var message.name:ucf$: {
-                $var message.name$ object = new $var message.name$(seqNum);
+                $var message.name$ object = new $var message.name$();
+$if options.hasSeqNum$
+                object.setSeqNum(seqNum);
+$-if$
                 object.decode(this,reader);
                 handler.handle(object);
                 break;
@@ -60,11 +65,15 @@ $foreach message$
     {
         // BufferWriter writer = new BufferWriter();
         try {
+$if options.hasSeqNum$
             writer.writeInt(object.getSeqNum());
+$-if$
             writer.writeTag(tag_$var message.name$);
             object.encode(this,writer);
         } catch ( PvapException e ) {
+$if options.hasSeqNum$
             e.setSeqNum(object.getSeqNum());
+$-if$
             throw e;
         }
         return writer.getData();

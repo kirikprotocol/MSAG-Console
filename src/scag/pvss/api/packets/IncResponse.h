@@ -10,7 +10,7 @@ class IncResponse : public BatchResponseComponent
 {
 public:
     IncResponse() : BatchResponseComponent(), result_(0) { initLog(); }
-    IncResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum), result_(0) { initLog(); }
+    IncResponse( uint8_t status ) : BatchResponseComponent(status), result_(0) { initLog(); }
     virtual ~IncResponse() { logDtor(); }
 
     virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {

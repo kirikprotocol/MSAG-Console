@@ -44,5 +44,18 @@ int main()
 
     std::auto_ptr< Packet > pack(protocol.deserialize(buf));
     std::cout << pack->toString() << std::endl;
+    
+    protocol.setOptions( Protocol::PASSBUFFER );
+    std::auto_ptr< Packet > pack2(protocol.deserialize(buf));
+    std::cout << pack2->toString() << std::endl;
+
+    {
+        Protocol::Buffer buf2(100);
+        protocol.setOptions(0);
+        protocol.serialize( *pack2.get(), buf2 );
+
+        std::auto_ptr< Packet > pack3(protocol.deserialize(buf2));
+        std::cout << pack3->toString() << std::endl;
+    }
     return 0;
 }

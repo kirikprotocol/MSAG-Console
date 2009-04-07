@@ -15,9 +15,11 @@ class CommandResponse : public StatusType
 protected:
     static smsc::logger::Logger* log_;
     
-public:
+protected:
     CommandResponse() : status_(UNKNOWN) {}
     CommandResponse( uint8_t status ) : status_(status) {}
+
+public:
     virtual ~CommandResponse() {}
 
     /// return true if the command content is valid.
@@ -38,7 +40,11 @@ public:
 
     inline bool isRequest() const { return false; }
     inline uint8_t getStatus() const { return status_; }
-    void setStatus( uint8_t status ) { status_ = status; }
+    inline void setStatus( uint8_t status ) { status_ = status; }
+
+    // for serialization
+    inline uint8_t getStatusValue() const { return getStatus(); }
+    inline void setStatusValue( uint8_t status ) { setStatus(status); }
 
 protected:
     virtual const char* typeToString() const = 0;

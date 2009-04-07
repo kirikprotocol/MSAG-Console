@@ -17,8 +17,7 @@ private:
     class BufferWriterVisitor : public RequestVisitor, public ResponseVisitor 
     {
     public:
-        BufferWriterVisitor( Buffer& buf ) : writer(buf), packet(0) {
-        }
+        BufferWriterVisitor( Buffer& buf ) : writer(buf) {}
 
         virtual bool visitPingRequest( PingRequest& req ) throw(PvapException) {
             PC_PING msg(&req);
@@ -123,14 +122,13 @@ private:
     private:
         BufferWriter writer;
         PVAP         pvap;
-        Packet*      packet;
     };
 
 
     class Handler : public PVAP::Handler
     {
     public:
-        Handler() : packet(0), pvap(this) {}
+        Handler( PVAP& basepvap ) : packet(0), pvap(this,basepvap.getOptions()) {}
         
         ~Handler() {
             if (packet) delete packet;
@@ -145,7 +143,6 @@ private:
             return p;
         }
 
-        virtual bool hasSeqNum( uint32_t ) const { return true; }
         virtual void handle( PC_ERR_RESP& obj )     { packet = obj.pop(); }
         virtual void handle( PC_PING& obj )         { packet = obj.pop(); }
         virtual void handle( PC_PING_RESP& obj )    { packet = obj.pop(); }
@@ -194,10 +191,13 @@ public:
      * NOTE: buf will be used only for reading, so it is safe to pass an extBuf.
      */
     virtual Packet* deserialize( Buffer& buf ) throw(PvapException) {
-        Handler h;
+        Handler h(pvap);
         return h.decode(buf);
     }
     
+    virtual void setOptions( unsigned options ) { pvap.setOptions(options); }
+    virtual unsigned getOptions() const { return pvap.getOptions(); }
+
 private:
     PVAP pvap;
 };

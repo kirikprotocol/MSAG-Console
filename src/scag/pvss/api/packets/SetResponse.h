@@ -10,7 +10,7 @@ class SetResponse : public BatchResponseComponent
 {
 public:
     SetResponse() : BatchResponseComponent() { initLog(); }
-    SetResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum) { initLog(); }
+    SetResponse( uint8_t status ) : BatchResponseComponent(status) { initLog(); }
     virtual ~SetResponse() { logDtor(); }
 
     virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {

@@ -18,6 +18,7 @@ class Response : public Packet, public StatusType
 protected:
     Response() : seqNum_(uint32_t(-1)) {}
     Response( uint32_t seqNum ) : seqNum_(seqNum) {}
+    // Response( const Response& other ); // default is ok
 
 public:
     virtual ~Response() {}
@@ -46,15 +47,10 @@ public:
     }
 
     // for serialization
-    // uint8_t getStatusValue() const { return uint8_t(status_); }
-    // void setStatusValue( uint8_t val ) { status_ = StatusType(val); }
+    inline uint8_t getStatusValue() const { return getStatus(); }
 
 protected:
     virtual const char* typeToString() const = 0;
-
-private:
-    // Response( const Response& );
-    // Response& operator = ( const Response& );
 
 protected:
     uint32_t   seqNum_;

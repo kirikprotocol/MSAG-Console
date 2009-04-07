@@ -7,7 +7,7 @@ message PC_ERR_RESP // 0x8000
     version 2.0
     property inheritsFrom="ErrorResponse"
     utf8 statusMessage 41
-    byte status 1
+    byte statusValue 1
 end
 
 message PC_PING       // 0x0006
@@ -18,7 +18,7 @@ end
 message PC_PING_RESP  // 0x8006
     version 2.0
     property inheritsFrom="PingResponse"
-    byte status 1
+    byte statusValue 1
 end
 
 message PC_AUTH       // 0x000a
@@ -33,7 +33,7 @@ end
 message PC_AUTH_RESP  // 0x800a
     version 2.0
     property inheritsFrom="AuthResponse"
-    byte status 1
+    byte statusValue 1
     byte   clientType  35 opt
     byte   sid         36 opt
 end

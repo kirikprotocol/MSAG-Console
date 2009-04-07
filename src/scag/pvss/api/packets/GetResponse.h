@@ -11,7 +11,7 @@ class GetResponse : public BatchResponseComponent, public HavingProperty
 {
 public:
     GetResponse() : BatchResponseComponent() { initLog(); }
-    GetResponse( uint32_t seqNum ) : BatchResponseComponent(seqNum) { initLog(); }
+    GetResponse( uint8_t status ) : BatchResponseComponent(status) { initLog(); }
     virtual ~GetResponse() { logDtor(); }
 
     virtual const Property& getProperty() const { return property_; }

@@ -47,9 +47,9 @@ public:
         virtual void handle( PC_PROFILE_RESP& obj ) = 0;
     };
 
-    PVAP() : handler(0) {}
+    PVAP( unsigned options = 0 ) : handler(0), options_(options) {}
 
-    PVAP( Handler* newHandler ) : handler(newHandler) {}
+    PVAP( Handler* newHandler, unsigned options = 0 ) : handler(newHandler), options_(options) {}
 
     /*
     void assignHandler( Handler* newHandler)
@@ -57,6 +57,9 @@ public:
         handler=newHandler;
     }
      */
+
+    inline unsigned getOptions() const { return options_; }
+    inline void setOptions( unsigned opt ) { options_ = opt; }
 
     void decodeMessage( BufferReader& ss ) throw (PvapException)
     {
@@ -184,6 +187,7 @@ public:
 
 protected:
     Handler* handler; // unowned
+    unsigned options_;
 };
 
 }

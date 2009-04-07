@@ -16,20 +16,17 @@ class ProfileRequest : public Request
 {
 public:
     ProfileRequest( ProfileCommand* cmd = 0 ) : command_(cmd), context_(0) { initLog(); }
-    // ProfileRequest( uint32_t seqNum, ProfileCommand* cmd = 0 ) : Request(seqNum), command_(cmd), context_(0) { initLog(); }
+    ProfileRequest( uint32_t seqNum, ProfileCommand* cmd = 0 ) : Request(seqNum), command_(cmd), context_(0) { initLog(); }
     ProfileRequest( const ProfileKey& profileKey, ProfileCommand* cmd = 0 ) : profileKey_(profileKey), command_(cmd), context_(0) { initLog(); }
     virtual ~ProfileRequest() {
         logDtor();
-        if (context_) smsc_log_warn( log_, "request %p has extra context %p at dtor", this, context_ );
-        if (command_) delete command_; 
+        if (context_) { smsc_log_warn( log_, "request %p has extra context %p at dtor", this, context_ ); }
+        if (command_) { delete command_; }
     }
 
     const ProfileKey& getProfileKey() const { return profileKey_; }
     ProfileKey& getProfileKey() { return profileKey_; }
     void setProfileKey( const ProfileKey& key ) { profileKey_ = key; }
-
-    // virtual uint32_t getSeqNum() const { return getCommand()->getSeqNum(); }
-    // virtual void setSeqNum( uint32_t seqNum ) { return getCommand()->setSeqNum(seqNum); }
 
     inline const ProfileCommand* getCommand() const { return command_; }
     inline ProfileCommand* getCommand() { return command_; }

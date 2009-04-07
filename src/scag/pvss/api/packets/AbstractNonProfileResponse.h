@@ -20,6 +20,9 @@ public:
     void setStatus( uint8_t status ) { status_ = status; }
     virtual void clear() { status_ = UNKNOWN; }
 
+    // for serialization
+    inline void setStatusValue( uint8_t status ) { status_ = status; }
+
 private:
     uint8_t status_;
 };

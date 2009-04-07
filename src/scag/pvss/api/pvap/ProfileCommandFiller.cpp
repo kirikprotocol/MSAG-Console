@@ -1,4 +1,5 @@
 #include "ProfileCommandFiller.h"
+#include "scag/pvss/api/packets/SerializedProfileCommand.h"
 #include "scag/pvss/api/pvap/generated-cpp/PVAP.hpp"
 #include "scag/pvss/api/pvap/generated-cpp/PVAPPROF.hpp"
 
@@ -85,23 +86,38 @@ void ProfileCommandFiller::serialize( const PVAP&, BufferWriter& writer ) const 
                                           "command response is not attached" );
     BufferFiller filler;
     if (!owner_->getCommand()->visit(filler)) {
-        throw PvapSerializationException( owner_->isRequest(),
-                                          owner_->getSeqNum(),
-                                          "unknown command response: %s",
-                                          owner_->getCommand()->toString().c_str() );
+        /// db: it may be ugly to use dynamic_cast here but still it is as it is.
+        SerializedProfileCommand* spc = dynamic_cast<SerializedProfileCommand*>(owner_->getCommand());
+        if ( spc ) {
+            Protocol::Buffer buf;
+            spc->setupBuffer(buf);
+            BufferWriter bw(buf);
+            writer.write(bw);
+        } else {
+            throw PvapSerializationException( owner_->isRequest(),
+                                              owner_->getSeqNum(),
+                                              "unknown command response: %s",
+                                              owner_->getCommand()->toString().c_str() );
+        }
+    } else {
+        writer.write(filler.getWriter());
     }
-    writer.write(filler.getWriter());
 }
 
 
-void ProfileCommandFiller::deserialize( PVAP&, BufferReader& reader ) throw (PvapException)
+void ProfileCommandFiller::deserialize( PVAP& pvap, BufferReader& reader ) throw (PvapException)
 {
     try {
         BufferReader subreader;
-        ::Handler h(*this);
-        PVAPPROF subproto(&h);
         reader.read( subreader );
-        subproto.decodeMessage( subreader );
+        if ( (pvap.getOptions() & Protocol::PASSBUFFER) != 0 ) {
+            // pass buffer as is
+            owner_->setCommand( new SerializedProfileCommand(subreader.getBuffer()) );
+        } else {
+            ::Handler h(*this);
+            PVAPPROF subproto(&h);
+            subproto.decodeMessage( subreader );
+        }
     } catch ( exceptions::IOException& e ) {
         throw PvapSerializationException( owner_->isRequest(),
                                           owner_->getSeqNum(),

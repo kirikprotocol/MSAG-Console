@@ -25,7 +25,7 @@ class PC_ERR_RESP
 {
 protected:
     static const int statusMessageTag = 41;
-    static const int statusTag = 1;
+    static const int statusValueTag = 1;
 
 public:
     PC_ERR_RESP() :
@@ -78,13 +78,13 @@ public:
                                               e.what() );
         }
         try {
-            // printf( "write pos=%d field=%d\n", ds.getPos(), statusTag );
-            writer.writeTag(statusTag);
-            writer.writeByteLV(data_->getStatus());
+            // printf( "write pos=%d field=%d\n", ds.getPos(), statusValueTag );
+            writer.writeTag(statusValueTag);
+            writer.writeByteLV(data_->getStatusValue());
         } catch ( exceptions::IOException e ) {
             throw PvapSerializationException( data_->isRequest(),
                                               getSeqNum(),
-                                              "writing field status in PC_ERR_RESP: %s",
+                                              "writing field statusValue in PC_ERR_RESP: %s",
                                               e.what() );
         }
         // optional fields
@@ -107,8 +107,8 @@ public:
                     data_->setStatusMessage(reader.readUTFLV());
                     break;
                 }
-                case statusTag: {
-                    data_->setStatus(reader.readByteLV());
+                case statusValueTag: {
+                    data_->setStatusValue(reader.readByteLV());
                     break;
                 }
                 default:

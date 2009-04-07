@@ -123,6 +123,8 @@ public:
 
     size_t getPos() const { return pos_; }
 
+    const Protocol::Buffer& getBuffer() const { return buf_; }
+
 protected:
     inline void rcheck( int sz ) const throw (exceptions::IOException) {
         if ( pos_+sz > size() ) throw ReadBeyondEof();

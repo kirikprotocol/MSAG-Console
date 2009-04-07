@@ -47,9 +47,7 @@ public:
 
     virtual BatchCommand* clone() const { return new BatchCommand(*this); }
 
-protected:
     virtual const char* typeToString() const { return "batch"; }
-    // virtual ResponseTypeMatch& getResponseTypeMatch() const;
 
 private:
     BatchCommand( const BatchCommand& cmd );

@@ -31,6 +31,7 @@ public:
     virtual uint32_t  getSeqNum() const = 0;
     virtual void setSeqNum( uint32_t seqNum ) = 0;
     virtual Packet* clone() const = 0;
+    virtual const char* typeToString() const = 0;
 
 protected:
     void initLog();
