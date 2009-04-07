@@ -170,7 +170,7 @@ void PvssDispatcher::init()
     }
 
     if ( !failure.empty() ) throw smsc::util::Exception(failure.c_str());
-    reportStatistics();
+    smsc_log_info(logger_,"all storages inited, stats: %s", reportStatistics().c_str());
 }
 
 
@@ -206,6 +206,7 @@ void PvssDispatcher::rebuildIndex()
         delete task;
     }
     if ( !failure.empty() ) throw smsc::util::Exception(failure.c_str());
+    smsc_log_info(logger_,"index rebuilding is finished");
 }
 
 
