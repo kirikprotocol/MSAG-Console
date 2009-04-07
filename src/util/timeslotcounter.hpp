@@ -2,6 +2,7 @@
 #define __SMSC_UTIL_TIMESLOTCOUNTER_HPP__
 
 #include <stdlib.h>
+//#include <vector>
 #include <algorithm>
 #ifndef _WIN32
 #include <sys/time.h>
@@ -46,7 +47,7 @@ public:
     slotsCount=(int)(nsec*1000UL/msecres);
     slotRes=msecres;
     slot=new T[slotsCount];
-    lastTime=0;
+    lastTime=gethrtime();
     first=0;
     last=0;
     slot[0]=init_v;
@@ -104,8 +105,9 @@ public:
     {
       //inc-=count-maxperslot*slotsCount-1;
       //count=maxperslot*slotsCount+1;
-      maxperslot+=(count-maxperslot*slotsCount+slotsCount/2)/slotsCount;
+      maxperslot+=(count-maxperslot*slotsCount)/slotsCount;
     }
+    if(first!=last)
     while(inc>0)
     {
       using namespace std;
@@ -120,7 +122,7 @@ public:
       if(l==first)break;
     }
     //count-=inc;
-    slot[first]+=inc;
+    slot[last]+=inc;
   }
 
   void IncEven(T inc)
@@ -148,6 +150,11 @@ public:
   {
     return slotRes;
   }
+  
+  /*void dump(std::vector<T>& v)
+  {
+    v.insert(v.begin(),slot,slot+slotsCount);
+  }*/
 
 protected:
   T *slot;
