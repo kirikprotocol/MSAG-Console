@@ -26,7 +26,7 @@ using smsc::inman::inap::_RCS_TC_Dialog;
 using smsc::inman::inap::TC_DlgError;
 
 #ifdef SMSEXTRA
-#define SMSX_WEB_GT "GT SMSXC"
+#define SMSX_WEB_GT "GT SMSCX"
 #endif /* SMSEXTRA */
 
 namespace smsc {
