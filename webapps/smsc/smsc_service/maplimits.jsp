@@ -26,11 +26,11 @@
     startSection(out, "dlglimit", "maplimits.dlglimit", true);
     startParams(out);
 
-    param(out, "in", "dlglimit.in", bean.getIntParam("dlglimit.in"));
-    param(out, "insri", "dlglimit.insri", bean.getIntParam("dlglimit.insri"));
-    param(out, "ussd", "dlglimit.ussd", bean.getIntParam("dlglimit.ussd"));
-    param(out, "out", "dlglimit.out", bean.getIntParam("dlglimit.out"));
-    param(out, "niussd", "dlglimit.niussd", bean.getIntParam("dlglimit.niussd"));
+    param(out, "maplimits.dlglimit.in", "dlglimit.in", bean.getIntParam("dlglimit.in"));
+    param(out, "maplimits.dlglimit.insri", "dlglimit.insri", bean.getIntParam("dlglimit.insri"));
+    param(out, "maplimits.dlglimit.ussd", "dlglimit.ussd", bean.getIntParam("dlglimit.ussd"));
+    param(out, "maplimits.dlglimit.outsri", "dlglimit.outsri", bean.getIntParam("dlglimit.outsri"));
+    param(out, "maplimits.dlglimit.niussd", "dlglimit.niussd", bean.getIntParam("dlglimit.niussd"));
 
     finishParams(out);
     finishSection(out);
@@ -39,9 +39,23 @@
     startSection(out, "ussd", "maplimits.ussd", true);
     startParams(out);
 
-    param(out, "no SRI codes", "ussd.no_sri_codes", bean.getStringParam("ussd.no_sri_codes"));
+    param(out, "maplimits.ussd.no_sri_codes", "ussd.no_sri_codes", bean.getStringParam("ussd.no_sri_codes"));
 
     finishParams(out);
+    finishSection(out);
+
+    //################################## clevels #############################
+    startSection(out, "clevels", "maplimits.clevels", true);
+    for( int ii = 1; ii <= 8; ii++ ) {
+      startSection(out, "clevels.level"+ii, "maplimits.clevels.level"+ii, true);
+      startParams(out);
+      param(out, "maplimits.clevels.level.dialogsLimit", "maplimits.clevels.level"+ii+".dialogsLimit", bean.getStringParam("maplimits.clevels.level"+ii+".dialogsLimit"));
+      param(out, "maplimits.clevels.level.failUpperLimit", "maplimits.clevels.level"+ii+".failUpperLimit", bean.getStringParam("maplimits.clevels.level"+ii+".failUpperLimit"));
+      param(out, "maplimits.clevels.level.failLowerLimit", "maplimits.clevels.level"+ii+".failLowerLimit", bean.getStringParam("maplimits.clevels.level"+ii+".failLowerLimit"));
+      param(out, "maplimits.clevels.level.okToLower", "maplimits.clevels.level"+ii+".okToLower", bean.getStringParam("maplimits.clevels.level"+ii+".okToLower"));
+      finishParams(out);
+      finishSection(out);
+    }
     finishSection(out);
 %>
 </div>
