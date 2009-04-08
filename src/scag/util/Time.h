@@ -19,6 +19,7 @@ inline msectime_type currentTimeMillis()
 namespace scag {
 namespace util {
 using scag2::util::currentTimeMillis;
+using scag2::util::msectime_type;
 }
 }
 

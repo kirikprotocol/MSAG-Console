@@ -30,14 +30,15 @@ public:
                         const std::string& dbpath,
                         int indexGrowth = 1000000,
                         bool cleanup = false,
-                        smsc::logger::Logger* thelog = 0 ) :
+                        smsc::logger::Logger* thelog = 0,
+                        bool fullRecovery = false ) :
     index_(0,0,thelog),
     cacheaddr_(0),
     cache_(0),
     invalid_(0),
     goodNodesCount_(0)
     {
-        allocator_.reset( new IndexAllocator(thelog) );
+        allocator_.reset( new IndexAllocator(thelog,fullRecovery) );
         if ( allocator_->Init( dbpath + '/' + dbname + "-index",
                                indexGrowth,
                                cleanup) < 0 ) {
@@ -50,6 +51,14 @@ public:
     }
 
     ~RBTreeIndexStorage() {
+        flush();
+    }
+
+
+    /// flush index allocator in case of fullRecovery
+    void flush( unsigned maxSpeedkBPerSec = 0 )
+    {
+        allocator_->flush( maxSpeedkBPerSec );
     }
 
 

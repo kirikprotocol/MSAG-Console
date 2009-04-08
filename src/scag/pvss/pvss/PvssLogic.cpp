@@ -256,9 +256,11 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index )
     } catch (...) {}
 
     /// create a temporary index file
+    const bool fullRecovery = true;
     std::auto_ptr< DiskIndexStorage > dis
         (new DiskIndexStorage( config_.dbName + "-temp", path, config_.indexGrowth, false,
-                               smsc::logger::Logger::getInstance(("pvssix."+pathSuffixString).c_str())));
+                               smsc::logger::Logger::getInstance(("pvssix."+pathSuffixString).c_str()),
+                               fullRecovery ));
     dis->setInvalidIndex( DiskDataStorage::storage_type::invalidIndex() );
     smsc_log_debug(logger_, "temporary data index storage %u is created", index);
 
@@ -273,6 +275,7 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index )
         dis->setIndex(iter.key(),iter.blockIndex());
         ++rebuilt;
     }
+    dis->flush();
     smsc_log_info( logger_, "storage %s indices rebuilt: %lu", path.c_str(), rebuilt );
 
     rename( n.c_str(), o.c_str() );

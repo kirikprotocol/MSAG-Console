@@ -24,6 +24,7 @@
 #include "logger/Logger.h"
 #include "core/buffers/File.hpp"
 #include "scag/util/storage/Serializer.h"
+#include "scag/util/Time.h"
 
 namespace scag {
 namespace util {
@@ -121,12 +122,14 @@ public:
     static const int RBTREE_FILE_ERROR		= -10;
     static const int ATTEMPT_INIT_RUNNING_PROC	= -20;
 
-    RBTreeHSAllocator( smsc::logger::Logger* thelog ):
+    RBTreeHSAllocator( smsc::logger::Logger* thelog,
+                       bool fullRecovery = false ):
     growth(1000000),
     running(false),
     currentOperation(0),
     logger(thelog),
-    rbtFileHeaderDump_(rbtFileHeaderBuf_)
+    rbtFileHeaderDump_(rbtFileHeaderBuf_),
+    fullRecovery_(fullRecovery)
     {
     }
 
@@ -158,10 +161,48 @@ public:
     virtual ~RBTreeHSAllocator()
     {
         if (running) running = false;
+        if ( fullRecovery_ ) flush();
         for ( std::vector< caddr_t >::iterator i = chunks_.begin();
               i != chunks_.end(); ++i ) {
             delete *i;
         }
+    }
+
+
+    /// Flush recovered nodes to disk
+    void flush( unsigned maxSpeed = 0 )
+    {
+        if (!fullRecovery_) return;
+        if (logger) smsc_log_info(logger,"flushing all %u nodes to disk, maxspeed = %u kB/sec",
+                                  header_.cells_count, maxSpeed );
+        util::msectime_type currentTime, startTime;
+        currentTime = startTime = util::currentTimeMillis();
+        uint64_t writtenSize = 0;
+        smsc::core::synchronization::EventMonitor evm;
+        MutexGuard mg(evm);
+        for ( std::vector< caddr_t >::iterator i = chunks_.begin();
+              i != chunks_.end();
+              ++i ) {
+            uint32_t startcell = (i-chunks_.begin())*growth;
+            writeCells(startcell,growth);
+            if ( maxSpeed == 0 ) { continue; } // no limits
+
+            // waiting...
+            currentTime = util::currentTimeMillis();
+            writtenSize += growth * header_.persistentCellSize;
+            util::msectime_type expectedTime = writtenSize / maxSpeed; // bytes/(kBytes/sec) == msec
+            util::msectime_type elapsedTime = currentTime - startTime;
+            if ( elapsedTime < expectedTime ) {
+                // ...if we are too fast
+                evm.wait(expectedTime-elapsedTime);
+            }
+        }
+        // write header
+        serializeRbtHeader(rbtFileHeaderDump_, header_);
+        rbtree_f.Seek(0, SEEK_SET);
+        rbtree_f.Write( rbtFileHeaderDump_.data(), rbtFileHeaderDump_.size());
+        rbtree_f.Flush();
+        fullRecovery_ = false;
     }
 
 
@@ -231,6 +272,7 @@ public:
 
     virtual void startChanges( nodeptr_type node, int operation )
     {
+        if ( fullRecovery_ ) return;
         if ( changedNodes.size() > 0 ) completeChanges();
         if (logger) smsc_log_debug(logger, "startChanges. node = (%ld)%p, operation = %d", (long)node, realAddr(node), operation);
         currentOperation = operation;
@@ -239,12 +281,14 @@ public:
 
     virtual void nodeChanged( nodeptr_type node)
     {
+        if ( fullRecovery_ ) return;
         //	    smsc_log_debug(logger, "Node changed=%d(%p)", node2addr(node), node);
         changedNodes.push_back(node);
     }
 
     virtual void completeChanges(void)
     {
+        if ( fullRecovery_ ) return;
         //	    smsc_log_debug(logger, "completeChanges=%d", changedNodes.size());
         // changedNodes.sort();
         // changedNodes.unique();
@@ -398,18 +442,17 @@ private:
             serializeRbtHeader(rbtFileHeaderDump_, header_);
         }
 
-        {
+        if ( fullRecovery_ ) {
+            // we don't write things to disk in this case,
+            // instead we only seek to the end of file and write one byte
+            rbtree_f.Seek( rbtFileHeaderDump_.size() + 
+                           header_.persistentCellSize*(startcell+realgrowth) - 1,
+                           SEEK_SET );
+            uint8_t dummy = 0;
+            rbtree_f.Write(&dummy,1);
+        } else {
             // writing new cells to disk
-            std::vector< unsigned char > buf;
-            buf.reserve(header_.persistentCellSize*realgrowth);
-            Serializer ss(buf);
-            ss.setVersion(header_.version);
-            rbtree_f.Seek( rbtFileHeaderDump_.size() + header_.persistentCellSize*startcell, SEEK_SET );
-            for ( nodeptr_type i = 0; i < realgrowth; ++i ) {
-                // ss.reset();
-                serializeCell(ss, addr2node(startcell++) );
-            }
-            rbtree_f.Write(ss.data(), ss.size() );
+            writeCells( startcell, realgrowth );
         }
 
         if ( creation ) {
@@ -433,6 +476,22 @@ private:
         // check nodes
         // freenodes();
         return SUCCESS;
+    }
+
+
+    /// write a realgrowth number of cells to disk starting from startcell.
+    void writeCells( nodeptr_type startcell, int32_t realgrowth )
+    {
+        std::vector< unsigned char > buf;
+        buf.reserve(header_.persistentCellSize*realgrowth);
+        Serializer ss(buf);
+        ss.setVersion(header_.version);
+        rbtree_f.Seek(rbtFileHeaderDump_.size() + header_.persistentCellSize*startcell, SEEK_SET);
+        for ( nodeptr_type i = 0; i < realgrowth; ++i ) {
+            // ss.reset();
+            serializeCell(ss, addr2node(startcell++) );
+        }
+        rbtree_f.Write(ss.data(), ss.size() );
     }
 
 
@@ -919,6 +978,8 @@ private:
     // a buffer where serialized cells are kept during transaction
     std::vector< nodeptr_type >  transactionNodes_;
     std::vector< unsigned char > transactionBuf_;
+
+    bool                         fullRecovery_;    // a flag telling that full recovery in progress
 };
 
 } // namespace storage
