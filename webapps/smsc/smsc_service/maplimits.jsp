@@ -49,10 +49,10 @@
     for( int ii = 1; ii <= 8; ii++ ) {
       startSection(out, "clevels.level"+ii, "maplimits.clevels.level"+ii, true);
       startParams(out);
-      param(out, "maplimits.clevels.level.dialogsLimit", "clevels.level"+ii+".dialogsLimit", bean.getStringParam("clevels.level"+ii+".dialogsLimit"));
-      param(out, "maplimits.clevels.level.failUpperLimit", "clevels.level"+ii+".failUpperLimit", bean.getStringParam("clevels.level"+ii+".failUpperLimit"));
-      param(out, "maplimits.clevels.level.failLowerLimit", "clevels.level"+ii+".failLowerLimit", bean.getStringParam("clevels.level"+ii+".failLowerLimit"));
-      param(out, "maplimits.clevels.level.okToLower", "clevels.level"+ii+".okToLower", bean.getStringParam("clevels.level"+ii+".okToLower"));
+      param(out, "maplimits.clevels.level.dialogsLimit", "clevels.level"+ii+".dialogsLimit", bean.getIntParam("clevels.level"+ii+".dialogsLimit"));
+      param(out, "maplimits.clevels.level.failUpperLimit", "clevels.level"+ii+".failUpperLimit", bean.getIntParam("clevels.level"+ii+".failUpperLimit"));
+      param(out, "maplimits.clevels.level.failLowerLimit", "clevels.level"+ii+".failLowerLimit", bean.getIntParam("clevels.level"+ii+".failLowerLimit"));
+      param(out, "maplimits.clevels.level.okToLower", "clevels.level"+ii+".okToLower", bean.getIntParam("clevels.level"+ii+".okToLower"));
       finishParams(out);
       finishSection(out);
     }
