@@ -111,10 +111,12 @@ public class TaskManager {
     modified = true;
   }
 
-  public synchronized void removeTask(String id, Config cfg) throws AdminException {
+  public synchronized boolean removeTask(String id, Config cfg) throws AdminException {
     try {
-      if (tasks.remove(id) != null)
-        cfg.removeSection(TASKS_PREFIX + '.' + id);      
+      boolean removed = tasks.remove(id) != null;
+      if (removed)
+        cfg.removeSection(TASKS_PREFIX + '.' + id);
+      return removed;
     } catch (Exception e) {
       e.printStackTrace();
       throw new AdminException(e.getMessage());

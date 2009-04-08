@@ -105,6 +105,10 @@ public class Deliveries extends InfoSmeBean {
     return pageData.transactionMode;
   }
 
+  public boolean isFileContainsText() {
+    return this.pageData.deliveriesFileContainsText;
+  }
+
   public void setTransactionMode(boolean val) {
     this.pageData.transactionMode = val;
   }

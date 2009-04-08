@@ -4,6 +4,7 @@ import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.region.Region;
 import ru.novosoft.smsc.admin.route.Subject;
 import ru.novosoft.smsc.admin.users.User;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.BlackListManager;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.radixtree.TemplatesRadixTree;
@@ -40,6 +41,7 @@ public class LoadDeliveriesFileThread extends Thread {
 
   private volatile boolean started = true;
   private volatile int status = 0;
+  private String statusStr;
 
   public LoadDeliveriesFileThread(File inputFile, InfoSmeContext infoSmeContext, boolean splitFile, SMSCAppContext appContext, User user) {
     this.infoSmeContext = infoSmeContext;
@@ -57,6 +59,10 @@ public class LoadDeliveriesFileThread extends Thread {
 
   public int getStatus() {
     return status;
+  }
+
+  public String getStatusStr() {
+    return statusStr;
   }
 
   public Progress getProgress() {
@@ -83,17 +89,28 @@ public class LoadDeliveriesFileThread extends Thread {
       try {
         is = new BufferedReader(new FileReader(inputFile));
 
-        String msisdn;
+        String line;
+        Boolean containsText = null;
         DeliveriesFile deliveriesFile;
-        while (started && (msisdn = is.readLine()) != null) {
+        while (started && (line = is.readLine()) != null) {
           progress.recordsProcessed++;
 
-          msisdn = msisdn.trim();
-          if (msisdn.length() == 0)
+          line = line.trim();
+          if (line.length() == 0)
             continue;
 
-          if (!msisdn.startsWith("+"))
-            msisdn = '+' + msisdn;
+          int i= line.indexOf("|");
+
+          if (containsText != null) {
+              if (containsText.booleanValue() != i > 0)
+                throw new AdminException("Invalid file format");
+            } else
+              containsText = Boolean.valueOf(i > 0);
+
+          if (!line.startsWith("+"))
+            line = '+' + line;
+
+          String msisdn = i > 0 ? line.substring(0, i).trim() : line;
 
           if (blm.contains(msisdn)) {
             progress.inblackList++;
@@ -103,7 +120,9 @@ public class LoadDeliveriesFileThread extends Thread {
           deliveriesFile = (DeliveriesFile)radixTree.getValue(msisdn);
           if (deliveriesFile != null) {
             // Add MSISDN to file
-            deliveriesFile.addMsisdn(msisdn);
+            deliveriesFile.addLine(line);
+            deliveriesFile.setContainsTexts(containsText.booleanValue());
+
             if (!outputFiles.containsKey(new Integer(deliveriesFile.getRegion()))) {
               outputFiles.put(new Integer(deliveriesFile.getRegion()), deliveriesFile);
               progress.subjectsFound++;
@@ -135,6 +154,7 @@ public class LoadDeliveriesFileThread extends Thread {
 
     } catch (Throwable e) {
       e.printStackTrace();
+      this.statusStr = e.getMessage();
       this.status = STATUS_ERROR;
     }
   }

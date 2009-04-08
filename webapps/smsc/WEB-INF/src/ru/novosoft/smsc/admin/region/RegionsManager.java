@@ -28,6 +28,8 @@ public class RegionsManager {
   private String defaultEmail;
   private int id = 0;
 
+  private boolean modified = false;
+
   public static RegionsManager getInstance() throws AdminException {
     if (instance == null)
       instance = new RegionsManager();
@@ -52,12 +54,14 @@ public class RegionsManager {
     }
 
     regions.put(new Integer(region.getId()), region);
+
+    modified = true;
   }
 
   public synchronized void removeRegion(int id) throws AdminException {
     try {
       regions.remove(new Integer(id));
-
+      modified = true;
     } catch (Exception e) {
       log.error(e,e);
       throw new AdminException("Can't add region. Reason: " + e.getMessage());
@@ -104,6 +108,7 @@ public class RegionsManager {
         defaultEmail = defRegion.getAttribute("email");
       }
 
+      modified = false;
     } catch (Exception e) {
       log.error(e,e);
       throw new AdminException("Can't add region. Reason: " + e.getMessage());
@@ -150,6 +155,7 @@ public class RegionsManager {
       }
       out.println("  <region_default bandwidth=\"" + defaultBandwidth + "\"" + (defaultEmail==null || defaultEmail.length() == 0 ? "" : " email=\"" + defaultEmail + "\" ") + "/>");
       Functions.storeConfigFooter(out, "regions");
+      modified = false;
     } catch (IOException e) {
       log.error(e,e);
       throw new AdminException("Can't save regions. Reason: " + e.getMessage());
@@ -185,6 +191,7 @@ public class RegionsManager {
   }
 
   public synchronized void setDefaultBandwidth(int defaultBandwidth) {
+    modified = modified || defaultBandwidth != this.defaultBandwidth;
     this.defaultBandwidth = defaultBandwidth;
   }
 
@@ -193,6 +200,15 @@ public class RegionsManager {
   }
 
   public synchronized void setDefaultEmail(String defaultEmail) {
+    modified = modified || !defaultEmail.equals(this.defaultEmail);      
     this.defaultEmail = defaultEmail;
+  }
+
+  protected void setModified() {
+    modified = true;
+  }
+
+  public boolean isModified() {
+    return modified;
   }
 }

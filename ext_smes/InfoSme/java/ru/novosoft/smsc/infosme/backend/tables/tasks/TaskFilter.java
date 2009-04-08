@@ -37,26 +37,22 @@ public class TaskFilter implements Filter {
   }
 
   public boolean isItemAllowed(DataItem item) {
-    TaskDataItem i = (TaskDataItem)item;
+    TaskDataItem i = (TaskDataItem) item;
     if (name != null && !i.getName().startsWith(name))
       return false;
-    if (startDate != null && i.getEndDate()!= null && i.getEndDate().before(startDate))
+    if (startDate != null && i.getEndDate() != null && i.getEndDate().before(startDate))
       return false;
     if (endDate != null && i.getStartDate() != null && i.getStartDate().after(endDate))
       return false;
-    if (active != null && active.booleanValue()) {
+    if (active != null) {
       Date now = new Date();
-      if (!i.isEnabled() || !(i.getStartDate().before(now) && i.getEndDate() == null || i.getEndDate().after(now)))
-        return false;
-    }
-    if (active != null && !active.booleanValue()) {
-      Date now = new Date();
-      if (i.isEnabled() && (i.getStartDate().before(now) && (i.getEndDate() == null || i.getEndDate().after(now))))
+      boolean isEventActive = i.isEnabled() && i.getStartDate().before(now) && (i.getEndDate() == null || i.getEndDate().after(now));
+      if (isEventActive != active.booleanValue())
         return false;
     }
     if (owner != null && i.getOwner() != null && !i.getOwner().equals(owner))
       return false;
-    
+
     return true;
   }
 

@@ -7,6 +7,7 @@ import ru.novosoft.smsc.util.config.Config;
 
 import java.util.*;
 import java.text.SimpleDateFormat;
+import java.io.File;
 
 /**
  * Created by IntelliJ IDEA.
@@ -68,6 +69,8 @@ public class Task extends Observable
 
   // for new deliveries
   private int regionId;
+  private File deliveriesFile;
+  private boolean deliveriesFileContainsTexts;
   private int actualRecordsSize;
   private boolean messagesHaveLoaded = false;
   // for secret
@@ -611,6 +614,22 @@ public class Task extends Observable
   public void setOwner(String owner) {
     this.owner = owner == null ? "" : owner;
     modified = true;
+  }
+
+  public File getDeliveriesFile() {
+    return deliveriesFile;
+  }
+
+  public void setDeliveriesFile(File deliveriesFile) {
+    this.deliveriesFile = deliveriesFile;
+  }
+
+  public boolean isDeliveriesFileContainsTexts() {
+    return deliveriesFileContainsTexts;
+  }
+
+  public void setDeliveriesFileContainsTexts(boolean deliveriesFileContainsTexts) {
+    this.deliveriesFileContainsTexts = deliveriesFileContainsTexts;
   }
 
   public void setModified(boolean modified) {

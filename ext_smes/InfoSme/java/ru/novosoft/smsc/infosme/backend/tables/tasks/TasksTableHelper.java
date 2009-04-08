@@ -61,11 +61,10 @@ public class TasksTableHelper extends PagedStaticTableHelper {
     addColumn(enabledColumn);
     addColumn(idColumn);
     addColumn(nameColumn);
-
+    addColumn(startDateColumn);
+    addColumn(endDateColumn);
 
     if (mode == MODE_MARKET) {
-      addColumn(startDateColumn);
-      addColumn(endDateColumn);
       addColumn(generatingColumn);
       addColumn(processingColumn);
     } else if (mode == MODE_ADMIN_ACTIVE) {
@@ -74,7 +73,6 @@ public class TasksTableHelper extends PagedStaticTableHelper {
       addColumn(processingColumn);
       addColumn(priorityColumn);
       addColumn(trackIntegrityColumn);
-      addColumn(endDateColumn);
     } else {
       addColumn(ownerColumn);
       addColumn(providerColumn);
@@ -82,8 +80,8 @@ public class TasksTableHelper extends PagedStaticTableHelper {
       addColumn(processingColumn);
       addColumn(priorityColumn);
       addColumn(retryOnFailColumn);
-      addColumn(replaceMessageColumn);
-      addColumn(trackIntegrityColumn);
+//      addColumn(replaceMessageColumn);
+//      addColumn(trackIntegrityColumn);
     }
   }
 
@@ -124,7 +122,8 @@ public class TasksTableHelper extends PagedStaticTableHelper {
         filter.setEndDate(user.getLocalTime(filter.getEndDate()));
     }
 
-    QueryResultSet rs = tds.query(new TaskQuery(filter, start + size + 1, sortOrder, start));
+    System.out.println("Sort order = " + sortOrder);
+    QueryResultSet rs = tds.query(new TaskQuery(filter, size, sortOrder, start));
 
     // Convert back from local to user time
     if (filter != null) {
@@ -138,7 +137,7 @@ public class TasksTableHelper extends PagedStaticTableHelper {
     SimpleDateFormat df = new SimpleDateFormat("dd.MM.yy HH:mm");
 
     clear();
-    for (int i=start; i < start + size && i < rs.size(); i++) {
+    for (int i=0; i < size && i < rs.size(); i++) {
       TaskDataItem t = (TaskDataItem)rs.get(i);
       final Row row = createNewRow();
       row.addCell(checkColumn, new CheckBoxCell("chb" + t.getId(), false));

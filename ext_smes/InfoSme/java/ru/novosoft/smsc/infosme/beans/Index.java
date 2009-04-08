@@ -5,6 +5,7 @@ import ru.novosoft.smsc.infosme.backend.config.ConfigChanges;
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskFilter;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TasksTableHelper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Iterator;
@@ -20,6 +21,7 @@ public class Index extends IndexProperties
 {
   public Index() {
     super(new TaskFilter(true));
+    setTableHelperMode(TasksTableHelper.MODE_ADMIN_ACTIVE, false);
   }
 
   protected int reset(HttpServletRequest req)
@@ -46,7 +48,7 @@ public class Index extends IndexProperties
 
     try {
       String user = isUserAdmin(req) ? null : req.getRemoteUser();
-      getInfoSmeConfig().reset(user, options, tasks, schedules, retries, providers, drivers);
+      getInfoSmeConfig().reset(req.getRemoteUser(), user, options, tasks, schedules, retries, providers, drivers);
     } catch (Throwable e) {
       logger.error("Could not reload schedules", e);
       result = error("infosme.error.reload_schedules", e);
@@ -75,7 +77,7 @@ public class Index extends IndexProperties
       }
       String user = isUserAdmin(req) ? null : req.getRemoteUser();
 
-      ConfigChanges changes = getInfoSmeConfig().apply(user, options, tasks, schedules, retries, providers, drivers);
+      ConfigChanges changes = getInfoSmeConfig().apply(req.getRemoteUser(), user, options, tasks, schedules, retries, providers, drivers);
       if (tasks) {
         // Notify InfoSme about new tasks
         for (Iterator iter = changes.getTasksChanges().getAdded().iterator(); iter.hasNext();)

@@ -83,6 +83,10 @@ public class InfoSmeContext implements SMEAppContext
     return providersSort;
   }
 
+  public SMSCAppContext getAppContext() {
+    return appContext;
+  }
+
   public void setProvidersSort(String providersSort)
   {
     this.providersSort = providersSort;

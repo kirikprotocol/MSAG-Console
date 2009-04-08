@@ -26,7 +26,7 @@ public class FinishPage extends DeliveriesPage {
       if (t != null) {
         if (log.isDebugEnabled())
           log.debug("Remove " + t.getName() + " from config: " + t.getId());
-        pageData.getInfoSmeContext().getInfoSmeConfig().removeAndApplyTask(t.getId());
+        pageData.getInfoSmeContext().getInfoSmeConfig().removeAndApplyTask(t.getOwner(), t.getId());
         try {
           pageData.getInfoSmeContext().getInfoSme().removeTask(t.getId());
         } catch (Throwable e) {
@@ -41,9 +41,9 @@ public class FinishPage extends DeliveriesPage {
       if (pageData.secret) {
         try {
           SmsXSender smsxSender = pageData.getAppContext().getSmsXSender();
-          for (Iterator iter = pageData.getInputFiles().values().iterator(); iter.hasNext();) {
-            File f = (File)iter.next();
-            SmsXSenderResponse r = smsxSender.batchSecret(pageData.sourceAddress, pageData.secretText, pageData.secretFlash, f);
+          for (Iterator iter = pageData.getTask().iterator(); iter.hasNext();) {
+            Task t = (Task)iter.next();
+            SmsXSenderResponse r = smsxSender.batchSecret(pageData.sourceAddress, pageData.secretText, pageData.secretFlash, t.getDeliveriesFile());
             if (r.getStatus() != 0)
               throw new AdminException("Batch secret error: code=" + r.getStatus());
           }

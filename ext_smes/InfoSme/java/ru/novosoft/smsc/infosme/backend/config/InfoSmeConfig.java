@@ -1,6 +1,9 @@
 package ru.novosoft.smsc.infosme.backend.config;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.config.driver.Driver;
 import ru.novosoft.smsc.infosme.backend.config.driver.DriverManager;
@@ -82,7 +85,7 @@ public class InfoSmeConfig {
     }
   }
 
-  private void checkConfiguration(TaskManager taskManager, ScheduleManager scheduleManager, RetryPolicyManager retryManager) throws AdminException {
+  private static void checkConfiguration(TaskManager taskManager, ScheduleManager scheduleManager, RetryPolicyManager retryManager) throws AdminException {
     // Check schedules
     for (Iterator iter = scheduleManager.getSchedules().iterator(); iter.hasNext();) {
       Schedule s = (Schedule)iter.next();
@@ -101,7 +104,7 @@ public class InfoSmeConfig {
     }
   }
 
-  public ConfigChanges apply(String user, boolean options, boolean tasks, boolean schedules, boolean retries, boolean providers, boolean drivers) throws AdminException {
+  public ConfigChanges apply(String user, String owner, boolean options, boolean tasks, boolean schedules, boolean retries, boolean providers, boolean drivers) throws AdminException {
     try {
       Config cfg = ctx.loadCurrentConfig();
 
@@ -111,15 +114,16 @@ public class InfoSmeConfig {
       RetryPolicyManager rpm = retries ? retryPolicyManager : new RetryPolicyManager(cfg);
       checkConfiguration(tm, sm, rpm);
 
-      Changes tasksChanges = null, schedulesChanges = null;
+      // Apply changes
+      Changes tasksChanges = null, schedulesChanges = null, policiesChanges = null;
       if (options)
         applyOptions(cfg);
       if (tasks)
-        tasksChanges = taskManager.applyTasks(user, cfg);
+        tasksChanges = taskManager.applyTasks(owner, cfg);
       if (schedules)
         schedulesChanges = scheduleManager.applySchedules(cfg);
       if (retries)
-        retryPolicyManager.applyRetryPolicies(cfg);
+        policiesChanges = retryPolicyManager.applyRetryPolicies(cfg);
       if (providers)
         providerManager.applyProviders(cfg);
       if (drivers)
@@ -127,10 +131,49 @@ public class InfoSmeConfig {
 
       cfg.save();
 
+      // Journal changes
+      Journal j = ctx.getAppContext().getJournal();
+      if (tasks) {
+        for (Iterator iter = tasksChanges.getAdded().iterator(); iter.hasNext();)
+          j.append(user, "", SubjectTypes.TYPE_infosme, (String)iter.next(), Actions.ACTION_ADD, "Type", "Task");
+        for (Iterator iter = tasksChanges.getDeleted().iterator(); iter.hasNext();)
+          j.append(user, "", SubjectTypes.TYPE_infosme, (String)iter.next(), Actions.ACTION_DEL, "Type", "Task");
+        for (Iterator iter = tasksChanges.getModified().iterator(); iter.hasNext();)
+          j.append(user, "", SubjectTypes.TYPE_infosme, (String)iter.next(), Actions.ACTION_MODIFY, "Type", "Task");
+      }
+
+      if (schedules) {
+        for (Iterator iter = schedulesChanges.getAdded().iterator(); iter.hasNext();)
+          j.append(user, "", SubjectTypes.TYPE_infosme, (String)iter.next(), Actions.ACTION_ADD, "Type", "Schedule");
+        for (Iterator iter = schedulesChanges.getDeleted().iterator(); iter.hasNext();)
+          j.append(user, "", SubjectTypes.TYPE_infosme, (String)iter.next(), Actions.ACTION_DEL, "Type", "Schedule");
+        for (Iterator iter = schedulesChanges.getModified().iterator(); iter.hasNext();)
+          j.append(user, "", SubjectTypes.TYPE_infosme, (String)iter.next(), Actions.ACTION_MODIFY, "Type", "Schedule");
+      }
+
+      if (retries) {
+        for (Iterator iter = policiesChanges.getAdded().iterator(); iter.hasNext();)
+          j.append(user, "", SubjectTypes.TYPE_infosme, (String)iter.next(), Actions.ACTION_ADD, "Type", "Retry Policy");
+        for (Iterator iter = policiesChanges.getDeleted().iterator(); iter.hasNext();)
+          j.append(user, "", SubjectTypes.TYPE_infosme, (String)iter.next(), Actions.ACTION_DEL, "Type", "Retry Policy");
+        for (Iterator iter = policiesChanges.getModified().iterator(); iter.hasNext();)
+          j.append(user, "", SubjectTypes.TYPE_infosme, (String)iter.next(), Actions.ACTION_MODIFY, "Type", "Retry Policy");
+      }
+
+      if (options && optionsModified)
+        j.append(user, "", SubjectTypes.TYPE_infosme, "Options", Actions.ACTION_SAVE, "Type", "Options");
+
+      if (drivers && driverManager.isDriversChanged())
+        j.append(user, "", SubjectTypes.TYPE_infosme, "Drivers", Actions.ACTION_MODIFY, "Type", "Drivers");
+
+      if (providers && providerManager.isProvidersChanged())
+        j.append(user, "", SubjectTypes.TYPE_infosme, "Providers", Actions.ACTION_MODIFY, "Type", "Providers");
+
+      // Clear configuration
       if (options)
         optionsModified = false;
       if (tasks)
-        taskManager.setModified(false, user);
+        taskManager.setModified(false, owner);
       if (schedules)
         scheduleManager.setModified(false);
       if (retries)
@@ -140,29 +183,42 @@ public class InfoSmeConfig {
       if (drivers)
         driverManager.setModified(false);
 
-      return new ConfigChanges(schedulesChanges, tasksChanges);
+      return new ConfigChanges(schedulesChanges, tasksChanges, policiesChanges);
     } catch (Throwable e) {
       e.printStackTrace();
       throw new AdminException(e.getMessage());
     }
   }
 
-  public void reset(String user, boolean options, boolean tasks, boolean schedules, boolean retries, boolean providers, boolean drivers) throws AdminException {
+  public void reset(String user, String owner, boolean options, boolean tasks, boolean schedules, boolean retries, boolean providers, boolean drivers) throws AdminException {
     try {
       Config cfg = ctx.loadCurrentConfig();            
 
-      if (options)
+      Journal j = ctx.getAppContext().getJournal();
+      if (options) {
         resetOptions(cfg);
-      if (tasks)
-        taskManager.resetTasks(user, cfg);
-      if (schedules)
+        j.append(user, "", SubjectTypes.TYPE_infosme, "Options", Actions.ACTION_RESTORE);
+      }
+      if (tasks) {
+        taskManager.resetTasks(owner, cfg);
+        j.append(user, "", SubjectTypes.TYPE_infosme, "Tasks", Actions.ACTION_RESTORE);
+      }
+      if (schedules) {
         scheduleManager.resetSchedules(cfg);
-      if (retries)
+        j.append(user, "", SubjectTypes.TYPE_infosme, "Schedules", Actions.ACTION_RESTORE);
+      }
+      if (retries) {
         retryPolicyManager.resetRetryPolicies(cfg);
-      if (providers)
+        j.append(user, "", SubjectTypes.TYPE_infosme, "Retry Policies", Actions.ACTION_RESTORE);
+      }
+      if (providers) {
         providerManager.resetProviders(cfg);
-      if (drivers)
+        j.append(user, "", SubjectTypes.TYPE_infosme, "Providers", Actions.ACTION_RESTORE);
+      }
+      if (drivers) {
         driverManager.resetDrivers(cfg);
+        j.append(user, "", SubjectTypes.TYPE_infosme, "Drivers", Actions.ACTION_RESTORE);
+      }
 
     } catch (Throwable e) {
       e.printStackTrace();
@@ -184,8 +240,10 @@ public class InfoSmeConfig {
   public void addAndApplyTask(Task t) throws AdminException {
     try {
       Config cfg = ctx.loadCurrentConfig();
+      boolean modified = taskManager.containsTaskWithId(t.getId());
       taskManager.addTask(t, cfg);
       cfg.save();
+      ctx.getAppContext().getJournal().append(t.getOwner(), "", SubjectTypes.TYPE_infosme, t.getId(), modified ? Actions.ACTION_MODIFY : Actions.ACTION_ADD, "Type", "Task");
     } catch (Throwable e) {
       e.printStackTrace();
       throw new AdminException(e.getMessage());
@@ -196,11 +254,13 @@ public class InfoSmeConfig {
     taskManager.removeTask(id);
   }
 
-  public void removeAndApplyTask(String id) throws AdminException {
+  public void removeAndApplyTask(String user, String id) throws AdminException {
     try {
       Config cfg = ctx.loadCurrentConfig();
-      taskManager.removeTask(id, cfg);
-      cfg.save();
+      if (taskManager.removeTask(id, cfg)) {
+        cfg.save();
+        ctx.getAppContext().getJournal().append(user, "", SubjectTypes.TYPE_infosme, id, Actions.ACTION_DEL, "Type", "Task");
+      }
     } catch (Throwable e) {
       e.printStackTrace();
       throw new AdminException(e.getMessage());

@@ -11,6 +11,7 @@ import java.util.Collections;
 public class DeliveriesFile {
 
   private int region;
+  private boolean containsTexts;
   private final File file;
   private OutputStream os;
   private final ArrayList buffer;
@@ -24,7 +25,15 @@ public class DeliveriesFile {
     this.buffer = new ArrayList(1000);
   }
 
-  public void addMsisdn(String msisdn) throws IOException {
+  public boolean isContainsTexts() {
+    return containsTexts;
+  }
+
+  public void setContainsTexts(boolean containsTexts) {
+    this.containsTexts = containsTexts;
+  }
+
+  public void addLine(String msisdn) throws IOException {
     buffer.add(msisdn);
     totalSize++;
     if (buffer.size()>=1000)

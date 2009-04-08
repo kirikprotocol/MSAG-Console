@@ -39,7 +39,7 @@ public class TaskBuilder extends Thread {
 
   private void removeTask(Task task) {
     try {
-      smeContext.getInfoSmeConfig().removeAndApplyTask(task.getId());
+      smeContext.getInfoSmeConfig().removeAndApplyTask(task.getOwner(), task.getId());
       smeContext.getInfoSme().removeTask(task.getId());
     } catch (Throwable e) {
       e.printStackTrace();
@@ -159,10 +159,10 @@ public class TaskBuilder extends Thread {
         if (blm.contains(msisdn)) {
           continue;
         }
-//          if (rtree.getValue(msisdn) == null) {
-//            System.out.println("WARN: rtree doesn't contains: "+msisdn);
-//            continue;
-//          }
+          if (rtree.getValue(msisdn) == null) {
+            System.out.println("WARN: rtree doesn't contains: "+msisdn);
+            continue;
+          }
 
         String text = line.substring(index+1);
         text = text.replaceAll("\\\\r","").replaceAll("\\\\n",System.getProperty("line.separator"));

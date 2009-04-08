@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.jsp.smsc.region;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.region.RegionsManager;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCJspException;
@@ -94,6 +96,9 @@ public class RegionsBean extends SmscBean {
 
     checkedSet.addAll(Arrays.asList(checked));
 
+    if (rm.isModified())
+      warning("Regions configuration changed.");
+
     return PageBean.RESULT_OK;
   }
 
@@ -102,6 +107,7 @@ public class RegionsBean extends SmscBean {
       rm.reset();
       defaultBandwidth = null;
       defaultEmail = null;
+      journalAppend(SubjectTypes.TYPE_regions, "Regions configuration", Actions.ACTION_RESTORE);
     } catch (AdminException e) {
       logger.error(e,e);
       return error("Can't reset regions", e);
@@ -123,6 +129,8 @@ public class RegionsBean extends SmscBean {
       rm.setDefaultEmail(defaultEmail);
 
       rm.save();
+
+      journalAppend(SubjectTypes.TYPE_regions, "Regions configuration", Actions.ACTION_MODIFY);
     } catch (AdminException e) {
       logger.error(e,e);
       return error("Can't save regions", e);

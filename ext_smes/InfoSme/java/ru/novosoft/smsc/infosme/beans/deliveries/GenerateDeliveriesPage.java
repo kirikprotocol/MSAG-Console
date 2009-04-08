@@ -16,7 +16,7 @@ public class GenerateDeliveriesPage extends DeliveriesPage {
 
   public GenerateDeliveriesPage(DeliveriesPageData pageData) {
     super(pageData);
-    thread = new DeliveriesGenerationThread(pageData.getInfoSmeContext(), pageData.getInputFiles(), pageData.getTask());
+    thread = new DeliveriesGenerationThread(pageData.getInfoSmeContext(), pageData.getTask());
     thread.start();
   }
 

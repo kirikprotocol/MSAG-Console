@@ -41,7 +41,7 @@ public class ProcessFilePage extends DeliveriesPage {
         if (outputFiles.isEmpty())
           return new LoadFilePage(pageData);
 
-        final HashMap inputFiles = new HashMap(outputFiles.size());
+//        final HashMap inputFiles = new HashMap(outputFiles.size());
         final MultiTask multiTask = new MultiTask();
 
         Map.Entry e;
@@ -57,14 +57,16 @@ public class ProcessFilePage extends DeliveriesPage {
           resetTask(t, pageData.getInfoSmeContext(), pageData.getAppContext(), request);
 
           multiTask.addTask(region, t);
+          t.setDeliveriesFile(deliveriesFile.getFile());
+          t.setDeliveriesFileContainsTexts(deliveriesFile.isContainsTexts());
 
-          inputFiles.put(new Integer(region), deliveriesFile.getFile());
+//          inputFiles.put(new Integer(region), deliveriesFile.getFile());
 
           if (pageData.activeTaskRegionId == -1)
             pageData.activeTaskRegionId = region;
         }
 
-        pageData.setInputFiles(inputFiles);
+//        pageData.setInputFiles(inputFiles);
 
         pageData.setTask(multiTask);
 
@@ -96,6 +98,7 @@ public class ProcessFilePage extends DeliveriesPage {
     pageData.inblackList = progress.getInblackList();
     pageData.regionsFound = progress.getSubjectsFound();
     pageData.splitDeliveriesFileStatus = thread.getStatus();
+    pageData.splitDeliveriesFileStatusStr = thread.getStatusStr();
     return this;
   }
 

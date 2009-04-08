@@ -117,8 +117,7 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
         row.addCell(msisdnColumn, new StringCell(msisdn, msisdn, false));
         row.addCell(dateColumn, new StringCell(msisdn,
             convertDateToString((Date)item.getValue(MessageDataSource.DATE)), false));
-        row.addCell(stateColumn, new StringCell(msisdn,
-            getStateName((Message.State)item.getValue(MessageDataSource.STATE)), false));
+        row.addCell(stateColumn, new StringCell(msisdn,((Message.State)item.getValue(MessageDataSource.STATE)).getName(), false));
         row.addCell(messageColumn, new StringCell(msisdn,
             (String)item.getValue(MessageDataSource.MESSAGE), false));
       }
@@ -141,26 +140,26 @@ public class MessagesTableHelper extends PagedStaticTableHelper  {
     this.ds = ds;
   }
 
-  private static String getStateName(Message.State state) {
-    if (state == Message.State.UNDEFINED)
-      return "ALL";
-    else if (state == Message.State.NEW)
-      return "NEW";
-    else if (state == Message.State.WAIT)
-      return "WAIT";
-    else if (state == Message.State.ENROUTE)
-      return "ENROUTE";
-    else if (state == Message.State.DELIVERED)
-      return "DELIVERED";
-    else if (state == Message.State.EXPIRED)
-      return "EXPIRED";
-    else if (state == Message.State.FAILED)
-      return "FAILED";
-    else if (state == Message.State.DELETED)
-      return "DELETED";
-
-    return "";
-  }
+//  private static String getStateName(Message.State state) {
+//    if (state == Message.State.UNDEFINED)
+//      return "ALL";
+//    else if (state == Message.State.NEW)
+//      return "NEW";
+//    else if (state == Message.State.WAIT)
+//      return "WAIT";
+//    else if (state == Message.State.ENROUTE)
+//      return "ENROUTE";
+//    else if (state == Message.State.DELIVERED)
+//      return "DELIVERED";
+//    else if (state == Message.State.EXPIRED)
+//      return "EXPIRED";
+//    else if (state == Message.State.FAILED)
+//      return "FAILED";
+//    else if (state == Message.State.DELETED)
+//      return "DELETED";
+//
+//    return "";
+//  }
 
   public void reset() {
     setStartPosition(0);

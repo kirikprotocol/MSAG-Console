@@ -87,7 +87,7 @@ page_menu_begin(out);
 if (bean.isSmeRunning()) {
   if (admin)
     page_menu_button(session, out, "mbAdd",    "common.buttons.add",    "infosme.hint.add_task");
-  page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_tasks", getLocString("infosme.confirm.del_tasks"), null, true);
+  page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_tasks", getLocString("infosme.confirm.del_tasks"));
 }
 page_menu_space(out);
 if (!admin) {

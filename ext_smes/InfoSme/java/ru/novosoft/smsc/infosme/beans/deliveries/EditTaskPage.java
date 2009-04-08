@@ -27,96 +27,11 @@ public class EditTaskPage extends DeliveriesPage {
       e.printStackTrace();
     }
     pageData.activeWeekDays = new String[task.getActiveWeekDays().size()];
-    int i=0;
+    int i = 0;
     for (Iterator iter = task.getActiveWeekDays().iterator(); iter.hasNext(); i++)
-      pageData.activeWeekDays[i] = (String)iter.next();
+      pageData.activeWeekDays[i] = (String) iter.next();
     pageData.sourceAddress = task.getAddress();
   }
-
-//  private long calculateTotalTime(Task task)  {
-//    long result = 0;
-//    String[] days = new String[] {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-//    final long endDate = task.getEndDateDate().getTime();
-//
-//    final Calendar start = Calendar.getInstance();
-//    final Calendar end = Calendar.getInstance();
-//
-//    start.setTimeInMillis(task.getActivePeriodStartDate().getTime());
-//    end.setTimeInMillis(task.getActivePeriodEndDate().getTime());
-//
-//    final long dayCount = end.getTimeInMillis() - start.getTimeInMillis();
-//
-//    final Calendar cal = Calendar.getInstance();
-//
-//    long date = System.currentTimeMillis();
-//    cal.setTimeInMillis(date);
-//
-//    start.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH));
-//    start.set(Calendar.MONTH, cal.get(Calendar.MONTH));
-//    start.set(Calendar.YEAR, cal.get(Calendar.YEAR));
-//
-//    end.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH));
-//    end.set(Calendar.MONTH, cal.get(Calendar.MONTH));
-//    end.set(Calendar.YEAR, cal.get(Calendar.YEAR));
-//
-//    if (cal.getTime().after(start.getTime())) {
-//      if (task.isWeekDayActive(days[cal.get(Calendar.DAY_OF_WEEK) - 1]))
-//        result += (end.getTimeInMillis() - cal.getTimeInMillis());
-//      date += 1000 * 60 * 60 * 24;
-//    }
-//
-//    for (; date < endDate; date += 1000 * 60 * 60 * 24) {
-//      cal.setTimeInMillis(date);
-//      if (task.isWeekDayActive(days[cal.get(Calendar.DAY_OF_WEEK) - 1]))
-//        result += dayCount;
-//    }
-//
-//    return result;
-//  }
-
-//  private String getDoubleCharNumber(long num) {
-//    String res = String.valueOf(num);
-//    if (res.length() == 1)
-//      res = '0' + res;
-//    return res;
-//  }
-
-//  private void calculateRetryOnFail(Task task) throws AdminException {
-//    long retryOnFail = -1;
-//    if (task.getEndDate() == null || task.getEndDate().length() == 0)
-//      retryOnFail = 24*3600;
-//    else {
-//      try {
-//        final int maxSmsSec = pageData.getInfoSmeContext().getInfoSmeConfig().getMaxMessagesPerSecond() >> 1;
-//        final long totalTime = calculateTotalTime(task) / 1000 ; // total time in seconds
-//
-//        long trySeconds = task.getActualRecordsSize() / maxSmsSec ; // total work time in seconds
-//        if (trySeconds == 0)
-//          trySeconds = 1; // One second will be enough
-//
-//        long ntries = totalTime / trySeconds; // Count of tries
-//
-//        if (ntries - 1 > 0)
-//          retryOnFail = ntries * trySeconds;
-//
-//      } catch (Exception e) {
-//        throw new AdminException(e.getMessage());
-//      }
-//    }
-//
-//    if (retryOnFail > 0) {
-//      task.setRetryOnFail(true);
-//      long hours = Math.min(retryOnFail/3600, 24);
-//      long minutes = hours == 24 ? 0 : (retryOnFail - hours*3600) / 60;
-//      long seconds = hours == 24 ? 0 : retryOnFail - hours*3600 - minutes*60;
-//      task.setRetryTime(getDoubleCharNumber(hours) + ':' + getDoubleCharNumber(minutes) + ':' + getDoubleCharNumber(seconds));
-//    } else
-//      task.setRetryOnFail(false);
-//  }
-
-//  private static boolean isUserAdmin(HttpServletRequest request) {
-//    return request.isUserInRole("infosme-admin");
-//  }
 
   private void checkAndPrepareTask(Task task) throws AdminException {
     if (pageData.name == null || (pageData.name = pageData.name.trim()).length() <= 0) {
@@ -134,10 +49,12 @@ public class EditTaskPage extends DeliveriesPage {
       throw new AdminException("infosme.error.task_priority_invalid");
     }
 
-    if (pageData.text == null || (pageData.text = pageData.text.trim()).length() <= 0) {
-      task.setText(""); throw new AdminException("infosme.error.task_msg_text_empty");
+    if (!task.isDeliveriesFileContainsTexts()) {
+      if (pageData.text == null || (pageData.text = pageData.text.trim()).length() <= 0) {
+        task.setText("");
+        throw new AdminException("infosme.error.task_msg_text_empty");
+      } else task.setText((pageData.transliterate) ? Transliterator.translit(pageData.text) : pageData.text);
     }
-    else task.setText((pageData.transliterate) ? Transliterator.translit(pageData.text):pageData.text);
 
     InfoSmeConfig c = pageData.getInfoSmeContext().getInfoSmeConfig();
 
@@ -164,12 +81,11 @@ public class EditTaskPage extends DeliveriesPage {
   }
 
 
-
   public DeliveriesPage mbNext(HttpServletRequest request) throws AdminException {
     pageToTask(pageData.getTask().getTask(pageData.oldActiveTaskRegionId));
 
     for (Iterator iter = pageData.getTask().tasks().iterator(); iter.hasNext();)
-      checkAndPrepareTask((Task)iter.next());
+      checkAndPrepareTask((Task) iter.next());
 
     return new GenerateDeliveriesPage(pageData);
   }
@@ -190,6 +106,7 @@ public class EditTaskPage extends DeliveriesPage {
 
   private void taskToPage(Task task) throws AdminException {
     pageData.retryOnFail = task.isRetryOnFail();
+    pageData.deliveriesFileContainsText = task.isDeliveriesFileContainsTexts();
     Region r = pageData.getAppContext().getRegionsManager().getRegionById(task.getRegionId());
     SimpleDateFormat df = new SimpleDateFormat(DeliveriesPageData.PAGE_DATE_FORMAT);
     SimpleDateFormat tf = new SimpleDateFormat(DeliveriesPageData.PAGE_TIME_FORMAT);

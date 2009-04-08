@@ -1,17 +1,16 @@
 package ru.novosoft.smsc.infosme.beans;
 
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.infosme.backend.config.ConfigChanges;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskFilter;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TasksTableHelper;
-import ru.novosoft.smsc.infosme.backend.config.ConfigChanges;
-import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
-import ru.novosoft.smsc.admin.AdminException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by igork
@@ -22,7 +21,7 @@ public class Tasks extends TasksListBean
 {
   private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
-  public static final int RESULT_EDIT = InfoSmeBean.PRIVATE_RESULT + 0;
+  public static final int RESULT_EDIT = InfoSmeBean.PRIVATE_RESULT;
   public static final int RESULT_ADD = InfoSmeBean.PRIVATE_RESULT + 1;
   protected static final int PRIVATE_RESULT = InfoSmeBean.PRIVATE_RESULT + 3;
 
@@ -43,7 +42,7 @@ public class Tasks extends TasksListBean
   {
     if (mbClear != null) {
       mbClear = null;
-      ((TaskFilter)tasksFilter).clear();
+      tasksFilter.clear();
     }
 
     String owner = isUserAdmin(request) ? null : request.getRemoteUser();
@@ -62,9 +61,9 @@ public class Tasks extends TasksListBean
     if (mbDelete != null)
       return delete();
     if (mbApply != null)
-      return apply(owner);
+      return apply(request.getRemoteUser(), owner);
     if (mbReset != null)
-      return reset(owner);
+      return reset(request.getRemoteUser(), owner);
 
     if (getSelectedTaskId() != null) {
       edit = getSelectedTaskId();
@@ -74,9 +73,9 @@ public class Tasks extends TasksListBean
     return result;
   }
 
-  private int apply(String owner) {
+  private int apply(String user, String owner) {
     try {
-      ConfigChanges changes = getInfoSmeConfig().apply(owner, false, true, false, false, false, false);
+      ConfigChanges changes = getInfoSmeConfig().apply(user, owner, false, true, false, false, false, false);
       // Notify InfoSme about new tasks
       for (Iterator iter = changes.getTasksChanges().getAdded().iterator(); iter.hasNext();)
         getInfoSme().addTask((String)iter.next());
@@ -93,9 +92,9 @@ public class Tasks extends TasksListBean
     }
   }
 
-  private int reset(String owner) {
+  private int reset(String user, String owner) {
     try {
-      getInfoSmeConfig().reset(owner, false, true, false, false, false, false);
+      getInfoSmeConfig().reset(user, owner, false, true, false, false, false, false);
       return RESULT_DONE;
     } catch (AdminException e) {
       return error(e.getMessage(), e);
@@ -129,7 +128,7 @@ public class Tasks extends TasksListBean
     this.mbDelete = mbDelete;
   }
 
-  private Date convertStringToDate(String date) {
+  private static Date convertStringToDate(String date) {
     Date converted = new Date();
     try {
       SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
@@ -139,7 +138,8 @@ public class Tasks extends TasksListBean
     }
     return converted;
   }
-  public String convertDateToString(Date date) {
+
+  public static String convertDateToString(Date date) {
     if (date == null)
       return "";
     SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
@@ -147,27 +147,27 @@ public class Tasks extends TasksListBean
   }
 
   public void setFromDate(String startDate) {
-    ((TaskFilter)tasksFilter).setStartDate(convertStringToDate(startDate));
+    tasksFilter.setStartDate(convertStringToDate(startDate));
   }
 
   public String getFromDate() {
-    return convertDateToString(((TaskFilter)tasksFilter).getStartDate());
+    return convertDateToString(tasksFilter.getStartDate());
   }
 
   public void setTillDate(String endDate) {
-    ((TaskFilter)tasksFilter).setEndDate(convertStringToDate(endDate));
+    tasksFilter.setEndDate(convertStringToDate(endDate));
   }
 
   public String getTillDate() {
-    return convertDateToString(((TaskFilter)tasksFilter).getEndDate());
+    return convertDateToString(tasksFilter.getEndDate());
   }
 
   public void setName(String name) {
-    ((TaskFilter)tasksFilter).setName(name.trim().length() == 0 ? null : name);
+    tasksFilter.setName(name.trim().length() == 0 ? null : name);
   }
 
   public String getName() {
-    String  name = ((TaskFilter)tasksFilter).getName();
+    String  name = tasksFilter.getName();
     return name == null ? "" : name;
   }
 
@@ -181,17 +181,17 @@ public class Tasks extends TasksListBean
 
   public void setStatus(int status) {
     if (status == 0)
-      ((TaskFilter)tasksFilter).setActive(null);
+      tasksFilter.setActive(null);
     else if (status == 1)
-      ((TaskFilter)tasksFilter).setActive(Boolean.TRUE);
+      tasksFilter.setActive(Boolean.TRUE);
     else
-      ((TaskFilter)tasksFilter).setActive(Boolean.FALSE);
+      tasksFilter.setActive(Boolean.FALSE);
   }
 
   public int getStatus() {
-    if (((TaskFilter)tasksFilter).getActive() == null)
+    if (tasksFilter.getActive() == null)
       return 0;
-    else if (((TaskFilter)tasksFilter).getActive().booleanValue())
+    else if (tasksFilter.getActive().booleanValue())
       return 1;
     return 2;
   }

@@ -179,4 +179,8 @@ public class MultiTask {
     return result;
   }
 
+  public Iterator iterator() {
+    return tasks.values().iterator();
+  }
+
 }

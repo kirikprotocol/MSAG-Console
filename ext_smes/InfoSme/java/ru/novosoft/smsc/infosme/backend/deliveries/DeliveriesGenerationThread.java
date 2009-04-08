@@ -27,7 +27,6 @@ public class DeliveriesGenerationThread extends Thread {
   public final static int STATUS_CANCELED = 4;
 
   private final InfoSmeContext infoSmeContext;
-  private final HashMap inputFiles;
   private final MultiTask task;
   private final HashMap generationProgress;
 
@@ -37,9 +36,8 @@ public class DeliveriesGenerationThread extends Thread {
 
   private boolean started = true;
 
-  public DeliveriesGenerationThread(InfoSmeContext infoSmeContext, HashMap inputFiles, MultiTask task) {
+  public DeliveriesGenerationThread(InfoSmeContext infoSmeContext, MultiTask task) {
     this.infoSmeContext = infoSmeContext;
-    this.inputFiles = inputFiles;
     this.task = task;
 
     generationProgress = new HashMap(task.tasks().size());
@@ -61,7 +59,7 @@ public class DeliveriesGenerationThread extends Thread {
     for (Iterator iter = task.tasks().iterator(); iter.hasNext();) {
       Task t = (Task)iter.next();
       if (t != null) {
-        infoSmeContext.getInfoSmeConfig().removeAndApplyTask(t.getId());
+        infoSmeContext.getInfoSmeConfig().removeAndApplyTask(t.getOwner(), t.getId());
         try {
           infoSmeContext.getInfoSme().removeTask(t.getId());
         } catch (Throwable e) {
@@ -107,18 +105,12 @@ public class DeliveriesGenerationThread extends Thread {
       status = STATUS_GENERATION;
 
       // Process each input file
-      Map.Entry e;
-      for (Iterator iter = inputFiles.entrySet().iterator(); iter.hasNext() && started;) {
-        e = (Map.Entry)iter.next();
-
-        int regionId = ((Integer)e.getKey()).intValue();
-        File file = (File)e.getValue();
-        Progress progress = (Progress)generationProgress.get(new Integer(regionId));
-        Task t = task.getTask(regionId);
-
-        addDeliveries(file, t, progress, maxMessagesPerSecond);
-
+      for (Iterator iter = task.iterator(); iter.hasNext();) {
+        Task t = (Task)iter.next();
+        Progress progress = (Progress)generationProgress.get(new Integer(t.getRegionId()));
+        addDeliveries(t, progress, maxMessagesPerSecond);
       }
+
       status = (started) ? STATUS_DONE : STATUS_CANCELED;
 
     } catch (Throwable e) {
@@ -129,16 +121,16 @@ public class DeliveriesGenerationThread extends Thread {
     }
   }
 
-  private void addDeliveries(File file, Task t, Progress progress, int maxMessagesPerSecond) throws IOException, AdminException {
+  private void addDeliveries(Task t, Progress progress, int maxMessagesPerSecond) throws IOException, AdminException {
 
     BufferedReader bis = null;
     try {
-      bis = new BufferedReader(new FileReader(file));//InputStream(new FileInputStream(file));
+      bis = new BufferedReader(new FileReader(t.getDeliveriesFile()));
 
       Date curTime = t.getStartDate();
       if (curTime == null)
         curTime = new Date();
-      String msisdn = null;
+      String line = null;
       ArrayList messages = new ArrayList(maxMessagesPerSecond);
 
       while (started) {
@@ -146,11 +138,22 @@ public class DeliveriesGenerationThread extends Thread {
 
         // Prepare array of messages
         int i=0;
-        while (started && i < maxMessagesPerSecond && (msisdn = bis.readLine()) != null) {
+        while (started && i < maxMessagesPerSecond && (line = bis.readLine()) != null) {
           final Message message = new Message();
           message.setState(Message.State.NEW);
           message.setSendDate(curTime);
-          message.setMessage(t.getText());
+
+          String msisdn, text;
+          if (t.isDeliveriesFileContainsTexts()) {
+            int ind= line.indexOf('|');
+            msisdn = line.substring(0, ind);
+            text = line.substring(ind + 1);
+            text.replaceAll("\\\\r", "").replaceAll("\\\\n", System.getProperty("line.separator"));
+          } else {
+            msisdn = line;
+            text = t.getText();
+          }
+          message.setMessage(text);
           message.setAbonent(msisdn);
 
           messages.add(message);
@@ -164,7 +167,7 @@ public class DeliveriesGenerationThread extends Thread {
           curTime = new Date(curTime.getTime() + 1000);
         }
 
-        if (msisdn == null)
+        if (line == null)
           break;
       }
 

@@ -66,6 +66,7 @@ public class DeliveriesPageData {
   public User owner;
 
   public boolean splitDeliveriesFile = true;
+  public boolean deliveriesFileContainsText = true;
 
   // process file progress attributes
   public int recordsProcessed;
@@ -73,6 +74,7 @@ public class DeliveriesPageData {
   public int unrecognized;
   public int inblackList;
   public int splitDeliveriesFileStatus;
+  public String splitDeliveriesFileStatusStr;
 
   // deliveries generation progress attributes
   public Map deliveriesGenProgr;
@@ -80,7 +82,7 @@ public class DeliveriesPageData {
 
   // Data
   private File deliveriesFile;
-  private HashMap inputFiles;
+//  private HashMap inputFiles;
   private MultiTask task;
 
   public DeliveriesPageData(SMSCAppContext appContext, InfoSmeContext infoSmeContext) {
@@ -152,7 +154,7 @@ public class DeliveriesPageData {
       case STATUS_CANCELED:
         return STATUS_STR_CANCELED;
       default:
-        return STATUS_STR_ERR + errorStr;
+        return STATUS_STR_ERR + splitDeliveriesFileStatusStr;
     }
   }
 
@@ -172,13 +174,13 @@ public class DeliveriesPageData {
     this.deliveriesFile = deliveriesFile;
   }
 
-  public HashMap getInputFiles() {
-    return inputFiles;
-  }
-
-  public void setInputFiles(HashMap inputFiles) {
-    this.inputFiles = inputFiles;
-  }
+//  public HashMap getInputFiles() {
+//    return inputFiles;
+//  }
+//
+//  public void setInputFiles(HashMap inputFiles) {
+//    this.inputFiles = inputFiles;
+//  }
 
   public MultiTask getTask() {
     return task;

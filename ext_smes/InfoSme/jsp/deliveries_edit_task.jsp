@@ -113,6 +113,7 @@
       retryOnFailUpdated();
     </script>
 <% } %>
+<% if (!deliveries_bean.isFileContainsText()) { %>
     <tr class=row<%=rowN++&1%>>
       <th><%= getLocString("infosme.label.message_text")%></th>
       <td><textarea name=text><%=StringEncoderDecoder.encode(deliveries_bean.getText())%></textarea></td>
@@ -148,9 +149,18 @@
       checkSecretText();
     </script>
   <% } %>
+<% } else { %>
+    <tr class=row<%=rowN++&1%>>
+     <th><%= getLocString("infosme.label.message_text")%></th>
+     <td><%= getLocString("infosme.msg.text_included_in_file")%></td>
+   </tr>
+    <tr class=row<%=rowN++&1%>>
+      <th><%= getLocString("infosme.label.flash")%></th>
+      <td><input class=check type=checkbox id=flash name=flash value=true <%=deliveries_bean.isFlash() ? "checked" : ""%>></td>
+    </tr>
+<% } %>
   </table>
 </div>
-
 <%
   page_menu_begin(out);
   page_menu_button(session, out, "mbCancel", "common.buttons.cancel",    "infosme.hint.cancel_task_add", "clickCancel()");

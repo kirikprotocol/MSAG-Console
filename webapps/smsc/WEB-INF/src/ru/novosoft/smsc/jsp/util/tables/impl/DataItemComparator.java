@@ -41,6 +41,13 @@ class DataItemComparator implements Comparator
     Object val1 = i1.getValue(fieldName);
     Object val2 = i2.getValue(fieldName);
 
+    if (val1 == null && val2 != null)
+      return -1;
+    else if (val2 == null && val1 != null)
+      return 1;
+    else if (val1 == val2)
+      return 0;
+
     if (val1 instanceof String) {
       return ((String) val1).compareToIgnoreCase((String) val2);
 
@@ -62,12 +69,7 @@ class DataItemComparator implements Comparator
         return ((Boolean) val2).booleanValue() ? -1 : 0;
 
     } else if (val1 instanceof Comparable) {
-      if (val1 == null && val2 != null)
-        return -1;
-      else if (val2 == null && val1 != null)
-        return 1;
-      else if (val1 == val2)
-        return 0;
+
       return ((Comparable)val1).compareTo(val2);
 
     } else

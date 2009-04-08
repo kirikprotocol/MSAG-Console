@@ -1,8 +1,6 @@
 package ru.novosoft.smsc.infosme.backend;
 
 import java.util.Date;
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Created by IntelliJ IDEA.
@@ -76,30 +74,37 @@ public class Message
   }
 
   public static final class State {
-    private final static Map all = new HashMap(10);
+    private final static State[] all = new State[7];
 
-    public final static State UNDEFINED  = new State(-1);
-    public final static State NEW        = new State(0);
-    public final static State WAIT       = new State(1);
-    public final static State ENROUTE    = new State(2);
-    public final static State DELIVERED  = new State(3);
-    public final static State EXPIRED    = new State(4);
-    public final static State FAILED     = new State(5);
-    public final static State DELETED    = new State(6);
+    public final static State UNDEFINED  = new State(-1, "UNDEFINED");
+    public final static State NEW        = new State(0, "NEW");
+    public final static State WAIT       = new State(1, "WAIT");
+    public final static State ENROUTE    = new State(2, "ENROUTE");
+    public final static State DELIVERED  = new State(3, "DELIVERED");
+    public final static State EXPIRED    = new State(4, "EXPIRED");
+    public final static State FAILED     = new State(5, "FAILED");
+    public final static State DELETED    = new State(6, "DELETED");
 
     private final int id;
+    private final String name;
 
-    private State(int id) {
+    private State(int id, String name) {
       this.id = id;
-      all.put(new Integer(id), this);
+      this.name = name;
+      if (id >= 0)
+        all[id] = this;
     }
 
     public int getId() {
       return id;  
     }
 
+    public String getName() {
+      return name;
+    }
+
     public static State getById(int id) {
-      return (State)all.get(new Integer(id));
+      return (id < 0 || id >= all.length) ? UNDEFINED : all[id];      
     }
   }
 }

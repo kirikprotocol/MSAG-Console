@@ -155,7 +155,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
         return;
 
       // Remove task
-      context.getInfoSmeConfig().removeAndApplyTask(taskId);
+      context.getInfoSmeConfig().removeAndApplyTask(getUser(ctx).getLogin(), taskId);
       context.getInfoSme().removeTask(taskId);
 
       ctx.setMessage("OK");

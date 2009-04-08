@@ -89,7 +89,7 @@ public class DriverManager {
     }
   }
 
-  private List loadDrivers(Config config) throws AdminException {
+  private static List loadDrivers(Config config) throws AdminException {
     List result = new ArrayList(10);
     try {
       for (Iterator i = config.getSectionChildShortSectionNames(DRIVER_PREFIX).iterator(); i.hasNext();)
