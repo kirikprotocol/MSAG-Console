@@ -288,3 +288,25 @@ B3016: Mar 02, 2009
     MCISme	small logging improvements
     MCISme	fix for banner api V2: send RollbackBannerRequest when got BannerResponse with unexpected transaction id value
     SMPPdmplx	demultiplexor first version
+
+B3017: Mar 13, 2009
+    core	bug fixed, introduced on 2008-09-02, bug was in effect when an Update() was invoked on the non-single page data.
+
+B3101: Apr 08, 2009
+    SMSC	ss7AddrToSTring odd digits computation fix for opt SMPP fields SCCP_OA and SCCP_DA
+    SMSC	scheduler limitation added, autosense, use not more than half of idle license limit
+    SMSC	new map limits logic, SMS MT congestion levels, separate out SRI limit
+    SMSC	SMPP proxy total limit calculation fix for speeds >1000 per sec
+    SMSC	fix for not all PXQLimit rejects shown on monitor
+    SMSC	HD stack support
+    Inman	HD stack support
+    InfoSme	Write all events to journal
+    Infosme	Add posibility to create deliveries from <msisdn>|<text> files
+    Emailsme	More details in case of exception
+    DBSme	multiple addresses for job support added
+    Webapp	SMS MT congestion levels configuration added to maplimits
+    Webapp	exclude fields 'SMSC_RAW_PAYLOAD' and 'SMSC_RAW_SHORTMESSAGE' from smsview when user does not have 'View sms texts' role
+    Smscagent	htons compatibility fix for x86 
+    Inman	preserving special GT SMSX for FR on SMSX
+    core	TimeSlotCounter IncDistr fix
+    core	FixedLengthString init with null fix
