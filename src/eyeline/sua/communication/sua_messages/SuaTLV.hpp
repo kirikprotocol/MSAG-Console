@@ -104,6 +104,8 @@ template <size_t SZ>
 class TLV_OctetArrayPrimitive : public SuaTLV {
 public:
   explicit TLV_OctetArrayPrimitive(uint16_t tag);
+  
+  TLV_OctetArrayPrimitive(const TLV_OctetArrayPrimitive& rhs);
 
   TLV_OctetArrayPrimitive(uint16_t tag, const uint8_t* val, uint16_t valLen);
 
