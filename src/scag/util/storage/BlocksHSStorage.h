@@ -24,6 +24,8 @@
 #include "util/Exception.hpp"
 #include "util/Uint64Converter.h"
 #include "DataFileCreator.h"
+#include "FixupLogger.h"
+#include "EndianConverter.h"
 
 
 namespace scag {
@@ -309,7 +311,7 @@ public:
     static const int64_t BLOCK_USED	= int64_t(1) << 63;
 
     BlocksHSStorage(DataFileManager& manager, GlossaryBase* g = NULL,
-                   smsc::logger::Logger* thelog = 0): glossary_(g), running(false), iterBlockIndex(0), deserBuf_(0), dataFileCreator_(manager, thelog)
+                    smsc::logger::Logger* thelog = 0): glossary_(g), running(false), deserBuf_(0), dataFileCreator_(manager, thelog)
     {
         /*
         if (!glossary_) {
@@ -380,11 +382,16 @@ public:
             return ret;
         if (!checkFirstFreeBlock()) {
           if (logger) smsc_log_warn(logger, "try to rollback last transaction");
-          loadBackupData(true);
-          if (!checkFirstFreeBlock()) {
-            if (!findFirstFreeBlock()) {
+          try {
+              loadBackupData(true);
+              if (!checkFirstFreeBlock()) {
+                  if (!findFirstFreeBlock()) {
+                      return FIRST_FREE_BLOCK_FAILED;
+                  }
+              }
+          } catch ( std::exception& e ) {
+              if (logger) smsc_log_warn(logger,"exception: %s", e.what());
               return FIRST_FREE_BLOCK_FAILED;
-            }
           }
         }
 
@@ -523,15 +530,15 @@ public:
         do {
             DataBlockHeader hdr;
 
-            int file_number = curBlockIndex / descrFile.file_size;
-            if (!checkfn( file_number )) return false;
-            off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
+            const int file_number = getFileNumber(curBlockIndex);
+            if ( file_number < 0 ) return false;
+            const off_t offset = getOffset(curBlockIndex);
             File* f = dataFile_f[file_number];
             f->Seek(offset, SEEK_SET);
             deserialize(f, hdr);
 
-            if(hdr.block_used != BLOCK_USED)
-                return false;
+            if (hdr.block_used != BLOCK_USED) { return false; }
+
             if(curBlockIndex == blockIndex)
             {
                 data.setBuffLength(hdr.data_size);
@@ -561,15 +568,16 @@ public:
         int i = 0;
         profileData.Empty();
         do {
+
             DataBlockHeader hdr;
-            int file_number = curBlockIndex / descrFile.file_size;
-            if ( !checkfn(file_number) ) return false;
-            off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
+            const int file_number = getFileNumber(curBlockIndex);
+            if ( file_number < 0 ) return false;
+            const off_t offset = getOffset(curBlockIndex);
             File* f = dataFile_f[file_number];
             f->Seek(offset, SEEK_SET);
             deserialize(f, hdr);
 
-            if(hdr.block_used != BLOCK_USED) {
+            if (hdr.block_used != BLOCK_USED) {
                 if (logger) smsc_log_error(logger, "block index=%d unused", curBlockIndex);
                 return false;
             }
@@ -619,19 +627,174 @@ public:
     }
 
 
+private:
+    /// recovery procedures
+    class Recovery 
+    {
+    public:
+        Recovery( BlocksHSStorage& bhs ) : bhs_(bhs), df_(bhs_.descrFile) {
+            if ( df_.files_count <= 0 ) {
+                if (bhs_.logger) smsc_log_error(bhs_.logger,"cannot recover as files_count = 0");
+                throw smsc::util::Exception("cannot recover as files_count = 0");
+            }
+            fixup_.reset(new FixupLogger(bhs_.dbPath + '/' + bhs_.dbName + ".fixup"));
+            std::vector< unsigned char > buf;
+            Serializer ser(buf);
+            df_.serialize(ser);
+            fixup_->makeComment(2,ser.size(),ser.data());
+            lastFreeBlock_ = df_.first_free_block = bhs_.invalidIndex();
+            df_.blocks_free = 0;
+            df_.blocks_used = df_.files_count * df_.file_size;
+        }
+
+        ~Recovery() {
+            // we have to write down a new description file
+            bhs_.changeDescriptionFile();
+        }
+
+        /// the methods frees a chain of used blocks
+        void freeBlocks( index_type blockIndex, DataBlockHeader& hdr ) {
+            const index_type totalBlocks = df_.files_count * df_.file_size;
+            do {
+                if ( bhs_.logger ) smsc_log_info( bhs_.logger, "freeing block %lld, next %lld", blockIndex, hdr.next_block );
+                freeBlock( blockIndex, hdr.next_free_block );
+                blockIndex = hdr.next_block;
+                if ( blockIndex < 0 || blockIndex >= totalBlocks ) {
+                    // this block points to nowhere
+                    if (bhs_.logger) smsc_log_info(bhs_.logger, "next block %lld points to nowhere");
+                    break;
+                } else {
+                    // reading header
+                    int fn = bhs_.getFileNumber(blockIndex);
+                    off_t offset = bhs_.getOffset(blockIndex);
+                    File* f = bhs_.dataFile_f[fn];
+                    f->Seek(offset);
+                    bhs_.deserialize(f,hdr);
+                }
+            } while ( hdr.block_used == BLOCK_USED );
+        }
+
+        void chainFreeBlock( index_type blockIndex, DataBlockHeader& hdr ) {
+            freeBlock( blockIndex, hdr.next_free_block );
+        }
+
+    private:
+        void freeBlock( index_type blockIndex, index_type saved_next_free_block )
+        {
+            EndianConverter cvt;
+            if ( lastFreeBlock_ != bhs_.invalidIndex() ) {
+                int fn = bhs_.getFileNumber(lastFreeBlock_);
+                off_t offset = bhs_.getOffset(lastFreeBlock_);
+                File* f = bhs_.dataFile_f[fn];
+                f->Seek(offset);
+                f->WriteNetInt64(blockIndex);
+            } else {
+                // lastFreeBlock was not set
+                df_.first_free_block = blockIndex;
+            }
+            int fn = bhs_.getFileNumber(blockIndex);
+            off_t offset = bhs_.getOffset(blockIndex);
+            fixup_->save(offset,8,cvt.set(uint64_t(saved_next_free_block)));
+            File* f = bhs_.dataFile_f[fn];
+            f->Seek(offset);
+            f->WriteNetInt64(bhs_.invalidIndex());
+            lastFreeBlock_ = blockIndex;
+            ++df_.blocks_free;
+            --df_.blocks_used;
+        }
+
+    private:
+        BlocksHSStorage&           bhs_;
+        DescriptionFile&           df_;
+        std::auto_ptr<FixupLogger> fixup_;
+        index_type                 lastFreeBlock_;
+    };
+
+public:
+    /// used to iterate over BlocksHSStorage.
+    /// NOTE: modification operation may invalidate the iterator!
+    class Iterator {
+        friend class BlocksHSStorage;
+    private:
+        Iterator( BlocksHSStorage& bhs, Recovery* rec = 0 ) :
+        bhs_(&bhs), iterBlockIndex_(0), recovery_(rec) {}
+    public:
+        Iterator( const Iterator& o ) {
+            Iterator& i(const_cast<Iterator&>(o));
+            bhs_ = i.bhs_;
+            iterBlockIndex_ = i.iterBlockIndex_;
+            recovery_ = i.recovery_;
+            curBlockIndex_ = i.curBlockIndex_;
+            blockData_ = i.blockData_;
+            key_ = i.key_;
+        }
+
+        inline void reset() { iterBlockIndex_ = 0; }
+        
+        /// find the next iteration
+        bool next() {
+            if (!bhs_) return false;
+            DataBlockHeader hdr;
+            const index_type cnt = bhs_->descrFile.files_count * bhs_->descrFile.file_size;
+            while ( iterBlockIndex_ < cnt ) {
+
+                const int fn = bhs_->getFileNumber(iterBlockIndex_);
+                if ( fn < 0 ) return false;
+                const off_t offset = bhs_->getOffset(iterBlockIndex_);
+                File* f = bhs_->dataFile_f[fn];
+                f->Seek(offset,SEEK_SET);
+                bhs_->deserialize(f,hdr);
+                curBlockIndex_ = iterBlockIndex_++;
+                // if ( recovery_.get() ) recovery_->recoverBlock(curBlockIndex_,hdr);
+                if (hdr.block_used == BLOCK_USED) {
+                    if (hdr.head) {
+                        key_ = hdr.key;
+                        if ( bhs_->Get(curBlockIndex_,blockData_) ) { return true; }
+                        if ( bhs_->logger ) smsc_log_error( bhs_->logger, "Error reading block chain at %llu", curBlockIndex_ );
+                        if ( recovery_.get() ) recovery_->freeBlocks(curBlockIndex_,hdr);
+                    }
+                } else {
+                    // unused block
+                    if ( recovery_.get() ) recovery_->chainFreeBlock(curBlockIndex_,hdr);
+                }
+            }
+            return false;
+        }
+        
+        inline index_type blockIndex() const { return curBlockIndex_; }
+        inline const DataBlock& blockData() const { return blockData_; }
+        inline const Key& key() const { return key_; }
+        
+    private:
+        BlocksHSStorage*                 bhs_;
+        index_type                       iterBlockIndex_;
+        std::auto_ptr<Recovery>          recovery_;
+
+        // data which are set as a result of a positive next() call.
+        index_type       curBlockIndex_;
+        DataBlock        blockData_;
+        Key              key_;
+    };
+
+
+    Iterator begin() { return Iterator(*this); }
+    
+    /// NOTE: this version of iterator automatically fixup (free) broken blocks.
+    /// Use it only for recovery.
+    Iterator beginWithRecovery() { return Iterator(*this,new Recovery(*this)); }
+
+    /*
     void Reset()
     {
         iterBlockIndex = 0;
     }
-
     
-    /// NOTE: this method is used for index rebuilding
+    // NOTE: this method is used for index rebuilding
     bool next( index_type& blockIndex, Key& key )
     {
         DataBlock db;
         return Next(blockIndex,db,key);
     }
-
 
     bool Next( index_type& blockIndex, DataBlock& data, Key& key )
     {
@@ -646,7 +809,7 @@ public:
             f->Seek(offset, SEEK_SET);
             deserialize(f, hdr);
 
-            blockIndex = iterBlockIndex++;            
+            blockIndex = iterBlockIndex++;
             if(hdr.block_used == BLOCK_USED && hdr.head)
             {
                 key = hdr.key;
@@ -658,36 +821,7 @@ public:
         }
         return false;
     }
-
-
-private:
-
-  Logger* logger;
-  GlossaryBase* glossary_;
-  bool running;
-  string dbName;
-  string dbPath;
-  DescriptionFile descrFile;		
-  File descrFile_f;
-  File backupFile_f;
-  vector<File*> dataFile_f;
-  index_type iterBlockIndex;
-  int effectiveBlockSize;	
-
-  vector<index_type> dataBlockBackup;
-  char writeBuf[WRITE_BUF_SIZE];
-  char backupBuf[BACKUP_BUF_SIZE];
-  size_t hdrSize;
-  SerialBuffer profileData;
-  CompleteDataBlock completeDataBlock;
-  BackupHeader backupHeader;
-
-  std::vector< unsigned char > serDescrBuf_;
-  std::vector< unsigned char > serBackupBuf_;
-  std::vector< unsigned char > serHdrBuf_;
-    unsigned char* deserBuf_;
-    unsigned deserBufSize_;
-    DataFileCreator dataFileCreator_;
+     */
 
 private:
 
@@ -705,7 +839,7 @@ private:
     void printHdr(const DataBlockHeader& hdr) {
         if (!logger) return;
         smsc_log_debug(logger, "block header used=%d next_free=%d head=%d total=%d next=%d size=%d key='%s'",
-                       hdr.block_used, hdr.next_free_block, hdr.head, hdr.total_blocks, 
+                       hdr.getBlockUsed(), hdr.next_free_block, hdr.head, hdr.total_blocks, 
                        hdr.next_block, hdr.data_size, hdr.key.toString().c_str());
     }
 
@@ -715,9 +849,12 @@ private:
         if (logger)
             smsc_log_debug(logger, "write data block fn=%d, offset=%d, blockSize=%d", fileNumber,
                            offset, curBlockSize);
+        /*
+         * NOTE: fn and offset must be already checked
         if ( !checkfn(fileNumber) ) {
             throw smsc::util::Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count-1);
         }
+         */
         size_t bufSize = hdrSize + curBlockSize;
         // memset(&(serHdrBuf_[0]), 0, DataBlockHeader::persistentSize());
         Serializer ser(serHdrBuf_);
@@ -749,8 +886,11 @@ private:
         hdr.data_size = dataLength;//effectiveBlockSize;
         size_t curBlockSize = 0;
         for (int i = backupStartIndex; i < blocksCount; ++i) {
-            int file_number = curBlockIndex / descrFile.file_size;
-            off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
+            const int file_number = getFileNumber(curBlockIndex);
+            if (file_number < 0) {
+                throw smsc::util::Exception("invalid file number %d, max file number %d", file_number, descrFile.files_count-1);
+            }
+            const off_t offset = getOffset(curBlockIndex);
             curBlockIndex = dataBlockBackup[i];
             if (i == hdr.total_blocks - 1) {
                 hdr.next_block =  -1; 
@@ -770,9 +910,12 @@ private:
 
     index_type getFirstFreeBlock(int fileNumber, off_t offset)
     {
+        /*
+         * fileNumber is already checked in getFileNumber!
         if (!checkfn(fileNumber)) {
             throw smsc::util::Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count-1);
         }
+         */
         File* f = dataFile_f[fileNumber];
         f->Seek(offset, SEEK_SET);
         index_type ffb = f->ReadNetInt64();
@@ -794,11 +937,11 @@ private:
         }
         while (blockIndex != -1) {
             if (logger) smsc_log_debug(logger, "Remove %d block, ffb=%d", blockIndex, ffb); 
-            int file_number = blockIndex / descrFile.file_size;
-            if (!checkfn(file_number)) {
+            const int file_number = getFileNumber(blockIndex);
+            if ( file_number < 0 ) {
                 throw smsc::util::Exception("Invalid file number %d, max file number %d", file_number, descrFile.files_count-1);
             }
-            off_t offset = (blockIndex - file_number * descrFile.file_size) * descrFile.block_size;
+            const off_t offset = getOffset(blockIndex);
             File* f = dataFile_f[file_number];
             f->Seek(offset);
             f->WriteNetInt64(ffb);
@@ -808,6 +951,7 @@ private:
         }
         return ffb;
     }
+
 
     int CreateBackupFile() {
         try {
@@ -998,7 +1142,7 @@ private:
               return CANNOT_OPEN_EXISTS_DESCR_FILE;
             }
 
-            if (logger) smsc_log_info(logger, "OpenDescrFile: storage version:0x%x, files count:%d, block size:%d, file size:%d, first free block:%d",
+            if (logger) smsc_log_info(logger, "OpenDescrFile: storage version:0x%x, files count:%d, block size:%d, file size:%d, first free block:%lld",
                           descrFile.version, descrFile.files_count, descrFile.block_size, descrFile.file_size, descrFile.first_free_block);
             effectiveBlockSize = descrFile.block_size - hdrSize;
             return 0;
@@ -1062,11 +1206,11 @@ private:
             hdr.total_blocks = profileBlocksCount;
             int dataSize = 0;
             for (int i = 0; i < profileBlocksCount; ++i) {
-                int file_number = curBlockIndex / descrFile.file_size;
-                if (!checkfn(file_number)) {
+                const int file_number = getFileNumber(curBlockIndex);
+                if ( file_number < 0 ) {
                     throw smsc::util::Exception("Invalid file number %d, max file number %d", file_number, descrFile.files_count-1);
                 }
-                off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
+                const off_t offset = getOffset(curBlockIndex);
                 curBlockIndex = dataBlockBackup[i];
                 if (i == profileBlocksCount - 1) {
                     hdr.next_block = -1;
@@ -1079,8 +1223,11 @@ private:
                                (void*)(data + i * effectiveBlockSize), dataSize);
             }
             for (int i = profileBlocksCount; i < backupHeader.blocksCount; ++i) {
-                int file_number = curBlockIndex / descrFile.file_size;
-                off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
+                const int file_number = getFileNumber(curBlockIndex);
+                if ( file_number < 0 ) {
+                    throw smsc::util::Exception("invalid fn: %d, max fn: %d", file_number, descrFile.files_count-1);
+                }
+                const off_t offset = getOffset(curBlockIndex);
                 curBlockIndex = dataBlockBackup[i];
                 File* f = dataFile_f[file_number];
                 f->Seek(offset);
@@ -1187,8 +1334,11 @@ private:
         if (logger) smsc_log_debug(logger, "Read %d free blocks", blocksCount);
         index_type curBlockIndex = descrFile.first_free_block;
         for (int i = 0; i < blocksCount; ++i) {
-            int file_number = curBlockIndex / descrFile.file_size;
-            off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
+            const int file_number = getFileNumber(curBlockIndex);
+            if ( file_number < 0 ) {
+                throw smsc::util::Exception("invalid fn: %d, max fn: %d", file_number, descrFile.files_count-1);
+            }
+            const off_t offset = getOffset(curBlockIndex);
             curBlockIndex = getFirstFreeBlock(file_number, offset);
             dataBlockBackup.push_back(curBlockIndex);
         }
@@ -1247,20 +1397,16 @@ private:
         }
     }
 
-    off_t getOffset(index_type index, int fileNumber) {
-      return (index - fileNumber * descrFile.file_size) * descrFile.block_size;
-    }
-
     inline bool findFirstFreeBlock() {
       try {
         if (logger) smsc_log_warn(logger, "try to find first free block");
         index_type lastBlock = descrFile.files_count * descrFile.file_size - 1;
-        int fileNumber = lastBlock / descrFile.file_size;
-        if (!checkfn(fileNumber)) {
+        int fileNumber = getFileNumber(lastBlock);
+        if (fileNumber < 0) {
           smsc_log_error(logger, "can't find first free block: last block index is invalid %lld", lastBlock);
           return false;
         }
-        off_t offset = getOffset(lastBlock, fileNumber);
+        off_t offset = getOffset(lastBlock);
         File* f = dataFile_f[fileNumber];
         f->Seek(offset, SEEK_SET);
         index_type ffb = f->ReadNetInt64();
@@ -1269,11 +1415,12 @@ private:
           return false;
         }
         for (index_type curBlockIndex = lastBlock - 1; curBlockIndex >= 0; --curBlockIndex) {
-          fileNumber = curBlockIndex / descrFile.file_size;
-          if (!checkfn(fileNumber)) {
+          fileNumber = getFileNumber(curBlockIndex);
+          if (fileNumber < 0) {
             smsc_log_error(logger, "can't find first free block: current block index is invalid %lld", curBlockIndex);
             return false;
           }
+          offset = getOffset(curBlockIndex);
           File* f = dataFile_f[fileNumber];
           f->Seek(offset, SEEK_SET);
           index_type nextffb = f->ReadNetInt64();
@@ -1296,12 +1443,16 @@ private:
       try {
         if (logger) smsc_log_info(logger, "check first free block: %lld", descrFile.first_free_block);
         index_type curBlockIndex = descrFile.first_free_block;
-        int fileNumber = curBlockIndex / descrFile.file_size;
-        if (curBlockIndex < 0 || !checkfn(fileNumber)) {
+        if (curBlockIndex < 0) {
           smsc_log_error(logger, "first free block invalid: %lld, can't fix first free block", curBlockIndex);
           return false;
         }
-        off_t offset = getOffset(curBlockIndex, fileNumber);
+        const int fileNumber = getFileNumber(curBlockIndex);
+        if ( fileNumber < 0 ) {
+            smsc_log_error(logger, "first free block invalid: %lld, can't fix first free block", curBlockIndex);
+            return false;
+        }
+        const off_t offset = getOffset(curBlockIndex);
         File* f = dataFile_f[fileNumber];
         f->Seek(offset, SEEK_SET);
         index_type ffb = f->ReadNetInt64();
@@ -1318,12 +1469,12 @@ private:
         }
         ++curBlockIndex;
         while (curBlockIndex < maxBlockIndex) {
-          int fn = curBlockIndex / descrFile.file_size;
-          if (!checkfn(fn)) {
+          const int fn = getFileNumber(curBlockIndex);
+          if (fn < 0) {
             if (logger) smsc_log_error(logger, "can't fix first free block: %lld", curBlockIndex);
             return false;
           }
-          off_t offset = getOffset(curBlockIndex, fileNumber);
+          const off_t offset = getOffset(curBlockIndex);
           File* f = dataFile_f[fileNumber];
           f->Seek(offset, SEEK_SET);
           index_type nextffb = f->ReadNetInt64();
@@ -1343,12 +1494,54 @@ private:
       return false;
     }
 
+
+    inline int getFileNumber(index_type index) const {
+        int fn = index / descrFile.file_size;
+        if (!checkfn(fn)) return -1;
+        return fn;
+    }
+
+    inline off_t getOffset(index_type index) const {
+        return (index % descrFile.file_size) * descrFile.block_size;
+    }
+
     /// check file number
     inline bool checkfn( int fn ) const {
         if ( fn >= 0 && fn < descrFile.files_count ) return true;
         if (logger) smsc_log_error(logger, "Invalid file number %d, max file number %d", fn, descrFile.files_count-1 );
         return false;
     }
+
+private:
+
+  Logger* logger;
+  GlossaryBase* glossary_;
+  bool running;
+  string dbName;
+  string dbPath;
+  DescriptionFile descrFile;		
+  File descrFile_f;
+  File backupFile_f;
+  vector<File*> dataFile_f;
+  // iterBlockIndex is not used anymore, see Iterator
+  // index_type iterBlockIndex;
+  int effectiveBlockSize;	
+
+  vector<index_type> dataBlockBackup;
+  char writeBuf[WRITE_BUF_SIZE];
+  char backupBuf[BACKUP_BUF_SIZE];
+  size_t hdrSize;
+  SerialBuffer profileData;
+  CompleteDataBlock completeDataBlock;
+  BackupHeader backupHeader;
+
+  std::vector< unsigned char > serDescrBuf_;
+  std::vector< unsigned char > serBackupBuf_;
+  std::vector< unsigned char > serHdrBuf_;
+    unsigned char* deserBuf_;
+    unsigned deserBufSize_;
+    DataFileCreator dataFileCreator_;
+
 };
 
 

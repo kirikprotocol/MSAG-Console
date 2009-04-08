@@ -729,6 +729,7 @@ int main( int argc, char** argv )
 
     Config cfg( slog );
 
+    DataFileManager dataFileManager(4,400);
     std::auto_ptr< SessionStorage > store;
 
     do {
@@ -776,7 +777,7 @@ int main( int argc, char** argv )
                 pf->Create( fn, cfg.pagesize, cfg.preallocate );
             }
 #else
-            pf.reset( new DiskDataStorage::storage_type(0,smsc::logger::Logger::getInstance("diskstore")) );
+            pf.reset( new DiskDataStorage::storage_type(dataFileManager,0,smsc::logger::Logger::getInstance("diskstore")) );
             int ret = -1;
             const std::string fn( cfg.storagename + storagesuffix + idxstr + "-data" );
             try {

@@ -336,18 +336,27 @@ int ServerCore::doExecute()
         fullstat.reserve(512);
         snprintf(buf,sizeof(buf),"Statistics follows: connections=%u", conns );
         fullstat.append(buf);
+        //01234567890123456789
+        //== Total: HH:MM:SS  req/resp/err=
+        //        speed(1/s): req/resp/err=
+        //         total err: 6/workProcTmo:12
+        //    Last: HH:MM:SS  req/resp/err=
+        //        speed(1/s): req/resp/err=
+        //          last err: 6/workProcTmo:1
+        //    Data:  abonents=xxxxxx locations=16 storages=128
         fullstat.append("\n== Total: ");
         fullstat.append(totalStat.toString());
         std::string caught = totalExceptions_.toString();
         if ( ! caught.empty() ) {
-            fullstat.append("\n  caught: ");
+            //                 01234567890123456789
+            fullstat.append("\n         total err: ");
             fullstat.append(caught);
         }
         fullstat.append("\n    Last: ");
         fullstat.append(lastStat.toString());
         caught = exceptions->toString();
         if ( ! caught.empty() ) {
-            fullstat.append("\n  caught: ");
+            fullstat.append("\n          last err: ");
             fullstat.append(caught);
         }
         if ( syncDispatcher_ ) {
@@ -760,12 +769,13 @@ std::string ServerCore::ExceptionCount::toString() const
         for ( Hash< unsigned >::Iterator j(hash); j.Next(where,value); ) {
             snprintf(buf,sizeof(buf),"%u/%s:%u", k, where, value);
             unsigned buflen = unsigned(strlen(buf));
-            if ( curlen + buflen > 70 ) {
-                //                 caught:
-                result.append("\n          ");
-                curlen = 10;
+            if ( curlen + buflen > 73 ) {
+                //               01234567890123456789
+                result.append("\n                    ");
+                curlen = 20;
             } else if ( first ) {
                 first = false;
+                curlen = 20; // initial padding
             } else {
                 result.append("  ");
                 curlen += 2;

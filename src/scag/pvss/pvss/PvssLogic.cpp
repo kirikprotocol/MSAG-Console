@@ -232,7 +232,20 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index )
 
     const std::string pathSuffixString(pathSuffix);
 
-    /// TODO: move the code into a separate class scag/util/storage/IndexRebuilder.
+    // do we need glossary here ?
+    // I (db) think 'no', as we don't unpack datablocks
+    std::auto_ptr< DiskDataStorage::storage_type > bs
+        (new DiskDataStorage::storage_type
+         (dataFileManager_,
+          0, // elStorage->glossary,
+          smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
+
+    const string fn(config_.dbName + "-data");
+    int ret = bs->Open(fn, path);
+    if (ret < 0 && ret != DiskDataStorage::storage_type::FIRST_FREE_BLOCK_FAILED ) {
+        throw Exception("can't open data disk storage: %s", path.c_str());
+    }
+    // we have opened everything
 
     /// making sure that temporary index file is not here
     std::string n = path + "/" + config_.dbName + "-index";
@@ -249,28 +262,15 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index )
     dis->setInvalidIndex( DiskDataStorage::storage_type::invalidIndex() );
     smsc_log_debug(logger_, "temporary data index storage %u is created", index);
 
-    // FIXME: do we need glossary here ?
-    // I (db) think 'no', as we don't unpack datablocks
-    std::auto_ptr< DiskDataStorage::storage_type > bs
-        (new DiskDataStorage::storage_type
-         (dataFileManager_,
-          0, // elStorage->glossary,
-          smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
-
-    int ret = -1;
-    const string fn(config_.dbName + "-data");
-    ret = bs->Open(fn, path);
-    if (ret < 0) {
-        throw Exception("can't open data disk storage: %s", path.c_str());
-    }
-
     // rebuilding index
-    DiskIndexStorage::index_type blockIndex = 0;
-    AbntAddr key;
+    // DiskIndexStorage::index_type blockIndex = 0;
+    // AbntAddr key;
     unsigned long rebuilt = 0;
-    while ( bs->next(blockIndex,key) ) {
-        smsc_log_debug( logger_, "rebuiling: key=%s, idx=%lx", key.toString().c_str(), long(blockIndex));
-        dis->setIndex(key,blockIndex);
+    for ( DiskDataStorage::storage_type::Iterator iter = bs->beginWithRecovery(); iter.next(); ) {
+        smsc_log_debug( logger_, "rebuilding: key=%s, idx=%lx",
+                        iter.key().toString().c_str(),
+                        long(iter.blockIndex()) );
+        dis->setIndex(iter.key(),iter.blockIndex());
         ++rebuilt;
     }
     smsc_log_info( logger_, "storage %s indices rebuilt: %lu", path.c_str(), rebuilt );

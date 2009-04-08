@@ -643,7 +643,9 @@ private:
 
 namespace scag2 {
 namespace util {
-namespace storage = scag::util::storage;
+namespace storage {
+using namespace scag::util::storage;
+}
 }
 }
 
