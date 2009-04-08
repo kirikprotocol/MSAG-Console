@@ -379,7 +379,13 @@ public:
         if(0 != (ret = OpenBackupFile()))
             return ret;
         if (!checkFirstFreeBlock()) {
-          return FIRST_FREE_BLOCK_FAILED;
+          if (logger) smsc_log_warn(logger, "try to rollback last transaction");
+          loadBackupData(true);
+          if (!checkFirstFreeBlock()) {
+            if (!findFirstFreeBlock()) {
+              return FIRST_FREE_BLOCK_FAILED;
+            }
+          }
         }
 
         dataFileCreator_.init(descrFile.file_size, descrFile.block_size, descrFile.files_count, dbPath, dbName);
@@ -922,16 +928,20 @@ private:
     }
 
 
-    void loadBackupData() {
+    void loadBackupData(bool ignoreCompleteFlag = false) {
         try {
             dataBlockBackup.clear();
             backupFile_f.Seek(0);
             uint8_t trx = backupFile_f.ReadByte();
-            if (trx == TRX_COMPLETE) {
+            if (trx == TRX_COMPLETE && !ignoreCompleteFlag) {
                 if (logger) smsc_log_debug(logger, "Last transaction is complete");
                 return;
             }
-            if (logger) smsc_log_warn(logger, "Last transaction is incomplete. Load transaction data");
+            if (ignoreCompleteFlag) {
+              if (logger) smsc_log_warn(logger, "Last transaction is complete. Rollback last transaction.");
+            } else {
+              if (logger) smsc_log_warn(logger, "Last transaction is incomplete. Load transaction data");
+            }
 
             deserialize(&backupFile_f, descrFile);
             deserialize(&backupFile_f, backupHeader);
@@ -1237,19 +1247,61 @@ private:
         }
     }
 
+    off_t getOffset(index_type index, int fileNumber) {
+      return (index - fileNumber * descrFile.file_size) * descrFile.block_size;
+    }
+
+    inline bool findFirstFreeBlock() {
+      try {
+        if (logger) smsc_log_warn(logger, "try to find first free block");
+        index_type lastBlock = descrFile.files_count * descrFile.file_size - 1;
+        int fileNumber = lastBlock / descrFile.file_size;
+        if (!checkfn(fileNumber)) {
+          smsc_log_error(logger, "can't find first free block: last block index is invalid %lld", lastBlock);
+          return false;
+        }
+        off_t offset = getOffset(lastBlock, fileNumber);
+        File* f = dataFile_f[fileNumber];
+        f->Seek(offset, SEEK_SET);
+        index_type ffb = f->ReadNetInt64();
+        if (ffb != -1) {
+          smsc_log_error(logger, "can't find first free block: last block header is invalid %lld, mast be -1", ffb);
+          return false;
+        }
+        for (index_type curBlockIndex = lastBlock - 1; curBlockIndex >= 0; --curBlockIndex) {
+          fileNumber = curBlockIndex / descrFile.file_size;
+          if (!checkfn(fileNumber)) {
+            smsc_log_error(logger, "can't find first free block: current block index is invalid %lld", curBlockIndex);
+            return false;
+          }
+          File* f = dataFile_f[fileNumber];
+          f->Seek(offset, SEEK_SET);
+          index_type nextffb = f->ReadNetInt64();
+          if (nextffb == BLOCK_USED) {
+            smsc_log_error(logger, "first used block found: %lld, first free block will be: %lld", curBlockIndex, curBlockIndex + 1);
+            descrFile.first_free_block = curBlockIndex + 1;
+            changeDescriptionFile();
+            if (logger) smsc_log_info(logger, "first free block fixed: %lld", descrFile.first_free_block);
+            return true;
+          }
+        }
+      } catch (const std::exception& ex) {
+        if (logger) smsc_log_error(logger, "Error finding first free block: %s", ex.what());
+      }
+      smsc_log_error(logger, "first free block not found");
+      return false;
+    }
+
     inline bool checkFirstFreeBlock() {
       try {
+        if (logger) smsc_log_info(logger, "check first free block: %lld", descrFile.first_free_block);
         index_type curBlockIndex = descrFile.first_free_block;
-        if (curBlockIndex < 0) {
-          smsc_log_error(logger, "first free block invalid: %lld, can't fix first free block", curBlockIndex);
-          return false;
-        }
         int fileNumber = curBlockIndex / descrFile.file_size;
-        if (!checkfn(fileNumber)) {
+        if (curBlockIndex < 0 || !checkfn(fileNumber)) {
           smsc_log_error(logger, "first free block invalid: %lld, can't fix first free block", curBlockIndex);
           return false;
         }
-        off_t offset = (curBlockIndex - fileNumber * descrFile.file_size) * descrFile.block_size;
+        off_t offset = getOffset(curBlockIndex, fileNumber);
         File* f = dataFile_f[fileNumber];
         f->Seek(offset, SEEK_SET);
         index_type ffb = f->ReadNetInt64();
@@ -1271,7 +1323,7 @@ private:
             if (logger) smsc_log_error(logger, "can't fix first free block: %lld", curBlockIndex);
             return false;
           }
-          off_t offset = (curBlockIndex - fileNumber * descrFile.file_size) * descrFile.block_size;
+          off_t offset = getOffset(curBlockIndex, fileNumber);
           File* f = dataFile_f[fileNumber];
           f->Seek(offset, SEEK_SET);
           index_type nextffb = f->ReadNetInt64();
@@ -1279,14 +1331,14 @@ private:
             if (logger) smsc_log_info(logger, "correct first free block found: %lld, next free block: %lld", curBlockIndex, nextffb);
             descrFile.first_free_block = curBlockIndex;
             changeDescriptionFile();
-            if (logger) smsc_log_info(logger, "first free block fixed", curBlockIndex);
+            if (logger) smsc_log_info(logger, "first free block fixed %lld", descrFile.first_free_block);
             return true;
           }
           ++curBlockIndex;
         }
         if (logger) smsc_log_error(logger, "can't fix first free block: %lld", curBlockIndex);
       } catch (const std::exception& ex) {
-        if (logger) smsc_log_warn(logger, "Error checking first free block: %s", ex.what());
+        if (logger) smsc_log_error(logger, "Error checking first free block: %s", ex.what());
       }
       return false;
     }
