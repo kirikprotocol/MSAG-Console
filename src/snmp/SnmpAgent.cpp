@@ -541,6 +541,8 @@ using smsc::snmp::SnmpAgent;
     uint64_t perf[smsc::system::performance::performanceCounters];
     ((smsc::system::Smsc*)smscptr)->getPerfData(perf);
 
+    const int perfBase=6;
+
     switch (reqinfo->mode)
     {
       case MODE_GET:
@@ -552,40 +554,41 @@ using smsc::snmp::SnmpAgent;
         if (snmp_oid_compare(sumbitOkOid,OID_LENGTH(sumbitOkOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
         {
-          val.high = perf[0] >> 32;
-          val.low  = perf[0] & 0xffffffff;
+          val.high = perf[perfBase+0] >> 32;
+          val.low  = perf[perfBase+0] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
          smsc_log_debug(((smsc::logger::Logger*)agentlog), "submitOK req");
         }
         else if (snmp_oid_compare(sumbitErrOid,OID_LENGTH(sumbitErrOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
         {
-          val.high = perf[1] >> 32;
-          val.low  = perf[1] & 0xffffffff;
+          val.high = perf[perfBase+1] >> 32;
+          val.low  = perf[perfBase+1] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "submitErr req");
         }
         else if (snmp_oid_compare(deliverOkOid,OID_LENGTH(deliverOkOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
         {
-          val.high = perf[2] >> 32;
-          val.low  = perf[2] & 0xffffffff;
+          val.high = perf[perfBase+2] >> 32;
+          val.low  = perf[perfBase+2] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "delivwerOK req");
         }
         else if (snmp_oid_compare(deliverErrOid,OID_LENGTH(deliverErrOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
         {
-          val.high = perf[3] >> 32;
-          val.low  = perf[4] & 0xffffffff;
+          uint64_t summ = perf[perfBase+3]+perf[perfBase+4];
+          val.high =  summ >> 32;
+          val.low  = summ & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverERR req");
         }
         else if (snmp_oid_compare(rescheduledOid,OID_LENGTH(rescheduledOid),
                              reginfo->rootoid, reginfo->rootoid_len) ==0)
         {
-          val.high = perf[5] >> 32;
-          val.low  = perf[5] & 0xffffffff;
+          val.high = perf[perfBase+5] >> 32;
+          val.low  = perf[perfBase+5] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "rescheduled req");
         }
