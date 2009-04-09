@@ -35,7 +35,10 @@ class TSM
       STOP = 3
     };
   public:
+    // remove external transaction id generation, get limit only
+    // constructor with TrId will ignore external id
     TSM(TrId _ltrid,AC& ac,TCO* _tco);
+    //TSM(uint32_t limit,AC& ac,TCO* _tco);
     virtual ~TSM();
     virtual void setCompletionListener(TsmComletionListener* listener);
     virtual void BEGIN(Message& msg);
@@ -63,6 +66,7 @@ class TSM
     virtual void TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg);
     virtual void TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg);
     static void getCounters(TSMSTAT&);
+    TrId getltrid();
   protected:
 
     TrId ltrid;

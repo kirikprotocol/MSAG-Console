@@ -42,6 +42,9 @@ static void DumpSentSms(SMS& sms,Logger* logger)
  */
 void MTFTSM::sendResponse(int result,int iid)
 {
+  //simulate MAP_NO_RESPONSE_FROM_PEER=1143
+  if ( result == 1143) tco->TSMStopped(ltrid);
+
   if (st==ACTIVE)
   {
     if (req.mms)
@@ -117,6 +120,7 @@ void MTFTSM::BEGIN(Message& msg)
     req.invokeId = msg.getInvokeId();
     req.mms = mtf.isMMS();
     try {
+      unpackSccpDigits(req.dstmsc,laddr,laddrlen);
       makeSmsToRequest(&mtf,&req);
     } catch (exception& exc) {
         smsc_log_debug(logger,
@@ -170,6 +174,7 @@ void MTFTSM::CONTINUE_received(uint8_t cdlen,
     req.invokeId = msg.getInvokeId();
     req.mms = mtf.isMMS();
     try {
+      unpackSccpDigits(req.dstmsc,laddr,laddrlen);
       makeSmsToRequest(&mtf,&req);
     } catch (exception& exc) {
         smsc_log_debug(logger,

@@ -134,7 +134,11 @@ bool modifyssn(uint8_t* src, uint8_t len, const char* pattern, uint8_t newssn, b
   }
   return false;
 }
-
+void unpackSccpDigits(char* dst, uint8_t* addr, uint8_t addrlen)
+{
+  uint8_t odd = addr[3] & 0x01;
+  unpack_addr(dst, addr+5, (addrlen - 5)*2 - odd);
+}
 std::string getAddressDescription(uint8_t len, uint8_t* buf)
 {
   string res="";

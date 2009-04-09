@@ -23,6 +23,7 @@ namespace smsc { namespace mtsmsme { namespace processor
     struct Request
     {
         SMS sms;
+        char dstmsc[20];
 
         /**
          * Callback function for setting result of send operation (responce code)

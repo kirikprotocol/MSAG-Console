@@ -57,12 +57,12 @@ class TCO: public SccpUser
     RequestSender *sender;
     AddressValue hlrnumber;
     AddressValue mscnumber;
+    list<TrId> tridpool;
   private:
     AddressValue vlrnumber;
     void fixCalledAddress(uint8_t cdlen, uint8_t *cd);
     XHash<TrId,TSM*,TrIdHash> tsms;
     Mutex tridpool_mutex;
-    list<TrId> tridpool;
     HLROAM* hlr;
 };
 

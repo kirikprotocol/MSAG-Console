@@ -24,6 +24,7 @@ extern const char* getReturnCodeDescription(uint16_t code);
 extern unsigned packNumString2BCD(unsigned char* bcd, const char* str,unsigned slen, bool filler = true);
 extern unsigned packNumString2BCD91(unsigned char* bcd, const char* str,unsigned slen, bool filler = true);
 extern unsigned unpackBCD912NumString(char* dst, const unsigned char* src, unsigned srclen);
+extern void unpackSccpDigits(char* dst, uint8_t* src, uint8_t srclen);
 extern unsigned packSCCPAddress(unsigned char* dst, unsigned char npi, const char *saddr, unsigned char ssn);
 extern bool modifyssn(uint8_t* src, uint8_t len, const char* pattern, uint8_t newssn, bool unconditional = false);
 }//namespace util

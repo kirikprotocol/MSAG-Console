@@ -1,6 +1,7 @@
 static char const ident[] = "$Id$";
 #include "mtsmsme/processor/TSM.hpp"
 #include "mtsmsme/processor/TCO.hpp"
+#include "util/Exception.hpp"
 #include <sys/time.h>
 namespace smsc{namespace mtsmsme{namespace processor{
 
@@ -14,17 +15,18 @@ void TSM::getCounters(TSMSTAT& stat)
   stat.objcreated = objcreated;
   stat.objdeleted = objdeleted;
 }
-TSM::TSM(TrId _ltrid,AC& ac,TCO* _tco):objnumber(++objcount)
+TSM::TSM(TrId _ltrid,AC& ac,TCO* _tco):tco(_tco),appcntx(ac),listener(0),
+                                      objnumber(++objcount),st(IDLE)
 {
+  if ( tco->tridpool.empty() ) throw smsc::util::Exception("transaction pool is empty");
+  ltrid = tco->tridpool.front();
+  tco->tridpool.pop_front();
+
   logger = Logger::getInstance("mt.sme.tsm");
-  ltrid = _ltrid;
-  appcntx = ac;
-  tco = _tco;
-  st = IDLE;
-  listener = 0;
   ++objcreated;
   gettimeofday(&start_ts, NULL);
 }
+TrId TSM::getltrid() { return ltrid; }
 void TSM::setCompletionListener(TsmComletionListener* _listener) { listener = _listener; }
 
 TSM::~TSM()
@@ -32,6 +34,7 @@ TSM::~TSM()
   struct timeval end_ts;
   --objcount;
   ++objdeleted;
+  tco->tridpool.push_back(ltrid);
 //  gettimeofday(&end_ts,NULL);
 //  smsc_log_info(logger,"tsm(ltrid=%s,objnumber=%d,lifetime=%ldms)",
 //      ltrid.toString().c_str(),objnumber,
