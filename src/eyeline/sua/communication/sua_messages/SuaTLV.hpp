@@ -39,7 +39,7 @@ public:
   virtual std::string toString() const = 0;
 protected:
   enum { HEADER_SZ = sizeof(uint16_t) + sizeof(uint16_t) };
-private:
+//private:
   uint16_t _tag;
 };
 
@@ -108,6 +108,8 @@ public:
   TLV_OctetArrayPrimitive(const TLV_OctetArrayPrimitive& rhs);
 
   TLV_OctetArrayPrimitive(uint16_t tag, const uint8_t* val, uint16_t valLen);
+
+  TLV_OctetArrayPrimitive& operator=(const TLV_OctetArrayPrimitive& rhs);
 
   virtual size_t serialize(communication::TP* packetBuf,
                            size_t offset /*position inside buffer where TLV object will be stored*/) const;

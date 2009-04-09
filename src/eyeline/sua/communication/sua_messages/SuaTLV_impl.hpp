@@ -78,7 +78,9 @@ TLV_OctetArrayPrimitive<SZ>::TLV_OctetArrayPrimitive(uint16_t tag)
   //memset(_valueBuffer._value, 0, sizeof(_valueBuffer));
 }
 
-TLV_OctetArrayPrimitive::TLV_OctetArrayPrimitive(const TLV_OctetArrayPrimitive& rhs)
+
+template <size_t SZ>
+TLV_OctetArrayPrimitive<SZ>::TLV_OctetArrayPrimitive(const TLV_OctetArrayPrimitive<SZ>& rhs)
   : SuaTLV(rhs), _valLen(rhs._valLen), _isValueSet(rhs._isValueSet), _paddingLen(rhs._paddingLen)
 {
   if(_isValueSet)
@@ -116,6 +118,21 @@ TLV_OctetArrayPrimitive<SZ>::TLV_OctetArrayPrimitive(uint16_t tag, size_t reserv
       _paddingLen = 0x04 - paddingTo4bytes;
   }
 }
+
+template <size_t SZ>
+TLV_OctetArrayPrimitive<SZ>& TLV_OctetArrayPrimitive<SZ>::operator=(const TLV_OctetArrayPrimitive<SZ>& rhs)
+{
+  _tag=rhs._tag;
+  _isValueSet=rhs._isValueSet;
+  _valLen=rhs._valLen;
+  _paddingLen=rhs._paddingLen;
+  if(_isValueSet)
+  {
+    memcpy(_valueBuffer._value,rhs._valueBuffer._value,_valLen);
+  }
+  return *this;
+}
+
 
 template <size_t SZ>
 size_t
