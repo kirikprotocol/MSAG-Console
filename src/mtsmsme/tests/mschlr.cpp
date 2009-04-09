@@ -1,4 +1,5 @@
-#include "mtsmsme/sccp/SccpProcessor.hpp"
+static char const ident[] = "$Id$";
+#include "mtsmsme/sua/SuaProcessor.hpp"
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
 #include "mtsmsme/processor/TCO.hpp"
@@ -16,7 +17,7 @@ extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 #define ENC_SCHEME 0x01
 #define NATURE_OF_ADDR 0x04
 
-using smsc::mtsmsme::processor::SccpProcessor;
+using smsc::mtsmsme::processor::SuaProcessor;
 using smsc::mtsmsme::processor::RequestSender;
 using smsc::mtsmsme::processor::Request;
 using smsc::mtsmsme::processor::SubscriberRegistrator;
@@ -47,10 +48,11 @@ class EmptyRequestSender: public RequestSender {
     request->setSendResult(0); return true;
   }
 };
-static char etalon[] = "791398699814xxxx";
+static char etalon[] = "791398600044xxxx";
 static char etalon_imsi[] = "25001389999xxxx";
-static char etalon_msc[] = "791398699812";
-static char sender_msc[] = "791398699815";
+static char etalon_msc[] = "791398600042";
+static char sender_msc[] = "791398600045";
+static char border_msisdn[] = "7913986000440099";
 class EmptySubscriberRegistrator: public SubscriberRegistrator {
   public:
     EmptySubscriberRegistrator(TCO* _tco) : SubscriberRegistrator(_tco) {}
@@ -64,7 +66,7 @@ class EmptySubscriberRegistrator: public SubscriberRegistrator {
       {
         strncpy(etalon_imsi+strlen(etalon_imsi)-4,msisdn.value+strlen(msisdn.value)-4,4);
         imsi.setValue((uint8_t)strlen(etalon_imsi),etalon_imsi);
-        if (strncmp(msisdn.value,"7913986998140099",strlen(etalon)) <= 0 )
+        if (strncmp(msisdn.value,border_msisdn,strlen(etalon)) <= 0 )
           msc.setValue((uint8_t) strlen(sender_msc), sender_msc);
         else
           msc.setValue((uint8_t) strlen(etalon_msc), etalon_msc);
@@ -73,9 +75,9 @@ class EmptySubscriberRegistrator: public SubscriberRegistrator {
       return false;
     }
 };
-class GopotaListener: public SccpProcessor, public Thread {
+class GopotaListener: public SuaProcessor, public Thread {
   public:
-    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg) : SccpProcessor(_tco,_reg) {}
+    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg) : SuaProcessor(_tco,_reg) {}
     virtual int Execute()
     {
       int result;
@@ -120,9 +122,9 @@ int main(int argc, char** argv)
     mtsms.setRequestSender(&fakeSender);
     GopotaListener listener(&mtsms,&fakeHLR);
     DialogueStat stat;
-    listener.configure(43,191,Address(".1.1.791398699812"),
-                               Address(".1.1.791398699813"),
-                               Address(".1.1.791398699814"));
+    listener.configure(43,191,Address(".1.1.791398600042"),
+                               Address(".1.1.791398600043"),
+                               Address(".1.1.791398600044"));
     listener.Start();
     stat.Start();
     int8_t invoke_id = 0;

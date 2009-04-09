@@ -1,4 +1,5 @@
-#include "mtsmsme/sccp/SccpProcessor.hpp"
+static char const ident[] = "$Id$";
+#include "mtsmsme/sua/SuaProcessor.hpp"
 #include "mtsmsme/processor/HLRImpl.hpp"
 #include "mtsmsme/processor/TCO.hpp"
 #include "mtsmsme/processor/TSM.hpp"
@@ -11,7 +12,7 @@
 #include <string>
 #include <vector>
 
-using smsc::mtsmsme::processor::SccpProcessor;
+using smsc::mtsmsme::processor::SuaProcessor;
 using smsc::mtsmsme::processor::RequestSender;
 using smsc::mtsmsme::processor::Request;
 using smsc::mtsmsme::processor::SubscriberRegistrator;
@@ -20,6 +21,7 @@ using smsc::mtsmsme::processor::TSM;
 using smsc::mtsmsme::processor::util::packSCCPAddress;
 using smsc::mtsmsme::processor::shortMsgMoRelayContext_v2;
 using smsc::mtsmsme::processor::TrId;
+using smsc::mtsmsme::processor::TSMSTAT;
 using smsc::mtsmsme::comp::MoForwardSmReq;
 using smsc::mtsmsme::processor::BeginMsg;
 using smsc::mtsmsme::processor::util::packNumString2BCD91;
@@ -51,9 +53,9 @@ class EmptySubscriberRegistrator: public SubscriberRegistrator {
     virtual int  update(Address& imsi, Address& msisdn, Address& mgt) {return 1;}
     virtual bool lookup(Address& msisdn, Address& imsi, Address& msc) {return false;}
 };
-class GopotaListener: public SccpProcessor, public Thread {
+class GopotaListener: public SuaProcessor, public Thread {
   public:
-    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg) : SccpProcessor(_tco,_reg) {}
+    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg) : SuaProcessor(_tco,_reg) {}
     virtual int Execute()
     {
       int result;
@@ -108,16 +110,18 @@ int main(int argc, char** argv)
     smsc_log_error(logger,"sizeof(MoForwardSmReq)=%d",sizeof(MoForwardSmReq));
     StatFlusher trener;
     trener.Start();
-    string msca("791398699815"); // MSC address
-    string sca("79139869990"); // service center address
-//    string sca("791398699812"); // service center address
+    string msca("791398600045"); // MSC address
+    string sca("79139860005"); // service center address
+    string vlra("791398600043"); //VLR address
+    string hlra("791398600044"); //HLR address
     EmptyRequestSender fakeSender;
     TCO mtsms(10000);
     EmptySubscriberRegistrator fakeHLR(&mtsms);
     mtsms.setRequestSender(&fakeSender);
     GopotaListener listener(&mtsms, &fakeHLR);
     listener.configure(44, 192, Address(msca.length(), 1, 1, msca.c_str()),
-        Address(".1.1.791398699813"), Address(".1.1.791398699814"));
+        Address(vlra.length(), 1, 1, vlra.c_str()),
+        Address(hlra.length(), 1, 1, hlra.c_str()));
     listener.Start();
     sleep(10);
     uint32_t smscount = 0;
@@ -170,9 +174,9 @@ int main(int argc, char** argv)
         char rndmsto[20] = {0};
         char rndmsfrom[20] = {0};
         int pos;
-        pos = snprintf(rndmsto,sizeof(rndmsto),"791398699814%04d",randint(100,9999));
+        pos = snprintf(rndmsto,sizeof(rndmsto),"791398600044%04d",randint(100,9999));
         rndmsto[pos] = 0;
-        pos = snprintf(rndmsfrom,sizeof(rndmsfrom),"791398699814%04d",randint(0,99));
+        pos = snprintf(rndmsfrom,sizeof(rndmsfrom),"791398600044%04d",randint(0,99));
         rndmsfrom[pos] = 0;
         string msto(rndmsto); // B-subsriber e.g. "7913986998140100"
         string msfrom(rndmsfrom); // A-subscriber e.g. "7913986998140001
@@ -182,7 +186,7 @@ int main(int argc, char** argv)
         smstextlatin1[tpos] = 0;
         unsigned char smstext[20] = {0};
         unsigned int escaped_len = 0; // TP-User-Data-Length
-        //            unsigned maxlen=(unsigned)(ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+1-(pdu->signalInfo+1)));
+        //unsigned maxlen=(unsigned)(ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+1-(pdu->signalInfo+1)));
         int _newbuflen = ConvertText27bit(
             (unsigned char *)smstextlatin1,strlen(smstextlatin1),
             smstext,&escaped_len,0,sizeof(smstext));
@@ -206,11 +210,13 @@ int main(int argc, char** argv)
         tsm->TBeginReq(cdlen, cd, cllen, cl);
         smsc_log_info(logger,"sent %010d",smscount);
         invokation_count++;
+      //struct timespec delay = { 0, 500000000}; // nonoseconds
+      //nanosleep(&delay, 0);
       }
       else
       {
       //sleep(1);
-      struct timespec delay = { 0, 5000000}; // nonoseconds
+      struct timespec delay = { 0, 500000000}; // nonoseconds
       nanosleep(&delay, 0);
       }
     }
