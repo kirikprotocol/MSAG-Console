@@ -111,7 +111,7 @@ static void changeState(State nstate)
                  "RequestProcessor:%s",
                  getStateDescription(state).c_str());
 }
-extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
+//extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 static void suaHandleInd(libsua::MessageInfo& message, SccpUser& listener)
 {
   smsc_log_debug(logger,
@@ -147,6 +147,10 @@ static void suaHandleInd(libsua::MessageInfo& message, SccpUser& listener)
       listener.NUNITDATA(cdlen,cd,cllen,cl,ulen,udp);
       break;
     }
+    case libsua::N_NOTICE_IND_MSGCODE :
+    {
+      smsc_log_info(logger,"N_NOTICE_IND_MSGCODE");
+    }break;
   }
 }
 int SuaProcessor::Run()
@@ -165,10 +169,23 @@ int SuaProcessor::Run()
   changeState(INIT);
   for(int i=0; i < suaApi.sua_getConnectsCount(); ++i)
   {
-    smsc_log_info(logger, "libSuaTest::: call sua_connect(connectNum=%d)", i);
-    suaApi.sua_connect(i);
-    smsc_log_info(logger, "libSuaTest::: call sua_bind(connectNum=%d)", i);
-    suaApi.bind(i);
+    int result;
+    if ((result = suaApi.sua_connect(i)) != 0)
+    {
+      smsc_log_error(logger,
+                     "libSuaTest::: call sua_connect(connectNum=%d)"
+                     " failed with code %d", i,result);
+      changeState(SUABINDERROR);
+      return -1;
+    }
+    if ((result = suaApi.bind(i)) != 0)
+    {
+      smsc_log_error(logger,
+                     "libSuaTest::call sua_bind(connectNum=%d)"
+                     " failed with code %d", i,result);
+      changeState(SUABINDERROR);
+      return -1;
+    }
   }
 
   changeState(WORKING);
@@ -193,7 +210,7 @@ int SuaProcessor::Run()
     }
     suaHandleInd(message,*coordinator);
     message.msgData.SetPos(0);//release buffer
-//    smsc_log_info(logger, "got new message=[%s]", hexdmp(msgInfo.msgData.get(), msgInfo.msgData.GetPos()).c_str());
+    //smsc_log_debug(logger, "got new message=[%s]", dump(message.msgData.GetPos(),message.msgData.get()).c_str());
   }
   for(int i=0; i < suaApi.sua_getConnectsCount(); ++i)
   {
