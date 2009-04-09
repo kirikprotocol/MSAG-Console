@@ -95,9 +95,9 @@ PvssLogic::LogicInitTask* AbonentLogic::startInit()
     dataFileManager_.startTask(task,false);
     return task;
 }
-PvssLogic::LogicRebuildIndexTask* AbonentLogic::startRebuildIndex()
+PvssLogic::LogicRebuildIndexTask* AbonentLogic::startRebuildIndex(unsigned maxSpeed)
 {
-    LogicRebuildIndexTask* task = new LogicRebuildIndexTask(this);
+    LogicRebuildIndexTask* task = new LogicRebuildIndexTask(this,maxSpeed);
     dataFileManager_.startTask(task,false);
     return task;
 }
@@ -155,14 +155,14 @@ void AbonentLogic::init() /* throw (smsc::util::Exception) */
 }
 
 
-void AbonentLogic::rebuildIndex()
+void AbonentLogic::rebuildIndex(unsigned maxSpeed)
 {
     smsc_log_info(logger_,"rebuilding indices on abonent location #%u", locationNumber_ );
     unsigned long total = 0;
     for ( unsigned i = 0; i < dispatcher_.getStoragesCount(); ++i ) {
         if ( util::storage::StorageNumbering::instance().node(i) == dispatcher_.getNodeNumber() ) {
             if ( dispatcher_.getLocationNumber(i) == locationNumber_ ) {
-                total += rebuildElementStorage(i);
+                total += rebuildElementStorage(i,maxSpeed);
             }
         }
     }
@@ -221,7 +221,7 @@ unsigned long AbonentLogic::initElementStorage(unsigned index) /* throw (smsc::u
 }
 
 
-unsigned long AbonentLogic::rebuildElementStorage( unsigned index )
+unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxSpeed )
 {
     char pathSuffix[4];
     snprintf(pathSuffix, sizeof(pathSuffix), "%03u", index);
@@ -275,7 +275,7 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index )
         dis->setIndex(iter.key(),iter.blockIndex());
         ++rebuilt;
     }
-    dis->flush();
+    dis->flush(maxSpeed);
     smsc_log_info( logger_, "storage %s indices rebuilt: %lu", path.c_str(), rebuilt );
 
     rename( n.c_str(), o.c_str() );
@@ -387,10 +387,10 @@ PvssLogic::LogicInitTask* InfrastructLogic::startInit()
     task->Execute();
     return 0;
 }
-PvssLogic::LogicRebuildIndexTask* InfrastructLogic::startRebuildIndex()
+PvssLogic::LogicRebuildIndexTask* InfrastructLogic::startRebuildIndex(unsigned maxSpeed)
 {
     // we do in in the main thread
-    std::auto_ptr<LogicRebuildIndexTask> task(new LogicRebuildIndexTask(this));
+    std::auto_ptr<LogicRebuildIndexTask> task(new LogicRebuildIndexTask(this,maxSpeed));
     task->Execute();
     return 0;
 }
@@ -431,7 +431,7 @@ void InfrastructLogic::init() /* throw (smsc::util::Exception) */ {
 }
 
 
-void InfrastructLogic::rebuildIndex()
+void InfrastructLogic::rebuildIndex( unsigned /*maxSpeed*/)
 {
     smsc_log_warn(logger_,"infrastructure index rebuilding is not impl yet");
 }

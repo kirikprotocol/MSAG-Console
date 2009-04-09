@@ -251,6 +251,13 @@ int main(int argc, char* argv[]) {
       smsc_log_warn(logger, "Parameter <PVSS.storageQueueSize> missed. Default value is %d", maxWaitingCount);
     }
 
+      unsigned maxSpeed = 0;
+      try {
+          maxSpeed = persConfig.getInt("maxSpeed");
+      } catch (...) {
+          smsc_log_warn(logger,"Parameter <PVSS.maxSpeed> missed, Default value is %d", maxSpeed );
+      }
+
     NodeConfig nodeCfg = getNodeConfig(persConfig, logger);
 
     ConfigView asyncCfg(manager, "PVSS.AsyncTransport");
@@ -298,7 +305,7 @@ int main(int argc, char* argv[]) {
           const bool makedirs = !rebuildIndex;
           pvssDispatcher.createLogics( makedirs, abntCfg, infCfg.get() );
           if ( rebuildIndex ) {
-              pvssDispatcher.rebuildIndex();
+              pvssDispatcher.rebuildIndex( maxSpeed );
               return 0;
           } else {
               pvssDispatcher.init();

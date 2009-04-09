@@ -50,7 +50,7 @@ public:
                        const InfrastructStorageConfig* infcfg) /* throw (smsc::util::Exception) */;
 
     void init();
-    void rebuildIndex();
+    void rebuildIndex( unsigned maxSpeed = 0 );
 
   unsigned getInfrastructNodeNumber() const { return 0; }
 

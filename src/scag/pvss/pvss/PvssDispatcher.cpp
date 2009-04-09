@@ -174,11 +174,11 @@ void PvssDispatcher::init()
 }
 
 
-void PvssDispatcher::rebuildIndex()
+void PvssDispatcher::rebuildIndex( unsigned maxSpeed )
 {
     smsc::core::buffers::Array< LogicTask* > rebuildTasks;
     for ( unsigned i = 0; i < abonentLogics_.Count(); ++i ) {
-        LogicTask* task = abonentLogics_[i]->startRebuildIndex();
+        LogicTask* task = abonentLogics_[i]->startRebuildIndex(maxSpeed);
         if (task) rebuildTasks.Push(task);
     }
 

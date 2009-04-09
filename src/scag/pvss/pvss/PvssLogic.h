@@ -91,11 +91,12 @@ protected:
     class LogicRebuildIndexTask : public LogicTask
     {
     public:
-        LogicRebuildIndexTask( PvssLogic* logic ) : LogicTask(logic) {}
+        LogicRebuildIndexTask( PvssLogic* logic, unsigned maxSpeed = 0 ) :
+        LogicTask(logic), maxSpeed_(maxSpeed) {}
         virtual const char* taskName() { return "pvss.rbld"; }
         virtual int doExecute() {
             try {
-                logic_->rebuildIndex();
+                logic_->rebuildIndex(maxSpeed_);
             } catch ( std::exception& e ) {
                 setFailure(e.what());
             } catch (...) {
@@ -103,6 +104,8 @@ protected:
             }
             return 0;
         }
+    private:
+        unsigned maxSpeed_;
     };
 
 public:
@@ -116,7 +119,7 @@ public:
 
     /// start a task that initialize the logic
     virtual LogicInitTask* startInit() = 0;
-    virtual LogicRebuildIndexTask* startRebuildIndex() = 0;
+    virtual LogicRebuildIndexTask* startRebuildIndex(unsigned maxSpeed = 0) = 0;
 
     /// return the name of the logic
     virtual std::string toString() const = 0;
@@ -126,7 +129,7 @@ protected:
 
     // initialize logic
     virtual void init() = 0;
-    virtual void rebuildIndex() = 0;
+    virtual void rebuildIndex(unsigned maxSpeed = 0) = 0;
 
   virtual Response* processProfileRequest(ProfileRequest& request) = 0;
 
@@ -157,7 +160,7 @@ public:
     virtual ~AbonentLogic();
 
     virtual LogicInitTask* startInit();
-    virtual LogicRebuildIndexTask* startRebuildIndex();
+    virtual LogicRebuildIndexTask* startRebuildIndex(unsigned maxSpeed = 0);
 
     virtual std::string toString() const {
         char buf[64];
@@ -175,11 +178,11 @@ public:
 
 protected:
     virtual void init() /* throw (smsc::util::Exception) */;
-    virtual void rebuildIndex();
+    virtual void rebuildIndex( unsigned maxSpeed = 0);
 
     /// init an element storage and return the total number of good nodes in it
     unsigned long initElementStorage(unsigned index) /* throw (smsc::util::Exception) */;
-    unsigned long rebuildElementStorage(unsigned index);
+    unsigned long rebuildElementStorage(unsigned index,unsigned maxSpeed);
 
     virtual Response* processProfileRequest(ProfileRequest& request);
 
@@ -228,7 +231,7 @@ public:
   ~InfrastructLogic();
 
     virtual LogicInitTask* startInit();
-    virtual LogicRebuildIndexTask* startRebuildIndex();
+    virtual LogicRebuildIndexTask* startRebuildIndex( unsigned maxSpeed = 0);
     virtual std::string toString() const { return "infrastruct logic"; }
 
   //virtual Response* process(Request& request) /* throw(PvssException) */ ;
@@ -238,7 +241,7 @@ public:
 
 protected:
     virtual void init() /* throw (smsc::util::Exception) */;
-    virtual void rebuildIndex();
+    virtual void rebuildIndex( unsigned maxSpeed = 0 );
 
   virtual Response* processProfileRequest(ProfileRequest& request);
 
