@@ -23,6 +23,7 @@
 
 #include "logger/Logger.h"
 #include "core/buffers/File.hpp"
+#include "core/synchronization/EventMonitor.hpp"
 #include "scag/util/storage/Serializer.h"
 #include "scag/util/Time.h"
 

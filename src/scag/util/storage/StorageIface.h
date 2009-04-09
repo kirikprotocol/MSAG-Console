@@ -160,7 +160,7 @@ template < class IS, bool UPD = false >
         else
             is.index_->removeIndex(k);
         is.data_->remove(i);
-        return bool(j);
+        return (j != is.data_->invalidIndex());
     }
 
 };
@@ -174,11 +174,13 @@ template < class IS >
     inline static bool update( IS& is, const key_type& k, index_type i )
     {
         index_type j = is.data_->update(i);
-        if ( j != is.data_->invalidIndex() )
+        if ( j != is.data_->invalidIndex() ) {
             is.index_->setIndex(k,j);
-        else
+            return true;
+        } else {
             is.index_->removeIndex(k);
-        return bool(j);
+            return false;
+        }
     }
 };
 
