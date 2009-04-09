@@ -83,10 +83,13 @@ private:
     utilx::RingBuffer<communication::TP::MAX_PACKET_SIZE> ringBuf;
     uint32_t expectedMessageSize;
     unsigned int suaConnectNum;
+    corex::io::InputStream* owner;
   };
 
   typedef std::map<corex::io::InputStream*, CacheEntry*> packets_cache_t;
   packets_cache_t _packetsCache;
+  
+  CacheEntry* availableData;
 
   bool _wasInitialized;
 

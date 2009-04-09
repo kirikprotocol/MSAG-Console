@@ -17,7 +17,9 @@ namespace libsua {
 
 SuaUser::SuaUser()
   : _wasInitialized(false), _logger(smsc::logger::Logger::getInstance("libsua")), _lastUsedConnIdx(0)
-{}
+{
+  availableData=0;
+}
 
 int
 SuaUser::sua_init(smsc::util::config::ConfigView* config)
@@ -335,24 +337,33 @@ SuaUser::msgRecv(MessageInfo* msgInfo, uint32_t timeout)
     } else
       _socketPool.listen();
 
-    corex::io::InputStream* iStream;
-    while ( iStream = _socketPool.getNextReadyInputStream() ) {
+    corex::io::InputStream* iStream=0;
+    while ( availableData || (iStream = _socketPool.getNextReadyInputStream()) ) {
+      if(availableData)
+      {
+        iStream=availableData->owner;
+      }
       packets_cache_t::iterator iter = _packetsCache.find(iStream);
-      if ( iter == _packetsCache.end() ) {
+      if ( iter == _packetsCache.end() )
+      {
         std::pair<packets_cache_t::iterator,bool> ins_res =  _packetsCache.insert(std::make_pair(iStream, new CacheEntry()));
         iter = ins_res.first;
       }
 
-      CacheEntry* cacheEntry = iter->second;
+      CacheEntry* cacheEntry = availableData?availableData:iter->second;
+      cacheEntry->owner=iStream;
 
       if ( cacheEntry->expectedMessageSize == 0 || 
            cacheEntry->expectedMessageSize > cacheEntry->ringBuf.getSizeOfAvailData() )
         cacheEntry->ringBuf.load(iStream);
+	
 
-      if ( cacheEntry->expectedMessageSize == 0 )
+      if ( cacheEntry->expectedMessageSize == 0 && cacheEntry->ringBuf.getSizeOfAvailData()>=4)
         cacheEntry->expectedMessageSize = cacheEntry->ringBuf.readUint32();
 
-      if ( cacheEntry->expectedMessageSize <= cacheEntry->ringBuf.getSizeOfAvailData() ) {
+      smsc_log_debug(_logger,"msgRecv: cacheEntry.expectedMessageSize=%d, cacheEntry.getSizeOfAvailData()=%d",cacheEntry->expectedMessageSize,cacheEntry->ringBuf.getSizeOfAvailData());
+
+      if ( cacheEntry->expectedMessageSize!=0 && cacheEntry->expectedMessageSize <= cacheEntry->ringBuf.getSizeOfAvailData() ) {
         uint32_t lenField = htonl(cacheEntry->expectedMessageSize);
 
         msgInfo->msgData.setSize(cacheEntry->expectedMessageSize + sizeof(cacheEntry->expectedMessageSize));
@@ -370,8 +381,24 @@ SuaUser::msgRecv(MessageInfo* msgInfo, uint32_t timeout)
         msgInfo->msgData.SetPos(msgInfo->msgData.GetPos() + cacheEntry->expectedMessageSize - sizeof(msgInfo->messageType));
         msgInfo->suaConnectNum = static_cast<LinkInputStream*>(iStream)->getConnectNum();
 
-        delete cacheEntry;
-        _packetsCache.erase(iter);
+        //delete cacheEntry;
+        //_packetsCache.erase(iter);
+        smsc_log_debug(_logger,"msgRecv: after cacheEntry.expectedMessageSize=%d, cacheEntry.getSizeOfAvailData()=%d",cacheEntry->expectedMessageSize,cacheEntry->ringBuf.getSizeOfAvailData());
+	cacheEntry->expectedMessageSize=0;
+	if(cacheEntry->ringBuf.getSizeOfAvailData()>=4)
+	{
+	  cacheEntry->expectedMessageSize=cacheEntry->ringBuf.readUint32();
+	  if(cacheEntry->expectedMessageSize<=cacheEntry->ringBuf.getSizeOfAvailData())
+	  {
+	    availableData=cacheEntry;
+          }else
+	  {
+            availableData=0;
+	  }
+	}else
+	{
+	  availableData=0;
+	}
         return OK;
       }
     }
