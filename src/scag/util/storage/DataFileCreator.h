@@ -11,6 +11,7 @@
 #include "util/Uint64Converter.h"
 #include "util/timeslotcounter.hpp"
 #include "DataFileManager.h"
+#include "scag/util/Time.h"
 
 
 namespace scag    {
@@ -59,23 +60,46 @@ public:
     if (getThreshold(ffb) >= ffbThreshold_) {
       if (File::Exists(name_.c_str())) {
         std::auto_ptr<File> f(new File);
-        if (logger_) smsc_log_debug(logger_, "open preallocated file: %s", name_.c_str());
+        if (logger_) smsc_log_info(logger_, "open preallocated file: %s", name_.c_str());
         f->RWOpen(name_.c_str());
         f->SetUnbuffered();
-        setState(CREATED);
-        file_ = f.release();
-      } else {
-        setState(CREATING);
-        sleepTime_ = 0;
-        createDataFile();
-        sleepTime_ = getSleepTime();
+        if (checkCreatedFile(f.get())) {
+          setState(CREATED);
+          file_ = f.release();
+          return;
+        } else {
+          if (logger_) smsc_log_warn(logger_, "remove invalid preallocated file: %s", name_.c_str());
+          f->Close();
+          File::Unlink(name_.c_str());
+        }
       }
+      setState(CREATING);
+      sleepTime_ = 0;
+      createDataFile();
+      sleepTime_ = getSleepTime();
       return;
     }
     if (getThreshold(ffb) < ffbThreshold_) {
       checkExistedFile();
       return;
     }
+  }
+
+  bool checkCreatedFile(File *f) {
+    try {
+      if (!f || f->Size() != fileSize_ * blockSize_) {
+        return false;
+      }
+      off_t offset = (fileSize_ - 1)  * blockSize_;
+      f->Seek(offset, SEEK_SET);
+      int64_t nextffb = f->ReadNetInt64();
+      if (nextffb == -1) {
+        return true;
+      }
+    } catch (const std::exception& ex) {
+      if (logger_) smsc_log_warn(logger_, "error checking preallocated file '%s' : %s", name_.c_str(), ex.what());
+    }
+    return false;
   }
 
   void create(int64_t ffb, int32_t filesCount) {
@@ -171,17 +195,23 @@ public:
       emptyBlock = new char[blockSize_ * blocksCount];
       memset(emptyBlock, 0x00, blockSize_ * blocksCount);
       int64_t index = startBlock + 1;
+      int overdelay = 0;
+      scag2::util::msectime_type currentTime, startWriteTime;
+      currentTime = startWriteTime = scag2::util::currentTimeMillis();
       for (int i = 0; i < writeCount; ++i) {
         index = prepareBlock(emptyBlock, blocksCount, index, 0);
-        hrtime_t startWrite = gethrtime();
         f->Write(emptyBlock, blockSize_ * blocksCount);
-        int writeTime = static_cast<int>((gethrtime() - startWrite) / 1000000);
-        int sleepTime = sleepTime_ - writeTime;
-        if (sleepTime > 0) {
+
+        currentTime = scag2::util::currentTimeMillis();
+        scag2::util::msectime_type elapsedTime = currentTime - startWriteTime;
+        scag2::util::msectime_type expectedTime = (i + 1) * sleepTime_;
+        int sleepTime = static_cast<int>(expectedTime - elapsedTime);
+        if (sleepTime >= 10) {
           MutexGuard mg(sleepMonitor_);
           sleepMonitor_.wait(sleepTime);
         }
       }
+
       blocksCount = lastWriteSize > 0 ? lastWriteSize : blocksCount;
       index = prepareBlock(emptyBlock, blocksCount, index, 1);
       f->Write(emptyBlock, blockSize_ * blocksCount);
