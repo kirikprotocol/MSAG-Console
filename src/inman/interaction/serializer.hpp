@@ -1,6 +1,5 @@
-#pragma ident "$Id$"
-
 #ifndef __SMSC_INMAN_INTERACTION_SERIALIZER__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INTERACTION_SERIALIZER__
 
 #include <arpa/inet.h>
@@ -65,7 +64,12 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::vector<unsigned char>& a
                                       SerializerException::invObjData, 
                                       ">> vector: corrupted size");
         len |= ((unsigned)(l7b & 0x7F) << (7*i++));
-    } while (l7b >= 0x80);
+    } while ((l7b >= 0x80) && (i < ((sizeof(unsigned)<<3)/7)));
+
+    if (l7b >= 0x80)
+      throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
+                                SerializerException::invObjData, 
+                                ">> vector: too long size");
 
     unsigned oldLen = (unsigned)arr.size();
     arr.resize(len + oldLen);
@@ -98,7 +102,12 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str ) throw(Seri
                                         SerializerException::invObjData,
                                         " >> string: corrupted size");
         len |= ((unsigned)(l7b & 0x7F) << (7*i++));
-    } while (l7b >= 0x80);
+    } while ((l7b >= 0x80) && (i < ((sizeof(unsigned)<<3)/7)));
+
+    if (l7b >= 0x80)
+      throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
+                                SerializerException::invObjData, 
+                                ">> string: too long size");
 
     while (len) {
         char strBuf[255 + 1];
