@@ -299,6 +299,7 @@ B3101: Apr 08, 2009
     SMSC	SMPP proxy total limit calculation fix for speeds >1000 per sec
     SMSC	fix for not all PXQLimit rejects shown on monitor
     SMSC	HD stack support
+    SMSC        SNMP get counters will return messages in parts instead of whole messages
     Inman	HD stack support
     InfoSme	Write all events to journal
     Infosme	Add posibility to create deliveries from <msisdn>|<text> files
