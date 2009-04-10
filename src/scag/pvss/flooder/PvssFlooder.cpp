@@ -6,6 +6,7 @@
 #include "scag/pvss/data/ProfileKey.h"
 #include "scag/pvss/base/PersClientException.h"
 #include "util/debug.h"
+#include "scag/util/Drndm.h"
 
 using namespace scag2::pvss;
 namespace {
@@ -31,6 +32,7 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
 
   smsc_log_info(logger_, "generate addresses");
 
+  scag2::util::Drndm::getRnd().setSeed(uint64_t(time(0)));
   generator_.randomizeProfileKeys(addressFormat_, addrsCount);
 
   while (persClient_.getClientStatus() != 0 && !isStopped_ ) {
@@ -42,6 +44,7 @@ void PvssFlooder::execute(int addrsCount, int getsetCount) {
   //int addrsCount = 1000000;
   char addr[20];
 
+  procTime_ = 100000000;
   unsigned number = 0;
   int iterCount = 0;
   for (int i = 0; i < addrsCount; ++i) {
@@ -87,11 +90,12 @@ void PvssFlooder::doCall( PersCall* context ) {
     throw PersClientException(NOT_CONNECTED);
   }
   busyRejects_ = busyRejects_ > 0 ? busyRejects_ - 1 : 0;
-  //persClient_.callAsync( context, *this );
-  //++callsCount_;
-  //++sentCalls_;
+  persClient_.callAsync( context, *this );
+  ++callsCount_;
+  ++sentCalls_;
+  delay();
   //smsc_log_debug(logger_, "call cx:%p calls count %d", context, callsCount_);
-  callSync( context );
+  //callSync( context );
 }
 
 void PvssFlooder::callSync( PersCall* call ) {
@@ -154,10 +158,10 @@ PersCall* PvssFlooder::createPersCall( ProfileType pfType,
                                         int intKey,
                                         std::auto_ptr<PersCommand> cmd )
 {
-    //startTime_ = gethrtime();
-    //hrtime_t* st = new hrtime_t;
-    //*st = startTime_;
-    PersCall* call = new PersCall( pfType, cmd.release(), 0 );
+    startTime_ = gethrtime();
+    hrtime_t* st = new hrtime_t;
+    *st = startTime_;
+    PersCall* call = new PersCall( pfType, cmd.release(), st );
     //PersCall* call = new PersCall( pfType, cmd.release(), 0 );
     if (pfType == PT_ABONENT) {
         call->setKey(addr);
@@ -168,24 +172,26 @@ PersCall* PvssFlooder::createPersCall( ProfileType pfType,
 }
 void PvssFlooder::delay() {
   hrtime_t endTime = gethrtime();
-  hrtime_t procTime = endTime - startTime_;
-  smsc_log_debug(logger_, "delay=%d ns procTime=%d ns", delay_, procTime);
-  unsigned sleepTime = delay_ - procTime - overdelay_;
-  if (delay_ > procTime + overdelay_ && sleepTime > 1000000) {
-    __trace2__("try to sleep:%d ns, delay=%d ns", sleepTime, delay_);
+  //hrtime_t procTime = endTime - startTime_;
+  //hrtime_t endTime = gethrtime();
+  hrtime_t procTime = procTime_;
+  //smsc_log_debug(logger_, "delay=%d ns procTime=%d ns", delay_, procTime);
+  unsigned sleepTime = delay_ - overdelay_;// - procTime - overdelay_;
+  //if (delay_ > procTime + overdelay_ && sleepTime > 1000000) {
+    //__trace2__("try to sleep:%d ns, delay=%d ns", sleepTime, delay_);
     timespec ts,rm={0,0};
     ts.tv_sec = 0;
     ts.tv_nsec= sleepTime;
     nanosleep(&ts,&rm);
     overdelay_ = gethrtime() - endTime - sleepTime;
-    __trace2__("wake, overdelay=%d ns", overdelay_);
+    //__trace2__("wake, overdelay=%d ns", overdelay_);
     if (overdelay_ < 0) {
       overdelay_ = 0;
     }
-  } else {
-    overdelay_ -= delay_;
-    if (overdelay_ < 0) overdelay_ = 0;
-  }
+  //} else {
+    //overdelay_ -= delay_;
+    //if (overdelay_ < 0) overdelay_ = 0;
+  //}
 }
 
 /*
