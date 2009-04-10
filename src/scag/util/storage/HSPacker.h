@@ -147,7 +147,7 @@ public:
     /// method counts how many trailing blocks (non-head) is needed for buffer of given size
     inline size_t trailingBlocks( size_t unpackedSize ) const {
         if ( unpackedSize <= blockSize_ ) return 0;
-        return ( unpackedSize - 1 ) / ( blockSize_ - navSize() );
+        return ( unpackedSize - blockSize_ - 1 ) / ( blockSize_ - navSize() ) + 1;
     }
 
 
@@ -160,44 +160,37 @@ public:
             // only packtype 0 is implemented
             ::abort();
         }
-        size_t oldSize = buffer.size();
+        const size_t oldSize = buffer.size();
         assert( oldSize >= initialPos );
         const size_t trailBlocks = trailingBlocks( oldSize - initialPos );
         if ( !trailBlocks ) return;
-        size_t pos = initialPos + blockSize_;
         size_t headerPos;
         if ( headers ) {
             assert(headers->size() >= trailBlocks*navSize());
-            // the last trailBlocks are used
-            headerPos = headers->size() - trailBlocks*navSize();
+            headerPos = headers->size() - trailBlocks*navSize(); // last trailblocks
         }
-        const size_t newSize = oldSize+trailBlocks*navSize();
+        const size_t newSize = oldSize + trailBlocks*navSize();
         buffer.resize(newSize);
-        // copy all blocks except the last
+        size_t frompos = initialPos + blockSize_;
+        size_t topos = oldSize;
         for ( size_t blk = 1; blk <= trailBlocks; ++blk ) {
-            if ( oldSize < pos+navSize() ) {
-                // overlap detected
-                if ( oldSize < pos ) {
-                    // first part is copyed before the pos
-                    const size_t trail = pos-oldSize;
-                    memcpy(&buffer[oldSize],&buffer[pos],trail);
-                    memcpy(&buffer[pos+navSize()],&buffer[pos+trail],navSize()-trail);
-                    oldSize += navSize(); // extra move
-                } else {
-                    memcpy(&buffer[pos+navSize()],&buffer[pos],oldSize-pos);
-                }
+            fprintf(stderr,"blk:%u topos:%u frompos:%u\n", blk, topos, frompos );
+            if ( blk == trailBlocks && topos < frompos+navSize() ) {
+                // overlap detected in last block
+                assert(topos>frompos);
+                const size_t trail = topos-frompos;
+                memcpy(&buffer[frompos+navSize()],&buffer[frompos],trail);
             } else {
-                memcpy(&buffer[oldSize], &buffer[pos], navSize());
+                memcpy(&buffer[topos],&buffer[frompos],navSize());
             }
             if ( headers ) {
                 // restore headers
-                memcpy(&buffer[pos],&((*headers)[headerPos]), navSize());
+                memcpy(&buffer[frompos],&((*headers)[headerPos]), navSize());
                 headerPos += navSize();
             }
-            oldSize += navSize();
-            pos += blockSize_;
+            topos += navSize();
+            frompos += blockSize_;
         }
-        assert(oldSize == newSize);
     }
 
 
@@ -208,32 +201,36 @@ public:
         if ( packingType_ != 0 ) {
             ::abort();
         }
-        size_t oldSize = buffer.size();
+        const size_t oldSize = buffer.size();
         assert( oldSize >= initialPos );
-        size_t pos = initialPos;
-        if ( oldSize <= pos+blockSize_ ) return;
-        const size_t trailBlocks = ( oldSize - pos - 1 ) / blockSize_;
-        pos += trailBlocks*blockSize_; // points to the head of the last block
+        if ( oldSize <= initialPos+blockSize_ ) return;
+        const size_t trailBlocks = (oldSize - initialPos - 1) / blockSize_;
         size_t headerPos;
         if ( headers ) {
             headers->resize( headers->size()+trailBlocks*navSize() );
             headerPos = headers->size();
         }
+        size_t frompos = initialPos + trailBlocks*blockSize_; // points to the last block
+        size_t topos = oldSize; // points past buffer
         for ( size_t blk = trailBlocks; blk > 0; --blk ) {
-            oldSize -= navSize();
             if ( headers ) {
+                // save headers
                 headerPos -= navSize();
-                memcpy( &(*headers)[headerPos],&buffer[pos],navSize());
+                memcpy(&((*headers)[headerPos]),&buffer[frompos],navSize());
             }
-            if ( oldSize < pos+navSize() ) {
-                // last block overlap
-                memcpy(&buffer[pos],&buffer[pos+navSize()],oldSize-pos);
+            topos -= navSize();
+            fprintf(stderr,"blk:%u topos:%u frompos:%u\n", blk, topos, frompos );
+            if ( blk == trailBlocks && topos < frompos+navSize() ) {
+                // overlap detected in last block
+                assert(topos>frompos);
+                const size_t trail = topos-frompos;
+                memcpy(&buffer[frompos],&buffer[frompos+navSize()],trail);
             } else {
-                memcpy(&buffer[pos], &buffer[oldSize], navSize());
+                memcpy(&buffer[frompos],&buffer[topos],navSize());
             }
-            pos -= blockSize_;
+            frompos -= blockSize_;
         }
-        buffer.resize(oldSize);
+        buffer.resize(topos);
     }
 
     inline index_type invalidIndex() const {

@@ -15,90 +15,9 @@ public:
     typedef uint64_t         index_type;
     typedef Serializer::Buf  buffer_type;
 
-    class BlockNavigation
-    {
-    private:
-        static size_t persistentSize_;
-        static void calculatePersistentSize();
-
-        inline static index_type highBit() { return 0x8000000000000000ULL; }
-
-    public:
-        inline static index_type invalidIndex() { return 0x7fffffffffffffffULL; }
-
-        inline static size_t persistentSize() {
-            if ( ! persistentSize_ ) calculatePersistentSize();
-            return persistentSize_;
-        }
-
-        inline void setNextBlock( index_type next ) {
-            next_ = next;
-        }
-        inline void setRefBlock( index_type refBlock ) {
-            used_ = true;
-            head_ = false;
-            ref_ = refBlock;
-        }
-        inline void setDataSize( index_type dataSize ) {
-            used_ = head_ = true;
-            ref_ = dataSize;
-        }
-        inline void setFreeCells( index_type freeCells ) {
-            used_ = head_ = false;
-            ref_ = freeCells;
-        }
-
-
-
-        /// used both for free/used block chains.
-        inline index_type nextBlock() const { return next_; }
-
-        /// the index of the reference block.
-        /// only valid when ( isFree() == false && isHead() == false ).
-        inline index_type refBlock() const { return ref_; }
-
-        /// the length of data in the used chain.
-        /// only valid when isHead() == true.
-        inline index_type dataSize() const { return ref_; }
-
-        /// the number of free cells in the tail of the free cell chain.
-        /// only valid when isFree() == true.
-        inline index_type freeCells() const { return ref_; }
-
-        /// if the block is free.
-        inline bool isFree() const { return !used_; }
-
-        /// NOTE: post-condition isHead() == true => isFree() === false.
-        inline bool isHead() const { return head_; }
-
-        inline void load( Deserializer& dsr ) {
-            uint64_t val;
-            dsr >> val;
-            used_ = (val & highBit());
-            next_ = (val & invalidIndex());
-            dsr >> val;
-            head_ = (val & highBit());
-            ref_ = (val & invalidIndex());
-        }
-        void save( Serializer& ser ) const {
-            uint64_t val = next_;
-            if ( used_ ) val |= highBit();
-            ser << val;
-            val = ref_;
-            if ( head_ ) val |= highBit();
-            ser << val;
-        }
-
-    protected:
-        uint64_t next_;
-        uint64_t ref_;
-        bool     used_;
-        bool     head_;
-    };
-
 public:
     BlocksHSStorage2( size_t blockSize, unsigned extraSize = 0 ) :
-    blockSize_(blockSize),
+    packer_(blockSize,0),
     headerSize_(navSize()+extraSize+idxSize())
     {
         assert(blockSize_ > navSize());
