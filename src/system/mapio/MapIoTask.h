@@ -1097,7 +1097,7 @@ public:
     {
       throw Exception("MAP:: reassign dialog: there is no dialog for did=0x%x/%x",did,oldssn);
     }
-    if(!dlgPool[ssn])
+    if(!dlgPool[ssn][rinst])
     {
       throw Exception("Unsupported ssn:%d",ssn);
     }
@@ -1105,6 +1105,15 @@ public:
     {
       MutexGuard g(sync);
       MAPSTATS_DumpDialogLC(dlg);
+      if(dlgType==radtOut)
+      {
+        using smsc::system::mapio::MapLimits;
+        dlg->clevel=MapLimits::getInstance().incDlgCounter(dlg->s_msc.c_str());
+        if(dlg->clevel==-1)
+        {
+          throw smsc::util::Exception("out dlg limit reached for msc %s",dlg->s_msc.c_str());
+        }
+      }
       if ( dialogId_pool[ssn][rinst].empty() )
       {
         smsc_log_warn(smsc::logger::_mapdlg_cat, "Dialog id POOL is empty" );
@@ -1121,6 +1130,15 @@ public:
         }else if(dlg->dlgType==MAPSTAT_DLGOUT)
         {
           MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
+          using smsc::system::mapio::MapLimits;
+          MapLimits::getInstance().decDlgCounter(dlg->clevel);
+          if(dlg->noRespFromPeer)
+          {
+            MapLimits::getInstance().reportMscFailure(dlg->s_msc.c_str());
+          }else
+          {
+            MapLimits::getInstance().reportMscOk(dlg->s_msc.c_str());
+          }
         }else if(dlg->dlgType==MAPSTAT_DLGNIUSSD)
         {
           MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_NIUSSD);
@@ -1146,18 +1164,9 @@ public:
         {
           __map_warn2__("unexpected dlgType=%d for in dlg",dlg->dlgType);
         }
-        dlg->dlgType=-1;
       }
+      dlg->dlgType=-1;
 
-      if(dlgType==radtOut)
-      {
-        using smsc::system::mapio::MapLimits;
-        dlg->clevel=MapLimits::getInstance().incDlgCounter(dlg->s_msc.c_str());
-        if(dlg->clevel==-1)
-        {
-          throw smsc::util::Exception("out dlg limit reached for msc %s",dlg->s_msc.c_str());
-        }
-      }
       switch(dlgType)
       {
         case radtOut:MAPSTATS_Update(MAPSTATS_NEWDIALOG_OUT);break;
@@ -1272,8 +1281,8 @@ public:
         __map_warn2__("unexpected dlgType=%d for in dlg",item->dlgType);
       }
     }
-    __mapdlg_trace2__("drop dialog(%d) 0x%x",item->dlgType,item->dialogid_map);
     item->dlgType=-1;
+    __mapdlg_trace2__("drop dialog(%d) 0x%x",item->dlgType,item->dialogid_map);
   }
 
   void registerSelf(SmeManager* smeman);

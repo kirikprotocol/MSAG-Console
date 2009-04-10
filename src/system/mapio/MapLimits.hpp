@@ -130,18 +130,18 @@ public:
     CLevelInfo& li=limitsOut[mscPtr->clevel];
     if(li.dlgCount>=li.dlgLimit)
     {
-      return false;
+      return -1;
     }
     li.dlgCount++;
-    smsc_log_debug(log,"inc dlg count by msc %s:%d",msc,li.dlgCount);
-    return true;
+    smsc_log_debug(log,"inc dlg count by msc %s[cl=%d]:%d",msc,mscPtr->clevel,li.dlgCount);
+    return mscPtr->clevel;
   }
   
   void decDlgCounter(int clevel)
   {
     //sync::MutexGuard mg(mtxMsc);
     limitsOut[clevel].dlgCount--;
-    smsc_log_debug(log,"dec dlg count :%d",limitsOut[clevel].dlgCount);
+    smsc_log_debug(log,"dec dlg count[cl=%d]:%d",clevel,limitsOut[clevel].dlgCount);
   }
   
 protected:
