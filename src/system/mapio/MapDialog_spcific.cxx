@@ -22,7 +22,7 @@ using namespace smsc::smeman;
 #define MAP_UCS2_ENCODING 0x8
 
 //#define MAKE_ERRORCODE(klass,code) (klass)
-#define MAKE_ERRORCODE(klass,code) MAKE_COMMAND_STATUS(klass,code)
+//#define MAKE_ERRORCODE(klass,code) MAKE_COMMAND_STATUS(klass,code)
 #define MAP_NETWORKERROR 1
 
 struct MicroString{

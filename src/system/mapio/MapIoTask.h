@@ -6,6 +6,7 @@
 #include <memory.h>
 #include <time.h>
 #include <pthread.h>
+#include <stdexcept>
 #include "util/debug.h"
 #include "util/smstext.h"
 #include "sms/sms.h"
@@ -15,6 +16,8 @@
 #include "core/threads/ThreadPool.hpp"
 #include "core/buffers/CyclicQueue.hpp"
 #include "MapLimits.hpp"
+#include "system/status.h"
+#include "smeman/smsccmd.h"
 
 using namespace std;
 using namespace smsc::sms;
@@ -194,6 +197,18 @@ public:
     return (unsigned)id;
   }
 };
+
+#define MAKE_ERRORCODE(klass,code) MAKE_COMMAND_STATUS(klass,code)
+
+struct MAPDIALOG_ERROR : public std::runtime_error
+{
+  unsigned code;
+  MAPDIALOG_ERROR(unsigned code,const string& s) :
+    runtime_error(s),code(code){}
+  MAPDIALOG_ERROR(const string& s) :
+    runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,smsc::system::Status::MAPINTERNALFAILURE)){}
+};
+
 
 void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId,ET96MAP_LOCAL_SSN_T ssn,EINSS7INSTANCE_T inst);
 //ET96MAP_DIALOGUE_ID_T allocateDialogueId();
@@ -1111,7 +1126,7 @@ public:
         dlg->clevel=MapLimits::getInstance().incDlgCounter(dlg->s_msc.c_str());
         if(dlg->clevel==-1)
         {
-          throw smsc::util::Exception("out dlg limit reached for msc %s",dlg->s_msc.c_str());
+          throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,smsc::system::Status::THROTTLED),"out dlg limit reached for msc "+dlg->s_msc);
         }
       }
       if ( dialogId_pool[ssn][rinst].empty() )

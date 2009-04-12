@@ -104,14 +104,14 @@ static void ForwardMO(MapDialog* dialog);
 #define MAP_ERRORS_BASE Status::MAP_ERR_BASE
 #define MAP_FALURE (/*MAP_ERRORS_BASE+34*/8)
 
-struct MAPDIALOG_ERROR : public runtime_error
+/*struct MAPDIALOG_ERROR : public runtime_error
 {
   unsigned code;
   MAPDIALOG_ERROR(unsigned code,const string& s) :
     runtime_error(s),code(code){}
   MAPDIALOG_ERROR(const string& s) :
     runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,Status::MAPINTERNALFAILURE)){}
-};
+};*/
 
 struct MAPDIALOG_XERROR : public runtime_error
 {
