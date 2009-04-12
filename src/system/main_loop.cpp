@@ -221,6 +221,7 @@ void Smsc::mainLoop(int idx)
         time_t oldLicenseExp=license.expdate;
         bool licenseExpireSoon=license.expdate-now<20*24*60*60;
         InitLicense();
+        maxSmsPerSecond=license.maxsms;
         licenseFileCheckHour=t.tm_hour;
         if(oldLicenseExp!=license.expdate && licenseExpireSoon && license.expdate-now>20*24*60*60)
         {
