@@ -520,11 +520,13 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     if((60%speedLogFlushPeriod)!=0)
     {
       smsc_log_warn(log,"60 isn't multiple of core.speedLogFlushPeriodMin. using default value");
+      speedLogFlushPeriod=60;
     }
     time_t now=time(NULL)/60;
     nextSpeedLogFlush=now+(speedLogFlushPeriod-(now%speedLogFlushPeriod));
   } catch(...)
   {
+    speedLogFlushPeriod=60;
   }
 
 
@@ -1085,12 +1087,12 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       smsc_log_warn(log,"core.smartMultipartForward not found in config and disabled by default");
     }
 
-    maxSmsPerSecond=cfg.cfgman->getInt("trafficControl.maxSmsPerSecond");
-    if(maxSmsPerSecond>license.maxsms)
+    maxSmsPerSecond=license.maxsms;//cfg.cfgman->getInt("trafficControl.maxSmsPerSecond");
+    /*if(maxSmsPerSecond>license.maxsms)
     {
       smsc_log_warn(log, "maxSmsPerSecond in configuration is greater than license limit, adjusting\n");
       maxSmsPerSecond=license.maxsms;
-    }
+    }*/
     if(maxSmsPerSecond<=0)maxSmsPerSecond=license.maxsms;
     shapeTimeFrame=cfg.cfgman->getInt("trafficControl.shapeTimeFrame");
     statTimeFrame=cfg.cfgman->getInt("trafficControl.statTimeFrame");
