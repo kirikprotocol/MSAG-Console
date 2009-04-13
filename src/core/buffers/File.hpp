@@ -1117,6 +1117,17 @@ public:
       }
     }
   }
+  
+  static offset_type Size(const char* argFileName)
+  {
+#ifdef __GNUC__
+    struct stat st;
+#else
+    struct ::stat st;
+#endif
+    ::stat(argFileName,&st);
+    return st.st_size;
+  }
 
 protected:
   enum{INIT_BUFFER_SIZE=8192};
