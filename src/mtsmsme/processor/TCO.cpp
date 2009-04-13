@@ -198,6 +198,7 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
       smsc_log_debug(logger,"TCO receive END but TSM not found, DISCARD");
     }
   }/* end of END handling section */
+  smsc_log_error(logger,"TCO receive UNSUPPORTED TCAP message, DISCARD");
 }
 void TCO::TSMStopped(TrId ltrid)
 {
