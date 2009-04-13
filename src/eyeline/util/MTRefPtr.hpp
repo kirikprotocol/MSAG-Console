@@ -11,6 +11,7 @@ namespace eyeline {
 namespace util {
 
 using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 
 // ********************************************************************
 // Generic object referee abstract class (interface defined)
