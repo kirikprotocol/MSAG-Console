@@ -1,6 +1,9 @@
-#include <stdio.h>
+#ifndef MOD_IDENT_OFF
+static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
-#include "BindConfirmMessage.hpp"
+#include <stdio.h>
+#include "eyeline/sua/communication/libsua_messages/BindConfirmMessage.hpp"
 
 namespace eyeline {
 namespace sua {
@@ -43,18 +46,6 @@ const char*
 BindConfirmMessage::getMsgCodeTextDescription() const
 {
   return "BIND_CONFIRM";
-}
-
-uint32_t
-BindConfirmMessage::getStatus() const
-{
-  return _status;
-}
-
-void
-BindConfirmMessage::setStatus(status_t status)
-{
-  _status = status;
 }
 
 uint32_t
