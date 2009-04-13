@@ -1,18 +1,22 @@
+/* ************************************************************************** *
+ * SuaUser: SUA API implementation.
+ * ************************************************************************** */
 #ifndef __EYELINE_SUA_LIBSUA_SUAUSER_HPP__
+#ident "@(#)$Id$"
 # define __EYELINE_SUA_LIBSUA_SUAUSER_HPP__
 
 # include <map>
-# include <sys/types.h>
 # include <netinet/in.h>
-# include <logger/Logger.h>
-# include <util/config/ConfigView.h>
-# include <core/synchronization/Mutex.hpp>
 
-# include <eyeline/corex/io/network/TCPSocket.hpp>
-# include <eyeline/corex/io/IOObjectsPool.hpp>
-# include <eyeline/utilx/RingBuffer.hpp>
-# include <eyeline/sua/libsua/SuaApi.hpp>
-# include <eyeline/sua/communication/TP.hpp>
+# include "logger/Logger.h"
+# include "util/config/ConfigView.h"
+# include "core/synchronization/Mutex.hpp"
+
+# include "eyeline/sua/libsua/SuaApi.hpp"
+# include "eyeline/sua/communication/TP.hpp"
+# include "eyeline/corex/io/network/TCPSocket.hpp"
+# include "eyeline/corex/io/IOObjectsPool.hpp"
+# include "eyeline/utilx/RingBuffer.hpp"
 
 namespace eyeline {
 namespace sua {
@@ -22,19 +26,19 @@ class SuaUser : public SuaApi {
 public:
   SuaUser();
 
-  virtual int sua_init(smsc::util::config::ConfigView* config);
+  virtual ErrorCode_e sua_init(smsc::util::config::ConfigView* config);
 
-  virtual int sua_close();
+  virtual ErrorCode_e sua_close();
 
-  virtual int sua_connect(unsigned int suaConnectNum);
+  virtual ErrorCode_e sua_connect(unsigned int suaConnectNum);
 
-  virtual int sua_disconnect(unsigned int suaConnectNum);
+  virtual ErrorCode_e sua_disconnect(unsigned int suaConnectNum);
 
-  virtual int bind(unsigned int suaConnectNum);
+  virtual ErrorCode_e bind(unsigned int suaConnectNum);
 
-  virtual int unbind(unsigned int suaConnectNum);
+  virtual ErrorCode_e unbind(unsigned int suaConnectNum);
 
-  virtual int unitdata_req(const uint8_t* message,
+  virtual ErrorCode_e unitdata_req(const uint8_t* message,
                            uint16_t messageSize,
                            const uint8_t* calledAddr,
                            uint8_t calledAddrLen,
@@ -43,13 +47,13 @@ public:
                            const MessageProperties& msgProperties,
                            unsigned int suaConnectNum);
 
-  virtual int msgRecv(MessageInfo* msgInfo, uint32_t timeout=0);
+  virtual ErrorCode_e msgRecv(MessageInfo* msgInfo, uint32_t timeout=0);
 
   virtual size_t sua_getConnectsCount() const;
 protected:
   virtual int getConnNumByPolicy();
 private:
-  typedef enum { NOT_CONNECTED, CONNECTED, BINDED } connection_state_t;
+  enum LinkState_e { linkNOT_CONNECTED, linkCONNECTED, linkBINDED };
 
   class LinkInputStream : public corex::io::InputStream {
   public:
@@ -72,7 +76,7 @@ private:
     std::string suaLayerHost;
     in_port_t suaLayerPort;
     corex::io::network::TCPSocket* socket;
-    connection_state_t connectionState;
+    LinkState_e      connectionState;
     LinkInputStream* inputStream;
   };
 
@@ -115,4 +119,5 @@ private:
 
 }}}
 
-#endif
+#endif /* __EYELINE_SUA_LIBSUA_SUAUSER_HPP__ */
+

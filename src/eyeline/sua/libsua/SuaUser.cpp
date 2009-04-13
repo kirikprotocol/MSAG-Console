@@ -1,15 +1,19 @@
-#include <utility>
-#include <core/synchronization/MutexGuard.hpp>
-#include <eyeline/utilx/hexdmp.hpp>
-#include <eyeline/utilx/toLowerCaseString.hpp>
-#include <eyeline/sua/communication/TP.hpp>
-#include <eyeline/sua/communication/libsua_messages/BindMessage.hpp>
-#include <eyeline/sua/communication/libsua_messages/BindConfirmMessage.hpp>
-#include <eyeline/sua/communication/libsua_messages/UnbindMessage.hpp>
-#include <eyeline/sua/communication/libsua_messages/N_UNITDATA_REQ_Message.hpp>
+#ifndef MOD_IDENT_OFF
+static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
-#include "SuaUser.hpp"
-#include "Exception.hpp"
+#include <utility>
+#include "core/synchronization/MutexGuard.hpp"
+#include "eyeline/utilx/hexdmp.hpp"
+#include "eyeline/utilx/toLowerCaseString.hpp"
+#include "eyeline/sua/communication/TP.hpp"
+#include "eyeline/sua/communication/libsua_messages/BindMessage.hpp"
+#include "eyeline/sua/communication/libsua_messages/BindConfirmMessage.hpp"
+#include "eyeline/sua/communication/libsua_messages/UnbindMessage.hpp"
+#include "eyeline/sua/communication/libsua_messages/N_UNITDATA_REQ_Message.hpp"
+
+#include "eyeline/sua/libsua/SuaUser.hpp"
+#include "eyeline/sua/libsua/Exception.hpp"
 
 namespace eyeline {
 namespace sua {
@@ -21,7 +25,7 @@ SuaUser::SuaUser()
   availableData=0;
 }
 
-int
+SuaApi::ErrorCode_e
 SuaUser::sua_init(smsc::util::config::ConfigView* config)
 {
   if ( !_wasInitialized ) {
@@ -62,7 +66,7 @@ SuaUser::sua_init(smsc::util::config::ConfigView* config)
   return OK;
 }
 
-int
+SuaApi::ErrorCode_e
 SuaUser::sua_close()
 {
   try {
@@ -86,7 +90,7 @@ SuaUser::sua_close()
   return OK;
 }
 
-int
+SuaApi::ErrorCode_e
 SuaUser::sua_connect(unsigned int suaConnectNum)
 {
   if ( !_wasInitialized )
@@ -102,12 +106,12 @@ SuaUser::sua_connect(unsigned int suaConnectNum)
   smsc_log_info(_logger, "try establish connection for link=[%s], linkId=%d", linkInfo.toString().c_str(), suaConnectNum);
 
   try {
-    if ( linkInfo.connectionState == NOT_CONNECTED ) {
+    if ( linkInfo.connectionState == linkNOT_CONNECTED ) {
       linkInfo.socket = new corex::io::network::TCPSocket(linkInfo.suaLayerHost, linkInfo.suaLayerPort);
       linkInfo.socket->connect();
       linkInfo.inputStream = new LinkInputStream(linkInfo.socket->getInputStream(), suaConnectNum);
 
-      linkInfo.connectionState = CONNECTED;
+      linkInfo.connectionState = linkCONNECTED;
       smsc_log_info(_logger, "connection for link=[%s] has been established, linkId=%d", linkInfo.toString().c_str(), suaConnectNum);
     } else
       smsc_log_error(_logger, "connection [%s] has been already established, linkId=%d", linkInfo.toString().c_str(), suaConnectNum);
@@ -122,7 +126,7 @@ SuaUser::sua_connect(unsigned int suaConnectNum)
   return OK;
 }
 
-int
+SuaApi::ErrorCode_e
 SuaUser::sua_disconnect(unsigned int suaConnectNum)
 {
   if ( !_wasInitialized )
@@ -138,11 +142,11 @@ SuaUser::sua_disconnect(unsigned int suaConnectNum)
   smsc_log_info(_logger, "try release connection for link=[%s], linkId=%d", linkInfo.toString().c_str(), suaConnectNum);
 
   try {
-    if ( linkInfo.connectionState == CONNECTED ) {
+    if ( linkInfo.connectionState == linkCONNECTED ) {
       _socketPool.remove(linkInfo.inputStream);
       delete linkInfo.inputStream; linkInfo.inputStream = NULL;
       linkInfo.socket->close();
-      linkInfo.connectionState = NOT_CONNECTED;
+      linkInfo.connectionState = linkNOT_CONNECTED;
       delete linkInfo.socket; linkInfo.socket = NULL;
       smsc_log_info(_logger, "connection for link=[%s] has been released, linkId=%d", linkInfo.toString().c_str(), suaConnectNum);
 
@@ -160,7 +164,7 @@ SuaUser::sua_disconnect(unsigned int suaConnectNum)
   }
 }
 
-int
+SuaApi::ErrorCode_e
 SuaUser::bind(unsigned int suaConnectNum)
 {
   if ( !_wasInitialized )
@@ -173,7 +177,7 @@ SuaUser::bind(unsigned int suaConnectNum)
   LinkInfo& linkInfo = _knownLinks[suaConnectNum];
 
   try {
-    if ( linkInfo.connectionState == CONNECTED ) {
+    if ( linkInfo.connectionState == linkCONNECTED ) {
       communication::TP tp;
       communication::libsua_messages::BindMessage bindMessage;
       bindMessage.setAppId(_appId);
@@ -206,12 +210,13 @@ SuaUser::bind(unsigned int suaConnectNum)
       communication::libsua_messages::BindConfirmMessage bindConfirmMessage;
       bindConfirmMessage.deserialize(tp);
       if ( bindConfirmMessage.getStatus() == communication::libsua_messages::BindConfirmMessage::BIND_OK ) {
-        linkInfo.connectionState = BINDED;
+        linkInfo.connectionState = linkBINDED;
         _socketPool.insert(linkInfo.inputStream);
       }
-
-      return bindConfirmMessage.getStatus();
-    } else if ( linkInfo.connectionState == BINDED )
+      //NOTE: bind result related values of SuaApi::ErrorCode_e biuniquely conform
+      //to corresponding BindConfirmMessage::BindResult_e values !!!
+      return static_cast<SuaApi::ErrorCode_e>(bindConfirmMessage.getStatus());
+    } else if ( linkInfo.connectionState == linkBINDED )
       return ALREADY_BINDED;
     else {
       smsc_log_error(_logger, "SuaUser::bind::: connection for link=[%s] hasn't been established, linkId=%d", linkInfo.toString().c_str(), suaConnectNum);
@@ -226,7 +231,7 @@ SuaUser::bind(unsigned int suaConnectNum)
   }
 }
 
-int
+SuaApi::ErrorCode_e
 SuaUser::unbind(unsigned int suaConnectNum)
 {
   if ( !_wasInitialized )
@@ -239,7 +244,7 @@ SuaUser::unbind(unsigned int suaConnectNum)
   LinkInfo& linkInfo = _knownLinks[suaConnectNum];
 
   try {
-    if ( linkInfo.connectionState == BINDED ) {
+    if ( linkInfo.connectionState == linkBINDED ) {
       communication::TP tp;
       communication::libsua_messages::UnbindMessage unbindMessage;
       unbindMessage.serialize(&tp);
@@ -247,7 +252,7 @@ SuaUser::unbind(unsigned int suaConnectNum)
       smsc_log_info(_logger, "send Unbind message to link=[%s], linkId=%d", linkInfo.toString().c_str(), suaConnectNum);
 
       linkInfo.socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
-      linkInfo.connectionState = CONNECTED;
+      linkInfo.connectionState = linkCONNECTED;
 
       return OK;
     } else
@@ -261,7 +266,7 @@ SuaUser::unbind(unsigned int suaConnectNum)
   }
 }
 
-int
+SuaApi::ErrorCode_e
 SuaUser::unitdata_req(const uint8_t* message,
                       uint16_t messageSize,
                       const uint8_t* calledAddr,
@@ -304,7 +309,7 @@ SuaUser::unitdata_req(const uint8_t* message,
 
     LinkInfo& linkInfo = _knownLinks[suaConnectNum];
 
-    if ( linkInfo.connectionState == BINDED ) {
+    if ( linkInfo.connectionState == linkBINDED ) {
       linkInfo.socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
       smsc_log_info(_logger, "send message=[%s] to link=[%s], linkId=%d", utilx::hexdmp(tp.packetBody, tp.packetLen).c_str(), linkInfo.toString().c_str(), suaConnectNum);
       return OK;
@@ -321,7 +326,7 @@ SuaUser::unitdata_req(const uint8_t* message,
   }
 }
 
-int
+SuaApi::ErrorCode_e
 SuaUser::msgRecv(MessageInfo* msgInfo, uint32_t timeout)
 {
   if ( !_wasInitialized )
@@ -366,19 +371,20 @@ SuaUser::msgRecv(MessageInfo* msgInfo, uint32_t timeout)
       if ( cacheEntry->expectedMessageSize!=0 && cacheEntry->expectedMessageSize <= cacheEntry->ringBuf.getSizeOfAvailData() ) {
         uint32_t lenField = htonl(cacheEntry->expectedMessageSize);
 
-        msgInfo->msgData.setSize(cacheEntry->expectedMessageSize + sizeof(cacheEntry->expectedMessageSize));
+        msgInfo->msgData.reset(cacheEntry->expectedMessageSize + sizeof(cacheEntry->expectedMessageSize));
         msgInfo->messageType = cacheEntry->ringBuf.readUint32();
 
         uint32_t msgTypeField = htonl(msgInfo->messageType);
 
-        memcpy(msgInfo->msgData.GetCurPtr(), reinterpret_cast<uint8_t*>(&lenField), sizeof(lenField));
-        msgInfo->msgData.SetPos(msgInfo->msgData.GetPos() + sizeof(lenField));
+        msgInfo->msgData.Append(reinterpret_cast<uint8_t*>(&lenField), sizeof(lenField));
+//        memcpy(msgInfo->msgData.getCurPtr(), reinterpret_cast<uint8_t*>(&lenField), sizeof(lenField));
+//        msgInfo->msgData.setPos(msgInfo->msgData.getPos() + sizeof(lenField));
+        msgInfo->msgData.Append(reinterpret_cast<uint8_t*>(&msgTypeField), sizeof(msgTypeField));
+//        memcpy(msgInfo->msgData.getCurPtr(), reinterpret_cast<uint8_t*>(&msgTypeField), sizeof(msgTypeField));
+//        msgInfo->msgData.setPos(msgInfo->msgData.getPos() + sizeof(msgTypeField));
 
-        memcpy(msgInfo->msgData.GetCurPtr(), reinterpret_cast<uint8_t*>(&msgTypeField), sizeof(msgTypeField));
-        msgInfo->msgData.SetPos(msgInfo->msgData.GetPos() + sizeof(msgTypeField));
-
-        cacheEntry->ringBuf.readArray(msgInfo->msgData.GetCurPtr(), cacheEntry->expectedMessageSize - sizeof(msgInfo->messageType));
-        msgInfo->msgData.SetPos(msgInfo->msgData.GetPos() + cacheEntry->expectedMessageSize - sizeof(msgInfo->messageType));
+        cacheEntry->ringBuf.readArray(msgInfo->msgData.getCurPtr(), cacheEntry->expectedMessageSize - sizeof(msgInfo->messageType));
+        msgInfo->msgData.setPos(msgInfo->msgData.getPos() + cacheEntry->expectedMessageSize - sizeof(msgInfo->messageType));
         msgInfo->suaConnectNum = static_cast<LinkInputStream*>(iStream)->getConnectNum();
 
         //delete cacheEntry;
@@ -436,11 +442,11 @@ SuaUser::getConnNumByPolicy()
 
 SuaUser::LinkInfo::LinkInfo()
   : suaLayerPort(0),
-    socket(NULL), connectionState(NOT_CONNECTED), inputStream(NULL) {}
+    socket(NULL), connectionState(linkNOT_CONNECTED), inputStream(NULL) {}
 
 SuaUser::LinkInfo::LinkInfo(const std::string& aLinkName, const std::string& aSuaLayerHost, in_port_t aSuaLayerPort)
   : linkName(aLinkName), suaLayerHost(aSuaLayerHost), suaLayerPort(aSuaLayerPort),
-    socket(NULL), connectionState(NOT_CONNECTED), inputStream(NULL)
+    socket(NULL), connectionState(linkNOT_CONNECTED), inputStream(NULL)
 {
   if ( aLinkName == "" ) throw SuaLibException("LinkInfo::LinkInfo::: empty link name value");
   if ( aSuaLayerPort > 0xFFFF ) throw SuaLibException("LinkInfo::LinkInfo::: wrong port value=[%d]", aSuaLayerPort);
