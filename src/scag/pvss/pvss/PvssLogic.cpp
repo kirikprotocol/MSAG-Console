@@ -322,7 +322,7 @@ Response* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest) {
     commandProcessor_.flushLogs(abntlog_);
   } else if (commandProcessor_.rollback()) {
     smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, pf->getKey().c_str());
-    elstorage->storage->backup2Profile(profileKey.getAddress(), elstorage->glossary);
+    elstorage->storage->backup2Profile(profileKey.getAddress());
   }
   CommandResponse* r = commandProcessor_.getResponse();
   return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
@@ -372,8 +372,10 @@ Response* InfrastructLogic::processProfileRequest(ProfileRequest& profileRequest
       }
     commandProcessor_.flushLogs(dblog);
   } else if (commandProcessor_.rollback()){
-    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, pf->getKey().c_str());
-    storage->backup2Profile(intKey, &glossary_);
+      // FIXME: rollback
+      smsc_log_warn(logger_, "%p: %p rollback %s is not implemented", this, &profileRequest, pf->getKey().c_str());
+      // smsc_log_warn(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, pf->getKey().c_str());
+      // storage->backup2Profile(intKey);
   }
   CommandResponse* r = commandProcessor_.getResponse();
   return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;

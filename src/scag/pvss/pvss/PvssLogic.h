@@ -14,6 +14,7 @@
 #include "core/buffers/IntHash.hpp"
 
 #include "scag/util/storage/BlocksHSStorage.h"
+#include "scag/util/storage/BlocksHSStorage3.h"
 #include "scag/util/storage/RBTreeIndexStorage.h"
 #include "scag/util/storage/DiskHashIndexStorage.h"
 //#include "scag/util/storage/HashedMemoryCache.h"
@@ -188,8 +189,10 @@ protected:
 
 private:
     //typedef HashedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
-    typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
-    typedef BHDiskStorage< AbntAddr, Profile > DiskDataStorage;
+    // typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
+    // typedef BHDiskStorage< AbntAddr, Profile > DiskDataStorage;
+    typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
+    typedef BHDiskStorage< AbntAddr, Profile, BlocksHSStorage3<AbntAddr,Profile> > DiskDataStorage;
     typedef RBTreeIndexStorage< AbntAddr, DiskDataStorage::index_type > DiskIndexStorage;
     typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
     typedef CachedDiskStorage< MemStorage, DiskStorage > AbonentStorage;
