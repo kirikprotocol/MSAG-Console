@@ -10,3 +10,12 @@ scag/tests/test-blockshsstorage2  testbh2 \
    -lcore-buffers -lcore-threads \
    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
    -lutil -lpthread -lrt -ldl
+
+scag/tests/test-blockshsstorage3  testbh3 \
+   -lscag-pvss-profile \
+   -lscag-pvss-data \
+   -lscag-util-storage \
+   -lscag-util \
+   -lcore-buffers -lcore-threads \
+   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+   -lutil -lpthread -lrt -ldl

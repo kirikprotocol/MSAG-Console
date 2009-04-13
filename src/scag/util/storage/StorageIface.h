@@ -333,6 +333,11 @@ public:
     }
 
 
+    void recoverFromBackup( value_type& v ) {
+        data_->recoverFromBackup(v);
+    }
+
+
     /// NOTE: this method gives some optimization
     /// by avoiding extra deserialization/serialization steps.
     /// NOTE: use external locking for this method!
@@ -497,12 +502,13 @@ public:
     }
 
     /// NOTE: use only if type of stored_type is DataBlockBackup
-    void backup2Profile ( const key_type& k, GlossaryBase* glossary ) {
+    void backup2Profile ( const key_type& k ) {
         stored_type* const vv = cache_->get( k );
         if ( !vv || !vv->value || !vv->backup ) {
             return;
         }
-        vv->value->deserialize( vv->backup->getBackupData(), vv->backup->getBackupDataSize(), glossary );
+        // vv->value->deserialize( vv->backup->getBackupData(), vv->backup->getBackupDataSize(), glossary );
+        disk_->recoverFromBackup( *vv );
     }
 
     /// flush item to disk

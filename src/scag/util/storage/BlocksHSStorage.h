@@ -283,6 +283,7 @@ class BlocksHSStorage
 {
 public:
     typedef DescriptionFile::index_type index_type;
+    typedef DataBlockBackup<Profile>    data_type;
 
 private:
     typedef templDataBlockHeader<Key> DataBlockHeader;
@@ -522,6 +523,14 @@ public:
 
     }
     
+
+    void recoverFromBackup( data_type& prof ) const
+    {
+        prof.value->deserialize( prof.backup->getBackupData(),
+                                 prof.backup->getBackupDataSize(),
+                                 glossary_ );
+    }
+
 
     bool Get(index_type blockIndex, DataBlock& data)
     {

@@ -136,6 +136,12 @@ public:
         pf_->Delete( i );
     }
 
+
+    void recoverFromBackup( value_type& v )
+    {
+        // v.recoverFromBackup();
+    }
+
 private:
     PF* pf_;                            // owned
     // mutable std::string key_;

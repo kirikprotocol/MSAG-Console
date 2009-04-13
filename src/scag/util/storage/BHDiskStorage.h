@@ -18,7 +18,7 @@ public:
     typedef Storage                           storage_type;
     typedef Key                               key_type;
     typedef typename storage_type::index_type index_type;
-    typedef DataBlockBackup< Val >            value_type;
+    typedef typename storage_type::data_type  value_type;
 
     BHDiskStorage( storage_type* hs,
                    smsc::logger::Logger* = 0 ) : store_(hs), v_(NULL)
@@ -89,6 +89,12 @@ public:
         typename value_type::backup_type bb;
         value_type v(&vv,&bb);
         if ( store_->Get(i,v) ) store_->Remove(key_,i,v);
+    }
+
+
+    void recoverFromBackup( value_type& v )
+    {
+        return store_->recoverFromBackup(v);
     }
 
 private:

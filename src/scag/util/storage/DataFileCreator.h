@@ -12,6 +12,7 @@
 #include "util/timeslotcounter.hpp"
 #include "DataFileManager.h"
 #include "scag/util/Time.h"
+#include "HSPacker.h"
 
 
 namespace scag    {
@@ -37,9 +38,10 @@ public:
   };
 public:
   DataFileCreator(DataFileManager& manager, Logger* log):manager_(manager), file_(0), fileSize_(0), blockSize_(0), filesCount_(0), writeBlockSize_(8),
-                                            fileCreated_(false), logger_(log), state_(OK) {};
+                                            fileCreated_(false), logger_(log), state_(OK), newFormat_(false) {};
 
-  void init(int32_t fileSize, int32_t blockSize, int32_t filesCount, const string& dbPath, const string& dbName) {
+  void init(int32_t fileSize, int32_t blockSize, int32_t filesCount, const string& dbPath, const string& dbName,
+            bool newFormat = false) {
     dbPath_ = dbPath;
     dbName_ = dbName;
     fileSize_ = fileSize;
@@ -47,6 +49,7 @@ public:
     filesCount_ = filesCount;
     ffbThreshold_ = (fileSize_ / 2);
     sleepTime_ = getSleepTime();
+      newFormat_ = newFormat;
     if (logger_) smsc_log_info(logger_, "init creator: fileSize:%d blockSize:%d filesCount:%d reserver:%d sleepTime:%d ms",
                                           fileSize_, blockSize_, filesCount_, fileSize_ - ffbThreshold_, sleepTime_);
   }
@@ -102,7 +105,8 @@ public:
     return false;
   }
 
-  void create(int64_t ffb, int32_t filesCount) {
+  void create(int64_t ffb, int32_t filesCount, bool newFormat = false) {
+      newFormat_ = newFormat;
     filesCount_ = filesCount;
     if (ffb == 0 && filesCount_ == 0) {
       State state = getState();
@@ -149,16 +153,31 @@ public:
   }
 
   int64_t prepareBlock(char* writeBlock, int blocksCount, int64_t startIndex, int lastBlock) {
-    lastBlock = lastBlock > 0 ? 1 : 0;
-    for (int i = 0; i < blocksCount - lastBlock; ++i) {
-      uint64_t ni = Uint64Converter::toNetworkOrder(startIndex++);
-      memcpy(writeBlock + (i * blockSize_), &ni, sizeof(ni));
-    }
-    if (lastBlock > 0) {
-      uint64_t ni = Uint64Converter::toNetworkOrder(-1);
-      memcpy(writeBlock + ((blocksCount - 1) * blockSize_), &ni, sizeof(ni));
-    }
-    return startIndex;
+      lastBlock = lastBlock > 0 ? 1 : 0;
+      if ( !newFormat_ ) {
+          for (int i = 0; i < blocksCount - lastBlock; ++i) {
+              uint64_t ni = Uint64Converter::toNetworkOrder(startIndex++);
+              memcpy(writeBlock + (i * blockSize_), &ni, sizeof(ni));
+          }
+          if (lastBlock > 0) {
+              uint64_t ni = Uint64Converter::toNetworkOrder(-1);
+              memcpy(writeBlock + ((blocksCount - 1) * blockSize_), &ni, sizeof(ni));
+          }
+      } else {
+          // FIXME: packer should be taken from BHS.
+          HSPacker packer(blockSize_,0);
+          BlockNavigation bn;
+          bn.setFreeCells(packer.lastIndex()); // not used
+          for ( int i = 0; i < blocksCount-lastBlock; ++i ) {
+              bn.setNextBlock(packer.idx2pos(startIndex++));
+              bn.save( writeBlock + (i*blockSize_) );
+          }
+          if ( lastBlock > 0 ) {
+              bn.setNextBlock(packer.lastIndex());
+              bn.save( writeBlock + (blocksCount-1)*blockSize_ );
+          }
+      }
+      return startIndex;
   }
 
   unsigned getSleepTime() {
@@ -296,6 +315,8 @@ private:
   EventMonitor sleepMonitor_;
   State state_;
   unsigned sleepTime_;
+
+    bool newFormat_;
 };
 
 

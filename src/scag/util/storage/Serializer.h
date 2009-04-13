@@ -112,6 +112,10 @@ public:
         return buf_->size() ? &(buf_->front()) : 0;
     }
 
+    inline unsigned char* data() {
+        return buf_->size() ? &(buf_->front()) : 0;
+    }
+
     /// write buffer of size sz.
     /// This method is provided to co-work with other serializer types.
     /// NOTE: see also Deserializer::read().
@@ -143,8 +147,9 @@ class Deserializer : public SerializerBase
 {
 public:
     // a special constructor from a chunk of data in memory to avoid an extra copying
-    Deserializer( const unsigned char* buf, size_t bufsize, GlossaryBase* glossary = NULL ) :
-    SerializerBase(glossary), buf_(0), rpos_(0), ebuf_(buf), esize_(bufsize) {}
+    Deserializer( const void* buf, size_t bufsize, GlossaryBase* glossary = NULL ) :
+    SerializerBase(glossary), buf_(0), rpos_(0),
+    ebuf_(reinterpret_cast<const unsigned char*>(buf)), esize_(bufsize) {}
 
     // a ctor from standard buffer
     Deserializer( const Buf& buf, GlossaryBase* glossary = NULL ) :
@@ -169,7 +174,7 @@ public:
     const char* readAsIs( uint32_t sz ) throw (DeserializerException);
 
     inline size_t size() const {
-        return esize_;
+        return buf_ ? buf_->size() : esize_;
     }
     
     inline size_t rpos() const {
