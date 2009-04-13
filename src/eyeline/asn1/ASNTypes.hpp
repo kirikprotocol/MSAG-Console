@@ -5,9 +5,8 @@
 #ident "@(#)$Id$"
 #define __ABSTRACT_SYNTAX_TYPE_DEFS__
 
-#include <stdarg.h>
 #include <set>
-#include <vector>
+#include "eyeline/asn1/ASNTags.hpp"
 
 namespace eyeline {
 namespace asn1 {
@@ -27,93 +26,10 @@ struct BITBuffer : public OCTBuffer {
   uint8_t         bitsUnused; //unused bits in last byte of encoding
 
   BITBuffer(uint8_t * use_ptr = 0, uint32_t use_sz = 0)
-    : OCTBuffer(use_ptr, use_sz), bitsUnused(0), bitsGap(0)
+    : OCTBuffer(use_ptr, use_sz), bitsGap(0), bitsUnused(0)
   { }
 };
 
-struct ASTag {
-  enum TagClass {
-    tagUniversal = 0x00,
-    tagApplication = 0x40,
-    tagContextSpecific = 0x80,
-    tagPrivate = 0xB0
-  };
-
-  TagClass    tagClass;
-  uint16_t    tagValue;
-
-  ASTag(TagClass tag_class = tagUniversal, uint16_t tag_val = 0)
-    : tagClass(tag_class), tagValue(tag_val)
-  { }
-
-  bool operator== (const ASTag & cmp_tag) const
-  {
-    return (tagClass == cmp_tag.tagClass) && (tagValue == cmp_tag.tagValue);
-  }
-
-  //Compares tags in accordance with ASN.1 canonical tags order as stated
-  //in X.680 cl.8.6:
-  //  The canonical order for tags is based on the outermost tag of each type
-  //  and is defined as follows:
-  //  a) those elements or alternatives with universal class tags shall appear
-  //    first, followed by those with application class tags, followed by those
-  //    with context-specific tags, followed by those with private class tags;
-  //  b) within each class of tags, the elements or alternatives shall appear
-  //    in ascending order of their tag numbers.
-  bool operator< (const ASTag & cmp_tag) const
-  {
-    if (tagClass == cmp_tag.tagClass)
-        return (tagValue < cmp_tag.tagValue);
-    return (tagClass < cmp_tag.tagClass);
-  }
-};
-
-//Abstract type complete tagging (all tags goes to encoding in case of
-//EXPLICIT tagging environment).
-class ASTagging : std::vector<ASTag> {
-public:
-  ASTagging()    //just a [UNIVERSAL 0]
-    : std::vector<ASTag>(1)
-  { }
-  ASTagging(const ASTag & use_tag) //just one tag
-    : std::vector<ASTag>(1)
-  {
-    at(0) = use_tag;
-  }
-  ASTagging(const ASTagging & use_tags)
-    : std::vector<ASTag>(use_tags)
-  { }
-  ASTagging(uint16_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/)
-    : std::vector<ASTag>(num_tags)
-  {
-    at(0) = use_tag1;
-    va_list  useTags;
-    va_start(useTags, use_tag1);
-    for (uint16_t i = 1; i < num_tags; ++i)
-      at(i) = va_arg(useTags, ASTag);
-    va_end(useTags);
-  }
-  ~ASTagging()
-  { }
-
-
-  uint16_t numTags(void) const
-  {
-    return (uint16_t)(size());
-  }
-  //tag_idx = 0 - outermost tag, in most cases this is just a type tag
-  //NOTE: It's a caller responsibility to ensure tag_idx isn't out of range
-  const ASTag & Tag(uint16_t tag_idx = 0) const
-  {
-    return tag_idx < numTags() ? at(tag_idx) : at(0);
-  }
-
-  //Compares taggings in accordance with ASN.1 canonical tags order.
-  bool operator< (const ASTagging & cmp_tags) const
-  {
-    return at(0) < cmp_tags.Tag(0);
-  }
-};
 
 //This class helps to cope with untagged CHOICE types, which potentially may have
 //several tagging options, but only one at a time depending on CHOICE value type
@@ -214,33 +130,35 @@ public:
     ENCStatus   rval;   //encoding status
     uint32_t    nbytes; //number of bytes encoded
 
-    ENCResult() : rval(encOk), nbytes(0)
+    ENCResult(ENCStatus use_status = encBadVal, uint32_t nb_encoded = 0)
+      : rval(encBadVal), nbytes(nb_encoded)
     { }
   };
   struct DECResult {
     DECStatus   rval;   //decoding status
     uint32_t    nbytes; //number of bytes succsefully decoded
 
-    DECResult() : rval(decOk), nbytes(0)
+    DECResult(DECStatus use_status = decBadVal, uint32_t nb_decoded = 0)
+      : rval(use_status), nbytes(nb_decoded)
     { }
   };
 
 protected:
-  Presentation  valType;
-  BITBuffer     valEnc;
+  Presentation  valPresentation;
+  BITBuffer     valEnc; //meaningfull only in case of valPresentation == valMixed
   EncodingRule  valRule;
   ASTagOptions  tags;
 
 public:
   ASTypeAC()
-    : valType(valNone), valRule(undefinedER)
+    : valPresentation(valNone), valRule(undefinedER)
   { }
-  ASTypeAC(ASTag::TagClass tag_class,  uint16_t tag_val)
-    : valType(valNone), valRule(undefinedER)
+  ASTypeAC(ASTag::TagClass_e tag_class,  uint16_t tag_val)
+    : valPresentation(valNone), valRule(undefinedER)
     , tags(ASTagging(ASTag(tag_class, tag_val)))
   { }
   ASTypeAC(const ASTagging & use_tags)
-    : valType(valNone), valRule(undefinedER)
+    : valPresentation(valNone), valRule(undefinedER)
     , tags(use_tags)
   { }
   virtual ~ASTypeAC()
@@ -249,7 +167,7 @@ public:
   ASTagOptions & asTags(void) { return tags; }
 
   //type is tagged by single tag
-  void setTagging(ASTag::TagClass tag_class,  uint16_t tag_val)
+  void setTagging(ASTag::TagClass_e tag_class,  uint16_t tag_val)
   {
     tags.selectOption(ASTag(tag_class, tag_val));
   }
@@ -261,7 +179,7 @@ public:
 
   void setEncoding(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
   {
-    valType = valEncoded; valEnc = use_buf; valRule = use_rule;
+    valPresentation = valEncoded; valEnc = use_buf; valRule = use_rule;
   }
 
   //Returns type tag (outermost tag  of selected tagging option)
@@ -269,52 +187,63 @@ public:
   //Returns type tagging (selected tagging option)
   const ASTagging * Tagging(void) const { return tags.Selected(); }
   //
-  Presentation getPresentation(void) const { return valType; }
+  Presentation getPresentation(void) const { return valPresentation; }
   //
   const BITBuffer * getEncoding(void) const { return valEnc.ptr ? &valEnc : 0; }
   //
   EncodingRule getRule(void) const { return valRule; }
 
   // ---------------------------------
-  // ASTypeAC interface methods
+  // -- ASTypeAC interface methods
   // ---------------------------------
 
-  //REQ: presentation > valNone, if use_rule == valRule, otherwise presentation == valDecoded
-  virtual ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER) /*throw ASN1CodecError*/ = 0;
-  //REQ: presentation == valEncoded | valMixed (setEncoding was called)
-  //OUT: type presentation = valDecoded, components (if exist) presentation = valDecoded,
-  //in case of decMoreInput, stores decoding context
-  virtual DECResult Decode(void) /*throw ASN1CodecError*/ = 0;
-  //REQ: presentation == valEncoded  (setEncoding was called)
-  //OUT: type presentation = valMixed | valDecoded, 
-  //     deferred components presentation = valEncoded
-  //NOTE: all components decoding is deferred 
-  //in case of decMoreInput, stores decoding context 
-  virtual DECResult DeferredDecode(void) /*throw ASN1CodecError*/ = 0;
+  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
+  virtual ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/ = 0;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valDecoded,
+  //NOTE: in case of decMoreInput, stores decoding context 
+  virtual DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/ = 0;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
+  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of decMoreInput, stores decoding context 
+  virtual DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/ = 0;
 
 
   // ---------------------------------
   // ASTypeAC auxiliary methods
   // ---------------------------------
-  //REQ: presentation == valNone, if decMoreInput stores decoding context,
-  //type presentation = valDecoded, components (if exist) presentation = valDecoded
-  DECResult DecodeBuf(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
-      /*throw ASN1CodecError*/
+  //REQ: presentation == valEncoded | valMixed,
+  //    (setEncoding() or DeferredDecode() was called)
+  //OUT: type presentation (include all subcomponents) = valDecoded
+  //NOTE: in case of decMoreInput, stores decoding context
+  DECResult selfDecode(void) /*throw ASN1CodecError*/
   {
-    setEncoding(use_buf, use_rule);
-    return Decode();
+    if ((valPresentation == valEncoded) || (valPresentation == valMixed)) {
+      BITBuffer useEnc = valEnc;
+      return Decode(useEnc, valRule);
+    }
+    return DECResult(decBadVal);
   }
-  //REQ: presentation == valNone, if decMoreInput stores decoding context
-  //type presentation = valDecoded, deferred components presentation = valEncoded
-  //NOTE: if num_tags == 0 all components are deferred 
-  DECResult DeferredDecodeBuf(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
-      /*throw ASN1CodecError*/
+
+  //REQ: presentation == valEncoded (setEncoding() was called)
+  //OUT: presentation = valMixed | valDecoded, all 
+  //     subcomponents presentation = valMixed | valDecoded
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult selfDeferredDecode(void) /*throw ASN1CodecError*/
   {
-    setEncoding(use_buf, use_rule);
-    return DeferredDecode();
+    if (valPresentation == valEncoded) {
+      BITBuffer useEnc = valEnc;
+      return DeferredDecode(useEnc, valRule);
+    }
+    return DECResult(decBadVal);
   }
 };
-
 
 } //asn1
 } //eyeline
