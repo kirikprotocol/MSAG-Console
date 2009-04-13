@@ -351,7 +351,9 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
                 startTransaction(); // start transactional indecies
                 if (!transactionSrcFiles.Exists(srcFileNameStr))
                      transactionSrcFiles.Insert(srcFileNameStr, true);
-
+              
+              
+                if(File::Size(srcFileNameStr)!=0)
                 while (!bNeedExit)
                 {
                     SMSId id; SMS sms;
