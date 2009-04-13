@@ -166,7 +166,6 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
     }
     if (tsm)
     {
-      TSM* tsm = *ptr;
       tsm->CONTINUE_received(cdlen, cd, cllen, cl, msg);
     } else
     {
