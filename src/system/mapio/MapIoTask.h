@@ -1120,11 +1120,12 @@ public:
     {
       MutexGuard g(sync);
       MAPSTATS_DumpDialogLC(dlg);
+      int newCLevel=-1;
       if(dlgType==radtOut)
       {
         using smsc::system::mapio::MapLimits;
-        dlg->clevel=MapLimits::getInstance().incDlgCounter(dlg->s_msc.c_str());
-        if(dlg->clevel==-1)
+        newCLevel=MapLimits::getInstance().incDlgCounter(dlg->s_msc.c_str());
+        if(newCLevel==-1)
         {
           throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,smsc::system::Status::THROTTLED),"out dlg limit reached for msc "+dlg->s_msc);
         }
@@ -1208,7 +1209,7 @@ public:
         dlgPool[ssn][rinst][dialogid_map]=dlg;
         switch(dlgType)
         {
-          case radtOut:dlg->dlgType = MAPSTAT_DLGOUT;break;
+          case radtOut:dlg->dlgType = MAPSTAT_DLGOUT;dlg->clevel=newCLevel;break;
           case radtOutSRI:dlg->dlgType = MAPSTAT_DLGOUTSRI;break;
           case radtNIUSSD:dlg->dlgType = MAPSTAT_DLGNIUSSD;break;
         }

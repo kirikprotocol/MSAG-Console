@@ -140,8 +140,14 @@ public:
   void decDlgCounter(int clevel)
   {
     //sync::MutexGuard mg(mtxMsc);
-    limitsOut[clevel].dlgCount--;
-    smsc_log_debug(log,"dec dlg count[cl=%d]:%d",clevel,limitsOut[clevel].dlgCount);
+    if(clevel>=0 && clevel<maxCLevels)
+    {
+      limitsOut[clevel].dlgCount--;
+      smsc_log_debug(log,"dec dlg count[cl=%d]:%d",clevel,limitsOut[clevel].dlgCount);
+    }else
+    {
+      smsc_log_warn(log,"attempt to decrement dlg count for incorect clevel=%d",clevel);
+    }
   }
   
 protected:
