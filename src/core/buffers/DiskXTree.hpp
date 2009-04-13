@@ -505,6 +505,8 @@ protected:
           delete dataArray;
         }
       }
+      dataType=dtSingleValue;
+      nodeType=ntCollapsed;
       data=0;
       chSize=0;
     }
