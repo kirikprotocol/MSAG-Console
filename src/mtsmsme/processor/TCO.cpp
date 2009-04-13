@@ -148,6 +148,7 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
       SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
       return;
     }
+    return;
   } /* end of BEGIN handling section */
   if (msg.isContinue())
   {
@@ -174,6 +175,7 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
       encoder.encodeResourceLimitation(rtrid, rsp);
       SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
     }
+    return;
   }/* end of CONTINUE handling section */
   if (msg.isEnd())
   {
@@ -197,6 +199,7 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
     {
       smsc_log_debug(logger,"TCO receive END but TSM not found, DISCARD");
     }
+    return;
   }/* end of END handling section */
   if (msg.isAbort())
   {
@@ -220,6 +223,7 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
     {
       smsc_log_debug(logger,"TCO receive ABORT but TSM not found, DISCARD");
     }
+    return;
   }/* end of Abort handling section */
   smsc_log_error(logger,"TCO receive UNSUPPORTED TCAP message, DISCARD");
 }
