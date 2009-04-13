@@ -5,6 +5,7 @@
 #ident "@(#)$Id$"
 #define __TCAP_TRANSACTION_ID_HPP
 
+#include <inttypes.h>
 #include "util/vformat.hpp"
 
 namespace eyeline {
@@ -15,31 +16,33 @@ using smsc::util::format;
 
 //Unified transaction identifier: "[LR]ReqNN:RespNN"
 class TransactionId {
+public:
+  enum Origin_e { orgNotAnId = 0, orgLocal, orgRemote };
+
 protected:
-  uint32_t    reqId; //transaction  id at requesting side
-  uint32_t    rspId; //transaction  id at responding side
+  Origin_e  _origin;  //transaction initiating side
+  uint32_t  _reqId;   //transaction  id at requesting side
+  uint32_t  _rspId;   //transaction  id at responding side
 
 public:
-  enum Origin { orgNotAnId = 0, orgLocal, orgRemote };
-
-  const Origin   origin; //transaction initiating side
-
-  TransactionId(Origin org_type = orgNotAnId, uint32_t req_id = 0, uint32_t rsp_id = 0)
-    : origin(org_type), reqId(req_id), rspId(rsp_id)
+  TransactionId(Origin_e org_type = orgNotAnId, uint32_t req_id = 0, uint32_t rsp_id = 0)
+    : _origin(org_type), _reqId(req_id), _rspId(rsp_id)
   { }
   TransactionId(const TransactionId & use_trid)
-    : origin(use_trid.origin), reqId(use_trid.reqId), rspId(use_trid.rspId)
+    : _origin(use_trid._origin), _reqId(use_trid._reqId), _rspId(use_trid._rspId)
   { }
   ~TransactionId()
   { }
 
+  Origin_e  origin(void) const { return _origin; }
+
   //unified Transaction Id value: "[LR]ReqNN:RespNN"
   std::string & value(std::string & str) const
   {
-    if (origin == orgNotAnId)
+    if (_origin == orgNotAnId)
       str = "NotAnId";
     else
-      format(str, "%c%u:%u", (origin == iniLocal) ? 'L' : 'R', reqId, rspId);
+      format(str, "%c%u:%u", (_origin == orgLocal) ? 'L' : 'R', _reqId, _rspId);
     return str;
   }
 
@@ -52,29 +55,29 @@ public:
   //returns local transaction id 
   uint32_t localId(void) const
   {
-      return !origin ? 0 : ((origin == iniLocal) ? reqId : rspId);
+      return !_origin ? 0 : ((_origin == orgLocal) ? _reqId : _rspId);
   }
   //returns remote transaction id 
   uint32_t remoteId(void) const
   {
-      return !origin ? 0 : ((origin != iniLocal) ? reqId : rspId);
+      return !_origin ? 0 : ((_origin != orgLocal) ? _reqId : _rspId);
   }
 
   //sets local transaction id 
   void setIdLocal(uint32_t use_id)
   {
-      if (origin == iniLocal)
-          reqId = use_id;
+      if (_origin == orgLocal)
+          _reqId = use_id;
       else
-          rspId = use_id;
+          _rspId = use_id;
   }
   //sets local transaction id
   void setIdRemote(uint32_t use_id)
   {
-      if (origin != iniLocal)
-          reqId = use_id;
+      if (_origin != orgLocal)
+          _reqId = use_id;
       else
-          rspid = use_id;
+          _rspId = use_id;
   }
 };
 

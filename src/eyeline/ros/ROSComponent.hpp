@@ -23,13 +23,13 @@ public:
   enum Kind_e { //ContextSpecific tag of component
     //basic components, according to
     //joint-iso-itu-t(2) remote-operations(4) generic-ROS-PDUs(6) version1(0)
-    rosInvoke = 0x01
-    , rosResult = 0x02
-    , rosError = 0x03
-    , rosReject = 0x04
+    rosInvoke = 0x01    //[CONTEXT SPECIFIC 1]
+    , rosResult = 0x02  //[CONTEXT SPECIFIC 2]
+    , rosError = 0x03   //[CONTEXT SPECIFIC 3]
+    , rosReject = 0x04  //[CONTEXT SPECIFIC 4]
     //additional conponent, according to
     //itu-t(0) recommendation(0) q(17) 773 modules(2) messages(1) version3(3)
-    , rosResultNL = 0x07
+    , rosResultNL = 0x07  //[CONTEXT SPECIFIC 7]
   };
 
 protected:
@@ -55,25 +55,11 @@ public:
   void setParam(const ASTypeRfp & ref_param) { _param = ref_param; }
 
   //Merges component paramater if it's was splitted to several
-  //component due to segmantation issue
-  void Merge(ROSComponentPrimitive & use_segm);
-
-  // ---------------------------------
-  // ASTypeAC interface methods
-  // ---------------------------------
-
-  //REQ: presentation > valNone, if use_rule == valRule, otherwise presentation == valDecoded
-  ENCResult Encode(BITBuffer & buf, EncodingRule use_rule) /*throw ASN1CodecError*/;
-  //REQ: presentation == valEncoded | valMixed (setEncoding was called)
-  //OUT: type presentation = valDecoded, components (if exist) presentation = valDecoded,
-  //in case of decMoreInput, stores decoding context
-  DECResult Decode(void) /*throw ASN1CodecError*/;
-  //REQ: presentation == valEncoded (setEncoding was called)
-  //OUT: type presentation = valMixed | valDecoded, 
-  //     deferred components presentation = valEncoded
-  //NOTE: if num_tags == 0, all components decoding is deferred 
-  //in case of decMoreInput, stores decoding context 
-  DECResult DeferredDecode(void) /*throw ASN1CodecError*/;
+  //component due to segmentation issue
+  virtual bool Merge(ROSComponentPrimitive & use_segm)
+  {
+    return false;
+  }
 };
 
 class ROSInvoke : public ROSComponentPrimitive {
@@ -100,6 +86,28 @@ public:
   //NOTE: it's user responsibility to check for linked Invoke
   //status before using this method !
   uint8_t getLinked(void) const { return _linkedId; }
+
+
+  // ---------------------------------
+  // -- ASTypeAC interface methods
+  // ---------------------------------
+
+  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
+  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valDecoded,
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
+  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
 };
 
 class ROSResult : public ROSComponentPrimitive {
@@ -107,6 +115,26 @@ public:
   ROSResult(uint8_t op_code, const EncodedOID * app_ctx = 0)
     : ROSComponentPrimitive(ROSComponentPrimitive::rosResult, op_code, app_ctx)
   { }
+  // ---------------------------------
+  // -- ASTypeAC interface methods
+  // ---------------------------------
+
+  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
+  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valDecoded,
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
+  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
 };
 
 class ROSResultNL : public ROSComponentPrimitive {
@@ -114,6 +142,26 @@ public:
   ROSResultNL(uint8_t op_code, const EncodedOID * app_ctx = 0)
     : ROSComponentPrimitive(ROSComponentPrimitive::rosResultNL, op_code, app_ctx)
   { }
+  // ---------------------------------
+  // -- ASTypeAC interface methods
+  // ---------------------------------
+
+  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
+  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valDecoded,
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
+  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
 };
 
 class ROSError : public ROSComponentPrimitive {
@@ -121,6 +169,26 @@ public:
   ROSError(uint8_t op_code, const EncodedOID * app_ctx = 0)
     : ROSComponentPrimitive(ROSComponentPrimitive::rosError, op_code, app_ctx)
   { }
+  // ---------------------------------
+  // -- ASTypeAC interface methods
+  // ---------------------------------
+
+  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
+  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valDecoded,
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
+  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
 };
 
 
@@ -216,6 +284,26 @@ public:
 
   const RejectProblem & Problem(void) const { return _problem; }
 
+  // ---------------------------------
+  // -- ASTypeAC interface methods
+  // ---------------------------------
+
+  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
+  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valDecoded,
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
+  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
 };
 
 

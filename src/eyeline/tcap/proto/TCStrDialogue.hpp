@@ -6,7 +6,7 @@
 #ident "@(#)$Id$"
 #define __TC_STR_DIALOGUE_DEFS_HPP
 
-#include "eyeline/tcap/TCUserInfo.hpp"
+#include "eyeline/tcap/proto/TCUserInfo.hpp"
 #include "eyeline/util/MaxSizeof.hpp"
 
 namespace eyeline {
@@ -17,161 +17,317 @@ extern EncodedOID _ac_tcap_strDialogue_as;
 
 //Base class for dialogue PDUs
 class TCDlgPduAC : public ASTypeAC {
+protected:
+  TCUserInformation   _usrInfo;    //optional
+
 public:
-    enum PDUKind_e { pduNone = -1, pduAARQ = 0, pduAARE = 1, pduABRT = 4 };
+  enum ProtoVersion_e { protoVersion1 = 0 };
+  enum PDUKind_e { pduNone = -1, pduAARQ = 0, pduAARE = 1, pduABRT = 4 };
 
-    TCUserInformation   usrInfo;    //optional
+  TCDlgPduAC(PDUKind_e use_pdu)
+    : ASTypeAC(ASTag::tagApplication, use_pdu)
+  { }
 
-    TCDlgPduAC(PDUKind_e use_pdu)
-        : ASTypeAC(ASTag::tagApplication, use_pdu)
-    { }
+  TCUserInformation & usrInfo(void) { return _usrInfo; }
 
-    bool hasUsrInfo(void) const
-    {
-        return !usrInfo.extVals.empty();
-    }
-
-    // -- TCDlgPduAC interface methods:
-    virtual const EncodedOID * ACDefined(void) const = 0;
+  // -- TCDlgPduAC interface methods:
+  virtual const EncodedOID * ACDefined(void) const = 0;
 };
 
 //Structured TC Dialogue request APDU (AARQ)
 class TCReqPDU : public TCDlgPduAC {
+protected:
+  unsigned    _protoVer;  //BIT STING
+  EncodedOID  _acId;      //mandatory!!!
+
 public:
-    EncodedOID          ac_id; //optional
+  TCReqPDU() : TCDlgPduAC(TCDlgPduAC::pduAARQ)
+    , _protoVer(TCDlgPduAC::protoVersion1)
+  { }
+  ~TCReqPDU()
+  { }
 
-    TCReqPDU() : TCDlgPduAC(TCDlgPduAC::pduAARQ);
-    { }
-    ~TCReqPDU()
-    { }
+  void setAppCtx(const EncodedOID & use_acid) { _acId = use_acid; }
 
-    // -- TCDlgPduAC interface methods
-    const EncodedOID * ACDefined(void) const
-    {
-        return ac_id.length() ? &ac_id : 0;
-    } 
+  // -- TCDlgPduAC interface methods
+  const EncodedOID * ACDefined(void) const
+  {
+    return _acId.length() ? &_acId : 0;
+  } 
+
+  // ---------------------------------
+  // -- ASTypeAC interface methods
+  // ---------------------------------
+
+  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
+  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valDecoded,
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
+  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
 };
 
-struct AssociateSourceDiagnostic {
-    enum DialogueServiceUser {
-        dsu_null = 0, dsu_no_reason_given = 1, dsu_ac_not_supported = 2
-    } dsuDiagnostic;
-    enum DialogueServiceProvider {
-        dsp_null = 0, dsp_no_reason_given = 1, dsp_no_dialogue_portion = 2
-    } dspDiagnostic;
+class AssociateSourceDiagnostic {
+public:
+  enum SDKind_e {
+    dlgSrvUser = 0x01, dlgSrvPrvd = 0x02
+  };
+  enum DlgSrvUser_e {
+    dsu_null = 0, dsu_no_reason_given = 1, dsu_ac_not_supported = 2
+  };
+  enum DlgSrvProvider_e {
+    dsp_null = 0, dsp_no_reason_given = 1, dsp_no_dialogue_portion = 2
+  };
+
+protected:
+  SDKind_e  _sdKind;
+  union {
+    DlgSrvUser_e     user;
+    DlgSrvProvider_e prvd;
+  } _dsDiagnostic;
+
+public:
+  AssociateSourceDiagnostic()
+  {
+    setUserDiagnostic(dsu_null); //default: accepted by user 
+  }
+
+  void setUserDiagnostic(DlgSrvUser_e use_diagnostic = dsu_null)
+  {
+    _sdKind = dlgSrvUser;
+    _dsDiagnostic.user = use_diagnostic;
+  }
+  void setPrvdDiagnostic(DlgSrvProvider_e use_diagnostic = dsp_null)
+  {
+    _sdKind = dlgSrvPrvd;
+    _dsDiagnostic.prvd = use_diagnostic;
+  }
+
+  SDKind_e diagnosticKind(void) const { return _sdKind; }
+
+  DlgSrvUser_e getUserDiagnostic(void) const
+  {
+    return _dsDiagnostic.user;
+  }
+  DlgSrvProvider_e getPrvdDiagnostic(void) const
+  {
+    return _dsDiagnostic.prvd;
+  }
 };
 
 //Structured TC Dialogue response APDU (AARE)
 class TCRespPDU : public TCDlgPduAC {
 public:
-    enum AssociateResult {
-        dlgAccepted = 0, dlgRejectPermanent = 1
-    };
-    EncodedOID                  ac_id; //optional
-    AssociateResult             result;
-    AssociateSourceDiagnostic   diagnostic;
+  enum AssociateResult_e {
+    dlgAccepted = 0, dlgRejectPermanent = 1
+  };
 
-    TCRespPDU() : TCDlgPduAC(TCDlgPduAC::pduAARE);
-    { }
-    ~TCRespPDU()
-    { }
+protected:
+  unsigned    _protoVer;  //BIT STING
+  EncodedOID  _acId;      //mandatory!!!
 
-    // -- TCDlgPduAC interface methods
-    const EncodedOID * ACDefined(void) const
-    {
-        return ac_id.length() ? &ac_id : 0;
-    } 
+  AssociateResult_e           _result;
+  AssociateSourceDiagnostic   _diagnostic;
+
+public:
+  TCRespPDU() : TCDlgPduAC(TCDlgPduAC::pduAARE)
+    , _protoVer(TCDlgPduAC::protoVersion1), _result(dlgAccepted)
+  { }
+  ~TCRespPDU()
+  { }
+
+  void acceptByUser(void)
+  {
+    _result = dlgAccepted; _diagnostic.setUserDiagnostic();
+  }
+  void acceptByPrvd(void)
+  {
+    _result = dlgAccepted; _diagnostic.setPrvdDiagnostic();
+  }
+
+  void rejectByUser(AssociateSourceDiagnostic::DlgSrvUser_e use_cause =
+                        AssociateSourceDiagnostic::dsu_null)
+  {
+    _result = dlgRejectPermanent; _diagnostic.setUserDiagnostic(use_cause);
+  }
+  void rejectByPrvd(AssociateSourceDiagnostic::DlgSrvProvider_e use_cause =
+                        AssociateSourceDiagnostic::dsp_null)
+  {
+    _result = dlgRejectPermanent; _diagnostic.setPrvdDiagnostic(use_cause);
+  }
+
+  void setAppCtx(const EncodedOID & use_acid) { _acId = use_acid; }
+
+  AssociateResult_e result(void) const { return _result; }
+  const AssociateSourceDiagnostic & diagnostic(void) const { return _diagnostic; }
+
+  // -- TCDlgPduAC interface methods
+  const EncodedOID * ACDefined(void) const
+  {
+      return _acId.length() ? &_acId : 0;
+  }
+
+  // ---------------------------------
+  // -- ASTypeAC interface methods
+  // ---------------------------------
+
+  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
+  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valDecoded,
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
+  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
 };
 
 //Structured TC Dialogue abort APDU (ABRT)
 class TCAbrtPDU : public TCDlgPduAC {
 public:
-    enum Source { dialogue_service_user = 0, dialogue_service_provider = 1 };
+  enum AbortSource_e {
+    dlg_srv_user = 0, dlg_srv_provider = 1 
+  };
 
-    Source              abrtSource;
+protected:
+  AbortSource_e  _abrtSrc;
 
-    TCAbrtPDU() : TCDlgPduAC(TCDlgPduAC::pduABRT)
-        , abrtSource(dialogue_service_provider)
-    { }
-    ~TCAbrtPDU()
-    { }
+public:
+  TCAbrtPDU(AbortSource_e abrt_src = dlg_srv_provider)
+    : TCDlgPduAC(TCDlgPduAC::pduABRT), _abrtSrc(abrt_src)
+  { }
+  ~TCAbrtPDU()
+  { }
 
-    // -- TCDlgPduAC interface methods
-    const EncodedOID * ACDefined(void) const { return 0; }
+  void setAbortSource(AbortSource_e abrt_src) { _abrtSrc = abrt_src; }
+
+  AbortSource_e  abortSource(void) const { return _abrtSrc; }
+  // -- TCDlgPduAC interface methods
+  const EncodedOID * ACDefined(void) const { return 0; }
+
+  // ---------------------------------
+  // -- ASTypeAC interface methods
+  // ---------------------------------
+
+  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
+  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valDecoded,
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
+  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
 };
 
 // TC Structured Dialogue ABSTRACT SYNTAX
 class TCStrDialogueAS : public AbstractSyntax {
-public:
-    typedef TCDlgPduAC::PDUKind_e PDUKind_e;
-
 private:
-    uint8_t pduMem[eyeline::util::MaxSizeOf3_T< TCReqPDU,
-                                                TCRespPDU, TCAbrtPDU >::VALUE];
-    PDUKind_e pduKind;
-    union {
-        TCDlgPduAC *    ac;     //APDU's base class
-        TCReqPDU *      req;    //[APPLICATION 0]
-        TCRespPDU *     resp;   //[APPLICATION 1]
-        TCAbrtPDU *     abrt;   //[APPLICATION 4]
-    } pdu;
+  uint8_t pduMem[eyeline::util::MaxSizeOf3_T< TCReqPDU,
+                                              TCRespPDU, TCAbrtPDU >::VALUE];
+  TCDlgPduAC::PDUKind_e _pduKind;
+  union {
+    TCDlgPduAC *    ac;     //APDU's base class
+    TCReqPDU *      req;    //[APPLICATION 0]
+    TCRespPDU *     resp;   //[APPLICATION 1]
+    TCAbrtPDU *     abrt;   //[APPLICATION 4]
+  } _pdu;
 
 protected:
-    void resetPdu(void)
-    {
-        if (pdu.ac) {
-            pdu.ac->~ASTypeAC();
-            pdu.ac = 0;
-        }
+  void resetPdu(void)
+  {
+    if (_pdu.ac) {
+      _pdu.ac->~TCDlgPduAC();
+      _pdu.ac = 0;
     }
+  }
 
 public:
-    TCStrDialogueAS(PDUKind_e use_kind = pduNone)
-        : AbstractSyntax(_ac_tcap_strDialogue_as)
-    {
-        asTags().addOption(ASTagging(ASTag::tagApplication, TCDlgPduAC::pduAARQ));
-        asTags().addOption(ASTagging(ASTag::tagApplication, TCDlgPduAC::pduAARE));
-        asTags().addOption(ASTagging(ASTag::tagApplication, TCDlgPduAC::pduABRT));
-        //
-        pdu.ac = 0;
-        if ((pduKind = use_kind) != pduNone)
-            Init(use_kind);
+  TCStrDialogueAS(TCDlgPduAC::PDUKind_e use_pdu = TCDlgPduAC::pduNone)
+      : AbstractSyntax(_ac_tcap_strDialogue_as)
+  {
+    asTags().addOption(ASTagging(ASTag::tagApplication, TCDlgPduAC::pduAARQ));
+    asTags().addOption(ASTagging(ASTag::tagApplication, TCDlgPduAC::pduAARE));
+    asTags().addOption(ASTagging(ASTag::tagApplication, TCDlgPduAC::pduABRT));
+    //
+    _pdu.ac = 0;
+    if ((_pduKind = use_pdu) != TCDlgPduAC::pduNone)
+        Reset(use_pdu);
+  }
+  ~TCStrDialogueAS()
+  {
+    resetPdu();
+  }
+
+  TCDlgPduAC * Reset(TCDlgPduAC::PDUKind_e use_pdu = TCDlgPduAC::pduNone)
+  {
+    resetPdu();
+    switch ((_pduKind = use_pdu)) {
+    case TCDlgPduAC::pduAARQ: _pdu.req = new(pduMem)TCReqPDU(); break;
+    case TCDlgPduAC::pduAARE: _pdu.resp = new(pduMem)TCRespPDU(); break;
+    case TCDlgPduAC::pduABRT: _pdu.abrt = new(pduMem)TCAbrtPDU(); break;
+    default:; //pduNone
     }
-    ~TCStrDialogueAS()
-    {
-        resetPdu();
-    }
+    asTags().selectOption(ASTag(ASTag::tagApplication, use_pdu));
+    return _pdu.ac;
+  }
 
-    ASTypeAC * Init(PDUKind_e use_kind)
-    {
-        resetPdu();
-        switch ((pduKind = use_kind)) {
-        case pduAARQ: pdu.ac = new(pduMem)TCReqPDU();
-        break;
-        case pduAARE: pdu.ac = new(pduMem)TCRespPDU();
-        break;
-        case pduABRT: pdu.ac = new(pduMem)TCAbrtPDU();
-        break
-        default:; //pduNone
-        }
-        asTags().selectOption(ASTag(ASTag::tagApplication, use_kind));
-        return pdu.ac;
-    }
+  TCDlgPduAC::PDUKind_e PDUKind(void) const { return _pduKind; }
+  TCDlgPduAC * Get(void)  { return _pdu.ac; }
 
-    void Reset(void) { Init(pduNone); }
+  TCReqPDU *  Req(void)   { return _pduKind == TCDlgPduAC::pduAARQ ? _pdu.req : 0; }
+  TCRespPDU * Resp(void)  { return _pduKind == TCDlgPduAC::pduAARE ? _pdu.resp : 0; }
+  TCAbrtPDU * Abrt(void)  { return _pduKind == TCDlgPduAC::pduABRT ? _pdu.abrt : 0; }
 
-    PDUKind_e PDUKind(void) const { return pduKind; }
-    TCDlgPduAC * Get(void) const { return pdu.ac; }
+  TCUserInformation * usrInfo(void)
+  {
+      return _pdu.ac ? &(_pdu.ac->usrInfo()) : 0;
+  }
 
-    TCReqPDU * Req(void) const { return pduKind == pduAARQ ? pdu.req : 0; }
-    TCRespPDU * Resp(void) const { return pduKind == pduAARE ? pdu.resp : 0; }
-    TCAbrtPDU * Abrt(void) const { return pduKind == pduABRT ? pdu.abrt : 0; }
+  // ---------------------------------
+  // -- ASTypeAC interface methods
+  // ---------------------------------
 
-    TCUserInformation * UsrInfo(void) const
-    {
-        return pdu.ac ? &(pdu.ac->usrInfo) : 0;
-    }
+  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
+  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
 
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valDecoded,
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
+  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of decMoreInput, stores decoding context 
+  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+    /*throw ASN1CodecError*/;
 };
 
 } //proto
