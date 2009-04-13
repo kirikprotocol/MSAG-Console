@@ -198,6 +198,29 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
       smsc_log_debug(logger,"TCO receive END but TSM not found, DISCARD");
     }
   }/* end of END handling section */
+  if (msg.isAbort())
+  {
+    TrId rtrid;
+    TrId ltrid;
+    ltrid = msg.getDTID();
+    rtrid = msg.getOTID();
+    TSM* tsm = 0;
+    {
+      MutexGuard g(tridpool_mutex);
+      TSM** ptr = tsms.GetPtr(ltrid);
+      if(ptr)
+      {
+        tsm=*ptr;
+      }
+    }
+    if (tsm)
+    {
+      tsm->ABORT_received(msg);
+    } else
+    {
+      smsc_log_debug(logger,"TCO receive ABORT but TSM not found, DISCARD");
+    }
+  }/* end of Abort handling section */
   smsc_log_error(logger,"TCO receive UNSUPPORTED TCAP message, DISCARD");
 }
 void TCO::TSMStopped(TrId ltrid)

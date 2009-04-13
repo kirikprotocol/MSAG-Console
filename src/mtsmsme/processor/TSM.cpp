@@ -99,5 +99,9 @@ void TSM::END_received(Message& msg)
   smsc_log_debug(logger,"tsm otid=%s receive END, close dialogue",ltrid.toString().c_str());
   tco->TSMStopped(ltrid);
 }
-
+void TSM::ABORT_received(Message& msg)
+{
+  smsc_log_debug(logger,"tsm otid=%s receive ABORT, close dialogue",ltrid.toString().c_str());
+  tco->TSMStopped(ltrid);
+}
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

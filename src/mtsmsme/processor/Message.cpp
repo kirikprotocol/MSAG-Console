@@ -105,6 +105,13 @@ bool Message::isEnd()
   if(structure) res = (((TCMessage_t*)structure)->present == TCMessage_PR_end);
   return res;
 }
+bool Message::isAbort()
+{
+  bool res = false;
+  if(structure) res = (((TCMessage_t*)structure)->present == TCMessage_PR_abort);
+  return res;
+
+}
 
 /*
  * check component presence

@@ -231,10 +231,14 @@ void SuaProcessor::send(uint8_t cdlen, uint8_t *cd,
   //msgProperties.hopCount = 2;
   //msgProperties.fieldsMask = libsua::MessageProperties::SET_HOP_COUNT;
   libsua::SuaApi& suaApi = libsua::SuaApiFactory::getSuaApiIface();
-  suaApi.unitdata_req(udp, ulen,
-                      cd, cdlen,
-                      cl, cllen,
-                      msgProperties, 0);
+  int result;
+  result = suaApi.unitdata_req(udp, ulen,
+                               cd, cdlen,
+                               cl, cllen,
+                               msgProperties, 0);
+  if (result != 0)
+    smsc_log_error(logger,
+                   "libSuaTest::unitdat_req failed with code %d",result);
 }
 }//namespace processor
 }//namespace mtsmsme

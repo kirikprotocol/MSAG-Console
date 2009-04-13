@@ -57,6 +57,7 @@ class TSM
                                    Message& msg);
 
     virtual void END_received(Message& msg);
+    virtual void ABORT_received(Message& msg);
     virtual void TBeginReq(uint8_t  cdlen,
                            uint8_t* cd,        /* called party address */
                            uint8_t  cllen,

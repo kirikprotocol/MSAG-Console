@@ -86,6 +86,7 @@ class Message {
     bool isBegin();
     bool isContinue();
     bool isEnd();
+    bool isAbort();
     bool isComponentPresent();
     int getInvokeId();
     bool isDialoguePortionExist();
