@@ -30,7 +30,8 @@ class PvssFlooder : public pvss::PersCallInitiator
 {
 public:
     PvssFlooder(pvss::PersClient& pc, int speed, const string& addressFormat):persClient_(pc), isStopped_(false), callsCount_(0), logger_(Logger::getInstance("flooder")),
-                                          addressFormat_(addressFormat), speed_(speed > 0 ? speed : 10), delay_(1000000000/speed_), overdelay_(0), startTime_(0),
+                                          addressFormat_(addressFormat), speed_(speed > 0 ? speed : 10), currentSpeed_(speed_),
+                                          delay_(1000000000/currentSpeed_), overdelay_(0), startTime_(0),
                                           busyRejects_(0), maxRejects_(1000), sentCalls_(0), successCalls_(0), errorCalls_(0), procTime_(0),
                                           maxprocTime_(0), minprocTime_(MAX_PROC_TIME)  {};
   void execute(int addrsCount, int getsetCount);
@@ -42,6 +43,7 @@ public:
   int getError();
   int getSent();
   int getBusy();
+  void setCurrentSpeed(int sent, int ok);
   uint32_t getProcTime();
 
 private:
@@ -67,6 +69,7 @@ private:
   Logger* logger_;
   string addressFormat_;
   int speed_; //req/sec
+  int currentSpeed_;
   int delay_;
   int overdelay_;
   hrtime_t startTime_;
@@ -114,6 +117,7 @@ private:
     int sent = client_->getSent() / period_;
     int ok = client_->getSuccess() / period_;
     int errtotal = client_->getError();
+    client_->setCurrentSpeed(sent, ok);
     int err = errtotal / period_;
     if (sent != 0 || ok != 0 || err != 0) {
       success_ += ok;

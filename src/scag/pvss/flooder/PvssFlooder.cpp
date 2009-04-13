@@ -170,28 +170,29 @@ PersCall* PvssFlooder::createPersCall( ProfileType pfType,
     }
     return call;
 }
+
 void PvssFlooder::delay() {
+  int currentDelay = 1000000000 / currentSpeed_;
   hrtime_t endTime = gethrtime();
-  //hrtime_t procTime = endTime - startTime_;
-  //hrtime_t endTime = gethrtime();
-  hrtime_t procTime = procTime_;
-  //smsc_log_debug(logger_, "delay=%d ns procTime=%d ns", delay_, procTime);
-  unsigned sleepTime = delay_ - overdelay_;// - procTime - overdelay_;
-  //if (delay_ > procTime + overdelay_ && sleepTime > 1000000) {
-    //__trace2__("try to sleep:%d ns, delay=%d ns", sleepTime, delay_);
-    timespec ts,rm={0,0};
-    ts.tv_sec = 0;
-    ts.tv_nsec= sleepTime;
-    nanosleep(&ts,&rm);
-    overdelay_ = gethrtime() - endTime - sleepTime;
-    //__trace2__("wake, overdelay=%d ns", overdelay_);
-    if (overdelay_ < 0) {
-      overdelay_ = 0;
-    }
-  //} else {
-    //overdelay_ -= delay_;
-    //if (overdelay_ < 0) overdelay_ = 0;
-  //}
+  unsigned sleepTime = currentDelay - overdelay_;
+  timespec ts,rm={0,0};
+  ts.tv_sec = 0;
+  ts.tv_nsec= sleepTime;
+  nanosleep(&ts,&rm);
+  overdelay_ = gethrtime() - endTime - sleepTime;
+  if (overdelay_ < 0) {
+    overdelay_ = 0;
+  }
+}
+
+void PvssFlooder::setCurrentSpeed(int sent, int ok) {
+  if (ok < sent) {
+    currentSpeed_ = ok;
+    return;
+  }
+  if (currentSpeed_ < speed_) {
+    currentSpeed_ = currentSpeed_ + 50 > speed_ ? speed_ : currentSpeed_ + 50;
+  }
 }
 
 /*
