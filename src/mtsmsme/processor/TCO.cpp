@@ -155,12 +155,16 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
     TrId ltrid;
     ltrid = msg.getDTID();
     rtrid = msg.getOTID();
-    TSM** ptr = 0;
+    TSM* tsm = 0;
     {
       MutexGuard g(tridpool_mutex);
-      ptr = tsms.GetPtr(ltrid);
+      TSM** ptr = tsms.GetPtr(ltrid);
+      if (ptr)
+      {
+        tsm = *ptr;
+      }
     }
-    if (ptr)
+    if (tsm)
     {
       TSM* tsm = *ptr;
       tsm->CONTINUE_received(cdlen, cd, cllen, cl, msg);
@@ -178,14 +182,17 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
     TrId ltrid;
     ltrid = msg.getDTID();
     rtrid = msg.getOTID();
-    TSM** ptr = 0;
+    TSM* tsm = 0;
     {
       MutexGuard g(tridpool_mutex);
-      ptr = tsms.GetPtr(ltrid);
+      TSM** ptr = tsms.GetPtr(ltrid);
+      if(ptr)
+      {
+        tsm=*ptr;
+      }
     }
-    if (ptr)
+    if (tsm)
     {
-      TSM* tsm = *ptr;
       tsm->END_received(msg);
     } else
     {
@@ -195,13 +202,17 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
 }
 void TCO::TSMStopped(TrId ltrid)
 {
-  TSM** ptr = 0;
+  TSM* tsm = 0;
   {
     MutexGuard g(tridpool_mutex);
-    ptr = tsms.GetPtr(ltrid);
-    if (ptr) tsms.Delete(ltrid);
+    TSM** ptr = tsms.GetPtr(ltrid);
+    if (ptr)
+    {
+      tsm = *ptr;
+      tsms.Delete(ltrid);
+    }
   }
-  if (ptr) delete(*ptr);
+  if (tsm) delete(tsm);
 }
 void TCO::setHLROAM(HLROAM* _hlr) { hlr = _hlr; }
 HLROAM* TCO::getHLROAM() { return hlr; }
