@@ -36,8 +36,8 @@ BEReconnector::Execute()
            iter != end_iter;) {
         core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex>& brokenConnectionToBE = *iter;
         if ( brokenConnectionToBE->reinit(_connectTimeout) ) {
-          _setOfBrokenConnections.erase(iter++);
           smsc_log_info(_logger, "BEReconnector::Execute::: connection  to [%s] established successful", brokenConnectionToBE->toString().c_str());
+          _setOfBrokenConnections.erase(iter++);
         } else
           iter++;
       }
