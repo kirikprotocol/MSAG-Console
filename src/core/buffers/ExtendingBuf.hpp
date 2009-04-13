@@ -1,6 +1,5 @@
-#pragma ident "$Id$"
-
 #ifndef __SMSC_CORE_EXTENDING_BUFFER_HPP
+#ident "@(#)$Id$"
 #define __SMSC_CORE_EXTENDING_BUFFER_HPP
 
 #include <algorithm>
@@ -21,7 +20,7 @@ namespace buffers {
 //               |
 //             Write()/Append()
 // 
-template <typename T, unsigned SZ> class ExtendingBuffer {
+template <typename T, unsigned SZ /*stackBufSZ*/> class ExtendingBuffer {
 protected:
     T   stackBuf[SZ];
     T*  heapBuf;
@@ -50,11 +49,11 @@ public:
             delete [] heapBuf; 
     }
 
-    inline T*   get()                  const { return dataBuf; }
-    inline T*   getCurPtr()            const { return dataBuf + pos; }
-    inline unsigned  getPos(void)      const { return pos; }
-    inline unsigned  getDataSize(void) const { return dataSz; }
-    inline unsigned  getMaxSize(void)  const { return heapBufSz ? heapBufSz : SZ; }
+    T*   get()                  const { return dataBuf; }
+    T*   getCurPtr()            const { return dataBuf + pos; }
+    unsigned  getPos(void)      const { return pos; }
+    unsigned  getDataSize(void) const { return dataSz; }
+    unsigned  getMaxSize(void)  const { return heapBufSz ? heapBufSz : SZ; }
 
     //resets buffer, destroys all previously set data
     T * reset(void)
@@ -128,9 +127,9 @@ public:
         dataSz = new_dsz;
     }
 
-    //Reads requested number of elements at current position and adjusts
-    //it if requested.
-    //Checks for ABR, returns number of objects have been red.
+    //Reads requested number of elements at current position
+    //and adjusts it if requested.
+    //Checks for ABR, returns number of objects have been read.
     unsigned Read(T* dst, unsigned count, bool adjust_pos = true)
     {
         if ((pos + count) >= dataSz)
@@ -142,6 +141,22 @@ public:
         }
         return count;
     }
+
+    //Copies requested number of elements at specified position.
+    //Checks for ABR, returns number of objects have been read.
+    unsigned Copy(T* dst, unsigned pos_at, unsigned count) const
+    {
+      if (pos_at >= dataSz)
+        return 0;
+
+      unsigned pos_end = pos_at + count;
+      if (pos_end >= dataSz)
+          count = dataSz - pos_at;
+      if (count)
+          std::copy(dataBuf + pos_at, dataBuf + pos_at + count, dst);
+      return count;
+    }
+
 
     //Writes data to buffer at given position, extending buffer and 
     //effective data size if necessary. Doesn't change current position!!!
@@ -168,7 +183,7 @@ public:
     }
 
 
-    inline operator T* () { return dataBuf; }
+    operator T* () { return dataBuf; }
 
     ExtendingBuffer<T, SZ>& operator=(const ExtendingBuffer<T, SZ>& _Right)
     {
