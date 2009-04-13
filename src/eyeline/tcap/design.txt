@@ -1,0 +1,43 @@
+/* ************************************************************************** *
+ * TC User Application:
+ *   AppDispatcher module:
+ *     SUA message reading and dispatching thread metacode.
+ * ************************************************************************** */
+
+//Option 1: Currently implementing!
+//---------
+MsgReciever thread meta-code:
+{
+  TDlgIndicationDispatcher & tDsp = tdspPool.getObject();
+  tDsp.Reset();
+
+  suaApiIface->recvMsg(tDsp.suaMsgBuf());
+  if (!tDsp.processSuaMsgBuf()) //while this call the complete
+    log_error();		//indication promitive is created
+				//(TransactionId is determined)
+  
+  TDialogueId   dlgId = /* logic to determine DialogueId by
+			   tDsp.TInd().getTransactionid() */;
+  TDlgHandlerIface * dlgHdl = /*logic to determine dialogue handler*/;
+
+  tDsp.TInd().setDialogueId(dlgId);
+  tDsp.dispatch(dlgHdl); //lead to dlgHdl->updateDialogue() being called
+			 //with appropriate TCAP indication object
+
+  tDsp.Pool.rlseObject(tInd);
+}
+
+
+/* ************************************************************************** *
+ * TC User Application:
+ *   TDlgHandlerIface module:
+ *     local transaction initiation scheme
+ * ************************************************************************** */
+
+/* ************************************************************************** *
+ * TC User Application:
+ *   TDlgHandlerIface module:
+ *     updateDialogue() scheme
+ * ************************************************************************** */
+
+
