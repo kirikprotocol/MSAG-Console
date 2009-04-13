@@ -458,6 +458,10 @@ bool SSNSession::noticeParms(const TCDialogID & dlg_id, TNoticeParms & parms)
  * ---------------------------------------------------------------------------------- */
 void SSNSession::dischargeDlg(Dialog * pDlg, const TCSessionSUID * tc_suid/* = 0*/)
 {
+    UNITBinding * ubnd = state.getUnit(pDlg->getId().tcInstId);
+    if (ubnd)
+        --(ubnd->numOfDlgs);
+
     if (tc_suid && (*tc_suid == pDlg->getSUId())) {
         TCSessionsMAP::iterator sit = tcSessions.find(*tc_suid);
         if (sit != tcSessions.end()) {
