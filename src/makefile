@@ -106,7 +106,7 @@ export SOCKETLIB=-lsocket
 endif
 
 ifndef SS7_STACK_HOME
-SS7_STACK_HOME := /opt/EABss7009/r5e
+SS7_STACK_HOME := /opt/EABss7009
 endif
 export SS7_STACK_HOME
 
