@@ -669,11 +669,10 @@ private:
         if (blkIndex == invalidIndex()) return false;
         const offset_type blockIndex = idx2pos(blkIndex);
         const size_t oldSize = data.size();
-        {
-            // store initial index
-            Serializer ser(data);
-            ser << blockIndex;
-        }
+        data.reserve(oldSize+idxSize()+navSize()+extraSize());
+        Serializer ser(data);
+        ser.setwpos(oldSize+idxSize());
+        ser << blockIndex;
         size_t curpos = data.size();
         size_t dataSize = navSize();
         data.resize(curpos+dataSize);
@@ -689,12 +688,12 @@ private:
             f->Seek(offset, SEEK_SET);
             size_t toread = std::min( dataSize, blockSize() );
             if ( toread < navSize() ) { break; }
-            f->Read(&((*profileData_)[curpos]),toread);
+            f->Read(&data[curpos],toread);
 
             // decode navigation
             BlockNavigation bn;
             {
-                Deserializer dsr(*profileData_);
+                Deserializer dsr(data);
                 dsr.setrpos(curpos);
                 bn.load(dsr);
             }
@@ -707,7 +706,7 @@ private:
                 dataSize = bn.dataSize() - toread;
                 data.resize(data.size()+dataSize);
                 toread = std::min(dataSize,blockSize()-navSize());
-                f->Read(&((*profileData_)[curpos]),toread);
+                f->Read(&data[curpos],toread);
                 curpos += toread;
             } else {
                 // not a head
