@@ -498,7 +498,7 @@ public:
                 descrFile.first_free_block = removeBlocks(ffb, curBlockIndex, updateBlocksCount);
             }
             //optimization
-            if (oldDescrFile.first_free_block != descrFile.first_free_block || oldDescrFile.files_count != descrFile.first_free_block) { 
+            if (oldDescrFile.first_free_block != descrFile.first_free_block || oldDescrFile.files_count != descrFile.files_count) { 
               changeDescriptionFile();
             }
             clearBackup();
