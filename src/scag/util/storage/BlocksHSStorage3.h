@@ -22,7 +22,6 @@
 #include "GlossaryBase.h"
 #include "DataBlockBackup2.h"
 #include "util/Exception.hpp"
-#include "util/Uint64Converter.h"
 #include "DataFileCreator.h"
 #include "FixupLogger.h"
 #include "EndianConverter.h"
@@ -37,88 +36,6 @@ namespace storage {
 using std::vector;
 using std::string;
 using smsc::logger::Logger;
-using smsc::util::Uint64Converter;
-
-/*
-template<class Key>
-struct templDataBlockHeader
-{
-private:
-    static uint32_t size_;
-
-public:
-    typedef DescriptionFile::index_type index_type;
-    union
-    {
-        index_type next_free_block;
-        index_type block_used;
-    };
-    uint64_t   total_blocks;
-    uint64_t   data_size;
-    index_type next_block;
-    Key        key;
-    bool       head;
-
-    void deserialize(Deserializer& deser) {
-      deser.setrpos(0);
-      uint64_t val;
-      deser >> val;
-      next_free_block = val;
-
-      deser >> key;
-
-      deser >> val;
-      total_blocks = val;
-
-      deser >> val;
-      data_size = val;
-
-      deser >> val;
-      next_block = val;
-
-      uint8_t boolval;
-      deser >> boolval;
-      head = (bool)boolval;
-    }
-
-    void serialize(Serializer& ser) const {
-      ser << (uint64_t)next_free_block;
-      ser << key;
-      ser << (uint64_t)total_blocks;
-      ser << (uint64_t)data_size;
-      ser << (uint64_t)next_block;
-      ser << (uint8_t)head;
-    }
-
-    // persistent size!!!
-    static uint32_t persistentSize() {
-        if ( ! size_ ) {
-            std::vector< unsigned char > buf;
-            Serializer ser(buf);
-            templDataBlockHeader<Key> hdr;
-            hdr.serialize(ser);
-            size_ = ser.size();
-        }
-        return size_;
-    }
-};
-
-template< class Key > uint32_t templDataBlockHeader< Key >::size_ = 0;
-
-template<class Key>
-struct templDataBlock {
-  templDataBlockHeader<Key> hdr;
-  DataBlock data;
-  templDataBlock(const templDataBlockHeader<Key>& _hdr, const DataBlock& _data)
-                 :hdr(_hdr), data(_data) {}
-  templDataBlock(const templDataBlockHeader<Key>& _hdr)
-                 :hdr(_hdr), data(0) {}
-  templDataBlock():data(0) {
-    memset((void*)&hdr, 0, sizeof(hdr));
-  }
-};
- */
-
 
 struct BHDescription3
 {
@@ -171,7 +88,6 @@ private:
     typedef BHDescription3         DescriptionFile;
     typedef BlockNavigation        DataBlockHeader;
     typedef HSPacker::buffer_type  buffer_type;
-    // typedef BHBackupHeader         BackupHeader;
 
 public:
 //	static const int SUCCESS			           = 0;
@@ -210,16 +126,12 @@ public:
           throw std::runtime_error("BlocksHSStorage: glossary should be provided!");
         }
          */
-        // memset(&backupHeader, 0, sizeof(BackupHeader));
-        // deserBuf_ = new unsigned char[deserBufSize_ = 70];
-        // memset(backupBuf, 0, BACKUP_BUF_SIZE);
     }
 
 
     virtual ~BlocksHSStorage3()
     {
         Close();
-        // if (deserBuf_) delete[] deserBuf_;
     }
 
 
@@ -313,9 +225,6 @@ public:
 
     bool Add( data_type& prof, const Key& key, index_type& blockIndex) {
         Profile& profile = *prof.value;
-        // profileData.Empty();
-        // profile.Serialize(profileData, true, glossary_);
-        // const unsigned dataLength = 
         serializeProfile(key,profile);
         if (logger) smsc_log_debug(logger, "Add data block key='%s' length=%u",
                                    key.toString().c_str(),
@@ -325,9 +234,7 @@ public:
             return false;
         }
 
-        // index_type ffb = descrFile.first_free_block;
         DescriptionFile oldDescrFile = descrFile;
-        // backupHeader.key = key;
         prof.backup->clear(); // reset backup
         if (!backUpProfile(key, notUsed(), prof.backup, profileData_, true)) {
             blockIndex = invalidIndex();
@@ -347,8 +254,7 @@ public:
             changeDescriptionFile();
             clearBackup();
             blockIndex = pos2idx(dataStart);
-            // bkp.setBackupData(profileData.c_ptr(), profileData.length());
-            std::swap(prof.backup,profileData_);
+            attachBackup(prof.backup,profileData_);
             if (logger) smsc_log_debug(logger, "add(%s) finished with prof.backup=%u",
                                        key.toString().c_str(),
                                        unsigned(prof.backup->size()));
@@ -368,8 +274,6 @@ public:
             return Add(prof, key, blockIndex);
         }
         Profile& profile = *prof.value;
-        // serialization is here
-        // const unsigned dataLength = 
         serializeProfile(key,profile);
         if (profileData_->size() <= idxSize()+navSize()) {
             // we have to remove it
@@ -378,8 +282,6 @@ public:
         }
         const offset_type blkIndex = idx2pos(blockIndex);
         const size_t newDataSize = profileData_->size(); // remember to remove free chain
-        // profileData.Empty();
-        // profile.Serialize(profileData, true, glossary_);
         if (logger) 
             smsc_log_debug(logger, "Change data block index=%llx key='%s' oldsize=%u newsize=%u",
                            blkIndex, key.toString().c_str(),
@@ -387,9 +289,8 @@ public:
                            unsigned(profileData_->size()));
         DescriptionFile oldDescrFile = descrFile;
         offset_type ffb = idx2pos(descrFile.first_free_block);
-        // backupHeader.key = key;
 
-        // old size is remembered to remove the tail
+        // old size is remembered to remove the tail at the end
         const size_t oldBackupSize = prof.backup->size();
         if (!backUpProfile( key, blkIndex, prof.backup, profileData_, true )) {
             if (logger) smsc_log_error(logger, "Backup profile error");
@@ -405,7 +306,6 @@ public:
                                               ffb );
 
         try {
-            // bkp.clearBackup();
             writeBlocks(*profileData_,0);
             descrFile.first_free_block = pos2idx(newffb);
 
@@ -413,7 +313,6 @@ public:
             if (oldDescrFile.first_free_block != descrFile.first_free_block || oldDescrFile.files_count != descrFile.first_free_block) {
                 changeDescriptionFile();
             }
-            // clearBackup();
             if (blocksCount == 0) {
                 // no new data -- profile has been removed
                 blockIndex = invalidIndex(); 
@@ -421,10 +320,8 @@ public:
                 // otherwise, the profile has not been moved.
             }
 
-            // bkp.setBackupData(profileData.c_ptr(), profileData.length());
-
             profileData_->resize(newDataSize); // remove the tail containing free blocks
-            std::swap( prof.backup, profileData_ );
+            attachBackup( prof.backup, profileData_ );
             if (logger) smsc_log_debug(logger,"change(%s) finished with prof.backup=%u",
                                        key.toString().c_str(),
                                        unsigned(prof.backup->size()));
@@ -529,7 +426,7 @@ public:
         if (!Get(blockIndex,*profileData_)) return false;
         Key key;
         deserializeProfile(key,*prof.value,*profileData_);
-        std::swap(prof.backup,profileData_);
+        attachBackup(prof.backup,profileData_);
         if ( logger ) smsc_log_debug(logger,"get(%llx) finished with prof.backup=%u",
                                      blockIndex,
                                      unsigned(prof.backup->size()));
@@ -655,6 +552,13 @@ private:
 
     inline off_t getOffset(offset_type absoluteOffset) const {
         return absoluteOffset % fileSizeBytes_;
+    }
+
+
+    inline void attachBackup( buffer_type*& oldbackup, buffer_type*& newbackup ) const {
+        // FIXME: add consumption check, i.e. if new backup capacity is too big
+        // then resize it.
+        std::swap(oldbackup,newbackup);
     }
 
 
@@ -930,9 +834,10 @@ private:
                             key.toString().c_str(), blockIndex, ohex.c_str(), nhex.c_str() );
         }
 
-        // dataBlockBackup.clear();
         size_t blocksCount = newprofile ? countBlocks(newprofile->size()) : 0;
-        if ( blockIndex == notUsed() && blocksCount == 0 ) { return true; }
+        if ( blockIndex == notUsed() && blocksCount == 0 ) {
+            return true; 
+        }
 
         DescriptionFile oldDescrFile = descrFile;
         printDescrFile();
@@ -979,6 +884,9 @@ private:
             changeDescriptionFile();
             if (oldprofile) oldprofile->resize(oldProfileSize);
             ::abort();
+            // FIXME: if abort will be replaced eventually with return false
+            // you'll have to uncomment the following:
+            // if (oldprofile) oldprofile->resize(oldProfileSize);
         }
         return true;
     }
@@ -1606,18 +1514,6 @@ private:
         descr.serialize(ser);
     }
 
-    /*
-    void deserializeBackup( Deserializer& dsr, BackupHeader& backup ) const
-    {
-        backup.deserialize(dsr);
-    }
-
-    void serializeBackup( Serializer& ser, const BackupHeader& backup ) const
-    {
-        backup.serialize(ser);
-    }
-     */
-
 
     void readFreeBlocks( buffer_type& buffer, size_t blocksCount )
     {
@@ -1630,10 +1526,12 @@ private:
         offset_type prevBlockIndex = idx2pos(invalidIndex());
         for ( size_t i = 0; i < blocksCount; ++i ) {
 
-            if ( pos2idx(curBlockIndex) == invalidIndex() ) {
+            if ( curBlockIndex == notUsed() ) {
                 // need a new file
                 curBlockIndex = descrFile.files_count * fileSizeBytes_;
                 CreateDataFile();
+            } else {
+                dataFileCreator_.create( pos2idx(curBlockIndex), descrFile.files_count, true );
             }
 
             if ( i == 0 ) {

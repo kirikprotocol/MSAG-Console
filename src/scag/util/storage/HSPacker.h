@@ -29,7 +29,7 @@ namespace storage {
 ///  pppppppp  -- pack_type (when H==1), or reserved (when H==0)
 ///  X         -- reserved
 ///  sssssss   -- data_size (when H==1), or free_blocks_count (when U==0),
-///               or prev_block_offset (when U==1,H==0)
+///               or head_block_offset (when U==1,H==0)
 ///  
 class BlockNavigation
 {
@@ -355,6 +355,7 @@ public:
     /// buffer must be in form: idx nav data nav data ... [ free-idx free-nav free-nav ... ]
     /// blocks on output will contain:
     /// idx datasize idx datasize ... corresponding to the buffer contents.
+    /// @return the offset of the last next_block field in the chain.
     offset_type extractBlocks( const buffer_type& buffer,
                               std::vector<offset_type>& blocks,
                               size_t initialPosition = 0 )
@@ -372,6 +373,7 @@ public:
             smsc_log_debug(log_,"extractBlocks buf: %s", hex.c_str());
         }
 
+        offset_type headBlock = notUsed();
         do {
             // write the empty block
             size_t dataSize = 0;
@@ -418,6 +420,7 @@ public:
                             ::abort();
                         }
                         dataSize = bn.dataSize();
+                        headBlock = nextBlock;
                     } else {
                         // used
                         if (dataSize == 0) {
@@ -425,6 +428,13 @@ public:
                                 smsc_log_error(log_,"used is found while dataSize == 0");
                             }
                             ::abort();
+                        }
+                        if (bn.refBlock() != headBlock) {
+                            if (log_) {
+                                smsc_log_error(log_,"head_block reference is %llx, should be %llx",
+                                               bn.refBlock(), headBlock);
+                                ::abort();
+                            }
                         }
                     }
                 }
