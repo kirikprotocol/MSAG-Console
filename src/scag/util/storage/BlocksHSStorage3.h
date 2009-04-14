@@ -509,11 +509,13 @@ private:
     {
         std::vector< offset_type > blocks;
         blocks.reserve( (countBlocks(newprofile.size())+2)*2 );
-        offset_type newffb = ffb;
-        offset_type lastold = packer_.extractBlocks(oldprofile,blocks);
-        if ( lastold != notUsed() ) {
-            // assert(newffb == notUsed());
-            newffb = lastold;
+        // offset_type newffb = ffb;
+        offset_type newffb = packer_.extractBlocks(oldprofile,blocks,ffb);
+        if ( newffb == notUsed() ) {
+            // if newffb is notUsed(), it means that we reached end-of-free-chain
+            // let's create a new file.
+            newffb = descrFile.files_count * fileSizeBytes_;
+            CreateDataFile();
         }
 
         std::vector< offset_type > offsets;
@@ -906,7 +908,7 @@ private:
         assert(needBlocks > 0);
         affectedBlocks.reserve(needBlocks+20);
         offset_type rv = notUsed();
-        packer_.extractBlocks(buffer,affectedBlocks,position);
+        packer_.extractBlocks(buffer,affectedBlocks,notUsed(),position);
 
         size_t pos = position;
         for ( std::vector<offset_type>::const_iterator i = affectedBlocks.begin();

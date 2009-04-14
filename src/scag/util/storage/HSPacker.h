@@ -357,8 +357,9 @@ public:
     /// idx datasize idx datasize ... corresponding to the buffer contents.
     /// @return the offset of the last next_block field in the chain.
     offset_type extractBlocks( const buffer_type& buffer,
-                              std::vector<offset_type>& blocks,
-                              size_t initialPosition = 0 )
+                               std::vector<offset_type>& blocks,
+                               offset_type prevffb,
+                               size_t initialPosition = 0 )
     {
         blocks.clear();
         Deserializer dsr(buffer);
@@ -476,7 +477,9 @@ public:
                             os.str().c_str(), nextBlock );
         }
 
-        return nextBlock;
+        /// if free chain has not started and used chain already finished,
+        /// then prevffb is not changed, otherwise prevffb should be replaced with nextBlock
+        return ( isUsed && nextBlock == notUsed() ) ? prevffb : nextBlock;
     }
 
 
