@@ -339,78 +339,6 @@ public:
     }
     
 
-    /// load datablocks only
-    bool Get( index_type blkIndex, buffer_type& data )
-    {
-        if (logger) smsc_log_debug(logger, "Get data block index=%llx", blkIndex);
-        if (blkIndex == invalidIndex()) return false;
-        const offset_type blockIndex = idx2pos(blkIndex);
-        const size_t oldSize = data.size();
-        {
-            // store initial index
-            Serializer ser(data);
-            ser << blockIndex;
-        }
-        size_t curpos = data.size();
-        size_t dataSize = navSize();
-        data.resize(curpos+dataSize);
-        bool head = true;
-        bool rv = false;
-        offset_type curBlockIndex = blockIndex;
-        offset_type prevBlockIndex = curBlockIndex;
-        do {
-
-            File* f = getFile(curBlockIndex);
-            if ( !f ) { break; }
-            const off_t offset = getOffset(curBlockIndex);
-            f->Seek(offset, SEEK_SET);
-            size_t toread = std::min( dataSize, blockSize() );
-            if ( toread < navSize() ) { break; }
-            f->Read(&((*profileData_)[curpos]),toread);
-
-            // decode navigation
-            BlockNavigation bn;
-            {
-                Deserializer dsr(*profileData_);
-                dsr.setrpos(curpos);
-                bn.load(dsr);
-            }
-            curpos += toread;
-
-            if ( head ) {
-                // shall be head
-                if (!bn.isHead()) {break;}
-                if ( bn.dataSize() <= navSize() ) {break;}
-                dataSize = bn.dataSize() - toread;
-                data.resize(data.size()+dataSize);
-                toread = std::min(dataSize,blockSize()-navSize());
-                f->Read(&((*profileData_)[curpos]),toread);
-                curpos += toread;
-            } else {
-                // not a head
-                if (bn.isFree()) {break;}
-                if (bn.refBlock() != prevBlockIndex) {break;}
-            }
-            dataSize -= toread;
-
-            if ( dataSize == 0 ) {
-                // last block has been just read
-                if ( bn.nextBlock() != notUsed() ) {break;} // too much data
-                rv = true;
-                break;
-            } else {
-                // next block
-                prevBlockIndex = curBlockIndex;
-                curBlockIndex = bn.nextBlock();
-                if ( curBlockIndex == notUsed()) {break;} // too few data
-            }
-
-        } while (true);
-        if (!rv) { data.resize(oldSize); }
-        return rv;
-    }
-
-
     void recoverFromBackup( data_type& prof )
     {
         Key key;
@@ -579,8 +507,6 @@ private:
             df_.serialize(ser);
             fixup_->makeComment(2,ser.size(),ser.data());
             lastFreeBlock_ = df_.first_free_block = bhs_.invalidIndex();
-            // df_.blocks_free = 0;
-            // df_.blocks_used = df_.files_count * df_.file_size;
         }
 
         ~Recovery() {
@@ -589,68 +515,69 @@ private:
         }
 
         /// the methods frees a chain of used blocks
-        void freeBlocks( offset_type blockIndex, DataBlockHeader& hdr ) {
-            /*
-             * FIXME: restore
-            const offset_type totalBlocks = df_.files_count * df_.file_size;
+        void freeBlocks( offset_type blockIndex, BlockNavigation& bn ) {
+            const offset_type totalSize = df_.files_count * bhs_.fileSizeBytes_;
             do {
-                if ( bhs_.logger ) smsc_log_info( bhs_.logger, "freeing block %lld, next %lld", blockIndex, hdr.next_block );
-                freeBlock( blockIndex, hdr.next_free_block );
-                blockIndex = hdr.next_block;
-                if ( blockIndex < 0 || blockIndex >= totalBlocks ) {
+                if ( bhs_.logger ) smsc_log_info( bhs_.logger, "freeing block %llx, next %llx", blockIndex, bn.nextBlock() );
+                freeBlock( blockIndex, bn );
+                blockIndex = bn.nextBlock();
+                if ( blockIndex >= totalSize ) {
                     // this block points to nowhere
-                    if (bhs_.logger) smsc_log_info(bhs_.logger, "next block %lld points to nowhere");
+                    if (bhs_.logger) smsc_log_info(bhs_.logger, "next block %llx points to nowhere", blockIndex );
                     break;
                 } else {
                     // reading header
-                    int fn = bhs_.getFileNumber(blockIndex);
+                    File* f = bhs_.getFile(blockIndex);
                     off_t offset = bhs_.getOffset(blockIndex);
-                    File* f = bhs_.dataFile_f[fn];
                     f->Seek(offset);
-                    bhs_.deserialize(f,hdr);
+                    bn.load(*f);
                 }
-            } while ( hdr.block_used == BLOCK_USED );
-             */
+            } while ( ! bn.isFree() );
         }
 
-        void chainFreeBlock( offset_type blockIndex, DataBlockHeader& hdr ) {
-            /*
-            freeBlock( blockIndex, hdr.next_free_block );
-             */
+        void chainFreeBlock( offset_type blockIndex, const BlockNavigation& bn ) {
+            freeBlock( blockIndex, bn );
         }
 
     private:
-        void freeBlock( offset_type blockIndex, offset_type saved_next_free_block )
+        void freeBlock( offset_type blockIndex, const BlockNavigation& savedBn )
         {
-            /*
-            EndianConverter cvt;
+            // chain last free block to this one
             if ( lastFreeBlock_ != bhs_.invalidIndex() ) {
-                int fn = bhs_.getFileNumber(lastFreeBlock_);
-                off_t offset = bhs_.getOffset(lastFreeBlock_);
-                File* f = bhs_.dataFile_f[fn];
+                const offset_type lfb = bhs_.idx2pos(lastFreeBlock_);
+                File* f = bhs_.getFile(lfb);
+                off_t offset = bhs_.getOffset(lfb);
                 f->Seek(offset);
-                f->WriteNetInt64(blockIndex);
+                BlockNavigation lastBn;
+                lastBn.load(*f);
+                lastBn.setNextBlock(blockIndex);
+                f->Seek(offset);
+                lastBn.save(*f);
             } else {
                 // lastFreeBlock was not set
-                df_.first_free_block = blockIndex;
+                df_.first_free_block = bhs_.pos2idx(blockIndex);
             }
-            int fn = bhs_.getFileNumber(blockIndex);
+
+            File* f = bhs_.getFile( blockIndex );
             off_t offset = bhs_.getOffset(blockIndex);
-            fixup_->save(offset,8,cvt.set(uint64_t(saved_next_free_block)));
-            File* f = bhs_.dataFile_f[fn];
+            unsigned char tmpbuf[bhs_.navSize()];
+            savedBn.save(tmpbuf);
+            fixup_->save(blockIndex,bhs_.navSize(),tmpbuf);
+            BlockNavigation bn(savedBn);
+            bn.setFreeCells(bhs_.notUsed());
+            bn.setNextBlock(bhs_.notUsed());
             f->Seek(offset);
-            f->WriteNetInt64(bhs_.invalidIndex());
-            lastFreeBlock_ = blockIndex;
-            ++df_.blocks_free;
-            --df_.blocks_used;
-         */
+            bn.save(*f);
+            lastFreeBlock_ = bhs_.pos2idx(blockIndex);
+            // ++df_.blocks_free;
+            // --df_.blocks_used;
         }
 
     private:
         BlocksHSStorage3&           bhs_;
-        DescriptionFile&           df_;
-        std::auto_ptr<FixupLogger> fixup_;
-        offset_type                 lastFreeBlock_;
+        DescriptionFile&            df_;
+        std::auto_ptr<FixupLogger>  fixup_;
+        index_type                  lastFreeBlock_;
     };
 
 public:
@@ -679,17 +606,40 @@ public:
             if (!bhs_) return false;
             const index_type cnt = bhs_->descrFile.files_count * bhs_->descrFile.file_size;
             while ( iterBlockIndex_ < cnt ) {
+
                 curBlockIndex_ = iterBlockIndex_++;
+                blockData_.clear();
                 if ( bhs_->Get(curBlockIndex_,blockData_) ) {
-                    // FIXME: deser key
-                    return true; 
+                    Deserializer dsr(blockData_);
+                    dsr.setrpos(bhs_->idxSize()+bhs_->navSize()+bhs_->extraSize());
+                    dsr >> key_;
+                    buffer_type(blockData_.begin()+dsr.rpos(),blockData_.end()).swap(blockData_);
+                    return true;
+                } else if (blockData_.size() < bhs_->idxSize()+bhs_->navSize()) {
+                    // failed to read a byte
+                    if (bhs_->logger) smsc_log_error(bhs_->logger,"cannot read a chain at %llx", curBlockIndex_ );
+                    ::abort();
+                }
+
+                // parsing to-be-head
+                Deserializer dsr(blockData_);
+                dsr.setrpos(bhs_->idxSize());
+                BlockNavigation bn;
+                bn.load(dsr);
+                if ( bn.isHead() ) {
+                    if ( bhs_->logger ) smsc_log_error( bhs_->logger, "Error reading used chain at %llx", curBlockIndex_ );
+                    // we have to fix this broken chain
+                    if ( recovery_.get() ) recovery_->freeBlocks(curBlockIndex_,bn);
+                } else if ( bn.isFree() ) {
+                    // rechaining unused blocks
+                    if ( recovery_.get() ) recovery_->chainFreeBlock(curBlockIndex_,bn);
                 }
             }
             return false;
         }
         
         inline index_type blockIndex() const { return curBlockIndex_; }
-        inline const DataBlock& blockData() const { return blockData_; }
+        inline const buffer_type& blockData() const { return blockData_; }
         inline const Key& key() const { return key_; }
         
     private:
@@ -710,60 +660,79 @@ public:
     /// Use it only for recovery.
     Iterator beginWithRecovery() { return Iterator(*this,new Recovery(*this)); }
 
-    /*
-    void Reset()
-    {
-        iterBlockIndex = 0;
-    }
-    
-    // NOTE: this method is used for index rebuilding
-    bool next( index_type& blockIndex, Key& key )
-    {
-        DataBlock db;
-        return Next(blockIndex,db,key);
-    }
-
-    bool Next( index_type& blockIndex, DataBlock& data, Key& key )
-    {
-        uint64_t cnt = descrFile.files_count * descrFile.file_size;
-        DataBlockHeader hdr;
-        
-        while(iterBlockIndex < cnt)
-        {
-            int file_number = iterBlockIndex / descrFile.file_size;
-            off_t offset = (iterBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
-            File* f = dataFile_f[file_number];
-            f->Seek(offset, SEEK_SET);
-            deserialize(f, hdr);
-
-            blockIndex = iterBlockIndex++;
-            if(hdr.block_used == BLOCK_USED && hdr.head)
-            {
-                key = hdr.key;
-                if ( Get(blockIndex,data) ) {
-                    return true;
-                }
-                if (logger) smsc_log_error(logger, "Error reading block: %d", blockIndex);
-            }
-        }
-        return false;
-    }
-     */
-
 private:
 
-    /*
-  template<class T> void deserialize(File* f, T& hdr) {
-      unsigned needsize = T::persistentSize();
-      if ( deserBufSize_ < needsize ) {
-          delete [] deserBuf_;
-          deserBuf_ = new unsigned char[deserBufSize_ = needsize];
-      }
-      f->Read( (void*)deserBuf_, needsize );
-      Deserializer ds( deserBuf_, needsize );
-      hdr.deserialize(ds);
-  }
-     */
+    /// load datablocks only
+    bool Get( index_type blkIndex, buffer_type& data )
+    {
+        if (logger) smsc_log_debug(logger, "Get data block index=%llx", blkIndex);
+        if (blkIndex == invalidIndex()) return false;
+        const offset_type blockIndex = idx2pos(blkIndex);
+        const size_t oldSize = data.size();
+        {
+            // store initial index
+            Serializer ser(data);
+            ser << blockIndex;
+        }
+        size_t curpos = data.size();
+        size_t dataSize = navSize();
+        data.resize(curpos+dataSize);
+        bool head = true;
+        bool rv = false;
+        offset_type curBlockIndex = blockIndex;
+        offset_type prevBlockIndex = curBlockIndex;
+        do {
+
+            File* f = getFile(curBlockIndex);
+            if ( !f ) { break; }
+            const off_t offset = getOffset(curBlockIndex);
+            f->Seek(offset, SEEK_SET);
+            size_t toread = std::min( dataSize, blockSize() );
+            if ( toread < navSize() ) { break; }
+            f->Read(&((*profileData_)[curpos]),toread);
+
+            // decode navigation
+            BlockNavigation bn;
+            {
+                Deserializer dsr(*profileData_);
+                dsr.setrpos(curpos);
+                bn.load(dsr);
+            }
+            curpos += toread;
+
+            if ( head ) {
+                // shall be head
+                if (!bn.isHead()) {break;}
+                if ( bn.dataSize() <= navSize() ) {break;}
+                dataSize = bn.dataSize() - toread;
+                data.resize(data.size()+dataSize);
+                toread = std::min(dataSize,blockSize()-navSize());
+                f->Read(&((*profileData_)[curpos]),toread);
+                curpos += toread;
+            } else {
+                // not a head
+                if (bn.isFree()) {break;}
+                if (bn.refBlock() != prevBlockIndex) {break;}
+            }
+            dataSize -= toread;
+
+            if ( dataSize == 0 ) {
+                // last block has been just read
+                if ( bn.nextBlock() != notUsed() ) {break;} // too much data
+                rv = true;
+                break;
+            } else {
+                // next block
+                prevBlockIndex = curBlockIndex;
+                curBlockIndex = bn.nextBlock();
+                if ( curBlockIndex == notUsed()) {break;} // too few data
+            }
+
+        } while (true);
+        // if (!rv) { data.resize(oldSize); }
+        return rv;
+    }
+
 
     void printHdr( const DataBlockHeader& hdr ) {
         if (!logger) return;
@@ -1645,7 +1614,7 @@ private:
                 if (logger) smsc_log_warn(logger, "first free block: %llx used, try to find correct first free block...", curBlockIndex);
             }
 
-            ++curBlockIndex;
+            curBlockIndex += blockSize();
             while (curBlockIndex < maxBlockIndex) {
                 File* f = getFile(curBlockIndex);
                 if (!f) {

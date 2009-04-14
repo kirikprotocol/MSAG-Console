@@ -116,6 +116,11 @@ public:
         load(dsr);
     }
 
+    inline void save( smsc::core::buffers::File& f ) const {
+        unsigned char tmpbuf[navSize()];
+        save(tmpbuf);
+        f.Write(tmpbuf,navSize());
+    }
 
     void save( Serializer& ser ) const {
         ser.reserve(navSize());
