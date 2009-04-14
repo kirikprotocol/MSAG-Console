@@ -36,6 +36,10 @@ int main()
     std::cout << "sizeof(test3)=" << sizeof(test3) << std::endl;
     const char* what = "hello, world, bye, life";
     unsigned width = 10;
-    printf("%*.*s", width, width, what);
+    printf("%*.*s\n", width, width, what);
+
+    size_t x = 0;
+    printf(" (size_t(%u)-1) / 10 + 1 = %d\n", x, (x-1)/10+1 );
+    printf(" size_t((int(%u)-1)/10+1) = %d\n", x, size_t((int(x)-1)/10+1) );
     return 0;
 }
