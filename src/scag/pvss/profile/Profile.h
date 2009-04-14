@@ -13,6 +13,7 @@
 #include <core/buffers/TmpBuf.hpp>
 #include "scag/util/storage/Serializer.h"
 #include "scag/util/storage/GlossaryBase.h"
+#include "scag/util/storage/BlocksHSBackupData.h"
 
 #include "scag/pvss/data/Property.h"
 #include "AbntAddr.hpp"
@@ -28,6 +29,7 @@ using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
 using scag::util::storage::Serializable;
 using scag::util::storage::GlossaryBase;
+using scag::util::storage::BlocksHSBackupData;
 using smsc::core::buffers::File;
 
 typedef Hash<Property*> PropertyHash;
@@ -117,6 +119,11 @@ public:
     bool isChanged() const { return changed; };
     void setChanged(bool change) { changed = change; };
     void deserialize(const char* data, uint32_t dataSize, GlossaryBase* glossary = NULL);
+
+    /// for recovery
+    void deserialize(BlocksHSBackupData& backup,GlossaryBase* glossary=0) {
+        deserialize(backup.getBackupData(),backup.getBackupDataSize(),glossary);
+    }
 
 private:
   PropertyHash properties;
