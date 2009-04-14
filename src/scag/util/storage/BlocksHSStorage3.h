@@ -179,6 +179,7 @@ public:
         int ret;
         if(0 != (ret = OpenDescriptionFile()))
             return ret;
+        dataFileCreator_.init(descrFile.file_size, descrFile.block_size, descrFile.files_count, dbPath, dbName, true);
         if(0 != (ret = OpenDataFiles()))
             return ret;
         if(0 != (ret = OpenBackupFile()))
@@ -198,7 +199,6 @@ public:
           }
         }
 
-        dataFileCreator_.init(descrFile.file_size, descrFile.block_size, descrFile.files_count, dbPath, dbName, true);
         dataFileCreator_.openPreallocatedFile(descrFile.first_free_block);
 
         running = true;
@@ -512,9 +512,9 @@ private:
         ~Recovery() {
             // we have to write down a new description file
             if ( df_.first_free_block == bhs_.invalidIndex() ) {
-                df_.first_free_block = df_.files_count * df_.files_size;
-                dataFileCreator_.openPreallocatedFile(descrFile.first_free_block);
-                CreateDataFile();
+                df_.first_free_block = df_.files_count * df_.file_size;
+                bhs_.dataFileCreator_.openPreallocatedFile(df_.first_free_block);
+                bhs_.CreateDataFile();
             }
             bhs_.changeDescriptionFile();
         }
