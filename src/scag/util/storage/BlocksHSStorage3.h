@@ -629,10 +629,10 @@ public:
                 if ( bn.isHead() ) {
                     if ( bhs_->logger ) smsc_log_error( bhs_->logger, "Error reading used chain at %llx", curBlockIndex_ );
                     // we have to fix this broken chain
-                    if ( recovery_.get() ) recovery_->freeBlocks(curBlockIndex_,bn);
+                    if ( recovery_.get() ) recovery_->freeBlocks(bhs_->idx2pos(curBlockIndex_),bn);
                 } else if ( bn.isFree() ) {
                     // rechaining unused blocks
-                    if ( recovery_.get() ) recovery_->chainFreeBlock(curBlockIndex_,bn);
+                    if ( recovery_.get() ) recovery_->chainFreeBlock(bhs_->idx2pos(curBlockIndex_),bn);
                 }
             }
             return false;
@@ -671,7 +671,7 @@ private:
         const size_t oldSize = data.size();
         data.reserve(oldSize+idxSize()+navSize()+extraSize());
         Serializer ser(data);
-        ser.setwpos(oldSize+idxSize());
+        ser.setwpos(oldSize);
         ser << blockIndex;
         size_t curpos = data.size();
         size_t dataSize = navSize();
