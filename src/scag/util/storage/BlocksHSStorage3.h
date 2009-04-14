@@ -513,6 +513,7 @@ private:
             // we have to write down a new description file
             if ( df_.first_free_block == bhs_.invalidIndex() ) {
                 df_.first_free_block = df_.files_count * df_.files_size;
+                dataFileCreator_.openPreallocatedFile(descrFile.first_free_block);
                 CreateDataFile();
             }
             bhs_.changeDescriptionFile();
