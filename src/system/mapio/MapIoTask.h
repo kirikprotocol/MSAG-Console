@@ -969,6 +969,7 @@ public:
       {
         // drop locked dialog and all msg in chain, and create dialog as new.
         __warn2__(smsc::logger::_mapdlg_cat,"Dialog locked too long id=%x.",item->dialogid_map);
+        item->noRespFromPeer=true;
         dropDialogUnlocked(item);
         item->Release();
       } else

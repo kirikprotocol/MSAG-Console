@@ -2444,6 +2444,10 @@ USHORT_T Et96MapOpenConf (
               Status::MAP_REFUSE_REASON_BASE+*refuseReason_p);
           }
         }else{
+          if(provErrCode_p && (Status::MAP_PROVIDER_REASON_BASE+*provErrCode_p)==Status::MAP_DIALOGUE_TIMEOUT)
+          {
+            dialog->noRespFromPeer=true;
+          }
           DoProvErrorProcessing(provErrCode_p);
           throw MAPDIALOG_FATAL_ERROR(
             FormatText("MAP::%s connection opening error, reason %d",__func__,refuseReason_p?*refuseReason_p:0),
