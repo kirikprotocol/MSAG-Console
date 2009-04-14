@@ -44,6 +44,8 @@ public:
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
       //char buf[256];
+      static Logger* log=Logger::getInstance("smpp.in");
+      smsc_log_info(log,"received delivery_sm seq=%d",pdu->get_sequenceNumber());
       PduDeliverySmResp resp;
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
       resp.set_messageId("");
@@ -114,7 +116,8 @@ string systemId;
 string password;
 int timeOut=60;
 int speed=10;
-int maxCount=10000;
+int maxCount=0;
+int maxTime=0;
 string source;
 string sourcesFile;
 string destination;
@@ -150,6 +153,7 @@ Option options[]=
   {"timeOut",'i',&timeOut},
   {"speed",'i',&speed},
   {"maxCount",'i',&maxCount},
+  {"maxTime",'i',&maxTime},
   {"source",'s',&source},
   {"sourcesFile",'s',&sourcesFile},
   {"destination",'s',&destination},
@@ -342,12 +346,14 @@ int main(int argc,char* argv[])
       throw Exception("probDefault+probDatagram+probForward+probStoreAndForward==0");
     }
 
-    int delay=1000/speed;
+    int delay=1000000/speed;
+    
+    time_t startTime=time(NULL);
 
     SmppSession ss(cfg,&lst);
     SmppTransmitter *tr=ss.getSyncTransmitter();
     SmppTransmitter *atr=ss.getAsyncTransmitter();
-    lst.setTrans(tr);
+    lst.setTrans(atr);
     try{
       ss.connect();
       PduSubmitSm sm;
@@ -471,36 +477,47 @@ int main(int argc,char* argv[])
         if(dstidx>=dests.size())dstidx=0;
 
         //slev.Wait(delay);
-        hrtime_t msgproc=gethrtime()-msgstart;
-        msgproc/=1000000;
-        if(delay>msgproc+overdelay)
-        {
-          msgstart=gethrtime();
-          __trace2__("try to sleep:%d",delay-msgproc-overdelay);
-          millisleep(delay-msgproc-overdelay);
-          overdelay=(gethrtime()-msgstart)/1000000-(delay-msgproc-overdelay);
-        }else
-        {
-          __trace2__("overdelay:%d",overdelay);
-          overdelay-=delay;
-          if(overdelay<0)overdelay=0;
-        }
 
         time_t now=time(NULL);
         if((cnt%500)==0 || now-lasttime>5)
         {
+          double sokt;
           {
             MutexGuard g(cntMutex);
-            printf("ut:%d sbm:%d sok:%d serr:%d recv:%d avgsp: %lf lstsp:%lf\n",
-              now-starttime,cnt,sokcnt,serrcnt,reccnt,
-              (double)sokcnt/(now-starttime),
-              (double)sok_time_cnt.Get()/30.0
-              );
+            sokt=sok_time_cnt.Get()/30.0;
           }
+          printf("ut:%d sbm:%d sok:%d serr:%d recv:%d avgsp: %lf lstsp:%lf\n",
+                 now-starttime,cnt,sokcnt,serrcnt,reccnt,
+                 (double)sokcnt/(now-starttime),
+                 sokt
+                 );
           fflush(stdout);
           lasttime=time(NULL);
         }
-
+        if(maxCount>0 && cnt>=maxCount)
+        {
+          break;
+        }
+        if(maxTime>0 && now-startTime>=maxTime)
+        {
+          break;
+        }
+        
+        hrtime_t msgproc=gethrtime()-msgstart;
+        msgproc/=1000;
+        if(delay>msgproc+overdelay)
+        {
+          int toSleep=delay-msgproc-overdelay;
+          msgstart=gethrtime();
+          millisleep(toSleep/1000);
+          overdelay=(gethrtime()-msgstart)/1000-toSleep;
+        }else
+        {
+          overdelay-=delay-(int)msgproc;
+          //__warning2__("overdelay:%d",overdelay);
+          //if(overdelay<0)overdelay=0;
+        }
+        
       }
     }
     catch(std::exception& e)
