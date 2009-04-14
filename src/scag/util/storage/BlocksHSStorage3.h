@@ -329,7 +329,7 @@ public:
         DescriptionFile oldDescrFile = descrFile;
         // backupHeader.key = key;
         prof.backup->clear(); // reset backup
-        if (!backUpProfile(key, lastIndex(), prof.backup, profileData_, true)) {
+        if (!backUpProfile(key, notUsed(), prof.backup, profileData_, true)) {
             blockIndex = invalidIndex();
             if (logger) smsc_log_error(logger, "Backup profile error");
             return false;
@@ -342,7 +342,7 @@ public:
                                                idx2pos(descrFile.first_free_block) );
 
         try {
-            const offset_type dataStart = addBlocks(*profileData_,0);
+            const offset_type dataStart = writeBlocks(*profileData_,0);
             descrFile.first_free_block = pos2idx(newffb);
             changeDescriptionFile();
             clearBackup();
@@ -355,15 +355,7 @@ public:
             return true;
         } catch (const std::exception& e) {
             blockIndex = invalidIndex();
-            // FIXME: restore things
-            /*
-            restoreDataBlocks(oldDescrFile,bkp.backup);
-            SerialBuffer sb;
-            profile.Deserialize(sb);
-            bkp.clearBackup();
-            //exit(-1);
-             */
-            prof.backup->clear();
+            writeBlocks(*prof.backup,0);
             descrFile = oldDescrFile;
             changeDescriptionFile();
             throw;
@@ -401,7 +393,6 @@ public:
         const size_t oldBackupSize = prof.backup->size();
         if (!backUpProfile( key, blkIndex, prof.backup, profileData_, true )) {
             if (logger) smsc_log_error(logger, "Backup profile error");
-            prof.backup->clear();
             return false;
         }
         // backup may contain:
@@ -415,7 +406,7 @@ public:
 
         try {
             // bkp.clearBackup();
-            addBlocks(*profileData_,0);
+            writeBlocks(*profileData_,0);
             descrFile.first_free_block = pos2idx(newffb);
 
             //optimization
@@ -439,20 +430,12 @@ public:
                                        unsigned(prof.backup->size()));
             return true;
         } catch (const std::exception& e) {
-            /*
-             FIXME: restore things
-            bkp.setBackup(vector<offset_type>(dataBlockBackup.begin(), dataBlockBackup.begin() + oldBlocksCount));
-            size_t backupSize = bkp.getBackupDataSize();
-            SerialBuffer sb(backupSize);
-            sb.Append(bkp.getBackupData(), backupSize);
-            sb.SetPos(0);
-            profile.Deserialize(sb, true, glossary_);
-            restoreDataBlocks(oldDescrFile, bkp.getBackupData());
-             */
+            writeBlocks(*prof.backup,0);
             descrFile = oldDescrFile;
             changeDescriptionFile();
-            prof.backup->clear();
-            //exit(-1);
+            prof.backup->resize(oldBackupSize);
+            Key tmpkey;
+            deserializeProfile(tmpkey,*prof.value,*prof.backup);
             throw;
         }
 
@@ -515,14 +498,14 @@ public:
 
             if ( dataSize == 0 ) {
                 // last block has been just read
-                if ( bn.nextBlock() != lastIndex() ) {break;} // too much data
+                if ( bn.nextBlock() != notUsed() ) {break;} // too much data
                 rv = true;
                 break;
             } else {
                 // next block
                 prevBlockIndex = curBlockIndex;
                 curBlockIndex = bn.nextBlock();
-                if ( curBlockIndex == lastIndex()) {break;} // too few data
+                if ( curBlockIndex == notUsed()) {break;} // too few data
             }
 
         } while (true);
@@ -567,7 +550,6 @@ public:
         DescriptionFile oldDescrFile = descrFile;
         offset_type ffb = idx2pos(descrFile.first_free_block);
         if (!backUpProfile(key,blockIndex,prof.backup,0,true)) {
-            prof.backup->clear();
             return;
         }
         // backup contains iNDNDND
@@ -578,15 +560,12 @@ public:
                                                ffb );
         
         try {
-            addBlocks(tmpbuf,0);
+            writeBlocks(tmpbuf,0);
             descrFile.first_free_block = pos2idx(newffb);
             changeDescriptionFile();
             clearBackup();
         } catch (const std::exception& e) {
-            /*
-             * FIXME: restoration
-            restoreDataBlocks(oldDescrFile, bkp.getBackupData());
-             */
+            writeBlocks(*prof.backup,0);
             descrFile = oldDescrFile;
             changeDescriptionFile();
             if (logger) smsc_log_error(logger, "error remove data block index:%d : %s", blockIndex, e.what());
@@ -602,8 +581,8 @@ private:
         return packer_.countBlocks(packedSize);
     }
     /// checks if absolute offset is last in the chain.
-    inline offset_type lastIndex() const {
-        return packer_.lastIndex();
+    inline offset_type notUsed() const {
+        return packer_.notUsed();
     }
     inline size_t navSize() const {
         return packer_.navSize();
@@ -635,8 +614,8 @@ private:
         blocks.reserve( (countBlocks(newprofile.size())+2)*2 );
         offset_type newffb = ffb;
         offset_type lastold = packer_.extractBlocks(oldprofile,blocks);
-        if ( lastold != lastIndex() ) {
-            // assert(newffb == lastIndex());
+        if ( lastold != notUsed() ) {
+            // assert(newffb == notUsed());
             newffb = lastold;
         }
 
@@ -953,14 +932,14 @@ private:
 
         // dataBlockBackup.clear();
         size_t blocksCount = newprofile ? countBlocks(newprofile->size()) : 0;
-        if ( blockIndex == lastIndex() && blocksCount == 0 ) { return true; }
+        if ( blockIndex == notUsed() && blocksCount == 0 ) { return true; }
 
         DescriptionFile oldDescrFile = descrFile;
         printDescrFile();
         const size_t oldProfileSize = oldprofile ? oldprofile->size() : 0;
         try {
             if ( oldProfileSize == 0 ) {
-                assert( blockIndex == lastIndex() );
+                assert( blockIndex == notUsed() );
                 buffer_type backupbuf;
                 if (!oldprofile) oldprofile = &backupbuf;
                 // backupHeader.blocksCount = blocksCount;
@@ -1010,15 +989,15 @@ private:
     ///  @param newdata          -- new data chain
     ///  @param ffb              -- is necessary to link free chain at the end
     ///  @return the index of the first block in the chain.
-    offset_type addBlocks( const buffer_type& buffer, size_t position )
+    offset_type writeBlocks( const buffer_type& buffer, size_t position )
     {
-        if ( buffer.size() <= position ) return lastIndex();
+        if ( buffer.size() <= position ) return notUsed();
 
         std::vector< offset_type > affectedBlocks;
         const size_t needBlocks = countBlocks(buffer.size()-position);
         assert(needBlocks > 0);
         affectedBlocks.reserve(needBlocks+20);
-        offset_type rv = lastIndex();
+        offset_type rv = notUsed();
         packer_.extractBlocks(buffer,affectedBlocks,position);
 
         size_t pos = position;
@@ -1028,11 +1007,11 @@ private:
 
             const offset_type idx = *i;
             const size_t dataSize = *++i;
-            if (idx == lastIndex() || dataSize == 0) {
+            if (idx == notUsed() || dataSize == 0) {
                 // skip dummy and go on
                 pos += idxSize();
                 continue;
-            } else if ( rv == lastIndex() ) {
+            } else if ( rv == notUsed() ) {
                 rv = idx;
             }
             
@@ -1288,7 +1267,7 @@ private:
                 backupFile_f.Read((void*)(dataBuf), backupHeader.dataSize);
             }
              */
-            addBlocks(hdrbuf,dataStart);
+            writeBlocks(hdrbuf,dataStart);
 
             // FIXME: restore (write back) descrFile
             // FIXME: should it be done with changeDescriptionFile(); ?
@@ -1738,7 +1717,7 @@ private:
         try {
             offset_type curBlockIndex = idx2pos(descrFile.first_free_block);
             if (logger) smsc_log_info(logger, "check first free block: %llx", curBlockIndex);
-            if ( lastIndex() == curBlockIndex ) {
+            if ( notUsed() == curBlockIndex ) {
                 // FIXME: it should be quite ok
                 smsc_log_error(logger, "first free block invalid: %llx, can't fix first free block", curBlockIndex);
                 return false;
@@ -1755,7 +1734,7 @@ private:
             const offset_type maxBlockIndex = descrFile.files_count * fileSizeBytes_;
 
             if ( bn.isFree() ) {
-                if ( (lastIndex() == bn.nextBlock()) || (bn.nextBlock() < maxBlockIndex) ) {
+                if ( (notUsed() == bn.nextBlock()) || (bn.nextBlock() < maxBlockIndex) ) {
                     if (logger) smsc_log_info(logger, "first free block: %llx valid, next free block: %llx", curBlockIndex, bn.nextBlock());
                     return true;
                 }
@@ -1779,7 +1758,7 @@ private:
                 bn.load(*f);
 
                 if ( bn.isFree() ) {
-                    if ( (lastIndex() == bn.nextBlock()) || (bn.nextBlock() < maxBlockIndex) ) {
+                    if ( (notUsed() == bn.nextBlock()) || (bn.nextBlock() < maxBlockIndex) ) {
                         if (logger) smsc_log_info(logger, "correct first free block found: %llx, next free block: %llx", curBlockIndex, bn.nextBlock());
                         descrFile.first_free_block = pos2idx(curBlockIndex);
                         changeDescriptionFile();

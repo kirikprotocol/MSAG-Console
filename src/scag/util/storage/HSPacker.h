@@ -151,7 +151,16 @@ protected:
 };
 
 
+
+
+/// --------------------------------------------------
 /// class for repacking HS buffer.
+/// It has two coordinate systems:
+///  1. indices of blocks in datafile, starting from 0
+///  2. absolute offsets of blocks in datafile, starting from 0
+/// Typically, all internals work with offsets.
+/// Indices are used for interface to client code.
+/// --------------------------------------------------
 class HSPacker
 {
 public:
@@ -164,7 +173,7 @@ public:
     blockSize_(blockSize), packingType_(packType), log_(logger)
     {
         assert(blockSize_ > 2*navSize());
-        invalid_ = blockSize_ + BlockNavigation::badBit();
+        notUsed_ = blockSize_ + BlockNavigation::badBit();
     }
 
     inline size_t blockSize() const { return blockSize_; }
@@ -354,7 +363,7 @@ public:
         Deserializer dsr(buffer);
         dsr.setrpos(initialPosition);
         bool isUsed = true;
-        offset_type nextBlock = lastIndex();
+        offset_type nextBlock = notUsed();
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
@@ -371,7 +380,7 @@ public:
 
             dsr >> nextBlock;
 
-            while ( nextBlock != lastIndex() ) {
+            while ( nextBlock != notUsed() ) {
 
                 BlockNavigation bn;
                 {
@@ -392,6 +401,14 @@ public:
                     dataSize = navSize();
 
                 } else {
+
+                    if ( !isUsed ) {
+                        // only one isused chain is allowed
+                        if (log_) {
+                            smsc_log_error(log_,"only one is used chain allowed");
+                        }
+                        ::abort();
+                    }
 
                     if ( bn.isHead() ) {
                         if ( dataSize > 0 ) {
@@ -464,7 +481,7 @@ public:
         for ( size_t pos = 0; pos < blocks.size(); ++pos ) {
             const offset_type i = blocks[pos];
             const size_t sz = blocks[++pos];
-            if (i == lastIndex() || sz == 0) continue;
+            if (i == notUsed() || sz == 0) continue;
             offsets.push_back(i);
         }
     }
@@ -500,7 +517,7 @@ public:
             }
 
             if ( i+1 == needBlocks ) {
-                bn.setNextBlock(lastIndex());
+                bn.setNextBlock(notUsed());
             } else {
                 bn.setNextBlock(*iter++);
             }
@@ -534,7 +551,7 @@ public:
         const size_t oldSize = profile.size();
         profile.reserve( oldSize + (offsets.size() - startPos)*navSize()+idxSize() );
         BlockNavigation bn;
-        bn.setFreeCells( lastIndex() );
+        bn.setFreeCells( notUsed() );
         Serializer ser(profile);
         ser.setwpos(profile.size());
         std::vector< offset_type >::const_iterator iter = offsets.begin() + startPos;
@@ -557,12 +574,13 @@ public:
         return newffb;
     }
 
-
+    /// index value corresponding to non-valid index.
     inline static index_type invalidIndex() {
         return 0xffffffffffffffffULL;
     }
 
-    inline offset_type lastIndex() const { return invalid_; }
+    /// offset value representing not used item.
+    inline offset_type notUsed() const { return notUsed_; }
 
     inline size_t navSize() const { return BlockNavigation::navSize(); }
 
@@ -576,7 +594,7 @@ public:
 
     /// block index to offset
     inline offset_type idx2pos( index_type idx ) const {
-        if ( idx == invalidIndex() ) return invalid_;
+        if ( idx == invalidIndex() ) return notUsed_;
         return offset_type(idx*blockSize_);
     }
 
@@ -589,7 +607,7 @@ public:
 private:
     size_t                blockSize_;
     size_t                packingType_;
-    offset_type           invalid_;
+    offset_type           notUsed_;
     smsc::logger::Logger* log_;
 };
 

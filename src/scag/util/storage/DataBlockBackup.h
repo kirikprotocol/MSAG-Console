@@ -6,7 +6,7 @@
 #include <vector>
 #include "logger/Logger.h"
 #include "BlocksHSBackupData.h"
-#include "scag/util/storage/Serializer.h"
+#include "Serializer.h"
 
 
 namespace scag {
@@ -23,6 +23,11 @@ struct DataBlockBackup
     typedef BlocksHSBackupData  backup_type;
 
     DataBlockBackup(value_type* v = NULL, backup_type* b = NULL) : value(v), backup(b) {}
+
+    void recoverFromBackup( GlossaryBase* gloss ) {
+        if (!value || !backup) return;
+        value->deserialize( *backup, gloss );
+    }
 
 public:
     Val*                        value;

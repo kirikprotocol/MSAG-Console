@@ -167,13 +167,13 @@ public:
           // FIXME: packer should be taken from BHS.
           HSPacker packer(blockSize_,0);
           BlockNavigation bn;
-          bn.setFreeCells(packer.lastIndex()); // not used
+          bn.setFreeCells(packer.notUsed()); // not used
           for ( int i = 0; i < blocksCount-lastBlock; ++i ) {
               bn.setNextBlock(packer.idx2pos(startIndex++));
               bn.save( writeBlock + (i*blockSize_) );
           }
           if ( lastBlock > 0 ) {
-              bn.setNextBlock(packer.lastIndex());
+              bn.setNextBlock(packer.notUsed());
               bn.save( writeBlock + (blocksCount-1)*blockSize_ );
           }
       }

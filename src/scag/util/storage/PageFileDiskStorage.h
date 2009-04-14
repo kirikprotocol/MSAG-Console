@@ -136,10 +136,10 @@ public:
         pf_->Delete( i );
     }
 
-
+    /// invoke only if v has this ability
     void recoverFromBackup( value_type& v )
     {
-        // v.recoverFromBackup();
+        v.recoverFromBackup(glossary_);
     }
 
 private:
