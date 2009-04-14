@@ -564,10 +564,11 @@ private:
 
             File* f = bhs_.getFile( blockIndex );
             off_t offset = bhs_.getOffset(blockIndex);
-            unsigned char tmpbuf[bhs_.navSize()];
+            smsc::core::buffers::TmpBuf<unsigned char,32> tmpbuf(bhs_.navSize());
+            savedBn.save(tmpbuf.GetCurPtr());
             savedBn.save(tmpbuf);
-            fixup_->save(blockIndex,bhs_.navSize(),tmpbuf);
-            BlockNavigation bn(savedBn);
+            fixup_->save(blockIndex,bhs_.navSize(),tmpbuf.GetCurPtr());
+            BlockNavigation bn;
             bn.setFreeCells(bhs_.notUsed());
             bn.setNextBlock(bhs_.notUsed());
             f->Seek(offset);

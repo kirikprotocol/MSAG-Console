@@ -117,9 +117,9 @@ public:
     }
 
     inline void save( smsc::core::buffers::File& f ) const {
-        unsigned char tmpbuf[navSize()];
-        save(tmpbuf);
-        f.Write(tmpbuf,navSize());
+        smsc::core::buffers::TmpBuf<unsigned char,32> tmpbuf(navSize());
+        save(tmpbuf.GetCurPtr());
+        f.Write(tmpbuf.GetCurPtr(),navSize());
     }
 
     void save( Serializer& ser ) const {
@@ -624,7 +624,7 @@ public:
 
 private:
     size_t                blockSize_;
-    size_t                packingType_;
+    uint8_t               packingType_;
     offset_type           notUsed_;
     smsc::logger::Logger* log_;
 };
