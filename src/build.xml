@@ -35,7 +35,7 @@ Required environment: ORACLE_HOME
 
   <target name="deps">
     <ant antfile="${SRC_DIR}/conf/make.xml">
-      <property name="targets" value="deps"/>
+      <property name="targets" value="gen"/>
     </ant>
   </target>
 
