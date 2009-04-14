@@ -420,7 +420,17 @@
       <web-resource-name></web-resource-name>
       <url-pattern>/smsc/esme_InfoSme/index.jsp</url-pattern>
       <url-pattern>/smsc/esme_InfoSme/stat.jsp</url-pattern>
-      <url-pattern>/smsc/esme_InfoSme/deliveries.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_new.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/taskEdit.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_edit_task.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_file.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_finish_task.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_gen_progress.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_gen_task.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_process_file.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_process_progress.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/tasks.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/messages.jsp</url-pattern>
       <url-pattern>/smsc/esme_InfoSme/csv_download.jsp</url-pattern>
       <url-pattern>/smsc/esme_InfoSme/taskProgress.jsp</url-pattern>
     </web-resource-collection>
