@@ -291,7 +291,9 @@ void SmppSocket::genEnquireLink(int to)
         return;
     }
     lastEnquireLink=now;
-    SmppEntity* se = SmppManager::Instance().getSmppEntity(systemId.c_str());
+    bool isEnabled;
+    SmppEntity* se = SmppManager::Instance().getSmppEntity(systemId.c_str(),&isEnabled);
+    if (!isEnabled) se = 0;
     outQueue.Push(SmppCommand::makeCommand(ENQUIRELINK,se?se->getNextSeq():1,0,0).release());
 }
 

@@ -287,6 +287,11 @@ void StateMachine::registerEvent( int event, SmppEntity* src, SmppEntity* dst,
 
     smsc_log_debug(log_, "SmppStateMachine Event:%d", event);
 
+    if (!src) {
+        // cannot proceed
+        smsc_log_error(log_,"SmppStateMachine: no src passed! The event is lost.");
+        return;
+    }
     src_id = (char*)src->info.systemId;
     srcType = src->info.type == etSmsc;
 
@@ -434,7 +439,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
                 }else
                 {
                     try {
-                        srcUid = src->getUid();
+                        if (src) srcUid = src->getUid();
                     }
                     catch (std::exception& exc)
                     {

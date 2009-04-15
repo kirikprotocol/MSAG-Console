@@ -115,11 +115,17 @@ public:
     return rv;
   }
 
-  virtual SmppEntity* getSmppEntity(const char* systemId) const
+  virtual SmppEntity* getSmppEntity(const char* systemId, bool* isEnabled = 0) const
   {
     MutexGuard mg(regMtx);
     SmppEntity* const *ptr=registry.GetPtr(systemId);
-    return ptr ? (*ptr)->info.enabled?*ptr:0 : 0;
+    if (ptr) {
+        if (isEnabled) *isEnabled = (*ptr)->info.enabled;
+        return *ptr;
+    } else {
+        if (isEnabled) *isEnabled = false;
+        return 0;
+    }
   }
 
   void addMetaEntity(MetaEntityInfo info)
