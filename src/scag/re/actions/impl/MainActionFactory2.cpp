@@ -34,13 +34,6 @@
 #include "BillActionInfo.h"
 #include "BillActionKeywords.h"
 
-#include "scag/pvss/api/packets/DelCommand.h"
-#include "scag/pvss/api/packets/SetCommand.h"
-#include "scag/pvss/api/packets/GetCommand.h"
-#include "scag/pvss/api/packets/IncCommand.h"
-#include "scag/pvss/api/packets/IncModCommand.h"
-#include "scag/pvss/api/packets/BatchCommand.h"
-
 namespace scag2 {
 namespace re {
 namespace actions {
@@ -135,15 +128,14 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             break;
         }
         if ( 0 == strncmp(name.c_str(), "profile:", 8 ) ) {
-            if (name=="profile:set") return new PersAction(new pvss::SetCommand);
-            if (name=="profile:get") return new PersAction(new pvss::GetCommand);
-            if (name=="profile:del") return new PersAction(new pvss::DelCommand);
-            if (name=="profile:inc") return new PersAction(new pvss::IncCommand);
-            if (name=="profile:inc-mod") return new PersAction(new pvss::IncModCommand);
-            // if (name=="profile:batch") return new BatchAction();
+            if (name=="profile:set") return new PersAction(pvss::PC_SET);
+            if (name=="profile:get") return new PersAction(pvss::PC_GET);
+            if (name=="profile:del") return new PersAction(pvss::PC_DEL);
+            if (name=="profile:inc") return new PersAction(pvss::PC_INC_RESULT);
+            if (name=="profile:inc-mod") return new PersAction(pvss::PC_INC_MOD);
+            if (name=="profile:batch") return new BatchAction();
             break;
         }
-        /*
         if ( 0 == strncmp(name.c_str(), "batch:", 6 ) ) {
             if (name=="batch:set") return new PersActionCommand(pvss::PC_SET);
             if (name=="batch:get") return new PersActionCommand(pvss::PC_GET);
@@ -152,7 +144,6 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             if (name=="batch:inc-mod") return new PersActionCommand(pvss::PC_INC_MOD);
             break;
         }
-         */
         if ( 0 == strncmp(name.c_str(), "stat:", 5 ) ) {
             if (name == "stat:add_keywords") return new AddKeywordsAction();
             if (name == "stat:set_keywords") return new SetKeywordsAction();
