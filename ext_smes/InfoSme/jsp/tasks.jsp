@@ -97,7 +97,7 @@ if (!admin) {
 page_menu_end(out);
 %>
 <script type="text/javascript">
-<%if (bean.isSmeRunning()) {%>checkCheckboxesForMbDeleteButton();<%}%>
+<%--<%if (bean.isSmeRunning()) {%>checkCheckboxesForMbDeleteButton();<%}%>--%>
 </script>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

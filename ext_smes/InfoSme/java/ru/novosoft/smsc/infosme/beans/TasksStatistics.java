@@ -91,9 +91,6 @@ public class TasksStatistics extends InfoSmeBean
   private void processQuery(HttpServletRequest request) throws AdminException {
      flushStatistics(query);
 
-      Calendar oldPeriod = null;
-      DateCountersSet dateCounters = null;
-
       statistics = null;
       statistics = new Statistics();
 
@@ -126,6 +123,10 @@ public class TasksStatistics extends InfoSmeBean
 
       final HashMap hourCounterSets = new HashMap(100);
 
+
+      Calendar oldPeriod = null;
+      DateCountersSet dateCounters = null;
+    
       for (Iterator iter = stats.iterator(); iter.hasNext();) {
         StatisticDataItem st = (StatisticDataItem)iter.next();
 
@@ -142,7 +143,6 @@ public class TasksStatistics extends InfoSmeBean
 
         HourCountersSet hourCounters = (HourCountersSet)hourCounterSets.get(newPeriod.getTime());
         if (hourCounters == null) {
-          hourCounters = s;
           hourCounterSets.put(newPeriod.getTime(), s);
 
           if (dateCounters == null) { // on first iteration
@@ -151,7 +151,7 @@ public class TasksStatistics extends InfoSmeBean
             statistics.addDateStat(dateCounters);
             dateCounters = new DateCountersSet(newPeriod.getTime());
           }
-          dateCounters.addHourStat(hourCounters);
+          dateCounters.addHourStat(s);
         } else {
           if (dateCounters != null)
             dateCounters.increment(s);

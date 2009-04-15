@@ -221,7 +221,7 @@
 <tr class=row<%=rowN++&1%>>
   <th><label for=retryOnFail>Retry policy</label></th>
   <td><%if (bean.isSmeRunning()) {%>
-    <input class=check type=checkbox id=retryOnFail name=retryOnFail <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="retryOnFailUpdated()">
+    <input class=check type=checkbox id=retryOnFail name=retryOnFail <%=bean.isRetryOnFail() ? "checked" : ""%>>
     <select id="retryPolicy" name="retryPolicy">
           <%for (Iterator iter = bean.getRetryPolicies().iterator(); iter.hasNext();) {
             String policy = (String)iter.next();
@@ -229,14 +229,7 @@
           <option value="<%=policy%>" <%=bean.getRetryPolicy() != null && bean.getRetryPolicy().equals(policy) ? "SELECTED" : ""%>><%=StringEncoderDecoder.encode(policy)%></option>
           <%}%>
         </select>
-    <script>
-      function retryOnFailUpdated() {
-        document.getElementById('retryPolicy').disabled = !document.getElementById('retryOnFail').checked;
-        if (document.getElementById('retryOnFail').checked)
-          document.getElementById('transactionMode').checked=true;
-      }
-      retryOnFailUpdated();
-    </script><%
+    <%
   } else {
     if (bean.isRetryOnFail() && bean.getRetryPolicy() != null && bean.getRetryPolicy().trim().length() > 0) {
       %>enabled, retry policy is '<%=StringEncoderDecoder.encode(bean.getRetryPolicy())%>'<%
