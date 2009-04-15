@@ -26,6 +26,7 @@ scag/msag           gwmain2        \
   -lscag-transport-smpp-router \
   -lscag-transport-http-base \
   -lscag-stat-base \
+  -lscag-pvss-data \
   -lscag-pvss-base \
   \
   -lscag-transport \
