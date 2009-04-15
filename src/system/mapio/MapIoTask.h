@@ -1070,7 +1070,7 @@ public:
       if( MAPSTATS_dialogs[MAPSTAT_DLGOUTSRI] >= MapLimits::getInstance().getLimitOutSRI() )
       {
         Dump();
-        throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGOUTSRI] , MapLimits::getInstance().getLimitNIUSSD());
+        throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGOUTSRI] , MapLimits::getInstance().getLimitOutSRI());
       }
       map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool[lssn][rinst].front();
       dialogId_pool[lssn][rinst].pop_front();
