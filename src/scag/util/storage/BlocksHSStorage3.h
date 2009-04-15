@@ -10,22 +10,18 @@
 #include <string>
 #include <vector>
 #include <cstdio>
-#include <cerrno>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "util/Exception.hpp"
 #include "core/buffers/File.hpp"
-#include "SerialBuffer.h"
 #include "GlossaryBase.h"
 #include "DataBlockBackup2.h"
-#include "util/Exception.hpp"
 #include "DataFileCreator.h"
 #include "FixupLogger.h"
-#include "EndianConverter.h"
-#include "BlocksHSStorage.h"
 #include "HSPacker.h"
 #include "scag/util/Drndm.h"
 
@@ -90,8 +86,15 @@ private:
     typedef HSPacker::buffer_type  buffer_type;
 
 public:
-//	static const int SUCCESS			           = 0;
-//	static const int RBTREE_FILE_NOT_SPECIFIED	   = -1;
+
+    static const size_t WRITE_BUF_SIZE = 10240;
+    static const size_t MIN_BLOCK_SIZE = 60;
+    static const uint8_t TRX_COMPLETE = 0;
+    static const uint8_t TRX_INCOMPLETE = 1;
+    static const int32_t dfVersion_64_2 = 0x80000002; // PVSS 2.0
+
+    // static const int SUCCESS			           = 0;
+    // static const int RBTREE_FILE_NOT_SPECIFIED	   = -1;
     static const int CANNOT_CREATE_STORAGE	       = -1;
     static const int CANNOT_CREATE_DESCR_FILE	   = -2;
     static const int CANNOT_CREATE_DATA_FILE	   = -3;
@@ -99,7 +102,7 @@ public:
     static const int CANNOT_OPEN_DATA_FILE		   = -5;
     static const int DESCR_FILE_CREATE_FAILED	   = -6;
     static const int DESCR_FILE_OPEN_FAILED		   = -7;
-    //static const int RBTREE_FILE_ERROR		   = -10;
+    // static const int RBTREE_FILE_ERROR		   = -10;
     static const int CANNOT_OPEN_EXISTS_DESCR_FILE = -8;
     static const int CANNOT_OPEN_EXISTS_DATA_FILE  = -9;
     static const int BACKUP_FILE_CREATE_FAILED	   = -11;
@@ -119,13 +122,7 @@ public:
     packer_(defaultBlockSize,0,thelog),
     fileSizeBytes_(0)
     {
-
         rnd_.setSeed(time(0));
-        /*
-        if (!glossary_) {
-          throw std::runtime_error("BlocksHSStorage: glossary should be provided!");
-        }
-         */
     }
 
 
@@ -177,15 +174,15 @@ public:
         dbPath = _dbPath;
 		
         int ret;
-        if(0 != (ret = OpenDescriptionFile()))
-            return ret;
+        if (0 != (ret = OpenDescriptionFile()))
+            { return ret; }
         dataFileCreator_.init(descrFile.file_size, descrFile.block_size, descrFile.files_count, dbPath, dbName, true);
         if(0 != (ret = OpenDataFiles()))
-            return ret;
+            { return ret; }
         if(0 != (ret = OpenBackupFile()))
-            return ret;
+            { return ret; }
         if (!checkFirstFreeBlock()) {
-          if (logger) smsc_log_warn(logger, "try to rollback last transaction");
+          if (logger) { smsc_log_warn(logger, "try to rollback last transaction"); }
           try {
               loadBackupData(true);
               if (!checkFirstFreeBlock()) {
@@ -194,7 +191,7 @@ public:
                   }
               }
           } catch ( std::exception& e ) {
-              if (logger) smsc_log_warn(logger,"exception: %s", e.what());
+              if (logger) { smsc_log_warn(logger,"exception: %s", e.what()); }
               return FIRST_FREE_BLOCK_FAILED;
           }
         }
@@ -310,7 +307,8 @@ public:
             descrFile.first_free_block = pos2idx(newffb);
 
             //optimization
-            if (oldDescrFile.first_free_block != descrFile.first_free_block || oldDescrFile.files_count != descrFile.first_free_block) {
+            if (oldDescrFile.first_free_block != descrFile.first_free_block ||
+                oldDescrFile.files_count != descrFile.files_count ) {
                 changeDescriptionFile();
             }
             if (blocksCount == 0) {
@@ -364,7 +362,6 @@ public:
 
     void Remove( const Key& key, index_type blkIndex, const data_type& prof ) {
         Profile& profile = *prof.value;
-        // BlocksHSBackupData& bkp = *prof.backup;
         offset_type blockIndex = idx2pos(blkIndex);
         if (logger) smsc_log_debug(logger, "Remove data block index=%llx key=%s",
                                    blockIndex, key.toString().c_str() );
@@ -405,7 +402,7 @@ private:
     inline size_t countBlocks( size_t packedSize ) const {
         return packer_.countBlocks(packedSize);
     }
-    /// checks if absolute offset is last in the chain.
+    /// returns the special 'notUsed' value for offset
     inline offset_type notUsed() const {
         return packer_.notUsed();
     }
@@ -418,6 +415,7 @@ private:
     inline size_t blockSize() const {
         return packer_.blockSize();
     }
+    /// extra space written at the beginning of serialized data
     inline size_t extraSize() const {
         return 32;
     }

@@ -177,8 +177,12 @@ public:
     HSPacker( size_t blockSize, uint8_t packType, smsc::logger::Logger* logger = 0 ) :
     blockSize_(blockSize), packingType_(packType), log_(logger)
     {
-        assert(blockSize_ > 2*navSize());
+        // assert(blockSize_ > 2*navSize());
         notUsed_ = blockSize_ + BlockNavigation::badBit();
+        if ( blockSize_ <= 2*navSize() ) {
+            throw smsc::util::Exception("block size = %u is too small, must be greater than 2*%u",
+                                        unsigned(blockSize_), unsigned(navSize()) );
+        }
     }
 
     inline size_t blockSize() const { return blockSize_; }
@@ -204,6 +208,7 @@ public:
     {
         if ( packingType_ != 0 ) {
             // only packtype 0 is implemented
+            if (log_) { smsc_log_error(log_,"packing type = %u is not implemented", unsigned(packingType_) ); }
             ::abort();
         }
         assert(buffer.size() > initialPos);
@@ -235,7 +240,6 @@ public:
         size_t frompos = initialPos + blockSize_;
         size_t topos = oldSize;
         for ( size_t blk = 1; blk <= trailBlocks; ++blk ) {
-            // fprintf(stderr,"blk:%u topos:%u frompos:%u\n", blk, topos, frompos );
             if ( blk == trailBlocks && topos < frompos+navSize() ) {
                 // overlap detected in last block
                 assert(topos>frompos);
@@ -513,7 +517,7 @@ public:
         // offsets contains affected block indices
         const size_t needBlocks = countBlocks( dataSize+idxSize() );
         if ( needBlocks > offsets.size() ) {
-            if (log_) smsc_log_error(log_,"too few offsets in vector");
+            if (log_) {smsc_log_error(log_,"too few offsets in vector");}
             ::abort();
         }
 
@@ -530,7 +534,7 @@ public:
 
             if ( dataSize == 0 ) {
                 // too many blocks
-                if (log_) smsc_log_error(log_,"too many blocks counted");
+                if (log_) {smsc_log_error(log_,"too many blocks counted");}
                 ::abort();
             }
 
@@ -547,7 +551,7 @@ public:
         }
         if ( dataSize > 0 ) {
             // too few blocks
-            if (log_) smsc_log_error(log_,"too few blocks");
+            if (log_) {smsc_log_error(log_,"too few blocks");}
             ::abort();
         }
 
@@ -618,7 +622,14 @@ public:
 
     inline index_type pos2idx( offset_type pos ) const {
         if ( (pos & BlockNavigation::badBit()) ) return invalidIndex();
-        assert( (pos % blockSize_) == 0 );
+        if ( pos % blockSize_ != 0 ) {
+            if (log_) {
+                smsc_log_error( log_,"offset %llx is not divisable by blocksize=%x",
+                                pos, unsigned(blockSize_) );
+            }
+            ::abort();
+        }
+        // assert( (pos % blockSize_) == 0 );
         return index_type(pos / blockSize_);
     }
 
