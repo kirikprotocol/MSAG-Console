@@ -69,6 +69,7 @@ void getConfig( smsc::logger::Logger* thelog,
         clientConfig.setProcessTimeout(1000);
     } catch ( ConfigException& e ) {
         smsc_log_error(thelog, "cannot set default value: %s", e.what() );
+        fprintf(stderr,"cannot set default value: %s\n", e.what() );
         abort();
     }
 
@@ -84,6 +85,7 @@ void getConfig( smsc::logger::Logger* thelog,
         flooderConfig.setAddressFormat(".1.1.791%08u");
     } catch ( ConfigException& e ) {
         smsc_log_error(thelog, "cannot set default value: %s", e.what() );
+        fprintf(stderr,"cannot set default value: %s\n", e.what() );
         abort();
     }
 
@@ -145,6 +147,7 @@ int main( int argc, const char** argv )
         flooderStat->init( skip );
     } catch ( IOException& e ) {
         smsc_log_error( logger, "cannot init flooder patterns: %s", e.what() );
+        fprintf(stderr,"cannot init flooder patterns: %s\n", e.what());
         ::abort();
     }
 
@@ -152,6 +155,7 @@ int main( int argc, const char** argv )
         client->startup();
     } catch ( PvssException& e ) {
         smsc_log_error( logger, "client startup exception: %s", e.what() );
+        fprintf(stderr,"client startup exception: %s\n", e.what());
         ::abort();
     }
 
