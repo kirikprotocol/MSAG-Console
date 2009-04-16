@@ -475,8 +475,11 @@ public:
                 }
                 ::abort();
             }
+
+            if ( dsr.rpos() >= dsr.size() ) { break; }
             isUsed = false;
-        } while ( dsr.rpos() < dsr.size() );
+
+        } while ( true );
 
         if (log_ && log_->isDebugEnabled()) {
             std::ostringstream os;
