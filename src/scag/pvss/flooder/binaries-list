@@ -46,3 +46,13 @@ scag/pvss-flooder2  flooder2 \
     $(SSL_LIB) \
     -lpthread -lrt -ldl \
     $(LIBMALLOC)
+
+scag/filetest  filetest \
+    -lscag-util \
+    -lcore-buffers \
+    -lutil \
+    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+    $(__LIBRARIES) \
+    $(SSL_LIB) \
+    -lpthread -lrt -ldl \
+    $(LIBMALLOC)

@@ -187,7 +187,7 @@ void PvssFlooder::delay() {
 
 void PvssFlooder::setCurrentSpeed(int sent, int ok) {
   if (ok < sent) {
-    currentSpeed_ = ok;
+    currentSpeed_ = ok > 0 ? ok : 1;
     return;
   }
   if (currentSpeed_ < speed_) {
