@@ -609,7 +609,7 @@ public:
     inline offset_type notUsed() const { return notUsed_; }
 
     inline bool isNotUsed( offset_type o ) const {
-        return (o & BlockNavigation::badBit());
+        return bool(o & BlockNavigation::badBit());
     }
 
     inline size_t navSize() const { return BlockNavigation::navSize(); }

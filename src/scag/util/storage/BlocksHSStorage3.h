@@ -442,7 +442,7 @@ private:
         blocks.reserve( (countBlocks(newprofile.size())+2)*2 );
         // offset_type newffb = ffb;
         offset_type lastRef = packer_.extractBlocks(oldprofile,blocks,ffb);
-        newffb = hasFreeBlocks ? lastRef : ffb;
+        offset_type newffb = hasFreeBlocks ? lastRef : ffb;
         if ( newffb == notUsed() ) {
             // if newffb is notUsed(), it means that we reached end-of-free-chain
             // let's create a new file.
