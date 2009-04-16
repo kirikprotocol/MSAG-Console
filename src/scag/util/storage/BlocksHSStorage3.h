@@ -243,7 +243,8 @@ public:
         // extract link information from backup and add it to the new data
         const offset_type newffb = linkBlocks( *prof.backup,
                                                *profileData_,
-                                               idx2pos(descrFile.first_free_block) );
+                                               idx2pos(descrFile.first_free_block),
+                                               true );
 
         try {
             const offset_type dataStart = writeBlocks(*profileData_,0);
@@ -289,6 +290,7 @@ public:
 
         // old size is remembered to remove the tail at the end
         const size_t oldBackupSize = prof.backup->size();
+        const size_t oldBlocksCount = countBlocks(oldBackupSize);
         if (!backUpProfile( key, blkIndex, prof.backup, profileData_, true )) {
             if (logger) smsc_log_error(logger, "Backup profile error");
             return false;
@@ -300,7 +302,8 @@ public:
         const size_t blocksCount = countBlocks(newDataSize);
         const offset_type newffb = linkBlocks(*prof.backup,
                                               *profileData_,
-                                              ffb );
+                                              ffb,
+                                              oldBlocksCount < blocksCount );
 
         try {
             writeBlocks(*profileData_,0);
@@ -379,7 +382,8 @@ public:
         buffer_type tmpbuf;
         const offset_type newffb = linkBlocks( *prof.backup,
                                                tmpbuf,
-                                               ffb );
+                                               ffb,
+                                               false );
         
         try {
             writeBlocks(tmpbuf,0);
@@ -431,12 +435,14 @@ private:
     /// and fill newprofile with header data => ([iNDNDND][iFFFF])
     offset_type linkBlocks( buffer_type& oldprofile,
                             buffer_type& newprofile,
-                            offset_type ffb )
+                            offset_type  ffb,
+                            bool         hasFreeBlocks )
     {
         std::vector< offset_type > blocks;
         blocks.reserve( (countBlocks(newprofile.size())+2)*2 );
         // offset_type newffb = ffb;
-        offset_type newffb = packer_.extractBlocks(oldprofile,blocks,ffb);
+        offset_type lastRef = packer_.extractBlocks(oldprofile,blocks,ffb);
+        newffb = hasFreeBlocks ? lastRef : ffb;
         if ( newffb == notUsed() ) {
             // if newffb is notUsed(), it means that we reached end-of-free-chain
             // let's create a new file.
@@ -683,7 +689,7 @@ private:
         bool head = true;
         bool rv = false;
         offset_type curBlockIndex = blockIndex;
-        offset_type prevBlockIndex = curBlockIndex;
+        offset_type refBlockIndex;
         do {
 
             File* f = getFile(curBlockIndex);
@@ -712,21 +718,24 @@ private:
                 toread = std::min(dataSize,blockSize()-navSize());
                 f->Read(&data[curpos],toread);
                 curpos += toread;
+                refBlockIndex = curBlockIndex;
+                head = false;
             } else {
                 // not a head
-                if (bn.isFree()) {break;}
-                if (bn.refBlock() != prevBlockIndex) {break;}
+                if (bn.isFree() || bn.isHead()) {break;}
+                if (bn.refBlock() != refBlockIndex) {break;}
             }
             dataSize -= toread;
 
             if ( dataSize == 0 ) {
                 // last block has been just read
-                if ( bn.nextBlock() != notUsed() ) {break;} // too much data
-                rv = true;
+                if ( bn.nextBlock() == notUsed() ) {
+                    // ok
+                    rv = true;
+                }
                 break;
             } else {
                 // next block
-                prevBlockIndex = curBlockIndex;
                 curBlockIndex = bn.nextBlock();
                 if ( curBlockIndex == notUsed()) {break;} // too few data
             }
@@ -1017,19 +1026,19 @@ private:
     int CreateDataFile(void)
     {
         const std::string name = makeDataFileName(descrFile.files_count);
-        if (logger) smsc_log_info(logger, "Create data file: '%s'", name.c_str());
+        if (logger) smsc_log_info(logger, "attaching data file: '%s'", name.c_str());
         index_type startBlock = descrFile.files_count * descrFile.file_size;
         try
         {
           File *f = dataFileCreator_.getFile();
           if (!f) {
-            throw FileException(FileException::errOpenFailed, dataFileCreator_.getFileName());
+            throw FileException(FileException::errOpenFailed, name.c_str());
           }
           dataFile_f.push_back(f);
         }
         catch (const std::exception& ex)
         {
-            if (logger) smsc_log_error(logger, "Error create data file. std::exception: '%s'", ex.what());
+            if (logger) smsc_log_error(logger, "Error attaching new file. std::exception: '%s'", ex.what());
             throw;
         }
         descrFile.files_count++;
@@ -1037,7 +1046,7 @@ private:
         descrFile.first_free_block = startBlock;
         printDescrFile();
         changeDescriptionFile();
-        if (logger) smsc_log_info(logger, "data file:'%s' created", name.c_str());
+        if (logger) smsc_log_info(logger, "data file:'%s' attached", name.c_str());
         return 0;
     }
 
