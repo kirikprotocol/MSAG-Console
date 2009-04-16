@@ -335,7 +335,7 @@ public:
                 memcpy(&((*headers)[headerPos]),&buffer[frompos],navSize());
             }
             topos -= navSize();
-            fprintf(stderr,"blk:%u topos:%u frompos:%u\n", blk, topos, frompos );
+            // fprintf(stderr,"blk:%u topos:%u frompos:%u\n", blk, topos, frompos );
             if ( blk == trailBlocks && topos < frompos+navSize() ) {
                 // overlap detected in last block
                 assert(topos>frompos);
