@@ -25,7 +25,7 @@
 
 #ident "@(#)$Id$"
 
-// строчка по русски, что б сработал autodetect :)
+//   ,    autodetect :)
 
 namespace smsc{
 namespace system{
@@ -997,6 +997,24 @@ StateType StateMachine::submit(Tuple& t)
     );
     return ERROR_STATE;
   }
+  
+  if(sms->hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM) &&
+     (
+       sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)<1 ||
+       sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)>sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)
+     )
+    )
+  {
+    submitResp(t,sms,Status::INVOPTPARAMVAL);
+    warn2(smsLog, "SBM: invalid SMPP_SAR_SEGMENT_SEQNUM %d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+      sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM),
+      t.msgId,c.dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      c.src_proxy->getSystemId()
+    );
+    return ERROR_STATE;
+  }
 
   if(sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
   {
@@ -1841,8 +1859,8 @@ StateType StateMachine::submit(Tuple& t)
     //__trace2__("SUBMIT_SM: dest_addr_subunit=%d",sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
 
     /*
-    // Этот кусок закомментирован так как никто уже не помнит
-       зачем он был написан.
+    //         
+          .
     if(ri.smeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
     {
       unsigned len=sms->getIntProperty(Tag::SMPP_SM_LENGTH);
@@ -2015,9 +2033,9 @@ StateType StateMachine::submit(Tuple& t)
         smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
       }
 
-      // sms сохранена в базе, с выставленным Next Time, таким образом
-      // даже если дальше что-то обломится, потом будет еще попытка послать её
-      // то бишь мы приняли sms в обработку, можно слать ok.
+      // sms   ,   Next Time,  
+      //    - ,      
+      //     sms  ,   ok.
       char buf[64];
       sprintf(buf,"%lld",t.msgId);
       SmscCommand resp = SmscCommand::makeSubmitSmResp
@@ -2209,9 +2227,9 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
     }
 
-    // sms сохранена в базе, с выставленным Next Time, таким образом
-    // даже если дальше что-то обломится, потом будет еще попытка послать её
-    // то бишь мы приняли sms в обработку, можно слать ok.
+    // sms   ,   Next Time,  
+    //    - ,      
+    //     sms  ,   ok.
     char buf[64];
     sprintf(buf,"%lld",t.msgId);
     SmscCommand response = SmscCommand::makeSubmitSmResp
@@ -2245,10 +2263,10 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     return ENROUTE_STATE;
   }
 
-  // этот код сработает только для Datagram и Transction режимов.
-  // то бишь на выходе из submit пошлётся submit response, ошибочный или нет...
-  // во всех случаях когда деливер не запихивается в проксю,
-  // у sms вызывается setLastError()
+  //      Datagram  Transction .
+  //      submit  submit response,   ...
+  //         ,
+  //  sms  setLastError()
   struct ResponseGuard{
     SMS *sms;
     SmeProxy* prx;
@@ -5402,8 +5420,8 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
 {
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)//forward mode (transaction)
   {
-    //smsc->registerStatisticalEvent(sms.lastResult==0?StatEvents::etSubmitOk:StatEvents::etSubmitErr,&sms);
-    smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
+    smsc->registerStatisticalEvent(sms.lastResult==0?StatEvents::etSubmitOk:StatEvents::etSubmitErr,&sms);
+    //smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
     SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
     if(src_proxy)
     {
