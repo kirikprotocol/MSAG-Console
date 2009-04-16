@@ -32,7 +32,7 @@ void Core::closeChannel( smsc::core::network::Socket& channel )
     inactivityTracker->removeChannel(channel);
     // channel.disconnect();
     channel.Close();
-    smsc_log_debug(logger,"Channel closed: %p",&channel);
+    smsc_log_info(logger,"Channel closed: %p",&channel);
 }
 
 

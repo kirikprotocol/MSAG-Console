@@ -527,7 +527,7 @@ private:
 
     virtual void closeChannel( smsc::core::network::Socket& channel )
     {
-        Core::closeChannel(channel);
+        closeChannel(&channel);
     }
 
     virtual void stopCoreLogic();

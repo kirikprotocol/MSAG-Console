@@ -273,8 +273,17 @@ void ServerCore::shutdown()
 
     {
         MutexGuard mgs(statMutex_);
-        smsc_log_info(log_,"server active parts are shutdowned, statistics follows:");
-        smsc_log_info(log_,"total: %s", total_.toString().c_str());
+        char buf[300];
+        const std::string caught = totalExceptions_.toString();
+        snprintf(buf, sizeof(buf),
+                 "server active parts are shutdowned, statistics follows:\n"
+                 "== Total: %s%s%s%s%s",
+                 total_.toString().c_str(),
+                 caught.empty() ? "" : "\n         total err: ",
+                 caught.empty() ? "" : caught.c_str(),
+                 syncDispatcher_ ? "\n    Data: " : "",
+                 syncDispatcher_ ? syncDispatcher_->reportStatistics().c_str() : "");
+        smsc_log_info(log_,"%s",buf);
     }
 
     for ( int i = 0; i < workers_.Count(); ++i ) {
@@ -323,6 +332,8 @@ int ServerCore::doExecute()
             exceptions = exceptions_;
             exceptions_.reset(new ExceptionCount);
         }
+        // to fix statistics on channels
+        destroyDeadChannels();
         unsigned conns;
         {
             MutexGuard mg(channelMutex_);
@@ -617,6 +628,7 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
 
 void ServerCore::closeChannel( smsc::core::network::Socket* socket )
 {
+    if (!socket) return;
     {
         MutexGuard mg(channelMutex_);
         ChannelList::iterator i = std::find( channels_.begin(),
@@ -633,7 +645,7 @@ void ServerCore::closeChannel( smsc::core::network::Socket* socket )
             return;
         }
     }
-    PvssSocket* channel = PvssSocket::fromSocket(socket);
+    // PvssSocket* channel = PvssSocket::fromSocket(socket);
     Core::closeChannel(*socket);
     // should we destroy dead channels?
     destroyDeadChannels();
@@ -678,6 +690,8 @@ void ServerCore::destroyDeadChannels()
     ChannelList ourDead;
     {
         MutexGuard mg(channelMutex_);
+        if ( deadChannels_.empty() ) return;
+
         for ( ChannelList::iterator i = deadChannels_.begin();
               i != deadChannels_.end();
               ) {

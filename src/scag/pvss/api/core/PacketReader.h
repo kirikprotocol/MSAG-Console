@@ -36,7 +36,7 @@ protected:
     virtual void process( PvssSocket& con ) {
         con.processInput();
     }
-    virtual void postProcess() {}
+    // virtual void postProcess() {}
 };
 
 } // namespace core
