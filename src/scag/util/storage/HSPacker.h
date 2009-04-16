@@ -2,6 +2,7 @@
 #define _SCAG_UTIL_STORAGE_HSPACKER_H
 
 #include "util/int.h"
+#include "logger/Logger.h"
 #include "Serializer.h"
 #include "core/buffers/File.hpp"
 #include "scag/util/HexDump.h"
@@ -603,6 +604,10 @@ public:
 
     /// offset value representing not used item.
     inline offset_type notUsed() const { return notUsed_; }
+
+    inline bool isNotUsed( offset_type o ) const {
+        return (o & BlockNavigation::badBit());
+    }
 
     inline size_t navSize() const { return BlockNavigation::navSize(); }
 
