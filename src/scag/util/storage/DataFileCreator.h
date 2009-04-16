@@ -95,9 +95,15 @@ public:
       }
       off_t offset = (fileSize_ - 1)  * blockSize_;
       f->Seek(offset, SEEK_SET);
-      int64_t nextffb = f->ReadNetInt64();
-      if (nextffb == -1) {
-        return true;
+      if ( !newFormat_ ) {
+          int64_t nextffb = f->ReadNetInt64();
+          if (nextffb == -1) { return true; }
+      } else {
+          BlockNavigation bn;
+          bn.load(*f);
+          // FIXME: packer should be taken from bhs
+          HSPacker packer(blockSize_,0);
+          if ( bn.nextBlock() == packer.notUsed() ) { return true; }
       }
     } catch (const std::exception& ex) {
       if (logger_) smsc_log_warn(logger_, "error checking preallocated file '%s' : %s", name_.c_str(), ex.what());
