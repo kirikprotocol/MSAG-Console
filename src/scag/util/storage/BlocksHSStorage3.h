@@ -333,7 +333,7 @@ public:
             changeDescriptionFile();
             prof.backup->resize(oldBackupSize);
             Key tmpkey;
-            deserializeProfile(tmpkey,*prof.value,*prof.backup);
+            deserializeProfile(tmpkey,*prof.value,*prof.backup,notUsed());
             throw;
         }
 
@@ -343,7 +343,7 @@ public:
     void recoverFromBackup( data_type& prof )
     {
         Key key;
-        deserializeProfile(key,*prof.value,*prof.backup);
+        deserializeProfile(key,*prof.value,*prof.backup,notUsed());
     }
 
 
@@ -354,7 +354,7 @@ public:
         profileData_->clear();
         if (!Get(blockIndex,*profileData_)) return false;
         Key key;
-        deserializeProfile(key,*prof.value,*profileData_);
+        deserializeProfile(key,*prof.value,*profileData_,idx2pos(blockIndex));
         attachBackup(prof.backup,profileData_);
         if ( logger ) smsc_log_debug(logger,"get(%llx) finished with prof.backup=%u",
                                      blockIndex,
@@ -1445,21 +1445,35 @@ private:
     }
 
 
-    bool deserializeProfile( Key& key, Profile& profile, buffer_type& buffer )
+    bool deserializeProfile( Key& key, Profile& profile, buffer_type& buffer,
+                             offset_type where )
     {
-        if (!profileData_) return false;
+        if (buffer.size() < idxSize()) {
+            if (logger) smsc_log_warn(logger,"profile at %llx has no idx and cannot be deserialized");
+            return false;
+        }
         // unpack buffer
+        offset_type realWhere;
         buffer_type headers;
         packer_.unpackBuffer(buffer,&headers);
         bool rv = false;
         try {
-            Deserializer dsr(*profileData_,glossary_);
+            Deserializer dsr(buffer,glossary_);
+            dsr >> realWhere;
             dsr.setrpos(idxSize()+navSize()+extraSize());
             dsr >> key;
             dsr >> profile;
             rv = true;
-        } catch (std::exception& e) {
-            if (logger) smsc_log_warn(logger,"profile cannot be deserialized: %s", e.what());
+        } catch (...) {
+            if (logger && logger->isWarnEnabled()) {
+                HexDump hd;
+                std::string hex;
+                hex.reserve(hd.hexdumpsize(buffer.size())+hd.strdumpsize(buffer.size()));
+                hd.hexdump(hex,&buffer[0],buffer.size());
+                hd.strdump(hex,&buffer[0],buffer.size());
+                smsc_log_warn(logger,"profile at %llx(real=%llx) key=%s cannot be deserialized: %s",
+                              where, realWhere, key.toString().c_str(), hex.c_str());
+            }
         }
         packer_.packBuffer(buffer,&headers);
         return rv;
