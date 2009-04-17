@@ -139,8 +139,12 @@ public:
             return *this;
         }
 
-        bool operator !() const {
+        inline bool operator !() const {
             return !registry_;
+        }
+
+        inline operator bool () const {
+            return registry_;
         }
 
         ContextRegistry* operator ->() {

@@ -42,7 +42,8 @@ extern "C" void appSignalHandler(int sig)
 
 extern "C" void atExitHandler(void)
 {
-    smsc::logger::Logger::Shutdown();
+    // temporary disabled as some long-living services requires logger after main exited.
+    // smsc::logger::Logger::Shutdown();
 }
 
 
