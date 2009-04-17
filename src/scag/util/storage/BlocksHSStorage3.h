@@ -1449,7 +1449,7 @@ private:
                              offset_type where )
     {
         if (buffer.size() < idxSize()) {
-            if (logger) smsc_log_warn(logger,"profile at %llx has no idx and cannot be deserialized");
+            if (logger) smsc_log_warn(logger,"profile at %llx has no idx and cannot be deserialized",where);
             return false;
         }
         // unpack buffer
