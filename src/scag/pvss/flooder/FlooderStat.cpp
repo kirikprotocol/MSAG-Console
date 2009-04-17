@@ -173,6 +173,12 @@ void FlooderStat::init( unsigned skip ) /* throw (exceptions::IOException) */
     const std::vector< std::string >& patterns = config_.getPropertyPatterns();
     if ( patterns.size() <= 0 ) throw exceptions::IOException("too few property patterns configured");
 
+    for ( std::vector< std::string >::const_iterator i = patterns.begin();
+          i != patterns.end(); ++i ) {
+        std::auto_ptr<Property> p( new Property );
+        p->fromString( *i );
+        generator_.addPropertyPattern( unsigned(i - patterns.begin()), p.release() );
+    }
     generator_.parseCommandPatterns( config_.getCommands() );
     if ( log_->isInfoEnabled() ) {
         for ( std::vector< ProfileCommand* >::const_iterator i = generator_.getPatterns().begin();
@@ -181,14 +187,9 @@ void FlooderStat::init( unsigned skip ) /* throw (exceptions::IOException) */
             smsc_log_info(log_,"pattern #%u: %s", i - generator_.getPatterns().begin(), (*i)->toString().c_str());
         }
     }
+
     smsc_log_info(log_,"shuffling %u addresses", unsigned(config_.getAddressesCount()));
     generator_.randomizeProfileKeys( config_.getAddressFormat().c_str(), config_.getAddressesCount(), skip );
-    for ( std::vector< std::string >::const_iterator i = patterns.begin();
-          i != patterns.end(); ++i ) {
-        std::auto_ptr<Property> p( new Property );
-        p->fromString( *i );
-        generator_.addPropertyPattern( unsigned(i - patterns.begin()), p.release() );
-    }
 }
 
 
