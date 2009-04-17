@@ -34,6 +34,11 @@ namespace storage {
 ///  
 class BlockNavigation
 {
+public:
+    enum {
+        NAV_SIZE = 16 // may be used in dependent code to e.g. create char arrays
+    };
+
 private:
     enum {
             USED_BIT = 0x80,
@@ -47,7 +52,7 @@ public:
     // 7 bytes
     inline static offset_type navBits() { return 0x00ffffffffffffffULL; }
     inline static offset_type badBit()  { return 0x0080000000000000ULL; }
-    inline static size_t navSize() { return 16; }
+    inline static size_t navSize() { return NAV_SIZE; }
     inline static size_t idxSize() { return 8; }
 
     inline void setNextBlock( offset_type next ) {
@@ -96,56 +101,71 @@ public:
     /// NOTE: post-condition isHead() == true => isFree() === false.
     inline bool isHead() const { return head_; }
 
-    inline void load( Deserializer& dsr ) {
-        const uint8_t state = *dsr.curpos();
+    /// helper: load index from memory
+    static inline offset_type loadIdx( const void* wher ) {
+        EndianConverter cvt;
+        memcpy(cvt.ubuf(),wher,idxSize());
+        return (cvt.get64() & navBits());
+    }
+
+    static inline void saveIdx( void* wher, offset_type idx ) {
+        EndianConverter cvt;
+        memcpy(wher,cvt.set(idx & navBits()),idxSize());
+    }
+
+    /// load from a block of memory, considering it has been filled
+    void load( const void* wher ) {
+        const char* where = reinterpret_cast<const char*>(wher);
+        EndianConverter cvt;
+        memcpy(cvt.ubuf(),where,idxSize());
+        const uint8_t state = cvt.ubuf()[0];
         used_ = (state & USED_BIT);
         head_ = (state & HEAD_BIT);
-        uint64_t val;
-        dsr >> val;
-        next_ = (val & navBits());
-        pack_ = *dsr.curpos();
-        dsr >> val;
-        ref_ = (val & navBits());
+        next_ = (cvt.get64() & navBits());
+        memcpy(cvt.ubuf(),where+idxSize(),idxSize());
+        pack_ = cvt.ubuf()[0];
+        ref_ = (cvt.get64() & navBits());
     }
 
-
-    /// read from file
-    inline void load( smsc::core::buffers::File& f ) {
-        smsc::core::buffers::TmpBuf<unsigned char,32> buf(navSize());
-        f.Read(buf.GetCurPtr(),navSize());
-        Deserializer dsr(buf.GetCurPtr(),navSize());
-        load(dsr);
-    }
-
-    inline void save( smsc::core::buffers::File& f ) const {
-        smsc::core::buffers::TmpBuf<unsigned char,32> tmpbuf(navSize());
-        save(tmpbuf.GetCurPtr());
-        f.Write(tmpbuf.GetCurPtr(),navSize());
-    }
-
-    void save( Serializer& ser ) const {
-        ser.reserve(navSize());
-        size_t curpos = ser.wpos();
-        ser << next_;
-        ser << ref_;
-        // setting state and pack
-        unsigned char* p = ser.data() + curpos;
-        const uint8_t state( (used_ ? USED_BIT : 0) | (head_ ? HEAD_BIT : 0) );
-        *p = state;
-        p += idxSize();
-        *p = pack_;
-    }
-
+    /// save to a block of memory, which should be at least NAV_SIZE in length
     void save( void* wher ) const {
         unsigned char* where = reinterpret_cast<unsigned char*>(wher);
         EndianConverter cvt;
-        unsigned char* p = reinterpret_cast<unsigned char*>(cvt.set(next_));
+        cvt.set(next_);
         const uint8_t state( (used_ ? USED_BIT : 0) | (head_ ? HEAD_BIT : 0) );
-        *p = state;
-        memcpy(where, p, idxSize());
-        p = reinterpret_cast<unsigned char*>(cvt.set(ref_));
-        *p = pack_;
-        memcpy(where+idxSize(),p,idxSize());
+        cvt.ubuf()[0] = state;
+        memcpy(where,cvt.ubuf(),idxSize());
+        cvt.set(ref_);
+        cvt.ubuf()[0] = pack_;
+        memcpy(where+idxSize(),cvt.ubuf(),idxSize());
+    }
+
+    // helper methods to load from different sources
+    inline void load( Deserializer& dsr ) {
+        const uint8_t* cp = dsr.curpos();
+        dsr.setrpos(dsr.rpos()+navSize()); // check that it has enough data
+        load(cp);
+    }
+
+    // save to serializer
+    void save( Serializer& ser ) const {
+        register size_t wpos = ser.wpos();
+        ser.setwpos(wpos+navSize());
+        save(ser.data()+wpos);
+    }
+
+    // read from file
+    inline void load( smsc::core::buffers::File& f ) {
+        char buf[NAV_SIZE];
+        f.Read(buf,navSize());
+        load(buf);
+    }
+
+    // save to file
+    inline void save( smsc::core::buffers::File& f ) const {
+        char buf[NAV_SIZE];
+        save(buf);
+        f.Write(buf,navSize());
     }
 
 protected:
