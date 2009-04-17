@@ -300,9 +300,12 @@ B3101: Apr 08, 2009
     SMSC	fix for not all PXQLimit rejects shown on monitor
     SMSC	HD stack support
     SMSC        SNMP get counters will return messages in parts instead of whole messages
+    SMSC	reject by SME for other SME in transact mode not showed reject on monitor
+    SMSC	SNMP separate counter for temp err, counters for current used MAP dialogs
     Inman	HD stack support
     InfoSme	Write all events to journal
     Infosme	Add posibility to create deliveries from <msisdn>|<text> files
+    InfoSme	Fix for region limit calculation can cause creation of duplicate msg 
     Emailsme	More details in case of exception
     DBSme	multiple addresses for job support added
     Webapp	SMS MT congestion levels configuration added to maplimits
