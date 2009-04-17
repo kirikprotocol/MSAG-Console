@@ -9,12 +9,12 @@
 namespace smsc{
 namespace infosme{
 
-  static const uint8_t MESSAGE_NEW_STATE          = 0; // Новое или перешедуленное сообщение
-  static const uint8_t MESSAGE_WAIT_STATE         = 1; // Ожидает submitResponce
-  static const uint8_t MESSAGE_ENROUTE_STATE      = 2; // В процессе доставки, ожидает deliveryReciept
-  static const uint8_t MESSAGE_DELIVERED_STATE    = 3; // Доставлено
-  static const uint8_t MESSAGE_EXPIRED_STATE      = 4; // Не доставлено, время жизни истекло
-  static const uint8_t MESSAGE_FAILED_STATE       = 5; // Не доставлено, фатальная ошибка при доставке
+  static const uint8_t MESSAGE_NEW_STATE          = 0; //    
+  static const uint8_t MESSAGE_WAIT_STATE         = 1; //  submitResponce
+  static const uint8_t MESSAGE_ENROUTE_STATE      = 2; //   ,  deliveryReciept
+  static const uint8_t MESSAGE_DELIVERED_STATE    = 3; // 
+  static const uint8_t MESSAGE_EXPIRED_STATE      = 4; //  ,   
+  static const uint8_t MESSAGE_FAILED_STATE       = 5; //  ,    
   static const uint8_t MESSAGE_DELETED_STATE      = 6; // for csv store only. message was created in another file.
 
   typedef enum {
@@ -93,7 +93,7 @@ namespace infosme{
     {
       using namespace smsc::system;
       accepted = status==Status::OK;
-      retry     = (!Status::isErrorPermanent(status));
+      retry     = !accepted && (!Status::isErrorPermanent(status));
 
       immediate = (status == Status::MSGQFUL   ||
                         status == Status::THROTTLED ||

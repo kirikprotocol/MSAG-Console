@@ -469,6 +469,7 @@ bool TaskProcessor::processTask(Task* task)
           smsc_log_info(logger, "TaskId=[%d/%s]: Sent message #%llx sq=%d for '%s'", 
                         info.uid,info.name.c_str(), message.id, seqNum, message.abonent.c_str());
         } else {
+          msguard.processed();
           const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
           smsc_log_info(logger, "TaskId=[%d/%s]: Traffic for region %s with id %s was suspended",
                         info.uid,info.name.c_str(), region->getName().c_str(), region->getId().c_str());
