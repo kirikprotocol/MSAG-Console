@@ -75,11 +75,12 @@ protected:
     class LogicInitTask : public LogicTask
     {
     public:
-        LogicInitTask( PvssLogic* logic ) : LogicTask(logic) {}
+        LogicInitTask( PvssLogic* logic, bool checkAtStart = false ) :
+        LogicTask(logic), checkAtStart_(checkAtStart) {}
         virtual const char* taskName() { return "pvss.init"; }
         virtual int doExecute() {
             try {
-                logic_->init();
+                logic_->init( checkAtStart_ );
             } catch ( std::exception& e ) {
                 setFailure(e.what());
             } catch (...) {
@@ -87,6 +88,8 @@ protected:
             }
             return 0;
         }
+    private:
+        bool checkAtStart_;
     };
 
     class LogicRebuildIndexTask : public LogicTask
@@ -119,7 +122,7 @@ public:
   virtual void shutdownStorages() = 0;
 
     /// start a task that initialize the logic
-    virtual LogicInitTask* startInit() = 0;
+    virtual LogicInitTask* startInit( bool checkAtStart = false ) = 0;
     virtual LogicRebuildIndexTask* startRebuildIndex(unsigned maxSpeed = 0) = 0;
 
     /// return the name of the logic
@@ -129,7 +132,7 @@ protected:
   void initGlossary(const string& path, Glossary* glossary);
 
     // initialize logic
-    virtual void init() = 0;
+    virtual void init( bool checkAtStart = false ) = 0;
     virtual void rebuildIndex(unsigned maxSpeed = 0) = 0;
 
   virtual Response* processProfileRequest(ProfileRequest& request) = 0;
@@ -160,7 +163,7 @@ public:
 
     virtual ~AbonentLogic();
 
-    virtual LogicInitTask* startInit();
+    virtual LogicInitTask* startInit( bool checkAtStart = false );
     virtual LogicRebuildIndexTask* startRebuildIndex(unsigned maxSpeed = 0);
 
     virtual std::string toString() const {
@@ -178,11 +181,11 @@ public:
     inline unsigned getLocationNumber() const { return locationNumber_; }
 
 protected:
-    virtual void init() /* throw (smsc::util::Exception) */;
+    virtual void init( bool checkAtStart = false ) /* throw (smsc::util::Exception) */;
     virtual void rebuildIndex( unsigned maxSpeed = 0);
 
     /// init an element storage and return the total number of good nodes in it
-    unsigned long initElementStorage(unsigned index) /* throw (smsc::util::Exception) */;
+    unsigned long initElementStorage(unsigned index,bool checkAtStart = false) /* throw (smsc::util::Exception) */;
     unsigned long rebuildElementStorage(unsigned index,unsigned maxSpeed);
 
     virtual Response* processProfileRequest(ProfileRequest& request);
@@ -233,7 +236,7 @@ public:
     {}
   ~InfrastructLogic();
 
-    virtual LogicInitTask* startInit();
+    virtual LogicInitTask* startInit( bool checkAtStart = false );
     virtual LogicRebuildIndexTask* startRebuildIndex( unsigned maxSpeed = 0);
     virtual std::string toString() const { return "infrastruct logic"; }
 
@@ -243,7 +246,7 @@ public:
     std::string reportStatistics() const;
 
 protected:
-    virtual void init() /* throw (smsc::util::Exception) */;
+    virtual void init( bool checkAtStart = false ) /* throw (smsc::util::Exception) */;
     virtual void rebuildIndex( unsigned maxSpeed = 0 );
 
   virtual Response* processProfileRequest(ProfileRequest& request);
@@ -259,7 +262,7 @@ private:
   typedef CachedDiskStorage< MemStorage, DiskStorage > InfrastructStorage;
 
 private:
-  InfrastructStorage* initStorage(const InfrastructStorageConfig& cfg);
+  InfrastructStorage* initStorage( const InfrastructStorageConfig& cfg, bool checkAtStart = false );
 
 private:
   InfrastructStorage* provider_;
@@ -285,6 +288,7 @@ struct AbonentStorageConfig {
   unsigned fileSize;
   unsigned blockSize;
   unsigned cacheSize;
+  bool     checkAtStart;
   struct Location {
     Location(const string& locpath, unsigned locdisk):path(locpath), disk(locdisk) {};
     string path;
@@ -301,6 +305,7 @@ struct InfrastructStorageConfig {
   string localPath;
   uint32_t cacheSize;
   uint32_t recordCount;
+  bool    checkAtStart;
 };
 
 }//mtpers

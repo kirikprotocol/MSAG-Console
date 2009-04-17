@@ -230,6 +230,32 @@ int main(int argc, char* argv[]) {
   int resultCode = 0;
   Logger* logger = Logger::getInstance("pvss.main");
 
+    // parsing the command line
+    bool recovery = false;
+    bool checkIndex = false;
+    for ( int i = 1; i < argc; ++i ) {
+        std::string sarg(argv[i]);
+        if ( sarg == "--recovery" || sarg == "--rebuild-index" ) {
+            recovery = true;
+            smsc_log_info(logger,"%s on command line", sarg.c_str());
+            continue;
+        }
+        if ( sarg == "--check-index" ) {
+            checkIndex = true;
+            smsc_log_info(logger,"%s on command line", sarg.c_str());
+            continue;
+        }
+        std::string extraMsg;
+        if ( sarg != "--help" ) {
+            extraMsg = "Unknown option " + sarg + "\n";
+        }
+        fprintf(stderr,"%sUsage: %s [--recovery] [--check-index]\n",
+                extraMsg.c_str(), argv[0]);
+        smsc_log_error(logger,"%sUsage: %s [--recovery] [--check-index]",
+                       extraMsg.c_str(), argv[0]);
+        ::exit(1);
+    }
+
   try{
     smsc_log_info(logger,  "Starting up %s", getStrVersion());
 
@@ -276,6 +302,7 @@ int main(int argc, char* argv[]) {
 
 
     AbonentStorageConfig abntCfg(abntStorageConfig, "AbonentStorage", logger);
+      abntCfg.checkAtStart = checkIndex;
 
     std::auto_ptr<CStrSet> disks(disksConfig.getSectionNames());
     if (disks->empty()) {
@@ -295,16 +322,10 @@ int main(int argc, char* argv[]) {
       infCfg.reset(new InfrastructStorageConfig(infStorageConfig, "InfrastructStorage", logger));
     }
 
-      // rebuilding index
-      bool rebuildIndex = false;
-      if ( argc > 1 && strcmp(argv[1], "--rebuild-index") == 0 ) {
-          rebuildIndex = true;
-      }
-
       try {
-          const bool makedirs = !rebuildIndex;
+          const bool makedirs = !recovery;
           pvssDispatcher.createLogics( makedirs, abntCfg, infCfg.get() );
-          if ( rebuildIndex ) {
+          if ( recovery ) {
               pvssDispatcher.rebuildIndex( maxSpeed );
               return 0;
           } else {

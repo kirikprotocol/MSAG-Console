@@ -77,11 +77,19 @@ public:
         }
          */
         // All checking has been moved to allocator
-        const std::vector< nodeptr_type > freenodes = allocator->freenodes();
-        int cnt = dumpcheck( freenodes, rootNode, nilNode, 0, "" );
+        // const std::vector< nodeptr_type > freenodes = allocator->freenodes();
+        // int cnt = dumpcheck( freenodes, rootNode, nilNode, 0, "" );
         // if (logger) smsc_log_info( logger, "SetAllocator: rbtree nodes=%d", cnt );
     }
 
+
+    unsigned checkTree()
+    {
+        const std::vector< nodeptr_type > freenodes = allocator->freenodes();
+        return dumpcheck( freenodes, rootNode, nilNode, 0, "" );
+    }
+    
+    
     void SetChangesObserver( RBTreeChangesObserver<Key, Value>* _changesObserver)
     {
         if (!_changesObserver) return;

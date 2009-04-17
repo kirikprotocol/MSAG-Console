@@ -55,6 +55,12 @@ public:
     }
 
 
+    unsigned checkTree()
+    {
+        return index_.checkTree();
+    }
+
+
     /// flush index allocator in case of fullRecovery
     void flush( unsigned maxSpeedkBPerSec = 0 )
     {

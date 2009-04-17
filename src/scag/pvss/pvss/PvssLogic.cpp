@@ -89,9 +89,9 @@ AbonentLogic::~AbonentLogic() {
     smsc_log_debug(logger_, "storage processor %d deleted", locationNumber_);
 }
 
-PvssLogic::LogicInitTask* AbonentLogic::startInit()
+PvssLogic::LogicInitTask* AbonentLogic::startInit( bool checkAtStart )
 {
-    LogicInitTask* task = new LogicInitTask(this);
+    LogicInitTask* task = new LogicInitTask(this,checkAtStart);
     dataFileManager_.startTask(task,false);
     return task;
 }
@@ -140,14 +140,14 @@ unsigned long AbonentLogic::reportStatistics() const
 }
 
 
-void AbonentLogic::init() /* throw (smsc::util::Exception) */
+void AbonentLogic::init( bool checkAtStart ) /* throw (smsc::util::Exception) */
 {
     smsc_log_debug(logger_," init abonent location #%u", locationNumber_ );
     unsigned long total = 0;
     for ( unsigned i = 0; i < dispatcher_.getStoragesCount(); ++i ) {
         if ( util::storage::StorageNumbering::instance().node(i) == dispatcher_.getNodeNumber() ) {
             if ( dispatcher_.getLocationNumber(i) == locationNumber_ ) {
-                total += initElementStorage(i);
+                total += initElementStorage(i,checkAtStart);
             }
         }
     }
@@ -170,7 +170,7 @@ void AbonentLogic::rebuildIndex(unsigned maxSpeed)
 }
 
 
-unsigned long AbonentLogic::initElementStorage(unsigned index) /* throw (smsc::util::Exception) */ {
+unsigned long AbonentLogic::initElementStorage(unsigned index,bool checkAtStart) /* throw (smsc::util::Exception) */ {
   char pathSuffix[4];
   snprintf(pathSuffix, sizeof(pathSuffix), "%03u", index);
   string path = string(config_.locations[locationNumber_].path + "/") + pathSuffix;
@@ -183,6 +183,10 @@ unsigned long AbonentLogic::initElementStorage(unsigned index) /* throw (smsc::u
         (new DiskIndexStorage( config_.dbName, path, config_.indexGrowth, false,
                                smsc::logger::Logger::getInstance(("pvssix."+pathSuffixString).c_str())));
   smsc_log_debug(logger_, "data index storage %d is created", index);
+  if ( checkAtStart ) {
+      dis->checkTree();
+      smsc_log_debug(logger_, "data index storage %d is checked", index);
+  }
   std::auto_ptr< DiskDataStorage::storage_type > bs
         (new DiskDataStorage::storage_type
          (dataFileManager_, elStorage->glossary,
@@ -380,10 +384,10 @@ Response* InfrastructLogic::processProfileRequest(ProfileRequest& profileRequest
 }
 
 
-PvssLogic::LogicInitTask* InfrastructLogic::startInit()
+PvssLogic::LogicInitTask* InfrastructLogic::startInit( bool checkAtStart )
 {
     // we do in in the main thread
-    std::auto_ptr<LogicInitTask> task(new LogicInitTask(this));
+    std::auto_ptr<LogicInitTask> task(new LogicInitTask(this,checkAtStart));
     task->Execute();
     return 0;
 }
@@ -412,17 +416,17 @@ std::string InfrastructLogic::reportStatistics() const
 }
 
 
-void InfrastructLogic::init() /* throw (smsc::util::Exception) */ {
+void InfrastructLogic::init( bool checkAtStart ) /* throw (smsc::util::Exception) */ {
   InfrastructStorageConfig locCfg(config_);
   initGlossary(locCfg.dbPath, &glossary_);
   locCfg.dbName = "provider";
-  provider_ = initStorage(locCfg);
+  provider_ = initStorage(locCfg,checkAtStart);
   smsc_log_debug(logger_, "provider storage is created");
   locCfg.dbName = "service";
-  service_ = initStorage(locCfg);
+  service_ = initStorage(locCfg,checkAtStart);
   smsc_log_debug(logger_, "service storage is created");
   locCfg.dbName = "operator";
-  operator_ = initStorage(locCfg);
+  operator_ = initStorage(locCfg,checkAtStart);
   smsc_log_debug(logger_, "operator storage is created");
     smsc_log_info(logger_,"infrastructure storages are inited, good nodes: provider=%lu, service=%lu, operator=%lu", 
                   static_cast<unsigned long>(provider_->filledDataSize()),
@@ -437,7 +441,8 @@ void InfrastructLogic::rebuildIndex( unsigned /*maxSpeed*/)
 }
 
 
-InfrastructLogic::InfrastructStorage* InfrastructLogic::initStorage(const InfrastructStorageConfig& cfg) {
+InfrastructLogic::InfrastructStorage* InfrastructLogic::initStorage(const InfrastructStorageConfig& cfg,
+                                                                    bool checkAtStart ) {
   const string fn(cfg.dbPath + "/" + cfg.dbName + ".bin");
   std::auto_ptr< DiskDataStorage::storage_type > pf(new PageFile);
   try {
@@ -497,6 +502,7 @@ AbonentStorageConfig::AbonentStorageConfig() {
   blockSize = DEF_BLOCK_SIZE;
   fileSize = DEF_FILE_SIZE;
   cacheSize = DEF_CACHE_SIZE;
+  checkAtStart = false;
 }
 
 AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg, const char* storageType,
@@ -536,6 +542,16 @@ AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg, const char* storageT
     smsc_log_warn(logger, "Parameter <PVSS.%s.cacheSize> missed. Defaul value is %d",
                    storageType, DEF_CACHE_SIZE);
   }
+    /*
+     * It is not taken from config
+  try {
+    checkAtStart = cfg.getBool("checkAtStart");
+  } catch (...) {
+    checkAtStart = false;
+    smsc_log_warn(logger, "Parameter <PVSS.%s.checkAtStart> missed. Default value is %d",
+                  storageType, checkAtStart);
+  }
+     */
 }
 
 InfrastructStorageConfig::InfrastructStorageConfig() {
