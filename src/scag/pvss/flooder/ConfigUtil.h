@@ -106,6 +106,13 @@ void readFlooderConfig( smsc::logger::Logger* logger,
     }
 
     try {
+        flooderConfig.setOneCommandPerAbonent( fview.getBool("oneCommandPerAbonent") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <Flooder.oneCommandPerAbonent> missed. Default value is %d",
+                      flooderConfig.getOneCommandPerAbonent() ? 1 : 0 );
+    }
+
+    try {
         std::string format = fview.getString("addressPrefix");
         // checking that address prefix is numeric
         char* endptr;

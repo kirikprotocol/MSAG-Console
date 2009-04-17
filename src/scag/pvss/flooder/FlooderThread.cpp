@@ -7,11 +7,12 @@ namespace scag2 {
 namespace pvss {
 namespace flooder {
 
-FlooderThread::FlooderThread( FlooderStat&          flooderStat ) :
+FlooderThread::FlooderThread( FlooderStat& flooderStat, bool oneCommandPerAbonent ) :
 log_(smsc::logger::Logger::getInstance(taskName())),
 stat_(flooderStat),
 pattern_(0),
-profileKey_(stat_.getGenerator().getProfileKey())
+profileKey_(stat_.getGenerator().getProfileKey()),
+oneCommandPerAbonent_(oneCommandPerAbonent)
 {
     assert(stat_.getGenerator().getPatterns().size() > 0 );
 }
@@ -21,11 +22,11 @@ std::auto_ptr<Request> FlooderThread::generate()
 {
     while ( true ) {
         ProfileCommand* cmd = stat_.getGenerator().generateCommand(pattern_);
-        if ( ! cmd ) {
-            // end of command patterns reached, we have to switch to a new profile key
+        if ( ! cmd || oneCommandPerAbonent_ ) {
+            // switching to a new abonent
             profileKey_ = stat_.getGenerator().getProfileKey();
-            continue;
         }
+        if ( ! cmd ) continue;
         return std::auto_ptr<Request>(new ProfileRequest(profileKey_,cmd));
     }
 }

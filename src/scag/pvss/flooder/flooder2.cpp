@@ -84,6 +84,7 @@ void getConfig( smsc::logger::Logger* thelog,
         flooderConfig.setFlooderThreadCount(clientConfig.getConnectionsCount());
         flooderConfig.setCommands("s0g0");
         flooderConfig.setAddressFormat(".1.1.791%08u");
+        flooderConfig.setOneCommandPerAbonent(true);
     } catch ( ConfigException& e ) {
         smsc_log_error(thelog, "cannot set default value: %s", e.what() );
         fprintf(stderr,"cannot set default value: %s\n", e.what() );

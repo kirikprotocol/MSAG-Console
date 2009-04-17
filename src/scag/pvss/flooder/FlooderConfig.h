@@ -12,7 +12,8 @@ class FlooderConfig
 {
 public:
     FlooderConfig() :
-    asyncMode_(false), speed_(10), addressesCount_(100), flooderThreads_(1), commands_("s0g0") {
+    asyncMode_(false), speed_(10), addressesCount_(100), flooderThreads_(1), commands_("s0g0"),
+    oneCommandPerAbonent_(false) {
         patterns_.push_back("\"test0\" INT: 1 TIME_POLICY: FIXED FINAL_DATE: 2009/03/16 09:52:55 LIFE_TIME: 123");
     }
 
@@ -26,6 +27,8 @@ public:
     void setAddressesCount( int ac ) { addressesCount_ = ac; } 
     int getFlooderThreadCount() const { return flooderThreads_; }
     void setFlooderThreadCount( int ftc ) { flooderThreads_ = ftc; }
+    bool getOneCommandPerAbonent() const { return oneCommandPerAbonent_; }
+    void setOneCommandPerAbonent( bool v ) { oneCommandPerAbonent_ = v; }
 
     const std::vector< std::string >& getPropertyPatterns() const { return patterns_; }
     void setPropertyPatterns( const std::vector< std::string >& pat ) { patterns_ = pat; }
@@ -47,6 +50,7 @@ private:
     std::vector< std::string > patterns_;
     std::string                commands_;
     std::string                addressFormat_;
+    bool    oneCommandPerAbonent_;
 };
 
 } // namespace flooder

@@ -33,7 +33,7 @@ class FlooderThread : public util::WatchedThreadedTask
 {
 
 protected:
-    FlooderThread( FlooderStat& flooderStat);
+    FlooderThread( FlooderStat& flooderStat, bool oneCommandPerAbonent = false );
 
 public:
     virtual const char* taskName() { return "pvss.fldr"; }
@@ -49,14 +49,15 @@ protected:
     FlooderStat&                                    stat_;
     unsigned                                        pattern_;
     ProfileKey                                      profileKey_;
+    bool                                            oneCommandPerAbonent_;
 };
 
 
 class AsyncFlooderThread : public FlooderThread
 {
 public:
-    AsyncFlooderThread( FlooderStat&      flooderStat ) :
-    FlooderThread(flooderStat) {}
+    AsyncFlooderThread( FlooderStat& flooderStat, bool oneCommandPerAbonent = false ) :
+    FlooderThread(flooderStat,oneCommandPerAbonent) {}
 protected:
     virtual void doProcessRequest( std::auto_ptr< Request >& req ) /* throw (PvssException) */ ;
 };
@@ -64,8 +65,8 @@ protected:
 class SyncFlooderThread : public FlooderThread
 {
 public:
-    SyncFlooderThread( FlooderStat&          flooderStat) :
-    FlooderThread(flooderStat) {}
+    SyncFlooderThread( FlooderStat& flooderStat, bool oneCommandPerAbonent = false) :
+    FlooderThread(flooderStat,oneCommandPerAbonent) {}
 protected:
     virtual void doProcessRequest( std::auto_ptr< Request >& req ) /* throw (PvssException) */ ;
 };
