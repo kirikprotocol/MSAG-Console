@@ -40,6 +40,7 @@ public:
         MutexGuard mg(activityTimesMutex);
         return activityTimes.Delete(&channel);
     }
+
     void registerChannel( PvssSocket& channel, util::msectime_type tmo )
     {
         MutexGuard mg(activityTimesMutex);
@@ -47,6 +48,15 @@ public:
         if ( ptr ) *ptr = tmo;
         else activityTimes.Insert( channel.socket(), tmo );
     }
+
+    void updateChannel( PvssSocket& channel, util::msectime_type tmo )
+    {
+        MutexGuard mg(activityTimesMutex);
+        util::msectime_type* ptr = activityTimes.GetPtr(channel.socket());
+        if ( ptr ) *ptr = tmo;
+        // else activityTimes.Insert( channel.socket(), tmo );
+    }
+
     void shutdown()
     {
         if (!started) return;

@@ -108,7 +108,7 @@ public:
         try {
             registerForRead(channel);
             registerForWrite(channel);
-            updateChannelActivity(channel, utime);
+            inactivityTracker->registerChannel(channel, utime);
         }
         catch (PvssException& register_exc) {
             smsc_log_error( logger, "Failed to register new channel. Details: %s", register_exc.what() );
@@ -150,7 +150,7 @@ protected:
 
 private:
     void updateChannelActivity( PvssSocket& channel, long utime ) {
-        inactivityTracker->registerChannel(channel, utime);
+        inactivityTracker->updateChannel(channel, utime);
     }
 
     void registerForWrite( PvssSocket& channel ) /* throw(PvssException) */ ;
