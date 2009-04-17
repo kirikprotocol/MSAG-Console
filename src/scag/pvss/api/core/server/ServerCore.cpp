@@ -557,7 +557,9 @@ void ServerCore::sendResponse( std::auto_ptr<ServerContext>& context ) /* throw 
         ctx->sendResponse();
     } catch (...) {
         ContextRegistry::Ptr ptr = regset_.get(socket);
-        context.reset( static_cast<ServerContext*>(ptr->pop(ptr->get(seqNum))));
+        if (ptr) {
+            context.reset( static_cast<ServerContext*>(ptr->pop(ptr->get(seqNum))));
+        }
         // logic should be notified externally as it may take ctx ownership
         throw;
     }
