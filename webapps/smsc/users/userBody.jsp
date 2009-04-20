@@ -133,7 +133,8 @@
             if (Constants.instMode == Constants.INST_MODE_INFO_SME) {
               startParams(out);
               paramSelect(out, "users.prefs.timezone", "timezone", bean.getTimezones(), bean.getTimezone(), null, null, null);
-              finishParams(out);              
+              finishParams(out);
+            }
               startSection(out, "prefs.infosme.regions", "users.prefs.infosme.regions", false);
               startParams(out);
               for (Iterator iter = bean.getRegions().iterator(); iter.hasNext();) {
@@ -142,7 +143,7 @@
               }
               finishParams(out);
               finishSection(out);
-            }
+            
             finishSection(out);
         %>
     </td>
