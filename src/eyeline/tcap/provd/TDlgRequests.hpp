@@ -6,6 +6,7 @@
 #define __ELC_TCAP_DIALOGUE_REQUESTS_HPP
 
 #include "eyeline/tcap/provd/TDlgHandling.hpp"
+#include "eyeline/tcap/provd/SUARequests.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -23,6 +24,7 @@ public:
   virtual ~TDialogueRequestPrimitive()
   { }
 
+  virtual bool transform(SUAUnitdataReq & use_udt) const = 0;
   //TODO: request specific stuff
 };
 
