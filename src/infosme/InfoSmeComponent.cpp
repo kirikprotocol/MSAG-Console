@@ -145,7 +145,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
   Method select_task_messages ((unsigned)selectTaskMessagesMethod, "selectTaskMessages",
                                message_criterion_params, StringListType);
   
-  // Интерфейс для запроса статистики
+  //    
   Parameters select_statistic_params;
   // all parameters is optional
   select_statistic_params[ARGUMENT_NAME_ID]         = Parameter(ARGUMENT_NAME_ID, StringType);
@@ -166,6 +166,13 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
   Method change_delivery_text_message((unsigned)changeDeliveryTextMessageMethod, "changeDeliveryTextMessage",
                                       change_delivery_text_message_params, StringType);
   
+  Parameters send_sms_params;
+  send_sms_params["source"] = Parameter("source",StringType);
+  send_sms_params["destination"] = Parameter("destination",StringType);
+  send_sms_params["message"] = Parameter("message",StringType);
+  send_sms_params["flash"] = Parameter("flash",BooleanType);
+  Method send_sms((unsigned)sendSmsMethod,"sendSms",send_sms_params,LongType);
+
   methods[start_task_processor.getName()]         = start_task_processor;
   methods[stop_task_processor.getName()]          = stop_task_processor;
   methods[is_task_processor_running.getName()]    = is_task_processor_running;
@@ -194,6 +201,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
   methods[end_delivery_messages_generation.getName()] = end_delivery_messages_generation;
   methods[change_delivery_text_message.getName()]     = change_delivery_text_message;
   methods[apply_retry_policies.getName()] = apply_retry_policies;
+  methods[send_sms.getName()] = send_sms;
 }
 
 InfoSmeComponent::~InfoSmeComponent()
@@ -283,9 +291,11 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
         case changeDeliveryTextMessageMethod:
           changeDeliveryTextMessage(args);
           break;
-          case applyRetryPoliciesMethod:
-            applyRetryPolicies(args);
-            break;
+        case applyRetryPoliciesMethod:
+          applyRetryPolicies(args);
+          break;
+        case sendSmsMethod:
+          return sendSms(args);
         default:
             smsc_log_debug(logger, "unknown method \"%s\" [%u]", method.getName(), method.getId());
             throw AdminException("Unknown method \"%s\"", method.getName());
@@ -930,6 +940,18 @@ void InfoSmeComponent::changeDeliveryTextMessage(const Arguments& args)
 void InfoSmeComponent::applyRetryPolicies(const Arguments& args)
 {
   admin.applyRetryPolicies();
+}
+
+
+Variant InfoSmeComponent::sendSms(const Arguments& args)
+{
+  using namespace smsc::smpp;
+  std::string org=args["source"].getStringValue();
+  std::string dst=args["destination"].getStringValue();
+  std::string txt=args["message"].getStringValue();
+  bool isFlash=args["flash"].getBooleanValue();
+  
+  return Variant((long)admin.sendSms(org,dst,txt,isFlash));
 }
 
 }}

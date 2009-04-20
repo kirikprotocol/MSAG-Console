@@ -9,6 +9,7 @@
 #include <admin/service/Type.h>
 
 #include "InfoSmeAdmin.h"
+#include "sme/SmppBase.hpp"
 
 namespace smsc { namespace infosme
 {
@@ -39,7 +40,8 @@ namespace smsc { namespace infosme
         addDeliveryMessagesMethod, changeDeliveryMessageInfoMethod,
         deleteDeliveryMessagesMethod, addStatisticRecordMethod,
         selectTaskMessagesMethod, selectTasksStatisticMethod, endDeliveryMessagesGenerationMethod,
-        changeDeliveryTextMessageMethod,applyRetryPoliciesMethod
+        changeDeliveryTextMessageMethod,applyRetryPoliciesMethod,
+        sendSmsMethod
       };
       
       void error(const char* method, const char* param);
@@ -68,6 +70,8 @@ namespace smsc { namespace infosme
       void addSchedule(const Arguments& args);
       void removeSchedule(const Arguments& args);
       void changeSchedule(const Arguments& args);
+      
+      Variant sendSms(const Arguments& args);
       
       void applyRetryPolicies(const Arguments& args);
 

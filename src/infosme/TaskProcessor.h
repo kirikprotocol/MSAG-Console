@@ -169,6 +169,7 @@ namespace smsc { namespace infosme
         virtual int  getSequenceNumber() = 0;
         virtual bool send(std::string abonent, std::string message,
                           TaskInfo info, int seqNum) = 0;
+        virtual uint32_t sendSms(const std::string& src,const std::string& dst,const std::string& txt,bool flash)=0;
         virtual ~MessageSender() {};
 
     protected:
@@ -507,6 +508,7 @@ namespace smsc { namespace infosme
                                                                   const std::string& newTextMsg,
                                                                   const InfoSme_T_SearchCriterion& searchCrit);
       void applyRetryPolicies();
+      uint32_t sendSms(const std::string& src,const std::string& dst,const std::string& msg,bool flash);
     };
 
 }}

@@ -354,6 +354,41 @@ public:
         TrafficControl::incOutgoing();
         return true;
     }
+    uint32_t sendSms(const std::string& org,const std::string& dst,const std::string& txt,bool flash)
+    {
+      PduSubmitSm sbm;
+      PduPartSm msg=sbm.get_message();
+      msg.set_source(smsc::smpp::Address2PduAddress(org.c_str()));
+      msg.set_dest(smsc::smpp::Address2PduAddress(dst.c_str()));
+      msg.set_esmClass(0x02);//forward mode
+      if(flash)
+      {
+        sbm.get_optional().set_destAddrSubunit(1);
+      }
+      
+      if(hasHighBit(txt.c_str(),txt.length()))
+      {
+        msg.set_dataCoding(DataCoding::UCS2);
+        TmpBuf<char,2048> tmp(txt.length()*2+2);
+        int len=ConvertMultibyteToUCS2(txt.c_str(), txt.length(), (short*)tmp.get(), txt.length()*2+2,
+                                       CONV_ENCODING_CP1251);
+        sbm.get_optional().set_messagePayload(tmp.get(),len);
+      }else
+      {
+        msg.set_dataCoding(DataCoding::LATIN1);
+        sbm.get_optional().set_messagePayload(txt.c_str(),txt.length());
+      }
+      sbm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+      sbm.get_header().set_sequenceNumber(getSequenceNumber());
+      PduSubmitSmResp* resp=session->getSyncTransmitter()->submit(sbm);
+      if(!resp)
+      {
+        return SmppStatusSet::ESME_RUNKNOWNERR;
+      }
+      uint32_t rv=resp->get_header().get_commandStatus();
+      disposePdu((SmppHeader*)resp);
+      return rv;
+    }
 };
 
 class InfoSmePduListener: public SmppPduEventListener

@@ -1388,6 +1388,10 @@ void TaskProcessor::applyRetryPolicies()
   retryPlcs.Load(&retryPlcCfg);
 }
 
+uint32_t TaskProcessor::sendSms(const std::string& src,const std::string& dst,const std::string& msg,bool flash)
+{
+  return messageSender->sendSms(src,dst,msg,flash);
+}
 
 
 }}

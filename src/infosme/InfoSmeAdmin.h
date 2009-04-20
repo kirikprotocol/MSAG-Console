@@ -93,7 +93,10 @@ namespace smsc { namespace infosme
         virtual void changeDeliveryTextMessageByCompositCriterion(uint32_t taskId,
                                                                   const std::string& newTextMsg,
                                                                   const InfoSme_T_SearchCriterion& searchCrit) = 0;
-      virtual void applyRetryPolicies()=0;
+        virtual void applyRetryPolicies()=0;
+        
+        virtual uint32_t sendSms(const std::string& src,const std::string& dst,const std::string& msg,bool flash)=0;
+        
         InfoSmeAdmin() {};
 
     protected:

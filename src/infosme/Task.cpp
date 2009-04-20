@@ -23,7 +23,6 @@ Task::Task(ConfigView* config, uint32_t taskId, std::string location,
       infoSme_T_storageWasDestroyed(false), lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
    
 {
-  store.Init();
   init(config, taskId);
   formatter = new OutputFormatter(info.msgTemplate.c_str());
   trackIntegrity(true, true); // delete flag & generated messages
@@ -55,6 +54,11 @@ void Task::init(ConfigView* config, uint32_t taskId)
   info.uid = taskId;
   try { info.name = config->getString("name"); } catch (...) {}
   info.enabled = config->getBool("enabled");
+  if(info.enabled)
+  {
+    store.Init();
+  }
+  
   info.priority = config->getInt("priority");
   if (info.priority <= 0 || info.priority > MAX_PRIORITY_VALUE)
       throw ConfigException("Task priority should be positive and less than %d.", 
@@ -285,6 +289,10 @@ void Task::update(ConfigView *config)
   newinfo.messagesCacheSleep = 1;
   try { newinfo.messagesCacheSleep = config->getInt("messagesCacheSleep"); } catch(...) {}
   if (newinfo.messagesCacheSleep <= 0) newinfo.messagesCacheSleep = 1;
+  if(!info.enabled && newinfo.enabled)
+  {
+    store.Init();
+  }
   info=newinfo;
   {
     MutexGuard mg(inGenerationMon);
