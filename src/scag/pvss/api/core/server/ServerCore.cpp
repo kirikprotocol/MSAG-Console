@@ -273,7 +273,7 @@ void ServerCore::shutdown()
 
     {
         MutexGuard mgs(statMutex_);
-        char buf[300];
+        char buf[400];
         const std::string caught = totalExceptions_.toString();
         snprintf(buf, sizeof(buf),
                  "server active parts are shutdowned, statistics follows:\n"
