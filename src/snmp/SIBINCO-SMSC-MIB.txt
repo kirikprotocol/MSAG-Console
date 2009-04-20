@@ -5,8 +5,8 @@
     SIBINCO-SMSC-MIB DEFINITIONS ::= BEGIN
   IMPORTS
       OBJECT-TYPE, enterprises, TimeTicks, Unsigned32, Counter32, Counter64,
-      NOTIFICATION-TYPE
---      MODULE-IDENTITY, NOTIFICATION-TYPE
+--      NOTIFICATION-TYPE
+      MODULE-IDENTITY, NOTIFICATION-TYPE
     FROM SNMPv2-SMI
       DisplayString
     FROM SNMPv2-TC;
@@ -129,6 +129,15 @@
     DESCRIPTION
         "rescheduled"
     ::= { smscStats 5}
+
+
+      deliveryTemp OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "deliveryTEMP"
+    ::= { smscStats 6}
 
             -- 1.3.6.1.4.1.26757.1.5
         alertMessage OBJECT-TYPE
@@ -371,6 +380,58 @@
       STATUS      current
       DESCRIPTION "Object category."
   ::= { smsc 9 }
+  
+  
+    mapDlgStats OBJECT IDENTIFIER ::= { smsc 12 }
+
+      dlgInSRI OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "dlgInSRI"
+    ::= { mapDlgStats 1}
+  
+      dlgIn OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "dlgIn"
+    ::= { mapDlgStats 2}
+
+      dlgOutSRI OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "dlgOutSRI"
+    ::= { mapDlgStats 3}
+
+      dlgOut OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "dlgOut"
+    ::= { mapDlgStats 4}
+
+      dlgUSSD OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "dlgUSSD"
+    ::= { mapDlgStats 5}
+    
+      dlgNIUSSD OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "dlgNIUSSD"
+    ::= { mapDlgStats 6}
+    
 
 -- trap section
 

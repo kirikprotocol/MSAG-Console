@@ -15,6 +15,8 @@ static char const ident[] = "$Id$";
 #include "core/buffers/CyclicQueue.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 
+#include "system/mapio/MapIoTask.h"
+
 #include "snmp/smestattable/SmeStatTableSubAgent.hpp"
 #include "snmp/smeerrtable/smeErrTable_subagent.hpp"
 
@@ -64,6 +66,13 @@ static char const ident[] = "$Id$";
     static oid deliverOkOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 3, 0 };
     static oid deliverErrOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 4, 0 };
     static oid rescheduledOid[] =        { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 5, 0 };
+    static oid deliverTmpOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 6, 0 };
+    static oid mapStatDlgInSRIOid[] =    { 1, 3, 6, 1, 4, 1, 26757, 1, 12, 1 };
+    static oid mapStatDlgInOid[] =       { 1, 3, 6, 1, 4, 1, 26757, 1, 12, 2 };
+    static oid mapStatDlgOutSRIOid[] =   { 1, 3, 6, 1, 4, 1, 26757, 1, 12, 3 };
+    static oid mapStatDlgOutOid[] =      { 1, 3, 6, 1, 4, 1, 26757, 1, 12, 4 };
+    static oid mapStatDlgUSSDOid[] =     { 1, 3, 6, 1, 4, 1, 26757, 1, 12, 5 };
+    static oid mapStatDlgNIUSSDOid[] =   { 1, 3, 6, 1, 4, 1, 26757, 1, 12, 6 };
   };
 
   namespace smsc{
@@ -391,6 +400,24 @@ static char const ident[] = "$Id$";
     netsnmp_register_instance(reginfo);
     reginfo = netsnmp_create_handler_registration("rescheduled", smscStatsHandler, rescheduledOid, OID_LENGTH(rescheduledOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
+    reginfo = netsnmp_create_handler_registration("deliverTEMP", smscStatsHandler, deliverTmpOid, OID_LENGTH(deliverTmpOid), HANDLER_CAN_RONLY);
+    netsnmp_register_instance(reginfo);
+    
+
+    reginfo = netsnmp_create_handler_registration("dlgInSRI", smscStatsHandler, mapStatDlgInSRIOid, OID_LENGTH(mapStatDlgInSRIOid), HANDLER_CAN_RONLY);
+    netsnmp_register_instance(reginfo);
+    reginfo = netsnmp_create_handler_registration("dlgIn", smscStatsHandler, mapStatDlgInOid, OID_LENGTH(mapStatDlgInOid), HANDLER_CAN_RONLY);
+    netsnmp_register_instance(reginfo);
+    reginfo = netsnmp_create_handler_registration("dlgOutSRI", smscStatsHandler, mapStatDlgOutSRIOid, OID_LENGTH(mapStatDlgOutSRIOid), HANDLER_CAN_RONLY);
+    netsnmp_register_instance(reginfo);
+    reginfo = netsnmp_create_handler_registration("dlgOut", smscStatsHandler, mapStatDlgOutOid, OID_LENGTH(mapStatDlgOutOid), HANDLER_CAN_RONLY);
+    netsnmp_register_instance(reginfo);
+    reginfo = netsnmp_create_handler_registration("dlgUSSD", smscStatsHandler, mapStatDlgUSSDOid, OID_LENGTH(mapStatDlgUSSDOid), HANDLER_CAN_RONLY);
+    netsnmp_register_instance(reginfo);
+    reginfo = netsnmp_create_handler_registration("dlgNIUSSD", smscStatsHandler, mapStatDlgNIUSSDOid, OID_LENGTH(mapStatDlgNIUSSDOid), HANDLER_CAN_RONLY);
+    netsnmp_register_instance(reginfo);
+    
+    
     reginfo = netsnmp_create_handler_registration("status", smscStatusHandler, status_oid, OID_LENGTH(status_oid), HANDLER_CAN_RWRITE);
     netsnmp_register_instance(reginfo);
     reginfo = netsnmp_create_handler_registration("smscDescr", smscDescrHandler, smscDescrOid, OID_LENGTH(smscDescrOid), HANDLER_CAN_RONLY);
@@ -540,6 +567,9 @@ using smsc::snmp::SnmpAgent;
     struct counter64 val;
     uint64_t perf[smsc::system::performance::performanceCounters];
     ((smsc::system::Smsc*)smscptr)->getPerfData(perf);
+    
+    int mapDlgStat[6];
+    MapDialogContainer::getInstance()->getDlgStats(mapDlgStat);
 
     const int perfBase=6;
 
@@ -573,14 +603,13 @@ using smsc::snmp::SnmpAgent;
           val.high = perf[perfBase+2] >> 32;
           val.low  = perf[perfBase+2] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "delivwerOK req");
+        smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverOK req");
         }
         else if (snmp_oid_compare(deliverErrOid,OID_LENGTH(deliverErrOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
         {
-          uint64_t summ = perf[perfBase+3]+perf[perfBase+4];
-          val.high =  summ >> 32;
-          val.low  = summ & 0xffffffff;
+          val.high =  perf[perfBase+4] >> 32;
+          val.low  = perf[perfBase+4] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverERR req");
         }
@@ -592,9 +621,59 @@ using smsc::snmp::SnmpAgent;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "rescheduled req");
         }
+        else if (snmp_oid_compare(deliverTmpOid,OID_LENGTH(deliverTmpOid),
+                             reginfo->rootoid, reginfo->rootoid_len) ==0)
+        {
+          val.high = perf[perfBase+4] >> 32;
+          val.low  = perf[perfBase+4] & 0xffffffff;
+          snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
+          smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverTEMP req");
+        }
+        else if (snmp_oid_compare(mapStatDlgInSRIOid,OID_LENGTH(mapStatDlgInSRIOid),
+                             reginfo->rootoid, reginfo->rootoid_len) ==0)
+        {
+          uint32_t val32=mapDlgStat[0];
+          snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER, (u_char *) &val32, sizeof(val32));
+          smsc_log_debug(((smsc::logger::Logger*)agentlog), "mapDlgInSRI req");
+        }
+        else if (snmp_oid_compare(mapStatDlgInOid,OID_LENGTH(mapStatDlgInOid),
+                             reginfo->rootoid, reginfo->rootoid_len) ==0)
+        {
+          uint32_t val32=mapDlgStat[1];
+          snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER, (u_char *) &val32, sizeof(val32));
+          smsc_log_debug(((smsc::logger::Logger*)agentlog), "mapDlgIn req");
+        }
+        else if (snmp_oid_compare(mapStatDlgOutSRIOid,OID_LENGTH(mapStatDlgOutSRIOid),
+                             reginfo->rootoid, reginfo->rootoid_len) ==0)
+        {
+          uint32_t val32=mapDlgStat[2];
+          snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER, (u_char *) &val32, sizeof(val32));
+          smsc_log_debug(((smsc::logger::Logger*)agentlog), "mapDlgOutSRI req");
+        }
+        else if (snmp_oid_compare(mapStatDlgOutOid,OID_LENGTH(mapStatDlgOutOid),
+                             reginfo->rootoid, reginfo->rootoid_len) ==0)
+        {
+          uint32_t val32=mapDlgStat[3];
+          snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER, (u_char *) &val32, sizeof(val32));
+          smsc_log_debug(((smsc::logger::Logger*)agentlog), "mapDlgOut req");
+        }
+        else if (snmp_oid_compare(mapStatDlgUSSDOid,OID_LENGTH(mapStatDlgUSSDOid),
+                             reginfo->rootoid, reginfo->rootoid_len) ==0)
+        {
+          uint32_t val32=mapDlgStat[4];
+          snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER, (u_char *) &val32, sizeof(val32));
+          smsc_log_debug(((smsc::logger::Logger*)agentlog), "mapDlgUSSD req");
+        }
+        else if (snmp_oid_compare(mapStatDlgNIUSSDOid,OID_LENGTH(mapStatDlgNIUSSDOid),
+                             reginfo->rootoid, reginfo->rootoid_len) ==0)
+        {
+          uint32_t val32=mapDlgStat[5];
+          snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER, (u_char *) &val32, sizeof(val32));
+          smsc_log_debug(((smsc::logger::Logger*)agentlog), "mapDlgNIUSSD req");
+        }
         else
         {
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "compate does not work");
+          smsc_log_debug(((smsc::logger::Logger*)agentlog), "compate does not work");
           netsnmp_set_request_error(reqinfo, requests, SNMP_NOSUCHINSTANCE);
         }
         return SNMP_ERR_NOERROR;
