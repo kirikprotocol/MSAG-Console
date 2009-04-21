@@ -7,6 +7,13 @@
 #include "scag/pvss/base/PersClientException.h"
 #include "util/debug.h"
 #include "scag/util/Drndm.h"
+#include "scag/pvss/api/packets/BatchCommand.h"
+#include "scag/pvss/api/packets/DelCommand.h"
+#include "scag/pvss/api/packets/GetCommand.h"
+#include "scag/pvss/api/packets/IncCommand.h"
+#include "scag/pvss/api/packets/IncModCommand.h"
+#include "scag/pvss/api/packets/SetCommand.h"
+#include "scag/pvss/api/packets/ProfileCommandVisitor.h"
 
 using namespace scag2::pvss;
 namespace {
@@ -19,59 +26,191 @@ PersCommandSingle* addcmd( std::vector< PersCommandSingle >& cmds )
 
 }
 
-
 namespace scag2 { 
 namespace pvss { 
 namespace flooder {
 
 static const size_t MASK_SIZE = 3;
 
-void PvssFlooder::execute(int addrsCount, int getsetCount) {
+class PersCallCreator : public ProfileCommandVisitor {
+public:
+  PersCallCreator(bool batch = false):batch_(batch) {};
+
+  virtual bool visitBatchCommand(BatchCommand &cmd) throw(PvapException) {
+    PersCallCreator creator(true);
+
+    std::vector<BatchRequestComponent*> content = cmd.getBatchContent();
+    typedef std::vector<BatchRequestComponent*>::iterator BatchIterator;
+    std::vector< PersCommandSingle > cmds;
+    cmds.reserve(content.size());
+    for (BatchIterator i = content.begin(); i != content.end(); ++i) {
+      (*i)->visit(creator);
+      PersCommandSingle* persCmd = creator.getPersCmd();
+      if (!persCmd) {
+        continue;
+      }
+      cmds.push_back(*persCmd);
+      delete persCmd;
+    }
+    if (cmds.empty()) {
+      return false;
+    }
+    persCall_.reset( new PersCall(static_cast<ProfileType>(key_.getScopeType()), new PersCommandBatch(cmds, cmd.isTransactional()), 0));
+    setKey();
+    return true;
+  }
+  virtual bool visitDelCommand(DelCommand &cmd) throw(PvapException) {
+    persCmd_.reset( new PersCommandSingle( PC_DEL ));
+    persCmd_->property().setName(cmd.getVarName());
+    createPersCall();
+    return true;
+  }
+  virtual bool visitGetCommand(GetCommand &cmd) throw(PvapException) {
+    persCmd_.reset( new PersCommandSingle( PC_GET ) );
+    persCmd_->property().setName(cmd.getVarName());
+    createPersCall();
+    return true;
+  }
+  virtual bool visitIncCommand(IncCommand &cmd) throw(PvapException) {
+    persCmd_.reset(  new PersCommandSingle( PC_INC_RESULT ) );
+    persCmd_->property().setName(cmd.getVarName());
+    persCmd_->property().setValue(cmd.getProperty());
+    createPersCall();
+    return true;
+  }
+  virtual bool visitIncModCommand(IncModCommand &cmd) throw(PvapException) {
+    persCmd_.reset( new PersCommandSingle( PC_INC_MOD ) );
+    persCmd_->property().setName(cmd.getVarName());
+    persCmd_->property().setValue(cmd.getProperty());
+    persCmd_->setResult(cmd.getModulus());
+    createPersCall();
+    return true;
+  }
+  virtual bool visitSetCommand(SetCommand &cmd) throw(PvapException) {
+    persCmd_.reset( new PersCommandSingle( PC_SET ) );
+    persCmd_->property().setName(cmd.getVarName());
+    persCmd_->property().setValue(cmd.getProperty());
+    createPersCall();
+    return true;
+  }
+
+  void setProfileKey(const ProfileKey& key) {
+    key_ = key;
+  }
+
+  PersCall* getPersCall() {
+    return persCall_.release();
+  }
+  PersCommandSingle* getPersCmd() {
+    return persCmd_.release();
+  }
+private:
+  void createPersCall() {
+    if (!batch_) {
+      persCall_.reset( new PersCall(static_cast<ProfileType>(key_.getScopeType()), persCmd_.release(), 0));
+      setKey();
+    }
+  }
+  void setKey() {
+    if (!persCall_.get()) {
+      return;
+    }
+    if (key_.hasAbonentKey()) {
+      persCall_->setKey(key_.getAbonentKey());
+      return;
+    }
+    if (key_.hasOperatorKey()) {
+      persCall_->setKey(key_.getOperatorKey());
+      return;
+    }
+    if (key_.hasProviderKey()) {
+      persCall_->setKey(key_.getProviderKey());
+      return;
+    }
+    if (key_.hasServiceKey()) {
+      persCall_->setKey(key_.getServiceKey());
+      return;
+    }
+  }
+private:
+  std::auto_ptr<PersCall> persCall_;
+  ProfileKey key_;
+  std::auto_ptr<PersCommandSingle> persCmd_;
+  bool batch_;
+};
+
+PvssFlooder::PvssFlooder(pvss::PersClient& pc, const FlooderConfig& config, unsigned skip):persClient_(pc), config_(config), isStopped_(false), callsCount_(0),
+                                          logger_(Logger::getInstance("flooder")),
+                                          addressFormat_(config.getAddressFormat()),
+                                          speed_(config.getSpeed() > 0 ? config.getSpeed() +  config.getSpeed() / 20 : 10),
+                                          currentSpeed_(speed_), delay_(1000000000/currentSpeed_), overdelay_(0), startTime_(0),
+                                          busyRejects_(0), maxRejects_(1000), sentCalls_(0), successCalls_(0), errorCalls_(0), procTime_(0),
+                                          maxprocTime_(0), minprocTime_(MAX_PROC_TIME), pattern_(0)  
+{
+
+  const std::vector< std::string >& patterns = config_.getPropertyPatterns();
+  if ( patterns.size() <= 0 ) throw exceptions::IOException("too few property patterns configured");
+
+  for ( std::vector< std::string >::const_iterator i = patterns.begin();
+        i != patterns.end(); ++i ) {
+      std::auto_ptr<Property> p( new Property );
+      p->fromString( *i );
+      generator_.addPropertyPattern( unsigned(i - patterns.begin()), p.release() );
+  }
+  generator_.parseCommandPatterns( config_.getCommands() );
+  if ( logger_->isInfoEnabled() ) {
+      for ( std::vector< ProfileCommand* >::const_iterator i = generator_.getPatterns().begin();
+            i != generator_.getPatterns().end();
+            ++i ) {
+          smsc_log_info(logger_,"pattern #%u: %s", i - generator_.getPatterns().begin(), (*i)->toString().c_str());
+      }
+  }
+
+  smsc_log_info(logger_,"shuffling %u addresses", unsigned(config_.getAddressesCount()));
+  generator_.randomizeProfileKeys( config_.getAddressFormat().c_str(), config_.getAddressesCount(), skip );
+
+}
+
+void PvssFlooder::execute() {
 
   smsc_log_info(logger_, "execution...");
 
   smsc_log_info(logger_, "generate addresses");
 
-  scag2::util::Drndm::getRnd().setSeed(uint64_t(time(0)));
-  generator_.randomizeProfileKeys(addressFormat_, addrsCount);
-
+  unsigned sleepTime = 0;
   while (persClient_.getClientStatus() != 0 && !isStopped_ ) {
+    if (sleepTime > 60) {
+      smsc_log_warn(logger_, "client can't connect to server");
+      return;
+    }
     smsc_log_warn(logger_, "waiting while pers client connecting to server...");
     sleep(1);
+    ++sleepTime;
   }
   
   smsc_log_info(logger_, "pers client connected to server");
-  //int addrsCount = 1000000;
-  char addr[20];
-
-  procTime_ = 100000000;
-  unsigned number = 0;
-  int iterCount = 0;
-  for (int i = 0; i < addrsCount; ++i) {
-    if (isStopped_) {
-      smsc_log_warn(logger_, "pers client stopped");
-      break;
-    }
-    ProfileKey key = generator_.getProfileKey();
-    commandsSetConfigured(key.getAbonentKey(), i, "test_abnt_prop", PT_ABONENT, getsetCount);
-  }
-  /*
-  srand(time(NULL));
+  ProfileKey profileKey;
+  PersCallCreator callCreator;
+  callCreator.setProfileKey(generator_.getProfileKey());
+  int n = 0;
   while (!isStopped_) {
-  //while (iterCount == 0) {
-    number = (rand() * RAND_MAX + 1) | (rand() + 1);
-    number = number % addrsCount;
-    snprintf(addr, sizeof(addr), addressFormat_.c_str(), number);			
-    //commandsSetConfigured(addr);
-    commandsSetConfigured(addr, number, "test_abnt_prop", PT_ABONENT, getsetCount);
-    //commandsSet(addr, number, "test_serv_prop", PT_ABONENT);
-    ++iterCount;
-    //number = number > addrsCount ? 0 : number + 1;
-  }*/
+
+    ProfileCommand* cmd = generator_.generateCommand(pattern_);
+    if ( ! cmd || config_.getOneCommandPerAbonent() ) {
+        // switching to a new abonent
+        callCreator.setProfileKey(generator_.getProfileKey());
+        ++n;
+    }
+    if ( ! cmd ) continue;
+    if ( cmd->visit(callCreator) )  {
+      doCall(callCreator.getPersCall());
+    } else {
+      smsc_log_warn(logger_, "can't create pers call for cmd: '%s', probably error in batch", cmd->toString().c_str());
+    }
+    delete cmd;
+  }
 
   smsc_log_info(logger_, "test case stopped");
-  smsc_log_info(logger_, "stopping pers client...");
-  persClient_.Stop();
 }
 
 void PvssFlooder::doCall( PersCall* context ) {
@@ -110,7 +249,8 @@ void PvssFlooder::callSync( PersCall* call ) {
   if (call->status() == PERSCLIENTOK || call->status() == PROPERTY_NOT_FOUND) {
     ++successCalls_;
   } else {
-    smsc_log_warn(logger_, "request result: %s", exceptionReasons[call->status()]);
+    //smsc_log_warn(logger_, "request result: %s", exceptionReasons[call->status()]);
+    smsc_log_warn(logger_, "request result: %s", call->exception().c_str());
     ++errorCalls_;
   }
   delete call;
@@ -131,28 +271,20 @@ void PvssFlooder::continuePersCall( PersCall* call, bool dropped ) {
     uint32_t msprocTime = static_cast<uint32_t>(procTime / 1000000);
     minprocTime_ = msprocTime < minprocTime_ ? msprocTime : minprocTime_; 
     maxprocTime_ = msprocTime > maxprocTime_ ? msprocTime : maxprocTime_; 
-    smsc_log_info(logger_, "continue execution cx:%p, process time: %d ms", call, msprocTime);
+    smsc_log_debug(logger_, "continue execution cx:%p, process time: %d ms", call, msprocTime);
     delete startTime;
   }
   if (call->status() == PERSCLIENTOK || call->status() == PROPERTY_NOT_FOUND) {
     ++successCalls_;
     procTime_ += procTime;
   } else {
-    smsc_log_warn(logger_, "request result: %s", exceptionReasons[call->status()]);
+    smsc_log_warn(logger_, "request result: %s", call->exception().c_str());
     ++errorCalls_;
   }
   delete call;
 }
 
 /*
-LongCallContextBase* LCPersClient::getCallContext(PersCallParams *callParams) {
-  LongCallContextBase* context = new LongCallContextBase();
-  context->initiator = this;
-  context->setParams(callParams);
-  return context;
-}
- */
-
 PersCall* PvssFlooder::createPersCall( ProfileType pfType,
                                         const string& addr,
                                         int intKey,
@@ -170,6 +302,7 @@ PersCall* PvssFlooder::createPersCall( ProfileType pfType,
     }
     return call;
 }
+*/
 
 void PvssFlooder::delay() {
   int currentDelay = 1000000000 / currentSpeed_;
@@ -224,7 +357,7 @@ void PvssFlooder::delay() {
   }
 }
 */
-
+/*
 void PvssFlooder::commandsSetConfigured(const string& addr) {
   string strPropName = "some.string.var";
   string strPropValue = "some text";
@@ -349,7 +482,7 @@ PersCommandBatch* PvssFlooder::batchCmd(const string& propName, bool trans) {
     getCmd(name, ::addcmd(cmds));
     return new PersCommandBatch(cmds, trans);
 }
-
+*/
 bool PvssFlooder::canStop() {
   return callsCount_ > 0 ? false : true;
 }

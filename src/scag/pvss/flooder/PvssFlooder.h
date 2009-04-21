@@ -12,6 +12,7 @@
 #include "util/timeslotcounter.hpp"
 #include "util/sleep.h"
 #include "RequestGenerator.h"
+#include "FlooderConfig.h"
 
 namespace scag2 {
 namespace pvss {
@@ -29,13 +30,9 @@ static const uint32_t MAX_PROC_TIME = 10000;
 class PvssFlooder : public pvss::PersCallInitiator
 {
 public:
-    PvssFlooder(pvss::PersClient& pc, int speed, const string& addressFormat):persClient_(pc), isStopped_(false), callsCount_(0), logger_(Logger::getInstance("flooder")),
-                                          addressFormat_(addressFormat), speed_(speed > 0 ? speed : 10), currentSpeed_(speed_),
-                                          delay_(1000000000/currentSpeed_), overdelay_(0), startTime_(0),
-                                          busyRejects_(0), maxRejects_(1000), sentCalls_(0), successCalls_(0), errorCalls_(0), procTime_(0),
-                                          maxprocTime_(0), minprocTime_(MAX_PROC_TIME)  {};
-  void execute(int addrsCount, int getsetCount);
-    virtual void continuePersCall( pvss::PersCall* context, bool dropped );
+  PvssFlooder(pvss::PersClient& pc, const FlooderConfig& config, unsigned skip);
+  void execute();
+  virtual void continuePersCall( pvss::PersCall* context, bool dropped );
   void shutdown();
   bool canStop();
 
@@ -48,22 +45,23 @@ public:
 
 private:
     void doCall( pvss::PersCall* context );
-    pvss::PersCommandSingle* getCmd(const string& propName, pvss::PersCommandSingle* cmd = 0 );
-    pvss::PersCommandSingle* setCmd(const string& propName, const string& strVal, pvss::PersCommandSingle* cmd = 0 );
-    pvss::PersCommandSingle* setCmd( const string& propName, int intVal, pvss::PersCommandSingle* cmd = 0 );
-    pvss::PersCommandSingle* incCmd(const string& propName, int inc, pvss::PersCommandSingle* cmd = 0 );
-    pvss::PersCommandSingle* incModCmd(const string& propName, int inc, int mod, pvss::PersCommandSingle* cmd = 0 );
-    pvss::PersCommandBatch* batchCmd(const string& propName, bool trans);
-    void commandsSet(const string& addr, int intKey, const string& propName, pvss::ProfileType pfType);
-    void commandsSetConfigured(const string& addr, int intKey, const string& propName, pvss::ProfileType pfType, int cmdsCount);
-    void commandsSetConfigured(const string& addr);
-    pvss::PersCall* createPersCall( pvss::ProfileType pfType, const string& addr, int intKey, std::auto_ptr<pvss::PersCommand> cmd );
     void callSync( PersCall* call );
+    void delay();
+    //pvss::PersCommandSingle* getCmd(const string& propName, pvss::PersCommandSingle* cmd = 0 );
+    //pvss::PersCommandSingle* setCmd(const string& propName, const string& strVal, pvss::PersCommandSingle* cmd = 0 );
+    //pvss::PersCommandSingle* setCmd( const string& propName, int intVal, pvss::PersCommandSingle* cmd = 0 );
+    //pvss::PersCommandSingle* incCmd(const string& propName, int inc, pvss::PersCommandSingle* cmd = 0 );
+    //pvss::PersCommandSingle* incModCmd(const string& propName, int inc, int mod, pvss::PersCommandSingle* cmd = 0 );
+    //pvss::PersCommandBatch* batchCmd(const string& propName, bool trans);
+    //void commandsSet(const string& addr, int intKey, const string& propName, pvss::ProfileType pfType);
+    //void commandsSetConfigured(const string& addr, int intKey, const string& propName, pvss::ProfileType pfType, int cmdsCount);
+    //void commandsSetConfigured(const string& addr);
+    //pvss::PersCall* createPersCall( pvss::ProfileType pfType, const string& addr, int intKey, std::auto_ptr<pvss::PersCommand> cmd );
 
-  void delay();
 
 private:
-    pvss::PersClient& persClient_;
+  pvss::PersClient& persClient_;
+  FlooderConfig config_;
   bool isStopped_;
   uint32_t callsCount_;
   Logger* logger_;
@@ -83,11 +81,12 @@ private:
   uint32_t maxprocTime_;
   uint32_t minprocTime_;
   RequestGenerator generator_;
+  unsigned pattern_;
 };
 
 class CallsCounter : public smsc::core::threads::Thread {
 public:
-  CallsCounter(PvssFlooder* client, int period):client_(client), period_(period), stopped_(false), success_(0), error_(0), procTime_(0),
+  CallsCounter(PvssFlooder* client, int period):client_(client), period_(period > 0 ? period : 5), stopped_(false), success_(0), error_(0), procTime_(0),
                                                  sent_(0), logger_(Logger::getInstance("counter")) {
     Start();
   };
@@ -137,8 +136,10 @@ private:
   }
 
   void averageCount() {
-    smsc_log_info(logger_, "average %d/%d/%d sent/ok/error per second, process time %d ms",
-                   sent_/count_, success_/count_, error_/count_, procTime_/count_);
+    if (count_ > 0) {
+      smsc_log_info(logger_, "average %d/%d/%d sent/ok/error per second",
+                     sent_/count_, success_/count_, error_/count_);
+    }
   }
 
 private:

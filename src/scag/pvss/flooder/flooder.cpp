@@ -12,7 +12,12 @@
 #include "util/config/ConfigView.h"
 #include "scag/pvss/base/PersClientException.h"
 #include "scag/pvss/client/PvssStreamClient.h"
+#include "scag/pvss/api/core/ConfigException.h"
 #include "PvssFlooder.h"
+#include "FlooderConfig.h"
+#include "ConfigUtil.h"
+#include "scag/util/Drndm.h"
+
 
 using std::string;
 using namespace scag2::pvss::flooder;
@@ -132,16 +137,34 @@ int main(int argc, char* argv[]) {
       smsc_log_warn(logger, "Parameter <PvssClient.async> missed. Defaul value is %d", async ? 1 : 0 );
     };
 
-      /*
-    bool async = true;
-    try { 
-      async = clientConfig.getBool("async");
-    } catch (...) {
-      smsc_log_warn(logger, "Parameter <PvssClient.async> missed. Defaul value is false");
-    };
-       */
-
     PvssStreamClient* pc = new PvssStreamClient;
+
+    unsigned skip = unsigned(-1);
+    if ( argc > 2 ) {
+        skip = unsigned(atoi(argv[2]));
+    }
+    if ( skip == unsigned(-1) ) {
+        scag2::util::Drndm::getRnd().setSeed(uint64_t(time(0)));
+    }
+
+    FlooderConfig flooderConfig;
+    try {
+        flooderConfig.setAsyncMode(true);
+        flooderConfig.setSpeed(100);
+        flooderConfig.setAddressesCount(1000000);
+        flooderConfig.setCommands("s0g0");
+        flooderConfig.setAddressFormat(".1.1.791%08u");
+        flooderConfig.setOneCommandPerAbonent(false);
+    } catch ( scag2::pvss::core::ConfigException& e ) {
+        smsc_log_error(logger, "cannot set default value: %s", e.what() );
+        fprintf(stderr,"cannot set default value: %s\n", e.what() );
+        abort();
+    }
+
+    ::readFlooderConfig( logger, flooderConfig, manager );
+                             
+    lcClient = new PvssFlooder(PersClient::Instance(), flooderConfig, skip);
+
     pc->init( host.c_str(),
               port,
               timeout,
@@ -152,51 +175,12 @@ int main(int argc, char* argv[]) {
               connPerThread,
               async );
 
-    smsc::util::config::ConfigView flooderConfig(manager, "Flooder");
-    
-    try { 
-      if (speed <= 0) {
-        speed = flooderConfig.getInt("speed");
-      }
-    } catch (...) {
-      speed = 100;
-      smsc_log_warn(logger, "Parameter <Flooder.speed> missed. Defaul value is %d", speed);
-    };
-    int getsetCount = 1;
-    try { 
-      getsetCount = flooderConfig.getInt("getsetCount");
-    } catch (...) {
-      smsc_log_warn(logger, "Parameter <Flooder.getsetCount> missed. Defaul value is %d", getsetCount);
-    };
-    int addressesCount = 1000000;
-    try { 
-      addressesCount = flooderConfig.getInt("addressesCount");
-    } catch (...) {
-      smsc_log_warn(logger, "Parameter <Flooder.addressesCount> missed. Defaul value is %d", addressesCount);
-    };
-
-    std::string addressFormat = "791%08u";
-    try {
-        std::string format = flooderConfig.getString("addressPrefix");
-        // checking that address prefix is numeric
-        char* endptr;
-        unsigned pfx = unsigned(strtoul(format.c_str(),&endptr,10));
-        if ( *endptr != '\0' ) throw std::runtime_error("wrong address prefix");
-        char buf[40];
-        snprintf(buf,sizeof(buf),"%u",pfx);
-        if ( strlen(buf) > 10 ) throw std::runtime_error("too long prefix");
-        format = buf;
-        snprintf(buf,sizeof(buf),"%s%%0%uu",format.c_str(),11-format.size());
-        addressFormat = buf;
-    } catch (...) {
-        smsc_log_warn(logger, "Parameter <Flooder.addressPrefix> missed or wrong. Default value is %s", addressFormat.c_str());
-    }
-
-    lcClient = new PvssFlooder(PersClient::Instance(), speed, addressFormat);
     CallsCounter counter(lcClient, 5);
 
-    lcClient->execute(addressesCount, getsetCount);
+    lcClient->execute();
     counter.stop();
+    smsc_log_info(logger, "stopping pers client...");
+    pc->Stop();
     delete lcClient;
   }
   catch (const PersClientException& exc) 
