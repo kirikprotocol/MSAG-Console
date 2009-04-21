@@ -302,6 +302,7 @@ B3101: Apr 08, 2009
     SMSC        SNMP get counters will return messages in parts instead of whole messages
     SMSC	reject by SME for other SME in transact mode not showed reject on monitor
     SMSC	SNMP separate counter for temp err, counters for current used MAP dialogs
+    SMSC	UCS2 byteorder on X64 fix for SMS and USSD
     Inman	HD stack support
     InfoSme	Write all events to journal
     Infosme	Add posibility to create deliveries from <msisdn>|<text> files
