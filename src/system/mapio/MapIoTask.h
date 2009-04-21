@@ -792,6 +792,16 @@ public:
     MutexGuard g(sync);
     return lock_map.Count();
   }
+  
+  void getDlgStats(int cnt[])
+  {
+    cnt[0]=MAPSTATS_dialogs[MAPSTAT_DLGINSRI];
+    cnt[1]=MAPSTATS_dialogs[MAPSTAT_DLGIN];
+    cnt[2]=MAPSTATS_dialogs[MAPSTAT_DLGOUTSRI];
+    cnt[3]=MAPSTATS_dialogs[MAPSTAT_DLGOUT];
+    cnt[4]=MAPSTATS_dialogs[MAPSTAT_DLGUSSD];
+    cnt[5]=MAPSTATS_dialogs[MAPSTAT_DLGNIUSSD];
+  }
 
   MapDialog* newDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn, EINSS7INSTANCE_T inst, unsigned version)
   {
