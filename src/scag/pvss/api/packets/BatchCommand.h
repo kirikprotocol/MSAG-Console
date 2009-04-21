@@ -12,7 +12,7 @@ namespace pvss {
 class BatchCommand : public ProfileCommand
 {
 public:
-    BatchCommand() : ProfileCommand() { initLog(); }
+    BatchCommand() : ProfileCommand(), transactional_(false) { initLog(); }
     // BatchCommand( uint32_t seqNum ) : ProfileCommand(seqNum) {}
 
     virtual ~BatchCommand() {
