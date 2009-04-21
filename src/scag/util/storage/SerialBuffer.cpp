@@ -2,6 +2,7 @@
 
 #include "SerialBuffer.h"
 #include "core/synchronization/Mutex.hpp"
+#include "scag/util/HexDump.h"
 
 namespace {
 
@@ -45,7 +46,11 @@ namespace storage {
 std::string SerialBuffer::toString()
 {
     std::string str;
-    bufdump( str, c_ptr(), length() );
+    HexDump hd;
+    str.reserve(hd.hexdumpsize(length())+hd.strdumpsize(length())+2);
+    hd.hexdump(str,c_ptr(),length());
+    hd.strdump(str,c_ptr(),length());
+    // bufdump( str, c_ptr(), length() );
     return str;
 }
 
