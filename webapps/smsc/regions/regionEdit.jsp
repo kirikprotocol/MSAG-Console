@@ -89,7 +89,7 @@ function addSourceSubj() {
       <td>
         <select name="timezone" id="timezone">
         <% for (Iterator iter = bean.getTimezones().iterator(); iter.hasNext();) { String tzid = (String)iter.next();%>
-          <option id="<%=tzid%>" <%=bean.getTimezone().equals(tzid) ? "SELECTED" : ""%>><%=tzid%></option>
+          <option id="<%=tzid%>" <%=bean.getTimezone() != null && bean.getTimezone().equals(tzid) ? "SELECTED" : ""%>><%=tzid%></option>
         <% } %>
         </select>
       </td>
