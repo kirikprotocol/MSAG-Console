@@ -1591,10 +1591,10 @@ static void DoUSSRUserResponce( MapDialog* dialog)
   unsigned encoding = dialog->sms->getIntProperty(Tag::SMPP_DATA_CODING);
   unsigned text_len;
 
-  const unsigned char* text = (const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
-  if(text_len==0 && dialog->sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  const unsigned char* text = (const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_RAW_SHORT_MESSAGE,&text_len);
+  if(text_len==0 && dialog->sms->hasBinProperty(Tag::SMPP_RAW_MESSAGE_PAYLOAD))
   {
-    text=(const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
+    text=(const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_RAW_MESSAGE_PAYLOAD,&text_len);
   }
 
   if(text_len==0)
@@ -1708,10 +1708,10 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   unsigned text_len;
   unsigned encoding = dialog->sms->getIntProperty(Tag::SMPP_DATA_CODING);
 
-  const unsigned char* text = (const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
-  if(text_len==0 && dialog->sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  const unsigned char* text = (const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_RAW_SHORT_MESSAGE,&text_len);
+  if(text_len==0 && dialog->sms->hasBinProperty(Tag::SMPP_RAW_MESSAGE_PAYLOAD))
   {
-    text=(const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
+    text=(const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_RAW_MESSAGE_PAYLOAD,&text_len);
   }
 
   if(text_len==0)
