@@ -342,9 +342,9 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
     }else{ // UCS2 || 8BIT
       unsigned text_len;
       const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);
-      if(text_len==0 && sms->hasBinProperty(Tag::SMPP_RAW_MESSAGE_PAYLOAD))
+      if(text_len==0 && sms->hasBinProperty(Tag::SMPP_RAW_PAYLOAD))
       {
-        text=(const unsigned char*)sms->getBinProperty(Tag::SMPP_RAW_MESSAGE_PAYLOAD,&text_len);
+        text=(const unsigned char*)sms->getBinProperty(Tag::SMPP_RAW_PAYLOAD,&text_len);
       }
       //unsigned size_x = /*pdu_ptr-(unsigned char*)pdu->signalInfo*;
       if ( text_len > 140 )
