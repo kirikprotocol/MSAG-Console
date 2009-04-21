@@ -357,7 +357,7 @@ public:
     uint32_t sendSms(const std::string& org,const std::string& dst,const std::string& txt,bool flash)
     {
       PduSubmitSm sbm;
-      PduPartSm msg=sbm.get_message();
+      PduPartSm& msg=sbm.get_message();
       msg.set_source(smsc::smpp::Address2PduAddress(org.c_str()));
       msg.set_dest(smsc::smpp::Address2PduAddress(dst.c_str()));
       msg.set_esmClass(0x02);//forward mode
