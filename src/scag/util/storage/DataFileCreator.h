@@ -176,11 +176,11 @@ public:
           bn.setFreeCells(packer.notUsed()); // not used
           for ( int i = 0; i < blocksCount-lastBlock; ++i ) {
               bn.setNextBlock(packer.idx2pos(startIndex++));
-              bn.save( writeBlock + (i*blockSize_) );
+              bn.savePtr( writeBlock + (i*blockSize_) );
           }
           if ( lastBlock > 0 ) {
               bn.setNextBlock(packer.notUsed());
-              bn.save( writeBlock + (blocksCount-1)*blockSize_ );
+              bn.savePtr( writeBlock + (blocksCount-1)*blockSize_ );
           }
       }
       return startIndex;

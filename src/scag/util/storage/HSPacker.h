@@ -36,9 +36,8 @@ class BlockNavigation
 {
 public:
     enum {
-        NAV_SIZE = 16 // may be used in dependent code to e.g. create char arrays
+            NAV_SIZE = 16, // may be used in dependent code to e.g. create char arrays
     };
-
 private:
     enum {
             USED_BIT = 0x80,
@@ -114,7 +113,7 @@ public:
     }
 
     /// load from a block of memory, considering it has been filled
-    void load( const void* wher ) {
+    void loadPtr( const void* wher ) {
         const char* where = reinterpret_cast<const char*>(wher);
         EndianConverter cvt;
         memcpy(cvt.ubuf(),where,idxSize());
@@ -128,7 +127,7 @@ public:
     }
 
     /// save to a block of memory, which should be at least NAV_SIZE in length
-    void save( void* wher ) const {
+    void savePtr( void* wher ) const {
         unsigned char* where = reinterpret_cast<unsigned char*>(wher);
         EndianConverter cvt;
         cvt.set(next_);
@@ -144,27 +143,27 @@ public:
     inline void load( Deserializer& dsr ) {
         const uint8_t* cp = dsr.curpos();
         dsr.setrpos(dsr.rpos()+navSize()); // check that it has enough data
-        load(cp);
+        loadPtr(cp);
     }
 
     // save to serializer
     void save( Serializer& ser ) const {
         register size_t wpos = ser.wpos();
         ser.setwpos(wpos+navSize());
-        save(ser.data()+wpos);
+        savePtr(ser.data()+wpos);
     }
 
     // read from file
     inline void load( smsc::core::buffers::File& f ) {
         char buf[NAV_SIZE];
         f.Read(buf,navSize());
-        load(buf);
+        loadPtr(buf);
     }
 
     // save to file
     inline void save( smsc::core::buffers::File& f ) const {
         char buf[NAV_SIZE];
-        save(buf);
+        savePtr(buf);
         f.Write(buf,navSize());
     }
 
@@ -211,9 +210,9 @@ public:
     inline uint8_t getPackingType() const { return packingType_; }
     
     /// method counts how many trailing blocks (non-head) is needed for buffer of given size
-    inline size_t trailingBlocks( size_t unpackedSize ) const {
-        if ( unpackedSize <= blockSize_ ) return 0;
-        return ( unpackedSize - blockSize_ - 1 ) / ( blockSize_ - navSize() ) + 1;
+    inline size_t trailingBlocks( size_t dataSize ) const {
+        if ( dataSize <= blockSize_ ) return 0;
+        return ( dataSize-blockSize_-1 ) / ( blockSize_ - navSize() ) + 1;
     }
 
 
@@ -232,10 +231,9 @@ public:
             if (log_) { smsc_log_error(log_,"packing type = %u is not implemented", unsigned(packingType_) ); }
             ::abort();
         }
-        assert(buffer.size() > initialPos);
         const size_t oldSize = buffer.size();
-        assert( oldSize >= initialPos );
-        const size_t trailBlocks = trailingBlocks( oldSize - initialPos );
+        if ( oldSize <= initialPos+idxSize()+blockSize() ) return;
+        const size_t trailBlocks = trailingBlocks( oldSize-initialPos-idxSize() );
         if ( !trailBlocks ) return;
 
         if (log_ && log_->isDebugEnabled()) {
@@ -248,41 +246,52 @@ public:
                            &((*headers)[headers->size()-trailBlocks*navSize()]),
                            trailBlocks*navSize());
             }
-            smsc_log_debug(log_,"packBuffer buf: %s hdr: %s", hex.c_str(), hdx.c_str() );
+            smsc_log_debug(log_,"packBuffer buf: sz=%u %s hdr: %s",
+                           unsigned(buffer.size()-initialPos),
+                           hex.c_str(), hdx.c_str() );
         }
 
-        size_t headerPos;
+        buffer.resize(oldSize+trailBlocks*navSize());
+
+        // size_t headerPos;
+        buffer_type::iterator hptr;
         if ( headers ) {
-            assert(headers->size() >= trailBlocks*navSize());
-            headerPos = headers->size() - trailBlocks*navSize(); // last trailblocks
+            assert(headers->size() == (trailBlocks+1)*navSize()+idxSize());
+            hptr = headers->begin();
+            std::copy( hptr, hptr+idxSize()+navSize(), buffer.begin()+initialPos);
+            hptr = headers->begin()+idxSize()+navSize();
         }
-        const size_t newSize = oldSize + trailBlocks*navSize();
-        buffer.resize(newSize);
-        size_t frompos = initialPos + blockSize_;
-        size_t topos = oldSize;
+        // const size_t newSize = oldSize + idxSize() + trailBlocks*navSize();
+        buffer_type::iterator iptr = buffer.begin() + initialPos + idxSize() + blockSize_;
+        buffer_type::iterator optr = buffer.begin() + oldSize;
         for ( size_t blk = 1; blk <= trailBlocks; ++blk ) {
-            if ( blk == trailBlocks && topos < frompos+navSize() ) {
+            if ( blk == trailBlocks && optr < iptr + navSize() ) {
                 // overlap detected in last block
-                assert(topos>frompos);
-                const size_t trail = topos-frompos;
-                memcpy(&buffer[frompos+navSize()],&buffer[frompos],trail);
+                assert( optr > iptr );
+                // const size_t trail = optr-iptr;
+                std::copy(iptr,optr,iptr+navSize());
+                // memcpy(&buffer[frompos+navSize()],&buffer[frompos],trail);
             } else {
-                memcpy(&buffer[topos],&buffer[frompos],navSize());
+                std::copy(iptr,iptr+navSize(),optr);
+                // memcpy(&buffer[topos],&buffer[frompos],navSize());
             }
             if ( headers ) {
                 // restore headers
-                memcpy(&buffer[frompos],&((*headers)[headerPos]), navSize());
-                headerPos += navSize();
+                std::copy(hptr,hptr+navSize(),iptr);
+                // memcpy(&buffer[frompos],&((*headers)[headerPos]), navSize());
+                hptr += navSize();
             }
-            topos += navSize();
-            frompos += blockSize_;
+            optr += navSize();
+            iptr += blockSize();
         }
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
             std::string hex;
             hd.hexdump(hex,&buffer[initialPos],buffer.size()-initialPos);
-            smsc_log_debug(log_,"after pack: %s", hex.c_str() );
+            smsc_log_debug(log_,"after pack: sz=%u %s",
+                           unsigned(buffer.size()-initialPos),
+                           hex.c_str() );
         }
     }
 
@@ -293,7 +302,7 @@ public:
     {
         assert( headers.size() >= idxSize() + navSize() );
         assert( buffer.size() > initialPos + idxSize() + navSize() );
-        assert( countBlocks(buffer.size()-initialPos) == (headers.size()-idxSize())/navSize() );
+        assert( countBlocks(buffer.size()-initialPos-idxSize()) == (headers.size()-idxSize())/navSize() );
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
@@ -301,21 +310,27 @@ public:
             hd.hexdump(hex,&buffer[initialPos],buffer.size()-initialPos);
             std::string hdx;
             hd.hexdump(hdx,&headers[0],headers.size());
-            smsc_log_debug(log_,"mergeHeaders buf: %s hdr: %s", hex.c_str(), hdx.c_str() );
+            smsc_log_debug(log_,"mergeHeaders buf: sz=%u %s hdr: %s",
+                           unsigned(buffer.size()-initialPos),
+                           hex.c_str(), hdx.c_str() );
         }
 
-        std::copy( headers.begin(), headers.begin()+idxSize(), buffer.begin() );
-        size_t outpos = idxSize()+initialPos;
-        for ( size_t pos = idxSize(); pos < headers.size(); pos += navSize() ) {
-            std::copy( headers.begin()+pos, headers.begin()+pos+navSize(), buffer.begin()+outpos );
-            outpos += blockSize();
+        buffer_type::iterator optr = buffer.begin() + initialPos;
+        buffer_type::const_iterator iptr = headers.begin();
+        optr = std::copy( iptr, iptr+idxSize(), optr );
+        iptr += idxSize();
+        for ( ; iptr != headers.end(); iptr += navSize() ) {
+            std::copy( iptr, iptr+navSize(), optr );
+            optr += blockSize();
         }
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
             std::string hex;
             hd.hexdump(hex,&buffer[initialPos],buffer.size()-initialPos);
-            smsc_log_debug(log_,"after merge: %s", hex.c_str() );
+            smsc_log_debug(log_,"after merge: sz=%u %s",
+                           unsigned(buffer.size()-initialPos),
+                           hex.c_str() );
         }
     }
 
@@ -330,43 +345,51 @@ public:
             ::abort();
         }
         const size_t oldSize = buffer.size();
-        assert( oldSize >= initialPos );
-        if ( oldSize <= initialPos+blockSize_ ) return;
-        const size_t trailBlocks = (oldSize - initialPos - 1) / blockSize_;
-        size_t headerPos;
+        if ( oldSize <= initialPos+idxSize()+navSize() ) return;
+        const size_t trailBlocks = (oldSize-initialPos-idxSize()-1) / blockSize_;
+        buffer_type::iterator hptr;
         if ( headers ) {
-            headers->resize( headers->size()+trailBlocks*navSize() );
-            headerPos = headers->size();
+            headers->resize(idxSize()+(trailBlocks+1)*navSize() );
+            std::copy(buffer.begin()+initialPos,
+                      buffer.begin()+initialPos+idxSize()+navSize(),
+                      headers->begin());
+            hptr = headers->end();
         }
+        if ( oldSize <= initialPos+idxSize()+blockSize() ) return;
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
             std::string hex;
             hd.hexdump(hex,&buffer[initialPos],buffer.size()-initialPos);
-            smsc_log_debug(log_,"unpackBuffer buf: %s", hex.c_str());
+            smsc_log_debug(log_,"unpackBuffer buf: sz=%u %s", 
+                           unsigned(buffer.size()-initialPos), hex.c_str());
         }
 
-        size_t frompos = initialPos + trailBlocks*blockSize_; // points to the last block
-        size_t topos = oldSize; // points past buffer
+        buffer_type::iterator iptr = buffer.begin()+initialPos+idxSize()+trailBlocks*blockSize();
+        buffer_type::iterator optr = buffer.begin()+oldSize;
         for ( size_t blk = trailBlocks; blk > 0; --blk ) {
             if ( headers ) {
                 // save headers
-                headerPos -= navSize();
-                memcpy(&((*headers)[headerPos]),&buffer[frompos],navSize());
+                // headerPos -= navSize();
+                // memcpy(&((*headers)[headerPos]),&buffer[frompos],navSize());
+                hptr -= navSize();
+                std::copy( iptr, iptr+navSize(), hptr );
             }
-            topos -= navSize();
+            optr -= navSize();
             // fprintf(stderr,"blk:%u topos:%u frompos:%u\n", blk, topos, frompos );
-            if ( blk == trailBlocks && topos < frompos+navSize() ) {
+            if ( blk == trailBlocks && optr < iptr+navSize() ) {
                 // overlap detected in last block
-                assert(topos>frompos);
-                const size_t trail = topos-frompos;
-                memcpy(&buffer[frompos],&buffer[frompos+navSize()],trail);
+                assert(optr>iptr);
+                // memcpy(&buffer[frompos],&buffer[frompos+navSize()],trail);
+                std::copy(iptr+navSize(),optr+navSize(),iptr);
             } else {
-                memcpy(&buffer[frompos],&buffer[topos],navSize());
+                // memcpy(&buffer[frompos],&buffer[topos],navSize());
+                std::copy(optr,optr+navSize(),iptr);
             }
-            frompos -= blockSize_;
+            // frompos -= blockSize_;
+            iptr -= blockSize();
         }
-        buffer.resize(topos);
+        buffer.erase(optr,buffer.end());
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
@@ -376,7 +399,9 @@ public:
             if ( headers ) {
                 hd.hexdump(hdx,&((*headers)[headers->size()-trailBlocks*navSize()]),trailBlocks*navSize());
             }
-            smsc_log_debug(log_,"after unpack: buf: %s hdr: %s", hex.c_str(), hdx.c_str() );
+            smsc_log_debug(log_,"after unpack: buf: sz=%u %s hdr: %s",
+                           unsigned(buffer.size()-initialPos),
+                           hex.c_str(), hdx.c_str() );
         }
     }
 
@@ -414,6 +439,10 @@ public:
             dsr >> nextBlock;
 
             while ( nextBlock != notUsed() ) {
+
+                if ( nextBlock % blockSize() != 0 ) {
+                    throw smsc::util::Exception("extracted block %llx is not at block boundary", nextBlock );
+                }
 
                 BlockNavigation bn;
                 {
@@ -533,13 +562,48 @@ public:
     }
 
 
+    /// an opposite method -- offsets are transformed into pos-and-sizes.
+    void offsetsToPosAndSize( const std::vector< offset_type >& offsets,
+                              size_t dataSize,
+                              std::vector< offset_type >& posAndSize )
+    {
+        const size_t usedBlocks = countBlocks(dataSize);
+        assert( offsets.size() > 0 && offsets.size() >= usedBlocks );
+        // one index + nav per block + extra index if there is free blocks
+        posAndSize.resize( ( offsets.size() + 
+                             (( offsets.size() == usedBlocks ) ? 1 : 2) )*2 );
+        std::vector< offset_type >::iterator iter = posAndSize.begin();
+        std::vector< offset_type >::const_iterator ofit = offsets.begin();
+        if ( usedBlocks > 0 ) {
+            *iter = notUsed(); // skip index
+            *++iter = 0;
+            for ( ; dataSize > 0; ) {
+                *++iter = *ofit++;
+                const size_t sz = std::min(dataSize,blockSize());
+                *++iter = sz;
+                dataSize -= sz;
+            }
+        }
+        if ( ofit != offsets.end() ) {
+            // free blocks
+            *++iter = notUsed(); // skip index
+            *++iter = 0;
+            for ( ; ofit != offsets.end(); ++ofit ) {
+                *++iter = *ofit;
+                *++iter = navSize();
+            }
+        }
+        assert( ++iter == posAndSize.end() );
+    }
+
+
     /// method prepares headers for used chain of length dataSize.
     void makeHeaders( buffer_type&              headers,
                       std::vector<offset_type>& offsets,
                       size_t                    dataSize )
     {
         // offsets contains affected block indices
-        const size_t needBlocks = countBlocks( dataSize+idxSize() );
+        const size_t needBlocks = countBlocks(dataSize);
         if ( needBlocks > offsets.size() ) {
             if (log_) {smsc_log_error(log_,"too few offsets in vector");}
             ::abort();
@@ -637,9 +701,9 @@ public:
     inline size_t idxSize() const { return BlockNavigation::idxSize(); }
 
     /// what is the needed amount of blocks?
-    inline size_t countBlocks( size_t packedSize ) const {
-        if ( packedSize <= idxSize() ) return 0;
-        return (packedSize - idxSize() - 1) / blockSize() + 1;
+    inline size_t countBlocks( size_t dataSize ) const {
+        if ( dataSize == 0 ) return 0;
+        return (dataSize - 1) / blockSize() + 1;
     }
 
     /// block index to offset

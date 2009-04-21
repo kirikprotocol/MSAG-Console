@@ -279,7 +279,7 @@ public:
             return true;
         }
         const offset_type blkIndex = idx2pos(blockIndex);
-        const size_t newDataSize = profileData_->size(); // remember to remove free chain
+        const size_t newDataBufSize = profileData_->size(); // remember to remove free chain
         if (logger) 
             smsc_log_debug(logger, "Change data block index=%llx key='%s' oldsize=%u newsize=%u",
                            blkIndex, key.toString().c_str(),
@@ -290,7 +290,7 @@ public:
 
         // old size is remembered to remove the tail at the end
         const size_t oldBackupSize = prof.backup->size();
-        const size_t oldBlocksCount = countBlocks(oldBackupSize);
+        const size_t oldBlocksCount = countBlocksPerBuf(oldBackupSize);
         if (!backUpProfile( key, blkIndex, prof.backup, profileData_, true )) {
             if (logger) smsc_log_error(logger, "Backup profile error");
             return false;
@@ -299,7 +299,7 @@ public:
         // iNDNDNDiFFFF or iNDNDND
 
         // link blocks
-        const size_t blocksCount = countBlocks(newDataSize);
+        const size_t blocksCount = countBlocksPerBuf(newDataBufSize);
         const offset_type newffb = linkBlocks(*prof.backup,
                                               *profileData_,
                                               ffb,
@@ -321,7 +321,7 @@ public:
                 // otherwise, the profile has not been moved.
             }
 
-            profileData_->resize(newDataSize); // remove the tail containing free blocks
+            profileData_->resize(newDataBufSize); // remove the tail containing free blocks
             attachBackup( prof.backup, profileData_ );
             if (logger) smsc_log_debug(logger,"change(%s) finished with prof.backup=%u",
                                        key.toString().c_str(),
@@ -403,8 +403,12 @@ private:
 
     /// method counts a number of necessary datablocks for packed buffer.
     /// idx + nav+data [+nav+data ... ]
-    inline size_t countBlocks( size_t packedSize ) const {
-        return packer_.countBlocks(packedSize);
+    inline size_t countBlocks( size_t dataSize ) const {
+        return packer_.countBlocks(dataSize);
+    }
+    inline size_t countBlocksPerBuf( size_t bufferSize ) const {
+        if ( bufferSize <= idxSize() ) return 0;
+        return countBlocks(bufferSize-idxSize());
     }
     /// returns the special 'notUsed' value for offset
     inline offset_type notUsed() const {
@@ -439,7 +443,7 @@ private:
                             bool         hasFreeBlocks )
     {
         std::vector< offset_type > blocks;
-        blocks.reserve( (countBlocks(newprofile.size())+2)*2 );
+        blocks.reserve( (countBlocksPerBuf(newprofile.size())+2)*2 );
         // offset_type newffb = ffb;
         offset_type lastRef = packer_.extractBlocks(oldprofile,blocks,ffb);
         offset_type newffb = hasFreeBlocks ? lastRef : ffb;
@@ -453,7 +457,7 @@ private:
         std::vector< offset_type > offsets;
         packer_.extractOffsets(blocks,offsets);
 
-        const size_t needBlocks = countBlocks(newprofile.size());
+        const size_t needBlocks = countBlocksPerBuf(newprofile.size());
         if ( needBlocks > 0 ) {
             // headers should be filled
             buffer_type headers;
@@ -570,8 +574,7 @@ private:
             File* f = bhs_.getFile( blockIndex );
             off_t offset = bhs_.getOffset(blockIndex);
             smsc::core::buffers::TmpBuf<unsigned char,32> tmpbuf(bhs_.navSize());
-            savedBn.save(tmpbuf.GetCurPtr());
-            savedBn.save(tmpbuf);
+            savedBn.savePtr(tmpbuf.GetCurPtr());
             fixup_->save(blockIndex,bhs_.navSize(),tmpbuf.GetCurPtr());
             BlockNavigation bn;
             bn.setFreeCells(bhs_.notUsed());
@@ -817,7 +820,7 @@ private:
                             key.toString().c_str(), blockIndex, ohex.c_str(), nhex.c_str() );
         }
 
-        size_t blocksCount = newprofile ? countBlocks(newprofile->size()) : 0;
+        size_t blocksCount = newprofile ? countBlocksPerBuf(newprofile->size()) : 0;
         if ( blockIndex == notUsed() && blocksCount == 0 ) {
             return true; 
         }
@@ -847,7 +850,7 @@ private:
             }
             // backupHeader.dataSize = oldprofile->size() - idxSize();
             // dataBlockBackup = profile.getBackup();
-            const size_t backupSize = countBlocks(oldprofile->size());
+            const size_t backupSize = countBlocksPerBuf(oldprofile->size());
             // backupHeader.blocksCount = blocksCount >= backupSize ? blocksCount : backupSize;
             if (backupSize < blocksCount) {
                 // dataBlockBackup[backupSize - 1] = oldDescrFile.first_free_block;
@@ -885,7 +888,7 @@ private:
         if ( buffer.size() <= position ) return notUsed();
 
         std::vector< offset_type > affectedBlocks;
-        const size_t needBlocks = countBlocks(buffer.size()-position);
+        const size_t needBlocks = countBlocksPerBuf(buffer.size()-position);
         assert(needBlocks > 0);
         affectedBlocks.reserve(needBlocks+20);
         offset_type rv = notUsed();
