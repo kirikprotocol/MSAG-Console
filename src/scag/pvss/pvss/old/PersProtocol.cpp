@@ -197,13 +197,17 @@ bool PersProtocol::SerialBufferResponseVisitor::visitErrResponse(ErrorResponse &
 
 bool PersProtocol::SerialBufferResponseVisitor::visitGetResponse(GetResponse &resp) /* throw(PvapException) */  {
   buff_.WriteInt8(getResponseStatus(resp.getStatus()));
-  resp.getProperty().Serialize(buff_);
+  if (resp.getStatus() == Response::OK) {
+    resp.getProperty().Serialize(buff_);
+  }
   return true;
 }
 
 bool PersProtocol::SerialBufferResponseVisitor::visitIncResponse(IncResponse &resp) /* throw(PvapException) */  {
   buff_.WriteInt8(getResponseStatus(resp.getStatus()));
-  buff_.WriteInt32(resp.getResult());
+  if (resp.getStatus() == Response::OK) {
+    buff_.WriteInt32(resp.getResult());
+  }
   return true;
 }
 
