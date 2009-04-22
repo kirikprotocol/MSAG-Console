@@ -38,7 +38,7 @@ class Request;
 
 class PvssDispatcher : public core::server::SyncDispatcher {
 public:
-  PvssDispatcher(const NodeConfig& nodeCfg);
+  PvssDispatcher(const NodeConfig& nodeCfg, unsigned creationLimit = 1000);
   virtual ~PvssDispatcher();
 
   virtual unsigned getIndex(Request& request) const;

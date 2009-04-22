@@ -314,7 +314,7 @@ int main(int argc, char* argv[]) {
       ++nodeCfg.disksCount;
     }
 
-    PvssDispatcher pvssDispatcher(nodeCfg);
+    PvssDispatcher pvssDispatcher(nodeCfg,abntCfg.fileSize/2);
 
     std::auto_ptr<InfrastructStorageConfig> infCfg;
     if (nodeCfg.nodeNumber == pvssDispatcher.getInfrastructNodeNumber()) {
