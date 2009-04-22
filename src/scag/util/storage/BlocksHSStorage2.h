@@ -36,47 +36,8 @@ private:
      */
 
     class CreationTask;
-
-    // to keep state during transaction and for serialization
-    struct StorageState
-    {
-        StorageState() {}
-
-        StorageState( const BlocksHSStorage2& bhs ) :
-        fileCount(bhs.files_.size()),
-        freeCount(bhs.freeCount_),
-        ffb(bhs.freeChain_.empty() ? bhs.packer_.invalidIndex() : bhs.freeChain_.front()) {}
-
-        static size_t dataSize() { return 12; }
-
-        unsigned char* saveData( unsigned char* ptr ) const
-        {
-            uint32_t val = htonl(fileCount);
-            ptr = mempcpy(ptr,&val,4);
-            val = htonl(freeCount);
-            ptr = mempcpy(ptr,&val,4);
-            val = htonl(ffb);
-            ptr = mempcpy(ptr,&val,4);
-            return ptr;
-        }
-
-        const unsigned char* loadData( const unsigned char* ptr )
-        {
-            uint32_t val;
-            ptr = memscpy(&val,ptr,4);
-            fileCount = ntohl(val);
-            ptr = memscpy(&val,ptr,4);
-            freeCount = ntohl(val);
-            ptr = memscpy(&val,ptr,4);
-            ffb = ntohl(val);
-            return ptr;
-        }
-
-        uint32_t fileCount;
-        uint32_t freeCount;
-        uint32_t ffb;
-    };
-
+    struct StorageState;
+    struct Transaction;
 
     // version + blockSize + fileSize
     inline size_t journalHeaderSize() const {
@@ -92,7 +53,10 @@ public:
             JOURNAL_FILE_OPEN_FAILED = -16,
             DATA_FILES_OPEN_FAILED = -17,
             JOURNAL_FILE_ALREADY_EXISTS = -18,
-            JOURNAL_FILE_CREATION_FAILED = -19
+            JOURNAL_FILE_CREATION_FAILED = -19,
+            FREE_CHAIN_BROKEN = -20,
+            JOURNAL_FILE_READ_FAILED = -21,
+            TRANSACTION_WRITE_FAILED = -22
     };
 
 
@@ -246,24 +210,10 @@ private:
     // and (possibly) applying transaction stored in buffer.
     int openDataFiles( const StorageState& state, const buffer_type* buffer );
 
-    inline size_t minTransactionSize() const
-    {
-        static const size_t constantBufSize =
-            4*2 +                             // length
-            8*2 +                             // csum*2
-            // 8*2 +                          // tstamp*2
-            StorageState::dataSize()*2 +      // old+new
-            4 +                               // oldbufsize
-            4;                                // newbufsize
-        return constantBufSize;
-    }
+    size_t minTransactionSize() const;
 
-
-    bool readJournal( buffer_type& oldbuf,
-                      buffer_type& newbuf,
-                      StorageState& oldState,
-                      StorageState& newState );
-
+    Transaction* readJournal( buffer_type& buffer,
+                              buffer_type::iterator& iptr );
 
     bool writeJournal( const buffer_type& oldbuf,
                        const buffer_type& newbuf,
@@ -380,7 +330,7 @@ private:
 
     util::Drndm           rnd_;
 
-    size_t                journalWrites_; // counter for how many times a journal was written
+    uint32_t              journalWrites_; // counter for how many times a journal was written
     size_t                maxJournalWrites_;
     File                  journalFile_;
 

@@ -1,11 +1,37 @@
+#include <algorithm>
 #include "BlocksHSStorage2.h"
 #include "scag/util/WatchedThreadedTask.h"
 #include "DataFileManager.h"
 #include "scag/util/Time.h"
+#include "scag/util/PtrLess.h"
+#include "scag/util/PtrDestroy.h"
+
+namespace {
+
+bool staticDone = false;
+scag2::util::storage::BlocksHSStorage2::buffer_type transactionHeader;
+scag2::util::storage::BlocksHSStorage2::buffer_type transactionEnd;
+smsc::core::synchronization::Mutex staticMutex;
+
+void makeStaticData()
+{
+    if ( staticDone ) return;
+    MutexGuard mg(staticMutex);
+    if ( staticDone ) return;
+    const std::string transHead("TrAnSaCt");
+    const std::string transEnd("EnDoFtRaNsAcTiOnS");
+    std::copy( transHead.begin(), transHead.end(), std::back_inserter(transactionHeader) );
+    std::copy( transEnd.begin(), transEnd.end(), std::back_inserter(transactionEnd) );
+    staticDone = true;
+}
+
+}
+
 
 namespace scag2 {
 namespace util {
 namespace storage {
+
 
 class BlocksHSStorage2::CreationTask : public WatchedThreadedTask
 {
@@ -59,6 +85,7 @@ private:
 
         std::auto_ptr< File > file( new File );
         file->RWCreate( tempName.c_str() );
+        file->SetUnbuffered();
 
         // getting preferred size
         struct stat st;
@@ -96,17 +123,17 @@ private:
                 // we have to write buffer
                 size_t bufsize = optr - buffer.begin();
                 file->Write(&buffer[0],bufsize);
-
+                writtenSize += bufsize;
                 if ( speed_ != 0 ) {
                     currentTime = util::currentTimeMillis();
-                    writtenSize += bufsize;
                     util::msectime_type expectedTime = writtenSize / speed_;
                     util::msectime_type elapsedTime = currentTime - startTime;
                     if ( elapsedTime < expectedTime ) {
                         sleepMonitor_.wait(expectedTime-elapsedTime);
                         if ( stopping() ) {
-                            if ( log_ && freeCount != 0 ) {
-                                smsc_log_warn(log_,"preallocation of %s stopped prematurely",fileName_.c_str());
+                            if ( log_ ) {
+                                smsc_log_warn(log_,"preallocation of %s has been externally stopped, freecount=%u",
+                                              fileName_.c_str(), unsigned(freeCount));
                             }
                             file->Close();
                             return -1;
@@ -203,7 +230,75 @@ private:
     FreeChainType                              freeChain_;
 };
 
+/// ======================================================================
 
+
+struct BlocksHSStorage2::StorageState
+{
+    StorageState() {}
+
+    StorageState( const BlocksHSStorage2& bhs ) :
+    fileCount(bhs.files_.size()),
+    freeCount(bhs.freeCount_),
+    ffb(bhs.freeChain_.empty() ? bhs.packer_.invalidIndex() : bhs.freeChain_.front()) {}
+
+    static size_t dataSize() { return 12; }
+
+    unsigned char* saveData( unsigned char* ptr ) const
+    {
+        uint32_t val = htonl(fileCount);
+        ptr = mempcpy(ptr,&val,4);
+        val = htonl(freeCount);
+        ptr = mempcpy(ptr,&val,4);
+        val = htonl(ffb);
+        ptr = mempcpy(ptr,&val,4);
+        return ptr;
+    }
+
+    const unsigned char* loadData( const unsigned char* ptr )
+    {
+        uint32_t val;
+        ptr = memscpy(&val,ptr,4);
+        fileCount = ntohl(val);
+        ptr = memscpy(&val,ptr,4);
+        freeCount = ntohl(val);
+        ptr = memscpy(&val,ptr,4);
+        ffb = ntohl(val);
+        return ptr;
+    }
+
+    std::string toString() const {
+        char buf[100];
+        snprintf(buf,sizeof(buf), "files=%u frees=%u ffb=%x", fileCount, freeCount, ffb);
+        return buf;
+    }
+
+public:
+    uint32_t fileCount;
+    uint32_t freeCount;
+    uint32_t ffb;
+};
+
+
+struct BlocksHSStorage2::Transaction
+{
+public:
+    bool operator < ( const Transaction& t ) const {
+        return serial < t.serial;
+    }
+
+public:
+    StorageState  oldState;
+    StorageState  newState;
+    buffer_type   oldBuf;
+    buffer_type   newBuf;
+    uint32_t      origSerial;
+    uint32_t      serial;
+    size_t        endsAt;     // in buffer
+};
+
+
+/// ======================================================================
 BlocksHSStorage2::BlocksHSStorage2( DataFileManager& manager,
                                     smsc::logger::Logger* logger ) :
 inited_(false),
@@ -219,6 +314,7 @@ maxJournalWrites_(100),
 manager_(manager),
 creationTask_(0)
 {
+    makeStaticData();
     rnd_.setSeed(time(0));
 }
 
@@ -646,71 +742,257 @@ int BlocksHSStorage2::doOpen()
     }
 
     if (log_) {
-        smsc_log_debug(log_,"journal header has been read: version=%x blockSize=%u fileSize=%u",
-                       unsigned(version_), unsigned(packer_.blockSize()), unsigned(fileSize_));
+        smsc_log_info(log_,"journal header has been read: version=%x blockSize=%u fileSize=%u",
+                      unsigned(version_), unsigned(packer_.blockSize()), unsigned(fileSize_));
     }
 
-    // reading transactions
-    size_t transRead = 0;
-    StorageState newState;
-    StorageState oldState;
+    // reading the whole journal file
+    if ( journalFile_.Size() > 1000000 ) {
+        smsc_log_error(log_,"journal file %s is too big", fn.c_str() );
+        return JOURNAL_FILE_READ_FAILED;
+    }
+    journal_.resize(journalFile_.Size());
+    journalFile_.Read(&journal_[journalHeaderSize()],journalFile_.Size()-journalHeaderSize());
+
+    // looking for a transaction
+    typedef std::vector< Transaction* > TransList;
+    TransList transactions_;
+    transactions_.reserve(100);
     try {
-        if ( !oldBuf_ ) oldBuf_ = new buffer_type;
-        if ( !newBuf_ ) newBuf_ = new buffer_type;
+
+        buffer_type::iterator iptr = journal_.begin() + journalHeaderSize();
         do {
-            if ( !readJournal( *oldBuf_, *newBuf_, oldState, newState ) ) {
+            // search for given position
+            iptr = find( iptr, journal_.end(), transactionHeader[0]);
+            if ( iptr+transactionHeader.size() >= journal_.end() ) { break; }
+            if ( ! std::equal(transactionHeader.begin(), transactionHeader.end(), iptr) ) {
+                // not equal
+                ++iptr;
+                continue;
+            }
+
+            buffer_type::iterator optr = iptr + transactionHeader.size();
+            Transaction* t = 0;
+            try {
+                t = readJournal( journal_, optr );
+            } catch ( std::exception& e ) {
+                if (log_) {
+                    smsc_log_warn(log_,"exception reading jnl: %s", e.what());
+                }
+            }
+            if ( t ) {
+                iptr = optr;
+                transactions_.push_back( t );
+                // checking if the eof-mark is here
+                if ( iptr + transactionEnd.size() >= journal_.end() ) {
+                    // file has ended
+                    break;
+                }
+                if ( std::equal(transactionEnd.begin(), transactionEnd.end(), iptr) ) {
+                    // eof-mark found
+                    if (log_) {
+                        smsc_log_info(log_,"eof-mark found");
+                    }
+                    break;
+                }
+            } else {
+                ++iptr;
+            }
+
+        } while ( true );
+
+    } catch ( std::exception& e ) {
+        if (log_) {
+            smsc_log_warn(log_,"exc in readTrans: %s", e.what());
+        }
+    }
+
+    // journal data is not needed anymore
+    buffer_type().swap(journal_);
+
+    if ( transactions_.size() == 0 ) {
+        if (log_) {
+            smsc_log_error(log_,"no transaction could be read");
+        }
+        return JOURNAL_FILE_READ_FAILED;
+    }
+
+    int ret = 0;
+    const char* transType = "none";
+    do { // fake loop
+
+        // shifting all transaction so that they will have sequential serial numbers
+        uint32_t serialShift = ( transactions_.front()->serial > 0x40000000U &&
+                                 transactions_.front()->serial < 0xc0000000U ) ?
+            0U : 0x80000000U;
+
+        for ( TransList::const_iterator i = transactions_.begin();
+              i != transactions_.end();
+              ++i ) {
+            (*i)->serial += serialShift;
+        }
+    
+        std::sort( transactions_.begin(), transactions_.end(), PtrLess() );
+
+        if ( transactions_.size() > 1 ) {
+            // check that all transactions are sequential
+            TransList::const_iterator i = transactions_.begin();
+            for ( TransList::const_iterator j = i+1;
+                  j != transactions_.end();
+                  ++j ) {
+                if ( (*i)->serial + 1 != (*j)->serial ) {
+                    if (log_) {
+                        smsc_log_error(log_,"we have non-sequential transactions: %u %u",
+                                       (*i)->origSerial, (*j)->origSerial );
+                    }
+                    ret = JOURNAL_FILE_READ_FAILED;
+                    break;
+                }
+                ++i;
+            }
+        }
+
+        if ( ret ) break;
+
+        // all transaction are sequential
+
+        // opening files
+        for ( std::vector< File* >::const_iterator i = files_.begin();
+              i != files_.end();
+              ++i ) {
+            (*i)->Close();
+        }
+        files_.clear();
+        try {
+            const size_t fileCount = transactions_.back()->newState.fileCount;
+            for ( size_t i = 0; i < fileCount; ++i ) {
+                const std::string fn = makeFileName(i);
+                if ( ! File::Exists(fn.c_str()) ) {
+                    throw smsc::util::Exception("file %s does not exist", fn.c_str());
+                }
+                std::auto_ptr< File > file(new File);
+                file->RWOpen(fn.c_str());
+                file->SetUnbuffered();
+                files_.push_back(file.release());
+            }
+        } catch ( std::exception& e ) {
+            if (log_) {
+                smsc_log_error(log_,"cannot open data files: %s", e.what());
+            }
+            ret = DATA_FILES_OPEN_FAILED;
+            break;
+        }
+        
+        if (log_) {
+            smsc_log_info(log_,"all %u files have been opened",unsigned(files_.size()));
+        }
+
+        for ( TransList::const_iterator i = transactions_.begin();
+              i != transactions_.end();
+              ++i ) {
+            try {
+                if (log_) {            
+                    smsc_log_debug(log_,"applying new transaction #%u", (*i)->origSerial );
+                }
+                writeBlocks( (*i)->newBuf );
+            } catch ( std::exception& e ) {
+                if (log_) {
+                    smsc_log_warn(log_,"new transaction #%u failed: %s", (*i)->origSerial, e.what());
+                }
+                ret = TRANSACTION_WRITE_FAILED;
                 break;
             }
-            ++transRead;
-        } while ( true );
-    } catch ( std::exception& e ) {
-        if (transRead == 0 && log_) {
-            smsc_log_warn(log_,"readJournal: %s", e.what());
         }
-    }
-    if ( transRead == 0 ) {
-        // no transaction has been read
-        return JOURNAL_FILE_OPEN_FAILED;
-    }
-    
-    // else the last valid transaction is in oldstate, newstate, oldbuf, newbuf.
-    // trying to open data files according to newstate.
-    const char* transType = "none";
-    int ret;
-    do {
-        try {
-            ret = openDataFiles( newState, newBuf_ );
-            if ( ret != 0 ) {
-                throw smsc::util::Exception("cannot open datafiles");
+
+        if ( ! ret ) {
+            // success?
+            // setting state
+            freeChain_.clear();
+            freeCount_ = transactions_.back()->newState.freeCount;
+            freeChain_.push_back( transactions_.back()->newState.ffb );
+            try {
+                if ( ! readFreeBlocks(1) ) {
+                    throw smsc::util::Exception("failed");
+                }
+            } catch ( std::exception& e ) {
+                if (log_) {
+                    smsc_log_warn(log_,"cannot read new free blocks starting at %llx: %s",
+                                  idx2pos(transactions_.back()->newState.ffb), e.what());
+                }
+                ret = FREE_CHAIN_BROKEN;
             }
-            transType = "new";
-        } catch ( std::exception& e ) {
+            if (!ret) {
+                // success
+                journalFile_.Seek(transactions_.back()->endsAt);
+                journalWrites_ = transactions_.back()->origSerial;
+                transType = "new";
+            }
+        }
+        
+        if ( ret ) {
+            // new state is broken, trying to rollback all transactions
             if (log_) {
-                smsc_log_warn(log_,"new state failure: %s", e.what());
+                smsc_log_warn(log_,"could not apply new transactions, trying with old");
             }
-            ret = DATA_FILES_OPEN_FAILED;
-        }
+            ret = 0;
+            for ( TransList::const_reverse_iterator i = transactions_.rbegin();
+                  i != transactions_.rend();
+                  ++i ) {
+                try {
+                    if (log_) {            
+                        smsc_log_debug(log_,"applying old transaction #%u", (*i)->origSerial );
+                    }
+                    writeBlocks( (*i)->oldBuf );
+                } catch ( std::exception& e ) {
+                    if (log_) {
+                        smsc_log_warn(log_,"old transaction #%u failed: %s", (*i)->origSerial, e.what());
+                    }
+                    ret = TRANSACTION_WRITE_FAILED;
+                    break;
+                }
+            }
+
+            if ( ! ret ) {
+                // applying old state
+                const size_t oldFileCount = transactions_.front()->oldState.fileCount;
+                if ( oldFileCount < files_.size() ) {
+                    std::for_each( files_.begin() + oldFileCount,
+                                   files_.end(),
+                                   PtrDestroy() );
+                    files_.erase( files_.begin()+oldFileCount,files_.end() );
+                }
+
+                freeChain_.clear();
+                freeCount_ = transactions_.front()->oldState.freeCount;
+                freeChain_.push_back(transactions_.front()->oldState.ffb);
+                try {
+                    if ( ! readFreeBlocks(1) ) {
+                        throw smsc::util::Exception("failed");
+                    }
+                } catch ( std::exception& e ) {
+                    if (log_) {
+                        smsc_log_warn(log_,"cannot read old free blocks starting at %llx: %s",
+                                      idx2pos(transactions_.front()->oldState.ffb), e.what());
+                    }
+                    ret = FREE_CHAIN_BROKEN;
+                }
+                if (!ret) {
+                    // success
+                    journalFile_.Seek(journalHeaderSize());
+                    journalWrites_ = 0;
+                    transType = "old";
+                }
+
+            } // if old buffers applied
+
+        } // if new state is broken
+
     } while ( false );
 
-    // trying the same with old transaction
-    do {
-        if ( ret == 0 ) {break;}
-        try {
-            ret = openDataFiles( oldState, oldBuf_ );
-            if ( ret != 0 ) {
-                throw smsc::util::Exception("cannot open datafiles");
-            }
-            transType = "old";
-        } catch ( std::exception& e ) {
-            if (log_) {
-                smsc_log_warn(log_,"old state failure: %s", e.what());
-            }
-            ret = DATA_FILES_OPEN_FAILED;
-        }
-    } while ( false );
+    // destroying all transactions
+    std::for_each( transactions_.begin(), transactions_.end(), PtrDestroy() );
 
     if ( ret == 0 ) {
-        journalFile_.Seek( journalHeaderSize() );
         if (log_) {
             smsc_log_info(log_,"storage has been opened via %s trans: version=%x blockSize=%u/%x fileSize=%u/%x fszBytes=%llx fileCount=%u freeCount=%u ffb=%llx",
                           transType,
@@ -754,13 +1036,20 @@ int BlocksHSStorage2::doCreate()
         return JOURNAL_FILE_CREATION_FAILED;
     }
 
+    try {
+        checkFreeCount(freeCount_);
+    } catch ( std::exception& e ) {
+        if (log_) {
+            smsc_log_error(log_,"cannot load initial free chain");
+        }
+        return FREE_CHAIN_BROKEN;
+    }
     if (log_) {
         smsc_log_info(log_,"storage has been created: version=%x blockSize=%u/%x fileSize=%u/%x fszBytes=%llx fileCount=%u freeCount=%u ffb=%llx",
                       unsigned(version_), unsigned(packer_.blockSize()), unsigned(packer_.blockSize()),
                       unsigned(fileSize_), unsigned(fileSize_), fileSizeBytes_,
                       unsigned(files_.size()), unsigned(freeCount_), idx2pos(freeChain_.front()));
     }
-    checkFreeCount(freeCount_);
     return 0;
 }
 
@@ -774,6 +1063,16 @@ int BlocksHSStorage2::openDataFiles( const StorageState& state, const buffer_typ
     }
     files_.clear();
 
+    /*
+    if ( log_ ) {
+        smsc_log_info( log_,"trying to open w/ state: files=%u bufSz=%u frees=%u ffb=%llx",
+                       unsigned(state.fileCount),
+                       buffer ? unsigned(buffer->size()) : 0U,
+                       unsigned(state.freeCount),
+                       idx2pos(state.ffb) );
+    }
+     */
+
     for ( size_t i = 0; i < state.fileCount; ++i ) {
         std::string fn = makeFileName( i );
         if ( ! File::Exists(fn.c_str()) ) {
@@ -785,7 +1084,13 @@ int BlocksHSStorage2::openDataFiles( const StorageState& state, const buffer_typ
         files_.push_back(file.release());
     }
     
-    if ( buffer ) {
+    if ( buffer && buffer->size() > 0 ) {
+        if (log_ && log_->isDebugEnabled()) {
+            HexDump hd;
+            std::string dump;
+            hd.hexdump(dump,&(*buffer)[0],buffer->size());
+            smsc_log_debug(log_,"applying block contents: sz=%u %s", unsigned(buffer->size()), dump.c_str());
+        }
         if ( !writeBlocks(*buffer) ) {
             throw smsc::util::Exception( "cannot apply transaction after opening datafiles" );
         }
@@ -803,36 +1108,39 @@ int BlocksHSStorage2::openDataFiles( const StorageState& state, const buffer_typ
 }
 
 
-bool BlocksHSStorage2::readJournal( buffer_type& oldbuf,
-                                    buffer_type& newbuf,
-                                    StorageState& oldState,
-                                    StorageState& newState )
+size_t BlocksHSStorage2::minTransactionSize() const
 {
-    journal_.clear();
+    static const size_t constantBufSize =
+        4*2 +                             // length*2
+        8*2 +                             // csum*2
+        4 +                               // serial
+        StorageState::dataSize()*2 +      // old+new
+        4 +                               // oldbufsize
+        4;                                // newbufsize
+    return constantBufSize;
+}
+
+
+BlocksHSStorage2::Transaction* BlocksHSStorage2::readJournal( buffer_type& buffer,
+                                                              buffer_type::iterator& iptr )
+{
+    const unsigned char* ptr = &buffer[iptr-buffer.begin()];
+    // reading length
     uint32_t val;
-    int rv = journalFile_.Read(&val,4);
-    if ( rv == 0 ) { return false; }
-    if ( rv != 4 ) {
-        throw smsc::util::Exception("wrong size of transLen=%d",rv);
-    }
+    ptr = memscpy(&val,ptr,4);
     const size_t transactionSize = ntohl(val);
     if ( transactionSize < minTransactionSize() ) {
         throw smsc::util::Exception("weird transLen=%u, must be >= minLen=%u",
                                     unsigned(transactionSize),
                                     unsigned(minTransactionSize()) );
     }
-    const uint64_t fsz( journalFile_.Size() );
-    if ( transactionSize >= fsz ) {
-        throw smsc::util::Exception("weird transLen=%u, must be < %u",
+    if ( iptr + transactionSize > buffer.end() ) {
+        throw smsc::util::Exception("weird transLen=%u, must be <= %u",
                                     unsigned(transactionSize),
-                                    unsigned(fsz));
+                                    unsigned(buffer.end()-iptr));
     }
-    journal_.resize(transactionSize);
-    const unsigned char* ptr = mempcpy(&journal_[0],&val,4);
-    if ( transactionSize-4 != journalFile_.Read(&journal_[4],transactionSize-4) ) {
-        throw smsc::util::Exception("cannot read trans data");
-    }
-    // checking checksums
+
+    // checking csums
     uint64_t csum1, csum2;
     uint32_t ctrlval;
     ptr = memscpy( &csum1, ptr, 8);
@@ -840,7 +1148,7 @@ bool BlocksHSStorage2::readJournal( buffer_type& oldbuf,
         throw smsc::util::Exception("control sum cannot be 0");
     }
     {
-        const unsigned char* endptr = &journal_[transactionSize-12];
+        const unsigned char* endptr = &buffer[(iptr - buffer.begin()) + transactionSize - 12];
         endptr = memscpy( &csum2, endptr,8);
         memscpy( &ctrlval, endptr, 4);
     }
@@ -851,18 +1159,32 @@ bool BlocksHSStorage2::readJournal( buffer_type& oldbuf,
         throw smsc::util::Exception("lengths do not match %x != %x", unsigned(val), unsigned(ctrlval) );
     }
     // everything is ok, reading states and buffers
-    ptr = oldState.loadData(ptr);
-    ptr = newState.loadData(ptr);
+    Transaction* t = new Transaction;
+    ptr = memscpy(&val,ptr,4);
+    t->serial = t->origSerial = ntohl(val);
+    ptr = t->oldState.loadData(ptr);
+    ptr = t->newState.loadData(ptr);
     uint32_t szval;
     ptr = memscpy(&szval,ptr,4);
     szval = ntohl(szval);
-    oldbuf.resize(szval);
-    if (szval > 0 ) ptr = memscpy(&oldbuf[0],ptr,szval);
+    t->oldBuf.resize(szval);
+    if (szval > 0 ) ptr = memscpy(&(t->oldBuf[0]),ptr,szval);
     ptr = memscpy(&szval,ptr,4);
     szval = ntohl(szval);
-    newbuf.resize(szval);
-    if (szval > 0 ) ptr = memscpy(&newbuf[0],ptr,szval);
-    return true;
+    t->newBuf.resize(szval);
+    if (szval > 0 ) ptr = memscpy(&(t->newBuf[0]),ptr,szval);
+    iptr += transactionSize;
+    t->endsAt = (iptr - buffer.begin());
+    if (log_) {
+        smsc_log_debug(log_,"transaction #%u has been read: old=(%s,sz=%u) new=(%s,sz=%u) ends=%u",
+                       t->serial,
+                       t->oldState.toString().c_str(),
+                       unsigned(t->oldBuf.size()),
+                       t->newState.toString().c_str(),
+                       unsigned(t->newBuf.size()),
+                       unsigned(t->endsAt) );
+    }
+    return t;
 }
 
 
@@ -870,9 +1192,12 @@ bool BlocksHSStorage2::writeJournal( const buffer_type& oldbuf,
                                      const buffer_type& newbuf,
                                      const StorageState& oldhead )
 {
-    size_t constantBufSize = minTransactionSize();
-    const uint32_t jnlSize = constantBufSize + oldbuf.size() + newbuf.size();
-    journal_.resize( jnlSize );
+    ++journalWrites_;
+    const bool lastTrans = ((journalWrites_ % maxJournalWrites_) == 0);
+
+    const uint32_t jnlSize = minTransactionSize() + oldbuf.size() + newbuf.size();
+    journal_.resize( transactionHeader.size() + jnlSize +
+                     ( lastTrans ? transactionEnd.size() : 0 ) );
     unsigned char* ptr = &journal_[0];
     const uint32_t jnlSizeNet = htonl(jnlSize);
 
@@ -887,9 +1212,12 @@ bool BlocksHSStorage2::writeJournal( const buffer_type& oldbuf,
     // timestamp -- not written
     // cvt.set( int64_t(util::currentTimeMillis()) );
     // const uint64_t tstamp = cvt.cvt.quads[0];
+    ptr = mempcpy(ptr,&transactionHeader[0],transactionHeader.size());
     ptr = mempcpy(ptr,&jnlSizeNet,4);
     ptr = mempcpy(ptr,&csum,8);
+    const uint32_t serial = htonl(journalWrites_);
     // ptr = mempcpy(ptr,&tstamp,8);
+    ptr = mempcpy(ptr,&serial,4);
     ptr = oldhead.saveData(ptr);
     ptr = newhead.saveData(ptr);
     uint32_t szval = htonl(uint32_t(oldbuf.size()));
@@ -901,20 +1229,23 @@ bool BlocksHSStorage2::writeJournal( const buffer_type& oldbuf,
     ptr = mempcpy(ptr,&csum,8);
     // ptr = mempcpy(ptr,&tstamp,8);
     ptr = mempcpy(ptr,&jnlSizeNet,4);
-    assert( ptr == &journal_[jnlSize] );
 
-    // write buffer to a journal file
-    if ( ++journalWrites_ > maxJournalWrites_ ) {
-        journalFile_.Seek(journalHeaderSize());
-        journalWrites_ = 1;
+    if ( lastTrans ) {
+        ptr = mempcpy(ptr,&transactionEnd[0],transactionEnd.size());
     }
+
+    assert( ptr == (&journal_[0] + journal_.size()) );
+
     if ( log_ ) {
         smsc_log_debug(log_,"writing journal #%u of sz=%u csum=%llx",
                        unsigned(journalWrites_),
                        unsigned(jnlSize),
                        csum );
     }
-    journalFile_.Write( &journal_[0], jnlSize );
+    journalFile_.Write( &journal_[0], journal_.size() );
+    if ( lastTrans ) {
+        journalFile_.Seek(journalHeaderSize());
+    }
     return true;
 }
 
@@ -1068,22 +1399,36 @@ void BlocksHSStorage2::checkFreeCount( size_t freeCount )
     if ( creationTask_.get() ) { return; }
 
     // we have to create a new task
-    MutexGuard mg(creationMutex_);
-    if ( creationTask_.get() ) { return; }
-
-    // calculate speed (kb/sec)
     size_t speed = 0;
-    if ( manager_.getExpectedSpeed() > 0 && freeCount > 0 ) {
-        speed = (fileSizeBytes_/1024) * manager_.getExpectedSpeed() / freeCount; 
+    {
+        MutexGuard mg(creationMutex_);
+        if ( creationTask_.get() ) { return; }
+
+        // calculate speed (kb/sec)
+        if ( manager_.getExpectedSpeed() > 0 && freeCount > 0 ) {
+            speed = (fileSizeBytes_/1024) * manager_.getExpectedSpeed() / freeCount; 
+        }
+        creationTask_.reset( new CreationTask( makeFileName(files_.size()),
+                                               packer_.blockSize(),
+                                               fileSize_,
+                                               files_.size(),
+                                               speed,
+                                               log_ ));
     }
 
-    creationTask_.reset( new CreationTask( makeFileName(files_.size()),
-                                           packer_.blockSize(),
-                                           fileSize_,
-                                           files_.size(),
-                                           speed,
-                                           log_ ));
-    manager_.startTask( creationTask_.get(), false );
+    if ( inited_ ) {
+        manager_.startTask( creationTask_.get(), false );
+    } else {
+        // invoked on the same thread
+        try {
+            creationTask_->Execute();
+            creationTask_->onRelease();
+        } catch ( std::exception& e ) {
+            if (log_) {
+                smsc_log_warn(log_,"exc in creationTask: %s", e.what());
+            }
+        }
+    }
 }
 
 

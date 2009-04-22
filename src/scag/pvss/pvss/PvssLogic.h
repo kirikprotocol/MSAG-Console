@@ -13,18 +13,31 @@
 #include "core/buffers/PageFile.hpp"
 #include "core/buffers/IntHash.hpp"
 
-#include "scag/util/storage/BlocksHSStorage.h"
+
+#include "scag/util/storage/DataBlockBackup.h"
+
+// please uncomment the following line to get the new code
+// #define PVSSLOGIC_BHS2 1
+
+#ifdef PVSSLOGIC_BHS2
+
+#include "scag/util/storage/BlocksHSStorage2.h"
+#include "scag/util/storage/BHDiskStorage2.h"
+
+#else
+
 #include "scag/util/storage/BlocksHSStorage3.h"
+#include "scag/util/storage/BHDiskStorage.h"
+
+#endif
+
 #include "scag/util/storage/RBTreeIndexStorage.h"
 #include "scag/util/storage/DiskHashIndexStorage.h"
-//#include "scag/util/storage/HashedMemoryCache.h"
 #include "scag/util/storage/ArrayedMemoryCache.h"
 #include "scag/util/storage/StorageIface.h"
 #include "scag/util/storage/PageFileDiskStorage.h"
-#include "scag/util/storage/BHDiskStorage.h"
 #include "scag/util/storage/Glossary.h"
 #include "scag/util/WatchedThreadedTask.h"
-
 #include "scag/pvss/api/core/server/Server.h"
 #include "ProfileCommandProcessor.h"
 
@@ -195,7 +208,11 @@ private:
     // typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
     // typedef BHDiskStorage< AbntAddr, Profile > DiskDataStorage;
     typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
+#ifdef PVSSLOGIC_BHS2
+    typedef BHDiskStorage2< AbntAddr, Profile, BlocksHSStorage2 > DiskDataStorage;
+#else
     typedef BHDiskStorage< AbntAddr, Profile, BlocksHSStorage3<AbntAddr,Profile> > DiskDataStorage;
+#endif
     typedef RBTreeIndexStorage< AbntAddr, DiskDataStorage::index_type > DiskIndexStorage;
     typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
     typedef CachedDiskStorage< MemStorage, DiskStorage > AbonentStorage;

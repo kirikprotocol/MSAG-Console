@@ -187,6 +187,32 @@ unsigned long AbonentLogic::initElementStorage(unsigned index,bool checkAtStart)
       dis->checkTree();
       smsc_log_debug(logger_, "data index storage %d is checked", index);
   }
+
+#ifdef PVSSLOGIC_BHS2
+    std::auto_ptr< DiskDataStorage::storage_type > bs
+        ( new DiskDataStorage::storage_type
+          ( dataFileManager_,
+            smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
+    const std::string fn( config_.dbName + "-data" );
+    int ret = -1;
+    ret = bs->open(fn,path);
+    if ( ret == DiskDataStorage::storage_type::JOURNAL_FILE_OPEN_FAILED ) {
+        if ( bs->create(fn,path, config_.fileSize, config_.blockSize ) < 0 ) {
+            throw smsc::util::Exception("cannot create data disk storage: %s", path.c_str());
+        }
+        ret = 0;
+    }
+    if ( ret < 0 ) {
+        throw smsc::util::Exception("cannot create data disk storage: %s", path.c_str());
+    }
+    std::auto_ptr< DiskDataStorage > dds
+        ( new DiskDataStorage
+          ( bs.release(),
+            elStorage->glossary,
+            smsc::logger::Logger::getInstance(("pvssdd."+pathSuffixString).c_str())));
+
+#else
+
   std::auto_ptr< DiskDataStorage::storage_type > bs
         (new DiskDataStorage::storage_type
          (dataFileManager_, elStorage->glossary,
@@ -208,6 +234,8 @@ unsigned long AbonentLogic::initElementStorage(unsigned index,bool checkAtStart)
   std::auto_ptr< DiskDataStorage > dds
         (new DiskDataStorage(bs.release(),
                              smsc::logger::Logger::getInstance(("pvssdd."+pathSuffixString).c_str())));
+#endif
+
   smsc_log_debug(logger_, "data disk storage %d is created", index);
 
   std::auto_ptr< DiskStorage > ds(new DiskStorage(dis.release(), dds.release()));
@@ -227,6 +255,10 @@ unsigned long AbonentLogic::initElementStorage(unsigned index,bool checkAtStart)
 
 unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxSpeed )
 {
+#ifdef PVSSLOGIC_BHS2
+    smsc_log_warn(logger_,"rebuildElementStorage is not implemented yet");
+    return 0;
+#else
     char pathSuffix[4];
     snprintf(pathSuffix, sizeof(pathSuffix), "%03u", index);
     string path = string(config_.locations[locationNumber_].path + "/") + pathSuffix;
@@ -290,6 +322,7 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
     rename( n.c_str(), o.c_str() );
     rename( t.c_str(), n.c_str() );
     return rebuilt;
+#endif
 }
 
 
@@ -312,7 +345,9 @@ Response* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest) {
   commandProcessor_.setProfile(pf);
   profileRequest.getCommand()->visit(commandProcessor_);
   if (!pf) {
-    if (createProfile) smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &profileRequest, pf->getKey().c_str());
+    if (createProfile) {
+        smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &profileRequest, pf->getKey().c_str());
+    }
     CommandResponse* r = commandProcessor_.getResponse();
     return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
   }
@@ -363,7 +398,9 @@ Response* InfrastructLogic::processProfileRequest(ProfileRequest& profileRequest
   commandProcessor_.setProfile(pf);
   profileRequest.getCommand()->visit(commandProcessor_);
   if (!pf) {
-    if (createProfile) smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &profileRequest, pf->getKey().c_str());
+    if (createProfile) {
+        smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &profileRequest, pf->getKey().c_str());
+    }
     CommandResponse* r = commandProcessor_.getResponse();
     return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
   }
