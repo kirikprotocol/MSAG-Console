@@ -220,6 +220,15 @@ AbonentLogic* PvssDispatcher::getLocation(unsigned elementStorageNumber) {
 
 void PvssDispatcher::shutdown() {
   uint16_t created = createdLocations_;
+    // stopping all file managers
+    for ( std::vector< DataFileManager* >::iterator i = dataFileManagers_.begin();
+          i != dataFileManagers_.end();
+          ++i ) {
+        if ( *i ) {
+            (*i)->shutdown();
+        }
+    }
+
   for (unsigned i = 0; i < created; ++i) {
     delete abonentLogics_[i];
     --createdLocations_;
