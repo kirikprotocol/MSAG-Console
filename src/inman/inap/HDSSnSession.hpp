@@ -38,7 +38,7 @@ struct TNoticeParms {
     TCDialogID  relId;
     uint8_t     reportCause;
 
-    TNoticeParms() : relId(0), reportCause(0)
+    TNoticeParms() : reportCause(0)
     { }
     TNoticeParms(const TCDialogID & rel_id, uint8_t report_cause)
         : relId(rel_id), reportCause(report_cause)
@@ -187,7 +187,6 @@ public:
 
     SSBindStatus getStatus(void) const
     {
-        SSBindStatus  rval = SSNBinding::ssnIdle;
         uint8_t mask = 0x00; //'0000 0,Bound,Error,Idle'
         
         for (UNITsBinding::const_iterator cit = units.begin(); cit != units.end(); ++cit) {

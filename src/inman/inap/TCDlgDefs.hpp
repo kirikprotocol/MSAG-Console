@@ -17,7 +17,10 @@ struct TCDialogID {
     uint8_t     tcInstId;   //instanceId of TCAP unit controlling this dialog
     uint16_t    dlgId;      //
 
-    TCDialogID(uint8_t tc_inst_id = 0, uint16_t dlg_id = 0)
+    TCDialogID()
+        : tcInstId(0), dlgId(0)
+    { }
+    TCDialogID(uint8_t tc_inst_id, uint16_t dlg_id)
         : tcInstId(tc_inst_id), dlgId(dlg_id)
     { }
 

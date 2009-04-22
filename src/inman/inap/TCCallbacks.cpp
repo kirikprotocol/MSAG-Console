@@ -315,7 +315,7 @@ USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
     SSNSession* pSession = findSSNsession(ssn);
     if (pSession) {
         TCDialogID    dlgId(tcapInstanceId, dialogueId);
-        Dialog* dlg = pSession->findDialog(dialogueId);
+        Dialog* dlg = pSession->findDialog(dlgId);
         if (dlg)
             dlg->handleResultNotLast(invokeId, tag, opLength, op, paramLength, pm);
         else { //look in noticed dialogs
@@ -366,7 +366,7 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
             dlg->handleResultLast(invokeId, tag, opLength, op, paramLength, pm);
         else { //look in noticed dialogs
             TNoticeParms    parms;
-            if (pSession->noticeParms(dialogueId, parms)) {
+            if (pSession->noticeParms(dlgId, parms)) {
                 if ((dlg = pSession->findDialog(parms.relId))) {
                     dlg->handleNoticeInd(parms.reportCause, TcapEntity::tceResult,
                                          invokeId, opLength, op);
@@ -412,7 +412,7 @@ USHORT_T EINSS7_I97TUErrorInd(UCHAR_T          ssn,
             dlg->handleResultError(invokeId, tag, opLength, op, paramLength, pm);
         else { //look in noticed dialogs
             TNoticeParms    parms;
-            if (pSession->noticeParms(dialogueId, parms)) {
+            if (pSession->noticeParms(dlgId, parms)) {
                 if ((dlg = pSession->findDialog(parms.relId))) {
                     dlg->handleNoticeInd(parms.reportCause, TcapEntity::tceError,
                                          invokeId, opLength, op);
