@@ -25,7 +25,8 @@ public:
 
     BHDiskStorage2( storage_type* hs,
                     GlossaryBase* glossary = 0,
-                    smsc::logger::Logger* = 0 ) : store_(hs), glossary_(glossary), v_(0), buf_(0)
+                    smsc::logger::Logger* logger = 0 ) :
+    store_(hs), glossary_(glossary), v_(0), buf_(0), log_(logger)
     {
         i_ = invalidIndex();
         if ( !hs ) {
@@ -48,24 +49,29 @@ public:
     }
 
 
+    inline index_type invalidIndex() const {
+        return store_->invalidIndex();
+    }
+
+
     void serialize( const value_type& v ) /* throw exception ? */
     {
         i_ = invalidIndex();
         v_ = const_cast<value_type*>(&v);
         if ( !buf_ ) buf_ = new buffer_type;
         Serializer ser(*buf_,glossary_);
+        ser.setVersion(store_->version());
         ser.reset();
         ser.setwpos( headerSize() );
         ser << key_;
-        {
-            const size_t oldwpos = ser.wpos();
-            ser << v.value;
-            if ( ser.wpos() <= oldwpos ) {
-                // no bytes written
-                ser.reset();
-            }
+        const size_t oldwpos = ser.wpos();
+        ser << *v.value;
+        if ( ser.wpos() <= oldwpos ) {
+            // no bytes written
+            ser.reset();
+        } else {
+            packBuffer(*buf_,0);
         }
-        packBuffer(*buf_);
     }
 
 
@@ -73,10 +79,10 @@ public:
     {
         index_type blockIndex;
         if ( v_ && buf_ && !buf_->empty() ) {
-            blockIndex = store_->change(key_,invalidIndex(),0,buf_);
+            blockIndex = store_->change(invalidIndex(),0,buf_);
             if ( blockIndex != invalidIndex() ) {
                 // successfully stored, now buf_ has fully functional
-                std::swap(buf_,v_->backup);
+                attachBackup(v_->backup,buf_);
             }
         } else {
             blockIndex = invalidIndex();
@@ -97,16 +103,18 @@ public:
 
     bool deserialize( value_type& v ) const /* throw exception */
     {
-        if ( i_ == invalidIndex() || !buf_ || !v.value ) return false;
-        unpackBuffer(*buf_);
+        if ( i_ == invalidIndex() || !buf_ || buf_->empty() || !v.value ) return false;
+        buffer_type headers;
+        unpackBuffer(*buf_,&headers);
         Deserializer dsr(*buf_,glossary_);
+        dsr.setVersion(store_->version());
         dsr.setrpos(headerSize());
         // FIXME: should we check for key match here?
         dsr >> key_;
         dsr >> *v.value;
-        // if everything is ok, then pack buffer again and attach it to v
-        packBuffer(*buf_);
-        std::swap(v.backup,buf_);
+        // if everything is ok, then pack buffer back again and attach it to v
+        packBuffer(*buf_,&headers);
+        attachBackup(v.backup,buf_);
         return true;
     }
 
@@ -115,10 +123,10 @@ public:
     {
         index_type blockIndex;
         if ( v_ && buf_ && !buf_->empty() && i != invalidIndex() ) {
-            blockIndex = store_->change(key_,i,v_->backup,buf_);
+            blockIndex = store_->change(i,v_->backup,buf_);
             if ( blockIndex != invalidIndex() ) {
                 // successfully stored, attach buf_ to v
-                std::swap(buf_,v_->backup);
+                attachBackup(v_->backup,buf_);
             }
         } else {
             blockIndex = invalidIndex();
@@ -129,23 +137,27 @@ public:
 
     void remove(index_type i)
     {
-        store_->change(key_,i,0,0);
+        store_->change(i,0,0);
     }
 
-    inline index_type invalidIndex() const {
-        return store_->invalidIndex();
-    }
 
+    void recoverFromBackup( value_type& v )
+    {
+        if (log_) {smsc_log_warn(log_,"recover from backup is not implemented");}
+    }
 
 protected:
     inline size_t headerSize() const {
         return store_->headerSize();
     }
-    inline void packBuffer( buffer_type& buf ) const {
-        store_->packBuffer(buf);
+    inline void packBuffer(buffer_type& buf, buffer_type* hdr) const {
+        store_->packBuffer(buf,hdr);
     }
-    inline void unpackBuffer( buffer_type& buf ) const {
-        store_->unpackBuffer(buf);
+    inline void unpackBuffer( buffer_type& buf, buffer_type* hdr ) const {
+        store_->unpackBuffer(buf,hdr);
+    }
+    inline void attachBackup( buffer_type*& oldBuf, buffer_type*& newBuf ) const {
+        std::swap(oldBuf,newBuf);
     }
 
 private:
@@ -155,6 +167,7 @@ private:
     mutable index_type       i_;
     mutable value_type*      v_;     // not owned
     mutable buffer_type*     buf_;   // owned
+    smsc::logger::Logger*    log_;
 };
 
 } // namespace storage

@@ -163,13 +163,21 @@ void testBHS2()
     smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("main");
 
     typedef BlocksHSStorage2 BHS;
-    const size_t fileSize = 16384;
-    const size_t blockSize = 256;
-    
-    BHS bhs(smsc::logger::Logger::getInstance("bhs"));
-    if ( 0 != bhs.open("abonent-data","storage/0/000") ) {
-        if ( 0 != bhs.create("abonent","storage",fileSize,blockSize) ) {
+    const size_t fileSize = 0x1000;
+    const size_t blockSize = 0x100;
+    const std::string dbname = "abonent-data";
+    const std::string dbpath = "storage/0/000";
+    const unsigned blockSpeed = 100;
+
+    DataFileManager dfm(1,blockSpeed,fileSize/2);
+
+    BHS bhs(dfm,smsc::logger::Logger::getInstance("bhs"));
+    if ( 0 != bhs.open(dbname, dbpath) ) {
+        if ( 0 != bhs.create(dbname,dbpath,fileSize,blockSize) ) {
             smsc_log_fatal(logger,"cannot create storage: cannot proceed");
+            return;
+        } else {
+            smsc_log_info(logger,"storage has been created");
             return;
         }
     }
@@ -244,6 +252,9 @@ void testBHS2()
             ::abort();
         }
     }
+
+    dfm.shutdown();
+
 }
 
 

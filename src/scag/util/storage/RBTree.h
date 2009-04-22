@@ -29,7 +29,8 @@ public:
     RBTree( RBTreeAllocator<Key, Value>* _allocator=0,
             RBTreeChangesObserver<Key, Value>* _changesObserver=0,
             smsc::logger::Logger* thelog = 0 ) : 
-    defaultAllocator(false), defaultChangesObserver(false), logger(thelog)
+    logger(thelog),
+    defaultAllocator(false), defaultChangesObserver(false)
     {
         if (!_allocator) {
             allocator = new DefaultAllocator;
@@ -110,7 +111,9 @@ public:
 
     int Insert( const Key& k, const Value& v )
     {
-        if (logger) smsc_log_debug(logger, "Start Insert: k=%s val=%lld", k.toString().c_str(), (long long)v);
+        if (logger) {
+            smsc_log_debug(logger, "Start Insert: k=%s val=%lld", k.toString().c_str(), (long long)v);
+        }
         nodeptr_type nn = allocator->allocateNode();
         RBTreeNode* newNode = allocator->realAddr(nn);
         // rootNode = allocator->getRootNode();
@@ -118,7 +121,9 @@ public:
         // offset = allocator->getOffset();
         newNode->key = k;
         newNode->value = v;
-        if (logger) smsc_log_debug(logger, "Insert: %lx k=%s val=%lld", (long)nn, k.toString().c_str(), (long long)v);
+        if (logger) {
+            smsc_log_debug(logger, "Insert: %lx k=%s val=%lld", (long)nn, k.toString().c_str(), (long long)v);
+        }
         changesObserver->startChanges( nn, RBTreeChangesObserver<Key, Value>::OPER_INSERT );
         bstInsert( nn );
         newNode->color = RED;
@@ -145,7 +150,9 @@ public:
         }
          */
         changesObserver->completeChanges();
-        if (logger) smsc_log_debug(logger, "End Insert: %lx k=%s val=%lld", (long)nn, k.toString().c_str(), (long long)v);
+        if (logger) {
+            smsc_log_debug(logger, "End Insert: %lx k=%s val=%lld", (long)nn, k.toString().c_str(), (long long)v);
+        }
         return 1;
     }
 
@@ -165,27 +172,35 @@ public:
         if (!node || node->value == val) {
             return;
         }
-        if (logger) smsc_log_debug( logger, "Node %lx k=%s value has changed. old=%lld new=%lld",
-                                    (long)iNode,
-                                    node->key.toString().c_str(),
-                                    (long long)node->value, (long long)val);
+        if (logger) {
+            smsc_log_debug( logger, "Node %lx k=%s value has changed. old=%lld new=%lld",
+                            (long)iNode,
+                            node->key.toString().c_str(),
+                            (long long)node->value, (long long)val);
+        }
         node->value = val;
         changesObserver->startChanges( iNode, RBTreeChangesObserver<Key, Value>::OPER_CHANGE );
         // changesObserver->nodeChanged(node);
         changesObserver->completeChanges();
-        if (logger) smsc_log_debug( logger, "Node key=%s setNodeValue finished",
-                                    node->key.toString().c_str() );
+        if (logger) {
+            smsc_log_debug( logger, "Node key=%s setNodeValue finished",
+                            node->key.toString().c_str() );
+        }
     }
 
     bool Get( const Key& k, Value& val )
     {
         nodeptr_type node = findNode(k);
         if ( node == nilNode ) {
-            if (logger) smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
+            if (logger) {
+                smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
+            }
             return false;
         } 
         val = allocator->realAddr(node)->value;
-        if (logger) smsc_log_debug(logger, "Get: %lx k=%s val=%lld", (long)node, k.toString().c_str(), (long long)val);
+        if (logger) {
+            smsc_log_debug(logger, "Get: %lx k=%s val=%lld", (long)node, k.toString().c_str(), (long long)val);
+        }
         return true;
     }
 
@@ -193,11 +208,15 @@ public:
     {
         nodeptr_type node = findNode(k);
         if (node == nilNode ) {
-            if (logger) smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
+            if (logger) {
+                smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
+            }
             return nilNode;
         }
-        if (logger) smsc_log_debug(logger, "Get: %lx k=%s val=%lld", (long)node, k.toString().c_str(),
-                                   (long long)allocator->realAddr(node)->value );
+        if (logger) {
+            smsc_log_debug(logger, "Get: %lx k=%s val=%lld", (long)node, k.toString().c_str(),
+                           (long long)allocator->realAddr(node)->value );
+        }
         return node;
     }
 

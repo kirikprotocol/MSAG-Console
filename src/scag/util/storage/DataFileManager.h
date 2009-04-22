@@ -27,14 +27,24 @@ private:
 
 class DataFileManager {
 public:
-  DataFileManager(uint16_t maxThreads, unsigned addSpeed):maxThreads_(maxThreads), addSpeed_(addSpeed) {
-    pool_.setMaxThreads(maxThreads_);
-    pool_.preCreateThreads(maxThreads_);
-  };
+    DataFileManager(uint16_t maxThreads,
+                    unsigned addSpeed,
+                    unsigned freeCountThreshold = 5000 ) :
+    maxThreads_(maxThreads), addSpeed_(addSpeed),
+    threshold_(freeCountThreshold) {
+        pool_.setMaxThreads(maxThreads_);
+        pool_.preCreateThreads(maxThreads_);
+    };
+
   void createDataFile(DataFileCreator& creator);
   unsigned getExpectedSpeed() const {
     return addSpeed_;
   }
+
+    inline void shutdown() { pool_.shutdown(); }
+
+    /// when to start new file creation (in free blocks)
+    inline unsigned creationThreshold() const { return threshold_; }
 
     /// used eg for initialization
     void startTask( ThreadedTask* task, bool delOnCompletion = true );
@@ -42,6 +52,7 @@ public:
 private:
   uint16_t maxThreads_;
   unsigned addSpeed_;
+    unsigned threshold_;   // when to start file creation (in free blocks)
   ThreadPool pool_;
 };
 

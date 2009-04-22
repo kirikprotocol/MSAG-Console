@@ -174,8 +174,10 @@ public:
     void flush( unsigned maxSpeed = 0 )
     {
         if (!fullRecovery_) return;
-        if (logger) smsc_log_info(logger,"flushing all %u nodes to disk, maxspeed = %u kB/sec",
-                                  header_.cells_count, maxSpeed );
+        if (logger) {
+            smsc_log_info(logger,"flushing all %u nodes to disk, maxspeed = %u kB/sec",
+                          header_.cells_count, maxSpeed );
+        }
         util::msectime_type currentTime, startTime;
         currentTime = startTime = util::currentTimeMillis();
         uint64_t writtenSize = 0;
@@ -211,11 +213,15 @@ public:
     {
         if (!running) return 0;
         if (!header_.cells_free && ReallocRBTreeFile() != SUCCESS) {
-            if (logger) smsc_log_fatal(logger,"ReallocRBTree is not successful, will ABORT!");
+            if (logger) {
+                smsc_log_fatal(logger,"ReallocRBTree is not successful, will ABORT!");
+            }
             ::abort();
         }
         nodeptr_type newNode = header_.first_free_cell;
-        if (logger) smsc_log_debug( logger, "allocateNode node=%ld", (long)newNode );
+        if (logger) {
+            smsc_log_debug( logger, "allocateNode node=%ld", (long)newNode );
+        }
         RBTreeNode* node = addr2node(newNode);
         header_.first_free_cell = node->parent;
         node->parent = node->left = node->right = header_.nil_cell;
@@ -246,11 +252,9 @@ public:
         if (!running) return;
         header_.root_cell = node;
 		
-        if (logger) smsc_log_debug( logger, "SetRoot header_.root_cell=%ld", (long)header_.root_cell);
-        //printf("SetRoot (long)node = %X", (long)node);
-        //printf("(long)rbtree_body_ = %X", (long)rbtree_body_);
-        //printf("((long)node - (long)rbtree_body_) = %d", ((long)node - (long)rbtree_body_));
-        //printf("header_.root_cell = %d\n", header_.root_cell);
+        if (logger) {
+            smsc_log_debug( logger, "SetRoot header_.root_cell=%ld", (long)header_.root_cell);
+        }
     }
 
     virtual nodeptr_type getNilNode()
@@ -275,7 +279,9 @@ public:
     {
         if ( fullRecovery_ ) return;
         if ( changedNodes.size() > 0 ) completeChanges();
-        if (logger) smsc_log_debug(logger, "startChanges. node = (%ld)%p, operation = %d", (long)node, realAddr(node), operation);
+        if (logger) {
+            smsc_log_debug(logger, "startChanges. node = (%ld)%p, operation = %d", (long)node, realAddr(node), operation);
+        }
         currentOperation = operation;
         changedNodes.push_back(node);
     }
@@ -334,7 +340,9 @@ public:
             // if ( cf < 20 )
             // smsc_log_debug( logger, "free cell #%d has address %ld", cf, celladdr );
             if ( celladdr >= rbtree_len ) {
-                if (logger) smsc_log_error( logger, "free cell %d address is too big=%lld filelen=%lld", cf, celladdr, rbtree_len );
+                if (logger) {
+                    smsc_log_error( logger, "free cell %d address is too big=%lld filelen=%lld", cf, celladdr, rbtree_len );
+                }
                 // fprintf( stderr, "free cell #d address is too big=%ld filelen=%lld\n", cf, celladdr, (long long)rbtFileLen );
                 throw smsc::util::Exception( "RBTreeAlloc: free cell %d address is too big %lld filelen=%lld", cf, celladdr, rbtree_len );
                 break;
@@ -346,7 +354,9 @@ public:
         const size_t fnc = fnl.size();
         fnl.erase( std::unique( fnl.begin(), fnl.end() ), fnl.end() );
         if ( fnc != fnl.size() ) {
-            if (logger) smsc_log_error( logger, "non-unique nodes have been found!" );
+            if (logger) {
+                smsc_log_error( logger, "non-unique nodes have been found!" );
+            }
             // fprintf( stderr, "non-unique nodes have been found!\n" );
             throw smsc::util::Exception( "RBTreeAlloc: %d non-unique nodes have been found!", fnc - fnl.size() );
         }
@@ -395,7 +405,9 @@ private:
             std::auto_ptr<char> newMem(new char[newChunkSize]);
             if(!newMem.get())
             {
-                if (logger) smsc_log_error(logger, "Error reallocating memory for RBTree, reason: %s", strerror(errno));
+                if (logger) {
+                    smsc_log_error(logger, "Error reallocating memory for RBTree, reason: %s", strerror(errno));
+                }
                 return BTREE_FILE_MAP_FAILED;
             }
 
@@ -405,9 +417,11 @@ private:
             // we don't need a new chunk, the last one is quite enough
         }
         memset( chunks_.back()+(growth-realgrowth)*cellsize(), 0, realgrowth*cellsize() );
-        if (logger) smsc_log_info(logger, "RBTree index realloc from %lld to %lld cells",
-                                  int64_t(header_.cells_count),
-                                  int64_t(header_.cells_count+realgrowth) );
+        if (logger) {
+            smsc_log_info(logger, "RBTree index realloc from %lld to %lld cells",
+                          int64_t(header_.cells_count),
+                          int64_t(header_.cells_count+realgrowth) );
+        }
 
         nodeptr_type freecell = header_.cells_count;
         if ( header_.cells_free > 0 ) {
@@ -465,15 +479,17 @@ private:
             completeChanges();
         }
 
-        if (logger) smsc_log_info( logger, "ReallocRBTree: header_size=%x cells_count=%u cells_used=%u cells_free=%u root_cell=%lx first_free_cell=%lx pers_cell_size=%u trans_cell_size=%u",
-                                   unsigned(rbtFileHeaderDump_.size()),
-                                   header_.cells_count,
-                                   header_.cells_used,
-                                   header_.cells_free,
-                                   long(header_.root_cell),
-                                   long(header_.first_free_cell),
-                                   unsigned(header_.persistentCellSize),
-                                   unsigned(sizeof(RBTreeNode)));
+        if (logger) {
+            smsc_log_info( logger, "ReallocRBTree: header_size=%x cells_count=%u cells_used=%u cells_free=%u root_cell=%lx first_free_cell=%lx pers_cell_size=%u trans_cell_size=%u",
+                           unsigned(rbtFileHeaderDump_.size()),
+                           header_.cells_count,
+                           header_.cells_used,
+                           header_.cells_free,
+                           long(header_.root_cell),
+                           long(header_.first_free_cell),
+                           unsigned(header_.persistentCellSize),
+                           unsigned(sizeof(RBTreeNode)));
+        }
         // check nodes
         // freenodes();
         return SUCCESS;
@@ -505,7 +521,9 @@ private:
         }
         catch(FileException ex)
         {
-            if (logger) smsc_log_error(logger, "FSStorage: error idx_file: %s, reason: %s\n", rbtree_file.c_str(), ex.what());
+            if (logger) {
+                smsc_log_error(logger, "FSStorage: error idx_file: %s, reason: %s\n", rbtree_file.c_str(), ex.what());
+            }
             return CANNOT_CREATE_RBTREE_FILE;
         }
 
@@ -516,7 +534,9 @@ private:
         }
         catch(FileException ex)
         {
-            if (logger) smsc_log_error(logger, "FSStorage: error idx_file - %s\n", ex.what());
+            if (logger) {
+                smsc_log_error(logger, "FSStorage: error idx_file - %s\n", ex.what());
+            }
             rbtree_f.Close();
             return CANNOT_CREATE_TRANS_FILE;
         }
@@ -570,14 +590,18 @@ private:
         if (status == STAT_WRITE_TRX)
         {
             //printf("status == STAT_WRITE_TRX\n");
-            if (logger) smsc_log_debug(logger, "OpenRBTree: transf status is trx" );
+            if (logger) {
+                smsc_log_debug(logger, "OpenRBTree: transf status is trx" );
+            }
             trans_f.Seek(0, SEEK_SET);
             status = STAT_OK;
             trans_f.WriteNetInt32(status);
             trans_f.Flush();
             ret = SUCCESS_PREV_OPER_FAILED;
         } else if (status == STAT_WRITE_RBT) {
-            if (logger) smsc_log_debug(logger, "OpenRBTree: transf status is rbt" );
+            if (logger) {
+                smsc_log_debug(logger, "OpenRBTree: transf status is rbt" );
+            }
             //printf("status == STAT_WRITE_RBT\n");
             repairRBTreeFile();
         }
@@ -610,7 +634,9 @@ private:
 
             // create the necessary number of chunks
             unsigned needchunks = (maxcells-1) / growth + 1;
-            if (logger) smsc_log_info(logger,"OpenRBTree is going to read %ld cells, %ld chunks", long(maxcells), long(needchunks));
+            if (logger) {
+                smsc_log_info(logger,"OpenRBTree is going to read %ld cells, %ld chunks", long(maxcells), long(needchunks));
+            }
             chunks_.reserve( needchunks );
 
             {
@@ -639,25 +665,29 @@ private:
             
             if ( len < expectedLen ) {
                 // FIXME: we should fix it oneday
-                if (logger) smsc_log_warn( logger, "OpenRBTree: file size is smaller than what expected: headersize=%d expected_cells_count=%lld actual_cells_count=%lld cellsize=%d expectedlen=%lld len=%lld, I'll try to recover...",
-                                           int(rbtFileHeaderDump_.size()),
-                                           int64_t(header_.cells_count),
-                                           int64_t(maxcells),
-                                           int(header_.persistentCellSize),
-                                           expectedLen,
-                                           int64_t(len) );
+                if (logger) {
+                    smsc_log_warn( logger, "OpenRBTree: file size is smaller than what expected: headersize=%d expected_cells_count=%lld actual_cells_count=%lld cellsize=%d expectedlen=%lld len=%lld, I'll try to recover...",
+                                   int(rbtFileHeaderDump_.size()),
+                                   int64_t(header_.cells_count),
+                                   int64_t(maxcells),
+                                   int(header_.persistentCellSize),
+                                   expectedLen,
+                                   int64_t(len) );
+                }
                 // trying to recover the file
                 RBTreeChecker< Key, Value > checker( *this,
                                                      maxcells,
                                                      logger,
                                                      10 );
                 if ( ! checker.check(header_.root_cell, header_.nil_cell) ) {
-                    if ( logger ) smsc_log_error( logger,
-                                                  "cannot recover the tree: %s at depth=%u in node %ld path=%s",
-                                                  checker.failedMsg(),
-                                                  checker.failedDepth(),
-                                                  long(checker.failedNode()),
-                                                  checker.failedPath() );
+                    if ( logger ) {
+                        smsc_log_error( logger,
+                                        "cannot recover the tree: %s at depth=%u in node %ld path=%s",
+                                        checker.failedMsg(),
+                                        checker.failedDepth(),
+                                        long(checker.failedNode()),
+                                        checker.failedPath() );
+                    }
                     return CANNOT_OPEN_RBTREE_FILE;
                 }
 
@@ -666,9 +696,11 @@ private:
                 header_.cells_count = header_.cells_used = checker.maxUsedCell() + 1;
                 header_.cells_free = 0;
                 header_.first_free_cell = 0;
-                if (logger) smsc_log_debug( logger, "Hoorah! It seems that we could recover, the cells_count=cells_used=%d actual_used_cells=%d",
-                                            int(header_.cells_count),
-                                            int(checker.usedCells()) );
+                if (logger) {
+                    smsc_log_debug( logger, "Hoorah! It seems that we could recover, the cells_count=cells_used=%d actual_used_cells=%d",
+                                    int(header_.cells_count),
+                                    int(checker.usedCells()) );
+                }
 
             } else if ( logger ) {
 
@@ -694,23 +726,29 @@ private:
             }
 
         } catch (std::exception& e) {
-            if ( logger ) smsc_log_error(logger, "OpenRBTree: exception %s", e.what() );
+            if ( logger ) {
+                smsc_log_error(logger, "OpenRBTree: exception %s", e.what() );
+            }
             return CANNOT_OPEN_RBTREE_FILE;
         } catch (...) {
-            if ( logger ) smsc_log_error(logger, "OpenRBTree: unknown exception");
+            if ( logger ) {
+                smsc_log_error(logger, "OpenRBTree: unknown exception");
+            }
             return CANNOT_OPEN_RBTREE_FILE;
         }
 
-        if (logger) smsc_log_info( logger, "OpenRBTree: version=%u header_size=%x cells_count=%u cells_used=%u cells_free=%u root_cell=%lx first_free_cell=%lx pers_cell_size=%u trans_cell_size=%u",
-                                   header_.version,
-                                   unsigned(rbtFileHeaderDump_.size()),
-                                   header_.cells_count,
-                                   header_.cells_used,
-                                   header_.cells_free,
-                                   long(header_.root_cell),
-                                   long(header_.first_free_cell),
-                                   unsigned(header_.persistentCellSize),
-                                   unsigned(sizeof(RBTreeNode)));
+        if (logger) {
+            smsc_log_info( logger, "OpenRBTree: version=%u header_size=%x cells_count=%u cells_used=%u cells_free=%u root_cell=%lx first_free_cell=%lx pers_cell_size=%u trans_cell_size=%u",
+                           header_.version,
+                           unsigned(rbtFileHeaderDump_.size()),
+                           header_.cells_count,
+                           header_.cells_used,
+                           header_.cells_free,
+                           long(header_.root_cell),
+                           long(header_.first_free_cell),
+                           unsigned(header_.persistentCellSize),
+                           unsigned(sizeof(RBTreeNode)));
+        }
         // check integrity
         freenodes();
         return ret;
@@ -727,7 +765,9 @@ private:
         transactionNodes_.erase( std::unique(transactionNodes_.begin(), transactionNodes_.end()),
                                  transactionNodes_.end() );
 
-        if (logger) smsc_log_debug( logger, "Start transaction: nodes changed=%d", transactionNodes_.size() );
+        if (logger) {
+            smsc_log_debug( logger, "Start transaction: nodes changed=%d", transactionNodes_.size() );
+        }
         //printf("header_.root_cell = %d (%d)\n", header_.root_cell, sizeof(header_.root_cell));
 
         FileFlushGuard fg( trans_f );
@@ -770,7 +810,9 @@ private:
 
     int writeChanges(void)
     {
-        if (logger) smsc_log_debug( logger, "Write Changes: nodes changed=%d", transactionNodes_.size());
+        if (logger) {
+            smsc_log_debug( logger, "Write Changes: nodes changed=%d", transactionNodes_.size());
+        }
         trans_f.Seek(0, SEEK_SET);
         trans_f.WriteNetInt32(STAT_WRITE_RBT);
         trans_f.Flush();
@@ -795,7 +837,9 @@ private:
 
     int endTransaction()
     {
-        if (logger) smsc_log_debug(logger, "endTransaction");
+        if (logger) {
+            smsc_log_debug(logger, "endTransaction");
+        }
         trans_f.Seek(0, SEEK_SET);
         trans_f.WriteNetInt32(STAT_OK);
         trans_f.Flush();
@@ -825,9 +869,13 @@ private:
         rbtree_f.Write( ds.curposc(), rbtLen );
         ds.setrpos(rbtPos+rbtLen);
 
-        if (logger) smsc_log_debug(logger, "RepairRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %lx, root_cell %lx, nil_cell %lx",
-                                   rbtHdr.cells_used, rbtHdr.cells_free, rbtHdr.cells_count, (long)rbtHdr.first_free_cell, (long)rbtHdr.root_cell, (long)rbtHdr.nil_cell);
-        if (logger) smsc_log_debug(logger, "repairRBTreeFile transHdr.nodes_count = %d, transHdr.status=%d", transHdr.nodes_count, status);
+        if (logger) {
+            smsc_log_debug(logger, "RepairRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %lx, root_cell %lx, nil_cell %lx",
+                           rbtHdr.cells_used, rbtHdr.cells_free, rbtHdr.cells_count, (long)rbtHdr.first_free_cell, (long)rbtHdr.root_cell, (long)rbtHdr.nil_cell);
+        }
+        if (logger) {
+            smsc_log_debug(logger, "repairRBTreeFile transHdr.nodes_count = %d, transHdr.status=%d", transHdr.nodes_count, status);
+        }
 		
         for ( int32_t i = 0; i < transHdr.nodes_count; i++ )
         {
@@ -844,7 +892,9 @@ private:
     void serializeCell( Serializer& s, const RBTreeNode* node ) const {
         // for version 1
         if ( s.version() != 1 && s.version() != 2 ) {
-            if (logger) smsc_log_warn( logger, "version %d is not implemented in rbtree, using version #1", s.version() );
+            if (logger) {
+                smsc_log_warn( logger, "version %d is not implemented in rbtree, using version #1", s.version() );
+            }
             throw smsc::util::Exception( "version %d is not implemented in rbtree", s.version() );
         }
         s << 
@@ -858,7 +908,9 @@ private:
 
     void deserializeCell( Deserializer& d, RBTreeNode* node ) const {
         if ( d.version() != 1 && d.version() != 2 ) {
-            if (logger) smsc_log_warn( logger, "version %d is not implemented in rbtree", d.version() );
+            if (logger) {
+                smsc_log_warn( logger, "version %d is not implemented in rbtree", d.version() );
+            }
             throw smsc::util::Exception( "version %d is not implemented in rbtree", d.version() );
         }
         const char* fail = 0;
@@ -875,8 +927,10 @@ private:
             node->right = i;
         } while ( false );
         if ( fail ) {
-            if (logger) smsc_log_warn( logger, "rbtree: reading node @ %p: %s field (%u) is greater than total number of cells (%u)",
-                                       node, fail, unsigned(i), unsigned(header_.cells_count) );
+            if (logger) {
+                smsc_log_warn( logger, "rbtree: reading node @ %p: %s field (%u) is greater than total number of cells (%u)",
+                               node, fail, unsigned(i), unsigned(header_.cells_count) );
+            }
             throw smsc::util::Exception( "rbtree: reading node @ %p: %s field (%u) is greater than total number of cells (%u)",
                                          node, fail, unsigned(i), unsigned(header_.cells_count) );
         }
@@ -909,7 +963,9 @@ private:
         const char* p = d.readAsIs(20);
         if ( strncmp(p, "RBTREE_FILE_STORAGE!", 20) ) {
             // strings differ
-            if (logger) smsc_log_error( logger, "Wrong rbtree index prefix" );
+            if (logger) {
+                smsc_log_error( logger, "Wrong rbtree index prefix" );
+            }
             throw DeserializerException::stringMismatch();
         }
         d >> hdr.version >> hdr.cells_count >> hdr.cells_used >> hdr.cells_free;
@@ -926,8 +982,10 @@ private:
             persistentCellSize( hdr );
         } while (false);
         if ( fail ) {
-            if ( logger ) smsc_log_error( logger, "rbtree header field %s (%u) is greater than total number of cells (%u)",
-                                          fail, i, unsigned(hdr.cells_count) );
+            if ( logger ) {
+                smsc_log_error( logger, "rbtree header field %s (%u) is greater than total number of cells (%u)",
+                                fail, i, unsigned(hdr.cells_count) );
+            }
             throw smsc::util::Exception( "rbtree header field %s (%u) is greater than total number of cells (%u)",
                                          fail, i, unsigned(hdr.cells_count) );
         }
