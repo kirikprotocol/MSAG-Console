@@ -11,11 +11,12 @@ class WatchedThreadedTask : public smsc::core::threads::ThreadedTask
 {
 protected:
     WatchedThreadedTask() : isStarted_(false) {
-        isReleased = true;
+        // isReleased = true;
     }
 
 public:
     virtual void onRelease() {
+        stop();
         MutexGuard mg(releaseMon_);
         ThreadedTask::onRelease();
         releaseMon_.notify();
@@ -31,8 +32,10 @@ public:
 
     void waitUntilStarted() {
         if (isStarted_) return;
+        if (stopping()) return;
         MutexGuard mg(releaseMon_);
         while ( !isStarted_ ) {
+            if ( stopping() ) return;
             releaseMon_.wait(100);
         }
     }
