@@ -281,24 +281,22 @@ string SS7AddressToString(const ET96MAP_SS7_ADDR_T* addr)
   {
     case 1:
     {
-      isOdd=(*ptr&0x80)!=0;
-      ptr++;
+      isOdd=((*ptr)&0x80)!=0; ptr++; // nature of address
     }break;
     case 2:
     {
-      ptr++;
+      ptr++; // translation type
     }break;
     case 3:
     {
       ptr++;//trans type
-      isOdd=(ptr[1]&0x03)==1;
-      ptr++;
+      isOdd=((*ptr)&0x03)==1; ptr++; //(num plan, enc scheme)
     }break;
     case 4:
     {
       ptr++;//trans type
-      isOdd=(ptr[1]&0x03)==1;
-      ptr+=2;//(num plan, enc scheme), nature of addr
+      isOdd=((*ptr)&0x03)==1; ptr++; //(num plan, enc scheme)
+      ptr++;// nature of addr
     }break;
     default:return "";
   }
