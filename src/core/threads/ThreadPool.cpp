@@ -215,7 +215,7 @@ void ThreadPool::startTask(ThreadedTask* task, bool delOnCompletion/* = true*/)
   {
     if(usedThreads.Count()==maxThreads)
     {
-      __trace__("pending task");
+      __trace2__("pending task %s", task->taskName());
       pendingTasks.Push(task);
     }else
     {
