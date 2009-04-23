@@ -573,7 +573,7 @@ inline scag::util::storage::Deserializer& operator >> ( scag::util::storage::Des
     char val[30];
     scag2::pvss::AbntAddr::unpack(val,buf);
     if ( len > strlen(val) ) {
-        throw exceptions::IOException("wrong abntaddr: len=%u, val=%s", unsigned(len), val);
+        throw scag::exceptions::IOException("wrong abntaddr: len=%u, val=%s", unsigned(len), val);
     }
     addr.setValue( len, plan, type, val );
     return deser;
