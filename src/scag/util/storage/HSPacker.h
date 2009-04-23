@@ -36,7 +36,7 @@ class BlockNavigation
 {
 public:
     enum {
-            NAV_SIZE = 16, // may be used in dependent code to e.g. create char arrays
+            NAV_SIZE = 16 // may be used in dependent code to e.g. create char arrays
     };
 private:
     enum {

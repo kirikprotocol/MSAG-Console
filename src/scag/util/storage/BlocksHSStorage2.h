@@ -327,7 +327,7 @@ private:
     }
 
     inline File* getFile( offset_type pos ) {
-        unsigned fn = pos / fileSizeBytes_;
+        unsigned fn = unsigned(pos / fileSizeBytes_);
         if ( fn >= files_.size() ) {
             if (log_) {
                 smsc_log_error(log_,"position %llx is in fn=%u >= %u",pos,fn,files_.size());

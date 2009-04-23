@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include "BlocksHSStorage2.h"
 #include "scag/util/WatchedThreadedTask.h"
 #include "DataFileManager.h"
@@ -129,7 +130,7 @@ private:
                     util::msectime_type expectedTime = writtenSize / speed_;
                     util::msectime_type elapsedTime = currentTime - startTime;
                     if ( elapsedTime < expectedTime ) {
-                        sleepMonitor_.wait(expectedTime-elapsedTime);
+                        sleepMonitor_.wait(int(expectedTime-elapsedTime));
                         if ( stopping() ) {
                             if ( log_ ) {
                                 smsc_log_warn(log_,"preallocation of %s has been externally stopped, freecount=%u",
@@ -209,9 +210,9 @@ private:
 
     void makeFreeChain()
     {
-        unsigned freeChainSize = std::min(fileSize_,1000U);
+        unsigned freeChainSize = std::min(fileSize_,size_t(1000U));
         freeChain_.reserve(freeChainSize);
-        unsigned iend = fileCount_*fileSize_+freeChainSize;
+        unsigned iend = unsigned(fileCount_*fileSize_+freeChainSize);
         for ( unsigned i = fileCount_ * fileSize_; i < iend; ++i ) {
             freeChain_.push_back(i);
         }
@@ -859,7 +860,7 @@ int BlocksHSStorage2::doOpen()
         buffer_type::iterator iptr = journal_.begin() + journalHeaderSize();
         do {
             // search for given position
-            iptr = find( iptr, journal_.end(), transactionHeader[0]);
+            iptr = std::find( iptr, journal_.end(), transactionHeader[0]);
             if ( iptr+transactionHeader.size() >= journal_.end() ) { break; }
             if ( ! std::equal(transactionHeader.begin(), transactionHeader.end(), iptr) ) {
                 // not equal
@@ -1031,7 +1032,7 @@ int BlocksHSStorage2::doOpen()
                 smsc_log_warn(log_,"could not apply new transactions, trying with old");
             }
             ret = 0;
-            for ( TransList::const_reverse_iterator i = transactions_.rbegin();
+            for ( TransList::reverse_iterator i = transactions_.rbegin();
                   i != transactions_.rend();
                   ++i ) {
                 try {
@@ -1150,7 +1151,7 @@ int BlocksHSStorage2::doCreate()
 
 int BlocksHSStorage2::doRecover( IndexRescuer* indexRescuer )
 {
-    for_each( files_.begin(), files_.end(), PtrDestroy() );
+    std::for_each( files_.begin(), files_.end(), PtrDestroy() );
     files_.clear();
 
     // first of all open all existing data files
