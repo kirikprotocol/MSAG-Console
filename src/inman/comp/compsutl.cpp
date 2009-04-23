@@ -42,7 +42,7 @@ unsigned OCTET_STRING_2_Address(OCTET_STRING_t * octs, TonNpiAddress & addr)
 {
     addr.clear();
     if (octs && octs->size)
-	unpackOCTS2MAPAddress(addr, (TONNPI_ADDRESS_OCTS *)(octs->buf), octs->size - 1);
+      smsc::cvtutil::unpackOCTS2MAPAddress(addr, octs->buf, octs->size);
     return addr.length;
 }
 

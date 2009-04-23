@@ -10,6 +10,7 @@ static char const ident[] = "$Id$";
 using smsc::util::DumpHex;
 
 #include "inman/common/adrutil.hpp"
+using smsc::cvtutil::TONNPI_ADDRESS_OCTS;
 using smsc::cvtutil::packMAPAddress2OCTS;
 
 #include "inman/inap/map_uss/DlgMapUSS.hpp"
@@ -83,19 +84,19 @@ static void makeUI(std::vector<unsigned char> & ui, const TonNpiAddress & own_ad
     ui.clear();
 
     if (msadr) {
-        addrLen = packMAPAddress2OCTS(*msadr, (TONNPI_ADDRESS_OCTS*)addrOcts);
+        addrLen = packMAPAddress2OCTS(*msadr, addrOcts);
         ui.insert(ui.begin(), addrOcts, addrOcts + addrLen);
         ui.insert(ui.begin(), (unsigned char)addrLen);
         ui.insert(ui.begin(), 0x82); //destinationISDN [2]
     }
 
-    addrLen = packMAPAddress2OCTS(own_adr, (TONNPI_ADDRESS_OCTS*)addrOcts);
+    addrLen = packMAPAddress2OCTS(own_adr, addrOcts);
     ui.insert(ui.begin(), addrOcts, addrOcts + addrLen);
     ui.insert(ui.begin(), (unsigned char)addrLen);
     ui.insert(ui.begin(), 0x81); //originationReference	[1]
 
     if (ms_imsi) {
-        addrLen = packMAPAddress2OCTS(*ms_imsi, (TONNPI_ADDRESS_OCTS*)addrOcts);
+        addrLen = packMAPAddress2OCTS(*ms_imsi, addrOcts);
         ui.insert(ui.begin(), addrOcts, addrOcts + addrLen);
         ui.insert(ui.begin(), (unsigned char)addrLen);
         ui.insert(ui.begin(), 0x80); //destinationReference [0]

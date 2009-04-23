@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 /* ************************************************************************* *
  * cap3SMS CONTRACT implementation (over TCAP dialog)
@@ -10,11 +10,10 @@ using smsc::util::format;
 #include "inman/inap/cap_sms/DlgCapSMS.hpp"
 using smsc::inman::comp::CapSMSOp;
 using smsc::inman::comp::SMSEventDPs;
-//using smsc::inman::comp::ConnectSMSArg;
-using smsc::inman::comp::ReleaseSMSArg;
-using smsc::inman::comp::RequestReportSMSEventArg;
-using smsc::inman::comp::ResetTimerSMSArg;
-using smsc::inman::comp::EventReportSMSArg;
+using smsc::inman::comp::SMSReleaseArg;
+using smsc::inman::comp::SMSRequestReportEventArg;
+using smsc::inman::comp::SMSResetTimerArg;
+using smsc::inman::comp::SMSEventReportArg;
 
 using smsc::inman::comp::_RCS_CAPOpErrors;
 using smsc::inman::comp::CAPServiceRC;
@@ -91,7 +90,7 @@ RCHash CapSMSDlg::Init(void) _THROWS_NONE
 /* ------------------------------------------------------------------------ *
  * SCFcontractor interface
  * ------------------------------------------------------------------------ */
-RCHash CapSMSDlg::initialDPSMS(const InitialDPSMSArg* arg) _THROWS_NONE
+RCHash CapSMSDlg::initialDPSMS(const SMSInitialDPArg* arg) _THROWS_NONE
 {
     MutexGuard  grd(_sync);
     //check preconfitions
@@ -323,7 +322,7 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
                 && (_relation == SMS_SSF_Fsm::relControl)) {
                 if (_tDPs.front() == EventTypeSMS_sms_CollectedInfo) {
                     _capState.s.smsRlse = 1;
-                    ReleaseSMSArg * arg = static_cast<ReleaseSMSArg*>(op->getParam());
+                    SMSReleaseArg * arg = static_cast<SMSReleaseArg*>(op->getParam());
                     rPCause = arg->rPCause();
                     smsc_log_debug(logger, "%s: <-- %s: ReleaseSMS { RP cause: %u }",
                                     _logId, nmScf, (unsigned)rPCause);
@@ -343,7 +342,7 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
         }   break;
 
         case CapSMSOp::ConnectSMS:
-            smsParams.reset(static_cast<ConnectSMSArg*>(op->getParam()));
+            smsParams.reset(static_cast<SMSConnectArg*>(op->getParam()));
         case CapSMSOp::ContinueSMS: {
             //check preconditions
             if ((_fsmState == SMS_SSF_Fsm::fsmWaitInstr) 
@@ -380,7 +379,7 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
                 && (_relation == SMS_SSF_Fsm::relControl)) {
                 _capState.s.smsReqEvent = 1;
                 std::string dump;
-                RequestReportSMSEventArg * rrse = static_cast<RequestReportSMSEventArg*>(op->getParam());
+                SMSRequestReportEventArg * rrse = static_cast<SMSRequestReportEventArg*>(op->getParam());
                 smsc_log_debug(logger, "%s: <-- %s: %s {%s}", _logId, nmScf, 
                                 CapSMSOp::code2Name(op->getOpcode()),
                                 rrse->SMSEvents().print(dump).c_str());
@@ -405,7 +404,7 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
             //check preconditions
             if (_fsmState == SMS_SSF_Fsm::fsmWaitInstr) {
                 _capState.s.smsTimer = 1;
-                ResetTimerSMSArg* arg = static_cast<ResetTimerSMSArg*>(op->getParam());
+                SMSResetTimerArg* arg = static_cast<SMSResetTimerArg*>(op->getParam());
                 smsc_log_debug(logger, "%s: <-- %s: ResetTimerSMS { value: %lu secs }",
                                _logId, nmScf, (long)(arg->timerValue()));
                 resetTimer();
@@ -474,7 +473,7 @@ RCHash CapSMSDlg::eventReportSMS(bool submitted) _THROWS_NONE
                     MessageType_request : MessageType_notification;
 
     std::string dump;
-    EventReportSMSArg    arg(logger);
+    SMSEventReportArg    arg(logger);
     arg.setReportParms(eventType, reportType);
     smsc_log_debug(logger, "%s: --> %s: EventReportSMS %s", _logId, nmScf, arg.print(dump).c_str());
     uint8_t invId = 0;

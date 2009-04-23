@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/codec_inc/map/SendRoutingInfoArg.h"
@@ -10,6 +10,7 @@ static char const ident[] = "$Id$";
 #include "util/vformat.hpp"
 using smsc::util::format;
 
+using smsc::cvtutil::TONNPI_ADDRESS_OCTS;
 using smsc::cvtutil::packNumString2BCD;
 using smsc::cvtutil::packMAPAddress2OCTS;
 using smsc::cvtutil::unpackBCD2NumString;
@@ -21,7 +22,7 @@ using smsc::inman::comp::smsc_log_component;
 #define ZERO_OCTET_STRING(name)	{ memset(&name, 0, sizeof(name)); name.buf = name##_buf; }
 
 #define Address2OCTET_STRING(octs, addr)	{ ZERO_OCTET_STRING(octs); \
-	octs.size = packMAPAddress2OCTS(addr, (TONNPI_ADDRESS_OCTS *)(octs.buf)); }
+	octs.size = packMAPAddress2OCTS(addr, octs.buf); }
 
 #define ZERO_VALUE(name)    memset(&name, 0, sizeof(name))
 
@@ -63,11 +64,10 @@ void CHSendRoutingInfoArg::encode(std::vector<unsigned char>& buf) const throw(C
     cmd.interrogationType = InterrogationType_basicCall;
 
     cmd.msisdn.buf = isdn_buf;
-    cmd.msisdn.size = packMAPAddress2OCTS(subscrAdr, (TONNPI_ADDRESS_OCTS *)(isdn_buf));
+    cmd.msisdn.size = packMAPAddress2OCTS(subscrAdr, isdn_buf);
 
     cmd.gmsc_OrGsmSCF_Address.buf = isdn_buf2;
-    cmd.gmsc_OrGsmSCF_Address.size = 
-        packMAPAddress2OCTS(scfAdr, (TONNPI_ADDRESS_OCTS *)(isdn_buf2));
+    cmd.gmsc_OrGsmSCF_Address.size = packMAPAddress2OCTS(scfAdr, isdn_buf2);
 /*
     CallReferenceNumber_t   crfn;
     unsigned char           crfn_buf = 0x0F; //SIZE(1..8)

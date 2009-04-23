@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/codec_inc/cap/ResetTimerSMSArg.h"
@@ -10,7 +10,7 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-void ResetTimerSMSArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+void SMSResetTimerArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     ResetTimerSMSArg_t *dcmd = NULL;	/* decoded structure */
     asn_dec_rval_t	drc;		/* Decoder return value  */

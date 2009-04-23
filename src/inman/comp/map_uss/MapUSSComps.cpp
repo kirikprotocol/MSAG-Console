@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include <vector>
@@ -19,6 +19,8 @@ using smsc::cbs::parseCBS_DCS;
 using smsc::cvtutil::unpack7BitPadded2Text;
 using smsc::cvtutil::packTextAs7BitPadded;
 using smsc::cvtutil::estimateTextAs7Bit;
+using smsc::cvtutil::packMAPAddress2OCTS;
+
 
 namespace smsc {
 namespace inman {
@@ -165,7 +167,7 @@ void ProcessUSSRequestArg::encode(std::vector<unsigned char>& buf) const throw(C
 
     if (msISDNadr_present()) {
         memset(&isdn, 0, sizeof(isdn));
-        isdn.size = packMAPAddress2OCTS(_msAdr, (TONNPI_ADDRESS_OCTS *)isdn_buf);
+        isdn.size = packMAPAddress2OCTS(_msAdr, isdn_buf);
         isdn.buf = isdn_buf;
         cmd.msisdn = &isdn;
     }

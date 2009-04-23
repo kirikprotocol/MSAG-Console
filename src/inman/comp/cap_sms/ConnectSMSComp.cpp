@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/codec_inc/cap/ConnectSMSArg.h"
@@ -10,7 +10,7 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-void ConnectSMSArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+void SMSConnectArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     ConnectSMSArg_t *dcmd = NULL;	/* decoded structure */
     asn_dec_rval_t	drc;		/* Decoder return value  */
@@ -19,11 +19,11 @@ void ConnectSMSArg::decode(const std::vector<unsigned char>& buf) throw(CustomEx
     ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_ConnectSMSArg, "ConnSmsArg");
 
     if (OCTET_STRING_2_Address(dcmd->destinationSubscriberNumber, dstSN))
-        mask |= ConnectSMSArg::connDSN;
+        mask |= SMSConnectArg::connDSN;
     if (OCTET_STRING_2_Address(dcmd->callingPartysNumber, clngPN))
-        mask |= ConnectSMSArg::connCPN;
+        mask |= SMSConnectArg::connCPN;
     if (OCTET_STRING_2_Address(dcmd->sMSCAddress, sMSCAdr))
-        mask |= ConnectSMSArg::connSMSC;
+        mask |= SMSConnectArg::connSMSC;
 
     smsc_log_component(compLogger, &asn_DEF_ConnectSMSArg, dcmd);
     asn_DEF_ConnectSMSArg.free_struct(&asn_DEF_ConnectSMSArg, dcmd, 0);

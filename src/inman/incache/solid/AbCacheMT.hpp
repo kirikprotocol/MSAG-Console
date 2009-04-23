@@ -20,6 +20,7 @@ using smsc::core::synchronization::EventMonitor;
 
 #include "inman/common/adrutil.hpp"
 #include "inman/common/cvtutil.hpp"
+using smsc::cvtutil::TONNPI_ADDRESS_OCTS;
 using smsc::cvtutil::packMAPAddress2OCTS;
 using smsc::cvtutil::unpackOCTS2MAPAddress;
 using smsc::cvtutil::packNumString2BCD;
@@ -185,11 +186,10 @@ protected:
                         uint8_t len = fh.ReadByte();
                         rv += 5;
                         if (len && (len <= MAP_MAX_ISDN_AddressLength)) {
-                            TONNPI_ADDRESS_OCTS oct;
-                            oct.b0.tonpi = fh.ReadByte();
-                            fh.Read(oct.val, len - 1);
+                            uint8_t oct_buf[sizeof(TONNPI_ADDRESS_OCTS)];
+                            fh.Read(oct_buf, len);
                             rv += len;
-                            unpackOCTS2MAPAddress(gsmSCF.scfAddress, &oct, len - 1);
+                            unpackOCTS2MAPAddress(gsmSCF.scfAddress, oct_buf, len);
                         }
                         tdpSCF[tdpType] = gsmSCF;
                     }
@@ -218,12 +218,12 @@ protected:
                         //write SCF parms
                         fh.WriteNetInt32(it->second.serviceKey);
                         sz += 4 + 1;    //serviceKey + address length
-                        TONNPI_ADDRESS_OCTS oct;
-                        unsigned len = packMAPAddress2OCTS(it->second.scfAddress, &oct);
+
+                        uint8_t oct_buf[sizeof(TONNPI_ADDRESS_OCTS)];
+                        unsigned len = packMAPAddress2OCTS(it->second.scfAddress, oct_buf);
                         if ((len > 1) && (len <= MAP_MAX_ISDN_AddressLength)) {
                             fh.WriteByte((uint8_t)len);
-                            fh.WriteByte(oct.b0.tonpi);
-                            fh.Write(oct.val, len - 1);
+                            fh.Write(oct_buf, len);
                             sz += len;
                         } else
                             fh.WriteByte(0);

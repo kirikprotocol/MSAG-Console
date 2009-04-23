@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/comp/cap_sms/CapSMSFactory.hpp"
@@ -22,15 +22,15 @@ ROSComponentsFactory * initCAP3SMSComponents(void)
 {
     ROSComponentsFactory * fact = new ROSComponentsFactory(_ac_cap3_sms);
     fact->registerArg(CapSMSOp::RequestReportSMSEvent,
-            new CompFactory::ProducerT<smsc::inman::comp::RequestReportSMSEventArg>() );
+            new CompFactory::ProducerT<smsc::inman::comp::SMSRequestReportEventArg>() );
     fact->registerArg(CapSMSOp::ReleaseSMS,
-            new CompFactory::ProducerT<smsc::inman::comp::ReleaseSMSArg>() );
+            new CompFactory::ProducerT<smsc::inman::comp::SMSReleaseArg>() );
     fact->registerArg(CapSMSOp::ConnectSMS,
-            new CompFactory::ProducerT<smsc::inman::comp::ConnectSMSArg>() );
+            new CompFactory::ProducerT<smsc::inman::comp::SMSConnectArg>() );
     fact->registerArg(CapSMSOp::ResetTimerSMS,
-            new CompFactory::ProducerT<smsc::inman::comp::ResetTimerSMSArg>() );
+            new CompFactory::ProducerT<smsc::inman::comp::SMSResetTimerArg>() );
     fact->registerArg(CapSMSOp::FurnishChargingInformationSMS,
-            new CompFactory::ProducerT<smsc::inman::comp::FurnishChargingInformationSMSArg>() );
+            new CompFactory::ProducerT<smsc::inman::comp::SMSFurnishChargingInformationArg>() );
 
     fact->bindErrors(CapSMSOp::InitialDPSMS, 8,
                      CAP3SMSerrCode::missingParameter,
@@ -40,7 +40,7 @@ ROSComponentsFactory * initCAP3SMSComponents(void)
                      CAP3SMSerrCode::unexpectedParameter,
                      CAP3SMSerrCode::parameterOutOfRange,
                      CAP3SMSerrCode::systemFailure, 
-                     InitialDPSMSArg::missingCustomerRecord
+                     SMSInitialDPArg::missingCustomerRecord
                      );
     return fact;
 }

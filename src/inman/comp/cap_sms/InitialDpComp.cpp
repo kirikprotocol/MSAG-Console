@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/asn1rt/asn_internal.h"
@@ -13,12 +13,17 @@ using smsc::cvtutil::packTimeT2BCD7;
 using smsc::cvtutil::packTimeT2BCD8;
 using smsc::cvtutil::packTP_VP_Relative;
 using smsc::cvtutil::packNumString2BCD;
+using smsc::cvtutil::packMAPAddress2OCTS;
+using smsc::cvtutil::packMAPAddress2LocationOCTS;
+using smsc::cvtutil::TONNPI_ADDRESS_OCTS;
+using smsc::cvtutil::LOCATION_ADDRESS_OCTS;
+
 
 #define OCTET_STRING_DECL(name, szo) unsigned char name##_buf[szo]; OCTET_STRING_t name
 #define ZERO_OCTET_STRING(name)	{ memset(&name, 0, sizeof(name)); name.buf = name##_buf; }
 
 #define Address2OCTET_STRING(octs, addr)	{ ZERO_OCTET_STRING(octs); \
-	octs.size = packMAPAddress2OCTS(addr, (TONNPI_ADDRESS_OCTS *)(octs.buf)); }
+	octs.size = packMAPAddress2OCTS(addr, octs.buf); }
 
 
 namespace smsc {
@@ -61,17 +66,17 @@ public:
     }
 };
 
-InitialDPSMSArg::InitialDPSMSArg(Logger * use_log/* = NULL*/)
+SMSInitialDPArg::SMSInitialDPArg(Logger * use_log/* = NULL*/)
     : compLogger(use_log ? use_log : Logger::getInstance("smsc.inman.comp.IDPSmsArg"))
     , servKey(0), comp(new PrivateInitialDPSMSArg())
 { }
 
-InitialDPSMSArg::~InitialDPSMSArg()
+SMSInitialDPArg::~SMSInitialDPArg()
 {
     delete(comp);
 }
 
-void InitialDPSMSArg::setIDPParms(DeliveryMode_e idpMode, unsigned int serviceKey)
+void SMSInitialDPArg::setIDPParms(DeliveryMode_e idpMode, unsigned int serviceKey)
 {
     comp->setIDPParms(idpMode, servKey = serviceKey);
 }
@@ -82,47 +87,47 @@ void InitialDPSMSArg::setIDPParms(DeliveryMode_e idpMode, unsigned int serviceKe
  * length, which is 10 octet. That's why the TonNpiAddress structure is used and 
  * calling the packMAPAddress2OCTS() is safe.
  */
-void InitialDPSMSArg::setDestinationSubscriberNumber(const TonNpiAddress& addr)
+void SMSInitialDPArg::setDestinationSubscriberNumber(const TonNpiAddress& addr)
 {
     Address2OCTET_STRING(comp->_destSN, addr);
     comp->idp.destinationSubscriberNumber = &(comp->_destSN);
 }
 
-void InitialDPSMSArg::setDestinationSubscriberNumber(const char * text)
+void SMSInitialDPArg::setDestinationSubscriberNumber(const char * text)
 {
     TonNpiAddress   sadr;
     if (sadr.fromText(text))
-        InitialDPSMSArg::setDestinationSubscriberNumber((const TonNpiAddress&)sadr);
+        SMSInitialDPArg::setDestinationSubscriberNumber((const TonNpiAddress&)sadr);
 }
 
-void InitialDPSMSArg::setCalledPartyNumber(const TonNpiAddress& addr)
+void SMSInitialDPArg::setCalledPartyNumber(const TonNpiAddress& addr)
 {
     Address2OCTET_STRING(comp->_clldPN, addr);
     comp->idp.calledPartyNumber = &(comp->_clldPN);
 }
 
-void InitialDPSMSArg::setCalledPartyNumber(const char * text)
+void SMSInitialDPArg::setCalledPartyNumber(const char * text)
 {
     TonNpiAddress   sadr;
     if (sadr.fromText(text))
-        InitialDPSMSArg::setCalledPartyNumber((const TonNpiAddress&)sadr);
+        SMSInitialDPArg::setCalledPartyNumber((const TonNpiAddress&)sadr);
 }
 
-void InitialDPSMSArg::setCallingPartyNumber(const TonNpiAddress& addr)
+void SMSInitialDPArg::setCallingPartyNumber(const TonNpiAddress& addr)
 {
     Address2OCTET_STRING(comp->_clngPN, addr);
     comp->idp.callingPartyNumber = &(comp->_clngPN);
 }
 
-void InitialDPSMSArg::setCallingPartyNumber(const char * text)
+void SMSInitialDPArg::setCallingPartyNumber(const char * text)
 {
     TonNpiAddress   sadr;
     if (sadr.fromText(text))
-        InitialDPSMSArg::setCallingPartyNumber((const TonNpiAddress&)sadr);
+        SMSInitialDPArg::setCallingPartyNumber((const TonNpiAddress&)sadr);
 }
 
 //imsi contains sequence of ASCII digits
-void InitialDPSMSArg::setIMSI(const std::string& imsi) throw(CustomException)
+void SMSInitialDPArg::setIMSI(const std::string& imsi) throw(CustomException)
 {
     //smsc_log_debug( compLogger, "IMSI: %s (%d)", imsi.c_str(), imsi.length());
     if (((imsi.length() + 1)/2) > CAP_MAX_IMSILength)
@@ -134,21 +139,21 @@ void InitialDPSMSArg::setIMSI(const std::string& imsi) throw(CustomException)
 }
 
 
-void InitialDPSMSArg::setSMSCAddress(const TonNpiAddress& addr)
+void SMSInitialDPArg::setSMSCAddress(const TonNpiAddress& addr)
 {
     Address2OCTET_STRING(comp->_adrSMSC, addr);
     comp->idp.sMSCAddress = &(comp->_adrSMSC);
 }
 
-void InitialDPSMSArg::setSMSCAddress(const char * text)
+void SMSInitialDPArg::setSMSCAddress(const char * text)
 {
     TonNpiAddress   sadr;
     if (sadr.fromText(text))
-        InitialDPSMSArg::setSMSCAddress((const TonNpiAddress&)sadr);
+        SMSInitialDPArg::setSMSCAddress((const TonNpiAddress&)sadr);
 }
 
 //requires the preceeding call of tzset()
-void InitialDPSMSArg::setTimeAndTimezone(time_t tmVal) throw(CustomException)
+void SMSInitialDPArg::setTimeAndTimezone(time_t tmVal) throw(CustomException)
 {
     ZERO_OCTET_STRING(comp->_tmTz);
     int res = packTimeT2BCD8((unsigned char (*)[8])(comp->_tmTz.buf), tmVal);
@@ -159,7 +164,7 @@ void InitialDPSMSArg::setTimeAndTimezone(time_t tmVal) throw(CustomException)
     comp->idp.timeAndTimezone = &(comp->_tmTz);
 }
 
-void InitialDPSMSArg::setTPShortMessageSpecificInfo(unsigned char tPSMSI)
+void SMSInitialDPArg::setTPShortMessageSpecificInfo(unsigned char tPSMSI)
 {
     ZERO_OCTET_STRING(comp->_tPSMSI);
     comp->_tPSMSI.buf[0] = tPSMSI;
@@ -168,7 +173,7 @@ void InitialDPSMSArg::setTPShortMessageSpecificInfo(unsigned char tPSMSI)
     //smsc_log_debug( compLogger, "TPSMSInfo: %x", (unsigned)(comp->idp.tPShortMessageSpecificInfo->buf[0]));
 }
 
-void InitialDPSMSArg::setTPProtocolIdentifier(unsigned char tPPid)
+void SMSInitialDPArg::setTPProtocolIdentifier(unsigned char tPPid)
 {
     ZERO_OCTET_STRING(comp->_tPPid);
     comp->_tPPid.buf[0] = tPPid;
@@ -177,7 +182,7 @@ void InitialDPSMSArg::setTPProtocolIdentifier(unsigned char tPPid)
     //smsc_log_debug( compLogger, "TPProtoId: %x", (unsigned)(comp->idp.tPProtocolIdentifier->buf[0]));
 }
 
-void InitialDPSMSArg::setTPDataCodingScheme(unsigned char tPDCSch)
+void SMSInitialDPArg::setTPDataCodingScheme(unsigned char tPDCSch)
 {
     ZERO_OCTET_STRING(comp->_tPDCSch);
     comp->_tPDCSch.buf[0] = tPDCSch;
@@ -187,7 +192,7 @@ void InitialDPSMSArg::setTPDataCodingScheme(unsigned char tPDCSch)
 }
 
 //requires the preceeding call of tzset()
-void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt) throw(CustomException)
+void SMSInitialDPArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt) throw(CustomException)
 {
     ZERO_OCTET_STRING(comp->_tPVP);
     switch (fmt) {
@@ -209,7 +214,7 @@ void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt) t
 }
 
 /* Sets VLR number and LocationNumber (duplicates it from VLR) */
-void InitialDPSMSArg::setLocationInformationMSC(const TonNpiAddress& sadr) throw(CustomException)
+void SMSInitialDPArg::setLocationInformationMSC(const TonNpiAddress& sadr) throw(CustomException)
 {
     TonNpiAddress addr = sadr;
     /* NOTE: _vlrNumber may be only the ISDN INTERNATIONAL address */
@@ -222,8 +227,7 @@ void InitialDPSMSArg::setLocationInformationMSC(const TonNpiAddress& sadr) throw
     comp->_li.vlr_number = &(comp->_vlrNumber);
     /**/
     ZERO_OCTET_STRING(comp->_locNumber);
-    comp->_locNumber.size = packMAPAddress2LocationOCTS(addr,
-			    (LOCATION_ADDRESS_OCTS *)(comp->_locNumber.buf));
+    comp->_locNumber.size = packMAPAddress2LocationOCTS(addr, comp->_locNumber.buf);
     if (comp->_locNumber.size)
         comp->_li.locationNumber = &(comp->_locNumber);
     /**/
@@ -246,16 +250,16 @@ void InitialDPSMSArg::setLocationInformationMSC(const TonNpiAddress& sadr) throw
     comp->idp.locationInformationMSC = &(comp->_li);
 }
 
-void InitialDPSMSArg::setLocationInformationMSC(const char* text) throw(CustomException)
+void SMSInitialDPArg::setLocationInformationMSC(const char* text) throw(CustomException)
 {
     TonNpiAddress   sadr;
     if (!sadr.fromText(text))
         throw CustomException(-1, "IDPSmsArg: invalid VLR address",
                               sadr.toString().c_str());
-    InitialDPSMSArg::setLocationInformationMSC(sadr);
+    SMSInitialDPArg::setLocationInformationMSC(sadr);
 }
 
-void InitialDPSMSArg::encode(std::vector<unsigned char>& buf) const throw(CustomException)
+void SMSInitialDPArg::encode(std::vector<unsigned char>& buf) const throw(CustomException)
 {
     asn_enc_rval_t er;
 

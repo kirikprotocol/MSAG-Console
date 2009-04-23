@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * CAMEL phase 3 SMS Service components definition.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_CAP3SMS_COMPS_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_CAP3SMS_COMPS_HPP__
 
 #include <map>
@@ -139,16 +139,16 @@ public:
 // This operation is used after a TDP to indicate request for service.
 class PrivateInitialDPSMSArg;
 //NOTE: requires the preceeding call of tzset()
-class InitialDPSMSArg: public Component { //SSF -> SCF
+class SMSInitialDPArg: public Component { //SSF -> SCF
 public:
-    InitialDPSMSArg(Logger * use_log = NULL);
-    ~InitialDPSMSArg();
+    SMSInitialDPArg(Logger * use_log = NULL);
+    ~SMSInitialDPArg();
 
     enum { //errors in addition to CAP3SMSerrCode
         missingCustomerRecord = 6
     } IDPErrCodes;
 
-    inline uint32_t ServiceKey(void) const { return servKey; }
+    uint32_t ServiceKey(void) const { return servKey; }
 
     void setIDPParms(DeliveryMode_e idpMode, unsigned int serviceKey);
     void setDestinationSubscriberNumber(const TonNpiAddress& addr); // missing for MT
@@ -189,15 +189,15 @@ private:
 //  This operation is used to notify the gsmSCF of a Short Message related event
 //  (FSM events such as submission, delivery or failure) previously requested by
 //  the gsmSCF in a RequestReportSMSEvent operation.
-class EventReportSMSArg: public Component { //SSF -> SCF
+class SMSEventReportArg: public Component { //SSF -> SCF
 public:
-    EventReportSMSArg(Logger * use_log = NULL)
+    SMSEventReportArg(Logger * use_log = NULL)
         : compLogger(use_log ? use_log : Logger::getInstance("smsc.inman.comp.ERSmsArg"))
     { }
-    ~EventReportSMSArg()
+    ~SMSEventReportArg()
     { }
 
-    inline void setReportParms(EventTypeSMS_e et, messageType_e mt)
+    void setReportParms(EventTypeSMS_e et, messageType_e mt)
     {
         eventType = et; messageType = mt;
     }
@@ -216,12 +216,12 @@ private:
 //  Short Message related event (FSM events such as submission, delivery or failure)
 //  and to send a notification to the gsmSCF when the event is detected.
 //  NOTE: Inman uses only SCF -> SSF
-class RequestReportSMSEventArg: public Component { //SSF -> SCF, SCF -> SSF
+class SMSRequestReportEventArg: public Component { //SSF -> SCF, SCF -> SSF
 public:
-    RequestReportSMSEventArg(Logger * use_log = NULL)
+    SMSRequestReportEventArg(Logger * use_log = NULL)
         : compLogger(use_log ? use_log : Logger::getInstance("smsc.inman.comp.RRSmsEvtArg"))
     { }
-    ~RequestReportSMSEventArg()
+    ~SMSRequestReportEventArg()
     { }
 
     const SMSEventDPs& SMSEvents(void) const { return events; }
@@ -237,21 +237,21 @@ private:
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Tconsms
 //  This operation is used to request the smsSSF to perform the SMS processing
 //  actions to route or forward a short message to a specified destination.
-class ConnectSMSArg: public Component { //SCF -> SSF
+class SMSConnectArg: public Component { //SCF -> SSF
 public:
     enum Params { connNone = 0, connDSN = 0x01, connCPN = 0x02, connSMSC = 0x04 };
 
-    ConnectSMSArg(Logger * use_log = NULL)
+    SMSConnectArg(Logger * use_log = NULL)
         : mask(0), compLogger(use_log ? use_log :
                               Logger::getInstance("smsc.inman.comp.ConnSmsArg"))
     { }
-    ~ConnectSMSArg()
+    ~SMSConnectArg()
     { }
 
-    inline unsigned char paramsMask(void) const { return mask; }
-    inline const TonNpiAddress&	destinationSubscriberNumber(void) const { return dstSN; }
-    inline const TonNpiAddress&	callingPartyNumber(void) const { return clngPN; }
-    inline const TonNpiAddress&	SMSCAddress(void) const { return sMSCAdr; }
+    unsigned char paramsMask(void) const { return mask; }
+    const TonNpiAddress&	destinationSubscriberNumber(void) const { return dstSN; }
+    const TonNpiAddress&	callingPartyNumber(void) const { return clngPN; }
+    const TonNpiAddress&	SMSCAddress(void) const { return sMSCAdr; }
 
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
@@ -266,13 +266,13 @@ protected:
 //  charging record or to include some information in the default SM record.
 //  The registered charging record is intended for off line charging of the
 //  Short Message.
-class FurnishChargingInformationSMSArg: public Component { //SCF -> SSF 
+class SMSFurnishChargingInformationArg: public Component { //SCF -> SSF 
 public:
-    FurnishChargingInformationSMSArg(Logger * use_log = NULL)
+    SMSFurnishChargingInformationArg(Logger * use_log = NULL)
         : compLogger(use_log ? use_log :
                         Logger::getInstance("smsc.inman.comp.FCISmsArg"))
     { }
-    ~FurnishChargingInformationSMSArg()
+    ~SMSFurnishChargingInformationArg()
     { }
 
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
@@ -284,40 +284,40 @@ private:
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Trelsms
 //  This operation is used to prevent an attempt to submit or deliver a short message. 
-class ReleaseSMSArg: public Component { //SCF -> SSF 
+class SMSReleaseArg: public Component { //SCF -> SSF 
 private:
     Logger* compLogger;
     unsigned char _rPCause;
 
 public:
-    ReleaseSMSArg(Logger * use_log = NULL)
+    SMSReleaseArg(Logger * use_log = NULL)
         : _rPCause(0), compLogger(use_log ? use_log :
                     Logger::getInstance("smsc.inman.comp.RLSSmsArg"))
     { }
-    ~ReleaseSMSArg()
+    ~SMSReleaseArg()
     { }
 
-    inline unsigned char rPCause(void) const { return _rPCause; }
+    unsigned char rPCause(void) const { return _rPCause; }
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 };
 
 // Direction: gsmSCF -> smsSSF, Timer: Trtsms 
 // This operation is used to request the smsSSF to refresh an application
 // timer in the smsSSF.
-class ResetTimerSMSArg: public Component { //SCF -> SSF 
+class SMSResetTimerArg: public Component { //SCF -> SSF 
 private:
     Logger* compLogger;
     time_t  tmrValue;
 
 public:
-    ResetTimerSMSArg(Logger * use_log = NULL)
+    SMSResetTimerArg(Logger * use_log = NULL)
         : tmrValue(0), compLogger(use_log ? use_log :
                 Logger::getInstance("smsc.inman.comp.RSTSmsArg"))
     { }
-    ~ResetTimerSMSArg()
+    ~SMSResetTimerArg()
     { }
 
-    inline time_t timerValue(void) const { return tmrValue; }
+    time_t timerValue(void) const { return tmrValue; }
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 };
 

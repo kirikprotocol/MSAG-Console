@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/codecs/map_atih/AnyTimeSubscriptionInterrogationArg.h"
@@ -10,6 +10,7 @@ static char const ident[] = "$Id$";
 #include "util/vformat.hpp"
 using smsc::util::format;
 
+using smsc::cvtutil::TONNPI_ADDRESS_OCTS;
 using smsc::cvtutil::packNumString2BCD;
 using smsc::cvtutil::packMAPAddress2OCTS;
 using smsc::inman::comp::OCTET_STRING_2_Address;
@@ -20,7 +21,7 @@ using smsc::inman::comp::smsc_log_component;
 #define ZERO_OCTET_STRING(name)	{ memset(&name, 0, sizeof(name)); name.buf = name##_buf; }
 
 #define Address2OCTET_STRING(octs, addr)	{ ZERO_OCTET_STRING(octs); \
-	octs.size = packMAPAddress2OCTS(addr, (TONNPI_ADDRESS_OCTS *)(octs.buf)); }
+	octs.size = packMAPAddress2OCTS(addr, octs.buf); }
 
 namespace smsc {
 namespace inman {
@@ -66,14 +67,12 @@ void ATSIArg::encode(std::vector<unsigned char>& buf) const throw(CustomExceptio
         cmd.subscriberIdentity.choice.imsi.buf = imsi_buf;
     } else {            //ISDNAddress
         cmd.subscriberIdentity.choice.msisdn.buf = isdn_buf;
-        cmd.subscriberIdentity.choice.msisdn.size =
-            packMAPAddress2OCTS(subscrAdr, (TONNPI_ADDRESS_OCTS *)(isdn_buf));
+        cmd.subscriberIdentity.choice.msisdn.size = packMAPAddress2OCTS(subscrAdr, isdn_buf);
     }
     cmd.requestedSubscriptionInfo.requestedCAMEL_SubscriptionInfo = &reqCSI;
 
     cmd.gsmSCF_Address.buf = isdn_buf2;
-    cmd.gsmSCF_Address.size = 
-        packMAPAddress2OCTS(scfAdr, (TONNPI_ADDRESS_OCTS *)(isdn_buf2));
+    cmd.gsmSCF_Address.size = packMAPAddress2OCTS(scfAdr, isdn_buf2);
 
     smsc_log_component(compLogger, &asn_DEF_AnyTimeSubscriptionInterrogationArg, &cmd);
     erc = der_encode(&asn_DEF_AnyTimeSubscriptionInterrogationArg, &cmd, print2vec, &buf);

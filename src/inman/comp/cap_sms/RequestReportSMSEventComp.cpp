@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/codec_inc/cap/RequestReportSMSEventArg.h"
@@ -10,7 +10,7 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-const std::string & RequestReportSMSEventArg::printEvents(std::string & dump)
+const std::string & SMSRequestReportEventArg::printEvents(std::string & dump)
 {
     SMSEventDPs::const_iterator it = events.begin();
     for (short i = 0; it != events.end(); it++, i++) {
@@ -25,7 +25,7 @@ const std::string & RequestReportSMSEventArg::printEvents(std::string & dump)
     return dump;
 }
 
-void RequestReportSMSEventArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+void SMSRequestReportEventArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     RequestReportSMSEventArg_t *dcmd = 0;
     asn_dec_rval_t rval;

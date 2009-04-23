@@ -73,7 +73,7 @@ RCHash CAPSmTaskAC::startDialog(CAPSmDPList::iterator & use_da)
 // -- CapSMS_SSFhandlerITF interface methods
 // -- --------------------------------------
 void CAPSmTaskAC::onDPSMSResult(TCDialogID dlg_id, unsigned char rp_cause,
-                        std::auto_ptr<ConnectSMSArg> & sms_params)
+                        std::auto_ptr<SMSConnectArg> & sms_params)
 {
     {
         MutexGuard tmp(_sync);
@@ -88,15 +88,15 @@ void CAPSmTaskAC::onDPSMSResult(TCDialogID dlg_id, unsigned char rp_cause,
         if (!(res->dlgRes->rpCause = rp_cause)) {    //ContinueSMS
             res->doCharge = true;
             if (sms_params.get()) {
-                if (sms_params->paramsMask() & ConnectSMSArg::connDSN) {
+                if (sms_params->paramsMask() & SMSConnectArg::connDSN) {
                     smsc_log_info(logger, "%s: %s set DA: %s", _logId, abScf->Ident(),
                         sms_params->destinationSubscriberNumber().toString().c_str());
                 }
-                if (sms_params->paramsMask() & ConnectSMSArg::connCPN) {
+                if (sms_params->paramsMask() & SMSConnectArg::connCPN) {
                     smsc_log_info(logger, "%s: %s set OA: %s", _logId, abScf->Ident(),
                         sms_params->callingPartyNumber().toString().c_str());
                 }
-                if (sms_params->paramsMask() & ConnectSMSArg::connSMSC) {
+                if (sms_params->paramsMask() & SMSConnectArg::connSMSC) {
                     smsc_log_info(logger, "%s: %s set SMSC: %s", _logId, abScf->Ident(),
                         sms_params->SMSCAddress().toString().c_str());
                 }

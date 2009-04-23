@@ -67,7 +67,7 @@ public:
     unsigned            attNum;     //attempt number
     bool                doCharge;
     RCHash              scfErr;
-    ConnectSMSArg *     smsArg; //last ConnectSMSArg received
+    SMSConnectArg *     smsArg; //last ConnectSMSArg received
     CAPSmDlgResult *    dlgRes; //last CAPSmsDialog result
 
     CAPSmDPResult(const TonNpiAddress & use_da)
@@ -183,7 +183,7 @@ protected:
 
     mutable Mutex       _sync;
     volatile ProcMode   _pMode;
-    std::auto_ptr<InitialDPSMSArg> _arg;
+    std::auto_ptr<SMSInitialDPArg> _arg;
     DAList          daList;
 
     DLGList         corpses;
@@ -263,7 +263,7 @@ protected:
     // -- --------------------------------------
     friend class smsc::inman::inap::CapSMSDlg;
     void onDPSMSResult(TCDialogID dlg_id, unsigned char rp_cause,
-                        std::auto_ptr<ConnectSMSArg> & sms_params);
+                        std::auto_ptr<SMSConnectArg> & sms_params);
     void onEndCapDlg(TCDialogID dlg_id, RCHash errcode);
 
     // ----------------------------------
@@ -286,7 +286,7 @@ public:
         , abNumber(use_abn), capSess(0), _pMode(pmIdle)
         , logPfx(log_pfx), logger(use_log)
     {
-        _arg.reset(new InitialDPSMSArg(logger));
+        _arg.reset(new SMSInitialDPArg(logger));
         _arg->setIDPParms(!idp_mode ? smsc::inman::comp::DeliveryMode_Originating :
                         smsc::inman::comp::DeliveryMode_Terminating , serv_key);
         _arg->setCallingPartyNumber(use_abn);
@@ -317,7 +317,7 @@ public:
     //
     ProcMode curPMode(void) const { return _pMode; }
     //
-    InitialDPSMSArg & Arg(void) const { return *(_arg.get()); }
+    SMSInitialDPArg & Arg(void) const { return *(_arg.get()); }
     //
     void enqueueDA(const TonNpiAddress & use_da)
     { 

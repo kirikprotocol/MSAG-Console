@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/codec_inc/cap/FurnishChargingInformationSMSArg.h"
@@ -12,7 +12,7 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-void FurnishChargingInformationSMSArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+void SMSFurnishChargingInformationArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     FurnishChargingInformationSMSArg_t *dcmd = NULL;	/* decoded structure */
     CAMEL_FCISMSBillingChargingCharacteristics_t * dcmd2 = NULL; /* */

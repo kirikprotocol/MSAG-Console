@@ -15,8 +15,8 @@ using smsc::inman::inap::TCSessionSR;
 #include "inman/inap/cap_sms/FSMCapSMS.hpp"
 using smsc::util::RCHash;
 using smsc::inman::comp::CapSMSOp;
-using smsc::inman::comp::InitialDPSMSArg;
-using smsc::inman::comp::ConnectSMSArg;
+using smsc::inman::comp::SMSInitialDPArg;
+using smsc::inman::comp::SMSConnectArg;
 
 #ifdef _THROWS_NONE
 #undef _THROWS_NONE
@@ -50,7 +50,7 @@ public:
     //Stands for following signals to MSC/SGSN:
     //  Int_ReleaseSMS, Int_ConnectSMS, Int_ContinueSMS
     virtual void onDPSMSResult(TCDialogID dlg_id, unsigned char rp_cause,
-                                    std::auto_ptr<ConnectSMSArg> & sms_params) = 0;
+                                    std::auto_ptr<SMSConnectArg> & sms_params) = 0;
 
     //if ercode != 0, CAP dialog is abnormally ended
     //NOTE: CAP dialog may be deleted only from this callback !!!
@@ -61,7 +61,7 @@ public:
 class CapSMS_SCFContractorITF { //SSF -> CapSMSDlg --> SCF
 public:
     // initiates capSMS dialog
-    virtual void initialDPSMS(InitialDPSMSArg* arg) throw(CustomException) = 0;
+    virtual void initialDPSMS(SMSInitialDPArg* arg) throw(CustomException) = 0;
     // reports SMS delivery status (continues) and ends capSMS dialog
     virtual void reportSubmission(bool submitted) throw(CustomException) = 0;
     // aborts capSMS dialog (
@@ -93,7 +93,7 @@ public:
 
     // SCFcontractor interface
     //  initiates capSMS dialog (over TCAP dialog)
-    RCHash initialDPSMS(const InitialDPSMSArg* arg) _THROWS_NONE;
+    RCHash initialDPSMS(const SMSInitialDPArg * arg) _THROWS_NONE;
     //  reports delivery status(continues) and ends capSMS dialog
     RCHash reportSubmission(bool submitted) _THROWS_NONE;
     //Forcedly ends CapSMS dialog
@@ -161,7 +161,7 @@ private:
     const char *    nmScf;
     Logger*         logger;
     messageType_e   reportType; //notification or request
-    std::auto_ptr<ConnectSMSArg> smsParams;
+    std::auto_ptr<SMSConnectArg> smsParams;
     uint16_t        invTimeout;
 };
 
