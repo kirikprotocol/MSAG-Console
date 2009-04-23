@@ -1115,14 +1115,18 @@ int BlocksHSStorage2::doCreate()
     if ( File::Exists(fn.c_str()) ) {
         return JOURNAL_FILE_ALREADY_EXISTS;
     }
-    {
+    try {
         std::string dfn = makeFileName(0);
         if ( File::Exists(dfn.c_str())) {
-            if (log_) {
-                smsc_log_error(log_,"there is file %s already", dfn.c_str());
-            }
-            return JOURNAL_FILE_CREATION_FAILED;
+            throw smsc::util::Exception("there is file %s already", dfn.c_str());
         }
+        journalFile_.RWCreate(fn.c_str());
+        journalFile_.SetUnbuffered();
+    } catch ( std::exception& e ) {
+        if (log_) {
+            smsc_log_error(log_,"exc in create: %s", e.what());
+        }
+        return JOURNAL_FILE_CREATION_FAILED;
     }
 
     try {
