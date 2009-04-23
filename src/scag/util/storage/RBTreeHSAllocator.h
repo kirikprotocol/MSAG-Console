@@ -170,10 +170,10 @@ public:
     }
 
 
-    /// Flush recovered nodes to disk
-    void flush( unsigned maxSpeed = 0 )
+    /// Flush recovered nodes to disk, returns the number of nodes flushed
+    size_t flush( unsigned maxSpeed = 0 )
     {
-        if (!fullRecovery_) return;
+        if (!fullRecovery_) return 0;
         if (logger) {
             smsc_log_info(logger,"flushing all %u nodes to disk, maxspeed = %u kB/sec",
                           header_.cells_count, maxSpeed );
@@ -206,6 +206,7 @@ public:
         rbtree_f.Write( rbtFileHeaderDump_.data(), rbtFileHeaderDump_.size());
         rbtree_f.Flush();
         fullRecovery_ = false;
+        return header_.cells_used;
     }
 
 

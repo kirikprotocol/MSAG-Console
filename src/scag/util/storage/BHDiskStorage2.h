@@ -37,7 +37,7 @@ public:
 
     ~BHDiskStorage2() {
         delete store_; 
-        delete glossary_;
+        // delete glossary_;
         delete buf_;
     }
 
@@ -162,7 +162,7 @@ protected:
 
 private:
     storage_type*            store_; // owned
-    GlossaryBase*            glossary_; // owned?
+    GlossaryBase*            glossary_; // not owned
     mutable key_type         key_;
     mutable index_type       i_;
     mutable value_type*      v_;     // not owned

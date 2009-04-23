@@ -62,9 +62,9 @@ public:
 
 
     /// flush index allocator in case of fullRecovery
-    void flush( unsigned maxSpeedkBPerSec = 0 )
+    size_t flush( unsigned maxSpeedkBPerSec = 0 )
     {
-        allocator_->flush( maxSpeedkBPerSec );
+        return allocator_->flush( maxSpeedkBPerSec );
     }
 
 

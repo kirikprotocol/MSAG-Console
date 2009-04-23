@@ -26,25 +26,56 @@ public:
     typedef HSPacker::index_type   index_type;
 
 private:
-    /*
-    struct TransHeader
-    {
-        offset_type ffb;
-        uint32_t    files_count;  // how many files
-        uint32_t    free_count;   // how many free blocks in the chain
-    };
-     */
-
     class CreationTask;
     struct StorageState;
     struct Transaction;
-
-    // version + blockSize + fileSize
-    inline size_t journalHeaderSize() const {
-        return 12;
-    }
-
     typedef std::deque< unsigned > FreeChainType;
+    class FreeChainRescuer;
+
+    /// scanning the whole storage returning true
+    /// when the head is found
+    struct Scanner {
+        Scanner( BlocksHSStorage2* s = 0, FreeChainRescuer* f = 0 ) :
+        s_(s), f_(f), idx_(-1) {}
+        bool next();
+    public:
+        BlocksHSStorage2*  s_; // pointer to the storage
+        FreeChainRescuer*  f_;
+        index_type         idx_;
+    };
+
+public:
+    /// interface for rescueing indices
+    struct IndexRescuer
+    {
+        typedef BlocksHSStorage2::index_type  index_type;
+        typedef BlocksHSStorage2::buffer_type buffer_type;
+        virtual ~IndexRescuer() {}
+        virtual void recoverIndex( index_type idx, buffer_type& buffer ) = 0;
+    };
+
+    /// interface for adapter to print keys
+    struct KeyLogger
+    {
+    public:
+        virtual const char* toString() const = 0;
+        virtual ~KeyLogger() {}
+    };
+
+    class Iterator
+    {
+    public:
+        Iterator() {}
+        Iterator( BlocksHSStorage2& s ) : scanner_(&s) {}
+        bool next();
+
+        inline index_type getIndex() const { return scanner_.idx_; }
+        inline buffer_type& getBuffer() { return buffer_; }
+
+    private:
+        Scanner     scanner_;
+        buffer_type buffer_;
+    };
 
 public:
     enum {
@@ -59,15 +90,7 @@ public:
             TRANSACTION_WRITE_FAILED = -22
     };
 
-
-
-    struct KeyLogger
-    {
-    public:
-        virtual const char* toString() const = 0;
-        virtual ~KeyLogger() {}
-    };
-
+    /*
     template < class Key > class KeyLoggerT : public KeyLogger
     {
     public:
@@ -78,14 +101,9 @@ public:
     private:
         const Key& key_;
     };
+     */
 
 public:    
-    inline size_t blockSize() const { return packer_.blockSize(); }
-    inline index_type invalidIndex() const { return packer_.invalidIndex(); }
-
-    inline uint32_t version() const { return version_; }
-    inline size_t headerSize() const { return idxSize() + navSize(); }
-
     BlocksHSStorage2( DataFileManager& manager, smsc::logger::Logger* logger = 0 );
 
     ~BlocksHSStorage2();
@@ -116,6 +134,22 @@ public:
         fileSize_ = fileSize;
         fileSizeBytes_ = fileSize_ * blockSize;
         int ret = doCreate();
+        if (!ret) { inited_ = true; }
+        return ret;
+    }
+
+
+    int recover( const std::string& dbname,
+                 const std::string& dbpath,
+                 IndexRescuer* indexRescuer = 0,
+                 uint32_t version = 0x80000002 )
+    {
+        if (inited_) return ALREADY_INITED;
+        if (dbname.empty()) return DBNAME_INVALID;
+        version_ = version;
+        dbname_ = dbname;
+        dbpath_ = dbpath;
+        int ret = doRecover( indexRescuer );
         if (!ret) { inited_ = true; }
         return ret;
     }
@@ -163,7 +197,15 @@ public:
         return read(idx2pos(index),buf,0);
     }
 
+    inline size_t blockSize() const { return packer_.blockSize(); }
+    inline index_type invalidIndex() const { return packer_.invalidIndex(); }
+
+    inline uint32_t version() const { return version_; }
+    inline size_t headerSize() const { return idxSize() + navSize(); }
+
 private:
+    // version + blockSize + fileSize
+    inline size_t journalHeaderSize() const { return 12; }
     inline size_t idxSize() const { return packer_.idxSize(); }
     inline size_t navSize() const { return packer_.navSize(); }
     inline index_type pos2idx( offset_type o ) const { return packer_.pos2idx(o); }
@@ -203,12 +245,12 @@ private:
                          buffer_type* buffer = 0 );
 
     int doOpen();
-
     int doCreate();
+    int doRecover( IndexRescuer* indexRescuer );
 
     // opening the data files according to the state
     // and (possibly) applying transaction stored in buffer.
-    int openDataFiles( const StorageState& state, const buffer_type* buffer );
+    // int openDataFiles( const StorageState& state, const buffer_type* buffer );
 
     size_t minTransactionSize() const;
 
@@ -303,6 +345,9 @@ private:
         if ( packedSize <= idxSize() ) return 0;
         return packer_.countBlocks(packedSize-idxSize());
     }
+
+
+    int writeJournalHeader();
 
 private:
     bool                  inited_;

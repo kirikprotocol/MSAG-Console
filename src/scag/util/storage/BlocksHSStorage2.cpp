@@ -45,7 +45,7 @@ public:
                   size_t             fileCount,
                   size_t             speedKbSec,
                   smsc::logger::Logger* logger = 0 ) :
-    fileName_(fileName), packer_(blockSize,0,logger), fileSize_(fileSize),
+    fileName_(fileName), packer_(blockSize,0/*,logger*/), fileSize_(fileSize),
     fileCount_(fileCount), speed_(speedKbSec), log_(logger) {
     }
     virtual ~CreationTask() {
@@ -280,6 +280,7 @@ public:
 };
 
 
+/// ======================================================================
 struct BlocksHSStorage2::Transaction
 {
 public:
@@ -299,10 +300,105 @@ public:
 
 
 /// ======================================================================
+
+class BlocksHSStorage2::FreeChainRescuer
+{
+public:
+    FreeChainRescuer( BlocksHSStorage2& s ) : s_(s) {}
+    inline void freeBlock( index_type idx ) {
+        freeChain_.push_back( idx );
+    }
+    void freeBlocks( std::vector< offset_type >& offsets ) {
+        if ( offsets.size() == 0 ) return;
+        const size_t freeChainSize = freeChain_.size();
+        freeChain_.resize( freeChain_.size() + offsets.size() );
+        std::transform( offsets.begin(), offsets.end(),
+                        freeChain_.begin() + freeChainSize,
+                        std::bind2nd( std::divides<offset_type>(), s_.blockSize()) );
+    }
+
+    inline size_t freeCount() const { return freeChain_.size(); }
+
+    inline index_type ffb() {
+        assert( freeChain_.size() > 0 );
+        std::sort( freeChain_.begin(), freeChain_.end() );
+        freeChain_.erase( std::unique( freeChain_.begin(), freeChain_.end() ),
+                          freeChain_.end() );
+        return freeChain_.front(); 
+    }
+
+    ~FreeChainRescuer() 
+    {
+        try {
+            size_t freeChainSize = freeChain_.size();
+            if ( !freeChainSize ) { return; }
+            // std::sort( freeChain_.begin(), freeChain_.end() );
+            if ( s_.log_ ) {
+                smsc_log_info(s_.log_,"writing a chain of size %u", unsigned(freeChainSize));
+            }
+            for ( std::vector< index_type >::const_iterator i = freeChain_.begin();
+                  i != freeChain_.end();
+                  ) {
+                const offset_type offset = s_.idx2pos(*i);
+                ++i;
+                File* f = s_.getFile(offset);
+                f->Seek(s_.getOffset(offset));
+                BlockNavigation bn;
+                bn.setFreeCells( --freeChainSize );
+                bn.setNextBlock( freeChainSize == 0 ? s_.packer_.notUsed() : s_.idx2pos(*i) );
+                bn.save(*f);
+            }
+        } catch ( std::exception& e ) {
+            smsc_log_error(s_.log_,"exc in freeChainRescue: %s", e.what() );
+        }
+    }
+private:
+    BlocksHSStorage2&         s_;
+    std::vector< index_type > freeChain_;
+};
+
+/// ======================================================================
+bool BlocksHSStorage2::Scanner::next()
+{
+    if (!s_) return false;
+    const index_type maxIdx = s_->fileSize_ * s_->files_.size();
+    if (idx_==index_type(-1)) {
+        idx_ = 0;
+    } else if ( idx_ < maxIdx ){
+        ++idx_;
+    }
+    while ( idx_ < maxIdx ) {
+        offset_type offset = s_->idx2pos(idx_);
+        File* f = s_->getFile(offset);
+        if ( !f ) { break; }
+        const off_t localOffset = s_->getOffset(offset);
+        f->Seek(localOffset);
+        BlockNavigation bn;
+        bn.load(*f);
+        if ( bn.isHead() ) return true;
+        if ( bn.isFree() && f_ ) { f_->freeBlock(idx_); }
+        ++idx_;
+    }
+    return false;
+}
+
+
+
+bool BlocksHSStorage2::Iterator::next()
+{
+    while ( scanner_.next() ) {
+        if ( scanner_.s_->read(scanner_.idx_,buffer_) ) return true;
+    }
+    return false;
+}
+
+
+
+/// ======================================================================
 BlocksHSStorage2::BlocksHSStorage2( DataFileManager& manager,
                                     smsc::logger::Logger* logger ) :
 inited_(false),
-packer_(1024,0,logger),
+packer_(1024,0/*,logger*/),
 fileSize_(0),
 fileSizeBytes_(0),
 log_(logger),
@@ -726,7 +822,7 @@ int BlocksHSStorage2::doOpen()
         dsr >> val;
         version_ = val;
         dsr >> val;
-        packer_ = HSPacker(val,0,log_);
+        packer_ = HSPacker(val,0/*,log_*/);
         dsr >> val;
         fileSize_ = val;
         fileSizeBytes_ = fileSize_ * packer_.blockSize();
@@ -1008,34 +1104,18 @@ int BlocksHSStorage2::doOpen()
 
 int BlocksHSStorage2::doCreate()
 {
-    const std::string fn = dbpath_ + "/" + dbname_ + ".jnl";
-    if ( File::Exists(fn.c_str()) ) {
-        return JOURNAL_FILE_ALREADY_EXISTS;
-    }
+    int ret = writeJournalHeader();
+    if (ret) return ret;
     try {
-        journalFile_.RWCreate( fn.c_str() );
-        journalFile_.SetUnbuffered();
-        journal_.clear();
-        journal_.reserve(journalHeaderSize());
-        Serializer ser(journal_);
-        ser << uint32_t(version_);
-        ser << uint32_t(packer_.blockSize());
-        ser << uint32_t(fileSize_);
-        assert( journal_.size() == journalHeaderSize());
-        journalFile_.Write(&journal_[0],journalHeaderSize());
-
-        // making a data file
         if ( ! attachNewFile() ) {
-            throw smsc::util::Exception("cannot create the first datafile");
+            throw smsc::util::Exception("return false");
         }
-
     } catch ( std::exception& e ) {
         if (log_) {
-            smsc_log_error(log_,"cannot create journal file %s: %s", fn.c_str(), e.what());
+            smsc_log_error(log_,"cannot create initial data file: %s", e.what());
         }
-        return JOURNAL_FILE_CREATION_FAILED;
+        return DATA_FILES_OPEN_FAILED;
     }
-
     try {
         checkFreeCount(freeCount_);
     } catch ( std::exception& e ) {
@@ -1054,6 +1134,126 @@ int BlocksHSStorage2::doCreate()
 }
 
 
+int BlocksHSStorage2::doRecover( IndexRescuer* indexRescuer )
+{
+    for_each( files_.begin(), files_.end(), PtrDestroy() );
+    files_.clear();
+
+    // first of all open all existing data files
+    fileSizeBytes_ = 0;
+    for ( size_t i = 0; ; ++i ) {
+        const std::string fn = makeFileName(i);
+        if ( ! File::Exists(fn.c_str()) ) break;
+        if ( i == 0 ) {
+            fileSizeBytes_ = File::Size(fn.c_str());
+            if ( fileSizeBytes_ == 0 ) {
+                if (log_) {
+                    smsc_log_error(log_,"first file %s has size=0", fn.c_str());
+                }
+                break;
+            }
+        } else {
+            if ( fileSizeBytes_ != offset_type(File::Size(fn.c_str())) ) {
+                if (log_) {
+                    smsc_log_warn(log_,"file %s has different size", fn.c_str() );
+                }
+                break;
+            }
+        }
+        std::auto_ptr< File > file(new File);
+        try {
+            file->RWOpen(fn.c_str());
+            file->SetUnbuffered();
+            files_.push_back(file.release());
+        } catch ( std::exception& e ) {
+            if (log_) {
+                smsc_log_warn(log_,"exc open file %s: %s", fn.c_str(), e.what());
+            }
+        }
+    }
+
+    if ( files_.size() == 0 ) {
+        if (log_) {
+            smsc_log_error(log_,"no files found for dbpath=%s", dbpath_.c_str());
+        }
+        return DATA_FILES_OPEN_FAILED;
+    }
+
+    // then determine blockSize
+    offset_type pos = 0;
+    do {
+        File* f = getFile(pos);
+        f->Seek(getOffset(pos));
+        BlockNavigation bn;
+        bn.load( *f );
+        pos = bn.nextBlock();
+        if ( packer_.isNotUsed(pos) ) {
+            // blockSize found
+            size_t blockSize = (pos & ~BlockNavigation::badBit());
+            packer_ = HSPacker(blockSize,0/*,log_*/);
+            fileSize_ = fileSizeBytes_ / packer_.blockSize();
+            fileSizeBytes_ = fileSize_ * packer_.blockSize();
+            break;
+        }
+    } while (true);
+
+    if (log_) {
+        smsc_log_info(log_,"sizes recovered: blockSize=%u/%x fileSize=%u/%x fszBytes=%x",
+                      unsigned(packer_.blockSize()),
+                      unsigned(packer_.blockSize()),
+                      unsigned(fileSize_),
+                      unsigned(fileSize_),
+                      unsigned(fileSizeBytes_));
+    }
+    
+    {
+        const std::string fn = dbpath_ + "/" + dbname_ + ".jnl";
+        if ( File::Exists(fn.c_str()) ) { File::Unlink(fn.c_str()); }
+        int ret = writeJournalHeader();
+        if ( ret ) { return ret; }
+    }
+
+    FreeChainRescuer freeChainer(*this);
+    Scanner scanner(this,&freeChainer);
+    buffer_type buffer;
+    std::vector< offset_type > affected;
+    while ( scanner.next() ) {
+        buffer.clear();
+        affected.clear();
+        try {
+            if ( ! read(idx2pos(scanner.idx_),buffer,&affected) ) {
+                throw smsc::util::Exception("return false");
+            }
+            // recover index
+            if ( indexRescuer ) {
+                indexRescuer->recoverIndex(scanner.idx_,buffer);
+            }
+            continue;
+        } catch ( std::exception& e ) {
+            // failed
+            if (log_) {
+                smsc_log_warn(log_,"failed to read used chain at %llx: %s",
+                              idx2pos(scanner.idx_), e.what());
+            }
+        }
+        // free affected blocks
+        freeChainer.freeBlocks( affected );
+    }
+    
+    // writing free chain information
+    freeCount_ = freeChainer.freeCount();
+    freeChain_.clear();
+    if (freeCount_ > 0) freeChain_.push_back(freeChainer.ffb());
+    buffer_type dummy;
+    journalWrites_ = 0;
+    if ( !writeJournal(dummy,dummy,StorageState(*this)) ) {
+        return TRANSACTION_WRITE_FAILED;
+    }
+    return 0;
+}
+
+
+#if 0
 int BlocksHSStorage2::openDataFiles( const StorageState& state, const buffer_type* buffer )
 {
     for ( std::vector< File* >::iterator i = files_.begin(); 
@@ -1106,7 +1306,7 @@ int BlocksHSStorage2::openDataFiles( const StorageState& state, const buffer_typ
     }
     return 0;
 }
-
+#endif
 
 size_t BlocksHSStorage2::minTransactionSize() const
 {
@@ -1477,6 +1677,41 @@ bool BlocksHSStorage2::attachNewFile()
         delete f;
     }
     return rv;
+}
+
+
+int BlocksHSStorage2::writeJournalHeader()
+{
+    const std::string fn = dbpath_ + "/" + dbname_ + ".jnl";
+    if ( File::Exists(fn.c_str()) ) {
+        return JOURNAL_FILE_ALREADY_EXISTS;
+    }
+    try {
+        journalFile_.RWCreate( fn.c_str() );
+        journalFile_.SetUnbuffered();
+        journal_.clear();
+        journal_.reserve(journalHeaderSize());
+        Serializer ser(journal_);
+        ser << uint32_t(version_);
+        ser << uint32_t(packer_.blockSize());
+        ser << uint32_t(fileSize_);
+        assert( journal_.size() == journalHeaderSize());
+        journalFile_.Write(&journal_[0],journalHeaderSize());
+
+        /*
+        // making a data file
+        if ( ! attachNewFile() ) {
+            throw smsc::util::Exception("cannot create the first datafile");
+        }
+         */
+
+    } catch ( std::exception& e ) {
+        if (log_) {
+            smsc_log_error(log_,"cannot create journal file %s: %s", fn.c_str(), e.what());
+        }
+        return JOURNAL_FILE_CREATION_FAILED;
+    }
+    return 0;
 }
 
 } // namespace storage
