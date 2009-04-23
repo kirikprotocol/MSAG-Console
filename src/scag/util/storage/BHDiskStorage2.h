@@ -103,15 +103,23 @@ public:
 
     bool deserialize( value_type& v ) const /* throw exception */
     {
-        if ( i_ == invalidIndex() || !buf_ || buf_->empty() || !v.value ) return false;
+        if ( !buf_ || buf_->empty() || !v.value ) return false;
         buffer_type headers;
         unpackBuffer(*buf_,&headers);
         Deserializer dsr(*buf_,glossary_);
         dsr.setVersion(store_->version());
         dsr.setrpos(headerSize());
         // FIXME: should we check for key match here?
-        dsr >> key_;
-        dsr >> *v.value;
+        try {
+            dsr >> key_;
+            dsr >> *v.value;
+        } catch ( std::exception& e ) {
+            // FIXME: should we restore from backup here?
+            if (log_) {
+                smsc_log_info(log_,"exc in BHS2: %s", e.what());
+            }
+            throw;
+        }
         // if everything is ok, then pack buffer back again and attach it to v
         packBuffer(*buf_,&headers);
         attachBackup(v.backup,buf_);
@@ -143,7 +151,10 @@ public:
 
     void recoverFromBackup( value_type& v )
     {
-        if (log_) {smsc_log_warn(log_,"recover from backup is not implemented");}
+        // if (log_) {smsc_log_warn(log_,"recover from backup is not implemented");}
+        // temporary switch backup and buffer
+        attachBackup(v.backup,buf_);
+        deserialize(v);
     }
 
 protected:

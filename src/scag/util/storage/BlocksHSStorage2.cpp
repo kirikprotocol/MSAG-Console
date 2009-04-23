@@ -1104,6 +1104,20 @@ int BlocksHSStorage2::doOpen()
 
 int BlocksHSStorage2::doCreate()
 {
+    const std::string fn = dbpath_ + "/" + dbname_ + ".jnl";
+    if ( File::Exists(fn.c_str()) ) {
+        return JOURNAL_FILE_ALREADY_EXISTS;
+    }
+    {
+        std::string dfn = makeFileName(0);
+        if ( File::Exists(dfn.c_str())) {
+            if (log_) {
+                smsc_log_error(log_,"there is file %s already", dfn.c_str());
+            }
+            return JOURNAL_FILE_CREATION_FAILED;
+        }
+    }
+
     int ret = writeJournalHeader();
     if (ret) return ret;
     try {
