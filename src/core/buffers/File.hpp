@@ -770,6 +770,18 @@ public:
     }
     return realPos;
   }
+    
+  void Truncate( offset_type pos )
+  {
+      if (isInMemory()) { throw std::runtime_error("Truncate is not impl for inmemory");}
+      Check();
+      if (flags & (FLG_RDBUF|FLG_WRBUF)) {
+          throw std::runtime_error("Truncate is not impl for buffered file");
+      }
+      if (-1 == ftruncate(fd,pos)) {
+          throw FileException(FileException::errWriteFailed,filename.c_str());
+      }
+  }
 
   uint64_t ReadInt64()
   {

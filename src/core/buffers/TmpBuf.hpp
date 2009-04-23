@@ -33,7 +33,7 @@ public:
   /*use to read from external buffer.
     never ever even try to write to TmpBuf created with this constructor.
   */
-  TmpBuf(T* extbuf,int extbufsize)
+  TmpBuf(T* extbuf,size_t extbufsize)
   {
     realBuf=extbuf;
     heapBuf=0;
@@ -41,7 +41,7 @@ public:
     pos=0;
   }
 
-    void setExtBuf( T* extbuf, int extbufsize ) {
+    void setExtBuf( T* extbuf, size_t extbufsize ) {
         if ( heapBuf ) delete [] heapBuf;
         realBuf = extbuf;
         heapBuf = 0;
