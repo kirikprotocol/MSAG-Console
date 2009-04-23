@@ -29,6 +29,7 @@ private:
     class CreationTask;
     struct StorageState;
     struct Transaction;
+    class TransApplier;
     typedef std::deque< unsigned > FreeChainType;
     class FreeChainRescuer;
 
@@ -45,7 +46,8 @@ private:
     };
 
 public:
-    /// interface for rescueing indices
+    /// interface for rescueing indices.
+    /// Please, inherits from this and pass to recover().
     struct IndexRescuer
     {
         typedef BlocksHSStorage2::index_type  index_type;
@@ -54,7 +56,8 @@ public:
         virtual void recoverIndex( index_type idx, buffer_type& buffer ) = 0;
     };
 
-    /// interface for adapter to print keys
+    /// adapter interface to print key.
+    /// It is created to avoid dependency on key type.
     struct KeyLogger
     {
     public:
@@ -90,80 +93,24 @@ public:
             TRANSACTION_WRITE_FAILED = -22
     };
 
-    /*
-    template < class Key > class KeyLoggerT : public KeyLogger
-    {
-    public:
-        KeyLoggerT( const Key& key ) : key_(key) {}
-        virtual const char* toString() const {
-            return key_.toString().c_str();
-        }
-    private:
-        const Key& key_;
-    };
-     */
-
 public:    
     BlocksHSStorage2( DataFileManager& manager, smsc::logger::Logger* logger = 0 );
 
     ~BlocksHSStorage2();
 
-    int open( const std::string& dbname, const std::string& dbpath )
-    {
-        if ( inited_ ) return ALREADY_INITED;
-        if ( dbname.empty() ) return DBNAME_INVALID;
-        dbname_ = dbname;
-        dbpath_ = dbpath;
-        int ret = doOpen();
-        if (!ret) { inited_ = true; }
-        return ret;
-    }
+    int open( const std::string& dbname, const std::string& dbpath );
 
     int create( const std::string& dbname,
                 const std::string& dbpath,
                 size_t fileSize,
                 size_t blockSize,
-                uint32_t version = 0x80000002 )
-    {
-        if ( inited_ ) return ALREADY_INITED;
-        if ( dbname.empty() ) return DBNAME_INVALID;
-        version_ = version;
-        dbname_ = dbname;
-        dbpath_ = dbpath;
-        packer_ = HSPacker(blockSize,0,log_);
-        fileSize_ = fileSize;
-        fileSizeBytes_ = fileSize_ * blockSize;
-        int ret = doCreate();
-        if (!ret) { inited_ = true; }
-        return ret;
-    }
+                uint32_t version = 0x80000002 );
 
 
     int recover( const std::string& dbname,
                  const std::string& dbpath,
                  IndexRescuer* indexRescuer = 0,
-                 uint32_t version = 0x80000002 )
-    {
-        if (inited_) return ALREADY_INITED;
-        if (dbname.empty()) return DBNAME_INVALID;
-        version_ = version;
-        dbname_ = dbname;
-        dbpath_ = dbpath;
-        int ret = doRecover( indexRescuer );
-        if (!ret) { inited_ = true; }
-        return ret;
-    }
-
-
-    inline void packBuffer( buffer_type& buf, buffer_type* hdr )
-    {
-        packer_.packBuffer(buf,hdr);
-    }
-    inline void unpackBuffer( buffer_type& buf, buffer_type* hdr )
-    {
-        packer_.unpackBuffer(buf,hdr);
-    }
-
+                 uint32_t version = 0x80000002 );
 
     /// Modifies storage:
     ///
@@ -195,6 +142,15 @@ public:
     bool read(index_type index,buffer_type& buf) {
         buf.clear();
         return read(idx2pos(index),buf,0);
+    }
+
+    inline void packBuffer( buffer_type& buf, buffer_type* hdr )
+    {
+        packer_.packBuffer(buf,hdr);
+    }
+    inline void unpackBuffer( buffer_type& buf, buffer_type* hdr )
+    {
+        packer_.unpackBuffer(buf,hdr);
     }
 
     inline size_t blockSize() const { return packer_.blockSize(); }
@@ -248,10 +204,6 @@ private:
     int doCreate();
     int doRecover( IndexRescuer* indexRescuer );
 
-    // opening the data files according to the state
-    // and (possibly) applying transaction stored in buffer.
-    // int openDataFiles( const StorageState& state, const buffer_type* buffer );
-
     size_t minTransactionSize() const;
 
     Transaction* readJournal( buffer_type& buffer,
@@ -261,7 +213,6 @@ private:
                        const buffer_type& newbuf,
                        const StorageState& oldhead );
 
-    
     /// method invokes pushFree or popFree, depending on what is bigger hasBlocks or needBlocks.
     /// NOTE: this method should not fail as it just return blocks to free chain
     /// w/o access to disk.
@@ -326,6 +277,11 @@ private:
         return rv;
     }
 
+    std::string makeJnlFileName() const
+    {
+        return dbpath_ + "/" + dbname_ + ".jnl";
+    }
+
     inline File* getFile( offset_type pos ) {
         unsigned fn = unsigned(pos / fileSizeBytes_);
         if ( fn >= files_.size() ) {
@@ -346,8 +302,7 @@ private:
         return packer_.countBlocks(packedSize-idxSize());
     }
 
-
-    int writeJournalHeader();
+    // int writeJournalHeader();
 
 private:
     bool                  inited_;

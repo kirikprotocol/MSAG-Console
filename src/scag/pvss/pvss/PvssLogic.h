@@ -210,7 +210,6 @@ private:
     // typedef BHDiskStorage< AbntAddr, Profile > DiskDataStorage;
     typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
 #ifdef PVSSLOGIC_BHS2
-    class RBTreeIndexRescuer;
     typedef BHDiskStorage2< AbntAddr, Profile, BlocksHSStorage2 > DiskDataStorage;
 #else
     typedef BHDiskStorage< AbntAddr, Profile, BlocksHSStorage3<AbntAddr,Profile> > DiskDataStorage;

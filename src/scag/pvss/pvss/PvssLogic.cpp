@@ -253,6 +253,7 @@ unsigned long AbonentLogic::initElementStorage(unsigned index,bool checkAtStart)
 }
 
 
+/*
 #ifdef PVSSLOGIC_BHS2
 class AbonentLogic::RBTreeIndexRescuer : public AbonentLogic::DiskDataStorage::storage_type::IndexRescuer
 {
@@ -276,6 +277,7 @@ private:
     DiskDataStorage::storage_type& dstore_;
 };
 #endif
+ */
 
 
 unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxSpeed )
@@ -330,9 +332,12 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
 
     // rebuilding index
 #ifdef PVSSLOGIC_BHS2
+    DiskDataStorage dds(bs.release(),
+                        0, // glossary
+                        0 ); // logger
+    DiskDataStorage::IndexRescuer< DiskIndexStorage > indexRescuer(*dis.get(),dds);
     const string fn(config_.dbName + "-data");
-    RBTreeIndexRescuer indexRescuer(*dis.get(),*bs.get());
-    int ret = bs->recover(fn, path, &indexRescuer);
+    int ret = indexRescuer.recover(fn, path);
     if ( ret < 0 ) {
         throw Exception("can't recover data disk storage: %s", path.c_str());
     }

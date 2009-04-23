@@ -62,7 +62,7 @@ public:
         Serializer ser(*buf_,glossary_);
         ser.setVersion(store_->version());
         ser.reset();
-        ser.setwpos( headerSize() );
+        ser.setwpos( headerSize()+32 );
         ser << key_;
         const size_t oldwpos = ser.wpos();
         ser << *v.value;
@@ -104,24 +104,7 @@ public:
     bool deserialize( value_type& v ) const /* throw exception */
     {
         if ( !buf_ || buf_->empty() || !v.value ) return false;
-        buffer_type headers;
-        unpackBuffer(*buf_,&headers);
-        Deserializer dsr(*buf_,glossary_);
-        dsr.setVersion(store_->version());
-        dsr.setrpos(headerSize());
-        // FIXME: should we check for key match here?
-        try {
-            dsr >> key_;
-            dsr >> *v.value;
-        } catch ( std::exception& e ) {
-            // FIXME: should we restore from backup here?
-            if (log_) {
-                smsc_log_info(log_,"exc in BHS2: %s", e.what());
-            }
-            throw;
-        }
-        // if everything is ok, then pack buffer back again and attach it to v
-        packBuffer(*buf_,&headers);
+        if ( ! deserializeBuffer(v,*buf_) ) return false;
         attachBackup(v.backup,buf_);
         return true;
     }
@@ -153,11 +136,62 @@ public:
     {
         // if (log_) {smsc_log_warn(log_,"recover from backup is not implemented");}
         // temporary switch backup and buffer
-        attachBackup(v.backup,buf_);
-        deserialize(v);
+        if (v.value && v.backup) deserializeBuffer(v,*v.backup);
     }
 
+    template < class DiskIndexStorage >
+        class IndexRescuer : public storage_type::IndexRescuer
+    {
+    public:
+        IndexRescuer( DiskIndexStorage& istore,
+                      BHDiskStorage2&   dstore ) :
+        istore_(istore), dstore_(dstore) {}
+
+        int recover( const std::string& dbname,
+                      const std::string& dbpath )
+        {
+            return dstore_.store_->recover(dbname,dbpath,this);
+        }
+
+        virtual void recoverIndex( index_type idx, buffer_type& buffer ) {
+            dstore_.unpackBuffer(buffer,0);
+            Deserializer dsr(buffer);
+            dsr.setVersion(dstore_.store_->version());
+            dsr.setrpos(dstore_.headerSize()+32);
+            typename DiskIndexStorage::key_type key;
+            dsr >> key;
+            istore_.setIndex(key,idx);
+        }
+
+    private:
+        DiskIndexStorage& istore_;
+        BHDiskStorage2&   dstore_;
+    };
+
 protected:
+    bool deserializeBuffer( value_type& v, buffer_type& buffer ) const
+    {
+        buffer_type headers;
+        unpackBuffer(buffer,&headers);
+        Deserializer dsr(buffer,glossary_);
+        dsr.setVersion(store_->version());
+        // FIXME: should we check for key match here?
+        try {
+            dsr.setrpos(headerSize()+32);
+            dsr >> key_;
+            dsr >> *v.value;
+        } catch ( std::exception& e ) {
+            // FIXME: should we restore from backup here?
+            if (log_) {
+                smsc_log_info(log_,"exc in BHS2: %s", e.what());
+            }
+            throw; // or should we return false?
+        }
+        // if everything is ok, then pack buffer back again and attach it to v
+        packBuffer(buffer,&headers);
+        return true;
+    }
+    
     inline size_t headerSize() const {
         return store_->headerSize();
     }
