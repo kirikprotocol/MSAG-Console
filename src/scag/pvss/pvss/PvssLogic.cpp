@@ -253,12 +253,33 @@ unsigned long AbonentLogic::initElementStorage(unsigned index,bool checkAtStart)
 }
 
 
+#ifdef PVSSLOGIC_BHS2
+class AbonentLogic::RBTreeIndexRescuer : public AbonentLogic::DiskDataStorage::storage_type::IndexRescuer
+{
+public:
+    RBTreeIndexRescuer( DiskIndexStorage& istore,
+                        DiskDataStorage::storage_type& dstore ) :
+    istore_(istore), dstore_(dstore) {}
+    virtual void recoverIndex( index_type idx, buffer_type& buffer )
+    {
+        // unpack buffer
+        dstore_.unpackBuffer(buffer,0);
+        Deserializer dsr(buffer);
+        dsr.setVersion(dstore_.version());
+        dsr.setrpos(dstore_.headerSize());
+        AbntAddr key;
+        dsr >> key;
+        istore_.setIndex( key, idx );
+    }
+private:
+    DiskIndexStorage&              istore_;
+    DiskDataStorage::storage_type& dstore_;
+};
+#endif
+
+
 unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxSpeed )
 {
-#ifdef PVSSLOGIC_BHS2
-    smsc_log_warn(logger_,"rebuildElementStorage is not implemented yet");
-    return 0;
-#else
     char pathSuffix[4];
     snprintf(pathSuffix, sizeof(pathSuffix), "%03u", index);
     string path = string(config_.locations[locationNumber_].path + "/") + pathSuffix;
@@ -268,6 +289,12 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
 
     const std::string pathSuffixString(pathSuffix);
 
+#ifdef PVSSLOGIC_BHS2
+    std::auto_ptr< DiskDataStorage::storage_type > bs
+        (new DiskDataStorage::storage_type
+         (dataFileManager_,
+          smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
+#else
     // do we need glossary here ?
     // I (db) think 'no', as we don't unpack datablocks
     std::auto_ptr< DiskDataStorage::storage_type > bs
@@ -281,7 +308,8 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
     if (ret < 0 && ret != DiskDataStorage::storage_type::FIRST_FREE_BLOCK_FAILED ) {
         throw Exception("can't open data disk storage: %s", path.c_str());
     }
-    // we have opened everything
+#endif
+    // we have opened data storage
 
     /// making sure that temporary index file is not here
     std::string n = path + "/" + config_.dbName + "-index";
@@ -297,22 +325,27 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
         (new DiskIndexStorage( config_.dbName + "-temp", path, config_.indexGrowth, false,
                                smsc::logger::Logger::getInstance(("pvssix."+pathSuffixString).c_str()),
                                fullRecovery ));
-    dis->setInvalidIndex( DiskDataStorage::storage_type::invalidIndex() );
+    dis->setInvalidIndex( bs->invalidIndex() );
     smsc_log_debug(logger_, "temporary data index storage %u is created", index);
 
     // rebuilding index
-    // DiskIndexStorage::index_type blockIndex = 0;
-    // AbntAddr key;
-    unsigned long rebuilt = 0;
+#ifdef PVSSLOGIC_BHS2
+    const string fn(config_.dbName + "-data");
+    RBTreeIndexRescuer indexRescuer(*dis.get(),*bs.get());
+    int ret = bs->recover(fn, path, &indexRescuer);
+    if ( ret < 0 ) {
+        throw Exception("can't recover data disk storage: %s", path.c_str());
+    }
+#else
     for ( DiskDataStorage::storage_type::Iterator iter = bs->beginWithRecovery(); iter.next(); ) {
         smsc_log_debug( logger_, "rebuilding: key=%s, idx=%lx",
                         iter.key().toString().c_str(),
                         long(iter.blockIndex()) );
         dis->setIndex(iter.key(),iter.blockIndex());
-        ++rebuilt;
     }
-    dis->flush(maxSpeed);
-    smsc_log_info( logger_, "storage %s indices rebuilt: %lu", path.c_str(), rebuilt );
+#endif
+    const size_t rebuilt = dis->flush(maxSpeed);
+    smsc_log_info( logger_, "storage %s indices rebuilt: %u", path.c_str(), unsigned(rebuilt) );
 
     rename( n.c_str(), o.c_str() );
     rename( t.c_str(), n.c_str() );
@@ -322,7 +355,6 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
     rename( n.c_str(), o.c_str() );
     rename( t.c_str(), n.c_str() );
     return rebuilt;
-#endif
 }
 
 
@@ -366,7 +398,6 @@ Response* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest) {
   CommandResponse* r = commandProcessor_.getResponse();
   return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
 }
-
 
 // ==== infrastruct
 

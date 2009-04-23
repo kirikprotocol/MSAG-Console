@@ -17,7 +17,7 @@
 #include "scag/util/storage/DataBlockBackup.h"
 
 // please uncomment the following line to get the new code
-// #define PVSSLOGIC_BHS2 1
+#define PVSSLOGIC_BHS2 1
 
 #ifdef PVSSLOGIC_BHS2
 
@@ -204,11 +204,13 @@ protected:
     virtual Response* processProfileRequest(ProfileRequest& request);
 
 private:
+    
     //typedef HashedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
     // typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
     // typedef BHDiskStorage< AbntAddr, Profile > DiskDataStorage;
     typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
 #ifdef PVSSLOGIC_BHS2
+    class RBTreeIndexRescuer;
     typedef BHDiskStorage2< AbntAddr, Profile, BlocksHSStorage2 > DiskDataStorage;
 #else
     typedef BHDiskStorage< AbntAddr, Profile, BlocksHSStorage3<AbntAddr,Profile> > DiskDataStorage;
