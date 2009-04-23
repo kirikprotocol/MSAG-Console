@@ -2385,7 +2385,7 @@ USHORT_T Et96MapOpenConf (
     } else {
       __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s",__func__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
     }
-    /* обработка openResult */
+    /*  openResult */
     switch( dialog->state ){
     case MAPST_WaitDelRepConf:
       if ( openResult == ET96MAP_RESULT_NOT_OK ){
@@ -2452,7 +2452,7 @@ USHORT_T Et96MapOpenConf (
             refuseReason_p?(Status::MAP_REFUSE_REASON_BASE+*refuseReason_p):Status::MAP_REFUSE_REASON_NO_REASON);
         }
       }
-      /* перевод в след состо€ние */
+      /*     */
       switch(dialog->state){
       case MAPST_RInfoFallBack:
         dialog->hlrVersion = dialog->version;
@@ -2874,6 +2874,13 @@ USHORT_T Et96MapOpenInd (
         dialog->hasIndAddress = true;
       }
     }
+#ifdef MAP_R12
+    mkIMSIOrMSISDNFromIMSI(destRef_sp,dialog->s_imsi);
+#else
+    Address imsi;
+    ConvAddrIMSI2Smc(destRef_sp,&imsi);
+    dialog->s_imsi=imsi.value;
+#endif
     dialog->origAddress=SS7AddressToString(ss7OrigAddr_sp);
     dialog->destAddress=SS7AddressToString(ss7DestAddr_sp);
     dialog->state = MAPST_WaitSms;
@@ -2994,7 +3001,7 @@ USHORT_T Et96MapV2ForwardSmMOConf(ET96MAP_LOCAL_SSN_T localSsn  INSTANCEIDARGDEF
     }catch(MAPDIALOG_ERROR& e){
       SendErrToSmsc(dialog->dialogid_smsc,e.code);
       if( GET_STATUS_CODE(e.code) == Status::MAP_NO_RESPONSE_FROM_PEER ) dialog->dropChain = true;
-      dialog->dialogid_smsc = 0; // далее смсцентр ничего не знает о диалоге
+      dialog->dialogid_smsc = 0; //       
       dialog->wasDelivered = false;
     }
 
@@ -3104,7 +3111,7 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
     }catch(MAPDIALOG_ERROR& e){
       __map_trace2__("%s: %s", __func__,e.what());
       SendErrToSmsc(dialog->dialogid_smsc,e.code);
-      dialog->dialogid_smsc = 0; // далее смсцентр ничего не знает о диалоге
+      dialog->dialogid_smsc = 0; //       
       dialog->wasDelivered = false;
     }
 
@@ -3602,7 +3609,7 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
       dialog->state = MAPST_WaitUSSDReqClose;
       return ET96MAP_E_OK;
     }
-    // послать ок на USSDRequestReq
+    //    USSDRequestReq
     SendOkToSmsc(dialog.get());
 
 /*    if( smsc::logger::_map_cat->isDebugEnabled() && ussdString_sp) {
@@ -3693,7 +3700,7 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
       dialog->state = MAPST_WaitUSSDNotifyCloseErr;
       return ET96MAP_E_OK;
     }
-    // послать ок на USSDNotifyReq
+    //    USSDNotifyReq
     SendOkToSmsc(dialog.get());
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();
@@ -3947,7 +3954,7 @@ static void NotifyHLR(MapDialog* dialog)
   checkMapReq( Et96MapOpenReq( SSN INSTDLGARG(dialog), dialog_id, &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 ), __func__);
   dialog->id_opened = true;
 
-  // АК !!!!
+  //  !!!!
   if ( dialog->hlrVersion != 2 && dialog->hlrVersion != 1 ) dialog->hlrVersion = 2;
   // !!!!
 
