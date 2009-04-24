@@ -4,9 +4,11 @@
 #include <string>
 #include "util/int.h"
 #include "scag/util/HexDump.h"
+#include "scag/util/storage/EndianConverter.h"
 
 int main()
 {
+    scag::util::storage::EndianConverter cvt;
     const char* test = "\x01\x23\x45\x67\x89\xab\xcd\xef\x01\x23\x45\x67\x89\xab\xcd\xef";
     for ( size_t i = 0; i < 8; ++i ) {
         const char* ptr = test + i;
@@ -16,7 +18,12 @@ int main()
         hd.hexdump(dump,ptr,8);
         dump.append(" uint64: ");
         hd.hexdump(dump,uptr,8);
-        printf("uint64:%llx, dump: %s\n", *uptr, dump.c_str());
+        printf("uint64: %llx, cvt16:%x, cvt32: %x, cvt64: %llx, dump: %s\n",
+               *uptr,
+               cvt.get16(ptr),
+               cvt.get32(ptr),
+               cvt.get64(ptr),
+               dump.c_str());
     }
     return 0;
 }
