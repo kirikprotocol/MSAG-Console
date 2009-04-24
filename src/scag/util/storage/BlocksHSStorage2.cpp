@@ -1633,8 +1633,10 @@ bool BlocksHSStorage2::attachNewFile()
     if ( ! creationTask_.get() ) {
         return false;
     }
-    // creationTask_->waitUntilStarted();
-    creationTask_->waitUntilReleased();
+    if ( ! creationTask_->isReleased() ) {
+        if (log_) smsc_log_warn(log_,"waiting until preallocation task is finished");
+        creationTask_->waitUntilReleased();
+    }
     // creation task is finished
     std::auto_ptr<CreationTask> ct(creationTask_.release());
     File* f = ct->getFile();
