@@ -457,9 +457,9 @@ inline void ConvAddrIMSIorMSISDN2String(const ET96MAP_IMSI_OR_MSISDN_T* ma,std::
 {
   if ( ma->imsiOrMsisdnLen == 0 ) return;
   for ( int i = 1;i<(ma->imsiOrMsisdnLen);i++){
-    s.append((ma->imsi[i]&0x0f)+0x30);
-    if( (ma->imsi[i]&0xF0) == 0xF0 ) break;
-    s.append(((ma->imsi[i]>>4)&0x0f)+0x30);
+    s.append((ma->imsiOrMsisdn[i]&0x0f)+0x30);
+    if( (ma->imsiOrMsisdn[i]&0xF0) == 0xF0 ) break;
+    s.append(((ma->imsiOrMsisdn[i]>>4)&0x0f)+0x30);
   }
 }
 
