@@ -31,7 +31,7 @@ namespace timers {
 using smsc::logger::Logger;
 using smsc::core::threads::Thread;
 using smsc::util::Exception;
-//using smsc::core::synchronization::Event;
+using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::EventMonitor;
 using smsc::core::synchronization::TimeSlice;
 
@@ -123,13 +123,14 @@ public:
         ~SWIdTime()
         { }
 
-        inline bool operator< (const SWIdTime & obj2) const
+        bool operator< (const SWIdTime & obj2) const
         {
             return swTms < obj2.swTms;
         }
     };
 
     virtual bool empty(void) const = 0;
+    virtual uint32_t size(void) const = 0;
     virtual const SWIdTime & front(void) = 0;
     virtual void add(const SWIdTime & use_val) = 0;
     virtual bool remove(uint32_t sw_id) = 0;
@@ -153,8 +154,11 @@ public:
     { }
 
     bool empty(void) const { return swQueue.empty(); }
+    //
+    uint32_t size(void) const { return (uint32_t)swQueue.size(); }
+    //
     const SWIdTime & front(void) { return *swQueue.begin(); }
-
+    //
     void add(const SWIdTime & use_val)
     {
         SWQueue::iterator it = swQueue.insert(use_val);
@@ -195,6 +199,9 @@ public:
     { }
 
     bool empty(void) const { return swQueue.empty(); }
+    //
+    uint32_t size(void) const { return (uint32_t)swQueue.size(); }
+    //
     const SWIdTime & front(void) { return *swQueue.begin(); }
 
     void add(const SWIdTime & use_val)
@@ -229,9 +236,9 @@ private:
 
     class StopWatch : public Mutex {
     public:
-        typedef enum { //reverse order of FSM states
+        enum SWState { //reverse order of FSM states
             swIsToSignal = 0, swActive, swInited, swIdle
-        } SWState;
+        };
 
     private:
         const uint32_t  _id;
@@ -249,7 +256,7 @@ private:
         OPAQUE_OBJ          _opaqueObj;   //externally defined object that
                                           //is passed to listeners
 
-        inline void mkIdent(void)
+        void mkIdent(void)
         {
             char buf[2*sizeof(uint32_t)*3 + 4]; //":%u{%u}"
             snprintf(buf, sizeof(buf)-1, ":%u{%u}", _id, _usage);
@@ -257,10 +264,6 @@ private:
         }
 
     public:
-        inline uint32_t Id(void) const { return _id; }
-        inline const char * IdStr(void) const { return _idStr.c_str(); }
-        inline SWState State(void) const { return _swState; }
-
         StopWatch(uint32_t tm_id, TimeWatcherITF * use_owner, std::string & owner_id)
             : _id(tm_id), _refNum(0), _owner(use_owner), _ownerId(owner_id)
             , _swState(swIdle), _nextState(swIsToSignal), _usage(0), _eventHdl(0)
@@ -270,16 +273,24 @@ private:
         ~StopWatch()
         { }
 
+        uint32_t Id(void) const { return _id; }
+
+        //notifies event handler
+        TimeWatcherITF::SignalResult notify(void);
+
+        // -- ******************************************************************** --
+        // -- NOTE: following methods require StopWatch being locked !!!
+        // -- ******************************************************************** --
+        //
+        SWState State(void) const { return _swState; }
+        //
+        const char * IdStr(void) const { return _idStr.c_str(); }
+        //
         struct timespec tgtTime(const struct timespec * cur_time = 0) const
         {
             return _tgtTime.adjust(cur_time);
         }
 
-        //switches FSM to swIsToSignal
-        bool setToSignal(void);
-        // -- ******************************************************************** --
-        // -- NOTE: all next FSM switching methods require StopWatch being locked !!!
-        // -- ******************************************************************** --
         bool Ref(void)
         {
             if (!++_refNum) { //too much refs !!!
@@ -294,6 +305,8 @@ private:
                 --_refNum;
             return !_refNum;
         }
+        //switches FSM to swIsToSignal 
+        bool setToSignal(void);
         //switches FSM to swInited
         bool init(TimerListenerITF * listener, const SWTgtTime & tgt_time,
                   const OPAQUE_OBJ * opaque_obj = NULL);
@@ -305,28 +318,27 @@ private:
         //tries to switche FSM to swIdle, returns true if succeded,
         //false if stopwatch is currently signaling
         bool release(void);
-
-        TimeWatcherITF::SignalResult notify(void);
     };
+
     //
     class SWNotifier : public Thread {
     private:
         using Thread::Start; //hide it to avoid annoying CC warnings
 
     protected:
-        mutable EventMonitor    _sync;
-        volatile bool           _running;
+        mutable EventMonitor  _sync;
+        volatile bool         _running;
 
-        std::string     _ident;
-        TimeWatcherITF * watcher;
-        TimersLIST      timers;
-        Logger *        logger;
+        std::string       _ident;
+        TimeWatcherITF * _watcher;
+        TimersLIST        _timers;
+        Logger *          logger;
 
         int Execute();
 
     public:
         SWNotifier(const char * use_id, TimeWatcherITF * master, Logger * uselog = NULL)
-            : _running(false), _ident("TmNtfr["), watcher(master)
+            : _running(false), _ident("TmNtfr["), _watcher(master)
         {
             logger = uselog ? uselog : Logger::getInstance(TIMEWATCHER_DFLT_LOGGER);
             _ident += use_id; _ident += ']';
@@ -337,8 +349,7 @@ private:
         }
 
         const char * logId(void) const { return _ident.c_str(); }
-        void signalTimer(const TimerHdl & sw_id);
-        void signalTimers(TimersLIST & sw_list);
+        void signalTimer(uint32_t sw_id);
 
         bool isRunning(void) const;
         bool Start(void);
@@ -346,64 +357,144 @@ private:
         void Stop(bool do_wait = false);
     };
 
-    typedef std::vector<StopWatch*> SWRegistry;
-    typedef std::multimap<struct timespec, uint32_t/*swId*/> SWTimesQueue;
-    typedef std::map<uint32_t, SWTimesQueue::iterator> SWSupervised;
+    class SWStore {
+    protected:
+      class SWRegistry : public std::vector<StopWatch *> {
+      public:
+        StopWatch * getStopWatch(uint32_t tm_id) const
+        {
+          return (tm_id && (tm_id <= size())) ? at(tm_id - 1) : NULL;
+        }
+      };
+      typedef std::list<StopWatch *> SWList;
+      typedef std::multimap<struct timespec, uint32_t/*swId*/> SWTimesQueue;
+      typedef std::map<uint32_t, SWTimesQueue::iterator> SWSupervised;
+
+      SWQueueITF &  swQueue;  //sorted queue of supervised timers
+      SWRegistry    swReg;    //timers registry
+      SWList        swPool;   //list of idle timers
+
+    public:
+      SWStore(SWQueueITF & use_queue) : swQueue(use_queue)
+      { }
+      ~SWStore()
+      {
+        //swPool.clear();
+        for (SWRegistry::iterator it = swReg.begin(); it != swReg.end(); ++it)
+          delete *it;
+        //swReg.clear();
+      }
+
+      SWQueueITF & Queue(void) const { return swQueue; }
+      //
+      void reserve(uint32_t num_tmrs)
+      {
+        swReg.reserve(num_tmrs); //reallocate only if num_tmrs > size()
+      }
+
+      void clear(void)
+      {
+        swPool.clear();
+        for (SWRegistry::iterator it = swReg.begin(); it != swReg.end(); ++it)
+          delete *it;
+        swReg.clear();
+      }
+
+      //
+      void addTimer(StopWatch * use_sw)
+      {
+        swReg.push_back(use_sw);
+      }
+      //
+      StopWatch * getIdleTimer(void)
+      {
+        StopWatch * pSw = NULL;
+        if (!swPool.empty()) {
+          pSw = swPool.front();
+          swPool.pop_front();
+        }
+        return pSw;
+      }
+
+      //adds timer to list of supervised ones
+      void watchTimer(StopWatch * p_sw, const struct timespec & abs_time)
+      {
+        swQueue.add(SWQueueITF::SWIdTime(abs_time, p_sw->Id()));
+      }
+      //removes timer from list of supervised ones
+      bool cancelTimer(uint32_t tm_id)
+      {
+        return swQueue.remove(tm_id);
+      }
+      //moves timer to pool of idle ones
+      void releaseTimer(StopWatch * p_sw)
+      {
+        swPool.push_back(p_sw);
+      }
+      //switches timer to activated state, and adds it to list of supervised ones
+      //NOTE: Timer should be locked upon entry!
+      bool activateTimer(StopWatch * p_sw, const struct timespec & abs_time)
+      {
+        bool rval = p_sw->activate();
+        if (rval)
+          watchTimer(p_sw, abs_time);
+        return rval;
+      }
+      //
+      StopWatch * getTimer(uint32_t tm_id) const
+      {
+        return swReg.getStopWatch(tm_id);
+      }
+      //
+      StopWatch * lockTimer(uint32_t tm_id) const
+      {
+        StopWatch * pSw = swReg.getStopWatch(tm_id);
+        if (pSw)
+          pSw->Lock();
+        return pSw;
+      }
+    };
+    //
+    class SWGuard {
+    protected:
+      const SWStore & _store;
+      StopWatch *     _pSw;
+
+    public:
+      SWGuard(const SWStore & use_store, uint32_t sw_id)
+        : _store(use_store)
+      {
+        _pSw = _store.lockTimer(sw_id);
+      }
+      ~SWGuard()
+      {
+        if (_pSw)
+          _pSw->Unlock();
+      }
+      StopWatch * get(void) const { return _pSw; }
+      //
+      StopWatch * operator->() const { return get(); }
+    };
+
 
     mutable EventMonitor    _sync;
     volatile bool           _running;
 
     std::string     _ident, _idStr;
     uint32_t        _lastId;
-    SWNotifier *    ntfr;
+    SWNotifier *    _ntfr;
+    //NOTE: any access to _swStore should be guarded by _sync
+    SWStore         _swStore;
     Logger *        logger;
 
-    SWQueueITF &    swQueue;
-    SWRegistry      swReg;  //timers registry
-    std::list<StopWatch*>   swPool; //list of idle timers
-
-    //adds timer to list of supervised ones
-    TMError watchTimer(StopWatch * p_sw, const struct timespec & abs_time)
-    {
-        MutexGuard tmp(_sync);
-        if (!_running)
-            return TimeWatcherITF::errTimerState;
-        swQueue.add(SWQueueITF::SWIdTime(abs_time, p_sw->Id()));
-//        smsc_log_debug(logger, "%s: timer[%s] monitoring ON", logId(), p_sw->IdStr());
-        _sync.notify();
-        return TimeWatcherITF::errOk;
-    }
-    //removes timer from list of supervised ones
-    void cancelTimer(uint32_t tm_id)
-    {
-        MutexGuard tmp(_sync);
-        swQueue.remove(tm_id);
-//        if (swQueue.remove(tm_id))
-//            smsc_log_debug(logger, "%s: timer[%u] monitoring OFF", logId(), tm_id);
-    }
-    //moves timer to pool of idle ones
-    void releaseTimer(StopWatch * p_sw)
-    {
-        MutexGuard tmp(_sync);
-        swPool.push_back(p_sw);
-        smsc_log_debug(logger, "%s: timer[%s] moved to pool", logId(), p_sw->IdStr());
-    }
-    //adds timer to list of supervised ones
-    TMError activateTimer(StopWatch * p_sw, const struct timespec & abs_time)
-    {
-        MutexGuard swGrd(*p_sw);
-        if (p_sw->activate())
-            return watchTimer(p_sw, abs_time);
-        smsc_log_warn(logger, "%s: timer[%s] activation failed", logId(), p_sw->IdStr());
-        return TimeWatcherITF::errTimerState;
-    }
-
+    //
     StopWatch * getTimer(uint32_t tm_id) const
     {
         MutexGuard tmp(_sync);
-        return (tm_id && (tm_id <= swReg.size())) ? swReg[tm_id-1] : NULL;
+        return _swStore.getTimer(tm_id);
     }
 
+      
 protected:
     TimerHdl _createTimer(TimerListenerITF * listener, const SWTgtTime & tgt_time,
                             OPAQUE_OBJ * opaque_obj = NULL);

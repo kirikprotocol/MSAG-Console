@@ -6,7 +6,7 @@
 #define _CORE_SYNC_TIMEWATCHER_DEFS_HPP
 
 #include <inttypes.h>
-#include <sys/time.h>
+//#include <sys/time.h>
 
 namespace smsc {
 namespace core {
@@ -20,7 +20,7 @@ class TimeWatcherITF {
 //NOTE2: TimerId 0 is reserved !!! 
 public:
     enum Error {
-        errOk = 0, errBadTimer, errBadTimeVal, errTimerState
+        errOk = 0, errBadTimer, errBadTimeVal, errTimerState, errWatcherState
     };
     //result of timer signalling
     enum SignalResult {
@@ -46,43 +46,45 @@ typedef TimeWatcherITF::Error TMError;
 
 class TimerHdl {
 protected:
-    const uint32_t      timerId;
-    TimeWatcherITF *    watcher;
+    uint32_t          _timerId;
+    TimeWatcherITF *  _watcher;
 
 public:
     TimerHdl(uint32_t tmr_id = 0, TimeWatcherITF *  use_watcher = NULL)
-        : timerId(tmr_id), watcher(use_watcher)
+        : _timerId(tmr_id), _watcher(use_watcher)
     {
-        if (watcher)
-            watcher->RefTimer(timerId);
+        if (_watcher && _watcher->RefTimer(_timerId)) {
+          _watcher = 0; _timerId = 0;
+        }
     }
     TimerHdl(const TimerHdl & use_hdl)
-        : timerId(use_hdl.timerId), watcher(use_hdl.watcher)
+        : _timerId(use_hdl._timerId), _watcher(use_hdl._watcher)
     {
-        if (watcher)
-            watcher->RefTimer(timerId);
+        if (_watcher && _watcher->RefTimer(_timerId)) {
+          _watcher = 0; _timerId = 0;
+        }
     }
     ~TimerHdl()
     { 
-        if (watcher)
-            watcher->UnRefTimer(timerId);
+        if (_watcher)
+            _watcher->UnRefTimer(_timerId);
     }
 
-    uint32_t Id(void) const { return timerId; }
+    uint32_t Id(void) const { return _timerId; }
     const char * IdStr(void) const
     {
-        return watcher ? watcher->IdStr(timerId) : "unknown";
+        return _watcher ? _watcher->IdStr(_timerId) : "unknown";
     }
     //
     TMError Start(void) const
     {
-        return watcher ? watcher->StartTimer(timerId) : TimeWatcherITF::errBadTimer;
+        return _watcher ? _watcher->StartTimer(_timerId) : TimeWatcherITF::errBadTimer;
     }
     //releases timer
     void Stop(void) const
     {
-        if (watcher)
-            watcher->StopTimer(timerId);
+        if (_watcher)
+            _watcher->StopTimer(_timerId);
     }
 };
 
@@ -107,6 +109,8 @@ struct OPAQUE_OBJ {
 
 class TimerListenerITF {
 public:
+    //NOTE: TimerListener shouldn't block while this call! It's recommended
+    //to return TimeWatcherITF::evtResignal instead.
     virtual TimeWatcherITF::SignalResult
         onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj = NULL) = 0;
 };
