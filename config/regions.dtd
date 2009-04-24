@@ -6,6 +6,7 @@
 	name CDATA #REQUIRED
 	bandwidth CDATA #REQUIRED
         email CDATA #IMPLIED
+	timezone CDATA #IMPLIED
 >
 <!ELEMENT subjects (subject*)>
 <!ELEMENT subject EMPTY>
@@ -17,4 +18,5 @@
 <!ATTLIST region_default
 	bandwidth CDATA #REQUIRED
         email CDATA #IMPLIED
+	timezone CDATA #IMPLIED
 >
