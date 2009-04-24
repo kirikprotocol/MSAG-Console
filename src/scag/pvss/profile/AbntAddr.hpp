@@ -110,7 +110,7 @@ public:
     static unsigned unpack( char* buf, const char* from )
     {
         const bool newformat = (from[7] == char(0xfe));
-        unsigned pos = 0;
+        char* ptr = buf;
         unsigned char h, l, c;
         for ( unsigned idx = 0; idx < PACKED_SIZE-1; ++idx ) {
             c = static_cast<unsigned char>(*from++);
@@ -122,16 +122,16 @@ public:
                 h = c & 0xf;
             }
             if ( h > 0x9 ) break;
-            buf[pos++] = char(h+0x30);
+            *ptr++ = char(h+0x30);
             if ( l > 0x9 ) break;
-            buf[pos++] = char(l+0x30);
+            *ptr++ = char(l+0x30);
         }
-        buf[pos] = '\0';
-        return pos;
+        *ptr = '\0';
+        return ptr - buf;
     }
     
 
-    /// pack into buffer, buffer must be large enough
+    /// pack into buffer, buffer must be of PACKED_SIZE bytes
     void pack( char* buf ) const
     {
         memset(buf,0xff,PACKED_SIZE);
@@ -143,11 +143,31 @@ public:
             oldformat = true;
         }
 
-        if ( len > PACKED_SIZE*2 ) {
-            len = PACKED_SIZE*2;
-        }
+        if ( len > PACKED_SIZE*2 ) { len = PACKED_SIZE*2; }
 
         if ( !oldformat ) buf[7] = 0xfe;
+        unsigned char l = 0;
+        if ((len & 1)) {
+            l = 0xf;
+        }
+        char* ptr = buf+((len+1)/2);
+        uint64_t val = number_.data.value;
+        for ( ; len > 0; ) {
+            unsigned char h = val % 10;
+            val /= 10;
+            --len;
+            if ( !(len & 1) ) {
+                // need to write
+                if (oldformat) {
+                    *--ptr = char((l << 4) | h);
+                } else {
+                    *--ptr = char((h << 4) | l);
+                }
+            } else {
+                l = h;
+            }
+        }
+        /*
         char tmp[20];
         snprintf(tmp,sizeof(tmp),"%0*llu",len,number_.data.value);
         unsigned char h, l, c;
@@ -161,6 +181,7 @@ public:
             c = (h << 4) | l;
             buf[pos++] = char(c);
         }
+         */
     }
 
 
@@ -545,38 +566,30 @@ inline scag::util::storage::Serializer& operator << ( scag::util::storage::Seria
   //uint8_t plan = (addr.getNumberingPlan() & 0x07) << 5;
   //uint8_t res = len | plan;
   //ser << res;
-    ser << addr.getLength();
-    ser << addr.getNumberingPlan();
-    ser << addr.getTypeOfNumber();
-    char buf[10];
-    addr.pack(buf);
-    ser.writeAsIs(8,buf);
+    const size_t wpos = ser.wpos();
+    ser.setwpos(wpos+11); // 3 + 8
+    unsigned char* ptr = ser.data() + wpos;
+    *ptr = addr.getLength();
+    *++ptr = addr.getNumberingPlan();
+    *++ptr = addr.getTypeOfNumber();
+    addr.pack(reinterpret_cast<char*>(++ptr));
     return ser; 
 };
 
-inline scag::util::storage::Deserializer& operator >> ( scag::util::storage::Deserializer& deser,
+inline scag::util::storage::Deserializer& operator >> ( scag::util::storage::Deserializer& dsr,
                                                         scag2::pvss::AbntAddr& addr) { 
-  //uint8_t lenplan = 0;
-  //deser >> lenplan;
-  //uint8_t type = 0;
-  //deser >> type;
-  //uint8_t len = lenplan & 0x1F;
-  //uint8_t plan = (lenplan >> 5) & 0x07;
-
-    uint8_t len = 0;
-    deser >> len;
-    uint8_t plan = 0;
-    deser >> plan;
-    uint8_t type = 0;
-    deser >> type;
-    const char* buf = deser.readAsIs(8);
+    const unsigned char* ptr = dsr.curpos();
+    dsr.setrpos(dsr.rpos()+11); 
+    uint8_t len = *ptr;
+    uint8_t plan = *++ptr;
+    uint8_t type = *++ptr;
     char val[30];
-    scag2::pvss::AbntAddr::unpack(val,buf);
+    scag2::pvss::AbntAddr::unpack(val,reinterpret_cast<const char*>(++ptr));
     if ( len > strlen(val) ) {
         throw scag::exceptions::IOException("wrong abntaddr: len=%u, val=%s", unsigned(len), val);
     }
     addr.setValue( len, plan, type, val );
-    return deser;
+    return dsr;
 };
 
 

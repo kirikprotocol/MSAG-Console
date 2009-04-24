@@ -51,10 +51,14 @@ public:
 
 // partial specialization for long
 template <> inline void RBTreeSerializer< long >::serialize( Serializer& s, const long& k ) {
-    int64_t x = k; s << x;
+    const size_t wpos = s.wpos();
+    s.setwpos(wpos+8);
+    EndianConverter::set64(s.data()+wpos,uint64_t(k));
 }
 template <> inline void RBTreeSerializer< long >::deserialize( Deserializer& d, long& k ) {
-    int64_t x; d >> x; k = static_cast<long>(x);
+    const unsigned char* ptr = d.curpos();
+    d.setrpos(d.rpos()+8);
+    k = long(EndianConverter::get64(ptr));
 }
 
 
@@ -370,7 +374,7 @@ private:
     inline RBTreeNode* addr2node( nodeptr_type offset ) const
     {
         register unsigned chunkidx = offset / growth;
-        assert( chunkidx < chunks_.size() );
+        // assert( chunkidx < chunks_.size() );
         return reinterpret_cast< RBTreeNode* >(int64_t(chunks_[chunkidx]) + cellsize()*int64_t(offset%growth) );
     }
     /*
@@ -657,8 +661,9 @@ private:
                     rbtree_f.Read(chunkBuf.get(),chunksize);
                     dds.setrpos(0);
                     // loop over cells
+                    nodeptr_type ptr = i*growth;
                     for ( unsigned j = 0; j < cellsInChunk; ++j ) {
-                        deserializeCell(dds,addr2node(i*growth+j));
+                        deserializeCell(dds,addr2node(ptr++));
                     }
                     // if (logger) smsc_log_info(logger,"OpenRBTree: cells/total = %010ld/%010ld", long(i*growth+cellsInChunk), long(maxcells));
                 }
@@ -898,11 +903,13 @@ private:
             }
             throw smsc::util::Exception( "version %d is not implemented in rbtree", s.version() );
         }
-        s << 
-            uint32_t(node->parent) <<
-            uint32_t(node->left) <<
-            uint32_t(node->right) <<
-            uint8_t(node->color);
+        const size_t wpos = s.wpos();
+        s.setwpos(s.wpos()+13); // 4 * 3 + 1
+        unsigned char* ptr = s.data() + wpos;
+        EndianConverter::set32(ptr,node->parent); ptr += 4;
+        EndianConverter::set32(ptr,node->left); ptr += 4;
+        EndianConverter::set32(ptr,node->right); ptr += 4;
+        *ptr = node->color;
         KS ks; ks.serialize(s,node->key);
         VS vs; vs.serialize(s,node->value);
     }
@@ -914,16 +921,19 @@ private:
             }
             throw smsc::util::Exception( "version %d is not implemented in rbtree", d.version() );
         }
+        // NOTE: we speed up reading by not using deserializer methods
+        const unsigned char* ptr = d.curpos();
+        d.setrpos(d.rpos()+13); // 4*3+1
         const char* fail = 0;
         uint32_t i;
         do {
-            d >> i;
+            i = EndianConverter::get32(ptr); ptr += 4;
             if ( i >= header_.cells_count ) { fail = "parent"; break; }
             node->parent = i;
-            d >> i;
+            i = EndianConverter::get32(ptr); ptr += 4;
             if ( i >= header_.cells_count ) { fail = "left"; break; }
             node->left = i;
-            d >> i;
+            i = EndianConverter::get32(ptr); ptr += 4;
             if ( i >= header_.cells_count ) { fail = "right"; break; }
             node->right = i;
         } while ( false );
@@ -935,9 +945,7 @@ private:
             throw smsc::util::Exception( "rbtree: reading node @ %p: %s field (%u) is greater than total number of cells (%u)",
                                          node, fail, unsigned(i), unsigned(header_.cells_count) );
         }
-        uint8_t j;
-        d >> j;
-        node->color = j;
+        node->color = uint8_t(*ptr);
         KS ks; ks.deserialize(d,node->key);
         VS vs; vs.deserialize(d,node->value);
     }
