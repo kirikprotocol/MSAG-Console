@@ -45,28 +45,41 @@ int Worker::doExecute()
         case (ServerContext::FAILED) :
             logic_.responseFail( context );
             break;
-        case (ServerContext::NEW) : {
-            util::msectime_type currentTime = util::currentTimeMillis();
-            try {
-                if ( currentTime  > context->getCreationTime() + core_.getConfig().getProcessTimeout() ) {
-                    throw PvssException(PvssException::REQUEST_TIMEOUT,"processing timeout");
-                }
-                Response* resp = logic_.process(*context->getRequest().get());
-                context->setResponse(resp);
-            } catch (PvssException& e){
-                smsc_log_debug(log_,"processing timeout of context: %s", context->getRequest()->toString().c_str() );
-                core_.countExceptions(e.getType(),"workProcTmo");
+        case (ServerContext::NEW) : 
+            do {
+                util::msectime_type currentTime = util::currentTimeMillis();
                 try {
-                    context->setError(e.getMessage());
-                } catch (...) {}
-            }
+                    if ( currentTime  > context->getCreationTime() + core_.getConfig().getProcessTimeout() ) {
+                        throw PvssException(PvssException::REQUEST_TIMEOUT,"processing timeout");
+                    }
+                } catch (PvssException& e){
+                    smsc_log_debug(log_,"proc tmo in context: %s", context->getRequest()->toString().c_str() );
+                    core_.countExceptions(e.getType(),"workProcTmo");
+                    try {
+                        context->setError(e.getMessage());
+                    } catch (...) {}
+                    break;
+                }
+                
+                try {
+                    Response* resp = logic_.process(*context->getRequest().get());
+                    context->setResponse(resp);
+                } catch (PvssException& e) {
+                    smsc_log_debug(log_,"exc in process: %s", context->getRequest()->toString().c_str());
+                    core_.countExceptions(e.getType(),"procFailed");
+                    try {
+                        context->setError(e.getMessage());
+                    } catch (...) {}
+                    break;
+                }
+            } while ( false );
+
             core_.contextProcessed(context); // it will come back to the queue after sending response
             if ( !queue_.couldHaveRequests() ) {
                 // send notification that this worker should stop
                 stop();
             }
             break;
-        }
         case (ServerContext::PROCESSED) :
         default :
             smsc_log_debug(log_,"unexpected context state (processed)", context->getState());

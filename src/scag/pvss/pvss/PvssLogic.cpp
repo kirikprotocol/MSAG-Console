@@ -399,6 +399,7 @@ Response* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest) {
   } else if (commandProcessor_.rollback()) {
     smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, pf->getKey().c_str());
     elstorage->storage->backup2Profile(profileKey.getAddress());
+    // NOTE: backup2profile may delete object under pf!
   }
   CommandResponse* r = commandProcessor_.getResponse();
   return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
