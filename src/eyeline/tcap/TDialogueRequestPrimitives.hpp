@@ -21,6 +21,9 @@ public:
   virtual ~TDialogueRequestPrimitive()
   { }
 
+  virtual bool transform(SUAUnitdataReq & use_udt) const = 0;
+  //TODO: request specific stuff
+
   //TODO: request specific stuff
 };
 
