@@ -2875,11 +2875,17 @@ USHORT_T Et96MapOpenInd (
       }
     }
 #ifdef MAP_R12
-    mkIMSIOrMSISDNFromIMSI(destRef_sp,dialog->s_imsi);
+    if(destRef_sp)
+    {
+      mkIMSIOrMSISDNFromIMSI(destRef_sp,dialog->s_imsi);
+    }
 #else
-    Address imsi;
-    ConvAddrIMSI2Smc(destRef_sp,&imsi);
-    dialog->s_imsi=imsi.value;
+    if(destRef_sp)
+    {
+      Address imsi;
+      ConvAddrIMSI2Smc(destRef_sp,&imsi);
+      dialog->s_imsi=imsi.value;
+    }
 #endif
     dialog->origAddress=SS7AddressToString(ss7OrigAddr_sp);
     dialog->destAddress=SS7AddressToString(ss7DestAddr_sp);
