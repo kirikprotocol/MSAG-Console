@@ -170,6 +170,7 @@ protected:
     bool deserializeBuffer( typename value_type::value_type& value,
                             buffer_type& buffer ) const
     {
+        if (buffer.empty()) return false;
         buffer_type headers;
         unpackBuffer(buffer,&headers);
         Deserializer dsr(buffer,glossary_);
