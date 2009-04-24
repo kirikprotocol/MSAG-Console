@@ -1633,7 +1633,7 @@ bool BlocksHSStorage2::attachNewFile()
     if ( ! creationTask_.get() ) {
         return false;
     }
-    if ( ! creationTask_->isReleased() ) {
+    if ( ! creationTask_->released() ) {
         if (log_) smsc_log_warn(log_,"waiting until preallocation task is finished");
         creationTask_->waitUntilReleased();
     }
