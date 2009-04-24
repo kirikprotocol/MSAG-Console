@@ -69,14 +69,18 @@ public:
 #ifdef EXPLICIT_PTHREAD_API
     int wait(pthread_cond_t* cnd)
     {
-        return pthread_cond_wait(cnd, &mutex);
+        int rval = pthread_cond_wait(cnd, &mutex);
+        updateThreadId();
+        return rval;
     }
 
     int wait(pthread_cond_t* cnd, int timeout_msec) //timeout unit: millisecs
     {
         TimeSlice tmo(timeout_msec, TimeSlice::tuMSecs);
         struct timespec tv = tmo.adjust2Nano();
-        return pthread_cond_timedwait(cnd, &mutex, &tv);
+        int rval = pthread_cond_timedwait(cnd, &mutex, &tv);
+        updateThreadId();
+        return rval;
     }
 
     void notify(pthread_cond_t* cnd)

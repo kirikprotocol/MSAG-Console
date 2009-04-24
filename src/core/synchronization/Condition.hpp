@@ -41,18 +41,24 @@ public:
     //Note: mutex MUST BE LOCKED!
     int WaitOn(Mutex & use_mtx)
     {
-        return pthread_cond_wait(&event, &use_mtx.mutex);
+        int rval = pthread_cond_wait(&event, &use_mtx.mutex);
+        use_mtx.updateThreadId();
+        return rval;
     }
     //Note: mutex MUST BE LOCKED!
     int WaitOn(Mutex & use_mtx, const TimeSlice & use_timeout)
     {
         struct timespec tv = use_timeout.adjust2Nano();
-        return pthread_cond_timedwait(&event, &use_mtx.mutex, &tv);
+        int rval = pthread_cond_timedwait(&event, &use_mtx.mutex, &tv);
+        use_mtx.updateThreadId();
+        return rval;
     }
     //Note: mutex MUST BE LOCKED!
     int WaitOn(Mutex & use_mtx, const struct timespec & abs_time)
     {
-        return pthread_cond_timedwait(&event, &use_mtx.mutex, &abs_time);
+        int rval = pthread_cond_timedwait(&event, &use_mtx.mutex, &abs_time);
+        use_mtx.updateThreadId();
+        return rval;
     }
 };
 

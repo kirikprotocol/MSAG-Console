@@ -24,6 +24,8 @@ protected:
     Mutex(const Mutex&);
     void operator=(const Mutex&);
 
+    void updateThreadId(void) { ltid = pthread_self(); }
+
 public:
     Mutex()
     {
@@ -37,7 +39,7 @@ public:
     void Lock()
     {
         pthread_mutex_lock(&mutex);
-        ltid = pthread_self();
+        updateThreadId();
     }
     void Unlock()
     {
@@ -47,7 +49,7 @@ public:
     bool TryLock()
     {
         if (!pthread_mutex_trylock(&mutex)) {
-            ltid = pthread_self();
+            updateThreadId();
             return true;
         }
         return false; 
