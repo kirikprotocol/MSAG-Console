@@ -56,7 +56,7 @@ public:
                 fill( dump, 8, os.str().c_str() );
             } else {
                 os.rdbuf()->str("");
-                os << h.getBinLowerBount(i);
+                os << h.getBinLowerBound(i);
                 fill( dump, 8, os.str().c_str(), '>');
             }
             dump.push_back(' ');
