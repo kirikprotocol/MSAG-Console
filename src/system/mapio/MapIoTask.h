@@ -520,6 +520,9 @@ struct MapDialog{
     isUSSD = false;
     noSri=false;
     noRespFromPeer=false;
+    s_imsi.clear();
+    s_msc.clear();
+	 
     //isAllocated=false;
   }
 

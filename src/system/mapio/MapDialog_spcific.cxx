@@ -455,6 +455,7 @@ inline void ConvAddrIMSI2Smc(const ET96MAP_IMSI_T* ma,Address* sa)
 
 inline void ConvAddrIMSIorMSISDN2String(const ET96MAP_IMSI_OR_MSISDN_T* ma,std::string &s)
 {
+  s.clear();
   if ( ma->imsiOrMsisdnLen == 0 ) return;
   for ( int i = 1;i<(ma->imsiOrMsisdnLen);i++){
     s += ((ma->imsiOrMsisdn[i]&0x0f)+0x30);
