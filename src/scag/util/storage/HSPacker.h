@@ -167,6 +167,21 @@ public:
         f.Write(buf,navSize());
     }
 
+    std::string toString() const {
+        char buf[80];
+        if ( isFree() ) {
+            snprintf(buf,sizeof(buf),"free next=%llx tail=%lld",
+                     nextBlock(), freeCells() );
+        } else if ( isHead() ) {
+            snprintf(buf,sizeof(buf),"head next=%llx size=%lld",
+                     nextBlock(), dataSize() );
+        } else {
+            snprintf(buf,sizeof(buf),"used next=%llx refb=%llx",
+                     nextBlock(), refBlock() );
+        }
+        return buf;
+    }
+    
 protected:
     uint64_t next_;
     uint64_t ref_;
@@ -197,7 +212,6 @@ public:
     HSPacker( size_t blockSize, uint8_t packType, smsc::logger::Logger* logger = 0 ) :
     blockSize_(blockSize), packingType_(packType), log_(logger)
     {
-        // assert(blockSize_ > 2*navSize());
         notUsed_ = blockSize_ + BlockNavigation::badBit();
         if ( blockSize_ <= 2*navSize() ) {
             throw smsc::util::Exception("block size = %u is too small, must be greater than 2*%u",
@@ -228,7 +242,7 @@ public:
     {
         if ( packingType_ != 0 ) {
             // only packtype 0 is implemented
-            if (log_) { smsc_log_error(log_,"packing type = %u is not implemented", unsigned(packingType_) ); }
+            if (log_) { smsc_log_fatal(log_,"packing type = %u is not implemented", unsigned(packingType_) ); }
             ::abort();
         }
         const size_t oldSize = buffer.size();
@@ -342,6 +356,7 @@ public:
                        size_t initialPos = 0 ) const
     {
         if ( packingType_ != 0 ) {
+            if (log_) { smsc_log_fatal(log_,"packing type %u is not implemented",unsigned(packingType_));}
             ::abort();
         }
         const size_t oldSize = buffer.size();
@@ -455,46 +470,29 @@ public:
 
                 if ( bn.isFree() ) {
 
-                    if ( isUsed ) {
-                        // add a check for used chain
-                        // ::abort();
-                        isUsed = false;
-                    }
+                    isUsed = false;
                     dataSize = navSize();
 
                 } else {
 
                     if ( !isUsed ) {
                         // only one isused chain is allowed
-                        if (log_) {
-                            smsc_log_error(log_,"only one is used chain allowed");
-                        }
-                        ::abort();
+                        throw smsc::util::Exception("broken chain (second used) at %llx",headBlock);
                     }
 
                     if ( bn.isHead() ) {
                         if ( dataSize > 0 ) {
-                            if (log_) {
-                                smsc_log_error(log_,"head is found while dataSize > 0");
-                            }
-                            ::abort();
+                            throw smsc::util::Exception("broken chain (second head) at %llx", headBlock);
                         }
                         dataSize = bn.dataSize();
                         headBlock = nextBlock;
                     } else {
                         // used
                         if (dataSize == 0) {
-                            if (log_) {
-                                smsc_log_error(log_,"used is found while dataSize == 0");
-                            }
-                            ::abort();
+                            throw smsc::util::Exception("broken chain (too many blocks) at %llx", headBlock );
                         }
                         if (bn.refBlock() != headBlock) {
-                            if (log_) {
-                                smsc_log_error(log_,"head_block reference is %llx, should be %llx",
-                                               bn.refBlock(), headBlock);
-                                ::abort();
-                            }
+                            throw smsc::util::Exception("broken chain (ref=%llx is wrong) at %llx", bn.refBlock(), headBlock);
                         }
                     }
                 }
@@ -502,10 +500,8 @@ public:
                 idx = bn.nextBlock();
                 const size_t toWrite = std::min(blockSize(),dataSize);
                 if ( dsr.size() < dsr.rpos() + toWrite ) {
-                    if (log_) {
-                        smsc_log_error(log_,"too few data in block chain");
-                    }
-                    ::abort();
+                    throw smsc::util::Exception("broken chain (buffer underrun) at head=%llx, cur=%s",
+                                                headBlock, bn.toString().c_str() );
                 }
 
                 blocks.push_back(nextBlock);
@@ -519,10 +515,7 @@ public:
             
             if ( dataSize > 0 ) {
                 // too few blocks
-                if (log_) {
-                    smsc_log_error(log_,"too few blocks found");
-                }
-                ::abort();
+                throw smsc::util::Exception("broken chain (too few blocks) at %llx", headBlock);
             }
 
             if ( dsr.rpos() >= dsr.size() ) { break; }
@@ -605,8 +598,7 @@ public:
         // offsets contains affected block indices
         const size_t needBlocks = countBlocks(dataSize);
         if ( needBlocks > offsets.size() ) {
-            if (log_) {smsc_log_error(log_,"too few offsets in vector");}
-            ::abort();
+            throw smsc::util::Exception("too few offsets in makeHeaders");
         }
 
         headers.clear();
@@ -621,9 +613,7 @@ public:
         for ( size_t i = 0; i < needBlocks; ++i ) {
 
             if ( dataSize == 0 ) {
-                // too many blocks
-                if (log_) {smsc_log_error(log_,"too many blocks counted");}
-                ::abort();
+                throw smsc::util::Exception("too many blocks in makeHeaders, first=%llx", firstBlock);
             }
 
             if ( i+1 == needBlocks ) {
@@ -639,8 +629,7 @@ public:
         }
         if ( dataSize > 0 ) {
             // too few blocks
-            if (log_) {smsc_log_error(log_,"too few blocks");}
-            ::abort();
+            throw smsc::util::Exception("too few blocks in makeHeaders, first=%llx", firstBlock );
         }
 
         if (log_ && log_->isDebugEnabled()) {
@@ -715,11 +704,8 @@ public:
     inline index_type pos2idx( offset_type pos ) const {
         if ( (pos & BlockNavigation::badBit()) ) return invalidIndex();
         if ( pos % blockSize_ != 0 ) {
-            if (log_) {
-                smsc_log_error( log_,"offset %llx is not divisable by blocksize=%x",
-                                pos, unsigned(blockSize_) );
-            }
-            ::abort();
+            throw smsc::util::Exception("offset %llx is not divisable by blockSize=%x",
+                                        pos, unsigned(blockSize_) );
         }
         // assert( (pos % blockSize_) == 0 );
         return index_type(pos / blockSize_);

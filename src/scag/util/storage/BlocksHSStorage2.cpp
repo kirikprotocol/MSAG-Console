@@ -329,7 +329,8 @@ public:
         s_.freeCount_ = state.freeCount;
         s_.freeChain_.push_back( state.ffb );
         if ( !s_.readFreeBlocks(1) ) {
-            throw smsc::util::Exception("readFreeBlocks(%s) ret false", isNew_ ? "new" : "old");
+            throw smsc::util::Exception("readFreeBlocks(%s,trans=#%u) ret false",
+                                        isNew_ ? "new" : "old", t->origSerial );
         }
         if ( isNew_ ) {
             s_.journalFile_.Seek(t->endsAt);
@@ -840,7 +841,7 @@ bool BlocksHSStorage2::pushFreeBlocks( size_t freeStart,
 {
     if ( freeStart >= affectedBlocks.size() ) {
         if (log_) { 
-            smsc_log_error(log_,"logic error: too few affected blocks in pushFree");
+            smsc_log_fatal(log_,"logic error: too few affected blocks in pushFree");
         }
         abort();
     }
@@ -1132,7 +1133,7 @@ int BlocksHSStorage2::doCreate()
     try {
         // create a data file
         if ( ! attachNewFile() ) {
-            throw smsc::util::Exception("return false");
+            throw smsc::util::Exception("attach returns false");
         }
     } catch ( std::exception& e ) {
         if (log_) {
@@ -1253,7 +1254,7 @@ int BlocksHSStorage2::doRecover( IndexRescuer* indexRescuer )
         affected.clear();
         try {
             if ( ! read(idx2pos(scanner.idx_),buffer,&affected) ) {
-                throw smsc::util::Exception("return false");
+                throw smsc::util::Exception("read() returns false");
             }
             // recover index
             if ( indexRescuer ) {
@@ -1646,18 +1647,17 @@ bool BlocksHSStorage2::attachNewFile()
                       ct->freeChain().begin(),
                       ct->freeChain().end());
     freeCount_ += ct->fileSize();
-    bool rv = false;
+    bool rv = true;
     try {
         buffer_type dummy;
-        if ( writeJournal(dummy,dummy,oldState) ) {
-            rv = true;
-        } else {
+        if ( ! writeJournal(dummy,dummy,oldState) ) {
             throw smsc::util::Exception("writeJournal returns false");
         }
     } catch ( std::exception& e ) {
         if (log_) {
             smsc_log_warn(log_,"attachNewFile(#%u): %s", unsigned(files_.size())-1, e.what());
         }
+        rv = false;
     }
     if ( ! rv ) {
         // recovery
@@ -1668,36 +1668,6 @@ bool BlocksHSStorage2::attachNewFile()
     }
     return rv;
 }
-
-
-/*
-int BlocksHSStorage2::writeJournalHeader()
-{
-    const std::string fn = dbpath_ + "/" + dbname_ + ".jnl";
-    if ( File::Exists(fn.c_str()) ) {
-        return JOURNAL_FILE_ALREADY_EXISTS;
-    }
-    try {
-        journalFile_.RWCreate( fn.c_str() );
-        journalFile_.SetUnbuffered();
-        journal_.clear();
-        journal_.reserve(journalHeaderSize());
-        Serializer ser(journal_);
-        ser << uint32_t(version_);
-        ser << uint32_t(packer_.blockSize());
-        ser << uint32_t(fileSize_);
-        assert( journal_.size() == journalHeaderSize());
-        journalFile_.Write(&journal_[0],journalHeaderSize());
-
-    } catch ( std::exception& e ) {
-        if (log_) {
-            smsc_log_error(log_,"cannot create journal file %s: %s", fn.c_str(), e.what());
-        }
-        return JOURNAL_FILE_CREATION_FAILED;
-    }
-    return 0;
-}
- */
 
 } // namespace storage
 } // namespace util

@@ -92,7 +92,7 @@ public:
     }
 
 
-    void recoverFromBackup( value_type& v )
+    bool recoverFromBackup( value_type& v )
     {
         return store_->recoverFromBackup(v);
     }

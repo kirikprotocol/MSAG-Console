@@ -24,9 +24,14 @@ struct DataBlockBackup
 
     DataBlockBackup(value_type* v = NULL, backup_type* b = NULL) : value(v), backup(b) {}
 
-    void recoverFromBackup( GlossaryBase* gloss ) {
-        if (!value || !backup) return;
-        value->deserialize( *backup, gloss );
+    bool recoverFromBackup( GlossaryBase* gloss ) {
+        if (!value || !backup) return false;
+        try {
+            value->deserialize( *backup, gloss );
+        } catch (...) {
+            return false;
+        }
+        return true;
     }
 
 public:

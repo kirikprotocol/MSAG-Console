@@ -340,10 +340,10 @@ public:
     }
     
 
-    void recoverFromBackup( data_type& prof )
+    bool recoverFromBackup( data_type& prof )
     {
         Key key;
-        deserializeProfile(key,*prof.value,*prof.backup,notUsed());
+        return deserializeProfile(key,*prof.value,*prof.backup,notUsed());
     }
 
 

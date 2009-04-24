@@ -137,9 +137,9 @@ public:
     }
 
     /// invoke only if v has this ability
-    void recoverFromBackup( value_type& v )
+    bool recoverFromBackup( value_type& v )
     {
-        v.recoverFromBackup(glossary_);
+        return v.recoverFromBackup(glossary_);
     }
 
 private:

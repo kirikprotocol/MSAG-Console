@@ -333,8 +333,8 @@ public:
     }
 
 
-    void recoverFromBackup( value_type& v ) {
-        data_->recoverFromBackup(v);
+    bool recoverFromBackup( value_type& v ) {
+        return data_->recoverFromBackup(v);
     }
 
 
@@ -504,11 +504,12 @@ public:
     /// NOTE: use only if type of stored_type is DataBlockBackup
     void backup2Profile ( const key_type& k ) {
         stored_type* const vv = cache_->get( k );
-        if ( !vv || !vv->value || !vv->backup ) {
-            return;
+        if ( !vv ) {return;}
+        if ( !vv->value || !vv->backup ||
+             !disk_->recoverFromBackup(cache_->store2ref(*vv)) ) {
+            // we have to delete such an entry from cache
+            delete cache_->release(k);
         }
-        // vv->value->deserialize( vv->backup->getBackupData(), vv->backup->getBackupDataSize(), glossary );
-        disk_->recoverFromBackup( *vv );
     }
 
     /// flush item to disk

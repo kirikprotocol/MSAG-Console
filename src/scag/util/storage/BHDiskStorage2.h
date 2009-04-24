@@ -37,7 +37,6 @@ public:
 
     ~BHDiskStorage2() {
         delete store_; 
-        // delete glossary_;
         delete buf_;
     }
 
@@ -62,7 +61,7 @@ public:
         Serializer ser(*buf_,glossary_);
         ser.setVersion(store_->version());
         ser.reset();
-        ser.setwpos( headerSize()+32 );
+        ser.setwpos( headerSize()+extraSize() );
         ser << key_;
         const size_t oldwpos = ser.wpos();
         ser << *v.value;
@@ -94,7 +93,7 @@ public:
     bool read( index_type i ) const /* throw exception */
     {
         i_ = i;
-        v_ = 0;
+        // v_ = 0;
         if (!buf_) buf_ = new buffer_type;
         buf_->clear();
         return store_->read(i,*buf_);
@@ -104,7 +103,7 @@ public:
     bool deserialize( value_type& v ) const /* throw exception */
     {
         if ( !buf_ || buf_->empty() || !v.value ) return false;
-        if ( ! deserializeBuffer(v,*buf_) ) return false;
+        if ( ! deserializeBuffer(*v.value,*buf_) ) return false;
         attachBackup(v.backup,buf_);
         return true;
     }
@@ -132,12 +131,11 @@ public:
     }
 
 
-    void recoverFromBackup( value_type& v )
+    bool recoverFromBackup( value_type& v )
     {
-        // if (log_) {smsc_log_warn(log_,"recover from backup is not implemented");}
-        // temporary switch backup and buffer
-        if (v.value && v.backup) deserializeBuffer(v,*v.backup);
+        return (v.value && v.backup && deserializeBuffer(*v.value,*v.backup));
     }
+
 
     template < class DiskIndexStorage >
         class IndexRescuer : public storage_type::IndexRescuer
@@ -157,7 +155,7 @@ public:
             dstore_.unpackBuffer(buffer,0);
             Deserializer dsr(buffer);
             dsr.setVersion(dstore_.store_->version());
-            dsr.setrpos(dstore_.headerSize()+32);
+            dsr.setrpos(dstore_.headerSize()+dstore_.extraSize());
             typename DiskIndexStorage::key_type key;
             dsr >> key;
             istore_.setIndex(key,idx);
@@ -169,32 +167,42 @@ public:
     };
 
 protected:
-    bool deserializeBuffer( value_type& v, buffer_type& buffer ) const
+    bool deserializeBuffer( typename value_type::value_type& value,
+                            buffer_type& buffer ) const
     {
         buffer_type headers;
         unpackBuffer(buffer,&headers);
         Deserializer dsr(buffer,glossary_);
         dsr.setVersion(store_->version());
         // FIXME: should we check for key match here?
+        bool rv = false;
+        key_type key;
         try {
-            dsr.setrpos(headerSize()+32);
-            dsr >> key_;
-            dsr >> *v.value;
+            dsr.setrpos(headerSize()+extraSize());
+            dsr >> key;
+            dsr >> value;
+            rv = true;
         } catch ( std::exception& e ) {
             // FIXME: should we restore from backup here?
             if (log_) {
-                smsc_log_info(log_,"exc in BHS2: %s", e.what());
+                smsc_log_warn( log_,"exc in BHS2: %s, idx=%llx oldkey=%s key=%s bufSz=%u",
+                               e.what(),
+                               uint64_t(i_),
+                               key_.toString().c_str(),
+                               key.toString().c_str(),
+                               unsigned(buffer.size()) );
             }
-            throw; // or should we return false?
         }
         // if everything is ok, then pack buffer back again and attach it to v
         packBuffer(buffer,&headers);
-        return true;
+        return rv;
     }
     
     inline size_t headerSize() const {
         return store_->headerSize();
     }
+    /// reserved space
+    inline size_t extraSize() const { return 32; }
     inline void packBuffer(buffer_type& buf, buffer_type* hdr) const {
         store_->packBuffer(buf,hdr);
     }
