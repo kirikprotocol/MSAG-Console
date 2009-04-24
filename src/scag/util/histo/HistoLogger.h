@@ -47,11 +47,17 @@ public:
         for ( unsigned i = 0; i < h.numberOfBins(); ++i ) {
             dump.push_back('\n');
             if ( i == 0 ) {
-                fill( dump, 8, "und" );
-            } else {
+                os.rdbuf()->str("");
+                os << h.getBinLowerBound(1);
+                fill( dump, 8, os.str().c_str(), '<');
+            } else if ( i+1 < h.numberOfBins() ) {
                 os.rdbuf()->str(""); // reset the stream
                 os << h.getBinLowerBound(i);
                 fill( dump, 8, os.str().c_str() );
+            } else {
+                os.rdbuf()->str("");
+                os << h.getBinLowerBount(i);
+                fill( dump, 8, os.str().c_str(), '>');
             }
             dump.push_back(' ');
             fill(dump,h.getBinValue(i)/scale,"",'*');
