@@ -5,6 +5,9 @@
 #ident "@(#)$Id$"
 #define __CORE_SYNCHRONIZATION_TIMEOUT_HPP__
 
+#ifdef __GNUC__
+#include <time.h>
+#endif
 #include <sys/time.h>
 
 namespace smsc {
