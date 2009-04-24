@@ -2,6 +2,8 @@
 #define _SCAG_UTIL_STORAGE_ENDIANCONVERTER_H
 
 #include "util/int.h"
+#include "util/byteorder.h"
+#include <netinet/in.h>
 
 namespace scag {
 namespace util {
@@ -16,35 +18,84 @@ struct EndianConverter
     }
 
     inline char* set( uint16_t i ) {
-        cvt.words[0] = htons(i);
+        set16(cvt.buf,i);
         return cvt.buf;
     }
 
     inline char* set( uint32_t i ) {
-        cvt.longs[0] = htonl(i);
+        set32(cvt.buf,i);
         return cvt.buf;
     }
 
     inline char* set( uint64_t i ) {
-        cvt.longs[0] = htonl(uint32_t(i>>32));
-        cvt.longs[1] = htonl(uint32_t(i));
+        set64(cvt.buf,i);
         return cvt.buf;
     }
 
     inline uint16_t get16() const {
-        return ntohs( cvt.words[0] );
+        return get16(cvt.buf);
     }
 
     inline uint32_t get32() const {
-        return ntohl( cvt.longs[0] );
+        return get32(cvt.buf);
     }
 
     inline uint64_t get64() const {
-        return (uint64_t(ntohl(cvt.longs[0])) << 32) + ntohl(cvt.longs[1]);
+        return get64(cvt.buf);
     }
 
     inline uint8_t* ubuf() {
         return cvt.bytes;
+    }
+
+    // methods for inplace conversion
+    inline static uint16_t get16( const void* buf ) {
+#if BYTE_ORDER == BIG_ENDIAN
+        return *reinterpret_cast<const uint16_t*>(buf);
+#else
+        return ntohs(*reinterpret_cast<const uint16_t*>(buf));
+#endif
+    }
+
+    inline static uint32_t get32( const void* buf ) {
+#if BYTE_ORDER == BIG_ENDIAN
+        return *reinterpret_cast<const uint32_t*>(buf);
+#else
+        return ntohl(*reinterpret_cast<const uint32_t*>(buf));
+#endif
+    }
+
+    inline static uint64_t get64( const void* buf ) {
+#if BYTE_ORDER == BIG_ENDIAN
+        return *reinterpret_cast<const uint64_t*>(buf);
+#else
+        return (uint64_t(ntohl(*reinterpret_cast<const uint32_t*>(buf))) << 32) +
+            ntohl(*(reinterpret_cast<const uint32_t*>(buf)+1));
+#endif
+    }
+    
+    inline static void set16( void* buf, uint16_t i ) {
+#if BYTE_ORDER == BIG_ENDIAN
+        *reinterpret_cast<uint16_t*>(buf) = i;
+#else
+        *reinterpret_cast<uint16_t*>(buf) = htons(i);
+#endif
+    }
+    inline static void set32( void* buf, uint32_t i ) {
+#if BYTE_ORDER == BIG_ENDIAN
+        *reinterpret_cast<uint32_t*>(buf) = i;
+#else
+        *reinterpret_cast<uint32_t*>(buf) = htonl(i);
+#endif
+    }
+    inline static void set64( void* buf, uint64_t i ) {
+#if BYTE_ORDER == BIG_ENDIAN
+        *reinterpret_cast<uint64_t*>(buf) = i;
+#else
+        register uint32_t* ptr = reinterpret_cast<uint32_t*>(buf);
+        *ptr = htonl(i >> 32);
+        *++ptr = htonl(uint32_t(i));
+#endif
     }
 
     union {
