@@ -2877,7 +2877,7 @@ USHORT_T Et96MapOpenInd (
 #ifdef MAP_R12
     if(destRef_sp)
     {
-      mkIMSIOrMSISDNFromIMSI(destRef_sp,dialog->s_imsi);
+      ConvAddrIMSIorMSISDN2String(destRef_sp,dialog->s_imsi);
     }
 #else
     if(destRef_sp)
