@@ -845,7 +845,7 @@ bool BlocksHSStorage2::pushFreeBlocks( size_t freeStart,
         }
         abort();
     }
-    if ( freeChain_.size() == 0 ) {
+    if ( freeChain_.empty() ) {
         if ( ! readFreeBlocks(1) ) {
             return false; 
         }
@@ -889,6 +889,9 @@ bool BlocksHSStorage2::pushFreeBlocks( size_t freeStart,
         }
     }
     freeChain_.insert( freeChain_.begin(), temp.begin(), temp.end() );
+    if ( freeChain_.size() > 10000 ) {
+        freeChain_.erase(freeChain_.begin()+10000,freeChain_.end());
+    }
     freeCount_ += returnedBlocks;
     return true;
 }
