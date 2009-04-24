@@ -110,9 +110,11 @@ void TaskSchedulerSEQ::processSignal(void)
         //be automatically activated as moves to front.
         if (tSig.tId != pTask->pQueue->front()) {
             tAction = taskIgnore;
+            tSig.sId = sigNone;
             //stores signal argument in task housekeeping data
             pTask->addProcData(tSig.sObj);
             sDat.release();
+            smsc_log_debug(logger, "%s: %s is enqueued", _logId, pTask->ptr->TaskName());
         }
     }
 
