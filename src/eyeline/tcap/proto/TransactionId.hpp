@@ -36,8 +36,8 @@ public:
 
   Origin_e  origin(void) const { return _origin; }
 
-  //unified Transaction Id value: "[LR]ReqNN:RespNN"
-  std::string & value(std::string & str) const
+  //unified Transaction Id string representation: "[LR]ReqNN:RespNN"
+  std::string & uidString(std::string & str) const
   {
     if (_origin == orgNotAnId)
       str = "NotAnId";
@@ -46,39 +46,58 @@ public:
     return str;
   }
 
-  std::string value(void) const
+  //unified Transaction Id string representation: "[LR]ReqNN:RespNN"
+  std::string uidString(void) const
   {
     std::string str;
-    return value(str);
+    return uidString(str);
   }
 
   //returns local transaction id 
   uint32_t localId(void) const
   {
-      return !_origin ? 0 : ((_origin == orgLocal) ? _reqId : _rspId);
+    return !_origin ? 0 : ((_origin == orgLocal) ? _reqId : _rspId);
   }
   //returns remote transaction id 
   uint32_t remoteId(void) const
   {
-      return !_origin ? 0 : ((_origin != orgLocal) ? _reqId : _rspId);
+    return !_origin ? 0 : ((_origin != orgLocal) ? _reqId : _rspId);
   }
 
   //sets local transaction id 
   void setIdLocal(uint32_t use_id)
   {
-      if (_origin == orgLocal)
-          _reqId = use_id;
-      else
-          _rspId = use_id;
+    if (_origin == orgLocal)
+      _reqId = use_id;
+    else
+      _rspId = use_id;
   }
   //sets local transaction id
   void setIdRemote(uint32_t use_id)
   {
-      if (_origin != orgLocal)
-          _reqId = use_id;
-      else
-          _rspId = use_id;
+    if (_origin != orgLocal)
+      _reqId = use_id;
+    else
+      _rspId = use_id;
   }
+
+  bool operator< (const TransactionId & cmp_id) const
+  {
+    if (_origin == cmp_id._origin) {
+      if (_reqId == cmp_id._reqId)
+        return _rspId < cmp_id._rspId;
+      return _reqId < cmp_id._reqId;
+    }
+    return _origin < cmp_id._origin;
+  }
+
+  bool operator== (const TransactionId & cmp_id) const
+  {
+    return (_origin == cmp_id._origin)
+          && (_reqId == cmp_id._reqId)
+          && (_rspId == cmp_id._rspId);
+  }
+
 };
 
 } //proto
