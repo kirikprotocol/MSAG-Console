@@ -5,14 +5,22 @@
 #ident "@(#)$Id$"
 #define __ELC_TCAP_INDICATIONS_DISPATCHER_HPP
 
-#include "eyeline/tcap/provd/TDlgIndications.hpp"
+#include "eyeline/tcap/TDialogueIndicationPrimitives.hpp"
+#include "eyeline/tcap/TDlgHandlerIface.hpp"
+#include "eyeline/tcap/provd/SUAIndications.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace provd {
 
+using eyeline::tcap::TDlgHandlerIface;
+
 //Basic abstract class for all indication dispatchers
 class TDlgIndicationDispatcherAC {
+protected:
+  bool setAddresses(const SUAMessageIndAC & sua_ind,
+                       TDialogueIndicationPrimitive & t_ind);
+
 public:
   TDlgIndicationDispatcherAC()
   { }
@@ -32,6 +40,11 @@ template <class _TArg /* pubic: TDialogueIndicationPrimitive */>
 class TDlgIndicationDispatcherT : public TDlgIndicationDispatcherAC {
 protected:
   _TArg _tInd;
+
+  bool unpackAddresses(const SUAMessageIndAC & sua_ind)
+  {
+    return setAddresses(sua_ind, _tInd);
+  }
 
 public:
   TDlgIndicationDispatcherT(TCAPMessage & use_tmsg)
@@ -55,9 +68,9 @@ public:
     : TDlgIndicationDispatcherT<TC_Begin_Ind>(use_tmsg)
   { }
   //
-  void bindSUAInd(const SUAUnitdataInd & sua_ind)
+  bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
-    _tInd.bindSUAInd(sua_ind);
+    return unpackAddresses(sua_ind);
   }
 //  TC_Begin_Ind & TBeginInd(void) { return _tInd; }
 };
@@ -68,9 +81,9 @@ public:
     : TDlgIndicationDispatcherT<TC_Cont_Ind>(use_tmsg)
   { }
   //
-  void bindSUAInd(const SUAUnitdataInd & sua_ind)
+  bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
-    _tInd.bindSUAInd(sua_ind);
+    return unpackAddresses(sua_ind);
   }
 //  TC_Cont_Ind & TContInd(void) { return _tInd; }
 };
@@ -81,9 +94,9 @@ public:
     : TDlgIndicationDispatcherT<TC_End_Ind>(use_tmsg)
   { }
   //
-  void bindSUAInd(const SUAUnitdataInd & sua_ind)
+  bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
-    _tInd.bindSUAInd(sua_ind);
+    return unpackAddresses(sua_ind);
   }
 //  TC_End_Ind & TEndInd(void) { return _tInd; }
 };
@@ -94,9 +107,9 @@ public:
     : TDlgIndicationDispatcherT<TC_PAbort_Ind>(use_tmsg)
   { }
   //
-  void bindSUAInd(const SUAUnitdataInd & sua_ind)
+  bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
-    _tInd.bindSUAInd(sua_ind);
+    return unpackAddresses(sua_ind);
   }
 //  TC_PAbort_Ind & TPAbortInd(void) { return _tInd; }
 };
@@ -107,9 +120,9 @@ public:
     : TDlgIndicationDispatcherT<TC_UAbort_Ind>(use_tmsg)
   { }
   //
-  void bindSUAInd(const SUAUnitdataInd & sua_ind)
+  bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
-    _tInd.bindSUAInd(sua_ind);
+    return unpackAddresses(sua_ind);
   }
 //  TC_UAbort_Ind & TUAbortInd(void) { return _tInd; }
 };
@@ -120,9 +133,10 @@ public:
     : TDlgIndicationDispatcherT<TC_Notice_Ind>(use_tmsg)
   { }
   //
-  void bindSUAInd(const SUANoticeInd & sua_ind)
+  bool bindSUAInd(const SUANoticeInd & sua_ind)
   {
-    _tInd.bindSUAInd(sua_ind);
+    //TODO: process Notice_Ind specific stuff
+    return unpackAddresses(sua_ind);
   }
 //  TC_Notice_Ind & TNoticeInd(void) { return _tInd; }
 };

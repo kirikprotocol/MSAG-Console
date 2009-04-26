@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "eyeline/asn1/ASNTags.hpp"
@@ -14,6 +14,28 @@ using eyeline::asn1::ASTag;
 using eyeline::asn1::BITBuffer;
 
 using eyeline::tcap::proto::TCMsgAbortPortion;
+
+typedef eyeline::asn1::ASTypeAC::DECResult DECResult;
+
+/* ************************************************************************* *
+ * class TDlgIndicationDispatcherAC implementation
+ * ************************************************************************* */
+bool TDlgIndicationDispatcherAC::setAddresses(const SUAMessageIndAC & sua_ind,
+                                                TDialogueIndicationPrimitive & t_ind)
+{
+  SCCPAddress adr;
+
+  if (!adr.unpackOcts(sua_ind.callingAddr(), sua_ind.callingAddrLen()))
+    return false;
+  t_ind.setOrigAddress(adr);
+
+  if (!adr.unpackOcts(sua_ind.calledAddr(), sua_ind.calledAddrLen()))
+    return false;
+  t_ind.setDestAddress(adr);
+
+  return true;
+}
+
 
 /* ************************************************************************* *
  * class TDlgIndicationDispatcher implementation
@@ -49,48 +71,66 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
   if (tmTag.tagClass != ASTag::tagApplication)
     return false;
 
-  uint32_t pos = sua_ind.userData() - sua_ind.msgBuffer();
+  bool      failed = false;
+  DECResult decRc;
+  uint32_t  pos = (uint32_t)(sua_ind.userData() - sua_ind.msgBuffer());
   BITBuffer tmsgEnc(sua_ind.msgBuffer() + pos, (uint32_t)sua_ind.userDataLen());
 
   //decode TCAP message and create associated dispatcher
   switch (tmTag.tagValue) {
   case TCAPMessage::t_begin: {
     _msgTC.Reset(TCAPMessage::t_begin);
-    _msgTC.DeferredDecode(tmsgEnc);
-    Reset(indTBegin);
-    _dsp.tBegin->bindSUAInd(sua_ind);
+    decRc = _msgTC.DeferredDecode(tmsgEnc);
+    if (decRc.rval) {
+      failed = true;
+    } else {
+      Reset(indTBegin);
+      failed |= _dsp.tBegin->bindSUAInd(sua_ind);
+    }
   } break;
 
   case TCAPMessage::t_end: {
     _msgTC.Reset(TCAPMessage::t_end);
-    _msgTC.DeferredDecode(tmsgEnc);
-    Reset(indTEnd);
-    _dsp.tEnd->bindSUAInd(sua_ind);
+    decRc = _msgTC.DeferredDecode(tmsgEnc);
+    if (decRc.rval) {
+      failed = true;
+    } else {
+      Reset(indTEnd);
+      failed |= _dsp.tEnd->bindSUAInd(sua_ind);
+    }
   } break;
 
   case TCAPMessage::t_continue: {
     _msgTC.Reset(TCAPMessage::t_continue);
-    _msgTC.DeferredDecode(tmsgEnc);
-    Reset(indTCont);
-    _dsp.tCont->bindSUAInd(sua_ind);
+    decRc = _msgTC.DeferredDecode(tmsgEnc);
+    if (decRc.rval) {
+      failed = true;
+    } else {
+      Reset(indTCont);
+      failed |= _dsp.tCont->bindSUAInd(sua_ind);
+    }
   } break;
 
   case TCAPMessage::t_abort: {
     _msgTC.Reset(TCAPMessage::t_abort);
-    _msgTC.DeferredDecode(tmsgEnc);
-    if (_msgTC.AbortPortion()->AbortForm() == TCMsgAbortPortion::abrtFrmProvider) {
-      Reset(indTPAbrt);
-      _dsp.tPAbrt->bindSUAInd(sua_ind);
-    } else{
-      Reset(indTUAbrt);
-      _dsp.tUAbrt->bindSUAInd(sua_ind);
+    decRc = _msgTC.DeferredDecode(tmsgEnc);
+    if (decRc.rval) {
+      failed = true;
+    } else {
+      if (_msgTC.AbortPortion()->AbortForm() == TCMsgAbortPortion::abrtFrmProvider) {
+        Reset(indTPAbrt);
+        failed |= _dsp.tPAbrt->bindSUAInd(sua_ind);
+      } else{
+        Reset(indTUAbrt);
+        failed |= _dsp.tUAbrt->bindSUAInd(sua_ind);
+      }
     }
   } break;
 
   default: //t_unidirection, t_none
-    return false;
+    failed = true;
   }
-  return true;
+  return !failed;
 }
 
 bool TDlgIndicationDispatcher::processSuaInd(const SUANoticeInd & sua_ind)
@@ -99,7 +139,9 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUANoticeInd & sua_ind)
   if (tmTag.tagClass != ASTag::tagApplication)
     return false;
 
-  uint32_t pos = sua_ind.userData() - sua_ind.msgBuffer();
+  bool      failed = false;
+  DECResult decRc;
+  uint32_t  pos = (uint32_t)(sua_ind.userData() - sua_ind.msgBuffer());
   BITBuffer tmsgEnc(sua_ind.msgBuffer() + pos, (uint32_t)sua_ind.userDataLen());
 
   //decode TCAP message
@@ -109,16 +151,20 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUANoticeInd & sua_ind)
   case TCAPMessage::t_continue:
   case TCAPMessage::t_abort: {
     _msgTC.Reset(static_cast<TCAPMessage::TKind_e>(tmTag.tagValue));
-    _msgTC.DeferredDecode(tmsgEnc);
+    decRc = _msgTC.DeferredDecode(tmsgEnc);
+    if (decRc.rval)
+      failed = true;
   } break;
 
   default: //t_unidirection, t_none
-    return false;
+    failed = true;
   }
   //create TNoticeInd dispatcher
-  Reset(indTNotice);
-  _dsp.tNotice->bindSUAInd(sua_ind);
-  return true;
+  if (!failed) {
+    Reset(indTNotice);
+    failed = _dsp.tNotice->bindSUAInd(sua_ind);
+  }
+  return !failed;
 }
 
 

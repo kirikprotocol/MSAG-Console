@@ -7,12 +7,6 @@
 
 # include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
 
-//   bindSUAInd was removed from TC_*_Ind classes
-//   void bindSUAInd(const SUANoticeInd & sua_ind)
-//   {
-//     //TODO:
-//   }
-
 namespace eyeline {
 namespace tcap {
 
@@ -85,4 +79,5 @@ public:
 } //tcap
 } //eyeline
 
-#endif
+#endif /* __EYELINE_TCAP_TDIALOGUEINDICATIONPRIMITIVE_HPP__ */
+

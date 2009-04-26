@@ -45,7 +45,6 @@ public:
     return _suaMsg ? _suaMsg->getMsgId() : SUAMessageId::UNKNOWN_MSGCODE;
   }
 
-  //TODO: ???
   uint8_t * msgBuffer(void) const
   {
     return _suaMsg ? _suaMsg->msgData.get() : 0; 
@@ -58,11 +57,6 @@ public:
   uint16_t userDataLen(void) const { return _userDataLen; }
   const uint8_t * userData(void) const { return _userData; }
 
-  //returns false if calledAdr cann't be represented in .ton.npi.addr form
-//  bool getCalledAdr(TonNpiAddress & use_tnadr) const; //TODO:
-  //returns false if callingAdr cann't be represented in .ton.npi.addr form
-//  bool getCallingAdr(TonNpiAddress & use_tnadr) const; //TODO:
-
   //Parses MessageInfo::msgData buffer,
   //NOTE: sets references to MessageInfo::msgData buffer
   bool parseMsgInfo(const MessageInfo & use_buf)
@@ -74,7 +68,8 @@ public:
 
 class SUAUnitdataInd : public SUAMessageIndAC {
 protected:
-  enum { has_SEQUENCE_CONTROL = 0x01 };
+  enum Options_e { has_SEQUENCE_CONTROL = 0x01 };
+
   uint8_t   _fieldsMask;
   uint32_t  _sequenceControl;
 
@@ -101,10 +96,10 @@ public:
 
 class SUANoticeInd : public SUAMessageIndAC {
 protected:
-  enum { has_RETURN_REASON = 0x01, has_IMPORTANCE = 0x02 };
+  enum Options_e { has_IMPORTANCE = 0x01 };
   uint8_t _fieldsMask;
   uint8_t _returnReason;
-  uint8_t _importance;
+  uint8_t _importance;  //3 bits value
 
   // -------------------------------------
   // -- SUAMessageIndAC interface methods
@@ -114,17 +109,48 @@ protected:
   bool _parseMsgInfo(void);
 
 public:
+  //according ITU Q.713 clause 3.12
+  enum ReturnCause_e { //8 bits values:
+    errNoTranslationNoA = 0x0, errNoTranslationAdr = 0x01,
+    errSSNConjestion = 0x02, errSSNFailure = 0x03, errUserUneqipped = 0x04,
+    errMTPFailure = 0x05, errNetworkConjestion = 0x06, errUnquilified = 0x07,
+    errMsgTransport = 0x08, errLocalProcessing = 0x09, errDstReassembly = 0x0A,
+    errSCCPFailure = 0x0B, errHOPCounter = 0x0C, errSegmNotSupported = 0x0D,
+    errSegmFailure = 0x0E, 
+    errRsrvInternational = 0x0F, //up to 0xE4
+    errRsrvNational = 0xE5,      //up to 0xFE
+    errReserved = 0xFF
+  };
+
+  static ReturnCause_e returnCauseByValue(uint8_t use_val)
+  {
+    if (use_val == errReserved)
+      return errReserved;
+
+    if (use_val >= errRsrvNational)
+      return errRsrvNational;
+
+    if (use_val >= errRsrvInternational)
+      return errRsrvInternational;
+    return static_cast<ReturnCause_e>(use_val);
+  }
+
   SUANoticeInd()
       : _fieldsMask(0), _returnReason(0), _importance(0) 
   { }
   ~SUANoticeInd()
   { }
 
-  uint32_t returnReason(void) const
+
+  ReturnCause_e returnCause(void) const
   {
-    return (_fieldsMask & has_RETURN_REASON) ? _returnReason : 0;
+    return returnCauseByValue(_returnReason);
   }
-  uint32_t sequenceControl(void) const
+  uint8_t returnCauseValue(void) const
+  {
+    return _returnReason;
+  }
+  uint8_t hasImportance(void) const
   {
     return (_fieldsMask & has_IMPORTANCE) ? _importance : 0;
   }
