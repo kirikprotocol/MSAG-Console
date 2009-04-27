@@ -369,10 +369,14 @@ public:
       if(hasHighBit(txt.c_str(),txt.length()))
       {
         msg.set_dataCoding(DataCoding::UCS2);
-        TmpBuf<char,2048> tmp(txt.length()*2+2);
-        int len=ConvertMultibyteToUCS2(txt.c_str(), txt.length(), (short*)tmp.get(), txt.length()*2+2,
+        TmpBuf<short,1024> tmp(txt.length()+1);
+        int len=ConvertMultibyteToUCS2(txt.c_str(), txt.length(), tmp.get(), txt.length()*2+2,
                                        CONV_ENCODING_CP1251);
-        sbm.get_optional().set_messagePayload(tmp.get(),len);
+        for(int i=0;i<len;i++)
+        {
+          tmp.get()[i]=htons(tmp.get()[i]);
+        }        
+        sbm.get_optional().set_messagePayload((char*)tmp.get(),len);
       }else
       {
         msg.set_dataCoding(DataCoding::LATIN1);
