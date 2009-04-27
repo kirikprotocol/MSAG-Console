@@ -5,7 +5,7 @@
                  ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
                  ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem"%>
 <%@ page import="ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper" %>
-<jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Tasks" />
+<jsp:useBean id="bean" scope="session" class="ru.novosoft.smsc.infosme.beans.Tasks" />
 <jsp:setProperty name="bean" property="*"/>
 <%
   boolean admin = InfoSmeBean.isUserAdmin(request);
@@ -35,39 +35,39 @@
 <div class=content>
 
 <table class=properties_list>
-  <tr>
+  <col width="10%">
+  <col width="40%">
+  <col width="10%">
+  <col width="40%">
+  <tr class=row<%=rowN++&1%>>
+    <td style="text-align:left">Task:</td>
+    <td><input class="txt" type="text" name="name" value="<%=bean.getName()%>"></td>
+    <td style="text-align:left">Status:</td>
     <td>
-      <table>
-        <tr class=row<%=rowN++&1%>>
-          <td style="text-align:left">Task:</td>
-          <td><input class="txt" type="text" name="name" value="<%=bean.getName()%>"></td>
-        </tr>
-        <tr class=row<%=rowN++&1%>>
-          <td style="text-align:left">Status:</td>
-          <td>
-          <% int status = bean.getStatus(); %>
-          <select name="status">
-            <option value="0" <%=status == 0 ? "SELECTED": ""%>>ALL</option>
-            <option value="1" <%=status == 1 ? "SELECTED": ""%>>ACTIVE</option>
-            <option value="2" <%=status == 2 ? "SELECTED": ""%>>FINISHED</option>
-          </select>
-          </td>
-        </tr>
-      </table>
+      <% int status = bean.getStatus(); %>
+      <select name="status">
+        <option value="0" <%=status == 0 ? "SELECTED": ""%>>ALL</option>
+        <option value="1" <%=status == 1 ? "SELECTED": ""%>>ACTIVE</option>
+        <option value="2" <%=status == 2 ? "SELECTED": ""%>>FINISHED</option>
+      </select>
     </td>
-    <td>&nbsp;</td>
+  </tr>
+  <tr class=row<%=rowN++&1%>>
+    <td style="text-align:left"><%= getLocString("infosme.label.from_date")%></td>
+    <td><input class=calendarField id=fromDate name=fromDate value="<%=StringEncoderDecoder.encode(bean.getFromDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
+    <td style="text-align:left"><%= getLocString("infosme.label.till_date")%></td>
+    <td><input class=calendarField id=tillDate name=tillDate value="<%=StringEncoderDecoder.encode(bean.getTillDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
+  </tr>
+  <tr class=row<%=rowN++&1%>>
+    <td style="text-align:left">View:</td>
     <td>
-      <table>
-      <tr class=row<%=rowN++&1%>>
-        <td style="text-align:left"><%= getLocString("infosme.label.from_date")%></td>
-        <td><input class=calendarField id=fromDate name=fromDate value="<%=StringEncoderDecoder.encode(bean.getFromDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
-      </tr>
-      <tr class=row<%=rowN++&1%>>
-        <td style="text-align:left"><%= getLocString("infosme.label.till_date")%></td>
-        <td><input class=calendarField id=tillDate name=tillDate value="<%=StringEncoderDecoder.encode(bean.getTillDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
-      </tr>
-      </table>
+      <% int view = bean.getView(); %>
+      <select name="view">
+        <option value="<%=Tasks.VIEW_LIST%>" <%=view == Tasks.VIEW_LIST ? "SELECTED": ""%>>LIST</option>
+        <option value="<%=Tasks.VIEW_WEEKLY%>" <%=view == Tasks.VIEW_WEEKLY ? "SELECTED": ""%>>WEEKLY</option>
+      </select>
     </td>
+    <td colspan="2">&nbsp;</td>
   </tr>
 </table>
 </div>
@@ -79,7 +79,8 @@ page_menu_space(out);
 page_menu_end(out);
 %>
 <div class="content">
-<%{final PagedStaticTableHelper tableHelper = bean.getTableHelper();%>
+<%{final PagedStaticTableHelper tableHelper = bean.getTableHelper();
+  tableHelper.fillTable(); %>
 <%@ include file="/WEB-INF/inc/paged_static_table.jsp"%>
 <%}%>
 </div><%
@@ -87,13 +88,20 @@ page_menu_begin(out);
 if (bean.isSmeRunning()) {
   if (admin)
     page_menu_button(session, out, "mbAdd",    "common.buttons.add",    "infosme.hint.add_task");
-  page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_tasks", getLocString("infosme.confirm.del_tasks"));
+  if (view == Tasks.VIEW_LIST) {
+    page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_tasks", getLocString("infosme.confirm.del_tasks"));
+    page_menu_confirm_button(session, out, "mbEnable",  "common.buttons.enable",  "infosme.hint.enable", getLocString("infosme.confirm.enable.tasks"));
+    page_menu_confirm_button(session, out, "mbDisable", "common.buttons.disable", "infosme.hint.disable", getLocString("infosme.confirm.disable.tasks"));
+  }
 }
+
 page_menu_space(out);
 if (!admin) {
   page_menu_button(session, out, "mbApply",  "common.buttons.apply", "infosme.hint.apply_changes");
   page_menu_button(session, out, "mbReset",  "common.buttons.reset", "infosme.hint.reset_changes");
 }
+page_menu_confirm_button(session, out, "mbEnableAll",  "common.buttons.enable.all",  "infosme.hint.enable.all", getLocString("infosme.confirm.enable.tasks"));
+page_menu_confirm_button(session, out, "mbDisableAll", "common.buttons.disable.all", "infosme.hint.disable.all", getLocString("infosme.confirm.disable.tasks"));
 page_menu_end(out);
 %>
 <script type="text/javascript">

@@ -94,6 +94,7 @@
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "infosme.hint.query_messages");
+page_menu_button(session, out, "mbClear",  "common.buttons.clear",  "common.buttons.clearFilter");
 page_menu_space(out);
 page_menu_end(out);
 }

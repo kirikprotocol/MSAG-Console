@@ -5,7 +5,6 @@ import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.tables.messages.*;
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,7 +15,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -40,6 +38,7 @@ public class Messages extends InfoSmeBean
   private String message2update;
 
   private String mbQuery     = null;
+  private String mbClear     = null;
   private String mbResend    = null;
   private String mbDelete    = null;
 
@@ -111,10 +110,11 @@ public class Messages extends InfoSmeBean
       if (mbDelete != null || mbDeleteAll != null) result = processDelete(request);
       else if (mbResend != null || mbResendAll != null) result =  processResend(request);
       else if (mbUpdateAll != null) return processUpdateAll();
-      else if (mbExportAll != null) result =  processExportAll();
+      else if (mbExportAll != null) return processExportAll();
       else if (mbUpdate != null) result = processUpdate();
       else if (mbCancelUpdate != null) result = processCancelUpdate();
       else if (mbQuery != null) processQuery();
+      else if (mbClear != null) {initialized = false; mbClear = null;}
     } catch (AdminException e) {
       logger.error("Process error", e);
       error("Error", e);
@@ -153,32 +153,34 @@ public class Messages extends InfoSmeBean
     return RESULT_EXPORT_ALL;
   }
 
-  public void exportAll(HttpServletResponse response, JspWriter out) {
+  public void exportAll(HttpServletResponse response, final JspWriter out) {
     response.setContentType("file/csv; filename=messages.csv; charset=windows-1251");
 //    response.setContentLength(exportFile.length());
     response.setHeader("Content-Disposition", "attachment; filename=messages.csv");
 
     try {
       out.clear();
-//      final InfoSmeTransport.GetMessagesResult result = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
-//                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), 5000000);
-//      final Collection messages = result.getMessages();
 
-      QueryResultSet messages = ds.query(new MessageQuery(5000000, msgFilter, MessagesTableHelper.DEFAULT_SORT, 0));
-
-      StringBuffer buffer = new StringBuffer();
-      MessageDataItem msg;
-      for (Iterator iter = messages.iterator(); iter.hasNext();) {
-
-        msg = (MessageDataItem)iter.next();
-        buffer.append(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.TASK_ID))).append(",")
-            .append(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.MSISDN))).append(",")
-            .append(StringEncoderDecoder.encode(getStateName((Message.State)msg.getValue(MessageDataSource.STATE)))).append(",")
-            .append(StringEncoderDecoder.encode(convertDateToString((Date)msg.getValue(MessageDataSource.DATE)))).append(",")
-            .append(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.MESSAGE))).append('\n');
-        out.print(buffer);
-        buffer.setLength(0);
-      }
+      ds.visit(new MessageVisitor() {
+        public boolean visit(MessageDataItem msg) {
+          try {
+            out.write(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.TASK_ID)));
+            out.write(',');
+            out.write(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.MSISDN)));
+            out.write(',');
+            out.write(StringEncoderDecoder.encode(getStateName((Message.State)msg.getValue(MessageDataSource.STATE))));
+            out.write(',');
+            out.write(StringEncoderDecoder.encode(convertDateToString((Date)msg.getValue(MessageDataSource.DATE))));
+            out.write(',');
+            out.write(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.MESSAGE)));
+            out.write('\n');          
+          } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+          }
+          return true;
+        }
+      }, msgFilter);
 
       out.flush();
     } catch (IOException e) {
@@ -203,7 +205,7 @@ public class Messages extends InfoSmeBean
     return RESULT_CANCEL_UPDATE;
   }
 
-  public String getStateName(Message.State state) {
+  public static String getStateName(Message.State state) {
     if (state == Message.State.UNDEFINED)
       return "ALL";
     else if (state == Message.State.NEW)
@@ -486,6 +488,14 @@ public class Messages extends InfoSmeBean
 
   public void setMbExportAll(String mbExportAll) {
     this.mbExportAll = mbExportAll;
+  }
+
+  public String getMbClear() {
+    return mbClear;
+  }
+
+  public void setMbClear(String mbClear) {
+    this.mbClear = mbClear;
   }
 
   public boolean isProcessed() {

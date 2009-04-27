@@ -94,6 +94,20 @@ public class EditTaskPage extends DeliveriesPage {
     return new LoadFilePage(pageData);
   }
 
+  protected DeliveriesPage mbTest(HttpServletRequest request) throws AdminException {
+    pageToTask(pageData.getTask().getTask(pageData.oldActiveTaskRegionId));
+    taskToPage(pageData.getTask().getTask(pageData.activeTaskRegionId));
+    if (pageData.testSmsAddress == null || pageData.testSmsAddress.trim().length() == 0)
+      throw new AdminException("infosme.error.dst_addr_is_empty");
+
+    long result = pageData.getInfoSmeContext().getInfoSme().sendSms(pageData.sourceAddress, pageData.testSmsAddress, pageData.text, pageData.flash);
+
+    if (result != 0)
+      throw new AdminException(pageData.getAppContext().getLocaleString(request.getUserPrincipal(), "infosme.error.test_sms_delivery_error") + ": " + pageData.getAppContext().getLocaleString(request.getUserPrincipal(),"smsc.errcode." + result));    
+
+    return this;
+  }
+
   public DeliveriesPage mbUpdate(HttpServletRequest request) throws AdminException {
     pageToTask(pageData.getTask().getTask(pageData.oldActiveTaskRegionId));
     taskToPage(pageData.getTask().getTask(pageData.activeTaskRegionId));

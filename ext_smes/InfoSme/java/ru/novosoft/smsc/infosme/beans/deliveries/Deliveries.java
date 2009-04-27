@@ -24,6 +24,7 @@ public class Deliveries extends InfoSmeBean {
   // Page data
   private String mbNext;
   private String mbCancel;
+  private String mbTest;
 
   protected int init(List errors) {
     int result = super.init(errors);
@@ -52,6 +53,9 @@ public class Deliveries extends InfoSmeBean {
       } else if (mbCancel != null) {
         mbCancel = null;
         activePage = activePage.mbCancel(request);
+      } else if (mbTest != null) {
+        mbTest = null;
+        activePage = activePage.mbTest(request);
       } else
         activePage = activePage.mbUpdate(request);
     } catch (AdminException e) {
@@ -225,6 +229,14 @@ public class Deliveries extends InfoSmeBean {
     pageData.secretFlash = val;
   }
 
+  public String getTestSmsAddress() {
+    return pageData.testSmsAddress == null ? "" : pageData.testSmsAddress;
+  }
+
+  public void setTestSmsAddress(String address) {
+    pageData.testSmsAddress = address;
+  }
+
   public Map getGenerationProgress() {
     return pageData.deliveriesGenProgr;
   }
@@ -243,7 +255,15 @@ public class Deliveries extends InfoSmeBean {
 
   public void setMbCancel(String mbCancel) {
     this.mbCancel = mbCancel;
-  }  
+  }
+
+  public String getMbTest() {
+    return mbTest;
+  }
+
+  public void setMbTest(String mbTest) {
+    this.mbTest = mbTest;
+  }
 
   public String getStatusStr() {
     return pageData.getDeliveriesGenStatus();

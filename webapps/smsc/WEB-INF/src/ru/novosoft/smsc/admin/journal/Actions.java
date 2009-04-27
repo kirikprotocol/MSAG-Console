@@ -12,6 +12,8 @@ public abstract class Actions {
     public static final byte ACTION_VIEW = 8;
     public static final byte ACTION_EXPORT = 9;
     public static final byte ACTION_SAVE = 10;
+    public static final byte ACTION_DISABLE = 11;
+    public static final byte ACTION_ENABLE = 12;
 
     public static final String actionToString(byte action) {
         switch (action) {
@@ -35,6 +37,10 @@ public abstract class Actions {
                 return "export";
             case ACTION_SAVE:
                 return "save";
+            case ACTION_DISABLE:
+                return "disable";
+            case ACTION_ENABLE:
+                return "enable";
             default:
                 return "unknown";
         }
@@ -61,6 +67,10 @@ public abstract class Actions {
             return ACTION_EXPORT;
         if ("save".equals(action))
             return ACTION_SAVE;
+        if ("disable".equals(action))
+            return ACTION_DISABLE;
+        if ("enable".equals(action))
+            return ACTION_ENABLE;
         return ACTION_UNKNOWN;
     }
 }

@@ -13,6 +13,12 @@
 		case TaskEdit.RESULT_DONE:
 			response.sendRedirect("tasks.jsp");
 			return;
+    case TaskEdit.RESULT_MESSAGES:
+      response.sendRedirect("messages.jsp?taskId=" + bean.getId() + "&initialized=true");
+      return;
+    case TaskEdit.RESULT_STATISTICS:
+      response.sendRedirect("stat.jsp?taskId=" + bean.getId() + "&initialized=true");
+      return;
 		default:{%><%@ include file="inc/menu_switch.jsp"%><%}
 	}
   int rowN = 0;
@@ -350,6 +356,8 @@ if (bean.isSmeRunning()) {
 }
 page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "infosme.hint.cancel_changes", "clickCancel()");
 page_menu_space(out);
+page_menu_button(session, out, "mbMessages",   "Messages",  "Messages");
+page_menu_button(session, out, "mbStatistics",   "Statistics",  "Statistics");
 page_menu_end(out);
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

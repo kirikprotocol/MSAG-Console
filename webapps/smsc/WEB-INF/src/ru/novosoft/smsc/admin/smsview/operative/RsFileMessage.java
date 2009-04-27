@@ -238,14 +238,14 @@ public class RsFileMessage  extends Message
 //    if(query.isFilterLastResult && lastResult != query.getLastResult()) return false;
 
     int strLen = Message.readUInt8(is);
-    Mask origMask = new Mask((byte)Message.readUInt8(is), (byte)Message.readUInt8(is), Message.readString(is,strLen));
+    Mask origMask = new Mask((byte)Message.readUInt8(is), (byte)Message.readUInt8(is), Message.readString(is,strLen)); // todo do not use mask
     if(query.isFilterFromAddress && !query.getFromAddressMask().addressConfirm(origMask)) return false;
 
     strLen = Message.readUInt8(is);
-    Mask destMask = new Mask((byte)Message.readUInt8(is), (byte)Message.readUInt8(is), Message.readString(is,strLen));
+    Mask destMask = new Mask((byte)Message.readUInt8(is), (byte)Message.readUInt8(is), Message.readString(is,strLen));  // todo do not use mask
 
     strLen = Message.readUInt8(is);
-    Mask dDestMask = new Mask((byte)Message.readUInt8(is), (byte)Message.readUInt8(is), Message.readString(is,strLen));
+    Mask dDestMask = new Mask((byte)Message.readUInt8(is), (byte)Message.readUInt8(is), Message.readString(is,strLen));  // todo do not use mask
     if(query.isFilterToAddress && !query.getToAddressMask().addressConfirm(dDestMask)) return false;
     if(query.isFilterAbonentAddress && !(query.getAbonentAddressMask().addressConfirm(origMask) || query.getAbonentAddressMask().addressConfirm(dDestMask))) return false;
 

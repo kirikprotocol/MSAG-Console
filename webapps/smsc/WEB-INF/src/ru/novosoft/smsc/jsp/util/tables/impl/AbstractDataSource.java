@@ -40,7 +40,7 @@ public abstract class AbstractDataSource implements DataSource {
     data = new DataItemList(sort, isNegativeSort, query.getStartPosition() + query.getExpectedResultsQuantity());
   }
 
-  protected void add(DataItem item) throws AdminException {
+  protected synchronized void add(DataItem item) throws AdminException {
     if (data == null)
       throw new AdminException("Data source is not initialized.");
 

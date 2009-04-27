@@ -86,7 +86,6 @@
         <input class=calendarField id=endDate name=endDate value="<%=StringEncoderDecoder.encode(deliveries_bean.getEndDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(endDate, false, true);">...</button>
       </td>
     </tr>
-<% if (deliveries_bean.isUserAdmin(request)) { %>
     <tr class=row<%=rowN++&1%>>
       <th><label for=retryOnFail><%= getLocString("infosme.label.retry_on_fail")%></label></th>
       <td nowrap>
@@ -104,7 +103,6 @@
       <th><label for="transactionMode"><%= getLocString("infosme.label.transaction_mode")%></label></th>
       <td><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=deliveries_bean.isTransactionMode() ? "checked" : ""%>></td>
     </tr>
-<% } %>
 <% if (!deliveries_bean.isFileContainsText()) { %>
     <tr class=row<%=rowN++&1%>>
       <th><%= getLocString("infosme.label.message_text")%></th>
@@ -141,6 +139,10 @@
       checkSecretText();
     </script>
   <% } %>
+    <tr class=row<%=rowN++&1%>>
+      <th><%= getLocString("infosme.label.test_sms")%></th>
+      <td><input class=txt id=testSmsAddress name=testSmsAddress value="<%=deliveries_bean.getTestSmsAddress()%>" ></td>
+    </tr>
 <% } else { %>
     <tr class=row<%=rowN++&1%>>
      <th><%= getLocString("infosme.label.message_text")%></th>
@@ -156,6 +158,7 @@
 <%
   page_menu_begin(out);
   page_menu_button(session, out, "mbCancel", "common.buttons.cancel",    "infosme.hint.cancel_task_add", "clickCancel()");
+  page_menu_button(session, out, "mbTest",   "infosme.button.test", "infosme.hint.test");
   page_menu_button(session, out, "mbNext",   "infosme.button.next_page", "infosme.hint.next_page");
   page_menu_space(out);
   page_menu_end(out);

@@ -7,7 +7,7 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.Column;
  * Date: 20.12.2006
  */
 public class TextColumn extends Column {
-  private final String title;
+  private String title;
 
   public TextColumn(String uId, String title) {
     super(uId);
@@ -21,6 +21,10 @@ public class TextColumn extends Column {
 
   public TextColumn(String uId, String title, boolean sortable, int width) {
     super(uId, sortable, width);
+    this.title = title;
+  }
+
+  public void setTitle(String title) {
     this.title = title;
   }
 

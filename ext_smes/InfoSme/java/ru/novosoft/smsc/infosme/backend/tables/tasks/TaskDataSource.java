@@ -7,6 +7,7 @@ import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
 
 import java.util.HashSet;
@@ -31,6 +32,22 @@ public class TaskDataSource extends AbstractDataSource
     super(new String[]{"id", "name", "provider", "enabled", "priority", "retryOnFail", "replaceMessage", "svcType", "generating", "processing", "trackIntegrity", "startDate", "endDate", "owner", "delivery"});
     this.infoSme = infoSme;
     this.config = config;
+  }
+
+  public void visit(TaskVisitor visitor, Filter filter) throws AdminException {
+    Set generatingTasks = new HashSet();
+    Set processingTasks = new HashSet();
+    if (infoSme.getInfo().isOnline()) {
+      generatingTasks.addAll(infoSme.getGeneratingTasks());
+      processingTasks.addAll(infoSme.getProcessingTasks());
+    }
+    for (Iterator iter = config.getTasks(null).iterator(); iter.hasNext();) {
+      Task t = (Task)iter.next();
+      TaskDataItem item = new TaskDataItem(t.getId(), t.getName(), t.getProvider(), t.isEnabled(), t.getPriority(), t.getRetryPolicy(), t.isReplaceMessage(),
+            t.getSvcType(), generatingTasks.contains(t.getId()), processingTasks.contains(t.getId()), t.isTrackIntegrity(), t.getStartDate(), t.getEndDate(), t.getOwner(), t.isDelivery());
+      if (filter.isItemAllowed(item) && !visitor.visit(item))
+        break;
+    }
   }
   
 

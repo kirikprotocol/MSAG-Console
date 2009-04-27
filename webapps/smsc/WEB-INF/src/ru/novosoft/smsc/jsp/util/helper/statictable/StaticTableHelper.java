@@ -84,6 +84,9 @@ public abstract class StaticTableHelper {
     if (columnId == null)
       return;
 
+    if (sortOrder == null)
+      sortOrder = new SortOrderElement[columns.size()];
+
     final SortOrderElement[] newSortOrder = new SortOrderElement[columns.size()];
     newSortOrder[0] = new SortOrderElement(columnId, (orderType == null) ? OrderType.ASC : orderType);
 

@@ -41,5 +41,9 @@ public abstract class DeliveriesPage  {
   public abstract DeliveriesPage mbCancel(HttpServletRequest request) throws AdminException;
   public abstract DeliveriesPage mbUpdate(HttpServletRequest request) throws AdminException;
 
+  protected DeliveriesPage mbTest(HttpServletRequest request) throws AdminException {
+    return this;
+  }
+
   public abstract int getId();
 }

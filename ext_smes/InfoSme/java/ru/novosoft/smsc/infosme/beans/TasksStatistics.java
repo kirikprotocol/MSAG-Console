@@ -4,13 +4,9 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.infosme.backend.DateCountersSet;
 import ru.novosoft.smsc.infosme.backend.HourCountersSet;
-import ru.novosoft.smsc.infosme.backend.tables.stat.StatQuery;
 import ru.novosoft.smsc.infosme.backend.Statistics;
-import ru.novosoft.smsc.infosme.backend.tables.stat.StatisticDataItem;
-import ru.novosoft.smsc.infosme.backend.tables.stat.StatisticsDataSource;
-import ru.novosoft.smsc.infosme.backend.tables.stat.StatisticsQuery;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.infosme.backend.tables.stat.*;
+import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspWriter;
@@ -31,6 +27,9 @@ public class TasksStatistics extends InfoSmeBean
     public static final int RESULT_EXPORT = PRIVATE_RESULT + 1;
 
     public final static String ALL_TASKS_MARKER = "-- ALL TASKS --";
+    public static final int VIEW_DATES = 0;
+    public static final int VIEW_TASKS = 1;
+
     private static final SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
     private Statistics statistics = null;
@@ -39,8 +38,10 @@ public class TasksStatistics extends InfoSmeBean
     private String mbQuery = null;
     private String mbExport = null;
     private String mbCancel = null;
+    private int view = VIEW_DATES;
 
     private StatisticsDataSource ds;
+    private TaskStatTableHelper tasksStatsTable;
 
     private boolean initialized = false;
 
@@ -67,6 +68,10 @@ public class TasksStatistics extends InfoSmeBean
         if (result != RESULT_OK)
             return result;
 
+      query.setConfig(getConfig());
+      if (!isUserAdmin(request))
+        query.setOwner(request.getRemoteUser());
+
       try {
         if (mbCancel != null) {
           mbCancel = null;
@@ -74,12 +79,19 @@ public class TasksStatistics extends InfoSmeBean
         }
 
         if (mbQuery != null) {
-          processQuery(request);
+          initialized = true;
           mbQuery = null;
         } else if (mbExport != null) {
           mbExport = null;
-          processQuery(request);
+//          processDatesQuery(request);
           return RESULT_EXPORT;
+        }
+
+        if (initialized) {
+          if (view == VIEW_DATES)
+            processDatesQuery(request);
+          else
+            processTasksQuery(request);
         }
       } catch (Throwable e) {
         logger.debug("Couldn't get statisctics", e);
@@ -88,22 +100,29 @@ public class TasksStatistics extends InfoSmeBean
       return RESULT_OK;
     }
 
-  private void processQuery(HttpServletRequest request) throws AdminException {
+    private void processTasksQuery(HttpServletRequest request) throws AdminException {
+      tasksStatsTable = new TaskStatTableHelper("tasksStatistics", ds, query);
+      try {
+        tasksStatsTable.setPageSize(20);
+        tasksStatsTable.processRequest(request);
+        tasksStatsTable.fillTable();
+      } catch (TableHelperException e) {
+        throw new AdminException(e.getMessage(), e);
+      }
+    }
+
+    private void processDatesQuery(HttpServletRequest request) throws AdminException {
      flushStatistics(query);
 
       statistics = null;
       statistics = new Statistics();
 
-//      final List stats =  getInfoSme().getTaskStatistics(query.getTaskId(),
-//                                                    (query.isFromDateEnabled()) ? query.getFromDate() : null,
-//                                                    (query.isTillDateEnabled()) ? query.getTillDate() : null);
-
-      query.setConfig(getConfig());
-      if (!isUserAdmin(request))
-        query.setOwner(request.getRemoteUser());
+//      query.setConfig(getConfig());
+//      if (!isUserAdmin(request))
+//        query.setOwner(request.getRemoteUser());
 
       // Convert time to local
-      User user = getUser(request);
+      final User user = getUser(request);
       if (user != null) {
         if (query.getFromDate() != null)
           query.setFromDate(user.getLocalTime(query.getFromDate()));
@@ -111,7 +130,8 @@ public class TasksStatistics extends InfoSmeBean
           query.setTillDate(user.getLocalTime(query.getTillDate()));
       }
 
-      final QueryResultSet stats = ds.query(new StatisticsQuery(query));
+      StatisticsVisitor v = new StatisticsVisitor(user);
+      ds.visit(v, query);
 
       // Convert time back to user time
       if (user != null) {
@@ -121,48 +141,8 @@ public class TasksStatistics extends InfoSmeBean
           query.setTillDate(user.getUserTime(query.getTillDate()));
       }
 
-      final HashMap hourCounterSets = new HashMap(100);
-
-
-      Calendar oldPeriod = null;
-      DateCountersSet dateCounters = null;
-    
-      for (Iterator iter = stats.iterator(); iter.hasNext();) {
-        StatisticDataItem st = (StatisticDataItem)iter.next();
-
-        final Calendar newPeriod = Calendar.getInstance();
-
-        newPeriod.setTime(user.getUserTime((Date)st.getValue("period")));
-
-        int hour = newPeriod.get(Calendar.HOUR_OF_DAY);
-
-        HourCountersSet s = new HourCountersSet(((Integer)st.getValue("generated")).intValue(),
-                                             ((Integer)st.getValue("delivered")).intValue(),
-                                             ((Integer)st.getValue("retried")).intValue(),
-                                             ((Integer)st.getValue("failed")).intValue(),hour);
-
-        HourCountersSet hourCounters = (HourCountersSet)hourCounterSets.get(newPeriod.getTime());
-        if (hourCounters == null) {
-          hourCounterSets.put(newPeriod.getTime(), s);
-
-          if (dateCounters == null) { // on first iteration
-            dateCounters = new DateCountersSet(newPeriod.getTime());
-          } else if (needChangeDate(oldPeriod, newPeriod)) { // on date changed
-            statistics.addDateStat(dateCounters);
-            dateCounters = new DateCountersSet(newPeriod.getTime());
-          }
-          dateCounters.addHourStat(s);
-        } else {
-          if (dateCounters != null)
-            dateCounters.increment(s);
-          hourCounters.increment(s);
-        }
-
-        oldPeriod = newPeriod;
-      }
-
-      if (dateCounters != null)
-        statistics.addDateStat(dateCounters);
+      if (v.getDateCounters() != null)
+        statistics.addDateStat(v.getDateCounters());
     }
 
     private void flushStatistics(StatQuery query) throws AdminException {
@@ -197,7 +177,8 @@ public class TasksStatistics extends InfoSmeBean
     {
         try
         {
-            processQuery(request);
+            if (view == VIEW_DATES) {
+            processDatesQuery(request);
             if (statistics == null) {
               logger.warn("Statistics is empty.");
               return;
@@ -251,6 +232,12 @@ public class TasksStatistics extends InfoSmeBean
                 out.print(hourCounters.failed); out.println();
               }
             }
+            } else {
+              processTasksQuery(request);
+              tasksStatsTable.exportCsv(out);
+            }
+
+          System.out.println("Export finished");
 
         } catch (Exception exc) {
           logger.error("Unable to export statistics", exc);
@@ -346,13 +333,75 @@ public class TasksStatistics extends InfoSmeBean
     {
       return getInfoSmeConfig().getTask(taskId).getName();
     }
-    
 
-    public boolean isInitialized() {
+    public int getView() {
+      return view;
+    }
+
+    public void setView(int view) {
+      this.view = view;
+    }
+
+  public boolean isInitialized() {
         return initialized;
     }
     public void setInitialized(boolean initialized) {
         this.initialized = initialized;
     }
+
+  public TaskStatTableHelper getTasksStatsTable() {
+    return tasksStatsTable;
+  }
+
+  private class StatisticsVisitor implements StatVisitor {
+
+    final HashMap hourCounterSets = new HashMap(100);
+    private final User user;
+
+    Calendar oldPeriod = null;
+    DateCountersSet dateCounters = null;
+
+    private StatisticsVisitor(User user) {
+      this.user = user;
+    }
+
+    public DateCountersSet getDateCounters() {
+      return dateCounters;
+    }
+
+    public boolean visit(StatisticDataItem st) {
+
+      final Calendar newPeriod = Calendar.getInstance();
+
+      newPeriod.setTime(user.getUserTime((Date)st.getValue("period")));
+
+      int hour = newPeriod.get(Calendar.HOUR_OF_DAY);
+
+      HourCountersSet s = new HourCountersSet(((Integer)st.getValue("generated")).intValue(),
+          ((Integer)st.getValue("delivered")).intValue(),
+          ((Integer)st.getValue("retried")).intValue(),
+          ((Integer)st.getValue("failed")).intValue(),hour);
+
+      HourCountersSet hourCounters = (HourCountersSet)hourCounterSets.get(newPeriod.getTime());
+      if (hourCounters == null) {
+        hourCounterSets.put(newPeriod.getTime(), s);
+
+        if (dateCounters == null) { // on first iteration
+          dateCounters = new DateCountersSet(newPeriod.getTime());
+        } else if (needChangeDate(oldPeriod, newPeriod)) { // on date changed
+          statistics.addDateStat(dateCounters);
+          dateCounters = new DateCountersSet(newPeriod.getTime());
+        }
+        dateCounters.addHourStat(s);
+      } else {
+        if (dateCounters != null)
+          dateCounters.increment(s);
+        hourCounters.increment(s);
+      }
+
+      oldPeriod = newPeriod;
+      return true;
+    }
+  }
 }
 

@@ -106,7 +106,7 @@ public class Index extends IndexProperties
         getInfoSme().applyRetryPolicies();
 
       if(options)
-        return warning("New Configuration will be applied after InfoSme restart.");
+        return warning("infosme.prompt.restart");
 
     } catch (Throwable e) {
       logger.error("Couldn't save InfoSME config", e);

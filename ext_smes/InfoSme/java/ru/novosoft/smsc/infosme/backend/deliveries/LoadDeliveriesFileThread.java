@@ -99,6 +99,9 @@ public class LoadDeliveriesFileThread extends Thread {
           if (line.length() == 0)
             continue;
 
+          if (!line.startsWith("+"))
+            line = '+' + line;
+
           int i= line.indexOf("|");
 
           if (containsText != null) {
@@ -106,9 +109,6 @@ public class LoadDeliveriesFileThread extends Thread {
                 throw new AdminException("Invalid file format");
             } else
               containsText = Boolean.valueOf(i > 0);
-
-          if (!line.startsWith("+"))
-            line = '+' + line;
 
           String msisdn = i > 0 ? line.substring(0, i).trim() : line;
 

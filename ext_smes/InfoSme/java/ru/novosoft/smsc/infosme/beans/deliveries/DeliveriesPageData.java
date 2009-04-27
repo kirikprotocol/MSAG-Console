@@ -60,6 +60,7 @@ public class DeliveriesPageData {
   public boolean secret;
   public String secretText;
   public boolean secretFlash;
+  public String testSmsAddress;
   public String sourceAddress;
   public String errorStr;
   public String retryPolicy;

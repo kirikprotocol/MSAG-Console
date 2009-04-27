@@ -3,13 +3,10 @@ package ru.novosoft.smsc.infosme.backend.tables.messages;
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.Message;
-import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
-import ru.novosoft.smsc.util.AdvancedStringTokenizer;
 import ru.novosoft.smsc.util.RandomAccessFileReader;
-import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
 import java.text.ParseException;
@@ -35,7 +32,7 @@ public class MessageDataSource extends AbstractDataSource {
   public static final String DATE = "date";
   public static final String MSISDN = "msisdn";
   public static final String REGION = "region";
-  public static final String MESSAGE ="message";
+  public static final String MESSAGE = "message";
   public static final String ID = "id";
   public static final String TASK_ID = "taskId";
 
@@ -44,99 +41,128 @@ public class MessageDataSource extends AbstractDataSource {
     this.storeDir = storeDir;
   }
 
-  public QueryResultSet query(Query query_to_run) {
+  public void visit(MessageVisitor visitor, MessageFilter filter) {
+    visit(visitor, filter, 1);
+  }
 
-    MessageFilter filter = (MessageFilter)query_to_run.getFilter();
-    final String deletedStateStr = String.valueOf(Message.State.DELETED.getId());
-    final String filterStateStr = (filter.getStatus() == null || filter.getStatus() == Message.State.UNDEFINED) ? null : String.valueOf(filter.getStatus().getId());
-    final String filterAbonentStr = filter.getAddress() == null || filter.getAddress().length()==0 ? null : filter.getAddress();
+  public void visit(MessageVisitor visitor, MessageFilter filter, int threadsNumber) {
+    SimpleDateFormat fileNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT + '/' + FILE_DATE_FORMAT);
+    SimpleDateFormat msgDateFormat = new SimpleDateFormat(MSG_DATE_FORMAT);
 
-    // Set empty filter because we make filtering here, in data source (for performance purposes)
-    init(new MessageQuery(query_to_run.getExpectedResultsQuantity(), null, query_to_run.getSortOrder(), query_to_run.getStartPosition()));
+    int filterStatus = (filter.getStatus() == null || filter.getStatus() == Message.State.UNDEFINED) ? -1 : filter.getStatus().getId();
+    String fromDateString = filter.getFromDate() == null ? null : msgDateFormat.format(filter.getFromDate());
+    String tillDateString = filter.getTillDate() == null ? null : msgDateFormat.format(filter.getTillDate());
+    String filterAbonentStr = filter.getAddress() == null || filter.getAddress().length() == 0 ? null : filter.getAddress();
 
+    String encoding = System.getProperty("file.encoding");
+
+    ArrayList threads = new ArrayList(threadsNumber);
     try {
-
-      final SimpleDateFormat fileNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT + '/' + FILE_DATE_FORMAT);
-      final SimpleDateFormat msgDateFormat = new SimpleDateFormat(MSG_DATE_FORMAT);
-
       List files = getFiles(filter.getTaskId(), filter.getFromDate(), filter.getTillDate());
       if (files.isEmpty())
-        return new EmptyResultSet();
+        return;
 
-      String fromDateString = filter.getFromDate() == null ? null : msgDateFormat.format(filter.getFromDate());
-      String tillDateString = filter.getTillDate() == null ? null : msgDateFormat.format(filter.getTillDate());
-
-      String encoding = System.getProperty("file.encoding");
-
+      int k = 0, linesSize = 1000;
+      Line[] lines = new Line[linesSize];
       for (Iterator iter = files.iterator(); iter.hasNext();) {
-        File file = (File)iter.next();
+        File file = (File) iter.next();
 
         long idbase = getIdBase(fileNameFormat.parse(file.getParentFile().getName() + '/' + file.getName()));
 
         RandomAccessFile f = null;
-        if (log.isDebugEnabled())
-          log.debug("Start reading messages from file: " + file.getName());
-
         try {
           f = new RandomAccessFile(file, "r");
 
           RandomAccessFileReader is = new RandomAccessFileReader(f);
 
-          String line = is.readLine(encoding); // Skip first string
+          is.readLine(encoding); // Skip first string
 
-          while(true) {
-            long offset =is.getFilePointer();
-            line = is.readLine(encoding);
-            if (line == null)
+          String line;
+          long offset;
+          while (true) {
+            offset = is.getFilePointer();
+            if ((line = is.readLine(encoding)) == null)
               break;
 
-            int i = line.indexOf(',');
-            String stateStr = line.substring(0,i);
-            if (stateStr.equals(deletedStateStr) || (filterStateStr != null && !stateStr.equals(filterStateStr)))
-              continue;
-            int state = Integer.parseInt(stateStr);
-
-            int k = i + 1;
-            i = line.indexOf(',', k);
-
-            String dateStr = line.substring(k, i);
-            if ((fromDateString != null && fromDateString.compareTo(dateStr) > 0) || (tillDateString != null && tillDateString.compareTo(dateStr) < 0))
+            int state = line.charAt(0) - '0';
+            if (state == Message.State.DELETED.getId() || (filterStatus != -1 && state != filterStatus))
               continue;
 
-            k = i+1;
-            i = line.indexOf(',', k);
-            String msisdn = line.substring(k, i);
-            if (filterAbonentStr != null && !filterAbonentStr.equals(msisdn))
-              continue;
-
-            k = i+1;
-            i = line.indexOf(',', k);
-            String region = line.substring(k, i);
-
-            String message = prepareMessage(line.substring(i+2, line.length() - 1));
-
-            long id = getId(idbase, offset);
-
-            add(new MessageDataItem(id, filter.getTaskId(), state, msgDateFormat.parse(dateStr), msisdn, region, message));
-
+            lines[k++] = new Line(line, getId(idbase, offset));
+            if (k >= linesSize) {
+              // Offer lines to thread
+              parseLines(threads, lines, threadsNumber, visitor, filter, filterAbonentStr, fromDateString, tillDateString);
+              lines = new Line[linesSize];
+              k = 0;
+            }
           }
         } catch (EOFException e) {
         } catch (IOException e) {
-          e.printStackTrace();
-        } catch (AdminException e) {
-          e.printStackTrace();
+          log.error(e,e);
         } finally {
           if (f != null)
             try {
               f.close();
             } catch (IOException e) {
+              log.error(e,e);
             }
         }
       }
 
-    } catch (ParseException e) {
-      e.printStackTrace();
+      // Offer lines to thread
+      parseLines(threads, lines, threadsNumber, visitor, filter, filterAbonentStr, fromDateString, tillDateString);
+
+      // Shutdown threads
+      for (int i = 0; i < threads.size(); i++) {
+        LineParser p = (LineParser) threads.get(i);
+        p.shutdown();
+        p.join();
+      }
+
+    } catch (Throwable e) {
+      log.error(e, e);
+    } finally {
+      for (int i = 0; i < threads.size(); i++) {
+        LineParser p = (LineParser) threads.get(i);
+        p.shutdown();
+      }
     }
+  }
+
+  private static void parseLines(ArrayList threads, Line[] lineArray, int threadsNumber, MessageVisitor visitor, MessageFilter filter, String filterAbonentStr, String fromDateStr, String tillDateStr) {
+    do {
+      for (int i = 0; i < threads.size(); i++) {
+        if (((LineParser)threads.get(i)).parseLines(lineArray))
+          return;
+      }
+
+      if (threads.size() < threadsNumber) {
+        LineParser p = new LineParser(visitor, filter, "MessageDataSource-Thread-" + threads.size(), filterAbonentStr, fromDateStr, tillDateStr);
+        p.setDaemon(true);
+        p.parseLines(lineArray);
+        p.start();
+        threads.add(p);
+        return;
+      }
+
+    } while (true);
+  }
+
+
+  public QueryResultSet query(Query query_to_run) {
+    init(new MessageQuery(query_to_run.getExpectedResultsQuantity(), null, query_to_run.getSortOrder(), query_to_run.getStartPosition()));
+
+    visit(new MessageVisitor() {
+      public boolean visit(MessageDataItem msg) {
+        try {
+          add(msg);
+          return true;
+        } catch (AdminException e) {
+          log.error(e,e);
+          return false;
+        }
+      }
+    }, (MessageFilter) query_to_run.getFilter(), 5);
 
     return getResults();
   }
@@ -239,7 +265,53 @@ public class MessageDataSource extends AbstractDataSource {
     return -1;
   }
 
-  private List getFiles (String taskId, Date from, Date till) throws ParseException {
+  private static boolean isFileContainsMessages(File file) {
+    BufferedReader r = null;
+    try {
+      r = new BufferedReader(new FileReader(file));
+      r.readLine(); // Skip header
+      String str;
+      while ((str = r.readLine()) != null) {
+        int state = str.charAt(0) - '0';
+        if (state != Message.State.DELETED.getId())
+          return true;
+      }
+    } catch (IOException e) {
+      log.error(e, e);
+    } finally {
+      if (r != null)
+        try {
+          r.close();
+        } catch (IOException e) {
+        }
+    }
+    return false;
+  }
+
+  public SortedSet getTaskActivityDates(String taskId) throws ParseException {
+    File dir = new File(storeDir, taskId);
+    TreeSet result = new TreeSet();
+    if (dir.exists()) {
+      final SimpleDateFormat dirNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT);
+      File[] dirArr = dir.listFiles();
+      if (dirArr != null) {
+        for (int j = 0; j < dirArr.length; j++) {
+          Date d = dirNameFormat.parse(dirArr[j].getName());
+          File[] files = dirArr[j].listFiles();
+          if (files != null) {
+            for (int i = 0; i < files.length; i++)
+              if (isFileContainsMessages(files[i])) {
+                result.add(d);
+                break;
+              }
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  private List getFiles(String taskId, Date from, Date till) throws ParseException {
 
     List files = new LinkedList();
 
@@ -290,6 +362,128 @@ public class MessageDataSource extends AbstractDataSource {
       }
     }
     return files;
+  }
+
+  private static class Line {
+    String line;
+    long id;
+
+    private Line(String line, long id) {
+      this.line = line;
+      this.id = id;
+    }
+  }
+
+  private static class LineParser extends Thread {
+
+    private final Lines lines = new Lines();
+    private final MessageVisitor visitor;
+    private final MessageFilter filter;
+    private final String filterAbonentStr;
+    private final String fromDateString;
+    private final String tillDateString;
+
+    private LineParser(MessageVisitor visitor, MessageFilter filter, String name, String filterAbonentStr, String fromDateString, String tillDateStr) {
+      super(name);
+      this.filterAbonentStr = filterAbonentStr;
+      this.fromDateString = fromDateString;
+      this.tillDateString = tillDateStr;
+      this.visitor = visitor;
+      this.filter = filter;
+    }
+
+    public boolean parseLines(Line[] lines) {
+      return this.lines.set(lines);
+    }
+
+    public void shutdown() {
+      this.lines.shutdown();
+    }
+
+    public void run() {
+      try {
+        final SimpleDateFormat msgDateFormat = new SimpleDateFormat(MSG_DATE_FORMAT);
+
+        while (true) {
+
+          Line[] lineArray = lines.get();
+          if (lineArray == null)
+            break;
+
+          for (int l = 0; l < lineArray.length; l++) {
+
+            Line lineObj = lineArray[l];
+            if (lineObj == null)
+              break;
+
+            String line = lineObj.line;
+
+            int state = line.charAt(0) - '0';
+            int i = 1;
+
+            int k = i + 1;
+            i = line.indexOf(',', k);
+
+            String dateStr = line.substring(k, i);
+            if ((fromDateString != null && fromDateString.compareTo(dateStr) > 0) || (tillDateString != null && tillDateString.compareTo(dateStr) < 0))
+              continue;
+
+            k = i + 1;
+            i = line.indexOf(',', k);
+            String msisdn = line.substring(k, i);
+            if (filterAbonentStr != null && !filterAbonentStr.equals(msisdn))
+              continue;
+
+            k = i + 1;
+            i = line.indexOf(',', k);
+            String region = line.substring(k, i);
+
+            String message = prepareMessage(line.substring(i + 2, line.length() - 1));
+
+            MessageDataItem item = new MessageDataItem(lineObj.id, filter.getTaskId(), state, msgDateFormat.parse(dateStr), msisdn, region, message);
+            if (!visitor.visit(item))
+              break;
+          }
+
+          lines.clear();
+        }
+
+      } catch (Exception e) {
+        log.error(e,e);
+      } finally {
+        lines.clear();
+      }
+    }
+  }
+
+  private static class Lines {
+
+    private Line[] value;
+    private boolean shutdowned = false;
+
+    public synchronized boolean set(Line[] list) {
+      if (this.value != null)
+        return false;
+      this.value = list;
+      notify();
+      return true;
+    }
+
+    public synchronized Line[] get() throws InterruptedException {
+      if (value == null && !shutdowned)
+        wait();
+      return value;
+    }
+
+    public synchronized void clear() {
+      value = null;
+    }
+
+    public synchronized void shutdown() {
+      shutdowned = true;
+      notify();
+    }
+
   }
 
 }

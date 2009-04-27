@@ -122,7 +122,6 @@ public class TasksTableHelper extends PagedStaticTableHelper {
         filter.setEndDate(user.getLocalTime(filter.getEndDate()));
     }
 
-    System.out.println("Sort order = " + sortOrder);
     QueryResultSet rs = tds.query(new TaskQuery(filter, size, sortOrder, start));
 
     // Convert back from local to user time

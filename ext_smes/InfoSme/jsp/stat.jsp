@@ -6,6 +6,8 @@
                  java.text.SimpleDateFormat, ru.novosoft.smsc.infosme.beans.InfoSmeBean,
                  ru.novosoft.smsc.jsp.PageBean"%>
 <%@ page import="ru.novosoft.smsc.infosme.beans.TasksStatistics" %>
+<%@ page import="ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper" %>
+<%@ page import="ru.novosoft.smsc.infosme.backend.tables.stat.TaskStatTableHelper" %>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.TasksStatistics" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -14,7 +16,7 @@
     int rowN = 0;
 	int beanResult = bean.process(request);
   if (beanResult == TasksStatistics.RESULT_EXPORT) {
-    response.sendRedirect(CPATH+"/esme_InfoSme/csv_download.jsp?taskId=" + StringEncoderDecoder.encode(bean.getTaskId()) + "&fromDate=" + StringEncoderDecoder.encode(bean.getFromDate()) + "&tillDate=" + StringEncoderDecoder.encode(bean.getTillDate()));
+    response.sendRedirect(CPATH+"/esme_InfoSme/csv_download.jsp?taskId=" + StringEncoderDecoder.encode(bean.getTaskId()) + "&fromDate=" + StringEncoderDecoder.encode(bean.getFromDate()) + "&tillDate=" + StringEncoderDecoder.encode(bean.getTillDate()) + "&view=" + bean.getView());
     return;
   }
 %>
@@ -24,7 +26,7 @@
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <div class=content>
 <div class=page_subtitle><%= getLocString("infosme.subtitle.stat_params")%></div>
-<input type=hidden name=initialized value=true>
+<input type=hidden name=initialized value="<%=bean.isInitialized()%>">
 <table class=properties_list>
 <col width="5%">
 <col width="45%">
@@ -32,7 +34,7 @@
 <col width="45%">
 <tr class=row<%=rowN++&1%>>
   <th style="text-align:left"><%= getLocString("infosme.label.task")%></th>
-  <td colspan=3>
+  <td colspan=1>
   <select name=taskId>
     <option value="<%=TasksStatistics.ALL_TASKS_MARKER%>" <%=bean.getTaskId().length()==0 ? "selected" : ""%>><%=TasksStatistics.ALL_TASKS_MARKER%></option>
   <%for (Iterator i = bean.getAllTasks(request).iterator(); i.hasNext();) {
@@ -43,6 +45,13 @@
       %></option>
   <%}%>
   </select></td>
+  <th style="text-align:left">View</th>
+  <td colspan=2>
+    <select name="view">
+      <option value="<%=TasksStatistics.VIEW_DATES%>" <%=bean.getView() == TasksStatistics.VIEW_DATES ? "selected" : ""%>>Dates</option>
+      <option value="<%=TasksStatistics.VIEW_TASKS%>" <%=bean.getView() == TasksStatistics.VIEW_TASKS ? "selected" : ""%>>Tasks</option>
+    </select>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th style="text-align:left"><%= getLocString("infosme.label.from_date")%></th>
@@ -57,6 +66,7 @@ page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "infosme.hin
 page_menu_space(out);
 page_menu_end(out);
 
+  if (bean.getView() == TasksStatistics.VIEW_DATES) {
   Statistics statistics = bean.getStatistics();
   if (statistics != null)
   {
@@ -116,6 +126,13 @@ page_menu_end(out);
         }
       }
     %>
+      <tr class=row1>
+       <td><%= getLocString("infosme.label.total")%></td>
+       <td><%= statistics.getCounters().generated%></td>
+       <td><%= statistics.getCounters().delivered%></td>
+       <td><%= statistics.getCounters().retried%></td>
+       <td><%= statistics.getCounters().failed%></td>
+      </tr>
     </table>
 <%--
 final String exportFile = "temp/"+bean.getExportFilePath();
@@ -123,11 +140,41 @@ if (exportFile != null) {
 %><br/><a class=font href="<%= exportFile%>">Download as CSV file</a><%
 }--%>
     </div>
-<%
-page_menu_begin(out);
-page_menu_space(out);
-page_menu_button(session, out, "mbExport",  "common.buttons.export",  "infosme.hint.download_statistics");
-page_menu_end(out);%>
 <%}%>
+<% } else { %>
+<%final TaskStatTableHelper tableHelper = bean.getTasksStatsTable();%>
+<%@ include file="/WEB-INF/inc/paged_static_table.jsp"%>
+<div class=content>
+<div class=page_subtitle>Total:</div>
+<table class=list>
+  <tr class=row1>
+    <td width="1" nowrap>Generated</td>
+    <td width="1" nowrap><%=tableHelper.getTotalGenerated()%></td>
+    <td width="100%">&nbsp;</td>
+  </tr>
+  <tr class=row0>
+    <td width="1" nowrap>Delivered</td>
+    <td width="1" nowrap><%=tableHelper.getTotalDelivered()%></td>
+    <td width="100%">&nbsp;</td>
+  </tr>
+  <tr class=row1>
+    <td width="1" nowrap>Retried</td>
+    <td width="1" nowrap><%=tableHelper.getTotalRetried()%></td>
+    <td width="100%">&nbsp;</td>
+  </tr>
+  <tr class=row0>
+    <td width="1" nowrap>Failed</td>
+    <td width="1" nowrap><%=tableHelper.getTotalFailed()%></td>
+    <td width="100%">&nbsp;</td>
+  </tr>
+</table>
+  </div>
+<% } %>
+<% if (bean.isInitialized()) {
+  page_menu_begin(out);
+  page_menu_space(out);
+  page_menu_button(session, out, "mbExport",  "common.buttons.export",  "infosme.hint.download_statistics");
+  page_menu_end(out);
+} %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

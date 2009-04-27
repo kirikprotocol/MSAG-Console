@@ -1,12 +1,10 @@
 package ru.novosoft.smsc.infosme.backend.tables.stat;
 
-import ru.novosoft.smsc.infosme.backend.tables.stat.StatQuery;
-import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
-import ru.novosoft.smsc.admin.AdminException;
 
 import java.io.*;
 import java.text.ParseException;
@@ -30,9 +28,7 @@ public class StatisticsDataSource extends AbstractDataSource {
     this.storeDir = storeDir;
   }
 
-  public QueryResultSet query(Query query_to_run) {
-    init(query_to_run);
-    final StatQuery filter = (StatQuery)query_to_run.getFilter();
+  public void visit(StatVisitor visitor, final StatQuery filter) {
 
     Date fromDate = filter.getFromDate();
     Date endDate = filter.getTillDate();
@@ -40,7 +36,7 @@ public class StatisticsDataSource extends AbstractDataSource {
     try {
       List files = getFiles(fromDate, endDate);
       if (files.isEmpty())
-        return new EmptyResultSet();
+        return;
 
       final SimpleDateFormat fileDateFormat = new SimpleDateFormat(DIR_DATE_FORMAT + '/' + FILE_DATE_FORMAT);
 
@@ -60,22 +56,24 @@ public class StatisticsDataSource extends AbstractDataSource {
             StringTokenizer st = new StringTokenizer(line, ",");
             String taskId = st.nextToken();
             String taskName = st.nextToken();
+            taskName = taskName.substring(1, taskName.length() - 1);
             String minute = st.nextToken();
             String generated = st.nextToken();
             String delivered = st.nextToken();
             String retried = st.nextToken();
             String failed = st.nextToken();
 
-            final DataItem item = new StatisticDataItem(fileDate, taskId, taskName, Integer.valueOf(generated),
+            final StatisticDataItem item = new StatisticDataItem(fileDate, taskId, taskName, Integer.valueOf(generated),
                 Integer.valueOf(delivered), Integer.valueOf(retried), Integer.valueOf(failed));
 
-            add(item);
+            if (filter == null || filter.isItemAllowed(item)) {
+              if (!visitor.visit(item))
+                return;
+            }
           }
 
         } catch (EOFException e) {
         } catch (IOException e) {
-          e.printStackTrace();
-        } catch (AdminException e) {
           e.printStackTrace();
         } finally {
           if (is != null)
@@ -86,13 +84,90 @@ public class StatisticsDataSource extends AbstractDataSource {
         }
       }
 
-      return getResults();
-
     } catch (ParseException e) {
       e.printStackTrace();
     }
+  }
 
-    return new EmptyResultSet();
+  public QueryResultSet query(Query query_to_run) {
+    init(query_to_run);
+    final boolean[] err = new boolean[]{true};
+    visit(new StatVisitor() {
+      public boolean visit(StatisticDataItem item) {
+        try {
+          add(item);
+          err[0] = false;
+        } catch (AdminException e) {
+          err[0] = true;
+          return false;
+        }
+        return true;
+      }
+    }, (StatQuery)query_to_run.getFilter());
+
+    return (err[0]) ? new EmptyResultSet() : getResults();
+
+//    final StatQuery filter = (StatQuery)query_to_run.getFilter();
+//
+//    Date fromDate = filter.getFromDate();
+//    Date endDate = filter.getTillDate();
+//
+//    try {
+//      List files = getFiles(fromDate, endDate);
+//      if (files.isEmpty())
+//        return new EmptyResultSet();
+//
+//      final SimpleDateFormat fileDateFormat = new SimpleDateFormat(DIR_DATE_FORMAT + '/' + FILE_DATE_FORMAT);
+//
+//      for (Iterator iter = files.iterator(); iter.hasNext();) {
+//        File f = (File)iter.next();
+//
+//        Date fileDate = fileDateFormat.parse(f.getParentFile().getName() + '/' + f.getName());
+//
+//        BufferedReader is = null;
+//
+//        try {
+//          is = new BufferedReader(new FileReader(f));
+//
+//          String line = is.readLine(); // Skip first line
+//
+//          while((line = is.readLine()) != null) {
+//            StringTokenizer st = new StringTokenizer(line, ",");
+//            String taskId = st.nextToken();
+//            String taskName = st.nextToken();
+//            String minute = st.nextToken();
+//            String generated = st.nextToken();
+//            String delivered = st.nextToken();
+//            String retried = st.nextToken();
+//            String failed = st.nextToken();
+//
+//            final DataItem item = new StatisticDataItem(fileDate, taskId, taskName, Integer.valueOf(generated),
+//                Integer.valueOf(delivered), Integer.valueOf(retried), Integer.valueOf(failed));
+//
+//            add(item);
+//          }
+//
+//        } catch (EOFException e) {
+//        } catch (IOException e) {
+//          e.printStackTrace();
+//        } catch (AdminException e) {
+//          e.printStackTrace();
+//        } finally {
+//          if (is != null)
+//            try {
+//              is.close();
+//            } catch (IOException e) {
+//            }
+//        }
+//      }
+//
+//      return getResults();
+//
+//    } catch (ParseException e) {
+//      e.printStackTrace();
+//    }
+//
+//    return new EmptyResultSet();
   }
 
   private List getFiles (Date from, Date till) throws ParseException {

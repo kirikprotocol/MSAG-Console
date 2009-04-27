@@ -43,6 +43,7 @@ public class InfoSmeTransport extends Service
   private static final String method_changeSchedule_ID = "changeSchedule";
 
   private static final String method_flushStatistics_ID = "flushStatistics";
+  private static final String method_sendSms_ID = "sendSms";
 
   private static final String SELECT_TASK_MESSAGES_METHOD_ID = "selectTaskMessages";
   private static final String CHANGE_DELIVERY_MESSAGE_INFO_METHOD_ID = "changeDeliveryMessageInfo";
@@ -442,6 +443,16 @@ public class InfoSmeTransport extends Service
     args.put("failed", new Integer(failed));
 
     callMethod(ADD_STATISTIC_RECORD_METHOD_ID, Type.Types[Type.StringType], args);
+  }
+
+  public long sendSms(String source, String destination, String message, boolean flash) throws AdminException {
+    final Map args = new HashMap(6);
+    args.put("source", source);
+    args.put("destination", destination);
+    args.put("message", message);
+    args.put("flash", Boolean.valueOf(flash));
+
+    return ((Long)callMethod(method_sendSms_ID, Type.Types[Type.IntType], args)).intValue();
   }
 
   private static String messageToString(Message m) {

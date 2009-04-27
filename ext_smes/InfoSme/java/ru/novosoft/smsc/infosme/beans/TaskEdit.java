@@ -10,6 +10,7 @@ import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyQuery;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserDataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserQuery;
+import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.Transliterator;
 
@@ -28,8 +29,15 @@ public class TaskEdit extends InfoSmeBean
   private final static SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
   private static final SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
 
+  public static final int RESULT_MESSAGES = InfoSmeBean.PRIVATE_RESULT + 1;
+  public static final int RESULT_STATISTICS = InfoSmeBean.PRIVATE_RESULT + 2;
+  protected static final int PRIVATE_RESULT = InfoSmeBean.PRIVATE_RESULT + 3;
+
+
   private String mbDone = null;
   private String mbCancel = null;
+  private String mbMessages = null;
+  private String mbStatistics = null;
 
   private boolean transliterate = false;
   private boolean initialized = false;
@@ -121,6 +129,8 @@ public class TaskEdit extends InfoSmeBean
       return error(e.getMessage(),e);
     }
     else if (mbCancel != null) result = RESULT_DONE;
+    else if (mbMessages != null) result = RESULT_MESSAGES;
+    else if (mbStatistics != null) result = RESULT_STATISTICS;
 
     return result;
   }
@@ -632,5 +642,21 @@ public class TaskEdit extends InfoSmeBean
 
   public void setOwner(String owner) {
     this.owner = owner;
+  }
+
+  public String getMbMessages() {
+    return mbMessages;
+  }
+
+  public void setMbMessages(String mbMessages) {
+    this.mbMessages = mbMessages;
+  }
+
+  public String getMbStatistics() {
+    return mbStatistics;
+  }
+
+  public void setMbStatistics(String mbStatistics) {
+    this.mbStatistics = mbStatistics;
   }
 }

@@ -83,7 +83,7 @@ public class SmsOperativeSource extends SmsSource
     System.out.println("start reading File in: " + new Date());
     long tm = System.currentTimeMillis();
     try {
-      input = new FileInputStream(smsstorePath);
+      input = new FileInputStream(smsstorePath);  //todo Buffered OutputStream
 
       Message.readString(input, 9);
       long version = Message.readUInt32(input);
@@ -98,22 +98,23 @@ public class SmsOperativeSource extends SmsSource
           Functions.readBuffer(input, message, msgSize1);
           int msgSize2 = (int) Message.readUInt32(input);
           if (msgSize1 != msgSize2) throw new IOException("Protocol error sz1=" + msgSize1 + " sz2=" + msgSize2);
-          InputStream bis = new ByteArrayInputStream(message, 0, msgSize1);
+          InputStream bis = new ByteArrayInputStream(message, 0, msgSize1); // todo do not use ArrayInputStream
           long msgId=Message.readInt64(bis);
-          Long lmsgId = new Long(msgId);
-          totalCount++;
-          if( resp.receive(bis, query, message, msgId, false,haveArc) ) {
+          Long lmsgId = new Long(msgId);   // todo Create lmsgId in if statement near  -
+          totalCount++;                                                         //      |
+          if( resp.receive(bis, query, message, msgId, false, haveArc) ) {       //     |
+                                                                                //    <-
             if( resp.getSms().getStatusInt() == SmsRow.MSG_STATE_ENROUTE ) {
               msgs.put(lmsgId, resp.getSms());
             } else {
-              msgs.remove(lmsgId);
+              msgs.remove(lmsgId);   // todo do not read all message if status != ENROUTE
             }
           }
         }
       } catch (EOFException e) {
       }
       logger.info("Operative store read "+totalCount+" records. "+msgs.size()+" messages matches filter");
-      if( query.isFilterLastResult || query.isFilterStatus ) {
+      if( query.isFilterLastResult || query.isFilterStatus ) {   // todo move this into previous circle ???
         Map.Entry entry = null;
         SmsRow row = null;
         for( Iterator it = msgs.entrySet().iterator(); it.hasNext(); ) {
@@ -140,7 +141,7 @@ public class SmsOperativeSource extends SmsSource
           logger.warn("can't close file");
         }
       System.out.println("end reading File in: " + new Date()+" spent: "+(System.currentTimeMillis()-tm)/1000);
-      set.addAll(msgs.values());
+      set.addAll(msgs.values());  // todo DO NOT COPY. USE set from the beginning!!!
     }
     set.setSmesRows(msgs.size());
     return set;

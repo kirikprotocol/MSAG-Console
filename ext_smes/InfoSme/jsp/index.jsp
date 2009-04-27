@@ -142,7 +142,8 @@ checkStartStop();
 
 </script>
 <div class=content>
-<%{final PagedStaticTableHelper tableHelper = bean.getTableHelper();%>
+<%{final PagedStaticTableHelper tableHelper = bean.getTableHelper();
+  tableHelper.fillTable(); %>
 <%@ include file="/WEB-INF/inc/paged_static_table.jsp"%>
 <%}%>
 </div><%

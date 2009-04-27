@@ -2,8 +2,12 @@ package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.config.ConfigChanges;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskFilter;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskVisitor;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TasksTableHelper;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
@@ -31,6 +35,10 @@ public class Tasks extends TasksListBean
   private String mbClear = null;
   private String mbApply = null;
   private String mbReset = null;
+  private String mbEnable = null;
+  private String mbDisable = null;
+  private String mbEnableAll = null;
+  private String mbDisableAll = null;
 
   private String edit;
 
@@ -56,20 +64,23 @@ public class Tasks extends TasksListBean
     if (!isSmeRunning())
       message("infosme.prompt.no_task_edit");
 
-    if (mbAdd != null)
-      return Tasks.RESULT_ADD;
-    if (mbDelete != null)
-      return delete();
-    if (mbApply != null)
-      return apply(request.getRemoteUser(), owner);
-    if (mbReset != null)
-      return reset(request.getRemoteUser(), owner);
+    if (mbAdd != null) {mbAdd = null; return Tasks.RESULT_ADD;}
+    if (mbDelete != null) {mbDelete = null; return delete();}
+    if (mbApply != null) {mbApply = null; return apply(request.getRemoteUser(), owner);}
+    if (mbReset != null) {mbReset = null; return reset(request.getRemoteUser(), owner);}
+    if (mbEnable != null) {mbEnable = null; result = setSelectedTasksEnabled(true);}
+    if (mbDisable != null) {mbDisable = null; result = setSelectedTasksEnabled(false);}
+    if (mbEnableAll != null) {mbEnableAll = null; result = setAllTasksEnabled(request.getRemoteUser(), isUserAdmin(request), true);}
+    if (mbDisableAll != null) {mbDisableAll = null;  result = setAllTasksEnabled(request.getRemoteUser(), isUserAdmin(request), false);}
 
     if (getSelectedTaskId() != null) {
       edit = getSelectedTaskId();
       return Tasks.RESULT_EDIT;
     }
 
+    if (!isUserAdmin(request) && getInfoSmeConfig().isTasksChanged(owner))
+      message("Tasks configuration has been changed.");
+    
     return result;
   }
 
@@ -86,7 +97,7 @@ public class Tasks extends TasksListBean
       for (Iterator iter = changes.getTasksChanges().getModified().iterator(); iter.hasNext();)
         getInfoSme().changeTask((String)iter.next());
 
-      return RESULT_DONE;
+      return RESULT_OK;
     } catch (AdminException e) {
       return error(e.getMessage(), e);
     }
@@ -106,6 +117,28 @@ public class Tasks extends TasksListBean
     List checked = getChecked();
     for (int i = 0; i < getChecked().size(); i++)
       getInfoSmeConfig().removeTask((String)checked.get(i));
+    return RESULT_DONE;
+  }
+
+  private int setSelectedTasksEnabled(boolean enabled) {
+    List checked = getChecked();
+    for (int i = 0; i < checked.size(); i++) {
+      Task t = getInfoSmeConfig().getTask((String)checked.get(i));
+      t.setEnabled(enabled);
+    }
+    return RESULT_DONE;
+  }
+
+  private int setAllTasksEnabled(final String user, final boolean admin, final boolean enabled) {
+    visitAll(new TaskVisitor() {
+      public boolean visit(TaskDataItem t) {
+        if (admin || t.getOwner() == null || t.getOwner().equals(user)) {
+          Task task = getInfoSmeConfig().getTask(t.getId());
+          task.setEnabled(enabled);
+        }
+        return true;
+      }
+    });
     return RESULT_DONE;
   }
 
@@ -215,4 +248,36 @@ public class Tasks extends TasksListBean
   public void setMbReset(String mbReset) {
     this.mbReset = mbReset;
   }
+
+  public String getMbEnable() {
+    return mbEnable;
+  }
+
+  public void setMbEnable(String mbEnable) {
+    this.mbEnable = mbEnable;
+  }
+
+  public String getMbDisable() {
+    return mbDisable;
+  }
+
+  public void setMbDisable(String mbDisable) {
+    this.mbDisable = mbDisable;
+  }
+
+  public String getMbEnableAll() {
+    return mbEnableAll;
+  }
+
+  public void setMbEnableAll(String mbEnableAll) {
+    this.mbEnableAll = mbEnableAll;
+  }
+
+  public String getMbDisableAll() {
+    return mbDisableAll;
+  }
+
+  public void setMbDisableAll(String mbDisableAll) {
+    this.mbDisableAll = mbDisableAll;
+  }    
 }
