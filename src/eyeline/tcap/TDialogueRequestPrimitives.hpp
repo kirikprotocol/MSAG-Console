@@ -5,10 +5,14 @@
 #ident "@(#)$Id$"
 #define __EYELINE_TCAP_PROVD_TDLGREQUESTPRIMITIVES_HPP__
 
+#include "eyeline/asn1/EncodedOID.hpp"
 #include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
+#include "eyeline/tcap/proto/TCAssociateDiagnostic.hpp"
 
 namespace eyeline {
 namespace tcap {
+
+using eyeline::asn1::EncodedOID;
 
 class TDialogueRequestPrimitive : public TDialogueHandlingPrimitive {
 protected:
@@ -20,9 +24,6 @@ public:
   { }
   virtual ~TDialogueRequestPrimitive()
   { }
-
-  virtual bool transform(SUAUnitdataReq & use_udt) const = 0;
-  //TODO: request specific stuff
 
   //TODO: request specific stuff
 };
@@ -41,6 +42,13 @@ public:
   TC_Cont_Req()
     : TDialogueRequestPrimitive(TCAPMessage::t_continue)
   { }
+
+  //These methods only for 1st response to T_Begin_Ind
+  void acceptDlgByUser(void);
+  void rejectDlgByUser(proto::AssociateSourceDiagnostic::DlgSrvUser_e use_cause =
+                        proto::AssociateSourceDiagnostic::dsu_null);
+  void setAppCtx(const EncodedOID & use_acid);
+
   //TODO: setters
 };
 //
@@ -49,6 +57,12 @@ public:
   TC_End_Req()
     : TDialogueRequestPrimitive(TCAPMessage::t_end)
   { }
+
+  //These methods only for 1st response to T_Begin_Ind
+  void acceptDlgByUser(void);
+  void rejectDlgByUser(proto::AssociateSourceDiagnostic::DlgSrvUser_e use_cause =
+                        proto::AssociateSourceDiagnostic::dsu_null);
+  void setAppCtx(const EncodedOID & use_acid);
 
   end_transaction_facility_t getTermination() const;
   //TODO: setters
