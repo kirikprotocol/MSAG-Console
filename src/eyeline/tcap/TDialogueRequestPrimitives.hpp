@@ -25,6 +25,16 @@ public:
   virtual ~TDialogueRequestPrimitive()
   { }
 
+  void setAppCtx(const EncodedOID & use_acid)
+  { /*TODO: _msgTC.setAppCtx() */ }
+
+  //These methods only for 1st response to T_Begin_Ind
+  void acceptDlgByUser(void)
+  { /*TODO: */ }
+  void rejectDlgByUser(proto::AssociateSourceDiagnostic::DlgSrvUser_e use_cause =
+                        proto::AssociateSourceDiagnostic::dsu_null)
+  { /*TODO: */  }
+
   //TODO: request specific stuff
 };
 
@@ -42,13 +52,6 @@ public:
   TC_Cont_Req()
     : TDialogueRequestPrimitive(TCAPMessage::t_continue)
   { }
-
-  //These methods only for 1st response to T_Begin_Ind
-  void acceptDlgByUser(void);
-  void rejectDlgByUser(proto::AssociateSourceDiagnostic::DlgSrvUser_e use_cause =
-                        proto::AssociateSourceDiagnostic::dsu_null);
-  void setAppCtx(const EncodedOID & use_acid);
-
   //TODO: setters
 };
 //
@@ -58,15 +61,10 @@ public:
     : TDialogueRequestPrimitive(TCAPMessage::t_end)
   { }
 
-  //These methods only for 1st response to T_Begin_Ind
-  void acceptDlgByUser(void);
-  void rejectDlgByUser(proto::AssociateSourceDiagnostic::DlgSrvUser_e use_cause =
-                        proto::AssociateSourceDiagnostic::dsu_null);
-  void setAppCtx(const EncodedOID & use_acid);
-
   end_transaction_facility_t getTermination() const;
   //TODO: setters
 };
+
 //
 class TC_UAbort_Req : public TDialogueRequestPrimitive {
 public:
@@ -80,5 +78,5 @@ public:
 } //tcap
 } //eyeline
 
-#endif
+#endif /* __EYELINE_TCAP_PROVD_TDLGREQUESTPRIMITIVES_HPP__ */
 

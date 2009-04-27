@@ -16,7 +16,6 @@ namespace provd {
 using eyeline::sua::libsua::SuaApi;
 using eyeline::tcap::proto::AssociateSourceDiagnostic;
 
-
 //
 class TC_PAbort_Req : public TDialogueRequestPrimitive {
 public:
@@ -28,18 +27,23 @@ public:
 };
 
 
-//Basic abstract class for all requests serializer.
-class TDlgRequestSerializerAC {
+template <class _TArg /* pubic: TDialogueRequestPrimitive */>
+class TDlgRequestSerializerT {
 protected:
-  // -----------------------------------------------
-  // -- TDlgRequestSerializerAC interface methods
-  // -----------------------------------------------
-  virtual bool convert2UDT(SUAUnitdataReq & use_udt) const = 0;
+  const _TArg & _tReq;
+
+  bool convertTReq2UDT(const _TArg & use_treq,
+                      SUAUnitdataReq & use_udt) const
+  {
+    //TODO: 
+    return false;
+  }
 
 public:
-  TDlgRequestSerializerAC()
+  TDlgRequestSerializerT(const _TArg & use_treq)
+    : _tReq(use_treq)
   { }
-  virtual ~TDlgRequestSerializerAC()
+  ~TDlgRequestSerializerT()
   { }
 
   //TODO: 2nd parameter: connect_num, etc
@@ -47,7 +51,7 @@ public:
   {
     SUAUnitdataReq  udt;
     SuaApi::ErrorCode_e rc = SuaApi::OK;
-    if (convert2UDT(udt)) {
+    if (convertTReq2UDT(_tReq, udt)) {
       rc = sua_iface->unitdata_req(udt.userData(), udt.userDataLen(),
                                    udt.calledAddr(), udt.calledAddrLen(),
                                    udt.callingAddr(), udt.callingAddrLen(),
@@ -55,28 +59,15 @@ public:
     }
     return rc ? false : true;
   }
-};
 
-template <class _TArg /* pubic: TDialogueRequestPrimitive */>
-class TDlgRequestSerializerT : public TDlgRequestSerializerAC {
-protected:
-  const _TArg & _tReq;
+  //These methods only for 1st response to T_Begin_Ind
+  void rejectDlgByProvider(AssociateSourceDiagnostic::DlgSrvProvider_e use_cause =
+                        AssociateSourceDiagnostic::dsp_null)
+  { /*TODO: */  }
 
-public:
-  TDlgRequestSerializerT(const _TArg & use_treq)
-    : _tReq(use_treq)
-  { }
-  virtual ~TDlgRequestSerializerT()
-  { }
 };
 
 class TBeginReqSerializer : public TDlgRequestSerializerT<TC_Begin_Req> {
-protected:
-  // -----------------------------------------------
-  // -- TDlgRequestSerializerAC interface methods
-  // -----------------------------------------------
-  bool convert2UDT(SUAUnitdataReq & use_udt) const;
-
 public:
   TBeginReqSerializer(const TC_Begin_Req & use_treq)
     : TDlgRequestSerializerT<TC_Begin_Req>(use_treq)
@@ -84,50 +75,20 @@ public:
 };
 //
 class TContReqSerializer : public TDlgRequestSerializerT<TC_Cont_Req> {
-protected:
-  // -----------------------------------------------
-  // -- TDlgRequestSerializerAC interface methods
-  // -----------------------------------------------
-  bool convert2UDT(SUAUnitdataReq & use_udt) const;
-
 public:
   TContReqSerializer(const TC_Cont_Req & use_treq)
     : TDlgRequestSerializerT<TC_Cont_Req>(use_treq)
   { }
-
-  //These methods only for 1st response to T_Begin_Ind
-  void acceptDlgByProvider(void);
-  void rejectDlgByProvider(AssociateSourceDiagnostic::DlgSrvProvider_e use_cause =
-                        AssociateSourceDiagnostic::dsp_null);
-  void setAppCtx(const EncodedOID & use_acid);
 };
 //
 class TEndReqSerializer : public TDlgRequestSerializerT<TC_End_Req> {
-protected:
-  // -----------------------------------------------
-  // -- TDlgRequestSerializerAC interface methods
-  // -----------------------------------------------
-  bool convert2UDT(SUAUnitdataReq & use_udt) const;
-
 public:
   TEndReqSerializer(const TC_End_Req & use_treq)
     : TDlgRequestSerializerT<TC_End_Req>(use_treq)
   { }
-
-  //These methods only for 1st response to T_Begin_Ind
-  void acceptDlgByProvider(void);
-  void rejectDlgByProvider(AssociateSourceDiagnostic::DlgSrvProvider_e use_cause =
-                        AssociateSourceDiagnostic::dsp_null);
-  void setAppCtx(const EncodedOID & use_acid);
 };
 //
 class TPAbortReqSerializer : public TDlgRequestSerializerT<TC_PAbort_Req> {
-protected:
-  // -----------------------------------------------
-  // -- TDlgRequestSerializerAC interface methods
-  // -----------------------------------------------
-  bool convert2UDT(SUAUnitdataReq & use_udt) const;
-
 public:
   TPAbortReqSerializer(const TC_PAbort_Req & use_treq)
     : TDlgRequestSerializerT<TC_PAbort_Req>(use_treq)
@@ -135,12 +96,6 @@ public:
 };
 //
 class TUAbortReqSerializer : public TDlgRequestSerializerT<TC_UAbort_Req> {
-protected:
-  // -----------------------------------------------
-  // -- TDlgRequestSerializerAC interface methods
-  // -----------------------------------------------
-  bool convert2UDT(SUAUnitdataReq & use_udt) const;
-
 public:
   TUAbortReqSerializer(const TC_UAbort_Req & use_treq)
     : TDlgRequestSerializerT<TC_UAbort_Req>(use_treq)
