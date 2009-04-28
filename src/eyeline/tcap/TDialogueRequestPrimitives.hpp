@@ -61,6 +61,8 @@ public:
     : TDialogueRequestPrimitive(TCAPMessage::t_end)
   { }
 
+  typedef enum { PREARRANGED_END, BASIC_END } end_transaction_facility_t;
+
   end_transaction_facility_t getTermination() const;
   //TODO: setters
 };
