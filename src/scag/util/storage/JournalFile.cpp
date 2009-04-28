@@ -29,10 +29,14 @@ namespace scag2 {
 namespace util {
 namespace storage {
 
-void JournalFile::open()
+void JournalFile::open( bool readonly )
 {
     const std::string fn = store_.journalFileName();
-    journalFile_.RWOpen( fn.c_str() );
+    if ( readonly ) {
+        journalFile_.ROpen( fn.c_str() );
+    } else {
+        journalFile_.RWOpen( fn.c_str() );
+    }
     journalFile_.SetUnbuffered();
 
     // reading the header

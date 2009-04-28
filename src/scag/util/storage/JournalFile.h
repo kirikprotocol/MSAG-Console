@@ -110,7 +110,7 @@ public:
     }
 
     /// opens journal file
-    void open(); // throw
+    void open( bool readonly = false ); // throw
 
     /// create a new journal file
     void create(); // throw
