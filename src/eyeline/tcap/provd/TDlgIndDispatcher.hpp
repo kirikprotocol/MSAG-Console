@@ -200,7 +200,7 @@ public:
 
   IKind_e indKind(void) const { return _kind; }
 
-  MessageInfo & suaMsgBuf(void) { return _msgSUA; }
+  MessageInfo* suaMsgBuf(void) { return &_msgSUA; }
 
   //Parses SUA mesage buffer, decodes TCAP message, composes appropriate TCAP
   //Indication prinitive and creates its dispatcher (by calling processSuaInd())
