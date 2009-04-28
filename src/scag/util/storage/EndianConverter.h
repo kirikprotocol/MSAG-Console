@@ -112,4 +112,12 @@ struct EndianConverter
 }
 }
 
+namespace scag2 {
+namespace util {
+namespace storage {
+using namespace scag::util::storage;
+}
+}
+}
+
 #endif /* !_SCAG_UTIL_STORAGE_ENDIANCONVERTER_H */

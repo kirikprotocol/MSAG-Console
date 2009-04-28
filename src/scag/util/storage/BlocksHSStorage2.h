@@ -1,11 +1,6 @@
 #ifndef _SCAG_UTIL_STORAGE_BLOCKSHSSTORAGE2_H
 #define _SCAG_UTIL_STORAGE_BLOCKSHSSTORAGE2_H
 
-#include "util/int.h"
-#include "Serializer.h"
-#include "DataFileManager.h"
-#include "HSPacker.h"
-#include "scag/util/Drndm.h"
 #include <cstring>
 #include <vector>
 #include <deque>
@@ -14,11 +9,17 @@
 #include <sstream>
 #include <iterator>
 
+#include "util/int.h"
+#include "Serializer.h"
+#include "DataFileManager.h"
+#include "HSPacker.h"
+#include "JournalFile.h"
+
 namespace scag2 {
 namespace util {
 namespace storage {
 
-class BlocksHSStorage2
+class BlocksHSStorage2 : public JournalStorage
 {
 public:
     typedef HSPacker::buffer_type  buffer_type;
@@ -29,7 +30,6 @@ private:
     class CreationTask;
     struct StorageState;
     struct Transaction;
-    class TransApplier;
     typedef std::deque< unsigned > FreeChainType;
     class FreeChainRescuer;
 
@@ -160,8 +160,6 @@ public:
     inline size_t headerSize() const { return idxSize() + navSize(); }
 
 private:
-    // version + blockSize + fileSize
-    inline size_t journalHeaderSize() const { return 12; }
     inline size_t idxSize() const { return packer_.idxSize(); }
     inline size_t navSize() const { return packer_.navSize(); }
     inline index_type pos2idx( offset_type o ) const { return packer_.pos2idx(o); }
@@ -204,14 +202,6 @@ private:
     int doCreate();
     int doRecover( IndexRescuer* indexRescuer );
 
-    size_t minTransactionSize() const;
-
-    Transaction* readJournal( buffer_type& buffer,
-                              buffer_type::iterator& iptr );
-
-    bool writeJournal( const buffer_type& oldbuf,
-                       const buffer_type& newbuf,
-                       const StorageState& oldhead );
 
     /// method invokes pushFree or popFree, depending on what is bigger hasBlocks or needBlocks.
     /// NOTE: this method should not fail as it just return blocks to free chain
@@ -232,10 +222,10 @@ private:
         }
     }
 
-
     /// writing blocks to disk.
     /// posAndSize may be supplied to avoid redundant buffer parsing.
-    bool writeBlocks( const buffer_type& buffer,
+    bool writeBlocks( const void* buffer,
+                      size_t bufsize,
                       const std::vector< offset_type >* posAndSize = 0,
                       size_t initialPos = 0 );
 
@@ -249,21 +239,6 @@ private:
     /// NOTE: the last free block in the chain should have nextBlock() == notUsed().
     bool attachNewFile();
 
-    /// copy sz bytes from 'src' to 'dst' and returns the new position of dst.
-    /// the function is ala linux mempcpy.
-    inline static unsigned char* mempcpy(unsigned char* dst, const void* src, unsigned sz)
-    {
-        memcpy(dst,src,sz);
-        return dst+sz;
-    }
-
-    /// copy sz bytes from 'src' to 'dst' and returns the new position of src.
-    inline static const unsigned char* memscpy(void* dst, const unsigned char* src, unsigned sz )
-    {
-        memcpy(dst,src,sz);
-        return src+sz;
-    }
-
     std::string makeFileName( size_t idx ) const
     {
         char buf[50];
@@ -275,11 +250,6 @@ private:
         rv.append(dbname_);
         rv.append(buf);
         return rv;
-    }
-
-    std::string makeJnlFileName() const
-    {
-        return dbpath_ + "/" + dbname_ + ".jnl";
     }
 
     inline File* getFile( offset_type pos ) {
@@ -302,7 +272,42 @@ private:
         return packer_.countBlocks(packedSize-idxSize());
     }
 
-    // int writeJournalHeader();
+    // --- journal storage interface
+
+    virtual std::string journalFileName() const {
+        return dbpath_ + "/" + dbname_ + ".jnl";
+    }
+    
+    // version + blockSize + fileSize
+    virtual size_t journalHeaderSize() const { return 12; }
+    virtual size_t maxJournalHeaderSize() const { return journalHeaderSize(); }
+
+    virtual const std::string& journalRecordMark() const;
+    virtual const std::string& journalRecordTrailer() const;
+
+    virtual void saveJournalHeader( void* buffer ) const;
+    virtual size_t loadJournalHeader( const void* buffer );
+    virtual JournalRecord* createJournalRecord();
+    virtual void prepareForApplication( const std::vector< JournalRecord* >& records );
+    virtual void applyJournalData( const JournalRecord& rec, bool takeNew );
+    virtual void applyJournalState( const JournalRecord& rec, bool takeNew );
+
+    /*
+    /// copy sz bytes from 'src' to 'dst' and returns the new position of dst.
+    /// the function is ala linux mempcpy.
+    inline static unsigned char* mempcpy(unsigned char* dst, const void* src, unsigned sz)
+    {
+        memcpy(dst,src,sz);
+        return dst+sz;
+    }
+
+    /// copy sz bytes from 'src' to 'dst' and returns the new position of src.
+    inline static const unsigned char* memscpy(void* dst, const unsigned char* src, unsigned sz )
+    {
+        memcpy(dst,src,sz);
+        return src+sz;
+    }
+     */
 
 private:
     bool                  inited_;
@@ -320,7 +325,7 @@ private:
     buffer_type*          oldBuf_;     // owned
     buffer_type*          newBuf_;     // owned
     buffer_type           headers_;    // working place for headers
-    buffer_type           journal_;    // journal
+    // buffer_type           journal_;    // journal
     std::vector< offset_type > posAndSize_;
 
     // the state of the storage
@@ -328,11 +333,11 @@ private:
     size_t                freeCount_;  // how many free cells in storage
     std::deque<unsigned>  freeChain_;  // indices (not offsets!)
 
-    util::Drndm           rnd_;
+    // util::Drndm           rnd_;
 
-    uint32_t              journalWrites_; // counter for how many times a journal was written
-    size_t                maxJournalWrites_;
-    File                  journalFile_;
+    // uint32_t              journalWrites_; // counter for how many times a journal was written
+    // size_t                maxJournalWrites_;
+    JournalFile              journalFile_;
 
     DataFileManager&                   manager_;
     std::auto_ptr<CreationTask>        creationTask_;

@@ -10,8 +10,8 @@
 namespace {
 
 bool staticDone = false;
-scag2::util::storage::BlocksHSStorage2::buffer_type transactionHeader;
-scag2::util::storage::BlocksHSStorage2::buffer_type transactionEnd;
+std::string journalRecordMark;
+std::string journalRecordTrailer;
 smsc::core::synchronization::Mutex staticMutex;
 
 void makeStaticData()
@@ -19,10 +19,8 @@ void makeStaticData()
     if ( staticDone ) return;
     MutexGuard mg(staticMutex);
     if ( staticDone ) return;
-    const std::string transHead("TrAnSaCt");
-    const std::string transEnd("EnDoFtRaNsAcTiOnS");
-    std::copy( transHead.begin(), transHead.end(), std::back_inserter(transactionHeader) );
-    std::copy( transEnd.begin(), transEnd.end(), std::back_inserter(transactionEnd) );
+    journalRecordMark = "TrAnSaCt";
+    journalRecordTrailer = "EnDoFtRaNsAcTiOnS";
     staticDone = true;
 }
 
@@ -245,27 +243,20 @@ struct BlocksHSStorage2::StorageState
 
     static size_t dataSize() { return 12; }
 
-    unsigned char* saveData( unsigned char* ptr ) const
+    char* saveData( char* ptr ) const
     {
-        uint32_t val = htonl(fileCount);
-        ptr = mempcpy(ptr,&val,4);
-        val = htonl(freeCount);
-        ptr = mempcpy(ptr,&val,4);
-        val = htonl(ffb);
-        ptr = mempcpy(ptr,&val,4);
-        return ptr;
+        EndianConverter::set32(ptr,fileCount);
+        EndianConverter::set32(ptr+4,freeCount);
+        EndianConverter::set32(ptr+8,ffb);
+        return ptr+12;
     }
 
-    const unsigned char* loadData( const unsigned char* ptr )
+    const char* loadData( const char* ptr )
     {
-        uint32_t val;
-        ptr = memscpy(&val,ptr,4);
-        fileCount = ntohl(val);
-        ptr = memscpy(&val,ptr,4);
-        freeCount = ntohl(val);
-        ptr = memscpy(&val,ptr,4);
-        ffb = ntohl(val);
-        return ptr;
+        fileCount = EndianConverter::get32(ptr);
+        freeCount = EndianConverter::get32(ptr+4);
+        ffb = EndianConverter::get32(ptr+8);
+        return ptr+12;
     }
 
     std::string toString() const {
@@ -282,26 +273,67 @@ public:
 
 
 /// ======================================================================
-struct BlocksHSStorage2::Transaction
+struct BlocksHSStorage2::Transaction : public JournalRecord
 {
 public:
-    bool operator < ( const Transaction& t ) const {
-        return serial < t.serial;
+    Transaction() : oldBufSize(0), newBufSize(0) {}
+
+    Transaction( const BlocksHSStorage2& bh ) :
+    oldState(bh), oldBufSize(0), newBufSize(0) {}
+
+    virtual void load( const void* p, size_t bufsize ) {
+        const char* ptr = reinterpret_cast<const char*>(p);
+        const char* endptr = ptr + bufsize;
+        ptr = oldState.loadData(ptr);
+        ptr = newState.loadData(ptr);
+        oldBufSize = EndianConverter::get32(ptr);
+        ptr += 4;
+        if ( ptr + oldBufSize > endptr ) {
+            throw smsc::util::Exception("buffer underrun");
+        }
+        oldBuf = ptr;
+        ptr += oldBufSize;
+        newBufSize = EndianConverter::get32(ptr);
+        ptr += 4;
+        if ( ptr + newBufSize != endptr ) {
+            throw smsc::util::Exception("buffer size mismatch");
+        }
+        newBuf = ptr;
+    }
+    virtual void save( void* p ) const {
+        char* ptr = reinterpret_cast<char*>(p);
+        ptr = oldState.saveData(ptr);
+        ptr = newState.saveData(ptr);
+        EndianConverter::set32(ptr,oldBufSize);
+        ptr += 4;
+        if ( oldBufSize > 0 ) {
+            memcpy(ptr,oldBuf,oldBufSize);
+            ptr += oldBufSize;
+        }
+        EndianConverter::set32(ptr,newBufSize);
+        ptr += 4;
+        if ( newBufSize > 0 ) {
+            memcpy(ptr,newBuf,newBufSize);
+            ptr += newBufSize;
+        }
+    }
+    virtual size_t savedDataSize() const {
+        return 2*(4+StorageState::dataSize()) + oldBufSize + newBufSize;
     }
 
-public:
-    StorageState  oldState;
-    StorageState  newState;
-    buffer_type   oldBuf;
-    buffer_type   newBuf;
-    uint32_t      origSerial;
-    uint32_t      serial;
-    size_t        endsAt;     // in buffer
+    StorageState         oldState;
+    const void*          oldBuf;    // not owned
+    size_t               oldBufSize;
+
+    StorageState         newState;
+    const void*          newBuf;    // not owned
+    size_t               newBufSize;
 };
 
 
 /// ======================================================================
 
+/*
 class BlocksHSStorage2::TransApplier
 {
 public:
@@ -343,6 +375,7 @@ private:
     BlocksHSStorage2&  s_;
     bool               isNew_;
 };
+ */
 
 /// ======================================================================
 
@@ -379,7 +412,9 @@ public:
             if ( !freeChainSize ) { return; }
             // std::sort( freeChain_.begin(), freeChain_.end() );
             if ( s_.log_ ) {
-                smsc_log_info(s_.log_,"writing a chain of size %u", unsigned(freeChainSize));
+                smsc_log_info(s_.log_,"writing a chain of size %u, ffb=%llx",
+                              unsigned(freeChainSize),
+                              s_.packer_.idx2pos(freeChain_.front()));
             }
             for ( std::vector< index_type >::const_iterator i = freeChain_.begin();
                   i != freeChain_.end();
@@ -401,6 +436,7 @@ private:
     BlocksHSStorage2&         s_;
     std::vector< index_type > freeChain_;
 };
+
 
 /// ======================================================================
 bool BlocksHSStorage2::Scanner::next()
@@ -450,13 +486,11 @@ log_(logger),
 oldBuf_(0),
 newBuf_(0),
 freeCount_(0),
-journalWrites_(0),
-maxJournalWrites_(100),
+journalFile_(*this,100,logger),
 manager_(manager),
 creationTask_(0)
 {
     makeStaticData();
-    rnd_.setSeed(time(0));
 }
 
 BlocksHSStorage2::~BlocksHSStorage2()
@@ -533,7 +567,8 @@ BlocksHSStorage2::index_type BlocksHSStorage2::change( index_type   oldIndex,
     size_t oldDataSize = 0;
     std::vector< offset_type > affectedBlocks;  // offsets
     const offset_type oldPos = idx2pos(oldIndex);
-    StorageState oldState(*this);
+
+    Transaction transaction(*this);
 
     bool ok = false;
     do {
@@ -644,7 +679,14 @@ BlocksHSStorage2::index_type BlocksHSStorage2::change( index_type   oldIndex,
         }
 
         // writing journal
-        if ( !writeJournal(*oldBuf, *newBuf, oldState) ) {
+        try {
+            transaction.oldBuf = &(*oldBuf)[0];
+            transaction.oldBufSize = oldBuf->size();
+            transaction.newBuf = &(*newBuf)[0];
+            transaction.newBufSize = newBuf->size();
+            transaction.newState = StorageState(*this);
+            journalFile_.writeRecord( transaction );
+        } catch (...) {
             // cannot save transaction
             rollbackFreeChain(hasBlocks,needBlocks,affectedBlocks);
             break;
@@ -655,9 +697,9 @@ BlocksHSStorage2::index_type BlocksHSStorage2::change( index_type   oldIndex,
         packer_.offsetsToPosAndSize( affectedBlocks, newDataSize, posAndSize );
 
         // saving blocks
-        if ( !writeBlocks(*newBuf,&posAndSize) ) {
+        if ( !writeBlocks(&(*newBuf)[0],newBuf->size(),&posAndSize) ) {
             // failure
-            writeBlocks(*oldBuf);
+            writeBlocks(&(*oldBuf)[0],oldBuf->size());
             rollbackFreeChain(hasBlocks,needBlocks,affectedBlocks);
             break;
         }
@@ -899,6 +941,22 @@ bool BlocksHSStorage2::pushFreeBlocks( size_t freeStart,
 
 int BlocksHSStorage2::doOpen()
 {
+    try {
+        std::for_each( files_.begin(), files_.end(), PtrDestroy() );
+        files_.clear();
+        journalFile_.open();
+        if ( files_.size() == 0 ) {
+            throw smsc::util::Exception("no records found");
+        }
+    } catch ( std::exception& e ) {
+        if (log_) {
+            smsc_log_warn(log_,"cannot open journal file %s: %s",
+                          journalFileName().c_str(), e.what() );
+        }
+        return JOURNAL_FILE_OPEN_FAILED;
+    }
+
+    /*
     {
         // opening journal file
         const std::string fn = dbpath_ + "/" + dbname_ + ".jnl";
@@ -914,7 +972,7 @@ int BlocksHSStorage2::doOpen()
             dsr >> val;
             version_ = val;
             dsr >> val;
-            packer_ = HSPacker(val,0/*,log_*/);
+            packer_ = HSPacker(val,0);
             dsr >> val;
             fileSize_ = val;
             fileSizeBytes_ = fileSize_ * packer_.blockSize();
@@ -1098,34 +1156,27 @@ int BlocksHSStorage2::doOpen()
 
     // destroying all transactions
     std::for_each( transactions.begin(), transactions.end(), PtrDestroy() );
+     */
 
-    if ( ret == 0 ) {
-        if (log_) {
-            smsc_log_info(log_,"storage has been opened via %s trans: version=%x blockSize=%u/%x fileSize=%u/%x fszBytes=%llx fileCount=%u freeCount=%u ffb=%llx",
-                          transType,
-                          unsigned(version_), unsigned(packer_.blockSize()), unsigned(packer_.blockSize()),
-                          unsigned(fileSize_), unsigned(fileSize_), fileSizeBytes_,
-                          unsigned(files_.size()), unsigned(freeCount_), idx2pos(freeChain_.front()));
-        }
-        checkFreeCount(freeCount_);
+    if (log_) {
+        smsc_log_info(log_,"storage has been opened: version=%x blockSize=%u/%x fileSize=%u/%x fszBytes=%llx fileCount=%u freeCount=%u ffb=%llx",
+                      unsigned(version_), unsigned(packer_.blockSize()), unsigned(packer_.blockSize()),
+                      unsigned(fileSize_), unsigned(fileSize_), fileSizeBytes_,
+                      unsigned(files_.size()), unsigned(freeCount_), idx2pos(freeChain_.front()));
     }
-    return ret;
+    checkFreeCount(freeCount_);
+    return 0;
 }
 
 
 int BlocksHSStorage2::doCreate()
 {
-    const std::string fn = dbpath_ + "/" + dbname_ + ".jnl";
-    if ( File::Exists(fn.c_str()) ) {
-        return JOURNAL_FILE_ALREADY_EXISTS;
-    }
     try {
         std::string dfn = makeFileName(0);
         if ( File::Exists(dfn.c_str())) {
             throw smsc::util::Exception("there is file %s already", dfn.c_str());
         }
-        journalFile_.RWCreate(fn.c_str());
-        journalFile_.SetUnbuffered();
+        journalFile_.create();
     } catch ( std::exception& e ) {
         if (log_) {
             smsc_log_error(log_,"exc in create: %s", e.what());
@@ -1233,17 +1284,11 @@ int BlocksHSStorage2::doRecover( IndexRescuer* indexRescuer )
                       unsigned(files_.size()));
     }
     
-    const std::string fn = makeJnlFileName();
     try {
-        if ( File::Exists(fn.c_str()) ) {
-            File::Rename(fn.c_str(),(fn + ".bak").c_str());
-        }
-        journalFile_.RWCreate(fn.c_str());
-        journalFile_.SetUnbuffered();
-        journalWrites_ = 0; // recreate header at the next write
+        journalFile_.recreate();
     } catch ( std::exception& e ) {
         if (log_) {
-            smsc_log_error(log_,"cannot create journal file %s", fn.c_str());
+            smsc_log_error(log_,"cannot recreate journal file %s", journalFileName().c_str());
         }
         return JOURNAL_FILE_CREATION_FAILED;
     }
@@ -1278,184 +1323,31 @@ int BlocksHSStorage2::doRecover( IndexRescuer* indexRescuer )
     freeCount_ = freeChainer.freeCount();
     freeChain_.clear();
     if (freeCount_ > 0) freeChain_.push_back(freeChainer.ffb());
-    buffer_type dummy;
-    journalWrites_ = 0;
-    if ( !writeJournal(dummy,dummy,StorageState(*this)) ) {
+    Transaction t(*this);
+    t.newState = StorageState(*this);
+    try {
+        journalFile_.writeRecord(t);
+    } catch (...) {
         return TRANSACTION_WRITE_FAILED;
     }
     return 0;
 }
 
 
-size_t BlocksHSStorage2::minTransactionSize() const
-{
-    static const size_t constantBufSize =
-        4*2 +                             // length*2
-        8*2 +                             // csum*2
-        4 +                               // serial
-        StorageState::dataSize()*2 +      // old+new
-        4 +                               // oldbufsize
-        4;                                // newbufsize
-    return constantBufSize;
-}
-
-
-BlocksHSStorage2::Transaction* BlocksHSStorage2::readJournal( buffer_type& buffer,
-                                                              buffer_type::iterator& iptr )
-{
-    const unsigned char* ptr = &buffer[iptr-buffer.begin()];
-    // reading length
-    uint32_t val;
-    ptr = memscpy(&val,ptr,4);
-    const size_t transactionSize = ntohl(val);
-    if ( transactionSize < minTransactionSize() ) {
-        throw smsc::util::Exception("weird transLen=%u, must be >= minLen=%u",
-                                    unsigned(transactionSize),
-                                    unsigned(minTransactionSize()) );
-    }
-    if ( iptr + transactionSize > buffer.end() ) {
-        throw smsc::util::Exception("weird transLen=%u, must be <= %u",
-                                    unsigned(transactionSize),
-                                    unsigned(buffer.end()-iptr));
-    }
-
-    // checking csums
-    uint64_t csum1, csum2;
-    uint32_t ctrlval;
-    ptr = memscpy( &csum1, ptr, 8);
-    if ( csum1 == 0 ) {
-        throw smsc::util::Exception("control sum cannot be 0");
-    }
-    {
-        const unsigned char* endptr = &buffer[(iptr - buffer.begin()) + transactionSize - 12];
-        endptr = memscpy( &csum2, endptr,8);
-        memscpy( &ctrlval, endptr, 4);
-    }
-    if ( csum1 != csum2 ) {
-        throw smsc::util::Exception("control sums do not match %llx != %llx", csum1, csum2 );
-    }
-    if ( val != ctrlval ) {
-        throw smsc::util::Exception("lengths do not match %x != %x", unsigned(val), unsigned(ctrlval) );
-    }
-    // everything is ok, reading states and buffers
-    Transaction* t = new Transaction;
-    ptr = memscpy(&val,ptr,4);
-    t->serial = t->origSerial = ntohl(val);
-    ptr = t->oldState.loadData(ptr);
-    ptr = t->newState.loadData(ptr);
-    uint32_t szval;
-    ptr = memscpy(&szval,ptr,4);
-    szval = ntohl(szval);
-    t->oldBuf.resize(szval);
-    if (szval > 0 ) ptr = memscpy(&(t->oldBuf[0]),ptr,szval);
-    ptr = memscpy(&szval,ptr,4);
-    szval = ntohl(szval);
-    t->newBuf.resize(szval);
-    if (szval > 0 ) ptr = memscpy(&(t->newBuf[0]),ptr,szval);
-    iptr += transactionSize;
-    t->endsAt = (iptr - buffer.begin());
-    if (log_) {
-        smsc_log_debug(log_,"transaction #%u has been read: old=(%s,sz=%u) new=(%s,sz=%u) ends=%u",
-                       t->serial,
-                       t->oldState.toString().c_str(),
-                       unsigned(t->oldBuf.size()),
-                       t->newState.toString().c_str(),
-                       unsigned(t->newBuf.size()),
-                       unsigned(t->endsAt) );
-    }
-    return t;
-}
-
-
-bool BlocksHSStorage2::writeJournal( const buffer_type& oldbuf,
-                                     const buffer_type& newbuf,
-                                     const StorageState& oldhead )
-{
-    bool needHeader = ( journalWrites_ == 0 );
-    ++journalWrites_;
-    if ( journalWrites_ == 0 ) { ++journalWrites_; }
-    const bool lastTrans = (journalWrites_ % maxJournalWrites_) == 0;
-
-    const uint32_t jnlSize = minTransactionSize() + oldbuf.size() + newbuf.size();
-    journal_.resize( ( needHeader ? journalHeaderSize() : 0 ) +
-                     transactionHeader.size() + jnlSize +
-                     ( lastTrans ? transactionEnd.size() : 0 ) );
-    unsigned char* ptr = &journal_[0];
-    const uint32_t jnlSizeNet = htonl(jnlSize);
-
-    StorageState newhead(*this);
-
-    // composing buffer
-    if ( needHeader ) {
-        // make the header
-        uint32_t val = htonl(version_);
-        ptr = mempcpy(ptr,&val,4);
-        val = htonl(packer_.blockSize());
-        ptr = mempcpy(ptr,&val,4);
-        val = htonl(fileSize_);
-        ptr = mempcpy(ptr,&val,4);
-    }
-
-    // control sum
-    uint64_t csum;
-    do {
-        csum = rnd_.getNextNumber();
-    } while ( csum == 0 );
-    // timestamp -- not written
-    // cvt.set( int64_t(util::currentTimeMillis()) );
-    // const uint64_t tstamp = cvt.cvt.quads[0];
-    ptr = mempcpy(ptr,&transactionHeader[0],transactionHeader.size());
-    ptr = mempcpy(ptr,&jnlSizeNet,4);
-    ptr = mempcpy(ptr,&csum,8);
-    const uint32_t serial = htonl(journalWrites_);
-    // ptr = mempcpy(ptr,&tstamp,8);
-    ptr = mempcpy(ptr,&serial,4);
-    ptr = oldhead.saveData(ptr);
-    ptr = newhead.saveData(ptr);
-    uint32_t szval = htonl(uint32_t(oldbuf.size()));
-    ptr = mempcpy(ptr,&szval,4);
-    if (oldbuf.size()>0) ptr = mempcpy(ptr,&oldbuf[0],oldbuf.size());
-    szval = htonl(uint32_t(newbuf.size()));
-    ptr = mempcpy(ptr,&szval,4);
-    if (newbuf.size()>0) ptr = mempcpy(ptr,&newbuf[0],newbuf.size());
-    ptr = mempcpy(ptr,&csum,8);
-    // ptr = mempcpy(ptr,&tstamp,8);
-    ptr = mempcpy(ptr,&jnlSizeNet,4);
-
-    if ( lastTrans ) {
-        ptr = mempcpy(ptr,&transactionEnd[0],transactionEnd.size());
-    }
-
-    assert( ptr == (&journal_[0] + journal_.size()) );
-
-    if ( log_ ) {
-        smsc_log_debug(log_,"writing journal #%u of sz=%u csum=%llx",
-                       unsigned(journalWrites_),
-                       unsigned(jnlSize),
-                       csum );
-    }
-    if ( needHeader ) { journalFile_.Seek(0); }
-    journalFile_.Write( &journal_[0], journal_.size() );
-    if ( lastTrans ) {
-        journalFile_.Truncate(journalFile_.Pos());
-        journalFile_.Seek(journalHeaderSize());
-    }
-    return true;
-}
-
-
-bool BlocksHSStorage2::writeBlocks( const buffer_type& buffer,
+bool BlocksHSStorage2::writeBlocks( const void* buffer,
+                                    size_t bufferSize,
                                     const std::vector< offset_type >* posAndSize,
                                     size_t initialPos )
 {
-    if ( buffer.size() < initialPos + idxSize() + navSize() ) { return true; }
+    if ( bufferSize < initialPos + idxSize() + navSize() ) { return true; }
     if ( ! posAndSize ) {
         posAndSize = &posAndSize_;
-        packer_.extractBlocks( buffer, posAndSize_, packer_.notUsed(), initialPos );
+        packer_.extractBlocks( buffer, bufferSize, posAndSize_, packer_.notUsed(), initialPos );
     }
     // writing blocks
     assert( posAndSize->size() % 2 == 0 );
-    const unsigned char* ptr = &buffer[initialPos];
+    const unsigned char* ptr = 
+        reinterpret_cast<const unsigned char*>(buffer) + initialPos;
     for ( std::vector< offset_type >::const_iterator iter = posAndSize->begin();
           iter != posAndSize->end();
           ++iter ) {
@@ -1600,7 +1492,8 @@ void BlocksHSStorage2::checkFreeCount( size_t freeCount )
 
         // calculate speed (kb/sec)
         if ( manager_.getExpectedSpeed() > 0 && freeCount > 0 ) {
-            speed = (fileSizeBytes_/1024) * manager_.getExpectedSpeed() / freeCount; 
+            const size_t expectedSpeed = (fileSizeBytes_/1024) * manager_.getExpectedSpeed() / freeCount;
+            speed = expectedSpeed * 4 / 3;
         }
         creationTask_.reset( new CreationTask( makeFileName(files_.size()),
                                                packer_.blockSize(),
@@ -1637,7 +1530,7 @@ bool BlocksHSStorage2::attachNewFile()
         return false;
     }
     if ( ! creationTask_->released() ) {
-        if (log_) smsc_log_warn(log_,"waiting until preallocation task is finished");
+        if (log_) {smsc_log_warn(log_,"waiting until preallocation task is finished");}
         creationTask_->waitUntilReleased();
     }
     // creation task is finished
@@ -1645,7 +1538,7 @@ bool BlocksHSStorage2::attachNewFile()
     File* f = ct->getFile();
     if ( !f ) { return false; }
     // write a new transaction
-    StorageState oldState(*this);
+    Transaction trans(*this);
     files_.push_back(f);
     const size_t freeChainSize = freeChain_.size();
     freeChain_.insert(freeChain_.end(),
@@ -1654,10 +1547,8 @@ bool BlocksHSStorage2::attachNewFile()
     freeCount_ += ct->fileSize();
     bool rv = true;
     try {
-        buffer_type dummy;
-        if ( ! writeJournal(dummy,dummy,oldState) ) {
-            throw smsc::util::Exception("writeJournal returns false");
-        }
+        trans.newState = StorageState(*this);
+        journalFile_.writeRecord( trans );
     } catch ( std::exception& e ) {
         if (log_) {
             smsc_log_warn(log_,"attachNewFile(#%u): %s", unsigned(files_.size())-1, e.what());
@@ -1673,6 +1564,251 @@ bool BlocksHSStorage2::attachNewFile()
     }
     return rv;
 }
+
+
+// --- journal interface
+const std::string& BlocksHSStorage2::journalRecordMark() const
+{
+    return ::journalRecordMark;
+}
+const std::string& BlocksHSStorage2::journalRecordTrailer() const
+{
+    return ::journalRecordTrailer;
+}
+
+
+void BlocksHSStorage2::saveJournalHeader( void* p ) const
+{
+    // make the header
+    register char* ptr = reinterpret_cast<char*>(p);
+    EndianConverter::set32(ptr,version_);
+    EndianConverter::set32(ptr+4,packer_.blockSize());
+    EndianConverter::set32(ptr+8,fileSize_);
+}
+
+
+size_t BlocksHSStorage2::loadJournalHeader( const void* p )
+{
+    register const char* ptr = reinterpret_cast<const char*>(p);
+    version_ = EndianConverter::get32(ptr);
+    if ( version_ != 0x80000002 ) {
+        throw smsc::util::Exception("wrong version %u", version_);
+    }
+    uint32_t bsz = EndianConverter::get32(ptr+4);
+    packer_ = HSPacker(bsz,0/*,log_*/);
+    fileSize_ = EndianConverter::get32(ptr+8);
+    fileSizeBytes_ = offset_type(fileSize_) * packer_.blockSize();
+    return journalHeaderSize();
+}
+
+
+JournalRecord* BlocksHSStorage2::createJournalRecord()
+{
+    return new Transaction;
+}
+
+
+void BlocksHSStorage2::prepareForApplication( const std::vector< JournalRecord* >& records )
+{
+    // closing all files
+    std::for_each( files_.begin(), files_.end(), PtrDestroy() );
+    files_.clear();
+
+    // taking the newest state, opening all necessary files
+    const Transaction* t = static_cast<const Transaction*>(records.back());
+    const size_t fileCount = t->newState.fileCount;
+    for ( size_t i = 0; i < fileCount; ++i ) {
+        const std::string fn = makeFileName(i);
+        if ( ! File::Exists(fn.c_str()) ) {
+            throw smsc::util::Exception("file %s does not exist", fn.c_str());
+        }
+        std::auto_ptr< File > file(new File);
+        file->RWOpen(fn.c_str());
+        file->SetUnbuffered();
+        files_.push_back(file.release());
+    }
+}
+
+
+void BlocksHSStorage2::applyJournalData( const JournalRecord& rec, bool takeNew )
+{
+    const Transaction& t = static_cast<const Transaction&>(rec);
+    try {
+        if ( takeNew ) {
+            writeBlocks(t.newBuf,t.newBufSize);
+        } else {
+            writeBlocks(t.oldBuf,t.oldBufSize);
+        }
+    } catch ( std::exception& e ) {
+        throw smsc::util::Exception("failed to apply %s #%u: %s",
+                                    takeNew ? "new" : "old",
+                                    t.getSerial(), e.what() );
+    }
+}
+
+
+void BlocksHSStorage2::applyJournalState( const JournalRecord& rec, bool takeNew )
+{
+    const Transaction& t = static_cast<const Transaction&>(rec);
+    const StorageState& state( takeNew ? t.newState : t.oldState );
+    if ( state.fileCount < files_.size() ) {
+        std::for_each(files_.begin()+state.fileCount, files_.end(), PtrDestroy() );
+        files_.erase(files_.begin()+state.fileCount, files_.end());
+    }
+    freeChain_.clear();
+    freeCount_ = state.freeCount;
+    freeChain_.push_back( state.ffb );
+    if ( ! readFreeBlocks(1) ) {
+        throw smsc::util::Exception( "readFreeBlocks(%s,#%u) failed",
+                                     takeNew ? "new" : "old", t.getSerial() );
+    }
+}
+
+
+/*
+BlocksHSStorage2::Transaction* BlocksHSStorage2::readJournal( buffer_type& buffer,
+                                                              buffer_type::iterator& iptr )
+{
+    const unsigned char* ptr = &buffer[iptr-buffer.begin()];
+    // reading length
+    uint32_t val;
+    ptr = memscpy(&val,ptr,4);
+    const size_t transactionSize = ntohl(val);
+    if ( transactionSize < minTransactionSize() ) {
+        throw smsc::util::Exception("weird transLen=%u, must be >= minLen=%u",
+                                    unsigned(transactionSize),
+                                    unsigned(minTransactionSize()) );
+    }
+    if ( iptr + transactionSize > buffer.end() ) {
+        throw smsc::util::Exception("weird transLen=%u, must be <= %u",
+                                    unsigned(transactionSize),
+                                    unsigned(buffer.end()-iptr));
+    }
+
+    // checking csums
+    uint64_t csum1, csum2;
+    uint32_t ctrlval;
+    ptr = memscpy( &csum1, ptr, 8);
+    if ( csum1 == 0 ) {
+        throw smsc::util::Exception("control sum cannot be 0");
+    }
+    {
+        const unsigned char* endptr = &buffer[(iptr - buffer.begin()) + transactionSize - 12];
+        endptr = memscpy( &csum2, endptr,8);
+        memscpy( &ctrlval, endptr, 4);
+    }
+    if ( csum1 != csum2 ) {
+        throw smsc::util::Exception("control sums do not match %llx != %llx", csum1, csum2 );
+    }
+    if ( val != ctrlval ) {
+        throw smsc::util::Exception("lengths do not match %x != %x", unsigned(val), unsigned(ctrlval) );
+    }
+    // everything is ok, reading states and buffers
+    Transaction* t = new Transaction;
+    ptr = memscpy(&val,ptr,4);
+    t->serial = t->origSerial = ntohl(val);
+    ptr = t->oldState.loadData(ptr);
+    ptr = t->newState.loadData(ptr);
+    uint32_t szval;
+    ptr = memscpy(&szval,ptr,4);
+    szval = ntohl(szval);
+    t->oldBuf.resize(szval);
+    if (szval > 0 ) ptr = memscpy(&(t->oldBuf[0]),ptr,szval);
+    ptr = memscpy(&szval,ptr,4);
+    szval = ntohl(szval);
+    t->newBuf.resize(szval);
+    if (szval > 0 ) ptr = memscpy(&(t->newBuf[0]),ptr,szval);
+    iptr += transactionSize;
+    t->endsAt = (iptr - buffer.begin());
+    if (log_) {
+        smsc_log_debug(log_,"transaction #%u has been read: old=(%s,sz=%u) new=(%s,sz=%u) ends=%u",
+                       t->serial,
+                       t->oldState.toString().c_str(),
+                       unsigned(t->oldBuf.size()),
+                       t->newState.toString().c_str(),
+                       unsigned(t->newBuf.size()),
+                       unsigned(t->endsAt) );
+    }
+    return t;
+}
+
+
+bool BlocksHSStorage2::writeJournal( const buffer_type& oldbuf,
+                                     const buffer_type& newbuf,
+                                     const StorageState& oldhead )
+{
+    bool needHeader = ( journalWrites_ == 0 );
+    ++journalWrites_;
+    if ( journalWrites_ == 0 ) { ++journalWrites_; }
+    const bool lastTrans = (journalWrites_ % maxJournalWrites_) == 0;
+
+    const uint32_t jnlSize = minTransactionSize() + oldbuf.size() + newbuf.size();
+    journal_.resize( ( needHeader ? journalHeaderSize() : 0 ) +
+                     transactionHeader.size() + jnlSize +
+                     ( lastTrans ? transactionEnd.size() : 0 ) );
+    unsigned char* ptr = &journal_[0];
+    const uint32_t jnlSizeNet = htonl(jnlSize);
+
+    StorageState newhead(*this);
+
+    // composing buffer
+    if ( needHeader ) {
+        // make the header
+        uint32_t val = htonl(version_);
+        ptr = mempcpy(ptr,&val,4);
+        val = htonl(packer_.blockSize());
+        ptr = mempcpy(ptr,&val,4);
+        val = htonl(fileSize_);
+        ptr = mempcpy(ptr,&val,4);
+    }
+
+    // control sum
+    uint64_t csum;
+    do {
+        csum = rnd_.getNextNumber();
+    } while ( csum == 0 );
+    // timestamp -- not written
+    // cvt.set( int64_t(util::currentTimeMillis()) );
+    // const uint64_t tstamp = cvt.cvt.quads[0];
+    ptr = mempcpy(ptr,&transactionHeader[0],transactionHeader.size());
+    ptr = mempcpy(ptr,&jnlSizeNet,4);
+    ptr = mempcpy(ptr,&csum,8);
+    const uint32_t serial = htonl(journalWrites_);
+    // ptr = mempcpy(ptr,&tstamp,8);
+    ptr = mempcpy(ptr,&serial,4);
+    ptr = oldhead.saveData(ptr);
+    ptr = newhead.saveData(ptr);
+    uint32_t szval = htonl(uint32_t(oldbuf.size()));
+    ptr = mempcpy(ptr,&szval,4);
+    if (oldbuf.size()>0) ptr = mempcpy(ptr,&oldbuf[0],oldbuf.size());
+    szval = htonl(uint32_t(newbuf.size()));
+    ptr = mempcpy(ptr,&szval,4);
+    if (newbuf.size()>0) ptr = mempcpy(ptr,&newbuf[0],newbuf.size());
+    ptr = mempcpy(ptr,&csum,8);
+    // ptr = mempcpy(ptr,&tstamp,8);
+    ptr = mempcpy(ptr,&jnlSizeNet,4);
+
+    if ( lastTrans ) {
+        ptr = mempcpy(ptr,&transactionEnd[0],transactionEnd.size());
+    }
+
+    assert( ptr == (&journal_[0] + journal_.size()) );
+
+    if ( log_ ) {
+        smsc_log_debug(log_,"writing journal #%u of sz=%u csum=%llx",
+                       unsigned(journalWrites_),
+                       unsigned(jnlSize),
+                       csum );
+    }
+    if ( needHeader ) { journalFile_.Seek(0); }
+    journalFile_.Write( &journal_[0], journal_.size() );
+    if ( lastTrans ) {
+        journalFile_.Truncate(journalFile_.Pos());
+        journalFile_.Seek(journalHeaderSize());
+    }
+    return true;
+}
+ */
 
 } // namespace storage
 } // namespace util

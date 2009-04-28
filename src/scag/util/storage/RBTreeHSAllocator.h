@@ -9,7 +9,6 @@
 #ifndef _SCAG_UTIL_STORAGE_RBTREEHSALLOCATOR_H
 #define _SCAG_UTIL_STORAGE_RBTREEHSALLOCATOR_H
 
-#include "RBTreeAllocator.h"
 #include <string>
 #include <list>
 #include <vector>
@@ -20,12 +19,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-
+#include "RBTreeAllocator.h"
 #include "logger/Logger.h"
 #include "core/buffers/File.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "scag/util/storage/Serializer.h"
 #include "scag/util/Time.h"
+#include "JournalFile.h"
 
 namespace scag {
 namespace util {
@@ -63,11 +63,15 @@ template <> inline void RBTreeSerializer< long >::deserialize( Deserializer& d, 
 
 
 template< class Key = long, class Value = long, class KS = RBTreeSerializer<Key>, class VS = RBTreeSerializer<Value> >
-    class RBTreeHSAllocator: public RBTreeAllocator<Key, Value>, public RBTreeChangesObserver<Key, Value>
+    class RBTreeHSAllocator:
+public RBTreeAllocator<Key, Value>,
+public RBTreeChangesObserver<Key, Value>,
+public JournalStorage
 {
 protected:
     typedef typename RBTreeAllocator<Key,Value>::RBTreeNode RBTreeNode;
     typedef typename RBTreeNode::nodeptr_type               nodeptr_type;
+    typedef typename std::list< nodeptr_type >              nodelist_type;
 
 public:
     static const int32_t version_32_1 = 0x01;             // prehistoric version
@@ -80,7 +84,118 @@ private:
         RbtFileHeader() :
         version(version_current),
         cells_count(0), cells_used(0),
-        cells_free(0), root_cell(0), first_free_cell(0), nil_cell(0), growth(0) {}
+        cells_free(0), root_cell(0), first_free_cell(0), nil_cell(0), growth(0),
+        cellSize_(0) {}
+
+        void load( const void* p ) {
+            const uint32_t* ptr = reinterpret_cast<const uint32_t*>(p);
+            version = EndianConverter::get32(ptr);
+            cells_count = EndianConverter::get32(++ptr);
+            cells_used = EndianConverter::get32(++ptr);
+            cells_free = EndianConverter::get32(++ptr);
+            root_cell = nodeptr_type(EndianConverter::get32(++ptr));
+            first_free_cell = nodeptr_type(EndianConverter::get32(++ptr));
+            nil_cell = nodeptr_type(EndianConverter::get32(++ptr));
+            growth = int32_t(EndianConverter::get32(++ptr));
+        }
+        void save( void* p ) const {
+            uint32_t* ptr = reinterpret_cast<uint32_t*>(p);
+            EndianConverter::set32(ptr,version);
+            EndianConverter::set32(++ptr,cells_count);
+            EndianConverter::set32(++ptr,cells_used);
+            EndianConverter::set32(++ptr,cells_free);
+            EndianConverter::set32(++ptr,uint32_t(root_cell));
+            EndianConverter::set32(++ptr,uint32_t(first_free_cell));
+            EndianConverter::set32(++ptr,uint32_t(nil_cell));
+            EndianConverter::set32(++ptr,growth);
+        }
+
+        inline size_t preambuleSize() const {
+            return 20;
+        }
+
+        inline size_t dataSize() const {
+            static const size_t datasize = 4*8;
+            return datasize;
+        }
+
+        inline size_t fullSavedSize() const {
+            static const size_t fullsize =
+                preambuleSize() +
+                dataSize() +
+                160;
+            return fullsize;
+        }
+
+        // persistent cellsize
+        inline size_t cellSize() const {
+            if ( cellSize_ > 0 ) return cellSize_;
+            const_cast< RbtFileHeader* >(this)->findCellSize();
+            return cellSize_;
+        }
+
+
+        void serializeCell( Serializer& s, const RBTreeNode* node ) const 
+        {
+            // for version 1
+            if ( s.version() != 1 && s.version() != 2 ) {
+                throw smsc::util::Exception( "version %d is not implemented in rbtree", s.version() );
+            }
+            const size_t wpos = s.wpos();
+            s.setwpos(s.wpos()+13); // 4 * 3 + 1
+            unsigned char* ptr = s.data() + wpos;
+            EndianConverter::set32(ptr,node->parent);
+            EndianConverter::set32(ptr+4,node->left);
+            EndianConverter::set32(ptr+8,node->right);
+            ptr += 12;
+            *ptr = node->color;
+            KS ks; ks.serialize(s,node->key);
+            VS vs; vs.serialize(s,node->value);
+        }
+
+        void deserializeCell( Deserializer& d, RBTreeNode* node ) const {
+            if ( d.version() != 1 && d.version() != 2 ) {
+                throw smsc::util::Exception( "version %d is not implemented in rbtree", d.version() );
+            }
+            // NOTE: we speed up reading by not using deserializer methods
+            const unsigned char* ptr = d.curpos();
+            d.setrpos(d.rpos()+13); // 4*3+1
+            const char* fail = 0;
+            uint32_t i;
+            do {
+                i = EndianConverter::get32(ptr); ptr += 4;
+                if ( i >= cells_count ) { fail = "parent"; break; }
+                node->parent = i;
+                i = EndianConverter::get32(ptr); ptr += 4;
+                if ( i >= cells_count ) { fail = "left"; break; }
+                node->left = i;
+                i = EndianConverter::get32(ptr); ptr += 4;
+                if ( i >= cells_count ) { fail = "right"; break; }
+                node->right = i;
+            } while ( false );
+            if ( fail ) {
+                throw smsc::util::Exception( "rbtree: reading node @ %p: %s field (%u) is greater than total number of cells (%u)",
+                                             node, fail, unsigned(i), unsigned(cells_count) );
+            }
+            node->color = uint8_t(*ptr);
+            KS ks; ks.deserialize(d,node->key);
+            VS vs; vs.deserialize(d,node->value);
+        }
+
+    private:
+        inline void findCellSize() {
+            // MutexGuard mg(cellSizeMutex_);
+            if ( cellSize_ > 0 ) return;
+            RBTreeNode n;
+            memset(&n,0,sizeof(RBTreeNode));
+            Serializer::Buf buf;
+            buf.reserve(100);
+            Serializer ser(buf);
+            ser.setVersion(version);
+            serializeCell(ser,&n);
+            cellSize_ = ser.size();
+        }
+
     public:
         // char preamble[20];                   // 20
         int32_t version;                     // 4
@@ -93,7 +208,95 @@ private:
         int32_t growth;                      // 8
         // char reserved[160];               // 160
 
-        int32_t persistentCellSize;          // this is not a persistent field
+        // int32_t persistentCellSize;          // this is not a persistent field
+    private:
+        size_t  cellSize_;
+    };
+
+
+    /// transaction is a rbtree header (data part only) and a number of nodes
+    struct Transaction : public JournalRecord
+    {
+    public:
+        Transaction( RBTreeHSAllocator& a ) : alloc_(&a), bufferSize(0) {}
+        Transaction( RBTreeHSAllocator& a, const nodelist_type& changed ) :
+        alloc_(&a), bufferSize(0)
+        {
+            nodes_.assign( changed.begin(), changed.end() );
+            std::sort( nodes_.begin(), nodes_.end() );
+            nodes_.erase( std::unique(nodes_.begin(), nodes_.end()),
+                          nodes_.end() );
+        }
+
+        virtual void load( const void* buf, size_t bufsize ) {
+            // reading the header
+            RbtFileHeader head;
+            if ( bufsize < head.dataSize() ) {
+                throw smsc::util::Exception("too small buffer to load rbt header");
+            }
+            buffer = reinterpret_cast<const char*>(buf);
+            const char* ptr = buffer;
+            head.load(ptr);
+            ptr += head.dataSize();
+            const size_t nodes = EndianConverter::get32(ptr);
+            ptr += 4;
+            if ( ptr + (4+head.cellSize())*nodes != buffer + bufsize ) {
+                throw smsc::util::Exception("buffer size mismatch in Trans::load(), bufsz=%u headsz=%u cells=%u cellsz=%u",
+                                            unsigned(bufsize),
+                                            unsigned(head.dataSize()),
+                                            unsigned(nodes),
+                                            unsigned(head.cellSize()) );
+            }
+            bufferSize = bufsize;
+        }
+
+        virtual size_t savedDataSize() const {
+            return alloc_->header_.dataSize() + 4 +
+                nodes_.size() * (alloc_->header_.cellSize() + 4); // + nodeaddr
+        }
+
+        virtual void save( void* buf ) const {
+            if ( bufferSize == 0 ) {
+                char* ptr = reinterpret_cast<char*>(buf);
+                const RbtFileHeader& hdr = alloc_->header_;
+                buffer = ptr;
+                bufferSize = savedDataSize();
+                hdr.save(ptr);
+                ptr += hdr.dataSize();
+                EndianConverter::set32(ptr,nodes_.size());
+                ptr += 4;
+                if ( ! nodes_.empty() ) {
+                    uint32_t* uptr = reinterpret_cast<uint32_t*>(ptr);
+                    for ( typename std::vector< nodeptr_type >::const_iterator i = nodes_.begin();
+                          i != nodes_.end();
+                          ++i ) {
+                        EndianConverter::set32(uptr,uint32_t(*i));
+                        ++uptr;
+                    }
+                    ptr = reinterpret_cast<char*>(uptr);
+                    Serializer ser(ptr, nodes_.size()*hdr.cellSize());
+                    ser.setVersion( hdr.version );
+                    for ( typename std::vector< nodeptr_type >::const_iterator i = nodes_.begin();
+                          i != nodes_.end();
+                          ++i ) {
+                        hdr.serializeCell( ser, alloc_->addr2node(*i) );
+                    }
+                }
+            }
+        }
+        
+        inline size_t nodesCount() const {
+            return ( bufferSize > 0 ?
+                     (bufferSize - alloc_->header_.dataSize()) / alloc_->header_.cellSize() :
+                     nodes_.size() );
+        }
+
+    private:
+        RBTreeHSAllocator*                   alloc_;
+        typename std::vector< nodeptr_type > nodes_;
+    public:
+        mutable const char*        buffer;
+        mutable size_t             bufferSize;
     };
 
     static const int32_t STAT_OK = 0;
@@ -101,6 +304,7 @@ private:
     static const int32_t STAT_WRITE_RBT = 2;
     static const int32_t TRX_VER_1 = 1;
 
+    /*
     struct TransFileHeader  // transient representation
     {
         /// NOTE: serialization does not include the status of the trans file header
@@ -109,6 +313,7 @@ private:
         int32_t operation;
         int32_t nodes_count;
     };
+     */
 
 public:
     static const int mode = 0600;
@@ -133,7 +338,8 @@ public:
     running(false),
     currentOperation(0),
     logger(thelog),
-    rbtFileHeaderDump_(rbtFileHeaderBuf_),
+    // rbtFileHeaderDump_(rbtFileHeaderBuf_),
+    journalFile_(*this,100,thelog),
     fullRecovery_(fullRecovery)
     {
     }
@@ -145,7 +351,7 @@ public:
             return RBTREE_FILE_NOT_SPECIFIED;
 		
         rbtree_file = _rbtree_file;
-        trans_file = rbtree_file + ".trx";
+        // trans_file = rbtree_file + ".trx";
         if(_growth > 0) growth = _growth;
 		
         if(!isFileExists() || clearFile)
@@ -196,7 +402,7 @@ public:
 
             // waiting...
             currentTime = util::currentTimeMillis();
-            writtenSize += growth * header_.persistentCellSize;
+            writtenSize += growth * header_.cellSize();
             util::msectime_type expectedTime = writtenSize / maxSpeed; // bytes/(kBytes/sec) == msec
             util::msectime_type elapsedTime = currentTime - startTime;
             if ( elapsedTime < expectedTime ) {
@@ -205,9 +411,11 @@ public:
             }
         }
         // write header
-        serializeRbtHeader(rbtFileHeaderDump_, header_);
+        Serializer::Buf buffer;
+        Serializer ser(buffer);
+        serializeRbtHeader(ser,header_);
         rbtree_f.Seek(0, SEEK_SET);
-        rbtree_f.Write( rbtFileHeaderDump_.data(), rbtFileHeaderDump_.size());
+        rbtree_f.Write(buffer.data(),buffer.size());
         rbtree_f.Flush();
         fullRecovery_ = false;
         return header_.cells_used;
@@ -248,7 +456,7 @@ public:
     virtual nodeptr_type getRootNode(void)
     {
         if (!running) return header_.nil_cell;
-        if (-1 == header_.root_cell) return header_.nil_cell;
+        if (nodeptr_type(-1) == header_.root_cell) return header_.nil_cell;
         return header_.root_cell;
     }
 
@@ -283,33 +491,33 @@ public:
     virtual void startChanges( nodeptr_type node, int operation )
     {
         if ( fullRecovery_ ) return;
-        if ( changedNodes.size() > 0 ) completeChanges();
+        if ( ! changedNodes_.empty() ) completeChanges();
         if (logger) {
             smsc_log_debug(logger, "startChanges. node = (%ld)%p, operation = %d", (long)node, realAddr(node), operation);
         }
         currentOperation = operation;
-        changedNodes.push_back(node);
+        changedNodes_.push_back(node);
     }
 
     virtual void nodeChanged( nodeptr_type node)
     {
         if ( fullRecovery_ ) return;
         //	    smsc_log_debug(logger, "Node changed=%d(%p)", node2addr(node), node);
-        changedNodes.push_back(node);
+        changedNodes_.push_back(node);
     }
 
     virtual void completeChanges(void)
     {
         if ( fullRecovery_ ) return;
-        //	    smsc_log_debug(logger, "completeChanges=%d", changedNodes.size());
-        // changedNodes.sort();
-        // changedNodes.unique();
-        //printf("%d\n", changedNodes.size());
-        if ( changedNodes.empty() ) return;
-        startTransaction();
+        //	    smsc_log_debug(logger, "completeChanges=%d", changedNodes_.size());
+        // changedNodes_.sort();
+        // changedNodes_.unique();
+        //printf("%d\n", changedNodes_.size());
+        if ( changedNodes_.empty() ) return;
+        // startTransaction();
         writeChanges();
-        endTransaction();
-        changedNodes.erase(changedNodes.begin(), changedNodes.end());
+        // endTransaction();
+        changedNodes_.clear();
     }
 
     /// a temporary method to check free cells integrity
@@ -341,7 +549,7 @@ public:
         nodeptr_type celladdr = header_.first_free_cell;
         std::vector< nodeptr_type > fnl;
         fnl.reserve( header_.cells_free );
-        for ( int32_t cf = 0; cf < header_.cells_free; ++cf ) {
+        for ( uint32_t cf = 0; cf < header_.cells_free; ++cf ) {
             // if ( cf < 20 )
             // smsc_log_debug( logger, "free cell #%d has address %ld", cf, celladdr );
             if ( celladdr >= rbtree_len ) {
@@ -392,13 +600,14 @@ private:
         struct ::stat st;
         return ::stat(rbtree_file.c_str(),&st)==0;
     }
-    
+
+
     int ReallocRBTreeFile(void)
     {
         if ( header_.cells_free >= growth ) return SUCCESS;
 
         const bool creation = ( chunks_.size() == 0 );
-        if ( changedNodes.size() > 0 ) {
+        if ( ! changedNodes_.empty() ) {
             // we have to make sure that no pending nodes are on the list
             completeChanges();
         }
@@ -442,7 +651,7 @@ private:
         }
 
         // filling free cells links
-        for ( nodeptr_type i = 0; i < realgrowth-1; ++i ) {
+        for ( nodeptr_type i = 1; i < nodeptr_type(realgrowth); ++i ) {
             RBTreeNode* cell = addr2node(freecell);
             cell->parent = ++freecell;
         }
@@ -456,17 +665,16 @@ private:
             header_.root_cell = 0;
             header_.nil_cell = 0;
             header_.growth = growth;
-            persistentCellSize(header_);
+            // persistentCellSize_ = findPersistentCellSize(header_.version);
             // clearing a nil_node
             memset(addr2node(0),0,cellsize());
-            serializeRbtHeader(rbtFileHeaderDump_, header_);
         }
 
         if ( fullRecovery_ ) {
             // we don't write things to disk in this case,
             // instead we only seek to the end of file and write one byte
-            rbtree_f.Seek( rbtFileHeaderDump_.size() + 
-                           header_.persistentCellSize*(startcell+realgrowth) - 1,
+            rbtree_f.Seek( header_.fullSavedSize() +
+                           header_.cellSize() * (startcell+realgrowth) - 1,
                            SEEK_SET );
             uint8_t dummy = 0;
             rbtree_f.Write(&dummy,1);
@@ -477,7 +685,11 @@ private:
 
         if ( creation ) {
             rbtree_f.Seek(0, SEEK_SET);
-            rbtree_f.Write( rbtFileHeaderDump_.data(), rbtFileHeaderDump_.size());
+            Serializer::Buf buffer;
+            Serializer ser(buffer);
+            ser.reserve(header_.fullSavedSize());
+            serializeRbtHeader(ser,header_);
+            rbtree_f.Write(buffer.data(), buffer.size());
             rbtree_f.Flush();
         } else {
             rbtree_f.Flush();
@@ -486,13 +698,13 @@ private:
 
         if (logger) {
             smsc_log_info( logger, "ReallocRBTree: header_size=%x cells_count=%u cells_used=%u cells_free=%u root_cell=%lx first_free_cell=%lx pers_cell_size=%u trans_cell_size=%u",
-                           unsigned(rbtFileHeaderDump_.size()),
+                           unsigned(header_.fullSavedSize()),
                            header_.cells_count,
                            header_.cells_used,
                            header_.cells_free,
                            long(header_.root_cell),
                            long(header_.first_free_cell),
-                           unsigned(header_.persistentCellSize),
+                           unsigned(header_.cellSize()),
                            unsigned(sizeof(RBTreeNode)));
         }
         // check nodes
@@ -505,13 +717,13 @@ private:
     void writeCells( nodeptr_type startcell, int32_t realgrowth )
     {
         std::vector< unsigned char > buf;
-        buf.reserve(header_.persistentCellSize*realgrowth);
+        buf.reserve(header_.cellSize()*realgrowth);
         Serializer ss(buf);
         ss.setVersion(header_.version);
-        rbtree_f.Seek(rbtFileHeaderDump_.size() + header_.persistentCellSize*startcell, SEEK_SET);
-        for ( nodeptr_type i = 0; i < realgrowth; ++i ) {
+        rbtree_f.Seek(header_.fullSavedSize() + header_.cellSize()*startcell, SEEK_SET);
+        for ( nodeptr_type i = 0; i < nodeptr_type(realgrowth); ++i ) {
             // ss.reset();
-            serializeCell(ss, addr2node(startcell++) );
+            header_.serializeCell(ss, addr2node(startcell++) );
         }
         rbtree_f.Write(ss.data(), ss.size() );
     }
@@ -534,8 +746,9 @@ private:
 
         try
         {
-            trans_f.RWCreate(trans_file.c_str());
-            trans_f.SetUnbuffered();
+            journalFile_.create();
+            // trans_f.RWCreate(trans_file.c_str());
+            // trans_f.SetUnbuffered();
         }
         catch(FileException ex)
         {
@@ -545,15 +758,16 @@ private:
             rbtree_f.Close();
             return CANNOT_CREATE_TRANS_FILE;
         }
-        
-        trans_f.WriteNetInt32(STAT_OK);
+
+        // trans_f.WriteNetInt32(STAT_OK);
         int ret = ReallocRBTreeFile();
         if ( ret != SUCCESS ) return ret;
         // check integrity
         freenodes();
         return SUCCESS;
     }
-    
+
+
     int OpenRBTreeFile(void)
     {
         //printf("OpenRBTreeFile\n");
@@ -568,8 +782,14 @@ private:
         }
         try
         {
-            trans_f.RWOpen(trans_file.c_str());
-            trans_f.SetUnbuffered();
+            if ( File::Exists(journalFileName().c_str()) ) {
+                journalFile_.open();
+            } else {
+                // VM on 2009-04-28: it's ok if journalFile_ is absent, just create it
+                journalFile_.create();
+            }
+            // trans_f.RWOpen(trans_file.c_str());
+            // trans_f.SetUnbuffered();
         }
         catch(FileException ex)
         {
@@ -577,6 +797,7 @@ private:
             return CANNOT_OPEN_TRANS_FILE;
         }
 		
+        /*
         int32_t status;
         try
         {
@@ -610,11 +831,12 @@ private:
             //printf("status == STAT_WRITE_RBT\n");
             repairRBTreeFile();
         }
+         */
 		
         try {
             // determining the length of the file
-            rbtree_f.Seek(0, SEEK_END);
-            const off_t len = rbtree_f.Pos();
+            // rbtree_f.Seek(0, SEEK_END);
+            const off_t len = rbtree_f.Size();
             rbtree_f.Seek(0, SEEK_SET);
 
             // reading the header
@@ -627,14 +849,15 @@ private:
             rbtree_f.Read(p.get(),buflen);
             Deserializer ds(p.get(),buflen);
             deserializeRbtHeader(ds,header_);
-            rbtFileHeaderBuf_.clear();
-            serializeRbtHeader(rbtFileHeaderDump_,header_);
-            assert( ds.rpos() == rbtFileHeaderDump_.size() );
-            const off_t expectedLen = off_t(rbtFileHeaderDump_.size() + header_.cells_count*header_.persistentCellSize);
+            Serializer::Buf buffer;
+            Serializer ser(buffer);
+            serializeRbtHeader(ser,header_);
+            assert( ds.rpos() == buffer.size() );
+            const off_t expectedLen = off_t(buffer.size() + header_.cells_count*header_.cellSize());
 
             nodeptr_type maxcells = header_.cells_count;
             if ( len < expectedLen ) {
-                maxcells = ( len - rbtFileHeaderDump_.size() ) / header_.persistentCellSize;
+                maxcells = ( len - buffer.size() ) / header_.cellSize();
             }
 
             // create the necessary number of chunks
@@ -646,9 +869,9 @@ private:
 
             {
                 // setting file position, prepare the buffer to read a chunk in one sweep
-                rbtree_f.Seek( rbtFileHeaderDump_.size() );
-                std::auto_ptr<unsigned char> chunkBuf(new unsigned char[growth*header_.persistentCellSize]);
-                Deserializer dds(chunkBuf.get(),growth*header_.persistentCellSize);
+                rbtree_f.Seek( buffer.size() );
+                std::auto_ptr<unsigned char> chunkBuf(new unsigned char[growth*header_.cellSize()]);
+                Deserializer dds(chunkBuf.get(),growth*header_.cellSize());
                 dds.setVersion( header_.version );
 
                 // allocating chunks/reading cells
@@ -657,13 +880,13 @@ private:
                     if ( ! mem.get() ) return BTREE_FILE_MAP_FAILED;
                     chunks_.push_back( mem.release() );
                     unsigned cellsInChunk = std::min(unsigned(growth),unsigned(maxcells-i*growth));
-                    unsigned chunksize = cellsInChunk * header_.persistentCellSize;
+                    unsigned chunksize = cellsInChunk * header_.cellSize();
                     rbtree_f.Read(chunkBuf.get(),chunksize);
                     dds.setrpos(0);
                     // loop over cells
                     nodeptr_type ptr = i*growth;
                     for ( unsigned j = 0; j < cellsInChunk; ++j ) {
-                        deserializeCell(dds,addr2node(ptr++));
+                        header_.deserializeCell(dds,addr2node(ptr++));
                     }
                     // if (logger) smsc_log_info(logger,"OpenRBTree: cells/total = %010ld/%010ld", long(i*growth+cellsInChunk), long(maxcells));
                 }
@@ -673,10 +896,10 @@ private:
                 // FIXME: we should fix it oneday
                 if (logger) {
                     smsc_log_warn( logger, "OpenRBTree: file size is smaller than what expected: headersize=%d expected_cells_count=%lld actual_cells_count=%lld cellsize=%d expectedlen=%lld len=%lld, I'll try to recover...",
-                                   int(rbtFileHeaderDump_.size()),
+                                   int(header_.fullSavedSize()),
                                    int64_t(header_.cells_count),
                                    int64_t(maxcells),
-                                   int(header_.persistentCellSize),
+                                   int(header_.cellSize()),
                                    expectedLen,
                                    int64_t(len) );
                 }
@@ -746,27 +969,27 @@ private:
         if (logger) {
             smsc_log_info( logger, "OpenRBTree: version=%u header_size=%x cells_count=%u cells_used=%u cells_free=%u root_cell=%lx first_free_cell=%lx pers_cell_size=%u trans_cell_size=%u",
                            header_.version,
-                           unsigned(rbtFileHeaderDump_.size()),
+                           unsigned(header_.fullSavedSize()),
                            header_.cells_count,
                            header_.cells_used,
                            header_.cells_free,
                            long(header_.root_cell),
                            long(header_.first_free_cell),
-                           unsigned(header_.persistentCellSize),
+                           unsigned(header_.cellSize()),
                            unsigned(sizeof(RBTreeNode)));
         }
         // check integrity
         freenodes();
-        return ret;
+        return SUCCESS;
     }
     
 
     int startTransaction(void)
     {
+        /*
+
         // 1. making sure all nodes are unique
-        transactionNodes_.clear();
-        transactionNodes_.reserve(changedNodes.size());
-        std::copy( changedNodes.begin(), changedNodes.end(), std::back_inserter(transactionNodes_) );
+        transactionNodes_.assign( changedNodes_.begin(), changedNodes_.end() );
         std::sort( transactionNodes_.begin(), transactionNodes_.end() );
         transactionNodes_.erase( std::unique(transactionNodes_.begin(), transactionNodes_.end()),
                                  transactionNodes_.end() );
@@ -775,7 +998,6 @@ private:
             smsc_log_debug( logger, "Start transaction: nodes changed=%d", transactionNodes_.size() );
         }
         //printf("header_.root_cell = %d (%d)\n", header_.root_cell, sizeof(header_.root_cell));
-
         FileFlushGuard fg( trans_f );
 
         TransFileHeader hdr;
@@ -797,7 +1019,7 @@ private:
         transactionBuf_.clear();
         Serializer ser(transactionBuf_);
         ser.setVersion(header_.version);
-        transactionBuf_.reserve( transactionNodes_.size()*header_.persistentCellSize );
+        transactionBuf_.reserve( transactionNodes_.size()*persistentCellSize_ );
         for ( typename std::vector< nodeptr_type >::const_iterator i = transactionNodes_.begin();
               i != transactionNodes_.end();
               ++i ) {
@@ -808,17 +1030,20 @@ private:
             trans_f.WriteNetInt32( idx );
             const size_t pos = ser.size();
             serializeCell( ser, addr2node(*i) ); // node serialization
-            trans_f.Write( &(ser.data()[pos]), header_.persistentCellSize );
+            trans_f.Write( &(ser.data()[pos]), persistentCellSize_ );
         }
+         */
 	return 0;
     }
 
 
     int writeChanges(void)
     {
+        Transaction trans( *this, changedNodes_ );
         if (logger) {
-            smsc_log_debug( logger, "Write Changes: nodes changed=%d", transactionNodes_.size());
+            smsc_log_debug( logger, "Write Changes: nodes changed=%d", trans.nodesCount() );
         }
+        /*
         trans_f.Seek(0, SEEK_SET);
         trans_f.WriteNetInt32(STAT_WRITE_RBT);
         trans_f.Flush();
@@ -831,27 +1056,37 @@ private:
         for ( typename std::vector< nodeptr_type >::const_iterator i = transactionNodes_.begin();
               i != transactionNodes_.end();
               ++i ) {
-            rbtree_f.Seek( (*i) * header_.persistentCellSize + rbtFileHeaderDump_.size() );
-            rbtree_f.Write( &transactionBuf_.front() + pos, header_.persistentCellSize );
-            pos += header_.persistentCellSize;
+            rbtree_f.Seek( (*i) * persistentCellSize_ + rbtFileHeaderDump_.size() );
+            rbtree_f.Write( &transactionBuf_.front() + pos, persistentCellSize_ );
+            pos += persistentCellSize_;
             // rbtree_f.Seek((long)*It - (long)rbtree_addr , SEEK_SET);
             // rbtree_f.Write((char*)*It, sizeof(RBTreeNode));
         }
-        //smsc_log_debug(logger, "Write Changes: finish");        
+        //smsc_log_debug(logger, "Write Changes: finish");
+         */
+        if ( journalFile_.writeRecord( trans ) ) {
+            // simple optimization: we don't write the header on each transaction
+            // but only on the last one in journal file.
+            applyJournalState( trans, true );
+        }
+        applyJournalData( trans, true );
         return 0;
     }
 
     int endTransaction()
     {
+        /*
         if (logger) {
             smsc_log_debug(logger, "endTransaction");
         }
         trans_f.Seek(0, SEEK_SET);
         trans_f.WriteNetInt32(STAT_OK);
         trans_f.Flush();
+         */
         return 0;
     }
 
+    /*
     int repairRBTreeFile(void)
     {
         trans_f.Seek(0, SEEK_END);
@@ -894,71 +1129,22 @@ private:
         rbtree_f.Flush();
         return 0;
     }
-
-    void serializeCell( Serializer& s, const RBTreeNode* node ) const {
-        // for version 1
-        if ( s.version() != 1 && s.version() != 2 ) {
-            if (logger) {
-                smsc_log_warn( logger, "version %d is not implemented in rbtree, using version #1", s.version() );
-            }
-            throw smsc::util::Exception( "version %d is not implemented in rbtree", s.version() );
-        }
-        const size_t wpos = s.wpos();
-        s.setwpos(s.wpos()+13); // 4 * 3 + 1
-        unsigned char* ptr = s.data() + wpos;
-        EndianConverter::set32(ptr,node->parent); ptr += 4;
-        EndianConverter::set32(ptr,node->left); ptr += 4;
-        EndianConverter::set32(ptr,node->right); ptr += 4;
-        *ptr = node->color;
-        KS ks; ks.serialize(s,node->key);
-        VS vs; vs.serialize(s,node->value);
-    }
-
-    void deserializeCell( Deserializer& d, RBTreeNode* node ) const {
-        if ( d.version() != 1 && d.version() != 2 ) {
-            if (logger) {
-                smsc_log_warn( logger, "version %d is not implemented in rbtree", d.version() );
-            }
-            throw smsc::util::Exception( "version %d is not implemented in rbtree", d.version() );
-        }
-        // NOTE: we speed up reading by not using deserializer methods
-        const unsigned char* ptr = d.curpos();
-        d.setrpos(d.rpos()+13); // 4*3+1
-        const char* fail = 0;
-        uint32_t i;
-        do {
-            i = EndianConverter::get32(ptr); ptr += 4;
-            if ( i >= header_.cells_count ) { fail = "parent"; break; }
-            node->parent = i;
-            i = EndianConverter::get32(ptr); ptr += 4;
-            if ( i >= header_.cells_count ) { fail = "left"; break; }
-            node->left = i;
-            i = EndianConverter::get32(ptr); ptr += 4;
-            if ( i >= header_.cells_count ) { fail = "right"; break; }
-            node->right = i;
-        } while ( false );
-        if ( fail ) {
-            if (logger) {
-                smsc_log_warn( logger, "rbtree: reading node @ %p: %s field (%u) is greater than total number of cells (%u)",
-                               node, fail, unsigned(i), unsigned(header_.cells_count) );
-            }
-            throw smsc::util::Exception( "rbtree: reading node @ %p: %s field (%u) is greater than total number of cells (%u)",
-                                         node, fail, unsigned(i), unsigned(header_.cells_count) );
-        }
-        node->color = uint8_t(*ptr);
-        KS ks; ks.deserialize(d,node->key);
-        VS vs; vs.deserialize(d,node->value);
-    }
+     */
 
     void serializeRbtHeader( Serializer& s, const RbtFileHeader& hdr ) {
         const bool first = ( s.size() == 0 );
-        if ( first ) s.writeAsIs( 20, "RBTREE_FILE_STORAGE!" );
-        else s.setwpos(20);
+        if ( first ) s.writeAsIs( hdr.preambuleSize(), "RBTREE_FILE_STORAGE!" );
+        else s.setwpos(hdr.preambuleSize());
+        size_t wpos = s.wpos();
+        s.setwpos(wpos+hdr.dataSize());
+        hdr.save(s.data()+wpos);
+        /*
         s << hdr.version << hdr.cells_count << hdr.cells_used << hdr.cells_free <<
             uint32_t(hdr.root_cell) <<
             uint32_t(hdr.first_free_cell) <<
             uint32_t(hdr.nil_cell) <<
             uint32_t(hdr.growth);
+         */
         if ( first ) 
             s.writeAsIs( 160,
                          "Written by db. This is a dummy message which serves as a placeholder "
@@ -977,6 +1163,10 @@ private:
             }
             throw DeserializerException::stringMismatch();
         }
+        const size_t rpos = d.rpos();
+        hdr.load(d.curpos());
+        d.setrpos(rpos+hdr.dataSize());
+        /*
         d >> hdr.version >> hdr.cells_count >> hdr.cells_used >> hdr.cells_free;
         uint32_t i;
         const char* fail = 0;
@@ -998,9 +1188,11 @@ private:
             throw smsc::util::Exception( "rbtree header field %s (%u) is greater than total number of cells (%u)",
                                          fail, i, unsigned(hdr.cells_count) );
         }
+         */
         d.readAsIs(160); // skip 160 bytes
     }
 
+    /*
     void serializeTransHeader( Serializer& s, const TransFileHeader& hdr ) {
         s << s.version() << hdr.operation << hdr.nodes_count;
     }
@@ -1009,45 +1201,98 @@ private:
         d >> v; // reading version
         d >> hdr.operation >> hdr.nodes_count;
     }
+     */
 
-    // derived data: 
-    // a size of one node on disk for this version
-    void persistentCellSize( RbtFileHeader& header ) const
+    // --- journal storage iface
+    virtual std::string journalFileName() const { return rbtree_file + ".jnl"; }
+    virtual size_t journalHeaderSize() const { return 0; } // no header
+    virtual size_t maxJournalHeaderSize() const { return 0; }
+    virtual const std::string& journalRecordMark() const {
+        if ( ! mark_.get() ) const_cast<RBTreeHSAllocator*>(this)->makeJournalMarks();
+        return *mark_.get();
+    }
+    virtual const std::string& journalRecordTrailer() const {
+        if ( ! trail_.get() ) const_cast<RBTreeHSAllocator*>(this)->makeJournalMarks();
+        return *trail_.get();
+    }
+    void makeJournalMarks() {
+        if ( mark_.get() ) return;
+        MutexGuard mg(initMutex_);
+        if ( mark_.get() ) return;
+        mark_.reset( new std::string("TrAnSaCt") );
+        trail_.reset( new std::string("EnDoFtRaNsAcTiOnS") );
+    }
+    virtual void saveJournalHeader( void* ) const {}
+    virtual size_t loadJournalHeader( const void* ) {
+        return 0;
+    }
+    virtual JournalRecord* createJournalRecord() {
+        return new Transaction(*this);
+    }
+    virtual void prepareForApplication( const std::vector< JournalRecord* >& records )
     {
-        assert( header.version );
-        RBTreeNode n;
-        memset( (void*)&n, 0, sizeof(RBTreeNode) );
-        std::vector< unsigned char > buf;
-        buf.reserve(cellsize()*2);
-        Serializer s(buf);
-        s.setVersion( header.version );
-        serializeCell( s, &n );
-        header.persistentCellSize = s.size();
+        applyJournalState( *records.back(), true );
+    }
+    virtual void applyJournalData( const JournalRecord& rec, bool takeNew ) {
+        if ( ! takeNew ) {
+            throw smsc::util::Exception("only new transaction is allowed");
+        }
+        const Transaction& t = static_cast<const Transaction&>(rec);
+        const char* ptr = t.buffer + header_.dataSize();
+        size_t nodes = EndianConverter::get32(ptr);
+        ptr += 4;
+        if ( ptr + nodes*(4+header_.cellSize()) != t.buffer + t.bufferSize ) {
+            throw smsc::util::Exception("buffer size mismatch");
+        }
+        const uint32_t* uptr = reinterpret_cast<const uint32_t*>(ptr);
+        ptr = ptr + nodes*4;
+        for ( ; nodes > 0; ) {
+            nodeptr_type addr = EndianConverter::get32(uptr++);
+            rbtree_f.Seek( header_.fullSavedSize() + addr*header_.cellSize());
+            rbtree_f.Write( ptr, header_.cellSize());
+            ptr += header_.cellSize();
+            --nodes;
+        }
+    }
+    virtual void applyJournalState( const JournalRecord& rec, bool takeNew ) {
+        if ( ! takeNew ) {
+            throw smsc::util::Exception("only new transaction is allowed");
+        }
+        const Transaction& t = static_cast< const Transaction& >(rec);
+        header_.load(t.buffer);
+        // persistentCellSize_ = findPersistentCellSize(header_.version);
+        rbtree_f.Seek(header_.preambuleSize());
+        rbtree_f.Write(t.buffer,header_.dataSize());
     }
 
 private:
     string			rbtree_file;
-    string			trans_file;
+    // string			trans_file;
     File			rbtree_f;
-    File			trans_f;
+    // File			trans_f;
 
     off_t			growth;
     bool			running;
     RbtFileHeader		header_;          // transient header
     std::vector< caddr_t >      chunks_;
 
-    list<nodeptr_type>	        changedNodes;
+    nodelist_type	        changedNodes_;
     int			        currentOperation;
     smsc::logger::Logger*       logger;
 
     // a cached serialized RbtFileHeader
-    std::vector< unsigned char > rbtFileHeaderBuf_;
-    Serializer                   rbtFileHeaderDump_;
+    // std::vector< unsigned char > rbtFileHeaderBuf_;
+    // Serializer                   rbtFileHeaderDump_;
     // a buffer where serialized cells are kept during transaction
-    std::vector< nodeptr_type >  transactionNodes_;
-    std::vector< unsigned char > transactionBuf_;
+    // std::vector< nodeptr_type >  transactionNodes_;
+    // std::vector< unsigned char > transactionBuf_;
+    JournalFile                 journalFile_;
 
-    bool                         fullRecovery_;    // a flag telling that full recovery in progress
+    bool                        fullRecovery_;    // a flag telling that full recovery in progress
+
+    smsc::core::synchronization::Mutex initMutex_;
+    std::auto_ptr< std::string > mark_;
+    std::auto_ptr< std::string > trail_;
 };
 
 } // namespace storage

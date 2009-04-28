@@ -421,18 +421,28 @@ public:
     }
 
 
+    offset_type extractBlocks( const buffer_type& buffer,
+                               std::vector< offset_type >& blocks,
+                               offset_type prevffb,
+                               size_t initialPosition = 0 )
+    {
+        return extractBlocks(&buffer[0],buffer.size(),blocks,prevffb,initialPosition);
+    }
+
+
     /// extract block information from block buffer.
     /// buffer must be in form: idx nav data nav data ... [ free-idx free-nav free-nav ... ]
     /// blocks on output will contain:
     /// idx datasize idx datasize ... corresponding to the buffer contents.
     /// @return the offset of the last next_block field in the chain.
-    offset_type extractBlocks( const buffer_type& buffer,
+    offset_type extractBlocks( const void* buffer,
+                               size_t      bufferSize,
                                std::vector<offset_type>& blocks,
                                offset_type prevffb,
                                size_t initialPosition = 0 )
     {
         blocks.clear();
-        Deserializer dsr(buffer);
+        Deserializer dsr(buffer,bufferSize);
         dsr.setrpos(initialPosition);
         bool isUsed = true;
         offset_type nextBlock = notUsed();
@@ -440,7 +450,7 @@ public:
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
             std::string hex;
-            hd.hexdump(hex,&buffer[initialPosition],buffer.size()-initialPosition);
+            hd.hexdump(hex,buffer,bufferSize-initialPosition);
             smsc_log_debug(log_,"extractBlocks buf: %s", hex.c_str());
         }
 

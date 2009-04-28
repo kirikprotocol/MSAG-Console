@@ -9,6 +9,7 @@
 
 #include "GlossaryBase.h"
 #include "EndianConverter.h"
+#include "util/Exception.hpp"
 
 namespace scag {
 namespace util {
@@ -37,6 +38,24 @@ public:
 private:
     const char* what_;
 };
+
+
+class SerializerException : public std::exception
+{
+public:
+    SerializerException( const char* fmt, ... ) {
+        SMSC_UTIL_EX_FILL(fmt);
+    }
+    virtual ~SerializerException() throw () {}
+    virtual const char* what() const throw () { return message_.c_str(); }
+private:
+    inline void fill( const char* fmt, va_list& arglist ) {
+        smsc::util::vformat(message_, fmt, arglist);
+    }
+private:
+    std::string message_;
+};
+
 
 
 class SerializerBase
@@ -70,7 +89,13 @@ private:
 class Serializer : public SerializerBase
 {
 public:
-    Serializer( Buf& b, GlossaryBase* glossary = NULL ) : SerializerBase(glossary) ,buf_(&b), wpos_(0) {}
+    Serializer( Buf& b, GlossaryBase* glossary = 0 ) :
+    SerializerBase(glossary) ,buf_(&b), wpos_(0), ebuf_(0), bufSize_(0) {}
+
+    // special ctor to a chunk of memory to avoid extra copying
+    Serializer( void* buf, size_t bufSize, GlossaryBase* glossary = 0 ) :
+    SerializerBase(glossary), buf_(0), wpos_(0),
+    ebuf_(reinterpret_cast<unsigned char*>(buf)), bufSize_(bufSize) {}
 
     // writing at wpos
     inline Serializer& operator << ( int8_t x ) { return *this << uint8_t(x); }
@@ -86,17 +111,20 @@ public:
     Serializer& operator << ( const Buf& );
 
     inline void reset() {
-        buf_->clear();
+        if (buf_) {buf_->clear();}
         wpos_ = 0;
     }
 
-
     inline size_t size() const {
-        return buf_->size();
+        return ( buf_ ? buf_->size() : bufSize_ );
     }
 
     inline void reserve( size_t sz ) {
-        buf_->reserve(sz);
+        if (buf_) {buf_->reserve(sz);}
+        else if (sz > bufSize_) {
+            throw SerializerException("reserve(%u) on memory chunk of sz=%u",
+                                      unsigned(sz), unsigned(bufSize_));
+        }
     }
 
     inline size_t wpos() const {
@@ -104,16 +132,24 @@ public:
     }
 
     inline void setwpos( size_t wp ) {
+        if ( wp > size() ) {
+            if (buf_) { buf_->resize(wp); }
+            else {
+                throw SerializerException("setwpos(%u) on memchunk of sz=%u",
+                                          unsigned(wp), unsigned(bufSize_) );
+            }
+        }
         wpos_ = wp;
-        if ( wpos_ > size() ) buf_->resize(wpos_); // do we need this?
     }
 
     inline const unsigned char* data() const {
-        return buf_->size() ? &(buf_->front()) : 0;
+        return buf_ ? (buf_->size() ? &(buf_->front()) : 0) :
+        reinterpret_cast<const unsigned char*>(ebuf_);
     }
 
     inline unsigned char* data() {
-        return buf_->size() ? &(buf_->front()) : 0;
+        return buf_ ? (buf_->size() ? &(buf_->front()) : 0) :
+        reinterpret_cast<unsigned char*>(ebuf_);
     }
 
     /// write buffer of size sz.
@@ -124,22 +160,25 @@ public:
 
     /// NOTE: this method does not add a length to the buffer.
     /// NOTE: see also Deserializer::readAsIs().
+    /// NOTE: this method does not add a length to buffer.
     void writeAsIs( uint32_t sz, const char* buf );
 
     uint32_t checksum( size_t pos1, size_t pos2 ) const {
-        assert( pos2 < buf_->size() );
-        return dochecksum( &(buf_->front()), pos1, pos2 );
+        assert( pos2 < size() );
+        return dochecksum( data(), pos1, pos2 );
     }
 
 
 private:
-    // returns an iterator to a chunk of given size
-    Buf::iterator ensure( uint32_t chunk );
+    // returns a pointer to a given position, chunk is added to wpos_.
+    uint8_t* ensure( uint32_t chunk );
     Serializer();
 
 private:
     Buf*   buf_;
-    size_t wpos_;  // current writing position
+    size_t wpos_;    // current writing position
+    unsigned char* ebuf_;    // not owned
+    size_t         bufSize_; // size of ebuf_
 };
 
 
