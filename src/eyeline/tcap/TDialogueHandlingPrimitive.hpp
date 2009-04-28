@@ -54,8 +54,6 @@ public:
   ROSComponentsList & CompList(void) { return _msgTC.CompList(); }
 };
 
-typedef enum { PREARRANGED_END, BASIC_END, ABORT } end_transaction_facility_t;
-
 } //tcap
 } //eyeline
 
