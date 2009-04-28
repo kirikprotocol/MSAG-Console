@@ -34,10 +34,12 @@ void compare( const AbntAddr& a )
 int main()
 {
     AbntAddr a;
-    compare(a);
     AbntAddr b(11,1,1,"79137654079");
+    AbntAddr c(10,1,1,"79137654079");
+    compare(a);
     compare(b);
-    if ( a == b ) {
+    compare(c);
+    if ( a == b || b == c ) {
         fprintf(stderr,"operator == failure\n");
         exit(-1);
     }
@@ -45,5 +47,6 @@ int main()
     AbntAddr::setAllowNewPacking( false );
     compare(a);
     compare(b);
+    compare(c);
     return 0;
 }

@@ -15,6 +15,23 @@
 
 
 namespace {
+
+void doRename( const std::string& t,
+               const std::string& n,
+               const std::string& o,
+               const char* ext = "" )
+{
+    std::string f = n + ext;
+    if ( smsc::core::buffers::File::Exists(f.c_str()) ) {
+        rename(f.c_str(),(o+ext).c_str());
+    }
+    std::string g = t + ext;
+    if ( smsc::core::buffers::File::Exists(g.c_str()) ) {
+        rename(g.c_str(),f.c_str());
+    }
+}
+
+
   class CreateProfileVisitor : public scag2::pvss::ProfileCommandVisitor {
 public:
     virtual bool visitBatchCommand(scag2::pvss::BatchCommand &cmd) /* throw(scag2::pvss::PvapException) */ {
@@ -319,6 +336,7 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
     std::string o = path + "/" + config_.dbName + "-old-index";
     try {
         File::Unlink(t.c_str());
+        File::Unlink((t+".jnl").c_str());
     } catch (...) {}
 
     /// create a temporary index file
@@ -352,13 +370,9 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
     const size_t rebuilt = dis->flush(maxSpeed);
     smsc_log_info( logger_, "storage %s indices rebuilt: %u", path.c_str(), unsigned(rebuilt) );
 
-    rename( n.c_str(), o.c_str() );
-    rename( t.c_str(), n.c_str() );
-    t += ".trx";
-    n += ".trx";
-    o += ".trx";
-    rename( n.c_str(), o.c_str() );
-    rename( t.c_str(), n.c_str() );
+    doRename(t,n,o);
+    doRename(t,n,o,".trx");
+    doRename(t,n,o,".jnl");
     return rebuilt;
 }
 
