@@ -200,6 +200,36 @@ void Profile::copyPropertiesTo(Profile* pf) const {
   }
 }
 
+
+std::string Profile::toString() const
+{
+    std::string res;
+    res.reserve(400);
+    res.append( "profile \"" );
+    res.append( pkey );
+    res.append( "\" sz=" );
+    char buf[10];
+    snprintf(buf,sizeof(buf),"%u {",unsigned(properties.GetCount()));
+    res.append(buf);
+    char *key;
+    Property* prop;
+    bool comma = false;
+    for ( PropertyHash::Iterator i = properties.getIterator(); i.Next(key,prop); ) {
+        if ( comma ) {
+            res.append(", ");
+        } else {
+            comma = true;
+        }
+        if (prop) {
+            res.append( prop->toString() );
+        } else {
+            res.append( "0x0" );
+        }
+    }
+    res.append("}");
+    return res;
+}
+
 }//pvss
 }//scag2
 

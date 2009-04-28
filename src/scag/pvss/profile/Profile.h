@@ -125,6 +125,8 @@ public:
         deserialize(backup.getBackupData(),backup.getBackupDataSize(),glossary);
     }
 
+    std::string toString() const;
+
 private:
   PropertyHash properties;
   smsc::logger::Logger* log;
