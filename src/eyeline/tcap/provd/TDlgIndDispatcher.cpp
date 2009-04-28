@@ -58,7 +58,7 @@ void TDlgIndicationDispatcher::Reset(IKind_e use_ikind/* = indNone*/)
 bool TDlgIndicationDispatcher::processSuaMsgBuf(void)
 {
   SUAIndicationParser  suaParser;
-  return suaParser.parseMsgInfo(this->suaMsgBuf()) ?
+  return suaParser.parseMsgInfo(*(this->suaMsgBuf())) ?
                   suaParser.processInd(*this) : false;
 }
 
