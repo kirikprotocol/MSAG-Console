@@ -98,7 +98,9 @@ public:
 
     ~BlocksHSStorage2();
 
-    int open( const std::string& dbname, const std::string& dbpath );
+    int open( const std::string& dbname,
+              const std::string& dbpath,
+              bool  readonly = false );
 
     int create( const std::string& dbname,
                 const std::string& dbpath,
@@ -342,6 +344,8 @@ private:
     DataFileManager&                   manager_;
     std::auto_ptr<CreationTask>        creationTask_;
     smsc::core::synchronization::Mutex creationMutex_;
+
+    bool                               readonly_;
 };
 
 } // namespace storage

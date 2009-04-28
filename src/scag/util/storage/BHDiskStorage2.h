@@ -4,6 +4,7 @@
 // #include "BlocksHSStorage.h"
 #include "DataBlockBackup2.h"
 #include "BlocksHSStorage2.h"
+#include "scag/util/HexDump.h"
 
 namespace scag2 {
 namespace util {
@@ -166,6 +167,7 @@ public:
         BHDiskStorage2&   dstore_;
     };
 
+
 protected:
     bool deserializeBuffer( typename value_type::value_type& value,
                             buffer_type& buffer ) const
@@ -192,6 +194,18 @@ protected:
                                key_.toString().c_str(),
                                key.toString().c_str(),
                                unsigned(buffer.size()) );
+                if (log_->isDebugEnabled()) {
+                    const size_t ipos = headerSize()+extraSize();
+                    if ( buffer.size() > ipos ) {
+                        const size_t bsz = buffer.size()-ipos;
+                        HexDump hd;
+                        std::string dump;
+                        dump.reserve(hd.hexdumpsize(bsz)+hd.strdumpsize(bsz));
+                        hd.hexdump(dump,&buffer[ipos],bsz);
+                        hd.strdump(dump,&buffer[ipos],bsz);
+                        smsc_log_debug(log_,"buf: %s", dump.c_str());
+                    }
+                }
             }
         }
         // if everything is ok, then pack buffer back again and attach it to v

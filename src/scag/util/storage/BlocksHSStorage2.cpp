@@ -488,7 +488,8 @@ newBuf_(0),
 freeCount_(0),
 journalFile_(*this,100,logger),
 manager_(manager),
-creationTask_(0)
+creationTask_(0),
+readonly_(false)
 {
     makeStaticData();
 }
@@ -508,12 +509,15 @@ BlocksHSStorage2::~BlocksHSStorage2()
 
 
 
-int BlocksHSStorage2::open( const std::string& dbname, const std::string& dbpath )
+int BlocksHSStorage2::open( const std::string& dbname,
+                            const std::string& dbpath,
+                            bool readonly )
 {
     if ( inited_ ) return ALREADY_INITED;
     if ( dbname.empty() ) return DBNAME_INVALID;
     dbname_ = dbname;
     dbpath_ = dbpath;
+    readonly_ = readonly;
     int ret = doOpen();
     if (!ret) { inited_ = true; }
     return ret;
@@ -531,6 +535,7 @@ int BlocksHSStorage2::create( const std::string& dbname,
     version_ = version;
     dbname_ = dbname;
     dbpath_ = dbpath;
+    readonly_ = false;
     packer_ = HSPacker(blockSize,0,log_);
     fileSize_ = fileSize;
     fileSizeBytes_ = fileSize_ * blockSize;
@@ -550,6 +555,7 @@ int BlocksHSStorage2::recover( const std::string& dbname,
     version_ = version;
     dbname_ = dbname;
     dbpath_ = dbpath;
+    readonly_ = false;
     int ret = doRecover( indexRescuer );
     if (!ret) { inited_ = true; }
     return ret;
@@ -944,7 +950,7 @@ int BlocksHSStorage2::doOpen()
     try {
         std::for_each( files_.begin(), files_.end(), PtrDestroy() );
         files_.clear();
-        journalFile_.open();
+        journalFile_.open( readonly_ );
         if ( files_.size() == 0 ) {
             throw smsc::util::Exception("no records found");
         }
@@ -1623,7 +1629,11 @@ void BlocksHSStorage2::prepareForApplication( const std::vector< JournalRecord* 
             throw smsc::util::Exception("file %s does not exist", fn.c_str());
         }
         std::auto_ptr< File > file(new File);
-        file->RWOpen(fn.c_str());
+        if ( readonly_ ) {
+            file->ROpen(fn.c_str());
+        } else {
+            file->RWOpen(fn.c_str());
+        }
         file->SetUnbuffered();
         files_.push_back(file.release());
     }
@@ -1632,6 +1642,7 @@ void BlocksHSStorage2::prepareForApplication( const std::vector< JournalRecord* 
 
 void BlocksHSStorage2::applyJournalData( const JournalRecord& rec, bool takeNew )
 {
+    if ( readonly_ ) return;
     const Transaction& t = static_cast<const Transaction&>(rec);
     try {
         if ( takeNew ) {
