@@ -1,5 +1,6 @@
 #include <functional>
 #include <cassert>
+#include <algorithm>
 #include "JournalFile.h"
 #include "scag/util/PtrLess.h"
 #include "scag/util/PtrDestroy.h"
@@ -166,10 +167,10 @@ void JournalFile::open()
         }
 
     } catch ( ... ) {
-        for_each( records.begin(), records.end(), PtrDestroy() );
+        std::for_each( records.begin(), records.end(), PtrDestroy() );
         throw;
     }
-    for_each( records.begin(), records.end(), PtrDestroy() );
+    std::for_each( records.begin(), records.end(), PtrDestroy() );
 }
 
 

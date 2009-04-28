@@ -415,7 +415,7 @@ public:
         Serializer ser(buffer);
         serializeRbtHeader(ser,header_);
         rbtree_f.Seek(0, SEEK_SET);
-        rbtree_f.Write(buffer.data(),buffer.size());
+        rbtree_f.Write(&buffer[0],buffer.size());
         rbtree_f.Flush();
         fullRecovery_ = false;
         return header_.cells_used;
@@ -689,7 +689,7 @@ private:
             Serializer ser(buffer);
             ser.reserve(header_.fullSavedSize());
             serializeRbtHeader(ser,header_);
-            rbtree_f.Write(buffer.data(), buffer.size());
+            rbtree_f.Write(&buffer[0], buffer.size());
             rbtree_f.Flush();
         } else {
             rbtree_f.Flush();
