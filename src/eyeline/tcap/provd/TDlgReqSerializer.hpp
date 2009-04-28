@@ -19,11 +19,23 @@ using eyeline::tcap::proto::AssociateSourceDiagnostic;
 //
 class TC_PAbort_Req : public TDialogueRequestPrimitive {
 public:
+  enum PAbortCause_e {
+    p_unrecognizedMessageType = 0
+    , p_unrecognizedTransactionID = 1
+    , p_badlyFormattedTransactionPortion = 2
+    , p_incorrectTransactionPortion = 3
+    , p_resourceLimitation = 4
+    , p_genericError = 127  //That's a max value allowed by protocol
+  };
+
   TC_PAbort_Req()
     : TDialogueRequestPrimitive(TCAPMessage::t_abort)
   { }
 
-  //TODO: setters for PAbortCause
+  void setAbortCause(PAbortCause_e use_reason)
+  {
+    //TODO:
+  }
 };
 
 
