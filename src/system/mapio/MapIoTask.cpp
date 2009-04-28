@@ -38,12 +38,15 @@ Mutex mapMutex;
 int bindTimer = 0;
 //static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
-static bool MAP_isAlive = false;
+//static bool MAP_isAlive = false;
 static bool MAP_aborting = false;
-bool MAP_disconnectDetected = false;
-bool MAP_disconnectedInst[10]={
+
+static EventMonitor reconnectMon;
+volatile bool MAP_connectedInst[10]={
 false,
 };
+
+volatile int MAP_connectedInstCount=0;
 
 #define MAX_BIND_TIMEOUT 15
 
@@ -62,40 +65,30 @@ extern "C" {
 
   USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn INSTANCEIDARGDEF(rinst), ET96MAP_BIND_STAT_T status)
   {
-    __map_warn2__("%s: confirmation received ssn=%d status=%d",__func__,lssn,status);
+    __map_warn2__("%s: confirmation received ssn=%d rinst=%d status=%d",__func__,lssn,INSTARG0(rinst),status);
+    bool isBound=false;
     if( status == 0  )
     {
       for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
       {
         if( MapDialogContainer::localSSNs[i] == lssn )
         {
-          MapDialogContainer::boundLocalSSNs[i] = 1;
+          MapDialogContainer::boundLocalSSNs[INSTARG0(rinst)] |= (uint64_t)1<<i;
+          isBound=true;
           __map_warn2__("%s: local ssn=%d bound",__func__,lssn);
-
           break;
         }
       }
-    } else if( status == 1 )
+    }
+    if(!isBound)
     {
-      __map_warn2__("Et96MapBindConf SSN %d is already bound trying to reconnect",lssn);
-      MAP_disconnectDetected = true;
-    } else
-    {
-      __map_warn2__("Et96MapBindConf SSN %d is not bound trying to reconnect",lssn);
-      MAP_disconnectDetected = true;
+      EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID,INSTARG0(rinst));
     }
 #ifdef SNMP
     const char* sid="MAP_PROXY";
     smsc::system::SnmpCounter::SmeTrapSeverities trpSvrt=smsc::system::SnmpCounter::getInstance().getSmeSeverities(sid);
     char snmpMsg[1024];
-    if(MAP_disconnectDetected)
-    {
-      if(trpSvrt.onRegisterFailed!=-1)
-      {
-        sprintf(snmpMsg,"ACTIVE ESME %s registration failed (AlaramID=%s; severity=%d)",sid,sid,trpSvrt.onRegisterFailed);
-        smsc::snmp::SnmpAgent::trap(sid,"ESME",(smsc::snmp::SnmpAgent::alertSeverity)trpSvrt.onRegisterFailed,snmpMsg);
-      }
-    }else
+    if(isBound)
     {
       if(trpSvrt.onRegister!=-1)
       {
@@ -104,6 +97,13 @@ extern "C" {
           sprintf(snmpMsg,"CLEARED ESME %s registration successful (AlaramID=%s; severity=%d)",sid,sid,trpSvrt.onRegister);
           smsc::snmp::SnmpAgent::trap(sid,"ESME",(smsc::snmp::SnmpAgent::alertSeverity)trpSvrt.onRegister,snmpMsg);
         }
+      }
+    }else
+    {
+      if(trpSvrt.onRegisterFailed!=-1)
+      {
+        sprintf(snmpMsg,"ACTIVE ESME %s registration failed (AlaramID=%s; severity=%d)",sid,sid,trpSvrt.onRegisterFailed);
+        smsc::snmp::SnmpAgent::trap(sid,"ESME",(smsc::snmp::SnmpAgent::alertSeverity)trpSvrt.onRegisterFailed,snmpMsg);
       }
     }
 #endif
@@ -126,22 +126,26 @@ extern "C" {
         {
           if( MapDialogContainer::localSSNs[i] == affectedSSN )
           {
-            if( MapDialogContainer::boundLocalSSNs[i] )
+            if( MapDialogContainer::boundLocalSSNs[INSTARG0(rinst)]&((uint64_t)1<<i) )
             {
-              MapDialogContainer::boundLocalSSNs[i] = 0;
+              MapDialogContainer::boundLocalSSNs[INSTARG0(rinst)] &= ~((uint64_t)1<<i);
               __map_warn2__("%s: SSN %d is unavailable trying to rebind",__func__,affectedSSN);
               USHORT_T result = Et96MapBindReq(MY_USER_ID, SSN INSTARG(rinst));
-              if (result!=ET96MAP_E_OK) {
+              if (result!=ET96MAP_E_OK)
+              {
                 __map_warn2__("%s: SSN %d Bind error 0x%hx",__func__,affectedSSN,result);
+                EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID,INSTARG0(rinst));
               }
             }
             break;
           }
         }
       } else {
-        for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ ) {
-          if( MapDialogContainer::localSSNs[i] == affectedSSN ) {
-            MapDialogContainer::boundLocalSSNs[i] = 1;
+        for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
+        {
+          if( MapDialogContainer::localSSNs[i] == affectedSSN )
+          {
+            MapDialogContainer::boundLocalSSNs[INSTARG0(rinst)] |= (uint64_t)1<<i;
             break;
           }
         }
@@ -165,6 +169,14 @@ extern "C" uint16_t onBrokenConn(uint16_t fromID,
                         uint16_t toID, 
                         uint8_t inst)
 {
+  __map_warn2__("broken conn:%d->%d,%d",fromID,toID,inst);
+  MutexGuard mg(reconnectMon);
+  MAP_connectedInstCount--;
+  if(inst<10)
+  {
+    MAP_connectedInst[inst]=false;
+  }
+  reconnectMon.notify();
   return RETURN_OK;
 }
 
@@ -178,20 +190,26 @@ void MapIoTask::connect(unsigned timeout) {
     __map_warn2__("Error at MsgOpen, code 0x%hx",result);
     kill(getpid(),17);
   }
-  for(int n=0;n<MapDialogContainer::remInstCount;n++)
+  MAP_connectedInstCount=0;
+  while(!isStopping && MAP_connectedInstCount==0)
   {
-    while( !isStopping)
+    for(int n=0;n<MapDialogContainer::remInstCount;n++)
     {
-//    result = MsgConn(MY_USER_ID,ETSIMAP_ID);
+      __map_trace2__("connecting instance %d",MapDialogContainer::remInst[n]);
       result = EINSS7CpMsgConnNotify(MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[n],onBrokenConn);
       if ( result != RETURN_OK )
       {
         __map_warn2__("Error at MsgConn, code 0x%hx, sleep 1 sec and retry connect",result);
-        sleep(1);
-      } else
+      }else
       {
-        break;
+        MAP_connectedInstCount++;
+        MAP_connectedInst[MapDialogContainer::remInst[n]]=true;
       }
+    }
+    if(MAP_connectedInstCount==0)
+    {
+      __map_warn__("No instancies are connected. Sleep 1 sec before reconnect attempt");
+      sleep(1);
     }
   }
   if(isStopping)
@@ -208,13 +226,16 @@ void MapIoTask::connect(unsigned timeout) {
   bindTimer = 0;
   for(int n=0;n<MapDialogContainer::remInstCount;n++)
   {
-    for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
+    if(MAP_connectedInst[MapDialogContainer::remInst[n]])
     {
-      result = Et96MapBindReq(MY_USER_ID, MapDialogContainer::localSSNs[i] CONNINSTARG(MapDialogContainer::remInst[n]));
-      if (result!=ET96MAP_E_OK)
+      for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
       {
-        __map_warn2__("SSN %d Inst %d Bind error 0x%hx",MapDialogContainer::localSSNs[i],MapDialogContainer::remInst[n],result);
-        throw runtime_error("bind error");
+        result = Et96MapBindReq(MY_USER_ID, MapDialogContainer::localSSNs[i] CONNINSTARG(MapDialogContainer::remInst[n]));
+        if (result!=ET96MAP_E_OK)
+        {
+          __map_warn2__("SSN %d Inst %d Bind error 0x%hx",MapDialogContainer::localSSNs[i],MapDialogContainer::remInst[n],result);
+          throw runtime_error("bind error");
+        }
       }
     }
   }
@@ -223,14 +244,73 @@ void MapIoTask::connect(unsigned timeout) {
   }
 }
 
+int MapIoTask::ReconnectThread::Execute()
+{
+  USHORT_T result;
+  while(!isStopping)
+  {
+    MutexGuard mg(reconnectMon);
+    if(MAP_connectedInstCount==MapDialogContainer::remInstCount)
+    {
+      reconnectMon.wait();
+    }
+    if(MAP_connectedInstCount==MapDialogContainer::remInstCount)
+    {
+      continue;
+    }
+    sleep(1);
+    for(int n=0;n<MapDialogContainer::remInstCount;n++)
+    {
+      if(MAP_connectedInst[MapDialogContainer::remInst[n]])
+      {
+        continue;
+      }
+      MapDialogContainer::getInstance()->DropAllDialogs(MapDialogContainer::remInst[n]);
+      __map_warn2__("Reconnecting instance %d",MapDialogContainer::remInst[n]);
+      result = EINSS7CpMsgConnNotify(MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[n],onBrokenConn);
+      if(result != RETURN_OK)
+      {
+        __map_warn2__("EINSS7CpMsgConnNotify returned error %d",result);
+        continue;
+      }
+      bool bindOk=true;
+      for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
+      {
+        result = Et96MapBindReq(MY_USER_ID, MapDialogContainer::localSSNs[i] CONNINSTARG(MapDialogContainer::remInst[n]));
+        if (result!=ET96MAP_E_OK)
+        {
+          __map_warn2__("SSN %d Inst %d Bind error 0x%hx",MapDialogContainer::localSSNs[i],MapDialogContainer::remInst[n],result);
+          EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[n]);
+          bindOk=false;
+          break;
+        }
+      }
+      MAP_connectedInst[MapDialogContainer::remInst[n]]=true;
+    }
+    MAP_connectedInstCount=0;
+    for(int n=0;n<MapDialogContainer::remInstCount;n++)
+    {
+      if(MAP_connectedInst[MapDialogContainer::remInst[n]])
+      {
+        MAP_connectedInstCount++;
+      }
+    }
+  }
+  return 0;
+}
+
 void MapIoTask::init(unsigned timeout)
 {
   USHORT_T err;
+  MapDialogContainer::patternBoundLocalSSNs=0;
   for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
   {
-    MapDialogContainer::boundLocalSSNs[i] = 0;
-    MapDialogContainer::patternBoundLocalSSNs[i] = 1;
+    MapDialogContainer::patternBoundLocalSSNs|=(uint64_t)1<<i;
     MapDialogContainer::getInstance()->InitLSSN(MapDialogContainer::localSSNs[i]);
+  }
+  for( int i = 0; i < 10; i++ )
+  {
+    MapDialogContainer::boundLocalSSNs[i] = 0;
   }
 #ifdef EIN_HD
   EINSS7CpMain_CpInit(); 
@@ -287,24 +367,36 @@ void MapIoTask::disconnect()
   __map_warn__("disconnect from MAP stack");
 
   for(int n=0;n<MapDialogContainer::remInstCount;n++)
-  for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
   {
-    result = Et96MapUnbindReq(MapDialogContainer::localSSNs[i] INSTARG(MapDialogContainer::remInst[n]));
-    if ( result != ET96MAP_E_OK)
+    if(!MAP_connectedInst[n])
     {
-      __map_warn2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",MapDialogContainer::localSSNs[i],result);
+      continue;
     }
-    MapDialogContainer::boundLocalSSNs[i] = 0;
+    for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
+    {
+      if(!(MapDialogContainer::boundLocalSSNs[MapDialogContainer::remInst[n]]&((uint64_t)1<<i)))
+      {
+        continue;
+      }
+      result = Et96MapUnbindReq(MapDialogContainer::localSSNs[i] INSTARG(MapDialogContainer::remInst[n]));
+      if ( result != ET96MAP_E_OK)
+      {
+        __map_warn2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",MapDialogContainer::localSSNs[i],result);
+      }
+    }
+    MapDialogContainer::boundLocalSSNs[MapDialogContainer::remInst[n]]=0;
   }
 
 //  result = MsgRel(MY_USER_ID,ETSIMAP_ID);
-  for(int i=0;i<MapDialogContainer::localInstCount;i++)
-  result = EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID, MapDialogContainer::localInst[i]);
-  if ( result != MSG_OK)
+  for(int i=0;i<MapDialogContainer::remInstCount;i++)
   {
-    __map_warn2__("error at MsgRel errcode 0x%hx",result);
-//    if ( !isStopping ) kill(getpid(),17);
-//    return;
+    result = EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[i]);
+    if ( result != MSG_OK)
+    {
+      __map_warn2__("error at MsgRel errcode 0x%hx",result);
+      //    if ( !isStopping ) kill(getpid(),17);
+      //    return;
+    }
   }
 
   result = MsgClose(MY_USER_ID);
@@ -314,8 +406,10 @@ void MapIoTask::disconnect()
 //    if ( !isStopping ) kill(getpid(),17);
 //    return;
   }
-  MapDialogContainer::getInstance()->DropAllDialogs();
-  sleep(1);
+  for(int i=0;i<MapDialogContainer::remInstCount;i++)
+  {
+    MapDialogContainer::getInstance()->DropAllDialogs(MapDialogContainer::remInst[i]);
+  }
 }
 
 void MapIoTask::deinit( bool connected )
@@ -323,7 +417,7 @@ void MapIoTask::deinit( bool connected )
   USHORT_T result;
   __map_warn__("deinitialize MAP_PROXY");
   MapDialogContainer::destroyInstance();
-  if( connected ) disconnect();
+  disconnect();
 
   MsgExit();
 }
@@ -374,21 +468,26 @@ void MapIoTask::dispatcher()
   message.receiver = MY_USER_ID;
   for (;;)
   {
-    MAP_isAlive = true;
+//    MAP_isAlive = true;
     if ( isStopping )
     {
       return;
     }
-    MAP_dispatching = true;
 
     if ( isStopping )
     {
       return;
+    }
+    
+    while(MAP_connectedInstCount==0)
+    {
+      usleep(100);
     }
 
     DialogRefGuard dlg;
     {
       MutexGuard mg(receiveMon);
+      MAP_dispatching = true;
 
       result = EINSS7CpMsgRecv_r(&message,1000);
 
@@ -396,65 +495,11 @@ void MapIoTask::dispatcher()
 
       MAP_dispatching = false;
 
-      if ( result == MSG_TIMEOUT )
-      {
-        if (MAP_disconnectDetected && !isStopping)
-        {
-          MutexGuard mapMutexGuard(mapMutex);
-          if(MAP_disconnectDetected)
-          {
-            disconnect();
-            connect();
-            MAP_disconnectDetected = false;
-
-          }
-          continue;
-        }
-        if( memcmp( MapDialogContainer::boundLocalSSNs, MapDialogContainer::patternBoundLocalSSNs, MapDialogContainer::numLocalSSNs*sizeof(int)) == 0 ) continue;
-        __map_warn2__("MAP:: check binders %d", bindTimer);
-        if ( ++bindTimer <= MAX_BIND_TIMEOUT ) continue;
-        __map_warn2__("MAP:: not all binders binded in %d seconds. Restarting...", MAX_BIND_TIMEOUT);
-        if ( !isStopping )
-        {
-          MAP_disconnectDetected=true;
-          MutexGuard mapMutexGuard(mapMutex);
-          if(MAP_disconnectDetected)
-          {
-            disconnect();
-            connect();
-            MAP_disconnectDetected = false;
-          }
-        }
-        continue;
-      }
-      if ( result == MSG_BROKEN_CONNECTION && !isStopping)
-      {
-        __map_warn2__("Broken connection %d", result);
-        MAP_disconnectDetected=true;
-        MutexGuard mapMutexGuard(mapMutex);
-        if(MAP_disconnectDetected)
-        {
-          disconnect();
-          connect();
-          MAP_disconnectDetected = false;
-        }
-        continue;
-      }
       if ( result != MSG_OK )
       {
-        __map_warn2__("Error at MsgRecv with code %d",result);
-        if ( !(MAP_aborting || isStopping) )
+        if( result != MSG_TIMEOUT )
         {
-  //        MAP_aborting = true;
-  //        abort();
-          MAP_disconnectDetected=true;
-          MutexGuard mapMutexGuard(mapMutex);
-          if(MAP_disconnectDetected)
-          {
-            disconnect();
-            connect();
-            MAP_disconnectDetected = false;
-          }
+          __map_warn2__("Error at MsgRecv with code %d",result);
         }
         continue;
       }
@@ -551,16 +596,6 @@ void MapIoTask::dispatcher()
       }
     }
 
-    if (MAP_disconnectDetected && !isStopping)
-    {
-      MutexGuard mapMutexGuard(mapMutex);
-      if(MAP_disconnectDetected)
-      {
-        disconnect();
-        connect();
-        MAP_disconnectDetected = false;
-      }
-    }
   }
 }
 
@@ -689,10 +724,13 @@ smsc::logger::Logger* MapDialogContainer::loggerMapPdu = 0;
 
 void MapIoTask::Start()
 {
-  try {
-    try {
+  try
+  {
+    try 
+    {
       init();
-    } catch (exception& e) {
+    } catch (exception& e)
+    {
       __map_warn2__("exception in mapio, restarting: %s",e.what());
       kill(getpid(),9);
     }
@@ -703,6 +741,7 @@ void MapIoTask::Start()
     {
       tp.startTask(new DispatcherExecutor(this));
     }
+    tp.startTask(new ReconnectThread());
   } catch (exception& e) {
     __map_warn2__("exception in mapio: %s",e.what());
   }
@@ -721,8 +760,8 @@ bool MapDialogContainer::ussdV1Enabled = false;
 bool MapDialogContainer::ussdV1UseOrigEntityNumber = false;
 ET96MAP_LOCAL_SSN_T *MapDialogContainer::localSSNs = 0;
 int                  MapDialogContainer::numLocalSSNs = 0;
-int                 *MapDialogContainer::boundLocalSSNs = 0;
-int                 *MapDialogContainer::patternBoundLocalSSNs = 0;
+uint64_t             MapDialogContainer::boundLocalSSNs[10];
+uint64_t             MapDialogContainer::patternBoundLocalSSNs;
 
 EINSS7INSTANCE_T MapDialogContainer::allInst[10];
 int MapDialogContainer::allInstCount=0;
@@ -744,6 +783,7 @@ void MapDialogContainer::abort()
 #endif
 }
 
+/*
 int MapTracker::Execute(){
   Event e;
 #ifdef USE_MAP
@@ -768,6 +808,7 @@ int MapTracker::Execute(){
 #endif
   return 0;
 }
+ */
 
 void MapDialogContainer::registerSelf(SmeManager* smeman)
 {
@@ -1073,8 +1114,14 @@ void MapProxy::checkLogging() {
 
 bool isMapBound() {
 #ifdef USE_MAP
-  return memcmp( MapDialogContainer::boundLocalSSNs, MapDialogContainer::patternBoundLocalSSNs, MapDialogContainer::numLocalSSNs*sizeof(int)) == 0 ;
-#else
-  return false;
+  for(int n=0;n<MapDialogContainer::remInstCount;n++)
+  {
+    if(MapDialogContainer::boundLocalSSNs[MapDialogContainer::remInst[n]]==MapDialogContainer::patternBoundLocalSSNs)
+    {
+      return true;
+    }
+  }
+  //return memcmp( MapDialogContainer::boundLocalSSNs, MapDialogContainer::patternBoundLocalSSNs, MapDialogContainer::numLocalSSNs*sizeof(int)) == 0 ;
 #endif
+  return false;
 }

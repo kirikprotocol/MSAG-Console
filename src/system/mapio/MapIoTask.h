@@ -78,9 +78,9 @@ extern "C" {
 #define MAX_MT_LOCK_TIME 600
 
 
-extern bool MAP_disconnectDetected;
-extern Mutex mapMutex;
-
+//extern Mutex mapMutex;
+extern volatile int MAP_connectedInstCount;
+extern volatile bool MAP_connectedInst[];
 
 #ifdef EIN_HD
 #define INSTARG(arg) ,arg
@@ -596,6 +596,7 @@ class MapDialogContainer{
     memset(dlgPool,0,sizeof(dlgPool));
     last_dump_time=0;
     dialogsCount=0;
+    rinstIdx=0;
   }
 
   void Dump()
@@ -631,9 +632,9 @@ public:
   static int localInstCount;
   static EINSS7INSTANCE_T remInst[10];
   static int remInstCount;
-  static int                *boundLocalSSNs;
-  static int                *patternBoundLocalSSNs; /* contains true values, used for memcmp to check if all SSN bound*/
-  static int                 numLocalSSNs;
+  static uint64_t boundLocalSSNs[10];
+  static uint64_t patternBoundLocalSSNs; /* contains true values, used for memcmp to check if all SSN bound*/
+  static int numLocalSSNs;
   static smsc::logger::Logger* loggerStatDlg;
   static smsc::logger::Logger* loggerMapPdu;
   
@@ -694,17 +695,16 @@ public:
     }
   }
 
-  void DropAllDialogs()
+  void DropAllDialogs(int rinst)
   {
     MutexGuard g(sync);
     __mapdlg_trace2__("%s: dropping all dialogs",__func__);
-    for(int n=0;n<allInstCount;n++)
     for(int j=0;j<numLocalSSNs;j++)
     {
       for(int i=0;i<65536;i++)
       {
-        if(!dlgPool[localSSNs[j]][allInst[n]])continue;
-        MapDialog* dlg=dlgPool[localSSNs[j]][allInst[n]][i];
+        if(!dlgPool[localSSNs[j]][rinst])continue;
+        MapDialog* dlg=dlgPool[localSSNs[j]][rinst][i];
         if(!dlg->isAllocated)continue;
         dropDialogUnlocked(dlg);
         dlg->Release();
@@ -740,15 +740,14 @@ public:
   {
     ussdSSN = (ET96MAP_LOCAL_SSN_T)ssn;
     int addssns = 0;
-    if( addUssdSSN.length() > 0 ) {
+    if( addUssdSSN.length() > 0 )
+    {
       const char *str = addUssdSSN.c_str();
       for( int i = 0; str[i]; i++ ) if( str[i] == ',' ) addssns++;
       addssns++;
     }
     __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_INFO,"%s: initializing local SSNs additional %d",__func__, addssns);
     localSSNs = new ET96MAP_LOCAL_SSN_T[addssns+2];
-    boundLocalSSNs = new int[addssns+2];
-    patternBoundLocalSSNs = new int[addssns+2];
     numLocalSSNs = addssns+2;
     const char *str = addUssdSSN.c_str();
     localSSNs[0] = SSN;
@@ -938,7 +937,7 @@ public:
       throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGINSRI],MapLimits::getInstance().getLimitInSRI());
     }
     MutexGuard g(sync);
-    int rinst=remInst[0];//!!TODO!!
+    int rinst=getNextRInst();
     if ( dialogId_pool[lssn][rinst].empty() ) {
       Dump();
       throw runtime_error("MAP:: POOL is empty");
@@ -1029,7 +1028,7 @@ public:
         }
       }
     }
-    int rinst=remInst[0];//!!TODO!!
+    int rinst=getNextRInst();
     if ( dialogId_pool[lssn][rinst].empty() )
     {
       smsc_log_warn(smsc::logger::_mapdlg_cat, "Dialog id POOL is empty" );
@@ -1070,7 +1069,7 @@ public:
   MapDialog* createOrAttachSMSCUSSDDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd)
   {
     ET96MAP_DIALOGUE_ID_T map_dialog;
-    int rinst=remInst[0];
+    int rinst=getNextRInst();
     {
       MutexGuard g(sync);
       if ( dialogId_pool[lssn][rinst].empty() )
@@ -1318,6 +1317,37 @@ public:
   void registerSelf(SmeManager* smeman);
   void unregisterSelf(SmeManager* smeman);
   void abort();
+  
+  int rinstIdx;
+  
+  int getNextRInst()
+  {
+    if(MAP_connectedInstCount==0)
+    {
+      throw std::runtime_error("No connected instancies");
+    }
+    if(MAP_connectedInstCount==1 && MAP_connectedInst[MapDialogContainer::remInst[rinstIdx]])
+    {
+      return remInst[rinstIdx];
+    }
+    int cnt=0;
+    do
+    {
+      rinstIdx++;
+      if(rinstIdx>=remInstCount)
+      {
+        rinstIdx=0;
+      }
+      cnt++;
+      if(cnt>10)
+      {
+        throw std::runtime_error("No connected instancies");
+      }
+    }
+    while(!MAP_connectedInst[remInst[rinstIdx]]);
+    return remInst[rinstIdx];
+  }
+  
 };
 
 class DialogRefGuard{
@@ -1371,11 +1401,13 @@ void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId,ET96MAP_LOCAL_SSN_T ssn,EIN
   MapDialogContainer::getInstance()->freeDialogueId(dialogueId,ssn,inst);
 }
 
+/*
 class MapTracker : public ThreadedTask{
 public:
   virtual int Execute();
   virtual const char* taskName() { return "MapTracker";}
 };
+ */
 
 /*
 */
@@ -1413,6 +1445,7 @@ public:
     MapDialogContainer::allInst[0]=0;
     MapDialogContainer::allInst[1]=0;
     MapDialogContainer::allInstCount=2;
+    
 #endif
   }
   
@@ -1483,6 +1516,7 @@ public:
     MapDialogContainer::setProxy( 0 );
   }
 protected:
+  
   class DispatcherExecutor;
   friend class MapIoTask::DispatcherExecutor;
   class DispatcherExecutor:public smsc::core::threads::ThreadedTask{
@@ -1510,6 +1544,20 @@ protected:
     virtual const char* taskName() { return "MapIoTask::dispatcher";}
   protected:
     MapIoTask* mapIoTask;
+  };
+  class ReconnectThread:public smsc::core::threads::ThreadedTask{
+  public:
+    ReconnectThread():isStopping(false)
+    {
+    }
+    virtual int Execute();
+    virtual void stop()
+    {
+      isStopping=true;
+    }
+    virtual const char* taskName() { return "MapIoTask::reconnect";}
+  protected:
+    bool isStopping;
   };
 
 private:

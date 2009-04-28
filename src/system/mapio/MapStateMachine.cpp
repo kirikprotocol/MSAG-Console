@@ -171,7 +171,6 @@ void checkMapReq(USHORT_T result, const char* func) {
   if ( result != ET96MAP_E_OK ) {
     const string &text = FormatText("MAP request call failed result=%d in %s", result, func);
     if ( result == 1009 || result == 1011 ) {
-      MAP_disconnectDetected = true;
       throw MAPDIALOG_TEMP_ERROR(text, Status::SYSFAILURE);
     } else {
       throw runtime_error(text);
@@ -180,10 +179,8 @@ void checkMapReq(USHORT_T result, const char* func) {
 }
 
 void warnMapReq(USHORT_T result, const char* func) {
-  if ( result != ET96MAP_E_OK ) {
-    if ( result == 1009 || result == 1011 ) {
-      MAP_disconnectDetected = true;
-    }
+  if ( result != ET96MAP_E_OK )
+  {
     __map_warn2__("MAP request call failed result=%d in %s", result, func);
   }
 }
@@ -1808,7 +1805,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
   DialogRefGuard dialog;
   UssdProcessingGuard ussdGuard;
     MAP_TRY {
-    if( !isMapBound() || MAP_disconnectDetected )
+    if( MAP_connectedInstCount==0 || !isMapBound() )
     {
       throw runtime_error("MAP is not bound yet");
     }
