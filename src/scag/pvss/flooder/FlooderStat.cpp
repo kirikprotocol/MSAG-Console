@@ -285,6 +285,7 @@ void FlooderStat::checkTime()
             outLastHisto_ = lastHisto_;
             outHistoCreateTime_ = lastHistoCreateTime_;
             lastHistoCreateTime_ = currentTime;
+            lastHisto_.reset();
         }
 
         if ( outLast_.requests == 0 ) {
