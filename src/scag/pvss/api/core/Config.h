@@ -30,9 +30,9 @@ public:
     static const int DEF_CONNECT_TIMEOUT = 60000;    // 1 min
     static const int MAX_CONNECT_TIMEOUT = 300000;   // 5 min
 
-    static const int MIN_PROCESS_TIMEOUT = 1;        // 1 msec
-    static const int DEF_PROCESS_TIMEOUT = 10;       // 10 msec
-    static const int MAX_PROCESS_TIMEOUT = 1000;     // 1 sec
+    static const util::msectime_type MIN_PROCESS_TIMEOUT = 10;        // 10 msec
+    static const util::msectime_type DEF_PROCESS_TIMEOUT = 100;      // 100 msec
+    static const util::msectime_type MAX_PROCESS_TIMEOUT = 10000;    // 10 sec
 
     static const util::msectime_type MIN_STATISTICS_INTERVAL = 1000;
     static const util::msectime_type DEF_STATISTICS_INTERVAL = 10000;
