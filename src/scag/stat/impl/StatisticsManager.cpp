@@ -153,6 +153,9 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
 
     initTraffic(smppTrafficByRouteId, traffloc + std::string("/SMPP/") + "traffic.dat");
     initTraffic(httpTrafficByRouteId, traffloc + std::string("/HTTP/") + "traffic.dat");
+    statLogger.reset(new StatLogger(statManConfig.getDir(), statManConfig.getSaaDir(),
+                                    statManConfig.getFilesPrefix(), statManConfig.getRollingInterval()));
+    statRoller.reset(new StatRoller(statLogger.get()));
 }
 
 
@@ -514,6 +517,8 @@ void StatisticsManager::Start()
     smsc_log_debug(logger, "PerformanceServer is starting...");
     sender.Start();
     smsc_log_debug(logger, "PerformanceServer is started");
+
+    statRoller->Stop();
 
     thrSaccSender.Start();
     isStarted = true;
@@ -1282,11 +1287,21 @@ int StatisticsManager::indexByHttpCounter(int event)
 
 void StatisticsManager::registerSaccEvent(stat::SaccTrafficInfoEvent* ev)
 {
-    thrSaccSender.PushEvent(ev);
+    if (statLogger.get() && statRoller.get() && !statRoller->isStopped()) {
+      statLogger->logEvent(ev);
+    }
+    if (ev) {
+      delete ev;
+    }
 }
 void StatisticsManager::registerSaccEvent(stat::SaccBillingInfoEvent* ev)
 {
-    thrSaccSender.PushEvent(ev);
+    if (statLogger.get() && statRoller.get() && !statRoller->isStopped()) {
+      statLogger->logEvent(ev);
+    }
+    if (ev) {
+      delete ev;
+    }
 }
 void StatisticsManager::registerSaccEvent(stat::SaccAlarmMessageEvent* ev)
 {

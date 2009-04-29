@@ -24,6 +24,7 @@
 #include "Sender.h"
 #include "Performance.h"
 #include "scag/stat/impl/SACC_EventSender.h"
+#include "scag/stat/impl/StatisticsLogger.h"
 
 #include <util/BufferSerialization.hpp>
 
@@ -267,6 +268,14 @@ using namespace scag::stat::sacc;
     private:
         // to make compiler happy
         void Start( int );
+
+    private:
+        typedef StatisticsLogger<SaccEvent, SaccSerialBuffer> StatLogger;
+        typedef StatisticsRoller<SaccEvent, SaccSerialBuffer> StatRoller;
+
+    private:
+        std::auto_ptr<StatLogger> statLogger;
+        std::auto_ptr<StatRoller> statRoller;
     };
 
 }//namespace stat

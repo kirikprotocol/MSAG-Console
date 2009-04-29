@@ -155,6 +155,10 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
 
     initTraffic(smppTrafficByRouteId, traffloc + std::string("/SMPP/") + "traffic.dat");
     initTraffic(httpTrafficByRouteId, traffloc + std::string("/HTTP/") + "traffic.dat");
+
+    statLogger.reset(new StatLogger(statManConfig.getDir(), statManConfig.getSaaDir(),
+                                    statManConfig.getFilesPrefix(), statManConfig.getRollingInterval()));
+    statRoller.reset(new StatRoller(statLogger.get()));
 }
 
 
@@ -454,6 +458,8 @@ void StatisticsManager::Stop()
     smsc_log_debug(logger, "PerformanceServer is shutdowninig...");
     sender.Stop();
     smsc_log_debug(logger, "PerformanceServer is shutdowned");
+
+    statRoller->Stop();
 
     thrSaccSender.Stop();
 
@@ -1235,11 +1241,21 @@ int StatisticsManager::indexByHttpCounter(int event)
 
 void StatisticsManager::registerSaccEvent(scag::stat::SaccTrafficInfoEvent* ev)
 {
-    thrSaccSender.PushEvent(ev);
+    if (statLogger.get() && statRoller.get() && !statRoller->isStopped()) {
+      statLogger->logEvent(ev);
+    }
+    if (ev) {
+      delete ev;
+    }
 }
 void StatisticsManager::registerSaccEvent(scag::stat::SaccBillingInfoEvent* ev)
 {
-    thrSaccSender.PushEvent(ev);
+    if (statLogger.get() && statRoller.get() && !statRoller->isStopped()) {
+      statLogger->logEvent(ev);
+    }
+    if (ev) {
+      delete ev;
+    }
 }
 void StatisticsManager::registerSaccEvent(scag::stat::SaccAlarmMessageEvent* ev)
 {
