@@ -86,27 +86,40 @@ public:
         return double(avg)/count;
     }
 
-private:
-    HistoData() : size_(0), bins_(0) {}
-    HistoData( const HistoData& h ) : size_(h.size_), bins_(new unsigned[size_]) {
-        reset();
+    HistoData( const HistoData& h ) : size_(h.size_), bins_(new unsigned[size_]), count_(h.count_) {
+        memcpy(bins_,h.bins_,sizeof(unsigned)*size_);
     }
-    HistoData& operator = ( const HistoData& h );
+
+    HistoData& operator = ( const HistoData& h ) {
+        if ( &h == this ) return *this;
+        delete [] bins_;
+        size_ = h.size_;
+        bins_ = new unsigned[size_];
+        count_ = h.count_;
+        memcpy(bins_,h.bins_,sizeof(unsigned)*size_);
+        return *this;
+    }
 
 private:
-    const unsigned size_; // the size of histogram (including the underflow and the overflow bins)
-    unsigned*      bins_;
-    unsigned       count_;
+    HistoData() : size_(0), bins_(0) {}
+
+private:
+    unsigned     size_; // the size of histogram (including the underflow and the overflow bins)
+    unsigned*    bins_;
+    unsigned     count_;
 };
 
 
 template < typename T > class Histo1d
 {
 public:
-    Histo1d( unsigned nbins, T tmin, T tmax ) : nbins_(nbins), data_(nbins+2), tmin_(tmin), dt_((tmax-tmin)/nbins), first_(true), bounds_(0) {
+    Histo1d( unsigned nbins, T tmin, T tmax ) :
+    nbins_(nbins), data_(nbins+2), bounds_(0), tmin_(tmin), dt_((tmax-tmin)/nbins),
+    first_(true) {
         if ( dt_ <= 0 ) dt_ = 1;
     }
-    Histo1d( double scale, unsigned nbins, T tmin = 1 ) : nbins_(nbins), data_(nbins+2), tmin_(tmin), dt_(0), first_(true) {
+    Histo1d( double scale, unsigned nbins, T tmin = 1 ) :
+    nbins_(nbins), data_(nbins+2), tmin_(tmin), dt_(0), first_(true) {
         if ( scale <= 1. ) scale = 2.;
         // find out the boundaries between bins
         bounds_ = new T[nbins_+1];
@@ -117,6 +130,34 @@ public:
         }
     }
     
+    Histo1d( const Histo1d& h ) :
+    nbins_(h.nbins_), data_(h.data_), bounds_(0), tmin_(h.tmin_), dt_(h.dt_),
+    minValue_(h.minValue_), maxValue_(h.maxValue_), first_(h.first_) {
+        if ( h.bounds_ ) {
+            bounds_ = new T[nbins_+1];
+            memcpy(bounds_,h.bounds_,sizeof(T)*(nbins_+1));
+        }
+    }
+
+    Histo1d& operator = ( const Histo1d& h ) {
+        if ( &h == this ) return *this;
+        nbins_ = h.nbins_;
+        data_ = h.data_;
+        delete [] bounds_;
+        if ( h.bounds_ ) {
+            bounds_ = new T[nbins_+1];
+            memcpy(bounds_,h.bounds_,sizeof(T)*(nbins_+1));
+        } else {
+            bounds_ = 0;
+        }
+        tmin_ = h.tmin_;
+        dt_ = h.dt_;
+        minValue_ = h.minValue_;
+        maxValue_ = h.maxValue_;
+        first_ = h.first_;
+        return *this;
+    }
+
     ~Histo1d() {
         if (bounds_) delete [] bounds_;
     }
