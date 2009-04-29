@@ -9,6 +9,7 @@
 # include "eyeline/tcap/TDialogueId.hpp"
 # include "eyeline/tcap/proto/TCAPMessage.hpp"
 # include "eyeline/tcap/proto/TransactionId.hpp"
+# include "eyeline/asn1/EncodedOID.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -50,6 +51,8 @@ public:
   {
     return _msgTC.getTransactionId();
   }
+
+  const asn1::EncodedOID* getAppCtx() const;
 
   ROSComponentsList & CompList(void) { return _msgTC.CompList(); }
 };
