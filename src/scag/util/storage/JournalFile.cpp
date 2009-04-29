@@ -1,6 +1,7 @@
 #include <functional>
 #include <cassert>
 #include <algorithm>
+#include <sstream>
 #include "JournalFile.h"
 #include "scag/util/PtrLess.h"
 #include "scag/util/PtrDestroy.h"
@@ -38,6 +39,11 @@ void JournalFile::open( bool readonly )
         journalFile_.RWOpen( fn.c_str() );
     }
     journalFile_.SetUnbuffered();
+    if (log_) {
+        smsc_log_debug(log_,"journal file %s has been opened%s",
+                       fn.c_str(),
+                       readonly ? " readonly" : "");
+    }
 
     // reading the header
     const size_t mhsz = store_.maxJournalHeaderSize();
@@ -49,6 +55,9 @@ void JournalFile::open( bool readonly )
         journalFile_.Read(&journal_[0],mhsz);
         // applying
         hsz = store_.loadJournalHeader(&journal_[0]);
+        if (log_) {
+            smsc_log_debug(log_,"header of size=%u has been loaded",unsigned(hsz));
+        }
     }
 
     // loading the whole journal file
@@ -82,6 +91,10 @@ void JournalFile::open( bool readonly )
             continue;
         }
 
+        if (log_) {
+            smsc_log_debug(log_,"journal record found at %u", unsigned(iptr-&journal_[0]));
+        }
+
         JournalRecord* jr;
         const char* optr = iptr+jrm.size();
         try {
@@ -93,6 +106,9 @@ void JournalFile::open( bool readonly )
             iptr = optr;
             records.push_back(jr);
             jr->setEndsAt( optr - &journal_[0] );
+            if (log_) {
+                smsc_log_debug(log_,"journal record %s has been loaded",jr->toString().c_str());
+            }
             // check for trailer
             const std::string& jrt = store_.journalRecordTrailer();
             if ( iptr + jrt.size() >= endptr ) {
@@ -101,6 +117,9 @@ void JournalFile::open( bool readonly )
             }
             if ( std::equal(jrt.begin(),jrt.end(),iptr) ) {
                 // eof found
+                if (log_) {
+                    smsc_log_debug(log_,"trailer found at %u", unsigned(iptr-&journal_[0]));
+                }
                 break;
             }
         } else {
@@ -108,14 +127,25 @@ void JournalFile::open( bool readonly )
         }
     } // loop over file content
 
-    // clearing journal content
-    buffer_type().swap(journal_);
-    
     if ( records.size() == 0 ) {
+        if (log_) {
+            smsc_log_debug(log_,"journal has no records");
+        }
         return;
     }
 
     try {
+
+        if (log_ && log_->isDebugEnabled()) {
+            std::ostringstream os;
+            for ( RecordList::const_iterator i = records.begin();
+                  i != records.end();
+                  ++i ) {
+                os << " " << (*i)->getSerial();
+            }
+            smsc_log_debug(log_,"record serials(%u): %s", unsigned(records.size()),
+                           os.str().c_str());
+        }
 
         if ( records.size() > 1 ) {
 
@@ -148,6 +178,16 @@ void JournalFile::open( bool readonly )
             }
         }
 
+        if (log_ && log_->isDebugEnabled()) {
+            std::ostringstream os;
+            for ( RecordList::const_iterator i = records.begin();
+                  i != records.end();
+                  ++i ) {
+                os << " " << (*i)->getSerial();
+            }
+            smsc_log_debug(log_,"after sorting: %s", os.str().c_str());
+        }
+
         // all records are sequential
         store_.prepareForApplication( records );
 
@@ -160,8 +200,12 @@ void JournalFile::open( bool readonly )
             journalFile_.Seek( records.back()->getEndsAt() );
             recordSerial_ = records.back()->getSerial();
 
-        } catch (...) {
+        } catch ( std::exception& e ) {
             
+            if (log_) {
+                smsc_log_info(log_,"new state failed: %s", e.what());
+            }
+
             // trying with old
             ::Applier applier(store_,false);
             std::for_each( records.rbegin(), records.rend(), applier );

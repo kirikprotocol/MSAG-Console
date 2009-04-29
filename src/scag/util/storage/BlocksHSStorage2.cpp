@@ -321,6 +321,17 @@ public:
         return 2*(4+StorageState::dataSize()) + oldBufSize + newBufSize;
     }
 
+    virtual std::string toString() const
+    {
+        char buf[200];
+        snprintf(buf,sizeof(buf)," oldSt=%s newSt=%s oldSz=%u newSz=%u",
+                 oldState.toString().c_str(),
+                 newState.toString().c_str(),
+                 unsigned(oldBufSize),
+                 unsigned(newBufSize) );
+        return JournalRecord::toString() + buf;
+    }
+
     StorageState         oldState;
     const void*          oldBuf;    // not owned
     size_t               oldBufSize;
@@ -1604,6 +1615,12 @@ size_t BlocksHSStorage2::loadJournalHeader( const void* p )
     packer_ = HSPacker(bsz,0/*,log_*/);
     fileSize_ = EndianConverter::get32(ptr+8);
     fileSizeBytes_ = offset_type(fileSize_) * packer_.blockSize();
+    if (log_) {
+        smsc_log_debug(log_,"journal header has been loaded: blockSize=%u/%x fileSize=%u/%x fszBytes=%llx",
+                       unsigned(bsz), unsigned(bsz),
+                       unsigned(fileSize_), unsigned(fileSize_),
+                       uint64_t(fileSizeBytes_) );
+    }
     return journalHeaderSize();
 }
 
@@ -1637,6 +1654,9 @@ void BlocksHSStorage2::prepareForApplication( const std::vector< JournalRecord* 
         file->SetUnbuffered();
         files_.push_back(file.release());
     }
+    if (log_) {
+        smsc_log_debug(log_,"all %u files opened", unsigned(files_.size()));
+    }
 }
 
 
@@ -1651,6 +1671,17 @@ void BlocksHSStorage2::applyJournalData( const JournalRecord& rec, bool takeNew 
             writeBlocks(t.oldBuf,t.oldBufSize);
         }
     } catch ( std::exception& e ) {
+        if (log_ && log_->isDebugEnabled()) {
+            HexDump hd;
+            std::string dump;
+            const void* buf = takeNew ? t.newBuf : t.oldBuf;
+            const size_t bufSize = takeNew ? t.newBufSize : t.oldBufSize;
+            dump.reserve(hd.hexdumpsize(bufSize)+hd.strdumpsize(bufSize));
+            hd.hexdump(dump,buf,bufSize);
+            hd.strdump(dump,buf,bufSize);
+            smsc_log_debug(log_,"failed to apply %s: %s, buf=%s",
+                           takeNew ? "new" : "old", t.toString().c_str(), dump.c_str());
+        }
         throw smsc::util::Exception("failed to apply %s #%u: %s",
                                     takeNew ? "new" : "old",
                                     t.getSerial(), e.what() );

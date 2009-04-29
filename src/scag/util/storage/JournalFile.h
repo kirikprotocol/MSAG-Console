@@ -37,6 +37,12 @@ public:
     virtual size_t savedDataSize() const = 0;
     virtual void save( void* buf ) const = 0;
 
+    virtual std::string toString() const {
+        char buf[50];
+        snprintf(buf,sizeof(buf),"serial=%u csum=%llx ends=%u",serial_,controlSum_,unsigned(endsAt_));
+        return buf;
+    }
+
     bool operator < ( const JournalRecord& jr ) const { return serial_ < jr.serial_; }
 
 private:
