@@ -102,6 +102,8 @@ void FlooderStat::requestCreated( Request* req )
     if ( ++counter % requestsPerSecond_ == 0 ) {
         // we would like to have one timing request per second
         static_cast< ProfileRequest* >(req)->startTiming();
+        // randomization
+        counter += reinterpret_cast<unsigned>(static_cast<const void*>(req)) % 13;
     }
 }
 

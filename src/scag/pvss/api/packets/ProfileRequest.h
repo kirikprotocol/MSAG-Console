@@ -36,18 +36,7 @@ public:
     ProfileRequest( const ProfileKey& profileKey, ProfileCommand* cmd = 0 ) : profileKey_(profileKey), command_(cmd), timing_(0) {
         initLog(); 
     }
-    virtual ~ProfileRequest() {
-        logDtor();
-        if (timing_) {
-            if ( ! timing_->result.empty() ) {
-                smsc_log_info( logtm_, "timing: %s %s", this, timing_->result.c_str(),
-                               command_ ? command_->toString().c_str() : "");
-            }
-            delete timing_;
-            // smsc_log_warn( log_, "request %p has extra context %p at dtor", this, context_ ); 
-        }
-        if (command_) { delete command_; }
-    }
+    virtual ~ProfileRequest();
 
     const ProfileKey& getProfileKey() const { return profileKey_; }
     ProfileKey& getProfileKey() { return profileKey_; }
