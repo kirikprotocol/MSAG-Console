@@ -98,7 +98,7 @@ public:
     inline unsigned mark( const char* where ) {
         if ( ! result_ ) return 0;
         char buf[100];
-        unsigned tm = unsigned(timer_.get() / resol_);
+        const unsigned tm = unsigned(timer_.get() / resol_);
         int written = snprintf( buf, sizeof(buf), " %s=%u", where, tm );
         if ( written > 0 ) {
             result_->append( buf, std::min(unsigned(sizeof(buf)-1),unsigned(written)) );
