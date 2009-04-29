@@ -65,7 +65,7 @@ private:
 
 private:    
     static const util::msectime_type accumulationTime = 5000; // 5 seconds accumulation time
-    static const unsigned histoBins = 21;
+    static const unsigned histoBins = 23;
     static const unsigned minTime = 20;
     static const double binScale;
 
@@ -74,11 +74,9 @@ private:
     smsc::logger::Logger*                                  log_;
     unsigned                                               requestsPerSecond_;
     unsigned                                               requested_;
-    util::msectime_type                                    doneTime_;
     util::msectime_type                                    timeout_;
     bool                                                   stopped_;
     core::Statistics                                       total_;
-    core::Statistics                                       previous_;
     core::Statistics                                       last_;
     const FlooderConfig&                                   config_;
     RequestGenerator                                       generator_;
@@ -88,6 +86,15 @@ private:
     util::histo::Histo1d< unsigned >                       totalHisto_;
     util::histo::Histo1d< unsigned >                       lastHisto_;
     util::msectime_type                                    lastHistoCreateTime_;
+
+    // statistics which is printed
+    bool                             outReady_;
+    core::Statistics                 outTotal_;
+    core::Statistics                 outLast_;
+    bool                             histoReady_;
+    util::histo::Histo1d< unsigned > outTotalHisto_;
+    util::histo::Histo1d< unsigned > outLastHisto_;
+    util::msectime_type              outHistoCreateTime_;
 };
 
 } // namespace flooder

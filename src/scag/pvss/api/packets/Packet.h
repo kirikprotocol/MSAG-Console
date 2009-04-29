@@ -15,6 +15,7 @@ class Packet
 {
 protected:
     static smsc::logger::Logger* log_;
+    static smsc::logger::Logger* logtm_;
 
 public:
     enum {
@@ -32,6 +33,13 @@ public:
     virtual void setSeqNum( uint32_t seqNum ) = 0;
     virtual Packet* clone() const = 0;
     virtual const char* typeToString() const = 0;
+
+    /// report timing in different parts of program
+    virtual bool hasTiming() const { return false; }
+    /// NOTE: that timing information is not a part of packet, so
+    /// const is quite reasonable here.
+    virtual void timingMark( const char* where ) const {}
+    virtual void timingComment( const char* comment ) const {}
 
 protected:
     void initLog();

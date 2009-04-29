@@ -259,6 +259,8 @@ void ClientCore::reportPacket( uint32_t seqNum, smsc::core::network::Socket& cha
         ctx.reset(static_cast<ClientContext*>(ptr->pop(i)));
     }
 
+    request->timingMark("reportPack");
+
     // we have found a request context
     if ( state == SENT ) {
         if (request->isPing())
@@ -512,6 +514,7 @@ void ClientCore::sendRequest(std::auto_ptr<ClientContext>& context) /* throw(Pvs
             throw PvssException(PvssException::CLIENT_BUSY,
                                 "Possible seqNum overrrun! seqNum=%u is still in use", seqNum);
         ptr->push( context.release() );
+        // packet->timingMark("beforeSend");
     }
     try {
         channel.send(packet,true,false);
@@ -582,6 +585,7 @@ void ClientCore::handleResponseWithContext( std::auto_ptr< ClientContext >& cont
         else context->setError(exc);
         return;
     }
+    request->timingMark("handleResp");
 
     if (request->isPing()) {
         if (response->getStatus() != Response::OK) {

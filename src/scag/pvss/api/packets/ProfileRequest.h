@@ -5,6 +5,7 @@
 #include "ProfileCommand.h"
 #include "RequestVisitor.h"
 #include "scag/pvss/data/ProfileKey.h"
+#include "scag/util/HRTimer.h"
 
 namespace scag2 {
 namespace pvss {
@@ -14,13 +15,37 @@ namespace pvss {
 ///
 class ProfileRequest : public Request
 {
+private:
+    struct Timing {
+        std::string    result;
+        util::HRTiming timing;
+        unsigned       total;
+        Timing() : total(0) {
+            timing.reset(result);
+            result.reserve(400);
+        }
+    };
+
 public:
-    ProfileRequest( ProfileCommand* cmd = 0 ) : command_(cmd), context_(0) { initLog(); }
-    ProfileRequest( uint32_t seqNum, ProfileCommand* cmd = 0 ) : Request(seqNum), command_(cmd), context_(0) { initLog(); }
-    ProfileRequest( const ProfileKey& profileKey, ProfileCommand* cmd = 0 ) : profileKey_(profileKey), command_(cmd), context_(0) { initLog(); }
+    ProfileRequest( ProfileCommand* cmd = 0 ) : command_(cmd), timing_(0) {
+        initLog(); 
+    }
+    ProfileRequest( uint32_t seqNum, ProfileCommand* cmd = 0 ) : Request(seqNum), command_(cmd), timing_(0) {
+        initLog(); 
+    }
+    ProfileRequest( const ProfileKey& profileKey, ProfileCommand* cmd = 0 ) : profileKey_(profileKey), command_(cmd), timing_(0) {
+        initLog(); 
+    }
     virtual ~ProfileRequest() {
         logDtor();
-        if (context_) { smsc_log_warn( log_, "request %p has extra context %p at dtor", this, context_ ); }
+        if (timing_) {
+            if ( ! timing_->result.empty() ) {
+                smsc_log_info( logtm_, "timing: %s %s", this, timing_->result.c_str(),
+                               command_ ? command_->toString().c_str() : "");
+            }
+            delete timing_;
+            // smsc_log_warn( log_, "request %p has extra context %p at dtor", this, context_ ); 
+        }
         if (command_) { delete command_; }
     }
 
@@ -65,20 +90,45 @@ public:
         if ( getCommand() ) getCommand()->clear();
     }
 
-    inline void* getExtraContext() { return context_; }
-    inline void setExtraContext( void* ctx ) { context_ = ctx; }
+    // --- timing
+    virtual bool hasTiming() const {
+        return ( timing_ ? timing_->timing.isValid() : false );
+    }
+    virtual void timingMark( const char* where ) const {
+        if (!timing_) return;
+        timing_->total += timing_->timing.mark(where);
+    }
+    virtual void timingComment( const char* comment ) const {
+        if (!timing_) return;
+        timing_->timing.comment(comment);
+    }
+    
+
+    /// --- these extra methods may be used to juggle with timing
+    inline const std::string* getTimingResult() const {
+        return timing_ ? &(timing_->result) : 0;
+    }
+    inline unsigned getTimingTotal() const {
+        return timing_ ? timing_->total : 0;
+    }
+    inline void startTiming() {
+        if ( ! timing_ ) { timing_ = new Timing; }
+    }
+    inline void stopTiming() {
+        if ( timing_ ) { timing_->timing.stop(); }
+    }
 
 protected:
     virtual const char* typeToString() const { return "prof"; }
 
 private:
     ProfileRequest( const ProfileRequest& other ) :
-    Request(other), profileKey_(other.profileKey_), command_(other.command_->clone()) {}
+    Request(other), profileKey_(other.profileKey_), command_(other.command_->clone()), timing_(0) {}
 
 private:
     ProfileKey       profileKey_;
     ProfileCommand*  command_;
-    void*            context_;
+    mutable Timing*  timing_;
 };
 
 } // namespace pvss

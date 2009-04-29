@@ -53,13 +53,16 @@ int FlooderThread::doExecute()
 
 void AsyncFlooderThread::doProcessRequest( std::auto_ptr< Request >& request ) /* throw (PvssException) */ 
 {
+    // request->timingMark("bProcAsync");
     stat_.getClient().processRequestAsync(request,stat_);
 }
 
 
 void SyncFlooderThread::doProcessRequest( std::auto_ptr< Request >& request ) /* throw (PvssException) */ 
 {
+    // request->timingMark("bProcSync");
     std::auto_ptr<Response> response = stat_.getClient().processRequestSync(request);
+    // request->timingMark("aProcSync");
     stat_.handleResponse(request,response);
 }
 

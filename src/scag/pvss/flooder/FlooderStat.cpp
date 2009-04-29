@@ -15,7 +15,6 @@ FlooderStat::FlooderStat( const FlooderConfig& config,
 log_(0),
 requestsPerSecond_(config.getSpeed()),
 requested_(config.getRequested()),
-doneTime_(0),
 timeout_(100),
 stopped_(false),
 total_(0),
@@ -26,7 +25,14 @@ client_(client),
 tp_(new smsc::core::threads::ThreadPool),
 totalHisto_(binScale,histoBins,minTime),
 lastHisto_(binScale,histoBins,minTime),
-lastHistoCreateTime_(util::currentTimeMillis())
+lastHistoCreateTime_(util::currentTimeMillis()),
+outReady_(false),
+outTotal_(0),
+outLast_(accumulationTime),
+histoReady_(false),
+outTotalHisto_(binScale,histoBins,minTime),
+outLastHisto_(binScale,histoBins,minTime),
+outHistoCreateTime_(0)
 {
     log_ = smsc::logger::Logger::getInstance("flooder");
 }
@@ -41,20 +47,15 @@ void FlooderStat::handleResponse( std::auto_ptr< Request > request, std::auto_pt
 {
     smsc_log_debug(log_,"response got: req=%s resp=%s", request->toString().c_str(), response->toString().c_str() );
     // checking timer
-    unsigned processTime; // in usec
+    unsigned processTime = 0; // in usec
     if ( request.get() ) {
         ProfileRequest* req = static_cast<ProfileRequest*>(request.get());
-        if ( req->getExtraContext() ) {
-            // timer has been setup
-            util::HRTimer* timer = static_cast<util::HRTimer*>(req->getExtraContext());
-            req->setExtraContext(0);
-            processTime = unsigned(timer->get()/1000);
-            delete timer;
-        } else {
-            processTime = 0;
+        if ( req->hasTiming() ) {
+            processTime = req->getTimingTotal();
+            char buf[40];
+            sprintf(buf," total=%u", processTime );
+            req->timingComment(buf);
         }
-    } else {
-        processTime = 0;
     }
     {
         MutexGuard mg(mon_);
@@ -74,12 +75,7 @@ void FlooderStat::handleError( const PvssException& e, std::auto_ptr<Request> re
     smsc_log_debug(log_,"error got: req=%s except=%s", request->toString().c_str(), e.what() );
     if ( request.get() ) {
         ProfileRequest* req = static_cast<ProfileRequest*>(request.get());
-        if ( req->getExtraContext() ) {
-            // simply delete extra context
-            util::HRTimer* timer = static_cast<util::HRTimer*>(req->getExtraContext());
-            req->setExtraContext(0);
-            delete timer;
-        }
+        req->timingMark("handleErr");
     }
     {
         MutexGuard mg(mon_);
@@ -103,10 +99,9 @@ void FlooderStat::requestCreated( Request* req )
     }
     // do we need a timer?
     static unsigned counter = 0;
-    if ( requestsPerSecond_ <= 100 || ++counter % 10 == 0 ) {
-        util::HRTimer* timer = new util::HRTimer();
-        timer->mark();
-        static_cast< ProfileRequest* >(req)->setExtraContext(timer);
+    if ( ++counter % requestsPerSecond_ == 0 ) {
+        // we would like to have one timing request per second
+        static_cast< ProfileRequest* >(req)->startTiming();
     }
 }
 
@@ -146,25 +141,65 @@ void FlooderStat::adjustSpeed()
 
 void FlooderStat::waitUntilProcessed()
 {
-    MutexGuard mg(mon_);
-    if ( stopped_ ) return;
-    if ( requested_ == 0 ) {
-        mon_.wait();
-    } else {
-        while ( total_.requests < requested_ ) {
-            if ( stopped_ ) return;
-            mon_.wait(1000);
-        }
-        util::msectime_type currentTime;
-        while ( total_.responses+total_.errors < total_.requests ) {
-            if ( stopped_ ) return;
-            currentTime = util::currentTimeMillis();
-            if ( doneTime_+timeout_ < currentTime ) {
-                break;
+    bool needPrinting = false;
+    util::msectime_type doneTime = 0;
+    util::msectime_type currentTime;
+    int waitTime = 1000;
+
+    while ( true ) {
+
+        if ( stopped_ ) break;
+
+        {
+            MutexGuard mg(mon_);
+            if ( needPrinting ) {
+                // we were printing in the previous pass, reset printing flag
+                outReady_ = false;
             }
-            mon_.wait( int(doneTime_ + timeout_ - currentTime) );
+            mon_.wait(1000);
+            needPrinting = outReady_;
         }
-    }
+
+        if ( needPrinting ) {
+            if ( histoReady_ ) {
+                currentTime = util::currentTimeMillis();
+                scag_plog_info(si,log_);
+                util::histo::HistoLogger hl(si);
+                hl.printHisto(outTotalHisto_, "total");
+                hl.printHisto(outLastHisto_, "last %u sec", unsigned((currentTime - outHistoCreateTime_)/1000) );
+                histoReady_ = false;
+            }
+            std::string fullstat;
+            fullstat.reserve(512);
+            char buf[100];
+            snprintf(buf,sizeof(buf),"Statistics follows: commands=%s", config_.getCommands().c_str() );
+            fullstat.append(buf);
+            fullstat.append("\n== Total: ");
+            fullstat.append( outTotal_.toString() );
+            fullstat.append("\n    Last: ");
+            fullstat.append( outLast_.toString() );
+            smsc_log_info( log_, "%s", fullstat.c_str());
+        }
+
+        if ( ! doneTime ) {
+            if ( requested_ == 0 || total_.requests < requested_ ) {
+                continue;
+            }
+        }
+
+        // all requests are collected
+        currentTime = util::currentTimeMillis();
+        if ( ! doneTime ) { doneTime = currentTime; }
+        if ( total_.responses + total_.errors >= total_.requests ) {
+            break;
+        }
+
+        if ( doneTime + timeout_ <= currentTime ) {
+            break;
+        }
+        waitTime = doneTime + timeout_ - currentTime;
+
+    } // while
 }
 
 
@@ -238,10 +273,29 @@ void FlooderStat::checkTime()
 {
     util::msectime_type currentTime = util::currentTimeMillis();
     total_.checkTime( currentTime );
-    if ( last_.checkTime( currentTime ) ) {
+    if ( last_.checkTime( currentTime ) && !outReady_ ) {
         // a new statistics chunk is filled
-        previous_ = last_;
+        outReady_ = true;
+        outTotal_ = total_;
+        outLast_ = last_;
         last_.reset();
+        if ( lastHisto_.getTotal() >= 300 ) { // 5 min
+            histoReady_ = true;
+            outTotalHisto_ = totalHisto_;
+            outLastHisto_ = lastHisto_;
+            outHistoCreateTime_ = lastHistoCreateTime_;
+            lastHistoCreateTime_ = currentTime;
+        }
+
+        if ( outLast_.requests == 0 ) {
+            smsc_log_warn(log_,"there were no requests during last %u msec, stopping",
+                          unsigned(outLast_.elapsedTime));
+            stopped_ = true;
+        }
+        mon_.notify();
+    }
+}
+/*
         smsc_log_info(log_,"total: %s", total_.toString().c_str());
         smsc_log_info(log_,"last %u sec: %s", unsigned(previous_.accumulationTime/1000), previous_.toString().c_str());
         if ( lastHisto_.getTotal() >= 1000 ) {
@@ -254,14 +308,9 @@ void FlooderStat::checkTime()
             lastHistoCreateTime_ = currentTime;
         }
 
-        if ( previous_.requests == 0 ) {
-            smsc_log_warn(log_,"there were no requests during last %u msec, stopping",
-                          unsigned(previous_.elapsedTime));
-            stopped_ = true;
-            mon_.notifyAll();
-        }
     }
 }
+ */
 
 } // namespace flooder
 } // namespace pvss

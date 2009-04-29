@@ -61,7 +61,8 @@ void PvssSocket::send( const Packet* packet, bool isRequest, bool force ) /* thr
         throw PvssException(PvssException::IO_ERROR, "packet %s is bad formed", packet->toString().c_str() );
 
     // fast check for queue limit (w/o locking)
-    if ( !force && pendingContexts_.Count() > writer_->getConfig().getChannelQueueSizeLimit() )
+    const unsigned pendingCount = pendingContexts_.Count();
+    if ( !force && pendingCount > unsigned(writer_->getConfig().getChannelQueueSizeLimit()) )
         throw PvssException(PvssException::CLIENT_BUSY, "Queue size limit exceeded for channel: %p",this);
 
     std::auto_ptr<WriteContext> writeContext( new WriteContext(packet->getSeqNum(),
@@ -69,6 +70,12 @@ void PvssSocket::send( const Packet* packet, bool isRequest, bool force ) /* thr
 
     // packet serialization
     writer_->serialize(*packet,writeContext->buffer);
+    if ( packet->hasTiming() ) {
+        packet->timingMark("afterSerlz");
+        char buf[40];
+        sprintf(buf," (pendingQsz=%u)", pendingCount );
+        packet->timingComment(buf);
+    }
     int packetSize = writeContext->buffer.GetPos();
     if ( log_->isDebugEnabled() ) {
         smsc_log_debug(log_,"writing %s: %s", isRequest ? "request" : "response",
