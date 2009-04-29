@@ -5,11 +5,14 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.jsp.util.helper.statictable.Row;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
+import ru.novosoft.smsc.jsp.SMSCAppContextImpl;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.util.LocaleMessages;
+import ru.novosoft.util.jsp.AppContextImpl;
 
 import java.util.*;
 import java.text.ParseException;
@@ -116,21 +119,25 @@ public class TaskWeeklyTableHelper extends PagedStaticTableHelper {
   private void setColumnNames(Date startDate) {
     final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM");
 
+    if (locale == null)
+        locale = new Locale(LocaleMessages.DEFAULT_PREFERRED_LANGUAGE);
+    ResourceBundle b = ResourceBundle.getBundle(LocaleMessages.SMSC_BUNDLE_NAME, locale);
+
     Calendar st = Calendar.getInstance();
     st.setTime(startDate);
-    monday.setTitle("Mon, " + sdf.format(st.getTime()));
+    monday.setTitle(b.getString("infosme.label.monday.short") + ", " + sdf.format(st.getTime()));
     st.set(Calendar.DATE, st.get(Calendar.DATE) + 1);
-    tuesday.setTitle("Tue, " + sdf.format(st.getTime()));
+    tuesday.setTitle(b.getString("infosme.label.tuesday.short") + ", " + sdf.format(st.getTime()));
     st.set(Calendar.DATE, st.get(Calendar.DATE) + 1);
-    wednesday.setTitle("Wed, " + sdf.format(st.getTime()));
+    wednesday.setTitle(b.getString("infosme.label.wednesday.short") + ", " + sdf.format(st.getTime()));
     st.set(Calendar.DATE, st.get(Calendar.DATE) + 1);
-    thursday.setTitle("Thu, " + sdf.format(st.getTime()));
+    thursday.setTitle(b.getString("infosme.label.thursday.short") + ", " + sdf.format(st.getTime()));
     st.set(Calendar.DATE, st.get(Calendar.DATE) + 1);
-    friday.setTitle("Fri, " + sdf.format(st.getTime()));
+    friday.setTitle(b.getString("infosme.label.friday.short") + ", " + sdf.format(st.getTime()));
     st.set(Calendar.DATE, st.get(Calendar.DATE) + 1);
-    saturday.setTitle("Sat, " + sdf.format(st.getTime()));
+    saturday.setTitle(b.getString("infosme.label.saturday.short") + ", " + sdf.format(st.getTime()));
     st.set(Calendar.DATE, st.get(Calendar.DATE) + 1);
-    sunday.setTitle("Sun, " + sdf.format(st.getTime()));
+    sunday.setTitle(b.getString("infosme.label.sunday.short") + ", " + sdf.format(st.getTime()));
   }
 
   private void fillRows(WeekDay[] weekDays) {

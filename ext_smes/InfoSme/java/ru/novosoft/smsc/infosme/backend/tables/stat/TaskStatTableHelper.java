@@ -15,11 +15,11 @@ import java.io.IOException;
  */
 public class TaskStatTableHelper extends PagedStaticTableHelper {
 
-  private final Column task = new TextColumn("taskName", "Task", true);
-  private final Column generated = new TextColumn("generated", "Generated", true);
-  private final Column delivered = new TextColumn("delivered", "Delivered", true);
-  private final Column retried = new TextColumn("retried", "Retried", true);
-  private final Column failed = new TextColumn("failed", "Failed", true);
+  private final Column task = new TextColumn("taskName", "infosme.label.task", true);
+  private final Column generated = new TextColumn("generated", "infosme.label.generated", true);
+  private final Column delivered = new TextColumn("delivered", "infosme.label.delivered", true);
+  private final Column retried = new TextColumn("retried", "infosme.label.retried", true);
+  private final Column failed = new TextColumn("failed", "infosme.label.failed", true);
 
   private final StatisticsDataSource ds;
   private final StatQuery filter;

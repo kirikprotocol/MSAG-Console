@@ -5,12 +5,12 @@
 <div class=content>
 
   <div class=page_subtitle><%= getLocString("infosme.subtitle.stage2")%></div><br/>
-  <div class=secInfo><%= getLocString("infosme.label.status")%>&nbsp;<span id="tdcStatus" style='color:blue;'><%= deliveries_bean.getStatusStr()%></span></div>
+  <div class=secInfo><%= getLocString("infosme.label.status")%>:&nbsp;<span id="tdcStatus" style='color:blue;'><%= deliveries_bean.getStatusStr()%></span></div>
   <div>
-    <div class=secInfo><%= getLocString("Records Processed")%>&nbsp;<span id="tdcRecordsProcessed" ><%= deliveries_bean.getRecordsProcessed()%></span></div>
-    <div class=secInfo><%= getLocString("Regions found")%>&nbsp;<span id="tdcRegionsFound" ><%= deliveries_bean.getRegionsFound()%></span></div>
-    <div class=secInfo><%= getLocString("Unrecognized numbers")%>&nbsp;<span id="tdcUnrecognized" ><%= deliveries_bean.getUnrecognized()%></span></div>
-    <div class=secInfo><%= getLocString("Black numbers")%>&nbsp;<span id="tdcInBlackList" ><%= deliveries_bean.getInBlackList()%></span></div>
+    <div class=secInfo><%= getLocString("infosme.label.records_processed")%>:&nbsp;<span id="tdcRecordsProcessed" ><%= deliveries_bean.getRecordsProcessed()%></span></div>
+    <div class=secInfo><%= getLocString("infosme.label.regions_found")%>:&nbsp;<span id="tdcRegionsFound" ><%= deliveries_bean.getRegionsFound()%></span></div>
+    <div class=secInfo><%= getLocString("infosme.label.unrecognized_numbers")%>:&nbsp;<span id="tdcUnrecognized" ><%= deliveries_bean.getUnrecognized()%></span></div>
+    <div class=secInfo><%= getLocString("infosme.label.black_numbers")%>:&nbsp;<span id="tdcInBlackList" ><%= deliveries_bean.getInBlackList()%></span></div>
   </div>
 </div>
 

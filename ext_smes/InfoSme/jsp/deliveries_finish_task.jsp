@@ -3,7 +3,7 @@
   <div class=page_subtitle><%= getLocString("infosme.subtitle.stage5")%></div><br/>
   <div class=secInfo><%= ((deliveries_bean.getGenerationStatus() == DeliveriesPageData.STATUS_DONE) ?
       getLocString("infosme.msg.task_add_success"):
-      getLocString("infosme.msg.task_add_failure"))%>'<%= deliveries_bean.getName()%>': <%=" " + deliveries_bean.getStatusStr()%></div>
+      getLocString("infosme.msg.task_add_failure"))%>'<%= deliveries_bean.getName()%>'</div>
   <div class=secInfo><%= getLocString("infosme.msg.to_main")%></div>
 </div>
 

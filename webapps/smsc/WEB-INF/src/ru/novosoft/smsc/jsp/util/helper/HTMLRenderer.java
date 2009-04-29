@@ -202,9 +202,11 @@ public class HTMLRenderer {
 
   // Local Message =====================================================================================================
 
-  protected static String getLocalMessage(String key) {
+  protected static String getLocalMessage(String key, Locale locale) {
     try {
-      ResourceBundle bundle = ResourceBundle.getBundle(LocaleMessages.SMSC_BUNDLE_NAME, new Locale(LocaleMessages.DEFAULT_PREFERRED_LANGUAGE));
+      if (locale == null)
+        locale = new Locale(LocaleMessages.DEFAULT_PREFERRED_LANGUAGE);
+      ResourceBundle bundle = ResourceBundle.getBundle(LocaleMessages.SMSC_BUNDLE_NAME, locale);
       return bundle.getString(key);
     } catch (MissingResourceException e) {
     }

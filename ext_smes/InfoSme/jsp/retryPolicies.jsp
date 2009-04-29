@@ -53,7 +53,7 @@ function setSort(sorting)
     <col width="99%"            > <!--name-->
     <tr>
       <th>&nbsp;</th>
-      <th><a href="#" <%=bean.getSort().endsWith("name")           ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Policy name"            onclick='return setSort("name")'           >Policy</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("name")           ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Policy name"            onclick='return setSort("name")'           ><%=getLocString("infosme.label.retry_policy")%></a></th>
     </tr>
     <%
     int rowN = 0;

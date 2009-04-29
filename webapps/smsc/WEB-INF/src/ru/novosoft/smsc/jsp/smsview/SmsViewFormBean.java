@@ -232,7 +232,7 @@ public class SmsViewFormBean extends IndexBean {
       }
       startPosition = 0;
       totalSize = (rows == null) ? 0 : rows.getRowsCount();
-      processResortAndNavigate(true);
+      processResortAndNavigate(true);   // todo DO not sort rows here!!!
       return RESULT_OK;
     } catch (AdminException ex) {
       ex.printStackTrace();

@@ -20,7 +20,7 @@
 <col width="99%">
 <% int rowN = 0;%>
 <tr class=row<%=rowN++&1%>>
-  <th>address</th>
+  <th>Address</th>
   <td><input class=txt name=address value="<%=StringEncoderDecoder.encode(bean.getAddress())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>

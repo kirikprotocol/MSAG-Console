@@ -7,6 +7,8 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.ImageColumn;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
 
+import java.util.Locale;
+
 /**
  * User: artem
  * Date: 21.12.2006
@@ -83,7 +85,7 @@ public class StaticTableRenderer extends HTMLRenderer {
       buffer.append(image("/images/sort_" + (orderType == OrderType.ASC ? "down" : "up") + ".gif", null, null, "ico16"));
 
     if (column instanceof TextColumn)
-      buffer.append(renderTextColumn((TextColumn)column));
+      buffer.append(renderTextColumn((TextColumn)column, helper.getLocale()));
     else if (column instanceof ImageColumn)
       buffer.append(renderImageColumn((ImageColumn)column));
 
@@ -101,10 +103,10 @@ public class StaticTableRenderer extends HTMLRenderer {
     return aEnd();
   }
 
-  private static String renderTextColumn(TextColumn column) {
+  private static String renderTextColumn(TextColumn column, Locale locale) {
     final StringBuffer buffer = new StringBuffer();
 
-    String str = getLocalMessage(column.getTitle());
+    String str = getLocalMessage(column.getTitle(), locale);
     if (str == null || str.equals(""))
       str = "&nbsp";
     buffer.append(str);

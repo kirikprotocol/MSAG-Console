@@ -32,7 +32,7 @@
 <table class=properties_list>
 <col width="10%">
 <tr class=row<%=rowN++&1%>>
-  <th>Provider name</th>
+  <th><%=getLocString("infosme.label.provider")%></th>
   <td><input class=txt name=provider value="<%=StringEncoderDecoder.encode(bean.getProvider())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>

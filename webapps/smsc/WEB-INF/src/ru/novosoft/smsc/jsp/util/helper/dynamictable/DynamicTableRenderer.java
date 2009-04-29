@@ -87,7 +87,7 @@ public class DynamicTableRenderer extends HTMLRenderer {
     } else if (column instanceof RowControlButtonColumn) {
       final RowControlButtonColumn rowColumn = (RowControlButtonColumn)column;
       if (rowColumn.isAllowRemoveAddedRows())
-        return image("/images/but_del.gif", "delRow('" + uid + "'," + rowNum + ")", getLocalMessage("common.hints.delParam"));
+        return image("/images/but_del.gif", "delRow('" + uid + "'," + rowNum + ")", getLocalMessage("common.hints.delParam", tableHelper.getLocale()));
       else return "";
     } else if (column instanceof SelectColumn) {
       final SelectColumn selectColumn = (SelectColumn)column;
@@ -169,7 +169,7 @@ public class DynamicTableRenderer extends HTMLRenderer {
     } else if (column instanceof RowControlButtonColumn) {
       final RowControlButtonColumn rowColumn = (RowControlButtonColumn)column;
       if (rowColumn.isAllowRemoveAddedRows())
-        return image("/images/but_add.gif", "addRow('" + uid + "','" + tableHelper.getTotalCountPrefix() + "'," + generateColumns(tableHelper)+ ")", getLocalMessage("common.hints.addParam"), "button");
+        return image("/images/but_add.gif", "addRow('" + uid + "','" + tableHelper.getTotalCountPrefix() + "'," + generateColumns(tableHelper)+ ")", getLocalMessage("common.hints.addParam", tableHelper.getLocale()), "button");
       else return "";
     } else if (column instanceof SelectColumn) {
       final SelectColumn selectColumn = (SelectColumn)column;

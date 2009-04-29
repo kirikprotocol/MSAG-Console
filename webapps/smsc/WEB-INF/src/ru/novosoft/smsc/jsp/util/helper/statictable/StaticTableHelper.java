@@ -1,8 +1,11 @@
 package ru.novosoft.smsc.jsp.util.helper.statictable;
 
+import ru.novosoft.smsc.jsp.SMSCAppContextImpl;
+
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Locale;
 
 /**
  * User: artem
@@ -23,6 +26,7 @@ public abstract class StaticTableHelper {
   private String selectedCellId = null;
   private String selectedColumnId = null;
   private String sortedColumnId = null;
+  protected Locale locale = null;
 
   private SortOrderElement[] sortOrder = null;
 
@@ -55,6 +59,8 @@ public abstract class StaticTableHelper {
 
     if (sortedColumnId != null && sortedColumnId.equals(""))
       sortedColumnId = null;
+
+    locale = SMSCAppContextImpl.getInstance().getUserManager().getPrefs(request.getUserPrincipal()).getLocale();
 
     fillSortOrder(request);
   }
@@ -206,8 +212,11 @@ public abstract class StaticTableHelper {
     return sortedColumnId != null;
   }
 
+  public Locale getLocale() {
+    return locale;
+  }
 
-//  Sort order element =================================================================================================
+  //  Sort order element =================================================================================================
 
 
   public class SortOrderElement {

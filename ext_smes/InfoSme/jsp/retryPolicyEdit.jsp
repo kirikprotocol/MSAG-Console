@@ -31,11 +31,11 @@
     <col width="99%">
     <% int rowN = 0;%>
     <tr class=row<%=rowN++&1%>>
-      <th>Name</th>
+      <th><%=getLocString("infosme.label.name")%></th>
       <td><input class=txt name=name value="<%=StringEncoderDecoder.encode(bean.getName())%>" <%=bean.isCreate()?"" : "READONLY"%> validation="nonEmpty"></td>
     </tr>
     <tr class=row<%=rowN++&1%>>
-      <th>Defalt Policy:</th>
+      <th><%=getLocString("infosme.label.default_policy")%></th>
       <td><input class=txt name=defaultPolicy value="<%=bean.getDefaultPolicy()%>" validation="positive"></td>
     </tr>
  </table>

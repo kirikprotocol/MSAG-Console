@@ -65,7 +65,7 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Originating address</th>
+  <th><%= getLocString("infosme.label.originating_address")%></th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=txt id=address name=address value="<%=StringEncoderDecoder.encode(bean.getAddress())%>"><%
   } else {
@@ -75,7 +75,7 @@
 </tr>
 <% if (admin) { %>
 <tr class=row<%=rowN++&1%>>
-  <th>Provider</th>
+  <th><%= getLocString("infosme.label.provider")%></th>
   <td><%
     if (bean.isDelivery()) {
       %><input type=hidden name=provider value=<%= Task.INFOSME_EXT_PROVIDER%>><%= Task.INFOSME_EXT_PROVIDER%><%
@@ -93,7 +93,7 @@
 </tr>
 <% } %>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=enabled>Enabled</label></th>
+  <th><label for=enabled><%= getLocString("infosme.label.on")%></label></th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=check type=checkbox id=enabled name=enabled <%=bean.isEnabled() ? "checked" : ""%>><%
   } else {
@@ -111,7 +111,7 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Priority</th>
+  <th><%= getLocString("infosme.label.priority")%></th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=txt name=priority value="<%=StringEncoderDecoder.encode(bean.getPriority())%>" validation="int_range" range_min="1" range_max="100" onkeyup="resetValidation(this)"><%
   } else {
@@ -144,17 +144,17 @@
     <col width="1%"><col width="32%">
     <col width="1%"><col width="32%">
     <tr>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Mon value=Mon <%=bean.isWeekDayActive("Mon") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Mon>Monday</label></td>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Thu value=Thu <%=bean.isWeekDayActive("Thu") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Thu>Thursday</label></td>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Sat value=Sat <%=bean.isWeekDayActive("Sat") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Sat>Saturday</label></td>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Mon value=Mon <%=bean.isWeekDayActive("Mon") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Mon><%= getLocString("infosme.label.monday")%></label></td>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Thu value=Thu <%=bean.isWeekDayActive("Thu") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Thu><%= getLocString("infosme.label.thursday")%></label></td>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Sat value=Sat <%=bean.isWeekDayActive("Sat") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Sat><%= getLocString("infosme.label.saturday")%></label></td>
     <tr>
     <tr>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Tue value=Tue <%=bean.isWeekDayActive("Tue") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Tue>Tuesday</label></td>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Fri value=Fri <%=bean.isWeekDayActive("Fri") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Fri>Friday</label></td>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Sun value=Sun <%=bean.isWeekDayActive("Sun") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Sun>Sunday</label></td>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Tue value=Tue <%=bean.isWeekDayActive("Tue") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Tue><%= getLocString("infosme.label.tuesday")%></label></td>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Fri value=Fri <%=bean.isWeekDayActive("Fri") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Fri><%= getLocString("infosme.label.friday")%></label></td>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Sun value=Sun <%=bean.isWeekDayActive("Sun") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Sun><%= getLocString("infosme.label.sunday")%></label></td>
     <tr>
     <tr>
-      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Wed value=Wed <%=bean.isWeekDayActive("Wed") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Wed>Wednesday</label></td>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Wed value=Wed <%=bean.isWeekDayActive("Wed") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Wed><%= getLocString("infosme.label.wednesday")%></label></td>
     <tr>
     </table><%
   } else {
@@ -200,7 +200,7 @@
 </tr>
 <%if (!bean.isDelivery()) {%>
 <tr class=row<%=rowN++&1%>>
-  <th>Query</th>
+  <th><%= getLocString("infosme.label.query")%></th>
   <td><%if (bean.isSmeRunning()) {
     %><textarea name=query><%=StringEncoderDecoder.encode(bean.getQuery())%></textarea><%
   } else {
@@ -209,7 +209,7 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Template</th>
+  <th><%= getLocString("infosme.label.template")%></th>
   <td><%if (bean.isSmeRunning()) {
     %><textarea name=template><%=StringEncoderDecoder.encode(bean.getTemplate())%></textarea><%
   } else {
@@ -225,7 +225,7 @@
 <%}}%>
 <% if (admin) { %>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=retryOnFail>Retry policy</label></th>
+  <th><label for=retryOnFail><%= getLocString("infosme.label.retry_policy")%></label></th>
   <td><%if (bean.isSmeRunning()) {%>
     <input class=check type=checkbox id=retryOnFail name=retryOnFail <%=bean.isRetryOnFail() ? "checked" : ""%>>
     <select id="retryPolicy" name="retryPolicy">
@@ -246,7 +246,7 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=replaceMessage>Replace message (service type)</label></th>
+  <th><label for=replaceMessage><%= getLocString("infosme.label.replace_messages")%></label></th>
   <td><%if (bean.isSmeRunning()) {%>
     <input class=check type=checkbox id=replaceMessage name=replaceMessage <%=bean.isReplaceMessage() ? "checked" : ""%> onClick="document.getElementById('svcType').disabled = !this.checked;">
     <input class=txt id=svcType name=svcType value="<%=StringEncoderDecoder.encode(bean.getSvcType())%>" maxlength=5 validation="id" onkeyup="resetValidation(this)">
@@ -262,7 +262,7 @@
 </tr>
 <%if (!bean.isDelivery()) {%>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=trackIntegrity>track integrity</label></th>
+  <th><label for=trackIntegrity><%= getLocString("infosme.label.integrity")%></label></th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=check type=checkbox id=trackIntegrity name=trackIntegrity <%=bean.isTrackIntegrity() ? "checked" : ""%>><%
   } else {
@@ -272,7 +272,7 @@
 </tr>
 <%}%>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=keepHistory>keep messages history</label></th>
+  <th><label for=keepHistory><%= getLocString("infosme.label.keep_history")%></label></th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=check type=checkbox id=keepHistory name=keepHistory <%=bean.isKeepHistory() ? "checked" : ""%>><%
   } else {
@@ -281,7 +281,7 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>system data source timeout</th>
+  <th>System data source timeout</th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=txt name=dsOwnTimeout value="<%=StringEncoderDecoder.encode(bean.getDsTimeout())%>">secs<%
   } else {
@@ -290,7 +290,7 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>messages cache size </th>
+  <th>Messages cache size </th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=txt name=messagesCacheSize value="<%=StringEncoderDecoder.encode(bean.getMessagesCacheSize())%>"><%
   } else {
@@ -299,7 +299,7 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>messages cache sleep</th>
+  <th>Messages cache sleep</th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=txt name=messagesCacheSleep value="<%=StringEncoderDecoder.encode(bean.getMessagesCacheSleep())%>">secs<%
   } else {
@@ -309,7 +309,7 @@
 </tr>
 <%if (!bean.isDelivery()) {%>
 <tr class=row<%=rowN++&1%>>
-  <th>uncommited in generation</th>
+  <th>Uncommited in generation</th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=txt name=uncommitedInGeneration value="<%=StringEncoderDecoder.encode(bean.getUncommitedInGeneration())%>"><%
   } else {
@@ -319,7 +319,7 @@
 </tr>
 <%}%>
 <tr class=row<%=rowN++&1%>>
-  <th>uncommited in process</th>
+  <th>Uncommited in process</th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=txt name=uncommitedInProcess value="<%=StringEncoderDecoder.encode(bean.getUncommitedInProcess())%>"><%
   } else {
@@ -329,7 +329,7 @@
 </tr>
 <% } %>
 <tr class=row<%=rowN++&1%>>
-  <th>flash</th>
+  <th><%= getLocString("infosme.label.flash")%></th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=check type=checkbox id=flash name=flash <%=bean.isFlash() ? "checked" : ""%>><%
   } else {
@@ -339,11 +339,11 @@
 </tr>
 <% if (bean.isDelivery() && !bean.isCreate() && bean.isSecret()) { %>
 <tr class=row<%=rowN++&1%>>
-  <th>secret message</th>
+  <th><%= getLocString("infosme.label.secret_message")%></th>
   <td><%=StringEncoderDecoder.encode(bean.getSecretMessage())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>secret flash</th>
+  <th><%= getLocString("infosme.label.secret_flash")%></th>
   <td><%=bean.isSecretFlash() ? "enabled" : "disabled"%></td>
 </tr>
 
@@ -356,8 +356,8 @@ if (bean.isSmeRunning()) {
 }
 page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "infosme.hint.cancel_changes", "clickCancel()");
 page_menu_space(out);
-page_menu_button(session, out, "mbMessages",   "Messages",  "Messages");
-page_menu_button(session, out, "mbStatistics",   "Statistics",  "Statistics");
+page_menu_button(session, out, "mbMessages",   "infosme.menu.messages",  "");
+page_menu_button(session, out, "mbStatistics",   "infosme.menu.statistics",  "");
 page_menu_end(out);
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

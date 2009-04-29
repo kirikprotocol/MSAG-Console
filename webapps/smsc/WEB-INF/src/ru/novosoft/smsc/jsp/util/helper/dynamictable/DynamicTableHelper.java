@@ -1,8 +1,11 @@
 package ru.novosoft.smsc.jsp.util.helper.dynamictable;
 
+import ru.novosoft.smsc.jsp.SMSCAppContextImpl;
+
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Locale;
 
 /**
  * User: artem
@@ -22,6 +25,7 @@ public abstract class DynamicTableHelper {
   private boolean showTableTitle = true;
   private boolean allowAddValues = true;
   private Row lastRow = new Row();
+  private Locale locale;
 
   public DynamicTableHelper(String name, String uid) {
     this.name = name;
@@ -39,6 +43,8 @@ public abstract class DynamicTableHelper {
     int totalCount = Integer.parseInt(request.getParameter(getTotalCountPrefix()));
     for (int i = 0; i < totalCount ; i++)
       addRow(readRow(request, i));
+
+    locale = SMSCAppContextImpl.getInstance().getUserManager().getPrefs(request.getUserPrincipal()).getLocale();
 
     lastRow = readLastRow(request);
   }
@@ -159,4 +165,7 @@ public abstract class DynamicTableHelper {
     return lastRow;
   }
 
+  public Locale getLocale() {
+    return locale;
+  }
 }

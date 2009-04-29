@@ -36,7 +36,7 @@
   <th style="text-align:left"><%= getLocString("infosme.label.task")%></th>
   <td colspan=1>
   <select name=taskId>
-    <option value="<%=TasksStatistics.ALL_TASKS_MARKER%>" <%=bean.getTaskId().length()==0 ? "selected" : ""%>><%=TasksStatistics.ALL_TASKS_MARKER%></option>
+    <option value="<%=TasksStatistics.ALL_TASKS_MARKER%>" <%=bean.getTaskId().length()==0 ? "selected" : ""%>><%=getLocString("infosme.label.all")%></option>
   <%for (Iterator i = bean.getAllTasks(request).iterator(); i.hasNext();) {
       String taskId = (String) i.next();
       String taskIdEnc = StringEncoderDecoder.encode(taskId);
@@ -45,11 +45,11 @@
       %></option>
   <%}%>
   </select></td>
-  <th style="text-align:left">View</th>
+  <th style="text-align:left"><%= getLocString("infosme.label.view")%></th>
   <td colspan=2>
     <select name="view">
-      <option value="<%=TasksStatistics.VIEW_DATES%>" <%=bean.getView() == TasksStatistics.VIEW_DATES ? "selected" : ""%>>Dates</option>
-      <option value="<%=TasksStatistics.VIEW_TASKS%>" <%=bean.getView() == TasksStatistics.VIEW_TASKS ? "selected" : ""%>>Tasks</option>
+      <option value="<%=TasksStatistics.VIEW_DATES%>" <%=bean.getView() == TasksStatistics.VIEW_DATES ? "selected" : ""%>><%=getLocString("infosme.label.stat.view.dates")%></option>
+      <option value="<%=TasksStatistics.VIEW_TASKS%>" <%=bean.getView() == TasksStatistics.VIEW_TASKS ? "selected" : ""%>><%=getLocString("infosme.label.stat.view.tasks")%></option>
     </select>
   </td>
 </tr>
@@ -96,7 +96,7 @@ page_menu_end(out);
       for (Iterator i = statistics.getCountersByDates().iterator(); i.hasNext();) {
         DateCountersSet dateCounters =    (DateCountersSet) i.next();
         if (dateCounters != null) {
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
         String date = formatter.format(dateCounters.getDate());
         String dateHex = StringEncoderDecoder.encodeHEX(date);
         %><tr class=row0>
@@ -145,25 +145,25 @@ if (exportFile != null) {
 <%final TaskStatTableHelper tableHelper = bean.getTasksStatsTable();%>
 <%@ include file="/WEB-INF/inc/paged_static_table.jsp"%>
 <div class=content>
-<div class=page_subtitle>Total:</div>
+<div class=page_subtitle><%=getLocString("infosme.label.total")%>:</div>
 <table class=list>
   <tr class=row1>
-    <td width="1" nowrap>Generated</td>
+    <td width="1" nowrap><%=getLocString("infosme.label.generated")%></td>
     <td width="1" nowrap><%=tableHelper.getTotalGenerated()%></td>
     <td width="100%">&nbsp;</td>
   </tr>
   <tr class=row0>
-    <td width="1" nowrap>Delivered</td>
+    <td width="1" nowrap><%=getLocString("infosme.label.delivered")%></td>
     <td width="1" nowrap><%=tableHelper.getTotalDelivered()%></td>
     <td width="100%">&nbsp;</td>
   </tr>
   <tr class=row1>
-    <td width="1" nowrap>Retried</td>
+    <td width="1" nowrap><%=getLocString("infosme.label.retried")%></td>
     <td width="1" nowrap><%=tableHelper.getTotalRetried()%></td>
     <td width="100%">&nbsp;</td>
   </tr>
   <tr class=row0>
-    <td width="1" nowrap>Failed</td>
+    <td width="1" nowrap><%=getLocString("infosme.label.failed")%></td>
     <td width="1" nowrap><%=tableHelper.getTotalFailed()%></td>
     <td width="100%">&nbsp;</td>
   </tr>

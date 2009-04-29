@@ -40,15 +40,15 @@
   <col width="10%">
   <col width="40%">
   <tr class=row<%=rowN++&1%>>
-    <td style="text-align:left">Task:</td>
+    <td style="text-align:left"><%=getLocString("infosme.label.task")%>:</td>
     <td><input class="txt" type="text" name="name" value="<%=bean.getName()%>"></td>
-    <td style="text-align:left">Status:</td>
+    <td style="text-align:left"><%=getLocString("infosme.label.status")%></td>
     <td>
       <% int status = bean.getStatus(); %>
       <select name="status">
-        <option value="0" <%=status == 0 ? "SELECTED": ""%>>ALL</option>
-        <option value="1" <%=status == 1 ? "SELECTED": ""%>>ACTIVE</option>
-        <option value="2" <%=status == 2 ? "SELECTED": ""%>>FINISHED</option>
+        <option value="0" <%=status == 0 ? "SELECTED": ""%>><%=getLocString("infosme.label.task.status.all")%></option>
+        <option value="1" <%=status == 1 ? "SELECTED": ""%>><%=getLocString("infosme.label.task.status.active")%></option>
+        <option value="2" <%=status == 2 ? "SELECTED": ""%>><%=getLocString("infosme.label.task.status.finished")%></option>
       </select>
     </td>
   </tr>
@@ -59,12 +59,12 @@
     <td><input class=calendarField id=tillDate name=tillDate value="<%=StringEncoderDecoder.encode(bean.getTillDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
   </tr>
   <tr class=row<%=rowN++&1%>>
-    <td style="text-align:left">View:</td>
+    <td style="text-align:left"><%=getLocString("infosme.label.view")%>:</td>
     <td>
       <% int view = bean.getView(); %>
       <select name="view">
-        <option value="<%=Tasks.VIEW_LIST%>" <%=view == Tasks.VIEW_LIST ? "SELECTED": ""%>>LIST</option>
-        <option value="<%=Tasks.VIEW_WEEKLY%>" <%=view == Tasks.VIEW_WEEKLY ? "SELECTED": ""%>>WEEKLY</option>
+        <option value="<%=Tasks.VIEW_LIST%>" <%=view == Tasks.VIEW_LIST ? "SELECTED": ""%>><%=getLocString("infosme.label.task.view.list")%></option>
+        <option value="<%=Tasks.VIEW_WEEKLY%>" <%=view == Tasks.VIEW_WEEKLY ? "SELECTED": ""%>><%=getLocString("infosme.label.task.view.weekly")%></option>
       </select>
     </td>
     <td colspan="2">&nbsp;</td>

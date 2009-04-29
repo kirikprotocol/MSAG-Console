@@ -51,7 +51,7 @@
 <col width="10%">
 <col width="40%">
 <tr class=row<%=rowN++&1%>>
-  <th style="text-align:left">Task:</th>
+  <th style="text-align:left"><%= getLocString("infosme.label.task")%>:</th>
   <td><select name=taskId><%
   for (Iterator i = allTasks.iterator(); i.hasNext();) {
     String taskId = (String) i.next();

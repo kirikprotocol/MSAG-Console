@@ -158,7 +158,7 @@
 <%
   page_menu_begin(out);
   page_menu_button(session, out, "mbCancel", "common.buttons.cancel",    "infosme.hint.cancel_task_add", "clickCancel()");
-  page_menu_button(session, out, "mbTest",   "infosme.button.test", "infosme.hint.test");
+  page_menu_button(session, out, "mbTest",   "common.buttons.test", "");
   page_menu_button(session, out, "mbNext",   "infosme.button.next_page", "infosme.hint.next_page");
   page_menu_space(out);
   page_menu_end(out);

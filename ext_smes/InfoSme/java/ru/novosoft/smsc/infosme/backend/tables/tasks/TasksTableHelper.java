@@ -30,19 +30,19 @@ public class TasksTableHelper extends PagedStaticTableHelper {
   public static final int MODE_MARKET = 2;
 
   private final ImageColumn checkColumn = new ImageColumn("checkColumn", "/images/ico16_checked_sa.gif", "", false, 1);
-  private final TextColumn enabledColumn = new TextColumn("enabled", "On", true, 1);
-  private final TextColumn nameColumn = new TextColumn("name", "Task", true, 20);
-  private final TextColumn providerColumn = new TextColumn("provider", "Provider", true);
-  private final TextColumn generatingColumn = new TextColumn("generating", "Generating", false);
-  private final TextColumn processingColumn = new TextColumn("processing", "Processing", false);
-  private final TextColumn priorityColumn = new TextColumn("priority", "Priority", true);
-  private final TextColumn retryOnFailColumn = new TextColumn("retryOnFail", "RetryOnFail", true);
-  private final TextColumn replaceMessageColumn = new TextColumn("replaceMessage", "Replace", true, 1);
-  private final TextColumn trackIntegrityColumn = new TextColumn("trackIntegrity", "Integrity", true, 1);
-  private final TextColumn startDateColumn = new TextColumn("startDate", "Start", true);
-  private final TextColumn endDateColumn = new TextColumn("endDate", "End", true);
-  private final TextColumn ownerColumn = new TextColumn("owner", "Owner", true);
-  private final TextColumn idColumn = new TextColumn("id", "Id", true, 2);
+  private final TextColumn enabledColumn = new TextColumn("enabled", "infosme.label.on", true, 1);
+  private final TextColumn nameColumn = new TextColumn("name", "infosme.label.task", true, 20);
+  private final TextColumn providerColumn = new TextColumn("provider", "infosme.label.provider", true);
+  private final TextColumn generatingColumn = new TextColumn("generating", "infosme.label.generating", false);
+  private final TextColumn processingColumn = new TextColumn("processing", "infosme.label.processing", false);
+  private final TextColumn priorityColumn = new TextColumn("priority", "infosme.label.priority", true);
+  private final TextColumn retryOnFailColumn = new TextColumn("retryOnFail", "infosme.label.retryOnFail", true);
+  private final TextColumn replaceMessageColumn = new TextColumn("replaceMessage", "infosme.label.replace", true, 1);
+  private final TextColumn trackIntegrityColumn = new TextColumn("trackIntegrity", "infosme.label.integrity", true, 1);
+  private final TextColumn startDateColumn = new TextColumn("startDate", "infosme.label.start", true);
+  private final TextColumn endDateColumn = new TextColumn("endDate", "infosme.label.end", true);
+  private final TextColumn ownerColumn = new TextColumn("owner", "infosme.label.owner", true);
+  private final TextColumn idColumn = new TextColumn("id", "infosme.label.id", true, 2);
 
   private final TaskDataSource tds;
   private TaskFilter filter;

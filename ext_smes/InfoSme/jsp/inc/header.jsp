@@ -2,23 +2,23 @@
 <%
 	sme_menu_begin(out);
     if (bean.isUserAdmin(request)) {
-	    sme_menu_button(out, "mbMenu",  "apply",      "Statuses",   "");
-      sme_menu_button(out, "mbMenu",  "options",    "Options",    "Global InfoSme options");
+	    sme_menu_button(out, "mbMenu",  "apply",      getLocString("infosme.menu.statuses"), "");
+      sme_menu_button(out, "mbMenu",  "options",    getLocString("infosme.menu.options"), "");
     }
-    sme_menu_button(out, "mbMenu",  "tasks",      "Tasks",      "Tasks list");
+    sme_menu_button(out, "mbMenu",  "tasks",      getLocString("infosme.menu.tasks"),      "");
     if (bean.isUserAdmin(request)) {
-      sme_menu_button(out, "mbMenu",  "shedules",   "Schedules",  "Schedules");
-      sme_menu_button(out, "mbMenu",  "providers",  "Providers",  "Providers");
-      sme_menu_button(out, "mbMenu",  "drivers",    "Drivers",    "DB drivers");
-      sme_menu_button(out, "mbMenu",  "retryPolicies",    "Retry Policies",    "Retry Policies");
+      sme_menu_button(out, "mbMenu",  "shedules",   getLocString("infosme.menu.schedules"),  "");
+      sme_menu_button(out, "mbMenu",  "providers",  getLocString("infosme.menu.providers"),  "");
+      sme_menu_button(out, "mbMenu",  "drivers",    getLocString("infosme.menu.drivers"),    "");
+      sme_menu_button(out, "mbMenu",  "retryPolicies",    getLocString("infosme.menu.retry_policies"), "");
     }
 
-    sme_menu_button(out, "mbMenu",  "deliveries", "Deliveries", "Message deliveries");
+    sme_menu_button(out, "mbMenu",  "deliveries", getLocString("infosme.menu.deliveries"), "");
     if (bean.isBlackListEnabled())
-      sme_menu_button(out, "mbMenu",  "black_list", "Black List", "Black List");
+      sme_menu_button(out, "mbMenu",  "black_list", getLocString("infosme.menu.black_list"), "");
 
     sme_menu_space(out);
-    sme_menu_button(out, "mbMenu",  "messages",  "Messages",  "Messages set");
-    sme_menu_button(out, "mbMenu",  "stat",      "Statistics","");
+    sme_menu_button(out, "mbMenu",  "messages",  getLocString("infosme.menu.messages"),  "");
+    sme_menu_button(out, "mbMenu",  "stat",      getLocString("infosme.menu.statistics"),"");
 	sme_menu_end(out);
 %>

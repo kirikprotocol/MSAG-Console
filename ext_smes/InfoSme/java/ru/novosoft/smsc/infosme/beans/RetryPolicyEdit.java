@@ -39,7 +39,7 @@ public class RetryPolicyEdit extends InfoSmeBean {
     if (result != RESULT_OK)
       return result;
 
-    helper = new ErrorPoliciesTableHelper("errorPolicies", "errorPolicies");
+    helper = new ErrorPoliciesTableHelper("infosme.label.errorPolicies", "errorPolicies");
     return RESULT_OK;
   }
   
@@ -149,8 +149,8 @@ public class RetryPolicyEdit extends InfoSmeBean {
 
     public ErrorPoliciesTableHelper(String name, String uid) {
       super(name, uid);
-      errorColumn = new TextColumn(this, "Error",  "error", 30, Validation.POSITIVE, true);
-      policyColumn = new TextColumn(this, "Policy", "policy", 30, Validation.POSITIVE, true);
+      errorColumn = new TextColumn(this, "infosme.label.error",  "error", 30, Validation.POSITIVE, true);
+      policyColumn = new TextColumn(this, "infosme.label.policy", "policy", 30, Validation.POSITIVE, true);
       delColumn = new RowControlButtonColumn(this, "", "delColumn");
       addColumn(errorColumn);
       addColumn(policyColumn);
