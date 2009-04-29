@@ -6,7 +6,6 @@
 # define __EYELINE_TCAP_TDIALOGUEINDICATIONPRIMITIVE_HPP__
 
 # include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
-# include "eyeline/asn1/EncodedOID.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -19,7 +18,6 @@ public:
   virtual ~TDialogueIndicationPrimitive()
   { }
 
-  const asn1::EncodedOID* getAppCtx() const;
   //TODO: indications specific stuff
 };
 
