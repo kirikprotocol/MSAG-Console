@@ -14,7 +14,7 @@ public:
     bool check(const ConfigView& cv)  throw(ConfigException);
     
 #ifdef TESTING    
-    StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,int svcp,int scp)  throw(ConfigException);
+    StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,int svcp,int scp, const std::string& saadir, int interval)  throw(ConfigException);
 #endif
 
     std::string getDir() const;
@@ -23,6 +23,9 @@ public:
     int getPerfSvcPort() const;
     int getPerfScPort() const;
 
+    std::string getSaaDir() const;
+    std::string getFilesPrefix() const;
+    int getRollingInterval() const;
 	
 	
 protected:
@@ -48,6 +51,10 @@ protected:
 		std::string saccHost;
 		int saccPort;
 		IntHash<std::string> eventFilter;
+
+        std::string saaDir;
+        std::string filesPrefix;
+        int rollingInterval;
 
 };
 

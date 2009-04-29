@@ -15,6 +15,9 @@ StatManConfig::StatManConfig()
     eventFilter.Empty();
     connect_timeout=1000;
     queue_length=100000;
+    filesPrefix = "events";
+    rollingInterval = 10;
+    saaDir = "";
 
 }
 #ifdef TESTING
@@ -23,18 +26,22 @@ for testing only!
 created by 
 Gregory Panin green@sbingo.com
 */
-StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,int svcp,int scp) throw(ConfigException)
+StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,int svcp,int scp, const std::string& saadir, int interval) throw(ConfigException)
 {	    
 	try{
 	if(directory.length()==0)
 	                    throw ConfigException("StatManConfig.StatManConfig, stat dir. length ==0! ");
 	if(host.length()==0)
                 	    throw ConfigException("StatManConfig.StatManConfig, host. length ==0! ");			    
+    if(saadir.length()==0)
+                        throw ConfigException("StatManConfig.StatManConfig, saa dir. length ==0! ");			    
 	    dir = directory;
 	    perfHost = host;
 	    perfGenPort = genp;
 	    perfSvcPort = svcp;
 	    perfScPort  = scp;	
+        saaDir = saadir;
+        rollingInterval = interval;
 
 	}
 	catch(ConfigException& e)
@@ -68,6 +75,10 @@ StatManConfig::StatManConfig(const ConfigView& cv)  throw(ConfigException)
 		eventFilter.Insert(1,"submit");
 		eventFilter.Insert(3,"billing");
 
+        std::auto_ptr<char> saaDir_( cv.getString("saaDir") );
+        saaDir = saaDir_.get();
+        rollingInterval = cv.getInt("rollingInterval");
+
     }
 	catch(ConfigException& e)
 	{
@@ -98,6 +109,9 @@ void StatManConfig::init(const ConfigView& cv) throw(ConfigException)
 		saccHost    = sch.get();
 		saccPort    = cv.getInt("saccPort");
 
+        std::auto_ptr<char> saaDir_( cv.getString("saaDir") );
+        saaDir = saaDir_.get();
+        rollingInterval = cv.getInt("rollingInterval");
 
     }
 	catch(ConfigException& e)
@@ -121,11 +135,17 @@ bool StatManConfig::check(const ConfigView& cv)  throw(ConfigException)
         if(   !strcmp( perfHost.c_str(), perfHost_.get() )   )
             return false;
 
+        std::auto_ptr<char> saaDir_( cv.getString("saaDir") );
+        if(   !strcmp( saaDir.c_str(), saaDir_.get() )   )
+            return false;
+
         if(perfGenPort != cv.getInt("perfGenPort"))
             return false;
         if(perfSvcPort != cv.getInt("perfSvcPort"))
             return false;
         if(perfScPort  != cv.getInt("perfScPort"))
+            return false;
+        if(rollingInterval  != cv.getInt("rollingInterval"))
             return false;
 
         return true;
@@ -153,6 +173,10 @@ int StatManConfig::getMaxQueueLength()const {return queue_length;}
 int StatManConfig::getSaccPort() const{return saccPort;}
 std::string StatManConfig::getSaccHost()const{return saccHost;}
 IntHash<std::string> StatManConfig::getEventFiler()const{return eventFilter;}
+
+std::string StatManConfig::getSaaDir() const { return saaDir; }
+std::string StatManConfig::getFilesPrefix() const { return filesPrefix; }
+int StatManConfig::getRollingInterval() const { return rollingInterval; }
 
 }
 }
