@@ -13,7 +13,7 @@
 
 #define MAXENTRIES 8192
 
-USHORT_T MY_USER_ID=USER01_ID;
+USHORT_T MY_USER_ID=USER01_ID;//!!
 
 using namespace std;
 
@@ -165,8 +165,8 @@ extern "C" {
 
 } // extern "C"
 
-extern "C" uint16_t onBrokenConn(uint16_t fromID, 
-                        uint16_t toID, 
+extern "C" uint16_t onBrokenConn(uint16_t fromID,
+                        uint16_t toID,
                         uint8_t inst)
 {
   __map_warn2__("broken conn:%d->%d,%d",fromID,toID,inst);
@@ -313,20 +313,20 @@ void MapIoTask::init(unsigned timeout)
     MapDialogContainer::boundLocalSSNs[i] = 0;
   }
 #ifdef EIN_HD
-  EINSS7CpMain_CpInit(); 
+  EINSS7CpMain_CpInit();
   err=EINSS7CpRegisterMPOwner(MY_USER_ID);
   if ( err != RETURN_OK)
-  { 
-    __map_warn2__("Error at EINSS7CpRegisterMPOwner, code 0x%hx",err); 
+  {
+    __map_warn2__("Error at EINSS7CpRegisterMPOwner, code 0x%hx",err);
     throw runtime_error("MsgInit error");
-  } 
+  }
   err=EINSS7CpRegisterRemoteCPMgmt(CP_MANAGER_ID, 0, (char*)MapDialogContainer::remoteMgmtAddress.c_str());
   if ( err != RETURN_OK)
-  { 
-    __map_warn2__("Error at EINSS7CpRegisterRemoteCPMgmt, host='%s', code 0x%hx",MapDialogContainer::remoteMgmtAddress.c_str(),err); 
+  {
+    __map_warn2__("Error at EINSS7CpRegisterRemoteCPMgmt, host='%s', code 0x%hx",MapDialogContainer::remoteMgmtAddress.c_str(),err);
     throw runtime_error("MsgInit error");
-  } 
-#endif  
+  }
+#endif
 //  __pingPongWaitCounter = 0;
 
   for(int i=0;i<MapDialogContainer::localInstCount;i++)
@@ -478,7 +478,7 @@ void MapIoTask::dispatcher()
     {
       return;
     }
-    
+
     while(MAP_connectedInstCount==0)
     {
       usleep(100);
@@ -514,7 +514,7 @@ void MapIoTask::dispatcher()
           k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
         }
         text[k]=0;
-        __log2__(smsc::logger::_mapmsg_cat,smsc::logger::Logger::LEVEL_DEBUG, "MsgRecv msg: %s",text);
+        __log2__(smsc::logger::_mapmsg_cat,smsc::logger::Logger::LEVEL_DEBUG, "MsgRecv[inst=%d] msg: %s",INSTARG0(message.remoteInstance), text);
       }
       if ( message.primitive == 0x8b && message.msg_p[6] >= 0x04 )
       {
@@ -671,7 +671,7 @@ void MapIoTask::handleMessage(MSG_T& message)
       k+=sprintf(text.get()+k,"%02x ",(unsigned)message.msg_p[i]);
     }
     text[k]=0;
-    __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text.get());
+    __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "error at Et96MapHandleIndication with code x%hx msg[inst=%d]: %s",map_result,INSTARG0(message.remoteInstance),text.get());
   }
 
   /*
@@ -726,7 +726,7 @@ void MapIoTask::Start()
 {
   try
   {
-    try 
+    try
     {
       init();
     } catch (exception& e)
@@ -922,14 +922,14 @@ static void MAPSTATS_Flush2(int idx)
             MAPSTATS_close[3][idx],
             MAPSTATS_close[4][idx],
             MAPSTATS_close[5][idx],
-                
+
             MAPSTATS_dialogs[0],
             MAPSTATS_dialogs[1],
             MAPSTATS_dialogs[2],
             MAPSTATS_dialogs[3],
             MAPSTATS_dialogs[4],
             MAPSTATS_dialogs[5],
-                
+
             MAPSTATS_recv[idx]
            );
 }
