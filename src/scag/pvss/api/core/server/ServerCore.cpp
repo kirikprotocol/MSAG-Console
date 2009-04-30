@@ -5,6 +5,8 @@
 #include "scag/pvss/api/packets/PingResponse.h"
 #include "scag/pvss/api/packets/ErrorResponse.h"
 #include "scag/pvss/api/packets/ResponseVisitor.h"
+#include "scag/pvss/api/packets/RequestVisitor.h"
+#include "scag/pvss/api/packets/ProfileRequest.h"
 
 namespace {
 
@@ -16,6 +18,13 @@ struct ErrorResponseVisitor : public ResponseVisitor
     virtual bool visitPingResponse( PingResponse& resp ) { return false; }
     virtual bool visitAuthResponse( AuthResponse& resp ) { return false; }
     virtual bool visitProfileResponse( ProfileResponse& resp ) { return false; }
+};
+
+struct PRVisitor : public RequestVisitor
+{
+    virtual bool visitPingRequest( PingRequest& ) { return false; }
+    virtual bool visitAuthRequest( AuthRequest& ) { return false; }
+    virtual bool visitProfileRequest( ProfileRequest& ) { return true; }
 };
 
 }
@@ -445,11 +454,36 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
     }
 
     {
-        // a new request has come
-        MutexGuard mg(statMutex_);
-        ++total_.requests;
-        ++last_.requests;
-        checkStatistics();
+        PRVisitor prv;
+        ProfileRequest* preq;
+        if ( req->visit(prv) ) {
+            preq = static_cast< ProfileRequest* >(req);
+        } else {
+            preq = 0;
+        }
+
+        bool needTiming = false;
+        do {
+            // a new request has come
+            MutexGuard mg(statMutex_);
+            static util::msectime_type timingCounter = 0;
+            ++total_.requests;
+            ++last_.requests;
+            util::msectime_type currentTime = checkStatistics();
+            if ( preq && (currentTime - timingCounter > util::msectime_type(5000)) ) {
+                // more than 5 seconds
+                // NOTE: simple randomization
+                static unsigned counter = 0;
+                ++counter;
+                if ( (counter % 7) == 0 ) break;
+                counter += unsigned(reinterpret_cast<uint64_t>(static_cast<const void*>(req)));
+                timingCounter = currentTime;
+                needTiming = true;
+            }
+        } while ( false );
+        if ( needTiming ) {
+            preq->startTiming();
+        }
     }
 
     uint32_t seqNum = req->getSeqNum();
@@ -746,7 +780,7 @@ void ServerCore::destroyDeadChannels()
 }
 
 
-void ServerCore::checkStatistics()
+util::msectime_type ServerCore::checkStatistics()
 {
     const util::msectime_type currentTime = util::currentTimeMillis();
     total_.checkTime(currentTime);
@@ -759,7 +793,7 @@ void ServerCore::checkStatistics()
         last_.reset();
          */
     }
-
+    return currentTime;
 }
 
 

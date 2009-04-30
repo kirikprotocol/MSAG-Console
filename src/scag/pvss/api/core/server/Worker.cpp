@@ -3,6 +3,7 @@
 #include "ServerContext.h"
 #include "ServerConfig.h"
 #include "ServerCore.h"
+#include "core/buffers/File.hpp"
 
 namespace scag2 {
 namespace pvss {
@@ -50,6 +51,7 @@ int Worker::doExecute()
                 util::msectime_type currentTime = util::currentTimeMillis();
                 try {
                     if ( currentTime  > context->getCreationTime() + core_.getConfig().getProcessTimeout() ) {
+                        context->getRequest()->timingMark("expired");
                         throw PvssException(PvssException::REQUEST_TIMEOUT,"processing timeout");
                     }
                 } catch (PvssException& e){
@@ -62,10 +64,26 @@ int Worker::doExecute()
                 }
                 
                 try {
+                    context->getRequest()->timingMark("inQueue");
                     Response* resp = logic_.process(*context->getRequest().get());
+                    if ( context->getRequest()->hasTiming() ) {
+                        context->getRequest()->timingMark("process");
+                        if (resp) {
+                            resp->startTiming(*context->getRequest().get());
+                        }
+                    }
                     context->setResponse(resp);
+                } catch ( smsc::core::buffers::FileException& e ) {
+                    smsc_log_fatal(log_,"FileExc in process: %s, SIGTERM will follow", e.what());
+                    core_.countExceptions(PvssException::UNKNOWN,"procFileExc");
+                    try {
+                        context->setError(e.what());
+                    } catch (...) {}
+                    kill(getpid(),SIGTERM);
+                    break;
                 } catch (PvssException& e) {
                     smsc_log_debug(log_,"exc in process: %s", context->getRequest()->toString().c_str());
+                    context->getRequest()->timingMark("procFail");
                     core_.countExceptions(e.getType(),"procFailed");
                     try {
                         context->setError(e.getMessage());

@@ -149,7 +149,7 @@ protected:
     virtual void stopCoreLogic() {}
 
 private:
-    void updateChannelActivity( PvssSocket& channel, long utime ) {
+    void updateChannelActivity( PvssSocket& channel, util::msectime_type utime ) {
         inactivityTracker->updateChannel(channel, utime);
     }
 

@@ -24,6 +24,11 @@ void ContextQueue::requestReceived( std::auto_ptr<ServerContext>& context ) /* t
     if ( queueLimit_ > 0 && getSize() > queueLimit_ ) {
         throw PvssException(PvssException::SERVER_BUSY,"too many requests, try later");
     }
+    if ( context->getRequest()->hasTiming() ) {
+        char buf[50];
+        sprintf(buf,"reqRecv(qsz=%u)",getSize());
+        context->getRequest()->timingMark(buf);
+    }
     context->setRespQueue(*this);
     MutexGuard mg(queueMon_);
     queues_[1].Push(context.release());
@@ -36,6 +41,16 @@ void ContextQueue::reportResponse( std::auto_ptr<ServerContext>& context )
     if (!started_) {
         smsc_log_error(log_,"logic failure: response arrived when queue is stopped!");
         abort();
+    }
+    Response* resp = context->getResponse().get();
+    if ( resp && resp->hasTiming() ) {
+        Request* req = context->getRequest().get();
+        if ( req ) {
+            req->mergeTiming(*resp);
+        }
+        char buf[50];
+        sprintf(buf,"respRecv(qsz=%u)",queues_[0].Count());
+        req->timingMark(buf);
     }
     MutexGuard mg(queueMon_);
     queues_[0].Push(context.release());

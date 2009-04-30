@@ -50,12 +50,8 @@ void FlooderStat::handleResponse( std::auto_ptr< Request > request, std::auto_pt
     unsigned processTime = 0; // in usec
     if ( request.get() ) {
         ProfileRequest* req = static_cast<ProfileRequest*>(request.get());
-        if ( req->hasTiming() ) {
-            processTime = req->getTimingTotal();
-            char buf[40];
-            sprintf(buf," total=%u", processTime );
-            req->timingComment(buf);
-        }
+        const Packet::Timing* timing = req->getTiming();
+        if ( timing ) { processTime = timing->total; }
     }
     {
         MutexGuard mg(mon_);

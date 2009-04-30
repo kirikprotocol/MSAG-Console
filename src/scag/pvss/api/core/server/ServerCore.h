@@ -535,7 +535,7 @@ private:
     void destroyDeadChannels();
 
     /// NOTE: statMutex_ must be locked
-    void checkStatistics();
+    util::msectime_type checkStatistics();
 
 private:
     typedef std::list< smsc::core::network::Socket* > ChannelList;

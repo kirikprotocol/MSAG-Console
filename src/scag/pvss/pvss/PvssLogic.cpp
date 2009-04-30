@@ -90,7 +90,8 @@ Response* PvssLogic::process(Request& request) /* throw(PvssException) */  {
   } catch (const std::runtime_error &e) {
     smsc_log_warn(logger_, "%p: %p processing error: std::runtime_error: %s", this, &request, e.what());
   } catch (const FileException &e) {
-    smsc_log_warn(logger_, "%p: %p processing error: FileException: %s", this, &request, e.what());
+      smsc_log_warn(logger_, "%p: %p processing error: FileException: %s", this, &request, e.what());
+      throw;
   } catch (const std::exception &e) {
     smsc_log_warn(logger_, "%p: %p processing error: std::exception: %s", this, &request, e.what());
   } catch (...) {
