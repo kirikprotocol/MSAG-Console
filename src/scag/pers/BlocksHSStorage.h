@@ -285,7 +285,9 @@ public:
           smsc_log_debug(logger, "Remove empty blocks");
           descrFile.first_free_block = removeBlocks(ffb, curBlockIndex, updateBlocksCount);
         }
-        changeDescriptionFile();
+        if (oldDescrFile.first_free_block != descrFile.first_free_block || oldDescrFile.files_count != descrFile.files_count) {
+          changeDescriptionFile();
+        }
         clearBackup();
         if (blocksCount == 0) {
           blockIndex = -1;
