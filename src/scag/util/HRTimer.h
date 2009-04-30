@@ -11,7 +11,7 @@ class HRTimer
 {
 public:
     HRTimer() : mark_(0) {}
-    ~HRTimer() {}
+    // ~HRTimer() {}
 
     /// place a mark (timestamp)
     inline void mark() {
@@ -57,6 +57,10 @@ public:
     /// ctor for grandparent
     HRTiming( std::string& res, unsigned resolution = 1000 /* ns */ ) :
     parent_(0), result_(&res), resol_(resolution) {}
+
+    /// correlated ctor, to continue timing measurement in independent unit
+    HRTiming( std::string& res, const HRTiming& t ) :
+    parent_(0), timer_(t.timer_), result_(&res), resol_(t.resol_) {}
 
     /// ctor for child
     HRTiming( HRTiming* inhrt = 0 ) : parent_(inhrt), result_(0) {
@@ -120,6 +124,10 @@ public:
     inline void stop() {
         if ( parent_ ) parent_->stop();
         result_ = 0;
+    }
+    
+    void setTimer( const HRTiming& t ) {
+        timer_ = t.timer_;
     }
 
 private:
