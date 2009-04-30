@@ -164,9 +164,14 @@ void JournalFile::open( bool readonly )
             for ( RecordList::const_iterator j = i+1;
                   j != records.end(); ++j ) {
                 if ( (*i)->getSerial() + 1 != (*j)->getSerial() ) {
-                    throw smsc::util::Exception("journal records are not sequential: %u %u",
-                                                unsigned((*i)->getSerial()-serialShift),
-                                                unsigned((*j)->getSerial()-serialShift));
+                    if ( (*i)->getSerial() == serialShift-1 &&
+                         (*j)->getSerial() == serialShift+1 ) {
+                        // ok
+                    } else {
+                        throw smsc::util::Exception("journal records are not sequential: %u %u",
+                                                    unsigned((*i)->getSerial()-serialShift),
+                                                    unsigned((*j)->getSerial()-serialShift));
+                    }
                 }
                 ++i;
             }
@@ -246,10 +251,12 @@ void JournalFile::recreate()
 
 bool JournalFile::writeRecord( const JournalRecord& record )
 {
+    // NOTE: we don't modify recordSerial_ until it has been written to disk
     const bool needHeader = ( recordSerial_ == 0 );
-    ++recordSerial_;
-    if ( recordSerial_ == 0 ) { ++recordSerial_; }
-    const bool lastRecord = ( recordSerial_ % maxRecords_ ) == 0;
+    uint32_t serial = recordSerial_ + 1;
+    if ( serial == 0 ) { ++serial; }
+    const bool lastRecord = ( serial % maxRecords_ ) == 0;
+    // record.setSerial( serial );
 
     const uint32_t jnlSize = constantRecordSize() + record.savedDataSize();
     journal_.resize( ( needHeader ? store_.journalHeaderSize() : 0 ) +
@@ -270,7 +277,7 @@ bool JournalFile::writeRecord( const JournalRecord& record )
     const char* ptr0 = ptr; // remember position
     EndianConverter::set32(ptr,jnlSize);
     ptr = mempcpy(ptr+4,&csum,8);
-    EndianConverter::set32(ptr,recordSerial_);
+    EndianConverter::set32(ptr,serial);
     ptr += 4;
     record.save(ptr);
     ptr += record.savedDataSize();
@@ -283,9 +290,10 @@ bool JournalFile::writeRecord( const JournalRecord& record )
     if ( needHeader ) { journalFile_.Seek(0); }
     journalFile_.Write( &journal_[0], journal_.size() );
     if ( lastRecord ) {
-        journalFile_.Truncate(journalFile_.Pos());
+        // journalFile_.Truncate(journalFile_.Pos());
         journalFile_.Seek( store_.journalHeaderSize() );
     }
+    recordSerial_ = serial;
     return lastRecord;
 }
 

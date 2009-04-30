@@ -1500,6 +1500,10 @@ void BlocksHSStorage2::checkFreeCount( size_t freeCount )
 {
     if ( freeCount > manager_.creationThreshold() ) { return; }
     if ( creationTask_.get() ) { return; }
+    if ( !inited_ ) {
+        if ( freeCount > 100 ) { return; }
+        freeCount = 0; // we want to create at maximum speed
+    }
 
     // we have to create a new task
     size_t speed = 0;
@@ -1509,7 +1513,8 @@ void BlocksHSStorage2::checkFreeCount( size_t freeCount )
 
         // calculate speed (kb/sec)
         if ( manager_.getExpectedSpeed() > 0 && freeCount > 0 ) {
-            const size_t expectedSpeed = (fileSizeBytes_/1024) * manager_.getExpectedSpeed() / freeCount;
+            const size_t expectedSpeed = 
+                (fileSizeBytes_/1024) * manager_.getExpectedSpeed() / manager_.creationThreshold();
             speed = expectedSpeed * 4 / 3;
         }
         creationTask_.reset( new CreationTask( makeFileName(files_.size()),
