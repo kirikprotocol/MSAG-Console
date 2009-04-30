@@ -18,7 +18,7 @@ public:
     inline time_type msectime() const {
         struct timeval tv;
         ::gettimeofday(&tv,0);
-        time_type t = time_type((tv.tv_sec - t0_.tv_sec)*1000) +
+        time_type t = time_type(tv.tv_sec - t0_.tv_sec)*1000 +
             (int(tv.tv_usec) - int(t0_.tv_usec)) / 1000;
         return t;
     }
