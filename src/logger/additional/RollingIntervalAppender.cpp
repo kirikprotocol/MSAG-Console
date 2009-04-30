@@ -113,7 +113,7 @@ void RollingIntervalAppender::clearLogDir(time_t curTime)
 }
 
 RollingIntervalAppender::RollingIntervalAppender(const char * const _name, const Properties & properties, const char* suffix)
-  :Appender(_name), interval(86400), path("."), maxBackupIndex(0)
+  :Appender(_name), interval(86400), path("."), maxBackupIndex(0), lastIntervalStart(0)
 {
   if (properties.Exists("maxindex"))
     maxBackupIndex = atoi(properties["maxindex"]);
@@ -169,12 +169,10 @@ void RollingIntervalAppender::rollover(time_t dat, bool useLast) throw()
     if(findLastFile(dat, suffixSize, lastFile))
     {
       file.Append((path+'/'+lastFile).c_str());
-      return;
     } else {
-      if (!lastFile.empty()) {
-        currentName = path+'/'+lastFile;
-      }
+      lastIntervalStart = 0;
     }
+    return;
   }
 
   if (!currentName.empty() && File::Exists(currentName.c_str())) {
