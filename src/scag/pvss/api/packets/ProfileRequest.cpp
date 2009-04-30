@@ -1,6 +1,7 @@
 #include "ProfileRequest.h"
 #include "ProfileCommandVisitor.h"
 #include "BatchCommand.h"
+#include "Response.h"
 
 namespace {
 using namespace scag2::pvss;
@@ -60,6 +61,11 @@ ProfileRequest::~ProfileRequest()
     logDtor();
     if (timing_) {
         if ( !timing_->result.empty() && logtm_->isInfoEnabled() ) {
+            if ( timing_->timing.isValid() ) {
+                char buf[50];
+                sprintf(buf," total=%u",timing_->total);
+                timing_->timing.comment(buf);
+            }
             AbbrevCmdVisitor acv;
             if (command_) { acv.process(*command_); }
             smsc_log_info(logtm_,"timing: %s %s",
@@ -68,6 +74,14 @@ ProfileRequest::~ProfileRequest()
         delete timing_;
     }
     if (command_) {delete command_;}
+}
+
+
+void ProfileRequest::mergeTiming( const Response& resp )
+{
+    const Timing* t = resp.getTiming();
+    if (!t || !timing_) return;
+    timing_->merge(*t);
 }
 
 } // namespace pvss

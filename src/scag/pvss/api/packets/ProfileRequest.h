@@ -5,7 +5,6 @@
 #include "ProfileCommand.h"
 #include "RequestVisitor.h"
 #include "scag/pvss/data/ProfileKey.h"
-#include "scag/util/HRTimer.h"
 
 namespace scag2 {
 namespace pvss {
@@ -15,17 +14,6 @@ namespace pvss {
 ///
 class ProfileRequest : public Request
 {
-private:
-    struct Timing {
-        std::string    result;
-        util::HRTiming timing;
-        unsigned       total;
-        Timing() : total(0) {
-            timing.reset(result);
-            result.reserve(400);
-        }
-    };
-
 public:
     ProfileRequest( ProfileCommand* cmd = 0 ) : command_(cmd), timing_(0) {
         initLog(); 
@@ -91,15 +79,10 @@ public:
         if (!timing_) return;
         timing_->timing.comment(comment);
     }
-    
+    virtual const Timing* getTiming() const { return timing_; }
+    virtual void mergeTiming( const Response& resp );
 
     /// --- these extra methods may be used to juggle with timing
-    inline const std::string* getTimingResult() const {
-        return timing_ ? &(timing_->result) : 0;
-    }
-    inline unsigned getTimingTotal() const {
-        return timing_ ? timing_->total : 0;
-    }
     inline void startTiming() {
         if ( ! timing_ ) { timing_ = new Timing; }
     }

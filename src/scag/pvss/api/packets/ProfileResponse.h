@@ -11,9 +11,12 @@ namespace pvss {
 class ProfileResponse : public Response
 {
 public:
-    ProfileResponse( CommandResponse* cmd = 0 ) : Response(), cmd_(cmd) { initLog(); }
-    ProfileResponse( uint32_t seqNum, CommandResponse* cmd = 0 ) : Response(seqNum), cmd_(cmd) { initLog(); }
-    virtual ~ProfileResponse() { logDtor(); clear(); }
+    ProfileResponse( CommandResponse* cmd = 0 ) : Response(), cmd_(cmd), timing_(0) { initLog(); }
+    ProfileResponse( uint32_t seqNum, CommandResponse* cmd = 0 ) : Response(seqNum), cmd_(cmd), timing_(0) { initLog(); }
+    virtual ~ProfileResponse() {
+        logDtor();
+        clear();
+    }
 
     virtual uint8_t getStatus() const { return cmd_ ? cmd_->getStatus() : UNKNOWN; }
 
@@ -22,11 +25,36 @@ public:
     }
     virtual ProfileResponse* clone() const { return new ProfileResponse(*this); }
     virtual bool isPing() const { return false; }
-    virtual void clear() { delete cmd_; cmd_ = 0; }
+    virtual void clear() {
+        if (timing_) {
+            // note: timing report is done in request
+            delete timing_; timing_ = 0;
+        }
+        delete cmd_; cmd_ = 0; 
+    }
 
     inline CommandResponse* getResponse() { return cmd_; }
     inline const CommandResponse* getResponse() const { return cmd_; }
     inline void setResponse( CommandResponse* resp ) { clear(); cmd_ = resp; }
+
+    // --- timing
+    virtual void startTiming( const Request& req ) {
+        if (!timing_) {
+            const Timing* t = req.getTiming();
+            if (t) timing_ = new Timing(*t);
+        }
+    }
+    virtual bool hasTiming() const {
+        return (timing_ ? timing_->timing.isValid() : false );
+    }
+    virtual void timingMark( const char* where ) const {
+        if (!timing_) return;
+        timing_->total += timing_->timing.mark(where);
+    }
+    virtual void timingComment( const char* comment ) const {
+        if (!timing_) return;
+        timing_->timing.comment(comment);
+    }
 
 protected:
     virtual const char* typeToString() const { return "prof_resp"; }
@@ -39,6 +67,7 @@ private:
 
 private:
     CommandResponse* cmd_;
+    mutable Timing*  timing_;
 };
 
 } // namespace pvss

@@ -49,6 +49,9 @@ public:
     // for serialization
     inline uint8_t getStatusValue() const { return getStatus(); }
 
+    /// start timing measurements corresponding to request.
+    virtual void startTiming( const Request& ) {}
+
 protected:
     virtual const char* typeToString() const = 0;
 

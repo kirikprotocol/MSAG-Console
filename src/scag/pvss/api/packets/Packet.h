@@ -4,6 +4,7 @@
 #include <string>
 #include "util/int.h"
 #include "logger/Logger.h"
+#include "scag/util/HRTimer.h"
 
 namespace scag2 {
 namespace pvss {
@@ -18,6 +19,30 @@ protected:
     static smsc::logger::Logger* logtm_;
 
 public:
+    struct Timing {
+        std::string    result;
+        util::HRTiming timing;
+        unsigned       total;
+        Timing() : total(0) {
+            timing.reset(result);
+            result.reserve(400);
+        }
+        /// correlated constructor
+        Timing( const Timing& t ) : timing(t.timing), total(0) {
+            result.reserve(400);
+        }
+
+        /// merge timing info back
+        void merge( const Timing& t ) {
+            if (!t.result.empty()) {
+                result.push_back(' ');
+                result.append(t.result);
+            }
+            timing.setTimer(t.timing);
+            total += t.total;
+        }
+    };
+
     enum {
             CONNECT_RESPONSE_OK = 0x4f4b,         // "OK"
             CONNECT_RESPONSE_SERVER_BUSY = 0x5342 // "SB"
@@ -40,6 +65,9 @@ public:
     /// const is quite reasonable here.
     virtual void timingMark( const char* where ) const {}
     virtual void timingComment( const char* comment ) const {}
+    /// this method is necessary to bind timing measurements in response
+    /// to the corresponding request.
+    virtual const Timing* getTiming() const { return 0; }
 
 protected:
     void initLog();

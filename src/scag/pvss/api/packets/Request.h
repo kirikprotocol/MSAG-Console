@@ -8,7 +8,7 @@ namespace scag2 {
 namespace pvss {
 
 class Command;
-// class Response;
+class Response;
 class RequestVisitor;
 // class ResponseTypeMatch;
 
@@ -46,6 +46,9 @@ public:
     virtual Request* clone() const = 0;
 
     // bool matchResponseType( const Response& resp ) const;
+
+    /// merge timing measurements from response
+    virtual void mergeTiming( const Response& ) {}
 
 protected:
     virtual const char* typeToString() const = 0;
