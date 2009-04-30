@@ -65,8 +65,8 @@ private:
 
 private:    
     static const util::msectime_type accumulationTime = 5000; // 5 seconds accumulation time
-    static const unsigned histoBins = 23;
-    static const unsigned minTime = 20;
+    static const unsigned histoBins = 22;
+    static const unsigned minTime = 100;
     static const double binScale;
 
 private:
