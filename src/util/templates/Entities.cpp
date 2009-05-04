@@ -38,7 +38,7 @@ struct InitLocaleDataDummy{
       fprintf(stderr,"Failed to set LC_TIME from environment\n");
       return;
     };
-    fprintf(stderr,"setlocale for LC_TIME to %s",newLocale);
+    fprintf(stderr,"setlocale for LC_TIME to %s\n",newLocale);
     tm t;
     static char mon1[12][32];
     static char mon2[12][32];
