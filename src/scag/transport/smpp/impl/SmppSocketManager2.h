@@ -82,6 +82,8 @@ public:
         }
     }
 
+    /// add whitelisted ip address
+    void addWhiteIp( const char* dottedaddr );
 
   SmscConnectorAdmin* getSmscConnectorAdmin()
   {
@@ -114,6 +116,7 @@ protected:
 
     unsigned   readerCount_;  // current number of multiplexer threads
     IphashType iphash_;
+    IntHash< uint8_t > whiteList_;
 
     // limits
     unsigned socketsPerThread_;     // max number of sockets per multiplexer thread

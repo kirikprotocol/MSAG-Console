@@ -372,6 +372,24 @@ void SmppManagerImpl::Init(const char* cfgFile)
     unsigned maxMultiCount = getUnsigned( "smpp.core.maxRWMultiplexersCount", 100 );
     sm.init( socketsPerThread, bindTimeout, connectionsPerIp, failTimeout, maxMultiCount );
 
+    // collecting whitelisted ips
+    try {
+        ConfigView cv(*ConfigManager::Instance().getConfig(),"smpp.core.whitelist");
+        typedef std::set< std::string > CStrSet;
+        CStrSet* hostset = cv.getStrParamNames();
+        if ( hostset ) {
+            for ( CStrSet::const_iterator i = hostset->begin();
+                  i != hostset->end();
+                  ++i ) {
+                sm.addWhiteIp( i->c_str() );
+            }
+        }
+    } catch (std::exception& e) {
+        smsc_log_info(log,"whitelist exc: %s", e.what());
+    } catch (...) {
+        smsc_log_info(log,"whitelist exc: unknown");
+    }
+
   running=true;
 
   int stmCnt = 0;
