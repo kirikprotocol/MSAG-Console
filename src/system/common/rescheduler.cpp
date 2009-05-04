@@ -188,7 +188,7 @@ void RescheduleCalculator::init(const char* filename){
   {
     if(i!=0)out+=',';
     char buf[32];
-    sprintf(buf,"%d",RescheduleTable[i]);
+    sprintf(buf,"%ld",RescheduleTable[i]);
     out+=buf;
   }
   smsc_log_info(log,"Default Reschedule Table:%s",out.c_str());
@@ -202,7 +202,7 @@ void RescheduleCalculator::init(const char* filename){
     {
       if(i!=0)out+=',';
       char buf[32];
-      sprintf(buf,"%d",(*arr)[i]);
+      sprintf(buf,"%ld",(*arr)[i]);
       out+=buf;
     }
     smsc_log_info(log,"Reschedule Table for code %d:%s",code,out.c_str());

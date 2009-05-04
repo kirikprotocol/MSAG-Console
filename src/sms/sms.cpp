@@ -431,10 +431,10 @@ void Body::Print(FILE* f)
           fprintf(f,"i:%s:%d=%d\n",Tag::tagNames[i],i,prop.properties[i].iValue);
           break;
         case SMS_STR_TAG:
-          fprintf(f,"s:%s:%d(%d)=%s\n",Tag::tagNames[i],i,prop.properties[i].sValue->length(),prop.properties[i].sValue->c_str());
+          fprintf(f,"s:%s:%d(%ld)=%s\n",Tag::tagNames[i],i,prop.properties[i].sValue->length(),prop.properties[i].sValue->c_str());
           break;
         case SMS_BIN_TAG:
-          fprintf(f,"b:%s:%d(%d)=%s\n",Tag::tagNames[i],i,prop.properties[i].bValue->length(),prop.properties[i].bValue->c_str());
+          fprintf(f,"b:%s:%d(%ld)=%s\n",Tag::tagNames[i],i,prop.properties[i].bValue->length(),prop.properties[i].bValue->c_str());
           break;
       }
     }
