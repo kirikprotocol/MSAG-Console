@@ -519,6 +519,7 @@ int BillingManagerImpl::Execute()
             else
             {
                 connectEvent.Wait(10000);
+                // smsc_log_debug(logger,"billman rolling");
                 if(lastReconnect + m_ReconnectTimeout < time(NULL))
                 {
                     m_Connected = Reconnect();

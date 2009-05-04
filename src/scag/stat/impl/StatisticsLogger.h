@@ -98,6 +98,12 @@ private:
 }
 }
 
+#ifdef TEMPINST
+#ifndef SMSC_SCAG_STAT_STATISTICS_LOGGER_CPP
+#include "StatisticsLogger.cpp"
+#endif
+#endif
+
 #endif
 
 

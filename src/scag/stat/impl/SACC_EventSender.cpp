@@ -188,6 +188,7 @@ int EventSender::Execute()
 {
     while( bStarted )
     {
+        // smsc_log_debug(logger,"sacc.evsend rolling");
         if ( !bConnected )
         {
             //          SaccSocket.Abort();

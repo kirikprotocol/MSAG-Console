@@ -216,6 +216,7 @@ int StateMachine::Execute()
                 if ( !cmd ) continue;
                 std::auto_ptr<SmppCommand> aucmd(cmd);
                 
+                // smsc_log_debug(log_,"smppstm rolling");
                 if ( cmd->getCommandId() != PROCESSEXPIREDRESP ) {
                     smsc_log_debug(log_,"Exec: processing cmd=%p serial=%u %d(%s) from %s",
                                    cmd,

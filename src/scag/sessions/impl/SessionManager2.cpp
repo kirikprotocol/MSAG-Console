@@ -228,6 +228,7 @@ int SessionManagerImpl::Execute()
     bool started = true;
     while( true ) {
 
+        // smsc_log_debug(log_,"sessman rolling");
         ExpireList* list = 0;
         {
             MutexGuard mg(expireMonitor_);

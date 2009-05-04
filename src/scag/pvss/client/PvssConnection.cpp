@@ -184,7 +184,7 @@ void PvssConnection::connect()
         if ( connected_ ) return;
     }
     time_t now = time(0);
-    if ( lastConnect_ + pers_->reconnectTimeout > now ) return;
+    if ( nextConnectTime() > now ) return;
     lastConnect_ = now;
     int res = 0;
     do {
@@ -242,6 +242,12 @@ void PvssConnection::connect()
         smsc_log_warn( log_, "Cannot connect to pvss host=%s:%d: status=%d msg=%s",
                        pers_->host.c_str(), pers_->port, res, exceptionReasons[res]);
     }
+}
+
+
+time_t PvssConnection::nextConnectTime() const
+{
+    return lastConnect_ + pers_->reconnectTimeout;
 }
 
 

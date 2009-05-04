@@ -22,6 +22,7 @@ int PvssConnTask::Execute()
     smsc_log_debug(log_,"Starting %s", taskName());
 
     while ( ! isStopping ) {
+        // smsc_log_debug(log_,"%s rolling", taskName());
         try {
             if ( ! setupSockets() ) {
                 setupFailed();

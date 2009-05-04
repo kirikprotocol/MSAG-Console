@@ -36,20 +36,27 @@ public:
     }
     smsc_log_info(log,"SmeAcceptor inited");      
   }
-  int Execute()
-  {
-    while(!isStopping)
+    int Execute()
     {
-      Socket* s=sock.Accept();
-      if(!s)break;
-      char buf[32];
-      s->GetPeer(buf);
-      smsc_log_info(log,"connection accepted from %s",buf);
-      sm->registerSocket(new SmeSocket(s));
+        try {
+            while(!isStopping)
+            {
+                smsc_log_debug(log,"prior to accept");
+                Socket* s=sock.Accept();
+                if(!s)break;
+                char buf[32];
+                s->GetPeer(buf);
+                smsc_log_info(log,"connection accepted from %s",buf);
+                sm->registerSocket(new SmeSocket(s));
+            }
+        } catch ( std::exception& e ) {
+            smsc_log_error(log,"SmeAcceptor failed: %s", e.what());
+        } catch (...) {
+            smsc_log_error(log,"SmeAcceptor failed: unknown");
+        }
+        smsc_log_info(log,"SmeAcceptor stopped");
+        return 0;
     }
-    smsc_log_info(log,"SmeAcceptor stopped");
-    return 0;
-  }
   void Stop()
   {
     smsc_log_info(log, "SmeAcceptor stopping");

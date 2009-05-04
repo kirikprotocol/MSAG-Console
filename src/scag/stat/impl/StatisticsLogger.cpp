@@ -1,3 +1,16 @@
+#ifdef SMSC_SCAG_STAT_STATISTICS_LOGGER
+// inclusion via .hpp (templates only)
+# define SMSC_SCAG_STAT_STATISTICS_LOGGER_CPP 0
+#else
+# ifndef TEMPINST
+// library compilation w/ templates (i.e. everything)
+#  define SMSC_SCAG_STAT_STATISTICS_LOGGER_CPP 1
+# else
+// library compilation w/o templates
+#  define SMSC_SCAG_STAT_STATISTICS_LOGGER_CPP 2
+# endif
+#endif
+
 #include "StatisticsLogger.h"
 #include <dirent.h>
 #include <vector>

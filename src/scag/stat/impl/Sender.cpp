@@ -139,6 +139,7 @@ int Sender::Execute()
     //for(;;)
     while(!isStopping)
     {
+      // smsc_log_debug(logger,"stat.send rolling");
       while(now.tv_sec==time(NULL))ev.Wait(10);
       if(isStopping) break;
       //===========================

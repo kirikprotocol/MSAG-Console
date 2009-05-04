@@ -170,6 +170,7 @@ int main( int argc, char* argv[] )
             MutexGuard mg(mon);
             while(!shutdownFlag) {
                 mon.wait(1000);
+                // smsc_log_debug(logger,"main rolling");
                 if ( smsc::core::buffers::File::Exists("stop")) {
                     shutdownFlag = SHUTDOWN_SIGNAL;
                     // sigsuspend(&st); 

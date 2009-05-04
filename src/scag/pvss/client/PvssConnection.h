@@ -56,6 +56,7 @@ public:
     inline smsc::core::network::Socket* socket() { return &sock_; }
 
     void connect();
+    time_t nextConnectTime() const;
     void disconnect();
     void dropCalls();
     void dropExpiredCalls();

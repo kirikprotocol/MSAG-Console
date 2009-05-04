@@ -15,6 +15,18 @@ bool PvssConnector::setupSockets()
         return false;
     }
     worksock_ = sockets_;
+    // waiting until nearest connect time
+    time_t mintime = worksock_[0]->nextConnectTime();
+    for ( int i = 0; i < worksock_.Count(); ++i ) {
+        const time_t conntime = worksock_[i]->nextConnectTime();
+        if ( conntime < mintime ) {
+            mintime = conntime;
+        }
+    }
+    const time_t now = time(0);
+    if ( mintime > now ) {
+        mon_.wait((mintime-now)*1000);
+    }
     return true;
 }
 
