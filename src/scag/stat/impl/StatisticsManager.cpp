@@ -503,6 +503,8 @@ void StatisticsManager::Stop()
     sender.Stop();
     smsc_log_debug(logger, "PerformanceServer is shutdowned");
 
+    statRoller->Stop();
+
     thrSaccSender.Stop();
 
     if (isStarted)
@@ -517,8 +519,6 @@ void StatisticsManager::Start()
     smsc_log_debug(logger, "PerformanceServer is starting...");
     sender.Start();
     smsc_log_debug(logger, "PerformanceServer is started");
-
-    statRoller->Stop();
 
     thrSaccSender.Start();
     isStarted = true;
