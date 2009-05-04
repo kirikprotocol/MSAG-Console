@@ -1186,7 +1186,7 @@ none_validity:;
   sms.setOriginatingAddress(src_addr);
   ConvAddrMap2Smc(msa,&dest_addr);
   sms.setDestinationAddress(dest_addr);
-  
+
   dialog->AssignSms(_sms.release());
 }
 
@@ -2011,7 +2011,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   __map_warn__("putCommand: can't create SMSC->MS ussd dialog. Shouldn't happen.");
                   // command has bean attached by dialog container
                 } else {
-                  
+
                   dialog->dropChain = false;
                   dialog->wasDelivered = false;
                   dialog->hlrWasNotified = false;
@@ -2049,6 +2049,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                           SSN,
                           string(cmd->get_sms()->getDestinationAddress().value),
                           cmd));
+              rinst=dialog->instanceId;
             } else
             {
               // QUERYABONENTSTATUS
@@ -3004,7 +3005,7 @@ USHORT_T Et96MapV2ForwardSmMOConf(ET96MAP_LOCAL_SSN_T localSsn  INSTANCEIDARGDEF
     }catch(MAPDIALOG_ERROR& e){
       SendErrToSmsc(dialog->dialogid_smsc,e.code);
       if( GET_STATUS_CODE(e.code) == Status::MAP_NO_RESPONSE_FROM_PEER ) dialog->dropChain = true;
-      dialog->dialogid_smsc = 0; //       
+      dialog->dialogid_smsc = 0; //
       dialog->wasDelivered = false;
     }
 
@@ -3052,7 +3053,7 @@ USHORT_T Et96MapV3ForwardSmMOInd (
 static USHORT_T Et96MapVxForwardSmMTConf_Impl (
   ET96MAP_LOCAL_SSN_T localSsn,
   ET96MAP_DIALOGUE_ID_T dialogueId,
-  EINSS7INSTANCE_T rinst,                                             
+  EINSS7INSTANCE_T rinst,
   ET96MAP_INVOKE_ID_T invokeId,
   ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
   ET96MAP_PROV_ERR_T *provErrCode_p,
@@ -3114,7 +3115,7 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
     }catch(MAPDIALOG_ERROR& e){
       __map_trace2__("%s: %s", __func__,e.what());
       SendErrToSmsc(dialog->dialogid_smsc,e.code);
-      dialog->dialogid_smsc = 0; //       
+      dialog->dialogid_smsc = 0; //
       dialog->wasDelivered = false;
     }
 
@@ -3548,7 +3549,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
 
     sms.setStrProperty(Tag::SMSC_SCCP_OA,dialog->origAddress.c_str());
     sms.setStrProperty(Tag::SMSC_SCCP_DA,dialog->destAddress.c_str());
-    
+
     sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, ussdDataCodingScheme );
     unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
