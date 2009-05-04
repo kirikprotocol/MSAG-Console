@@ -55,10 +55,10 @@ private:
 template<typename Event, typename Buffer>
 class StatisticsRoller : public smsc::core::threads::Thread {
 public:
-  StatisticsRoller(StatisticsLogger<Event, Buffer>* statlog):statlog_(statlog), interval_(statlog->getRollingInterval() * 1000) {
+  StatisticsRoller(StatisticsLogger<Event, Buffer>* statlog):statlog_(statlog), interval_(statlog->getRollingInterval() * 1000), stopped_(true) {
     if (statlog_) {
-      Start();
       stopped_ = false;
+      Start();
     }
   }
   ~StatisticsRoller() {
@@ -88,6 +88,9 @@ public:
   bool isStopped() {
     return stopped_;
   }
+private:
+  StatisticsRoller<Event, Buffer>& operator=(StatisticsRoller<Event, Buffer>&);
+
 private:
   StatisticsLogger<Event, Buffer>* statlog_;
   int interval_;
