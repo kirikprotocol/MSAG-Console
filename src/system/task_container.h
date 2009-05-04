@@ -16,7 +16,7 @@ namespace system{
 
 using namespace smsc::core::synchronization;
 
-#define TASK_CONTAINER_MAX_PROCESSED   (2000*(8+1)) /* 200 msg/s * 8 sec */
+#define TASK_CONTAINER_MAX_PROCESSED   65536
 #define TASK_CONTAINER_MAX_TIMEOUTS    64
 
 struct Task
@@ -67,7 +67,7 @@ typedef std::vector<FindTaskData> FindTaskVector;
 
 class TaskContainer
 {
-  Task* hash[TASK_CONTAINER_MAX_PROCESSED*2]; // hash table
+  Task* hash[TASK_CONTAINER_MAX_PROCESSED]; // hash table
   Task pool[TASK_CONTAINER_MAX_PROCESSED];
   Task *first_task;
   struct TimeOutList{
