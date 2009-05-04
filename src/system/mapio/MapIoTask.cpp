@@ -34,9 +34,6 @@ Mutex mapMutex;
 
 //#define SMSC_FORWARD_RESPONSE 0x001
 
-//unsigned __global_bind_counter = 0;
-int bindTimer = 0;
-//static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
 //static bool MAP_isAlive = false;
 static bool MAP_aborting = false;
@@ -185,16 +182,10 @@ extern "C" uint16_t onBrokenConn(uint16_t fromID,
   return RETURN_OK;
 }
 
-void MapIoTask::connect(unsigned timeout) {
+bool MapIoTask::connect(unsigned timeout) {
   USHORT_T result;
   __map_warn__("Connecting to MAP stack");
 //  result = MsgOpen(MY_USER_ID);
-  result = EINSS7CpMsgPortOpen( MY_USER_ID, TRUE);
-  if ( result != RETURN_OK )
-  {
-    __map_warn2__("Error at MsgOpen, code 0x%hx",result);
-    kill(getpid(),17);
-  }
   MAP_connectedInstCount=0;
   while(!isStopping && MAP_connectedInstCount==0)
   {
@@ -226,9 +217,8 @@ void MapIoTask::connect(unsigned timeout) {
     __map_warn__("pause self and wait map initialization");
     sleep(timeout);
   }
-
+  bool bindOk=false;
   __map_warn2__("Binding %d subsystems", MapDialogContainer::numLocalSSNs);
-  bindTimer = 0;
   for(int n=0;n<MapDialogContainer::remInstCount;n++)
   {
     if(MAP_connectedInst[MapDialogContainer::remInst[n]])
@@ -240,13 +230,15 @@ void MapIoTask::connect(unsigned timeout) {
         {
           __map_warn2__("SSN %d Inst %d Bind error 0x%hx",MapDialogContainer::localSSNs[i],MapDialogContainer::remInst[n],result);
           //throw runtime_error("bind error");
+        }else
+        {
+          bindOk=true;
         }
       }
     }
   }
-  {
-    MapDialogContainer::getInstance()->restartStatistics();
-  }
+  MapDialogContainer::getInstance()->restartStatistics();
+  return bindOk;
 }
 
 int MapIoTask::ReconnectThread::Execute()
@@ -322,51 +314,65 @@ void MapIoTask::init(unsigned timeout)
   {
     MapDialogContainer::boundLocalSSNs[i] = 0;
   }
+  reinit:
 #ifdef EIN_HD
   EINSS7CpMain_CpInit();
-  do
+  err = EINSS7CpRegisterMPOwner(MY_USER_ID);
+  if (err != RETURN_OK)
   {
-    err = EINSS7CpRegisterMPOwner(MY_USER_ID);
-    if (err != RETURN_OK)
-    {
-      __map_warn2__("Error at EINSS7CpRegisterMPOwner, code 0x%hx",err);
-      sleep(1);
-      //throw runtime_error("MsgInit error");
-    }
-  } while (err != RETURN_OK);
-  do{
-    err=EINSS7CpRegisterRemoteCPMgmt(CP_MANAGER_ID, 0, (char*)MapDialogContainer::remoteMgmtAddress.c_str());
-    if ( err != RETURN_OK)
-    {
-      __map_warn2__("Error at EINSS7CpRegisterRemoteCPMgmt, host='%s', code 0x%hx",MapDialogContainer::remoteMgmtAddress.c_str(),err);
-      sleep(1);
-      //throw runtime_error("MsgInit error");
-    }
-  }while(err != RETURN_OK);
+    __map_warn2__("Error at EINSS7CpRegisterMPOwner, code 0x%hx",err);
+    sleep(1);
+    MsgExit();
+    goto reinit;
+    //throw runtime_error("MsgInit error");
+  }
+  err=EINSS7CpRegisterRemoteCPMgmt(CP_MANAGER_ID, 0, (char*)MapDialogContainer::remoteMgmtAddress.c_str());
+  if ( err != RETURN_OK)
+  {
+    __map_warn2__("Error at EINSS7CpRegisterRemoteCPMgmt, host='%s', code 0x%hx",MapDialogContainer::remoteMgmtAddress.c_str(),err);
+    sleep(1);
+    MsgExit();
+    goto reinit;
+    //throw runtime_error("MsgInit error");
+  }
 #endif
 //  __pingPongWaitCounter = 0;
 
   for(int i=0;i<MapDialogContainer::localInstCount;i++)
   {
-    do{
-      err = EINSS7CpMsgInitiate( MAXENTRIES, MapDialogContainer::localInst[i], FALSE );
-      /*
+    err = EINSS7CpMsgInitiate( MAXENTRIES, MapDialogContainer::localInst[i], FALSE );
+    /*
        if( MapDialogContainer::GetNodesCount() > 1 ) {
        if( MapDialogContainer::GetNodeNumber() == 2 ) MY_USER_ID = USER06_ID;
        } else {
        err = EINSS7CpMsgInitiate( MAXENTRIES INSTARG(MapDialogContainer::localInst[0]), FALSE );
        }*/
-      if ( err != RETURN_OK )
-      {
-        __map_warn2__("Error at MsgInit, code 0x%hx",err);
-        sleep(1);
-        //throw runtime_error("MsgInit error");
-      }
-    }while(err!=RETURN_OK);
+    if ( err != RETURN_OK )
+    {
+      __map_warn2__("Error at MsgInit, code 0x%hx",err);
+      sleep(1);
+      MsgExit();
+      goto reinit;
+      //throw runtime_error("MsgInit error");
+    }
   }
+  err= EINSS7CpMsgPortOpen( MY_USER_ID, TRUE);
+  if ( err != RETURN_OK )
+  {
+    __map_warn2__("Error at MsgOpen, code 0x%hx",err);
+    sleep(1);
+    MsgExit();
+    goto reinit;
+  }
+
   {
     MutexGuard mapMutexGuard(mapMutex);
-    connect(timeout);
+    if(!connect(timeout))
+    {
+      sleep(1);
+      MsgExit();
+      goto reinit;
+    }
   }
   __map_trace__("MAP proxy init complete");
 }

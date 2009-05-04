@@ -522,7 +522,7 @@ struct MapDialog{
     noRespFromPeer=false;
     s_imsi.clear();
     s_msc.clear();
-	 
+
     //isAllocated=false;
   }
 
@@ -637,7 +637,7 @@ public:
   static int numLocalSSNs;
   static smsc::logger::Logger* loggerStatDlg;
   static smsc::logger::Logger* loggerMapPdu;
-  
+
   static std::string remoteMgmtAddress;
 
   void setPerformanceLimits(int newTimeOut,int newProcLimit)
@@ -794,7 +794,7 @@ public:
     MutexGuard g(sync);
     return lock_map.Count();
   }
-  
+
   void getDlgStats(int cnt[])
   {
     cnt[0]=MAPSTATS_dialogs[MAPSTAT_DLGINSRI];
@@ -1317,9 +1317,9 @@ public:
   void registerSelf(SmeManager* smeman);
   void unregisterSelf(SmeManager* smeman);
   void abort();
-  
+
   int rinstIdx;
-  
+
   int getNextRInst()
   {
     if(MAP_connectedInstCount==0)
@@ -1347,7 +1347,7 @@ public:
     while(!MAP_connectedInst[remInst[rinstIdx]]);
     return remInst[rinstIdx];
   }
-  
+
 };
 
 class DialogRefGuard{
@@ -1416,9 +1416,9 @@ public:
 
   bool isStarted() {return is_started;}
   MapProxy proxy;
-  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, 
-            int ussdSSN, const string& addUssdSSN, 
-            int busyMTDelay, int lockedByMODelay, int MOLockTimeout, 
+  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr,
+            int ussdSSN, const string& addUssdSSN,
+            int busyMTDelay, int lockedByMODelay, int MOLockTimeout,
             bool allowCallBarred, bool ussdV1Enabled, bool ussdV1UseOrigEntityNumber,
             int  nodeNumber, int nodesCount) : startevent(startevent)
   {
@@ -1445,10 +1445,10 @@ public:
     MapDialogContainer::allInst[0]=0;
     MapDialogContainer::allInst[1]=0;
     MapDialogContainer::allInstCount=2;
-    
+
 #endif
   }
-  
+
 #ifdef EIN_HD
   void initInstances(const std::string& local,const std::string& remote)
   {
@@ -1498,7 +1498,7 @@ public:
     MapDialogContainer::remoteMgmtAddress=argAddr;
   }
 #endif
-  
+
   void Start();
   void setMapIoTaskCount(int newcnt)
   {
@@ -1516,7 +1516,7 @@ public:
     MapDialogContainer::setProxy( 0 );
   }
 protected:
-  
+
   class DispatcherExecutor;
   friend class MapIoTask::DispatcherExecutor;
   class DispatcherExecutor:public smsc::core::threads::ThreadedTask{
@@ -1569,7 +1569,7 @@ private:
   bool is_started;
   void dispatcher();
   void init(unsigned timeout=0);
-  void connect(unsigned timeout=0);
+  bool connect(unsigned timeout=0);
   void deinit(bool connected);
   void disconnect();
 
