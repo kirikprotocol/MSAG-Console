@@ -38,21 +38,21 @@ public:
   }
     int Execute()
     {
-        try {
-            while(!isStopping)
-            {
-                smsc_log_debug(log,"prior to accept");
-                Socket* s=sock.Accept();
-                if(!s)break;
-                char buf[32];
-                s->GetPeer(buf);
-                smsc_log_info(log,"connection accepted from %s",buf);
+        while(!isStopping)
+        {
+            smsc_log_debug(log,"prior to accept");
+            Socket* s=sock.Accept();
+            if(!s)break;
+            char buf[32];
+            s->GetPeer(buf);
+            smsc_log_info(log,"connection accepted from %s",buf);
+            try {
                 sm->registerSocket(new SmeSocket(s));
+            } catch ( std::exception& e ) {
+                smsc_log_error(log,"exc in registerSocket: %s", e.what());
+            } catch (...) {
+                smsc_log_error(log,"exc in registerSocket: unknown");
             }
-        } catch ( std::exception& e ) {
-            smsc_log_error(log,"SmeAcceptor failed: %s", e.what());
-        } catch (...) {
-            smsc_log_error(log,"SmeAcceptor failed: unknown");
         }
         smsc_log_info(log,"SmeAcceptor stopped");
         return 0;
