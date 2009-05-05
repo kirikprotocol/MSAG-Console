@@ -1545,6 +1545,7 @@ protected:
   protected:
     MapIoTask* mapIoTask;
   };
+public:
   class ReconnectThread:public smsc::core::threads::ThreadedTask{
   public:
     ReconnectThread():isStopping(false)
@@ -1556,8 +1557,10 @@ protected:
       isStopping=true;
     }
     virtual const char* taskName() { return "MapIoTask::reconnect";}
+    static void reportDisconnect(int rinst);
   protected:
     bool isStopping;
+    static EventMonitor reconnectMon;
   };
 
 private:

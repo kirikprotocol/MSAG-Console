@@ -39,7 +39,6 @@ static bool MAP_dispatching = false;
 //static bool MAP_isAlive = false;
 static bool MAP_aborting = false;
 
-static EventMonitor reconnectMon;
 volatile bool MAP_connectedInst[10]={
 false,
 };
@@ -80,11 +79,7 @@ extern "C" {
     }
     if(!isBound)
     {
-      MutexGuard mg(reconnectMon);
-      EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID,INSTARG0(rinst));
-      MAP_connectedInstCount--;
-      MAP_connectedInst[INSTARG0(rinst)]=false;
-      reconnectMon.notify();
+      MapIoTask::ReconnectThread::reportDisconnect(INSTARG0(rinst));
     }
 #ifdef SNMP
     const char* sid="MAP_PROXY";
@@ -172,14 +167,15 @@ extern "C" uint16_t onBrokenConn(uint16_t fromID,
                         uint8_t inst)
 {
   __map_warn2__("broken conn:%d->%d,%d",fromID,toID,inst);
-  MutexGuard mg(reconnectMon);
+  MapIoTask::ReconnectThread::reportDisconnect(inst);
+  /*MutexGuard mg(reconnectMon);
   MAP_connectedInstCount--;
   if(inst<10)
   {
     MAP_connectedInst[inst]=false;
   }
   __map_trace2__("MAP_connectedInstCount=%d",MAP_connectedInstCount);
-  reconnectMon.notify();
+  reconnectMon.notify();*/
   return RETURN_OK;
 }
 
@@ -241,6 +237,22 @@ bool MapIoTask::connect(unsigned timeout) {
   MapDialogContainer::getInstance()->restartStatistics();
   return bindOk;
 }
+
+EventMonitor MapIoTask::ReconnectThread::reconnectMon;
+
+void MapIoTask::ReconnectThread::reportDisconnect(int rinst)
+{
+  MutexGuard mg(reconnectMon);
+  EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID,rinst);
+  MAP_connectedInstCount--;
+  if(rinst>=0 || rinst<10)
+  {
+    MAP_connectedInst[rinst]=false;
+  }
+  __map_trace2__("MAP_connectedInstCount=%d",MAP_connectedInstCount);
+  reconnectMon.notify();
+}
+
 
 int MapIoTask::ReconnectThread::Execute()
 {
