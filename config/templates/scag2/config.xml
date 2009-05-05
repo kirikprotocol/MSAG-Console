@@ -45,13 +45,15 @@
     <section name="StatisticsManager">
         <param name="statisticsDir" type="string">@stat.dir@</param>
         <param name="perfHost" type="string">@stat.perf_host@</param>
-        <param type="int" name="perfGenPort">@stat.perf_port@</param>
-        <param type="int" name="perfSvcPort">@stat.perf_svc_port@</param>
-        <param type="int" name="perfScPort">@stat.perf_sc_port@</param>
-        <param type="int" name="saccPort">@stat.sacc_port@</param>
+        <param name="perfGenPort" type="int">@stat.perf_port@</param>
+        <param name="perfSvcPort" type="int">@stat.perf_svc_port@</param>
+        <param name="perfScPort" type="int">@stat.perf_sc_port@</param>
+        <param name="saccPort" type="int">@stat.sacc_port@</param>
         <param name="saccHost" type="string">@stat.sacc_host@</param>
         <param name="connect_timeout" type="int">@stat.sacc_connect_timeout@</param>
         <param name="queue_length" type="int">@stat.sacc_queue_length@</param>
+        <param name="saaDir" type="string">@stat.saa_dir@</param>
+        <param name="rollingInterval" type="int">@stat.rolling_interval@</param>
     </section>
 
     <section name="RuleEngine">
@@ -105,8 +107,8 @@
     </section>
 
     <section name="Personalization">
-        <param name="host" type="string">@mtpers.connect_host@</param>
-        <param type="int" name="port">@mtpers.port@</param>
+        <param name="host" type="string">@pvss.connect_host@</param>
+        <param type="int" name="port">@pvss.port@</param>
         <param name="ioTimeout" type="int">@pers_client.io_timeout@</param> <!--in miliseconds-->
         <param name="pingTimeout" type="int">@pers_client.ping_timeout@</param> <!--in seconds-->
         <param name="reconnectTimeout" type="int">@pers_client.reconnect_timeout@</param> <!--in seconds-->
