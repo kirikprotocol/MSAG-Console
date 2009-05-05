@@ -179,6 +179,10 @@ public:
   void init(const SmscConfigs& cfg, const char * node);
   void run();
   void stop(){stopFlag=true;}
+  bool getStopFlag()
+  {
+    return stopFlag;
+  }
   void mainLoop(int);
   void shutdown();
   TaskContainer tasks;
@@ -392,7 +396,7 @@ public:
       testRouter_ = new Reffer<RouteManager>(manager);
     }
     if ( refToKill ) refToKill->Release();
-    
+
   }
 
   /*
@@ -487,7 +491,7 @@ public:
     int cntVal=statCounter->Get()/statTimeFrame;
     if(cntVal>maxStatCounter)maxStatCounter=cntVal;
   }
-  
+
   enum{
     chargeOnSubmit,chargeOnDelivery,chargeAlways
   };
