@@ -842,7 +842,7 @@ namespace cfg{
   string mailstripper;
   int mailthreadsCount;
   EmailProcessor* mailThreads;
-  
+
   OutputFormatter *msgFormat;
   Hash<OutputFormatter*> answerFormats;
   string storeDir;
@@ -852,9 +852,9 @@ namespace cfg{
   LimitType defaultLimitType=ltDay;
   int defaultLimitValue=10;
   bool sendSuccessAnswer=true;
-  
+
   std::string helpDeskAddress;
-  
+
   bool useTransformRegexp=false;
   // RegExp reTransform;
   std::string transformResult;
@@ -1477,7 +1477,7 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
       {
         storage.incGsm2EmlLimit(fromaddress);
       }
-        
+
       if(rv!=ProcessSmsCodes::OK)
       {
         statCollector.IncSms2Eml(false);
@@ -1583,7 +1583,7 @@ public:
         {
           continue;
         }
-  
+
         RecordKey key(it->second);
         RecordsMap::iterator rit=records.find(key);
         if(rit==records.end())
@@ -1905,8 +1905,8 @@ public:
       answers.erase(it);
     }
   }
-  
-  bool handleIdle() 
+
+  bool handleIdle()
   {
     return false;
   }
@@ -2213,10 +2213,10 @@ struct XBuffer{
   char* buffer;
   int size;
   int offset;
-  
+
   XBuffer(){buffer=0;size=0;offset=0;}
   ~XBuffer(){if(buffer)delete [] buffer;}
-  
+
   void setSize(int newsize)
   {
     if(newsize<size)return;
@@ -2248,6 +2248,7 @@ public:
     emlOut=0;
     emlIn=0;
     needRestartChild=false;
+    mr=0;
   }
   int Execute()
   {
@@ -2340,6 +2341,7 @@ protected:
   Socket* clnt;
   bool busy;
   bool needRestartChild;
+  int mr;
   static smsc::logger::Logger* log;
   static int busyCount;
   static EventMonitor mon;
@@ -2598,6 +2600,7 @@ int EmailProcessor::sendSms(std::string from,const std::string to,const char* ms
       {
         psms.setIntProperty(Tag::SMSC_UDH_CONCAT,1);
       }
+      psms.setConcatMsgRef(mr++);
       extractSmsPart(&psms,0);
       fillSmppPduFromSms(&sm,&psms);
       resp=cfg::tr->submit(sm);
@@ -2901,10 +2904,10 @@ int main(int argc,char* argv[])
     //using namespace smsc::db;
     config::Manager::init("conf/config.xml");
     config::Manager& cfgman= config::Manager::getInstance();
-    
+
     config::ConfigView *dsConfig = new config::ConfigView(cfgman, "StartupLoader");
-    
-    
+
+
     cfg::smtpHost=cfgman.getString("smtp.host");
     try{
       cfg::smtpPort=cfgman.getInt("smtp.port");
@@ -2918,37 +2921,37 @@ int main(int argc,char* argv[])
     {
       __warning__("smpp.retryTime not found, using default");
     }
-    
+
     try
     {
       cfg::pauseAfterDisconnect=cfgman.getBool("smpp.pauseAfterDisconnect");
-      
+
     } catch(...)
     {
       __warning__("smpp.pauseAfterDisconnect not found, disabled");
     }
-    
+
     try{
       cfg::allowGsm2EmlWithoutProfile=cfgman.getBool("admin.allowGsm2EmlWithoutProfile");
     }catch(...)
     {
       __warning__("admin.allowGsm2EmlWithoutProfile not found, disabled by default");
     }
-    
+
     try{
       cfg::allowEml2GsmWithoutProfile=cfgman.getBool("admin.allowEml2GsmWithoutProfile");
     }catch(...)
     {
       __warning__("admin.allowEml2GsmWithoutProfile not found, disabled by default");
     }
-    
+
     try{
       cfg::autoCreateGsm2EmlProfile=cfgman.getBool("admin.autoCreateGsm2EmlProfile");
     }catch(...)
     {
       __warning__("admin.autoCreateGsm2EmlProfile not found disabled by default");
     }
-    
+
     try
     {
       initRegions(cfgman.getString("admin.regionsconfig"),cfgman.getString("admin.routesconfig"));
@@ -2956,7 +2959,7 @@ int main(int argc,char* argv[])
     {
       __warning__("regions support disabled");
     }
-    
+
     try
     {
       cfg::helpDeskAddress=Address(cfgman.getString("admin.helpdeskAddress")).value;
@@ -2964,19 +2967,19 @@ int main(int argc,char* argv[])
     {
       __warning__("helpdesk support disabled");
     }
-    
+
     bool haveStats=false;
     try
     {
       statCollector.Init(cfgman.getString("stat.storeLocation"),cfgman.getInt("stat.flushPeriodInSec"));
       haveStats=true;
       statCollector.Start();
-      
+
     } catch(std::exception&e)
     {
       __warning2__("stats disabled:%s",e.what());
     }
-    
+
     try{
       const char* lmt=cfgman.getString("admin.defaultLimit");
       int val;
@@ -3001,14 +3004,14 @@ int main(int argc,char* argv[])
     {
       __warning__("parameter admin.defaultLimit not found, using default value");
     }
-    
+
     cfg::storeDir=cfgman.getString("store.dir");
-    
-    
-    
+
+
+
     storage.Open(cfg::storeDir.c_str());
-    
-    
+
+
     SmeConfig cfg;
     cfg.host=cfgman.getString("smpp.host");
     cfg.port=cfgman.getInt("smpp.port");
@@ -3022,7 +3025,7 @@ int main(int argc,char* argv[])
     } catch(...)
     {
     }
-    
+
     try
     {
       cfg::partitionSms=cfgman.getBool("smpp.partitionSms");
@@ -3030,13 +3033,13 @@ int main(int argc,char* argv[])
     } catch(...)
     {
     }
-    
+
     if(cfg::partitionSms)
     {
       int sendSpeed=cfgman.getInt("smpp.partsSendSpeedPerHour");
       int sendDelay=3600*1000/sendSpeed;
       multiPartSendQueue.Init(cfgman.getString("store.queueDir"),sendDelay);
-      
+
       std::string concatStore=cfg::storeDir;
       if(concatStore.length() && *concatStore.rbegin()!='/')
       {
@@ -3049,12 +3052,12 @@ int main(int argc,char* argv[])
       }
       concatManager.Init(concatStore,cfgman.getInt("smpp.concatTimeout"));
     }
-    
+
     cfg::serviceType=cfgman.getString("smpp.serviceType");
     cfg::protocolId=cfgman.getInt("smpp.protocolId");
-    
+
     cfg::maildomain=cfgman.getString("mail.domain");
-    
+
     {
       std::string validToDomains=cfgman.getString("mail.validToDomains");
       size_t pos=0;
@@ -3073,7 +3076,7 @@ int main(int argc,char* argv[])
         }
       }while(comma!=std::string::npos);
     }
-    
+
     std::string reSrc;
     try{
       reSrc=cfgman.getString("mail.userNameTransformRegexp");
@@ -3093,14 +3096,14 @@ int main(int argc,char* argv[])
     {
       __warning2__("Missing optional parameter:%s",e.what());
     }
-    
+
     AdminCommandsListener acl;
-    
+
     acl.Init(cfgman.getString("admin.host"),cfgman.getInt("admin.port"));
     acl.Start();
-    
+
     Socket srv;
-    
+
     if(srv.InitServer(cfgman.getString("listener.host"),cfgman.getInt("listener.port"),0,0)==-1)
     {
       __warning2__("emailsme: Failed to init listener at %s:%d",cfgman.getString("listener.host"),cfgman.getInt("listener.port"));
@@ -3111,8 +3114,8 @@ int main(int argc,char* argv[])
       __warning__("Failed to start listener");
       return -1;
     };
-    
-    
+
+
     cfg::mailstripper=cfgman.getString("mail.stripper");
     try{
       cfg::mailthreadsCount=cfgman.getInt("mail.threadsCount");
@@ -3132,7 +3135,7 @@ int main(int argc,char* argv[])
       cfg::mailThreads[i].assignTransformRegexp(reSrc.c_str());
       cfg::mailThreads[i].Start();
     }
-    
+
     /*if(util::ForkPipedCmd(cfg::mailstripper.c_str(),emlIn,emlOut)<=0)
      {
      __warning2__("Failed to execute mail stripper:%s",strerror(errno));
@@ -3140,11 +3143,11 @@ int main(int argc,char* argv[])
      return -1;
      }
      */
-    
+
     cfg::sendSuccessAnswer=cfgman.getBool("answers.sendSuccessAnswer");
-    
+
     cfg::msgFormat=new OutputFormatter(cfgman.getString("mail.format"));
-    
+
     {
       const char* answers[]=
       {
@@ -3175,21 +3178,21 @@ int main(int argc,char* argv[])
         cfg::answerFormats.Insert(answers[i],new OutputFormatter(cfgman.getString(fullCfgString.c_str())));
       }
     }
-    
+
     //cfg::defaultDailyLimit=cfgman.getInt("defaults.dailyLimit");
     cfg::annotationSize=cfgman.getInt("defaults.annotationSize");
-    
+
     __trace2__("defaults.annotationSize:%d",cfg::annotationSize);
-    
+
     MyListener lst;
     cfg::aq=&lst;
-    
+
     SmppSession ss(cfg,&lst);
     cfg::tr=ss.getSyncTransmitter();
     cfg::atr=ss.getAsyncTransmitter();
     cfg::sourceAddress=cfgman.getString("smpp.sourceAddress");
     lst.setTrans(cfg::tr);
-    
+
     while(!cfg::stopSme)
     {
       for(;;)
@@ -3211,7 +3214,7 @@ int main(int argc,char* argv[])
         multiPartSendQueue.Start();
         concatManager.Start();
       }
-      
+
       reconnectFlag=false;
       while(!cfg::stopSme)
       {
