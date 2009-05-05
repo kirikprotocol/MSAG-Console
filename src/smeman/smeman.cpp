@@ -473,5 +473,8 @@ SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
   return INVALID_SME_INDEX;
 }
 
+std::string SmeProxy::nullstr="";
+
+
 } // namespace smeman
 } // namespace smsc

@@ -105,8 +105,6 @@ public:
   virtual const char* what() const throw() {return "Invalid bind state";}
 };
 
-static std::string nullstr="";
-
 // abstract
 class SmeProxy
 {
@@ -172,6 +170,8 @@ public:
 
   virtual void disconnect(){};
   virtual bool deleteOnUnregister(){return false;}
+
+  static std::string nullstr;
 };
 
 } // namespace smeman
