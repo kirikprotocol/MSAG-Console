@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <time.h>
 #include "core/buffers/TmpBuf.hpp"
+#include "system/smsc.hpp"
 #ifdef SNMP
 #include "snmp/SnmpAgent.hpp"
 #include "system/snmp/SnmpCounter.hpp"
@@ -315,7 +316,7 @@ void MapIoTask::init(unsigned timeout)
     MapDialogContainer::boundLocalSSNs[i] = 0;
   }
   reinit:
-  if( isStopping ) return;
+  if( isStopping || smsc::system::Smsc::getInstance().getStopFlag()) return;
 #ifdef EIN_HD
   EINSS7CpMain_CpInit();
   err = EINSS7CpRegisterMPOwner(MY_USER_ID);
@@ -764,7 +765,7 @@ void MapIoTask::Start()
     is_started = true;
     __trace2__("signal mapiotask start:%p",startevent);
     startevent->SignalAll();
-    if( isStopping ) return;
+    if( isStopping || smsc::system::Smsc::getInstance().getStopFlag()) return;
     for(int i=0;i<mapIoTaskCount;i++)
     {
       tp.startTask(new DispatcherExecutor(this));
