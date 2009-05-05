@@ -21,9 +21,9 @@ void ServerContext::setResponse(Response* response) /* throw (PvssException) */
 }
 
 
-void ServerContext::setError(const std::string& msg) /* throw(PvssException) */ 
+void ServerContext::setError( const std::string& msg, Response::Type type ) /* throw(PvssException) */ 
 {
-    setResponse(new ErrorResponse(getSeqNum(),Response::ERROR, msg.empty() ? 0 : msg.c_str()));
+    setResponse( new ErrorResponse( getSeqNum(), type, msg.empty() ? 0 : msg.c_str()));
 }
 
 } // namespace server

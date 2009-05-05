@@ -170,18 +170,15 @@ bool PersProtocol::SerialBufferResponseVisitor::visitBatchResponse(BatchResponse
 }
 
 uint8_t PersProtocol::SerialBufferResponseVisitor::getResponseStatus(uint8_t status) const {
-  switch (status) {
-  case Response::OK                 : return perstypes::RESPONSE_OK;
-  case Response::ERROR              : return perstypes::RESPONSE_ERROR;
-  case Response::PROPERTY_NOT_FOUND : return perstypes::RESPONSE_PROPERTY_NOT_FOUND;
-  case Response::BAD_REQUEST        : return perstypes::RESPONSE_BAD_REQUEST;
-  case Response::TYPE_INCONSISTENCE : return perstypes::RESPONSE_TYPE_INCONSISTENCE;
-  case Response::NOT_SUPPORTED      : return perstypes::RESPONSE_NOTSUPPORT;
-  case Response::SERVER_SHUTDOWN    : return perstypes::RESPONSE_ERROR;
-  case Response::REQUEST_TIMEOUT    : return perstypes::RESPONSE_ERROR;
-  case Response::UNKNOWN            : return 0;
-    default: return status > Response::ERROR ? perstypes::RESPONSE_ERROR : 0;
-  }
+    switch (status) {
+    case Response::OK                 : return perstypes::RESPONSE_OK;
+    case Response::PROPERTY_NOT_FOUND : return perstypes::RESPONSE_PROPERTY_NOT_FOUND;
+    case Response::TYPE_INCONSISTENCE : return perstypes::RESPONSE_TYPE_INCONSISTENCE;
+    case Response::BAD_REQUEST        : return perstypes::RESPONSE_BAD_REQUEST;
+    case Response::NOT_SUPPORTED      : return perstypes::RESPONSE_NOTSUPPORT;
+    case Response::UNKNOWN            : return 0;
+    default                           : return perstypes::RESPONSE_ERROR;
+    }
 }
 
 

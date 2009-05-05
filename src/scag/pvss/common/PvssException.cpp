@@ -1,3 +1,4 @@
+/*
 #include "PvssException.h"
 
 namespace scag2 {
@@ -26,3 +27,5 @@ const char* PvssException::typeToString( Type t )
 
 }
 }
+
+ */

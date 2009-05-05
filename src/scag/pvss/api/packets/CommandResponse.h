@@ -3,7 +3,7 @@
 
 #include <string>
 #include "util/int.h"
-#include "StatusType.h"
+#include "scag/pvss/common/StatusType.h"
 #include "ProfileResponseVisitor.h"
 #include "logger/Logger.h"
 

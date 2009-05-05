@@ -58,7 +58,7 @@ int Worker::doExecute()
                     smsc_log_debug(log_,"proc tmo in context: %s", context->getRequest()->toString().c_str() );
                     core_.countExceptions(e.getType(),"workProcTmo");
                     try {
-                        context->setError(e.getMessage());
+                        context->setError(e.getMessage(),e.getType());
                     } catch (...) {}
                     break;
                 }
@@ -77,7 +77,7 @@ int Worker::doExecute()
                     smsc_log_fatal(log_,"FileExc in process: %s, SIGTERM will follow", e.what());
                     core_.countExceptions(PvssException::UNKNOWN,"procFileExc");
                     try {
-                        context->setError(e.what());
+                        context->setError(e.what(),Response::UNKNOWN);
                     } catch (...) {}
                     kill(getpid(),SIGTERM);
                     break;
@@ -86,7 +86,7 @@ int Worker::doExecute()
                     context->getRequest()->timingMark("procFail");
                     core_.countExceptions(e.getType(),"procFailed");
                     try {
-                        context->setError(e.getMessage());
+                        context->setError(e.getMessage(),e.getType());
                     } catch (...) {}
                     break;
                 }

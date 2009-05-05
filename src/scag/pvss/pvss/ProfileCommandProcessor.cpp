@@ -94,7 +94,7 @@ bool ProfileCommandProcessor::visitIncModCommand(IncModCommand &cmd) /* throw(Pv
   uint32_t result = 0;
   response_.reset( new IncResponse());
   if (!profile_) {
-    response_->setStatus(StatusType::ERROR);
+    response_->setStatus(StatusType::IO_ERROR);
     return false;
   }
   uint8_t status = incModProperty(cmd.getProperty(), cmd.getModulus(), result);
@@ -110,7 +110,7 @@ bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapExce
   const Property& prop = cmd.getProperty();
   response_.reset( new SetResponse() );
   if (!profile_) {
-    response_->setStatus(StatusType::ERROR);
+    response_->setStatus(StatusType::IO_ERROR);
     return false;
   }
   if (prop.isExpired()) {
@@ -125,7 +125,7 @@ bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapExce
     dblog_.createUpdateLogMsg(profile_->getKey(), prop.toString());
   } else {
     if (!profile_->AddProperty(prop)) {
-      response_->setStatus(StatusType::ERROR);
+      response_->setStatus(StatusType::IO_ERROR);
       return false;
     }
     dblog_.createAddLogMsg(profile_->getKey(), prop.toString());
@@ -142,7 +142,7 @@ uint8_t ProfileCommandProcessor::incModProperty(Property& property, uint32_t mod
     result = mod > 0 ? result % mod : result;
     property.setIntValue(result);
     if (!profile_->AddProperty(property)) {
-      return StatusType::ERROR;
+      return StatusType::IO_ERROR;
     }
     dblog_.createAddLogMsg(profile_->getKey(), property.toString());
     profile_->setChanged(true);

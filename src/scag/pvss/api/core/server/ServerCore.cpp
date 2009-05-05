@@ -461,7 +461,7 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         if ( syncDispatcher_ ) {
             const int idx = syncDispatcher_->getIndex(*req);
             if ( idx > workers_.Count() ) {
-                status = Response::ERROR;
+                status = Response::INVALID_KEY;
                 what = "recvNoWorker";
                 throw PvssException(PvssException::UNKNOWN,"cannot dispatch");
             }
@@ -470,7 +470,7 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         } else if ( dispatcher_.get() ) {
             queue = & dispatcher_->getQueue();
         } else {
-            status = Response::ERROR;
+            status = Response::CONFIG_INVALID;
             what = "recvNoDisptch";
             throw PvssException(PvssException::UNKNOWN,"dispatcher is not found");
         }

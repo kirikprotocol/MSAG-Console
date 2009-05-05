@@ -38,7 +38,7 @@ public:
 
     virtual void setResponse(Response* response) /* throw (PvssException) */ ;
 
-    virtual void setError(const std::string& msg) /* throw(PvssException) */ ;
+    void setError( const std::string& msg, Response::Type type ) /* throw(PvssException) */ ;
 
     /// where to return notification on response delivery
     virtual void setRespQueue( ContextQueue& respQueue ) {

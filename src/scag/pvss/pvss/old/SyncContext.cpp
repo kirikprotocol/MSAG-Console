@@ -84,7 +84,7 @@ bool SyncContext::processReadSocket(const time_t& now) {
     if (!req) {
       smsc_log_warn(logger_, "%p:request is NULL. buffer received len=%d curpos=%d data=%s",
                               this, inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
-      createErrorResponse(Response::ERROR,"request is NULL");
+      createErrorResponse(Response::BAD_REQUEST,"request is NULL");
     }
   
     std::auto_ptr<Request> request(req);
@@ -110,7 +110,7 @@ bool SyncContext::processReadSocket(const time_t& now) {
   } catch (const std::runtime_error& e) {
     smsc_log_warn(logger_, "%p:std::runtime_error: Error profile key: %s. buffer received len=%d curpos=%d data=%s",
                             this, e.what(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
-    createErrorResponse(Response::ERROR,e.what());
+    createErrorResponse(Response::UNKNOWN,e.what());
 
   } catch (const pvap::InvalidMessageTypeException& e) {
     smsc_log_warn(logger_, "%p:InvalidMessageTypeException: %s. buffer received len=%d curpos=%d data=%s",
@@ -120,17 +120,17 @@ bool SyncContext::processReadSocket(const time_t& now) {
   } catch (const PvapException& e) {
     smsc_log_warn(logger_, "%p:PvapException: %s. buffer received len=%d curpos=%d data=%s",
                             this, e.getMessage().c_str(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
-    createErrorResponse(Response::ERROR,e.what());
+    createErrorResponse(e.getType(),e.what());
 
   } catch (const std::exception& e) {
     smsc_log_warn(logger_, "%p:std::exception: %s. buffer received len=%d curpos=%d data=%s",
                             this, e.what(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
-    createErrorResponse(Response::ERROR,e.what());
+    createErrorResponse(Response::UNKNOWN,e.what());
 
   } catch (...) {
     smsc_log_warn(logger_, "%p:Unknown Exception: buffer received len=%d curpos=%d data=%s",
                             this, inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
-    createErrorResponse(Response::ERROR,"unknown exc");
+    createErrorResponse(Response::UNKNOWN,"unknown exc");
   }
 
   return true;

@@ -1,9 +1,9 @@
 #ifndef _SCAG_PVSS_BASE_RESPONSE_H
 #define _SCAG_PVSS_BASE_RESPONSE_H
 
+#include "scag/pvss/common/StatusType.h"
 #include "Packet.h"
 #include "Request.h"
-#include "StatusType.h"
 
 namespace scag2 {
 namespace pvss {
