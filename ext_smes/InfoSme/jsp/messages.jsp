@@ -19,14 +19,11 @@
   int rowN = 0;
   int beanResult = bean.process(request);
   if (beanResult == Messages.RESULT_EXPORT_ALL) {
-    if(session.getAttribute("Export mess done")==null) {
-      session.setAttribute("Export mess done",Boolean.TRUE);
-      bean.exportAll(response, out);
-      return;
-    } else {
-      beanResult = Messages.RESULT_OK;
-      session.setAttribute("Export mess done",null);
-    }
+    bean.exportAll(response, out, true);
+    return;
+  } else if (beanResult == Messages.RESULT_EXPORT_ALL_NO_TEXTS) {
+    bean.exportAll(response, out, false);
+    return;
   } else if (beanResult == Messages.RESULT_UPDATE_ALL) {
     session.setAttribute("Export mess done",null);    
     request.getRequestDispatcher("updateMessages.jsp").forward(request, response);
@@ -119,6 +116,7 @@ page_menu_button(session, out, "mbUpdateAll", "infosme.button.update_all", "info
 page_menu_button(session, out, "mbDeleteAll", "infosme.button.delete_all", "infosme.hint.delete_all");
 page_menu_button(session, out, "mbResendAll", "infosme.button.resend_all", "infosme.hint.resend_all");
 page_menu_button(session, out, "mbExportAll", "infosme.button.export_all", "infosme.hint.export_all");
+page_menu_button(session, out, "mbExportAllNoTexts", "infosme.button.export_all_no_texts", "infosme.hint.export_all");
 page_menu_end(out);
 }%><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

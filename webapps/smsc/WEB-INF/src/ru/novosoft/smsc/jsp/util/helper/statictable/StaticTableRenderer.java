@@ -47,6 +47,9 @@ public class StaticTableRenderer extends HTMLRenderer {
         buffer.append(image(image, null, null));
       } else
         buffer.append("&nbsp;");
+      String text = ((ImageCell)dataCell).getText();
+      if (text != null)
+        buffer.append(text);
     }
 
     if (dataCell.isSelectable())

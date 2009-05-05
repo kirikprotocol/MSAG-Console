@@ -106,68 +106,6 @@ public class StatisticsDataSource extends AbstractDataSource {
     }, (StatQuery)query_to_run.getFilter());
 
     return (err[0]) ? new EmptyResultSet() : getResults();
-
-//    final StatQuery filter = (StatQuery)query_to_run.getFilter();
-//
-//    Date fromDate = filter.getFromDate();
-//    Date endDate = filter.getTillDate();
-//
-//    try {
-//      List files = getFiles(fromDate, endDate);
-//      if (files.isEmpty())
-//        return new EmptyResultSet();
-//
-//      final SimpleDateFormat fileDateFormat = new SimpleDateFormat(DIR_DATE_FORMAT + '/' + FILE_DATE_FORMAT);
-//
-//      for (Iterator iter = files.iterator(); iter.hasNext();) {
-//        File f = (File)iter.next();
-//
-//        Date fileDate = fileDateFormat.parse(f.getParentFile().getName() + '/' + f.getName());
-//
-//        BufferedReader is = null;
-//
-//        try {
-//          is = new BufferedReader(new FileReader(f));
-//
-//          String line = is.readLine(); // Skip first line
-//
-//          while((line = is.readLine()) != null) {
-//            StringTokenizer st = new StringTokenizer(line, ",");
-//            String taskId = st.nextToken();
-//            String taskName = st.nextToken();
-//            String minute = st.nextToken();
-//            String generated = st.nextToken();
-//            String delivered = st.nextToken();
-//            String retried = st.nextToken();
-//            String failed = st.nextToken();
-//
-//            final DataItem item = new StatisticDataItem(fileDate, taskId, taskName, Integer.valueOf(generated),
-//                Integer.valueOf(delivered), Integer.valueOf(retried), Integer.valueOf(failed));
-//
-//            add(item);
-//          }
-//
-//        } catch (EOFException e) {
-//        } catch (IOException e) {
-//          e.printStackTrace();
-//        } catch (AdminException e) {
-//          e.printStackTrace();
-//        } finally {
-//          if (is != null)
-//            try {
-//              is.close();
-//            } catch (IOException e) {
-//            }
-//        }
-//      }
-//
-//      return getResults();
-//
-//    } catch (ParseException e) {
-//      e.printStackTrace();
-//    }
-//
-//    return new EmptyResultSet();
   }
 
   private List getFiles (Date from, Date till) throws ParseException {

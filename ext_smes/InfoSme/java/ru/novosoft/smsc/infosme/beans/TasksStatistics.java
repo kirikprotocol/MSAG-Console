@@ -165,7 +165,7 @@ public class TasksStatistics extends InfoSmeBean
 
 
 
-    private final static char   COL_SEP       = ',';
+    private final static char   COL_SEP       = ';';
     private final static String CAPTION_STR   = "Sibinco InfoSme statistics report";
     private final static String GEN_TIME_STR  = "Generated at:";
     private final static String TASK_STR      = "Task:";

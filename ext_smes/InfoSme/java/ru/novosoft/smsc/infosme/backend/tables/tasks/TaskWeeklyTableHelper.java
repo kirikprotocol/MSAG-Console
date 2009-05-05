@@ -4,10 +4,15 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.jsp.util.helper.statictable.Row;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
+import ru.novosoft.smsc.jsp.util.helper.statictable.cell.ImageCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
 import ru.novosoft.smsc.jsp.SMSCAppContextImpl;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.stat.StatisticsDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.stat.StatVisitor;
+import ru.novosoft.smsc.infosme.backend.tables.stat.StatQuery;
+import ru.novosoft.smsc.infosme.backend.tables.stat.StatisticDataItem;
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
 import ru.novosoft.smsc.admin.AdminException;
@@ -39,6 +44,7 @@ public class TaskWeeklyTableHelper extends PagedStaticTableHelper {
   private int total;
   private final Date minWeekStart;
   private final HashMap taskActivities;
+  private final StatisticsDataSource sds;
 
   public TaskWeeklyTableHelper(String uid, InfoSmeContext ctx, TaskFilter filter) throws AdminException {
     super(uid, false);
@@ -60,7 +66,11 @@ public class TaskWeeklyTableHelper extends PagedStaticTableHelper {
     String msgStoreDir = ctx.getInfoSmeConfig().getStoreLocation();
     if (msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/')
       msgStoreDir = serviceFolder + '/' + msgStoreDir;
+    String statStoreDir = ctx.getInfoSmeConfig().getStatStoreLocation();
+    if (statStoreDir.length() > 0 && statStoreDir.charAt(0) != '/')
+      statStoreDir = serviceFolder + '/' + statStoreDir;
     final MessageDataSource mds = new MessageDataSource(msgStoreDir);
+    sds = new StatisticsDataSource(statStoreDir);
 
     // Fill task activities, calculate min and max dates
     try {
@@ -194,9 +204,31 @@ public class TaskWeeklyTableHelper extends PagedStaticTableHelper {
     fillRows(weekDays);
   }
 
+  private Map getTasksActivities(Date date) {
+    StatQuery q = new StatQuery();
+    q.setFromDate(date);
+    q.setTillDate(new Date(date.getTime() + 3600 * 24 * 1000));
+
+    final Map result = new HashMap();
+    sds.visit(new StatVisitor() {
+      public boolean visit(StatisticDataItem item) {
+        String id = (String)item.getValue("taskId");
+        TaskActivity a = (TaskActivity)result.get(id);
+        if (a == null) {
+          a = new TaskActivity();
+          result.put(id, a);
+        }
+        a.delivered += ((Integer)item.getValue("delivered")).intValue();
+        a.failed += ((Integer)item.getValue("failed")).intValue();
+        return true;
+      }
+    }, q);
+    return result;
+  }
+
   private static void addToColumn(Row row, TextColumn column, int rowNumber, int dayOfWeek, WeekDay[] weekDays) {
     Task t = rowNumber < weekDays[dayOfWeek].tasks.size() ? (Task) weekDays[dayOfWeek].tasks.get(rowNumber) : null;
-    row.addCell(column, new StringCell(t == null ? "" : t.getId(), t == null ? "" : t.getName(), t != null));
+    row.addCell(column, new ImageCell(t == null ? "" : t.getId(), t != null && t.isEnabled() ? "/images/ic_checked.gif" : null, t == null ? "" : t.getName(), t != null));    
   }
 
   protected int calculateTotalSize() throws TableHelperException {
@@ -205,6 +237,11 @@ public class TaskWeeklyTableHelper extends PagedStaticTableHelper {
 
   private static class WeekDay {
     private List tasks = new ArrayList(30);
+  }
+
+  private static class TaskActivity {
+    private int delivered;
+    private int failed;
   }
 
 }

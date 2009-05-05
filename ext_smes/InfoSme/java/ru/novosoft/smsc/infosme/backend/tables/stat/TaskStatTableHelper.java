@@ -5,9 +5,9 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
 
 import java.util.*;
-import java.io.OutputStream;
 import java.io.Writer;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 
 /**
  * User: artem
@@ -16,6 +16,8 @@ import java.io.IOException;
 public class TaskStatTableHelper extends PagedStaticTableHelper {
 
   private final Column task = new TextColumn("taskName", "infosme.label.task", true);
+  private final Column activityStart = new TextColumn("activityStart", "infosme.label.activityStart", true);
+  private final Column activityEnd = new TextColumn("activityEnd", "infosme.label.activityEnd", true);
   private final Column generated = new TextColumn("generated", "infosme.label.generated", true);
   private final Column delivered = new TextColumn("delivered", "infosme.label.delivered", true);
   private final Column retried = new TextColumn("retried", "infosme.label.retried", true);
@@ -34,6 +36,8 @@ public class TaskStatTableHelper extends PagedStaticTableHelper {
     this.filter = filter;
 
     addColumn(task);
+    addColumn(activityStart);
+    addColumn(activityEnd);
     addColumn(generated);
     addColumn(delivered);
     addColumn(retried);
@@ -52,12 +56,14 @@ public class TaskStatTableHelper extends PagedStaticTableHelper {
         if (stat == null) {
           stat = new Stat();
           stat.taskName = taskName;
+          stat.activityStart = (Date)item.getValue("period");
           results.put(taskName, stat);
         }
         stat.delivered += ((Integer) item.getValue("delivered")).intValue();
         stat.generated += ((Integer) item.getValue("generated")).intValue();
         stat.retried += ((Integer) item.getValue("retried")).intValue();
         stat.failed += ((Integer) item.getValue("failed")).intValue();
+        stat.activityEnd = (Date)item.getValue("period");
         return true;
       }
     }, filter);
@@ -73,6 +79,8 @@ public class TaskStatTableHelper extends PagedStaticTableHelper {
     Set sortedResults = getStatsMap();
     this.size = sortedResults.size();
 
+    SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy HH:mm");
+
     int i = 0;
 
     totalDelivered = totalGenerated = totalRetried = totalFailed = 0;
@@ -83,6 +91,8 @@ public class TaskStatTableHelper extends PagedStaticTableHelper {
       if (i >= start && i < start + size) {
         Row r = createNewRow();
         r.addCell(task, new StringCell(taskName, taskName, false));
+        r.addCell(activityStart, new StringCell(taskName, sdf.format(stat.activityStart), false));
+        r.addCell(activityEnd, new StringCell(taskName, sdf.format(stat.activityEnd), false));
         r.addCell(generated, new StringCell(taskName, String.valueOf(stat.generated), false));
         r.addCell(delivered, new StringCell(taskName, String.valueOf(stat.delivered), false));
         r.addCell(retried, new StringCell(taskName, String.valueOf(stat.retried), false));
@@ -98,16 +108,21 @@ public class TaskStatTableHelper extends PagedStaticTableHelper {
 
   public void exportCsv(Writer os) throws IOException {
     Set sortedResults = getStatsMap();
+    SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy HH:mm");
     for (Iterator iter = sortedResults.iterator(); iter.hasNext();) {
       Stat stat = (Stat) iter.next();
       os.write(stat.taskName);
-      os.write(",");
+      os.write(";");
+      os.write(sdf.format(stat.activityStart));
+      os.write(";");
+      os.write(sdf.format(stat.activityEnd));      
+      os.write(";");
       os.write(String.valueOf(stat.generated));
-      os.write(",");
+      os.write(";");
       os.write(String.valueOf(stat.delivered));
-      os.write(",");
+      os.write(";");
       os.write(String.valueOf(stat.retried));
-      os.write(",");
+      os.write(";");
       os.write(String.valueOf(stat.failed));
       os.write("\r\n");
     }    
@@ -135,6 +150,8 @@ public class TaskStatTableHelper extends PagedStaticTableHelper {
 
   private static class Stat {
     private String taskName;
+    private Date activityStart;
+    private Date activityEnd;
     private int generated;
     private int delivered;
     private int retried;
@@ -160,6 +177,12 @@ public class TaskStatTableHelper extends PagedStaticTableHelper {
         result = s1.retried > s2.retried ? 1 : -1;
       } else if (sortOrder != null && sortOrder.getColumnId().equals(failed.getId())) {
         result = s1.failed > s2.failed ? 1 : -1;
+      } else if (sortOrder != null && sortOrder.getColumnId().equals(activityStart.getId())) {
+        result = s1.activityStart.compareTo(s2.activityStart);
+        if (result == 0) result = -1;
+      } else if (sortOrder != null && sortOrder.getColumnId().equals(activityEnd.getId())) {
+        result = s1.activityEnd.compareTo(s2.activityEnd);
+        if (result == 0) result = -1;
       } else
         result = s1.taskName.compareTo(s2.taskName);
 

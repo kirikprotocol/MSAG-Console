@@ -31,6 +31,7 @@ public class Messages extends InfoSmeBean
   public static final int RESULT_UPDATE = PRIVATE_RESULT + 2;
   public static final int RESULT_CANCEL_UPDATE = PRIVATE_RESULT + 3;
   public static final int RESULT_EXPORT_ALL = PRIVATE_RESULT + 4;
+  public static final int RESULT_EXPORT_ALL_NO_TEXTS = PRIVATE_RESULT + 5;
 
   private int pageSize = 0;
 
@@ -49,6 +50,7 @@ public class Messages extends InfoSmeBean
   private String mbResendAll = null;
   private String mbDeleteAll = null;
   private String mbExportAll = null;
+  private String mbExportAllNoTexts = null;
 
   private boolean initialized = false;
 
@@ -111,6 +113,7 @@ public class Messages extends InfoSmeBean
       else if (mbResend != null || mbResendAll != null) result =  processResend(request);
       else if (mbUpdateAll != null) return processUpdateAll();
       else if (mbExportAll != null) return processExportAll();
+      else if (mbExportAllNoTexts != null) return processExportAllNoTexts();
       else if (mbUpdate != null) result = processUpdate();
       else if (mbCancelUpdate != null) result = processCancelUpdate();
       else if (mbQuery != null) processQuery();
@@ -149,11 +152,15 @@ public class Messages extends InfoSmeBean
 
   private int processExportAll() throws AdminException {
     mbExportAll = null;
-
     return RESULT_EXPORT_ALL;
   }
 
-  public void exportAll(HttpServletResponse response, final JspWriter out) {
+  private int processExportAllNoTexts() throws AdminException {
+    mbExportAllNoTexts = null;
+    return RESULT_EXPORT_ALL_NO_TEXTS;
+  }
+
+  public void exportAll(HttpServletResponse response, final JspWriter out, final boolean addTexts) {
     response.setContentType("file/csv; filename=messages.csv; charset=windows-1251");
 //    response.setContentLength(exportFile.length());
     response.setHeader("Content-Disposition", "attachment; filename=messages.csv");
@@ -165,14 +172,16 @@ public class Messages extends InfoSmeBean
         public boolean visit(MessageDataItem msg) {
           try {
             out.write(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.TASK_ID)));
-            out.write(',');
+            out.write(';');
             out.write(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.MSISDN)));
-            out.write(',');
+            out.write(';');
             out.write(StringEncoderDecoder.encode(getStateName((Message.State)msg.getValue(MessageDataSource.STATE))));
-            out.write(',');
+            out.write(';');
             out.write(StringEncoderDecoder.encode(convertDateToString((Date)msg.getValue(MessageDataSource.DATE))));
-            out.write(',');
-            out.write(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.MESSAGE)));
+            if (addTexts) {
+              out.write(';');
+              out.write(StringEncoderDecoder.encode((String)msg.getValue(MessageDataSource.MESSAGE)));
+            }
             out.write('\n');          
           } catch (IOException e) {
             e.printStackTrace();
@@ -488,6 +497,14 @@ public class Messages extends InfoSmeBean
 
   public void setMbExportAll(String mbExportAll) {
     this.mbExportAll = mbExportAll;
+  }
+
+  public String getMbExportAllNoTexts() {
+    return mbExportAllNoTexts;
+  }
+
+  public void setMbExportAllNoTexts(String mbExportAllNoTexts) {
+    this.mbExportAllNoTexts = mbExportAllNoTexts;
   }
 
   public String getMbClear() {

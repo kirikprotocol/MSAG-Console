@@ -50,12 +50,6 @@ public class TaskBuilder extends Thread {
 
     System.out.println("Task builder started");
 
-    // Validate task
-    if (smeContext.getInfoSmeConfig().containsTaskWithName(task.getName())) {
-      System.out.println("Task with name '" + task.getName() + "' already exists");
-      return;
-    }
-
     System.out.println("Copy file: " + file);
 
     String processedFile = file + ".processed";
@@ -72,12 +66,14 @@ public class TaskBuilder extends Thread {
     try {
       task.setMessagesHaveLoaded(false);
 
-      smeContext.getInfoSmeConfig().addAndApplyTask(task);
+      if (!smeContext.getInfoSmeConfig().containsTaskWithId(task.getId())) {
+        smeContext.getInfoSmeConfig().addAndApplyTask(task);
+        smeContext.getInfoSme().addTask(task.getId());
+      }
 
       System.out.println("Task generation....");
 
       is = new BufferedReader(new InputStreamReader(new FileInputStream(processedFile), Functions.getLocaleEncoding()));
-      smeContext.getInfoSme().addTask(task.getId());
 
       final int maxMessagesPerSecond = smeContext.getInfoSmeConfig().getMaxMessagesPerSecond();
 

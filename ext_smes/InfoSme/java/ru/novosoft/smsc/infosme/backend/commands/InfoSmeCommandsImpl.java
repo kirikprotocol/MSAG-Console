@@ -88,7 +88,22 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
 
       // Prepare task
       User user = getUser(ctx);
-      Task task = createTask(context, new File(file).getName(), user);
+      List tasks = context.getInfoSmeConfig().getTasks(user.getLogin());
+      String name = new File(file).getName();
+      int ind = name.lastIndexOf('.');
+      if (ind > 0)
+        name = name.substring(0, ind);
+      
+      Task task = null;
+      for (Iterator iter = tasks.iterator(); iter.hasNext();) {
+        Task t = (Task)iter.next();
+        if (t.getName().equals(name)) {
+          task = t;
+          break;
+        }
+      }
+      if (task == null)
+        task = createTask(context, name, user);
 
       new TaskBuilder(appContext, context, task, user, file).start();
       ctx.setMessage("File " + file + " was added to process queue");
