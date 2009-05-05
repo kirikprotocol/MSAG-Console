@@ -76,7 +76,7 @@ void StatisticsLogger<Event, Buffer>::rollover() {
     string newName;
     {
       MutexGuard mg(mutex_);
-      if (!file_.isOpened() || curTime - lastFileTime_ < interval_) {
+      if (!file_.isOpened()) {
         return;
       }
       currentName = file_.getFileName();
