@@ -210,7 +210,7 @@ bool MapIoTask::connect(unsigned timeout) {
   }
   if(isStopping)
   {
-    return;
+    return false;
   }
   if( timeout > 0 )
   {
@@ -315,6 +315,7 @@ void MapIoTask::init(unsigned timeout)
     MapDialogContainer::boundLocalSSNs[i] = 0;
   }
   reinit:
+  if( isStopping ) return;
 #ifdef EIN_HD
   EINSS7CpMain_CpInit();
   err = EINSS7CpRegisterMPOwner(MY_USER_ID);
@@ -763,6 +764,7 @@ void MapIoTask::Start()
     is_started = true;
     __trace2__("signal mapiotask start:%p",startevent);
     startevent->SignalAll();
+    if( isStopping ) return;
     for(int i=0;i<mapIoTaskCount;i++)
     {
       tp.startTask(new DispatcherExecutor(this));
