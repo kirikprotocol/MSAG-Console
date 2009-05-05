@@ -133,21 +133,32 @@ public:
     {
         XConfigView cfgSec(root_sec, nmSec);
 
-        const char * cstr = NULL; //cpMgrHost
-        try { cstr = cfgSec.getString("cpMgrHost");
+        uint32_t      tmo = 0;
+        const char *  cstr = NULL; //cpMgrHost
+
+        try { cstr = cfgSec.getString("cpMgrHosts");
         } catch (const ConfigException & exc) { }
         if (!cstr || !cstr[0])
-            throw ConfigException("Remote CommonParts Manager host address is missing");
-        st_cfg.rcpMgrAdr = cstr;
+            throw ConfigException("Remote CommonParts Manager"
+                                  " host addresses are missing");
 
-        uint32_t tmo = 0;    //cpMgrPort
-        try { tmo = (uint32_t)cfgSec.getInt("cpMgrPort");
-        } catch (const ConfigException & exc) { }
-        if (!tmo)
-            throw ConfigException("Remote CommonParts Manager Port is missing or invalid");
-        format(st_cfg.rcpMgrAdr, ":%u", tmo);
-        smsc_log_info(logger, "  cpMgrHostPort: \'%s\'", st_cfg.rcpMgrAdr.c_str());
-
+        { //validate addresses format and recompose it without blanks
+          CSVList  hosts;
+          if (!hosts.init(cstr))
+            throw ConfigException("Remote CommonParts Manager"
+                                  " host addresses are invalid: %s", cstr);
+          unsigned i = 0;
+          for (CSVList::iterator it = hosts.begin(); it != hosts.end(); ++it, ++i) {
+            CSVList hp(':');
+            if (hp.init(it->c_str()) != 2)
+              throw ConfigException("Remote CommonParts Manager"
+                                    " host address is invalid: %s", it->c_str());
+            if (i)
+              st_cfg.rcpMgrAdr += ',';
+            hp.print(st_cfg.rcpMgrAdr, false);
+          }
+        }
+        smsc_log_info(logger, "  cpMgrHosts: \'%s\'", st_cfg.rcpMgrAdr.c_str());
 
         tmo = 0;    //cpMgrInstId
         try { tmo = (uint32_t)cfgSec.getInt("cpMgrInstId");

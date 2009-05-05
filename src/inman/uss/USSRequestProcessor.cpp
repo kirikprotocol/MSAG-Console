@@ -162,7 +162,7 @@ TCSessionSR * USSRequestProcessor::getMAPSession(uint8_t rmt_ssn, const TonNpiAd
         return NULL;
     }
     SSNSession * ssnSess = _cfg.tcDisp->openSSN(_cfg.tcUsr.ownSsn, _cfg.tcUsr.maxDlgId, _logger);
-    if (!ssnSess || (ssnSess->getState() < SSNBinding::ssnPartiallyBound)) {
+    if (!ssnSess || (ssnSess->bindStatus() < SSNBinding::ssnPartiallyBound)) {
         smsc_log_error(_logger, "%s: SSN[%u] is not available/bound!", _logId,
                        (unsigned)_cfg.tcUsr.ownSsn);
         return NULL;

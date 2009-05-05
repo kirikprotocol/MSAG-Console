@@ -51,7 +51,7 @@ struct TNoticeParms {
 class UNITStatus {
 public:
     uint8_t         instId;     //SS7 communication unit instanceId, [1..255]
-    enum BindStatus_e { unitIdle = 0, unitError, unitBound };
+    enum BindStatus_e { unitIdle = 0, unitError, unitAwaited, unitBound };
 
     BindStatus_e    bindStatus;
 
@@ -64,7 +64,10 @@ public:
         , bindStatus((unit_inst.connStatus == SS7UnitInstance::uconnError) ? unitError : unitIdle)
     { }
 
-    void Reset(void) { bindStatus = UNITStatus::unitIdle; }
+    void Reset(BindStatus_e use_status = UNITStatus::unitIdle)
+    {
+        bindStatus = use_status;
+    }
     bool operator< (const UNITStatus & obj2) const
     {
         return (instId < obj2.instId);
@@ -91,7 +94,10 @@ public:
 
     void Rise(void) { signaled = true; }
     bool isSignaled(void) const { return signaled; }
-    void Reset(void) { signaled = false; unit.Reset(); }
+    void Reset(UNITStatus::BindStatus_e use_status = UNITStatus::unitIdle)
+    {
+      signaled = false; unit.Reset(use_status);
+    }
 };
 
 struct SSNBinding : public Event {
@@ -194,16 +200,18 @@ public:
                 mask |= 0x01;
             } else if (cit->second.unit.bindStatus == UNITStatus::unitError) {
                 mask |= 0x02;
-            } else //cit->second.unit.bindStatus == UNITStatus::unitBound
+            } else if (cit->second.unit.bindStatus == UNITStatus::unitBound)
                 mask |= 0x04;
         }
-        if ((mask & 0x07) == 0x01)  //all units are idle
-            return ssnIdle;
+//        if ((mask & 0x07) == 0x01)  //all units are idle
+//            return ssnIdle;
+        if ((mask & 0x07) == 0x02)  //all units faced error
+            return ssnError;
         if ((mask & 0x07) == 0x04)  //all units are bound
             return ssnBound;
         if (mask & 0x04)            //at least one unit is bound
             return ssnPartiallyBound;
-        return ssnError;
+        return ssnIdle;
     }
 
     bool setUnitStatus(uint8_t unit_inst_id, UNITStatus::BindStatus_e use_status)
@@ -244,11 +252,11 @@ public:
         return true;
     }
     //
-    void ResetUnit(uint8_t unit_inst_id)
+    void ResetUnit(uint8_t unit_inst_id, UNITStatus::BindStatus_e use_status = UNITStatus::unitIdle)
     {
         UNITBinding * unb = getUnit(unit_inst_id);
         if (unb)
-            unb->Reset();
+            unb->Reset(use_status);
     }
 };
 
@@ -269,6 +277,8 @@ private:
     typedef std::map<TCDialogID, TNoticeParms>   NoticedDLGs;
 
     mutable Mutex   _sync;
+    volatile bool   _stopping;
+
     DialogsMAP      dialogs;
     NoticedDLGs     ntcdDlgs;
     DlgTimesMAP     pending; //released but not terminated Dialogs with timestamp
@@ -277,7 +287,7 @@ private:
 
     uint8_t         _SSN;
     uint16_t        msgUserId;  //Common part message port user id
-    SSNBinding      state;
+    SSNBinding      _cfg;
     uint16_t        lastTCSUId;
     const ApplicationContextRegistryITF * acReg;  //ApplicationContexts Registry
     Logger *        logger;
@@ -295,42 +305,53 @@ protected:
                uint16_t max_dlg_id = 2000, Logger * uselog = NULL);
     ~SSNSession();
 
+    void Stop(void)
+    {
+      MutexGuard  tmp(_sync);
+      _stopping = true;
+    }
     //
-    bool incMaxDlgs(uint16_t max_dlg_num) { return state.incMaxDlgNum(max_dlg_num); }
+    bool incMaxDlgs(uint16_t max_dlg_num) { return _cfg.incMaxDlgNum(max_dlg_num); }
     //
     int  Wait(int timeout_msec) //timeout unit: millisecs
     {
-        return state.Wait(timeout_msec);
+        return _cfg.Wait(timeout_msec);
     }
     //Returns false if no TCAP BE instance exists with given instId
     bool SignalUnit(uint8_t unit_inst_id, UNITStatus::BindStatus_e unit_status)
     {
         MutexGuard  tmp(_sync);
-        return state.SignalUnit(unit_inst_id, unit_status);
+        return _cfg.SignalUnit(unit_inst_id, unit_status);
     }
     //
     void setUnitStatus(uint8_t unit_inst_id, UNITStatus::BindStatus_e inst_status)
     {
         MutexGuard  tmp(_sync);
-        state.setUnitStatus(unit_inst_id, inst_status);
+        _cfg.setUnitStatus(unit_inst_id, inst_status);
     }
     //
-    void ResetUnit(uint8_t unit_inst_id)
+    void ResetUnit(uint8_t unit_inst_id, UNITStatus::BindStatus_e use_status = UNITStatus::unitIdle)
     {
         MutexGuard  tmp(_sync);
-        state.ResetUnit(unit_inst_id);
+        _cfg.ResetUnit(unit_inst_id, use_status);
     }
 
     bool getUnitsStatus(UNITsStatus & unit_set) const
     {
         MutexGuard  tmp(_sync);
-        return state.getUnitsStatus(unit_set);
+        return _cfg.getUnitsStatus(unit_set);
+    }
+    //
+    const UNITBinding * findUnit(uint8_t unit_inst_id) const
+    {
+      MutexGuard  tmp(_sync);
+      return _cfg.findUnit(unit_inst_id);
     }
     //Returns number of unbinded TCAP BE instances
     unsigned unbindedUnits(void) const
     {
         MutexGuard  tmp(_sync);
-        return state.unbindedUnits();
+        return _cfg.unbindedUnits();
     }
 
 
@@ -343,10 +364,10 @@ protected:
     void    closeTCSession(TCSessionAC * p_sess);
 
 public:
-    SSNBinding::SSBindStatus    getState(void)  const
+    SSNBinding::SSBindStatus    bindStatus(void)  const
     {
         MutexGuard  tmp(_sync);
-        return state.getStatus(); 
+        return _cfg.getStatus(); 
     }
     uint8_t     getSSN(void)    const { return _SSN; }
     uint16_t    getMsgUserId(void) const { return msgUserId; }
@@ -412,7 +433,7 @@ public:
     uint16_t     getUID(void)        const { return tcUID; }
     uint8_t      getSSNid(void)      const { return _owner->getSSN(); }
     SSNSession * getSSNSession(void) const { return _owner; }
-    SSNBinding::SSBindStatus  getState(void) const { return _owner->getState(); }
+    SSNBinding::SSBindStatus  bindStatus(void) const { return _owner->bindStatus(); }
 
     const TonNpiAddress & getOwnAdr(void) const { return ownAdr; }
     const TCSessionSUID & Signature(void) const { return sign; }

@@ -79,15 +79,21 @@ class SSNSession;
 
 class TCAPDispatcherITF {
 public:
-    enum SS7State_T { ss7None = 0
-        , ss7REGISTERED = 1 //remote CP manager and message port owner are registered
-        , ss7INITED     = 2 //SS7 communication facility is initialized
+    enum DSPState_e {
+      dspStopped = 0, dspStopping, dspRunning
+    };
+    enum SS7State_e { ss7None = 0
+        , ss7INITED     = 1 //CP static data is initialized
+        , ss7REGISTERED = 2 //remote CP manager and message port owner are registered,
+                            //SS7 communication facility is initialized
         , ss7OPENED     = 3 //user input message queue is opened
-        , ss7CONNECTED  = 4 //user is connected to TCAP unit
+        , ss7CONNECTED  = 4 //user is connected to at least one TCAP BE unit
     };
 
-    //Returns state of TCAP unit connection
-    virtual SS7State_T  ss7State(void) const  = 0;
+    //Returns dispatcher state
+    virtual DSPState_e  dspState(void) const = 0;
+    //Returns state of TCAP BE unit(s) connection
+    virtual SS7State_e  ss7State(void) const = 0;
     //Binds SSN and initializes SSNSession (TCAP dialogs registry/factory)
     virtual SSNSession *
         openSSN(uint8_t ssn_id, uint16_t max_dlg_id = 2000,

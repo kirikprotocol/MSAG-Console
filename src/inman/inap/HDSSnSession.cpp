@@ -147,8 +147,9 @@ Dialog* TCSessionSR::openDialog(Logger * use_log/* = NULL*/)
 SSNSession::SSNSession(const ApplicationContextRegistryITF * use_acReg, uint8_t ssn_id,
                        uint16_t user_id, const SS7UnitInstsMap & tcap_inst_ids,
                        uint16_t max_dlg_id/* = 2000*/, Logger * uselog/* = NULL*/)
-    : _SSN(ssn_id), msgUserId(user_id),  state(tcap_inst_ids, max_dlg_id)
-    , lastTCSUId(0), acReg(use_acReg), logger(uselog)
+    : _stopping(false), _SSN(ssn_id), msgUserId(user_id)
+    , _cfg(tcap_inst_ids, max_dlg_id), lastTCSUId(0)
+    , acReg(use_acReg), logger(uselog)
 {
     if (!uselog)
         logger = Logger::getInstance("smsc.inman.inap.SSN");
@@ -157,6 +158,7 @@ SSNSession::SSNSession(const ApplicationContextRegistryITF * use_acReg, uint8_t 
 SSNSession::~SSNSession()
 {
     MutexGuard tmp(_sync);
+    _stopping = true;
     cleanUpDialogs(); //adjusts tcSessions pools
     if (!tcSessions.empty()) { //kill TC sessions
         for (TCSessionsMAP::iterator sit = tcSessions.begin();
@@ -404,9 +406,11 @@ void SSNSession::releaseDialogs(const TCSessionSUID * tc_suid/* = 0*/)
 bool SSNSession::getDialogId(TCDialogID & dId)
 {
     MutexGuard tmp(_sync);
+    if (_stopping)
+        return false;
     cleanUpDialogs();
 
-    if (state.getStatus() < SSNBinding::ssnPartiallyBound) {
+    if (_cfg.getStatus() < SSNBinding::ssnPartiallyBound) {
         smsc_log_error(logger, "SSN[%u]: not bounded!", (unsigned)_SSN);
         return false;
     }
@@ -458,7 +462,7 @@ bool SSNSession::noticeParms(const TCDialogID & dlg_id, TNoticeParms & parms)
  * ---------------------------------------------------------------------------------- */
 void SSNSession::dischargeDlg(Dialog * pDlg, const TCSessionSUID * tc_suid/* = 0*/)
 {
-    UNITBinding * ubnd = state.getUnit(pDlg->getId().tcInstId);
+    UNITBinding * ubnd = _cfg.getUnit(pDlg->getId().tcInstId);
     if (ubnd)
         --(ubnd->numOfDlgs);
 
@@ -493,7 +497,7 @@ void SSNSession::cleanUpDialogs(void)
 
 bool SSNSession::nextDialogId(TCDialogID & dId)
 {
-    UNITBinding * ubnd = state.getUnitForDialog();
+    UNITBinding * ubnd = _cfg.getUnitForDialog();
     if (!ubnd)
         return false;
 
@@ -529,7 +533,7 @@ void SSNSession::dumpDialogs(void) const
 {
     std::string dump;
     format(dump, "SSN[%u]: Dialogs [%u of %u], ", (unsigned)_SSN,
-           (unsigned)(dialogs.size() + pending.size()), state.MaxDlgNum());
+           (unsigned)(dialogs.size() + pending.size()), _cfg.MaxDlgNum());
 
     if (!pending.empty()) {
         format(dump, "pending(%u): ", (unsigned)pending.size());

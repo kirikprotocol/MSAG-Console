@@ -118,7 +118,7 @@ bool ServiceCHSRI::requestCSI(const std::string &subcr_addr)
     MutexGuard  grd(_sync);
     IntrgtrMAP::iterator it = workers.find(subcr_addr);
     if (it == workers.end()) {
-        if (mapSess && (mapSess->getState() >= SSNBinding::ssnPartiallyBound)) {
+        if (mapSess && (mapSess->bindStatus() >= SSNBinding::ssnPartiallyBound)) {
             SRIInterrogator * worker = newWorker();
             if (worker->interrogate(subcr_addr)) {
                 workers.insert(IntrgtrMAP::value_type(subcr_addr, worker));

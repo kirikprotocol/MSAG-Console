@@ -19,7 +19,7 @@ namespace inap   {
 
 struct SS7UnitInstance {
     enum ConnectStatus {
-        uconnIdle = 0, uconnError, uconnOk
+        uconnIdle = 0, uconnError, uconnAwaited, uconnOk
     };
 
     uint8_t         instId;     //SS7 communication unit instanceId, [1..255],
@@ -36,6 +36,13 @@ struct SS7UnitInstance {
 
 class SS7UnitInstsMap : public std::map<uint8_t /* instId */, SS7UnitInstance> {
 public:
+
+    SS7UnitInstance * getInstance(uint8_t inst_id)
+    {
+        SS7UnitInstsMap::iterator cit = find(inst_id);
+        return cit == end() ? 0 : &(cit->second);
+    }
+
     const SS7UnitInstance * findInstance(uint8_t inst_id) const
     {
         SS7UnitInstsMap::const_iterator cit = find(inst_id);
@@ -72,7 +79,7 @@ struct SS7HD_CFG {
 
     std::string nmLayout;       //name of this SS7 units layout
     uint8_t     appInstId;      //local application instanceId, [1..255]
-    std::string rcpMgrAdr;      //remote CommonParts Manager host:port
+    std::string rcpMgrAdr;      //CSV list of remote CommonParts Managers host:port
     uint8_t     rcpMgrInstId;   //remote CommonParts Manager instanceId, [0..255],
                                 //by default: 0
     uint8_t     mpUserId;       //CP userId of local message port owner, [1..20]

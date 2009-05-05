@@ -90,6 +90,16 @@ static Dialog* findDialog(UCHAR_T ssn, EINSS7INSTANCE_T tcapInstanceId,
 }
 
 //-------------------------------- Callbacks implementation -----------------------
+/* function to be called when a connection is broken */
+USHORT_T onEINSS7CpConnectBroken(USHORT_T from_usrID, USHORT_T to_usrID, UCHAR_T inst_id)
+{
+  TCAPDispatcher * dsp = TCCbkLink::get().tcapDisp();
+  if (dsp)
+    dsp->onDisconnect(from_usrID, to_usrID, inst_id);
+  return MSG_OK;
+}
+
+
 USHORT_T EINSS7_I97TBindConf(UCHAR_T ssn, USHORT_T userId,
                             EINSS7INSTANCE_T tcapInstanceId, UCHAR_T bindResult
 #ifdef EIN_HD

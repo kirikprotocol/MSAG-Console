@@ -13,7 +13,7 @@ using smsc::util::DumpHex;
 #include "inman/inap/dialog.hpp"
 #include "inman/inap/dispatcher.hpp"
 #include "inman/inap/TCAPErrors.hpp"
-#include "inman/inap/TCCallbacks.hpp"
+
 namespace smsc  {
 namespace inman {
 namespace inap  {
@@ -89,8 +89,6 @@ void Dialog::setInvokeTimeout(USHORT_T timeout)
 void Dialog::checkSS7res(const char * descr, USHORT_T result) throw(CustomException)
 {
     if (result) {
-        if ((MSG_BROKEN_CONNECTION == result) || (MSG_NOT_CONNECTED == result))
-            TCCbkLink::get().tcapDisp()->onDisconnect();
         throw CustomException((int)_RCS_TC_APIError->mkhash(result),
                             descr, _RCS_TC_APIError->explainCode(result).c_str());
     }

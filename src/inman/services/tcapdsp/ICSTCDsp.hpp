@@ -12,8 +12,9 @@ namespace inman {
 namespace inap {
 
 //TCAP Dispatcher service
-class ICSTCDispatcher : public ICServiceAC_T<TCDsp_CFG>,
-                        public TCAPDispatcherITF {
+class ICSTCDispatcher : public ICServiceAC_T<TCDsp_CFG>
+//                        , public TCAPDispatcherITF 
+{
 protected:
     mutable Mutex   _sync;
     std::auto_ptr<TCDsp_CFG> _cfg;
@@ -60,12 +61,17 @@ public:
         return (TCAPDispatcherITF*)_disp.get();
     }
 
-
+/*
     // -------------------------------------
     // TCAPDispatcherITF interface methods:
     // -------------------------------------
-    //Returns state of TCAP unit connection
-    SS7State_T  ss7State(void) const
+    //Returns dispatcher state
+    DSPState_e  dspState(void) const
+    {
+        return _disp->dspState();
+    }
+    //Returns state of TCAP BE unit(s) connection
+    SS7State_e  ss7State(void) const
     {
         return _disp->ss7State();
     }
@@ -85,6 +91,7 @@ public:
     {
         return _disp->acRegistry();
     }
+*/
 };
 
 } //inap

@@ -54,7 +54,7 @@ RCHash CAPSmTaskAC::startDialog(CAPSmDPList::iterator & use_da)
         smsc_log_debug(logger, "%s: using TCSR[%u]: %s", _logId,
                        capSess->getUID(), capSess->Signature().c_str());
     }
-    if (!capSess || (capSess->getState() < SSNBinding::ssnPartiallyBound)) {
+    if (!capSess || (capSess->bindStatus() < SSNBinding::ssnPartiallyBound)) {
         smsc_log_error(logger, "%s: SSN[%u] session is not available/bound", _logId,
                         cfgSS7.ownSsn);
         return (use_da->scfErr = _RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit));

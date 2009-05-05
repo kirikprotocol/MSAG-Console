@@ -1,9 +1,14 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * 
  * ************************************************************************* */
 #ifndef __INMAN_INAP_TCCALLBACKS_HPP
+#ident "$Id$"
 #define __INMAN_INAP_TCCALLBACKS_HPP
+
+/* function to be called when a connection is broken */
+extern "C" unsigned short
+  onEINSS7CpConnectBroken(unsigned short from_usrID,
+                         unsigned short to_usrID, unsigned char inst_id);
 
 #include "core/synchronization/Mutex.hpp"
 using smsc::core::synchronization::Mutex;

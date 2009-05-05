@@ -85,8 +85,8 @@ IAProviderITF * IAProviderCreatorSRI::startProvider(const ICServicesHostITF * us
         icsHost = use_host;
         TCAPDispatcherITF * disp = (TCAPDispatcherITF *)
                                 icsHost->getInterface(ICSIdent::icsIdTCAPDisp);
-        if (!disp || (disp->ss7State() != TCAPDispatcherITF::ss7CONNECTED)) {
-            smsc_log_error(logger, "iapSRI: TCAPDispatcher is not connected!");
+        if (!disp || (disp->dspState() != TCAPDispatcherITF::dspRunning)) {
+            smsc_log_error(logger, "iapSRI: TCAPDispatcher is not running!");
             return NULL;
         }
         if (!disp->acRegistry()->getFactory(_ac_map_locInfoRetrieval_v3)
