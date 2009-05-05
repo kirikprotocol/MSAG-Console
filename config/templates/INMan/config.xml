@@ -108,12 +108,12 @@
   </section>
 
   <section name="SS7_HD"> <!-- SS7 HD stack interaction parameters -->
-    <param name="cpMgrHost" type="string">@CPMgr.host@</param>  <!--
-    Remote CommonParts Manager host -->
-    <param name="cpMgrPort" type="int">@CPMgr.port@</param>     <!--
-    Remote CommonParts Manager port -->
-    <param name="cpMgrInstId" type="int">0</param> <!-- optional:
-    Remote CommonParts Manager instanceId, [0..255], default: 0 -->
+    <param name="cpMgrHosts" type="string">
+      @CPMgr.host@ : @CPMgr.port@ , @CPMgr2.host@ : @CPMgr2.port@
+    </param>  <!-- CSV list of Remote CommonParts Managers addresses
+    (in form 'host:port') -->
+    <param name="cpMgrInstId" type="int">0</param> <!-- optional: Remote
+    CommonParts Manager instanceId, [0..255], default: 0 -->
     <param name="mpUserId" type="int">03</param>               <!--
     CP userId of message port owner [1..20] -->
     <param name="maxMsgNum" type="int">800</param> <!-- optional:
