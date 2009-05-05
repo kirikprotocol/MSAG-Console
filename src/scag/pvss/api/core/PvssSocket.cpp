@@ -237,13 +237,7 @@ void PvssSocket::connect() /* throw (exceptions::IOException) */
 
 void PvssSocket::disconnect()
 {
-    // FIXME: what to do to pendingContexts queue ?
     sock_->Close();
-    /*
-    rdBuflen_ = 0;
-    rdBuffer_.SetPos(0);
-    wrBuffer_.SetPos(wrBuffer_.getSize());
-     */
 }
 
 void PvssSocket::registerWriter( PacketWriter* writer )

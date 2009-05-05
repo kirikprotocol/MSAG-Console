@@ -351,7 +351,7 @@ int ClientCore::doExecute()
                 util::msectime_type t = ptr->popExpired(list,currentTime,timeToSleep);
                 if ( t < nextWakeupTime ) nextWakeupTime = t;
             }
-            // fixme: process those items in list
+            // process those items in list
             for ( ContextRegistry::ProcessingList::iterator i = list.begin();
                   i != list.end();
                   ++i ) {

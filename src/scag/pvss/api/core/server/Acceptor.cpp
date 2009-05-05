@@ -89,7 +89,7 @@ void Acceptor::processEvents()
         smsc::core::network::Socket* socket = ready[i];
         removeFinishingSocket(socket);
         PvssSocket* channel = new PvssSocket(*serverCore_,socket);
-        // FIXME: check accept time
+        // FIXME: should we check accept time of the channel ?
         bool accepted = serverCore_->acceptChannel(channel);
         char buf[3];
         buf[2] = 0;

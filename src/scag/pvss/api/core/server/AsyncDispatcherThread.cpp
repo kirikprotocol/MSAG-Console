@@ -20,21 +20,21 @@ AsyncDispatcherThread::~AsyncDispatcherThread()
 
 int AsyncDispatcherThread::doExecute()
 {
-    // FIXME
+    // FIXME: impl
     return 0;
 }
 
 
 void AsyncDispatcherThread::init() /* throw (PvssException) */ 
 {
-    // FIXME
+    // FIXME: impl
 }
 
 
 void AsyncDispatcherThread::shutdown()
 {
     queue_.shutdown();
-    // FIXME
+    // FIXME: impl
 }
 
 } // namespace server

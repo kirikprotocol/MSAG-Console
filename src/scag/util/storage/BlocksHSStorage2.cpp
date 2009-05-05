@@ -624,7 +624,6 @@ BlocksHSStorage2::index_type BlocksHSStorage2::change( index_type   oldIndex,
                 // NOTE: side-effect: transHeader_ and free chain are changed if true.
                 if ( ! popFreeBlocks(needBlocks-hasBlocks,affectedBlocks,oldBuf) ) {
                     // free blocks failure
-                    // FIXME: the method above should restore the previous state of the free chain and header?
                     break;
                 }
             }
@@ -644,7 +643,6 @@ BlocksHSStorage2::index_type BlocksHSStorage2::change( index_type   oldIndex,
             // free blocks should be chained also
             // NOTE: side-effect: transHeader_ and free chain are changed if true.
             if ( !pushFreeBlocks(needBlocks,affectedBlocks,newBuf) ) {
-                // FIXME: the method above should restore the previous state of storage?
                 break;
             }
         }
@@ -680,7 +678,7 @@ BlocksHSStorage2::index_type BlocksHSStorage2::change( index_type   oldIndex,
     } while ( false );
 
     if ( ! ok ) {
-        // FIXME: rollback profile, etc.
+        // rollback profile should be done externally
         oldIndex = invalidIndex();
     } else if ( needBlocks > 0 ) {
         oldIndex = pos2idx(affectedBlocks[0]);

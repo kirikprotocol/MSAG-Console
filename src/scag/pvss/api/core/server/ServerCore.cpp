@@ -125,7 +125,7 @@ void ServerCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channe
 
 void ServerCore::receiveOldPacket( std::auto_ptr< ServerContext > ctx )
 {
-    // FIXME: do we need some checks on this context?
+    // do we need some checks on this context?
     receiveContext(ctx);
 }
 
@@ -254,7 +254,7 @@ void ServerCore::shutdown()
     shutdownIO(true); // write pending
     smsc_log_info(log_,"All readers/writers are stopped");
 
-    // FIXME: destroy contexts in regset
+    // destroy contexts in regset
     {
         ContextRegistry::ProcessingList pl;
         while ( regset_.popAny(pl) ) {
@@ -385,53 +385,6 @@ int ServerCore::doExecute()
         }
         smsc_log_info(log_,"%s",fullstat.c_str());
 
-        /*
-        ChannelList currentChannels;
-        {
-            MutexGuard mg(channelMutex_);
-            if ( timeToWait < minTimeToSleep ) timeToWait = minTimeToSleep;
-            // smsc_log_debug(log_,"timetowait: %d", int(timeToWait));
-            channelMutex_.wait(int(timeToWait));
-            if (isStopping) break;
-            std::copy(channels_.begin(), channels_.end(),
-                      std::back_inserter(currentChannels));
-        }
-        currentTime = util::currentTimeMillis();
-        nextWakeupTime = currentTime + timeToSleep;
-
-        smsc_log_debug(log_,"processing expired contexts for %d channels",unsigned(currentChannels.size()));
-        for ( ChannelList::const_iterator j = currentChannels.begin();
-              j != currentChannels.end(); ++j ) {
-            
-            smsc::core::network::Socket* channel = *j;
-            ContextRegistry::ProcessingList list;
-            {
-                ContextRegistry::Ptr ptr = regset_.get(channel);
-                if (!ptr) continue;
-                util::msectime_type t = ptr->popExpired(list,currentTime,timeToSleep);
-                if ( t < nextWakeupTime ) nextWakeupTime = t;
-            }
-            // fixme: process those items in list
-            std::auto_ptr< ServerContext > context;
-            for ( ContextRegistry::ProcessingList::iterator i = list.begin();
-                  i != list.end();
-                  ++i ) {
-                // expired
-                ServerContext* ctx = static_cast<ServerContext*>(*i);
-                if (ctx->getRequest()->isPing()) {
-                    smsc_log_warn(log_,"PING failed, timeout");
-                    closeChannel(channel);
-                    delete ctx;
-                } else {
-                    try {
-                        ctx->setError("timeout");
-                    } catch (...) {}
-                    context.reset(ctx);
-                    reportContext(context);
-                }
-            }
-         }
-         */
     }
     smsc_log_info( log_, "Server shutdowned" );
     return 0;
@@ -690,7 +643,7 @@ void ServerCore::closeChannel( smsc::core::network::Socket* socket )
 
 void ServerCore::stopCoreLogic()
 {
-    // FIXME: send signals to all queue, wait until all workers are finished.
+    // send signals to all queue, wait until all workers are finished.
     smsc_log_info(log_,"signalling worker thread queues");
     for ( int i = 0; i < workers_.Count(); ++i ) {
         workers_[i]->getQueue().stop();
@@ -713,10 +666,6 @@ void ServerCore::stopCoreLogic()
     // all workers and async logic dispatcher are stopping,
     // i.e. they have no pending processing requests and async logic is also stopped.
     // Now we have to wait until all pending outgoing contexts are written to their sockets.
-
-    // smsc_log_info(log_,"waiting a little to allow writers to finish");
-    // regset_.waitUntilEmpty();
-    // smsc_log_info(log_,"registries are empty");
 }
 
 

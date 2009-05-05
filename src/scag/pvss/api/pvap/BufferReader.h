@@ -53,11 +53,6 @@ public:
         uint32_t i0 = readInt();
         return (uint64_t(i1) << 32) | i0;
     }
-    /*
-    std::string readUCSLV() throw (exceptions::IOException) {
-        // FIXME
-    }
-     */
     std::string readUTFLV() throw (exceptions::IOException) {
         int sz = readLength();
         int oldpos = pos_;

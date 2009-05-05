@@ -55,7 +55,6 @@ public:
         bool wasempty = list_.empty();
         ProcessingList::iterator i = list_.insert(list_.end(),ctx);
         map_.Insert(ctx->getSeqNum(),i);
-        // FIXME: should we notify on previously empty list?
         if (wasempty) mon_.notify();
     }
 

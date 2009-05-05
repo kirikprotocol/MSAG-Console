@@ -32,11 +32,10 @@ protected:
     }
 
     virtual bool setupSocket( PvssSocket& conn, util::msectime_type currentTime );
-    virtual bool hasEvents() { return mul_.canRead(ready_, error_, 200 /* FIXME: timeout from config */); }
+    virtual bool hasEvents() { return mul_.canRead(ready_, error_, config_->getIOTimeout()); }
     virtual void process( PvssSocket& con ) {
         con.processInput();
     }
-    // virtual void postProcess() {}
 };
 
 } // namespace core

@@ -76,14 +76,6 @@ public:
          */
         virtual void requestReceived(std::auto_ptr<ServerContext>& context ) /* throw (PvssException) */  = 0;
 
-        /*
-         * Notifies server logic that processing should be stopped.
-         * All requests currently in processing should be finished and reported back to core.
-         * This method does not wait until the logic is stopped.
-         * FIXME: do we need this method?
-         */
-        // virtual void stop() = 0;
-
         /**
          * Notifies server logic that processing should be stopped and waits until it finishes.
          */

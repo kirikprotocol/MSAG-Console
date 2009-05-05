@@ -893,7 +893,6 @@ private:
             }
             
             if ( len < expectedLen ) {
-                // FIXME: we should fix it oneday
                 if (logger) {
                     smsc_log_warn( logger, "OpenRBTree: file size is smaller than what expected: headersize=%d expected_cells_count=%lld actual_cells_count=%lld cellsize=%d expectedlen=%lld len=%lld, I'll try to recover...",
                                    int(header_.fullSavedSize()),

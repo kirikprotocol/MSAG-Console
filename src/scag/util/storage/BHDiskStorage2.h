@@ -177,16 +177,23 @@ protected:
         unpackBuffer(buffer,&headers);
         Deserializer dsr(buffer,glossary_);
         dsr.setVersion(store_->version());
-        // FIXME: should we check for key match here?
         bool rv = false;
         key_type key;
         try {
             dsr.setrpos(headerSize()+extraSize());
             dsr >> key;
+            // should we check for key match here?
+            /*
+            if ( key != key_ ) {
+                key_type empty;
+                if ( key_ != empty ) {
+                    throw smsc::util::Exception("key mismatch");
+                }
+            }
+             */
             dsr >> value;
             rv = true;
         } catch ( std::exception& e ) {
-            // FIXME: should we restore from backup here?
             if (log_) {
                 smsc_log_warn( log_,"exc in BHS2: %s, idx=%llx oldkey=%s key=%s bufSz=%u",
                                e.what(),
@@ -208,7 +215,7 @@ protected:
                 }
             }
         }
-        // if everything is ok, then pack buffer back again and attach it to v
+        // pack buffer back again
         packBuffer(buffer,&headers);
         return rv;
     }

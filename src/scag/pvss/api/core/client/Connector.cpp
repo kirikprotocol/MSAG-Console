@@ -101,7 +101,7 @@ void Connector::processEvents()
     for ( int i = 0; i < ready.Count(); ++i ) {
         PvssSocket& channel = *PvssSocket::fromSocket(ready[i]);
         int res = channel.socket()->Read(reinterpret_cast<char*>(&serverStatus),2);
-        // FIXME: may it be so that less than 2 bytes is read in an attempt ?
+        // may it be so that less than 2 bytes is read in an attempt ?
         if ( res != 2 ) {
             smsc_log_warn(log_,"cannot read status data", ready[i]);
             core_->handleError(PvssException(PvssException::IO_ERROR,"cannot read server status data, res=%d",res),channel);
