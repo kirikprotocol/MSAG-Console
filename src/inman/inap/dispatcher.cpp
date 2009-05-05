@@ -417,7 +417,7 @@ bool TCAPDispatcher::unitsNeedBinding(void) const
     if (it->second.connStatus == SS7UnitInstance::uconnOk) {
       for (SSNmap_T::const_iterator sit = _sessions.begin(); sit != _sessions.end(); ++sit) {
         const UNITBinding * unb = sit->second->findUnit(it->second.instId);
-        if (unb && unb->unit.bindStatus < UNITStatus::unitAwaited)
+        if (unb && (unb->unit.bindStatus < UNITStatus::unitAwaited))
           return true;
       }
     }
@@ -569,10 +569,15 @@ int TCAPDispatcher::connectCP(SS7State_e upTo/* = ss7CONNECTED*/)
           break;
         }
         _ss7State = ss7REGISTERED;
+#ifdef EIN_HD
         smsc_log_info(logger, "%s: state REGISTERED (appInstanceId = %u,"
                               " userId = %u, CpMgr: %s)",
                       _logId, (unsigned)_cfg.appInstId, (unsigned)_cfg.mpUserId,
                       _cfg.rcpMgrAdr.c_str());
+#else  /* EIN_HD */
+        smsc_log_info(logger, "%s: state REGISTERED (appInstanceId = %u, userId = %u)",
+                      _logId, (unsigned)_cfg.appInstId, (unsigned)_cfg.mpUserId);
+#endif /* EIN_HD */
       } break;
 
       case ss7REGISTERED: {  //Opening of the input queue.
@@ -670,7 +675,7 @@ SSNSession* TCAPDispatcher::openSSN(UCHAR_T ssn_id, USHORT_T max_dlg_id/* = 2000
                      ssn_id, pSession->bindStatus());
     }
   }
-  if (pSession->bindStatus() != SSNBinding::ssnBound) {
+  if (pSession->bindStatus() < SSNBinding::ssnPartiallyBound) {
     _sync.notify(); //awake autoconnection thread
     pSession->Wait(MAX_BIND_TIMEOUT);
   }
