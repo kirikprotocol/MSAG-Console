@@ -63,6 +63,9 @@ stat.sacc_host=127.0.0.1
 stat.sacc_connect_timeout=60
 stat.sacc_queue_length=1000
 
+stat.saa_dir=/opt/home/msag_test/msag_distr/storage/statistics/saa
+stat.rolling_interval=10
+
 pers_client.io_timeout=100
 pers_client.reconnect_timeout=100
 pers_client.ping_timeout=100
