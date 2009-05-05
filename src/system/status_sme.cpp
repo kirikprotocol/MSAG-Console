@@ -103,7 +103,7 @@ int StatusSme::Execute()
       char buf[256];
       time_t now=time(NULL);
       time_t headTime=smsc->scheduler->tlHeadTime();
-      sprintf(buf,"tlc:%d,ftc=%d,tll:%d,rs=%d,ipc:%d\nht/now=%d/%d(",
+      sprintf(buf,"tlc:%d,ftc=%d,tll:%d,rs=%d,ipc:%d\nht/now=%ld/%ld(",
         cnts.timeLineCount,
         cnts.firstTimeCount,
         cnts.timeLineSize,
