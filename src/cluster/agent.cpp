@@ -174,6 +174,9 @@ int main(int argc, char **argv)
     SendCommand(clntSock, COMMAND_SHUTDOWN);
     smsc_log_info(logger, "Command is sent");
 
+#ifdef EIN_HD
+    sleep(15);
+#endif
 
   }catch(std::exception& e)
   {
