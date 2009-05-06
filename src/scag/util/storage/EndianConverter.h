@@ -4,6 +4,7 @@
 #include "util/int.h"
 #include "util/byteorder.h"
 #include <netinet/in.h>
+#include "string.h"
 
 namespace scag {
 namespace util {
@@ -50,51 +51,57 @@ struct EndianConverter
 
     // methods for inplace conversion
     inline static uint16_t get16( const void* buf ) {
+        uint16_t tmp;
+        memcpy(&tmp,buf,2);
 #if BYTE_ORDER == BIG_ENDIAN
-        return *reinterpret_cast<const uint16_t*>(buf);
+        return tmp;
 #else
-        return ntohs(*reinterpret_cast<const uint16_t*>(buf));
+        return ntohs(tmp);
 #endif
     }
 
     inline static uint32_t get32( const void* buf ) {
+        uint32_t tmp;
+        memcpy(&tmp,buf,4);
 #if BYTE_ORDER == BIG_ENDIAN
-        return *reinterpret_cast<const uint32_t*>(buf);
+        return tmp;
 #else
-        return ntohl(*reinterpret_cast<const uint32_t*>(buf));
+        return ntohl(tmp);
 #endif
     }
 
     inline static uint64_t get64( const void* buf ) {
+        uint64_t tmp;
+        memcpy(&tmp,buf,8);
 #if BYTE_ORDER == BIG_ENDIAN
-        return *reinterpret_cast<const uint64_t*>(buf);
+        return tmp;
 #else
-        return (uint64_t(ntohl(*reinterpret_cast<const uint32_t*>(buf))) << 32) +
-            ntohl(*(reinterpret_cast<const uint32_t*>(buf)+1));
+        return (uint64_t(ntohl(uint32_t(tmp)))<<32) + ntohl(uint32_t(tmp >> 32));
 #endif
     }
     
     inline static void set16( void* buf, uint16_t i ) {
 #if BYTE_ORDER == BIG_ENDIAN
-        *reinterpret_cast<uint16_t*>(buf) = i;
+        memcpy(buf,&i,2);
 #else
-        *reinterpret_cast<uint16_t*>(buf) = htons(i);
+        uint16_t tmp = htons(i);
+        memcpy(buf,&tmp,2);
 #endif
     }
     inline static void set32( void* buf, uint32_t i ) {
 #if BYTE_ORDER == BIG_ENDIAN
-        *reinterpret_cast<uint32_t*>(buf) = i;
+        memcpy(buf,&i,4);
 #else
-        *reinterpret_cast<uint32_t*>(buf) = htonl(i);
+        uint32_t tmp = htonl(i);
+        memcpy(buf,&tmp,4);
 #endif
     }
     inline static void set64( void* buf, uint64_t i ) {
 #if BYTE_ORDER == BIG_ENDIAN
-        *reinterpret_cast<uint64_t*>(buf) = i;
+        memcpy(buf,&i,8);
 #else
-        register uint32_t* ptr = reinterpret_cast<uint32_t*>(buf);
-        *ptr = htonl(i >> 32);
-        *++ptr = htonl(uint32_t(i));
+        set32(buf,uint32_t(i>>32));
+        set32(reinterpret_cast<uint32_t*>(buf)+1,uint32_t(i));
 #endif
     }
 

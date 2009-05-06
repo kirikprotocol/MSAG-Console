@@ -18,8 +18,10 @@ int main()
         hd.hexdump(dump,ptr,8);
         dump.append(" uint64: ");
         hd.hexdump(dump,uptr,8);
+        uint64_t utmp;
+        memcpy(&utmp,uptr,8);
         printf("uint64: %llx, cvt16:%x, cvt32: %x, cvt64: %llx, dump: %s\n",
-               *uptr,
+               utmp,
                cvt.get16(ptr),
                cvt.get32(ptr),
                cvt.get64(ptr),
