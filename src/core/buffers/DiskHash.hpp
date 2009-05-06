@@ -343,11 +343,13 @@ public:
   //Inserts/Updates record.
   //In case of insertion checks that key is not already used, otherwise
   //throws DiskHashDuplicateKeyException
-  void Insert(const K& key, const V& value, bool update = false)
+  // @return true if item was created, false if updated.
+  bool Insert(const K& key, const V& value, bool update = false)
   {
     if(!isFileOpen)RTERROR("Attempt to insert into not opened hash file");
     if(!inplacekey || !inplaceval)RTERROR("Non inplace kv not implemented yet");
     int attempt=0;
+    bool created = true;
 
     if(count>=size*3/4)
     {
@@ -373,6 +375,7 @@ public:
         if (k == key) {
             if (!update)
                 throw DiskHashDuplicateKeyException();
+            created = false;
         } else
             continue;
       }
@@ -385,7 +388,7 @@ public:
       f.Flush();
       count++;
       isChanged=true;
-      return;
+      return created;
     }
   }
   bool LookUp(const K& key,V& value)
