@@ -41,7 +41,8 @@ public:
     reg(argReg),
     queue(argQueue),
     log(0),
-    readerCount_(0),
+    // readerCount_(0),
+    registeredConnections_(0),
     socketsPerThread_(16),
     bindTimeout_(10),
     connectionsPerIp_(100),
@@ -89,7 +90,7 @@ public:
   {
     return conn;
   }
-    virtual void registerSocket(SmppSocket* sock);
+    virtual bool registerSocket(SmppSocket* sock);
     virtual void unregisterSocket(SmppSocket* sock);
     void shutdown();
 
@@ -114,7 +115,8 @@ protected:
 
   thr::ThreadPool tp;
 
-    unsigned   readerCount_;  // current number of multiplexer threads
+    // unsigned   readerCount_;  // take the number as readers.Count()
+    unsigned   registeredConnections_;
     IphashType iphash_;
     IntHash< uint8_t > whiteList_;
 

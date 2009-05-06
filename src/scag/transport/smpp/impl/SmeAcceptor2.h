@@ -45,9 +45,13 @@ public:
             if(!s)break;
             char buf[32];
             s->GetPeer(buf);
-            smsc_log_info(log,"connection accepted from %s",buf);
+            smsc_log_info(log,"incoming connection from %s",buf);
             try {
-                sm->registerSocket(new SmeSocket(s));
+                if ( sm->registerSocket(new SmeSocket(s)) ) {
+                    smsc_log_info(log,"connection %s accepted",buf);
+                } else {
+                    smsc_log_info(log,"connection %s rejected",buf);
+                }
             } catch ( std::exception& e ) {
                 smsc_log_error(log,"exc in registerSocket: %s", e.what());
             } catch (...) {

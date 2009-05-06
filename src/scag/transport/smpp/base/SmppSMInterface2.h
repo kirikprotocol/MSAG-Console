@@ -8,7 +8,7 @@ namespace smpp {
 class SmppSocket;
 
 struct SmppSMInterface{
-    virtual void registerSocket(SmppSocket* sock)=0;
+    virtual bool registerSocket(SmppSocket* sock)=0;
     virtual void unregisterSocket(SmppSocket* sock)=0;
 };
 

@@ -41,7 +41,7 @@ void SmppSocketManager::addWhiteIp( const char* dotted )
 }
 
 
-void SmppSocketManager::registerSocket(SmppSocket* sock)
+bool SmppSocketManager::registerSocket(SmppSocket* sock)
 {
     do {
         const uint32_t netaddr = getNetworkAddress(sock->getPeerAddress().sin_addr);
@@ -50,7 +50,7 @@ void SmppSocketManager::registerSocket(SmppSocket* sock)
         IpLimit* l = 0;
         if ( isWhite ) {
             // in white list - no limits
-        } else {
+        } else if ( sock->getType() == etService ) {
             l = iphash_.GetPtr( netaddr );
             if ( !l ) {
                 // no limits yet
@@ -58,7 +58,7 @@ void SmppSocketManager::registerSocket(SmppSocket* sock)
                 l = iphash_.GetPtr(netaddr);
             } else if ( l->connectionCount() > connectionsPerIp_ ) {
                 mg.Unlock();
-                smsc_log_warn( log, "Connection from %s is dropped: max connect limit: %u",
+                smsc_log_warn( log, "Connection %s is dropped: max connect limit: %u",
                                sock->getPeer(), connectionsPerIp_ );
                 break;
             } else if ( l->lastFailure() ) {
@@ -66,7 +66,7 @@ void SmppSocketManager::registerSocket(SmppSocket* sock)
                 const int tmo = int(now - l->lastFailure());
                 if ( tmo < int(failTimeout_) ) {
                     mg.Unlock();
-                    smsc_log_warn( log, "Connection from %s is dropped: last failure was %d seconds ago, tmo=%d",
+                    smsc_log_warn( log, "Connection %s is dropped: last failure was %d seconds ago, tmo=%d",
                                    sock->getPeer(), tmo, failTimeout_ );
                     break;
                 } else {
@@ -80,31 +80,36 @@ void SmppSocketManager::registerSocket(SmppSocket* sock)
         {
             if (unsigned(readers[i]->getSocketsCount()) < socketsPerThread_ )
             {
-                smsc_log_debug(log,"Reusing reader/writer (%d)",readers[i]->getSocketsCount());
                 if (l) l->addConnection();
                 sock->setSocketManager(this);
                 readers[i]->addSocket(sock);
                 writers[i]->addSocket(sock);
+                ++registeredConnections_;
                 sock->release();
                 sock = 0;
+                const unsigned rc = readers[i]->getSocketsCount();
+                const int cpi = l ? int(l->connectionCount()) : -1;
+                const unsigned regc = registeredConnections_;
+                mg.Unlock();
+                smsc_log_info(log,"Reusing reader/writer (%d), conn(perIp/total)=%d/%d",rc,cpi,regc);
                 break;
             }
         }
         if ( sock ) {
-            if ( readerCount_ >= maxReaderCount_ ) {
+            if ( readers.Count() >= maxReaderCount_ ) {
                 if ( l && l->connectionCount() == 0 ) {
                     // has been just created
                     iphash_.Delete( netaddr );
                 }
+                const unsigned rc = readers.Count();
                 mg.Unlock();
-                smsc_log_warn(log,"Connection from %s is dropped: too many readers/writers: %d",
-                              sock->getPeer(), readerCount_ );
+                smsc_log_warn(log,"Connection %s is dropped: too many readers/writers: %d",
+                              sock->getPeer(), rc );
                 break;
             }
-            smsc_log_debug(log,"Creating new reader/writer (%d)", readers.Count() );
             if (l) l->addConnection();
+            ++registeredConnections_;
             sock->setSocketManager(this);
-            ++readerCount_;
             SmppReader* rd = new SmppReader();
             SmppWriter* wr = new SmppWriter(*this);
             readers.Push(rd);
@@ -115,42 +120,62 @@ void SmppSocketManager::registerSocket(SmppSocket* sock)
             tp.startTask(rd);
             tp.startTask(wr);
             sock = 0;
+            const unsigned rc = readers.Count();
+            const int cpi = l ? int(l->connectionCount()) : -1;
+            const unsigned regc = registeredConnections_;
+            mg.Unlock();
+            smsc_log_info(log,"Creating new reader/writer (%d), conn(perIp/total)=%d/%d", rc, cpi, regc );
         }
     } while ( false ); // fake loop
     if ( sock ) {
         sock->disconnect();
         sock->release();
+        return false;
     }
+    return true;
 }
 
 void SmppSocketManager::unregisterSocket(SmppSocket* sock)
 {
-    if (sock->getType()==etSmsc) {
-        conn->reportSmscDisconnect(sock->getSystemId());
-    } else if ( sock->getType() == etService ) {
-        const uint32_t netaddr = getNetworkAddress(sock->getPeerAddress().sin_addr);
+    unsigned rc;
+    int cpi;
+    do {
         RelockMutexGuard mg(mtx);
-        uint8_t* isWhite = whiteList_.GetPtr(netaddr);
-        if ( isWhite ) {
-            return;
-        }
-        IpLimit* l = iphash_.GetPtr(netaddr);
-        if ( !l ) {
+        rc = --registeredConnections_;
+        if (sock->getType()==etSmsc) {
             mg.Unlock();
-            smsc_log_error( log,"logic error: failed to receive iplimit structure on %s", sock->getPeer());
-            // FIXME: temporary
-            smsc_log_error( log,"temporary abort will follow");
-            ::abort();
-        } else {
-            // FIXME: it also will decrement a connection count
+            cpi = -1;
+            conn->reportSmscDisconnect(sock->getSystemId());
+            break;
+        }
+        if ( sock->getType() == etService ) {
+            const uint32_t netaddr = getNetworkAddress(sock->getPeerAddress().sin_addr);
+            uint8_t* isWhite = whiteList_.GetPtr(netaddr);
+            if ( isWhite ) {
+                cpi = -1;
+                break;
+            }
+            IpLimit* l = iphash_.GetPtr(netaddr);
+            if ( !l ) {
+                mg.Unlock();
+                smsc_log_error( log,"logic error: failed to receive iplimit structure on %s", sock->getPeer());
+                // FIXME: temporary
+                smsc_log_fatal( log,"temporary abort will follow");
+                ::abort();
+                break;
+            }
             l->removeConnection();
+            cpi = l->connectionCount();
             if ( sock->hasBindFailed() ) {
                 l->setLastFailure(time(0));
             } else if ( l->connectionCount() == 0 ) {
                 iphash_.Delete(netaddr);
             }
+        } else {
+            cpi = -1;
         }
-    }
+    } while ( false );
+    smsc_log_info(log,"connection unregistered, perIP/total=%d/%u", cpi, rc);
 }
 
 void SmppSocketManager::shutdown()
