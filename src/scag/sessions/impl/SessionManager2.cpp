@@ -415,7 +415,7 @@ int SessionManagerImpl::Execute()
 
             // const unsigned tot = unsigned(expireMap_.size());
             // const unsigned act = activeSessions_;
-            smsc_log_debug( log_, "expire/flush=%u/%u act/tot=%u/%u inc=%u tmAE=%d/%d limTS=%u/%u run=%u",
+            smsc_log_info( log_, "expire/flush=%u/%u act/tot=%u/%u inc=%u tmAE=%d/%d limTS=%u/%u run=%u",
                             unsigned(curset.size()),
                             unsigned(flushset.size()),
                             activeSessions_,
