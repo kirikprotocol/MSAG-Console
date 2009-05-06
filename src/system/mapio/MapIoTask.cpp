@@ -18,7 +18,6 @@ USHORT_T MY_USER_ID=USER01_ID;//!!
 
 using namespace std;
 
-Mutex mapMutex;
 
 #ifdef USE_MAP
 
@@ -398,7 +397,6 @@ void MapIoTask::init(unsigned timeout)
   }
 
   {
-    MutexGuard mapMutexGuard(mapMutex);
     if(!connect(timeout))
     {
       sleep(1);
@@ -887,17 +885,9 @@ void MapDialogContainer::unregisterSelf(SmeManager* smeman)
 
 void setMapProxyLimits(int timeout, int limit)
 {
-  MutexGuard mapMutexGuard(mapMutex);
   MapDialogContainer::getInstance()->setPerformanceLimits( timeout, limit );
 }
 
-
-/*
-  Mutex& MAPSTATS_GetMutex(){
-    static Mutex mutex;
-    return mutex;
- }
-*/
 
 smsc::logger::Logger* MAPSTATS_GetLoggerSec() {
   static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.sec");
