@@ -103,6 +103,10 @@ protected:
     //Check all connected unit instances for binding status
     //Returns true if at least one unit instance needs binding
     bool unitsNeedBinding(void) const;
+    //Checks all SubSystems for bind status.
+    //Returns number of unbided SSNs. 
+    unsigned unbindedSSNs(void) const;
+
     //Binds SubSystem to each unit instance.
     //Returns true if at least one BindReq() is successfull
     bool bindSSN(SSNSession * p_session) const;

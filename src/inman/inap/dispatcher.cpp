@@ -11,13 +11,14 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-#define MAX_BIND_TIMEOUT  4000  //maximum timeout on SSN bind request, units: millisecs
+#define MAX_BIND_TIMEOUT  5000  //maximum timeout on SSN bind request, units: millisecs
 #define MAX_CONN_TIMEOUT  4000  //maximum timeout on Unit reconnection 
 
 #define RECV_TIMEOUT      300   //message receiving timeout, units: millisecs
 #define RECONNECT_TIMEOUT 800   //SS7 stack reconnection timeout, units: millisecs
 
 #define MAX_UCONN_ATTEMPTS ((MAX_CONN_TIMEOUT + RECONNECT_TIMEOUT/2)/RECONNECT_TIMEOUT)
+#define MAX_BIND_ATTEMPTS ((MAX_BIND_TIMEOUT + RECONNECT_TIMEOUT/2)/RECONNECT_TIMEOUT)
 
 /* ************************************************************************** *
  * class TCAPDispatcher::MessageListener implementation:
@@ -263,6 +264,7 @@ unsigned short TCAPDispatcher::dispatchMsg(void)
 int TCAPDispatcher::Reconnect(void)
 {
   unsigned connCounter = 0;
+  unsigned bindCounter = 0;
   USHORT_T result = 0;
 
   _sync.Lock(); //waits here for Start()
@@ -270,10 +272,10 @@ int TCAPDispatcher::Reconnect(void)
   _sync.notify();
   while (_dspState == dspRunning) {
 //smsc_log_debug(logger, "%s: Reconnect(): state %u, connCounter: %u", _logId, _ss7State, connCounter);
-    if (connCounter >= MAX_UCONN_ATTEMPTS) {
+    if ((connCounter >= MAX_UCONN_ATTEMPTS) || (bindCounter >= MAX_BIND_ATTEMPTS)) {
       smsc_log_error(logger, "%s: lingering connection troubles, reconnecting ..", _logId);
       disconnectCP(ss7INITED);
-      connCounter = 0;
+      connCounter = bindCounter = 0;
     }
     if (_ss7State == ss7CONNECTED) {
       //check for disconnected units
@@ -286,6 +288,8 @@ int TCAPDispatcher::Reconnect(void)
       }
       if (unitsNeedBinding())
         bindSSNs();
+      if (unbindedSSNs() == _sessions.size())
+        ++bindCounter;
     } else if (connectCP(ss7CONNECTED) < 0) { //also binds SSNs
       ++connCounter;
     } else
@@ -395,9 +399,9 @@ void TCAPDispatcher::disconnectUnits(void)
   SS7UnitInstsMap::iterator it = _unitCfg->instIds.begin();
   for (; it != _unitCfg->instIds.end(); ++it) {
     if (it->second.connStatus == SS7UnitInstance::uconnOk) {
-//      _sync.Unlock();
+      _sync.Unlock();
       USHORT_T result = EINSS7CpMsgRelInst(_cfg.mpUserId, TCAP_ID, it->second.instId);
-//      _sync.Lock();
+      _sync.Lock();
       if (result)
           smsc_log_error(logger, "%s: MsgRel(TCAP instId = %u) failed: %s (code %u)",
                       _logId, (unsigned)it->second.instId, rc2Txt_SS7_CP(result), result);
@@ -424,16 +428,33 @@ bool TCAPDispatcher::unitsNeedBinding(void) const
   }
   return false;
 }
+
+//Checks all SubSystems for bind status.
+//Returns number of unbided SSNs. 
+//NOTE: _sync MUST be locked upon entry!
+unsigned TCAPDispatcher::unbindedSSNs(void) const
+{
+    unsigned rval = 0;
+    for (SSNmap_T::const_iterator it = _sessions.begin(); it != _sessions.end(); ++it) {
+      if (it->second->bindStatus() < SSNBinding::ssnPartiallyBound)
+        ++rval;
+    }
+    return rval;
+}
+
 //Binds SubSystem to each unit instance.
 //Returns true if at least one BindReq() is successfull
 //NOTE: actual BindReq() result is returned to confirmSSN()
 //NOTE: _sync MUST be locked upon entry! 
 bool TCAPDispatcher::bindSSN(SSNSession * p_session) const
 {
+    if (_ss7State != ss7CONNECTED)
+      return false;
+
+    bool rval = false;
     UNITsStatus tcUnits;
     p_session->getUnitsStatus(tcUnits);
 
-    bool rval = false;
     for (UNITsStatus::const_iterator cit = tcUnits.begin();
                                       cit != tcUnits.end() ; ++cit) {
       const UNITStatus & unit = *cit;
@@ -446,14 +467,14 @@ bool TCAPDispatcher::bindSSN(SSNSession * p_session) const
       if (unit.bindStatus == UNITStatus::unitError)
         p_session->ResetUnit(unit.instId);
 
-//        _sync.Unlock();
+      _sync.Unlock();
       USHORT_T  result = EINSS7_I97TBindReq(p_session->getSSN(), _cfg.mpUserId,
                                             unit.instId, EINSS7_I97TCAP_WHITE_USER
 #if EIN_HD >= 101
                                             , 0
 #endif /* EIN_HD >= 101 */
                                             );
-//        _sync.Lock();
+      _sync.Lock();
       if (result) {
         smsc_log_error(logger, "%s: TBindReq(SSN=%u, userId=%u,"
                                " instId=%u) failed with code %u (%s)", _logId,
@@ -481,7 +502,7 @@ bool TCAPDispatcher::bindSSNs(void) const
 
     bool failed = false;
     for (SSNmap_T::const_iterator it = _sessions.begin(); it != _sessions.end(); ++it)
-        failed |= !bindSSN(it->second);
+      failed |= !bindSSN(it->second);
     return !failed;
 }
 
@@ -496,8 +517,10 @@ void TCAPDispatcher::unbindSSN(SSNSession * p_session) const
                                         cit != tcUnits.end(); ++cit) {
       const UNITStatus & unit = *cit;
       if (unit.bindStatus == UNITStatus::unitBound) {
+        _sync.Unlock();
         USHORT_T  result = EINSS7_I97TUnBindReq(p_session->getSSN(),
                                                 _cfg.mpUserId, unit.instId);
+        _sync.Lock();
         if (!result)
           smsc_log_debug(logger, "%s: TUnBindReq(SSN=%u, userId=%u, instId=%u)", _logId,
                          p_session->getSSN(), _cfg.mpUserId, (unsigned)unit.instId);
