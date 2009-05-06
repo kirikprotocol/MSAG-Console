@@ -253,6 +253,21 @@ void MapIoTask::ReconnectThread::reportDisconnect(int rinst)
   reconnectMon.notify();
 }
 
+class MutexTempUnlock{
+public:
+  MutexTempUnlock(Mutex& argMtx):mtx(argMtx)
+  {
+    mtx.Unlock();
+  }
+  ~MutexTempUnlock()
+  {
+    mtx.Lock();
+  }
+
+protected:
+  Mutex& mtx;
+};
+
 
 int MapIoTask::ReconnectThread::Execute()
 {
@@ -277,23 +292,26 @@ int MapIoTask::ReconnectThread::Execute()
       }
       MapDialogContainer::getInstance()->DropAllDialogs(MapDialogContainer::remInst[n]);
       __map_warn2__("Reconnecting instance %d",MapDialogContainer::remInst[n]);
-      result = EINSS7CpMsgConnNotify(MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[n],onBrokenConn);
-      if(result != RETURN_OK)
-      {
-        __map_warn2__("EINSS7CpMsgConnNotify returned error %d",result);
-        continue;
-      }
-      sleep(1);
       bool bindOk=true;
-      for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
+      MutexTempUnlock mung(reconnectMon);
       {
-        result = Et96MapBindReq(MY_USER_ID, MapDialogContainer::localSSNs[i] CONNINSTARG(MapDialogContainer::remInst[n]));
-        if (result!=ET96MAP_E_OK)
+        result = EINSS7CpMsgConnNotify(MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[n],onBrokenConn);
+        if(result != RETURN_OK)
         {
-          __map_warn2__("SSN %d Inst %d Bind error 0x%hx",MapDialogContainer::localSSNs[i],MapDialogContainer::remInst[n],result);
-          EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[n]);
-          bindOk=false;
-          break;
+          __map_warn2__("EINSS7CpMsgConnNotify returned error %d",result);
+          continue;
+        }
+        sleep(1);
+        for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
+        {
+          result = Et96MapBindReq(MY_USER_ID, MapDialogContainer::localSSNs[i] CONNINSTARG(MapDialogContainer::remInst[n]));
+          if (result!=ET96MAP_E_OK)
+          {
+            __map_warn2__("SSN %d Inst %d Bind error 0x%hx",MapDialogContainer::localSSNs[i],MapDialogContainer::remInst[n],result);
+            EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[n]);
+            bindOk=false;
+            break;
+          }
         }
       }
       if(bindOk)
