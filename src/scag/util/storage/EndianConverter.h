@@ -51,22 +51,20 @@ struct EndianConverter
 
     // methods for inplace conversion
     inline static uint16_t get16( const void* buf ) {
-        uint16_t tmp;
-        memcpy(&tmp,buf,2);
+        // register const uint8_t* p = reinterpret_cast<const uint8_t*>(buf);
+        // register uint16_t tmp = uint16_t(*p);
 #if BYTE_ORDER == BIG_ENDIAN
-        return tmp;
+        return uint16_t(*ptr(buf)) << 8 + *move(buf,1);
 #else
-        return ntohs(tmp);
+        return *ptr(buf) + (uint16_t(*move(buf,1)) << 8);
 #endif
     }
 
     inline static uint32_t get32( const void* buf ) {
-        uint32_t tmp;
-        memcpy(&tmp,buf,4);
 #if BYTE_ORDER == BIG_ENDIAN
-        return tmp;
+        return uint32_t(get16(buf)) << 16 + get16(move(buf,2));
 #else
-        return ntohl(tmp);
+        return get16(buf) + (uint32_t(get16(move(buf,2))) << 16);
 #endif
     }
 
@@ -113,6 +111,19 @@ struct EndianConverter
         uint64_t quads[1];
     } cvt;
 
+private:
+    inline static uint8_t* move( void* p, int x ) {
+        return reinterpret_cast<uint8_t*>(p)+x;
+    }
+    inline static const uint8_t* move( const void* p, int x ) {
+        return reinterpret_cast<const uint8_t*>(p)+x;
+    }
+    inline static uint8_t* ptr( void* p ) {
+        return reinterpret_cast<uint8_t*>(p);
+    }
+    inline static const uint8_t* ptr( const void* p ) {
+        return reinterpret_cast<const uint8_t*>(p);
+    }
 };
 
 }
