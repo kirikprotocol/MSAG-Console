@@ -121,8 +121,8 @@ __synchronized__
   if ( index == INVALID_SME_INDEX ) throw SmeError();
   if ( records[index]->proxy )
   {
-    // ???????  что делать если уже в работе , шутдаунить прокси, как корректно или абортом
-    // к примеру так, но тогда , что делает close?
+    // ???????        ,  ,    
+    //   ,   ,   close?
     //dispatcher.detachSmeProxy(records[index]->proxy);
     records[index]->proxy->attachMonitor(0);
     //records[index]->proxy->close();
@@ -193,7 +193,7 @@ void SmeManager::disableSme(const SmeSystemId& systemId)
   /*
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX ) throw SmeError();
-  // ???????  что делать если уже в работе , шутдаунить прокси, как корректно или абортом
+  // ???????        ,  ,    
   records[index].info.disabled = true;*/
   __warning__("disableSme is not implemented");
 }
@@ -202,7 +202,7 @@ void SmeManager::enableSme(const SmeSystemId& systemId)
 {
   /*SmeIndex index = internalLookup(systemId);
   if ( index != INVALID_SME_INDEX ) throw SmeError();
-  // ???????  что делать если уже в работе , шутдаунить прокси, как корректно или абортом
+  // ???????        ,  ,    
   records[index].info.disabled = false;*/
   __warning__("enableSme is not implemented");
 }
@@ -457,7 +457,7 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout,boo
 
 SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
 {
-//__synchronized__ не нужно поскольку вызывается из синхронизированных методов
+//__synchronized__       
   for ( Records::const_iterator p = records.begin(); p != records.end(); ++p )
   {
     if ( (*p) == 0 )
@@ -472,9 +472,6 @@ SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
   }
   return INVALID_SME_INDEX;
 }
-
-std::string SmeProxy::nullstr="";
-
 
 } // namespace smeman
 } // namespace smsc

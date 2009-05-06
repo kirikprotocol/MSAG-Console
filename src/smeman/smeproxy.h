@@ -109,19 +109,20 @@ public:
 class SmeProxy
 {
 public:
+  SmeProxy():nullstr(""){}
   //....
   virtual ~SmeProxy() {}
   virtual void close() = 0;
-  /// кидает exception если был достигнут лимит
-  /// и длина очереди еще не упала до допустимого значения
+  ///  exception    
+  ///         
   virtual void putCommand(const SmscCommand& command) = 0;
   virtual bool getCommand(SmscCommand& cmd) = 0;
 
-  // этот метод добавдяе в cmds не более mx комманд.
-  // в mx же запихивается сколько именно он отдал.
-  // возвращаемое значение - сколько команд осталось.
-  // prx - это указатель на SmeRecord, который нужно
-  // присвоить команде.
+  //     cmds   mx .
+  //  mx      .
+  //   -   .
+  // prx -    SmeRecord,  
+  //  .
   virtual int getCommandEx(std::vector<SmscCommand>& cmds,int& mx,SmeProxy* prx)
   {
     SmscCommand cmd;
@@ -171,7 +172,7 @@ public:
   virtual void disconnect(){};
   virtual bool deleteOnUnregister(){return false;}
 
-  static std::string nullstr;
+  std::string nullstr;
 };
 
 } // namespace smeman

@@ -3,8 +3,8 @@
 #define __SMSC_SMS_SMS_H__
 
 /**
-* Файл содержит описание внутренней структуры данных для представления SMS
-* в системе SMS центра. Используется системой хранения.
+*         SMS
+*   SMS .   .
 *
 * @author Victor V. Makarov
 * @version 1.0
@@ -59,7 +59,7 @@ using std::runtime_error;
 using std::auto_ptr;
 
 /**
-  имя списка рассылки
+    
 */
 struct DistrList {
   char dl_name[21];
@@ -72,8 +72,8 @@ static inline bool HSNS_isEqual()
 }
 
 /**
-* Структура Address предназначена для хранения
-* адресов в SMS сообщении.
+*  Address   
+*   SMS .
 *
 * @author Victor V. Makarov
 * @version 1.0
@@ -85,7 +85,7 @@ struct Address
   AddressValue value;
 
   /**
-  * Default конструктор, просто инициализирует некоторые поля нулями
+  * Default ,     
   */
   Address() : length(1), type(0), plan(0)
   {
@@ -93,13 +93,13 @@ struct Address
   };
 
   /**
-  * Конструктор для Address, инициализирует поля структуры реальными данными.
-  * Копирует даннуе из буфера к себе
+  *   Address,     .
+  *      
   *
-  * @param _len   длинна буфера _value
-  * @param _type  тип адреса
-  * @param _plan  план нумерации
-  * @param _value значение адреса
+  * @param _len     _value
+  * @param _type   
+  * @param _plan   
+  * @param _value  
   */
   Address(uint8_t _len, uint8_t _type, uint8_t _plan, const char* _value)
     : length(_len), type(_type), plan(_plan)
@@ -108,9 +108,9 @@ struct Address
   };
 
   /**
-  * Конструктор копирования, используется для создания адреса по образцу
+  *  ,      
   *
-  * @param addr   образец адреса.
+  * @param addr    .
   */
   Address(const Address& addr)
     : length(addr.length), type(addr.type), plan(addr.plan)
@@ -159,11 +159,11 @@ struct Address
   }
 
   /**
-  * Переопределённый оператор '=',
-  * используется для копирования адресов друг в друга
+  *   '=',
+  *       
   *
-  * @param addr   Правая часть оператора '='
-  * @return Ссылку на себя
+  * @param addr      '='
+  * @return   
   */
   Address& operator =(const Address& addr)
   {
@@ -193,11 +193,11 @@ struct Address
 
 
   /**
-  * Метод устанавливает значение адреса и его длинну.
-  * Длинна адреса должна быть меньше MAX_ADDRESS_VALUE_LENGTH.
+  *       .
+  *      MAX_ADDRESS_VALUE_LENGTH.
   *
-  * @param _len   длинна нового адреса
-  * @param _value значение нового адреса
+  * @param _len     
+  * @param _value   
   */
   inline void setValue(uint8_t _len, const char* _value)
   {
@@ -209,12 +209,12 @@ struct Address
   };
 
   /**
-  * Метод копирует значение адреса и возвращает его длинну
+  *        
   *
-  * @param _value указатель на буфер куда будет скопированно значение адреса
-  *               буфер должен иметь размер не меньше
-  *               MAX_ADDRESS_VALUE_LENGTH+1, чтобы принять любое значение
-  * @return длинна адреса
+  * @param _value        
+  *                    
+  *               MAX_ADDRESS_VALUE_LENGTH+1,    
+  * @return  
   */
   inline uint8_t getValue(char* _value) const
   {
@@ -235,9 +235,9 @@ struct Address
   };
 
   /**
-  * Возвращает длинну адреса
+  *   
   *
-  * @return длинна адреса
+  * @return  
   */
   inline uint8_t getLength() const
   {
@@ -245,9 +245,9 @@ struct Address
   };
 
   /**
-  * Устанавливает тип адреса
+  *   
   *
-  * @param _type  тип адреса
+  * @param _type   
   */
   inline void setTypeOfNumber(uint8_t _type)
   {
@@ -255,9 +255,9 @@ struct Address
   };
 
   /**
-  * Возвращает тип адреса
+  *   
   *
-  * @param _type  тип адреса
+  * @param _type   
   */
   inline uint8_t getTypeOfNumber() const
   {
@@ -265,9 +265,9 @@ struct Address
   };
 
   /**
-  * Устанавливает план нумерации адреса
+  *    
   *
-  * @param _plan  план нумерации адреса
+  * @param _plan    
   */
   inline void setNumberingPlan(uint8_t _plan)
   {
@@ -275,9 +275,9 @@ struct Address
   };
 
   /**
-  * Возвращает план нумерации адреса
+  *    
   *
-  * @return план нумерации адреса
+  * @return   
   */
   inline uint8_t getNumberingPlan() const
   {
@@ -323,9 +323,9 @@ struct Address
 };
 
 /**
-* Структура Descriptor предназначена для хранения
-* информации идентифицирующей взаимодействующую сторону
-* (например, источник или приёмник сообщения SMS)
+*  Descriptor   
+*    
+* (,     SMS)
 *
 * @author Victor V. Makarov
 * @version 1.0
@@ -338,7 +338,7 @@ struct Descriptor
   uint32_t        sme;
 
   /**
-  * Default конструктор, просто инициализирует некоторые поля нулями
+  * Default ,     
   */
   Descriptor() : mscLength(0), imsiLength(0), sme(0)
   {
@@ -346,14 +346,14 @@ struct Descriptor
   };
 
   /**
-  * Конструктор для Descriptor, инициализирует поля структуры реальными данными.
-  * Копирует даннуе из буферов к себе
+  *   Descriptor,     .
+  *      
   *
-  * @param _mscLen   длинна буфера _msc
-  * @param _value значение адреса MSC
-  * @param _imsiLen   длинна буфера _imsi
-  * @param _value значение адреса IMSI
-  * @param _sme номер SME
+  * @param _mscLen     _msc
+  * @param _value   MSC
+  * @param _imsiLen     _imsi
+  * @param _value   IMSI
+  * @param _sme  SME
   */
   Descriptor(uint8_t _mscLen, const char* _msc,
     uint8_t _imsiLen, const char* _imsi, uint32_t _sme)
@@ -364,10 +364,10 @@ struct Descriptor
   };
 
   /**
-  * Конструктор копирования, используется для
-  * создания дескриптора по образцу
+  *  ,  
+  *    
   *
-  * @param descr образец дескриптора.
+  * @param descr  .
   */
   Descriptor(const Descriptor& descr)
     : mscLength(descr.mscLength),
@@ -378,11 +378,11 @@ struct Descriptor
   };
 
   /**
-  * Переопределённый оператор '=',
-  * используется для копирования дескрипторов друг в друга
+  *   '=',
+  *       
   *
-  * @param descr   Правая часть оператора '='
-  * @return Ссылку на себя
+  * @param descr      '='
+  * @return   
   */
   Descriptor& operator =(const Descriptor& descr)
   {
@@ -393,11 +393,11 @@ struct Descriptor
   };
 
   /**
-  * Метод устанавливает значение адреса MSC и его длинну.
-  * Длинна адреса должна быть меньше MAX_ADDRESS_VALUE_LENGTH.
+  *     MSC   .
+  *      MAX_ADDRESS_VALUE_LENGTH.
   *
-  * @param _len   длинна нового адреса MSC
-  * @param _value значение нового адреса MSC
+  * @param _len      MSC
+  * @param _value    MSC
   */
   inline void setMsc(uint8_t _len, const char* _value)
   {
@@ -416,11 +416,11 @@ struct Descriptor
   };
 
   /**
-  * Метод устанавливает значение адреса IMSI и его длинну.
-  * Длинна адреса должна быть меньше MAX_ADDRESS_VALUE_LENGTH.
+  *     IMSI   .
+  *      MAX_ADDRESS_VALUE_LENGTH.
   *
-  * @param _len   длинна нового адреса IMSI
-  * @param _value значение нового адреса IMSI
+  * @param _len      IMSI
+  * @param _value    IMSI
   */
   inline void setImsi(uint8_t _len, const char* _value)
   {
@@ -439,12 +439,12 @@ struct Descriptor
   };
 
   /**
-  * Метод копирует значение адреса MSC и возвращает его длинну
+  *     MSC    
   *
-  * @param _value указатель на буфер куда будет скопированно значение
-  *               адреса MSC. Буфер должен иметь размер не меньше
-  *               MAX_ADDRESS_VALUE_LENGTH+1, чтобы принять любое значение
-  * @return длинна адреса MSC
+  * @param _value       
+  *                MSC.      
+  *               MAX_ADDRESS_VALUE_LENGTH+1,    
+  * @return   MSC
   */
   inline uint8_t getMsc(char* _value) const
   {
@@ -459,12 +459,12 @@ struct Descriptor
   }
 
   /**
-  * Метод копирует значение адреса IMSI и возвращает его длинну
+  *     IMSI    
   *
-  * @param _value указатель на буфер куда будет скопированно значение
-  *               адреса IMSI. Буфер должен иметь размер не меньше
-  *               MAX_ADDRESS_VALUE_LENGTH+1, чтобы принять любое значение
-  * @return длинна адреса IMSI
+  * @param _value       
+  *                IMSI.      
+  *               MAX_ADDRESS_VALUE_LENGTH+1,    
+  * @return   IMSI
   */
   inline uint8_t getImsi(char* _value) const
   {
@@ -485,9 +485,9 @@ struct Descriptor
   };
 
   /**
-  * Возвращает длинну адреса MSC
+  *    MSC
   *
-  * @return длинна адреса MSC
+  * @return   MSC
   */
   inline uint8_t getMscLength() const
   {
@@ -501,9 +501,9 @@ struct Descriptor
   };
 
   /**
-  * Возвращает длинну адреса IMSI
+  *    IMSI
   *
-  * @return длинна адреса IMSI
+  * @return   IMSI
   */
   inline uint8_t getImsiLength() const
   {
@@ -511,9 +511,9 @@ struct Descriptor
   };
 
   /**
-  * Устанавливает номер SME
+  *   SME
   *
-  * @return длинна адреса IMSI
+  * @return   IMSI
   */
   inline void setSmeNumber(uint32_t _sme)
   {
@@ -521,9 +521,9 @@ struct Descriptor
   };
 
   /**
-  * Возвращает номер SME
+  *   SME
   *
-  * @return номер SME
+  * @return  SME
   */
   inline uint32_t getSmeNumber() const
   {
@@ -540,11 +540,11 @@ struct Descriptor
   }
 };
 
-static const SmsPropertyBuf nullStr="";
 
 struct OptionalProperty{
   uint16_t isSetVal;
   uint16_t type;
+  static SmsPropertyBuf nullStr;
   union{
     SmsPropertyBuf* sValue;
     SmsPropertyBuf* bValue;
@@ -672,7 +672,7 @@ struct PropertySet{
 };
 
 /**
-* Структура описывает тело сообщения
+*    
 *
 * @author Victor V. Makarov
 * @version 10.0
@@ -686,16 +686,16 @@ private:
   mutable PropertySet prop;
 public:
   /**
-  * Default конструктор, просто инициализирует поля нулями
+  * Default ,    
   */
   Body() : buffLen(0) {};
 
   /**
-  * Конструктор для Body, инициализирует поля структуры реальными данными.
-  * Копирует даннуе из буфера к себе
+  *   Body,     .
+  *      
   *
-  * @param data   данные в теле сообщения
-  * @param len    длинна буфера data
+  * @param data      
+  * @param len      data
   */
   Body(uint8_t* data, int len)
     : buff(0), buffLen(0)
@@ -704,9 +704,9 @@ public:
   };
 
   /**
-  * Конструктор копирования, используется для создания тела по образцу
+  *  ,      
   *
-  * @param body   образец тела.
+  * @param body    .
   */
   Body(const Body& body)
     : buffLen(0)
@@ -720,11 +720,11 @@ public:
   };
 
   /**
-  * Переопределённый оператор '=',
-  * используется для копирования тел сообщений друг в друга
+  *   '=',
+  *        
   *
-  * @param body   Правая часть оператора '='
-  * @return ссылку на себя
+  * @param body      '='
+  * @return   
   */
   Body& operator =(const Body& body)
   {
@@ -739,11 +739,11 @@ public:
   };
 
   /**
-  * Метод декодирует тело сообщения.
-  * Выделяет память, после использования её необходимо освободить.
-  * Пока не имплементированно
+  *    .
+  *  ,     .
+  *   
   *
-  * @return декодированное тело сообщения. Сейчас NULL.
+  * @return   .  NULL.
   */
   char* getDecodedText()
   {
@@ -899,8 +899,8 @@ public:
 
 
 /**
-* Структура описывающая SMS в контексте операций
-* SMS ценра. Используется системой хранения.
+*   SMS   
+* SMS .   .
 *
 * @author Victor V. Makarov
 * @version 1.0
@@ -911,14 +911,14 @@ public:
 struct SMS
 {
   State       state;
-  time_t      submitTime;     // Время/Дата поступления на SMSC
-  time_t      validTime;      // Время/Дата до которого сообщение валидно
+  time_t      submitTime;     // /   SMSC
+  time_t      validTime;      // /    
 
-  uint32_t    attempts;       // Количество неуспешных попыток доставки
-  uint32_t    lastResult;     // Результат последней попытки
-  uint32_t    oldResult;      // предыдущее значение lastResult
-  time_t      lastTime;       // Время/Дата последней попытки доставки
-  time_t      nextTime;       // Время/Дата слудующей попытки доставки
+  uint32_t    attempts;       //    
+  uint32_t    lastResult;     //   
+  uint32_t    oldResult;      //   lastResult
+  time_t      lastTime;       // /   
+  time_t      nextTime;       // /   
 
   Address     originatingAddress;
   Address     destinationAddress;
@@ -934,7 +934,7 @@ struct SMS
   Descriptor  originatingDescriptor;
   Descriptor  destinationDescriptor;
 
-  Body        messageBody;    // Тело сообщения + PDU поля.
+  Body        messageBody;    //   + PDU .
   bool        attach;
 
   RouteId     routeId;        // Additional fields
@@ -950,8 +950,8 @@ struct SMS
   int         dialogId;  // used for transaction mode, not stored in DB
 
   /**
-  * Default конструктор, просто инициализирует поле state как ENROUTE
-  * и прочие поля дефолтными значениями
+  * Default ,    state  ENROUTE
+  *     
   */
   SMS() : state(ENROUTE), submitTime(0), validTime(0),
     attempts(0), lastResult(0), oldResult(0),lastTime(0), nextTime(0),
@@ -965,10 +965,10 @@ struct SMS
 
 
   /**
-  * Конструктор копирования, используется для создания
-  * SMS по образцу
+  *  ,   
+  * SMS  
   *
-  * @param sms    образец SMS
+  * @param sms     SMS
   */
   SMS(const SMS& sms) :
     state(sms.state),
@@ -1003,11 +1003,11 @@ struct SMS
   };
 
   /**
-  * Переопределённый оператор '=',
-  * используется для копирования сообщений
+  *   '=',
+  *    
   *
-  * @param sms   Правая часть оператора '='
-  * @return ссылку на себя
+  * @param sms      '='
+  * @return   
   */
   SMS& operator =(const SMS& sms)
   {
@@ -1048,9 +1048,9 @@ struct SMS
   };
 
   /**
-  * Возвращает состояние сообщения
+  *   
   *
-  * @return состояние сообщения
+  * @return  
   */
   inline State getState() const
   {
@@ -1058,13 +1058,13 @@ struct SMS
   };
 
   /**
-  * Устанавливает адрес отправителя.
-  * Копирует адрес во внутренние структуры
+  *   .
+  *     
   *
-  * @param length длинна адреса (0 < length <= MAX_ADDRESS_VALUE_LENGTH)
-  * @param type   тип адреса
-  * @param plan   план нумерации адреса
-  * @param buff   значение адреса
+  * @param length   (0 < length <= MAX_ADDRESS_VALUE_LENGTH)
+  * @param type    
+  * @param plan     
+  * @param buff    
   * @see Address
   */
   inline void setOriginatingAddress(uint8_t length, uint8_t type,
@@ -1076,10 +1076,10 @@ struct SMS
   };
 
   /**
-  * Устанавливает адрес отправителя
-  * Копирует адрес во внутренние структуры
+  *   
+  *     
   *
-  * @param address новый адрес отправителя
+  * @param address   
   * @see Address
   */
   inline void setOriginatingAddress(const Address& address)
@@ -1088,9 +1088,9 @@ struct SMS
   };
 
   /**
-  * Возвращает адрес отправителя
+  *   
   *
-  * @return адрес отправителя
+  * @return  
   * @see Address
   */
   inline const Address& getOriginatingAddress() const
@@ -1099,9 +1099,9 @@ struct SMS
   };
 
   /**
-  * Возвращает адрес отправителя
+  *   
   *
-  * @return адрес отправителя
+  * @return  
   * @see Address
   */
   inline Address& getOriginatingAddress()
@@ -1110,13 +1110,13 @@ struct SMS
   };
 
   /**
-  * Устанавливает адрес получателя
-  * Копирует адрес во внутренние структуры
+  *   
+  *     
   *
-  * @param length длинна адреса (0 < length <= MAX_ADDRESS_VALUE_LENGTH)
-  * @param type   тип адреса
-  * @param plan   план нумерации адреса
-  * @param buff   значение адреса
+  * @param length   (0 < length <= MAX_ADDRESS_VALUE_LENGTH)
+  * @param type    
+  * @param plan     
+  * @param buff    
   * @see Address
   */
   inline void setDestinationAddress(uint8_t length, uint8_t type,
@@ -1128,10 +1128,10 @@ struct SMS
   };
 
   /**
-  * Устанавливает адрес получателя
-  * Копирует адрес во внутренние структуры
+  *   
+  *     
   *
-  * @param address новый адрес получателя
+  * @param address   
   * @see Address
   */
   inline void setDestinationAddress(const Address& address)
@@ -1140,9 +1140,9 @@ struct SMS
   };
 
   /**
-  * Возвращает адрес получателя
+  *   
   *
-  * @return адрес получателя
+  * @return  
   * @see Address
   */
   inline const Address& getDestinationAddress() const
@@ -1151,9 +1151,9 @@ struct SMS
   };
 
   /**
-  * Возвращает адрес получателя
+  *   
   *
-  * @return адрес получателя
+  * @return  
   * @see Address
   */
   inline Address& getDestinationAddress()
@@ -1185,10 +1185,10 @@ struct SMS
   };
 
   /**
-  * Устанавливает дескриптор отправителя
-  * Копирует адрес во внутренние структуры
+  *   
+  *     
   *
-  * @param descriptor новый дескриптор отправителя
+  * @param descriptor   
   * @see Descriptor
   */
   inline void setOriginatingDescriptor(const Descriptor& descriptor)
@@ -1197,14 +1197,14 @@ struct SMS
   };
 
   /**
-  * Устанавливает дескриптор отправителя
-  * Копирует адрес во внутренние структуры
+  *   
+  *     
   *
-  * @param _mscLen   длинна буфера _msc
-  * @param _value значение адреса MSC
-  * @param _imsiLen   длинна буфера _imsi
-  * @param _value значение адреса IMSI
-  * @param _sme номер SME
+  * @param _mscLen     _msc
+  * @param _value   MSC
+  * @param _imsiLen     _imsi
+  * @param _value   IMSI
+  * @param _sme  SME
   *
   * @see Descriptor
   */
@@ -1217,9 +1217,9 @@ struct SMS
   };
 
   /**
-  * Возвращает дескриптор отправителя
+  *   
   *
-  * @return дескриптор отправителя
+  * @return  
   * @see Descriptor
   */
   inline const Descriptor& getOriginatingDescriptor() const
@@ -1228,9 +1228,9 @@ struct SMS
   };
 
   /**
-  * Возвращает дескриптор отправителя
+  *   
   *
-  * @return дескриптор отправителя
+  * @return  
   * @see Descriptor
   */
   inline Descriptor& getOriginatingDescriptor()
@@ -1239,10 +1239,10 @@ struct SMS
   };
 
   /**
-  * Устанавливает дескриптор получателя
-  * Копирует адрес во внутренние структуры
+  *   
+  *     
   *
-  * @param descriptor новый дескриптор получателя
+  * @param descriptor   
   * @see Descriptor
   *
   inline void setDestinationDescriptor(const Descriptor& descriptor)
@@ -1251,9 +1251,9 @@ struct SMS
   };*/
 
   /**
-  * Возвращает дескриптор получателя
+  *   
   *
-  * @return дескриптор получателя
+  * @return  
   * @see Descriptor
   */
   inline const Descriptor& getDestinationDescriptor() const
@@ -1262,9 +1262,9 @@ struct SMS
   };
 
   /**
-  * Возвращает дескриптор получателя
+  *   
   *
-  * @return дескриптор получателя
+  * @return  
   * @see Descriptor
   *
   inline Descriptor& getDestinationDescriptor()
@@ -1274,10 +1274,10 @@ struct SMS
 
 
   /**
-  * Устанавливает время валидности сообщения.
+  *    .
   *
-  * @param time   дата, до которой сообщение валидно
-  *               (не интервал времени).
+  * @param time   ,    
+  *               (  ).
   */
   inline void setValidTime(time_t time)
   {
@@ -1285,10 +1285,10 @@ struct SMS
   };
 
   /**
-  * Возвращает время валидности сообщения.
+  *    .
   *
-  * @return time   дата, до которой сообщение валидно
-  *         (не интервал времени).
+  * @return time   ,    
+  *         (  ).
   */
   inline time_t getValidTime() const
   {
@@ -1296,9 +1296,9 @@ struct SMS
   };
 
   /**
-  * Устанавливает время поступления сообщения в SMSC
+  *      SMSC
   *
-  * @param time   время поступления сообщения в SMSC
+  * @param time       SMSC
   */
   inline void setSubmitTime(time_t time)
   {
@@ -1306,9 +1306,9 @@ struct SMS
   };
 
   /**
-  * Возвращает время поступления сообщения в SMSC
+  *      SMSC
   *
-  * @return время поступления сообщения в SMSC
+  * @return     SMSC
   */
   inline time_t getSubmitTime() const
   {
@@ -1316,9 +1316,9 @@ struct SMS
   };
 
   /**
-  * Устанавливает время последней попытки доставки сообщения из SMSC
+  *        SMSC
   *
-  * @param time   время последней попытки доставки сообщения из SMSC
+  * @param time         SMSC
   *
   inline void setLastTime(time_t time)
   {
@@ -1326,9 +1326,9 @@ struct SMS
   };*/
 
   /**
-  * Возвращает время последней попытки доставки сообщения из SMSC
+  *        SMSC
   *
-  * @return время последней попытки доставки сообщения из SMSC
+  * @return       SMSC
   */
   inline time_t getLastTime() const
   {
@@ -1336,9 +1336,9 @@ struct SMS
   };
 
   /**
-  * Устанавливает время следующей попытки доставки сообщения из SMSC
+  *        SMSC
   *
-  * @param time   время следующей попытки доставки сообщения из SMSC
+  * @param time         SMSC
   */
   inline void setNextTime(time_t time)
   {
@@ -1346,9 +1346,9 @@ struct SMS
   };
 
   /**
-  * Возвращает время следующей попытки доставки сообщения из SMSC
+  *        SMSC
   *
-  * @return время следующей попытки доставки сообщения из SMSC
+  * @return       SMSC
   */
   inline time_t getNextTime() const
   {
@@ -1356,10 +1356,10 @@ struct SMS
   };
 
   /**
-  * Устанавливает номер сообщения (MR),
-  * для идентификации сообщений приходящих с одного адреса
+  *    (MR),
+  *       
   *
-  * @param mr     идентификационный номер сообщения (MR)
+  * @param mr        (MR)
   */
   inline void setMessageReference(uint16_t mr)
   {
@@ -1367,10 +1367,10 @@ struct SMS
   };
 
   /**
-  * Возвращает номер сообщения (MR),
-  * для идентификации сообщений приходящих с одного адреса
+  *    (MR),
+  *       
   *
-  * @return идентификационный номер сообщения (MR)
+  * @return    (MR)
   */
   inline uint16_t getMessageReference() const
   {
@@ -1378,9 +1378,9 @@ struct SMS
   };
 
   /**
-  * Устанавливает тип отчета о доставке сообщения
+  *      
   *
-  * @param req    тип отчета о доставке сообщения
+  * @param req        
   */
   inline void setDeliveryReport(uint8_t report)
   {
@@ -1388,9 +1388,9 @@ struct SMS
   };
 
   /**
-  * Возвращает тип отчета о доставке сообщения
+  *      
   *
-  * @return      тип отчета о доставке сообщения
+  * @return          
   */
   inline uint8_t getDeliveryReport() const
   {
@@ -1398,9 +1398,9 @@ struct SMS
   };
 
   /**
-  * Устанавливает тип биллинга сообщения
+  *    
   *
-  * @param req    тип биллинга сообщения
+  * @param req      
   */
   inline void setBillingRecord(uint8_t billing)
   {
@@ -1413,9 +1413,9 @@ struct SMS
   }
 
   /**
-  * Возвращает тип биллинга сообщения
+  *    
   *
-  * @return      тип биллинга сообщения
+  * @return        
   */
   inline uint8_t getBillingRecord() const
   {
@@ -1423,10 +1423,10 @@ struct SMS
   };
 
   /**
-  * Устанавливает признак, нужно ли архивировать сообщение после
-  * успешной или неуспешной попытке доставки
+  *  ,     
+  *     
   *
-  * @param arc    признак, нужно ли архивировать сообщение
+  * @param arc    ,    
   */
   inline void setArchivationRequested(bool arc)
   {
@@ -1434,10 +1434,10 @@ struct SMS
   };
 
   /**
-  * Возвращает признак, нужно ли архивировать сообщение после
-  * успешной или неуспешной попытке доставки
+  *  ,     
+  *     
   *
-  * @return признак, нужно ли нужно ли архивировать сообщение (да / нет)
+  * @return ,       ( / )
   */
   inline bool isArchivationRequested() const
   {
@@ -1445,10 +1445,10 @@ struct SMS
   };
 
   /**
-  * Возвращает причину в случае
-  * отказа/некорректности/недоставки последней попытки доставки сообщения
+  *    
+  * //    
   *
-  * @return причина отказа/некорректности/недоставки сообщения
+  * @return  // 
   */
   inline uint32_t getLastResult() const
   {
@@ -1456,11 +1456,11 @@ struct SMS
   };
 
   /**
-  * Выставляет причину
-  * отказа/некорректности/недоставки последней попытки доставки сообщения
-  * и созраняет предыдущую
+  *  
+  * //    
+  *   
   *
-  * @param value новое значеие причины отказа
+  * @param value    
   *
   */
 
@@ -1471,9 +1471,9 @@ struct SMS
   }
 
   /**
-  * Устанавливает количество неудач при доставке сообщения
+  *      
   *
-  * @param count  количество неудач при доставке сообщения
+  * @param count      
   *
   */
   inline void setAttemptsCount(uint32_t count)
@@ -1482,9 +1482,9 @@ struct SMS
   };
 
   /**
-  * Возвращает количество неудач при доставке сообщения
+  *      
   *
-  * @return количество неудач при доставке сообщения
+  * @return     
   */
   inline uint32_t getAttemptsCount() const
   {
@@ -1492,9 +1492,9 @@ struct SMS
   };
 
   /**
-  * Возвращает тело сообщения
+  *   
   *
-  * @return тело сообщения
+  * @return  
   * @see Body
   */
   inline const Body& getMessageBody() const
@@ -1503,9 +1503,9 @@ struct SMS
   };
 
   /**
-  * Возвращает тело сообщения
+  *   
   *
-  * @return тело сообщения
+  * @return  
   * @see Body
   */
   inline Body& getMessageBody()
@@ -1526,30 +1526,30 @@ struct SMS
   }
 
   /**
-  * Метод устанавливает имя-тип сервиса SME.
+  *   -  SME.
   *
-  * @param type имя-тип SME
+  * @param type - SME
   */
   inline void setEServiceType(const char* type)
   {
       setStringField(eServiceType, type, MAX_ESERVICE_TYPE_LENGTH);
   };
   /**
-  * Метод возвращает имя-тип сервиса
+  *   - 
   *
-  * @param type   указатель на буфер куда будет скопированно имя
-  *               буфер должен иметь размер не меньше
-  *               MAX_ESERVICE_TYPE_LENGTH+1, чтобы принять
-  *               любое значение
+  * @param type         
+  *                    
+  *               MAX_ESERVICE_TYPE_LENGTH+1,  
+  *                
   */
   inline void getEServiceType(char* type) const
   {
       getStringField(eServiceType, type, MAX_ESERVICE_TYPE_LENGTH);
   };
   /**
-  * Метод возвращает имя-тип сервиса
+  *   - 
   *
-  * @return имя-тип сервиса
+  * @return - 
   */
   inline const char* getEServiceType() const
   {
@@ -1558,18 +1558,18 @@ struct SMS
 
   /**
   *
-  * Устанавливает приоритет сообщения.
+  *   .
   *
-  * @param pri    приоритет сообщения
+  * @param pri     
   */
   inline void setPriority(int32_t pri) {
       priority = pri;
   };
   /**
   *
-  * Возвращает приоритет сообщения.
+  *   .
   *
-  * @return приоритет сообщения
+  * @return  
   */
   inline int32_t getPriority() const {
       return priority;
@@ -1577,38 +1577,38 @@ struct SMS
 
   /**
   *
-  * Устанавливает идентификатор сервиса.
+  *   .
   *
-  * @param id    идентификатор сервиса
+  * @param id     
   */
   inline void setServiceId(int32_t id) {
       serviceId = id;
   };
   /**
   *
-  * Возвращает идентификатор сервиса.
+  *   .
   *
-  * @return идентификатор сервиса
+  * @return  
   */
   inline uint32_t getServiceId() const {
       return serviceId;
   };
 
   /**
-  * Метод устанавливает идентификатор маршрута.
+  *    .
   *
-  * @param route идентификатор маршрута
+  * @param route  
   */
   inline void setRouteId(const char* route)
   {
       setStringField(routeId, route, MAX_ROUTE_ID_TYPE_LENGTH);
   };
   /**
-  * Метод возвращает идентификатор маршрута
+  *    
   *
-  * @param route  указатель на буфер куда будет скопирован
-  *               идентификатор маршрута
-  *               буфер должен иметь размер не меньше
+  * @param route       
+  *                
+  *                    
   *               MAX_ROUTE_ID_TYPE_LENGTH+1
   */
   inline void getRouteId(char* route) const
@@ -1616,9 +1616,9 @@ struct SMS
       getStringField(routeId, route, MAX_ROUTE_ID_TYPE_LENGTH);
   };
   /**
-  * Метод возвращает идентификатор маршрута
+  *    
   *
-  * return идентификатор маршрута
+  * return  
   */
   inline const char* getRouteId() const
   {
@@ -1626,20 +1626,20 @@ struct SMS
   };
 
   /**
-  * Метод устанавливает идентификатор sme-источника.
+  *    sme-.
   *
-  * @param id идентификатор sme-источника
+  * @param id  sme-
   */
   inline void setSourceSmeId(const char* id)
   {
       setStringField(srcSmeId, id, MAX_SMESYSID_TYPE_LENGTH);
   };
   /**
-  * Метод возвращает идентификатор sme-источника
+  *    sme-
   *
-  * @param id     указатель на буфер куда будет скопирован
-  *               идентификатор sme-источника
-  *               буфер должен иметь размер не меньше
+  * @param id          
+  *                sme-
+  *                    
   *               MAX_SMESYSID_TYPE_LENGTH+1
   */
   inline void getSourceSmeId(char* id) const
@@ -1647,9 +1647,9 @@ struct SMS
       getStringField(srcSmeId, id, MAX_SMESYSID_TYPE_LENGTH);
   };
   /**
-  * Метод возвращает идентификатор sme-источника
+  *    sme-
   *
-  * return идентификатор sme-источника
+  * return  sme-
   */
   inline const char* getSourceSmeId() const
   {
@@ -1657,9 +1657,9 @@ struct SMS
   };
 
   /**
-  * Метод устанавливает идентификатор sme-приёмника.
+  *    sme-.
   *
-  * @param id идентификатор sme-приёмника
+  * @param id  sme-
   */
   inline void setDestinationSmeId(const char* id)
   {
@@ -1667,11 +1667,11 @@ struct SMS
   };
 
   /**
-  * Метод возвращает идентификатор sme-приёмника
+  *    sme-
   *
-  * @param id     указатель на буфер куда будет скопирован
-  *               идентификатор sme-приёмника
-  *               буфер должен иметь размер не меньше
+  * @param id          
+  *                sme-
+  *                    
   *               MAX_SMESYSID_TYPE_LENGTH+1
   */
   inline void getDestinationSmeId(char* id) const
@@ -1679,9 +1679,9 @@ struct SMS
       getStringField(dstSmeId, id, MAX_SMESYSID_TYPE_LENGTH);
   };
   /**
-  * Метод возвращает идентификатор sme-приёмника
+  *    sme-
   *
-  * return идентификатор sme-приёмника
+  * return  sme-
   */
   inline const char* getDestinationSmeId() const
   {
