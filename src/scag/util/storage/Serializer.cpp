@@ -60,17 +60,17 @@ Serializer& Serializer::operator << ( uint64_t i ) {
 }
 
 Serializer& Serializer::operator << ( const char* str ) {
-    write( str ? strlen(str) : 0, str );
+    write( str ? uint32_t(strlen(str)) : 0, str );
     return *this;
 }
 
 Serializer& Serializer::operator << ( const std::string& i ) {
-    write( i.size(), i.c_str() );
+    write( uint32_t(i.size()), i.c_str() );
     return *this;
 }
 
 Serializer& Serializer::operator << ( const Buf& i ) {
-    write( i.size(), reinterpret_cast<const char*>(&i[0]) );
+    write( uint32_t(i.size()), reinterpret_cast<const char*>(&i[0]) );
     return *this;
 }
 
@@ -92,23 +92,23 @@ void Serializer::writeAsIs( uint32_t sz, const char* buf )
 uint8_t* Serializer::ensure( uint32_t chunk )
 {
     if ( buf_ ) {
-        uint32_t resv = buf_->capacity() - wpos();
+        uint32_t resv = uint32_t(buf_->capacity() - wpos());
         if ( resv < chunk ) {
-            const uint32_t need = buf_->capacity() + chunk;
+            const uint32_t need = uint32_t(buf_->capacity() + chunk);
             buf_->reserve( need < 16 ? need+16 :
                            need+128 );
         }
         if ( wpos()+chunk > buf_->size() ) {
             buf_->resize(wpos()+chunk);
         }
-        uint32_t w = wpos();
+        uint32_t w = uint32_t(wpos());
         wpos_ += chunk;
         return &((*buf_)[w]);
     } else if ( wpos() + chunk > bufSize_ ) {
         throw SerializerException("ensure(%u+%u) on buffer sz=%u",
                                   unsigned(wpos_), unsigned(chunk), unsigned(bufSize_) );
     } else {
-        uint32_t w = wpos();
+        uint32_t w = uint32_t(wpos());
         wpos_ += chunk;
         return ebuf_ + w;
     }
@@ -120,31 +120,28 @@ uint8_t* Serializer::ensure( uint32_t chunk )
 
 Deserializer& Deserializer::operator >> ( uint8_t& i ) throw (DeserializerException )
 {
-    readbuf( & static_cast<unsigned char&>(i), 1 ); 
+    i = *readAsIs(1);
     return *this;
 }
 
 
 Deserializer& Deserializer::operator >> ( uint16_t& i ) throw ( DeserializerException )
 {
-    readbuf( cvt.ubuf(), 2 );
-    i = cvt.get16();
+    i = EndianConverter::get16(readAsIs(2));
     return *this;
 }
 
     
 Deserializer& Deserializer::operator >> ( uint32_t& i ) throw ( DeserializerException )
 {
-    readbuf( cvt.ubuf(), 4 );
-    i = cvt.get32();
+    i = EndianConverter::get32(readAsIs(4));
     return *this;
 }
 
     
 Deserializer& Deserializer::operator >> ( uint64_t& i ) throw ( DeserializerException )
 {
-    readbuf( cvt.ubuf(), 8 );
-    i = cvt.get64();
+    i = EndianConverter::get64(readAsIs(8));
     return *this;
 }
 
@@ -205,12 +202,14 @@ const char* Deserializer::readAsIs( uint32_t sz ) throw (DeserializerException)
 }
 
 
+/*
 void Deserializer::readbuf( unsigned char* ptr, size_t sz ) throw ( DeserializerException )
 {
     rcheck( sz );
     std::copy( curpos(), curpos() + sz, ptr );
     rpos_ += sz;
 }
+ */
 
 } // namespace storage
 } // namespace util

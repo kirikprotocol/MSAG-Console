@@ -102,41 +102,31 @@ public:
 
     /// helper: load index from memory
     static inline offset_type loadIdx( const void* wher ) {
-        EndianConverter cvt;
-        memcpy(cvt.ubuf(),wher,idxSize());
-        return (cvt.get64() & navBits());
+        return (EndianConverter::get64(wher) & navBits());
     }
 
     static inline void saveIdx( void* wher, offset_type idx ) {
-        EndianConverter cvt;
-        memcpy(wher,cvt.set(idx & navBits()),idxSize());
+        EndianConverter::set64(wher,idx & navBits());
     }
 
     /// load from a block of memory, considering it has been filled
     void loadPtr( const void* wher ) {
-        const char* where = reinterpret_cast<const char*>(wher);
-        EndianConverter cvt;
-        memcpy(cvt.ubuf(),where,idxSize());
-        const uint8_t state = cvt.ubuf()[0];
-        used_ = (state & USED_BIT);
-        head_ = (state & HEAD_BIT);
-        next_ = (cvt.get64() & navBits());
-        memcpy(cvt.ubuf(),where+idxSize(),idxSize());
-        pack_ = cvt.ubuf()[0];
-        ref_ = (cvt.get64() & navBits());
+        register const uint8_t* where = reinterpret_cast<const uint8_t*>(wher);
+        const uint8_t state = *where;
+        next_ = EndianConverter::get64(where) & navBits();
+        where += idxSize();
+        pack_ = *where;
+        ref_ = EndianConverter::get64(where) & navBits();
     }
 
     /// save to a block of memory, which should be at least NAV_SIZE in length
     void savePtr( void* wher ) const {
-        unsigned char* where = reinterpret_cast<unsigned char*>(wher);
-        EndianConverter cvt;
-        cvt.set(next_);
-        const uint8_t state( (used_ ? USED_BIT : 0) | (head_ ? HEAD_BIT : 0) );
-        cvt.ubuf()[0] = state;
-        memcpy(where,cvt.ubuf(),idxSize());
-        cvt.set(ref_);
-        cvt.ubuf()[0] = pack_;
-        memcpy(where+idxSize(),cvt.ubuf(),idxSize());
+        register uint8_t* where = reinterpret_cast<uint8_t*>(wher);
+        EndianConverter::set64(where,next_);
+        *where = (used_ ? USED_BIT : 0) | (head_ ? HEAD_BIT : 0);
+        where += idxSize();
+        EndianConverter::set64(where,ref_);
+        *where = pack_;
     }
 
     // helper methods to load from different sources

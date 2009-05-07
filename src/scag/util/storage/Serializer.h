@@ -78,8 +78,6 @@ protected:
 
     uint32_t dochecksum( const unsigned char* buf, size_t pos1, size_t pos2 ) const;
 
-    EndianConverter cvt;
-
 private:
     GlossaryBase* glossary_;
     int32_t       version_;
@@ -237,8 +235,8 @@ public:
     }
 
 private:
-    /// read from buffer into \ptr.
-    void readbuf( unsigned char* ptr, size_t size ) throw ( DeserializerException );
+    // read size bytes (actually move buffer pos, checking for ability to do so)
+    // unsigned char* readbuf(size_t size) throw ( DeserializerException );
     
     /// 1. checks that buffer has enough data to read;
     /// 2. if not raise an exception.

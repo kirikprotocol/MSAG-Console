@@ -12,6 +12,7 @@ namespace storage {
 
 struct EndianConverter
 {
+    /*
     template < class T > 
         inline uint8_t* uset( T i ) {
         this->set( i );
@@ -48,33 +49,46 @@ struct EndianConverter
     inline uint8_t* ubuf() {
         return cvt.bytes;
     }
+     */
 
     // methods for inplace conversion
     inline static uint16_t get16( const void* buf ) {
-        // register const uint8_t* p = reinterpret_cast<const uint8_t*>(buf);
-        // register uint16_t tmp = uint16_t(*p);
-#if BYTE_ORDER == BIG_ENDIAN
-        return uint16_t(*ptr(buf)) << 8 + *move(buf,1);
-#else
-        return *ptr(buf) + (uint16_t(*move(buf,1)) << 8);
-#endif
+        register const uint8_t* p = reinterpret_cast<const uint8_t*>(buf);
+        register uint16_t tmp(*p);
+        return (tmp << 8) + *++p;
     }
 
     inline static uint32_t get32( const void* buf ) {
-#if BYTE_ORDER == BIG_ENDIAN
-        return uint32_t(get16(buf)) << 16 + get16(move(buf,2));
-#else
-        return get16(buf) + (uint32_t(get16(move(buf,2))) << 16);
-#endif
-    }
-
-    inline static uint64_t get64( const void* buf ) {
-        uint64_t tmp;
-        memcpy(&tmp,buf,8);
+/*
+        uint32_t tmp;
+        memcpy(&tmp,buf,4);
 #if BYTE_ORDER == BIG_ENDIAN
         return tmp;
 #else
-        return (uint64_t(ntohl(uint32_t(tmp)))<<32) + ntohl(uint32_t(tmp >> 32));
+        return ntohl(tmp);
+#endif
+*/
+        register const uint8_t* p = reinterpret_cast<const uint8_t*>(buf);
+        register uint32_t tmp(*p);
+        tmp << 8;
+        tmp += *++p;
+        tmp << 8;
+        tmp += *++p;
+        tmp << 8;
+        tmp += *++p;
+        return tmp;
+    }
+
+    inline static uint64_t get64( const void* buf ) {
+        union {
+            uint64_t u64;
+            uint32_t u32[2];
+        } tmp;
+        memcpy(&tmp,buf,8);
+#if BYTE_ORDER == BIG_ENDIAN
+        return tmp.u64;
+#else
+        return (uint64_t(ntohl(tmp.u32[0])) << 32) + ntohl(tmp.u32[1]);
 #endif
     }
     
@@ -103,6 +117,7 @@ struct EndianConverter
 #endif
     }
 
+    /*
     union {
         char     buf[8];
         uint8_t  bytes[8];
@@ -110,20 +125,7 @@ struct EndianConverter
         uint32_t longs[2];
         uint64_t quads[1];
     } cvt;
-
-private:
-    inline static uint8_t* move( void* p, int x ) {
-        return reinterpret_cast<uint8_t*>(p)+x;
-    }
-    inline static const uint8_t* move( const void* p, int x ) {
-        return reinterpret_cast<const uint8_t*>(p)+x;
-    }
-    inline static uint8_t* ptr( void* p ) {
-        return reinterpret_cast<uint8_t*>(p);
-    }
-    inline static const uint8_t* ptr( const void* p ) {
-        return reinterpret_cast<const uint8_t*>(p);
-    }
+     */
 };
 
 }
