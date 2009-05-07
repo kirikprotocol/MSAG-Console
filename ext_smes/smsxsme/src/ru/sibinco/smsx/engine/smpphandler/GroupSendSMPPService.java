@@ -106,6 +106,12 @@ public class GroupSendSMPPService extends AbstractSMPPService {
   }
 
   private boolean groupSend(SMPPRequest smppRequest) {
+    try {
+      smppRequest.getInObj().respond(Data.ESME_ROK);
+    } catch (SMPPException e) {
+      log.error(e, e);
+    }
+
     final Message m = smppRequest.getInObj().getMessage();
     GroupSendCmd cmd = new GroupSendCmd();
 
@@ -142,14 +148,6 @@ public class GroupSendSMPPService extends AbstractSMPPService {
 
     try {
       Services.getInstance().getGroupService().execute(cmd);
-
-      try {
-        smppRequest.getInObj().respond(Data.ESME_ROK);
-      } catch (SMPPException e) {
-        log.error(e);
-      }
-
-      return true;
     } catch (CommandExecutionException e) {
       switch (e.getErrCode()) {
         case GroupSendCmd.ERR_UNKNOWN_GROUP:
@@ -161,8 +159,8 @@ public class GroupSendSMPPService extends AbstractSMPPService {
         default:
           log.error(e,e);
       }
-      return false;
     }
+    return true;
   }
 
   private boolean receipt(SMPPRequest smppRequest) {

@@ -45,6 +45,7 @@
     <copy file="bin/start.sh" todir="${SME_DISTR_DIR}"/>
     <copy file="bin/stop.sh" todir="${SME_DISTR_DIR}"/>
     <copydir src="bin/soap" dest="${SME_DISTR_DIR}/bin/soap"/>
+    <copydir src="bin/stat" dest="${SME_DISTR_DIR}/bin/stat"/>
     <chmod dir="${SME_DISTR_DIR}/bin" perm="ugo+rx" includes="*.sh"/>
     <chmod dir="${SME_DISTR_DIR}" perm="ugo+rx" includes="*.sh"/>
     <chmod dir="${SME_DISTR_DIR}/bin" perm="ugo+rx" includes="**/*.sh"/>

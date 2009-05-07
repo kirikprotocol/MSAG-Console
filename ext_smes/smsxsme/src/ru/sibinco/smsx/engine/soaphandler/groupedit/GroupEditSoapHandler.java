@@ -77,10 +77,8 @@ class GroupEditSoapHandler implements GroupEdit {
       response.setGroups(names);
       response.setStatus(RESULT_OK);
     } catch (CommandExecutionException e) {
-      log.error("Group list failed", e);
       response.setStatus(getStatus(e.getErrCode()));
     } catch (Throwable e) {
-      log.error(e, e);
       response.setStatus(RESULT_SYSTEM_ERROR);
     } finally {
       if (log.isDebugEnabled())
@@ -116,7 +114,6 @@ class GroupEditSoapHandler implements GroupEdit {
 
       return RESULT_OK;
     } catch (CommandExecutionException e) {
-      log.error("Group add failed", e);
       return getStatus(e.getErrCode());
     } catch (Throwable e) {
       log.error(e, e);
@@ -146,7 +143,6 @@ class GroupEditSoapHandler implements GroupEdit {
 
       return RESULT_OK;
     } catch (CommandExecutionException e) {
-      log.error("Group remove failed", e);
       return getStatus(e.getErrCode());
     } catch (Throwable e) {
       log.error(e, e);
@@ -180,7 +176,6 @@ class GroupEditSoapHandler implements GroupEdit {
       resp.setStatus(RESULT_OK);
 
     } catch (CommandExecutionException e) {
-      log.error("Group info failed", e);
       resp.setStatus(getStatus(e.getErrCode()));
     } catch (Throwable e) {
       log.error(e, e);
@@ -213,7 +208,6 @@ class GroupEditSoapHandler implements GroupEdit {
 
       return RESULT_OK;
     } catch (CommandExecutionException e) {
-      log.error("Group add member failed", e);
       return getStatus(e.getErrCode());
     } catch (Throwable e) {
       log.error(e, e);
@@ -244,7 +238,6 @@ class GroupEditSoapHandler implements GroupEdit {
 
       return RESULT_OK;
     } catch (CommandExecutionException e) {
-      log.error("Group remove member failed", e);
       return getStatus(e.getErrCode());
     } catch (Throwable e) {
       log.error(e, e);
@@ -275,7 +268,6 @@ class GroupEditSoapHandler implements GroupEdit {
 
       return RESULT_OK;
     } catch (CommandExecutionException e) {
-      log.error("Group rename failed", e);
       return getStatus(e.getErrCode());
     } catch (Throwable e) {
       log.error(e, e);
@@ -306,7 +298,6 @@ class GroupEditSoapHandler implements GroupEdit {
 
       return RESULT_OK;
     } catch (CommandExecutionException e) {
-      log.error("Group copy failed", e);
       return getStatus(e.getErrCode());
     } catch (Throwable e) {
       log.error(e, e);

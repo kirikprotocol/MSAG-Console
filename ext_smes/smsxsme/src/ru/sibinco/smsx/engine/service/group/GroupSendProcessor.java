@@ -124,7 +124,6 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
           }
 
           outQueue.offer(o);
-//          System.out.println("Send " + msgId + " " + member);
         }
       } else {
         cmd.setDeliveryStatuses(deliveryStatuses);
