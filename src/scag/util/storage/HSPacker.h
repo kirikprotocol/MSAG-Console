@@ -113,6 +113,8 @@ public:
     void loadPtr( const void* wher ) {
         register const uint8_t* where = reinterpret_cast<const uint8_t*>(wher);
         const uint8_t state = *where;
+        used_ = state & USED_BIT;
+        head_ = state & HEAD_BIT;
         next_ = EndianConverter::get64(where) & navBits();
         where += idxSize();
         pack_ = *where;

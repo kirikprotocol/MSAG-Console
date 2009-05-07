@@ -694,7 +694,7 @@ private:
     private:
         void freeBlock( index_type blockIndex, index_type saved_next_free_block )
         {
-            EndianConverter cvt;
+            // EndianConverter cvt;
             if ( lastFreeBlock_ != bhs_.invalidIndex() ) {
                 int fn = bhs_.getFileNumber(lastFreeBlock_);
                 off_t offset = bhs_.getOffset(lastFreeBlock_);
@@ -707,7 +707,9 @@ private:
             }
             int fn = bhs_.getFileNumber(blockIndex);
             off_t offset = bhs_.getOffset(blockIndex);
-            fixup_->save(offset,8,cvt.set(uint64_t(saved_next_free_block)));
+            char cvtbuf[8];
+            EndianConverter::set64(cvtbuf,uint64_t(saved_next_free_block));
+            fixup_->save(offset,8,cvtbuf);
             File* f = bhs_.dataFile_f[fn];
             f->Seek(offset);
             f->WriteNetInt64(bhs_.invalidIndex());

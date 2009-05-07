@@ -70,11 +70,11 @@ struct EndianConverter
 */
         register const uint8_t* p = reinterpret_cast<const uint8_t*>(buf);
         register uint32_t tmp(*p);
-        tmp << 8;
+        tmp <<= 8;
         tmp += *++p;
-        tmp << 8;
+        tmp <<= 8;
         tmp += *++p;
-        tmp << 8;
+        tmp <<= 8;
         tmp += *++p;
         return tmp;
     }
