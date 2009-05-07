@@ -27,6 +27,8 @@ public class Options extends SmeBean
   private boolean smpp_partitionSms = false;
   private int smpp_partsSendSpeedPerHour = 60;
   private int smpp_maxUdhParts = 3;
+  private int smpp_concatTimeout = 120;
+  private boolean smpp_pauseAfterDisconnect = false;
 
   private boolean stat_enabled = false;
   private String stat_storeLocation = "store/stat";
@@ -54,7 +56,6 @@ public class Options extends SmeBean
   private String smtp_host = "";
   private int smtp_port = 0;
 
-  private int defaults_dailyLimt = 0;
   private int default_annotation_size = 0;
 
   private String answers_alias = "";
@@ -128,6 +129,8 @@ public class Options extends SmeBean
         smpp_partitionSms = getBoolParameter("smpp.partitionSms");
         smpp_partsSendSpeedPerHour = getIntParameter("smpp.partsSendSpeedPerHour");
         smpp_maxUdhParts = getIntParameter("smpp.maxUdhParts");
+	smpp_concatTimeout = getIntParameter("smpp.concatTimeout");
+	smpp_pauseAfterDisconnect = getBoolParameter("smpp.pauseAfterDisconnect");
 
         if (getConfig().containsSection("stat") && getConfig().containsParameter("stat.storeLocation")) {
           stat_storeLocation = getStringParameter("stat.storeLocation");
@@ -159,7 +162,6 @@ public class Options extends SmeBean
         smtp_host = getStringParameter("smtp.host");
         smtp_port = getIntParameter("smtp.port");
 
-        defaults_dailyLimt = getIntParameter("defaults.dailyLimit");
         default_annotation_size = getIntParameter("defaults.annotationSize");
 
         answers_alias = getStringParameter("answers.alias");
@@ -220,6 +222,8 @@ public class Options extends SmeBean
     getConfig().setBool("smpp.partitionSms", smpp_partitionSms);
     getConfig().setInt("smpp.partsSendSpeedPerHour", smpp_partsSendSpeedPerHour);
     getConfig().setInt("smpp.maxUdhParts", smpp_maxUdhParts);
+    getConfig().setInt("smpp.concatTimeout", smpp_concatTimeout);
+    getConfig().setBool("smpp.pauseAfterDisconnect", smpp_pauseAfterDisconnect);
 
     if (stat_enabled) {
       getConfig().setString("stat.storeLocation", stat_storeLocation);
@@ -250,7 +254,6 @@ public class Options extends SmeBean
     getConfig().setString("smtp.host", smtp_host);
     getConfig().setInt("smtp.port", smtp_port);
 
-    getConfig().setInt("defaults.dailyLimit", defaults_dailyLimt);
     getConfig().setInt("defaults.annotationSize", default_annotation_size);
 
 
@@ -528,30 +531,6 @@ public class Options extends SmeBean
     this.mail_domain = mail_domain;
   }
 
-  public int getDefaults_dailyLimtInt()
-  {
-    return defaults_dailyLimt;
-  }
-
-  public void setDefaults_dailyLimtInt(int defaults_dailyLimt)
-  {
-    this.defaults_dailyLimt = defaults_dailyLimt;
-  }
-
-  public String getDefaults_dailyLimt()
-  {
-    return String.valueOf(defaults_dailyLimt);
-  }
-
-  public void setDefaults_dailyLimt(String defaults_dailyLimt)
-  {
-    try {
-      this.defaults_dailyLimt = Integer.decode(defaults_dailyLimt).intValue();
-    } catch (NumberFormatException e) {
-      logger.error("Invalid defaults.dailyLimit parameter value: \"" + defaults_dailyLimt + '"', e);
-    }
-  }
-
   public String getStore_dir() {
     return store_dir;
   }
@@ -812,6 +791,26 @@ public class Options extends SmeBean
     }
   }
 
+  public String getSmpp_concatTimeout() {
+    return String.valueOf(smpp_concatTimeout);
+  }
+
+  public void setSmpp_concatTimeout(String smpp_concatTimeout) {
+    try {
+      this.smpp_concatTimeout = Integer.parseInt(smpp_concatTimeout);
+    } catch (NumberFormatException e) {
+      logger.error("Invalid smpp.concatTimeout: " + smpp_concatTimeout);
+    }
+  }
+  
+  public boolean isSmpp_pauseAfterDisconnect() {
+    return smpp_pauseAfterDisconnect;
+  }
+
+  public void setSmpp_pauseAfterDisconnect(boolean smpp_pauseAfterDisconnect) {
+    this.smpp_pauseAfterDisconnect = smpp_pauseAfterDisconnect;
+  }
+  
   public boolean isSmpp_partitionSms() {
     return smpp_partitionSms;
   }
