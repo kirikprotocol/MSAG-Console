@@ -364,14 +364,6 @@ void SmppManagerImpl::Init(const char* cfgFile)
 
   LoadRoutes("conf/smpp_routes.xml");
 
-    // initialization of sm
-    unsigned socketsPerThread = getUnsigned( "smpp.core.socketsPerMultiplexer", 16 );
-    unsigned bindTimeout = getUnsigned( "smpp.core.bindWaitTimeout", 10 );
-    unsigned connectionsPerIp = getUnsigned( "smpp.core.connectionsPerIp", 100 );
-    unsigned failTimeout = getUnsigned( "smpp.core.ipBlockingTime", 60 );
-    unsigned maxMultiCount = getUnsigned( "smpp.core.maxRWMultiplexersCount", 100 );
-    sm.init( socketsPerThread, bindTimeout, connectionsPerIp, failTimeout, maxMultiCount );
-
     // collecting whitelisted ips
     try {
         ConfigView cv(*ConfigManager::Instance().getConfig(),"smpp.core.whitelist");
@@ -389,6 +381,14 @@ void SmppManagerImpl::Init(const char* cfgFile)
     } catch (...) {
         smsc_log_info(log,"whitelist exc: unknown");
     }
+
+    // initialization of sm
+    unsigned socketsPerThread = getUnsigned( "smpp.core.socketsPerMultiplexer", 16 );
+    unsigned bindTimeout = getUnsigned( "smpp.core.bindWaitTimeout", 10 );
+    unsigned connectionsPerIp = getUnsigned( "smpp.core.connectionsPerIp", 100 );
+    unsigned failTimeout = getUnsigned( "smpp.core.ipBlockingTime", 60 );
+    unsigned maxMultiCount = getUnsigned( "smpp.core.maxRWMultiplexersCount", 100 );
+    sm.init( socketsPerThread, bindTimeout, connectionsPerIp, failTimeout, maxMultiCount );
 
   running=true;
 

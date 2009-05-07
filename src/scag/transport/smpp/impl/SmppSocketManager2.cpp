@@ -175,7 +175,7 @@ void SmppSocketManager::unregisterSocket(SmppSocket* sock)
             cpi = -1;
         }
     } while ( false );
-    smsc_log_info(log,"connection unregistered, perIP/total=%d/%u", cpi, rc);
+    smsc_log_info(log,"connection %s unregistered, perIP/total=%d/%u", sock->getPeer(), cpi, rc);
 }
 
 void SmppSocketManager::shutdown()
