@@ -180,8 +180,10 @@ bool TCAPDispatcher::Start(void)
   return true;
 }
 
-//Stops TCAP messages(indications) listener, unbinds all SSNs,
-//if do_wait is set sets ss7INITED state
+//Stopps dispatcher in two phases. 2nd is performed only if do_wait is set
+//1) Stops Units autoconnection thread, switches SSNSessions to stopping state 
+//2) Destroys SSNSessions, finishes autoconnection and listener threads, 
+//   switches to ss7INITED state.
 void TCAPDispatcher::Stop(bool do_wait/* = false*/)
 {
   {
@@ -216,12 +218,14 @@ void TCAPDispatcher::Stop(bool do_wait/* = false*/)
       _sync.Unlock();
     }
     //wait for Autoconnection and Listener threads
-    _msgAcq.Stop(false);
     Thread::WaitFor();
     _msgAcq.Stop(true);
     smsc_log_debug(logger, "%s: MsgListener thread finished", _logId);
-    disconnectCP(ss7INITED);
-    _dspState = dspStopped;
+    {
+      MutexGuard grd(_sync);
+      _dspState = dspStopped;
+      disconnectCP(ss7INITED);
+    }
   }
 }
 
