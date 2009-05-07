@@ -78,6 +78,14 @@
   <th>maxUdhParts</th>
   <td><input class=txt name=smpp_maxUdhParts value="<%=StringEncoderDecoder.encode(bean.getSmpp_maxUdhParts())%>"></td>
 </tr>
+<tr class=row<%=rowN++&1%>>
+  <th>concatTimeout</th>
+  <td><input class=txt name=smpp_concatTimeout value="<%=StringEncoderDecoder.encode(bean.getSmpp_concatTimeout())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>pause after disconnect</th>
+  <td align="LEFT"><input type=checkbox name=smpp_pauseAfterDisconnect <%=bean.isSmpp_pauseAfterDisconnect() ? "checked" : ""%>></td>
+</tr>
 
 <%rowN=0;%>
 <tr><td colspan=2>&nbsp;</td></tr>
@@ -184,12 +192,6 @@
 <%rowN=0;%>
 <tr><td colspan=2>&nbsp;</td></tr>
 <tr><td colspan=2><div class=page_subtitle>Defaults</div></td></tr>
-<!--
-<tr class=row<%=""/*rowN++&1*/%>>
-  <th>daily limit</th>
-  <td><input class=txt name=defaults_dailyLimt value="<%=StringEncoderDecoder.encode(bean.getDefaults_dailyLimt())%>"></td>
-</tr>
--->
 <tr class=row<%=rowN++&1%>>
   <th>annotation size</th>
   <td><input class=txt name=default_annotation_size value="<%=StringEncoderDecoder.encode(bean.getDefault_annotation_size())%>"></td>
