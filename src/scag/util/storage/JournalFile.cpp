@@ -290,7 +290,8 @@ bool JournalFile::writeRecord( const JournalRecord& record )
     if ( needHeader ) { journalFile_.Seek(0); }
     journalFile_.Write( &journal_[0], journal_.size() );
     if ( lastRecord ) {
-        // journalFile_.Truncate(journalFile_.Pos());
+        // NOTE: we need truncate as the last entry may be rewritten
+        journalFile_.Truncate(journalFile_.Pos());
         journalFile_.Seek( store_.journalHeaderSize() );
     }
     recordSerial_ = serial;
