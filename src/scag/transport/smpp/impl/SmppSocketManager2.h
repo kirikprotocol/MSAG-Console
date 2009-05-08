@@ -27,8 +27,8 @@ private:
         IpLimit() : connected_(0), lastFailure_(0) {}
         inline unsigned connectionCount() const { return connected_; }
         inline time_t lastFailure() const { return lastFailure_; }
-        void addConnection() { ++connected_; }
-        void removeConnection() { --connected_; }
+        inline unsigned addConnection() { return ++connected_; }
+        inline unsigned removeConnection() { return --connected_; }
         void setLastFailure( time_t t ) { lastFailure_ = t; }
     private:
         unsigned connected_;
@@ -115,9 +115,9 @@ protected:
 
   thr::ThreadPool tp;
 
-    // unsigned   readerCount_;  // take the number as readers.Count()
-    unsigned   registeredConnections_;
-    IphashType iphash_;
+    sync::Mutex        statMutex_;
+    unsigned           registeredConnections_;
+    IphashType         iphash_;
     IntHash< uint8_t > whiteList_;
 
     // limits
