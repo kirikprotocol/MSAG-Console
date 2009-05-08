@@ -115,6 +115,7 @@ dir.eachDir {dateDir ->
     hourDir.eachFile {it-> parseFile(it, subjects) }    
   }
   websmsDailyCounters.entrySet().each {it-> websmsDailyReport.append("${df.format(date)}; ${it.key}; 999; SMS с сайта; ${it.value}\r\n")}
+  websmsDailyCounters.clear()
 }
 
 def year = new SimpleDateFormat("yyyy").format(new Date())
