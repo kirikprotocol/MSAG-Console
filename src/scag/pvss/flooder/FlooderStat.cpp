@@ -32,13 +32,19 @@ outLast_(accumulationTime),
 histoReady_(false),
 outTotalHisto_(binScale,histoBins,minTime),
 outLastHisto_(binScale,histoBins,minTime),
-outHistoCreateTime_(0)
+outHistoCreateTime_(0),
+decreaseCount_(0),
+maxSpeed_(0)
 {
     log_ = smsc::logger::Logger::getInstance("flooder");
 }
 
 FlooderStat::~FlooderStat()
 {
+  if (maxSpeed_ > 0) {
+    smsc_log_info( log_, "max speed: %d", maxSpeed_);
+  }
+
     shutdown(); 
 }
 
@@ -177,7 +183,11 @@ void FlooderStat::waitUntilProcessed()
             fullstat.append("\n    Last: ");
             fullstat.append( outLast_.toString() );
             smsc_log_info( log_, "%s", fullstat.c_str());
+
+            changeSpeed();
+
         }
+
 
         if ( ! doneTime ) {
             if ( requested_ == 0 || total_.requests < requested_ ) {
@@ -200,6 +210,30 @@ void FlooderStat::waitUntilProcessed()
     } // while
 }
 
+void FlooderStat::changeSpeed() {
+  //set max possible speed
+  if (!config_.getMaxSpeed() || total_.requests <= last_.requests || outLast_.elapsedTime < 1000) {
+    return;
+  }
+  unsigned maxChange = 50;
+  MutexGuard mg(mon_);
+  unsigned elapsedTime = static_cast<unsigned>(outLast_.elapsedTime / 1000); 
+  unsigned requests = outLast_.requests / elapsedTime;
+  unsigned response = outLast_.responses / elapsedTime;
+  if (requests > response) {
+    unsigned dec = requests - response < maxChange ? requests - response : maxChange;
+    requestsPerSecond_ = requestsPerSecond_ - maxChange > maxChange ? requestsPerSecond_ - dec : requestsPerSecond_;
+    decreaseCount_ += 1 + dec / 10;
+    smsc_log_info( log_, "current speed: %d (-%d)", requestsPerSecond_, dec);
+  } else {
+    if (requests - maxChange <= requestsPerSecond_ && decreaseCount_ == 0) {
+      maxSpeed_ = requestsPerSecond_ > maxSpeed_ ? requestsPerSecond_ : maxSpeed_;
+      requestsPerSecond_ += 10;
+      smsc_log_info( log_, "current speed: %d (+10)", requestsPerSecond_);
+    }
+    decreaseCount_ = decreaseCount_ > 0 ? decreaseCount_ - 1 : 0;
+  }
+}
 
 void FlooderStat::init( unsigned skip ) /* throw (exceptions::IOException) */ 
 {

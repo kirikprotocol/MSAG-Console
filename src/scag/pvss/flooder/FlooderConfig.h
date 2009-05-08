@@ -13,7 +13,7 @@ class FlooderConfig
 public:
     FlooderConfig() :
     asyncMode_(false), speed_(10), addressesCount_(100), flooderThreads_(1), commands_("s0g0"),
-    oneCommandPerAbonent_(false) {
+    oneCommandPerAbonent_(false), maxSpeed_(false) {
         patterns_.push_back("\"test0\" INT: 1 TIME_POLICY: FIXED FINAL_DATE: 2009/03/16 09:52:55 LIFE_TIME: 123");
     }
 
@@ -41,6 +41,9 @@ public:
 
     int getRequested() const { return 0; /* unlimited */ }
 
+    bool getMaxSpeed() const { return maxSpeed_;  }
+    void setMaxSpeed(bool maxSpeed) { maxSpeed_ = maxSpeed; }
+
 private:
     bool    asyncMode_;
     int     speed_;
@@ -51,6 +54,7 @@ private:
     std::string                commands_;
     std::string                addressFormat_;
     bool    oneCommandPerAbonent_;
+    bool    maxSpeed_;
 };
 
 } // namespace flooder

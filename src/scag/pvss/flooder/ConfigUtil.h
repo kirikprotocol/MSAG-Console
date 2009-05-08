@@ -113,6 +113,13 @@ void readFlooderConfig( smsc::logger::Logger* logger,
     }
 
     try {
+        flooderConfig.setMaxSpeed( fview.getBool("maxSpeed") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <Flooder.maxSpeed> missed. Default value is %d",
+                      flooderConfig.getMaxSpeed() ? 1 : 0 );
+    }
+
+    try {
         std::string format = fview.getString("addressPrefix");
         // checking that address prefix is numeric
         char* endptr;

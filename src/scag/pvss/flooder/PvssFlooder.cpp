@@ -323,6 +323,10 @@ void PvssFlooder::setCurrentSpeed(int sent, int ok) {
     currentSpeed_ = ok > 0 ? ok : 1;
     return;
   }
+  if (config_.getMaxSpeed()) {
+    currentSpeed_ = currentSpeed_ + 50;
+    return;
+  }
   if (currentSpeed_ < speed_) {
     currentSpeed_ = currentSpeed_ + 50 > speed_ ? speed_ : currentSpeed_ + 50;
   }

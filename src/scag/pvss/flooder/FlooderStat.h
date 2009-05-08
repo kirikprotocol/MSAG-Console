@@ -62,6 +62,7 @@ public:
 private:
     /// check time and reset statistics if needed
     void checkTime();
+    void changeSpeed();
 
 private:    
     static const util::msectime_type accumulationTime = 5000; // 5 seconds accumulation time
@@ -95,6 +96,8 @@ private:
     util::histo::Histo1d< unsigned > outTotalHisto_;
     util::histo::Histo1d< unsigned > outLastHisto_;
     util::msectime_type              outHistoCreateTime_;
+    unsigned decreaseCount_;
+    unsigned maxSpeed_;
 };
 
 } // namespace flooder

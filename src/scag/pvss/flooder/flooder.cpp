@@ -155,6 +155,7 @@ int main(int argc, char* argv[]) {
         flooderConfig.setCommands("s0g0");
         flooderConfig.setAddressFormat(".1.1.791%08u");
         flooderConfig.setOneCommandPerAbonent(false);
+        flooderConfig.setMaxSpeed(false);
     } catch ( scag2::pvss::core::ConfigException& e ) {
         smsc_log_error(logger, "cannot set default value: %s", e.what() );
         fprintf(stderr,"cannot set default value: %s\n", e.what() );
