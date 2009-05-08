@@ -149,9 +149,9 @@ bool StatisticsLogger<Event, Buffer>::checkDir() {
 
 template<typename Event, typename Buffer>
 time_t StatisticsLogger<Event, Buffer>::getFileTime(const char* fname) const {
-  time_t ftime = 0;
+  long long ftime = 0;
   sscanf(fname, format_.c_str(), &ftime);
-  return ftime;
+  return time_t(ftime);
 }
 
 template<typename Event, typename Buffer>
