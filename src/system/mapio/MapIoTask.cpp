@@ -113,7 +113,7 @@ extern "C" {
                            ULONG_T affectedSPC,
                            ULONG_T localSPC)
   {
-    __map_warn2__("%s: received ssn=%d user state=%d affected SSN=%d affected SPC=%d local SPC=%d",__func__,lssn,userState,affectedSSN,affectedSPC,localSPC);
+    __map_warn2__("%s: received ssn=%d rinst=%d user state=%d affected SSN=%d affected SPC=%d local SPC=%d",__func__,lssn,INSTARG0(rinst),userState,affectedSSN,affectedSPC,localSPC);
     if( affectedSPC == localSPC )
     {
       if( userState == 1 )
@@ -125,12 +125,13 @@ extern "C" {
             if( MapDialogContainer::boundLocalSSNs[INSTARG0(rinst)]&((uint64_t)1<<i) )
             {
               MapDialogContainer::boundLocalSSNs[INSTARG0(rinst)] &= ~((uint64_t)1<<i);
-              __map_warn2__("%s: SSN %d is unavailable trying to rebind",__func__,affectedSSN);
-              USHORT_T result = Et96MapBindReq(MY_USER_ID, SSN INSTARG(rinst));
+              __map_warn2__("%s: SSN %d rinst %d is unavailable trying to rebind",__func__,affectedSSN,INSTARG0(rinst));
+              USHORT_T result = Et96MapBindReq(MY_USER_ID, lssn INSTARG(rinst));
               if (result!=ET96MAP_E_OK)
               {
                 __map_warn2__("%s: SSN %d Bind error 0x%hx",__func__,affectedSSN,result);
                 EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID,INSTARG0(rinst));
+                MapIoTask::ReconnectThread::reportDisconnect(INSTARG0(rinst));
               }
             }
             break;
