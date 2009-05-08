@@ -2049,7 +2049,10 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                           SSN,
                           string(cmd->get_sms()->getDestinationAddress().value),
                           cmd));
-              rinst=dialog->instanceId;
+              if(!dialog.isnull())
+              {
+                rinst=dialog->instanceId;
+              }
             } else
             {
               // QUERYABONENTSTATUS
@@ -2087,6 +2090,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           dialog->id_opened = false;
           dialog->dialogid_smsc = dialogid_smsc;
           dialog->dropChain = false;
+          rinst=dialog->instanceId;
         }
       }catch(MAPDIALOG_ERROR& e){ // try for delivery command
         throw;
