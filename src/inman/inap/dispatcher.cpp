@@ -285,14 +285,14 @@ int TCAPDispatcher::Reconnect(void)
       //check for disconnected units
       bool disconnAll = false;
       if (disconnectedUnits(&disconnAll)) {
-        if (connectUnits()) {             //give the SCCP time to refresh SubSystems
-          _sync.wait(RECONNECT_TIMEOUT);  //states prior to rebinding them.
-        } else if (disconnAll)
+        if (!connectUnits() && disconnAll)
           ++connCounter;
+        _sync.wait(RECONNECT_TIMEOUT);  //give the SCCP time to refresh SubSystems states prior to rebinding them.
+        continue;
       }
       if (unitsNeedBinding())
         bindSSNs();
-      if (unbindedSSNs() == _sessions.size())
+      if (!_sessions.empty() && (unbindedSSNs() == _sessions.size()))
         ++bindCounter;
     } else if (connectCP(ss7CONNECTED) < 0) { //also binds SSNs
       ++connCounter;
