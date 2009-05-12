@@ -121,6 +121,9 @@ bool ConnectionContext::readData(const time_t& now) {
   if (n > 0) {
     SocketData::updateTimestamp(socket_, now);
     inbuf_.Append(readBuf_, n);
+    if (inbuf_.GetSize() < packetLen_) {
+      return true;
+    }
   } else if (errno != EWOULDBLOCK) {
     if (n) smsc_log_warn(logger_, "read error: %s(%d)", strerror(errno), errno);
     return false;
@@ -135,18 +138,6 @@ bool ConnectionContext::readData(const time_t& now) {
   inbuf_.SetPos(PACKET_LENGTH_SIZE);
   return true;
 }
-
-/*
-void ConnectionContext::flushLogs() {
-  if (dbLogs_.empty()) {
-    return;
-  }
-  for (vector<DbLog>::iterator i = dbLogs_.begin(); i != dbLogs_.end(); ++i) {
-    (*i).flush();
-  }
-  dbLogs_.clear();
-}
-*/
 
 bool ConnectionContext::processWriteSocket(const time_t& now) {
   RelockMutexGuard mg(mutex_);

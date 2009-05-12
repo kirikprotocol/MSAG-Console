@@ -26,7 +26,7 @@ using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
 using smsc::core::synchronization::Mutex;
 
-const int32_t READ_BUF_SIZE = 1024;
+const int32_t READ_BUF_SIZE = 10240;
 const uint32_t RESP_BUF_SIZE = 5;
 const uint32_t PACKET_LENGTH_SIZE = 4;
 
