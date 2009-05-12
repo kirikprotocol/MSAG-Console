@@ -60,7 +60,7 @@ public:
       if (scopeType_ != key.getScopeType() ) {
         return false;
       }
-      if (scopeType_ == ABONENT) {
+      if (scopeType_ == SCOPE_ABONENT) {
         return address_ == key.getAddress();
       }
       return intKey_ == key.getOperatorKey();
