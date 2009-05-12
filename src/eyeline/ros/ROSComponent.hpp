@@ -30,6 +30,7 @@ public:
     //additional conponent, according to
     //itu-t(0) recommendation(0) q(17) 773 modules(2) messages(1) version3(3)
     , rosResultNL = 0x07  //[CONTEXT SPECIFIC 7]
+    , rosCancel
   };
 
 protected:
@@ -46,11 +47,11 @@ public:
       , _invId(0xFF), _kind(ros_kind), _opCode(op_code), _appCtx(app_ctx), _param(0)
   { }
 
-  uint8_t invId(void) const { return _invId; }
   Kind_e  rosKind(void) const { return _kind; }
   uint8_t opCode(void) const { return _opCode; }
   const EncodedOID *  appContext(void) const { return _appCtx; }
 
+  uint8_t getInvokeId(void) const { return _invId; }
   void setInvokeId(uint8_t inv_id) { _invId = inv_id; }
   void setParam(const ASTypeRfp & ref_param) { _param = ref_param; }
 
@@ -87,6 +88,12 @@ public:
   //status before using this method !
   uint8_t getLinked(void) const { return _linkedId; }
 
+  uint16_t getTimeout() const;
+  void setTimeout(uint16_t timeout);
+
+  enum OpClass_e { Class_1, Class_2, Class_3, Class_4 };
+  OpClass_e getOperationClass() const;
+  void setOperationClass(OpClass_e opClass);
 
   // ---------------------------------
   // -- ASTypeAC interface methods
@@ -305,7 +312,6 @@ public:
   DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 };
-
 
 } //ros
 } //eyeline
