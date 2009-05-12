@@ -13,7 +13,7 @@ protected:
     IncCommand( const inherited& ) : inherited_(true) {}
 
 public:
-    IncCommand() : AbstractPropertyCommand(), inherited_(false) { initLog(); }
+    IncCommand() : AbstractPropertyCommand(), inherited_(false), incResult_(true) { initLog(); }
     // IncCommand( uint32_t seqNum ) : AbstractPropertyCommand(seqNum) {}
     virtual ~IncCommand() { if (!inherited_) logDtor(); }
     
@@ -28,11 +28,16 @@ public:
 
     virtual IncCommand* clone() const { return new IncCommand(*this); }
 
+    bool isIncResult() const { return incResult_; }
+
+    void setIncResult(bool incResult) { incResult_ = incResult; }
+
 protected:
     virtual const char* typeToString() const { return "inc"; }
     // virtual ResponseTypeMatch& getResponseTypeMatch() const;
 private:
     bool inherited_;
+    bool incResult_;
 };
 
 } // namespace pvss

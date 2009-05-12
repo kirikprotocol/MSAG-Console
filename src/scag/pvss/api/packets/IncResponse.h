@@ -9,8 +9,8 @@ namespace pvss {
 class IncResponse : public BatchResponseComponent
 {
 public:
-    IncResponse() : BatchResponseComponent(), result_(0) { initLog(); }
-    IncResponse( uint8_t status ) : BatchResponseComponent(status), result_(0) { initLog(); }
+    IncResponse() : BatchResponseComponent(), result_(0), incResult_(true) { initLog(); }
+    IncResponse( uint8_t status ) : BatchResponseComponent(status), result_(0), incResult_(true) { initLog(); }
     virtual ~IncResponse() { logDtor(); }
 
     virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
@@ -21,6 +21,9 @@ public:
 
     uint32_t getResult() const { return result_; }
     void setResult( uint32_t result ) { result_ = result; }
+
+    bool isIncResult() const { return incResult_; }
+    void setIncResult(bool incResult) { incResult_ = incResult; }
 
 protected:
     virtual const char* typeToString() const { return "inc_resp"; }
@@ -33,6 +36,7 @@ private:
 
 private:
     uint32_t result_;
+    bool incResult_;
 };
 
 } // namespace pvss

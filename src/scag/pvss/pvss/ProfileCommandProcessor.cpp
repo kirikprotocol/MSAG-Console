@@ -82,7 +82,9 @@ bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) /* throw(PvapExce
 bool ProfileCommandProcessor::visitIncCommand(IncCommand &cmd) /* throw(PvapException) */  {
   uint32_t result = 0;
   uint8_t status = incModProperty(cmd.getProperty(), 0, result);
-  response_.reset( new IncResponse(status) );
+  IncResponse *incResp = new IncResponse(status);
+  incResp->setIncResult(cmd.isIncResult());
+  response_.reset( incResp );
   if (status != StatusType::OK) {
     return false;
   }
