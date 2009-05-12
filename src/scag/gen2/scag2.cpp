@@ -7,7 +7,11 @@
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/config/base/ConfigView.h"
 #include "scag/lcm/impl/LongCallManagerImpl.h"
-#include "scag/pvss/client/PvssStreamClient.h"
+
+#include "scag/pvss/api/core/client/impl/ClientCore.h"
+#include "scag/pvss/api/pvap/PvapProtocol.h"
+#include "scag/pvss/flooder/ConfigUtil.h"
+
 #include "scag/re/base/XMLHandlers2.h" // for StrX
 #include "scag/re/impl/RuleEngine2.h"
 #include "scag/sessions/impl/SessionManager2.h"
@@ -84,6 +88,9 @@ using config::ConfigManager;
 using smsc::util::findConfigFile;
 using namespace xercesc;
 
+
+
+
 Scag::~Scag()
 {
 }
@@ -96,9 +103,68 @@ void Scag::init( unsigned mynode )
 
     ConfigManager& cfg = ConfigManager::Instance();
 
+    //************** Personalization client initialization **************
+
+    std::auto_ptr<pvss::core::client::Client> pvssClnt;
+    try {
+        smsc_log_info(log, "Personalization client initializing...");
+        smsc_log_warn(log, "Personalization client initializing host=%s port=%d", cfg.getPersClientConfig().host.c_str(), cfg.getPersClientConfig().port);
+
+        // --- configuration is taken from flooder
+        pvss::core::client::ClientConfig clientConfig;
+        try {
+            // setting default values
+            clientConfig.setHost("127.0.0.1");
+            clientConfig.setPort(27880);
+            clientConfig.setIOTimeout(300);
+            clientConfig.setInactivityTime(30000); // in msec
+            clientConfig.setConnectTimeout(10000);  // in msec
+            clientConfig.setChannelQueueSizeLimit(1000); // the queue length
+            clientConfig.setConnectionsCount(10);
+            clientConfig.setMaxReaderChannelsCount(5);
+            clientConfig.setMaxWriterChannelsCount(5);
+            clientConfig.setReadersCount(2);
+            clientConfig.setWritersCount(2);
+            clientConfig.setProcessTimeout(1000);
+        } catch ( ConfigException& e ) {
+            smsc_log_error(log, "cannot set default value: %s", e.what() );
+            fprintf(stderr,"cannot set default value: %s\n", e.what() );
+            abort();
+        }
+
+        smsc::util::config::Manager::init("config.xml");
+        smsc::util::config::Manager& manager = smsc::util::config::Manager::getInstance();
+        ::readClientConfig(log, clientConfig, manager);
+
+        pvssClnt.reset( new pvss::core::client::ClientCore
+                        ( new pvss::core::client::ClientConfig(clientConfig),
+                          new pvss::pvap::PvapProtocol ));
+
+        pvssClnt->startup();
+
+        // FIXME: init
+        /*
+        pc->init( pcfg.host.c_str(),
+                  pcfg.port,
+                  pcfg.timeout,
+                  pcfg.pingTimeout,
+                  pcfg.reconnectTimeout,
+                  pcfg.maxCallsCount,
+                  pcfg.connections,
+                  pcfg.connPerThread );
+         */
+        smsc_log_info(log, "Personalization client initialized");
+    } catch(std::exception& e) {
+        throw Exception("Exception during initialization of PersClient: %s", e.what());
+    }catch (...)
+    {
+        throw Exception("Exception during initialization of PersClient: unknown error");
+    }
+
+
     //********************************************************
     try {
-        LongCallManagerImpl* lcm = new LongCallManagerImpl();
+        LongCallManagerImpl* lcm = new LongCallManagerImpl(pvssClnt.release());
         lcm->init( cfg.getLongCallManConfig().maxThreads );
     }catch(...)
     {
@@ -151,31 +217,6 @@ void Scag::init( unsigned mynode )
     }catch(...){
       __warning__("Statistics manager is not started.");
     }
-
-    //************** Personalization client initialization **************
-
-    try {
-        smsc_log_info(log, "Personalization client initializing...");
-        smsc_log_warn(log, "Personalization client initializing host=%s port=%d", cfg.getPersClientConfig().host.c_str(), cfg.getPersClientConfig().port);
-
-        const config::PersClientConfig& pcfg = cfg.getPersClientConfig();
-        pvss::client::PvssStreamClient* pc = new pvss::client::PvssStreamClient;
-        pc->init( pcfg.host.c_str(),
-                  pcfg.port,
-                  pcfg.timeout,
-                  pcfg.pingTimeout,
-                  pcfg.reconnectTimeout,
-                  pcfg.maxCallsCount,
-                  pcfg.connections,
-                  pcfg.connPerThread );
-        smsc_log_info(log, "Personalization client initialized");
-    } catch(std::exception& e) {
-        throw Exception("Exception during initialization of PersClient: %s", e.what());
-    }catch (...)
-    {
-        throw Exception("Exception during initialization of PersClient: unknown error");
-    }
-
 
     //************** RuleEngine initialization ***************
     try {
@@ -299,7 +340,7 @@ void Scag::shutdown()
 {
     // __trace__("shutting down");
     smsc_log_info( log, "SCAG is shutting down\n\n");
-    pvss::PersClient::Instance().Stop();   // to prevent dangling longcalls
+    lcm::LongCallManager::Instance().pvssClient().shutdown();
     bill::BillingManager::Instance().Stop();     // to prevent dangling longcalls
     lcm::LongCallManager::Instance().shutdown(); // to prevent dangling longcalls
     transport::http::HttpManager::Instance().shutdown();

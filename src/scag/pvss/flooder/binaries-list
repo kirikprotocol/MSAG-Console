@@ -30,6 +30,7 @@ scag/pvss_flooder   flooder  \
 scag/pvss-flooder2  flooder2 \
     -lscag-pvss-api-pvap \
     -lscag-pvss-flooder \
+    -lscag-pvss-api-core-client-impl \
     -lscag-pvss-api-core-client \
     -lscag-pvss-api-core \
     -lscag-pvss-api-packets \

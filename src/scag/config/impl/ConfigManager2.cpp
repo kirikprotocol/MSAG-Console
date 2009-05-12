@@ -88,7 +88,7 @@ void ConfigManagerImpl::Init() throw(ConfigException)
     getSessionManConfig_().init(ConfigView(config, "SessionManager"));
     getStatManConfig_().init(ConfigView(config, "StatisticsManager"));
     getHttpManConfig_().init(ConfigView(config, "HttpTransport"));    
-    getPersClientConfig_().init(ConfigView(config, "Personalization"));
+      getPersClientConfig_().init(ConfigView(config,"PvssClient"));
     getLongCallManConfig_().init(ConfigView(config, "LongCallManager"));        
     
   } catch (ParseException &e) {

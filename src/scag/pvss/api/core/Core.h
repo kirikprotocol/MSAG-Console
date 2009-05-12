@@ -43,9 +43,10 @@ public:
     };
 
 protected:
-    Core( Config& theConfig, Protocol& theProtocol ) :
-    config(&theConfig),
-    protocol(&theProtocol),
+    /// config and proto gets owned
+    Core( Config* theConfig, Protocol* theProtocol ) :
+    config(theConfig),
+    protocol(theProtocol),
     inactivityTracker(new ChannelInactivityTracker(*this,config->getInactivityTime()))
     {
         if ( !logger ) {

@@ -339,8 +339,9 @@ int main(int argc, char* argv[]) {
           exit(-1);
       }
 
-    std::auto_ptr< Protocol > protocol( new scag2::pvss::pvap::PvapProtocol );
-    std::auto_ptr< ServerCore > server( new ServerCore( serverConfig, *protocol.get() ) );
+    std::auto_ptr< ServerCore > server
+          ( new ServerCore( new ServerConfig(serverConfig),
+                            new scag2::pvss::pvap::PvapProtocol ));
 
     try {
         // server->init();

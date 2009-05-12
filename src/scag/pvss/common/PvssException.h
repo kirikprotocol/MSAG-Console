@@ -13,6 +13,8 @@ protected:
     PvssException( Type type ) : type_(type) {}
 
 public:
+    PvssException() : type_(UNKNOWN) {}
+    PvssException( const std::string& msg, Type t ) : exceptions::SCAGException(msg), type_(t) {}
     PvssException( Type type, const char* fmt, ... ) : type_(type) {
         SMSC_UTIL_EX_FILL(fmt);
     }
@@ -21,6 +23,11 @@ public:
 
     Type getType() const { return type_; }
     
+    virtual const char* what() const throw () {
+        if ( message.empty() ) return StatusType::statusMessage(type_);
+        return message.c_str();
+    }
+
 private:
     Type type_;
 };

@@ -15,7 +15,10 @@ scag/msag           gwmain2        \
   -lscag-config-impl \
   -lscag-transport-smpp-impl \
   -lscag-transport-http-impl \
-  -lscag-pvss-client \
+  -lscag-pvss-api-core-client-impl \
+  -lscag-pvss-api-core-client \
+  -lscag-pvss-api-core \
+  -lscag-pvss-api-pvap \
   \
   -lscag-sessions-base \
   -lscag-lcm-base \
@@ -27,7 +30,8 @@ scag/msag           gwmain2        \
   -lscag-transport-http-base \
   -lscag-stat-base \
   -lscag-pvss-data \
-  -lscag-pvss-base \
+  -lscag-pvss-api-packets \
+  -lscag-pvss-common \
   \
   -lscag-transport \
   \

@@ -36,13 +36,13 @@ namespace core {
 namespace server {
 
 
-ServerCore::ServerCore( ServerConfig& config, Protocol& protocol ) :
+ServerCore::ServerCore( ServerConfig* config, Protocol* protocol ) :
 Core(config,protocol), Server(),
 log_(smsc::logger::Logger::getInstance(taskName())),
 loge_(smsc::logger::Logger::getInstance("pvssEsrv")),
 started_(false),
 syncDispatcher_(0),
-last_(config.getStatisticsInterval()),
+last_(config->getStatisticsInterval()),
 hasNewStats_(false),
 exceptions_(new ExceptionCount)
 {

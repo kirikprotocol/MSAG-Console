@@ -9,29 +9,34 @@ namespace scag2 { namespace re { namespace actions {
 class BatchAction : public PersActionBase, public PersActionResultRetriever
 {
 public:
-    BatchAction() : PersActionBase(pvss::PC_MTBATCH), transactMode(false) {}
+    BatchAction() : PersActionBase(), transactMode_(false) {}
     virtual ~BatchAction();
-    virtual bool RunBeforePostpone(ActionContext& context);
-    // virtual void ContinueRunning(ActionContext& context);
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
+    virtual bool RunBeforePostpone( ActionContext& context );
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 
-    virtual const std::string& statusName() const { return batchStatus; }
-    virtual const std::string& msgName() const { return batchMsg; }
-    virtual pvss::PersCmd cmdType() const { return pvss::PC_MTBATCH; }
-    virtual pvss::PersCommand* makeCommand( ActionContext& ctx );
-    virtual PersActionResultRetriever& results() { return *this; }
-    virtual void storeResults( const pvss::PersCommand& command, ActionContext& context );
+    virtual PersActionResultRetriever& resultHandler() { return *this; }
+    virtual pvss::ProfileCommand* makeCommand( ActionContext& ctx );
+    virtual void handleResponse( ActionContext& ctx, const pvss::CommandResponse& resp );
+    virtual void handleError( ActionContext& ctx, const pvss::PvssException& e );
+    virtual const std::string& statusName() const { return batchStatus_; }
+    virtual const std::string& msgName() const { return batchMsg_; }
+    virtual const char* typeToString() const { return "batch"; }
+
+private:
+    // NOTE: it rethrow exception e
+    void handleException( ActionContext& ctx, const pvss::PvssException& e,
+                          std::vector< PersActionCommand* >::const_iterator i );
 
 protected:
-    std::vector<PersActionCommand *> actions; // owned
-    PropertyObject pobj;
-    bool transactMode;
-    std::string batchStatus;
-    std::string batchMsg;
+    std::vector< PersActionCommand* > actions_; // owned
+    PropertyObject pobj_;
+    bool transactMode_;
+    std::string batchStatus_;
+    std::string batchMsg_;
 };
 
 }

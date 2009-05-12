@@ -37,6 +37,9 @@ public:
         batchContent_.push_back( req );
         // req->setSeqNum(int(batchContent_.size()));
     }
+    void addComponents( std::vector< BatchRequestComponent* >& comps ) {
+        batchContent_.insert( batchContent_.end(), comps.begin(), comps.end() );
+    }
 
     virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
     {

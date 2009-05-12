@@ -3,7 +3,7 @@
 
 #include "scag/util/Time.h"
 #include "scag/pvss/api/core/SockTask.h"
-#include "ClientConfig.h"
+#include "scag/pvss/api/core/client/ClientConfig.h"
 
 namespace scag2 {
 namespace pvss {

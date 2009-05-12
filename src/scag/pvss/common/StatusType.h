@@ -60,6 +60,7 @@ protected:
     /// NOTE: they are all protected to prevent nasty things
     StatusType() {}
     StatusType( const StatusType& ) {}
+    StatusType& operator == ( const StatusType& ) { return *this; }
     ~StatusType() throw () {}
 };
 

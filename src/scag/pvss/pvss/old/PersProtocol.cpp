@@ -70,16 +70,16 @@ void PersProtocol::deserializeProfileKey(ProfileKey& key, SerialBuffer& sb) cons
   smsc_log_debug(logger_, "deserialize profile key");
   ScopeType scopeType = static_cast<ScopeType>(sb.ReadInt8());
   switch (scopeType) {
-  case ABONENT: {
+  case SCOPE_ABONENT: {
     std::string strKey;
     sb.ReadString(strKey);
     key.setAbonentKey(strKey);    
     smsc_log_debug(logger_, "abonent key='%s'", strKey.c_str());
     break;
   }
-  case OPERATOR: key.setOperatorKey(sb.ReadInt32()); break;
-  case PROVIDER: key.setProviderKey(sb.ReadInt32()); break;;
-  case SERVICE:  key.setServiceKey(sb.ReadInt32()); break;
+  case SCOPE_OPERATOR: key.setOperatorKey(sb.ReadInt32()); break;
+  case SCOPE_PROVIDER: key.setProviderKey(sb.ReadInt32()); break;;
+  case SCOPE_SERVICE:  key.setServiceKey(sb.ReadInt32()); break;
   }
 }
 

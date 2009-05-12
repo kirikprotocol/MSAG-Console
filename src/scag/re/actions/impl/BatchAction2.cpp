@@ -1,15 +1,16 @@
 #include "BatchAction2.h"
-#include "scag/stat/Statistics.h"
 #include "scag/re/base/CommandAdapter2.h"
 #include "scag/re/base/ActionFactory2.h"
-// #include "scag/pvss/base/PersClient.h"
+#include "scag/pvss/api/packets/BatchCommand.h"
+#include "scag/pvss/api/packets/BatchResponse.h"
+#include "scag/util/PtrDestroy.h"
 
 namespace scag2 { 
-namespace re {
-namespace actions {
 
 using namespace pvss;
-using namespace scag::stat;
+
+namespace re {
+namespace actions {
 
 const std::string TRANSACTIONAL_MODE = "TRANSACTIONAL";
 const std::string NORMAL_MODE = "NORMAL";
@@ -18,11 +19,7 @@ const char* BATCH_MODE = "mode";
 
 BatchAction::~BatchAction()
 {
-    for ( std::vector< PersActionCommand* >::iterator i = actions.begin();
-          i != actions.end();
-          ++i ) {
-        if (*i) delete *i;
-    }
+    for_each( actions_.begin(), actions_.end(), PtrDestroy() );
 }
 
 
@@ -30,51 +27,55 @@ BatchAction::~BatchAction()
 void BatchAction::init(const SectionParams& params, PropertyObject propertyObject)
 {
     smsc_log_debug(logger, "BatchAction: init");
-    pobj = propertyObject;
+    pobj_ = propertyObject;
 
     PersActionBase::init(params, propertyObject);
 
     bool statusExist = false;
-    CheckParameter(params, propertyObject, "PersAction", "status", false, false,
-                    batchStatus, statusExist);
+    CheckParameter( params, propertyObject, "PersAction", "status", false, false,
+                    batchStatus_, statusExist);
     bool msgExist = false;
-    CheckParameter(params, propertyObject, "PersAction", "msg", false, false,
-                    batchMsg, msgExist);
+    CheckParameter( params, propertyObject, "PersAction", "msg", false, false,
+                    batchMsg_, msgExist);
 
     if (params.Exists(BATCH_MODE)) {
         if (TRANSACTIONAL_MODE == params[BATCH_MODE]) {
-            transactMode = true;
+            transactMode_ = true;
         } else if (NORMAL_MODE == params[BATCH_MODE]) {
-            transactMode = false;
+            transactMode_ = false;
         } else {
-            transactMode = false;
+            transactMode_ = false;
             throw SCAGException("BatchAction : unknown 'mode' parameter %s", params[BATCH_MODE].c_str());
         }
     }
 
-    if(!params.Exists("type") || (profile = getProfileTypeFromStr(params["type"])) == PT_UNKNOWN) 
-        throw SCAGException("PersAction 'batch' : missing or unknown 'type' parameter");
+    if( !params.Exists("type") ||
+        (scopeType_ = pvss::scopeTypeFromString(params["type"].c_str())) == pvss::ScopeType(0) )
+        throw SCAGException("PersAction '%s' : missing or unknown 'type' parameter", typeToString());
 }
 
 
 bool BatchAction::RunBeforePostpone(ActionContext& context)
 {
-    if ( actions.size() == 0 ) return false;
-    smsc_log_debug(logger,"Run Action 'BatchAction' in %s mode...", transactMode ? TRANSACTIONAL_MODE.c_str() : NORMAL_MODE.c_str());
-    auto_ptr< lcm::LongCallParams > params = makeParams(context,*this);
-    if ( ! params.get() ) return false;
+    if ( actions_.size() == 0 ) return false;
+    smsc_log_debug(logger,"Run Action 'BatchAction' in %s mode...", transactMode_ ? TRANSACTIONAL_MODE.c_str() : NORMAL_MODE.c_str());
+    PersCall* params = makeParams(context);
+    if ( !params ) return false;
     context.getSession().getLongCallContext().callCommandId = PERS_BATCH;
-    context.getSession().getLongCallContext().setParams( params.release() );
+    context.getSession().getLongCallContext().setParams( params );
     return true;
 }
 
 
-IParserHandler * BatchAction::StartXMLSubSection(const std::string& name, const SectionParams& params, const ActionFactory& factory)
+IParserHandler * BatchAction::StartXMLSubSection( const std::string& name, const SectionParams& params, const ActionFactory& factory )
 {
     smsc_log_debug(logger, "BatchAction: %s", name.c_str());
     std::auto_ptr<PersActionCommand> act( (PersActionCommand*)( factory.CreateAction(name) ) );
-    act->init(params, pobj);
-    actions.push_back(act.release());
+    if ( !act.get() ) {
+        throw SCAGException("batch action %s was not created");
+    }
+    act->init(params, pobj_);
+    actions_.push_back(act.release());
     return NULL;
 }
 
@@ -88,25 +89,79 @@ bool BatchAction::FinishXMLSubSection(const std::string& name)
 }
 
 
-pvss::PersCommand* BatchAction::makeCommand( ActionContext& ctx )
+pvss::ProfileCommand* BatchAction::makeCommand( ActionContext& ctx )
 {
-    std::auto_ptr< pvss::PersCommand > res;
-    std::vector< pvss::PersCommandSingle > batch;
-    batch.resize( actions.size() );
-    for ( std::vector< PersActionCommand* >::const_iterator i = actions.begin();
-          i != actions.end();
+    // batch.resize( actions.size() );
+    std::vector< BatchRequestComponent* > comps;
+    comps.reserve( actions_.size() );
+    for ( std::vector< PersActionCommand* >::const_iterator i = actions_.begin();
+          i != actions_.end();
           ++i ) {
-        int stat = (*i)->fillCommand( ctx, batch[i - actions.begin()] );
-        if ( stat ) {
-            setStatus( ctx, stat, i-actions.begin() + 1);
-            return res.release();
+        try {
+            comps.push_back((*i)->makeCommand( ctx ));
+        } catch ( PvssException& e ) {
+            std::for_each( comps.begin(), comps.end(), PtrDestroy() );
+            handleException(ctx,e,i);
+        } catch ( std::exception& e ) {
+            std::for_each( comps.begin(), comps.end(), PtrDestroy() );
+            PvssException pe(e.what(),PvssException::UNKNOWN);
+            handleException(ctx,pe,i);
         }
     }
-    res.reset( new pvss::PersCommandBatch(batch,transactMode) );
+    std::auto_ptr< BatchCommand > res(new BatchCommand);
+    res->setTransactional(transactMode_);
+    res->addComponents(comps);
     return res.release();
 }
 
 
+void BatchAction::handleResponse( ActionContext& ctx, const pvss::CommandResponse& resp )
+{
+    const BatchResponse& response = static_cast<const BatchResponse&>(resp);
+    typedef std::vector< BatchResponseComponent* > BatchList;
+    const BatchList& comps = response.getBatchContent();
+    if ( comps.size() > actions_.size() ) {
+        smsc_log_fatal(logger,"logic error in batch action: response size is bigger than orig size, abort will follow");
+        ::abort();
+    }
+    std::vector< PersActionCommand* >::const_iterator j = actions_.begin();
+    uint8_t status = PvssException::OK;
+    std::string msg = PvssException::statusMessage(status);
+    for ( BatchList::const_iterator i = comps.begin(); i != comps.end(); ++i ) {
+        (*j)->handleResponse(ctx,**i);
+        if ( (*i)->getStatus() != PvssException::OK && status == PvssException::OK ) {
+            status = (*i)->getStatus();
+            char buf[30];
+            sprintf(buf," in action #%u",i-comps.begin());
+            msg = std::string(PvssException::statusMessage(status)) + buf;
+        }
+    }
+    setStatus(ctx,status,msg.c_str());
+}
+
+
+void BatchAction::handleError( ActionContext& ctx, const pvss::PvssException& e )
+{
+    setStatus( ctx, uint8_t(e.getType()), e.what() );
+}
+
+
+void BatchAction::handleException( ActionContext& ctx, const PvssException& e,
+                                   std::vector< PersActionCommand* >::const_iterator i )
+{
+    (*i)->handleError(ctx,e);
+    char buf[30];
+    sprintf(buf," in action #%u", i-actions_.begin());
+    std::string pewhat;
+    pewhat.reserve(strlen(e.what())+30);
+    pewhat.append(e.what());
+    pewhat.append(buf);
+    PvssException pe(pewhat,e.getType());
+    throw pe;
+}
+
+
+/*
 void BatchAction::storeResults( const pvss::PersCommand& command, ActionContext& context )
 {
     const pvss::PersCommandBatch* cmd = 
@@ -125,6 +180,7 @@ void BatchAction::storeResults( const pvss::PersCommand& command, ActionContext&
     }
     PersActionResultRetriever::storeResults( command, context );
 }
+ */
 
 }//actions
 }//re

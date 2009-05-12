@@ -7,7 +7,7 @@
 #include "scag/pvss/base/PersClient.h"
 #include "scag/pvss/base/Types.h"
 #include "scag/re/base/ActionContext2.h"
-#include "scag/re/base/PersCallWrapper.h"
+#include "scag/re/base/PersCallParams.h"
 
 namespace scag2 {
 namespace lcm {
@@ -141,9 +141,10 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
         else if(context->callCommandId >= PERS_GET && context->callCommandId <= PERS_BATCH)
         {
             PersCallParams* p = (PersCallParams*) context->getParams();
-            pvss::PersCall* call = p->getPersCall();
-            call->setContext(context);
-            if (!pvss::PersClient::Instance().callAsync(call,*this) ) {
+            // pvss::PersCall* call = p->getPersCall();
+            // call->setContext(context);
+            if ( ! p->callPvss(context) ) {
+                // pvss::PersClient::Instance().callAsync(call,*this) ) {
                 // context->initiator->continueExecution(context, false);
                 break;
             }

@@ -3,8 +3,8 @@
 
 #include <list>
 #include <memory>
-#include "Client.h"
-#include "ClientConfig.h"
+#include "scag/pvss/api/core/client/Client.h"
+#include "scag/pvss/api/core/client/ClientConfig.h"
 #include "ClientContext.h"
 #include "scag/pvss/api/core/Core.h"
 #include "scag/pvss/api/core/ContextRegistry.h"
@@ -30,7 +30,8 @@ public:
      * @param config        Client configuration parameters
      * @param protocol      PVAP protocol serializer/deserializer
      */
-    ClientCore( ClientConfig& config, Protocol& protocol );
+    /// NOTE: config and proto get owned
+    ClientCore( ClientConfig* config, Protocol* protocol );
 
     virtual ~ClientCore();
 
@@ -83,6 +84,9 @@ public:
         }
         return Core::registerChannel(channel,utime);
     }
+
+
+    virtual bool canProcessRequest( PvssException* exc = 0 );
 
 
     /**

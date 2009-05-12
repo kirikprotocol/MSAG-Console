@@ -15,6 +15,12 @@ namespace client {
 class Client
 {
 public:
+    // used to get client ref from anywhere. setInstance() must be invoked before.
+    // static Client& getInstance() /* throw */ ;
+    // typically invoked by main
+    // static void setInstance( Client* i ) /* throw */;
+
+public:
     virtual ~Client() {}
 
     /**
@@ -61,6 +67,13 @@ public:
         virtual void handleError(const PvssException& exc, std::auto_ptr<Request> request) = 0;
 
     };
+
+    /**
+     * Pre-checking (fast) if request could be processed.
+     * @return true if it could.
+     * @param exc is filled (if provided and result is false).
+     */
+    virtual bool canProcessRequest( PvssException* exc = 0 ) = 0;
 
     /**
      * Sends PVAP request and waits PVAP response (sync mode).

@@ -63,7 +63,7 @@ namespace client {
 
 smsc::logger::Logger* ClientCore::logger = 0;
 
-ClientCore::ClientCore( ClientConfig& config, Protocol& proto ) :
+ClientCore::ClientCore( ClientConfig* config, Protocol* proto ) :
 Core(config,proto),
 connector_(0),
 lastUsedSeqNum_(0),
@@ -184,6 +184,24 @@ void ClientCore::closeChannel( smsc::core::network::Socket& socket )
             smsc_log_warn(logger,"Channel recreation failed. Details: %s", create_exc.what());
         }
     }
+}
+
+
+bool ClientCore::canProcessRequest( PvssException* exc )
+{
+    do {
+        if ( isStopping ) { break; }
+        MutexGuard mg(channelMutex_);
+        if ( activeChannels_.empty() ) { break; }
+
+        // ok
+        return true;
+
+    } while ( false );
+    // fail
+    if ( exc ) { *exc = PvssException( PvssException::statusMessage(PvssException::NOT_CONNECTED),
+                                       PvssException::NOT_CONNECTED); }
+    return false;
 }
 
 

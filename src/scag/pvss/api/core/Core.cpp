@@ -23,6 +23,8 @@ Core::~Core()
 {
     // shutdownIO();
     waitUntilReleased();
+    delete protocol;
+    delete config;
     smsc_log_info(logger,"dtor: core");
 }
 

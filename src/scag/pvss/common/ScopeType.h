@@ -6,15 +6,16 @@ namespace pvss {
 
 enum ScopeType
 {
-        ABONENT = 0x01,
-        OPERATOR = 0x02,
-        PROVIDER = 0x03,
-        SERVICE = 0x04
+    // NOTE: 0x00 is reserved for UNKNOWN
+        SCOPE_ABONENT = 0x01,
+        SCOPE_OPERATOR = 0x02,
+        SCOPE_PROVIDER = 0x03,
+        SCOPE_SERVICE = 0x04
 };
 
 inline const char* scopeTypeToString( ScopeType t ) {
     switch ( t ) {
-#define CASETOSTRING(x) case x: return #x
+#define CASETOSTRING(x) case SCOPE_##x: return #x
     CASETOSTRING(ABONENT);
     CASETOSTRING(OPERATOR);
     CASETOSTRING(PROVIDER);
@@ -23,6 +24,15 @@ inline const char* scopeTypeToString( ScopeType t ) {
     default: return "UNKNOWN";
     }
 };
+
+inline ScopeType scopeTypeFromString( const char* t ) {
+    if (!t) {return ScopeType(0);}
+    else if ( !strcmp(t,"ABONENT") )  { return SCOPE_ABONENT; }
+    else if ( !strcmp(t,"OPERATOR") ) { return SCOPE_OPERATOR; }
+    else if ( !strcmp(t,"PROVIDER") ) { return SCOPE_PROVIDER; }
+    else if ( !strcmp(t,"SERVICE") )  { return SCOPE_SERVICE; }
+    else { return ScopeType(0); }
+}
 
 } // namespace pvss
 } // namespace scag2

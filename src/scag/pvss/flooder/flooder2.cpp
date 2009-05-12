@@ -6,7 +6,7 @@
 #include "core/threads/ThreadPool.hpp"
 #include "logger/Logger.h"
 #include "scag/pvss/api/core/client/ClientConfig.h"
-#include "scag/pvss/api/core/client/ClientCore.h"
+#include "scag/pvss/api/core/client/impl/ClientCore.h"
 #include "scag/pvss/api/pvap/PvapProtocol.h"
 #include "util/config/ConfigView.h"
 #include "util/config/Manager.h"
@@ -135,8 +135,9 @@ int main( int argc, const char** argv )
     }
 
     // --- making a client
-    std::auto_ptr< Protocol > protocol( new scag2::pvss::pvap::PvapProtocol );
-    std::auto_ptr< Client > client( new ClientCore( clientConfig, *protocol.get() ) );
+    std::auto_ptr< Client > client
+        ( new ClientCore( new ClientConfig(clientConfig),
+                          new scag2::pvss::pvap::PvapProtocol ));
     flooderStat.reset(new FlooderStat(flooderConfig,*client.get()));
 
     // randomizing the seed

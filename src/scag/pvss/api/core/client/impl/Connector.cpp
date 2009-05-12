@@ -51,7 +51,7 @@ bool Connector::setupSockets(util::msectime_type currentTime)
         }
     }
     if ( !rv ) {
-        smsc_log_debug(log_,"no channel is connecting, wakeuptime=%d",int(wakeupTime_-currentTime));
+        // smsc_log_debug(log_,"no channel is connecting, wakeuptime=%d",int(wakeupTime_-currentTime));
     }
     return rv;
 }
