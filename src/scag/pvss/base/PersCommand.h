@@ -108,7 +108,7 @@ class PersCommandBatch : public PersCommand
 public:
     PersCommandBatch( const std::vector< PersCommandSingle >& cmds,
                       bool trans ) :
-    PersCommand(PC_MTBATCH), batch_(cmds), transact_(trans), index_(0) {}
+    PersCommand(PC_TRANSACT_BATCH), batch_(cmds), transact_(trans), index_(0) {}
     virtual ~PersCommandBatch() {}
     virtual int fillSB( SerialBuffer& sb );
     virtual int readSB( SerialBuffer& sb );
