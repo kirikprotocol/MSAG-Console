@@ -16,7 +16,6 @@ scag/msag           gwmain2        \
   -lscag-transport-smpp-impl \
   -lscag-transport-http-impl \
   -lscag-pvss-api-core-client-impl \
-  -lscag-pvss-api-core-client \
   -lscag-pvss-api-core \
   -lscag-pvss-api-pvap \
   \

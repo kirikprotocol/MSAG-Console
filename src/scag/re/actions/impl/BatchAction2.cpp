@@ -19,7 +19,7 @@ const char* BATCH_MODE = "mode";
 
 BatchAction::~BatchAction()
 {
-    for_each( actions_.begin(), actions_.end(), PtrDestroy() );
+    std::for_each( actions_.begin(), actions_.end(), PtrDestroy() );
 }
 
 
