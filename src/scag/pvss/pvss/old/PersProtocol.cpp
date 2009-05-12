@@ -23,8 +23,7 @@ namespace scag2 {
 namespace pvss  {
 
 bool PersProtocol::notSupport(PersCmd cmd) const {
-  return (cmd > PC_MTBATCH || cmd == PC_BATCH
-          || cmd == PC_TRANSACT_BATCH || cmd == PC_UNKNOWN) ? true : false;
+  return (cmd >= PC_MTBATCH || cmd == PC_UNKNOWN) ? true : false;
 }
 
 Request* PersProtocol::deserialize(SerialBuffer& sb) const {
@@ -42,16 +41,28 @@ Request* PersProtocol::deserialize(SerialBuffer& sb) const {
   }
 
   ProfileKey key;
-  deserializeProfileKey(key, sb);
-
-  // ProfileRequestCreator requestCreator(&key);
   ProfileCommand* request = 0;
-  if (cmd == PC_MTBATCH) {
+
+  if (cmd == PC_BATCH) {
     smsc_log_debug(logger_, "Batch received");
-    request = deserializeBatchCommand(sb);
+    uint16_t cmdCount = sb.ReadInt16();
+    if (cmdCount == 0) {
+      smsc_log_debug(logger_, "error deserialize batch: commands count = 0");
+      throw pvap::MessageIsBrokenException(true, -1, "batch commands count = 0");
+    }
+    PersCmd firstCmd = static_cast<PersCmd>(sb.ReadInt8());
+    deserializeProfileKey(key, sb);
+    request = deserializeOldBatchCommand(cmdCount, firstCmd, key, sb);
   } else {
-    request = deserializeCommand(cmd, sb);
+    deserializeProfileKey(key, sb);
+    if (cmd == PC_TRANSACT_BATCH) {
+      smsc_log_debug(logger_, "Transact Batch received");
+      request = deserializeBatchCommand(sb);
+    } else {
+      request = deserializeCommand(cmd, sb);
+    }
   }
+
   return request ? new ProfileRequest(key,request) : 0;
 }
 
@@ -80,11 +91,34 @@ void PersPvapProtocol::deserialize(SingleRequest* request, SerialBuffer& sb) con
 */
 BatchCommand* PersProtocol::deserializeBatchCommand(SerialBuffer& sb) const {
   uint16_t cmdCount = sb.ReadInt16();
+  if (cmdCount == 0) {
+    smsc_log_debug(logger_, "error deserialize batch: commands count = 0");
+    throw pvap::MessageIsBrokenException(true, -1, "batch commands count = 0");
+  }
   std::auto_ptr<BatchCommand> batch( new BatchCommand() );
   batch->setTransactional((bool)sb.ReadInt8());
   for (int i = 0; i < cmdCount; ++i) {
     PersCmd cmd = static_cast<PersCmd>(sb.ReadInt8());
     batch->addComponent(deserializeCommand(cmd, sb));
+  }
+  return batch.release();
+}
+
+BatchCommand* PersProtocol::deserializeOldBatchCommand(uint16_t cmdCount, PersCmd cmdId, const ProfileKey& key, SerialBuffer& sb) const {
+  std::auto_ptr<BatchCommand> batch( new BatchCommand() );
+  batch->setTransactional(false);
+  batch->addComponent(deserializeCommand(cmdId, sb));
+  --cmdCount;
+  ProfileKey cmdKey;
+  for (int i = 0; i < cmdCount; ++i) {
+    PersCmd cmd = static_cast<PersCmd>(sb.ReadInt8());
+    deserializeProfileKey(cmdKey, sb);
+    if (cmdKey != key) {
+      smsc_log_debug(logger_, "error deserialize batch: multiprofile batch");
+      throw pvap::MessageIsBrokenException(true, -1, "multiprofile batch");
+    }
+    batch->addComponent(deserializeCommand(cmd, sb));
+    cmdKey.clear();
   }
   return batch.release();
 }
@@ -116,7 +150,15 @@ BatchRequestComponent* PersProtocol::deserializeCommand(PersCmd cmdType, SerialB
     cmd->setVarName(varName);
     return cmd;
   }
-  case PC_INC:
+  case PC_INC:  {
+    smsc_log_debug(logger_, "deserialize INC");
+    Property prop;
+    prop.Deserialize(sb);
+    IncCommand *cmd = new IncCommand();
+    cmd->setProperty(prop);
+    cmd->setIncResult(false);
+    return cmd;
+  }
   case PC_INC_RESULT: {
     smsc_log_debug(logger_, "deserialize INC");
     Property prop;
@@ -202,7 +244,7 @@ bool PersProtocol::SerialBufferResponseVisitor::visitGetResponse(GetResponse &re
 
 bool PersProtocol::SerialBufferResponseVisitor::visitIncResponse(IncResponse &resp) /* throw(PvapException) */  {
   buff_.WriteInt8(getResponseStatus(resp.getStatus()));
-  if (resp.getStatus() == Response::OK) {
+  if (resp.isIncResult() && resp.getStatus() == Response::OK) {
     buff_.WriteInt32(resp.getResult());
   }
   return true;
@@ -218,74 +260,5 @@ bool PersProtocol::SerialBufferResponseVisitor::visitSetResponse(SetResponse &re
   return true;
 }
 
-/*
-void PersPvapProtocol::serialize(const ResponsePacket& packet, SerialBuffer& sb) const {
-  uint32_t seqNumber = packet.getSequenceNumber();
-  if (seqNumber > 0) {
-    sb.WriteInt32(seqNumber);
-  }
-  ResponsePacket::Response resp = packet.getResponse();
-  sb.WriteInt8(resp);
-  if (resp != RESPONSE_OK) {
-    return;
-  }
-  PersCmd cmd = packet.getCmdId();
-  if (cmd == PC_SET || cmd == PC_DEL) {
-    return;
-  }
-  if (cmd == PC_GET) {
-    packet.getProperty().Serialize(sb);
-    return;
-  }
-  sb.WriteInt32(packet.getResult());
-}
-
-void PersPvapProtocol::serialize(const RequestPacket* packet, SerialBuffer& sb) const {
-  const ResponsePacket& fakeResp = packet->getFakeResponse();
-  if (fakeResp.getResponse() != RESPONSE_OK) {
-    serialize(fakeResp, sb);
-    return;
-  }
-  if (!packet->isBatch()) {
-    serialize(packet->getResponse(), sb);
-    return;
-  }
-  const BatchRequest* batch = 0;
-  try {
-    batch = dynamic_cast<BatchRequest*>(const_cast<RequestPacket*>(packet));
-    require(batch);
-  } catch (const std::bad_cast& ex) {
-    smsc_log_error(logger_, "PersProtocol::serialize: bad cast exception: %s", ex.what());
-    abort();
-  }
-  uint16_t cmdCount = batch->getCommandsCount();
-  if (!batch->isTransact()) {
-    for (uint16_t i = 0; i < cmdCount; ++i) {
-      serialize(batch->getResponse(i), sb);
-    }
-    return;
-  }
-  for (uint16_t i = 0; i < cmdCount; ++i) {
-    const ResponsePacket& resp = batch->getResponse(i);
-    serialize(resp, sb);
-    if (resp.getResponse() != RESPONSE_OK) {
-      return;
-    }
-  }
-
-}
-*/
-
-/*
-void PersProtocol::serialize(const GetResponse* packet, SerialBuffer& sb) const {
-  sb.WriteInt8(packet->getResponse());
-  packet->getProperty().serialize(sb);
-}
-
-void PersProtocol::serialize(const IncResponse* packet, SerialBuffer& sb) const {
-  sb.WriteInt8(packet->getResponse());
-  sb.WriteInt32(packet->getResult());
-}
-*/
 }
 }

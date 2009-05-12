@@ -49,6 +49,7 @@ private:
   void deserializeProfileKey(ProfileKey& key, SerialBuffer& sb) const;
   BatchRequestComponent* deserializeCommand(PersCmd cmd, SerialBuffer& sb) const;
   BatchCommand* deserializeBatchCommand(SerialBuffer& sb) const;
+  BatchCommand* deserializeOldBatchCommand(uint16_t cmdCount, PersCmd cmdId, const ProfileKey& key, SerialBuffer& sb) const;
   bool notSupport(PersCmd cmd) const;
 private:
   mutable Logger* logger_;
