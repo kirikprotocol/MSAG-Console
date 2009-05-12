@@ -208,7 +208,7 @@ void CompositeSessionStore::clear()
 
 
 CompositeSessionStore::Storage* 
-    CompositeSessionStore::store( const SessionKey& key ) const throw ( SCAGException )
+    CompositeSessionStore::store( const SessionKey& key ) const /*throw ( SCAGException )*/
 {
     const unsigned n = StorageNumbering::instance().storage( key.toIndex() );
     if ( ! storages_[n] ) {

@@ -57,8 +57,8 @@ public:
 private:
     void clear();
 
-    Storage* store( const SessionKey& key ) const throw (SCAGException);
-    
+    Storage* store( const SessionKey& key ) const /* throw (SCAGException) */;
+
     struct InitialThread : public smsc::core::threads::Thread
     {
         InitialThread( CompositeSessionStore& s ) : store_(s) {}
