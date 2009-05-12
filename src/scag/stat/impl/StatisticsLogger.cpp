@@ -62,7 +62,7 @@ void StatisticsLogger<Event, Buffer>::logEvent(Event* event) {
       file_.WOpen(getFileName(statDir_, lastFileTime_).c_str());
       smsc_log_debug(logger_, "create stat file '%s'", getFileName(statDir_, lastFileTime_).c_str());
     }
-    file_.Write(pdubuf_.getBuffer(), pdubuf_.getBufferSize());
+    file_.Write(pdubuf_.getBuffer(), bsize);
   } catch (const std::exception& ex) {
     smsc_log_warn(logger_, "write event to file error: %s", ex.what());
   }
