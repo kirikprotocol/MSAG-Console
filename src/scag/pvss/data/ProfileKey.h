@@ -52,6 +52,21 @@ public:
         intKey_ = -1;
     }
 
+    inline bool operator == ( const ProfileKey& key ) const {
+      if (scopeType_ != key.getScopeType() ) {
+        return false;
+      }
+      if (scopeType_ == ABONENT) {
+        return address_ == key.getAddress();
+      }
+      return intKey_ == key.getOperatorKey();
+    }
+
+    inline bool operator != ( const ProfileKey& key ) const
+    {
+        return !(*this == key);
+    }
+
 private:
     ScopeType   scopeType_;
     std::string abonentKey_;
