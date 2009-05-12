@@ -698,7 +698,7 @@ public:
   void DropAllDialogs(int rinst)
   {
     MutexGuard g(sync);
-    __mapdlg_trace2__("%s: dropping all dialogs",__func__);
+    __mapdlg_trace2__("%s: dropping all dialogs for rinst=%d",__func__,rinst);
     for(int j=0;j<numLocalSSNs;j++)
     {
       for(int i=0;i<65536;i++)

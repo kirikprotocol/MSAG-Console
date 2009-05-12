@@ -71,7 +71,7 @@ extern "C" {
         {
           MapDialogContainer::boundLocalSSNs[INSTARG0(rinst)] |= (uint64_t)1<<i;
           isBound=true;
-          __map_warn2__("%s: local ssn=%d bound",__func__,lssn);
+          __map_warn2__("%s: local ssn=%d rinst=%d bound",__func__,lssn,INSTARG0(rinst));
           break;
         }
       }
@@ -130,7 +130,6 @@ extern "C" {
               if (result!=ET96MAP_E_OK)
               {
                 __map_warn2__("%s: SSN %d Bind error 0x%hx",__func__,affectedSSN,result);
-                EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID,INSTARG0(rinst));
                 MapIoTask::ReconnectThread::reportDisconnect(INSTARG0(rinst));
               }
             }
@@ -244,12 +243,12 @@ void MapIoTask::ReconnectThread::reportDisconnect(int rinst)
 {
   MutexGuard mg(reconnectMon);
   EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID,rinst);
-  MAP_connectedInstCount--;
-  if(rinst>=0 || rinst<10)
+  if(MAP_connectedInst[rinst])
   {
+    MAP_connectedInstCount--;
     MAP_connectedInst[rinst]=false;
   }
-  __map_trace2__("MAP_connectedInstCount=%d",MAP_connectedInstCount);
+  __map_trace2__("Disconnected rinst=%d MAP_connectedInstCount=%d",rinst,MAP_connectedInstCount);
   reconnectMon.notify();
 }
 
@@ -293,15 +292,15 @@ int MapIoTask::ReconnectThread::Execute()
       MapDialogContainer::getInstance()->DropAllDialogs(MapDialogContainer::remInst[n]);
       __map_warn2__("Reconnecting instance %d",MapDialogContainer::remInst[n]);
       bool bindOk=true;
-      MutexTempUnlock mung(reconnectMon);
       {
+        MutexTempUnlock mung(reconnectMon);
         result = EINSS7CpMsgConnNotify(MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[n],onBrokenConn);
         if(result != RETURN_OK)
         {
           __map_warn2__("EINSS7CpMsgConnNotify returned error %d",result);
           continue;
         }
-        sleep(1);
+        sleep(4);
         for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
         {
           result = Et96MapBindReq(MY_USER_ID, MapDialogContainer::localSSNs[i] CONNINSTARG(MapDialogContainer::remInst[n]));
