@@ -132,6 +132,16 @@ public:
     return const_iterator(_comps.begin(), _comps.end());
   }
 
+  iterator end(void)
+  {
+    return iterator(_comps.end(), _comps.end());
+  }
+
+  const_iterator end(void) const
+  {
+    return const_iterator(_comps.end(), _comps.end());
+  }
+
   unsigned size(void) const { return (unsigned)_comps.size(); }
   bool empty(void) const { return _comps.empty(); }
 
