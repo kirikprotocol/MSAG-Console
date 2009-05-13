@@ -120,8 +120,8 @@ public:
     const smsc::logger::Logger* getLog() const { return log; }
     void setLog(Logger* dblog) { log = dblog; }
 
-    void Serialize(SerialBuffer& buf, bool toFSDB = false) const;
-    void Deserialize(SerialBuffer& buf, bool fromFSDB = false);
+    void Serialize(SerialBuffer& buf, bool toFSDB = false, GlossaryBase* glossary = NULL) const;
+    void Deserialize(SerialBuffer& buf, bool fromFSDB = false, GlossaryBase* glossary = NULL);
     ProfileState getState() const { return state; };
     void setLocked() { state = LOCKED; };
     void setDeleted() { Empty(); state = DELETED; };
